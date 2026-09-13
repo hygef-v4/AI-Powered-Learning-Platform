@@ -25,7 +25,7 @@
 ## Kết quả mong đợi
 
 - Bộ persona phản ánh bốn vai trò sản phẩm, gồm quyền cấp môn của Chủ nhiệm môn, và bối cảnh của đơn vị đào tạo.
-- Stories bao phủ các yêu cầu FR-001 đến FR-014 và các ràng buộc NFR/SEC/REL có tác động đến hành vi quan sát được.
+- Stories ban đầu bao phủ FR-001 đến FR-014; revision ngày 2026-09-13 mở rộng tới FR-024 và giữ các ràng buộc NFR/SEC/REL có tác động đến hành vi quan sát được.
 - Mỗi story có tiêu chí chấp nhận kiểm thử được và truy vết về yêu cầu nguồn.
 - Các hành trình cốt lõi trở thành cơ sở cho thiết kế, phân rã unit và kiểm thử end-to-end/system.
 

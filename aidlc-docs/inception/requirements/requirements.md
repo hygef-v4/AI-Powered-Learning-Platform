@@ -18,13 +18,15 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản, phân quyền, quản lý môn học/khóa học/lớp học, kho học liệu và RAG cấp môn, nội dung riêng của lớp, tải tài liệu, theo dõi tiến độ, đánh giá, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm tự động, thanh toán và email/thông báo. Sản phẩm chỉ cung cấp web responsive; không đặt yêu cầu riêng cho ứng dụng mobile hoặc API dành cho mobile trong đợt đầu.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một bản chung, kho học liệu và RAG cấp môn, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi, theo dõi tiến độ, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
 - Ứng dụng mobile native
 - Multi-tenancy và cô lập dữ liệu giữa nhiều tổ chức
 - Đồng bộ LMS hoặc SSO của tổ chức
+- Chức năng dành riêng cho vai trò Head of Department/Trưởng bộ môn
+- Mọi nội dung dạng viết được mô hình hóa chung là bài viết luận
 - Active/active đa region
 - Property-based testing
 - Chứng nhận tuân thủ một khung pháp lý cụ thể
@@ -43,15 +45,16 @@ MVP bao gồm tài khoản, phân quyền, quản lý môn học/khóa học/l�
 
 ## 4. Yêu cầu chức năng
 
-### FR-001 - Xác thực và tài khoản
+### FR-001 - Xác thực và tài khoản trường cấp
 
-Hệ thống phải cho phép đăng ký hoặc cấp tài khoản, đăng nhập, đăng xuất, khôi phục mật khẩu và quản lý hồ sơ ở mức tối thiểu cần thiết.
+Hệ thống phải dùng email do trường cấp làm định danh đăng nhập cho người học và giảng viên. Tài khoản được quản trị viên cấp/import hoặc đồng bộ từ nguồn danh tính của trường; không có đăng ký công khai. Hệ thống phải hỗ trợ kích hoạt lần đầu khi cần, đăng nhập, đăng xuất, khôi phục mật khẩu và quản lý hồ sơ tối thiểu.
 
 **Tiêu chí chấp nhận:**
 
 - Người dùng đã xác thực có thể đăng nhập và đăng xuất an toàn.
 - Phiên hết hạn theo cấu hình và bị vô hiệu hóa khi đăng xuất.
 - Luồng khôi phục mật khẩu không tiết lộ tài khoản có tồn tại hay không.
+- Email đăng nhập của người học/giảng viên phải thuộc miền email trường được cấu hình; người dùng không thể tự đăng ký bằng email ngoài miền.
 
 ### FR-002 - Phân quyền
 
@@ -118,11 +121,12 @@ Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp đ
 
 ### FR-008 - Chấm điểm và phản hồi tự động
 
-Hệ thống phải tự chấm câu hỏi có đáp án xác định và có thể dùng AI đề xuất điểm/phản hồi cho câu trả lời mở. Giảng viên giữ quyền duyệt và ghi đè kết quả AI.
+Sau khi người học nộp bài, bài nộp chuyển tới giảng viên phụ trách. Giảng viên quyết định chấm thủ công hoặc yêu cầu AI đề xuất điểm/phản hồi; AI không tự động chấm nếu chưa có lựa chọn của giảng viên và không bao giờ quyết định điểm cuối.
 
 **Tiêu chí chấp nhận:**
 
 - Điểm tự động có kèm trạng thái và phương thức chấm.
+- Mỗi bài nộp mới ở trạng thái chờ giảng viên xử lý; lựa chọn chấm tay hoặc nhờ AI được lưu theo actor/thời gian.
 - Kết quả AI chưa duyệt không được coi là quyết định cuối đối với câu trả lời mở.
 - Mọi lần ghi đè điểm lưu người thực hiện, thời gian và lý do.
 
@@ -156,6 +160,69 @@ Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riê
 
 Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi nội dung đã xuất bản, thay đổi điểm, phát hành đề chung, sự kiện thanh toán và truy cập đặc quyền.
 
+### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
+
+Quản trị viên phải có thể tìm kiếm, tạo, cập nhật, khóa/mở khóa và cấp mật khẩu tạm thời cho tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ.
+
+### FR-016 - Ngân hàng rubric và câu hỏi
+
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Nội dung đã được dùng để chấm phải được version hóa hoặc bảo toàn để không làm thay đổi kết quả lịch sử.
+
+### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
+
+Hệ thống phải hỗ trợ sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận. Với bài sơ đồ, người học vẽ trực tiếp trên canvas Draw.io nhúng trong web và nộp XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
+
+### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
+
+Hệ thống phải tự động lưu bản nháp theo người học/bài đánh giá, khôi phục an toàn sau gián đoạn và lưu lịch sử các lần nộp; bản nháp không được coi là bài nộp chính thức.
+
+### FR-019 - Theo dõi nộp bài và nhắc nhở
+
+Giảng viên phải xem được trạng thái đã nộp, chưa nộp, nộp trễ và được gia hạn của lớp được phân công, đồng thời gửi nhắc nhở có giới hạn tần suất tới đúng người học.
+
+### FR-020 - Chốt điểm hàng loạt
+
+Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho lớp được phân công; chỉ bài đã đủ điều kiện mới được chốt và mọi thay đổi điểm phải được audit.
+
+### FR-021 - Quản trị và giám sát dịch vụ AI
+
+Quản trị viên phải có thể cấu hình model được phép, quota, giới hạn chi phí và kill-switch qua ranh giới provider-neutral; xem nhật ký trạng thái/chi phí mà không lộ prompt, dữ liệu học tập hoặc secret ngoài quyền.
+
+### FR-022 - Tự ghi danh bằng mã mời lớp (Phase 2)
+
+Phase 2 hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
+
+### FR-023 - Cộng tác và xử lý ngoại lệ đánh giá (Phase 2)
+
+Phase 2 hỗ trợ thông báo/hỏi đáp lớp, gia hạn nộp bài theo cá nhân, phúc khảo và kiểm tra tương đồng mang tính tham khảo.
+
+### FR-024 - Báo cáo và phân tích nâng cao (Phase 2)
+
+Phase 2 hỗ trợ dashboard kết quả cá nhân, xuất bảng điểm, phân tích câu hỏi và so sánh điểm AI đề xuất với điểm giảng viên chốt; báo cáo không được dùng để tự động kết luận gian lận hoặc đánh giá năng lực cá nhân giảng viên.
+
+### FR-025 - Quản lý nhóm và trưởng nhóm
+
+Giảng viên phải có thể chia sinh viên của lớp được phân công thành nhiều nhóm và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
+
+**Tiêu chí chấp nhận:**
+
+- Mỗi nhóm luôn có đúng một trưởng nhóm đang hiệu lực trước khi nhận bài nhóm.
+- Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó.
+- Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
+
+### FR-026 - Bài tập nhóm, bài cá nhân và bài chung
+
+Giảng viên phải có thể tạo một bài tập nhóm chung, tách thành các phần cá nhân và giao từng phần cho thành viên, ví dụ sơ đồ use case hoặc activity. Mỗi sinh viên nộp phần cá nhân của mình; giảng viên có thể chọn chấm tay hoặc nhờ AI đề xuất. Nhóm phối hợp tạo một tài liệu DOCX chung bên ngoài hệ thống và chỉ trưởng nhóm được upload/nộp tài liệu này. Giảng viên phải tự chấm tay bài chung và có thể đối chiếu với các phần cá nhân; bài chung không được gửi AI để chấm.
+
+**Tiêu chí chấp nhận:**
+
+- Phần cá nhân và bài chung có deadline/trạng thái/bài nộp riêng nhưng cùng truy vết về một bài tập nhóm.
+- Mỗi phần cá nhân được gán cho đúng một thành viên và chỉ thành viên đó nộp; giảng viên có thể đổi phân công trước hạn với audit.
+- Chỉ trưởng nhóm hiện tại có thể nộp hoặc nộp lại DOCX chung; thành viên khác bị từ chối phía server.
+- DOCX chung được lưu riêng tư, kiểm tra loại/kích thước và phiên bản nộp; không cung cấp chỉnh sửa cộng tác DOCX trong hệ thống.
+- Giảng viên xem được bài chung cạnh các phần cá nhân, nhập điểm/phản hồi thủ công và hệ thống không cung cấp hành động chấm AI cho bài chung.
+- Điểm phần cá nhân và điểm bài chung được lưu riêng; chưa áp dụng công thức tự động gộp điểm khi chưa có chính sách trọng số được phê duyệt.
+
 ## 5. Luồng người dùng chính
 
 ### USCN-001 - Chuẩn bị và giao bài cấp lớp bằng AI
@@ -172,7 +239,7 @@ Người học đăng nhập, truy cập lớp được ghi danh, học nội du
 
 ### USCN-003 - Duyệt chấm điểm AI
 
-AI đề xuất điểm cho câu trả lời mở; giảng viên kiểm tra bằng rubric, chấp nhận hoặc ghi đè và công bố kết quả. Hệ thống lưu audit cho quyết định cuối.
+Sau khi nhận bài nộp, giảng viên chọn chấm thủ công hoặc yêu cầu AI đề xuất điểm theo rubric. Nếu dùng AI, giảng viên kiểm tra, chấp nhận hoặc ghi đè đề xuất trước khi công bố; hệ thống lưu lựa chọn phương thức và audit quyết định cuối.
 
 ### USCN-004 - Thanh toán và cấp quyền
 
@@ -181,6 +248,10 @@ Người dùng bắt đầu thanh toán; nhà cung cấp xử lý giao dịch; b
 ### USCN-005 - Xử lý lỗi phụ thuộc
 
 Khi AI, email, lưu trữ hoặc thanh toán tạm thời không khả dụng, hệ thống không làm mất dữ liệu nghiệp vụ, hiển thị trạng thái an toàn và cho phép retry có kiểm soát.
+
+### USCN-006 - Thực hiện và đánh giá bài tập nhóm
+
+Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, tạo bài chung và giao các phần cá nhân. Thành viên nộp phần được giao; trưởng nhóm upload DOCX chung. Giảng viên có thể nhờ AI đề xuất cho phần cá nhân nhưng tự chấm bài chung và đối chiếu hai cấp bài làm trước khi công bố kết quả.
 
 ## 6. Yêu cầu phi chức năng
 
@@ -193,7 +264,7 @@ Khi AI, email, lưu trữ hoặc thanh toán tạm thời không khả dụng, h
 
 ### NFR-002 - Khả năng sử dụng và truy cập
 
-- Giao diện phải responsive trên desktop, tablet và trình duyệt mobile hiện đại.
+- Giao diện người học phải desktop-first và tối ưu cho trình duyệt máy tính, đặc biệt canvas Draw.io và các luồng làm bài; tablet/mobile vẫn phải responsive cho đăng nhập, đọc nội dung, thông báo và xem kết quả nhưng không phải mục tiêu chính cho thao tác vẽ/làm bài phức tạp.
 - Các luồng cốt lõi phải dùng được bằng bàn phím và có nhãn hỗ trợ công nghệ trợ năng.
 - Thông báo lỗi phải nêu hành động khắc phục mà không lộ chi tiết nội bộ.
 
@@ -308,9 +379,13 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 
 - Chỉ một tổ chức trong MVP.
 - Bốn vai trò trong MVP gồm người học, giảng viên, Chủ nhiệm môn và quản trị viên.
+- Không có role Head of Department/Trưởng bộ môn trong hệ thống.
 - Chủ nhiệm môn là vai trò RBAC riêng, được gán phạm vi một hoặc nhiều môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công.
 - Chỉ web responsive.
 - Nội dung được nhập trực tiếp hoặc tải PDF/DOCX/slide.
+- Bốn loại bài đánh giá là sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận; bài sơ đồ lưu/nộp XML Draw.io đầy đủ cho giảng viên, còn XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
+- Bài tập nhóm gồm các phần cá nhân và một DOCX chung; hệ thống không cung cấp trình soạn thảo cộng tác DOCX, chỉ nhận file do nhóm tự phối hợp tạo bên ngoài.
+- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; chỉ trưởng nhóm được nộp bài chung.
 - Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán và email/thông báo.
 - Triển khai đợt đầu ưu tiên local container.
 - MVP phải có test tự động (bao gồm unit test, integration test, system test, e2e test), tài liệu chạy và khả năng triển khai thử nghiệm.
@@ -320,8 +395,12 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 ## 10. Tiêu chí thành công của MVP
 
 - Một giảng viên có thể tạo lớp, đưa nội dung vào hệ thống, dùng AI tạo và duyệt bài đánh giá.
+- Một giảng viên có thể quản lý rubric/câu hỏi, xem trước hoặc chạy thử từng loại bài, theo dõi nộp bài và chốt điểm hàng loạt.
 - Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG và phát hành đề chung tới đúng mọi lớp của môn được phân công mà không cần giảng viên lớp duyệt lại.
 - Một người học được ghi danh có thể học, nộp bài và nhận điểm/phản hồi đúng quyền.
+- Bản nháp và lịch sử lần nộp của người học được bảo toàn qua gián đoạn mà không bị coi nhầm là bài nộp chính thức.
+- Quản trị viên có thể quản lý vòng đời tài khoản và kiểm soát quota/kill-switch/chi phí AI mà không khóa hệ thống vào một provider.
+- Một nhóm có thể hoàn thành các phần cá nhân và nộp một DOCX chung qua trưởng nhóm; AI chỉ có thể hỗ trợ chấm phần cá nhân, còn bài chung luôn do giảng viên chấm tay và đối chiếu.
 - Luồng thanh toán thử nghiệm cấp quyền chính xác và chống xử lý webhook trùng lặp.
 - Các vai trò không thể truy cập dữ liệu hoặc chức năng ngoài quyền.
 - Dữ liệu và hành động nhạy cảm có audit trail phù hợp.
@@ -339,6 +418,8 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 | Làm rõ vòng 1 Q1-Q10 | Web, tích hợp, criticality, DR, change, CI/CD, rollback, topology, incident response |
 | Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone |
 | Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung và ranh giới học liệu cấp môn/lớp |
+| Đối chiếu `uc1.pdf` và yêu cầu ngày 2026-09-13 | FR-015 đến FR-024; loại Head of Department; dùng chung loại bài viết luận; phân tách MVP và Phase 2 |
+| Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader, phần cá nhân, DOCX chung và quy tắc chấm hai cấp |
 
 ## 12. Security Compliance tại Requirements Analysis
 

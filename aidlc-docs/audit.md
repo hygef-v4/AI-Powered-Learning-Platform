@@ -160,3 +160,92 @@
 **Context**: INCEPTION - Session paused; repository checkpoint requested
 
 ---
+
+## User Stories - External Use Case Comparison Request
+**Timestamp**: 2026-09-13T13:26:21Z
+**User Input**: "giúp tôi so sánh với user story hiện tại, xem cần bổ sung user story những gì với những cái trong uc1.pdf có hợp lý cho hệ thống ko, với lại bỏ qua cái role head of department đi"
+**AI Response**: "Reviewed uc1.pdf against the approved requirements, personas, and user stories; excluded Head of Department from the comparison and prepared recommendations without changing the approved story set."
+**Context**: INCEPTION - User Stories review; Workflow Planning remains paused at its approval gate
+
+---
+
+## Requirements and User Stories - UC1 Revision
+**Timestamp**: 2026-09-13T13:40:11Z
+**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi , theo ai dlc"
+**AI Response**: "Reopened the AI-DLC requirements/user-story artifacts, expanded functional requirements through FR-024, revised the catalog to 51 stories with MVP/Phase 2 separation, removed Head of Department from the role model, normalized written assignments to one essay type, updated personas/traceability/workflow state, and prepared the User Stories approval checkpoint."
+**Context**: INCEPTION - User Stories revision after uc1.pdf comparison
+
+---
+
+## User Stories Revision - Approval Prompt
+**Timestamp**: 2026-09-13T13:42:04Z
+**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi , theo ai dlc"
+**AI Response**: "# 📚 User Stories Complete
+
+> **📋 REVIEW REQUIRED:**
+> Please examine the user stories and personas at: `aidlc-docs/inception/user-stories/stories.md` and `aidlc-docs/inception/user-stories/personas.md`
+
+> **🚀 WHAT'S NEXT?**
+>
+> **You may:**
+>
+> 🔧 **Request Changes** - Ask for modifications to the stories or personas based on your review
+> ✅ **Approve & Continue** - Approve user stories and proceed to **Workflow Planning**"
+**Context**: INCEPTION - User Stories revision approval gate
+
+---
+
+## User Stories Revision - Change Request
+**Timestamp**: 2026-09-13T14:24:33Z
+**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn ko, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng kí tài khoản ko? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên noopj bài gửi giảng viên giảng viên mới quyết định là  chấm bằng ai hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
+**AI Response**: "Accepted as Request Changes at the User Stories approval gate. Planned updates: Draw.io canvas and reduced XML submission, desktop-first learner experience, institution-email account provisioning without public registration, teacher-selected manual or AI-assisted grading after submission, clearer clone/unpublish semantics, and removal of US-GRD-009."
+**Context**: INCEPTION - User Stories revision change request
+
+---
+
+## User Stories Revision - Changes Applied and Approval Prompt
+**Timestamp**: 2026-09-13T14:29:33Z
+**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn ko, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng kí tài khoản ko? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên noopj bài gửi giảng viên giảng viên mới quyết định là  chấm bằng ai hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
+**AI Response**: "Applied the requested changes and prepared a revised approval checkpoint. The catalog now has 50 stories (38 MVP, 12 Phase 2), uses Draw.io canvas with reduced XML submission, is desktop-first, provisions learner/instructor accounts through institution email without public registration, makes the instructor choose manual or AI-assisted grading after submission, clarifies clone versus stop-assignment behavior, and removes US-GRD-009. Requested review of stories.md and personas.md with Request Changes or Approve & Continue options."
+**Context**: INCEPTION - User Stories revision approval gate
+
+---
+
+## User Stories Revision - Group Assignment Change Request
+**Timestamp**: 2026-09-13T14:54:28Z
+**User Input**: "thêm làm bài tập nhóm (bài cá nhân và 1 bài chung để giảng viên review). Bài cá nhân sẽ là các phần tách riêng từ 1 bài chung. Ví dụ sẽ là 1 người sẽ usecase diagram, 1 người vẽ activity diagram, ... Bài cá nhân sẽ có thể được AI chấm điểm, còn bài chung thì giảng viên sẽ tự chấm tay. Bài chung sẽ là bản doc (nhóm sinh viên tự chỉnh sửa cùng nhau rồi upload lên để giảng viên tự chấm và so sánh với bài cá nhân). \n-giảng viên có thể chia lớp thành nhiều nhóm, mỗi nhóm chỉ có 1 leader được chỉ định bởi giảng viên, nếu muốn thay đổi leader thì sinh viên có thể request với giảng viên\n-chỉ leader của nhóm mới có thể nộp bài làm chung của cả nhóm."
+**AI Response**: "Accepted as Request Changes at the User Stories approval gate. Planned group management, leader change request, decomposition of a shared assignment into individual parts, leader-only DOCX submission, optional AI assistance for individual parts, and mandatory instructor manual grading/comparison for the shared submission."
+**Context**: INCEPTION - User Stories revision change request
+
+---
+
+## User Stories Revision - Group Assignment Applied and Approval Prompt
+**Timestamp**: 2026-09-13T14:58:20Z
+**User Input**: "thêm làm bài tập nhóm (bài cá nhân và 1 bài chung để giảng viên review). Bài cá nhân sẽ là các phần tách riêng từ 1 bài chung. Ví dụ sẽ là 1 người sẽ usecase diagram, 1 người vẽ activity diagram, ... Bài cá nhân sẽ có thể được AI chấm điểm, còn bài chung thì giảng viên sẽ tự chấm tay. Bài chung sẽ là bản doc (nhóm sinh viên tự chỉnh sửa cùng nhau rồi upload lên để giảng viên tự chấm và so sánh với bài cá nhân). \n-giảng viên có thể chia lớp thành nhiều nhóm, mỗi nhóm chỉ có 1 leader được chỉ định bởi giảng viên, nếu muốn thay đổi leader thì sinh viên có thể request với giảng viên\n-chỉ leader của nhóm mới có thể nộp bài làm chung của cả nhóm."
+**AI Response**: "Added FR-025 and FR-026 plus US-GRP-001 through US-GRP-006. The revised catalog contains 56 stories (44 MVP, 12 Phase 2), enforces exactly one instructor-appointed leader per group, supports member leader-change requests, links individual parts to one shared assignment, restricts shared DOCX submission to the current leader, permits AI assistance only for individual parts, and requires instructor-only manual grading/comparison for the shared submission. Requested review of stories.md and personas.md with Request Changes or Approve & Continue options."
+**Context**: INCEPTION - User Stories revision approval gate
+
+---
+
+## User Stories Revision - Class Lifecycle and Draw.io XML Change Request
+**Timestamp**: 2026-09-13T15:35:28Z
+**User Input**: "bỏ **US-CAT-004 - Quản lý học kỳ và nhân bản lớp (Phase 2), sửa lại nộp xml đầy đủ thay vì rút gọn, rút gọn chỉ nộp cho ai chấm thôi, còn nộp cho thầy thì vẫn đầy đủ**"
+**AI Response**: "Accepted as Request Changes. Planned removal of US-CAT-004 and all related semester/class-cloning scope, plus revision of Draw.io submission so the canonical instructor-visible submission stores full XML while a minimized derived copy is created only when the instructor requests AI grading."
+**Context**: INCEPTION - User Stories revision change request
+
+---
+
+## User Stories Revision - Class Lifecycle and Draw.io XML Applied
+**Timestamp**: 2026-09-13T15:37:24Z
+**User Input**: "bỏ **US-CAT-004 - Quản lý học kỳ và nhân bản lớp (Phase 2), sửa lại nộp xml đầy đủ thay vì rút gọn, rút gọn chỉ nộp cho ai chấm thôi, còn nộp cho thầy thì vẫn đầy đủ**"
+**AI Response**: "Removed US-CAT-004 from the story catalog and mappings, reduced FR-022 to class join-code scope, and revised Draw.io handling so full XML is the canonical learner submission visible to the instructor. A minimized derived XML is created only after the instructor requests AI grading; it never replaces the full submission. The catalog now contains 55 stories (44 MVP, 11 Phase 2). Requested review with Request Changes or Approve & Continue options."
+**Context**: INCEPTION - User Stories revision approval gate
+
+---
+## User Stories - Generate Full Use Case Documentation
+**Timestamp**: 2026-09-13T16:30:00Z
+**User Input**: "dựa vào user story giúp tôi gen đoc usecase đầy đủ"
+**AI Response**: "Generated a complete use case specification derived from the current 55 user stories, including actors, preconditions, postconditions, main flows, alternative/error flows, relationships, business rules, security/resiliency constraints, and full story-to-use-case traceability."
+**Context**: User Stories revision cycle; added `aidlc-docs/inception/user-stories/use-cases.md` and retained the explicit approval checkpoint before Workflow Planning.
+
+---

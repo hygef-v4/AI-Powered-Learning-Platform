@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: INCEPTION
-- **Current Stage**: Workflow Planning - Plan Complete, Awaiting Approval
-- **Session Status**: Paused by user; resume from Workflow Planning approval gate
+- **Current Stage**: User Stories - Use Case Documentation Complete, Awaiting Approval
+- **Session Status**: Active; full use case specification derived from the current user stories is awaiting explicit approval
 
 ## Workspace State
 - **Existing Code**: No
@@ -30,8 +30,8 @@
 ## Stage Progress
 - [x] Workspace Detection
 - [x] Requirements Analysis
-- [x] User Stories
-- [ ] Workflow Planning (execution plan complete; awaiting explicit approval)
+- [ ] User Stories (stories, personas and use case specification complete; awaiting explicit approval)
+- [ ] Workflow Planning (existing execution plan must be revalidated after story approval)
 - [ ] Application Design - EXECUTE
 - [ ] Units Generation - EXECUTE
 - [ ] Functional Design - EXECUTE PER UNIT
@@ -44,11 +44,11 @@
 
 ## Execution Plan Summary
 
-- **Stages completed**: Workspace Detection, Requirements Analysis, User Stories
+- **Stages completed**: Workspace Detection, Requirements Analysis
 - **Stages skipped**: Reverse Engineering (greenfield; no application code)
 - **Conditional stages to execute**: Application Design, Units Generation, Functional Design, NFR Requirements, NFR Design, Infrastructure Design
 - **Always stages remaining**: Code Generation per unit, Build and Test
-- **Next stage after approval**: Application Design
+- **Next stage after approval**: Revalidate Workflow Planning, then request approval before Application Design
 - **Risk level**: High
 - **Testing complexity**: Complex
-- **Resume action**: Review and approve or revise `aidlc-docs/inception/plans/execution-plan.md`
+- **Resume action**: Review and approve or revise `aidlc-docs/inception/user-stories/stories.md`, `personas.md` and `use-cases.md`

@@ -1,5 +1,7 @@
 # Kế hoạch tạo User Stories
 
+> Bổ sung 2026-09-13: Tạo đặc tả use case đầy đủ từ bộ user story hiện tại tại `aidlc-docs/inception/user-stories/use-cases.md`, gồm tác nhân, tiền/hậu điều kiện, luồng chính, ngoại lệ, quan hệ và truy vết 55/55 story.
+
 ## 1. Mục tiêu và phạm vi
 
 Chuyển `aidlc-docs/inception/requirements/requirements.md` thành bộ user stories lấy người dùng làm trung tâm, có thể kiểm thử và truy vết. Kế hoạch bao phủ người học, giảng viên, Chủ nhiệm môn và quản trị viên; các actor hệ thống bên ngoài chỉ xuất hiện khi cần mô tả tương tác hỗ trợ hành trình.
@@ -164,3 +166,38 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - **Security Baseline**: Stories và acceptance criteria phải phản ánh quyền truy cập, input boundary, audit, thanh toán và fail-safe behavior khi có tác động nghiệp vụ; control thuần thiết kế được truy vết downstream.
 - **Resiliency Baseline**: Stories phải phản ánh timeout/failure/degraded mode có ảnh hưởng đến hành trình; topology, backup và recovery chi tiết được giữ cho các stage thiết kế/hạ tầng.
 - **Property-Based Testing**: N/A vì extension đã bị tắt trong Requirements Analysis.
+
+## 8. Revision 2026-09-13 - Đối chiếu UC1
+
+### Phạm vi đã được phê duyệt
+
+- Đối chiếu bộ stories với `uc1.pdf` và bổ sung các hành trình phù hợp theo phương án được người dùng chấp thuận.
+- Không tạo persona hoặc quyền cho Head of Department/Trưởng bộ môn.
+- Giữ Chủ nhiệm môn/Subject Manager là role RBAC cấp môn.
+- Chuẩn hóa bốn loại bài: sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận; người học vẽ trên canvas web và nộp XML Draw.io rút gọn.
+- Người học sử dụng web desktop-first; mobile phục vụ chủ yếu cho đọc nội dung, thông báo và kết quả.
+- Tài khoản người học/giảng viên được cấp theo email trường, không có self-registration công khai.
+- Sau khi nhận bài, giảng viên chủ động chọn chấm thủ công hoặc yêu cầu AI đề xuất; AI không tự động quyết định phương thức hay điểm cuối.
+- Loại bỏ story phân công chấm chéo khỏi Phase 2.
+- Mở rộng acceptance criteria nếu mục tiêu đã có; chỉ tạo story mới cho giá trị người dùng độc lập.
+- Story sau MVP được ghi rõ hậu tố `(Phase 2)`.
+- Giữ payment và learning progress vì người dùng chưa yêu cầu loại khỏi phạm vi hiện tại.
+- Giữ tích hợp AI ở mức provider-neutral; không khóa vào Gemini.
+
+### Checklist revision
+
+- [x] Cập nhật requirements nguồn và phạm vi từ FR-015 đến FR-024.
+- [x] Bổ sung vòng đời tài khoản, ngân hàng rubric/câu hỏi và quản trị AI.
+- [x] Bổ sung bốn loại bài cùng preview/test và chuẩn hóa bài viết luận.
+- [x] Bổ sung autosave/lịch sử attempt, theo dõi nộp, nhắc nhở và chốt điểm hàng loạt.
+- [x] Bổ sung backlog Phase 2 về join code, cộng tác, ngoại lệ đánh giá và báo cáo nâng cao.
+- [x] Cập nhật persona-story mapping và xác nhận không có Head of Department/Trưởng bộ môn.
+- [x] Chuẩn hóa bài sơ đồ thành canvas Draw.io; lưu XML đầy đủ và chỉ tạo XML rút gọn dẫn xuất khi gửi AI.
+- [x] Làm rõ cấp tài khoản email trường, desktop-first và quyền lựa chọn phương thức chấm của giảng viên.
+- [x] Loại bỏ US-GRD-009 và mọi truy vết liên quan.
+- [x] Bổ sung FR-025/FR-026 và sáu story cho nhóm, leader, phần cá nhân, DOCX chung và chấm hai cấp.
+- [x] Giới hạn quyền nộp DOCX chung ở leader hiện tại và giữ quyết định đổi leader cho giảng viên.
+- [x] Giới hạn AI ở phần cá nhân; bài chung chỉ có luồng giảng viên chấm thủ công và đối chiếu.
+- [x] Loại bỏ US-CAT-004 cùng phạm vi học kỳ/nhân bản lớp và thu hẹp FR-022 còn join code.
+- [x] Hoàn tất kiểm tra traceability, INVEST, Security và Resiliency.
+- [ ] Trình người dùng checkpoint phê duyệt lại User Stories.
