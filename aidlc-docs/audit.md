@@ -567,3 +567,23 @@ giải thích"
 **User Input**: "thế thì tôi muốn lưu bằng gg drive"
 
 **AI Response**: Updated the global ERD to make the organization's Google Shared Drive the file-byte storage provider. Replaced the generic object key in artifacts with storage_provider, provider_file_id, drive_id and original_file_name, while retaining checksum, scan state and derived-artifact lineage. Added the constraint that files remain private and are accessed by backend/worker only after application authorization.
+## 2026-09-14 - Main Business Flow design request
+
+**User Input**: "giúp tôi thiết kê bussiness flow theo mẫu này [attached sample showing Main Business Flow with Trigger, End condition and swimlane diagram]"
+
+**AI Response**: Proposed nine end-to-end business flows covering authentication, academic setup, AI-assisted learning-content generation, assignment publication, learning progress, group organization, individual/shared submission, grading, and payment/access grant. Selected Mermaid flowchart subgraphs as Markdown-compatible swimlanes with trigger, end condition and text alternative for every flow. Created business-flow-design-plan.md and paused for scope approval before generating the diagrams.
+
+## 2026-09-14 - Main Business Flow plan approval and generation
+
+**User Input**: "approve"
+
+**Validated Answer**: Question 1 = A. Generate all nine proposed business flows.
+
+**AI Response**: Generated business-flows.md with nine end-to-end flows. Every flow includes an ID, trigger, end condition, Mermaid swimlane-style diagram and text alternative. The flows reflect the approved role hierarchy, one primary instructor per class, Google Drive artifacts, Redis authentication state, RabbitMQ worker jobs, assignment terminology, individual/shared group submissions, instructor-controlled grading and verified payment access grants.
+## 2026-09-14 - System Functionalities section approval and generation
+
+**User Input**: "approve"
+
+**Approved Design**: Create one Section 5 Markdown document containing Screen Flow, detailed Screen List, External API Inventory and Background Job Inventory based on the supplied SRS template.
+
+**AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
