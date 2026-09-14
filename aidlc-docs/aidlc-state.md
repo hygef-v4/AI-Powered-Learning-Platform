@@ -3,9 +3,9 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
-- **Current Phase**: INCEPTION
-- **Current Stage**: User Stories - Use Case Documentation Complete, Awaiting Approval
-- **Session Status**: Active; full use case specification derived from the current user stories is awaiting explicit approval
+- **Current Phase**: CONSTRUCTION
+- **Current Stage**: CONSTRUCTION - U01 Functional Design Approval
+- **Session Status**: Active; U01 Functional Design artifacts validated and awaiting explicit approval
 
 ## Workspace State
 - **Existing Code**: No
@@ -30,10 +30,10 @@
 ## Stage Progress
 - [x] Workspace Detection
 - [x] Requirements Analysis
-- [ ] User Stories (stories, personas and use case specification complete; awaiting explicit approval)
-- [ ] Workflow Planning (existing execution plan must be revalidated after story approval)
-- [ ] Application Design - EXECUTE
-- [ ] Units Generation - EXECUTE
+- [x] User Stories (stories, personas and use case specification approved)
+- [x] Workflow Planning (revalidated after story/use-case approval)
+- [x] Application Design
+- [x] Units Generation
 - [ ] Functional Design - EXECUTE PER UNIT
 - [ ] NFR Requirements - EXECUTE PER UNIT
 - [ ] NFR Design - EXECUTE PER UNIT
@@ -44,11 +44,12 @@
 
 ## Execution Plan Summary
 
-- **Stages completed**: Workspace Detection, Requirements Analysis
+- **Stages completed**: Workspace Detection, Requirements Analysis, User Stories, Workflow Planning, Application Design, Units Generation
 - **Stages skipped**: Reverse Engineering (greenfield; no application code)
 - **Conditional stages to execute**: Application Design, Units Generation, Functional Design, NFR Requirements, NFR Design, Infrastructure Design
 - **Always stages remaining**: Code Generation per unit, Build and Test
-- **Next stage after approval**: Revalidate Workflow Planning, then request approval before Application Design
+- **Next stage after approval**: U01 Functional Design Part 2 artifact generation
 - **Risk level**: High
 - **Testing complexity**: Complex
-- **Resume action**: Review and approve or revise `aidlc-docs/inception/user-stories/stories.md`, `personas.md` and `use-cases.md`
+- **Current unit**: U01 - Platform Foundation and Identity
+- **Resume action**: Review U01 Functional Design artifacts and choose Request Changes or Continue to Next Stage

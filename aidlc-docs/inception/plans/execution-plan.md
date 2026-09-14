@@ -40,8 +40,8 @@ flowchart TD
         WD["Workspace Detection<br/><b>COMPLETED</b>"]
         RE["Reverse Engineering<br/><b>SKIP</b>"]
         RA["Requirements Analysis<br/><b>COMPLETED</b>"]
-        US["User Stories<br/><b>REVISION READY</b>"]
-        WP["Workflow Planning<br/><b>REVALIDATE</b>"]
+        US["User Stories<br/><b>APPROVED</b>"]
+        WP["Workflow Planning<br/><b>COMPLETED</b>"]
         AD["Application Design<br/><b>EXECUTE</b>"]
         UG["Units Generation<br/><b>EXECUTE</b>"]
     end
@@ -99,8 +99,8 @@ flowchart TD
 1. Workspace Detection - completed.
 2. Reverse Engineering - skipped because the workspace is greenfield.
 3. Requirements Analysis - completed.
-4. User Stories - revision ready, awaiting approval.
-5. Workflow Planning - revalidate after User Stories approval.
+4. User Stories - approved.
+5. Workflow Planning - completed after revalidation.
 6. Application Design - execute.
 7. Units Generation - execute.
 8. For every generated unit: Functional Design, NFR Requirements, NFR Design, Infrastructure Design and Code Generation - execute in that order.
@@ -114,8 +114,8 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [ ] **User Stories - REVISION AWAITING APPROVAL**: Bốn persona và 55 stories đã được cập nhật sau đối chiếu `uc1.pdf` cùng các vòng làm rõ; đang chờ duyệt lại.
-- [ ] **Workflow Planning - REVALIDATE**: Kế hoạch hiện có phải được cập nhật và trình lại sau khi revision User Stories được duyệt.
+- [x] **User Stories - APPROVED**: Bốn persona, 55 stories và use case specification đã được duyệt.
+- [x] **Workflow Planning - COMPLETED**: Kế hoạch được revalidate sau khi User Stories/Use Case được duyệt; Application Design là stage kế tiếp.
 - [ ] **Application Design - EXECUTE**: Cần xác định component/service boundaries, trách nhiệm, methods, dependency và luồng đồng bộ/bất đồng bộ cho một hệ thống mới.
 - [ ] **Units Generation - EXECUTE**: Hệ thống có nhiều domain, data model, API, external adapters và infrastructure concerns; cần phân rã thành units độc lập, có dependency order rõ.
 

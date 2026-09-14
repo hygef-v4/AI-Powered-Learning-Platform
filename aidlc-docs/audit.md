@@ -249,3 +249,321 @@
 **Context**: User Stories revision cycle; added `aidlc-docs/inception/user-stories/use-cases.md` and retained the explicit approval checkpoint before Workflow Planning.
 
 ---
+## Workflow Planning - Approval
+**Timestamp**: 2026-09-13T16:45:00Z
+**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**AI Response**: "Interpreted the request to continue as approval of the current User Stories, personas, use case specification and revalidated execution plan; marked User Stories and Workflow Planning complete and moved the next stage to Application Design."
+**Status**: Approved
+**Context**: INCEPTION - Workflow Planning approval gate
+
+---
+## Application Design - Plan and Questions
+**Timestamp**: 2026-09-13T16:50:00Z
+**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**AI Response**: "Started Application Design planning, created decision questions for component boundaries, asynchronous processing, file/XML storage, AI adapters and frontend/backend contracts. Awaiting answers before generating design artifacts."
+**Context**: INCEPTION - Application Design planning; questions stored in `aidlc-docs/inception/plans/application-design-plan.md`.
+
+---
+## Application Design - Answers and Generation
+**Timestamp**: 2026-09-13T17:10:00Z
+**User Input**: "ok rồi"
+**AI Response**: "Validated all five Application Design answers as complete and consistent (A/A/A/A/A), then generated components, component methods, services/orchestration, dependency/data flow and consolidated design artifacts. Requested explicit review before Units Generation."
+**Context**: INCEPTION - Application Design generation and approval checkpoint.
+
+---
+## Application Design - Approval
+**Timestamp**: 2026-09-13T17:20:00Z
+**User Input**: "approve"
+**AI Response**: "Recorded explicit approval of Application Design, marked the stage complete and started Units Generation Part 1 by creating the Unit of Work planning questions."
+**Status**: Approved
+**Context**: INCEPTION - Transition from Application Design to Units Generation planning.
+
+---
+
+## Units Generation - Next-step Guidance
+**Timestamp**: 2026-09-14T07:13:13Z
+**User Input**: "tiepse tuc ai dlc h can lam nhung gi"
+**AI Response**: "Confirmed that Application Design is approved and the active checkpoint is Units Generation Part 1 Planning. Directed the user to answer the six questions in unit-of-work-plan.md; recommended B/A/A/A/A/A for the current modular-monolith project, after which the answers will be validated and the Unit of Work Plan presented for approval before artifact generation."
+**Context**: INCEPTION - Units Generation Part 1 Planning guidance.
+
+---
+
+## Units Generation - Answer Validation and Clarification
+**Timestamp**: 2026-09-14T07:31:16Z
+**User Input**: "**ok tôi điền xong rồi**"
+**AI Response**: "Validated all six Unit of Work answers. Q1-Q3 are complete and consistent. Detected ambiguity in Q4 about the criteria for sequential versus parallel work and a conflict between Q5 shared worker process and Q6 worker placement inside the backend. Added two targeted clarification questions to unit-of-work-plan.md and paused before the plan approval gate."
+**Context**: INCEPTION - Units Generation Part 1 clarification required.
+
+---
+
+## Units Generation - Parallel Work Options Explanation
+**Timestamp**: 2026-09-14T07:33:56Z
+**User Input**: "**Clarification Question 1 - Quy tắc làm việc song song**
+giải thích từng cái"
+**AI Response**: "Explained options A, B, and C for coordinating a five-person team, including dependency waves and integration gates, persistent unit ownership after contract freeze, and mostly sequential unit delivery with intra-unit parallelism. Recommended option A for this modular-monolith project."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance.
+
+---
+
+## Units Generation - Module Integration Testing Guidance
+**Timestamp**: 2026-09-14T07:36:26Z
+**User Input**: "integration test của mỗi module làm thế nào"
+**AI Response**: "Explained the integration-testing strategy for modules in the Spring Boot modular monolith: test each module through its public application/API contracts with real persistence, verify authorization and owned data, test synchronous contracts and asynchronous events, isolate external providers with controlled adapters, and add wave-level end-to-end integration scenarios. Distinguished module integration tests from unit tests and full-system tests."
+**Context**: INCEPTION - Units Generation planning guidance; no architecture decision changed.
+
+---
+
+## Units Generation - Integration Testing Comparison
+**Timestamp**: 2026-09-14T07:37:38Z
+**User Input**: "integration test của phương án a với b khác gì nhau"
+**AI Response**: "Compared integration testing under option A dependency waves versus option B persistent unit ownership. Clarified that both use the same test technology, while A integrates and gates complete dependency waves using shared cross-module scenarios, whereas B relies more heavily on early contract tests, owner-maintained module suites, and later continuous integration across independently progressing units."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
+
+---
+
+## Units Generation - Option A Team Allocation Example
+**Timestamp**: 2026-09-14T07:39:14Z
+**User Input**: "ví dụ chọn a thì chia như thế nào"
+**AI Response**: "Provided a concrete dependency-wave allocation example for a five-person team across Foundation, academic/content, assessment/submission, grading/AI/group, and supporting/reporting capabilities, including per-wave integration gates and rotating ownership."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
+
+---
+
+## Units Generation - Worker Placement Explanation
+**Timestamp**: 2026-09-14T07:41:51Z
+**User Input**: "**Clarification Question 2 - Vị trí và cách chạy worker**
+Với lựa chọn worker dùng chung ở Q5 và cấu trúc không có thư mục /worker riêng ở Q6, worker nên được tổ chức và chạy thế nào?
+
+A) Mã worker nằm trong /backend, dùng chung domain/application contracts, nhưng chạy thành process/container riêng với API (Khuyến nghị)
+
+B) Mã worker nằm trong /backend và chạy ngay trong cùng Spring Boot process với REST API
+
+C) Tạo project /worker riêng và chạy thành process/container riêng
+
+X) Other (mô tả sau [Answer]:)
+
+[Answer](https://file+.vscode-resource.vscode-cdn.net/f:/code/git/AI-Powered-Learning-Platform/aidlc-docs/inception/plans/b):
+giải thích worker là gì a với b khacsn hau như nào"
+**AI Response**: "Explained that a worker processes queued long-running/background jobs such as RAG ingestion, AI grading, Code Lab, notifications, exports, and reconciliation. Compared option A, where worker code remains in backend but runs as a separate process/container, with option B, where job handlers execute inside the REST API process. Recommended A for fault isolation and independent scaling while retaining one backend codebase."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
+
+---
+
+## Units Generation - Separate Worker Project Explanation
+**Timestamp**: 2026-09-14T07:45:16Z
+**User Input**: "C) Tạo project /worker riêng và chạy thành process/container riêng
+thì sao"
+**AI Response**: "Explained option C as a top-level worker application with its own build, dependencies, container, configuration, and deployment lifecycle. Compared it with option A: both isolate runtime failures and scaling, but A shares backend domain/application code directly, while C must integrate through versioned job/event/API contracts and introduces duplication and contract-management overhead. Recommended A for the current five-person modular-monolith project, with C reserved for substantially different worker technology or an independent team/lifecycle."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
+
+---
+
+## Units Generation - Infrastructure Organization Explanation
+**Timestamp**: 2026-09-14T07:46:30Z
+**User Input**: "nếu tách worker rồi thì cần tách infra ko, infra là gì"
+**AI Response**: "Explained that infrastructure is the configuration used to run and connect frontend, API, worker, database, queue, object storage, networking, secrets, monitoring, and deployment environments. Clarified that separating worker does not technically require a top-level infra project, but centralized /infra is recommended when backend and worker are separate deployables so shared runtime configuration is not duplicated."
+**Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
+
+---
+
+## Units Generation - Clarification Validation and Plan Approval Prompt
+**Timestamp**: 2026-09-14T07:48:33Z
+**User Input**: "ok tôi trả lời xong rồi"
+**AI Response**: "Validated Clarification 1A and Clarification 2C. Established dependency-wave delivery with integration gates for the five-person team and a separate top-level worker project/process/container. Treated Clarification 2C as superseding the original Q6B choice, making the effective monorepo structure /frontend, /backend, /worker, /infra. Marked all substantive Part 1 planning steps complete and presented the required approval prompt: Unit of work plan complete. Review the plan in aidlc-docs/inception/plans/unit-of-work-plan.md. Ready to proceed to generation?"
+**Context**: INCEPTION - Units Generation Part 1 approval gate.
+
+---
+
+## Units Generation - Plan Approval
+**Timestamp**: 2026-09-14T07:50:14Z
+**User Input**: "ok"
+**AI Response**: "Interpreted the unambiguous response as approval of the Unit of Work Plan, marked Part 1 approved, and started Units Generation Part 2 artifact generation."
+**Status**: Approved
+**Context**: INCEPTION - Transition from Units Generation Part 1 to Part 2.
+
+---
+
+## Units Generation - Artifact Generation and Approval Prompt
+**Timestamp**: 2026-09-14T07:56:29Z
+**User Input**: "ok"
+**AI Response**: "Generated eight logical units, an acyclic dependency matrix and critical path, and a one-owner story map covering exactly 55 stories (44 MVP and 11 Phase 2). Documented the effective monorepo structure /frontend, /backend, /worker, /infra, /contracts; worker ownership; dependency waves; integration gates; and stage-level Security/Resiliency compliance. Presented the Units Generation review checkpoint with Request Changes and Approve & Continue options."
+**Context**: INCEPTION - Units Generation completion checkpoint; awaiting explicit artifact approval.
+
+---
+
+## Units Generation - Database and API Contract Stage Guidance
+**Timestamp**: 2026-09-14T07:58:51Z
+**User Input**: "khi nào đến bước thiết kế database, api constract?"
+**AI Response**: "Explained that after Units Generation approval, Construction proceeds per unit. Functional Design defines domain entities, relationships, business constraints, data flow, and API integration needs; NFR Design refines technical/security/performance contract constraints; Infrastructure Design selects and configures physical persistence/runtime services; Code Generation materializes database migrations and executable OpenAPI/job/event schemas. Clarified that high-level API methods and boundaries already exist in Application Design, while detailed endpoint/DTO/error contracts are finalized per unit before implementation."
+**Context**: INCEPTION - Units Generation approval checkpoint guidance; no stage transition.
+
+---
+
+## Units Generation - Shared Contracts Directory Explanation
+**Timestamp**: 2026-09-14T08:03:39Z
+**User Input**: "/contracts: OpenAPI, job/event schemas và compatibility tests dùng chung giữa backend, frontend và worker.
+giải thích tại sao lại tách constract ra"
+**AI Response**: "Explained that /contracts is a shared source of truth for communication formats among independently built frontend, backend, and worker deployables. Separating schemas prevents DTO duplication and drift, enables client/model generation and compatibility checks without importing backend implementation, and supports independent releases. Clarified that contracts contain interface schemas only, not business logic, and that a separate top-level directory is recommended rather than mandatory; it is particularly useful because the selected worker is a separate project."
+**Context**: INCEPTION - Units Generation artifact explanation; no artifact change requested.
+
+---
+
+## Units Generation - Contract Code Usage Explanation
+**Timestamp**: 2026-09-14T08:09:17Z
+**User Input**: "trong code constract có thể sự dụng hay chỉ đọc thôi"
+**AI Response**: "Clarified that contracts are executable build/runtime inputs, not read-only documentation: OpenAPI can generate frontend clients and backend interfaces/models; JSON Schema or equivalent can generate/validate worker job and event models; compatibility tests enforce producer-consumer agreement. Distinguished editable source schemas from generated code, which should be regenerated rather than manually edited, and reiterated that business logic must remain in backend/worker modules."
+**Context**: INCEPTION - Units Generation artifact explanation; no artifact change requested.
+
+---
+
+## Units Generation - Frontend Contract Security Explanation
+**Timestamp**: 2026-09-14T08:11:45Z
+**User Input**: "để frontend truy cập constract thì có sợ lộ api, vấn đề security ko"
+**AI Response**: "Explained that browser-facing endpoint names and request formats are inherently discoverable and must not be treated as secrets. Recommended generating a frontend client from a public-facing OpenAPI subset without shipping internal worker/admin schemas or secrets, keeping the full contract in the repository/build pipeline, restricting production API documentation UI, and enforcing authentication, object/function authorization, validation, TLS, CORS/CSRF, rate limiting, and safe errors on the backend."
+**Context**: INCEPTION - Units Generation security guidance; no artifact change requested.
+
+---
+
+## Units Generation - Frontend to Worker Communication Guidance
+**Timestamp**: 2026-09-14T08:14:19Z
+**User Input**: "frontend có nên gọi worker server k hay backend gọi"
+**AI Response**: "Recommended that the frontend never call the worker directly. The frontend should submit commands and poll/subscribe to job status through the backend; the backend authenticates and authorizes the actor, persists the business request, and publishes a versioned job for the worker. The worker uses a scoped machine identity to fetch inputs and publish results. Identified direct signed upload to object storage as a controlled exception that still requires backend-issued authorization, not a worker call."
+**Context**: INCEPTION - Units Generation trust-boundary guidance; no artifact change requested.
+
+---
+
+## Units Generation - Approval and Construction Transition
+**Timestamp**: 2026-09-14T08:28:52Z
+**User Input**: "ok tipes tục"
+**AI Response**: "Interpreted the response as Approve & Continue for the reviewed Units Generation artifacts. Marked Units Generation complete, transitioned from INCEPTION to CONSTRUCTION, selected U01 Platform Foundation and Identity as the first unit, and created its Functional Design Plan with ten questions covering account provisioning, activation, role combinations, admin bootstrap, sessions, school-email domains, file scanning, backend-worker interaction, audit detail, and contract governance. Added database-design.md and api-contract.md to the planned Functional Design artifacts as requested by the user."
+**Status**: Approved
+**Context**: Units Generation approval; transition to CONSTRUCTION - U01 Functional Design Part 1 Planning.
+
+---
+
+## Construction - Global Database Design Guidance
+**Timestamp**: 2026-09-14T08:33:22Z
+**User Input**: "có cách nào thiết kế database tổng quát trc ko để vẽ doc nộp trc"
+**AI Response**: "Confirmed that a cross-unit Global Database Design can be inserted before per-unit Functional Design as a supplementary architecture artifact. Recommended a conceptual/logical ERD containing core entities, cardinalities, module ownership, lifecycle/versioning, and key constraints, while deferring detailed columns, indexes, migrations, and physical tuning to per-unit Functional/NFR/Infrastructure Design. Proposed producing a database overview document, data dictionary, and editable Draw.io ERD for submission."
+**Context**: CONSTRUCTION - U01 Functional Design planning guidance; no workflow change applied yet.
+
+---
+
+## U01 Functional Design - Backend/Worker Exchange Options Explanation
+**Timestamp**: 2026-09-14T08:40:03Z
+**User Input**: "**Question 8 - Backend và worker trao đổi kết quả**
+Với worker là project/process riêng, luồng trao đổi nên dùng cách nào?
+
+A) Backend phát versioned job qua queue; worker dùng scoped internal API/artifact access để lấy input và phát result event qua queue (Khuyến nghị)
+
+B) Backend phát job qua queue; worker đọc/ghi trực tiếp các bảng job và nghiệp vụ trong database chung
+
+C) Backend gọi HTTP worker và worker callback HTTP về backend
+
+X) Other (mô tả sau [Answer]:)
+
+[Answer](https://file+.vscode-resource.vscode-cdn.net/f:/code/git/AI-Powered-Learning-Platform/aidlc-docs/construction/plans/a):
+giải thích"
+**AI Response**: "Explained options A, B, and C using an AI-grading job. A uses durable versioned queue messages, scoped internal data/artifact access, and result events while backend remains the business-state owner. B lets worker access shared business tables directly, reducing initial code but causing schema coupling, duplicated rules, excessive database permissions, and unsafe ownership. C uses HTTP request/callback, which is simpler to observe but creates availability coupling and requires callback security, retries, and idempotency. Recommended A."
+**Context**: CONSTRUCTION - U01 Functional Design Part 1 question guidance; no answer changed.
+
+---
+
+## U01 Functional Design - Answer Validation and Clarification
+**Timestamp**: 2026-09-14T08:41:47Z
+**User Input**: "ok xong r"
+**AI Response**: "Validated all ten original U01 Functional Design answers. Eight answers are complete and consistent. Detected ambiguity in Q4B about whether a fixed administrator seed includes hardcoded credentials, which would violate SECURITY-09/12, and a contradiction between Q7C and the approved Malware Scan Port/quarantine design. Added two targeted clarification questions to the U01 plan and paused before Functional Design generation."
+**Context**: CONSTRUCTION - U01 Functional Design Part 1 clarification required.
+
+---
+
+## U01 Functional Design - Clarification Round 1 Validation
+**Timestamp**: 2026-09-14T08:47:28Z
+**User Input**: "xong r"
+**AI Response**: "Validated both clarification answers. Clarification 1B explicitly selects a fixed default administrator password in a database migration, creating a blocking SECURITY-09/12 finding. Clarification 2B makes file upload unavailable until a real scanner exists, which remains ambiguous against the approved MVP upload, RAG, Draw.io XML, and shared DOCX scope. Added a second clarification round with safe bootstrap alternatives and an explicit scanner/upload scope decision; paused before approval."
+**Context**: CONSTRUCTION - U01 Functional Design Part 1 clarification round 2 required.
+
+---
+
+## U01 Functional Design - Clarification Round 2 Validation and Approval Prompt
+**Timestamp**: 2026-09-14T08:50:32Z
+**User Input**: "ok"
+**AI Response**: "Validated Clarification Round 2 answers A/A. Replaced the earlier insecure fixed-password choice with migration-seeded identity/role/status plus activation-link password setup, and made a real malware scanner a required MVP component with quarantine until scan success. Confirmed all twelve answers are complete and consistent, cleared the SECURITY-09/12 blocking finding, and presented the U01 Functional Design Plan approval checkpoint."
+**Context**: CONSTRUCTION - U01 Functional Design Part 1 approval gate.
+
+---
+
+## U01 Functional Design - Plan Approval
+**Timestamp**: 2026-09-14T08:52:53Z
+**User Input**: "approve"
+**AI Response**: "Recorded explicit approval of the U01 Functional Design Plan, marked Part 1 approved, and started Part 2 generation for business logic, rules, entities, logical database design, API contract, frontend components, and foundation contracts."
+**Status**: Approved
+**Context**: CONSTRUCTION - U01 Functional Design Part 2 generation.
+
+---
+
+## U01 Functional Design - Generation Complete and Approval Prompt
+**Timestamp**: 2026-09-14T08:59:57Z
+**User Input**: "approve"
+**AI Response**: "Generated all seven approved U01 Functional Design artifacts: business logic, 42 business rules plus extension compliance, domain entities, logical database design, API contract, frontend components, and foundation contracts. Validated artifact presence, all eight U01 story references, answer completeness, key security/resiliency decisions, Markdown fences, and diff formatting. Presented the standardized Functional Design U01 review checkpoint with Request Changes and Continue to Next Stage options."
+**Context**: CONSTRUCTION - U01 Functional Design completion checkpoint; awaiting explicit approval.
+
+---
+
+## Global Database Design - ERD Request and Design Proposal
+**Timestamp**: 2026-09-14T09:13:41Z
+**User Input**: "thiết kế erd database tổng quan dựa theo mẫu này , để tôi thêm vào doc cho thầy duyệt\n[Attached image showing a Conceptual Data Model template with a Crow-Foot ERD and per-entity descriptions]"
+**AI Response**: "Classified the request as an architectural documentation addition. Proposed a Word-ready conceptual ERD using Crow-Foot notation and business-verb relationship labels, organized by the eight approved units, with only key business attributes. Proposed deliverables are an editable Draw.io source, exported PNG and SVG, and a Markdown entity-description section matching the supplied template. Paused for design approval before generating the artifacts."
+**Context**: CONSTRUCTION - supplementary Global Database Design proposal; current U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Global Database Design - ERD Approval
+**Timestamp**: 2026-09-14T09:17:52Z
+**User Input**: "approve"
+**AI Response**: "Recorded approval of the proposed Word-ready conceptual database package and started generation of an editable Crow-Foot Draw.io ERD, high-resolution PNG/SVG exports, and entity descriptions matching the supplied document template."
+**Status**: Approved
+**Context**: Supplementary Global Database Design generation; U01 Functional Design approval checkpoint remains pending.
+
+---
+
+## Global Database Design - Markdown-only Consolidation Change
+**Timestamp**: 2026-09-14T09:29:47Z
+**User Input**: "chỉ cần viết detail database erd ra file md thôi k cần gen file vẽ, với bảng nào gộp được thì cứ gộp k cần phải phân nhỏ ra, ví dụ bảng account với password thì nên gộp làm 1 bảng account thôi"
+**AI Response**: "Stopped the image/Draw.io deliverable, removed the generated Draw.io, PNG, and SVG files, and replaced the earlier conceptual description with one detailed Markdown database ERD. Consolidated account/password, role/scope, auth tokens, class memberships, learning resources, bank items, assessment versions, submission attempts, grade proposals/final grades, and AI requests/jobs where history and invariants remain safe. Retained separate history, artifact, group-allocation, payment/entitlement, and audit tables where separation is required."
+**Context**: Supplementary Global Database Design revised to Markdown-only output; U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Units Generation - Why Contracts Are Still Required
+**Timestamp**: 2026-09-14T08:16:42Z
+**User Input**: "nếu fe chỉ gọi backend , backend chỉ gọi worker thì tại sao phải thêm contract"
+**AI Response**: "Clarified that each communication edge needs its own contract: frontend-backend uses a Web API/OpenAPI contract, while backend-worker uses a job/event schema. The frontend does not consume worker contracts. Explicit contracts prevent independently compiled projects from silently drifting, enable generated clients/models and compatibility tests, and remain necessary even when communication is indirect. Also clarified that a top-level /contracts directory is an organizational recommendation, not a technical requirement; schemas could be colocated with their producer if ownership and automated synchronization remain clear."
+**Context**: INCEPTION - Units Generation contract-boundary explanation; no artifact change requested.
+
+---
+## 2026-09-14 - Global ERD simplification clarification
+
+**User Input**: "gộp role vào account, subject manager có thể có các chức năng của giảng viên, bỏ bảng session được k, class memberships có thể bỏ memebership_role, artifact với learning_resources khác gì nhau, assessment với grade history khác j nhau, bỏ lưu background job có được k, entitlements đổi tên được k"
+
+**AI Response**: Analyzed the requested ERD simplifications. Recommended a single hierarchical role on accounts, retaining the distinction between file artifacts and business learning resources, retaining assessment definitions separately from immutable grade history, renaming entitlements to access_grants, and omitting background_jobs from the conceptual business ERD only when durable queue infrastructure owns job state. Identified instructor-to-class cardinality as the remaining ambiguity before removing membership_role and created erd-simplification-questions.md.
+
+## 2026-09-14 - Global ERD simplification applied
+
+**User Input**: "role code là gì, giử session trong redis được k, k cần lưu qua db đúng k, đổi assessment thành assignment đc k, bỏ background job lưu trong rabbitmq\nok tôi trả lời câu hỏi rồi với sửa theo plan với note của tôi, nhớ thêm description vào các entity"
+
+**Validated Answer**: Question 1 = A. Each class has exactly one primary instructor; learner membership becomes enrollment.
+
+**AI Response**: Updated the global database ERD to store role_code in accounts with hierarchical Subject Manager behavior, assign one subject manager per subject and one primary instructor per class, replace class_memberships with learner-only enrollments, rename assessment entities to assignment entities, rename entitlements to access_grants, remove relational sessions and background_jobs, and document Redis session state plus RabbitMQ job state outside PostgreSQL. Added or normalized a Description for every entity and removed the answered temporary question file.
+
+## 2026-09-14 - Redis temporary-state refinement
+
+**User Input**: "thế thì lưu otp trong redis , còn gì lưu tạm thời nữa k để lưu trong redis"
+
+**AI Response**: Renamed accounts.role_code to accounts.role, removed auth_tokens from the relational ERD, and documented Redis ownership of hashed OTPs, refresh sessions, attempt/rate-limit counters, short-lived cache and temporary distributed locks. Added TTL, deletion, revocation and source-of-truth constraints; RabbitMQ remains responsible for temporary background-job delivery.
+
+## 2026-09-14 - Google Drive selected for file storage
+
+**User Input**: "thế thì tôi muốn lưu bằng gg drive"
+
+**AI Response**: Updated the global ERD to make the organization's Google Shared Drive the file-byte storage provider. Replaced the generic object key in artifacts with storage_provider, provider_file_id, drive_id and original_file_name, while retaining checksum, scan state and derived-artifact lineage. Added the constraint that files remain private and are accessed by backend/worker only after application authorization.
