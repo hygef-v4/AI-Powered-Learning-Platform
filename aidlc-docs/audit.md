@@ -587,3 +587,20 @@ giải thích"
 **Approved Design**: Create one Section 5 Markdown document containing Screen Flow, detailed Screen List, External API Inventory and Background Job Inventory based on the supplied SRS template.
 
 **AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
+---
+
+## Main Business Flows - Draw.io Generation Request
+**Timestamp**: 2026-09-14T03:03:25Z
+**User Input**: "Vẽ đủ 9 sơ đồ draw\.io  "
+**AI Response**: "Started generating nine editable swimlane diagrams for BF-01 through BF-09 as supplementary inception documentation. This does not advance or bypass the pending User Stories approval gate."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation
+
+---
+
+## Main Business Flows - Draw.io Generation Complete
+**Timestamp**: 2026-09-14T03:13:10Z
+**User Input**: "Vẽ đủ 9 sơ đồ draw\.io  "
+**AI Response**: "Generated one nine-page draw.io file, nine individual editable draw.io files, a text alternative/index and nine PNG exports. Validated XML structure, page count, node/edge references and node geometry, then visually reviewed every flow preview. The User Stories approval gate remains unchanged."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation complete
+
+---
