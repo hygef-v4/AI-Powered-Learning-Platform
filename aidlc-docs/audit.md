@@ -587,3 +587,110 @@ giải thích"
 **Approved Design**: Create one Section 5 Markdown document containing Screen Flow, detailed Screen List, External API Inventory and Background Job Inventory based on the supplied SRS template.
 
 **AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
+
+---
+
+## User Case Review and Reformat Request
+**Timestamp**: 2026-09-14T13:52:30Z
+**User Input**: "giúp tô đọc lại user-cases.md xem đủ tính năng chưa với tôi muốn viết lại theo format kiểu này , usecase cũng chia nhỏ theo kiểu này\n[Attached images showing a Use Cases table with columns ID, Use Case, Feature, and Use Case Description, where operations such as sign in, sign out, view profile, update profile, and individual class-management actions are separate rows.]"
+**AI Response**: "Resumed the existing AI-DLC project, classified the documentation change as bounded, and started reviewing use-cases.md against approved requirements, user stories, business flows, and the system functionality inventory. No use-case artifact changes will be made until the proposed table structure and granularity are explicitly approved."
+**Context**: Supplementary review and reformatting of the approved use-case specification; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Reformat - Review Findings and Approval Prompt
+**Timestamp**: 2026-09-14T13:54:07Z
+**User Input**: "N/A - approval checkpoint generated from the user's preceding request."
+**AI Response**: "Reported that use-cases.md covers all 55 approved user stories but only through 37 coarse-grained use cases, so it is not complete at the atomic action level shown in the reference. Identified merged authentication, profile, account, academic structure, enrollment, content, group, assignment, grading, reporting, payment and notification actions; missing explicit view/list/status actions; omission of Admin from shared authentication/profile actors; and a stale multi-role statement that conflicts with the latest single highest-role hierarchy in global-database-erd.md. Proposed replacing the coarse detailed-use-case section with feature-grouped four-column tables (ID, Use Case, Feature, Use Case Description), splitting each user-visible goal into one row, marking Phase 2 rows, retaining actor/business-rule and user-story traceability appendices, and aligning the document with the latest approved role, Google Drive, Redis and RabbitMQ decisions. Asked the user to reply 'approve' before the file is modified."
+**Context**: Supplementary use-case reformat design approval checkpoint; no use-case file changes made.
+
+---
+
+## Use Case Reformat - Design Approval
+**Timestamp**: 2026-09-14T13:55:30Z
+**User Input**: "ok giúp tôi sửa"
+**AI Response**: "Recorded explicit approval of the proposed atomic four-column use-case format and started rewriting use-cases.md while preserving approved MVP/Phase 2 scope and traceability."
+**Status**: Approved
+**Context**: Supplementary use-case reformat implementation; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Reformat - Implementation Complete
+**Timestamp**: 2026-09-14T14:05:11Z
+**User Input**: "N/A - implementation continued from the approved request."
+**AI Response**: "Rewrote use-cases.md as twelve feature-grouped tables using the approved ID, Use Case, Feature and Use Case Description columns. Split 37 coarse use cases into 160 unique atomic use cases; aligned actors and rules with the latest single highest-role hierarchy, Subject Manager inheritance, Google Drive, Redis and RabbitMQ decisions; retained explicit Phase 2 labels and embedded user-story traceability. Verification found 160/160 unique use-case IDs, references to all 55/55 user stories with no unknown IDs, all eleven Phase 2 source stories correctly labeled, consistent Markdown table structure, no placeholders and a clean git diff whitespace check."
+**Context**: Supplementary use-case review and reformat completed; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Actor Column - Approved Change
+**Timestamp**: 2026-09-14T14:08:38Z
+**User Input**: "bảng usecase thiếu actor bổ sung đi"
+**AI Response**: "Classified the request as a bounded documentation correction and treated the explicit instruction as approval to add an Actor column. Started updating every use-case table to the format ID, Actor, Use Case, Feature and Use Case Description, with actors assigned per individual action."
+**Status**: Approved
+**Context**: Supplementary use-case table correction; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Actor Column - Change Complete
+**Timestamp**: 2026-09-14T14:12:08Z
+**User Input**: "N/A - implementation continued from the approved correction request."
+**AI Response**: "Added an Actor column to all twelve feature-grouped use-case tables and populated every one of the 160 atomic use cases with its applicable user, system or external-service actor. Verification confirmed 160 rows, twelve Actor headers, zero missing actors, zero malformed rows, 160 unique IDs, 55/55 user-story coverage and a clean diff whitespace check."
+**Context**: Supplementary use-case Actor correction completed; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Consolidation - Review Request and Design Proposal
+**Timestamp**: 2026-09-14T14:21:06Z
+**User Input**: "những usecase nào có thể gộp được, mấy cái bản nháp có thể goppj được hay rút gọn gì k, mấy cái use case có actor hệ thống thì k cần cho vào, nhận thông báo thì actor là người dùng thôi, xem trạng thái tác vụ nền k cần, các usecase tìm kiếm k tính là use case\n[Attached screenshots highlighting UC-GRP-15/16, UC-QBK-11, UC-AIG-01 through UC-AIG-04, UC-PAY-04 and UC-OPS-02.]"
+**AI Response**: "Classified the request as a bounded documentation consolidation. Reviewed the catalogue using business-goal granularity and proposed removing system-only, background-status, search and filter rows; changing notification receipt to a user actor; merging AI draft view/edit/accept/discard into the two scope-specific draft-generation use cases; merging AI administration actions; and consolidating related view/detail, lifecycle, group grading, assignment authoring/submission and grading steps. Paused for explicit approval before renumbering and rewriting the catalogue."
+**Context**: Supplementary use-case consolidation design checkpoint; no consolidation changes made yet.
+
+---
+
+## Use Case Consolidation - Design Approval
+**Timestamp**: 2026-09-14T14:23:00Z
+**User Input**: "ok"
+**AI Response**: "Recorded approval to consolidate the use-case catalogue at business-goal granularity, remove system-only/search/filter/background-status rows, merge AI draft steps and related supporting actions, change notification receipt to a user actor, and renumber the remaining use cases while preserving all approved feature traceability."
+**Status**: Approved
+**Context**: Supplementary use-case consolidation implementation; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Use Case Consolidation - Implementation Complete
+**Timestamp**: 2026-09-14T14:28:45Z
+**User Input**: "N/A - implementation continued from the approved consolidation request."
+**AI Response**: "Reduced the catalogue from 160 atomic UI-level rows to 86 business-goal use cases. Removed standalone system/service actors, search/filter use cases and background-task status; folded automatic grading and payment access-grant processing into user-driven flows; changed notification to the User actor; consolidated AI draft lifecycle, AI administration, group grading, account/class lifecycle, assignment submission and grading steps. Verification confirmed 86 unique use cases, no missing actors, no system/service actors, no search/filter/background-status titles, all twelve table headers valid and 55/55 user-story coverage."
+**Context**: Supplementary use-case consolidation completed; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## External Actors Restored to Actor Catalogue
+**Timestamp**: 2026-09-14T14:30:13Z
+**User Input**: "phần tác nhân này thì có hệ thống bên ngoài như lúc nãy\n[Attached screenshot showing the actor table with only ACT-01 through ACT-04 and the note about supporting systems.]"
+**AI Response**: "Restored five external actors to the Actor section: AI Service, Google Drive, Payment Gateway, Notification Service and Code Sandbox. Clarified that external systems participate in business flows and belong in the actor catalogue, while system-only internal processing still does not receive standalone use-case rows."
+**Context**: Supplementary use-case actor catalogue correction; use-case table scope remains unchanged.
+
+---
+
+## Group Submission Use Case Renamed
+**Timestamp**: 2026-09-14T14:31:58Z
+**User Input**: "Nộp DOCX chung đổi thành nộp bài tập nhóm chung"
+**AI Response**: "Renamed UC-GRP-07 from Nộp DOCX chung to Nộp bài tập nhóm chung. Retained DOCX in the description as the approved submission format."
+**Context**: Supplementary terminology correction in the use-case catalogue.
+
+---
+
+## UML Assignment Authoring Use Case Renamed
+**Timestamp**: 2026-09-14T14:36:04Z
+**User Input**: "Soạn bài [Draw.io](http://draw.io/)\nđổi thành soạn bài thực hành vẽ uml đi"
+**AI Response**: "Renamed UC-ASM-04 from Soạn bài Draw.io to Soạn bài thực hành vẽ UML. Kept Draw.io in the description as the authoring tool and XML as the technical submission format."
+**Context**: Supplementary terminology correction in the use-case catalogue.
+
+---
+
+## UML Submission Rename and AI Authoring Rename Proposal
+**Timestamp**: 2026-09-14T14:38:51Z
+**User Input**: "Làm và nộp bài [Draw.io](http://draw.io/)\ncái này cx thế, với laij 2 use case này có  thể đổi tên là gì bỏ chữ bản nháp được ko Điểm khác\tUC-AIG-01\tUC-AIG-02\nActor\tGiảng viên\tChủ nhiệm môn\nNguồn dữ liệu\tNội dung của lớp được phân công\tKho RAG chung của môn\nLoại assignment\tAssignment riêng của lớp\tAssignment chung cấp môn\nNơi phát hành\tMột lớp cụ thể\tTất cả lớp hiện hành thuộc môn\n\nTuy nhiên, ở mức danh mục use case thì hai mục này khá giống nhau và có thể gộp thành:\n**Actor:** Giảng viên / Chủ nhiệm môn\n**Use Case:** Tạo và duyệt bản nháp assignment bằng AI\n**Description:** Cho phép giảng viên tạo bản nháp từ nội dung lớp hoặc Chủ nhiệm môn tạo bản nháp từ RAG cấp môn; người dùng xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành."
+**AI Response**: "Renamed UC-ASM-12 to Làm và nộp bài thực hành vẽ UML while retaining Draw.io and XML in its description. Recommended renaming UC-AIG-01 to Soạn assignment cấp lớp với AI hỗ trợ and UC-AIG-02 to Soạn assignment chung cấp môn với AI hỗ trợ, removing bản nháp from the use-case names while preserving draft-only behavior in the descriptions. Paused for approval before changing the AI use-case names."
+**Context**: Supplementary terminology update and bounded AI authoring rename proposal.

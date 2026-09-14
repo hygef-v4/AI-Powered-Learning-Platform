@@ -1,430 +1,213 @@
-# Đặc tả Use Case - AI-Powered Learning Platform
+# Danh mục Use Case - AI-Powered Learning Platform
 
 ## 1. Mục đích
 
-Tài liệu chuyển hóa toàn bộ 55 user story hiện tại thành các use case nghiệp vụ phục vụ thiết kế, kiểm thử và nghiệm thu. Hệ thống là ứng dụng web, người học chủ yếu sử dụng máy tính để bàn/laptop. Không có vai trò Head of Department/Trưởng bộ môn.
+Tài liệu liệt kê các use case theo mục tiêu nghiệp vụ của người dùng để phục vụ thiết kế, kiểm thử và nghiệm thu. Các thao tác hỗ trợ như tìm kiếm, lọc, xem trạng thái tác vụ nền, retry và xử lý tự động không được tách thành use case riêng mà được mô tả trong use case nghiệp vụ liên quan.
+
+Danh mục bao phủ toàn bộ 55 user story đã được duyệt. Chức năng chưa thuộc MVP được đánh dấu `(Phase 2)`.
 
 ## 2. Tác nhân
 
 | Mã | Tác nhân | Trách nhiệm |
 |---|---|---|
-| ACT-01 | Người học | Học, làm/nộp bài cá nhân, tham gia bài nhóm, thanh toán và xem kết quả của mình |
-| ACT-02 | Giảng viên | Quản lý lớp, nhóm, giao bài, chọn cách chấm và quyết định điểm cuối |
-| ACT-03 | Chủ nhiệm môn | Quản lý học liệu, ngân hàng và đề chung trong một hoặc nhiều môn được giao |
-| ACT-04 | Quản trị viên | Quản lý tài khoản, quyền, cấu trúc học thuật, AI, thanh toán và audit |
-| EXT-01 | Dịch vụ AI | Tạo nội dung nháp/đề xuất chấm; không tự công bố điểm |
-| EXT-02 | Cổng thanh toán | Xử lý giao dịch và gửi callback đã xác thực |
-| EXT-03 | Dịch vụ thông báo | Gửi email/thông báo thiết yếu |
-
-## 3. Quy ước chung
-
-- Mọi quyền được kiểm tra phía server ở cả mức chức năng và đối tượng.
-- Tài khoản người học/giảng viên do trường cấp và đăng nhập bằng email trường; không đăng ký công khai.
-- Một người có thể có nhiều role nhưng chỉ thao tác trong phạm vi môn/lớp được gán.
-- AI chỉ tạo bản nháp hoặc đề xuất. Con người duyệt nội dung; giảng viên quyết định điểm cuối.
-- Bài Draw.io được vẽ trên canvas web. XML đầy đủ là bản nộp chính thức, lưu nguyên vẹn và hiển thị cho giảng viên. XML rút gọn chỉ được tạo làm dữ liệu dẫn xuất khi giảng viên chọn nhờ AI chấm.
-- Thao tác nhạy cảm phải có audit bất biến.
-
-## 4. Use case chi tiết
-
-### UC-IAM-01 - Kích hoạt, đăng nhập và đăng xuất
-
-- **Tác nhân**: Người học, Giảng viên, Chủ nhiệm môn.
-- **Mục tiêu**: Truy cập hệ thống bằng tài khoản trường cấp một cách an toàn.
-- **Tiền điều kiện**: Tài khoản tồn tại, có email trường hợp lệ, chưa bị vô hiệu hóa.
-- **Luồng chính**: (1) Người dùng mở liên kết kích hoạt còn hạn và đặt mật khẩu; (2) nhập email trường/mật khẩu; (3) hệ thống kiểm tra thông tin, trạng thái và chống brute-force; (4) tạo phiên và chuyển đến màn hình theo quyền; (5) khi đăng xuất, hệ thống thu hồi phiên.
-- **Ngoại lệ**: Link hết hạn/đã dùng được từ chối và có thể cấp lại; sai thông tin trả lỗi trung tính; tài khoản khóa không tạo phiên.
-- **Hậu điều kiện**: Phiên hợp lệ được tạo hoặc thu hồi; sự kiện cần thiết được audit.
-- **Truy vết**: US-IAM-001, US-IAM-002.
-
-### UC-IAM-02 - Khôi phục và đổi mật khẩu
-
-- **Tác nhân**: Người học, Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Đổi mật khẩu cần phiên hợp lệ; khôi phục cho phép nhập email công khai.
-- **Luồng chính**: Gửi yêu cầu; hệ thống phản hồi trung tính, gửi token một lần nếu hợp lệ; người dùng đặt mật khẩu đạt chính sách; hệ thống lưu an toàn và thu hồi phiên cần thiết.
-- **Ngoại lệ**: Token sai/hết hạn/đã dùng hoặc yêu cầu quá tần suất bị từ chối.
-- **Hậu điều kiện**: Mật khẩu mới có hiệu lực và có audit.
-- **Truy vết**: US-IAM-003, US-IAM-006.
-
-### UC-IAM-03 - Quản lý hồ sơ
-
-- **Tác nhân**: Người học, Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Đã đăng nhập.
-- **Luồng chính**: Mở hồ sơ, sửa trường được phép, hệ thống validate và lưu.
-- **Ngoại lệ**: Không cho tự sửa email định danh, role hoặc trường đặc quyền; dữ liệu sai không thay thế dữ liệu cũ.
-- **Hậu điều kiện**: Hồ sơ hợp lệ được cập nhật.
-- **Truy vết**: US-IAM-004.
-
-### UC-IAM-04 - Quản lý vai trò, phạm vi và tài khoản
-
-- **Tác nhân**: Quản trị viên.
-- **Tiền điều kiện**: Có quyền quản trị và xác thực phù hợp.
-- **Luồng chính**: Tìm tài khoản; gán/gỡ role hoặc phạm vi môn; khóa/mở/vô hiệu hóa; hệ thống kiểm tra chống leo quyền; xác nhận và ghi thay đổi trước/sau.
-- **Ngoại lệ**: Tự leo quyền, gán môn ngoài phạm vi, xóa quyền bảo vệ cuối cùng hoặc sửa audit bị từ chối.
-- **Hậu điều kiện**: Quyền/trạng thái mới có hiệu lực, phiên cũ được xử lý và audit bất biến.
-- **Truy vết**: US-IAM-005, US-IAM-007.
-
-### UC-CAT-01 - Quản lý môn, lớp và phân công
-
-- **Tác nhân**: Quản trị viên; Giảng viên là bên được phân công.
-- **Tiền điều kiện**: Có quyền quản lý cấu trúc học thuật.
-- **Luồng chính**: Tạo/cập nhật môn; tạo lớp thuộc môn; đặt trạng thái lớp; phân công giảng viên; hệ thống validate và lưu.
-- **Ngoại lệ**: Trùng mã, môn không tồn tại, người được phân công không hợp lệ hoặc thay đổi làm mất lịch sử bị từ chối.
-- **Hậu điều kiện**: Cấu trúc và phân công hợp lệ có audit.
-- **Truy vết**: US-CAT-001.
-
-### UC-CAT-02 - Quản lý vòng đời và ghi danh lớp
-
-- **Tác nhân**: Giảng viên, Quản trị viên; Người học là đối tượng ghi danh.
-- **Tiền điều kiện**: Lớp tồn tại; tác nhân đúng phạm vi.
-- **Luồng chính**: Mở/đóng lớp; thêm hoặc gỡ ghi danh theo chính sách; hệ thống kiểm tra trùng, quyền và tác động lịch sử; lưu và thông báo.
-- **Ngoại lệ**: Không xóa dữ liệu học tập khi gỡ ghi danh; giảng viên không thao tác lớp khác.
-- **Hậu điều kiện**: Trạng thái lớp/danh sách học viên nhất quán.
-- **Truy vết**: US-CAT-002, US-CAT-003.
-
-### UC-CAT-03 - Tự ghi danh bằng mã mời (Phase 2)
-
-- **Tác nhân**: Người học.
-- **Tiền điều kiện**: Đã đăng nhập; lớp cho tự ghi danh.
-- **Luồng chính**: Nhập mã; hệ thống kiểm tra lớp, hạn, quota, entitlement; người học xác nhận; hệ thống tạo ghi danh đúng một lần.
-- **Ngoại lệ**: Mã sai/hết hạn, lớp đóng, đã ghi danh hoặc thiếu quyền lợi bị từ chối an toàn.
-- **Truy vết**: US-CAT-005.
-
-### UC-CNT-01 - Quản lý học liệu và RAG cấp môn
-
-- **Tác nhân**: Chủ nhiệm môn.
-- **Tiền điều kiện**: Được giao môn mục tiêu.
-- **Luồng chính**: Chọn môn; tải/cập nhật tài liệu; hệ thống kiểm tra file; xử lý và lập chỉ mục; hiển thị trạng thái; cho dùng khi hoàn tất.
-- **Ngoại lệ**: File độc hại/sai định dạng bị cách ly; lỗi xử lý có retry an toàn; không truy xuất nguồn môn khác.
-- **Hậu điều kiện**: Tài liệu hợp lệ có phiên bản, nguồn gốc và phạm vi.
-- **Truy vết**: US-CNT-001.
-
-### UC-CNT-02 - Quản lý và truy cập nội dung lớp
-
-- **Tác nhân**: Giảng viên, Người học.
-- **Tiền điều kiện**: Giảng viên được phân công; người học đã ghi danh.
-- **Luồng chính**: Giảng viên soạn/tải, sắp xếp và xuất bản nội dung; người học mở nội dung đã phát hành.
-- **Ngoại lệ**: Bản nháp không hiển thị; file sai hoặc truy cập chéo lớp bị từ chối.
-- **Hậu điều kiện**: Nội dung đúng lớp chỉ hiển thị cho người đủ quyền.
-- **Truy vết**: US-CNT-002, US-LRN-001.
-
-### UC-CNT-03 - Tìm kiếm, tóm tắt và trao đổi lớp (Phase 2)
-
-- **Tác nhân**: Người học, Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Có quyền trên lớp/môn.
-- **Luồng chính**: Nhập truy vấn/bài đăng; hệ thống giới hạn nguồn theo quyền; trả kết quả có nguồn hoặc đăng nội dung và thông báo.
-- **Ngoại lệ**: Thiếu nguồn thì nêu giới hạn; prompt vượt phạm vi/nội dung không hợp lệ bị chặn.
-- **Truy vết**: US-CNT-003, US-CNT-004.
-
-### UC-GRP-01 - Thành lập nhóm và chỉ định leader
-
-- **Tác nhân**: Giảng viên.
-- **Tiền điều kiện**: Quản lý lớp; thành viên thuộc lớp.
-- **Luồng chính**: Tạo nhiều nhóm; thêm thành viên; chỉ định một leader mỗi nhóm; validate và công bố.
-- **Ngoại lệ**: Thành viên ngoài lớp, trùng nhóm trái chính sách, nhóm không có hoặc có nhiều leader bị từ chối.
-- **Hậu điều kiện**: Mỗi nhóm hợp lệ có đúng một leader.
-- **Truy vết**: US-GRP-001.
-
-### UC-GRP-02 - Yêu cầu đổi leader
-
-- **Tác nhân**: Người học, Giảng viên.
-- **Tiền điều kiện**: Người yêu cầu thuộc nhóm đang hoạt động.
-- **Luồng chính**: Sinh viên gửi lý do/đề xuất; giảng viên duyệt hoặc từ chối; hệ thống cập nhật leader và thông báo.
-- **Ngoại lệ**: Người được đề xuất ngoài nhóm hoặc yêu cầu trùng bị từ chối; sinh viên không tự đổi leader.
-- **Hậu điều kiện**: Nhóm vẫn có đúng một leader và giữ lịch sử quyết định.
-- **Truy vết**: US-GRP-002.
-
-### UC-GRP-03 - Giao và chấm phần cá nhân của bài nhóm
-
-- **Tác nhân**: Giảng viên, Người học; Dịch vụ AI hỗ trợ tùy chọn.
-- **Tiền điều kiện**: Nhóm tồn tại; bài nhóm đã phát hành.
-- **Luồng chính**: (1) Giảng viên mô tả bài chung và tách các phần như use case diagram, activity diagram; (2) gán mỗi phần cho thành viên; (3) sinh viên nộp phần của mình; (4) sau khi nhận bài, giảng viên chọn chấm tay hoặc nhờ AI đề xuất; (5) giảng viên quyết định điểm cuối.
-- **Ngoại lệ**: Không nộp thay người khác; lỗi AI không làm mất bài và vẫn cho chấm tay.
-- **Hậu điều kiện**: Bài cá nhân, phiên bản, điểm và phản hồi gắn đúng người/nhóm.
-- **Truy vết**: US-GRP-003, US-GRP-004.
-
-### UC-GRP-04 - Nộp và chấm DOCX chung
-
-- **Tác nhân**: Leader nhóm, Giảng viên.
-- **Tiền điều kiện**: Đang nhận bài; người nộp là leader hiện tại.
-- **Luồng chính**: Nhóm cộng tác soạn ngoài hệ thống; leader upload DOCX; hệ thống kiểm tra quyền/file và tạo biên nhận; giảng viên mở DOCX cùng các phần cá nhân, đối chiếu và chấm tay.
-- **Ngoại lệ**: Thành viên không phải leader bị từ chối; file lỗi không thay bản hợp lệ trước; AI không chấm bài chung.
-- **Hậu điều kiện**: Bài chung lưu theo nhóm/phiên bản; điểm do giảng viên nhập thủ công.
-- **Truy vết**: US-GRP-005, US-GRP-006.
-
-### UC-LRN-01 - Lưu và tiếp tục tiến độ
-
-- **Tác nhân**: Người học.
-- **Tiền điều kiện**: Đã ghi danh và có quyền nội dung.
-- **Luồng chính**: Mở nội dung; tải vị trí gần nhất; tiếp tục/đánh dấu hoàn thành; hệ thống lưu idempotent.
-- **Ngoại lệ**: Mất mạng hiển thị chưa đồng bộ và retry không nhân đôi; quyền bị thu hồi thì dừng truy cập.
-- **Truy vết**: US-LRN-002.
-
-### UC-LRN-02 - Theo dõi tiến độ lớp
-
-- **Tác nhân**: Giảng viên.
-- **Tiền điều kiện**: Được phân công lớp.
-- **Luồng chính**: Chọn lớp; lọc theo học viên/nội dung/trạng thái; xem tiến độ và nhận diện người cần hỗ trợ.
-- **Ngoại lệ**: Không trả dữ liệu ngoài lớp hoặc trường dữ liệu không cần thiết.
-- **Truy vết**: US-LRN-003.
-
-### UC-QBK-01 - Quản lý rubric và ngân hàng câu hỏi
-
-- **Tác nhân**: Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Có quyền trên lớp/môn.
-- **Luồng chính**: Tạo/sửa/nhân bản rubric hoặc câu hỏi; khai báo tiêu chí, đáp án, metadata; xem trước và lưu phiên bản.
-- **Ngoại lệ**: Không sửa trực tiếp phiên bản đã dùng; nội dung ngoài phạm vi bị từ chối.
-- **Hậu điều kiện**: Mục ngân hàng có nguồn gốc, phiên bản và phạm vi.
-- **Truy vết**: US-QBK-001, US-QBK-002.
-
-### UC-QBK-02 - Phân tích chất lượng câu hỏi (Phase 2)
-
-- **Tác nhân**: Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Đủ dữ liệu và có quyền.
-- **Luồng chính**: Chọn câu hỏi/kỳ dữ liệu; hệ thống tính chỉ số, hiển thị cảnh báo; tác nhân có thể tạo phiên bản cải thiện.
-- **Ngoại lệ**: Mẫu nhỏ được cảnh báo; hệ thống không tự sửa nội dung đã phát hành.
-- **Truy vết**: US-QBK-003.
-
-### UC-AIG-01 - Tạo bản nháp bằng AI
-
-- **Tác nhân**: Giảng viên, Chủ nhiệm môn; Dịch vụ AI.
-- **Tiền điều kiện**: Đúng phạm vi, còn quota, nguồn RAG sẵn sàng.
-- **Luồng chính**: Chọn nguồn/loại bài/rubric; nhập yêu cầu; hệ thống lọc dữ liệu và gọi AI; trả bản nháp có nguồn; tác nhân sửa và lưu.
-- **Ngoại lệ**: Timeout, hết quota, thiếu căn cứ hoặc prompt vượt phạm vi được báo rõ; không tự phát hành.
-- **Hậu điều kiện**: Bản nháp có nguồn gốc được lưu.
-- **Truy vết**: US-AIG-001, US-AIG-002.
-
-### UC-AIG-02 - Cấu hình và giám sát AI
-
-- **Tác nhân**: Quản trị viên.
-- **Tiền điều kiện**: Có quyền quản trị AI.
-- **Luồng chính**: Xem usage; đặt model, quota, giới hạn chi phí hoặc kill-switch; validate, xác nhận và áp dụng.
-- **Ngoại lệ**: Cấu hình sai/nguy hiểm bị từ chối; secret không hiển thị; kill-switch không làm mất bài đã nộp.
-- **Hậu điều kiện**: Cấu hình có phiên bản và audit.
-- **Truy vết**: US-AIG-003.
-
-### UC-ASM-01 - Duyệt và phát hành bài đánh giá
-
-- **Tác nhân**: Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Bản nháp hợp lệ, đúng phạm vi.
-- **Luồng chính**: Cấu hình lịch, hạn, lượt nộp, rubric; xem trước như người học; duyệt; giảng viên phát hành cho lớp hoặc Chủ nhiệm môn phát hành đề chung cho mọi lớp thuộc môn.
-- **Ngoại lệ**: Thiếu cấu hình thì không phát hành; không phát hành sang lớp/môn ngoài quyền.
-- **Hậu điều kiện**: Bài được phát hành đúng đối tượng và thông báo.
-- **Truy vết**: US-ASM-001, US-ASM-002.
-
-### UC-ASM-02 - Làm và nộp bài
-
-- **Tác nhân**: Người học.
-- **Tiền điều kiện**: Đã ghi danh; bài đang mở.
-- **Luồng chính**: Mở bài; tải nháp; trả lời; tự lưu; xác nhận nộp; hệ thống lưu lần nộp bất biến và trả biên nhận.
-- **Ngoại lệ**: Quá hạn/hết lượt xử lý theo chính sách; retry không tạo bản trùng; lỗi tạm thời không xóa nháp.
-- **Hậu điều kiện**: Bản nộp gắn đúng người và phiên bản đề.
-- **Truy vết**: US-ASM-003.
-
-### UC-ASM-03 - Soạn và nộp sơ đồ Draw.io
-
-- **Tác nhân**: Giảng viên, Người học; Dịch vụ AI tùy chọn.
-- **Tiền điều kiện**: Bài Draw.io đã phát hành.
-- **Luồng chính**: (1) Giảng viên soạn yêu cầu/rubric; (2) sinh viên vẽ trên canvas; (3) hệ thống lưu nháp; (4) sinh viên nộp XML đầy đủ; (5) hệ thống kiểm tra cấu trúc, kích thước, allowlist và cấm external entities; (6) lưu nguyên vẹn XML đầy đủ và tạo biên nhận; (7) giảng viên xem bản đầy đủ; (8) chỉ khi giảng viên chọn AI, hệ thống tạo XML rút gọn dẫn xuất cho lần gọi đó; (9) giảng viên quyết định điểm.
-- **Ngoại lệ**: XML nguy hiểm/sai bị từ chối nhưng giữ nháp hợp lệ; AI lỗi không đổi bản đầy đủ và cho chấm tay; bản rút gọn không thay thế/hiển thị như bài gốc.
-- **Hậu điều kiện**: XML đầy đủ là bản chuẩn để review, lưu trữ và audit.
-- **Truy vết**: US-ASM-004, US-GRD-002, US-GRD-003.
-
-### UC-ASM-04 - Soạn và kiểm thử Code Lab
-
-- **Tác nhân**: Giảng viên, Người học.
-- **Tiền điều kiện**: Môi trường thực thi được cấu hình.
-- **Luồng chính**: Giảng viên khai báo đề, ngôn ngữ, test và quota; chạy thử và phát hành; sinh viên viết/chạy/nộp; hệ thống chạy cô lập và trả kết quả được phép.
-- **Ngoại lệ**: Quá tài nguyên/thời gian hoặc mã nguy hiểm bị dừng; test ẩn/secret không lộ.
-- **Truy vết**: US-ASM-005.
-
-### UC-ASM-05 - Soạn trắc nghiệm, bài viết luận và tái sử dụng
-
-- **Tác nhân**: Giảng viên, Chủ nhiệm môn.
-- **Tiền điều kiện**: Có quyền phù hợp.
-- **Luồng chính**: Chọn trắc nghiệm hoặc bài viết luận; thêm yêu cầu/câu hỏi/rubric/đáp án; xem trước; lưu và phát hành qua UC-ASM-01.
-- **Phase 2**: Nhân bản để tái sử dụng, sửa bản mới hoặc ngừng giao nhưng giữ đề cũ, bài nộp, điểm và lịch sử.
-- **Ngoại lệ**: Không sửa hồi tố nội dung đã có bài nộp; ngừng giao không xóa lịch sử.
-- **Truy vết**: US-ASM-006, US-ASM-007, US-ASM-008.
-
-### UC-GRD-01 - Tự chấm câu hỏi xác định
-
-- **Tác nhân**: Hệ thống; Giảng viên giám sát.
-- **Tiền điều kiện**: Bài nộp và đáp án/rule đúng phiên bản tồn tại.
-- **Luồng chính**: Tải dữ liệu đúng phiên bản; chấm idempotent; lưu chi tiết; đưa kết quả sang duyệt/công bố theo chính sách.
-- **Ngoại lệ**: Thiếu cấu hình/lỗi chấm chuyển cho giảng viên, không tự gán điểm sai.
-- **Truy vết**: US-GRD-001.
-
-### UC-GRD-02 - Chọn chấm tay hoặc AI đề xuất
-
-- **Tác nhân**: Giảng viên; Dịch vụ AI tùy chọn.
-- **Tiền điều kiện**: Hệ thống đã nhận bài thuộc lớp được phân công.
-- **Luồng chính**: Mở bài/rubric; chọn chấm tay hoặc “Nhờ AI đề xuất”; nếu AI, hệ thống gửi dữ liệu tối thiểu và hiển thị đề xuất/căn cứ; giảng viên chấp nhận, sửa hoặc bỏ đề xuất.
-- **Ngoại lệ**: AI lỗi/không chắc chắn thì báo rõ và cho chấm tay; AI không cập nhật điểm cuối trực tiếp.
-- **Hậu điều kiện**: Có kết quả nháp chờ giảng viên chốt.
-- **Truy vết**: US-GRD-002.
-
-### UC-GRD-03 - Duyệt, chốt và công bố điểm
-
-- **Tác nhân**: Giảng viên; Người học nhận kết quả.
-- **Tiền điều kiện**: Có bài/kết quả cần duyệt.
-- **Luồng chính**: Xem bài, rubric và kết quả; nhập/sửa điểm/phản hồi; cung cấp lý do ghi đè khi cần; chốt; công bố; gửi thông báo.
-- **Ngoại lệ**: Điểm ngoài thang, thiếu lý do hoặc cập nhật đồng thời bị từ chối/phát hiện; mọi ghi đè có audit.
-- **Hậu điều kiện**: Điểm cuối và người quyết định được lưu; người học chỉ thấy sau công bố.
-- **Truy vết**: US-GRD-003, US-GRD-005.
-
-### UC-GRD-04 - Xem sổ điểm
-
-- **Tác nhân**: Người học, Giảng viên, Quản trị viên.
-- **Tiền điều kiện**: Có quyền dữ liệu.
-- **Luồng chính**: Chọn lớp/bài hoặc hồ sơ cá nhân; hệ thống lọc theo role và hiển thị điểm, phản hồi, trạng thái.
-- **Ngoại lệ**: Sinh viên không xem điểm chưa công bố/người khác; giảng viên không xem lớp khác.
-- **Truy vết**: US-GRD-004.
-
-### UC-GRD-05 - Gia hạn, phúc khảo và tương đồng (Phase 2)
-
-- **Tác nhân**: Người học, Giảng viên.
-- **Tiền điều kiện**: Bài/lần nộp đúng người và lớp tồn tại.
-- **Luồng chính**: Sinh viên gửi gia hạn/phúc khảo; giảng viên xem và quyết định; hệ thống cập nhật có lý do/lịch sử. Giảng viên có thể yêu cầu kiểm tra tương đồng và tự diễn giải kết quả.
-- **Ngoại lệ**: Yêu cầu trái chính sách bị từ chối; chỉ số tương đồng không tự kết luận gian lận hoặc đổi điểm.
-- **Truy vết**: US-GRD-006, US-GRD-007, US-GRD-008.
-
-### UC-RPT-01 - Theo dõi nộp bài và nhắc nhở
-
-- **Tác nhân**: Giảng viên; Dịch vụ thông báo.
-- **Tiền điều kiện**: Bài đã phát hành trong lớp được phân công.
-- **Luồng chính**: Lọc chưa nộp/đã nộp/quá hạn; chọn người nhận; gửi nhắc và theo dõi trạng thái.
-- **Ngoại lệ**: Provider lỗi không rollback nghiệp vụ; retry hữu hạn và chống trùng.
-- **Truy vết**: US-RPT-001.
-
-### UC-RPT-02 - Dashboard và xuất bảng điểm (Phase 2)
-
-- **Tác nhân**: Người học, Giảng viên, Quản trị viên.
-- **Tiền điều kiện**: Có quyền trên phạm vi dữ liệu.
-- **Luồng chính**: Chọn phạm vi/chỉ số/định dạng; hệ thống tổng hợp; hiển thị dashboard hoặc tạo file tải có hạn.
-- **Ngoại lệ**: Dataset lớn xử lý bất đồng bộ; loại dữ liệu ngoài quyền; file hết hạn không tải được.
-- **Truy vết**: US-RPT-002, US-RPT-003.
-
-### UC-RPT-03 - Đối sánh điểm AI và điểm chốt (Phase 2)
-
-- **Tác nhân**: Giảng viên, Quản trị viên.
-- **Tiền điều kiện**: Có cả đề xuất AI và điểm cuối.
-- **Luồng chính**: Chọn phạm vi; hệ thống ghép cặp, tính chênh lệch và hiển thị phân bố/trường hợp cần xem.
-- **Ngoại lệ**: Cảnh báo mẫu nhỏ; không lộ dữ liệu dư thừa và không tự sửa điểm.
-- **Truy vết**: US-RPT-004.
-
-### UC-PAY-01 - Thanh toán và cấp quyền
-
-- **Tác nhân**: Người học; Cổng thanh toán.
-- **Tiền điều kiện**: Đã đăng nhập; sản phẩm/lớp khả dụng.
-- **Luồng chính**: Chọn gói; tạo giao dịch idempotent; chuyển cổng; nhận callback đã xác thực; đối chiếu tiền/trạng thái; cấp entitlement đúng một lần.
-- **Ngoại lệ**: Hủy/thất bại/timeout giữ trạng thái; callback giả/replay/sai tiền bị từ chối; không cấp quyền chỉ từ browser redirect.
-- **Truy vết**: US-PAY-001, US-PAY-002.
-
-### UC-PAY-02 - Đối soát thanh toán
-
-- **Tác nhân**: Quản trị viên; Cổng thanh toán.
-- **Tiền điều kiện**: Có quyền thanh toán.
-- **Luồng chính**: Chọn kỳ/trạng thái; hệ thống đối chiếu giao dịch, callback, entitlement; hiển thị lệch; quản trị viên xác minh và xử lý có lý do.
-- **Ngoại lệ**: Provider lỗi thì giữ dữ liệu và retry; thao tác thủ công luôn audit.
-- **Truy vết**: US-PAY-003.
-
-### UC-OPS-01 - Gửi thông báo thiết yếu
-
-- **Tác nhân**: Tất cả người dùng; Dịch vụ thông báo.
-- **Tiền điều kiện**: Sự kiện tài khoản, ghi danh, giao bài, nhóm hoặc kết quả đã hoàn tất.
-- **Luồng chính**: Phát sự kiện; tạo thông báo idempotent; chọn kênh; gửi và ghi trạng thái.
-- **Ngoại lệ**: Provider timeout thì retry/backoff; không rollback giao dịch chính; không đưa secret/dữ liệu dư thừa vào nội dung.
-- **Truy vết**: US-NTF-001.
-
-### UC-OPS-02 - Tra cứu audit
-
-- **Tác nhân**: Quản trị viên.
-- **Tiền điều kiện**: Có quyền audit.
-- **Luồng chính**: Lọc theo actor, sự kiện, đối tượng, correlation ID hoặc thời gian; xem timestamp, actor, hành động và kết quả đã khử dữ liệu nhạy cảm.
-- **Ngoại lệ**: Sửa/xóa hoặc xem ngoài phạm vi bị từ chối và ghi nhận theo chính sách.
-- **Hậu điều kiện**: Audit vẫn bất biến.
-- **Truy vết**: US-AUD-001.
-
-## 5. Quan hệ include/extend
-
-| Nguồn | Quan hệ | Đích | Ý nghĩa |
-|---|---|---|---|
-| Mọi use case bảo vệ | include | Kiểm tra phiên/role/quyền đối tượng | Thực hiện trước hành động nghiệp vụ |
-| UC-ASM-01 | extend | UC-AIG-01 | AI tạo nháp là tùy chọn |
-| UC-GRP-03, UC-ASM-03 | extend | UC-GRD-02 | AI chấm phần cá nhân chỉ khi giảng viên chọn |
-| UC-ASM-02 | include | UC-GRD-01 | Chỉ với câu hỏi xác định |
-| UC-GRD-03, UC-PAY-01 | include | UC-OPS-01 | Công bố kết quả/cấp quyền tạo thông báo |
-| Thay đổi role, leader, đề, điểm, payment, AI | include | Ghi audit | Audit không thể sửa qua ứng dụng |
-
-## 6. Ma trận truy vết 55/55 user story
-
-| Use case | User story được bao phủ |
-|---|---|
-| UC-IAM-01 | US-IAM-001, US-IAM-002 |
-| UC-IAM-02 | US-IAM-003, US-IAM-006 |
-| UC-IAM-03 | US-IAM-004 |
-| UC-IAM-04 | US-IAM-005, US-IAM-007 |
-| UC-CAT-01 | US-CAT-001 |
-| UC-CAT-02 | US-CAT-002, US-CAT-003 |
-| UC-CAT-03 | US-CAT-005 |
-| UC-CNT-01 | US-CNT-001 |
-| UC-CNT-02 | US-CNT-002, US-LRN-001 |
-| UC-CNT-03 | US-CNT-003, US-CNT-004 |
-| UC-GRP-01 | US-GRP-001 |
-| UC-GRP-02 | US-GRP-002 |
-| UC-GRP-03 | US-GRP-003, US-GRP-004 |
-| UC-GRP-04 | US-GRP-005, US-GRP-006 |
-| UC-LRN-01 | US-LRN-002 |
-| UC-LRN-02 | US-LRN-003 |
-| UC-QBK-01 | US-QBK-001, US-QBK-002 |
-| UC-QBK-02 | US-QBK-003 |
-| UC-AIG-01 | US-AIG-001, US-AIG-002 |
-| UC-AIG-02 | US-AIG-003 |
-| UC-ASM-01 | US-ASM-001, US-ASM-002 |
-| UC-ASM-02 | US-ASM-003 |
-| UC-ASM-03 | US-ASM-004 |
-| UC-ASM-04 | US-ASM-005 |
-| UC-ASM-05 | US-ASM-006, US-ASM-007, US-ASM-008 |
-| UC-GRD-01 | US-GRD-001 |
-| UC-GRD-02 | US-GRD-002 |
-| UC-GRD-03 | US-GRD-003, US-GRD-005 |
-| UC-GRD-04 | US-GRD-004 |
-| UC-GRD-05 | US-GRD-006, US-GRD-007, US-GRD-008 |
-| UC-RPT-01 | US-RPT-001 |
-| UC-RPT-02 | US-RPT-002, US-RPT-003 |
-| UC-RPT-03 | US-RPT-004 |
-| UC-PAY-01 | US-PAY-001, US-PAY-002 |
-| UC-PAY-02 | US-PAY-003 |
-| UC-OPS-01 | US-NTF-001 |
-| UC-OPS-02 | US-AUD-001 |
-
-## 7. Quy tắc nghiệp vụ cốt lõi
-
-1. Chủ nhiệm môn có thể phụ trách nhiều môn, nhưng không có quyền hoạt động lớp/điểm nếu không đồng thời được phân công làm giảng viên.
-2. Mỗi nhóm có đúng một leader; chỉ leader hiện tại nộp DOCX chung.
-3. Bài cá nhân có thể nhận đề xuất AI; bài chung chỉ do giảng viên chấm tay.
-4. Giảng viên chọn AI hoặc chấm tay sau khi nhận bài và luôn quyết định điểm cuối.
-5. XML Draw.io đầy đủ là nguồn chuẩn; XML rút gọn chỉ là bản dẫn xuất tạm cho AI.
-6. Nhân bản/ngừng giao bài không xóa hoặc sửa hồi tố đề đã dùng, bài nộp, điểm và audit.
-7. Callback thanh toán phải xác thực, chống replay và idempotent trước khi cấp quyền.
-
-## 8. Bảo mật và khả năng phục hồi
-
-- Validate và giới hạn mọi input, upload, XML, DOCX và dữ liệu từ dịch vụ ngoài.
-- XML parser tắt external entities và áp dụng allowlist cấu trúc Draw.io.
-- Code Lab chạy cô lập với quota CPU, bộ nhớ, thời gian và mạng.
-- Dữ liệu gửi AI phải tối thiểu, đúng môn/lớp; không gửi secret hoặc dữ liệu không cần thiết.
-- AI, payment và notification có timeout, retry hữu hạn, backoff và idempotency.
-- Lỗi tích hợp không làm mất nháp, bài nộp, điểm đã chốt hoặc giao dịch đã xác nhận.
-- Log/audit không chứa mật khẩu, token, secret hoặc dữ liệu bài làm dư thừa.
-
-## 9. Kiểm tra độ đầy đủ
-
-- 55/55 user story có use case truy vết.
-- 4/4 persona nghiệp vụ được bao phủ; không có Head of Department.
-- Luồng nhóm phân biệt phần cá nhân và DOCX chung.
-- Luồng Draw.io phân biệt XML đầy đủ và XML rút gọn dẫn xuất.
-- Luồng chấm xác định rõ quyền chọn và quyết định cuối của giảng viên.
-- Các chức năng Phase 2 được đánh dấu theo user story nguồn.
-
+| ACT-01 | Người học | Truy cập lớp, học, làm và nộp bài, tham gia nhóm, thanh toán và xem kết quả của mình |
+| ACT-02 | Giảng viên | Quản lý lớp được phân công, nội dung lớp, nhóm, assignment, bài nộp và điểm |
+| ACT-03 | Chủ nhiệm môn | Kế thừa chức năng giảng viên; quản lý học liệu, ngân hàng và assignment chung trong phạm vi môn hoặc lớp được giao |
+| ACT-04 | Quản trị viên | Quản lý tài khoản, cấu trúc học thuật, cấu hình AI, thanh toán và audit |
+| EXT-01 | Dịch vụ AI | Tạo nội dung nháp và đề xuất chấm theo yêu cầu; không tự phát hành nội dung hoặc quyết định điểm cuối |
+| EXT-02 | Google Drive | Lưu trữ file riêng tư và cung cấp file cho backend hoặc worker sau khi ứng dụng xác minh quyền |
+| EXT-03 | Cổng thanh toán | Xử lý giao dịch và gửi webhook để hệ thống xác minh trước khi cấp quyền truy cập |
+| EXT-04 | Dịch vụ thông báo | Gửi OTP, email và thông báo thiết yếu do hệ thống yêu cầu |
+| EXT-05 | Code Sandbox | Biên dịch và chạy code trong môi trường cô lập với giới hạn tài nguyên và mạng |
+
+Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác nhân `EXT-*` là hệ thống bên ngoài tham gia hỗ trợ luồng nghiệp vụ, nhưng không đứng tên một use case độc lập chỉ để mô tả xử lý nội bộ.
+
+## 3. Quy ước
+
+- Mỗi use case thể hiện một mục tiêu nghiệp vụ có giá trị đối với actor, không phải một nút bấm hoặc bước xử lý nội bộ.
+- Các thao tác xem danh sách, chi tiết, tìm kiếm và lọc được gộp khi phục vụ cùng một mục tiêu.
+- Mỗi tài khoản giữ một role cao nhất: `LEARNER`, `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN`.
+- `SUBJECT_MANAGER` kế thừa chức năng của `INSTRUCTOR`, nhưng quyền dữ liệu vẫn phụ thuộc phạm vi môn và lớp được giao.
+- AI chỉ tạo bản nháp hoặc đề xuất; con người duyệt nội dung và giảng viên quyết định điểm cuối.
+- Redis giữ dữ liệu tạm thời có TTL, RabbitMQ vận chuyển job và Google Drive lưu file riêng tư; các cơ chế này không tạo use case độc lập.
+- Mã user story nguồn được ghi cuối mỗi mô tả để duy trì truy vết.
+
+## 4. Danh sách Use Case
+
+### 4.1 Identity and Access Management
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-IAM-01 | Tất cả người dùng | Kích hoạt tài khoản | Authentication | Cho phép người dùng kích hoạt tài khoản trường cấp, thiết lập mật khẩu và yêu cầu lại liên kết khi liên kết cũ không còn hợp lệ. (`US-IAM-001`) |
+| UC-IAM-02 | Tất cả người dùng | Đăng nhập | Authentication | Cho phép người dùng đăng nhập bằng email trường và mật khẩu với kiểm tra trạng thái, giới hạn thử và phản hồi lỗi an toàn. (`US-IAM-002`) |
+| UC-IAM-03 | Người dùng đã đăng nhập | Đăng xuất | Authentication | Cho phép người dùng kết thúc phiên hiện tại và thu hồi thông tin xác thực liên quan. (`US-IAM-002`) |
+| UC-IAM-04 | Tất cả người dùng | Khôi phục mật khẩu | Authentication | Cho phép người dùng yêu cầu, xác minh OTP và đặt mật khẩu mới mà không làm lộ tài khoản có tồn tại hay không. (`US-IAM-003`) |
+| UC-IAM-05 | Người dùng đã đăng nhập | Đổi mật khẩu | Authentication | Cho phép người dùng đổi mật khẩu sau khi xác minh mật khẩu hiện tại và đáp ứng chính sách bảo mật. (`US-IAM-006`) |
+| UC-IAM-06 | Người dùng đã đăng nhập | Xem hồ sơ cá nhân | Profile Management | Cho phép người dùng xem thông tin hồ sơ và tài khoản của chính mình. (`US-IAM-004`) |
+| UC-IAM-07 | Người dùng đã đăng nhập | Cập nhật hồ sơ cá nhân | Profile Management | Cho phép người dùng sửa các trường hồ sơ được phép nhưng không tự đổi email định danh hoặc role. (`US-IAM-004`) |
+| UC-IAM-08 | Quản trị viên | Xem tài khoản người dùng | Account Management | Cho phép quản trị viên xem danh sách và chi tiết tài khoản theo role hoặc trạng thái cần quản lý. (`US-IAM-007`) |
+| UC-IAM-09 | Quản trị viên | Tạo tài khoản thủ công | Account Management | Cho phép quản trị viên tạo một tài khoản trường cấp và gửi quy trình kích hoạt an toàn. (`US-IAM-007`) |
+| UC-IAM-10 | Quản trị viên | Nhập tài khoản hàng loạt | Account Management | Cho phép quản trị viên nhập nhiều tài khoản từ file và nhận kết quả hợp lệ hoặc lỗi theo từng dòng. (`US-IAM-007`) |
+| UC-IAM-11 | Quản trị viên | Cập nhật tài khoản và role | Account Management | Cho phép quản trị viên cập nhật thông tin và role cao nhất của tài khoản với kiểm tra chống leo quyền. (`US-IAM-005`, `US-IAM-007`) |
+| UC-IAM-12 | Quản trị viên | Quản lý trạng thái tài khoản | Account Management | Cho phép quản trị viên khóa, mở khóa hoặc vô hiệu hóa tài khoản mà không xóa lịch sử nghiệp vụ. (`US-IAM-007`) |
+
+### 4.2 Academic Structure and Enrollment
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-CAT-01 | Quản trị viên | Xem môn học | Subject Management | Cho phép quản trị viên xem danh sách, chi tiết, Chủ nhiệm môn và các lớp của môn học. (`US-CAT-001`) |
+| UC-CAT-02 | Quản trị viên | Tạo môn học | Subject Management | Cho phép quản trị viên tạo môn học với mã và thông tin hợp lệ. (`US-CAT-001`) |
+| UC-CAT-03 | Quản trị viên | Cập nhật môn học | Subject Management | Cho phép quản trị viên cập nhật thông tin môn học mà không làm mất lịch sử. (`US-CAT-001`) |
+| UC-CAT-04 | Quản trị viên | Phân công Chủ nhiệm môn | Subject Management | Cho phép quản trị viên chỉ định tài khoản có role phù hợp quản lý một môn học. (`US-IAM-005`, `US-CAT-001`) |
+| UC-CAT-05 | Quản trị viên / Giảng viên / Chủ nhiệm môn | Xem lớp học | Class Management | Cho phép người có quyền xem danh sách và chi tiết lớp trong phạm vi được phân công. (`US-CAT-001`, `US-CAT-002`) |
+| UC-CAT-06 | Quản trị viên | Tạo lớp học | Class Management | Cho phép quản trị viên tạo lớp thuộc đúng một môn học. (`US-CAT-001`) |
+| UC-CAT-07 | Quản trị viên / Giảng viên | Cập nhật lớp học | Class Management | Cho phép quản trị viên hoặc giảng viên được phân công cập nhật thông tin lớp. (`US-CAT-002`) |
+| UC-CAT-08 | Quản trị viên | Phân công giảng viên chính | Class Management | Cho phép quản trị viên chỉ định đúng một giảng viên chính cho một lớp. (`US-CAT-001`) |
+| UC-CAT-09 | Quản trị viên / Giảng viên | Quản lý vòng đời lớp | Class Lifecycle | Cho phép người quản lý mở hoặc lưu trữ lớp trong khi giữ nội dung và lịch sử học tập. (`US-CAT-002`) |
+| UC-CAT-10 | Quản trị viên / Giảng viên | Xem danh sách học viên | Enrollment | Cho phép người quản lý lớp xem học viên đang hoặc từng được ghi danh. (`US-CAT-003`) |
+| UC-CAT-11 | Quản trị viên / Giảng viên | Ghi danh học viên | Enrollment | Cho phép người quản lý thêm học viên vào lớp đúng một lần và gửi thông báo liên quan. (`US-CAT-003`) |
+| UC-CAT-12 | Quản trị viên / Giảng viên | Gỡ học viên khỏi lớp | Enrollment | Cho phép người quản lý thu hồi quyền truy cập mới nhưng giữ dữ liệu học tập lịch sử. (`US-CAT-003`) |
+| UC-CAT-13 | Người học | Tự ghi danh bằng mã mời (Phase 2) | Enrollment | Cho phép người học dùng mã mời hợp lệ để tự ghi danh vào lớp đang mở. (`US-CAT-005`) |
+
+### 4.3 Learning Content and RAG
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-CNT-01 | Chủ nhiệm môn | Quản lý học liệu và RAG cấp môn | Subject Content | Cho phép Chủ nhiệm môn xem, tải lên, cập nhật, lưu trữ và lập chỉ mục học liệu trong môn được giao; trạng thái xử lý là một phần của luồng này. (`US-CNT-001`) |
+| UC-CNT-02 | Giảng viên | Quản lý nội dung lớp | Class Content | Cho phép giảng viên xem, tạo, tải file, cập nhật, sắp xếp và lưu trữ nội dung riêng của lớp được phân công. (`US-CNT-002`) |
+| UC-CNT-03 | Giảng viên | Xuất bản nội dung lớp | Class Content | Cho phép giảng viên công bố nội dung hợp lệ cho học viên đã ghi danh. (`US-CNT-002`) |
+| UC-CNT-04 | Người học | Truy cập bài học | Learning Content | Cho phép người học đã ghi danh xem nội dung đã phát hành và tải file được phép. (`US-LRN-001`) |
+| UC-CNT-05 | Người học / Giảng viên / Chủ nhiệm môn | Tóm tắt học liệu (Phase 2) | AI Content | Cho phép người dùng yêu cầu bản tóm tắt có căn cứ từ nguồn trong phạm vi được phép. (`US-CNT-003`) |
+| UC-CNT-06 | Giảng viên | Đăng thông báo lớp (Phase 2) | Class Communication | Cho phép giảng viên đăng thông báo tới đúng lớp được phân công. (`US-CNT-004`) |
+| UC-CNT-07 | Người học / Giảng viên | Trao đổi hỏi đáp trong lớp (Phase 2) | Class Communication | Cho phép thành viên đăng câu hỏi và phản hồi trong đúng phạm vi lớp. (`US-CNT-004`) |
+
+### 4.4 Group Management and Group Assignment
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-GRP-01 | Người học / Giảng viên | Xem thông tin nhóm | Group Management | Cho phép người có quyền xem nhóm, trưởng nhóm, thành viên và trạng thái đóng góp trong lớp. (`US-GRP-001`, `US-GRP-003`) |
+| UC-GRP-02 | Giảng viên | Quản lý nhóm và trưởng nhóm | Group Management | Cho phép giảng viên tạo hoặc cập nhật nhóm, thêm hoặc gỡ thành viên và chỉ định đúng một trưởng nhóm. (`US-GRP-001`) |
+| UC-GRP-03 | Người học | Gửi yêu cầu đổi trưởng nhóm | Leader Management | Cho phép thành viên gửi lý do và đề xuất trưởng nhóm mới để giảng viên xem xét. (`US-GRP-002`) |
+| UC-GRP-04 | Giảng viên | Xử lý yêu cầu đổi trưởng nhóm | Leader Management | Cho phép giảng viên phê duyệt hoặc từ chối yêu cầu và thông báo quyết định. (`US-GRP-002`) |
+| UC-GRP-05 | Giảng viên | Phân chia phần việc cá nhân | Group Assignment | Cho phép giảng viên tạo phần việc, giao hoặc chuyển phần việc chưa chốt cho thành viên và giữ lịch sử. (`US-GRP-003`) |
+| UC-GRP-06 | Người học | Xem và nộp phần việc cá nhân | Group Submission | Cho phép thành viên xem và nộp đúng phần được giao; thành viên khác không thể nộp thay. (`US-GRP-004`) |
+| UC-GRP-07 | Người học (Trưởng nhóm) | Nộp bài tập nhóm chung | Group Submission | Cho phép duy nhất trưởng nhóm hiện tại tải file DOCX và xác nhận nộp bài tập chung của nhóm. (`US-GRP-005`) |
+| UC-GRP-08 | Giảng viên | Đối chiếu và chấm bài chung | Group Grading | Cho phép giảng viên xem DOCX chung cạnh các phần cá nhân, sau đó nhập điểm và phản hồi thủ công. (`US-GRP-006`) |
+
+### 4.5 Learning Journey
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-LRN-01 | Người học | Xem dashboard học tập | Learning Dashboard | Cho phép người học xem lớp, assignment sắp đến hạn, thông báo và tiến độ cá nhân. (`US-LRN-001`, `US-LRN-002`) |
+| UC-LRN-02 | Người học | Truy cập lớp đã ghi danh | Learning Dashboard | Cho phép người học xem các lớp và chi tiết lớp gồm nội dung, assignment, nhóm và tiến độ. (`US-LRN-001`) |
+| UC-LRN-03 | Người học | Lưu và tiếp tục tiến độ học | Learning Progress | Cho phép người học tiếp tục tại vị trí gần nhất, cập nhật hoặc đánh dấu hoàn thành nội dung. (`US-LRN-002`) |
+| UC-LRN-04 | Người học | Xem tiến độ cá nhân | Learning Progress | Cho phép người học xem tiến độ của chính mình trong từng lớp. (`US-LRN-002`) |
+| UC-LRN-05 | Giảng viên | Theo dõi tiến độ lớp | Progress Tracking | Cho phép giảng viên xem tiến độ học viên trong lớp được phân công và nhận diện người cần hỗ trợ. (`US-LRN-003`) |
+
+### 4.6 Question and Rubric Bank
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-QBK-01 | Giảng viên / Chủ nhiệm môn | Quản lý ngân hàng rubric | Rubric Bank | Cho phép người có quyền xem, tạo, cập nhật, nhân bản và quản lý phiên bản rubric trong phạm vi được phép. (`US-QBK-001`) |
+| UC-QBK-02 | Giảng viên / Chủ nhiệm môn | Quản lý ngân hàng câu hỏi | Question Bank | Cho phép người có quyền xem, tạo, cập nhật, nhân bản và xem trước câu hỏi trong phạm vi được phép. (`US-QBK-002`) |
+| UC-QBK-03 | Giảng viên / Chủ nhiệm môn | Phân tích chất lượng câu hỏi (Phase 2) | Question Analytics | Cho phép người có quyền xem chỉ số chất lượng khi dữ liệu đạt ngưỡng phù hợp. (`US-QBK-003`) |
+
+### 4.7 AI-Assisted Authoring and Administration
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-AIG-01 | Giảng viên | Tạo và duyệt bản nháp assignment cấp lớp bằng AI | AI Authoring | Cho phép giảng viên yêu cầu AI tạo bản nháp từ nội dung lớp, xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành. (`US-AIG-001`) |
+| UC-AIG-02 | Chủ nhiệm môn | Tạo và duyệt bản nháp assignment chung bằng AI | AI Authoring | Cho phép Chủ nhiệm môn yêu cầu AI tạo bản nháp từ RAG cấp môn, xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả. (`US-AIG-002`) |
+| UC-AIG-03 | Quản trị viên | Quản lý và giám sát AI | AI Administration | Cho phép quản trị viên xem usage, quota, chi phí, cấu hình model và bật hoặc tắt dịch vụ AI. (`US-AIG-003`) |
+
+### 4.8 Assignment Authoring and Submission
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-ASM-01 | Giảng viên / Chủ nhiệm môn | Xem assignment quản lý | Assignment Management | Cho phép người có quyền xem danh sách và chi tiết assignment trong phạm vi được giao. (`US-ASM-001`, `US-ASM-002`) |
+| UC-ASM-02 | Giảng viên / Chủ nhiệm môn | Soạn bài viết luận | Assignment Authoring | Cho phép người có quyền tạo bài viết luận với hướng dẫn, giới hạn và rubric. (`US-ASM-007`) |
+| UC-ASM-03 | Giảng viên / Chủ nhiệm môn | Soạn bài trắc nghiệm | Assignment Authoring | Cho phép người có quyền tạo bài trắc nghiệm với câu hỏi, đáp án và quy tắc điểm. (`US-ASM-006`) |
+| UC-ASM-04 | Giảng viên / Chủ nhiệm môn | Soạn bài thực hành vẽ UML | Assignment Authoring | Cho phép người có quyền tạo bài thực hành vẽ UML trên Draw.io, cấu hình yêu cầu và quy tắc kiểm tra XML. (`US-ASM-004`) |
+| UC-ASM-05 | Giảng viên / Chủ nhiệm môn | Soạn và kiểm thử Code Lab | Assignment Authoring | Cho phép người có quyền cấu hình đề code, ngôn ngữ, quota, test case và chạy lời giải mẫu trong sandbox. (`US-ASM-005`) |
+| UC-ASM-06 | Giảng viên | Soạn bài tập nhóm | Assignment Authoring | Cho phép giảng viên tạo bài chung, gắn rubric và cấu hình các phần việc cá nhân. (`US-GRP-003`) |
+| UC-ASM-07 | Giảng viên | Duyệt và phát hành assignment cho lớp | Assignment Publication | Cho phép giảng viên cấu hình lịch, lượt nộp, xem trước, duyệt và phát hành assignment cho lớp được phân công. (`US-ASM-001`) |
+| UC-ASM-08 | Chủ nhiệm môn | Duyệt và phát hành assignment chung | Assignment Publication | Cho phép Chủ nhiệm môn xem trước, duyệt và phát hành đề chung tới mọi lớp hiện hành thuộc môn được giao. (`US-ASM-002`) |
+| UC-ASM-09 | Người học | Xem assignment được giao | Assignment Delivery | Cho phép người học xem danh sách, yêu cầu, rubric, thời hạn, số lượt và trạng thái assignment. (`US-ASM-003`) |
+| UC-ASM-10 | Người học | Làm và nộp bài viết luận | Assignment Workspace | Cho phép người học soạn, lưu nháp và nộp câu trả lời mở đang hiệu lực. (`US-ASM-003`, `US-ASM-007`) |
+| UC-ASM-11 | Người học | Làm và nộp bài trắc nghiệm | Assignment Workspace | Cho phép người học trả lời, lưu nháp và nộp bài; câu hỏi xác định được tự chấm theo phiên bản đáp án. (`US-ASM-003`, `US-ASM-006`, `US-GRD-001`) |
+| UC-ASM-12 | Người học | Làm và nộp bài thực hành vẽ UML | Diagram Assignment | Cho phép người học vẽ UML trên canvas Draw.io, lưu nháp và nộp XML Draw.io đầy đủ làm bản chuẩn. (`US-ASM-003`, `US-ASM-004`) |
+| UC-ASM-13 | Người học | Làm và nộp bài Code Lab | Code Assignment | Cho phép người học viết, chạy thử trong sandbox, lưu nháp và nộp mã nguồn theo giới hạn đề. (`US-ASM-003`, `US-ASM-005`) |
+| UC-ASM-14 | Người học | Xem lịch sử và nộp lại assignment | Submission | Cho phép người học xem các attempt của mình và tạo attempt mới khi còn thời gian và lượt nộp. (`US-ASM-003`) |
+| UC-ASM-15 | Giảng viên / Chủ nhiệm môn | Quản lý vòng đời assignment (Phase 2) | Assignment Lifecycle | Cho phép người có quyền nhân bản, tạo phiên bản mới hoặc ngừng giao assignment mà không sửa dữ liệu lịch sử. (`US-ASM-008`) |
+
+### 4.9 Grading and Feedback
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-GRD-01 | Giảng viên | Xem và review bài nộp | Submission Review | Cho phép giảng viên xem danh sách, bài làm, rubric, attempt và kết quả tự chấm của lớp được phân công. (`US-GRD-002`, `US-GRD-003`) |
+| UC-GRD-02 | Giảng viên | Chấm bài thủ công | Manual Grading | Cho phép giảng viên nhập điểm và phản hồi cho bài cá nhân mà không gọi AI. (`US-GRD-002`, `US-GRD-003`) |
+| UC-GRD-03 | Giảng viên | Chấm bài với AI hỗ trợ | AI-Assisted Grading | Cho phép giảng viên chủ động yêu cầu, xem, chấp nhận hoặc ghi đè đề xuất AI; AI không quyết định điểm cuối. (`US-GRD-002`, `US-GRD-003`) |
+| UC-GRD-04 | Giảng viên | Chốt và công bố điểm | Grade Finalization | Cho phép giảng viên xác nhận điểm cuối, công bố điểm và phản hồi cho đúng người học. (`US-GRD-003`) |
+| UC-GRD-05 | Giảng viên | Chốt điểm hàng loạt | Grade Finalization | Cho phép giảng viên kiểm tra điều kiện và chốt nhiều điểm hợp lệ trong lớp. (`US-GRD-005`) |
+| UC-GRD-06 | Người học | Xem điểm và phản hồi cá nhân | Gradebook | Cho phép người học xem điểm cuối đã công bố và phản hồi của chính mình. (`US-GRD-004`) |
+| UC-GRD-07 | Giảng viên / Quản trị viên | Xem sổ điểm và lịch sử điểm | Gradebook | Cho phép người có quyền xem sổ điểm cùng lịch sử thay đổi, actor, thời gian và lý do. (`US-GRD-003`, `US-GRD-004`) |
+| UC-GRD-08 | Người học | Yêu cầu gia hạn nộp bài (Phase 2) | Submission Exception | Cho phép người học gửi yêu cầu gia hạn với lý do. (`US-GRD-006`) |
+| UC-GRD-09 | Giảng viên | Xử lý yêu cầu gia hạn (Phase 2) | Submission Exception | Cho phép giảng viên phê duyệt hoặc từ chối hạn riêng của người học. (`US-GRD-006`) |
+| UC-GRD-10 | Người học | Khiếu nại điểm (Phase 2) | Grade Appeal | Cho phép người học gửi khiếu nại trong thời hạn cho phép. (`US-GRD-007`) |
+| UC-GRD-11 | Giảng viên | Xử lý phúc khảo điểm (Phase 2) | Grade Appeal | Cho phép giảng viên xem xét, quyết định và lưu lịch sử phúc khảo. (`US-GRD-007`) |
+| UC-GRD-12 | Giảng viên | Kiểm tra tương đồng bài nộp (Phase 2) | Similarity Review | Cho phép giảng viên yêu cầu và xem báo cáo tương đồng mang tính tham khảo. (`US-GRD-008`) |
+
+### 4.10 Reporting and Analytics
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-RPT-01 | Giảng viên | Theo dõi tình trạng nộp bài | Submission Monitoring | Cho phép giảng viên xem tình trạng nộp trong lớp và gửi nhắc có giới hạn tới học viên cần xử lý. (`US-RPT-001`) |
+| UC-RPT-02 | Người học | Xem dashboard kết quả cá nhân (Phase 2) | Learning Analytics | Cho phép người học xem xu hướng kết quả cá nhân và phân bố lớp đã ẩn danh. (`US-RPT-002`) |
+| UC-RPT-03 | Giảng viên / Quản trị viên | Xuất bảng điểm (Phase 2) | Grade Export | Cho phép người có quyền tạo và tải file bảng điểm đúng phạm vi. (`US-RPT-003`) |
+| UC-RPT-04 | Quản trị viên | Đối sánh điểm AI và điểm chốt (Phase 2) | AI Analytics | Cho phép quản trị viên xem báo cáo sai lệch khi cỡ mẫu đáp ứng quy tắc riêng tư. (`US-RPT-004`) |
+
+### 4.11 Payment and Access
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-PAY-01 | Người học | Thanh toán và nhận quyền truy cập | Payment | Cho phép người học xem gói, bắt đầu thanh toán, theo dõi trạng thái và nhận access grant sau khi giao dịch được xác minh. (`US-PAY-001`, `US-PAY-002`) |
+| UC-PAY-02 | Quản trị viên | Đối soát thanh toán | Payment Operations | Cho phép quản trị viên đối chiếu payment, webhook và access grant, rồi xử lý chênh lệch có lý do. (`US-PAY-003`) |
+
+### 4.12 Notification and Audit
+
+| ID | Actor | Use Case | Feature | Use Case Description |
+|---|---|---|---|---|
+| UC-OPS-01 | Người dùng | Nhận và xem thông báo | Notification | Cho phép người dùng nhận và xem thông báo assignment, hạn nộp, nhóm, điểm và thanh toán của mình. (`US-NTF-001`) |
+| UC-OPS-02 | Quản trị viên | Xem nhật ký audit | Audit | Cho phép quản trị viên được phép xem sự kiện theo actor, hành động, đối tượng, kết quả và thời gian; audit không thể sửa hoặc xóa. (`US-AUD-001`) |
+
+## 5. Quy tắc nghiệp vụ cốt lõi
+
+1. Mỗi tài khoản có một role cao nhất; `SUBJECT_MANAGER` kế thừa chức năng giảng viên nhưng quyền dữ liệu vẫn phụ thuộc phân công môn và lớp.
+2. Mỗi môn có một Chủ nhiệm môn và mỗi lớp có đúng một giảng viên chính; một Chủ nhiệm môn có thể được phân công làm giảng viên chính.
+3. Mỗi nhóm có đúng một trưởng nhóm; chỉ trưởng nhóm hiện tại được nộp DOCX chung.
+4. Phần cá nhân có thể được AI đề xuất điểm; bài chung chỉ do giảng viên chấm thủ công.
+5. Giảng viên luôn quyết định điểm cuối; AI không tự chốt hoặc công bố điểm.
+6. XML Draw.io đầy đủ là bản nộp chuẩn; XML rút gọn chỉ là dữ liệu dẫn xuất tạm thời khi giảng viên yêu cầu AI chấm.
+7. Nội dung, assignment, bài nộp, điểm, payment và audit đã phát sinh không bị xóa hồi tố.
+8. Payment webhook phải được xác minh chữ ký, số tiền, tiền tệ, transaction ID, chống replay và xử lý idempotent trước khi cấp access grant.
+
+## 6. Bảo mật và khả năng phục hồi
+
+- Validate và giới hạn mọi input, upload, XML, DOCX và dữ liệu nhận từ dịch vụ ngoài.
+- File phải được quét trước khi được dùng cho RAG, AI, nội dung hoặc bài nộp.
+- XML parser phải tắt external entities và áp dụng schema hoặc allowlist Draw.io.
+- Code Lab chạy trong sandbox có quota CPU, bộ nhớ, thời gian và network policy.
+- Dữ liệu gửi AI phải tối thiểu và đúng phạm vi; không gửi secret hoặc dữ liệu không cần thiết.
+- AI, Google Drive, payment, notification và Code Sandbox phải có timeout, retry hữu hạn, backoff và idempotency phù hợp.
+- Lỗi tích hợp không được làm mất nháp, bài nộp, điểm đã chốt hoặc giao dịch đã xác nhận.
+- Log và audit không chứa mật khẩu, OTP, token, secret hoặc dữ liệu bài làm dư thừa.
+
+## 7. Kiểm tra độ đầy đủ
+
+- Toàn bộ 55/55 user story có ít nhất một use case truy vết trực tiếp trong mô tả.
+- Danh mục chỉ sử dụng bốn actor nghiệp vụ; hệ thống và dịch vụ ngoài không đứng tên use case riêng.
+- Tìm kiếm, lọc, xử lý nền, retry và tự chấm được giữ như hành vi bên trong use case liên quan.
+- Các bước tạo, xem, sửa, chấp nhận và loại bỏ bản nháp AI được gộp theo phạm vi cấp lớp hoặc cấp môn.
+- Luồng nhóm phân biệt quản lý nhóm, đổi trưởng nhóm, phần cá nhân và bài chung.
+- Luồng chấm phân biệt chấm tay, AI hỗ trợ, chốt điểm, công bố điểm và các ngoại lệ Phase 2.
+- Các chức năng Phase 2 được đánh dấu rõ và không bị trộn vào phạm vi MVP.
