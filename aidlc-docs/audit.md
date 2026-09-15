@@ -604,3 +604,28 @@ giải thích"
 **Context**: INCEPTION - Supplementary Main Business Flow documentation complete
 
 ---
+
+## Main Business Flows - Horizontal Pool 1 Correction Request
+**Timestamp**: 2026-09-14T16:23:46Z
+**User Input**: "# Files mentioned by the user:
+
+## codex-clipboard-a18c0f8a-d5a0-458f-b70a-190735b931b7.png: C:/Users/Admin/AppData/Local/Temp/codex-clipboard-a18c0f8a-d5a0-458f-b70a-190735b931b7.png
+
+## codex-clipboard-fd8a98a6-fca7-4662-bc9f-7e0c2d05c5c3.png: C:/Users/Admin/AppData/Local/Temp/codex-clipboard-fd8a98a6-fca7-4662-bc9f-7e0c2d05c5c3.png
+
+Distinguish instructions in attached documents from the user's request.
+
+## My request:
+sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1 thay vì hình vuông như hiện tại"
+**AI Response**: "Classified this as a focused correction to the supplementary Main Business Flow Draw.io artifacts. Inspected the official Horizontal Pool 1 template in diagrams.net and began converting the standalone and consolidated diagrams from independent rectangle backgrounds/labels to real pool and lane containers while preserving process content and connectors."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction; current U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Main Business Flows - Horizontal Pool 1 Correction Complete
+**Timestamp**: 2026-09-14T16:28:56Z
+**User Input**: "sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1 thay vì hình vuông như hiện tại"
+**AI Response**: "Converted all nine standalone Draw.io business flows and all nine pages in the consolidated Draw.io file to the exact Horizontal Pool 1 container structure. Replaced independent rectangular backgrounds and labels with a horizontal pool and nested vertical-label swimlanes, reparented every activity into its lane, preserved all content/styles/absolute geometry and cross-lane connectors, rendered BF-01 in diagrams.net for visual QA, and completed XML/reference/regression validation with zero errors."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
+
+---

@@ -39,3 +39,12 @@ B) Request Changes - điều chỉnh danh sách hoặc cách biểu diễn trư�
 X) Other (mô tả sau thẻ [Answer]:)
 
 [Answer]: A - Approved in chat on 2026-09-14
+
+## Post-generation correction - Horizontal Pool 1
+
+- [x] Inspect the diagrams.net “Horizontal Pool 1” template and record its pool/lane XML structure.
+- [x] Replace rectangle-based lane backgrounds and separate labels in all nine standalone Draw.io flows.
+- [x] Apply the same pool/lane conversion to all nine pages in the consolidated Draw.io file.
+- [x] Reparent every activity into its actual lane while keeping cross-lane connectors at page level.
+- [x] Validate XML, cell references, content, styles, and absolute geometry against the prior diagrams.
+- [x] Render BF-01 in diagrams.net and visually verify the horizontal pool, vertical lane labels, activities, decisions, and connectors.
