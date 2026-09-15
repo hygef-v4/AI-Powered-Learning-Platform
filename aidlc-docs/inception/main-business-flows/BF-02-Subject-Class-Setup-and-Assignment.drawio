@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mxfile host="app.diagrams.net" modified="2026-09-14T16:25:00.000Z" agent="Codex" version="24.7.17" type="device" compressed="false">
+<mxfile host="app.diagrams.net" modified="2026-09-15T02:47:00.000Z" agent="Codex" version="24.7.17" type="device" compressed="false">
   <diagram id="bf02" name="BF-02 Subject and Class Setup and Staff Assignment">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2135" pageHeight="730" math="0" shadow="0">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2065" pageHeight="530" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" value="BF-02  Subject and Class Setup and Staff Assignment" style="text;html=1;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1F4E78;" vertex="1" parent="1">
-          <mxGeometry x="40" y="18" width="2055" height="38" as="geometry" />
-        </mxCell>
-        <mxCell id="trigger" value="Trigger: An administrator creates a subject or class, or changes the responsible staff." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="40" y="62" width="2055" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="endCondition" value="End condition: Valid subjects and classes are saved; the subject owner and lead instructor are assigned and notified." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="40" y="94" width="2055" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="horizontal-pool-1" parent="1" style="swimlane;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;horizontal=1;startSize=20;horizontalStack=0;html=1;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" value="Pool" vertex="1">
-          <mxGeometry height="530" width="2065" x="35" y="125" as="geometry" />
+        <mxCell id="horizontal-pool-1" parent="1" style="swimlane;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;horizontal=1;startSize=20;horizontalStack=0;html=1;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" value="Subject and Class Setup and Staff Assignment" vertex="1">
+          <mxGeometry height="530" width="2065" x="0" y="0" as="geometry" />
         </mxCell>
         <mxCell id="lane-bg-0" value="Administrator" style="swimlane;startSize=120;horizontal=0;html=1;fillColor=#D5E8D4;swimlaneFillColor=#F3F9EE;strokeColor=#82B366;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;spacing=6;" vertex="1" parent="horizontal-pool-1">
           <mxGeometry y="20" width="2065" height="170" as="geometry" />

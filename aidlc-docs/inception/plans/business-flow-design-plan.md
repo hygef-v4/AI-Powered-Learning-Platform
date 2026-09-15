@@ -48,3 +48,12 @@ X) Other (mô tả sau thẻ [Answer]:)
 - [x] Reparent every activity into its actual lane while keeping cross-lane connectors at page level.
 - [x] Validate XML, cell references, content, styles, and absolute geometry against the prior diagrams.
 - [x] Render BF-01 in diagrams.net and visually verify the horizontal pool, vertical lane labels, activities, decisions, and connectors.
+
+## Post-generation correction - Pool titles and swimlane-only PNGs
+
+- [x] Inspect all nine diagram names and existing PNG exports.
+- [x] Rename each pool to its matching business-flow name without the `BF-xx` prefix.
+- [x] Remove the separate `BF-xx`, `Trigger`, and `End condition` text cells and crop the page to the pool.
+- [x] Validate the nine standalone diagrams against the nine consolidated pages.
+- [x] Regenerate all nine PNG exports with only the swimlane visible.
+- [x] Visually inspect the regenerated PNGs against the supplied sample.

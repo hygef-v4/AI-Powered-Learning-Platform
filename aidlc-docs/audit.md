@@ -629,3 +629,33 @@ sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1
 **Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
 
 ---
+
+## Main Business Flows - Pool Titles and PNG Cleanup Request
+**Timestamp**: 2026-09-15T02:45:49Z
+**User Input**: "# Files mentioned by the user:
+
+## SEP490-G21-BF-01 Login and Session Management.drawio.png: D:/Downloads/SEP490-G21-BF-01 Login and Session Management.drawio.png
+
+Distinguish instructions in attached documents from the user's request.
+## My request:
+sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
+**AI Response**: "Started a focused correction to give every Horizontal Pool 1 container its matching business-flow name, remove the separate BF title, Trigger, and End condition cells, and regenerate swimlane-only PNG exports matching the supplied example."
+**Context**: INCEPTION - Supplementary Main Business Flow Draw.io and PNG correction; U01 Functional Design approval checkpoint unchanged.
+
+---
+
+## Main Business Flows - Pool Titles and PNG Cleanup Continuation
+**Timestamp**: 2026-09-15T02:45:49Z
+**User Input**: "continue"
+**AI Response**: "Resumed the pool-title and swimlane-only PNG correction after confirming the available Draw.io sources and existing PNG exports."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction resumed.
+
+---
+
+## Main Business Flows - Pool Titles and PNG Cleanup Complete
+**Timestamp**: 2026-09-15T02:55:26Z
+**User Input**: "continue"
+**AI Response**: "Renamed the Horizontal Pool 1 container on all nine standalone diagrams and all nine consolidated pages to the matching business-flow name without the BF prefix. Removed the separate BF title, Trigger, and End condition cells, cropped every page to the pool, regenerated all nine PNG exports locally with only the swimlane visible, and visually inspected every PNG against the supplied sample."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
+
+---
