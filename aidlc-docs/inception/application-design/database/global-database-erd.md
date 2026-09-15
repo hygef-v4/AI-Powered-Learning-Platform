@@ -22,27 +22,34 @@ erDiagram
     ACCOUNTS ||--o{ PLATFORM_SETTINGS : updates
     ACCOUNTS ||--o{ SUBJECTS : manages
     ACCOUNTS ||--o{ CLASSES : teaches
-    ACCOUNTS ||--o{ ENROLLMENTS : enrolls
-
     SUBJECTS ||--o{ CLASSES : contains
+    ACCOUNTS ||--o{ ENROLLMENTS : enrolls
     CLASSES ||--o{ ENROLLMENTS : has
-    SUBJECTS ||--o{ LEARNING_RESOURCES : owns
-    CLASSES ||--o{ LEARNING_RESOURCES : publishes
+
+    ACCOUNTS ||--o{ ARTIFACTS : owns
+    ARTIFACTS o|--o{ ARTIFACTS : derives
+
+    SUBJECTS o|--o{ LEARNING_RESOURCES : owns
+    CLASSES o|--o{ LEARNING_RESOURCES : publishes
     ENROLLMENTS ||--o{ LEARNING_PROGRESS : records
     LEARNING_RESOURCES ||--o{ LEARNING_PROGRESS : tracks
 
     SUBJECTS ||--o{ BANK_ITEMS : owns
-    SUBJECTS ||--o{ ASSIGNMENTS : authors
+    ACCOUNTS ||--o{ ASSIGNMENTS : creates
+    SUBJECTS o|--o{ ASSIGNMENTS : authors
+    CLASSES o|--o{ ASSIGNMENTS : publishes
     ASSIGNMENTS ||--o{ ASSIGNMENT_COMPONENTS : contains
-    BANK_ITEMS ||--o{ ASSIGNMENT_COMPONENTS : reuses
+    BANK_ITEMS o|--o{ ASSIGNMENT_COMPONENTS : reuses
     ASSIGNMENTS ||--o{ ASSIGNMENT_PUBLICATIONS : publishes
     CLASSES ||--o{ ASSIGNMENT_PUBLICATIONS : receives
+    ACCOUNTS ||--o{ ASSIGNMENT_PUBLICATIONS : publishes
 
     CLASSES ||--o{ STUDENT_GROUPS : divides
-    STUDENT_GROUPS ||--o{ GROUP_MEMBERS : contains
     ENROLLMENTS ||--o{ GROUP_MEMBERS : participates
+    GROUP_MEMBERS }|--o| STUDENT_GROUPS : contains
     STUDENT_GROUPS ||--o{ LEADER_CHANGE_REQUESTS : receives
     ACCOUNTS ||--o{ LEADER_CHANGE_REQUESTS : requests
+    GROUP_MEMBERS o|--o{ LEADER_CHANGE_REQUESTS : proposed_as
     STUDENT_GROUPS ||--o{ GROUP_ASSIGNMENTS : receives
     ASSIGNMENTS ||--o{ GROUP_ASSIGNMENTS : defines
     GROUP_ASSIGNMENTS ||--o{ INDIVIDUAL_ALLOCATIONS : splits
@@ -50,22 +57,26 @@ erDiagram
 
     ASSIGNMENT_PUBLICATIONS ||--o{ SUBMISSIONS : collects
     ACCOUNTS ||--o{ SUBMISSIONS : submits
-    GROUP_ASSIGNMENTS ||--o{ SUBMISSIONS : groups
-    ARTIFACTS ||--o{ SUBMISSIONS : stores
+    GROUP_ASSIGNMENTS o|--o{ SUBMISSIONS : groups
+    INDIVIDUAL_ALLOCATIONS o|--o{ SUBMISSIONS : fulfills
+    ARTIFACTS o|--o{ SUBMISSIONS : stores
     SUBMISSIONS ||--o| GRADES : receives
+    ACCOUNTS o|--o{ GRADES : finalizes
     GRADES ||--o{ GRADE_HISTORY : preserves
-    ACCOUNTS ||--o{ GRADES : finalizes
+    ACCOUNTS ||--o{ GRADE_HISTORY : changes
 
     ACCOUNTS ||--o{ NOTIFICATIONS : receives
     ACCOUNTS ||--o{ PAYMENTS : initiates
     PAYMENTS ||--o{ ACCESS_GRANTS : grants
     ACCOUNTS ||--o{ ACCESS_GRANTS : owns
-    ACCOUNTS ||--o{ AUDIT_EVENTS : performs
+    ACCOUNTS o|--o{ AUDIT_EVENTS : performs
+
+    ARTIFACTS o|--o{ LEARNING_RESOURCES : references
 ```
 
 ### Text alternative
 
-Accounts contain their role code, may manage subjects, teach classes and enroll in classes as learners. Subjects contain classes and own reusable learning resources, bank items and assignments. Assignments are published to classes; learners submit attempts that may reference artifacts and receive grades. Classes contain student groups; group assignments are split into individual allocations. RabbitMQ handles background jobs outside PostgreSQL. Payments grant access, while notifications and audit events preserve communication and accountability.
+Accounts contain their role code and may manage subjects, teach classes, enroll in classes, own artifacts, create assignments, publish assignments, finalize grades and change grade history. Subjects contain classes and own reusable learning resources, bank items and subject-scoped assignments; classes may own learning resources and class-scoped assignments. Artifacts can derive other artifacts and may be referenced by learning resources or submissions. Classes contain student groups; enrollments participate through group members, leader-change requests may propose a group member, and group assignments are split into individual allocations that submissions can fulfill. Published assignments collect submissions, and each submission may receive one grade whose changes are preserved in grade history. Payments grant access, while notifications and audit events preserve communication and accountability. RabbitMQ handles background jobs outside PostgreSQL.
 
 ## 3.3 Detailed Entity Descriptions
 

@@ -694,3 +694,29 @@ giải thích"
 **User Input**: "Làm và nộp bài [Draw.io](http://draw.io/)\ncái này cx thế, với laij 2 use case này có  thể đổi tên là gì bỏ chữ bản nháp được ko Điểm khác\tUC-AIG-01\tUC-AIG-02\nActor\tGiảng viên\tChủ nhiệm môn\nNguồn dữ liệu\tNội dung của lớp được phân công\tKho RAG chung của môn\nLoại assignment\tAssignment riêng của lớp\tAssignment chung cấp môn\nNơi phát hành\tMột lớp cụ thể\tTất cả lớp hiện hành thuộc môn\n\nTuy nhiên, ở mức danh mục use case thì hai mục này khá giống nhau và có thể gộp thành:\n**Actor:** Giảng viên / Chủ nhiệm môn\n**Use Case:** Tạo và duyệt bản nháp assignment bằng AI\n**Description:** Cho phép giảng viên tạo bản nháp từ nội dung lớp hoặc Chủ nhiệm môn tạo bản nháp từ RAG cấp môn; người dùng xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành."
 **AI Response**: "Renamed UC-ASM-12 to Làm và nộp bài thực hành vẽ UML while retaining Draw.io and XML in its description. Recommended renaming UC-AIG-01 to Soạn assignment cấp lớp với AI hỗ trợ and UC-AIG-02 to Soạn assignment chung cấp môn với AI hỗ trợ, removing bản nháp from the use-case names while preserving draft-only behavior in the descriptions. Paused for approval before changing the AI use-case names."
 **Context**: Supplementary terminology update and bounded AI authoring rename proposal.
+
+---
+
+## Global Database ERD - Draw.io Reconciliation Request
+**Timestamp**: 2026-09-15T08:53:31Z
+**User Input**: "trước tiên hãy xem xét và sửa lại doc global-database-erd.md để đúng với diagram tôi gửi"
+**AI Response**: "Classified the request as a bounded supplementary documentation correction. Began comparing the visible entities, attributes and relationships in SEP490-G21.drawio.xml with global-database-erd.md; the active U01 Functional Design approval checkpoint remains unchanged."
+**Context**: Supplementary application-design database documentation reconciliation against the user-provided Draw.io ERD.
+
+---
+
+## Global Database ERD - Draw.io Reconciliation Complete
+**Timestamp**: 2026-09-15T08:58:21Z
+**User Input**: "N/A - implementation continued from the user's explicit documentation correction request."
+**AI Response**: "Reconciled the Mermaid relationship diagram and its text alternative with the visible Draw.io model. Confirmed all 24 entities and their documented fields/types already matched; updated the document to represent all 46 visible relationships with matching endpoints, labels and cardinalities. Validation confirmed 46/46 relationship equivalence, 24/24 entity sections, valid relationship syntax, well-formed Markdown tables and a clean git diff whitespace check."
+**Context**: Supplementary application-design database documentation correction completed; the U01 Functional Design approval checkpoint remains unchanged.
+
+---
+
+## Global Database ERD - Commit and Push Request
+**Timestamp**: 2026-09-15T09:02:32Z
+**User Input**: "commit lên github"
+**AI Response**: "Verified that only the ERD documentation and AI-DLC audit log were modified, then prepared to commit those scoped changes on main and push them to origin."
+**Context**: Version-control publication of the approved supplementary ERD documentation correction.
+
+---
