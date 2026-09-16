@@ -57,3 +57,14 @@ X) Other (mô tả sau thẻ [Answer]:)
 - [x] Validate the nine standalone diagrams against the nine consolidated pages.
 - [x] Regenerate all nine PNG exports with only the swimlane visible.
 - [x] Visually inspect the regenerated PNGs against the supplied sample.
+
+## Post-review correction - Routing, business logic and terminology
+
+- [x] Build a reproducible generator with explicit lanes, node positions, connector exit/entry points and waypoints.
+- [x] Separate Yes/No branch targets so no connector passes through another node; route loop-backs outside forward paths.
+- [x] Enlarge terminal and decision shapes so labels do not overflow; label every End with its outcome.
+- [x] Fix business logic: BF-01 credential check and failed-login outcome; BF-04 duplicate authoring step and class scope; BF-05 backend-mediated data reads and optional file; BF-06 invalid-group branch; BF-07 confirm-before-store and rejection outcome; BF-08 discard-to-manual, AI failure fallback and shared-work comparison; BF-09 gateway order, invalid-signature rejection and failed-payment update.
+- [x] Align terminology: Subject Manager, staff assignments, Student, consistent RabbitMQ/AI Worker and PostgreSQL lanes.
+- [x] Regenerate the nine standalone Draw.io files and the consolidated nine-page file; validate XML and references.
+- [x] Render all nine PNG exports with the draw.io viewer and visually inspect each one.
+- [x] Synchronize business-flows.md Mermaid diagrams, text alternatives and README with the corrected Draw.io flows.

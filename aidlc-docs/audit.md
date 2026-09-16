@@ -659,3 +659,27 @@ sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigg
 **Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
 
 ---
+
+## Main Business Flows - Review Request
+**Timestamp**: 2026-09-15T06:40:32Z
+**User Input**: "kiểm tra business flow đã ổn chưa, diagram có phải sửa gì không"
+**AI Response**: "Reviewed business-flows.md, all nine standalone Draw.io files, the consolidated nine-page file and the nine PNG exports against requirements FR-001, FR-010, FR-025 and FR-026. Confirmed every edge source/target in XML matches the intended logic and the standalone files match the consolidated pages. Reported findings without changing diagrams: auto-routed connectors pass through stacked Yes/No boxes so several PNGs appear to connect the wrong steps (BF-01, 02, 03, 05, 06, 07, 09), loop-back edges and branch labels are hidden (BF-02, 03, 04, 08), terminal/decision text overflows, and business-logic gaps (BF-08 discarded AI suggestion reaches publish without a grade, BF-09 gateway step order and invalid-signature handling, BF-07 file stored before confirmation, BF-05 data-store-to-data-store arrow), plus terminology and consistency issues (Subject Owner vs Subject Manager, Assignments vs staff assignments, Learner vs Student, stale README)."
+**Context**: INCEPTION - Supplementary Main Business Flow review; no artifact changed; U01 Functional Design approval checkpoint unchanged.
+
+---
+
+## Main Business Flows - Review Findings Correction Request
+**Timestamp**: 2026-09-15T06:57:24Z
+**User Input**: "sửa luôn"
+**AI Response**: "Started correcting all review findings: rebuilding the nine standalone Draw.io flows and the consolidated nine-page file with explicit connector routing, separated decision branches and larger terminals; fixing business-logic gaps in BF-01, BF-04, BF-05, BF-06, BF-07, BF-08 and BF-09; aligning terminology (Subject Manager, staff assignments, Student); regenerating PNG exports with the draw.io viewer; and synchronizing business-flows.md Mermaid diagrams and README."
+**Context**: INCEPTION - Supplementary Main Business Flow correction; U01 Functional Design approval checkpoint unchanged.
+
+---
+
+## Main Business Flows - Review Findings Correction Complete
+**Timestamp**: 2026-09-15T07:20:25Z
+**User Input**: "sửa luôn"
+**AI Response**: "Rebuilt all nine standalone Draw.io flows and the consolidated nine-page file from a reproducible specification with fixed connector exit/entry points, separated decision branches, loop-backs along lane edges and outcome-labelled End shapes; automated checks found no connector crossing a shape, no unintended overlap or crossing, no broken references, and every standalone file matches its consolidated page. Fixed business logic: BF-01 password verification, attempt recording, login-failed/logged-out/session-expired outcomes; BF-02 correction loop and staff-assignment wording; BF-03 AI processing failure branch and PostgreSQL persistence; BF-04 single authoring step, draft persistence and target-class publication; BF-05 backend-mediated reads with optional Google Drive file; BF-06 invalid-setup branch, rejection reason and audit history; BF-07 confirm-before-store, submission-rights check and rejection outcome; BF-08 grading always ends in instructor-entered or confirmed grade, AI failure fallback and shared-work comparison; BF-09 correct gateway order, invalid-webhook rejection without status change, separate FAILED and PAID updates. Aligned terminology to Subject Manager, staff assignment and Student, merged RabbitMQ and AI Worker lanes and added PostgreSQL lanes where business results persist. Regenerated nine PNG exports with the diagrams.net viewer and visually inspected each. Rewrote business-flows.md Mermaid diagrams, end conditions, text alternatives and coverage to match (all nine Mermaid blocks parse and render), and updated the README."
+**Context**: INCEPTION - Supplementary Main Business Flow correction complete; U01 Functional Design approval checkpoint unchanged.
+
+---
