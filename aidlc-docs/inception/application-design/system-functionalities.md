@@ -118,9 +118,9 @@ flowchart LR
 | 15 | SCR-LRN-08 | Làm bài trắc nghiệm | Sinh viên | Assignment Workspace | Trả lời câu hỏi trắc nghiệm và xem trạng thái lưu nháp. |
 | 16 | SCR-LRN-09 | Canvas Draw.io | Sinh viên | Diagram Assignment | Vẽ sơ đồ trên canvas và nộp XML Draw.io đầy đủ; XML rút gọn không được người học nộp. |
 | 17 | SCR-LRN-10 | Code Lab | Sinh viên | Code Assignment | Viết, chạy thử trong sandbox và nộp mã nguồn theo giới hạn đề bài. |
-| 18 | SCR-LRN-11 | Xác nhận nộp bài | Sinh viên/Leader | Submission | Kiểm tra file, attempt và thời hạn trước khi tạo bài nộp bất biến cùng biên nhận. |
+| 18 | SCR-LRN-11 | Xác nhận nộp bài | Sinh viên | Submission | Kiểm tra nội dung/artifact, attempt và thời hạn trước khi tạo bài nộp bất biến cùng biên nhận. |
 | 19 | SCR-LRN-12 | Không gian nhóm | Sinh viên | Group Work | Hiển thị nhóm, leader, thành viên, bài chung và trạng thái đóng góp. |
-| 20 | SCR-LRN-13 | Phần việc cá nhân và bài chung | Sinh viên/Leader | Group Assignment | Cho từng thành viên nộp phần được giao; chỉ leader được upload DOCX chung. |
+| 20 | SCR-LRN-13 | Phần việc cá nhân và tài liệu chung | Sinh viên | Group Assignment | Cho từng thành viên nộp phần được giao và xem trạng thái composite do hệ thống tạo/giảng viên chốt. |
 | 21 | SCR-LRN-14 | Yêu cầu đổi leader | Sinh viên | Group Work | Gửi lý do và người đề xuất để giảng viên xem xét thay đổi leader. |
 | 22 | SCR-LRN-15 | Điểm và phản hồi | Sinh viên | Grading | Hiển thị điểm cuối cùng đã công bố và phản hồi của chính sinh viên. |
 | 23 | SCR-LRN-16 | Thanh toán và quyền truy cập | Sinh viên | Payment | Chọn gói, chuyển đến cổng thanh toán và theo dõi payment/access grant. |
@@ -128,18 +128,21 @@ flowchart LR
 | 25 | SCR-TCH-02 | Quản lý lớp | Giảng viên | Class Management | Cập nhật thông tin, trạng thái và nội dung của lớp được phân công. |
 | 26 | SCR-TCH-03 | Danh sách sinh viên | Giảng viên | Enrollment | Xem, thêm hoặc gỡ ghi danh mà không xóa lịch sử học tập. |
 | 27 | SCR-TCH-04 | Quản lý nội dung lớp | Giảng viên | Learning Content | Soạn, upload, sắp xếp, duyệt và xuất bản nội dung riêng của lớp. |
-| 28 | SCR-TCH-05 | Upload và AI chia bài học | Giảng viên/Chủ nhiệm môn | AI Content | Upload DOCX/PDF lên Google Drive, yêu cầu AI tóm tắt/chia bài và duyệt các lesson nháp. |
+| 28 | SCR-TCH-05 | Nguồn học liệu và AI chia bài học | Giảng viên/Chủ nhiệm môn | AI Content | Upload DOCX/PDF hoặc gắn YouTube/playlist, theo dõi caption/phiên âm/RAG và duyệt lesson nháp. |
 | 29 | SCR-TCH-06 | Quản lý nhóm và leader | Giảng viên | Group Management | Tạo nhóm, thêm thành viên, chỉ định đúng một leader, chia phần việc và xử lý yêu cầu đổi leader. |
-| 30 | SCR-TCH-07 | Soạn assignment | Giảng viên/Chủ nhiệm môn | Assignment Authoring | Tạo bài viết luận, trắc nghiệm, Draw.io, Code Lab hoặc bài nhóm và gắn rubric. |
+| 30 | SCR-TCH-07 | Soạn assignment | Giảng viên/Chủ nhiệm môn | Assignment Authoring | Tạo bài viết luận, trắc nghiệm, Draw.io, Code Lab, bài nhóm hoặc simulation và gắn rubric/version. |
 | 31 | SCR-TCH-08 | Duyệt bản nháp AI | Giảng viên/Chủ nhiệm môn | AI Authoring | Xem căn cứ, sửa, chấp nhận hoặc bỏ nội dung do AI đề xuất trước khi lưu. |
 | 32 | SCR-TCH-09 | Phát hành assignment | Giảng viên/Chủ nhiệm môn | Assignment Publication | Chọn lớp, thời gian mở/đóng và lượt nộp; đóng băng phiên bản trước khi phát hành. |
 | 33 | SCR-TCH-10 | Theo dõi bài nộp | Giảng viên | Submission Monitoring | Lọc chưa nộp, đã nộp, trễ hạn và gửi nhắc nhở tới đúng sinh viên. |
 | 34 | SCR-TCH-11 | Chấm bài | Giảng viên | Grading | Sau khi nhận bài, chọn chấm tay hoặc yêu cầu AI đề xuất; bài chung luôn chấm tay. |
-| 35 | SCR-TCH-12 | Sổ điểm | Giảng viên | Gradebook | Duyệt, chốt, công bố điểm và xem lịch sử thay đổi có lý do. |
+| 35 | SCR-TCH-12 | Sổ điểm | Giảng viên | Gradebook | Duyệt, chốt, công bố điểm; với bài nhóm hiển thị điểm phần/composite để giảng viên tự nhập điểm cuối có lý do. |
 | 36 | SCR-TCH-13 | Tiến độ lớp | Giảng viên | Progress Tracking | Xem tiến độ tổng hợp và chi tiết phù hợp của sinh viên trong lớp được giao. |
 | 37 | SCR-SUB-01 | Quản lý học liệu cấp môn | Chủ nhiệm môn | Subject Content | Quản lý tài liệu/RAG dùng chung của các môn được phân công. |
-| 38 | SCR-SUB-02 | Ngân hàng câu hỏi và rubric | Chủ nhiệm môn/Giảng viên được phép | Question Bank | Tạo, sửa, nhân bản, xem trước và quản lý phiên bản câu hỏi/rubric tái sử dụng. |
-| 39 | SCR-SUB-03 | Assignment chung của môn | Chủ nhiệm môn | Common Assignment | Biên soạn, duyệt và phát hành đề chung tới mọi lớp hiện hành thuộc môn được giao. |
+| 38 | SCR-SUB-02 | Ngân hàng câu hỏi và rubric | Chủ nhiệm môn/Giảng viên được phép | Question Bank | Tạo, sửa, nhân bản, xem trước và phát hành version; attempt đã bắt đầu giữ snapshot. |
+| 39 | SCR-SUB-03 | Assignment chung và template của môn | Chủ nhiệm môn | Common Assignment | Biên soạn/phát hành đề chung hoặc template có version để giảng viên copy thành draft riêng. |
+| 40 | SCR-TCH-13 | Copy assignment/rubric | Giảng viên | Content Reuse | Chọn lớp nguồn/đích trong phạm vi, tạo bản copy độc lập và xem lineage mà không mang dữ liệu thực thi. |
+| 41 | SCR-TCH-14 | Tổng hợp và chấm bài nhóm | Giảng viên | Group Grading | Tạo/xem trước/chốt composite, chấm nhất quán và nhập điểm cuối từng thành viên. |
+| 42 | SCR-LRN-15 | Simulation exam | Sinh viên | Simulation | Hiển thị lượt, cách lấy kết quả, thời điểm hiện đáp án, trạng thái tính điểm và nhãn thi thử. |
 | 40 | SCR-ADM-01 | Dashboard quản trị | Quản trị viên | Administration | Tổng hợp trạng thái tài khoản, môn/lớp, tích hợp và sự kiện cần xử lý. |
 | 41 | SCR-ADM-02 | Quản lý tài khoản | Quản trị viên | Identity Administration | Tạo/import tài khoản, đặt role, khóa, mở khóa hoặc vô hiệu hóa tài khoản. |
 | 42 | SCR-ADM-03 | Quản lý môn, lớp và phân công | Quản trị viên | Academic Administration | Tạo môn/lớp, chỉ định Chủ nhiệm môn và một giảng viên chính cho mỗi lớp. |
@@ -154,7 +157,8 @@ External API chỉ được gọi từ backend hoặc worker. Frontend không ch
 | # | API Name | Provider/System | Calling Path | Description |
 |---:|---|---|---|---|
 | 1 | Google Drive API | Google Workspace | Backend/Worker → Google Drive | Upload, tải và quản lý file DOCX, PDF, slide, Draw.io XML và artifact dẫn xuất bằng `provider_file_id` trong Shared Drive của tổ chức. |
-| 2 | Generative AI API | AI Provider | AI Worker → AI Provider | Tóm tắt tài liệu, chia tài liệu thành lesson, tạo bản nháp assignment và đề xuất điểm/phản hồi. Chỉ dữ liệu tối thiểu được phép mới được gửi. |
+| 2 | Generative AI API | AI Provider | AI Worker → AI Provider | Tóm tắt tài liệu, chia lesson, tạo assignment draft và đề xuất điểm/phản hồi phần cá nhân. Composite nhóm không được gửi để chấm. |
+| 6 | YouTube/Transcript Source | YouTube | Content Worker → YouTube | Lấy metadata/caption video hoặc audio stream được phép để phiên âm; URL/provider response được xem là untrusted input. |
 | 3 | Payment API | Payment Gateway | Backend → Payment Gateway | Tạo yêu cầu thanh toán, chuyển hướng người dùng và truy vấn trạng thái khi đối soát. |
 | 4 | Payment Webhook | Payment Gateway | Payment Gateway → Backend | Thông báo kết quả giao dịch có chữ ký; backend xác minh trước khi đánh dấu `PAID` và cấp access grant. |
 | 5 | Email Delivery API | Email Provider/Google Workspace | Notification Worker → Email Provider | Gửi OTP, thông báo assignment, nhắc hạn, quyết định đổi leader, điểm và trạng thái thanh toán. |
@@ -181,6 +185,8 @@ Background job được backend phát dưới dạng message có version qua Rab
 | 4 | `AI_ASSIGNMENT_DRAFT` | AI Authoring | Giảng viên/Chủ nhiệm môn yêu cầu tạo bài | Assignment draft và căn cứ | Tạo câu hỏi, bài viết luận hoặc hướng dẫn từ nguồn được phép; không tự phát hành. |
 | 5 | `DRAWIO_COMPACT_XML` | Diagram Processing | Giảng viên chọn AI chấm bài Draw.io | Artifact XML rút gọn dẫn xuất | Đọc XML đầy đủ đã kiểm tra, loại phần không cần cho AI và giữ liên kết với artifact gốc. |
 | 6 | `AI_GRADE_PROPOSAL` | AI Grading | Giảng viên chọn “Nhờ AI đề xuất” cho bài cá nhân | Proposed score, feedback và evidence | Phân tích submission/rubric tối thiểu; kết quả chỉ là đề xuất để giảng viên chấp nhận, sửa hoặc bỏ. |
+| 7 | `YOUTUBE_TRANSCRIPT_INGEST` | Content/RAG | Video/playlist được gắn vào bài giảng | Transcript artifact, timestamps và index reference | Ưu tiên caption; tự phiên âm khi thiếu caption; trạng thái tách theo video. |
+| 8 | `GROUP_COMPOSITE_GENERATE` | Group Submission | Giảng viên yêu cầu ghép ordered part versions | Derived composite artifact/version | Không sửa source; lưu lineage và chỉ dùng version giảng viên chốt để chấm. |
 | 7 | `CODE_RUN` | Code Execution | Sinh viên chạy thử/nộp Code Lab hoặc giảng viên kiểm thử đề | Kết quả test được phép hiển thị | Gửi code tới sandbox cô lập, áp dụng quota và trả kết quả đã lọc thông tin nhạy cảm. |
 | 8 | `NOTIFICATION_SEND` | Notification | Business event cần thông báo | Cập nhật trạng thái notification | Gửi email/in-app idempotent; lỗi gửi không rollback giao dịch nghiệp vụ gốc. |
 | 9 | `PAYMENT_RECONCILE` | Payment | Lịch định kỳ hoặc quản trị viên yêu cầu | Cập nhật payment/access grant có audit | Đối chiếu giao dịch chưa rõ trạng thái với provider và xử lý chênh lệch theo chính sách. |
@@ -191,7 +197,8 @@ Background job được backend phát dưới dạng message có version qua Rab
 1. Message chỉ chứa ID/reference và metadata tối thiểu, không chứa password, raw OTP hoặc service credential.
 2. Job phải có `message_id`, `correlation_id`, schema version và idempotency key phù hợp.
 3. Worker không tự ý ghi trực tiếp bảng ngoài contract nghiệp vụ; result event được backend xác minh và áp dụng.
-4. AI grading chỉ áp dụng cho bài cá nhân; DOCX chung của nhóm luôn do giảng viên chấm tay.
+4. AI grading chỉ áp dụng cho bài cá nhân; composite nhóm luôn do giảng viên chấm tay.
+5. Attempt snapshot giữ assignment/question/rubric version và simulation policy; publication mới không đổi attempt đang làm.
 5. Full Draw.io XML là bản nộp chính thức; compact XML chỉ là artifact dẫn xuất cho đúng lần AI xử lý.
 6. Job hết retry chuyển dead-letter queue và hiển thị lỗi an toàn cùng hướng xử lý cho người dùng có quyền.
 7. Kết quả hoàn tất phải nằm trong bảng nghiệp vụ hoặc Google Drive; không dùng RabbitMQ làm kho lịch sử vĩnh viễn.
@@ -204,7 +211,7 @@ Background job được backend phát dưới dạng message có version qua Rab
 | Academic | Subject/class administration, enrollments, dashboards | Không bắt buộc | Notification send |
 | Learning content | Lesson viewer, content manager, AI lesson review | Google Drive, Generative AI | Scan, extract/index, summarize/split |
 | Assignment | Builder, publication, learner workspaces | Generative AI, Code Sandbox | AI draft, compact XML, code run |
-| Group work | Group workspace, group management, leader request | Google Drive | Notification send |
+| Group work | Group workspace, group management, composite review/grading | Google Drive | Composite generation, notification send |
 | Grading | Grading workspace, gradebook, results | Generative AI | AI grade proposal |
 | Payment | Payment/access screen, reconciliation | Payment API/Webhook | Payment reconciliation |
 | Reporting/Audit | Progress, audit explorer, exports | Google Drive | Report export |

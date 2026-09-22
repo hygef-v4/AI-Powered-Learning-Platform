@@ -53,11 +53,11 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 | User, role, scope, session | Identity & Access | Tất cả module qua actor/resource contract |
 | Subject, class, enrollment | Academic | Group, Content, Learning, Assessment, Reporting |
 | Group, leader, allocation | Group | Submission, Grading, Reporting |
-| Material/content metadata | Content | Learning, AI, Assessment |
-| Assessment/publication/version | Assessment | Submission, Grading, Reporting |
-| Draft/submission/artifact refs | Submission | Grading, Reporting |
+| Material/content/source/transcript version | Content | Learning, AI, Assessment |
+| Assessment/template/copy/publication/simulation policy | Assessment | Submission, Grading, Reporting |
+| Attempt snapshot, draft/submission/composite/artifact refs | Submission | Grading, Reporting |
 | Grade/proposal/publication state | Grading | Learning, Reporting, Notification |
-| Object bytes/checksum/scan | File & Artifact | Content, Submission, AI, Reporting |
+| Object bytes/checksum/scan/derivation | File & Artifact | Content, Submission, AI, Reporting |
 | Payment/event/entitlement | Payment | Academic/access checks qua entitlement contract |
 | Audit events | Audit | Admin query only |
 
@@ -68,3 +68,11 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 - Worker payload chỉ chứa ID/reference; worker tải dữ liệu qua scoped service.
 - Signed artifact access có TTL, purpose và actor binding khi khả thi.
 - Full Draw.io XML không được gửi thẳng sang AI; derived artifact được tạo trong trusted worker sau validation.
+
+## 6. Change-specific communication contracts
+
+- Content → Job: `YOUTUBE_TRANSCRIPT_INGEST` chỉ mang source/version reference đã được authorize; worker trả transcript artifact và timestamp metadata qua Content service contract.
+- Assessment → Submission: `AttemptSnapshot` đóng băng assignment, question/rubric component versions và simulation policy khi attempt bắt đầu.
+- Copy operation chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không có event đồng bộ ngược hoặc xuôi.
+- Submission → Job: `GROUP_COMPOSITE_GENERATE` mang danh sách part-version bất biến có thứ tự; kết quả là derived composite artifact/version.
+- Submission → Grading: composite evidence và individual-part evidence là read-only. Grading lưu kết quả tách biệt và điểm cuối từng thành viên do giảng viên nhập.

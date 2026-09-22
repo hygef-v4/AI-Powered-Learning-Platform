@@ -223,52 +223,54 @@ flowchart LR
 
 **Text alternative:** Giảng viên tạo nhóm, chọn đúng một leader và gán phần riêng cho từng thành viên. Sinh viên có thể yêu cầu đổi leader; chỉ giảng viên được phê duyệt hoặc từ chối và hệ thống lưu quyết định.
 
-## 2.7 Làm và nộp bài cá nhân hoặc bài chung (BF-07)
+## 2.7 Nộp phần cá nhân và tạo tài liệu nhóm (BF-07)
 
-**Trigger:** Assignment đang mở và sinh viên muốn nộp phần cá nhân hoặc leader muốn nộp DOCX chung.
+**Trigger:** Assignment nhóm đang mở; thành viên nộp phần được giao hoặc giảng viên yêu cầu tổng hợp các phần đã nộp.
 
-**End condition:** Một submission bất biến và biên nhận được tạo; file đầy đủ nằm trên Google Drive, hoặc yêu cầu bị từ chối vì không hợp lệ.
+**End condition:** Các submission phần cá nhân bất biến được bảo toàn và một composite version có truy vết nguồn được giảng viên chốt, hoặc tác vụ hiển thị lỗi/thiếu phần an toàn.
 
 ```mermaid
 flowchart LR
-    subgraph S["Sinh viên hoặc Leader"]
-        S1([Bắt đầu]) --> S2[Mở assignment và làm bài]
-        S3[Chọn loại bài nộp]
-        S4{Bài chung?}
-        S5[Leader chọn DOCX chung]
-        S6[Sinh viên chọn câu trả lời hoặc XML đầy đủ]
-        S7[Xác nhận nộp]
-        S8[Nhận biên nhận]
-        S9([Kết thúc])
+    subgraph S["Sinh viên"]
+        S1([Bắt đầu]) --> S2[Mở phần được giao]
+        S3[Nộp nội dung hoặc artifact]
+        S4[Nhận biên nhận]
+    end
+    subgraph T["Giảng viên"]
+        T1[Yêu cầu tổng hợp]
+        T2[Xem trước và chỉnh cấu trúc]
+        T3[Chốt composite version]
+        T4([Kết thúc])
     end
     subgraph B["Backend"]
-        B1[Kiểm tra thời hạn attempt và quyền]
+        B1[Kiểm tra thời hạn allocation và quyền]
         B2{Hợp lệ?}
         B3[Từ chối và nêu lý do]
-        B4[Kiểm tra cấu trúc và metadata file]
-        B5[Tạo submission bất biến]
+        B4[Tạo part submission bất biến]
+        B5[Phát job với ordered source versions]
+        B6[Lưu composite version và lineage]
     end
-    subgraph G["Google Drive"]
-        G1[Lưu DOCX hoặc XML đầy đủ riêng tư]
+    subgraph W["Composite Worker"]
+        W1[Ghép phần theo cấu trúc]
+        W2[Tạo derived artifact]
     end
     subgraph D["PostgreSQL"]
-        D1[(Artifact metadata và submission)]
+        D1[(Part submissions và composite metadata)]
     end
-    S2 --> S3 --> S4
-    S4 -- Có --> S5 --> B1
-    S4 -- Không --> S6 --> B1
+    S3 --> B1
     B1 --> B2
-    B2 -- Không --> B3 --> S9
-    B2 -- Có --> B4 --> G1 --> S7 --> B5 --> D1 --> S8 --> S9
+    B2 -- Không --> B3
+    B2 -- Có --> B4 --> D1 --> S4
+    D1 --> T1 --> B5 --> W1 --> W2 --> B6 --> D1 --> T2 --> T3 --> T4
 ```
 
-**Text alternative:** Sinh viên nộp phần cá nhân; chỉ leader được nộp DOCX chung. Backend kiểm tra quyền, thời hạn, số lần nộp và file. File đầy đủ được lưu riêng tư trên Google Drive, còn metadata và submission bất biến được lưu trong PostgreSQL.
+**Text alternative:** Mỗi sinh viên chỉ nộp phần được giao. Backend tạo submission bất biến. Khi giảng viên yêu cầu, worker ghép các source version theo cấu trúc và tạo derived composite; giảng viên xem trước, điều chỉnh lựa chọn/thứ tự và chốt version dùng để chấm.
 
 ## 2.8 Chọn phương pháp chấm và công bố điểm (BF-08)
 
 **Trigger:** Giảng viên mở một submission hợp lệ chưa được chốt điểm.
 
-**End condition:** Điểm cuối cùng do giảng viên quyết định được lưu, lịch sử thay đổi được bảo toàn, công bố cho đúng sinh viên; bài chung chỉ được chấm tay.
+**End condition:** Điểm cuối cùng do giảng viên quyết định được lưu, lịch sử thay đổi được bảo toàn và công bố đúng sinh viên; composite nhóm chỉ được chấm tay, không có công thức tự quyết định điểm thành viên.
 
 ```mermaid
 flowchart LR
@@ -306,7 +308,7 @@ flowchart LR
     T7 --> T8 --> B5 --> B6 --> S1 --> S2
 ```
 
-**Text alternative:** Giảng viên quyết định chấm tay hoặc yêu cầu AI sau khi nhận bài. Bài chung luôn chấm tay. Với Draw.io, XML đầy đủ được giữ nguyên, còn bản rút gọn chỉ tạo khi gọi AI. Đề xuất AI không tự trở thành điểm cuối; giảng viên chốt và công bố điểm.
+**Text alternative:** Giảng viên quyết định chấm tay hoặc yêu cầu AI sau khi nhận bài cá nhân. Composite nhóm luôn chấm tay theo rubric tích hợp/nhất quán. Điểm cá nhân và điểm chung được hiển thị tách biệt; giảng viên nhập điểm cuối từng sinh viên và mọi điều chỉnh có lý do/audit. Với Draw.io, XML đầy đủ được giữ nguyên, còn bản rút gọn chỉ tạo khi gọi AI.
 
 ## 2.9 Thanh toán và cấp quyền truy cập (BF-09)
 
@@ -347,7 +349,31 @@ flowchart LR
 
 **Text alternative:** Backend tạo payment idempotent và chuyển sinh viên tới cổng thanh toán. Chỉ webhook hợp lệ mới được dùng để đánh dấu `PAID` và tạo `access_grants` đúng một lần; kết quả redirect từ trình duyệt không tự cấp quyền.
 
-## 2.10 Business Flow Coverage
+## 2.10 YouTube RAG theo bài giảng (BF-10)
+
+**Trigger:** Giảng viên hoặc Chủ nhiệm môn gắn video/playlist YouTube hợp lệ vào bài giảng.
+
+**End condition:** Caption hoặc transcript tự phiên âm có timestamp được lưu và lập chỉ mục vào đúng scope/version; từng video lỗi có trạng thái retry độc lập.
+
+**Text alternative:** Backend xác thực URL và quyền bài giảng, worker xử lý từng video, ưu tiên caption rồi fallback sang phiên âm audio, sau đó chunk/index transcript. Kết quả ngoài quyền hoặc lỗi không được đánh dấu hoàn tất.
+
+## 2.11 Template, copy và question version (BF-11)
+
+**Trigger:** Chủ nhiệm môn phát hành template hoặc giảng viên copy template/assignment/rubric và phát hành version mới.
+
+**End condition:** Target draft có identity độc lập và lineage; không mang publication/attempt/submission/grade. Attempt đã bắt đầu giữ snapshot cũ.
+
+**Text alternative:** Mọi thao tác copy kiểm tra cả scope nguồn và đích. Chỉnh sửa câu hỏi đã publish tạo version mới; attempt đang làm không đổi, attempt bắt đầu sau publication mới dùng version mới.
+
+## 2.12 Simulation exam (BF-12)
+
+**Trigger:** Giảng viên cấu hình và phát hành simulation exam.
+
+**End condition:** Người học làm trong giới hạn lượt bằng snapshot bất biến; kết quả dùng chính sách cao nhất/gần nhất/trung bình và chỉ vào điểm thành phần khi đã cấu hình.
+
+**Text alternative:** Simulation policy gồm cửa sổ, lượt, cách chọn kết quả, thời điểm hiện đáp án và trạng thái tính điểm. Policy bị khóa sau attempt đầu tiên; giao diện luôn ghi rõ đây không phải kỳ thi chính thức có giám sát.
+
+## 2.13 Business Flow Coverage
 
 | Business flow | Nghiệp vụ chính được bao phủ |
 |---|---|
@@ -357,8 +383,11 @@ flowchart LR
 | BF-04 | Assignment thủ công/AI, duyệt và phát hành |
 | BF-05 | Enrollment, access grant, học liệu và tiến độ |
 | BF-06 | Nhóm, leader, phần việc cá nhân và yêu cầu đổi leader |
-| BF-07 | Bài cá nhân, XML Draw.io đầy đủ, DOCX chung và biên nhận |
-| BF-08 | Giảng viên chọn AI/chấm tay, XML rút gọn, grade history |
+| BF-07 | Phần cá nhân, composite derived artifact/version và biên nhận |
+| BF-08 | AI proposal phần cá nhân, chấm tay composite, điểm cuối từng thành viên và grade history |
 | BF-09 | Payment webhook và access grant idempotent |
+| BF-10 | YouTube caption/phiên âm, transcript timestamp và RAG theo bài giảng |
+| BF-11 | Template/copy lineage, question version và attempt snapshot |
+| BF-12 | Simulation policy, giới hạn lượt và tính điểm thành phần tùy chọn |
 
 Các use case quản trị AI, báo cáo, audit và notification là luồng hỗ trợ hoặc luồng quản trị, được gọi từ các business flow chính khi cần và không tách thành Main Business Flow riêng.

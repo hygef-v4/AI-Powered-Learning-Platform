@@ -12,12 +12,12 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 | AuthorizationService | Role + subject/class/object decision | Không tin quyền do frontend truyền |
 | AcademicService | Subject/class/assignment/enrollment | Không xóa lịch sử học tập |
 | GroupService | Membership, leader invariant, allocation | Không cho learner tự đổi leader |
-| ContentService | Version/publish nội dung và material metadata | Không xử lý vector trực tiếp trong request |
+| ContentService | Version/publish nội dung, file/YouTube source và transcript metadata | Không xử lý download/phiên âm/vector trực tiếp trong request |
 | LearningService | Access check và progress | Không trả dữ liệu học viên khác |
 | BankService | Rubric/question versions | Không sửa hồi tố version đã dùng |
-| AssessmentService | Draft/review/publish/retire | Không để AI tự publish |
-| SubmissionService | Autosave, submit, receipt, immutable artifact | Không chấm hoặc sửa bản đã nộp |
-| GradingService | Manual/deterministic/AI proposal review/finalize | Không cho AI quyết định final grade |
+| AssessmentService | Draft/review/publish/retire, template/copy lineage, simulation policy và attempt snapshot contract | Không để AI tự publish hoặc đổi policy sau attempt đầu tiên |
+| SubmissionService | Autosave, submit, receipt, immutable artifact và group composite orchestration | Không chấm hoặc sửa bản đã nộp/source part |
+| GradingService | Manual/deterministic/AI proposal review, manual composite grade và per-student finalize | Không cho AI hoặc công thức tự động quyết định final grade |
 | AiOrchestrationService | Context scope, quota, job, provider port | Không sở hữu dữ liệu nguồn hoặc grade cuối |
 | PaymentService | Intent, webhook verification, entitlement | Không tin browser redirect |
 | ReportingService | Read model/report/export jobs | Không vượt row/object authorization |
@@ -42,15 +42,16 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 
 1. GroupService tạo nhóm, đảm bảo đúng một leader và phân phần cá nhân.
 2. Mỗi thành viên nộp phần của mình qua SubmissionService.
-3. Leader hiện tại nộp DOCX chung; server kiểm tra leader tại thời điểm submit.
-4. GradingService có thể tạo AI proposal cho phần cá nhân nếu giảng viên chọn.
-5. Bài DOCX chung luôn vào manual review; giảng viên đối chiếu các phần cá nhân.
+3. Giảng viên yêu cầu SubmissionService tạo composite theo cấu trúc và các version phần đã nộp; worker tạo derived artifact nhưng không sửa source.
+4. Giảng viên xem trước, đổi thứ tự/loại phần và chốt composite version.
+5. GradingService có thể tạo AI proposal cho phần cá nhân nếu giảng viên chọn.
+6. Composite luôn vào manual review với tiêu chí tích hợp/nhất quán; giảng viên nhập điểm cuối từng sinh viên từ evidence cá nhân và điểm chung, không có công thức bắt buộc.
 
 ### RAG/AI authoring
 
-1. ContentService đăng ký material và tạo artifact.
-2. Scan thành công phát event enqueue ingestion.
-3. Worker parse/chunk/index qua RAG port và cập nhật trạng thái.
+1. ContentService đăng ký material file hoặc URL video/playlist theo bài giảng.
+2. File sạch hoặc URL hợp lệ phát event enqueue ingestion; video ưu tiên caption và fallback sang phiên âm audio.
+3. Worker parse/transcribe, tạo transcript có timestamp, chunk/index qua RAG port và cập nhật trạng thái từng source.
 4. AiOrchestrationService chỉ lấy source trong subject/class scope của actor.
 5. Bản AI sinh ra là assessment draft, cần human review trước publish.
 
@@ -67,6 +68,8 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 | Job | Retry | Idempotency/result |
 |---|---|---|
 | RAG ingestion | Hữu hạn + backoff | Theo material version/checksum |
+| YouTube transcript ingestion | Hữu hạn + backoff; không retry lỗi URL/quyền vĩnh viễn | Theo video ID + transcript language/version |
+| Group composite generation | Hữu hạn + backoff | Theo group assignment + ordered source version set |
 | AI generation/grading | Hữu hạn theo failure class | Theo request ID; không nhân đôi proposal ngoài policy |
 | Code execution | Không retry lỗi code; retry giới hạn lỗi hạ tầng | Theo run ID, sandbox result immutable |
 | Notification | Hữu hạn + backoff | Theo event/recipient/channel |

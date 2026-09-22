@@ -3,9 +3,9 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
-- **Current Phase**: INCEPTION (change request; previous CONSTRUCTION checkpoint preserved)
-- **Current Stage**: Requirements Change Approval
-- **Session Status**: Revised requirements awaiting explicit approval; U01 Functional Design approval checkpoint is preserved and paused
+- **Current Phase**: CONSTRUCTION
+- **Current Stage**: U01 Functional Design Recovery Clarification
+- **Session Status**: Recovery option A selected; awaiting five missing policy decisions before regenerating the U01 Functional Design artifacts
 
 ## Workspace State
 - **Existing Code**: No
@@ -48,8 +48,19 @@
 - **Stages skipped**: Reverse Engineering (greenfield; no application code)
 - **Conditional stages to execute**: Application Design, Units Generation, Functional Design, NFR Requirements, NFR Design, Infrastructure Design
 - **Always stages remaining**: Code Generation per unit, Build and Test
-- **Next stage after approval**: U01 Functional Design Part 2 artifact generation
+- **Next stage after recovery**: U01 Functional Design artifact review or regeneration
 - **Risk level**: High
 - **Testing complexity**: Complex
 - **Current unit**: U01 - Platform Foundation and Identity
-- **Resume action**: Review and approve the revised requirements, then propagate the approved change through remaining Inception artifacts before returning to the preserved U01 Functional Design approval checkpoint
+- **Resume action**: Answer all questions in `aidlc-docs/construction/plans/u01-platform-foundation-and-identity-functional-design-plan.md`, then validate and regenerate the seven U01 artifacts
+
+## Change Request Progress - 2026-09-22
+
+- [x] Requirements clarification
+- [x] Requirements revision approved
+- [x] User Stories revision approved
+- [x] Workflow Planning revalidation approved
+- [x] Application Design synchronization approved
+- [x] Units Generation synchronization approved
+- [x] Return to Construction
+- [ ] Recover missing U01 Functional Design artifacts

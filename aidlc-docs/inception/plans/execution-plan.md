@@ -6,7 +6,7 @@
 
 - **Project type**: Greenfield.
 - **Primary goal**: Xây dựng MVP web AI-Powered Learning Platform cho một tổ chức, đồng thời duy trì đầy đủ artifact/checkpoint AI-DLC.
-- **Business scope**: Bốn vai trò (không có Head of Department), quản lý môn/lớp/nhóm/nội dung, bài nhóm hai cấp, RAG và tạo bài bằng AI, rubric/câu hỏi, bốn loại bài đánh giá, học tập/tiến độ, đánh giá/chấm điểm, giám sát AI, thanh toán, thông báo và audit.
+- **Business scope**: Bốn vai trò (không có Head of Department), quản lý môn/lớp/nhóm/nội dung, bài nhóm gồm phần cá nhân và tài liệu hệ thống tổng hợp, RAG theo bài giảng từ tài liệu/YouTube, tạo bài bằng AI, rubric/câu hỏi có version, template đề cấp môn, copy assignment/rubric giữa lớp, simulation exam, bốn loại bài đánh giá, học tập/tiến độ, chấm điểm, giám sát AI, thanh toán, thông báo và audit.
 - **Technical direction already fixed**: Next.js/TypeScript frontend, Java/Spring Boot backend, local container; provider/database/cloud cụ thể chưa được chọn.
 - **Brownfield transformation**: N/A; workspace không có application code nên Reverse Engineering và package-change analysis được bỏ qua.
 
@@ -14,10 +14,10 @@
 
 | Khu vực | Tác động | Nhận định |
 |---|---|---|
-| User-facing | Có - toàn hệ thống | 55 stories trên bốn persona và mười một miền nghiệp vụ sản phẩm |
+| User-facing | Có - toàn hệ thống | 59 stories trên bốn persona và mười một miền nghiệp vụ sản phẩm |
 | Structural | Có - lớn | Cần xác định component/service boundary, async work và external adapters |
-| Data model | Có - lớn | User/role/scope môn, môn/lớp/nhóm/leader, phần cá nhân/bài chung, nội dung, tiến độ, assessment, submission, grade, payment, notification, audit |
-| API/contracts | Có - lớn | Web API, upload/status, AI task, payment webhook và provider adapters |
+| Data model | Có - lớn | User/role/scope môn, môn/lớp/nhóm/leader, source/transcript RAG, question/rubric/assessment version, template/copy lineage, simulation policy/attempt snapshot, group part/composite version, submission, grade, payment, notification, audit |
+| API/contracts | Có - lớn | Web API, upload/YouTube ingestion/status, version publication/copy, group aggregation, AI task, payment webhook và provider adapters |
 | NFR | Có - lớn | Security/Resiliency Baseline, p95, async processing, accessibility, observability, backup và multi-zone production |
 | Infrastructure | Có | Local container và thiết kế production single-region/multi-zone |
 | Operations | Có giới hạn | CI/CD, rollback, health, logs/metrics/traces, incident/DR artifacts; Operations stage vẫn là placeholder |
@@ -31,6 +31,19 @@
 - **Testing complexity**: Complex; cần unit, integration, contract/webhook, system và e2e trong môi trường container.
 - **Giảm thiểu**: Phân rã units trước khi code, design gate theo unit, TDD trong Code Generation, system test toàn stack và kiểm tra Security/Resiliency ở từng stage.
 
+### Change request impact - 2026-09-22
+
+| Unit hiện tại | Mức tác động | Nội dung cần đồng bộ |
+|---|---|---|
+| U01 Platform Foundation and Identity | Không đổi chức năng | Giữ nguyên checkpoint Functional Design; chỉ tiếp tục sau khi Inception change request hoàn tất |
+| U02 Academic Structure | Nhỏ | Kiểm tra authorization lớp nguồn/lớp đích và liên kết bài giảng |
+| U03 Content and Question Bank | Lớn | YouTube/caption/transcript ingestion, question/rubric version và template lineage |
+| U04 Assessment Authoring and Publication | Lớn | Template copy, cross-class copy, simulation policy và attempt snapshot |
+| U05 Submission and Group Work | Lớn | Thay leader-upload DOCX bằng composite generation/version/finalization |
+| U06 AI and Grading | Vừa | AI chỉ đề xuất phần cá nhân; manual shared grade, consistency rubric và manual final score |
+| U07 Reporting and Audit | Nhỏ | Audit version/copy/grade override và báo cáo simulation |
+| U08 Payment and Entitlement | Không đổi | Không có tác động trực tiếp |
+
 ## 2. Workflow Visualization
 
 ```mermaid
@@ -41,7 +54,7 @@ flowchart TD
         RE["Reverse Engineering<br/><b>SKIP</b>"]
         RA["Requirements Analysis<br/><b>COMPLETED</b>"]
         US["User Stories<br/><b>APPROVED</b>"]
-        WP["Workflow Planning<br/><b>COMPLETED</b>"]
+        WP["Workflow Planning<br/><b>REVALIDATED - REVIEW</b>"]
         AD["Application Design<br/><b>EXECUTE</b>"]
         UG["Units Generation<br/><b>EXECUTE</b>"]
     end
@@ -76,7 +89,7 @@ flowchart TD
     style RE fill:#BDBDBD,stroke:#424242,stroke-width:2px,stroke-dasharray:5 5,color:#000
     style RA fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
     style US fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
-    style WP fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style WP fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
     style AD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
     style UG fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
     style FD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
@@ -100,9 +113,9 @@ flowchart TD
 2. Reverse Engineering - skipped because the workspace is greenfield.
 3. Requirements Analysis - completed.
 4. User Stories - approved.
-5. Workflow Planning - completed after revalidation.
-6. Application Design - execute.
-7. Units Generation - execute.
+5. Workflow Planning - revalidated and awaiting approval.
+6. Application Design - synchronize affected artifacts after approval.
+7. Units Generation - synchronize unit boundaries/story maps after Application Design approval.
 8. For every generated unit: Functional Design, NFR Requirements, NFR Design, Infrastructure Design and Code Generation - execute in that order.
 9. After all units: Build and Test - execute.
 10. Operations - placeholder only.
@@ -114,10 +127,10 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [x] **User Stories - APPROVED**: Bốn persona, 55 stories và use case specification đã được duyệt.
-- [x] **Workflow Planning - COMPLETED**: Kế hoạch được revalidate sau khi User Stories/Use Case được duyệt; Application Design là stage kế tiếp.
-- [ ] **Application Design - EXECUTE**: Cần xác định component/service boundaries, trách nhiệm, methods, dependency và luồng đồng bộ/bất đồng bộ cho một hệ thống mới.
-- [ ] **Units Generation - EXECUTE**: Hệ thống có nhiều domain, data model, API, external adapters và infrastructure concerns; cần phân rã thành units độc lập, có dependency order rõ.
+- [x] **User Stories - APPROVED**: Bốn persona, 59 stories và 90 use cases đã được duyệt cho change request.
+- [ ] **Workflow Planning - REVALIDATED, AWAITING APPROVAL**: Kế hoạch đã xác định tác động U02-U07; Application Design là stage kế tiếp sau approval.
+- [ ] **Application Design - EXECUTE/SYNCHRONIZE**: Cần cập nhật component responsibilities, methods, services, business flows, system functionalities và global ERD cho versioning, reuse, YouTube RAG, simulation và group composite.
+- [ ] **Units Generation - EXECUTE/SYNCHRONIZE**: Cần cập nhật unit scope, dependency, story map và quality gates cho U03-U07; không tạo unit mới nếu boundary hiện tại vẫn đủ rõ.
 
 ### CONSTRUCTION PHASE - per-unit loop
 
@@ -143,7 +156,7 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 
 - Identity/authorization và academic scope.
 - Subject/class content và private file/RAG ingestion.
-- Group/leader management, individual work packages và leader-only shared DOCX submission.
+- Group/leader management, individual work packages, composite generation/version và instructor finalization.
 - Learning progress.
 - AI authoring và assessment delivery.
 - Submission, grading và gradebook.
@@ -174,14 +187,14 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 - **Integration tests**: Database, object storage abstraction, async jobs, provider adapters và security filters.
 - **Contract tests**: AI/email/storage adapter contracts và payment webhook signature/idempotency.
 - **System tests**: Next.js + Spring Boot + database + mock/sandbox AI/payment chạy trong container.
-- **End-to-end tests**: Giảng viên tạo/giao bài; chia nhóm/chỉ định leader; thành viên nộp phần cá nhân; leader nộp DOCX chung; giảng viên đối chiếu/chấm tay; Chủ nhiệm môn phát hành đề chung; người học học/nộp/xem kết quả; payment cấp quyền; authorization misuse cases.
+- **End-to-end tests**: Question version không đổi attempt đang làm; Chủ nhiệm môn phát hành template và giảng viên copy; copy assignment/rubric đúng phạm vi; simulation exam thực thi lượt/chính sách điểm; YouTube caption/phiên âm/RAG; thành viên nộp phần cá nhân, hệ thống tổng hợp, giảng viên chốt/chấm tài liệu chung và quyết định điểm cuối; payment cấp quyền; authorization misuse cases.
 - **Non-functional tests**: p95 API target, upload limits, accessibility core flows, failure/degraded behavior, backup/restore instructions và security checks.
 
 ## 6. Success Criteria and Quality Gates
 
 ### Primary success
 
-MVP thực hiện được các hành trình MVP trong Requirements và bộ 55 stories phân tách MVP/Phase 2 với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
+MVP thực hiện được các hành trình MVP trong Requirements và bộ 59 stories phân tách MVP/Phase 2 với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
 
 ### Key deliverables
 

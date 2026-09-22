@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Phân rã modular monolith thành các đơn vị lập kế hoạch/triển khai có ranh giới rõ, dependency order hợp lý và truy vết đủ 55 user story. Các module vẫn nằm trong một backend Spring Boot deployable; “unit of work” dùng để tổ chức thiết kế và phát triển tuần tự.
+Phân rã modular monolith thành các đơn vị lập kế hoạch/triển khai có ranh giới rõ, dependency order hợp lý và truy vết đủ 59 user story. Các module vẫn nằm trong một backend Spring Boot deployable; “unit of work” dùng để tổ chức thiết kế và phát triển tuần tự.
 
 ## Các bước Part 1 - Planning
 
@@ -18,7 +18,7 @@ Phân rã modular monolith thành các đơn vị lập kế hoạch/triển kha
 
 - [x] Sinh `unit-of-work.md` với định nghĩa, trách nhiệm và code organization
 - [x] Sinh `unit-of-work-dependency.md` với dependency matrix và critical path
-- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 55 story
+- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 59 story
 - [x] Validate ranh giới và dependency
 - [x] Validate mọi story được gán đúng unit
 - [x] Cập nhật trạng thái và trình checkpoint Units Generation
@@ -149,3 +149,15 @@ X) Other (mô tả sau `[Answer]:`)
 ## Hướng dẫn trả lời
 
 Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ bắt đầu sau khi Unit of Work Plan được phê duyệt rõ ràng.
+
+## Revision 2026-09-22
+
+- [x] Giữ tám unit hiện có; không tạo unit mới vì boundary vẫn phù hợp.
+- [x] Mở rộng U03 cho YouTube transcript RAG và question/rubric version.
+- [x] Mở rộng U04 cho template/copy lineage, simulation policy và attempt snapshot contract.
+- [x] Thay U05 leader-upload DOCX bằng group composite generation/version/finalization.
+- [x] Mở rộng U06 cho manual composite grade và manual per-member final grade.
+- [x] Cập nhật U07 audit/reporting events cho version, copy, simulation và grade override.
+- [x] Cập nhật dependency contracts, worker handlers, waves và integration gates.
+- [x] Ánh xạ đủ 59/59 stories đúng một primary unit.
+- [ ] Trình checkpoint phê duyệt lại Units Generation.

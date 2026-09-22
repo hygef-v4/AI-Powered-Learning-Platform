@@ -55,10 +55,11 @@ Các nguyên tắc bắt buộc:
 **Sở hữu:**
 
 - Học liệu/RAG source cấp môn và nội dung riêng cấp lớp.
+- Video/playlist YouTube theo bài giảng, caption/transcript version có timestamp và trạng thái ingestion.
 - Content publication/version và authorized search.
 - Learning access, progress idempotent và class progress.
-- Rubric/question bank versioning, reuse và question analytics.
-- Worker handlers cho parsing, chunking và indexing RAG.
+- Rubric/question bank versioning, reuse, publication snapshot và question analytics.
+- Worker handlers cho file parsing, YouTube caption/phiên âm, chunking và indexing RAG.
 
 **Không sở hữu:** Assessment publication, submission hoặc final grade.
 
@@ -69,6 +70,8 @@ Các nguyên tắc bắt buộc:
 **Sở hữu:**
 
 - Assessment draft, version, preview, validation và schedule.
+- Subject template/copy lineage và copy assignment/rubric giữa các lớp được phép.
+- Simulation exam policy, giới hạn lượt, result policy, answer release và attempt snapshot contract.
 - Bài cấp lớp và đề chung cấp môn.
 - Cấu hình trắc nghiệm, bài viết luận và các policy chung của bài.
 - Clone/version/retire Phase 2.
@@ -85,10 +88,10 @@ Các nguyên tắc bắt buộc:
 - Autosave draft, attempt, idempotent submission receipt và immutable submission version.
 - Draw.io embedded-canvas handoff và full XML artifact.
 - Group membership, đúng một leader, leader-change request và individual allocation.
-- Individual group-part submission và leader-only shared DOCX submission.
+- Individual group-part submission, composite generation/version lineage và instructor finalization.
 - Authorized view để giảng viên đối chiếu bài chung với các phần cá nhân.
 
-**Không sở hữu:** AI proposal hoặc final grade; không chỉnh sửa cộng tác DOCX trong hệ thống.
+**Không sở hữu:** AI proposal hoặc final grade; không chỉnh sửa cộng tác tài liệu trong hệ thống.
 
 ### U06 - Grading, AI and Code Execution
 
@@ -97,6 +100,7 @@ Các nguyên tắc bắt buộc:
 **Sở hữu:**
 
 - Deterministic grading, manual grade, AI proposal review, finalize và publish grade.
+- Manual composite grade theo tiêu chí tích hợp/nhất quán và manual per-member final grade từ evidence tách biệt.
 - AI authoring/grading orchestration, provider-neutral ports, quota và kill-switch.
 - Compact Draw.io derived artifact chỉ khi giảng viên yêu cầu AI chấm.
 - Code Lab authoring/test execution qua sandbox port.
@@ -172,9 +176,9 @@ Mỗi unit có một owner chính nhưng ít nhất một reviewer khác. Integr
 |---|---|
 | G0 Foundation | Authentication, authorization, artifact, job và audit contracts hoạt động; fail closed khi dependency lỗi |
 | G1 Academic | Subject/class/enrollment scope được kiểm tra server-side; module khác không đọc bảng Academic trực tiếp |
-| G2 Content/Payment | Learner chỉ đọc nội dung được phép; RAG job và payment webhook idempotent |
-| G3 Assessment | Draft/review/publish đúng role/scope; AI không tự publish |
-| G4 Submission/Group | Full XML immutable; đúng leader mới nộp DOCX; submission không bị nhân đôi |
+| G2 Content/Payment | Learner chỉ đọc nội dung được phép; file/YouTube RAG job và payment webhook idempotent |
+| G3 Assessment | Draft/review/publish đúng role/scope; copy lineage, simulation policy và attempt snapshot bất biến; AI không tự publish |
+| G4 Submission/Group | Full XML/part submission bất biến; composite giữ ordered lineage và chỉ giảng viên chốt; submission không bị nhân đôi |
 | G5 Grading/AI/Code | Instructor chọn phương thức chấm; AI chỉ tạo proposal; bài chung không gửi AI; sandbox có giới hạn |
 | G6 Reporting/Notification | Read model không vượt quyền; lỗi provider không rollback nghiệp vụ; journey MVP chạy đầu-cuối |
 

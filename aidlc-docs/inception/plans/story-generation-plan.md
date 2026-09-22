@@ -1,6 +1,6 @@
 # Kế hoạch tạo User Stories
 
-> Bổ sung 2026-09-13: Tạo đặc tả use case đầy đủ từ bộ user story hiện tại tại `aidlc-docs/inception/user-stories/use-cases.md`, gồm tác nhân, tiền/hậu điều kiện, luồng chính, ngoại lệ, quan hệ và truy vết 55/55 story.
+> Bổ sung 2026-09-13: Tạo đặc tả use case đầy đủ từ bộ user story hiện tại tại `aidlc-docs/inception/user-stories/use-cases.md`, gồm tác nhân, tiền/hậu điều kiện, luồng chính, ngoại lệ, quan hệ và truy vết. Sau change request 2026-09-22, coverage là 59/59 stories.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -195,9 +195,31 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Chuẩn hóa bài sơ đồ thành canvas Draw.io; lưu XML đầy đủ và chỉ tạo XML rút gọn dẫn xuất khi gửi AI.
 - [x] Làm rõ cấp tài khoản email trường, desktop-first và quyền lựa chọn phương thức chấm của giảng viên.
 - [x] Loại bỏ US-GRD-009 và mọi truy vết liên quan.
-- [x] Bổ sung FR-025/FR-026 và sáu story cho nhóm, leader, phần cá nhân, DOCX chung và chấm hai cấp.
-- [x] Giới hạn quyền nộp DOCX chung ở leader hiện tại và giữ quyết định đổi leader cho giảng viên.
+- [x] Bổ sung FR-025/FR-026 và sáu story cho nhóm, leader, phần cá nhân, tài liệu chung và chấm hai cấp; cơ chế DOCX do leader nộp đã được change request 2026-09-22 thay thế.
+- [x] Giữ quyết định đổi leader cho giảng viên; từng thành viên nộp phần cá nhân, hệ thống tổng hợp và giảng viên chốt tài liệu chung.
 - [x] Giới hạn AI ở phần cá nhân; bài chung chỉ có luồng giảng viên chấm thủ công và đối chiếu.
 - [x] Loại bỏ US-CAT-004 cùng phạm vi học kỳ/nhân bản lớp và thu hẹp FR-022 còn join code.
 - [x] Hoàn tất kiểm tra traceability, INVEST, Security và Resiliency.
+- [ ] Trình người dùng checkpoint phê duyệt lại User Stories.
+
+## 9. Revision 2026-09-22 - Versioning, simulation, reuse, YouTube RAG và chấm nhóm
+
+### Quyết định đã được phê duyệt ở Requirements
+
+- Attempt đã bắt đầu giữ snapshot câu hỏi; chỉnh sửa khi bài còn mở tạo version mới cho attempt bắt đầu sau đó.
+- Chủ nhiệm môn phát hành template có version; giảng viên copy thành draft độc lập cho lớp.
+- Giảng viên copy assignment/rubric chỉ giữa các lớp mình phụ trách và không mang theo dữ liệu thực thi.
+- Simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần, nhưng không phải kỳ thi chính thức có giám sát.
+- Video/playlist YouTube gắn theo bài giảng; dùng caption hoặc tự phiên âm trước khi lập chỉ mục RAG.
+- Hệ thống ghép phần cá nhân; giảng viên chốt tài liệu chung, tự chấm tính tích hợp và tự quyết định điểm cuối từng sinh viên.
+
+### Checklist revision
+
+- [x] Thêm `US-CNT-005` cho YouTube RAG theo bài giảng.
+- [x] Thay `US-GRP-005` bằng luồng tổng hợp/chốt tài liệu và mở rộng `US-GRP-006` cho chấm nhất quán/điểm cuối.
+- [x] Mở rộng `US-QBK-002` với snapshot/version theo attempt.
+- [x] Thêm `US-ASM-009` đến `US-ASM-011` cho template, copy giữa lớp và simulation exam.
+- [x] Cập nhật personas và use cases; xác minh 59/59 story có use case truy vết.
+- [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
+- [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
 - [ ] Trình người dùng checkpoint phê duyệt lại User Stories.

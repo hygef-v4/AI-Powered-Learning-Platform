@@ -10,7 +10,7 @@ Thiết kế này là ERD tổng quan để duyệt nghiệp vụ, chưa phải 
 - Không có bảng role riêng: vai trò cao nhất được lưu trực tiếp tại `accounts.role`; `SUBJECT_MANAGER` kế thừa chức năng của `INSTRUCTOR`.
 - Phiên đăng nhập, refresh token và OTP có TTL được lưu trong Redis; không tạo bảng session hoặc OTP trong PostgreSQL.
 - Job AI/RAG/Code Lab được RabbitMQ lưu và chuyển tới worker, không tạo bảng `background_jobs` trong PostgreSQL.
-- Mỗi dòng `submissions` là một draft/attempt; không cần bảng submission-version riêng.
+- Mỗi dòng `submissions` là một draft/attempt bất biến sau submit; group composite có bảng/version và lineage riêng vì là artifact hệ thống tổng hợp.
 - AI proposal và điểm cuối cùng cùng nằm trong `grades`; `grade_history` bảo toàn lịch sử thay đổi.
 - File bytes được lưu trên Google Drive của tổ chức; PostgreSQL chỉ giữ metadata và Google Drive file ID tại `artifacts`.
 - Full Draw.io XML là artifact gốc; compact XML là artifact dẫn xuất chỉ dùng cho AI.
@@ -60,7 +60,13 @@ erDiagram
     GROUP_ASSIGNMENTS o|--o{ SUBMISSIONS : groups
     INDIVIDUAL_ALLOCATIONS o|--o{ SUBMISSIONS : fulfills
     ARTIFACTS o|--o{ SUBMISSIONS : stores
-    SUBMISSIONS ||--o| GRADES : receives
+    GROUP_ASSIGNMENTS ||--o{ GROUP_COMPOSITES : aggregates
+    ARTIFACTS ||--o{ GROUP_COMPOSITES : stores
+    GROUP_COMPOSITES ||--o{ GROUP_COMPOSITE_PARTS : contains
+    SUBMISSIONS ||--o{ GROUP_COMPOSITE_PARTS : sources
+    SUBMISSIONS o|--o{ GRADES : receives
+    GROUP_COMPOSITES o|--o{ GRADES : receives
+    GROUP_ASSIGNMENTS o|--o{ GRADES : finalizes_members
     ACCOUNTS o|--o{ GRADES : finalizes
     GRADES ||--o{ GRADE_HISTORY : preserves
     ACCOUNTS ||--o{ GRADE_HISTORY : changes
@@ -76,7 +82,7 @@ erDiagram
 
 ### Text alternative
 
-Accounts contain their role code and may manage subjects, teach classes, enroll in classes, own artifacts, create assignments, publish assignments, finalize grades and change grade history. Subjects contain classes and own reusable learning resources, bank items and subject-scoped assignments; classes may own learning resources and class-scoped assignments. Artifacts can derive other artifacts and may be referenced by learning resources or submissions. Classes contain student groups; enrollments participate through group members, leader-change requests may propose a group member, and group assignments are split into individual allocations that submissions can fulfill. Published assignments collect submissions, and each submission may receive one grade whose changes are preserved in grade history. Payments grant access, while notifications and audit events preserve communication and accountability. RabbitMQ handles background jobs outside PostgreSQL.
+Accounts contain their role code and may manage subjects, teach classes, enroll in classes, own artifacts, create assignments, publish assignments, finalize grades and change grade history. Subjects contain classes and own reusable learning resources, bank items and subject-scoped assignments; classes may own learning resources and class-scoped assignments. Artifacts can derive other artifacts and may be referenced by learning resources, submissions or group composites. Group assignments split work into individual allocations and immutable part submissions; a composite version records ordered source submissions selected by the instructor. Grades may target a submission, a composite or a member-final result. Payments grant access, while notifications and audit events preserve communication and accountability. RabbitMQ handles background jobs outside PostgreSQL.
 
 ## 3.3 Detailed Entity Descriptions
 
@@ -155,7 +161,7 @@ Description: records learner enrollment only. Instructor assignment is stored in
 |---|---|---|
 | artifact_id | uuid | PK |
 | owner_account_id | uuid | FK accounts |
-| purpose | varchar(50) | MATERIAL, DRAWIO_FULL, DRAWIO_AI_COMPACT, DOCX_GROUP, etc. |
+| purpose | varchar(50) | MATERIAL, YOUTUBE_TRANSCRIPT, DRAWIO_FULL, DRAWIO_AI_COMPACT, GROUP_COMPOSITE, etc. |
 | scope_type, scope_id | varchar + uuid | Resource ownership |
 | storage_provider | varchar(30) | GOOGLE_DRIVE |
 | provider_file_id | varchar(255) | Google Drive file ID, required and unique |
@@ -177,15 +183,18 @@ Description: stores metadata and stable identifiers for private files held in th
 | resource_id | uuid | PK |
 | scope_type | varchar(20) | SUBJECT or CLASS |
 | subject_id, class_id | uuid | Exactly one effective owner scope |
-| resource_type | varchar(30) | MATERIAL or CONTENT |
+| resource_type | varchar(30) | MATERIAL, CONTENT, VIDEO_SOURCE or TRANSCRIPT |
 | title | varchar(200) | Required |
 | body | text | Nullable authored content |
 | artifact_id | uuid | Nullable FK artifacts |
+| parent_resource_id | uuid | Nullable self-FK; transcript belongs to a lesson/video source |
+| source_uri | varchar(1000) | Nullable allowlisted YouTube video/playlist URL |
+| source_metadata | jsonb | Video ID, language, timestamps and processing metadata |
 | stable_key | uuid | Groups versions |
 | version_no | integer | Unique per stable key |
 | status | varchar(30) | DRAFT, PROCESSING, PUBLISHED, FAILED, ARCHIVED |
 
-Description: represents learning content owned by a subject or class. It may contain authored text or reference an `artifacts` row when the content comes from an uploaded file.
+Description: represents learning content owned by a subject or class. It may contain authored text, reference an uploaded artifact, or register a YouTube source/transcript version linked to a lesson.
 
 ### Entity: `learning_progress`
 
@@ -228,8 +237,10 @@ Description: combines reusable questions and rubrics because both use the same s
 | configuration | jsonb | Type-specific validated configuration |
 | status | varchar(20) | DRAFT, REVIEWED, RETIRED |
 | created_by | uuid | FK accounts |
+| lifecycle_kind | varchar(20) | STANDARD or TEMPLATE |
+| source_assignment_id | uuid | Nullable self-FK; template/cross-class copy lineage |
 
-Description: defines an immutable version of a task given to learners, including quizzes, essays, Draw.io exercises, code labs and group work. `Assignment` is used because it is clearer in this learning context than the broader term `Assessment`.
+Description: defines an immutable version of a task given to learners, including quizzes, essays, Draw.io exercises, code labs, group work and simulation exams. A template or copy creates a new stable identity and retains lineage to the source version.
 
 ### Entity: `assignment_components`
 
@@ -253,10 +264,15 @@ Description: lists the ordered questions, rubric criteria, instructions or test 
 | class_id | uuid | FK classes |
 | opens_at, closes_at | timestamptz | Submission window |
 | max_attempts | integer | Positive |
+| delivery_mode | varchar(20) | STANDARD or SIMULATION |
+| result_policy | varchar(20) | HIGHEST, LATEST or AVERAGE; nullable for standard |
+| counts_toward_grade | boolean | Required for simulation |
+| answer_release_policy | varchar(30) | AFTER_ATTEMPT or AFTER_CLOSE |
+| policy_locked_at | timestamptz | Set when first attempt starts |
 | status | varchar(20) | SCHEDULED, OPEN, CLOSED, RETIRED |
 | published_by | uuid | FK accounts |
 
-Description: releases one immutable assignment version to one class with its own submission window and attempt limit.
+Description: releases one immutable assignment version to one class with its own window and attempt limit. Simulation publications freeze result, answer-release and grade policies when the first attempt starts.
 
 ### Entity: `student_groups`
 
@@ -329,21 +345,52 @@ Description: assigns one independently deliverable part of a shared group assign
 | submitter_id | uuid | FK accounts |
 | group_assignment_id | uuid | Nullable FK group_assignments |
 | allocation_id | uuid | Nullable FK individual_allocations |
-| submission_kind | varchar(30) | INDIVIDUAL, GROUP_PART, GROUP_SHARED |
+| submission_kind | varchar(30) | INDIVIDUAL or GROUP_PART |
 | attempt_no | integer | Unique per target and submitter/group |
+| started_at | timestamptz | Attempt start time |
+| snapshot_payload | jsonb | Assignment, component, question/rubric versions and publication policy snapshot |
 | answer_payload | jsonb | Quiz/essay/metadata, bounded |
 | artifact_id | uuid | Nullable FK artifacts |
 | status | varchar(20) | DRAFT, SUBMITTED, LATE, WITHDRAWN |
 | submitted_at | timestamptz | Nullable; immutable after submission |
 
-Description: stores individual work, allocated group parts and shared group documents. Each row is one draft or attempt; only the current group leader may submit `GROUP_SHARED` work.
+Description: stores individual work and allocated group parts. `submission_kind` is limited to `INDIVIDUAL` or `GROUP_PART`; every attempt keeps the version/policy snapshot captured at start and becomes immutable after submission.
+
+### Entity: `group_composites`
+
+| Field | Type | Constraint/Meaning |
+|---|---|---|
+| composite_id | uuid | PK |
+| group_assignment_id | uuid | FK group_assignments |
+| version_no | integer | Unique per group assignment |
+| artifact_id | uuid | FK artifacts; derived GROUP_COMPOSITE artifact |
+| status | varchar(20) | GENERATED, REVIEWED, FINALIZED |
+| requested_by, finalized_by | uuid | FK accounts; instructor scope required |
+| created_at, finalized_at | timestamptz | Lifecycle timestamps |
+
+Description: represents one generated composite version for a group assignment. Generation never overwrites source part submissions; only a FINALIZED version can be used as the shared grading target.
+
+### Entity: `group_composite_parts`
+
+| Field | Type | Constraint/Meaning |
+|---|---|---|
+| composite_part_id | uuid | PK |
+| composite_id | uuid | FK group_composites |
+| source_submission_id | uuid | FK submissions; must be SUBMITTED GROUP_PART |
+| sequence_no | integer | Unique within composite |
+| included | boolean | Instructor selection |
+
+Description: preserves ordered lineage from a composite version to each immutable part submission selected by the instructor.
 
 ### Entity: `grades`
 
 | Field | Type | Constraint/Meaning |
 |---|---|---|
 | grade_id | uuid | PK |
-| submission_id | uuid | FK submissions, unique current grade |
+| submission_id | uuid | Nullable FK submissions |
+| composite_id | uuid | Nullable FK group_composites |
+| group_assignment_id, learner_id | uuid + uuid | Nullable member-final target |
+| grade_kind | varchar(30) | SUBMISSION, GROUP_COMPOSITE or MEMBER_FINAL |
 | grading_method | varchar(20) | MANUAL, DETERMINISTIC, AI_ASSISTED |
 | proposed_score, proposed_feedback | numeric + text | Nullable AI/deterministic proposal |
 | final_score, final_feedback | numeric + text | Instructor-controlled result |
@@ -351,7 +398,7 @@ Description: stores individual work, allocated group parts and shared group docu
 | finalized_by | uuid | Nullable FK accounts |
 | status | varchar(20) | DRAFT, FINALIZED, PUBLISHED |
 
-Description: stores the current AI/deterministic proposal and the instructor-controlled final result for one submission. Shared group documents must be graded manually.
+Description: stores a result for exactly one target kind. AI/deterministic proposals apply only to individual submissions. Composite and member-final grades are manual; member-final values use evidence but no mandatory formula.
 
 ### Entity: `grade_history`
 
@@ -447,7 +494,7 @@ Redis keys must expire automatically. OTP must be stored as a hash, limited by a
 | Material + Class Content Version → `learning_resources` | Chung scope/version/artifact/publication lifecycle |
 | Question Version + Rubric Version → `bank_items` | Chung versioning và reuse; phân biệt bằng item type |
 | Assignment + Assignment Version → `assignments` | Mỗi row là immutable version, nhóm bằng stable key |
-| Draft + Submission + Submission Version → `submissions` | Mỗi row là một draft/attempt với state transition rõ |
+| Draft + Submission + Submission Version → `submissions` | Mỗi row là một draft/attempt với immutable start snapshot và state transition rõ |
 | Grade Proposal + Final Grade → `grades` | Proposal và final thuộc cùng submission; lịch sử ở `grade_history` |
 
 ## 3.6 Tables Kept Separate
@@ -455,6 +502,7 @@ Redis keys must expire automatically. OTP must be stored as a hash, limited by a
 - `grade_history`: bắt buộc để bảo toàn lịch sử ghi đè điểm.
 - `assignment_components`: cần biểu diễn nhiều thành phần có thứ tự trong một assignment.
 - `group_members` và `individual_allocations`: cần thực thi đúng một leader và phần việc từng người.
+- `group_composites` và `group_composite_parts`: version hóa tài liệu tổng và giữ ordered lineage tới source submission.
 - `payments` và `access_grants`: thanh toán không đồng nghĩa cấp quyền; webhook phải xác minh trước.
 - `artifacts`: tách metadata file khỏi mọi nghiệp vụ sử dụng file.
 - `audit_events`: append-only và có quyền lưu trữ khác dữ liệu nghiệp vụ.
@@ -465,14 +513,16 @@ Redis keys must expire automatically. OTP must be stored as a hash, limited by a
 2. Mỗi account có một `role`; `SUBJECT_MANAGER` kế thừa chức năng giảng viên và `ADMIN` có quyền quản trị toàn hệ thống.
 3. Mỗi class thuộc đúng một subject, có đúng một giảng viên chính; mỗi learner có tối đa một active enrollment trong class.
 4. Mỗi student group có đúng một leader là active member của chính group đó.
-5. Chỉ leader hiện tại được tạo `GROUP_SHARED` submission.
-6. Submitted row và artifact gốc là immutable; lần nộp lại tạo attempt mới.
+5. Mỗi thành viên chỉ tạo GROUP_PART submission cho allocation của chính mình; composite do system job tạo và giảng viên chốt.
+6. Submitted row, attempt snapshot, source artifact và finalized composite version là immutable; lần làm/tổng hợp lại tạo version mới.
 7. Full Draw.io XML phải có purpose `DRAWIO_FULL`; compact XML tham chiếu source artifact và chỉ được AI job đọc.
-8. `GROUP_SHARED` grade chỉ có `MANUAL`; AI chỉ có thể đề xuất cho phần cá nhân.
-9. Worker cập nhật kết quả thông qua event/internal contract; không ghi trực tiếp bảng nghiệp vụ.
-10. Access grant chỉ được tạo từ payment `PAID` sau verified, idempotent webhook.
-11. Audit event không có application update/delete operation và phải redaction secret/PII.
-12. Refresh session chỉ lưu trong Redis với TTL/revocation policy; PostgreSQL không có bảng session.
-13. RabbitMQ chỉ lưu trạng thái xử lý tạm thời; kết quả nghiệp vụ hoàn tất phải được lưu vào bảng nghiệp vụ tương ứng.
+8. GROUP_COMPOSITE và MEMBER_FINAL grade chỉ có `MANUAL`; AI chỉ có thể đề xuất cho submission cá nhân.
+9. Copy/template tạo assignment stable identity mới, giữ `source_assignment_id` và không copy publication/submission/grade.
+10. Simulation policy bị khóa khi attempt đầu tiên bắt đầu; mỗi submission lưu snapshot các version/policy đã dùng.
+11. Worker cập nhật kết quả thông qua event/internal contract; không ghi trực tiếp bảng nghiệp vụ.
+12. Access grant chỉ được tạo từ payment `PAID` sau verified, idempotent webhook.
+13. Audit event không có application update/delete operation và phải redaction secret/PII.
+14. Refresh session chỉ lưu trong Redis với TTL/revocation policy; PostgreSQL không có bảng session.
+15. RabbitMQ chỉ lưu trạng thái xử lý tạm thời; kết quả nghiệp vụ hoàn tất phải được lưu vào bảng nghiệp vụ tương ứng.
 14. OTP, rate-limit counter, cache và lock trong Redis phải có TTL; OTP không được lưu dạng rõ và không được tái sử dụng.
 15. Google Drive file phải ở Shared Drive của tổ chức và không được đặt chế độ public; ứng dụng phân quyền trước khi backend hoặc worker truy cập bằng `provider_file_id`.

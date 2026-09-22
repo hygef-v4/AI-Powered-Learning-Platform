@@ -20,13 +20,14 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Truy cập lớp, học nội dung, đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
 - Vẽ sơ đồ trên canvas Draw.io và nộp XML đầy đủ cho giảng viên, hoặc làm trắc nghiệm, Code Lab và bài viết luận; lưu nháp, khôi phục và xem lịch sử lần nộp.
-- Làm phần cá nhân của bài nhóm; nếu là trưởng nhóm thì upload DOCX chung, hoặc gửi yêu cầu đổi trưởng nhóm để giảng viên xem xét.
+- Làm và nộp phần cá nhân của bài nhóm để hệ thống đưa vào tài liệu tổng hợp; xem phản hồi phần cá nhân và điểm cuối do giảng viên quyết định.
+- Làm simulation exam trong giới hạn lượt, biết rõ bài có hoặc không tính điểm thành phần và chính sách lấy kết quả.
 - Thực hiện thanh toán và theo dõi trạng thái cấp quyền.
 - Nhận thông báo thiết yếu.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-GRP-005`, `US-CNT-004`, `US-LRN-001`, `US-LRN-002`, `US-ASM-003`, `US-GRD-001`, `US-GRD-004`, `US-GRD-006`, `US-GRD-007`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-LRN-002`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-GRD-006`, `US-GRD-007`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 3. P-INSTRUCTOR - Giảng viên
 
@@ -43,15 +44,17 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Quản lý vòng đời lớp/khóa học và nội dung riêng của lớp.
 - Ghi danh người học khi được cấp quyền.
 - Chia lớp thành nhóm, chỉ định trưởng nhóm, phân công phần cá nhân và xử lý yêu cầu đổi trưởng nhóm.
-- Đối chiếu các phần cá nhân với DOCX chung và tự chấm tay bài chung.
+- Định nghĩa cấu trúc bài nhóm, xem trước tài liệu do hệ thống tổng hợp, điều chỉnh thứ tự/phần được dùng và chốt version để chấm.
+- Nhờ AI đề xuất feedback cho phần cá nhân, tự chấm tài liệu chung và quyết định điểm cuối từng sinh viên dựa trên hai nguồn mà không bị hệ thống ép công thức.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
-- Quản lý rubric/ngân hàng câu hỏi và soạn, xem trước từng loại bài đánh giá.
+- Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
+- Soạn, xem trước từng loại bài đánh giá và cấu hình simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
 - Xem tiến độ nộp, gửi nhắc, chốt điểm và xem sổ điểm của lớp được phân công.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002` đến `US-CNT-004`, `US-LRN-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-008`, `US-GRD-001` đến `US-GRD-008`, `US-RPT-001`, `US-RPT-003`, `US-RPT-004`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002` đến `US-CNT-005`, `US-LRN-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-008`, `US-RPT-001`, `US-RPT-003`, `US-RPT-004`, `US-NTF-001`.
 
 ## 4. P-SUBJECT-MANAGER - Chủ nhiệm môn
 
@@ -65,15 +68,15 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ### Hành vi điển hình
 
-- Quản lý học liệu và nguồn RAG cấp môn.
+- Quản lý học liệu và nguồn RAG cấp môn, gồm video/playlist YouTube gắn theo bài giảng và trạng thái caption/phiên âm/lập chỉ mục.
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
-- Duyệt và phát hành đề chung xuyên các lớp thuộc môn.
+- Duyệt và phát hành đề chung xuyên các lớp thuộc môn hoặc phát hành template có version để giảng viên copy thành đề riêng.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-002`, `US-ASM-002`, `US-ASM-004` đến `US-ASM-008`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-003`, `US-CNT-005`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-002`, `US-ASM-002`, `US-ASM-004` đến `US-ASM-009`, `US-NTF-001`.
 
 ## 5. P-ADMIN - Quản trị viên
 

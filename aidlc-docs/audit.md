@@ -786,3 +786,100 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **Context**: Security and Resiliency baselines remain compliant and unchanged; downstream Inception synchronization is gated on approval.
 
 ---
+
+## Inception Requirements Change - Approved
+**Timestamp**: 2026-09-22T23:01:09+07:00
+**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**AI Response**: "Interpreted the instruction to continue as approval of the revised requirements and transitioned the change request to User Stories propagation."
+**Status**: Approved
+**Context**: Requirements change approved; previous U01 Functional Design checkpoint remains preserved.
+
+---
+
+## User Stories Change Propagation - Approval Requested
+**Timestamp**: 2026-09-22T23:01:09+07:00
+**AI Response**: "Updated stories, personas, use cases and the story-generation plan for question snapshots, subject templates, cross-class copying, simulation exams, lesson-scoped YouTube RAG and system-assembled group documents. Verified 59 stories are represented by 90 unique use cases and requested explicit approval before Workflow Planning revalidation."
+**Status**: Awaiting explicit approval
+**Context**: User Stories change checkpoint; Security and Resiliency compliance remain without blocking findings.
+
+---
+
+## User Stories Change Propagation - Approved
+**Timestamp**: 2026-09-22T23:05:32+07:00
+**User Input**: "ok"
+**AI Response**: "Recorded approval of the revised 59-story, 90-use-case catalogue and proceeded to Workflow Planning revalidation."
+**Status**: Approved
+**Context**: User Stories change checkpoint completed; U01 Functional Design checkpoint remains preserved.
+
+---
+
+## Workflow Planning Change Revalidation - Approval Requested
+**Timestamp**: 2026-09-22T23:05:32+07:00
+**AI Response**: "Revalidated the execution plan for the approved change request. Kept all existing stage decisions, identified major impact in U03-U05, moderate impact in U06, minor impact in U02/U07, no direct impact in U01/U08, and recommended synchronizing Application Design then Units Generation before returning to U01 Functional Design."
+**Status**: Awaiting explicit approval
+**Context**: Workflow Planning change checkpoint; Security and Resiliency compliance remain without blocking findings.
+
+---
+
+## Workflow Planning Change Revalidation - Approved
+**Timestamp**: 2026-09-22T23:16:42+07:00
+**User Input**: "ok giúp tôi tiếp tục"
+**AI Response**: "Recorded approval of the revalidated execution plan and proceeded to synchronize Application Design artifacts."
+**Status**: Approved
+**Context**: Workflow Planning change checkpoint completed; U01 Functional Design checkpoint remains preserved.
+
+---
+
+## Application Design Change Synchronization - Approval Requested
+**Timestamp**: 2026-09-22T23:16:42+07:00
+**AI Response**: "Synchronized Application Design for YouTube transcript RAG, question/attempt snapshots, template and cross-class copy lineage, simulation policy, system-generated group composites and manual member-final grading. Updated components, methods, services, dependencies, business flows, screens/jobs, consolidated design and the global ERD."
+**Status**: Awaiting explicit approval
+**Context**: Application Design change checkpoint; Units Generation synchronization remains gated on approval.
+
+---
+
+## Application Design Change Synchronization - Approved
+**Timestamp**: 2026-09-22T23:21:50+07:00
+**User Input**: "đến bước unit generation đi"
+**AI Response**: "Recorded approval of synchronized Application Design and proceeded to Units Generation synchronization."
+**Status**: Approved
+**Context**: Application Design change checkpoint completed; U01 Functional Design checkpoint remains preserved.
+
+---
+
+## Units Generation Change Synchronization - Approval Requested
+**Timestamp**: 2026-09-22T23:21:50+07:00
+**AI Response**: "Kept the existing eight-unit decomposition and synchronized U03-U07 scopes, worker contracts, dependency gates and story mappings for the approved change. Verified all 59 source stories map exactly once, with no missing, extra or duplicate story mappings."
+**Status**: Awaiting explicit approval
+**Context**: Units Generation change checkpoint; approval returns the workflow to the preserved U01 Functional Design checkpoint in Construction.
+
+---
+
+## Units Generation Change Synchronization - Approved
+**Timestamp**: 2026-09-22T23:34:13+07:00
+**User Input**: "approve"
+**AI Response**: "Recorded approval of synchronized Units Generation and returned the workflow to Construction."
+**Status**: Approved
+**Context**: Inception change request completed.
+
+---
+
+## Error - U01 Functional Design Resumption
+**Timestamp**: 2026-09-22T23:34:13+07:00
+**Error Type**: Critical
+**Description**: Audit records a completed U01 Functional Design plan and seven generated artifacts, but `aidlc-docs/construction/plans/` and `aidlc-docs/construction/u01-platform-foundation-and-identity/functional-design/` are empty.
+**Cause**: The files are neither present in the workspace nor tracked in Git, so the prior checkpoint cannot be reviewed or safely approved.
+**Resolution**: Reset the current stage to U01 Functional Design Recovery and create a recovery-choice file. No Construction stage was skipped or falsely marked complete.
+**Impact**: Construction cannot proceed to NFR Requirements until U01 Functional Design artifacts are restored or regenerated and reviewed.
+
+---
+
+## Recovery - U01 Functional Design Option Selected
+**Timestamp**: 2026-09-22T23:36:54+07:00
+**User Input**: "xong r"
+**Recovery Choice**: "A - Tạo lại plan và toàn bộ artefact U01; hỏi lại các điểm cần làm rõ."
+**Recovery Steps**: Reconstructed traceable decisions from audit and approved Inception artifacts; created a new U01 Functional Design recovery plan with five focused questions for policies that could not be safely inferred.
+**Outcome**: Recovery plan created; artifact regeneration is gated on answers.
+**Artifacts Affected**: `aidlc-docs/construction/plans/u01-platform-foundation-and-identity-functional-design-plan.md`
+
+---

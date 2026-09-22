@@ -45,19 +45,19 @@ U03 và U08 dùng entitlement contract theo hướng dependency inversion: contr
 ### U04 phụ thuộc U01, U02 và U03
 
 - U02 cung cấp author scope và tập lớp thuộc môn.
-- U03 cung cấp immutable rubric/question/content version references.
+- U03 cung cấp immutable rubric/question/content/transcript version references.
 - U01 cung cấp job/audit/artifact primitives; U04 không gọi AI provider trực tiếp.
 
 ### U05 phụ thuộc U01, U02 và U04
 
-- U04 cung cấp publication/version/schedule/attempt policy.
+- U04 cung cấp publication/version/schedule/simulation policy và attempt snapshot contract.
 - U02 cung cấp enrollment và class membership.
 - U01 cung cấp artifact, idempotency, authorization và audit.
 - U05 sở hữu submission; U04 không ghi vào submission tables.
 
 ### U06 phụ thuộc U01 đến U05 theo public contract
 
-- Đọc immutable submission version từ U05.
+- Đọc immutable part submission và finalized composite version từ U05.
 - Đọc publication/rubric/content references từ U04/U03.
 - Kiểm tra instructor/class/subject scope qua U02/U01.
 - Gửi job tới worker qua versioned job contract; không đặt full Draw.io XML trong payload.
@@ -82,6 +82,8 @@ Worker là deployable riêng nhưng không phải bounded context riêng. Mỗi 
 | Handler | Owner | Input tối thiểu | Output |
 |---|---|---|---|
 | RAG ingestion | U03 | Material version ID, scope reference | Index status/reference |
+| YouTube transcript ingestion | U03 | Video/playlist source version, lesson scope | Transcript artifact, timestamps và index reference |
+| Group composite generation | U05 | Group assignment + ordered source submission versions | Derived composite artifact/version |
 | AI authoring | U06 | Generation request ID | Draft proposal reference |
 | AI grading | U06 | Grading request ID | Grade proposal reference |
 | Compact Draw.io | U06 | AI job ID, full artifact reference | Derived artifact reference |
@@ -120,10 +122,10 @@ U08 nằm ngoài critical path học/chấm cơ bản và có thể phát triể
 |---|---|---|---|
 | G0 | U01 | U02 | Auth, object authorization, audit, artifact và job contract tests |
 | G1 | U02 | U03, U08 | Subject/class/enrollment integration và negative authorization tests |
-| G2 | U03, U08 | U04 | Content/rubric version references, RAG job và entitlement compatibility tests |
-| G3 | U04 | U05 | Publication/schedule/attempt-policy contract tests |
-| G4 | U05 | U06 | Immutable submission, leader-only DOCX và full Draw.io XML tests |
-| G5 | U06 | U07 | Grade event, AI proposal/final-grade separation và worker retry/idempotency tests |
+| G2 | U03, U08 | U04 | Content/rubric/transcript version references, file/YouTube RAG và entitlement compatibility tests |
+| G3 | U04 | U05 | Publication, template/copy lineage, simulation policy và attempt-snapshot contract tests |
+| G4 | U05 | U06 | Immutable part submission, composite lineage/finalization và full Draw.io XML tests |
+| G5 | U06 | U07 | Individual/composite/member-final grade events, AI proposal separation và worker retry/idempotency tests |
 | G6 | U07 | System checkpoint | Authorized reporting, notification isolation và MVP journey tests |
 
 ## 7. Cycle-prevention rules
@@ -131,8 +133,8 @@ U08 nằm ngoài critical path học/chấm cơ bản và có thể phát triể
 - U01 không phụ thuộc unit nghiệp vụ.
 - U02 không phụ thuộc Content, Assessment, Submission hoặc Payment implementation.
 - U03 không gọi U08 implementation trực tiếp; dùng entitlement port.
-- U04 không cập nhật Submission; U05 không cập nhật Assessment version.
-- U05 không cập nhật Grade; U06 chỉ tham chiếu immutable Submission.
+- U04 không cập nhật Submission; U05 không cập nhật Assessment/template/simulation policy.
+- U05 không cập nhật Grade; U06 chỉ tham chiếu immutable Submission/Composite.
 - U07 chỉ tiêu thụ event/read contract và không trở thành transaction coordinator.
 - Backend và worker chia sẻ schema contract, không chia sẻ repository implementation.
 

@@ -5,7 +5,7 @@
 - Mỗi user story có đúng một unit chủ trì chịu trách nhiệm acceptance criteria và Definition of Done.
 - Unit hỗ trợ được ghi riêng, không tạo ownership trùng.
 - Phase 2 được giữ trong cùng bounded context với MVP để tránh tách sai ranh giới.
-- Tổng nguồn chuẩn: 55 story, gồm 44 MVP và 11 Phase 2.
+- Tổng nguồn chuẩn: 59 story, gồm 48 MVP và 11 Phase 2.
 
 ## 2. Tổng hợp coverage
 
@@ -13,13 +13,13 @@
 |---|---:|---:|---:|
 | U01 Platform Foundation and Identity | 8 | 0 | 8 |
 | U02 Academic Administration | 3 | 1 | 4 |
-| U03 Content, Learning and Banks | 7 | 3 | 10 |
-| U04 Assessment Authoring and Publication | 4 | 1 | 5 |
+| U03 Content, Learning and Banks | 8 | 3 | 11 |
+| U04 Assessment Authoring and Publication | 7 | 1 | 8 |
 | U05 Submission and Group Work | 8 | 0 | 8 |
 | U06 Grading, AI and Code Execution | 9 | 3 | 12 |
 | U07 Reporting and Notification | 2 | 3 | 5 |
 | U08 Payment and Entitlement | 3 | 0 | 3 |
-| **Tổng** | **44** | **11** | **55** |
+| **Tổng** | **48** | **11** | **59** |
 
 ## 3. U01 - Platform Foundation and Identity
 
@@ -53,6 +53,7 @@
 | US-CNT-002 | MVP | Quản lý nội dung riêng của lớp | U01 file, U02 class scope |
 | US-CNT-003 | Phase 2 | Tìm kiếm và tóm tắt học liệu | U06 AI orchestration |
 | US-CNT-004 | Phase 2 | Thông báo và hỏi đáp trong lớp | U07 notification |
+| US-CNT-005 | MVP | Dùng YouTube làm nguồn RAG theo bài giảng | U01 job/artifact, U02 lesson scope, worker transcript adapter |
 | US-LRN-001 | MVP | Truy cập lớp đã ghi danh | U02 enrollment, U08 entitlement port |
 | US-LRN-002 | MVP | Lưu tiến độ và tiếp tục học | U02 enrollment |
 | US-LRN-003 | MVP | Theo dõi tiến độ lớp | U02 class scope |
@@ -69,6 +70,9 @@
 | US-ASM-006 | MVP | Soạn và kiểm tra bài trắc nghiệm | U03 question bank |
 | US-ASM-007 | MVP | Soạn bài viết luận | U03 rubric bank |
 | US-ASM-008 | Phase 2 | Nhân bản, sửa phiên bản và ngừng giao bài | U01 audit |
+| US-ASM-009 | MVP | Phát hành và sử dụng template đề cấp môn | U02 subject/class scope, U03 bank versions |
+| US-ASM-010 | MVP | Copy assignment và rubric giữa các lớp | U02 source/target authorization, U03 rubric version |
+| US-ASM-011 | MVP | Làm simulation exam giới hạn lượt | U05 attempt snapshot/submission, U06 grading |
 
 ## 7. U05 - Submission and Group Work
 
@@ -78,8 +82,8 @@
 | US-GRP-002 | MVP | Yêu cầu thay đổi trưởng nhóm | U01 audit, U02 enrollment |
 | US-GRP-003 | MVP | Tạo bài tập nhóm và phân chia phần cá nhân | U04 assessment |
 | US-GRP-004 | MVP | Nộp và chấm phần cá nhân của bài nhóm | U06 grading/AI proposal |
-| US-GRP-005 | MVP | Trưởng nhóm nộp tài liệu chung | U01 file, U02/U05 leader check |
-| US-GRP-006 | MVP | Đối chiếu và chấm tay bài chung | U06 manual grading |
+| US-GRP-005 | MVP | Tổng hợp các phần thành tài liệu chung | U01 file/job, U05 composite lineage/finalization |
+| US-GRP-006 | MVP | Đối chiếu, chấm bài chung và quyết định điểm thành viên | U06 manual composite/member-final grading |
 | US-ASM-003 | MVP | Làm và nộp bài | U01 file/idempotency, U04 publication |
 | US-ASM-004 | MVP | Soạn và làm bài sơ đồ Draw.io | U04 authoring, U01 artifact, U06 compact AI copy |
 
@@ -137,4 +141,4 @@
 - Không thêm lại `US-CAT-004` hoặc `US-GRD-009` đã bị loại khỏi phạm vi.
 - Bài viết chỉ dùng loại chung “bài viết luận”; không có loại ngoại ngữ riêng.
 - Bản Draw.io chuẩn là full XML; compact XML chỉ được tạo cho AI grading sau yêu cầu của giảng viên.
-- Bài cá nhân của bài nhóm có thể nhận AI proposal nếu giảng viên chọn; bài DOCX chung luôn do giảng viên chấm tay.
+- Bài cá nhân của bài nhóm có thể nhận AI proposal nếu giảng viên chọn; composite và điểm cuối thành viên luôn do giảng viên chấm/quyết định thủ công.

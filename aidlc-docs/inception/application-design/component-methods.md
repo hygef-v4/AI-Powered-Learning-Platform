@@ -35,12 +35,16 @@ assignIndividualParts(instructor, groupAssignmentId, allocations) -> AllocationS
 
 ```text
 uploadSubjectMaterial(subjectManager, subjectId, fileRef, metadata) -> Material
+registerYoutubeSource(actor, lessonId, videoOrPlaylistUrl) -> SourceRegistration
+requestTranscriptIngestion(actor, sourceId) -> JobReference
 publishClassContent(instructor, classId, contentVersionId) -> PublishedContent
 searchAuthorizedContent(actor, scope, query) -> SearchResult
 saveProgress(learner, contentId, progressCommand, idempotencyKey) -> Progress
 getClassProgress(instructor, classId, filters) -> ProgressReport
 createRubric(actor, scope, rubricDraft) -> RubricVersion
 createQuestion(actor, scope, questionDraft) -> QuestionVersion
+createQuestionVersion(actor, questionStableKey, changeSet) -> QuestionVersion
+publishQuestionVersion(actor, questionVersionId, effectivePolicy) -> VersionPublication
 cloneBankItem(actor, itemVersionId, targetScope) -> DraftVersion
 analyzeQuestion(actor, questionId, period) -> QuestionAnalytics
 ```
@@ -52,11 +56,18 @@ createAssessmentDraft(author, scope, assessmentDraft) -> AssessmentVersion
 reviewAssessment(author, assessmentVersionId) -> ReviewResult
 publishClassAssessment(instructor, assessmentVersionId, classId, schedule) -> Publication
 publishCommonAssessment(subjectManager, assessmentVersionId, subjectId, schedule) -> PublicationSet
+publishSubjectTemplate(subjectManager, assessmentVersionId, subjectId) -> AssessmentTemplateVersion
+copySubjectTemplate(instructor, templateVersionId, targetClassId) -> AssessmentVersion
+copyAssessmentToClass(instructor, sourceAssessmentId, targetClassId) -> AssessmentVersion
+copyRubricToClass(instructor, sourceRubricVersionId, targetClassId) -> RubricVersion
+configureSimulationExam(instructor, assessmentVersionId, simulationPolicy) -> AssessmentVersion
+startAttempt(learner, publicationId) -> AttemptSnapshot
 saveAttemptDraft(learner, publicationId, payload, idempotencyKey) -> DraftReceipt
 submitAttempt(learner, publicationId, payloadRef, idempotencyKey) -> SubmissionReceipt
 submitDrawioXml(learner, publicationId, fullXmlArtifact, idempotencyKey) -> SubmissionReceipt
 submitIndividualGroupPart(learner, allocationId, artifact, idempotencyKey) -> SubmissionReceipt
-submitSharedDocx(leader, groupAssignmentId, docxArtifact, idempotencyKey) -> SubmissionReceipt
+requestGroupComposite(instructor, groupAssignmentId, orderedPartVersions) -> JobReference
+finalizeGroupComposite(instructor, compositeVersionId, selectionPatch) -> CompositeVersion
 cloneAssessment(author, assessmentVersionId, targetScope) -> AssessmentVersion
 retirePublication(author, publicationId, reason) -> Publication
 ```
@@ -70,6 +81,8 @@ requestAiGradeProposal(instructor, submissionId, rubricVersionId) -> JobReferenc
 createCompactDrawioArtifact(aiJobId, fullXmlArtifactId) -> DerivedArtifact
 reviewGradeProposal(instructor, proposalId, decisionPatch) -> GradeDraft
 finalizeGrade(instructor, submissionId, finalGrade, reason?) -> FinalGrade
+recordCompositeGrade(instructor, compositeVersionId, rubricResult) -> GroupGrade
+finalizeMemberGrade(instructor, groupAssignmentId, learnerId, evidence, finalGrade, reason) -> FinalGrade
 publishGrades(instructor, publicationId, gradeIds) -> PublicationResult
 requestExtension(learner, publicationId, request) -> ExtensionRequest
 requestRegrade(learner, gradeId, request) -> RegradeRequest

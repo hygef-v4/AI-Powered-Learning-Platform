@@ -364,6 +364,32 @@
 - **When** yêu cầu được gửi
 - **Then** hệ thống từ chối, không phát thông báo và không tiết lộ thành viên/nội dung lớp
 
+### US-CNT-005 - Dùng YouTube làm nguồn RAG theo bài giảng
+
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn gắn video/playlist YouTube vào bài giảng và xử lý transcript để dùng đúng nguồn đó cho RAG.
+
+**Truy vết**: FR-002, FR-004, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Video có caption
+
+- **Given** người dùng có quyền với bài giảng và URL YouTube hợp lệ có caption
+- **When** người dùng yêu cầu xử lý nguồn
+- **Then** hệ thống lưu liên kết video/bài giảng, transcript có timestamp và chỉ mục trong đúng phạm vi RAG
+
+#### Scenario 2 - Playlist hoặc video không có caption
+
+- **Given** URL là playlist hợp lệ hoặc video không có caption khả dụng
+- **When** tác vụ xử lý chạy
+- **Then** hệ thống xử lý từng video, tự phiên âm audio khi cần và hiển thị trạng thái riêng cho từng mục
+
+#### Scenario 3 - Nguồn lỗi hoặc ngoài quyền
+
+- **Given** URL không hợp lệ, video không truy cập được, phiên âm thất bại hoặc bài giảng ngoài quyền
+- **When** yêu cầu được xử lý
+- **Then** hệ thống không lập chỉ mục kết quả lỗi/ngoài quyền, giữ trạng thái có thể retry và không tạo transcript hoàn tất giả
+
 ## 4. Miền Group Assignment
 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
@@ -398,7 +424,7 @@
 
 - **Given** người yêu cầu là thành viên nhóm và người được đề xuất cũng thuộc nhóm
 - **When** giảng viên phê duyệt và xác nhận trưởng nhóm mới
-- **Then** nhóm vẫn có đúng một trưởng nhóm, quyền nộp bài chung chuyển sang người mới và quyết định được audit
+- **Then** nhóm vẫn có đúng một trưởng nhóm, vai trò điều phối chuyển sang người mới và quyết định được audit mà không đổi quyền nộp phần của các thành viên
 
 #### Scenario 2 - Từ chối hoặc yêu cầu không hợp lệ
 
@@ -446,35 +472,35 @@
 - **When** giảng viên chọn chấm thủ công hoặc “Nhờ AI đề xuất”
 - **Then** hệ thống áp dụng đúng luồng đã chọn, lưu actor/thời gian và AI chỉ tạo đề xuất chưa công bố
 
-### US-GRP-005 - Trưởng nhóm nộp tài liệu chung
+### US-GRP-005 - Tổng hợp các phần thành tài liệu chung
 
-**Story**: Là trưởng nhóm, tôi muốn upload DOCX chung do cả nhóm phối hợp hoàn thiện để đại diện nhóm nộp sản phẩm tổng hợp cho giảng viên.
+**Story**: Là giảng viên, tôi muốn hệ thống ghép các phần cá nhân theo cấu trúc đã định nghĩa để tôi rà soát và chốt một tài liệu chung mà vẫn truy vết được nguồn đóng góp.
 
-**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, SEC-001, SEC-003, SEC-005, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Trưởng nhóm nộp DOCX hợp lệ
+#### Scenario 1 - Tổng hợp các phần đã nộp
 
-- **Given** người học là trưởng nhóm hiện tại, bài chung còn hiệu lực và tệp DOCX nằm trong giới hạn
-- **When** trưởng nhóm upload và xác nhận nộp
-- **Then** hệ thống lưu tệp riêng tư, nhóm/người nộp/thời điểm/phiên bản và chuyển bài chung sang chờ giảng viên chấm tay
+- **Given** bài nhóm có cấu trúc và ít nhất một phần cá nhân hợp lệ đã nộp
+- **When** giảng viên yêu cầu tạo tài liệu chung
+- **Then** hệ thống ghép đúng thứ tự, lưu liên kết tới version nguồn/người phụ trách và không ghi đè artifact cá nhân
 
-#### Scenario 2 - Thành viên thường nộp bài chung
+#### Scenario 2 - Giảng viên rà soát và chốt
 
-- **Given** người học thuộc nhóm nhưng không phải trưởng nhóm hiện tại
-- **When** người học dùng giao diện hoặc API để nộp DOCX chung
-- **Then** hệ thống từ chối phía server, không thay đổi phiên bản bài chung và ghi sự kiện authorization phù hợp
+- **Given** tài liệu tổng hợp đã được tạo
+- **When** giảng viên đổi thứ tự, loại một phần không hợp lệ và xác nhận chốt
+- **Then** hệ thống tạo version chung đã chốt, giữ lịch sử cấu trúc và dùng version đó cho luồng chấm
 
-#### Scenario 3 - Tệp không hợp lệ hoặc storage lỗi
+#### Scenario 3 - Thiếu phần hoặc tổng hợp lỗi
 
-- **Given** tệp sai loại/quá kích thước hoặc storage không khả dụng
-- **When** trưởng nhóm nộp
-- **Then** hệ thống không tạo trạng thái nộp thành công giả, giữ phiên bản hợp lệ trước đó và trả hướng dẫn thử lại an toàn
+- **Given** một phần chưa nộp hoặc tác vụ tổng hợp thất bại
+- **When** giảng viên xem trạng thái
+- **Then** hệ thống chỉ rõ phần thiếu/lỗi, không đánh dấu hoàn tất giả và cho phép tạo lại có kiểm soát
 
 ### US-GRP-006 - Đối chiếu và chấm tay bài chung
 
-**Story**: Là giảng viên, tôi muốn xem DOCX chung cạnh các phần cá nhân và tự chấm bài chung để đánh giá tính thống nhất của sản phẩm nhóm với đóng góp từng thành viên.
+**Story**: Là giảng viên, tôi muốn xem tài liệu chung cạnh các phần cá nhân, tự chấm tính tích hợp và quyết định điểm cuối từng sinh viên để phản ánh cả chất lượng chung và mức đóng góp.
 
 **Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-001, SEC-003, SEC-005, SEC-008.
 
@@ -482,21 +508,33 @@
 
 #### Scenario 1 - Chấm tay và đối chiếu
 
-- **Given** DOCX chung và các phần cá nhân của nhóm đã được nộp
+- **Given** tài liệu chung đã chốt và các phần cá nhân của nhóm đã được nộp
 - **When** giảng viên mở màn hình review
-- **Then** hệ thống hiển thị đúng phiên bản chung cùng từng phần/người phụ trách để giảng viên nhập điểm và phản hồi thủ công; điểm chung được lưu riêng với điểm cá nhân
+- **Then** hệ thống hiển thị đúng version chung cùng từng phần/người phụ trách, đề xuất AI của phần cá nhân nếu có và các vùng điểm/feedback tách biệt
 
 #### Scenario 2 - Không cho AI chấm bài chung
 
-- **Given** người dùng đang xem bài nộp chung của nhóm
+- **Given** người dùng đang xem tài liệu chung của nhóm
 - **When** chọn phương thức chấm
-- **Then** hệ thống chỉ cung cấp chấm thủ công, không gửi DOCX chung tới AI và lưu giảng viên là người quyết định điểm
+- **Then** hệ thống chỉ cung cấp chấm thủ công, không gửi tài liệu chung tới AI và lưu giảng viên là người quyết định điểm
 
 #### Scenario 3 - Thiếu phần cá nhân
 
 - **Given** một hoặc nhiều phần cá nhân chưa nộp
 - **When** giảng viên review bài chung
 - **Then** hệ thống chỉ rõ phần còn thiếu nhưng vẫn cho phép giảng viên xử lý bài chung theo chính sách lớp mà không giả định đóng góp
+
+#### Scenario 4 - Nội dung không nhất quán
+
+- **Given** các phần đúng riêng lẻ nhưng xung đột khi ghép
+- **When** giảng viên chấm tiêu chí tích hợp và nhất quán
+- **Then** lỗi được trừ ở điểm tài liệu chung; chỉ khi xác định được phần/thành viên gây lỗi, giảng viên mới trừ thêm phần đó và phải ghi lý do
+
+#### Scenario 5 - Quyết định điểm cuối từng sinh viên
+
+- **Given** điểm/feedback phần cá nhân và điểm tài liệu chung đã có
+- **When** giảng viên nhập điểm cuối cho từng sinh viên
+- **Then** hệ thống hiển thị hai nguồn để tham khảo nhưng không tự áp dụng công thức, đồng thời audit mọi điều chỉnh và lý do
 
 ## 5. Miền Learning Journey
 
@@ -598,9 +636,15 @@
 
 #### Scenario 2 - Câu hỏi đã phát hành
 
-- **Given** câu hỏi đã thuộc một bài được phát hành
-- **When** người dùng sửa hoặc xóa bản trong ngân hàng
-- **Then** snapshot của bài đã phát hành và bài nộp lịch sử không bị thay đổi
+- **Given** câu hỏi đã thuộc một bài được phát hành nhưng vẫn còn trong thời hạn làm
+- **When** người dùng sửa câu hỏi và phát hành version mới
+- **Then** snapshot của attempt đã bắt đầu không đổi, còn version mới chỉ áp dụng cho attempt bắt đầu sau thời điểm phát hành mới
+
+#### Scenario 3 - Thay đổi ảnh hưởng công bằng
+
+- **Given** chỉnh sửa câu hỏi làm thay đổi đáng kể nội dung hoặc đáp án
+- **When** giảng viên phát hành version mới
+- **Then** hệ thống yêu cầu giảng viên cân nhắc gia hạn hoặc cấp lượt làm lại, giữ version trên từng attempt và audit quyết định
 
 ### US-QBK-003 - Phân tích chất lượng câu hỏi (Phase 2)
 
@@ -893,6 +937,72 @@
 - **Given** bài đã phát hành và chính sách cho phép thu hồi
 - **When** người dùng xác nhận ngừng giao/nhận bài mới
 - **Then** bài biến mất khỏi danh sách cần làm hoặc khóa lượt nộp mới theo chính sách, nhưng cấu hình đã phát hành, bài nộp và điểm cũ vẫn chỉ đọc được để truy vết
+
+### US-ASM-009 - Phát hành và sử dụng template đề cấp môn
+
+**Story**: Là Chủ nhiệm môn, tôi muốn phát hành template đề có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
+
+**Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-003, SEC-005, SEC-008.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Phát hành và copy template
+
+- **Given** Chủ nhiệm môn có quyền với môn và template hợp lệ
+- **When** Chủ nhiệm môn phát hành, sau đó giảng viên của lớp thuộc môn copy template
+- **Then** hệ thống tạo draft độc lập cho lớp, lưu source template/version và không tự đồng bộ cập nhật sau này
+
+#### Scenario 2 - Sai phạm vi hoặc sửa nguồn
+
+- **Given** giảng viên không phụ trách lớp đích hoặc cố sửa trực tiếp template chỉ đọc
+- **When** yêu cầu được gửi
+- **Then** hệ thống từ chối phía server và giữ nguyên template
+
+### US-ASM-010 - Copy assignment và rubric giữa các lớp
+
+**Story**: Là giảng viên, tôi muốn copy assignment và rubric giữa các lớp mình phụ trách để tái sử dụng nội dung mà không mang theo dữ liệu thực thi cũ.
+
+**Truy vết**: FR-002, FR-014, FR-016, FR-028, SEC-003, SEC-005, SEC-008.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Copy hợp lệ
+
+- **Given** giảng viên được phân công cả lớp nguồn và lớp đích
+- **When** giảng viên copy assignment hoặc rubric
+- **Then** hệ thống tạo draft/identity độc lập ở lớp đích, giữ nguồn gốc audit và không copy lịch, attempt, bài nộp hoặc điểm
+
+#### Scenario 2 - Lớp đích ngoài quyền
+
+- **Given** giảng viên không được phân công lớp đích dù lớp đó thuộc cùng môn
+- **When** yêu cầu copy được gửi
+- **Then** hệ thống từ chối ở mức đối tượng và không tiết lộ nội dung lớp đích
+
+### US-ASM-011 - Làm simulation exam giới hạn lượt
+
+**Story**: Là người học, tôi muốn làm simulation exam theo số lượt và chính sách rõ ràng để luyện tập hoặc nhận điểm thành phần mà không nhầm đây là kỳ thi chính thức.
+
+**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-003, SEC-005, SEC-008.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Làm trong giới hạn
+
+- **Given** simulation exam đang mở và người học còn lượt
+- **When** người học bắt đầu và nộp attempt
+- **Then** hệ thống giữ snapshot đề/version, cập nhật số lượt và áp dụng chính sách kết quả cao nhất/gần nhất/trung bình đã công bố
+
+#### Scenario 2 - Công bố và tính điểm
+
+- **Given** giảng viên đã cấu hình thời điểm hiện đáp án và trạng thái tính điểm thành phần
+- **When** attempt được hoàn tất hoặc cửa sổ bài đóng
+- **Then** hệ thống chỉ hiển thị đáp án đúng thời điểm và đưa kết quả vào điểm thành phần chỉ khi cấu hình cho phép
+
+#### Scenario 3 - Không phải kỳ thi chính thức
+
+- **Given** người học hoặc giảng viên xem simulation exam
+- **When** giao diện hiển thị thông tin bài
+- **Then** hệ thống ghi rõ đây là thi thử, số lượt, cách lấy kết quả và việc có/không tính điểm; không hiển thị như proctored exam
 
 ## 9. Miền Grading and Progress
 
@@ -1291,10 +1401,10 @@
 | FR-001 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-006 |
 | FR-002 | US-IAM-002, US-IAM-004 đến US-AUD-001 theo phạm vi actor |
 | FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-005, US-ASM-002 |
-| FR-004 | US-CNT-001, US-CNT-002, US-CNT-003, US-AIG-002 |
+| FR-004 | US-CNT-001, US-CNT-002, US-CNT-003, US-CNT-005, US-AIG-002 |
 | FR-005 | US-LRN-001, US-LRN-002, US-LRN-003, US-GRD-004 |
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-002, US-ASM-004 đến US-ASM-007 |
-| FR-007 | US-ASM-001, US-ASM-002, US-ASM-003, US-ASM-008, US-GRD-006 |
+| FR-007 | US-ASM-001, US-ASM-002, US-ASM-003, US-ASM-008, US-ASM-011, US-GRD-006 |
 | FR-008 | US-GRD-001 đến US-GRD-008, US-RPT-004 |
 | FR-009 | US-LRN-002, US-LRN-003, US-GRD-004, US-RPT-002, US-RPT-003 |
 | FR-010 | US-PAY-001, US-PAY-002, US-PAY-003 |
@@ -1303,7 +1413,7 @@
 | FR-013 | US-CNT-001, US-CNT-002, US-LRN-001 |
 | FR-014 | US-IAM-002, US-IAM-005, US-CAT-001, US-CAT-002, US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-002, US-ASM-003, US-GRD-002, US-GRD-003, US-PAY-001, US-PAY-002, US-PAY-003, US-AUD-001 |
 | FR-015 | US-IAM-007 |
-| FR-016 | US-QBK-001, US-QBK-002, US-QBK-003, US-ASM-006, US-ASM-007 |
+| FR-016 | US-QBK-001, US-QBK-002, US-QBK-003, US-ASM-006, US-ASM-007, US-ASM-009, US-ASM-010 |
 | FR-017 | US-QBK-002, US-ASM-003 đến US-ASM-007 |
 | FR-018 | US-ASM-003 |
 | FR-019 | US-RPT-001 |
@@ -1314,6 +1424,9 @@
 | FR-024 | US-QBK-003, US-RPT-002, US-RPT-003, US-RPT-004 |
 | FR-025 | US-GRP-001, US-GRP-002 |
 | FR-026 | US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |
+| FR-027 | US-ASM-009 |
+| FR-028 | US-ASM-010 |
+| FR-029 | US-ASM-011 |
 
 ## 14. Ràng buộc phi chức năng và kỹ thuật downstream
 
@@ -1336,7 +1449,7 @@
 | Valuable | Đạt | Mỗi story gắn với một trong bốn persona và nêu lợi ích rõ ràng |
 | Estimable | Đạt | Phạm vi được giới hạn theo một thao tác hoặc kết quả quan sát được |
 | Small | Đạt | Các hành trình lớn được tách theo kích hoạt, nội dung, tạo AI, phát hành, nộp, chấm và công bố |
-| Testable | Đạt | Tất cả 55 stories có acceptance criteria Given/When/Then và truy vết requirements |
+| Testable | Đạt | Tất cả 59 stories có acceptance criteria Given/When/Then và truy vết requirements |
 
 ## 16. Security Compliance tại User Stories
 
@@ -1352,7 +1465,7 @@
 | SECURITY-08 | Compliant | Object/function authorization được thể hiện xuyên IAM, môn, lớp, nhóm/leader, nội dung, bài nộp, điểm và payment |
 | SECURITY-09 | Compliant | Failure scenarios yêu cầu fail closed và safe error; hardening chi tiết downstream |
 | SECURITY-10 | N/A | Supply-chain controls được truy vết tới Code Generation/Build and Test theo lựa chọn không tạo system story |
-| SECURITY-11 | Compliant | Misuse cases gồm leo quyền, leader-only submission, prompt vượt phạm vi, sửa điểm và webhook replay có acceptance criteria |
+| SECURITY-11 | Compliant | Misuse cases gồm leo quyền, nộp thay phần cá nhân, prompt vượt phạm vi, sửa điểm và webhook replay có acceptance criteria |
 | SECURITY-12 | Compliant | US-IAM-001/002/003 bao phủ password, session, brute-force; MFA admin giữ downstream |
 | SECURITY-13 | Compliant | US-PAY-002 và US-AUD-001 bao phủ integrity/replay/audit; artifact integrity downstream |
 | SECURITY-14 | Compliant | US-AUD-001 xác định sự kiện và tính bất biến; retention/alerting downstream |
