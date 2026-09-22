@@ -3,9 +3,9 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
-- **Current Phase**: CONSTRUCTION
-- **Current Stage**: CONSTRUCTION - U01 Functional Design Approval
-- **Session Status**: Active; U01 Functional Design artifacts validated and awaiting explicit approval
+- **Current Phase**: INCEPTION (change request; previous CONSTRUCTION checkpoint preserved)
+- **Current Stage**: Requirements Change Approval
+- **Session Status**: Revised requirements awaiting explicit approval; U01 Functional Design approval checkpoint is preserved and paused
 
 ## Workspace State
 - **Existing Code**: No
@@ -52,4 +52,4 @@
 - **Risk level**: High
 - **Testing complexity**: Complex
 - **Current unit**: U01 - Platform Foundation and Identity
-- **Resume action**: Review U01 Functional Design artifacts and choose Request Changes or Continue to Next Stage
+- **Resume action**: Review and approve the revised requirements, then propagate the approved change through remaining Inception artifacts before returning to the preserved U01 Functional Design approval checkpoint

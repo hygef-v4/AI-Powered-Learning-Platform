@@ -18,7 +18,7 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một bản chung, kho học liệu và RAG cấp môn, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi, theo dõi tiến độ, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một tài liệu tổng hợp, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi tiến độ, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -80,7 +80,7 @@ Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm m�
 
 ### FR-004 - Nhập và quản lý nội dung học
 
-Hệ thống phải hỗ trợ soạn nội dung trực tiếp và tải lên PDF, DOCX hoặc slide. Chủ nhiệm môn quản lý kho học liệu và nguồn trích xuất RAG dùng chung ở cấp môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công. Việc xử lý tệp phải có trạng thái, giới hạn loại/kích thước và thông báo lỗi an toàn.
+Hệ thống phải hỗ trợ soạn nội dung trực tiếp, tải lên PDF, DOCX hoặc slide và gắn nguồn YouTube cho từng bài giảng. Chủ nhiệm môn quản lý kho học liệu và nguồn trích xuất RAG dùng chung ở cấp môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công. Việc xử lý tệp, caption và transcript phải có trạng thái, giới hạn hợp lệ và thông báo lỗi an toàn.
 
 **Tiêu chí chấp nhận:**
 
@@ -88,6 +88,9 @@ Hệ thống phải hỗ trợ soạn nội dung trực tiếp và tải lên PD
 - Tệp hợp lệ được lưu riêng tư và gắn đúng phạm vi môn hoặc lớp.
 - Người tải lên và người quản lý được ủy quyền xem được trạng thái chờ, đang xử lý, thành công hoặc thất bại.
 - Giảng viên không thể sửa kho học liệu/RAG cấp môn nếu không có quyền Chủ nhiệm môn tương ứng.
+- Mỗi bài giảng có thể gắn một video hoặc playlist YouTube; hệ thống ưu tiên caption có sẵn và tự phiên âm audio khi caption không khả dụng.
+- Transcript được lưu cùng video, bài giảng, ngôn ngữ và timestamp; chỉ transcript xử lý thành công mới được lập chỉ mục vào đúng phạm vi RAG.
+- Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái xử lý và retry khi lấy caption, phiên âm hoặc lập chỉ mục thất bại.
 
 ### FR-005 - Trải nghiệm học theo lớp
 
@@ -166,7 +169,15 @@ Quản trị viên phải có thể tìm kiếm, tạo, cập nhật, khóa/mở
 
 ### FR-016 - Ngân hàng rubric và câu hỏi
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Nội dung đã được dùng để chấm phải được version hóa hoặc bảo toàn để không làm thay đổi kết quả lịch sử.
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+
+**Tiêu chí chấp nhận:**
+
+- Câu hỏi chưa publish có thể sửa trong draft hiện tại.
+- Khi một assignment đã publish nhưng vẫn còn trong thời hạn làm bài, chỉnh sửa câu hỏi tạo version mới; không sửa snapshot của lượt làm đã bắt đầu.
+- Version mới chỉ áp dụng cho lượt làm bắt đầu sau khi giảng viên phát hành version đó; hệ thống lưu version được dùng cho từng attempt.
+- Nếu thay đổi ảnh hưởng đáng kể đến tính công bằng, giảng viên có thể gia hạn hoặc cấp lượt làm lại và hành động này phải được audit.
+- Rubric đã dùng để chấm không bị ghi đè; thay đổi tạo version mới cho lần sử dụng sau.
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
@@ -212,16 +223,52 @@ Giảng viên phải có thể chia sinh viên của lớp được phân công 
 
 ### FR-026 - Bài tập nhóm, bài cá nhân và bài chung
 
-Giảng viên phải có thể tạo một bài tập nhóm chung, tách thành các phần cá nhân và giao từng phần cho thành viên, ví dụ sơ đồ use case hoặc activity. Mỗi sinh viên nộp phần cá nhân của mình; giảng viên có thể chọn chấm tay hoặc nhờ AI đề xuất. Nhóm phối hợp tạo một tài liệu DOCX chung bên ngoài hệ thống và chỉ trưởng nhóm được upload/nộp tài liệu này. Giảng viên phải tự chấm tay bài chung và có thể đối chiếu với các phần cá nhân; bài chung không được gửi AI để chấm.
+Giảng viên phải có thể tạo một bài tập nhóm, định nghĩa cấu trúc/thứ tự các phần và giao từng phần cho thành viên, ví dụ sơ đồ use case hoặc activity. Mỗi sinh viên nộp phần được giao; hệ thống tổng hợp các phần đã nộp thành một tài liệu chung theo cấu trúc do giảng viên định nghĩa. Giảng viên xem trước, đổi thứ tự hoặc loại phần không hợp lệ rồi chốt tài liệu tổng. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
 **Tiêu chí chấp nhận:**
 
-- Phần cá nhân và bài chung có deadline/trạng thái/bài nộp riêng nhưng cùng truy vết về một bài tập nhóm.
+- Phần cá nhân có deadline/trạng thái/bài nộp riêng nhưng cùng truy vết về một bài tập nhóm và một phiên bản tài liệu tổng hợp.
 - Mỗi phần cá nhân được gán cho đúng một thành viên và chỉ thành viên đó nộp; giảng viên có thể đổi phân công trước hạn với audit.
-- Chỉ trưởng nhóm hiện tại có thể nộp hoặc nộp lại DOCX chung; thành viên khác bị từ chối phía server.
-- DOCX chung được lưu riêng tư, kiểm tra loại/kích thước và phiên bản nộp; không cung cấp chỉnh sửa cộng tác DOCX trong hệ thống.
-- Giảng viên xem được bài chung cạnh các phần cá nhân, nhập điểm/phản hồi thủ công và hệ thống không cung cấp hành động chấm AI cho bài chung.
-- Điểm phần cá nhân và điểm bài chung được lưu riêng; chưa áp dụng công thức tự động gộp điểm khi chưa có chính sách trọng số được phê duyệt.
+- Hệ thống chỉ tổng hợp các phiên bản phần cá nhân đã nộp, giữ liên kết nguồn và tạo lại tài liệu khi giảng viên yêu cầu; không ghi đè artifact nguồn.
+- Giảng viên xem được tài liệu chung cạnh các phần cá nhân, điều chỉnh cấu trúc tổng hợp và chốt một version để chấm.
+- AI chỉ tạo đề xuất điểm/phản hồi cho phần cá nhân khi giảng viên chủ động yêu cầu; hệ thống không cung cấp hành động chấm AI cho tài liệu chung.
+- Giảng viên chấm tài liệu chung bằng rubric có tiêu chí tích hợp và nhất quán. Lỗi chung trừ ở bài chung; phần cá nhân chỉ bị trừ thêm khi giảng viên xác định được phần hoặc thành viên gây lỗi.
+- Điểm/feedback phần cá nhân và điểm tài liệu chung được lưu riêng và hiển thị cạnh nhau. Hệ thống không tự áp dụng công thức; giảng viên dựa trên hai nguồn cùng mức đóng góp để nhập điểm cuối cho từng sinh viên.
+- Mọi ghi đè đề xuất AI, điều chỉnh điểm cuối và quy kết lỗi nhất quán cho một phần/thành viên phải lưu lý do và audit actor/thời gian.
+
+### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
+
+Chủ nhiệm môn phải có thể phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
+
+**Tiêu chí chấp nhận:**
+
+- Chỉ Chủ nhiệm môn có quyền phát hành hoặc tạo version mới của template cấp môn.
+- Bản copy thuộc lớp đích và độc lập với template nguồn; cập nhật template không tự ghi đè bản đã copy.
+- Hệ thống lưu `source template/version`, người copy, lớp đích và thời gian để truy vết.
+- Bản copy không mang theo lịch phát hành, attempt, bài nộp hoặc điểm từ nguồn.
+
+### FR-028 - Sao chép assignment và rubric giữa các lớp
+
+Giảng viên phải có thể copy assignment và rubric từ một lớp sang lớp khác mà chính giảng viên đang được phân công.
+
+**Tiêu chí chấp nhận:**
+
+- Backend kiểm tra quyền của giảng viên trên cả lớp nguồn và lớp đích.
+- Bản copy là draft độc lập, giữ nguồn gốc để audit nhưng không đồng bộ hai chiều.
+- Assignment copy loại bỏ lịch phát hành, deadline, attempt, bài nộp và điểm; rubric copy giữ cấu trúc/tiêu chí nhưng có identity/version riêng ở lớp đích.
+- Không cho copy sang lớp ngoài phạm vi được phân công, kể cả khi thuộc cùng môn.
+
+### FR-029 - Simulation exam
+
+Hệ thống phải cung cấp simulation exam để sinh viên thi thử. Không có chế độ kỳ thi chính thức có giám sát; giảng viên có thể cấu hình một simulation exam tính hoặc không tính vào điểm thành phần.
+
+**Tiêu chí chấp nhận:**
+
+- Giảng viên cấu hình số lượt tối đa, cửa sổ làm bài, cách lấy kết quả cao nhất/gần nhất/trung bình và thời điểm hiển thị đáp án.
+- Server thực thi giới hạn lượt và thời gian; mỗi attempt giữ snapshot đề/version riêng.
+- Nếu được cấu hình không tính điểm, kết quả chỉ phục vụ luyện tập/phản hồi và không đi vào điểm chính thức.
+- Nếu được cấu hình tính điểm thành phần, chính sách lấy kết quả được khóa khi đã có attempt; thay đổi sau đó cần version mới và audit.
+- Giao diện và báo cáo phải ghi rõ đây là thi thử, có hay không tính điểm, không được mô tả là kỳ thi chính thức/proctored exam.
 
 ## 5. Luồng người dùng chính
 
@@ -251,7 +298,7 @@ Khi AI, email, lưu trữ hoặc thanh toán tạm thời không khả dụng, h
 
 ### USCN-006 - Thực hiện và đánh giá bài tập nhóm
 
-Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, tạo bài chung và giao các phần cá nhân. Thành viên nộp phần được giao; trưởng nhóm upload DOCX chung. Giảng viên có thể nhờ AI đề xuất cho phần cá nhân nhưng tự chấm bài chung và đối chiếu hai cấp bài làm trước khi công bố kết quả.
+Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, định nghĩa cấu trúc bài chung và giao các phần cá nhân. Thành viên nộp phần được giao; hệ thống ghép các phần thành tài liệu tổng để giảng viên rà soát và chốt. Giảng viên có thể nhờ AI đề xuất cho phần cá nhân nhưng tự chấm tài liệu chung, đánh giá tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên dựa trên cả hai cấp bài làm.
 
 ## 6. Yêu cầu phi chức năng
 
@@ -384,8 +431,10 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 - Chỉ web responsive.
 - Nội dung được nhập trực tiếp hoặc tải PDF/DOCX/slide.
 - Bốn loại bài đánh giá là sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận; bài sơ đồ lưu/nộp XML Draw.io đầy đủ cho giảng viên, còn XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
-- Bài tập nhóm gồm các phần cá nhân và một DOCX chung; hệ thống không cung cấp trình soạn thảo cộng tác DOCX, chỉ nhận file do nhóm tự phối hợp tạo bên ngoài.
-- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; chỉ trưởng nhóm được nộp bài chung.
+- Bài tập nhóm gồm các phần cá nhân và tài liệu chung do hệ thống tổng hợp theo cấu trúc giảng viên định nghĩa; hệ thống không cung cấp trình soạn thảo cộng tác DOCX.
+- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; việc nộp phần vẫn thuộc từng thành viên, còn giảng viên chốt tài liệu tổng hợp.
+- Không có loại kỳ thi chính thức/proctored exam; simulation exam có thể được cấu hình tính hoặc không tính điểm thành phần.
+- Template cấp môn và bản copy giữa lớp luôn tạo bản độc lập có truy vết nguồn, không đồng bộ hoặc mang theo dữ liệu phát hành/kết quả.
 - Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán và email/thông báo.
 - Triển khai đợt đầu ưu tiên local container.
 - MVP phải có test tự động (bao gồm unit test, integration test, system test, e2e test), tài liệu chạy và khả năng triển khai thử nghiệm.
@@ -395,12 +444,12 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 ## 10. Tiêu chí thành công của MVP
 
 - Một giảng viên có thể tạo lớp, đưa nội dung vào hệ thống, dùng AI tạo và duyệt bài đánh giá.
-- Một giảng viên có thể quản lý rubric/câu hỏi, xem trước hoặc chạy thử từng loại bài, theo dõi nộp bài và chốt điểm hàng loạt.
-- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG và phát hành đề chung tới đúng mọi lớp của môn được phân công mà không cần giảng viên lớp duyệt lại.
+- Một giảng viên có thể quản lý rubric/câu hỏi theo version, copy assignment/rubric giữa các lớp được phân công, tổ chức simulation exam giới hạn lượt, theo dõi nộp bài và chốt điểm hàng loạt.
+- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG gồm nguồn YouTube theo bài giảng, phát hành đề chung hoặc template đề có version tới đúng phạm vi môn được phân công.
 - Một người học được ghi danh có thể học, nộp bài và nhận điểm/phản hồi đúng quyền.
 - Bản nháp và lịch sử lần nộp của người học được bảo toàn qua gián đoạn mà không bị coi nhầm là bài nộp chính thức.
 - Quản trị viên có thể quản lý vòng đời tài khoản và kiểm soát quota/kill-switch/chi phí AI mà không khóa hệ thống vào một provider.
-- Một nhóm có thể hoàn thành các phần cá nhân và nộp một DOCX chung qua trưởng nhóm; AI chỉ có thể hỗ trợ chấm phần cá nhân, còn bài chung luôn do giảng viên chấm tay và đối chiếu.
+- Một nhóm có thể nộp các phần cá nhân để hệ thống tạo tài liệu tổng; AI chỉ hỗ trợ chấm phần cá nhân, còn giảng viên tự chấm tài liệu chung, xử lý lỗi không nhất quán và quyết định điểm cuối từng thành viên.
 - Luồng thanh toán thử nghiệm cấp quyền chính xác và chống xử lý webhook trùng lặp.
 - Các vai trò không thể truy cập dữ liệu hoặc chức năng ngoài quyền.
 - Dữ liệu và hành động nhạy cảm có audit trail phù hợp.
@@ -419,7 +468,8 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 | Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone |
 | Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung và ranh giới học liệu cấp môn/lớp |
 | Đối chiếu `uc1.pdf` và yêu cầu ngày 2026-09-13 | FR-015 đến FR-024; loại Head of Department; dùng chung loại bài viết luận; phân tách MVP và Phase 2 |
-| Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader, phần cá nhân, DOCX chung và quy tắc chấm hai cấp |
+| Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
+| Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 
 ## 12. Security Compliance tại Requirements Analysis
 

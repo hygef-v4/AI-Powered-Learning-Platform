@@ -744,3 +744,45 @@ giải thích"
 **Context**: Local version-control checkpoint for AI-DLC audit changes only.
 
 ---
+
+## Inception Requirements Change Request
+**Timestamp**: 2026-09-22T21:56:10+07:00
+**User Input**: "Question Version: chỉ cho sửa question khi chưa publish cho sinh viên làm hoặc trong thời hạn nộp bài.
+Question lấy điểm thành phần: Trưởng môn có thể up cho giảng viên 1 đề mẫu, giảng viên có thể tự sửa đề rồi cho sinh viên làm.
+simulation exam: cho phép hsinh thi thử (giới hạn số lần)
+Cho phép giảng viên copy để bài, rubric từ lớp này sang lớp khác của giảng viên đó
+RAG: có thể chia theo bài giảng sử dụng link video youtube.
+Bài tập nhóm: khi team cùng submit kết quả của mình, kết quả đấy sẽ được đẩy cho giáo viên ghép lại thành 1 tài liệu lớn. Ai sẽ chấm từng phần, có điểm chấm từng phần tổng lên thành điểm tổng, sau đó giảng viên điều chỉnh. Nhưng nếu các nội dung bài làm không nhất quán với nhau thì phải chấm thế nào?
+
+giúp tôi sửa các doc trong inception phase như trên và đề xuất ý tưởng"
+**AI Response**: "Classified the request as a comprehensive requirements change spanning question versioning, subject-level templates, simulation exams, cross-class copying, lesson-scoped YouTube RAG, and group submission/grading. Created a dedicated clarification file with recommended options before revising approved Inception artifacts. Preserved and paused the existing U01 Functional Design approval checkpoint."
+**Status**: Awaiting clarification answers
+**Context**: Reopened Requirements Analysis for a user-requested change; enabled Security and Resiliency baselines remain in force.
+
+---
+
+## Inception Requirements Change - First Answer Review
+**Timestamp**: 2026-09-22T22:52:11+07:00
+**User Input**: "check giúp tôi plan"
+**AI Response**: "Reviewed all nine answers in `requirements-change-questions-2026-09-22.md`. Accepted Q1-Q7, including the clarified AI-assisted grading and YouTube transcription choices. Detected unresolved scope and grading ambiguities in the simulation-only statement and Q8-Q9, then created a focused three-question clarification file."
+**Status**: Awaiting clarification answers
+**Context**: Requirements change validation; no approved Inception artifact has been revised yet.
+
+---
+
+## Inception Requirements Change - Clarifications Completed
+**Timestamp**: 2026-09-22T22:36:32+07:00
+**User Input**: "ok tôi trả lời xong r"
+**AI Response**: "Validated the three follow-up answers: simulation exams may optionally count toward component grades but are never official/proctored exams; group final scores are manually determined from separately displayed individual and shared-work results without an automatic formula; inconsistency is graded in the shared-work integration rubric and may additionally affect an identified responsible part. Revised `requirements.md` with all approved first-round and clarification decisions and moved the change request to Requirements Approval."
+**Status**: Requirements revision awaiting explicit approval
+**Context**: Requirements Analysis change request; downstream Inception artifacts remain unchanged pending approval.
+
+---
+
+## Inception Requirements Change - Approval Requested
+**Timestamp**: 2026-09-22T22:52:11+07:00
+**AI Response**: "Requirements Analysis change revision completed. Requested review of `aidlc-docs/inception/requirements/requirements.md` with two permitted responses: Request Changes or Approve & Continue to User Stories change propagation."
+**Status**: Awaiting explicit approval
+**Context**: Security and Resiliency baselines remain compliant and unchanged; downstream Inception synchronization is gated on approval.
+
+---
