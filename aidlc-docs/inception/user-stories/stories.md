@@ -705,9 +705,9 @@
 - **When** tác vụ thực thi
 - **Then** không có bản nháp được đánh dấu hoàn tất giả, trạng thái lỗi an toàn được hiển thị và retry có giới hạn
 
-### US-AIG-002 - Tạo bản nháp đề chung cấp môn bằng AI
+### US-AIG-002 - Tạo bản nháp template/câu hỏi cấp môn bằng AI
 
-**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo đề từ kho học liệu/RAG của môn để chuẩn bị đánh giá thống nhất cho các lớp.
+**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi ngân hàng cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
 
 **Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 

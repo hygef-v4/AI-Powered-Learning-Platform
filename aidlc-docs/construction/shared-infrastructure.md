@@ -31,12 +31,17 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | `redis` | redis, phiên bản cố định, `requirepass` | Không | 0.25 CPU, 256 MB | `redis-cli ping` |
 | `rabbitmq` | rabbitmq, phiên bản cố định | Không | 0.5 CPU, 512 MB | `rabbitmq-diagnostics ping` |
 | `mailpit` | chỉ local | 8025 ở local | - | - |
+| `judge0-server` | `judge0/judge0:1.13.1` | Không | 0.5 CPU, 512 MB | `GET /languages` |
+| `judge0-workers` | `judge0/judge0:1.13.1` | Không | 1.5 CPU, 1,5 GB | - |
+| `judge0-db` | `postgres:16-alpine` | Không | 0.25 CPU, 256 MB | `pg_isready` |
+| `judge0-redis` | `redis:7-alpine` | Không | 0.1 CPU, 128 MB | `redis-cli ping` |
 
-VPS tối thiểu gợi ý: 2 vCPU, 4 GB RAM, 40 GB SSD.
+VPS gợi ý: 4 vCPU, 8 GB RAM, 60 GB SSD (có Judge0). VPS nhỏ hơn: xem U13 infrastructure-design §5.
 
 ## 3. Mạng
 
-- Hai mạng Docker: `edge` (nginx ↔ frontend, backend) và `internal` (backend, worker ↔ postgres, redis, rabbitmq). Datastore không nằm trong `edge`.
+- Ba mạng Docker: `edge` (nginx ↔ frontend, backend), `internal` (backend, worker ↔ postgres, redis, rabbitmq) và `sandbox` (`internal: true`, không ra Internet: backend, worker ↔ 4 container Judge0). Datastore không nằm trong `edge`; Judge0 không chạm được datastore của hệ thống.
+- Judge0 chạy `privileged: true` (isolate cần cgroup); không mount thư mục host, tắt mạng cho submission.
 - Chỉ Nginx publish cổng 80/443. Cổng 80 chỉ chuyển hướng sang 443 và phục vụ ACME của certbot.
 - Firewall VPS: chặn mọi cổng trừ 80, 443 và SSH. SSH chỉ bằng khóa, tắt đăng nhập mật khẩu và root.
 - RabbitMQ management **không public**; truy cập qua SSH tunnel.
@@ -50,7 +55,7 @@ VPS tối thiểu gợi ý: 2 vCPU, 4 GB RAM, 40 GB SSD.
 
 ## 4. Secret
 
-- CI/CD giữ: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`, `APP_PUBLIC_URL`, `GEMINI_API_KEY`, `YOUTUBE_API_KEY`, `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`, `GOOGLE_SHARED_DRIVE_ID`, `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_MIGRATOR_PASSWORD`, `POSTGRES_APP_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
+- CI/CD giữ: `JUDGE0_AUTH_TOKEN`, `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`, `APP_PUBLIC_URL`, `GEMINI_API_KEY`, `YOUTUBE_API_KEY`, `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`, `GOOGLE_SHARED_DRIVE_ID`, `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_MIGRATOR_PASSWORD`, `POSTGRES_APP_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
 - Khi deploy, pipeline ghi `.env` qua SSH, quyền `600`, chủ là user deploy. Không commit, không in ra log pipeline.
 - Xoay secret thủ công: đổi trong CI/CD rồi deploy lại. Đổi `U01_JWT_SECRET` làm mọi access token hiện có mất hiệu lực.
 

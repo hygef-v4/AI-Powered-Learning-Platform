@@ -1909,3 +1909,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U12 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U12 Code Plan Approval and U13 Functional Design
+
+**Timestamp**: 2026-09-24T22:54:36Z
+
+**User Input**: "continue"; UI answers: "Judge0 tự chạy như demo (Khuyến nghị)", "Java, Python, C, C++, JS, Dart, C#", "Vào template hoặc ngân hàng cấp môn (Khuyến nghị)", "tuỳ theo công việc"
+
+**AI Response**: Treated "continue" as approval of the U12 code generation plan. Read demo_do_an code lab design (Judge0 1.13.1, reference-solution verification). Created U13 functional design: provider-neutral AI gateway with per-task Gemini models (flash for question drafts and code feedback, pro for grading proposals, flash-lite for short text), pre-call guards (kill-switch, daily cost cap, per-user rate, U07 credit reserve), proposals only, prompt-injection handling, metrics-only call log; Code Lab in self-hosted Judge0 for 7 languages with TRY/VERIFY/GRADE runs and deterministic scoring (BR-U13-01..42). Synced U06 CODE definition (multi-file, reference solution, memory limit, 7 languages), US-AIG-002/UC-AIG-02 (templates/subject bank), U13 row.
+
+**Context**: U13 Functional Design Step 7; awaiting approval.
+
+---
+
+## U13 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T22:55:42Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U13 Functional Design. No new questions (defaults configurable). Created U13 NFR plan, `nfr-requirements.md` (NFR-U13-01..42: latency targets, worker concurrency, 2 USD default daily cap, token estimation for credit reserve, timeouts, isolated Judge0 network, per-process limits, degraded modes, tests with fakes and real Judge0) and `tech-stack-decisions.md`.
+
+**Context**: U13 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U13 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T22:56:45Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U13 NFR Requirements. No new questions. Created U13 NFR Design plan, `nfr-design-patterns.md` (P1-P8: ordered AI guard, provider-neutral gateway with per-task model and cost tracking, data-bounded prompts with injection scan, two-layer output validation, idempotent AI jobs with credit release, Judge0 batch adapter with language check, deterministic code scorer, queue concurrency) and `logical-components.md`.
+
+**Context**: U13 NFR Design Step 7; awaiting approval.
+
+---
+
+## U13 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T22:57:48Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U13 NFR Design. No new questions. Created U13 `infrastructure-design.md` (mapping, 4 Judge0 containers from demo_do_an in an internal-only `sandbox` network with privileged isolate mitigations, judge0.conf limits, migration, VPS sizing) and `deployment-architecture.md`. Shared infrastructure: Judge0 containers, `sandbox` network, `JUDGE0_AUTH_TOKEN`, VPS suggestion raised to 4 vCPU / 8 GB / 60 GB.
+
+**Context**: U13 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U13 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T22:58:54Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U13 Infrastructure Design. Created `u13-ai-code-execution-code-generation-plan.md` (Step 0 + 30 steps), referencing demo_do_an Judge0 runner, solution verifier and injection scanner. Replaces temporary adapters in U05 (kill-switch), U08 (AI drafts, code-lab check) and U11 (code runs).
+
+**Context**: U13 Code Generation Part 1; plan awaiting approval.
+
+---

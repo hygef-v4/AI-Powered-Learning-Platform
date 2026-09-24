@@ -118,7 +118,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
 | UC-AIG-01 | Giảng viên | Tạo và duyệt bản nháp assignment cấp lớp bằng AI | AI Authoring | Cho phép giảng viên yêu cầu AI tạo bản nháp từ nội dung lớp, xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành. (`US-AIG-001`) |
-| UC-AIG-02 | Chủ nhiệm môn | Tạo và duyệt bản nháp assignment chung bằng AI | AI Authoring | Cho phép Chủ nhiệm môn yêu cầu AI tạo bản nháp từ RAG cấp môn, xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả. (`US-AIG-002`) |
+| UC-AIG-02 | Chủ nhiệm môn | Tạo bản nháp template/câu hỏi cấp môn bằng AI | AI Authoring | Cho phép Chủ nhiệm môn yêu cầu AI tạo bản nháp từ RAG cấp môn, xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả. (`US-AIG-002`) |
 | UC-AIG-03 | Quản trị viên | Quản lý và giám sát AI | AI Administration | Cho phép quản trị viên xem usage, quota, chi phí, cấu hình model và bật hoặc tắt dịch vụ AI. (`US-AIG-003`) |
 
 ### 4.8 Assignment Authoring and Submission

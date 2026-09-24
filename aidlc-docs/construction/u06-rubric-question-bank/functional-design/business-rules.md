@@ -28,7 +28,7 @@
 | BR-U06-20 | `MCQ_SINGLE`: 2-6 lựa chọn, đúng 1 đáp án. `MCQ_MULTI`: ≥ 1 đáp án đúng. Lựa chọn không trùng nội dung. | FR-017 |
 | BR-U06-21 | `ESSAY`: `stem` bắt buộc; không giới hạn số từ. | FR-017, U09 Câu 3 |
 | BR-U06-22 | `DOCUMENT` (thay `DRAWIO`): `stem` bắt buộc; `skeleton` hợp lệ theo mô hình tài liệu của U09; `requiredDiagrams` mỗi loại 1-20. | U09 Câu 5-8 |
-| BR-U06-23 | `CODE`: `language` thuộc danh sách ngôn ngữ cho phép (cấu hình, U13 hỗ trợ); 1-50 test case, ≥ 1 test không ẩn; `timeLimitMs` 100-10 000; tổng điểm test = `defaultPoints`. | FR-017 |
+| BR-U06-23 | `CODE`: `language` thuộc `JAVA`, `PYTHON`, `C`, `CPP`, `JAVASCRIPT`, `DART`, `CSHARP` (U13 hỗ trợ); ≤ 20 file, mỗi file ≤ 64 KB; `memoryLimitMb` 64-1024; 1-50 test case, ≥ 1 test không ẩn; `timeLimitMs` 100-10 000; tổng điểm test = `defaultPoints`. | FR-017 |
 | BR-U06-24 | `rubricId` (nếu có) phải là rubric `ACTIVE` cùng phạm vi hoặc cấp môn của lớp. | US-QBK-001 |
 | BR-U06-25 | `stem`, lựa chọn, hướng dẫn là markdown ≤ 20 000 ký tự, hiển thị đã làm sạch. | SEC-003 |
 | BR-U06-26 | Kích hoạt câu hỏi yêu cầu `definition` hợp lệ theo loại. | FR-017 |

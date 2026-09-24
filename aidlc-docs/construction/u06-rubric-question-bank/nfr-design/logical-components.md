@@ -37,7 +37,7 @@
 |---|---|
 | `U06_IMPORT_MAX_ROWS` | 500 |
 | `U06_IMPORT_MAX_BYTES` | 5MB |
-| `U06_CODE_LANGUAGES` | `java,python,cpp,javascript` (khớp U13) |
+| `U06_CODE_LANGUAGES` | `java,python,c,cpp,javascript,dart,csharp` (khớp U13) |
 
 ## 4. Compliance
 

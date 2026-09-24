@@ -31,7 +31,7 @@ U06 sở hữu câu hỏi và rubric có phiên bản ở cấp môn và cấp l
 | `MCQ_SINGLE`, `MCQ_MULTI` | `stem` (markdown), 2-6 `options` (`id`, `text`), `correctOptionIds`, `explanation` tùy chọn |
 | `ESSAY` | `stem`, `answerGuide` tùy chọn, `rubricId` tùy chọn; bài viết văn bản thường, không giới hạn số từ |
 | `DOCUMENT` | `stem`, `skeleton` tùy chọn (khung tài liệu theo mô hình của U09: heading, đoạn văn, bảng, ảnh, sơ đồ Draw.io), `requiredDiagrams` tùy chọn (loại sơ đồ → số tối thiểu), `rubricId` tùy chọn; không giới hạn số từ |
-| `CODE` | `stem`, `language`, `starterCode`, `testCases` (`input`, `expectedOutput`, `hidden`, `points`), `timeLimitMs`, `rubricId` tùy chọn |
+| `CODE` | `stem`, `language` (`JAVA`, `PYTHON`, `C`, `CPP`, `JAVASCRIPT`, `DART`, `CSHARP`), `starterFiles` (tên → nội dung), `referenceFiles` (lời giải mẫu, không bao giờ trả cho người học), `entryPoint`, `testCases` (`input`, `expectedOutput`, `hidden`, `points`), `timeLimitMs`, `memoryLimitMb`, `rubricId` tùy chọn |
 
 Mọi câu có `defaultPoints` (> 0, tối đa 2 chữ số thập phân).
 
