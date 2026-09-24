@@ -1429,3 +1429,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U04 Code Generation Part 1 approved.
 
 ---
+
+## U05 Functional Design
+
+**Timestamp**: 2026-09-24T21:13:47Z
+
+**User Input**: "continue"; UI answers in order: "Chương → bài → mục", "GV chọn bài cấp môn đưa vào lớp", "RAG là gì", "Không tự phiên âm (Khuyến nghị)", "chưa có hướng gợi ý đi với lại sao phải 0 đồng", "Sửa luôn (Khuyến nghị)", "Sửa tạo bản nháp mới, phát hành lại (Khuyến nghị)", "phase 2 là gì sao lại có", "Cho phép tốn ít, có trần (Khuyến nghị)", "chưa có ý tưởng hỏi nhiều câu hỏi hơn để gợi ý", "sao lại có phase 2 nó là gì", "tạm thời bỏ qua để hội ý sau", "AI tạo đề từ học liệu, AI chấm gợi ý có căn cứ", "Vừa: ≤ 200 file", "Đã chọn AI (ghi ở ô khác)", "Google Gemini", "Chưa biết", "embedding là sao", "Luôn bản mới nhất đã phát hành (Khuyến nghị)", "Không OCR, vẫn cho xem (Khuyến nghị)", "Chỉ xem PDF, không tải", "nhưng à dùng api gemini hay thế nào", "thế thì cho tải tất cả về đi, ko chỉ xem nữa", "Đồng ý (Khuyến nghị)"
+
+**AI Response**: Treated "continue" as moving to U05 after the U04 code plan approval. Explained RAG, embedding, the zero-cost origin (REL-005) and the MVP/Phase 2 split; recommended Gemini embedding + pgvector, which the user accepted. Synced inception: no auto transcription (FR-004, US-CNT-005 S2, UC-CNT-08, personas); REL-005 now allows capped AI cost. Created U05 functional design (BR-U05-01..51, F1-F9, chapter/lesson/version/item, YouTube, SourceDocument/RagChunk, contracts). US-CNT-003/004 left out pending team discussion.
+
+**Context**: U05 Functional Design Step 7; awaiting approval.
+
+---
+
+## U05 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T21:18:46Z
+
+**User Input**: "continue"; UI answers N1 "giới hạn theo ngày, vượt thì báo server đang bận", N2 "4 job", N3 "Dùng, key trong .env (Khuyến nghị)"
+
+**AI Response**: Recorded approval of U05 Functional Design. Interpreted N1 as: daily embedding cap; when exceeded, ingest ends FAILED with "server busy" (manual retry) and retrieve returns 503. Noted 4 concurrent ingest jobs need a VPS with at least 8 GB RAM. Created U05 NFR plan, questions, `nfr-requirements.md` (NFR-U05-01..32) and `tech-stack-decisions.md`.
+
+**Context**: U05 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U05 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T21:20:28Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U05 NFR Requirements. No new questions. Created U05 NFR Design plan, `nfr-design-patterns.md` (P1-P8: worker ingest pipeline, streaming extraction, chunking, Redis daily embedding budget and kill-switch, Gemini/YouTube clients with ID regex, filtered pgvector search, safe markdown/video rendering, fake adapters) and `logical-components.md`.
+
+**Context**: U05 NFR Design Step 7; awaiting approval.
+
+---
+
+## U05 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T21:21:27Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U05 NFR Design. No new questions. Created U05 `infrastructure-design.md` and `deployment-architecture.md`. Shared infrastructure updated: PostgreSQL image `pgvector/pgvector:pg16`, worker memory 1.5 GB (fallback 1 GB with 2 ingest jobs), CSP `frame-src` for youtube-nocookie, egress to Gemini/YouTube, secrets `GEMINI_API_KEY` and `YOUTUBE_API_KEY`.
+
+**Context**: U05 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U05 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T21:22:26Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U05 Infrastructure Design. Created `u05-content-material-rag-code-generation-plan.md` (Step 0 + 31 steps). Uses real U01-U04 ports; replaces U04's empty content adapter; AI kill-switch read from `.env` until U13.
+
+**Context**: U05 Code Generation Part 1; plan awaiting approval.
+
+---

@@ -389,7 +389,7 @@
 
 - **Given** URL là playlist hợp lệ hoặc video không có caption khả dụng
 - **When** tác vụ xử lý chạy
-- **Then** hệ thống xử lý từng video, tự phiên âm audio khi cần và hiển thị trạng thái riêng cho từng mục
+- **Then** hệ thống xử lý từng video, chỉ dùng caption có sẵn; video không có caption được đánh dấu "không có phụ đề", không lập chỉ mục; trạng thái hiển thị riêng cho từng mục
 
 #### Scenario 3 - Nguồn lỗi hoặc ngoài quyền
 

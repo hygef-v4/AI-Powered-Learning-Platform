@@ -80,7 +80,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-CNT-05 | Người học / Giảng viên / Chủ nhiệm môn | Tóm tắt học liệu (Phase 2) | AI Content | Cho phép người dùng yêu cầu bản tóm tắt có căn cứ từ nguồn trong phạm vi được phép. (`US-CNT-003`) |
 | UC-CNT-06 | Giảng viên | Đăng thông báo lớp (Phase 2) | Class Communication | Cho phép giảng viên đăng thông báo tới đúng lớp được phân công. (`US-CNT-004`) |
 | UC-CNT-07 | Người học / Giảng viên | Trao đổi hỏi đáp trong lớp (Phase 2) | Class Communication | Cho phép thành viên đăng câu hỏi và phản hồi trong đúng phạm vi lớp. (`US-CNT-004`) |
-| UC-CNT-08 | Giảng viên / Chủ nhiệm môn | Dùng YouTube làm nguồn RAG theo bài giảng | Lesson RAG | Cho phép người có quyền gắn video/playlist, lấy caption hoặc tự phiên âm, theo dõi trạng thái và lập chỉ mục transcript có timestamp trong đúng phạm vi. (`US-CNT-005`) |
+| UC-CNT-08 | Giảng viên / Chủ nhiệm môn | Dùng YouTube làm nguồn RAG theo bài giảng | Lesson RAG | Cho phép người có quyền gắn video/playlist, lấy caption có sẵn (không tự phiên âm), theo dõi trạng thái và lập chỉ mục transcript có timestamp trong đúng phạm vi. (`US-CNT-005`) |
 
 ### 4.4 Group Management and Group Assignment
 

@@ -89,9 +89,9 @@ Hệ thống phải hỗ trợ soạn nội dung trực tiếp, tải lên PDF, 
 - Tệp hợp lệ được lưu riêng tư và gắn đúng phạm vi môn hoặc lớp.
 - Người tải lên và người quản lý được ủy quyền xem được trạng thái chờ, đang xử lý, thành công hoặc thất bại.
 - Giảng viên không thể sửa kho học liệu/RAG cấp môn nếu không có quyền Chủ nhiệm môn tương ứng.
-- Mỗi bài giảng có thể gắn một video hoặc playlist YouTube; hệ thống ưu tiên caption có sẵn và tự phiên âm audio khi caption không khả dụng.
+- Mỗi bài giảng có thể gắn một video hoặc playlist YouTube; hệ thống chỉ dùng caption có sẵn (kể cả caption tự động của YouTube), không tự phiên âm audio; video không có caption được báo rõ và không lập chỉ mục.
 - Transcript được lưu cùng video, bài giảng, ngôn ngữ và timestamp; chỉ transcript xử lý thành công mới được lập chỉ mục vào đúng phạm vi RAG.
-- Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái xử lý và retry khi lấy caption, phiên âm hoặc lập chỉ mục thất bại.
+- Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái xử lý và retry khi lấy caption hoặc lập chỉ mục thất bại.
 
 ### FR-005 - Truy cập nội dung theo lớp
 
@@ -390,6 +390,8 @@ Không có multi-zone, auto-scaling, backup, DR, runbook failover, chaos testing
 ### REL-005 - Không phát sinh chi phí
 
 Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Gmail SMTP (App Password) khi demo.
+
+Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): ưu tiên gói miễn phí, được phép tốn ít chi phí nhưng phải có trần quota/chi phí và kill-switch theo FR-021.
 
 ## 9. Ràng buộc và giả định đã xác nhận
 

@@ -68,7 +68,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ### Hành vi điển hình
 
-- Quản lý học liệu và nguồn RAG cấp môn, gồm video/playlist YouTube gắn theo bài giảng và trạng thái caption/phiên âm/lập chỉ mục.
+- Quản lý học liệu và nguồn RAG cấp môn, gồm video/playlist YouTube gắn theo bài giảng và trạng thái caption/lập chỉ mục.
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
 - Duyệt và phát hành đề chung xuyên các lớp thuộc môn hoặc phát hành template có version để giảng viên copy thành đề riêng.
