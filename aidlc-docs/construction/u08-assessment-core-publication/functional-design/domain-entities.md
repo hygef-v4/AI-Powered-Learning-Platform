@@ -75,6 +75,7 @@ Publication: SCHEDULED --tới opensAt--> OPEN --tới closesAt (hoặc lateUnti
 | `AssignmentQueryPort` | U08 cung cấp cho U09-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
 | `PublicationService` | U08 cung cấp cho U10 | Tạo publication theo quy tắc U08 |
 | `TypeConfigPort` | U08 khai báo, U09 cài (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình/khung khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
+| `GroupReadinessPort` | U08 khai báo, U12 cài (`C`) | Bài nhóm đủ nhóm, leader, phân công; chưa có U12 → không cho phát hành bài `GROUP` |
 | `AiDraftPort` | U08 dùng, U13 cung cấp (`C`) | Yêu cầu và nhận đề xuất AI |
 | `BankQueryPort`, `DefinitionValidationPort` | U08 dùng U06 | Lấy phiên bản, kiểm câu riêng |
 | `ClassAccessPort` | U08 dùng U04 | Phạm vi, danh sách lớp |

@@ -23,6 +23,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `BankQueryPort`, `DefinitionValidationPort`, `QuestionEditor`, `QuestionView` | U06 | Dùng thật |
 | `ContentRefPort` | U05 | Dùng thật (câu riêng gắn chương/bài) |
 | `TypeConfigPort` | U09 (`C`) | Adapter tạm luôn đạt; U09 thay |
+| `GroupReadinessPort` | U12 (`C`) | Adapter tạm trả "chưa sẵn sàng" (chặn phát hành bài `GROUP`); U12 thay |
 | `AiDraftPort` | U13 (`C`) | Adapter tạm báo "AI chưa sẵn sàng"; ẩn nút AI khi chưa có; U13 thay |
 
 ### Dữ liệu U08 sở hữu

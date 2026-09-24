@@ -1849,3 +1849,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U11 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U11 Code Plan Approval and U12 Functional Design
+
+**Timestamp**: 2026-09-24T22:45:57Z
+
+**User Input**: "Continue"; UI answers: "Theo từng bài nhóm", "GV phân công (theo story)", "GV tạo tay, Chia ngẫu nhiên theo sĩ số", "Yêu cầu + GV duyệt, GV cũng đổi trực tiếp (Khuyến nghị)", "Có (Khuyến nghị)", "Mỗi phần 1 người, 1 người có thể nhiều phần (Khuyến nghị)", "Được, giữ bài đã nộp (Khuyến nghị)"
+
+**AI Response**: Treated "Continue" as approval of the U11 code generation plan. Read demo_do_an group plan for reference. Created U12 functional design: one group set per group assignment (manual, balanced random split, reuse from another group assignment), exactly one leader, leader change requests with teacher approval plus direct change, teacher allocates each part to exactly one member (members may hold several parts), readiness check for publishing, reassignment keeps prior submissions (BR-U12-01..32). Added `GroupReadinessPort` (C edge U12 → U08) to U08 docs, U08 code plan and dependency matrix; updated U12 row.
+
+**Context**: U12 Functional Design Step 7; awaiting approval.
+
+---
+
+## U12 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T22:46:48Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U12 Functional Design. No new questions. Created U12 NFR plan, `nfr-requirements.md` (NFR-U12-01..31: save/lookup performance, atomic optimistic-locked save, partial uniques, append-only history, preview-only random split, authorization) and `tech-stack-decisions.md`.
+
+**Context**: U12 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U12 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T22:47:25Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U12 NFR Requirements. No new questions. Created U12 NFR Design plan, `nfr-design-patterns.md` (P1-P5: desired-state atomic save with pure validator and soft-close history, pure random splitter, conditional leader-request transitions, indexed allocation lookup, coded readiness errors) and `logical-components.md`.
+
+**Context**: U12 NFR Design Step 7; awaiting approval.
+
+---
+
+## U12 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T22:48:01Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U12 NFR Design. No new questions. Created U12 `infrastructure-design.md` (backend-only, event routing keys, migration with partial uniques and no DELETE grants for history) and `deployment-architecture.md`. No shared infrastructure changes.
+
+**Context**: U12 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U12 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T22:48:45Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U12 Infrastructure Design. Created `u12-group-allocation-code-generation-plan.md` (Step 0 + 22 steps). Uses real U01, U02, U04, U08 ports; implements GroupReadinessPort for U08 and provides AllocationPort for U14-U16.
+
+**Context**: U12 Code Generation Part 1; plan awaiting approval.
+
+---
