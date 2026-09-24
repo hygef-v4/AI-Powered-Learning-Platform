@@ -13,12 +13,12 @@
  |                 BankItemRepository (PostgreSQL bank_items)                 |
  | ImportController --> ImportService --> XlsxRowReader / CsvRowReader        |
  |                                    --> RowMapper --> BankItemService       |
- |                                    --> ArtifactPort (U03, XML mẫu)         |
+ |                                    --> DocumentModelPort (U09, C)          |
  | BankQueryService (BankQueryPort), RubricScorer (RubricPort)                |
  +----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `BankController`; `BankItemService` kiểm phạm vi qua U04, kiểm `definition` rồi lưu vào bảng `bank_items`. Nhập file đi qua `ImportController` và `ImportService`, đọc xlsx hoặc csv, ánh xạ từng dòng rồi dùng lại `BankItemService`; XML mẫu Draw.io lưu qua U03. Các unit khác đọc phiên bản qua `BankQueryService` và tính điểm rubric qua `RubricScorer`.
+**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `BankController`; `BankItemService` kiểm phạm vi qua U04, kiểm `definition` rồi lưu vào bảng `bank_items`. Nhập file đi qua `ImportController` và `ImportService`, đọc xlsx hoặc csv, ánh xạ từng dòng rồi dùng lại `BankItemService`; khung tài liệu kiểm qua U09. Các unit khác đọc phiên bản qua `BankQueryService` và tính điểm rubric qua `RubricScorer`.
 
 ## 2. Thành phần
 

@@ -7,7 +7,7 @@ app/teaching/bank/                 BankPage (chọn phạm vi: môn hoặc lớp
   QuestionEditor
     McqEditor                      lựa chọn 2-6, chọn đáp án đúng
     EssayEditor
-    DrawioEditor                   FileUploader (U03, DRAWIO_FULL) cho XML mẫu
+    DocumentQuestionEditor         DocumentEditor (U09, chế độ soạn khung) + sơ đồ bắt buộc
     CodeEditor                     ngôn ngữ, code mẫu, bảng test case
     ClassificationFields           độ khó, tag, chương/bài (U05)
   RubricEditor                     tiêu chí → mục checklist + điểm, tổng tự tính

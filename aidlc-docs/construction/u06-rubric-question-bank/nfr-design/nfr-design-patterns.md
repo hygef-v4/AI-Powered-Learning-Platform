@@ -6,7 +6,7 @@
 - Tạo bản nháp đồng thời: unique partial index 1 `DRAFT`/`stableKey`; vi phạm → `409` "đã có bản nháp".
 
 ## P2 - `definition` đa hình
-- Jackson `@JsonTypeInfo(property = "questionType")` ánh xạ `McqDefinition`, `EssayDefinition`, `DrawioDefinition`, `CodeDefinition`, `RubricDefinition`.
+- Jackson `@JsonTypeInfo(property = "questionType")` ánh xạ `McqDefinition`, `EssayDefinition`, `DocumentDefinition`, `CodeDefinition`, `RubricDefinition`.
 - `DefinitionValidator` theo loại, hai mức: `DRAFT` (định dạng, độ dài) và `ACTIVATE` (đầy đủ BR-U06-20…31).
 - Lỗi trả danh sách `{field, message}` để frontend gắn vào trường.
 
@@ -14,7 +14,7 @@
 1. `ImportReader` theo đuôi: `XlsxRowReader` (POI event API, `ZipSecureFile.setMinInflateRatio(0.01)`, `setMaxEntrySize(20 MB)`, đọc giá trị đã tính, không đánh giá công thức) hoặc `CsvRowReader` (Commons CSV, bỏ BOM).
 2. Dừng khi > 500 dòng hoặc > 5 MB.
 3. `RowMapper` theo loại (4 bộ cột, BR-U06-42) → `definition` → `DefinitionValidator` mức `ACTIVATE` (câu vẫn lưu `DRAFT`).
-4. `TransactionTemplate` mỗi dòng; `DRAWIO` gọi `ArtifactPort.store` cho XML mẫu trước khi lưu (NFR-U06-13, 23).
+4. `TransactionTemplate` mỗi dòng (NFR-U06-13).
 
 ## P4 - Tính điểm rubric
 - `RubricScorer.score(definition, checkedItemIds)` hàm thuần, dùng `BigDecimal` scale 2; ID lạ → lỗi (BR-U06-32, NFR-U06-12).

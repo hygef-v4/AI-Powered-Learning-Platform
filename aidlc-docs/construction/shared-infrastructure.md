@@ -40,9 +40,10 @@ VPS tối thiểu gợi ý: 2 vCPU, 4 GB RAM, 40 GB SSD.
 - Chỉ Nginx publish cổng 80/443. Cổng 80 chỉ chuyển hướng sang 443 và phục vụ ACME của certbot.
 - Firewall VPS: chặn mọi cổng trừ 80, 443 và SSH. SSH chỉ bằng khóa, tắt đăng nhập mật khẩu và root.
 - RabbitMQ management **không public**; truy cập qua SSH tunnel.
-- Nginx thêm header của SEC-004: CSP `default-src 'self'; frame-src https://www.youtube-nocookie.com`, HSTS 1 năm, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- Nginx thêm header của SEC-004: CSP `default-src 'self'; frame-src https://www.youtube-nocookie.com https://embed.diagrams.net`, HSTS 1 năm, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
 - Định tuyến: `/api/*` → backend, còn lại → frontend.
 - Webhook PayOS `/api/v1/payments/payos/webhook`: `client_max_body_size 16k`.
+- Nhập DOCX `/api/v1/assignments/*/skeleton:import-docx`: `client_max_body_size 20m`, `proxy_read_timeout 60s`.
 - `client_max_body_size 50m`; riêng `/api/v1/files` tắt đệm request (`proxy_request_buffering off`) và `proxy_read_timeout 120s`.
 - Backend và worker cần kết nối ra `www.googleapis.com:443` (Google Drive, YouTube Data API), `generativelanguage.googleapis.com:443` (Gemini), `www.youtube.com:443` (caption) và `api-merchant.payos.vn:443` (PayOS); firewall chỉ chặn chiều vào.
 

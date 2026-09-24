@@ -1669,3 +1669,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U08 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U08 Code Plan Approval and U09 Functional Design
+
+**Timestamp**: 2026-09-24T22:16:19Z
+
+**User Input**: "Continue"; UI answers: "Đúng hết mới có điểm (Khuyến nghị)", "Trộn câu / trộn đáp án, Giới hạn thời gian, Hiện điểm ngay sau nộp, Hiện đáp án đúng", "tham khảo cái github demo do an de lam mot trang copy doc, cái dạng bài xml cũng ko phải chỉ có xml mà nó cũng là dạng doc đấy", "giáo viên mới chọn đề chứ ko có đề chung", "DRAWIO đổi tên thành DOCUMENT", "làm dạng kiểu tự do, có thể import doc để lấy khung nhưng cái document những block mà giáo viên viết sẽ ko thể sửa, với cả sửa lại khác bản demo là nếu là ảnh thì giữ nguyên, hoặc là nếu detect đc diagram mà ko dùng ai thì mới thay bằng digram block", "GV nhập khung/dàn ý từ DOCX, Xuất bài nộp ra DOCX", "chủ nhiệm môn có lớp thì mới đc phát hành đề cho lớp đấy", "ESSAY là dạng văn viết bình thường thôi, ko giới hạn từ, cả DOCUMENT cx ko giới hạn từ", "đúng nhưng m phải tra xem drawio có xuất png chứa diagram ko", "chèn tự do xung quanh và cho sửa cả table, với diagram của cái có sẵn", "Chỉ GV của lớp (Khuyến nghị)"
+
+**AI Response**: Treated "Continue" as approval of the U08 code generation plan. Read the sibling project demo_do_an (document essays with templates, embedded diagrams, DOCX import/export). Verified draw.io embeds the diagram XML in PNG text chunks and in the SVG `content` attribute when "Include a copy of my diagram" is enabled. Created U09 functional design: QUIZ config, ESSAY rich text with no word limit, DOCUMENT free-form editor with locked teacher text/image blocks and learner-editable teacher tables/diagrams, DOCX skeleton import with non-AI diagram detection (else keep image), DOCX export with re-embedded XML, XML compaction for AI (BR-U09-01..60). Synced: DRAWIO → DOCUMENT, no subject-wide assignment (FR-007, FR-017, US-ASM-002 marked removed, UC-ASM-04/08/12, story map, unit-of-work), U06 and U08 docs, U03 purpose DOCUMENT_IMAGE, dependency edges U03 → U09 (H) and U09 → U06 (C), CSP frame-src embed.diagrams.net.
+
+**Context**: U09 Functional Design Step 7; awaiting approval.
+
+---
+
+## U09 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T22:18:24Z
+
+**User Input**: "continue"; UI answer N1 "embed.diagrams.net (Khuyến nghị)"
+
+**AI Response**: Recorded approval of U09 Functional Design. Asked 1 NFR question. Created U09 NFR plan, questions, `nfr-requirements.md` (NFR-U09-01..32: save/import/export performance with export semaphore, DOCX zip-bomb limits, safe XML, SVG sanitising, iframe origin check, degraded mode when draw.io is unreachable, round-trip test) and `tech-stack-decisions.md` (Apache POI, own PNG chunk reader, JSVG, block editor, embed.diagrams.net).
+
+**Context**: U09 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U09 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T22:19:32Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U09 NFR Requirements. No new questions. Created U09 NFR Design plan, `nfr-design-patterns.md` (P1-P7: single document schema for Java/TS, hash-based block locking, streaming DOCX import with zip guard and PNG/SVG draw.io detection, bounded DOCX export with re-embedded XML, SVG sanitiser, draw.io iframe protocol with origin check and timeout, virtualised editor) and `logical-components.md`.
+
+**Context**: U09 NFR Design Step 7; awaiting approval.
+
+---
+
+## U09 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T22:20:21Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U09 NFR Design. No new questions. Created U09 `infrastructure-design.md` (backend-only mapping, Nginx DOCX limit, heap note, migration for question_type_config and document_skeletons) and `deployment-architecture.md`; added the DOCX import route to shared infrastructure.
+
+**Context**: U09 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U09 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T22:21:24Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U09 Infrastructure Design. Created `u09-question-type-authoring-code-generation-plan.md` (Step 0 + 27 steps), referencing demo_do_an classes for DOCX import/export and rasterising. U09 replaces the temporary adapters of U06 (DocumentModelPort) and U08 (TypeConfigCheckPort).
+
+**Context**: U09 Code Generation Part 1; plan awaiting approval.
+
+---

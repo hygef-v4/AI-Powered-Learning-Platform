@@ -779,7 +779,9 @@
 - **When** giảng viên yêu cầu xuất bản
 - **Then** hệ thống từ chối phía server và không giao bài cho người học
 
-### US-ASM-002 - Phát hành đề chung cho mọi lớp thuộc môn
+### US-ASM-002 - Phát hành đề chung cho mọi lớp thuộc môn (Đã loại)
+
+> **Đã loại (2026-09-25)**: không có đề chung cấp môn; chỉ giảng viên của lớp phát hành bài cho lớp (xem U09 Functional Design, câu 9). Giữ mã để truy vết.
 
 **Story**: Là Chủ nhiệm môn, tôi muốn duyệt và phát hành trực tiếp đề chung tới mọi lớp thuộc môn được phân công để bảo đảm đánh giá thống nhất.
 
@@ -843,7 +845,7 @@
 - **When** người học xem lịch sử hoặc nộp lại
 - **Then** từng attempt được giữ nguyên theo thời gian, lượt mới không ghi đè lịch sử và lượt được chấm được xác định rõ
 
-### US-ASM-004 - Soạn và làm bài sơ đồ Draw.io
+### US-ASM-004 - Soạn và làm bài tài liệu có sơ đồ Draw.io (DOCUMENT)
 
 **Story**: Là người học, tôi muốn vẽ sơ đồ trên canvas Draw.io trong web và nộp XML đầy đủ để giảng viên xem chính xác bài làm của tôi.
 

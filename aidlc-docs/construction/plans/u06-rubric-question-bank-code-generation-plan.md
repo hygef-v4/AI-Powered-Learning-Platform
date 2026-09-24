@@ -22,6 +22,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AuditPort` | U02 | Dùng thật |
 | `ArtifactPort`, `FileUploader` | U03 | Dùng thật |
 | `ClassAccessPort`, `SubjectScopePort` | U04 | Dùng thật |
+| `DocumentModelPort` | U09 (`C`) | Chưa có U09: chỉ kiểm cấu trúc JSON; U09 thay |
 | `ContentRefPort` | U05 (`C`) | Chưa có U05: adapter tạm chấp nhận mọi ID (chỉ lưu); U05 thay bằng bản thật |
 
 ### Dữ liệu U06 sở hữu
@@ -36,7 +37,7 @@ PostgreSQL `bank_items`.
     api/                BankController, ImportController, DTO (ManagerView)
     application/        BankItemService, BankScopeGuard, BankQueryService,
                         ImportService, RubricScorer
-    domain/             BankItem, BankItemStatus, definition/ (Mcq, Essay, Drawio,
+    domain/             BankItem, BankItemStatus, definition/ (Mcq, Essay, Document,
                         Code, Rubric), DefinitionValidator
     importer/           XlsxRowReader, CsvRowReader, RowMapper (4 loại)
     infrastructure/     BankItemRepository, PermissiveContentRefAdapter

@@ -29,8 +29,8 @@ U06 sở hữu câu hỏi và rubric có phiên bản ở cấp môn và cấp l
 | `questionType` | Nội dung |
 |---|---|
 | `MCQ_SINGLE`, `MCQ_MULTI` | `stem` (markdown), 2-6 `options` (`id`, `text`), `correctOptionIds`, `explanation` tùy chọn |
-| `ESSAY` | `stem`, `answerGuide` tùy chọn, `rubricId` tùy chọn, `maxWords` tùy chọn |
-| `DRAWIO` | `stem`, `sampleXmlArtifactId` tùy chọn (U03 `DRAWIO_FULL`), `rubricId` tùy chọn |
+| `ESSAY` | `stem`, `answerGuide` tùy chọn, `rubricId` tùy chọn; bài viết văn bản thường, không giới hạn số từ |
+| `DOCUMENT` | `stem`, `skeleton` tùy chọn (khung tài liệu theo mô hình của U09: heading, đoạn văn, bảng, ảnh, sơ đồ Draw.io), `requiredDiagrams` tùy chọn (loại sơ đồ → số tối thiểu), `rubricId` tùy chọn; không giới hạn số từ |
 | `CODE` | `stem`, `language`, `starterCode`, `testCases` (`input`, `expectedOutput`, `hidden`, `points`), `timeLimitMs`, `rubricId` tùy chọn |
 
 Mọi câu có `defaultPoints` (> 0, tối đa 2 chữ số thập phân).
@@ -63,5 +63,6 @@ DRAFT --kích hoạt--> ACTIVE --ngưng--> RETIRED
 | `BankQueryPort` | U06 cung cấp cho U08, U09, U10, U13 | `getVersion(id)` (bản bất biến), `search(scope, filter)` chỉ trả `ACTIVE` |
 | `RubricPort` | U06 cung cấp cho U11, U15 | `getRubric(id)`, `score(rubricId, checkedItemIds)` |
 | `ClassAccessPort`, `SubjectScopePort` | U06 dùng U04 | Phạm vi |
-| `ArtifactPort` | U06 dùng U03 | XML mẫu Draw.io |
+| `ArtifactPort` | U06 dùng U03 | Ảnh trong khung tài liệu |
+| `DocumentModelPort` | U06 dùng U09 (`C`) | Kiểm khung tài liệu; chưa có U09 → chỉ kiểm cấu trúc JSON |
 | `ContentRefPort` | U06 dùng U05 (`C`) | Kiểm `lessonRefs`; chưa có U05 thì bỏ qua kiểm và lưu ID |

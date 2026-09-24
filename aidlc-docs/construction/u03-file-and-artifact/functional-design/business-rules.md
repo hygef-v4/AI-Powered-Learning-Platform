@@ -7,7 +7,7 @@
 | BR-U03-01 | Upload đi qua backend trong một request multipart. | Câu 2 |
 | BR-U03-02 | Mọi file ≤ 50 MB; vượt thì từ chối trước khi đọc hết. | Câu 4 |
 | BR-U03-03 | Loại file xác định bằng nội dung (magic bytes), phải khớp allowlist của `purpose`. Đuôi file và `Content-Type` của trình duyệt chỉ để tham khảo. | Câu 5 |
-| BR-U03-04 | Quyền upload theo mục đích: `AVATAR` mọi người đã đăng nhập; `MATERIAL` giảng viên/chủ nhiệm môn/admin; `DRAWIO_FULL` giảng viên (đề) và người học (bài làm); `SUBMISSION_FILE` người học. Mục đích dẫn xuất chỉ hệ thống tạo. | SEC-002 |
+| BR-U03-04 | Quyền upload theo mục đích: `AVATAR` mọi người đã đăng nhập; `MATERIAL` giảng viên/chủ nhiệm môn/admin; `DRAWIO_FULL` giảng viên (đề) và người học (bài làm); `SUBMISSION_FILE` người học; `DOCUMENT_IMAGE` (PNG, JPEG, GIF, SVG ≤ 5 MB, ảnh trong bài tài liệu) giảng viên và người học. Mục đích dẫn xuất chỉ hệ thống tạo. | SEC-002 |
 | BR-U03-05 | Tính SHA-256 khi nhận; lưu cùng artifact. | services.md |
 | BR-U03-06 | Chỉ khi file đã lên Drive **và** dòng `artifacts` đã commit mới trả về `artifactId`. Lỗi ở bất kỳ bước nào → xóa file trên Drive nếu đã tạo, không để lại dòng nào. | Câu 7 |
 | BR-U03-07 | Upload thành công là artifact hợp lệ, được giữ kể cả khi chưa gắn vào đối tượng nào; không có job dọn file chưa gắn. | Câu 7 |

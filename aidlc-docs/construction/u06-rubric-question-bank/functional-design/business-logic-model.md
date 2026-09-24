@@ -25,7 +25,7 @@
 ## F6 - Nhập hàng loạt
 1. Chọn loại và phạm vi, tải mẫu tương ứng.
 2. Đọc file (xlsx/csv), kiểm giới hạn (BR-U06-40).
-3. Mỗi dòng: dựng `definition`, kiểm như F2 bước 1 (trừ `sampleXml` đi qua U03 `storeDerived`/`store`), tạo `DRAFT` (BR-U06-41, 42).
+3. Mỗi dòng: dựng `definition`, kiểm như F2 bước 1 , tạo `DRAFT` (BR-U06-41, 42).
 4. Trả bảng kết quả; audit một sự kiện.
 
 ## F7 - Contract cho unit khác

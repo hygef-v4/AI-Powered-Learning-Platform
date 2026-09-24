@@ -114,14 +114,14 @@ Giảng viên phải có thể yêu cầu AI tạo câu hỏi hoặc bài tập 
 
 ### FR-007 - Đánh giá và bài nộp
 
-Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp được phân công. Chủ nhiệm môn phải có thể biên soạn và phát hành trực tiếp bài đánh giá chung cho mọi lớp thuộc môn được phân công mà không cần giảng viên từng lớp duyệt lại. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
+Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp được phân công. Không có bài đánh giá chung cấp môn: chỉ giảng viên của lớp (kể cả Chủ nhiệm môn khi là giảng viên của lớp đó) phát hành bài cho lớp. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
 
 **Tiêu chí chấp nhận:**
 
 - Hệ thống lưu bài nộp, thời điểm nộp và trạng thái chấm.
 - Một người học không thể đọc hoặc sửa bài nộp của người khác.
 - Quy tắc số lần làm và hạn nộp được thực thi phía server.
-- Bài đánh giá chung chỉ được phân phối tới các lớp thuộc đúng môn và lưu actor/phạm vi phát hành trong audit.
+- Mỗi lần phát hành lưu actor và lớp đích trong audit.
 
 ### FR-008 - Chấm điểm và phản hồi tự động
 
@@ -182,7 +182,7 @@ Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm 
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
-Hệ thống phải hỗ trợ sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận. Với bài sơ đồ, người học vẽ trực tiếp trên canvas Draw.io nhúng trong web và nộp XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
+Hệ thống phải hỗ trợ trắc nghiệm, bài viết (ESSAY, văn bản thường, không giới hạn số từ), bài tài liệu (DOCUMENT: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; giảng viên có thể nhập khung từ DOCX, bài nộp xuất được ra DOCX) và Code Lab. Với khối sơ đồ, người học vẽ trên canvas Draw.io nhúng trong web và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
 
 ### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
 

@@ -9,10 +9,10 @@ U08 sở hữu bài đánh giá (assignment), thành phần của bài, trạng 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `scopeType`, `scopeId` | | `CLASS` (U08) hoặc `SUBJECT` (đề chung, U09 dùng) |
+| `classId` | UUID | Bài luôn thuộc một lớp (không có đề chung cấp môn) |
 | `title` | chuỗi ≤ 200 | |
 | `instructions` | markdown ≤ 20 000 ký tự | |
-| `assignmentType` | enum | `QUIZ`, `ESSAY`, `DRAWIO`, `CODE_LAB`, `GROUP`; một loại mỗi bài |
+| `assignmentType` | enum | `QUIZ`, `ESSAY`, `DOCUMENT`, `CODE_LAB`, `GROUP`; một loại mỗi bài |
 | `status` | enum | `DRAFT`, `REVIEWED`, `LOCKED`, `ARCHIVED` |
 | `totalPoints` | numeric(6,2) | Tổng điểm thành phần, tự tính |
 | `origin` | enum | `MANUAL`, `AI`, `CLONE` (`TEMPLATE`, `COPY` do U10) |
@@ -33,7 +33,7 @@ U08 sở hữu bài đánh giá (assignment), thành phần của bài, trạng 
 | `inlineDefinition` | JSON | Câu riêng của bài, cùng cấu trúc `definition` U06, khi không có `bankItemId` |
 | `points` | numeric(6,2) | Mặc định bằng `defaultPoints` của câu; sửa được khi `DRAFT` |
 
-Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`QUIZ` ↔ `MCQ_*`, `ESSAY` ↔ `ESSAY`, `DRAWIO` ↔ `DRAWIO`, `CODE_LAB` ↔ `CODE`; `GROUP` gồm `ESSAY`/`DRAWIO`/`CODE`).
+Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`QUIZ` ↔ `MCQ_*`, `ESSAY` ↔ `ESSAY`, `DOCUMENT` ↔ `DOCUMENT`, `CODE_LAB` ↔ `CODE`; `GROUP` gồm `ESSAY`/`DOCUMENT`/`CODE`).
 
 ## 4. `Publication`
 
@@ -70,7 +70,7 @@ Publication: SCHEDULED --tới opensAt--> OPEN --tới closesAt (hoặc lateUnti
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `AssignmentQueryPort` | U08 cung cấp cho U09-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
-| `PublicationService` | U08 cung cấp cho U09 (đề chung), U10 | Tạo publication theo quy tắc U08 |
+| `PublicationService` | U08 cung cấp cho U10 | Tạo publication theo quy tắc U08 |
 | `TypeConfigCheckPort` | U08 khai báo, U09 cài (`C`) | Cấu hình riêng loại bài đủ để duyệt chưa; chưa có U09 → chỉ kiểm phần U08 |
 | `AiDraftPort` | U08 dùng, U13 cung cấp (`C`) | Yêu cầu và nhận đề xuất AI |
 | `BankQueryPort`, `DefinitionValidationPort` | U08 dùng U06 | Lấy phiên bản, kiểm câu riêng |

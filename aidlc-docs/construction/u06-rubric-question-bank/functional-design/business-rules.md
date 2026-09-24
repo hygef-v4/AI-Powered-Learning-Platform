@@ -26,8 +26,8 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U06-20 | `MCQ_SINGLE`: 2-6 lựa chọn, đúng 1 đáp án. `MCQ_MULTI`: ≥ 1 đáp án đúng. Lựa chọn không trùng nội dung. | FR-017 |
-| BR-U06-21 | `ESSAY`: `stem` bắt buộc; `maxWords` ≤ 10 000. | FR-017 |
-| BR-U06-22 | `DRAWIO`: XML mẫu (nếu có) tải qua U03 purpose `DRAWIO_FULL` (kiểm XML an toàn). | FR-017 |
+| BR-U06-21 | `ESSAY`: `stem` bắt buộc; không giới hạn số từ. | FR-017, U09 Câu 3 |
+| BR-U06-22 | `DOCUMENT` (thay `DRAWIO`): `stem` bắt buộc; `skeleton` hợp lệ theo mô hình tài liệu của U09; `requiredDiagrams` mỗi loại 1-20. | U09 Câu 5-8 |
 | BR-U06-23 | `CODE`: `language` thuộc danh sách ngôn ngữ cho phép (cấu hình, U13 hỗ trợ); 1-50 test case, ≥ 1 test không ẩn; `timeLimitMs` 100-10 000; tổng điểm test = `defaultPoints`. | FR-017 |
 | BR-U06-24 | `rubricId` (nếu có) phải là rubric `ACTIVE` cùng phạm vi hoặc cấp môn của lớp. | US-QBK-001 |
 | BR-U06-25 | `stem`, lựa chọn, hướng dẫn là markdown ≤ 20 000 ký tự, hiển thị đã làm sạch. | SEC-003 |
@@ -47,9 +47,9 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U06-40 | Nhận `.xlsx` hoặc `.csv` (UTF-8), mỗi loại câu hỏi một file mẫu riêng (`MCQ`, `ESSAY`, `DRAWIO`, `CODE`); ≤ 500 dòng, ≤ 5 MB. | Câu 4, 6, 8 |
+| BR-U06-40 | Nhận `.xlsx` hoặc `.csv` (UTF-8), mỗi loại câu hỏi một file mẫu riêng (`MCQ`, `ESSAY`, `DOCUMENT`, `CODE`); ≤ 500 dòng, ≤ 5 MB. | Câu 4, 6, 8 |
 | BR-U06-41 | Kiểm từng dòng như tạo tay; dòng hợp lệ tạo câu `DRAFT`, dòng lỗi không tạo; trả kết quả từng dòng. | US-QBK-002 S1 |
-| BR-U06-42 | Cột riêng: MCQ `lua_chon_1..6`, `dap_an_dung` (ví dụ `1,3`); ESSAY `goi_y_dap_an`, `so_tu_toi_da`; DRAWIO `xml_mau` (nội dung XML); CODE `ngon_ngu`, `code_mau`, `test_cases` (JSON), `gioi_han_ms`. Cột chung: `tieu_de`, `noi_dung`, `diem`, `do_kho`, `tag`, `ma_bai`. | Câu 8 |
+| BR-U06-42 | Cột riêng: MCQ `lua_chon_1..6`, `dap_an_dung` (ví dụ `1,3`); ESSAY `goi_y_dap_an`; DOCUMENT `so_do_bat_buoc` (ví dụ `CLASS:1,SEQUENCE:2`; khung tài liệu chỉ tạo trên giao diện hoặc nhập DOCX); CODE `ngon_ngu`, `code_mau`, `test_cases` (JSON), `gioi_han_ms`. Cột chung: `tieu_de`, `noi_dung`, `diem`, `do_kho`, `tag`, `ma_bai`. | Câu 8 |
 | BR-U06-43 | Nhập file chỉ tạo câu hỏi, không tạo rubric. | Thiết kế |
 
 ## 6. Audit và ngoài phạm vi

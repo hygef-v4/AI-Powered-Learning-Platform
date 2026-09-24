@@ -5,7 +5,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U06-01 | Tìm kiếm ngân hàng p95 ≤ 300 ms với ≤ 20 000 phiên bản mỗi môn, trang ≤ 50. | NFR-003 |
-| NFR-U06-02 | Nhập file 500 dòng xử lý đồng bộ ≤ 10 giây (không tính upload XML mẫu Draw.io qua Drive). | BR-U06-40 |
+| NFR-U06-02 | Nhập file 500 dòng xử lý đồng bộ ≤ 10 giây . | BR-U06-40 |
 | NFR-U06-03 | `getVersion` p95 ≤ 50 ms (đọc theo khóa chính). | NFR-003 |
 
 ## 2. Toàn vẹn dữ liệu
@@ -24,7 +24,7 @@
 | NFR-U06-20 | Đọc xlsx có giới hạn: ≤ 5 MB, tỉ lệ nén tối thiểu (chống zip bomb), chỉ sheet đầu, ≤ 500 dòng, ô ≤ 32 000 ký tự; bỏ qua công thức (chỉ đọc giá trị). | SEC-003 |
 | NFR-U06-21 | CSV UTF-8, có BOM hoặc không; dòng ≤ 64 KB. | SEC-003 |
 | NFR-U06-22 | Đáp án đúng, test ẩn, `answerGuide` không bao giờ trả cho người học qua API của U06 (U06 chỉ phục vụ người quản lý; U11 tự lọc khi hiển thị). | SEC-002 |
-| NFR-U06-23 | XML mẫu trong file nhập đi qua parser an toàn của U03. | BR-U03-10 |
+| NFR-U06-23 | Sơ đồ Draw.io trong khung tài liệu kiểm bằng parser an toàn (quy tắc U03/U09). | BR-U03-10 |
 | NFR-U06-24 | Kiểm quyền theo phạm vi ở mọi endpoint; ngoài phạm vi trả `404`. | SEC-002 |
 
 ## 4. Kiểm thử

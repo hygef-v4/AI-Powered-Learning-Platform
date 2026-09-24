@@ -6,7 +6,7 @@
 |---|---|
 | Controller, service, nhập file, `RubricScorer` | `backend` |
 | Bảng `bank_items` | `postgres` |
-| XML mẫu Draw.io | U03 (Google Drive) |
+| Ảnh trong khung tài liệu | U03 (Google Drive) |
 
 U06 không chạy trong `worker`, không có queue, Redis key, secret hay kết nối ra ngoài riêng. Nhập file chạy đồng bộ trong request (≤ 10 s); file nhận vào đi qua multipart giới hạn 5 MB, không lưu lại.
 

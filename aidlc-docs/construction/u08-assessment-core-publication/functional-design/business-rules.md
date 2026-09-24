@@ -4,7 +4,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-01 | Bài cấp lớp: giảng viên của lớp, Chủ nhiệm môn, ADMIN tạo/sửa/duyệt/phát hành/ngưng. | FR-007, US-ASM-001 |
+| BR-U08-01 | Chỉ giảng viên của lớp tạo/sửa/duyệt/phát hành/ngưng bài của lớp (Chủ nhiệm môn chỉ khi chính họ là giảng viên của lớp); Chủ nhiệm môn của môn và ADMIN chỉ xem. Không có đề chung cấp môn. | FR-007, U09 Câu 9 |
 | BR-U08-02 | Phát hành chỉ tới lớp thuộc phạm vi người phát hành; sai lớp → từ chối, audit. | US-ASM-001 S2 |
 | BR-U08-03 | Người học chỉ thấy publication `OPEN`/`CLOSED` của lớp mình đang ghi danh; `SCHEDULED`/`RETIRED` ẩn. | FR-007 |
 
@@ -12,7 +12,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-10 | Mỗi bài một loại (`QUIZ`, `ESSAY`, `DRAWIO`, `CODE_LAB`, `GROUP`); thành phần phải khớp loại. | Câu 1 |
+| BR-U08-10 | Mỗi bài một loại (`QUIZ`, `ESSAY`, `DOCUMENT`, `CODE_LAB`, `GROUP`); thành phần phải khớp loại. | Câu 1, U09 |
 | BR-U08-11 | Thành phần lấy từ ngân hàng (phiên bản `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng kiểm theo quy tắc U06. | Câu 2 |
 | BR-U08-12 | Điểm từng thành phần > 0; `totalPoints` = tổng, tự tính. | Thiết kế |
 | BR-U08-13 | Bài 1-200 câu (`QUIZ`), 1-20 câu cho loại khác. | Thiết kế |
