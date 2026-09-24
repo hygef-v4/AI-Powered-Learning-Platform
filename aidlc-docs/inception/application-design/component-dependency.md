@@ -15,7 +15,7 @@
 | Academic | R | O | - | - | - | - | - | - | - | - | - | R | - | - | - | - | W |
 | Group | R | R | O | - | - | - | R | - | - | - | - | - | - | - | - | - | W |
 | Content | R | R | - | O | - | - | - | - | - | - | - | - | - | - | W | W | W |
-| Learning | R | R | - | R | O | - | - | - | - | - | - | R | - | - | - | - | W |
+| Learning | R | R | - | R | O | - | - | - | - | - | - | - | - | - | - | - | W |
 | Question Bank | R | R | - | - | - | O | - | - | - | - | - | - | - | - | - | - | W |
 | Assessment | R | R | R | R | - | R | O | - | - | W | - | - | - | - | R | W | W |
 | Submission | R | R | R | - | - | R | R | O | - | - | R | - | - | - | W | W | W |
@@ -31,7 +31,7 @@
 
 `O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp.
 
-Ma trận liệt kê đủ 17 module ở cả hàng và cột. Identity & Access, File & Artifact, Job Platform và Audit là module nền: chúng không phụ thuộc module nghiệp vụ nào, và Job Platform cùng Audit không gọi ngược lên Identity để tránh tạo chu trình - controller truyền sẵn actor context xuống. Ba cột Learning, Reporting và Notification trống ngoài ô owner vì không module nào đọc chúng qua contract đồng bộ; chúng chỉ tiêu thụ event. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning kiểm cả Academic enrollment lẫn Payment entitlement trước khi cấp nội dung.
+Ma trận liệt kê đủ 17 module ở cả hàng và cột. Identity & Access, File & Artifact, Job Platform và Audit là module nền: chúng không phụ thuộc module nghiệp vụ nào, và Job Platform cùng Audit không gọi ngược lên Identity để tránh tạo chu trình - controller truyền sẵn actor context xuống. Ba cột Learning, Reporting và Notification trống ngoài ô owner vì không module nào đọc chúng qua contract đồng bộ; chúng chỉ tiêu thụ event. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning chỉ kiểm Academic enrollment trước khi cấp nội dung; Payment chỉ cộng token AI.
 
 AI Orchestration chỉ nhận request/context reference đã được Assessment hoặc Grading kiểm quyền. Nó đọc nguồn Content/Question Bank/File theo scope và ghi Job, rồi trả proposal qua contract cho module gọi; không đọc hoặc ghi trực tiếp dữ liệu Assessment, Submission hay Grading. Cách này giữ U03 độc lập với U04-U06. Content không gọi thẳng AI Orchestration: mọi tác vụ RAG, transcript hay tóm tắt đều được Content enqueue qua Job Platform, nên đồ thị không có chu trình hai chiều.
 
@@ -71,7 +71,7 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 | Attempt snapshot, draft/submission/composite/artifact refs | Submission | Grading, Reporting |
 | Grade/proposal/publication state | Grading | Learning, Reporting, Notification |
 | Object bytes/checksum/abuse check/derivation | File & Artifact | Content, Submission, AI, Reporting |
-| Payment/event/entitlement | Payment | Learning/access checks qua entitlement contract |
+| Payment/event/entitlement | Payment | AI (số dư token AI) |
 | Audit events | Audit | Admin query only |
 
 ## 5. Trust boundaries

@@ -1357,3 +1357,75 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U03 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U03 Code Plan Approval and U04 Functional Design
+
+**Timestamp**: 2026-09-24T20:26:41Z
+
+**User Input**: "continue"; UI answers: "NHÁP → MỞ → LƯU TRỮ (Khuyến nghị)", "Đúng 1 giảng viên chính (Khuyến nghị)", "Đúng 1 người (Khuyến nghị)", "Cả hai", "Làm bản đơn giản", "Trong app + email", "thanh toán chỉ thêm token ai thôi chứ ko ảnh hưởng đến lớp", "Được, khôi phục bản ghi cũ (Khuyến nghị)", "Sửa luôn (Khuyến nghị)", "Không, 1 lớp đang mở mỗi môn (Khuyến nghị)", "Sửa thông tin, mở/lưu trữ, ghi danh (Khuyến nghị)", "Được khi không còn lớp mở (Khuyến nghị)"
+
+**AI Response**: Treated "continue" as approval of the U03 code generation plan. Asked 12 U04 questions via UI and recorded them. Payment only adds AI tokens, so removed U04 → U07 `C` edge and entitlement checks from requirements FR-005/FR-010 and application-design files. Created U04 functional design (BR-U04-01..54, F1-F9, entities Subject/CourseClass/Enrollment, frontend components). Simple invite code included.
+
+**Context**: U04 Functional Design Step 7; awaiting approval.
+
+---
+
+## U04 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T20:32:11Z
+
+**User Input**: "continue"; UI answers N1 "Không cache, query DB có index (Khuyến nghị)", N2 "Gửi dần qua job, giới hạn 300/ngày (Khuyến nghị)"
+
+**AI Response**: Recorded approval of U04 Functional Design. Asked 2 NFR questions via UI. Created U04 NFR plan, questions, `nfr-requirements.md` (NFR-U04-01..41) and `tech-stack-decisions.md`. The 300 email/day cap is recorded as a requirement for U16.
+
+**Context**: U04 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U04 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T20:33:40Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U04 NFR Requirements. No new questions. Created U04 NFR Design plan, `nfr-design-patterns.md` (P1-P8: indexed scope queries, advisory lock per learner+subject, per-row transactions for bulk enrollment, optimistic locking, after-commit events, invite code generation and Redis rate limit, not-found masking, fail closed) and `logical-components.md`.
+
+**Context**: U04 NFR Design Step 7; awaiting approval.
+
+---
+
+## U04 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T20:34:25Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U04 NFR Design. No new questions. Created U04 `infrastructure-design.md` (component mapping, Redis invite-fail key, event routing key on `platform.events`, migration with no DELETE grant) and `deployment-architecture.md`. No changes to shared infrastructure.
+
+**Context**: U04 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U04 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T20:35:57Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U04 Infrastructure Design. Created `u04-subject-class-enrollment-code-generation-plan.md` (Step 0 + 29 steps). Uses real U01/U02 ports; `PublishedContentPort` has a temporary empty adapter until U05; U04 replaces U01's fake scope adapters.
+
+**Context**: U04 Code Generation Part 1; plan awaiting approval.
+
+---
+
+## U04 Code Generation Plan Approval
+
+**Timestamp**: 2026-09-24T20:37:28Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of the U04 code generation plan. U04 design is complete; U05 Functional Design is next.
+
+**Context**: U04 Code Generation Part 1 approved.
+
+---

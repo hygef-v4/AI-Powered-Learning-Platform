@@ -29,7 +29,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Academic | Môn, lớp và ghi danh | Subject, class lifecycle, assignment giảng viên, enrollment, mã mời Phase 2 |
 | Group | Nhóm học tập | Group membership, đúng một leader, yêu cầu đổi leader, phần việc cá nhân |
 | Content | Nội dung và học liệu | Nội dung lớp, file/YouTube source, caption/transcript, version và RAG lifecycle |
-| Learning | Hành trình học | Kiểm tra enrollment và entitlement để truy cập nội dung/lớp; không lưu tiến độ từng bài học |
+| Learning | Hành trình học | Kiểm tra enrollment để truy cập nội dung/lớp; không lưu tiến độ từng bài học |
 | Question Bank | Rubric và câu hỏi | Versioned rubric/question bank, preview, analytics Phase 2 |
 | Assessment | Vòng đời bài đánh giá | Tạo đề thủ công/AI draft, review/publish, template/copy assignment lineage, version kế tiếp khi sửa đề đã giao, schedule, simulation policy, attempt snapshot và đề chung |
 | Submission | Nháp và bản nộp | Autosave, immutable attempts, Draw.io full XML, group parts, generated composite version và receipt |

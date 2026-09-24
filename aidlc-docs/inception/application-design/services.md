@@ -13,7 +13,7 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 | AcademicService | Subject/class/assignment/enrollment | Không xóa lịch sử học tập |
 | GroupService | Membership, leader invariant, allocation | Không cho learner tự đổi leader |
 | ContentService | Version/publish nội dung, file/YouTube source và transcript metadata | Không xử lý download/phiên âm/vector trực tiếp trong request |
-| LearningService | Kiểm tra enrollment và entitlement trước khi trả nội dung/lớp | Không trả dữ liệu học viên khác hoặc nội dung ngoài quyền truy cập |
+| LearningService | Kiểm tra enrollment trước khi trả nội dung/lớp | Không trả dữ liệu học viên khác hoặc nội dung ngoài quyền truy cập |
 | BankService | Rubric/question versions | Không sửa hồi tố version đã dùng |
 | AssessmentService | Tạo đề thủ công/AI draft, review/publish/retire; template/copy assignment lineage; tạo version mới khi sửa assignment đã giao; simulation policy và attempt snapshot contract | Không sao chép khóa học/lớp, không sửa version đã phát hành, không để AI tự publish hoặc đổi policy sau attempt đầu tiên |
 | SubmissionService | Autosave, submit, receipt, immutable artifact và group composite orchestration | Không chấm hoặc sửa bản đã nộp/source part |

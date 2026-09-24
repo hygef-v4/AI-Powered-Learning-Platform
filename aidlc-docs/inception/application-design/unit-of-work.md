@@ -10,7 +10,7 @@
 - AI chỉ tạo draft hoặc grade proposal. Giảng viên duyệt đề và quyết định điểm cuối. RAG là nguồn hỗ trợ tùy chọn cho tạo đề.
 - Không sao chép khóa học/lớp. Copy assignment/rubric theo phạm vi đã duyệt tạo identity độc lập có lineage.
 - Không có learning path, trạng thái hoàn thành hay tiến độ từng bài học. Tiến độ nộp bài và trạng thái job vẫn có.
-- Phần Learning Access của U04 cần nội dung của U05 và entitlement của U07, trong khi U05/U07 lại cần class scope của U04. Quan hệ này được đảo ngược qua port trung lập đặt ở tầng contract dùng chung: U04 phụ thuộc interface, U05 và U07 cung cấp implementation. Nhờ đó đồ thị unit không có chu trình cứng.
+- Phần Learning Access của U04 cần nội dung của U05, trong khi U05 lại cần class scope của U04. Quan hệ này được đảo ngược qua port trung lập đặt ở tầng contract dùng chung: U04 phụ thuộc interface, U05 cung cấp implementation. Nhờ đó đồ thị unit không có chu trình cứng. Thanh toán (U07) chỉ cộng token AI, không ảnh hưởng quyền vào lớp nên U04 không phụ thuộc U07.
 
 ## 2. Danh sách unit và ownership
 
@@ -19,7 +19,7 @@
 | U01 | Account & Access | Account, credential, session, role/scope/object authorization | Không sở hữu audit, job hoặc nội dung nghiệp vụ |
 | U02 | Audit, Job & Outbox | Audit append-only, job enqueue/lease/status, outbox, retry/dead-letter, correlation | Không quyết định quyền học, payment hoặc điểm |
 | U03 | File & Artifact | Upload/download có quyền, checksum, signed access, immutable full Draw.io XML, chống XXE; lưu derived artifact theo metadata/TTL | Không sở hữu nội dung, submission hoặc logic tạo bản compact cho AI |
-| U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment + entitlement rồi trả nội dung đã phát hành và dữ liệu dashboard | Không sao chép khóa học/lớp, không cấp entitlement, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
+| U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment rồi trả nội dung đã phát hành và dữ liệu dashboard; mã mời tự ghi danh bản đơn giản | Không sao chép khóa học/lớp, không kiểm thanh toán, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
 | U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index, thông báo/hỏi đáp lớp Phase 2 | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề |
 | U06 | Rubric & Question Bank | QuestionVersion/RubricVersion, preview, publish/retire version, analytics Phase 2 | Không sửa hồi tố version đã dùng trong attempt |
 | U07 | Payment & Entitlement | Intent, verified webhook, idempotent access grant, reconciliation | Không ghi enrollment; redirect browser không cấp quyền |
@@ -56,7 +56,7 @@ Wave là nhóm công việc và điểm kiểm tra tích hợp, không phải ba
 | Wave | Unit (số lượng) | Nhánh có thể mở song song và điều kiện nối tiếp | Điểm dừng tích hợp |
 |---|---|---|---|
 | 1 - nền | U01, U02, U03, U04 (4) | U01 và U02 chạy song song; U03/U04 mở sau khi cả hai cung cấp phần cần dùng | Identity, audit/job/outbox, file/artifact và class/enrollment contract |
-| 2 - nguồn và đề lõi | U05, U06, U07, U08 (4) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U06 sẵn sàng. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 và U07 cắm vào port | Content/bank versions, entitlement, Learning access và đề thủ công/publication |
+| 2 - nguồn và đề lõi | U05, U06, U07, U08 (4) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U06 sẵn sàng. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port | Content/bank versions, entitlement token AI, Learning access và đề thủ công/publication |
 | 3 - biên soạn và thực hiện | U09, U10, U11, U12, U13 (5) | U09/U12 mở sau U08; U13 mở sau U03/U05/U06; U10 sau U09; U11 sau U04/U10, tích hợp U13 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
 | 4 - kết quả | U14, U15, U16 (3) | U14 sau U11/U12; U15 sau U14 và U13; U16 hoàn tất projection sau event U15 | Composite, final grade, reporting/notification |
 
@@ -67,7 +67,7 @@ Không có điều kiện “đóng toàn bộ wave N mới được bắt đầ
 | Gate | Kiểm tra bắt buộc |
 |---|---|
 | G1 | U01-U04: deny-by-default auth, audit append-only, job idempotency/retry, upload checksum, XML XXE rejection, abuse-file rejection, signed access và subject/class scope |
-| G2 | U05-U08 và phần Learning Access của U04: Content/File scope, QuestionVersion/RubricVersion immutable, verified entitlement, Learning access không có lesson progress và đề thủ công/publication đúng scope |
+| G2 | U05-U08 và phần Learning Access của U04: Content/File scope, QuestionVersion/RubricVersion immutable, verified payment event, Learning access không có lesson progress và đề thủ công/publication đúng scope |
 | G3 | U09-U13: loại câu hỏi, template/copy lineage, simulation policy, group allocation, AI/Code sandbox contract, attempt snapshot và nộp idempotent |
 | G4 | U14-U16: composite immutable, chấm tay/final grade, AI proposal không thành final grade và reporting/notification/export theo quyền |
 

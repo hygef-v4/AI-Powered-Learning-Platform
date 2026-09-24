@@ -99,8 +99,8 @@ Người học phải có thể xem nội dung đã xuất bản trong lớp đ�
 
 **Tiêu chí chấp nhận:**
 
-- Người học chỉ nhận nội dung đã xuất bản trong lớp mình được ghi danh và có entitlement hợp lệ khi nội dung yêu cầu thanh toán.
-- Truy cập trực tiếp bằng URL/ID không vượt qua kiểm tra enrollment, entitlement hoặc publication.
+- Người học chỉ nhận nội dung đã xuất bản trong lớp mình được ghi danh. Thanh toán không ảnh hưởng quyền vào lớp hay xem nội dung.
+- Truy cập trực tiếp bằng URL/ID không vượt qua kiểm tra enrollment hoặc publication.
 
 ### FR-006 - Tạo câu hỏi và bài tập bằng AI
 
@@ -147,6 +147,7 @@ Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo gi
 - Webhook được xác minh chữ ký và xử lý idempotent.
 - Trạng thái thanh toán được đối soát với nhà cung cấp.
 - Lỗi thanh toán không tự cấp quyền truy cập.
+- Quyền lợi mua được là token AI; thanh toán không mở hay chặn quyền vào lớp và nội dung học.
 
 ### FR-011 - Email và thông báo
 

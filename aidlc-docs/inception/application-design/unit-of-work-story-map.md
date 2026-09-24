@@ -41,12 +41,12 @@ Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực ti
 | Soạn bài Draw.io | U09 sở hữu cấu hình loại bài và quy tắc kiểm XML | U03 giữ artifact full XML/checksum; U08 aggregate/publication |
 | Soạn Code Lab và nộp bài Draw.io/Code Lab | U13 sở hữu Code Lab authoring và CodeExecution; U11 sở hữu attempt/submission | U03 giữ artifact; U08 publication; U09 cấu hình loại bài Draw.io |
 | Bài nhóm | U12 nhóm/phân phần; U14 nộp phần và composite | U11 attempt; U15 lưu grade cuối |
-| Learning dashboard | U04 kiểm quyền và trả lớp/nội dung; UI ghép assignment/notification | U04 enrollment, U07 entitlement, U05 content, U08/U16 read APIs khi có |
+| Learning dashboard | U04 kiểm quyền và trả lớp/nội dung; UI ghép assignment/notification | U04 enrollment, U05 content, U08/U16 read APIs khi có |
 | Chấm bài nhóm | U14 đối chiếu/chốt composite; U15 chấm và công bố điểm | U13 chỉ được đề xuất chấm phần cá nhân khi giảng viên chọn |
 
 ## 4. Learning Access trong U04 và chức năng đã loại
 
-- `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` nay thuộc U04 nhưng phần mô tả cũ về tiến độ trong UC-LRN-01/02 không còn hiệu lực. U04 kiểm enrollment + entitlement rồi trả lớp, bài học đã phát hành và dữ liệu dashboard không nhạy cảm trong phạm vi.
+- `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` nay thuộc U04 nhưng phần mô tả cũ về tiến độ trong UC-LRN-01/02 không còn hiệu lực. U04 kiểm enrollment rồi trả lớp, bài học đã phát hành và dữ liệu dashboard không nhạy cảm trong phạm vi.
 - `UC-LRN-03` (lưu/tiếp tục tiến độ), `UC-LRN-04` (xem tiến độ cá nhân), `UC-LRN-05` (giảng viên xem tiến độ lớp), `US-LRN-002` và `US-LRN-003` nằm ngoài phạm vi triển khai.
 - Không có learning path trong plan hiện hành. U04 không tạo lộ trình, prerequisite, completion record hay `learning_progress`. Trạng thái nộp bài và job vẫn được U11/U16/U02 quản lý theo nghiệp vụ riêng.
 
