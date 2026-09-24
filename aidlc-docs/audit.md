@@ -1789,3 +1789,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U10 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U10 Code Plan Approval and U11 Functional Design
+
+**Timestamp**: 2026-09-24T22:36:31Z
+
+**User Input**: "continue"; UI answers: "Lượt nộp cuối (Khuyến nghị)", "Khi bấm 'Bắt đầu làm' (Khuyến nghị)", "tự nộp bài hiện tại", "tự nộp bài hiện tại"
+
+**AI Response**: Treated "continue" as approval of the U10 code generation plan. Created U11 functional design: attempts counted at start with snapshot and seed, single in-progress attempt, autosave with version check, deadline = min(time limit, last accepted time), auto-submit current content on time limit / deadline / retire, last submitted attempt is graded (simulation via U10), receipts, DOCX download (BR-U11-01..40). Updated U11 row in unit-of-work.
+
+**Context**: U11 Functional Design Step 7; awaiting approval.
+
+---
+
+## U11 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T22:37:44Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U11 Functional Design. No new questions. Created U11 NFR plan, `nfr-requirements.md` (NFR-U11-01..32: 100 concurrent autosaving users, 10 MB content cap with gzip, uniqueness and conditional updates for start/save/submit, immutable submitted content via trigger, ownership checks, autosave rate limit, k6 load test) and `tech-stack-decisions.md`.
+
+**Context**: U11 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U11 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T22:38:36Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U11 NFR Requirements. No new questions. Created U11 NFR Design plan, `nfr-design-patterns.md` (P1-P7: advisory-locked attempt start, versioned conditional draft save with gzip limit, single idempotent submit path, immutability trigger, scheduled/event auto-submit, save rate limit, client autosave queue) and `logical-components.md`.
+
+**Context**: U11 NFR Design Step 7; awaiting approval.
+
+---
+
+## U11 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T22:39:13Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U11 NFR Design. No new questions. Created U11 `infrastructure-design.md` (mapping, queues and event bindings, Nginx 12 MB save route, migration with partial unique and immutability trigger) and `deployment-architecture.md`; added the save route to shared infrastructure.
+
+**Context**: U11 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U11 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T22:40:03Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U11 Infrastructure Design. Created `u11-attempt-submission-code-generation-plan.md` (Step 0 + 27 steps). Uses real U01-U04, U06, U08-U10 ports; temporary CodeRunPort adapter until U13; score display hidden until U15.
+
+**Context**: U11 Code Generation Part 1; plan awaiting approval.
+
+---
