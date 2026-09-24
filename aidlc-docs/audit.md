@@ -983,3 +983,163 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: User requested review and Construction. No application code exists; Construction starts with per-unit design under the current 16-unit plan.
 
 ---
+
+## U01 Functional Design - Clarification Answer Review
+
+**Timestamp**: 2026-09-24T15:15:51Z
+
+**User Input**: "t vừa điền câu hỏi u01 rồi check lại"
+
+**Recorded answer**: Question 1 - Initial account credential: "A"
+
+**AI Response**: Answer A is valid and unambiguous: accounts are created in pending activation, the user receives a one-time email OTP and sets the first password; administrators never issue temporary passwords. It matches `component-methods.md` (`activateAccount(token, ...)` where token is the OTP), UC-IAM-09 and US-IAM-001. It contradicts the temporary-password wording still present in US-IAM-007 (story and Scenario 1), the account-administration requirement in `requirements.md`, and the "link" wording in UC-IAM-01. Raised a follow-up question on what replaces the administrator's temporary-password action and whether to synchronize the inception artifacts before generating Functional Design.
+
+**Context**: U01 Functional Design clarification gate. Detailed artifacts remain blocked until the follow-up is resolved.
+
+---
+
+## U01 Functional Design - Follow-up Answers and Inception Sync
+
+**Timestamp**: 2026-09-24T15:21:46Z
+
+**User Input**: Follow-up 1 answer "Chỉ gửi lại OTP kích hoạt"; Follow-up 2 first reply "A là gì", then after explanation "Sửa cả 3 (Khuyến nghị)"
+
+**AI Response**: Explained that A is the OTP-only activation decision. Recorded both follow-ups in the U01 question file. Updated `FR-015`, `US-IAM-007` (story and Scenario 1), `UC-IAM-01` and `UC-IAM-09` so administrators never set, issue or view passwords, new accounts stay pending until the user verifies an email OTP and sets the first password, and administrators may only resend the activation OTP for pending accounts. No temporary-password or activation-link wording remains in inception. Marked the U01 clarification gate complete.
+
+**Context**: U01 Functional Design clarification gate closed; artifact generation is the next step.
+
+---
+
+## U01 Functional Design - Activation OTP Trigger Change
+
+**Timestamp**: 2026-09-24T15:27:35Z
+
+**User Input**: "hệ thống gửi hay admin gửi" then "cái tự động gửi khi tạo sẽ tốn lượt gửi mail sửa lại thành khi nào người dùng yêu cầu lần đầu đăng nhập thì mới gửi"; follow-up answer "Bỏ quyền của admin (Khuyến nghị)"
+
+**AI Response**: Clarified that the system always sends the OTP and administrators never see it. Changed the trigger: account creation and import send no email; the activation OTP is sent only when the user requests activation at first sign-in. Removed the administrator resend action. Added a neutral response and rate limiting to prevent account enumeration and email-quota abuse. Updated FR-015, US-IAM-001 (Scenarios 1-2, new Scenario 3), US-IAM-007, UC-IAM-01, UC-IAM-09, UC-IAM-10, added requestActivation(schoolEmail, clientContext) to component-methods.md, recorded Follow-up 3 and updated the U01 plan.
+
+**Context**: U01 Functional Design clarification gate remains closed with the revised activation decision.
+
+---
+
+## U01 Functional Design - Clarification Round 2
+
+**Timestamp**: 2026-09-24T15:45:47Z
+
+**User Input**: "approve làm tiếp aidlc question bằng tiếng việt làm ui cho t chọn luôn trên claude rồi note râ doc"
+
+**Answers (UI, raw)**: Câu 2 "Nút kích hoạt riêng (Khuyến nghị)"; Câu 3 "Tối thiểu 8 ký tự, có chữ và số"; Câu 4 "6 chữ số, hạn 10 phút, sai 5 lần hủy (Khuyến nghị)"; Câu 5 "5 lần sai → khóa tạm 15 phút, tự mở (Khuyến nghị)"; Câu 6 "Thu hồi mọi phiên, buộc đăng nhập lại (Khuyến nghị)"; Câu 7 "U01 đặt role, U04 gán môn (Khuyến nghị)"; Câu 8 "Chặn, phải gỡ phân công trước (Khuyến nghị)"; Câu 9 "Chặn tự hạ/khóa mình và admin cuối cùng (Khuyến nghị)"; Câu 10 "gộp lại thành DISABLED", then confirmed interpretation "Đúng"; Câu 11 "Tên hiển thị, số điện thoại, ảnh đại diện"; Câu 12 "Đảo ngược qua port (Khuyến nghị)"; Câu 13 "CSV, email trùng báo lỗi dòng (Khuyến nghị)"; Câu 14 "Chỉ phiên hiện tại"
+
+**AI Response**: Asked 13 Vietnamese Functional Design questions in three UI batches plus two follow-ups (account status interpretation; avatar creating a U01-U03 cycle). Recorded all questions and answers in the U01 question file, summarized decisions in the plan, changed US-IAM-003 from a reset link to an OTP, and added a `C` edge U01 -> U03 (AvatarPort implemented by U03) to the dependency matrix and Mermaid. ERD sync (drop LOCKED, add phone and avatar reference) is recorded as pending.
+
+**Context**: U01 Functional Design clarification complete; artifact generation is the next step.
+
+---
+
+## U01 Functional Design - Artifact Generation
+
+**Timestamp**: 2026-09-24T15:50:46Z
+
+**User Input**: "làm tiếp bước aidlc tiếp theo đi"
+
+**AI Response**: Generated U01 Functional Design in Vietnamese: `domain-entities.md` (Account aggregate, 3-state lifecycle, OTP/session/throttle in Redis, import batch, ports to U02/U03/U04), `business-rules.md` (BR-U01-01..94), `business-logic-model.md` (flows F1-F13 traced to UC-IAM-01..12 and US-IAM-001..007) and `frontend-components.md` (Web Shell auth/profile, Admin Console accounts). Added a breached/common password check to satisfy SECURITY-12 on top of the chosen 8-character letters-and-digits policy. Routed OTP email through U02 outbox with a U01-owned handler so activation does not wait for U16. Recorded extension compliance and five AI assumptions in the plan; updated aidlc-state. Presenting completion for approval.
+
+**Context**: U01 Functional Design Step 7; awaiting explicit approval.
+
+---
+
+## U01 Functional Design - Approval
+
+**Timestamp**: 2026-09-24T16:05:47Z
+
+**User Input**: "làm tiếp đi"
+
+**AI Response**: Treated as explicit approval of U01 Functional Design and moved to U01 NFR Requirements.
+
+**Context**: U01 Functional Design approved.
+
+---
+
+## U01 NFR Requirements - Questions, Decisions and Artifacts
+
+**Timestamp**: 2026-09-24T16:05:47Z
+
+**Answers (UI, raw)**: N1 "JWT access ngắn + refresh cookie"; N2 "Idle 2 giờ, tối đa 7 ngày"; N3 "admin ko cần mfa", then "Bỏ MFA, chấp nhận rủi ro"; N4 "bcrypt"; N5 "Access 15 phút, chấp nhận trễ"; N6 "bỏ sec002 đi", then clarified "Chỉ bỏ MFA admin và kiểm mật khẩu bị lộ (Khuyến nghị)"; N7 "Chờ 60 giây, tối đa 5 lần/giờ mỗi email (Khuyến nghị)"; N8 "SMTP qua adapter, local dùng Mailpit (Khuyến nghị)"; N9 "Cho đăng nhập, tạm bỏ rate limit", then "Quay lại từ chối an toàn (Khuyến nghị)"
+
+**AI Response**: Warned that dropping admin MFA and the breached-password check violates SEC-002 and enabled rule SECURITY-12, that JWT delays revocation beyond the Functional Design, and that allowing login while Redis is down is impossible with refresh tokens stored in Redis. User reaffirmed the MFA and breached-list removal and accepted a 15-minute revocation delay; reverted to fail-closed for Redis. Recorded both as accepted SECURITY-12 exceptions, updated SEC-002, updated BR-U01-31/32/44/47/63 and added BR-U01-95, removed the admin second-factor step from the logic model and frontend. Created NFR plan, Vietnamese question file, `nfr-requirements.md` (NFR-U01-01..62) and `tech-stack-decisions.md`.
+
+**Context**: U01 NFR Requirements Step 7; awaiting explicit approval.
+
+---
+
+## U01 NFR Requirements - Approval
+
+**Timestamp**: 2026-09-24T16:11:45Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval of U01 NFR Requirements and started U01 NFR Design.
+
+**Context**: U01 NFR Requirements approved.
+
+---
+
+## U01 NFR Design - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T16:11:45Z
+
+**Answers (UI, raw)**: D1 "Bucket4j + Redis, token bucket (Khuyến nghị)"; D2 "Chỉ timeout, không circuit breaker"; D3 "Xóa cookie + thu hồi refresh, chấp nhận trễ (Khuyến nghị)"; D4 "Integration test giết phụ thuộc (Khuyến nghị)"
+
+**AI Response**: Circuit breaker is a SHOULD under RESILIENCY-10, so D2 is documented as not applicable with rationale rather than as a blocking finding. Created NFR Design plan and questions, `nfr-design-patterns.md` (P1-P10 and RESILIENCY-14 failure test scenarios) and `logical-components.md` (component diagram, stores, configuration, compliance). OTP is generated inside the worker, so no plaintext code ever enters the queue, database or logs.
+
+**Context**: U01 NFR Design Step 7; awaiting explicit approval.
+
+---
+
+## U01 NFR Design - Approval
+
+**Timestamp**: 2026-09-24T16:18:59Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval of U01 NFR Design and started U01 Infrastructure Design.
+
+**Context**: U01 NFR Design approved.
+
+---
+
+## U01 Infrastructure Design - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T16:18:59Z
+
+**Answers (UI, raw)**: I1 "Một VPS + Docker Compose"; I2 "Tự chạy container RabbitMQ"; I3 "Grafana + Prometheus + Loki tự chạy"; I4 "Biến môi trường của CI/CD"; I5 "bỏ backup đi, bỏ luôn rel008"; I6 "Nginx + certbot"; I7 "Không mã hóa, chấp nhận rủi ro"
+
+**AI Response**: Warned that a single VPS without backup means permanent loss of all data if the VPS fails. Recorded accepted exceptions and rewrote SEC-001, REL-002, REL-006 and REL-008. Treated unencrypted container-to-container traffic on the host-local Docker network as part of the SEC-001 exception. Created shared-infrastructure.md (containers, networks, secrets, deploy/rollback, observability, exceptions) and U01 infrastructure-design.md and deployment-architecture.md.
+
+**Context**: U01 Infrastructure Design Step 7; awaiting explicit approval.
+
+---
+
+## U01 Infrastructure Design - Approval
+
+**Timestamp**: 2026-09-24T16:23:59Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval of U01 Infrastructure Design and shared infrastructure; started U01 Code Generation Part 1.
+
+**Context**: U01 Infrastructure Design approved.
+
+---
+
+## U01 Code Generation - Plan and Approval Prompt
+
+**Timestamp**: 2026-09-24T16:23:59Z
+
+**Answers (UI, raw)**: "Maven + Java 17"; "npm + Tailwind, tự viết component"; "Khai báo port + adapter giả (Khuyến nghị)"; "Khung dự án + backend + frontend + test U01 (Khuyến nghị)"
+
+**AI Response**: Created `construction/plans/u01-account-and-access-code-generation-plan.md` with 36 steps in six groups (scaffold, domain/business logic, repository/migration, API, frontend, docs/deployment), fake adapters for U02/U03/U04 and story traceability. Asked for approval of the plan before generating code.
+
+**Context**: U01 Code Generation Part 1 Step 6; awaiting approval.
+
+---

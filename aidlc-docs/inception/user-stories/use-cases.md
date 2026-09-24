@@ -38,7 +38,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
-| UC-IAM-01 | Tất cả người dùng | Kích hoạt tài khoản | Authentication | Cho phép người dùng kích hoạt tài khoản trường cấp, thiết lập mật khẩu và yêu cầu lại liên kết khi liên kết cũ không còn hợp lệ. (`US-IAM-001`) |
+| UC-IAM-01 | Tất cả người dùng | Kích hoạt tài khoản | Authentication | Cho phép người dùng ở lần đăng nhập đầu nhập email trường để yêu cầu kích hoạt, xác minh mã OTP hệ thống gửi qua email và tự thiết lập mật khẩu; có thể yêu cầu lại OTP trong giới hạn tần suất. Phản hồi luôn trung tính để không lộ email nào đã được cấp tài khoản. (`US-IAM-001`) |
 | UC-IAM-02 | Tất cả người dùng | Đăng nhập | Authentication | Cho phép người dùng đăng nhập bằng email trường và mật khẩu với kiểm tra trạng thái, giới hạn thử và phản hồi lỗi an toàn. (`US-IAM-002`) |
 | UC-IAM-03 | Người dùng đã đăng nhập | Đăng xuất | Authentication | Cho phép người dùng kết thúc phiên hiện tại và thu hồi thông tin xác thực liên quan. (`US-IAM-002`) |
 | UC-IAM-04 | Tất cả người dùng | Khôi phục mật khẩu | Authentication | Cho phép người dùng yêu cầu, xác minh OTP và đặt mật khẩu mới mà không làm lộ tài khoản có tồn tại hay không. (`US-IAM-003`) |
@@ -46,8 +46,8 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-IAM-06 | Người dùng đã đăng nhập | Xem hồ sơ cá nhân | Profile Management | Cho phép người dùng xem thông tin hồ sơ và tài khoản của chính mình. (`US-IAM-004`) |
 | UC-IAM-07 | Người dùng đã đăng nhập | Cập nhật hồ sơ cá nhân | Profile Management | Cho phép người dùng sửa các trường hồ sơ được phép nhưng không tự đổi email định danh hoặc role. (`US-IAM-004`) |
 | UC-IAM-08 | Quản trị viên | Xem tài khoản người dùng | Account Management | Cho phép quản trị viên xem danh sách và chi tiết tài khoản theo role hoặc trạng thái cần quản lý. (`US-IAM-007`) |
-| UC-IAM-09 | Quản trị viên | Tạo tài khoản thủ công | Account Management | Cho phép quản trị viên tạo một tài khoản trường cấp và gửi quy trình kích hoạt an toàn. (`US-IAM-007`) |
-| UC-IAM-10 | Quản trị viên | Nhập tài khoản hàng loạt | Account Management | Cho phép quản trị viên nhập nhiều tài khoản từ file và nhận kết quả hợp lệ hoặc lỗi theo từng dòng. (`US-IAM-007`) |
+| UC-IAM-09 | Quản trị viên | Tạo tài khoản thủ công | Account Management | Cho phép quản trị viên tạo một tài khoản trường cấp ở trạng thái chờ kích hoạt; không gửi email lúc tạo và quản trị viên không đặt mật khẩu. (`US-IAM-007`) |
+| UC-IAM-10 | Quản trị viên | Nhập tài khoản hàng loạt | Account Management | Cho phép quản trị viên nhập nhiều tài khoản từ file ở trạng thái chờ kích hoạt, không gửi email lúc nhập, và nhận kết quả hợp lệ hoặc lỗi theo từng dòng. (`US-IAM-007`) |
 | UC-IAM-11 | Quản trị viên | Cập nhật tài khoản và role | Account Management | Cho phép quản trị viên cập nhật thông tin và role cao nhất của tài khoản với kiểm tra chống leo quyền. (`US-IAM-005`, `US-IAM-007`) |
 | UC-IAM-12 | Quản trị viên | Quản lý trạng thái tài khoản | Account Management | Cho phép quản trị viên khóa, mở khóa hoặc vô hiệu hóa tài khoản mà không xóa lịch sử nghiệp vụ. (`US-IAM-007`) |
 

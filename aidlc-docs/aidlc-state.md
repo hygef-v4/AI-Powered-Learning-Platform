@@ -4,7 +4,7 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: U01 Account & Access Functional Design planning and clarification
+- **Current Stage**: U01 Account & Access Code Generation Part 1 - plan awaiting approval
 - **Session Status**: Current Application Design uses 16 units, with Learning Access in U04. Construction has started with U01; detailed Functional Design waits on account-onboarding clarification.
 - **Application Design Revision**: 2026-09-24 corrections approved by user
 
@@ -35,7 +35,11 @@
 - [x] Workflow Planning (revalidated after story/use-case approval)
 - [x] Application Design
 - [x] Units Generation (16-unit plan selected for Construction)
-- [ ] Functional Design - U01 plan and clarification in progress; execute per unit
+- [ ] Functional Design - U01 approved; execute per unit
+- [ ] NFR Requirements - U01 approved; execute per unit
+- [ ] NFR Design - U01 approved; execute per unit
+- [ ] Infrastructure Design - U01 approved; execute per unit
+- [ ] Code Generation - U01 plan awaiting approval; execute per unit
 - [ ] NFR Requirements - EXECUTE PER UNIT
 - [ ] NFR Design - EXECUTE PER UNIT
 - [ ] Infrastructure Design - EXECUTE PER UNIT
@@ -53,7 +57,7 @@
 - **Risk level**: High
 - **Testing complexity**: Complex
 - **Current unit**: U01 - Account & Access (16-unit plan)
-- **Resume action**: Resolve the U01 onboarding question in its Functional Design plan, then generate its business logic, rules, entities and frontend design
+- **Resume action**: Get approval of `construction/plans/u01-account-and-access-code-generation-plan.md`, then execute it step by step
 
 ## Earlier Change Request Progress - 2026-09-24 (superseded by Construction Start and 16-Unit Review)
 

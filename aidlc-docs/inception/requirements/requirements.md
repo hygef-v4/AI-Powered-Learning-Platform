@@ -166,7 +166,7 @@ Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai 
 
 ### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
 
-Quản trị viên phải có thể tìm kiếm, tạo, cập nhật, khóa/mở khóa và cấp mật khẩu tạm thời cho tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ.
+Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
 ### FR-016 - Ngân hàng rubric và câu hỏi
 
@@ -340,11 +340,11 @@ Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, đ�
 
 ### SEC-001 - Bảo vệ dữ liệu
 
-Mọi database, object storage, cache và backup phải mã hóa at rest. Mọi kết nối tới data store và mọi luồng dữ liệu qua network phải dùng TLS 1.2 trở lên, kể cả giữa các container khi có giao tiếp qua network. Dữ liệu nhạy cảm không được ghi log.
+Mọi kết nối từ Internet phải dùng TLS 1.2 trở lên. Dữ liệu nhạy cảm không được ghi log. Theo quyết định của người dùng tại U01 Infrastructure Design, MVP chạy trên một VPS: dữ liệu trên đĩa không mã hóa at rest và lưu lượng giữa các container trên cùng host đi qua mạng Docker nội bộ không TLS. Đây là ngoại lệ SECURITY-01 được chấp nhận.
 
 ### SEC-002 - Xác thực và phiên
 
-Mật khẩu phải được băm bằng thuật toán adaptive, được kiểm tra với danh sách mật khẩu đã lộ, và có tối thiểu 8 ký tự. Tài khoản quản trị phải hỗ trợ MFA. Cookie phiên phải có `Secure`, `HttpOnly`, `SameSite`, thời hạn server-side và bị vô hiệu khi đăng xuất. Login phải có bảo vệ brute-force.
+Mật khẩu phải được băm bằng thuật toán adaptive và có tối thiểu 8 ký tự. Theo quyết định của người dùng tại U01 NFR Requirements, MVP không kiểm tra danh sách mật khẩu đã lộ và không có MFA, kể cả tài khoản quản trị; đây là ngoại lệ SECURITY-12 được chấp nhận. Cookie phiên phải có `Secure`, `HttpOnly`, `SameSite`, thời hạn server-side và bị vô hiệu khi đăng xuất. Login phải có bảo vệ brute-force.
 
 ### SEC-003 - Authorization và API
 
@@ -385,7 +385,7 @@ MVP có mức quan trọng **Trung bình**: dùng thử với người thật; d
 - Chiến lược DR: Backup & Restore.
 - RTO mục tiêu: tính bằng giờ.
 - RPO mục tiêu: tính bằng giờ, được tinh chỉnh theo lịch backup trong Infrastructure Design.
-- Production topology: single-region, multi-zone.
+- Production topology: một VPS chạy Docker Compose, không multi-zone (ngoại lệ được chấp nhận tại U01 Infrastructure Design).
 - Local/demo: được phép chạy một instance và không phải mô hình HA.
 
 ### REL-003 - Change management
@@ -405,7 +405,7 @@ Mỗi component production phải phát metrics về latency, error rate, throug
 
 ### REL-006 - Capacity và fault isolation
 
-Production compute và data store phải phân bố ít nhất hai availability zone, có load balancing và giữ khả năng phục vụ khi một zone lỗi mà không cần control-plane operation để khôi phục. Infrastructure Design phải xác định min/max capacity, scaling trigger, quota liên quan và cảnh báo ở ngưỡng 80% khi phù hợp. Resiliency-specific alarms phải bao phủ mất redundancy, backup failure và capacity risk; resiliency assessment tool phải được cấu hình hoặc ghi nhận là cải tiến có kế hoạch.
+MVP chạy trên một VPS, không phân bố nhiều availability zone và không có load balancer dự phòng; VPS lỗi thì hệ thống dừng tới khi khôi phục thủ công. Đây là ngoại lệ RESILIENCY-08 được chấp nhận. Mọi container vẫn phải có giới hạn CPU/bộ nhớ và cảnh báo khi đĩa, RAM hoặc CPU vượt 80%.
 
 ### REL-007 - Dependency isolation
 
@@ -413,7 +413,7 @@ External call phải có timeout. Dependency quan trọng phải có circuit bre
 
 ### REL-008 - Backup và recovery
 
-Persistent data phải được backup tự động, mã hóa, có retention policy và quy trình test restore. Runbook phải mô tả failover/failback, phục hồi từ backup, kiểm tra sau phục hồi và truyền thông sự cố.
+Theo quyết định của người dùng tại U01 Infrastructure Design, MVP **không có backup**. VPS hỏng hoặc dữ liệu bị xóa thì mất toàn bộ dữ liệu, không khôi phục được; RPO không xác định. Đây là ngoại lệ RESILIENCY-11 và RESILIENCY-12 được chấp nhận.
 
 ### REL-009 - Incident response
 

@@ -25,15 +25,21 @@
 
 #### Scenario 1 - Kích hoạt thành công
 
-- **Given** tài khoản đã được cấp/import với email thuộc miền của trường và lời mời còn hiệu lực
-- **When** người dùng cung cấp dữ liệu bắt buộc và mật khẩu đạt chính sách
-- **Then** tài khoản được kích hoạt và người dùng nhận xác nhận an toàn
+- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt với email thuộc miền của trường
+- **When** ở lần đăng nhập đầu người dùng nhập email trường, yêu cầu kích hoạt, xác minh OTP hệ thống gửi qua email và đặt mật khẩu đạt chính sách
+- **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng nhận xác nhận an toàn
 
 #### Scenario 2 - Email chưa được cấp hoặc ngoài miền trường
 
-- **Given** email chưa có tài khoản được cấp, ngoài allowlist miền trường hoặc mật khẩu không đạt chính sách
-- **When** người dùng gửi yêu cầu kích hoạt
-- **Then** hệ thống từ chối an toàn, không tạo tài khoản công khai và hướng dẫn liên hệ đơn vị quản trị phù hợp
+- **Given** email chưa có tài khoản chờ kích hoạt hoặc ngoài allowlist miền trường
+- **When** người dùng yêu cầu kích hoạt
+- **Then** hệ thống trả phản hồi trung tính giống trường hợp hợp lệ, không gửi email, không tạo tài khoản công khai và hướng dẫn liên hệ quản trị nếu không nhận được mã
+
+#### Scenario 3 - Yêu cầu OTP quá tần suất
+
+- **Given** người dùng vừa yêu cầu OTP kích hoạt
+- **When** yêu cầu lại vượt giới hạn tần suất
+- **Then** hệ thống không gửi thêm email và vẫn trả phản hồi trung tính
 
 ### US-IAM-002 - Đăng nhập và đăng xuất an toàn
 
@@ -73,7 +79,7 @@
 
 - **Given** một địa chỉ email bất kỳ
 - **When** người dùng yêu cầu khôi phục
-- **Then** hệ thống trả cùng một thông báo dù tài khoản có tồn tại hay không và chỉ gửi liên kết hữu hạn nếu phù hợp
+- **Then** hệ thống trả cùng một thông báo dù tài khoản có tồn tại hay không và chỉ gửi OTP có thời hạn nếu tài khoản đang hoạt động
 
 #### Scenario 2 - Email tạm thời lỗi
 
@@ -149,7 +155,7 @@
 
 ### US-IAM-007 - Quản trị vòng đời tài khoản
 
-**Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật, khóa/mở khóa và cấp mật khẩu tạm thời để quản lý tài khoản người dùng trong tổ chức.
+**Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản để quản lý tài khoản người dùng trong tổ chức.
 
 **Truy vết**: FR-002, FR-015, FR-014, SEC-002, SEC-003, SEC-005, SEC-008.
 
@@ -158,8 +164,8 @@
 #### Scenario 1 - Quản lý một tài khoản
 
 - **Given** quản trị viên có quyền và dữ liệu tài khoản hợp lệ
-- **When** quản trị viên tạo, cập nhật, khóa/mở khóa hoặc cấp mật khẩu tạm thời
-- **Then** thay đổi có hiệu lực đúng một tài khoản, mật khẩu tạm thời buộc đổi khi đăng nhập và hành động được audit
+- **When** quản trị viên tạo, cập nhật hoặc khóa/mở khóa
+- **Then** thay đổi có hiệu lực đúng một tài khoản, tài khoản mới ở trạng thái chờ kích hoạt và không có email nào được gửi, quản trị viên không đặt hay xem mật khẩu, và hành động được audit
 
 #### Scenario 2 - Nhập tài khoản hàng loạt
 

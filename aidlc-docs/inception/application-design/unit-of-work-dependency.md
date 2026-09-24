@@ -8,7 +8,7 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 
 | Consumer \ Provider | U01 | U02 | U03 | U04 | U05 | U06 | U07 | U08 | U09 | U10 | U11 | U12 | U13 | U14 | U15 | U16 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| U01 | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+| U01 | - | - | C | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U02 | C | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U03 | H | H | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U04 | H | H | - | - | C | - | C | - | - | - | - | - | - | - | - | - |
@@ -77,6 +77,7 @@ flowchart LR
     U03 --> U16
 
     U01 -.-> U02
+    U03 -.-> U01
     U05 -.-> U04
     U07 -.-> U04
     U13 -.-> U08
@@ -84,7 +85,7 @@ flowchart LR
     U15 -.-> U16
 ```
 
-U04 phụ thuộc U05 và U07 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 và U07 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Mũi tên liền là cạnh `H` tối giản theo bắc cầu: nếu A → B → C thì không lặp A → C. Mũi tên đứt U01 → U02, U13 → U08/U11 và U05/U07 → U04 là tích hợp contract `C`; hai mũi tên cuối là port trung lập cho phần Learning Access của U04. U15 → U16 minh họa event/read model `E`. Ma trận phía trên vẫn là danh sách đầy đủ, gồm các cạnh `E` khác đi vào U16. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Các mũi tên trong cùng khung thể hiện thứ tự mở việc của từng nhánh.
+U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `AvatarPort`, U03 cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 và U07 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 và U07 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Mũi tên liền là cạnh `H` tối giản theo bắc cầu: nếu A → B → C thì không lặp A → C. Mũi tên đứt U01 → U02, U13 → U08/U11 và U05/U07 → U04 là tích hợp contract `C`; hai mũi tên cuối là port trung lập cho phần Learning Access của U04. U15 → U16 minh họa event/read model `E`. Ma trận phía trên vẫn là danh sách đầy đủ, gồm các cạnh `E` khác đi vào U16. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Các mũi tên trong cùng khung thể hiện thứ tự mở việc của từng nhánh.
 
 **Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06/U07 song song sau U04; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 và U07 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U03/U05/U06 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U11/U12, U15 sau U14/U13 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
 

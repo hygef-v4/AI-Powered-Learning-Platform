@@ -2,11 +2,12 @@
 
 Các chữ ký dưới đây là contract cấp cao; DTO/schema và business rule chi tiết được chốt tại Functional Design.
 
-`token` trong `activateAccount` và `resetPassword` là mã OTP dùng một lần: gửi qua email, lưu dạng hash có TTL trong Redis, giới hạn số lần nhập sai và bị xóa ngay sau khi dùng thành công. Không có cơ chế token link riêng bên cạnh OTP.
+`token` trong `activateAccount` và `resetPassword` là mã OTP dùng một lần: gửi qua email, lưu dạng hash có TTL trong Redis, giới hạn số lần nhập sai và bị xóa ngay sau khi dùng thành công. Không có cơ chế token link riêng bên cạnh OTP. OTP kích hoạt chỉ được gửi khi người dùng gọi `requestActivation`; tạo hoặc nhập tài khoản không gửi email. `requestActivation` và `requestPasswordReset` luôn trả `Accepted` trung tính và bị giới hạn tần suất theo email và client.
 
 ## Identity & Access
 
 ```text
+requestActivation(schoolEmail, clientContext) -> Accepted
 activateAccount(token, newPassword) -> ActivationResult
 authenticate(schoolEmail, password, clientContext) -> Session
 logout(sessionId) -> void
