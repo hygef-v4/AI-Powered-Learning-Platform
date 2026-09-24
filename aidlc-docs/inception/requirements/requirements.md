@@ -18,7 +18,7 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một tài liệu tổng hợp, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi tiến độ, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một tài liệu tổng hợp, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi trạng thái bài nộp và kết quả đánh giá, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -28,6 +28,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 - Chức năng dành riêng cho vai trò Head of Department/Trưởng bộ môn
 - Mọi nội dung dạng viết được mô hình hóa chung là bài viết luận
 - Active/active đa region
+- Lưu vị trí học, đánh dấu hoàn thành hoặc báo cáo tiến độ hoàn thành từng bài học
 - Property-based testing
 - Chứng nhận tuân thủ một khung pháp lý cụ thể
 - Operations automation hoàn chỉnh ngoài các yêu cầu sẵn sàng và tài liệu được xác định trong quy trình này
@@ -36,7 +37,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 
 | Bên liên quan | Nhu cầu chính |
 |---|---|
-| Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem tiến độ |
+| Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
 | Chủ nhiệm môn | Quản lý kho học liệu/RAG cấp môn và biên soạn, phát hành đề chung cho mọi lớp thuộc môn được phân công |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
@@ -92,14 +93,14 @@ Hệ thống phải hỗ trợ soạn nội dung trực tiếp, tải lên PDF, 
 - Transcript được lưu cùng video, bài giảng, ngôn ngữ và timestamp; chỉ transcript xử lý thành công mới được lập chỉ mục vào đúng phạm vi RAG.
 - Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái xử lý và retry khi lấy caption, phiên âm hoặc lập chỉ mục thất bại.
 
-### FR-005 - Trải nghiệm học theo lớp
+### FR-005 - Truy cập nội dung theo lớp
 
-Người học phải có thể xem nội dung theo cấu trúc khóa học/lớp, đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất.
+Người học phải có thể xem nội dung đã xuất bản trong lớp được ghi danh và được cấp quyền. Hệ thống không lưu trạng thái hoàn thành hoặc vị trí học của từng bài.
 
 **Tiêu chí chấp nhận:**
 
-- Tiến độ được lưu theo người học và đơn vị nội dung.
-- Giảng viên xem được tiến độ của người học trong lớp được phân công.
+- Người học chỉ nhận nội dung đã xuất bản trong lớp mình được ghi danh và có entitlement hợp lệ khi nội dung yêu cầu thanh toán.
+- Truy cập trực tiếp bằng URL/ID không vượt qua kiểm tra enrollment, entitlement hoặc publication.
 
 ### FR-006 - Tạo câu hỏi và bài tập bằng AI
 
@@ -133,9 +134,9 @@ Sau khi người học nộp bài, bài nộp chuyển tới giảng viên phụ
 - Kết quả AI chưa duyệt không được coi là quyết định cuối đối với câu trả lời mở.
 - Mọi lần ghi đè điểm lưu người thực hiện, thời gian và lý do.
 
-### FR-009 - Sổ điểm và tiến độ
+### FR-009 - Sổ điểm và trạng thái bài nộp
 
-Người học phải xem được điểm và tiến độ của chính mình; giảng viên xem được tổng hợp theo lớp; quản trị viên xem được dữ liệu theo quyền quản trị.
+Người học phải xem được điểm, phản hồi và trạng thái bài nộp của chính mình; giảng viên xem được tổng hợp theo lớp được phân công; quản trị viên xem dữ liệu theo quyền quản trị. Yêu cầu này không bao gồm tiến độ hoàn thành hoặc vị trí học theo bài.
 
 ### FR-010 - Thanh toán
 

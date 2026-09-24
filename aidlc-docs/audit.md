@@ -971,3 +971,15 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: User questioned an overly strong dependency in the pending Units Generation artifacts; current Application Design still owns authorization under U01.
 
 ---
+
+## Construction Start and Documentation Review
+
+**Timestamp**: 2026-09-24T14:57:44Z
+
+**User Input**: "review lại doc và giúp tôi triển khai construction phase"
+
+**AI Response**: Reviewed current HEAD (`docs: Rework application design into 16-unit plan`) and selected its 16-unit Application Design set as the current source. Found stale AI-DLC state/execution plan still claiming 17 units, an apparent U04 Learning Access self-dependency in the contract table, and learning-progress scope still active in Requirements/Stories/Use Cases. Synchronized scope to exclude lesson completion/position progress while retaining assignment submission/grade status; corrected the U04 contract wording; synchronized the active plan/state to 16 units. Treated the direct Construction-start instruction as authorization to proceed and began U01 Account & Access Functional Design planning. The old U01 recovery plan incorrectly included `US-AUD-001` and is marked superseded. One conflict remains for user clarification: US-IAM-007 permits a temporary password, while the current service contract specifies OTP activation. Created a U01 Functional Design plan and dedicated question file; detailed design artifacts wait for the answer.
+
+**Context**: User requested review and Construction. No application code exists; Construction starts with per-unit design under the current 16-unit plan.
+
+---

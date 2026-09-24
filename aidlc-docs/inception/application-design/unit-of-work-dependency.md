@@ -95,7 +95,7 @@ U04 phụ thuộc U05 và U07 bằng cạnh `C`: phần Learning Access của U0
 | Identity → audit/job query | U01 → U02 (`C`) | U02 ghi audit/điều phối job độc lập bằng actor/scope reference; `queryAudit` và `getJobStatus` gọi authorization contract có version, fail closed khi chưa tích hợp |
 | Identity, audit, file, job | U01/U02/U03 → mọi unit cần dùng | Actor/resource authorization, append-only audit, scoped artifact, idempotent job; không dùng shared repository |
 | Môn/lớp/ghi danh | U04 → U05-U15 khi cần | Subject/class/enrollment reference và scoped authorization |
-| Learning access | U04 + U07 + U05 → U04 | Đủ enrollment và entitlement mới trả nội dung đã phát hành; không lưu lesson progress |
+| Learning access within U04 | U04 enrollment + U07 entitlement + U05 published content → Learning Access capability in U04 | Đây là orchestration nội bộ của U04, không phải self-dependency giữa unit; chỉ trả nội dung khi enrollment, entitlement và publication hợp lệ; không lưu lesson progress |
 | Ngân hàng → đề/attempt/chấm | U06 → U08/U09/U10/U11/U15 | QuestionVersion/RubricVersion immutable và snapshot đúng version |
 | Tạo đề | U05/U06 → U13 → U08; U09/U10 cấu hình | U13 trả AI draft proposal; U08 review, sửa, lưu và publish. RAG chỉ hỗ trợ nguồn khi được chọn |
 | Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; sửa đề tạo version mới |

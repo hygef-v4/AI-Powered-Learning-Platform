@@ -4,7 +4,7 @@
 
 Tài liệu liệt kê các use case theo mục tiêu nghiệp vụ của người dùng để phục vụ thiết kế, kiểm thử và nghiệm thu. Các thao tác hỗ trợ như tìm kiếm, lọc, xem trạng thái tác vụ nền, retry và xử lý tự động không được tách thành use case riêng mà được mô tả trong use case nghiệp vụ liên quan.
 
-Danh mục bao phủ toàn bộ 55 user story đã được duyệt. Chức năng chưa thuộc MVP được đánh dấu `(Phase 2)`.
+Danh mục giữ 90 use case và 59 story để truy vết; 87 use case và 57 story thuộc phạm vi hiện hành. `US-LRN-002` và `US-LRN-003` cùng ba use case tiến độ bài học được đánh dấu ngoài phạm vi. Chức năng chưa thuộc MVP được đánh dấu `(Phase 2)`.
 
 ## 2. Tác nhân
 
@@ -99,11 +99,11 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
-| UC-LRN-01 | Người học | Xem dashboard học tập | Learning Dashboard | Cho phép người học xem lớp, assignment sắp đến hạn, thông báo và tiến độ cá nhân. (`US-LRN-001`, `US-LRN-002`) |
-| UC-LRN-02 | Người học | Truy cập lớp đã ghi danh | Learning Dashboard | Cho phép người học xem các lớp và chi tiết lớp gồm nội dung, assignment, nhóm và tiến độ. (`US-LRN-001`) |
-| UC-LRN-03 | Người học | Lưu và tiếp tục tiến độ học | Learning Progress | Cho phép người học tiếp tục tại vị trí gần nhất, cập nhật hoặc đánh dấu hoàn thành nội dung. (`US-LRN-002`) |
-| UC-LRN-04 | Người học | Xem tiến độ cá nhân | Learning Progress | Cho phép người học xem tiến độ của chính mình trong từng lớp. (`US-LRN-002`) |
-| UC-LRN-05 | Giảng viên | Theo dõi tiến độ lớp | Progress Tracking | Cho phép giảng viên xem tiến độ học viên trong lớp được phân công và nhận diện người cần hỗ trợ. (`US-LRN-003`) |
+| UC-LRN-01 | Người học | Xem dashboard học tập | Learning Dashboard | Cho phép người học xem lớp, assignment sắp đến hạn, thông báo và trạng thái đánh giá đã có. (`US-LRN-001`) |
+| UC-LRN-02 | Người học | Truy cập lớp đã ghi danh | Learning Dashboard | Cho phép người học xem các lớp và chi tiết lớp gồm nội dung, assignment và nhóm trong phạm vi quyền. (`US-LRN-001`) |
+| UC-LRN-03 | Người học | Lưu và tiếp tục tiến độ học (Ngoài phạm vi) | Learning Progress | Ngoài phạm vi: không lưu vị trí học hoặc trạng thái hoàn thành nội dung. (`US-LRN-002`) |
+| UC-LRN-04 | Người học | Xem tiến độ cá nhân (Ngoài phạm vi) | Learning Progress | Ngoài phạm vi: không triển khai tiến độ hoàn thành nội dung từng bài. (`US-LRN-002`) |
+| UC-LRN-05 | Giảng viên | Theo dõi tiến độ lớp (Ngoài phạm vi) | Progress Tracking | Ngoài phạm vi: không triển khai báo cáo tiến độ hoàn thành nội dung từng bài. (`US-LRN-003`) |
 
 ### 4.6 Question and Rubric Bank
 

@@ -11,6 +11,7 @@
 - Story không ghi nhãn thuộc MVP; story có hậu tố `(Phase 2)` là backlog sau MVP.
 - Hệ thống chỉ có bốn persona người dùng: Người học, Giảng viên, Chủ nhiệm môn và Quản trị viên; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
+- Phạm vi hiện hành: 57/59 stories; `US-LRN-002` và `US-LRN-003` được giữ dưới đây để truy vết lịch sử nhưng loại khỏi MVP theo quyết định bỏ tiến độ từng bài học.
 
 ## 2. Miền Identity and Access
 
@@ -558,7 +559,9 @@
 - **When** người học dùng URL/ID trực tiếp
 - **Then** hệ thống từ chối mà không tiết lộ nội dung hoặc metadata nhạy cảm
 
-### US-LRN-002 - Lưu tiến độ và tiếp tục học
+### US-LRN-002 - Lưu tiến độ và tiếp tục học (Ngoài phạm vi)
+
+> Ngoài phạm vi MVP: không triển khai lưu vị trí học hoặc trạng thái hoàn thành từng bài.
 
 **Story**: Là người học, tôi muốn đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất để duy trì tiến độ qua nhiều phiên.
 
@@ -578,11 +581,13 @@
 - **When** người học quay lại lớp
 - **Then** hệ thống cho phép tiếp tục từ vị trí gần nhất và không hiển thị tiến độ của người khác
 
-### US-LRN-003 - Theo dõi tiến độ lớp
+### US-LRN-003 - Theo dõi tiến độ lớp (Ngoài phạm vi)
+
+> Ngoài phạm vi MVP: không triển khai báo cáo tiến độ hoàn thành nội dung từng bài.
 
 **Story**: Là giảng viên, tôi muốn xem tiến độ tổng hợp và chi tiết phù hợp của lớp được phân công để hỗ trợ người học kịp thời.
 
-**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1092,7 +1097,7 @@
 
 ### US-GRD-004 - Xem sổ điểm theo quyền
 
-**Story**: Là người dùng, tôi muốn xem điểm và tiến độ đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
+**Story**: Là người dùng, tôi muốn xem điểm, phản hồi và trạng thái bài nộp đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
 
 **Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
 
@@ -1102,7 +1107,7 @@
 
 - **Given** kết quả đã được công bố
 - **When** người học mở sổ điểm
-- **Then** chỉ điểm, phản hồi và tiến độ của chính người học được hiển thị
+- **Then** chỉ điểm, phản hồi và trạng thái bài nộp của chính người học được hiển thị
 
 #### Scenario 2 - Giảng viên xem lớp
 
@@ -1220,9 +1225,9 @@
 
 ### US-RPT-002 - Dashboard kết quả cá nhân (Phase 2)
 
-**Story**: Là người học, tôi muốn xem dashboard điểm, tiến độ và bài sắp đến hạn để ưu tiên việc học của mình.
+**Story**: Là người học, tôi muốn xem dashboard điểm, trạng thái bài nộp và bài sắp đến hạn để ưu tiên việc học của mình.
 
-**Truy vết**: FR-002, FR-005, FR-009, FR-024, NFR-002, SEC-001, SEC-003.
+**Truy vết**: FR-002, FR-009, FR-024, NFR-002, SEC-001, SEC-003.
 
 **Acceptance criteria**
 
@@ -1402,11 +1407,11 @@
 | FR-002 | US-IAM-002, US-IAM-004 đến US-AUD-001 theo phạm vi actor |
 | FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-005, US-ASM-002 |
 | FR-004 | US-CNT-001, US-CNT-002, US-CNT-003, US-CNT-005, US-AIG-002 |
-| FR-005 | US-LRN-001, US-LRN-002, US-LRN-003, US-GRD-004 |
+| FR-005 | US-LRN-001 |
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-002, US-ASM-004 đến US-ASM-007 |
 | FR-007 | US-ASM-001, US-ASM-002, US-ASM-003, US-ASM-008, US-ASM-011, US-GRD-006 |
 | FR-008 | US-GRD-001 đến US-GRD-008, US-RPT-004 |
-| FR-009 | US-LRN-002, US-LRN-003, US-GRD-004, US-RPT-002, US-RPT-003 |
+| FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
 | FR-010 | US-PAY-001, US-PAY-002, US-PAY-003 |
 | FR-011 | US-IAM-001, US-IAM-003, US-CAT-003, US-CNT-004, US-RPT-001, US-NTF-001 |
 | FR-012 | US-CNT-001, US-CNT-003, US-AIG-001, US-AIG-002, US-AIG-003, US-GRD-002 |

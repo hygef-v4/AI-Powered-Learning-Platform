@@ -1,6 +1,6 @@
 # Unit of Work Plan
 
-> Bản hiệu lực hiện tại là revision 17 unit ở cuối tài liệu; các quyết định/checklist tám unit phía dưới là lịch sử và đã được thay thế theo yêu cầu mới.
+> Bản hiệu lực là bộ 16 unit hiện tại trong `application-design/unit-of-work.md`, `unit-of-work-dependency.md` và `unit-of-work-story-map.md`. Các revision 17 unit phía dưới đã được thay thế bởi commit `docs: Rework application design into 16-unit plan`.
 
 ## Mục tiêu
 
@@ -175,7 +175,7 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Kiểm tra 57 story còn hiệu lực được gán đúng một unit; hai story bị loại có ghi lý do.
 - [ ] Trình checkpoint phê duyệt lại Units Generation trước khi tiếp tục Construction.
 
-## Revision theo hai ảnh tham chiếu
+## Revision cũ: 17 unit theo hai ảnh tham chiếu (đã thay thế)
 
 - [x] Đối chiếu danh sách 17 unit và sơ đồ wave với catalog UC/story hiện hành; không dùng các số UC trong ảnh khi khác catalog.
 - [x] Kiểm tra riêng U14 với yêu cầu Learning hiện hành: không thêm learning path hay tiến độ bài học.
@@ -209,7 +209,7 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Đồng bộ gate và state; kiểm tra wave/ma trận/story map.
 - [ ] Trình checkpoint phê duyệt revision mới.
 
-## Revision: wave là checkpoint, nhánh chạy khi dependency sẵn sàng
+## Revision cũ: wave là checkpoint, nhánh chạy khi dependency sẵn sàng (đã thay thế)
 
 - [x] Dùng bốn wave 4/5/5/3 unit theo sơ đồ tham chiếu, giữ ID hiện hành với Learning ở U08.
 - [x] Cho phép cạnh `H` trong cùng wave và cho phép nhánh ở wave sau mở trước khi toàn bộ wave trước hoàn tất, miễn provider trực tiếp đã sẵn sàng.
@@ -217,10 +217,18 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Đồng bộ integration gate, state và mô tả scheduler; giữ ma trận dependency và story map.
 - [ ] Trình checkpoint phê duyệt revision mới.
 
-## Revision: quan hệ U01/U02
+## Revision cũ: quan hệ U01/U02 trong plan 17 unit (đã thay thế)
 
 - [x] Đối chiếu AuditService/JobService với AuthorizationService; xác định core audit/job/outbox không cần chờ implementation U01.
 - [x] Đổi U02 đọc U01 từ `H` sang `C` cho `queryAudit`/`getJobStatus`, yêu cầu fail closed trước khi phát hành read API.
 - [x] Cho U01 và U02 khởi động song song, giữ U03/U04 phụ thuộc `H` vào cả hai; đồng bộ Mermaid và critical path.
 - [x] Kiểm tra ma trận 17x17, graph và wave vẫn tối đa năm unit.
 - [ ] Trình checkpoint phê duyệt revision mới.
+
+## Revision hiệu lực: 16 unit và bắt đầu Construction
+
+- [x] Chọn bộ Application Design 16 unit hiện tại làm nguồn boundary; Learning Access được gộp vào U04.
+- [x] Rà soát dependency/story map 16 unit; sửa mô tả Learning Access thành capability nội bộ U04, không phải self-dependency.
+- [x] Đồng bộ requirements, stories và use cases để tiến độ bài học nằm ngoài phạm vi, trong khi trạng thái bài nộp/điểm vẫn được giữ.
+- [x] Ghi nhận yêu cầu "review lại doc và giúp tôi triển khai construction phase" là chỉ dẫn bắt đầu Construction theo bộ 16 unit sau khi review.
+- [x] Bắt đầu Functional Design U01 Account & Access; tạo kế hoạch và câu hỏi riêng, chưa sinh thiết kế chi tiết khi còn câu hỏi chưa trả lời.

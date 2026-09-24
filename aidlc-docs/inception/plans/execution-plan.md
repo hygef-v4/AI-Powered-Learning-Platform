@@ -1,6 +1,6 @@
 # AI-DLC Execution Plan
 
-> Lưu ý cập nhật: bảng unit U01-U08 bên dưới là kế hoạch lịch sử. Bản phân chia hiệu lực đang chờ duyệt là 17 unit trong `aidlc-docs/inception/application-design/unit-of-work.md`; dependency và story map mới thay thế bảng unit cũ. U01 Functional Design cũ phải lập lại theo boundary Account & Access sau khi bản 17 unit được duyệt.
+> Lưu ý cập nhật: các bảng unit U01-U08 bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit trong `aidlc-docs/inception/application-design/unit-of-work.md`; Learning Access thuộc U04. Theo yêu cầu ngày 2026-09-24, Construction bắt đầu với Functional Design U01 Account & Access; kế hoạch recovery cũ đã được thay thế.
 
 ## 1. Detailed Analysis Summary
 
@@ -130,9 +130,9 @@ flowchart TD
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
 - [x] **User Stories - APPROVED**: Bốn persona, 59 stories và 90 use cases đã được duyệt cho change request.
-- [ ] **Workflow Planning - REVALIDATED, AWAITING APPROVAL**: Kế hoạch đã xác định tác động U02-U07; Application Design là stage kế tiếp sau approval.
-- [ ] **Application Design - EXECUTE/SYNCHRONIZE**: Cần cập nhật component responsibilities, methods, services, business flows, system functionalities và global ERD cho versioning, reuse, YouTube RAG, simulation và group composite.
-- [ ] **Units Generation - EXECUTE/SYNCHRONIZE**: Cần cập nhật unit scope, dependency, story map và quality gates cho U03-U07; không tạo unit mới nếu boundary hiện tại vẫn đủ rõ.
+- [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
+- [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
+- [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.
 
 ### CONSTRUCTION PHASE - per-unit loop
 
@@ -159,7 +159,7 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 - Identity/authorization và academic scope.
 - Subject/class content và private file/RAG ingestion.
 - Group/leader management, individual work packages, composite generation/version và instructor finalization.
-- Learning progress.
+- Learning access and entitlement; lesson completion/position progress is out of scope.
 - AI authoring và assessment delivery.
 - Submission, grading và gradebook.
 - Payment/entitlement.
@@ -168,12 +168,11 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 
 ### Trình tự phụ thuộc sơ bộ
 
-1. Xác định application boundaries và contracts ở Application Design.
-2. Units Generation lập unit-story map và dependency graph.
-3. Ưu tiên các unit nền tảng về identity, authorization, academic model và shared contracts trước các unit phụ thuộc.
-4. Hoàn thiện từng unit theo vòng Functional Design → NFR Requirements → NFR Design → Infrastructure Design → Code Generation.
-5. External adapter phải có sandbox/mock contract trước khi hành trình phụ thuộc được coi là hoàn tất.
-6. Sau tất cả units, thực hiện Build and Test toàn hệ thống.
+1. Dùng 16 boundary, dependency graph và story map hiện hành.
+2. Hoàn thiện từng unit theo vòng Functional Design → NFR Requirements → NFR Design → Infrastructure Design → Code Generation.
+3. Mở unit khi các dependency trực tiếp sẵn sàng; wave là checkpoint, không phải barrier đồng bộ.
+4. External adapter phải có sandbox/mock contract trước khi hành trình phụ thuộc được coi là hoàn tất.
+5. Sau tất cả units, thực hiện Build and Test toàn hệ thống.
 
 ### Coordination gates
 
@@ -221,7 +220,7 @@ MVP thực hiện được các hành trình MVP trong Requirements và bộ 59 
 ## 7. Estimated Effort Boundary
 
 - **Stage types còn phải thực thi**: 8 loại - Application Design, Units Generation, năm stage per-unit và Build and Test.
-- **Số vòng per-unit**: Được xác định tại Units Generation; không ước đoán trước khi có dependency map.
+- **Số vòng per-unit**: 16 unit theo boundary hiện hành; tối đa năm unit triển khai đồng thời theo dependency map.
 - **Thời lượng lịch**: Chưa cam kết vì chưa có quy mô đội ngũ, năng lực triển khai hoặc provider choices; kế hoạch đo theo approval gates và deliverable thay vì ngày giả định.
 
 ## 8. Extension Compliance tại Workflow Planning

@@ -1,4 +1,6 @@
-# U01 Platform Foundation and Identity - Functional Design Recovery Plan
+# Superseded: U01 Platform Foundation and Identity - Functional Design Recovery Plan
+
+> This recovery plan targets the old eight-unit boundary and incorrectly includes `US-AUD-001` under U01. Do not answer its questions or generate its artifacts. Current U01 is Account & Access; use `u01-account-and-access-functional-design-plan.md` and its linked clarification file.
 
 ## 1. Mục tiêu
 
