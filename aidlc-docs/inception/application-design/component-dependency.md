@@ -9,25 +9,31 @@
 
 ## 2. Dependency matrix
 
-| Consumer | Identity/Auth | Academic | Group | Content | Question Bank | Assessment | Submission | Grading | AI | Code Execution | Payment | File | Job | Audit |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Academic | R | O | - | - | - | - | - | - | - | - | R | - | - | W |
-| Learning | R | R | - | R | - | - | - | - | - | - | R | - | - | W |
-| Group | R | R | O | - | - | R | - | - | - | - | - | - | - | W |
-| Content | R | R | - | O | - | - | - | - | W | - | - | W | W | W |
-| Question Bank | R | R | - | - | O | - | - | - | - | - | - | - | - | W |
-| Assessment | R | R | R | R | R | O | - | - | W | - | - | R | W | W |
-| Submission | R | R | R | - | R | R | O | - | - | R | - | W | W | W |
-| Grading | R | R | R | - | R | R | R | O | W | R | - | R | W | W |
-| AI Orchestration | R | R | - | R | R | - | - | - | O | - | - | R | W | W |
-| Code Execution | R | R | - | - | - | R | R | - | - | O | - | R | W | W |
-| Reporting | R | R | R | - | - | R | R | R | - | - | - | R | W | W |
-| Payment | R | R | - | - | - | - | - | - | - | - | O | - | W | W |
-| Notification | R | R | R | - | - | R | R | R | - | - | - | - | W | W |
+| Consumer | Identity | Academic | Group | Content | Learning | Bank | Assessment | Submission | Grading | AI | Code Exec | Payment | Reporting | Notification | File | Job | Audit |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Identity & Access | O | - | - | - | - | - | - | - | - | - | - | - | - | - | - | W | W |
+| Academic | R | O | - | - | - | - | - | - | - | - | - | R | - | - | - | - | W |
+| Group | R | R | O | - | - | - | R | - | - | - | - | - | - | - | - | - | W |
+| Content | R | R | - | O | - | - | - | - | - | - | - | - | - | - | W | W | W |
+| Learning | R | R | - | R | O | - | - | - | - | - | - | R | - | - | - | - | W |
+| Question Bank | R | R | - | - | - | O | - | - | - | - | - | - | - | - | - | - | W |
+| Assessment | R | R | R | R | - | R | O | - | - | W | - | - | - | - | R | W | W |
+| Submission | R | R | R | - | - | R | R | O | - | - | R | - | - | - | W | W | W |
+| Grading | R | R | R | - | - | R | R | R | O | W | R | - | - | - | R | W | W |
+| AI Orchestration | R | R | - | R | - | R | - | - | - | O | - | - | - | - | R | W | W |
+| Code Execution | R | R | - | - | - | - | R | R | - | - | O | - | - | - | R | W | W |
+| Payment | R | R | - | - | - | - | - | - | - | - | - | O | - | - | - | W | W |
+| Reporting | R | R | R | - | - | - | R | R | R | - | - | - | O | - | R | W | W |
+| Notification | R | R | R | - | - | - | R | R | R | - | - | - | - | O | - | W | W |
+| File & Artifact | R | - | - | - | - | - | - | - | - | - | - | - | - | - | O | W | W |
+| Job Platform | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | O | W |
+| Audit | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | O |
 
-`O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning kiểm cả Academic enrollment lẫn Payment entitlement trước khi cấp nội dung.
+`O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp.
 
-AI Orchestration chỉ nhận request/context reference đã được Assessment hoặc Grading kiểm quyền. Nó đọc nguồn Content/Question Bank/File theo scope và ghi Job, rồi trả proposal qua contract cho module gọi; không đọc hoặc ghi trực tiếp dữ liệu Assessment, Submission hay Grading. Cách này giữ U03 độc lập với U04-U06.
+Ma trận liệt kê đủ 17 module ở cả hàng và cột. Identity & Access, File & Artifact, Job Platform và Audit là module nền: chúng không phụ thuộc module nghiệp vụ nào, và Job Platform cùng Audit không gọi ngược lên Identity để tránh tạo chu trình - controller truyền sẵn actor context xuống. Ba cột Learning, Reporting và Notification trống ngoài ô owner vì không module nào đọc chúng qua contract đồng bộ; chúng chỉ tiêu thụ event. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning kiểm cả Academic enrollment lẫn Payment entitlement trước khi cấp nội dung.
+
+AI Orchestration chỉ nhận request/context reference đã được Assessment hoặc Grading kiểm quyền. Nó đọc nguồn Content/Question Bank/File theo scope và ghi Job, rồi trả proposal qua contract cho module gọi; không đọc hoặc ghi trực tiếp dữ liệu Assessment, Submission hay Grading. Cách này giữ U03 độc lập với U04-U06. Content không gọi thẳng AI Orchestration: mọi tác vụ RAG, transcript hay tóm tắt đều được Content enqueue qua Job Platform, nên đồ thị không có chu trình hai chiều.
 
 ## 3. Sơ đồ dependency
 
@@ -64,7 +70,7 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 | Assessment/template/copy assignment/version/publication/simulation policy | Assessment | Submission, Grading, Reporting |
 | Attempt snapshot, draft/submission/composite/artifact refs | Submission | Grading, Reporting |
 | Grade/proposal/publication state | Grading | Learning, Reporting, Notification |
-| Object bytes/checksum/scan/derivation | File & Artifact | Content, Submission, AI, Reporting |
+| Object bytes/checksum/abuse check/derivation | File & Artifact | Content, Submission, AI, Reporting |
 | Payment/event/entitlement | Payment | Learning/access checks qua entitlement contract |
 | Audit events | Audit | Admin query only |
 

@@ -13,7 +13,9 @@ MVP dùng modular monolith: frontend Next.js và một backend Spring Boot đư�
 | Assessment UI | Làm bài, tự lưu, lịch sử nộp, xem kết quả | Assessment API, Submission API |
 | Draw.io Canvas Adapter | Nhúng canvas, lấy/khôi phục XML đầy đủ, preview | Submission API; không tự rút gọn XML |
 | Group Workspace UI | Nhóm, phần cá nhân, yêu cầu đổi leader, trạng thái composite và phản hồi | Group API, Submission API |
-| Teaching Console | Quản lý lớp, nội dung, assignment/rubric và version, simulation, composite nhóm, chấm và báo cáo | Academic, Content, Assessment, Grading APIs |
+| Class Console | Quản lý lớp, danh sách học viên, nội dung lớp, nhóm và phân chia phần việc | Academic, Content, Group APIs |
+| Assignment Console | Soạn đề theo loại, gắn rubric và version, template/copy giữa lớp, simulation policy, duyệt và phát hành | Assessment, Question Bank, AI APIs |
+| Grading Console | Theo dõi nộp bài, tổng hợp và chốt composite, chấm tay hoặc AI proposal, sổ điểm, export | Submission, Grading, Reporting APIs |
 | Subject Console | Học liệu/RAG gồm YouTube, ngân hàng, đề chung và template theo môn | Subject-scoped APIs |
 | Admin Console | Tài khoản, role/scope, cấu hình AI, payment, audit | Admin APIs |
 
@@ -38,7 +40,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Payment & Entitlement | Thanh toán/quyền lợi | Payment intent, verified webhook, reconciliation, entitlement idempotency |
 | Notification | Thông báo | Outbox/job, template, recipient scope, delivery status |
 | Audit | Bằng chứng bất biến | Security/business events, query by authorized admin, redaction |
-| File & Artifact | Lưu trữ file | Object key, checksum, immutable version, scan status, signed access |
+| File & Artifact | Lưu trữ file | Object key, checksum, immutable version, abuse check của provider, signed access |
 | Job Platform | Công việc nền | Enqueue, lease, retry/backoff, dead-letter, status and correlation |
 
 ## 4. Thành phần ngoài hệ thống
@@ -47,10 +49,11 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 |---|---|
 | AI Provider Port | Generate draft, summarize, propose grade; implementation thay được |
 | Object Storage Port | Put/get immutable object, signed access, checksum |
-| Malware Scan Port | Quét upload trước khi phát hành/processing |
 | Payment Gateway Port | Create checkout, verify webhook, query transaction |
 | Mail/Notification Port | Gửi và nhận delivery status |
 | Code Sandbox Port | Chạy code cô lập theo quota |
+| Cache/Session Port | Lưu refresh session, OTP hash, counter rate-limit và lock ngắn hạn theo TTL; hỗ trợ thu hồi phiên |
+| Message Broker Port | Publish và consume job message có schema version, ack sau xử lý, retry hữu hạn và dead-letter |
 
 ## 5. Boundary bắt buộc
 
@@ -62,3 +65,4 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 - Full Draw.io XML là artifact gốc. Derived compact XML thuộc AI job, có TTL/retention riêng và không thay đổi bản gốc.
 - AI Orchestration không được publish assessment hoặc final grade.
 - Payment chỉ cấp entitlement sau verified event và idempotency check.
+- Hệ thống không tự quét malware. Object Storage Port dựa vào abuse check của provider: khi provider từ chối trả file vì bị gắn cờ, artifact đó bị coi là không dùng được và không được ép tải bằng cờ bỏ qua cảnh báo.

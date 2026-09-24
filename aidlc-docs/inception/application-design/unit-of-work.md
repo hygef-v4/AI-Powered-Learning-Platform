@@ -1,8 +1,8 @@
-# Unit of Work - 17 unit logic
+# Unit of Work - 16 unit logic
 
 ## 1. Phạm vi và quy tắc
 
-Đây là 17 unit lập kế hoạch theo hai ảnh tham chiếu, được đối chiếu với catalog 90 use case/59 story hiện hành. Chúng là module logic trong một backend Spring Boot, không phải 17 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. 57 story còn hiệu lực được gán một primary unit; hai story tiến độ bài học được ghi là ngoài phạm vi.
+Đây là 16 unit lập kế hoạch, được đối chiếu với catalog 90 use case/59 story hiện hành. Phần Learning Access trước đây đứng riêng đã được gộp vào U04 vì chỉ còn một story và không sở hữu bảng nào. Chúng là module logic trong một backend Spring Boot, không phải 16 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. 57 story còn hiệu lực được gán một primary unit; hai story tiến độ bài học được ghi là ngoài phạm vi.
 
 - Mỗi unit sở hữu dữ liệu và quy tắc nghiệp vụ của mình; unit khác gọi public contract, không đọc bảng/repository trực tiếp.
 - U01 kiểm quyền actor/object; U02 giữ audit/job/outbox và phát triển song song với U01 qua authorization contract có version; U03 giữ file/artifact. Tách unit không thay đổi một backend deployable.
@@ -10,6 +10,7 @@
 - AI chỉ tạo draft hoặc grade proposal. Giảng viên duyệt đề và quyết định điểm cuối. RAG là nguồn hỗ trợ tùy chọn cho tạo đề.
 - Không sao chép khóa học/lớp. Copy assignment/rubric theo phạm vi đã duyệt tạo identity độc lập có lineage.
 - Không có learning path, trạng thái hoàn thành hay tiến độ từng bài học. Tiến độ nộp bài và trạng thái job vẫn có.
+- Phần Learning Access của U04 cần nội dung của U05 và entitlement của U07, trong khi U05/U07 lại cần class scope của U04. Quan hệ này được đảo ngược qua port trung lập đặt ở tầng contract dùng chung: U04 phụ thuộc interface, U05 và U07 cung cấp implementation. Nhờ đó đồ thị unit không có chu trình cứng.
 
 ## 2. Danh sách unit và ownership
 
@@ -17,32 +18,32 @@
 |---|---|---|---|
 | U01 | Account & Access | Account, credential, session, role/scope/object authorization | Không sở hữu audit, job hoặc nội dung nghiệp vụ |
 | U02 | Audit, Job & Outbox | Audit append-only, job enqueue/lease/status, outbox, retry/dead-letter, correlation | Không quyết định quyền học, payment hoặc điểm |
-| U03 | File & Artifact | Upload/download có quyền, scan, checksum, signed access, immutable full Draw.io XML, chống XXE; lưu derived artifact theo metadata/TTL | Không sở hữu nội dung, submission hoặc logic tạo bản compact cho AI |
-| U04 | Subject, Class & Enrollment | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope | Không sao chép khóa học/lớp hoặc cấp entitlement |
+| U03 | File & Artifact | Upload/download có quyền, checksum, signed access, immutable full Draw.io XML, chống XXE; lưu derived artifact theo metadata/TTL | Không sở hữu nội dung, submission hoặc logic tạo bản compact cho AI |
+| U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment + entitlement rồi trả nội dung đã phát hành và dữ liệu dashboard | Không sao chép khóa học/lớp, không cấp entitlement, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
 | U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index, thông báo/hỏi đáp lớp Phase 2 | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề |
 | U06 | Rubric & Question Bank | QuestionVersion/RubricVersion, preview, publish/retire version, analytics Phase 2 | Không sửa hồi tố version đã dùng trong attempt |
 | U07 | Payment & Entitlement | Intent, verified webhook, idempotent access grant, reconciliation | Không ghi enrollment; redirect browser không cấp quyền |
-| U08 | Learning Access & Dashboard | Kiểm enrollment + entitlement, đọc nội dung được phát hành, lớp/assignment dashboard | Không có learning path hoặc tiến độ từng bài học; không ghi nội dung |
-| U09 | Assessment Core & Publication | Assignment aggregate, draft/review, publication lớp, schedule, version khi sửa đề đã giao | Không sở hữu kiểu câu hỏi, attempt hay final grade |
-| U10 | Question Type Authoring | Cấu hình quiz/essay, đề chung cấp môn, quy tắc bài loại cụ thể | Không sở hữu bank item hoặc publication transaction |
-| U11 | Template, Copy & Simulation | Template môn, copy assignment/rubric giữa lớp có lineage, simulation policy, retire/clone Phase 2 | Không copy lớp/khóa học, publication, attempt, submission hay grade |
-| U12 | Attempt & Submission | Attempt snapshot, autosave, nộp cá nhân/Draw.io/Code Lab, receipt, lịch sử/nộp lại | Không chấm điểm hoặc sửa attempt đã nộp |
-| U13 | Group & Allocation | Membership, đúng một leader, yêu cầu đổi leader, phân phần việc | Không sở hữu phần nộp hay composite |
-| U14 | AI & Code Execution | AI provider-neutral, quota/kill-switch, draft proposal, CodeExecutionService/sandbox, compact XML job | Không publish đề, không chốt grade, không chạy mã không cô lập |
-| U15 | Part Submission & Composite | Nộp phần cá nhân, ghép composite từ ordered source versions, giảng viên chốt version chung | Không sửa source part hoặc tự tính điểm cuối thành viên |
-| U16 | Grading | Tự chấm xác định, chấm tay, AI proposal review, điểm composite/member, grade history và publication | AI không quyết định final grade; không sửa submission |
-| U17 | Reporting & Notification | Read model theo quyền, theo dõi nộp bài, export, analytics, notification delivery | Không ghi ngược transaction nguồn hoặc rollback nghiệp vụ khi gửi lỗi |
+| U08 | Assessment Core & Publication | Assignment aggregate, draft/review, publication lớp, schedule, version khi sửa đề đã giao | Không sở hữu kiểu câu hỏi, attempt hay final grade |
+| U09 | Question Type Authoring | Cấu hình quiz/essay/Draw.io, quy tắc kiểm XML của bài vẽ, đề chung cấp môn. Sở hữu bảng riêng `question_type_config` tham chiếu assignment qua khóa ngoài | Không sở hữu bank item, publication transaction, attempt hay sandbox; không ALTER bảng của U08 |
+| U10 | Template, Copy & Simulation | Template môn, copy assignment/rubric giữa lớp có lineage, simulation policy, retire/clone Phase 2. Sở hữu bảng riêng `assignment_lineage` và `simulation_policies` | Không copy lớp/khóa học, publication, attempt, submission hay grade; không ALTER bảng của U08 |
+| U11 | Attempt & Submission | Attempt snapshot, autosave, nộp cá nhân/Draw.io/Code Lab, receipt, lịch sử/nộp lại | Không chấm điểm hoặc sửa attempt đã nộp |
+| U12 | Group & Allocation | Membership, đúng một leader, yêu cầu đổi leader, phân phần việc | Không sở hữu phần nộp hay composite |
+| U13 | AI & Code Execution | AI provider-neutral, quota/kill-switch, draft proposal, Code Lab authoring, CodeExecutionService/sandbox, compact XML job | Không publish đề, không chốt grade, không chạy mã không cô lập, không sở hữu cấu hình bài Draw.io |
+| U14 | Part Submission & Composite | Nộp phần cá nhân, ghép composite từ ordered source versions, giảng viên chốt version chung. Sở hữu bảng riêng `part_submissions`, `group_composites`, `group_composite_parts` | Không sửa source part, không ghi bảng `submissions` của U11, không tự tính điểm cuối thành viên |
+| U15 | Grading | Tự chấm xác định, chấm tay, AI proposal review, điểm composite/member, grade history và publication | AI không quyết định final grade; không sửa submission |
+| U16 | Reporting & Notification | Read model theo quyền, theo dõi nộp bài, export, analytics, notification delivery | Không ghi ngược transaction nguồn hoặc rollback nghiệp vụ khi gửi lỗi |
 
-### Quyết định riêng cho U08
+### Quyết định riêng cho phần Learning Access của U04
 
-Catalog hiện hành chỉ có `US-LRN-001` cho quyền truy cập lớp. `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` hỗ trợ dashboard/truy cập nội dung nhưng mô tả cũ còn nhắc tiến độ; phần tiến độ đó không được triển khai. `US-LRN-002`, `US-LRN-003` cùng `UC-LRN-03..05` đã bị loại khỏi phạm vi thiết kế. Không có requirement/story về learning path, vì vậy U08 không tạo lộ trình, prerequisite hay completion model. Dashboard chỉ tổng hợp lớp, assignment, thông báo và trạng thái có sẵn từ owner khác.
+Catalog hiện hành chỉ có `US-LRN-001` cho quyền truy cập lớp. `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` hỗ trợ dashboard/truy cập nội dung nhưng mô tả cũ còn nhắc tiến độ; phần tiến độ đó không được triển khai. `US-LRN-002`, `US-LRN-003` cùng `UC-LRN-03..05` đã bị loại khỏi phạm vi thiết kế. Không có requirement/story về learning path, vì vậy U04 không tạo lộ trình, prerequisite hay completion model. Dashboard chỉ tổng hợp lớp, assignment, thông báo và trạng thái có sẵn từ owner khác.
 
 ## 3. Code organization
 
-- `/frontend`: Next.js, feature folders theo UI/domain, gọi REST OpenAPI.
-- `/backend`: một Spring Boot modular monolith; package theo U01-U17, mỗi package có API/application/domain/infrastructure khi cần.
+- `/frontend`: Next.js, mỗi unit một feature folder riêng dưới console tương ứng, dùng chung layout và nav. Khu vực giảng dạy tách thành Class Console, Assignment Console và Grading Console để nhiều unit không sửa chung một cây component.
+- `/backend`: một Spring Boot modular monolith; package theo U01-U16, mỗi package có API/application/domain/infrastructure khi cần.
 - `/worker`: process/container riêng, handler thuộc unit nghiệp vụ tương ứng và dùng versioned job contract; không import repository nội bộ backend.
-- `/contracts`: OpenAPI, event/job schema và compatibility tests.
+- `/contracts`: OpenAPI tách theo unit (`u01-identity.yaml`, `u09-assessment.yaml`...), event/job schema và compatibility tests; gộp thành một spec lúc build.
+- Migration đánh số theo timestamp (`V20260924_1430__`), không dùng số tăng dần, để hai người không trùng số.
 - `/infra`: cấu hình database, queue, storage, deployment/observability.
 - `/aidlc-docs`: chỉ có tài liệu.
 
@@ -55,20 +56,20 @@ Wave là nhóm công việc và điểm kiểm tra tích hợp, không phải ba
 | Wave | Unit (số lượng) | Nhánh có thể mở song song và điều kiện nối tiếp | Điểm dừng tích hợp |
 |---|---|---|---|
 | 1 - nền | U01, U02, U03, U04 (4) | U01 và U02 chạy song song; U03/U04 mở sau khi cả hai cung cấp phần cần dùng | Identity, audit/job/outbox, file/artifact và class/enrollment contract |
-| 2 - nguồn và đề lõi | U05, U06, U07, U08, U09 (5) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U07 sẵn sàng; U09 mở khi U05 và U06 sẵn sàng | Content/bank versions, entitlement, Learning access và đề thủ công/publication |
-| 3 - biên soạn và thực hiện | U10, U11, U12, U13, U14 (5) | U10/U13 mở sau U09; U14 mở sau U05/U06/U03; U11 sau U10; U12 sau U08/U11, tích hợp U14 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
-| 4 - kết quả | U15, U16, U17 (3) | U15 sau U12/U13; U16 sau U15 và U14; U17 hoàn tất projection sau event U16 | Composite, final grade, reporting/notification |
+| 2 - nguồn và đề lõi | U05, U06, U07, U08 (4) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U06 sẵn sàng. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 và U07 cắm vào port | Content/bank versions, entitlement, Learning access và đề thủ công/publication |
+| 3 - biên soạn và thực hiện | U09, U10, U11, U12, U13 (5) | U09/U12 mở sau U08; U13 mở sau U03/U05/U06; U10 sau U09; U11 sau U04/U10, tích hợp U13 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
+| 4 - kết quả | U14, U15, U16 (3) | U14 sau U11/U12; U15 sau U14 và U13; U16 hoàn tất projection sau event U15 | Composite, final grade, reporting/notification |
 
-Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U14 thuộc wave 3 có thể bắt đầu khi U03/U05/U06 sẵn sàng, dù U08 hoặc U09 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
+Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U13 thuộc wave 3 có thể bắt đầu khi U03/U05/U06 sẵn sàng, dù U08 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
 
 ## 5. Integration gates
 
 | Gate | Kiểm tra bắt buộc |
 |---|---|
-| G1 | U01-U04: deny-by-default auth, audit append-only, job idempotency/retry, upload scan/checksum, XML XXE rejection, signed access và subject/class scope |
-| G2 | U05-U09: Content/File scope, QuestionVersion/RubricVersion immutable, verified entitlement, Learning access không có lesson progress và đề thủ công/publication đúng scope |
-| G3 | U10-U14: loại câu hỏi, template/copy lineage, simulation policy, group allocation, AI/Code sandbox contract, attempt snapshot và nộp idempotent |
-| G4 | U15-U17: composite immutable, chấm tay/final grade, AI proposal không thành final grade và reporting/notification/export theo quyền |
+| G1 | U01-U04: deny-by-default auth, audit append-only, job idempotency/retry, upload checksum, XML XXE rejection, abuse-file rejection, signed access và subject/class scope |
+| G2 | U05-U08 và phần Learning Access của U04: Content/File scope, QuestionVersion/RubricVersion immutable, verified entitlement, Learning access không có lesson progress và đề thủ công/publication đúng scope |
+| G3 | U09-U13: loại câu hỏi, template/copy lineage, simulation policy, group allocation, AI/Code sandbox contract, attempt snapshot và nộp idempotent |
+| G4 | U14-U16: composite immutable, chấm tay/final grade, AI proposal không thành final grade và reporting/notification/export theo quyền |
 
 Gate kiểm tra kết quả của từng nhánh khi nhánh đó sẵn sàng; gate tổng của wave dùng để xác nhận đủ phạm vi, không khóa việc mở unit ở wave sau nếu provider trực tiếp đã sẵn sàng.
 

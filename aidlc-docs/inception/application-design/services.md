@@ -20,7 +20,7 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 | GradingService | Manual/deterministic/AI proposal review, manual composite grade và per-student finalize | Không cho AI hoặc công thức tự động quyết định final grade |
 | AiOrchestrationService | Context scope, quota, job, provider port | Không sở hữu dữ liệu nguồn hoặc grade cuối |
 | CodeExecutionService | Xác thực quyền chạy Code Lab, test visibility/quota, tạo sandbox job và lưu kết quả run bất biến | Không chạy mã trong API/worker không cô lập hoặc tiết lộ hidden tests |
-| FileArtifactService | Upload/download có phân quyền, kiểm tra loại file/scan/checksum; validate Draw.io XML và vô hiệu external entities/XXE trước khi lưu artifact bất biến | Không phát signed access cho actor ngoài scope hoặc đưa XML chưa kiểm tra sang AI |
+| FileArtifactService | Upload/download có phân quyền, kiểm tra loại file/kích thước/checksum; validate Draw.io XML và vô hiệu external entities/XXE trước khi lưu artifact bất biến | Không phát signed access cho actor ngoài scope, không đưa XML chưa kiểm tra sang AI, không dùng `acknowledgeAbuse` để tải file bị provider gắn cờ |
 | JobService | Enqueue, lease, retry/backoff, dead-letter và scoped status/correlation | Không quyết định nghiệp vụ, cấp quyền dữ liệu hoặc sửa kết quả domain trực tiếp |
 | PaymentService | Intent, webhook verification, entitlement | Không tin browser redirect |
 | ReportingService | Read model/report/export jobs | Không vượt row/object authorization |
@@ -61,7 +61,7 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 ### Nạp nguồn RAG hỗ trợ AI
 
 1. ContentService đăng ký material file hoặc URL video/playlist theo bài giảng.
-2. File sạch hoặc URL hợp lệ phát event enqueue ingestion; video ưu tiên caption và fallback sang phiên âm audio.
+2. File tải được từ provider hoặc URL hợp lệ phát event enqueue ingestion; video ưu tiên caption và fallback sang phiên âm audio.
 3. Worker parse/transcribe, tạo transcript có timestamp, chunk/index qua RAG port và cập nhật trạng thái từng source.
 4. AiOrchestrationService chỉ lấy source trong subject/class scope của actor.
 5. Chỉ job tạo đề được actor yêu cầu mới dùng index này để sinh assessment draft; giảng viên duyệt trước publish.
