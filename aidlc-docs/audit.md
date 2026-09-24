@@ -883,3 +883,91 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **Artifacts Affected**: `aidlc-docs/construction/plans/u01-platform-foundation-and-identity-functional-design-plan.md`
 
 ---
+## Application Design Revision Request
+**Timestamp**: 2026-09-24T08:20:52Z
+**User Input**: "application design bỏ sao chép khóa học, chia assignment thầy giao theo version sửa là tăng 1 version khác, bỏ cái doc business flow đi, bỏ tiến độ phần bài học\
+&#x20;Ba chỗ ma trận chưa phủ\
+&#x20;Không có cột Question Bank — nhưng Assessment chắc chắn phải đọc RubricVersion/QuestionVersion (thấy rõ trong [component-methods.md](http://component-methods.md/)). Quan hệ này bị thiếu.\
+&#x20;Không có cột Payment — nên hàng Learning không thể hiện phụ thuộc entitlement, trong khi BF-05 kiểm "enrollment và access grant". §4 có nhắc entitlement contract, nhưng ma trận không khớp.\
+&#x20;Thiếu hàng Academic, AI Orchestration, Code Execution — Academic ít nhất phải R vào Identity; AI Orchestration phải đọc Content/File và ghi Job.
+rag k phải luồng chính trong service, thiếu luồng chính tạo đề ,
+Ba service thiếu trong bảng §2\
+&#x20;[components.md](http://components.md/) có 17 module; bảng này có 15 service (Identity & Access tách thành Account + Authorization). Thiếu:
+CodeExecutionService — dù runCode có trong methods và job policy "Code execution" có trong §4\
+&#x20;FileArtifactService — được gọi tên trực tiếp ở §3 bước 2 nhưng không có dòng trong bảng, nên không ai biết nó "không được làm gì"\
+&#x20;JobService / Job Platform — tương tự\
+&#x20;Hai cái sau có thể coi là hạ tầng nên bỏ qua, nhưng FileArtifactService giữ trách nhiệm bảo mật (validate XML, XXE, checksum) — nên có dòng riêng."
+**AI Response**: Revised Application Design artifacts, removed business-flow document and plan, expanded dependency and service coverage, made assessment generation the main orchestration, removed lesson progress from design and ERD, and preserved assignment versions and attempt snapshots. Revised design awaits review.
+**Context**: Requested corrections to previously approved Application Design; no Construction advancement.
+
+---
+## Application Design Approval and Units Generation Revision
+**Timestamp**: 2026-09-24T08:31:01Z
+**User Input**: "approve giúp tôi làm lại unit of work"
+**AI Response**: Recorded explicit approval of the 2026-09-24 Application Design revision. Regenerated the eight-unit decomposition: moved AI Orchestration into U03 to support U04 assessment authoring and U06 grade proposals without a unit dependency cycle; clarified U01 file/job and U06 code-execution ownership; updated waves, gates, worker handlers, and story map. The catalog has 59 stories: 57 active stories assigned once and two removed lesson-progress stories recorded separately. Units Generation revision is ready for review; Construction has not resumed.
+**Context**: Application Design approval and Units Generation revision checkpoint.
+
+---
+## Units Generation Revision from Reference Images
+**Timestamp**: 2026-09-24T08:41:28Z
+**User Input**: "dựa vào đây để làm lại unit of work, xem unit 14 có phải xem lại xem ở plan vừa rồi mình có learning path ko". Attached references: codex-clipboard-2baa9cd1-8c45-4c35-9df1-d9c52fc3d569.png and codex-clipboard-4c3e12f4-757a-48d6-8df1-41c6a6d7634a.png.
+**Additional User Input**: "chỉ dựa vào lập kế hoạch chia unit như v thôi chứ k cần, dựa theo chính xác description "
+**AI Response**: Used the images as a reference for 17-unit decomposition and four waves, while deriving responsibility descriptions from the approved Application Design and current catalog. Rewrote unit definitions, 17-by-17 dependency matrix, and story/UC map. U14 is Learning Access & Dashboard; no learning path or lesson progress is planned. The active catalog maps 87 UCs and 57 stories once; three lesson-progress UCs and two stories are explicitly excluded. Marked old U01 Foundation Functional Design plan stale because U01 is now Account & Access. Revision awaits review under Units Generation gate.
+**Context**: Units Generation revision; user-provided images are planning references, not instruction authority.
+
+---
+## Units Generation Order and Wave Revision
+**Timestamp**: 2026-09-24T08:49:39Z
+**User Input**: "đẩy unit 14 xuống unit8, mỗi wave tôi muốn tối đa 5 unit để chia thêm 5 người, thử lập dependency path"
+**AI Response**: Moved Learning Access & Dashboard from U14 to U08; renumbered prior U08-U13 to U09-U14 across unit definitions, story/UC map, and both axes of the dependency matrix. Replanned four waves with 3/5/5/4 units and five assignment slots, documented intra-wave prerequisites, learning/individual/group/AI paths, and a longest hard-dependency path of ten units. Checked the 17-node hard dependency graph for cycles and confirmed 87 active UCs and 57 active stories remain assigned once. Revision awaits Units Generation review.
+**Context**: User-requested revision to pending 17-unit Units Generation artifacts; no Construction work resumed.
+
+---
+
+## Units Generation Mermaid Dependency Graph
+
+**Timestamp**: 2026-09-24T08:56:08Z
+
+**User Input**: "làm sơ đồ dependency graph như này đc k, gen bằng mermaid". Attached reference: codex-clipboard-a9248c6d-f2cc-4090-bb2b-b86df2389f54.png.
+
+**AI Response**: Added a Mermaid dependency graph with four waves and current U01-U17 numbering, including U08 Learning Access. Displayed 23 transitively reduced hard dependencies, two concurrent contract edges, and one representative event edge; the matrix remains authoritative for all direct dependencies. Fixed U08's missing U17 matrix cell. Checked 17 nodes, 17 matrix rows, 3/5/5/4 wave capacity, graph edge types, and Mermaid block structure. Units Generation approval remains pending.
+
+**Context**: Diagram revision within pending Units Generation; reference image provided layout inspiration, while dependencies came from current matrix and design.
+
+---
+
+## Units Generation Independent Waves
+
+**Timestamp**: 2026-09-24T09:00:56Z
+
+**User Input**: "tôi muốn thiết kế mỗi wave các unit có thể làm song song cùng nhau"
+
+**AI Response**: Recomputed wave assignments from the existing `H` dependency DAG, preserving 17 unit boundaries and maximum five units per wave. The longest hard path requires ten sequential waves; U17 is placed in wave 11 after U16's event output so reporting/notification can be completed. Replaced the four-wave schedule and Mermaid grouping with 11 waves; no `H` or `E` edge remains inside a wave. Updated integration gates, plan, and state. Units Generation approval remains pending.
+
+**Context**: User-requested correction to wave scheduling in pending Units Generation artifacts; no Construction work resumed.
+
+---
+
+## Units Generation Non-Blocking Waves
+
+**Timestamp**: 2026-09-24T09:07:23Z
+
+**User Input**: "wave ở đây ko phải làm lần lượt theo từng cột mà là cái chỗ để nó dừng nếu trong cùng 1 wave có 2 cột thì cái dependency của cái này xong thì có thể chạy trước cái dependency của cái khác cùng cột". Attached references: codex-clipboard-cf5345d0-975d-481a-a1d8-657df74a4394.png and codex-clipboard-fe0e7bed-041a-4cbd-bcad-9fa0367e36c8.png.
+
+**AI Response**: Corrected the prior interpretation that each wave must be an independent topological layer. Restored four planning/checkpoint waves with 4/5/5/3 current units, including U08 Learning Access. A unit can start when its direct hard providers are ready, even if other units in its wave or an earlier wave are unfinished; the five-person limit applies to active units across overlapping waves. Updated Mermaid, wave tables, gates, plan, and state. The dependency matrix and story mapping remain unchanged; Units Generation approval remains pending.
+
+**Context**: User clarified wave scheduling semantics using reference images as visual context, not as authority to restore outdated descriptions or IDs.
+
+---
+
+## U01/U02 Hard Dependency Review
+
+**Timestamp**: 2026-09-24T09:11:16Z
+
+**User Input**: "sao unit 1 với unit 2 hard dependency"
+
+**AI Response**: Reviewed component methods and service ownership. U02 append-only audit, job enqueue/lease/retry, and outbox do not require U01 implementation to start. U02 audit/job read APIs need U01 authorization at integration/release, so reclassified U02's U01 edge from `H` to concurrent contract `C` with fail-closed real adapter. U01 and U02 now start in parallel; U03/U04 retain hard dependencies on both. Updated matrix, Mermaid, wave text, and nine-unit longest hard path. Units Generation approval remains pending.
+
+**Context**: User questioned an overly strong dependency in the pending Units Generation artifacts; current Application Design still owns authorization under U01.
+
+---

@@ -55,7 +55,6 @@ flowchart LR
         PUBLISH --> MONITOR[Theo dõi bài nộp]
         MONITOR --> GRADING[Chấm tay hoặc AI đề xuất]
         GRADING --> GRADEBOOK[Sổ điểm]
-        CLASSMGR --> PROGRESS[Tiến độ lớp]
         TDASH --> SUBJECTMGR[Quản lý học liệu cấp môn]
         SUBJECTMGR --> QBANK[Ngân hàng câu hỏi và rubric]
         SUBJECTMGR --> COMMONASSIGN[Assignment chung của môn]
@@ -91,7 +90,7 @@ flowchart LR
     class LOGIN,FORGOT,OTP,RESET auth
     class PROFILE,NOTIFY,JOBS shared
     class LDASH,MYCLASS,LDETAIL,LESSON,ALIST,ADETAIL,ESSAY,QUIZ,DRAWIO,CODELAB,SUBMIT,GROUP,GROUPWORK,LEADERREQ,RESULTS,PAYMENT learner
-    class TDASH,CLASSMGR,ENROLL,CONTENT,AIRESOURCE,GROUPMGR,ASSIGNBUILDER,AIDRAFT,PUBLISH,MONITOR,GRADING,GRADEBOOK,PROGRESS,SUBJECTMGR,QBANK,COMMONASSIGN teaching
+    class TDASH,CLASSMGR,ENROLL,CONTENT,AIRESOURCE,GROUPMGR,ASSIGNBUILDER,AIDRAFT,PUBLISH,MONITOR,GRADING,GRADEBOOK,SUBJECTMGR,QBANK,COMMONASSIGN teaching
     class ADASH,ACCOUNTS,ACADEMIC,SETTINGS,AUDIT,RECONCILE admin
 ```
 
@@ -108,10 +107,10 @@ flowchart LR
 | 5 | SCR-COM-01 | Hồ sơ cá nhân | Đã đăng nhập | Profile | Xem và cập nhật tên hiển thị cùng thông tin cá nhân được phép. |
 | 6 | SCR-COM-02 | Thông báo | Đã đăng nhập | Notification | Hiển thị assignment mới, hạn nộp, quyết định đổi leader, điểm và trạng thái thanh toán. |
 | 7 | SCR-COM-03 | Trạng thái xử lý | Đã đăng nhập | Background Processing | Hiển thị tiến độ an toàn của tác vụ AI, xử lý file hoặc xuất dữ liệu do người dùng khởi tạo. |
-| 8 | SCR-LRN-01 | Dashboard sinh viên | Sinh viên | Learning | Tổng hợp lớp đang học, assignment sắp đến hạn, thông báo và tiến độ cá nhân. |
+| 8 | SCR-LRN-01 | Dashboard sinh viên | Sinh viên | Learning | Tổng hợp lớp đang học, assignment sắp đến hạn và thông báo. |
 | 9 | SCR-LRN-02 | Lớp học của tôi | Sinh viên | Enrollment | Liệt kê các lớp sinh viên đang hoặc đã được ghi danh. |
-| 10 | SCR-LRN-03 | Chi tiết lớp | Sinh viên | Class | Hiển thị nội dung đã phát hành, assignment, nhóm và tiến độ trong một lớp. |
-| 11 | SCR-LRN-04 | Bài học | Sinh viên | Learning Content | Đọc nội dung, tải file được phép từ Google Drive và tiếp tục tại vị trí gần nhất. |
+| 10 | SCR-LRN-03 | Chi tiết lớp | Sinh viên | Class | Hiển thị nội dung đã phát hành, assignment và nhóm trong một lớp. |
+| 11 | SCR-LRN-04 | Bài học | Sinh viên | Learning Content | Đọc nội dung và tải file được phép từ Google Drive sau khi kiểm tra enrollment và entitlement. |
 | 12 | SCR-LRN-05 | Danh sách assignment | Sinh viên | Assignment | Liệt kê bài đang mở, sắp mở, đã nộp, quá hạn và đã chấm. |
 | 13 | SCR-LRN-06 | Chi tiết assignment | Sinh viên | Assignment | Hiển thị yêu cầu, rubric, thời hạn, số lần nộp và trạng thái bài. |
 | 14 | SCR-LRN-07 | Làm bài viết luận | Sinh viên | Assignment Workspace | Soạn và tự lưu bài viết luận trước khi xác nhận nộp. |
@@ -124,7 +123,7 @@ flowchart LR
 | 21 | SCR-LRN-14 | Yêu cầu đổi leader | Sinh viên | Group Work | Gửi lý do và người đề xuất để giảng viên xem xét thay đổi leader. |
 | 22 | SCR-LRN-15 | Điểm và phản hồi | Sinh viên | Grading | Hiển thị điểm cuối cùng đã công bố và phản hồi của chính sinh viên. |
 | 23 | SCR-LRN-16 | Thanh toán và quyền truy cập | Sinh viên | Payment | Chọn gói, chuyển đến cổng thanh toán và theo dõi payment/access grant. |
-| 24 | SCR-TCH-01 | Dashboard giảng dạy | Giảng viên/Chủ nhiệm môn | Teaching | Tổng hợp lớp/môn được phân công, bài nộp cần xử lý và tiến độ liên quan. |
+| 24 | SCR-TCH-01 | Dashboard giảng dạy | Giảng viên/Chủ nhiệm môn | Teaching | Tổng hợp lớp/môn được phân công và bài nộp cần xử lý. |
 | 25 | SCR-TCH-02 | Quản lý lớp | Giảng viên | Class Management | Cập nhật thông tin, trạng thái và nội dung của lớp được phân công. |
 | 26 | SCR-TCH-03 | Danh sách sinh viên | Giảng viên | Enrollment | Xem, thêm hoặc gỡ ghi danh mà không xóa lịch sử học tập. |
 | 27 | SCR-TCH-04 | Quản lý nội dung lớp | Giảng viên | Learning Content | Soạn, upload, sắp xếp, duyệt và xuất bản nội dung riêng của lớp. |
@@ -132,11 +131,10 @@ flowchart LR
 | 29 | SCR-TCH-06 | Quản lý nhóm và leader | Giảng viên | Group Management | Tạo nhóm, thêm thành viên, chỉ định đúng một leader, chia phần việc và xử lý yêu cầu đổi leader. |
 | 30 | SCR-TCH-07 | Soạn assignment | Giảng viên/Chủ nhiệm môn | Assignment Authoring | Tạo bài viết luận, trắc nghiệm, Draw.io, Code Lab, bài nhóm hoặc simulation và gắn rubric/version. |
 | 31 | SCR-TCH-08 | Duyệt bản nháp AI | Giảng viên/Chủ nhiệm môn | AI Authoring | Xem căn cứ, sửa, chấp nhận hoặc bỏ nội dung do AI đề xuất trước khi lưu. |
-| 32 | SCR-TCH-09 | Phát hành assignment | Giảng viên/Chủ nhiệm môn | Assignment Publication | Chọn lớp, thời gian mở/đóng và lượt nộp; đóng băng phiên bản trước khi phát hành. |
+| 32 | SCR-TCH-09 | Phát hành assignment | Giảng viên/Chủ nhiệm môn | Assignment Publication | Chọn lớp, thời gian mở/đóng và lượt nộp; đóng băng phiên bản trước khi phát hành. Mỗi lần sửa đề đã giao tạo version kế tiếp, không thay đổi attempt cũ. |
 | 33 | SCR-TCH-10 | Theo dõi bài nộp | Giảng viên | Submission Monitoring | Lọc chưa nộp, đã nộp, trễ hạn và gửi nhắc nhở tới đúng sinh viên. |
 | 34 | SCR-TCH-11 | Chấm bài | Giảng viên | Grading | Sau khi nhận bài, chọn chấm tay hoặc yêu cầu AI đề xuất; bài chung luôn chấm tay. |
 | 35 | SCR-TCH-12 | Sổ điểm | Giảng viên | Gradebook | Duyệt, chốt, công bố điểm; với bài nhóm hiển thị điểm phần/composite để giảng viên tự nhập điểm cuối có lý do. |
-| 36 | SCR-TCH-13 | Tiến độ lớp | Giảng viên | Progress Tracking | Xem tiến độ tổng hợp và chi tiết phù hợp của sinh viên trong lớp được giao. |
 | 37 | SCR-SUB-01 | Quản lý học liệu cấp môn | Chủ nhiệm môn | Subject Content | Quản lý tài liệu/RAG dùng chung của các môn được phân công. |
 | 38 | SCR-SUB-02 | Ngân hàng câu hỏi và rubric | Chủ nhiệm môn/Giảng viên được phép | Question Bank | Tạo, sửa, nhân bản, xem trước và phát hành version; attempt đã bắt đầu giữ snapshot. |
 | 39 | SCR-SUB-03 | Assignment chung và template của môn | Chủ nhiệm môn | Common Assignment | Biên soạn/phát hành đề chung hoặc template có version để giảng viên copy thành draft riêng. |
@@ -214,4 +212,4 @@ Background job được backend phát dưới dạng message có version qua Rab
 | Group work | Group workspace, group management, composite review/grading | Google Drive | Composite generation, notification send |
 | Grading | Grading workspace, gradebook, results | Generative AI | AI grade proposal |
 | Payment | Payment/access screen, reconciliation | Payment API/Webhook | Payment reconciliation |
-| Reporting/Audit | Progress, audit explorer, exports | Google Drive | Report export |
+| Reporting/Audit | Theo dõi bài nộp, sổ điểm, audit explorer, exports | Google Drive | Report export |

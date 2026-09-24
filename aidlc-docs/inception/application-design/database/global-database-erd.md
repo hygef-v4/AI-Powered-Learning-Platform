@@ -31,8 +31,6 @@ erDiagram
 
     SUBJECTS o|--o{ LEARNING_RESOURCES : owns
     CLASSES o|--o{ LEARNING_RESOURCES : publishes
-    ENROLLMENTS ||--o{ LEARNING_PROGRESS : records
-    LEARNING_RESOURCES ||--o{ LEARNING_PROGRESS : tracks
 
     SUBJECTS ||--o{ BANK_ITEMS : owns
     ACCOUNTS ||--o{ ASSIGNMENTS : creates
@@ -196,19 +194,6 @@ Description: stores metadata and stable identifiers for private files held in th
 
 Description: represents learning content owned by a subject or class. It may contain authored text, reference an uploaded artifact, or register a YouTube source/transcript version linked to a lesson.
 
-### Entity: `learning_progress`
-
-| Field | Type | Constraint/Meaning |
-|---|---|---|
-| progress_id | uuid | PK |
-| enrollment_id | uuid | FK enrollments |
-| resource_id | uuid | FK learning_resources |
-| completion_percent | numeric(5,2) | 0 to 100 |
-| last_position | jsonb | Schema-validated resume position |
-| completed_at, updated_at | timestamptz | Progress state |
-
-Description: stores one enrolled learner's current completion and resume position for one learning resource.
-
 ### Entity: `bank_items`
 
 | Field | Type | Constraint/Meaning |
@@ -240,7 +225,7 @@ Description: combines reusable questions and rubrics because both use the same s
 | lifecycle_kind | varchar(20) | STANDARD or TEMPLATE |
 | source_assignment_id | uuid | Nullable self-FK; template/cross-class copy lineage |
 
-Description: defines an immutable version of a task given to learners, including quizzes, essays, Draw.io exercises, code labs, group work and simulation exams. A template or copy creates a new stable identity and retains lineage to the source version.
+Description: defines an immutable version of a task given to learners, including quizzes, essays, Draw.io exercises, code labs, group work and simulation exams. A template or assignment copy creates a new stable identity and retains lineage to the source version. Editing an assignment already given by an instructor creates the next `version_no` under the same `stable_key`; existing publications and attempts keep their prior version.
 
 ### Entity: `assignment_components`
 
@@ -517,7 +502,7 @@ Redis keys must expire automatically. OTP must be stored as a hash, limited by a
 6. Submitted row, attempt snapshot, source artifact và finalized composite version là immutable; lần làm/tổng hợp lại tạo version mới.
 7. Full Draw.io XML phải có purpose `DRAWIO_FULL`; compact XML tham chiếu source artifact và chỉ được AI job đọc.
 8. GROUP_COMPOSITE và MEMBER_FINAL grade chỉ có `MANUAL`; AI chỉ có thể đề xuất cho submission cá nhân.
-9. Copy/template tạo assignment stable identity mới, giữ `source_assignment_id` và không copy publication/submission/grade.
+9. Copy assignment/template tạo stable identity mới, giữ `source_assignment_id` và không copy publication/submission/grade; không sao chép khóa học/lớp. Sửa assignment đã giao tạo version mới cùng `stable_key` và không thay đổi attempt cũ.
 10. Simulation policy bị khóa khi attempt đầu tiên bắt đầu; mỗi submission lưu snapshot các version/policy đã dùng.
 11. Worker cập nhật kết quả thông qua event/internal contract; không ghi trực tiếp bảng nghiệp vụ.
 12. Access grant chỉ được tạo từ payment `PAID` sau verified, idempotent webhook.

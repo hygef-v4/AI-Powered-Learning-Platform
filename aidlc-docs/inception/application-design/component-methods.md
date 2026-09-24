@@ -39,8 +39,7 @@ registerYoutubeSource(actor, lessonId, videoOrPlaylistUrl) -> SourceRegistration
 requestTranscriptIngestion(actor, sourceId) -> JobReference
 publishClassContent(instructor, classId, contentVersionId) -> PublishedContent
 searchAuthorizedContent(actor, scope, query) -> SearchResult
-saveProgress(learner, contentId, progressCommand, idempotencyKey) -> Progress
-getClassProgress(instructor, classId, filters) -> ProgressReport
+getAuthorizedClassContent(learner, classId) -> PublishedContentList
 createRubric(actor, scope, rubricDraft) -> RubricVersion
 createQuestion(actor, scope, questionDraft) -> QuestionVersion
 createQuestionVersion(actor, questionStableKey, changeSet) -> QuestionVersion
@@ -53,6 +52,7 @@ analyzeQuestion(actor, questionId, period) -> QuestionAnalytics
 
 ```text
 createAssessmentDraft(author, scope, assessmentDraft) -> AssessmentVersion
+reviseAssignedAssessment(instructor, assignmentStableKey, baseVersionId, changeSet) -> AssessmentVersion
 reviewAssessment(author, assessmentVersionId) -> ReviewResult
 publishClassAssessment(instructor, assessmentVersionId, classId, schedule) -> Publication
 publishCommonAssessment(subjectManager, assessmentVersionId, subjectId, schedule) -> PublicationSet

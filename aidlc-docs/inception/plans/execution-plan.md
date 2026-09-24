@@ -1,5 +1,7 @@
 # AI-DLC Execution Plan
 
+> Lưu ý cập nhật: bảng unit U01-U08 bên dưới là kế hoạch lịch sử. Bản phân chia hiệu lực đang chờ duyệt là 17 unit trong `aidlc-docs/inception/application-design/unit-of-work.md`; dependency và story map mới thay thế bảng unit cũ. U01 Functional Design cũ phải lập lại theo boundary Account & Access sau khi bản 17 unit được duyệt.
+
 ## 1. Detailed Analysis Summary
 
 ### Project and scope

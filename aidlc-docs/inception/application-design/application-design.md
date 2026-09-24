@@ -28,7 +28,7 @@ Chi tiết trách nhiệm: `components.md`. Chữ ký interface: `component-meth
 6. AI không publish đề hoặc final grade; giảng viên giữ quyết định học thuật cuối.
 7. Composite nhóm luôn chấm tay; AI chỉ hỗ trợ phần cá nhân. Điểm cuối từng sinh viên do giảng viên nhập từ hai nguồn, không có công thức hệ thống bắt buộc.
 8. Payment entitlement chỉ phát sinh từ verified, idempotent provider event.
-9. Template/copy tạo identity độc lập có lineage; không copy publication, attempt, submission hoặc grade.
+9. Không sao chép khóa học/lớp. Template hoặc thao tác copy assignment/rubric được phép tạo identity độc lập có lineage; không copy publication, attempt, submission hoặc grade. Sửa assignment đã giao tạo `AssignmentVersion` kế tiếp trên cùng `stable_key`; attempt đã bắt đầu giữ snapshot version cũ.
 10. Simulation exam giữ attempt snapshot và có chính sách lượt/kết quả/tính điểm bất biến sau attempt đầu tiên.
 11. Audit không có application update/delete contract.
 
@@ -37,12 +37,12 @@ Chi tiết trách nhiệm: `components.md`. Chữ ký interface: `component-meth
 - Next.js và Spring Boot triển khai tách process/container nhưng cùng một sản phẩm modular monolith.
 - Relational database giữ transactional data và artifact metadata.
 - Object storage implementation có thể local-compatible trong development và thay bằng managed storage ở production.
-- Worker process xử lý file/YouTube transcript RAG, group composite, AI, Code Lab, notification, reconciliation và export.
+- Worker process xử lý tạo đề bằng AI, file/YouTube transcript RAG hỗ trợ truy xuất nguồn, group composite, Code Lab, notification, reconciliation và export.
 - External systems luôn nằm sau ports/adapters để test bằng mock/sandbox.
 
 ## 5. Traceability
 
-Thiết kế bao phủ 90 use case và 59 user story thông qua các module sau:
+Thiết kế bám bộ 90 use case và 59 user story gốc thông qua các module sau. Theo điều chỉnh ngày 2026-09-24, `US-LRN-002`, `US-LRN-003` và các use case tiến độ bài học liên quan không còn trong phạm vi triển khai; tiến độ nộp bài và trạng thái job vẫn được giữ.
 
 | Story domain | Module chủ đạo |
 |---|---|

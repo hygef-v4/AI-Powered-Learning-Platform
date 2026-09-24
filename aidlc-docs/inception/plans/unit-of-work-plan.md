@@ -1,5 +1,7 @@
 # Unit of Work Plan
 
+> Bản hiệu lực hiện tại là revision 17 unit ở cuối tài liệu; các quyết định/checklist tám unit phía dưới là lịch sử và đã được thay thế theo yêu cầu mới.
+
 ## Mục tiêu
 
 Phân rã modular monolith thành các đơn vị lập kế hoạch/triển khai có ranh giới rõ, dependency order hợp lý và truy vết đủ 59 user story. Các module vẫn nằm trong một backend Spring Boot deployable; “unit of work” dùng để tổ chức thiết kế và phát triển tuần tự.
@@ -161,3 +163,64 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Cập nhật dependency contracts, worker handlers, waves và integration gates.
 - [x] Ánh xạ đủ 59/59 stories đúng một primary unit.
 - [ ] Trình checkpoint phê duyệt lại Units Generation.
+
+## Revision 2026-09-24 sau Application Design được duyệt
+
+- [x] Giữ tám unit logic và cấu trúc backend/worker đã được duyệt trước đây.
+- [x] Đưa AI Orchestration vào U03 để U04 tạo đề và U06 chấm đề xuất qua public contract mà không tạo cycle.
+- [x] Làm rõ U01 sở hữu FileArtifactService và JobService; U06 sở hữu CodeExecutionService.
+- [x] Cập nhật U04 cho luồng tạo đề chính và quy tắc sửa đề đã giao tăng assignment version.
+- [x] Bỏ tiến độ bài học khỏi U03 và tách hai story đã loại khỏi bảng phân công triển khai.
+- [x] Đồng bộ dependency matrix, worker ownership, waves và integration gates.
+- [x] Kiểm tra 57 story còn hiệu lực được gán đúng một unit; hai story bị loại có ghi lý do.
+- [ ] Trình checkpoint phê duyệt lại Units Generation trước khi tiếp tục Construction.
+
+## Revision theo hai ảnh tham chiếu
+
+- [x] Đối chiếu danh sách 17 unit và sơ đồ wave với catalog UC/story hiện hành; không dùng các số UC trong ảnh khi khác catalog.
+- [x] Kiểm tra riêng U14 với yêu cầu Learning hiện hành: không thêm learning path hay tiến độ bài học.
+- [x] Viết lại `unit-of-work.md` thành 17 unit logic, giữ một backend modular monolith và worker riêng.
+- [x] Viết lại `unit-of-work-dependency.md` theo các wave/contract có hướng, tránh vòng phụ thuộc.
+- [x] Viết lại `unit-of-work-story-map.md`, gán 57 story còn hiệu lực đúng một lần; ghi hai story bị loại và UC liên quan.
+- [x] Kiểm tra nhất quán với Application Design, cú pháp bảng/diagram và trạng thái workflow.
+- [ ] Trình checkpoint phê duyệt bản Unit of Work mới.
+
+## Revision cũ: đưa Learning Access lên U08 và giới hạn 5 unit mỗi wave (wave đã được thay thế)
+
+- [x] Đổi ID U14 Learning Access & Dashboard thành U08; dịch U08-U13 cũ thành U09-U14 và đồng bộ story/UC map.
+- [x] Hoán vị hàng/cột ma trận dependency, kiểm tra DAG không có hard cycle.
+- [x] Chia lại wave, mỗi wave tối đa 5 unit; nêu thứ tự phụ thuộc bên trong wave và capacity cho nhóm 5 người.
+- [x] Lập đường phụ thuộc chính cho học liệu, bài cá nhân, bài nhóm và AI; đồng bộ gate/state.
+- [x] Kiểm tra coverage 87 UC/57 story và cú pháp tài liệu.
+- [ ] Trình checkpoint phê duyệt revision mới.
+
+## Revision cũ: biểu đồ dependency Mermaid (bố cục wave đã được thay thế)
+
+- [x] Thêm graph bốn wave vào `unit-of-work-dependency.md`, dùng ID hiện hành với Learning ở U08.
+- [x] Hiển thị các cạnh `H` đã rút gọn theo bắc cầu, hai contract `C` của U14 và một event `E` đại diện vào U17; giữ ma trận làm nguồn đầy đủ.
+- [x] Kiểm tra cú pháp cấu trúc Mermaid, 17 node, số unit mỗi wave 3/5/5/4 và các cạnh khớp ma trận; sửa hàng U08 thiếu cột U17.
+- [ ] Trình checkpoint phê duyệt revision mới.
+
+## Revision cũ: các unit cùng wave chạy song song (cách hiểu wave đã được thay thế)
+
+- [x] Giữ ranh giới 17 unit và ma trận dependency; không dùng contract giả để che cạnh `H` trong cùng wave.
+- [x] Tính wave sớm nhất theo DAG `H` và đặt U17 sau nguồn event muộn nhất U16.
+- [x] Cập nhật `unit-of-work.md` và Mermaid/dependency path thành 11 wave; mỗi wave tối đa 5 unit, không có cạnh `H`/`E` nội bộ.
+- [x] Đồng bộ gate và state; kiểm tra wave/ma trận/story map.
+- [ ] Trình checkpoint phê duyệt revision mới.
+
+## Revision: wave là checkpoint, nhánh chạy khi dependency sẵn sàng
+
+- [x] Dùng bốn wave 4/5/5/3 unit theo sơ đồ tham chiếu, giữ ID hiện hành với Learning ở U08.
+- [x] Cho phép cạnh `H` trong cùng wave và cho phép nhánh ở wave sau mở trước khi toàn bộ wave trước hoàn tất, miễn provider trực tiếp đã sẵn sàng.
+- [x] Giới hạn tối đa năm unit đang triển khai đồng thời trên toàn bộ wave; cập nhật bảng và Mermaid.
+- [x] Đồng bộ integration gate, state và mô tả scheduler; giữ ma trận dependency và story map.
+- [ ] Trình checkpoint phê duyệt revision mới.
+
+## Revision: quan hệ U01/U02
+
+- [x] Đối chiếu AuditService/JobService với AuthorizationService; xác định core audit/job/outbox không cần chờ implementation U01.
+- [x] Đổi U02 đọc U01 từ `H` sang `C` cho `queryAudit`/`getJobStatus`, yêu cầu fail closed trước khi phát hành read API.
+- [x] Cho U01 và U02 khởi động song song, giữ U03/U04 phụ thuộc `H` vào cả hai; đồng bộ Mermaid và critical path.
+- [x] Kiểm tra ma trận 17x17, graph và wave vẫn tối đa năm unit.
+- [ ] Trình checkpoint phê duyệt revision mới.

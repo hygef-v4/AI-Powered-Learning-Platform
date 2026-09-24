@@ -9,19 +9,25 @@
 
 ## 2. Dependency matrix
 
-| Consumer | Identity/Auth | Academic | Group | Content | Assessment | Submission | Grading | AI | File | Job | Audit |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Learning | R | R | - | R | - | - | - | - | - | - | W |
-| Group | R | R | O | - | R | - | - | - | - | - | W |
-| Content | R | R | - | O | - | - | - | W | W | W | W |
-| Assessment | R | R | R | R | O | - | - | W | R | W | W |
-| Submission | R | R | R | - | R | O | - | - | W | - | W |
-| Grading | R | R | R | - | R | R | O | W | R | W | W |
-| Reporting | R | R | R | - | R | R | R | - | R | W | W |
-| Payment | R | R | - | - | - | - | - | - | - | W | W |
-| Notification | R | R | R | - | R | R | R | - | - | W | W |
+| Consumer | Identity/Auth | Academic | Group | Content | Question Bank | Assessment | Submission | Grading | AI | Code Execution | Payment | File | Job | Audit |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Academic | R | O | - | - | - | - | - | - | - | - | R | - | - | W |
+| Learning | R | R | - | R | - | - | - | - | - | - | R | - | - | W |
+| Group | R | R | O | - | - | R | - | - | - | - | - | - | - | W |
+| Content | R | R | - | O | - | - | - | - | W | - | - | W | W | W |
+| Question Bank | R | R | - | - | O | - | - | - | - | - | - | - | - | W |
+| Assessment | R | R | R | R | R | O | - | - | W | - | - | R | W | W |
+| Submission | R | R | R | - | R | R | O | - | - | R | - | W | W | W |
+| Grading | R | R | R | - | R | R | R | O | W | R | - | R | W | W |
+| AI Orchestration | R | R | - | R | R | - | - | - | O | - | - | R | W | W |
+| Code Execution | R | R | - | - | - | R | R | - | - | O | - | R | W | W |
+| Reporting | R | R | R | - | - | R | R | R | - | - | - | R | W | W |
+| Payment | R | R | - | - | - | - | - | - | - | - | O | - | W | W |
+| Notification | R | R | R | - | - | R | R | R | - | - | - | - | W | W |
 
-`O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp.
+`O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning kiểm cả Academic enrollment lẫn Payment entitlement trước khi cấp nội dung.
+
+AI Orchestration chỉ nhận request/context reference đã được Assessment hoặc Grading kiểm quyền. Nó đọc nguồn Content/Question Bank/File theo scope và ghi Job, rồi trả proposal qua contract cho module gọi; không đọc hoặc ghi trực tiếp dữ liệu Assessment, Submission hay Grading. Cách này giữ U03 độc lập với U04-U06.
 
 ## 3. Sơ đồ dependency
 
@@ -54,11 +60,12 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 | Subject, class, enrollment | Academic | Group, Content, Learning, Assessment, Reporting |
 | Group, leader, allocation | Group | Submission, Grading, Reporting |
 | Material/content/source/transcript version | Content | Learning, AI, Assessment |
-| Assessment/template/copy/publication/simulation policy | Assessment | Submission, Grading, Reporting |
+| QuestionVersion/RubricVersion | Question Bank | Assessment, Submission snapshot, Grading, AI |
+| Assessment/template/copy assignment/version/publication/simulation policy | Assessment | Submission, Grading, Reporting |
 | Attempt snapshot, draft/submission/composite/artifact refs | Submission | Grading, Reporting |
 | Grade/proposal/publication state | Grading | Learning, Reporting, Notification |
 | Object bytes/checksum/scan/derivation | File & Artifact | Content, Submission, AI, Reporting |
-| Payment/event/entitlement | Payment | Academic/access checks qua entitlement contract |
+| Payment/event/entitlement | Payment | Learning/access checks qua entitlement contract |
 | Audit events | Audit | Admin query only |
 
 ## 5. Trust boundaries
@@ -73,6 +80,6 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 
 - Content → Job: `YOUTUBE_TRANSCRIPT_INGEST` chỉ mang source/version reference đã được authorize; worker trả transcript artifact và timestamp metadata qua Content service contract.
 - Assessment → Submission: `AttemptSnapshot` đóng băng assignment, question/rubric component versions và simulation policy khi attempt bắt đầu.
-- Copy operation chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không có event đồng bộ ngược hoặc xuôi.
+- Copy assignment/rubric chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không sao chép khóa học/lớp. Sửa assignment đã giao tạo version kế tiếp trên cùng stable key, không sửa version cũ hoặc attempt snapshot.
 - Submission → Job: `GROUP_COMPOSITE_GENERATE` mang danh sách part-version bất biến có thứ tự; kết quả là derived composite artifact/version.
 - Submission → Grading: composite evidence và individual-part evidence là read-only. Grading lưu kết quả tách biệt và điểm cuối từng thành viên do giảng viên nhập.

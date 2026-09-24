@@ -42,7 +42,18 @@ X) Other (mô tả sau `[Answer]:`)
 - [x] Cập nhật Grading cho manual shared grade, consistency rubric và manual per-student final score.
 - [x] Đồng bộ component, methods, services, dependency, flows, screens/jobs và global ERD.
 - [x] Kiểm tra Security/Resiliency và content consistency.
-- [ ] Trình checkpoint phê duyệt lại Application Design.
+- [x] Trình checkpoint phê duyệt lại Application Design.
+
+## Revision 2026-09-24
+
+- [x] Làm rõ không sao chép khóa học/lớp; sửa assignment đã giao tạo version kế tiếp và giữ attempt snapshot cũ.
+- [x] Loại tiến độ từng bài học khỏi component, method, màn hình, phân rã unit và ERD.
+- [x] Mở rộng dependency matrix với Question Bank, Payment và các hàng Academic, AI Orchestration, Code Execution.
+- [x] Đặt luồng tạo đề làm orchestration chính; RAG chỉ hỗ trợ nguồn cho AI.
+- [x] Thêm CodeExecutionService, FileArtifactService và JobService vào bảng dịch vụ.
+- [x] Bỏ tài liệu và kế hoạch business flow riêng.
+- [x] Kiểm tra tham chiếu còn sót và cú pháp tài liệu.
+- [x] Trình checkpoint phê duyệt bản sửa Application Design; người dùng duyệt ngày 2026-09-24.
 
 ### Question 2 - Giao tiếp bất đồng bộ
 

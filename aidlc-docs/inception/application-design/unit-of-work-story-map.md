@@ -1,144 +1,58 @@
-# Unit of Work Story Map
+# Unit of Work Story and Use Case Map
 
-## 1. Quy tắc ánh xạ
+## 1. Quy tắc đối chiếu
 
-- Mỗi user story có đúng một unit chủ trì chịu trách nhiệm acceptance criteria và Definition of Done.
-- Unit hỗ trợ được ghi riêng, không tạo ownership trùng.
-- Phase 2 được giữ trong cùng bounded context với MVP để tránh tách sai ranh giới.
-- Tổng nguồn chuẩn: 59 story, gồm 48 MVP và 11 Phase 2.
+Ảnh tham chiếu cung cấp cách tách 17 unit và wave, không thay thế catalog UC/story trong repository. Bảng này dùng mã hiện có trong `use-cases.md` và `stories.md`. Mỗi UC còn hiệu lực có đúng một unit chủ trì; một story có thể hỗ trợ nhiều UC nhưng chỉ có một primary unit cho acceptance criteria. Các unit khác tham gia qua public contract trong `unit-of-work-dependency.md`.
 
-## 2. Tổng hợp coverage
+Catalog gốc: 90 UC, 59 story (48 MVP, 11 Phase 2). Điều chỉnh thiết kế đã bỏ 3 UC tiến độ bài học và 2 story tương ứng. Phạm vi triển khai: **87 UC, 57 story (46 MVP, 11 Phase 2)**.
 
-| Unit | MVP | Phase 2 | Tổng |
-|---|---:|---:|---:|
-| U01 Platform Foundation and Identity | 8 | 0 | 8 |
-| U02 Academic Administration | 3 | 1 | 4 |
-| U03 Content, Learning and Banks | 8 | 3 | 11 |
-| U04 Assessment Authoring and Publication | 7 | 1 | 8 |
-| U05 Submission and Group Work | 8 | 0 | 8 |
-| U06 Grading, AI and Code Execution | 9 | 3 | 12 |
-| U07 Reporting and Notification | 2 | 3 | 5 |
-| U08 Payment and Entitlement | 3 | 0 | 3 |
-| **Tổng** | **48** | **11** | **59** |
+## 2. Coverage theo unit
 
-## 3. U01 - Platform Foundation and Identity
+| Unit | UC chủ trì | Story chủ trì | MVP | Phase 2 | Tổng story |
+|---|---|---|---:|---:|---:|
+| U01 Account & Access | UC-IAM-01..12 | US-IAM-001..007 | 7 | 0 | 7 |
+| U02 Audit, Job & Outbox | UC-OPS-02 | US-AUD-001 | 1 | 0 | 1 |
+| U03 File & Artifact | Không có UC trực tiếp | Hạ tầng dùng chung | 0 | 0 | 0 |
+| U04 Subject/Class/Enrollment | UC-CAT-01..13 | US-CAT-001..003, US-CAT-005 | 3 | 1 | 4 |
+| U05 Content/Material/RAG | UC-CNT-01..03, 05..08 | US-CNT-001..005 | 3 | 2 | 5 |
+| U06 Rubric & Question Bank | UC-QBK-01..03 | US-QBK-001..003 | 2 | 1 | 3 |
+| U07 Payment & Entitlement | UC-PAY-01..02 | US-PAY-001..003 | 3 | 0 | 3 |
+| U08 Learning Access & Dashboard | UC-LRN-01, 02, UC-CNT-04 | US-LRN-001 | 1 | 0 | 1 |
+| U09 Assessment Core & Publication | UC-ASM-01, 07 | US-ASM-001 | 1 | 0 | 1 |
+| U10 Question Type Authoring | UC-ASM-02, 03, 08 | US-ASM-002, 006, 007 | 3 | 0 | 3 |
+| U11 Template, Copy & Simulation | UC-ASM-15..18 | US-ASM-008..011 | 3 | 1 | 4 |
+| U12 Attempt & Submission | UC-ASM-09..14 | US-ASM-003 | 1 | 0 | 1 |
+| U13 Group & Allocation | UC-GRP-01..05, UC-ASM-06 | US-GRP-001..003 | 3 | 0 | 3 |
+| U14 AI & Code Execution | UC-AIG-01..03, UC-ASM-04, 05 | US-AIG-001..003, US-ASM-004, 005 | 5 | 0 | 5 |
+| U15 Part Submission & Composite | UC-GRP-06..08 | US-GRP-004..006 | 3 | 0 | 3 |
+| U16 Grading | UC-GRD-01..12 | US-GRD-001..008 | 5 | 3 | 8 |
+| U17 Reporting & Notification | UC-RPT-01..04, UC-OPS-01 | US-RPT-001..004, US-NTF-001 | 2 | 3 | 5 |
+| **Tổng đang triển khai** | **87 UC** | **57 story** | **46** | **11** | **57** |
 
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-IAM-001 | MVP | Nhận và kích hoạt tài khoản trường cấp | U07 notification |
-| US-IAM-002 | MVP | Đăng nhập và đăng xuất an toàn | - |
-| US-IAM-003 | MVP | Khôi phục mật khẩu riêng tư | U07 notification |
-| US-IAM-004 | MVP | Quản lý hồ sơ cá nhân | - |
-| US-IAM-005 | MVP | Quản lý vai trò và phạm vi môn | U02 scope reference |
-| US-IAM-006 | MVP | Đổi mật khẩu cá nhân | - |
-| US-IAM-007 | MVP | Quản trị vòng đời tài khoản | - |
-| US-AUD-001 | MVP | Tra cứu audit nghiệp vụ và bảo mật | Tất cả unit phát audit event |
+Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực tiếp vì cung cấp FileArtifactService cho các luồng upload/download, Draw.io và worker của các unit khác; trách nhiệm bảo mật và hợp đồng của U03 được kiểm tại gate G1.
 
-## 4. U02 - Academic Administration
+## 3. Quyết định phân chia các luồng giao nhau
 
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-CAT-001 | MVP | Quản lý cấu trúc môn và lớp | U01 authorization/audit |
-| US-CAT-002 | MVP | Quản lý vòng đời lớp/khóa học | U01 authorization/audit |
-| US-CAT-003 | MVP | Ghi danh người học | U01 identity, U07 notification |
-| US-CAT-005 | Phase 2 | Tự ghi danh bằng mã mời | U01 rate limit/audit |
-
-`US-CAT-004` không tồn tại trong catalog đã duyệt và không được đưa lại vào phạm vi.
-
-## 5. U03 - Content, Learning and Banks
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-CNT-001 | MVP | Quản lý kho học liệu và RAG cấp môn | U01 file/job, U06 worker adapter |
-| US-CNT-002 | MVP | Quản lý nội dung riêng của lớp | U01 file, U02 class scope |
-| US-CNT-003 | Phase 2 | Tìm kiếm và tóm tắt học liệu | U06 AI orchestration |
-| US-CNT-004 | Phase 2 | Thông báo và hỏi đáp trong lớp | U07 notification |
-| US-CNT-005 | MVP | Dùng YouTube làm nguồn RAG theo bài giảng | U01 job/artifact, U02 lesson scope, worker transcript adapter |
-| US-LRN-001 | MVP | Truy cập lớp đã ghi danh | U02 enrollment, U08 entitlement port |
-| US-LRN-002 | MVP | Lưu tiến độ và tiếp tục học | U02 enrollment |
-| US-LRN-003 | MVP | Theo dõi tiến độ lớp | U02 class scope |
-| US-QBK-001 | MVP | Quản lý ngân hàng rubric | U01 audit |
-| US-QBK-002 | MVP | Quản lý ngân hàng câu hỏi | U01 audit |
-| US-QBK-003 | Phase 2 | Phân tích chất lượng câu hỏi | U07 reporting projection |
-
-## 6. U04 - Assessment Authoring and Publication
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-ASM-001 | MVP | Duyệt và xuất bản bài đánh giá của lớp | U02 scope, U03 banks |
-| US-ASM-002 | MVP | Phát hành đề chung cho mọi lớp thuộc môn | U02 subject/classes |
-| US-ASM-006 | MVP | Soạn và kiểm tra bài trắc nghiệm | U03 question bank |
-| US-ASM-007 | MVP | Soạn bài viết luận | U03 rubric bank |
-| US-ASM-008 | Phase 2 | Nhân bản, sửa phiên bản và ngừng giao bài | U01 audit |
-| US-ASM-009 | MVP | Phát hành và sử dụng template đề cấp môn | U02 subject/class scope, U03 bank versions |
-| US-ASM-010 | MVP | Copy assignment và rubric giữa các lớp | U02 source/target authorization, U03 rubric version |
-| US-ASM-011 | MVP | Làm simulation exam giới hạn lượt | U05 attempt snapshot/submission, U06 grading |
-
-## 7. U05 - Submission and Group Work
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-GRP-001 | MVP | Chia lớp thành nhóm và chỉ định trưởng nhóm | U02 enrollment |
-| US-GRP-002 | MVP | Yêu cầu thay đổi trưởng nhóm | U01 audit, U02 enrollment |
-| US-GRP-003 | MVP | Tạo bài tập nhóm và phân chia phần cá nhân | U04 assessment |
-| US-GRP-004 | MVP | Nộp và chấm phần cá nhân của bài nhóm | U06 grading/AI proposal |
-| US-GRP-005 | MVP | Tổng hợp các phần thành tài liệu chung | U01 file/job, U05 composite lineage/finalization |
-| US-GRP-006 | MVP | Đối chiếu, chấm bài chung và quyết định điểm thành viên | U06 manual composite/member-final grading |
-| US-ASM-003 | MVP | Làm và nộp bài | U01 file/idempotency, U04 publication |
-| US-ASM-004 | MVP | Soạn và làm bài sơ đồ Draw.io | U04 authoring, U01 artifact, U06 compact AI copy |
-
-## 8. U06 - Grading, AI and Code Execution
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-AIG-001 | MVP | Tạo bản nháp bài tập cho lớp bằng AI | U03 content, U04 draft |
-| US-AIG-002 | MVP | Tạo bản nháp đề chung cấp môn bằng AI | U02 scope, U03 RAG, U04 draft |
-| US-AIG-003 | MVP | Cấu hình và giám sát sử dụng AI | U01 audit, U07 reporting |
-| US-ASM-005 | MVP | Soạn và kiểm thử Code Lab | U04 authoring, worker sandbox adapter |
-| US-GRD-001 | MVP | Nhận kết quả tự chấm câu hỏi xác định | U04 assessment, U05 submission |
-| US-GRD-002 | MVP | Nhận đề xuất chấm câu trả lời mở từ AI | U03 rubric, U05 submission |
-| US-GRD-003 | MVP | Duyệt, ghi đè và công bố điểm | U01 audit, U05 submission |
-| US-GRD-004 | MVP | Xem sổ điểm theo quyền | U02 scope, U07 read projection |
-| US-GRD-005 | MVP | Kiểm tra và chốt điểm hàng loạt | U01 audit, U05 submission |
-| US-GRD-006 | Phase 2 | Yêu cầu gia hạn nộp bài | U04 publication, U05 submission |
-| US-GRD-007 | Phase 2 | Khiếu nại và phúc khảo điểm | U01 audit, U05 submission |
-| US-GRD-008 | Phase 2 | Kiểm tra tương đồng bài nộp | U05 submission, worker adapter |
-
-`US-GRD-009` không tồn tại trong catalog đã duyệt; chức năng phân công chấm chéo không được đưa lại vào phạm vi.
-
-## 9. U07 - Reporting and Notification
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-RPT-001 | MVP | Theo dõi tiến độ nộp bài và nhắc nhở | U02 class, U05 submission |
-| US-RPT-002 | Phase 2 | Dashboard kết quả cá nhân | U03 progress, U06 grades |
-| US-RPT-003 | Phase 2 | Xuất bảng điểm | U06 grades, U01 file/job |
-| US-RPT-004 | Phase 2 | Đối sánh điểm AI và điểm chốt | U06 proposals/final grades |
-| US-NTF-001 | MVP | Nhận thông báo thiết yếu | Tất cả producer qua outbox |
-
-## 10. U08 - Payment and Entitlement
-
-| Story | Phase | Nội dung | Unit hỗ trợ chính |
-|---|---|---|---|
-| US-PAY-001 | MVP | Bắt đầu thanh toán an toàn | U01 identity/audit |
-| US-PAY-002 | MVP | Nhận quyền sau xác nhận thanh toán | U01 idempotency/audit, U02 learner/product reference |
-| US-PAY-003 | MVP | Đối soát trạng thái thanh toán | U01 job, worker reconciliation handler |
-
-## 11. Cross-cutting acceptance ownership
-
-| Concern | Owner chuẩn | Trách nhiệm của unit nghiệp vụ |
+| Trường hợp | Unit chủ trì | Unit cung cấp contract |
 |---|---|---|
-| Authentication/authorization | U01 | Truyền actor/resource context và gọi authorization contract |
-| Audit | U01 | Phát đúng security/business event, không log secret/PII |
-| File/artifact | U01 | Khai báo purpose, scope, checksum và retention phù hợp |
-| Job/outbox | U01 | Định nghĩa idempotent handler, retry class và safe failure state |
-| Worker runtime | `/worker` deployable | Handler vẫn do U03/U06/U07/U08 sở hữu về nghiệp vụ |
-| Reporting | U07 | Producer phát versioned event; không cho projection ghi ngược transaction nguồn |
+| Tạo đề thủ công, duyệt và phát hành lớp | U09 | U04 scope, U06 bank, U10 cấu hình kiểu câu hỏi |
+| Đề chung cấp môn và cấu hình quiz/essay | U10 | U09 aggregate/publication, U06 rubric/question versions |
+| AI tạo bản nháp đề | U14 | U05 nguồn học liệu, U06 bank; U09 duyệt/lưu/publish |
+| Sửa assignment đã giao | U09 | U11 giữ template/copy/simulation policy; tạo version kế tiếp trên cùng stable key |
+| Tạo/nộp bài Draw.io và Code Lab | U14 sở hữu authoring/CodeExecution; U12 sở hữu attempt/submission | U03 giữ artifact full XML/checksum; U09 publication |
+| Bài nhóm | U13 nhóm/phân phần; U15 nộp phần và composite | U12 attempt; U16 lưu grade cuối |
+| Learning dashboard | U08 kiểm quyền và trả lớp/nội dung; UI ghép assignment/notification | U04 enrollment, U07 entitlement, U05 content, U09/U17 read APIs khi có |
+| Chấm bài nhóm | U15 đối chiếu/chốt composite; U16 chấm và công bố điểm | U14 chỉ được đề xuất chấm phần cá nhân khi giảng viên chọn |
 
-## 12. Coverage assertions
+## 4. U08 và chức năng đã loại
 
-- Mọi ID trong `stories.md` xuất hiện đúng một lần ở cột Story của các bảng U01-U08.
-- Không thêm lại `US-CAT-004` hoặc `US-GRD-009` đã bị loại khỏi phạm vi.
-- Bài viết chỉ dùng loại chung “bài viết luận”; không có loại ngoại ngữ riêng.
-- Bản Draw.io chuẩn là full XML; compact XML chỉ được tạo cho AI grading sau yêu cầu của giảng viên.
-- Bài cá nhân của bài nhóm có thể nhận AI proposal nếu giảng viên chọn; composite và điểm cuối thành viên luôn do giảng viên chấm/quyết định thủ công.
+- `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` vẫn thuộc U08 nhưng phần mô tả cũ về tiến độ trong UC-LRN-01/02 không còn hiệu lực. U08 kiểm enrollment + entitlement rồi trả lớp, bài học đã phát hành và dữ liệu dashboard không nhạy cảm trong phạm vi.
+- `UC-LRN-03` (lưu/tiếp tục tiến độ), `UC-LRN-04` (xem tiến độ cá nhân), `UC-LRN-05` (giảng viên xem tiến độ lớp), `US-LRN-002` và `US-LRN-003` nằm ngoài phạm vi triển khai.
+- Không có learning path trong plan hiện hành. U08 không tạo lộ trình, prerequisite, completion record hay `learning_progress`. Trạng thái nộp bài và job vẫn được U12/U17/U02 quản lý theo nghiệp vụ riêng.
+
+## 5. Coverage assertions
+
+- U01-U17 bao phủ đúng 87 UC còn hiệu lực, mỗi UC một primary unit; U03 có 0 UC vì là hạ tầng.
+- Mọi story còn hiệu lực trong `stories.md` xuất hiện một lần ở bảng unit; hai story bị loại được nêu riêng ở mục 4.
+- `UC-ASM-15` vẫn là Phase 2 cho clone/retire nâng cao; quy tắc sửa đề đã giao tăng version là invariant MVP của U09.
+- Không mở lại `US-CAT-004` hoặc `US-GRD-009` vì chúng không nằm trong catalog được duyệt.

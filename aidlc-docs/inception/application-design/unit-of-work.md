@@ -1,186 +1,76 @@
-# Unit of Work
+# Unit of Work - 17 unit logic
 
-## 1. Mục đích và nguyên tắc
+## 1. Phạm vi và quy tắc
 
-Hệ thống được chia thành tám unit logic để lập kế hoạch, thiết kế, phát triển và kiểm thử. Các unit backend vẫn tạo thành một Spring Boot modular monolith. Worker là project/process/container riêng trong cùng monorepo, giao tiếp với backend bằng job/event contract được version hóa.
+Đây là 17 unit lập kế hoạch theo hai ảnh tham chiếu, được đối chiếu với catalog 90 use case/59 story hiện hành. Chúng là module logic trong một backend Spring Boot, không phải 17 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. 57 story còn hiệu lực được gán một primary unit; hai story tiến độ bài học được ghi là ngoài phạm vi.
 
-Các nguyên tắc bắt buộc:
+- Mỗi unit sở hữu dữ liệu và quy tắc nghiệp vụ của mình; unit khác gọi public contract, không đọc bảng/repository trực tiếp.
+- U01 kiểm quyền actor/object; U02 giữ audit/job/outbox và phát triển song song với U01 qua authorization contract có version; U03 giữ file/artifact. Tách unit không thay đổi một backend deployable.
+- Assignment đã giao sửa bằng version mới cùng stable key. Attempt giữ assignment/question/rubric snapshot cũ.
+- AI chỉ tạo draft hoặc grade proposal. Giảng viên duyệt đề và quyết định điểm cuối. RAG là nguồn hỗ trợ tùy chọn cho tạo đề.
+- Không sao chép khóa học/lớp. Copy assignment/rubric theo phạm vi đã duyệt tạo identity độc lập có lineage.
+- Không có learning path, trạng thái hoàn thành hay tiến độ từng bài học. Tiến độ nộp bài và trạng thái job vẫn có.
 
-- Mỗi story có đúng một unit chủ trì; unit khác chỉ hỗ trợ qua public contract.
-- Mỗi module sở hữu schema/table của mình; không truy cập trực tiếp repository hoặc bảng của module khác.
-- Cross-module write đi qua application service hoặc domain event/outbox.
-- Frontend không quyết định authorization; backend kiểm tra role, scope và object-level permission.
-- Submission và artifact đã nộp là immutable; các thay đổi tạo version mới.
-- Full Draw.io XML là artifact chuẩn. Compact XML chỉ là derived artifact cho AI job do giảng viên yêu cầu.
-- AI chỉ tạo draft/proposal; không tự publish đề hoặc final grade.
-- Worker payload chỉ mang ID/reference tối thiểu và không sao chép business rule từ backend.
+## 2. Danh sách unit và ownership
 
-## 2. Danh sách unit
+| Unit | Tên | Sở hữu chính | Không sở hữu / ranh giới |
+|---|---|---|---|
+| U01 | Account & Access | Account, credential, session, role/scope/object authorization | Không sở hữu audit, job hoặc nội dung nghiệp vụ |
+| U02 | Audit, Job & Outbox | Audit append-only, job enqueue/lease/status, outbox, retry/dead-letter, correlation | Không quyết định quyền học, payment hoặc điểm |
+| U03 | File & Artifact | Upload/download có quyền, scan, checksum, signed access, immutable full Draw.io XML, chống XXE; lưu derived artifact theo metadata/TTL | Không sở hữu nội dung, submission hoặc logic tạo bản compact cho AI |
+| U04 | Subject, Class & Enrollment | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope | Không sao chép khóa học/lớp hoặc cấp entitlement |
+| U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index, thông báo/hỏi đáp lớp Phase 2 | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề |
+| U06 | Rubric & Question Bank | QuestionVersion/RubricVersion, preview, publish/retire version, analytics Phase 2 | Không sửa hồi tố version đã dùng trong attempt |
+| U07 | Payment & Entitlement | Intent, verified webhook, idempotent access grant, reconciliation | Không ghi enrollment; redirect browser không cấp quyền |
+| U08 | Learning Access & Dashboard | Kiểm enrollment + entitlement, đọc nội dung được phát hành, lớp/assignment dashboard | Không có learning path hoặc tiến độ từng bài học; không ghi nội dung |
+| U09 | Assessment Core & Publication | Assignment aggregate, draft/review, publication lớp, schedule, version khi sửa đề đã giao | Không sở hữu kiểu câu hỏi, attempt hay final grade |
+| U10 | Question Type Authoring | Cấu hình quiz/essay, đề chung cấp môn, quy tắc bài loại cụ thể | Không sở hữu bank item hoặc publication transaction |
+| U11 | Template, Copy & Simulation | Template môn, copy assignment/rubric giữa lớp có lineage, simulation policy, retire/clone Phase 2 | Không copy lớp/khóa học, publication, attempt, submission hay grade |
+| U12 | Attempt & Submission | Attempt snapshot, autosave, nộp cá nhân/Draw.io/Code Lab, receipt, lịch sử/nộp lại | Không chấm điểm hoặc sửa attempt đã nộp |
+| U13 | Group & Allocation | Membership, đúng một leader, yêu cầu đổi leader, phân phần việc | Không sở hữu phần nộp hay composite |
+| U14 | AI & Code Execution | AI provider-neutral, quota/kill-switch, draft proposal, CodeExecutionService/sandbox, compact XML job | Không publish đề, không chốt grade, không chạy mã không cô lập |
+| U15 | Part Submission & Composite | Nộp phần cá nhân, ghép composite từ ordered source versions, giảng viên chốt version chung | Không sửa source part hoặc tự tính điểm cuối thành viên |
+| U16 | Grading | Tự chấm xác định, chấm tay, AI proposal review, điểm composite/member, grade history và publication | AI không quyết định final grade; không sửa submission |
+| U17 | Reporting & Notification | Read model theo quyền, theo dõi nộp bài, export, analytics, notification delivery | Không ghi ngược transaction nguồn hoặc rollback nghiệp vụ khi gửi lỗi |
 
-### U01 - Platform Foundation and Identity
+### Quyết định riêng cho U08
 
-**Mục tiêu:** Cung cấp nền tảng bảo mật và kỹ thuật dùng chung trước khi các unit nghiệp vụ bắt đầu.
+Catalog hiện hành chỉ có `US-LRN-001` cho quyền truy cập lớp. `UC-LRN-01`, `UC-LRN-02` và `UC-CNT-04` hỗ trợ dashboard/truy cập nội dung nhưng mô tả cũ còn nhắc tiến độ; phần tiến độ đó không được triển khai. `US-LRN-002`, `US-LRN-003` cùng `UC-LRN-03..05` đã bị loại khỏi phạm vi thiết kế. Không có requirement/story về learning path, vì vậy U08 không tạo lộ trình, prerequisite hay completion model. Dashboard chỉ tổng hợp lớp, assignment, thông báo và trạng thái có sẵn từ owner khác.
 
-**Sở hữu:**
+## 3. Code organization
 
-- Identity, account lifecycle, school-email authentication, session và password recovery.
-- Role/scope authorization và object authorization contracts.
-- Append-only audit và correlation context.
-- File/artifact metadata, checksum, scan state và signed access contract.
-- Job lifecycle, outbox, retry/backoff, dead-letter và idempotency primitives.
-- OpenAPI/event schema conventions và worker bootstrap contract.
+- `/frontend`: Next.js, feature folders theo UI/domain, gọi REST OpenAPI.
+- `/backend`: một Spring Boot modular monolith; package theo U01-U17, mỗi package có API/application/domain/infrastructure khi cần.
+- `/worker`: process/container riêng, handler thuộc unit nghiệp vụ tương ứng và dùng versioned job contract; không import repository nội bộ backend.
+- `/contracts`: OpenAPI, event/job schema và compatibility tests.
+- `/infra`: cấu hình database, queue, storage, deployment/observability.
+- `/aidlc-docs`: chỉ có tài liệu.
 
-**Không sở hữu:** Nội dung học, bài đánh giá, submission, grade hoặc provider-specific AI logic.
+Nhóm 5 người mở tối đa năm unit đang triển khai cùng lúc theo dependency trực tiếp và slot trống. Mỗi unit có owner và reviewer; consumer chỉ tích hợp sau khi provider tương ứng đạt kiểm tra contract/behavior, không cần chờ toàn bộ wave đóng.
 
-**Điều kiện hoàn thành:** Các module khác có thể xác thực actor, kiểm tra quyền, lưu artifact, enqueue job và ghi audit mà không phụ thuộc implementation nội bộ.
+## 4. Bốn wave mở việc theo dependency
 
-### U02 - Academic Administration
+Wave là nhóm công việc và điểm kiểm tra tích hợp, không phải barrier bắt mọi unit trong một cột xong rồi mới mở cột tiếp theo. Unit được mở ngay khi **tất cả provider `H` của chính nó** đạt contract/behavior cần dùng và có người rảnh; không phải chờ unit không liên quan. Cạnh `C` cho phép phát triển song song với contract có version và fake adapter; cạnh `E` cần event/schema của owner và dữ liệu thật tại integration gate. Nhóm có tối đa năm unit đang được triển khai đồng thời trên toàn bộ các wave, kể cả khi hai wave chồng thời gian.
 
-**Mục tiêu:** Thiết lập cấu trúc môn/lớp và phạm vi thành viên làm nền cho mọi hành trình học.
+| Wave | Unit (số lượng) | Nhánh có thể mở song song và điều kiện nối tiếp | Điểm dừng tích hợp |
+|---|---|---|---|
+| 1 - nền | U01, U02, U03, U04 (4) | U01 và U02 chạy song song; U03/U04 mở sau khi cả hai cung cấp phần cần dùng | Identity, audit/job/outbox, file/artifact và class/enrollment contract |
+| 2 - nguồn và đề lõi | U05, U06, U07, U08, U09 (5) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U07 sẵn sàng; U09 mở khi U05 và U06 sẵn sàng | Content/bank versions, entitlement, Learning access và đề thủ công/publication |
+| 3 - biên soạn và thực hiện | U10, U11, U12, U13, U14 (5) | U10/U13 mở sau U09; U14 mở sau U05/U06/U03; U11 sau U10; U12 sau U08/U11, tích hợp U14 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
+| 4 - kết quả | U15, U16, U17 (3) | U15 sau U12/U13; U16 sau U15 và U14; U17 hoàn tất projection sau event U16 | Composite, final grade, reporting/notification |
 
-**Sở hữu:**
-
-- Subject, class lifecycle và phân công giảng viên.
-- Enrollment do quản trị viên/giảng viên thực hiện.
-- Subject Manager scope cho một hoặc nhiều môn được phân công.
-- Invite-code enrollment Phase 2.
-- Public contract để kiểm tra membership và quyền quản lý lớp/môn.
-
-**Không sở hữu:** Nội dung lớp, nhóm, bài đánh giá, điểm hoặc entitlement transaction.
-
-### U03 - Content, Learning and Banks
-
-**Mục tiêu:** Cung cấp học liệu, hành trình học và tài nguyên biên soạn có version.
-
-**Sở hữu:**
-
-- Học liệu/RAG source cấp môn và nội dung riêng cấp lớp.
-- Video/playlist YouTube theo bài giảng, caption/transcript version có timestamp và trạng thái ingestion.
-- Content publication/version và authorized search.
-- Learning access, progress idempotent và class progress.
-- Rubric/question bank versioning, reuse, publication snapshot và question analytics.
-- Worker handlers cho file parsing, YouTube caption/phiên âm, chunking và indexing RAG.
-
-**Không sở hữu:** Assessment publication, submission hoặc final grade.
-
-### U04 - Assessment Authoring and Publication
-
-**Mục tiêu:** Quản lý vòng đời đề/bài từ draft đến review, publish và retire.
-
-**Sở hữu:**
-
-- Assessment draft, version, preview, validation và schedule.
-- Subject template/copy lineage và copy assignment/rubric giữa các lớp được phép.
-- Simulation exam policy, giới hạn lượt, result policy, answer release và attempt snapshot contract.
-- Bài cấp lớp và đề chung cấp môn.
-- Cấu hình trắc nghiệm, bài viết luận và các policy chung của bài.
-- Clone/version/retire Phase 2.
-- Publication contract được Submission sử dụng.
-
-**Không sở hữu:** Nội dung bài làm, attempt artifact, grade hoặc AI final decision.
-
-### U05 - Submission and Group Work
-
-**Mục tiêu:** Bảo toàn bài làm cá nhân/nhóm và thực thi đúng quyền nộp.
-
-**Sở hữu:**
-
-- Autosave draft, attempt, idempotent submission receipt và immutable submission version.
-- Draw.io embedded-canvas handoff và full XML artifact.
-- Group membership, đúng một leader, leader-change request và individual allocation.
-- Individual group-part submission, composite generation/version lineage và instructor finalization.
-- Authorized view để giảng viên đối chiếu bài chung với các phần cá nhân.
-
-**Không sở hữu:** AI proposal hoặc final grade; không chỉnh sửa cộng tác tài liệu trong hệ thống.
-
-### U06 - Grading, AI and Code Execution
-
-**Mục tiêu:** Điều phối chấm điểm có con người quyết định cuối và các tác vụ AI/Code Lab cô lập.
-
-**Sở hữu:**
-
-- Deterministic grading, manual grade, AI proposal review, finalize và publish grade.
-- Manual composite grade theo tiêu chí tích hợp/nhất quán và manual per-member final grade từ evidence tách biệt.
-- AI authoring/grading orchestration, provider-neutral ports, quota và kill-switch.
-- Compact Draw.io derived artifact chỉ khi giảng viên yêu cầu AI chấm.
-- Code Lab authoring/test execution qua sandbox port.
-- Worker handlers cho AI generation, AI grading và Code Lab.
-- Extension, regrade và similarity-check workflows Phase 2.
-
-**Không sở hữu:** Full submission artifact, assessment publication hoặc quyền tự chốt điểm cho AI.
-
-### U07 - Reporting and Notification
-
-**Mục tiêu:** Tạo read model/báo cáo theo quyền và gửi thông báo không làm rollback nghiệp vụ.
-
-**Sở hữu:**
-
-- Submission tracking, reminder, learner dashboard và grade export.
-- Question/grade analytics projection và AI-versus-final comparison.
-- Notification outbox consumption, template, recipient scope và delivery status.
-- Worker handlers cho export và notification delivery.
-
-**Không sở hữu:** Transaction nghiệp vụ nguồn; báo cáo không tự kết luận gian lận hoặc đánh giá giảng viên.
-
-### U08 - Payment and Entitlement
-
-**Mục tiêu:** Xử lý thanh toán và cấp quyền theo verified provider event.
-
-**Sở hữu:**
-
-- Payment intent, provider adapter và transaction state.
-- Signature/timestamp/replay validation cho webhook.
-- Idempotent entitlement grant và reconciliation.
-- Worker handler cho payment reconciliation.
-
-**Không sở hữu:** Dữ liệu thẻ thô, browser redirect như bằng chứng thanh toán hoặc class enrollment lifecycle.
-
-## 3. Tổ chức source code
-
-```text
-/
-  frontend/
-  backend/
-  worker/
-  infra/
-  contracts/
-  aidlc-docs/
-```
-
-- `/frontend`: Next.js desktop-first; các feature folder bám theo unit và dùng generated OpenAPI client.
-- `/backend`: Spring Boot modular monolith; mỗi unit có `api`, `application`, `domain`, `infrastructure` và test package tương ứng.
-- `/worker`: Ứng dụng worker độc lập; handler theo job type, adapter provider và consumer của versioned contracts. Worker không import repository nội bộ của backend.
-- `/infra`: Docker Compose/IaC, database, queue, object storage, networking, logging và monitoring configuration.
-- `/contracts`: OpenAPI, job/event schemas và compatibility tests dùng chung giữa backend, frontend và worker.
-- `/aidlc-docs`: Chỉ chứa tài liệu AI-DLC, không chứa application code.
-
-Nếu worker dùng ngôn ngữ khác backend, `/contracts` là ranh giới tích hợp. Dữ liệu job phải có `schemaVersion`, `jobId`, `type`, correlation ID và reference ID; dữ liệu nhạy cảm không được nhúng khi có thể tải qua scoped service.
-
-## 4. Chiến lược nhóm 5 người
-
-| Wave | Unit | Cách thực hiện |
-|---|---|---|
-| 0 | U01 | Cả nhóm chia Foundation theo identity/auth, file, job, audit và contract; hoàn tất integration gate chung |
-| 1 | U02 | Hoàn thành subject/class/enrollment và public authorization contracts |
-| 2 | U03 và U08 | Có thể làm song song sau U01/U02; integration gate xác nhận content access và entitlement contract |
-| 3 | U04 | Hoàn thành assessment authoring/publication trên scope môn/lớp ổn định |
-| 4 | U05 | Hoàn thành individual/group submission dựa trên publication contract |
-| 5 | U06 | Hoàn thành grading, AI và Code Lab dựa trên immutable submission |
-| 6 | U07 | Hoàn thành reporting/notification projection và kiểm thử hành trình đầu-cuối |
-
-Mỗi unit có một owner chính nhưng ít nhất một reviewer khác. Integration owner luân phiên theo wave. Cuối mỗi wave phải chạy unit test, module integration test, contract test và các journey test liên quan trước khi mở wave phụ thuộc.
+Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U14 thuộc wave 3 có thể bắt đầu khi U03/U05/U06 sẵn sàng, dù U08 hoặc U09 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
 
 ## 5. Integration gates
 
-| Gate | Điều kiện bắt buộc |
+| Gate | Kiểm tra bắt buộc |
 |---|---|
-| G0 Foundation | Authentication, authorization, artifact, job và audit contracts hoạt động; fail closed khi dependency lỗi |
-| G1 Academic | Subject/class/enrollment scope được kiểm tra server-side; module khác không đọc bảng Academic trực tiếp |
-| G2 Content/Payment | Learner chỉ đọc nội dung được phép; file/YouTube RAG job và payment webhook idempotent |
-| G3 Assessment | Draft/review/publish đúng role/scope; copy lineage, simulation policy và attempt snapshot bất biến; AI không tự publish |
-| G4 Submission/Group | Full XML/part submission bất biến; composite giữ ordered lineage và chỉ giảng viên chốt; submission không bị nhân đôi |
-| G5 Grading/AI/Code | Instructor chọn phương thức chấm; AI chỉ tạo proposal; bài chung không gửi AI; sandbox có giới hạn |
-| G6 Reporting/Notification | Read model không vượt quyền; lỗi provider không rollback nghiệp vụ; journey MVP chạy đầu-cuối |
+| G1 | U01-U04: deny-by-default auth, audit append-only, job idempotency/retry, upload scan/checksum, XML XXE rejection, signed access và subject/class scope |
+| G2 | U05-U09: Content/File scope, QuestionVersion/RubricVersion immutable, verified entitlement, Learning access không có lesson progress và đề thủ công/publication đúng scope |
+| G3 | U10-U14: loại câu hỏi, template/copy lineage, simulation policy, group allocation, AI/Code sandbox contract, attempt snapshot và nộp idempotent |
+| G4 | U15-U17: composite immutable, chấm tay/final grade, AI proposal không thành final grade và reporting/notification/export theo quyền |
+
+Gate kiểm tra kết quả của từng nhánh khi nhánh đó sẵn sàng; gate tổng của wave dùng để xác nhận đủ phạm vi, không khóa việc mở unit ở wave sau nếu provider trực tiếp đã sẵn sàng.
 
 ## 6. Quy tắc security và resiliency xuyên unit
 
@@ -199,7 +89,7 @@ Mỗi unit có một owner chính nhưng ít nhất một reviewer khác. Integr
 - Unit test, module integration test và security negative test chạy đạt.
 - Không vi phạm data ownership hoặc dependency direction.
 - Migration, observability, error handling và audit events liên quan được xác định.
-- Integration gate của wave đạt trước khi bắt đầu unit phụ thuộc.
+- Contract/behavior của mọi provider trực tiếp đạt trước khi consumer tích hợp; gate tổng wave không chặn nhánh độc lập.
 
 ## 8. Extension compliance tại Units Generation
 
