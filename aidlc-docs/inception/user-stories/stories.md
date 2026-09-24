@@ -1293,7 +1293,7 @@
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua quyền truy cập mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
 **Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -1301,7 +1301,7 @@
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** người dùng đã xác thực và sản phẩm/quyền lợi hợp lệ
+- **Given** người dùng đã xác thực và gói credit hợp lệ
 - **When** người dùng bắt đầu thanh toán
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
 
@@ -1309,11 +1309,11 @@
 
 - **Given** provider timeout hoặc từ chối tạo giao dịch
 - **When** yêu cầu được xử lý
-- **Then** giao dịch không bị đánh dấu đã thanh toán, quyền truy cập không được cấp và người dùng nhận trạng thái an toàn có thể thử lại
+- **Then** giao dịch không bị đánh dấu đã thanh toán, credit không được cộng và người dùng nhận trạng thái an toàn có thể thử lại
 
-### US-PAY-002 - Nhận quyền sau xác nhận thanh toán
+### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là người dùng đã thanh toán, tôi muốn quyền truy cập chỉ được cấp sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là người dùng đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
 **Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
@@ -1323,23 +1323,23 @@
 
 - **Given** giao dịch đang chờ và webhook có chữ ký/trạng thái hợp lệ
 - **When** backend xử lý sự kiện
-- **Then** trạng thái được đối soát, quyền truy cập được cấp đúng một lần và sự kiện được audit
+- **Then** trạng thái được đối soát, credit được cộng đúng một lần và sự kiện được audit
 
 #### Scenario 2 - Webhook trùng lặp
 
 - **Given** sự kiện đã được xử lý
 - **When** cùng định danh webhook được gửi lại
-- **Then** hệ thống trả kết quả idempotent, không cấp trùng quyền hoặc tạo giao dịch bổ sung
+- **Then** hệ thống trả kết quả idempotent, không cộng trùng credit hoặc tạo giao dịch bổ sung
 
 #### Scenario 3 - Webhook sai chữ ký, replay hoặc thất bại
 
 - **Given** chữ ký không hợp lệ, sự kiện replay không được phép hoặc trạng thái thanh toán thất bại
 - **When** backend nhận webhook
-- **Then** hệ thống fail closed, không cấp quyền và ghi sự kiện bảo mật phù hợp
+- **Then** hệ thống fail closed, không cộng credit và ghi sự kiện bảo mật phù hợp
 
 ### US-PAY-003 - Đối soát trạng thái thanh toán
 
-**Story**: Là quản trị viên, tôi muốn đối soát giao dịch với nhà cung cấp để xử lý trạng thái chờ hoặc sai lệch mà không cấp quyền nhầm.
+**Story**: Là quản trị viên, tôi muốn đối soát giao dịch với nhà cung cấp để xử lý trạng thái chờ hoặc sai lệch mà không cộng credit nhầm.
 
 **Truy vết**: FR-002, FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
@@ -1355,7 +1355,7 @@
 
 - **Given** provider không khả dụng hoặc trả dữ liệu không xác minh được
 - **When** đối soát chạy
-- **Then** trạng thái hiện tại không được nâng lên thành công, quyền không được cấp và lỗi có thể retry được ghi an toàn
+- **Then** trạng thái hiện tại không được nâng lên thành công, credit không được cộng và lỗi có thể retry được ghi an toàn
 
 ## 12. Miền Notification and Audit
 

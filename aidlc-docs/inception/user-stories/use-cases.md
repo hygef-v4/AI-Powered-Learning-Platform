@@ -174,8 +174,8 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
-| UC-PAY-01 | Người học | Thanh toán và nhận quyền truy cập | Payment | Cho phép người học xem gói, bắt đầu thanh toán, theo dõi trạng thái và nhận access grant sau khi giao dịch được xác minh. (`US-PAY-001`, `US-PAY-002`) |
-| UC-PAY-02 | Quản trị viên | Đối soát thanh toán | Payment Operations | Cho phép quản trị viên đối chiếu payment, webhook và access grant, rồi xử lý chênh lệch có lý do. (`US-PAY-003`) |
+| UC-PAY-01 | Người dùng | Mua credit AI | Payment | Cho phép mọi người dùng xem gói credit, bắt đầu thanh toán, theo dõi trạng thái và nhận credit AI sau khi giao dịch được xác minh. (`US-PAY-001`, `US-PAY-002`) |
+| UC-PAY-02 | Quản trị viên | Đối soát thanh toán | Payment Operations | Cho phép quản trị viên đối chiếu payment, webhook và credit đã cộng, rồi điều chỉnh chênh lệch có lý do. (`US-PAY-003`) |
 
 ### 4.12 Notification and Audit
 

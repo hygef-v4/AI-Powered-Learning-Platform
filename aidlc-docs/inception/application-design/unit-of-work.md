@@ -22,7 +22,7 @@
 | U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment rồi trả nội dung đã phát hành và dữ liệu dashboard; mã mời tự ghi danh bản đơn giản | Không sao chép khóa học/lớp, không kiểm thanh toán, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
 | U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index, thông báo/hỏi đáp lớp Phase 2 | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề |
 | U06 | Rubric & Question Bank | QuestionVersion/RubricVersion, preview, publish/retire version, analytics Phase 2 | Không sửa hồi tố version đã dùng trong attempt |
-| U07 | Payment & Entitlement | Intent, verified webhook, idempotent access grant, reconciliation | Không ghi enrollment; redirect browser không cấp quyền |
+| U07 | Payment & AI Credit | Gói credit, thanh toán PayOS, verified webhook, ví credit AI (tặng tháng, giữ/trừ khi dùng AI), đối soát, điều chỉnh thủ công | Không ghi enrollment, không ảnh hưởng quyền vào lớp; redirect browser không cộng credit |
 | U08 | Assessment Core & Publication | Assignment aggregate, draft/review, publication lớp, schedule, version khi sửa đề đã giao | Không sở hữu kiểu câu hỏi, attempt hay final grade |
 | U09 | Question Type Authoring | Cấu hình quiz/essay/Draw.io, quy tắc kiểm XML của bài vẽ, đề chung cấp môn. Sở hữu bảng riêng `question_type_config` tham chiếu assignment qua khóa ngoài | Không sở hữu bank item, publication transaction, attempt hay sandbox; không ALTER bảng của U08 |
 | U10 | Template, Copy & Simulation | Template môn, copy assignment/rubric giữa lớp có lineage, simulation policy, retire/clone Phase 2. Sở hữu bảng riêng `assignment_lineage` và `simulation_policies` | Không copy lớp/khóa học, publication, attempt, submission hay grade; không ALTER bảng của U08 |
@@ -57,10 +57,10 @@ Wave là nhóm công việc và điểm kiểm tra tích hợp, không phải ba
 |---|---|---|---|
 | 1 - nền | U01, U02, U03, U04 (4) | U01 và U02 chạy song song; U03/U04 mở sau khi cả hai cung cấp phần cần dùng | Identity, audit/job/outbox, file/artifact và class/enrollment contract |
 | 2 - nguồn và đề lõi | U05, U06, U07, U08 (4) | Sau U04, U05/U06/U07 chạy song song; U08 mở khi U05 và U06 sẵn sàng. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port | Content/bank versions, entitlement token AI, Learning access và đề thủ công/publication |
-| 3 - biên soạn và thực hiện | U09, U10, U11, U12, U13 (5) | U09/U12 mở sau U08; U13 mở sau U03/U05/U06; U10 sau U09; U11 sau U04/U10, tích hợp U13 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
+| 3 - biên soạn và thực hiện | U09, U10, U11, U12, U13 (5) | U09/U12 mở sau U08; U13 mở sau U03/U05/U06/U07; U10 sau U09; U11 sau U04/U10, tích hợp U13 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
 | 4 - kết quả | U14, U15, U16 (3) | U14 sau U11/U12; U15 sau U14 và U13; U16 hoàn tất projection sau event U15 | Composite, final grade, reporting/notification |
 
-Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U13 thuộc wave 3 có thể bắt đầu khi U03/U05/U06 sẵn sàng, dù U08 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
+Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U13 thuộc wave 3 có thể bắt đầu khi U03/U05/U06/U07 sẵn sàng, dù U08 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
 
 ## 5. Integration gates
 

@@ -1549,3 +1549,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U06 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U06 Code Plan Approval, Commit Preference and U07 Functional Design
+
+**Timestamp**: 2026-09-24T21:45:45Z
+
+**User Input**: "Viêt commit cho cái này, với cả hãy nhỡ cái context đừng ghi doc do chỉ mình t dùng local này: tự động ghi commiit cho t sau mỗi unit,"; then "continue"; UI answers: "Mọi tài khoản", "PayOS", "Gói cố định do admin tạo (Khuyến nghị)", "Credit quy đổi + tặng hàng tháng (Khuyến nghị)", "Mọi người như nhau", "Được, bắt buộc lý do + audit (Khuyến nghị)", "Không hỗ trợ (Khuyến nghị)"
+
+**AI Response**: Gave the U06 commit message and saved the "commit message after each unit" preference to local memory (not repo docs). Treated "continue" as approval of the U06 code generation plan. Created U07 functional design: PayOS payments for fixed credit packages, signed webhook + reconciliation, AI credit wallet (equal monthly free credits, purchased credits never expire, reserve/settle/release for U13), admin adjustments with reason, no refunds (BR-U07-01..52). Synced inception: US-PAY-001..003, UC-PAY-01/02 and U07 row now describe AI credits; added `H` edge U07 → U13 (matrix, Mermaid, wave text, draw.io copy).
+
+**Context**: U07 Functional Design Step 7; awaiting approval.
+
+---
+
+## U07 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T21:46:37Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U07 Functional Design. No new questions. Created U07 NFR plan, `nfr-requirements.md` (NFR-U07-01..32: single locked ledger write path, DB uniques, integer money, append-only ledger, PayOS secrets/timeouts/signature, webhook limits, fake adapter) and `tech-stack-decisions.md`.
+
+**Context**: U07 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U07 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T21:47:27Z
+
+**User Input**: "Conitunue"
+
+**AI Response**: Recorded approval of U07 NFR Requirements. No new questions. Created U07 NFR Design plan, `nfr-design-patterns.md` (P1-P7: single locked ledger path, shared idempotent settlement for webhook and reconcile, webhook verification with constant-time HMAC, idempotent link creation and 53-bit orderCode, idempotent reservations with SKIP LOCKED sweeper, batched reconcile, fake PayOS adapter) and `logical-components.md`.
+
+**Context**: U07 NFR Design Step 7; awaiting approval.
+
+---
+
+## U07 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T21:48:45Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U07 NFR Design. No new questions. Created U07 `infrastructure-design.md` (mapping, PayOS setup and webhook URL, Nginx webhook limit, migration with append-only ledger grants) and `deployment-architecture.md`. Shared infrastructure: PayOS secrets, `APP_PUBLIC_URL`, egress to PayOS, webhook body limit.
+
+**Context**: U07 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U07 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T21:49:31Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U07 Infrastructure Design. Created `u07-payment-credit-code-generation-plan.md` (Step 0 + 27 steps). Uses real U01/U02 ports; PayOS adapter plus fake adapter for local; provides CreditPort for U13.
+
+**Context**: U07 Code Generation Part 1; plan awaiting approval.
+
+---
