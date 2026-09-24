@@ -15,7 +15,7 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 | U05 | H | H | H | H | - | - | - | - | - | - | - | - | - | - | - | - |
 | U06 | H | H | H | H | C | - | - | - | - | - | - | - | - | - | - | - |
 | U07 | H | H | - | H | - | - | - | - | - | - | - | - | - | - | - | - |
-| U08 | H | H | - | H | H | H | - | - | - | - | - | - | C | - | - | - |
+| U08 | H | H | - | H | H | H | - | - | C | - | - | - | C | - | - | - |
 | U09 | H | H | - | H | - | H | - | H | - | - | - | - | - | - | - | - |
 | U10 | H | H | - | H | - | H | - | H | H | - | - | - | - | - | - | - |
 | U11 | H | H | H | H | - | H | - | H | H | H | - | - | C | - | - | - |
@@ -81,6 +81,7 @@ flowchart LR
     U03 -.-> U01
     U05 -.-> U04
     U13 -.-> U08
+    U09 -.-> U08
     U13 -.-> U11
     U15 -.-> U16
 ```
@@ -99,7 +100,7 @@ U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `
 | Learning access within U04 | U04 enrollment + U05 published content → Learning Access capability in U04 | Đây là orchestration nội bộ của U04, không phải self-dependency giữa unit; chỉ trả nội dung khi enrollment và publication hợp lệ; không lưu lesson progress |
 | Ngân hàng → đề/attempt/chấm | U06 → U08/U09/U10/U11/U15 | QuestionVersion/RubricVersion immutable và snapshot đúng version |
 | Tạo đề | U05/U06 → U13 → U08; U09/U10 cấu hình | U13 trả AI draft proposal; U08 review, sửa, lưu và publish. RAG chỉ hỗ trợ nguồn khi được chọn |
-| Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; sửa đề tạo version mới |
+| Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; bài đã phát hành khóa nội dung |
 | Nhóm → phần nộp | U12 + U11 → U14 | Allocation, immutable part submission và ordered source versions; giảng viên chốt composite |
 | Chấm | U11/U14/U06 → U15; U13 hỗ trợ | AI chỉ trả proposal; U15 lưu manual/final grade, composite luôn chấm tay |
 | Báo cáo/thông báo | Owner events → U16 | Projection theo quyền, outbox delivery; lỗi gửi không rollback transaction nguồn |

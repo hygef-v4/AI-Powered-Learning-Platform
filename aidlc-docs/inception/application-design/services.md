@@ -56,7 +56,7 @@ Mỗi module có application service làm transaction boundary. Controller nhậ
 2. AssessmentService kiểm tra quyền và đọc `QuestionVersion`/`RubricVersion` qua BankService; giảng viên có thể soạn trực tiếp hoặc yêu cầu AiOrchestrationService tạo draft qua JobService.
 3. AI chỉ tạo bản nháp từ nguồn Content/File được phép. RAG là cơ chế hỗ trợ truy xuất nguồn khi cần, không phải bước bắt buộc của luồng tạo đề.
 4. Giảng viên duyệt, sửa, rồi phát hành một assignment version bất biến cho lớp; SubmissionService đóng băng assignment/question/rubric version khi learner bắt đầu attempt.
-5. Khi sửa đề đã giao, AssessmentService tạo `version_no + 1` trên cùng `stable_key` và publication mới trỏ tới version mới; attempt cũ tiếp tục dùng snapshot cũ.
+5. Assignment đã phát hành bị khóa nội dung; muốn đổi thì giảng viên ngưng giao publication cũ và nhân bản assignment thành bản nháp mới.
 
 ### Nạp nguồn RAG hỗ trợ AI
 

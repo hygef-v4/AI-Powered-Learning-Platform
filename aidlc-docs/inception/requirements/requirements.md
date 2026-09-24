@@ -176,9 +176,8 @@ Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm 
 **Tiêu chí chấp nhận:**
 
 - Câu hỏi chưa publish có thể sửa trong draft hiện tại.
-- Khi một assignment đã publish nhưng vẫn còn trong thời hạn làm bài, chỉnh sửa câu hỏi tạo version mới; không sửa snapshot của lượt làm đã bắt đầu.
-- Version mới chỉ áp dụng cho lượt làm bắt đầu sau khi giảng viên phát hành version đó; hệ thống lưu version được dùng cho từng attempt.
-- Nếu thay đổi ảnh hưởng đáng kể đến tính công bằng, giảng viên có thể gia hạn hoặc cấp lượt làm lại và hành động này phải được audit.
+- Assignment đã phát hành bị khóa nội dung (kể cả khi chưa ai làm); muốn thay đổi thì ngưng giao rồi nhân bản thành assignment mới. Hệ thống lưu version câu hỏi được dùng cho từng attempt.
+- Sửa câu hỏi trong ngân hàng tạo version mới và không ảnh hưởng assignment đã dùng version cũ.
 - Rubric đã dùng để chấm không bị ghi đè; thay đổi tạo version mới cho lần sử dụng sau.
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành

@@ -645,17 +645,17 @@
 - **When** người dùng tạo, sửa, tìm kiếm hoặc nhập tệp
 - **Then** câu hỏi được lưu đúng lớp/môn, kết quả nhập báo theo dòng và không tạo bản ghi lỗi
 
-#### Scenario 2 - Câu hỏi đã phát hành
+#### Scenario 2 - Câu hỏi đã được dùng trong bài
 
-- **Given** câu hỏi đã thuộc một bài được phát hành nhưng vẫn còn trong thời hạn làm
-- **When** người dùng sửa câu hỏi và phát hành version mới
-- **Then** snapshot của attempt đã bắt đầu không đổi, còn version mới chỉ áp dụng cho attempt bắt đầu sau thời điểm phát hành mới
+- **Given** câu hỏi đã thuộc một bài được phát hành
+- **When** người dùng sửa câu hỏi trong ngân hàng
+- **Then** hệ thống tạo version mới trong ngân hàng; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
 
-#### Scenario 3 - Thay đổi ảnh hưởng công bằng
+#### Scenario 3 - Muốn đổi nội dung bài đã phát hành
 
-- **Given** chỉnh sửa câu hỏi làm thay đổi đáng kể nội dung hoặc đáp án
-- **When** giảng viên phát hành version mới
-- **Then** hệ thống yêu cầu giảng viên cân nhắc gia hạn hoặc cấp lượt làm lại, giữ version trên từng attempt và audit quyết định
+- **Given** bài đã phát hành cần thay đổi nội dung hoặc đáp án
+- **When** giảng viên thử sửa bài
+- **Then** hệ thống không cho sửa; giảng viên ngưng giao bài cũ và nhân bản thành bài mới, thao tác được audit
 
 ### US-QBK-003 - Phân tích chất lượng câu hỏi (Phase 2)
 

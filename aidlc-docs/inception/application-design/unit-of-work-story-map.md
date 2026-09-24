@@ -37,7 +37,7 @@ Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực ti
 | Tạo đề thủ công, duyệt và phát hành lớp | U08 | U04 scope, U06 bank, U09 cấu hình kiểu câu hỏi |
 | Đề chung cấp môn và cấu hình quiz/essay | U09 | U08 aggregate/publication, U06 rubric/question versions |
 | AI tạo bản nháp đề | U13 | U05 nguồn học liệu, U06 bank; U08 duyệt/lưu/publish |
-| Sửa assignment đã giao | U08 | U10 giữ template/copy/simulation policy; tạo version kế tiếp trên cùng stable key |
+| Thay đổi assignment đã giao | U08 | Không sửa được; ngưng giao rồi nhân bản thành bài mới. U10 giữ template/copy/simulation policy |
 | Soạn bài Draw.io | U09 sở hữu cấu hình loại bài và quy tắc kiểm XML | U03 giữ artifact full XML/checksum; U08 aggregate/publication |
 | Soạn Code Lab và nộp bài Draw.io/Code Lab | U13 sở hữu Code Lab authoring và CodeExecution; U11 sở hữu attempt/submission | U03 giữ artifact; U08 publication; U09 cấu hình loại bài Draw.io |
 | Bài nhóm | U12 nhóm/phân phần; U14 nộp phần và composite | U11 attempt; U15 lưu grade cuối |
@@ -54,5 +54,5 @@ Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực ti
 
 - U01-U16 bao phủ đúng 87 UC còn hiệu lực, mỗi UC một primary unit; U03 có 0 UC vì là hạ tầng.
 - Mọi story còn hiệu lực trong `stories.md` xuất hiện một lần ở bảng unit; hai story bị loại được nêu riêng ở mục 4.
-- `UC-ASM-15` vẫn là Phase 2 cho clone/retire nâng cao; quy tắc sửa đề đã giao tăng version là invariant MVP của U08.
+- `UC-ASM-15` vẫn là Phase 2 cho clone/retire nâng cao; quy tắc khóa nội dung bài đã phát hành là invariant MVP của U08.
 - Không mở lại `US-CAT-004` hoặc `US-GRD-009` vì chúng không nằm trong catalog được duyệt.

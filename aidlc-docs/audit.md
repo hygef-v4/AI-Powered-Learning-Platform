@@ -1609,3 +1609,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U07 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U07 Code Plan Approval and U08 Functional Design
+
+**Timestamp**: 2026-09-24T21:54:59Z
+
+**User Input**: "continue"; UI answers: "Mỗi bài một loại (Khuyến nghị)", "Cho phép câu riêng trong bài", "Chính GV tự duyệt (Khuyến nghị)", "Không cho sửa", "Sửa luôn (Khuyến nghị)", "Cũng không cho sửa", "có tuỳ chọn cho nộp trễ", "Mỗi lần một lớp + báo app & email"
+
+**AI Response**: Treated "continue" as approval of the U07 code generation plan. Created U08 functional design: one type per assignment, bank or inline questions, self-review, one class per publication, optional late submission with hard deadline, content locked from first publication (even with no attempts), retire + clone instead of editing, scheduled open/close with notification event (BR-U08-01..50). Synced inception: FR-016, US-QBK-002 S2/S3, story map, unit-of-work, application-design, components, component-dependency, services now describe locked published assignments; added `C` edge U09 → U08 for type config checks.
+
+**Context**: U08 Functional Design Step 7; awaiting approval.
+
+---
+
+## U08 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T21:55:43Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U08 Functional Design. No new questions. Created U08 NFR plan, `nfr-requirements.md` (NFR-U08-01..41: performance, UTC storage with Vietnam display, server-time deadlines, locked content, conditional state transitions, answer hiding) and `tech-stack-decisions.md` (scheduling via U02 jobs).
+
+**Context**: U08 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U08 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T21:56:27Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U08 NFR Requirements. No new questions. Created U08 NFR Design plan, `nfr-design-patterns.md` (P1-P6: locked aggregate with optimistic locking, U02 scheduled jobs with conditional updates keyed by expected time, on-the-fly submission window, learner view mapping, extensible review checks, after-commit events) and `logical-components.md`.
+
+**Context**: U08 NFR Design Step 7; awaiting approval.
+
+---
+
+## U08 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T21:57:08Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U08 NFR Design. No new questions. Created U08 `infrastructure-design.md` (mapping, queues, event routing keys, UTC containers, migration with CHECK constraints and partial unique publication index) and `deployment-architecture.md`. No shared infrastructure changes.
+
+**Context**: U08 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U08 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T21:58:06Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U08 Infrastructure Design. Created `u08-assessment-core-publication-code-generation-plan.md` (Step 0 + 26 steps). Uses real U01, U02, U04, U05, U06 ports; temporary adapters for U09 type-config check (pass) and U13 AI drafts (unavailable).
+
+**Context**: U08 Code Generation Part 1; plan awaiting approval.
+
+---

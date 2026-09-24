@@ -31,7 +31,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Content | Nội dung và học liệu | Nội dung lớp, file/YouTube source, caption/transcript, version và RAG lifecycle |
 | Learning | Hành trình học | Kiểm tra enrollment để truy cập nội dung/lớp; không lưu tiến độ từng bài học |
 | Question Bank | Rubric và câu hỏi | Versioned rubric/question bank, preview, analytics Phase 2 |
-| Assessment | Vòng đời bài đánh giá | Tạo đề thủ công/AI draft, review/publish, template/copy assignment lineage, version kế tiếp khi sửa đề đã giao, schedule, simulation policy, attempt snapshot và đề chung |
+| Assessment | Vòng đời bài đánh giá | Tạo đề thủ công/AI draft, review/publish, template/copy assignment lineage, khóa nội dung sau phát hành, ngưng giao/nhân bản, schedule, simulation policy, attempt snapshot và đề chung |
 | Submission | Nháp và bản nộp | Autosave, immutable attempts, Draw.io full XML, group parts, generated composite version và receipt |
 | Grading | Chấm và công bố | Deterministic/AI proposal cho bài cá nhân, manual composite grade, consistency rubric, manual per-student final decision |
 | AI Orchestration | Tương tác AI | Provider-neutral ports, prompt context scope, jobs, quota, kill-switch |
@@ -60,7 +60,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 - Module chỉ truy cập dữ liệu module khác qua application service/port đã công bố.
 - Mọi object access nhận actor context và resource scope; controller không thay thế authorization service.
 - Submission sở hữu bản nộp. Grading chỉ tham chiếu immutable submission version.
-- Assessment sở hữu version/template/copy assignment/publication policy; sửa đề giảng viên đã giao tạo version mới trên cùng stable key. Submission giữ assignment/question/rubric snapshot tại thời điểm attempt bắt đầu. Không có thao tác sao chép khóa học/lớp.
+- Assessment sở hữu version/template/copy assignment/publication policy; assignment đã phát hành bị khóa nội dung, thay đổi bằng ngưng giao và nhân bản. Submission giữ assignment/question/rubric snapshot tại thời điểm attempt bắt đầu. Không có thao tác sao chép khóa học/lớp.
 - Content sở hữu transcript source/status; vector index chỉ giữ reference tới đúng resource version.
 - Full Draw.io XML là artifact gốc. Derived compact XML thuộc AI job, có TTL/retention riêng và không thay đổi bản gốc.
 - AI Orchestration không được publish assessment hoặc final grade.
