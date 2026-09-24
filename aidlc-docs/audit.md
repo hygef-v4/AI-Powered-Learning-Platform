@@ -1297,3 +1297,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U02 Code Generation Part 1 Step 6; awaiting approval.
 
 ---
+
+## U02 Code Plan Approval and U03 NFR Requirements
+
+**Timestamp**: 2026-09-24T19:53:21Z
+
+**User Input**: "được r làm tiếp u03 đi"; answers N1 "dựa vào .env", N2 "Tối đa 5 cùng lúc, ghi file tạm ra đĩa (Khuyến nghị)"
+
+**AI Response**: Treated "được r" as approval of the U02 code generation plan (flagged to the user). Interpreted N1 as: Drive auth mode and credentials come from environment variables, supporting service account (default) and OAuth. Created U03 NFR plan, questions, `nfr-requirements.md` (NFR-U03-01..31) and `tech-stack-decisions.md`; added Drive variables to shared infrastructure secrets.
+
+**Context**: U03 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U03 NFR Requirements - Drive Credential Clarification
+
+**Timestamp**: 2026-09-24T19:54:36Z
+
+**User Input**: "dựa vào .env tức là nó sẽ có key gì đó ở env sau đó upload lên theo cái key đấy"
+
+**AI Response**: Explained that Google Drive does not allow uploads with a plain API key; the key must be a service account JSON key. Dropped the OAuth mode; NFR-U03-10 now uses `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY` (base64 JSON) and `GOOGLE_SHARED_DRIVE_ID` from `.env`. Updated tech stack, question file and shared infrastructure secrets.
+
+**Context**: U03 NFR Requirements revision; awaiting approval.
+
+---
+
+## U03 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T19:56:02Z
+
+**User Input**: "approved"
+
+**AI Response**: Recorded approval of U03 NFR Requirements. Evaluated NFR Design question categories; all choices were already fixed, so no new questions. Created U03 NFR Design plan, `nfr-design-patterns.md` (P1-P8: compensating upload cleanup, streaming download with safe headers, Tika + hardened XML parser, no ZIP extraction, Redis download tokens, swappable Drive/local storage, Drive timeouts/retry, derived deletion via U02 jobs, cached Drive health) and `logical-components.md`.
+
+**Context**: U03 NFR Design Step 7; awaiting approval.
+
+---
+
+## U03 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T20:00:19Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval of U03 NFR Design. No new infrastructure questions (Drive, VPS, Compose and secrets already decided). Created U03 `infrastructure-design.md` (component mapping, Drive service-account config, upload-tmp volume, Nginx unbuffered 50 MB uploads, artifacts migration) and `deployment-architecture.md`; added Nginx upload settings and Google API egress to shared infrastructure.
+
+**Context**: U03 Infrastructure Design Step 7; awaiting approval. Code generation plan follows approval.
+
+---
+
+## U03 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T20:02:49Z
+
+**User Input**: "Approve"
+
+**AI Response**: Recorded approval of U03 Infrastructure Design. Created `u03-file-and-artifact-code-generation-plan.md` (Step 0 + 28 steps: scaffold check, domain/logic, data/storage adapters, API, shared frontend file components, README and test run). AuthorizationPort fake denies when U01 is not coded; JobPort/AuditPort use real U02.
+
+**Context**: U03 Code Generation Part 1; plan awaiting approval.
+
+---

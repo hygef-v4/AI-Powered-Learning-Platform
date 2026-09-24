@@ -42,10 +42,12 @@ VPS tối thiểu gợi ý: 2 vCPU, 4 GB RAM, 40 GB SSD.
 - RabbitMQ management **không public**; truy cập qua SSH tunnel.
 - Nginx thêm header của SEC-004: CSP `default-src 'self'`, HSTS 1 năm, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
 - Định tuyến: `/api/*` → backend, còn lại → frontend.
+- `client_max_body_size 50m`; riêng `/api/v1/files` tắt đệm request (`proxy_request_buffering off`) và `proxy_read_timeout 120s`.
+- Backend và worker cần kết nối ra `www.googleapis.com:443` để dùng Google Drive; firewall chỉ chặn chiều vào.
 
 ## 4. Secret
 
-- CI/CD giữ: `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_MIGRATOR_PASSWORD`, `POSTGRES_APP_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
+- CI/CD giữ: `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`, `GOOGLE_SHARED_DRIVE_ID`, `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_MIGRATOR_PASSWORD`, `POSTGRES_APP_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
 - Khi deploy, pipeline ghi `.env` qua SSH, quyền `600`, chủ là user deploy. Không commit, không in ra log pipeline.
 - Xoay secret thủ công: đổi trong CI/CD rồi deploy lại. Đổi `U01_JWT_SECRET` làm mọi access token hiện có mất hiệu lực.
 
