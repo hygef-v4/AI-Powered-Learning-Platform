@@ -1143,3 +1143,27 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U01 Code Generation Part 1 Step 6; awaiting approval.
 
 ---
+
+## Security and Resiliency Scope Reduction
+
+**Timestamp**: 2026-09-24T16:40:41Z
+
+**User Input**: "liệt kê lại các sec với res rule rồi điều chỉnh lại cho nó đơn giản hơn, phù hợp với 1 dựa ns sinh viên"; answers "Theo đề xuất: giữ 7 Security + 3 Resiliency (Khuyến nghị)", "Bỏ, chỉ dùng docker logs (Khuyến nghị)"
+
+**AI Response**: Listed all 15 Security and 15 Resiliency rules with current status. Reduced scope to SECURITY-03, 04, 05, 08, 09, 12, 15 and RESILIENCY-04, 06, 10; the rest are N/A "ngoài phạm vi đồ án". Rewrote requirements sections 7, 8, 12 and 13 (SEC-001..007, REL-001..004), recorded the scope in aidlc-state, removed Prometheus/Grafana/Loki from shared infrastructure, replaced U01 compliance tables and removed alerting requirements, the RESILIENCY-14 failure-test section and code-generation step 27.
+
+**Context**: Cross-cutting scope change; U01 code generation plan still awaiting approval.
+
+---
+
+## Cost Review of Security and Resiliency Scope
+
+**Timestamp**: 2026-09-24T16:46:01Z
+
+**User Input**: "check lại lần nữa xem các cài sec với res có cái nào mất phí ko, có thì bỏ đi"; answers "có vps rồi", "Mailpit khi dev + Gmail SMTP khi demo (Khuyến nghị)"
+
+**AI Response**: Found three potential costs: VPS hosting, a domain for HTTPS, and a production SMTP provider. VPS is already owned, so no new cost. Documented Let's Encrypt with an existing domain or a free DuckDNS subdomain, and Gmail SMTP with an App Password for demos. Added REL-005 requiring zero-cost security and operations components. Noted that AI API and payment gateway fees are functional costs outside this review.
+
+**Context**: Cross-cutting scope clarification.
+
+---

@@ -109,4 +109,4 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-92 | Lỗi gửi email không làm hỏng yêu cầu: người dùng vẫn nhận phản hồi trung tính, outbox retry hữu hạn. | US-IAM-003 S2, RESILIENCY |
 | BR-U01-93 | Khi không kiểm được quyền (phụ thuộc lỗi) thì từ chối. | SECURITY-15 |
 | BR-U01-94 | Lỗi trả client dạng an toàn, không lộ stack trace hay trạng thái tài khoản. | SECURITY-15 |
-| BR-U01-95 | Redis không khả dụng thì không tạo phiên mới, không refresh, không gửi OTP; trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | SEC-007, U01 NFR |
+| BR-U01-95 | Redis không khả dụng thì không tạo phiên mới, không refresh, không gửi OTP; trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | SEC-006, U01 NFR |

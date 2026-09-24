@@ -28,6 +28,8 @@
 | Resiliency Baseline | Yes | Requirements Analysis |
 | Property-Based Testing | No | Requirements Analysis |
 
+**Phạm vi rule rút gọn (2026-09-24)**: Security chỉ áp dụng SECURITY-03, 04, 05, 08, 09, 12, 15; Resiliency chỉ áp dụng RESILIENCY-04, 06, 10. Các rule còn lại là N/A "ngoài phạm vi đồ án" ở mọi stage, không phải blocking finding. Xem `requirements.md` mục 12-13.
+
 ## Stage Progress
 - [x] Workspace Detection
 - [x] Requirements Analysis

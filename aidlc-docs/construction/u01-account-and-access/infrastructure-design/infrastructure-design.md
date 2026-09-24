@@ -20,7 +20,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 | Exchange | `u01.events` (direct) |
 | Queue | `u01.otp-delivery`, durable |
 | Retry | Queue trễ `u01.otp-delivery.retry` với TTL 30 s, 1, 2, 4, 8 phút |
-| Dead-letter | `u01.otp-delivery.dlq`; cảnh báo khi có message |
+| Dead-letter | `u01.otp-delivery.dlq`; ghi log mức ERROR khi có message |
 | Payload | `{ schemaVersion, jobId, correlationId, accountId, purpose }` - không chứa mã OTP |
 
 ## 3. Redis
@@ -39,23 +39,20 @@ Biến môi trường như `logical-components.md` mục 4; giá trị bí mật
 
 ## 5. Quan sát riêng U01
 
-| Loại | Chỉ số / luật |
-|---|---|
-| Metric | `u01_login_total{result}`, `u01_account_temp_locked_total`, `u01_otp_requested_total{purpose}`, `u01_otp_sent_total{result}`, `u01_rate_limited_total{bucket}`, `u01_access_denied_total` |
-| Cảnh báo | > 20 đăng nhập thất bại/5 phút từ một IP; > 10 lần từ chối quyền/5 phút cho một tài khoản; có thay đổi role; `u01.otp-delivery.dlq` > 0 |
+Log có cấu trúc với các sự kiện `LOGIN_FAILED`, `ACCOUNT_TEMP_LOCKED`, `ROLE_CHANGED`, `ACCESS_DENIED`, `OTP_DELIVERY_FAILED`. Không có metric hay cảnh báo.
 
 ## 6. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-01 | **Ngoại lệ được chấp nhận** | Không mã hóa at rest, không TLS nội bộ |
-| SECURITY-02 | Compliant | Nginx access log vào Loki |
-| SECURITY-06, 07, 09 | Compliant | Datastore không public, firewall chỉ 80/443/SSH, SSH bằng khóa, tắt root |
+| SECURITY-03 | Compliant | Log che mật khẩu, OTP, token, số điện thoại; audit sự kiện đăng nhập/đổi quyền |
 | SECURITY-04 | Compliant | Header ở Nginx |
-| SECURITY-10 | Compliant | Image khóa phiên bản, tag SHA |
-| SECURITY-12 | Ngoại lệ đã ghi ở NFR Requirements | - |
-| SECURITY-14 | Compliant một phần | Có cảnh báo; log không thật sự append-only (ngoại lệ trong shared-infrastructure) |
-| RESILIENCY-04 | Compliant | Direct deploy, rollback bằng tag SHA |
-| RESILIENCY-05, 06, 07 | Compliant | Prometheus/Grafana, healthcheck mọi container, cảnh báo 80% |
-| RESILIENCY-08, 11, 12 | **Ngoại lệ được chấp nhận** | Một VPS, không backup |
-| RESILIENCY-13 | Compliant tối thiểu | Runbook dựng lại: cài Docker, chạy pipeline deploy; dữ liệu không khôi phục được |
+| SECURITY-05 | Compliant | Validate email, hồ sơ, CSV; rate limit endpoint public |
+| SECURITY-08 | Compliant | `authorize()` mặc định từ chối, kiểm role + phạm vi phía server |
+| SECURITY-09 | Compliant | Không default password, secret từ biến môi trường |
+| SECURITY-12 | Compliant (rút gọn) | bcrypt, ≥ 8 ký tự, khóa tạm, cookie HttpOnly; không MFA, không kiểm mật khẩu lộ theo phạm vi đồ án |
+| SECURITY-15 | Compliant | Lỗi an toàn, fail-closed khi phụ thuộc lỗi |
+| RESILIENCY-04 | Compliant | Deploy Compose, rollback bằng tag |
+| RESILIENCY-06 | Compliant | Healthcheck container, `/health` |
+| RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc; không circuit breaker |
+| Rule còn lại | N/A | Ngoài phạm vi đồ án (`requirements.md` mục 12-13) |

@@ -53,7 +53,7 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 | U03 (`AvatarPort`) | 2 s | Tắt đổi ảnh, hồ sơ còn lại chạy | NFR-U01-43 |
 | SMTP | Kết nối 5 s, gửi 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
 
-- **Không dùng circuit breaker** (Câu D2). Lý do: quy mô ≤ 100 người đồng thời, mọi timeout ngắn và pool hữu hạn nên phụ thuộc chết không làm cạn tài nguyên; SMTP đã tách sang worker bất đồng bộ. RESILIENCY-10 cho phép ghi "không áp dụng" với circuit breaker.
+- **Không dùng circuit breaker** (Câu D2): quy mô ≤ 100 người đồng thời, timeout ngắn và pool hữu hạn là đủ.
 
 ### P8 - Pool hữu hạn (bulkhead nhẹ)
 - Pool PostgreSQL tối đa 10 kết nối; pool Redis tối đa 16.
@@ -68,22 +68,11 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 
 ## 4. Quan sát
 
-### P10 - Log, metric, health
+### P10 - Log và health
 - Log JSON: `timestamp`, `level`, `correlationId`, `event`, `accountId` khi có. Bộ lọc che `password`, `otp`, `token`, `phone` trước khi ghi (NFR-U01-50).
-- Metric: số đăng nhập thành công/thất bại, số khóa tạm, số OTP gửi/thất bại, số lần chạm rate limit, độ trễ p95 từng endpoint.
-- Cảnh báo: > 20 đăng nhập thất bại/5 phút từ một IP; > 10 lần từ chối quyền/5 phút cho một tài khoản; mọi thay đổi role (NFR-U01-52).
-- Health: `/health/live` nông; `/health/ready` kiểm PostgreSQL và Redis (REL-005, RESILIENCY-06).
+- Xem log bằng `docker compose logs`. Không có metric, dashboard hay cảnh báo tự động (ngoài phạm vi đồ án).
+- Health: `/health` kiểm PostgreSQL và Redis; Docker Compose dùng nó làm healthcheck.
 
-## 5. Kiểm thử chịu lỗi (RESILIENCY-14)
+## 5. Kiểm thử lỗi phụ thuộc
 
-Integration test với Testcontainers, chạy trong CI mỗi lần build; kết quả lưu cùng báo cáo test (Câu D4):
-
-| Kịch bản | Kỳ vọng |
-|---|---|
-| Dừng Redis rồi đăng nhập | `503`, không tạo phiên |
-| Dừng Redis, gọi API bằng access còn hạn | Vẫn thành công |
-| Dừng Redis rồi yêu cầu OTP | `503` từ rate limit, không ghi outbox |
-| Dừng Mailpit rồi yêu cầu OTP | `202`; job retry rồi vào dead-letter |
-| Dừng PostgreSQL rồi đăng nhập | `503` an toàn, không lộ chi tiết |
-| U04 giả trả chậm quá timeout | Từ chối quyền |
-| Bật lại phụ thuộc | Luồng tự phục hồi, không cần khởi động lại backend |
+Không bắt buộc (RESILIENCY-14 ngoài phạm vi đồ án). Hành vi fail-closed ở P7 vẫn được kiểm bằng unit test với adapter giả trả lỗi.

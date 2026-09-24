@@ -19,7 +19,7 @@
 
 **Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email trường để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
 
-**Truy vết**: FR-001, FR-011, NFR-002, SEC-002, SEC-003, SEC-007.
+**Truy vết**: FR-001, FR-011, NFR-002, SEC-001, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -45,7 +45,7 @@
 
 **Story**: Là người dùng, tôi muốn đăng nhập và đăng xuất an toàn để chỉ mình tôi sử dụng phiên đã xác thực.
 
-**Truy vết**: FR-001, FR-002, NFR-002, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-001, FR-002, NFR-002, SEC-001, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -71,7 +71,7 @@
 
 **Story**: Là người dùng quên mật khẩu, tôi muốn yêu cầu khôi phục mà không làm lộ trạng thái tài khoản để lấy lại quyền truy cập an toàn.
 
-**Truy vết**: FR-001, FR-011, SEC-002, SEC-003, SEC-007, REL-007.
+**Truy vết**: FR-001, FR-011, SEC-001, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -91,7 +91,7 @@
 
 **Story**: Là người dùng, tôi muốn xem và cập nhật thông tin hồ sơ tối thiểu của mình để dữ liệu tài khoản luôn chính xác.
 
-**Truy vết**: FR-001, FR-002, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-001, FR-002, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -111,7 +111,7 @@
 
 **Story**: Là quản trị viên, tôi muốn gán hoặc thu hồi vai trò và phạm vi môn để người dùng chỉ có đúng quyền cần thiết.
 
-**Truy vết**: FR-002, FR-003, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -137,7 +137,7 @@
 
 **Story**: Là người dùng đã xác thực, tôi muốn đổi mật khẩu để chủ động bảo vệ tài khoản của mình.
 
-**Truy vết**: FR-001, SEC-002, SEC-003, SEC-007.
+**Truy vết**: FR-001, SEC-001, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -157,7 +157,7 @@
 
 **Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản để quản lý tài khoản người dùng trong tổ chức.
 
-**Truy vết**: FR-002, FR-015, FR-014, SEC-002, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-015, FR-014, SEC-001, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -185,7 +185,7 @@
 
 **Story**: Là quản trị viên, tôi muốn tạo môn, tạo lớp thuộc môn và phân công vai trò để cấu trúc học thuật phản ánh đúng hoạt động đào tạo.
 
-**Truy vết**: FR-002, FR-003, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -205,7 +205,7 @@
 
 **Story**: Là giảng viên, tôi muốn tạo, sửa, xuất bản và lưu trữ lớp/khóa học được phân công để kiểm soát nội dung người học nhìn thấy.
 
-**Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -231,7 +231,7 @@
 
 **Story**: Là giảng viên hoặc quản trị viên được phép, tôi muốn ghi danh người học vào lớp để họ nhận đúng nội dung và bài tập.
 
-**Truy vết**: FR-002, FR-003, FR-011, FR-014, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-011, FR-014, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -257,7 +257,7 @@
 
 **Story**: Là người học, tôi muốn dùng mã mời để tự ghi danh vào lớp được phép mà không phải chờ nhập thủ công.
 
-**Truy vết**: FR-002, FR-003, FR-022, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-022, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -277,7 +277,7 @@
 
 **Story**: Là Chủ nhiệm môn, tôi muốn soạn hoặc tải học liệu vào kho cấp môn và theo dõi xử lý RAG để mọi lớp dùng chung nguồn đã kiểm soát.
 
-**Truy vết**: FR-002, FR-004, FR-012, FR-013, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-012, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -309,7 +309,7 @@
 
 **Story**: Là giảng viên, tôi muốn soạn hoặc tải nội dung riêng cho lớp được phân công để bổ sung học liệu phù hợp với lớp mình.
 
-**Truy vết**: FR-002, FR-003, FR-004, FR-013, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-003, FR-004, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -335,7 +335,7 @@
 
 **Story**: Là người dùng có quyền, tôi muốn tìm kiếm ngữ nghĩa và nhận bản tóm tắt học liệu để nhanh chóng tìm đúng nội dung cần học hoặc soạn bài.
 
-**Truy vết**: FR-002, FR-004, FR-012, FR-023, SEC-003, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-012, FR-023, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -355,7 +355,7 @@
 
 **Story**: Là thành viên lớp, tôi muốn đọc thông báo và trao đổi hỏi đáp trong đúng lớp để phối hợp học tập tại một nơi.
 
-**Truy vết**: FR-002, FR-003, FR-011, FR-023, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-011, FR-023, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -375,7 +375,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn gắn video/playlist YouTube vào bài giảng và xử lý transcript để dùng đúng nguồn đó cho RAG.
 
-**Truy vết**: FR-002, FR-004, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -403,7 +403,7 @@
 
 **Story**: Là giảng viên, tôi muốn chia lớp được phân công thành nhiều nhóm và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
 
-**Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -423,7 +423,7 @@
 
 **Story**: Là thành viên nhóm, tôi muốn gửi yêu cầu thay đổi trưởng nhóm để giảng viên xem xét khi phân công hiện tại không còn phù hợp.
 
-**Truy vết**: FR-002, FR-011, FR-025, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-011, FR-025, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -443,7 +443,7 @@
 
 **Story**: Là giảng viên, tôi muốn tạo một bài chung và tách thành các phần cá nhân giao cho từng thành viên để mọi đóng góp cùng hướng tới một sản phẩm nhóm.
 
-**Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -463,7 +463,7 @@
 
 **Story**: Là thành viên nhóm, tôi muốn nộp phần cá nhân được giao để giảng viên có thể chấm tay hoặc chọn AI hỗ trợ đánh giá đóng góp của tôi.
 
-**Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-003, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -483,7 +483,7 @@
 
 **Story**: Là giảng viên, tôi muốn hệ thống ghép các phần cá nhân theo cấu trúc đã định nghĩa để tôi rà soát và chốt một tài liệu chung mà vẫn truy vết được nguồn đóng góp.
 
-**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -509,7 +509,7 @@
 
 **Story**: Là giảng viên, tôi muốn xem tài liệu chung cạnh các phần cá nhân, tự chấm tính tích hợp và quyết định điểm cuối từng sinh viên để phản ánh cả chất lượng chung và mức đóng góp.
 
-**Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-001, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-005, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -549,7 +549,7 @@
 
 **Story**: Là người học, tôi muốn xem cấu trúc và nội dung đã xuất bản của lớp được ghi danh để học đúng chương trình.
 
-**Truy vết**: FR-002, FR-003, FR-005, FR-013, NFR-002, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-005, FR-013, NFR-002, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -571,7 +571,7 @@
 
 **Story**: Là người học, tôi muốn đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất để duy trì tiến độ qua nhiều phiên.
 
-**Truy vết**: FR-005, FR-009, NFR-002, NFR-003, SEC-003, SEC-007.
+**Truy vết**: FR-005, FR-009, NFR-002, NFR-003, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -593,7 +593,7 @@
 
 **Story**: Là giảng viên, tôi muốn xem tiến độ tổng hợp và chi tiết phù hợp của lớp được phân công để hỗ trợ người học kịp thời.
 
-**Truy vết**: FR-002, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-009, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -615,7 +615,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và tái sử dụng rubric trong phạm vi được giao để chấm bài nhất quán.
 
-**Truy vết**: FR-002, FR-016, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-016, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -635,7 +635,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và nhập câu hỏi hàng loạt để tái sử dụng nội dung đánh giá có kiểm soát.
 
-**Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -661,7 +661,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn xem độ khó và độ phân biệt của câu hỏi để cải thiện ngân hàng câu hỏi dựa trên kết quả thực tế.
 
-**Truy vết**: FR-002, FR-016, FR-024, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-016, FR-024, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -683,7 +683,7 @@
 
 **Story**: Là giảng viên, tôi muốn yêu cầu AI tạo câu hỏi/bài tập từ nội dung được phép của lớp để giảm thời gian soạn bài.
 
-**Truy vết**: FR-002, FR-006, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -709,7 +709,7 @@
 
 **Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo đề từ kho học liệu/RAG của môn để chuẩn bị đánh giá thống nhất cho các lớp.
 
-**Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -735,7 +735,7 @@
 
 **Story**: Là quản trị viên, tôi muốn cấu hình giới hạn và giám sát việc sử dụng AI để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
 
-**Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -763,7 +763,7 @@
 
 **Story**: Là giảng viên, tôi muốn chỉnh sửa, duyệt và xuất bản bản nháp đánh giá cho lớp được phân công để kiểm soát chất lượng trước khi giao.
 
-**Truy vết**: FR-002, FR-006, FR-007, FR-014, SEC-003, SEC-005, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-007, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007.
 
 **Acceptance criteria**
 
@@ -783,7 +783,7 @@
 
 **Story**: Là Chủ nhiệm môn, tôi muốn duyệt và phát hành trực tiếp đề chung tới mọi lớp thuộc môn được phân công để bảo đảm đánh giá thống nhất.
 
-**Truy vết**: FR-002, FR-003, FR-006, FR-007, FR-014, SEC-003, SEC-005, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-006, FR-007, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007.
 
 **Acceptance criteria**
 
@@ -809,7 +809,7 @@
 
 **Story**: Là người học, tôi muốn làm và nộp bài đánh giá đang hiệu lực để hoàn thành yêu cầu học tập.
 
-**Truy vết**: FR-002, FR-007, FR-014, NFR-002, SEC-003, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-014, NFR-002, SEC-002, SEC-003, SEC-006, SEC-007.
 
 **Acceptance criteria**
 
@@ -847,7 +847,7 @@
 
 **Story**: Là người học, tôi muốn vẽ sơ đồ trên canvas Draw.io trong web và nộp XML đầy đủ để giảng viên xem chính xác bài làm của tôi.
 
-**Truy vết**: FR-002, FR-006, FR-017, FR-014, SEC-003, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-017, FR-014, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -873,7 +873,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn cấu hình Code Lab cùng test công khai/test ẩn và chạy thử để xác nhận bài có thể chấm tự động.
 
-**Truy vết**: FR-002, FR-006, FR-017, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-017, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -893,7 +893,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài trắc nghiệm với đáp án và quy tắc điểm để hệ thống có thể chấm nhất quán.
 
-**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -913,7 +913,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài viết luận với hướng dẫn và rubric để đánh giá câu trả lời mở theo tiêu chí rõ ràng.
 
-**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -933,7 +933,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, xem thay đổi phiên bản và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
 
-**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -953,7 +953,7 @@
 
 **Story**: Là Chủ nhiệm môn, tôi muốn phát hành template đề có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
 
-**Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -973,7 +973,7 @@
 
 **Story**: Là giảng viên, tôi muốn copy assignment và rubric giữa các lớp mình phụ trách để tái sử dụng nội dung mà không mang theo dữ liệu thực thi cũ.
 
-**Truy vết**: FR-002, FR-014, FR-016, FR-028, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-014, FR-016, FR-028, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -993,7 +993,7 @@
 
 **Story**: Là người học, tôi muốn làm simulation exam theo số lượt và chính sách rõ ràng để luyện tập hoặc nhận điểm thành phần mà không nhầm đây là kỳ thi chính thức.
 
-**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -1021,7 +1021,7 @@
 
 **Story**: Là người học, tôi muốn câu hỏi có đáp án xác định được tự chấm nhất quán để nhận kết quả theo chính sách công bố.
 
-**Truy vết**: FR-007, FR-008, FR-009, SEC-003, SEC-008.
+**Truy vết**: FR-007, FR-008, FR-009, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1041,7 +1041,7 @@
 
 **Story**: Là giảng viên, tôi muốn sau khi nhận bài có thể chọn AI đề xuất điểm và phản hồi để rút ngắn thời gian chấm mà không mất quyền quyết định.
 
-**Truy vết**: FR-002, FR-008, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-008, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -1073,7 +1073,7 @@
 
 **Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI rồi công bố kết quả để chịu trách nhiệm cho quyết định học thuật cuối cùng.
 
-**Truy vết**: FR-002, FR-008, FR-009, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-009, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -1105,7 +1105,7 @@
 
 **Story**: Là người dùng, tôi muốn xem điểm, phản hồi và trạng thái bài nộp đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
 
-**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1131,7 +1131,7 @@
 
 **Story**: Là giảng viên, tôi muốn kiểm tra và chốt điểm hàng loạt cho lớp được phân công để công bố kết quả nhất quán và có kiểm soát.
 
-**Truy vết**: FR-002, FR-008, FR-014, FR-020, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-014, FR-020, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -1151,7 +1151,7 @@
 
 **Story**: Là người học gặp trở ngại, tôi muốn xin gia hạn cho một bài cụ thể để được giảng viên xem xét mà không thay đổi hạn chung của lớp.
 
-**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1171,7 +1171,7 @@
 
 **Story**: Là người học, tôi muốn yêu cầu phúc khảo một kết quả đã công bố để nhận được quyết định và giải thích có truy vết.
 
-**Truy vết**: FR-002, FR-008, FR-023, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-023, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1191,7 +1191,7 @@
 
 **Story**: Là giảng viên, tôi muốn xem các cặp bài có độ tương đồng bất thường để có thêm chỉ báo khi đánh giá tính trung thực học thuật.
 
-**Truy vết**: FR-002, FR-008, FR-023, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-008, FR-023, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1213,7 +1213,7 @@
 
 **Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài và nhắc đúng người học để hỗ trợ họ hoàn thành trước hạn.
 
-**Truy vết**: FR-002, FR-011, FR-019, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-011, FR-019, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1233,7 +1233,7 @@
 
 **Story**: Là người học, tôi muốn xem dashboard điểm, trạng thái bài nộp và bài sắp đến hạn để ưu tiên việc học của mình.
 
-**Truy vết**: FR-002, FR-009, FR-024, NFR-002, SEC-001, SEC-003.
+**Truy vết**: FR-002, FR-009, FR-024, NFR-002, SEC-005, SEC-002, SEC-003.
 
 **Acceptance criteria**
 
@@ -1253,7 +1253,7 @@
 
 **Story**: Là giảng viên hoặc quản trị viên có quyền, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
 
-**Truy vết**: FR-002, FR-009, FR-024, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-009, FR-024, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1273,7 +1273,7 @@
 
 **Story**: Là quản trị viên hoặc giảng viên, tôi muốn so sánh điểm AI đề xuất với điểm cuối để cải thiện rubric và chất lượng hỗ trợ chấm.
 
-**Truy vết**: FR-002, FR-008, FR-021, FR-024, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-008, FR-021, FR-024, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1295,7 +1295,7 @@
 
 **Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua quyền truy cập mà nền tảng không lưu dữ liệu thẻ thô.
 
-**Truy vết**: FR-010, FR-014, NFR-002, SEC-001, SEC-003, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -1315,7 +1315,7 @@
 
 **Story**: Là người dùng đã thanh toán, tôi muốn quyền truy cập chỉ được cấp sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
-**Truy vết**: FR-010, FR-014, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -1341,7 +1341,7 @@
 
 **Story**: Là quản trị viên, tôi muốn đối soát giao dịch với nhà cung cấp để xử lý trạng thái chờ hoặc sai lệch mà không cấp quyền nhầm.
 
-**Truy vết**: FR-002, FR-010, FR-014, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-002, FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -1363,7 +1363,7 @@
 
 **Story**: Là người dùng, tôi muốn nhận thông báo về tài khoản, ghi danh, giao bài và kết quả để không bỏ lỡ hành động quan trọng.
 
-**Truy vết**: FR-011, NFR-002, NFR-003, SEC-001, SEC-007, REL-007.
+**Truy vết**: FR-011, NFR-002, NFR-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -1383,7 +1383,7 @@
 
 **Story**: Là quản trị viên, tôi muốn tra cứu sự kiện audit theo phạm vi và thời gian để điều tra thay đổi nhạy cảm mà không thể sửa lịch sử.
 
-**Truy vết**: FR-002, FR-014, SEC-001, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-014, SEC-005, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1448,8 +1448,8 @@
 | NFR-003 | Stories file/AI/payment/email có trạng thái, timeout và retry hữu hạn; API thường giữ mục tiêu p95 | NFR Design, Infrastructure Design, Build and Test |
 | NFR-004 | Acceptance criteria là đầu vào cho unit, integration, system và e2e test; adapter/webhook cần contract test | Code Generation, Build and Test |
 | NFR-005 | Không tạo system story; container, secret và version pinning là tiêu chí triển khai | Infrastructure Design, Code Generation, Build and Test |
-| SEC-001 đến SEC-009 | Được gắn trên stories có hành vi quan sát được; control hạ tầng/chuỗi cung ứng giữ downstream | NFR Design, Infrastructure Design, Code Generation, Build and Test |
-| REL-001 đến REL-010 | Failure/degraded behavior gắn vào story tích hợp; topology, DR, observability và incident process giữ downstream | Application Design, NFR Design, Infrastructure Design, Build and Test |
+| SEC-001 đến SEC-007 | Được gắn trên stories có hành vi quan sát được; phạm vi rút gọn cho đồ án | NFR Design, Infrastructure Design, Code Generation, Build and Test |
+| REL-001 đến REL-004 | Timeout và fail-closed gắn vào story tích hợp; topology, DR, monitoring và incident process ngoài phạm vi đồ án | Application Design, NFR Design, Infrastructure Design, Build and Test |
 
 ## 15. Kiểm tra INVEST
 
@@ -1501,7 +1501,7 @@ Không có blocking security finding tại User Stories.
 | RESILIENCY-11 | N/A | DR strategy đã chốt; runbook thuộc Infrastructure Design/Build and Test |
 | RESILIENCY-12 | N/A | Backup/retention/test restore thuộc Infrastructure Design/Build and Test |
 | RESILIENCY-13 | N/A | Failover/failback procedures thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-14 | N/A | Decision gate được giữ cho NFR Design theo REL-010 |
+| RESILIENCY-14 | N/A | Decision gate được giữ cho NFR Design theo REL-004 |
 | RESILIENCY-15 | N/A | Incident response/COE thuộc NFR/Infrastructure Design |
 
 Không có blocking resiliency finding tại User Stories; các mục N/A vẫn là ràng buộc bắt buộc tại stage downstream đã chỉ định.

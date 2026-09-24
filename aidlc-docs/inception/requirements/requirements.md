@@ -338,90 +338,57 @@ Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, đ�
 
 ## 7. Yêu cầu bảo mật và quyền riêng tư
 
-### SEC-001 - Bảo vệ dữ liệu
+Phạm vi rút gọn cho đồ án sinh viên, chỉ giữ các control rẻ để làm và cần có. Rule ngoài phạm vi ghi ở mục 12.
 
-Mọi kết nối từ Internet phải dùng TLS 1.2 trở lên. Dữ liệu nhạy cảm không được ghi log. Theo quyết định của người dùng tại U01 Infrastructure Design, MVP chạy trên một VPS: dữ liệu trên đĩa không mã hóa at rest và lưu lượng giữa các container trên cùng host đi qua mạng Docker nội bộ không TLS. Đây là ngoại lệ SECURITY-01 được chấp nhận.
+### SEC-001 - Mật khẩu và phiên
 
-### SEC-002 - Xác thực và phiên
+Mật khẩu băm bằng bcrypt, tối thiểu 8 ký tự có chữ và số. Sai 5 lần thì khóa tạm. Token nằm trong cookie `HttpOnly`, `Secure`, `SameSite`, có hạn và bị thu hồi khi đăng xuất. Không có MFA, không kiểm danh sách mật khẩu bị lộ.
 
-Mật khẩu phải được băm bằng thuật toán adaptive và có tối thiểu 8 ký tự. Theo quyết định của người dùng tại U01 NFR Requirements, MVP không kiểm tra danh sách mật khẩu đã lộ và không có MFA, kể cả tài khoản quản trị; đây là ngoại lệ SECURITY-12 được chấp nhận. Cookie phiên phải có `Secure`, `HttpOnly`, `SameSite`, thời hạn server-side và bị vô hiệu khi đăng xuất. Login phải có bảo vệ brute-force.
+### SEC-002 - Phân quyền
 
-### SEC-003 - Authorization và API
+Mọi API mặc định yêu cầu đăng nhập, trừ các endpoint được đánh dấu public. Quyền được kiểm phía server ở mức chức năng và đối tượng; frontend ẩn nút chỉ để tiện dùng.
 
-Mọi endpoint mặc định yêu cầu xác thực trừ khi được đánh dấu public. API phải kiểm tra quyền ở mức object và chức năng, xác thực toàn bộ input, giới hạn payload, dùng truy vấn tham số hóa và giới hạn CORS theo allowlist. Endpoint public phải có rate limiting. Thiết kế phải bao phủ các misuse case gồm leo thang đặc quyền, truy xuất nội dung ngoài khóa học qua prompt, thao túng điểm và webhook replay.
+### SEC-003 - Kiểm tra đầu vào
 
-### SEC-004 - Bảo mật web
+Mọi request body và tham số được validate kiểu, độ dài và định dạng. Truy vấn database luôn tham số hóa. Endpoint public có giới hạn tần suất.
 
-Endpoint phục vụ HTML phải thiết lập tối thiểu `Content-Security-Policy: default-src 'self'` mà không dùng `unsafe-inline`/`unsafe-eval` nếu không có lý do được duyệt; `Strict-Transport-Security: max-age=31536000; includeSubDomains`; `X-Content-Type-Options: nosniff`; `X-Frame-Options: DENY` trừ khi có yêu cầu framing được duyệt; và `Referrer-Policy: strict-origin-when-cross-origin`.
+### SEC-004 - Header HTTP
 
-### SEC-005 - Logging, alerting và audit
+Nginx thêm `Content-Security-Policy: default-src 'self'`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`. Truy cập từ Internet dùng HTTPS với chứng chỉ Let's Encrypt miễn phí; dùng tên miền có sẵn, nếu chưa có thì dùng subdomain miễn phí (DuckDNS).
 
-Ứng dụng phải dùng structured logging với timestamp, correlation ID, level và message. Mọi load balancer, API gateway hoặc CDN xử lý traffic bên ngoài phải bật access logging vào kho tập trung. Log production phải lưu tối thiểu 90 ngày trong kho append-only hoặc tamper-evident. Cảnh báo phải bao phủ đăng nhập thất bại lặp lại, vi phạm authorization và thay đổi đặc quyền; dashboard phải hiển thị các chỉ số vận hành và bảo mật chính. Ứng dụng không được sửa hoặc xóa audit log của chính nó.
+### SEC-005 - Log
 
-### SEC-006 - Chuỗi cung ứng
+Log không chứa mật khẩu, OTP, token hay dữ liệu cá nhân nhạy cảm. Sự kiện đăng nhập thất bại, đổi quyền và thao tác đặc quyền được ghi audit.
 
-Dependency phải có lock file hoặc phiên bản chính xác, lấy từ registry tin cậy, được xác minh integrity khi tải, được quét lỗ hổng và loại bỏ khi không dùng. Build production phải tạo SBOM và dùng tool/base image đã khóa phiên bản. Quyền sửa pipeline phải được kiểm soát và thay đổi phải audit được. External script từ CDN, nếu có, phải dùng Subresource Integrity.
+### SEC-006 - Xử lý lỗi và cấu hình an toàn
 
-### SEC-007 - Fail-safe và error handling
+Có global error handler; phản hồi lỗi không lộ stack trace, đường dẫn hay chi tiết database. Không có mật khẩu mặc định. Tắt Swagger và endpoint debug ở production. Secret không commit vào repository. Dependency khóa phiên bản.
 
-External call, file I/O và database operation phải xử lý lỗi rõ ràng, giải phóng tài nguyên và fail closed. Backend phải có global error handler; phản hồi production không được lộ stack trace, path, phiên bản framework hoặc chi tiết database. Không được có default credential; sample app, tính năng không dùng, directory listing và documentation endpoint không dành cho production phải bị loại bỏ hoặc vô hiệu hóa. Object storage phải chặn public access.
+### SEC-007 - Thanh toán
 
-### SEC-008 - Payment và integrity
+Không lưu thông tin thẻ. Webhook phải xác minh chữ ký và xử lý idempotent.
 
-Hệ thống không lưu thông tin thẻ thô. Webhook phải xác minh chữ ký, chống replay khi nhà cung cấp hỗ trợ và xử lý idempotent. Thay đổi dữ liệu quan trọng phải truy vết được actor và timestamp.
+## 8. Yêu cầu vận hành
 
-### SEC-009 - IAM và network least privilege
+### REL-001 - Triển khai
 
-Mọi IAM policy phải giới hạn action và resource cụ thể; wildcard chỉ được dùng khi API không hỗ trợ resource-level permission và phải ghi lý do. Quyền đọc và ghi phải tách khi phù hợp. Network phải deny-by-default, chỉ public load balancer được mở Internet trên cổng 80/443; application, database và storage phải giới hạn nguồn/đích cần thiết, ưu tiên private subnet hoặc private endpoint.
+Chạy trên VPS nhóm đã có sẵn bằng Docker Compose; không dùng dịch vụ trả phí mới. Image gắn tag theo commit; rollback bằng cách chạy lại tag trước. Migration database tương thích ngược.
 
-## 8. Yêu cầu resiliency và vận hành
+### REL-002 - Health check
 
-### REL-001 - Mức quan trọng và tác động
+Mỗi container có healthcheck trong Docker Compose; backend có `/health`.
 
-MVP có mức quan trọng **Trung bình**: dùng thử với người thật; downtime gây bất tiện nhưng có thể xử lý thủ công. Application Design phải phân loại từng deployable component và ghi rõ dependency/tác động khi không khả dụng.
+### REL-003 - Timeout
 
-### REL-002 - Recovery objectives
+Mọi lời gọi ra ngoài (database, Redis, SMTP, AI, thanh toán, unit khác) có timeout hữu hạn và retry có giới hạn. Lỗi phụ thuộc thì từ chối an toàn.
 
-- Chiến lược DR: Backup & Restore.
-- RTO mục tiêu: tính bằng giờ.
-- RPO mục tiêu: tính bằng giờ, được tinh chỉnh theo lịch backup trong Infrastructure Design.
-- Production topology: một VPS chạy Docker Compose, không multi-zone (ngoại lệ được chấp nhận tại U01 Infrastructure Design).
-- Local/demo: được phép chạy một instance và không phải mô hình HA.
+### REL-004 - Ngoài phạm vi đồ án
 
-### REL-003 - Change management
+Không có multi-zone, auto-scaling, backup, DR, runbook failover, chaos testing, incident response, dashboard hay cảnh báo tự động. Log xem bằng `docker compose logs`.
 
-Do chưa có quy trình tổ chức, AI-DLC phải đề xuất quy trình nhẹ gồm change record, phê duyệt trước production và ghi chú rollback. Git history và tài liệu AI-DLC là nguồn truy vết thay đổi ban đầu.
+### REL-005 - Không phát sinh chi phí
 
-### REL-004 - CI/CD, deployment và rollback
-
-- AI-DLC phải đề xuất pipeline CI/CD phù hợp với Next.js, Spring Boot và container.
-- Chiến lược MVP: direct/in-place.
-- Rollback: triển khai lại artifact/container image đã khóa phiên bản trước đó.
-- Database migration phải ưu tiên backward compatibility; migration phá vỡ phải có kế hoạch khôi phục riêng trước khi được duyệt.
-
-### REL-005 - Observability và health
-
-Mỗi component production phải phát metrics về latency, error rate, throughput và saturation; log có cấu trúc phải tập trung. Kiến trúc nhiều service phải có distributed tracing và dashboard sức khỏe vận hành. Mỗi service phải có shallow health check; component quan trọng phải có deep health check cho dependency. Health check phải tích hợp với load balancer/service discovery và endpoint public phải có synthetic monitoring hoặc lý do N/A được duyệt.
-
-### REL-006 - Capacity và fault isolation
-
-MVP chạy trên một VPS, không phân bố nhiều availability zone và không có load balancer dự phòng; VPS lỗi thì hệ thống dừng tới khi khôi phục thủ công. Đây là ngoại lệ RESILIENCY-08 được chấp nhận. Mọi container vẫn phải có giới hạn CPU/bộ nhớ và cảnh báo khi đĩa, RAM hoặc CPU vượt 80%.
-
-### REL-007 - Dependency isolation
-
-External call phải có timeout. Dependency quan trọng phải có circuit breaker khi phù hợp; connection/thread pool phải được tách theo bulkhead khi một dependency có thể làm cạn tài nguyên dùng chung; mọi pool/resource limit phải hữu hạn; tính năng không thiết yếu phải có degraded mode thay vì gây lỗi dây chuyền.
-
-### REL-008 - Backup và recovery
-
-Theo quyết định của người dùng tại U01 Infrastructure Design, MVP **không có backup**. VPS hỏng hoặc dữ liệu bị xóa thì mất toàn bộ dữ liệu, không khôi phục được; RPO không xác định. Đây là ngoại lệ RESILIENCY-11 và RESILIENCY-12 được chấp nhận.
-
-### REL-009 - Incident response
-
-AI-DLC phải đề xuất quy trình incident response và Correction of Errors nhẹ, gồm phân loại sự cố, người chịu trách nhiệm, kênh thông báo, post-mortem và theo dõi corrective action.
-
-### REL-010 - Resiliency testing
-
-NFR Design phải trình người dùng lựa chọn cách kiểm thử failover/recovery theo RESILIENCY-14; kịch bản, lịch thực hiện và cơ chế lưu kết quả phải được ghi nhận trước khi hoàn tất thiết kế resiliency.
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Gmail SMTP (App Password) khi demo.
 
 ## 9. Ràng buộc và giả định đã xác nhận
 
@@ -462,8 +429,8 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 | Nguồn | Yêu cầu liên quan |
 |---|---|
 | Phiếu xác minh Q1-Q14 | FR-001 đến FR-014, NFR-001 đến NFR-005 |
-| Security Baseline Q15 | SEC-001 đến SEC-008 và Security Compliance |
-| Resiliency Baseline Q16 | REL-001 đến REL-010 và Resiliency Compliance |
+| Security Baseline Q15 | SEC-001 đến SEC-007 và mục 12 (phạm vi rút gọn) |
+| Resiliency Baseline Q16 | REL-001 đến REL-004 và mục 13 (phạm vi rút gọn) |
 | Property-Based Testing Q17 | NFR-004, extension bị tắt |
 | Làm rõ vòng 1 Q1-Q10 | Web, tích hợp, criticality, DR, change, CI/CD, rollback, topology, incident response |
 | Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone |
@@ -472,46 +439,26 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 
-## 12. Security Compliance tại Requirements Analysis
+## 12. Phạm vi Security Baseline
 
-| Rule | Trạng thái | Cách đáp ứng ở requirements |
+Rút gọn cho đồ án sinh viên theo quyết định của người dùng ngày 2026-09-24.
+
+| Rule | Áp dụng | Đáp ứng bởi / lý do |
 |---|---|---|
-| SECURITY-01 | Compliant | SEC-001 yêu cầu mã hóa at rest và TLS 1.2+ |
-| SECURITY-02 | Compliant | SEC-005 yêu cầu access/centralized logging cho thành phần network-facing ở production |
-| SECURITY-03 | Compliant | SEC-005 yêu cầu structured logging và cấm log dữ liệu nhạy cảm |
-| SECURITY-04 | Compliant | SEC-004 xác định đầy đủ nhóm HTTP security headers |
-| SECURITY-05 | Compliant | SEC-003 yêu cầu validation, size limit, sanitization và parameterized query |
-| SECURITY-06 | Compliant | SEC-009 yêu cầu IAM action/resource cụ thể và tách quyền đọc/ghi |
-| SECURITY-07 | Compliant | SEC-009 yêu cầu network deny-by-default, giới hạn cổng/nguồn và private placement |
-| SECURITY-08 | Compliant | FR-002 và SEC-003 yêu cầu server-side, object-level và function-level authorization |
-| SECURITY-09 | Compliant | SEC-007 và NFR-005 yêu cầu hardening, safe errors, no defaults, private storage, secret handling và image pinning |
-| SECURITY-10 | Compliant | SEC-006 xác định pinning, scanning, trusted registry và SBOM |
-| SECURITY-11 | Compliant | FR-002, SEC-003 và thiết kế abuse controls/rate limiting được đặt làm ràng buộc downstream |
-| SECURITY-12 | Compliant | SEC-002 xác định password, MFA admin, session và brute-force controls |
-| SECURITY-13 | Compliant | SEC-006 và SEC-008 yêu cầu artifact/pipeline/data integrity, SRI và audit |
-| SECURITY-14 | Compliant | SEC-005 xác định alerting, retention và log integrity |
-| SECURITY-15 | Compliant | SEC-007 xác định fail-closed, cleanup, global handler và safe errors |
+| SECURITY-03 | Có | SEC-005 |
+| SECURITY-04 | Có | SEC-004 |
+| SECURITY-05 | Có | SEC-003 |
+| SECURITY-08 | Có | SEC-002 |
+| SECURITY-09 | Có | SEC-006 |
+| SECURITY-12 | Có, rút gọn | SEC-001; không MFA, không kiểm mật khẩu bị lộ |
+| SECURITY-15 | Có | SEC-006 |
+| SECURITY-01, 02, 06, 07, 10, 11, 13, 14 | Không | Ngoài phạm vi đồ án: mã hóa at rest, access log tập trung, IAM cloud, network nhiều lớp, SBOM/quét lỗ hổng, misuse-case analysis, phân quyền CI/CD, alerting |
 
-Không có blocking security finding tại Requirements Analysis. Việc triển khai từng control phải được xác minh lại ở các stage thiết kế, code và test.
+## 13. Phạm vi Resiliency Baseline
 
-## 13. Resiliency Compliance tại Requirements Analysis
-
-| Rule | Trạng thái | Cách đáp ứng ở requirements |
+| Rule | Áp dụng | Đáp ứng bởi / lý do |
 |---|---|---|
-| RESILIENCY-01 | Compliant | REL-001 xác định mức quan trọng Trung bình và yêu cầu impact/dependency mapping |
-| RESILIENCY-02 | Compliant | REL-002 xác định RTO/RPO theo giờ và Backup & Restore |
-| RESILIENCY-03 | Compliant | REL-003 yêu cầu quy trình change management nhẹ |
-| RESILIENCY-04 | Compliant | REL-004 xác định CI/CD cần đề xuất, direct/in-place và version-pinned rollback |
-| RESILIENCY-05 | Compliant | REL-005 yêu cầu metrics, logs, traces và dashboard downstream |
-| RESILIENCY-06 | Compliant | REL-005 yêu cầu shallow/deep health checks và integration với routing downstream |
-| RESILIENCY-07 | Compliant | REL-005 và REL-006 yêu cầu resiliency/capacity alarms; tool cụ thể thuộc Infrastructure Design |
-| RESILIENCY-08 | Compliant | REL-002 và REL-006 xác định production single-region multi-zone; local được miễn HA |
-| RESILIENCY-09 | Compliant | REL-006 yêu cầu scaling limits, triggers và quota awareness |
-| RESILIENCY-10 | Compliant | REL-007 yêu cầu timeout, circuit breaker, bulkhead/resource limit và degraded mode |
-| RESILIENCY-11 | Compliant | REL-002 và REL-008 xác định Backup & Restore cùng runbook |
-| RESILIENCY-12 | Compliant | REL-008 yêu cầu backup tự động, mã hóa, retention và test restore |
-| RESILIENCY-13 | Compliant | REL-008 yêu cầu failover/failback và recovery validation |
-| RESILIENCY-14 | Compliant | REL-010 giữ decision gate bắt buộc tại NFR Design như rule cho phép |
-| RESILIENCY-15 | Compliant | REL-009 yêu cầu quy trình incident response và COE nhẹ |
-
-Không có blocking resiliency finding tại Requirements Analysis. Các quyết định và artifact chi tiết phải được xác minh lại ở các stage thiết kế, hạ tầng, code và test.
+| RESILIENCY-04 | Có | REL-001 |
+| RESILIENCY-06 | Có | REL-002 |
+| RESILIENCY-10 | Có, chỉ timeout | REL-003; không circuit breaker |
+| RESILIENCY-01, 02, 03, 05, 07, 08, 09, 11, 12, 13, 14, 15 | Không | Ngoài phạm vi đồ án (REL-004) |

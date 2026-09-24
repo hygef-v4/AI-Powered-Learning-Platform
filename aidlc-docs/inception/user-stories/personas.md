@@ -121,4 +121,4 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ## 8. Truy vết nguồn
 
-Các persona được dẫn xuất từ `FR-001` đến `FR-026`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-002`, `SEC-003`, `SEC-005`, `SEC-008`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.
+Các persona được dẫn xuất từ `FR-001` đến `FR-026`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-001`, `SEC-002`, `SEC-003`, `SEC-005`, `SEC-007`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.

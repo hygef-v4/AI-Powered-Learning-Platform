@@ -50,7 +50,7 @@
 /contracts/openapi/u01-identity.yaml
 /infra
   docker-compose.yml, docker-compose.local.yml
-  nginx/, prometheus/, grafana/, loki/
+  nginx/
 /.github/workflows/ci.yml
 ```
 
@@ -58,11 +58,11 @@
 
 ### Nhóm A - Khung dự án
 
-- [ ] **Bước 1** - Tạo `/backend/pom.xml`: Spring Boot 3.x, Java 17, Web, Security, Data JPA, Validation, Data Redis, Actuator, Micrometer Prometheus, Flyway, PostgreSQL, Mail, Bucket4j + Redis, jjwt, Commons CSV, Testcontainers, JUnit 5. Khóa phiên bản.
+- [ ] **Bước 1** - Tạo `/backend/pom.xml`: Spring Boot 3.x, Java 17, Web, Security, Data JPA, Validation, Data Redis, Actuator, Flyway, PostgreSQL, Mail, Bucket4j + Redis, jjwt, Commons CSV, Testcontainers, JUnit 5. Khóa phiên bản.
 - [ ] **Bước 2** - `PlatformApplication`, `application.yml` (đọc mọi cấu hình U01 từ biến môi trường theo `logical-components.md` §4), `application-local.yml`.
 - [ ] **Bước 3** - Hạ tầng dùng chung trong `shared/`: global error handler trả problem-details an toàn, filter correlation ID, bộ che dữ liệu nhạy cảm trong log, cấu hình Spring Security mặc định từ chối.
 - [ ] **Bước 4** - Khung `/frontend`: Next.js + TypeScript strict + Tailwind, ESLint, Vitest + Testing Library, `src/lib/api` gửi cookie, component UI cơ bản (Button, Input, PasswordField, OtpInput, Dialog, Table, Alert).
-- [ ] **Bước 5** - `/infra/docker-compose.yml` và `docker-compose.local.yml`: nginx, frontend, backend, postgres, redis, rabbitmq, mailpit (local), prometheus, loki, promtail, grafana; mạng `edge`/`internal`, giới hạn tài nguyên, healthcheck.
+- [ ] **Bước 5** - `/infra/docker-compose.yml` và `docker-compose.local.yml`: nginx, frontend, backend, postgres, redis, rabbitmq, mailpit (local); mạng `edge`/`internal`, giới hạn tài nguyên, healthcheck.
 - [ ] **Bước 6** - `.github/workflows/ci.yml`: test backend + frontend, build image tag SHA. Bước deploy qua SSH để dạng khung, chưa bật.
 
 ### Nhóm B - Domain và business logic (US-IAM-001…007)
@@ -93,7 +93,6 @@
 - [ ] **Bước 24** - `/contracts/openapi/u01-identity.yaml`: toàn bộ endpoint U01, lỗi problem-details, cookie.
 - [ ] **Bước 25** - Controller + DTO + validation: `auth` (login, refresh, logout, activation-requests, activations, password-reset-requests, password-resets), `me` (profile, password), `admin/accounts` (list, create, role, status, imports). `RateLimitFilter`, `JwtAuthFilter`, cookie theo P2.
 - [ ] **Bước 26** - Test API: MockMvc cho mọi endpoint, gồm negative test bảo mật (NFR-U01-61).
-- [ ] **Bước 27** - Test chịu lỗi RESILIENCY-14: dừng Redis, PostgreSQL, Mailpit; U04 giả trả chậm (bảng §5 `nfr-design-patterns.md`).
 - [ ] **Bước 28** - Tóm tắt API: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
@@ -106,7 +105,7 @@
 
 ### Nhóm F - Tài liệu và triển khai
 
-- [ ] **Bước 34** - Cấu hình Nginx (định tuyến, header SEC-004, HTTP ở local), Prometheus scrape, datasource Grafana/Loki, luật cảnh báo U01.
+- [ ] **Bước 34** - Cấu hình Nginx: định tuyến, header SEC-004, HTTP ở local, giới hạn log Docker.
 - [ ] **Bước 35** - `README.md` ở root: chạy local bằng Docker Compose, biến môi trường, tài khoản admin seed, cách xem OTP trong Mailpit, chạy test.
 - [ ] **Bước 36** - Chạy toàn bộ test backend và frontend; ghi kết quả vào `code/test-results.md`.
 
@@ -126,3 +125,4 @@
 
 - Adapter thật của U02, U03, U04; relay outbox sang RabbitMQ; container `worker` riêng (handler OTP tạm chạy trong backend).
 - Bật bước deploy SSH trong CI.
+- Bước 27 (test chịu lỗi) đã bỏ vì RESILIENCY-14 ngoài phạm vi đồ án; số bước giữ nguyên để không lệch truy vết.

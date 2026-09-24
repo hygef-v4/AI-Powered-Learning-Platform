@@ -56,26 +56,19 @@
 
 ## 6. Extension compliance
 
-### Security Baseline
-
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-03 | Compliant | BR-U01-90, 91: audit mọi sự kiện bảo mật, không ghi mật khẩu, OTP, token, số điện thoại |
-| SECURITY-05 | Compliant | Chuẩn hóa và kiểm email, domain, hồ sơ, CSV từng dòng |
-| SECURITY-08 | Compliant | F13 mặc định từ chối, kiểm role + phạm vi phía server, chặn truy cập theo ID của người khác |
-| SECURITY-11 | Compliant | Phản hồi trung tính chống dò tài khoản; bảo vệ admin cuối cùng; nhập hàng loạt không tạo ADMIN |
-| SECURITY-12 | Ngoại lệ được chấp nhận | Đạt: ≥ 8 ký tự, bcrypt, khóa tạm sau 5 lần sai, phiên hết hạn và thu hồi khi đăng xuất. Người dùng chủ động bỏ kiểm danh sách mật khẩu bị lộ và MFA admin tại U01 NFR Requirements; `SEC-002` đã sửa theo |
-| SECURITY-15 | Compliant | BR-U01-93, 94: không kiểm được quyền thì từ chối, lỗi an toàn |
-| Các rule còn lại | N/A | Hạ tầng, header, dependency, alerting thuộc NFR/Infrastructure/Build |
-
-### Resiliency Baseline
-
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| RESILIENCY-10 | Compliant | Gửi OTP qua outbox U02 với retry hữu hạn; lỗi email không làm hỏng yêu cầu (BR-U01-92) |
-| Các rule còn lại | N/A | Mức Functional Design không quyết định topology, backup, alarm |
-
-Không có blocking finding.
+| SECURITY-03 | Compliant | Log che mật khẩu, OTP, token, số điện thoại; audit sự kiện đăng nhập/đổi quyền |
+| SECURITY-04 | Compliant | Header ở Nginx |
+| SECURITY-05 | Compliant | Validate email, hồ sơ, CSV; rate limit endpoint public |
+| SECURITY-08 | Compliant | `authorize()` mặc định từ chối, kiểm role + phạm vi phía server |
+| SECURITY-09 | Compliant | Không default password, secret từ biến môi trường |
+| SECURITY-12 | Compliant (rút gọn) | bcrypt, ≥ 8 ký tự, khóa tạm, cookie HttpOnly; không MFA, không kiểm mật khẩu lộ theo phạm vi đồ án |
+| SECURITY-15 | Compliant | Lỗi an toàn, fail-closed khi phụ thuộc lỗi |
+| RESILIENCY-04 | Compliant | Deploy Compose, rollback bằng tag |
+| RESILIENCY-06 | Compliant | Healthcheck container, `/health` |
+| RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc; không circuit breaker |
+| Rule còn lại | N/A | Ngoài phạm vi đồ án (`requirements.md` mục 12-13) |
 
 ## 7. Giả định do AI thêm, cần bạn duyệt
 

@@ -73,14 +73,14 @@
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-03 | Compliant | P10, `SensitiveDataMasker` |
-| SECURITY-05 | Compliant | Rate limit + validation endpoint public |
-| SECURITY-08 | Compliant | P5 |
-| SECURITY-11 | Compliant | P3 |
-| SECURITY-12 | Ngoại lệ được chấp nhận | Như NFR Requirements: không MFA, không kiểm mật khẩu bị lộ, thu hồi trễ tối đa 15 phút |
-| SECURITY-15 | Compliant | P7 fail closed |
-| RESILIENCY-05 | Compliant | Metric và cảnh báo P10 |
-| RESILIENCY-06 | Compliant | `/health/live`, `/health/ready` |
-| RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc, pool hữu hạn, degraded mode cho ảnh đại diện. Circuit breaker ghi "không áp dụng" có lý do (P7) |
-| RESILIENCY-14 | Compliant | Bảng kịch bản mục 5 của `nfr-design-patterns.md` |
-| Các rule còn lại | N/A | Topology, backup, alarm hạ tầng thuộc Infrastructure Design |
+| SECURITY-03 | Compliant | Log che mật khẩu, OTP, token, số điện thoại; audit sự kiện đăng nhập/đổi quyền |
+| SECURITY-04 | Compliant | Header ở Nginx |
+| SECURITY-05 | Compliant | Validate email, hồ sơ, CSV; rate limit endpoint public |
+| SECURITY-08 | Compliant | `authorize()` mặc định từ chối, kiểm role + phạm vi phía server |
+| SECURITY-09 | Compliant | Không default password, secret từ biến môi trường |
+| SECURITY-12 | Compliant (rút gọn) | bcrypt, ≥ 8 ký tự, khóa tạm, cookie HttpOnly; không MFA, không kiểm mật khẩu lộ theo phạm vi đồ án |
+| SECURITY-15 | Compliant | Lỗi an toàn, fail-closed khi phụ thuộc lỗi |
+| RESILIENCY-04 | Compliant | Deploy Compose, rollback bằng tag |
+| RESILIENCY-06 | Compliant | Healthcheck container, `/health` |
+| RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc; không circuit breaker |
+| Rule còn lại | N/A | Ngoài phạm vi đồ án (`requirements.md` mục 12-13) |

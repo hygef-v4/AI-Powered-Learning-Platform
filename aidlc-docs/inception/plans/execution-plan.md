@@ -229,10 +229,10 @@ MVP thực hiện được các hành trình MVP trong Requirements và bộ 59 
 
 | Nhóm rule | Trạng thái | Xử lý trong kế hoạch |
 |---|---|---|
-| SECURITY-01 đến SECURITY-05 | Compliant | Data protection, logging, headers, validation được đưa vào NFR/design/code/test gates |
-| SECURITY-06 đến SECURITY-09 | Compliant | IAM/network least privilege, authorization và hardening bắt buộc trong design/infrastructure/code |
-| SECURITY-10 đến SECURITY-13 | Compliant | Dependency/artifact integrity, abuse controls, auth/session và payment integrity có downstream gates |
-| SECURITY-14 đến SECURITY-15 | Compliant | Alerting/audit và fail-safe behavior được giữ xuyên design, code và test |
+| SECURITY-01 đến SECURITY-05 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Data protection, logging, headers, validation được đưa vào NFR/design/code/test gates |
+| SECURITY-06 đến SECURITY-09 | Đã rút gọn 2026-09-24, xem requirements mục 12 | IAM/network least privilege, authorization và hardening bắt buộc trong design/infrastructure/code |
+| SECURITY-10 đến SECURITY-13 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Dependency/artifact integrity, abuse controls, auth/session và payment integrity có downstream gates |
+| SECURITY-14 đến SECURITY-15 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Alerting/audit và fail-safe behavior được giữ xuyên design, code và test |
 
 Không có blocking security finding tại Workflow Planning.
 
@@ -240,9 +240,9 @@ Không có blocking security finding tại Workflow Planning.
 
 | Nhóm rule | Trạng thái | Xử lý trong kế hoạch |
 |---|---|---|
-| RESILIENCY-01 đến RESILIENCY-04 | Compliant | Impact, RTO/RPO, change, CI/CD/rollback được chuyển rõ tới Application/NFR/Infrastructure Design |
-| RESILIENCY-05 đến RESILIENCY-10 | Compliant | Observability, health, alarms, multi-zone, capacity và dependency isolation có stage thực thi bắt buộc |
-| RESILIENCY-11 đến RESILIENCY-15 | Compliant | DR, backup, recovery test gate và incident/COE được giữ cho design/build-test; RESILIENCY-14 phải hỏi tại NFR Design |
+| RESILIENCY-01 đến RESILIENCY-04 | Đã rút gọn 2026-09-24, xem requirements mục 13 | Impact, RTO/RPO, change, CI/CD/rollback được chuyển rõ tới Application/NFR/Infrastructure Design |
+| RESILIENCY-05 đến RESILIENCY-10 | Đã rút gọn 2026-09-24, xem requirements mục 13 | Observability, health, alarms, multi-zone, capacity và dependency isolation có stage thực thi bắt buộc |
+| RESILIENCY-11 đến RESILIENCY-15 | Đã rút gọn 2026-09-24, xem requirements mục 13 | DR, backup, recovery test gate và incident/COE được giữ cho design/build-test; RESILIENCY-14 phải hỏi tại NFR Design |
 
 Không có blocking resiliency finding tại Workflow Planning. Property-Based Testing đã bị tắt và được ghi N/A.
 

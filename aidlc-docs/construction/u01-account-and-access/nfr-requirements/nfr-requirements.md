@@ -18,7 +18,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 |---|---|---|
 | NFR-U01-10 | Access token JWT ký bằng khóa bí mật phía server, sống 15 phút, chứa `accountId`, `role`, `credentialVersion`. | Câu N1, N5 |
 | NFR-U01-11 | Refresh token ngẫu nhiên, chỉ lưu bản băm ở Redis. Idle 2 giờ, tối đa 7 ngày. Mỗi lần refresh cấp token mới và hủy token cũ; phát hiện dùng lại thì thu hồi phiên. | Câu N2, BR-U01-46 |
-| NFR-U01-12 | Cả hai token nằm trong cookie `Secure`, `HttpOnly`, `SameSite=Lax`; không để trong local storage hay URL. | SEC-002 |
+| NFR-U01-12 | Cả hai token nằm trong cookie `Secure`, `HttpOnly`, `SameSite=Lax`; không để trong local storage hay URL. | SEC-001 |
 | NFR-U01-13 | Thu hồi quyền (đổi role, vô hiệu hóa, đổi/đặt lại mật khẩu) chặn refresh ngay; access token còn hạn dùng tối đa 15 phút. **Rủi ro được chấp nhận.** | Câu N5 |
 | NFR-U01-14 | Mật khẩu băm bằng bcrypt, cost ≥ 12; cost cấu hình được. Mật khẩu dài quá 72 byte bị từ chối rõ ràng thay vì bị cắt ngầm. | Câu N4 |
 | NFR-U01-15 | Không có MFA; không kiểm danh sách mật khẩu bị lộ. **Ngoại lệ SECURITY-12 được chấp nhận.** | Câu N3, N6 |
@@ -37,20 +37,19 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/demo dùng Mailpit, không gửi mail thật. Production cấu hình SMTP bằng biến môi trường/secret. | Câu N8, NFR-005 |
-| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì outbox retry tối đa 5 lần với backoff tăng dần; hết lượt thì chuyển dead-letter và ghi log, không báo lỗi cho người dùng. | REL-007, BR-U01-92 |
-| NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-001 |
+| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/demo dùng Mailpit, không gửi mail thật. Khi demo dùng Gmail SMTP với App Password (miễn phí, ~500 mail/ngày), cấu hình bằng biến môi trường. | Câu N8, NFR-005 |
+| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì outbox retry tối đa 5 lần với backoff tăng dần; hết lượt thì chuyển dead-letter và ghi log, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
+| NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-005 |
 
 ## 5. Khả dụng và lỗi phụ thuộc
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-40 | Redis không khả dụng: không đăng nhập mới, không refresh, không gửi OTP, trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | Câu N9, SEC-007 |
-| NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-007 |
+| NFR-U01-40 | Redis không khả dụng: không đăng nhập mới, không refresh, không gửi OTP, trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | Câu N9, SEC-006 |
+| NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-006 |
 | NFR-U01-42 | U04 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
 | NFR-U01-43 | U03 không khả dụng: tắt đổi ảnh đại diện, phần hồ sơ còn lại vẫn chạy. | BR-U01-52 |
-| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, SMTP có timeout hữu hạn. | NFR-003, REL-007 |
-| NFR-U01-45 | Mức quan trọng Trung bình; RTO/RPO tính bằng giờ theo REL-002. | REL-001, REL-002 |
+| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
 
 ## 6. Bảo mật dữ liệu và log
 
@@ -58,8 +57,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 |---|---|---|
 | NFR-U01-50 | Log có cấu trúc gồm timestamp, correlation ID, level, message; không chứa mật khẩu, OTP, token, số điện thoại. | SEC-005, BR-U01-91 |
 | NFR-U01-51 | Khóa ký JWT và thông tin SMTP chỉ lấy từ biến môi trường/secret store. | NFR-005 |
-| NFR-U01-52 | Cảnh báo khi đăng nhập thất bại lặp lại, bị từ chối quyền nhiều lần, đổi role. | SEC-005 |
-| NFR-U01-53 | Endpoint public (đăng nhập, yêu cầu OTP, kích hoạt, đặt lại) có rate limit; mọi endpoint khác yêu cầu access token. | SEC-003 |
+| NFR-U01-53 | Endpoint public (đăng nhập, yêu cầu OTP, kích hoạt, đặt lại) có rate limit; mọi endpoint khác yêu cầu access token. | SEC-002, SEC-003 |
 
 ## 7. Khả năng kiểm thử và dùng được
 
@@ -71,13 +69,16 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 
 ## 8. Compliance
 
-| Rule | Trạng thái | Ghi chú |
+| Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-03 | Compliant | NFR-U01-50 |
-| SECURITY-05 | Compliant | Rate limit và validation endpoint public |
-| SECURITY-08 | Compliant | Mặc định từ chối, NFR-U01-42 |
-| SECURITY-11 | Compliant | Phản hồi trung tính, thời gian đồng đều |
-| SECURITY-12 | **Ngoại lệ được chấp nhận** | Đạt: bcrypt, ≥ 8 ký tự, cookie an toàn, hết hạn phía server, chống brute-force. Không đạt theo quyết định người dùng: MFA admin, kiểm mật khẩu bị lộ. Thêm rủi ro: thu hồi trễ tối đa 15 phút |
-| SECURITY-15 | Compliant | NFR-U01-40…44 fail closed |
-| RESILIENCY-10 | Compliant | Timeout, retry hữu hạn, dead-letter cho SMTP |
-| Các rule còn lại | N/A | Hạ tầng, backup, alarm chốt ở Infrastructure Design |
+| SECURITY-03 | Compliant | Log che mật khẩu, OTP, token, số điện thoại; audit sự kiện đăng nhập/đổi quyền |
+| SECURITY-04 | Compliant | Header ở Nginx |
+| SECURITY-05 | Compliant | Validate email, hồ sơ, CSV; rate limit endpoint public |
+| SECURITY-08 | Compliant | `authorize()` mặc định từ chối, kiểm role + phạm vi phía server |
+| SECURITY-09 | Compliant | Không default password, secret từ biến môi trường |
+| SECURITY-12 | Compliant (rút gọn) | bcrypt, ≥ 8 ký tự, khóa tạm, cookie HttpOnly; không MFA, không kiểm mật khẩu lộ theo phạm vi đồ án |
+| SECURITY-15 | Compliant | Lỗi an toàn, fail-closed khi phụ thuộc lỗi |
+| RESILIENCY-04 | Compliant | Deploy Compose, rollback bằng tag |
+| RESILIENCY-06 | Compliant | Healthcheck container, `/health` |
+| RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc; không circuit breaker |
+| Rule còn lại | N/A | Ngoài phạm vi đồ án (`requirements.md` mục 12-13) |
