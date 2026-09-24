@@ -655,7 +655,7 @@
 
 - **Given** bài đã phát hành cần thay đổi nội dung hoặc đáp án
 - **When** giảng viên thử sửa bài
-- **Then** hệ thống không cho sửa; giảng viên ngưng giao bài cũ và nhân bản thành bài mới, thao tác được audit
+- **Then** hệ thống không cho sửa version đang giao; sau khi ngưng giao hoặc bài đóng, giảng viên sửa để tạo version mới, version cũ giữ nguyên cho bài nộp cũ, thao tác được audit
 
 ### US-QBK-003 - Phân tích chất lượng câu hỏi (Phase 2)
 
@@ -931,7 +931,7 @@
 - **When** người dùng cấu hình bài
 - **Then** hệ thống vẫn lưu dưới loại bài viết luận và ngôn ngữ chỉ là thuộc tính/cấu hình nếu cần
 
-### US-ASM-008 - Nhân bản, sửa phiên bản và ngừng giao bài (Phase 2)
+### US-ASM-008 - Nhân bản, sửa phiên bản và ngừng giao bài
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, xem thay đổi phiên bản và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
 
@@ -943,7 +943,7 @@
 
 - **Given** người dùng có quyền với bài nguồn
 - **When** người dùng sửa hoặc nhân bản
-- **Then** hệ thống lưu phiên bản/diff, tạo định danh mới khi nhân bản và không sao chép bài nộp/điểm
+- **Then** sửa bài đã ngừng giao/đóng tạo version mới, xem được diff giữa hai version; nhân bản tạo định danh mới; không sao chép bài nộp/điểm
 
 #### Scenario 2 - Ngừng giao hoặc nhận bài mới
 

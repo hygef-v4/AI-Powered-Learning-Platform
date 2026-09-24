@@ -9,7 +9,7 @@
  +------------------------------- backend -------------------------------------+
  | AssignmentController --> AssignmentService --> BankQueryPort (U06)           |
  |                                  |          --> AiDraftPort (U13, C)          |
- |                                  +--> ReviewValidator --> TypeConfigCheckPort |
+ |                                  +--> ReviewValidator --> TypeConfigPort |
  |                                                           (U09, C)            |
  | PublicationController --> PublicationService --> JobPort (U02)               |
  | AssignmentQueryService (AssignmentQueryPort, LearnerAssignmentView)          |

@@ -28,7 +28,7 @@ Chi tiết trách nhiệm: `components.md`. Chữ ký interface: `component-meth
 6. AI không publish đề hoặc final grade; giảng viên giữ quyết định học thuật cuối.
 7. Composite nhóm luôn chấm tay; AI chỉ hỗ trợ phần cá nhân. Điểm cuối từng sinh viên do giảng viên nhập từ hai nguồn, không có công thức hệ thống bắt buộc.
 8. Payment entitlement chỉ phát sinh từ verified, idempotent provider event.
-9. Không sao chép khóa học/lớp. Template hoặc thao tác copy assignment/rubric được phép tạo identity độc lập có lineage; không copy publication, attempt, submission hoặc grade. Assignment đã phát hành bị khóa nội dung; muốn đổi thì ngưng giao rồi nhân bản thành assignment mới; attempt giữ version câu hỏi đã dùng.
+9. Không sao chép khóa học/lớp. Template hoặc thao tác copy assignment/rubric được phép tạo identity độc lập có lineage; không copy publication, attempt, submission hoặc grade. Assignment đã phát hành bị khóa nội dung; muốn đổi thì ngưng giao rồi tạo version mới (hoặc nhân bản); attempt giữ version câu hỏi đã dùng.
 10. Simulation exam giữ attempt snapshot và có chính sách lượt/kết quả/tính điểm bất biến sau attempt đầu tiên.
 11. Audit không có application update/delete contract.
 

@@ -23,7 +23,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-20 | Chính người có quyền tự duyệt sau khi xem trước; hệ thống kiểm: ≥ 1 thành phần, thành phần hợp lệ, cấu hình loại bài đủ (`TypeConfigCheckPort`). | Câu 3, US-ASM-001 |
+| BR-U08-20 | Chính người có quyền tự duyệt sau khi xem trước; hệ thống kiểm: ≥ 1 thành phần, thành phần hợp lệ, cấu hình loại bài đủ (`TypeConfigPort`). | Câu 3, US-ASM-001 |
 | BR-U08-21 | Bản do AI tạo vào bài ở `DRAFT`, `origin = AI`, giữ tham chiếu nguồn; phải duyệt như bài thường. | FR-006 |
 | BR-U08-22 | Chưa `REVIEWED` → không phát hành được. | US-ASM-001 S2 |
 
@@ -34,7 +34,7 @@
 | BR-U08-30 | Mỗi lần phát hành một lớp, lịch riêng; phát hành cùng bài cho lớp khác là lần phát hành khác. | Câu 8 |
 | BR-U08-31 | `opensAt < closesAt`; `maxAttempts` 1-10; lớp phải `OPEN`. | FR-007 |
 | BR-U08-32 | Tùy chọn nộp trễ: `allowLate` + `lateUntil` (≤ `closesAt` + 30 ngày). Nộp sau `closesAt` được đánh dấu trễ; sau `lateUntil` không nhận. | Câu 7 |
-| BR-U08-33 | Phát hành lần đầu chuyển bài sang `LOCKED`: nội dung, thành phần, điểm **không sửa được nữa**, kể cả khi chưa ai làm. | Câu 4, 6 |
+| BR-U08-33 | Phát hành lần đầu chuyển version sang `LOCKED`: nội dung, thành phần, điểm của version đó **không sửa được nữa**, kể cả khi chưa ai làm; thay đổi bằng version mới (BR-U08-43) hoặc nhân bản. | Câu 4, 6 |
 | BR-U08-34 | Lịch của publication sửa được khi `SCHEDULED`; khi `OPEN` chỉ được kéo dài `closesAt`/`lateUntil`, không rút ngắn, không đổi `maxAttempts`. | Thiết kế |
 | BR-U08-35 | Khi publication chuyển `OPEN`, phát event `ASSIGNMENT_OPENED`; U16 báo trong app và email cho người học của lớp. | Câu 8 |
 | BR-U08-36 | Mở/đóng theo lịch tự động (job U02), sai lệch ≤ 1 phút. | Thiết kế |
@@ -46,9 +46,11 @@
 | BR-U08-40 | Ngưng giao: publication → `RETIRED`, lý do bắt buộc; người học không bắt đầu/nộp thêm; bài đã nộp giữ nguyên; phát event `ASSIGNMENT_RETIRED` (U11 xử lý lượt đang dở); audit. | Câu 4 |
 | BR-U08-41 | Nhân bản: tạo bài `DRAFT` mới cùng phạm vi, sao chép thành phần (ghim cùng phiên bản ngân hàng, sao chép câu riêng), `origin = CLONE`, `sourceAssignmentId`; audit. | Câu 5 |
 | BR-U08-42 | Lưu trữ bài `LOCKED` khi mọi publication đã `CLOSED`/`RETIRED`: ẩn khỏi danh sách mặc định. | Thiết kế |
+| BR-U08-43 | Khi mọi publication của version mới nhất đã `CLOSED`/`RETIRED` (không còn `SCHEDULED`/`OPEN`), bấm "Sửa" tạo version kế tiếp (`versionNo + 1`, cùng `stableKey`, `DRAFT`, `origin = NEW_VERSION`) sao chép thành phần và cấu hình; version cũ vẫn `LOCKED` cho bài nộp cũ. Version mới duyệt và phát hành như bài mới. | U10 Câu 5, 6 |
+| BR-U08-44 | Mỗi `stableKey` tối đa một version `DRAFT`. | Thiết kế |
 
 ## 6. Audit
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-50 | Audit: duyệt, phát hành (actor, lớp, lịch), sửa lịch, ngưng giao, nhân bản, xóa nháp, phát hành bị từ chối vì sai phạm vi. | FR-014 |
+| BR-U08-50 | Audit: duyệt, phát hành (actor, lớp, lịch), sửa lịch, ngưng giao, nhân bản, tạo version mới, xóa nháp, phát hành bị từ chối vì sai phạm vi. | FR-014 |

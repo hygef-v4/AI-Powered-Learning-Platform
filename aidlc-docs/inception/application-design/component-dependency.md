@@ -86,6 +86,6 @@ Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain
 
 - Content → Job: `YOUTUBE_TRANSCRIPT_INGEST` chỉ mang source/version reference đã được authorize; worker trả transcript artifact và timestamp metadata qua Content service contract.
 - Assessment → Submission: `AttemptSnapshot` đóng băng assignment, question/rubric component versions và simulation policy khi attempt bắt đầu.
-- Copy assignment/rubric chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không sao chép khóa học/lớp. Assignment đã phát hành bị khóa nội dung; thay đổi bằng ngưng giao và nhân bản.
+- Copy assignment/rubric chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không sao chép khóa học/lớp. Assignment đã phát hành bị khóa nội dung; thay đổi bằng ngưng giao rồi tạo version mới, hoặc nhân bản.
 - Submission → Job: `GROUP_COMPOSITE_GENERATE` mang danh sách part-version bất biến có thứ tự; kết quả là derived composite artifact/version.
 - Submission → Grading: composite evidence và individual-part evidence là read-only. Grading lưu kết quả tách biệt và điểm cuối từng thành viên do giảng viên nhập.

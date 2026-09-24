@@ -49,7 +49,7 @@ Document
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
-| `TypeConfigCheckPort` | U09 cài cho U08 (`C`) | Cấu hình đủ để duyệt |
+| `TypeConfigPort` | U09 cài cho U08 (`C`), U10 dùng | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình và khung tài liệu |
 | `DocumentModelPort` | U09 cài cho U06 (`C`), U11, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
 | `DocxExportPort` | U09 cung cấp cho U11, U15 | Tài liệu → DOCX |
 | `DiagramCompactPort` | U09 cung cấp cho U13 | XML đầy đủ → XML rút gọn theo allowlist |

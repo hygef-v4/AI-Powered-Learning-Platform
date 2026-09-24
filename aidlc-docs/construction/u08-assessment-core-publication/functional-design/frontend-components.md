@@ -20,7 +20,7 @@ app/teaching/assignments/[id]/                AssignmentEditorPage
 | Component | Hành vi | API |
 |---|---|---|
 | `AssignmentListPage` | Lọc theo trạng thái, loại | `GET /api/v1/classes/{id}/assignments` |
-| `ComponentList` | Chỉ sửa khi `DRAFT`; bài `LOCKED` hiện nhãn "Đã khóa - nhân bản để thay đổi" | `POST`, `PATCH`, `DELETE /api/v1/assignments/{id}/components` |
+| `ComponentList` | Chỉ sửa khi `DRAFT`; bài `LOCKED` hiện nhãn "Đã khóa"; nút "Sửa (tạo version mới)" bật khi mọi lượt phát hành đã đóng/ngưng | `POST`, `PATCH`, `DELETE /api/v1/assignments/{id}/components` |
 | `AiDraftDialog` | Gửi yêu cầu, poll job, hiện đề xuất và nguồn trích dẫn | `POST /api/v1/assignments/{id}/ai-drafts`, `GET /api/v1/jobs/{id}` |
 | `ReviewButton` | | `POST /api/v1/assignments/{id}/review` |
 | `PublishDialog` | Kiểm lịch phía client; hiện cảnh báo "phát hành xong sẽ khóa nội dung" | `POST /api/v1/assignments/{id}/publications` |

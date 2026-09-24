@@ -15,7 +15,7 @@
 3. Trả bản xem trước + báo cáo (số sơ đồ nhận được, ảnh giữ nguyên, nội dung bị bỏ) (BR-U09-43).
 4. Giảng viên chỉnh rồi lưu như F2 bước 3 (BR-U09-44).
 
-## F4 - Kiểm duyệt (`TypeConfigCheckPort`)
+## F4 - Kiểm duyệt (`TypeConfigPort`)
 - `QUIZ`: BR-U09-14. `ESSAY`: luôn đạt. `DOCUMENT`: khung (nếu có) hợp lệ, `requiredDiagrams` hợp lệ.
 
 ## F5 - Kiểm tài liệu của người học (U11 gọi)

@@ -8,14 +8,17 @@ U08 sở hữu bài đánh giá (assignment), thành phần của bài, trạng 
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
-| `id` | UUID | |
-| `classId` | UUID | Bài luôn thuộc một lớp (không có đề chung cấp môn) |
+| `id` | UUID | Một dòng = một version |
+| `stableKey` | UUID | Gom các version của cùng một bài |
+| `versionNo` | số | Tăng dần theo `stableKey` |
+| `ownerType` | enum | `CLASS` (bài của lớp) hoặc `SUBJECT_TEMPLATE` (template cấp môn của U10, không phát hành trực tiếp) |
+| `classId` / `subjectId` | UUID | Theo `ownerType`; không có đề chung cấp môn |
 | `title` | chuỗi ≤ 200 | |
 | `instructions` | markdown ≤ 20 000 ký tự | |
 | `assignmentType` | enum | `QUIZ`, `ESSAY`, `DOCUMENT`, `CODE_LAB`, `GROUP`; một loại mỗi bài |
 | `status` | enum | `DRAFT`, `REVIEWED`, `LOCKED`, `ARCHIVED` |
 | `totalPoints` | numeric(6,2) | Tổng điểm thành phần, tự tính |
-| `origin` | enum | `MANUAL`, `AI`, `CLONE` (`TEMPLATE`, `COPY` do U10) |
+| `origin` | enum | `MANUAL`, `AI`, `CLONE`, `NEW_VERSION` (`TEMPLATE_COPY`, `CLASS_COPY` do U10) |
 | `sourceAssignmentId` | UUID | Khi nhân bản |
 | `aiProposalRef` | chuỗi | Khi từ AI: tham chiếu đề xuất và nguồn (U13) |
 | `reviewedBy`, `reviewedAt` | | |
@@ -71,7 +74,7 @@ Publication: SCHEDULED --tới opensAt--> OPEN --tới closesAt (hoặc lateUnti
 |---|---|---|
 | `AssignmentQueryPort` | U08 cung cấp cho U09-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
 | `PublicationService` | U08 cung cấp cho U10 | Tạo publication theo quy tắc U08 |
-| `TypeConfigCheckPort` | U08 khai báo, U09 cài (`C`) | Cấu hình riêng loại bài đủ để duyệt chưa; chưa có U09 → chỉ kiểm phần U08 |
+| `TypeConfigPort` | U08 khai báo, U09 cài (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình/khung khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
 | `AiDraftPort` | U08 dùng, U13 cung cấp (`C`) | Yêu cầu và nhận đề xuất AI |
 | `BankQueryPort`, `DefinitionValidationPort` | U08 dùng U06 | Lấy phiên bản, kiểm câu riêng |
 | `ClassAccessPort` | U08 dùng U04 | Phạm vi, danh sách lớp |

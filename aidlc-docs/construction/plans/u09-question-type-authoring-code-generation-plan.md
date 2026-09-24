@@ -24,7 +24,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort` | U06 | Dùng thật (kiểm câu quiz khi duyệt) |
 | `AssignmentQueryPort`, `TypeConfigSlot` | U08 | Dùng thật |
-| U09 cài `TypeConfigCheckPort` (U08), `DocumentModelPort` (U06, U11, U15) | | Thay adapter tạm của U08 và U06 |
+| U09 cài `TypeConfigPort` (U08), `DocumentModelPort` (U06, U11, U15) | | Thay adapter tạm của U08 và U06 |
 
 ### Dữ liệu U09 sở hữu
 
@@ -64,7 +64,7 @@ PostgreSQL `question_type_config`, `document_skeletons`.
 - [ ] **Bước 2** - `contracts/schemas/document.json`; Java `Block` sealed + record; sinh kiểu TypeScript từ schema (P1).
 - [ ] **Bước 3** - `SafeDrawioParser`, `SvgSanitizer` (P5, BR-U09-35).
 - [ ] **Bước 4** - `DocumentValidator`: `validateSkeleton`, `validateForSave` (hash khóa block), `validateForSubmit` (block giảng viên đủ, sơ đồ không rỗng, `requiredDiagrams`, có nội dung người học); ESSAY chỉ block chữ, trần 1 000 000 ký tự (F5, P2, BR-U09-20…21, 30…38).
-- [ ] **Bước 5** - `TypeConfigService` và `TypeConfigCheckPort` cho QUIZ/ESSAY/DOCUMENT (F1, F4, BR-U09-01…03, 10…14).
+- [ ] **Bước 5** - `TypeConfigService` và `TypeConfigPort` (`check`, `copy`) cho QUIZ/ESSAY/DOCUMENT (F1, F4, BR-U09-01…03, 10…14).
 - [ ] **Bước 6** - `SkeletonService` (lưu khung, hash, làm sạch SVG) (F2).
 - [ ] **Bước 7** - Nhập DOCX: `SafeZipGuard`, `DocxImporter`, `BlockMapper`, `PngChunkReader`, `DiagramDetector` (PNG `tEXt`/`zTXt`/`iTXt`, SVG `content`, giải nén diagram nén), báo cáo nhập (F3, P3, BR-U09-40…44).
 - [ ] **Bước 8** - Xuất DOCX: `DocxExportService`, `JsvgRasterizer`, `PngChunkWriter`, semaphore 2 (F6, P4, BR-U09-50…52).
@@ -77,7 +77,7 @@ PostgreSQL `question_type_config`, `document_skeletons`.
 
 - [ ] **Bước 13** - Flyway `V20260925_1600__u09_question_type.sql` theo `infrastructure-design.md` §4.
 - [ ] **Bước 14** - JPA repository.
-- [ ] **Bước 15** - Integration test: sửa cấu hình khi bài không `DRAFT` bị chặn; U08 duyệt gọi `TypeConfigCheckPort` thật.
+- [ ] **Bước 15** - Integration test: sửa cấu hình khi bài không `DRAFT` bị chặn; U08 duyệt gọi `TypeConfigPort` thật.
 - [ ] **Bước 16** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API

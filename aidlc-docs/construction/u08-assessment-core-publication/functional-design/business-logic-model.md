@@ -30,6 +30,7 @@
 
 ## F7 - Ngưng giao, nhân bản, lưu trữ
 1. Ngưng giao (BR-U08-40); nhân bản (BR-U08-41); lưu trữ (BR-U08-42).
+2. Sửa sau khi ngừng giao/đóng: kiểm BR-U08-43, 44 → tạo version `DRAFT` mới, gọi `TypeConfigPort.copy`; audit.
 
 ## F8 - Truy vấn
 1. Giảng viên: danh sách bài theo lớp/trạng thái, chi tiết, publication (UC-ASM-01).

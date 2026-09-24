@@ -7,7 +7,7 @@
       |
       v
  +------------------------------ backend -------------------------------------+
- | TypeConfigController --> TypeConfigService (TypeConfigCheckPort cho U08)   |
+ | TypeConfigController --> TypeConfigService (TypeConfigPort cho U08)   |
  | SkeletonController --> SkeletonService --> DocumentValidator, SvgSanitizer  |
  | DocxImportController --> DocxImporter --> SafeZipGuard, BlockMapper,       |
  |                                          DiagramDetector --> SafeDrawioParser|

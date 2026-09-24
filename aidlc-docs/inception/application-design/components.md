@@ -60,7 +60,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 - Module chỉ truy cập dữ liệu module khác qua application service/port đã công bố.
 - Mọi object access nhận actor context và resource scope; controller không thay thế authorization service.
 - Submission sở hữu bản nộp. Grading chỉ tham chiếu immutable submission version.
-- Assessment sở hữu version/template/copy assignment/publication policy; assignment đã phát hành bị khóa nội dung, thay đổi bằng ngưng giao và nhân bản. Submission giữ assignment/question/rubric snapshot tại thời điểm attempt bắt đầu. Không có thao tác sao chép khóa học/lớp.
+- Assessment sở hữu version/template/copy assignment/publication policy; assignment đã phát hành bị khóa nội dung, thay đổi bằng ngưng giao rồi tạo version mới, hoặc nhân bản. Submission giữ assignment/question/rubric snapshot tại thời điểm attempt bắt đầu. Không có thao tác sao chép khóa học/lớp.
 - Content sở hữu transcript source/status; vector index chỉ giữ reference tới đúng resource version.
 - Full Draw.io XML là artifact gốc. Derived compact XML thuộc AI job, có TTL/retention riêng và không thay đổi bản gốc.
 - AI Orchestration không được publish assessment hoặc final grade.

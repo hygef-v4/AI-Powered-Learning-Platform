@@ -176,7 +176,7 @@ Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm 
 **Tiêu chí chấp nhận:**
 
 - Câu hỏi chưa publish có thể sửa trong draft hiện tại.
-- Assignment đã phát hành bị khóa nội dung (kể cả khi chưa ai làm); muốn thay đổi thì ngưng giao rồi nhân bản thành assignment mới. Hệ thống lưu version câu hỏi được dùng cho từng attempt.
+- Assignment đã phát hành bị khóa nội dung (kể cả khi chưa ai làm); muốn thay đổi thì ngưng giao (hoặc đợi đóng) rồi sửa để tạo version mới; version cũ giữ nguyên cho bài nộp cũ và xem được khác biệt giữa các version. Hệ thống lưu version câu hỏi được dùng cho từng attempt.
 - Sửa câu hỏi trong ngân hàng tạo version mới và không ảnh hưởng assignment đã dùng version cũ.
 - Rubric đã dùng để chấm không bị ghi đè; thay đổi tạo version mới cho lần sử dụng sau.
 

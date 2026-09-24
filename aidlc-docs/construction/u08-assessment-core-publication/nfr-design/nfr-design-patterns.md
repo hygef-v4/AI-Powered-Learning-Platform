@@ -17,7 +17,7 @@
 - `LearnerAssignmentView` dựng từ thành phần: câu ngân hàng qua `BankQueryPort.getLearnerView`, câu riêng qua cùng bộ lọc (`LearnerViewMapper`) (NFR-U08-30).
 
 ## P5 - Kiểm duyệt có thể mở rộng
-- `ReviewValidator` chạy danh sách `ReviewCheck`: kiểm của U08 (thành phần, điểm, loại khớp) + `TypeConfigCheckPort` (U09, `C`); mặc định khi chưa có U09: đạt.
+- `ReviewValidator` chạy danh sách `ReviewCheck`: kiểm của U08 (thành phần, điểm, loại khớp) + `TypeConfigPort` (U09, `C`); mặc định khi chưa có U09: đạt.
 
 ## P6 - Event sau commit
 - `ASSIGNMENT_OPENED`, `ASSIGNMENT_CLOSED`, `ASSIGNMENT_RETIRED` `{publicationId, assignmentId, classId}` qua `EventPublisherPort` (U02) (NFR-U08-24).

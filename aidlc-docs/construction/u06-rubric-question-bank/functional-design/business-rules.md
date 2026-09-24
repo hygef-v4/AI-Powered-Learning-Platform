@@ -6,7 +6,7 @@
 |---|---|---|
 | BR-U06-01 | Ngân hàng cấp môn: Chủ nhiệm môn và ADMIN tạo/sửa/kích hoạt/ngưng; mọi giảng viên có lớp thuộc môn được xem và dùng bản `ACTIVE`. | Câu 1 |
 | BR-U06-02 | Ngân hàng cấp lớp: giảng viên của lớp, Chủ nhiệm môn, ADMIN tạo/sửa; chỉ người quản lý lớp đó thấy. | Câu 1 |
-| BR-U06-03 | Nhân bản: câu/rubric cấp lớp → cấp môn chỉ Chủ nhiệm môn làm; cấp môn → cấp lớp mọi người quản lý lớp làm được. Bản nhân bản là `DRAFT` mới, lưu `clonedFrom`. | Câu 1 |
+| BR-U06-03 | Nhân bản: câu/rubric cấp lớp → cấp môn chỉ Chủ nhiệm môn làm; cấp môn → cấp lớp mọi người quản lý lớp làm được; cấp lớp → cấp lớp khác chỉ giảng viên dạy cả hai lớp (FR-028). Bản nhân bản là `DRAFT` mới, lưu `clonedFrom`. | Câu 1 |
 | BR-U06-04 | Ngoài phạm vi → "không tìm thấy". | SEC-002 |
 
 ## 2. Phiên bản

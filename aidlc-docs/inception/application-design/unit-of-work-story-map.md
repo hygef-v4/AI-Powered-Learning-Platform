@@ -19,7 +19,7 @@ Catalog gốc: 90 UC, 59 story (48 MVP, 11 Phase 2). Điều chỉnh thiết k�
 | U07 Payment & Entitlement | UC-PAY-01..02 | US-PAY-001..003 | 3 | 0 | 3 |
 | U08 Assessment Core & Publication | UC-ASM-01, 07 | US-ASM-001 | 1 | 0 | 1 |
 | U09 Question Type Authoring | UC-ASM-02, 03, 04 (UC-ASM-08 đã loại) | US-ASM-004, 006, 007 (US-ASM-002 đã loại) | 3 | 0 | 3 |
-| U10 Template, Copy & Simulation | UC-ASM-15..18 | US-ASM-008..011 | 3 | 1 | 4 |
+| U10 Template, Copy & Simulation | UC-ASM-15..18 | US-ASM-008..011 | 4 | 0 | 4 |
 | U11 Attempt & Submission | UC-ASM-09..14 | US-ASM-003 | 1 | 0 | 1 |
 | U12 Group & Allocation | UC-GRP-01..05, UC-ASM-06 | US-GRP-001..003 | 3 | 0 | 3 |
 | U13 AI & Code Execution | UC-AIG-01..03, UC-ASM-05 | US-AIG-001..003, US-ASM-005 | 4 | 0 | 4 |
@@ -37,7 +37,7 @@ Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực ti
 | Tạo đề thủ công, duyệt và phát hành lớp | U08 | U04 scope, U06 bank, U09 cấu hình kiểu câu hỏi |
 | Cấu hình quiz/essay/tài liệu (không có đề chung cấp môn) | U09 | U08 aggregate/publication, U06 rubric/question versions |
 | AI tạo bản nháp đề | U13 | U05 nguồn học liệu, U06 bank; U08 duyệt/lưu/publish |
-| Thay đổi assignment đã giao | U08 | Không sửa được; ngưng giao rồi nhân bản thành bài mới. U10 giữ template/copy/simulation policy |
+| Thay đổi assignment đã giao | U08 | Không sửa version đang giao; ngưng giao/đóng rồi sửa tạo version mới. U10 giữ template/copy/simulation policy và diff version |
 | Soạn bài tài liệu (DOCUMENT) có sơ đồ Draw.io | U09 sở hữu mô hình tài liệu, khung, nhập/xuất DOCX và quy tắc kiểm XML | U03 giữ ảnh; U08 aggregate/publication |
 | Soạn Code Lab và nộp bài tài liệu/Code Lab | U13 sở hữu Code Lab authoring và CodeExecution; U11 sở hữu attempt/submission | U03 giữ artifact; U08 publication; U09 mô hình tài liệu |
 | Bài nhóm | U12 nhóm/phân phần; U14 nộp phần và composite | U11 attempt; U15 lưu grade cuối |

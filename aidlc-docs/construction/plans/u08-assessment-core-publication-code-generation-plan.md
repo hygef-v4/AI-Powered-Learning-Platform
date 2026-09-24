@@ -22,7 +22,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort`, `DefinitionValidationPort`, `QuestionEditor`, `QuestionView` | U06 | Dùng thật |
 | `ContentRefPort` | U05 | Dùng thật (câu riêng gắn chương/bài) |
-| `TypeConfigCheckPort` | U09 (`C`) | Adapter tạm luôn đạt; U09 thay |
+| `TypeConfigPort` | U09 (`C`) | Adapter tạm luôn đạt; U09 thay |
 | `AiDraftPort` | U13 (`C`) | Adapter tạm báo "AI chưa sẵn sàng"; ẩn nút AI khi chưa có; U13 thay |
 
 ### Dữ liệu U08 sở hữu
@@ -41,7 +41,7 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; queue `jobs.u
                         SubmissionWindow
     infrastructure/     JPA repository, PassTypeConfigCheckAdapter, UnavailableAiDraftAdapter
     worker/             PublicationScheduleHandler
-    port/               AssignmentQueryPort, TypeConfigCheckPort, AiDraftPort
+    port/               AssignmentQueryPort, TypeConfigPort, AiDraftPort
 /backend/src/main/resources/db/migration/u08/
 /frontend/src/app/teaching/classes/[id]/assignments/
 /frontend/src/app/teaching/assignments/[id]/
@@ -59,8 +59,8 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; queue `jobs.u
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain: `Assignment` (aggregate, khóa khi không `DRAFT`), `AssignmentComponent` (một nguồn), `Publication`, `SubmissionWindow` (P1, P3, BR-U08-10…14, 33).
-- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigCheckPort`, `AiDraftPort`.
-- [ ] **Bước 4** - `AssignmentService`: tạo, thêm từ ngân hàng/câu riêng, điểm, sửa, xóa nháp, nhân bản, lưu trữ, audit (F1, F7, BR-U08-01, 10…15, 41, 42).
+- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`.
+- [ ] **Bước 4** - `AssignmentService`: tạo, thêm từ ngân hàng/câu riêng, điểm, sửa, xóa nháp, nhân bản, tạo version mới sau khi ngừng giao/đóng, lưu trữ, audit (F1, F7, BR-U08-01, 10…15, 41…44).
 - [ ] **Bước 5** - AI draft: gọi `AiDraftPort`, thêm câu giữ lại với `origin = AI` (F2, BR-U08-21).
 - [ ] **Bước 6** - `ReviewValidator` và duyệt (F3, P5, BR-U08-20, 22).
 - [ ] **Bước 7** - `PublicationService`: phát hành một lớp, kiểm lịch/nộp trễ/số lượt, khóa bài, tạo job, sửa lịch, ngưng giao, audit (F4, F6, F7, P2, BR-U08-02, 30…34, 40).
@@ -93,7 +93,7 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; queue `jobs.u
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 25** - Cập nhật `README.md`: vòng đời bài, lịch mở/đóng, cách U09 cài `TypeConfigCheckPort`, cách U11 dùng `isSubmissionOpen`.
+- [ ] **Bước 25** - Cập nhật `README.md`: vòng đời bài, lịch mở/đóng, cách U09 cài `TypeConfigPort`, cách U11 dùng `isSubmissionOpen`.
 - [ ] **Bước 26** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết

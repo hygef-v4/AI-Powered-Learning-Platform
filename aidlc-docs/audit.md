@@ -1729,3 +1729,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U09 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U09 Code Plan Approval and U10 Functional Design
+
+**Timestamp**: 2026-09-24T22:29:29Z
+
+**User Input**: "continue"; UI answers: "Giữ (Khuyến nghị)", "Mọi loại", "Không giới hạn", "ngừng giao thì vẫn sửa đc mà nên vẫn xem diff đc chứ", "Đúng, sửa tạo version mới (Khuyến nghị)"
+
+**AI Response**: Treated "continue" as approval of the U09 code generation plan. Created U10 functional design: subject templates authored as U08 assignments with ownerType SUBJECT_TEMPLATE and released read-only versions, copy template/class-to-class with lineage (class-bank items duplicated via U06), version diff, simulation for all types with unlimited attempts option and locked policy (BR-U10-01..40). Amended U08 (stableKey/versionNo, edit after all publications closed/retired creates a new version, TypeConfigPort.copy) and synced FR-016, US-QBK-002 S3, US-ASM-008 (no longer Phase 2), UC-ASM-15, story map, application-design; U06 class-to-class copy.
+
+**Context**: U10 Functional Design Step 7; awaiting approval.
+
+---
+
+## U10 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T22:30:39Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U10 Functional Design. No new questions. Created U10 NFR plan, `nfr-requirements.md` (NFR-U10-01..31: copy/diff performance, atomic copy, conditional policy lock, append-only lineage, dual-scope authorization) and `tech-stack-decisions.md` (java-diff-utils).
+
+**Context**: U10 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U10 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T22:31:27Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U10 NFR Requirements. No new questions. Created U10 NFR Design plan, `nfr-design-patterns.md` (P1-P4: single-transaction copy across U08/U06/U09, keyed component diff, conditional policy lock, pure result calculator) and `logical-components.md`.
+
+**Context**: U10 NFR Design Step 7; awaiting approval.
+
+---
+
+## U10 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T22:32:02Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U10 NFR Design. No new questions. Created U10 `infrastructure-design.md` (backend-only, migration with append-only lineage and nullable max attempts) and `deployment-architecture.md`. No shared infrastructure changes.
+
+**Context**: U10 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U10 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T22:32:54Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U10 Infrastructure Design. Created `u10-template-copy-simulation-code-generation-plan.md` (Step 0 + 24 steps). Uses real U01, U02, U04, U06, U08, U09 ports; provides SimulationPolicyPort for U11/U15.
+
+**Context**: U10 Code Generation Part 1; plan awaiting approval.
+
+---
