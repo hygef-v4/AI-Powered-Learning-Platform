@@ -1489,3 +1489,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U05 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U05 Code Plan Approval and U06 Functional Design
+
+**Timestamp**: 2026-09-24T21:33:41Z
+
+**User Input**: "continue"; UI answers: "Môn + lớp (Khuyến nghị)", "Tất cả 4 loại", "rubrick sẽ làm theo kiểu automic mỗi mục nhỏ sẽ có các checklist để tính điểm rồi cộng vào", "cả 2", "Đúng, chỉ đạt/không đạt (Khuyến nghị)", "cả 4 loại, khi code cả 4 loại sẽ có một cái dạng chung nên sẽ làm theo dạng đấy", "nếu ko cập nhật có phải tạo thêm bảng ko", "Gắn chương/bài U05, Độ khó, Tag tự do", "thế thì ko cần cập nhật, cũng ko cần báo giáo viên luôn", "Mỗi loại một file mẫu"
+
+**AI Response**: Treated "continue" as approval of the U05 code generation plan. Explained that versions are rows grouped by stable_key, so no extra table is needed. Created U06 functional design: subject + class banks, 4 question types, checklist rubric (pass/fail items summed), per-type import templates (xlsx/csv, 500 rows), assignments pin versions with no update or notice (BR-U06-01..51). US-QBK-002 S2/S3 moved to U08/U11; US-QBK-003 left out pending team discussion.
+
+**Context**: U06 Functional Design Step 7; awaiting approval.
+
+---
+
+## U06 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-24T21:34:41Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U06 Functional Design. No new questions. Created U06 NFR plan, `nfr-requirements.md` (NFR-U06-01..31: search/import performance, immutable versions, numeric points, xlsx zip-bomb limits, answer hiding) and `tech-stack-decisions.md` (jsonb + records, Apache POI, Commons CSV).
+
+**Context**: U06 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U06 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-24T21:35:38Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U06 NFR Requirements. No new questions. Created U06 NFR Design plan, `nfr-design-patterns.md` (P1-P6: immutable versions, polymorphic definition with two-level validation, streaming import with zip-bomb limits, BigDecimal rubric scorer, latest-active search, manager/learner views) and `logical-components.md`.
+
+**Context**: U06 NFR Design Step 7; awaiting approval.
+
+---
+
+## U06 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-24T21:36:14Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U06 NFR Design. No new questions. Created U06 `infrastructure-design.md` (backend-only mapping, bank_items migration with partial unique draft index and GIN tags) and `deployment-architecture.md`. No shared infrastructure changes.
+
+**Context**: U06 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U06 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-24T21:37:00Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U06 Infrastructure Design. Created `u06-rubric-question-bank-code-generation-plan.md` (Step 0 + 28 steps). Uses real U01-U04 ports; ContentRefPort has a permissive adapter until U05.
+
+**Context**: U06 Code Generation Part 1; plan awaiting approval.
+
+---
