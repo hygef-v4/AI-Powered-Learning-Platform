@@ -106,7 +106,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-90 | Ghi audit qua U02: đăng nhập thất bại, khóa tạm, kích hoạt, đổi/đặt lại mật khẩu, đổi hồ sơ, đổi role (trước/sau), đổi trạng thái, nhập hàng loạt, truy cập bị từ chối. | FR-014, SECURITY-03 |
 | BR-U01-91 | Audit và log không chứa mật khẩu, OTP, token, số điện thoại. | SECURITY-03 |
-| BR-U01-92 | Lỗi gửi email không làm hỏng yêu cầu: người dùng vẫn nhận phản hồi trung tính, outbox retry hữu hạn. | US-IAM-003 S2, RESILIENCY |
+| BR-U01-92 | Lỗi gửi email không làm hỏng yêu cầu: người dùng vẫn nhận phản hồi trung tính, job retry hữu hạn. | US-IAM-003 S2, RESILIENCY |
 | BR-U01-93 | Khi không kiểm được quyền (phụ thuộc lỗi) thì từ chối. | SECURITY-15 |
 | BR-U01-94 | Lỗi trả client dạng an toàn, không lộ stack trace hay trạng thái tài khoản. | SECURITY-15 |
 | BR-U01-95 | Redis không khả dụng thì không tạo phiên mới, không refresh, không gửi OTP; trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | SEC-006, U01 NFR |

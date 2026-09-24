@@ -59,8 +59,8 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 - Pool PostgreSQL tối đa 10 kết nối; pool Redis tối đa 16.
 - Gửi mail chạy ở worker, tách khỏi thread xử lý request (RESILIENCY-10).
 
-### P9 - Outbox gửi OTP
-- Request chỉ ghi bản ghi outbox `OTP_DELIVERY(accountId, purpose)` trong giao dịch PostgreSQL rồi trả `202`. Không sinh mã ở request.
+### P9 - Gửi OTP qua job U02
+- Request chỉ tạo job `OTP_DELIVERY(accountId, purpose)` trong giao dịch PostgreSQL rồi trả `202`. Không sinh mã ở request.
 - Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi SMTP. Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
 - SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → dead-letter + log (NFR-U01-31).
 - Redis lỗi lúc worker chạy → job retry như lỗi SMTP.

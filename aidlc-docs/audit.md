@@ -1167,3 +1167,133 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: Cross-cutting scope clarification.
 
 ---
+
+## Workflow Change - Design U02 Before Coding U01
+
+**Timestamp**: 2026-09-24T17:14:06Z
+
+**User Input**: "nếu mà gen doc unit 2 trước code unit 1 đc ko", then "sang unit 2 đi"
+
+**AI Response**: Explained the deviation from the per-unit design-then-code rule; U01 and U02 share only contract edges, so designing U02 first is safe and lets U01 code use real audit/job contracts. Paused the U01 code generation plan (not approved) and started U02 Functional Design.
+
+**Context**: Workflow change approved by user.
+
+---
+
+## U02 Functional Design - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T17:14:06Z
+
+**Answers (UI, raw)**: 1 "Bảng jobs trong PostgreSQL (Khuyến nghị)"; 2 "Gửi thẳng RabbitMQ sau commit"; 3 "Chỉ ghi log"; 4 "Người tạo job và admin (Khuyến nghị)"; 5 "Bất đồng bộ qua RabbitMQ"; 6 "Vĩnh viễn (Khuyến nghị)"; 7 "Chỉ ADMIN (Khuyến nghị)"; 8 "quét lại nhưng để lên đủ lâu để nó có thể xử lý", clarified "5 phút"; 9 "Chấp nhận có thể mất"
+
+**AI Response**: Warned that asynchronous audit with publish-after-commit can lose mandatory audit events required by US-AUD-001 S3; user accepted. Created U02 plan, question file and four Functional Design artifacts (jobs table with lease and 5-minute re-publish sweep, no outbox table, admin-only audit query, shared job status component). Renamed U01 `OutboxPort` to `JobPort` across U01 design docs and the paused code plan. ERD sync for the `jobs` table recorded as pending.
+
+**Context**: U02 Functional Design Step 7; awaiting approval.
+
+---
+
+## U02 Functional Design - Approval
+
+**Timestamp**: 2026-09-24T17:22:16Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval of U02 Functional Design and started U02 NFR Requirements.
+
+**Context**: U02 Functional Design approved.
+
+---
+
+## U02 NFR Requirements - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T17:22:16Z
+
+**Answers (UI, raw)**: N1 "Container worker riêng (Khuyến nghị)"; N2 "Queue durable + message persistent (Khuyến nghị)"; N3 "4 job/lúc, audit riêng 1 luồng (Khuyến nghị)"
+
+**AI Response**: Created U02 NFR plan, question file, `nfr-requirements.md` (NFR-U02-01..50, compliance under the reduced rule scope) and `tech-stack-decisions.md` (Spring AMQP, JPA with conditional UPDATE for claim, @Scheduled sweep in the single worker).
+
+**Context**: U02 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U02 NFR Requirements - Approval
+
+**Timestamp**: 2026-09-24T17:31:19Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval and started U02 NFR Design.
+
+**Context**: U02 NFR Requirements approved.
+
+---
+
+## U02 NFR Design - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T17:31:19Z
+
+**Answers (UI, raw)**: D1 "Bảng jobs + lượt quét (Khuyến nghị)"; D2 "Mỗi loại job một queue (Khuyến nghị)"
+
+**AI Response**: Resolved the retry-mechanism conflict with U01 Infrastructure Design in favour of PostgreSQL-driven retry. Created U02 NFR Design plan, questions, `nfr-design-patterns.md` (P1-P9: afterCommit publish, conditional-UPDATE claim, DB-driven backoff, lease expiry, idempotent audit insert, REVOKE UPDATE/DELETE on audit_events, per-job-type queues) and `logical-components.md`. Removed delay queues and DLQ from U01 infrastructure design and renamed its queue to `jobs.u01.otp-delivery`.
+
+**Context**: U02 NFR Design Step 7; awaiting approval.
+
+---
+
+## U02 NFR Design - Approval
+
+**Timestamp**: 2026-09-24T17:32:29Z
+
+**User Input**: "approve"
+
+**AI Response**: Recorded approval and started U02 Infrastructure Design.
+
+**Context**: U02 NFR Design approved.
+
+---
+
+## U02 Infrastructure Design - Artifacts
+
+**Timestamp**: 2026-09-24T17:32:29Z
+
+**AI Response**: Evaluated all seven infrastructure question categories; every decision was already fixed by U01 Infrastructure Design and the reduced rule scope, so no new questions were asked. Created U02 `infrastructure-design.md` (component mapping, `migrator`/`app` PostgreSQL users with audit REVOKE, RabbitMQ vhost/user/exchanges, worker container) and `deployment-architecture.md`. Added the two PostgreSQL users and RabbitMQ topology to shared infrastructure.
+
+**Context**: U02 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U02 Infrastructure Design - Approval and Next Step
+
+**Timestamp**: 2026-09-24T19:24:28Z
+
+**User Input**: "Continue"; code-order question answered "sinh u02 thì đến u03"; clarification answered "làm cho xong plan u02"
+
+**AI Response**: Recorded approval of U02 Infrastructure Design and closed all U02 design plans. Interpreted the instruction as finishing U02 design and moving to U03 design before any code generation. U01 code generation plan stays paused.
+
+**Context**: U02 design stages complete; starting U03 Functional Design.
+
+---
+
+## U03 Functional Design - Questions and Artifacts
+
+**Timestamp**: 2026-09-24T19:41:11Z
+
+**Answers (UI, raw)**: 1 "Google Drive Shared Drive (Khuyến nghị)"; 2 "Gửi qua backend trong một request (Khuyến nghị)"; 3 "Link tạm qua backend, hạn 5 phút (Khuyến nghị)"; 4 "Một mức chung 50 MB"; 5 "Allowlist theo mục đích (Khuyến nghị)"; 6 "Xóa ngay sau khi job AI xong"; 7 "nếu bỏ ngang thì xoá luôn, chỉ up full thành công thì mới tính"
+
+**AI Response**: Interpreted answer 7 as: interrupted/failed uploads leave nothing behind; completed uploads become artifacts and are kept with no orphan cleanup. Created U03 plan, questions and four Functional Design artifacts. Download authorization is decided by the owning unit, which asks U03 for a 5-minute account-bound token; U03 never exposes Drive IDs. Replaced two-step upload methods in component-methods.md. ERD sync (drop scan_status, add status/deleted_at, no upload_sessions) recorded as pending.
+
+**Context**: U03 Functional Design Step 7; awaiting approval.
+
+---
+
+## U03 Functional Design - Approval; Correction to Resume U02 Code Plan
+
+**Timestamp**: 2026-09-24T19:44:44Z
+
+**User Input**: "approved"; then interrupted the U03 NFR questions with "tạm thời bỏ qua đã unit 2 vẫn chưa xong mà vẫn còn code generation plan"
+
+**AI Response**: Recorded approval of U03 Functional Design and paused U03 NFR Requirements. Acknowledged the earlier misreading of "làm cho xong plan u02" as design completion instead of the code generation plan. Created `construction/plans/u02-audit-job-and-outbox-code-generation-plan.md` (Step 0 plus 26 steps in six groups; shared scaffold reused from U01 plan steps 1-6; fake fail-closed AuthorizationPort until U01 is coded) and asked for approval.
+
+**Context**: U02 Code Generation Part 1 Step 6; awaiting approval.
+
+---

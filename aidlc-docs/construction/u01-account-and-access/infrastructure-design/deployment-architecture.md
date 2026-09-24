@@ -39,10 +39,10 @@ Cùng `docker-compose.yml` với file override `docker-compose.local.yml`:
 
 ## 4. Luồng OTP qua hạ tầng
 
-1. Trình duyệt → backend `/api/v1/auth/activation-requests` → ghi outbox trong PostgreSQL → trả `202`.
-2. Relay của U02 chuyển bản ghi outbox sang RabbitMQ `u01.otp-delivery`.
+1. Trình duyệt → backend `/api/v1/auth/activation-requests` → tạo dòng `jobs` trong PostgreSQL → trả `202`.
+2. U02 gửi `JobMessage` sang RabbitMQ sau commit, vào queue `jobs.u01.otp-delivery`.
 3. Worker nhận, sinh mã, ghi băm vào Redis, gửi SMTP.
-4. Lỗi → queue retry; hết lượt → DLQ + log ERROR.
+4. Lỗi → job về PENDING với backoff, lượt quét của U02 gửi lại; hết lượt → `FAILED` + log ERROR.
 
 ## 5. Khôi phục khi VPS lỗi
 

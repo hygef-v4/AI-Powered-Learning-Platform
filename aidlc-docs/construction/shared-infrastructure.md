@@ -9,9 +9,9 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | Production | VPS Linux nhóm đã có, chạy Docker Compose | Câu I1 |
 | Local/demo | Cùng file Compose, thêm Mailpit, tắt Nginx TLS | NFR-005 |
 | Reverse proxy, HTTPS | Nginx + certbot (Let's Encrypt); tên miền có sẵn hoặc subdomain DuckDNS miễn phí | Câu I6 |
-| Database | PostgreSQL container | ERD |
+| Database | PostgreSQL container; user `migrator` cho Flyway, user `app` cho runtime | ERD, U02 |
 | Cache, phiên, rate limit | Redis container | ERD |
-| Queue | RabbitMQ container | Câu I2 |
+| Queue | RabbitMQ container, vhost `/platform`, user `app`, tắt `guest`; exchange `jobs`, `audit`, `platform.events` | Câu I2, U02 |
 | Quan sát | `docker compose logs` + healthcheck; không có monitoring stack | Rút gọn phạm vi đồ án |
 | Secret | Biến môi trường trong CI/CD, ghi ra file `.env` quyền 600 trên VPS khi deploy | Câu I4 |
 | Registry image | GitHub Container Registry (miễn phí với repo public), tag theo commit SHA, không dùng `latest` | NFR-005 |
@@ -45,7 +45,7 @@ VPS tối thiểu gợi ý: 2 vCPU, 4 GB RAM, 40 GB SSD.
 
 ## 4. Secret
 
-- CI/CD giữ: `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
+- CI/CD giữ: `U01_JWT_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_MIGRATOR_PASSWORD`, `POSTGRES_APP_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_PASSWORD`, `SMTP_*`.
 - Khi deploy, pipeline ghi `.env` qua SSH, quyền `600`, chủ là user deploy. Không commit, không in ra log pipeline.
 - Xoay secret thủ công: đổi trong CI/CD rồi deploy lại. Đổi `U01_JWT_SECRET` làm mọi access token hiện có mất hiệu lực.
 

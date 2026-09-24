@@ -29,7 +29,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
 3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING_ACTIVATION` → sang bước 6 (BR-U01-12).
-4. Ghi yêu cầu `OTP_DELIVERY(ACTIVATION)` vào outbox U02.
+4. Ghi yêu cầu `OTP_DELIVERY(ACTIVATION)` thành job U02 (`JobPort.enqueue`).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
 
@@ -73,7 +73,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 **Vào**: `schoolEmail`.
 
 1. Chuẩn hóa, kiểm `RequestThrottle`.
-2. Chỉ khi tài khoản `ACTIVE`: ghi yêu cầu `OTP_DELIVERY(PASSWORD_RESET)` vào outbox; worker sinh mã và gửi mail như F1.
+2. Chỉ khi tài khoản `ACTIVE`: tạo job `U01_OTP_DELIVERY(PASSWORD_RESET)` qua `JobPort.enqueue`; worker sinh mã và gửi mail như F1.
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng gửi `otpCode` + `newPassword`: xác minh như F2 bước 1-3.
 5. Lưu mật khẩu mới, tăng `credentialVersion` → **mọi phiên** bị thu hồi, xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
@@ -164,4 +164,4 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 | `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit; U16 read model khi có |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
-| `OTP_DELIVERY_REQUESTED` | Outbox U02 → handler mail của U01 |
+| `OTP_DELIVERY_REQUESTED` | Job U02 → handler mail của U01 |

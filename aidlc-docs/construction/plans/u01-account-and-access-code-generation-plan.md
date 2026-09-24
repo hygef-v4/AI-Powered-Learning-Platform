@@ -14,7 +14,7 @@
 | Port | Unit thật | Adapter giả lượt này | Thay khi |
 |---|---|---|---|
 | `AuditPort` | U02 | Ghi sự kiện ra log có cấu trúc | U02 xong |
-| `OutboxPort` | U02 | Hàng đợi trong bộ nhớ, gọi `OtpMailHandler` bất đồng bộ trong backend, gửi qua SMTP (Mailpit ở local) | U02 + worker xong |
+| `JobPort` | U02 | Hàng đợi trong bộ nhớ, gọi `OtpMailHandler` bất đồng bộ trong backend, gửi qua SMTP (Mailpit ở local) | U02 + worker xong |
 | `ScopePort` | U04 | Trả rỗng: không ai phụ trách môn/lớp; hạ role luôn qua được kiểm phân công | U04 xong |
 | `AvatarPort` | U03 | `isAvailable() = false`; đổi ảnh bị tắt | U03 xong |
 
@@ -35,7 +35,7 @@
       application/            service
       domain/                 Account, policy, rule
       infrastructure/         JPA, Redis, JWT, SMTP, Bucket4j
-      port/                   AuditPort, OutboxPort, ScopePort, AvatarPort
+      port/                   AuditPort, JobPort, ScopePort, AvatarPort
       adapter/fake/           adapter giả
   src/main/resources/
     application.yml, application-local.yml
@@ -69,8 +69,8 @@
 
 - [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, chuyển trạng thái hợp lệ (BR-U01-70…73).
 - [ ] **Bước 8** - `PasswordPolicy` (BR-U01-30, 31; ≤ 72 byte), `PasswordHasher` bcrypt cost cấu hình.
-- [ ] **Bước 9** - Port và adapter giả: `AuditPort`, `OutboxPort`, `ScopePort`, `AvatarPort`.
-- [ ] **Bước 10** - `OtpService` + `OtpMailHandler`: ghi outbox; handler sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP, retry theo backoff (BR-U01-20…27, P9).
+- [ ] **Bước 9** - Port và adapter giả: `AuditPort`, `JobPort`, `ScopePort`, `AvatarPort`.
+- [ ] **Bước 10** - `OtpService` + `OtpMailHandler`: tạo job; handler sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP, retry theo backoff (BR-U01-20…27, P9).
 - [ ] **Bước 11** - `ActivationService`: F1, F2 (US-IAM-001).
 - [ ] **Bước 12** - `TokenService`: JWT HMAC 15 phút; refresh ngẫu nhiên lưu băm, idle 2 giờ, trần 7 ngày, xoay vòng, phát hiện dùng lại (P1).
 - [ ] **Bước 13** - `AuthService`: đăng nhập với hash giả cho email không tồn tại, khóa tạm 5 lần/15 phút, refresh, đăng xuất, quên mật khẩu, đổi mật khẩu (F3-F6; US-IAM-002, 003, 006).
@@ -123,6 +123,6 @@
 
 ## 5. Ngoài phạm vi lượt này
 
-- Adapter thật của U02, U03, U04; relay outbox sang RabbitMQ; container `worker` riêng (handler OTP tạm chạy trong backend).
+- Adapter thật của U02, U03, U04; adapter job thật của U02; container `worker` riêng (handler OTP tạm chạy trong backend).
 - Bật bước deploy SSH trong CI.
 - Bước 27 (test chịu lỗi) đã bỏ vì RESILIENCY-14 ngoài phạm vi đồ án; số bước giữ nguyên để không lệch truy vết.

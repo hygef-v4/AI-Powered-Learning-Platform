@@ -112,9 +112,12 @@ queryAudit(admin, filters, page) -> AuditPage
 ## File & Job Platform
 
 ```text
-registerUpload(actor, purpose, metadata) -> UploadSession
-finalizeUpload(actor, uploadSessionId, checksum) -> Artifact
-getAuthorizedDownload(actor, artifactId) -> SignedAccess
+store(actor, purpose, file) -> Artifact
+storeDerived(sourceArtifactId, purpose, bytes) -> Artifact
+attach(artifactId, scopeType, scopeId, actor) -> Artifact
+issueDownloadToken(artifactId, accountId) -> DownloadToken
+open(artifactId) -> Stream
+deleteDerived(artifactId) -> void
 enqueue(jobType, payloadRef, policy) -> JobReference
 claim(workerId, supportedTypes) -> JobLease
 complete(jobId, resultRef) -> JobStatus

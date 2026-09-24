@@ -137,7 +137,7 @@ Phạm vi môn/lớp đến từ contract của U04 (`SubjectScopePort`, `ClassS
 | Port | Cung cấp bởi | Cạnh | Dùng để |
 |---|---|---|---|
 | `AuditPort.recordAudit` | U02 | Contract | Ghi sự kiện bảo mật/nghiệp vụ |
-| `OutboxPort.enqueue` | U02 | Contract | Đưa yêu cầu gửi OTP vào outbox trong cùng giao dịch; handler gửi mail do U01 sở hữu, chạy ở worker qua Mail/Notification Port và retry hữu hạn. Không chờ U16 (wave 4) |
+| `JobPort.enqueue` | U02 | Contract | Tạo job gửi OTP trong cùng giao dịch, U02 gửi sang RabbitMQ sau commit; handler gửi mail do U01 sở hữu, chạy ở worker qua Mail/Notification Port và retry hữu hạn. Không chờ U16 (wave 4) |
 | `AvatarPort` | U03 | `C` | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR`, lấy tham chiếu hiển thị |
 | `SubjectScopePort`, `ClassScopePort` | U04 | Contract | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 

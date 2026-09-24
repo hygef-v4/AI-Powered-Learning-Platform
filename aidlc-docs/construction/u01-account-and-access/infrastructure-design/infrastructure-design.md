@@ -7,21 +7,20 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 | Thành phần (NFR Design) | Chạy ở | Ghi chú |
 |---|---|---|
 | `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `u01` | Một backend modular monolith |
-| `OtpMailHandler` | Container `worker` | Consumer RabbitMQ queue `u01.otp-delivery` |
+| `OtpMailHandler` | Container `worker` | Handler của job `U01_OTP_DELIVERY`, nhận từ queue `jobs.u01.otp-delivery` |
 | Bảng `accounts`, `account_import_batches`, `account_import_rows` | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa có tiền tố `u01:` |
-| Outbox | Bảng outbox của U02 trong `postgres` → relay sang RabbitMQ | U02 sở hữu relay |
+| Job | Bảng `jobs` của U02 trong `postgres`; gửi RabbitMQ sau commit, quét gửi lại job kẹt quá 5 phút | U02 sở hữu |
 | Gửi mail | SMTP bên ngoài ở production; Mailpit ở local | Cấu hình `SMTP_*` |
 
 ## 2. RabbitMQ
 
 | Thành phần | Giá trị |
 |---|---|
-| Exchange | `u01.events` (direct) |
-| Queue | `u01.otp-delivery`, durable |
-| Retry | Queue trễ `u01.otp-delivery.retry` với TTL 30 s, 1, 2, 4, 8 phút |
-| Dead-letter | `u01.otp-delivery.dlq`; ghi log mức ERROR khi có message |
-| Payload | `{ schemaVersion, jobId, correlationId, accountId, purpose }` - không chứa mã OTP |
+| Queue | `jobs.u01.otp-delivery`, durable, routing key `U01_OTP_DELIVERY` trên exchange `jobs` của U02 |
+| Retry | Do bảng `jobs` của U02 điều khiển (backoff 30 s → 8 phút, lượt quét mỗi phút); không có queue trễ |
+| Hết lượt | Job `FAILED`, log ERROR; không có DLQ |
+| Payload | `{ schemaVersion, jobId, jobType, correlationId }`; `accountId` và `purpose` nằm trong `payloadRef` của bảng `jobs`, không có mã OTP |
 
 ## 3. Redis
 

@@ -8,7 +8,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 |---|---|---|
 | NFR-U01-01 | Phục vụ tới 1.000 tài khoản và 100 người dùng đồng thời. | NFR-003 |
 | NFR-U01-02 | Đăng nhập, refresh, đăng xuất, hồ sơ, danh sách tài khoản: p95 ≤ 500 ms ở tải mục tiêu. Thời gian bcrypt được tính vào ngân sách này. | NFR-003 |
-| NFR-U01-03 | Yêu cầu OTP trả `Accepted` mà không chờ gửi mail; mail đi qua outbox. | NFR-003, BR-U01-92 |
+| NFR-U01-03 | Yêu cầu OTP trả `Accepted` mà không chờ gửi mail; mail đi qua job U02. | NFR-003, BR-U01-92 |
 | NFR-U01-04 | Kiểm tra access token không gọi Redis hay database. | Câu N5 |
 | NFR-U01-05 | Nhập CSV 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
 
@@ -38,7 +38,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/demo dùng Mailpit, không gửi mail thật. Khi demo dùng Gmail SMTP với App Password (miễn phí, ~500 mail/ngày), cấu hình bằng biến môi trường. | Câu N8, NFR-005 |
-| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì outbox retry tối đa 5 lần với backoff tăng dần; hết lượt thì chuyển dead-letter và ghi log, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
+| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì job retry tối đa 5 lần với backoff tăng dần; hết lượt thì chuyển dead-letter và ghi log, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
 | NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-005 |
 
 ## 5. Khả dụng và lỗi phụ thuộc

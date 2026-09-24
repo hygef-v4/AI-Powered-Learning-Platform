@@ -4,7 +4,7 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: U01 Account & Access Code Generation Part 1 - plan awaiting approval
+- **Current Stage**: U02 Code Generation Part 1 - plan awaiting approval. U03 Functional Design approved; U03 NFR Requirements paused. U01 code plan paused.
 - **Session Status**: Current Application Design uses 16 units, with Learning Access in U04. Construction has started with U01; detailed Functional Design waits on account-onboarding clarification.
 - **Application Design Revision**: 2026-09-24 corrections approved by user
 
@@ -59,7 +59,7 @@
 - **Risk level**: High
 - **Testing complexity**: Complex
 - **Current unit**: U01 - Account & Access (16-unit plan)
-- **Resume action**: Get approval of `construction/plans/u01-account-and-access-code-generation-plan.md`, then execute it step by step
+- **Resume action**: Get approval of the U02 code generation plan; then resume U03 NFR Requirements. U01 code plan still paused.
 
 ## Earlier Change Request Progress - 2026-09-24 (superseded by Construction Start and 16-Unit Review)
 

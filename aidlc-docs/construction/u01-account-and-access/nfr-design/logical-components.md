@@ -18,7 +18,7 @@
  |       AuthorizationService   OtpService                       AvatarPort |
  |                |                |                              (-> U03)   |
  |                v                v                                         |
- |        ScopePort (-> U04)   OutboxPort (-> U02)                           |
+ |        ScopePort (-> U04)   JobPort (-> U02)                           |
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
@@ -27,7 +27,7 @@
    import batch      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ScopePort`) và `OtpService` (ghi outbox qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` đọc outbox và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ScopePort`) và `OtpService` (tạo job qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận job từ RabbitMQ và gửi SMTP, local dùng Mailpit.
 
 ## 2. Thành phần
 
@@ -37,7 +37,7 @@
 | `JwtAuthFilter` | Kiểm chữ ký, hạn JWT; dựng actor; không gọi Redis/DB | NFR-U01-04, 10 |
 | `AuthService` | Đăng nhập, refresh, đăng xuất, khóa tạm, đổi/đặt lại mật khẩu | F3, F4, F5, F6 |
 | `ActivationService` | Yêu cầu và hoàn tất kích hoạt | F1, F2 |
-| `OtpService` | Ghi outbox yêu cầu OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
+| `OtpService` | Tạo job gửi OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
 | `PasswordPolicy` | ≥ 8 ký tự, chữ + số, không chứa tên email, ≤ 72 byte | BR-U01-30, 31, NFR-U01-14 |
 | `TokenService` | Phát và xoay JWT/refresh; kiểm `credentialVersion` khi refresh | NFR-U01-10, 11 |
 | `ProfileService` | Sửa tên, số điện thoại, ảnh | F7 |
