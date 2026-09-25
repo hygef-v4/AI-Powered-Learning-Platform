@@ -9,14 +9,14 @@
 
 ## 2. Việc cần làm
 
-- [x] Đọc unit-of-work, story map, US-AUD-001, UC-OPS-02, component-methods, services, ERD `audit_events`.
+- [x] Đọc unit-of-work, story map, US-AUD-001, UC-OPS-02, component-methods, services và mô hình dữ liệu U02.
 - [x] Hỏi người dùng qua giao diện, ghi vào `u02-audit-job-and-outbox-functional-design-questions.md`.
 - [x] Tạo `business-logic-model.md`, `business-rules.md`, `domain-entities.md`, `frontend-components.md`.
 - [x] Đồng bộ tài liệu U01: `OutboxPort` thành `JobPort`, không còn bảng outbox.
 - [x] Ghi compliance theo phạm vi rút gọn.
 - [x] Trình duyệt Functional Design U02.
 
-## 3. Cần đồng bộ ERD sau
+## 3. Mô hình dữ liệu đã chốt
 
-- Thêm bảng `jobs` (ERD §3.1 đang ghi không có bảng này).
+- U02 sở hữu bảng `jobs` và `audit_events`.
 - Không có bảng `outbox`.

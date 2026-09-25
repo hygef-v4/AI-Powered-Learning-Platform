@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U16 sở hữu thông báo trong app, hàng đợi email thông báo (có trần ngày), cài đặt nhận email của người dùng, nhắc hạn nộp tự động và báo cáo tiến độ nộp bài. U16 **không** sở hữu: email OTP tài khoản (U01 qua U02), dữ liệu nghiệp vụ gốc (chỉ đọc qua port/event).
+U16 sở hữu thông báo trong app, hàng đợi email thông báo (có trần ngày), cài đặt nhận email của người dùng, nhắc hạn nộp tự động, dashboard cá nhân và xuất bảng điểm theo yêu cầu. U16 **không** sở hữu: email OTP tài khoản (U01 qua U02), điểm/bài nộp gốc (chỉ đọc qua port/event). Dashboard và tệp xuất tính khi đọc, không có bảng điểm tổng riêng.
 
 ## 2. `Notification`
 
@@ -10,7 +10,7 @@ U16 sở hữu thông báo trong app, hàng đợi email thông báo (có trần
 |---|---|---|
 | `id` | UUID | |
 | `recipientId` | UUID | |
-| `type` | enum | `ENROLLED`, `ASSIGNMENT_OPENED`, `DEADLINE_REMINDER`, `GRADE_PUBLISHED`, `GROUP_LEADER_CHANGED`, `GROUP_MEMBERSHIP_CHANGED`, `GROUP_SUBMITTED`, `PAYMENT_PAID` |
+| `type` | enum | `ENROLLED`, `ASSIGNMENT_OPENED`, `DEADLINE_REMINDER`, `GRADE_PUBLISHED`, `GROUP_LEADER_CHANGED`, `GROUP_MEMBERSHIP_CHANGED`, `GROUP_SUBMITTED`, `PAYMENT_PAID`, `CLASS_ANNOUNCEMENT`, `CLASS_QUESTION`, `CLASS_ANSWER` |
 | `title`, `body` | chuỗi | Không chứa điểm số, dữ liệu người khác |
 | `link` | chuỗi | Đường dẫn nội bộ |
 | `sourceEventId` | UUID | Unique theo `(sourceEventId, recipientId, type)` (chống trùng) |
@@ -46,5 +46,8 @@ U16 sở hữu thông báo trong app, hàng đợi email thông báo (có trần
 | `u12.group.leader-changed`, `u12.group.membership-changed` | U12 | App |
 | `u14.group.submitted` | U14 | App cho thành viên nhóm |
 | `u07.payment.paid` (U07 thêm event) | U07 | App |
-| `ClassAccessPort`, `AccountLookupPort` | U04, U01 | Danh sách người học, email |
+| `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted` | U05 | App cho người còn quyền trong lớp theo BR-U16-06; không gửi email. Event trả lời mang `questionAuthorId` để chọn người nhận, U16 kiểm lại quyền lớp qua U04 |
+| `AccountLookupPort` | U01 | Email tài khoản |
 | `SubmissionQueryPort`, `GroupSubmissionQueryPort`, `AssignmentQueryPort` | U11, U14, U08 | Báo cáo tiến độ, ai chưa nộp |
+| `GradebookQueryPort`, `GradeQueryPort` | U15 | Điểm cuối/trạng thái, không trả đề xuất AI cho dashboard hoặc xuất bảng điểm |
+| `ClassAccessPort` | U04 | Lớp người học đang ghi danh, người quản lý lớp, `showGradeDistribution` |

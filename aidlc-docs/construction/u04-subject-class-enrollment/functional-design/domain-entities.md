@@ -30,6 +30,7 @@ U04 sở hữu môn, lớp, phân công (Chủ nhiệm môn, giảng viên), ghi
 | `instructorAccountId` | UUID | Giảng viên chính; bắt buộc trước khi `OPEN` |
 | `inviteCode` | chuỗi 8 | Có thể rỗng; duy nhất toàn hệ thống khi có |
 | `inviteEnabled` | bool | Mặc định `false` |
+| `showGradeDistribution` | bool | Mặc định `false`; chỉ bật phân bố điểm ẩn danh trên dashboard khi đủ mẫu |
 | `inviteExpiresAt` | thời gian | Bắt buộc khi bật mã |
 | `createdAt`, `updatedAt` | thời gian | |
 
@@ -65,7 +66,7 @@ Ghi danh:  ACTIVE <--> REMOVED
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `SubjectScopePort`, `ClassScopePort` | U04 cung cấp cho U01 | `isSubjectManager`, `isInstructorOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
-| `ClassAccessPort` | U04 cung cấp cho U05-U15 | `getClassRef(classId)` (môn, trạng thái, giảng viên), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
+| `ClassAccessPort` | U04 cung cấp cho U05-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
 | `AccountLookupPort` | U04 dùng U01 | Tìm tài khoản theo email hoặc chuỗi tìm kiếm; trả `id`, `displayName`, `email`, `role`, `status` |
 | `AuthorizationPort` | U04 dùng U01 | Kiểm role và phạm vi |
 | `PublishedContentPort` | U04 dùng, U05 cung cấp (`C`) | Nội dung đã phát hành của lớp và môn |

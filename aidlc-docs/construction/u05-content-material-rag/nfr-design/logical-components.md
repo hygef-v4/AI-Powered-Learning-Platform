@@ -11,6 +11,8 @@
  |                      ItemService --> ArtifactPort (U03), JobPort (U02)       |
  | LearnerDownloadController --> ClassAccessPort (U04) --> ArtifactPort         |
  | PublishedContentService (PublishedContentPort)                              |
+ | ClassCommunicationController --> ClassCommunicationService --> ClassAccessPort |
+ |                               --> EventPublisherPort (U02, sau commit)       |
  | RetrievalService (RagRetrievalPort) --> EmbeddingBudget --> EmbeddingPort    |
  |                                     --> VectorSearchRepository (pgvector)   |
  +-----------------------------------------------------------------------------+
@@ -23,19 +25,20 @@
  +-----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `ContentController`; các service quản lý chương, bài, phiên bản, mục, lưu file qua U03 và tạo job qua U02. Học viên tải file qua `LearnerDownloadController`, kiểm ghi danh ở U04 rồi lấy token U03. U04 đọc nội dung đã phát hành qua `PublishedContentService`; U13 gọi `RetrievalService`, service này kiểm trần, tạo vector câu hỏi bằng Gemini và tìm đoạn gần nhất trong pgvector. Trong worker, `YoutubeResolveHandler` giải playlist và tạo job ingest; `IngestJobHandler` trích chữ, cắt đoạn, kiểm trần, gọi Gemini và ghi đoạn vào PostgreSQL.
+**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `ContentController`; các service quản lý chương, bài, phiên bản, mục, lưu file qua U03 và tạo job qua U02. Người trong lớp đọc/viết thông báo, câu hỏi và trả lời qua `ClassCommunicationController`; service kiểm quyền U04 rồi phát event sau commit cho U16. Học viên tải file qua `LearnerDownloadController`, kiểm ghi danh ở U04 rồi lấy token U03. U04 đọc nội dung đã phát hành qua `PublishedContentService`; U13 gọi `RetrievalService`, service này kiểm trần và giữ credit người yêu cầu qua U07 trước khi tạo vector câu hỏi bằng Gemini và tìm đoạn gần nhất trong pgvector. Trong worker, `YoutubeResolveHandler` giải playlist và tạo job ingest; `IngestJobHandler` trích chữ, cắt đoạn, kiểm trần, giữ credit của người tạo nguồn qua U07, gọi Gemini và ghi đoạn vào PostgreSQL. Hết quota hệ thống được báo là "Hệ thống đang bận".
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `ChapterService`, `LessonService`, `ItemService` | backend | F1-F4 |
+| `ClassCommunicationController`, `ClassCommunicationService` | backend | F10, quyền lớp và event U16 |
 | `LearnerDownloadController` | backend | F8 |
 | `PublishedContentService` | backend | `PublishedContentPort` |
 | `RetrievalService`, `VectorSearchRepository` | backend | F9, P6 |
 | `YoutubeResolveHandler` | worker | F5 |
 | `IngestJobHandler`, `TextExtractor`, `Chunker`, `ChunkWriter` | worker | F6, P1-P3 |
-| `EmbeddingBudget` | backend, worker | P4 |
+| `EmbeddingBudget`, `CreditPort` (U07) | backend, worker | P4; kiểm trần hệ thống và credit người dùng trước Gemini |
 | `GeminiEmbeddingAdapter`, `YoutubeAdapter` + adapter giả | backend, worker | P5, P8 |
 
 ## 3. Cấu hình

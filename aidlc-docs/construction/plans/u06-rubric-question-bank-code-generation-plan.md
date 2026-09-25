@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-QBK-001, US-QBK-002 (Scenario 1; Scenario 2, 3 thuộc U08/U11). US-QBK-003 (Phase 2) chưa thiết kế, chờ nhóm hội ý.
+- **Story trong phạm vi**: US-QBK-001, US-QBK-002 (Scenario 1; Scenario 2, 3 thuộc U08/U11). Phân tích chất lượng câu hỏi không thuộc MVP.
 - **Use case**: UC-QBK-01, UC-QBK-02.
 - **Thiết kế nguồn**: `construction/u06-rubric-question-bank/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -108,5 +108,5 @@ PostgreSQL `bank_items`.
 
 ## 5. Ngoài phạm vi
 
-- US-QBK-002 S2, S3 (U08/U11), US-QBK-003 (Phase 2).
+- US-QBK-002 S2, S3 thuộc U08/U11; phân tích chất lượng câu hỏi ngoài phạm vi dự án.
 - Chạy test case Code Lab (U13), chấm theo rubric (U15).

@@ -48,7 +48,7 @@ Sau khi `SUBMITTED`, nội dung bất biến.
 | `GradeQueryPort` | U11 dùng U15 (`C`: ẩn điểm tới khi U15 có) | Hiển thị điểm/đáp án theo BR-U11-33 |
 | Event `SUBMISSION_SUBMITTED` | U11 phát | `{attemptId, publicationId, learnerId, late, submitMode}` cho U15, U16 |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U11 dùng U08 | Bài, publication, hạn |
-| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort` | U11 dùng U09 | Cấu hình, kiểm tài liệu, xuất DOCX |
+| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxLearnerImportPort` | U11 dùng U09 | Cấu hình, kiểm tài liệu, xuất DOCX, xem trước nhập DOCX của người học |
 | `SimulationPolicyPort` | U11 dùng U10 | Lượt tối đa, khóa chính sách |
 | `BankQueryPort` | U11 dùng U06 | Góc nhìn người học của câu hỏi |
 | `CodeRunPort` | U11 dùng U13 (`C`) | Chạy thử code khi đang làm |

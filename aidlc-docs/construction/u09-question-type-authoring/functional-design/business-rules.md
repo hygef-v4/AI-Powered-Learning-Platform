@@ -50,6 +50,15 @@
 | BR-U09-43 | Nội dung không hỗ trợ (textbox, SmartArt, công thức, header/footer) bỏ qua và liệt kê trong báo cáo nhập. | Thiết kế |
 | BR-U09-44 | Kết quả nhập là bản xem trước; giảng viên sửa/xóa block rồi mới lưu làm khung. | Thiết kế |
 
+## 5a. Người học nhập DOCX vào lượt DOCUMENT
+
+| Mã | Quy tắc | Nguồn |
+|---|---|---|
+| BR-U09-45 | Chỉ người học sở hữu lượt `DOCUMENT` đang `IN_PROGRESS` được nhập `.docx` ≤ 20 MB; U11 kiểm quyền và thời hạn trước khi gọi U09. Không áp dụng cho `ESSAY`, `QUIZ` hoặc bài đã nộp. | US-ASM-004 S4 |
+| BR-U09-46 | Dùng cùng bộ đọc DOCX an toàn BR-U09-40…43; block nhập có `origin = LEARNER`. Trả bản xem trước và báo cáo phần bỏ qua; không lưu bài chỉ vì tải file lên. | US-ASM-004 S4 |
+| BR-U09-47 | Sau xác nhận, thêm block nhập vào bản nháp đang làm theo `contentVersion` của U11; không thay, xóa, đổi thứ tự hay đổi `contentHash` của block `TEACHER`. Xung đột phiên bản hoặc lỗi nhập giữ nguyên bản nháp. | US-ASM-004 S4, BR-U09-36 |
+| BR-U09-48 | Nếu DOCX chứa sơ đồ Draw.io, chỉ lưu XML sau khi qua BR-U09-35; ảnh không nhận được XML giữ dạng `IMAGE`. Kết quả vẫn phải qua `validateForSave`, và khi nộp qua `validateForSubmit`. | BR-U09-35…37 |
+
 ## 6. Xuất DOCX
 
 | Mã | Quy tắc | Nguồn |

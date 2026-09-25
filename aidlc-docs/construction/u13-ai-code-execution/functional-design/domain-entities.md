@@ -15,7 +15,7 @@ U13 sở hữu cấu hình AI (model theo việc, trần chi phí, kill-switch),
 
 Thuộc tính: `task`, `model` (trong danh sách cho phép: `gemini-2.5-flash-lite`, `gemini-2.5-flash`, `gemini-2.5-pro`), `maxOutputTokens`, `temperature`, `enabled`.
 
-`AiGlobalSettings`: `killSwitch` (bool), `dailyCostCapUsd`, `perUserPerMinute` (mặc định 10).
+`AiGlobalSettings`: `killSwitch` (bool, mặc định `false`; `true` chặn lời gọi AI mới), `dailyCostCapUsd`, `perUserPerMinute` (mặc định 10).
 
 ## 3. `AiCall` (nhật ký, không lưu nội dung)
 

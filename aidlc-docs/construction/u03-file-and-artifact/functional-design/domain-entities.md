@@ -34,7 +34,7 @@ Byte file không đổi sau khi tạo. Chỉ `status` và `scopeType`/`scopeId` 
 | `MATERIAL` | PDF, DOCX, PPTX | 50 MB | U05 |
 | `DOCUMENT_IMAGE` | PNG, JPEG, GIF, SVG | 5 MB | U06, U09, U11, U14 (ảnh trong khung đề, bài làm, tài liệu nhóm) |
 
-Không có loại file cho Draw.io: XML sơ đồ nằm trong block `DIAGRAM` của tài liệu (U09). Caption YouTube lưu ở U05; bài nhóm xuất DOCX tại chỗ (U09); export báo cáo là Phase 2.
+Không có loại file cho Draw.io: XML sơ đồ nằm trong block `DIAGRAM` của tài liệu (U09). Caption YouTube lưu ở U05; bài nhóm xuất DOCX tại chỗ (U09); U16 xuất bảng điểm CSV/XLSX trực tiếp theo yêu cầu, không lưu tệp xuất tại U03.
 
 ## 3. DownloadToken
 

@@ -65,7 +65,11 @@ publishLesson(actor, lessonId) -> LessonVersion
 linkSubjectLesson(actor, classChapterId, subjectLessonId) -> ClassLessonLink
 retryIngestion(actor, sourceDocumentId) -> JobReference
 listPublishedContent(classId) -> PublishedContent
-retrieve(scope, query, k) -> RagChunk[]
+retrieve(scope, query, k, requesterId, requestRef) -> RagChunk[]
+postClassAnnouncement(actor, classId, title, body) -> ClassAnnouncement
+askClassQuestion(actor, classId, title, body) -> ClassQuestion
+answerClassQuestion(actor, questionId, body) -> ClassAnswer
+listClassDiscussion(actor, classId) -> ClassDiscussion
 ```
 
 ## Question Bank (U06)
@@ -106,6 +110,7 @@ cloneAssignment(actor, assignmentId) -> Assignment
 setTypeConfig(actor, assignmentId, config) -> TypeConfig
 saveSkeleton(actor, assignmentId, blocks) -> Skeleton
 importSkeletonDocx(actor, assignmentId, docx) -> SkeletonPreview
+previewLearnerDocx(learner, attemptId, docx) -> LearnerBlockPreview
 exportDocx(document) -> Stream
 releaseTemplate(subjectManager, templateId) -> TemplateRelease
 copyTemplateToClass(instructor, templateId, classId) -> Assignment
@@ -145,4 +150,6 @@ getGradebook(actor, classId) -> Gradebook
 listNotifications(account, page) -> Page<Notification>
 setEmailPreference(account, type, enabled) -> Preference
 getSubmissionProgress(actor, publicationId) -> Progress
+getLearnerDashboard(learner) -> LearnerDashboard
+exportGradebook(actor, classId, publicationId, format) -> Stream
 ```

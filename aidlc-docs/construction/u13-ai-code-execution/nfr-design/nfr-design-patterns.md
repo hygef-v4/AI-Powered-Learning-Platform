@@ -3,7 +3,7 @@
 ## P1 - AiGuard trước mọi lời gọi
 Thứ tự, dừng ở bước đầu tiên không đạt, ghi `AiCall` `REJECTED_*`:
 1. `killSwitch` (đọc cache 30 s từ DB).
-2. Trần ngày: Redis `u13:cost:{yyyyMMdd}` (giờ Việt Nam) so `dailyCostCapUsd`.
+2. Trần ngày: Redis `u13:cost:{yyyyMMdd}` (giờ Việt Nam) so `dailyCostCapUsd`; hết trần trả "Hệ thống đang bận", không giữ/trừ credit.
 3. Rate limit Bucket4j `u13:ai:{userId}` 10/phút.
 4. `CreditPort.reserve(userId, estimate, requestRef = proposalId)`.
 
@@ -21,7 +21,7 @@ Thứ tự, dừng ở bước đầu tiên không đạt, ghi `AiCall` `REJECTE
 2. Quy tắc nghiệp vụ: câu hỏi qua `DefinitionValidator` (U06); chấm: mỗi `itemId` thuộc rubric, không thiếu mục.
 
 ## P5 - Job AI bền vững
-- Job U02 `U13_AI_TASK {proposalId}`; lỗi tạm → ném để U02 retry (tối đa 3); lỗi vĩnh viễn → `FAILED` + `release` credit.
+- Job U02 `U13_AI_TASK {proposalId}`; lỗi tạm → ném để U02 retry (tối đa 3); lỗi vĩnh viễn → `FAILED` + `release` credit chưa dùng. Khi U05 từ chối embedding trước khi gọi Gemini, trả phần giữ của U13; credit embedding dùng `requestRef` riêng.
 - Idempotent: job chạy lại khi đề xuất đã `READY` → bỏ qua.
 
 ## P6 - CodeRunner qua Judge0

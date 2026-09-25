@@ -41,7 +41,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 ## 5. Traceability
 
-Story và use case được gán cho unit trong `unit-of-work-story-map.md`. Các story Phase 2 chưa thiết kế đang chờ nhóm hội ý.
+Toàn bộ story và use case trong hai catalog hiện hành thuộc MVP và được gán cho unit trong `unit-of-work-story-map.md`. Thông báo/hỏi đáp lớp, dashboard cá nhân và xuất bảng điểm đều thuộc MVP.
 
 | Story domain | Unit chủ đạo |
 |---|---|

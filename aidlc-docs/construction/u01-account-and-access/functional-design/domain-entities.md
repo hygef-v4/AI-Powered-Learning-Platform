@@ -143,4 +143,4 @@ Phạm vi môn/lớp đến từ contract của U04 (`SubjectScopePort`, `ClassS
 
 ## 8. Ghi chú dữ liệu
 
-ERD tổng ở Inception đã bỏ (2026-09-25); bảng của U01 định nghĩa tại tài liệu này và migration trong code generation plan.
+Bảng của U01 được định nghĩa tại tài liệu này, Infrastructure Design và migration trong code generation plan.

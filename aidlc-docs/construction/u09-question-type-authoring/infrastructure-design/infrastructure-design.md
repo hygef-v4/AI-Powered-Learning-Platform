@@ -14,6 +14,7 @@ U09 không chạy trong `worker`, không có queue, Redis key hay secret riêng.
 ## 2. Nginx
 
 - `/api/v1/assignments/*/skeleton:import-docx`: `client_max_body_size 20m`, `proxy_read_timeout 60s`.
+- `/api/v1/attempts/*/docx:preview`: cùng giới hạn 20 MB và timeout 60 s; chỉ U11 cho lượt DOCUMENT đang làm.
 - Xuất DOCX trả stream: `proxy_read_timeout 60s`.
 
 ## 3. Bộ nhớ backend

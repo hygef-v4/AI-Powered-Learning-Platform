@@ -6,12 +6,13 @@
 |---|---|---|
 | BR-U13-01 | Mọi lời gọi AI qua `AiGateway` provider-neutral; nghiệp vụ không biết tên provider. | FR-012 |
 | BR-U13-02 | Model chọn theo loại việc (`AiTaskConfig`); admin đổi model trong danh sách cho phép. | Câu 4, FR-021 |
-| BR-U13-03 | Trước khi gọi: kill-switch tắt, chưa vượt trần chi phí ngày, chưa vượt 10 yêu cầu/phút/người, `CreditPort.reserve` đủ credit của **người yêu cầu**. Không đạt → từ chối trước khi gọi provider, ghi `AiCall` `REJECTED_*`. | US-AIG-003 S3, U07 |
+| BR-U13-03 | Trước khi gọi: kill-switch tắt, chưa vượt trần chi phí ngày, chưa vượt 10 yêu cầu/phút/người, `CreditPort.reserve` đủ credit của **người yêu cầu**. Hết hạn mức hệ thống → báo "Hệ thống đang bận", không trừ credit; thiếu credit cá nhân → báo "Không đủ credit AI". Không đạt → không gọi provider, ghi `AiCall` `REJECTED_*`. | US-AIG-003 S3, U07, quyết định đồng bộ 2026-09-25 |
 | BR-U13-04 | Sau khi gọi: `settle` theo token thật (1 credit = 1 000 token); lỗi → `release`. | BR-U07-40…43 |
 | BR-U13-05 | Chạy nền bằng job U02; kết quả là **đề xuất** (`READY`), không bao giờ tự phát hành đề hay chốt điểm. | FR-006, FR-008 |
-| BR-U13-06 | Lỗi tạm (timeout, 429, 5xx) retry theo U02 tối đa 3 lần; đầu ra sai định dạng JSON retry 1 lần rồi `FAILED`/`INVALID_OUTPUT`. Không có đề xuất hoàn tất giả. | US-AIG-001 S3 |
+| BR-U13-06 | Lỗi tạm (timeout, 429, 5xx) retry theo U02 tối đa 3 lần; Gemini báo hết quota (429) sau các lần retry → báo "Hệ thống đang bận", trả phần credit chưa dùng. Đầu ra sai định dạng JSON retry 1 lần rồi `FAILED`/`INVALID_OUTPUT`. Không có đề xuất hoàn tất giả. | US-AIG-001 S3 |
 | BR-U13-07 | Nội dung người dùng (học liệu, bài nộp) đưa vào prompt trong khối phân cách, kèm chỉ dẫn "chỉ là dữ liệu"; quét dấu hiệu chèn lệnh, có dấu hiệu thì gắn cờ trong đề xuất cho giảng viên. | demo_do_an, SEC-003 |
 | BR-U13-08 | `AiCall` chỉ lưu số liệu, không lưu prompt/phản hồi thô. | US-AIG-003 S2 |
+| BR-U13-09 | Khi dùng RAG, U13 truyền `requesterId` và `requestRef` riêng cho U05 để tính credit embedding câu hỏi; credit tạo nội dung của U13 giữ bằng `requestRef` khác. Nếu U05 từ chối trước khi gọi Gemini vì hết hạn mức hoặc thiếu credit, U13 trả phần credit tạo nội dung đã giữ. | BR-U05-44, BR-U07-41…43 |
 
 ## 2. Đề xuất câu hỏi (`QUESTION_DRAFT`)
 

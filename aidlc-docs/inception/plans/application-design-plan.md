@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 59 user story, persona và 90 use cases. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
+Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 50 user story thuộc MVP, persona và 78 use case hiện hành. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
 
 ## Các bước thực hiện
 
@@ -40,14 +40,14 @@ X) Other (mô tả sau `[Answer]:`)
 - [x] Bổ sung template lineage, cross-class copy và simulation policy.
 - [x] Thay leader-upload DOCX bằng composite generation/version và instructor finalization.
 - [x] Cập nhật Grading cho manual shared grade, consistency rubric và manual per-student final score.
-- [x] Đồng bộ component, methods, services, dependency, flows, screens/jobs và global ERD.
+- [x] Đồng bộ component, methods, services, dependency, flows và screens/jobs; mô hình bảng cuối cùng được chốt theo từng unit ở Construction.
 - [x] Kiểm tra Security/Resiliency và content consistency.
 - [x] Trình checkpoint phê duyệt lại Application Design.
 
 ## Revision 2026-09-24
 
 - [x] Làm rõ không sao chép khóa học/lớp; sửa assignment đã giao tạo version kế tiếp và giữ attempt snapshot cũ.
-- [x] Loại tiến độ từng bài học khỏi component, method, màn hình, phân rã unit và ERD.
+- [x] Loại tiến độ từng bài học khỏi component, method, màn hình và phân rã unit.
 - [x] Mở rộng dependency matrix với Question Bank, Payment và các hàng Academic, AI Orchestration, Code Execution.
 - [x] Đặt luồng tạo đề làm orchestration chính; RAG chỉ hỗ trợ nguồn cho AI.
 - [x] Thêm CodeExecutionService, FileArtifactService và JobService vào bảng dịch vụ.

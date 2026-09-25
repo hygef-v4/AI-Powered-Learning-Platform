@@ -7,6 +7,7 @@ app/teaching/classes/        ClassListPage, ClassFormDialog (ADMIN tạo), Class
     ClassInfoTab             sửa name/description/term, ClassStateActions
     EnrollmentTab            EnrollmentTable, AddLearnerSearch, AddLearnersListDialog, EnrollmentResultTable
     InviteCodeTab            InviteCodePanel
+    GradeDistributionToggle  người quản lý lớp bật hoặc tắt phân bố điểm ẩn danh; mặc định tắt
     AssignInstructorDialog   (chỉ ADMIN)
 app/learn/                   MyClassesPage, LearnerClassPage, JoinByCodeDialog
 ```
@@ -23,6 +24,7 @@ app/learn/                   MyClassesPage, LearnerClassPage, JoinByCodeDialog
 | `EnrollmentResultTable` | Kết quả từng dòng với nhãn tiếng Việt | - |
 | `EnrollmentTable` | Người học `ACTIVE`/`REMOVED`, nút Gỡ (xác nhận), Ghi danh lại | `GET`, `DELETE`, `POST .../enrollments` |
 | `InviteCodePanel` | Hiện mã, hạn, bật/tắt, đổi mã, sao chép | `PUT /api/v1/classes/{id}/invite` |
+| `GradeDistributionToggle` | Hiện trạng thái và xác nhận khi bật; chỉ người quản lý lớp thao tác | `PATCH /api/v1/classes/{id}/grade-distribution` |
 | `MyClassesPage` | Hai mục "Đang học" / "Đã kết thúc"; nút "Tham gia bằng mã" | `GET /api/v1/me/classes` |
 | `JoinByCodeDialog` | Ô 8 ký tự, tự viết hoa; lỗi chung | `POST /api/v1/me/classes:join` |
 | `LearnerClassPage` | Thông tin lớp và nội dung đã phát hành; chỗ trống cho assignment (U08) | `GET /api/v1/me/classes/{id}` |

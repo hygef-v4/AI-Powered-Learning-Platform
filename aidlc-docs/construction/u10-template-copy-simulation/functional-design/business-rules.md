@@ -33,12 +33,12 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U10-30 | Mọi loại bài phát hành được dạng thi thử (`deliveryMode = SIMULATION`) cho một lớp. | Câu 2 |
-| BR-U10-31 | `maxAttempts` để trống = không giới hạn; có giá trị thì ≥ 1. | Câu 3 |
+| BR-U10-31 | `maxAttempts` mặc định 3; giảng viên chỉnh được từ 1 đến 10 trước khi chính sách khóa; không để trống và không có lượt không giới hạn. | Quyết định 2026-09-25 |
 | BR-U10-32 | `resultPolicy`: `HIGHEST`, `LATEST`, `AVERAGE`; chỉ tính trên lượt đã có điểm (bài cần giảng viên chấm thì chờ). | FR-029, Câu 2 |
 | BR-U10-33 | `answerRelease`: `AFTER_ATTEMPT` (sau mỗi lượt, chỉ với phần tự chấm), `AFTER_CLOSE`, `NEVER`. | FR-029 |
 | BR-U10-34 | `countsTowardGrade`: tắt → chỉ luyện tập, không vào điểm chính thức (U15). | FR-029 |
 | BR-U10-35 | Chính sách khóa khi lượt đầu tiên bắt đầu (`lockedAt`); sau đó chỉ kéo dài được cửa sổ (theo U08). | FR-029 |
-| BR-U10-36 | Giao diện luôn ghi "Thi thử", số lượt (hoặc "không giới hạn"), cách lấy kết quả, có/không tính điểm; không hiển thị như thi chính thức. | US-ASM-011 S3 |
+| BR-U10-36 | Giao diện luôn ghi "Thi thử", số lượt 1-10, cách lấy kết quả, có/không tính điểm; không hiển thị như thi chính thức. | US-ASM-011 S3 |
 
 ## 5. Audit
 

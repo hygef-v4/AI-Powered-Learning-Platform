@@ -15,7 +15,7 @@ U04 không chạy gì trong `worker`, không có queue riêng, không có secret
 
 `V20260925_1100__u04_subjects_classes_enrollments.sql`:
 - `subjects`: unique `code`, index `manager_account_id`, cột `version`.
-- `classes`: unique `(subject_id, code)`, unique `invite_code` (cho phép rỗng), index `(subject_id, status)`, `instructor_account_id`, cột `version`.
+- `classes`: unique `(subject_id, code)`, unique `invite_code` (cho phép rỗng), index `(subject_id, status)`, `instructor_account_id`, `show_grade_distribution BOOLEAN NOT NULL DEFAULT FALSE`, cột `version`.
 - `enrollments`: unique `(class_id, learner_account_id)`, index `(learner_account_id, status)`.
 - Quyền: user `app` được SELECT/INSERT/UPDATE, **không** DELETE trên ba bảng (không xóa lịch sử).
 

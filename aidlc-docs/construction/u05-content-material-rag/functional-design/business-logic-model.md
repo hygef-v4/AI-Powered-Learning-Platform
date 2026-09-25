@@ -10,7 +10,7 @@
    - `TEXT`: lưu markdown, tính `contentKey`, tạo hoặc dùng lại `SourceDocument`.
    - `FILE`: frontend upload qua U03 (`MATERIAL`) → `attach` vào bài → tạo hoặc dùng lại `SourceDocument`.
    - `YOUTUBE`: kiểm URL (BR-U05-22), tạo `YoutubeSource`, tạo job `U05_YOUTUBE_RESOLVE`.
-3. `SourceDocument` mới ở `PENDING` → tạo job `U05_INGEST` (BR-U05-31).
+3. `SourceDocument` mới ghi `chargedToAccountId` của người tải/phát hành rồi ở `PENDING` → tạo job `U05_INGEST` (BR-U05-31, 39). Nguồn đã `INDEXED` dùng lại thì không gọi Gemini và không trừ thêm credit.
 
 ## F3 - Phát hành
 1. Kiểm quyền, `DRAFT` có ≥ 1 mục (BR-U05-13).
@@ -22,16 +22,16 @@
 
 ## F5 - Job `U05_YOUTUBE_RESOLVE` (worker)
 1. `VIDEO` → một `YoutubeVideo`; `PLAYLIST` → gọi YouTube Data API lấy ≤ 50 video.
-2. Mỗi video tạo hoặc dùng lại `SourceDocument` (`contentKey = videoId`) → job `U05_INGEST`.
+2. Mỗi video tạo hoặc dùng lại `SourceDocument` (`contentKey = videoId`, tài khoản chịu phí lấy từ người thêm nguồn YouTube) → job `U05_INGEST`.
 3. URL không tồn tại/riêng tư → `YoutubeSource.FAILED`.
 
 ## F6 - Job `U05_INGEST` (worker)
 1. `SourceDocument` → `PROCESSING`.
 2. Lấy chữ: `TEXT` từ markdown; `FILE` mở qua U03 và trích chữ theo trang; `YOUTUBE_VIDEO` lấy caption (BR-U05-33).
 3. Không có chữ → `NO_TEXT`; không caption → `NO_CAPTION`; kết thúc.
-4. Cắt đoạn (BR-U05-34), gọi `EmbeddingPort` theo lô ≤ 100 đoạn.
-5. Một transaction: xóa đoạn cũ, ghi đoạn mới, `INDEXED`, `chunkCount` (BR-U05-36).
-6. Lỗi: tạm → ném lỗi để U02 retry; vĩnh viễn hoặc hết lượt retry → `FAILED` với `errorCode` (BR-U05-37).
+4. Cắt đoạn (BR-U05-34), kiểm trần hệ thống, giữ credit của `chargedToAccountId` qua U07, rồi gọi `EmbeddingPort` theo lô ≤ 100 đoạn (BR-U05-39).
+5. Một transaction: xóa đoạn cũ, ghi đoạn mới, `INDEXED`, `chunkCount`; quyết toán credit theo token đã dùng (BR-U05-36, 39).
+6. Hết trần hệ thống → `FAILED/BUSY`, báo "Hệ thống đang bận" và không trừ credit cho lô bị từ chối; thiếu credit → `FAILED/INSUFFICIENT_CREDIT`; lỗi tạm → U02 retry; lỗi vĩnh viễn hoặc hết lượt retry → `FAILED` với `errorCode` và trả phần credit đã giữ nếu Gemini chưa xử lý (BR-U05-37, 39).
 
 ## F7 - Retry thủ công
 1. Người quản lý bấm "Thử lại" trên tài liệu `FAILED` → `PENDING`, tạo job mới; audit.
@@ -40,7 +40,13 @@
 1. U04 gọi `PublishedContentPort.listForClass(classId)` sau khi đã kiểm ghi danh.
 2. Học viên bấm tải file → U05 kiểm `ClassAccessPort.isActiveLearner`, lớp `OPEN`, mục thuộc bản `PUBLISHED` hiển thị trong lớp → `issueDownloadToken` (BR-U05-23).
 
-## F9 - `retrieve(scope, query, k)`
+## F9 - `retrieve(scope, query, k, requesterId, requestRef)`
 1. Kiểm phạm vi (BR-U05-40), lấy danh sách `SourceDocument` của bài `PUBLISHED` trong phạm vi (BR-U05-41).
-2. Tạo vector câu hỏi qua `EmbeddingPort`.
+2. Kiểm trần hệ thống, giữ credit của `requesterId` qua U07 với `requestRef` riêng, tạo vector câu hỏi qua `EmbeddingPort` rồi quyết toán credit; lỗi trước khi gọi thì trả phần đã giữ (BR-U05-44).
 3. Tìm `k` đoạn gần nhất (cosine) trong các tài liệu đó; trả kèm nguồn (BR-U05-42).
+
+## F10 - Thông báo và hỏi đáp lớp
+1. U04 kiểm actor được quản lý/ghi danh trong lớp `OPEN`; U05 kiểm lại classId cho mọi lệnh và truy vấn. Ngoài phạm vi trả `404`.
+2. Giảng viên đăng thông báo; người học/giảng viên đặt câu hỏi và trả lời. Kiểm giới hạn, làm sạch nội dung, lưu actor và thời gian (BR-U05-60…63).
+3. Truy vấn phân trang theo lớp, chỉ trả mục `VISIBLE`; người quản lý có thể ẩn bài với lý do và audit. Không sửa/xóa cứng bài đã đăng.
+4. Sau commit phát sự kiện tối thiểu cho U16 theo BR-U05-64; lỗi thông báo không rollback nội dung.

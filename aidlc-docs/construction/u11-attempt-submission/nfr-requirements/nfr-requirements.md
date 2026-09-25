@@ -27,6 +27,7 @@
 | NFR-U11-21 | Đề trả cho người học không có đáp án, test ẩn, `answerGuide`. | SEC-002 |
 | NFR-U11-22 | Nội dung tài liệu kiểm và làm sạch SVG (U09) trước khi lưu. | NFR-U09-13 |
 | NFR-U11-23 | Rate limit lưu nháp 30 lần/phút/người (Bucket4j + Redis). | SEC-005 |
+| NFR-U11-24 | Preview DOCX chỉ cho chủ lượt `DOCUMENT` đang làm; xác nhận dùng `contentVersion` và cùng kiểm cấu trúc như lưu nháp, không ghi đè block giảng viên. | BR-U09-45…48 |
 
 ## 4. Kiểm thử
 

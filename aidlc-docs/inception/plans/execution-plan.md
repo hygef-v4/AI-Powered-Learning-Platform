@@ -16,7 +16,7 @@
 
 | Khu vực | Tác động | Nhận định |
 |---|---|---|
-| User-facing | Có - toàn hệ thống | 59 stories trên bốn persona và mười một miền nghiệp vụ sản phẩm |
+| User-facing | Có - toàn hệ thống | 50 story MVP triển khai trên bốn persona |
 | Structural | Có - lớn | Cần xác định component/service boundary, async work và external adapters |
 | Data model | Có - lớn | User/role/scope môn, môn/lớp/nhóm/leader, source/transcript RAG, question/rubric/assessment version, template/copy lineage, simulation policy/attempt snapshot, group part/composite version, submission, grade, payment, notification, audit |
 | API/contracts | Có - lớn | Web API, upload/YouTube ingestion/status, version publication/copy, group aggregation, AI task, payment webhook và provider adapters |
@@ -34,6 +34,8 @@
 - **Giảm thiểu**: Phân rã units trước khi code, design gate theo unit, TDD trong Code Generation, system test toàn stack và kiểm tra Security/Resiliency ở từng stage.
 
 ### Change request impact - 2026-09-22
+
+> Bảng dưới đây là lịch sử của sơ đồ 8 unit trước khi tách thành 16 unit. Tên/mã unit hiện hành và dependency dùng `unit-of-work.md` cùng `unit-of-work-dependency.md`; không dùng bảng này để phân công triển khai.
 
 | Unit hiện tại | Mức tác động | Nội dung cần đồng bộ |
 |---|---|---|
@@ -129,7 +131,7 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [x] **User Stories - APPROVED**: Bốn persona, 59 stories và 90 use cases đã được duyệt cho change request.
+- [x] **User Stories - APPROVED**: Bốn persona; 50 story và 78 use case thuộc phạm vi MVP. Danh mục use case hiện hành đã bỏ các UC ngoài phạm vi.
 - [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
 - [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
 - [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.
@@ -188,14 +190,14 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 - **Integration tests**: Database, object storage abstraction, async jobs, provider adapters và security filters.
 - **Contract tests**: AI/email/storage adapter contracts và payment webhook signature/idempotency.
 - **System tests**: Next.js + Spring Boot + database + mock/sandbox AI/payment chạy trong container.
-- **End-to-end tests**: Question version không đổi attempt đang làm; Chủ nhiệm môn phát hành template và giảng viên copy; copy assignment/rubric đúng phạm vi; simulation exam thực thi lượt/chính sách điểm; YouTube caption/phiên âm/RAG; thành viên nộp phần cá nhân, hệ thống tổng hợp, giảng viên chốt/chấm tài liệu chung và quyết định điểm cuối; payment cấp quyền; authorization misuse cases.
+- **End-to-end tests**: Question version không đổi attempt đang làm; Chủ nhiệm môn phát hành template và giảng viên copy; copy assignment/rubric đúng phạm vi; simulation exam thực thi lượt/chính sách điểm; YouTube chỉ lấy caption có sẵn cho RAG; thành viên nộp phần cá nhân, hệ thống tổng hợp, giảng viên chốt/chấm tài liệu chung và quyết định điểm cuối; payment cộng credit AI sau xác minh; thông báo/hỏi đáp lớp, dashboard cá nhân, xuất bảng điểm và authorization misuse cases.
 - **Non-functional tests**: p95 API target, upload limits, accessibility core flows, failure/degraded behavior, backup/restore instructions và security checks.
 
 ## 6. Success Criteria and Quality Gates
 
 ### Primary success
 
-MVP thực hiện được các hành trình MVP trong Requirements và bộ 59 stories phân tách MVP/Phase 2 với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
+MVP thực hiện được các hành trình trong Requirements thuộc phạm vi triển khai và 50 story trong catalog hiện hành với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
 
 ### Key deliverables
 

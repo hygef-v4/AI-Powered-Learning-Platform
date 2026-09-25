@@ -2317,3 +2317,95 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 **Context**: Consistency review, round 4
 
 ---
+
+## Documentation Consistency and AI Credit Clarification
+**Timestamp**: 2026-09-25T06:41:59Z
+**User Input**: "bỏ global database giúp tôi sửa , cái ai là trừ token người dùng nếu hệ thống hết lượt token thì sẽ thông báo hệ thống đang bận, có câu hỏi b cần làm rõ thì cứ hỏi "
+**AI Response**: "Updated live Inception and Construction documents to remove references to the deleted global ERD, align 56 active stories and UC-ASM-01 traceability, charge user AI credits for Gemini generation and embedding, and show a separate system-busy message when system AI quota is exhausted."
+**Context**: Inception/Construction documentation consistency correction
+
+---
+
+## Background Embedding Credit Owner Clarification
+**Timestamp**: 2026-09-25T06:41:59Z
+**User Input**: "Người tải/phát hành học liệu (Recommended)"
+**AI Response**: "Recorded the uploader/publisher as the credit owner for background U05 embedding and propagated that choice to U05, U07, and U13 design and code-generation plans."
+**Context**: U05 background embedding credit policy
+
+---
+
+## Simulation Attempts, Learner DOCX Import, and PayOS Refund Review
+**Timestamp**: 2026-09-25
+**User Input**: "1a, 2, phase 2 là gì?, 3, b"; "tưởng triển khai theo ai dlc thì phase 2 là sao"; "tải docx lên thì có thể làm luôn còn hoàn tiền thì chưa biết để xem payos có hỗ trợ hoàn tiền k đã"
+**AI Response**: "Clarified that product Phase 2 differs from AI-DLC phases; synchronized simulation default 3 attempts and range 1-10, learner DOCX preview/import into an in-progress DOCUMENT attempt, and no weighted course total. Reviewed official payOS API: cancellation applies to payment links and payout is a separate transfer; direct reversal/refund API was not found in the published API reference. Refund policy remains open; MVP design has no refund flow yet."
+**Context**: Inception and Construction scope/design revision. No application code exists yet.
+
+---
+
+## Remove Planned Phase 2 and Clarify AI Grade Comparison
+**Timestamp**: 2026-09-25
+**User Input**: "nhóm tôi k định làm phase 2'"; "9. Đối sánh điểm AI đề xuất với điểm giảng viên chốt. 10. cho tôi hỏi tưởng là ai đề xuất điểm trc sau giảng viên là người quyết định điểm"
+**AI Response**: "Restricted delivery scope to MVP only (47 stories, 74 use cases), marked the former 9 Phase 2 stories and 12 use cases as out of project scope, and removed pending Phase 2 design tasks. Clarified that per-submission AI grade proposals followed by teacher final decisions remain in MVP; only the aggregate comparison report is out of scope."
+**Context**: Scope revision across Inception and Construction documentation; historical entries retained for traceability.
+
+---
+
+## Select Three Former Backlog Features for One MVP
+
+**Timestamp**: 2026-09-25
+
+**User Input**: "trông số uc này tôi chỉ muốn là 2,7,8 giúp tôi đồng bộ doc , với tôi muốn gộp hết vào mvp k chia phase 2 nữa"
+
+**AI Response**: "Updated the current MVP scope to include feature 2 (class announcements and Q&A, US-CNT-004/UC-CNT-06..07), feature 7 (learner dashboard, US-RPT-002/UC-RPT-02), and feature 8 (gradebook CSV/XLSX export, US-RPT-003/UC-RPT-03). The six other former Phase 2 stories remain outside project scope. Synchronized current requirements, story/use-case catalog, ownership map, U04/U05/U15/U16 construction designs and code plans, and application architecture. Active scope: 50 stories and 78 use cases; no separate product Phase 2. Historical decisions above remain for traceability."
+
+**Context**: Current user instruction supersedes the immediately preceding decision to exclude all nine former Phase 2 stories. Documentation only; application code generation has not started.
+
+---
+
+## Use Case Catalog Consistency Review
+
+**Timestamp**: 2026-09-25
+
+**User Input**: "usecase md đã chuẩn chưa"
+
+**AI Response**: "Reviewed `use-cases.md` against the current one-MVP scope and corrected stale story count, out-of-scope labels, the payment provider description, class notification coverage, and the distinction between the class overview and personal results dashboard. Verified 90 unique UC rows: 78 MVP and 12 historical out of scope; all 59 catalog stories have at least one UC reference."
+
+**Context**: Inception documentation review after selecting features 2, 7, and 8 for MVP.
+
+---
+
+## Remove Out-of-Scope Use Cases from Current Catalog
+
+**Timestamp**: 2026-09-25
+
+**User Input**: "bỏ hết cho tôi"
+
+**AI Response**: "Removed all 12 out-of-scope UC rows from `use-cases.md` and updated the current story map, execution/application design plans, U05 plan, and state tracking. The current use-case catalog has 78 unique MVP UC rows referencing exactly 50 active stories; no out-of-scope UC rows remain. Historical decisions are retained in audit only."
+
+**Context**: The request refers to the twelve historical use cases listed in the preceding answer. User story catalog remains unchanged; only the use-case catalog and current count references were revised.
+
+---
+
+## Inception and Construction Consistency Review
+
+**Timestamp**: 2026-09-25
+
+**User Input**: "soát lại toàn bộ doc inception construction xem doc đồng bộ chưa"
+
+**AI Response**: "Reviewed the current Inception and Construction Markdown corpus and corrected stale eight-unit plans, YouTube transcription/payment wording, U03 export ownership, U16 scope plan, active FR-to-story traceability, U05 RAG versus class communication, AI kill-switch polarity, U05-to-U16 event names/payload, U04 grade distribution controls, frontend route discrepancies, and story/UC scope counts. Verified 16 unit directories with four design-stage folders each, 78 unique MVP use cases referencing exactly 50 active stories, all 29 FR identifiers mapped, no duplicate BR IDs, no broken relative Markdown links, and clean diff whitespace. Historical question files were marked as superseded where their answers conflicted with current decisions. Refund policy remains the previously recorded open decision."
+
+**Context**: Documentation review and synchronization only; no application code or implementation tests were run. Previous uncommitted documentation changes were preserved.
+
+---
+
+## Remove Historical Stories from Current Catalog
+
+**Timestamp**: 2026-09-25
+
+**User Input**: "xoas bo khoi user sotry di"
+
+**AI Response**: "Removed all nine out-of-scope story blocks from `stories.md`, leaving exactly 50 MVP stories. Updated personas, scope statements, story map, state, requirements wording, and Construction plans/rules so deleted story IDs are not referenced as current requirements. The existing 78 UC rows still reference exactly the 50 retained stories. Historical decisions remain in this audit log; removed IDs are not reused."
+
+**Context**: User request follows the explicit list of nine surplus historical stories. The request concerns the user-story catalog and its live references; no application code was modified.
+
+---

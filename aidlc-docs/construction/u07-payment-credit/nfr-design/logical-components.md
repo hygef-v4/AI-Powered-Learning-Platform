@@ -3,7 +3,7 @@
 ## 1. Sơ đồ
 
 ```
- Trình duyệt                 PayOS (Internet)                  U13 (nội bộ)
+ Trình duyệt                 PayOS (Internet)              U05/U13 (nội bộ)
    |  mua, xem ví              |  webhook   ^ tạo link/tra cứu     |
    v                           v            |                      v
  +--------------------------------- backend -----------------------------------+
@@ -19,7 +19,7 @@
          ReservationSweepHandler --> CreditPortService.release
 ```
 
-**Text alternative**: Người dùng mua credit qua `PaymentController`; `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U13 gọi `CreditPortService` để giữ, trừ, trả credit; admin quản lý gói và điều chỉnh credit. Trong worker, job đối soát tra PayOS và áp dụng kết quả, job quét trả lại phần credit giữ quá hạn.
+**Text alternative**: Người dùng mua credit qua `PaymentController`; `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U05 và U13 gọi `CreditPortService` để giữ, trừ, trả credit cho embedding và tạo nội dung; admin quản lý gói và điều chỉnh credit. Trong worker, job đối soát tra PayOS và áp dụng kết quả, job quét trả lại phần credit giữ quá hạn.
 
 ## 2. Thành phần
 

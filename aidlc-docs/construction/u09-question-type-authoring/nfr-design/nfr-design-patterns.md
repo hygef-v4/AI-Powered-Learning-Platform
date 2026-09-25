@@ -17,6 +17,7 @@
    - Nếu `<diagram>` bên trong nén (base64 + raw deflate + URL-encode) → giải nén (≤ 2 MB).
    - Qua `SafeDrawioParser`; lỗi ở bất kỳ bước nào → trả `IMAGE` (BR-U09-42).
 4. Ảnh còn lại lưu qua `ArtifactPort.store(DOCUMENT_IMAGE)`.
+- Cùng parser phục vụ hai chế độ: nhập khung gắn `origin = TEACHER`; preview cho lượt DOCUMENT gắn `origin = LEARNER`. U11 kiểm chủ lượt/trạng thái trước khi gọi và chỉ lưu sau xác nhận qua `PUT /attempts/{id}/content` với `contentVersion`.
 
 ## P4 - Xuất DOCX có giới hạn
 - `Semaphore(2)` (NFR-U09-03); `JsvgRasterizer` dựng PNG từ SVG đã làm sạch (scale 2x, tối đa 4000 px cạnh dài); `PngChunkWriter` chèn `tEXt` `mxfile` trước `IEND`.

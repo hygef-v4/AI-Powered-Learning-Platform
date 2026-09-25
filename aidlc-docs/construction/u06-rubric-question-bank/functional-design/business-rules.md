@@ -57,4 +57,4 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U06-50 | Audit: kích hoạt, ngưng, nhân bản lên cấp môn, nhập file (một sự kiện mỗi lần nhập). | FR-014 |
-| BR-U06-51 | US-QBK-003 (phân tích chất lượng câu hỏi, Phase 2) chưa thiết kế, chờ nhóm hội ý. | Phase 2 |
+| BR-U06-51 | Phân tích độ khó/độ phân biệt câu hỏi từ kết quả thực tế nằm ngoài phạm vi dự án, không thiết kế hoặc triển khai. | Quyết định phạm vi 2026-09-25 |

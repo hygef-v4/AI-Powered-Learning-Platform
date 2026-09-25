@@ -45,6 +45,7 @@ PENDING --tự chấm/chấm tay/nhận đề xuất--> DRAFT --chốt--> FINALI
 |---|---|---|
 | Event `u15.grade.published` | U15 phát | Cho U16 báo người học |
 | `GradeQueryPort` | U15 cung cấp cho U11, U16 | Điểm đã công bố của một lượt/người học |
+| `GradebookQueryPort` | U15 cung cấp cho U16 | Đọc theo lớp và người học: điểm cuối giảng viên chốt, trạng thái công bố, lượt tính điểm theo quy tắc U15; không trả điểm AI đề xuất cho báo cáo/xuất tệp |
 | `SubmissionQueryPort` | U15 dùng U11 | Lượt, nội dung, lượt được chấm |
 | `GroupSubmissionQueryPort` | U15 dùng U14 | Bản nộp nhóm, mục theo tác giả |
 | `BankQueryPort`, `RubricPort` | U15 dùng U06 | Đáp án (chấm trắc nghiệm), rubric, `score` |

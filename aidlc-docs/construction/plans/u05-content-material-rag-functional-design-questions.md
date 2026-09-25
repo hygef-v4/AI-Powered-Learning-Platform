@@ -154,7 +154,9 @@ X) Khác (mô tả sau thẻ [Answer]: bên dưới)
 
 [Answer]: X - "thế thì cho tải tất cả về đi, ko chỉ xem nữa" (tải được mọi file; PDF vẫn xem trực tiếp được)
 
-## Câu 15 - Phase 2 của U05 (US-CNT-003, 004)
+## Câu 15 - Quyết định cũ về U05 (US-CNT-003, 004; đã thay thế)
+
+> Quyết định hiện hành: US-CNT-004 thuộc MVP; chỉ US-CNT-003 ngoài phạm vi. Phần hỏi đáp dưới đây được giữ làm lịch sử.
 
 A) Làm
 

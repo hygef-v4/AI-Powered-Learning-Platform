@@ -1,6 +1,8 @@
 # Kế hoạch tạo User Stories
 
-> Bổ sung 2026-09-13: Tạo đặc tả use case đầy đủ từ bộ user story hiện tại tại `aidlc-docs/inception/user-stories/use-cases.md`, gồm tác nhân, tiền/hậu điều kiện, luồng chính, ngoại lệ, quan hệ và truy vết. Sau change request 2026-09-22, coverage là 59/59 stories.
+> Lịch sử lập kế hoạch: các mục nhắc "Phase 2" bên dưới phản ánh quyết định cũ. Hai catalog hiện hành chỉ gồm 50 story/78 use case MVP; story/UC ngoài phạm vi đã bị xóa. Xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
+
+> Bổ sung 2026-09-13: Kế hoạch cũ yêu cầu đặc tả use case đầy đủ. Danh mục hiện hành tại `aidlc-docs/inception/user-stories/use-cases.md` chỉ giữ 78 UC MVP và truy vết 50/50 story đang triển khai; phần 59/59 là mốc lịch sử trước khi rút phạm vi.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -210,7 +212,7 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - Chủ nhiệm môn phát hành template có version; giảng viên copy thành draft độc lập cho lớp.
 - Giảng viên copy assignment/rubric chỉ giữa các lớp mình phụ trách và không mang theo dữ liệu thực thi.
 - Simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần, nhưng không phải kỳ thi chính thức có giám sát.
-- Video/playlist YouTube gắn theo bài giảng; dùng caption hoặc tự phiên âm trước khi lập chỉ mục RAG.
+- Video/playlist YouTube gắn theo bài giảng; chỉ dùng caption có sẵn trước khi lập chỉ mục RAG, không tự phiên âm (quyết định hiện hành thay thế mô tả cũ).
 - Hệ thống ghép phần cá nhân; giảng viên chốt tài liệu chung, tự chấm tính tích hợp và tự quyết định điểm cuối từng sinh viên.
 
 ### Checklist revision
@@ -219,7 +221,7 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Thay `US-GRP-005` bằng luồng tổng hợp/chốt tài liệu và mở rộng `US-GRP-006` cho chấm nhất quán/điểm cuối.
 - [x] Mở rộng `US-QBK-002` với snapshot/version theo attempt.
 - [x] Thêm `US-ASM-009` đến `US-ASM-011` cho template, copy giữa lớp và simulation exam.
-- [x] Cập nhật personas và use cases; xác minh 59/59 story có use case truy vết.
+- [x] Cập nhật personas và use cases; danh mục hiện hành truy vết đủ 50/50 story MVP tới 78 UC. Story ngoài phạm vi đã xóa khỏi catalog, quyết định lịch sử còn trong audit.
 - [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
 - [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
 - [x] Trình người dùng checkpoint phê duyệt lại User Stories.

@@ -3,17 +3,18 @@
 ## 1. Sơ đồ
 
 ```
- events u04/u07/u08/u12/u14/u15 --> worker: NotificationListener --> NotificationFanout (P1)
+ events u04/u05/u07/u08/u12/u14/u15 --> worker: NotificationListener --> NotificationFanout (P1)
                                                                         |
                                             fanout realtime <-----------+ (sau commit)
                                                   |
  Trình duyệt <==SSE== backend: SseHub <-----------+
- Trình duyệt --REST--> backend: NotificationController, PreferenceController, ProgressController
+ Trình duyệt --REST--> backend: NotificationController, PreferenceController, ProgressController,
+                          LearnerDashboardController, GradebookExportController
  worker: EmailDispatcher (P2) --> EmailSendHandler (P3) --> SMTP (Gmail / Mailpit)
  worker: DeadlineReminderHandler (P4) --> NotificationFanout
 ```
 
-**Text alternative**: Worker nghe event của các unit, tạo thông báo theo lô và phát tín hiệu realtime; backend đẩy tới trình duyệt qua SSE. Người dùng đọc thông báo, cài đặt email và giảng viên xem tiến độ qua REST. Worker điều phối email theo trần và ưu tiên, gửi qua SMTP; job nhắc hạn tạo thông báo cho người chưa nộp.
+**Text alternative**: Worker nghe event của các unit, kể cả bài đăng và hỏi đáp lớp từ U05, tạo thông báo theo lô và phát tín hiệu realtime; backend đẩy tới trình duyệt qua SSE. Người dùng đọc thông báo, cài đặt email; giảng viên xem tiến độ và xuất bảng điểm; học viên xem dashboard điểm cá nhân qua REST. Worker điều phối email theo trần và ưu tiên, gửi qua SMTP; job nhắc hạn tạo thông báo cho người chưa nộp.
 
 ## 2. Thành phần
 
@@ -24,6 +25,8 @@
 | `DeadlineReminderHandler` | worker | F3; P4 |
 | `NotificationController`, `PreferenceController` | backend | F4 |
 | `ProgressController`, `ProgressService` | backend | F5; P5 |
+| `LearnerDashboardController`, `LearnerDashboardService` | backend | F6; chỉ đọc điểm đã công bố |
+| `GradebookExportController`, `GradebookExportService` | backend | F7; CSV/XLSX theo yêu cầu |
 
 ## 3. Cấu hình
 

@@ -1,5 +1,7 @@
 # Câu hỏi làm rõ bổ sung cho thay đổi yêu cầu ngày 2026-09-22
 
+> Tài liệu lưu câu trả lời lịch sử. Quyết định hiện hành về YouTube là **chỉ lấy caption có sẵn, không tự phiên âm**; xem `requirements.md` FR-004 và thiết kế U05. Các câu trả lời cũ dưới đây không ghi đè quyết định hiện hành.
+
 ## Kết quả kiểm tra vòng đầu
 
 - Question 1, 2, 4 và 6: chọn A, hợp lệ.

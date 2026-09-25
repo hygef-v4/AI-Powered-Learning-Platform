@@ -15,11 +15,12 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U05-10 | Trần embedding theo ngày (mặc định 2 000 000 token ước tính, `U05_EMBED_DAILY_TOKENS`), đếm trong Redis theo ngày (giờ Việt Nam). | Câu N1, REL-005 |
-| NFR-U05-11 | Vượt trần: job ingest dừng với `errorCode = BUSY`, trạng thái `FAILED` hiển thị "Máy chủ đang bận, vui lòng thử lại sau"; người quản lý bấm Thử lại được. `retrieve` trả `503` "máy chủ đang bận". | Câu N1 |
-| NFR-U05-12 | Kill-switch AI (cờ dùng chung với U13, FR-021) tắt → xử lý như vượt trần. | FR-021 |
+| NFR-U05-11 | Hết hạn mức embedding nội bộ hoặc Gemini báo hết quota sau các lần retry: job ingest dừng với `errorCode = BUSY`, trạng thái `FAILED` hiển thị "Hệ thống đang bận, vui lòng thử lại sau"; người quản lý bấm Thử lại được. `retrieve` trả `503` "Hệ thống đang bận". Không trừ credit cho lời gọi chưa được Gemini xử lý. | Câu N1, quyết định đồng bộ 2026-09-25 |
+| NFR-U05-12 | Kill-switch AI (cờ dùng chung với U13, FR-021) **bật** (`true`) → từ chối embedding mới với "Hệ thống đang bận" và không trừ credit; mặc định `false` là cho phép AI hoạt động. | FR-021 |
 | NFR-U05-13 | `GEMINI_API_KEY` và `YOUTUBE_API_KEY` đọc từ `.env`, không commit, không log. | Câu N3, SEC-006 |
 | NFR-U05-14 | Timeout: Gemini kết nối 5 s, đọc 30 s; YouTube 5 s/15 s. 429/5xx retry theo job U02; lỗi 400/403 không retry. | REL-003 |
 | NFR-U05-15 | YouTube Data API dùng trong quota miễn phí 10 000 đơn vị/ngày (mỗi trang playlist 1 đơn vị). | Câu N3, REL-005 |
+| NFR-U05-16 | Mỗi lời gọi Gemini embedding giữ và quyết toán credit qua U07 (1 credit = 1 000 token, làm tròn lên mỗi lần gọi); ingest tính cho người tạo nguồn, truy xuất tính cho người yêu cầu AI. Thiếu credit được báo riêng với hết hạn mức hệ thống; `requestRef` idempotent để retry không trừ trùng. | BR-U05-39, 44; BR-U07-30, 40…43 |
 
 ## 3. Bảo mật
 
@@ -30,6 +31,7 @@
 | NFR-U05-22 | CSP cho phép `frame-src https://www.youtube-nocookie.com`. | BR-U05-24, SEC-004 |
 | NFR-U05-23 | `retrieve` chỉ gọi nội bộ từ U13 (không có endpoint HTTP công khai). | BR-U05-40 |
 | NFR-U05-24 | Không gửi dữ liệu người dùng lên Gemini ngoài nội dung học liệu và câu hỏi truy xuất. | SEC-005 |
+| NFR-U05-25 | API thông báo/hỏi đáp lớp kiểm tra người gửi và người đọc thuộc lớp đang hoạt động; chỉ giảng viên phụ trách/ADMIN đăng thông báo hoặc ẩn bài theo quyền. Nội dung Markdown được lọc trước hiển thị. | US-CNT-004, BR-U05-60…64 |
 
 ## 4. Kiểm thử
 
@@ -38,6 +40,7 @@
 | NFR-U05-30 | Unit test mọi `BR-U05-xx`; markdown chứa script bị lọc; URL YouTube giả mạo bị từ chối. | NFR-004 |
 | NFR-U05-31 | `EmbeddingPort` và `YoutubePort` có adapter giả (vector cố định, caption mẫu) cho test và khi chạy local không có key. | NFR-004, NFR-005 |
 | NFR-U05-32 | Integration test: `retrieve` không trả đoạn của bài nháp, bài lưu trữ, lớp khác. | BR-U05-41 |
+| NFR-U05-33 | Kiểm thử thông báo, câu hỏi và trả lời: lớp khác không đọc/ghi, payload nguy hiểm bị lọc, event U16 phát một lần sau commit và bài bị ẩn không hiển thị. | US-CNT-004 |
 
 ## 5. Compliance
 

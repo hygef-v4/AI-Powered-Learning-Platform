@@ -5,7 +5,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U09-01 | `validateForSave` p95 ≤ 200 ms với tài liệu 500 block, 20 sơ đồ. | U11 lưu nháp thường xuyên |
-| NFR-U09-02 | Nhập DOCX 50 trang, 20 ảnh ≤ 15 s (đồng bộ). | BR-U09-40 |
+| NFR-U09-02 | Nhập DOCX 50 trang, 20 ảnh ≤ 15 s (đồng bộ), áp dụng cho giảng viên và preview của người học. | BR-U09-40, 45 |
 | NFR-U09-03 | Xuất DOCX tài liệu 20 sơ đồ ≤ 20 s; tối đa 2 lần xuất đồng thời trên backend (semaphore), vượt → `503` thử lại sau. | BR-U09-50 |
 | NFR-U09-04 | Trình soạn tài liệu mượt với 500 block trên máy tính thông thường (chỉ render block trong vùng nhìn thấy khi > 200 block). | NFR-002 |
 
@@ -31,7 +31,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U09-30 | Unit test mọi `BR-U09-xx`; bộ DOCX mẫu: có PNG draw.io nhúng XML, SVG draw.io, ảnh thường, ảnh PNG đã nén lại (mất XML), bảng gộp ô, textbox. | NFR-004 |
-| NFR-U09-31 | Test chặn: sửa block khóa, xóa bảng của giảng viên, DOCX zip bomb, SVG có script, XML có DOCTYPE. | NFR-004 |
+| NFR-U09-31 | Test chặn: sửa block khóa, xóa bảng của giảng viên, DOCX zip bomb, SVG có script, XML có DOCTYPE; nhập DOCX của người học không đổi khung và lỗi không mất bản nháp. | NFR-004 |
 | NFR-U09-32 | Test vòng tròn: xuất DOCX rồi nhập lại → sơ đồ vẫn nhận được (XML nhúng còn). | BR-U09-51 |
 
 ## 5. Compliance

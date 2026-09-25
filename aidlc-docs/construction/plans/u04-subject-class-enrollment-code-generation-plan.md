@@ -59,10 +59,10 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; rout
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain: `Subject`, `CourseClass`, `Enrollment` với trạng thái và chuyển trạng thái hợp lệ; `InviteCodeGenerator` (BR-U04-02, 11, 14, 21, 30).
+- [ ] **Bước 2** - Domain: `Subject`, `CourseClass` (gồm `showGradeDistribution` mặc định false), `Enrollment` với trạng thái và chuyển trạng thái hợp lệ; `InviteCodeGenerator` (BR-U04-02, 11, 14, 17, 21, 30).
 - [ ] **Bước 3** - Port: `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`, `PublishedContentPort`; `EmptyPublishedContentAdapter`.
 - [ ] **Bước 4** - `SubjectService`: tạo, sửa, gán Chủ nhiệm môn, lưu trữ/mở lại (BR-U04-01…04).
-- [ ] **Bước 5** - `ClassService`: tạo lớp, gán giảng viên, sửa, đổi trạng thái, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (BR-U04-10…16, 26, P4, P5).
+- [ ] **Bước 5** - `ClassService`: tạo lớp, gán giảng viên, sửa, đổi trạng thái, bật/tắt phân bố điểm, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (BR-U04-10…17, 26, P4, P5).
 - [ ] **Bước 6** - `EnrollmentGuard` (advisory lock theo người học + môn, khóa theo thứ tự khi mở lại) (P2).
 - [ ] **Bước 7** - `EnrollmentService`: tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, ghi danh lại, phát event (BR-U04-20…26, P3).
 - [ ] **Bước 8** - `InviteCodeService`: bật/tắt/đổi mã, tự ghi danh, rate limit Bucket4j chỉ trừ khi sai, thông báo chung (BR-U04-30…34, P6).
@@ -74,7 +74,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; rout
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 14** - Flyway `V20260925_1100__u04_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm `REVOKE DELETE` khỏi `app`.
+- [ ] **Bước 14** - Flyway `V20260925_1100__u04_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm cờ `show_grade_distribution` mặc định false và `REVOKE DELETE` khỏi `app`.
 - [ ] **Bước 15** - JPA repository và query phạm vi có index.
 - [ ] **Bước 16** - Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ): hai yêu cầu ghi danh đồng thời vào hai lớp cùng môn chỉ một thành công; ghi danh 200 dòng ≤ 5 s; event gửi sau commit; `app` không DELETE được.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
@@ -89,7 +89,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; rout
 ### Nhóm E - Frontend
 
 - [ ] **Bước 22** - Admin: `SubjectListPage`, `SubjectFormDialog`, `AssignManagerDialog`.
-- [ ] **Bước 23** - Quản lý lớp: `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học viên, Mã mời), `AssignInstructorDialog`, `ClassStateActions`.
+- [ ] **Bước 23** - Quản lý lớp: `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học viên, Mã mời), `AssignInstructorDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
 - [ ] **Bước 24** - Ghi danh: `AddLearnerSearch`, `AddLearnersListDialog`, `EnrollmentResultTable`, `EnrollmentTable`.
 - [ ] **Bước 25** - Người học: `MyClassesPage`, `JoinByCodeDialog`, `LearnerClassPage`.
 - [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, lỗi chung khi mã sai.

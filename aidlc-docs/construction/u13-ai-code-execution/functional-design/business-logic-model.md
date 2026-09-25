@@ -4,7 +4,7 @@
 1. Nhận yêu cầu (U08/U06/U10), kiểm phạm vi và tham số (BR-U13-10…13).
 2. `AiGuard`: kill-switch, trần ngày, rate limit, `CreditPort.reserve` ước tính (BR-U13-03).
 3. Tạo `AiProposal` `QUEUED` + job `U13_AI_TASK`.
-4. Worker: `RagRetrievalPort.retrieve` → dựng prompt (khối dữ liệu phân cách) → `AiGateway.generate(task, prompt, jsonSchema)` → kiểm JSON + quy tắc U06 → `READY`; `settle` credit; ghi `AiCall` (BR-U13-04…08, 14).
+4. Worker: `RagRetrievalPort.retrieve(scope, query, k, requesterId, requestRef)` tính credit embedding của người yêu cầu qua U05 → dựng prompt (khối dữ liệu phân cách) → `AiGateway.generate(task, prompt, jsonSchema)` → kiểm JSON + quy tắc U06 → `READY`; `settle` credit tạo nội dung; ghi `AiCall` (BR-U13-04…09, 14). Nếu truy xuất bị từ chối trước khi gọi Gemini thì `release` phần credit tạo nội dung đã giữ.
 5. Giảng viên chọn câu → đích lưu nháp → `ACCEPTED` (BR-U13-15).
 
 ## F2 - Đề xuất chấm

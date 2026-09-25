@@ -14,7 +14,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | AuditService, JobService (U02) | Audit append-only; enqueue trong transaction, gửi sau commit, retry theo DB, sweeper | Không cung cấp update/delete audit; không quyết định nghiệp vụ |
 | FileArtifactService (U03) | Upload, kiểm loại/dung lượng file, lưu Drive, token tải | Không tự quyết ai được xem file; không dùng `acknowledgeAbuse` |
 | AcademicService (U04) | Môn, lớp, phân công, ghi danh, mã mời, lớp của người học | Không xóa lịch sử ghi danh; không kiểm thanh toán |
-| ContentService (U05) | Chương/bài/phiên bản, liên kết bài cấp môn, ingest RAG, `retrieve` | Không tự phiên âm; không xử lý ingest trong request |
+| ContentService, ClassCommunicationService (U05) | Chương/bài/phiên bản, liên kết bài cấp môn, ingest RAG, `retrieve`; thông báo/hỏi đáp lớp và sự kiện U16 | Không tự phiên âm; không xử lý ingest trong request; không cho lớp khác đọc/ghi |
 | BankService (U06) | Phiên bản câu hỏi/rubric, nhập file, tính điểm rubric | Không sửa bản đã `ACTIVE` |
 | PaymentService, CreditService (U07) | PayOS, webhook, đối soát, ví credit, giữ/trừ/trả | Không tin browser redirect; không để số dư âm |
 | AssessmentService (U08) | Bài, duyệt, phát hành, lịch, khóa, version mới, ngưng giao | Không sửa version đã phát hành; không có đề chung |
@@ -25,12 +25,12 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | AiService, CodeRunService (U13) | Kiểm trần/credit, gọi Gemini, kiểm đầu ra; chạy Judge0 | Không phát hành đề, không chốt điểm; không chạy mã ngoài sandbox |
 | GroupDocumentService (U14) | Tài liệu nhóm, khóa mục, Xong → realtime, nộp | Không cho hai người sửa cùng một mục |
 | GradingService (U15) | Tự chấm, chấm tay/AI, chốt, công bố, sổ điểm | Không để AI hay công thức quyết định điểm cuối |
-| NotificationService, ReportingService (U16) | Thông báo, email có trần, nhắc hạn, tiến độ | Không rollback nghiệp vụ khi gửi email lỗi |
+| NotificationService, ReportingService (U16) | Thông báo, email có trần, nhắc hạn, tiến độ, dashboard cá nhân và xuất bảng điểm | Không rollback nghiệp vụ khi gửi email lỗi; không công bố điểm nháp hoặc điểm AI đề xuất |
 
 ## 3. Orchestration quan trọng
 
 ### Bài tài liệu có sơ đồ và AI đề xuất chấm
-1. Người học soạn tài liệu (U09 `DocumentEditor`), vẽ sơ đồ trong iframe Draw.io; U11 tự lưu và kiểm tài liệu qua U09.
+1. Người học soạn tài liệu (U09 `DocumentEditor`), có thể nhập DOCX vào lượt DOCUMENT sau khi xem trước, vẽ sơ đồ trong iframe Draw.io; U11 tự lưu và kiểm tài liệu qua U09, không cho DOCX sửa khung giảng viên.
 2. Nộp: U11 khóa nội dung, phát `u11.submission.submitted`.
 3. U15 tạo điểm `PENDING`; giảng viên chọn chấm tay hoặc "Nhờ AI đề xuất".
 4. U13 kiểm trần và credit, lấy văn bản phẳng + XML rút gọn (U09), gọi Gemini, kiểm đầu ra, trả đề xuất.
@@ -49,7 +49,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ### Nạp nguồn RAG
 1. Giảng viên/Chủ nhiệm môn thêm file hoặc YouTube vào bài (U05).
-2. Worker trích chữ (không OCR) hoặc lấy caption có sẵn (không tự phiên âm), cắt đoạn, gọi Gemini embedding (trừ trần ngày), ghi pgvector.
+2. Worker trích chữ (không OCR) hoặc lấy caption có sẵn (không tự phiên âm), cắt đoạn; kiểm trần hệ thống và giữ credit của người tạo nguồn học liệu qua U07, rồi gọi Gemini embedding, ghi pgvector và quyết toán credit. Hết trần hệ thống báo "Hệ thống đang bận"; không trừ credit cho lô bị từ chối.
 
 ### Thanh toán mua credit AI
 1. U07 tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị.

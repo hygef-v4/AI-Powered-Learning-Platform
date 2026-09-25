@@ -14,6 +14,12 @@
 2. Kiểm cấu trúc (BR-U11-12); ghi nội dung, `contentVersion + 1`, `lastSavedAt`.
 
 ## F4 - Nộp tay
+## F3a - Nhập DOCX vào bản nháp DOCUMENT
+1. Kiểm chủ lượt, `IN_PROGRESS`, hạn còn hiệu lực và loại bài `DOCUMENT` (BR-U09-45).
+2. Gọi `DocxLearnerImportPort` (U09) trả xem trước và báo cáo, không thay đổi nội dung lượt.
+3. Khi xác nhận, thêm block `LEARNER` bằng cùng kiểm `contentVersion` và `validateForSave` như F3; xung đột trả `409`, bản nháp cũ giữ nguyên.
+
+## F4 - Nộp tay
 1. Kiểm BR-U11-20.
 2. Chuyển `SUBMITTED` theo BR-U11-21; trả biên nhận; audit.
 

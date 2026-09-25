@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U07 sở hữu gói credit, giao dịch thanh toán qua PayOS, webhook, ví credit AI, sổ cái credit và phần giữ credit khi dùng AI. U07 **không** sở hữu: gọi AI và tính token thực tế (U13), kill-switch/quota AI toàn hệ thống (U13), quyền vào lớp (U04, không liên quan).
+U07 sở hữu gói credit, giao dịch thanh toán qua PayOS, webhook, ví credit AI, sổ cái credit và phần giữ credit khi dùng AI. U07 **không** sở hữu: gọi Gemini và tính token thực tế (U05 cho embedding, U13 cho tạo nội dung), kill-switch/quota AI toàn hệ thống (U13), quyền vào lớp (U04, không liên quan).
 
 ## 2. `CreditPackage`
 
@@ -54,7 +54,7 @@ Sổ cái chỉ thêm, không sửa, không xóa. Số dư ví = tổng sổ cá
 
 ## 6. `CreditReservation`
 
-`id`, `accountId`, `requestRef` (duy nhất, do U13 đặt), `freeHeld`, `purchasedHeld`, `status` (`HELD`, `SETTLED`, `RELEASED`), `expiresAt` (tạo + 30 phút).
+`id`, `accountId`, `requestRef` (duy nhất, do U05 hoặc U13 đặt), `freeHeld`, `purchasedHeld`, `status` (`HELD`, `SETTLED`, `RELEASED`), `expiresAt` (tạo + 30 phút).
 
 ## 7. Trạng thái
 
@@ -72,7 +72,7 @@ Reservation: HELD --settle--> SETTLED
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
-| `CreditPort` | U07 cung cấp cho U13 | `reserve(accountId, credits, requestRef)`, `settle(reservationId, actualCredits)`, `release(reservationId)`, `balance(accountId)` |
+| `CreditPort` | U07 cung cấp cho U05 và U13 | `reserve(accountId, credits, requestRef)`, `settle(reservationId, actualCredits)`, `release(reservationId)`, `balance(accountId)` |
 | `PaymentProviderPort` | U07 dùng, adapter PayOS | Tạo link, lấy trạng thái, kiểm chữ ký webhook |
 | `AuthorizationPort` | U07 dùng U01 | Quyền admin |
 | `JobPort`, `AuditPort` | U07 dùng U02 | Đối soát, audit |

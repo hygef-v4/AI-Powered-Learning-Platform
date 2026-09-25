@@ -14,7 +14,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U13-10 | Trần chi phí AI ngày mặc định 2 USD (`AI_DAILY_COST_CAP_USD`), ước tính theo bảng giá model trong cấu hình; đạt trần → từ chối mới, job đang chạy được hoàn tất. | REL-005, FR-021 |
+| NFR-U13-10 | Trần chi phí AI ngày mặc định 2 USD (`AI_DAILY_COST_CAP_USD`), ước tính theo bảng giá model trong cấu hình; đạt trần → từ chối mới với "Hệ thống đang bận", không trừ credit người dùng; job đang chạy được hoàn tất. | REL-005, FR-021, quyết định đồng bộ 2026-09-25 |
 | NFR-U13-11 | Ước tính token trước khi gọi để `reserve` credit: độ dài prompt/4 + `maxOutputTokens`. | U07 |
 | NFR-U13-12 | Timeout Gemini: kết nối 5 s, đọc 90 s (`pro`: 150 s). | REL-003 |
 | NFR-U13-13 | Judge0 gọi qua mạng nội bộ, timeout 30 s mỗi lô; Judge0 không phản hồi → `SANDBOX_ERROR` sau 3 lần retry. | REL-003 |

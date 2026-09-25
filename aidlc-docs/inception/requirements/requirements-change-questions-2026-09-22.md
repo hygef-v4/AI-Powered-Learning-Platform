@@ -1,5 +1,7 @@
 # Câu hỏi làm rõ thay đổi yêu cầu ngày 2026-09-22
 
+> Tài liệu là lịch sử làm rõ. Với YouTube, quyết định hiện hành là chỉ dùng caption có sẵn, không tự phiên âm; xem `requirements.md` FR-004.
+
 Các câu hỏi dưới đây chốt những quyết định có ảnh hưởng đến tính công bằng của bài đánh giá, versioning và cách tính điểm. Phương án A ở mỗi câu là đề xuất mặc định của nhóm phân tích.
 
 ## Question 1

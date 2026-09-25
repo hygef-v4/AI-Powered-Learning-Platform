@@ -5,7 +5,7 @@
 - Unit: U01 Account & Access, current 16-unit plan.
 - Stories: `US-IAM-001` through `US-IAM-007` only. `US-AUD-001` belongs to U02.
 - Use cases: `UC-IAM-01` through `UC-IAM-12`.
-- Review `unit-of-work.md`, `unit-of-work-story-map.md`, current Requirements/User Stories/Use Cases, `components.md`, `component-methods.md`, `services.md`, and the account/role sections of `global-database-erd.md`.
+- Review `unit-of-work.md`, `unit-of-work-story-map.md`, current Requirements/User Stories/Use Cases, `components.md`, `component-methods.md`, `services.md`, and the U01 data model in `functional-design/domain-entities.md`.
 - Preserve current decisions: no public registration; one highest role per account; `SUBJECT_MANAGER` inherits instructor capabilities but remains subject-scoped; authorization is server-side; password reset and activation tokens are one-time OTPs sent by email and stored as hashes with TTL in Redis.
 - U01 owns accounts, credentials, sessions, roles, scopes and authorization decisions. U02 owns append-only audit and job/outbox state. U01 emits audit events through U02's contract and does not query or mutate U02 storage.
 
@@ -29,7 +29,7 @@
 - Hồ sơ tự sửa: tên hiển thị, số điện thoại, ảnh đại diện. Ảnh đại diện đi qua `AvatarPort` do U03 cung cấp (cạnh `C` U01 → U03).
 - Nhập hàng loạt chỉ CSV, tối đa 1000 dòng; email trùng báo lỗi dòng, không ghi đè.
 - Đăng xuất chỉ thu hồi phiên hiện tại; đổi mật khẩu thu hồi các phiên khác.
-- Cần đồng bộ ERD sau: bỏ `LOCKED` khỏi enum `accounts.status`, thêm số điện thoại và tham chiếu ảnh đại diện vào `accounts`.
+- Mô hình dữ liệu U01: `accounts.status` không có `LOCKED`; `accounts` có số điện thoại và tham chiếu ảnh đại diện.
 
 ## 3. Clarification gate
 

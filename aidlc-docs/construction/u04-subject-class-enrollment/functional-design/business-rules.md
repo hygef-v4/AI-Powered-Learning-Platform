@@ -20,6 +20,7 @@
 | BR-U04-14 | Chuyển trạng thái hợp lệ: `DRAFT→OPEN`, `DRAFT→ARCHIVED`, `OPEN→ARCHIVED`, `ARCHIVED→OPEN`. `OPEN` cần có giảng viên và môn `ACTIVE`. | Câu 1 |
 | BR-U04-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có người học `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U04-22 |
 | BR-U04-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc với người quản lý. | UC-CAT-09 |
+| BR-U04-17 | Người quản lý lớp bật/tắt `showGradeDistribution`; mặc định tắt. U16 chỉ hiện phân bố điểm ẩn danh khi cờ bật và đủ mẫu theo BR-U16-42. | US-RPT-002 |
 
 ## 3. Ghi danh
 

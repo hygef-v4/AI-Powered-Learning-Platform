@@ -85,7 +85,7 @@ PostgreSQL `template_releases`, `assignment_lineage`, `simulation_policies`.
 - [ ] **Bước 18** - `TemplateListPage`, `CopyFromTemplateDialog`, `CopyToClassDialog`.
 - [ ] **Bước 19** - `VersionHistoryPanel`, `AssignmentDiffView`.
 - [ ] **Bước 20** - `SimulationPolicyForm` (gắn vào `PublishDialog` U08), `SimulationBadge`.
-- [ ] **Bước 21** - Test frontend: badge ghi "Thi thử" và "không giới hạn", diff đánh dấu đúng loại thay đổi.
+- [ ] **Bước 21** - Test frontend: badge ghi "Thi thử" và số lượt 1-10 (mặc định 3), diff đánh dấu đúng loại thay đổi.
 - [ ] **Bước 22** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất

@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004. US-GRD-006..008 (Phase 2) chưa thiết kế. **Use case**: UC-GRD-01..07, UC-GRP-08.
+- **Story trong phạm vi**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004. **Use case**: UC-GRD-01..07, UC-GRP-08. Gia hạn/phúc khảo/kiểm tra tương đồng nằm ngoài phạm vi.
 - **Thiết kế nguồn**: `construction/u15-grading/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -27,7 +27,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `SubmissionQueryPort`, event `u11.submission.submitted` | U11 | Dùng thật |
 | `AiGradingPort`, `AiGradingPanel`, event `u13.code.graded` | U13 | Dùng thật |
 | `GroupSubmissionQueryPort`, event `u14.group.submitted` | U14 | Dùng thật |
-| U15 cung cấp `GradeQueryPort`, event `u15.grade.published` | cho U11, U16 | U11 bật hiển thị điểm; U16 dùng khi được code |
+| U15 cung cấp `GradeQueryPort`, `GradebookQueryPort`, event `u15.grade.published` | cho U11, U16 | U11 bật hiển thị điểm; U16 đọc điểm cuối/trạng thái công bố cho dashboard và tệp xuất |
 
 ### Dữ liệu U15 sở hữu
 
@@ -45,7 +45,7 @@ PostgreSQL `grades`, `grade_history`, `publication_grade_releases`; queue `u15.g
                         PublicationGradeRelease, LearnerGradeView, TeacherGradeView
     infrastructure/     JPA repository
     worker/             SubmissionGradeListener
-    port/               GradeQueryPort
+    port/               GradeQueryPort, GradebookQueryPort
 /backend/src/main/resources/db/migration/u15/
 /frontend/src/app/teaching/publications/[id]/grading/
 /frontend/src/app/teaching/grading/
@@ -63,7 +63,7 @@ PostgreSQL `grades`, `grade_history`, `publication_grade_releases`; queue `u15.g
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 1** - Domain `Grade` và chuyển trạng thái, `GradeHistory`, hai góc nhìn; port `GradeQueryPort`.
+- [ ] **Bước 1** - Domain `Grade` và chuyển trạng thái, `GradeHistory`, hai góc nhìn; port `GradeQueryPort` và `GradebookQueryPort` cho U16 (điểm cuối/trạng thái, không lộ đề xuất AI).
 - [ ] **Bước 2** - `GradeWriter` một đường (version, luật lý do, khoảng điểm, lịch sử, event sau commit) (P1, BR-U15-13, 22, 33).
 - [ ] **Bước 3** - `QuizScorer` và `SubmissionGradeListener` (trắc nghiệm, code, bài nhóm; idempotent; hiện điểm ngay) (F1, P2, P3, BR-U15-10…12).
 - [ ] **Bước 4** - `GradingService`: chọn phương thức, chấm tay theo rubric/điểm câu, nhờ AI, dùng đề xuất (F2, BR-U15-20…23).
@@ -115,4 +115,4 @@ PostgreSQL `grades`, `grade_history`, `publication_grade_releases`; queue `u15.g
 
 ## 5. Ngoài phạm vi
 
-- US-GRD-006..008 (Phase 2), thông báo (U16), xuất bảng điểm (Phase 2, FR-024).
+- Gia hạn/phúc khảo/kiểm tra tương đồng ngoài phạm vi dự án; U16 sở hữu xuất bảng điểm trong MVP và thông báo hệ thống.

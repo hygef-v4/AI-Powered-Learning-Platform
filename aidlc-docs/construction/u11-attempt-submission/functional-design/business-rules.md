@@ -7,7 +7,7 @@
 | BR-U11-01 | Chỉ người học đang ghi danh `ACTIVE` của lớp, lớp `OPEN`, publication đang nhận bài (`ON_TIME` hoặc `LATE`). | FR-007, US-ASM-003 S2 |
 | BR-U11-02 | Bấm "Bắt đầu làm" tạo lượt và tính vào số lượt; chụp version bài, cấu hình, chính sách và seed trộn. | Câu 2 |
 | BR-U11-03 | Mỗi người học tối đa một lượt `IN_PROGRESS` mỗi publication; bấm lại thì mở lượt đang làm. | Câu 2 |
-| BR-U11-04 | Số lượt: bài thường theo `maxAttempts` (U08); thi thử theo U10 (trống = không giới hạn). Hết lượt → từ chối. | FR-007, U10 |
+| BR-U11-04 | Số lượt: bài thường theo `maxAttempts` (U08); thi thử theo U10 (mặc định 3, từ 1 đến 10). Hết lượt → từ chối. | FR-007, U10 |
 | BR-U11-05 | Lượt đầu tiên của publication thi thử gọi `SimulationPolicyPort.lock`. | BR-U10-35 |
 | BR-U11-06 | `deadlineAt` = sớm nhất giữa `startedAt + timeLimit` (nếu có) và hạn cuối nhận bài (`lateUntil` nếu cho nộp trễ, không thì `closesAt`). | BR-U09-12 |
 

@@ -20,7 +20,7 @@ Phân rã modular monolith thành các đơn vị lập kế hoạch/triển kha
 
 - [x] Sinh `unit-of-work.md` với định nghĩa, trách nhiệm và code organization
 - [x] Sinh `unit-of-work-dependency.md` với dependency matrix và critical path
-- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 59 story
+- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 50 story MVP và 78 UC hiện hành.
 - [x] Validate ranh giới và dependency
 - [x] Validate mọi story được gán đúng unit
 - [x] Cập nhật trạng thái và trình checkpoint Units Generation
@@ -154,6 +154,8 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 
 ## Revision 2026-09-22
 
+> Các mục bên dưới ghi lại sơ đồ 8 unit cũ. Sơ đồ hiện hành có 16 unit; xem `unit-of-work.md` và `unit-of-work-story-map.md`.
+
 - [x] Giữ tám unit hiện có; không tạo unit mới vì boundary vẫn phù hợp.
 - [x] Mở rộng U03 cho YouTube transcript RAG và question/rubric version.
 - [x] Mở rộng U04 cho template/copy lineage, simulation policy và attempt snapshot contract.
@@ -161,7 +163,7 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Mở rộng U06 cho manual composite grade và manual per-member final grade.
 - [x] Cập nhật U07 audit/reporting events cho version, copy, simulation và grade override.
 - [x] Cập nhật dependency contracts, worker handlers, waves và integration gates.
-- [x] Ánh xạ đủ 59/59 stories đúng một primary unit.
+- [x] Ánh xạ đủ 50/50 story MVP đúng một primary unit trong sơ đồ 16 unit hiện hành.
 - [x] Trình checkpoint phê duyệt lại Units Generation.
 
 ## Revision 2026-09-24 sau Application Design được duyệt

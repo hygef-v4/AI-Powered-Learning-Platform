@@ -8,6 +8,7 @@
 | NFR-U16-02 | Một event cho lớp 200 người tạo xong thông báo ≤ 5 s (INSERT theo lô). | BR-U16-01 |
 | NFR-U16-03 | Gửi email tối đa 1 email/giây (tránh Gmail chặn), trong trần 300/ngày. | BR-U16-12 |
 | NFR-U16-04 | Báo cáo tiến độ 200 người p95 ≤ 1 s. | BR-U16-30 |
+| NFR-U16-05 | Dashboard của người học p95 ≤ 1 s; xuất bảng điểm lớp 200 người × 30 bài p95 ≤ 5 s khi dữ liệu nguồn bình thường. | US-RPT-002, 003 |
 
 ## 2. Toàn vẹn
 
@@ -24,6 +25,7 @@
 | NFR-U16-21 | Email không chứa điểm, nội dung bài, dữ liệu người khác; chỉ tiêu đề ngắn và đường dẫn tới hệ thống. | BR-U16-03 |
 | NFR-U16-22 | `SMTP_*` trong `.env`; không log địa chỉ email người nhận (log `accountId`). | SEC-005, SEC-006 |
 | NFR-U16-23 | Mẫu email tiếng Việt, escape mọi giá trị chèn (tên lớp, tên bài). | SEC-003 |
+| NFR-U16-24 | Dashboard chỉ trả điểm `PUBLISHED` của chính người học; phân bố lớp cần cờ cho phép và ngưỡng BR-U16-42; export kiểm quyền trước khi tạo file và escape CSV formula injection. | US-RPT-002, 003 |
 
 ## 4. Kiểm thử
 
@@ -31,6 +33,7 @@
 |---|---|---|
 | NFR-U16-30 | Unit test mọi `BR-U16-xx`; ưu tiên và dời khi hết trần; tắt email từng loại. | NFR-004 |
 | NFR-U16-31 | Integration test với Mailpit: event lặp không gửi trùng; SMTP lỗi thì retry; nhắc hạn bị hủy khi ngừng giao. | NFR-004 |
+| NFR-U16-32 | Kiểm chứng sự kiện U05 gửi đúng người, dashboard không lộ điểm chưa công bố/người khác, phân bố lớp ẩn khi thiếu mẫu và export ngoài quyền bị từ chối. | US-CNT-004, US-RPT-002, 003 |
 
 ## 5. Compliance
 

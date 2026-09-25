@@ -11,7 +11,7 @@
 | BR-U07-05 | Mỗi tài khoản tối đa 3 giao dịch `PENDING` cùng lúc. | Thiết kế |
 | BR-U07-06 | Link PayOS hết hạn sau 15 phút; `PENDING` quá hạn → `EXPIRED`. | Thiết kế |
 | BR-U07-07 | PayOS lỗi/timeout khi tạo link → `FAILED`, không cộng credit, người dùng thử lại bằng giao dịch mới. | US-PAY-001 S2 |
-| BR-U07-08 | Không hoàn tiền; không có trạng thái `REFUNDED`. | Câu 7 |
+| BR-U07-08 | Phạm vi MVP hiện chưa có luồng hoàn tiền và chưa có trạng thái `REFUNDED`; chính sách hoàn tiền đang chờ quyết định. Hủy link `PENDING` không phải hoàn giao dịch đã `PAID`. | Quyết định mở 2026-09-25 |
 
 ## 2. Xác nhận thanh toán
 
@@ -40,14 +40,14 @@
 | BR-U07-33 | Trừ credit tặng trước, credit mua sau. | Câu 4 |
 | BR-U07-34 | Số dư không bao giờ âm. | Thiết kế |
 
-## 5. Dùng credit (cho U13)
+## 5. Dùng credit (cho U05 và U13)
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-40 | Trước khi gọi AI, U13 `reserve` số credit ước tính; không đủ → từ chối "không đủ credit", AI không được gọi. | FR-021 |
+| BR-U07-40 | Trước mỗi lời gọi Gemini tạo nội dung hoặc embedding, U05/U13 `reserve` số credit ước tính của tài khoản chịu phí; không đủ → từ chối "không đủ credit", không gọi Gemini. Embedding nền tính cho người tải/phát hành học liệu; embedding truy xuất tính cho người yêu cầu AI. | FR-021, quyết định đồng bộ 2026-09-25 |
 | BR-U07-41 | `reserve` idempotent theo `requestRef`. | Thiết kế |
 | BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần còn lại trong ví, không để âm. | Thiết kế |
-| BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi. Phần giữ quá 30 phút tự trả lại (job quét). | Thiết kế |
+| BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi hoặc hết hạn mức hệ thống trước khi gọi provider. Phần giữ quá 30 phút tự trả lại (job quét). | Thiết kế |
 
 ## 6. Điều chỉnh và audit
 

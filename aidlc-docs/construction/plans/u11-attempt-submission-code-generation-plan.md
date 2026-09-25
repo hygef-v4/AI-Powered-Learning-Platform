@@ -23,7 +23,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort`, `QuestionView` | U06 | Dùng thật |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật |
-| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocumentEditor`, `EssayEditor` | U09 | Dùng thật |
+| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxLearnerImportPort`, `DocumentEditor`, `EssayEditor` | U09 | Dùng thật |
 | `SimulationPolicyPort`, `SimulationBadge` | U10 | Dùng thật |
 | `CodeRunPort` | U13 (`C`) | Adapter tạm báo "chạy thử chưa sẵn sàng"; U13 thay |
 | Điểm hiển thị | U15 | Ẩn phần điểm tới khi U15 có |
@@ -64,7 +64,7 @@ PostgreSQL `submissions`, `submission_contents`; Redis `u11:save:*`; queue `jobs
 - [ ] **Bước 2** - Domain `Attempt`, `AttemptContent` (4 loại), `DeadlineCalculator` (BR-U11-06); port `SubmissionQueryPort`, `CodeRunPort` + adapter tạm.
 - [ ] **Bước 3** - `AttemptStarter`: advisory lock, đếm lượt (bài thường/thi thử), snapshot, seed, khóa chính sách thi thử, job tự nộp (F2, P1, BR-U11-01…06).
 - [ ] **Bước 4** - Trả đề cho người học: góc nhìn đã lọc đáp án, trộn theo seed (F2 bước 4).
-- [ ] **Bước 5** - `DraftSaver`: UPDATE có điều kiện, `409`/`410`, ân hạn 30 s, kiểm tài liệu, `GzipRequestFilter` giới hạn 10 MB, rate limit (F3, P2, P6, BR-U11-10…14).
+- [ ] **Bước 5** - `DraftSaver`: UPDATE có điều kiện, `409`/`410`, ân hạn 30 s, kiểm tài liệu, `GzipRequestFilter` giới hạn 10 MB, rate limit; preview DOCX chỉ cho lượt DOCUMENT đang làm, xác nhận thêm block qua cùng luồng lưu có `contentVersion` (F3, F3a, P2, P6, BR-U11-10…14, BR-U09-45…48).
 - [ ] **Bước 6** - `AttemptSubmitter` một đường, idempotent, biên nhận, event sau commit; nộp tay kiểm `validateForSubmit`, tự nộp ghi `warnings` (F4, F5, P3, BR-U11-20…24).
 - [ ] **Bước 7** - `AutoSubmitHandler`, `RetiredListener` (P5).
 - [ ] **Bước 8** - `AttemptQueryService`: danh sách bài của người học, lịch sử, lượt được chấm (lượt nộp cuối / chính sách U10), xuất DOCX, `SubmissionQueryPort` (F1, F6, F7, BR-U11-30…34).
@@ -82,14 +82,14 @@ PostgreSQL `submissions`, `submission_contents`; Redis `u11:save:*`; queue `jobs
 ### Nhóm D - API
 
 - [ ] **Bước 16** - `/contracts/openapi/u11-attempt.yaml` và schema event.
-- [ ] **Bước 17** - Controller + DTO + validation.
+- [ ] **Bước 17** - Controller + DTO + validation, gồm `POST /api/v1/attempts/{id}/docx:preview` chỉ cho chủ lượt DOCUMENT đang làm; xác nhận dùng `PUT /api/v1/attempts/{id}/content`.
 - [ ] **Bước 18** - Test MockMvc: lượt người khác `404`; hết lượt/quá hạn bị từ chối; đề không chứa đáp án.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
 - [ ] **Bước 20** - `MyAssignmentsPage`, `AssignmentOverviewPage` (`AssignmentInfo`, `StartAttemptButton`, `AttemptHistoryList`).
-- [ ] **Bước 21** - `AttemptWorkspacePage` với `QuizWorkspace`, `EssayWorkspace`, `DocumentWorkspace`, `CodeWorkspace`, `AttemptHeader` (đồng hồ).
+- [ ] **Bước 21** - `AttemptWorkspacePage` với `QuizWorkspace`, `EssayWorkspace`, `DocumentWorkspace` (gồm `LearnerDocxImportDialog`), `CodeWorkspace`, `AttemptHeader` (đồng hồ).
 - [ ] **Bước 22** - `useAutosave` (P7), `SubmitConfirmDialog`, `ReceiptView`, `SubmittedAttemptView`.
 - [ ] **Bước 23** - Test frontend: tự lưu không gửi chồng, `409` dừng tự lưu, hết giờ tự chuyển biên nhận.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.

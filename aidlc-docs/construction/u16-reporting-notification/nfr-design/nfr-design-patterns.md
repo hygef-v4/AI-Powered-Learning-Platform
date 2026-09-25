@@ -18,3 +18,7 @@
 
 ## P5 - Báo cáo tiến độ một query
 - Người học đang ghi danh (U04) LEFT JOIN trạng thái lượt (U11) hoặc bản nộp nhóm (U14) theo publication.
+
+## P6 - Dashboard và xuất bảng điểm
+- Dashboard tổng hợp theo accountId lấy từ phiên đăng nhập, chỉ đọc qua U04/U08/U11/U14/U15; không nhận accountId khác từ client. Phân bố dùng ngưỡng BR-U16-42 trước khi trả dữ liệu.
+- Export kiểm quyền lớp/bài trước query; đọc dữ liệu từ `GradebookQueryPort` và stream CSV/XLSX trực tiếp. Chuỗi CSV bắt đầu bằng `=`, `+`, `-`, `@` được escape; không log nội dung tệp.

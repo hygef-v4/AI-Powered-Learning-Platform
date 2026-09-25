@@ -14,8 +14,9 @@
 1. Kiểm quyền (BR-U04-13).
 2. Sửa `name`, `description`, `term`.
 3. Đổi trạng thái theo BR-U04-14; mở lại kiểm BR-U04-15.
-4. `DRAFT→OPEN`: phát `ENROLLMENT_ACTIVATED` cho mọi ghi danh `ACTIVE` (BR-U04-26).
-5. Audit.
+4. Người quản lý có thể bật/tắt `showGradeDistribution`; mặc định tắt và U16 chỉ dùng khi đủ mẫu (BR-U04-17).
+5. `DRAFT→OPEN`: phát `ENROLLMENT_ACTIVATED` cho mọi ghi danh `ACTIVE` (BR-U04-26).
+6. Audit.
 
 ## F4 - Ghi danh từng người
 1. Tìm người học qua `AccountLookupPort` (BR-U04-23).

@@ -19,7 +19,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 |---|---|---|
 | `AuthorizationPort` | U01 | Dùng thật |
 | `JobPort`, `JobHandler`, `AuditPort` | U02 | Dùng thật |
-| U07 cung cấp `CreditPort` | cho U13 | U13 dùng khi được code |
+| U07 cung cấp `CreditPort` | cho U05 và U13 | U05 dùng cho embedding, U13 dùng cho tạo nội dung AI |
 | `PaymentProviderPort` | PayOS | Adapter thật + adapter giả khi không có key (không bật ở prod) |
 
 ### Dữ liệu U07 sở hữu
@@ -93,7 +93,7 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 26** - Cập nhật `README.md`: đăng ký PayOS, đăng ký webhook, test bằng gói 2 000đ, chạy local với adapter giả, cách U13 dùng `CreditPort`.
+- [ ] **Bước 26** - Cập nhật `README.md`: đăng ký PayOS, đăng ký webhook, test bằng gói 2 000đ, chạy local với adapter giả, cách U05/U13 dùng `CreditPort`.
 - [ ] **Bước 27** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết

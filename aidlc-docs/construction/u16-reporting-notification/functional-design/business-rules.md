@@ -9,6 +9,7 @@
 | BR-U16-03 | Nội dung chỉ về chính người nhận; không ghi điểm số trong thông báo/email, chỉ báo "có điểm mới" và đường dẫn. | US-NTF-001 S1 |
 | BR-U16-04 | Thông báo trong app hiển thị realtime (SSE dùng chung hạ tầng U14) và danh sách có đánh dấu đã đọc. | Câu 4, UC-OPS-01 |
 | BR-U16-05 | Giữ thông báo 180 ngày rồi xóa. | Thiết kế |
+| BR-U16-06 | Nhận sự kiện thông báo lớp, câu hỏi và câu trả lời từ U05; chỉ tạo thông báo trong app cho người nhận còn quyền trong lớp, trừ actor, và chống trùng theo BR-U16-02. | US-CNT-004 |
 
 ## 2. Email
 
@@ -34,4 +35,15 @@
 |---|---|---|
 | BR-U16-30 | Giảng viên lớp xem theo lượt phát hành: đã nộp, đang làm, chưa bắt đầu, nộp trễ, thời gian còn lại; bài nhóm theo nhóm (đã nộp/chưa, số mục xong). | US-RPT-001 S1 |
 | BR-U16-31 | Chỉ giảng viên lớp, Chủ nhiệm môn của môn, ADMIN xem; ngoài quyền `404`. | SEC-002 |
-| BR-U16-32 | US-RPT-002..004 (dashboard kết quả, xuất bảng điểm, đối sánh AI) là Phase 2, chưa thiết kế, chờ nhóm hội ý. | Phase 2 |
+| BR-U16-32 | Báo cáo thống kê độ lệch điểm AI đề xuất và điểm giảng viên chốt nằm ngoài phạm vi. Dashboard cá nhân và xuất bảng điểm thuộc MVP. | Quyết định phạm vi 2026-09-25 |
+
+## 5. Dashboard người học và xuất bảng điểm
+
+| Mã | Quy tắc | Nguồn |
+|---|---|---|
+| BR-U16-40 | Dashboard chỉ cho tài khoản người học đang đăng nhập: lớp đang ghi danh, bài sắp hạn, trạng thái lượt/bài nộp của chính mình và điểm `PUBLISHED` từ U15; điểm chờ chấm/chưa công bố hiện trạng thái, không lộ số. | US-RPT-002 S1 |
+| BR-U16-41 | Dashboard không tính điểm tổng hay hệ số; sắp bài sắp hạn tăng dần, không đưa bài đã ngừng giao vào danh sách cần làm. | Quyết định 2026-09-25 |
+| BR-U16-42 | Phân bố điểm lớp chỉ hiện khi `showGradeDistribution` của U04 bật và có ít nhất 20 người học có điểm `PUBLISHED` cho bài đó; trả các khoảng điểm tổng hợp, ẩn khoảng có dưới 5 người, không trả tên/điểm cá nhân người khác. | US-RPT-002 S2, SEC-005 |
+| BR-U16-43 | Chỉ giảng viên lớp, Chủ nhiệm môn được gán môn hoặc ADMIN xuất bảng điểm lớp/bài mình được xem. Kiểm toàn bộ bộ lọc trước khi tạo CSV/XLSX; ngoài quyền `404`. | US-RPT-003 |
+| BR-U16-44 | Tệp xuất gồm người học, lớp/bài, trạng thái nộp/chấm, thời gian nộp, điểm cuối đã chốt hoặc đã công bố và phản hồi theo quyền giảng viên; đánh dấu rõ chưa nộp/chưa chốt. Không có cột điểm tổng/hệ số; không xuất đề xuất điểm AI. | US-RPT-003 S1, BR-U15-50 |
+| BR-U16-45 | Tạo tệp khi yêu cầu, trả stream cho người có quyền; không lưu tệp xuất lâu dài. Giá trị CSV được escape để tránh công thức bảng tính; tên tệp không chứa dữ liệu cá nhân. Audit người xuất, phạm vi và thời gian. | US-RPT-003 S2, SEC-003 |

@@ -12,7 +12,7 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 | U02 | C | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U03 | H | H | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U04 | H | H | - | - | C | - | - | - | - | - | - | - | - | - | - | - |
-| U05 | H | H | H | H | - | - | - | - | - | - | - | - | C | - | - | - |
+| U05 | H | H | H | H | - | - | C | - | - | - | - | - | C | - | - | - |
 | U06 | H | H | H | H | C | - | - | - | C | - | - | - | - | - | - | - |
 | U07 | H | H | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
 | U08 | H | H | - | H | H | H | - | - | C | - | - | C | C | - | - | - |
@@ -23,7 +23,7 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 | U13 | H | H | - | - | H | H | H | - | C | - | C | - | - | C | - | - |
 | U14 | H | H | H | H | - | - | - | H | H | - | - | H | - | - | - | - |
 | U15 | H | H | - | H | - | H | - | H | H | H | H | - | H | H | - | - |
-| U16 | H | H | - | H | - | - | E | H | - | - | H | H | - | H | E | - |
+| U16 | H | H | - | H | E | - | E | H | - | - | H | H | - | H | E | - |
 
 ### Dependency graph theo wave
 
@@ -31,10 +31,10 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 
 Nguồn hình: `unit-of-work-dependency.drawio` (mở bằng draw.io để sửa). Hình vẽ các cạnh `H` tối giản theo bắc cầu và cạnh `E` U15 → U16; mọi mũi tên đi từ trái sang phải.
 
-**Text alternative** (cạnh provider → consumer): U01 → U03, U04, U07; U02 → U03, U04, U07; U03 → U05, U06; U04 → U05, U06; U05 → U08, U13; U06 → U08, U13; U07 → U13; U08 → U09, U12; U09 → U10, U14; U10 → U11; U11 → U15; U12 → U14; U13 → U15; U14 → U15; U15 → U16.
+**Text alternative** (cạnh provider → consumer): U01 → U03, U04, U07; U02 → U03, U04, U07; U03 → U05, U06; U04 → U05, U06; U05 → U08, U13, U16 (event lớp); U06 → U08, U13; U07 → U13; U08 → U09, U12; U09 → U10, U14; U10 → U11; U11 → U15; U12 → U14; U13 → U15; U14 → U15; U15 → U16 (đọc sổ điểm).
 
 
-U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) và U04 (phạm vi môn/lớp) bằng cạnh `C`: U01 khai báo port, các unit đó cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Hình chỉ vẽ cạnh `H` tối giản theo bắc cầu (nếu A → B → C thì không lặp A → C) và cạnh `E` U15 → U16; các cạnh `C` (U01 → U02, U02/U03/U04 → U01, U05 → U04, U13 → U05, U05/U09 → U06, U09/U12/U13 → U08, U13/U15 → U11, U09/U11/U14 → U13) không vẽ, xem ma trận. U16 còn phụ thuộc `H` vào U11/U14 (đọc tiến độ nộp bài) và `E` từ U07; các cạnh này không vẽ vì U15 đã phụ thuộc cứng U11/U14, nên cạnh U15 → U16 đã giữ đúng thứ tự. Ma trận phía trên vẫn là danh sách đầy đủ. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Mọi mũi tên đi từ trái sang phải.
+U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) và U04 (phạm vi môn/lớp) bằng cạnh `C`: U01 khai báo port, các unit đó cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. U05 phụ thuộc `CreditPort` của U07 bằng cạnh `C` để tính credit embedding; hai unit vẫn phát triển song song, nhưng adapter thật phải có trước khi bật Gemini cho U05. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Hình chỉ vẽ cạnh `H` tối giản theo bắc cầu (nếu A → B → C thì không lặp A → C) và cạnh `E` U15 → U16; các cạnh `C` (U01 → U02, U02/U03/U04 → U01, U05 → U04, U07 → U05, U13 → U05, U05/U09 → U06, U09/U12/U13 → U08, U13/U15 → U11, U09/U11/U14 → U13) không vẽ, xem ma trận. U16 còn phụ thuộc `H` vào U11/U14 (đọc tiến độ nộp bài), `E` từ U05/U07 và `E` từ U15 (đọc điểm cuối qua port, nhận event công bố); các cạnh này không vẽ vì đồ thị chỉ thể hiện đường triển khai tối giản qua U15. Ma trận phía trên vẫn là danh sách đầy đủ. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Mọi mũi tên đi từ trái sang phải.
 
 **Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06 song song sau U04 và U07 mở ngay sau U01/U02; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U05/U06 và credit U07 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U09/U12, U15 sau U11/U13/U14 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
 
@@ -51,7 +51,7 @@ U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) 
 | Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; bài đã phát hành khóa nội dung |
 | Nhóm → tài liệu nhóm | U12 + U09 → U14 | Thành viên/trưởng nhóm, mô hình tài liệu; nhận/khóa mục, ghép realtime, bản nộp bất biến có tác giả từng mục |
 | Chấm | U11/U14/U06 → U15; U13 hỗ trợ | AI chỉ trả proposal; U15 lưu manual/final grade; tài liệu nhóm chấm tay, AI chỉ đề xuất cho phần đóng góp của từng thành viên |
-| Báo cáo/thông báo | Owner events → U16 | Thông báo trong app (SSE), email có trần 300/ngày, nhắc hạn; lỗi gửi không rollback transaction nguồn |
+| Báo cáo/thông báo | U05 event lớp, owner events và điểm U15 → U16 | Thông báo trong app (SSE), email có trần 300/ngày, nhắc hạn, dashboard cá nhân và xuất bảng điểm; lỗi gửi không rollback transaction nguồn |
 
 ### Ranh giới tránh vòng phụ thuộc
 
@@ -71,7 +71,7 @@ U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) 
 | Group document | U14 | Tài liệu nhóm, lịch sử mục theo tác giả, bản nộp bất biến |
 | AI grade proposal và compact Draw.io | U13 phối hợp U15 | Proposal (XML rút gọn tạo trong bộ nhớ bởi U09); U15 quyết định điểm |
 | Payment reconciliation | U07 | Giao dịch PayOS, ví và sổ cái credit AI |
-| Notification | U16 | Thông báo, email outbox, nhắc hạn |
+| Notification & reporting | U16 | Thông báo, email outbox, nhắc hạn, dashboard đọc theo yêu cầu và xuất bảng điểm trực tiếp |
 
 Job Platform U02 giữ lease/retry/status (không có dead-letter; hết lượt thì `FAILED`), còn owner nghiệp vụ kiểm tra idempotency và lưu kết quả. Worker payload chỉ chứa ID/reference và scope; worker tải nguồn qua contract có quyền.
 

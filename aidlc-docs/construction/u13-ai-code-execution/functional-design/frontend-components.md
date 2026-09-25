@@ -15,8 +15,8 @@ app/admin/ai/
 
 | Component | Hành vi | API |
 |---|---|---|
-| `AiDraftDialog` | Hiện credit ước tính trước khi gửi; poll job | `POST /api/v1/ai/question-drafts`, `GET /api/v1/ai/proposals/{id}`, `POST .../{id}/accept` |
-| `AiGradingPanel` | | `POST /api/v1/ai/grading-proposals`, `GET /api/v1/ai/proposals/{id}` |
+| `AiDraftDialog` | Hiện credit ước tính trước khi gửi; poll job; phân biệt "Không đủ credit AI" với "Hệ thống đang bận" | `POST /api/v1/ai/question-drafts`, `GET /api/v1/ai/proposals/{id}`, `POST .../{id}/accept` |
+| `AiGradingPanel` | Hiện riêng lỗi thiếu credit và hệ thống bận | `POST /api/v1/ai/grading-proposals`, `GET /api/v1/ai/proposals/{id}` |
 | `CodeEditor` + `CodeRunResult` | Chạy thử (người học), 5 lần/phút | `POST /api/v1/code-runs` (`TRY`), `GET /api/v1/code-runs/{id}` |
 | `VerifySolutionButton` | | `POST /api/v1/code-runs` (`VERIFY`) |
 | `AiSettingsPage` | | `GET`, `PUT /api/v1/admin/ai/settings` |

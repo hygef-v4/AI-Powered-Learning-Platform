@@ -27,7 +27,7 @@
 1. Đọc ví: nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng (BR-U07-31).
 2. Tài khoản chưa có ví → tạo khi đọc lần đầu.
 
-## F6 - Giữ và trừ credit (U13 gọi)
+## F6 - Giữ và trừ credit (U05 và U13 gọi)
 1. `reserve`: F5 bước 1, khóa ví, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), tạo `HELD`, ghi sổ `RESERVE`.
 2. `settle`: tính chênh lệch với phần giữ, trả lại hoặc trừ thêm (BR-U07-42), ghi sổ `SETTLE`, `SETTLED`.
 3. `release`: trả lại phần giữ, ghi sổ `RELEASE`, `RELEASED`.

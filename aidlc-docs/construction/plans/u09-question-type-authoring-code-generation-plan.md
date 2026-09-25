@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-004 (soạn khung, kiểm/xuất tài liệu; phần làm bài ở U11), US-ASM-006, US-ASM-007. US-ASM-002 đã loại.
+- **Story**: US-ASM-004 (soạn khung, kiểm/xuất tài liệu; phần làm bài ở U11), US-ASM-006, US-ASM-007. Đề chung cấp môn đã loại.
 - **Use case**: UC-ASM-02, 03, 04.
 - **Thiết kế nguồn**: `construction/u09-question-type-authoring/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`DocxOutlineImporter`, `DocxExporter`, `DiagramRasterizer`, `DiagramContentCleaner`, `EssayDocument`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -66,7 +66,7 @@ PostgreSQL `question_type_config`, `document_skeletons`.
 - [ ] **Bước 4** - `DocumentValidator`: `validateSkeleton`, `validateForSave` (hash khóa block), `validateForSubmit` (block giảng viên đủ, sơ đồ không rỗng, `requiredDiagrams`, có nội dung người học); ESSAY chỉ block chữ, trần 1 000 000 ký tự (F5, P2, BR-U09-20…21, 30…38).
 - [ ] **Bước 5** - `TypeConfigService` và `TypeConfigPort` (`check`, `copy`) cho QUIZ/ESSAY/DOCUMENT (F1, F4, BR-U09-01…03, 10…14).
 - [ ] **Bước 6** - `SkeletonService` (lưu khung, hash, làm sạch SVG) (F2).
-- [ ] **Bước 7** - Nhập DOCX: `SafeZipGuard`, `DocxImporter`, `BlockMapper`, `PngChunkReader`, `DiagramDetector` (PNG `tEXt`/`zTXt`/`iTXt`, SVG `content`, giải nén diagram nén), báo cáo nhập (F3, P3, BR-U09-40…44).
+- [ ] **Bước 7** - Nhập DOCX: `SafeZipGuard`, `DocxImporter`, `BlockMapper`, `PngChunkReader`, `DiagramDetector` (PNG `tEXt`/`zTXt`/`iTXt`, SVG `content`, giải nén diagram nén), báo cáo nhập. Hỗ trợ cả khung giảng viên và preview block `LEARNER` cho U11 (F3, F3a, P3, BR-U09-40…48).
 - [ ] **Bước 8** - Xuất DOCX: `DocxExportService`, `JsvgRasterizer`, `PngChunkWriter`, semaphore 2 (F6, P4, BR-U09-50…52).
 - [ ] **Bước 9** - `DiagramCompactor` (F7, BR-U09-60).
 - [ ] **Bước 10** - `DocumentModelService` cài `DocumentModelPort`; thay adapter tạm của U06 và U08.
@@ -91,7 +91,7 @@ PostgreSQL `question_type_config`, `document_skeletons`.
 
 - [ ] **Bước 21** - `DocumentEditor` (3 chế độ), các block, `LockedBadge`, ảo hóa > 200 block (P7).
 - [ ] **Bước 22** - `DrawioPanel` (iframe `embed.diagrams.net`, kiểm origin, timeout 10 s, lưu XML + SVG) (P6).
-- [ ] **Bước 23** - `EssayEditor`; `QuizConfigForm`, `DocumentConfigForm` (`SkeletonEditor`, `DocxImportDialog`, `RequiredDiagramsForm`) gắn vào `TypeConfigSlot` của U08.
+- [ ] **Bước 23** - `EssayEditor`; `QuizConfigForm`, `DocumentConfigForm` (`SkeletonEditor`, `DocxImportDialog`, `RequiredDiagramsForm`) gắn vào `TypeConfigSlot` của U08; `LearnerDocxImportDialog` dùng trong `DocumentWorkspace` U11.
 - [ ] **Bước 24** - Test frontend: chế độ `LEARNER` không sửa/xóa block khóa, bảng/sơ đồ giảng viên sửa được nhưng không xóa, message từ origin lạ bị bỏ qua.
 - [ ] **Bước 25** - Tóm tắt: `code/frontend-summary.md`.
 

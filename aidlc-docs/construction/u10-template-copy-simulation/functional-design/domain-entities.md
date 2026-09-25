@@ -30,7 +30,7 @@ U10 sở hữu phát hành template cấp môn, dòng nguồn gốc (lineage) c�
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `publicationId` | UUID | Khóa; publication `deliveryMode = SIMULATION` |
-| `maxAttempts` | số hoặc rỗng | Rỗng = không giới hạn |
+| `maxAttempts` | số nguyên | Bắt buộc, mặc định 3, từ 1 đến 10 |
 | `resultPolicy` | enum | `HIGHEST`, `LATEST`, `AVERAGE` |
 | `answerRelease` | enum | `AFTER_ATTEMPT`, `AFTER_CLOSE`, `NEVER` |
 | `countsTowardGrade` | bool | |

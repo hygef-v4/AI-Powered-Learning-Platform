@@ -17,17 +17,17 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 ### Hành vi điển hình
 
 - Đăng nhập bằng email trường đã được cấp, quản lý hồ sơ và khôi phục mật khẩu; không tự đăng ký tài khoản công khai.
-- Truy cập lớp, học nội dung, đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất.
+- Truy cập lớp và học liệu đã phát hành; xem bài sắp hạn, trạng thái nộp và điểm đã công bố trên dashboard cá nhân.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
 - Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
 - Nhận và làm mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
 - Làm simulation exam trong giới hạn lượt, biết rõ bài có hoặc không tính điểm thành phần và chính sách lấy kết quả.
-- Thực hiện thanh toán và theo dõi trạng thái cấp quyền.
+- Mua credit AI và theo dõi trạng thái thanh toán/cộng credit.
 - Nhận thông báo thiết yếu.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-LRN-002`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-GRD-006`, `US-GRD-007`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 3. P-INSTRUCTOR - Giảng viên
 
@@ -50,11 +50,11 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
 - Soạn, xem trước từng loại bài đánh giá và cấu hình simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
-- Xem tiến độ nộp, gửi nhắc, chốt điểm và xem sổ điểm của lớp được phân công.
+- Xem tiến độ nộp, chốt điểm, xuất bảng điểm của lớp được phân công; hệ thống tự nhắc người chưa nộp trước hạn.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002` đến `US-CNT-005`, `US-LRN-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-008`, `US-RPT-001`, `US-RPT-003`, `US-RPT-004`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-NTF-001`.
 
 ## 4. P-SUBJECT-MANAGER - Chủ nhiệm môn
 
@@ -76,7 +76,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-003`, `US-CNT-005`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-002`, `US-ASM-002`, `US-ASM-004` đến `US-ASM-009`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-NTF-001`.
 
 ## 5. P-ADMIN - Quản trị viên
 
@@ -86,19 +86,19 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - **Mục tiêu**: Cấu hình hệ thống đúng quyền, xử lý ngoại lệ vận hành và có bằng chứng audit khi cần điều tra.
 - **Động lực**: Giữ nền tảng an toàn, nhất quán và đủ ổn định cho đợt thử nghiệm với người thật.
 - **Khó khăn**: Sai phân quyền hoặc cấp quyền thanh toán có thể làm lộ dữ liệu; cần thông tin rõ nhưng không được thay đổi/xóa audit log.
-- **Nhu cầu truy cập**: Quyền quản trị được kiểm soát phía server; hỗ trợ MFA; mọi thay đổi đặc quyền và nghiệp vụ quan trọng phải được audit.
+- **Nhu cầu truy cập**: Quyền quản trị được kiểm soát phía server; mọi thay đổi đặc quyền và nghiệp vụ quan trọng phải được audit.
 
 ### Hành vi điển hình
 
 - Quản lý tài khoản, bốn vai trò và phạm vi môn của Chủ nhiệm môn.
 - Cấu hình quota, model, giới hạn chi phí/kill-switch và giám sát dịch vụ AI theo cách không khóa nhà cung cấp.
 - Tạo cấu trúc môn/lớp, phân công và ghi danh.
-- Đối soát giao dịch và quyền truy cập.
+- Đối soát giao dịch và credit AI đã cộng.
 - Tra cứu audit theo phạm vi quản trị.
 
 ### Stories liên quan
 
-`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-RPT-004`, `US-PAY-002`, `US-PAY-003`, `US-AUD-001`, `US-NTF-001`.
+`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-PAY-002`, `US-PAY-003`, `US-AUD-001`, `US-NTF-001`.
 
 ## 6. Ma trận persona - miền nghiệp vụ
 

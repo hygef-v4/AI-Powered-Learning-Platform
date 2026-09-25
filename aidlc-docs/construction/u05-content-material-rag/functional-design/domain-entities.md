@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U05 sở hữu chương, bài giảng và phiên bản, mục nội dung, liên kết bài cấp môn vào lớp, nguồn YouTube, tài liệu nguồn RAG và đoạn (chunk) có vector. U05 **không** sở hữu: byte file (U03), quyền vào lớp (U04), gọi LLM tạo đề/chấm (U13), job (U02).
+U05 sở hữu chương, bài giảng và phiên bản, mục nội dung, liên kết bài cấp môn vào lớp, nguồn YouTube, tài liệu nguồn RAG và đoạn (chunk) có vector, thông báo và hỏi đáp lớp. U05 **không** sở hữu: byte file (U03), quyền vào lớp (U04), gọi LLM tạo đề/chấm (U13), job (U02) hoặc inbox thông báo (U16).
 
 ## 2. `Chapter`
 
@@ -53,7 +53,7 @@ Mỗi bài tối đa 1 `DRAFT` và 1 `PUBLISHED`.
 
 ## 6. YouTube
 
-`YoutubeSource`: `id`, `url`, `kind` (`VIDEO`, `PLAYLIST`), `externalId`, `status` (`PENDING`, `RESOLVED`, `FAILED`).
+`YoutubeSource`: `id`, `url`, `kind` (`VIDEO`, `PLAYLIST`), `externalId`, `chargedToAccountId` (người thêm nguồn), `status` (`PENDING`, `RESOLVED`, `FAILED`).
 
 `YoutubeVideo`: `id`, `sourceId`, `videoId`, `title`, `orderNo`, `sourceDocumentId`.
 
@@ -66,12 +66,21 @@ Mỗi bài tối đa 1 `DRAFT` và 1 `PUBLISHED`.
 | `id` | UUID | |
 | `kind` | enum | `TEXT`, `FILE`, `YOUTUBE_VIDEO` |
 | `contentKey` | chuỗi | SHA-256 nội dung (`TEXT`), `artifactId` (`FILE`) hoặc `videoId` (`YOUTUBE_VIDEO`); duy nhất - dùng lại khi phiên bản mới giữ nguyên mục |
+| `chargedToAccountId` | UUID | Người tải/phát hành đã tạo nguồn mới; job ingest và retry dùng cùng tài khoản này để trừ credit embedding |
 | `indexStatus` | enum | `PENDING`, `PROCESSING`, `INDEXED`, `NO_TEXT`, `NO_CAPTION`, `FAILED` |
 | `errorCode` | chuỗi | Mã lỗi an toàn |
 | `chunkCount` | số | |
 | `language` | chuỗi | Ngôn ngữ caption |
 
 `RagChunk`: `id`, `sourceDocumentId`, `chunkNo`, `text` (≤ ~3 000 ký tự), `pageNo` hoặc `startMs`/`endMs`, `embedding` (vector 768 chiều).
+
+## 7a. Nội dung trao đổi trong lớp
+
+`ClassAnnouncement`: `id`, `classId`, `title`, `body`, `authorId`, `status` (`VISIBLE`, `HIDDEN`), `createdAt`, `hiddenAt`, `hiddenBy`, `hideReason`.
+
+`ClassQuestion`: `id`, `classId`, `title`, `body`, `authorId`, `status` (`VISIBLE`, `HIDDEN`), `createdAt`, thông tin ẩn như trên.
+
+`ClassAnswer`: `id`, `questionId`, `authorId`, `body`, `status` (`VISIBLE`, `HIDDEN`), `createdAt`, thông tin ẩn như trên. Câu trả lời luôn thuộc lớp của câu hỏi; không có bảng thành viên hay thông báo riêng trong U05.
 
 ## 8. Trạng thái
 
@@ -89,10 +98,12 @@ SourceDocument: PENDING -> PROCESSING -> INDEXED
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `PublishedContentPort` | U05 cung cấp cho U04 | `listForClass(classId)`: chương, bài, mục đã phát hành (của lớp + bài cấp môn đã liên kết) |
-| `RagRetrievalPort` | U05 cung cấp cho U13 | `retrieve(scope, query, k)` → đoạn kèm nguồn (bài, phiên bản, trang/timestamp) |
+| `RagRetrievalPort` | U05 cung cấp cho U13 | `retrieve(scope, query, k, requesterId, requestRef)` → đoạn kèm nguồn (bài, phiên bản, trang/timestamp); embedding câu hỏi tính credit cho `requesterId` |
 | `ContentRefPort` | U05 cung cấp cho U08 | Kiểm `lessonVersionId` tồn tại, thuộc phạm vi |
 | `ClassAccessPort` | U05 dùng U04 | Ghi danh, phạm vi lớp |
 | `ArtifactPort` | U05 dùng U03 | `attach`, `open`, `issueDownloadToken` |
 | `JobPort`, `AuditPort` | U05 dùng U02 | Job ingest, audit |
 | `EmbeddingPort` | U05 dùng, adapter Gemini | `embed(texts)` → vector |
+| `CreditPort` | U05 dùng U07 | `reserve/settle/release` credit cho embedding; adapter thật bắt buộc khi bật Gemini |
 | `YoutubePort` | U05 dùng, adapter YouTube | Giải playlist, lấy caption |
+| `EventPublisherPort` | U05 dùng U02; U16 nhận | Sau commit phát `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted`; payload gồm eventId, đối tượngId, actorId, classId; sự kiện trả lời có thêm questionAuthorId để U16 chọn người nhận mà không đọc bảng U05 |

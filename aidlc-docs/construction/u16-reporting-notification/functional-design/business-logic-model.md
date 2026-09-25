@@ -21,3 +21,11 @@
 
 ## F5 - Báo cáo tiến độ
 1. Giảng viên chọn lượt phát hành → tổng hợp theo BR-U16-30.
+
+## F6 - Dashboard cá nhân
+1. Lấy lớp đang ghi danh qua U04, bài đang mở/sắp hạn qua U08, trạng thái/lượt của chính người học qua U11/U14, điểm `PUBLISHED` qua U15 (BR-U16-40, 41).
+2. Nếu lớp bật phân bố, U15 tổng hợp điểm công bố theo bài; U16 chỉ trả các khoảng đáp ứng BR-U16-42. Không trả điểm của người khác.
+
+## F7 - Xuất bảng điểm
+1. Kiểm quyền lớp/bài và bộ lọc trước khi đọc dữ liệu; lấy bảng điểm từ U15, trạng thái nộp từ U11/U14 (BR-U16-43, 44).
+2. Tạo CSV hoặc XLSX dạng stream, escape giá trị không tin cậy, audit yêu cầu xuất; không lưu tệp xuất vào U03 (BR-U16-45).

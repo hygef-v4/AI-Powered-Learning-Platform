@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U09 sở hữu cấu hình riêng của bài `QUIZ`, `ESSAY`, `DOCUMENT`; **mô hình tài liệu** (dùng chung cho soạn khung, làm bài, chấm); nhập khung từ DOCX; xuất tài liệu ra DOCX; nhận sơ đồ Draw.io nhúng trong ảnh; quy tắc kiểm và rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
+U09 sở hữu cấu hình riêng của bài `QUIZ`, `ESSAY`, `DOCUMENT`; **mô hình tài liệu** (dùng chung cho soạn khung, làm bài, chấm); nhập khung từ DOCX và chuyển DOCX của người học thành block nháp; xuất tài liệu ra DOCX; nhận sơ đồ Draw.io nhúng trong ảnh; quy tắc kiểm và rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
 
 ## 2. `QuestionTypeConfig` (bảng `question_type_config`, khóa = `assignmentId`)
 
@@ -52,6 +52,7 @@ Document
 | `TypeConfigPort` | U09 cài cho U08 (`C`), U10 dùng | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình và khung tài liệu |
 | `DocumentModelPort` | U09 cài cho U06 (`C`), U11, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
 | `DocxExportPort` | U09 cung cấp cho U11, U15 | Tài liệu → DOCX |
+| `DocxLearnerImportPort` | U09 cung cấp cho U11 | DOCX → block `LEARNER` xem trước + báo cáo; U11 xác nhận và lưu nháp bằng kiểm phiên bản |
 | `DiagramCompactPort` | U09 cung cấp cho U13 | XML đầy đủ → XML rút gọn theo allowlist |
 | `ArtifactPort` | U09 dùng U03 | Ảnh `DOCUMENT_IMAGE` (DOCX nhập khung chỉ xử lý trong bộ nhớ, không lưu) |
 | `AssignmentQueryPort` | U09 dùng U08 | Loại bài, trạng thái `DRAFT` |

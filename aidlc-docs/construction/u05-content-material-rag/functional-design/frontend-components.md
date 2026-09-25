@@ -19,6 +19,10 @@ shared/content/
     TextItemView          markdown đã làm sạch
     FileItemView          nút Tải (PDF: thêm nút Xem)
     YoutubeItemView       iframe youtube-nocookie
+app/classes/[id]/communication/
+  ClassAnnouncementList  thông báo lớp, phân trang
+  ClassDiscussionList    câu hỏi và câu trả lời, phân trang
+  ClassPostForm          giảng viên đăng thông báo; thành viên đặt câu hỏi/trả lời
 ```
 
 | Component | Hành vi | API |
@@ -28,6 +32,8 @@ shared/content/
 | `VersionBar` | Phát hành có hộp xác nhận | `POST /api/v1/lessons/{id}/publish` |
 | `ItemList` | Thêm/sửa/xóa/đổi thứ tự mục trong bản nháp | `POST`, `PATCH`, `DELETE /api/v1/lesson-drafts/{id}/items` |
 | `YoutubeItemEditor` | Kiểm URL phía client; sau khi lưu hiện từng video và trạng thái | như trên |
-| `IngestionStatusBadge` | Poll 5 giây khi đang `PENDING`/`PROCESSING`; nút Thử lại khi `FAILED` | `POST /api/v1/source-documents/{id}/retry` |
+| `IngestionStatusBadge` | Poll 5 giây khi đang `PENDING`/`PROCESSING`; `BUSY` hiện "Hệ thống đang bận", `INSUFFICIENT_CREDIT` hiện "Không đủ credit AI"; nút Thử lại khi `FAILED` | `POST /api/v1/source-documents/{id}/retry` |
 | `SubjectLessonPicker` | Danh sách bài cấp môn đã phát hành, chọn chương đích | `POST`, `DELETE /api/v1/classes/{id}/lesson-links` |
 | `FileItemView` | Gọi API lấy URL tải (token 5 phút) khi bấm | `POST /api/v1/classes/{classId}/items/{itemId}/download` |
+| `ClassAnnouncementList` | Thành viên lớp xem; giảng viên đăng hoặc ẩn có lý do | `GET`, `POST /api/v1/classes/{id}/announcements`, `POST /api/v1/classes/{id}/announcements/{postId}:hide` |
+| `ClassDiscussionList` | Thành viên lớp đặt câu hỏi/trả lời; giảng viên ẩn nội dung vi phạm có lý do | `GET`, `POST /api/v1/classes/{id}/questions`, `GET`, `POST /api/v1/classes/{id}/questions/{questionId}/answers`, `POST /api/v1/classes/{id}/questions/{questionId}:hide`, `POST /api/v1/classes/{id}/questions/{questionId}/answers/{answerId}:hide` |

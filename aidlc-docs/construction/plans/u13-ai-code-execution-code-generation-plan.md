@@ -87,7 +87,7 @@ PostgreSQL `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, 
 
 - [ ] **Bước 16** - Flyway `V20260925_2000__u13_ai_code.sql` (seed 4 việc, `REVOKE` trên `ai_calls`).
 - [ ] **Bước 17** - JPA repository.
-- [ ] **Bước 18** - Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày chặn yêu cầu mới. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn.
+- [ ] **Bước 18** - Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày và quota Gemini báo "Hệ thống đang bận"; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn.
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm E - API
@@ -102,7 +102,7 @@ PostgreSQL `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, 
 - [ ] **Bước 24** - `AiDraftDialog` (credit ước tính, trích dẫn, chọn câu) gắn vào U08, U06, U10; `AiGradingPanel` (cho U15).
 - [ ] **Bước 25** - `CodeEditor` (Monaco, nhiều file), `CodeRunResult`, `VerifySolutionButton`; gắn vào `CodeWorkspace` (U11) và trình soạn câu `CODE` (U06).
 - [ ] **Bước 26** - `AiSettingsPage`, `AiUsageDashboard`.
-- [ ] **Bước 27** - Test frontend: dialog hiện lỗi "không đủ credit"/"AI đang tắt", kết quả test ẩn chỉ đạt/không.
+- [ ] **Bước 27** - Test frontend: dialog phân biệt "Không đủ credit AI", "Hệ thống đang bận" và "AI đang tắt"; kết quả test ẩn chỉ đạt/không.
 - [ ] **Bước 28** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm G - Hoàn tất

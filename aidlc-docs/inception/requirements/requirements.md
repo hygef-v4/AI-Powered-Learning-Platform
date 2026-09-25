@@ -22,6 +22,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 
 ### 2.3 Ngoài phạm vi MVP
 
+- Dự án chỉ có một phạm vi MVP, không chia đợt Phase 2. Thông báo/hỏi đáp lớp, dashboard kết quả cá nhân và xuất bảng điểm thuộc MVP. Các chức năng đã loại gồm tìm kiếm/tóm tắt học liệu cho người dùng, phân tích chất lượng câu hỏi, gia hạn nộp bài cá nhân, phúc khảo điểm, kiểm tra tương đồng, báo cáo độ lệch điểm AI, tiến độ hoàn thành bài học và đề chung cấp môn; chúng không có story hoặc UC trong catalog hiện hành. Quy trình AI đề xuất điểm rồi giảng viên quyết định điểm cuối vẫn thuộc MVP.
 - Ứng dụng mobile native
 - Multi-tenancy và cô lập dữ liệu giữa nhiều tổ chức
 - Đồng bộ LMS hoặc SSO của tổ chức
@@ -182,7 +183,7 @@ Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm 
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
-Hệ thống phải hỗ trợ trắc nghiệm, bài viết (ESSAY, văn bản thường, không giới hạn số từ), bài tài liệu (DOCUMENT: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; giảng viên có thể nhập khung từ DOCX, bài nộp xuất được ra DOCX) và Code Lab. Với khối sơ đồ, người học vẽ trên canvas Draw.io nhúng trong web và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
+Hệ thống phải hỗ trợ trắc nghiệm, bài viết (ESSAY, văn bản thường, không giới hạn số từ), bài tài liệu (DOCUMENT: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; giảng viên có thể nhập khung từ DOCX; người học có thể nhập DOCX vào lượt DOCUMENT đang làm, xem trước rồi xác nhận để thêm nội dung của mình mà không sửa khung giảng viên; bài nộp xuất được ra DOCX) và Code Lab. Với khối sơ đồ, người học vẽ trên canvas Draw.io nhúng trong web và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
 
 ### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
 
@@ -200,17 +201,19 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 Quản trị viên phải có thể cấu hình model được phép, quota, giới hạn chi phí và kill-switch qua ranh giới provider-neutral; xem nhật ký trạng thái/chi phí mà không lộ prompt, dữ liệu học tập hoặc secret ngoài quyền.
 
+Mỗi lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của tài khoản chịu phí theo token sử dụng. Embedding học liệu chạy nền tính cho người tải/phát hành học liệu; embedding truy xuất tính cho người yêu cầu AI. Nếu hệ thống hết hạn mức AI, trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối; thiếu credit cá nhân được báo riêng.
+
 ### FR-022 - Tự ghi danh bằng mã mời lớp
 
 MVP (bản đơn giản, U04) hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
 
-### FR-023 - Cộng tác và xử lý ngoại lệ đánh giá (Phase 2)
+### FR-023 - Thông báo và hỏi đáp lớp
 
-Phase 2 hỗ trợ tìm kiếm ngữ nghĩa và tóm tắt học liệu bằng AI, thông báo/hỏi đáp lớp, gia hạn nộp bài theo cá nhân, phúc khảo và kiểm tra tương đồng mang tính tham khảo.
+MVP cho phép giảng viên đăng thông báo tới lớp mình dạy; thành viên lớp đọc, đặt câu hỏi và phản hồi trong đúng lớp. Nội dung cần kiểm quyền theo lớp, lọc đầu vào không an toàn, lưu người tạo và thời gian; sự kiện mới gửi thông báo trong ứng dụng cho người liên quan. RAG nội bộ phục vụ AI soạn đề vẫn thuộc MVP. Tìm kiếm/tóm tắt học liệu cho người dùng, gia hạn nộp bài cá nhân, phúc khảo và kiểm tra tương đồng nằm ngoài phạm vi dự án.
 
-### FR-024 - Báo cáo và phân tích nâng cao (Phase 2)
+### FR-024 - Dashboard cá nhân và xuất bảng điểm
 
-Phase 2 hỗ trợ dashboard kết quả cá nhân, xuất bảng điểm, phân tích câu hỏi và so sánh điểm AI đề xuất với điểm giảng viên chốt; báo cáo không được dùng để tự động kết luận gian lận hoặc đánh giá năng lực cá nhân giảng viên.
+MVP cung cấp dashboard cho người học gồm bài sắp hạn, trạng thái bài nộp và điểm đã công bố của chính mình; phân bố lớp chỉ hiển thị khi lớp cho phép và đủ điều kiện ẩn danh. Giảng viên/quản trị viên có quyền xuất bảng điểm CSV hoặc XLSX theo lớp/bài; kiểm phạm vi trước khi tạo tệp, ghi rõ mục chưa nộp/chưa chốt và không tự tính điểm tổng theo hệ số. Phân tích chất lượng câu hỏi và báo cáo thống kê độ lệch giữa điểm AI đề xuất với điểm chốt nằm ngoài phạm vi. Bước AI đề xuất và giảng viên chốt từng bài vẫn thuộc MVP (FR-008).
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -265,7 +268,7 @@ Hệ thống phải cung cấp simulation exam để sinh viên thi thử. Khôn
 
 **Tiêu chí chấp nhận:**
 
-- Giảng viên cấu hình số lượt tối đa, cửa sổ làm bài, cách lấy kết quả cao nhất/gần nhất/trung bình và thời điểm hiển thị đáp án.
+- Thi thử mặc định 3 lượt mỗi người học; giảng viên có thể chỉnh giới hạn từ 1 đến 10 lượt trước khi lượt đầu tiên bắt đầu, không có lựa chọn không giới hạn. Giảng viên cấu hình cửa sổ làm bài, cách lấy kết quả cao nhất/gần nhất/trung bình và thời điểm hiển thị đáp án.
 - Server thực thi giới hạn lượt và thời gian; mỗi attempt giữ snapshot đề/version riêng.
 - Nếu được cấu hình không tính điểm, kết quả chỉ phục vụ luyện tập/phản hồi và không đi vào điểm chính thức.
 - Nếu được cấu hình tính điểm thành phần, chính sách lấy kết quả được khóa khi đã có attempt; thay đổi sau đó cần version mới và audit.
