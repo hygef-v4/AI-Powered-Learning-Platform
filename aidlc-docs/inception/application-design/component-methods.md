@@ -1,126 +1,148 @@
 # Component Methods
 
-Các chữ ký dưới đây là contract cấp cao; DTO/schema và business rule chi tiết được chốt tại Functional Design.
+Các chữ ký dưới đây là contract cấp cao; DTO, quy tắc và API chi tiết nằm trong Functional Design và code generation plan của từng unit (`aidlc-docs/construction/`).
 
-`token` trong `activateAccount` và `resetPassword` là mã OTP dùng một lần: gửi qua email, lưu dạng hash có TTL trong Redis, giới hạn số lần nhập sai và bị xóa ngay sau khi dùng thành công. Không có cơ chế token link riêng bên cạnh OTP. OTP kích hoạt chỉ được gửi khi người dùng gọi `requestActivation`; tạo hoặc nhập tài khoản không gửi email. `requestActivation` và `requestPasswordReset` luôn trả `Accepted` trung tính và bị giới hạn tần suất theo email và client.
-
-## Identity & Access
+## Identity & Access (U01)
 
 ```text
 requestActivation(schoolEmail, clientContext) -> Accepted
-activateAccount(token, newPassword) -> ActivationResult
+activateAccount(otp, newPassword) -> ActivationResult
 authenticate(schoolEmail, password, clientContext) -> Session
+refresh(refreshCookie) -> Session
 logout(sessionId) -> void
 requestPasswordReset(email) -> Accepted
-resetPassword(token, newPassword) -> void
+resetPassword(otp, newPassword) -> void
 updateProfile(actor, profilePatch) -> Profile
-assignRolesAndScopes(admin, userId, roleScopePatch) -> AuthorizationSnapshot
+changeRole(admin, userId, role) -> Account
 changeAccountStatus(admin, userId, status, reason) -> Account
+importAccounts(admin, csvFile) -> ImportResult
 authorize(actor, action, resourceRef) -> AuthorizationDecision
 ```
-## Academic & Group
+
+## Audit, Job & Event (U02)
 
 ```text
-createSubject(admin, command) -> Subject
-createClass(admin, command) -> Class
-assignInstructor(admin, classId, instructorId) -> Assignment
-changeClassState(actor, classId, targetState) -> Class
-enrollLearner(actor, classId, learnerId) -> Enrollment
-joinByInviteCode(learner, code) -> Enrollment
-createGroups(instructor, classId, groupCommands) -> GroupSet
-appointLeader(instructor, groupId, learnerId) -> Group
-requestLeaderChange(learner, groupId, reason, proposedLearnerId?) -> LeaderChangeRequest
-decideLeaderChange(instructor, requestId, decision) -> Group
-assignIndividualParts(instructor, groupAssignmentId, allocations) -> AllocationSet
-```
-
-## Content, Learning & Banks
-
-```text
-uploadSubjectMaterial(subjectManager, subjectId, fileRef, metadata) -> Material
-registerYoutubeSource(actor, lessonId, videoOrPlaylistUrl) -> SourceRegistration
-requestTranscriptIngestion(actor, sourceId) -> JobReference
-publishClassContent(instructor, classId, contentVersionId) -> PublishedContent
-searchAuthorizedContent(actor, scope, query) -> SearchResult
-getAuthorizedClassContent(learner, classId) -> PublishedContentList
-createRubric(actor, scope, rubricDraft) -> RubricVersion
-createQuestion(actor, scope, questionDraft) -> QuestionVersion
-createQuestionVersion(actor, questionStableKey, changeSet) -> QuestionVersion
-publishQuestionVersion(actor, questionVersionId, effectivePolicy) -> VersionPublication
-cloneBankItem(actor, itemVersionId, targetScope) -> DraftVersion
-analyzeQuestion(actor, questionId, period) -> QuestionAnalytics
-```
-
-## Assessment & Submission
-
-```text
-createAssessmentDraft(author, scope, assessmentDraft) -> AssessmentVersion
-reviseAssignedAssessment(instructor, assignmentStableKey, baseVersionId, changeSet) -> AssessmentVersion
-reviewAssessment(author, assessmentVersionId) -> ReviewResult
-publishClassAssessment(instructor, assessmentVersionId, classId, schedule) -> Publication
-publishCommonAssessment(subjectManager, assessmentVersionId, subjectId, schedule) -> PublicationSet
-publishSubjectTemplate(subjectManager, assessmentVersionId, subjectId) -> AssessmentTemplateVersion
-copySubjectTemplate(instructor, templateVersionId, targetClassId) -> AssessmentVersion
-copyAssessmentToClass(instructor, sourceAssessmentId, targetClassId) -> AssessmentVersion
-copyRubricToClass(instructor, sourceRubricVersionId, targetClassId) -> RubricVersion
-configureSimulationExam(instructor, assessmentVersionId, simulationPolicy) -> AssessmentVersion
-startAttempt(learner, publicationId) -> AttemptSnapshot
-saveAttemptDraft(learner, publicationId, payload, idempotencyKey) -> DraftReceipt
-submitAttempt(learner, publicationId, payloadRef, idempotencyKey) -> SubmissionReceipt
-submitDrawioXml(learner, publicationId, fullXmlArtifact, idempotencyKey) -> SubmissionReceipt
-submitIndividualGroupPart(learner, allocationId, artifact, idempotencyKey) -> SubmissionReceipt
-requestGroupComposite(instructor, groupAssignmentId, orderedPartVersions) -> JobReference
-finalizeGroupComposite(instructor, compositeVersionId, selectionPatch) -> CompositeVersion
-cloneAssessment(author, assessmentVersionId, targetScope) -> AssessmentVersion
-retirePublication(author, publicationId, reason) -> Publication
-```
-
-## Grading, AI & Code Execution
-
-```text
-gradeDeterministic(submissionId) -> PreliminaryGrade
-recordManualGrade(instructor, submissionId, gradeDraft) -> GradeDraft
-requestAiGradeProposal(instructor, submissionId, rubricVersionId) -> JobReference
-createCompactDrawioArtifact(aiJobId, fullXmlArtifactId) -> DerivedArtifact
-reviewGradeProposal(instructor, proposalId, decisionPatch) -> GradeDraft
-finalizeGrade(instructor, submissionId, finalGrade, reason?) -> FinalGrade
-recordCompositeGrade(instructor, compositeVersionId, rubricResult) -> GroupGrade
-finalizeMemberGrade(instructor, groupAssignmentId, learnerId, evidence, finalGrade, reason) -> FinalGrade
-publishGrades(instructor, publicationId, gradeIds) -> PublicationResult
-requestExtension(learner, publicationId, request) -> ExtensionRequest
-requestRegrade(learner, gradeId, request) -> RegradeRequest
-runSimilarityCheck(instructor, submissionIds) -> JobReference
-runCode(actor, codeLabVersionId, sourceArtifact, mode) -> JobReference
-generateAssessmentDraft(actor, scopedSources, generationRequest) -> JobReference
-```
-
-## Payment, Notification, Reporting & Audit
-
-```text
-createPaymentIntent(learner, productId, idempotencyKey) -> PaymentIntent
-handleVerifiedWebhook(rawEvent, signature) -> WebhookResult
-grantEntitlement(paymentEventId, learnerId, productId) -> Entitlement
-reconcilePayments(admin, period) -> JobReference
-queueNotification(eventId, recipients, templateData) -> NotificationBatch
-getSubmissionReport(instructor, classId, filters) -> SubmissionReport
-requestGradeExport(actor, scope, format) -> JobReference
-compareAiAndFinalGrades(actor, scope, period) -> AiQualityReport
 recordAudit(event) -> void
 queryAudit(admin, filters, page) -> AuditPage
+enqueue(jobType, payload, idempotencyKey, runAt?) -> JobReference
+getJobStatus(actor, jobId) -> JobStatus
+publishEvent(routingKey, event) -> void            // sau commit
 ```
 
-## File & Job Platform
+## File & Artifact (U03)
 
 ```text
 store(actor, purpose, file) -> Artifact
-storeDerived(sourceArtifactId, purpose, bytes) -> Artifact
 attach(artifactId, scopeType, scopeId, actor) -> Artifact
 issueDownloadToken(artifactId, accountId) -> DownloadToken
 open(artifactId) -> Stream
-deleteDerived(artifactId) -> void
-enqueue(jobType, payloadRef, policy) -> JobReference
-claim(workerId, supportedTypes) -> JobLease
-complete(jobId, resultRef) -> JobStatus
-fail(jobId, failureClass, safeMessage) -> JobStatus
-getJobStatus(actor, jobId) -> JobStatus
+validateAvatar(artifactId, actor) -> boolean
+```
+
+## Academic & Learning Access (U04)
+
+```text
+createSubject(admin, command) -> Subject
+assignSubjectManager(admin, subjectId, accountId) -> Subject
+createClass(admin, subjectId, command) -> Class
+assignInstructor(admin, classId, accountId) -> Class
+changeClassState(actor, classId, targetState, version) -> Class
+enrollLearners(actor, classId, emailsOrIds) -> EnrollmentRowResult[]
+removeEnrollment(actor, classId, learnerId) -> Enrollment
+setInviteCode(actor, classId, enabled, expiresAt) -> InviteCode
+joinByInviteCode(learner, code) -> Enrollment
+listMyClasses(learner) -> ClassList
+isActiveLearner(accountId, classId) -> boolean
+```
+
+## Content & RAG (U05)
+
+```text
+createChapter(actor, scope, title) -> Chapter
+createLesson(actor, chapterId, title) -> LessonDraft
+editDraftItems(actor, lessonId, itemChanges) -> LessonDraft
+publishLesson(actor, lessonId) -> LessonVersion
+linkSubjectLesson(actor, classChapterId, subjectLessonId) -> ClassLessonLink
+retryIngestion(actor, sourceDocumentId) -> JobReference
+listPublishedContent(classId) -> PublishedContent
+retrieve(scope, query, k) -> RagChunk[]
+```
+
+## Question Bank (U06)
+
+```text
+createDraft(actor, scope, itemType, definition) -> BankItem
+activate(actor, bankItemId) -> BankItem
+newDraftFrom(actor, activeId) -> BankItem
+retire(actor, bankItemId) -> BankItem
+clone(actor, bankItemId, targetScope) -> BankItem
+search(actor, scope, filter) -> Page<BankItem>
+importItems(actor, scope, questionType, file) -> ImportRowResult[]
+score(rubricId, checkedItemIds) -> Score
+```
+
+## Payment & AI Credit (U07)
+
+```text
+createPayment(account, packageId, idempotencyKey) -> CheckoutLink
+handlePayosWebhook(rawBody, signature) -> WebhookResult
+reconcile(admin?, paymentId?) -> ReconcileResult
+reserve(accountId, credits, requestRef) -> Reservation
+settle(reservationId, actualCredits) -> void
+release(reservationId) -> void
+adjustCredits(admin, accountId, delta, reason) -> Ledger
+```
+
+## Assessment, Types, Template & Simulation (U08-U10)
+
+```text
+createAssignment(instructor, classId, type) -> Assignment
+editComponents(actor, assignmentId, changes, version) -> Assignment
+review(actor, assignmentId) -> ReviewResult
+publish(instructor, assignmentId, classId, schedule, latePolicy, attempts) -> Publication
+retirePublication(actor, publicationId, reason) -> Publication
+newVersion(actor, assignmentId) -> Assignment
+cloneAssignment(actor, assignmentId) -> Assignment
+setTypeConfig(actor, assignmentId, config) -> TypeConfig
+saveSkeleton(actor, assignmentId, blocks) -> Skeleton
+importSkeletonDocx(actor, assignmentId, docx) -> SkeletonPreview
+exportDocx(document) -> Stream
+releaseTemplate(subjectManager, templateId) -> TemplateRelease
+copyTemplateToClass(instructor, templateId, classId) -> Assignment
+copyToClass(instructor, assignmentId, targetClassId) -> Assignment
+diff(fromAssignmentId, toAssignmentId) -> AssignmentDiff
+setSimulationPolicy(instructor, publicationId, policy) -> SimulationPolicy
+```
+
+## Attempt, Group & Group Document (U11, U12, U14)
+
+```text
+startAttempt(learner, publicationId) -> AttemptSnapshot
+saveAttempt(learner, attemptId, content, contentVersion) -> SaveReceipt
+submitAttempt(learner, attemptId) -> SubmissionReceipt
+saveGroupSet(instructor, assignmentId, groupSet, version) -> GroupSet
+randomSplit(instructor, assignmentId, maxSize) -> GroupSetPreview
+requestLeaderChange(learner, groupId, reason, proposedLeaderId?) -> LeaderChangeRequest
+decideLeaderChange(instructor, requestId, decision) -> Group
+claimSection(learner, sectionId) -> Section
+saveSectionDraft(learner, sectionId, blocks, version) -> Section
+markSectionDone(learner, sectionId) -> SectionRevision
+releaseSection(actor, sectionId) -> Section
+submitGroupDocument(leader, groupDocumentId) -> GroupSubmission
+```
+
+## AI, Code Execution, Grading, Notification (U13, U15, U16)
+
+```text
+requestQuestionDraft(actor, target, params) -> AiProposal
+requestGradingProposal(instructor, submissionRef) -> AiProposal
+runCode(actor, kind, ownerRef, files) -> CodeRun          // TRY | VERIFY | GRADE
+gradeManually(instructor, gradeId, items, feedback, version) -> Grade
+finalizeGrades(instructor, gradeIds) -> FinalizeResult[]
+publishGrades(instructor, publicationId) -> PublishResult
+overrideGrade(instructor, gradeId, score, reason) -> Grade
+getGradebook(actor, classId) -> Gradebook
+listNotifications(account, page) -> Page<Notification>
+setEmailPreference(account, type, enabled) -> Preference
+getSubmissionProgress(actor, publicationId) -> Progress
 ```

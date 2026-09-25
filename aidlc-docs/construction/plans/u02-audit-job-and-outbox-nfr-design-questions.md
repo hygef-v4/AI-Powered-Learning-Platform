@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Câu hỏi NFR Design
+# U02 Audit, Job & Event - Câu hỏi NFR Design
 
 ## Câu D1 - Cơ chế retry job
 

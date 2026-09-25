@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Deployment Architecture
+# U02 Audit, Job & Event - Deployment Architecture
 
 ```
  mạng internal

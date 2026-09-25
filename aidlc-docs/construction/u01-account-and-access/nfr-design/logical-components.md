@@ -44,7 +44,7 @@
 | `AccountAdminService` | Tạo, đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F9, F11, F12 |
 | `AccountImportService` | Kiểm và commit CSV theo lô, idempotent theo checksum | F10 |
 | `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối | F13 |
-| `OtpMailHandler` (worker) | Nhận job, sinh mã, lưu băm vào Redis, gửi SMTP, retry, dead-letter | NFR-U01-30, 31 |
+| `OtpMailHandler` (worker) | Nhận job, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì job `FAILED` | NFR-U01-30, 31 |
 | `SensitiveDataMasker` | Che dữ liệu nhạy cảm trong log | NFR-U01-50 |
 
 ## 3. Kho dữ liệu

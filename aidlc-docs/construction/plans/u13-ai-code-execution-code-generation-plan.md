@@ -23,6 +23,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `BankQueryPort`, `RubricPort`, `DefinitionValidator` | U06 | Dùng thật |
 | `CreditPort` | U07 | Dùng thật |
 | `DocumentModelPort`, `DiagramCompactPort` | U09 | Dùng thật |
+| `SubmissionQueryPort`, `GroupSubmissionQueryPort`, event `u11.submission.submitted` | U11, U14 (`C`) | U11/U14 code sau U13: adapter tạm báo "chưa hỗ trợ"; U11/U14 cắm adapter thật khi được code |
 | U13 cài `AiDraftPort` (U08, U06, U10), `CodeRunPort` (U11), `CodeLabCheckPort` (U08), `AiKillSwitchPort` (U05) | | Thay adapter tạm của U05, U08, U11 |
 | `AiGradingPort`, `u13.code.graded` | cho U15 | Các unit đó dùng khi được code |
 

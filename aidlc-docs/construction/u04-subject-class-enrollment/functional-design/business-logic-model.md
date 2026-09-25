@@ -43,4 +43,4 @@
 
 ## F9 - Contract cho unit khác
 - `ClassScopePort`/`SubjectScopePort` cho U01 quyết định quyền và chặn hạ role.
-- `ClassAccessPort` cho U05-U15 kiểm ghi danh và lấy danh sách người học.
+- `ClassAccessPort` cho U05, U06, U08-U12, U14-U16 kiểm ghi danh và lấy danh sách người học.

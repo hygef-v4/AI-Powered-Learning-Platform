@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - NFR Design Plan
+# U02 Audit, Job & Event - NFR Design Plan
 
 - [x] Đọc NFR Requirements U02.
 - [x] Phát hiện lệch cơ chế retry giữa U01 Infrastructure Design (queue trễ) và U02 Functional Design (bảng jobs + quét); hỏi người dùng.

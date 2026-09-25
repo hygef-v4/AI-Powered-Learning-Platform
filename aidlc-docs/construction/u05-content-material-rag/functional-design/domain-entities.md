@@ -89,7 +89,7 @@ SourceDocument: PENDING -> PROCESSING -> INDEXED
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `PublishedContentPort` | U05 cung cấp cho U04 | `listForClass(classId)`: chương, bài, mục đã phát hành (của lớp + bài cấp môn đã liên kết) |
-| `RagRetrievalPort` | U05 cung cấp cho U13, U15 | `retrieve(scope, query, k)` → đoạn kèm nguồn (bài, phiên bản, trang/timestamp) |
+| `RagRetrievalPort` | U05 cung cấp cho U13 | `retrieve(scope, query, k)` → đoạn kèm nguồn (bài, phiên bản, trang/timestamp) |
 | `ContentRefPort` | U05 cung cấp cho U08 | Kiểm `lessonVersionId` tồn tại, thuộc phạm vi |
 | `ClassAccessPort` | U05 dùng U04 | Ghi danh, phạm vi lớp |
 | `ArtifactPort` | U05 dùng U03 | `attach`, `open`, `issueDownloadToken` |

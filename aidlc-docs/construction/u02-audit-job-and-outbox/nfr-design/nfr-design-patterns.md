@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - NFR Design Patterns
+# U02 Audit, Job & Event - NFR Design Patterns
 
 ## P1 - Ghi job cùng transaction, gửi sau commit
 - `JobPort.enqueue` INSERT vào `jobs` bằng transaction hiện tại của unit gọi (Spring `@Transactional` propagation `MANDATORY`).

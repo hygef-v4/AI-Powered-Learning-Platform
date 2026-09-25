@@ -35,7 +35,7 @@
 | BR-U09-32 | Người học chèn block của mình ở bất kỳ vị trí nào. | Câu 11 |
 | BR-U09-33 | `requiredDiagrams` (tùy chọn): mỗi loại 1-20 sơ đồ tối thiểu; kiểm lúc nộp. | demo_do_an |
 | BR-U09-34 | Trần kỹ thuật: ≤ 2 000 block, ≤ 100 sơ đồ, mỗi XML sơ đồ ≤ 2 MB, mỗi ảnh ≤ 5 MB. | Thiết kế |
-| BR-U09-35 | XML sơ đồ phải qua parser an toàn (không DOCTYPE/XXE/XInclude; gốc `mxfile` hoặc `mxGraphModel`). | BR-U03-10, US-ASM-004 S2 |
+| BR-U09-35 | XML sơ đồ phải qua parser an toàn (không DOCTYPE/XXE/XInclude; gốc `mxfile` hoặc `mxGraphModel`). | SEC-003, US-ASM-004 S2 |
 | BR-U09-36 | Lưu nháp: kiểm cấu trúc, id block duy nhất, block giảng viên khóa không bị đổi (so `contentHash`). | US-ASM-004 S2 |
 | BR-U09-37 | Nộp: thêm kiểm mọi block giảng viên còn đủ, mọi sơ đồ không rỗng, đủ `requiredDiagrams`, tài liệu có nội dung của người học. | US-ASM-004 S1 |
 | BR-U09-38 | Sơ đồ luôn hiển thị bằng SVG xem trước; không bao giờ hiện XML cho người dùng. Bấm vào mở Draw.io nhúng. | demo_do_an |

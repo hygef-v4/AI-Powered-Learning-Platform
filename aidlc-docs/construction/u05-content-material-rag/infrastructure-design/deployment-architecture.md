@@ -11,7 +11,7 @@
                                        +------------ ghi đoạn --------------+
 ```
 
-**Text alternative**: Trình duyệt dùng trang nội dung qua Nginx tới module U05 trong backend và nhúng video bằng iframe `youtube-nocookie`. Backend lưu nội dung vào PostgreSQL có pgvector, đếm trần embedding trong Redis, và tạo job qua RabbitMQ. Worker nhận job, đọc file từ U03, lấy caption/playlist từ YouTube, gọi Gemini tạo vector rồi ghi đoạn vào PostgreSQL. Khi U13/U15 truy xuất, backend gọi Gemini tạo vector câu hỏi và tìm trong pgvector.
+**Text alternative**: Trình duyệt dùng trang nội dung qua Nginx tới module U05 trong backend và nhúng video bằng iframe `youtube-nocookie`. Backend lưu nội dung vào PostgreSQL có pgvector, đếm trần embedding trong Redis, và tạo job qua RabbitMQ. Worker nhận job, đọc file từ U03, lấy caption/playlist từ YouTube, gọi Gemini tạo vector rồi ghi đoạn vào PostgreSQL. Khi U13 truy xuất, backend gọi Gemini tạo vector câu hỏi và tìm trong pgvector.
 
 ## Lưu ý triển khai
 - Đổi image PostgreSQL giữ nguyên volume dữ liệu (cùng major 16).

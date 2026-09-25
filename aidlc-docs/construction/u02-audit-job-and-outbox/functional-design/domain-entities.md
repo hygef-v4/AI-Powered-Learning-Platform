@@ -1,6 +1,6 @@
-# U02 Audit, Job & Outbox - Domain Entities
+# U02 Audit, Job & Event - Domain Entities
 
-Truy vết: `US-AUD-001`, `UC-OPS-02`. "Outbox" trong tên unit nghĩa là cơ chế đưa sự kiện ra RabbitMQ; **không có bảng outbox**.
+Truy vết: `US-AUD-001`, `UC-OPS-02`. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; unit hiện tên "Audit, Job & Event" và **không có bảng outbox**.
 
 ## 1. Tổng quan
 
@@ -13,7 +13,7 @@ Truy vết: `US-AUD-001`, `UC-OPS-02`. "Outbox" trong tên unit nghĩa là cơ c
 
 ## 2. AuditEvent
 
-Giữ nguyên cấu trúc ERD `audit_events`:
+Cấu trúc bảng `audit_events`:
 
 | Thuộc tính | Ràng buộc |
 |---|---|

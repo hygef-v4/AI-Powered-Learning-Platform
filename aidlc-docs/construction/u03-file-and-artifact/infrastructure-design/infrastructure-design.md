@@ -31,7 +31,7 @@
 
 ## 4. Migration
 
-`V20260925_1000__u03_artifacts.sql`: bảng `artifacts` theo `domain-entities.md` (không có `scan_status`, có `status`, `deleted_at`); index `(scope_type, scope_id)`, `source_artifact_id`, unique `provider_file_id`.
+`V20260925_1000__u03_artifacts.sql`: bảng `artifacts` theo `domain-entities.md` (không có `scan_status`, `source_artifact_id`, `deleted_at`; `status` chỉ `ACTIVE`/`BLOCKED`); index `(scope_type, scope_id)`, unique `provider_file_id`.
 
 ## 5. Compliance
 

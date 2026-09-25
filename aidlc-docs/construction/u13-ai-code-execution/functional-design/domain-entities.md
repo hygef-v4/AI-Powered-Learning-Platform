@@ -65,4 +65,6 @@ Kết quả `CodeRun` bất biến sau `DONE`.
 | `RagRetrievalPort` | U13 dùng U05 | Đoạn học liệu trong phạm vi |
 | `BankQueryPort` | U13 dùng U06 | Câu hỏi, rubric |
 | `DiagramCompactPort`, `DocumentModelPort` | U13 dùng U09 | XML rút gọn, văn bản phẳng |
+| `SubmissionQueryPort`, `GroupSubmissionQueryPort` | U13 dùng U11, U14 (`C`: U13 code trước, adapter tạm báo "chưa hỗ trợ" tới khi U11/U14 có) | Nội dung bài nộp / các mục của một thành viên để AI đề xuất chấm |
+| Event `u11.submission.submitted` | U13 nghe từ U11 | Chấm Code Lab khi nộp (BR-U13-35) |
 | `JobPort`, `AuditPort` | U13 dùng U02 | Chạy nền, audit |

@@ -54,7 +54,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-43 | Ngoài khóa theo tài khoản còn giới hạn theo client để chặn thử nhiều tài khoản. | Câu 5 |
 | BR-U01-44 | Phiên gồm access token 15 phút và refresh token lưu phía server (idle 2 giờ, tối đa 7 ngày). Refresh chỉ thành công khi `credentialVersion` còn khớp. Access token còn hạn không bị kiểm lại, nên mọi thu hồi quyền có hiệu lực chậm **tối đa 15 phút** (được chấp nhận). | US-IAM-002 S1/S3, U01 NFR |
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
-| BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | ERD §3.4 |
+| BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
 
 ## 6. Hồ sơ

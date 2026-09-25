@@ -3,7 +3,7 @@
 ## 1. Sơ đồ
 
 ```
- Trình duyệt (CN môn, GV)                         U04 / U13 / U15 (gọi nội bộ)
+ Trình duyệt (CN môn, GV)                         U04 / U13 (gọi nội bộ)
    |                                                   |
    v                                                   v
  +------------------------------ backend --------------------------------------+
@@ -23,7 +23,7 @@
  +-----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `ContentController`; các service quản lý chương, bài, phiên bản, mục, lưu file qua U03 và tạo job qua U02. Học viên tải file qua `LearnerDownloadController`, kiểm ghi danh ở U04 rồi lấy token U03. U04 đọc nội dung đã phát hành qua `PublishedContentService`; U13/U15 gọi `RetrievalService`, service này kiểm trần, tạo vector câu hỏi bằng Gemini và tìm đoạn gần nhất trong pgvector. Trong worker, `YoutubeResolveHandler` giải playlist và tạo job ingest; `IngestJobHandler` trích chữ, cắt đoạn, kiểm trần, gọi Gemini và ghi đoạn vào PostgreSQL.
+**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `ContentController`; các service quản lý chương, bài, phiên bản, mục, lưu file qua U03 và tạo job qua U02. Học viên tải file qua `LearnerDownloadController`, kiểm ghi danh ở U04 rồi lấy token U03. U04 đọc nội dung đã phát hành qua `PublishedContentService`; U13 gọi `RetrievalService`, service này kiểm trần, tạo vector câu hỏi bằng Gemini và tìm đoạn gần nhất trong pgvector. Trong worker, `YoutubeResolveHandler` giải playlist và tạo job ingest; `IngestJobHandler` trích chữ, cắt đoạn, kiểm trần, gọi Gemini và ghi đoạn vào PostgreSQL.
 
 ## 2. Thành phần
 

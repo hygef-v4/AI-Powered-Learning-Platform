@@ -4,7 +4,7 @@
 
 Tài liệu liệt kê các use case theo mục tiêu nghiệp vụ của người dùng để phục vụ thiết kế, kiểm thử và nghiệm thu. Các thao tác hỗ trợ như tìm kiếm, lọc, xem trạng thái tác vụ nền, retry và xử lý tự động không được tách thành use case riêng mà được mô tả trong use case nghiệp vụ liên quan.
 
-Danh mục giữ 90 use case và 59 story để truy vết; 87 use case và 57 story thuộc phạm vi hiện hành. `US-LRN-002` và `US-LRN-003` cùng ba use case tiến độ bài học được đánh dấu ngoài phạm vi. Chức năng chưa thuộc MVP được đánh dấu `(Phase 2)`.
+Danh mục giữ 90 use case và 59 story để truy vết; 86 use case và 56 story thuộc phạm vi hiện hành. `US-LRN-002` và `US-LRN-003` cùng ba use case tiến độ bài học được đánh dấu ngoài phạm vi; `UC-ASM-08`/`US-ASM-002` (đề chung cấp môn) đã loại. Chức năng chưa thuộc MVP được đánh dấu `(Phase 2)`.
 
 ## 2. Tác nhân
 
@@ -12,7 +12,7 @@ Danh mục giữ 90 use case và 59 story để truy vết; 87 use case và 57 s
 |---|---|---|
 | ACT-01 | Người học | Truy cập lớp, học, làm và nộp bài, tham gia nhóm, thanh toán và xem kết quả của mình |
 | ACT-02 | Giảng viên | Quản lý lớp được phân công, nội dung lớp, nhóm, assignment, bài nộp và điểm |
-| ACT-03 | Chủ nhiệm môn | Kế thừa chức năng giảng viên; quản lý học liệu, ngân hàng và assignment chung trong phạm vi môn hoặc lớp được giao |
+| ACT-03 | Chủ nhiệm môn | Kế thừa chức năng giảng viên; quản lý học liệu, ngân hàng và template đề trong phạm vi môn (không có đề chung cấp môn) hoặc lớp được giao |
 | ACT-04 | Quản trị viên | Quản lý tài khoản, cấu trúc học thuật, cấu hình AI, thanh toán và audit |
 | EXT-01 | Dịch vụ AI | Tạo nội dung nháp và đề xuất chấm theo yêu cầu; không tự phát hành nội dung hoặc quyết định điểm cuối |
 | EXT-02 | Google Drive | Lưu trữ file riêng tư và cung cấp file cho backend hoặc worker sau khi ứng dụng xác minh quyền |
@@ -67,7 +67,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-CAT-10 | Quản trị viên / Giảng viên | Xem danh sách học viên | Enrollment | Cho phép người quản lý lớp xem học viên đang hoặc từng được ghi danh. (`US-CAT-003`) |
 | UC-CAT-11 | Quản trị viên / Giảng viên | Ghi danh học viên | Enrollment | Cho phép người quản lý thêm học viên vào lớp đúng một lần và gửi thông báo liên quan. (`US-CAT-003`) |
 | UC-CAT-12 | Quản trị viên / Giảng viên | Gỡ học viên khỏi lớp | Enrollment | Cho phép người quản lý thu hồi quyền truy cập mới nhưng giữ dữ liệu học tập lịch sử. (`US-CAT-003`) |
-| UC-CAT-13 | Người học | Tự ghi danh bằng mã mời (Phase 2) | Enrollment | Cho phép người học dùng mã mời hợp lệ để tự ghi danh vào lớp đang mở. (`US-CAT-005`) |
+| UC-CAT-13 | Người học | Tự ghi danh bằng mã mời | Enrollment | Cho phép người học dùng mã mời hợp lệ để tự ghi danh vào lớp đang mở. (`US-CAT-005`) |
 
 ### 4.3 Learning Content and RAG
 
@@ -92,8 +92,8 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-GRP-04 | Giảng viên | Xử lý yêu cầu đổi trưởng nhóm | Leader Management | Cho phép giảng viên phê duyệt hoặc từ chối yêu cầu và thông báo quyết định. (`US-GRP-002`) |
 | UC-GRP-05 | Giảng viên | Soạn khung mục việc cho bài nhóm | Group Assignment | Cho phép giảng viên soạn khung tài liệu nhóm với các mục việc; thành viên tự nhận mục, giảng viên/trưởng nhóm nhả khóa khi cần. (`US-GRP-003`) |
 | UC-GRP-06 | Người học | Nhận và làm mục trong tài liệu nhóm | Group Submission | Cho phép thành viên nhận mục, làm trong trang riêng và bấm Xong để ghép realtime vào tài liệu chung. (`US-GRP-004`) |
-| UC-GRP-07 | Giảng viên | Theo dõi tài liệu chung và nộp bài nhóm | Group Submission | Cho phép nhóm xem tài liệu chung cập nhật realtime và trưởng nhóm nộp; hết hạn hệ thống tự nộp. (`US-GRP-005`) |
-| UC-GRP-08 | Giảng viên | Đối chiếu và chấm bài chung | Group Grading | Cho phép giảng viên xem tài liệu chung cạnh các phần cá nhân, tự chấm tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên không theo công thức tự động. (`US-GRP-006`) |
+| UC-GRP-07 | Người học (trưởng nhóm) / Giảng viên | Theo dõi tài liệu chung và nộp bài nhóm | Group Submission | Cho phép nhóm xem tài liệu chung cập nhật realtime và trưởng nhóm nộp; hết hạn hệ thống tự nộp. (`US-GRP-005`) |
+| UC-GRP-08 | Giảng viên | Đối chiếu và chấm tài liệu nhóm | Group Grading | Cho phép giảng viên xem tài liệu nhóm đã nộp cùng phần đóng góp của từng thành viên, tự chấm tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên không theo công thức tự động. (`US-GRP-006`) |
 
 ### 4.5 Learning Journey
 
@@ -128,7 +128,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-ASM-01 | Giảng viên / Chủ nhiệm môn | Xem assignment quản lý | Assignment Management | Cho phép người có quyền xem danh sách và chi tiết assignment trong phạm vi được giao. (`US-ASM-001`, `US-ASM-002`) |
 | UC-ASM-02 | Giảng viên / Chủ nhiệm môn | Soạn bài viết luận | Assignment Authoring | Cho phép người có quyền tạo bài viết luận với hướng dẫn, giới hạn và rubric. (`US-ASM-007`) |
 | UC-ASM-03 | Giảng viên / Chủ nhiệm môn | Soạn bài trắc nghiệm | Assignment Authoring | Cho phép người có quyền tạo bài trắc nghiệm với câu hỏi, đáp án và quy tắc điểm. (`US-ASM-006`) |
-| UC-ASM-04 | Giảng viên / Chủ nhiệm môn | Soạn bài tài liệu (DOCUMENT) có sơ đồ Draw.io | Assignment Authoring | Cho phép người có quyền tạo bài thực hành vẽ UML trên Draw.io, cấu hình yêu cầu và quy tắc kiểm tra XML. (`US-ASM-004`) |
+| UC-ASM-04 | Giảng viên / Chủ nhiệm môn | Soạn bài tài liệu (DOCUMENT) có sơ đồ Draw.io | Assignment Authoring | Cho phép người có quyền tạo bài tài liệu (khung, nhập DOCX, sơ đồ Draw.io bắt buộc) và quy tắc kiểm tra XML. (`US-ASM-004`) |
 | UC-ASM-05 | Giảng viên / Chủ nhiệm môn | Soạn và kiểm thử Code Lab | Assignment Authoring | Cho phép người có quyền cấu hình đề code, ngôn ngữ, quota, test case và chạy lời giải mẫu trong sandbox. (`US-ASM-005`) |
 | UC-ASM-06 | Giảng viên | Soạn bài tập nhóm | Assignment Authoring | Cho phép giảng viên tạo bài DOCUMENT làm nhóm với khung các mục việc và rubric. (`US-GRP-003`) |
 | UC-ASM-07 | Giảng viên | Duyệt và phát hành assignment cho lớp | Assignment Publication | Cho phép giảng viên cấu hình lịch, lượt nộp, xem trước, duyệt và phát hành assignment cho lớp được phân công. (`US-ASM-001`) |
@@ -136,7 +136,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-ASM-09 | Người học | Xem assignment được giao | Assignment Delivery | Cho phép người học xem danh sách, yêu cầu, rubric, thời hạn, số lượt và trạng thái assignment. (`US-ASM-003`) |
 | UC-ASM-10 | Người học | Làm và nộp bài viết luận | Assignment Workspace | Cho phép người học soạn, lưu nháp và nộp câu trả lời mở đang hiệu lực. (`US-ASM-003`, `US-ASM-007`) |
 | UC-ASM-11 | Người học | Làm và nộp bài trắc nghiệm | Assignment Workspace | Cho phép người học trả lời, lưu nháp và nộp bài; câu hỏi xác định được tự chấm theo phiên bản đáp án. (`US-ASM-003`, `US-ASM-006`, `US-GRD-001`) |
-| UC-ASM-12 | Người học | Làm và nộp bài tài liệu có sơ đồ Draw.io | Diagram Assignment | Cho phép người học vẽ UML trên canvas Draw.io, lưu nháp và nộp XML Draw.io đầy đủ làm bản chuẩn. (`US-ASM-003`, `US-ASM-004`) |
+| UC-ASM-12 | Người học | Làm và nộp bài tài liệu có sơ đồ Draw.io | Diagram Assignment | Cho phép người học soạn tài liệu, vẽ sơ đồ trên canvas Draw.io nhúng, lưu nháp và nộp; XML Draw.io đầy đủ lưu trong bài. (`US-ASM-003`, `US-ASM-004`) |
 | UC-ASM-13 | Người học | Làm và nộp bài Code Lab | Code Assignment | Cho phép người học viết, chạy thử trong sandbox, lưu nháp và nộp mã nguồn theo giới hạn đề. (`US-ASM-003`, `US-ASM-005`) |
 | UC-ASM-14 | Người học | Xem lịch sử và nộp lại assignment | Submission | Cho phép người học xem các attempt của mình và tạo attempt mới khi còn thời gian và lượt nộp. (`US-ASM-003`) |
 | UC-ASM-15 | Giảng viên / Chủ nhiệm môn | Quản lý vòng đời assignment | Assignment Lifecycle | Cho phép người có quyền nhân bản, tạo phiên bản mới hoặc ngừng giao assignment mà không sửa dữ liệu lịch sử. (`US-ASM-008`) |
@@ -188,17 +188,17 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 1. Mỗi tài khoản có một role cao nhất; `SUBJECT_MANAGER` kế thừa chức năng giảng viên nhưng quyền dữ liệu vẫn phụ thuộc phân công môn và lớp.
 2. Mỗi môn có một Chủ nhiệm môn và mỗi lớp có đúng một giảng viên chính; một Chủ nhiệm môn có thể được phân công làm giảng viên chính.
-3. Mỗi nhóm có đúng một trưởng nhóm; từng thành viên chỉ nộp phần được giao, còn hệ thống tổng hợp và giảng viên chốt tài liệu chung.
+3. Mỗi nhóm có đúng một trưởng nhóm; thành viên tự nhận mục trong tài liệu chung, trưởng nhóm nộp (hết hạn thì hệ thống tự nộp) và giảng viên chấm tay tài liệu chung.
 4. Phần cá nhân có thể được AI đề xuất điểm; tài liệu chung chỉ do giảng viên chấm thủ công và không có công thức tự động quyết định điểm cuối.
 5. Giảng viên luôn quyết định điểm cuối; AI không tự chốt hoặc công bố điểm.
-6. XML Draw.io đầy đủ là bản nộp chuẩn; XML rút gọn chỉ là dữ liệu dẫn xuất tạm thời khi giảng viên yêu cầu AI chấm.
+6. XML Draw.io đầy đủ trong bài tài liệu là bản nộp chuẩn; XML rút gọn chỉ là dữ liệu dẫn xuất tạm thời khi giảng viên yêu cầu AI chấm.
 7. Nội dung, assignment, question/rubric version, bài nộp, điểm, payment và audit đã phát sinh không bị xóa hồi tố; attempt giữ snapshot đã bắt đầu.
-8. Payment webhook phải được xác minh chữ ký, số tiền, tiền tệ, transaction ID, chống replay và xử lý idempotent trước khi cấp access grant.
+8. Payment webhook phải được xác minh chữ ký, số tiền, tiền tệ, transaction ID, chống replay và xử lý idempotent trước khi cộng credit AI.
 
 ## 6. Bảo mật và khả năng phục hồi
 
 - Validate và giới hạn mọi input, upload, URL YouTube, caption/transcript, XML, tài liệu tổng hợp và dữ liệu nhận từ dịch vụ ngoài.
-- File phải được quét trước khi được dùng cho RAG, AI, nội dung hoặc bài nộp.
+- File được kiểm loại (magic bytes) và dung lượng trước khi dùng; hệ thống không tự quét malware, file bị Google Drive gắn cờ abuse được coi là không dùng được.
 - XML parser phải tắt external entities và áp dụng schema hoặc allowlist Draw.io.
 - Code Lab chạy trong sandbox có quota CPU, bộ nhớ, thời gian và network policy.
 - Dữ liệu gửi AI phải tối thiểu và đúng phạm vi; không gửi secret hoặc dữ liệu không cần thiết.
@@ -208,10 +208,10 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 ## 7. Kiểm tra độ đầy đủ
 
-- Toàn bộ 59/59 user story có ít nhất một use case truy vết trực tiếp trong mô tả.
+- Toàn bộ 59 user story trong catalog (56 còn hiệu lực) có ít nhất một use case truy vết trực tiếp trong mô tả.
 - Danh mục chỉ sử dụng bốn actor nghiệp vụ; hệ thống và dịch vụ ngoài không đứng tên use case riêng.
 - Tìm kiếm, lọc, xử lý nền, retry và tự chấm được giữ như hành vi bên trong use case liên quan.
 - Các bước tạo, xem, sửa, chấp nhận và loại bỏ bản nháp AI được gộp theo phạm vi cấp lớp hoặc cấp môn.
-- Luồng nhóm phân biệt quản lý nhóm, đổi trưởng nhóm, phần cá nhân, tổng hợp tài liệu và chấm bài chung.
+- Luồng nhóm phân biệt quản lý nhóm, đổi trưởng nhóm, nhận/làm mục trong tài liệu nhóm, nộp bài nhóm và chấm tài liệu nhóm.
 - Luồng chấm phân biệt chấm tay, AI hỗ trợ, chốt điểm, công bố điểm và các ngoại lệ Phase 2.
 - Các chức năng Phase 2 được đánh dấu rõ và không bị trộn vào phạm vi MVP.

@@ -18,7 +18,7 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một tài liệu tổng hợp, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi trạng thái bài nộp và kết quả đánh giá, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi trạng thái bài nộp và kết quả đánh giá, đánh giá theo bốn loại trắc nghiệm, bài viết, bài tài liệu có sơ đồ Draw.io nhúng và Code Lab, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -39,7 +39,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 |---|---|
 | Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
-| Chủ nhiệm môn | Quản lý kho học liệu/RAG cấp môn và biên soạn, phát hành đề chung cho mọi lớp thuộc môn được phân công |
+| Chủ nhiệm môn | Quản lý kho học liệu/RAG, ngân hàng và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
 | Đơn vị đào tạo | Vận hành thử nghiệm ổn định, bảo vệ dữ liệu người học và đo hiệu quả MVP |
 | Nhóm phát triển | Quy trình AI-DLC rõ ràng, test tự động, container local và hướng dẫn triển khai |
@@ -64,20 +64,20 @@ Hệ thống phải cung cấp bốn vai trò: người học, giảng viên, Ch
 **Tiêu chí chấp nhận:**
 
 - Người học không thể gọi chức năng của giảng viên, Chủ nhiệm môn hoặc quản trị viên.
-- Giảng viên chỉ truy cập lớp học, khóa học và bài nộp được phân công.
+- Giảng viên chỉ truy cập lớp học và bài nộp được phân công.
 - Chủ nhiệm môn chỉ có quyền cấp môn đối với các môn được phân công, kể cả các lớp do giảng viên khác phụ trách trong những môn đó.
 - Quản trị viên có thể quản lý người dùng, phân vai trò và gán phạm vi môn học cho Chủ nhiệm môn.
 
-### FR-003 - Quản lý môn học, khóa học và lớp học
+### FR-003 - Quản lý môn học và lớp học
 
-Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm môn và tổ chức các lớp thuộc môn. Giảng viên hoặc quản trị viên phải có thể tạo, sửa, xuất bản và lưu trữ khóa học/lớp theo phạm vi quyền; quản lý phân công giảng viên và ghi danh người học.
+Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm môn và tổ chức các lớp thuộc môn. Chỉ quản trị viên tạo môn/lớp và phân công giảng viên chính. Người quản lý lớp (quản trị viên, giảng viên của lớp, Chủ nhiệm môn của môn) sửa thông tin, mở/lưu trữ lớp và ghi danh người học. Hệ thống không có thực thể "khóa học" riêng; mỗi lớp thuộc một môn.
 
 **Tiêu chí chấp nhận:**
 
 - Nội dung chưa xuất bản không hiển thị cho người học.
 - Người học chỉ truy cập lớp mình được ghi danh.
-- Mỗi lớp thuộc một môn và kế thừa học liệu hoặc đề chung đã được phát hành ở cấp môn.
-- Các thay đổi quan trọng về khóa học được ghi audit.
+- Mỗi lớp thuộc một môn; giảng viên chọn bài học cấp môn đưa vào lớp và copy template đề cấp môn thành bài của lớp.
+- Các thay đổi quan trọng về môn/lớp được ghi audit.
 
 ### FR-004 - Nhập và quản lý nội dung học
 
@@ -140,14 +140,14 @@ Người học phải xem được điểm, phản hồi và trạng thái bài 
 
 ### FR-010 - Thanh toán
 
-Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và ghi nhận quyền truy cập tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
+Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
 **Tiêu chí chấp nhận:**
 
 - Webhook được xác minh chữ ký và xử lý idempotent.
 - Trạng thái thanh toán được đối soát với nhà cung cấp.
-- Lỗi thanh toán không tự cấp quyền truy cập.
-- Quyền lợi mua được là token AI; thanh toán không mở hay chặn quyền vào lớp và nội dung học.
+- Thanh toán lỗi, hết hạn hoặc chưa xác minh thì không cộng credit.
+- Quyền lợi mua được là credit AI (quy đổi ra token khi gọi AI); thanh toán không mở hay chặn quyền vào lớp và nội dung học.
 
 ### FR-011 - Email và thông báo
 
@@ -163,7 +163,7 @@ Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riê
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
-Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi nội dung đã xuất bản, thay đổi điểm, phát hành đề chung, sự kiện thanh toán và truy cập đặc quyền.
+Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi nội dung đã xuất bản, thay đổi điểm, phát hành bài và template, sự kiện thanh toán và truy cập đặc quyền.
 
 ### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
 
@@ -200,13 +200,13 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 Quản trị viên phải có thể cấu hình model được phép, quota, giới hạn chi phí và kill-switch qua ranh giới provider-neutral; xem nhật ký trạng thái/chi phí mà không lộ prompt, dữ liệu học tập hoặc secret ngoài quyền.
 
-### FR-022 - Tự ghi danh bằng mã mời lớp (Phase 2)
+### FR-022 - Tự ghi danh bằng mã mời lớp
 
-Phase 2 hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
+MVP (bản đơn giản, U04) hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
 
 ### FR-023 - Cộng tác và xử lý ngoại lệ đánh giá (Phase 2)
 
-Phase 2 hỗ trợ thông báo/hỏi đáp lớp, gia hạn nộp bài theo cá nhân, phúc khảo và kiểm tra tương đồng mang tính tham khảo.
+Phase 2 hỗ trợ tìm kiếm ngữ nghĩa và tóm tắt học liệu bằng AI, thông báo/hỏi đáp lớp, gia hạn nộp bài theo cá nhân, phúc khảo và kiểm tra tương đồng mang tính tham khảo.
 
 ### FR-024 - Báo cáo và phân tích nâng cao (Phase 2)
 
@@ -222,7 +222,7 @@ Giảng viên phải có thể chia sinh viên của lớp được phân công 
 - Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 
-### FR-026 - Bài tập nhóm, bài cá nhân và bài chung
+### FR-026 - Bài tập nhóm: tài liệu chung và phần đóng góp cá nhân
 
 Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục việc (ví dụ sơ đồ use case, activity); nhóm có thể thêm mục. Thành viên tự nhận mục còn trống, mục bị khóa cho người đó; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung để cả nhóm review và mục được mở khóa cho người khác nhận sửa. Trưởng nhóm nộp tài liệu chung, hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
@@ -231,10 +231,10 @@ Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giản
 - Mỗi mục có trạng thái (trống, đang nhận, chờ review) và lịch sử phiên bản theo tác giả; cả bài dùng chung một hạn.
 - Tại một thời điểm mỗi mục chỉ một thành viên nhận và sửa; trưởng nhóm hoặc giảng viên có thể nhả khóa mục khi cần, có audit.
 - Tài liệu chung được cập nhật realtime khi một mục xong; bản trưởng nhóm nộp (hoặc tự nộp khi hết hạn) là bản bất biến dùng để chấm, giữ tác giả từng mục.
-- Giảng viên xem được tài liệu chung cạnh các phần cá nhân, điều chỉnh cấu trúc tổng hợp và chốt một version để chấm.
-- AI chỉ tạo đề xuất điểm/phản hồi cho phần cá nhân khi giảng viên chủ động yêu cầu; hệ thống không cung cấp hành động chấm AI cho tài liệu chung.
-- Giảng viên chấm tài liệu chung bằng rubric có tiêu chí tích hợp và nhất quán. Lỗi chung trừ ở bài chung; phần cá nhân chỉ bị trừ thêm khi giảng viên xác định được phần hoặc thành viên gây lỗi.
-- Điểm/feedback phần cá nhân và điểm tài liệu chung được lưu riêng và hiển thị cạnh nhau. Hệ thống không tự áp dụng công thức; giảng viên dựa trên hai nguồn cùng mức đóng góp để nhập điểm cuối cho từng sinh viên.
+- Giảng viên xem được bản nộp cuối của tài liệu chung cùng tác giả từng mục; bản nộp đó là bản dùng để chấm.
+- AI chỉ tạo đề xuất điểm/phản hồi cho phần đóng góp của từng thành viên (các mục người đó viết) khi giảng viên chủ động yêu cầu; hệ thống không cung cấp hành động chấm AI cho tài liệu chung.
+- Giảng viên chấm tài liệu chung bằng rubric có tiêu chí tích hợp và nhất quán. Lỗi chung trừ ở tài liệu chung; một thành viên chỉ bị trừ thêm khi giảng viên xác định được mục hoặc thành viên gây lỗi.
+- Điểm/feedback phần đóng góp và điểm tài liệu chung được lưu riêng và hiển thị cạnh nhau. Hệ thống không tự áp dụng công thức; giảng viên dựa trên hai nguồn cùng mức đóng góp để nhập điểm cuối cho từng sinh viên.
 - Mọi ghi đè đề xuất AI, điều chỉnh điểm cuối và quy kết lỗi nhất quán cho một phần/thành viên phải lưu lý do và audit actor/thời gian.
 
 ### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
@@ -275,11 +275,11 @@ Hệ thống phải cung cấp simulation exam để sinh viên thi thử. Khôn
 
 ### USCN-001 - Chuẩn bị và giao bài cấp lớp bằng AI
 
-Giảng viên tạo khóa học hoặc lớp, nhập nội dung/tải tài liệu, yêu cầu AI tạo câu hỏi, chỉnh sửa và duyệt bản nháp, sau đó xuất bản bài đánh giá cho lớp.
+Trong lớp được quản trị viên tạo và phân công, giảng viên nhập nội dung/tải tài liệu, yêu cầu AI tạo câu hỏi, chỉnh sửa và duyệt bản nháp, sau đó xuất bản bài đánh giá cho lớp.
 
-### USCN-001A - Quản lý học liệu và giao đề chung cấp môn
+### USCN-001A - Quản lý học liệu, ngân hàng và template cấp môn
 
-Chủ nhiệm môn quản lý kho học liệu/RAG của môn được phân công, dùng AI biên soạn và duyệt đề chung, sau đó phát hành trực tiếp cho mọi lớp thuộc môn; hệ thống bảo đảm phạm vi môn và ghi audit mà không yêu cầu giảng viên từng lớp duyệt lại.
+Chủ nhiệm môn quản lý kho học liệu/RAG, ngân hàng câu hỏi/rubric và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
 
 ### USCN-002 - Học và nhận phản hồi
 
@@ -299,7 +299,7 @@ Khi AI, email, lưu trữ hoặc thanh toán tạm thời không khả dụng, h
 
 ### USCN-006 - Thực hiện và đánh giá bài tập nhóm
 
-Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, định nghĩa cấu trúc bài chung và giao các phần cá nhân. Thành viên nộp phần được giao; hệ thống ghép các phần thành tài liệu tổng để giảng viên rà soát và chốt. Giảng viên có thể nhờ AI đề xuất cho phần cá nhân nhưng tự chấm tài liệu chung, đánh giá tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên dựa trên cả hai cấp bài làm.
+Giảng viên chia nhóm cho bài nhóm, chỉ định một trưởng nhóm và soạn khung tài liệu với các mục việc. Thành viên tự nhận mục, làm trong trang riêng rồi bấm Xong để ghép realtime vào tài liệu chung; trưởng nhóm nộp. Giảng viên có thể nhờ AI đề xuất cho phần đóng góp của từng thành viên nhưng tự chấm tài liệu chung, đánh giá tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên dựa trên cả hai cấp bài làm.
 
 ## 6. Yêu cầu phi chức năng
 
@@ -400,26 +400,26 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 - Chủ nhiệm môn là vai trò RBAC riêng, được gán phạm vi một hoặc nhiều môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công.
 - Chỉ web responsive.
 - Nội dung được nhập trực tiếp hoặc tải PDF/DOCX/slide.
-- Bốn loại bài đánh giá là sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận; bài sơ đồ lưu/nộp XML Draw.io đầy đủ cho giảng viên, còn XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
-- Bài tập nhóm gồm các phần cá nhân và tài liệu chung do hệ thống tổng hợp theo cấu trúc giảng viên định nghĩa; hệ thống không cung cấp trình soạn thảo cộng tác DOCX.
-- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; việc nộp phần vẫn thuộc từng thành viên, còn giảng viên chốt tài liệu tổng hợp.
+- Bốn loại bài đánh giá là trắc nghiệm, bài viết (ESSAY), bài tài liệu (DOCUMENT, có sơ đồ Draw.io nhúng) và Code Lab; sơ đồ lưu XML Draw.io đầy đủ trong tài liệu, XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
+- Bài tập nhóm là một tài liệu chung theo khung của giảng viên; mỗi mục tại một thời điểm chỉ một thành viên sửa, thay đổi được ghép realtime khi mục xong; không soạn đồng thời từng phím gõ.
+- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; thành viên tự nhận mục, trưởng nhóm nộp tài liệu chung (hết hạn thì hệ thống tự nộp), giảng viên chấm tay tài liệu chung.
 - Không có loại kỳ thi chính thức/proctored exam; simulation exam có thể được cấu hình tính hoặc không tính điểm thành phần.
 - Template cấp môn và bản copy giữa lớp luôn tạo bản độc lập có truy vết nguồn, không đồng bộ hoặc mang theo dữ liệu phát hành/kết quả.
-- Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán và email/thông báo.
+- Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán mua credit AI và email/thông báo.
 - Triển khai đợt đầu ưu tiên local container.
 - MVP phải có test tự động (bao gồm unit test, integration test, system test, e2e test), tài liệu chạy và khả năng triển khai thử nghiệm.
 - Quản trị quy trình AI-DLC: Repository phải duy trì state tracking, audit trail, requirements, user stories, thiết kế, kế hoạch code, kết quả kiểm thử và các checkpoint phê duyệt trong `aidlc-docs/`; mã nguồn ứng dụng không được đặt trong thư mục này.
-- Chưa chọn nhà cung cấp AI, payment, email, storage, database hoặc cloud; lựa chọn cụ thể thuộc các stage thiết kế sau và phải tuân thủ yêu cầu trong tài liệu này.
+- Nhà cung cấp được chọn ở Construction: Gemini (AI), PayOS (thanh toán), SMTP Gmail App Password/Mailpit (email), Google Shared Drive (file), PostgreSQL + pgvector (database), VPS chạy Docker Compose (xem `construction/shared-infrastructure.md`).
 
 ## 10. Tiêu chí thành công của MVP
 
 - Một giảng viên có thể tạo lớp, đưa nội dung vào hệ thống, dùng AI tạo và duyệt bài đánh giá.
 - Một giảng viên có thể quản lý rubric/câu hỏi theo version, copy assignment/rubric giữa các lớp được phân công, tổ chức simulation exam giới hạn lượt, theo dõi nộp bài và chốt điểm hàng loạt.
-- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG gồm nguồn YouTube theo bài giảng, phát hành đề chung hoặc template đề có version tới đúng phạm vi môn được phân công.
+- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG gồm nguồn YouTube theo bài giảng, phát hành template đề có version cho giảng viên các lớp thuộc môn copy.
 - Một người học được ghi danh có thể học, nộp bài và nhận điểm/phản hồi đúng quyền.
 - Bản nháp và lịch sử lần nộp của người học được bảo toàn qua gián đoạn mà không bị coi nhầm là bài nộp chính thức.
 - Quản trị viên có thể quản lý vòng đời tài khoản và kiểm soát quota/kill-switch/chi phí AI mà không khóa hệ thống vào một provider.
-- Một nhóm có thể nộp các phần cá nhân để hệ thống tạo tài liệu tổng; AI chỉ hỗ trợ chấm phần cá nhân, còn giảng viên tự chấm tài liệu chung, xử lý lỗi không nhất quán và quyết định điểm cuối từng thành viên.
+- Một nhóm cùng làm tài liệu chung theo mục và trưởng nhóm nộp; AI chỉ hỗ trợ chấm phần đóng góp của từng thành viên, còn giảng viên tự chấm tài liệu chung, xử lý lỗi không nhất quán và quyết định điểm cuối từng thành viên.
 - Luồng thanh toán thử nghiệm cấp quyền chính xác và chống xử lý webhook trùng lặp.
 - Các vai trò không thể truy cập dữ liệu hoặc chức năng ngoài quyền.
 - Dữ liệu và hành động nhạy cảm có audit trail phù hợp.
@@ -435,8 +435,8 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Resiliency Baseline Q16 | REL-001 đến REL-004 và mục 13 (phạm vi rút gọn) |
 | Property-Based Testing Q17 | NFR-004, extension bị tắt |
 | Làm rõ vòng 1 Q1-Q10 | Web, tích hợp, criticality, DR, change, CI/CD, rollback, topology, incident response |
-| Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone |
-| Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung và ranh giới học liệu cấp môn/lớp |
+| Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone (sau đó bỏ multi-zone khi rút gọn phạm vi 2026-09-24) |
+| Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung (sau đó đã loại đề chung, 2026-09-24) và ranh giới học liệu cấp môn/lớp |
 | Đối chiếu `uc1.pdf` và yêu cầu ngày 2026-09-13 | FR-015 đến FR-024; loại Head of Department; dùng chung loại bài viết luận; phân tách MVP và Phase 2 |
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |

@@ -31,7 +31,7 @@ U12 sở hữu bộ nhóm của từng bài nhóm, thành viên, trưởng nhóm
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `GroupReadinessPort` | U12 cài cho U08 (`C`) | Bộ nhóm đủ điều kiện phát hành |
-| `GroupMembershipPort` | U12 cung cấp cho U14, U15, U16 | `groupOf(learnerId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
+| `GroupMembershipPort` | U12 cung cấp cho U14, U16 | `groupOf(learnerId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
 | `AssignmentQueryPort` | U12 dùng U08 | Bài `GROUP`, trạng thái publication |
 | `ClassAccessPort` | U12 dùng U04 | Người học đang ghi danh |
 | `AuditPort`, `EventPublisherPort` | U12 dùng U02 | Audit; event `GROUP_MEMBERSHIP_CHANGED`, `GROUP_LEADER_CHANGED` |

@@ -28,7 +28,7 @@
 | NFR-U05-20 | Markdown hiển thị qua bộ lọc cho phép danh sách thẻ an toàn; không HTML thô, không `javascript:` URL. | BR-U05-20, SEC-003 |
 | NFR-U05-21 | Chỉ chấp nhận URL YouTube đúng mẫu BR-U05-22; server tự dựng URL gọi API từ ID, không gọi URL người dùng nhập (tránh SSRF). | SEC-003 |
 | NFR-U05-22 | CSP cho phép `frame-src https://www.youtube-nocookie.com`. | BR-U05-24, SEC-004 |
-| NFR-U05-23 | `retrieve` chỉ gọi nội bộ từ U13/U15 (không có endpoint HTTP công khai). | BR-U05-40 |
+| NFR-U05-23 | `retrieve` chỉ gọi nội bộ từ U13 (không có endpoint HTTP công khai). | BR-U05-40 |
 | NFR-U05-24 | Không gửi dữ liệu người dùng lên Gemini ngoài nội dung học liệu và câu hỏi truy xuất. | SEC-005 |
 
 ## 4. Kiểm thử

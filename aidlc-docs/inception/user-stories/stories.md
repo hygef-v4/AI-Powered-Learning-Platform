@@ -65,7 +65,7 @@
 
 - **Given** người dùng có phiên đang hoạt động
 - **When** người dùng đăng xuất hoặc phiên hết hạn
-- **Then** phiên bị vô hiệu phía server và không thể tiếp tục gọi API được bảo vệ
+- **Then** refresh token của phiên bị thu hồi phía server nên phiên không thể làm mới; access token còn lại hết hạn trong tối đa 15 phút (BR-U01-44, 45)
 
 ### US-IAM-003 - Khôi phục mật khẩu riêng tư
 
@@ -125,7 +125,7 @@
 
 - **Given** một quyền hoặc phạm vi đang có hiệu lực
 - **When** quản trị viên thu hồi
-- **Then** các request mới không còn được phép và phiên/quyền cache liên quan được cập nhật an toàn
+- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role làm refresh token hết hiệu lực ngay và access token còn lại hết hạn trong tối đa 15 phút (BR-U01-63)
 
 #### Scenario 3 - Người không phải quản trị viên thay đổi quyền
 
@@ -145,7 +145,7 @@
 
 - **Given** người dùng xác nhận đúng mật khẩu hiện tại và mật khẩu mới đạt chính sách
 - **When** người dùng yêu cầu đổi mật khẩu
-- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác bị vô hiệu hóa và người dùng nhận xác nhận
+- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác không làm mới được nữa (access token còn lại hết hạn trong tối đa 15 phút) và người dùng nhận xác nhận
 
 #### Scenario 2 - Thông tin không hợp lệ
 
@@ -201,19 +201,19 @@
 - **When** quản trị viên gửi cấu hình
 - **Then** hệ thống từ chối toàn bộ thay đổi không hợp lệ và trả hướng dẫn khắc phục an toàn
 
-### US-CAT-002 - Quản lý vòng đời lớp/khóa học
+### US-CAT-002 - Quản lý vòng đời lớp
 
-**Story**: Là giảng viên, tôi muốn tạo, sửa, xuất bản và lưu trữ lớp/khóa học được phân công để kiểm soát nội dung người học nhìn thấy.
+**Story**: Là giảng viên, tôi muốn sửa, mở và lưu trữ lớp được phân công (lớp do quản trị viên tạo) để kiểm soát nội dung người học nhìn thấy.
 
 **Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Xuất bản nội dung
+#### Scenario 1 - Mở lớp
 
-- **Given** giảng viên được phân công và nội dung hợp lệ
-- **When** giảng viên xuất bản
-- **Then** người học được ghi danh có thể thấy nội dung và thay đổi được audit
+- **Given** giảng viên được phân công và lớp `DRAFT` có giảng viên chính, môn đang `ACTIVE`
+- **When** giảng viên mở lớp
+- **Then** lớp chuyển `OPEN`, người học được ghi danh thấy lớp và nội dung đã xuất bản, nhận thông báo ghi danh, và thay đổi được audit
 
 #### Scenario 2 - Nội dung nháp hoặc đã lưu trữ
 
@@ -237,9 +237,9 @@
 
 #### Scenario 1 - Ghi danh hợp lệ
 
-- **Given** lớp đang hoạt động và người thực hiện có quyền
+- **Given** lớp `DRAFT` hoặc `OPEN` và người thực hiện quản lý lớp
 - **When** người học được ghi danh
-- **Then** quyền truy cập lớp được tạo một lần và thông báo ghi danh được xếp gửi
+- **Then** ghi danh được tạo một lần; thông báo ghi danh được xếp gửi khi lớp đã `OPEN`
 
 #### Scenario 2 - Ghi danh trùng hoặc ngoài quyền
 
@@ -253,7 +253,7 @@
 - **When** người thực hiện xác nhận gỡ ghi danh
 - **Then** quyền truy cập mới bị thu hồi, dữ liệu học tập lịch sử được giữ theo chính sách và thay đổi được audit
 
-### US-CAT-005 - Tự ghi danh bằng mã mời (Phase 2)
+### US-CAT-005 - Tự ghi danh bằng mã mời
 
 **Story**: Là người học, tôi muốn dùng mã mời để tự ghi danh vào lớp được phép mà không phải chờ nhập thủ công.
 
@@ -393,7 +393,7 @@
 
 #### Scenario 3 - Nguồn lỗi hoặc ngoài quyền
 
-- **Given** URL không hợp lệ, video không truy cập được, phiên âm thất bại hoặc bài giảng ngoài quyền
+- **Given** URL không hợp lệ, video không truy cập được, lấy caption thất bại hoặc bài giảng ngoài quyền
 - **When** yêu cầu được xử lý
 - **Then** hệ thống không lập chỉ mục kết quả lỗi/ngoài quyền, giữ trạng thái có thể retry và không tạo transcript hoàn tất giả
 
@@ -401,7 +401,7 @@
 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
 
-**Story**: Là giảng viên, tôi muốn chia lớp được phân công thành nhiều nhóm và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
+**Story**: Là giảng viên, tôi muốn tạo bộ nhóm cho từng bài nhóm của lớp được phân công (tạo tay, chia ngẫu nhiên hoặc dùng lại nhóm của bài khác) và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
 
 **Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -431,7 +431,7 @@
 
 - **Given** người yêu cầu là thành viên nhóm và người được đề xuất cũng thuộc nhóm
 - **When** giảng viên phê duyệt và xác nhận trưởng nhóm mới
-- **Then** nhóm vẫn có đúng một trưởng nhóm, vai trò điều phối chuyển sang người mới và quyết định được audit mà không đổi quyền nộp phần của các thành viên
+- **Then** nhóm vẫn có đúng một trưởng nhóm, vai trò điều phối chuyển sang người mới và quyết định được audit mà không đổi các mục thành viên đang nhận trong tài liệu nhóm
 
 #### Scenario 2 - Từ chối hoặc yêu cầu không hợp lệ
 
@@ -511,9 +511,9 @@
 - **When** tới hạn
 - **Then** hệ thống tự nộp bản hiện tại, mục đang nhận được đưa vào với nội dung đã lưu gần nhất và giảng viên thấy cảnh báo
 
-### US-GRP-006 - Đối chiếu và chấm tay bài chung
+### US-GRP-006 - Đối chiếu và chấm tay tài liệu nhóm
 
-**Story**: Là giảng viên, tôi muốn xem tài liệu chung cạnh các phần cá nhân, tự chấm tính tích hợp và quyết định điểm cuối từng sinh viên để phản ánh cả chất lượng chung và mức đóng góp.
+**Story**: Là giảng viên, tôi muốn xem tài liệu nhóm đã nộp cùng phần đóng góp của từng thành viên, tự chấm tính tích hợp và quyết định điểm cuối từng sinh viên để phản ánh cả chất lượng chung và mức đóng góp.
 
 **Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-005, SEC-002, SEC-003, SEC-007.
 
@@ -521,31 +521,31 @@
 
 #### Scenario 1 - Chấm tay và đối chiếu
 
-- **Given** tài liệu chung đã chốt và các phần cá nhân của nhóm đã được nộp
+- **Given** nhóm đã nộp tài liệu chung
 - **When** giảng viên mở màn hình review
-- **Then** hệ thống hiển thị đúng version chung cùng từng phần/người phụ trách, đề xuất AI của phần cá nhân nếu có và các vùng điểm/feedback tách biệt
+- **Then** hệ thống hiển thị bản nộp cuối, tác giả từng mục, đề xuất AI cho phần đóng góp nếu có và các vùng điểm/feedback tách biệt
 
-#### Scenario 2 - Không cho AI chấm bài chung
+#### Scenario 2 - Không cho AI chấm tài liệu nhóm
 
 - **Given** người dùng đang xem tài liệu chung của nhóm
 - **When** chọn phương thức chấm
 - **Then** hệ thống chỉ cung cấp chấm thủ công, không gửi tài liệu chung tới AI và lưu giảng viên là người quyết định điểm
 
-#### Scenario 3 - Thiếu phần cá nhân
+#### Scenario 3 - Mục còn trống
 
-- **Given** một hoặc nhiều phần cá nhân chưa nộp
-- **When** giảng viên review bài chung
-- **Then** hệ thống chỉ rõ phần còn thiếu nhưng vẫn cho phép giảng viên xử lý bài chung theo chính sách lớp mà không giả định đóng góp
+- **Given** một hoặc nhiều mục chưa có nội dung khi nộp
+- **When** giảng viên review tài liệu nhóm
+- **Then** hệ thống chỉ rõ mục còn trống nhưng vẫn cho phép giảng viên xử lý tài liệu nhóm theo chính sách lớp mà không giả định đóng góp
 
 #### Scenario 4 - Nội dung không nhất quán
 
-- **Given** các phần đúng riêng lẻ nhưng xung đột khi ghép
+- **Given** các mục đúng riêng lẻ nhưng xung đột khi đặt chung
 - **When** giảng viên chấm tiêu chí tích hợp và nhất quán
-- **Then** lỗi được trừ ở điểm tài liệu chung; chỉ khi xác định được phần/thành viên gây lỗi, giảng viên mới trừ thêm phần đó và phải ghi lý do
+- **Then** lỗi được trừ ở điểm tài liệu chung; chỉ khi xác định được mục/thành viên gây lỗi, giảng viên mới trừ thêm cho người đó và phải ghi lý do
 
 #### Scenario 5 - Quyết định điểm cuối từng sinh viên
 
-- **Given** điểm/feedback phần cá nhân và điểm tài liệu chung đã có
+- **Given** điểm/feedback phần đóng góp và điểm tài liệu chung đã có
 - **When** giảng viên nhập điểm cuối cho từng sinh viên
 - **Then** hệ thống hiển thị hai nguồn để tham khảo nhưng không tự áp dụng công thức, đồng thời audit mọi điều chỉnh và lý do
 
@@ -627,9 +627,9 @@
 
 #### Scenario 1 - Quản lý rubric hợp lệ
 
-- **Given** người dùng có quyền với lớp hoặc môn và rubric có thang điểm hợp lệ
+- **Given** người dùng có quyền với lớp hoặc môn và rubric có các mục checklist hợp lệ
 - **When** người dùng tạo, sửa hoặc chọn rubric
-- **Then** rubric được lưu đúng phạm vi và tổng trọng số/điểm được kiểm tra
+- **Then** rubric được lưu đúng phạm vi; mỗi tiêu chí gồm các mục checklist có điểm và điểm rubric là tổng điểm các mục đạt
 
 #### Scenario 2 - Rubric đã được sử dụng
 
@@ -824,12 +824,12 @@
 #### Scenario 1 - Nộp bài hợp lệ
 
 - **Given** người học được ghi danh, bài đang hiệu lực và còn lượt làm
-- **When** người học nộp câu trả lời hợp lệ cho sơ đồ Draw.io, trắc nghiệm, Code Lab hoặc bài viết luận
-- **Then** hệ thống lưu bài nộp, thời điểm, lượt làm và trạng thái chờ giảng viên chọn phương thức chấm một cách nguyên vẹn
+- **When** người học nộp bài hợp lệ loại trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io) hoặc Code Lab
+- **Then** hệ thống lưu nguyên vẹn bài nộp, thời điểm và lượt làm; trắc nghiệm và Code Lab được tự chấm ngay, loại khác chờ giảng viên chọn phương thức chấm
 
 #### Scenario 2 - Quá hạn hoặc hết lượt
 
-- **Given** đã qua hạn hoặc người học hết lượt
+- **Given** đã qua hạn (và qua hạn nộp trễ nếu bài cho phép nộp trễ) hoặc người học hết lượt
 - **When** người học nộp bài
 - **Then** hệ thống từ chối phía server và không tạo bài nộp hợp lệ mới
 
@@ -853,7 +853,7 @@
 
 ### US-ASM-004 - Soạn và làm bài tài liệu có sơ đồ Draw.io (DOCUMENT)
 
-**Story**: Là người học, tôi muốn vẽ sơ đồ trên canvas Draw.io trong web và nộp XML đầy đủ để giảng viên xem chính xác bài làm của tôi.
+**Story**: Là người học, tôi muốn làm bài tài liệu có sơ đồ vẽ trên canvas Draw.io nhúng trong web để giảng viên xem chính xác bài làm của tôi (XML đầy đủ lưu trong tài liệu).
 
 **Truy vết**: FR-002, FR-006, FR-017, FR-014, SEC-002, SEC-003, SEC-006, REL-003.
 
@@ -867,7 +867,7 @@
 
 #### Scenario 2 - XML không hợp lệ hoặc bị can thiệp
 
-- **Given** XML vượt giới hạn, sai schema hoặc chứa node/thuộc tính không nằm trong allowlist
+- **Given** XML sơ đồ vượt 2 MB, có DOCTYPE/external entity hoặc phần tử gốc không phải `mxfile`/`mxGraphModel`
 - **When** người học lưu hoặc nộp
 - **Then** hệ thống từ chối dữ liệu nguy hiểm, không xử lý external entity và giữ bản nháp hợp lệ gần nhất nếu có
 
@@ -927,7 +927,7 @@
 
 #### Scenario 1 - Bài viết luận hợp lệ
 
-- **Given** đề bài, giới hạn nội dung/tệp và rubric hợp lệ
+- **Given** đề bài và rubric hợp lệ (bài viết là văn bản thường, không giới hạn số từ, không nộp tệp)
 - **When** người dùng xem trước hoặc duyệt bài
 - **Then** hệ thống hiển thị đúng hướng dẫn, tiêu chí và cấu hình nộp cho góc nhìn người học
 
@@ -941,7 +941,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, xem thay đổi phiên bản và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
 
-**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-002, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-007, FR-016, FR-028, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1057,7 +1057,7 @@
 
 - **Given** giảng viên quản lý lớp, đã nhận bài nộp hợp lệ và rubric đã được chọn
 - **When** giảng viên chọn “Nhờ AI đề xuất” và tác vụ hoàn tất
-- **Then** điểm/phản hồi được lưu là đề xuất chưa duyệt, kèm actor/thời gian lựa chọn và không được công bố là quyết định cuối; nếu là bài Draw.io thì chỉ XML rút gọn dẫn xuất được gửi AI, còn XML đầy đủ vẫn là bản nộp chuẩn cho giảng viên
+- **Then** điểm/phản hồi được lưu là đề xuất chưa duyệt, kèm actor/thời gian lựa chọn và không được công bố là quyết định cuối; nếu bài có sơ đồ Draw.io thì chỉ XML rút gọn dẫn xuất được gửi AI, còn XML đầy đủ vẫn là bản nộp chuẩn cho giảng viên
 
 #### Scenario 2 - Giảng viên chọn chấm thủ công
 
@@ -1219,7 +1219,7 @@
 
 ### US-RPT-001 - Theo dõi tiến độ nộp bài và nhắc nhở
 
-**Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài và nhắc đúng người học để hỗ trợ họ hoàn thành trước hạn.
+**Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài và để hệ thống tự nhắc người học chưa nộp trước hạn, giúp họ hoàn thành đúng hạn.
 
 **Truy vết**: FR-002, FR-011, FR-019, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
@@ -1297,7 +1297,7 @@
 - **When** người dùng xem hoặc xuất
 - **Then** hệ thống nêu rõ báo cáo dùng cải thiện công cụ chấm, không tự động đánh giá năng lực cá nhân giảng viên
 
-## 11. Miền Payment and Entitlement
+## 11. Miền Payment and AI Credit
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
@@ -1409,7 +1409,7 @@
 
 #### Scenario 3 - Sự kiện bắt buộc
 
-- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành đề chung, thanh toán hoặc truy cập đặc quyền
+- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài/template, thanh toán hoặc truy cập đặc quyền
 - **When** hành động hoàn tất hoặc bị từ chối
 - **Then** sự kiện tương ứng được ghi với actor, thời gian, đối tượng và kết quả phù hợp
 
@@ -1472,22 +1472,24 @@
 
 ## 16. Security Compliance tại User Stories
 
+> Bảng này lập trước khi rút gọn phạm vi (2026-09-24). Hiện chỉ SECURITY-03, 04, 05, 08, 09, 12, 15 và RESILIENCY-04, 06, 10 còn áp dụng; các rule khác là N/A "ngoài phạm vi đồ án", kể cả những dòng ghi "downstream" (xem `requirements.md` mục 12-13).
+
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|
-| SECURITY-01 | Compliant | Stories về hồ sơ, học liệu, điểm và thanh toán yêu cầu bảo vệ dữ liệu; mã hóa chi tiết downstream |
-| SECURITY-02 | N/A | Network access logging là control hạ tầng, đã truy vết downstream |
+| SECURITY-01 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-02 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-03 | Compliant | US-AUD-001 và các failure scenario cấm log dữ liệu nhạy cảm |
 | SECURITY-04 | N/A | HTTP security headers không tạo giá trị persona riêng; giữ cho thiết kế/code/test |
 | SECURITY-05 | Compliant | Input/file/config/payment scenarios yêu cầu validation, giới hạn và lỗi an toàn |
-| SECURITY-06 | N/A | IAM policy cloud là control Infrastructure Design |
-| SECURITY-07 | N/A | Network deny-by-default là control Infrastructure Design |
+| SECURITY-06 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-07 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-08 | Compliant | Object/function authorization được thể hiện xuyên IAM, môn, lớp, nhóm/leader, nội dung, bài nộp, điểm và payment |
 | SECURITY-09 | Compliant | Failure scenarios yêu cầu fail closed và safe error; hardening chi tiết downstream |
-| SECURITY-10 | N/A | Supply-chain controls được truy vết tới Code Generation/Build and Test theo lựa chọn không tạo system story |
-| SECURITY-11 | Compliant | Misuse cases gồm leo quyền, nộp thay phần cá nhân, prompt vượt phạm vi, sửa điểm và webhook replay có acceptance criteria |
+| SECURITY-10 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-11 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-12 | Compliant | US-IAM-001/002/003 bao phủ password, session, brute-force; MFA admin giữ downstream |
-| SECURITY-13 | Compliant | US-PAY-002 và US-AUD-001 bao phủ integrity/replay/audit; artifact integrity downstream |
-| SECURITY-14 | Compliant | US-AUD-001 xác định sự kiện và tính bất biến; retention/alerting downstream |
+| SECURITY-13 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-14 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-15 | Compliant | External failure scenarios yêu cầu fail closed, không mất dữ liệu và không lộ nội bộ |
 
 Không có blocking security finding tại User Stories.
@@ -1496,20 +1498,20 @@ Không có blocking security finding tại User Stories.
 
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|
-| RESILIENCY-01 | N/A | Phân loại component/dependency thuộc Application Design |
-| RESILIENCY-02 | N/A | RTO/RPO đã chốt ở Requirements và được chi tiết downstream |
-| RESILIENCY-03 | N/A | Change management không phải hành trình persona sản phẩm |
+| RESILIENCY-01 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-02 | N/A | Ngoài phạm vi đồ án (không RTO/RPO) |
+| RESILIENCY-03 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-04 | N/A | CI/CD/rollback là ràng buộc construction/infrastructure |
-| RESILIENCY-05 | N/A | Metrics/logs/traces/dashboard thuộc NFR/Infrastructure Design |
+| RESILIENCY-05 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-06 | N/A | Health checks thuộc NFR/Infrastructure Design |
-| RESILIENCY-07 | N/A | Resiliency/capacity alarms thuộc Infrastructure Design |
-| RESILIENCY-08 | N/A | Multi-zone topology đã chốt và thuộc Infrastructure Design |
-| RESILIENCY-09 | N/A | Auto-scaling/quota thuộc Infrastructure Design |
+| RESILIENCY-07 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-08 | N/A | Ngoài phạm vi đồ án (không multi-zone) |
+| RESILIENCY-09 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-10 | Compliant | File, AI, payment và email scenarios yêu cầu timeout, retry hữu hạn và degraded/fail-safe behavior |
-| RESILIENCY-11 | N/A | DR strategy đã chốt; runbook thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-12 | N/A | Backup/retention/test restore thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-13 | N/A | Failover/failback procedures thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-14 | N/A | Decision gate được giữ cho NFR Design theo REL-004 |
-| RESILIENCY-15 | N/A | Incident response/COE thuộc NFR/Infrastructure Design |
+| RESILIENCY-11 | N/A | Ngoài phạm vi đồ án (không DR) |
+| RESILIENCY-12 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-13 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-14 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-15 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 
-Không có blocking resiliency finding tại User Stories; các mục N/A vẫn là ràng buộc bắt buộc tại stage downstream đã chỉ định.
+Không có blocking resiliency finding tại User Stories. Sau khi rút gọn phạm vi (2026-09-24), chỉ RESILIENCY-04, 06, 10 còn áp dụng; các mục N/A khác không còn là ràng buộc downstream.

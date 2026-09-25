@@ -19,7 +19,7 @@
  |       Repository (PostgreSQL: subjects, classes, enrollments)              |
  |                                                                            |
  | ScopeQueryService --> SubjectScopePort, ClassScopePort (cho U01)           |
- |                   --> ClassAccessPort (cho U05-U15)                        |
+ |                   --> ClassAccessPort (cho U05, U06, U08-U12, U14-U16)     |
  | Dùng: AuthorizationPort, AccountLookupPort (U01); PublishedContentPort     |
  |       (U05); AuditPort, EventPublisherPort (U02)                           |
  +----------------------------------------------------------------------------+

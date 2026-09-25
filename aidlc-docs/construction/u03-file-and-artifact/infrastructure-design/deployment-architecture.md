@@ -12,7 +12,7 @@
                                          [worker] --DriveJobHandler+
 ```
 
-**Text alternative**: Trình duyệt gửi file qua HTTPS tới Nginx; Nginx chuyển thẳng (không đệm) tới backend với giới hạn 50 MB. Backend ghi file tạm vào volume `/tmp/uploads`, lưu metadata vào PostgreSQL, token tải về vào Redis và byte file lên Google Shared Drive qua Internet. Worker xử lý job xóa và dọn file trên Drive.
+**Text alternative**: Trình duyệt gửi file qua HTTPS tới Nginx; Nginx chuyển thẳng (không đệm) tới backend với giới hạn 50 MB. Backend ghi file tạm vào volume `/tmp/uploads`, lưu metadata vào PostgreSQL, token tải về vào Redis và byte file lên Google Shared Drive qua Internet. Worker xử lý job dọn file Drive còn sót khi upload lỗi.
 
 ## Luồng upload
 1. Nginx chuyển stream sang backend.

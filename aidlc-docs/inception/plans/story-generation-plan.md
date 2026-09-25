@@ -200,7 +200,7 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Giới hạn AI ở phần cá nhân; bài chung chỉ có luồng giảng viên chấm thủ công và đối chiếu.
 - [x] Loại bỏ US-CAT-004 cùng phạm vi học kỳ/nhân bản lớp và thu hẹp FR-022 còn join code.
 - [x] Hoàn tất kiểm tra traceability, INVEST, Security và Resiliency.
-- [ ] Trình người dùng checkpoint phê duyệt lại User Stories.
+- [x] Trình người dùng checkpoint phê duyệt lại User Stories.
 
 ## 9. Revision 2026-09-22 - Versioning, simulation, reuse, YouTube RAG và chấm nhóm
 
@@ -222,4 +222,4 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Cập nhật personas và use cases; xác minh 59/59 story có use case truy vết.
 - [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
 - [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
-- [ ] Trình người dùng checkpoint phê duyệt lại User Stories.
+- [x] Trình người dùng checkpoint phê duyệt lại User Stories.

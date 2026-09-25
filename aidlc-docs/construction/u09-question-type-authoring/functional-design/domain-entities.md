@@ -53,5 +53,5 @@ Document
 | `DocumentModelPort` | U09 cài cho U06 (`C`), U11, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
 | `DocxExportPort` | U09 cung cấp cho U11, U15 | Tài liệu → DOCX |
 | `DiagramCompactPort` | U09 cung cấp cho U13 | XML đầy đủ → XML rút gọn theo allowlist |
-| `ArtifactPort` | U09 dùng U03 | Ảnh `DOCUMENT_IMAGE`, file DOCX tạm |
+| `ArtifactPort` | U09 dùng U03 | Ảnh `DOCUMENT_IMAGE` (DOCX nhập khung chỉ xử lý trong bộ nhớ, không lưu) |
 | `AssignmentQueryPort` | U09 dùng U08 | Loại bài, trạng thái `DRAFT` |

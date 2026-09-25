@@ -26,7 +26,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-20 | Parser XML cấu hình tắt DTD, external entity, XInclude. | BR-U03-10, SEC-003 |
+| NFR-U03-20 | Ảnh SVG trả kèm `Content-Security-Policy` sandbox; không có parser XML ở U03. | BR-U03-10, 11 |
 | NFR-U03-21 | Nhận dạng loại file bằng magic bytes (Apache Tika). | BR-U03-03 |
 | NFR-U03-22 | Download token 256 bit, Redis lưu băm, TTL 5 phút, gắn `accountId`. | BR-U03-21 |
 | NFR-U03-23 | Phản hồi tải về có `Content-Disposition` đúng, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`. | BR-U03-23 |
@@ -36,7 +36,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-30 | Unit test mọi `BR-U03-xx`, gồm XML có DOCTYPE/XXE, file đổi đuôi, file > 50 MB, token dùng sai người. | NFR-004 |
+| NFR-U03-30 | Unit test mọi `BR-U03-xx`, gồm SVG có script (header CSP), file đổi đuôi, file vượt trần theo `purpose` (50 MB / 5 MB), token dùng sai người. | NFR-004 |
 | NFR-U03-31 | Drive được thay bằng adapter giả lưu ra thư mục tạm trong test và khi chạy local không có credential. | NFR-004, NFR-005 |
 
 ## 5. Compliance
@@ -45,7 +45,7 @@
 |---|---|---|
 | SECURITY-03 | Compliant | NFR-U03-24 |
 | SECURITY-04 | Compliant | NFR-U03-23 |
-| SECURITY-05 | Compliant | Kiểm loại, kích thước, XML |
+| SECURITY-05 | Compliant | Kiểm loại, kích thước theo `purpose` |
 | SECURITY-08 | Compliant | Unit sở hữu kiểm quyền; token gắn người dùng |
 | SECURITY-09 | Compliant | Credential từ `.env`, không commit |
 | SECURITY-12 | N/A | U03 không xác thực người dùng |

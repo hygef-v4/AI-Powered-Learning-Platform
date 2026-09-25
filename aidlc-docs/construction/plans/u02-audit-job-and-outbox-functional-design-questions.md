@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Câu hỏi Functional Design
+# U02 Audit, Job & Event - Câu hỏi Functional Design
 
 Hỏi qua giao diện chọn đáp án.
 

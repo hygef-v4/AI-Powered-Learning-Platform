@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Frontend Components
+# U02 Audit, Job & Event - Frontend Components
 
 ## 1. Cây component
 

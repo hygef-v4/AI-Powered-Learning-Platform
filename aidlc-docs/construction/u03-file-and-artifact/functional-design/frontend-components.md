@@ -4,7 +4,7 @@ U03 không có trang riêng; cung cấp component dùng chung cho các unit.
 
 ```
 shared/files/
-  FileUploader        (props: purpose, accept, maxBytes = 50 MB, onUploaded)
+  FileUploader        (props: purpose, accept, maxBytes theo purpose, onUploaded)
   FileLink            (props: getDownloadUrl, fileName)
   useFileUpload       (hook: tiến trình, hủy, lỗi)
 ```
@@ -15,4 +15,4 @@ shared/files/
 | `useFileUpload` | Gửi `POST /api/v1/files` multipart với `purpose`; trả `artifactId` khi thành công; hủy giữa chừng thì backend không giữ lại gì |
 | `FileLink` | Khi bấm mới gọi API của unit sở hữu để lấy URL tải (token 5 phút), rồi mở URL; không lưu URL lâu |
 
-Unit dùng: U01 (`AvatarUploader` bọc `FileUploader` với `purpose = AVATAR`), U05, U11, U14, U16.
+Unit dùng: U01 (`AvatarUploader` bọc `FileUploader` với `purpose = AVATAR`), U05 (`MATERIAL`), U06/U09/U11/U14 (`DOCUMENT_IMAGE` qua trình soạn tài liệu).

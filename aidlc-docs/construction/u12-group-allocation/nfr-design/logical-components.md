@@ -3,7 +3,7 @@
 ## 1. Sơ đồ
 
 ```
- Trình duyệt (GV, người học)                        U08 / U14 / U15 / U16
+ Trình duyệt (GV, người học)                        U08 / U14 / U16
    |                                                   |
    v                                                   v
  +------------------------------ backend -------------------------------------+
@@ -11,13 +11,13 @@
  |                    --> RandomSplitter, GroupSetCopier                      |
  | LeaderRequestController --> LeaderRequestService                           |
  | GroupReadinessService (GroupReadinessPort cho U08)                         |
- | MembershipQueryService (GroupMembershipPort cho U14, U15, U16)           |
+ | MembershipQueryService (GroupMembershipPort cho U14, U16)                  |
  | Repository (group_sets, student_groups, group_members,                     |
  |             leader_change_requests)                                        |
  +----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Giảng viên lưu bộ nhóm qua `GroupSetSaver` (kiểm bằng `GroupSetValidator`), chia ngẫu nhiên bằng `RandomSplitter`, dùng lại nhóm bằng `GroupSetCopier`. Yêu cầu đổi trưởng nhóm qua `LeaderRequestService`. U08 hỏi `GroupReadinessService` trước khi phát hành; U14, U15, U16 tra thành viên và trưởng nhóm qua `MembershipQueryService`.
+**Text alternative**: Giảng viên lưu bộ nhóm qua `GroupSetSaver` (kiểm bằng `GroupSetValidator`), chia ngẫu nhiên bằng `RandomSplitter`, dùng lại nhóm bằng `GroupSetCopier`. Yêu cầu đổi trưởng nhóm qua `LeaderRequestService`. U08 hỏi `GroupReadinessService` trước khi phát hành; U14, U16 tra thành viên và trưởng nhóm qua `MembershipQueryService`.
 
 ## 2. Thành phần
 

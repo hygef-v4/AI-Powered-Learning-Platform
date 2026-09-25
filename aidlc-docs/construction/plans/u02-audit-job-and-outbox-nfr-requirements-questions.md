@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Câu hỏi NFR Requirements
+# U02 Audit, Job & Event - Câu hỏi NFR Requirements
 
 ## Câu N1 - Worker chạy ở đâu
 

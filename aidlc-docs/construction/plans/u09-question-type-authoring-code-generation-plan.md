@@ -20,7 +20,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 |---|---|---|
 | `AuthorizationPort` | U01 | Dùng thật |
 | `AuditPort` | U02 | Dùng thật |
-| `ArtifactPort` | U03 | Dùng thật; thêm purpose `DOCUMENT_IMAGE` vào allowlist U03 nếu U03 chưa có |
+| `ArtifactPort` | U03 | Dùng thật (purpose `DOCUMENT_IMAGE`) |
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort` | U06 | Dùng thật (kiểm câu quiz khi duyệt) |
 | `AssignmentQueryPort`, `TypeConfigSlot` | U08 | Dùng thật |

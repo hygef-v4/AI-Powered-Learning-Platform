@@ -46,7 +46,7 @@
 - [x] Trace every rule and flow to the seven U01 stories and twelve IAM use cases.
 - [x] Review Security Baseline rules applicable to U01: SECURITY-03, 05, 08, 11, 12 and 15; review enabled Resiliency rules for OTP/email and auth dependency failures.
 - [x] Record extension compliance, unresolved findings and stage audit entry.
-- [ ] Present U01 Functional Design for explicit review and approval before NFR Requirements.
+- [x] Present U01 Functional Design for explicit review and approval before NFR Requirements.
 
 ## 5. Exclusions
 

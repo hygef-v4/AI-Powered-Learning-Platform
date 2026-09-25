@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Code Generation Plan
+# U02 Audit, Job & Event - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U02. Mỗi bước xong thì đánh `[x]` ngay.
 

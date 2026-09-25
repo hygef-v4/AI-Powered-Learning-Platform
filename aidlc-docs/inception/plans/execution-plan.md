@@ -136,10 +136,10 @@ flowchart TD
 
 ### CONSTRUCTION PHASE - per-unit loop
 
-- [ ] **Functional Design - EXECUTE PER UNIT**: Cần thiết cho authorization scope, subject/class inheritance, assessment lifecycle, grading, payment entitlement và audit rules.
-- [ ] **NFR Requirements - EXECUTE PER UNIT**: Cần tinh chỉnh tech stack, performance, security, accessibility, testing và provider constraints theo từng unit.
-- [ ] **NFR Design - EXECUTE PER UNIT**: Cần thiết kế timeout/retry/circuit breaker, async jobs, observability, security controls và resiliency patterns.
-- [ ] **Infrastructure Design - EXECUTE PER UNIT**: Cần ánh xạ local containers và production single-region/multi-zone, storage, database, networking, secret, backup và scaling.
+- [x] **Functional Design - EXECUTE PER UNIT**: Cần thiết cho authorization scope, subject/class inheritance, assessment lifecycle, grading, payment entitlement và audit rules.
+- [x] **NFR Requirements - EXECUTE PER UNIT**: Cần tinh chỉnh tech stack, performance, security, accessibility, testing và provider constraints theo từng unit.
+- [x] **NFR Design - EXECUTE PER UNIT**: Cần thiết kế timeout/retry/circuit breaker, async jobs, observability, security controls và resiliency patterns.
+- [x] **Infrastructure Design - EXECUTE PER UNIT**: Cần ánh xạ local containers và production single-region/multi-zone, storage, database, networking, secret, backup và scaling.
 - [ ] **Code Generation - EXECUTE PER UNIT (ALWAYS)**: Mỗi unit phải có code-generation plan được duyệt, TDD, implementation và verification riêng.
 
 ### CONSTRUCTION PHASE - after all units

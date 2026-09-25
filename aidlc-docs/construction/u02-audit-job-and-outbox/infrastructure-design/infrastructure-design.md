@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Infrastructure Design
+# U02 Audit, Job & Event - Infrastructure Design
 
 Hạ tầng chung ở `construction/shared-infrastructure.md`.
 

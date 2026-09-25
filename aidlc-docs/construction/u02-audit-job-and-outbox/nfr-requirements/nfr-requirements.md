@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - NFR Requirements
+# U02 Audit, Job & Event - NFR Requirements
 
 ## 1. Hiệu năng
 

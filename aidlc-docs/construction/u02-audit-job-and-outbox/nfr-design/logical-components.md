@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Logical Components
+# U02 Audit, Job & Event - Logical Components
 
 ## 1. Sơ đồ
 

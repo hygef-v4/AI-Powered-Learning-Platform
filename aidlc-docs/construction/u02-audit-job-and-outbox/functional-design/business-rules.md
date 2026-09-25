@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Business Rules
+# U02 Audit, Job & Event - Business Rules
 
 ## 1. Audit
 

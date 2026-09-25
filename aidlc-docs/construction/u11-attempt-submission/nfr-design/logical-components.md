@@ -11,7 +11,7 @@
  |                   --> DraftSaver --> DocumentModelPort (U09)              |
  |                   --> AttemptSubmitter --> EventPublisherPort (U02)       |
  | RetiredListener (ASSIGNMENT_RETIRED) --> AttemptSubmitter                  |
- | AttemptQueryService (SubmissionQueryPort cho U13-U16)                     |
+ | AttemptQueryService (SubmissionQueryPort cho U13, U15, U16)               |
  | Repository (submissions, submission_contents + trigger)                   |
  +---------------------------------------------------------------------------+
             | job U11_AUTO_SUBMIT

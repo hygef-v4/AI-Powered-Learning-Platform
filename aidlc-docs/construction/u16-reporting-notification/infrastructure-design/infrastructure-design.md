@@ -11,7 +11,7 @@
 | RabbitMQ | queue `u16.notification-listener` bind `platform.events` với `u04.enrollment.activated`, `u07.payment.paid`, `u08.assignment.*`, `u12.group.*`, `u14.group.submitted`, `u15.grade.published`; queue `jobs.u16.email-dispatch`, `jobs.u16.email-send`, `jobs.u16.deadline-reminder`; phát realtime qua fanout `platform.realtime` |
 | SMTP | Gmail `smtp.gmail.com:587` STARTTLS (App Password) khi demo; `mailpit:1025` khi dev |
 
-- Fanout realtime của U14 (`u14.realtime`) đổi thành exchange dùng chung `platform.realtime`; `SseHub` phân kênh theo `groupDocumentId` (U14) và `accountId` (U16).
+- Dùng chung fanout `platform.realtime` với U14; `SseHub` phân kênh theo `groupDocumentId` (U14) và `accountId` (U16).
 
 ## 2. Nginx
 

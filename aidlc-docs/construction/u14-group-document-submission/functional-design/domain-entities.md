@@ -49,7 +49,7 @@ OPEN --nhận--> CLAIMED --Xong--> IN_REVIEW --nhận lại (ai trong nhóm)--> 
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
-| `GroupSubmissionQueryPort` | U14 cung cấp cho U15, U16 | Bản nộp, tác giả từng mục, các mục của một thành viên |
+| `GroupSubmissionQueryPort` | U14 cung cấp cho U13, U15, U16 | Bản nộp, tác giả từng mục, các mục của một thành viên |
 | Event `u14.group.submitted` | U14 phát | Cho U15, U16 |
 | `GroupMembershipPort` | U14 dùng U12 | Nhóm, thành viên, trưởng nhóm |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U14 dùng U08 | Khung, hạn |

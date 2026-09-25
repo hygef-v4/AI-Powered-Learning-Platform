@@ -2173,3 +2173,147 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: Application design documentation update.
 
 ---
+
+## Inception Clean-up
+
+**Timestamp**: 2026-09-25T04:57:56Z
+
+**User Input**: "thế bước inception thiếu những gì"; "thế làm đến cái thứ 4 đi hội ý để sau, riêng cái database trong inception xoá luôn đi"
+
+**AI Response**: (1) Swept stale text in requirements.md, personas.md, stories.md (US-GRP-006 rewritten, US-ASM-003/004, payment domain title, misuse wording) and use-cases.md to match unit decisions (AI credits, DOCUMENT assignments, no subject-wide assignments, group work as a shared document). (2) Rewrote components.md, component-methods.md, services.md, component-dependency.md and application-design.md for the 16-unit design. (3) Deleted `inception/application-design/database/` (global ERD) and replaced live references in construction docs. (4) Rewrote aidlc-state.md with clean stage/unit progress, open items and a history summary. Phase 2 discussion left for the team.
+
+**Context**: Inception documentation synchronization.
+
+---
+
+## U16 Code Generation Plan Approval
+
+**Timestamp**: 2026-09-25T05:02:11Z
+
+**User Input**: "approve plan code 16 và kiểm tra lại tính đồng bộ của inception với construction"
+
+**AI Response**: Recorded approval of the U16 code generation plan. Started an Inception ↔ Construction consistency review.
+
+**Context**: U16 Code Generation Part 1 approved.
+
+---
+
+## Inception ↔ Construction Consistency Review
+
+**Timestamp**: 2026-09-25T05:30:00Z
+
+**User Input**: (tiếp tục yêu cầu "approve plan code 16 và kiểm tra lại tính đồng bộ của inception với construction")
+
+**AI Response**: Compared Inception artifacts against the unit design and code plans for U01-U16 and fixed the differences:
+- Dependency matrix: U07 no longer depends on U04 (it depends on U01/U02); U05 C U13; U13 C U09; U15 H U09, U10; U16 H U04/U08/U11/U12/U14, with no dependency on U03/U05. Dependency figure (drawio/png) updated: U04→U07 replaced by U01→U07 and U02→U07.
+- unit-of-work.md: rows U02, U03, U06, U15, U16 and the waves/gates rewritten to match the unit designs (no outbox/dead-letter, AI credit, shared group document, automatic deadline reminders).
+- Story map: UC-ASM-06 → U09; UC-GRP-05..07 / US-GRP-003..005 → U14; UC-GRP-08 / US-GRP-006 → U15; U12 limited to UC-GRP-01..04 / US-GRP-001..002. Totals: 86 UC, 56 stories (47 MVP, 9 Phase 2).
+- Invite code (FR-022, US-CAT-005, UC-CAT-13) is now MVP (U04), so it is no longer labelled Phase 2.
+
+**Context**: Consistency review between Inception and Construction completed.
+
+---
+
+## Project Consistency Re-check
+**Timestamp**: 2026-09-25T06:10:00Z
+**User Input**: "hỉnh lại hình theo thế này rồi xác nhận độ đồng bộ của toàn dự án lần nữa" (kèm ảnh graph)
+**AI Response**: Updated the dependency figure to match the screenshot: U01→U07 and U02→U07 now leave from the centre of each node and share one vertical trunk. Fixed the dependency text: the text alternative now has U01/U02 → U07; the C-edge list gained U13→U05, U05→U06 and U09→U13; added a note that U16's H edges on U11/U14 are covered by U15→U16; the Wave 2 text now says U07 opens after U01/U02. Also fixed: U01 docs no longer say dead-letter (the job ends `FAILED`); U02 title and story-map row now read "Audit, Job & Event"; unit-of-work story count 57→56; U09 no longer mentions a temporary DOCX file in U03. Raised one finding: U03 still has file purposes, an XML check and derived files that no unit uses.
+**Context**: Consistency re-check. The U03 decision is pending.
+
+---
+
+## Clarification - U03 purposes
+**Timestamp**: 2026-09-25T06:15:00Z
+**User Input**: "DOCUMENT thì vẫn chứa drawio mà" / "là sao tức là có đúng lúc nộp bài thì lưu drawio dạng full còn gửi lên thì lưu dạng rút gọn ko"
+**AI Response**: Explained where the Draw.io XML lives: the full XML is stored inside the DIAGRAM block of the document in PostgreSQL. The compact XML is built in memory only when AI grading runs and is never saved. The U03 decision is still pending.
+**Context**: Construction - consistency re-check
+
+---
+
+## U03 Simplification and Consistency Check
+**Timestamp**: 2026-09-25T06:40:00Z
+**User Input**: "thế rút gọn đi xong thì check tiếp độ đồng bộ của doc"
+**AI Response**: Simplified U03 across FD, NFR, Infra and the code plan. U03 now keeps only three file purposes: `AVATAR`, `MATERIAL` and `DOCUMENT_IMAGE` (5 MB, SVG served with a sandbox CSP). Removed: the Draw.io file purposes, `SUBMISSION_FILE`, `GROUP_COMPOSITE`, `REPORT_EXPORT`, `YOUTUBE_TRANSCRIPT`, the XML parser, derived files, `storeDerived`/`deleteDerived`, the `DELETED` status and job `U03_DRIVE_DELETE`. Rules BR-U03-10..13 and 31..33 were rewritten. Inception was updated to match (components, component-methods, services, unit-of-work, G1/G3). U06 now references BR-U09-35.
+Further sync fixes:
+- matrix: U13 no longer depends on U03; added U01 C U04 (scope port); added U13 C U11/U14 (submission content and the submit event). U13 contract table and plan updated.
+- U14 port now lists U13 as a consumer; U05 RagRetrievalPort drops U15; U12 GroupMembershipPort drops U15.
+- shared-infrastructure now lists the `platform.realtime` fanout.
+Checked with no issues: all 56 stories and 86 UC are mapped, the 4 removed UC are marked, and the figure edges equal the transitive reduction of H plus U15→U16.
+**Context**: Construction - consistency review
+
+---
+
+## Final Consistency Check
+**Timestamp**: 2026-09-25T06:55:00Z
+**User Input**: "kiểm tra lại một lần nữa để xác nhận ko gì bị lệch rồi t commit"
+**AI Response**: Ran a final pass for stale terms, `<br>` inside tables, references to removed BR-U03 rules, broken markdown links, story/UC counts, matrix vs declared ports, and graph vs matrix. Fixed:
+- use-cases.md counts (86 UC / 56 story);
+- U02 plan titles now read "Audit, Job & Event";
+- added U15 C U11 (`GradeQueryPort` for showing scores) to the matrix and to the U11 contract table.
+Nothing else is out of sync.
+**Context**: Consistency review complete; ready to commit.
+
+---
+
+## Consistency Check (round 2)
+**Timestamp**: 2026-09-25T07:10:00Z
+**User Input**: "lần nữa đi xem còn chỗ lệch nhỏ nào nữa ko"
+**AI Response**: Ran checks from new angles: doc titles, event names (published vs consumed), unit names, migrations, Redis prefixes, table ownership, data ownership vs matrix, and each code plan's dependency table vs the matrix. Fixed:
+- U04/U05 names in the story map and aidlc-state now match the unit docs;
+- removed `u13.ai.proposal-ready` from U13 infra (no unit consumes it; proposals are read by polling status);
+- component-dependency §4 "Used by" lists now match the matrix (U04, U05, U06, U08, U09, U12, U13, U14);
+- added U02 C U01 (U01 uses U02 job/audit via a port) to the matrix, with the explanation and wave-1 text updated.
+**Context**: Consistency review, round 2
+
+---
+
+## Consistency Check (round 3)
+**Timestamp**: 2026-09-25T07:35:00Z
+**User Input**: "Vẫn còn tìm ra được chỗ lệch thì tiếp tục kiểm tra đi"
+**AI Response**: Checked more angles: BR/NFR/FR references, story traces per unit, event bindings, job types and queues, env/secret names, Nginx routes vs endpoints, key parameters (email cap, 12/20/50 MB limits, Gemini models, languages), plan checkboxes, stale technology terms, compliance scope, and duplicate routes/APIs. Fixed:
+- unit-of-work §6 cross-unit security/resiliency rules rewritten for the reduced scope (removed circuit breaker, encryption, alerting, backup, multi-zone);
+- added reduced-scope notes to the Units Generation and User Stories compliance tables, and fixed the RESILIENCY-02/08/10/11 rows;
+- requirements.md history row: noted that multi-zone was dropped;
+- U16 infra no longer uses the old name `u14.realtime`;
+- U01 plans: old REL codes annotated;
+- ticked approval checkboxes that were already done (U01 FD; story and unit checkpoints; execution-plan Functional Design, NFR and Infra stages);
+- services.md: noted that service names are logical names.
+Remaining open items (by design): Phase 2 team discussion; the U01 code plan is still paused.
+**Context**: Consistency review, round 3
+
+---
+
+## Consistency Check (round 4)
+**Timestamp**: 2026-09-25T08:10:00Z
+**User Input**: "tiếp tục kiểm tra lại đi"
+**AI Response**: This round checked content (requirements/stories/use-cases vs business rules), who may do what, FR↔story traceability, the ports/consumers listed in every construction file, enums, Mermaid/ASCII diagrams, cross-unit table references, and per-row story-map counts. Fixed:
+- **FR/stories:**
+  - FR-003, FR-002, USCN-001, US-CAT-002, personas: only ADMIN creates subjects/classes; there is no separate "course" entity.
+  - FR-023 now covers semantic search/summary (US-CNT-003).
+  - US-ASM-008 now traces FR-016 and FR-028 instead of FR-023 (Phase 2).
+  - FR-026 retitled.
+  - FR-010 now says "no credit added" and "AI credit".
+- **Wording in stories and use-cases:**
+  - US-RPT-001: the system reminds learners automatically.
+  - US-QBK-001: rubric is a checklist.
+  - US-GRP-001/002: group set per assignment; the leader change does not touch claimed sections.
+  - US-GRP-006/UC-GRP-08: "tài liệu nhóm" instead of "bài chung".
+  - UC-GRP-07 actor: leader / instructor.
+  - ACT-03: subject manager manages the subject template.
+- **Rules and constraints:**
+  - Group rule in requirements and use-cases §5: the leader submits.
+  - requirements: providers now chosen.
+  - use-cases §6: no malware scan.
+  - use-cases §7 count: 56 active stories.
+- **Construction:**
+  - U05 BR-U05-40, NFR-U05-23, text, diagram, plan: only U13 calls RAG.
+  - U12 GroupMembershipPort no longer lists U15.
+  - U04 ClassAccessPort consumer list; U11 SubmissionQueryPort consumer list.
+  - U08 GroupReadinessPort no longer mentions "phân công".
+- **Inception:**
+  - unit-of-work U10 row (retire/clone is MVP, in U08); versioning rule; "credit AI".
+  - dependency doc: U04 consumer list; code-run consumers.
+  - Compliance tables in stories and unit-of-work: out-of-scope rules now N/A.
+**Context**: Consistency review, round 4
+
+---

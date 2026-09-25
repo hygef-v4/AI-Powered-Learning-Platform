@@ -6,8 +6,8 @@
 | Bảo mật | Spring Security | Có sẵn bcrypt, filter chain, xử lý cookie | NFR-001 |
 | Phiên | JWT access 15 phút + refresh token trong cookie HttpOnly | Người dùng chọn; kiểm access không cần tra Redis | Câu N1, N5 |
 | Ký JWT | HMAC-SHA256 với khóa bí mật lấy từ secret | Một backend duy nhất ký và kiểm, không cần khóa công khai | NFR-U01-10 |
-| Lưu refresh, OTP, rate limit | Redis | Đã chốt ở ERD; có TTL và bộ đếm nguyên tử | ERD §3.4 |
-| Dữ liệu tài khoản | PostgreSQL | Đã chốt ở ERD | ERD |
+| Lưu refresh, OTP, rate limit | Redis | Đã chốt ở Application Design; có TTL và bộ đếm nguyên tử | Application Design |
+| Dữ liệu tài khoản | PostgreSQL | Đã chốt ở Application Design | Application Design |
 | Băm mật khẩu | bcrypt, cost ≥ 12 | Người dùng chọn | Câu N4 |
 | Gửi mail | SMTP qua Mail Port; demo dùng Gmail SMTP + App Password | Miễn phí, đổi nhà cung cấp chỉ bằng cấu hình | Câu N8, REL-005 |
 | Mail local/demo | Mailpit trong container | Không tốn lượt mail thật, xem được OTP khi test | Câu N8 |

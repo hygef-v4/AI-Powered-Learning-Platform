@@ -9,7 +9,7 @@
 | Bảng `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, `solution_verifications`, `code_runs` | `postgres` |
 | Trần chi phí ngày, rate limit | `redis`, khóa `u13:cost:*`, `u13:ai:*`, `u13:try:*` |
 | Queue | `jobs.u13.ai-task`, `jobs.u13.code-run` |
-| Event | `u13.code.graded`, `u13.ai.proposal-ready` trên `platform.events` |
+| Event | `u13.code.graded` trên `platform.events` (đề xuất AI được xem bằng cách hỏi trạng thái, không phát event) |
 | Chạy code | 4 container Judge0 trong mạng `sandbox` |
 
 ## 2. Judge0 (theo `demo_do_an`)

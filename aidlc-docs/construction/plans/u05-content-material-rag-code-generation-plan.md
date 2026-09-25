@@ -103,7 +103,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 30** - Cập nhật `README.md`: tạo `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; chạy local không có key; hạ `U05_INGEST_CONCURRENCY` khi VPS nhỏ; cách U13/U15 dùng `RagRetrievalPort`.
+- [ ] **Bước 30** - Cập nhật `README.md`: tạo `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; chạy local không có key; hạ `U05_INGEST_CONCURRENCY` khi VPS nhỏ; cách U13 dùng `RagRetrievalPort`.
 - [ ] **Bước 31** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết
@@ -114,7 +114,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 | US-CNT-002 (UC-CNT-02, 03) | 5, 6, 7, 25 |
 | US-CNT-005 (UC-CNT-08) | 3, 6, 10, 18 |
 | UC-CNT-04 (qua U04) | 12, 27 |
-| RAG cho U13/U15 | 8, 13, 17, 19 |
+| RAG cho U13 | 8, 13, 17, 19 |
 
 ## 5. Ngoài phạm vi
 

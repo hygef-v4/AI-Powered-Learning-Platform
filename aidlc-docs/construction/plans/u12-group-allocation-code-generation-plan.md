@@ -22,7 +22,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `AssignmentQueryPort` | U08 | Dùng thật |
 | U12 cài `GroupReadinessPort` cho U08 | | Thay adapter tạm của U08 |
-| U12 cung cấp `GroupMembershipPort` | cho U14, U15, U16 | Các unit đó dùng khi được code |
+| U12 cung cấp `GroupMembershipPort` | cho U14, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U12 sở hữu
 

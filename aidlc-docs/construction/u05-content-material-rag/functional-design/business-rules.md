@@ -48,7 +48,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-40 | Chỉ U13/U15 gọi, sau khi unit sở hữu (U08, U15) đã kiểm quyền người dùng; U05 kiểm lại `classId` thuộc `subjectId`. | components.md |
+| BR-U05-40 | Chỉ U13 gọi (khi soạn đề bằng AI), sau khi unit yêu cầu AI (U06, U08, U10) đã kiểm quyền người dùng; U05 kiểm lại `classId` thuộc `subjectId`. | components.md |
 | BR-U05-41 | Phạm vi tìm: bài `PUBLISHED` hiện tại của môn + của lớp + bài cấp môn liên kết vào lớp; có thể lọc theo danh sách bài. Không tìm trong bản nháp, bài lưu trữ hay phạm vi khác. | US-CNT-003 S2, Câu 7 |
 | BR-U05-42 | `k` ≤ 20; kết quả kèm `lessonId`, `lessonVersionId`, tiêu đề, trang hoặc timestamp để trích dẫn. | Câu 7 |
 | BR-U05-43 | Gemini lỗi khi tạo vector câu hỏi → trả lỗi "tạm thời không khả dụng", không trả kết quả rỗng giả. | US-CNT-003 S2 |

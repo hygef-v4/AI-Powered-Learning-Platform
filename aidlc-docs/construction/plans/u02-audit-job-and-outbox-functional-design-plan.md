@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Functional Design Plan
+# U02 Audit, Job & Event - Functional Design Plan
 
 ## 1. Phạm vi
 

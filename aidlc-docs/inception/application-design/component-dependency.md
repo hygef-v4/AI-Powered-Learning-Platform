@@ -2,90 +2,77 @@
 
 ## 1. Dependency principles
 
-- Dependency đi từ adapter/controller vào application/domain, rồi ra port; domain không phụ thuộc SDK provider.
-- Cross-module write phải qua public application service hoặc event contract.
-- Database có thể cùng instance ở modular monolith nhưng schema/table ownership theo module.
-- Worker dùng cùng module contracts và không vượt authorization/context scope của job nguồn.
+- Dependency đi từ controller/adapter vào application/domain rồi ra port; domain không phụ thuộc SDK provider.
+- Ghi liên module chỉ qua port công khai hoặc event sau commit.
+- Dùng chung một PostgreSQL nhưng mỗi bảng thuộc đúng một module (unit); không module nào đọc bảng của module khác.
+- Worker dùng cùng contract và không vượt phạm vi quyền của job nguồn.
 
 ## 2. Dependency matrix
 
-| Consumer | Identity | Academic | Group | Content | Learning | Bank | Assessment | Submission | Grading | AI | Code Exec | Payment | Reporting | Notification | File | Job | Audit |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Identity & Access | O | - | - | - | - | - | - | - | - | - | - | - | - | - | - | W | W |
-| Academic | R | O | - | - | - | - | - | - | - | - | - | R | - | - | - | - | W |
-| Group | R | R | O | - | - | - | R | - | - | - | - | - | - | - | - | - | W |
-| Content | R | R | - | O | - | - | - | - | - | - | - | - | - | - | W | W | W |
-| Learning | R | R | - | R | O | - | - | - | - | - | - | - | - | - | - | - | W |
-| Question Bank | R | R | - | - | - | O | - | - | - | - | - | - | - | - | - | - | W |
-| Assessment | R | R | R | R | - | R | O | - | - | W | - | - | - | - | R | W | W |
-| Submission | R | R | R | - | - | R | R | O | - | - | R | - | - | - | W | W | W |
-| Grading | R | R | R | - | - | R | R | R | O | W | R | - | - | - | R | W | W |
-| AI Orchestration | R | R | - | R | - | R | - | - | - | O | - | - | - | - | R | W | W |
-| Code Execution | R | R | - | - | - | - | R | R | - | - | O | - | - | - | R | W | W |
-| Payment | R | R | - | - | - | - | - | - | - | - | - | O | - | - | - | W | W |
-| Reporting | R | R | R | - | - | - | R | R | R | - | - | - | O | - | R | W | W |
-| Notification | R | R | R | - | - | - | R | R | R | - | - | - | - | O | - | W | W |
-| File & Artifact | R | - | - | - | - | - | - | - | - | - | - | - | - | - | O | W | W |
-| Job Platform | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | O | W |
-| Audit | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | O |
+Ma trận phụ thuộc giữa module là ma trận 16 unit trong `unit-of-work-dependency.md` §2 (ký hiệu `H` phụ thuộc cứng, `C` contract qua port trung lập, `E` event), kèm hình đồ thị phụ thuộc.
 
-`O`: owner; `R`: read/use public contract; `W`: invokes/writes through public contract; `-`: không phụ thuộc trực tiếp.
-
-Ma trận liệt kê đủ 17 module ở cả hàng và cột. Identity & Access, File & Artifact, Job Platform và Audit là module nền: chúng không phụ thuộc module nghiệp vụ nào, và Job Platform cùng Audit không gọi ngược lên Identity để tránh tạo chu trình - controller truyền sẵn actor context xuống. Ba cột Learning, Reporting và Notification trống ngoài ô owner vì không module nào đọc chúng qua contract đồng bộ; chúng chỉ tiêu thụ event. Ma trận biểu diễn contract đồng bộ hoặc command trực tiếp; event/outbox gián tiếp không được tính là quyền đọc bảng của module khác. Learning chỉ kiểm Academic enrollment trước khi cấp nội dung; Payment chỉ cộng token AI.
-
-AI Orchestration chỉ nhận request/context reference đã được Assessment hoặc Grading kiểm quyền. Nó đọc nguồn Content/Question Bank/File theo scope và ghi Job, rồi trả proposal qua contract cho module gọi; không đọc hoặc ghi trực tiếp dữ liệu Assessment, Submission hay Grading. Cách này giữ U03 độc lập với U04-U06. Content không gọi thẳng AI Orchestration: mọi tác vụ RAG, transcript hay tóm tắt đều được Content enqueue qua Job Platform, nên đồ thị không có chu trình hai chiều.
-
-## 3. Sơ đồ dependency
+## 3. Sơ đồ runtime
 
 ```mermaid
 flowchart LR
-    Web["Next.js Web"] --> Api["Spring Boot REST API"]
-    Api --> Auth["Identity and Authorization"]
-    Api --> Core["Domain Modules"]
-    Core --> Db["Relational Database"]
-    Core --> FilePort["File Artifact Port"]
-    Core --> Jobs["Job Platform"]
-    Jobs --> Workers["Workers"]
-    Workers --> AiPort["AI Provider Port"]
-    Workers --> CodePort["Code Sandbox Port"]
-    Workers --> NotifyPort["Notification Port"]
-    Workers --> FilePort
-    Core --> PayPort["Payment Gateway Port"]
-    Core --> Audit["Append Only Audit"]
+    Web["Next.js Web"] --> Nginx["Nginx"]
+    Nginx --> Api["Backend Spring Boot"]
+    Api --> Db["PostgreSQL pgvector"]
+    Api --> Redis["Redis"]
+    Api --> Mq["RabbitMQ"]
+    Mq --> Worker["Worker"]
+    Worker --> Db
+    Api --> Drive["Google Drive"]
+    Worker --> Drive
+    Worker --> Gemini["Gemini API"]
+    Api --> Gemini
+    Worker --> Judge0["Judge0 sandbox"]
+    Api --> Judge0
+    Api --> PayOS["PayOS"]
+    Worker --> PayOS
+    Worker --> Smtp["SMTP"]
+    Worker --> YouTube["YouTube"]
 ```
 
 ### Text alternative
 
-Next.js gọi REST API. API xác thực và chuyển vào domain modules. Domain lưu transactional data trong relational database, dùng artifact port cho file và job platform cho tác vụ dài. Worker gọi AI, code sandbox, notification và artifact ports. Payment dùng gateway port riêng. Mọi module phát audit event bất biến.
+Trình duyệt gọi Nginx, Nginx chuyển tới backend Spring Boot. Backend lưu dữ liệu trong PostgreSQL (có pgvector), dùng Redis cho phiên/bộ đếm/token, gửi job và event qua RabbitMQ cho worker. Backend và worker lưu file lên Google Drive, gọi Gemini cho AI và embedding, gọi Judge0 trong mạng sandbox để chạy code, gọi PayOS cho thanh toán. Worker gửi email qua SMTP và lấy playlist/caption từ YouTube.
 
 ## 4. Data ownership
 
-| Data | Owner | Tham chiếu bởi |
+| Dữ liệu | Owner | Dùng bởi (qua port/event) |
 |---|---|---|
-| User, role, scope, session | Identity & Access | Tất cả module qua actor/resource contract |
-| Subject, class, enrollment | Academic | Group, Content, Learning, Assessment, Reporting |
-| Group, leader, allocation | Group | Submission, Grading, Reporting |
-| Material/content/source/transcript version | Content | Learning, AI, Assessment |
-| QuestionVersion/RubricVersion | Question Bank | Assessment, Submission snapshot, Grading, AI |
-| Assessment/template/copy assignment/version/publication/simulation policy | Assessment | Submission, Grading, Reporting |
-| Attempt snapshot, draft/submission/composite/artifact refs | Submission | Grading, Reporting |
-| Grade/proposal/publication state | Grading | Learning, Reporting, Notification |
-| Object bytes/checksum/abuse check/derivation | File & Artifact | Content, Submission, AI, Reporting |
-| Payment/event/entitlement | Payment | AI (số dư token AI) |
-| Audit events | Audit | Admin query only |
+| Tài khoản, role, phiên, OTP | U01 | Mọi module |
+| Audit, job | U02 | Mọi module |
+| File (metadata, token tải) | U03 | U01, U05, U06, U09, U11, U14 |
+| Môn, lớp, ghi danh, mã mời | U04 | U01, U05, U06, U08-U12, U14-U16 |
+| Chương, bài, phiên bản, nguồn RAG, vector | U05 | U04, U06, U08, U13 |
+| Câu hỏi, rubric (phiên bản) | U06 | U08-U11, U13, U15 |
+| Giao dịch, ví credit, sổ cái credit | U07 | U13, U16 |
+| Bài, thành phần, publication | U08 | U09-U12, U14-U16 |
+| Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U10, U11, U13-U15 |
+| Template, lineage, chính sách thi thử | U10 | U11, U15 |
+| Lượt làm, bài nộp | U11 | U13, U15, U16 |
+| Bộ nhóm, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
+| Cấu hình AI, đề xuất AI, lần chạy code | U13 | U05, U08, U11, U15 |
+| Tài liệu nhóm, mục, bản nộp nhóm | U14 | U13, U15, U16 |
+| Điểm, lịch sử điểm | U15 | U11, U16 |
+| Thông báo, email outbox, nhắc hạn | U16 | - |
 
 ## 5. Trust boundaries
 
-- Browser, upload content, webhook và mọi provider response là untrusted input.
-- API authorization chạy trước load/return resource nhạy cảm.
-- Worker payload chỉ chứa ID/reference; worker tải dữ liệu qua scoped service.
-- Signed artifact access có TTL, purpose và actor binding khi khả thi.
-- Full Draw.io XML không được gửi thẳng sang AI; derived artifact được tạo trong trusted worker sau validation.
+- Trình duyệt, file upload, webhook PayOS, phản hồi Gemini/YouTube/Judge0 đều là đầu vào không tin cậy.
+- Kiểm quyền chạy trước khi đọc/trả tài nguyên nhạy cảm.
+- Payload job chỉ chứa ID; worker đọc dữ liệu qua service có kiểm phạm vi.
+- Token tải file 5 phút gắn tài khoản; không lộ ID file Drive.
+- XML Draw.io đầy đủ không gửi thẳng sang AI; chỉ bản rút gọn tạo trong worker sau khi kiểm.
+- Judge0 nằm trong mạng `sandbox` không ra Internet, không chạm datastore của hệ thống.
 
-## 6. Change-specific communication contracts
+## 6. Contract liên module quan trọng
 
-- Content → Job: `YOUTUBE_TRANSCRIPT_INGEST` chỉ mang source/version reference đã được authorize; worker trả transcript artifact và timestamp metadata qua Content service contract.
-- Assessment → Submission: `AttemptSnapshot` đóng băng assignment, question/rubric component versions và simulation policy khi attempt bắt đầu.
-- Copy assignment/rubric chỉ đọc source version rồi tạo stable identity mới ở lớp đích; không sao chép khóa học/lớp. Assignment đã phát hành bị khóa nội dung; thay đổi bằng ngưng giao rồi tạo version mới, hoặc nhân bản.
-- Submission → Job: `GROUP_COMPOSITE_GENERATE` mang danh sách part-version bất biến có thứ tự; kết quả là derived composite artifact/version.
-- Submission → Grading: composite evidence và individual-part evidence là read-only. Grading lưu kết quả tách biệt và điểm cuối từng thành viên do giảng viên nhập.
+- U11 → U15, U16: event `u11.submission.submitted` sau commit.
+- U14 → U15, U16: event `u14.group.submitted`; realtime qua `platform.realtime`.
+- U13 → U15: event `u13.code.graded`; `AiGradingPort` trả đề xuất, U15 quyết định.
+- U07 ← U13: `CreditPort.reserve/settle/release` quanh mỗi lời gọi AI.
+- U08 ← U09/U12/U13 (`C`): `TypeConfigPort`, `GroupReadinessPort`, `CodeLabCheckPort` khi duyệt/phát hành.
+- U04 ← U05 (`C`): `PublishedContentPort` cho trang lớp của người học.

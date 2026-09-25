@@ -1,4 +1,4 @@
-# U02 Audit, Job & Outbox - Business Logic Model
+# U02 Audit, Job & Event - Business Logic Model
 
 ## 1. Truy vết
 

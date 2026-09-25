@@ -45,6 +45,7 @@ Sau khi `SUBMITTED`, nội dung bất biến.
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `SubmissionQueryPort` | U11 cung cấp cho U13, U15, U16 | Bài nộp, nội dung, lượt được chấm |
+| `GradeQueryPort` | U11 dùng U15 (`C`: ẩn điểm tới khi U15 có) | Hiển thị điểm/đáp án theo BR-U11-33 |
 | Event `SUBMISSION_SUBMITTED` | U11 phát | `{attemptId, publicationId, learnerId, late, submitMode}` cho U15, U16 |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U11 dùng U08 | Bài, publication, hạn |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort` | U11 dùng U09 | Cấu hình, kiểm tài liệu, xuất DOCX |

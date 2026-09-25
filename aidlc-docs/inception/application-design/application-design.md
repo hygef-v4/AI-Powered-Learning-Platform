@@ -4,64 +4,61 @@
 
 | Chủ đề | Quyết định |
 |---|---|
-| Backend | Spring Boot modular monolith với domain boundaries rõ |
+| Backend | Spring Boot modular monolith, 16 module theo unit, cùng image cho `backend` và `worker` |
 | Frontend | Next.js desktop-first, gọi REST `/api/v1` |
-| Contract | OpenAPI; backend authorization là nguồn chuẩn |
-| Tác vụ dài | Job queue + worker, trạng thái, retry/backoff hữu hạn |
-| File | Object storage abstraction; metadata/checksum/version trong relational DB |
-| AI | Provider-neutral port/adapter, mock/sandbox contract tests |
-| Realtime | MVP polling job status; SSE/WebSocket có thể bổ sung sau |
+| Contract | OpenAPI mỗi unit; backend authorization là nguồn chuẩn |
+| Tác vụ dài | Bảng `jobs` + RabbitMQ, retry theo DB, worker riêng |
+| File | Google Shared Drive qua port lưu trữ; metadata trong PostgreSQL |
+| AI | Gemini qua port provider-neutral, model theo loại việc, trừ credit AI |
+| Realtime | SSE cho tài liệu nhóm và thông báo; còn lại polling trạng thái job |
+| Triển khai | Docker Compose trên VPS, Nginx + Let's Encrypt (xem `construction/shared-infrastructure.md`) |
 
 ## 2. Các domain module
 
-Identity & Access, Academic, Group, Content, Learning, Question Bank, Assessment, Submission, Grading, AI Orchestration, Code Execution, Reporting, Payment & Entitlement, Notification, Audit, File & Artifact và Job Platform.
+16 module trùng với 16 unit: Identity & Access, Audit/Job/Event, File & Artifact, Academic & Learning Access, Content & RAG, Question Bank, Payment & AI Credit, Assessment Core, Question Types & Documents, Template/Copy/Simulation, Attempt & Submission, Group, AI & Code Execution, Group Document, Grading, Reporting & Notification.
 
-Chi tiết trách nhiệm: `components.md`. Chữ ký interface: `component-methods.md`. Orchestration: `services.md`. Dependency/data flow: `component-dependency.md`.
+Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký), `services.md` (orchestration), `component-dependency.md` (luồng dữ liệu), `unit-of-work*.md` (unit, phụ thuộc, story). Thiết kế chi tiết và bảng dữ liệu của từng module nằm trong `aidlc-docs/construction/uXX-*/`.
 
 ## 3. Các invariants thiết kế
 
-1. Quyền role và object scope được kiểm tra server-side cho mọi use case.
-2. Chủ nhiệm môn chỉ quản lý phạm vi môn được giao; quyền đó không tự cấp quyền vận hành/chấm lớp.
-3. Mỗi nhóm có đúng một leader nhưng từng thành viên nộp phần được giao; hệ thống tạo composite và giảng viên chốt version chung.
-4. Submission/version và snapshot câu hỏi của attempt là immutable; chấm điểm chỉ tham chiếu đúng version.
-5. Full Draw.io XML là artifact chuẩn; compact XML là derived artifact chỉ cho AI job được giảng viên yêu cầu.
-6. AI không publish đề hoặc final grade; giảng viên giữ quyết định học thuật cuối.
-7. Composite nhóm luôn chấm tay; AI chỉ hỗ trợ phần cá nhân. Điểm cuối từng sinh viên do giảng viên nhập từ hai nguồn, không có công thức hệ thống bắt buộc.
-8. Payment entitlement chỉ phát sinh từ verified, idempotent provider event.
-9. Không sao chép khóa học/lớp. Template hoặc thao tác copy assignment/rubric được phép tạo identity độc lập có lineage; không copy publication, attempt, submission hoặc grade. Assignment đã phát hành bị khóa nội dung; muốn đổi thì ngưng giao rồi tạo version mới (hoặc nhân bản); attempt giữ version câu hỏi đã dùng.
-10. Simulation exam giữ attempt snapshot và có chính sách lượt/kết quả/tính điểm bất biến sau attempt đầu tiên.
-11. Audit không có application update/delete contract.
+1. Quyền role và phạm vi đối tượng được kiểm tra phía server cho mọi use case.
+2. Chủ nhiệm môn quản lý phạm vi môn (học liệu, ngân hàng, template); chỉ phát hành bài cho lớp mà chính họ là giảng viên. Không có đề chung cấp môn.
+3. Mỗi nhóm có đúng một trưởng nhóm; bài nhóm là một tài liệu chung, thành viên tự nhận mục, mỗi mục tại một thời điểm chỉ một người sửa; trưởng nhóm nộp.
+4. Bài đã phát hành bị khóa nội dung; thay đổi bằng version mới sau khi ngưng giao/đóng, hoặc nhân bản. Bài nộp bất biến sau khi nộp.
+5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi giảng viên yêu cầu AI chấm.
+6. AI chỉ tạo đề xuất; giảng viên giữ quyết định phát hành đề và điểm cuối.
+7. Tài liệu nhóm luôn chấm tay; AI chỉ hỗ trợ phần đóng góp của từng thành viên; điểm cuối từng người do giảng viên nhập, không có công thức bắt buộc.
+8. Thanh toán chỉ cộng credit AI từ webhook đã xác minh hoặc đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
+9. Không sao chép khóa học/lớp; template/copy bài tạo identity mới có lineage, không copy lịch, lượt làm, bài nộp, điểm.
+10. Thi thử khóa chính sách khi lượt đầu tiên bắt đầu.
+11. Audit chỉ thêm, không sửa, không xóa.
 
-## 4. Luồng triển khai MVP
+## 4. Luồng triển khai
 
-- Next.js và Spring Boot triển khai tách process/container nhưng cùng một sản phẩm modular monolith.
-- Relational database giữ transactional data và artifact metadata.
-- Object storage implementation có thể local-compatible trong development và thay bằng managed storage ở production.
-- Worker process xử lý tạo đề bằng AI, file/YouTube transcript RAG hỗ trợ truy xuất nguồn, group composite, Code Lab, notification, reconciliation và export.
-- External systems luôn nằm sau ports/adapters để test bằng mock/sandbox.
+- Nginx, frontend, backend, worker, PostgreSQL (pgvector), Redis, RabbitMQ và 4 container Judge0 chạy bằng Docker Compose trên VPS của nhóm.
+- Worker xử lý: gửi email/OTP, ingest RAG, AI, chạy code, mở/đóng bài, tự nộp, đối soát PayOS, dọn file, nhắc hạn.
+- Dịch vụ ngoài (Google Drive, Gemini, YouTube, PayOS, SMTP) nằm sau port/adapter, có adapter giả để chạy local và test.
 
 ## 5. Traceability
 
-Thiết kế bám bộ 90 use case và 59 user story gốc thông qua các module sau. Theo điều chỉnh ngày 2026-09-24, `US-LRN-002`, `US-LRN-003` và các use case tiến độ bài học liên quan không còn trong phạm vi triển khai; tiến độ nộp bài và trạng thái job vẫn được giữ.
+Story và use case được gán cho unit trong `unit-of-work-story-map.md`. Các story Phase 2 chưa thiết kế đang chờ nhóm hội ý.
 
-| Story domain | Module chủ đạo |
+| Story domain | Unit chủ đạo |
 |---|---|
-| IAM | Identity & Access |
-| CAT | Academic |
-| CNT/LRN | Content, Learning |
-| GRP | Group, Submission, Grading |
-| QBK | Question Bank |
-| AIG | AI Orchestration, Content, Assessment |
-| ASM | Assessment, Submission, Code Execution |
-| GRD | Grading, AI Orchestration |
-| RPT | Reporting |
-| PAY | Payment & Entitlement |
-| NTF/AUD | Notification, Audit |
+| IAM | U01 |
+| AUD | U02 |
+| CAT, LRN | U04 |
+| CNT | U05 |
+| QBK | U06 |
+| PAY | U07 |
+| ASM | U08-U11, U13 |
+| AIG | U13 |
+| GRP | U12, U14, U15 |
+| GRD | U15 |
+| RPT, NTF | U16 |
 
 ## 6. Security và resiliency compliance
 
-- **Security**: Compliant ở cấp application design với server-side object authorization, input/file/XML validation, provider isolation, secret redaction, immutable audit và payment integrity. Network/IAM cloud chi tiết chuyển sang Infrastructure Design.
-- **Resiliency**: Compliant ở cấp application design với queue/worker, idempotency, retry/backoff, immutable source artifacts và manual fallback cho AI. RTO/RPO, multi-zone, backup/restore và alarms được chi tiết ở NFR/Infrastructure Design.
-- **Property-Based Testing**: N/A vì extension đã tắt; unit/contract/system tests vẫn bắt buộc downstream.
-
-Không có blocking finding tại Application Design.
+- **Security** (phạm vi rút gọn SECURITY-03, 04, 05, 08, 09, 12, 15): Compliant ở cấp thiết kế với kiểm quyền phía server, kiểm file/XML, cô lập sandbox, không log secret, audit bất biến, webhook có chữ ký.
+- **Resiliency** (RESILIENCY-04, 06, 10): Compliant với deploy/rollback bằng Compose, healthcheck, timeout cho mọi dịch vụ ngoài, retry hữu hạn qua job.
+- **Property-Based Testing**: N/A (extension tắt).

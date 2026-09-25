@@ -141,8 +141,6 @@ Phạm vi môn/lớp đến từ contract của U04 (`SubjectScopePort`, `ClassS
 | `AvatarPort` | U03 | `C` | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR`, lấy tham chiếu hiển thị |
 | `SubjectScopePort`, `ClassScopePort` | U04 | Contract | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 
-## 8. Cần đồng bộ ERD
+## 8. Ghi chú dữ liệu
 
-- Bỏ `LOCKED` khỏi `accounts.status`.
-- Thêm `phone_number` và `avatar_ref` vào `accounts`.
-- Thêm bảng lưu `AccountImportBatch` và kết quả từng dòng.
+ERD tổng ở Inception đã bỏ (2026-09-25); bảng của U01 định nghĩa tại tài liệu này và migration trong code generation plan.

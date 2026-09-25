@@ -24,7 +24,7 @@
 | NFR-U06-20 | Đọc xlsx có giới hạn: ≤ 5 MB, tỉ lệ nén tối thiểu (chống zip bomb), chỉ sheet đầu, ≤ 500 dòng, ô ≤ 32 000 ký tự; bỏ qua công thức (chỉ đọc giá trị). | SEC-003 |
 | NFR-U06-21 | CSV UTF-8, có BOM hoặc không; dòng ≤ 64 KB. | SEC-003 |
 | NFR-U06-22 | Đáp án đúng, test ẩn, `answerGuide` không bao giờ trả cho người học qua API của U06 (U06 chỉ phục vụ người quản lý; U11 tự lọc khi hiển thị). | SEC-002 |
-| NFR-U06-23 | Sơ đồ Draw.io trong khung tài liệu kiểm bằng parser an toàn (quy tắc U03/U09). | BR-U03-10 |
+| NFR-U06-23 | Sơ đồ Draw.io trong khung tài liệu kiểm bằng parser an toàn của U09. | BR-U09-35 |
 | NFR-U06-24 | Kiểm quyền theo phạm vi ở mọi endpoint; ngoài phạm vi trả `404`. | SEC-002 |
 
 ## 4. Kiểm thử
