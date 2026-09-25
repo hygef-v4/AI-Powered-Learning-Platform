@@ -1036,8 +1036,8 @@
 #### Scenario 1 - Tự chấm sau nộp
 
 - **Given** bài nộp hợp lệ chứa câu hỏi có đáp án xác định
-- **When** giảng viên chọn chấm tự động theo đáp án đã cấu hình
-- **Then** hệ thống tính điểm theo đáp án/rule đã xuất bản, lưu lựa chọn của giảng viên và giữ kết quả ở trạng thái chưa công bố cho tới khi giảng viên quyết định
+- **When** người học nộp bài
+- **Then** hệ thống tự chấm ngay theo đáp án/test đã xuất bản; nếu bài bật "hiện điểm ngay sau nộp" thì người học thấy điểm, không thì kết quả chờ giảng viên chốt và công bố; giảng viên vẫn sửa được kèm lý do
 
 #### Scenario 2 - Không lộ kết quả sớm
 

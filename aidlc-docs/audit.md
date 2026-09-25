@@ -2029,3 +2029,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U14 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U14 Code Plan Approval and U15 Functional Design
+
+**Timestamp**: 2026-09-25T03:48:45Z
+
+**User Input**: "Continue"; UI answers: "Tự chấm ngay khi nộp (Khuyến nghị)", "giống dạng DOCUMENT", "Chốt từng bài hoặc hàng loạt, công bố theo bài (Khuyến nghị)", "Không tính tổng", then "DOCUMENT với ESSAY làm thế nào thì 2 cái này như thế"
+
+**AI Response**: Treated "Continue" as approval of the U14 code generation plan. Interpreted the scale answer as: quiz and Code Lab show scores like essay/document, "x / assignment total", no conversion to a 10-point scale (flagged to the user). Created U15 functional design: auto-grading on submit for quiz/code (published immediately when the assignment shows scores after submit), manual or AI-assisted rubric checklist grading, single/bulk finalize, publish per publication, reasoned overrides with history, late flag without automatic deduction, group document/member contribution/member final grades without formula, gradebook matrix without totals (BR-U15-01..54). Synced US-GRD-001 S1 and FR-008. US-GRD-006..008 left out pending team discussion.
+
+**Context**: U15 Functional Design Step 7; awaiting approval.
+
+---
+
+## U15 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-25T03:49:35Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U15 Functional Design. No new questions. Created U15 NFR plan, `nfr-requirements.md` (NFR-U15-01..31: auto-grading latency, bulk finalize/publish, gradebook query, BigDecimal and DB checks, versioned updates, append-only history, idempotent event consumption, learner-only published view) and `tech-stack-decisions.md`.
+
+**Context**: U15 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U15 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-25T03:50:25Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U15 NFR Requirements. No new questions. Created U15 NFR Design plan, `nfr-design-patterns.md` (P1-P6: single versioned grade write path with history, idempotent event consumption, pure quiz scorer, per-item bulk transactions and set-based publish, separate learner/teacher views, single gradebook query without totals) and `logical-components.md`.
+
+**Context**: U15 NFR Design Step 7; awaiting approval.
+
+---
+
+## U15 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-25T03:51:07Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U15 NFR Design. No new questions. Created U15 `infrastructure-design.md` (mapping, event bindings, migration with score CHECK and append-only history) and `deployment-architecture.md`. No shared infrastructure changes.
+
+**Context**: U15 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U15 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-25T03:52:15Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U15 Infrastructure Design. Created `u15-grading-code-generation-plan.md` (Step 0 + 26 steps). Uses real ports of U01, U02, U04, U06, U08-U11, U13, U14; provides GradeQueryPort and u15.grade.published.
+
+**Context**: U15 Code Generation Part 1; plan awaiting approval.
+
+---

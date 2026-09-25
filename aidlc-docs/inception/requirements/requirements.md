@@ -129,7 +129,7 @@ Sau khi người học nộp bài, bài nộp chuyển tới giảng viên phụ
 
 **Tiêu chí chấp nhận:**
 
-- Điểm tự động có kèm trạng thái và phương thức chấm.
+- Trắc nghiệm và Code Lab tự chấm ngay khi nộp; điểm tự động có kèm trạng thái và phương thức chấm. Mọi loại bài hiển thị điểm dạng "x / tổng điểm của bài"; sổ điểm không tính điểm tổng.
 - Mỗi bài nộp mới ở trạng thái chờ giảng viên xử lý; lựa chọn chấm tay hoặc nhờ AI được lưu theo actor/thời gian.
 - Kết quả AI chưa duyệt không được coi là quyết định cuối đối với câu trả lời mở.
 - Mọi lần ghi đè điểm lưu người thực hiện, thời gian và lý do.
