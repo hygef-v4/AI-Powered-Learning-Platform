@@ -2149,3 +2149,27 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U16 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## Dependency Graph Figure
+
+**Timestamp**: 2026-09-25T04:38:55Z
+
+**User Input**: "sửa cái graph.io thành giống dự án của t"; "đừng sửa vị trí chỉ sửa line thôi"; "làm lại đi nãy nhầm bản"; "ko đc hình cũ của t gọn thế này m nối kiểu gì đấy chỗ nào khác mới sửa thôi"; "cái dependecy path vẽ thành thế này cho dễ nhìn đc ko" (UI answers: "Giữ vị trí, chỉ đổi chữ trong hình tròn", "Đổi chữ như lần trước")
+
+**AI Response**: Updated the user's `Downloads/graph.drawio` with minimal changes (relabelled circles, deleted old U14 circle, moved one circle, kept 16 original edges, removed 4 wrong edges, added missing ones; 24 edges matching the matrix). After the user adjusted it, rendered it to `unit-of-work-dependency.png`, copied the source to `unit-of-work-dependency.drawio`, and embedded the figure with a text alternative in §6 of `unit-of-work-dependency.md`.
+
+**Context**: Application design documentation update outside the unit stage flow.
+
+---
+
+## Dependency Graph Figure Placement
+
+**Timestamp**: 2026-09-25T04:42:34Z
+
+**User Input**: "xoá cái dependecy graph ở trên đi, cái dependency path là graph ấy t nhầm tên"
+
+**AI Response**: Removed the Mermaid graph in §2 of `unit-of-work-dependency.md`, moved the draw.io figure and its text alternative there (out of §6), and updated the explanation to say the figure shows reduced `H` edges plus `E` U15 → U16 while `C` edges are listed in the matrix.
+
+**Context**: Application design documentation update.
+
+---

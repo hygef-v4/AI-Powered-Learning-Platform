@@ -27,69 +27,14 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 
 ### Dependency graph theo wave
 
-```mermaid
-flowchart LR
-    subgraph W1["WAVE 1"]
-        U01((U01))
-        U02((U02))
-        U03((U03))
-        U04((U04))
-    end
-    subgraph W2["WAVE 2"]
-        U05((U05))
-        U06((U06))
-        U07((U07))
-        U08((U08))
-    end
-    subgraph W3["WAVE 3"]
-        U09((U09))
-        U10((U10))
-        U11((U11))
-        U12((U12))
-        U13((U13))
-    end
-    subgraph W4["WAVE 4"]
-        U14((U14))
-        U15((U15))
-        U16((U16))
-    end
+![Đồ thị phụ thuộc 16 unit](unit-of-work-dependency.png)
 
-    U01 --> U03
-    U01 --> U04
-    U02 --> U03
-    U02 --> U04
-    U03 --> U05
-    U04 --> U05
-    U04 --> U06
-    U04 --> U07
-    U05 --> U08
-    U06 --> U08
-    U05 --> U13
-    U06 --> U13
-    U07 --> U13
-    U08 --> U09
-    U08 --> U12
-    U09 --> U10
-    U10 --> U11
-    U09 --> U14
-    U11 --> U15
-    U12 --> U14
-    U13 --> U15
-    U14 --> U15
-    U03 --> U16
+Nguồn hình: `unit-of-work-dependency.drawio` (mở bằng draw.io để sửa). Hình vẽ các cạnh `H` tối giản theo bắc cầu và cạnh `E` U15 → U16; mọi mũi tên đi từ trái sang phải.
 
-    U01 -.-> U02
-    U03 -.-> U01
-    U05 -.-> U04
-    U13 -.-> U08
-    U09 -.-> U08
-    U12 -.-> U08
-    U09 -.-> U06
-    U13 -.-> U11
-    U15 -.-> U16
-```
+**Text alternative** (cạnh provider → consumer): U01 → U03, U04; U02 → U03, U04; U03 → U05, U06; U04 → U05, U06, U07; U05 → U08, U13; U06 → U08, U13; U07 → U13; U08 → U09, U12; U09 → U10, U14; U10 → U11; U11 → U15; U12 → U14; U13 → U15; U14 → U15; U15 → U16.
 
-U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `AvatarPort`, U03 cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Mũi tên liền là cạnh `H` tối giản theo bắc cầu: nếu A → B → C thì không lặp A → C. Mũi tên đứt U01 → U02, U13 → U08/U11 và U05 → U04 là tích hợp contract `C`; mũi tên cuối là port trung lập cho phần Learning Access của U04. U15 → U16 minh họa event/read model `E`. Ma trận phía trên vẫn là danh sách đầy đủ, gồm các cạnh `E` khác đi vào U16. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Các mũi tên trong cùng khung thể hiện thứ tự mở việc của từng nhánh.
+
+U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `AvatarPort`, U03 cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Hình chỉ vẽ cạnh `H` tối giản theo bắc cầu (nếu A → B → C thì không lặp A → C) và cạnh `E` U15 → U16; các cạnh `C` (U01 → U02, U03 → U01, U05 → U04, U09/U12/U13 → U08, U09 → U06, U13 → U11) không vẽ, xem ma trận. Ma trận phía trên vẫn là danh sách đầy đủ, gồm các cạnh `E` khác đi vào U16. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Mọi mũi tên đi từ trái sang phải.
 
 **Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06/U07 song song sau U04; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U03/U05/U06 và credit U07 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U09/U12, U15 sau U11/U13/U14 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
 
@@ -151,6 +96,7 @@ Wave biểu thị nhóm và checkpoint kết quả, không buộc toàn bộ uni
 Gate tổng kiểm tra toàn bộ phạm vi của wave; nhánh ở wave sau được mở ngay khi provider trực tiếp đạt kiểm tra tương ứng, không phải chờ gate tổng.
 
 ## 6. Dependency paths và critical path
+
 
 - **Truy cập học liệu:** U01 và U02 song song → U04 → U05 → U04. U04 kiểm enrollment và publication; không có learning path hay lesson progress.
 - **Bài cá nhân:** U01/U02 → U04/U06 → U08 → U09 → U10 → U11 → U15 → U16. U03 cung cấp artifact; U13 cung cấp AI draft/Code run khi được chọn.

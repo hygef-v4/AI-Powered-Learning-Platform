@@ -60,7 +60,7 @@ Wave là nhóm công việc và điểm kiểm tra tích hợp, không phải ba
 | 3 - biên soạn và thực hiện | U09, U10, U11, U12, U13 (5) | U09/U12 mở sau U08; U13 mở sau U03/U05/U06/U07; U10 sau U09; U11 sau U04/U10, tích hợp U13 qua `C` | Loại câu hỏi, template/simulation, group allocation, AI/Code và attempt/submission |
 | 4 - kết quả | U14, U15, U16 (3) | U14 sau U11/U12; U15 sau U14 và U13; U16 hoàn tất projection sau event U15 | Composite, final grade, reporting/notification |
 
-Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U13 thuộc wave 3 có thể bắt đầu khi U03/U05/U06/U07 sẵn sàng, dù U08 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và Mermaid nằm trong `unit-of-work-dependency.md`.
+Không có điều kiện “đóng toàn bộ wave N mới được bắt đầu wave N+1”. Ví dụ U01/U02 có thể bắt đầu cùng lúc; U13 thuộc wave 3 có thể bắt đầu khi U03/U05/U06/U07 sẵn sàng, dù U08 ở wave 2 vẫn đang làm. U02 chỉ phát hành audit/job read API sau khi tích hợp kiểm quyền từ U01. Khi đủ năm người đang giữ unit, unit mới đủ dependency sẽ chờ slot trống. Đường phụ thuộc chi tiết và hình đồ thị phụ thuộc nằm trong `unit-of-work-dependency.md`.
 
 ## 5. Integration gates
 
