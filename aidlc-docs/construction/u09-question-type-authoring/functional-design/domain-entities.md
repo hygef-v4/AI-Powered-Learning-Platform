@@ -20,7 +20,7 @@ Document
     id                          UUID do client/server sinh, duy nhất trong tài liệu
     origin                      TEACHER | LEARNER
     type                        HEADING | PARAGRAPH | LIST | TABLE | IMAGE | DIAGRAM
-    HEADING    level 1-6, text
+    HEADING    level 1-6, text, workSection (bài nhóm: heading đánh dấu một mục việc để thành viên nhận)
     PARAGRAPH  runs[] (text, bold, italic, underline, code)
     LIST       ordered, items[] (runs, level 0-4)
     TABLE      rows[][] ô (runs), headerRow

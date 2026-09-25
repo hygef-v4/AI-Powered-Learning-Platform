@@ -19,23 +19,21 @@
 | BR-U12-10 | Thành viên gửi yêu cầu đổi trưởng nhóm kèm lý do, có thể đề xuất người thay (phải là thành viên); mỗi nhóm tối đa một yêu cầu `PENDING`. | US-GRP-002, Câu 4 |
 | BR-U12-11 | Chỉ giảng viên duyệt/từ chối; duyệt thì chọn trưởng nhóm mới (mặc định người được đề xuất). Người yêu cầu hủy được khi còn `PENDING`. | FR-025 |
 | BR-U12-12 | Giảng viên đổi trưởng nhóm trực tiếp; yêu cầu `PENDING` của nhóm tự `CANCELLED`. | Câu 4 |
-| BR-U12-13 | Đổi trưởng nhóm không đổi quyền nộp phần của ai. | US-GRP-002 S1 |
+| BR-U12-13 | Đổi trưởng nhóm chuyển quyền nộp bài nhóm (U14) sang trưởng nhóm mới; không đổi mục ai đang nhận. | US-GRP-002 S1 |
 | BR-U12-14 | Trưởng nhóm rời nhóm → giảng viên phải chọn trưởng nhóm mới trong cùng thao tác. | BR-U12-03 |
 
-## 3. Phân công phần
+## 3. Mục việc và sẵn sàng
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-20 | Giảng viên gán mỗi phần của mỗi nhóm cho đúng một thành viên; một người có thể nhiều phần. | Câu 2, 6, US-GRP-003 |
-| BR-U12-21 | Sẵn sàng phát hành khi: mọi nhóm hợp lệ (BR-U12-03), mọi phần của mọi nhóm đã có người, mọi thành viên có ≥ 1 phần. | Câu 6 |
-| BR-U12-22 | Chuyển phần cho người khác được khi phần chưa hết hạn và chưa chốt điểm: phân công cũ `supersededAt`; bài người cũ đã nộp giữ nguyên (chỉ đọc); người mới nộp mới; audit. | Câu 7, US-GRP-003 S2 |
-| BR-U12-23 | Xóa thành viên còn phần đang hiệu lực → phải chuyển phần trước; bài đã nộp của họ giữ nguyên. | Câu 7 |
-| BR-U12-24 | Thêm thành viên sau khi đã phát hành: phải gán ≥ 1 phần (chuyển từ người khác) trong cùng thao tác. | BR-U12-21 |
+| BR-U12-20 | Giảng viên **không** phân công phần; thành viên tự nhận mục việc trong tài liệu nhóm (U14). | U14 Câu 5, 6 |
+| BR-U12-21 | Sẵn sàng phát hành khi mọi nhóm hợp lệ (BR-U12-03) và mọi người học đang ghi danh của lớp đã có nhóm (cảnh báo nếu còn người chưa có nhóm, giảng viên xác nhận vẫn phát hành). | FR-025 |
+| BR-U12-22 | Đổi thành viên sau khi phát hành được; mục đang do người bị bỏ nhận tự nhả khóa (U14), nội dung đã viết giữ nguyên với tên tác giả. | U12 Câu 7, U14 |
 
 ## 4. Người học và audit
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-30 | Người học thấy nhóm của mình trong mỗi bài nhóm: tên nhóm, thành viên, trưởng nhóm, ai làm phần nào. Không thấy nhóm khác. | FR-025 |
-| BR-U12-31 | Event `GROUP_PART_ASSIGNED` (phân công mới/chuyển) và `GROUP_LEADER_CHANGED` cho U16 báo trong app. | FR-011 |
-| BR-U12-32 | Audit: tạo/sửa bộ nhóm, chia ngẫu nhiên, dùng lại nhóm, đổi trưởng nhóm, duyệt/từ chối yêu cầu, gán/chuyển phần. | FR-014 |
+| BR-U12-30 | Người học thấy nhóm của mình trong mỗi bài nhóm: tên nhóm, thành viên, trưởng nhóm. Không thấy nhóm khác. | FR-025 |
+| BR-U12-31 | Event `GROUP_MEMBERSHIP_CHANGED` và `GROUP_LEADER_CHANGED` cho U14 (nhả khóa mục, quyền nộp) và U16 (báo trong app). | FR-011 |
+| BR-U12-32 | Audit: tạo/sửa bộ nhóm, chia ngẫu nhiên, dùng lại nhóm, đổi trưởng nhóm, duyệt/từ chối yêu cầu. | FR-014 |

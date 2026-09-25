@@ -1969,3 +1969,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U13 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U13 Code Plan Approval and U14 Functional Design (group work redesign)
+
+**Timestamp**: 2026-09-25T03:30:32Z
+
+**User Input**: "continue"; UI answers: "lúc làm bài sẽ cho thành viên nhóm chọn block làm bài, lúc chọn xong thì sẽ khoá block đấy lại, lúc thành viên chọn xong thì sẽ mở block cá nhân đấy trong một trang mới, nó sẽ xuất hiện như bài DOCUMENT bình thường với một block, làm xong sẽ cập nhật realtime điền vào cái block của bài chính để các thành viên review và mở khoá block", "Chung hạn của bài", "ghép realtime khi mỗi thành viên làm xong", "bài nhóm chỉ là bài DOCUMENT làm nhóm", then "Cả hai", "Bỏ, thành viên tự nhận mục (Khuyến nghị theo ý bạn)", "Xong → nội dung vào bài chính, mục thành 'chờ review', người khác nhận sửa được (Khuyến nghị)", "Trưởng nhóm nộp, tự nộp khi hết hạn (Khuyến nghị)"
+
+**AI Response**: Treated "continue" as approval of the U13 code generation plan. Redesigned group work: a group assignment is a shared DOCUMENT per group built from the teacher skeleton (work sections from `workSection` headings, groups may add sections); members claim sections (locked to them), edit in a separate page, press Done to publish into the shared document in real time (SSE) as IN_REVIEW and unlock; comments for review; section revisions track authors; leader submits (resubmit allowed), auto-submit at deadline/retire. Created U14 functional design (BR-U14-01..50) and synced FR-026, US-GRP-003..005, UC-GRP-05..07, UC-ASM-06, unit-of-work, story map, dependency matrix/Mermaid/draw.io (removed U11→U14, added U09→U14 and U11→U15), U12 (teacher allocation removed, GroupMembershipPort), U08, U09 (`workSection`), U11, U13.
+
+**Context**: U14 Functional Design Step 7; awaiting approval.
+
+---
+
+## U14 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-25T03:38:19Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U14 Functional Design. No new questions. Created U14 NFR plan, `nfr-requirements.md` (NFR-U14-01..31: SSE latency ≤ 2 s, 100 connections, heartbeat/reconnect, conditional claim, owner-and-version checks, immutable revisions/submissions, idempotent auto-submit, channel authorization) and `tech-stack-decisions.md` (SseEmitter + RabbitMQ fanout).
+
+**Context**: U14 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U14 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-25T03:39:49Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U14 NFR Requirements. No new questions. Created U14 NFR Design plan, `nfr-design-patterns.md` (P1-P5: conditional-update section locks, RabbitMQ fanout + SseHub with small payloads/heartbeat/reconnect, SSE channel authorization tied to membership events, single idempotent submit path with consistent snapshot, document initialisation from skeleton) and `logical-components.md`.
+
+**Context**: U14 NFR Design Step 7; awaiting approval.
+
+---
+
+## U14 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-25T03:40:34Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U14 NFR Design. No new questions. Created U14 `infrastructure-design.md` (mapping, RabbitMQ fanout and listeners, Nginx SSE settings, Tomcat async, migration with immutable revisions/submissions) and `deployment-architecture.md`; added SSE and section-draft routes to shared infrastructure.
+
+**Context**: U14 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U14 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-25T03:41:42Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U14 Infrastructure Design. Created `u14-group-document-submission-code-generation-plan.md` (Step 0 + 26 steps). Uses real U01-U04, U08, U09, U12 ports; provides GroupSubmissionQueryPort and u14.group.submitted for U15/U16.
+
+**Context**: U14 Code Generation Part 1; plan awaiting approval.
+
+---

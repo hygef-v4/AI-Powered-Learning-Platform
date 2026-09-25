@@ -57,8 +57,8 @@ Kết quả `CodeRun` bất biến sau `DONE`.
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `AiDraftPort` | U13 cung cấp cho U08 (`C`), U06, U10 | Tạo/đọc/nhận đề xuất câu hỏi |
-| `AiGradingPort` | U13 cung cấp cho U14, U15 | Tạo/đọc đề xuất chấm |
-| `CodeRunPort` | U13 cung cấp cho U11 (`C`), U14, U15 | `try`, `grade`, kết quả |
+| `AiGradingPort` | U13 cung cấp cho U15 | Tạo/đọc đề xuất chấm |
+| `CodeRunPort` | U13 cung cấp cho U11 (`C`), U15 | `try`, `grade`, kết quả |
 | `CodeLabCheckPort` | U13 cài cho U08 (`C`, qua danh sách kiểm duyệt) | Bài `CODE_LAB` đã kiểm lời giải mẫu với đúng nội dung hiện tại |
 | `AiKillSwitchPort` | U13 cung cấp cho U05 | Thay biến `.env` tạm của U05 |
 | `CreditPort` | U13 dùng U07 | Giữ/trừ/trả credit |

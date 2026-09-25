@@ -8,8 +8,8 @@
 5. Giảng viên chọn câu → đích lưu nháp → `ACCEPTED` (BR-U13-15).
 
 ## F2 - Đề xuất chấm
-1. U15/U14 gọi `AiGradingPort.request(submissionRef)`; kiểm quyền giảng viên, `AiGuard`.
-2. Worker: lấy nội dung (U11/U14), văn bản phẳng + XML rút gọn (U09) hoặc code + kết quả test; rubric (U06) → prompt → kiểm JSON → `RubricPort.score` → `READY` (BR-U13-20…23).
+1. U15 gọi `AiGradingPort.request(submissionRef)` (bài cá nhân, hoặc phần đóng góp của một thành viên trong bài nhóm); kiểm quyền giảng viên, `AiGuard`.
+2. Worker: lấy nội dung (U11, hoặc các mục của thành viên từ U14), văn bản phẳng + XML rút gọn (U09) hoặc code + kết quả test; rubric (U06) → prompt → kiểm JSON → `RubricPort.score` → `READY` (BR-U13-20…23).
 
 ## F3 - Kiểm lời giải mẫu
 1. Giảng viên bấm "Kiểm lời giải mẫu" → `CodeRun` `VERIFY` chạy mọi test với cùng giới hạn như bài nộp.
@@ -17,7 +17,7 @@
 
 ## F4 - Chạy thử và chấm code
 1. `TRY`: rate limit, chỉ test công khai, trả kết quả (BR-U13-34, 36).
-2. `GRADE`: event nộp (`u11.submission.submitted` với bài `CODE_LAB`, hoặc phần code của U14) → job chạy mọi test → điểm xác định → event `CODE_GRADED` cho U15 (BR-U13-35).
+2. `GRADE`: event nộp (`u11.submission.submitted` với bài `CODE_LAB`) → job chạy mọi test → điểm xác định → event `CODE_GRADED` cho U15 (BR-U13-35).
 3. Judge0 lỗi → retry job; hết lượt → `SANDBOX_ERROR`, U15 hiện "chưa chấm được" (BR-U13-31, 37).
 
 ## F5 - Quản trị AI

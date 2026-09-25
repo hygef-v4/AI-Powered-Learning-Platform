@@ -11,13 +11,13 @@
  |                    --> RandomSplitter, GroupSetCopier                      |
  | LeaderRequestController --> LeaderRequestService                           |
  | GroupReadinessService (GroupReadinessPort cho U08)                         |
- | AllocationQueryService (AllocationPort cho U14, U15, U16)                  |
- | Repository (group_sets, student_groups, group_members, part_allocations,   |
+ | MembershipQueryService (GroupMembershipPort cho U14, U15, U16)           |
+ | Repository (group_sets, student_groups, group_members,                     |
  |             leader_change_requests)                                        |
  +----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Giảng viên lưu bộ nhóm qua `GroupSetSaver` (kiểm bằng `GroupSetValidator`), chia ngẫu nhiên bằng `RandomSplitter`, dùng lại nhóm bằng `GroupSetCopier`. Yêu cầu đổi trưởng nhóm qua `LeaderRequestService`. U08 hỏi `GroupReadinessService` trước khi phát hành; U14, U15, U16 tra phân công qua `AllocationQueryService`.
+**Text alternative**: Giảng viên lưu bộ nhóm qua `GroupSetSaver` (kiểm bằng `GroupSetValidator`), chia ngẫu nhiên bằng `RandomSplitter`, dùng lại nhóm bằng `GroupSetCopier`. Yêu cầu đổi trưởng nhóm qua `LeaderRequestService`. U08 hỏi `GroupReadinessService` trước khi phát hành; U14, U15, U16 tra thành viên và trưởng nhóm qua `MembershipQueryService`.
 
 ## 2. Thành phần
 
@@ -28,7 +28,7 @@
 | `GroupSetCopier` | BR-U12-06 |
 | `LeaderRequestService` | F6; P3 |
 | `GroupReadinessService` | F4; P5 |
-| `AllocationQueryService` | F7; P4 |
+| `MembershipQueryService` | F7; P4 |
 
 ## 3. Compliance
 

@@ -10,16 +10,14 @@
 2. Số nhóm mới = trần(số người / sĩ số tối đa); chia vòng tròn để chênh ≤ 1.
 3. Đặt tên "Nhóm N" tiếp theo; chọn trưởng nhóm ngẫu nhiên; trả bản xem trước để giảng viên sửa rồi lưu.
 
-## F3 - Phân công phần
-1. Bảng nhóm × phần; mỗi ô chọn một thành viên của nhóm (BR-U12-20).
-2. "Gán tự động": chia các phần lần lượt cho thành viên theo vòng tròn (giảng viên sửa được).
-3. Lưu; phát `GROUP_PART_ASSIGNED`; audit.
+## F3 - (Đã bỏ) Phân công phần
+- Thành viên tự nhận mục trong tài liệu nhóm (U14); giảng viên không phân công.
 
 ## F4 - Sẵn sàng phát hành (`GroupReadinessPort`)
-- Kiểm BR-U12-21, trả danh sách lỗi (nhóm/phần/thành viên thiếu).
+- Kiểm BR-U12-21, trả danh sách lỗi/cảnh báo (nhóm thiếu trưởng nhóm, người học chưa có nhóm).
 
 ## F5 - Đổi sau khi phát hành
-1. Chuyển phần (BR-U12-22), xóa/thêm thành viên (BR-U12-23, 24), trong một transaction; audit; event.
+1. Thêm/bớt thành viên, đổi nhóm (BR-U12-22) trong một transaction; phát `GROUP_MEMBERSHIP_CHANGED`; audit.
 
 ## F6 - Trưởng nhóm
 1. Người học gửi/hủy yêu cầu (BR-U12-10, 11).

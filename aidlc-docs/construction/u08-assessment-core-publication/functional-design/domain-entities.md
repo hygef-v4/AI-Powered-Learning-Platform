@@ -36,7 +36,7 @@ U08 sở hữu bài đánh giá (assignment), thành phần của bài, trạng 
 | `inlineDefinition` | JSON | Câu riêng của bài, cùng cấu trúc `definition` U06, khi không có `bankItemId` |
 | `points` | numeric(6,2) | Mặc định bằng `defaultPoints` của câu; sửa được khi `DRAFT` |
 
-Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`QUIZ` ↔ `MCQ_*`, `ESSAY` ↔ `ESSAY`, `DOCUMENT` ↔ `DOCUMENT`, `CODE_LAB` ↔ `CODE`; `GROUP` gồm `ESSAY`/`DOCUMENT`/`CODE`).
+Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`QUIZ` ↔ `MCQ_*`, `ESSAY` ↔ `ESSAY`, `DOCUMENT` ↔ `DOCUMENT`, `CODE_LAB` ↔ `CODE`; `GROUP` là bài `DOCUMENT` làm nhóm: đúng một thành phần `DOCUMENT` có khung chứa các mục việc (U09/U14)).
 
 ## 4. `Publication`
 

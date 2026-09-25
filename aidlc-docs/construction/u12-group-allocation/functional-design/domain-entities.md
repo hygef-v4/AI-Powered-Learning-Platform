@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U12 sở hữu bộ nhóm của từng bài nhóm, thành viên, trưởng nhóm, yêu cầu đổi trưởng nhóm và phân công phần việc. U12 **không** sở hữu: bài nhóm và các phần (thành phần của bài `GROUP`, U08), bài nộp phần và tài liệu tổng (U14), điểm (U15).
+U12 sở hữu bộ nhóm của từng bài nhóm, thành viên, trưởng nhóm, yêu cầu đổi trưởng nhóm. U12 **không** sở hữu: bài nhóm (U08), tài liệu nhóm, mục việc và khóa mục (U14), điểm (U15). Không có phân công phần của giảng viên.
 
 ## 2. `GroupSet`
 
@@ -26,25 +26,12 @@ U12 sở hữu bộ nhóm của từng bài nhóm, thành viên, trưởng nhóm
 | `status` | enum | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED` |
 | `decidedBy`, `decidedAt`, `decisionNote` | | |
 
-## 5. `PartAllocation`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `groupId` | UUID | |
-| `partId` | UUID | Thành phần của bài `GROUP` (U08) |
-| `assigneeId` | UUID | Thành viên đang hiệu lực của nhóm |
-| `assignedBy`, `assignedAt` | | |
-| `supersededAt` | thời gian | Khi chuyển sang người khác (lịch sử giữ lại) |
-
-Mỗi `(groupId, partId)` đúng một phân công đang hiệu lực.
-
 ## 6. Contract
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `GroupReadinessPort` | U12 cài cho U08 (`C`) | Bộ nhóm đủ điều kiện phát hành |
-| `AllocationPort` | U12 cung cấp cho U14, U15, U16 | `assigneeOf(groupId, partId)`, `partsOf(learnerId, assignmentId)`, `groupOf(learnerId, assignmentId)`, lịch sử phân công |
-| `AssignmentQueryPort` | U12 dùng U08 | Bài `GROUP`, các phần, trạng thái publication |
+| `GroupMembershipPort` | U12 cung cấp cho U14, U15, U16 | `groupOf(learnerId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
+| `AssignmentQueryPort` | U12 dùng U08 | Bài `GROUP`, trạng thái publication |
 | `ClassAccessPort` | U12 dùng U04 | Người học đang ghi danh |
-| `AuditPort`, `EventPublisherPort` | U12 dùng U02 | Audit; event `GROUP_PART_ASSIGNED`, `GROUP_LEADER_CHANGED` |
+| `AuditPort`, `EventPublisherPort` | U12 dùng U02 | Audit; event `GROUP_MEMBERSHIP_CHANGED`, `GROUP_LEADER_CHANGED` |

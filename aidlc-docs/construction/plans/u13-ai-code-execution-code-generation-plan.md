@@ -24,7 +24,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `CreditPort` | U07 | Dùng thật |
 | `DocumentModelPort`, `DiagramCompactPort` | U09 | Dùng thật |
 | U13 cài `AiDraftPort` (U08, U06, U10), `CodeRunPort` (U11), `CodeLabCheckPort` (U08), `AiKillSwitchPort` (U05) | | Thay adapter tạm của U05, U08, U11 |
-| `AiGradingPort`, `u13.code.graded` | cho U14, U15 | Các unit đó dùng khi được code |
+| `AiGradingPort`, `u13.code.graded` | cho U15 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U13 sở hữu
 

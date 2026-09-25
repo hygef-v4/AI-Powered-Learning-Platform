@@ -42,7 +42,7 @@
 | BR-U13-32 | Giới hạn mỗi test: thời gian theo đề (100-10 000 ms), bộ nhớ theo đề (64-1024 MB), output ≤ 64 KB, không mạng. | US-ASM-005 S1 |
 | BR-U13-33 | Duyệt bài `CODE_LAB` cần lời giải mẫu đạt **toàn bộ** test với `contentHash` khớp nội dung hiện tại; sửa đề/test/lời giải → phải kiểm lại. | demo_do_an INV-218 |
 | BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC-ASM-13 |
-| BR-U13-35 | `GRADE`: khi nộp (U11/U14) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI); gửi U15 làm điểm tự động. | FR-017 |
+| BR-U13-35 | `GRADE`: khi nộp (U11) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI); gửi U15 làm điểm tự động. | FR-017 |
 | BR-U13-36 | Kết quả test ẩn chỉ trả trạng thái đạt/không, không trả input/output cho người học. | SEC-002 |
 | BR-U13-37 | Chạy lại `GRADE` khi `SANDBOX_ERROR` do giảng viên bấm, hoặc job tự retry 3 lần. | REL-003 |
 

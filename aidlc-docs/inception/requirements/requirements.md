@@ -224,13 +224,13 @@ Giảng viên phải có thể chia sinh viên của lớp được phân công 
 
 ### FR-026 - Bài tập nhóm, bài cá nhân và bài chung
 
-Giảng viên phải có thể tạo một bài tập nhóm, định nghĩa cấu trúc/thứ tự các phần và giao từng phần cho thành viên, ví dụ sơ đồ use case hoặc activity. Mỗi sinh viên nộp phần được giao; hệ thống tổng hợp các phần đã nộp thành một tài liệu chung theo cấu trúc do giảng viên định nghĩa. Giảng viên xem trước, đổi thứ tự hoặc loại phần không hợp lệ rồi chốt tài liệu tổng. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
+Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục việc (ví dụ sơ đồ use case, activity); nhóm có thể thêm mục. Thành viên tự nhận mục còn trống, mục bị khóa cho người đó; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung để cả nhóm review và mục được mở khóa cho người khác nhận sửa. Trưởng nhóm nộp tài liệu chung, hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
 **Tiêu chí chấp nhận:**
 
-- Phần cá nhân có deadline/trạng thái/bài nộp riêng nhưng cùng truy vết về một bài tập nhóm và một phiên bản tài liệu tổng hợp.
-- Mỗi phần cá nhân được gán cho đúng một thành viên và chỉ thành viên đó nộp; giảng viên có thể đổi phân công trước hạn với audit.
-- Hệ thống chỉ tổng hợp các phiên bản phần cá nhân đã nộp, giữ liên kết nguồn và tạo lại tài liệu khi giảng viên yêu cầu; không ghi đè artifact nguồn.
+- Mỗi mục có trạng thái (trống, đang nhận, chờ review) và lịch sử phiên bản theo tác giả; cả bài dùng chung một hạn.
+- Tại một thời điểm mỗi mục chỉ một thành viên nhận và sửa; trưởng nhóm hoặc giảng viên có thể nhả khóa mục khi cần, có audit.
+- Tài liệu chung được cập nhật realtime khi một mục xong; bản trưởng nhóm nộp (hoặc tự nộp khi hết hạn) là bản bất biến dùng để chấm, giữ tác giả từng mục.
 - Giảng viên xem được tài liệu chung cạnh các phần cá nhân, điều chỉnh cấu trúc tổng hợp và chốt một version để chấm.
 - AI chỉ tạo đề xuất điểm/phản hồi cho phần cá nhân khi giảng viên chủ động yêu cầu; hệ thống không cung cấp hành động chấm AI cho tài liệu chung.
 - Giảng viên chấm tài liệu chung bằng rubric có tiêu chí tích hợp và nhất quán. Lỗi chung trừ ở bài chung; phần cá nhân chỉ bị trừ thêm khi giảng viên xác định được phần hoặc thành viên gây lỗi.

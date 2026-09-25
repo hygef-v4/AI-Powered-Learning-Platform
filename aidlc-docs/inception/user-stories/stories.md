@@ -439,71 +439,77 @@
 - **When** yêu cầu được gửi hoặc giảng viên từ chối
 - **Then** trưởng nhóm hiện tại không thay đổi và người liên quan nhận trạng thái/lý do phù hợp
 
-### US-GRP-003 - Tạo bài tập nhóm và phân chia phần cá nhân
+### US-GRP-003 - Tạo bài tập nhóm dạng tài liệu chung
 
-**Story**: Là giảng viên, tôi muốn tạo một bài chung và tách thành các phần cá nhân giao cho từng thành viên để mọi đóng góp cùng hướng tới một sản phẩm nhóm.
+**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục việc để các thành viên tự nhận và cùng hoàn thành một sản phẩm nhóm.
 
 **Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Phân công đầy đủ
+#### Scenario 1 - Khung có mục việc
 
-- **Given** lớp đã có nhóm hợp lệ và bài chung có hướng dẫn/rubric
-- **When** giảng viên tạo các phần như use case diagram, activity diagram hoặc phần nội dung khác và gán từng phần
-- **Then** mỗi phần cá nhân thuộc đúng một bài chung, đúng một nhóm và đúng một thành viên
+- **Given** lớp đã có bộ nhóm hợp lệ cho bài
+- **When** giảng viên soạn khung tài liệu với các mục việc (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
+- **Then** mỗi nhóm nhận một tài liệu chung theo khung; các mục ở trạng thái trống để thành viên nhận
 
-#### Scenario 2 - Thay đổi phân công trước hạn
+#### Scenario 2 - Nhả khóa mục khi cần
 
-- **Given** phần cá nhân chưa hết hạn và chưa chốt điểm
-- **When** giảng viên đổi người phụ trách
-- **Then** quyền nộp được chuyển đúng người, dữ liệu đã có được xử lý theo chính sách bảo toàn và thay đổi được audit
+- **Given** một mục đang bị một thành viên giữ quá lâu hoặc thành viên đó rời nhóm
+- **When** trưởng nhóm hoặc giảng viên nhả khóa
+- **Then** mục trở lại trạng thái có thể nhận, nội dung đã viết giữ nguyên kèm tác giả và thao tác được audit
 
-### US-GRP-004 - Nộp và chấm phần cá nhân của bài nhóm
+### US-GRP-004 - Nhận và làm mục trong tài liệu nhóm
 
-**Story**: Là thành viên nhóm, tôi muốn nộp phần cá nhân được giao để giảng viên có thể chấm tay hoặc chọn AI hỗ trợ đánh giá đóng góp của tôi.
+**Story**: Là thành viên nhóm, tôi muốn nhận một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
 
 **Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Thành viên nộp đúng phần
+#### Scenario 1 - Nhận và làm mục
 
-- **Given** phần cá nhân được giao cho người học và còn hiệu lực
-- **When** người học nộp nội dung đúng loại
-- **Then** bài nộp gắn với người học, nhóm, phần cá nhân và bài chung; thành viên khác không thể nộp thay
+- **Given** mục đang trống và bài còn hạn
+- **When** thành viên nhận mục
+- **Then** mục bị khóa cho thành viên đó, mở ra trong trang riêng như bài DOCUMENT thường; thành viên khác không sửa được mục đó
 
-#### Scenario 2 - Giảng viên chọn phương thức chấm
+#### Scenario 2 - Xong và review
 
-- **Given** giảng viên đã nhận phần cá nhân hợp lệ
-- **When** giảng viên chọn chấm thủ công hoặc “Nhờ AI đề xuất”
+- **Given** thành viên làm xong mục
+- **When** thành viên bấm "Xong"
+- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang chờ review và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản
+
+#### Scenario 3 - Giảng viên chọn phương thức chấm phần của từng người
+
+- **Given** tài liệu nhóm đã nộp
+- **When** giảng viên chấm đóng góp của một thành viên (các mục người đó viết) thủ công hoặc "Nhờ AI đề xuất"
 - **Then** hệ thống áp dụng đúng luồng đã chọn, lưu actor/thời gian và AI chỉ tạo đề xuất chưa công bố
 
-### US-GRP-005 - Tổng hợp các phần thành tài liệu chung
+### US-GRP-005 - Tài liệu chung và nộp bài nhóm
 
-**Story**: Là giảng viên, tôi muốn hệ thống ghép các phần cá nhân theo cấu trúc đã định nghĩa để tôi rà soát và chốt một tài liệu chung mà vẫn truy vết được nguồn đóng góp.
+**Story**: Là thành viên nhóm, tôi muốn thấy tài liệu chung cập nhật realtime và trưởng nhóm nộp bài khi xong để giảng viên chấm đúng bản của nhóm.
 
 **Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Tổng hợp các phần đã nộp
+#### Scenario 1 - Cập nhật realtime
 
-- **Given** bài nhóm có cấu trúc và ít nhất một phần cá nhân hợp lệ đã nộp
-- **When** giảng viên yêu cầu tạo tài liệu chung
-- **Then** hệ thống ghép đúng thứ tự, lưu liên kết tới version nguồn/người phụ trách và không ghi đè artifact cá nhân
+- **Given** nhiều thành viên đang mở tài liệu chung
+- **When** một mục được nhận, nhả hoặc bấm "Xong"
+- **Then** mọi người đang xem thấy trạng thái và nội dung mới mà không cần tải lại
 
-#### Scenario 2 - Giảng viên rà soát và chốt
+#### Scenario 2 - Trưởng nhóm nộp
 
-- **Given** tài liệu tổng hợp đã được tạo
-- **When** giảng viên đổi thứ tự, loại một phần không hợp lệ và xác nhận chốt
-- **Then** hệ thống tạo version chung đã chốt, giữ lịch sử cấu trúc và dùng version đó cho luồng chấm
+- **Given** tài liệu chung còn trong hạn
+- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn mục trống hoặc đang nhận)
+- **Then** hệ thống lưu một bản bất biến kèm tác giả từng mục; trưởng nhóm có thể nộp lại trước hạn, bản nộp cuối được chấm
 
-#### Scenario 3 - Thiếu phần hoặc tổng hợp lỗi
+#### Scenario 3 - Hết hạn
 
-- **Given** một phần chưa nộp hoặc tác vụ tổng hợp thất bại
-- **When** giảng viên xem trạng thái
-- **Then** hệ thống chỉ rõ phần thiếu/lỗi, không đánh dấu hoàn tất giả và cho phép tạo lại có kiểm soát
+- **Given** hết hạn mà nhóm chưa nộp
+- **When** tới hạn
+- **Then** hệ thống tự nộp bản hiện tại, mục đang nhận được đưa vào với nội dung đã lưu gần nhất và giảng viên thấy cảnh báo
 
 ### US-GRP-006 - Đối chiếu và chấm tay bài chung
 

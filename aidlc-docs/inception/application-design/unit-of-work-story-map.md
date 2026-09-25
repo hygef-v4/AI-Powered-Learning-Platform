@@ -23,7 +23,7 @@ Catalog gốc: 90 UC, 59 story (48 MVP, 11 Phase 2). Điều chỉnh thiết k�
 | U11 Attempt & Submission | UC-ASM-09..14 | US-ASM-003 | 1 | 0 | 1 |
 | U12 Group & Allocation | UC-GRP-01..05, UC-ASM-06 | US-GRP-001..003 | 3 | 0 | 3 |
 | U13 AI & Code Execution | UC-AIG-01..03, UC-ASM-05 | US-AIG-001..003, US-ASM-005 | 4 | 0 | 4 |
-| U14 Part Submission & Composite | UC-GRP-06..08 | US-GRP-004..006 | 3 | 0 | 3 |
+| U14 Group Document & Submission | UC-GRP-06..08 | US-GRP-004..006 | 3 | 0 | 3 |
 | U15 Grading | UC-GRD-01..12 | US-GRD-001..008 | 5 | 3 | 8 |
 | U16 Reporting & Notification | UC-RPT-01..04, UC-OPS-01 | US-RPT-001..004, US-NTF-001 | 2 | 3 | 5 |
 | **Tổng đang triển khai** | **87 UC** | **57 story** | **46** | **11** | **57** |
@@ -40,7 +40,7 @@ Các dải `01..12` bao gồm cả hai đầu. U03 không có UC/story trực ti
 | Thay đổi assignment đã giao | U08 | Không sửa version đang giao; ngưng giao/đóng rồi sửa tạo version mới. U10 giữ template/copy/simulation policy và diff version |
 | Soạn bài tài liệu (DOCUMENT) có sơ đồ Draw.io | U09 sở hữu mô hình tài liệu, khung, nhập/xuất DOCX và quy tắc kiểm XML | U03 giữ ảnh; U08 aggregate/publication |
 | Soạn Code Lab và nộp bài tài liệu/Code Lab | U13 sở hữu Code Lab authoring và CodeExecution; U11 sở hữu attempt/submission | U03 giữ artifact; U08 publication; U09 mô hình tài liệu |
-| Bài nhóm | U12 nhóm/phân phần; U14 nộp phần và composite | U11 attempt; U15 lưu grade cuối |
+| Bài nhóm | U12 nhóm và trưởng nhóm; U14 tài liệu nhóm, nhận mục, ghép realtime, nộp | U09 mô hình tài liệu; U15 lưu grade cuối |
 | Learning dashboard | U04 kiểm quyền và trả lớp/nội dung; UI ghép assignment/notification | U04 enrollment, U05 content, U08/U16 read APIs khi có |
 | Chấm bài nhóm | U14 đối chiếu/chốt composite; U15 chấm và công bố điểm | U13 chỉ được đề xuất chấm phần cá nhân khi giảng viên chọn |
 

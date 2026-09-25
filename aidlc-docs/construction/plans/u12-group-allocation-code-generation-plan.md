@@ -22,11 +22,11 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `AssignmentQueryPort` | U08 | Dùng thật |
 | U12 cài `GroupReadinessPort` cho U08 | | Thay adapter tạm của U08 |
-| U12 cung cấp `AllocationPort` | cho U14, U15, U16 | Các unit đó dùng khi được code |
+| U12 cung cấp `GroupMembershipPort` | cho U14, U15, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U12 sở hữu
 
-PostgreSQL `group_sets`, `student_groups`, `group_members`, `part_allocations`, `leader_change_requests`; routing key `u12.group.*`.
+PostgreSQL `group_sets`, `student_groups`, `group_members`, `leader_change_requests`; routing key `u12.group.*`.
 
 ## 2. Cấu trúc
 
@@ -35,11 +35,11 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `part_allocations`, 
   u12/
     api/                GroupSetController, LeaderRequestController, MyGroupController, DTO
     application/        GroupSetSaver, GroupSetCopier, LeaderRequestService,
-                        GroupReadinessService, AllocationQueryService
-    domain/             GroupSet, StudentGroup, GroupMember, PartAllocation,
+                        GroupReadinessService, MembershipQueryService
+    domain/             GroupSet, StudentGroup, GroupMember,
                         LeaderChangeRequest, GroupSetValidator, RandomSplitter
     infrastructure/     JPA repository
-    port/               AllocationPort
+    port/               GroupMembershipPort
 /backend/src/main/resources/db/migration/u12/
 /frontend/src/app/teaching/assignments/[id]/groups/
 /frontend/src/app/learn/assignments/[publicationId]/group/
@@ -55,11 +55,11 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `part_allocations`, 
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 1** - Domain và `GroupSetValidator` thuần (BR-U12-02, 03, 20…24); `RandomSplitter` thuần (BR-U12-05).
+- [ ] **Bước 1** - Domain và `GroupSetValidator` thuần (BR-U12-02, 03, 21, 22); `RandomSplitter` thuần (BR-U12-05).
 - [ ] **Bước 2** - `GroupSetSaver`: lưu nguyên khối theo `version`, đóng thay vì xóa, event + audit sau commit (F1, F3, F5, P1).
 - [ ] **Bước 3** - Chia ngẫu nhiên (xem trước) và `GroupSetCopier` (F2, BR-U12-06).
 - [ ] **Bước 4** - `LeaderRequestService`: gửi/hủy/duyệt/từ chối, đổi trực tiếp (F6, P3, BR-U12-10…14).
-- [ ] **Bước 5** - `GroupReadinessService` (cài `GroupReadinessPort`, thay adapter tạm U08) và `AllocationQueryService` (`AllocationPort`) (F4, F7, P4, P5).
+- [ ] **Bước 5** - `GroupReadinessService` (cài `GroupReadinessPort`, thay adapter tạm U08) và `MembershipQueryService` (`GroupMembershipPort`) (F4, F7, P4, P5).
 - [ ] **Bước 6** - Unit test mọi `BR-U12-xx`, gồm chia 7 người sĩ số 3 → 3/2/2 và giữ nhóm cũ.
 - [ ] **Bước 7** - Tóm tắt: `aidlc-docs/construction/u12-group-allocation/code/business-logic-summary.md`.
 
@@ -80,14 +80,14 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `part_allocations`, 
 ### Nhóm E - Frontend
 
 - [ ] **Bước 16** - `GroupSetPage` (`GroupCard`, `UngroupedLearnersPanel`, kéo thả `@dnd-kit`), `RandomSplitDialog`, `ReuseGroupsDialog`.
-- [ ] **Bước 17** - `AllocationMatrix` (gán tự động, xác nhận khi chuyển phần đã có bài nộp), `ReadinessPanel`, `LeaderRequestsPanel`.
+- [ ] **Bước 17** - `ReadinessPanel` (lỗi, cảnh báo người chưa có nhóm), `LeaderRequestsPanel`.
 - [ ] **Bước 18** - Người học: `MyGroupCard`, `LeaderChangeRequestDialog`.
-- [ ] **Bước 19** - Test frontend: không lưu khi còn lỗi, ma trận hiện đúng người mỗi phần.
+- [ ] **Bước 19** - Test frontend: không lưu khi còn lỗi, cảnh báo người học chưa có nhóm.
 - [ ] **Bước 20** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 21** - Cập nhật `README.md`: luồng chia nhóm, phân công, đổi trưởng nhóm; cách U14 dùng `AllocationPort`.
+- [ ] **Bước 21** - Cập nhật `README.md`: luồng chia nhóm, đổi trưởng nhóm; cách U14 dùng `GroupMembershipPort`.
 - [ ] **Bước 22** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết
@@ -96,8 +96,8 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `part_allocations`, 
 |---|---|
 | US-GRP-001 (UC-GRP-01..03) | 1, 2, 3, 16 |
 | US-GRP-002 (UC-GRP-04, 05) | 4, 17, 18 |
-| US-GRP-003 (UC-ASM-06) | 1, 2, 5, 17 |
+| US-GRP-003 (bộ nhóm của bài nhóm) | 1, 2, 5, 17 |
 
 ## 5. Ngoài phạm vi
 
-- Nộp phần và tài liệu tổng (U14), chấm (U15), thông báo (U16).
+- Tài liệu nhóm, nhận mục, nộp bài nhóm (U14), chấm (U15), thông báo (U16).

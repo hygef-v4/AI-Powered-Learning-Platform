@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi sở hữu
 
-U11 sở hữu lượt làm cá nhân (attempt), bản nháp, bài nộp, biên nhận và lịch sử. U11 **không** sở hữu: bài/publication (U08), cấu hình loại bài và mô hình tài liệu (U09), chính sách thi thử (U10), phần bài nhóm (U14), chạy code (U13), điểm (U15).
+U11 sở hữu lượt làm cá nhân (attempt), bản nháp, bài nộp, biên nhận và lịch sử. U11 **không** sở hữu: bài/publication (U08), cấu hình loại bài và mô hình tài liệu (U09), chính sách thi thử (U10), tài liệu bài nhóm (U14), chạy code (U13), điểm (U15).
 
 ## 2. `Attempt` (bảng `submissions`, một dòng một lượt)
 
@@ -44,7 +44,7 @@ Sau khi `SUBMITTED`, nội dung bất biến.
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
-| `SubmissionQueryPort` | U11 cung cấp cho U13, U14, U15, U16 | Bài nộp, nội dung, lượt được chấm |
+| `SubmissionQueryPort` | U11 cung cấp cho U13, U15, U16 | Bài nộp, nội dung, lượt được chấm |
 | Event `SUBMISSION_SUBMITTED` | U11 phát | `{attemptId, publicationId, learnerId, late, submitMode}` cho U15, U16 |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U11 dùng U08 | Bài, publication, hạn |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort` | U11 dùng U09 | Cấu hình, kiểm tài liệu, xuất DOCX |

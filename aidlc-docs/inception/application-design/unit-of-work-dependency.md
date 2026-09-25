@@ -21,7 +21,7 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 | U11 | H | H | H | H | - | H | - | H | H | H | - | - | C | - | - | - |
 | U12 | H | H | - | H | - | - | - | H | - | - | - | - | - | - | - | - |
 | U13 | H | H | H | - | H | H | H | - | - | - | - | - | - | - | - | - |
-| U14 | H | H | H | H | - | - | - | H | - | - | H | H | - | - | - | - |
+| U14 | H | H | H | H | - | - | - | H | H | - | - | H | - | - | - | - |
 | U15 | H | H | - | H | - | H | - | H | - | - | H | - | H | H | - | - |
 | U16 | H | H | H | E | E | - | E | E | - | - | E | E | - | E | E | - |
 
@@ -71,7 +71,8 @@ flowchart LR
     U08 --> U12
     U09 --> U10
     U10 --> U11
-    U11 --> U14
+    U09 --> U14
+    U11 --> U15
     U12 --> U14
     U13 --> U15
     U14 --> U15
@@ -90,7 +91,7 @@ flowchart LR
 
 U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `AvatarPort`, U03 cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Mũi tên liền là cạnh `H` tối giản theo bắc cầu: nếu A → B → C thì không lặp A → C. Mũi tên đứt U01 → U02, U13 → U08/U11 và U05 → U04 là tích hợp contract `C`; mũi tên cuối là port trung lập cho phần Learning Access của U04. U15 → U16 minh họa event/read model `E`. Ma trận phía trên vẫn là danh sách đầy đủ, gồm các cạnh `E` khác đi vào U16. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Các mũi tên trong cùng khung thể hiện thứ tự mở việc của từng nhánh.
 
-**Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06/U07 song song sau U04; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U03/U05/U06 và credit U07 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U11/U12, U15 sau U14/U13 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
+**Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06/U07 song song sau U04; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U03/U05/U06 và credit U07 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U09/U12, U15 sau U11/U13/U14 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
 
 ## 3. Public contract theo luồng
 
@@ -103,8 +104,8 @@ U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `
 | Ngân hàng → đề/attempt/chấm | U06 → U08/U09/U10/U11/U15 | QuestionVersion/RubricVersion immutable và snapshot đúng version |
 | Tạo đề | U05/U06 → U13 → U08; U09/U10 cấu hình | U13 trả AI draft proposal; U08 review, sửa, lưu và publish. RAG chỉ hỗ trợ nguồn khi được chọn |
 | Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; bài đã phát hành khóa nội dung |
-| Nhóm → phần nộp | U12 + U11 → U14 | Allocation, immutable part submission và ordered source versions; giảng viên chốt composite |
-| Chấm | U11/U14/U06 → U15; U13 hỗ trợ | AI chỉ trả proposal; U15 lưu manual/final grade, composite luôn chấm tay |
+| Nhóm → tài liệu nhóm | U12 + U09 → U14 | Thành viên/trưởng nhóm, mô hình tài liệu; nhận/khóa mục, ghép realtime, bản nộp bất biến có tác giả từng mục |
+| Chấm | U11/U14/U06 → U15; U13 hỗ trợ | AI chỉ trả proposal; U15 lưu manual/final grade; tài liệu nhóm chấm tay, AI chỉ đề xuất cho phần đóng góp của từng thành viên |
 | Báo cáo/thông báo | Owner events → U16 | Projection theo quyền, outbox delivery; lỗi gửi không rollback transaction nguồn |
 
 ### Ranh giới tránh vòng phụ thuộc
@@ -122,7 +123,7 @@ U01 phụ thuộc U03 bằng cạnh `C` cho ảnh đại diện: U01 khai báo `
 | File/YouTube ingestion và RAG index | U05 | Content/source/transcript version và index reference |
 | AI assessment draft | U13 | Draft proposal cho U08 duyệt/lưu |
 | Code sandbox run | U13 | Run result bất biến cho U11/U09 dùng |
-| Group composite | U14 | Derived artifact/composite version với lineage |
+| Group document | U14 | Tài liệu nhóm, lịch sử mục theo tác giả, bản nộp bất biến |
 | AI grade proposal và compact Draw.io | U13 phối hợp U15 | Proposal/derived artifact; U15 quyết định điểm |
 | Payment reconciliation | U07 | Payment/entitlement state |
 | Notification/export | U16 | Delivery status/scoped export artifact |
@@ -136,7 +137,7 @@ Job Platform U02 giữ lease/retry/dead-letter/status, còn owner nghiệp vụ 
 | 1 | U01, U02, U03, U04 | 4 | U01 và U02 song song (`C` cho read API của U02); U03/U04 sau U01 và U02; phần Learning Access của U04 chỉ khai báo port, hoàn tất ở wave 2 |
 | 2 | U05, U06, U07, U08 | 4 | U05/U06/U07 sau U04; U08 sau U05/U06; U05 cắm implementation vào port Learning Access của U04 |
 | 3 | U09, U10, U11, U12, U13 | 5 | U09/U12 sau U08; U10 sau U09; U11 sau U04/U10; U13 sau U03/U05/U06/U07 |
-| 4 | U14, U15, U16 | 3 | U14 sau U11/U12; U15 sau U14/U13; U16 nhận event sau U15 |
+| 4 | U14, U15, U16 | 3 | U14 sau U09/U12; U15 sau U11/U13/U14; U16 nhận event sau U15 |
 
 Wave biểu thị nhóm và checkpoint kết quả, không buộc toàn bộ unit của wave trước đóng mới cho mở unit tiếp theo. Scheduler mở unit khi các provider `H` của riêng unit đã sẵn sàng và còn slot; giới hạn tối đa năm unit đang triển khai cùng lúc tính trên toàn bộ wave. U08 có thể làm phần thủ công trước U13; AI tích hợp sau qua contract `C`. U16 có thể chuẩn bị schema/projection từ đầu, nhưng chỉ hoàn tất khi event từ các owner, gồm U15, đã có.
 
@@ -145,7 +146,7 @@ Wave biểu thị nhóm và checkpoint kết quả, không buộc toàn bộ uni
 | G1 | U01-U04 | Authorization, audit/job/outbox, artifact/XML/checksum và class/enrollment scope |
 | G2 | U05-U08 và phần Learning Access của U04 | Content/bank versions, verified payment event, Learning access và đề thủ công/publication |
 | G3 | U09-U13 | Question type, template/copy/simulation, group allocation, AI/Code và attempt/submission |
-| G4 | U14-U16 | Composite lineage/chốt, final grade, reporting/notification đúng scope |
+| G4 | U14-U16 | Tài liệu nhóm realtime/nộp, final grade, reporting/notification đúng scope |
 
 Gate tổng kiểm tra toàn bộ phạm vi của wave; nhánh ở wave sau được mở ngay khi provider trực tiếp đạt kiểm tra tương ứng, không phải chờ gate tổng.
 
@@ -153,9 +154,9 @@ Gate tổng kiểm tra toàn bộ phạm vi của wave; nhánh ở wave sau đư
 
 - **Truy cập học liệu:** U01 và U02 song song → U04 → U05 → U04. U04 kiểm enrollment và publication; không có learning path hay lesson progress.
 - **Bài cá nhân:** U01/U02 → U04/U06 → U08 → U09 → U10 → U11 → U15 → U16. U03 cung cấp artifact; U13 cung cấp AI draft/Code run khi được chọn.
-- **Bài nhóm:** U08 → U12, đồng thời U08/U09/U10 → U11; sau đó U11 + U12 → U14 → U15 → U16.
+- **Bài nhóm:** U08 → U12, đồng thời U08/U09/U10 → U11; U09 + U12 → U14 → U15 → U16.
 - **AI tạo đề:** U03/U05/U06 → U13 → U08 (contract `C`); U08 có thể soạn thủ công trước khi AI hoàn tất. **AI hỗ trợ chấm:** U11/U14 → U15 gọi U13, rồi giảng viên chốt.
-- **Một đường phụ thuộc dài nhất theo các cạnh `H`:** U01 hoặc U02 → U03 → U05 → U08 → U09 → U10 → U11 → U14 → U15 (9 unit). Nhánh U01 hoặc U02 → U04 → U06 → U08 cũng hội vào đường này ở U08. U16 nhận event/read model sau U15 qua cạnh `E`; thêm người không làm các cạnh bắt buộc biến mất.
+- **Một đường phụ thuộc dài nhất theo các cạnh `H`:** U01 hoặc U02 → U03 → U05 → U08 → U09 → U10 → U11 → U15 → U16 (9 unit). Nhánh U01 hoặc U02 → U04 → U06 → U08 cũng hội vào đường này ở U08. U16 nhận event/read model sau U15 qua cạnh `E`; thêm người không làm các cạnh bắt buộc biến mất.
 
 | Rủi ro | Kiểm soát |
 |---|---|

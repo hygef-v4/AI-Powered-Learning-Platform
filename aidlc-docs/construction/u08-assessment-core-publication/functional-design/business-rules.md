@@ -32,7 +32,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U08-30 | Mỗi lần phát hành một lớp, lịch riêng; phát hành cùng bài cho lớp khác là lần phát hành khác. | Câu 8 |
-| BR-U08-31 | `opensAt < closesAt`; `maxAttempts` 1-10; lớp phải `OPEN`. Bài `GROUP` chỉ phát hành khi U12 báo bộ nhóm sẵn sàng (`GroupReadinessPort`, `C`). | FR-007, U12 |
+| BR-U08-31 | `opensAt < closesAt`; `maxAttempts` 1-10; lớp phải `OPEN`. Bài `GROUP` (bài `DOCUMENT` làm nhóm) chỉ phát hành khi U12 báo bộ nhóm sẵn sàng (`GroupReadinessPort`, `C`). | FR-007, U12 |
 | BR-U08-32 | Tùy chọn nộp trễ: `allowLate` + `lateUntil` (≤ `closesAt` + 30 ngày). Nộp sau `closesAt` được đánh dấu trễ; sau `lateUntil` không nhận. | Câu 7 |
 | BR-U08-33 | Phát hành lần đầu chuyển version sang `LOCKED`: nội dung, thành phần, điểm của version đó **không sửa được nữa**, kể cả khi chưa ai làm; thay đổi bằng version mới (BR-U08-43) hoặc nhân bản. | Câu 4, 6 |
 | BR-U08-34 | Lịch của publication sửa được khi `SCHEDULED`; khi `OPEN` chỉ được kéo dài `closesAt`/`lateUntil`, không rút ngắn, không đổi `maxAttempts`. | Thiết kế |

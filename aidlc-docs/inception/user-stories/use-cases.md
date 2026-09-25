@@ -90,9 +90,9 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-GRP-02 | Giảng viên | Quản lý nhóm và trưởng nhóm | Group Management | Cho phép giảng viên tạo hoặc cập nhật nhóm, thêm hoặc gỡ thành viên và chỉ định đúng một trưởng nhóm. (`US-GRP-001`) |
 | UC-GRP-03 | Người học | Gửi yêu cầu đổi trưởng nhóm | Leader Management | Cho phép thành viên gửi lý do và đề xuất trưởng nhóm mới để giảng viên xem xét. (`US-GRP-002`) |
 | UC-GRP-04 | Giảng viên | Xử lý yêu cầu đổi trưởng nhóm | Leader Management | Cho phép giảng viên phê duyệt hoặc từ chối yêu cầu và thông báo quyết định. (`US-GRP-002`) |
-| UC-GRP-05 | Giảng viên | Phân chia phần việc cá nhân | Group Assignment | Cho phép giảng viên tạo phần việc, giao hoặc chuyển phần việc chưa chốt cho thành viên và giữ lịch sử. (`US-GRP-003`) |
-| UC-GRP-06 | Người học | Xem và nộp phần việc cá nhân | Group Submission | Cho phép thành viên xem và nộp đúng phần được giao; thành viên khác không thể nộp thay. (`US-GRP-004`) |
-| UC-GRP-07 | Giảng viên | Tổng hợp và chốt tài liệu nhóm | Group Submission | Cho phép giảng viên yêu cầu hệ thống ghép phần cá nhân theo cấu trúc, điều chỉnh thứ tự/phần được dùng và chốt version chung có truy vết nguồn. (`US-GRP-005`) |
+| UC-GRP-05 | Giảng viên | Soạn khung mục việc cho bài nhóm | Group Assignment | Cho phép giảng viên soạn khung tài liệu nhóm với các mục việc; thành viên tự nhận mục, giảng viên/trưởng nhóm nhả khóa khi cần. (`US-GRP-003`) |
+| UC-GRP-06 | Người học | Nhận và làm mục trong tài liệu nhóm | Group Submission | Cho phép thành viên nhận mục, làm trong trang riêng và bấm Xong để ghép realtime vào tài liệu chung. (`US-GRP-004`) |
+| UC-GRP-07 | Giảng viên | Theo dõi tài liệu chung và nộp bài nhóm | Group Submission | Cho phép nhóm xem tài liệu chung cập nhật realtime và trưởng nhóm nộp; hết hạn hệ thống tự nộp. (`US-GRP-005`) |
 | UC-GRP-08 | Giảng viên | Đối chiếu và chấm bài chung | Group Grading | Cho phép giảng viên xem tài liệu chung cạnh các phần cá nhân, tự chấm tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên không theo công thức tự động. (`US-GRP-006`) |
 
 ### 4.5 Learning Journey
@@ -130,7 +130,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 | UC-ASM-03 | Giảng viên / Chủ nhiệm môn | Soạn bài trắc nghiệm | Assignment Authoring | Cho phép người có quyền tạo bài trắc nghiệm với câu hỏi, đáp án và quy tắc điểm. (`US-ASM-006`) |
 | UC-ASM-04 | Giảng viên / Chủ nhiệm môn | Soạn bài tài liệu (DOCUMENT) có sơ đồ Draw.io | Assignment Authoring | Cho phép người có quyền tạo bài thực hành vẽ UML trên Draw.io, cấu hình yêu cầu và quy tắc kiểm tra XML. (`US-ASM-004`) |
 | UC-ASM-05 | Giảng viên / Chủ nhiệm môn | Soạn và kiểm thử Code Lab | Assignment Authoring | Cho phép người có quyền cấu hình đề code, ngôn ngữ, quota, test case và chạy lời giải mẫu trong sandbox. (`US-ASM-005`) |
-| UC-ASM-06 | Giảng viên | Soạn bài tập nhóm | Assignment Authoring | Cho phép giảng viên tạo bài chung, gắn rubric và cấu hình các phần việc cá nhân. (`US-GRP-003`) |
+| UC-ASM-06 | Giảng viên | Soạn bài tập nhóm | Assignment Authoring | Cho phép giảng viên tạo bài DOCUMENT làm nhóm với khung các mục việc và rubric. (`US-GRP-003`) |
 | UC-ASM-07 | Giảng viên | Duyệt và phát hành assignment cho lớp | Assignment Publication | Cho phép giảng viên cấu hình lịch, lượt nộp, xem trước, duyệt và phát hành assignment cho lớp được phân công. (`US-ASM-001`) |
 | UC-ASM-08 | Chủ nhiệm môn | Duyệt và phát hành assignment chung (Đã loại) | Assignment Publication | Cho phép Chủ nhiệm môn xem trước, duyệt và phát hành đề chung tới mọi lớp hiện hành thuộc môn được giao. (`US-ASM-002`) |
 | UC-ASM-09 | Người học | Xem assignment được giao | Assignment Delivery | Cho phép người học xem danh sách, yêu cầu, rubric, thời hạn, số lượt và trạng thái assignment. (`US-ASM-003`) |
