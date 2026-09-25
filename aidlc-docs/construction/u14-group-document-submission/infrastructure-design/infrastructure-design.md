@@ -8,7 +8,7 @@
 | `GroupDocInitializer`, `AutoSubmitHandler` | `worker` |
 | Bảng `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions` | `postgres` |
 | Rate limit lưu nháp mục | `redis`, khóa `u14:save:{learnerId}` |
-| RabbitMQ | fanout `u14.realtime` (mỗi backend một queue exclusive auto-delete); queue `jobs.u14.auto-submit`; listener `u08.assignment.opened`, `u08.assignment.retired`, `u12.group.membership-changed`; phát `u14.group.submitted` |
+| RabbitMQ | fanout `platform.realtime` (mỗi backend một queue exclusive auto-delete); queue `jobs.u14.auto-submit`; listener `u08.assignment.opened`, `u08.assignment.retired`, `u12.group.membership-changed`; phát `u14.group.submitted` |
 
 ## 2. Nginx
 

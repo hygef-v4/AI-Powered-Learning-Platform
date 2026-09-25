@@ -190,7 +190,7 @@ Hệ thống phải tự động lưu bản nháp theo người học/bài đán
 
 ### FR-019 - Theo dõi nộp bài và nhắc nhở
 
-Giảng viên phải xem được trạng thái đã nộp, chưa nộp, nộp trễ và được gia hạn của lớp được phân công, đồng thời gửi nhắc nhở có giới hạn tần suất tới đúng người học.
+Giảng viên phải xem được trạng thái đã nộp, chưa nộp, đang làm và nộp trễ của lớp được phân công. Hệ thống tự nhắc người học chưa nộp 24 giờ trước hạn (một lần mỗi bài); giảng viên không gửi nhắc thủ công.
 
 ### FR-020 - Chốt điểm hàng loạt
 

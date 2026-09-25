@@ -6,8 +6,8 @@
  Trình duyệt (thành viên, GV)  --REST-->  +------------------ backend ----------------------+
       ^                                   | GroupDocController --> SectionService (P1)      |
       |  SSE (EventSource)                |                    --> GroupSubmitter (P4)      |
-      +---------------------------------- | SseHub <-- queue riêng <-- fanout u14.realtime  |
-                                          | GroupDocEventPublisher --> fanout u14.realtime  |
+      +---------------------------------- | SseHub <-- queue riêng <-- fanout platform.realtime  |
+                                          | GroupDocEventPublisher --> fanout platform.realtime  |
                                           | GroupDocInitializer (P5), MembershipListener    |
                                           | GroupSubmissionQueryService (cho U15, U16)       |
                                           +---------------------------------------------------+
@@ -16,7 +16,7 @@
                                           worker: AutoSubmitHandler --> GroupSubmitter --> fanout
 ```
 
-**Text alternative**: Thành viên và giảng viên thao tác qua REST tới `GroupDocController`; `SectionService` khóa/lưu/xong mục bằng UPDATE có điều kiện, `GroupSubmitter` tạo bản nộp. Sau mỗi thay đổi, `GroupDocEventPublisher` gửi sự kiện lên fanout `u14.realtime`; mỗi backend nhận qua queue riêng và `SseHub` đẩy tới trình duyệt đang mở tài liệu qua SSE. `GroupDocInitializer` dựng tài liệu khi bài mở; `MembershipListener` nhả khóa và đóng kênh khi thành viên rời nhóm. Worker chạy job tự nộp tại hạn và cũng phát sự kiện qua fanout.
+**Text alternative**: Thành viên và giảng viên thao tác qua REST tới `GroupDocController`; `SectionService` khóa/lưu/xong mục bằng UPDATE có điều kiện, `GroupSubmitter` tạo bản nộp. Sau mỗi thay đổi, `GroupDocEventPublisher` gửi sự kiện lên fanout `platform.realtime`; mỗi backend nhận qua queue riêng và `SseHub` đẩy tới trình duyệt đang mở tài liệu qua SSE. `GroupDocInitializer` dựng tài liệu khi bài mở; `MembershipListener` nhả khóa và đóng kênh khi thành viên rời nhóm. Worker chạy job tự nộp tại hạn và cũng phát sự kiện qua fanout.
 
 ## 2. Thành phần
 

@@ -7,7 +7,7 @@
 - Nhả: `WHERE claimed_by IS NOT NULL`; trạng thái về `IN_REVIEW` nếu `published_blocks` có nội dung, không thì `OPEN`.
 
 ## P2 - Realtime qua RabbitMQ fanout + SSE
-1. Sau commit, `GroupDocEventPublisher` gửi `{groupDocumentId, type, payload nhỏ, version}` lên exchange fanout `u14.realtime`.
+1. Sau commit, `GroupDocEventPublisher` gửi `{groupDocumentId, type, payload nhỏ, version}` lên exchange fanout `platform.realtime`.
 2. Mỗi backend có queue riêng tự xóa (exclusive, auto-delete) bind vào fanout; `SseHub` giữ map `groupDocumentId → emitters`, đẩy sự kiện tới emitter của tài liệu đó.
 3. Payload chỉ chứa ID, trạng thái, tác giả; nội dung mục lớn thì client gọi `GET` mục theo `version` (tránh đẩy MB qua SSE).
 4. Heartbeat 25 s (comment `:ping`); emitter timeout 30 phút, client tự kết nối lại; kết nối lại → client `GET` toàn bộ tài liệu (NFR-U14-03).

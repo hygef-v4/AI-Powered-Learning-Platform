@@ -1229,13 +1229,13 @@
 
 - **Given** giảng viên được phân công và bài đã giao
 - **When** mở báo cáo tiến độ
-- **Then** hệ thống phân biệt đã nộp, chưa nộp, nộp trễ, được gia hạn và thời gian còn lại
+- **Then** hệ thống phân biệt đã nộp, chưa nộp, đang làm, nộp trễ và thời gian còn lại
 
-#### Scenario 2 - Gửi nhắc có giới hạn
+#### Scenario 2 - Tự nhắc trước hạn
 
-- **Given** danh sách người học chưa nộp trong đúng lớp
-- **When** giảng viên gửi nhắc
-- **Then** chỉ người được chọn nhận thông báo, giới hạn tần suất được áp dụng và bài đã thu hồi không được nhắc
+- **Given** bài còn 24 giờ tới hạn và có người học chưa nộp
+- **When** tới thời điểm nhắc
+- **Then** hệ thống gửi một lần thông báo trong app và email (nếu người học không tắt) cho đúng người chưa nộp; bài đã ngừng giao không được nhắc
 
 ### US-RPT-002 - Dashboard kết quả cá nhân (Phase 2)
 

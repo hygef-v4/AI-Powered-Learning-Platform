@@ -2089,3 +2089,63 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Context**: U15 Code Generation Part 1; plan awaiting approval.
 
 ---
+
+## U15 Code Plan Approval and U16 Functional Design
+
+**Timestamp**: 2026-09-25T03:57:24Z
+
+**User Input**: "continue"; UI answers: "Ghi danh vào lớp, Bài mới mở, Điểm được công bố, Nhắc hạn nộp", "chỉ 24h trước hạn", "Được, theo từng loại (Khuyến nghị)", "Có, dùng lại SSE (Khuyến nghị)"
+
+**AI Response**: Treated "continue" as approval of the U15 code generation plan. Created U16 functional design: event-driven in-app notifications (idempotent, realtime via SSE, 180-day retention), email for enrolment/assignment opened/grade published/deadline reminder with per-type opt-out, 300/day cap with priority and deferral, automatic single reminder 24 h before deadline (no manual reminders), submission progress report (BR-U16-01..32). Synced FR-019, US-RPT-001, UC-RPT-01; added U07 event `u07.payment.paid`. US-RPT-002..004 left out pending team discussion.
+
+**Context**: U16 Functional Design Step 7; awaiting approval.
+
+---
+
+## U16 Functional Design Approval and NFR Requirements
+
+**Timestamp**: 2026-09-25T03:58:08Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U16 Functional Design. No new questions. Created U16 NFR plan, `nfr-requirements.md` (NFR-U16-01..31: notification latency, batch inserts, 1 email/s within the daily cap, idempotency and Redis cap counter, reminder rescheduling, privacy of email content, escaping, Mailpit tests) and `tech-stack-decisions.md`.
+
+**Context**: U16 NFR Requirements Step 7; awaiting approval.
+
+---
+
+## U16 NFR Requirements Approval and NFR Design
+
+**Timestamp**: 2026-09-25T03:58:55Z
+
+**User Input**: "continue"
+
+**AI Response**: Recorded approval of U16 NFR Requirements. No new questions. Created U16 NFR Design plan, `nfr-design-patterns.md` (P1-P5: batched idempotent fan-out with realtime signal, capped prioritised email dispatcher with SKIP LOCKED and 1/s limiter, idempotent send with counter rollback, reminder jobs keyed by expected deadline, single-query progress report) and `logical-components.md`.
+
+**Context**: U16 NFR Design Step 7; awaiting approval.
+
+---
+
+## U16 NFR Design Approval and Infrastructure Design
+
+**Timestamp**: 2026-09-25T03:59:38Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U16 NFR Design. No new questions. Created U16 `infrastructure-design.md` (mapping, event bindings, SMTP, Redis cap counter, migration, retention job) and `deployment-architecture.md`. Renamed U14's realtime fanout to shared `platform.realtime` (U14 docs and code plan updated); added notification SSE route to shared infrastructure.
+
+**Context**: U16 Infrastructure Design Step 7; awaiting approval.
+
+---
+
+## U16 Infrastructure Design Approval and Code Generation Plan
+
+**Timestamp**: 2026-09-25T04:00:55Z
+
+**User Input**: "Continue"
+
+**AI Response**: Recorded approval of U16 Infrastructure Design. Created `u16-reporting-notification-code-generation-plan.md` (Step 0 + 24 steps). All 16 units now have design artifacts and a code generation plan; the U01 code plan is still paused and unapproved.
+
+**Context**: U16 Code Generation Part 1; plan awaiting approval.
+
+---

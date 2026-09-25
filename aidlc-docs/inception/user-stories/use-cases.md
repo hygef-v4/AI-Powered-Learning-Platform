@@ -165,7 +165,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
-| UC-RPT-01 | Giảng viên | Theo dõi tình trạng nộp bài | Submission Monitoring | Cho phép giảng viên xem tình trạng nộp trong lớp và gửi nhắc có giới hạn tới học viên cần xử lý. (`US-RPT-001`) |
+| UC-RPT-01 | Giảng viên | Theo dõi tình trạng nộp bài | Submission Monitoring | Cho phép giảng viên xem tình trạng nộp trong lớp; hệ thống tự nhắc học viên chưa nộp 24 giờ trước hạn. (`US-RPT-001`) |
 | UC-RPT-02 | Người học | Xem dashboard kết quả cá nhân (Phase 2) | Learning Analytics | Cho phép người học xem xu hướng kết quả cá nhân và phân bố lớp đã ẩn danh. (`US-RPT-002`) |
 | UC-RPT-03 | Giảng viên / Quản trị viên | Xuất bảng điểm (Phase 2) | Grade Export | Cho phép người có quyền tạo và tải file bảng điểm đúng phạm vi. (`US-RPT-003`) |
 | UC-RPT-04 | Quản trị viên | Đối sánh điểm AI và điểm chốt (Phase 2) | AI Analytics | Cho phép quản trị viên xem báo cáo sai lệch khi cỡ mẫu đáp ứng quy tắc riêng tư. (`US-RPT-004`) |

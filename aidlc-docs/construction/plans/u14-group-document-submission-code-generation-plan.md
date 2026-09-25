@@ -28,7 +28,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U14 sở hữu
 
-PostgreSQL `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `u14:save:*`; RabbitMQ fanout `u14.realtime`, queue `jobs.u14.auto-submit`.
+PostgreSQL `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `u14:save:*`; RabbitMQ fanout `platform.realtime`, queue `jobs.u14.auto-submit`.
 
 ## 2. Cấu trúc
 

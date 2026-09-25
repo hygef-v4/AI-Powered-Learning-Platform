@@ -54,5 +54,6 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-50 | ADMIN cộng/trừ credit mua của một tài khoản, lý do ≥ 10 ký tự, không làm số dư âm; audit. | Câu 6 |
+| BR-U07-53 | Sau khi `PAID`, phát event `u07.payment.paid` (sau commit) để U16 báo trong app. | U16 |
 | BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát thủ công, điều chỉnh, đổi mức tặng tháng. | FR-014, SEC-005 |
 | BR-U07-52 | Người dùng xem số dư, lịch sử giao dịch và sổ cái của mình; ADMIN xem mọi tài khoản. | UC-PAY-01, 02 |
