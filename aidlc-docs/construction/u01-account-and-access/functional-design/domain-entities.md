@@ -141,6 +141,15 @@ Phạm vi môn/lớp đến từ contract của U04 (`SubjectScopePort`, `ClassS
 | `AvatarPort` | U03 | `C` | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR`, lấy tham chiếu hiển thị |
 | `SubjectScopePort`, `ClassScopePort` | U04 | Contract | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 
+## 7b. Port U01 cung cấp
+
+| Port | Dùng bởi | Ghi chú |
+|---|---|---|
+| `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
+| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; không trả mật khẩu hay số điện thoại |
+
+`AvatarPort`, `SubjectScopePort`, `ClassScopePort` do U01 khai báo (cạnh `C`); U03 và U04 cài khi được code, trước đó U01 dùng adapter tạm (xem code generation plan).
+
 ## 8. Ghi chú dữ liệu
 
 Bảng của U01 được định nghĩa tại tài liệu này, Infrastructure Design và migration trong code generation plan.

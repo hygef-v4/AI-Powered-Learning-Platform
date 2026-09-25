@@ -6,7 +6,7 @@
  Browser (Next.js)
    | cookie access_token / refresh_token
    v
- +-------------------- Backend (Spring Boot, package u01) --------------------+
+ +-------------------- Backend (Spring Boot, package u01) -------------------+
  |  RateLimitFilter --> JwtAuthFilter --> Controllers                        |
  |                                         |                                 |
  |        +--------------------------------+---------------------------+     |
@@ -15,10 +15,10 @@
  |        |                |                |                          |     |
  |        +-------+--------+-------+--------+                          |     |
  |                v                v                                   v     |
- |       AuthorizationService   OtpService                       AvatarPort |
+ |       AuthorizationService   OtpService                       AvatarPort  |
  |                |                |                              (-> U03)   |
  |                v                v                                         |
- |        ScopePort (-> U04)   JobPort (-> U02)                           |
+ |   Subject/ClassScopePort (U04)   JobPort (-> U02)                         |
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
@@ -27,7 +27,7 @@
    import batch      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ScopePort`) và `OtpService` (tạo job qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận job từ RabbitMQ và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort`/`ClassScopePort`, U01 khai báo, U04 cài) và `OtpService` (tạo job qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận job từ RabbitMQ và gửi SMTP, local dùng Mailpit.
 
 ## 2. Thành phần
 

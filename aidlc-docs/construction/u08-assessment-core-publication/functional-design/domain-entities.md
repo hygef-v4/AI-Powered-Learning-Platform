@@ -72,7 +72,7 @@ Publication: SCHEDULED --tới opensAt--> OPEN --tới closesAt (hoặc lateUnti
 
 | Contract | Chiều | Mô tả |
 |---|---|---|
-| `AssignmentQueryPort` | U08 cung cấp cho U09-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
+| `AssignmentQueryPort` | U08 cung cấp cho U09-U12, U14-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
 | `PublicationService` | U08 cung cấp cho U10 | Tạo publication theo quy tắc U08 |
 | `TypeConfigPort` | U08 khai báo, U09 cài (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình/khung khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
 | `GroupReadinessPort` | U08 khai báo, U12 cài (`C`) | Bài nhóm đủ nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi người học có nhóm (BR-U12-21); chưa có U12 → không cho phát hành bài `GROUP` |

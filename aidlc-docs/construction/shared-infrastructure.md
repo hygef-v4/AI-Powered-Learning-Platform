@@ -50,7 +50,7 @@ VPS gợi ý: 4 vCPU, 8 GB RAM, 60 GB SSD (có Judge0). VPS nhỏ hơn: xem U13 
 - Webhook PayOS `/api/v1/payments/payos/webhook`: `client_max_body_size 16k`.
 - Lưu nháp bài làm `PUT /api/v1/attempts/*/content` và mục bài nhóm `PUT /api/v1/group-docs/*/sections/*/draft`: `client_max_body_size 12m`.
 - SSE tài liệu nhóm `GET /api/v1/group-docs/*/events` và chuông thông báo `GET /api/v1/me/notifications/stream`: `proxy_buffering off`, `proxy_read_timeout 1h`, `proxy_http_version 1.1`.
-- Nhập DOCX `/api/v1/assignments/*/skeleton:import-docx`: `client_max_body_size 20m`, `proxy_read_timeout 60s`.
+- Nhập DOCX `/api/v1/assignments/*/skeleton:import-docx` (khung giảng viên) và `/api/v1/attempts/*/docx:preview` (người học, bài DOCUMENT): `client_max_body_size 20m`, `proxy_read_timeout 60s`.
 - `client_max_body_size 50m`; riêng `/api/v1/files` tắt đệm request (`proxy_request_buffering off`) và `proxy_read_timeout 120s`.
 - Backend và worker cần kết nối ra `www.googleapis.com:443` (Google Drive, YouTube Data API), `generativelanguage.googleapis.com:443` (Gemini), `www.youtube.com:443` (caption) và `api-merchant.payos.vn:443` (PayOS); firewall chỉ chặn chiều vào.
 

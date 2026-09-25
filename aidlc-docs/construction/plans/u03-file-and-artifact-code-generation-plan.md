@@ -55,10 +55,10 @@ PostgreSQL `artifacts`; Redis `u03:dl:*`; thư mục trên Google Shared Drive; 
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 3** - Domain: `Artifact` với trạng thái `ACTIVE`/`BLOCKED`; `ArtifactPurpose` (`AVATAR`, `MATERIAL`, `DOCUMENT_IMAGE`); `PurposePolicy` (allowlist loại file, trần 50 MB / 5 MB, vai trò được upload); `FileNameSanitizer` (BR-U03-02, 03, 04, 08).
-- [ ] **Bước 4** - Port: `ArtifactPort` (`store`, `attach`, `issueDownloadToken`, `open`), `AvatarPort`, `StoragePort`.
+- [ ] **Bước 4** - Port: `ArtifactPort` (`store`, `attach`, `issueDownloadToken`, `open`), `StoragePort`. `AvatarPort` do U01 khai báo (`C`), U03 cài ở Bước 7.
 - [ ] **Bước 5** - `ContentInspector`: Tika trên 8 KB đầu, so allowlist của `purpose`; lỗi trả thông điệp chung (BR-U03-03, P3).
 - [ ] **Bước 6** - `UploadService`: `Semaphore` 5 permit (hết → `503`), kiểm quyền, kiểm nội dung, SHA-256, đẩy qua `StoragePort`, INSERT, dọn bù trừ khi lỗi (retry 3 lần, vẫn lỗi thì tạo job `U03_DRIVE_CLEANUP`), `finally` xóa file tạm (BR-U03-01…07, 41, P1).
-- [ ] **Bước 7** - `ArtifactService`: `attach` (một lần, đúng người tải lên), `open` (chỉ `ACTIVE`), `validateAvatar`; không có hàm xóa (BR-U03-30…32, F4, F5).
+- [ ] **Bước 7** - `ArtifactService`: `attach` (một lần, đúng người tải lên), `open` (chỉ `ACTIVE`), `validateAvatar` (cài `AvatarPort` của U01, bỏ `AvatarUnavailableAdapter` của U01); không có hàm xóa (BR-U03-30…32, F4, F5).
 - [ ] **Bước 8** - `DownloadTokenService`: token 32 byte base64url, Redis `u03:dl:{sha256}` TTL 5 phút gắn `accountId`; từ chối `BLOCKED`; kiểm chủ token khi dùng, sai thì `404` và audit (BR-U03-20, 21, 25, 40, P4).
 - [ ] **Bước 9** - `DriveJobHandler` trong worker cho `U03_DRIVE_CLEANUP`; đăng ký với `JobHandlerRegistry` của U02 và khai báo queue `jobs.u03.*`.
 - [ ] **Bước 10** - Audit các sự kiện của BR-U03-40; không log `providerFileId`, key, token.

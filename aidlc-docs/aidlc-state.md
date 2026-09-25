@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 complete except the paused U01 plan. Every unit has Functional Design, NFR Requirements, NFR Design, Infrastructure Design and a code generation plan; no application code generated yet.
-- **Resume action**: Update and approve the paused U01 code plan (use real U02/U03 adapters); then start Code Generation Part 2 following the dependency order and critical path.
+- **Current Stage**: Code Generation Part 1 complete. All 16 units have approved design stages and code generation plans; no application code generated yet.
+- **Resume action**: Finish the story check for the US-GRD stories, then start Code Generation Part 2 in dependency order (wave 1: U01 and U02 in parallel; the shared project skeleton is U01 steps 1-6).
 
 ## Workspace State
 - **Existing Code**: No
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [ ] Code Generation Part 1 (plans) - U02-U16 approved; U01 paused/unapproved
+- [x] Code Generation Part 1 (plans) - all 16 units approved
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -53,7 +53,7 @@
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
-| U01 Account & Access | Done | Paused, needs update | - |
+| U01 Account & Access | Done | Approved | - |
 | U02 Audit, Job & Event | Done | Approved | - |
 | U03 File & Artifact | Done | Approved | - |
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |

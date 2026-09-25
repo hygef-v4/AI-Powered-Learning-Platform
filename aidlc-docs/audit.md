@@ -2409,3 +2409,41 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 **Context**: User request follows the explicit list of nine surplus historical stories. The request concerns the user-story catalog and its live references; no application code was modified.
 
 ---
+
+## U01 Code Generation Plan Update
+**Timestamp**: 2026-09-25T08:40:00Z
+**User Input**: "unit 1 xong chưa" / "thế làm tiếp plan code đi để duyệt"
+**AI Response**: Rewrote the U01 code generation plan:
+- uses real U02 job/audit (C U02 → U01), with explicit waits on U02 steps;
+- U01 declares `AvatarPort`, `SubjectScopePort` and `ClassScopePort`, with temporary adapters until U03/U04 implement them; the scope adapter fails closed;
+- U01 implements `AuthorizationPort` (replacing U02's fake) and new `AccountLookupPort` for U04 and U16;
+- `OtpMailHandler` runs in the worker via U02's `JobHandlerRegistry`;
+- steps renumbered 1-37.
+Synced related docs: U01 domain-entities (new §7b "Port U01 cung cấp"), U01 logical-components text, U03 plan steps 4 and 7, U04 plan structure and steps 3 and 10.
+Also in this turn (story-check round 5): IAM-002/005/006 stories now state the 15-minute token delay; CAT-002/003 stories align with U04; CNT-005 wording; ASM-003/004/007 stories align with U09/U11/U08; BR-U09-35 source changed from BR-U03-10 to SEC-003.
+Asked for approval of the U01 code plan.
+**Context**: Construction - U01 Code Generation Part 1
+
+---
+
+## U01 Code Generation Plan Approval
+**Timestamp**: 2026-09-25T08:50:00Z
+**User Input**: "approved"
+**AI Response**: Recorded approval of the U01 code generation plan. Code Generation Part 1 is complete for all 16 units. Next: finish the US-GRD story check, then Code Generation Part 2.
+**Context**: Construction - U01 Code Generation Part 1 approved
+
+---
+
+## Consistency Check (after scope commit 3d91cc3)
+**Timestamp**: 2026-09-25T09:20:00Z
+**User Input**: "check lại đồng bộ giữa inception và construction và giữa các unit của construction"
+**AI Response**: Rebuilt the automated checker for the current 50-story/78-UC MVP scope. It checks ports vs matrix across all construction files, graph vs matrix, C-edge list, data ownership, code-plan dependency tables, story/UC coverage and counts, BR/NFR/FR references, FR↔story traceability, stale terms, `<br>` in tables, unit titles, and that consumed events are published. Also reviewed the new features from commit 3d91cc3 (U05 class announcements, U16 dashboard/export, U05 embedding credits, learner DOCX import, simulation 1-10 attempts) and the US-GRD stories against U15.
+Fixed:
+- U15 → U16 changed from E to H (U16 reads the gradebook synchronously through a port). The figure now matches the transitive reduction of H exactly. Figure text updated: U05 → U16 removed from the text alternative because it is an undrawn E edge; wave-4 text updated.
+- `ClassAccessPort` and `AssignmentQueryPort` consumer lists now match the matrix.
+- shared-infrastructure: added the learner route `/api/v1/attempts/*/docx:preview` (20 MB, 60 s).
+- U01 logical-components diagram: port name fixed and box widths aligned.
+Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05/U15/U16 rules. Open item remains: PayOS refund policy.
+**Context**: Consistency review
+
+---

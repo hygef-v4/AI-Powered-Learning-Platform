@@ -66,7 +66,7 @@ Ghi danh:  ACTIVE <--> REMOVED
 | Contract | Chiều | Mô tả |
 |---|---|---|
 | `SubjectScopePort`, `ClassScopePort` | U04 cung cấp cho U01 | `isSubjectManager`, `isInstructorOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
-| `ClassAccessPort` | U04 cung cấp cho U05-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
+| `ClassAccessPort` | U04 cung cấp cho U05, U06, U08-U12, U14-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
 | `AccountLookupPort` | U04 dùng U01 | Tìm tài khoản theo email hoặc chuỗi tìm kiếm; trả `id`, `displayName`, `email`, `role`, `status` |
 | `AuthorizationPort` | U04 dùng U01 | Kiểm role và phạm vi |
 | `PublishedContentPort` | U04 dùng, U05 cung cấp (`C`) | Nội dung đã phát hành của lớp và môn |

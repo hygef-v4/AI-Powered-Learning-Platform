@@ -40,8 +40,8 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; rout
     domain/             Subject, CourseClass, Enrollment, trạng thái, EnrollmentRowResult,
                         InviteCodeGenerator
     infrastructure/     JPA repository, EmptyPublishedContentAdapter
-    port/               SubjectScopePort, ClassScopePort, ClassAccessPort,
-                        PublishedContentPort
+    port/               ClassAccessPort, PublishedContentPort
+                        (SubjectScopePort, ClassScopePort do U01 khai báo; U04 cài)
 /backend/src/main/resources/db/migration/u04/
 /frontend/src/app/admin/subjects/
 /frontend/src/app/teaching/classes/
@@ -60,14 +60,14 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; rout
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain: `Subject`, `CourseClass` (gồm `showGradeDistribution` mặc định false), `Enrollment` với trạng thái và chuyển trạng thái hợp lệ; `InviteCodeGenerator` (BR-U04-02, 11, 14, 17, 21, 30).
-- [ ] **Bước 3** - Port: `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`, `PublishedContentPort`; `EmptyPublishedContentAdapter`.
+- [ ] **Bước 3** - Port: `ClassAccessPort`, `PublishedContentPort`; `EmptyPublishedContentAdapter`. `SubjectScopePort`, `ClassScopePort` dùng interface U01 đã khai báo.
 - [ ] **Bước 4** - `SubjectService`: tạo, sửa, gán Chủ nhiệm môn, lưu trữ/mở lại (BR-U04-01…04).
 - [ ] **Bước 5** - `ClassService`: tạo lớp, gán giảng viên, sửa, đổi trạng thái, bật/tắt phân bố điểm, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (BR-U04-10…17, 26, P4, P5).
 - [ ] **Bước 6** - `EnrollmentGuard` (advisory lock theo người học + môn, khóa theo thứ tự khi mở lại) (P2).
 - [ ] **Bước 7** - `EnrollmentService`: tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, ghi danh lại, phát event (BR-U04-20…26, P3).
 - [ ] **Bước 8** - `InviteCodeService`: bật/tắt/đổi mã, tự ghi danh, rate limit Bucket4j chỉ trừ khi sai, thông báo chung (BR-U04-30…34, P6).
 - [ ] **Bước 9** - `LearnerClassService`: danh sách lớp "Đang học"/"Đã kết thúc", trang lớp có nội dung, U05 lỗi thì vẫn trả thông tin lớp (BR-U04-40…44, P8).
-- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`; bỏ adapter giả phía U01 (P1).
+- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`; bỏ `NoAssignmentScopeAdapter` của U01 (P1).
 - [ ] **Bước 11** - `loadForActor` che giấu đối tượng ngoài quyền và audit theo BR-U04-51, 52.
 - [ ] **Bước 12** - Unit test cho mọi `BR-U04-xx`.
 - [ ] **Bước 13** - Tóm tắt: `aidlc-docs/construction/u04-subject-class-enrollment/code/business-logic-summary.md`.
