@@ -7,7 +7,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 | Thành phần (NFR Design) | Chạy ở | Ghi chú |
 |---|---|---|
 | `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `u01` | Một backend modular monolith |
-| `OtpMailHandler` | Container `worker` | Handler của job `U01_OTP_DELIVERY`, nhận từ queue `jobs.u01.otp-delivery` |
+| `OtpMailHandler` | Container `worker` | Handler của job `OTP_DELIVERY`, nhận từ queue `jobs.email` |
 | Bảng `accounts` (gồm cột số dư credit do U07 ghi), `app_settings` (bảng cấu hình dùng chung, U01 tạo) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa có tiền tố `u01:` |
 | Job | Bảng `jobs` của U02 trong `postgres`; gửi RabbitMQ sau commit, quét gửi lại job kẹt quá 5 phút | U02 sở hữu |
@@ -17,7 +17,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 
 | Thành phần | Giá trị |
 |---|---|
-| Queue | `jobs.u01.otp-delivery`, durable, routing key `U01_OTP_DELIVERY` trên exchange `jobs` của U02 |
+| Queue | `jobs.email`, durable, routing key `OTP_DELIVERY` trên exchange `jobs` của U02 |
 | Retry | Do bảng `jobs` của U02 điều khiển (backoff 30 s → 8 phút, lượt quét mỗi phút); không có queue trễ |
 | Hết lượt | Job `FAILED`, log ERROR; không có DLQ |
 | Payload | `{ schemaVersion, jobId, jobType, correlationId }`; `accountId` và `purpose` nằm trong `payloadRef` của bảng `jobs`, không có mã OTP |
@@ -26,9 +26,9 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 
 | Tiền tố | Nội dung | TTL |
 |---|---|---|
-| `u01:refresh:{hash}` | Refresh session | Idle 2 giờ, kiểm trần 7 ngày |
-| `u01:otp:{accountId}:{purpose}` | Băm OTP, số lượt còn lại | 10 phút |
-| `u01:rl:*` | Bucket4j | Theo cửa sổ |
+| `session:refresh:{hash}` | Refresh session | Idle 2 giờ, kiểm trần 7 ngày |
+| `otp:{accountId}:{purpose}` | Băm OTP, số lượt còn lại | 10 phút |
+| `ratelimit:auth:*` | Bucket4j | Theo cửa sổ |
 
 Redis **không bật persistence**: VPS khởi động lại thì mọi người phải đăng nhập lại và OTP đang chờ mất hiệu lực. Chấp nhận được vì Redis chỉ giữ dữ liệu tạm có TTL.
 

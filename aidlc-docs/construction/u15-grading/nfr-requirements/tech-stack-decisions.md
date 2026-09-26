@@ -4,5 +4,5 @@
 |---|---|---|
 | Lưu | PostgreSQL + JPA; `items` `jsonb` | Như các unit trước |
 | Chấm trắc nghiệm | Hàm thuần `QuizScorer` dùng `BankQueryPort` + câu riêng của bài | Xác định, dễ test |
-| Tiêu thụ event | Listener RabbitMQ trong `worker` (`u11.submission.submitted`, `u13.code.graded`, `u14.group.submitted`) | Không làm chậm request nộp |
+| Nhận bài nộp | Port do U15 cài, gọi trong transaction nộp của U11/U14 và khi U13 chấm xong; tạo job `GRADE_INIT` trên `jobs.triggered` | Không làm chậm request nộp; không mất như event |
 | Sổ điểm | Một query tổng hợp + index `(publication_id, learner_id)` | Đủ cho 200 × 30 |

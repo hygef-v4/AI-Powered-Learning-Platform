@@ -33,9 +33,9 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 ### P6 - Token bucket phân tán (Bucket4j + Redis)
 | Khóa | Dung lượng | Nạp lại | Nguồn |
 |---|---|---|---|
-| `otp:email:{hash(email)}` | 5 | 5/giờ, tối thiểu 60 giây giữa hai lần | NFR-U01-20 |
-| `otp:ip:{ip}` | 20 | 20/giờ | NFR-U01-20 |
-| `login:ip:{ip}` | 30 | 30/5 phút | NFR-U01-21 |
+| `ratelimit:auth:otp-email:{hash(email)}` | 5 | 5/giờ, tối thiểu 60 giây giữa hai lần | NFR-U01-20 |
+| `ratelimit:auth:otp-ip:{ip}` | 20 | 20/giờ | NFR-U01-20 |
+| `ratelimit:auth:login-ip:{ip}` | 30 | 30/5 phút | NFR-U01-21 |
 
 - Email trong khóa được băm để Redis không chứa email rõ.
 - Hết lượt: OTP vẫn trả `202` trung tính; đăng nhập trả lỗi trung tính (NFR-U01-22).

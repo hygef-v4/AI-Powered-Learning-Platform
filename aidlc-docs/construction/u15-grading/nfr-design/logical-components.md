@@ -3,30 +3,31 @@
 ## 1. Sơ đồ
 
 ```
- event u11.submission.submitted / u13.code.graded / u14.group.submitted
+ U11/U14 nộp, U13 chấm xong --> port (cùng transaction) --> job GRADE_INIT (jobs.triggered)
         |
         v
- worker: SubmissionGradeListener --> QuizScorer --> GradeWriter
- +--------------------------------- backend -----------------------------------+
+ worker: GradeInitHandler --> QuizScorer --> GradeWriter
+ +--------------------------------- backend -------------------------------------+
  | GradingController --> GradingService --> RubricPort (U06), AiGradingPort (U13)|
  |                                      --> GradeWriter (P1)                     |
  | BulkGradeService (P4)   PublishService (P4)                                   |
  | GradebookService (P6)   LearnerGradeController (P5)                           |
  | Repository (grades, grade_history) + AssignmentExtensionPort (U08)            |
  +-------------------------------------------------------------------------------+
-        | u15.grade.published
+        | event grade.published
         v
        U16
 ```
 
-**Text alternative**: Worker nghe các event nộp bài và chấm code, tự chấm trắc nghiệm bằng `QuizScorer` và ghi qua `GradeWriter`. Trong backend, giảng viên chấm qua `GradingService` (dùng rubric U06, đề xuất AI U13), chốt/công bố hàng loạt qua `BulkGradeService`/`PublishService`; sổ điểm qua `GradebookService`; người học chỉ đọc điểm đã công bố. Công bố phát event `u15.grade.published` cho U16.
+**Text alternative**: U11 và U14 khi nộp, U13 khi chấm xong code, gọi port do U15 cài trong cùng transaction; port tạo job `GRADE_INIT` hoặc cập nhật điểm code. Worker chạy `GradeInitHandler`, tự chấm trắc nghiệm bằng `QuizScorer` và ghi qua `GradeWriter`. Trong backend, giảng viên chấm qua `GradingService` (dùng rubric U06, đề xuất AI U13), chốt/công bố hàng loạt qua `BulkGradeService`/`PublishService`; sổ điểm qua `GradebookService`; người học chỉ đọc điểm đã công bố. Công bố phát event `grade.published` cho U16.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `GradeWriter` | backend, worker | P1 |
-| `SubmissionGradeListener`, `QuizScorer` | worker | F1; P2, P3 |
+| `GradeInitHandler`, `QuizScorer` | worker | F1; P2, P3 |
+| `SubmissionSubmittedAdapter`, `GroupSubmittedAdapter`, `CodeGradedAdapter` | backend, worker | Cài port của U11, U14, U13: tạo job `GRADE_INIT` hoặc cập nhật điểm code |
 | `GradingService` | backend | F2, F5, F6 |
 | `BulkGradeService`, `PublishService` | backend | F3, F4; P4 |
 | `GradebookService`, `LearnerGradeController` | backend | F7; P5, P6 |

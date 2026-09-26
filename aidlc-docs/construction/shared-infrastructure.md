@@ -10,8 +10,8 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | Local/demo | Cùng file Compose, thêm Mailpit, tắt Nginx TLS | NFR-005 |
 | Reverse proxy, HTTPS | Nginx + certbot (Let's Encrypt); tên miền có sẵn hoặc subdomain DuckDNS miễn phí | Câu I6 |
 | Database | PostgreSQL container; user `migrator` cho Flyway, user `app` cho runtime | U02 |
-| Cache, phiên, rate limit | Redis container | U01 |
-| Queue | RabbitMQ container, vhost `/platform`, user `app`, tắt `guest`; exchange `jobs`, `audit`, `platform.events` (U02) và fanout `platform.realtime` (U14 tạo, U16 dùng chung cho SSE) | Câu I2, U02, U14 |
+| Cache, phiên, rate limit | Redis container; 12 nhóm key đặt tên theo mục đích: `otp:*`, `session:refresh:*`, `file:download-token:*`, `gemini:daily-cost:*`, `email:daily-count:*` và 7 nhóm `ratelimit:*` (`auth`, `invite-code`, `payos-webhook`, `attempt-save`, `section-save`, `ai-request`, `code-try`). Mọi key có TTL; mất Redis chỉ làm đăng xuất và reset bộ đếm | U01, U03, U04, U07, U11, U13, U14, U16 |
+| Queue | RabbitMQ container, vhost `/platform`, user `app`, tắt `guest`. Exchange: `jobs` (direct), `platform.events` (topic, chỉ cho thông báo) do U02 khai báo; `platform.realtime` (fanout, U14 tạo, U16 dùng chung cho SSE). Queue: 8 queue job `jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos` (U02); `jobs.notification` (U16); mỗi backend một queue tạm `jobs.realtime.{instanceId}` (U14). Audit không đi qua RabbitMQ | Câu I2, U02, U14, U16 |
 | Quan sát | `docker compose logs` + healthcheck; không có monitoring stack | Rút gọn phạm vi đồ án |
 | Secret | Biến môi trường trong CI/CD, ghi ra file `.env` quyền 600 trên VPS khi deploy | Câu I4 |
 | Registry image | GitHub Container Registry (miễn phí với repo public), tag theo commit SHA, không dùng `latest` | NFR-005 |
@@ -26,7 +26,7 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | `nginx` | nginx + certbot | 80, 443 | 0.25 CPU, 128 MB | Trả `200` trên `/nginx-health` |
 | `frontend` | Next.js | Không | 0.5 CPU, 512 MB | `/api/health` |
 | `backend` | Spring Boot | Không | 1 CPU, 1 GB | `/health/ready` |
-| `worker` | Spring Boot (profile worker) | Không | 1 CPU, 1,5 GB (VPS < 8 GB: 1 GB và `U05_INGEST_CONCURRENCY=2`) | `/health/ready` |
+| `worker` | Spring Boot (profile worker) | Không | 1 CPU, 1,5 GB (VPS < 8 GB: 1 GB và `U05_INGEST_CONCURRENCY=2`); 14 luồng xử lý job chia theo 8 queue | `/health/ready` |
 | `postgres` | `pgvector/pgvector:pg16` (PostgreSQL 16 + pgvector) | Không | 1 CPU, 1 GB | `pg_isready` |
 | `redis` | redis, phiên bản cố định, `requirepass` | Không | 0.25 CPU, 256 MB | `redis-cli ping` |
 | `rabbitmq` | rabbitmq, phiên bản cố định | Không | 0.5 CPU, 512 MB | `rabbitmq-diagnostics ping` |

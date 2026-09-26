@@ -5,9 +5,9 @@
                                       |        |          |
                                       v        v          v
                                 [postgres]  [redis]   [rabbitmq]
-                                subjects    u04:      platform.events
-                                classes     invite-   (u04.enrollment.activated)
-                                enrollments fail:*          |
+                                subjects    ratelimit: platform.events
+                                classes     invite-    (enrollment.activated)
+                                enrollments code:*          |
                                                             v
                                                     U16 (thông báo, email)
 ```

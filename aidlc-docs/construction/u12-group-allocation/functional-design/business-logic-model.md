@@ -17,7 +17,7 @@
 - Kiểm BR-U12-21, trả danh sách lỗi/cảnh báo (nhóm thiếu trưởng nhóm, người học chưa có nhóm).
 
 ## F5 - Đổi sau khi phát hành
-1. Thêm/bớt thành viên, đổi nhóm (BR-U12-22) trong một transaction; phát `GROUP_MEMBERSHIP_CHANGED`; audit.
+1. Thêm/bớt thành viên, đổi nhóm (BR-U12-22) trong một transaction; nhóm mới tạo sau khi bài đã mở thì gọi `GroupChangePort.onGroupCreated` (U14 tạo tài liệu nhóm), thành viên rời nhóm thì gọi `GroupChangePort.onMemberRemoved` (U14 nhả khóa mục), đều trong cùng transaction; audit; sau commit phát event `group.membership-changed` cho thông báo.
 
 ## F6 - Trưởng nhóm
 1. Người học gửi/hủy yêu cầu (BR-U12-10, 11).

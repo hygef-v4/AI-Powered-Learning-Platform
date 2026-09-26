@@ -9,7 +9,7 @@ Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, `UC-OPS-02`. T
 | `AuditEvent` | Entity bất biến | `audit_events` | U02 (mọi unit gửi qua `AuditPort`) |
 | `Job` | Aggregate root | `jobs` | U02 (unit sở hữu `jobType` tạo và xử lý kết quả) |
 | `JobMessage` | Message | RabbitMQ | U02 |
-| `DomainEventMessage` | Message | RabbitMQ | U02 (unit nguồn phát qua `EventPublisherPort`) |
+| `DomainEventMessage` | Message (chỉ cho thông báo) | RabbitMQ | U02 (unit nguồn phát qua `EventPublisherPort`) |
 
 U02 **không** sở hữu: quyết định nghiệp vụ của job (unit sở hữu `jobType`), quyền đọc audit/job (U01).
 
@@ -34,7 +34,7 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 | Thuộc tính | Ràng buộc |
 |---|---|
 | `jobId` | Định danh; gửi kèm message |
-| `jobType` | Ví dụ `U01_OTP_DELIVERY`, `U16_DEADLINE_REMINDER`; mỗi loại do đúng một unit sở hữu |
+| `jobType` | Ví dụ `OTP_DELIVERY`, `DEADLINE_REMINDER`; mỗi loại do đúng một unit sở hữu |
 | `ownerUnit` | Unit xử lý kết quả |
 | `requestedBy` | `accountId` người tạo; rỗng nếu hệ thống tạo |
 | `payloadRef` | JSON chỉ chứa ID/tham chiếu, không chứa bí mật |
@@ -65,11 +65,11 @@ stateDiagram-v2
 
 ## 4. `JobMessage`
 
-`{ schemaVersion, jobId, jobType, correlationId }`. Worker đọc chi tiết job qua U02, không tin nội dung message.
+`{ schemaVersion, jobId, jobType, correlationId }`, gửi tới exchange `jobs` với routing key = `jobType`, vào 1 trong 8 queue (BR-U02-33). Worker đọc chi tiết job qua U02, không tin nội dung message.
 
 ## 5. `DomainEventMessage`
 
-`{ schemaVersion, eventId, eventType, sourceUnit, occurredAt, correlationId, payload }`, dùng cho audit và sự kiện nghiệp vụ gửi sau commit (U11, U15, U16…). Payload không chứa bí mật.
+`{ schemaVersion, eventId, eventType, sourceUnit, occurredAt, correlationId, payload }`, gửi sau commit lên `platform.events`, **chỉ cho thông báo** (U16 nghe bằng queue `jobs.notification`). Audit không đi qua message. Payload không chứa bí mật.
 
 ## 6. Contract
 
@@ -77,12 +77,12 @@ stateDiagram-v2
 
 | Port | Dùng bởi |
 |---|---|
-| `AuditPort.record(event)` | Mọi unit |
+| `AuditPort.record(event)` | Mọi unit; ghi trong transaction của unit gọi |
 | `AuditQueryPort.query(actor, filters, page)` | Trang audit của admin |
 | `JobPort.enqueue(jobType, payloadRef, idempotencyKey, requestedBy)` | Mọi unit có tác vụ nền |
 | `JobPort.getStatus(actor, jobId)` | Frontend qua API |
 | `JobWorkerPort.claim / complete / fail` | Worker |
-| `EventPublisherPort.publish(event)` | Unit phát sự kiện nghiệp vụ |
+| `EventPublisherPort.publish(event)` | Unit phát sự kiện cho thông báo U16 |
 
 ### Port U02 dùng
 

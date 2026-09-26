@@ -6,7 +6,7 @@
 |---|---|
 | Bộ nhóm, trưởng nhóm, sẵn sàng, tra cứu thành viên | `backend` |
 | Bảng `student_groups`, `group_members`, `leader_change_requests` | `postgres` |
-| Event | `u12.group.membership-changed`, `u12.group.leader-changed` trên `platform.events` |
+| Event | `group.membership-changed`, `group.leader-changed` trên `platform.events` |
 
 U12 không chạy trong `worker`, không có queue riêng, Redis key hay secret.
 

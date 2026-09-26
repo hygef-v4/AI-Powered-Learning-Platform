@@ -6,7 +6,7 @@
 ## F2 - Bắt đầu lượt
 1. Kiểm BR-U11-01, 03, 04.
 2. Tạo `Attempt` `IN_PROGRESS`, snapshot, seed, `deadlineAt` (BR-U11-02, 06); thi thử gọi `lock` (BR-U11-05).
-3. Tạo job U02 `U11_AUTO_SUBMIT` tại `deadlineAt`.
+3. Tạo job U02 `ATTEMPT_AUTO_SUBMIT` tại `deadlineAt`.
 4. Trả đề theo góc nhìn người học (U06/U08 đã lọc đáp án), đã trộn theo seed.
 
 ## F3 - Lưu nháp
@@ -24,8 +24,8 @@
 2. Chuyển `SUBMITTED` theo BR-U11-21; trả biên nhận; audit.
 
 ## F5 - Tự nộp
-1. Job `U11_AUTO_SUBMIT` tại `deadlineAt`: nếu lượt còn `IN_PROGRESS` → nộp nội dung hiện có với `submitMode` tương ứng (BR-U11-23, 24).
-2. Event `ASSIGNMENT_RETIRED` (U08): nộp mọi lượt `IN_PROGRESS` của publication với `AUTO_RETIRED`.
+1. Job `ATTEMPT_AUTO_SUBMIT` tại `deadlineAt`: nếu lượt còn `IN_PROGRESS` → nộp nội dung hiện có với `submitMode` tương ứng (BR-U11-23, 24).
+2. U08 ngưng giao gọi `PublicationLifecyclePort.onRetired` (U11 cài) → tạo job `ATTEMPT_AUTO_SUBMIT {publicationId, mode = AUTO_RETIRED}`; job nộp mọi lượt `IN_PROGRESS` của publication.
 3. Client: đồng hồ về 0 → gửi lần lưu cuối rồi hiện "Đã tự nộp".
 
 ## F6 - Lịch sử, biên nhận, xuất DOCX

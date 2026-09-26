@@ -5,9 +5,9 @@
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U02-01 | Audit chỉ được thêm, không có API hay thao tác ứng dụng nào sửa hoặc xóa. | US-AUD-001 S2 |
-| BR-U02-02 | Unit gọi gửi audit **bất đồng bộ** qua RabbitMQ sau khi transaction nghiệp vụ commit. Sự kiện bị từ chối (`DENIED`) cũng được gửi. | Câu 5 |
-| BR-U02-03 | Consumer lưu audit idempotent theo `eventId`; message trùng không tạo bản ghi thứ hai. | Thiết kế |
-| BR-U02-04 | Gửi RabbitMQ lỗi thì ghi log ERROR kèm `eventId`, `action`, `correlationId`; **không** chặn thao tác nghiệp vụ. Audit có thể mất trong trường hợp này (rủi ro được chấp nhận). | Câu 9 |
+| BR-U02-02 | `AuditPort.record` ghi thẳng vào bảng audit **trong transaction của unit gọi**: thao tác nghiệp vụ commit thì audit có, rollback thì audit không có. Sự kiện bị từ chối (`DENIED`) và lỗi (`FAILURE`) được ghi trong transaction riêng để không mất khi nghiệp vụ rollback. Không đi qua RabbitMQ. | Quyết định 2026-09-26 |
+| BR-U02-03 | `eventId` duy nhất; ghi lại cùng `eventId` không tạo bản ghi thứ hai. | Thiết kế |
+| BR-U02-04 | Ghi audit lỗi (ví dụ DB lỗi) thì thao tác nghiệp vụ cùng transaction cũng rollback; audit bắt buộc không bị mất âm thầm. | Quyết định 2026-09-26 |
 | BR-U02-05 | `beforeData`/`afterData` không chứa mật khẩu, OTP, token, số điện thoại; unit gọi chịu trách nhiệm che, U02 từ chối lưu nếu phát hiện khóa thuộc danh sách cấm (`password`, `otp`, `token`, `secret`, `phone`). | SEC-005 |
 | BR-U02-06 | Audit giữ vĩnh viễn. | Câu 6 |
 | BR-U02-07 | Chỉ `ADMIN` được tra cứu audit; mọi lần tra cứu cũng được audit. | Câu 7, UC-OPS-02 |
@@ -30,12 +30,14 @@
 | BR-U02-30 | Chỉ người tạo job và `ADMIN` xem được trạng thái; người khác nhận "không tìm thấy". | Câu 4 |
 | BR-U02-31 | Trạng thái trả ra gồm `status`, `attempts`, `safeMessage`, thời gian; không trả payload hay `leaseOwner`. | SEC-006 |
 | BR-U02-32 | Job ở trạng thái cuối được giữ; không có dọn dẹp trong MVP. | Thiết kế |
+| BR-U02-33 | Mỗi `jobType` thuộc đúng một trong 8 queue: `jobs.scheduled` (việc nội bộ hẹn giờ, phải chạy đúng giờ: mở/đóng bài, tự nộp, nhắc hạn, chia email, trả credit quá hạn), `jobs.triggered` (việc nội bộ phát sinh sau thao tác người dùng, có thể dồn cục: tạo điểm khi nộp, tạo tài liệu nhóm), `jobs.email` (SMTP), `jobs.gemini` (Gemini), `jobs.youtube` (YouTube Data API), `jobs.code` (Judge0), `jobs.drive` (Google Drive), `jobs.payos` (PayOS). Queue có hệ thống ngoài giới hạn số việc chạy cùng lúc theo giới hạn của hệ thống đó. | Quyết định 2026-09-26 |
+| BR-U02-34 | Phản ứng nghiệp vụ bắt buộc giữa các unit (tạo điểm khi nộp, tự nộp khi ngưng giao, nhận điểm Code Lab) **không** dùng event: unit nguồn gọi port do unit nhận cài, trong cùng transaction; cài đặt port chỉ tạo job của unit nhận qua `JobPort.enqueue`. | Quyết định 2026-09-26 |
 
 ## 3. Sự kiện nghiệp vụ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U02-40 | `EventPublisherPort.publish` gửi sau commit, không đảm bảo giao hàng; mất sự kiện thông báo được chấp nhận. | Câu 2 |
+| BR-U02-40 | `EventPublisherPort.publish` gửi sau commit, không đảm bảo giao hàng; chỉ dùng cho thông báo (U16), nên mất sự kiện được chấp nhận. | Câu 2 |
 | BR-U02-41 | Mọi message có `schemaVersion`; consumer bỏ qua và log WARN nếu gặp phiên bản không hỗ trợ. | Contract rule |
 
 ## 4. Lỗi

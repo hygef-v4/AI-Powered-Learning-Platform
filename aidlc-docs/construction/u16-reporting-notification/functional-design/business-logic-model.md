@@ -6,12 +6,12 @@
 3. Đẩy SSE tới người nhận đang trực tuyến (BR-U16-04).
 
 ## F2 - Gửi email
-1. Job U02 `U16_EMAIL_DISPATCH` mỗi phút lấy `QUEUED`/`DEFERRED` đến hạn theo ưu tiên (BR-U16-12).
-2. Còn trần ngày → tạo job `U16_EMAIL_SEND {outboxId}`; hết trần → `DEFERRED` sang 00:05 ngày sau.
+1. Job U02 `EMAIL_DISPATCH` mỗi phút lấy `QUEUED`/`DEFERRED` đến hạn theo ưu tiên (BR-U16-12).
+2. Còn trần ngày → tạo job `EMAIL_SEND {outboxId}`; hết trần → `DEFERRED` sang 00:05 ngày sau.
 3. Job gửi: tra email (U01), render mẫu tiếng Việt, gửi SMTP (Gmail/Mailpit), `SENT`/retry/`FAILED` (BR-U16-14).
 
 ## F3 - Nhắc hạn nộp
-1. `u08.assignment.opened` → tạo job U02 `U16_DEADLINE_REMINDER` hẹn lúc `closesAt − 24h` (bỏ qua nếu đã qua), `idempotencyKey` = `publicationId:closesAt`.
+1. `assignment.opened` → tạo job U02 `DEADLINE_REMINDER` hẹn lúc `closesAt − 24h` (bỏ qua nếu đã qua), `idempotencyKey` = `publicationId:closesAt`.
 2. Job: kiểm publication còn `OPEN` và hạn không đổi → lấy người chưa nộp (U11/U14) → tạo thông báo `DEADLINE_REMINDER` (BR-U16-20…22).
 3. Đổi hạn (U08 chỉ cho kéo dài khi `OPEN`) → job cũ chạy thấy `expectedClosesAt` khác hạn hiện tại thì không nhắc, và tạo job mới hẹn lúc hạn mới − 24h (khóa `publicationId:closesAt` mới).
 

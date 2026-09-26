@@ -2572,3 +2572,53 @@ Updated the checker to read the new contract tables and the 49/77 scope. Result:
 **Context**: Construction - Code Generation Part 1 re-approval
 
 ---
+
+## Redis/RabbitMQ Consolidation and Renaming (Option B)
+**Timestamp**: 2026-09-26T07:30:00Z
+**User Input**: "mấy cái db của redis với rabbitmq có đúng yêu cầu giống như posgres ko" / "là sao nếu gộp là gộp gì" / "hiện redis với rabbit có bao nhiêu cái" / "sao cái rabbit lại lên 19 cái rồi nãy m bảo 16 mà" / "3 cái queue nghe event có cần thiết ko" / "queue job gộp đc thêm ko" / "Gộp thêm những vẫn phải đúng 3 cái t bảo ở posgres ấy" / "Ko để default" / "đc rồi thế gộp redis và rabbit theo phương án B nhưng đổi lại tên tất cả các cái: ko để kiểu u01 hay u bao nhiêu đó mà ghi rõ tên ra, rabbit cái quêu nghe event cũng phải ghi rõ ra theo kiểu jobs.cái gì đó, rồi soát lại doc xem đã đồng bộ chưa (tự soát đừng dùng script), nếu chưa thì sửa đi"
+**AI Response**:
+- **Audit:** now INSERTed in the business transaction; DENIED/FAILURE entries use REQUIRES_NEW. Exchange `audit`, queue `audit.events` and `AuditListener` are removed.
+- **Required cross-unit reactions:** now declared ports implemented by the receiving unit, which only enqueues its own U02 job:
+  - `SubmissionSubmittedPort` (U11 → U15);
+  - `GroupSubmittedPort` (U14 → U15);
+  - `CodeGradedPort` (U13 → U15);
+  - `PublicationLifecyclePort` (U08 → U11, U14);
+  - `GroupChangePort` (U12 → U14).
+  New jobs: `GRADE_INIT`, `GROUP_DOC_CREATE`. Events kept only for U16 notifications. Removed events: `submission.submitted`, `code.graded`, `assignment.closed`, `assignment.retired`. Removed the event-listener queues of U11, U14 and U15.
+- **RabbitMQ:**
+  - Exchanges: `jobs`, `platform.events`, `platform.realtime`.
+  - Queues: `jobs.internal`, `jobs.email` (priority; OTP first), `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`, `jobs.notification-events`, plus temporary `jobs.realtime.{instanceId}`.
+  - Job types no longer carry unit prefixes; event routing keys no longer carry unit prefixes.
+- **Redis:** 12 key groups named by purpose.
+  - Keys: `otp`, `session:refresh`, `file:download-token`, `gemini:daily-cost` (shared by U05/U13 via new `AiBudgetPort`, replacing `AiKillSwitchPort` and `U05_EMBED_DAILY_TOKENS`), `email:daily-count`.
+  - Rate limits: `ratelimit:auth|invite-code|payos-webhook|attempt-save|section-save|ai-request|code-try`.
+- **Matrix:** new C edges U11/U14 → U08, U14 → U12, U15 → U13, U15 → U14.
+- **Docs updated:** construction docs and plans, inception (contracts, job policy table, U02 rows), `shared-infrastructure.md`, `docs/context-diagram.md`.
+- **Review:** done by reading, not by the checker script. It found and fixed hidden listeners in U14 (group docs on open, lock release on member removal), leftover event wording in U08/U12/U13/U14/U15, U01 rate-limit key names, and diagram widths.
+- **State:** aidlc-state marks the plans of U02, U05, U08 and U11-U16 for re-approval.
+**Context**: Construction - messaging and cache redesign
+
+---
+
+## Split jobs.internal Queue
+**Timestamp**: 2026-09-26T07:45:00Z
+**User Input**: "cái rabbit tách cái internal ra thành 2 cái đi 1 cái nó nặng quá"
+**AI Response**: Split `jobs.internal` into:
+- `jobs.scheduled`: time-critical scheduled jobs `PUBLICATION_OPEN`, `PUBLICATION_CLOSE`, `ATTEMPT_AUTO_SUBMIT`, `GROUP_AUTO_SUBMIT`, `DEADLINE_REMINDER`, `EMAIL_DISPATCH`, `CREDIT_RESERVATION_SWEEP`.
+- `jobs.triggered`: bursty jobs caused by user actions `GRADE_INIT`, `GROUP_DOC_CREATE`, so that a class submitting at the deadline does not delay auto-submit or closing.
+There are now 8 job queues (14 worker threads, 2 per internal queue). Updated U02 (BR-U02-33, logical components, patterns, infra, NFR, plan), U07, U08, U11, U14, U15, U16 infra/plans, `shared-infrastructure.md`, inception (services job table, components, unit-of-work), `docs/context-diagram.md` and aidlc-state.
+**Context**: Construction - messaging redesign refinement
+
+---
+
+## Rename Notification Queue and List Queues
+**Timestamp**: 2026-09-26T07:55:00Z
+**User Input**: "cái notification-events đổi tên thành notification thôi bây giờ còn những queue gì và có queue ẩn gì"
+**AI Response**: Renamed `jobs.notification-events` → `jobs.notification` in all current docs (U02, U16, shared-infrastructure, inception, docs). Listed current RabbitMQ queues:
+- 8 job queues and `jobs.notification`;
+- one temporary `jobs.realtime.{instanceId}` per backend;
+- no DLQ, delay or reply queues.
+Pointed out the only hidden queue: Judge0's internal work queue in container `judge0-redis`, managed by Judge0, not RabbitMQ.
+**Context**: Construction - messaging naming
+
+---

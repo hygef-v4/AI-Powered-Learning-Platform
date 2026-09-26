@@ -73,7 +73,7 @@ stateDiagram-v2
 
 ## 5. `DeadlineReminder`
 
-Mỗi publication có một job U02 `U16_DEADLINE_REMINDER` (`idempotencyKey` = `publicationId:closesAt`, hẹn lúc `closesAt` − 24 giờ, payload `{publicationId, expectedClosesAt}`). Đổi hạn thì tạo job mới theo hạn mới; job cũ chạy thì so `expectedClosesAt` với hạn hiện tại, khác thì bỏ qua. Bài ngưng giao/đóng thì job tự bỏ qua khi chạy. Chỉ nhắc người học chưa nộp, một lần mỗi bài.
+Mỗi publication có một job U02 `DEADLINE_REMINDER` (`idempotencyKey` = `publicationId:closesAt`, hẹn lúc `closesAt` − 24 giờ, payload `{publicationId, expectedClosesAt}`). Đổi hạn thì tạo job mới theo hạn mới; job cũ chạy thì so `expectedClosesAt` với hạn hiện tại, khác thì bỏ qua. Bài ngưng giao/đóng thì job tự bỏ qua khi chạy. Chỉ nhắc người học chưa nộp, một lần mỗi bài.
 
 ## 6. `LearnerDashboard`, `GradebookExport`, `SubmissionProgress`
 
@@ -89,14 +89,13 @@ Mỗi publication có một job U02 `U16_DEADLINE_REMINDER` (`idempotencyKey` = 
 
 | Event | Nguồn | Tạo thông báo |
 |---|---|---|
-| `u04.enrollment.activated` | U04 | `ENROLLED` (app + email) |
-| `u08.assignment.opened` | U08 | `ASSIGNMENT_OPENED` cho người học của lớp (app + email); tạo job nhắc hạn |
-| `u08.assignment.retired`, `u08.assignment.closed` | U08 | Không tạo thông báo; job nhắc hạn tự bỏ qua |
-| `u15.grade.published` | U15 | `GRADE_PUBLISHED` (app + email, không ghi điểm) |
-| `u12.group.leader-changed`, `u12.group.membership-changed` | U12 | App |
-| `u14.group.submitted` | U14 | App cho thành viên nhóm |
-| `u07.payment.paid` | U07 | App |
-| `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted` | U05 | App cho người còn quyền trong lớp (BR-U16-06); không gửi email |
+| `enrollment.activated` | U04 | `ENROLLED` (app + email) |
+| `assignment.opened` | U08 | `ASSIGNMENT_OPENED` cho người học của lớp (app + email); tạo job nhắc hạn |
+| `grade.published` | U15 | `GRADE_PUBLISHED` (app + email, không ghi điểm) |
+| `group.leader-changed`, `group.membership-changed` | U12 | App |
+| `group.submitted` | U14 | App cho thành viên nhóm |
+| `payment.paid` | U07 | App |
+| `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U05 | App cho người còn quyền trong lớp (BR-U16-06); không gửi email |
 
 ### Port U16 dùng
 

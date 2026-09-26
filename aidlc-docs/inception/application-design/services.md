@@ -11,7 +11,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | Service (unit) | Orchestration chính | Không được làm |
 |---|---|---|
 | AccountService, AuthorizationService (U01) | Kích hoạt OTP, phiên, khôi phục, role; quyết định quyền theo role + phạm vi U04 | Không cho admin đặt/xem mật khẩu hay OTP; không tin quyền do frontend gửi |
-| AuditService, JobService (U02) | Audit append-only; enqueue trong transaction, gửi sau commit, retry theo DB, sweeper | Không cung cấp update/delete audit; không quyết định nghiệp vụ |
+| AuditService, JobService (U02) | Audit append-only ghi trong transaction; enqueue trong transaction, gửi sau commit vào 1 trong 8 queue, retry theo DB, sweeper | Không cung cấp update/delete audit; không quyết định nghiệp vụ |
 | FileArtifactService (U03) | Upload, kiểm loại/dung lượng file, lưu Drive, token tải | Không tự quyết ai được xem file; không dùng `acknowledgeAbuse` |
 | AcademicService (U04) | Môn, lớp, phân công, ghi danh, mã mời, lớp của người học | Không xóa lịch sử ghi danh; không kiểm thanh toán |
 | ContentService, ClassCommunicationService (U05) | Chương/bài/phiên bản, liên kết bài cấp môn, ingest RAG, `retrieve`; thông báo/hỏi đáp lớp và sự kiện U16 | Không tự phiên âm; không xử lý ingest trong request; không cho lớp khác đọc/ghi |
@@ -31,14 +31,14 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ### Bài tài liệu có sơ đồ và AI đề xuất chấm
 1. Người học soạn tài liệu (U09 `DocumentEditor`), có thể nhập DOCX vào lượt DOCUMENT sau khi xem trước, vẽ sơ đồ trong iframe Draw.io; U11 tự lưu và kiểm tài liệu qua U09, không cho DOCX sửa khung giảng viên.
-2. Nộp: U11 khóa nội dung, phát `u11.submission.submitted`.
+2. Nộp: U11 khóa nội dung và trong cùng transaction gọi `SubmissionSubmittedPort`; U15 tạo job `GRADE_INIT`.
 3. U15 tạo điểm `PENDING`; giảng viên chọn chấm tay hoặc "Nhờ AI đề xuất".
 4. U13 kiểm trần và credit, lấy văn bản phẳng + XML rút gọn (U09), gọi Gemini, kiểm đầu ra, trả đề xuất.
 5. Giảng viên dùng/sửa đề xuất, chốt, công bố (U15); U16 báo người học.
 
 ### Bài nhóm
 1. U12 tạo bộ nhóm cho bài nhóm, đúng một trưởng nhóm.
-2. Bài mở: U14 dựng tài liệu nhóm từ khung (mục việc).
+2. Bài mở: U08 gọi `PublicationLifecyclePort.onOpened` trong transaction; U14 tạo job `GROUP_DOC_CREATE` dựng tài liệu nhóm từ khung (mục việc).
 3. Thành viên nhận mục, làm ở trang riêng, bấm Xong → ghép realtime (SSE qua `platform.realtime`).
 4. Trưởng nhóm nộp (hoặc tự nộp khi hết hạn); U15 chấm tay tài liệu chung, chấm phần đóng góp từng thành viên (tay/AI), nhập điểm cuối từng người.
 
@@ -57,16 +57,24 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ## 4. Job policies
 
-| Job | Retry | Idempotency |
-|---|---|---|
-| OTP email (U01), email thông báo (U16) | Backoff U02, tối đa 5 lần | Theo job / outbox ID; email thông báo có trần 300/ngày |
-| Dọn file Drive còn sót khi upload lỗi (U03) | Backoff U02 | Theo `providerFileId` |
-| Ingest RAG, giải playlist (U05) | Lỗi tạm retry; lỗi vĩnh viễn/`BUSY` không | Theo `contentKey` |
-| Tự đối soát PayOS, trả phần giữ quá hạn (U07) | Theo lịch | Theo `orderCode` / reservation |
-| Mở/đóng bài (U08) | Chạy lại bỏ qua nếu lịch đổi | Theo `expectedAt` |
-| Tự nộp (U11, U14) | Chạy lại không nộp trùng | Theo lượt / tài liệu nhóm |
-| AI, chạy code (U13) | Lỗi tạm tối đa 3 lần; lỗi code không retry | Theo proposal / run ID |
-| Nhắc hạn (U16) | Bỏ qua nếu hạn đổi | Theo publication |
+Mỗi job type thuộc đúng một trong 8 queue theo tính chất (U02 BR-U02-33): `jobs.scheduled` cho việc nội bộ hẹn giờ, `jobs.triggered` cho việc nội bộ phát sinh sau thao tác, còn lại mỗi hệ thống ngoài có giới hạn riêng một queue.
+
+| Job type (unit) | Queue | Retry | Idempotency |
+|---|---|---|---|
+| `OTP_DELIVERY` (U01) | `jobs.email` (ưu tiên cao) | Backoff U02, tối đa 5 lần | Theo tài khoản + mục đích + phút |
+| `EMAIL_SEND` (U16) | `jobs.email` | Backoff U02, tối đa 5 lần | Theo bản ghi email; trần 300/ngày |
+| `EMAIL_DISPATCH`, `DEADLINE_REMINDER` (U16) | `jobs.scheduled` | Nhắc hạn bỏ qua nếu hạn đổi | Theo publication + hạn |
+| `DRIVE_CLEANUP` (U03) | `jobs.drive` | Backoff U02 | Theo `providerFileId` |
+| `RAG_INGEST` (U05) | `jobs.gemini` | Lỗi tạm retry; lỗi vĩnh viễn/`BUSY` không | Theo `contentKey` |
+| `YOUTUBE_RESOLVE` (U05) | `jobs.youtube` | Lỗi tạm retry | Theo nguồn YouTube |
+| `PAYOS_RECONCILE` (U07) | `jobs.payos` | Theo lịch | Theo `orderCode` |
+| `CREDIT_RESERVATION_SWEEP` (U07) | `jobs.scheduled` | Theo lịch | Theo dòng giữ credit |
+| `PUBLICATION_OPEN`, `PUBLICATION_CLOSE` (U08) | `jobs.scheduled` | Chạy lại bỏ qua nếu lịch đổi | Theo `expectedAt` |
+| `ATTEMPT_AUTO_SUBMIT` (U11), `GROUP_AUTO_SUBMIT` (U14) | `jobs.scheduled` | Chạy lại không nộp trùng | Theo lượt / tài liệu nhóm |
+| `GROUP_DOC_CREATE` (U14) | `jobs.triggered` | Chạy lại không tạo trùng | Theo nhóm |
+| `GRADE_INIT` (U15) | `jobs.triggered` | Chạy lại không tạo điểm trùng | Theo bài nộp + người học |
+| `AI_TASK` (U13) | `jobs.gemini` | Lỗi tạm tối đa 3 lần | Theo proposal |
+| `CODE_RUN` (U13) | `jobs.code` | Lỗi sandbox retry; lỗi code của người học không retry | Theo run ID |
 
 ## 5. REST contract
 

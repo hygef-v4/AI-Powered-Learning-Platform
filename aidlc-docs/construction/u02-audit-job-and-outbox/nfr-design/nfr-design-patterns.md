@@ -25,17 +25,17 @@ UPDATE jobs
 - Lượt quét đưa job `RUNNING` có `lease_expires_at < now()` về `PENDING`, `next_attempt_at = now()`.
 - Handler chạy lâu gọi `extendLease(jobId)` trước khi hết hạn (NFR-U02-12).
 
-## P5 - Audit bất đồng bộ, lưu idempotent
-- `AuditPort.record` gửi message sang queue `audit.events` sau commit; không có transaction thì gửi ngay.
-- Consumer: `INSERT ... ON CONFLICT (event_id) DO NOTHING` (BR-U02-03).
-- Kiểm khóa cấm trong JSON trước khi gửi (BR-U02-05).
+## P5 - Audit ghi trong transaction
+- `AuditPort.record` INSERT vào `audit_events` bằng transaction hiện tại của unit gọi (propagation `REQUIRED`): nghiệp vụ commit thì có audit, rollback thì không (BR-U02-02).
+- `recordDenied`/`recordFailure` dùng propagation `REQUIRES_NEW` để sự kiện bị từ chối hoặc lỗi còn lại dù nghiệp vụ rollback.
+- `INSERT ... ON CONFLICT (event_id) DO NOTHING` (BR-U02-03). Kiểm khóa cấm trong JSON trước khi ghi (BR-U02-05).
 
 ## P6 - Chặn sửa audit ở tầng database
 - Ứng dụng kết nối bằng user `app`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_events FROM app` trong migration (NFR-U02-30).
 
 ## P7 - Cách ly theo loại job
-- Mỗi `jobType` một queue `jobs.<unit>.<type>`; mỗi queue có container listener riêng với số luồng cấu hình (mặc định 1, tổng tối đa 4 cho job). Audit có listener riêng 1 luồng, prefetch 10 (NFR-U02-11, 22).
-- Job AI chậm không làm OTP phải xếp hàng.
+- 8 queue theo tính chất (BR-U02-33); mỗi queue một container listener với số luồng = prefetch: `jobs.scheduled` 2, `jobs.triggered` 2, `jobs.email` 1 (priority queue `x-max-priority = 10`), `jobs.gemini` 4 (U05 và U13 tự giới hạn thêm bằng semaphore `U05_INGEST_CONCURRENCY`, `U13_AI_CONCURRENCY`), `jobs.youtube` 1, `jobs.code` 2, `jobs.drive` 1, `jobs.payos` 1 (NFR-U02-11, 22).
+- Job AI hoặc chạy code chậm không làm OTP, tự nộp hay mở/đóng bài phải xếp hàng; cả lớp nộp sát hạn (nhiều `GRADE_INIT`) không làm trễ tự nộp/đóng bài; OTP luôn gửi trước email thông báo.
 
 ## P8 - Timeout và kết nối lại
 - RabbitMQ: connection timeout 5 s, tự kết nối lại của Spring AMQP; publisher confirm bật, chờ tối đa 2 s.

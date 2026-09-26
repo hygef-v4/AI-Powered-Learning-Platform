@@ -44,8 +44,8 @@ flowchart LR
 | Thành phần | Trách nhiệm |
 |---|---|
 | PostgreSQL + pgvector | Bảng nghiệp vụ theo unit và vector RAG của U05 |
-| Redis | OTP, phiên, rate limit, trần AI/email và token tải tạm thời |
-| RabbitMQ | Chuyển job, event và tín hiệu realtime; U02 giữ trạng thái job/audit trong PostgreSQL |
+| Redis | 12 nhóm key có TTL: OTP, phiên, token tải file, trần chi phí Gemini và trần email theo ngày, 7 loại giới hạn tần suất |
+| RabbitMQ | 8 queue job (`jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`), event thông báo (`jobs.notification`) và tín hiệu realtime; U02 giữ trạng thái job trong PostgreSQL; audit ghi thẳng PostgreSQL |
 | Worker | Ingest học liệu, gửi mail, tự đối soát, chạy AI/code, tự nộp và nhắc hạn |
 
 Nguồn: [hạ tầng chung](../aidlc-docs/construction/shared-infrastructure.md), [phụ thuộc unit](../aidlc-docs/inception/application-design/unit-of-work-dependency.md) và các file `infrastructure-design.md` của U01–U16.

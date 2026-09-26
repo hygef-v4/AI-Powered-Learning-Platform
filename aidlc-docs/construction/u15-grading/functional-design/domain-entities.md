@@ -77,7 +77,10 @@ Sổ điểm lớp: hàng = người học, cột = lượt phát hành; ô = đ
 |---|---|---|
 | `GradeQueryPort` | U11 (`C`), U16 | Điểm đã công bố của một lượt/người học |
 | `GradebookQueryPort` | U16 | Đọc theo lớp và người học: điểm cuối giảng viên chốt, trạng thái công bố, lượt tính điểm; không trả điểm AI đề xuất |
-| Event `u15.grade.published` | U16 | Báo người học |
+| Event `grade.published` | U16 | Báo người học |
+| `SubmissionSubmittedPort` | U11 khai báo (`C`) | Tạo job `GRADE_INIT` cho lượt vừa nộp |
+| `GroupSubmittedPort` | U14 khai báo (`C`) | Tạo job `GRADE_INIT` cho bản nộp nhóm |
+| `CodeGradedPort` | U13 khai báo (`C`) | Ghi điểm Code Lab tự chấm |
 
 ### Port U15 dùng
 
@@ -86,7 +89,8 @@ Sổ điểm lớp: hàng = người học, cột = lượt phát hành; ô = đ
 | `SubmissionQueryPort` | U11 | Lượt, nội dung, lượt được chấm |
 | `GroupSubmissionQueryPort` | U14 | Bản nộp nhóm, mục theo tác giả |
 | `BankQueryPort`, `RubricPort` | U06 | Đáp án (chấm trắc nghiệm), rubric, `score` |
-| `AiGradingPort`, `CodeRunPort`, event `u13.code.graded` | U13 | Đề xuất chấm, chạy code, điểm code |
+| `AiGradingPort`, `CodeRunPort` | U13 | Đề xuất chấm; yêu cầu chấm Code Lab |
+| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Job `GRADE_INIT`, audit, event thông báo |
 | `SimulationPolicyPort` | U10 | Kết quả thi thử |
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Bài, publication; ghi trạng thái công bố |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort` | U09 | Cấu hình hiện điểm, xem/xuất tài liệu |

@@ -43,7 +43,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-40 | Ngưng giao: publication → `RETIRED`, lý do bắt buộc; người học không bắt đầu/nộp thêm; bài đã nộp giữ nguyên; phát event `ASSIGNMENT_RETIRED` (U11 xử lý lượt đang dở); audit. | Câu 4 |
+| BR-U08-40 | Ngưng giao: publication → `RETIRED`, lý do bắt buộc; người học không bắt đầu/nộp thêm; bài đã nộp giữ nguyên; trong cùng transaction gọi `PublicationLifecyclePort.onRetired` (U11, U14 cài: tạo job tự nộp lượt/tài liệu đang dở); audit. | Câu 4 |
 | BR-U08-41 | Nhân bản: tạo bài `DRAFT` mới cùng phạm vi, sao chép thành phần (ghim cùng phiên bản ngân hàng, sao chép câu riêng), `origin = CLONE`, `sourceAssignmentId`; audit. | Câu 5 |
 | BR-U08-42 | Lưu trữ bài `LOCKED` khi mọi publication đã `CLOSED`/`RETIRED`: ẩn khỏi danh sách mặc định. | Thiết kế |
 | BR-U08-43 | Khi mọi publication của version mới nhất đã `CLOSED`/`RETIRED` (không còn `SCHEDULED`/`OPEN`), bấm "Sửa" tạo version kế tiếp (`versionNo + 1`, cùng `stableKey`, `DRAFT`, `origin = NEW_VERSION`) sao chép thành phần và cấu hình; version cũ vẫn `LOCKED` cho bài nộp cũ. Version mới duyệt và phát hành như bài mới. | U10 Câu 5, 6 |

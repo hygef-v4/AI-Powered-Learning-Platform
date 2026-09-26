@@ -23,7 +23,7 @@
 
 ## P6 - Mã mời
 - Sinh 8 ký tự từ bảng chữ BR-U04-30 bằng `SecureRandom`; trùng unique → sinh lại, tối đa 3 lần.
-- Rate limit Bucket4j, khóa Redis `u04:invite-fail:{accountId}`, 10 token/giờ; **chỉ trừ khi nhập sai**; hết token → `429` và audit. Redis lỗi → từ chối (NFR-U04-31).
+- Rate limit Bucket4j, khóa Redis `ratelimit:invite-code:{accountId}`, 10 token/giờ; **chỉ trừ khi nhập sai**; hết token → `429` và audit. Redis lỗi → từ chối (NFR-U04-31).
 - Mã so sánh sau khi viết hoa, bỏ khoảng trắng.
 
 ## P7 - Che giấu đối tượng ngoài quyền

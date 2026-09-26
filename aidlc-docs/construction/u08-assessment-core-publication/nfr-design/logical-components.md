@@ -15,7 +15,7 @@
  | AssignmentQueryService (AssignmentQueryPort, LearnerAssignmentView)          |
  | Repository (PostgreSQL: assignments, assignment_components, publications)    |
  +------------------------------------------------------------------------------+
-                  | job U08_PUBLICATION_OPEN / CLOSE
+                  | job PUBLICATION_OPEN / CLOSE
                   v
  worker: PublicationScheduleHandler --> EventPublisherPort (U02) --> U11, U16
 ```

@@ -15,13 +15,13 @@ Hàng là consumer, cột là provider. `H` cần behavior/contract ổn định
 | U05 | H | H | H | H | - | - | C | - | - | - | - | - | C | - | - | - |
 | U06 | H | H | H | H | C | - | - | - | C | - | - | - | C | - | - | - |
 | U07 | H | H | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| U08 | H | H | - | H | H | H | - | - | C | - | - | C | C | - | - | - |
+| U08 | H | H | - | H | H | H | - | - | C | - | C | C | C | C | - | - |
 | U09 | H | H | H | H | - | H | - | H | - | - | - | - | - | - | - | - |
 | U10 | H | H | - | H | - | H | - | H | H | - | - | - | C | - | - | - |
 | U11 | H | H | H | H | - | H | - | H | H | H | - | - | C | - | C | - |
-| U12 | H | H | - | H | - | - | - | H | - | - | - | - | - | - | - | - |
-| U13 | H | H | - | - | H | H | H | - | C | - | C | - | - | C | - | - |
-| U14 | H | H | H | H | - | - | - | H | H | - | - | H | - | - | - | - |
+| U12 | H | H | - | H | - | - | - | H | - | - | - | - | - | C | - | - |
+| U13 | H | H | - | - | H | H | H | - | C | - | C | - | - | C | C | - |
+| U14 | H | H | H | H | - | - | - | H | H | - | - | H | - | - | C | - |
 | U15 | H | H | - | H | - | H | - | H | H | H | H | - | H | H | - | - |
 | U16 | H | H | - | H | E | - | E | H | - | - | H | H | - | H | H | - |
 
@@ -34,7 +34,7 @@ Nguồn hình: `unit-of-work-dependency.drawio` (mở bằng draw.io để sửa
 **Text alternative** (cạnh provider → consumer): U01 → U03, U04, U07; U02 → U03, U04, U07; U03 → U05, U06; U04 → U05, U06; U05 → U08, U13; U06 → U08, U13; U07 → U13; U08 → U09, U12; U09 → U10, U14; U10 → U11; U11 → U15; U12 → U14; U13 → U15; U14 → U15; U15 → U16 (đọc sổ điểm).
 
 
-U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) và U04 (phạm vi môn/lớp) bằng cạnh `C`: U01 khai báo port, các unit đó cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. U05 phụ thuộc `CreditPort` của U07 bằng cạnh `C` để tính credit embedding; hai unit vẫn phát triển song song, nhưng adapter thật phải có trước khi bật Gemini cho U05. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Hình chỉ vẽ cạnh `H` tối giản theo bắc cầu (nếu A → B → C thì không lặp A → C); các cạnh `C` (U01 → U02, U02/U03/U04 → U01, U05 → U04, U07 → U05, U13 → U05, U05/U09/U13 → U06, U09/U12/U13 → U08, U13 → U10, U13/U15 → U11, U09/U11/U14 → U13) không vẽ, xem ma trận. U16 đọc sổ điểm của U15 qua port nên U15 → U16 là `H`; U16 còn phụ thuộc `H` vào U11/U14 (đọc tiến độ nộp bài) nhưng đã phủ bắc cầu qua U15. Các cạnh `E` U05/U07 → U16 (event lớp, event thanh toán) không vẽ. Ma trận phía trên vẫn là danh sách đầy đủ. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Mọi mũi tên đi từ trái sang phải.
+U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) và U04 (phạm vi môn/lớp) bằng cạnh `C`: U01 khai báo port, các unit đó cung cấp implementation, nên U01 vẫn khởi động không cần chờ ai. U04 phụ thuộc U05 bằng cạnh `C`: phần Learning Access của U04 dùng port trung lập ở tầng contract, U05 cung cấp implementation, nên không tạo chu trình cứng với cạnh `H` theo chiều ngược lại. U05 phụ thuộc `CreditPort` của U07 bằng cạnh `C` để tính credit embedding; hai unit vẫn phát triển song song, nhưng adapter thật phải có trước khi bật Gemini cho U05. Mọi unit nghiệp vụ đều phụ thuộc `H` vào U01 để kiểm quyền actor/object và vào U02 để ghi audit append-only; các cạnh này không vẽ lại trong sơ đồ vì đã được phủ bắc cầu qua U03/U04/U05. Hình chỉ vẽ cạnh `H` tối giản theo bắc cầu (nếu A → B → C thì không lặp A → C); các cạnh `C` (U01 → U02, U02/U03/U04 → U01, U05 → U04, U07 → U05, U13 → U05, U05/U09/U13 → U06, U09/U11/U12/U13/U14 → U08, U13 → U10, U13/U15 → U11, U14 → U12, U09/U11/U14/U15 → U13, U15 → U14) không vẽ, xem ma trận. U16 đọc sổ điểm của U15 qua port nên U15 → U16 là `H`; U16 còn phụ thuộc `H` vào U11/U14 (đọc tiến độ nộp bài) nhưng đã phủ bắc cầu qua U15. Các cạnh `E` U05/U07 → U16 (event lớp, event thanh toán) không vẽ. Ma trận phía trên vẫn là danh sách đầy đủ. Chiều mũi tên luôn từ provider sang consumer. Khung wave là nhóm và điểm dừng tích hợp, **không phải hàng rào đồng bộ**: node ở wave sau có thể mở khi provider trực tiếp của nó xong, dù node khác của wave trước vẫn chạy. Mọi mũi tên đi từ trái sang phải.
 
 **Diễn giải bằng chữ:** Wave 1 có U01 và U02 khởi động song song; U03/U04 mở khi cả hai cung cấp contract/behavior cần thiết. Wave 2 có U05/U06 song song sau U04 và U07 mở ngay sau U01/U02; U08 theo U05/U06. Phần Learning Access của U04 hoàn tất tại wave này khi implementation của U05 cắm vào port trung lập. Wave 3 có U13 chạy khi nguồn U05/U06 và credit U07 sẵn sàng, trong khi U09/U12 theo U08; U10 theo U09 và U11 theo U04/U10. Wave 4 có U14 sau U09/U12, U15 sau U11/U13/U14 và U16 sau các event của owner. Các nhánh vượt ranh giới wave ngay khi dependency trực tiếp đạt; số unit đang triển khai đồng thời trên toàn nhóm không quá năm.
 

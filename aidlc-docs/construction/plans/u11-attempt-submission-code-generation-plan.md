@@ -30,7 +30,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U11 sở hữu
 
-PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue `jobs.u11.auto-submit`, `u11.retired-listener`; routing key `u11.submission.submitted`.
+PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-save:*`; job `ATTEMPT_AUTO_SUBMIT` trên queue `jobs.scheduled`; không phát và không nghe event.
 
 ## 2. Cấu trúc
 
@@ -41,7 +41,8 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue
     application/        AttemptStarter, DraftSaver, AttemptSubmitter, AttemptQueryService
     domain/             Attempt, AttemptStatus, SubmitMode, AttemptContent, DeadlineCalculator
     infrastructure/     JPA repository, UnavailableCodeRunAdapter
-    worker/             AutoSubmitHandler, RetiredListener
+    worker/             AutoSubmitHandler
+    adapter/            PublicationLifecycleAdapter (cài port của U08)
     port/               SubmissionQueryPort, CodeRunPort
 /backend/src/main/resources/db/migration/u11/
 /frontend/src/app/learn/...                (MyAssignmentsPage, AssignmentOverviewPage,
@@ -65,8 +66,8 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue
 - [ ] **Bước 3** - `AttemptStarter`: advisory lock, đếm lượt (bài thường/thi thử), snapshot, seed, khóa chính sách thi thử, job tự nộp (F2, P1, BR-U11-01…06).
 - [ ] **Bước 4** - Trả đề cho người học: góc nhìn đã lọc đáp án, trộn theo seed (F2 bước 4).
 - [ ] **Bước 5** - `DraftSaver`: UPDATE có điều kiện, `409`/`410`, ân hạn 30 s, kiểm tài liệu, `GzipRequestFilter` giới hạn 10 MB, rate limit; preview DOCX chỉ cho lượt DOCUMENT đang làm, xác nhận thêm block qua cùng luồng lưu có `contentVersion` (F3, F3a, P2, P6, BR-U11-10…14, BR-U09-45…48).
-- [ ] **Bước 6** - `AttemptSubmitter` một đường, idempotent, biên nhận, event sau commit; nộp tay kiểm `validateForSubmit`, tự nộp ghi `warnings` (F4, F5, P3, BR-U11-20…24).
-- [ ] **Bước 7** - `AutoSubmitHandler`, `RetiredListener` (P5).
+- [ ] **Bước 6** - `AttemptSubmitter` một đường, idempotent, biên nhận, gọi `SubmissionSubmittedPort` trong transaction; nộp tay kiểm `validateForSubmit`, tự nộp ghi `warnings` (F4, F5, P3, BR-U11-20…24).
+- [ ] **Bước 7** - `AutoSubmitHandler` (theo hạn và khi ngưng giao) và `PublicationLifecycleAdapter.onRetired` (tạo job tự nộp); khai báo `SubmissionSubmittedPort` với adapter rỗng tới khi U15 có (P3, P5).
 - [ ] **Bước 8** - `AttemptQueryService`: danh sách bài của người học, lịch sử, lượt được chấm (lượt nộp cuối / chính sách U10), xuất DOCX, `SubmissionQueryPort` (F1, F6, F7, BR-U11-30…34).
 - [ ] **Bước 9** - Audit theo BR-U11-40.
 - [ ] **Bước 10** - Unit test mọi `BR-U11-xx`, gồm các mốc giờ quanh `deadlineAt`.
@@ -81,7 +82,7 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue
 
 ### Nhóm D - API
 
-- [ ] **Bước 16** - `/contracts/openapi/u11-attempt.yaml` và schema event.
+- [ ] **Bước 16** - `/contracts/openapi/u11-attempt.yaml` (U11 không phát event).
 - [ ] **Bước 17** - Controller + DTO + validation, gồm `POST /api/v1/attempts/{id}/docx:preview` chỉ cho chủ lượt DOCUMENT đang làm; xác nhận dùng `PUT /api/v1/attempts/{id}/content`.
 - [ ] **Bước 18** - Test MockMvc: lượt người khác `404`; hết lượt/quá hạn bị từ chối; đề không chứa đáp án.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.
@@ -97,7 +98,7 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue
 ### Nhóm F - Hoàn tất
 
 - [ ] **Bước 25** - Tải thử k6 100 người tự lưu 10 phút; ghi kết quả.
-- [ ] **Bước 26** - Cập nhật `README.md`: luồng làm bài, tự nộp, cách U15 nghe `u11.submission.submitted`.
+- [ ] **Bước 26** - Cập nhật `README.md`: luồng làm bài, tự nộp, cách U15 cài `SubmissionSubmittedPort`.
 - [ ] **Bước 27** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết

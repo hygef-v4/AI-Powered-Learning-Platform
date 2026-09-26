@@ -15,7 +15,7 @@
 | NFR-U15-10 | Điểm lưu `numeric(6,2)`, tính bằng `BigDecimal`; `0 ≤ finalScore ≤ maxScore` kiểm ở service và CHECK DB. | BR-U15-30 |
 | NFR-U15-11 | Mọi thay đổi điểm kèm `version`; lệch → `409`; chốt hàng loạt bỏ qua mục lệch và báo. | US-GRD-005 S2 |
 | NFR-U15-12 | `GradeHistory` chỉ thêm (user `app` không UPDATE/DELETE); mỗi thay đổi điểm ghi lịch sử trong cùng transaction. | FR-008 |
-| NFR-U15-13 | Tiêu thụ event idempotent: một `Grade` mỗi `(targetKind, targetId, learnerId)`; event lặp không tạo điểm trùng. | Thiết kế |
+| NFR-U15-13 | Job `GRADE_INIT` idempotent: một `Grade` mỗi `(targetKind, targetId, learnerId)`; job chạy lặp không tạo điểm trùng. | Thiết kế |
 
 ## 3. Bảo mật
 
@@ -30,7 +30,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U15-30 | Unit test mọi `BR-U15-xx`; chấm trắc nghiệm nhiều đáp án; thi thử HIGHEST/LATEST/AVERAGE. | NFR-004 |
-| NFR-U15-31 | Integration test: nộp → điểm tự chấm → hiện ngay; chốt hàng loạt có mục lệch version; event lặp; `app` không sửa lịch sử. | NFR-004 |
+| NFR-U15-31 | Integration test: nộp → điểm tự chấm → hiện ngay; chốt hàng loạt có mục lệch version; job `GRADE_INIT` chạy lặp; `app` không sửa lịch sử. | NFR-004 |
 
 ## 5. Compliance
 

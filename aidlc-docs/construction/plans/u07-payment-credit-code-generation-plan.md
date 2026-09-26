@@ -24,7 +24,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U07 sở hữu
 
-PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; ghi cột số dư của `accounts` (U01 tạo) và khóa `u07.*` trong `app_settings`; Redis `u07:webhook:*`; queue `jobs.u07.reconcile`, `jobs.u07.reservation-sweep`.
+PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; ghi cột số dư của `accounts` (U01 tạo) và khóa `u07.*` trong `app_settings`; Redis `ratelimit:payos-webhook:*`; queue `jobs.payos` (`PAYOS_RECONCILE`), `jobs.scheduled` (`CREDIT_RESERVATION_SWEEP`).
 
 ## 2. Cấu trúc
 

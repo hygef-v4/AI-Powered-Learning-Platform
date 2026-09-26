@@ -5,7 +5,7 @@
 - `@Version` trên `Assignment` và `Publication`; lệch → `409` (NFR-U08-21).
 
 ## P2 - Lịch bằng job U02
-- Phát hành: tạo hai job `U08_PUBLICATION_OPEN` (`next_attempt_at = opensAt`) và `U08_PUBLICATION_CLOSE` (`next_attempt_at = lateUntil ?? closesAt`), payload `{publicationId, expectedAt}`.
+- Phát hành: tạo hai job `PUBLICATION_OPEN` (`next_attempt_at = opensAt`) và `PUBLICATION_CLOSE` (`next_attempt_at = lateUntil ?? closesAt`), payload `{publicationId, expectedAt}`.
 - Handler: `UPDATE publications SET status = 'OPEN' WHERE id = ? AND status = 'SCHEDULED' AND opens_at = :expectedAt` (tương tự cho đóng); 0 dòng → bỏ qua (job cũ sau khi đổi lịch hoặc chạy lại) (NFR-U08-23).
 - Đổi lịch tạo job mới với `expectedAt` mới; không cần xóa job cũ.
 - Độ trễ: U02 quét mỗi phút → ≤ 1 phút (NFR-U08-03).
@@ -20,4 +20,5 @@
 - `ReviewValidator` chạy danh sách `ReviewCheck`: kiểm của U08 (thành phần, điểm, loại khớp) + `TypeConfigPort` (U09, `C`); mặc định khi chưa có U09: đạt.
 
 ## P6 - Event sau commit
-- `ASSIGNMENT_OPENED`, `ASSIGNMENT_CLOSED`, `ASSIGNMENT_RETIRED` `{publicationId, assignmentId, classId}` qua `EventPublisherPort` (U02) (NFR-U08-24).
+- Mở bài và ngưng giao gọi `PublicationLifecyclePort.onOpened/onRetired(publicationId)` trong cùng transaction; các cài đặt (U11, U14) chỉ tạo job của mình nên không mất phản ứng.
+- Sau commit phát `ASSIGNMENT_OPENED` `{publicationId, assignmentId, classId}` qua `EventPublisherPort` (U02) chỉ cho thông báo (NFR-U08-24).

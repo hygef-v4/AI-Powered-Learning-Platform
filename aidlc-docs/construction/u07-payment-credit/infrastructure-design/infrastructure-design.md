@@ -7,8 +7,8 @@
 | Controller mua/ví/admin, `WebhookController`, `CreditPortService` | `backend` |
 | `ReconcileHandler`, `ReservationSweepHandler` | `worker` |
 | Bảng `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; cột số dư trong `accounts` (U01 tạo); khóa `u07.*` trong `app_settings` | `postgres` |
-| Rate limit webhook | `redis`, khóa `u07:webhook:{ip}` |
-| Queue | `jobs.u07.reconcile`, `jobs.u07.reservation-sweep` |
+| Rate limit webhook | `redis`, khóa `ratelimit:payos-webhook:{ip}` |
+| Queue | `jobs.payos` (`PAYOS_RECONCILE`), `jobs.scheduled` (`CREDIT_RESERVATION_SWEEP`) |
 
 ## 2. PayOS
 

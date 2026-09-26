@@ -11,8 +11,8 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U15-10 | Trắc nghiệm chấm ngay khi nộp (`u11.submission.submitted`): một đáp án đúng → đủ điểm câu; nhiều đáp án đúng hết mới có điểm (BR-U09-10); `method = DETERMINISTIC`, `DRAFT`. | Câu 1, US-GRD-001 |
-| BR-U15-11 | Code Lab lấy điểm từ `u13.code.graded`; `SANDBOX_ERROR` → giữ `PENDING`, hiện "chưa chấm được". | Câu 1, BR-U13-35 |
+| BR-U15-10 | Trắc nghiệm chấm ngay khi nộp (job `GRADE_INIT` tạo trong transaction nộp): một đáp án đúng → đủ điểm câu; nhiều đáp án đúng hết mới có điểm (BR-U09-10); `method = DETERMINISTIC`, `DRAFT`. | Câu 1, US-GRD-001 |
+| BR-U15-11 | Code Lab lấy điểm khi U13 báo qua `CodeGradedPort`; `SANDBOX_ERROR` → giữ `PENDING`, hiện "chưa chấm được". | Câu 1, BR-U13-35 |
 | BR-U15-12 | Bài bật "hiện điểm ngay sau nộp" → điểm tự chấm `PUBLISHED` luôn; không bật → chờ chốt và công bố. | BR-U09-13, US-GRD-001 S2 |
 | BR-U15-13 | Giảng viên sửa điểm tự chấm được, bắt buộc lý do. | US-GRD-003 |
 
@@ -31,7 +31,7 @@
 |---|---|---|
 | BR-U15-30 | Mọi loại bài hiển thị "x / tổng điểm của bài" (tổng điểm câu/rubric), 2 chữ số thập phân; không quy đổi thang 10. | Câu 2, 3 |
 | BR-U15-31 | Chốt từng bài hoặc hàng loạt: chỉ điểm `DRAFT` có `finalScore` hợp lệ và `version` khớp; kết quả từng bài trả về; lỗi từng mục không ảnh hưởng mục khác. | US-GRD-005 |
-| BR-U15-32 | "Công bố" theo lượt phát hành: mọi điểm `FINALIZED` → `PUBLISHED`; sau khi đã công bố, điểm chốt thêm được công bố ngay. Phát `u15.grade.published`. | Câu 4 |
+| BR-U15-32 | "Công bố" theo lượt phát hành: mọi điểm `FINALIZED` → `PUBLISHED`; sau khi đã công bố, điểm chốt thêm được công bố ngay. Phát `grade.published`. | Câu 4 |
 | BR-U15-33 | Sửa điểm `FINALIZED`/`PUBLISHED` bắt buộc lý do; lưu lịch sử; điểm đã công bố sửa thì người học thấy điểm mới và nhãn "đã cập nhật". | FR-008, US-GRD-003 S2 |
 | BR-U15-34 | Bài nộp trễ hiển thị nhãn trễ; giảng viên tự trừ điểm (nếu muốn) qua sửa điểm có lý do; hệ thống không tự trừ. | U08 BR-U08-32 |
 | BR-U15-35 | Lượt được chấm: bài thường là lượt nộp cuối (U11); thi thử theo chính sách U10, chỉ tính lượt đã có điểm. | BR-U11-31, BR-U10-32 |

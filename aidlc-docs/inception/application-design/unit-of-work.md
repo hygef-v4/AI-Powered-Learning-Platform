@@ -17,7 +17,7 @@
 | Unit | Tên | Sở hữu chính | Không sở hữu / ranh giới |
 |---|---|---|---|
 | U01 | Account & Access | Account, credential, session, role/scope/object authorization | Không sở hữu audit, job hoặc nội dung nghiệp vụ |
-| U02 | Audit, Job & Event | Audit append-only, bảng `jobs` + RabbitMQ (enqueue trong transaction, gửi sau commit, retry theo DB, sweeper), event sau commit | Không quyết định quyền học, payment hoặc điểm |
+| U02 | Audit, Job & Event | Audit append-only ghi trong transaction, bảng `jobs` + 8 queue RabbitMQ theo tính chất (enqueue trong transaction, gửi sau commit, retry theo DB, sweeper), event sau commit chỉ cho thông báo | Không quyết định quyền học, payment hoặc điểm |
 | U03 | File & Artifact | Upload qua backend (avatar, học liệu, ảnh trong tài liệu; kiểm magic bytes và dung lượng), lưu Google Shared Drive, token tải 5 phút gắn tài khoản | Không sở hữu nội dung, bài nộp; không tự quyết ai được xem file |
 | U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment rồi trả nội dung đã phát hành và dữ liệu dashboard; mã mời tự ghi danh bản đơn giản | Không sao chép khóa học/lớp, không kiểm thanh toán, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
 | U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index phục vụ AI tạo đề; thông báo và hỏi đáp trong lớp | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề; không có tìm kiếm/tóm tắt học liệu cho người dùng |

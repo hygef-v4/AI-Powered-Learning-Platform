@@ -4,11 +4,11 @@
 
 | Thành phần | Chạy ở |
 |---|---|
-| `SectionService`, `GroupSubmitter`, `SseHub`, `MembershipListener`, `GroupSubmissionQueryService` | `backend` |
+| `SectionService`, `GroupSubmitter`, `SseHub`, `GroupChangeAdapter`, `PublicationLifecycleAdapter`, `GroupSubmissionQueryService` | `backend` |
 | `GroupDocInitializer`, `AutoSubmitHandler` | `worker` |
 | Cột tài liệu nhóm trong `student_groups` (U12 tạo bảng); bảng `sections`, `section_revisions`, `section_comments`, `group_submissions` | `postgres` |
-| Rate limit lưu nháp mục | `redis`, khóa `u14:save:{learnerId}` |
-| RabbitMQ | fanout `platform.realtime` (mỗi backend một queue exclusive auto-delete); queue `jobs.u14.auto-submit`; listener `u08.assignment.opened`, `u08.assignment.retired`, `u12.group.membership-changed`; phát `u14.group.submitted` |
+| Rate limit lưu nháp mục | `redis`, khóa `ratelimit:section-save:{learnerId}` |
+| RabbitMQ | fanout `platform.realtime` (mỗi backend một queue tạm `jobs.realtime.{instanceId}`, exclusive, auto-delete); queue `jobs.triggered` (job `GROUP_DOC_CREATE`), `jobs.scheduled` (job `GROUP_AUTO_SUBMIT`); không nghe event: U08, U12 báo qua port trong transaction; phát `group.submitted` (chỉ cho thông báo U16) |
 
 ## 2. Nginx
 

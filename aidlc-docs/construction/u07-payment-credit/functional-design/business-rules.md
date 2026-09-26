@@ -52,6 +52,6 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-53 | Sau khi `PAID`, phát event `u07.payment.paid` (sau commit) để U16 báo trong app. | U16 |
+| BR-U07-53 | Sau khi `PAID`, phát event `payment.paid` (sau commit) để U16 báo trong app. | U16 |
 | BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát tự động, đổi mức tặng tháng. | FR-014, SEC-005 |
 | BR-U07-52 | Người dùng xem số dư, lịch sử giao dịch và sổ cái của mình. | UC-PAY-01 |

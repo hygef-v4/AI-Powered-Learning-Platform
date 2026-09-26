@@ -6,20 +6,20 @@
  U08/U06/U10 (đề xuất câu)   U15 (đề xuất chấm)       U11 (chạy thử, nộp)       ADMIN
         |                           |                          |                  |
         v                           v                          v                  v
- +-------------------------------- backend -------------------------------------------+
+ +-------------------------------------- backend ---------------------------------------+
  | AiProposalService --> AiGuard (kill-switch, trần, rate, CreditPort U07) --> JobPort  |
- | CodeRunService --> TRY: CodeRunnerPort (đồng bộ)   VERIFY/GRADE: JobPort            |
- | CodeLabCheckService (cho U08)      AiAdminService (cấu hình, báo cáo)               |
+ | CodeRunService --> TRY: CodeRunnerPort (đồng bộ)   VERIFY/GRADE: JobPort             |
+ | CodeLabCheckService (cho U08)      AiAdminService (cấu hình, báo cáo)                |
  +--------------------------------------------------------------------------------------+
-        | jobs.u13.ai-task                        | jobs.u13.code-run
+        | jobs.gemini                        | jobs.code
         v                                         v
- +------------------------------------- worker ---------------------------------------+
+ +-------------------------------------- worker ---------------------------------------+
  | AiTaskHandler --> RagRetrievalPort (U05), DocumentModelPort/DiagramCompactPort (U09)|
  |              --> PromptBuilder + InjectionScanner --> AiGateway --> GeminiAdapter   |
- |              --> OutputValidator (schema + U06) --> CreditPort.settle              |
+ |              --> OutputValidator (schema + U06) --> CreditPort.settle               |
  | CodeRunHandler --> CodeRunnerPort --> Judge0Adapter --[mạng sandbox]--> Judge0      |
- |               --> CodeScorer --> event code-graded (U15)                           |
- +------------------------------------------------------------------------------------+
+ |               --> CodeScorer --> CodeGradedPort (U15)                               |
+ +-------------------------------------------------------------------------------------+
 ```
 
 **Text alternative**: Các unit gọi `AiProposalService` để tạo đề xuất; `AiGuard` kiểm kill-switch, trần chi phí, giới hạn tần suất và giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài (U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định và phát event cho U15. Admin cấu hình và xem báo cáo qua `AiAdminService`.

@@ -13,7 +13,7 @@
  | CreditPortService (reserve/settle/release) --+--> CreditLedgerService       |
  | AdminCreditController (gói, mức tặng) -----+   (khóa số dư, sổ cái)         |
  +-----------------------------------------------------------------------------+
-            | job U07_RECONCILE, U07_RESERVATION_SWEEP
+            | job PAYOS_RECONCILE, CREDIT_RESERVATION_SWEEP
             v
  worker: ReconcileHandler --> PayosAdapter --> PaymentSettlement
          ReservationSweepHandler --> CreditPortService.release

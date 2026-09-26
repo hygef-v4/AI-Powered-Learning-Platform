@@ -23,7 +23,7 @@
 | NFR-U08-21 | Khóa lạc quan (`version`) cho bài và publication. | Thiết kế |
 | NFR-U08-22 | Partial unique: một publication chưa `RETIRED` mỗi `(assignment, class)`. | BR-U08-30 |
 | NFR-U08-23 | Chuyển trạng thái publication bằng UPDATE có điều kiện trạng thái cũ (job chạy lại không đổi sai). | BR-U08-36 |
-| NFR-U08-24 | Event `ASSIGNMENT_OPENED/CLOSED/RETIRED` gửi sau commit qua U02. | BR-U08-35, 40 |
+| NFR-U08-24 | Mở bài/ngưng giao gọi `PublicationLifecyclePort` trong transaction (U11, U14 tạo job của mình); event `ASSIGNMENT_OPENED` gửi sau commit qua U02 chỉ cho thông báo. | BR-U08-35, 40 |
 
 ## 4. Bảo mật
 

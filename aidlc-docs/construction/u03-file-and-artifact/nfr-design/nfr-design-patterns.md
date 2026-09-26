@@ -6,7 +6,7 @@
 3. Kiểm kích thước theo `purpose`, magic bytes (P3), tính SHA-256 trên file tạm.
 4. Upload lên Drive → nhận `providerFileId`.
 5. INSERT `artifacts` và commit.
-6. Bước 4-5 lỗi → xóa file Drive nếu đã có (retry 3 lần; vẫn lỗi thì tạo job U02 `U03_DRIVE_CLEANUP` để dọn sau) (BR-U03-06).
+6. Bước 4-5 lỗi → xóa file Drive nếu đã có (retry 3 lần; vẫn lỗi thì tạo job U02 `DRIVE_CLEANUP` để dọn sau) (BR-U03-06).
 7. `finally`: xóa file tạm, trả permit.
 
 ## P2 - Stream tải về
@@ -19,7 +19,7 @@
 - Không có parser XML và không nhận ZIP ở U03 (XML Draw.io do U09 kiểm).
 
 ## P4 - Download token
-- Sinh 32 byte `SecureRandom`, mã hóa base64url; Redis `u03:dl:{sha256(token)}` = `{artifactId, accountId, disposition}` TTL 5 phút (NFR-U03-22).
+- Sinh 32 byte `SecureRandom`, mã hóa base64url; Redis `file:download-token:{sha256(token)}` = `{artifactId, accountId, disposition}` TTL 5 phút (NFR-U03-22).
 - Endpoint tải kiểm `accountId` token khớp phiên; sai → `404` và audit (BR-U03-21, 40).
 
 ## P5 - Adapter lưu trữ thay được

@@ -21,14 +21,14 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Dùng thật |
 | `ArtifactPort` | U03 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật |
-| `AssignmentQueryPort`, `isSubmissionOpen`, event `u08.assignment.*` | U08 | Dùng thật |
+| `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật; U14 cài `PublicationLifecyclePort` của U08 |
 | `DocumentModelPort`, `DocxExportPort`, `DocumentEditor` | U09 | Dùng thật |
-| `GroupMembershipPort`, `GroupDocumentStorePort`, event `u12.group.membership-changed` | U12 | Dùng thật (lưu tài liệu nhóm trong bản ghi nhóm qua `GroupDocumentStorePort`) |
-| U14 cung cấp `GroupSubmissionQueryPort`, event `u14.group.submitted` | cho U13, U15, U16 | Các unit đó dùng khi được code |
+| `GroupMembershipPort`, `GroupDocumentStorePort` | U12 | Dùng thật (lưu tài liệu nhóm trong bản ghi nhóm qua `GroupDocumentStorePort`); U14 cài `GroupChangePort` của U12 |
+| U14 cung cấp `GroupSubmissionQueryPort` (U13, U15, U16), event `group.submitted` (U16); khai báo `GroupSubmittedPort` (U15 cài, adapter rỗng tới khi có U15) | cho U13, U15, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U14 sở hữu
 
-PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentStorePort` của U12), `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `u14:save:*`; RabbitMQ fanout `platform.realtime`, queue `jobs.u14.auto-submit`.
+PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentStorePort` của U12), `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `ratelimit:section-save:*`; RabbitMQ fanout `platform.realtime` và queue tạm `jobs.realtime.{instanceId}` mỗi backend; job `GROUP_DOC_CREATE` trên `jobs.triggered`, `GROUP_AUTO_SUBMIT` trên `jobs.scheduled`.
 
 ## 2. Cấu trúc
 
@@ -42,8 +42,8 @@ PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentSt
     domain/             GroupDocument, Section, SectionStatus, SectionRevision,
                         SectionComment, GroupSubmission
     infrastructure/     JPA repository
-    worker/             AutoSubmitHandler, AssignmentOpenedListener, RetiredListener
-    listener/           MembershipListener
+    worker/             AutoSubmitHandler, GroupDocCreateHandler
+    adapter/            PublicationLifecycleAdapter (U08), GroupChangeAdapter (U12)
     port/               GroupSubmissionQueryPort
 /backend/src/main/resources/db/migration/u14/
 /frontend/src/app/learn/group-docs/
@@ -65,8 +65,8 @@ PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentSt
 - [ ] **Bước 2** - Domain và trạng thái mục (BR-U14-10…15); port `GroupSubmissionQueryPort`.
 - [ ] **Bước 3** - `GroupDocInitializer`: dựng tài liệu từ khung theo `workSection` khi bài mở, cho nhóm mới sau đó (F1, P5, BR-U14-01).
 - [ ] **Bước 4** - `SectionService`: nhận, lưu nháp, Xong (revision), nhả, mục nhóm, bình luận; UPDATE có điều kiện (F3-F6, P1, BR-U14-02, 10…15).
-- [ ] **Bước 5** - Realtime: `GroupDocEventPublisher` (sau commit → fanout), `RealtimeListener` (queue riêng), `SseHub` (heartbeat, timeout, đóng kênh người bị bỏ) (P2, P3, BR-U14-20…22).
-- [ ] **Bước 6** - `MembershipListener`: nhả khóa, đóng kênh khi rời nhóm (BR-U14-13).
+- [ ] **Bước 5** - Realtime: `GroupDocEventPublisher` (sau commit → fanout), `RealtimeListener` (queue tạm `jobs.realtime.{instanceId}`), `SseHub` (heartbeat, timeout, đóng kênh người bị bỏ) (P2, P3, BR-U14-20…22).
+- [ ] **Bước 6** - `GroupChangeAdapter` (`onGroupCreated` tạo job `GROUP_DOC_CREATE`; `onMemberRemoved` nhả khóa, đóng kênh người rời nhóm) và `PublicationLifecycleAdapter` (`onOpened` tạo job `GROUP_DOC_CREATE` cho mọi nhóm; `onRetired` tạo job `GROUP_AUTO_SUBMIT`) (F1, F7, BR-U14-13, 33).
 - [ ] **Bước 7** - `GroupSubmitter` một đường (trưởng nhóm, tự nộp tại hạn, ngừng giao), bản chụp nhất quán, biên nhận, event (F7, P4, BR-U14-30…34).
 - [ ] **Bước 8** - `GroupSubmissionQueryService`: bản nộp cuối, mục theo tác giả; xuất DOCX (F8, BR-U14-35, 40).
 - [ ] **Bước 9** - Audit theo BR-U14-50.

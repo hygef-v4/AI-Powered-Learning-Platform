@@ -7,8 +7,8 @@
 | `NotificationController`, `PreferenceController`, `ProgressController`, `LearnerDashboardController`, `GradebookExportController`, kênh SSE thông báo | `backend` |
 | `NotificationListener`, `NotificationFanout`, `EmailDispatcher`, `EmailSendHandler`, `DeadlineReminderHandler` | `worker` |
 | Bảng `notifications`, `email_outbox`, `notification_preferences`; nhắc hạn là job trong bảng `jobs` (U02) | `postgres` |
-| Bộ đếm trần email | `redis`, khóa `u16:email:{yyyyMMdd}` (TTL 48 giờ) |
-| RabbitMQ | queue `u16.notification-listener` bind `platform.events` với `u04.enrollment.activated`, `u05.class.*`, `u07.payment.paid`, `u08.assignment.*`, `u12.group.*`, `u14.group.submitted`, `u15.grade.published`; queue `jobs.u16.email-dispatch`, `jobs.u16.email-send`, `jobs.u16.deadline-reminder`; phát realtime qua fanout `platform.realtime` |
+| Bộ đếm trần email | `redis`, khóa `email:daily-count:{yyyyMMdd}` (TTL 48 giờ) |
+| RabbitMQ | queue `jobs.notification` (U16 khai báo) bind `platform.events` với `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`; job trên queue `jobs.scheduled` (`EMAIL_DISPATCH`, `DEADLINE_REMINDER`) và `jobs.email` (`EMAIL_SEND`); phát realtime qua fanout `platform.realtime` |
 | SMTP | Gmail `smtp.gmail.com:587` STARTTLS (App Password) khi demo; `mailpit:1025` khi dev |
 
 - Dùng chung fanout `platform.realtime` với U14; `SseHub` phân kênh theo `groupId` (tài liệu nhóm U14) và `accountId` (U16).

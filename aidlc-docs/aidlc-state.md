@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 complete. All 16 code plans approved for the 45-table data model (2026-09-26); no application code generated yet.
-- **Resume action**: Start Code Generation Part 2 in dependency order (wave 1: U01 and U02 in parallel; the shared project skeleton is U01 steps 1-6).
+- **Current Stage**: Code Generation Part 1 - messaging redesign (2026-09-26): audit written in-transaction, cross-unit reactions via ports + jobs, 7 job queues, Redis/RabbitMQ renamed. Plans of U02, U05, U08, U11-U16 await re-approval; others approved.
+- **Resume action**: Re-approve plans of U02, U05, U08, U11-U16, then start Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
 
 ## Workspace State
 - **Existing Code**: No
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [x] Code Generation Part 1 (plans) - all 16 units approved (45-table model)
+- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign, awaiting re-approval
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -54,21 +54,21 @@
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
 | U01 Account & Access | Done | Approved | - |
-| U02 Audit, Job & Event | Done | Approved | - |
+| U02 Audit, Job & Event | Done | Updated, re-approval needed | - |
 | U03 File & Artifact | Done | Approved | - |
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
-| U05 Content, Material & RAG | Done | Approved | - |
+| U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
 | U06 Rubric & Question Bank | Done | Approved | - |
 | U07 Payment & AI Credit | Done | Approved | - |
-| U08 Assessment Core & Publication | Done | Approved | - |
+| U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
 | U09 Question Type Authoring | Done | Approved | - |
 | U10 Template, Copy & Simulation | Done | Approved | - |
-| U11 Attempt & Submission | Done | Approved | - |
-| U12 Group & Allocation | Done | Approved | - |
-| U13 AI & Code Execution | Done | Approved | - |
-| U14 Group Document & Submission | Done | Approved | - |
-| U15 Grading | Done | Approved | - |
-| U16 Reporting & Notification | Done | Approved | - |
+| U11 Attempt & Submission | Done | Updated, re-approval needed | - |
+| U12 Group & Allocation | Done | Updated, re-approval needed | - |
+| U13 AI & Code Execution | Done | Updated, re-approval needed | - |
+| U14 Group Document & Submission | Done | Updated, re-approval needed | - |
+| U15 Grading | Done | Updated, re-approval needed | - |
+| U16 Reporting & Notification | Done | Updated, re-approval needed | - |
 
 ## Open Items
 
@@ -91,4 +91,5 @@
 - 2026-09-25: Xóa 9 story ngoài phạm vi khỏi danh mục user story theo yêu cầu; catalog story lúc đó có 50 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi hiện hành: 49 story/77 use case.
 - 2026-09-26: Data model consolidated from 62 to 45 PostgreSQL tables (keep only tables that must stand alone, are listed by a use case, or tie to an external system; 1-1 data becomes columns). Five shared tables with owner-unit migrations and extension ports. Domain entities rewritten for all units; FD/NFR/Infra/plans/ERD synced. Account status `PENDING_ACTIVATION` renamed `PENDING`.
+- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; queues `jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`, `jobs.notification` (+ temporary `jobs.realtime.{instanceId}`). Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`.
 - Full chronological log: `audit.md`.

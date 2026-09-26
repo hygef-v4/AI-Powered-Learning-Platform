@@ -18,12 +18,12 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
 | `AuthorizationPort` (quyền upload theo `purpose`, vai trò người dùng) | U01 | Nếu U01 chưa code: adapter giả **luôn từ chối** (fail closed), test dùng mock |
-| `JobPort`, `JobHandler` (job `U03_DRIVE_CLEANUP`) | U02 | Dùng U02 thật nếu đã code; chưa có thì chờ U02 Bước 4-7 (U03 mở sau U01/U02 theo `unit-of-work.md`) |
+| `JobPort`, `JobHandler` (job `DRIVE_CLEANUP`) | U02 | Dùng U02 thật nếu đã code; chưa có thì chờ U02 Bước 4-7 (U03 mở sau U01/U02 theo `unit-of-work.md`) |
 | `AuditPort` | U02 | Như trên |
 
 ### Dữ liệu U03 sở hữu
 
-PostgreSQL `artifacts`; Redis `u03:dl:*`; thư mục trên Google Shared Drive; queue `jobs.u03.drive-cleanup`.
+PostgreSQL `artifacts`; Redis `file:download-token:*`; thư mục trên Google Shared Drive; queue `jobs.drive`.
 
 ## 2. Cấu trúc
 
@@ -57,10 +57,10 @@ PostgreSQL `artifacts`; Redis `u03:dl:*`; thư mục trên Google Shared Drive; 
 - [ ] **Bước 3** - Domain: `Artifact` với trạng thái `ACTIVE`/`BLOCKED`; `ArtifactPurpose` (`AVATAR`, `MATERIAL`, `DOCUMENT_IMAGE`); `PurposePolicy` (allowlist loại file, trần 50 MB / 5 MB, vai trò được upload); `FileNameSanitizer` (BR-U03-02, 03, 04, 08).
 - [ ] **Bước 4** - Port: `ArtifactPort` (`store`, `attach`, `issueDownloadToken`, `open`), `StoragePort`. `AvatarPort` do U01 khai báo (`C`), U03 cài ở Bước 7.
 - [ ] **Bước 5** - `ContentInspector`: Tika trên 8 KB đầu, so allowlist của `purpose`; lỗi trả thông điệp chung (BR-U03-03, P3).
-- [ ] **Bước 6** - `UploadService`: `Semaphore` 5 permit (hết → `503`), kiểm quyền, kiểm nội dung, SHA-256, đẩy qua `StoragePort`, INSERT, dọn bù trừ khi lỗi (retry 3 lần, vẫn lỗi thì tạo job `U03_DRIVE_CLEANUP`), `finally` xóa file tạm (BR-U03-01…07, 41, P1).
+- [ ] **Bước 6** - `UploadService`: `Semaphore` 5 permit (hết → `503`), kiểm quyền, kiểm nội dung, SHA-256, đẩy qua `StoragePort`, INSERT, dọn bù trừ khi lỗi (retry 3 lần, vẫn lỗi thì tạo job `DRIVE_CLEANUP`), `finally` xóa file tạm (BR-U03-01…07, 41, P1).
 - [ ] **Bước 7** - `ArtifactService`: `attach` (một lần, đúng người tải lên), `open` (chỉ `ACTIVE`), `validateAvatar` (cài `AvatarPort` của U01, bỏ `AvatarUnavailableAdapter` của U01); không có hàm xóa (BR-U03-30…32, F4, F5).
-- [ ] **Bước 8** - `DownloadTokenService`: token 32 byte base64url, Redis `u03:dl:{sha256}` TTL 5 phút gắn `accountId`; từ chối `BLOCKED`; kiểm chủ token khi dùng, sai thì `404` và audit (BR-U03-20, 21, 25, 40, P4).
-- [ ] **Bước 9** - `DriveJobHandler` trong worker cho `U03_DRIVE_CLEANUP`; đăng ký với `JobHandlerRegistry` của U02 và khai báo queue `jobs.u03.*`.
+- [ ] **Bước 8** - `DownloadTokenService`: token 32 byte base64url, Redis `file:download-token:{sha256}` TTL 5 phút gắn `accountId`; từ chối `BLOCKED`; kiểm chủ token khi dùng, sai thì `404` và audit (BR-U03-20, 21, 25, 40, P4).
+- [ ] **Bước 9** - `DriveJobHandler` trong worker cho `DRIVE_CLEANUP`; đăng ký với `JobHandlerRegistry` của U02 vào queue `jobs.drive` (U02 khai báo).
 - [ ] **Bước 10** - Audit các sự kiện của BR-U03-40; không log `providerFileId`, key, token.
 - [ ] **Bước 11** - Unit test cho mọi `BR-U03-xx`, gồm file đổi đuôi, file vượt trần theo `purpose` (50 MB / 5 MB), upload thứ 6 bị `503`, token dùng sai người, dọn Drive khi INSERT lỗi.
 - [ ] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u03-file-and-artifact/code/business-logic-summary.md`.
@@ -72,7 +72,7 @@ PostgreSQL `artifacts`; Redis `u03:dl:*`; thư mục trên Google Shared Drive; 
 - [ ] **Bước 15** - `GoogleDriveStorageAdapter`: đọc key base64 từ `.env`, thư mục theo `purpose` (tạo khi khởi động), timeout 5/60/120 s, retry 3 lần cho 429/5xx, nhận diện `cannotDownloadAbusiveFile` → `BLOCKED` (P5, P6, BR-U03-24).
 - [ ] **Bước 16** - `LocalFolderStorageAdapter`; chọn adapter theo có key hay không, cảnh báo khi khởi động (P5).
 - [ ] **Bước 17** - `DriveHealthIndicator`: `drives.get` cache 60 s, Drive lỗi không làm backend `DOWN` (P7).
-- [ ] **Bước 18** - Integration test Testcontainers (PostgreSQL, Redis) với `LocalFolderStorageAdapter`: upload → attach → cấp token → tải; token hết hạn; INSERT lỗi thì dọn Drive hoặc tạo job `U03_DRIVE_CLEANUP`; adapter Drive test bằng mock HTTP (lỗi 429, abuse).
+- [ ] **Bước 18** - Integration test Testcontainers (PostgreSQL, Redis) với `LocalFolderStorageAdapter`: upload → attach → cấp token → tải; token hết hạn; INSERT lỗi thì dọn Drive hoặc tạo job `DRIVE_CLEANUP`; adapter Drive test bằng mock HTTP (lỗi 429, abuse).
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API

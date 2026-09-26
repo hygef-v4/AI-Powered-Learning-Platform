@@ -27,7 +27,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U11-20 | Nộp tay kiểm: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (+30 giây ân hạn), nội dung hợp lệ (`validateForSubmit` cho tài liệu). | US-ASM-003 S1, S2 |
-| BR-U11-21 | Nộp: nội dung → bất biến, `submittedAt` theo giờ server, `late` nếu sau `closesAt`, `receiptHash`; phát `SUBMISSION_SUBMITTED`. | FR-007 |
+| BR-U11-21 | Nộp: nội dung → bất biến, `submittedAt` theo giờ server, `late` nếu sau `closesAt`, `receiptHash`; trong cùng transaction gọi `SubmissionSubmittedPort` (U15 cài: tạo job chấm) để việc chấm không bị mất. | FR-007 |
 | BR-U11-22 | Biên nhận hiển thị: mã lượt, thời điểm nộp, lượt thứ mấy, trễ hay không, mã băm. | UC-ASM-14 |
 | BR-U11-23 | Tự nộp **bài hiện tại** (bản đã lưu gần nhất, kể cả lần lưu cuối client gửi khi hết giờ) khi: hết giới hạn giờ (`AUTO_TIME_LIMIT`), hết hạn (`AUTO_DEADLINE`), giảng viên ngừng giao (`AUTO_RETIRED`). Không kiểm điều kiện nộp; lỗi điều kiện ghi thành cảnh báo cho giảng viên. | Câu 3, 4 |
 | BR-U11-24 | Lượt rỗng (chưa lưu gì) khi tự nộp vẫn được nộp với nội dung rỗng. | Câu 3 |

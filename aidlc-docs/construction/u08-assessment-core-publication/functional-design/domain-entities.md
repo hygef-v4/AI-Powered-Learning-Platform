@@ -123,6 +123,7 @@ stateDiagram-v2
 | `TypeConfigPort` | U09 (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
 | `GroupReadinessPort` | U12 (`C`) | Bài nhóm đủ nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi người học có nhóm; chưa có U12 → không cho phát hành bài `GROUP` |
 | `CodeLabCheckPort` | U13 (`C`) | Bài `CODE_LAB` đã kiểm lời giải mẫu với nội dung hiện tại |
+| `PublicationLifecyclePort` | U11, U14 (`C`) | `onOpened(publicationId)`, `onRetired(publicationId)` gọi trong transaction mở bài/ngưng giao; cài đặt chỉ tạo job của unit nhận (tạo tài liệu nhóm, tự nộp). Chưa có U11/U14 → adapter rỗng |
 
 ### Port U08 dùng
 
@@ -131,4 +132,4 @@ stateDiagram-v2
 | `AiDraftPort` | U13 (`C`) | Yêu cầu và nhận đề xuất AI |
 | `BankQueryPort`, `DefinitionValidationPort` | U06 | Lấy phiên bản, kiểm câu riêng |
 | `ClassAccessPort` | U04 | Phạm vi, danh sách lớp |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Mở/đóng theo lịch, audit, event `u08.assignment.*` |
+| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Mở/đóng theo lịch, audit, event `assignment.opened` (chỉ cho thông báo U16) |

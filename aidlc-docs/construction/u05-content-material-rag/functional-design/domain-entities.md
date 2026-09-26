@@ -203,7 +203,7 @@ stateDiagram-v2
 | `PublishedContentPort` | U04 (`C`) | `listForClass(classId)`: chương, bài, mục đã phát hành (của lớp và bài cấp môn đã liên kết) |
 | `RagRetrievalPort` | U13 | `retrieve(scope, query, k, requesterId, requestRef)` → đoạn kèm nguồn; embedding câu hỏi tính credit cho `requesterId` |
 | `ContentRefPort` | U08 | Kiểm `lessonVersionId` tồn tại, thuộc phạm vi |
-| Event `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted` | U16 | Phát sau commit; payload gồm eventId, id đối tượng, actorId, classId; sự kiện trả lời có thêm questionAuthorId |
+| Event `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U16 | Phát sau commit; payload gồm eventId, id đối tượng, actorId, classId; sự kiện trả lời có thêm questionAuthorId |
 
 ### Port U05 dùng
 
@@ -213,6 +213,6 @@ stateDiagram-v2
 | `ArtifactPort` | U03 | `attach`, `open`, `issueDownloadToken` |
 | `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Job ingest, audit, event lớp |
 | `CreditPort` | U07 (`C`) | Giữ/trừ/trả credit cho embedding |
-| `AiKillSwitchPort` | U13 (`C`) | Tắt gọi AI toàn hệ thống |
+| `AiBudgetPort` | U13 (`C`) | Kill-switch và trần chi phí Gemini/ngày dùng chung: `tryReserve`, `settle`, `release` |
 | `EmbeddingPort` | Adapter Gemini | `embed(texts)` → vector |
 | `YoutubePort` | Adapter YouTube | Giải playlist, lấy caption |

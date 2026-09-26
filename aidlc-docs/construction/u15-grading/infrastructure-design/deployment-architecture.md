@@ -1,11 +1,11 @@
 # U15 Grading - Deployment Architecture
 
 ```
- [rabbitmq] --u11/u13/u14 events--> [worker: tự chấm] --> [postgres: grades, history]
+ [rabbitmq: jobs.triggered] --job GRADE_INIT--> [worker: tự chấm] --> [postgres: grades, history]
                                                                  ^
  Trình duyệt --HTTPS--> [nginx] --> [backend: chấm, chốt, công bố, sổ điểm]
                                           |
-                                          +--u15.grade.published--> [rabbitmq] --> U16
+                                          +--grade.published--> [rabbitmq: platform.events] --> U16
 ```
 
-**Text alternative**: Worker nhận event nộp bài và chấm code từ RabbitMQ, tự chấm và ghi PostgreSQL. Giảng viên và người học thao tác qua Nginx tới backend để chấm, chốt, công bố và xem sổ điểm; công bố phát event `u15.grade.published` qua RabbitMQ cho U16. Không có container mới.
+**Text alternative**: U11/U14 khi nộp bài và U13 khi chấm code xong gọi port của U15 trong cùng transaction; port tạo job `GRADE_INIT` (queue `jobs.triggered`) hoặc ghi điểm code. Worker chạy job, tự chấm và ghi PostgreSQL. Giảng viên và người học thao tác qua Nginx tới backend để chấm, chốt, công bố và xem sổ điểm; công bố phát event `grade.published` qua RabbitMQ cho U16. Không có container mới.

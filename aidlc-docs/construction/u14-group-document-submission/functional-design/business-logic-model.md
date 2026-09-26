@@ -1,8 +1,8 @@
 # U14 Group Document & Submission - Business Logic Model
 
 ## F1 - Khởi tạo tài liệu nhóm
-1. Event `ASSIGNMENT_OPENED` của bài `GROUP` → với mỗi nhóm (U12) tạo `GroupDocument` và `Section` từ khung (BR-U14-01); tạo job tự nộp tại hạn cuối nhận bài.
-2. Nhóm thêm sau khi mở (U12 `GROUP_MEMBERSHIP_CHANGED` tạo nhóm mới) → tạo tài liệu cho nhóm đó.
+1. U08 mở bài `GROUP` gọi `PublicationLifecyclePort.onOpened` (U14 cài) → job `GROUP_DOC_CREATE`: với mỗi nhóm (U12) tạo tài liệu nhóm và `Section` từ khung (BR-U14-01); tạo job tự nộp tại hạn cuối nhận bài.
+2. Nhóm thêm sau khi mở: U12 gọi `GroupChangePort.onGroupCreated` (U14 cài) → job `GROUP_DOC_CREATE` cho nhóm đó.
 
 ## F2 - Mở tài liệu nhóm
 1. Kiểm thành viên/giảng viên (BR-U14-03); trả tài liệu (phần chung + `publishedBlocks` + trạng thái mục + người nhận + bình luận chưa giải quyết).
@@ -24,8 +24,8 @@
 - Theo BR-U14-02, 13, 14, 15; đẩy sự kiện tương ứng.
 
 ## F7 - Nộp
-1. Trưởng nhóm nộp (BR-U14-30…32) hoặc job tự nộp / event ngừng giao (BR-U14-33).
-2. Tạo `GroupSubmission` bất biến, biên nhận, event `u14.group.submitted`, đẩy `GROUP_SUBMITTED`.
+1. Trưởng nhóm nộp (BR-U14-30…32) hoặc job tự nộp theo hạn / khi ngưng giao (U08 gọi `PublicationLifecyclePort.onRetired`) (BR-U14-33).
+2. Tạo `GroupSubmission` bất biến, biên nhận; trong cùng transaction gọi `GroupSubmittedPort` (U15 cài: tạo job chấm); sau commit phát `group.submitted` cho thông báo U16, đẩy `GROUP_SUBMITTED`.
 
 ## F8 - Cho U15
 - `GroupSubmissionQueryPort` (BR-U14-40).

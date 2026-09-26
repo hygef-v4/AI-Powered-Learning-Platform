@@ -1,7 +1,7 @@
 # U05 Content, Material & RAG - NFR Design Patterns
 
 ## P1 - Pipeline ingest trong worker
-1. `IngestJobHandler` nhận `U05_INGEST {sourceDocumentId}`; handler giữ semaphore `U05_INGEST_CONCURRENCY` (mặc định 4) (NFR-U05-01).
+1. `IngestJobHandler` nhận `RAG_INGEST {sourceDocumentId}`; handler giữ semaphore `U05_INGEST_CONCURRENCY` (mặc định 4) (NFR-U05-01).
 2. `claim`: UPDATE `indexStatus = PROCESSING` khi đang `PENDING`; đã `INDEXED` thì bỏ qua (idempotent).
 3. `TextExtractor` → `Chunker` → với mỗi lô tối đa 100 đoạn: `EmbeddingBudget.reserve(tokens)` → `CreditPort.reserve(chargedToAccountId, estimate, requestRef = sourceId + batchNo)` → `EmbeddingPort.embed` → `CreditPort.settle` theo token của lô; khi mọi lô xong, `ChunkWriter` ghi đoạn trong một transaction (BR-U05-36, 39). Nếu lô chưa gọi Gemini mà bị lỗi, `CreditPort.release` phần giữ của lô đó.
 4. Lỗi tạm ném `RetryableJobException` cho U02; lỗi vĩnh viễn/`BUSY` ghi `FAILED` và kết thúc job.
@@ -15,10 +15,10 @@
 - Gom theo trang/timestamp tới ~3 000 ký tự, chồng lấn ~400 ký tự, không cắt giữa từ; mỗi đoạn giữ `pageNo` đầu hoặc `startMs`/`endMs` (BR-U05-34).
 - Token ước tính = số ký tự / 4.
 
-## P4 - Trần embedding (EmbeddingBudget)
-- Redis `u05:embed-tokens:{yyyyMMdd}` (giờ Asia/Ho_Chi_Minh), TTL 48 giờ.
-- `reserve(n)`: `INCRBY n`; vượt `U05_EMBED_DAILY_TOKENS` → `DECRBY n` và ném `BusyException` (NFR-U05-10, 11). Nếu thiếu credit hoặc lỗi khác trước khi gọi Gemini, `DECRBY n` để trả lượt đã giữ.
-- Kill-switch AI **bật** (`true`, đọc qua `AiKillSwitchPort`; U13 sở hữu cờ, chưa có U13 thì đọc biến `.env`) → `BusyException` (NFR-U05-12). Giá trị `false` cho phép tiếp tục kiểm trần và credit.
+## P4 - Trần chi phí Gemini dùng chung (EmbeddingBudget)
+- `EmbeddingBudget` không có bộ đếm riêng: gọi `AiBudgetPort.tryReserve(estimatedUsd)` của U13, dùng chung bộ đếm Redis `gemini:daily-cost:{yyyyMMdd}` và trần `u13.dailyCostCapUsd` với tạo đề/chấm AI.
+- Hết trần → `BusyException` (NFR-U05-10, 11). Thiếu credit hoặc lỗi khác trước khi gọi Gemini → `AiBudgetPort.release` trả phần đã giữ; gọi xong → `AiBudgetPort.settle(actualUsd)`.
+- Kill-switch AI **bật** (`true`, đọc qua `AiBudgetPort`; U13 sở hữu cờ, chưa có U13 thì adapter tạm đọc biến `.env` và không có trần chung) → `BusyException` (NFR-U05-12). Giá trị `false` cho phép tiếp tục kiểm trần và credit.
 - `BusyException` trong ingest → `FAILED`, `errorCode = BUSY`; trong `retrieve` → `503` "Hệ thống đang bận". Kiểm trần trước khi giữ credit; nếu trần đổi sau khi giữ, trả phần giữ và không gọi Gemini.
 - Thiếu credit của người tạo nguồn hoặc người yêu cầu AI là lỗi riêng `INSUFFICIENT_CREDIT`, không hiển thị như lỗi hệ thống. `requestRef` riêng cho từng lô embedding và cố định qua retry; nguồn đã `INDEXED` không bị tính phí lại. Gemini báo hết quota (429) sau các lần retry cũng hiển thị "Hệ thống đang bận".
 

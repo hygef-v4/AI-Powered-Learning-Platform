@@ -19,7 +19,7 @@
 4. Trả `200`.
 
 ## F4 - Tự đối soát
-1. Job U02 `U07_RECONCILE` mỗi 10 phút (BR-U07-20).
+1. Job U02 `PAYOS_RECONCILE` mỗi 10 phút (BR-U07-20).
 2. Gọi PayOS lấy trạng thái theo `orderCode`.
 3. `PAID` → áp dụng như F3 bước 3; `CANCELLED`/`EXPIRED` → cập nhật; lỗi → giữ nguyên (BR-U07-22).
 

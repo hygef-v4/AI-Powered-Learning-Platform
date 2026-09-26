@@ -119,7 +119,7 @@ Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `CreditPort` | U05, U13 | `reserve(accountId, credits, requestRef)`, `settle(reservationId, actualCredits)`, `release(reservationId)` (`reservationId` = id dòng `RESERVE`), `balance(accountId)` |
-| Event `u07.payment.paid` | U16 | Báo mua credit thành công |
+| Event `payment.paid` | U16 | Báo mua credit thành công |
 
 ### Port U07 dùng
 

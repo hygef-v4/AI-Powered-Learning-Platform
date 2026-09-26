@@ -6,8 +6,8 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`.
 
 | Thành phần | Container |
 |---|---|
-| `JobEnqueueService`, `AuditPublisher`, `EventPublisherPort`, `JobStatusService`, `AuditQueryService` | `backend` |
-| `JobListener`, `JobClaimService`, `JobCompletionService`, `AuditListener`, `StuckJobSweeper` | `worker` |
+| `JobEnqueueService`, `AuditStore`, `EventPublisherPort`, `JobStatusService`, `AuditQueryService` | `backend` |
+| `JobListener`, `JobClaimService`, `JobCompletionService`, `StuckJobSweeper` | `worker` |
 | Bảng `jobs`, `audit_events` | `postgres` |
 | Exchange, queue | `rabbitmq` |
 
@@ -25,8 +25,8 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`.
 |---|---|
 | vhost | `/platform` |
 | User | `app` với quyền trên `/platform`; tắt `guest` |
-| Exchange | `jobs` (direct), `audit` (direct), `platform.events` (topic), tất cả durable |
-| Queue | `audit.events` và `jobs.<unit>.<type>`, durable; mỗi unit tự khai báo queue của mình khi thêm loại job |
+| Exchange | `jobs` (direct), `platform.events` (topic) durable; `platform.realtime` (fanout) do U14 khai báo |
+| Queue | 8 queue job durable do U02 khai báo: `jobs.scheduled`, `jobs.triggered`, `jobs.email` (priority), `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`; mỗi unit chỉ đăng ký `jobType` → queue (binding theo `jobType`). Queue nghe event `jobs.notification` do U16 khai báo |
 | Khai báo | Spring AMQP khai báo lúc khởi động bằng `Declarables`; không cấu hình tay |
 | Management UI | Cổng 15672 chỉ trên mạng `internal`, vào qua SSH tunnel |
 

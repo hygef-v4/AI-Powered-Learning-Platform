@@ -6,8 +6,8 @@
 |---|---|
 | Controller, service, `EnrollmentGuard`, `InviteCodeService`, `ScopeQueryService` | `backend` |
 | Bảng `subjects`, `classes`, `enrollments` | `postgres` |
-| Bộ đếm nhập sai mã mời | `redis`, khóa `u04:invite-fail:{accountId}`, TTL 1 giờ |
-| Event `ENROLLMENT_ACTIVATED` | RabbitMQ exchange `platform.events` của U02, routing key `u04.enrollment.activated` |
+| Bộ đếm nhập sai mã mời | `redis`, khóa `ratelimit:invite-code:{accountId}`, TTL 1 giờ |
+| Event `ENROLLMENT_ACTIVATED` | RabbitMQ exchange `platform.events` của U02, routing key `enrollment.activated` |
 
 U04 không chạy gì trong `worker`, không có queue riêng, không có secret riêng, không gọi dịch vụ ngoài.
 

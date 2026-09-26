@@ -7,7 +7,7 @@
                                +---------------------+----------------+
                                v                     v                v
                           [postgres]             [redis]     Google Shared Drive
-                          artifacts              u03:dl:*    (qua Internet, 443)
+                          artifacts              file:download-token:*    (qua Internet, 443)
                                                                   ^
                                          [worker] --DriveJobHandler+
 ```

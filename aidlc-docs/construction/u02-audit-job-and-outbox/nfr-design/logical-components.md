@@ -7,26 +7,26 @@
  +------------------------------+              +--------------------------------+
  | service nghiệp vụ            |              | JobListener (mỗi queue một cái)|
  |   -> JobPort.enqueue --------+--INSERT----> |   -> JobClaimService (P2)      |
- |   -> AuditPort.record        |  jobs        |   -> handler của unit sở hữu   |
- |   -> EventPublisherPort      |              |   -> JobCompletionService      |
- | afterCommit -> AmqpPublisher-+--message-+   | AuditListener -> AuditStore    |
- +------------------------------+          |   | StuckJobSweeper (@Scheduled)   |
- | AuditQueryService (API admin)|          |   +--------------------------------+
- | JobStatusService (API)       |          v                ^
+ |   -> AuditPort.record -------+--INSERT----> |   -> handler của unit sở hữu   |
+ |   -> EventPublisherPort      |  jobs, audit |   -> JobCompletionService      |
+ | afterCommit -> AmqpPublisher-+--message-+   | StuckJobSweeper (@Scheduled)   |
+ +------------------------------+          |   +--------------------------------+
+ | AuditQueryService (API admin)|          |                ^
+ | JobStatusService (API)       |          v                |
  +------------------------------+     RabbitMQ -------------+
-                |                     jobs.<unit>.<type>, audit.events, platform.events
+                |                     8 queue jobs.*, platform.events
                 v
            PostgreSQL: jobs, audit_events
 ```
 
-**Text alternative**: Service nghiệp vụ trong backend gọi `JobPort.enqueue` (INSERT vào `jobs`), `AuditPort.record` và `EventPublisherPort`. Sau commit, `AmqpPublisher` gửi message sang RabbitMQ. Worker có một `JobListener` cho mỗi queue job: nhận job bằng `JobClaimService`, gọi handler của unit sở hữu, rồi ghi kết quả bằng `JobCompletionService`. `AuditListener` lưu audit vào `audit_events`. `StuckJobSweeper` chạy mỗi phút để gửi lại job đến hạn và trả job hết lease. API admin tra audit qua `AuditQueryService`; API trạng thái job qua `JobStatusService`.
+**Text alternative**: Service nghiệp vụ trong backend gọi `JobPort.enqueue` (INSERT vào `jobs`), `AuditPort.record` (INSERT vào `audit_events` trong cùng transaction) và `EventPublisherPort`. Sau commit, `AmqpPublisher` gửi message job và event sang RabbitMQ. Worker có một `JobListener` cho mỗi queue job: nhận job bằng `JobClaimService`, gọi handler của unit sở hữu, rồi ghi kết quả bằng `JobCompletionService`. `StuckJobSweeper` chạy mỗi phút để gửi lại job đến hạn và trả job hết lease. API admin tra audit qua `AuditQueryService`; API trạng thái job qua `JobStatusService`.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `JobPort` / `JobEnqueueService` | Backend | P1 |
-| `AuditPort` / `AuditPublisher` | Backend | P5, kiểm khóa cấm |
+| `AuditPort` / `AuditStore` | Backend, worker | P5: INSERT trong transaction của unit gọi, kiểm khóa cấm |
 | `EventPublisherPort` | Backend | Gửi `platform.events` sau commit |
 | `AmqpPublisher` | Backend, worker | Gửi message, publisher confirm, log lỗi |
 | `JobStatusService` | Backend | `getJobStatus`, kiểm người tạo/ADMIN |
@@ -35,7 +35,6 @@
 | `JobClaimService` | Worker | P2 |
 | `JobCompletionService` | Worker | `complete`, `fail`, `extendLease` |
 | `JobHandlerRegistry` | Worker | Ánh xạ `jobType` → handler của unit sở hữu |
-| `AuditListener` + `AuditStore` | Worker | P5 |
 | `StuckJobSweeper` | Worker | P3, P4 |
 
 ## 3. RabbitMQ
@@ -43,9 +42,15 @@
 | Thành phần | Kiểu | Ghi chú |
 |---|---|---|
 | `jobs` exchange | direct | Routing key = `jobType` |
-| `jobs.<unit>.<type>` | queue durable | Ví dụ `jobs.u01.otp-delivery` |
-| `audit` exchange / `audit.events` | direct / queue durable | |
-| `platform.events` | topic exchange | U16 và unit khác tự bind queue riêng |
+| `jobs.scheduled` | queue durable | Việc nội bộ hẹn giờ: `PUBLICATION_OPEN`, `PUBLICATION_CLOSE`, `ATTEMPT_AUTO_SUBMIT`, `GROUP_AUTO_SUBMIT`, `DEADLINE_REMINDER`, `EMAIL_DISPATCH`, `CREDIT_RESERVATION_SWEEP` |
+| `jobs.triggered` | queue durable | Việc nội bộ phát sinh sau thao tác: `GRADE_INIT`, `GROUP_DOC_CREATE`; tách riêng để lượt nộp dồn cục không làm trễ việc hẹn giờ |
+| `jobs.email` | queue durable, priority | SMTP: `OTP_DELIVERY` (ưu tiên 9), `EMAIL_SEND` (ưu tiên 1) |
+| `jobs.gemini` | queue durable | Gemini: `RAG_INGEST`, `AI_TASK` |
+| `jobs.youtube` | queue durable | YouTube Data API: `YOUTUBE_RESOLVE` |
+| `jobs.code` | queue durable | Judge0: `CODE_RUN` |
+| `jobs.drive` | queue durable | Google Drive: `DRIVE_CLEANUP` |
+| `jobs.payos` | queue durable | PayOS: `PAYOS_RECONCILE` |
+| `platform.events` | topic exchange | Chỉ cho thông báo; U16 bind queue `jobs.notification` |
 
 Không có queue trễ, không có DLQ.
 

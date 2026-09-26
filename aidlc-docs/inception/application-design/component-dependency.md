@@ -82,10 +82,14 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 
 ## 6. Contract liên module quan trọng
 
-- U11 → U15, U16: event `u11.submission.submitted` sau commit.
-- U14 → U15, U16: event `u14.group.submitted`; realtime qua `platform.realtime`.
-- U05 → U16: event bài đăng/câu hỏi/trả lời của lớp sau commit; U16 tạo thông báo trong app theo thành viên lớp.
-- U13 → U15: event `u13.code.graded`; `AiGradingPort` trả đề xuất, U15 quyết định.
-- U07 ← U05/U13: `CreditPort.reserve/settle/release` quanh mỗi lời gọi Gemini, kể cả embedding. U05 ghi người tải/phát hành khi tạo nguồn học liệu; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
+- Phản ứng bắt buộc giữa unit đi qua **port gọi trong transaction** (port do unit nhận cài, chỉ tạo job của unit nhận), không qua event:
+  - U11 → U15 (`C`): `SubmissionSubmittedPort` khi nộp bài → job `GRADE_INIT`.
+  - U14 → U15 (`C`): `GroupSubmittedPort` khi nộp bài nhóm → job `GRADE_INIT`.
+  - U13 → U15 (`C`): `CodeGradedPort` khi chấm Code Lab xong; `AiGradingPort` trả đề xuất, U15 quyết định.
+  - U08 → U11, U14 (`C`): `PublicationLifecyclePort.onOpened/onRetired` khi mở bài/ngưng giao → job tạo tài liệu nhóm, tự nộp.
+  - U12 → U14 (`C`): `GroupChangePort.onGroupCreated/onMemberRemoved` → job tạo tài liệu nhóm, nhả khóa mục.
+- Event trên `platform.events` chỉ dùng cho thông báo U16 (mất thì chấp nhận): `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`. U16 nghe bằng queue `jobs.notification`.
+- U14 → U16: realtime qua `platform.realtime`.
+- U07 ← U05/U13: `CreditPort.reserve/settle/release` quanh mỗi lời gọi Gemini, kể cả embedding. U13 ← U05 (`C`): `AiBudgetPort` cho kill-switch và trần chi phí Gemini/ngày dùng chung. U05 ghi người tải/phát hành khi tạo nguồn học liệu; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
 - U08 ← U09/U12/U13 (`C`): `TypeConfigPort`, `GroupReadinessPort`, `CodeLabCheckPort` khi duyệt/phát hành.
 - U04 ← U05 (`C`): `PublishedContentPort` cho trang lớp của người học.

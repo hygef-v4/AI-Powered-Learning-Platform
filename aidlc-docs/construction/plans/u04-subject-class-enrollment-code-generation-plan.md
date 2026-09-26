@@ -25,7 +25,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U04 sở hữu
 
-PostgreSQL `subjects`, `classes`, `enrollments`; Redis `u04:invite-fail:*`; routing key `u04.enrollment.activated`.
+PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`; routing key `enrollment.activated`.
 
 ## 2. Cấu trúc
 

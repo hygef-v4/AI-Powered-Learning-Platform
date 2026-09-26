@@ -23,13 +23,13 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ArtifactPort`, `FileUploader` | U03 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật; U05 thay `EmptyPublishedContentAdapter` của U04 bằng `PublishedContentService` |
 | `EventPublisherPort` | U02 | Phát sự kiện bài đăng/câu hỏi/trả lời sau commit; U16 tiêu thụ và tạo thông báo trong ứng dụng |
-| `AiKillSwitchPort` | U13 | Tạm đọc `AI_KILL_SWITCH` từ `.env`; U13 thay sau |
+| `AiBudgetPort` | U13 (`C`) | Tạm đọc `AI_KILL_SWITCH` từ `.env`, chưa có trần chi phí chung; U13 thay bằng bản thật (kill-switch + trần `gemini:daily-cost`) |
 | `CreditPort` | U07 | Contract `C`; có thể phát triển song song qua adapter giả, nhưng phải nối adapter thật trước khi bật Gemini |
 | `EmbeddingPort`, `YoutubePort` | Gemini, YouTube | Adapter thật + adapter giả khi không có key |
 
 ### Dữ liệu U05 sở hữu
 
-PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_lesson_links`, `youtube_sources`, `source_documents` (gồm cả video YouTube), `rag_chunks`, `class_announcements`, `class_questions`, `class_answers`; Redis `u05:embed-tokens:*`; queue `jobs.u05.youtube-resolve`, `jobs.u05.ingest`.
+PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_lesson_links`, `youtube_sources`, `source_documents` (gồm cả video YouTube), `rag_chunks`, `class_announcements`, `class_questions`, `class_answers`; không có key Redis riêng (trần chi phí Gemini dùng chung của U13 qua `AiBudgetPort`); job `YOUTUBE_RESOLVE` trên `jobs.youtube`, `RAG_INGEST` trên `jobs.gemini` (U02 khai báo queue).
 
 ## 2. Cấu trúc
 
@@ -50,7 +50,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
                         FakeYoutubeAdapter, EnvAiKillSwitchAdapter
     worker/             YoutubeResolveHandler, IngestJobHandler
     port/               PublishedContentPort, RagRetrievalPort, ContentRefPort,
-                        EmbeddingPort, YoutubePort, AiKillSwitchPort, CreditPort
+                        EmbeddingPort, YoutubePort, AiBudgetPort, CreditPort
 /backend/src/main/resources/db/migration/u05/
 /infra/postgres/init/01-extensions.sql
 /frontend/src/app/teaching/subjects/[id]/content/
@@ -71,11 +71,11 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 3** - Domain: chương, bài, phiên bản (1 `DRAFT` + 1 `PUBLISHED`), mục, liên kết, YouTube, `SourceDocument` và chuyển trạng thái; `YoutubeUrlParser` (regex ID) (BR-U05-10…15, 22, NFR-U05-21).
-- [ ] **Bước 4** - Port và adapter giả: `EmbeddingPort`, `YoutubePort`, `AiKillSwitchPort`, `CreditPort`, `PublishedContentPort`, `RagRetrievalPort`, `ContentRefPort` (P8).
+- [ ] **Bước 4** - Port và adapter giả: `EmbeddingPort`, `YoutubePort`, `AiBudgetPort`, `CreditPort`, `PublishedContentPort`, `RagRetrievalPort`, `ContentRefPort` (P8).
 - [ ] **Bước 5** - `ChapterService`, `LessonService`: tạo/sửa/đổi thứ tự/lưu trữ, tạo bản nháp sao chép mục, phát hành, audit (F1-F3, BR-U05-01, 02, 11-14, 50).
 - [ ] **Bước 6** - `ItemService`: mục `TEXT`/`FILE`/`YOUTUBE`, dùng lại `SourceDocument` theo `contentKey`, ghi tài khoản chịu phí cho nguồn mới, tạo job (F2, BR-U05-20…22, 30, 31, 39).
 - [ ] **Bước 7** - Liên kết bài cấp môn vào lớp (F4, BR-U05-03, 15).
-- [ ] **Bước 8** - `EmbeddingBudget` với Redis/kill-switch và `EmbeddingCreditService` giữ/quyết toán/trả credit U07; tách lỗi hệ thống bận khỏi thiếu credit (P4, BR-U05-39, 44).
+- [ ] **Bước 8** - `EmbeddingBudget` gọi `AiBudgetPort` của U13 (kill-switch và trần chi phí Gemini chung, không có bộ đếm Redis riêng) và `EmbeddingCreditService` giữ/quyết toán/trả credit U07; tách lỗi hệ thống bận khỏi thiếu credit (P4, BR-U05-39, 44).
 - [ ] **Bước 9** - `TextExtractor` (Tika theo luồng, giới hạn ký tự, `NO_TEXT`), `Chunker` (P2, P3).
 - [ ] **Bước 10** - `YoutubeResolveHandler` và `IngestJobHandler` (claim idempotent, concurrency, lỗi tạm/vĩnh viễn/`BUSY`, ghi đoạn một transaction) (F5, F6, P1).
 - [ ] **Bước 11** - Retry thủ công (F7).

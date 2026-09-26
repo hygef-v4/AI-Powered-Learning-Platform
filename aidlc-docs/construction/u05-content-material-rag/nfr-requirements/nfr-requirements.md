@@ -4,7 +4,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U05-01 | Worker chạy tối đa **4** job `U05_INGEST` cùng lúc; cần VPS ≥ 8 GB RAM, nếu VPS nhỏ hơn hạ về 2 qua cấu hình. | Câu N2 |
+| NFR-U05-01 | Worker chạy tối đa **4** job `RAG_INGEST` cùng lúc; cần VPS ≥ 8 GB RAM, nếu VPS nhỏ hơn hạ về 2 qua cấu hình. | Câu N2 |
 | NFR-U05-02 | Trích chữ đọc file theo luồng từ U03, không nạp cả file 50 MB vào RAM; giới hạn 2 triệu ký tự chữ mỗi tài liệu, vượt thì chỉ lấy phần đầu và ghi cảnh báo. | Thiết kế |
 | NFR-U05-03 | Tài liệu 50 trang lập chỉ mục xong ≤ 2 phút khi Gemini bình thường. | NFR-003 |
 | NFR-U05-04 | `retrieve` p95 ≤ 1,5 s (gồm gọi Gemini tạo vector câu hỏi); tìm vector trong DB p95 ≤ 200 ms với ≤ 200 000 đoạn. | NFR-003 |
@@ -14,7 +14,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U05-10 | Trần embedding theo ngày (mặc định 2 000 000 token ước tính, `U05_EMBED_DAILY_TOKENS`), đếm trong Redis theo ngày (giờ Việt Nam). | Câu N1, REL-005 |
+| NFR-U05-10 | Embedding dùng chung trần chi phí Gemini/ngày của hệ thống (`u13.dailyCostCapUsd`, một bộ đếm Redis `gemini:daily-cost` do U13 quản lý qua `AiBudgetPort`), tính theo ngày giờ Việt Nam. | Câu N1, REL-005 |
 | NFR-U05-11 | Hết hạn mức embedding nội bộ hoặc Gemini báo hết quota sau các lần retry: job ingest dừng với `errorCode = BUSY`, trạng thái `FAILED` hiển thị "Hệ thống đang bận, vui lòng thử lại sau"; người quản lý bấm Thử lại được. `retrieve` trả `503` "Hệ thống đang bận". Không trừ credit cho lời gọi chưa được Gemini xử lý. | Câu N1, quyết định đồng bộ 2026-09-25 |
 | NFR-U05-12 | Kill-switch AI (cờ dùng chung với U13, FR-021) **bật** (`true`) → từ chối embedding mới với "Hệ thống đang bận" và không trừ credit; mặc định `false` là cho phép AI hoạt động. | FR-021 |
 | NFR-U05-13 | `GEMINI_API_KEY` và `YOUTUBE_API_KEY` đọc từ `.env`, không commit, không log. | Câu N3, SEC-006 |

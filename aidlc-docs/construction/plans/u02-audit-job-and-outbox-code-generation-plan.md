@@ -23,7 +23,7 @@ U02 không phụ thuộc U03, U04.
 
 ### Dữ liệu U02 sở hữu
 
-PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.events`, queue `audit.events` và `jobs.<unit>.<type>`.
+PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `platform.events` và 8 queue job `jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`.
 
 ## 2. Cấu trúc
 
@@ -32,11 +32,11 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.
   u02/
     api/                AuditController, JobStatusController, DTO
     application/        JobEnqueueService, JobStatusService, AuditQueryService,
-                        AuditPublisher, EventPublisher
+                        AuditStore, EventPublisher
     domain/             Job, JobStatus, AuditEvent, BackoffPolicy, ForbiddenKeyGuard
     infrastructure/     JPA repository, AmqpPublisher, AmqpTopology
     worker/             JobListener, JobClaimService, JobCompletionService,
-                        JobHandlerRegistry, AuditListener, StuckJobSweeper
+                        JobHandlerRegistry, StuckJobSweeper
     port/               JobPort, AuditPort, EventPublisherPort, JobWorkerPort,
                         JobHandler, AuthorizationPort
     adapter/fake/       FakeAuthorizationPort (từ chối)
@@ -60,9 +60,9 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.
 - [ ] **Bước 3** - Domain: `Job` với 4 trạng thái và chuyển trạng thái hợp lệ, `BackoffPolicy` (30 s, 1, 2, 4, 8 phút), `AuditEvent`, `ForbiddenKeyGuard` (khóa `password`, `otp`, `token`, `secret`, `phone`).
 - [ ] **Bước 4** - Port: `JobPort`, `AuditPort`, `EventPublisherPort`, `JobWorkerPort`, `JobHandler`, `AuthorizationPort`; `FakeAuthorizationPort`.
 - [ ] **Bước 5** - `JobEnqueueService`: INSERT trong transaction bắt buộc, idempotent theo `(jobType, idempotencyKey)`, kiểm payload, gửi sau commit (BR-U02-20…22, P1).
-- [ ] **Bước 6** - `AuditPublisher` và `EventPublisher`: kiểm khóa cấm, gửi sau commit, lỗi chỉ log (BR-U02-02…05, 40, 41).
-- [ ] **Bước 7** - Worker: `JobClaimService` (UPDATE có điều kiện, lease 5 phút), `JobCompletionService` (`complete`, `fail`, `extendLease`), `JobHandlerRegistry`, `JobListener` mỗi queue (BR-U02-23…27, P2-P4, P7).
-- [ ] **Bước 8** - `AuditListener`: `INSERT ... ON CONFLICT (event_id) DO NOTHING` (BR-U02-03, P5).
+- [ ] **Bước 6** - `AuditStore` (INSERT trong transaction của unit gọi; `recordDenied`/`recordFailure` dùng `REQUIRES_NEW`; kiểm khóa cấm; `ON CONFLICT (event_id) DO NOTHING`) và `EventPublisher` (gửi sau commit, chỉ cho thông báo, lỗi chỉ log) (BR-U02-02…05, 40, 41, P5).
+- [ ] **Bước 7** - Worker: `JobClaimService` (UPDATE có điều kiện, lease 5 phút), `JobCompletionService` (`complete`, `fail`, `extendLease`), `JobHandlerRegistry` (đăng ký `jobType` → handler và queue), `JobListener` cho 8 queue với số luồng theo P7, `jobs.email` là priority queue (BR-U02-23…27, 33, P2-P4, P7).
+- [ ] **Bước 8** - Test audit: thao tác rollback thì không có audit thường nhưng vẫn có audit `DENIED`/`FAILURE`; ghi trùng `eventId` không tạo dòng thứ hai (BR-U02-02, 03).
 - [ ] **Bước 9** - `StuckJobSweeper` mỗi phút: gửi lại job đến hạn hoặc chưa gửi quá 5 phút, trả job hết lease (BR-U02-28, P3, P4).
 - [ ] **Bước 10** - `JobStatusService` (người tạo hoặc ADMIN, còn lại "không tìm thấy") và `AuditQueryService` (chỉ ADMIN, lọc, trang ≤ 100, tự ghi `AUDIT_QUERIED`) (BR-U02-07, 08, 30, 31).
 - [ ] **Bước 11** - Unit test cho mọi `BR-U02-xx`.
@@ -71,7 +71,7 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.
 ### Nhóm C - Dữ liệu và messaging
 
 - [ ] **Bước 13** - Flyway `V20260925_0900__u02_jobs_audit.sql`: bảng `jobs` (unique `(job_type, idempotency_key)`, index `(status, next_attempt_at)`, `lease_expires_at`), bảng `audit_events` + 4 index, `REVOKE UPDATE, DELETE, TRUNCATE ON audit_events FROM app`.
-- [ ] **Bước 14** - JPA repository; `AmqpTopology` khai báo exchange/queue bằng `Declarables`; `AmqpPublisher` với publisher confirm 2 s.
+- [ ] **Bước 14** - JPA repository; `AmqpTopology` khai báo exchange `jobs`, `platform.events` và 8 queue job bằng `Declarables`; `AmqpPublisher` với publisher confirm 2 s.
 - [ ] **Bước 15** - Integration test Testcontainers (PostgreSQL, RabbitMQ): tạo job, claim trùng, retry theo backoff, hết lease, quét gửi lại, audit trùng `eventId`, `app` không UPDATE/DELETE được `audit_events`.
 - [ ] **Bước 16** - Tóm tắt: `code/repository-summary.md`.
 
@@ -91,7 +91,7 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 25** - Cập nhật `README.md`: chạy worker, xem RabbitMQ qua SSH tunnel, cách một unit thêm loại job mới (khai báo queue + đăng ký handler).
+- [ ] **Bước 25** - Cập nhật `README.md`: chạy worker, xem RabbitMQ qua SSH tunnel, cách một unit thêm loại job mới (chọn 1 trong 8 queue theo BR-U02-33 + đăng ký handler; không tạo queue mới).
 - [ ] **Bước 26** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết
@@ -100,7 +100,7 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `audit`, `platform.
 |---|---|
 | US-AUD-001 S1 (tra cứu) | 10, 13, 17-19, 21 |
 | US-AUD-001 S2 (không sửa/xóa) | 8, 13, 15, 19 |
-| US-AUD-001 S3 (sự kiện bắt buộc) | 6, 8 (unit khác gọi `AuditPort`) |
+| US-AUD-001 S3 (sự kiện bắt buộc) | 6, 8 (unit khác gọi `AuditPort` trong transaction) |
 | UC-OPS-02 | 10, 18, 21 |
 | Job platform (không có story) | 3, 5, 7, 9, 13-15, 22 |
 

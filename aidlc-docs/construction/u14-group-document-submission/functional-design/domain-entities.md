@@ -98,7 +98,9 @@ Nhiều lần nộp; lần cuối được chấm.
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `GroupSubmissionQueryPort` | U13, U15, U16 | Bản nộp, tác giả từng mục, các mục của một thành viên |
-| Event `u14.group.submitted` | U15, U16 | Sau commit |
+| Event `group.submitted` | U16 | Sau commit, chỉ cho thông báo |
+| `PublicationLifecyclePort.onOpened/onRetired` | U08 khai báo (`C`) | Tạo job tạo tài liệu nhóm khi bài mở; tạo job tự nộp khi ngưng giao |
+| `GroupChangePort` | U12 khai báo (`C`) | `onGroupCreated`: tạo job tạo tài liệu cho nhóm thêm sau khi mở; `onMemberRemoved`: nhả khóa mục của người rời nhóm (BR-U14-13) |
 
 ### Port U14 dùng
 
@@ -108,4 +110,5 @@ Nhiều lần nộp; lần cuối được chấm.
 | `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Khung, hạn |
 | `DocumentModelPort`, `DocxExportPort`, `DocumentEditor` | U09 | Kiểm/làm sạch block, xuất DOCX, trình soạn |
 | `ArtifactPort` | U03 | Ảnh trong mục |
+| `GroupSubmittedPort` | U14 khai báo, U15 cài (`C`) | Gọi trong transaction nộp: U15 tạo job chấm. Chưa có U15 → adapter rỗng |
 | `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Tự nộp, audit, event |

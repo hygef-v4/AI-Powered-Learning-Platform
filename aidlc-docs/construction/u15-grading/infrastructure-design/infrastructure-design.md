@@ -5,9 +5,10 @@
 | Thành phần | Chạy ở |
 |---|---|
 | `GradingService`, `BulkGradeService`, `PublishService`, `GradebookService`, `LearnerGradeController` | `backend` |
-| `SubmissionGradeListener`, `QuizScorer` | `worker` |
+| `GradeInitHandler`, `QuizScorer` | `worker` |
+| `SubmissionSubmittedAdapter`, `GroupSubmittedAdapter`, `CodeGradedAdapter` | `backend`, `worker` |
 | Bảng `grades`, `grade_history`; cột công bố điểm của `publications` (U08 tạo bảng) | `postgres` |
-| RabbitMQ | queue `u15.grading-listener` bind `platform.events` với `u11.submission.submitted`, `u13.code.graded`, `u14.group.submitted`; phát `u15.grade.published` |
+| RabbitMQ | queue `jobs.triggered` (job `GRADE_INIT`); phát `grade.published` (chỉ cho thông báo U16) |
 
 U15 không có secret, Redis key hay dịch vụ ngoài riêng.
 

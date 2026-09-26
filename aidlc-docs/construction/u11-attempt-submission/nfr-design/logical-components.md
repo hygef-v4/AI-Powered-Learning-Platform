@@ -9,17 +9,17 @@
  +------------------------------- backend -----------------------------------+
  | AttemptController --> AttemptStarter (advisory lock) --> JobPort (U02)    |
  |                   --> DraftSaver --> DocumentModelPort (U09)              |
- |                   --> AttemptSubmitter --> EventPublisherPort (U02)       |
- | RetiredListener (ASSIGNMENT_RETIRED) --> AttemptSubmitter                  |
+ |                   --> AttemptSubmitter --> SubmissionSubmittedPort (U15)  |
+ | PublicationLifecycleAdapter (onRetired) --> JobPort (U02)                 |
  | AttemptQueryService (SubmissionQueryPort cho U13, U15, U16)               |
  | Repository (submissions + trigger bất biến)                               |
  +---------------------------------------------------------------------------+
-            | job U11_AUTO_SUBMIT
+            | job ATTEMPT_AUTO_SUBMIT
             v
  worker: AutoSubmitHandler --> AttemptSubmitter
 ```
 
-**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài, tạo job tự nộp), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter` (phát event sau commit). Khi bài bị ngừng giao, `RetiredListener` tự nộp mọi lượt dở. Worker chạy job tự nộp đúng hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
+**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài, tạo job tự nộp), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter` (gọi `SubmissionSubmittedPort` của U15 trong cùng transaction). Khi bài bị ngừng giao, U08 gọi `PublicationLifecycleAdapter` để tạo job tự nộp mọi lượt dở. Worker chạy job tự nộp đúng hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
 
 ## 2. Thành phần
 
@@ -28,7 +28,8 @@
 | `AttemptStarter` | backend | F2; P1 |
 | `DraftSaver` | backend | F3; P2, P6 |
 | `AttemptSubmitter` | backend, worker | F4, F5; P3 |
-| `AutoSubmitHandler`, `RetiredListener` | worker | F5; P5 |
+| `AutoSubmitHandler` | worker | F5; P5 |
+| `PublicationLifecycleAdapter` | backend, worker | Cài `PublicationLifecyclePort.onRetired` của U08: tạo job tự nộp |
 | `AttemptQueryService` | backend | F1, F6, F7 |
 
 ## 3. Cấu hình

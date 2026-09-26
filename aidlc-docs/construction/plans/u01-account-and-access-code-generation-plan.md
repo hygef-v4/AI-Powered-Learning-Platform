@@ -33,7 +33,7 @@ Bước 1-6 dưới đây là khung dự án cho mọi unit (Maven, cấu hình,
 
 ### Dữ liệu U01 sở hữu
 
-PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U07), `app_settings` (bảng cấu hình dùng chung, U01 tạo, mỗi unit ghi khóa có tiền tố của mình); Redis `u01:refresh:*`, `u01:otp:*`, `u01:rl:*`; queue `jobs.u01.otp-delivery` (khai báo qua topology của U02).
+PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U07), `app_settings` (bảng cấu hình dùng chung, U01 tạo, mỗi unit ghi khóa có tiền tố của mình); Redis `session:refresh:*`, `otp:*`, `ratelimit:auth:*`; queue `jobs.email` (khai báo qua topology của U02).
 
 ## 2. Cấu trúc thư mục
 
@@ -87,7 +87,7 @@ PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U0
 - [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, kiểm tên miền theo `u01.allowedEmailDomains`, chuyển trạng thái hợp lệ (BR-U01-03, 70…73).
 - [ ] **Bước 8** - `PasswordPolicy` (BR-U01-30, 31; ≤ 72 byte), `PasswordHasher` bcrypt cost cấu hình.
 - [ ] **Bước 9** - Port: khai báo `AvatarPort`, `SubjectScopePort`, `ClassScopePort` + `AvatarUnavailableAdapter`, `NoAssignmentScopeAdapter`; khai báo `AuthorizationPort`, `AccountLookupPort`. Dùng `AuditPort`, `JobPort` của U02 (cần U02 Bước 4).
-- [ ] **Bước 10** - `OtpService` tạo job `U01_OTP_DELIVERY` qua `JobPort.enqueue` trong cùng transaction (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U02: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP; lỗi thì U02 retry theo backoff, hết lượt job `FAILED` + log ERROR (BR-U01-20…27, NFR-U01-30, 31).
+- [ ] **Bước 10** - `OtpService` tạo job `OTP_DELIVERY` qua `JobPort.enqueue` trong cùng transaction (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U02: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP; lỗi thì U02 retry theo backoff, hết lượt job `FAILED` + log ERROR (BR-U01-20…27, NFR-U01-30, 31).
 - [ ] **Bước 11** - `ActivationService`: F1, F2 (US-IAM-001).
 - [ ] **Bước 12** - `TokenService`: JWT HMAC 15 phút; refresh ngẫu nhiên lưu băm, idle 2 giờ, trần 7 ngày, xoay vòng, phát hiện dùng lại; refresh kiểm `credentialVersion` (BR-U01-44…46, P1).
 - [ ] **Bước 13** - `AuthService`: đăng nhập với hash giả cho email không tồn tại, khóa tạm 5 lần/15 phút, refresh, đăng xuất (chỉ phiên hiện tại), quên mật khẩu, đổi mật khẩu tăng `credentialVersion` (F3-F6; US-IAM-002, 003, 006).
@@ -144,6 +144,6 @@ PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U0
 ## 5. Ngoài phạm vi lượt này
 
 - Cài thật `AvatarPort` (U03 Bước 7) và `SubjectScopePort`/`ClassScopePort` (U04 Bước 10); khi đó bỏ adapter tạm của U01.
-- Code của U02 (job platform, worker, audit); U01 chỉ đăng ký handler `U01_OTP_DELIVERY`.
+- Code của U02 (job platform, worker, audit); U01 chỉ đăng ký handler `OTP_DELIVERY`.
 - Bật bước deploy SSH trong CI.
 - Test chịu lỗi (RESILIENCY-14) ngoài phạm vi đồ án.

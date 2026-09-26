@@ -5,11 +5,11 @@
 | Thành phần | Chạy ở |
 |---|---|
 | `AttemptStarter`, `DraftSaver`, `AttemptSubmitter`, `AttemptQueryService` | `backend` |
-| `AutoSubmitHandler`, `RetiredListener` | `worker` |
+| `AutoSubmitHandler` | `worker` |
 | Bảng `submissions` (gồm nội dung bài làm) | `postgres` |
-| Rate limit lưu | `redis`, khóa `u11:save:{learnerId}` |
-| Queue | `jobs.u11.auto-submit`; `u11.retired-listener` bind `platform.events` routing key `u08.assignment.retired` |
-| Event phát | `u11.submission.submitted` trên `platform.events` |
+| Rate limit lưu | `redis`, khóa `ratelimit:attempt-save:{learnerId}` |
+| Queue | `jobs.scheduled` (job `ATTEMPT_AUTO_SUBMIT`) |
+| Event phát | Không; báo U15 qua `SubmissionSubmittedPort` trong transaction |
 
 ## 2. Nginx
 

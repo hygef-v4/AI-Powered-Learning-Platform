@@ -36,7 +36,7 @@ U13 **không** sở hữu: bài/câu hỏi (U08, U06), bài nộp (U11, U14), đ
 | Khóa | Ý nghĩa |
 |---|---|
 | `u13.killSwitch` | Bool, mặc định `false`; `true` chặn mọi lời gọi AI mới (kể cả embedding của U05) |
-| `u13.dailyCostCapUsd` | Trần chi phí ngày của hệ thống; vượt thì báo "Hệ thống đang bận" |
+| `u13.dailyCostCapUsd` | Trần chi phí Gemini/ngày của cả hệ thống (tạo đề, chấm AI và embedding của U05); vượt thì báo "Hệ thống đang bận" |
 | `u13.perUserPerMinute` | Mặc định 10 yêu cầu/phút/người |
 
 Chỉ ADMIN sửa; mọi thay đổi ghi audit.
@@ -119,8 +119,7 @@ Kết quả kiểm lời giải mẫu hiện hành = lần `CodeRun` loại `VER
 | `AiGradingPort` | U15 | Tạo/đọc đề xuất chấm |
 | `CodeRunPort` | U11 (`C`), U15 | `try`, `grade`, kết quả |
 | `CodeLabCheckPort` | U08 khai báo (`C`) | Bài `CODE_LAB` đã kiểm lời giải mẫu với đúng nội dung hiện tại |
-| `AiKillSwitchPort` | U05 (`C`) | Trạng thái kill-switch |
-| Event `u13.code.graded` | U15 | Điểm Code Lab tự chấm |
+| `AiBudgetPort` | U05 (`C`) | Kill-switch và trần chi phí Gemini/ngày dùng chung cho embedding của U05 (`tryReserve`, `settle`, `release`) |
 
 ### Port U13 dùng
 
@@ -131,5 +130,5 @@ Kết quả kiểm lời giải mẫu hiện hành = lần `CodeRun` loại `VER
 | `BankQueryPort` | U06 | Câu hỏi, rubric |
 | `DiagramCompactPort`, `DocumentModelPort` | U09 (`C`) | XML rút gọn, văn bản phẳng |
 | `SubmissionQueryPort`, `GroupSubmissionQueryPort` | U11, U14 (`C`) | Nội dung bài nộp / các mục của một thành viên để AI đề xuất chấm; adapter tạm báo "chưa hỗ trợ" tới khi U11/U14 có |
-| Event `u11.submission.submitted` | U11 (`C`) | Chấm Code Lab khi nộp |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Chạy nền, audit, event |
+| `CodeGradedPort` | U13 khai báo, U15 cài (`C`) | Gọi trong transaction kết thúc job chấm code: U15 ghi điểm Code Lab. Chưa có U15 → adapter rỗng |
+| `JobPort`, `AuditPort` | U02 | Chạy nền, audit |

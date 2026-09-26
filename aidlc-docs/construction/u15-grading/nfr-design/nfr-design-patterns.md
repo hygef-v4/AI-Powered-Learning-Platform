@@ -3,13 +3,13 @@
 ## P1 - Một đường ghi điểm
 - `GradeWriter.apply(gradeId, change, actor, reason?)`: khóa theo `version` → kiểm luật (lý do khi sửa điểm tự chấm/đã chốt/khác đề xuất; `0 ≤ score ≤ max`) → UPDATE → INSERT `grade_history` → event sau commit nếu `PUBLISHED`. Mọi luồng (tự chấm, chấm tay, dùng đề xuất, chốt, công bố, sửa) đi qua đây (NFR-U15-11, 12).
 
-## P2 - Tiêu thụ event idempotent
-- Unique `(target_kind, target_id, learner_id)`; listener dùng `INSERT ... ON CONFLICT DO NOTHING` rồi cập nhật qua P1 (NFR-U15-13).
+## P2 - Job chấm idempotent
+- Unique `(target_kind, target_id, learner_id)`; job `GRADE_INIT` dùng `INSERT ... ON CONFLICT DO NOTHING` rồi cập nhật qua P1 (NFR-U15-13).
 - Bản nộp nhóm mới: điểm chưa chốt chuyển `target_id` sang bản mới; điểm đã chốt giữ và gắn cờ "có bản nộp mới".
 
 ## P3 - Chấm xác định
 - `QuizScorer` thuần: nhận câu (góc nhìn đầy đủ từ U06/câu riêng U08) và đáp án; trả `items` + tổng `BigDecimal`.
-- Code: nhận `score`, `results` từ `u13.code.graded`.
+- Code: nhận `score`, `results` qua `CodeGradedPort.onGraded`.
 
 ## P4 - Hàng loạt theo từng mục
 - Chốt/công bố hàng loạt: mỗi mục một transaction con qua P1 (`TransactionTemplate`), gom kết quả `{gradeId, ok, error}`; công bố một lượt phát hành dùng một UPDATE `WHERE publication_id = ? AND status = 'FINALIZED'` + lịch sử hàng loạt (NFR-U15-02).

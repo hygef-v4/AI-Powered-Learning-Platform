@@ -7,8 +7,8 @@
 | `AssignmentService`, `PublicationService`, `AssignmentQueryService` | `backend` |
 | `PublicationScheduleHandler` | `worker` |
 | Bảng `assignments`, `assignment_components`, `publications` | `postgres` |
-| Queue | `jobs.u08.publication-open`, `jobs.u08.publication-close` |
-| Event | exchange `platform.events`, routing key `u08.assignment.opened`, `u08.assignment.closed`, `u08.assignment.retired` |
+| Queue | `jobs.scheduled` (`PUBLICATION_OPEN`, `PUBLICATION_CLOSE`) |
+| Event | exchange `platform.events`, routing key `assignment.opened` (chỉ cho thông báo U16); mở/ngưng giao báo U11, U14 qua `PublicationLifecyclePort` trong transaction |
 
 Container `backend`/`worker` đặt `TZ=UTC`; múi giờ hiển thị lấy từ `APP_TIMEZONE`.
 

@@ -7,9 +7,9 @@
 | `AiGuard`, `AiProposalService`, `CodeRunService` (TRY đồng bộ), `CodeLabCheckService`, `AiAdminService` | `backend` |
 | `AiTaskHandler`, `CodeRunHandler` | `worker` |
 | Bảng `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs` (index `(owner_ref, kind, created_at)` để lấy lần `VERIFY` mới nhất); khóa `u13.*` trong `app_settings` | `postgres` |
-| Trần chi phí ngày, rate limit | `redis`, khóa `u13:cost:*`, `u13:ai:*`, `u13:try:*` |
-| Queue | `jobs.u13.ai-task`, `jobs.u13.code-run` |
-| Event | `u13.code.graded` trên `platform.events` (đề xuất AI được xem bằng cách hỏi trạng thái, không phát event) |
+| Trần chi phí ngày, rate limit | `redis`, khóa `gemini:daily-cost:*`, `ratelimit:ai-request:*`, `ratelimit:code-try:*` |
+| Queue | `jobs.gemini`, `jobs.code` |
+| Event | Không phát event; điểm Code Lab báo U15 qua `CodeGradedPort` trong transaction; đề xuất AI xem bằng cách hỏi trạng thái |
 | Chạy code | 4 container Judge0 trong mạng `sandbox` |
 
 ## 2. Judge0 (theo `demo_do_an`)

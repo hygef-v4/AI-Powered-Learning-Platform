@@ -16,7 +16,7 @@
  | RetrievalService (RagRetrievalPort) --> EmbeddingBudget --> EmbeddingPort    |
  |                                     --> VectorSearchRepository (pgvector)   |
  +-----------------------------------------------------------------------------+
-                         | job U05_YOUTUBE_RESOLVE / U05_INGEST
+                         | job YOUTUBE_RESOLVE / RAG_INGEST
                          v
  +------------------------------ worker ---------------------------------------+
  | YoutubeResolveHandler --> YoutubePort (Data API / caption)                  |
@@ -38,7 +38,7 @@
 | `RetrievalService`, `VectorSearchRepository` | backend | F9, P6 |
 | `YoutubeResolveHandler` | worker | F5 |
 | `IngestJobHandler`, `TextExtractor`, `Chunker`, `ChunkWriter` | worker | F6, P1-P3 |
-| `EmbeddingBudget`, `CreditPort` (U07) | backend, worker | P4; kiểm trần hệ thống và credit người dùng trước Gemini |
+| `EmbeddingBudget`, `AiBudgetPort` (U13), `CreditPort` (U07) | backend, worker | P4; kiểm kill-switch và trần chi phí Gemini chung (U13), credit người dùng (U07) trước khi gọi Gemini |
 | `GeminiEmbeddingAdapter`, `YoutubeAdapter` + adapter giả | backend, worker | P5, P8 |
 
 ## 3. Cấu hình
@@ -48,7 +48,6 @@
 | `GEMINI_API_KEY` | Rỗng → adapter giả |
 | `YOUTUBE_API_KEY` | Rỗng → adapter giả |
 | `U05_INGEST_CONCURRENCY` | 4 (VPS < 8 GB: 2) |
-| `U05_EMBED_DAILY_TOKENS` | 2000000 |
 | `U05_EMBED_MODEL` | `gemini-embedding-001` |
 | `U05_EMBED_DIMENSIONS` | 768 |
 | `U05_MAX_TEXT_CHARS` | 2000000 |

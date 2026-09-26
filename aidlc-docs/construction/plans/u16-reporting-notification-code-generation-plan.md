@@ -19,19 +19,19 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 |---|---|---|
 | `AuthorizationPort`, `AccountLookupPort` | U01 | Dùng thật |
 | `JobPort`, `AuditPort` | U02 | Dùng thật |
-| `ClassAccessPort`, `u04.enrollment.activated` | U04 | Dùng thật |
-| `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted` | U05 | Thông báo trong app theo thành viên lớp |
-| `u07.payment.paid` | U07 | Dùng thật (U07 thêm event, BR-U07-53) |
-| `AssignmentQueryPort`, `u08.assignment.*` | U08 | Dùng thật |
+| `ClassAccessPort`, `enrollment.activated` | U04 | Dùng thật |
+| `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U05 | Thông báo trong app theo thành viên lớp |
+| `payment.paid` | U07 | Dùng thật (U07 thêm event, BR-U07-53) |
+| `AssignmentQueryPort`, event `assignment.opened` | U08 | Dùng thật |
 | `SubmissionQueryPort` | U11 | Dùng thật |
-| `GroupMembershipPort`, `u12.group.*` | U12 | Dùng thật |
-| `GroupSubmissionQueryPort`, `u14.group.submitted`, `SseHub`, `platform.realtime` | U14 | Dùng thật (thêm kênh theo `accountId`) |
-| `u15.grade.published` | U15 | Dùng thật |
+| `GroupMembershipPort`, `group.*` | U12 | Dùng thật |
+| `GroupSubmissionQueryPort`, `group.submitted`, `SseHub`, `platform.realtime` | U14 | Dùng thật (thêm kênh theo `accountId`) |
+| `grade.published` | U15 | Dùng thật |
 | `GradebookQueryPort`, `GradeQueryPort` | U15 | Chỉ đọc điểm giảng viên đã chốt/công bố; không lấy điểm AI đề xuất |
 
 ### Dữ liệu U16 sở hữu
 
-PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc hạn là job `U16_DEADLINE_REMINDER` trong bảng `jobs` của U02; Redis `u16:email:*`; queue `u16.notification-listener`, `jobs.u16.*`.
+PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc hạn là job `DEADLINE_REMINDER` trong bảng `jobs` của U02; Redis `email:daily-count:*`; queue nghe event `jobs.notification` (U16 khai báo); job `EMAIL_DISPATCH`, `DEADLINE_REMINDER` trên `jobs.scheduled`, `EMAIL_SEND` trên `jobs.email`.
 
 ## 2. Cấu trúc
 
@@ -72,7 +72,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 - [ ] **Bước 6** - `DeadlineReminderHandler`: tạo job khi bài mở; khi chạy bỏ qua nếu hạn đã đổi hoặc bài không còn `OPEN`; chỉ gửi người chưa nộp (F3, P4, BR-U16-20…22).
 - [ ] **Bước 7** - `PreferenceService`, `ProgressService` (một query), `RetentionHandler` 180 ngày (F4, F5, P5, BR-U16-05, 30, 31).
 - [ ] **Bước 7a** - `LearnerDashboardService` và `GradebookExportService`: điểm đã công bố của người học; phân bố lớp chỉ khi bật cờ và đủ ngưỡng; CSV/XLSX theo yêu cầu, không lưu tệp, không có điểm tổng/hệ số hay điểm AI đề xuất (F6, F7, BR-U16-40…45).
-- [ ] **Bước 8** - U07 phát `u07.payment.paid` sau commit (BR-U07-53) nếu U07 chưa có.
+- [ ] **Bước 8** - U07 phát `payment.paid` sau commit (BR-U07-53) nếu U07 chưa có.
 - [ ] **Bước 9** - Unit test mọi `BR-U16-xx`.
 - [ ] **Bước 10** - Tóm tắt: `aidlc-docs/construction/u16-reporting-notification/code/business-logic-summary.md`.
 

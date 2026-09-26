@@ -18,7 +18,7 @@
  | DownloadController --> DownloadTokenService (Redis) --> StoragePort |
  | ArtifactPort (cho unit khác): attach, issueDownloadToken, open      |
  +---------------------------------------------------------------------+
-                          | job U03_DRIVE_CLEANUP
+                          | job DRIVE_CLEANUP
                           v
                  worker (U02) --> DriveJobHandler --> StoragePort
 ```
@@ -37,7 +37,7 @@
 | `ArtifactService` (`ArtifactPort`) | backend, worker | `attach`, `open`, `issueDownloadToken` |
 | `DownloadTokenService` | backend | P4 |
 | `DownloadController` | backend | P2 |
-| `DriveJobHandler` | worker | Job `U03_DRIVE_CLEANUP` |
+| `DriveJobHandler` | worker | Job `DRIVE_CLEANUP` |
 
 ## 3. Cấu hình
 

@@ -15,11 +15,10 @@
 ## 2. Audit
 
 ### A1 - Ghi audit
-1. Unit gọi thực hiện thao tác, commit transaction.
-2. Sau commit, gọi `AuditPort.record(event)` với `eventId` mới, `occurredAt` là thời điểm thao tác.
-3. U02 kiểm danh sách khóa cấm trong `beforeData`/`afterData` (BR-U02-05); vi phạm thì log ERROR và bỏ.
-4. Gửi `DomainEventMessage` loại `AUDIT` sang RabbitMQ. Lỗi → log ERROR, trả về bình thường (BR-U02-04).
-5. Consumer U02 lưu vào `audit_events`; `eventId` đã tồn tại thì bỏ qua (BR-U02-03).
+1. Trong transaction nghiệp vụ, unit gọi `AuditPort.record(event)` với `eventId` mới, `occurredAt` là thời điểm thao tác.
+2. U02 kiểm danh sách khóa cấm trong `beforeData`/`afterData` (BR-U02-05); vi phạm thì từ chối (lỗi lập trình, thao tác rollback).
+3. INSERT vào `audit_events` trong cùng transaction; `eventId` đã tồn tại thì bỏ qua (BR-U02-02, 03).
+4. Sự kiện `DENIED`/`FAILURE` ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback.
 
 ### A2 - Tra cứu audit
 1. Gọi U01 `authorize(actor, AUDIT_READ)`. Không phải `ADMIN` hoặc U01 lỗi → từ chối (BR-U02-07, 50).
@@ -30,10 +29,11 @@
 ## 3. Job
 
 ### J1 - Tạo job
+0. Mỗi `jobType` đã đăng ký sẵn queue của nó (BR-U02-33).
 1. Trong transaction của unit gọi: tìm job cùng `jobType` + `idempotencyKey`; có thì trả job đó (BR-U02-21).
 2. Kiểm payload (BR-U02-22). Ghi `jobs` ở `PENDING`, `nextAttemptAt` = hiện tại.
 3. Trả `JobReference` cho unit gọi.
-4. Sau commit: gửi `JobMessage`, cập nhật `lastPublishedAt`. Lỗi gửi → log WARN; J3 sẽ gửi lại.
+4. Sau commit: gửi `JobMessage` tới exchange `jobs` (routing key = `jobType`, vào queue đã đăng ký), cập nhật `lastPublishedAt`. Lỗi gửi → log WARN; J3 sẽ gửi lại.
 
 ### J2 - Worker xử lý job
 1. Nhận `JobMessage`, gọi `claim(jobId, workerId)`. Không claim được → ack và bỏ (BR-U02-24).
@@ -58,8 +58,9 @@
 ### E1 - Phát sự kiện
 1. Sau commit, unit gọi `EventPublisherPort.publish(event)`.
 2. Gửi RabbitMQ exchange `platform.events` với routing key `eventType`. Lỗi → log WARN, không retry (BR-U02-40).
+3. Chỉ dùng cho thông báo; phản ứng bắt buộc giữa unit đi qua port + job (BR-U02-34).
 
 ## 5. Ảnh hưởng tới U01
 
-- `OutboxPort` của U01 đổi thành `JobPort.enqueue` với `jobType = U01_OTP_DELIVERY`, `idempotencyKey` = `accountId:purpose:phút hiện tại`.
+- `OutboxPort` của U01 đổi thành `JobPort.enqueue` với `jobType = OTP_DELIVERY`, `idempotencyKey` = `accountId:purpose:phút hiện tại`.
 - Gửi mail OTP chạy qua J2; hết lượt thì chỉ log.

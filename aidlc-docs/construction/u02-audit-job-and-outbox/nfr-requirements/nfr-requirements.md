@@ -4,7 +4,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U02-01 | `AuditPort.record` và `EventPublisherPort.publish` không chặn request quá 50 ms; gửi RabbitMQ lỗi thì trả ngay. | NFR-003, BR-U02-04 |
+| NFR-U02-01 | `AuditPort.record` chỉ thêm một câu INSERT vào transaction của unit gọi; `EventPublisherPort.publish` không chặn request quá 50 ms, gửi RabbitMQ lỗi thì trả ngay. | NFR-003, BR-U02-02 |
 | NFR-U02-02 | `JobPort.enqueue` chỉ thêm một câu INSERT vào transaction của unit gọi. | NFR-003 |
 | NFR-U02-03 | Tra cứu audit và `getJobStatus`: p95 ≤ 500 ms với tới 1 triệu bản ghi audit. Có index theo `occurred_at`, `(actor_id, occurred_at)`, `(resource_type, resource_id)`, `action`. | NFR-003, BR-U02-08 |
 | NFR-U02-04 | Frontend poll trạng thái job mỗi 3 giây, dừng ở trạng thái cuối. | frontend-components |
@@ -14,7 +14,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U02-10 | Worker là container riêng, dùng cùng mã nguồn backend với profile `worker`. | Câu N1 |
-| NFR-U02-11 | Mỗi worker xử lý tối đa 4 job cùng lúc; consumer audit có luồng riêng, không bị job chậm chặn. | Câu N3 |
+| NFR-U02-11 | Mỗi queue có luồng xử lý riêng (tổng 14 luồng trên worker); job chậm của Gemini/Judge0 không chặn việc nội bộ và email. | Câu N3 |
 | NFR-U02-12 | Lease 5 phút; handler chạy lâu hơn phải gia hạn lease. | BR-U02-23 |
 | NFR-U02-13 | Lượt quét job kẹt chạy mỗi phút trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U02-28 |
 | NFR-U02-14 | Mỗi loại job có timeout xử lý do unit sở hữu khai báo; mặc định 60 giây. | REL-003 |
@@ -25,7 +25,7 @@
 |---|---|---|
 | NFR-U02-20 | Queue durable, message persistent; RabbitMQ khởi động lại không mất message đang chờ. | Câu N2 |
 | NFR-U02-21 | Consumer ack thủ công, chỉ ack sau khi đã cập nhật PostgreSQL. | BR-U02-24 |
-| NFR-U02-22 | Prefetch bằng số luồng xử lý (4 cho job, 10 cho audit). | Câu N3 |
+| NFR-U02-22 | Prefetch bằng số luồng xử lý của từng queue (BR-U02-33, P7). | Câu N3 |
 | NFR-U02-23 | Kết nối RabbitMQ có timeout 5 s và tự kết nối lại. | REL-003 |
 
 ## 4. Bảo mật
@@ -40,7 +40,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U02-40 | RabbitMQ không khả dụng: thao tác nghiệp vụ vẫn thành công; job nằm ở `PENDING` chờ lượt quét; audit có thể mất (chấp nhận). | BR-U02-04, 40 |
+| NFR-U02-40 | RabbitMQ không khả dụng: thao tác nghiệp vụ vẫn thành công; job nằm ở `PENDING` chờ lượt quét; audit không bị ảnh hưởng (ghi trong DB); event thông báo có thể mất (chấp nhận). | BR-U02-04, 40 |
 | NFR-U02-41 | Worker chết: job `RUNNING` về `PENDING` khi hết lease; worker khởi động lại tự tiếp tục. | BR-U02-28 |
 | NFR-U02-42 | Healthcheck worker kiểm PostgreSQL và RabbitMQ. | REL-002 |
 

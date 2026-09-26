@@ -1,12 +1,13 @@
 # U05 Content, Material & RAG - Deployment Architecture
 
 ```
- Trình duyệt --HTTPS--> [nginx] --> [backend: U05] --job--> [rabbitmq] --> [worker: U05]
+ Trình duyệt --HTTPS--> [nginx] --> [backend: U05] --job--> [rabbitmq: jobs.gemini, jobs.youtube] --> [worker: U05]
    |  (iframe youtube-nocookie)        |      |                             |    |    |
    v                                   v      v                             v    v    v
  YouTube (nhúng video)          [postgres+pgvector] [redis]            U03   Gemini  YouTube
-                                 nội dung, đoạn,   u05:embed-      (đọc   API     Data API /
-                                 vector            tokens:*         file)          caption
+                                 nội dung, đoạn,   (qua U13:       (đọc   API     Data API /
+                                 vector            gemini:daily-    file)          caption
+                                                   cost:*)
                                        ^                                    |
                                        +------------ ghi đoạn --------------+
 ```

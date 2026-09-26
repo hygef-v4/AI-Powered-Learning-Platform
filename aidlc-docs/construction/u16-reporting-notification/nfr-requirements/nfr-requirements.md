@@ -14,7 +14,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U16-10 | Unique `(source_event_id, recipient_id, type)`; email outbox idempotent theo `id`; bộ đếm trần ngày trong Redis `u16:email:{yyyyMMdd}` tăng trước khi gửi, giảm lại nếu gửi lỗi vĩnh viễn. | BR-U16-02, 12, 14 |
+| NFR-U16-10 | Unique `(source_event_id, recipient_id, type)`; email outbox idempotent theo `id`; bộ đếm trần ngày trong Redis `email:daily-count:{yyyyMMdd}` tăng trước khi gửi, giảm lại nếu gửi lỗi vĩnh viễn. | BR-U16-02, 12, 14 |
 | NFR-U16-11 | Job nhắc hạn so `remindAt` với hạn hiện tại; lệch thì bỏ qua (đổi lịch). | BR-U16-22 |
 
 ## 3. Bảo mật và riêng tư

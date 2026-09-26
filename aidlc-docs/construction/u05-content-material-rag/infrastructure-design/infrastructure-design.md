@@ -7,9 +7,9 @@
 | Controller, service quản lý nội dung, `PublishedContentService`, `RetrievalService`, `ClassCommunicationController/Service` | `backend` |
 | `YoutubeResolveHandler`, `IngestJobHandler` | `worker` |
 | Bảng nội dung, `source_documents`, `rag_chunks` (cột `vector(768)`) | `postgres` (image có pgvector) |
-| Bộ đếm trần embedding | `redis`, khóa `u05:embed-tokens:{yyyyMMdd}` |
-| Queue | `jobs.u05.youtube-resolve`, `jobs.u05.ingest` (listener concurrency 4) |
-| Event lớp | `EventPublisherPort` (U02) phát sau commit trên `platform.events`: `u05.class.announcement-posted`, `u05.class.question-posted`, `u05.class.answer-posted`; U16 tiêu thụ |
+| Trần chi phí Gemini | Dùng chung bộ đếm `gemini:daily-cost:{yyyyMMdd}` của U13 qua `AiBudgetPort` (U05 không có key Redis riêng) |
+| Queue | `jobs.youtube`, `jobs.gemini` (listener concurrency 4) |
+| Event lớp | `EventPublisherPort` (U02) phát sau commit trên `platform.events`: `class.announcement-posted`, `class.question-posted`, `class.answer-posted`; U16 tiêu thụ |
 
 ## 2. Thay đổi hạ tầng dùng chung
 

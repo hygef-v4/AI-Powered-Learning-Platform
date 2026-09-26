@@ -28,7 +28,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U08 sở hữu
 
-PostgreSQL `assignments`, `assignment_components`, `publications`; queue `jobs.u08.publication-open`, `jobs.u08.publication-close`; routing key `u08.assignment.*`.
+PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICATION_OPEN`, `PUBLICATION_CLOSE` trên queue `jobs.scheduled`; event `assignment.opened` (chỉ cho thông báo U16).
 
 ## 2. Cấu trúc
 
@@ -60,12 +60,12 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; queue `jobs.u
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain: `Assignment` (aggregate, khóa khi không `DRAFT`), `AssignmentComponent` (một nguồn), `Publication`, `SubmissionWindow` (P1, P3, BR-U08-10…14, 33).
-- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`; `AssignmentExtensionPort` cho U09, U10, U15 ghi value object của mình (cấu hình loại bài, khung, lineage, chính sách thi thử, công bố điểm) vào bài/publication khi trạng thái cho phép.
+- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`, `PublicationLifecyclePort` (adapter rỗng); `AssignmentExtensionPort` cho U09, U10, U15 ghi value object của mình (cấu hình loại bài, khung, lineage, chính sách thi thử, công bố điểm) vào bài/publication khi trạng thái cho phép.
 - [ ] **Bước 4** - `AssignmentService`: tạo, thêm từ ngân hàng/câu riêng, điểm, sửa, xóa nháp, nhân bản, tạo version mới sau khi ngừng giao/đóng, lưu trữ, audit (F1, F7, BR-U08-01, 10…15, 41…44).
 - [ ] **Bước 5** - AI draft: gọi `AiDraftPort`, thêm câu giữ lại với `origin = AI` (F2, BR-U08-21).
 - [ ] **Bước 6** - `ReviewValidator` và duyệt (F3, P5, BR-U08-20, 22).
 - [ ] **Bước 7** - `PublicationService`: phát hành một lớp, kiểm lịch/nộp trễ/số lượt, khóa bài, tạo job, sửa lịch, ngưng giao, audit (F4, F6, F7, P2, BR-U08-02, 30…34, 40).
-- [ ] **Bước 8** - `PublicationScheduleHandler` (UPDATE có điều kiện, phát event) (F5, P2, P6, BR-U08-35, 36).
+- [ ] **Bước 8** - `PublicationScheduleHandler` (UPDATE có điều kiện; mở bài gọi `PublicationLifecyclePort.onOpened` trong transaction rồi phát `assignment.opened` sau commit); ngưng giao gọi `onRetired` trong transaction (F5, F6, P2, P6, BR-U08-35, 36, 40). Port khai báo ở Bước 3 kèm adapter rỗng tới khi U11/U14 có.
 - [ ] **Bước 9** - `AssignmentQueryService`, `LearnerViewMapper` và `AssignmentExtensionService` (cài `AssignmentExtensionPort`: chỉ cho U09 ghi cấu hình/khung khi bài `DRAFT`, U10 ghi lineage lúc tạo bài và chính sách thi thử trước khi khóa, U15 ghi công bố điểm) (F8, P3, P4, BR-U08-03).
 - [ ] **Bước 10** - Unit test mọi `BR-U08-xx`, gồm ranh giới `closesAt`/`lateUntil` và bài `LOCKED` không sửa được.
 - [ ] **Bước 11** - Tóm tắt: `aidlc-docs/construction/u08-assessment-core-publication/code/business-logic-summary.md`.

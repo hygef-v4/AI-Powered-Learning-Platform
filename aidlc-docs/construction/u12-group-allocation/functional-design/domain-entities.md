@@ -75,7 +75,7 @@ stateDiagram-v2
 | `GroupReadinessPort` | U08 khai báo (`C`) | Bộ nhóm đủ điều kiện phát hành |
 | `GroupMembershipPort` | U14, U16 | `groupOf(learnerId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
 | `GroupDocumentStorePort` | U14 | Đọc/ghi tài liệu nhóm trong bản ghi nhóm |
-| Event `u12.group.membership-changed`, `u12.group.leader-changed` | U16 | Sau commit |
+| Event `group.membership-changed`, `group.leader-changed` | U16 | Sau commit |
 
 ### Port U12 dùng
 
@@ -83,4 +83,5 @@ stateDiagram-v2
 |---|---|---|
 | `AssignmentQueryPort` | U08 | Bài `GROUP`, trạng thái publication |
 | `ClassAccessPort` | U04 | Người học đang ghi danh |
-| `AuditPort`, `EventPublisherPort` | U02 | Audit, event |
+| `GroupChangePort` | U12 khai báo, U14 cài (`C`) | `onGroupCreated(groupId)` khi thêm nhóm sau khi bài đã mở (U14 tạo job tạo tài liệu nhóm); `onMemberRemoved(groupId, learnerId)` khi thành viên rời nhóm (U14 nhả khóa mục của người đó). Gọi trong transaction; chưa có U14 → adapter rỗng |
+| `AuditPort`, `EventPublisherPort` | U02 | Audit, event thông báo |

@@ -26,7 +26,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U12 sở hữu
 
-PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`, `leader_change_requests`; routing key `u12.group.*`.
+PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`, `leader_change_requests`; event `group.leader-changed`, `group.membership-changed` (chỉ cho thông báo U16); khai báo `GroupChangePort` (U14 cài, adapter rỗng tới khi có U14).
 
 ## 2. Cấu trúc
 
@@ -56,7 +56,7 @@ PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 1** - Domain và `GroupSetValidator` thuần (BR-U12-02, 03, 21, 22); `RandomSplitter` thuần (BR-U12-05).
-- [ ] **Bước 2** - `GroupSetSaver`: lưu nguyên khối theo `version`, đóng thay vì xóa, event + audit sau commit (F1, F3, F5, P1).
+- [ ] **Bước 2** - `GroupSetSaver`: lưu nguyên khối (khóa theo bài + `version` từng nhóm), đóng thay vì xóa, audit trong transaction, event sau commit (F1, F3, F5, P1).
 - [ ] **Bước 3** - Chia ngẫu nhiên (xem trước) và `GroupSetCopier` (F2, BR-U12-06).
 - [ ] **Bước 4** - `LeaderRequestService`: gửi/hủy/duyệt/từ chối, đổi trực tiếp (F6, P3, BR-U12-10…14).
 - [ ] **Bước 5** - `GroupReadinessService` (cài `GroupReadinessPort`, thay adapter tạm U08), `MembershipQueryService` (`GroupMembershipPort`) và `GroupDocumentStorePort` (đọc/ghi cột tài liệu nhóm do U14 thêm, khóa lạc quan `doc_version`) (F4, F7, P4, P5).

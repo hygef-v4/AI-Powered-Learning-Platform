@@ -7,7 +7,7 @@
 | `FileUploadController`, `UploadService`, `ContentInspector`, `DownloadController`, `DownloadTokenService`, `ArtifactService` | `backend` |
 | `DriveJobHandler` | `worker` |
 | Bảng `artifacts` | `postgres` |
-| Download token | `redis`, tiền tố `u03:dl:` |
+| Download token | `redis`, tiền tố `file:download-token:` |
 | Byte file | Google Shared Drive (ngoài VPS); local dùng volume `files-local` |
 
 ## 2. Google Drive

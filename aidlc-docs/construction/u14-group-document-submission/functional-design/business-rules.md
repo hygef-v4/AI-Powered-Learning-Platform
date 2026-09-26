@@ -33,7 +33,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U14-30 | Chỉ trưởng nhóm hiện tại (U12) nộp; cảnh báo nếu còn mục `OPEN` hoặc `CLAIMED` nhưng vẫn cho nộp. | Câu 8 |
-| BR-U14-31 | Nộp: chụp tài liệu (phần chung + `publishedBlocks` các mục) và `sectionAuthors` thành bản bất biến; mục `CLAIMED` lấy `publishedBlocks` (không lấy nháp). Phát `u14.group.submitted`. | Câu 8 |
+| BR-U14-31 | Nộp: chụp tài liệu (phần chung + `publishedBlocks` các mục) và `sectionAuthors` thành bản bất biến; mục `CLAIMED` lấy `publishedBlocks` (không lấy nháp). Phát `group.submitted`. | Câu 8 |
 | BR-U14-32 | Trưởng nhóm nộp lại được trước hạn; bản nộp cuối được chấm; mọi bản giữ lại. | US-GRP-005 S2 |
 | BR-U14-33 | Hạn chung của bài (và nộp trễ theo U08); tới hạn cuối nhận bài mà chưa nộp sau lần sửa cuối → tự nộp bản hiện tại (`AUTO_DEADLINE`), ghi cảnh báo mục chưa xong. Ngừng giao → `AUTO_RETIRED`. | Câu 2, 8 |
 | BR-U14-34 | Sau khi nộp vẫn sửa được tới hạn (nộp lại); sau hạn tài liệu chỉ đọc. | FR-007 |

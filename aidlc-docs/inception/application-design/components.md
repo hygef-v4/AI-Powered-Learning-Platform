@@ -26,7 +26,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Module (unit) | Trách nhiệm cấp cao |
 |---|---|
 | Identity & Access (U01) | Tài khoản `PENDING/ACTIVE/DISABLED`, OTP kích hoạt/khôi phục, JWT + refresh cookie, hồ sơ, role, nhập CSV, `authorize` |
-| Audit, Job & Event (U02) | Audit append-only, bảng `jobs` + RabbitMQ (retry theo DB, sweeper), event sau commit |
+| Audit, Job & Event (U02) | Audit append-only ghi trong transaction, bảng `jobs` + 8 queue RabbitMQ theo tính chất (retry theo DB, sweeper), event sau commit chỉ cho thông báo |
 | File & Artifact (U03) | Upload qua backend (avatar, học liệu, ảnh trong tài liệu), kiểm magic bytes, lưu Google Drive, token tải 5 phút |
 | Academic & Learning Access (U04) | Môn, lớp `DRAFT/OPEN/ARCHIVED`, giảng viên, Chủ nhiệm môn, ghi danh, mã mời, lớp của người học |
 | Content & RAG (U05) | Chương → bài → mục, phiên bản bài, bài cấp môn liên kết vào lớp, YouTube (chỉ caption có sẵn), trích chữ, embedding Gemini + pgvector, `retrieve`; thông báo và hỏi đáp lớp |

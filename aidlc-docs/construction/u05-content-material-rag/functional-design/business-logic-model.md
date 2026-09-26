@@ -9,8 +9,8 @@
 2. Thêm/sửa/xóa/đổi thứ tự mục trong `DRAFT`:
    - `TEXT`: lưu markdown, tính `contentKey`, tạo hoặc dùng lại `SourceDocument`.
    - `FILE`: frontend upload qua U03 (`MATERIAL`) → `attach` vào bài → tạo hoặc dùng lại `SourceDocument`.
-   - `YOUTUBE`: kiểm URL (BR-U05-22), tạo `YoutubeSource`, tạo job `U05_YOUTUBE_RESOLVE`.
-3. `SourceDocument` mới ghi `chargedToAccountId` của người tải/phát hành rồi ở `PENDING` → tạo job `U05_INGEST` (BR-U05-31, 39). Nguồn đã `INDEXED` dùng lại thì không gọi Gemini và không trừ thêm credit.
+   - `YOUTUBE`: kiểm URL (BR-U05-22), tạo `YoutubeSource`, tạo job `YOUTUBE_RESOLVE`.
+3. `SourceDocument` mới ghi `chargedToAccountId` của người tải/phát hành rồi ở `PENDING` → tạo job `RAG_INGEST` (BR-U05-31, 39). Nguồn đã `INDEXED` dùng lại thì không gọi Gemini và không trừ thêm credit.
 
 ## F3 - Phát hành
 1. Kiểm quyền, `DRAFT` có ≥ 1 mục (BR-U05-13).
@@ -20,12 +20,12 @@
 1. Người quản lý lớp chọn bài cấp môn có bản `PUBLISHED` → tạo `ClassLessonLink` trong chương của lớp; audit.
 2. Gỡ liên kết → xóa link; audit.
 
-## F5 - Job `U05_YOUTUBE_RESOLVE` (worker)
+## F5 - Job `YOUTUBE_RESOLVE` (worker)
 1. `VIDEO` → một `SourceDocument` loại `YOUTUBE_VIDEO`; `PLAYLIST` → gọi YouTube Data API lấy ≤ 50 video, mỗi video một `SourceDocument` (`youtubeSourceId`, `videoTitle`, `orderNo`).
-2. Mỗi video tạo hoặc dùng lại `SourceDocument` (`contentKey = videoId`, tài khoản chịu phí lấy từ người thêm nguồn YouTube) → job `U05_INGEST`.
+2. Mỗi video tạo hoặc dùng lại `SourceDocument` (`contentKey = videoId`, tài khoản chịu phí lấy từ người thêm nguồn YouTube) → job `RAG_INGEST`.
 3. URL không tồn tại/riêng tư → `YoutubeSource.FAILED`.
 
-## F6 - Job `U05_INGEST` (worker)
+## F6 - Job `RAG_INGEST` (worker)
 1. `SourceDocument` → `PROCESSING`.
 2. Lấy chữ: `TEXT` từ markdown; `FILE` mở qua U03 và trích chữ theo trang; `YOUTUBE_VIDEO` lấy caption (BR-U05-33).
 3. Không có chữ → `NO_TEXT`; không caption → `NO_CAPTION`; kết thúc.

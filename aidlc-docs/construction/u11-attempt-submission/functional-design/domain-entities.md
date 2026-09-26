@@ -69,7 +69,7 @@ Cấu hình loại bài, chính sách (hạn, nộp trễ, giờ làm, thi thử
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `SubmissionQueryPort` | U13, U15, U16 | Bài nộp, nội dung, lượt được chấm |
-| Event `u11.submission.submitted` | U13, U15, U16 | `{attemptId, publicationId, learnerId, late, submitMode}` |
+| `PublicationLifecyclePort.onRetired` | U08 khai báo (`C`) | Tạo job tự nộp mọi lượt dở khi bài bị ngưng giao |
 
 ### Port U11 dùng
 
@@ -81,5 +81,7 @@ Cấu hình loại bài, chính sách (hạn, nộp trễ, giờ làm, thi thử
 | `BankQueryPort` | U06 | Góc nhìn người học của câu hỏi |
 | `CodeRunPort` | U13 (`C`) | Chạy thử code khi đang làm |
 | `GradeQueryPort` | U15 (`C`: ẩn điểm tới khi U15 có) | Hiển thị điểm/đáp án theo BR-U11-33 |
+| `SubmissionSubmittedPort` | U11 khai báo, U15 cài (`C`) | Gọi trong transaction nộp: U15 tạo job chấm. Chưa có U15 → adapter rỗng |
+| `JobPort`, `AuditPort` | U02 | Tự nộp, audit |
 | `ClassAccessPort` | U04 | Ghi danh |
 | `ArtifactPort` | U03 | Ảnh trong tài liệu |
