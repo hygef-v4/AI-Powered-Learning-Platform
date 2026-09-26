@@ -24,6 +24,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort`, `SubjectScopePort` | U04 | Dùng thật |
 | `DocumentModelPort` | U09 (`C`) | Chưa có U09: chỉ kiểm cấu trúc JSON; U09 thay |
 | `ContentRefPort` | U05 (`C`) | Chưa có U05: adapter tạm chấp nhận mọi ID (chỉ lưu); U05 thay bằng bản thật |
+| `AiDraftPort` | U13 (`C`) | Chưa có U13: ẩn nút "Nhờ AI tạo câu hỏi"; U13 thay bằng bản thật |
 
 ### Dữ liệu U06 sở hữu
 

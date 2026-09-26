@@ -4,7 +4,7 @@
 
 - Dependency đi từ controller/adapter vào application/domain rồi ra port; domain không phụ thuộc SDK provider.
 - Ghi liên module chỉ qua port công khai hoặc event sau commit.
-- Dùng chung một PostgreSQL nhưng mỗi bảng thuộc đúng một module (unit); không module nào đọc bảng của module khác.
+- Dùng chung một PostgreSQL (45 bảng). Mỗi bảng có một unit chủ tạo migration; phần lớn bảng chỉ unit chủ đọc/ghi. Năm bảng dùng chung (mục 4a) cho phép unit khác thêm cột của mình bằng migration riêng và ghi qua port của unit chủ; không unit nào đọc/ghi repository của unit khác trực tiếp.
 - Worker dùng cùng contract và không vượt phạm vi quyền của job nguồn.
 
 ## 2. Dependency matrix
@@ -38,6 +38,18 @@ flowchart LR
 
 Trình duyệt gọi Nginx, Nginx chuyển tới backend Spring Boot. Backend lưu dữ liệu trong PostgreSQL (có pgvector), dùng Redis cho phiên/bộ đếm/token, gửi job và event qua RabbitMQ cho worker. Backend và worker lưu file lên Google Drive, gọi Gemini cho AI và embedding, gọi Judge0 trong mạng sandbox để chạy code, gọi PayOS cho thanh toán. Worker gửi email qua SMTP và lấy playlist/caption từ YouTube.
 
+## 3a. Bảng dùng chung
+
+Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc đứng riêng, có use case liệt kê, hoặc gắn hệ thống ngoài; quan hệ 1-1 thành cột của bảng kia.
+
+| Bảng | Unit chủ (tạo bảng) | Unit khác ghi | Phần ghi | Qua |
+|---|---|---|---|---|
+| `accounts` | U01 | U07 | Số dư credit | Migration U07 thêm cột; chỉ `CreditLedgerService` của U07 ghi |
+| `app_settings` | U01 | U07, U13 | Khóa `u07.*`, `u13.*` | Mỗi unit chỉ ghi khóa có tiền tố của mình |
+| `assignments` | U08 | U09, U10 | Cấu hình loại bài, khung (U09); lineage (U10) | `AssignmentExtensionPort` |
+| `publications` | U08 | U10, U15 | Chính sách thi thử (U10); công bố điểm (U15) | `AssignmentExtensionPort` |
+| `student_groups` | U12 | U14 | Tài liệu nhóm | `GroupDocumentStorePort` |
+
 ## 4. Data ownership
 
 | Dữ liệu | Owner | Dùng bởi (qua port/event) |
@@ -54,7 +66,7 @@ Trình duyệt gọi Nginx, Nginx chuyển tới backend Spring Boot. Backend l�
 | Template, lineage, chính sách thi thử | U10 | U11, U15 |
 | Lượt làm, bài nộp | U11 | U13, U15, U16 |
 | Bộ nhóm, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
-| Cấu hình AI, đề xuất AI, lần chạy code | U13 | U05, U08, U11, U15 |
+| Cấu hình AI, đề xuất AI, lần chạy code | U13 | U05, U06, U08, U10, U11, U15 |
 | Tài liệu nhóm, mục, bản nộp nhóm | U14 | U13, U15, U16 |
 | Điểm, lịch sử điểm, sổ điểm đọc qua port | U15 | U11, U16 |
 | Thông báo, email outbox, nhắc hạn, dashboard và xuất bảng điểm theo yêu cầu | U16 | - |

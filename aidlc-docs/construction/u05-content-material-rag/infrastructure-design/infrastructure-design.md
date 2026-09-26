@@ -30,7 +30,7 @@
 ## 4. Migration
 
 `V20260925_1200__u05_content_rag.sql`:
-- `chapters`, `lessons`, `lesson_versions` (unique `(lesson_id, version_no)`, partial unique 1 `DRAFT` và 1 `PUBLISHED` mỗi bài), `lesson_items`, `class_lesson_links`, `youtube_sources`, `youtube_videos`; `class_announcements`, `class_questions`, `class_answers` (index theo classId/questionId và createdAt, không xóa cứng).
+- `chapters`, `lessons`, `lesson_versions` (unique `(lesson_id, version_no)`, partial unique 1 `DRAFT` và 1 `PUBLISHED` mỗi bài), `lesson_items`, `class_lesson_links`, `youtube_sources`; `source_documents` có thêm `youtube_source_id`, `video_title`, `order_no` cho video YouTube (index `(youtube_source_id, order_no)`); `class_announcements`, `class_questions`, `class_answers` (index theo classId/questionId và createdAt, không xóa cứng).
 - `source_documents` (unique `content_key`, `charged_to_account_id`), `youtube_sources.charged_to_account_id`; `rag_chunks` với `embedding vector(768)` và index `USING hnsw (embedding vector_cosine_ops)`, index `source_document_id`.
 
 ## 5. Compliance

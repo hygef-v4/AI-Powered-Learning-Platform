@@ -33,7 +33,7 @@ Bước 1-6 dưới đây là khung dự án cho mọi unit (Maven, cấu hình,
 
 ### Dữ liệu U01 sở hữu
 
-PostgreSQL `accounts`, `account_import_batches`, `account_import_rows`; Redis `u01:refresh:*`, `u01:otp:*`, `u01:rl:*`; queue `jobs.u01.otp-delivery` (khai báo qua topology của U02).
+PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U07), `app_settings` (bảng cấu hình dùng chung, U01 tạo, mỗi unit ghi khóa có tiền tố của mình); Redis `u01:refresh:*`, `u01:otp:*`, `u01:rl:*`; queue `jobs.u01.otp-delivery` (khai báo qua topology của U02).
 
 ## 2. Cấu trúc thư mục
 
@@ -84,7 +84,7 @@ PostgreSQL `accounts`, `account_import_batches`, `account_import_rows`; Redis `u
 
 ### Nhóm B - Domain và business logic (US-IAM-001…007)
 
-- [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, kiểm `AllowedEmailDomains`, chuyển trạng thái hợp lệ (BR-U01-03, 70…73).
+- [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, kiểm tên miền theo `u01.allowedEmailDomains`, chuyển trạng thái hợp lệ (BR-U01-03, 70…73).
 - [ ] **Bước 8** - `PasswordPolicy` (BR-U01-30, 31; ≤ 72 byte), `PasswordHasher` bcrypt cost cấu hình.
 - [ ] **Bước 9** - Port: khai báo `AvatarPort`, `SubjectScopePort`, `ClassScopePort` + `AvatarUnavailableAdapter`, `NoAssignmentScopeAdapter`; khai báo `AuthorizationPort`, `AccountLookupPort`. Dùng `AuditPort`, `JobPort` của U02 (cần U02 Bước 4).
 - [ ] **Bước 10** - `OtpService` tạo job `U01_OTP_DELIVERY` qua `JobPort.enqueue` trong cùng transaction (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U02: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP; lỗi thì U02 retry theo backoff, hết lượt job `FAILED` + log ERROR (BR-U01-20…27, NFR-U01-30, 31).
@@ -94,7 +94,7 @@ PostgreSQL `accounts`, `account_import_batches`, `account_import_rows`; Redis `u
 - [ ] **Bước 14** - `ProfileService`: F7 (US-IAM-004); đổi ảnh qua `AvatarPort.validateAvatar`, tắt khi adapter tạm báo chưa hỗ trợ.
 - [ ] **Bước 15** - `AuthorizationService` cài `AuthorizationPort`: mặc định từ chối, kết hợp role + `SubjectScopePort`/`ClassScopePort`; không gọi được U04 → từ chối (F13; BR-U01-62, 93; US-IAM-005). Thay `FakeAuthorizationPort` của U02 (và U03 nếu có) bằng bean này.
 - [ ] **Bước 16** - `AccountAdminService`: tạo, danh sách, đổi role (tăng `credentialVersion`, BR-U01-63), vô hiệu hóa/mở lại, bảo vệ admin tự hạ và admin cuối, chặn hạ role khi còn phụ trách môn/lớp (F8, F9, F11, F12; BR-U01-64; US-IAM-005, 007).
-- [ ] **Bước 17** - `AccountImportService`: CSV ≤ 1000 dòng, kiểm từng dòng, commit lô, idempotent theo checksum, cấm tạo ADMIN (F10; BR-U01-80…83; US-IAM-007).
+- [ ] **Bước 17** - `AccountImportService`: CSV ≤ 1000 dòng, kiểm từng dòng, trả kết quả không lưu; xác nhận thì kiểm lại và tạo dòng hợp lệ trong một transaction; audit kèm checksum; cấm tạo ADMIN (F10; BR-U01-80…83; US-IAM-007).
 - [ ] **Bước 18** - `AccountLookupService` cài `AccountLookupPort` cho U04, U16 (chỉ trả email, tên hiển thị, role, trạng thái).
 - [ ] **Bước 19** - Audit qua `AuditPort` của U02 mọi sự kiện BR-U01-90; không đưa mật khẩu, OTP, token, số điện thoại vào payload.
 - [ ] **Bước 20** - Unit test cho mọi `BR-U01-xx` ở bước 7-19 (mock port của U02, U03, U04).
@@ -102,7 +102,7 @@ PostgreSQL `accounts`, `account_import_batches`, `account_import_rows`; Redis `u
 
 ### Nhóm C - Repository và migration
 
-- [ ] **Bước 22** - Flyway `V20260924_1600__u01_accounts.sql`: `accounts` (email duy nhất, status 3 giá trị, `credential_version`, `failed_login_count`, `locked_until`, `phone_number`, `avatar_ref`), `account_import_batches`, `account_import_rows`; seed một ADMIN ở trạng thái chờ kích hoạt lấy email từ biến môi trường.
+- [ ] **Bước 22** - Flyway `V20260924_1600__u01_accounts.sql`: `accounts` (email duy nhất, status 3 giá trị `PENDING`/`ACTIVE`/`DISABLED`, `credential_version`, `failed_login_count`, `locked_until`, `phone_number`, `avatar_ref`), `app_settings` (`key` khóa chính, `value` JSON, `updated_by`, `updated_at`); seed khóa `u01.allowedEmailDomains` và một ADMIN ở trạng thái `PENDING` lấy email từ biến môi trường.
 - [ ] **Bước 23** - Repository JPA, adapter Redis cho refresh/OTP, Bucket4j proxy manager.
 - [ ] **Bước 24** - Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ, Mailpit): kích hoạt đầu-cuối qua bảng `jobs` + worker của U02 (cần U02 Bước 13-14), đăng nhập, khóa tạm, refresh dùng lại, import lặp lại cùng file.
 - [ ] **Bước 25** - Tóm tắt repository: `code/repository-summary.md`.

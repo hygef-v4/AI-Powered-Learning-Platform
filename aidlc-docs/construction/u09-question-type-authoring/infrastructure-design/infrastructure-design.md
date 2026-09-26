@@ -5,7 +5,7 @@
 | Thành phần | Chạy ở |
 |---|---|
 | Cấu hình loại bài, khung, nhập/xuất DOCX, kiểm tài liệu, rút gọn XML | `backend` |
-| Bảng `question_type_config`, `document_skeletons` | `postgres` |
+| Cột `type_config`, `skeleton` của `assignments` (U08 tạo bảng); khung câu ngân hàng trong `bank_items.definition` (U06) | `postgres` |
 | Ảnh trong tài liệu | U03 purpose `DOCUMENT_IMAGE` (Google Drive) |
 | Trình vẽ | `https://embed.diagrams.net` (trình duyệt tải trực tiếp, không qua server) |
 
@@ -24,8 +24,8 @@ U09 không chạy trong `worker`, không có queue, Redis key hay secret riêng.
 ## 4. Migration
 
 `V20260925_1600__u09_question_type.sql`:
-- `question_type_config (assignment_id PK FK assignments, assignment_type, config jsonb, updated_at)`.
-- `document_skeletons (id, assignment_id FK NULL, bank_item_id FK NULL, blocks jsonb, source_docx_name, created_by, updated_at)`, `CHECK ((assignment_id IS NULL) <> (bank_item_id IS NULL))`.
+- `ALTER TABLE assignments ADD COLUMN type_config jsonb, ADD COLUMN skeleton jsonb` (không tạo bảng riêng; cần migration U08 chạy trước).
+- Khung của câu `DOCUMENT` trong ngân hàng nằm trong `bank_items.definition` của U06; U09 chỉ kiểm qua `DocumentModelPort`.
 
 ## 5. Compliance
 

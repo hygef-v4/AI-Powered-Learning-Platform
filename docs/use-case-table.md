@@ -12,8 +12,8 @@ This table follows the current 77-use-case MVP catalog. IDs are renumbered seque
 | 06 | View Profile | Profile Management | Lets a user view their own profile and account information. |
 | 07 | Update Profile | Profile Management | Lets a user edit the permitted profile fields but not their identifying email or role. |
 | 08 | View User Accounts | Account Management | Lets the administrator browse the account list and account details by role or status. |
-| 09 | Create Account Manually | Account Management | Lets the administrator create one school-issued account in PENDING_ACTIVATION. No email is sent at creation, and the administrator does not set the password. |
-| 10 | Import Accounts in Bulk | Account Management | Lets the administrator import school-issued accounts from a file into PENDING_ACTIVATION, receive per-row success or error results, and send no email during import. |
+| 09 | Create Account Manually | Account Management | Lets the administrator create one school-issued account in PENDING. No email is sent at creation, and the administrator does not set the password. |
+| 10 | Import Accounts in Bulk | Account Management | Lets the administrator import school-issued accounts from a file into PENDING, receive per-row success or error results, and send no email during import. |
 | 11 | Update Account and Role | Account Management | Lets the administrator update account information and the account's highest role with privilege-escalation checks. |
 | 12 | Manage Account Status | Account Management | Lets the administrator disable or re-enable an account without deleting business history. Temporary sign-in restrictions after failed attempts are handled by LoginThrottle. |
 | 13 | View Subjects | Subject Management | Lets the administrator view subjects with their details, subject manager and classes. |

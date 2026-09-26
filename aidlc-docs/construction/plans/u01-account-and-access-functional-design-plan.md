@@ -25,7 +25,7 @@
 - Đổi role hoặc phạm vi thì tăng `credential_version` để thu hồi mọi phiên.
 - U01 chỉ đặt `accounts.role`; U04 gán môn/lớp cụ thể. Hạ role bị chặn khi người đó còn phụ trách môn/lớp.
 - Admin không tự hạ role hay tự khóa mình; luôn còn ít nhất một ADMIN hoạt động.
-- Trạng thái tài khoản chỉ còn PENDING_ACTIVATION, ACTIVE, DISABLED; khóa/mở khóa là ACTIVE ⇄ DISABLED.
+- Trạng thái tài khoản chỉ còn PENDING, ACTIVE, DISABLED; khóa/mở khóa là ACTIVE ⇄ DISABLED.
 - Hồ sơ tự sửa: tên hiển thị, số điện thoại, ảnh đại diện. Ảnh đại diện đi qua `AvatarPort` do U03 cung cấp (cạnh `C` U01 → U03).
 - Nhập hàng loạt chỉ CSV, tối đa 1000 dòng; email trùng báo lỗi dòng, không ghi đè.
 - Đăng xuất chỉ thu hồi phiên hiện tại; đổi mật khẩu thu hồi các phiên khác.
@@ -75,6 +75,6 @@
 - BR-U01-13: kích hoạt xong không tự đăng nhập, người dùng đăng nhập lại.
 - BR-U01-34: đặt lại mật khẩu qua OTP thu hồi mọi phiên; đổi mật khẩu giữ phiên hiện tại.
 - BR-U01-84: nhập hàng loạt không được tạo tài khoản ADMIN.
-- BR-U01-72: mở lại tài khoản chưa từng kích hoạt thì về PENDING_ACTIVATION.
+- BR-U01-72: mở lại tài khoản chưa từng kích hoạt thì về PENDING.
 - Gửi OTP đi qua outbox U02 và handler mail của U01, không chờ U16 ở wave 4.
 

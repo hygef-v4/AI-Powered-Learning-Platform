@@ -23,8 +23,8 @@
         |                 |                     |
         v                 v                     v
    PostgreSQL           Redis              Worker: OtpMailHandler --> SMTP
-   accounts          refresh, OTP,                                (Mailpit local)
-   import batch      rate buckets
+   accounts,         refresh, OTP,                                (Mailpit local)
+   app_settings      rate buckets
 ```
 
 **Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort`/`ClassScopePort`, U01 khai báo, U04 cài) và `OtpService` (tạo job qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận job từ RabbitMQ và gửi SMTP, local dùng Mailpit.
@@ -42,7 +42,7 @@
 | `TokenService` | Phát và xoay JWT/refresh; kiểm `credentialVersion` khi refresh | NFR-U01-10, 11 |
 | `ProfileService` | Sửa tên, số điện thoại, ảnh | F7 |
 | `AccountAdminService` | Tạo, đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F9, F11, F12 |
-| `AccountImportService` | Kiểm và commit CSV theo lô, idempotent theo checksum | F10 |
+| `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
 | `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối | F13 |
 | `OtpMailHandler` (worker) | Nhận job, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì job `FAILED` | NFR-U01-30, 31 |
 | `SensitiveDataMasker` | Che dữ liệu nhạy cảm trong log | NFR-U01-50 |
@@ -51,7 +51,7 @@
 
 | Kho | Khóa / bảng | TTL |
 |---|---|---|
-| PostgreSQL | `accounts`, `account_import_batches`, `account_import_rows` | Vĩnh viễn |
+| PostgreSQL | `accounts`, `app_settings` | Vĩnh viễn |
 | Redis | `refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
 | Redis | `otp:{accountId}:{purpose}` | 10 phút |
 | Redis | `rl:*` (Bucket4j) | Theo cửa sổ nạp lại |

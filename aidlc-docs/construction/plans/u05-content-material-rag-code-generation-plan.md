@@ -29,7 +29,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U05 sở hữu
 
-PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_lesson_links`, `youtube_sources`, `youtube_videos`, `source_documents`, `rag_chunks`, `class_announcements`, `class_questions`, `class_answers`; Redis `u05:embed-tokens:*`; queue `jobs.u05.youtube-resolve`, `jobs.u05.ingest`.
+PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_lesson_links`, `youtube_sources`, `source_documents` (gồm cả video YouTube), `rag_chunks`, `class_announcements`, `class_questions`, `class_answers`; Redis `u05:embed-tokens:*`; queue `jobs.u05.youtube-resolve`, `jobs.u05.ingest`.
 
 ## 2. Cấu trúc
 
@@ -42,7 +42,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
                         RetrievalService, EmbeddingBudget, EmbeddingCreditService,
                         ClassCommunicationService
     domain/             Chapter, Lesson, LessonVersion, LessonItem, ClassLessonLink,
-                        YoutubeSource, YoutubeVideo, SourceDocument, RagChunk, YoutubeUrlParser,
+                        YoutubeSource, SourceDocument, RagChunk, YoutubeUrlParser,
                         ClassAnnouncement, ClassQuestion, ClassAnswer
     ingest/             TextExtractor, Chunker, ChunkWriter
     infrastructure/     JPA repository, VectorSearchRepository (JdbcTemplate),

@@ -2,7 +2,7 @@
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu nội dung | Bảng riêng `submission_contents` (`jsonb`, TOAST nén) tách khỏi `submissions` | Danh sách lượt không phải đọc nội dung lớn |
+| Lưu nội dung | Cột `content jsonb` trong `submissions` (TOAST nén, lưu ngoài dòng khi lớn) | Danh sách lượt chọn cột metadata nên không phải đọc nội dung lớn; bớt một bảng |
 | Tự nộp | Job U02 `U11_AUTO_SUBMIT` đặt tại `deadlineAt`; listener event `ASSIGNMENT_RETIRED` | Dùng lại U02 |
 | Nén request | Client gzip (`CompressionStream`), backend giải nén theo `Content-Encoding` | Giảm băng thông tự lưu |
 | Rate limit | Bucket4j + Redis | Đã có |

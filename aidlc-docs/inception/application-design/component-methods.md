@@ -124,7 +124,7 @@ setSimulationPolicy(instructor, publicationId, policy) -> SimulationPolicy
 startAttempt(learner, publicationId) -> AttemptSnapshot
 saveAttempt(learner, attemptId, content, contentVersion) -> SaveReceipt
 submitAttempt(learner, attemptId) -> SubmissionReceipt
-saveGroupSet(instructor, assignmentId, groupSet, version) -> GroupSet
+saveGroupSet(instructor, assignmentId, groups[], versions) -> GroupSet
 randomSplit(instructor, assignmentId, maxSize) -> GroupSetPreview
 requestLeaderChange(learner, groupId, reason, proposedLeaderId?) -> LeaderChangeRequest
 decideLeaderChange(instructor, requestId, decision) -> Group
@@ -132,7 +132,7 @@ claimSection(learner, sectionId) -> Section
 saveSectionDraft(learner, sectionId, blocks, version) -> Section
 markSectionDone(learner, sectionId) -> SectionRevision
 releaseSection(actor, sectionId) -> Section
-submitGroupDocument(leader, groupDocumentId) -> GroupSubmission
+submitGroupDocument(leader, groupId) -> GroupSubmission
 ```
 
 ## AI, Code Execution, Grading, Notification (U13, U15, U16)

@@ -6,7 +6,7 @@
 
 ## F2 - Mở tài liệu nhóm
 1. Kiểm thành viên/giảng viên (BR-U14-03); trả tài liệu (phần chung + `publishedBlocks` + trạng thái mục + người nhận + bình luận chưa giải quyết).
-2. Mở kênh realtime của `groupDocumentId`.
+2. Mở kênh realtime của tài liệu nhóm (`groupId`).
 
 ## F3 - Nhận mục
 1. UPDATE có điều kiện `status IN (OPEN, IN_REVIEW)` → `CLAIMED`, `claimedBy`; `draftBlocks = publishedBlocks` (BR-U14-10).

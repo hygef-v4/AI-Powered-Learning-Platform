@@ -21,7 +21,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AuditPort`, `EventPublisherPort` | U02 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort`, `RubricPort`, `QuestionView` | U06 | Dùng thật |
-| `AssignmentQueryPort` | U08 | Dùng thật |
+| `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Dùng thật (ghi trạng thái công bố điểm qua `AssignmentExtensionPort`) |
 | `TypeConfigPort`, `DocumentEditor` | U09 | Dùng thật |
 | `SimulationPolicyPort` | U10 | Dùng thật |
 | `SubmissionQueryPort`, event `u11.submission.submitted` | U11 | Dùng thật |
@@ -31,7 +31,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U15 sở hữu
 
-PostgreSQL `grades`, `grade_history`, `publication_grade_releases`; queue `u15.grading-listener`.
+PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_released_at` của `publications` (U15 thêm cột, ghi qua `AssignmentExtensionPort` của U08); queue `u15.grading-listener`.
 
 ## 2. Cấu trúc
 
@@ -42,7 +42,7 @@ PostgreSQL `grades`, `grade_history`, `publication_grade_releases`; queue `u15.g
     application/        GradeWriter, GradingService, BulkGradeService, PublishService,
                         GradebookService, QuizScorer
     domain/             Grade, GradeStatus, GradeMethod, TargetKind, GradeHistory,
-                        PublicationGradeRelease, LearnerGradeView, TeacherGradeView
+                        GradeRelease, LearnerGradeView, TeacherGradeView
     infrastructure/     JPA repository
     worker/             SubmissionGradeListener
     port/               GradeQueryPort, GradebookQueryPort

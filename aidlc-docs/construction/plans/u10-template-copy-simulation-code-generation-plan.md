@@ -21,13 +21,14 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AuditPort` | U02 | Dùng thật |
 | `ClassAccessPort`, `SubjectScopePort` | U04 | Dùng thật |
 | `BankCopyPort` | U06 | Dùng thật (sao chép cấp lớp → lớp) |
-| `AssignmentQueryPort`, `AssignmentService`, `PublicationService`, `PublishDialog` | U08 | Dùng thật; U08 cần có `ownerType`, version, `createDraftFrom` |
+| `AssignmentQueryPort`, `AssignmentService`, `PublicationService`, `AssignmentExtensionPort`, `PublishDialog` | U08 | Dùng thật; U08 cần có `ownerType`, version, `createDraftFrom`; ghi lineage và chính sách thi thử qua `AssignmentExtensionPort` |
 | `TypeConfigPort.copy` | U09 | Dùng thật |
+| `AiDraftPort` | U13 (`C`) | Chưa có U13: ẩn nút "Nhờ AI tạo câu hỏi" trong trình soạn template; U13 thay bằng bản thật |
 | U10 cung cấp `SimulationPolicyPort` | cho U11, U15 | U11/U15 dùng khi được code |
 
 ### Dữ liệu U10 sở hữu
 
-PostgreSQL `template_releases`, `assignment_lineage`, `simulation_policies`.
+PostgreSQL `template_releases`; cột lineage của `assignments` và cột `simulation_policy`, `policy_locked_at` của `publications` (U08 tạo bảng, U10 thêm cột và ghi qua `AssignmentExtensionPort`).
 
 ## 2. Cấu trúc
 

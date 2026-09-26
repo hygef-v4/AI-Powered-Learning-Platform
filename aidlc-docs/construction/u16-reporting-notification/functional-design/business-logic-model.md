@@ -11,9 +11,9 @@
 3. Job gửi: tra email (U01), render mẫu tiếng Việt, gửi SMTP (Gmail/Mailpit), `SENT`/retry/`FAILED` (BR-U16-14).
 
 ## F3 - Nhắc hạn nộp
-1. `u08.assignment.opened` → tạo `DeadlineReminder` tại `closesAt − 24h` (bỏ qua nếu đã qua) + job U02 tại thời điểm đó.
+1. `u08.assignment.opened` → tạo job U02 `U16_DEADLINE_REMINDER` hẹn lúc `closesAt − 24h` (bỏ qua nếu đã qua), `idempotencyKey` = `publicationId:closesAt`.
 2. Job: kiểm publication còn `OPEN` và hạn không đổi → lấy người chưa nộp (U11/U14) → tạo thông báo `DEADLINE_REMINDER` (BR-U16-20…22).
-3. Đổi hạn (U08 sửa lịch) → cập nhật `remindAt` (job cũ tự bỏ qua vì so thời điểm).
+3. Đổi hạn (U08 chỉ cho kéo dài khi `OPEN`) → job cũ chạy thấy `expectedClosesAt` khác hạn hiện tại thì không nhắc, và tạo job mới hẹn lúc hạn mới − 24h (khóa `publicationId:closesAt` mới).
 
 ## F4 - Người dùng
 1. Chuông thông báo: số chưa đọc, danh sách, đánh dấu đã đọc/tất cả đã đọc.

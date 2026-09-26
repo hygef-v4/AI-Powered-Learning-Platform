@@ -6,14 +6,14 @@
   2. U08 `createDraftFrom(source, targetOwner)` sao chép thành phần.
   3. Với thành phần trỏ câu/rubric ngân hàng cấp lớp nguồn: U06 `copyToClass` → thay tham chiếu (BR-U10-13).
   4. U09 `TypeConfigPort.copy`.
-  5. INSERT lineage; audit sau commit.
+  5. Ghi lineage vào bài mới (qua `AssignmentExtensionPort` của U08, cùng transaction); audit sau commit.
 - Mọi port gọi đồng bộ trong cùng transaction DB (cùng backend) → lỗi ở đâu cũng rollback (NFR-U10-10).
 
 ## P2 - Diff
 - `AssignmentDiffer`: hướng dẫn qua `java-diff-utils` theo dòng; thành phần so khớp theo khóa (`bankItem.stableKey` hoặc hash `inlineDefinition`), đánh dấu `ADDED`, `REMOVED`, `MOVED`, `POINTS_CHANGED`, `CONTENT_CHANGED` (khác version ngân hàng hoặc khác hash); cấu hình loại bài so theo trường (NFR-U10-02).
 
 ## P3 - Khóa chính sách thi thử
-- `UPDATE simulation_policies SET locked_at = now() WHERE publication_id = ? AND locked_at IS NULL`; 0 dòng nghĩa là đã khóa trước đó, vẫn thành công (NFR-U10-11).
+- `UPDATE publications SET policy_locked_at = now() WHERE id = ? AND policy_locked_at IS NULL` (qua `AssignmentExtensionPort` của U08); 0 dòng nghĩa là đã khóa trước đó, vẫn thành công (NFR-U10-11).
 - `SimulationPolicyService.update` từ chối khi `locked_at` có giá trị.
 
 ## P4 - Kết quả thi thử

@@ -4,11 +4,11 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U07-01 | Mọi thay đổi số dư đi qua một hàm duy nhất: khóa hàng ví (`SELECT ... FOR UPDATE`), ghi sổ cái, cập nhật số dư trong cùng transaction. | BR-U07-12, 34 |
+| NFR-U07-01 | Mọi thay đổi số dư đi qua một hàm duy nhất: khóa dòng tài khoản chứa số dư (`SELECT ... FOR UPDATE`), ghi sổ cái, cập nhật số dư trong cùng transaction. | BR-U07-12, 34 |
 | NFR-U07-02 | Unique DB: `orderCode`, `(account_id, idempotency_key)`, `eventKey`, `requestRef`; cộng credit `PURCHASE` unique theo `payment_id`. | BR-U07-04, 12, 41 |
 | NFR-U07-03 | Tiền lưu số nguyên VND (`bigint`), credit số nguyên; không dùng số thực. | Thiết kế |
 | NFR-U07-04 | User `app` không được UPDATE/DELETE bảng sổ cái (chỉ INSERT, SELECT). | BR-U07 sổ cái |
-| NFR-U07-05 | Test tổng sổ cái = số dư ví sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời). | NFR-004 |
+| NFR-U07-05 | Test tổng sổ cái = số dư sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời). | NFR-004 |
 
 ## 2. PayOS
 

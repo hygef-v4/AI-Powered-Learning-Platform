@@ -29,12 +29,12 @@
 | BR-U07-20 | Job đối soát mỗi 10 phút kiểm giao dịch `PENDING` quá 5 phút và `EXPIRED` trong 24 giờ qua bằng API PayOS; kết quả áp dụng như webhook (BR-U07-12). | US-PAY-002 S4 |
 | BR-U07-22 | PayOS không trả lời hoặc dữ liệu không xác minh được → giữ nguyên trạng thái, không cộng, ghi lỗi, retry lần sau. | US-PAY-002 S5 |
 
-## 4. Ví credit
+## 4. Số dư credit
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-30 | 1 credit = 1 000 token Gemini, làm tròn lên mỗi lần gọi. | Câu 4 |
-| BR-U07-31 | Mọi tài khoản được tặng cùng một số credit mỗi tháng (`monthlyFreeCredits`, admin cấu hình). Tháng mới: `freeBalance` đặt lại bằng mức tặng (không cộng dồn); làm lười khi ví được đọc lần đầu trong tháng. | Câu 4, 5 |
+| BR-U07-31 | Mọi tài khoản được tặng cùng một số credit mỗi tháng (`u07.monthlyFreeCredits` trong `app_settings`, admin cấu hình). Tháng mới: `freeBalance` đặt lại bằng mức tặng (không cộng dồn); làm lười khi số dư được đọc lần đầu trong tháng. | Câu 4, 5 |
 | BR-U07-32 | Credit mua không hết hạn. | Câu 3 |
 | BR-U07-33 | Trừ credit tặng trước, credit mua sau. | Câu 4 |
 | BR-U07-34 | Số dư không bao giờ âm. | Thiết kế |
@@ -44,8 +44,8 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-40 | Trước mỗi lời gọi Gemini tạo nội dung hoặc embedding, U05/U13 `reserve` số credit ước tính của tài khoản chịu phí; không đủ → từ chối "không đủ credit", không gọi Gemini. Embedding nền tính cho người tải/phát hành học liệu; embedding truy xuất tính cho người yêu cầu AI. | FR-021, quyết định đồng bộ 2026-09-25 |
-| BR-U07-41 | `reserve` idempotent theo `requestRef`. | Thiết kế |
-| BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần còn lại trong ví, không để âm. | Thiết kế |
+| BR-U07-41 | `reserve` idempotent theo `requestRef`: mỗi `requestRef` chỉ có một dòng sổ `RESERVE`; mỗi dòng `RESERVE` chỉ được đóng một lần bằng `SETTLE` hoặc `RELEASE`. | Thiết kế |
+| BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần số dư còn lại, không để âm. | Thiết kế |
 | BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi hoặc hết hạn mức hệ thống trước khi gọi provider. Phần giữ quá 30 phút tự trả lại (job quét). | Thiết kế |
 
 ## 6. Audit

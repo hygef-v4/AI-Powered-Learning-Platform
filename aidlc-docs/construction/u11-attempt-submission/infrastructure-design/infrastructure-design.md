@@ -6,7 +6,7 @@
 |---|---|
 | `AttemptStarter`, `DraftSaver`, `AttemptSubmitter`, `AttemptQueryService` | `backend` |
 | `AutoSubmitHandler`, `RetiredListener` | `worker` |
-| Bảng `submissions`, `submission_contents` | `postgres` |
+| Bảng `submissions` (gồm nội dung bài làm) | `postgres` |
 | Rate limit lưu | `redis`, khóa `u11:save:{learnerId}` |
 | Queue | `jobs.u11.auto-submit`; `u11.retired-listener` bind `platform.events` routing key `u08.assignment.retired` |
 | Event phát | `u11.submission.submitted` trên `platform.events` |
@@ -19,8 +19,8 @@
 
 `V20260925_1800__u11_attempts.sql`:
 - `submissions` theo `domain-entities.md` §2; unique `(publication_id, learner_id, attempt_no)`; partial unique `(publication_id, learner_id) WHERE status = 'IN_PROGRESS'`; index `(publication_id, status)`, `(learner_id)`.
-- `submission_contents (attempt_id PK FK, content jsonb, content_version, warnings jsonb)`.
-- Trigger `trg_submission_contents_immutable` chặn UPDATE khi lượt `SUBMITTED`.
+- `submissions` có `content jsonb`, `content_version`, `warnings jsonb`; truy vấn danh sách lượt chỉ chọn cột metadata, không đọc `content`.
+- Trigger `trg_submissions_immutable` chặn UPDATE `content` khi lượt đã `SUBMITTED`.
 
 ## 4. Compliance
 

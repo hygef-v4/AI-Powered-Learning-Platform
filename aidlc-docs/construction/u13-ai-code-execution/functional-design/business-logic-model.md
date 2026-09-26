@@ -13,7 +13,7 @@
 
 ## F3 - Kiểm lời giải mẫu
 1. Giảng viên bấm "Kiểm lời giải mẫu" → `CodeRun` `VERIFY` chạy mọi test với cùng giới hạn như bài nộp.
-2. Đạt hết → `SolutionVerification(passed, contentHash)`; `CodeLabCheckPort` cho U08 dùng khi duyệt (BR-U13-33).
+2. Lưu `CodeRun` loại `VERIFY` kèm `contentHash`; đạt hết test thì bài/câu được coi là đã kiểm (`SolutionVerification` suy ra); `CodeLabCheckPort` cho U08 dùng khi duyệt (BR-U13-33).
 
 ## F4 - Chạy thử và chấm code
 1. `TRY`: rate limit, chỉ test công khai, trả kết quả (BR-U13-34, 36).

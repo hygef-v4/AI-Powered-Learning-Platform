@@ -5,7 +5,7 @@
 | Thành phần | Chạy ở |
 |---|---|
 | Template, copy, diff, chính sách thi thử | `backend` |
-| Bảng `template_releases`, `assignment_lineage`, `simulation_policies` | `postgres` |
+| Bảng `template_releases`; cột lineage của `assignments` và cột chính sách thi thử của `publications` (U08 tạo bảng) | `postgres` |
 
 U10 không chạy trong `worker`, không có queue, Redis key, secret hay dịch vụ ngoài.
 
@@ -13,8 +13,8 @@ U10 không chạy trong `worker`, không có queue, Redis key, secret hay dịch
 
 `V20260925_1700__u10_template_copy_simulation.sql`:
 - `template_releases` (FK `assignments`), unique `(template_assignment_id)`, index `(subject_id, status)`.
-- `assignment_lineage (target_assignment_id PK FK, source_assignment_id FK, kind, source_class_id, target_class_id, actor_id, created_at)`; `REVOKE UPDATE, DELETE ON assignment_lineage FROM app`.
-- `simulation_policies (publication_id PK FK publications, max_attempts INT NOT NULL DEFAULT 3 CHECK (max_attempts BETWEEN 1 AND 10), result_policy, answer_release, counts_toward_grade, locked_at)`.
+- `ALTER TABLE assignments ADD COLUMN lineage_kind, source_class_id, lineage_actor_id, lineage_at` (dùng cùng `source_assignment_id` của U08); lineage ghi một lần khi tạo bài, service không cho sửa.
+- `ALTER TABLE publications ADD COLUMN simulation_policy jsonb, policy_locked_at timestamptz`; `CHECK (simulation_policy IS NULL OR (simulation_policy->>'maxAttempts')::int BETWEEN 1 AND 10)`; mặc định `maxAttempts` = 3 do service đặt.
 
 ## 3. Compliance
 

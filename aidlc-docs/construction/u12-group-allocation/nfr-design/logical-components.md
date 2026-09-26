@@ -12,7 +12,7 @@
  | LeaderRequestController --> LeaderRequestService                           |
  | GroupReadinessService (GroupReadinessPort cho U08)                         |
  | MembershipQueryService (GroupMembershipPort cho U14, U16)                  |
- | Repository (group_sets, student_groups, group_members,                     |
+ | Repository (student_groups, group_members,                                 |
  |             leader_change_requests)                                        |
  +----------------------------------------------------------------------------+
 ```

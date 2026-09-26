@@ -1,7 +1,7 @@
 # U12 Group & Allocation - Business Logic Model
 
 ## F1 - Tạo bộ nhóm
-1. Giảng viên mở bài `GROUP` (DRAFT hoặc REVIEWED/LOCKED) → tạo `GroupSet` nếu chưa có.
+1. Giảng viên mở bài `GROUP` (DRAFT hoặc REVIEWED/LOCKED) → xem bộ nhóm của bài (các nhóm cùng `assignmentId`, rỗng nếu chưa có).
 2. Chọn cách: tạo tay (BR-U12-04), chia ngẫu nhiên (BR-U12-05), dùng lại nhóm của bài khác (BR-U12-06).
 3. Lưu nguyên khối, kiểm BR-U12-02, 03, 07; audit.
 

@@ -12,7 +12,7 @@
  |                                     --> U08, U06 (copyToClass), U09 copy |
  | DiffController --> AssignmentDiffer --> U08 (đọc version)               |
  | SimulationPolicyService (SimulationPolicyPort), SimulationResultCalculator|
- | Repository (template_releases, assignment_lineage, simulation_policies)  |
+ | Repository (template_releases) + AssignmentExtensionPort (U08)           |
  +--------------------------------------------------------------------------+
 ```
 

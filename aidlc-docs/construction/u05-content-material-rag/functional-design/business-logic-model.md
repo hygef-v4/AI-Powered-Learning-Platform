@@ -21,7 +21,7 @@
 2. Gỡ liên kết → xóa link; audit.
 
 ## F5 - Job `U05_YOUTUBE_RESOLVE` (worker)
-1. `VIDEO` → một `YoutubeVideo`; `PLAYLIST` → gọi YouTube Data API lấy ≤ 50 video.
+1. `VIDEO` → một `SourceDocument` loại `YOUTUBE_VIDEO`; `PLAYLIST` → gọi YouTube Data API lấy ≤ 50 video, mỗi video một `SourceDocument` (`youtubeSourceId`, `videoTitle`, `orderNo`).
 2. Mỗi video tạo hoặc dùng lại `SourceDocument` (`contentKey = videoId`, tài khoản chịu phí lấy từ người thêm nguồn YouTube) → job `U05_INGEST`.
 3. URL không tồn tại/riêng tư → `YoutubeSource.FAILED`.
 

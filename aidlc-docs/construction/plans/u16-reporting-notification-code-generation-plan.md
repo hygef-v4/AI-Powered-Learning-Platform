@@ -31,7 +31,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U16 sở hữu
 
-PostgreSQL `notifications`, `email_outbox`, `notification_preferences`, `deadline_reminders`; Redis `u16:email:*`; queue `u16.notification-listener`, `jobs.u16.*`.
+PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc hạn là job `U16_DEADLINE_REMINDER` trong bảng `jobs` của U02; Redis `u16:email:*`; queue `u16.notification-listener`, `jobs.u16.*`.
 
 ## 2. Cấu trúc
 
@@ -44,7 +44,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`, `deadlin
                         LearnerDashboardService, GradebookExportService
     email/              EmailDispatcher, EmailSendHandler, templates (Thymeleaf, tiếng Việt)
     domain/             Notification, NotificationType, EmailOutbox, NotificationPreference,
-                        DeadlineReminder
+                        DeadlineReminderScheduler (tạo job U02, không có bảng)
     infrastructure/     JPA repository
     worker/             NotificationListener, DeadlineReminderHandler, RetentionHandler
 /backend/src/main/resources/db/migration/u16/
@@ -69,7 +69,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`, `deadlin
 - [ ] **Bước 3** - `NotificationListener` cho mọi event, gồm bài đăng/câu hỏi/trả lời lớp từ U05, + `NotificationFanout` theo lô, idempotent, preference, tín hiệu realtime (F1, P1, BR-U16-01…06, 11).
 - [ ] **Bước 4** - `SseHub` (U14) thêm kênh theo người dùng; endpoint SSE chuông thông báo.
 - [ ] **Bước 5** - `EmailDispatcher` (ưu tiên, trần Redis, dời ngày sau, 1 email/giây) và `EmailSendHandler` (idempotent, retry, `FAILED`, bỏ nhắc đã quá hạn) (F2, P2, P3, BR-U16-12…14).
-- [ ] **Bước 6** - `DeadlineReminderHandler`: lên lịch khi bài mở, bỏ qua khi hạn đổi, hủy khi ngừng giao/đóng, người nhận chưa nộp (F3, P4, BR-U16-20…22).
+- [ ] **Bước 6** - `DeadlineReminderHandler`: tạo job khi bài mở; khi chạy bỏ qua nếu hạn đã đổi hoặc bài không còn `OPEN`; chỉ gửi người chưa nộp (F3, P4, BR-U16-20…22).
 - [ ] **Bước 7** - `PreferenceService`, `ProgressService` (một query), `RetentionHandler` 180 ngày (F4, F5, P5, BR-U16-05, 30, 31).
 - [ ] **Bước 7a** - `LearnerDashboardService` và `GradebookExportService`: điểm đã công bố của người học; phân bố lớp chỉ khi bật cờ và đủ ngưỡng; CSV/XLSX theo yêu cầu, không lưu tệp, không có điểm tổng/hệ số hay điểm AI đề xuất (F6, F7, BR-U16-40…45).
 - [ ] **Bước 8** - U07 phát `u07.payment.paid` sau commit (BR-U07-53) nếu U07 chưa có.
@@ -80,7 +80,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`, `deadlin
 
 - [ ] **Bước 11** - Flyway `V20260925_2300__u16_notifications.sql` theo `infrastructure-design.md` §3.
 - [ ] **Bước 12** - JPA repository.
-- [ ] **Bước 13** - Integration test với Mailpit (Testcontainers): event lặp không gửi trùng; hết trần dời sang ngày sau; SMTP lỗi retry; nhắc bị hủy khi ngừng giao; SSE chuông nhận thông báo; xuất CSV/XLSX chỉ có điểm cuối hợp lệ.
+- [ ] **Bước 13** - Integration test với Mailpit (Testcontainers): event lặp không gửi trùng; hết trần dời sang ngày sau; SMTP lỗi retry; job nhắc tự bỏ qua khi ngừng giao; SSE chuông nhận thông báo; xuất CSV/XLSX chỉ có điểm cuối hợp lệ.
 - [ ] **Bước 14** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API

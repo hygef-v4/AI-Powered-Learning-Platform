@@ -5,7 +5,7 @@
 - Partial unique index là chốt chặn cuối.
 
 ## P2 - Lưu nháp tối ưu
-- `UPDATE submission_contents SET content = ?, content_version = content_version + 1 WHERE attempt_id = ? AND content_version = ?` và điều kiện lượt `IN_PROGRESS`, `now <= deadline_at + 30s`; 0 dòng → phân biệt `409` (lệch version) hay `410` (hết hạn/đã nộp) bằng một SELECT (NFR-U11-11).
+- `UPDATE submissions SET content = ?, content_version = content_version + 1 WHERE id = ? AND content_version = ?` và điều kiện lượt `IN_PROGRESS`, `now <= deadline_at + 30s`; 0 dòng → phân biệt `409` (lệch version) hay `410` (hết hạn/đã nộp) bằng một SELECT (NFR-U11-11).
 - Kiểm tài liệu (`validateForSave`) trước UPDATE; request gzip giải nén qua filter giới hạn 10 MB sau giải nén (NFR-U11-02).
 
 ## P3 - Một đường nộp
@@ -16,7 +16,7 @@
 - Nộp tay: `validateForSubmit` trước bước 1; tự nộp: bỏ qua kiểm, lưu kết quả kiểm thành `warnings`.
 
 ## P4 - Bất biến sau nộp
-- Trigger `BEFORE UPDATE ON submission_contents`: nếu lượt `SUBMITTED` → `RAISE EXCEPTION` (NFR-U11-13).
+- Trigger `BEFORE UPDATE ON submissions`: nếu dòng cũ đã `SUBMITTED` và `content` đổi → `RAISE EXCEPTION` (NFR-U11-13).
 
 ## P5 - Tự nộp theo lịch và theo event
 - Job `U11_AUTO_SUBMIT {attemptId}` với `next_attempt_at = deadlineAt + 30s` (chờ lần lưu cuối trong ân hạn).

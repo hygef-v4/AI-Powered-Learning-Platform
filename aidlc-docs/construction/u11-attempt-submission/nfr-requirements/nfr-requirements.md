@@ -16,7 +16,7 @@
 | NFR-U11-10 | Bắt đầu lượt: unique `(publication_id, learner_id, attempt_no)` + partial unique một `IN_PROGRESS` mỗi `(publication_id, learner_id)`; đếm lượt trong cùng transaction. | BR-U11-03, 04 |
 | NFR-U11-11 | Lưu nháp dùng `contentVersion` (UPDATE có điều kiện). | BR-U11-11 |
 | NFR-U11-12 | Nộp tay và tự nộp cùng lúc: UPDATE `status = 'SUBMITTED' WHERE status = 'IN_PROGRESS'`; chỉ một cái thắng. | BR-U11-21, 23 |
-| NFR-U11-13 | Bài đã nộp bất biến: service chặn, user `app` không UPDATE được `submission_contents` khi `SUBMITTED` (trigger). | FR-018 |
+| NFR-U11-13 | Bài đã nộp bất biến: service chặn, user `app` không đổi được nội dung trong `submissions` khi `SUBMITTED` (trigger). | FR-018 |
 | NFR-U11-14 | Giờ nộp, hạn, trễ tính theo giờ server. | NFR-U08-11 |
 
 ## 3. Bảo mật

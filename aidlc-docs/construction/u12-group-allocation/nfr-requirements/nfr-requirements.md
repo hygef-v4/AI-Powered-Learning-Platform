@@ -11,7 +11,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U12-10 | Lưu bộ nhóm trong một transaction, khóa lạc quan `version` trên `GroupSet`; lệch → `409`. | BR-U12-07 |
+| NFR-U12-10 | Lưu bộ nhóm trong một transaction có khóa theo bài (advisory lock) và khóa lạc quan `version` trên từng nhóm; lệch → `409`. | BR-U12-07 |
 | NFR-U12-11 | Partial unique: một người học một nhóm đang hiệu lực mỗi bộ; một yêu cầu `PENDING` mỗi nhóm. | BR-U12-02, 10, 20 |
 | NFR-U12-12 | Lịch sử thành viên và yêu cầu đổi trưởng nhóm chỉ thêm, không xóa. | BR-U12-22 |
 | NFR-U12-13 | Chia ngẫu nhiên dùng `SecureRandom`; kết quả là bản xem trước, chỉ ghi khi giảng viên lưu. | BR-U12-05 |

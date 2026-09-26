@@ -12,7 +12,7 @@
  |                   --> AttemptSubmitter --> EventPublisherPort (U02)       |
  | RetiredListener (ASSIGNMENT_RETIRED) --> AttemptSubmitter                  |
  | AttemptQueryService (SubmissionQueryPort cho U13, U15, U16)               |
- | Repository (submissions, submission_contents + trigger)                   |
+ | Repository (submissions + trigger bất biến)                               |
  +---------------------------------------------------------------------------+
             | job U11_AUTO_SUBMIT
             v

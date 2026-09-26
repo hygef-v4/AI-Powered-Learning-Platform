@@ -14,7 +14,7 @@
 - Nhắc hạn đã quá hạn nộp → `SKIPPED` (BR-U16-13).
 
 ## P4 - Nhắc hạn theo thời điểm kỳ vọng
-- Job `U16_DEADLINE_REMINDER {publicationId, expectedClosesAt}`; chạy thì so với `closesAt` hiện tại (U08), khác → bỏ qua (NFR-U16-11).
+- Job `U16_DEADLINE_REMINDER {publicationId, expectedClosesAt}`; chạy thì so với `closesAt` hiện tại (U08), khác → không nhắc và tạo job mới theo hạn mới nếu còn ở tương lai (NFR-U16-11).
 
 ## P5 - Báo cáo tiến độ một query
 - Người học đang ghi danh (U04) LEFT JOIN trạng thái lượt (U11) hoặc bản nộp nhóm (U14) theo publication.

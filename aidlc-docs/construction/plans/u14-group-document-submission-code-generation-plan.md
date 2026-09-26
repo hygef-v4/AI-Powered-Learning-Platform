@@ -23,12 +23,12 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `AssignmentQueryPort`, `isSubmissionOpen`, event `u08.assignment.*` | U08 | Dùng thật |
 | `DocumentModelPort`, `DocxExportPort`, `DocumentEditor` | U09 | Dùng thật |
-| `GroupMembershipPort`, event `u12.group.membership-changed` | U12 | Dùng thật |
+| `GroupMembershipPort`, `GroupDocumentStorePort`, event `u12.group.membership-changed` | U12 | Dùng thật (lưu tài liệu nhóm trong bản ghi nhóm qua `GroupDocumentStorePort`) |
 | U14 cung cấp `GroupSubmissionQueryPort`, event `u14.group.submitted` | cho U13, U15, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U14 sở hữu
 
-PostgreSQL `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `u14:save:*`; RabbitMQ fanout `platform.realtime`, queue `jobs.u14.auto-submit`.
+PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentStorePort` của U12), `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `u14:save:*`; RabbitMQ fanout `platform.realtime`, queue `jobs.u14.auto-submit`.
 
 ## 2. Cấu trúc
 
@@ -75,7 +75,7 @@ PostgreSQL `group_documents`, `sections`, `section_revisions`, `section_comments
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 12** - Flyway `V20260925_2100__u14_group_documents.sql` theo `infrastructure-design.md` §4.
+- [ ] **Bước 12** - Flyway `V20260925_2100__u14_group_workspace.sql` theo `infrastructure-design.md` §4.
 - [ ] **Bước 13** - JPA repository.
 - [ ] **Bước 14** - Integration test: hai người nhận cùng mục; rời nhóm nhả khóa; tự nộp tại hạn và không nộp trùng; hai client SSE nhận đúng sự kiện; `app` không sửa được revision/bản nộp.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.

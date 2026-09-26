@@ -30,7 +30,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U11 sở hữu
 
-PostgreSQL `submissions`, `submission_contents`; Redis `u11:save:*`; queue `jobs.u11.auto-submit`, `u11.retired-listener`; routing key `u11.submission.submitted`.
+PostgreSQL `submissions` (gồm nội dung bài làm); Redis `u11:save:*`; queue `jobs.u11.auto-submit`, `u11.retired-listener`; routing key `u11.submission.submitted`.
 
 ## 2. Cấu trúc
 

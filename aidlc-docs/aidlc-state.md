@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 complete. All 16 units have approved design stages and code generation plans; no application code generated yet.
-- **Resume action**: Finish the story check for the US-GRD stories, then start Code Generation Part 2 in dependency order (wave 1: U01 and U02 in parallel; the shared project skeleton is U01 steps 1-6).
+- **Current Stage**: Code Generation Part 1 complete. All 16 code plans approved for the 45-table data model (2026-09-26); no application code generated yet.
+- **Resume action**: Start Code Generation Part 2 in dependency order (wave 1: U01 and U02 in parallel; the shared project skeleton is U01 steps 1-6).
 
 ## Workspace State
 - **Existing Code**: No
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [x] Code Generation Part 1 (plans) - all 16 units approved
+- [x] Code Generation Part 1 (plans) - all 16 units approved (45-table model)
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -90,4 +90,5 @@
 - 2026-09-25: Xóa 12 UC ngoài phạm vi khỏi danh mục use case theo yêu cầu; catalog UC lúc đó có 78 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-25: Xóa 9 story ngoài phạm vi khỏi danh mục user story theo yêu cầu; catalog story lúc đó có 50 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi hiện hành: 49 story/77 use case.
+- 2026-09-26: Data model consolidated from 62 to 45 PostgreSQL tables (keep only tables that must stand alone, are listed by a use case, or tie to an external system; 1-1 data becomes columns). Five shared tables with owner-unit migrations and extension ports. Domain entities rewritten for all units; FD/NFR/Infra/plans/ERD synced. Account status `PENDING_ACTIVATION` renamed `PENDING`.
 - Full chronological log: `audit.md`.

@@ -1,20 +1,40 @@
 # U09 Question Type Authoring - Domain Entities
 
-## 1. Phạm vi sở hữu
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; `UC-ASM-02`, `03`, `04`, `06`.
 
-U09 sở hữu cấu hình riêng của bài `QUIZ`, `ESSAY`, `DOCUMENT`; **mô hình tài liệu** (dùng chung cho soạn khung, làm bài, chấm); nhập khung từ DOCX và chuyển DOCX của người học thành block nháp; xuất tài liệu ra DOCX; nhận sơ đồ Draw.io nhúng trong ảnh; quy tắc kiểm và rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
+## 1. Tổng quan
 
-## 2. `QuestionTypeConfig` (bảng `question_type_config`, khóa = `assignmentId`)
+| Entity | Loại | Lưu ở | Unit ghi |
+|---|---|---|---|
+| `QuestionTypeConfig` | Value object của `Assignment` (U08) | `assignments` | U09 |
+| `DocumentSkeleton` | Value object của `Assignment` (U08) hoặc câu `DOCUMENT` (U06) | `assignments`, `bank_items` | U09 (bài), U06 (câu ngân hàng) |
+| `Document` | Value object (mô hình tài liệu dùng chung) | Nằm trong đối tượng chứa: khung, bài làm (U11), tài liệu nhóm (U14) | Unit sở hữu đối tượng chứa |
+| `Block` | Value object của `Document` | Như trên | Như trên |
+| `DocxImportPreview` | Kết quả trả về | Không lưu | U09 |
 
-| Loại bài | `config` |
+U09 sở hữu nghiệp vụ: cấu hình riêng của bài `QUIZ`, `ESSAY`, `DOCUMENT`; **mô hình tài liệu** (dùng chung cho soạn khung, làm bài, chấm); nhập khung từ DOCX và chuyển DOCX của người học thành block nháp; xuất DOCX; nhận sơ đồ Draw.io nhúng trong ảnh; kiểm và rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
+
+## 2. `QuestionTypeConfig`
+
+| Loại bài | Nội dung cấu hình |
 |---|---|
 | `QUIZ` | `shuffleQuestions`, `shuffleOptions` (bool); `timeLimitMinutes` (rỗng hoặc 1-300); `showScoreAfterSubmit` (bool); `showCorrectAnswers` (`NEVER`, `AFTER_SUBMIT`, `AFTER_CLOSE`) |
 | `ESSAY` | `richText` (luôn `true`: đoạn văn, heading, danh sách, đậm/nghiêng); không giới hạn số từ |
-| `DOCUMENT` | `skeletonId` (khung, có thể rỗng = trang trắng); `requiredDiagrams` (loại → số tối thiểu, tùy chọn) |
+| `DOCUMENT` | Có hoặc không có `DocumentSkeleton` (không có = trang trắng); `requiredDiagrams` (loại sơ đồ → số tối thiểu, tùy chọn) |
 
-## 3. Mô hình tài liệu
+Chỉ sửa khi bài `DRAFT`; khi tạo version mới hoặc nhân bản thì được sao chép qua `TypeConfigPort.copy`.
 
-```
+## 3. `DocumentSkeleton`
+
+| Thuộc tính | Ý nghĩa |
+|---|---|
+| `blocks[]` | Toàn bộ block `origin = TEACHER` |
+| `sourceDocxName` | Tên file nếu nhập từ DOCX |
+| `contentHash` | Băm từng block để phát hiện người học sửa block bị khóa |
+
+## 4. `Document` và `Block`
+
+```text
 Document
   blocks[]                      thứ tự trong tài liệu
     id                          UUID do client/server sinh, duy nhất trong tài liệu
@@ -32,11 +52,7 @@ Document
 
 `DiagramType`: `USE_CASE`, `CLASS`, `SEQUENCE`, `ACTIVITY`, `ER`, `COMPONENT`, `STATE`, `OTHER`.
 
-## 4. `DocumentSkeleton` (khung của giảng viên)
-
-`id`, `assignmentId` hoặc `bankItemId`, `blocks[]` (toàn bộ `origin = TEACHER`), `sourceDocxName` (nếu nhập từ DOCX), `contentHash` từng block.
-
-## 5. Quyền sửa theo block
+Quyền sửa theo block:
 
 | Block của giảng viên | Người học được |
 |---|---|
@@ -45,14 +61,31 @@ Document
 | `DIAGRAM` | Sửa bản vẽ; không xóa, không di chuyển |
 | Block của người học | Toàn quyền, chèn ở bất kỳ vị trí nào |
 
+## 5. `DocxImportPreview`
+
+| Thuộc tính | Ý nghĩa |
+|---|---|
+| `blocks[]` | Block sẽ thêm (khung giảng viên: `TEACHER`; bài làm: `LEARNER`) |
+| `diagramCount`, `imageCount` | Số sơ đồ nhận ra, số ảnh giữ nguyên |
+| `droppedParts[]` | Phần không chuyển được, báo cho người dùng |
+
+File DOCX chỉ xử lý trong bộ nhớ, không lưu.
+
 ## 6. Contract
 
-| Contract | Chiều | Mô tả |
+### Port U09 cung cấp / cài
+
+| Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `TypeConfigPort` | U09 cài cho U08 (`C`), U10 dùng | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình và khung tài liệu |
-| `DocumentModelPort` | U09 cài cho U06 (`C`), U11, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
-| `DocxExportPort` | U09 cung cấp cho U11, U15 | Tài liệu → DOCX |
-| `DocxLearnerImportPort` | U09 cung cấp cho U11 | DOCX → block `LEARNER` xem trước + báo cáo; U11 xác nhận và lưu nháp bằng kiểm phiên bản |
-| `DiagramCompactPort` | U09 cung cấp cho U13 | XML đầy đủ → XML rút gọn theo allowlist |
-| `ArtifactPort` | U09 dùng U03 | Ảnh `DOCUMENT_IMAGE` (DOCX nhập khung chỉ xử lý trong bộ nhớ, không lưu) |
-| `AssignmentQueryPort` | U09 dùng U08 | Loại bài, trạng thái `DRAFT` |
+| `TypeConfigPort` | U08 khai báo (`C`), U10 dùng | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình và khung tài liệu |
+| `DocumentModelPort` | U06 (`C`), U11, U13, U14, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
+| `DocxExportPort` | U11, U14, U15 | Tài liệu → DOCX |
+| `DocxLearnerImportPort` | U11 | DOCX → `DocxImportPreview`; U11 xác nhận và lưu nháp bằng kiểm phiên bản |
+| `DiagramCompactPort` | U13 | XML đầy đủ → XML rút gọn theo allowlist, trong bộ nhớ |
+
+### Port U09 dùng
+
+| Port | Unit | Mô tả |
+|---|---|---|
+| `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Đọc loại bài/trạng thái; ghi cấu hình và khung |
+| `ArtifactPort` | U03 | Ảnh `DOCUMENT_IMAGE` |

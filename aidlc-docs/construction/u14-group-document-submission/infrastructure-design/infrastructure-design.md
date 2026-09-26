@@ -6,7 +6,7 @@
 |---|---|
 | `SectionService`, `GroupSubmitter`, `SseHub`, `MembershipListener`, `GroupSubmissionQueryService` | `backend` |
 | `GroupDocInitializer`, `AutoSubmitHandler` | `worker` |
-| Bảng `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions` | `postgres` |
+| Cột tài liệu nhóm trong `student_groups` (U12 tạo bảng); bảng `sections`, `section_revisions`, `section_comments`, `group_submissions` | `postgres` |
 | Rate limit lưu nháp mục | `redis`, khóa `u14:save:{learnerId}` |
 | RabbitMQ | fanout `platform.realtime` (mỗi backend một queue exclusive auto-delete); queue `jobs.u14.auto-submit`; listener `u08.assignment.opened`, `u08.assignment.retired`, `u12.group.membership-changed`; phát `u14.group.submitted` |
 
@@ -22,8 +22,8 @@
 
 ## 4. Migration
 
-`V20260925_2100__u14_group_documents.sql`:
-- `group_documents` unique `(publication_id, group_id)`.
+`V20260925_2100__u14_group_workspace.sql`:
+- `ALTER TABLE student_groups ADD COLUMN doc_publication_id uuid, shared_blocks jsonb, doc_updated_at timestamptz, doc_version int` (cần migration U12 chạy trước).
 - `sections` index `(group_document_id, order_no)`, `(claimed_by)`.
 - `section_revisions`, `group_submissions`: `REVOKE UPDATE, DELETE ... FROM app`.
 - `section_comments` index `(section_id, created_at)`.

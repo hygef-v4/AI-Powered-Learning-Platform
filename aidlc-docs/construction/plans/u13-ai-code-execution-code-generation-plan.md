@@ -24,12 +24,12 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `CreditPort` | U07 | Dùng thật |
 | `DocumentModelPort`, `DiagramCompactPort` | U09 | Dùng thật |
 | `SubmissionQueryPort`, `GroupSubmissionQueryPort`, event `u11.submission.submitted` | U11, U14 (`C`) | U11/U14 code sau U13: adapter tạm báo "chưa hỗ trợ"; U11/U14 cắm adapter thật khi được code |
-| U13 cài `AiDraftPort` (U08, U06, U10), `CodeRunPort` (U11), `CodeLabCheckPort` (U08), `AiKillSwitchPort` (U05) | | Thay adapter tạm của U05, U08, U11 |
+| U13 cài `AiDraftPort` (U08, U06, U10), `CodeRunPort` (U11), `CodeLabCheckPort` (U08), `AiKillSwitchPort` (U05) | | Thay adapter tạm của U05, U06, U08, U10, U11 |
 | `AiGradingPort`, `u13.code.graded` | cho U15 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U13 sở hữu
 
-PostgreSQL `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, `solution_verifications`, `code_runs`; Redis `u13:*`; queue `jobs.u13.ai-task`, `jobs.u13.code-run`; 4 container Judge0.
+PostgreSQL `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs`; khóa `u13.*` trong `app_settings`; Redis `u13:*`; queue `jobs.u13.ai-task`, `jobs.u13.code-run`; 4 container Judge0.
 
 ## 2. Cấu trúc
 
@@ -43,7 +43,7 @@ PostgreSQL `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, 
                         InjectionScanner, OutputValidator, prompts/ (theo task, có version)
     sandbox/            CodeRunnerPort, Judge0Adapter, FakeCodeRunner, LanguageRegistry
     domain/             AiTaskConfig, AiGlobalSettings, AiCall, AiProposal,
-                        SolutionVerification, CodeRun
+                        CodeRun (gồm lần VERIFY = kiểm lời giải mẫu)
     infrastructure/     JPA repository
     worker/             AiTaskHandler, CodeRunHandler, SubmissionListener
     port/               AiDraftPort, AiGradingPort, CodeRunPort, CodeLabCheckPort, AiKillSwitchPort
@@ -79,13 +79,13 @@ PostgreSQL `ai_task_configs`, `ai_global_settings`, `ai_calls`, `ai_proposals`, 
 - [ ] **Bước 10** - `LanguageRegistry` (7 ngôn ngữ → `language_id`, kiểm `/languages` khi khởi động), `Judge0Adapter` (batch, `additional_files`, poll), `FakeCodeRunner` (P6).
 - [ ] **Bước 11** - `CodeRunService`: `TRY` đồng bộ + rate limit; `VERIFY`, `GRADE` qua job; `CodeScorer`; ẩn chi tiết test ẩn (F3, F4, P7, P8, BR-U13-30…37).
 - [ ] **Bước 12** - `CodeLabCheckService` (lời giải mẫu đạt, `contentHash` khớp) cài vào danh sách kiểm duyệt U08; `SubmissionListener` chấm khi nộp bài `CODE_LAB`; event `u13.code.graded`.
-- [ ] **Bước 13** - Thay adapter tạm: `AiDraftPort` (U08), `CodeRunPort` (U11).
+- [ ] **Bước 13** - Thay adapter tạm: `AiDraftPort` (U06, U08, U10), `CodeRunPort` (U11).
 - [ ] **Bước 14** - Unit test mọi `BR-U13-xx` với `FakeAiGateway`/`FakeCodeRunner`.
 - [ ] **Bước 15** - Tóm tắt: `aidlc-docs/construction/u13-ai-code-execution/code/business-logic-summary.md`.
 
 ### Nhóm D - Dữ liệu và tích hợp
 
-- [ ] **Bước 16** - Flyway `V20260925_2000__u13_ai_code.sql` (seed 4 việc, `REVOKE` trên `ai_calls`).
+- [ ] **Bước 16** - Flyway `V20260925_2000__u13_ai_code.sql` (seed 4 việc, seed khóa `u13.killSwitch`, `u13.dailyCostCapUsd`, `u13.perUserPerMinute` trong `app_settings`, `REVOKE` trên `ai_calls`).
 - [ ] **Bước 17** - JPA repository.
 - [ ] **Bước 18** - Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày và quota Gemini báo "Hệ thống đang bận"; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn.
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.

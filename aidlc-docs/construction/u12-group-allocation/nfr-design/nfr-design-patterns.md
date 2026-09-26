@@ -2,7 +2,7 @@
 
 ## P1 - Lưu nguyên khối theo trạng thái mong muốn
 - Client gửi toàn bộ bộ nhóm (nhóm, thành viên, trưởng nhóm) + `version`.
-- `GroupSetSaver`: khóa `GroupSet` theo `version` → `GroupSetValidator` (thuần) kiểm BR-U12-02, 03, 20-24 trên trạng thái mới so với trạng thái cũ → tính khác biệt: thêm/đóng (`removedAt`, `supersededAt`) thay vì xóa → ghi → `version + 1` → event và audit sau commit (NFR-U12-10, 12).
+- `GroupSetSaver`: khóa theo bài bằng `pg_advisory_xact_lock(assignment_id)` và kiểm `version` của từng nhóm → `GroupSetValidator` (thuần) kiểm BR-U12-02, 03, 20-24 trên trạng thái mới so với trạng thái cũ → tính khác biệt: thêm/đóng (`removedAt`, `supersededAt`) thay vì xóa → ghi → `version + 1` → event và audit sau commit (NFR-U12-10, 12).
 
 ## P2 - Chia ngẫu nhiên thuần
 - `RandomSplitter.split(ungrouped, existingGroups, maxSize, random)` thuần, nhận `Random` để test lặp lại được; runtime dùng `SecureRandom` (NFR-U12-13).

@@ -8,16 +8,16 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
-| BR-U01-03 | Email phải duy nhất và thuộc `AllowedEmailDomains`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
+| BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình `u01.allowedEmailDomains` (`app_settings`); sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
 | BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC-IAM-07 |
 
 ## 2. Kích hoạt
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING_ACTIVATION`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC-IAM-09, UC-IAM-10 |
+| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC-IAM-09, UC-IAM-10 |
 | BR-U01-11 | OTP kích hoạt chỉ được gửi khi người dùng tự yêu cầu từ liên kết "Kích hoạt tài khoản lần đầu". Admin không có thao tác gửi OTP. | US-IAM-001, Câu hỏi FU3 |
-| BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING_ACTIVATION`. | US-IAM-001 S2 |
+| BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING`. | US-IAM-001 S2 |
 | BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa OTP, ghi audit. Không tự đăng nhập; người dùng đăng nhập lại. | US-IAM-001 S1 |
 
 ## 3. OTP (kích hoạt và đặt lại)
@@ -48,7 +48,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-40 | Chỉ tài khoản `ACTIVE` đăng nhập được. `PENDING_ACTIVATION`, `DISABLED`, sai mật khẩu, email không tồn tại đều nhận **cùng một** thông báo lỗi. | US-IAM-002 S2, Câu 2 |
+| BR-U01-40 | Chỉ tài khoản `ACTIVE` đăng nhập được. `PENDING`, `DISABLED`, sai mật khẩu, email không tồn tại đều nhận **cùng một** thông báo lỗi. | US-IAM-002 S2, Câu 2 |
 | BR-U01-41 | Sai mật khẩu liên tiếp 5 lần thì đặt `lockedUntil` = hiện tại + 15 phút. Trong thời gian này mọi lần đăng nhập đều bị từ chối với cùng thông báo trung tính. | Câu 5, SECURITY-12 |
 | BR-U01-42 | Đăng nhập đúng xóa `failedLoginCount`. Hết `lockedUntil` thì tự mở, không cần admin. | Câu 5 |
 | BR-U01-43 | Ngoài khóa theo tài khoản còn giới hạn theo client để chặn thử nhiều tài khoản. | Câu 5 |
@@ -84,9 +84,9 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-70 | Chỉ có 3 trạng thái: `PENDING_ACTIVATION`, `ACTIVE`, `DISABLED`. | Câu 10 |
+| BR-U01-70 | Chỉ có 3 trạng thái: `PENDING`, `ACTIVE`, `DISABLED`. | Câu 10 |
 | BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC-IAM-12 |
-| BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING_ACTIVATION` nếu chưa. | Câu 10 |
+| BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING` nếu chưa. | Câu 10 |
 | BR-U01-73 | Không có thao tác xóa tài khoản. | UC-IAM-12 |
 
 ## 9. Nhập hàng loạt
@@ -96,7 +96,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-80 | Chỉ nhận CSV, tối đa 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13 |
 | BR-U01-81 | Kiểm tra toàn bộ file trước, trả kết quả từng dòng; admin xác nhận thì mới tạo các dòng hợp lệ. | US-IAM-007 S2 |
 | BR-U01-82 | Email đã tồn tại hoặc trùng trong file bị báo lỗi dòng, không ghi đè. | Câu 13 |
-| BR-U01-83 | Cùng một file (theo checksum) nhập lại không tạo trùng. | US-IAM-007 S2 |
+| BR-U01-83 | Nhập lại cùng file không tạo trùng: email đã tồn tại bị báo lỗi dòng (BR-U01-82). Kết quả nhập không lưu; audit ghi checksum file. | US-IAM-007 S2 |
 | BR-U01-84 | Nhập hàng loạt không được tạo `ADMIN`; tạo admin chỉ làm từng tài khoản. | SECURITY-11 |
 | BR-U01-85 | Nhập hàng loạt không gửi email. | FR-015 |
 

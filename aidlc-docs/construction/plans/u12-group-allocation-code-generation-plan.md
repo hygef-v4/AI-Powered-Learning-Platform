@@ -22,11 +22,11 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `AssignmentQueryPort` | U08 | Dùng thật |
 | U12 cài `GroupReadinessPort` cho U08 | | Thay adapter tạm của U08 |
-| U12 cung cấp `GroupMembershipPort` | cho U14, U16 | Các unit đó dùng khi được code |
+| U12 cung cấp `GroupMembershipPort` (U14, U16), `GroupDocumentStorePort` (U14) | cho U14, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U12 sở hữu
 
-PostgreSQL `group_sets`, `student_groups`, `group_members`, `leader_change_requests`; routing key `u12.group.*`.
+PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`, `leader_change_requests`; routing key `u12.group.*`.
 
 ## 2. Cấu trúc
 
@@ -36,10 +36,10 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `leader_change_reque
     api/                GroupSetController, LeaderRequestController, MyGroupController, DTO
     application/        GroupSetSaver, GroupSetCopier, LeaderRequestService,
                         GroupReadinessService, MembershipQueryService
-    domain/             GroupSet, StudentGroup, GroupMember,
+    domain/             GroupSet (gom theo bài), StudentGroup, GroupMember,
                         LeaderChangeRequest, GroupSetValidator, RandomSplitter
     infrastructure/     JPA repository
-    port/               GroupMembershipPort
+    port/               GroupMembershipPort, GroupDocumentStorePort
 /backend/src/main/resources/db/migration/u12/
 /frontend/src/app/teaching/assignments/[id]/groups/
 /frontend/src/app/learn/assignments/[publicationId]/group/
@@ -59,7 +59,7 @@ PostgreSQL `group_sets`, `student_groups`, `group_members`, `leader_change_reque
 - [ ] **Bước 2** - `GroupSetSaver`: lưu nguyên khối theo `version`, đóng thay vì xóa, event + audit sau commit (F1, F3, F5, P1).
 - [ ] **Bước 3** - Chia ngẫu nhiên (xem trước) và `GroupSetCopier` (F2, BR-U12-06).
 - [ ] **Bước 4** - `LeaderRequestService`: gửi/hủy/duyệt/từ chối, đổi trực tiếp (F6, P3, BR-U12-10…14).
-- [ ] **Bước 5** - `GroupReadinessService` (cài `GroupReadinessPort`, thay adapter tạm U08) và `MembershipQueryService` (`GroupMembershipPort`) (F4, F7, P4, P5).
+- [ ] **Bước 5** - `GroupReadinessService` (cài `GroupReadinessPort`, thay adapter tạm U08), `MembershipQueryService` (`GroupMembershipPort`) và `GroupDocumentStorePort` (đọc/ghi cột tài liệu nhóm do U14 thêm, khóa lạc quan `doc_version`) (F4, F7, P4, P5).
 - [ ] **Bước 6** - Unit test mọi `BR-U12-xx`, gồm chia 7 người sĩ số 3 → 3/2/2 và giữ nhóm cũ.
 - [ ] **Bước 7** - Tóm tắt: `aidlc-docs/construction/u12-group-allocation/code/business-logic-summary.md`.
 

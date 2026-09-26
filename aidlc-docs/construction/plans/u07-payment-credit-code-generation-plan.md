@@ -24,7 +24,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U07 sở hữu
 
-PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wallets`, `credit_ledger`, `credit_reservations`, `credit_settings`; Redis `u07:webhook:*`; queue `jobs.u07.reconcile`, `jobs.u07.reservation-sweep`.
+PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; ghi cột số dư của `accounts` (U01 tạo) và khóa `u07.*` trong `app_settings`; Redis `u07:webhook:*`; queue `jobs.u07.reconcile`, `jobs.u07.reservation-sweep`.
 
 ## 2. Cấu trúc
 
@@ -36,7 +36,7 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
     application/        PaymentService, PaymentSettlement, CreditLedgerService,
                         CreditPortService, PackageService
     domain/             CreditPackage, Payment, PaymentStatus, PaymentWebhookEvent,
-                        CreditWallet, CreditLedgerEntry, CreditReservation
+                        CreditBalance, CreditLedgerEntry, CreditReservation (suy ra từ sổ cái)
     infrastructure/     JPA repository, PayosAdapter, PayosSignatureVerifier,
                         FakePayosAdapter
     worker/             ReconcileHandler, ReservationSweepHandler
@@ -57,10 +57,10 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, webhook event, ví, sổ cái, phần giữ (BR-U07-01…08).
+- [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, webhook event, số dư, sổ cái, lần giữ suy ra từ sổ cái (BR-U07-01…08).
 - [ ] **Bước 3** - Port `CreditPort`, `PaymentProviderPort`; `FakePayosAdapter` (chỉ khi không phải prod).
-- [ ] **Bước 4** - `CreditLedgerService.apply` với khóa ví, đặt lại tặng tháng, chặn âm (F5, P1, BR-U07-30…34).
-- [ ] **Bước 5** - `PackageService` và cấu hình mức tặng tháng (F7, BR-U07-02).
+- [ ] **Bước 4** - `CreditLedgerService.apply` với khóa dòng tài khoản, đặt lại tặng tháng, chặn âm (F5, P1, BR-U07-30…34).
+- [ ] **Bước 5** - `PackageService` và cấu hình mức tặng tháng qua `app_settings` (F7, BR-U07-02).
 - [ ] **Bước 6** - `PaymentService`: idempotency, giới hạn 3 `PENDING`, `orderCode`, gọi PayOS sau commit, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-03…07).
 - [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13).
 - [ ] **Bước 8** - `CreditPortService`: `reserve`/`settle`/`release`/`balance` idempotent (F6, P5, BR-U07-40…43).
@@ -71,10 +71,10 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 
 ### Nhóm C - Dữ liệu và PayOS
 
-- [ ] **Bước 13** - Flyway `V20260925_1400__u07_payment_credit.sql` theo `infrastructure-design.md` §4.
+- [ ] **Bước 13** - Flyway `V20260925_1400__u07_payment_credit.sql` theo `infrastructure-design.md` §4: tạo bảng của U07, thêm cột số dư vào `accounts`, seed khóa `u07.*` trong `app_settings` (cần migration U01 chạy trước).
 - [ ] **Bước 14** - JPA repository (khóa `PESSIMISTIC_WRITE`, `SKIP LOCKED`).
 - [ ] **Bước 15** - `PayosAdapter` (tạo link, tra cứu, timeout 5/10 s).
-- [ ] **Bước 16** - Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm ví; tổng sổ cái = số dư; `app` không UPDATE/DELETE được sổ cái. `PayosAdapter` test bằng mock HTTP.
+- [ ] **Bước 16** - Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm số dư; `settle` gọi hai lần chỉ đóng một lần; tổng sổ cái = số dư; `app` không UPDATE/DELETE được sổ cái. `PayosAdapter` test bằng mock HTTP.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API

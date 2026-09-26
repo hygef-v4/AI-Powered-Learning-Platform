@@ -12,7 +12,7 @@
  |                                      --> GradeWriter (P1)                     |
  | BulkGradeService (P4)   PublishService (P4)                                   |
  | GradebookService (P6)   LearnerGradeController (P5)                           |
- | Repository (grades, grade_history, publication_grade_releases)                |
+ | Repository (grades, grade_history) + AssignmentExtensionPort (U08)            |
  +-------------------------------------------------------------------------------+
         | u15.grade.published
         v

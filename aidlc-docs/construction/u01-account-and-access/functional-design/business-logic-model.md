@@ -28,7 +28,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
-3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING_ACTIVATION` → sang bước 6 (BR-U01-12).
+3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
 4. Ghi yêu cầu `OTP_DELIVERY(ACTIVATION)` thành job U02 (`JobPort.enqueue`).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
@@ -108,18 +108,17 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 
 1. Kiểm quyền admin (BR-U01-67).
 2. Kiểm email (BR-U01-02, 03). Trùng → lỗi rõ cho admin.
-3. Tạo tài khoản `PENDING_ACTIVATION`, không mật khẩu, **không gửi mail** (BR-U01-10).
+3. Tạo tài khoản `PENDING`, không mật khẩu, **không gửi mail** (BR-U01-10).
 4. Tạo `ADMIN` bắt buộc qua luồng này, không qua nhập hàng loạt (BR-U01-84).
 5. Ghi audit `ACCOUNT_CREATED`.
 
 ### F10 - Nhập hàng loạt
 
 1. Kiểm quyền admin; kiểm file là CSV, ≤ 1000 dòng (BR-U01-80).
-2. Checksum đã có lô `COMMITTED` → trả lại kết quả lô cũ, không tạo gì (BR-U01-83).
-3. Kiểm từng dòng, ghi `ImportRowResult` (BR-U01-82, 84). Lô ở `VALIDATED`.
-4. Admin xem kết quả và xác nhận.
-5. Tạo các dòng hợp lệ ở `PENDING_ACTIVATION`, không gửi mail (BR-U01-85). Lô sang `COMMITTED`.
-6. Ghi một audit `ACCOUNTS_IMPORTED` kèm số dòng tạo và bị từ chối.
+2. Kiểm từng dòng, trả `AccountImportResult` trong response, không lưu (BR-U01-82, 84).
+3. Admin xem kết quả và xác nhận: frontend gửi lại cùng file.
+4. Kiểm lại toàn bộ file (dữ liệu có thể đã đổi), tạo các dòng hợp lệ ở `PENDING` trong một transaction, không gửi mail (BR-U01-85). Email đã tồn tại (kể cả do lần nhập trước) báo lỗi dòng nên nhập lại cùng file không tạo trùng (BR-U01-83).
+5. Ghi một audit `ACCOUNTS_IMPORTED` kèm checksum file, số dòng tạo và bị từ chối.
 
 ### F11 - Đổi role
 
@@ -140,7 +139,7 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 3. Ghi audit `ACCOUNT_DISABLED`.
 
 **Mở lại**:
-1. Có mật khẩu → `ACTIVE`; chưa có → `PENDING_ACTIVATION` (BR-U01-72).
+1. Có mật khẩu → `ACTIVE`; chưa có → `PENDING` (BR-U01-72).
 2. Xóa `failedLoginCount`, `lockedUntil`.
 3. Ghi audit `ACCOUNT_ENABLED`.
 

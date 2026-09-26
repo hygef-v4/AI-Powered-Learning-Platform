@@ -25,7 +25,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 
 | Module (unit) | Trách nhiệm cấp cao |
 |---|---|
-| Identity & Access (U01) | Tài khoản `PENDING_ACTIVATION/ACTIVE/DISABLED`, OTP kích hoạt/khôi phục, JWT + refresh cookie, hồ sơ, role, nhập CSV, `authorize` |
+| Identity & Access (U01) | Tài khoản `PENDING/ACTIVE/DISABLED`, OTP kích hoạt/khôi phục, JWT + refresh cookie, hồ sơ, role, nhập CSV, `authorize` |
 | Audit, Job & Event (U02) | Audit append-only, bảng `jobs` + RabbitMQ (retry theo DB, sweeper), event sau commit |
 | File & Artifact (U03) | Upload qua backend (avatar, học liệu, ảnh trong tài liệu), kiểm magic bytes, lưu Google Drive, token tải 5 phút |
 | Academic & Learning Access (U04) | Môn, lớp `DRAFT/OPEN/ARCHIVED`, giảng viên, Chủ nhiệm môn, ghi danh, mã mời, lớp của người học |

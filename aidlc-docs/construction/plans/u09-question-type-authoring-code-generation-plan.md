@@ -23,12 +23,12 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ArtifactPort` | U03 | Dùng thật (purpose `DOCUMENT_IMAGE`) |
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort` | U06 | Dùng thật (kiểm câu quiz khi duyệt) |
-| `AssignmentQueryPort`, `TypeConfigSlot` | U08 | Dùng thật |
+| `AssignmentQueryPort`, `AssignmentExtensionPort`, `TypeConfigSlot` | U08 | Dùng thật (ghi cấu hình loại bài và khung qua `AssignmentExtensionPort`) |
 | U09 cài `TypeConfigPort` (U08), `DocumentModelPort` (U06, U11, U15) | | Thay adapter tạm của U08 và U06 |
 
 ### Dữ liệu U09 sở hữu
 
-PostgreSQL `question_type_config`, `document_skeletons`.
+PostgreSQL: cột `type_config`, `skeleton` của `assignments` (U08 tạo bảng, U09 thêm cột và ghi qua `AssignmentExtensionPort`). Không có bảng riêng.
 
 ## 2. Cấu trúc
 

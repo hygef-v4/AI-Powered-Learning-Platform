@@ -1,10 +1,20 @@
 # U04 Subject, Class, Enrollment & Learning Access - Domain Entities
 
-## 1. Phạm vi sở hữu
+Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CAT-005`, `US-LRN-001`; `UC-CAT-01`…`13`, `UC-LRN-01`, `02`, `UC-CNT-04`.
 
-U04 sở hữu môn, lớp, phân công (Chủ nhiệm môn, giảng viên), ghi danh và mã mời. U04 **không** sở hữu: tài khoản và role (U01), nội dung (U05), thanh toán (U07), thông báo (U16), audit (U02).
+## 1. Tổng quan
 
-## 2. `Subject` (môn học)
+| Entity | Loại | Lưu ở | Unit ghi |
+|---|---|---|---|
+| `Subject` | Aggregate root | `subjects` | U04 |
+| `CourseClass` | Aggregate root | `classes` | U04 |
+| `InviteCode` | Value object của `CourseClass` | `classes` | U04 |
+| `Enrollment` | Entity | `enrollments` | U04 |
+| `LearnerClassView` | Kết quả tính (lớp của người học + nội dung đã phát hành) | Không lưu | U04 |
+
+U04 **không** sở hữu: tài khoản và role (U01), nội dung (U05), thanh toán (U07), thông báo (U16), audit (U02).
+
+## 2. `Subject`
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -16,7 +26,18 @@ U04 sở hữu môn, lớp, phân công (Chủ nhiệm môn, giảng viên), ghi
 | `managerAccountId` | UUID | Chủ nhiệm môn; có thể rỗng; tối đa 1 người |
 | `createdAt`, `updatedAt` | thời gian | |
 
-## 3. `CourseClass` (lớp học)
+### Trạng thái
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE: ADMIN tạo môn
+    ACTIVE --> ARCHIVED: Lưu trữ, mọi lớp đã ARCHIVED
+    ARCHIVED --> ACTIVE: Mở lại
+```
+
+**Text alternative**: Môn tạo ra ở `ACTIVE`. Chỉ lưu trữ được khi mọi lớp của môn đã `ARCHIVED`; môn `ARCHIVED` không tạo lớp mới và có thể mở lại về `ACTIVE`. Không xóa môn.
+
+## 3. `CourseClass`
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -28,13 +49,32 @@ U04 sở hữu môn, lớp, phân công (Chủ nhiệm môn, giảng viên), ghi
 | `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
 | `instructorAccountId` | UUID | Giảng viên chính; bắt buộc trước khi `OPEN` |
-| `inviteCode` | chuỗi 8 | Có thể rỗng; duy nhất toàn hệ thống khi có |
-| `inviteEnabled` | bool | Mặc định `false` |
+| `invite` | `InviteCode` | Có thể rỗng |
 | `showGradeDistribution` | bool | Mặc định `false`; chỉ bật phân bố điểm ẩn danh trên dashboard khi đủ mẫu |
-| `inviteExpiresAt` | thời gian | Bắt buộc khi bật mã |
 | `createdAt`, `updatedAt` | thời gian | |
 
-## 4. `Enrollment` (ghi danh)
+### Trạng thái
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: ADMIN tạo lớp
+    DRAFT --> OPEN: Mở lớp, có giảng viên và môn ACTIVE
+    DRAFT --> ARCHIVED: Lưu trữ (hủy lớp)
+    OPEN --> ARCHIVED: Lưu trữ
+    ARCHIVED --> OPEN: Mở lại
+```
+
+**Text alternative**: Lớp tạo ra ở `DRAFT`. Mở lớp cần có giảng viên chính và môn đang `ACTIVE`. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN`, không về `DRAFT`, và bị từ chối nếu có người học đang học lớp chưa lưu trữ khác cùng môn.
+
+## 4. `InviteCode`
+
+| Thuộc tính | Kiểu | Ràng buộc |
+|---|---|---|
+| `code` | chuỗi 8 | Bảng chữ không dễ nhầm; duy nhất toàn hệ thống |
+| `enabled` | bool | Mặc định `false` |
+| `expiresAt` | thời gian | Bắt buộc khi bật |
+
+## 5. `Enrollment`
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -46,28 +86,34 @@ U04 sở hữu môn, lớp, phân công (Chủ nhiệm môn, giảng viên), ghi
 | `enrolledBy` | UUID | Người thực hiện (chính người học nếu `INVITE`) |
 | `enrolledAt`, `removedAt` | thời gian | |
 
-## 5. Trạng thái
+### Trạng thái
 
-```
-Lớp:  DRAFT --mở--> OPEN --lưu trữ--> ARCHIVED
-        |                                 |
-        +---------lưu trữ (hủy)---------->+
-                   ARCHIVED --mở lại--> OPEN
-
-Môn:  ACTIVE <--> ARCHIVED
-
-Ghi danh:  ACTIVE <--> REMOVED
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE: Ghi danh
+    ACTIVE --> REMOVED: Gỡ ghi danh
+    REMOVED --> ACTIVE: Ghi danh lại
 ```
 
-**Text alternative**: Lớp đi từ `DRAFT` sang `OPEN` rồi `ARCHIVED`; `DRAFT` cũng có thể lưu trữ thẳng; `ARCHIVED` mở lại về `OPEN`, không về `DRAFT`. Môn chuyển qua lại `ACTIVE`/`ARCHIVED`. Ghi danh chuyển qua lại `ACTIVE`/`REMOVED` trên cùng một bản ghi.
+**Text alternative**: Ghi danh tạo ra ở `ACTIVE`; gỡ thì sang `REMOVED` nhưng giữ bản ghi và lịch sử; ghi danh lại dùng đúng bản ghi đó và chuyển về `ACTIVE`.
 
-## 6. Contract
+## 6. `LearnerClassView`
 
-| Contract | Chiều | Mô tả |
+Tính khi người học mở lớp: kiểm ghi danh `ACTIVE` và lớp `OPEN`, rồi lấy nội dung đã phát hành qua `PublishedContentPort` (U05). Không lưu.
+
+## 7. Contract
+
+### Port U04 cung cấp
+
+| Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `SubjectScopePort`, `ClassScopePort` | U04 cung cấp cho U01 | `isSubjectManager`, `isInstructorOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
-| `ClassAccessPort` | U04 cung cấp cho U05, U06, U08-U12, U14-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
-| `AccountLookupPort` | U04 dùng U01 | Tìm tài khoản theo email hoặc chuỗi tìm kiếm; trả `id`, `displayName`, `email`, `role`, `status` |
-| `AuthorizationPort` | U04 dùng U01 | Kiểm role và phạm vi |
-| `PublishedContentPort` | U04 dùng, U05 cung cấp (`C`) | Nội dung đã phát hành của lớp và môn |
-| `AuditPort`, `EventPublisherPort` | U04 dùng U02 | Audit; event `ENROLLMENT_ACTIVATED` cho U16 |
+| `SubjectScopePort`, `ClassScopePort` | U01 (U01 khai báo, U04 cài) | `isSubjectManager`, `isInstructorOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
+| `ClassAccessPort` | U05, U06, U08-U12, U14-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
+
+### Port U04 dùng
+
+| Port | Unit | Mô tả |
+|---|---|---|
+| `AccountLookupPort`, `AuthorizationPort` | U01 | Tìm tài khoản; kiểm role và phạm vi |
+| `PublishedContentPort` | U05 (`C`) | Nội dung đã phát hành của lớp và môn |
+| `AuditPort`, `EventPublisherPort` | U02 | Audit; event `ENROLLMENT_ACTIVATED` cho U16 |

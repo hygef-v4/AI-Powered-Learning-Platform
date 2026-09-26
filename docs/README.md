@@ -4,7 +4,7 @@ Các sơ đồ này được tổng hợp từ thiết kế Construction của 1
 
 | Sơ đồ | Nội dung |
 |---|---|
-| [ERD draw.io](erd.drawio) · [chú giải](erd.md) | Cả 62 bảng trên một canvas, có thuộc tính/khóa và quan hệ |
+| [ERD draw.io](erd.drawio) · [chú giải](erd.md) | Cả 45 bảng trên một canvas, có thuộc tính/khóa và quan hệ |
 | [Screen flow](screen-flow.md) | Điều hướng chính theo người học, giảng viên, Chủ nhiệm môn và quản trị viên |
 | [Business flow draw.io](business-flow.drawio) · [diễn giải](business-flow.md) | 5 trang swimlane cho học liệu/RAG, bài cá nhân, bài nhóm, credit AI và thông báo/báo cáo |
 | [Use case](use-case.md) | Đủ 77 use case MVP, giữ nguyên mã từ catalog |

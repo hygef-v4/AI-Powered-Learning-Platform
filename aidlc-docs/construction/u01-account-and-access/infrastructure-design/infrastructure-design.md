@@ -8,7 +8,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 |---|---|---|
 | `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `u01` | Một backend modular monolith |
 | `OtpMailHandler` | Container `worker` | Handler của job `U01_OTP_DELIVERY`, nhận từ queue `jobs.u01.otp-delivery` |
-| Bảng `accounts`, `account_import_batches`, `account_import_rows` | Container `postgres` | Migration Flyway trong thư mục của U01 |
+| Bảng `accounts` (gồm cột số dư credit do U07 ghi), `app_settings` (bảng cấu hình dùng chung, U01 tạo) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa có tiền tố `u01:` |
 | Job | Bảng `jobs` của U02 trong `postgres`; gửi RabbitMQ sau commit, quét gửi lại job kẹt quá 5 phút | U02 sở hữu |
 | Gửi mail | SMTP bên ngoài ở production; Mailpit ở local | Cấu hình `SMTP_*` |

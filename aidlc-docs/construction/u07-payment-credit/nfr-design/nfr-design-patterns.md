@@ -2,10 +2,10 @@
 
 ## P1 - Một đường ghi số dư (CreditLedgerService)
 - `apply(accountId, type, freeDelta, purchasedDelta, ref, actor)`:
-  1. Khóa ví `PESSIMISTIC_WRITE` (tạo ví nếu chưa có).
+  1. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`).
   2. Đặt lại tặng tháng nếu sang tháng mới (ghi `MONTHLY_GRANT` trước).
   3. Kiểm số dư sau thay đổi ≥ 0.
-  4. INSERT sổ cái, UPDATE ví.
+  4. INSERT sổ cái, UPDATE cột số dư trong `accounts`.
 - Mọi luồng (mua, giữ, trừ, trả) gọi hàm này trong transaction của mình (NFR-U07-01).
 
 ## P2 - Áp dụng thanh toán idempotent (PaymentSettlement)
@@ -28,9 +28,9 @@
 - Gọi PayOS **sau** khi commit `CREATED`; lỗi → cập nhật `FAILED` trong transaction riêng.
 
 ## P5 - Giữ credit
-- `reserve` INSERT `CreditReservation` unique `requestRef`; trùng → trả bản cũ.
-- `settle`/`release` khóa reservation, chỉ xử lý khi `HELD`; gọi lại sau khi đã xử lý → trả kết quả cũ.
-- Sweeper chọn `HELD` quá `expiresAt` bằng `FOR UPDATE SKIP LOCKED`, `release` từng cái.
+- `reserve` INSERT dòng sổ `RESERVE` (partial unique `request_ref` với `type = 'RESERVE'`); trùng → trả dòng cũ.
+- `settle`/`release` INSERT dòng `SETTLE`/`RELEASE` có `ref_id` = id dòng `RESERVE` (partial unique `ref_id` với `type IN ('SETTLE','RELEASE')`); trùng → đã đóng, trả kết quả cũ.
+- Sweeper chọn dòng `RESERVE` chưa có dòng đóng và quá `expires_at` (`NOT EXISTS`), khóa tài khoản rồi `release` từng cái.
 
 ## P6 - Tự đối soát
 - Job lấy tối đa 100 giao dịch mỗi lần; gọi PayOS tuần tự; `PAID` → P2 với `source = RECONCILE`; lỗi mạng → bỏ qua, lần sau thử lại.

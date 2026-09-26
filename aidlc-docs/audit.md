@@ -2495,3 +2495,80 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Context**: Inception/Construction documentation reconciliation; no application code changed
 
 ---
+
+## Domain Entities Update for 45-Table Model
+**Timestamp**: 2026-09-26T02:30:00Z
+**User Input**: "ko bỏ outbox đâu để im bây giờ sửa lại domain entity đi"
+**AI Response**: Kept `email_outbox` and `payment_webhook_events`. Target is 45 tables: the 62 in the current ERD minus 17. Updated `functional-design/domain-entities.md` of U01, U05, U07, U08, U09, U10, U11, U12, U13, U14, U15, U16:
+- `app_settings` replaces `platform_settings`, `credit_settings` and `ai_global_settings` (U01 migration; key prefix per unit).
+- Credit balance moves to columns in `accounts`; reservations become RESERVE/SETTLE/RELEASE ledger rows.
+- Account import is no longer stored (response + audit).
+- `youtube_videos` moves into `source_documents`.
+- Type config, skeleton and lineage become columns in `assignments` (the skeleton of a bank question goes into `bank_items`).
+- Simulation policy and grade release become columns in `publications`.
+- `submission_contents` becomes a column in `submissions`.
+- `group_sets` and `group_documents` fold into `student_groups`.
+- `solution_verifications` becomes VERIFY `code_runs` with `content_hash`.
+- `deadline_reminders` becomes U02 jobs.
+Not yet updated: business rules/logic, NFR/infra (migration, index), code plans, application-design ownership and matrix, docs/erd.drawio.
+**Context**: Construction - data model consolidation, domain entities step
+
+---
+
+## Rewrite All Domain Entities
+**Timestamp**: 2026-09-26T03:30:00Z
+**User Input**: "viết lại tất cả domain entities, viết thêm tổng quan giống u1 cho những cai thiếu, cái nào có trạng thái thì vẽ graph, và tổng quan và các đầu mục ko được ghi các cột của bảng (do vừa sửa nên còn nhiều cái vẫn ghi cột của bảng)"
+**AI Response**: Rewrote `functional-design/domain-entities.md` for all 16 units in one layout:
+- Tổng quan table: Entity / Loại / Lưu ở (table name only) / Unit ghi, plus "không sở hữu".
+- Headings show only the entity name.
+- Every stateful entity has a Mermaid state diagram with a text alternative (27 diagrams).
+- Contract section split into "Port cung cấp" and "Port dùng".
+- Content reflects the 45-table model.
+New ports named explicitly: `AssignmentExtensionPort` (U08, for U09/U10/U15 to write their value objects) and `GroupDocumentStorePort` (U12, for U14).
+Found and fixed a pre-existing gap: U06 and U10 use U13 `AiDraftPort`. Added C U13 → U06 and C U13 → U10 to the matrix, the C-edge text and data ownership, plus adapter rows in the U06/U10 plans and U13 plan steps.
+Updated the checker to read the new contract tables and the 49/77 scope. Result: TOTAL 0; no column names in headings or overviews; Mermaid syntax valid.
+**Context**: Construction - domain entities consolidation
+
+---
+
+## Rename PENDING_ACTIVATION and Project Consistency Check
+**Timestamp**: 2026-09-26T04:00:00Z
+**User Input**: "sửa cái pending_activation thành pending trong u01 rồi kiểm tra tính đồng bộ cả dự án"
+**AI Response**: Renamed the account status `PENDING_ACTIVATION` → `PENDING` in 7 current files: U01 FD (entities, rules, logic model), the U01 FD plan, U04 rules, `components.md` and `docs/use-case-table.md`. Audit and question files are unchanged (history). The automated checker returns TOTAL 0. Separately found 40 files (and `docs/erd.drawio`) that still reference the 17 removed tables, so they conflict with the new 45-table domain entities: NFR/Infra (migrations, indexes), code plans of U01, U05, U07, U09-U16, some business-logic models, `unit-of-work.md` and `component-methods.md`.
+**Context**: Construction - consistency check
+
+---
+
+## Sync All Documents to the 45-Table Model
+**Timestamp**: 2026-09-26T05:00:00Z
+**User Input**: "sửa lại hết tất cả chỗ lệch đi"
+**AI Response**: Fixed every reference to the 17 removed tables in FD logic/rules, NFR, Infra, code plans, inception and docs.
+- **Migration convention:** the owner unit creates each table; a unit that writes extra columns adds them with `ALTER TABLE` in its own migration.
+  - U07 adds balance columns to `accounts`.
+  - U09 and U10 add columns to `assignments`.
+  - U10 and U15 add columns to `publications`.
+  - U14 adds columns to `student_groups`.
+  - `app_settings` is created by U01 and seeded by U07/U13.
+- **New ports in plans:** `AssignmentExtensionPort` (U08; used by U09/U10/U15) and `GroupDocumentStorePort` (U12; used by U14).
+- **Behaviour changes:**
+  - U01 import is re-validated on confirm and not stored; BR-U01-83 reworded.
+  - U07 reservations are ledger rows with partial unique indexes.
+  - U11 content column plus immutability trigger on `submissions`.
+  - U12 group set lock uses an advisory lock per assignment.
+  - U13 verification is the latest VERIFY `code_run`.
+  - U16 reminders are U02 jobs; a changed deadline reschedules a new job.
+- **Inception:** new section "3a. Bảng dùng chung" in `component-dependency.md`; ownership principle updated in `unit-of-work.md`; U09/U10 rows and `component-methods` updated.
+- **ERD:** `docs/erd.drawio` rebuilt to 45 tables and 42 relations (20 containment, 22 reference), re-laid out without overlaps; `docs/erd.md` and `docs/README.md` updated.
+- **Checks:** checker TOTAL 0; no remaining references to removed tables.
+- **State:** aidlc-state marks the plans of U01 and U05-U16 as "Updated, re-approval needed".
+**Context**: Construction - data model consolidation sync
+
+---
+
+## Re-approval of Updated Code Plans
+**Timestamp**: 2026-09-26T05:10:00Z
+**User Input**: "duyệt"
+**AI Response**: Recorded re-approval of the updated code plans for U01 and U05-U16 (45-table data model). All 16 code plans are approved; Code Generation Part 1 is complete. Next: Code Generation Part 2.
+**Context**: Construction - Code Generation Part 1 re-approval
+
+---

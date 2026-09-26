@@ -4,14 +4,14 @@
 
 ```
  Trình duyệt                 PayOS (Internet)              U05/U13 (nội bộ)
-   |  mua, xem ví              |  webhook   ^ tạo link/tra cứu     |
+   |  mua, xem credit          |  webhook   ^ tạo link/tra cứu     |
    v                           v            |                      v
  +--------------------------------- backend -----------------------------------+
  | PaymentController --> PaymentService --> PayosAdapter (PaymentProviderPort) |
  | WebhookController --> PayosSignatureVerifier --> PaymentSettlement          |
  | CreditController ---------------------------+                               |
  | CreditPortService (reserve/settle/release) --+--> CreditLedgerService       |
- | AdminCreditController (gói, mức tặng) -----+       (khóa ví, sổ cái)        |
+ | AdminCreditController (gói, mức tặng) -----+   (khóa số dư, sổ cái)         |
  +-----------------------------------------------------------------------------+
             | job U07_RECONCILE, U07_RESERVATION_SWEEP
             v
@@ -40,7 +40,7 @@
 | `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` | Rỗng → adapter giả (không dùng ở prod) |
 | `U07_PAYMENT_EXPIRE_MINUTES` | 15 |
 | `U07_MAX_PENDING_PER_ACCOUNT` | 3 |
-| `U07_MONTHLY_FREE_CREDITS` | 50 (admin sửa trong DB, biến này là giá trị khởi tạo) |
+| `U07_MONTHLY_FREE_CREDITS` | 50 (giá trị khởi tạo khóa `u07.monthlyFreeCredits` trong `app_settings`; admin sửa ở đó) |
 | `U07_RESERVATION_TTL_MINUTES` | 30 |
 | `U07_TOKENS_PER_CREDIT` | 1000 |
 | `APP_PUBLIC_URL` | Dựng `returnUrl`, `cancelUrl` |

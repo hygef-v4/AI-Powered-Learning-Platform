@@ -117,7 +117,7 @@ Hai trang dùng chung `RequestOtpStep` và `VerifyOtpAndSetPasswordStep`, khác 
 |---|---|---|---|
 | `CsvUploadStep` | `file` | `validateAccountImport` | Chỉ nhận `.csv`; có nút tải file mẫu `email,display_name,role` |
 | `ImportPreviewTable` | `rows[]` | - | Mỗi dòng: kết quả, lý do lỗi dễ hiểu. Đếm số dòng hợp lệ và lỗi |
-| `ImportConfirmStep` | `batchId` | `commitAccountImport` | Chỉ tạo dòng hợp lệ. Thông báo không có email nào được gửi |
+| `ImportConfirmStep` | `file` (gửi lại) | `commitAccountImport` | Backend kiểm lại rồi chỉ tạo dòng hợp lệ. Thông báo không có email nào được gửi |
 
 ## 4. Nguyên tắc chung
 

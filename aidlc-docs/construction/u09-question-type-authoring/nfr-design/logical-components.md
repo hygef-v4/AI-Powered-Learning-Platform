@@ -15,7 +15,7 @@
  | DocxExportService (DocxExportPort) --> JsvgRasterizer, PngChunkWriter      |
  | DocumentModelService (DocumentModelPort cho U06, U11, U15)                 |
  | DiagramCompactor (DiagramCompactPort cho U13)                              |
- | Repository (PostgreSQL: question_type_config, document_skeletons)          |
+ | Ghi qua AssignmentExtensionPort (U08): type_config, skeleton               |
  +----------------------------------------------------------------------------+
 ```
 

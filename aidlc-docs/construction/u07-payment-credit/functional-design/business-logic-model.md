@@ -23,16 +23,16 @@
 2. Gọi PayOS lấy trạng thái theo `orderCode`.
 3. `PAID` → áp dụng như F3 bước 3; `CANCELLED`/`EXPIRED` → cập nhật; lỗi → giữ nguyên (BR-U07-22).
 
-## F5 - Ví và tặng tháng
-1. Đọc ví: nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng (BR-U07-31).
-2. Tài khoản chưa có ví → tạo khi đọc lần đầu.
+## F5 - Số dư và tặng tháng
+1. Đọc số dư (khóa dòng tài khoản): nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = u07.monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng (BR-U07-31).
+2. Tài khoản mới có số dư 0 và `freePeriod` rỗng nên lần đọc đầu tiên được tặng tháng.
 
 ## F6 - Giữ và trừ credit (U05 và U13 gọi)
-1. `reserve`: F5 bước 1, khóa ví, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), tạo `HELD`, ghi sổ `RESERVE`.
-2. `settle`: tính chênh lệch với phần giữ, trả lại hoặc trừ thêm (BR-U07-42), ghi sổ `SETTLE`, `SETTLED`.
-3. `release`: trả lại phần giữ, ghi sổ `RELEASE`, `RELEASED`.
-4. Job quét mỗi 5 phút trả lại phần `HELD` quá hạn (BR-U07-43).
+1. `reserve`: F5 bước 1, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), ghi dòng sổ `RESERVE` (có `requestRef`, `expiresAt`); lần giữ ở trạng thái `HELD`. `requestRef` đã có → trả dòng cũ.
+2. `settle`: tính chênh lệch với phần giữ, trả lại hoặc trừ thêm (BR-U07-42), ghi dòng sổ `SETTLE` trỏ về dòng `RESERVE` → `SETTLED`.
+3. `release`: trả lại phần giữ, ghi dòng sổ `RELEASE` trỏ về dòng `RESERVE` → `RELEASED`.
+4. Job quét mỗi 5 phút tìm dòng `RESERVE` chưa đóng quá `expiresAt` và `release` (BR-U07-43).
 
 ## F7 - Quản trị
 1. Gói: tạo/sửa/ẩn (BR-U07-02).
-2. Mức tặng tháng: sửa, có hiệu lực từ lần đặt lại kế tiếp.
+2. Mức tặng tháng: sửa khóa `u07.monthlyFreeCredits` trong `app_settings`, có hiệu lực từ lần đặt lại kế tiếp.

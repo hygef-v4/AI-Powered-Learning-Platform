@@ -14,7 +14,7 @@
 |---|---|---|
 | NFR-U10-10 | Copy chạy trong một transaction: hoặc có đủ bài nháp + câu sao chép + cấu hình + lineage, hoặc không có gì. | BR-U10-11…13 |
 | NFR-U10-11 | Khóa chính sách thi thử bằng UPDATE có điều kiện `locked_at IS NULL`; sau khi khóa service từ chối sửa. | BR-U10-35 |
-| NFR-U10-12 | Lineage chỉ thêm, không sửa, không xóa. | BR-U10-40 |
+| NFR-U10-12 | Lineage ghi một lần khi tạo bài, không sửa, không xóa (service chặn; `AssignmentExtensionPort` từ chối ghi đè). | BR-U10-40 |
 
 ## 3. Bảo mật
 

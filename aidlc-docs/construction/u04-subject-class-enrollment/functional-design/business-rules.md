@@ -26,7 +26,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U04-20 | Ghi danh chỉ vào lớp `DRAFT` hoặc `OPEN`. Người được ghi danh phải có role `LEARNER`, trạng thái `ACTIVE` hoặc `PENDING_ACTIVATION`. | UC-CAT-11 |
+| BR-U04-20 | Ghi danh chỉ vào lớp `DRAFT` hoặc `OPEN`. Người được ghi danh phải có role `LEARNER`, trạng thái `ACTIVE` hoặc `PENDING`. | UC-CAT-11 |
 | BR-U04-21 | Mỗi `(lớp, người học)` một bản ghi. Đã `ACTIVE` → không làm gì, báo "đã ghi danh". Đang `REMOVED` → chuyển lại `ACTIVE`. | Câu 8, US-CAT-003 S2 |
 | BR-U04-22 | Một người học chỉ `ACTIVE` ở tối đa 1 lớp chưa lưu trữ của mỗi môn. | Câu 10 |
 | BR-U04-23 | Thêm từng người: tìm theo email/tên (≤ 20 kết quả, chỉ `LEARNER`). Thêm theo danh sách: dán email hoặc CSV 1 cột, ≤ 200 dòng; xử lý từng dòng, dòng hợp lệ vẫn được ghi danh. | Câu 4 |
