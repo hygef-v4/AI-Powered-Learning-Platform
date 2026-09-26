@@ -8,7 +8,7 @@
 | NFR-U07-02 | Unique DB: `orderCode`, `(account_id, idempotency_key)`, `eventKey`, `requestRef`; cộng credit `PURCHASE` unique theo `payment_id`. | BR-U07-04, 12, 41 |
 | NFR-U07-03 | Tiền lưu số nguyên VND (`bigint`), credit số nguyên; không dùng số thực. | Thiết kế |
 | NFR-U07-04 | User `app` không được UPDATE/DELETE bảng sổ cái (chỉ INSERT, SELECT). | BR-U07 sổ cái |
-| NFR-U07-05 | Test tổng sổ cái = số dư ví sau mọi luồng (mua, tặng, giữ, trừ, trả, điều chỉnh, đồng thời). | NFR-004 |
+| NFR-U07-05 | Test tổng sổ cái = số dư ví sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời). | NFR-004 |
 
 ## 2. PayOS
 

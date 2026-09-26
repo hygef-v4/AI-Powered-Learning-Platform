@@ -11,7 +11,7 @@
 - Danh mục hiện hành chỉ gồm story thuộc MVP. Các mã story đã loại không được tái sử dụng; lịch sử quyết định nằm trong `audit.md`.
 - Hệ thống chỉ có bốn persona người dùng: Người học, Giảng viên, Chủ nhiệm môn và Quản trị viên; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
-- Phạm vi triển khai: **50 story MVP**, được ánh xạ tới 78 use case hiện hành.
+- Phạm vi triển khai: **49 story MVP**, được ánh xạ tới 77 use case hiện hành.
 
 ## 2. Miền Identity and Access
 
@@ -1159,25 +1159,17 @@
 - **When** backend nhận webhook
 - **Then** hệ thống fail closed, không cộng credit và ghi sự kiện bảo mật phù hợp
 
-### US-PAY-003 - Đối soát trạng thái thanh toán
+#### Scenario 4 - Tự xác minh khi thiếu webhook
 
-**Story**: Là quản trị viên, tôi muốn đối soát giao dịch với nhà cung cấp để xử lý trạng thái chờ hoặc sai lệch mà không cộng credit nhầm.
+- **Given** giao dịch còn chờ hoặc đã hết hạn gần đây nhưng chưa được xác nhận
+- **When** job định kỳ tra trạng thái giao dịch qua API PayOS
+- **Then** giao dịch đã trả được ghi nhận và cộng credit đúng một lần; trạng thái hủy/hết hạn được cập nhật phù hợp
 
-**Truy vết**: FR-002, FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
+#### Scenario 5 - PayOS không khả dụng khi tự xác minh
 
-**Acceptance criteria**
-
-#### Scenario 1 - Đối soát giao dịch
-
-- **Given** quản trị viên có quyền và giao dịch cần kiểm tra
-- **When** hệ thống lấy trạng thái từ provider trong timeout
-- **Then** kết quả được so sánh, cập nhật idempotent theo rule và ghi audit
-
-#### Scenario 2 - Không thể đối soát
-
-- **Given** provider không khả dụng hoặc trả dữ liệu không xác minh được
-- **When** đối soát chạy
-- **Then** trạng thái hiện tại không được nâng lên thành công, credit không được cộng và lỗi có thể retry được ghi an toàn
+- **Given** PayOS không trả lời hoặc trả dữ liệu không xác minh được
+- **When** job định kỳ tra trạng thái giao dịch
+- **Then** hệ thống giữ nguyên trạng thái, không cộng credit và thử lại ở lần job sau
 
 ## 12. Miền Notification and Audit
 
@@ -1232,7 +1224,7 @@
 | Requirement | Stories chính |
 |---|---|
 | FR-001 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-006 |
-| FR-002 | Quy tắc kiểm quyền xuyên suốt 50 story MVP; chi tiết actor và phạm vi nằm trong từng story/UC |
+| FR-002 | Quy tắc kiểm quyền xuyên suốt 49 story MVP; chi tiết actor và phạm vi nằm trong từng story/UC |
 | FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-003, US-CAT-005 |
 | FR-004 | US-CNT-001, US-CNT-002, US-CNT-005, US-AIG-002 |
 | FR-005 | US-LRN-001 |
@@ -1240,11 +1232,11 @@
 | FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-011 |
 | FR-008 | US-GRD-001 đến US-GRD-005 |
 | FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
-| FR-010 | US-PAY-001, US-PAY-002, US-PAY-003 |
+| FR-010 | US-PAY-001, US-PAY-002 |
 | FR-011 | US-IAM-001, US-IAM-003, US-CAT-003, US-CNT-004, US-RPT-001, US-NTF-001 |
 | FR-012 | US-CNT-001, US-AIG-001, US-AIG-002, US-AIG-003, US-GRD-002 |
 | FR-013 | US-CNT-001, US-CNT-002, US-LRN-001 |
-| FR-014 | US-IAM-002, US-IAM-005, US-CAT-001, US-CAT-002, US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-003, US-GRD-002, US-GRD-003, US-PAY-001, US-PAY-002, US-PAY-003, US-AUD-001 |
+| FR-014 | US-IAM-002, US-IAM-005, US-CAT-001, US-CAT-002, US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-003, US-GRD-002, US-GRD-003, US-PAY-001, US-PAY-002, US-AUD-001 |
 | FR-015 | US-IAM-007 |
 | FR-016 | US-QBK-001, US-QBK-002, US-ASM-006, US-ASM-007, US-ASM-009, US-ASM-010 |
 | FR-017 | US-QBK-002, US-ASM-003 đến US-ASM-007 |
@@ -1282,7 +1274,7 @@
 | Valuable | Đạt | Mỗi story gắn với một trong bốn persona và nêu lợi ích rõ ràng |
 | Estimable | Đạt | Phạm vi được giới hạn theo một thao tác hoặc kết quả quan sát được |
 | Small | Đạt | Các hành trình lớn được tách theo kích hoạt, nội dung, tạo AI, phát hành, nộp, chấm và công bố |
-| Testable | Đạt | Cả 50 story MVP có acceptance criteria Given/When/Then và truy vết requirements |
+| Testable | Đạt | Cả 49 story MVP có acceptance criteria Given/When/Then và truy vết requirements |
 
 ## 16. Security Compliance tại User Stories
 

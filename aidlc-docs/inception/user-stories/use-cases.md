@@ -4,7 +4,7 @@
 
 Tài liệu liệt kê các use case theo mục tiêu nghiệp vụ của người dùng để phục vụ thiết kế, kiểm thử và nghiệm thu. Các thao tác hỗ trợ như tìm kiếm, lọc, xem trạng thái tác vụ nền, retry và xử lý tự động không được tách thành use case riêng mà được mô tả trong use case nghiệp vụ liên quan.
 
-Danh mục chỉ liệt kê **78 use case thuộc MVP**, truy vết tới 50 user story đang triển khai. Các mã UC đã loại không được tái sử dụng; lịch sử quyết định được lưu trong `audit.md`.
+Danh mục chỉ liệt kê **77 use case thuộc MVP**, truy vết tới 49 user story đang triển khai. Các mã UC đã loại không được tái sử dụng; lịch sử quyết định được lưu trong `audit.md`.
 
 ## 2. Tác nhân
 
@@ -162,8 +162,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 | ID | Actor | Use Case | Feature | Use Case Description |
 |---|---|---|---|---|
-| UC-PAY-01 | Người dùng | Mua credit AI | Payment | Cho phép mọi người dùng xem gói credit, bắt đầu thanh toán, theo dõi trạng thái và nhận credit AI sau khi giao dịch được xác minh. (`US-PAY-001`, `US-PAY-002`) |
-| UC-PAY-02 | Quản trị viên | Đối soát thanh toán | Payment Operations | Cho phép quản trị viên đối chiếu payment, webhook và credit đã cộng, rồi điều chỉnh chênh lệch có lý do. (`US-PAY-003`) |
+| UC-PAY-01 | Người dùng | Mua credit AI | Payment | Cho phép mọi người dùng xem gói credit, bắt đầu thanh toán và theo dõi trạng thái. Hệ thống xác minh webhook hoặc tự đối soát PayOS khi thiếu webhook, rồi cộng credit AI đúng một lần sau khi xác minh. (`US-PAY-001`, `US-PAY-002`) |
 
 ### 4.12 Notification and Audit
 
@@ -196,7 +195,7 @@ Các tác nhân `ACT-*` là người dùng chính của hệ thống. Các tác 
 
 ## 7. Kiểm tra độ đầy đủ
 
-- Toàn bộ 50 user story thuộc MVP có ít nhất một use case truy vết trực tiếp trong mô tả.
+- Toàn bộ 49 user story thuộc MVP có ít nhất một use case truy vết trực tiếp trong mô tả.
 - Danh mục chỉ sử dụng bốn actor nghiệp vụ; hệ thống và dịch vụ ngoài không đứng tên use case riêng.
 - Tìm kiếm, lọc, xử lý nền, retry và tự chấm được giữ như hành vi bên trong use case liên quan.
 - Các bước tạo, xem, sửa, chấp nhận và loại bỏ bản nháp AI được gộp theo phạm vi cấp lớp hoặc cấp môn.

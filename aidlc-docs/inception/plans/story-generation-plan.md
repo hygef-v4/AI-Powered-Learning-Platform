@@ -1,8 +1,8 @@
 # Kế hoạch tạo User Stories
 
-> Lịch sử lập kế hoạch: các mục nhắc "Phase 2" bên dưới phản ánh quyết định cũ. Hai catalog hiện hành chỉ gồm 50 story/78 use case MVP; story/UC ngoài phạm vi đã bị xóa. Xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
+> Lịch sử lập kế hoạch: các mục nhắc "Phase 2" bên dưới phản ánh quyết định cũ. Hai catalog hiện hành chỉ gồm 49 story/77 use case MVP; story/UC ngoài phạm vi đã bị xóa. Xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
 
-> Bổ sung 2026-09-13: Kế hoạch cũ yêu cầu đặc tả use case đầy đủ. Danh mục hiện hành tại `aidlc-docs/inception/user-stories/use-cases.md` chỉ giữ 78 UC MVP và truy vết 50/50 story đang triển khai; phần 59/59 là mốc lịch sử trước khi rút phạm vi.
+> Bổ sung 2026-09-13: Kế hoạch cũ yêu cầu đặc tả use case đầy đủ. Danh mục hiện hành tại `aidlc-docs/inception/user-stories/use-cases.md` chỉ giữ 77 UC MVP và truy vết 49/49 story đang triển khai; phần 59/59 là mốc lịch sử trước khi rút phạm vi.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -221,7 +221,7 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Thay `US-GRP-005` bằng luồng tổng hợp/chốt tài liệu và mở rộng `US-GRP-006` cho chấm nhất quán/điểm cuối.
 - [x] Mở rộng `US-QBK-002` với snapshot/version theo attempt.
 - [x] Thêm `US-ASM-009` đến `US-ASM-011` cho template, copy giữa lớp và simulation exam.
-- [x] Cập nhật personas và use cases; danh mục hiện hành truy vết đủ 50/50 story MVP tới 78 UC. Story ngoài phạm vi đã xóa khỏi catalog, quyết định lịch sử còn trong audit.
+- [x] Cập nhật personas và use cases; danh mục hiện hành truy vết đủ 49/49 story MVP tới 77 UC. Story ngoài phạm vi đã xóa khỏi catalog, quyết định lịch sử còn trong audit.
 - [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
 - [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
 - [x] Trình người dùng checkpoint phê duyệt lại User Stories.

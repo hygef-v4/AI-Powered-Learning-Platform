@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi và quy tắc
 
-Đây là 16 unit lập kế hoạch, được đối chiếu với **78 use case và 50 story** trong phạm vi MVP. Phần Learning Access trước đây đứng riêng đã được gộp vào U04 vì chỉ còn một story và không sở hữu bảng nào. Chúng là module logic trong một backend Spring Boot, không phải 16 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. Mỗi story có một primary unit; hai catalog hiện hành chỉ chứa phạm vi MVP.
+Đây là 16 unit lập kế hoạch, được đối chiếu với **77 use case và 49 story** trong phạm vi MVP. Phần Learning Access trước đây đứng riêng đã được gộp vào U04 vì chỉ còn một story và không sở hữu bảng nào. Chúng là module logic trong một backend Spring Boot, không phải 16 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. Mỗi story có một primary unit; hai catalog hiện hành chỉ chứa phạm vi MVP.
 
 - Mỗi unit sở hữu dữ liệu và quy tắc nghiệp vụ của mình; unit khác gọi public contract, không đọc bảng/repository trực tiếp.
 - U01 kiểm quyền actor/object; U02 giữ audit/job/event và phát triển song song với U01 qua authorization contract có version; U03 giữ file/artifact. Tách unit không thay đổi một backend deployable.
@@ -22,7 +22,7 @@
 | U04 | Subject, Class, Enrollment & Learning Access | Môn/lớp, phân công giảng viên/Chủ nhiệm môn, ghi danh, class scope; kiểm enrollment rồi trả nội dung đã phát hành và dữ liệu dashboard; mã mời tự ghi danh bản đơn giản | Không sao chép khóa học/lớp, không kiểm thanh toán, không sở hữu nội dung, không có learning path hay tiến độ từng bài học |
 | U05 | Content, Material & RAG | Học liệu môn/lớp, publication, YouTube transcript, ingestion/index phục vụ AI tạo đề; thông báo và hỏi đáp trong lớp | Không quyết định quyền truy cập learner hoặc bắt buộc RAG trong tạo đề; không có tìm kiếm/tóm tắt học liệu cho người dùng |
 | U06 | Rubric & Question Bank | Câu hỏi 5 loại và rubric checklist có phiên bản, cấp môn/lớp, nhập Excel/CSV, xem trước | Không sửa bản đã `ACTIVE`; không làm phân tích chất lượng câu hỏi |
-| U07 | Payment & AI Credit | Gói credit, thanh toán PayOS, verified webhook, ví credit AI (tặng tháng, giữ/trừ khi dùng AI), đối soát, điều chỉnh thủ công | Không ghi enrollment, không ảnh hưởng quyền vào lớp; redirect browser không cộng credit |
+| U07 | Payment & AI Credit | Gói credit, thanh toán PayOS, verified webhook, ví credit AI (tặng tháng, giữ/trừ khi dùng AI), tự đối soát giao dịch chờ | Không ghi enrollment, không ảnh hưởng quyền vào lớp; redirect browser không cộng credit |
 | U08 | Assessment Core & Publication | Assignment aggregate, draft/review, publication từng lớp, lịch và nộp trễ, khóa nội dung sau phát hành, ngưng giao, nhân bản, version mới sau khi ngưng giao/đóng | Không sở hữu kiểu câu hỏi, attempt hay final grade |
 | U09 | Question Type Authoring | Cấu hình quiz/essay/tài liệu (DOCUMENT), mô hình tài liệu có sơ đồ Draw.io nhúng, nhập khung từ DOCX và preview DOCX của người học trong lượt DOCUMENT, xuất bài ra DOCX, quy tắc kiểm XML. Không có đề chung cấp môn. Sở hữu bảng riêng `question_type_config` tham chiếu assignment qua khóa ngoài | Không sở hữu bank item, publication transaction, attempt hay sandbox; không ALTER bảng của U08 |
 | U10 | Template, Copy & Simulation | Template môn, copy assignment/rubric giữa lớp có lineage, simulation policy, diff giữa các version (nhân bản và ngưng giao ở U08). Sở hữu bảng riêng `assignment_lineage` và `simulation_policies` | Không copy lớp/khóa học, publication, attempt, submission hay grade; không ALTER bảng của U08 |

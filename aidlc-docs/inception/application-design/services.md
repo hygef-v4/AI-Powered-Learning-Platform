@@ -16,7 +16,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | AcademicService (U04) | Môn, lớp, phân công, ghi danh, mã mời, lớp của người học | Không xóa lịch sử ghi danh; không kiểm thanh toán |
 | ContentService, ClassCommunicationService (U05) | Chương/bài/phiên bản, liên kết bài cấp môn, ingest RAG, `retrieve`; thông báo/hỏi đáp lớp và sự kiện U16 | Không tự phiên âm; không xử lý ingest trong request; không cho lớp khác đọc/ghi |
 | BankService (U06) | Phiên bản câu hỏi/rubric, nhập file, tính điểm rubric | Không sửa bản đã `ACTIVE` |
-| PaymentService, CreditService (U07) | PayOS, webhook, đối soát, ví credit, giữ/trừ/trả | Không tin browser redirect; không để số dư âm |
+| PaymentService, CreditService (U07) | PayOS, webhook, tự đối soát định kỳ, ví credit, giữ/trừ/trả | Không tin browser redirect; không để số dư âm |
 | AssessmentService (U08) | Bài, duyệt, phát hành, lịch, khóa, version mới, ngưng giao | Không sửa version đã phát hành; không có đề chung |
 | TypeConfigService, DocumentService (U09) | Cấu hình loại bài, mô hình tài liệu, DOCX | Không cho sửa block khóa của giảng viên |
 | TemplateService, CopyService, SimulationService (U10) | Template, copy, diff, chính sách thi thử | Không copy lịch, lượt làm, bài nộp, điểm |
@@ -53,7 +53,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ### Thanh toán mua credit AI
 1. U07 tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị.
-2. Webhook có chữ ký hoặc đối soát → `PAID` và cộng credit đúng một lần.
+2. Webhook có chữ ký hoặc job tự đối soát → `PAID` và cộng credit đúng một lần.
 
 ## 4. Job policies
 
@@ -62,7 +62,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | OTP email (U01), email thông báo (U16) | Backoff U02, tối đa 5 lần | Theo job / outbox ID; email thông báo có trần 300/ngày |
 | Dọn file Drive còn sót khi upload lỗi (U03) | Backoff U02 | Theo `providerFileId` |
 | Ingest RAG, giải playlist (U05) | Lỗi tạm retry; lỗi vĩnh viễn/`BUSY` không | Theo `contentKey` |
-| Đối soát PayOS, trả phần giữ quá hạn (U07) | Theo lịch | Theo `orderCode` / reservation |
+| Tự đối soát PayOS, trả phần giữ quá hạn (U07) | Theo lịch | Theo `orderCode` / reservation |
 | Mở/đóng bài (U08) | Chạy lại bỏ qua nếu lịch đổi | Theo `expectedAt` |
 | Tự nộp (U11, U14) | Chạy lại không nộp trùng | Theo lượt / tài liệu nhóm |
 | AI, chạy code (U13) | Lỗi tạm tối đa 3 lần; lỗi code không retry | Theo proposal / run ID |

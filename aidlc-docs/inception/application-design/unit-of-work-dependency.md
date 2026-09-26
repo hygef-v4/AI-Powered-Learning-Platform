@@ -70,7 +70,7 @@ U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) 
 | Code sandbox run | U13 | Run result bất biến cho U11, U15 (chấm Code Lab) và U08 (kiểm lời giải mẫu) |
 | Group document | U14 | Tài liệu nhóm, lịch sử mục theo tác giả, bản nộp bất biến |
 | AI grade proposal và compact Draw.io | U13 phối hợp U15 | Proposal (XML rút gọn tạo trong bộ nhớ bởi U09); U15 quyết định điểm |
-| Payment reconciliation | U07 | Giao dịch PayOS, ví và sổ cái credit AI |
+| Automatic payment reconciliation | U07 | Giao dịch PayOS, ví và sổ cái credit AI |
 | Notification & reporting | U16 | Thông báo, email outbox, nhắc hạn, dashboard đọc theo yêu cầu và xuất bảng điểm trực tiếp |
 
 Job Platform U02 giữ lease/retry/status (không có dead-letter; hết lượt thì `FAILED`), còn owner nghiệp vụ kiểm tra idempotency và lưu kết quả. Worker payload chỉ chứa ID/reference và scope; worker tải nguồn qua contract có quyền.

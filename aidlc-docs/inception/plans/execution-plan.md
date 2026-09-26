@@ -16,7 +16,7 @@
 
 | Khu vực | Tác động | Nhận định |
 |---|---|---|
-| User-facing | Có - toàn hệ thống | 50 story MVP triển khai trên bốn persona |
+| User-facing | Có - toàn hệ thống | 49 story MVP triển khai trên bốn persona |
 | Structural | Có - lớn | Cần xác định component/service boundary, async work và external adapters |
 | Data model | Có - lớn | User/role/scope môn, môn/lớp/nhóm/leader, source/transcript RAG, question/rubric/assessment version, template/copy lineage, simulation policy/attempt snapshot, group part/composite version, submission, grade, payment, notification, audit |
 | API/contracts | Có - lớn | Web API, upload/YouTube ingestion/status, version publication/copy, group aggregation, AI task, payment webhook và provider adapters |
@@ -131,7 +131,7 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [x] **User Stories - APPROVED**: Bốn persona; 50 story và 78 use case thuộc phạm vi MVP. Danh mục use case hiện hành đã bỏ các UC ngoài phạm vi.
+- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case thuộc phạm vi MVP. Danh mục use case hiện hành đã bỏ các UC ngoài phạm vi.
 - [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
 - [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
 - [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.
@@ -197,7 +197,7 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 
 ### Primary success
 
-MVP thực hiện được các hành trình trong Requirements thuộc phạm vi triển khai và 50 story trong catalog hiện hành với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
+MVP thực hiện được các hành trình trong Requirements thuộc phạm vi triển khai và 49 story trong catalog hiện hành với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
 
 ### Key deliverables
 

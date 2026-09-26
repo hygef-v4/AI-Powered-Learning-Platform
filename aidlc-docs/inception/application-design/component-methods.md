@@ -90,11 +90,10 @@ score(rubricId, checkedItemIds) -> Score
 ```text
 createPayment(account, packageId, idempotencyKey) -> CheckoutLink
 handlePayosWebhook(rawBody, signature) -> WebhookResult
-reconcile(admin?, paymentId?) -> ReconcileResult
+reconcilePendingPayments(job) -> ReconcileResult
 reserve(accountId, credits, requestRef) -> Reservation
 settle(reservationId, actualCredits) -> void
 release(reservationId) -> void
-adjustCredits(admin, accountId, delta, reason) -> Ledger
 ```
 
 ## Assessment, Types, Template & Simulation (U08-U10)

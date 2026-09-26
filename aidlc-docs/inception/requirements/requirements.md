@@ -146,7 +146,7 @@ Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo gi
 **Tiêu chí chấp nhận:**
 
 - Webhook được xác minh chữ ký và xử lý idempotent.
-- Trạng thái thanh toán được đối soát với nhà cung cấp.
+- Job định kỳ tự đối soát trạng thái thanh toán với nhà cung cấp khi thiếu webhook; không có thao tác admin đối soát thủ công.
 - Thanh toán lỗi, hết hạn hoặc chưa xác minh thì không cộng credit.
 - Quyền lợi mua được là credit AI (quy đổi ra token khi gọi AI); thanh toán không mở hay chặn quyền vào lớp và nội dung học.
 

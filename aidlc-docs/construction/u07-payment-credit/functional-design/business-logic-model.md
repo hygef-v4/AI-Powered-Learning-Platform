@@ -18,8 +18,8 @@
 3. Một transaction: INSERT `PaymentWebhookEvent` (unique `eventKey`) → nếu trùng thì `DUPLICATE`; `Payment` → `PAID` (khi chưa `PAID`) → ghi sổ `PURCHASE` + tăng `purchasedBalance` (BR-U07-12, 13); audit.
 4. Trả `200`.
 
-## F4 - Đối soát
-1. Job U02 `U07_RECONCILE` mỗi 10 phút, hoặc ADMIN bấm (BR-U07-20, 21).
+## F4 - Tự đối soát
+1. Job U02 `U07_RECONCILE` mỗi 10 phút (BR-U07-20).
 2. Gọi PayOS lấy trạng thái theo `orderCode`.
 3. `PAID` → áp dụng như F3 bước 3; `CANCELLED`/`EXPIRED` → cập nhật; lỗi → giữ nguyên (BR-U07-22).
 
@@ -36,5 +36,3 @@
 ## F7 - Quản trị
 1. Gói: tạo/sửa/ẩn (BR-U07-02).
 2. Mức tặng tháng: sửa, có hiệu lực từ lần đặt lại kế tiếp.
-3. Điều chỉnh credit (BR-U07-50).
-4. Danh sách giao dịch lọc theo trạng thái/tài khoản/thời gian, nút đối soát.

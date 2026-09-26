@@ -9,9 +9,9 @@
  +--------------------------------- backend -----------------------------------+
  | PaymentController --> PaymentService --> PayosAdapter (PaymentProviderPort) |
  | WebhookController --> PayosSignatureVerifier --> PaymentSettlement          |
- | CreditController ---------------------------+                              |
+ | CreditController ---------------------------+                               |
  | CreditPortService (reserve/settle/release) --+--> CreditLedgerService       |
- | AdminCreditController (gói, điều chỉnh) -----+       (khóa ví, sổ cái)      |
+ | AdminCreditController (gói, mức tặng) -----+       (khóa ví, sổ cái)        |
  +-----------------------------------------------------------------------------+
             | job U07_RECONCILE, U07_RESERVATION_SWEEP
             v
@@ -19,7 +19,7 @@
          ReservationSweepHandler --> CreditPortService.release
 ```
 
-**Text alternative**: Người dùng mua credit qua `PaymentController`; `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U05 và U13 gọi `CreditPortService` để giữ, trừ, trả credit cho embedding và tạo nội dung; admin quản lý gói và điều chỉnh credit. Trong worker, job đối soát tra PayOS và áp dụng kết quả, job quét trả lại phần credit giữ quá hạn.
+**Text alternative**: Người dùng mua credit qua `PaymentController`; `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U05 và U13 gọi `CreditPortService` để giữ, trừ, trả credit cho embedding và tạo nội dung; admin quản lý gói và mức tặng tháng. Trong worker, job đối soát tra PayOS và áp dụng kết quả, job quét trả lại phần credit giữ quá hạn.
 
 ## 2. Thành phần
 
@@ -51,7 +51,7 @@
 |---|---|---|
 | SECURITY-03 | Compliant | Không log key, payload đầy đủ |
 | SECURITY-05 | Compliant | P3 kích thước, chữ ký |
-| SECURITY-08 | Compliant | Chỉ chủ tài khoản/ADMIN; `CreditPort` nội bộ |
+| SECURITY-08 | Compliant | Chỉ chủ tài khoản xem ví/lịch sử; chỉ ADMIN sửa gói và mức tặng; `CreditPort` nội bộ |
 | SECURITY-09 | Compliant | Key trong `.env`; adapter giả không bật ở prod |
 | SECURITY-15 | Compliant | P2, P3 fail closed |
 | RESILIENCY-10 | Compliant | Timeout PayOS |

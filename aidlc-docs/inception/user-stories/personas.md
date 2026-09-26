@@ -93,12 +93,12 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Quản lý tài khoản, bốn vai trò và phạm vi môn của Chủ nhiệm môn.
 - Cấu hình quota, model, giới hạn chi phí/kill-switch và giám sát dịch vụ AI theo cách không khóa nhà cung cấp.
 - Tạo cấu trúc môn/lớp, phân công và ghi danh.
-- Đối soát giao dịch và credit AI đã cộng.
+- Cấu hình gói credit AI; việc xác minh thanh toán chạy tự động.
 - Tra cứu audit theo phạm vi quản trị.
 
 ### Stories liên quan
 
-`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-PAY-002`, `US-PAY-003`, `US-AUD-001`, `US-NTF-001`.
+`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-AUD-001`, `US-NTF-001`.
 
 ## 6. Ma trận persona - miền nghiệp vụ
 
@@ -107,7 +107,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 | Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài | Xem cá nhân | Chính | Nhận | Không |
 | Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Không | Nhận | Qua hành động được ghi |
 | Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo template đề | Không mặc định | Không | Nhận | Qua hành động được ghi |
-| Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Đối soát | Cấu hình/nhận | Chính |
+| Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Cấu hình gói/mua credit | Cấu hình/nhận | Chính |
 
 ## 7. Nguyên tắc phân quyền xuyên persona
 

@@ -17,18 +17,17 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-10 | Chỉ webhook có chữ ký hợp lệ (HMAC-SHA256 bằng checksum key PayOS) hoặc đối soát qua API PayOS mới chuyển `PAID`. Trang quay về (return URL) chỉ hiển thị. | US-PAY-002, SEC-007 |
+| BR-U07-10 | Chỉ webhook có chữ ký hợp lệ (HMAC-SHA256 bằng checksum key PayOS) hoặc job tự đối soát qua API PayOS mới chuyển `PAID`. Trang quay về (return URL) chỉ hiển thị. | US-PAY-002, SEC-007 |
 | BR-U07-11 | Webhook phải khớp `orderCode` có thật, `amount` bằng `amountVnd`, mã kết quả thành công; lệch → `REJECTED`, audit sự kiện bảo mật, không cộng. | US-PAY-002 S3 |
 | BR-U07-12 | `PAID` và ghi sổ `PURCHASE` trong một transaction, đúng một lần theo `eventKey`/`orderCode`; webhook trùng → `DUPLICATE`, trả thành công, không cộng thêm. | US-PAY-002 S2 |
 | BR-U07-13 | Webhook tới sau khi `EXPIRED`/`CANCELLED` nhưng hợp lệ và đã trả tiền → vẫn `PAID` và cộng credit (tiền đã nhận), audit. | Thiết kế |
 
-## 3. Đối soát
+## 3. Tự đối soát
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-20 | Job đối soát mỗi 10 phút kiểm giao dịch `PENDING` quá 5 phút và `EXPIRED` trong 24 giờ qua bằng API PayOS; kết quả áp dụng như webhook (BR-U07-12). | US-PAY-003 S1 |
-| BR-U07-21 | ADMIN bấm đối soát một giao dịch được. | UC-PAY-02 |
-| BR-U07-22 | PayOS không trả lời hoặc dữ liệu không xác minh được → giữ nguyên trạng thái, không cộng, ghi lỗi, retry lần sau. | US-PAY-003 S2 |
+| BR-U07-20 | Job đối soát mỗi 10 phút kiểm giao dịch `PENDING` quá 5 phút và `EXPIRED` trong 24 giờ qua bằng API PayOS; kết quả áp dụng như webhook (BR-U07-12). | US-PAY-002 S4 |
+| BR-U07-22 | PayOS không trả lời hoặc dữ liệu không xác minh được → giữ nguyên trạng thái, không cộng, ghi lỗi, retry lần sau. | US-PAY-002 S5 |
 
 ## 4. Ví credit
 
@@ -49,11 +48,10 @@
 | BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần còn lại trong ví, không để âm. | Thiết kế |
 | BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi hoặc hết hạn mức hệ thống trước khi gọi provider. Phần giữ quá 30 phút tự trả lại (job quét). | Thiết kế |
 
-## 6. Điều chỉnh và audit
+## 6. Audit
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-50 | ADMIN cộng/trừ credit mua của một tài khoản, lý do ≥ 10 ký tự, không làm số dư âm; audit. | Câu 6 |
 | BR-U07-53 | Sau khi `PAID`, phát event `u07.payment.paid` (sau commit) để U16 báo trong app. | U16 |
-| BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát thủ công, điều chỉnh, đổi mức tặng tháng. | FR-014, SEC-005 |
-| BR-U07-52 | Người dùng xem số dư, lịch sử giao dịch và sổ cái của mình; ADMIN xem mọi tài khoản. | UC-PAY-01, 02 |
+| BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát tự động, đổi mức tặng tháng. | FR-014, SEC-005 |
+| BR-U07-52 | Người dùng xem số dư, lịch sử giao dịch và sổ cái của mình. | UC-PAY-01 |

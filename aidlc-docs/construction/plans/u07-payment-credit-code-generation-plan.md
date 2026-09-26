@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-PAY-001, US-PAY-002, US-PAY-003. **Use case**: UC-PAY-01, UC-PAY-02.
+- **Story**: US-PAY-001, US-PAY-002. **Use case**: UC-PAY-01. Job tự đối soát thuộc US-PAY-002; không có thao tác admin đối soát hoặc điều chỉnh credit thủ công.
 - **Thiết kế nguồn**: `construction/u07-payment-credit/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -64,8 +64,8 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 - [ ] **Bước 6** - `PaymentService`: idempotency, giới hạn 3 `PENDING`, `orderCode`, gọi PayOS sau commit, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-03…07).
 - [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13).
 - [ ] **Bước 8** - `CreditPortService`: `reserve`/`settle`/`release`/`balance` idempotent (F6, P5, BR-U07-40…43).
-- [ ] **Bước 9** - Worker: `ReconcileHandler` (10 phút, ≤ 100 giao dịch) và `ReservationSweepHandler` (5 phút, `SKIP LOCKED`) (F4, P5, P6, BR-U07-20…22).
-- [ ] **Bước 10** - Điều chỉnh credit của admin và audit (BR-U07-50, 51).
+- [ ] **Bước 9** - Worker: `ReconcileHandler` (10 phút, ≤ 100 giao dịch) và `ReservationSweepHandler` (5 phút, `SKIP LOCKED`) (F4, P5, P6, BR-U07-20, BR-U07-22).
+- [ ] **Bước 10** - Audit sự kiện `PAID`, webhook bị từ chối, job tự đối soát và thay đổi cấu hình gói (BR-U07-51).
 - [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng tháng sang tháng mới.
 - [ ] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u07-payment-credit/code/business-logic-summary.md`.
 
@@ -87,8 +87,8 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 ### Nhóm E - Frontend
 
 - [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage` (`PackageList`, `PaymentHistoryTable`, `LedgerTable`), `PaymentResultPage`.
-- [ ] **Bước 23** - Admin: `PackageAdminPage`, `PaymentAdminPage`, `AdjustCreditsDialog`; trang thanh toán giả cho local.
-- [ ] **Bước 24** - Test frontend: trang kết quả không báo thành công khi chưa `PAID`, lý do điều chỉnh bắt buộc.
+- [ ] **Bước 23** - Admin: `PackageAdminPage` cho gói và mức tặng; trang thanh toán giả cho local.
+- [ ] **Bước 24** - Test frontend: trang kết quả không báo thành công khi chưa `PAID`.
 - [ ] **Bước 25** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
@@ -101,8 +101,7 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_wall
 | Nguồn | Bước |
 |---|---|
 | US-PAY-001 (UC-PAY-01) | 5, 6, 15, 22 |
-| US-PAY-002 (UC-PAY-01) | 7, 16, 20 |
-| US-PAY-003 (UC-PAY-02) | 9, 10, 23 |
+| US-PAY-002 (UC-PAY-01) | 7, 9, 16, 20 |
 | Credit cho U13 | 4, 8, 16 |
 
 ## 5. Ngoài phạm vi

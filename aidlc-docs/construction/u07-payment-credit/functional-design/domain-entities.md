@@ -44,10 +44,9 @@ U07 sở hữu gói credit, giao dịch thanh toán qua PayOS, webhook, ví cred
 |---|---|---|
 | `id` | UUID | |
 | `accountId` | UUID | |
-| `type` | enum | `PURCHASE`, `MONTHLY_GRANT`, `RESERVE`, `SETTLE`, `RELEASE`, `ADJUSTMENT` |
+| `type` | enum | `PURCHASE`, `MONTHLY_GRANT`, `RESERVE`, `SETTLE`, `RELEASE` |
 | `freeDelta`, `purchasedDelta` | số nguyên | Âm hoặc dương |
-| `refType`, `refId` | | `PAYMENT`, `RESERVATION`, `ADMIN` |
-| `reason` | chuỗi | Bắt buộc với `ADJUSTMENT` |
+| `refType`, `refId` | | `PAYMENT`, `RESERVATION` |
 | `actorId`, `createdAt` | | |
 
 Sổ cái chỉ thêm, không sửa, không xóa. Số dư ví = tổng sổ cái (kiểm được bằng query).
@@ -59,14 +58,14 @@ Sổ cái chỉ thêm, không sửa, không xóa. Số dư ví = tổng sổ cá
 ## 7. Trạng thái
 
 ```
-Payment: CREATED --tạo link OK--> PENDING --webhook/đối soát PAID--> PAID
+Payment: CREATED --tạo link OK--> PENDING --webhook/job tự đối soát PAID--> PAID
             |                        |--hủy--> CANCELLED
             +--PayOS lỗi--> FAILED   |--quá hạn--> EXPIRED
 Reservation: HELD --settle--> SETTLED
                +---release/hết hạn--> RELEASED
 ```
 
-**Text alternative**: Giao dịch tạo ở `CREATED`; tạo link PayOS thành công thì `PENDING`, lỗi thì `FAILED`. Từ `PENDING`, xác nhận đã trả (webhook hoặc đối soát) thì `PAID`; người dùng hủy thì `CANCELLED`; quá 15 phút thì `EXPIRED`. Phần giữ credit ở `HELD`, khi AI xong thì `SETTLED`, khi AI lỗi hoặc quá 30 phút thì `RELEASED`.
+**Text alternative**: Giao dịch tạo ở `CREATED`; tạo link PayOS thành công thì `PENDING`, lỗi thì `FAILED`. Từ `PENDING`, xác nhận đã trả (webhook hoặc job tự đối soát) thì `PAID`; người dùng hủy thì `CANCELLED`; quá 15 phút thì `EXPIRED`. Phần giữ credit ở `HELD`, khi AI xong thì `SETTLED`, khi AI lỗi hoặc quá 30 phút thì `RELEASED`.
 
 ## 8. Contract
 
@@ -75,4 +74,4 @@ Reservation: HELD --settle--> SETTLED
 | `CreditPort` | U07 cung cấp cho U05 và U13 | `reserve(accountId, credits, requestRef)`, `settle(reservationId, actualCredits)`, `release(reservationId)`, `balance(accountId)` |
 | `PaymentProviderPort` | U07 dùng, adapter PayOS | Tạo link, lấy trạng thái, kiểm chữ ký webhook |
 | `AuthorizationPort` | U07 dùng U01 | Quyền admin |
-| `JobPort`, `AuditPort` | U07 dùng U02 | Đối soát, audit |
+| `JobPort`, `AuditPort` | U07 dùng U02 | Job tự đối soát, audit |

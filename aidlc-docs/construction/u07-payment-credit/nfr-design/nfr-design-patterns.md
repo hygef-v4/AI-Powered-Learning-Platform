@@ -1,15 +1,15 @@
 # U07 Payment & AI Credit - NFR Design Patterns
 
 ## P1 - Một đường ghi số dư (CreditLedgerService)
-- `apply(accountId, type, freeDelta, purchasedDelta, ref, reason, actor)`:
+- `apply(accountId, type, freeDelta, purchasedDelta, ref, actor)`:
   1. Khóa ví `PESSIMISTIC_WRITE` (tạo ví nếu chưa có).
   2. Đặt lại tặng tháng nếu sang tháng mới (ghi `MONTHLY_GRANT` trước).
   3. Kiểm số dư sau thay đổi ≥ 0.
   4. INSERT sổ cái, UPDATE ví.
-- Mọi luồng (mua, giữ, trừ, trả, điều chỉnh) gọi hàm này trong transaction của mình (NFR-U07-01).
+- Mọi luồng (mua, giữ, trừ, trả) gọi hàm này trong transaction của mình (NFR-U07-01).
 
 ## P2 - Áp dụng thanh toán idempotent (PaymentSettlement)
-- `markPaid(orderCode, providerReference, source)` dùng chung cho webhook và đối soát:
+- `markPaid(orderCode, providerReference, source)` dùng chung cho webhook và job tự đối soát:
   1. Khóa `Payment` theo `orderCode`.
   2. Đã `PAID` → trả `DUPLICATE`.
   3. Kiểm số tiền; → `PAID`, `paidAt`.
@@ -32,7 +32,7 @@
 - `settle`/`release` khóa reservation, chỉ xử lý khi `HELD`; gọi lại sau khi đã xử lý → trả kết quả cũ.
 - Sweeper chọn `HELD` quá `expiresAt` bằng `FOR UPDATE SKIP LOCKED`, `release` từng cái.
 
-## P6 - Đối soát
+## P6 - Tự đối soát
 - Job lấy tối đa 100 giao dịch mỗi lần; gọi PayOS tuần tự; `PAID` → P2 với `source = RECONCILE`; lỗi mạng → bỏ qua, lần sau thử lại.
 
 ## P7 - Adapter giả

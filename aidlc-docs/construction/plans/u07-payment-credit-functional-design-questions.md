@@ -66,7 +66,9 @@ B) Không
 
 X) Khác (mô tả sau thẻ [Answer]: bên dưới)
 
-[Answer]: A
+[Answer]: B
+
+> Quyết định cập nhật 2026-09-26: bỏ UC-PAY-02; không có thao tác admin đối soát hoặc điều chỉnh credit thủ công trong MVP. Job tự đối soát vẫn chạy.
 
 ## Câu 7 - Hoàn tiền
 

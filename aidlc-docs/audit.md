@@ -2447,3 +2447,51 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Context**: Consistency review
 
 ---
+
+## Derived MVP diagrams
+**Timestamp**: 2026-09-26T08:42:11Z
+**User Input**: "dựa vào doc construction đã làm xong giúp tôi sinh ra erd, screen flow, bussiness flow, usecase, context diagram , đặt trong thư mục docs"
+**AI Response**: "Created docs/README.md, erd.md, screen-flow.md, business-flow.md, use-case.md, and context-diagram.md from the current Construction design. The diagrams cover 16 unit-owned data sets, 62 documented PostgreSQL tables, 78 current use cases, role-based screens, business journeys, and external integrations. Cross-unit references are identified separately from unit-owned tables."
+**Context**: Documentation diagrams derived from completed Construction design
+
+---
+
+## ERD draw.io consolidation
+**Timestamp**: 2026-09-26T09:08:17Z
+**User Input**: "erd vẽ ra drawio , gộp hết các bảng vào ko chia theo group"
+**AI Response**: "Created docs/erd.drawio with all 62 Construction tables on one canvas and 55 connections (36 from the previous ERD plus 19 selected cross-unit references). Updated docs/erd.md and docs/README.md so the editable draw.io file is the primary ERD; removed the grouped Mermaid ERD presentation."
+**Context**: Documentation diagram format and layout change
+
+---
+
+## SRS use-case table reconciliation
+**Timestamp**: 2026-09-26T09:12:36Z
+**User Input**: "đây là usecase của doc cũ giúp tôi viết lại 1 bảng có format như này, uc nào cũ đúng rồi thì k đổi còn nếu khác thì sửa, thêm sửa xóa"
+**AI Response**: "Created docs/use-case-table.md as one English four-column SRS table aligned to the current 78 MVP use cases. Preserved 54 old entries verbatim, revised 20, removed 12 obsolete entries, and added four current use cases. Linked the table from docs/README.md."
+**Context**: Documentation-only reconciliation against aidlc-docs/inception/user-stories/use-cases.md and the attached old SRS use-case list
+
+---
+
+## Business-flow swimlane revision
+**Timestamp**: 2026-09-26T09:19:15Z
+**User Input**: "sửa lại cái business flow như cái mẫu này, vẽ theo kieuerr swimlane"
+**AI Response**: "Created docs/business-flow.drawio with five editable swimlane pages for the existing MVP business flows; replaced Mermaid diagrams in docs/business-flow.md with links and kept their text explanations; updated docs/README.md. Validated five pages, lane containers, edge references, and XML structure."
+**Context**: Documentation-only visualization change requested with screenshot example C:/Users/QUANGH~1/AppData/Local/Temp/codex-clipboard-ca957603-b7df-48af-a8dc-66bcaef3c62d.png
+
+---
+
+## Remove manual payment reconciliation use case
+**Timestamp**: 2026-09-26T09:27:31Z
+**User Input**: "tôi nghĩ bỏ uc này đik cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
+**AI Response**: "Started a cross-document scope revision: remove UC-PAY-02 and administrator-triggered reconciliation/credit adjustment, retain automatic PayOS reconciliation for missed webhooks, and update dependent catalog, design, plans, diagrams, and counts."
+**Context**: Inception and Construction documentation scope change
+
+---
+
+## Remove manual payment reconciliation use case — completed
+**Timestamp**: 2026-09-26T09:36:27Z
+**User Input**: "tôi nghĩ bỏ uc này đik cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
+**AI Response**: "Removed UC-PAY-02 and US-PAY-003 from active catalogs; moved automatic PayOS reconciliation to US-PAY-002/UC-PAY-01; removed administrator reconciliation and manual credit adjustment from U07 design, UI, business rules, domain, methods, code plan, and diagrams; updated current scope to 49 stories and 77 use cases. Validated catalog counts, direct story traceability, SRS numbering, draw.io XML, and formatting."
+**Context**: Inception/Construction documentation reconciliation; no application code changed
+
+---
