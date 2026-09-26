@@ -6,7 +6,7 @@
  Browser (Next.js)
    | cookie access_token / refresh_token
    v
- +-------------------- Backend (Spring Boot, package u01) -------------------+
+ +-------------------- Backend (Spring Boot, package identity) --------------+
  |  RateLimitFilter --> JwtAuthFilter --> Controllers                        |
  |                                         |                                 |
  |        +--------------------------------+---------------------------+     |

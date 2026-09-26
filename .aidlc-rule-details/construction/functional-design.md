@@ -53,7 +53,7 @@ Design detailed business logic for the unit, technology-agnostic and focused pur
 - **Frontend Components** (if applicable) - Ask about UI component structure, user interactions, state management, and form handling
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-functional-design-plan.md`
+- Save as `aidlc-docs/construction/plans/functional-design-plan/{unit-name}-functional-design-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers

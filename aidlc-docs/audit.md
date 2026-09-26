@@ -2622,3 +2622,67 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Context**: Construction - messaging naming
 
 ---
+
+## Documentation organization
+**Timestamp**: 2026-09-26T14:51:44Z
+**User Input**: "cái plans trong construction hơi bừa nhóm thư mục đi"
+**AI Response**: "Grouped 105 construction plan and question files into 16 unit folders; updated plan path rules and the U01 NFR reference."
+**Context**: Documentation-only organization; no workflow stage advancement.
+
+---
+
+## Documentation organization correction
+**Timestamp**: 2026-09-26T14:56:13Z
+**User Input**: "tách mỗi loại file trong plans construction thành 1 folder chứ k phải là theo unit kiểu code generation plan ..."
+**AI Response**: "Regrouped 105 construction plan and question files by file type into 9 folders; corrected plan path rules and U01 NFR reference."
+**Context**: Documentation-only organization; correction to prior grouping.
+
+---
+
+## Code generation plan package naming
+**Timestamp**: 2026-09-26T15:01:06Z
+**User Input**: "thêm tên vào code generation plan kiểu thay u01 thành tên của unit"
+**AI Response**: "Changed Java package folder names in all 16 code generation plans from numeric unit codes to descriptive unit names; aligned the unit overview and U01 logical-components diagram."
+**Context**: Documentation update only; unit codes remain in document IDs and migration paths.
+
+---
+
+## Shorter backend package names
+**Timestamp**: 2026-09-26T15:04:24Z
+**User Input**: "đặt tên ngắn gọn xúc tích được ko"
+**AI Response**: "Shortened backend Java package names in all 16 code generation plans and aligned the architecture overview and U01 diagram."
+**Context**: Documentation update; U01-U16 remain traceability and migration identifiers.
+
+---
+
+## Use case specifications document
+**Timestamp**: 2026-09-26T15:20:13Z
+**User Input**: "chọn 10 usecase quan trọng nhất và làm theo mẫu này viết vào file md trong thư mục docs"
+**AI Response**: "Created docs/use-case-specifications.md with 10 prioritized MVP use case specifications following the supplied Primary Actors, Secondary Actors, Description, Preconditions, Normal Flow, Alternative Flows and Postconditions template."
+**Context**: Documentation request; source catalog and unit business designs checked.
+
+---
+
+## English use case specifications
+**Timestamp**: 2026-09-26T15:26:21Z
+**User Input**: "viết lại bằng tiếng anh , tên uc đúng với trong file usecase md"
+**AI Response**: "Rewrote docs/use-case-specifications.md entirely in English and matched all ten UC titles exactly to docs/use-case-table.md."
+**Context**: Documentation revision; UC IDs and business rules retained.
+
+---
+
+## Reselection of complex and important use cases
+**Timestamp**: 2026-09-26T15:34:50Z
+**User Input**: "chọn ra những usecase phức tạp và quan trọng nhất trong toàn bộ 77 usecase"
+**AI Response**: "Reassessed the 77-case MVP catalog and updated docs/use-case-specifications.md to the ten highest-priority complex or central workflows. Replaced UC-CAT-13 and UC-GRD-04 with UC-ASM-18 and UC-GRP-08; regrouped the specifications by feature."
+**Context**: Documentation revision based on supplied SRS selection rule.
+
+---
+
+## Reselecting use cases from the English table
+**Timestamp**: 2026-09-26T15:43:45Z
+**User Input**: "đọc lại file usecase table và chọn lại"
+**AI Response**: "Read all 77 rows of docs/use-case-table.md, reselected ten distinctive complex workflows, replaced the generic publication and simulation cases with DOCUMENT authoring and group section completion, and aligned all headings with the table's numeric IDs, exact names, and Feature categories."
+**Context**: Documentation revision. The old use-case catalog was absent from the workspace; the English table is the current source for IDs and names.
+
+---

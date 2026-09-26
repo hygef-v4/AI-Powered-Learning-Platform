@@ -58,7 +58,7 @@ This stage generates code for each unit of work through two integrated parts:
   - Service boundaries and responsibilities
 
 ## Step 4: Create Unit Plan Document
-- [ ] Save complete plan as `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
+- [ ] Save complete plan as `aidlc-docs/construction/plans/code-generation-plan/{unit-name}-code-generation-plan.md`
 - [ ] Include step numbering (Step 1, Step 2, etc.)
 - [ ] Include unit context and dependencies
 - [ ] Include story traceability
@@ -96,7 +96,7 @@ This stage generates code for each unit of work through two integrated parts:
 # PART 2: GENERATION
 
 ## Step 10: Load Unit Code Generation Plan
-- [ ] Read the complete plan from `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`
+- [ ] Read the complete plan from `aidlc-docs/construction/plans/code-generation-plan/{unit-name}-code-generation-plan.md`
 - [ ] Identify the next uncompleted step (first [ ] checkbox)
 - [ ] Load the context for that step (unit, dependencies, stories)
 

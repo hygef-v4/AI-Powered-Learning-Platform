@@ -40,7 +40,7 @@ Catalog hiện hành có `US-LRN-001` cho quyền truy cập lớp. `UC-LRN-01`,
 ## 3. Code organization
 
 - `/frontend`: Next.js, mỗi unit một feature folder riêng dưới console tương ứng, dùng chung layout và nav. Khu vực giảng dạy tách thành Class Console, Assignment Console và Grading Console để nhiều unit không sửa chung một cây component.
-- `/backend`: một Spring Boot modular monolith; package theo U01-U16, mỗi package có API/application/domain/infrastructure khi cần.
+- `/backend`: một Spring Boot modular monolith; package theo tên nghiệp vụ ngắn của từng unit (ví dụ `identity`, `auditjobs`, `academics`), mỗi package có `api`/`application`/`domain`/`infrastructure` khi cần. Mã U01-U16 dùng để truy vết tài liệu và migration.
 - `/worker`: process/container riêng, handler thuộc unit nghiệp vụ tương ứng và dùng versioned job contract; không import repository nội bộ backend.
 - `/contracts`: OpenAPI tách theo unit (`u01-identity.yaml`, `u09-assessment.yaml`...), event/job schema và compatibility tests; gộp thành một spec lúc build.
 - Migration đánh số theo timestamp (`V20260924_1430__`), không dùng số tăng dần, để hai người không trùng số.

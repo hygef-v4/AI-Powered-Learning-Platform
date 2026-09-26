@@ -1,6 +1,6 @@
 # U01 Account & Access - NFR Requirements
 
-Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết định: `plans/u01-account-and-access-nfr-requirements-questions.md`.
+Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết định: `aidlc-docs/construction/plans/nfr-requirements-questions/u01-account-and-access-nfr-requirements-questions.md`.
 
 ## 1. Quy mô và hiệu năng
 

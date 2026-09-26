@@ -40,7 +40,7 @@ Determine non-functional requirements for the unit and make tech stack choices.
 - **Usability Requirements** - Ask about user experience, accessibility, and interface requirements
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-nfr-requirements-plan.md`
+- Save as `aidlc-docs/construction/plans/nfr-requirements-plan/{unit-name}-nfr-requirements-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
