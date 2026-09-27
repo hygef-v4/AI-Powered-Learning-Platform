@@ -96,6 +96,8 @@ settle(reservationId, actualCredits) -> void
 release(reservationId) -> void
 ```
 
+Các method thanh toán, số dư và sổ cái chỉ phục vụ tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN`. Tài khoản chỉ có vai trò `LEARNER` không có ví/credit và bị backend từ chối khi gọi các method này hoặc chức năng AI.
+
 ## Assessment, Types, Template & Simulation (U08-U10)
 
 ```text

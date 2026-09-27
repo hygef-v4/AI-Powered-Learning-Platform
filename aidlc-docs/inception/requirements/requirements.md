@@ -143,6 +143,10 @@ Người học phải xem được điểm, phản hồi và trạng thái bài 
 
 Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
+Chỉ tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên được cấp, mua và sử dụng credit AI theo quyền nghiệp vụ. Người học không được gọi chức năng AI, không được cấp credit hằng tháng, không có ví/trang credit hoặc quyền mua credit; backend phải từ chối cả khi gọi trực tiếp API. Người học vẫn làm/nộp bài, chạy Code Lab và xem điểm/phản hồi đã công bố; các thao tác này không tiêu credit hay gọi dịch vụ AI dưới danh nghĩa Người học. Nếu giảng viên yêu cầu AI hỗ trợ chấm bài của Người học, credit được tính cho giảng viên và chỉ kết quả cuối do giảng viên công bố mới hiển thị cho Người học.
+
+Nếu một tài khoản có nhiều vai trò, quyền AI/credit chỉ áp dụng khi thao tác trong phạm vi Giảng viên, Chủ nhiệm môn hoặc Quản trị viên; góc nhìn và thao tác Người học không có AI/credit.
+
 **Tiêu chí chấp nhận:**
 
 - Webhook được xác minh chữ ký và xử lý idempotent.

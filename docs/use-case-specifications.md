@@ -218,16 +218,17 @@ These eleven use cases were selected from the 77 cases in [the use case table](u
 
 | Field | Specification |
 |---|---|
-| Primary Actors | User (any role) |
+| Primary Actors | Instructor, Subject Manager, Administrator |
 | Secondary Actors | PayOS Payment Gateway |
-| Description | A user selects a credit package, pays through PayOS, and receives AI credits exactly once after the payment is verified. |
-| Preconditions | The user is signed in with an ACTIVE account. The package is active, and the account has fewer than three PENDING payments. |
+| Description | An authorized Instructor, Subject Manager or Administrator selects a credit package, pays through PayOS, and receives AI credits exactly once after the payment is verified. A Learner has no AI credit wallet or access to AI services. |
+| Preconditions | The buyer is signed in with an ACTIVE account and an Instructor, Subject Manager or Administrator role. The package is active, and the account has fewer than three PENDING payments. |
 | Normal Flow | 1. The user selects a package and starts checkout; the request carries an Idempotency-Key. |
 |  | 2. The system creates a CREATED payment with a snapshot of the package price and credits, and requests a PayOS checkout link valid for 15 minutes. When the link is created, the payment becomes PENDING and the user is redirected to PayOS. |
 |  | 3. The user pays on PayOS. On return, the result page polls the payment status every 3 seconds for up to 2 minutes; the return page never grants credits. |
 |  | 4. The system receives the PayOS webhook and verifies the HMAC-SHA256 signature, order code, amount and successful result. |
 |  | 5. In one database transaction, the system marks the payment PAID, writes one PURCHASE ledger entry, adds the credits to the purchased balance and records an audit event. After commit, an in-app notification is sent. The user can view the updated balance and history. |
-| Alternative Flows | **A1 — PayOS cannot create a link:** Mark the payment FAILED and grant no credits; the user may start a new checkout. |
+| Alternative Flows | **A0 — Learner attempts credit or payment access:** Reject balance, ledger, package listing and checkout with a permission error before granting credits, creating a payment or calling PayOS. AI requests are also forbidden by the system-wide role rule. |
+|  | **A1 — PayOS cannot create a link:** Mark the payment FAILED and grant no credits; the user may start a new checkout. |
 |  | **A2 — User returns before verification:** Keep the payment PENDING and grant no credits yet (MSG11). |
 |  | **A3 — Invalid signature, or mismatched order code or amount:** Record the event as REJECTED, write a security audit event, and grant no credits (MSG12). |
 |  | **A4 — Duplicate webhook:** Record it as DUPLICATE and return success to PayOS without granting extra credits. |

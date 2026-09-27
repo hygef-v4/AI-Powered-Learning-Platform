@@ -103,13 +103,13 @@ stateDiagram-v2
 
 ## 7. `CreditBalance`
 
-Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của tài khoản (xem U01). Tháng mới: `freeBalance` đặt lại bằng mức tặng; trừ credit tặng trước, credit mua sau; không bao giờ âm.
+Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của tài khoản có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên (xem U01). Tài khoản chỉ có vai trò Người học không có ví nghiệp vụ, không nhận `MONTHLY_GRANT` và không được dùng các số dư này. Với tài khoản đủ quyền, tháng mới `freeBalance` đặt lại bằng mức tặng; trừ credit tặng trước, credit mua sau; không bao giờ âm.
 
 ## 8. `CreditSettings`
 
 | Khóa | Ý nghĩa |
 |---|---|
-| `u07.monthlyFreeCredits` | Credit tặng mỗi tháng cho mọi tài khoản; ADMIN sửa, có audit |
+| `u07.monthlyFreeCredits` | Credit tặng mỗi tháng cho Giảng viên, Chủ nhiệm môn và Quản trị viên đủ điều kiện; không cấp cho Người học; ADMIN sửa, có audit |
 | `u07.tokensPerCredit` | Quy đổi token Gemini ra credit |
 
 ## 9. Contract

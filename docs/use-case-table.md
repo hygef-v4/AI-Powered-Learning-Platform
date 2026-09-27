@@ -78,7 +78,7 @@ This table follows the current 77-use-case MVP catalog. IDs are renumbered seque
 | 72 | Monitor Submission Status | Submission Monitoring | Lets the instructor view submission status in an assigned class. The system automatically reminds learners who have not submitted 24 hours before the deadline. |
 | 73 | View Personal Result Dashboard | Learning Analytics | Lets the learner view upcoming assignments, submission status and published grades. An anonymized class distribution is shown only when its privacy conditions are met. |
 | 74 | Export Gradebook | Grade Export | Lets an authorized user export a CSV or XLSX gradebook for a class or assignment, containing only data within their permitted scope. |
-| 75 | Buy AI Credits | Payment | Lets any user view AI credit packages, start a payment and track its status. The system verifies a webhook or automatically checks PayOS when a webhook is missing, then grants AI credits exactly once after verification. |
+| 75 | Buy AI Credits | Payment | Lets an ACTIVE Instructor, Subject Manager or Administrator view AI credit packages, start a payment and track its status. A Learner has no AI credits or access to AI services. The system verifies a webhook or automatically checks PayOS when a webhook is missing, then grants AI credits exactly once after verification. |
 | 76 | Receive and View Notifications | Notification | Lets a user receive and read notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
 | 77 | View Audit Log | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
 

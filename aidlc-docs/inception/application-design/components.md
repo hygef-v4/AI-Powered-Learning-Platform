@@ -11,7 +11,7 @@ MVP dùng modular monolith: frontend Next.js, một backend Spring Boot chia th�
 | Web Shell | Điều hướng, phiên, layout desktop-first, chuông thông báo (SSE) | U01, U16 |
 | Account & Admin Console | Kích hoạt, đăng nhập, hồ sơ, quản lý tài khoản/role, audit, cấu hình AI, gói credit | U01, U02, U07, U13 |
 | Class Console | Môn, lớp, ghi danh, mã mời, nội dung lớp, thông báo và hỏi đáp lớp | U04, U05 |
-| Learner Space | Lớp của tôi, bài học, hỏi đáp, làm bài, lịch sử nộp, điểm, dashboard cá nhân, ví credit | U04, U05, U11, U15, U16, U07 |
+| Learner Space | Lớp của tôi, bài học, hỏi đáp, làm bài, lịch sử nộp, điểm, dashboard cá nhân; không có chức năng AI hoặc credit | U04, U05, U11, U15, U16 |
 | Bank Console | Ngân hàng câu hỏi/rubric cấp môn và lớp, nhập Excel/CSV | U06 |
 | Assignment Console | Soạn bài (trắc nghiệm, bài viết, bài tài liệu, Code Lab, bài nhóm), AI draft, duyệt, phát hành, version/diff, template, copy, thi thử | U08, U09, U10, U13 |
 | Document Editor | Trình soạn tài liệu theo block, khung khóa, sơ đồ Draw.io nhúng (iframe `embed.diagrams.net`), nhập/xuất DOCX | U09 (dùng ở U06, U11, U14, U15) |

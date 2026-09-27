@@ -28,7 +28,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi giảng viên yêu cầu AI chấm.
 6. AI chỉ tạo đề xuất; giảng viên giữ quyết định phát hành đề và điểm cuối.
 7. Tài liệu nhóm luôn chấm tay; AI chỉ hỗ trợ phần đóng góp của từng thành viên; điểm cuối từng người do giảng viên nhập, không có công thức bắt buộc.
-8. Thanh toán chỉ cộng credit AI từ webhook đã xác minh hoặc job tự đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
+8. Chỉ tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên được cấp/dùng credit AI và tạo thanh toán mua credit. Người học không có ví hoặc quyền gọi AI; chạy Code Lab và chấm tự động theo test không dùng AI. AI hỗ trợ chấm bài chỉ do giảng viên yêu cầu và tính vào credit của giảng viên. Credit mua chỉ được cộng từ webhook đã xác minh hoặc job tự đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
 9. Không sao chép khóa học/lớp; template/copy bài tạo identity mới có lineage, không copy lịch, lượt làm, bài nộp, điểm.
 10. Thi thử khóa chính sách khi lượt đầu tiên bắt đầu.
 11. Audit chỉ thêm, không sửa, không xóa.

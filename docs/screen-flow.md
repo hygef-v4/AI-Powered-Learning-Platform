@@ -29,8 +29,6 @@ flowchart LR
     section["Nhận mục · làm riêng · Xong"]
     grades["Điểm và phản hồi"]
     dashboard["Dashboard cá nhân"]
-    credits["Ví credit · gói mua"]
-    payment["PayOS · trang kết quả"]
     notifications["Thông báo"]
     login --> shell
     login --> activate --> login
@@ -47,11 +45,10 @@ flowchart LR
     overview --> group --> groupDoc --> section --> groupDoc
     shell --> grades
     shell --> dashboard
-    shell --> credits --> payment --> credits
     shell --> notifications
 ```
 
-**Diễn giải bằng chữ:** Người học đăng nhập hoặc kích hoạt/khôi phục tài khoản, vào các lớp đã ghi danh, xem bài học và hỏi đáp, mở bài được giao rồi bắt đầu một lượt. Bài DOCUMENT cho phép xem trước DOCX và thêm block vào lượt đang làm; Code Lab cho chạy thử. Bài nhóm mở tài liệu chung, thành viên nhận mục và bấm “Xong”; trưởng nhóm nộp. Người học xem điểm đã công bố, dashboard, ví credit và thông báo.
+**Diễn giải bằng chữ:** Người học đăng nhập hoặc kích hoạt/khôi phục tài khoản, vào các lớp đã ghi danh, xem bài học và hỏi đáp, mở bài được giao rồi bắt đầu một lượt. Bài DOCUMENT cho phép xem trước DOCX và thêm block vào lượt đang làm; Code Lab cho chạy thử bằng Judge0, không dùng AI. Bài nhóm mở tài liệu chung, thành viên nhận mục và bấm “Xong”; trưởng nhóm nộp. Người học xem điểm đã công bố, dashboard và thông báo; không có màn hình AI, ví credit hoặc thanh toán.
 
 ## 2. Giảng viên và Chủ nhiệm môn
 
@@ -76,6 +73,8 @@ flowchart LR
     groupGrading["Chấm tài liệu nhóm và từng thành viên"]
     gradebook["Sổ điểm · xuất CSV/XLSX"]
     version["Version · diff · copy"]
+    credits["Ví credit · gói mua"]
+    payment["PayOS · trang kết quả"]
     home --> classList --> classDetail
     classDetail --> content
     classDetail --> communication
@@ -91,9 +90,10 @@ flowchart LR
     gradingQueue --> grading --> gradebook
     gradingQueue --> groupGrading --> gradebook
     classDetail --> gradebook
+    home --> credits --> payment --> credits
 ```
 
-**Diễn giải bằng chữ:** Giảng viên quản lý lớp, nội dung và bài giao; soạn một trong năm loại bài, cấu hình nhóm nếu là GROUP, duyệt rồi phát hành. Sau khi có bài nộp, giảng viên theo dõi tiến độ, chấm tay hoặc yêu cầu AI đề xuất cho bài/phần được phép, chốt và công bố điểm, rồi xem/xuất sổ điểm. Chủ nhiệm môn có thêm học liệu RAG, ngân hàng và template cấp môn; template phải được copy về lớp trước khi dùng. Bài đã phát hành bị khóa nội dung; khi mọi lần giao của version đã đóng/ngưng, nút sửa tạo version mới.
+**Diễn giải bằng chữ:** Giảng viên quản lý lớp, nội dung và bài giao; soạn một trong năm loại bài, cấu hình nhóm nếu là GROUP, duyệt rồi phát hành. Sau khi có bài nộp, giảng viên theo dõi tiến độ, chấm tay hoặc yêu cầu AI đề xuất cho bài/phần được phép, chốt và công bố điểm, rồi xem/xuất sổ điểm. Chủ nhiệm môn có thêm học liệu RAG, ngân hàng và template cấp môn; template phải được copy về lớp trước khi dùng. Cả hai vai trò được mua credit AI cho tài khoản của mình. Bài đã phát hành bị khóa nội dung; khi mọi lần giao của version đã đóng/ngưng, nút sửa tạo version mới.
 
 ## 3. Quản trị viên
 
@@ -107,15 +107,18 @@ flowchart LR
     ai["Cấu hình model · quota · kill-switch"]
     usage["Giám sát AI"]
     packages["Gói credit · mức tặng"]
+    credits["Ví credit · gói mua"]
+    payment["PayOS · trang kết quả"]
     audit["Nhật ký audit"]
     admin --> accounts --> accountDetail
     admin --> subjects --> classes
     admin --> ai --> usage
     admin --> packages
+    admin --> credits --> payment --> credits
     admin --> audit
 ```
 
-**Diễn giải bằng chữ:** Quản trị viên tạo/nhập tài khoản, phân công môn/lớp, cấu hình và giám sát AI, quản lý gói credit, xem audit. Không có màn hình hoàn tiền trong MVP hiện tại vì chính sách chưa chốt.
+**Diễn giải bằng chữ:** Quản trị viên tạo/nhập tài khoản, phân công môn/lớp, cấu hình và giám sát AI, quản lý gói credit, có thể mua credit cho tài khoản của mình và xem audit. Không có màn hình hoàn tiền trong MVP hiện tại vì chính sách chưa chốt.
 
 ## Màn hình theo unit và UC
 
@@ -225,9 +228,9 @@ Bảng dưới liệt kê mọi ô trong [screen-flow.drawio](screen-flow.drawio
 | U06 | Import Questions Popup | Popup | GV và CN môn | Question Bank | UC-QBK-02 |
 | U06 | Archive Item Confirmation | Popup | GV và CN môn | Question Bank | UC-QBK-01, UC-QBK-02 |
 | U06 | Question Bank | Màn hình | GV và CN môn | Instructor Menu (SM sees it too) | UC-QBK-01, UC-QBK-02 |
-| U07 | Payment Result | Màn hình | Chung | PayOS Checkout (external) | UC-PAY-01 |
-| U07 | Buy Package Confirmation | Popup | Chung | AI Credits | UC-PAY-01 |
-| U07 | AI Credits | Màn hình | Chung | Header (all roles) | UC-PAY-01 |
+| U07 | Payment Result | Màn hình | Giảng viên, Chủ nhiệm môn, Quản trị viên | PayOS Checkout (external) | UC-PAY-01 |
+| U07 | Buy Package Confirmation | Popup | Giảng viên, Chủ nhiệm môn, Quản trị viên | AI Credits | UC-PAY-01 |
+| U07 | AI Credits / Packages | Màn hình | Giảng viên, Chủ nhiệm môn, Quản trị viên | Header (authorized roles) | UC-PAY-01 |
 | U07 | Create / Edit Package Popup | Popup | Quản trị viên | Credit Packages | UC-PAY-01 |
 | U07 | Hide Package Confirmation | Popup | Quản trị viên | Credit Packages | UC-PAY-01 |
 | U07 | Credit Packages | Màn hình | Quản trị viên | Admin Menu | UC-PAY-01 |

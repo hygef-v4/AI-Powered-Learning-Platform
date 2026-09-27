@@ -12,6 +12,8 @@ X) Khác (mô tả sau thẻ [Answer]: bên dưới)
 
 [Answer]: C
 
+> Quyết định cập nhật 2026-09-27: câu trả lời C không còn áp dụng cho mua, nhận hoặc dùng credit. Chỉ tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên có ví/credit AI và được mua theo quyền. Người học không được cấp credit hằng tháng, không có ví và không dùng dịch vụ AI.
+
 ## Câu 2 - Cổng thanh toán
 
 A) VNPay sandbox
@@ -57,6 +59,8 @@ B) Mọi người như nhau
 X) Khác (mô tả sau thẻ [Answer]: bên dưới)
 
 [Answer]: B
+
+> Diễn giải theo quyết định mới: mức tặng bằng nhau **giữa các tài khoản đủ điều kiện** (Giảng viên, Chủ nhiệm môn, Quản trị viên); Người học không nhận credit.
 
 ## Câu 6 - Admin điều chỉnh thủ công
 

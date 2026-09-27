@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 - messaging redesign (2026-09-26): audit written in-transaction, cross-unit reactions via ports + jobs, 7 job queues, Redis/RabbitMQ renamed. Plans of U02, U05, U08, U11-U16 await re-approval; others approved.
-- **Resume action**: Re-approve plans of U02, U05, U08, U11-U16, then start Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
+- **Current Stage**: Code Generation Part 1 - messaging redesign (2026-09-26): audit written in-transaction, cross-unit reactions via ports + jobs, 7 job queues, Redis/RabbitMQ renamed. Plans of U02, U05, U07, U08, U11-U16 await re-approval; others approved.
+- **Resume action**: Re-approve plans of U02, U05, U07, U08, U11-U16, then start Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
 
 ## Workspace State
 - **Existing Code**: No
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign, awaiting re-approval
+- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign; U07 updated for AI/credit eligibility; awaiting re-approval
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -59,7 +59,7 @@
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
 | U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
 | U06 Rubric & Question Bank | Done | Approved | - |
-| U07 Payment & AI Credit | Done | Approved | - |
+| U07 Payment & AI Credit | Done, AI/credit eligibility updated | Updated, re-approval needed | - |
 | U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
 | U09 Question Type Authoring | Done | Approved | - |
 | U10 Template, Copy & Simulation | Done | Approved | - |

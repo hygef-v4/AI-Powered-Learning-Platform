@@ -2,8 +2,8 @@
 
 ## P1 - Một đường ghi số dư (CreditLedgerService)
 - `apply(accountId, type, freeDelta, purchasedDelta, ref, actor)`:
-  1. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`).
-  2. Đặt lại tặng tháng nếu sang tháng mới (ghi `MONTHLY_GRANT` trước).
+  1. Kiểm tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN`; `LEARNER` không có ví và không được ghi `MONTHLY_GRANT`/`RESERVE`.
+  2. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`); đặt lại tặng tháng nếu sang tháng mới (ghi `MONTHLY_GRANT` trước).
   3. Kiểm số dư sau thay đổi ≥ 0.
   4. INSERT sổ cái, UPDATE cột số dư trong `accounts`.
 - Mọi luồng (mua, giữ, trừ, trả) gọi hàm này trong transaction của mình (NFR-U07-01).
