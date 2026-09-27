@@ -52,18 +52,19 @@ These eleven use cases were selected from the 77 cases in [the use case table](u
 |---|---|
 | Primary Actors | Learner |
 | Secondary Actors | None |
-| Description | The learner writes an open-ended answer, saves a draft, and submits it for instructor grading. |
-| Preconditions | The learner has an ACTIVE enrollment, the class is OPEN, the ESSAY publication accepts submissions, and an attempt is available. |
-| Normal Flow | 1. The learner starts or resumes an attempt; the system records the assignment version and deadline. |
-|  | 2. The learner writes the essay response. |
-|  | 3. The system autosaves the response with a content version and shows the last saved time. |
-|  | 4. The learner submits before the attempt deadline. The system validates the attempt and content, locks the submitted answer, and issues a receipt. |
-|  | 5. The submission enters the instructor grading workflow. |
-| Alternative Flows | **A1 — No available attempt or publication not accepting submissions:** Refuse to start a new attempt and explain the restriction. |
-|  | **A2 — Stale draft version:** Return a conflict instead of overwriting the newer saved answer; the learner reloads before continuing. |
-|  | **A3 — Deadline, time limit, or publication retirement occurs before manual submission:** Automatically submit the latest saved answer, including an empty answer if nothing was saved, and record any validation warning for the instructor. |
-|  | **A4 — Manual submission fails validation:** Keep the draft available for correction while the attempt remains open. |
-| Postconditions | The submitted essay and receipt are immutable. The answer awaits an instructor's grading decision; saving a draft alone does not submit it. |
+| Description | The learner writes an open-ended answer, the system autosaves the draft, and the learner submits it for instructor grading. |
+| Preconditions | The learner has an ACTIVE enrollment in an OPEN class. The ESSAY publication accepts submissions (on time or within the late-submission period). The attempt limit has not been reached; starting an attempt consumes one attempt. |
+| Normal Flow | 1. The learner starts a new attempt or resumes the single IN_PROGRESS attempt. The system snapshots the assignment version and rubric and sets the attempt deadline to the closing time, or to the late-submission limit when late work is allowed. |
+|  | 2. The learner writes the response using basic formatting only: paragraphs, headings, lists, bold and italic. |
+|  | 3. The system autosaves 10 seconds after the last edit and when the learner leaves the page. Each save carries a content version, and the screen shows the last saved time. |
+|  | 4. The learner submits before the deadline. The system validates the attempt and content, locks the submitted answer, and issues a receipt showing the attempt ID, attempt number, server submission time, late flag and hash. Work submitted after the closing time but within the late-submission limit is marked LATE. |
+|  | 5. In the same transaction, the system creates a PENDING grade record so that the submission enters the instructor grading queue. |
+| Alternative Flows | **A1 — No attempt remains or the publication is not accepting submissions:** Refuse to start a new attempt and explain the restriction (MSG07). |
+|  | **A2 — Stale draft version (the attempt is open elsewhere):** Return a conflict instead of overwriting the newer saved answer; the learner reloads before continuing (MSG05). |
+|  | **A3 — Deadline passes or the publication is retired before manual submission:** Automatically submit the latest saved answer, including an empty answer if nothing was saved, and record any validation warning for the instructor. |
+|  | **A4 — Content exceeds the size limit or uses unsupported formatting:** Reject the submission and keep the draft available for correction while the attempt remains open. |
+|  | **A5 — Submission after the final deadline (the closing time when late work is not allowed, otherwise the late-submission limit):** Reject the submission (MSG06). A 30-second grace period absorbs network delay. |
+| Postconditions | The submitted essay and receipt are immutable and await the instructor's grading decision. Saving a draft alone does not submit it. For a regular assignment, the last submitted attempt is the one graded. |
 
 ### 3.2 UC 57 — Complete and Submit Quiz
 
@@ -71,18 +72,20 @@ These eleven use cases were selected from the 77 cases in [the use case table](u
 |---|---|
 | Primary Actors | Learner |
 | Secondary Actors | None |
-| Description | The learner answers and submits a quiz; the system scores closed questions against the answer-key version captured for the attempt. |
-| Preconditions | The learner has an ACTIVE enrollment, the class is OPEN, the QUIZ publication accepts submissions, and an attempt is available. |
-| Normal Flow | 1. The learner starts or resumes an attempt; the system records the quiz version, question order, answer-key version, and deadline. |
-|  | 2. The learner answers questions and reviews the current responses. |
+| Description | The learner answers and submits a quiz of single-answer and multiple-answer questions; the system scores it against the answer key captured for the attempt. |
+| Preconditions | The learner has an ACTIVE enrollment in an OPEN class. The QUIZ publication accepts submissions. The attempt limit has not been reached; starting an attempt consumes one attempt. |
+| Normal Flow | 1. The learner starts a new attempt or resumes the IN_PROGRESS attempt. The system snapshots the quiz version and answer key and stores a per-attempt seed for question and option order. The attempt deadline is the earlier of the start time plus the time limit (if any) and the submission deadline. |
+|  | 2. The learner answers questions and reviews the current responses. A countdown is shown when the quiz has a time limit. |
 |  | 3. The system autosaves valid responses with a content version and shows the last saved time. |
-|  | 4. The learner submits before the attempt deadline. The system locks the answers and issues a receipt. |
-|  | 5. A grading job scores closed questions against the captured answer-key version. The system shows the score and correct answers only as permitted by the publication settings. |
+|  | 4. The learner submits before the deadline. The system locks the answers and issues a receipt showing the attempt ID, attempt number, submission time, late flag and hash. |
+|  | 5. A grading job created in the submission transaction scores each question. A single-answer question earns full points when correct; a multiple-answer question earns points only when all correct options and no wrong options are selected. |
+|  | 6. If "show score after submit" is enabled, the score is published immediately; otherwise it awaits instructor finalization and publication. Correct answers are shown according to the NEVER, AFTER_SUBMIT or AFTER_CLOSE setting. |
 | Alternative Flows | **A1 — Invalid question or option reference:** Reject that draft update without replacing the last valid saved answers. |
-|  | **A2 — Stale draft version:** Return a conflict and require the learner to reload instead of silently overwriting answers. |
-|  | **A3 — Deadline, time limit, or publication retirement occurs before manual submission:** Automatically submit the latest saved answers, even if incomplete or empty. |
+|  | **A2 — Stale draft version:** Return a conflict and require the learner to reload instead of silently overwriting answers (MSG05). |
+|  | **A3 — Time limit, deadline, or publication retirement occurs before manual submission:** Automatically submit the latest saved answers, even if incomplete or empty. |
 |  | **A4 — Grading job is delayed or fails:** Preserve the submission and receipt; keep the score pending until grading succeeds, without inventing a result. |
-| Postconditions | The submitted answers and receipt are immutable. Closed-question results are calculated for that attempt's answer-key version, and their visibility follows the publication settings. |
+|  | **A5 — No attempt remains, or submission after the final deadline (including the 30-second grace period):** Reject the request (MSG07 / MSG06). |
+| Postconditions | The submitted answers and receipt are immutable. The score is calculated against that attempt's answer-key version, and its visibility follows the quiz settings. The instructor may change an automatic score with a recorded reason. |
 
 ## 4. Diagram Assignment
 
@@ -215,21 +218,25 @@ These eleven use cases were selected from the 77 cases in [the use case table](u
 
 | Field | Specification |
 |---|---|
-| Primary Actors | User |
+| Primary Actors | User (any role) |
 | Secondary Actors | PayOS Payment Gateway |
-| Description | A user selects a credit package, pays through PayOS, and receives AI credits exactly once after payment verification. |
-| Preconditions | The user is signed in with an ACTIVE account. The package is active, and the account has fewer than three simultaneous PENDING payments. |
-| Normal Flow | 1. The user selects a package and starts checkout. |
-|  | 2. The system creates a payment with a snapshot of its price and credits, then asks PayOS for a checkout link. |
-|  | 3. The user pays through PayOS. The return page displays verification status rather than granting credits. |
-|  | 4. The system receives a valid webhook or obtains the status through automatic reconciliation, checking the order code, amount, and successful payment result. |
-|  | 5. In one database transaction, the system marks the payment PAID, writes one PURCHASE ledger entry, and adds the credits. The user can view the updated balance and history. |
-| Alternative Flows | **A1 — PayOS cannot create a link:** Mark the payment FAILED, grant no credits, and allow a new checkout. |
-|  | **A2 — User returns before verification:** Keep the payment PENDING and grant no credits yet. |
-|  | **A3 — Invalid signature, mismatched amount, or duplicate webhook:** Reject or record the duplicate without granting extra credits. |
-|  | **A4 — Missing webhook:** Reconcile automatically with PayOS and apply the same exactly-once purchase rule. |
-|  | **A5 — Valid payment arrives after link expiration or cancellation:** Mark it PAID and grant the credits because payment was received. |
-| Postconditions | A verified payment creates exactly one purchase ledger entry and increases the balance. Unverified, failed, or rejected payments do not increase it. |
+| Description | A user selects a credit package, pays through PayOS, and receives AI credits exactly once after the payment is verified. |
+| Preconditions | The user is signed in with an ACTIVE account. The package is active, and the account has fewer than three PENDING payments. |
+| Normal Flow | 1. The user selects a package and starts checkout; the request carries an Idempotency-Key. |
+|  | 2. The system creates a CREATED payment with a snapshot of the package price and credits, and requests a PayOS checkout link valid for 15 minutes. When the link is created, the payment becomes PENDING and the user is redirected to PayOS. |
+|  | 3. The user pays on PayOS. On return, the result page polls the payment status every 3 seconds for up to 2 minutes; the return page never grants credits. |
+|  | 4. The system receives the PayOS webhook and verifies the HMAC-SHA256 signature, order code, amount and successful result. |
+|  | 5. In one database transaction, the system marks the payment PAID, writes one PURCHASE ledger entry, adds the credits to the purchased balance and records an audit event. After commit, an in-app notification is sent. The user can view the updated balance and history. |
+| Alternative Flows | **A1 — PayOS cannot create a link:** Mark the payment FAILED and grant no credits; the user may start a new checkout. |
+|  | **A2 — User returns before verification:** Keep the payment PENDING and grant no credits yet (MSG11). |
+|  | **A3 — Invalid signature, or mismatched order code or amount:** Record the event as REJECTED, write a security audit event, and grant no credits (MSG12). |
+|  | **A4 — Duplicate webhook:** Record it as DUPLICATE and return success to PayOS without granting extra credits. |
+|  | **A5 — Missing webhook:** A reconciliation job runs every 10 minutes, checks PENDING payments older than 5 minutes and payments EXPIRED within the last 24 hours with PayOS, and applies the same exactly-once purchase rule. If PayOS does not respond, the status is kept and checked again on the next run. |
+|  | **A6 — User cancels on PayOS:** The system confirms with PayOS and marks the payment CANCELLED if it has not been paid. |
+|  | **A7 — Link not paid within 15 minutes:** Mark the payment EXPIRED. |
+|  | **A8 — Valid payment arrives after expiration or cancellation:** Mark it PAID and grant the credits because the money was received. |
+|  | **A9 — Same Idempotency-Key resubmitted, or three payments already PENDING:** Return the existing PENDING payment for the same key; refuse to create a fourth concurrent PENDING payment. |
+| Postconditions | A verified payment creates exactly one purchase ledger entry and increases the balance. Purchased credits do not expire. Unverified, failed or rejected payments do not increase the balance. |
 
 ## Sources
 

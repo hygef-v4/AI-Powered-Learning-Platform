@@ -2686,3 +2686,52 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Context**: Documentation revision. The old use-case catalog was absent from the workspace; the English table is the current source for IDs and names.
 
 ---
+
+## SRS report consistency review
+**Timestamp**: 2026-09-27T06:35:00Z
+**User Input**: "@\"D:\Downloads\Report-3_Software Requirement Specification.docx.md\"
+kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa, có cần chính sửa bổ sung gì không"
+**AI Response**: "Compared the SRS report with docs/ and aidlc-docs. Sections II (UC specs), III.5-6 (jobs, APIs), IV and V match the current design. Section I is outdated (86-UC old catalog, pre-consolidation entities, learning progress, access grants, common assignments, payment-for-access business flows, recruitment permission matrix, old screen list and job/API inventory); Section III.1-4 and the TOC/Change Log are template leftovers. Reported a prioritized fix list; no project files changed."
+**Context**: Review only, outside the stage workflow; no stage state change.
+
+---
+
+## UC56, UC57, UC75 specification review
+**Timestamp**: 2026-09-27T06:45:00Z
+**User Input**: "kiểm tra UC specification của UC56, UC57, UC75 xem đã chính xác chưa, có cần chỉnh sửa gì không"
+**AI Response**: "Checked the three specifications (identical in the SRS report and docs/use-case-specifications.md) against U07, U09, U11 and U15 business rules. No contradictions in the main flows; reported inaccuracies (time limit applies only to QUIZ, not ESSAY) and missing rules (late submission, grace period, receipt content, graded attempt, quiz scoring and publish-on-submit, PayOS link expiry, cancel, idempotency, reconciliation window, webhook outcomes) with suggested English replacement text. No files changed."
+**Context**: Review only; no stage state change.
+
+---
+
+## Vietnamese draft of UC56, UC57, UC75 specifications
+**Timestamp**: 2026-09-27T06:52:00Z
+**User Input**: "viết lại tiếng việt UC spec của 3 UC trên và giải thích cho tôi trước khi sửa"
+**AI Response**: "Presented Vietnamese drafts of UC56, UC57 and UC75 in chat with an explanation of each change and its source rule; no files edited, awaiting user confirmation."
+**Context**: Documentation draft; awaiting approval before editing docs/use-case-specifications.md.
+
+---
+
+## Essay deadline vs time limit clarification
+**Timestamp**: 2026-09-27T06:58:00Z
+**User Input**: "mở cho tôi cấu hình essay UC09. tôi nghĩ thời gian ở đây là hạn nộp bài thì essay cũng phải có hạn nộp chứ"
+**AI Response**: "Opened U09 domain-entities QuestionTypeConfig. Clarified that the submission deadline (opensAt/closesAt/lateUntil) is set per publication in U08 for every assignment type including ESSAY, while timeLimitMinutes is a per-attempt countdown configured only for QUIZ; the UC56 draft keeps the deadline and removes only the time limit."
+**Context**: Clarification; no files changed.
+
+---
+
+## Update UC56, UC57, UC75 specifications
+**Timestamp**: 2026-09-27T07:04:00Z
+**User Input**: "giữ như thiết kế hiện tại, hãy cập nhật 3 UC này trong tài liệu dự án để tôi copy sang báo cáo"
+**AI Response**: "Kept the current design (ESSAY has a submission deadline but no per-attempt time limit). Updated UC56, UC57 and UC75 in docs/use-case-specifications.md in English to match the report language, applying the reviewed changes: essay A3 without time limit, late submission and grace period, receipt content, graded attempt, quiz scoring and score/answer visibility, PayOS link expiry, cancel, idempotency, reconciliation window and separate REJECTED/DUPLICATE webhook outcomes, with MSG references."
+**Context**: Documentation update; no design change.
+
+---
+
+## Commit UC specification update
+**Timestamp**: 2026-09-27T07:10:00Z
+**User Input**: "kiểm tra lại các thay đổi, viết commit rõ ràng và tôi sẽ tự push"
+**AI Response**: "Reviewed the diff, corrected placeholder timestamps in today's audit entries, and committed docs/use-case-specifications.md and aidlc-docs/audit.md locally without pushing."
+**Context**: Documentation commit; user will push.
+
+---
