@@ -18,16 +18,18 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/khóa học/lớp học, nhóm học tập, bài nhóm gồm các phần cá nhân và một bản chung, kho học liệu và RAG cấp môn, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi, theo dõi tiến độ, đánh giá theo bốn loại sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán và email/thông báo. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi trạng thái bài nộp và kết quả đánh giá, đánh giá theo bốn loại trắc nghiệm, bài viết, bài tài liệu có sơ đồ Draw.io nhúng và Code Lab, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
+- Dự án chỉ có một phạm vi MVP, không chia đợt Phase 2. Thông báo/hỏi đáp lớp, dashboard kết quả cá nhân và xuất bảng điểm thuộc MVP. Các chức năng đã loại gồm tìm kiếm/tóm tắt học liệu cho người dùng, phân tích chất lượng câu hỏi, gia hạn nộp bài cá nhân, phúc khảo điểm, kiểm tra tương đồng, báo cáo độ lệch điểm AI, tiến độ hoàn thành bài học và đề chung cấp môn; chúng không có story hoặc UC trong catalog hiện hành. Quy trình AI đề xuất điểm rồi giảng viên quyết định điểm cuối vẫn thuộc MVP.
 - Ứng dụng mobile native
 - Multi-tenancy và cô lập dữ liệu giữa nhiều tổ chức
 - Đồng bộ LMS hoặc SSO của tổ chức
 - Chức năng dành riêng cho vai trò Head of Department/Trưởng bộ môn
 - Mọi nội dung dạng viết được mô hình hóa chung là bài viết luận
 - Active/active đa region
+- Lưu vị trí học, đánh dấu hoàn thành hoặc báo cáo tiến độ hoàn thành từng bài học
 - Property-based testing
 - Chứng nhận tuân thủ một khung pháp lý cụ thể
 - Operations automation hoàn chỉnh ngoài các yêu cầu sẵn sàng và tài liệu được xác định trong quy trình này
@@ -36,9 +38,9 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 
 | Bên liên quan | Nhu cầu chính |
 |---|---|
-| Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem tiến độ |
+| Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
-| Chủ nhiệm môn | Quản lý kho học liệu/RAG cấp môn và biên soạn, phát hành đề chung cho mọi lớp thuộc môn được phân công |
+| Chủ nhiệm môn | Quản lý kho học liệu/RAG, ngân hàng và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
 | Đơn vị đào tạo | Vận hành thử nghiệm ổn định, bảo vệ dữ liệu người học và đo hiệu quả MVP |
 | Nhóm phát triển | Quy trình AI-DLC rõ ràng, test tự động, container local và hướng dẫn triển khai |
@@ -63,24 +65,24 @@ Hệ thống phải cung cấp bốn vai trò: người học, giảng viên, Ch
 **Tiêu chí chấp nhận:**
 
 - Người học không thể gọi chức năng của giảng viên, Chủ nhiệm môn hoặc quản trị viên.
-- Giảng viên chỉ truy cập lớp học, khóa học và bài nộp được phân công.
+- Giảng viên chỉ truy cập lớp học và bài nộp được phân công.
 - Chủ nhiệm môn chỉ có quyền cấp môn đối với các môn được phân công, kể cả các lớp do giảng viên khác phụ trách trong những môn đó.
 - Quản trị viên có thể quản lý người dùng, phân vai trò và gán phạm vi môn học cho Chủ nhiệm môn.
 
-### FR-003 - Quản lý môn học, khóa học và lớp học
+### FR-003 - Quản lý môn học và lớp học
 
-Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm môn và tổ chức các lớp thuộc môn. Giảng viên hoặc quản trị viên phải có thể tạo, sửa, xuất bản và lưu trữ khóa học/lớp theo phạm vi quyền; quản lý phân công giảng viên và ghi danh người học.
+Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm môn và tổ chức các lớp thuộc môn. Chỉ quản trị viên tạo môn/lớp và phân công giảng viên chính. Người quản lý lớp (quản trị viên, giảng viên của lớp, Chủ nhiệm môn của môn) sửa thông tin, mở/lưu trữ lớp và ghi danh người học. Hệ thống không có thực thể "khóa học" riêng; mỗi lớp thuộc một môn.
 
 **Tiêu chí chấp nhận:**
 
 - Nội dung chưa xuất bản không hiển thị cho người học.
 - Người học chỉ truy cập lớp mình được ghi danh.
-- Mỗi lớp thuộc một môn và kế thừa học liệu hoặc đề chung đã được phát hành ở cấp môn.
-- Các thay đổi quan trọng về khóa học được ghi audit.
+- Mỗi lớp thuộc một môn; giảng viên chọn bài học cấp môn đưa vào lớp và copy template đề cấp môn thành bài của lớp.
+- Các thay đổi quan trọng về môn/lớp được ghi audit.
 
 ### FR-004 - Nhập và quản lý nội dung học
 
-Hệ thống phải hỗ trợ soạn nội dung trực tiếp và tải lên PDF, DOCX hoặc slide. Chủ nhiệm môn quản lý kho học liệu và nguồn trích xuất RAG dùng chung ở cấp môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công. Việc xử lý tệp phải có trạng thái, giới hạn loại/kích thước và thông báo lỗi an toàn.
+Hệ thống phải hỗ trợ soạn nội dung trực tiếp, tải lên PDF, DOCX hoặc slide và gắn nguồn YouTube cho từng bài giảng. Chủ nhiệm môn quản lý kho học liệu và nguồn trích xuất RAG dùng chung ở cấp môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công. Việc xử lý tệp, caption và transcript phải có trạng thái, giới hạn hợp lệ và thông báo lỗi an toàn.
 
 **Tiêu chí chấp nhận:**
 
@@ -88,15 +90,18 @@ Hệ thống phải hỗ trợ soạn nội dung trực tiếp và tải lên PD
 - Tệp hợp lệ được lưu riêng tư và gắn đúng phạm vi môn hoặc lớp.
 - Người tải lên và người quản lý được ủy quyền xem được trạng thái chờ, đang xử lý, thành công hoặc thất bại.
 - Giảng viên không thể sửa kho học liệu/RAG cấp môn nếu không có quyền Chủ nhiệm môn tương ứng.
+- Mỗi bài giảng có thể gắn một video hoặc playlist YouTube; hệ thống chỉ dùng caption có sẵn (kể cả caption tự động của YouTube), không tự phiên âm audio; video không có caption được báo rõ và không lập chỉ mục.
+- Transcript được lưu cùng video, bài giảng, ngôn ngữ và timestamp; chỉ transcript xử lý thành công mới được lập chỉ mục vào đúng phạm vi RAG.
+- Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái xử lý và retry khi lấy caption hoặc lập chỉ mục thất bại.
 
-### FR-005 - Trải nghiệm học theo lớp
+### FR-005 - Truy cập nội dung theo lớp
 
-Người học phải có thể xem nội dung theo cấu trúc khóa học/lớp, đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất.
+Người học phải có thể xem nội dung đã xuất bản trong lớp được ghi danh và được cấp quyền. Hệ thống không lưu trạng thái hoàn thành hoặc vị trí học của từng bài.
 
 **Tiêu chí chấp nhận:**
 
-- Tiến độ được lưu theo người học và đơn vị nội dung.
-- Giảng viên xem được tiến độ của người học trong lớp được phân công.
+- Người học chỉ nhận nội dung đã xuất bản trong lớp mình được ghi danh. Thanh toán không ảnh hưởng quyền vào lớp hay xem nội dung.
+- Truy cập trực tiếp bằng URL/ID không vượt qua kiểm tra enrollment hoặc publication.
 
 ### FR-006 - Tạo câu hỏi và bài tập bằng AI
 
@@ -110,14 +115,14 @@ Giảng viên phải có thể yêu cầu AI tạo câu hỏi hoặc bài tập 
 
 ### FR-007 - Đánh giá và bài nộp
 
-Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp được phân công. Chủ nhiệm môn phải có thể biên soạn và phát hành trực tiếp bài đánh giá chung cho mọi lớp thuộc môn được phân công mà không cần giảng viên từng lớp duyệt lại. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
+Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp được phân công. Không có bài đánh giá chung cấp môn: chỉ giảng viên của lớp (kể cả Chủ nhiệm môn khi là giảng viên của lớp đó) phát hành bài cho lớp. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
 
 **Tiêu chí chấp nhận:**
 
 - Hệ thống lưu bài nộp, thời điểm nộp và trạng thái chấm.
 - Một người học không thể đọc hoặc sửa bài nộp của người khác.
 - Quy tắc số lần làm và hạn nộp được thực thi phía server.
-- Bài đánh giá chung chỉ được phân phối tới các lớp thuộc đúng môn và lưu actor/phạm vi phát hành trong audit.
+- Mỗi lần phát hành lưu actor và lớp đích trong audit.
 
 ### FR-008 - Chấm điểm và phản hồi tự động
 
@@ -125,24 +130,25 @@ Sau khi người học nộp bài, bài nộp chuyển tới giảng viên phụ
 
 **Tiêu chí chấp nhận:**
 
-- Điểm tự động có kèm trạng thái và phương thức chấm.
+- Trắc nghiệm và Code Lab tự chấm ngay khi nộp; điểm tự động có kèm trạng thái và phương thức chấm. Mọi loại bài hiển thị điểm dạng "x / tổng điểm của bài"; sổ điểm không tính điểm tổng.
 - Mỗi bài nộp mới ở trạng thái chờ giảng viên xử lý; lựa chọn chấm tay hoặc nhờ AI được lưu theo actor/thời gian.
 - Kết quả AI chưa duyệt không được coi là quyết định cuối đối với câu trả lời mở.
 - Mọi lần ghi đè điểm lưu người thực hiện, thời gian và lý do.
 
-### FR-009 - Sổ điểm và tiến độ
+### FR-009 - Sổ điểm và trạng thái bài nộp
 
-Người học phải xem được điểm và tiến độ của chính mình; giảng viên xem được tổng hợp theo lớp; quản trị viên xem được dữ liệu theo quyền quản trị.
+Người học phải xem được điểm, phản hồi và trạng thái bài nộp của chính mình; giảng viên xem được tổng hợp theo lớp được phân công; quản trị viên xem dữ liệu theo quyền quản trị. Yêu cầu này không bao gồm tiến độ hoàn thành hoặc vị trí học theo bài.
 
 ### FR-010 - Thanh toán
 
-Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và ghi nhận quyền truy cập tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
+Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
 **Tiêu chí chấp nhận:**
 
 - Webhook được xác minh chữ ký và xử lý idempotent.
-- Trạng thái thanh toán được đối soát với nhà cung cấp.
-- Lỗi thanh toán không tự cấp quyền truy cập.
+- Job định kỳ tự đối soát trạng thái thanh toán với nhà cung cấp khi thiếu webhook; không có thao tác admin đối soát thủ công.
+- Thanh toán lỗi, hết hạn hoặc chưa xác minh thì không cộng credit.
+- Quyền lợi mua được là credit AI (quy đổi ra token khi gọi AI); thanh toán không mở hay chặn quyền vào lớp và nội dung học.
 
 ### FR-011 - Email và thông báo
 
@@ -158,19 +164,26 @@ Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riê
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
-Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi nội dung đã xuất bản, thay đổi điểm, phát hành đề chung, sự kiện thanh toán và truy cập đặc quyền.
+Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi nội dung đã xuất bản, thay đổi điểm, phát hành bài và template, sự kiện thanh toán và truy cập đặc quyền.
 
 ### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
 
-Quản trị viên phải có thể tìm kiếm, tạo, cập nhật, khóa/mở khóa và cấp mật khẩu tạm thời cho tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ.
+Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
 ### FR-016 - Ngân hàng rubric và câu hỏi
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Nội dung đã được dùng để chấm phải được version hóa hoặc bảo toàn để không làm thay đổi kết quả lịch sử.
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+
+**Tiêu chí chấp nhận:**
+
+- Câu hỏi chưa publish có thể sửa trong draft hiện tại.
+- Assignment đã phát hành bị khóa nội dung (kể cả khi chưa ai làm); muốn thay đổi thì ngưng giao (hoặc đợi đóng) rồi sửa để tạo version mới; version cũ giữ nguyên cho bài nộp cũ và xem được khác biệt giữa các version. Hệ thống lưu version câu hỏi được dùng cho từng attempt.
+- Sửa câu hỏi trong ngân hàng tạo version mới và không ảnh hưởng assignment đã dùng version cũ.
+- Rubric đã dùng để chấm không bị ghi đè; thay đổi tạo version mới cho lần sử dụng sau.
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
-Hệ thống phải hỗ trợ sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận. Với bài sơ đồ, người học vẽ trực tiếp trên canvas Draw.io nhúng trong web và nộp XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
+Hệ thống phải hỗ trợ trắc nghiệm, bài viết (ESSAY, văn bản thường, không giới hạn số từ), bài tài liệu (DOCUMENT: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; giảng viên có thể nhập khung từ DOCX; người học có thể nhập DOCX vào lượt DOCUMENT đang làm, xem trước rồi xác nhận để thêm nội dung của mình mà không sửa khung giảng viên; bài nộp xuất được ra DOCX) và Code Lab. Với khối sơ đồ, người học vẽ trên canvas Draw.io nhúng trong web và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
 
 ### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
 
@@ -178,7 +191,7 @@ Hệ thống phải tự động lưu bản nháp theo người học/bài đán
 
 ### FR-019 - Theo dõi nộp bài và nhắc nhở
 
-Giảng viên phải xem được trạng thái đã nộp, chưa nộp, nộp trễ và được gia hạn của lớp được phân công, đồng thời gửi nhắc nhở có giới hạn tần suất tới đúng người học.
+Giảng viên phải xem được trạng thái đã nộp, chưa nộp, đang làm và nộp trễ của lớp được phân công. Hệ thống tự nhắc người học chưa nộp 24 giờ trước hạn (một lần mỗi bài); giảng viên không gửi nhắc thủ công.
 
 ### FR-020 - Chốt điểm hàng loạt
 
@@ -188,17 +201,19 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 Quản trị viên phải có thể cấu hình model được phép, quota, giới hạn chi phí và kill-switch qua ranh giới provider-neutral; xem nhật ký trạng thái/chi phí mà không lộ prompt, dữ liệu học tập hoặc secret ngoài quyền.
 
-### FR-022 - Tự ghi danh bằng mã mời lớp (Phase 2)
+Mỗi lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của tài khoản chịu phí theo token sử dụng. Embedding học liệu chạy nền tính cho người tải/phát hành học liệu; embedding truy xuất tính cho người yêu cầu AI. Nếu hệ thống hết hạn mức AI, trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối; thiếu credit cá nhân được báo riêng.
 
-Phase 2 hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
+### FR-022 - Tự ghi danh bằng mã mời lớp
 
-### FR-023 - Cộng tác và xử lý ngoại lệ đánh giá (Phase 2)
+MVP (bản đơn giản, U04) hỗ trợ người học tự ghi danh bằng mã mời còn hiệu lực, có giới hạn thử và không tiết lộ thông tin lớp khi mã không hợp lệ.
 
-Phase 2 hỗ trợ thông báo/hỏi đáp lớp, gia hạn nộp bài theo cá nhân, phúc khảo và kiểm tra tương đồng mang tính tham khảo.
+### FR-023 - Thông báo và hỏi đáp lớp
 
-### FR-024 - Báo cáo và phân tích nâng cao (Phase 2)
+MVP cho phép giảng viên đăng thông báo tới lớp mình dạy; thành viên lớp đọc, đặt câu hỏi và phản hồi trong đúng lớp. Nội dung cần kiểm quyền theo lớp, lọc đầu vào không an toàn, lưu người tạo và thời gian; sự kiện mới gửi thông báo trong ứng dụng cho người liên quan. RAG nội bộ phục vụ AI soạn đề vẫn thuộc MVP. Tìm kiếm/tóm tắt học liệu cho người dùng, gia hạn nộp bài cá nhân, phúc khảo và kiểm tra tương đồng nằm ngoài phạm vi dự án.
 
-Phase 2 hỗ trợ dashboard kết quả cá nhân, xuất bảng điểm, phân tích câu hỏi và so sánh điểm AI đề xuất với điểm giảng viên chốt; báo cáo không được dùng để tự động kết luận gian lận hoặc đánh giá năng lực cá nhân giảng viên.
+### FR-024 - Dashboard cá nhân và xuất bảng điểm
+
+MVP cung cấp dashboard cho người học gồm bài sắp hạn, trạng thái bài nộp và điểm đã công bố của chính mình; phân bố lớp chỉ hiển thị khi lớp cho phép và đủ điều kiện ẩn danh. Giảng viên/quản trị viên có quyền xuất bảng điểm CSV hoặc XLSX theo lớp/bài; kiểm phạm vi trước khi tạo tệp, ghi rõ mục chưa nộp/chưa chốt và không tự tính điểm tổng theo hệ số. Phân tích chất lượng câu hỏi và báo cáo thống kê độ lệch giữa điểm AI đề xuất với điểm chốt nằm ngoài phạm vi. Bước AI đề xuất và giảng viên chốt từng bài vẫn thuộc MVP (FR-008).
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -210,28 +225,64 @@ Giảng viên phải có thể chia sinh viên của lớp được phân công 
 - Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 
-### FR-026 - Bài tập nhóm, bài cá nhân và bài chung
+### FR-026 - Bài tập nhóm: tài liệu chung và phần đóng góp cá nhân
 
-Giảng viên phải có thể tạo một bài tập nhóm chung, tách thành các phần cá nhân và giao từng phần cho thành viên, ví dụ sơ đồ use case hoặc activity. Mỗi sinh viên nộp phần cá nhân của mình; giảng viên có thể chọn chấm tay hoặc nhờ AI đề xuất. Nhóm phối hợp tạo một tài liệu DOCX chung bên ngoài hệ thống và chỉ trưởng nhóm được upload/nộp tài liệu này. Giảng viên phải tự chấm tay bài chung và có thể đối chiếu với các phần cá nhân; bài chung không được gửi AI để chấm.
+Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục việc (ví dụ sơ đồ use case, activity); nhóm có thể thêm mục. Thành viên tự nhận mục còn trống, mục bị khóa cho người đó; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung để cả nhóm review và mục được mở khóa cho người khác nhận sửa. Trưởng nhóm nộp tài liệu chung, hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
 **Tiêu chí chấp nhận:**
 
-- Phần cá nhân và bài chung có deadline/trạng thái/bài nộp riêng nhưng cùng truy vết về một bài tập nhóm.
-- Mỗi phần cá nhân được gán cho đúng một thành viên và chỉ thành viên đó nộp; giảng viên có thể đổi phân công trước hạn với audit.
-- Chỉ trưởng nhóm hiện tại có thể nộp hoặc nộp lại DOCX chung; thành viên khác bị từ chối phía server.
-- DOCX chung được lưu riêng tư, kiểm tra loại/kích thước và phiên bản nộp; không cung cấp chỉnh sửa cộng tác DOCX trong hệ thống.
-- Giảng viên xem được bài chung cạnh các phần cá nhân, nhập điểm/phản hồi thủ công và hệ thống không cung cấp hành động chấm AI cho bài chung.
-- Điểm phần cá nhân và điểm bài chung được lưu riêng; chưa áp dụng công thức tự động gộp điểm khi chưa có chính sách trọng số được phê duyệt.
+- Mỗi mục có trạng thái (trống, đang nhận, chờ review) và lịch sử phiên bản theo tác giả; cả bài dùng chung một hạn.
+- Tại một thời điểm mỗi mục chỉ một thành viên nhận và sửa; trưởng nhóm hoặc giảng viên có thể nhả khóa mục khi cần, có audit.
+- Tài liệu chung được cập nhật realtime khi một mục xong; bản trưởng nhóm nộp (hoặc tự nộp khi hết hạn) là bản bất biến dùng để chấm, giữ tác giả từng mục.
+- Giảng viên xem được bản nộp cuối của tài liệu chung cùng tác giả từng mục; bản nộp đó là bản dùng để chấm.
+- AI chỉ tạo đề xuất điểm/phản hồi cho phần đóng góp của từng thành viên (các mục người đó viết) khi giảng viên chủ động yêu cầu; hệ thống không cung cấp hành động chấm AI cho tài liệu chung.
+- Giảng viên chấm tài liệu chung bằng rubric có tiêu chí tích hợp và nhất quán. Lỗi chung trừ ở tài liệu chung; một thành viên chỉ bị trừ thêm khi giảng viên xác định được mục hoặc thành viên gây lỗi.
+- Điểm/feedback phần đóng góp và điểm tài liệu chung được lưu riêng và hiển thị cạnh nhau. Hệ thống không tự áp dụng công thức; giảng viên dựa trên hai nguồn cùng mức đóng góp để nhập điểm cuối cho từng sinh viên.
+- Mọi ghi đè đề xuất AI, điều chỉnh điểm cuối và quy kết lỗi nhất quán cho một phần/thành viên phải lưu lý do và audit actor/thời gian.
+
+### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
+
+Chủ nhiệm môn phải có thể phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
+
+**Tiêu chí chấp nhận:**
+
+- Chỉ Chủ nhiệm môn có quyền phát hành hoặc tạo version mới của template cấp môn.
+- Bản copy thuộc lớp đích và độc lập với template nguồn; cập nhật template không tự ghi đè bản đã copy.
+- Hệ thống lưu `source template/version`, người copy, lớp đích và thời gian để truy vết.
+- Bản copy không mang theo lịch phát hành, attempt, bài nộp hoặc điểm từ nguồn.
+
+### FR-028 - Sao chép assignment và rubric giữa các lớp
+
+Giảng viên phải có thể copy assignment và rubric từ một lớp sang lớp khác mà chính giảng viên đang được phân công.
+
+**Tiêu chí chấp nhận:**
+
+- Backend kiểm tra quyền của giảng viên trên cả lớp nguồn và lớp đích.
+- Bản copy là draft độc lập, giữ nguồn gốc để audit nhưng không đồng bộ hai chiều.
+- Assignment copy loại bỏ lịch phát hành, deadline, attempt, bài nộp và điểm; rubric copy giữ cấu trúc/tiêu chí nhưng có identity/version riêng ở lớp đích.
+- Không cho copy sang lớp ngoài phạm vi được phân công, kể cả khi thuộc cùng môn.
+
+### FR-029 - Simulation exam
+
+Hệ thống phải cung cấp simulation exam để sinh viên thi thử. Không có chế độ kỳ thi chính thức có giám sát; giảng viên có thể cấu hình một simulation exam tính hoặc không tính vào điểm thành phần.
+
+**Tiêu chí chấp nhận:**
+
+- Thi thử mặc định 3 lượt mỗi người học; giảng viên có thể chỉnh giới hạn từ 1 đến 10 lượt trước khi lượt đầu tiên bắt đầu, không có lựa chọn không giới hạn. Giảng viên cấu hình cửa sổ làm bài, cách lấy kết quả cao nhất/gần nhất/trung bình và thời điểm hiển thị đáp án.
+- Server thực thi giới hạn lượt và thời gian; mỗi attempt giữ snapshot đề/version riêng.
+- Nếu được cấu hình không tính điểm, kết quả chỉ phục vụ luyện tập/phản hồi và không đi vào điểm chính thức.
+- Nếu được cấu hình tính điểm thành phần, chính sách lấy kết quả được khóa khi đã có attempt; thay đổi sau đó cần version mới và audit.
+- Giao diện và báo cáo phải ghi rõ đây là thi thử, có hay không tính điểm, không được mô tả là kỳ thi chính thức/proctored exam.
 
 ## 5. Luồng người dùng chính
 
 ### USCN-001 - Chuẩn bị và giao bài cấp lớp bằng AI
 
-Giảng viên tạo khóa học hoặc lớp, nhập nội dung/tải tài liệu, yêu cầu AI tạo câu hỏi, chỉnh sửa và duyệt bản nháp, sau đó xuất bản bài đánh giá cho lớp.
+Trong lớp được quản trị viên tạo và phân công, giảng viên nhập nội dung/tải tài liệu, yêu cầu AI tạo câu hỏi, chỉnh sửa và duyệt bản nháp, sau đó xuất bản bài đánh giá cho lớp.
 
-### USCN-001A - Quản lý học liệu và giao đề chung cấp môn
+### USCN-001A - Quản lý học liệu, ngân hàng và template cấp môn
 
-Chủ nhiệm môn quản lý kho học liệu/RAG của môn được phân công, dùng AI biên soạn và duyệt đề chung, sau đó phát hành trực tiếp cho mọi lớp thuộc môn; hệ thống bảo đảm phạm vi môn và ghi audit mà không yêu cầu giảng viên từng lớp duyệt lại.
+Chủ nhiệm môn quản lý kho học liệu/RAG, ngân hàng câu hỏi/rubric và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
 
 ### USCN-002 - Học và nhận phản hồi
 
@@ -251,7 +302,7 @@ Khi AI, email, lưu trữ hoặc thanh toán tạm thời không khả dụng, h
 
 ### USCN-006 - Thực hiện và đánh giá bài tập nhóm
 
-Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, tạo bài chung và giao các phần cá nhân. Thành viên nộp phần được giao; trưởng nhóm upload DOCX chung. Giảng viên có thể nhờ AI đề xuất cho phần cá nhân nhưng tự chấm bài chung và đối chiếu hai cấp bài làm trước khi công bố kết quả.
+Giảng viên chia nhóm cho bài nhóm, chỉ định một trưởng nhóm và soạn khung tài liệu với các mục việc. Thành viên tự nhận mục, làm trong trang riêng rồi bấm Xong để ghép realtime vào tài liệu chung; trưởng nhóm nộp. Giảng viên có thể nhờ AI đề xuất cho phần đóng góp của từng thành viên nhưng tự chấm tài liệu chung, đánh giá tính tích hợp/nhất quán và quyết định điểm cuối từng sinh viên dựa trên cả hai cấp bài làm.
 
 ## 6. Yêu cầu phi chức năng
 
@@ -290,90 +341,59 @@ Giảng viên chia lớp thành nhóm, chỉ định một trưởng nhóm, tạ
 
 ## 7. Yêu cầu bảo mật và quyền riêng tư
 
-### SEC-001 - Bảo vệ dữ liệu
+Phạm vi rút gọn cho đồ án sinh viên, chỉ giữ các control rẻ để làm và cần có. Rule ngoài phạm vi ghi ở mục 12.
 
-Mọi database, object storage, cache và backup phải mã hóa at rest. Mọi kết nối tới data store và mọi luồng dữ liệu qua network phải dùng TLS 1.2 trở lên, kể cả giữa các container khi có giao tiếp qua network. Dữ liệu nhạy cảm không được ghi log.
+### SEC-001 - Mật khẩu và phiên
 
-### SEC-002 - Xác thực và phiên
+Mật khẩu băm bằng bcrypt, tối thiểu 8 ký tự có chữ và số. Sai 5 lần thì khóa tạm. Token nằm trong cookie `HttpOnly`, `Secure`, `SameSite`, có hạn và bị thu hồi khi đăng xuất. Không có MFA, không kiểm danh sách mật khẩu bị lộ.
 
-Mật khẩu phải được băm bằng thuật toán adaptive, được kiểm tra với danh sách mật khẩu đã lộ, và có tối thiểu 8 ký tự. Tài khoản quản trị phải hỗ trợ MFA. Cookie phiên phải có `Secure`, `HttpOnly`, `SameSite`, thời hạn server-side và bị vô hiệu khi đăng xuất. Login phải có bảo vệ brute-force.
+### SEC-002 - Phân quyền
 
-### SEC-003 - Authorization và API
+Mọi API mặc định yêu cầu đăng nhập, trừ các endpoint được đánh dấu public. Quyền được kiểm phía server ở mức chức năng và đối tượng; frontend ẩn nút chỉ để tiện dùng.
 
-Mọi endpoint mặc định yêu cầu xác thực trừ khi được đánh dấu public. API phải kiểm tra quyền ở mức object và chức năng, xác thực toàn bộ input, giới hạn payload, dùng truy vấn tham số hóa và giới hạn CORS theo allowlist. Endpoint public phải có rate limiting. Thiết kế phải bao phủ các misuse case gồm leo thang đặc quyền, truy xuất nội dung ngoài khóa học qua prompt, thao túng điểm và webhook replay.
+### SEC-003 - Kiểm tra đầu vào
 
-### SEC-004 - Bảo mật web
+Mọi request body và tham số được validate kiểu, độ dài và định dạng. Truy vấn database luôn tham số hóa. Endpoint public có giới hạn tần suất.
 
-Endpoint phục vụ HTML phải thiết lập tối thiểu `Content-Security-Policy: default-src 'self'` mà không dùng `unsafe-inline`/`unsafe-eval` nếu không có lý do được duyệt; `Strict-Transport-Security: max-age=31536000; includeSubDomains`; `X-Content-Type-Options: nosniff`; `X-Frame-Options: DENY` trừ khi có yêu cầu framing được duyệt; và `Referrer-Policy: strict-origin-when-cross-origin`.
+### SEC-004 - Header HTTP
 
-### SEC-005 - Logging, alerting và audit
+Nginx thêm `Content-Security-Policy: default-src 'self'`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`. Truy cập từ Internet dùng HTTPS với chứng chỉ Let's Encrypt miễn phí; dùng tên miền có sẵn, nếu chưa có thì dùng subdomain miễn phí (DuckDNS).
 
-Ứng dụng phải dùng structured logging với timestamp, correlation ID, level và message. Mọi load balancer, API gateway hoặc CDN xử lý traffic bên ngoài phải bật access logging vào kho tập trung. Log production phải lưu tối thiểu 90 ngày trong kho append-only hoặc tamper-evident. Cảnh báo phải bao phủ đăng nhập thất bại lặp lại, vi phạm authorization và thay đổi đặc quyền; dashboard phải hiển thị các chỉ số vận hành và bảo mật chính. Ứng dụng không được sửa hoặc xóa audit log của chính nó.
+### SEC-005 - Log
 
-### SEC-006 - Chuỗi cung ứng
+Log không chứa mật khẩu, OTP, token hay dữ liệu cá nhân nhạy cảm. Sự kiện đăng nhập thất bại, đổi quyền và thao tác đặc quyền được ghi audit.
 
-Dependency phải có lock file hoặc phiên bản chính xác, lấy từ registry tin cậy, được xác minh integrity khi tải, được quét lỗ hổng và loại bỏ khi không dùng. Build production phải tạo SBOM và dùng tool/base image đã khóa phiên bản. Quyền sửa pipeline phải được kiểm soát và thay đổi phải audit được. External script từ CDN, nếu có, phải dùng Subresource Integrity.
+### SEC-006 - Xử lý lỗi và cấu hình an toàn
 
-### SEC-007 - Fail-safe và error handling
+Có global error handler; phản hồi lỗi không lộ stack trace, đường dẫn hay chi tiết database. Không có mật khẩu mặc định. Tắt Swagger và endpoint debug ở production. Secret không commit vào repository. Dependency khóa phiên bản.
 
-External call, file I/O và database operation phải xử lý lỗi rõ ràng, giải phóng tài nguyên và fail closed. Backend phải có global error handler; phản hồi production không được lộ stack trace, path, phiên bản framework hoặc chi tiết database. Không được có default credential; sample app, tính năng không dùng, directory listing và documentation endpoint không dành cho production phải bị loại bỏ hoặc vô hiệu hóa. Object storage phải chặn public access.
+### SEC-007 - Thanh toán
 
-### SEC-008 - Payment và integrity
+Không lưu thông tin thẻ. Webhook phải xác minh chữ ký và xử lý idempotent.
 
-Hệ thống không lưu thông tin thẻ thô. Webhook phải xác minh chữ ký, chống replay khi nhà cung cấp hỗ trợ và xử lý idempotent. Thay đổi dữ liệu quan trọng phải truy vết được actor và timestamp.
+## 8. Yêu cầu vận hành
 
-### SEC-009 - IAM và network least privilege
+### REL-001 - Triển khai
 
-Mọi IAM policy phải giới hạn action và resource cụ thể; wildcard chỉ được dùng khi API không hỗ trợ resource-level permission và phải ghi lý do. Quyền đọc và ghi phải tách khi phù hợp. Network phải deny-by-default, chỉ public load balancer được mở Internet trên cổng 80/443; application, database và storage phải giới hạn nguồn/đích cần thiết, ưu tiên private subnet hoặc private endpoint.
+Chạy trên VPS nhóm đã có sẵn bằng Docker Compose; không dùng dịch vụ trả phí mới. Image gắn tag theo commit; rollback bằng cách chạy lại tag trước. Migration database tương thích ngược.
 
-## 8. Yêu cầu resiliency và vận hành
+### REL-002 - Health check
 
-### REL-001 - Mức quan trọng và tác động
+Mỗi container có healthcheck trong Docker Compose; backend có `/health`.
 
-MVP có mức quan trọng **Trung bình**: dùng thử với người thật; downtime gây bất tiện nhưng có thể xử lý thủ công. Application Design phải phân loại từng deployable component và ghi rõ dependency/tác động khi không khả dụng.
+### REL-003 - Timeout
 
-### REL-002 - Recovery objectives
+Mọi lời gọi ra ngoài (database, Redis, SMTP, AI, thanh toán, unit khác) có timeout hữu hạn và retry có giới hạn. Lỗi phụ thuộc thì từ chối an toàn.
 
-- Chiến lược DR: Backup & Restore.
-- RTO mục tiêu: tính bằng giờ.
-- RPO mục tiêu: tính bằng giờ, được tinh chỉnh theo lịch backup trong Infrastructure Design.
-- Production topology: single-region, multi-zone.
-- Local/demo: được phép chạy một instance và không phải mô hình HA.
+### REL-004 - Ngoài phạm vi đồ án
 
-### REL-003 - Change management
+Không có multi-zone, auto-scaling, backup, DR, runbook failover, chaos testing, incident response, dashboard hay cảnh báo tự động. Log xem bằng `docker compose logs`.
 
-Do chưa có quy trình tổ chức, AI-DLC phải đề xuất quy trình nhẹ gồm change record, phê duyệt trước production và ghi chú rollback. Git history và tài liệu AI-DLC là nguồn truy vết thay đổi ban đầu.
+### REL-005 - Không phát sinh chi phí
 
-### REL-004 - CI/CD, deployment và rollback
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Gmail SMTP (App Password) khi demo.
 
-- AI-DLC phải đề xuất pipeline CI/CD phù hợp với Next.js, Spring Boot và container.
-- Chiến lược MVP: direct/in-place.
-- Rollback: triển khai lại artifact/container image đã khóa phiên bản trước đó.
-- Database migration phải ưu tiên backward compatibility; migration phá vỡ phải có kế hoạch khôi phục riêng trước khi được duyệt.
-
-### REL-005 - Observability và health
-
-Mỗi component production phải phát metrics về latency, error rate, throughput và saturation; log có cấu trúc phải tập trung. Kiến trúc nhiều service phải có distributed tracing và dashboard sức khỏe vận hành. Mỗi service phải có shallow health check; component quan trọng phải có deep health check cho dependency. Health check phải tích hợp với load balancer/service discovery và endpoint public phải có synthetic monitoring hoặc lý do N/A được duyệt.
-
-### REL-006 - Capacity và fault isolation
-
-Production compute và data store phải phân bố ít nhất hai availability zone, có load balancing và giữ khả năng phục vụ khi một zone lỗi mà không cần control-plane operation để khôi phục. Infrastructure Design phải xác định min/max capacity, scaling trigger, quota liên quan và cảnh báo ở ngưỡng 80% khi phù hợp. Resiliency-specific alarms phải bao phủ mất redundancy, backup failure và capacity risk; resiliency assessment tool phải được cấu hình hoặc ghi nhận là cải tiến có kế hoạch.
-
-### REL-007 - Dependency isolation
-
-External call phải có timeout. Dependency quan trọng phải có circuit breaker khi phù hợp; connection/thread pool phải được tách theo bulkhead khi một dependency có thể làm cạn tài nguyên dùng chung; mọi pool/resource limit phải hữu hạn; tính năng không thiết yếu phải có degraded mode thay vì gây lỗi dây chuyền.
-
-### REL-008 - Backup và recovery
-
-Persistent data phải được backup tự động, mã hóa, có retention policy và quy trình test restore. Runbook phải mô tả failover/failback, phục hồi từ backup, kiểm tra sau phục hồi và truyền thông sự cố.
-
-### REL-009 - Incident response
-
-AI-DLC phải đề xuất quy trình incident response và Correction of Errors nhẹ, gồm phân loại sự cố, người chịu trách nhiệm, kênh thông báo, post-mortem và theo dõi corrective action.
-
-### REL-010 - Resiliency testing
-
-NFR Design phải trình người dùng lựa chọn cách kiểm thử failover/recovery theo RESILIENCY-14; kịch bản, lịch thực hiện và cơ chế lưu kết quả phải được ghi nhận trước khi hoàn tất thiết kế resiliency.
+Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): ưu tiên gói miễn phí, được phép tốn ít chi phí nhưng phải có trần quota/chi phí và kill-switch theo FR-021.
 
 ## 9. Ràng buộc và giả định đã xác nhận
 
@@ -383,24 +403,26 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 - Chủ nhiệm môn là vai trò RBAC riêng, được gán phạm vi một hoặc nhiều môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công.
 - Chỉ web responsive.
 - Nội dung được nhập trực tiếp hoặc tải PDF/DOCX/slide.
-- Bốn loại bài đánh giá là sơ đồ Draw.io, trắc nghiệm, Code Lab và bài viết luận; bài sơ đồ lưu/nộp XML Draw.io đầy đủ cho giảng viên, còn XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
-- Bài tập nhóm gồm các phần cá nhân và một DOCX chung; hệ thống không cung cấp trình soạn thảo cộng tác DOCX, chỉ nhận file do nhóm tự phối hợp tạo bên ngoài.
-- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; chỉ trưởng nhóm được nộp bài chung.
-- Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán và email/thông báo.
+- Bốn loại bài đánh giá là trắc nghiệm, bài viết (ESSAY), bài tài liệu (DOCUMENT, có sơ đồ Draw.io nhúng) và Code Lab; sơ đồ lưu XML Draw.io đầy đủ trong tài liệu, XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
+- Bài tập nhóm là một tài liệu chung theo khung của giảng viên; mỗi mục tại một thời điểm chỉ một thành viên sửa, thay đổi được ghép realtime khi mục xong; không soạn đồng thời từng phím gõ.
+- Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; thành viên tự nhận mục, trưởng nhóm nộp tài liệu chung (hết hạn thì hệ thống tự nộp), giảng viên chấm tay tài liệu chung.
+- Không có loại kỳ thi chính thức/proctored exam; simulation exam có thể được cấu hình tính hoặc không tính điểm thành phần.
+- Template cấp môn và bản copy giữa lớp luôn tạo bản độc lập có truy vết nguồn, không đồng bộ hoặc mang theo dữ liệu phát hành/kết quả.
+- Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán mua credit AI và email/thông báo.
 - Triển khai đợt đầu ưu tiên local container.
 - MVP phải có test tự động (bao gồm unit test, integration test, system test, e2e test), tài liệu chạy và khả năng triển khai thử nghiệm.
 - Quản trị quy trình AI-DLC: Repository phải duy trì state tracking, audit trail, requirements, user stories, thiết kế, kế hoạch code, kết quả kiểm thử và các checkpoint phê duyệt trong `aidlc-docs/`; mã nguồn ứng dụng không được đặt trong thư mục này.
-- Chưa chọn nhà cung cấp AI, payment, email, storage, database hoặc cloud; lựa chọn cụ thể thuộc các stage thiết kế sau và phải tuân thủ yêu cầu trong tài liệu này.
+- Nhà cung cấp được chọn ở Construction: Gemini (AI), PayOS (thanh toán), SMTP Gmail App Password/Mailpit (email), Google Shared Drive (file), PostgreSQL + pgvector (database), VPS chạy Docker Compose (xem `construction/shared-infrastructure.md`).
 
 ## 10. Tiêu chí thành công của MVP
 
 - Một giảng viên có thể tạo lớp, đưa nội dung vào hệ thống, dùng AI tạo và duyệt bài đánh giá.
-- Một giảng viên có thể quản lý rubric/câu hỏi, xem trước hoặc chạy thử từng loại bài, theo dõi nộp bài và chốt điểm hàng loạt.
-- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG và phát hành đề chung tới đúng mọi lớp của môn được phân công mà không cần giảng viên lớp duyệt lại.
+- Một giảng viên có thể quản lý rubric/câu hỏi theo version, copy assignment/rubric giữa các lớp được phân công, tổ chức simulation exam giới hạn lượt, theo dõi nộp bài và chốt điểm hàng loạt.
+- Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG gồm nguồn YouTube theo bài giảng, phát hành template đề có version cho giảng viên các lớp thuộc môn copy.
 - Một người học được ghi danh có thể học, nộp bài và nhận điểm/phản hồi đúng quyền.
 - Bản nháp và lịch sử lần nộp của người học được bảo toàn qua gián đoạn mà không bị coi nhầm là bài nộp chính thức.
 - Quản trị viên có thể quản lý vòng đời tài khoản và kiểm soát quota/kill-switch/chi phí AI mà không khóa hệ thống vào một provider.
-- Một nhóm có thể hoàn thành các phần cá nhân và nộp một DOCX chung qua trưởng nhóm; AI chỉ có thể hỗ trợ chấm phần cá nhân, còn bài chung luôn do giảng viên chấm tay và đối chiếu.
+- Một nhóm cùng làm tài liệu chung theo mục và trưởng nhóm nộp; AI chỉ hỗ trợ chấm phần đóng góp của từng thành viên, còn giảng viên tự chấm tài liệu chung, xử lý lỗi không nhất quán và quyết định điểm cuối từng thành viên.
 - Luồng thanh toán thử nghiệm cấp quyền chính xác và chống xử lý webhook trùng lặp.
 - Các vai trò không thể truy cập dữ liệu hoặc chức năng ngoài quyền.
 - Dữ liệu và hành động nhạy cảm có audit trail phù hợp.
@@ -412,55 +434,36 @@ NFR Design phải trình người dùng lựa chọn cách kiểm thử failover
 | Nguồn | Yêu cầu liên quan |
 |---|---|
 | Phiếu xác minh Q1-Q14 | FR-001 đến FR-014, NFR-001 đến NFR-005 |
-| Security Baseline Q15 | SEC-001 đến SEC-008 và Security Compliance |
-| Resiliency Baseline Q16 | REL-001 đến REL-010 và Resiliency Compliance |
+| Security Baseline Q15 | SEC-001 đến SEC-007 và mục 12 (phạm vi rút gọn) |
+| Resiliency Baseline Q16 | REL-001 đến REL-004 và mục 13 (phạm vi rút gọn) |
 | Property-Based Testing Q17 | NFR-004, extension bị tắt |
 | Làm rõ vòng 1 Q1-Q10 | Web, tích hợp, criticality, DR, change, CI/CD, rollback, topology, incident response |
-| Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone |
-| Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung và ranh giới học liệu cấp môn/lớp |
+| Làm rõ vòng 2 Q1-Q2 | Direct/in-place; production single-region multi-zone (sau đó bỏ multi-zone khi rút gọn phạm vi 2026-09-24) |
+| Làm rõ User Stories Q1-Q3 | Vai trò Chủ nhiệm môn, quyền phát hành đề chung (sau đó đã loại đề chung, 2026-09-24) và ranh giới học liệu cấp môn/lớp |
 | Đối chiếu `uc1.pdf` và yêu cầu ngày 2026-09-13 | FR-015 đến FR-024; loại Head of Department; dùng chung loại bài viết luận; phân tách MVP và Phase 2 |
-| Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader, phần cá nhân, DOCX chung và quy tắc chấm hai cấp |
+| Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
+| Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 
-## 12. Security Compliance tại Requirements Analysis
+## 12. Phạm vi Security Baseline
 
-| Rule | Trạng thái | Cách đáp ứng ở requirements |
+Rút gọn cho đồ án sinh viên theo quyết định của người dùng ngày 2026-09-24.
+
+| Rule | Áp dụng | Đáp ứng bởi / lý do |
 |---|---|---|
-| SECURITY-01 | Compliant | SEC-001 yêu cầu mã hóa at rest và TLS 1.2+ |
-| SECURITY-02 | Compliant | SEC-005 yêu cầu access/centralized logging cho thành phần network-facing ở production |
-| SECURITY-03 | Compliant | SEC-005 yêu cầu structured logging và cấm log dữ liệu nhạy cảm |
-| SECURITY-04 | Compliant | SEC-004 xác định đầy đủ nhóm HTTP security headers |
-| SECURITY-05 | Compliant | SEC-003 yêu cầu validation, size limit, sanitization và parameterized query |
-| SECURITY-06 | Compliant | SEC-009 yêu cầu IAM action/resource cụ thể và tách quyền đọc/ghi |
-| SECURITY-07 | Compliant | SEC-009 yêu cầu network deny-by-default, giới hạn cổng/nguồn và private placement |
-| SECURITY-08 | Compliant | FR-002 và SEC-003 yêu cầu server-side, object-level và function-level authorization |
-| SECURITY-09 | Compliant | SEC-007 và NFR-005 yêu cầu hardening, safe errors, no defaults, private storage, secret handling và image pinning |
-| SECURITY-10 | Compliant | SEC-006 xác định pinning, scanning, trusted registry và SBOM |
-| SECURITY-11 | Compliant | FR-002, SEC-003 và thiết kế abuse controls/rate limiting được đặt làm ràng buộc downstream |
-| SECURITY-12 | Compliant | SEC-002 xác định password, MFA admin, session và brute-force controls |
-| SECURITY-13 | Compliant | SEC-006 và SEC-008 yêu cầu artifact/pipeline/data integrity, SRI và audit |
-| SECURITY-14 | Compliant | SEC-005 xác định alerting, retention và log integrity |
-| SECURITY-15 | Compliant | SEC-007 xác định fail-closed, cleanup, global handler và safe errors |
+| SECURITY-03 | Có | SEC-005 |
+| SECURITY-04 | Có | SEC-004 |
+| SECURITY-05 | Có | SEC-003 |
+| SECURITY-08 | Có | SEC-002 |
+| SECURITY-09 | Có | SEC-006 |
+| SECURITY-12 | Có, rút gọn | SEC-001; không MFA, không kiểm mật khẩu bị lộ |
+| SECURITY-15 | Có | SEC-006 |
+| SECURITY-01, 02, 06, 07, 10, 11, 13, 14 | Không | Ngoài phạm vi đồ án: mã hóa at rest, access log tập trung, IAM cloud, network nhiều lớp, SBOM/quét lỗ hổng, misuse-case analysis, phân quyền CI/CD, alerting |
 
-Không có blocking security finding tại Requirements Analysis. Việc triển khai từng control phải được xác minh lại ở các stage thiết kế, code và test.
+## 13. Phạm vi Resiliency Baseline
 
-## 13. Resiliency Compliance tại Requirements Analysis
-
-| Rule | Trạng thái | Cách đáp ứng ở requirements |
+| Rule | Áp dụng | Đáp ứng bởi / lý do |
 |---|---|---|
-| RESILIENCY-01 | Compliant | REL-001 xác định mức quan trọng Trung bình và yêu cầu impact/dependency mapping |
-| RESILIENCY-02 | Compliant | REL-002 xác định RTO/RPO theo giờ và Backup & Restore |
-| RESILIENCY-03 | Compliant | REL-003 yêu cầu quy trình change management nhẹ |
-| RESILIENCY-04 | Compliant | REL-004 xác định CI/CD cần đề xuất, direct/in-place và version-pinned rollback |
-| RESILIENCY-05 | Compliant | REL-005 yêu cầu metrics, logs, traces và dashboard downstream |
-| RESILIENCY-06 | Compliant | REL-005 yêu cầu shallow/deep health checks và integration với routing downstream |
-| RESILIENCY-07 | Compliant | REL-005 và REL-006 yêu cầu resiliency/capacity alarms; tool cụ thể thuộc Infrastructure Design |
-| RESILIENCY-08 | Compliant | REL-002 và REL-006 xác định production single-region multi-zone; local được miễn HA |
-| RESILIENCY-09 | Compliant | REL-006 yêu cầu scaling limits, triggers và quota awareness |
-| RESILIENCY-10 | Compliant | REL-007 yêu cầu timeout, circuit breaker, bulkhead/resource limit và degraded mode |
-| RESILIENCY-11 | Compliant | REL-002 và REL-008 xác định Backup & Restore cùng runbook |
-| RESILIENCY-12 | Compliant | REL-008 yêu cầu backup tự động, mã hóa, retention và test restore |
-| RESILIENCY-13 | Compliant | REL-008 yêu cầu failover/failback và recovery validation |
-| RESILIENCY-14 | Compliant | REL-010 giữ decision gate bắt buộc tại NFR Design như rule cho phép |
-| RESILIENCY-15 | Compliant | REL-009 yêu cầu quy trình incident response và COE nhẹ |
-
-Không có blocking resiliency finding tại Requirements Analysis. Các quyết định và artifact chi tiết phải được xác minh lại ở các stage thiết kế, hạ tầng, code và test.
+| RESILIENCY-04 | Có | REL-001 |
+| RESILIENCY-06 | Có | REL-002 |
+| RESILIENCY-10 | Có, chỉ timeout | REL-003; không circuit breaker |
+| RESILIENCY-01, 02, 03, 05, 07, 08, 09, 11, 12, 13, 14, 15 | Không | Ngoài phạm vi đồ án (REL-004) |

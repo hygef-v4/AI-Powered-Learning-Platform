@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 55 user story, persona và `use-cases.md`. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
+Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 49 user story thuộc MVP, persona và 77 use case hiện hành. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
 
 ## Các bước thực hiện
 
@@ -32,6 +32,28 @@ C) Backend theo domain module nhưng có thể tách service sau khi MVP ổn đ
 X) Other (mô tả sau `[Answer]:`)
 
 [Answer]: a
+
+## Revision 2026-09-22
+
+- [x] Cập nhật Content cho YouTube/caption/transcript ingestion theo bài giảng.
+- [x] Cập nhật Question Bank và Assessment cho immutable version/snapshot theo attempt.
+- [x] Bổ sung template lineage, cross-class copy và simulation policy.
+- [x] Thay leader-upload DOCX bằng composite generation/version và instructor finalization.
+- [x] Cập nhật Grading cho manual shared grade, consistency rubric và manual per-student final score.
+- [x] Đồng bộ component, methods, services, dependency, flows và screens/jobs; mô hình bảng cuối cùng được chốt theo từng unit ở Construction.
+- [x] Kiểm tra Security/Resiliency và content consistency.
+- [x] Trình checkpoint phê duyệt lại Application Design.
+
+## Revision 2026-09-24
+
+- [x] Làm rõ không sao chép khóa học/lớp; sửa assignment đã giao tạo version kế tiếp và giữ attempt snapshot cũ.
+- [x] Loại tiến độ từng bài học khỏi component, method, màn hình và phân rã unit.
+- [x] Mở rộng dependency matrix với Question Bank, Payment và các hàng Academic, AI Orchestration, Code Execution.
+- [x] Đặt luồng tạo đề làm orchestration chính; RAG chỉ hỗ trợ nguồn cho AI.
+- [x] Thêm CodeExecutionService, FileArtifactService và JobService vào bảng dịch vụ.
+- [x] Bỏ tài liệu và kế hoạch business flow riêng.
+- [x] Kiểm tra tham chiếu còn sót và cú pháp tài liệu.
+- [x] Trình checkpoint phê duyệt bản sửa Application Design; người dùng duyệt ngày 2026-09-24.
 
 ### Question 2 - Giao tiếp bất đồng bộ
 

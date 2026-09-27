@@ -17,16 +17,17 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 ### Hành vi điển hình
 
 - Đăng nhập bằng email trường đã được cấp, quản lý hồ sơ và khôi phục mật khẩu; không tự đăng ký tài khoản công khai.
-- Truy cập lớp, học nội dung, đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất.
+- Truy cập lớp và học liệu đã phát hành; xem bài sắp hạn, trạng thái nộp và điểm đã công bố trên dashboard cá nhân.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
-- Vẽ sơ đồ trên canvas Draw.io và nộp XML đầy đủ cho giảng viên, hoặc làm trắc nghiệm, Code Lab và bài viết luận; lưu nháp, khôi phục và xem lịch sử lần nộp.
-- Làm phần cá nhân của bài nhóm; nếu là trưởng nhóm thì upload DOCX chung, hoặc gửi yêu cầu đổi trưởng nhóm để giảng viên xem xét.
-- Thực hiện thanh toán và theo dõi trạng thái cấp quyền.
+- Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
+- Nhận và làm mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
+- Làm simulation exam trong giới hạn lượt, biết rõ bài có hoặc không tính điểm thành phần và chính sách lấy kết quả.
+- Mua credit AI và theo dõi trạng thái thanh toán/cộng credit.
 - Nhận thông báo thiết yếu.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-GRP-005`, `US-CNT-004`, `US-LRN-001`, `US-LRN-002`, `US-ASM-003`, `US-GRD-001`, `US-GRD-004`, `US-GRD-006`, `US-GRD-007`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 3. P-INSTRUCTOR - Giảng viên
 
@@ -40,40 +41,42 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ### Hành vi điển hình
 
-- Quản lý vòng đời lớp/khóa học và nội dung riêng của lớp.
+- Quản lý vòng đời lớp được phân công (sửa, mở, lưu trữ) và nội dung riêng của lớp.
 - Ghi danh người học khi được cấp quyền.
-- Chia lớp thành nhóm, chỉ định trưởng nhóm, phân công phần cá nhân và xử lý yêu cầu đổi trưởng nhóm.
-- Đối chiếu các phần cá nhân với DOCX chung và tự chấm tay bài chung.
+- Chia nhóm cho bài nhóm, chỉ định trưởng nhóm, soạn khung mục việc và xử lý yêu cầu đổi trưởng nhóm.
+- Định nghĩa cấu trúc bài nhóm, xem trước tài liệu do hệ thống tổng hợp, điều chỉnh thứ tự/phần được dùng và chốt version để chấm.
+- Nhờ AI đề xuất feedback cho phần đóng góp của từng thành viên, tự chấm tài liệu chung và quyết định điểm cuối từng sinh viên dựa trên hai nguồn mà không bị hệ thống ép công thức.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
-- Quản lý rubric/ngân hàng câu hỏi và soạn, xem trước từng loại bài đánh giá.
+- Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
+- Soạn, xem trước từng loại bài đánh giá và cấu hình simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
-- Xem tiến độ nộp, gửi nhắc, chốt điểm và xem sổ điểm của lớp được phân công.
+- Xem tiến độ nộp, chốt điểm, xuất bảng điểm của lớp được phân công; hệ thống tự nhắc người chưa nộp trước hạn.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002` đến `US-CNT-004`, `US-LRN-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-008`, `US-GRD-001` đến `US-GRD-008`, `US-RPT-001`, `US-RPT-003`, `US-RPT-004`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-NTF-001`.
 
 ## 4. P-SUBJECT-MANAGER - Chủ nhiệm môn
 
 ### Hồ sơ
 
 - **Bối cảnh**: Giảng viên được giao trách nhiệm học thuật cấp môn cho một hoặc nhiều môn; mỗi môn có thể gồm nhiều lớp do các giảng viên khác nhau đứng lớp.
-- **Mục tiêu**: Duy trì nguồn học liệu chuẩn cấp môn và bảo đảm đề chung được áp dụng nhất quán cho mọi lớp thuộc môn.
+- **Mục tiêu**: Duy trì nguồn học liệu chuẩn cấp môn và cung cấp template đề và ngân hàng cấp môn để các lớp dùng thống nhất.
 - **Động lực**: Nâng chất lượng học thuật và giảm việc biên soạn trùng lặp giữa các lớp.
 - **Khó khăn**: Cần thao tác xuyên lớp nhưng tuyệt đối không vượt sang môn chưa được phân công; cần biết tài liệu nào đã xử lý thành công để dùng cho RAG.
-- **Nhu cầu truy cập**: Quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và đề chung của các môn được gán; phát hành trực tiếp đề chung cho mọi lớp thuộc môn mà không quản lý hoạt động thường ngày hoặc điểm của lớp thay giảng viên.
+- **Nhu cầu truy cập**: Quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và template đề của các môn được gán; không phát hành bài thay giảng viên và không quản lý hoạt động thường ngày hoặc điểm của lớp thay giảng viên.
 
 ### Hành vi điển hình
 
-- Quản lý học liệu và nguồn RAG cấp môn.
+- Quản lý học liệu và nguồn RAG cấp môn, gồm video/playlist YouTube gắn theo bài giảng và trạng thái caption/lập chỉ mục.
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
-- Duyệt và phát hành đề chung xuyên các lớp thuộc môn.
+- Phát hành template có version để giảng viên copy thành bài của lớp.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-003`, `US-QBK-001` đến `US-QBK-003`, `US-AIG-002`, `US-ASM-002`, `US-ASM-004` đến `US-ASM-008`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-NTF-001`.
 
 ## 5. P-ADMIN - Quản trị viên
 
@@ -83,19 +86,19 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - **Mục tiêu**: Cấu hình hệ thống đúng quyền, xử lý ngoại lệ vận hành và có bằng chứng audit khi cần điều tra.
 - **Động lực**: Giữ nền tảng an toàn, nhất quán và đủ ổn định cho đợt thử nghiệm với người thật.
 - **Khó khăn**: Sai phân quyền hoặc cấp quyền thanh toán có thể làm lộ dữ liệu; cần thông tin rõ nhưng không được thay đổi/xóa audit log.
-- **Nhu cầu truy cập**: Quyền quản trị được kiểm soát phía server; hỗ trợ MFA; mọi thay đổi đặc quyền và nghiệp vụ quan trọng phải được audit.
+- **Nhu cầu truy cập**: Quyền quản trị được kiểm soát phía server; mọi thay đổi đặc quyền và nghiệp vụ quan trọng phải được audit.
 
 ### Hành vi điển hình
 
 - Quản lý tài khoản, bốn vai trò và phạm vi môn của Chủ nhiệm môn.
 - Cấu hình quota, model, giới hạn chi phí/kill-switch và giám sát dịch vụ AI theo cách không khóa nhà cung cấp.
 - Tạo cấu trúc môn/lớp, phân công và ghi danh.
-- Đối soát giao dịch và quyền truy cập.
+- Cấu hình gói credit AI; việc xác minh thanh toán chạy tự động.
 - Tra cứu audit theo phạm vi quản trị.
 
 ### Stories liên quan
 
-`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-RPT-004`, `US-PAY-002`, `US-PAY-003`, `US-AUD-001`, `US-NTF-001`.
+`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-GRD-004`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-AUD-001`, `US-NTF-001`.
 
 ## 6. Ma trận persona - miền nghiệp vụ
 
@@ -103,8 +106,8 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 |---|---|---|---|---|---|---|---|---|---|
 | Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài | Xem cá nhân | Chính | Nhận | Không |
 | Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Không | Nhận | Qua hành động được ghi |
-| Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo/giao đề chung | Không mặc định | Không | Nhận | Qua hành động được ghi |
-| Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Đối soát | Cấu hình/nhận | Chính |
+| Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo template đề | Không mặc định | Không | Nhận | Qua hành động được ghi |
+| Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Cấu hình gói/mua credit | Cấu hình/nhận | Chính |
 
 ## 7. Nguyên tắc phân quyền xuyên persona
 
@@ -118,4 +121,4 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ## 8. Truy vết nguồn
 
-Các persona được dẫn xuất từ `FR-001` đến `FR-026`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-002`, `SEC-003`, `SEC-005`, `SEC-008`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.
+Các persona được dẫn xuất từ `FR-001` đến `FR-026`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-001`, `SEC-002`, `SEC-003`, `SEC-005`, `SEC-007`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.

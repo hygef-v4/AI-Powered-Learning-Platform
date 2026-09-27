@@ -8,9 +8,10 @@
 - Acceptance criteria dùng Given/When/Then.
 - Lỗi tích hợp được mô tả trong acceptance criteria của story nghiệp vụ liên quan.
 - Mỗi story ghi mã requirements liên quan; ràng buộc kỹ thuật thuần túy được giữ trong ma trận downstream thay vì tạo system story.
-- Story không ghi nhãn thuộc MVP; story có hậu tố `(Phase 2)` là backlog sau MVP.
+- Danh mục hiện hành chỉ gồm story thuộc MVP. Các mã story đã loại không được tái sử dụng; lịch sử quyết định nằm trong `audit.md`.
 - Hệ thống chỉ có bốn persona người dùng: Người học, Giảng viên, Chủ nhiệm môn và Quản trị viên; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
+- Phạm vi triển khai: **49 story MVP**, được ánh xạ tới 77 use case hiện hành.
 
 ## 2. Miền Identity and Access
 
@@ -18,27 +19,33 @@
 
 **Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email trường để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
 
-**Truy vết**: FR-001, FR-011, NFR-002, SEC-002, SEC-003, SEC-007.
+**Truy vết**: FR-001, FR-011, NFR-002, SEC-001, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Kích hoạt thành công
 
-- **Given** tài khoản đã được cấp/import với email thuộc miền của trường và lời mời còn hiệu lực
-- **When** người dùng cung cấp dữ liệu bắt buộc và mật khẩu đạt chính sách
-- **Then** tài khoản được kích hoạt và người dùng nhận xác nhận an toàn
+- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt với email thuộc miền của trường
+- **When** ở lần đăng nhập đầu người dùng nhập email trường, yêu cầu kích hoạt, xác minh OTP hệ thống gửi qua email và đặt mật khẩu đạt chính sách
+- **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng nhận xác nhận an toàn
 
 #### Scenario 2 - Email chưa được cấp hoặc ngoài miền trường
 
-- **Given** email chưa có tài khoản được cấp, ngoài allowlist miền trường hoặc mật khẩu không đạt chính sách
-- **When** người dùng gửi yêu cầu kích hoạt
-- **Then** hệ thống từ chối an toàn, không tạo tài khoản công khai và hướng dẫn liên hệ đơn vị quản trị phù hợp
+- **Given** email chưa có tài khoản chờ kích hoạt hoặc ngoài allowlist miền trường
+- **When** người dùng yêu cầu kích hoạt
+- **Then** hệ thống trả phản hồi trung tính giống trường hợp hợp lệ, không gửi email, không tạo tài khoản công khai và hướng dẫn liên hệ quản trị nếu không nhận được mã
+
+#### Scenario 3 - Yêu cầu OTP quá tần suất
+
+- **Given** người dùng vừa yêu cầu OTP kích hoạt
+- **When** yêu cầu lại vượt giới hạn tần suất
+- **Then** hệ thống không gửi thêm email và vẫn trả phản hồi trung tính
 
 ### US-IAM-002 - Đăng nhập và đăng xuất an toàn
 
 **Story**: Là người dùng, tôi muốn đăng nhập và đăng xuất an toàn để chỉ mình tôi sử dụng phiên đã xác thực.
 
-**Truy vết**: FR-001, FR-002, NFR-002, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-001, FR-002, NFR-002, SEC-001, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -58,13 +65,13 @@
 
 - **Given** người dùng có phiên đang hoạt động
 - **When** người dùng đăng xuất hoặc phiên hết hạn
-- **Then** phiên bị vô hiệu phía server và không thể tiếp tục gọi API được bảo vệ
+- **Then** refresh token của phiên bị thu hồi phía server nên phiên không thể làm mới; access token còn lại hết hạn trong tối đa 15 phút (BR-U01-44, 45)
 
 ### US-IAM-003 - Khôi phục mật khẩu riêng tư
 
 **Story**: Là người dùng quên mật khẩu, tôi muốn yêu cầu khôi phục mà không làm lộ trạng thái tài khoản để lấy lại quyền truy cập an toàn.
 
-**Truy vết**: FR-001, FR-011, SEC-002, SEC-003, SEC-007, REL-007.
+**Truy vết**: FR-001, FR-011, SEC-001, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -72,7 +79,7 @@
 
 - **Given** một địa chỉ email bất kỳ
 - **When** người dùng yêu cầu khôi phục
-- **Then** hệ thống trả cùng một thông báo dù tài khoản có tồn tại hay không và chỉ gửi liên kết hữu hạn nếu phù hợp
+- **Then** hệ thống trả cùng một thông báo dù tài khoản có tồn tại hay không và chỉ gửi OTP có thời hạn nếu tài khoản đang hoạt động
 
 #### Scenario 2 - Email tạm thời lỗi
 
@@ -84,7 +91,7 @@
 
 **Story**: Là người dùng, tôi muốn xem và cập nhật thông tin hồ sơ tối thiểu của mình để dữ liệu tài khoản luôn chính xác.
 
-**Truy vết**: FR-001, FR-002, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-001, FR-002, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -104,7 +111,7 @@
 
 **Story**: Là quản trị viên, tôi muốn gán hoặc thu hồi vai trò và phạm vi môn để người dùng chỉ có đúng quyền cần thiết.
 
-**Truy vết**: FR-002, FR-003, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -118,7 +125,7 @@
 
 - **Given** một quyền hoặc phạm vi đang có hiệu lực
 - **When** quản trị viên thu hồi
-- **Then** các request mới không còn được phép và phiên/quyền cache liên quan được cập nhật an toàn
+- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role làm refresh token hết hiệu lực ngay và access token còn lại hết hạn trong tối đa 15 phút (BR-U01-63)
 
 #### Scenario 3 - Người không phải quản trị viên thay đổi quyền
 
@@ -130,7 +137,7 @@
 
 **Story**: Là người dùng đã xác thực, tôi muốn đổi mật khẩu để chủ động bảo vệ tài khoản của mình.
 
-**Truy vết**: FR-001, SEC-002, SEC-003, SEC-007.
+**Truy vết**: FR-001, SEC-001, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -138,7 +145,7 @@
 
 - **Given** người dùng xác nhận đúng mật khẩu hiện tại và mật khẩu mới đạt chính sách
 - **When** người dùng yêu cầu đổi mật khẩu
-- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác bị vô hiệu hóa và người dùng nhận xác nhận
+- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác không làm mới được nữa (access token còn lại hết hạn trong tối đa 15 phút) và người dùng nhận xác nhận
 
 #### Scenario 2 - Thông tin không hợp lệ
 
@@ -148,17 +155,17 @@
 
 ### US-IAM-007 - Quản trị vòng đời tài khoản
 
-**Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật, khóa/mở khóa và cấp mật khẩu tạm thời để quản lý tài khoản người dùng trong tổ chức.
+**Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản để quản lý tài khoản người dùng trong tổ chức.
 
-**Truy vết**: FR-002, FR-015, FR-014, SEC-002, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-015, FR-014, SEC-001, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Quản lý một tài khoản
 
 - **Given** quản trị viên có quyền và dữ liệu tài khoản hợp lệ
-- **When** quản trị viên tạo, cập nhật, khóa/mở khóa hoặc cấp mật khẩu tạm thời
-- **Then** thay đổi có hiệu lực đúng một tài khoản, mật khẩu tạm thời buộc đổi khi đăng nhập và hành động được audit
+- **When** quản trị viên tạo, cập nhật hoặc khóa/mở khóa
+- **Then** thay đổi có hiệu lực đúng một tài khoản, tài khoản mới ở trạng thái chờ kích hoạt và không có email nào được gửi, quản trị viên không đặt hay xem mật khẩu, và hành động được audit
 
 #### Scenario 2 - Nhập tài khoản hàng loạt
 
@@ -178,7 +185,7 @@
 
 **Story**: Là quản trị viên, tôi muốn tạo môn, tạo lớp thuộc môn và phân công vai trò để cấu trúc học thuật phản ánh đúng hoạt động đào tạo.
 
-**Truy vết**: FR-002, FR-003, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -194,19 +201,19 @@
 - **When** quản trị viên gửi cấu hình
 - **Then** hệ thống từ chối toàn bộ thay đổi không hợp lệ và trả hướng dẫn khắc phục an toàn
 
-### US-CAT-002 - Quản lý vòng đời lớp/khóa học
+### US-CAT-002 - Quản lý vòng đời lớp
 
-**Story**: Là giảng viên, tôi muốn tạo, sửa, xuất bản và lưu trữ lớp/khóa học được phân công để kiểm soát nội dung người học nhìn thấy.
+**Story**: Là giảng viên, tôi muốn sửa, mở và lưu trữ lớp được phân công (lớp do quản trị viên tạo) để kiểm soát nội dung người học nhìn thấy.
 
-**Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Xuất bản nội dung
+#### Scenario 1 - Mở lớp
 
-- **Given** giảng viên được phân công và nội dung hợp lệ
-- **When** giảng viên xuất bản
-- **Then** người học được ghi danh có thể thấy nội dung và thay đổi được audit
+- **Given** giảng viên được phân công và lớp `DRAFT` có giảng viên chính, môn đang `ACTIVE`
+- **When** giảng viên mở lớp
+- **Then** lớp chuyển `OPEN`, người học được ghi danh thấy lớp và nội dung đã xuất bản, nhận thông báo ghi danh, và thay đổi được audit
 
 #### Scenario 2 - Nội dung nháp hoặc đã lưu trữ
 
@@ -224,15 +231,15 @@
 
 **Story**: Là giảng viên hoặc quản trị viên được phép, tôi muốn ghi danh người học vào lớp để họ nhận đúng nội dung và bài tập.
 
-**Truy vết**: FR-002, FR-003, FR-011, FR-014, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-011, FR-014, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Ghi danh hợp lệ
 
-- **Given** lớp đang hoạt động và người thực hiện có quyền
+- **Given** lớp `DRAFT` hoặc `OPEN` và người thực hiện quản lý lớp
 - **When** người học được ghi danh
-- **Then** quyền truy cập lớp được tạo một lần và thông báo ghi danh được xếp gửi
+- **Then** ghi danh được tạo một lần; thông báo ghi danh được xếp gửi khi lớp đã `OPEN`
 
 #### Scenario 2 - Ghi danh trùng hoặc ngoài quyền
 
@@ -246,11 +253,11 @@
 - **When** người thực hiện xác nhận gỡ ghi danh
 - **Then** quyền truy cập mới bị thu hồi, dữ liệu học tập lịch sử được giữ theo chính sách và thay đổi được audit
 
-### US-CAT-005 - Tự ghi danh bằng mã mời (Phase 2)
+### US-CAT-005 - Tự ghi danh bằng mã mời
 
 **Story**: Là người học, tôi muốn dùng mã mời để tự ghi danh vào lớp được phép mà không phải chờ nhập thủ công.
 
-**Truy vết**: FR-002, FR-003, FR-022, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-022, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -270,7 +277,7 @@
 
 **Story**: Là Chủ nhiệm môn, tôi muốn soạn hoặc tải học liệu vào kho cấp môn và theo dõi xử lý RAG để mọi lớp dùng chung nguồn đã kiểm soát.
 
-**Truy vết**: FR-002, FR-004, FR-012, FR-013, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-012, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -302,7 +309,7 @@
 
 **Story**: Là giảng viên, tôi muốn soạn hoặc tải nội dung riêng cho lớp được phân công để bổ sung học liệu phù hợp với lớp mình.
 
-**Truy vết**: FR-002, FR-003, FR-004, FR-013, FR-014, NFR-003, SEC-001, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-003, FR-004, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -324,31 +331,11 @@
 - **When** giảng viên tải tệp
 - **Then** hệ thống không tạo nội dung ở trạng thái thành công giả, trả trạng thái an toàn và cho phép thử lại có kiểm soát
 
-### US-CNT-003 - Tìm kiếm và tóm tắt học liệu (Phase 2)
-
-**Story**: Là người dùng có quyền, tôi muốn tìm kiếm ngữ nghĩa và nhận bản tóm tắt học liệu để nhanh chóng tìm đúng nội dung cần học hoặc soạn bài.
-
-**Truy vết**: FR-002, FR-004, FR-012, FR-023, SEC-003, SEC-007, REL-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Tìm kiếm trong phạm vi
-
-- **Given** học liệu đã xử lý và người dùng có quyền với môn/lớp
-- **When** người dùng tìm kiếm hoặc yêu cầu tóm tắt
-- **Then** kết quả chỉ dùng nguồn được phép và hiển thị trích dẫn tới nguồn tương ứng
-
-#### Scenario 2 - Nguồn ngoài quyền hoặc AI lỗi
-
-- **Given** nguồn thuộc phạm vi khác hoặc dependency tìm kiếm/AI không khả dụng
-- **When** yêu cầu được xử lý
-- **Then** hệ thống không gửi dữ liệu ngoài quyền, trả trạng thái an toàn và không tạo kết quả hoàn tất giả
-
-### US-CNT-004 - Thông báo và hỏi đáp trong lớp (Phase 2)
+### US-CNT-004 - Thông báo và hỏi đáp trong lớp
 
 **Story**: Là thành viên lớp, tôi muốn đọc thông báo và trao đổi hỏi đáp trong đúng lớp để phối hợp học tập tại một nơi.
 
-**Truy vết**: FR-002, FR-003, FR-011, FR-023, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-011, FR-023, SEC-002, SEC-003, SEC-005, SEC-006.
 
 **Acceptance criteria**
 
@@ -364,13 +351,39 @@
 - **When** yêu cầu được gửi
 - **Then** hệ thống từ chối, không phát thông báo và không tiết lộ thành viên/nội dung lớp
 
+### US-CNT-005 - Dùng YouTube làm nguồn RAG theo bài giảng
+
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn gắn video/playlist YouTube vào bài giảng và xử lý transcript để dùng đúng nguồn đó cho RAG.
+
+**Truy vết**: FR-002, FR-004, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Video có caption
+
+- **Given** người dùng có quyền với bài giảng và URL YouTube hợp lệ có caption
+- **When** người dùng yêu cầu xử lý nguồn
+- **Then** hệ thống lưu liên kết video/bài giảng, transcript có timestamp và chỉ mục trong đúng phạm vi RAG
+
+#### Scenario 2 - Playlist hoặc video không có caption
+
+- **Given** URL là playlist hợp lệ hoặc video không có caption khả dụng
+- **When** tác vụ xử lý chạy
+- **Then** hệ thống xử lý từng video, chỉ dùng caption có sẵn; video không có caption được đánh dấu "không có phụ đề", không lập chỉ mục; trạng thái hiển thị riêng cho từng mục
+
+#### Scenario 3 - Nguồn lỗi hoặc ngoài quyền
+
+- **Given** URL không hợp lệ, video không truy cập được, lấy caption thất bại hoặc bài giảng ngoài quyền
+- **When** yêu cầu được xử lý
+- **Then** hệ thống không lập chỉ mục kết quả lỗi/ngoài quyền, giữ trạng thái có thể retry và không tạo transcript hoàn tất giả
+
 ## 4. Miền Group Assignment
 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
 
-**Story**: Là giảng viên, tôi muốn chia lớp được phân công thành nhiều nhóm và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
+**Story**: Là giảng viên, tôi muốn tạo bộ nhóm cho từng bài nhóm của lớp được phân công (tạo tay, chia ngẫu nhiên hoặc dùng lại nhóm của bài khác) và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
 
-**Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -390,7 +403,7 @@
 
 **Story**: Là thành viên nhóm, tôi muốn gửi yêu cầu thay đổi trưởng nhóm để giảng viên xem xét khi phân công hiện tại không còn phù hợp.
 
-**Truy vết**: FR-002, FR-011, FR-025, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-011, FR-025, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -398,7 +411,7 @@
 
 - **Given** người yêu cầu là thành viên nhóm và người được đề xuất cũng thuộc nhóm
 - **When** giảng viên phê duyệt và xác nhận trưởng nhóm mới
-- **Then** nhóm vẫn có đúng một trưởng nhóm, quyền nộp bài chung chuyển sang người mới và quyết định được audit
+- **Then** nhóm vẫn có đúng một trưởng nhóm, vai trò điều phối chuyển sang người mới và quyết định được audit mà không đổi các mục thành viên đang nhận trong tài liệu nhóm
 
 #### Scenario 2 - Từ chối hoặc yêu cầu không hợp lệ
 
@@ -406,97 +419,115 @@
 - **When** yêu cầu được gửi hoặc giảng viên từ chối
 - **Then** trưởng nhóm hiện tại không thay đổi và người liên quan nhận trạng thái/lý do phù hợp
 
-### US-GRP-003 - Tạo bài tập nhóm và phân chia phần cá nhân
+### US-GRP-003 - Tạo bài tập nhóm dạng tài liệu chung
 
-**Story**: Là giảng viên, tôi muốn tạo một bài chung và tách thành các phần cá nhân giao cho từng thành viên để mọi đóng góp cùng hướng tới một sản phẩm nhóm.
+**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục việc để các thành viên tự nhận và cùng hoàn thành một sản phẩm nhóm.
 
-**Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-003, SEC-005, SEC-008.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Phân công đầy đủ
-
-- **Given** lớp đã có nhóm hợp lệ và bài chung có hướng dẫn/rubric
-- **When** giảng viên tạo các phần như use case diagram, activity diagram hoặc phần nội dung khác và gán từng phần
-- **Then** mỗi phần cá nhân thuộc đúng một bài chung, đúng một nhóm và đúng một thành viên
-
-#### Scenario 2 - Thay đổi phân công trước hạn
-
-- **Given** phần cá nhân chưa hết hạn và chưa chốt điểm
-- **When** giảng viên đổi người phụ trách
-- **Then** quyền nộp được chuyển đúng người, dữ liệu đã có được xử lý theo chính sách bảo toàn và thay đổi được audit
-
-### US-GRP-004 - Nộp và chấm phần cá nhân của bài nhóm
-
-**Story**: Là thành viên nhóm, tôi muốn nộp phần cá nhân được giao để giảng viên có thể chấm tay hoặc chọn AI hỗ trợ đánh giá đóng góp của tôi.
-
-**Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-003, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Thành viên nộp đúng phần
+#### Scenario 1 - Khung có mục việc
 
-- **Given** phần cá nhân được giao cho người học và còn hiệu lực
-- **When** người học nộp nội dung đúng loại
-- **Then** bài nộp gắn với người học, nhóm, phần cá nhân và bài chung; thành viên khác không thể nộp thay
+- **Given** lớp đã có bộ nhóm hợp lệ cho bài
+- **When** giảng viên soạn khung tài liệu với các mục việc (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
+- **Then** mỗi nhóm nhận một tài liệu chung theo khung; các mục ở trạng thái trống để thành viên nhận
 
-#### Scenario 2 - Giảng viên chọn phương thức chấm
+#### Scenario 2 - Nhả khóa mục khi cần
 
-- **Given** giảng viên đã nhận phần cá nhân hợp lệ
-- **When** giảng viên chọn chấm thủ công hoặc “Nhờ AI đề xuất”
+- **Given** một mục đang bị một thành viên giữ quá lâu hoặc thành viên đó rời nhóm
+- **When** trưởng nhóm hoặc giảng viên nhả khóa
+- **Then** mục trở lại trạng thái có thể nhận, nội dung đã viết giữ nguyên kèm tác giả và thao tác được audit
+
+### US-GRP-004 - Nhận và làm mục trong tài liệu nhóm
+
+**Story**: Là thành viên nhóm, tôi muốn nhận một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
+
+**Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Nhận và làm mục
+
+- **Given** mục đang trống và bài còn hạn
+- **When** thành viên nhận mục
+- **Then** mục bị khóa cho thành viên đó, mở ra trong trang riêng như bài DOCUMENT thường; thành viên khác không sửa được mục đó
+
+#### Scenario 2 - Xong và review
+
+- **Given** thành viên làm xong mục
+- **When** thành viên bấm "Xong"
+- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang chờ review và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản
+
+#### Scenario 3 - Giảng viên chọn phương thức chấm phần của từng người
+
+- **Given** tài liệu nhóm đã nộp
+- **When** giảng viên chấm đóng góp của một thành viên (các mục người đó viết) thủ công hoặc "Nhờ AI đề xuất"
 - **Then** hệ thống áp dụng đúng luồng đã chọn, lưu actor/thời gian và AI chỉ tạo đề xuất chưa công bố
 
-### US-GRP-005 - Trưởng nhóm nộp tài liệu chung
+### US-GRP-005 - Tài liệu chung và nộp bài nhóm
 
-**Story**: Là trưởng nhóm, tôi muốn upload DOCX chung do cả nhóm phối hợp hoàn thiện để đại diện nhóm nộp sản phẩm tổng hợp cho giảng viên.
+**Story**: Là thành viên nhóm, tôi muốn thấy tài liệu chung cập nhật realtime và trưởng nhóm nộp bài khi xong để giảng viên chấm đúng bản của nhóm.
 
-**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, SEC-001, SEC-003, SEC-005, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-013, FR-018, FR-026, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Trưởng nhóm nộp DOCX hợp lệ
+#### Scenario 1 - Cập nhật realtime
 
-- **Given** người học là trưởng nhóm hiện tại, bài chung còn hiệu lực và tệp DOCX nằm trong giới hạn
-- **When** trưởng nhóm upload và xác nhận nộp
-- **Then** hệ thống lưu tệp riêng tư, nhóm/người nộp/thời điểm/phiên bản và chuyển bài chung sang chờ giảng viên chấm tay
+- **Given** nhiều thành viên đang mở tài liệu chung
+- **When** một mục được nhận, nhả hoặc bấm "Xong"
+- **Then** mọi người đang xem thấy trạng thái và nội dung mới mà không cần tải lại
 
-#### Scenario 2 - Thành viên thường nộp bài chung
+#### Scenario 2 - Trưởng nhóm nộp
 
-- **Given** người học thuộc nhóm nhưng không phải trưởng nhóm hiện tại
-- **When** người học dùng giao diện hoặc API để nộp DOCX chung
-- **Then** hệ thống từ chối phía server, không thay đổi phiên bản bài chung và ghi sự kiện authorization phù hợp
+- **Given** tài liệu chung còn trong hạn
+- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn mục trống hoặc đang nhận)
+- **Then** hệ thống lưu một bản bất biến kèm tác giả từng mục; trưởng nhóm có thể nộp lại trước hạn, bản nộp cuối được chấm
 
-#### Scenario 3 - Tệp không hợp lệ hoặc storage lỗi
+#### Scenario 3 - Hết hạn
 
-- **Given** tệp sai loại/quá kích thước hoặc storage không khả dụng
-- **When** trưởng nhóm nộp
-- **Then** hệ thống không tạo trạng thái nộp thành công giả, giữ phiên bản hợp lệ trước đó và trả hướng dẫn thử lại an toàn
+- **Given** hết hạn mà nhóm chưa nộp
+- **When** tới hạn
+- **Then** hệ thống tự nộp bản hiện tại, mục đang nhận được đưa vào với nội dung đã lưu gần nhất và giảng viên thấy cảnh báo
 
-### US-GRP-006 - Đối chiếu và chấm tay bài chung
+### US-GRP-006 - Đối chiếu và chấm tay tài liệu nhóm
 
-**Story**: Là giảng viên, tôi muốn xem DOCX chung cạnh các phần cá nhân và tự chấm bài chung để đánh giá tính thống nhất của sản phẩm nhóm với đóng góp từng thành viên.
+**Story**: Là giảng viên, tôi muốn xem tài liệu nhóm đã nộp cùng phần đóng góp của từng thành viên, tự chấm tính tích hợp và quyết định điểm cuối từng sinh viên để phản ánh cả chất lượng chung và mức đóng góp.
 
-**Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-001, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-009, FR-020, FR-026, FR-014, SEC-005, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Chấm tay và đối chiếu
 
-- **Given** DOCX chung và các phần cá nhân của nhóm đã được nộp
+- **Given** nhóm đã nộp tài liệu chung
 - **When** giảng viên mở màn hình review
-- **Then** hệ thống hiển thị đúng phiên bản chung cùng từng phần/người phụ trách để giảng viên nhập điểm và phản hồi thủ công; điểm chung được lưu riêng với điểm cá nhân
+- **Then** hệ thống hiển thị bản nộp cuối, tác giả từng mục, đề xuất AI cho phần đóng góp nếu có và các vùng điểm/feedback tách biệt
 
-#### Scenario 2 - Không cho AI chấm bài chung
+#### Scenario 2 - Không cho AI chấm tài liệu nhóm
 
-- **Given** người dùng đang xem bài nộp chung của nhóm
+- **Given** người dùng đang xem tài liệu chung của nhóm
 - **When** chọn phương thức chấm
-- **Then** hệ thống chỉ cung cấp chấm thủ công, không gửi DOCX chung tới AI và lưu giảng viên là người quyết định điểm
+- **Then** hệ thống chỉ cung cấp chấm thủ công, không gửi tài liệu chung tới AI và lưu giảng viên là người quyết định điểm
 
-#### Scenario 3 - Thiếu phần cá nhân
+#### Scenario 3 - Mục còn trống
 
-- **Given** một hoặc nhiều phần cá nhân chưa nộp
-- **When** giảng viên review bài chung
-- **Then** hệ thống chỉ rõ phần còn thiếu nhưng vẫn cho phép giảng viên xử lý bài chung theo chính sách lớp mà không giả định đóng góp
+- **Given** một hoặc nhiều mục chưa có nội dung khi nộp
+- **When** giảng viên review tài liệu nhóm
+- **Then** hệ thống chỉ rõ mục còn trống nhưng vẫn cho phép giảng viên xử lý tài liệu nhóm theo chính sách lớp mà không giả định đóng góp
+
+#### Scenario 4 - Nội dung không nhất quán
+
+- **Given** các mục đúng riêng lẻ nhưng xung đột khi đặt chung
+- **When** giảng viên chấm tiêu chí tích hợp và nhất quán
+- **Then** lỗi được trừ ở điểm tài liệu chung; chỉ khi xác định được mục/thành viên gây lỗi, giảng viên mới trừ thêm cho người đó và phải ghi lý do
+
+#### Scenario 5 - Quyết định điểm cuối từng sinh viên
+
+- **Given** điểm/feedback phần đóng góp và điểm tài liệu chung đã có
+- **When** giảng viên nhập điểm cuối cho từng sinh viên
+- **Then** hệ thống hiển thị hai nguồn để tham khảo nhưng không tự áp dụng công thức, đồng thời audit mọi điều chỉnh và lý do
 
 ## 5. Miền Learning Journey
 
@@ -504,7 +535,7 @@
 
 **Story**: Là người học, tôi muốn xem cấu trúc và nội dung đã xuất bản của lớp được ghi danh để học đúng chương trình.
 
-**Truy vết**: FR-002, FR-003, FR-005, FR-013, NFR-002, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-003, FR-005, FR-013, NFR-002, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -520,61 +551,21 @@
 - **When** người học dùng URL/ID trực tiếp
 - **Then** hệ thống từ chối mà không tiết lộ nội dung hoặc metadata nhạy cảm
 
-### US-LRN-002 - Lưu tiến độ và tiếp tục học
-
-**Story**: Là người học, tôi muốn đánh dấu hoàn thành và tiếp tục từ vị trí gần nhất để duy trì tiến độ qua nhiều phiên.
-
-**Truy vết**: FR-005, FR-009, NFR-002, NFR-003, SEC-003, SEC-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Cập nhật tiến độ
-
-- **Given** người học đang xem một đơn vị nội dung được phép
-- **When** người học đánh dấu hoàn thành hoặc lưu vị trí
-- **Then** tiến độ của chính người học và đúng đơn vị nội dung được cập nhật
-
-#### Scenario 2 - Tiếp tục phiên sau
-
-- **Given** đã có vị trí học hợp lệ
-- **When** người học quay lại lớp
-- **Then** hệ thống cho phép tiếp tục từ vị trí gần nhất và không hiển thị tiến độ của người khác
-
-### US-LRN-003 - Theo dõi tiến độ lớp
-
-**Story**: Là giảng viên, tôi muốn xem tiến độ tổng hợp và chi tiết phù hợp của lớp được phân công để hỗ trợ người học kịp thời.
-
-**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Xem lớp được phân công
-
-- **Given** giảng viên được phân công lớp
-- **When** giảng viên mở báo cáo tiến độ
-- **Then** hệ thống hiển thị dữ liệu của người học trong lớp đó theo quyền
-
-#### Scenario 2 - Xem lớp khác
-
-- **Given** giảng viên không được phân công lớp đích
-- **When** giảng viên dùng bộ lọc hoặc ID trực tiếp
-- **Then** hệ thống từ chối và không trả dữ liệu tổng hợp hay chi tiết
-
 ## 6. Miền Question and Rubric Bank
 
 ### US-QBK-001 - Quản lý ngân hàng rubric
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và tái sử dụng rubric trong phạm vi được giao để chấm bài nhất quán.
 
-**Truy vết**: FR-002, FR-016, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-016, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Quản lý rubric hợp lệ
 
-- **Given** người dùng có quyền với lớp hoặc môn và rubric có thang điểm hợp lệ
+- **Given** người dùng có quyền với lớp hoặc môn và rubric có các mục checklist hợp lệ
 - **When** người dùng tạo, sửa hoặc chọn rubric
-- **Then** rubric được lưu đúng phạm vi và tổng trọng số/điểm được kiểm tra
+- **Then** rubric được lưu đúng phạm vi; mỗi tiêu chí gồm các mục checklist có điểm và điểm rubric là tổng điểm các mục đạt
 
 #### Scenario 2 - Rubric đã được sử dụng
 
@@ -586,7 +577,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và nhập câu hỏi hàng loạt để tái sử dụng nội dung đánh giá có kiểm soát.
 
-**Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -596,31 +587,17 @@
 - **When** người dùng tạo, sửa, tìm kiếm hoặc nhập tệp
 - **Then** câu hỏi được lưu đúng lớp/môn, kết quả nhập báo theo dòng và không tạo bản ghi lỗi
 
-#### Scenario 2 - Câu hỏi đã phát hành
+#### Scenario 2 - Câu hỏi đã được dùng trong bài
 
 - **Given** câu hỏi đã thuộc một bài được phát hành
-- **When** người dùng sửa hoặc xóa bản trong ngân hàng
-- **Then** snapshot của bài đã phát hành và bài nộp lịch sử không bị thay đổi
+- **When** người dùng sửa câu hỏi trong ngân hàng
+- **Then** hệ thống tạo version mới trong ngân hàng; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
 
-### US-QBK-003 - Phân tích chất lượng câu hỏi (Phase 2)
+#### Scenario 3 - Muốn đổi nội dung bài đã phát hành
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn xem độ khó và độ phân biệt của câu hỏi để cải thiện ngân hàng câu hỏi dựa trên kết quả thực tế.
-
-**Truy vết**: FR-002, FR-016, FR-024, SEC-003, SEC-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Mẫu dữ liệu đủ điều kiện
-
-- **Given** câu hỏi có đủ bài đã chốt điểm trong phạm vi được phép
-- **When** người dùng mở phân tích
-- **Then** hệ thống hiển thị chỉ số, cỡ mẫu và khoảng thời gian tính toán rõ ràng
-
-#### Scenario 2 - Mẫu nhỏ hoặc ngoài quyền
-
-- **Given** dữ liệu không đủ tin cậy hoặc thuộc lớp/môn ngoài phạm vi
-- **When** người dùng yêu cầu phân tích
-- **Then** hệ thống cảnh báo hạn chế hoặc từ chối mà không lộ dữ liệu người học ngoài quyền
+- **Given** bài đã phát hành cần thay đổi nội dung hoặc đáp án
+- **When** giảng viên thử sửa bài
+- **Then** hệ thống không cho sửa version đang giao; sau khi ngưng giao hoặc bài đóng, giảng viên sửa để tạo version mới, version cũ giữ nguyên cho bài nộp cũ, thao tác được audit
 
 ## 7. Miền AI-Assisted Authoring
 
@@ -628,7 +605,7 @@
 
 **Story**: Là giảng viên, tôi muốn yêu cầu AI tạo câu hỏi/bài tập từ nội dung được phép của lớp để giảm thời gian soạn bài.
 
-**Truy vết**: FR-002, FR-006, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -650,11 +627,11 @@
 - **When** tác vụ thực thi
 - **Then** không có bản nháp được đánh dấu hoàn tất giả, trạng thái lỗi an toàn được hiển thị và retry có giới hạn
 
-### US-AIG-002 - Tạo bản nháp đề chung cấp môn bằng AI
+### US-AIG-002 - Tạo bản nháp template/câu hỏi cấp môn bằng AI
 
-**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo đề từ kho học liệu/RAG của môn để chuẩn bị đánh giá thống nhất cho các lớp.
+**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi ngân hàng cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
 
-**Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -680,7 +657,7 @@
 
 **Story**: Là quản trị viên, tôi muốn cấu hình giới hạn và giám sát việc sử dụng AI để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
 
-**Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -708,7 +685,7 @@
 
 **Story**: Là giảng viên, tôi muốn chỉnh sửa, duyệt và xuất bản bản nháp đánh giá cho lớp được phân công để kiểm soát chất lượng trước khi giao.
 
-**Truy vết**: FR-002, FR-006, FR-007, FR-014, SEC-003, SEC-005, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-007, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007.
 
 **Acceptance criteria**
 
@@ -724,49 +701,23 @@
 - **When** giảng viên yêu cầu xuất bản
 - **Then** hệ thống từ chối phía server và không giao bài cho người học
 
-### US-ASM-002 - Phát hành đề chung cho mọi lớp thuộc môn
-
-**Story**: Là Chủ nhiệm môn, tôi muốn duyệt và phát hành trực tiếp đề chung tới mọi lớp thuộc môn được phân công để bảo đảm đánh giá thống nhất.
-
-**Truy vết**: FR-002, FR-003, FR-006, FR-007, FR-014, SEC-003, SEC-005, SEC-007, SEC-008.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Phát hành đúng phạm vi
-
-- **Given** bản nháp đã duyệt và Chủ nhiệm môn được gán môn
-- **When** Chủ nhiệm môn phát hành đề chung
-- **Then** đề được giao một lần tới tất cả lớp hiện hành thuộc môn mà không cần giảng viên lớp duyệt lại
-
-#### Scenario 2 - Không lan sang môn khác
-
-- **Given** có lớp thuộc môn ngoài phạm vi của Chủ nhiệm môn
-- **When** đề chung được phát hành
-- **Then** lớp ngoài phạm vi không nhận đề và không thể truy cập bằng ID trực tiếp
-
-#### Scenario 3 - Truy vết phát hành
-
-- **Given** một lần phát hành thành công hoặc bị từ chối
-- **When** audit được ghi
-- **Then** audit chứa actor, môn, tập lớp đích, thời gian và kết quả nhưng không chứa dữ liệu nhạy cảm
-
 ### US-ASM-003 - Làm và nộp bài
 
 **Story**: Là người học, tôi muốn làm và nộp bài đánh giá đang hiệu lực để hoàn thành yêu cầu học tập.
 
-**Truy vết**: FR-002, FR-007, FR-014, NFR-002, SEC-003, SEC-007, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-014, NFR-002, SEC-002, SEC-003, SEC-006, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Nộp bài hợp lệ
 
 - **Given** người học được ghi danh, bài đang hiệu lực và còn lượt làm
-- **When** người học nộp câu trả lời hợp lệ cho sơ đồ Draw.io, trắc nghiệm, Code Lab hoặc bài viết luận
-- **Then** hệ thống lưu bài nộp, thời điểm, lượt làm và trạng thái chờ giảng viên chọn phương thức chấm một cách nguyên vẹn
+- **When** người học nộp bài hợp lệ loại trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io) hoặc Code Lab
+- **Then** hệ thống lưu nguyên vẹn bài nộp, thời điểm và lượt làm; trắc nghiệm và Code Lab được tự chấm ngay, loại khác chờ giảng viên chọn phương thức chấm
 
 #### Scenario 2 - Quá hạn hoặc hết lượt
 
-- **Given** đã qua hạn hoặc người học hết lượt
+- **Given** đã qua hạn (và qua hạn nộp trễ nếu bài cho phép nộp trễ) hoặc người học hết lượt
 - **When** người học nộp bài
 - **Then** hệ thống từ chối phía server và không tạo bài nộp hợp lệ mới
 
@@ -788,11 +739,11 @@
 - **When** người học xem lịch sử hoặc nộp lại
 - **Then** từng attempt được giữ nguyên theo thời gian, lượt mới không ghi đè lịch sử và lượt được chấm được xác định rõ
 
-### US-ASM-004 - Soạn và làm bài sơ đồ Draw.io
+### US-ASM-004 - Soạn và làm bài tài liệu có sơ đồ Draw.io (DOCUMENT)
 
-**Story**: Là người học, tôi muốn vẽ sơ đồ trên canvas Draw.io trong web và nộp XML đầy đủ để giảng viên xem chính xác bài làm của tôi.
+**Story**: Là người học, tôi muốn làm bài tài liệu có sơ đồ vẽ trên canvas Draw.io nhúng trong web để giảng viên xem chính xác bài làm của tôi (XML đầy đủ lưu trong tài liệu).
 
-**Truy vết**: FR-002, FR-006, FR-017, FR-014, SEC-003, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-017, FR-014, SEC-002, SEC-003, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -804,7 +755,7 @@
 
 #### Scenario 2 - XML không hợp lệ hoặc bị can thiệp
 
-- **Given** XML vượt giới hạn, sai schema hoặc chứa node/thuộc tính không nằm trong allowlist
+- **Given** XML sơ đồ vượt 2 MB, có DOCTYPE/external entity hoặc phần tử gốc không phải `mxfile`/`mxGraphModel`
 - **When** người học lưu hoặc nộp
 - **Then** hệ thống từ chối dữ liệu nguy hiểm, không xử lý external entity và giữ bản nháp hợp lệ gần nhất nếu có
 
@@ -814,11 +765,17 @@
 - **When** hệ thống chuẩn bị dữ liệu gửi AI
 - **Then** hệ thống tạo XML rút gọn dẫn xuất theo allowlist chỉ cho lần gọi AI, giữ nguyên bản XML đầy đủ và không hiển thị bản rút gọn như bài nộp gốc
 
+#### Scenario 4 - Người học nhập DOCX vào bài đang làm
+
+- **Given** người học có lượt `DOCUMENT` đang làm và DOCX hợp lệ trong giới hạn
+- **When** người học tải DOCX lên, xem trước các block được chuyển đổi rồi xác nhận
+- **Then** hệ thống thêm các block với `origin = LEARNER` vào bản nháp hiện tại, không sửa hoặc xóa khung giảng viên; phần không hỗ trợ được báo rõ, lỗi nhập không làm mất bản nháp
+
 ### US-ASM-005 - Soạn và kiểm thử Code Lab
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn cấu hình Code Lab cùng test công khai/test ẩn và chạy thử để xác nhận bài có thể chấm tự động.
 
-**Truy vết**: FR-002, FR-006, FR-017, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-006, FR-017, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -838,7 +795,7 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài trắc nghiệm với đáp án và quy tắc điểm để hệ thống có thể chấm nhất quán.
 
-**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -858,13 +815,13 @@
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài viết luận với hướng dẫn và rubric để đánh giá câu trả lời mở theo tiêu chí rõ ràng.
 
-**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Bài viết luận hợp lệ
 
-- **Given** đề bài, giới hạn nội dung/tệp và rubric hợp lệ
+- **Given** đề bài và rubric hợp lệ (bài viết là văn bản thường, không giới hạn số từ, không nộp tệp)
 - **When** người dùng xem trước hoặc duyệt bài
 - **Then** hệ thống hiển thị đúng hướng dẫn, tiêu chí và cấu hình nộp cho góc nhìn người học
 
@@ -874,11 +831,11 @@
 - **When** người dùng cấu hình bài
 - **Then** hệ thống vẫn lưu dưới loại bài viết luận và ngôn ngữ chỉ là thuộc tính/cấu hình nếu cần
 
-### US-ASM-008 - Nhân bản, sửa phiên bản và ngừng giao bài (Phase 2)
+### US-ASM-008 - Nhân bản, sửa phiên bản và ngừng giao bài
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, xem thay đổi phiên bản và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
 
-**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-003, SEC-008.
+**Truy vết**: FR-002, FR-007, FR-016, FR-028, FR-014, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -886,7 +843,7 @@
 
 - **Given** người dùng có quyền với bài nguồn
 - **When** người dùng sửa hoặc nhân bản
-- **Then** hệ thống lưu phiên bản/diff, tạo định danh mới khi nhân bản và không sao chép bài nộp/điểm
+- **Then** sửa bài đã ngừng giao/đóng tạo version mới, xem được diff giữa hai version; nhân bản tạo định danh mới; không sao chép bài nộp/điểm
 
 #### Scenario 2 - Ngừng giao hoặc nhận bài mới
 
@@ -894,21 +851,87 @@
 - **When** người dùng xác nhận ngừng giao/nhận bài mới
 - **Then** bài biến mất khỏi danh sách cần làm hoặc khóa lượt nộp mới theo chính sách, nhưng cấu hình đã phát hành, bài nộp và điểm cũ vẫn chỉ đọc được để truy vết
 
+### US-ASM-009 - Phát hành và sử dụng template đề cấp môn
+
+**Story**: Là Chủ nhiệm môn, tôi muốn phát hành template đề có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
+
+**Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-002, SEC-003, SEC-005, SEC-007.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Phát hành và copy template
+
+- **Given** Chủ nhiệm môn có quyền với môn và template hợp lệ
+- **When** Chủ nhiệm môn phát hành, sau đó giảng viên của lớp thuộc môn copy template
+- **Then** hệ thống tạo draft độc lập cho lớp, lưu source template/version và không tự đồng bộ cập nhật sau này
+
+#### Scenario 2 - Sai phạm vi hoặc sửa nguồn
+
+- **Given** giảng viên không phụ trách lớp đích hoặc cố sửa trực tiếp template chỉ đọc
+- **When** yêu cầu được gửi
+- **Then** hệ thống từ chối phía server và giữ nguyên template
+
+### US-ASM-010 - Copy assignment và rubric giữa các lớp
+
+**Story**: Là giảng viên, tôi muốn copy assignment và rubric giữa các lớp mình phụ trách để tái sử dụng nội dung mà không mang theo dữ liệu thực thi cũ.
+
+**Truy vết**: FR-002, FR-014, FR-016, FR-028, SEC-002, SEC-003, SEC-005, SEC-007.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Copy hợp lệ
+
+- **Given** giảng viên được phân công cả lớp nguồn và lớp đích
+- **When** giảng viên copy assignment hoặc rubric
+- **Then** hệ thống tạo draft/identity độc lập ở lớp đích, giữ nguồn gốc audit và không copy lịch, attempt, bài nộp hoặc điểm
+
+#### Scenario 2 - Lớp đích ngoài quyền
+
+- **Given** giảng viên không được phân công lớp đích dù lớp đó thuộc cùng môn
+- **When** yêu cầu copy được gửi
+- **Then** hệ thống từ chối ở mức đối tượng và không tiết lộ nội dung lớp đích
+
+### US-ASM-011 - Làm simulation exam giới hạn lượt
+
+**Story**: Là người học, tôi muốn làm simulation exam theo số lượt và chính sách rõ ràng để luyện tập hoặc nhận điểm thành phần mà không nhầm đây là kỳ thi chính thức.
+
+**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-002, SEC-003, SEC-005, SEC-007.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Làm trong giới hạn
+
+- **Given** simulation exam đang mở và người học còn lượt
+- **When** người học bắt đầu và nộp attempt
+- **Then** hệ thống giữ snapshot đề/version, cập nhật số lượt (mặc định 3, giảng viên chỉnh từ 1 đến 10) và áp dụng chính sách kết quả cao nhất/gần nhất/trung bình đã công bố
+
+#### Scenario 2 - Công bố và tính điểm
+
+- **Given** giảng viên đã cấu hình thời điểm hiện đáp án và trạng thái tính điểm thành phần
+- **When** attempt được hoàn tất hoặc cửa sổ bài đóng
+- **Then** hệ thống chỉ hiển thị đáp án đúng thời điểm và đưa kết quả vào điểm thành phần chỉ khi cấu hình cho phép
+
+#### Scenario 3 - Không phải kỳ thi chính thức
+
+- **Given** người học hoặc giảng viên xem simulation exam
+- **When** giao diện hiển thị thông tin bài
+- **Then** hệ thống ghi rõ đây là thi thử, số lượt, cách lấy kết quả và việc có/không tính điểm; không hiển thị như proctored exam
+
 ## 9. Miền Grading and Progress
 
 ### US-GRD-001 - Nhận kết quả tự chấm câu hỏi xác định
 
 **Story**: Là người học, tôi muốn câu hỏi có đáp án xác định được tự chấm nhất quán để nhận kết quả theo chính sách công bố.
 
-**Truy vết**: FR-007, FR-008, FR-009, SEC-003, SEC-008.
+**Truy vết**: FR-007, FR-008, FR-009, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Tự chấm sau nộp
 
 - **Given** bài nộp hợp lệ chứa câu hỏi có đáp án xác định
-- **When** giảng viên chọn chấm tự động theo đáp án đã cấu hình
-- **Then** hệ thống tính điểm theo đáp án/rule đã xuất bản, lưu lựa chọn của giảng viên và giữ kết quả ở trạng thái chưa công bố cho tới khi giảng viên quyết định
+- **When** người học nộp bài
+- **Then** hệ thống tự chấm ngay theo đáp án/test đã xuất bản; nếu bài bật "hiện điểm ngay sau nộp" thì người học thấy điểm, không thì kết quả chờ giảng viên chốt và công bố; giảng viên vẫn sửa được kèm lý do
 
 #### Scenario 2 - Không lộ kết quả sớm
 
@@ -920,7 +943,7 @@
 
 **Story**: Là giảng viên, tôi muốn sau khi nhận bài có thể chọn AI đề xuất điểm và phản hồi để rút ngắn thời gian chấm mà không mất quyền quyết định.
 
-**Truy vết**: FR-002, FR-008, FR-012, FR-014, NFR-003, SEC-003, SEC-005, SEC-007, REL-007.
+**Truy vết**: FR-002, FR-008, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -928,7 +951,7 @@
 
 - **Given** giảng viên quản lý lớp, đã nhận bài nộp hợp lệ và rubric đã được chọn
 - **When** giảng viên chọn “Nhờ AI đề xuất” và tác vụ hoàn tất
-- **Then** điểm/phản hồi được lưu là đề xuất chưa duyệt, kèm actor/thời gian lựa chọn và không được công bố là quyết định cuối; nếu là bài Draw.io thì chỉ XML rút gọn dẫn xuất được gửi AI, còn XML đầy đủ vẫn là bản nộp chuẩn cho giảng viên
+- **Then** điểm/phản hồi được lưu là đề xuất chưa duyệt, kèm actor/thời gian lựa chọn và không được công bố là quyết định cuối; nếu bài có sơ đồ Draw.io thì chỉ XML rút gọn dẫn xuất được gửi AI, còn XML đầy đủ vẫn là bản nộp chuẩn cho giảng viên
 
 #### Scenario 2 - Giảng viên chọn chấm thủ công
 
@@ -952,7 +975,7 @@
 
 **Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI rồi công bố kết quả để chịu trách nhiệm cho quyết định học thuật cuối cùng.
 
-**Truy vết**: FR-002, FR-008, FR-009, FR-014, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-009, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -982,9 +1005,9 @@
 
 ### US-GRD-004 - Xem sổ điểm theo quyền
 
-**Story**: Là người dùng, tôi muốn xem điểm và tiến độ đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
+**Story**: Là người dùng, tôi muốn xem điểm, phản hồi và trạng thái bài nộp đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
 
-**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-005, FR-009, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -992,7 +1015,7 @@
 
 - **Given** kết quả đã được công bố
 - **When** người học mở sổ điểm
-- **Then** chỉ điểm, phản hồi và tiến độ của chính người học được hiển thị
+- **Then** chỉ điểm, phản hồi và trạng thái bài nộp của chính người học được hiển thị
 
 #### Scenario 2 - Giảng viên xem lớp
 
@@ -1010,7 +1033,7 @@
 
 **Story**: Là giảng viên, tôi muốn kiểm tra và chốt điểm hàng loạt cho lớp được phân công để công bố kết quả nhất quán và có kiểm soát.
 
-**Truy vết**: FR-002, FR-008, FR-014, FR-020, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-008, FR-014, FR-020, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -1026,73 +1049,13 @@
 - **When** yêu cầu được xử lý
 - **Then** hệ thống không chốt nhầm, báo rõ từng mục thất bại và không mở rộng quyền từ các mục hợp lệ
 
-### US-GRD-006 - Yêu cầu gia hạn nộp bài (Phase 2)
-
-**Story**: Là người học gặp trở ngại, tôi muốn xin gia hạn cho một bài cụ thể để được giảng viên xem xét mà không thay đổi hạn chung của lớp.
-
-**Truy vết**: FR-002, FR-007, FR-023, FR-014, SEC-003, SEC-008.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Phê duyệt hoặc từ chối
-
-- **Given** bài chưa chốt điểm và chưa có yêu cầu đang chờ của người học
-- **When** người học gửi lý do và giảng viên quyết định
-- **Then** quyết định, hạn riêng nếu được duyệt và thông báo được lưu đúng người học/bài
-
-#### Scenario 2 - Thực thi hạn riêng
-
-- **Given** người học có gia hạn còn hiệu lực
-- **When** nộp trong hạn riêng
-- **Then** bài được chấp nhận mà không bị đánh dấu trễ và không ảnh hưởng hạn của người khác
-
-### US-GRD-007 - Khiếu nại và phúc khảo điểm (Phase 2)
-
-**Story**: Là người học, tôi muốn yêu cầu phúc khảo một kết quả đã công bố để nhận được quyết định và giải thích có truy vết.
-
-**Truy vết**: FR-002, FR-008, FR-023, FR-014, SEC-003, SEC-008.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Xử lý phúc khảo
-
-- **Given** kết quả thuộc người học và còn trong thời hạn phúc khảo
-- **When** người học gửi yêu cầu và giảng viên ra quyết định
-- **Then** trạng thái, trao đổi, điểm trước/sau và lý do quyết định được giữ trong audit
-
-#### Scenario 2 - Ngoài quyền hoặc quá hạn
-
-- **Given** kết quả thuộc người khác hoặc đã hết thời hạn
-- **When** yêu cầu được gửi
-- **Then** hệ thống từ chối mà không tiết lộ dữ liệu bài nộp/điểm ngoài quyền
-
-### US-GRD-008 - Kiểm tra tương đồng bài nộp (Phase 2)
-
-**Story**: Là giảng viên, tôi muốn xem các cặp bài có độ tương đồng bất thường để có thêm chỉ báo khi đánh giá tính trung thực học thuật.
-
-**Truy vết**: FR-002, FR-008, FR-023, SEC-001, SEC-003, SEC-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Báo cáo tham khảo
-
-- **Given** bài có ít nhất hai bài nộp và giảng viên quản lý lớp
-- **When** giảng viên chạy kiểm tra
-- **Then** hệ thống loại trừ nội dung khung phù hợp, hiển thị cặp/đoạn tương đồng và không tự động kết luận gian lận hoặc trừ điểm
-
-#### Scenario 2 - Bảo vệ dữ liệu bài nộp
-
-- **Given** người dùng không quản lý lớp hoặc dependency phân tích lỗi
-- **When** yêu cầu được gửi
-- **Then** hệ thống không trả nội dung ngoài quyền, không làm mất bài nộp và hiển thị trạng thái lỗi an toàn
-
 ## 10. Miền Reporting and Analytics
 
 ### US-RPT-001 - Theo dõi tiến độ nộp bài và nhắc nhở
 
-**Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài và nhắc đúng người học để hỗ trợ họ hoàn thành trước hạn.
+**Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài và để hệ thống tự nhắc người học chưa nộp trước hạn, giúp họ hoàn thành đúng hạn.
 
-**Truy vết**: FR-002, FR-011, FR-019, NFR-002, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-011, FR-019, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1100,19 +1063,19 @@
 
 - **Given** giảng viên được phân công và bài đã giao
 - **When** mở báo cáo tiến độ
-- **Then** hệ thống phân biệt đã nộp, chưa nộp, nộp trễ, được gia hạn và thời gian còn lại
+- **Then** hệ thống phân biệt đã nộp, chưa nộp, đang làm, nộp trễ và thời gian còn lại
 
-#### Scenario 2 - Gửi nhắc có giới hạn
+#### Scenario 2 - Tự nhắc trước hạn
 
-- **Given** danh sách người học chưa nộp trong đúng lớp
-- **When** giảng viên gửi nhắc
-- **Then** chỉ người được chọn nhận thông báo, giới hạn tần suất được áp dụng và bài đã thu hồi không được nhắc
+- **Given** bài còn 24 giờ tới hạn và có người học chưa nộp
+- **When** tới thời điểm nhắc
+- **Then** hệ thống gửi một lần thông báo trong app và email (nếu người học không tắt) cho đúng người chưa nộp; bài đã ngừng giao không được nhắc
 
-### US-RPT-002 - Dashboard kết quả cá nhân (Phase 2)
+### US-RPT-002 - Dashboard kết quả cá nhân
 
-**Story**: Là người học, tôi muốn xem dashboard điểm, tiến độ và bài sắp đến hạn để ưu tiên việc học của mình.
+**Story**: Là người học, tôi muốn xem dashboard điểm, trạng thái bài nộp và bài sắp đến hạn để ưu tiên việc học của mình.
 
-**Truy vết**: FR-002, FR-005, FR-009, FR-024, NFR-002, SEC-001, SEC-003.
+**Truy vết**: FR-002, FR-009, FR-024, NFR-002, SEC-005, SEC-002, SEC-003.
 
 **Acceptance criteria**
 
@@ -1120,7 +1083,7 @@
 
 - **Given** người học đã ghi danh
 - **When** mở dashboard
-- **Then** hệ thống chỉ hiển thị dữ liệu của người học, phân biệt điểm đã chốt/chờ chấm và ưu tiên bài sắp đến hạn
+- **Then** hệ thống chỉ hiển thị dữ liệu của người học, chỉ hiện điểm đã công bố, phân biệt bài chờ chấm và ưu tiên bài sắp đến hạn
 
 #### Scenario 2 - Phân bố lớp ẩn danh
 
@@ -1128,11 +1091,11 @@
 - **When** người học xem phân bố điểm
 - **Then** dữ liệu được tổng hợp/ẩn danh và không suy ra danh tính hoặc điểm của người học khác
 
-### US-RPT-003 - Xuất bảng điểm (Phase 2)
+### US-RPT-003 - Xuất bảng điểm
 
 **Story**: Là giảng viên hoặc quản trị viên có quyền, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
 
-**Truy vết**: FR-002, FR-009, FR-024, SEC-001, SEC-003, SEC-007.
+**Truy vết**: FR-002, FR-009, FR-024, SEC-005, SEC-002, SEC-003, SEC-006.
 
 **Acceptance criteria**
 
@@ -1148,39 +1111,19 @@
 - **When** người dùng yêu cầu xuất
 - **Then** hệ thống từ chối trước khi tạo tệp và không rò rỉ dữ liệu qua tên tệp/metadata
 
-### US-RPT-004 - Đối sánh điểm AI và điểm chốt (Phase 2)
-
-**Story**: Là quản trị viên hoặc giảng viên, tôi muốn so sánh điểm AI đề xuất với điểm cuối để cải thiện rubric và chất lượng hỗ trợ chấm.
-
-**Truy vết**: FR-002, FR-008, FR-021, FR-024, SEC-001, SEC-003, SEC-007.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Tính báo cáo có cỡ mẫu
-
-- **Given** có bài vừa có đề xuất AI vừa có điểm chốt trong phạm vi người dùng
-- **When** mở báo cáo
-- **Then** hệ thống hiển thị sai lệch, tỷ lệ giữ/điều chỉnh, cỡ mẫu và các nhóm cần rà soát
-
-#### Scenario 2 - Giới hạn mục đích
-
-- **Given** báo cáo được tạo
-- **When** người dùng xem hoặc xuất
-- **Then** hệ thống nêu rõ báo cáo dùng cải thiện công cụ chấm, không tự động đánh giá năng lực cá nhân giảng viên
-
-## 11. Miền Payment and Entitlement
+## 11. Miền Payment and AI Credit
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua quyền truy cập mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
-**Truy vết**: FR-010, FR-014, NFR-002, SEC-001, SEC-003, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** người dùng đã xác thực và sản phẩm/quyền lợi hợp lệ
+- **Given** người dùng đã xác thực và gói credit hợp lệ
 - **When** người dùng bắt đầu thanh toán
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
 
@@ -1188,13 +1131,13 @@
 
 - **Given** provider timeout hoặc từ chối tạo giao dịch
 - **When** yêu cầu được xử lý
-- **Then** giao dịch không bị đánh dấu đã thanh toán, quyền truy cập không được cấp và người dùng nhận trạng thái an toàn có thể thử lại
+- **Then** giao dịch không bị đánh dấu đã thanh toán, credit không được cộng và người dùng nhận trạng thái an toàn có thể thử lại
 
-### US-PAY-002 - Nhận quyền sau xác nhận thanh toán
+### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là người dùng đã thanh toán, tôi muốn quyền truy cập chỉ được cấp sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là người dùng đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
-**Truy vết**: FR-010, FR-014, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
+**Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
 **Acceptance criteria**
 
@@ -1202,39 +1145,31 @@
 
 - **Given** giao dịch đang chờ và webhook có chữ ký/trạng thái hợp lệ
 - **When** backend xử lý sự kiện
-- **Then** trạng thái được đối soát, quyền truy cập được cấp đúng một lần và sự kiện được audit
+- **Then** trạng thái được đối soát, credit được cộng đúng một lần và sự kiện được audit
 
 #### Scenario 2 - Webhook trùng lặp
 
 - **Given** sự kiện đã được xử lý
 - **When** cùng định danh webhook được gửi lại
-- **Then** hệ thống trả kết quả idempotent, không cấp trùng quyền hoặc tạo giao dịch bổ sung
+- **Then** hệ thống trả kết quả idempotent, không cộng trùng credit hoặc tạo giao dịch bổ sung
 
 #### Scenario 3 - Webhook sai chữ ký, replay hoặc thất bại
 
 - **Given** chữ ký không hợp lệ, sự kiện replay không được phép hoặc trạng thái thanh toán thất bại
 - **When** backend nhận webhook
-- **Then** hệ thống fail closed, không cấp quyền và ghi sự kiện bảo mật phù hợp
+- **Then** hệ thống fail closed, không cộng credit và ghi sự kiện bảo mật phù hợp
 
-### US-PAY-003 - Đối soát trạng thái thanh toán
+#### Scenario 4 - Tự xác minh khi thiếu webhook
 
-**Story**: Là quản trị viên, tôi muốn đối soát giao dịch với nhà cung cấp để xử lý trạng thái chờ hoặc sai lệch mà không cấp quyền nhầm.
+- **Given** giao dịch còn chờ hoặc đã hết hạn gần đây nhưng chưa được xác nhận
+- **When** job định kỳ tra trạng thái giao dịch qua API PayOS
+- **Then** giao dịch đã trả được ghi nhận và cộng credit đúng một lần; trạng thái hủy/hết hạn được cập nhật phù hợp
 
-**Truy vết**: FR-002, FR-010, FR-014, SEC-003, SEC-005, SEC-007, SEC-008, REL-007.
+#### Scenario 5 - PayOS không khả dụng khi tự xác minh
 
-**Acceptance criteria**
-
-#### Scenario 1 - Đối soát giao dịch
-
-- **Given** quản trị viên có quyền và giao dịch cần kiểm tra
-- **When** hệ thống lấy trạng thái từ provider trong timeout
-- **Then** kết quả được so sánh, cập nhật idempotent theo rule và ghi audit
-
-#### Scenario 2 - Không thể đối soát
-
-- **Given** provider không khả dụng hoặc trả dữ liệu không xác minh được
-- **When** đối soát chạy
-- **Then** trạng thái hiện tại không được nâng lên thành công, quyền không được cấp và lỗi có thể retry được ghi an toàn
+- **Given** PayOS không trả lời hoặc trả dữ liệu không xác minh được
+- **When** job định kỳ tra trạng thái giao dịch
+- **Then** hệ thống giữ nguyên trạng thái, không cộng credit và thử lại ở lần job sau
 
 ## 12. Miền Notification and Audit
 
@@ -1242,7 +1177,7 @@
 
 **Story**: Là người dùng, tôi muốn nhận thông báo về tài khoản, ghi danh, giao bài và kết quả để không bỏ lỡ hành động quan trọng.
 
-**Truy vết**: FR-011, NFR-002, NFR-003, SEC-001, SEC-007, REL-007.
+**Truy vết**: FR-011, NFR-002, NFR-003, SEC-005, SEC-006, REL-003.
 
 **Acceptance criteria**
 
@@ -1262,7 +1197,7 @@
 
 **Story**: Là quản trị viên, tôi muốn tra cứu sự kiện audit theo phạm vi và thời gian để điều tra thay đổi nhạy cảm mà không thể sửa lịch sử.
 
-**Truy vết**: FR-002, FR-014, SEC-001, SEC-003, SEC-005, SEC-008.
+**Truy vết**: FR-002, FR-014, SEC-005, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
@@ -1280,7 +1215,7 @@
 
 #### Scenario 3 - Sự kiện bắt buộc
 
-- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành đề chung, thanh toán hoặc truy cập đặc quyền
+- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài/template, thanh toán hoặc truy cập đặc quyền
 - **When** hành động hoàn tất hoặc bị từ chối
 - **Then** sự kiện tương ứng được ghi với actor, thời gian, đối tượng và kết quả phù hợp
 
@@ -1289,31 +1224,34 @@
 | Requirement | Stories chính |
 |---|---|
 | FR-001 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-006 |
-| FR-002 | US-IAM-002, US-IAM-004 đến US-AUD-001 theo phạm vi actor |
-| FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-005, US-ASM-002 |
-| FR-004 | US-CNT-001, US-CNT-002, US-CNT-003, US-AIG-002 |
-| FR-005 | US-LRN-001, US-LRN-002, US-LRN-003, US-GRD-004 |
-| FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-002, US-ASM-004 đến US-ASM-007 |
-| FR-007 | US-ASM-001, US-ASM-002, US-ASM-003, US-ASM-008, US-GRD-006 |
-| FR-008 | US-GRD-001 đến US-GRD-008, US-RPT-004 |
-| FR-009 | US-LRN-002, US-LRN-003, US-GRD-004, US-RPT-002, US-RPT-003 |
-| FR-010 | US-PAY-001, US-PAY-002, US-PAY-003 |
+| FR-002 | Quy tắc kiểm quyền xuyên suốt 49 story MVP; chi tiết actor và phạm vi nằm trong từng story/UC |
+| FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-003, US-CAT-005 |
+| FR-004 | US-CNT-001, US-CNT-002, US-CNT-005, US-AIG-002 |
+| FR-005 | US-LRN-001 |
+| FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-004 đến US-ASM-007 |
+| FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-011 |
+| FR-008 | US-GRD-001 đến US-GRD-005 |
+| FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
+| FR-010 | US-PAY-001, US-PAY-002 |
 | FR-011 | US-IAM-001, US-IAM-003, US-CAT-003, US-CNT-004, US-RPT-001, US-NTF-001 |
-| FR-012 | US-CNT-001, US-CNT-003, US-AIG-001, US-AIG-002, US-AIG-003, US-GRD-002 |
+| FR-012 | US-CNT-001, US-AIG-001, US-AIG-002, US-AIG-003, US-GRD-002 |
 | FR-013 | US-CNT-001, US-CNT-002, US-LRN-001 |
-| FR-014 | US-IAM-002, US-IAM-005, US-CAT-001, US-CAT-002, US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-002, US-ASM-003, US-GRD-002, US-GRD-003, US-PAY-001, US-PAY-002, US-PAY-003, US-AUD-001 |
+| FR-014 | US-IAM-002, US-IAM-005, US-CAT-001, US-CAT-002, US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-003, US-GRD-002, US-GRD-003, US-PAY-001, US-PAY-002, US-AUD-001 |
 | FR-015 | US-IAM-007 |
-| FR-016 | US-QBK-001, US-QBK-002, US-QBK-003, US-ASM-006, US-ASM-007 |
+| FR-016 | US-QBK-001, US-QBK-002, US-ASM-006, US-ASM-007, US-ASM-009, US-ASM-010 |
 | FR-017 | US-QBK-002, US-ASM-003 đến US-ASM-007 |
 | FR-018 | US-ASM-003 |
 | FR-019 | US-RPT-001 |
 | FR-020 | US-GRD-005 |
-| FR-021 | US-AIG-003, US-RPT-004 |
+| FR-021 | US-AIG-003 |
 | FR-022 | US-CAT-005 |
-| FR-023 | US-CNT-003, US-CNT-004, US-ASM-008, US-GRD-006 đến US-GRD-008 |
-| FR-024 | US-QBK-003, US-RPT-002, US-RPT-003, US-RPT-004 |
+| FR-023 | US-CNT-004 |
+| FR-024 | US-RPT-002, US-RPT-003 |
 | FR-025 | US-GRP-001, US-GRP-002 |
 | FR-026 | US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |
+| FR-027 | US-ASM-009 |
+| FR-028 | US-ASM-010 |
+| FR-029 | US-ASM-011 |
 
 ## 14. Ràng buộc phi chức năng và kỹ thuật downstream
 
@@ -1324,8 +1262,8 @@
 | NFR-003 | Stories file/AI/payment/email có trạng thái, timeout và retry hữu hạn; API thường giữ mục tiêu p95 | NFR Design, Infrastructure Design, Build and Test |
 | NFR-004 | Acceptance criteria là đầu vào cho unit, integration, system và e2e test; adapter/webhook cần contract test | Code Generation, Build and Test |
 | NFR-005 | Không tạo system story; container, secret và version pinning là tiêu chí triển khai | Infrastructure Design, Code Generation, Build and Test |
-| SEC-001 đến SEC-009 | Được gắn trên stories có hành vi quan sát được; control hạ tầng/chuỗi cung ứng giữ downstream | NFR Design, Infrastructure Design, Code Generation, Build and Test |
-| REL-001 đến REL-010 | Failure/degraded behavior gắn vào story tích hợp; topology, DR, observability và incident process giữ downstream | Application Design, NFR Design, Infrastructure Design, Build and Test |
+| SEC-001 đến SEC-007 | Được gắn trên stories có hành vi quan sát được; phạm vi rút gọn cho đồ án | NFR Design, Infrastructure Design, Code Generation, Build and Test |
+| REL-001 đến REL-004 | Timeout và fail-closed gắn vào story tích hợp; topology, DR, monitoring và incident process ngoài phạm vi đồ án | Application Design, NFR Design, Infrastructure Design, Build and Test |
 
 ## 15. Kiểm tra INVEST
 
@@ -1336,26 +1274,28 @@
 | Valuable | Đạt | Mỗi story gắn với một trong bốn persona và nêu lợi ích rõ ràng |
 | Estimable | Đạt | Phạm vi được giới hạn theo một thao tác hoặc kết quả quan sát được |
 | Small | Đạt | Các hành trình lớn được tách theo kích hoạt, nội dung, tạo AI, phát hành, nộp, chấm và công bố |
-| Testable | Đạt | Tất cả 55 stories có acceptance criteria Given/When/Then và truy vết requirements |
+| Testable | Đạt | Cả 49 story MVP có acceptance criteria Given/When/Then và truy vết requirements |
 
 ## 16. Security Compliance tại User Stories
 
+> Bảng này lập trước khi rút gọn phạm vi (2026-09-24). Hiện chỉ SECURITY-03, 04, 05, 08, 09, 12, 15 và RESILIENCY-04, 06, 10 còn áp dụng; các rule khác là N/A "ngoài phạm vi đồ án", kể cả những dòng ghi "downstream" (xem `requirements.md` mục 12-13).
+
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|
-| SECURITY-01 | Compliant | Stories về hồ sơ, học liệu, điểm và thanh toán yêu cầu bảo vệ dữ liệu; mã hóa chi tiết downstream |
-| SECURITY-02 | N/A | Network access logging là control hạ tầng, đã truy vết downstream |
+| SECURITY-01 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-02 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-03 | Compliant | US-AUD-001 và các failure scenario cấm log dữ liệu nhạy cảm |
 | SECURITY-04 | N/A | HTTP security headers không tạo giá trị persona riêng; giữ cho thiết kế/code/test |
 | SECURITY-05 | Compliant | Input/file/config/payment scenarios yêu cầu validation, giới hạn và lỗi an toàn |
-| SECURITY-06 | N/A | IAM policy cloud là control Infrastructure Design |
-| SECURITY-07 | N/A | Network deny-by-default là control Infrastructure Design |
+| SECURITY-06 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-07 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-08 | Compliant | Object/function authorization được thể hiện xuyên IAM, môn, lớp, nhóm/leader, nội dung, bài nộp, điểm và payment |
 | SECURITY-09 | Compliant | Failure scenarios yêu cầu fail closed và safe error; hardening chi tiết downstream |
-| SECURITY-10 | N/A | Supply-chain controls được truy vết tới Code Generation/Build and Test theo lựa chọn không tạo system story |
-| SECURITY-11 | Compliant | Misuse cases gồm leo quyền, leader-only submission, prompt vượt phạm vi, sửa điểm và webhook replay có acceptance criteria |
+| SECURITY-10 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-11 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-12 | Compliant | US-IAM-001/002/003 bao phủ password, session, brute-force; MFA admin giữ downstream |
-| SECURITY-13 | Compliant | US-PAY-002 và US-AUD-001 bao phủ integrity/replay/audit; artifact integrity downstream |
-| SECURITY-14 | Compliant | US-AUD-001 xác định sự kiện và tính bất biến; retention/alerting downstream |
+| SECURITY-13 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| SECURITY-14 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | SECURITY-15 | Compliant | External failure scenarios yêu cầu fail closed, không mất dữ liệu và không lộ nội bộ |
 
 Không có blocking security finding tại User Stories.
@@ -1364,20 +1304,20 @@ Không có blocking security finding tại User Stories.
 
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|
-| RESILIENCY-01 | N/A | Phân loại component/dependency thuộc Application Design |
-| RESILIENCY-02 | N/A | RTO/RPO đã chốt ở Requirements và được chi tiết downstream |
-| RESILIENCY-03 | N/A | Change management không phải hành trình persona sản phẩm |
+| RESILIENCY-01 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-02 | N/A | Ngoài phạm vi đồ án (không RTO/RPO) |
+| RESILIENCY-03 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-04 | N/A | CI/CD/rollback là ràng buộc construction/infrastructure |
-| RESILIENCY-05 | N/A | Metrics/logs/traces/dashboard thuộc NFR/Infrastructure Design |
+| RESILIENCY-05 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-06 | N/A | Health checks thuộc NFR/Infrastructure Design |
-| RESILIENCY-07 | N/A | Resiliency/capacity alarms thuộc Infrastructure Design |
-| RESILIENCY-08 | N/A | Multi-zone topology đã chốt và thuộc Infrastructure Design |
-| RESILIENCY-09 | N/A | Auto-scaling/quota thuộc Infrastructure Design |
+| RESILIENCY-07 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-08 | N/A | Ngoài phạm vi đồ án (không multi-zone) |
+| RESILIENCY-09 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 | RESILIENCY-10 | Compliant | File, AI, payment và email scenarios yêu cầu timeout, retry hữu hạn và degraded/fail-safe behavior |
-| RESILIENCY-11 | N/A | DR strategy đã chốt; runbook thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-12 | N/A | Backup/retention/test restore thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-13 | N/A | Failover/failback procedures thuộc Infrastructure Design/Build and Test |
-| RESILIENCY-14 | N/A | Decision gate được giữ cho NFR Design theo REL-010 |
-| RESILIENCY-15 | N/A | Incident response/COE thuộc NFR/Infrastructure Design |
+| RESILIENCY-11 | N/A | Ngoài phạm vi đồ án (không DR) |
+| RESILIENCY-12 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-13 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-14 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
+| RESILIENCY-15 | N/A | Ngoài phạm vi đồ án (rút gọn 2026-09-24) |
 
-Không có blocking resiliency finding tại User Stories; các mục N/A vẫn là ràng buộc bắt buộc tại stage downstream đã chỉ định.
+Không có blocking resiliency finding tại User Stories. Sau khi rút gọn phạm vi (2026-09-24), chỉ RESILIENCY-04, 06, 10 còn áp dụng; các mục N/A khác không còn là ràng buộc downstream.
