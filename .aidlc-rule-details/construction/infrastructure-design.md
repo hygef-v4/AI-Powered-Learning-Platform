@@ -42,7 +42,7 @@ Map logical software components to actual infrastructure choices for deployment 
 - **Shared Infrastructure** - Ask about infrastructure sharing strategy, multi-tenancy, and resource isolation
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-infrastructure-design-plan.md`
+- Save as `aidlc-docs/construction/plans/infrastructure-design-plan/{unit-name}-infrastructure-design-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers

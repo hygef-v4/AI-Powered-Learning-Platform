@@ -39,7 +39,7 @@ Incorporate NFR requirements into unit design using patterns and logical compone
 - **Logical Components** - Ask about infrastructure components (queues, caches, circuit breakers, etc.) and their integration patterns
 
 ### Step 4: Store Plan
-- Save as `aidlc-docs/construction/plans/{unit-name}-nfr-design-plan.md`
+- Save as `aidlc-docs/construction/plans/nfr-design-plan/{unit-name}-nfr-design-plan.md`
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers

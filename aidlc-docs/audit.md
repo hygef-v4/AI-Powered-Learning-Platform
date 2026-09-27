@@ -2623,75 +2623,115 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 
 ---
 
-## Screen Flow Draw.io
-**Timestamp**: 2026-09-26T10:00:00Z
-**User Input**: "vẽ screen flow cho tất cả các cái làm thành file drawio lưu trong docs, làm theo cái hình t gửi, cái line để theo 90 độ với để kiểu spread ra cho dễ nhìn giống ảnh t gửi"
-**AI Response**: "Tạo docs/screen-flow.drawio từ frontend-components.md của U01-U16: Dashboard ở giữa, nhánh trái Learner/Common/Admin, nhánh phải Instructor/Question Bank (dùng chung)/Subject Manager; 59 màn hình, 13 tab, 75 popup, cạnh vuông góc, chú giải màu theo vai trò. Cập nhật link trong docs/README.md và docs/screen-flow.md."
-**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+## Documentation organization
+**Timestamp**: 2026-09-26T14:51:44Z
+**User Input**: "cái plans trong construction hơi bừa nhóm thư mục đi"
+**AI Response**: "Grouped 105 construction plan and question files into 16 unit folders; updated plan path rules and the U01 NFR reference."
+**Context**: Documentation-only organization; no workflow stage advancement.
 
 ---
 
-## Screen Flow Draw.io - Compact Layout
-**Timestamp**: 2026-09-27T09:00:00Z
-**User Input**: "cái drawio nhiều khoảng trống quá vẽ các ô sát lại vào nhau để t export ra còn nhìn đc"
-**AI Response**: "Vẽ lại docs/screen-flow.drawio bằng bố cục nén theo đường viền cây (các nhánh lồng vào khoảng trống của nhau), thu hẹp khoảng cách cột/hàng, ô rộng đều 160; trang có tab dùng làn nối riêng cho từng tab để không cắt nhau; chú giải đặt vào góc trống. Canvas từ 5130x3714 còn 4220x1407; kiểm tra 0 ô chồng, 0 đường cắt nhau."
-**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+## Documentation organization correction
+**Timestamp**: 2026-09-26T14:56:13Z
+**User Input**: "tách mỗi loại file trong plans construction thành 1 folder chứ k phải là theo unit kiểu code generation plan ..."
+**AI Response**: "Regrouped 105 construction plan and question files by file type into 9 folders; corrected plan path rules and U01 NFR reference."
+**Context**: Documentation-only organization; correction to prior grouping.
 
 ---
 
-## Screen Flow - Unit and UC Mapping
-**Timestamp**: 2026-09-27T10:00:00Z
-**User Input**: "giờ check lại cho chắc chắn cái screen flow, ghi rõ screen sẽ tạo cho từng unit nào và tạo cho uc nào"
-**AI Response**: "Đối chiếu screen flow với 77 UC và frontend-components của U01-U16. Bổ sung ô còn thiếu: Class Detail (Admin) với Gradebook/Export cho ADMIN (UC-CAT-07..12, UC-GRD-07, UC-RPT-03), Subject Class List cho CN môn (UC-CAT-05), Grade History Drawer ở Gradebook, Grade Distribution Confirmation (UC-RPT-02), Add YouTube Source Popup (UC-CNT-08), Reply Question Popup, Create/Edit Group Popup, Clone/Create New Version Confirmation (UC-ASM-15), Mark Work Sections và Verify Code Solution trong Type Config (UC-GRP-05, UC-ASM-05); Rubric Editor tách lên cấp Question Bank. Mỗi ô trong drawio có dòng phụ 'unit · UC'; docs/screen-flow.md thêm mục 'Màn hình theo unit và UC' (168 dòng). Kết quả: 77/77 UC và 16/16 unit có màn hình; 0 ô chồng, 0 đường cắt. Sửa U09 frontend-components: SkeletonEditor có nút 'Mục việc' (workSection) cho bài GROUP."
-**Context**: Tài liệu bổ trợ (docs/) và đồng bộ U09 functional design
+## Code generation plan package naming
+**Timestamp**: 2026-09-26T15:01:06Z
+**User Input**: "thêm tên vào code generation plan kiểu thay u01 thành tên của unit"
+**AI Response**: "Changed Java package folder names in all 16 code generation plans from numeric unit codes to descriptive unit names; aligned the unit overview and U01 logical-components diagram."
+**Context**: Documentation update only; unit codes remain in document IDs and migration paths.
 
 ---
 
-## Screen Flow - Role Landing and Popup Pruning
-**Timestamp**: 2026-09-27T11:00:00Z
-**User Input**: "cái dashboard là dùng chung cho tất cả role à nếu có link khác nhau thì tính là riêng đấy, với cả compact nó lại bằng cách bỏ hết các cái popup ko phải tạo sửa hay xoá bất cứ bảng nào trong database đi và không phải popup tải cái gì đó từ chương trình"
-**AI Response**: "Xác nhận không có dashboard chung: U01 LoginForm 'Điều hướng theo role'. Bỏ ô Dashboard; Sign In làm tâm, rẽ tới menu điều hướng từng vai trò (ô xám, không phải màn hình): Learner Menu, Header (all roles), Admin Menu, Subject Manager Menu, Instructor Menu (CN môn cũng thấy, cùng link /teaching). Trang đích đề xuất: Learner Dashboard, My Teaching Classes, Account List. Bỏ popup chỉ đọc hoặc không ghi PostgreSQL: Preview Assignment, Preview Question, 3 Grade History Drawer, Audit Detail Drawer, Version History Drawer (bank), Draw.io Diagram Panel, Mark Work Sections (ghi cùng lưu khung, UC-GRP-05 chuyển lên tab Type Config), Sign Out (chỉ xóa phiên Redis; UC-IAM-03 chuyển lên Profile). Còn 57 màn hình, 15 tab, 81 popup; 77/77 UC, 16/16 unit; canvas 4220x1858; 0 ô chồng, 0 đường cắt. Cập nhật bảng unit/UC trong docs/screen-flow.md và mô tả trong docs/README.md."
-**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+## Shorter backend package names
+**Timestamp**: 2026-09-26T15:04:24Z
+**User Input**: "đặt tên ngắn gọn xúc tích được ko"
+**AI Response**: "Shortened backend Java package names in all 16 code generation plans and aligned the architecture overview and U01 diagram."
+**Context**: Documentation update; U01-U16 remain traceability and migration identifiers.
 
 ---
 
-## Screen Flow - Remove Unit/UC Labels, Restyle Menus
-**Timestamp**: 2026-09-27T12:00:00Z
-**User Input**: "xoá mấy cái note unit với uc trong drawio đi, với lại cái header sao lại để thành external system thế sửa đi"
-**AI Response**: "Bỏ dòng 'unit · UC' trong mọi ô của docs/screen-flow.drawio (tra ở bảng trong screen-flow.md). Menu điều hướng (Learner, Header, Admin, Instructor, Subject Manager) đổi từ ô xám nét đứt (trùng kiểu External System) sang ô bo tròn viền đậm theo màu vai trò; Header dùng màu Common. Chú giải cập nhật. Canvas 4220x1603; 0 ô chồng, 0 đường cắt."
-**Context**: Tài liệu bổ trợ (docs/)
+## Use case specifications document
+**Timestamp**: 2026-09-26T15:20:13Z
+**User Input**: "chọn 10 usecase quan trọng nhất và làm theo mẫu này viết vào file md trong thư mục docs"
+**AI Response**: "Created docs/use-case-specifications.md with 10 prioritized MVP use case specifications following the supplied Primary Actors, Secondary Actors, Description, Preconditions, Normal Flow, Alternative Flows and Postconditions template."
+**Context**: Documentation request; source catalog and unit business designs checked.
 
 ---
 
-## Screen Flow - Review User-Edited Diagram
-**Timestamp**: 2026-09-27T13:00:00Z
-**User Input**: "t xoá mấy cái popup ko cần thiết rồi xem lại xem nó còn thiếu gì ko thì list ra để t thêm vào"
-**AI Response**: "Đọc docs/screen-flow.drawio bản người dùng sửa, dựng lại cây theo edge và đối chiếu 77 UC + frontend-components U01-U16. Báo cáo: lỗi nối (3 edge không gắn nguồn từ Assignment Detail, Assignment Detail bị nhân đôi, 9 ô không có edge vào, Profile/Payment/Notification không nối từ menu nào, Subject List trỏ vào chính nó) và danh sách màn hình/popup còn thiếu theo UC để người dùng tự thêm. Không sửa file."
-**Context**: Tài liệu bổ trợ (docs/), chỉ rà soát
+## English use case specifications
+**Timestamp**: 2026-09-26T15:26:21Z
+**User Input**: "viết lại bằng tiếng anh , tên uc đúng với trong file usecase md"
+**AI Response**: "Rewrote docs/use-case-specifications.md entirely in English and matched all ten UC titles exactly to docs/use-case-table.md."
+**Context**: Documentation revision; UC IDs and business rules retained.
 
 ---
 
-## Screen Flow - User Decision on Popups
-**Timestamp**: 2026-09-27T13:30:00Z
-**User Input**: "phát hành chỉ là một nút thôi mà người học từ vào cũng chỉ là một nút mà" / "T bảo t bỏ mấy cái popup vớ vẩn mà"
-**AI Response**: "Chấp nhận quyết định: phát hành và vào lớp bằng mã là thao tác trên trang, không vẽ popup. Sơ đồ người dùng sửa được coi là đủ UC; chỉ còn lỗi nối dây."
-**Context**: Tài liệu bổ trợ (docs/)
+## Reselection of complex and important use cases
+**Timestamp**: 2026-09-26T15:34:50Z
+**User Input**: "chọn ra những usecase phức tạp và quan trọng nhất trong toàn bộ 77 usecase"
+**AI Response**: "Reassessed the 77-case MVP catalog and updated docs/use-case-specifications.md to the ten highest-priority complex or central workflows. Replaced UC-CAT-13 and UC-GRD-04 with UC-ASM-18 and UC-GRP-08; regrouped the specifications by feature."
+**Context**: Documentation revision based on supplied SRS selection rule.
 
 ---
 
-## Screen Flow - Merge Check
-**Timestamp**: 2026-09-27T14:00:00Z
-**User Input**: "import account chỉ là một nút import thôi, notification setting thì chỉ là một toggle, group doc overview là một loại của submission detail, group grading cũng nằm trong đến grade submission detail
-Có đúng ko"
-**AI Response**: "Đánh giá từng điểm so với frontend-components: Import Accounts cần bước xem trước lỗi từng dòng (đặt được trên Account List); Notification Settings là nhiều toggle theo loại (đặt được trên Notification); Group Docs Overview là cấp danh sách nên gộp vào Submission List, xem tài liệu một nhóm mới là Submission Detail; Group Grading gộp được thành chế độ nhóm của Grading Detail. Lưu ý thiết kế U01/U14/U15/U16 đang ghi là trang riêng."
-**Context**: Tài liệu bổ trợ (docs/), rà soát
+## Reselecting use cases from the English table
+**Timestamp**: 2026-09-26T15:43:45Z
+**User Input**: "đọc lại file usecase table và chọn lại"
+**AI Response**: "Read all 77 rows of docs/use-case-table.md, reselected ten distinctive complex workflows, replaced the generic publication and simulation cases with DOCUMENT authoring and group section completion, and aligned all headings with the table's numeric IDs, exact names, and Feature categories."
+**Context**: Documentation revision. The old use-case catalog was absent from the workspace; the English table is the current source for IDs and names.
 
 ---
 
-## Frontend Sync with Screen Flow
-**Timestamp**: 2026-09-27T14:30:00Z
-**User Input**: "sửa lại theo screen flow"
-**AI Response**: "Sửa frontend-components và code plan theo screen flow: U01 ImportAccountsPage → ImportAccountsPanel trên AccountListPage (plan bước 32); U16 NotificationSettingsPage → NotificationEmailToggles trên NotificationListPage (plan bước 20, bỏ route app/settings/notifications); U14 GroupDocsOverviewPage → GroupDocsOverviewPanel gắn vào danh sách bài nộp của bài GROUP (plan bước 22, đường dẫn thư mục); U15 GroupGradingPage → GroupGradingMode trong GradingWorkspacePage với route app/teaching/grading/[targetKind]/[id] (plan bước 21). Không đổi API/UC. Ghi history trong aidlc-state.md."
-**Context**: Code Generation Part 1 - đồng bộ frontend với screen flow
+## SRS report consistency review
+**Timestamp**: 2026-09-27T06:35:00Z
+**User Input**: "@\"D:\Downloads\Report-3_Software Requirement Specification.docx.md\"
+kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa, có cần chính sửa bổ sung gì không"
+**AI Response**: "Compared the SRS report with docs/ and aidlc-docs. Sections II (UC specs), III.5-6 (jobs, APIs), IV and V match the current design. Section I is outdated (86-UC old catalog, pre-consolidation entities, learning progress, access grants, common assignments, payment-for-access business flows, recruitment permission matrix, old screen list and job/API inventory); Section III.1-4 and the TOC/Change Log are template leftovers. Reported a prioritized fix list; no project files changed."
+**Context**: Review only, outside the stage workflow; no stage state change.
+
+---
+
+## UC56, UC57, UC75 specification review
+**Timestamp**: 2026-09-27T06:45:00Z
+**User Input**: "kiểm tra UC specification của UC56, UC57, UC75 xem đã chính xác chưa, có cần chỉnh sửa gì không"
+**AI Response**: "Checked the three specifications (identical in the SRS report and docs/use-case-specifications.md) against U07, U09, U11 and U15 business rules. No contradictions in the main flows; reported inaccuracies (time limit applies only to QUIZ, not ESSAY) and missing rules (late submission, grace period, receipt content, graded attempt, quiz scoring and publish-on-submit, PayOS link expiry, cancel, idempotency, reconciliation window, webhook outcomes) with suggested English replacement text. No files changed."
+**Context**: Review only; no stage state change.
+
+---
+
+## Vietnamese draft of UC56, UC57, UC75 specifications
+**Timestamp**: 2026-09-27T06:52:00Z
+**User Input**: "viết lại tiếng việt UC spec của 3 UC trên và giải thích cho tôi trước khi sửa"
+**AI Response**: "Presented Vietnamese drafts of UC56, UC57 and UC75 in chat with an explanation of each change and its source rule; no files edited, awaiting user confirmation."
+**Context**: Documentation draft; awaiting approval before editing docs/use-case-specifications.md.
+
+---
+
+## Essay deadline vs time limit clarification
+**Timestamp**: 2026-09-27T06:58:00Z
+**User Input**: "mở cho tôi cấu hình essay UC09. tôi nghĩ thời gian ở đây là hạn nộp bài thì essay cũng phải có hạn nộp chứ"
+**AI Response**: "Opened U09 domain-entities QuestionTypeConfig. Clarified that the submission deadline (opensAt/closesAt/lateUntil) is set per publication in U08 for every assignment type including ESSAY, while timeLimitMinutes is a per-attempt countdown configured only for QUIZ; the UC56 draft keeps the deadline and removes only the time limit."
+**Context**: Clarification; no files changed.
+
+---
+
+## Update UC56, UC57, UC75 specifications
+**Timestamp**: 2026-09-27T07:04:00Z
+**User Input**: "giữ như thiết kế hiện tại, hãy cập nhật 3 UC này trong tài liệu dự án để tôi copy sang báo cáo"
+**AI Response**: "Kept the current design (ESSAY has a submission deadline but no per-attempt time limit). Updated UC56, UC57 and UC75 in docs/use-case-specifications.md in English to match the report language, applying the reviewed changes: essay A3 without time limit, late submission and grace period, receipt content, graded attempt, quiz scoring and score/answer visibility, PayOS link expiry, cancel, idempotency, reconciliation window and separate REJECTED/DUPLICATE webhook outcomes, with MSG references."
+**Context**: Documentation update; no design change.
+
+---
+
+## Commit UC specification update
+**Timestamp**: 2026-09-27T07:10:00Z
+**User Input**: "kiểm tra lại các thay đổi, viết commit rõ ràng và tôi sẽ tự push"
+**AI Response**: "Reviewed the diff, corrected placeholder timestamps in today's audit entries, and committed docs/use-case-specifications.md and aidlc-docs/audit.md locally without pushing."
+**Context**: Documentation commit; user will push.
 
 ---
