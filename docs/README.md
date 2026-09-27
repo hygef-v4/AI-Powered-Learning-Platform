@@ -5,7 +5,7 @@ Các sơ đồ này được tổng hợp từ thiết kế Construction của 1
 | Sơ đồ | Nội dung |
 |---|---|
 | [ERD draw.io](erd.drawio) · [chú giải](erd.md) | Cả 45 bảng trên một canvas, có thuộc tính/khóa và quan hệ |
-| [Screen flow](screen-flow.md) | Điều hướng chính theo người học, giảng viên, Chủ nhiệm môn và quản trị viên |
+| [Screen flow draw.io](screen-flow.drawio) · [diễn giải](screen-flow.md) | Toàn bộ màn hình và popup ghi dữ liệu/tải file trên một canvas, tỏa ra từ Sign In theo menu từng vai trò, bảng unit và UC từng ô trong phần diễn giải; bản Mermaid theo từng vai trò |
 | [Business flow draw.io](business-flow.drawio) · [diễn giải](business-flow.md) | 5 trang swimlane cho học liệu/RAG, bài cá nhân, bài nhóm, credit AI và thông báo/báo cáo |
 | [Use case](use-case.md) | Đủ 77 use case MVP, giữ nguyên mã từ catalog |
 | [Bảng use case SRS](use-case-table.md) | Một bảng tiếng Anh gồm 77 use case với bốn cột ID, Use Case, Feature, Use Case Description |

@@ -50,7 +50,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 /backend/src/main/resources/db/migration/u16/
 /backend/src/main/resources/templates/email/u16/
 /frontend/src/components/notifications/
-/frontend/src/app/notifications/, /frontend/src/app/settings/notifications/
+/frontend/src/app/notifications/
 /frontend/src/app/teaching/publications/[id]/progress/
 /frontend/src/app/learn/dashboard/, /frontend/src/app/teaching/classes/[id]/gradebook/
 /contracts/openapi/u16-notifications.yaml
@@ -93,7 +93,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 ### Nhóm E - Frontend
 
 - [ ] **Bước 19** - `NotificationBell` (SSE), `NotificationDropdown`, `NotificationListPage`.
-- [ ] **Bước 20** - `NotificationSettingsPage`; `SubmissionProgressPage` (`ProgressSummary`, `ProgressTable`); dashboard kết quả cá nhân và nút xuất bảng điểm CSV/XLSX cho giảng viên có quyền.
+- [ ] **Bước 20** - `NotificationEmailToggles` trên `NotificationListPage`; `SubmissionProgressPage` (`ProgressSummary`, `ProgressTable`); dashboard kết quả cá nhân và nút xuất bảng điểm CSV/XLSX cho giảng viên có quyền.
 - [ ] **Bước 21** - Test frontend: số chưa đọc cập nhật qua SSE, tắt email từng loại.
 - [ ] **Bước 22** - Tóm tắt: `code/frontend-summary.md`.
 

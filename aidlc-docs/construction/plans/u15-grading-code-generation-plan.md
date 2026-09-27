@@ -93,7 +93,7 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 
 - [ ] **Bước 19** - `GradingQueuePage` (lọc, chọn nhiều, `BulkFinalizeDialog`, `PublishGradesButton`).
 - [ ] **Bước 20** - `GradingWorkspacePage` (`SubmissionViewer`, `MethodChooser`, `RubricChecklistForm`, `AiGradingPanel`, `FeedbackEditor`, `OverrideReasonDialog`, `GradeHistoryDrawer`).
-- [ ] **Bước 21** - `GroupGradingPage` (tài liệu tô màu theo tác giả, đóng góp, điểm cuối).
+- [ ] **Bước 21** - `GroupGradingMode` trong `GradingWorkspacePage` khi `targetKind = groups` (tài liệu tô màu theo tác giả, đóng góp, điểm cuối).
 - [ ] **Bước 22** - `GradebookPage`, `MyGradesPage`; bật phần điểm trong trang bài đã nộp của U11.
 - [ ] **Bước 23** - Test frontend: điểm hiển thị "x / tổng", sửa điểm bắt lý do, sổ điểm không có cột tổng.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.

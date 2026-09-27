@@ -12,8 +12,8 @@ app/learn/group-docs/[id]/                  GroupDocumentPage (tài liệu chung
   useGroupDocStream         kết nối SSE, áp dụng sự kiện, tải lại khi kết nối lại
 app/learn/group-docs/[id]/sections/[sectionId]   SectionWorkPage
   DocumentEditor (U09, mode LEARNER, chỉ block của mục), "Đã lưu lúc …", nút Xong, nút Nhả
-app/teaching/assignments/[id]/group-docs/        GroupDocsOverviewPage (giảng viên)
-  bảng nhóm: số mục xong/đang làm/trống, bản nộp, xem tài liệu, nhả khóa
+shared/group-docs/GroupDocsOverviewPanel       (giảng viên; hiện trong danh sách bài nộp của publication khi bài là GROUP, thay bảng theo từng người học)
+  bảng nhóm: số mục xong/đang làm/trống, bản nộp, xem tài liệu (mở chi tiết bài nộp của nhóm), nhả khóa
 ```
 
 | Component | Hành vi | API |

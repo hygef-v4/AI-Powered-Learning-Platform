@@ -31,7 +31,7 @@ admin-console/accounts/
     RoleChangeDialog
     StatusToggleDialog
   CreateAccountDialog
-  ImportAccountsPage
+  ImportAccountsPanel       (mở bằng nút "Nhập CSV" ngay trên AccountListPage, không có trang riêng)
     CsvUploadStep
     ImportPreviewTable
     ImportConfirmStep
@@ -93,7 +93,7 @@ Hai trang dùng chung `RequestOtpStep` và `VerifyOtpAndSetPasswordStep`, khác 
 | State | `filters { email, role, status }`, `page`, `items`, `loading` |
 | API | `listAccounts` |
 | Cột | Email, tên hiển thị, role, trạng thái, ngày tạo |
-| Hành động | Mở chi tiết, tạo tài khoản, nhập CSV |
+| Hành động | Mở chi tiết, tạo tài khoản, nhập CSV (`ImportAccountsPanel` hiện ngay trên trang) |
 
 ### CreateAccountDialog
 
@@ -111,7 +111,10 @@ Hai trang dùng chung `RequestOtpStep` và `VerifyOtpAndSetPasswordStep`, khác 
 | `RoleChangeDialog` | `assignRole` | Cảnh báo người dùng sẽ bị đăng xuất. Backend từ chối vì còn phụ trách môn/lớp thì hiện danh sách môn/lớp. Nút bị tắt với chính mình khi hạ quyền |
 | `StatusToggleDialog` | `changeAccountStatus` | "Vô hiệu hóa" hoặc "Mở lại". Tắt với chính mình. Backend từ chối admin cuối cùng thì hiện lý do |
 
-### ImportAccountsPage
+### ImportAccountsPanel
+
+Nút "Nhập CSV" trên `AccountListPage` mở vùng nhập ngay trong trang; danh sách tài khoản tải lại sau khi xác nhận.
+
 
 | Bước | State | API | Hành vi |
 |---|---|---|---|

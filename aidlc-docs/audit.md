@@ -2622,3 +2622,76 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Context**: Construction - messaging naming
 
 ---
+
+## Screen Flow Draw.io
+**Timestamp**: 2026-09-26T10:00:00Z
+**User Input**: "vẽ screen flow cho tất cả các cái làm thành file drawio lưu trong docs, làm theo cái hình t gửi, cái line để theo 90 độ với để kiểu spread ra cho dễ nhìn giống ảnh t gửi"
+**AI Response**: "Tạo docs/screen-flow.drawio từ frontend-components.md của U01-U16: Dashboard ở giữa, nhánh trái Learner/Common/Admin, nhánh phải Instructor/Question Bank (dùng chung)/Subject Manager; 59 màn hình, 13 tab, 75 popup, cạnh vuông góc, chú giải màu theo vai trò. Cập nhật link trong docs/README.md và docs/screen-flow.md."
+**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+
+---
+
+## Screen Flow Draw.io - Compact Layout
+**Timestamp**: 2026-09-27T09:00:00Z
+**User Input**: "cái drawio nhiều khoảng trống quá vẽ các ô sát lại vào nhau để t export ra còn nhìn đc"
+**AI Response**: "Vẽ lại docs/screen-flow.drawio bằng bố cục nén theo đường viền cây (các nhánh lồng vào khoảng trống của nhau), thu hẹp khoảng cách cột/hàng, ô rộng đều 160; trang có tab dùng làn nối riêng cho từng tab để không cắt nhau; chú giải đặt vào góc trống. Canvas từ 5130x3714 còn 4220x1407; kiểm tra 0 ô chồng, 0 đường cắt nhau."
+**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+
+---
+
+## Screen Flow - Unit and UC Mapping
+**Timestamp**: 2026-09-27T10:00:00Z
+**User Input**: "giờ check lại cho chắc chắn cái screen flow, ghi rõ screen sẽ tạo cho từng unit nào và tạo cho uc nào"
+**AI Response**: "Đối chiếu screen flow với 77 UC và frontend-components của U01-U16. Bổ sung ô còn thiếu: Class Detail (Admin) với Gradebook/Export cho ADMIN (UC-CAT-07..12, UC-GRD-07, UC-RPT-03), Subject Class List cho CN môn (UC-CAT-05), Grade History Drawer ở Gradebook, Grade Distribution Confirmation (UC-RPT-02), Add YouTube Source Popup (UC-CNT-08), Reply Question Popup, Create/Edit Group Popup, Clone/Create New Version Confirmation (UC-ASM-15), Mark Work Sections và Verify Code Solution trong Type Config (UC-GRP-05, UC-ASM-05); Rubric Editor tách lên cấp Question Bank. Mỗi ô trong drawio có dòng phụ 'unit · UC'; docs/screen-flow.md thêm mục 'Màn hình theo unit và UC' (168 dòng). Kết quả: 77/77 UC và 16/16 unit có màn hình; 0 ô chồng, 0 đường cắt. Sửa U09 frontend-components: SkeletonEditor có nút 'Mục việc' (workSection) cho bài GROUP."
+**Context**: Tài liệu bổ trợ (docs/) và đồng bộ U09 functional design
+
+---
+
+## Screen Flow - Role Landing and Popup Pruning
+**Timestamp**: 2026-09-27T11:00:00Z
+**User Input**: "cái dashboard là dùng chung cho tất cả role à nếu có link khác nhau thì tính là riêng đấy, với cả compact nó lại bằng cách bỏ hết các cái popup ko phải tạo sửa hay xoá bất cứ bảng nào trong database đi và không phải popup tải cái gì đó từ chương trình"
+**AI Response**: "Xác nhận không có dashboard chung: U01 LoginForm 'Điều hướng theo role'. Bỏ ô Dashboard; Sign In làm tâm, rẽ tới menu điều hướng từng vai trò (ô xám, không phải màn hình): Learner Menu, Header (all roles), Admin Menu, Subject Manager Menu, Instructor Menu (CN môn cũng thấy, cùng link /teaching). Trang đích đề xuất: Learner Dashboard, My Teaching Classes, Account List. Bỏ popup chỉ đọc hoặc không ghi PostgreSQL: Preview Assignment, Preview Question, 3 Grade History Drawer, Audit Detail Drawer, Version History Drawer (bank), Draw.io Diagram Panel, Mark Work Sections (ghi cùng lưu khung, UC-GRP-05 chuyển lên tab Type Config), Sign Out (chỉ xóa phiên Redis; UC-IAM-03 chuyển lên Profile). Còn 57 màn hình, 15 tab, 81 popup; 77/77 UC, 16/16 unit; canvas 4220x1858; 0 ô chồng, 0 đường cắt. Cập nhật bảng unit/UC trong docs/screen-flow.md và mô tả trong docs/README.md."
+**Context**: Tài liệu bổ trợ (docs/), ngoài stage AI-DLC
+
+---
+
+## Screen Flow - Remove Unit/UC Labels, Restyle Menus
+**Timestamp**: 2026-09-27T12:00:00Z
+**User Input**: "xoá mấy cái note unit với uc trong drawio đi, với lại cái header sao lại để thành external system thế sửa đi"
+**AI Response**: "Bỏ dòng 'unit · UC' trong mọi ô của docs/screen-flow.drawio (tra ở bảng trong screen-flow.md). Menu điều hướng (Learner, Header, Admin, Instructor, Subject Manager) đổi từ ô xám nét đứt (trùng kiểu External System) sang ô bo tròn viền đậm theo màu vai trò; Header dùng màu Common. Chú giải cập nhật. Canvas 4220x1603; 0 ô chồng, 0 đường cắt."
+**Context**: Tài liệu bổ trợ (docs/)
+
+---
+
+## Screen Flow - Review User-Edited Diagram
+**Timestamp**: 2026-09-27T13:00:00Z
+**User Input**: "t xoá mấy cái popup ko cần thiết rồi xem lại xem nó còn thiếu gì ko thì list ra để t thêm vào"
+**AI Response**: "Đọc docs/screen-flow.drawio bản người dùng sửa, dựng lại cây theo edge và đối chiếu 77 UC + frontend-components U01-U16. Báo cáo: lỗi nối (3 edge không gắn nguồn từ Assignment Detail, Assignment Detail bị nhân đôi, 9 ô không có edge vào, Profile/Payment/Notification không nối từ menu nào, Subject List trỏ vào chính nó) và danh sách màn hình/popup còn thiếu theo UC để người dùng tự thêm. Không sửa file."
+**Context**: Tài liệu bổ trợ (docs/), chỉ rà soát
+
+---
+
+## Screen Flow - User Decision on Popups
+**Timestamp**: 2026-09-27T13:30:00Z
+**User Input**: "phát hành chỉ là một nút thôi mà người học từ vào cũng chỉ là một nút mà" / "T bảo t bỏ mấy cái popup vớ vẩn mà"
+**AI Response**: "Chấp nhận quyết định: phát hành và vào lớp bằng mã là thao tác trên trang, không vẽ popup. Sơ đồ người dùng sửa được coi là đủ UC; chỉ còn lỗi nối dây."
+**Context**: Tài liệu bổ trợ (docs/)
+
+---
+
+## Screen Flow - Merge Check
+**Timestamp**: 2026-09-27T14:00:00Z
+**User Input**: "import account chỉ là một nút import thôi, notification setting thì chỉ là một toggle, group doc overview là một loại của submission detail, group grading cũng nằm trong đến grade submission detail
+Có đúng ko"
+**AI Response**: "Đánh giá từng điểm so với frontend-components: Import Accounts cần bước xem trước lỗi từng dòng (đặt được trên Account List); Notification Settings là nhiều toggle theo loại (đặt được trên Notification); Group Docs Overview là cấp danh sách nên gộp vào Submission List, xem tài liệu một nhóm mới là Submission Detail; Group Grading gộp được thành chế độ nhóm của Grading Detail. Lưu ý thiết kế U01/U14/U15/U16 đang ghi là trang riêng."
+**Context**: Tài liệu bổ trợ (docs/), rà soát
+
+---
+
+## Frontend Sync with Screen Flow
+**Timestamp**: 2026-09-27T14:30:00Z
+**User Input**: "sửa lại theo screen flow"
+**AI Response**: "Sửa frontend-components và code plan theo screen flow: U01 ImportAccountsPage → ImportAccountsPanel trên AccountListPage (plan bước 32); U16 NotificationSettingsPage → NotificationEmailToggles trên NotificationListPage (plan bước 20, bỏ route app/settings/notifications); U14 GroupDocsOverviewPage → GroupDocsOverviewPanel gắn vào danh sách bài nộp của bài GROUP (plan bước 22, đường dẫn thư mục); U15 GroupGradingPage → GroupGradingMode trong GradingWorkspacePage với route app/teaching/grading/[targetKind]/[id] (plan bước 21). Không đổi API/UC. Ghi history trong aidlc-state.md."
+**Context**: Code Generation Part 1 - đồng bộ frontend với screen flow
+
+---
