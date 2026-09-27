@@ -2829,3 +2829,60 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **Context**: Documentation commit; user will push.
 
 ---
+
+## Merge main into cuong
+**Timestamp**: 2026-09-27T07:24:06Z
+**User Input**: "merge main sang nhánh cuong và solve conflict"
+**AI Response**: "Merged main into cuong. Resolved audit.md by keeping both sides; per user choice, accepted main's deletion of business-flows.md and business-flow-design-plan.md. Draw.io set in main-business-flows/ kept."
+**Context**: Git maintenance; no design change.
+
+---
+
+## Main Business Flows - Realignment Request
+**Timestamp**: 2026-09-27T07:28:37Z
+**User Input**: "dựa trên tài liệu dự án mới nhất, cập nhật chỉnh sửa lại business flow khớp"
+**Clarification**: User chose "Làm lại bộ BF của cuong" — rewrite the Draw.io set and PNG exports in aidlc-docs/inception/main-business-flows/ to match the latest 16-unit design, keeping the existing swimlane style; docs/business-flow.* left unchanged.
+**AI Response**: Started reviewing latest requirements, use cases, unit designs and construction business logic to realign the flows.
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Realignment Complete
+**Timestamp**: 2026-09-27T07:42:26Z
+**User Input**: (continuation of "dựa trên tài liệu dự án mới nhất, cập nhật chỉnh sửa lại business flow khớp")
+**AI Response**: "Rebuilt main-business-flows/ as eleven swimlane flows aligned with the 16-unit Construction design, 77-UC catalog and unit business rules: BF-01 Account Activation and Sign-In, BF-02 Subject/Class Setup and Enrollment, BF-03 Learning Material Upload and RAG Indexing, BF-04 Assignment Authoring, Review and Publication, BF-05 Lesson Publication and Class Content Access, BF-06 Group Set Setup and Leader Change, BF-07 Individual Attempt and Submission, BF-08 Group Document Collaboration and Submission, BF-09 Grading and Grade Publication, BF-10 AI Credit Purchase, BF-11 Notification and Deadline Reminder. Removed obsolete flows (AI summarization/lesson splitting, lesson progress, work allocation, shared DOCX submission, payment-based access grant). Regenerated the eleven-page consolidated file, eleven standalone files and PNG exports with the diagrams.net viewer; automated checks found no connector crossing a shape, no overlapping or crossing connectors, every decision has two labelled exits and every End states an outcome. Rewrote README with flow table, UC/unit traceability, text alternatives and conventions. docs/business-flow.* unchanged."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Trigger and End Condition
+**Timestamp**: 2026-09-27T10:06:13Z
+**User Input**: "viết trigger và end condition cho từng BF"
+**AI Response**: "Replaced the README Text alternatives list with a Flow details section: for each of BF-01 to BF-11, a Trigger, an End condition listing every End outcome shown in the diagram with its resulting state, and the existing text alternative. Diagrams unchanged."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Concise Trigger and End Condition
+**Timestamp**: 2026-09-27T10:13:09Z
+**User Input**: "viết trigger và end condition thật ngắn gọn (ví dụ như trong ảnh)" (attached screenshot of SRS section 2 Main Business Flow)
+**AI Response**: "Shortened Trigger and End condition for BF-01 to BF-11 in the README to one sentence each, matching the SRS format in the screenshot."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Explain attempt limit in UC56
+**Timestamp**: 2026-09-27T07:20:00Z
+**User Input**: "UC 56 giải thích cho tôi phần attempt, tại sao lại bị giới hạn: The learner has an ACTIVE enrollment in an OPEN class. The ESSAY publication accepts submissions (on time or within the late-submission period). The attempt limit has not been reached; starting an attempt consumes one attempt."
+**AI Response**: "Explained the three preconditions and the attempt concept: maxAttempts is set per publication by the instructor (1-10, BR-U08-31, fixed once OPEN per BR-U08-34); an attempt is counted when started (U11 question 2 answer A, BR-U11-02); one IN_PROGRESS attempt at a time; last submitted attempt is graded (question 1 answer A); unfinished attempts are auto-submitted. Gave rationale and noted that unlimited attempts are not in the design."
+**Context**: Clarification; no files changed.
+
+---
+
+## Should submissions be limited
+**Timestamp**: 2026-09-27T07:30:00Z
+**User Input**: "có nên giới hạn lượt nộp bài không"
+**AI Response**: "Recommended keeping the configurable 1-10 attempt limit (needed for QUIZ, simulation exams and Code Lab; harmless for ESSAY/DOCUMENT since the instructor can choose 10) and not adding an unlimited option in the MVP; suggested optionally defining a default per assignment type since none is specified. No files changed."
+**Context**: Design discussion; no decision recorded yet.
+
+---
