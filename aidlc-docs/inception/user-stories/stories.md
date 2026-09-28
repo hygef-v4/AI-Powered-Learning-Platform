@@ -1115,7 +1115,7 @@
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là người dùng, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
 **Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -1123,9 +1123,15 @@
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** người dùng đã xác thực và gói credit hợp lệ
+- **Given** tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên và gói credit hợp lệ
 - **When** người dùng bắt đầu thanh toán
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
+
+#### Scenario 3 - Người học không có AI hoặc credit
+
+- **Given** tài khoản chỉ có vai trò Người học đã đăng nhập
+- **When** tài khoản gọi API AI, số dư/sổ cái credit, gói mua hoặc tạo giao dịch, kể cả bằng cách gọi trực tiếp API
+- **Then** hệ thống từ chối theo quyền, không cấp/giữ/trừ credit và không tạo giao dịch hay link PayOS
 
 #### Scenario 2 - Provider lỗi
 
@@ -1135,7 +1141,7 @@
 
 ### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là người dùng đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
 **Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 

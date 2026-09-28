@@ -67,7 +67,7 @@ PostgreSQL `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs`; khóa `u1
 ### Nhóm B - AI
 
 - [ ] **Bước 3** - Domain AI; `AiGateway` + `GeminiAdapter` (`generateContent`, JSON schema, token, timeout theo model) + `FakeAiGateway` (P2).
-- [ ] **Bước 4** - `AiGuard` (kill-switch, trần ngày Redis, rate limit, `CreditPort.reserve`) (P1, BR-U13-03).
+- [ ] **Bước 4** - `AiGuard`: kiểm vai trò `INSTRUCTOR`/`SUBJECT_MANAGER`/`ADMIN` và phạm vi nghiệp vụ trước mọi lời gọi Gemini, từ chối `LEARNER`; sau đó kiểm kill-switch, trần ngày Redis, rate limit, `CreditPort.reserve` (P1, BR-U13-03).
 - [ ] **Bước 5** - `PromptBuilder` (khối `<data>`, prompt theo task có version), `InjectionScanner`, `OutputValidator` (schema + U06/rubric) (P3, P4, BR-U13-07).
 - [ ] **Bước 6** - `AiProposalService` + `AiTaskHandler`: `QUESTION_DRAFT` (phạm vi GV/CN môn, RAG, trích dẫn, nhận/bỏ) (F1, BR-U13-10…15).
 - [ ] **Bước 7** - `GRADING_PROPOSAL` (văn bản phẳng + XML rút gọn U09, code + kết quả test, `RubricPort.score`) (F2, BR-U13-20…23).
@@ -94,7 +94,7 @@ PostgreSQL `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs`; khóa `u1
 
 - [ ] **Bước 20** - `/contracts/openapi/u13-ai-code.yaml` (U13 không phát event).
 - [ ] **Bước 21** - Controller + DTO + validation.
-- [ ] **Bước 22** - Test MockMvc: người học không đọc được đề xuất AI; không phải ADMIN không sửa cấu hình; `TRY` quá 5/phút `429`.
+- [ ] **Bước 22** - Test MockMvc: người học bị `403` ở mọi API AI và không đọc được đề xuất AI; Code Lab `TRY` của người học vẫn dùng Judge0, không gọi Gemini hay trừ credit; không phải ADMIN không sửa cấu hình; `TRY` quá 5/phút `429`.
 - [ ] **Bước 23** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm F - Frontend

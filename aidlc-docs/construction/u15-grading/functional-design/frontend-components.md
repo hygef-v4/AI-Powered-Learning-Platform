@@ -6,7 +6,7 @@ app/teaching/publications/[id]/grading/     GradingQueuePage
   GradingTable            người học, lượt, trễ, phương thức, điểm x/tổng, trạng thái; chọn nhiều để chốt
   BulkFinalizeDialog      kết quả từng mục
   PublishGradesButton
-app/teaching/grading/attempts/[id]/        GradingWorkspacePage
+app/teaching/grading/[targetKind]/[id]/    GradingWorkspacePage (targetKind = attempts | groups)
   SubmissionViewer        QuestionView/DocumentEditor READONLY/Code + kết quả test
   MethodChooser           Chấm tay | Nhờ AI đề xuất (credit ước tính)
   RubricChecklistForm     tích mục, tổng tự tính; câu không rubric: ô điểm
@@ -14,10 +14,10 @@ app/teaching/grading/attempts/[id]/        GradingWorkspacePage
   FeedbackEditor
   OverrideReasonDialog    bắt buộc khi sửa điểm tự chấm/đã chốt/khác đề xuất
   GradeHistoryDrawer
-app/teaching/grading/groups/[id]/          GroupGradingPage
-  GroupDocumentViewer     tài liệu nhóm, tô màu mục theo tác giả
-  MemberContributionPanel mục của từng thành viên, chấm tay hoặc AI
-  MemberFinalForm         điểm cuối từng người, hiện hai nguồn tham khảo
+  GroupGradingMode        (chỉ khi targetKind = groups, thay SubmissionViewer và RubricChecklistForm)
+    GroupDocumentViewer     tài liệu nhóm, tô màu mục theo tác giả
+    MemberContributionPanel mục của từng thành viên, chấm tay hoặc AI
+    MemberFinalForm         điểm cuối từng người, hiện hai nguồn tham khảo
 app/teaching/classes/[id]/gradebook/       GradebookPage (ma trận, không có cột tổng)
 app/learn/grades/                          MyGradesPage
 ```

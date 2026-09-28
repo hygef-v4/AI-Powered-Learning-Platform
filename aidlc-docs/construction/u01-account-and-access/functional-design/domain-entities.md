@@ -79,7 +79,7 @@ stateDiagram-v2
 | `freePeriod` | Tháng của phần tặng (`yyyy-MM`) |
 | `purchasedBalance` | Credit đã mua còn lại |
 
-U07 ghi, khóa dòng tài khoản khi giữ/trừ credit và luôn ghi sổ cái trong cùng transaction. Quy tắc nghiệp vụ ở U07.
+U07 chỉ tạo/ghi ví nghiệp vụ cho tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên, khóa dòng tài khoản khi giữ/trừ credit và luôn ghi sổ cái trong cùng transaction. Các cột vật lý trên `accounts` không đồng nghĩa Người học có ví: tài khoản chỉ có vai trò Người học giữ số dư 0, không có `MONTHLY_GRANT` và không được truy cập API credit. Quy tắc nghiệp vụ ở U07.
 
 ## 7. `AppSetting`
 

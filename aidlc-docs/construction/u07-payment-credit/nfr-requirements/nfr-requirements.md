@@ -35,6 +35,7 @@
 | NFR-U07-30 | Người dùng chỉ thấy giao dịch/sổ cái của mình; ngoài quyền trả `404`. | SEC-002 |
 | NFR-U07-31 | `CreditPort` chỉ gọi nội bộ, không có endpoint HTTP cho `reserve`/`settle`. | Thiết kế |
 | NFR-U07-32 | Không lưu dữ liệu thẻ/ngân hàng của người dùng; chỉ lưu mã tham chiếu PayOS. | SEC-007 |
+| NFR-U07-33 | Mọi API credit (gói mua, thanh toán, số dư, sổ cái, lịch sử) và `CreditPort.reserve` yêu cầu tài khoản chịu phí `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN`; tài khoản chỉ có vai trò `LEARNER` nhận `403` ở HTTP và không được tạo/giữ credit qua port nội bộ. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
 
 ## 5. Compliance
 

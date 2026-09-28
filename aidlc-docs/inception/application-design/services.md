@@ -52,7 +52,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 2. Worker trích chữ (không OCR) hoặc lấy caption có sẵn (không tự phiên âm), cắt đoạn; kiểm trần hệ thống và giữ credit của người tạo nguồn học liệu qua U07, rồi gọi Gemini embedding, ghi pgvector và quyết toán credit. Hết trần hệ thống báo "Hệ thống đang bận"; không trừ credit cho lô bị từ chối.
 
 ### Thanh toán mua credit AI
-1. U07 tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị.
+1. U07 chỉ cho tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên tạo giao dịch PayOS với idempotency key; backend từ chối Người học trước khi tạo payment/link, trang quay về chỉ hiển thị.
 2. Webhook có chữ ký hoặc job tự đối soát → `PAID` và cộng credit đúng một lần.
 
 ## 4. Job policies

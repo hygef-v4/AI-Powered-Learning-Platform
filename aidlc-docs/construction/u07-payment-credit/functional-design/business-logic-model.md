@@ -1,7 +1,7 @@
 # U07 Payment & AI Credit - Business Logic Model
 
 ## F1 - Mua credit
-1. Người dùng chọn gói `active`, gửi kèm `Idempotency-Key` (BR-U07-04, 05).
+1. Backend kiểm tài khoản `ACTIVE` và vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` trước khi hiển thị gói mua hay tạo thanh toán; `LEARNER` không có vai trò mua bị từ chối. Người mua hợp lệ chọn gói `active`, gửi kèm `Idempotency-Key` (BR-U07-01, 04, 05).
 2. Tạo `Payment` `CREATED`, sinh `orderCode` duy nhất, chụp giá (BR-U07-03).
 3. Gọi PayOS tạo link (số tiền, mô tả, `returnUrl`, `cancelUrl`, hết hạn 15 phút).
 4. Thành công → `PENDING`, trả `checkoutUrl`; lỗi → `FAILED` (BR-U07-07).
@@ -24,11 +24,11 @@
 3. `PAID` → áp dụng như F3 bước 3; `CANCELLED`/`EXPIRED` → cập nhật; lỗi → giữ nguyên (BR-U07-22).
 
 ## F5 - Số dư và tặng tháng
-1. Đọc số dư (khóa dòng tài khoản): nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = u07.monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng (BR-U07-31).
-2. Tài khoản mới có số dư 0 và `freePeriod` rỗng nên lần đọc đầu tiên được tặng tháng.
+1. Kiểm tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN`; `LEARNER` không có ví và bị từ chối, không ghi `MONTHLY_GRANT` (BR-U07-01, 31).
+2. Với tài khoản hợp lệ, đọc số dư (khóa dòng tài khoản): nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = u07.monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng. Tài khoản hợp lệ mới có số dư 0 và `freePeriod` rỗng nên lần đọc đầu tiên được tặng tháng.
 
 ## F6 - Giữ và trừ credit (U05 và U13 gọi)
-1. `reserve`: F5 bước 1, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), ghi dòng sổ `RESERVE` (có `requestRef`, `expiresAt`); lần giữ ở trạng thái `HELD`. `requestRef` đã có → trả dòng cũ.
+1. `reserve`: kiểm vai trò chịu phí như F5 trước mọi lời gọi AI, từ chối `LEARNER`; sau đó kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), ghi dòng sổ `RESERVE` (có `requestRef`, `expiresAt`); lần giữ ở trạng thái `HELD`. `requestRef` đã có → trả dòng cũ.
 2. `settle`: tính chênh lệch với phần giữ, trả lại hoặc trừ thêm (BR-U07-42), ghi dòng sổ `SETTLE` trỏ về dòng `RESERVE` → `SETTLED`.
 3. `release`: trả lại phần giữ, ghi dòng sổ `RELEASE` trỏ về dòng `RESERVE` → `RELEASED`.
 4. Job quét mỗi 5 phút tìm dòng `RESERVE` chưa đóng quá `expiresAt` và `release` (BR-U07-43).

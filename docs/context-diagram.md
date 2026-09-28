@@ -21,10 +21,10 @@ flowchart LR
     payos["PayOS · thanh toán credit"]
     smtp["SMTP · OTP/email"]
     judge["Judge0 · chạy code cô lập"]
-    learner -->|"học, làm/nộp bài, xem điểm, mua credit"| web
-    teacher -->|"lớp, học liệu, đề, nhóm, chấm điểm"| web
-    manager -->|"học liệu, ngân hàng và template cấp môn"| web
-    admin -->|"tài khoản, AI, thanh toán, audit"| web
+    learner -->|"học, làm/nộp bài, xem điểm"| web
+    teacher -->|"lớp, học liệu, đề, nhóm, chấm điểm, mua credit"| web
+    manager -->|"học liệu, ngân hàng, template cấp môn, mua credit"| web
+    admin -->|"tài khoản, AI, gói và mua credit, audit"| web
     backend -->|"AI theo yêu cầu và trừ credit người dùng"| ai
     worker -->|"embedding nguồn, caption có sẵn"| youtube
     worker -->|"embedding và đề xuất AI"| ai
@@ -37,7 +37,7 @@ flowchart LR
     worker -->|"chấm code"| judge
 ```
 
-**Diễn giải bằng chữ:** Người học, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Backend kiểm quyền, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập; SMTP gửi OTP và email. Giảng viên quyết định điểm cuối. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit cá nhân là lỗi riêng.
+**Diễn giải bằng chữ:** Người học, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Chỉ ba vai trò sau được cấp/dùng/mua credit AI khi tài khoản `ACTIVE`; người học không có credit và không gọi Gemini. Backend kiểm quyền trước khi tạo giao dịch hoặc xử lý yêu cầu AI, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm theo yêu cầu của người có quyền; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập cho Code Lab mà không dùng AI; SMTP gửi OTP và email. Người học vẫn xem được điểm/phản hồi cuối sau khi giảng viên công bố; giảng viên quyết định điểm cuối. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit của người yêu cầu AI là lỗi riêng.
 
 ## Ranh giới nội bộ
 

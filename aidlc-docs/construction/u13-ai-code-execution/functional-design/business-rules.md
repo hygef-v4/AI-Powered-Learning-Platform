@@ -6,7 +6,7 @@
 |---|---|---|
 | BR-U13-01 | Mọi lời gọi AI qua `AiGateway` provider-neutral; nghiệp vụ không biết tên provider. | FR-012 |
 | BR-U13-02 | Model chọn theo loại việc (`AiTaskConfig`); admin đổi model trong danh sách cho phép. | Câu 4, FR-021 |
-| BR-U13-03 | Trước khi gọi: kill-switch tắt, chưa vượt trần chi phí ngày, chưa vượt 10 yêu cầu/phút/người, `CreditPort.reserve` đủ credit của **người yêu cầu**. Hết hạn mức hệ thống → báo "Hệ thống đang bận", không trừ credit; thiếu credit cá nhân → báo "Không đủ credit AI". Không đạt → không gọi provider, ghi `AiCall` `REJECTED_*`. | US-AIG-003 S3, U07, quyết định đồng bộ 2026-09-25 |
+| BR-U13-03 | Trước khi gọi AI: chỉ chấp nhận người yêu cầu `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` và đúng phạm vi nghiệp vụ; `LEARNER` không được gọi API AI, kể cả khi gọi trực tiếp. Sau đó kiểm kill-switch, trần chi phí ngày, tối đa 10 yêu cầu/phút/người và `CreditPort.reserve` đủ credit của **người yêu cầu**. Hết hạn mức hệ thống → báo "Hệ thống đang bận", không trừ credit; thiếu credit cá nhân → báo "Không đủ credit AI". Không đạt → không gọi provider, ghi `AiCall` `REJECTED_*` khi phù hợp. | US-AIG-003 S3, U07, quyết định 2026-09-27 |
 | BR-U13-04 | Sau khi gọi: `settle` theo token thật (1 credit = 1 000 token); lỗi → `release`. | BR-U07-40…43 |
 | BR-U13-05 | Chạy nền bằng job U02; kết quả là **đề xuất** (`READY`), không bao giờ tự phát hành đề hay chốt điểm. | FR-006, FR-008 |
 | BR-U13-06 | Lỗi tạm (timeout, 429, 5xx) retry theo U02 tối đa 3 lần; Gemini báo hết quota (429) sau các lần retry → báo "Hệ thống đang bận", trả phần credit chưa dùng. Đầu ra sai định dạng JSON retry 1 lần rồi `FAILED`/`INVALID_OUTPUT`. Không có đề xuất hoàn tất giả. | US-AIG-001 S3 |
@@ -32,7 +32,7 @@
 | BR-U13-20 | Chỉ khi giảng viên chọn "Nhờ AI đề xuất" cho một bài nộp/phần; credit trừ của giảng viên đó. | US-GRP-004 S2, FR-008 |
 | BR-U13-21 | Đầu vào: đề, rubric checklist (U06), nội dung bài: tài liệu → văn bản phẳng + XML sơ đồ rút gọn (U09); code → mã + kết quả test. Chỉ phạm vi một bài/phần. | US-ASM-004 S3 |
 | BR-U13-22 | Đầu ra: mỗi mục checklist `đạt/không đạt`, nhận xét ngắn, bằng chứng (trích đoạn/tên sơ đồ); tổng điểm đề xuất tính bằng `RubricPort.score` (không để AI cộng). | U06 BR-U06-32 |
-| BR-U13-23 | Người học không bao giờ thấy đề xuất AI; U15 quyết định dùng hay không. | FR-008 |
+| BR-U13-23 | Người học không gọi AI và không bao giờ thấy đề xuất AI; U15 quyết định dùng hay không và chỉ điểm/phản hồi cuối đã công bố mới hiển thị cho Người học. Credit AI hỗ trợ chấm do Giảng viên yêu cầu và chi trả. | FR-008 |
 
 ## 4. Code Lab
 

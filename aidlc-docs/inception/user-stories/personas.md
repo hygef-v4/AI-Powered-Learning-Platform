@@ -11,7 +11,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - **Bối cảnh**: Học trong một hoặc nhiều lớp đã được ghi danh, chủ yếu dùng web trên máy tính để bàn hoặc laptop; mobile chủ yếu để đọc và xem thông báo/kết quả.
 - **Mục tiêu**: Truy cập đúng nội dung, tiếp tục việc học, nộp bài đúng hạn và nhận điểm/phản hồi rõ ràng.
 - **Động lực**: Hoàn thành khóa học và hiểu mình cần cải thiện điều gì.
-- **Khó khăn**: Dễ mất phương hướng khi nội dung nhiều; cần biết trạng thái bài nộp, thanh toán và lỗi hệ thống mà không phải liên hệ hỗ trợ ngay.
+- **Khó khăn**: Dễ mất phương hướng khi nội dung nhiều; cần biết trạng thái bài nộp và lỗi hệ thống mà không phải liên hệ hỗ trợ ngay.
 - **Nhu cầu truy cập**: Chỉ dữ liệu, tiến độ, bài nộp, điểm và quyền lợi của chính mình trong các lớp được ghi danh.
 
 ### Hành vi điển hình
@@ -22,12 +22,12 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
 - Nhận và làm mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
 - Làm simulation exam trong giới hạn lượt, biết rõ bài có hoặc không tính điểm thành phần và chính sách lấy kết quả.
-- Mua credit AI và theo dõi trạng thái thanh toán/cộng credit.
+- Không có ví/credit AI, không gọi dịch vụ AI hoặc mua credit; vẫn làm bài, chạy Code Lab không dùng AI và xem điểm/phản hồi đã công bố.
 - Nhận thông báo thiết yếu.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-NTF-001`.
 
 ## 3. P-INSTRUCTOR - Giảng viên
 
@@ -47,6 +47,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Định nghĩa cấu trúc bài nhóm, xem trước tài liệu do hệ thống tổng hợp, điều chỉnh thứ tự/phần được dùng và chốt version để chấm.
 - Nhờ AI đề xuất feedback cho phần đóng góp của từng thành viên, tự chấm tài liệu chung và quyết định điểm cuối từng sinh viên dựa trên hai nguồn mà không bị hệ thống ép công thức.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
+- Mua credit AI để dùng cho các chức năng AI thuộc phạm vi lớp được phân công; theo dõi thanh toán và số dư của mình.
 - Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
 - Soạn, xem trước từng loại bài đánh giá và cấu hình simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
@@ -54,7 +55,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 4. P-SUBJECT-MANAGER - Chủ nhiệm môn
 
@@ -70,13 +71,14 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 - Quản lý học liệu và nguồn RAG cấp môn, gồm video/playlist YouTube gắn theo bài giảng và trạng thái caption/lập chỉ mục.
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
+- Mua credit AI để xử lý học liệu/RAG và tạo câu hỏi trong các môn được phân công; theo dõi thanh toán và số dư của mình.
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
 - Phát hành template có version để giảng viên copy thành bài của lớp.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 5. P-ADMIN - Quản trị viên
 
@@ -104,9 +106,9 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 | Persona | Danh tính | Học thuật/nội dung | Nhóm | Học tập | AI/đánh giá | Điểm | Thanh toán | Thông báo | Audit |
 |---|---|---|---|---|---|---|---|---|---|
-| Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài | Xem cá nhân | Chính | Nhận | Không |
-| Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Không | Nhận | Qua hành động được ghi |
-| Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo template đề | Không mặc định | Không | Nhận | Qua hành động được ghi |
+| Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài, không dùng AI | Xem cá nhân | Không có credit/thanh toán | Nhận | Không |
+| Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Mua credit cá nhân | Nhận | Qua hành động được ghi |
+| Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo template đề | Không mặc định | Mua credit cá nhân | Nhận | Qua hành động được ghi |
 | Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Cấu hình gói/mua credit | Cấu hình/nhận | Chính |
 
 ## 7. Nguyên tắc phân quyền xuyên persona

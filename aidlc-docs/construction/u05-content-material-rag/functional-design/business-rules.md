@@ -49,7 +49,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-40 | Chỉ U13 gọi (khi soạn đề bằng AI), sau khi unit yêu cầu AI (U06, U08, U10) đã kiểm quyền người dùng; U05 kiểm lại `classId` thuộc `subjectId`. | components.md |
+| BR-U05-40 | Chỉ U13 gọi (khi người có vai trò Giảng viên/Chủ nhiệm môn soạn đề bằng AI), sau khi unit yêu cầu AI (U06, U08, U10) đã kiểm quyền; không có truy xuất RAG/embedding theo yêu cầu Người học. U05 kiểm lại `classId` thuộc `subjectId`. | components.md, BR-U13-03 |
 | BR-U05-41 | Phạm vi tìm: bài `PUBLISHED` hiện tại của môn + của lớp + bài cấp môn liên kết vào lớp; có thể lọc theo danh sách bài. Không tìm trong bản nháp, bài lưu trữ hay phạm vi khác. | FR-004, U13 tạo đề bằng RAG, Câu 7 |
 | BR-U05-42 | `k` ≤ 20; kết quả kèm `lessonId`, `lessonVersionId`, tiêu đề, trang hoặc timestamp để trích dẫn. | Câu 7 |
 | BR-U05-43 | Gemini lỗi khi tạo vector câu hỏi → trả lỗi "tạm thời không khả dụng", không trả kết quả rỗng giả; riêng lỗi hết quota sau retry → "Hệ thống đang bận". | FR-004, NFR-U05-11 |

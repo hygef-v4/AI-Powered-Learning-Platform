@@ -24,7 +24,7 @@ File [business-flow.drawio](business-flow.drawio) gồm 5 trang swimlane có th�
 
 **Sơ đồ swimlane:** [Mở trang 4 — Mua và sử dụng credit AI](business-flow.drawio).
 
-**Diễn giải bằng chữ:** Mọi tài khoản `ACTIVE` có thể mua credit; chỉ webhook hợp lệ hoặc job tự đối soát xác thực mới cộng credit, trang PayOS quay về không tự cộng. Trước lời gọi AI, hệ thống kiểm trần rồi giữ credit; hoàn tất thì quyết toán, lỗi trước khi nhà cung cấp xử lý thì trả phần giữ. Credit miễn phí tháng được dùng trước credit mua. Hết quota hệ thống báo bận và không trừ credit cho lời gọi bị từ chối. Chính sách hoàn tiền cho giao dịch đã `PAID` chưa chốt, không nằm trong luồng này.
+**Diễn giải bằng chữ:** Chỉ tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên có thể được tặng, dùng và mua credit AI. Người học không có ví/credit, không gọi chức năng AI và không truy cập API U07, kể cả khi gọi trực tiếp; việc làm bài, chạy Code Lab và xem điểm không tiêu credit. Chỉ webhook hợp lệ hoặc job tự đối soát xác thực mới cộng credit cho người mua, trang PayOS quay về không tự cộng. Trước lời gọi AI của người có quyền, hệ thống kiểm trần rồi giữ credit; hoàn tất thì quyết toán, lỗi trước khi nhà cung cấp xử lý thì trả phần giữ. Credit miễn phí tháng của các vai trò có quyền được dùng trước credit mua. Hết quota hệ thống báo bận và không trừ credit cho lời gọi bị từ chối. Chính sách hoàn tiền cho giao dịch đã `PAID` chưa chốt, không nằm trong luồng này.
 
 ## 5. Thông báo, tiến độ và báo cáo
 

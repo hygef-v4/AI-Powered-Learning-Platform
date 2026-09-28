@@ -47,7 +47,7 @@ PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentSt
     port/               GroupSubmissionQueryPort
 /backend/src/main/resources/db/migration/u14/
 /frontend/src/app/learn/group-docs/
-/frontend/src/app/teaching/assignments/[id]/group-docs/
+/frontend/src/components/group-docs/ (GroupDocsOverviewPanel)
 /frontend/src/features/group-doc/useGroupDocStream.ts
 /contracts/openapi/u14-group-docs.yaml
 /contracts/messages/u14-events.json
@@ -91,7 +91,7 @@ PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentSt
 
 - [ ] **Bước 20** - `GroupDocumentPage` (`GroupDocHeader`, `SectionOutline`, `SharedBlocksView`, `SectionView` + bình luận, `AddSectionDialog`, `SubmitGroupDialog`), `useGroupDocStream`.
 - [ ] **Bước 21** - `SectionWorkPage` (`DocumentEditor` của U09, tự lưu, Xong, Nhả).
-- [ ] **Bước 22** - `GroupDocsOverviewPage` cho giảng viên (tiến độ, nhả khóa, xem bản nộp).
+- [ ] **Bước 22** - `GroupDocsOverviewPanel` cho giảng viên, gắn vào danh sách bài nộp của bài GROUP (tiến độ, nhả khóa, xem bản nộp).
 - [ ] **Bước 23** - Test frontend: nhận mục bị người khác nhận trước hiện thông báo; sự kiện SSE cập nhật trạng thái mục; mất kết nối thì tải lại.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 
