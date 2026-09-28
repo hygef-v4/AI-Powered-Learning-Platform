@@ -4,15 +4,15 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 - messaging redesign (2026-09-26): audit written in-transaction, cross-unit reactions via ports + jobs, 7 job queues, Redis/RabbitMQ renamed. Plans of U02, U05, U07, U08, U11-U16 await re-approval; others approved.
-- **Resume action**: Re-approve plans of U02, U05, U07, U08, U11-U16, then start Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
+- **Current Stage**: Code Generation Part 1 - updated plans awaiting re-approval after the 2026-09-26 messaging redesign and the U07 AI/credit eligibility change. Eight U02 job queues and one U16 notification queue are planned; no application code has been generated.
+- **Resume action**: Review and re-approve the updated plans of U02, U05, U07, U08 and U11-U16. Then begin Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
 
 ## Workspace State
 - **Existing Code**: No
 - **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)
 - **Build System**: None yet (planned: Maven, npm)
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `C:\Users\admin\Documents\GitHub\AI-Powered-Learning-Platform`
+- **Workspace Root**: `F:\code\git\AI-Powered-Learning-Platform`
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign; U07 updated for AI/credit eligibility; awaiting re-approval
+- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign; U07 updated for AI/credit eligibility; these plans await re-approval
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -91,6 +91,7 @@
 - 2026-09-25: Xóa 9 story ngoài phạm vi khỏi danh mục user story theo yêu cầu; catalog story lúc đó có 50 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi hiện hành: 49 story/77 use case.
 - 2026-09-26: Data model consolidated from 62 to 45 PostgreSQL tables (keep only tables that must stand alone, are listed by a use case, or tie to an external system; 1-1 data becomes columns). Five shared tables with owner-unit migrations and extension ports. Domain entities rewritten for all units; FD/NFR/Infra/plans/ERD synced. Account status `PENDING_ACTIVATION` renamed `PENDING`.
-- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; queues `jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`, `jobs.notification` (+ temporary `jobs.realtime.{instanceId}`). Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`.
+- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; eight U02 job queues (`jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`), U16's `jobs.notification`, and temporary `jobs.realtime.{instanceId}` queues. Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`. The affected code plans await re-approval.
 - 2026-09-27: Screen flow (`docs/screen-flow.drawio`) chốt theo bản nhóm vẽ; frontend gộp theo đó: nhập CSV thành `ImportAccountsPanel` trên danh sách tài khoản (U01), cài đặt email thành toggle trên trang thông báo (U16), tổng quan tài liệu nhóm thành panel trong danh sách bài nộp (U14), chấm nhóm thành chế độ `groups` của `GradingWorkspacePage` (U15). Plan U01/U14/U15/U16 chỉ đổi tên component tương ứng.
+- 2026-09-27: Updated UC56, UC57 and UC75 in `docs/use-case-specifications.md` to match the current design; this documentation change did not advance the Construction stage.
 - Full chronological log: `audit.md`.
