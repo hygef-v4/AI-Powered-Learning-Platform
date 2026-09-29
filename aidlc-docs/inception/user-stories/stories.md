@@ -9,9 +9,9 @@
 - Lỗi tích hợp được mô tả trong acceptance criteria của story nghiệp vụ liên quan.
 - Mỗi story ghi mã requirements liên quan; ràng buộc kỹ thuật thuần túy được giữ trong ma trận downstream thay vì tạo system story.
 - Danh mục hiện hành chỉ gồm story thuộc MVP. Các mã story đã loại không được tái sử dụng; lịch sử quyết định nằm trong `audit.md`.
-- Hệ thống chỉ có bốn persona người dùng: Người học, Giảng viên, Chủ nhiệm môn và Quản trị viên; không có Head of Department/Trưởng bộ môn.
+- Hệ thống chỉ có bốn persona người dùng: Student, Teacher, Subject Manager và Administrator; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
-- Phạm vi triển khai: **49 story MVP**, được ánh xạ tới 77 use case hiện hành.
+- Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
 
 ## 2. Miền Identity and Access
 
@@ -769,7 +769,7 @@
 
 - **Given** người học có lượt `DOCUMENT` đang làm và DOCX hợp lệ trong giới hạn
 - **When** người học tải DOCX lên, xem trước các block được chuyển đổi rồi xác nhận
-- **Then** hệ thống thêm các block với `origin = LEARNER` vào bản nháp hiện tại, không sửa hoặc xóa khung giảng viên; phần không hỗ trợ được báo rõ, lỗi nhập không làm mất bản nháp
+- **Then** hệ thống thêm các block với `origin = STUDENT` vào bản nháp hiện tại, không sửa hoặc xóa khung giảng viên; phần không hỗ trợ được báo rõ, lỗi nhập không làm mất bản nháp
 
 ### US-ASM-005 - Soạn và kiểm thử Code Lab
 
@@ -891,31 +891,37 @@
 - **When** yêu cầu copy được gửi
 - **Then** hệ thống từ chối ở mức đối tượng và không tiết lộ nội dung lớp đích
 
-### US-ASM-011 - Làm simulation exam giới hạn lượt
+### US-ASM-012 - Nộp bài Practice và nhận phản hồi AI khi đủ credit
 
-**Story**: Là người học, tôi muốn làm simulation exam theo số lượt và chính sách rõ ràng để luyện tập hoặc nhận điểm thành phần mà không nhầm đây là kỳ thi chính thức.
+**Story**: Là Student, tôi muốn nộp bài luyện tập Text Essay hoặc Diagram Essay và nhận một lần điểm/phản hồi AI cho mỗi attempt khi đủ credit để biết mình cần cải thiện gì.
 
-**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-007, FR-010, FR-017, FR-018, FR-030, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Làm trong giới hạn
+#### Scenario 1 - Đủ credit
 
-- **Given** simulation exam đang mở và người học còn lượt
-- **When** người học bắt đầu và nộp attempt
-- **Then** hệ thống giữ snapshot đề/version, cập nhật số lượt (mặc định 3, giảng viên chỉnh từ 1 đến 10) và áp dụng chính sách kết quả cao nhất/gần nhất/trung bình đã công bố
+- **Given** Student có quyền làm bài `PRACTICE` dạng Text Essay hoặc Diagram Essay và đủ credit
+- **When** Student nộp attempt
+- **Then** hệ thống giữ bài nộp, gọi AI chấm tối đa một lần cho attempt, tính credit theo token thực dùng và chỉ Student xem được kết quả luyện tập
 
-#### Scenario 2 - Công bố và tính điểm
+#### Scenario 2 - Thiếu credit
 
-- **Given** giảng viên đã cấu hình thời điểm hiện đáp án và trạng thái tính điểm thành phần
-- **When** attempt được hoàn tất hoặc cửa sổ bài đóng
-- **Then** hệ thống chỉ hiển thị đáp án đúng thời điểm và đưa kết quả vào điểm thành phần chỉ khi cấu hình cho phép
+- **Given** Student thiếu credit tại thời điểm nộp
+- **When** Student nộp attempt
+- **Then** bài vẫn được lưu nhưng không có điểm/phản hồi AI, không trừ credit và không vào hàng đợi Teacher; mua credit sau đó không chấm bù attempt cũ
 
-#### Scenario 3 - Không phải kỳ thi chính thức
+#### Scenario 3 - Làm lại
 
-- **Given** người học hoặc giảng viên xem simulation exam
-- **When** giao diện hiển thị thông tin bài
-- **Then** hệ thống ghi rõ đây là thi thử, số lượt, cách lấy kết quả và việc có/không tính điểm; không hiển thị như proctored exam
+- **Given** Student còn lượt và đã nộp một attempt
+- **When** Student làm lại và nộp attempt mới
+- **Then** attempt mới được xét chấm riêng nếu đủ credit; retry kỹ thuật không tạo kết quả hoặc khoản trừ trùng
+
+#### Scenario 4 - Các dạng luyện tập tự chấm
+
+- **Given** bài `PRACTICE` dạng Code Lab hoặc Quiz
+- **When** Student nộp bài
+- **Then** hệ thống chấm theo test/đáp án mà không gọi AI hoặc trừ credit Student; kết quả không vào sổ điểm chính thức
 
 ## 9. Miền Grading and Progress
 
@@ -1115,7 +1121,7 @@
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là Student, Teacher, Subject Manager hoặc Administrator, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
 **Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -1123,15 +1129,15 @@
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên và gói credit hợp lệ
+- **Given** tài khoản `ACTIVE` có một trong bốn vai trò hiện hành và gói credit hợp lệ
 - **When** người dùng bắt đầu thanh toán
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
 
-#### Scenario 3 - Người học không có AI hoặc credit
+#### Scenario 3 - Student không được dùng AI ngoài bài Practice hợp lệ
 
-- **Given** tài khoản chỉ có vai trò Người học đã đăng nhập
-- **When** tài khoản gọi API AI, số dư/sổ cái credit, gói mua hoặc tạo giao dịch, kể cả bằng cách gọi trực tiếp API
-- **Then** hệ thống từ chối theo quyền, không cấp/giữ/trừ credit và không tạo giao dịch hay link PayOS
+- **Given** tài khoản chỉ có vai trò Student đã đăng nhập
+- **When** tài khoản yêu cầu AI tạo đề, xử lý học liệu hoặc chấm bài `GRADED`, kể cả bằng cách gọi trực tiếp API
+- **Then** hệ thống từ chối theo quyền, không giữ/trừ credit và không gọi AI; Student vẫn được xem ví, mua credit và dùng cho bài `PRACTICE` Text Essay/Diagram Essay của chính mình
 
 #### Scenario 2 - Provider lỗi
 
@@ -1141,7 +1147,7 @@
 
 ### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là Student, Teacher, Subject Manager hoặc Administrator đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
 **Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
@@ -1235,7 +1241,7 @@
 | FR-004 | US-CNT-001, US-CNT-002, US-CNT-005, US-AIG-002 |
 | FR-005 | US-LRN-001 |
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-004 đến US-ASM-007 |
-| FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-011 |
+| FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-012 |
 | FR-008 | US-GRD-001 đến US-GRD-005 |
 | FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
 | FR-010 | US-PAY-001, US-PAY-002 |
@@ -1257,7 +1263,8 @@
 | FR-026 | US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |
 | FR-027 | US-ASM-009 |
 | FR-028 | US-ASM-010 |
-| FR-029 | US-ASM-011 |
+| FR-029 | Đã rút khỏi phạm vi; `US-ASM-011` chỉ còn là mã lịch sử |
+| FR-030 | US-ASM-012, US-PAY-001, US-PAY-002 |
 
 ## 14. Ràng buộc phi chức năng và kỹ thuật downstream
 

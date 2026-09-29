@@ -1,7 +1,7 @@
 # U15 Grading - Business Logic Model
 
 ## F1 - Nhận bài nộp
-1. U11 nộp gọi `SubmissionSubmittedPort.onSubmitted` (U15 cài) trong transaction nộp → tạo job `GRADE_INIT {attemptId}`. Job: tạo `Grade` `ATTEMPT` `PENDING`, `maxScore` = tổng điểm bài.
+1. Chỉ bài `GRADED`: U11 gọi `SubmissionSubmittedPort.onSubmitted` (U15 cài) trong transaction nộp → tạo job `GRADE_INIT {attemptId}`. Job: tạo `Grade` `ATTEMPT` `PENDING`, `maxScore` = tổng điểm bài. `PRACTICE` không gọi port này và không tạo grade.
 2. Trắc nghiệm → tự chấm ngay trong job (BR-U15-10), áp BR-U15-12. Code Lab → gọi `CodeRunPort.grade` (U13).
 3. U14 nộp gọi `GroupSubmittedPort.onGroupSubmitted` → job `GRADE_INIT {groupSubmissionId}`: `Grade` `GROUP_DOCUMENT` + `MEMBER_CONTRIBUTION`/`MEMBER_FINAL` cho mỗi thành viên, `PENDING` (bản nộp mới thay bản cũ: điểm chưa chốt gắn sang bản mới).
 4. U13 chấm xong gọi `CodeGradedPort.onGraded` (U15 cài) → cập nhật `autoScore`/`items`, `DRAFT` (BR-U15-11).

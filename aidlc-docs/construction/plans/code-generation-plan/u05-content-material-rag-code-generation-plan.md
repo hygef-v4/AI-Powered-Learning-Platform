@@ -36,7 +36,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 ```
 /backend/src/main/java/edu/aiplatform/
   content/
-    api/                ContentController, LessonController, LearnerDownloadController,
+    api/                ContentController, LessonController, StudentDownloadController,
                         ClassCommunicationController, DTO
     application/        ChapterService, LessonService, ItemService, PublishedContentService,
                         RetrievalService, EmbeddingBudget, EmbeddingCreditService,
@@ -79,7 +79,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 - [ ] **Bước 9** - `TextExtractor` (Tika theo luồng, giới hạn ký tự, `NO_TEXT`), `Chunker` (P2, P3).
 - [ ] **Bước 10** - `YoutubeResolveHandler` và `IngestJobHandler` (claim idempotent, concurrency, lỗi tạm/vĩnh viễn/`BUSY`, ghi đoạn một transaction) (F5, F6, P1).
 - [ ] **Bước 11** - Retry thủ công (F7).
-- [ ] **Bước 12** - `PublishedContentService` và `LearnerDownloadController` (kiểm ghi danh, lớp `OPEN`, mục hiển thị) (F8, BR-U05-04, 23).
+- [ ] **Bước 12** - `PublishedContentService` và `StudentDownloadController` (kiểm ghi danh, lớp `OPEN`, mục hiển thị) (F8, BR-U05-04, 23).
 - [ ] **Bước 13** - `RetrievalService` (kiểm phạm vi, trần, credit `requesterId`, vector câu hỏi, k ≤ 20) (F9, BR-U05-40…44).
 - [ ] **Bước 13a** - `ClassCommunicationService`: thông báo, câu hỏi, trả lời của lớp; kiểm quyền U04, lọc markdown, ẩn nội dung có lý do; phát event U16 sau commit (F10, BR-U05-60…64).
 - [ ] **Bước 14** - Unit test cho mọi `BR-U05-xx`: URL YouTube giả mạo, markdown có script, PDF không chữ, video không caption, vượt trần.
@@ -104,7 +104,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 
 - [ ] **Bước 25** - `ChapterList`, `LessonEditor`, `VersionBar`, `ItemList` với `TextItemEditor`, `FileItemEditor`, `YoutubeItemEditor`.
 - [ ] **Bước 26** - `IngestionStatusBadge` (poll, Thử lại) và `SubjectLessonPicker`.
-- [ ] **Bước 27** - `LessonViewer` dùng chung (`TextItemView` với `rehype-sanitize`, `FileItemView`, `YoutubeItemView`); gắn vào `LearnerClassPage` của U04.
+- [ ] **Bước 27** - `LessonViewer` dùng chung (`TextItemView` với `rehype-sanitize`, `FileItemView`, `YoutubeItemView`); gắn vào `StudentClassPage` của U04.
 - [ ] **Bước 27a** - Trang thông báo/hỏi đáp lớp, biểu mẫu đăng bài và trả lời, trạng thái ẩn; người dùng chỉ thấy lớp được phép truy cập (UC-CNT-06, 07).
 - [ ] **Bước 28** - Test frontend: markdown có script bị lọc, URL YouTube sai bị chặn, poll dừng ở trạng thái cuối; badge phân biệt "Hệ thống đang bận" và "Không đủ credit AI".
 - [ ] **Bước 29** - Tóm tắt: `code/frontend-summary.md`.

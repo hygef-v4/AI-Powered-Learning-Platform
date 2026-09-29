@@ -59,14 +59,14 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledg
 
 - [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, webhook event, số dư, sổ cái, lần giữ suy ra từ sổ cái (BR-U07-01…08).
 - [ ] **Bước 3** - Port `CreditPort`, `PaymentProviderPort`; `FakePayosAdapter` (chỉ khi không phải prod).
-- [ ] **Bước 4** - `CreditLedgerService.apply` với khóa dòng tài khoản, chỉ tặng tháng cho Giảng viên/CN môn/admin `ACTIVE`, không cấp ví/credit cho `LEARNER`, chặn âm (F5, P1, BR-U07-01, 30…34).
+- [ ] **Bước 4** - `CreditLedgerService.apply` với khóa dòng tài khoản; cả bốn vai trò `ACTIVE` có ví, chỉ Teacher/Subject Manager/Admin được tặng tháng, Student chỉ có credit mua; chặn số dư âm (F5, P1, BR-U07-01, 30…34).
 - [ ] **Bước 5** - `PackageService` và cấu hình mức tặng tháng qua `app_settings` (F7, BR-U07-02).
-- [ ] **Bước 6** - `PaymentService`: kiểm tài khoản `ACTIVE` và vai trò mua (`INSTRUCTOR`/`SUBJECT_MANAGER`/`ADMIN`) trước khi tạo giao dịch hoặc gọi PayOS; idempotency, giới hạn 3 `PENDING`, `orderCode`, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-01, 03…07).
+- [ ] **Bước 6** - `PaymentService`: kiểm tài khoản `ACTIVE` thuộc bốn vai trò hiện hành và chủ ví trước khi tạo giao dịch hoặc gọi PayOS; idempotency, giới hạn 3 `PENDING`, `orderCode`, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-01, 03…07).
 - [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13).
-- [ ] **Bước 8** - `CreditPortService`: `reserve`/`settle`/`release`/`balance` idempotent; `reserve` từ chối `LEARNER` trước khi ghi sổ hay gọi AI (F6, P5, BR-U07-01, 40…43).
+- [ ] **Bước 8** - `CreditPortService`: `reserve`/`settle`/`release`/`balance` idempotent; `reserve` kiểm purpose/attemptRef, Student chỉ được `PRACTICE_GRADING` Text/Diagram Essay của mình (F6, P5, BR-U07-01, 40…43).
 - [ ] **Bước 9** - Worker: `ReconcileHandler` (10 phút, ≤ 100 giao dịch) và `ReservationSweepHandler` (5 phút, `SKIP LOCKED`) (F4, P5, P6, BR-U07-20, BR-U07-22).
 - [ ] **Bước 10** - Audit sự kiện `PAID`, webhook bị từ chối, job tự đối soát và thay đổi cấu hình gói (BR-U07-51).
-- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: `LEARNER` không có ví/`MONTHLY_GRANT`/`RESERVE`, chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng tháng sang tháng mới cho vai trò có quyền.
+- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: Student có ví và mua credit nhưng không có `MONTHLY_GRANT`; chỉ reserve cho Practice hợp lệ; chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng tháng sang tháng mới cho vai trò có quyền.
 - [ ] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u07-payment-credit/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu và PayOS
@@ -81,12 +81,12 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledg
 
 - [ ] **Bước 18** - `/contracts/openapi/u07-payment-credit.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
 - [ ] **Bước 19** - Controller + DTO + validation; rate limit webhook.
-- [ ] **Bước 20** - Test MockMvc: `LEARNER` chỉ có vai trò học bị `403` ở mọi API gói/credit/payment và AI; không có `MONTHLY_GRANT`, giao dịch, link PayOS hay lời gọi Gemini; Giảng viên/CN môn/admin `ACTIVE` được mua/xem số dư của mình; không xem giao dịch người khác; không có endpoint HTTP `reserve`; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
+- [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví và mua credit của mình nhưng không có `MONTHLY_GRANT`; không xem giao dịch người khác; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage`, `PackageList`, checkout và `PaymentResultPage` chỉ cho Giảng viên/CN môn/admin; Learner không có lối vào AI hoặc credit.
+- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage`, `PackageList`, checkout và `PaymentResultPage` cho cả bốn vai trò; Student xem ví và mua credit để chấm Practice.
 - [ ] **Bước 23** - Admin: `PackageAdminPage` cho gói và mức tặng; trang thanh toán giả cho local.
 - [ ] **Bước 24** - Test frontend: trang kết quả không báo thành công khi chưa `PAID`.
 - [ ] **Bước 25** - Tóm tắt: `code/frontend-summary.md`.

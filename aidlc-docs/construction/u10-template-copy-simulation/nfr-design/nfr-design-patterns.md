@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - NFR Design Patterns
+# U10 Template & Copy - NFR Design Patterns
 
 ## P1 - Copy nguyên khối
 - `AssignmentCopier.copy(source, target, kind, actor)` trong một `@Transactional`:
@@ -11,10 +11,3 @@
 
 ## P2 - Diff
 - `AssignmentDiffer`: hướng dẫn qua `java-diff-utils` theo dòng; thành phần so khớp theo khóa (`bankItem.stableKey` hoặc hash `inlineDefinition`), đánh dấu `ADDED`, `REMOVED`, `MOVED`, `POINTS_CHANGED`, `CONTENT_CHANGED` (khác version ngân hàng hoặc khác hash); cấu hình loại bài so theo trường (NFR-U10-02).
-
-## P3 - Khóa chính sách thi thử
-- `UPDATE publications SET policy_locked_at = now() WHERE id = ? AND policy_locked_at IS NULL` (qua `AssignmentExtensionPort` của U08); 0 dòng nghĩa là đã khóa trước đó, vẫn thành công (NFR-U10-11).
-- `SimulationPolicyService.update` từ chối khi `locked_at` có giá trị.
-
-## P4 - Kết quả thi thử
-- `SimulationResultCalculator` thuần: lọc lượt có điểm; `HIGHEST` = max, `LATEST` = lượt nộp muộn nhất có điểm, `AVERAGE` = trung bình `BigDecimal` làm tròn 2 chữ số; không có lượt có điểm → chưa có kết quả.

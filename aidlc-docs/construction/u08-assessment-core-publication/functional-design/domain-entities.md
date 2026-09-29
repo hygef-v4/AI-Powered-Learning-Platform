@@ -12,10 +12,9 @@ Thiết kế độc lập công nghệ. Truy vết: `US-ASM-001`; `UC-ASM-01`, `
 | `QuestionTypeConfig` | Value object của `Assignment` | `assignments` | U09 |
 | `DocumentSkeleton` | Value object của `Assignment` | `assignments` | U09 |
 | `AssignmentLineage` | Value object của `Assignment` | `assignments` | U10 |
-| `SimulationPolicy` | Value object của `Publication` | `publications` | U10 |
 | `GradeRelease` | Value object của `Publication` | `publications` | U15 |
 
-U08 tạo migration cho các bảng trên; U09, U10, U15 ghi phần của mình qua port của U08. U08 **không** sở hữu nghiệp vụ: cấu hình riêng từng loại bài (U09), template/copy/thi thử (U10), lượt làm và bài nộp (U11), nhóm (U12), AI và chạy code (U13), điểm (U15).
+U08 tạo migration cho các bảng trên; U09, U10, U15 ghi phần của mình qua port của U08. U08 sở hữu dạng và chế độ bài; U08 **không** sở hữu cấu hình riêng từng loại bài (U09), template/copy (U10), lượt làm và bài nộp (U11), nhóm (U12), AI và chạy code (U13), điểm (U15).
 
 ## 2. `Assignment`
 
@@ -28,13 +27,14 @@ U08 tạo migration cho các bảng trên; U09, U10, U15 ghi phần của mình 
 | `classId` / `subjectId` | UUID | Theo `ownerType`; không có đề chung cấp môn |
 | `title` | chuỗi ≤ 200 | |
 | `instructions` | markdown ≤ 20 000 ký tự | |
-| `assignmentType` | enum | `QUIZ`, `ESSAY`, `DOCUMENT`, `CODE_LAB`, `GROUP`; một loại mỗi bài |
+| `assignmentType` | enum | `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY` (dùng cấu hình DOCUMENT), `CODE_LAB`, `GROUP_ASSIGNMENT`; một dạng mỗi bài |
+| `gradingMode` | enum | `GRADED` hoặc `PRACTICE`; `GROUP_ASSIGNMENT` chỉ cho `GRADED` |
 | `status` | enum | `DRAFT`, `REVIEWED`, `LOCKED`, `ARCHIVED` |
 | `totalPoints` | numeric(6,2) | Tổng điểm thành phần, tự tính |
 | `origin` | enum | `MANUAL`, `AI`, `CLONE`, `NEW_VERSION`, `TEMPLATE_COPY`, `CLASS_COPY` |
 | `aiProposalRef` | chuỗi | Khi từ AI: tham chiếu đề xuất và nguồn (U13) |
 | `typeConfig` | `QuestionTypeConfig` | U09 ghi |
-| `skeleton` | `DocumentSkeleton` | U09 ghi; chỉ bài `DOCUMENT`/`GROUP` |
+| `skeleton` | `DocumentSkeleton` | U09 ghi; chỉ bài `DIAGRAM_ESSAY`/`GROUP_ASSIGNMENT` |
 | `lineage` | `AssignmentLineage` | U10 ghi khi copy/nhân bản/version mới |
 | `reviewedBy`, `reviewedAt` | | |
 | `createdBy`, `version` | | Khóa lạc quan |
@@ -64,7 +64,7 @@ stateDiagram-v2
 | `inlineDefinition` | JSON | Câu riêng của bài, cùng cấu trúc `QuestionDefinition` U06, khi không có `bankItemId` |
 | `points` | numeric(6,2) | Mặc định bằng `defaultPoints` của câu; sửa được khi `DRAFT` |
 
-Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`QUIZ` ↔ `MCQ_*`, `ESSAY` ↔ `ESSAY`, `DOCUMENT` ↔ `DOCUMENT`, `CODE_LAB` ↔ `CODE`; `GROUP` là bài `DOCUMENT` làm nhóm: đúng một thành phần `DOCUMENT` có khung chứa các mục việc).
+Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Loại câu phải khớp `assignmentType` (`MULTIPLE_CHOICE_QUIZ` ↔ `MCQ_*`, `TEXT_ESSAY` ↔ `ESSAY`, `DIAGRAM_ESSAY` ↔ `DOCUMENT`, `CODE_LAB` ↔ `CODE`; `GROUP_ASSIGNMENT` là tài liệu nhóm có đúng một thành phần `DOCUMENT` và khung mục việc).
 
 ## 4. `Publication`
 
@@ -77,9 +77,7 @@ Mỗi thành phần có đúng một trong `bankItemId`, `inlineDefinition`. Lo�
 | `allowLate` | bool | |
 | `lateUntil` | thời gian | Khi `allowLate`; `closesAt < lateUntil ≤ closesAt + 30 ngày` |
 | `maxAttempts` | số | 1-10 |
-| `deliveryMode` | enum | `STANDARD`, `SIMULATION` |
 | `status` | enum | `SCHEDULED`, `OPEN`, `CLOSED`, `RETIRED` |
-| `simulationPolicy` | `SimulationPolicy` | U10 ghi; chỉ `SIMULATION` |
 | `gradeRelease` | `GradeRelease` | U15 ghi |
 | `publishedBy`, `publishedAt`, `retiredBy`, `retiredAt`, `retireReason` | | |
 
@@ -103,7 +101,7 @@ stateDiagram-v2
 | Value object | Định nghĩa ở | Unit ghi |
 |---|---|---|
 | `QuestionTypeConfig`, `DocumentSkeleton` | U09 domain entities | U09 |
-| `AssignmentLineage`, `SimulationPolicy` | U10 domain entities | U10 |
+| `AssignmentLineage` | U10 domain entities | U10 |
 | `GradeRelease` | U15 domain entities | U15 |
 
 ## 6. Contract
@@ -113,7 +111,7 @@ stateDiagram-v2
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `AssignmentQueryPort` | U09-U12, U14-U16 | Bài, thành phần, publication; `isSubmissionOpen(publicationId, now)` |
-| `AssignmentService`, `PublicationService` | U10 | Tạo bài nháp (copy, template), tạo publication `SIMULATION` |
+| `AssignmentService`, `PublicationService` | U10 | Tạo bài nháp (copy, template) |
 | `AssignmentExtensionPort` | U09, U10, U15 | Ghi value object của mình vào bài/publication khi trạng thái cho phép |
 
 ### Port U08 khai báo, unit khác cài
@@ -121,7 +119,7 @@ stateDiagram-v2
 | Port | Cài bởi | Mô tả |
 |---|---|---|
 | `TypeConfigPort` | U09 (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
-| `GroupReadinessPort` | U12 (`C`) | Bài nhóm đủ nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi người học có nhóm; chưa có U12 → không cho phát hành bài `GROUP` |
+| `GroupReadinessPort` | U12 (`C`) | Bài nhóm đủ nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi Student có nhóm; chưa có U12 → không cho phát hành bài `GROUP_ASSIGNMENT` |
 | `CodeLabCheckPort` | U13 (`C`) | Bài `CODE_LAB` đã kiểm lời giải mẫu với nội dung hiện tại |
 | `PublicationLifecyclePort` | U11, U14 (`C`) | `onOpened(publicationId)`, `onRetired(publicationId)` gọi trong transaction mở bài/ngưng giao; cài đặt chỉ tạo job của unit nhận (tạo tài liệu nhóm, tự nộp). Chưa có U11/U14 → adapter rỗng |
 

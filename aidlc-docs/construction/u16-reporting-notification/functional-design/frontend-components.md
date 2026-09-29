@@ -9,7 +9,7 @@ app/notifications/         NotificationListPage (phân trang)
 app/teaching/publications/[id]/progress   SubmissionProgressPage
   ProgressSummary          đã nộp / đang làm / chưa bắt đầu / trễ, thời gian còn lại
   ProgressTable            người học (hoặc nhóm), trạng thái, thời điểm nộp
-app/learn/dashboard/       LearnerResultDashboard (bài sắp hạn, trạng thái, điểm công bố)
+app/learn/dashboard/       StudentResultDashboard (bài sắp hạn, trạng thái, điểm công bố)
 app/teaching/classes/[id]/gradebook/  GradebookExportAction (CSV/XLSX theo lớp hoặc bài)
 ```
 
@@ -19,5 +19,5 @@ app/teaching/classes/[id]/gradebook/  GradebookExportAction (CSV/XLSX theo lớp
 | `NotificationListPage` | | `GET /api/v1/me/notifications`, `POST .../{id}/read`, `POST .../read-all` |
 | `NotificationEmailToggles` | Đổi toggle là lưu ngay | `GET`, `PUT /api/v1/me/notification-preferences` |
 | `SubmissionProgressPage` | | `GET /api/v1/publications/{id}/progress` |
-| `LearnerResultDashboard` | Chỉ dữ liệu của mình; phân bố lớp chỉ hiện khi đủ điều kiện ẩn danh | `GET /api/v1/me/dashboard`, `GET /api/v1/me/classes/{classId}/grade-distribution` |
+| `StudentResultDashboard` | Chỉ dữ liệu của mình; phân bố lớp chỉ hiện khi đủ điều kiện ẩn danh | `GET /api/v1/me/dashboard`, `GET /api/v1/me/classes/{classId}/grade-distribution` |
 | `GradebookExportAction` | Chọn lớp/bài và CSV/XLSX; tải khi có quyền | `GET /api/v1/classes/{id}/gradebook/export?format=csv|xlsx&publicationId=` |

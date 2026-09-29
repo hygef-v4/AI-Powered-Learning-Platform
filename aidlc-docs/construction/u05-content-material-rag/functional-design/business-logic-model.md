@@ -38,7 +38,7 @@
 
 ## F8 - Học viên xem và tải
 1. U04 gọi `PublishedContentPort.listForClass(classId)` sau khi đã kiểm ghi danh.
-2. Học viên bấm tải file → U05 kiểm `ClassAccessPort.isActiveLearner`, lớp `OPEN`, mục thuộc bản `PUBLISHED` hiển thị trong lớp → `issueDownloadToken` (BR-U05-23).
+2. Học viên bấm tải file → U05 kiểm `ClassAccessPort.isActiveStudent`, lớp `OPEN`, mục thuộc bản `PUBLISHED` hiển thị trong lớp → `issueDownloadToken` (BR-U05-23).
 
 ## F9 - `retrieve(scope, query, k, requesterId, requestRef)`
 1. Kiểm phạm vi (BR-U05-40), lấy danh sách `SourceDocument` của bài `PUBLISHED` trong phạm vi (BR-U05-41).

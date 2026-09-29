@@ -23,7 +23,6 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `BankQueryPort`, `RubricPort`, `QuestionView` | U06 | Dùng thật |
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Dùng thật (ghi trạng thái công bố điểm qua `AssignmentExtensionPort`) |
 | `TypeConfigPort`, `DocumentEditor` | U09 | Dùng thật |
-| `SimulationPolicyPort` | U10 | Dùng thật |
 | `SubmissionQueryPort` | U11 | Dùng thật; U15 cài `SubmissionSubmittedPort` của U11 |
 | `AiGradingPort`, `AiGradingPanel`, `CodeRunPort` | U13 | Dùng thật; U15 cài `CodeGradedPort` của U13 |
 | `GroupSubmissionQueryPort` | U14 | Dùng thật; U15 cài `GroupSubmittedPort` của U14 |
@@ -38,11 +37,11 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 ```
 /backend/src/main/java/edu/aiplatform/
   grading/
-    api/                GradingController, GradebookController, LearnerGradeController, DTO
+    api/                GradingController, GradebookController, StudentGradeController, DTO
     application/        GradeWriter, GradingService, BulkGradeService, PublishService,
                         GradebookService, QuizScorer
     domain/             Grade, GradeStatus, GradeMethod, TargetKind, GradeHistory,
-                        GradeRelease, LearnerGradeView, TeacherGradeView
+                        GradeRelease, StudentGradeView, TeacherGradeView
     infrastructure/     JPA repository
     worker/             GradeInitHandler
     adapter/            SubmissionSubmittedAdapter, GroupSubmittedAdapter, CodeGradedAdapter
@@ -66,11 +65,11 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 
 - [ ] **Bước 1** - Domain `Grade` và chuyển trạng thái, `GradeHistory`, hai góc nhìn; port `GradeQueryPort` và `GradebookQueryPort` cho U16 (điểm cuối/trạng thái, không lộ đề xuất AI).
 - [ ] **Bước 2** - `GradeWriter` một đường (version, luật lý do, khoảng điểm, lịch sử, event sau commit) (P1, BR-U15-13, 22, 33).
-- [ ] **Bước 3** - Adapter cài `SubmissionSubmittedPort`, `GroupSubmittedPort` (tạo job `GRADE_INIT`), `CodeGradedPort` (ghi điểm code); `GradeInitHandler` + `QuizScorer` (trắc nghiệm, gọi `CodeRunPort.grade` cho Code Lab, bài nhóm; idempotent; hiện điểm ngay) (F1, P2, P3, BR-U15-10…12).
+- [ ] **Bước 3** - Adapter cài `SubmissionSubmittedPort`, `GroupSubmittedPort` (chỉ tạo grade/job `GRADE_INIT` cho `GRADED`), `CodeGradedPort`; `GradeInitHandler` + `QuizScorer` chấm xác định bài `GRADED`. Cùng thuật toán Quiz được dùng cho `PRACTICE` qua U11; Code Lab `PRACTICE` nhận kết quả test U13, không tạo grade chính thức (F1, P2, P3, BR-U15-10…12, FR-030).
 - [ ] **Bước 4** - `GradingService`: chọn phương thức, chấm tay theo rubric/điểm câu, nhờ AI, dùng đề xuất (F2, BR-U15-20…23).
 - [ ] **Bước 5** - `BulkGradeService` chốt hàng loạt, `PublishService` công bố theo lượt phát hành (F3, F4, P4, BR-U15-31, 32).
 - [ ] **Bước 6** - Chấm bài nhóm: tài liệu chung (chỉ tay), đóng góp thành viên (tay/AI), điểm cuối thành viên (F6, BR-U15-40…43).
-- [ ] **Bước 7** - `GradebookService` (không cột tổng), điểm của người học, lịch sử (F7, P5, P6, BR-U15-50…52); lượt được chấm theo U11/U10 (BR-U15-35).
+- [ ] **Bước 7** - `GradebookService` chỉ lấy publication `GRADED` (không cột tổng), điểm của Student, lịch sử (F7, P5, P6, BR-U15-50…52); lượt chính thức theo U11 (BR-U15-35).
 - [ ] **Bước 8** - Audit theo BR-U15-53.
 - [ ] **Bước 9** - Unit test mọi `BR-U15-xx`.
 - [ ] **Bước 10** - Tóm tắt: `aidlc-docs/construction/u15-grading/code/business-logic-summary.md`.
@@ -79,7 +78,7 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 
 - [ ] **Bước 11** - Flyway `V20260925_2200__u15_grading.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 12** - JPA repository và query sổ điểm.
-- [ ] **Bước 13** - Integration test: nộp → tự chấm → hiện ngay; job `GRADE_INIT` chạy lặp; chốt hàng loạt có mục lệch version; `app` không sửa lịch sử; sổ điểm 200 × 30 ≤ 1 s.
+- [ ] **Bước 13** - Integration test: nộp `GRADED` → tự chấm → hiện đúng chính sách; `PRACTICE` không vào gradebook hoặc hàng đợi Teacher; job `GRADE_INIT` chạy lặp; chốt hàng loạt có mục lệch version; `app` không sửa lịch sử; sổ điểm 200 × 30 ≤ 1 s.
 - [ ] **Bước 14** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API

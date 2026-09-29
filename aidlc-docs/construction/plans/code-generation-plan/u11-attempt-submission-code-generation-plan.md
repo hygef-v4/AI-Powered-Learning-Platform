@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-003; phần làm bài của US-ASM-004, US-ASM-011. **Use case**: UC-ASM-09..14 (UC-ASM-13 phần chạy code ở U13).
+- **Story**: US-ASM-003, US-ASM-012; phần làm bài của US-ASM-004. **Use case**: UC-ASM-09..14, UC-ASM-19 (UC-ASM-13 phần chạy code ở U13).
 - **Thiết kế nguồn**: `construction/u11-attempt-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -23,8 +23,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `ClassAccessPort` | U04 | Dùng thật |
 | `BankQueryPort`, `QuestionView` | U06 | Dùng thật |
 | `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật |
-| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxLearnerImportPort`, `DocumentEditor`, `EssayEditor` | U09 | Dùng thật |
-| `SimulationPolicyPort`, `SimulationBadge` | U10 | Dùng thật |
+| `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxStudentImportPort`, `DocumentEditor`, `EssayEditor` | U09 | Dùng thật |
 | `CodeRunPort` | U13 (`C`) | Adapter tạm báo "chạy thử chưa sẵn sàng"; U13 thay |
 | Điểm hiển thị | U15 | Ẩn phần điểm tới khi U15 có |
 
@@ -62,11 +61,11 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain `Attempt`, `AttemptContent` (4 loại), `DeadlineCalculator` (BR-U11-06); port `SubmissionQueryPort`, `CodeRunPort` + adapter tạm.
-- [ ] **Bước 3** - `AttemptStarter`: advisory lock, đếm lượt (bài thường/thi thử), snapshot, seed, khóa chính sách thi thử, job tự nộp (F2, P1, BR-U11-01…06).
+- [ ] **Bước 2** - Domain `Attempt`, `AttemptContent` (4 loại cá nhân), `practiceFeedbackStatus`, `practiceResult`, `practiceResultRef`, `DeadlineCalculator` (BR-U11-06); port `SubmissionQueryPort`, `CodeRunPort`, `PracticeGradingPort` + adapter tạm.
+- [ ] **Bước 3** - `AttemptStarter`: advisory lock, đếm lượt theo `maxAttempts` U08, snapshot dạng/chế độ bài và seed, job tự nộp (F2, P1, BR-U11-01…06).
 - [ ] **Bước 4** - Trả đề cho người học: góc nhìn đã lọc đáp án, trộn theo seed (F2 bước 4).
 - [ ] **Bước 5** - `DraftSaver`: UPDATE có điều kiện, `409`/`410`, ân hạn 30 s, kiểm tài liệu, `GzipRequestFilter` giới hạn 10 MB, rate limit; preview DOCX chỉ cho lượt DOCUMENT đang làm, xác nhận thêm block qua cùng luồng lưu có `contentVersion` (F3, F3a, P2, P6, BR-U11-10…14, BR-U09-45…48).
-- [ ] **Bước 6** - `AttemptSubmitter` một đường, idempotent, biên nhận, gọi `SubmissionSubmittedPort` trong transaction; nộp tay kiểm `validateForSubmit`, tự nộp ghi `warnings` (F4, F5, P3, BR-U11-20…24).
+- [ ] **Bước 6** - `AttemptSubmitter` một đường, idempotent, biên nhận; chỉ `GRADED` gọi `SubmissionSubmittedPort` trong transaction. `PRACTICE` Quiz/Code Lab xếp chấm xác định; Text/Diagram Essay đủ credit gọi `PracticeGradingPort` một lần, thiếu credit lưu `NO_CREDIT` không điểm AI. Nộp tay kiểm `validateForSubmit`, tự nộp ghi `warnings` (F4, F5, P3, BR-U11-20…24).
 - [ ] **Bước 7** - `AutoSubmitHandler` (theo hạn và khi ngưng giao) và `PublicationLifecycleAdapter.onRetired` (tạo job tự nộp); khai báo `SubmissionSubmittedPort` với adapter rỗng tới khi U15 có (P3, P5).
 - [ ] **Bước 8** - `AttemptQueryService`: danh sách bài của người học, lịch sử, lượt được chấm (lượt nộp cuối / chính sách U10), xuất DOCX, `SubmissionQueryPort` (F1, F6, F7, BR-U11-30…34).
 - [ ] **Bước 9** - Audit theo BR-U11-40.
@@ -75,9 +74,9 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 12** - Flyway `V20260925_1800__u11_attempts.sql` theo `infrastructure-design.md` §3, gồm trigger bất biến.
+- [ ] **Bước 12** - Flyway `V20260925_1800__u11_attempts.sql` theo `infrastructure-design.md` §3, gồm `practice_feedback_status`, `practice_result`, `practice_result_ref` và trigger bất biến nội dung sau nộp.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test: hai lần bắt đầu đồng thời; nộp tay và tự nộp đồng thời; ngừng giao tự nộp hàng loạt; trigger chặn sửa sau nộp.
+- [ ] **Bước 14** - Integration test: hai lần bắt đầu đồng thời; nộp tay và tự nộp đồng thời; ngừng giao tự nộp hàng loạt; Practice đủ/thiếu credit, không chấm bù attempt cũ, không tạo grade U15; trigger chặn sửa sau nộp.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
@@ -90,7 +89,7 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-
 ### Nhóm E - Frontend
 
 - [ ] **Bước 20** - `MyAssignmentsPage`, `AssignmentOverviewPage` (`AssignmentInfo`, `StartAttemptButton`, `AttemptHistoryList`).
-- [ ] **Bước 21** - `AttemptWorkspacePage` với `QuizWorkspace`, `EssayWorkspace`, `DocumentWorkspace` (gồm `LearnerDocxImportDialog`), `CodeWorkspace`, `AttemptHeader` (đồng hồ).
+- [ ] **Bước 21** - `AttemptWorkspacePage` với `QuizWorkspace`, `EssayWorkspace`, `DocumentWorkspace` (gồm `StudentDocxImportDialog`), `CodeWorkspace`, `AttemptHeader` (đồng hồ).
 - [ ] **Bước 22** - `useAutosave` (P7), `SubmitConfirmDialog`, `ReceiptView`, `SubmittedAttemptView`.
 - [ ] **Bước 23** - Test frontend: tự lưu không gửi chồng, `409` dừng tự lưu, hết giờ tự chuyển biên nhận.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
@@ -111,7 +110,7 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-
 | US-ASM-003 S4 | 5, 22 |
 | US-ASM-003 S5 (UC-ASM-14) | 8, 20 |
 | UC-ASM-09 | 8, 20 |
-| US-ASM-011 (làm thi thử) | 3, 8 |
+| US-ASM-012 (Practice và AI theo credit) | 2, 3, 6, 8, 12, 14; phối hợp U07/U13 |
 
 ## 5. Ngoài phạm vi
 

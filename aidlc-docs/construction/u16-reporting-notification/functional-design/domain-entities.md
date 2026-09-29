@@ -10,7 +10,7 @@ Thiết kế độc lập công nghệ. Truy vết: `US-NTF-001`, `US-RPT-001`�
 | `EmailOutbox` | Entity | `email_outbox` | U16 |
 | `NotificationPreference` | Entity | `notification_preferences` | U16 |
 | `DeadlineReminder` | Job hẹn giờ | `jobs` (U02) | U16 tạo qua `JobPort` |
-| `LearnerDashboard` | Kết quả tính | Không lưu | U16 |
+| `StudentDashboard` | Kết quả tính | Không lưu | U16 |
 | `GradebookExport` | Tệp CSV/XLSX tạo khi yêu cầu | Không lưu | U16 |
 | `SubmissionProgress` | Kết quả tính (tiến độ nộp bài) | Không lưu | U16 |
 
@@ -75,11 +75,11 @@ stateDiagram-v2
 
 Mỗi publication có một job U02 `DEADLINE_REMINDER` (`idempotencyKey` = `publicationId:closesAt`, hẹn lúc `closesAt` − 24 giờ, payload `{publicationId, expectedClosesAt}`). Đổi hạn thì tạo job mới theo hạn mới; job cũ chạy thì so `expectedClosesAt` với hạn hiện tại, khác thì bỏ qua. Bài ngưng giao/đóng thì job tự bỏ qua khi chạy. Chỉ nhắc người học chưa nộp, một lần mỗi bài.
 
-## 6. `LearnerDashboard`, `GradebookExport`, `SubmissionProgress`
+## 6. `StudentDashboard`, `GradebookExport`, `SubmissionProgress`
 
 | Kết quả | Nội dung |
 |---|---|
-| `LearnerDashboard` | Lớp đang ghi danh, bài sắp hạn, trạng thái lượt/bài nộp của chính người học, điểm `PUBLISHED`; phân bố điểm ẩn danh khi lớp bật và đủ mẫu (BR-U16-42) |
+| `StudentDashboard` | Lớp đang ghi danh, bài sắp hạn, trạng thái lượt/bài nộp của chính người học, điểm `PUBLISHED`; phân bố điểm ẩn danh khi lớp bật và đủ mẫu (BR-U16-42) |
 | `GradebookExport` | CSV/XLSX theo lớp/bài: người học, trạng thái nộp/chấm, thời gian nộp, điểm cuối đã chốt hoặc công bố, phản hồi; không có điểm tổng, không có đề xuất AI; stream, không lưu |
 | `SubmissionProgress` | Theo lượt phát hành: đã nộp, chưa nộp, đang làm, nộp trễ, thời gian còn lại |
 

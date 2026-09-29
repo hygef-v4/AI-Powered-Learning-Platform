@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 49 user story thuộc MVP, persona và 77 use case hiện hành. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
+Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 49 user story thuộc MVP, persona và 69 use case hiện hành sau khi gộp CRUD cùng actor. Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
 
 ## Các bước thực hiện
 
@@ -38,7 +38,7 @@ X) Other (mô tả sau `[Answer]:`)
 - [x] Cập nhật Content cho YouTube/caption/transcript ingestion theo bài giảng.
 - [x] Cập nhật Question Bank và Assessment cho immutable version/snapshot theo attempt.
 - [x] Bổ sung template lineage, cross-class copy và simulation policy.
-- [x] Thay leader-upload DOCX bằng composite generation/version và instructor finalization.
+- [x] Thay leader-upload DOCX bằng composite generation/version và teacher finalization.
 - [x] Cập nhật Grading cho manual shared grade, consistency rubric và manual per-student final score.
 - [x] Đồng bộ component, methods, services, dependency, flows và screens/jobs; mô hình bảng cuối cùng được chốt theo từng unit ở Construction.
 - [x] Kiểm tra Security/Resiliency và content consistency.

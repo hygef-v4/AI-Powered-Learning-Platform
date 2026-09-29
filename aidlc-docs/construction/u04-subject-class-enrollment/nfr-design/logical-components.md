@@ -10,7 +10,7 @@
  | SubjectController   ClassController   EnrollmentController   MeController|
  |        |                  |                  |                   |        |
  |        v                  v                  v                   v        |
- | SubjectService      ClassService      EnrollmentService   LearnerClassService
+ | SubjectService      ClassService      EnrollmentService   StudentClassService
  |        |                  |             |       |                 |      |
  |        |                  |     EnrollmentGuard  InviteCodeService |      |
  |        |                  |      (advisory lock)  (Bucket4j/Redis)  |      |
@@ -36,7 +36,7 @@
 | `EnrollmentService` | F4-F6; P3, P5 |
 | `EnrollmentGuard` | P2 |
 | `InviteCodeService` | F7; P6 |
-| `LearnerClassService` | F8; P7, P8 |
+| `StudentClassService` | F8; P7, P8 |
 | `ScopeQueryService` | F9; P1 |
 
 ## 3. Cấu hình

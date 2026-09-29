@@ -13,7 +13,7 @@
 2. Đẩy sự kiện `SECTION_CLAIMED`.
 
 ## F4 - Làm mục (trang riêng)
-1. `DocumentEditor` chế độ `LEARNER` với block của mục; tự lưu `draftBlocks` (có version, như U11).
+1. `DocumentEditor` chế độ `STUDENT` với block của mục; tự lưu `draftBlocks` (có version, như U11).
 2. Chỉ người đang nhận được lưu.
 
 ## F5 - Xong mục

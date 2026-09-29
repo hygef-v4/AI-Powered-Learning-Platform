@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - Business Rules
+# U10 Template & Copy - Business Rules
 
 ## 1. Template cấp môn
 
@@ -28,20 +28,8 @@
 | BR-U10-21 | Người xem diff phải xem được cả hai bài (giảng viên lớp; Chủ nhiệm môn với template và bài copy từ template của môn). | SEC-002 |
 | BR-U10-22 | Diff hiển thị: hướng dẫn (theo dòng), câu thêm/bớt/đổi thứ tự/đổi điểm/đổi nội dung, cấu hình loại bài, tổng điểm. | US-ASM-008 |
 
-## 4. Thi thử (simulation)
+## 4. Audit
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U10-30 | Mọi loại bài phát hành được dạng thi thử (`deliveryMode = SIMULATION`) cho một lớp. | Câu 2 |
-| BR-U10-31 | `maxAttempts` mặc định 3; giảng viên chỉnh được từ 1 đến 10 trước khi chính sách khóa; không để trống và không có lượt không giới hạn. | Quyết định 2026-09-25 |
-| BR-U10-32 | `resultPolicy`: `HIGHEST`, `LATEST`, `AVERAGE`; chỉ tính trên lượt đã có điểm (bài cần giảng viên chấm thì chờ). | FR-029, Câu 2 |
-| BR-U10-33 | `answerRelease`: `AFTER_ATTEMPT` (sau mỗi lượt, chỉ với phần tự chấm), `AFTER_CLOSE`, `NEVER`. | FR-029 |
-| BR-U10-34 | `countsTowardGrade`: tắt → chỉ luyện tập, không vào điểm chính thức (U15). | FR-029 |
-| BR-U10-35 | Chính sách khóa khi lượt đầu tiên bắt đầu (`lockedAt`); sau đó chỉ kéo dài được cửa sổ (theo U08). | FR-029 |
-| BR-U10-36 | Giao diện luôn ghi "Thi thử", số lượt 1-10, cách lấy kết quả, có/không tính điểm; không hiển thị như thi chính thức. | US-ASM-011 S3 |
-
-## 5. Audit
-
-| Mã | Quy tắc | Nguồn |
-|---|---|---|
-| BR-U10-40 | Audit: phát hành/rút template, copy template, copy giữa lớp (nguồn, đích, actor), tạo/sửa chính sách thi thử. | FR-014, FR-027, FR-028 |
+| BR-U10-40 | Audit: phát hành/rút template và copy template/bài giữa lớp (nguồn, đích, actor). | FR-014, FR-027, FR-028 |

@@ -6,7 +6,7 @@
 |---|---|---|
 | BR-U09-01 | Cấu hình chỉ sửa khi bài `DRAFT`; người sửa là giảng viên của lớp (theo BR-U08-01). | U08 |
 | BR-U09-02 | Không có đề chung cấp môn; Chủ nhiệm môn chỉ phát hành khi là giảng viên của lớp. | Câu 4, 8, 12 |
-| BR-U09-03 | Loại bài: `QUIZ`, `ESSAY`, `DOCUMENT` (U09 cấu hình), `CODE_LAB` (U13), `GROUP` (U12/U14). `DRAWIO` đổi tên thành `DOCUMENT`. | Câu 5 |
+| BR-U09-03 | Dạng assignment hiện hành: `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY` (U09 cấu hình), `CODE_LAB` (U13), `GROUP_ASSIGNMENT` (U12/U14). `DIAGRAM_ESSAY` dùng mô hình `DOCUMENT`/Draw.io hiện có; tên `QUIZ`/`ESSAY`/`DOCUMENT` vẫn có thể là loại câu hỏi ngân hàng U06. | FR-017, quyết định 2026-09-29 |
 
 ## 2. Trắc nghiệm
 
@@ -55,7 +55,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U09-45 | Chỉ người học sở hữu lượt `DOCUMENT` đang `IN_PROGRESS` được nhập `.docx` ≤ 20 MB; U11 kiểm quyền và thời hạn trước khi gọi U09. Không áp dụng cho `ESSAY`, `QUIZ` hoặc bài đã nộp. | US-ASM-004 S4 |
-| BR-U09-46 | Dùng cùng bộ đọc DOCX an toàn BR-U09-40…43; block nhập có `origin = LEARNER`. Trả bản xem trước và báo cáo phần bỏ qua; không lưu bài chỉ vì tải file lên. | US-ASM-004 S4 |
+| BR-U09-46 | Dùng cùng bộ đọc DOCX an toàn BR-U09-40…43; block nhập có `origin = STUDENT`. Trả bản xem trước và báo cáo phần bỏ qua; không lưu bài chỉ vì tải file lên. | US-ASM-004 S4 |
 | BR-U09-47 | Sau xác nhận, thêm block nhập vào bản nháp đang làm theo `contentVersion` của U11; không thay, xóa, đổi thứ tự hay đổi `contentHash` của block `TEACHER`. Xung đột phiên bản hoặc lỗi nhập giữ nguyên bản nháp. | US-ASM-004 S4, BR-U09-36 |
 | BR-U09-48 | Nếu DOCX chứa sơ đồ Draw.io, chỉ lưu XML sau khi qua BR-U09-35; ảnh không nhận được XML giữ dạng `IMAGE`. Kết quả vẫn phải qua `validateForSave`, và khi nộp qua `validateForSubmit`. | BR-U09-35…37 |
 

@@ -47,7 +47,7 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 | `accounts` | U01 | U07 | Số dư credit | Migration U07 thêm cột; chỉ `CreditLedgerService` của U07 ghi |
 | `app_settings` | U01 | U07, U13 | Khóa `u07.*`, `u13.*` | Mỗi unit chỉ ghi khóa có tiền tố của mình |
 | `assignments` | U08 | U09, U10 | Cấu hình loại bài, khung (U09); lineage (U10) | `AssignmentExtensionPort` |
-| `publications` | U08 | U10, U15 | Chính sách thi thử (U10); công bố điểm (U15) | `AssignmentExtensionPort` |
+| `publications` | U08 | U15 | Công bố điểm `GRADED` (U15); chế độ bài `GRADED`/`PRACTICE` do U08 sở hữu | `AssignmentExtensionPort` |
 | `student_groups` | U12 | U14 | Tài liệu nhóm | `GroupDocumentStorePort` |
 
 ## 4. Data ownership
@@ -63,7 +63,7 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 | Giao dịch, ví credit, sổ cái credit | U07 | U05, U13, U16 |
 | Bài, thành phần, publication | U08 | U09-U12, U14-U16 |
 | Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U10, U11, U13-U15 |
-| Template, lineage, chính sách thi thử | U10 | U11, U15 |
+| Template và lineage | U10 | U08, U11 |
 | Lượt làm, bài nộp | U11 | U13, U15, U16 |
 | Bộ nhóm, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
 | Cấu hình AI, đề xuất AI, lần chạy code | U13 | U05, U06, U08, U10, U11, U15 |
@@ -83,7 +83,7 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 ## 6. Contract liên module quan trọng
 
 - Phản ứng bắt buộc giữa unit đi qua **port gọi trong transaction** (port do unit nhận cài, chỉ tạo job của unit nhận), không qua event:
-  - U11 → U15 (`C`): `SubmissionSubmittedPort` khi nộp bài → job `GRADE_INIT`.
+  - U11 → U15 (`C`): `SubmissionSubmittedPort` chỉ khi nộp bài `GRADED` → job `GRADE_INIT`.
   - U14 → U15 (`C`): `GroupSubmittedPort` khi nộp bài nhóm → job `GRADE_INIT`.
   - U13 → U15 (`C`): `CodeGradedPort` khi chấm Code Lab xong; `AiGradingPort` trả đề xuất, U15 quyết định.
   - U08 → U11, U14 (`C`): `PublicationLifecyclePort.onOpened/onRetired` khi mở bài/ngưng giao → job tạo tài liệu nhóm, tự nộp.

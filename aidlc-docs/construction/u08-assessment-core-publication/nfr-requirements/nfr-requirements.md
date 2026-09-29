@@ -29,7 +29,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U08-30 | API người học không bao giờ trả đáp án, `answerGuide`, test ẩn (dùng `QuestionLearnerView` của U06, câu riêng lọc tương tự). | SEC-002 |
+| NFR-U08-30 | API người học không bao giờ trả đáp án, `answerGuide`, test ẩn (dùng `QuestionStudentView` của U06, câu riêng lọc tương tự). | SEC-002 |
 | NFR-U08-31 | Kiểm phạm vi lớp mọi endpoint; ngoài phạm vi `404`; phát hành sai lớp audit. | SEC-002, BR-U08-02 |
 | NFR-U08-32 | Markdown hướng dẫn và câu hỏi hiển thị đã làm sạch. | SEC-003 |
 

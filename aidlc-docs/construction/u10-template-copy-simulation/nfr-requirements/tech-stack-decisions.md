@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - Tech Stack Decisions
+# U10 Template & Copy - Tech Stack Decisions
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|

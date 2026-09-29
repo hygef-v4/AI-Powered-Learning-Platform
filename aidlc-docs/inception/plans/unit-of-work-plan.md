@@ -20,7 +20,7 @@ Phân rã modular monolith thành các đơn vị lập kế hoạch/triển kha
 
 - [x] Sinh `unit-of-work.md` với định nghĩa, trách nhiệm và code organization
 - [x] Sinh `unit-of-work-dependency.md` với dependency matrix và critical path
-- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 49 story MVP và 77 UC hiện hành.
+- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 49 story MVP và 69 UC hiện hành sau khi gộp CRUD cùng actor.
 - [x] Validate ranh giới và dependency
 - [x] Validate mọi story được gán đúng unit
 - [x] Cập nhật trạng thái và trình checkpoint Units Generation

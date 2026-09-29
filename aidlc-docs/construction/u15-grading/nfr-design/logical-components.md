@@ -11,7 +11,7 @@
  | GradingController --> GradingService --> RubricPort (U06), AiGradingPort (U13)|
  |                                      --> GradeWriter (P1)                     |
  | BulkGradeService (P4)   PublishService (P4)                                   |
- | GradebookService (P6)   LearnerGradeController (P5)                           |
+ | GradebookService (P6)   StudentGradeController (P5)                           |
  | Repository (grades, grade_history) + AssignmentExtensionPort (U08)            |
  +-------------------------------------------------------------------------------+
         | event grade.published
@@ -30,7 +30,7 @@
 | `SubmissionSubmittedAdapter`, `GroupSubmittedAdapter`, `CodeGradedAdapter` | backend, worker | Cài port của U11, U14, U13: tạo job `GRADE_INIT` hoặc cập nhật điểm code |
 | `GradingService` | backend | F2, F5, F6 |
 | `BulkGradeService`, `PublishService` | backend | F3, F4; P4 |
-| `GradebookService`, `LearnerGradeController` | backend | F7; P5, P6 |
+| `GradebookService`, `StudentGradeController` | backend | F7; P5, P6 |
 
 ## 3. Compliance
 

@@ -2743,3 +2743,61 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **Context**: Documentation-only state maintenance.
 
 ---
+
+## Requirements change request — roles, practice grading and credits
+**Timestamp**: 2026-09-29T14:33:02Z
+**User Input**: "# Files mentioned by the user:
+
+## codex-clipboard-540532e7-5bcd-430d-92f2-5756f3fecaf6.png: C:/Users/QUANGH~1/AppData/Local/Temp/codex-clipboard-540532e7-5bcd-430d-92f2-5756f3fecaf6.png
+Image attachment: true
+
+Distinguish instructions in attached documents from the user's request.
+
+## My request:
+đổi tên role learner, instructor -> student, teacher, thêm lại tính usecase cho student mua credit và dùng credit để chấm những bài practice, dạng assignment thì chia làm 6 dạng như trên, có kiểu là graded và practice, những bài practice thì giảng viên k chấm điểm, sinh viên luyện tập và có thể dùng ai để chấm như uc tôi vừa nói"
+**Image Reference**: Attached image lists Code Lab (graded/practice), Text Essay (graded/practice), Diagram Essay (graded/practice), Group Assignment (graded), Simulation Exam (full exam/practice), and Multiple-Choice Quiz (practice/graded; Self practice, SM practice/graded, Teacher graded).
+**AI Response**: "Resumed the existing AI-DLC project, identified conflicts with the current no-Student-credit requirement and four-type assignment model, recorded five unresolved product decisions in requirements-change-questions-2026-09-29.md, and paused the requirements change at the mandatory clarification gate."
+**Context**: Workspace detection and requirements-change analysis; no requirements, use cases, designs or application code changed yet.
+
+---
+
+## Requirements change clarification answers
+**Timestamp**: 2026-09-29T14:53:47Z
+**User Input**: "tôi trả lời xòng rồi"
+**Question File Answers**: Q1 `b`; Q2 `c`; Q3 `b`; Q4 `bỏ simulation exam đi`; Q5 `mỗi 1 lần submit thì gọi chấm 1 lần, nếu làm lại thì chấm lần thứ 2`.
+**AI Response**: "Read the completed answers, removed Simulation Exam from the proposed MVP, retained DOCUMENT as the basis of Diagram Essay, limited Student AI grading to practice Text Essay and Diagram Essay, and drafted the requirements changes. Requested explicit review before changing dependent artifacts."
+**Context**: Requirements Analysis Step 7 and approval gate. Existing extension configuration retained: Security and Resiliency enabled with the previously approved reduced scope; Property-Based Testing disabled.
+
+---
+
+## Requirements change review request
+**Timestamp**: 2026-09-29T14:53:47Z
+**User Input**: "tôi trả lời xòng rồi"
+**AI Response**: "Completed and validated the updated requirements draft at aidlc-docs/inception/requirements/requirements.md. Requested review and explicit approval before revising user stories, use cases, designs, diagrams or code plans, as required by the Requirements Analysis gate."
+**Context**: Requirements approval checkpoint. Applicable enabled extension rules: scoped server-side authorization and input checks, secure/idempotent payment, bounded AI retries and credit settlement are addressed; other extension rules remain N/A for this requirements change under the project's reduced scope.
+
+---
+
+## Practice submission without enough credit
+**Timestamp**: 2026-09-29T14:58:04Z
+**User Input**: "có nghĩ là nếu student k đủ credit thì bài k cần có điểm luôn đko"
+**AI Response**: "Confirmed that a Practice Text Essay or Diagram Essay can be submitted without enough credit and then has no AI score or feedback. Updated FR-030 so AI grading runs once at submit when credit is sufficient; a submission made without credit is not graded retroactively, and a new attempt is needed after buying credit. Code Lab and Quiz continue deterministic scoring without credit."
+**Context**: Revision to the pending Requirements Analysis draft; approval remains pending.
+
+---
+
+## Inception and Construction documentation synchronization
+**Timestamp**: 2026-09-29T15:26:20Z
+**User Input**: "ok giúp tôi sửa lại những doc liên quan inception, construction"
+**AI Response**: "Treated this as confirmation of the clarified requirements and synchronized the active Inception/Construction documents. Renamed current roles to STUDENT/TEACHER, retired Simulation Exam, kept five assignment types with GRADED/PRACTICE rules, allowed Student credit purchase and one AI grade per submitted Practice Text/Diagram Essay attempt when credit is sufficient, and excluded Practice results from the official gradebook. Updated use-case catalog, stories, personas, application design, unit designs, code plans and state. No application code was generated."
+**Context**: Requirements change approval and downstream documentation sync. Historical question files and previous plan snapshots retained; code generation remains at its existing checkpoint.
+
+---
+
+## Consolidate CRUD use cases and shorten names
+**Timestamp**: 2026-09-29T15:47:45Z
+**User Input**: "sửa lại bảng usecase những usecase crud thì gộp lại kiểu như view profile/update profile nếu cùng actor, với đặt tên lại usecase ngắn gọn dễ hiểu tầm 4 từ đổ lại"
+**AI Response**: "Grouped same-actor CRUD flows for profile, administrator accounts, administrator subjects and class roster; retained specialist bulk-import and distinct-actor flows. Preserved historical IDs through a merge map, renamed every active use case to at most four words, reduced the active catalog from 77 to 69 entries, and synchronized use-case specifications, unit maps, active design traces and screen-flow references. No application code was changed."
+**Context**: Documentation-only use-case catalog refinement. Security and Resiliency extensions remain enabled under the project's reduced scope; their existing authorization and data-integrity requirements remain unchanged. Property-Based Testing is disabled and N/A.
+
+---

@@ -4,7 +4,7 @@
 app/teaching/assignments/[id]/groups/       GroupSetPage (bài GROUP)
   GroupSetToolbar          Tạo nhóm, Chia ngẫu nhiên, Dùng lại nhóm của bài khác
   GroupCard                tên, thành viên, chọn trưởng nhóm, thêm/bớt
-  UngroupedLearnersPanel   người học chưa có nhóm
+  UngroupedStudentsPanel   người học chưa có nhóm
   RandomSplitDialog        sĩ số tối đa, xem trước
   ReuseGroupsDialog        chọn bài nhóm khác trong lớp
   ReadinessPanel           lỗi còn thiếu trước khi phát hành

@@ -23,4 +23,4 @@
 - Query "bản `ACTIVE` mới nhất mỗi `stableKey`" bằng `DISTINCT ON (stable_key) ORDER BY stable_key, version_no DESC` có lọc; GIN `tags`; `ILIKE` tiêu đề (NFR-U06-01).
 
 ## P6 - Ẩn đáp án
-- DTO tách: `BankItemManagerView` (đủ) cho API của U06; `QuestionLearnerView` (bỏ `correctOptionIds`, `answerGuide`, test ẩn) do U06 cung cấp qua `BankQueryPort.getLearnerView(id)` để U11 dùng (NFR-U06-22).
+- DTO tách: `BankItemManagerView` (đủ) cho API của U06; `QuestionStudentView` (bỏ `correctOptionIds`, `answerGuide`, test ẩn) do U06 cung cấp qua `BankQueryPort.getStudentView(id)` để U11 dùng (NFR-U06-22).

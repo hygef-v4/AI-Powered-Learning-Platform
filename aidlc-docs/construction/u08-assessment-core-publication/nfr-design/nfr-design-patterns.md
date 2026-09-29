@@ -14,7 +14,7 @@
 - `isSubmissionOpen(publication, now)`: `RETIRED` hoặc `now < opensAt` → `CLOSED`; `now ≤ closesAt` → `ON_TIME`; `allowLate && now ≤ lateUntil` → `LATE`; còn lại `CLOSED`. Không phụ thuộc job (job chỉ để hiển thị và phát event) (NFR-U08-02, 11).
 
 ## P4 - Chuyển đổi hiển thị cho người học
-- `LearnerAssignmentView` dựng từ thành phần: câu ngân hàng qua `BankQueryPort.getLearnerView`, câu riêng qua cùng bộ lọc (`LearnerViewMapper`) (NFR-U08-30).
+- `StudentAssignmentView` dựng từ thành phần: câu ngân hàng qua `BankQueryPort.getStudentView`, câu riêng qua cùng bộ lọc (`StudentViewMapper`) (NFR-U08-30).
 
 ## P5 - Kiểm duyệt có thể mở rộng
 - `ReviewValidator` chạy danh sách `ReviewCheck`: kiểm của U08 (thành phần, điểm, loại khớp) + `TypeConfigPort` (U09, `C`); mặc định khi chưa có U09: đạt.

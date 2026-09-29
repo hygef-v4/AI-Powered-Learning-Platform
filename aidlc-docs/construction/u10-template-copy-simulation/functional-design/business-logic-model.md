@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - Business Logic Model
+# U10 Template & Copy - Business Logic Model
 
 ## F1 - Template
 1. Chủ nhiệm môn tạo bài `SUBJECT_TEMPLATE` (U08) và soạn như bài thường.
@@ -17,11 +17,3 @@
 ## F4 - Diff
 1. Kiểm BR-U10-21.
 2. Đọc hai version qua U08; so sánh theo BR-U10-22.
-
-## F5 - Phát hành thi thử
-1. Giảng viên chọn "Phát hành dạng thi thử" trong `PublishDialog` (U08) → U08 tạo publication `SIMULATION`.
-2. U10 lưu `SimulationPolicy` (BR-U10-30…34).
-3. U11 gọi `lock` khi lượt đầu tiên bắt đầu (BR-U10-35).
-
-## F6 - Kết quả thi thử (cho U15)
-- `SimulationPolicyPort.resultOf(publicationId, attempts)` chọn điểm theo `resultPolicy` trên lượt đã có điểm (BR-U10-32).

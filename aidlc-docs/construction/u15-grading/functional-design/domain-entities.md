@@ -11,15 +11,15 @@ Thiết kế độc lập công nghệ. Truy vết: `US-GRD-001`…`005`, `US-GR
 | `GradeRelease` | Value object của `Publication` (U08) | `publications` | U15 (qua port U08) |
 | `GradebookView` | Kết quả tính (sổ điểm) | Không lưu | U15 |
 
-U15 **không** sở hữu: bài nộp (U11, U14), rubric (U06), đề xuất AI và chạy code (U13), chính sách thi thử (U10).
+U15 **không** sở hữu: bài nộp (U11, U14), rubric (U06), đề xuất AI và chạy code (U13), kết quả AI Practice của Student (U13).
 
 ## 2. `Grade`
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `targetKind` | enum | `ATTEMPT` (lượt U11), `GROUP_DOCUMENT` (bản nộp nhóm U14), `MEMBER_CONTRIBUTION` (phần đóng góp của một thành viên), `MEMBER_FINAL` (điểm cuối thành viên bài nhóm) |
-| `targetId`, `learnerId`, `publicationId` | UUID | Theo loại |
+| `targetKind` | enum | `ATTEMPT` (chỉ bài `GRADED` của U11), `GROUP_DOCUMENT` (bản nộp nhóm U14), `MEMBER_CONTRIBUTION` (phần đóng góp của một thành viên), `MEMBER_FINAL` (điểm cuối thành viên bài nhóm) |
+| `targetId`, `studentId`, `publicationId` | UUID | Theo loại |
 | `method` | enum | `DETERMINISTIC` (trắc nghiệm, code), `MANUAL`, `AI_ASSISTED` |
 | `maxScore` | numeric(6,2) | Tổng điểm của bài (thành phần/rubric) |
 | `autoScore` | numeric(6,2) | Điểm tự chấm hoặc đề xuất AI (tham khảo) |
@@ -67,7 +67,7 @@ Bất biến.
 
 ## 5. `GradebookView`
 
-Sổ điểm lớp: hàng = người học, cột = lượt phát hành; ô = điểm lượt được chấm "x / tổng" và trạng thái (chưa nộp, trễ, chờ chấm, đã chốt, đã công bố). Không tính điểm tổng. Tính khi đọc.
+Sổ điểm lớp: chỉ publication `GRADED`; hàng = Student, cột = lượt phát hành; ô = điểm lượt nộp cuối "x / tổng" và trạng thái. Không chứa `PRACTICE`, không tính điểm tổng. Tính khi đọc.
 
 ## 6. Contract
 
@@ -91,6 +91,5 @@ Sổ điểm lớp: hàng = người học, cột = lượt phát hành; ô = đ
 | `BankQueryPort`, `RubricPort` | U06 | Đáp án (chấm trắc nghiệm), rubric, `score` |
 | `AiGradingPort`, `CodeRunPort` | U13 | Đề xuất chấm; yêu cầu chấm Code Lab |
 | `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Job `GRADE_INIT`, audit, event thông báo |
-| `SimulationPolicyPort` | U10 | Kết quả thi thử |
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Bài, publication; ghi trạng thái công bố |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort` | U09 | Cấu hình hiện điểm, xem/xuất tài liệu |

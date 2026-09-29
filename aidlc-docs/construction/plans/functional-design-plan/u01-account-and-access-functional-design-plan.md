@@ -4,15 +4,15 @@
 
 - Unit: U01 Account & Access, current 16-unit plan.
 - Stories: `US-IAM-001` through `US-IAM-007` only. `US-AUD-001` belongs to U02.
-- Use cases: `UC-IAM-01` through `UC-IAM-12`.
+- Use cases now active: `UC-IAM-01`…`06`, `UC-IAM-08`, `UC-IAM-10`; merged historical IDs remain traceable in `docs/use-case-table.md`.
 - Review `unit-of-work.md`, `unit-of-work-story-map.md`, current Requirements/User Stories/Use Cases, `components.md`, `component-methods.md`, `services.md`, and the U01 data model in `functional-design/domain-entities.md`.
-- Preserve current decisions: no public registration; one highest role per account; `SUBJECT_MANAGER` inherits instructor capabilities but remains subject-scoped; authorization is server-side; password reset and activation tokens are one-time OTPs sent by email and stored as hashes with TTL in Redis.
+- Preserve current decisions: no public registration; one highest role per account; `SUBJECT_MANAGER` inherits teacher capabilities but remains subject-scoped; authorization is server-side; password reset and activation tokens are one-time OTPs sent by email and stored as hashes with TTL in Redis.
 - U01 owns accounts, credentials, sessions, roles, scopes and authorization decisions. U02 owns append-only audit and job/outbox state. U01 emits audit events through U02's contract and does not query or mutate U02 storage.
 
 ## 2. Review findings carried into this design
 
 - The old recovery plan incorrectly included `US-AUD-001` in U01; it is superseded by this plan.
-- Resolved: accounts are created pending activation and activated by a one-time email OTP; administrators never set, issue or view passwords. Creation and import send no email; the system sends the activation OTP only when the user requests activation at first sign-in, with a neutral response and rate limiting. Administrators have no resend action; active users use self-service password reset. `FR-015`, `US-IAM-001`, `US-IAM-007`, `UC-IAM-01`, `UC-IAM-09`, `UC-IAM-10` and `component-methods.md` (`requestActivation`) were synchronized to this decision.
+- Resolved: accounts are created pending activation and activated by a one-time email OTP; administrators never set, issue or view passwords. Creation and import send no email; the system sends the activation OTP only when the user requests activation at first sign-in, with a neutral response and rate limiting. Administrators have no resend action; active users use self-service password reset. `FR-015`, `US-IAM-001`, `US-IAM-007`, `UC-IAM-01`, `UC-IAM-08`, `UC-IAM-10` and `component-methods.md` (`requestActivation`) reflect this decision; historical `UC-IAM-09` merged into `08`.
 - Session expiration values are not fixed in Functional Design. Keep expiration configurable and settle idle/absolute TTL under U01 NFR Requirements.
 - Admin MFA is required by the security baseline. Keep the domain behavior factor-neutral here; select the concrete factor during NFR Requirements.
 

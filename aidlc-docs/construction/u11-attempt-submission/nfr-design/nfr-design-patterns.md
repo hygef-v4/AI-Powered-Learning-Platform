@@ -1,7 +1,7 @@
 # U11 Attempt & Submission - NFR Design Patterns
 
 ## P1 - Bắt đầu lượt an toàn đồng thời
-- Transaction: `pg_advisory_xact_lock(hash(publicationId, learnerId))` → có `IN_PROGRESS` thì trả lại → đếm lượt đã có, so giới hạn → INSERT (`attemptNo = count + 1`) + nội dung rỗng → tạo job tự nộp (NFR-U11-10).
+- Transaction: `pg_advisory_xact_lock(hash(publicationId, studentId))` → có `IN_PROGRESS` thì trả lại → đếm lượt đã có, so giới hạn → INSERT (`attemptNo = count + 1`) + nội dung rỗng → tạo job tự nộp (NFR-U11-10).
 - Partial unique index là chốt chặn cuối.
 
 ## P2 - Lưu nháp tối ưu
@@ -12,7 +12,7 @@
 - `AttemptSubmitter.submit(attemptId, mode)` dùng cho nộp tay, job hết hạn, job ngừng giao:
   1. `UPDATE submissions SET status = 'SUBMITTED', submitted_at = now(), submit_mode = ?, late = ? WHERE id = ? AND status = 'IN_PROGRESS'`.
   2. 0 dòng → đã nộp trước đó, trả biên nhận cũ (idempotent) (NFR-U11-12).
-  3. Tính `receiptHash`; gọi `SubmissionSubmittedPort.onSubmitted(attemptId)` (U15 tạo job `GRADE_INIT`) trong cùng transaction.
+  3. Tính `receiptHash`; nếu `GRADED`, gọi `SubmissionSubmittedPort.onSubmitted(attemptId)` (U15 tạo job `GRADE_INIT`) trong cùng transaction. Nếu `PRACTICE`, xếp job kết quả đáp án/test hoặc AI theo dạng bài; thiếu credit Text/Diagram Essay thì ghi `NO_CREDIT`, không xếp job AI.
 - Nộp tay: `validateForSubmit` trước bước 1; tự nộp: bỏ qua kiểm, lưu kết quả kiểm thành `warnings`.
 
 ## P4 - Bất biến sau nộp
@@ -23,7 +23,7 @@
 - Ngưng giao: `PublicationLifecycleAdapter.onRetired` tạo job `ATTEMPT_AUTO_SUBMIT {publicationId, AUTO_RETIRED}`; job lấy mọi lượt `IN_PROGRESS` theo lô 100, gọi P3.
 
 ## P6 - Rate limit lưu
-- Bucket4j Redis `ratelimit:attempt-save:{learnerId}` 30/phút; vượt → `429`, client lùi 10 giây (NFR-U11-23).
+- Bucket4j Redis `ratelimit:attempt-save:{studentId}` 30/phút; vượt → `429`, client lùi 10 giây (NFR-U11-23).
 
 ## P7 - Client tự lưu
 - `useAutosave`: debounce 10 s; `navigator.sendBeacon` không dùng được với PUT nên khi rời trang gọi `fetch(..., {keepalive: true})`; nén gzip; hàng đợi một yêu cầu (không gửi chồng); `409` → dừng tự lưu, hộp thoại tải lại.

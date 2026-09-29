@@ -19,7 +19,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | PaymentService, CreditService (U07) | PayOS, webhook, tự đối soát định kỳ, ví credit, giữ/trừ/trả | Không tin browser redirect; không để số dư âm |
 | AssessmentService (U08) | Bài, duyệt, phát hành, lịch, khóa, version mới, ngưng giao | Không sửa version đã phát hành; không có đề chung |
 | TypeConfigService, DocumentService (U09) | Cấu hình loại bài, mô hình tài liệu, DOCX | Không cho sửa block khóa của giảng viên |
-| TemplateService, CopyService, SimulationService (U10) | Template, copy, diff, chính sách thi thử | Không copy lịch, lượt làm, bài nộp, điểm |
+| TemplateService, CopyService (U10) | Template, copy và diff version | Không copy lịch, lượt làm, bài nộp, điểm |
 | AttemptService (U11) | Bắt đầu lượt, tự lưu, nộp, tự nộp | Không sửa bài đã nộp |
 | GroupService (U12) | Bộ nhóm, trưởng nhóm, yêu cầu đổi trưởng nhóm | Không phân công phần (thành viên tự nhận mục ở U14) |
 | AiService, CodeRunService (U13) | Kiểm trần/credit, gọi Gemini, kiểm đầu ra; chạy Judge0 | Không phát hành đề, không chốt điểm; không chạy mã ngoài sandbox |
@@ -31,7 +31,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ### Bài tài liệu có sơ đồ và AI đề xuất chấm
 1. Người học soạn tài liệu (U09 `DocumentEditor`), có thể nhập DOCX vào lượt DOCUMENT sau khi xem trước, vẽ sơ đồ trong iframe Draw.io; U11 tự lưu và kiểm tài liệu qua U09, không cho DOCX sửa khung giảng viên.
-2. Nộp: U11 khóa nội dung và trong cùng transaction gọi `SubmissionSubmittedPort`; U15 tạo job `GRADE_INIT`.
+2. Nộp: U11 khóa nội dung. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` trong cùng transaction để U15 tạo job `GRADE_INIT`; bài `PRACTICE` dùng scorer đáp án/test hoặc AI của U13 và lưu kết quả riêng.
 3. U15 tạo điểm `PENDING`; giảng viên chọn chấm tay hoặc "Nhờ AI đề xuất".
 4. U13 kiểm trần và credit, lấy văn bản phẳng + XML rút gọn (U09), gọi Gemini, kiểm đầu ra, trả đề xuất.
 5. Giảng viên dùng/sửa đề xuất, chốt, công bố (U15); U16 báo người học.
@@ -44,7 +44,7 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 
 ### Tạo và phát hành bài
 1. Giảng viên tạo bài trong lớp mình dạy (U08), lấy câu từ ngân hàng (U06) hoặc câu riêng, hoặc AI đề xuất (U13, dùng RAG U05).
-2. Cấu hình loại bài (U09); duyệt; phát hành cho một lớp với lịch, nộp trễ, số lượt, hoặc dạng thi thử (U10).
+2. Cấu hình một trong năm dạng bài và chế độ `GRADED`/`PRACTICE` hợp lệ (U08/U09); duyệt; phát hành cho một lớp với lịch, nộp trễ và số lượt.
 3. Phát hành khóa nội dung; muốn đổi thì ngưng giao/đợi đóng rồi tạo version mới.
 
 ### Nạp nguồn RAG

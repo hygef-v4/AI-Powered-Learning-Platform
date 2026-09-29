@@ -79,7 +79,7 @@ PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 16** - `GroupSetPage` (`GroupCard`, `UngroupedLearnersPanel`, kéo thả `@dnd-kit`), `RandomSplitDialog`, `ReuseGroupsDialog`.
+- [ ] **Bước 16** - `GroupSetPage` (`GroupCard`, `UngroupedStudentsPanel`, kéo thả `@dnd-kit`), `RandomSplitDialog`, `ReuseGroupsDialog`.
 - [ ] **Bước 17** - `ReadinessPanel` (lỗi, cảnh báo người chưa có nhóm), `LeaderRequestsPanel`.
 - [ ] **Bước 18** - Người học: `MyGroupCard`, `LeaderChangeRequestDialog`.
 - [ ] **Bước 19** - Test frontend: không lưu khi còn lỗi, cảnh báo người học chưa có nhóm.

@@ -11,7 +11,7 @@ app/learn/group-docs/[id]/                  GroupDocumentPage (tài liệu chung
   SubmitGroupDialog         cảnh báo mục chưa xong
   useGroupDocStream         kết nối SSE, áp dụng sự kiện, tải lại khi kết nối lại
 app/learn/group-docs/[id]/sections/[sectionId]   SectionWorkPage
-  DocumentEditor (U09, mode LEARNER, chỉ block của mục), "Đã lưu lúc …", nút Xong, nút Nhả
+  DocumentEditor (U09, mode STUDENT, chỉ block của mục), "Đã lưu lúc …", nút Xong, nút Nhả
 shared/group-docs/GroupDocsOverviewPanel       (giảng viên; hiện trong danh sách bài nộp của publication khi bài là GROUP, thay bảng theo từng người học)
   bảng nhóm: số mục xong/đang làm/trống, bản nộp, xem tài liệu (mở chi tiết bài nộp của nhóm), nhả khóa
 ```

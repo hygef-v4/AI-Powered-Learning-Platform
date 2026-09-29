@@ -19,7 +19,7 @@
          ReservationSweepHandler --> CreditPortService.release
 ```
 
-**Text alternative**: Chỉ Giảng viên, Chủ nhiệm môn và Quản trị viên có tài khoản `ACTIVE` có ví và mua credit qua `PaymentController`; controller kiểm vai trò ở backend trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. Người học không có ví/credit và không được gọi chức năng AI hoặc API U07. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U05 và U13 gọi `CreditPortService` để giữ, trừ, trả credit cho embedding và tạo nội dung của tài khoản có quyền; port cũng từ chối `LEARNER`. Admin quản lý gói và mức tặng tháng. Trong worker, job đối soát tra PayOS và áp dụng kết quả, job quét trả lại phần credit giữ quá hạn.
+**Text alternative**: Student, Teacher, Subject Manager và Admin có tài khoản `ACTIVE` đều có ví và mua credit qua `PaymentController`; controller kiểm chủ ví trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `CreditLedgerService`. U05/U13 gọi `CreditPortService` để giữ, trừ và trả credit; Student chỉ được giữ cho `PRACTICE_GRADING` của attempt Text/Diagram Essay hợp lệ. Admin quản lý gói và mức tặng tháng cho các vai trò ngoài Student. Worker đối soát PayOS và trả lại phần credit giữ quá hạn.
 
 ## 2. Thành phần
 

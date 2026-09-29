@@ -65,7 +65,7 @@ PostgreSQL `bank_items`.
 - [ ] **Bước 5** - `BankScopeGuard` (BR-U06-01…04).
 - [ ] **Bước 6** - `BankItemService`: tạo/sửa nháp, bản nháp mới từ `ACTIVE`, kích hoạt, ngưng, xóa nháp, nhân bản, audit (F1-F4, BR-U06-10…16, 50).
 - [ ] **Bước 7** - `RubricScorer` (P4, BR-U06-32).
-- [ ] **Bước 8** - `BankQueryService`: tìm kiếm bản `ACTIVE` mới nhất, lịch sử, xem trước, `getVersion`, `getLearnerView` (F5, F7, P5, P6).
+- [ ] **Bước 8** - `BankQueryService`: tìm kiếm bản `ACTIVE` mới nhất, lịch sử, xem trước, `getVersion`, `getStudentView` (F5, F7, P5, P6).
 - [ ] **Bước 9** - Nhập file: `XlsxRowReader`, `CsvRowReader`, `RowMapper` 4 loại, `ImportService` mỗi dòng một transaction (F6, BR-U06-40…43, P3).
 - [ ] **Bước 10** - 4 file mẫu nhập (xlsx và csv) theo BR-U06-42.
 - [ ] **Bước 11** - Unit test mọi `BR-U06-xx`: từng loại câu, rubric, điểm `BigDecimal`, bản `ACTIVE` không sửa được, file nhập lỗi/zip bomb/CSV sai mã hóa.

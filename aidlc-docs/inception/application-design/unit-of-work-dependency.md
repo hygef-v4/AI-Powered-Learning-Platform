@@ -48,7 +48,7 @@ U01 phụ thuộc U02 (job OTP, audit), U03 (ảnh đại diện, `AvatarPort`) 
 | Learning access within U04 | U04 enrollment + U05 published content → Learning Access capability in U04 | Đây là orchestration nội bộ của U04, không phải self-dependency giữa unit; chỉ trả nội dung khi enrollment và publication hợp lệ; không lưu lesson progress |
 | Ngân hàng → đề/attempt/chấm | U06 → U08/U09/U10/U11/U15 | QuestionVersion/RubricVersion immutable và snapshot đúng version |
 | Tạo đề | U05/U06 → U13 → U08; U09/U10 cấu hình | U13 trả AI draft proposal; U08 review, sửa, lưu và publish. RAG chỉ hỗ trợ nguồn khi được chọn |
-| Đề → attempt | U08/U09/U10 → U11 | Publication, schedule, simulation policy và assignment/question/rubric snapshot; bài đã phát hành khóa nội dung |
+| Đề → attempt | U08/U09 → U11 | Publication, schedule, dạng/chế độ bài và assignment/question/rubric snapshot; bài đã phát hành khóa nội dung |
 | Nhóm → tài liệu nhóm | U12 + U09 → U14 | Thành viên/trưởng nhóm, mô hình tài liệu; nhận/khóa mục, ghép realtime, bản nộp bất biến có tác giả từng mục |
 | Chấm | U11/U14/U06 → U15; U13 hỗ trợ | AI chỉ trả proposal; U15 lưu manual/final grade; tài liệu nhóm chấm tay, AI chỉ đề xuất cho phần đóng góp của từng thành viên |
 | Báo cáo/thông báo | U05 event lớp, owner events và điểm U15 → U16 | Thông báo trong app (SSE), email có trần 300/ngày, nhắc hạn, dashboard cá nhân và xuất bảng điểm; lỗi gửi không rollback transaction nguồn |
@@ -90,7 +90,7 @@ Wave biểu thị nhóm và checkpoint kết quả, không buộc toàn bộ uni
 |---|---|---|
 | G1 | U01-U04 | Authorization, audit/job, artifact/checksum và class/enrollment scope |
 | G2 | U05-U08 và phần Learning Access của U04 | Content/bank versions, verified payment event, Learning access và đề thủ công/publication |
-| G3 | U09-U13 | Question type/tài liệu, template/copy/simulation, bộ nhóm, AI/Code và attempt/submission |
+| G3 | U09-U13 | Question type/tài liệu, template/copy, bộ nhóm, AI/Code, attempt/submission và chấm Practice theo credit |
 | G4 | U14-U16 | Tài liệu nhóm realtime/nộp, final grade, reporting/notification đúng scope |
 
 Gate tổng kiểm tra toàn bộ phạm vi của wave; nhánh ở wave sau được mở ngay khi provider trực tiếp đạt kiểm tra tương ứng, không phải chờ gate tổng.

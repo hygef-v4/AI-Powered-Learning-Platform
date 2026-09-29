@@ -15,9 +15,15 @@
 1. Giảng viên bấm "Kiểm lời giải mẫu" → `CodeRun` `VERIFY` chạy mọi test với cùng giới hạn như bài nộp.
 2. Lưu `CodeRun` loại `VERIFY` kèm `contentHash`; đạt hết test thì bài/câu được coi là đã kiểm (`SolutionVerification` suy ra); `CodeLabCheckPort` cho U08 dùng khi duyệt (BR-U13-33).
 
+## F3a - Chấm AI bài Practice của Student
+1. U11 nộp attempt `PRACTICE` Text/Diagram Essay và kiểm đủ credit; U13 kiểm chủ attempt, dạng/chế độ bài và unique target trước khi giữ credit U07 với `purpose = PRACTICE_GRADING`.
+2. Thiếu credit: U11 lưu attempt với `NO_CREDIT`, không gọi AI, không ghi grade U15; không chấm bù attempt cũ.
+3. Đủ credit: tạo đúng một `PRACTICE_RESULT`/attempt và job AI. Worker dùng nội dung snapshot, rubric và XML Draw.io rút gọn nếu có; kiểm kết quả, tính điểm theo rubric, settle credit thực dùng rồi trả điểm/phản hồi riêng cho Student.
+4. Retry kỹ thuật dùng cùng `requestRef` và target; không tạo kết quả hoặc khoản trừ trùng. Lỗi cuối cùng giải phóng credit chưa dùng và giữ bài nộp không điểm AI.
+
 ## F4 - Chạy thử và chấm code
 1. `TRY`: rate limit, chỉ test công khai, trả kết quả (BR-U13-34, 36).
-2. `GRADE`: job `GRADE_INIT` của U15 gọi `CodeRunPort.grade(attemptId)` → U13 tạo job `CODE_RUN` chạy mọi test → điểm xác định → trong transaction kết thúc job gọi `CodeGradedPort.onGraded` (U15 cài) (BR-U13-35).
+2. `GRADE`: bài `GRADED` do job `GRADE_INIT` của U15 gọi; bài `PRACTICE` do U11 xếp job. U13 chạy mọi test và tính điểm xác định. Chỉ `GRADED` gọi `CodeGradedPort.onGraded` của U15; `PRACTICE` trả kết quả cho U11 (BR-U13-35).
 3. Judge0 lỗi → retry job; hết lượt → `SANDBOX_ERROR`, U15 hiện "chưa chấm được" (BR-U13-31, 37).
 
 ## F5 - Quản trị AI

@@ -20,7 +20,8 @@ U13 **không** sở hữu: bài/câu hỏi (U08, U06), bài nộp (U11, U14), đ
 | `task` | Model mặc định | Ghi chú |
 |---|---|---|
 | `QUESTION_DRAFT` | `gemini-2.5-flash` | Tạo câu hỏi/đề nháp từ RAG |
-| `GRADING_PROPOSAL` | `gemini-2.5-pro` | Đề xuất chấm theo rubric (bài dài, cần suy luận) |
+| `GRADING_PROPOSAL` | `gemini-2.5-pro` | Đề xuất chấm bài `GRADED` cho Teacher duyệt |
+| `PRACTICE_GRADING` | `gemini-2.5-pro` | Chấm một attempt Text/Diagram Essay `PRACTICE` của Student; kết quả luyện tập không vào gradebook |
 | `CODE_FEEDBACK` | `gemini-2.5-flash` | Nhận xét code sau khi đã có kết quả test |
 | `SHORT_TEXT` | `gemini-2.5-flash-lite` | Việc ngắn (gợi ý tiêu đề, tóm tắt ngắn) |
 
@@ -56,11 +57,11 @@ Chỉ ADMIN sửa; mọi thay đổi ghi audit.
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `kind` | enum | `QUESTION_DRAFT`, `GRADING_PROPOSAL` |
+| `kind` | enum | `QUESTION_DRAFT`, `GRADING_PROPOSAL`, `PRACTICE_RESULT` |
 | `requestedBy` | UUID | |
-| `target` | JSON | Bài/template/ngân hàng đích, hoặc lượt bài nộp/phần đóng góp |
+| `target` | JSON | Bài/template/ngân hàng đích, lượt bài nộp/phần đóng góp; `PRACTICE_RESULT` trỏ tới attempt của Student, unique theo attempt |
 | `input` | JSON | Tham số (loại câu, số câu 1-20, độ khó, chương/bài); không lưu prompt thô |
-| `result` | JSON | Câu hỏi đề xuất kèm trích dẫn nguồn; hoặc từng mục checklist đạt/không + nhận xét + bằng chứng |
+| `result` | JSON | Câu hỏi đề xuất kèm trích dẫn nguồn; hoặc từng mục checklist đạt/không + điểm/nhận xét/bằng chứng; Practice chỉ Student xem |
 | `status` | enum | `QUEUED`, `RUNNING`, `READY`, `FAILED`, `ACCEPTED`, `DISCARDED` |
 | `jobId` | UUID | Job U02 |
 
@@ -76,7 +77,7 @@ stateDiagram-v2
     READY --> DISCARDED: Giảng viên bỏ
 ```
 
-**Text alternative**: Yêu cầu AI qua được kiểm tra (kill-switch, trần chi phí, tần suất, credit) thì tạo đề xuất ở `QUEUED`. Worker nhận thì `RUNNING`; đầu ra hợp lệ thì `READY`, lỗi hoặc sai định dạng sau retry thì `FAILED` (credit được trả). Giảng viên dùng đề xuất thì `ACCEPTED`, bỏ thì `DISCARDED`. AI không bao giờ tự lưu vào bài hay chốt điểm.
+**Text alternative**: Yêu cầu AI qua được kiểm tra (kill-switch, trần chi phí, tần suất, credit) thì tạo bản ghi ở `QUEUED`. Worker nhận thì `RUNNING`; đầu ra hợp lệ thì `READY`, lỗi hoặc sai định dạng sau retry thì `FAILED` (credit chưa dùng được trả). Với đề xuất bài `GRADED`, Teacher có thể dùng (`ACCEPTED`) hoặc bỏ (`DISCARDED`); AI không chốt điểm. Với `PRACTICE_RESULT`, `READY` là kết quả luyện tập cuối của attempt, chỉ Student xem, không vào U15 gradebook.
 
 ## 6. `CodeRun`
 
@@ -116,7 +117,8 @@ Kết quả kiểm lời giải mẫu hiện hành = lần `CodeRun` loại `VER
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `AiDraftPort` | U08 (`C`), U06, U10 | Tạo/đọc/nhận đề xuất câu hỏi |
-| `AiGradingPort` | U15 | Tạo/đọc đề xuất chấm |
+| `AiGradingPort` | U15 | Tạo/đọc đề xuất chấm bài `GRADED` cho Teacher |
+| `PracticeGradingPort` | U11 | Xác minh attempt, giữ credit, xếp job và trả kết quả AI `PRACTICE_RESULT` cho Student |
 | `CodeRunPort` | U11 (`C`), U15 | `try`, `grade`, kết quả |
 | `CodeLabCheckPort` | U08 khai báo (`C`) | Bài `CODE_LAB` đã kiểm lời giải mẫu với đúng nội dung hiện tại |
 | `AiBudgetPort` | U05 (`C`) | Kill-switch và trần chi phí Gemini/ngày dùng chung cho embedding của U05 (`tryReserve`, `settle`, `release`) |
@@ -130,5 +132,5 @@ Kết quả kiểm lời giải mẫu hiện hành = lần `CodeRun` loại `VER
 | `BankQueryPort` | U06 | Câu hỏi, rubric |
 | `DiagramCompactPort`, `DocumentModelPort` | U09 (`C`) | XML rút gọn, văn bản phẳng |
 | `SubmissionQueryPort`, `GroupSubmissionQueryPort` | U11, U14 (`C`) | Nội dung bài nộp / các mục của một thành viên để AI đề xuất chấm; adapter tạm báo "chưa hỗ trợ" tới khi U11/U14 có |
-| `CodeGradedPort` | U13 khai báo, U15 cài (`C`) | Gọi trong transaction kết thúc job chấm code: U15 ghi điểm Code Lab. Chưa có U15 → adapter rỗng |
+| `CodeGradedPort` | U13 khai báo, U15 cài (`C`) | Chỉ `GRADED`: gọi trong transaction kết thúc job chấm code để U15 ghi điểm. `PRACTICE`: U11 nhận kết quả test riêng, không ghi grade U15. Chưa có U15 → adapter rỗng |
 | `JobPort`, `AuditPort` | U02 | Chạy nền, audit |

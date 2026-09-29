@@ -12,7 +12,7 @@
 - Đổi trực tiếp: một transaction đổi `leaderId` và `CANCELLED` yêu cầu đang chờ.
 
 ## P4 - Tra cứu nhanh thành viên cho U14
-- Index `group_members (learner_id) WHERE removed_at IS NULL`; `GroupMembershipPort` chỉ đọc (NFR-U12-02).
+- Index `group_members (student_id) WHERE removed_at IS NULL`; `GroupMembershipPort` chỉ đọc (NFR-U12-02).
 
 ## P5 - Sẵn sàng phát hành
-- `GroupReadinessService` dùng lại `GroupSetValidator` với luật BR-U12-21; trả danh sách lỗi có mã (`GROUP_WITHOUT_LEADER`, `LEARNER_WITHOUT_GROUP` là cảnh báo).
+- `GroupReadinessService` dùng lại `GroupSetValidator` với luật BR-U12-21; trả danh sách lỗi có mã (`GROUP_WITHOUT_LEADER`, `STUDENT_WITHOUT_GROUP` là cảnh báo).

@@ -4,7 +4,7 @@
 
 | Thành phần | Chạy ở |
 |---|---|
-| `NotificationController`, `PreferenceController`, `ProgressController`, `LearnerDashboardController`, `GradebookExportController`, kênh SSE thông báo | `backend` |
+| `NotificationController`, `PreferenceController`, `ProgressController`, `StudentDashboardController`, `GradebookExportController`, kênh SSE thông báo | `backend` |
 | `NotificationListener`, `NotificationFanout`, `EmailDispatcher`, `EmailSendHandler`, `DeadlineReminderHandler` | `worker` |
 | Bảng `notifications`, `email_outbox`, `notification_preferences`; nhắc hạn là job trong bảng `jobs` (U02) | `postgres` |
 | Bộ đếm trần email | `redis`, khóa `email:daily-count:{yyyyMMdd}` (TTL 48 giờ) |

@@ -12,10 +12,10 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-10 | Mỗi bài một loại (`QUIZ`, `ESSAY`, `DOCUMENT`, `CODE_LAB`, `GROUP`); thành phần phải khớp loại. | Câu 1, U09 |
+| BR-U08-10 | Mỗi bài một trong năm dạng `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY`, `CODE_LAB`, `GROUP_ASSIGNMENT`; thành phần phải khớp dạng. Chế độ là `GRADED` hoặc `PRACTICE`, riêng `GROUP_ASSIGNMENT` chỉ `GRADED`. | FR-017, U09, quyết định 2026-09-29 |
 | BR-U08-11 | Thành phần lấy từ ngân hàng (phiên bản `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng kiểm theo quy tắc U06. | Câu 2 |
 | BR-U08-12 | Điểm từng thành phần > 0; `totalPoints` = tổng, tự tính. | Thiết kế |
-| BR-U08-13 | Bài 1-200 câu (`QUIZ`), 1-20 câu cho loại khác. | Thiết kế |
+| BR-U08-13 | Bài 1-200 câu (`MULTIPLE_CHOICE_QUIZ`), 1-20 câu cho dạng khác. | Thiết kế |
 | BR-U08-14 | Chỉ sửa khi `DRAFT`; sửa bài `REVIEWED` đưa về `DRAFT`. | Câu 3 |
 | BR-U08-15 | Bài `DRAFT` chưa từng phát hành được xóa. | Thiết kế |
 
@@ -32,7 +32,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U08-30 | Mỗi lần phát hành một lớp, lịch riêng; phát hành cùng bài cho lớp khác là lần phát hành khác. | Câu 8 |
-| BR-U08-31 | `opensAt < closesAt`; `maxAttempts` 1-10; lớp phải `OPEN`. Bài `GROUP` (bài `DOCUMENT` làm nhóm) chỉ phát hành khi U12 báo bộ nhóm sẵn sàng (`GroupReadinessPort`, `C`). | FR-007, U12 |
+| BR-U08-31 | `opensAt < closesAt`; `maxAttempts` 1-10; lớp phải `OPEN`. Bài `GROUP_ASSIGNMENT` (tài liệu nhóm) chỉ `GRADED` và chỉ phát hành khi U12 báo bộ nhóm sẵn sàng (`GroupReadinessPort`, `C`). | FR-007, FR-017, U12 |
 | BR-U08-32 | Tùy chọn nộp trễ: `allowLate` + `lateUntil` (≤ `closesAt` + 30 ngày). Nộp sau `closesAt` được đánh dấu trễ; sau `lateUntil` không nhận. | Câu 7 |
 | BR-U08-33 | Phát hành lần đầu chuyển version sang `LOCKED`: nội dung, thành phần, điểm của version đó **không sửa được nữa**, kể cả khi chưa ai làm; thay đổi bằng version mới (BR-U08-43) hoặc nhân bản. | Câu 4, 6 |
 | BR-U08-34 | Lịch của publication sửa được khi `SCHEDULED`; khi `OPEN` chỉ được kéo dài `closesAt`/`lateUntil`, không rút ngắn, không đổi `maxAttempts`. | Thiết kế |

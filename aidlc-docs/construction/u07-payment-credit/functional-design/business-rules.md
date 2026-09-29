@@ -4,7 +4,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-01 | Chỉ tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` có ví/credit AI, được xem gói mua và tạo thanh toán trong phạm vi vai trò đó. Góc nhìn `LEARNER` không có AI/credit; tài khoản chỉ có vai trò `LEARNER` không được cấp/dùng credit, xem số dư/sổ cái/gói mua hoặc tạo thanh toán. Backend từ chối gọi trực tiếp API không đúng vai trò, không tạo giao dịch/link PayOS. Credit đã mua chỉ thuộc tài khoản mua. | Quyết định 2026-09-27 thay Câu 1 |
+| BR-U07-01 | Tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN` có ví credit của chính mình, được xem gói, số dư, sổ cái và mua credit. Backend kiểm quyền chủ ví trước khi tạo giao dịch/link PayOS. Credit đã mua chỉ thuộc tài khoản mua. | FR-010, quyết định 2026-09-29 |
 | BR-U07-02 | Chỉ ADMIN tạo/sửa/ẩn gói; không xóa gói đã có giao dịch. Đổi giá chỉ áp dụng giao dịch mới. | Câu 3 |
 | BR-U07-03 | Giao dịch chụp `credits`, `amountVnd` lúc tạo. | Câu 3 |
 | BR-U07-04 | Tạo giao dịch cần `Idempotency-Key`; gửi lại cùng khóa trả lại giao dịch cũ nếu còn `PENDING`. | SEC-007 |
@@ -34,7 +34,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-30 | 1 credit = 1 000 token Gemini, làm tròn lên mỗi lần gọi. | Câu 4 |
-| BR-U07-31 | Chỉ tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` được tặng cùng một số credit mỗi tháng (`u07.monthlyFreeCredits` trong `app_settings`, admin cấu hình). `LEARNER` không được tặng. Với tài khoản hợp lệ, tháng mới `freeBalance` đặt lại bằng mức tặng (không cộng dồn) khi đọc số dư lần đầu trong tháng. | Câu 4, 5; quyết định 2026-09-27 |
+| BR-U07-31 | Chỉ tài khoản `ACTIVE` có vai trò `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN` được tặng cùng một số credit mỗi tháng (`u07.monthlyFreeCredits` trong `app_settings`, admin cấu hình). `STUDENT` không được tặng. Với tài khoản hợp lệ, tháng mới `freeBalance` đặt lại bằng mức tặng (không cộng dồn) khi đọc số dư lần đầu trong tháng. | Câu 4, 5; quyết định 2026-09-27 |
 | BR-U07-32 | Credit mua không hết hạn. | Câu 3 |
 | BR-U07-33 | Trừ credit tặng trước, credit mua sau. | Câu 4 |
 | BR-U07-34 | Số dư không bao giờ âm. | Thiết kế |
@@ -43,7 +43,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-40 | Trước mỗi lời gọi Gemini tạo nội dung hoặc embedding, U05/U13 chỉ `reserve` credit của tài khoản `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` chịu phí; `LEARNER` bị từ chối trước khi gọi AI. Không đủ credit → từ chối "không đủ credit", không gọi Gemini. Embedding nền tính cho người tải/phát hành học liệu có quyền; embedding truy xuất tính cho người yêu cầu AI có quyền. | FR-021, quyết định 2026-09-27 |
+| BR-U07-40 | Trước mỗi lời gọi Gemini, U05/U13 `reserve` credit của tài khoản `ACTIVE` chịu phí và kèm `purpose`. `STUDENT` chỉ được reserve với `purpose = PRACTICE_GRADING` sau khi U11/U13 xác minh attempt của chính mình, dạng Text/Diagram Essay và chế độ `PRACTICE`; mọi purpose khác bị từ chối. Teacher/Subject Manager/Admin tiếp tục dùng AI theo phạm vi nghiệp vụ. Thiếu credit → không gọi Gemini; attempt Practice vẫn được nộp không điểm AI. Embedding nền tính cho người tải/phát hành học liệu có quyền; embedding truy xuất tính cho người yêu cầu AI có quyền. | FR-021, FR-030 |
 | BR-U07-41 | `reserve` idempotent theo `requestRef`: mỗi `requestRef` chỉ có một dòng sổ `RESERVE`; mỗi dòng `RESERVE` chỉ được đóng một lần bằng `SETTLE` hoặc `RELEASE`. | Thiết kế |
 | BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần số dư còn lại, không để âm. | Thiết kế |
 | BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi hoặc hết hạn mức hệ thống trước khi gọi provider. Phần giữ quá 30 phút tự trả lại (job quét). | Thiết kế |
@@ -54,4 +54,4 @@
 |---|---|---|
 | BR-U07-53 | Sau khi `PAID`, phát event `payment.paid` (sau commit) để U16 báo trong app. | U16 |
 | BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát tự động, đổi mức tặng tháng. | FR-014, SEC-005 |
-| BR-U07-52 | Chỉ tài khoản có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` xem số dư, sổ cái và lịch sử giao dịch của chính mình. `LEARNER` không có các màn hình/API này. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC-PAY-01 |
+| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, sổ cái và lịch sử giao dịch của chính mình. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC-PAY-01 |

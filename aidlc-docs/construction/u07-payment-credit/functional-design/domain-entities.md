@@ -103,7 +103,7 @@ stateDiagram-v2
 
 ## 7. `CreditBalance`
 
-Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của tài khoản có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên (xem U01). Tài khoản chỉ có vai trò Người học không có ví nghiệp vụ, không nhận `MONTHLY_GRANT` và không được dùng các số dư này. Với tài khoản đủ quyền, tháng mới `freeBalance` đặt lại bằng mức tặng; trừ credit tặng trước, credit mua sau; không bao giờ âm.
+Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của mọi tài khoản `ACTIVE` có vai trò hiện hành (xem U01). Student có ví và được mua credit nhưng không nhận `MONTHLY_GRANT`; chỉ tiêu credit cho `PRACTICE_GRADING` hợp lệ. Với vai trò được tặng tháng, `freeBalance` đặt lại bằng mức tặng; trừ credit tặng trước, credit mua sau; không bao giờ âm.
 
 ## 8. `CreditSettings`
 
@@ -118,7 +118,7 @@ Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của 
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `CreditPort` | U05, U13 | `reserve(accountId, credits, requestRef)`, `settle(reservationId, actualCredits)`, `release(reservationId)` (`reservationId` = id dòng `RESERVE`), `balance(accountId)` |
+| `CreditPort` | U05, U13 | `reserve(accountId, credits, requestRef, purpose, attemptRef?)`, `settle(reservationId, actualCredits)`, `release(reservationId)` (`reservationId` = id dòng `RESERVE`), `balance(accountId)`; Student chỉ được reserve cho `PRACTICE_GRADING` với attempt hợp lệ |
 | Event `payment.paid` | U16 | Báo mua credit thành công |
 
 ### Port U07 dùng

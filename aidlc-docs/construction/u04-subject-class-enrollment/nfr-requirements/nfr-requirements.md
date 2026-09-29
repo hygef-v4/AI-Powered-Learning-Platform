@@ -13,8 +13,8 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U04-10 | Unique trong DB: `subjects.code`; `(subject_id, code)` của lớp; `invite_code`; `(class_id, learner_account_id)` của ghi danh. | BR-U04-02, 11, 21, 30 |
-| NFR-U04-11 | Quy tắc "1 lớp chưa lưu trữ mỗi môn" (BR-U04-22) kiểm trong transaction có khóa hàng theo `(learner, subject)` để hai yêu cầu đồng thời không cùng qua. | BR-U04-22 |
+| NFR-U04-10 | Unique trong DB: `subjects.code`; `(subject_id, code)` của lớp; `invite_code`; `(class_id, student_account_id)` của ghi danh. | BR-U04-02, 11, 21, 30 |
+| NFR-U04-11 | Quy tắc "1 lớp chưa lưu trữ mỗi môn" (BR-U04-22) kiểm trong transaction có khóa hàng theo `(student, subject)` để hai yêu cầu đồng thời không cùng qua. | BR-U04-22 |
 | NFR-U04-12 | Đổi trạng thái lớp dùng khóa lạc quan (`version`); xung đột → "dữ liệu đã thay đổi, tải lại". | BR-U04-14 |
 | NFR-U04-13 | Event `ENROLLMENT_ACTIVATED` gửi sau commit qua `EventPublisherPort` của U02. | BR-U04-26 |
 

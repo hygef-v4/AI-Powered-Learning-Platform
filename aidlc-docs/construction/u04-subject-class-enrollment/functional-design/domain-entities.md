@@ -10,7 +10,7 @@ Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CA
 | `CourseClass` | Aggregate root | `classes` | U04 |
 | `InviteCode` | Value object của `CourseClass` | `classes` | U04 |
 | `Enrollment` | Entity | `enrollments` | U04 |
-| `LearnerClassView` | Kết quả tính (lớp của người học + nội dung đã phát hành) | Không lưu | U04 |
+| `StudentClassView` | Kết quả tính (lớp của người học + nội dung đã phát hành) | Không lưu | U04 |
 
 U04 **không** sở hữu: tài khoản và role (U01), nội dung (U05), thanh toán (U07), thông báo (U16), audit (U02).
 
@@ -48,7 +48,7 @@ stateDiagram-v2
 | `description` | chuỗi ≤ 2000 | Tùy chọn |
 | `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
-| `instructorAccountId` | UUID | Giảng viên chính; bắt buộc trước khi `OPEN` |
+| `teacherAccountId` | UUID | Giảng viên chính; bắt buộc trước khi `OPEN` |
 | `invite` | `InviteCode` | Có thể rỗng |
 | `showGradeDistribution` | bool | Mặc định `false`; chỉ bật phân bố điểm ẩn danh trên dashboard khi đủ mẫu |
 | `createdAt`, `updatedAt` | thời gian | |
@@ -80,7 +80,7 @@ stateDiagram-v2
 |---|---|---|
 | `id` | UUID | Khóa |
 | `classId` | UUID | |
-| `learnerAccountId` | UUID | Duy nhất theo `(classId, learnerAccountId)` |
+| `studentAccountId` | UUID | Duy nhất theo `(classId, studentAccountId)` |
 | `status` | enum | `ACTIVE`, `REMOVED` |
 | `source` | enum | `MANUAL`, `LIST`, `INVITE` |
 | `enrolledBy` | UUID | Người thực hiện (chính người học nếu `INVITE`) |
@@ -97,7 +97,7 @@ stateDiagram-v2
 
 **Text alternative**: Ghi danh tạo ra ở `ACTIVE`; gỡ thì sang `REMOVED` nhưng giữ bản ghi và lịch sử; ghi danh lại dùng đúng bản ghi đó và chuyển về `ACTIVE`.
 
-## 6. `LearnerClassView`
+## 6. `StudentClassView`
 
 Tính khi người học mở lớp: kiểm ghi danh `ACTIVE` và lớp `OPEN`, rồi lấy nội dung đã phát hành qua `PublishedContentPort` (U05). Không lưu.
 
@@ -107,8 +107,8 @@ Tính khi người học mở lớp: kiểm ghi danh `ACTIVE` và lớp `OPEN`, 
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `SubjectScopePort`, `ClassScopePort` | U01 (U01 khai báo, U04 cài) | `isSubjectManager`, `isInstructorOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
-| `ClassAccessPort` | U05, U06, U08-U12, U14-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveLearner(accountId, classId)`, `listActiveLearners(classId)` |
+| `SubjectScopePort`, `ClassScopePort` | U01 (U01 khai báo, U04 cài) | `isSubjectManager`, `isTeacherOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role) |
+| `ClassAccessPort` | U05, U06, U08-U12, U14-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)` |
 
 ### Port U04 dùng
 

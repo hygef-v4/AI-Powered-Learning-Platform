@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - NFR Design Plan
+# U10 Template & Copy - NFR Design Plan (đã bỏ Simulation Exam; tên tệp giữ để truy vết)
 
 - [x] Đọc NFR Requirements U10.
 - [x] Đánh giá 5 nhóm câu hỏi: **không có câu hỏi mới**.

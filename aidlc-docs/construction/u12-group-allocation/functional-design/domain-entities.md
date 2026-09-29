@@ -35,7 +35,7 @@ Bộ nhóm của một bài `GROUP` = mọi `StudentGroup` cùng `assignmentId`.
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `groupId` | UUID | |
-| `learnerId` | UUID | Người học đang ghi danh `ACTIVE` của lớp |
+| `studentId` | UUID | Người học đang ghi danh `ACTIVE` của lớp |
 | `joinedAt`, `removedAt` | thời gian | `removedAt` rỗng = đang là thành viên |
 
 Mỗi người học tối đa một nhóm đang hiệu lực trong một bộ nhóm.
@@ -73,7 +73,7 @@ stateDiagram-v2
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `GroupReadinessPort` | U08 khai báo (`C`) | Bộ nhóm đủ điều kiện phát hành |
-| `GroupMembershipPort` | U14, U16 | `groupOf(learnerId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
+| `GroupMembershipPort` | U14, U16 | `groupOf(studentId, assignmentId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
 | `GroupDocumentStorePort` | U14 | Đọc/ghi tài liệu nhóm trong bản ghi nhóm |
 | Event `group.membership-changed`, `group.leader-changed` | U16 | Sau commit |
 
@@ -83,5 +83,5 @@ stateDiagram-v2
 |---|---|---|
 | `AssignmentQueryPort` | U08 | Bài `GROUP`, trạng thái publication |
 | `ClassAccessPort` | U04 | Người học đang ghi danh |
-| `GroupChangePort` | U12 khai báo, U14 cài (`C`) | `onGroupCreated(groupId)` khi thêm nhóm sau khi bài đã mở (U14 tạo job tạo tài liệu nhóm); `onMemberRemoved(groupId, learnerId)` khi thành viên rời nhóm (U14 nhả khóa mục của người đó). Gọi trong transaction; chưa có U14 → adapter rỗng |
+| `GroupChangePort` | U12 khai báo, U14 cài (`C`) | `onGroupCreated(groupId)` khi thêm nhóm sau khi bài đã mở (U14 tạo job tạo tài liệu nhóm); `onMemberRemoved(groupId, studentId)` khi thành viên rời nhóm (U14 nhả khóa mục của người đó). Gọi trong transaction; chưa có U14 → adapter rỗng |
 | `AuditPort`, `EventPublisherPort` | U02 | Audit, event thông báo |
