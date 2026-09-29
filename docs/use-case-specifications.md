@@ -1,10 +1,10 @@
-# II. Use Case Specifications — 12 Key Use Cases
+# II. Use Case Specifications — 12 flows across 11 key use cases
 
-These twelve use cases were selected from the 69 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table exactly. Same-actor CRUD actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
+These twelve flows cover eleven use cases selected from the 33 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table exactly. Same-actor CRUD actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
 
 ## 1. Subject Content
 
-### 1.1 UC 26 — Manage Subject Materials
+### 1.1 UC 10 — Manage Subject Materials
 
 | Field | Specification |
 |---|---|
@@ -25,7 +25,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 2. AI Authoring
 
-### 2.1 UC 45 — Draft Assignment with AI
+### 2.1 UC 17 — Create Assignment with AI
 
 | Field | Specification |
 |---|---|
@@ -46,7 +46,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 3. Assignment Workspace
 
-### 3.1 UC 56 — Complete and Submit Essay
+### 3.1 UC 22 — Do Text Essay
 
 | Field | Specification |
 |---|---|
@@ -66,7 +66,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 |  | **A5 — Submission after the final deadline (the closing time when late work is not allowed, otherwise the late-submission limit):** Reject the submission (MSG06). A 30-second grace period absorbs network delay. |
 | Postconditions | The submitted essay and receipt are immutable and await the teacher's grading decision. Saving a draft alone does not submit it. For a regular assignment, the last submitted attempt is the one graded. |
 
-### 3.2 UC 57 — Complete and Submit Quiz
+### 3.2 UC 23 — Do Multiple-Choice Quiz
 
 | Field | Specification |
 |---|---|
@@ -89,7 +89,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 4. Diagram Assignment
 
-### 4.1 UC 58 — Submit Diagram Essay
+### 4.1 UC 24 — Do Diagram Essay
 
 | Field | Specification |
 |---|---|
@@ -110,7 +110,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 5. Code Assignment
 
-### 5.1 UC 59 — Submit Code Lab
+### 5.1 UC 25 — Do Code Lab
 
 | Field | Specification |
 |---|---|
@@ -131,7 +131,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 6. Group Submission
 
-### 6.1 UC 38 — Complete Group Section
+### 6.1 UC 26 — Do Group Document: complete a section (flow 1)
 
 | Field | Specification |
 |---|---|
@@ -151,7 +151,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 |  | **A5 — Connection drops:** Reload the full section and shared-document state after reconnection. |
 | Postconditions | The section is IN_REVIEW with a recorded revision and author. Only completed published blocks are visible in the shared document. |
 
-### 6.2 UC 39 — Submit Group Document
+### 6.2 UC 26 — Do Group Document: submit the document (flow 2)
 
 | Field | Specification |
 |---|---|
@@ -172,7 +172,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 7. Group Grading
 
-### 7.1 UC 40 — Grade Group Document
+### 7.1 UC 27 — Grade Submissions: group document
 
 | Field | Specification |
 |---|---|
@@ -193,7 +193,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 8. AI-Assisted Grading
 
-### 8.1 UC 67 — Grade with AI Assistance
+### 8.1 UC 28 — Grade with AI Assistance
 
 | Field | Specification |
 |---|---|
@@ -214,7 +214,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 9. Payment
 
-### 9.1 UC 75 — Buy AI Credits
+### 9.1 UC 31 — Buy AI Credits
 
 | Field | Specification |
 |---|---|
@@ -241,7 +241,7 @@ These twelve use cases were selected from the 69 active cases in [the use case t
 
 ## 10. Practice Feedback
 
-### 10.1 UC 78 — Grade Practice with AI
+### 10.1 UC 22 & 24 — Do Text/Diagram Essay: Practice AI feedback
 
 | Field | Specification |
 |---|---|

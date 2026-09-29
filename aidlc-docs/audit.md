@@ -2801,3 +2801,43 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only use-case catalog refinement. Security and Resiliency extensions remain enabled under the project's reduced scope; their existing authorization and data-integrity requirements remain unchanged. Property-Based Testing is disabled and N/A.
 
 ---
+
+---
+
+## Use Case Table Consolidation to Screen-Backed Cases
+**Timestamp**: 2026-09-29T16:26:59Z
+**User Input**: "kiểm tra uc và gộp lại các uc ko có screen vào, chỉ để lại uc có screen thôi (trừ sign out với cả các uc liên quan đến 5 dạng bài thì tách ra)"
+**AI Response**: "Mapped all 64 use cases in docs/use-case-table.md against the screen inventory in docs/screen-flow.md, then asked the user three questions through the UI. Answers: merge UC 64 Grade Practice with AI into UC 47 Review Attempts; merge UC 28 View Learning Overview with UC 59 View Results Dashboard; keep only the learner-side assignment-type use cases separate ('uc làm bài'). Rewrote the table with 58 use cases renumbered 1 to 58: merged the five Create use cases (old 36-40) into UC 36 Create Assignment because all five share the Create Assignment Popup, Assignment Editor and Type Config tab; merged old 28 and 59 into UC 28 View Learner Dashboard; merged old 64 into UC 43 Review Attempts; folded the member section-work flow into UC 26 Complete and Submit Group Document; kept UC 3 Sign Out despite having no screen of its own. Kept the five doing-the-assignment use cases separate (UC 26, 39, 40, 41, 42). Added a change table at the end of the file. Renumbered the twelve specification sections in docs/use-case-specifications.md from the obsolete 69-case numbering to the new IDs (16, 32, 39, 40, 41, 42, 26 twice, 27, 49, 56, 43)."
+**Context**: Use case catalogue revision; docs/screen-flow.md still carries the old UC-XXX-NN codes and needs a separate renumbering pass.
+
+---
+
+## Use Case Table Second Consolidation by Screen and Unit
+**Timestamp**: 2026-09-29T16:34:05Z
+**User Input**: "vẫn nhiều quá xem lại cái nào screen của nhau gộp đc vào nhau (và khác unit) thì có thể gộp lại vào nhau"
+**AI Response**: "Asked three questions through the UI. Answers: AI use cases stay separate when their dialog belongs to a different unit than the host screen and are merged when the unit is the same; merge all popup-only class, group and announcement use cases; merge the grading-queue, gradebook-export and copy-assignment popups. Applied the rule that a use case stays separate only when it owns a screen or tab, or when its dialog is built by a different unit than its host screen. Reduced the table from 58 to 44 use cases: Change Password into Profile; Create/Update/Open-Archive Class into Manage Classes; Join Class into Manage Enrollment; Post Announcement into the Q&A use case; group CRUD and both leader-change use cases into Manage Groups and Leaders; the question bank into a combined Question and Rubric Bank; Copy Class Assignment into Clone/Version/Retire/Copy; Publish Grades and Bulk Finalize into Review and Finalize Submissions; Export Gradebook into View and Export Gradebook (noted that this one crosses U15 and U16 and was merged by the user's explicit choice). Kept separate: Sign Out, the five learner assignment-type use cases, and the three AI use cases because AI dialogs are built by U13 while their host screens belong to U08 and U15. Documented the merge rule and the change table in the file, then renumbered the twelve specification sections to the new IDs (11, 22, 29, 30, 31, 32, 17 twice, 18, 38, 42, 33)."
+**Context**: Use case catalogue revision; docs/screen-flow.md still carries the old UC-XXX-NN codes and needs a separate renumbering pass.
+
+---
+
+## Use Case Table Third Consolidation and Renaming
+**Timestamp**: 2026-09-29T16:46:05Z
+**User Input**: "đổi tên mấy cái crud thành manage, cái define group section cũng trong tạo đề mà, cả grade group cũng trong chấm đề mà, bỏ view learner dashboard, mấy cái assignment sao vx tách crud ra thế gộp vào gộp cả publish luôn, view assigned wwork cũng trong cái làm bài nhóm mà, mấy cái complete and submit các dạng bài đổi tên thành làm bài dạng đấy đi, mấy cái publish copy cũng trong màn manage template mà"
+**AI Response**: "Reduced the table from 44 to 37 use cases and renamed as asked. Merges: Define Group Sections into Manage Assignments because the section outline is created in the assignment editor; Grade Group Document into Grade Submissions because it is a branch of the same grading screen in U15; View Managed Assignments, Create Assignment, Publish Assignment and Clone/Version/Retire/Copy into one Manage Assignments covering the Assignment List, Assignment Editor and Publication List chain; View Assigned Work into View Assigned Work and Attempts; Publish and Copy Templates renamed and kept as Manage Subject Templates. Removed View Learner Dashboard on request and noted that the Learner Dashboard screen now has no use case pointing at it. Renamed every same-actor CRUD use case to Manage ... (Profile, Accounts, Subjects, Classes, Enrollment, Subject Materials, Class Content, Question and Rubric Bank, AI Service, Assignments, Subject Templates) and the five learner assignment use cases to Do ... (Do Group Document, Do Text Essay, Do Multiple-Choice Quiz, Do Diagram Essay, Do Code Lab). Updated the naming and merge rules plus the change table in the file, and resynchronized the twelve specification sections to the new IDs and names (11, 19, 23, 24, 25, 26, 16 twice, 30, 31, 35, 27)."
+**Context**: Use case catalogue revision; docs/screen-flow.md still carries the old UC-XXX-NN codes and the Learner Dashboard screen now has no use case reference.
+
+---
+
+## Use Case Table Fourth Consolidation
+**Timestamp**: 2026-09-29T16:52:25Z
+**User Input**: "manage account cùng màn với import account mà, view assigned wwork cùng màn do group nên chuyển cái đấy xuống cho cùng chỗ bọn do, review với final nó cùng màn với grade submission, monitor submission status là view của submission còn gì, với lại cái docs xoá quy tắc đặt tên với đợt này gộp gì đi chỉ để mỗi uc thôi"
+**AI Response**: "Reduced the table from 37 to 34 use cases: Import Accounts merged into Manage Accounts (same Account List screen); Review and Finalize Submissions and Monitor Submission Status merged into Grade Submissions, which now covers the submission status view with automatic reminders, the grading queue, manual grading, group-document grading, bulk finalization and grade publication; View Assigned Work and Attempts moved to sit directly above the five Do use cases, and Do Group Document moved into that block. Removed the naming-rule and change-log sections so the file contains only the intro and the use case table, as requested. Resynchronized the twelve specification sections to the new IDs (10, 17, 23, 24, 25, 26, 27 twice, 28, 29, 32, 22)."
+**Context**: Use case catalogue revision; docs/screen-flow.md still carries the old UC-XXX-NN codes and needs renumbering against this 34-case table.
+
+---
+
+## Use Case Table - Removed View Assigned Work
+**Timestamp**: 2026-09-29T17:05:10Z
+**User Input**: "T thấy nó chả khác gì mấy cái do cả nên bỏ đi"
+**AI Response**: "Removed UC 22 View Assigned Work and Attempts and folded its behaviour into the five Do use cases: each now covers opening the assigned work with its requirements, rubric, deadline and remaining attempts, starting an attempt, submitting, reading the submission receipt and reviewing submitted attempts; the PRACTICE AI score and feedback moved into Do Text Essay and Do Diagram Essay. The table is now 33 use cases renumbered 1 to 33. Renumbered the affected specification sections and retitled the practice-feedback specification to UC 22 & 24. Noted that Assignment Overview and Submitted Attempt View no longer have a use case that owns them, the same situation as the Learner Dashboard screen."
+**Context**: Use case catalogue revision; docs/screen-flow.md still carries the old UC-XXX-NN codes.
