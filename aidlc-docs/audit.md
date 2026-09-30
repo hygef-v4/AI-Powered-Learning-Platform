@@ -2829,3 +2829,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only use-case table revision aligning with FR-006; other documents remain for the user to synchronize.
 
 ---
+
+## Synchronize use-case specifications with the 40-case table
+**Timestamp**: 2026-09-30T16:40:00Z
+**User Input**: "đồng bộ lại use-case-specifications theo bảng mới"
+**AI Response**: "Rewrote docs/use-case-specifications.md to the 40-case table: renumbered and renamed the specified cases (UC 11 Manage Content, UC 16 Submit Group Document, UC 17 Grade Group Document, UC 21 Create Assignment with AI, UC 30 Submit Assignment, UC 33 Grade Submissions, UC 37 Buy AI Credits, UC 40 Grade Practice with AI). Folded Complete Group Section into UC 16, specified UC 30 once per assignment type, merged manual and AI-assisted grading into UC 33, extended UC 11 to teacher class content, and added GRADED/PRACTICE branches so PRACTICE submissions never enter the teacher grading queue."
+**Context**: Documentation-only synchronization; README, flows and other documents remain for the user to synchronize.
+
+---
+
+## Update UC16 description
+**Timestamp**: 2026-09-30T16:50:00Z
+**User Input**: "sửa mô tả UC16"
+**AI Response**: "Updated the UC16 Submit Group Document description in docs/use-case-table.md to include claiming a section, working in a private draft and marking it Done, matching the synchronized specification."
+**Context**: Documentation-only use-case table revision.
+
+---
