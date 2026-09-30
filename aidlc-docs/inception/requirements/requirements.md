@@ -10,6 +10,7 @@
 - **Mức độ chi tiết**: Comprehensive
 - **Mục tiêu**: Xây dựng MVP nền tảng học tập ứng dụng AI đồng thời duy trì bộ tài liệu và checkpoint AI-DLC có thể tái sử dụng
 - **Thay đổi đã được xác nhận (2026-09-29)**: Đổi mã vai trò `LEARNER`/`INSTRUCTOR` thành `STUDENT`/`TEACHER`; cho Student mua credit để chấm AI bài luyện tập dạng Text Essay hoặc Diagram Essay; phân loại assignment theo hình đính kèm và câu trả lời làm rõ, đồng thời bỏ Simulation Exam.
+- **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 25 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên.
 
 ## 2. Bối cảnh và phạm vi
 
@@ -19,7 +20,7 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, theo dõi trạng thái bài nộp và kết quả đánh giá, năm dạng assignment Code Lab, Text Essay, Diagram Essay, Group Assignment và Multiple-Choice Quiz với chế độ `GRADED`/`PRACTICE` theo từng dạng, tạo câu hỏi/bài tập bằng AI, chấm bài luyện tập Text Essay/Diagram Essay bằng credit của Student, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. Simulation Exam được bỏ khỏi MVP. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric và câu hỏi quiz có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, theo dõi trạng thái bài nộp và kết quả đánh giá, năm dạng assignment Code Lab, Text Essay, Diagram Essay, Group Assignment và Multiple-Choice Quiz với chế độ `GRADED`/`PRACTICE` theo từng dạng, tạo câu hỏi/bài tập bằng AI, chấm bài luyện tập Text Essay/Diagram Essay bằng credit của Student, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. Simulation Exam được bỏ khỏi MVP. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -42,7 +43,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 |---|---|
 | Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
-| Chủ nhiệm môn | Quản lý kho học liệu/RAG, ngân hàng và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
+| Chủ nhiệm môn | Quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
 | Đơn vị đào tạo | Vận hành thử nghiệm ổn định, bảo vệ dữ liệu người học và đo hiệu quả MVP |
 | Nhóm phát triển | Quy trình AI-DLC rõ ràng, test tự động, container local và hướng dẫn triển khai |
@@ -178,9 +179,9 @@ Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai 
 
 Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
-### FR-016 - Ngân hàng rubric và câu hỏi
+### FR-016 - Ngân hàng rubric và câu hỏi quiz
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Rubric được quản lý tại UC 20 Manage Rubrics; câu hỏi trắc nghiệm được tạo, sửa, tìm, nhập hàng loạt và dùng lại trong chức năng quản lý quiz (UC 25 Manage Quiz), không có use case ngân hàng câu hỏi riêng. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
 
 **Tiêu chí chấp nhận:**
 
@@ -297,7 +298,7 @@ Trong lớp được quản trị viên tạo và phân công, giảng viên nh�
 
 ### USCN-001A - Quản lý học liệu, ngân hàng và template cấp môn
 
-Chủ nhiệm môn quản lý kho học liệu/RAG, ngân hàng câu hỏi/rubric và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
+Chủ nhiệm môn quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
 
 ### USCN-002 - Học và nhận phản hồi
 
@@ -459,6 +460,7 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 | Change request và câu trả lời ngày 2026-09-29 | FR-002, FR-007, FR-008, FR-010, FR-017, FR-029 (rút), FR-030; đổi role, năm dạng assignment, Practice/Graded, Student mua credit và chấm AI bài luyện tập |
+| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case, câu hỏi quiz thuộc UC 25 Manage Quiz. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline
 

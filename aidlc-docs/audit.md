@@ -2869,3 +2869,11 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only synchronization with UC 37 Buy AI Credits.
 
 ---
+
+## Synchronize stories and requirements with the 40-case table
+**Timestamp**: 2026-10-01T00:30:00Z
+**User Input**: "đồng bộ lại stories và requirements theo bảng mới"
+**AI Response**: "Asked how to treat the removed question-bank use case; user chose to fold it into Manage Quiz and to add a story-to-use-case matrix. Updated requirements.md (2026-09-30 change note, FR-016 rubric/quiz-question wording, scope, stakeholder and USCN-001A wording, source traceability row) and stories.md (convention note, US-QBK-002 renamed to managing questions in a quiz, US-AIG-002 wording, new section 14 mapping all 49 stories to UC 1-40, later sections renumbered). No feature was removed and story IDs are unchanged."
+**Context**: Documentation-only synchronization with docs/use-case-table.md; personas and unit designs not changed.
+
+---

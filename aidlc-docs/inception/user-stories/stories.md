@@ -12,6 +12,7 @@
 - Hệ thống chỉ có bốn persona người dùng: Student, Teacher, Subject Manager và Administrator; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
 - Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
+- Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi quiz được quản lý trong UC 25 Manage Quiz, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
 
 ## 2. Miền Identity and Access
 
@@ -551,7 +552,7 @@
 - **When** người học dùng URL/ID trực tiếp
 - **Then** hệ thống từ chối mà không tiết lộ nội dung hoặc metadata nhạy cảm
 
-## 6. Miền Question and Rubric Bank
+## 6. Miền Rubric Bank and Quiz Questions
 
 ### US-QBK-001 - Quản lý ngân hàng rubric
 
@@ -573,9 +574,9 @@
 - **When** người dùng sửa hoặc xóa
 - **Then** hệ thống tạo phiên bản mới hoặc chặn xóa để kết quả lịch sử không thay đổi
 
-### US-QBK-002 - Quản lý ngân hàng câu hỏi
+### US-QBK-002 - Quản lý câu hỏi trong quiz
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và nhập câu hỏi hàng loạt để tái sử dụng nội dung đánh giá có kiểm soát.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt và dùng lại câu hỏi khi quản lý quiz để tái sử dụng nội dung đánh giá có kiểm soát.
 
 **Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -590,8 +591,8 @@
 #### Scenario 2 - Câu hỏi đã được dùng trong bài
 
 - **Given** câu hỏi đã thuộc một bài được phát hành
-- **When** người dùng sửa câu hỏi trong ngân hàng
-- **Then** hệ thống tạo version mới trong ngân hàng; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
+- **When** người dùng sửa câu hỏi
+- **Then** hệ thống tạo version mới của câu hỏi; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
 
 #### Scenario 3 - Muốn đổi nội dung bài đã phát hành
 
@@ -629,7 +630,7 @@
 
 ### US-AIG-002 - Tạo bản nháp template/câu hỏi cấp môn bằng AI
 
-**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi ngân hàng cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
+**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi quiz cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
 
 **Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -1266,7 +1267,54 @@
 | FR-029 | Đã rút khỏi phạm vi; `US-ASM-011` chỉ còn là mã lịch sử |
 | FR-030 | US-ASM-012, US-PAY-001, US-PAY-002 |
 
-## 14. Ràng buộc phi chức năng và kỹ thuật downstream
+## 14. Ma trận story ↔ use case
+
+Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi story thuộc ít nhất một use case; một use case gộp có thể gồm nhiều story.
+
+| ID | Use Case | Stories |
+|---|---|---|
+| 1 | Activate Account | US-IAM-001 |
+| 2 | Sign In | US-IAM-002 |
+| 3 | Sign Out | US-IAM-002 |
+| 4 | Recover Password | US-IAM-003 |
+| 5 | Change Password | US-IAM-006 |
+| 6 | Manage Profile | US-IAM-004 |
+| 7 | Manage Accounts | US-IAM-005, US-IAM-007 |
+| 8 | Manage Subjects | US-IAM-005, US-CAT-001 |
+| 9 | Manage Classes | US-CAT-001, US-CAT-002, US-CAT-003, US-GRP-001, US-GRP-002 |
+| 10 | Join Class | US-CAT-005 |
+| 11 | Manage Content | US-CNT-001, US-CNT-002, US-CNT-005 |
+| 12 | Access Lesson | US-LRN-001 |
+| 13 | Post Class Announcement | US-CNT-004 |
+| 14 | Discuss in Class Q&A | US-CNT-004 |
+| 15 | Request Leader Change | US-GRP-002 |
+| 16 | Submit Group Document | US-GRP-004, US-GRP-005 |
+| 17 | Grade Group Document | US-GRP-004, US-GRP-006 |
+| 18 | View Learning Overview | US-RPT-002 |
+| 19 | Access Enrolled Class | US-LRN-001 |
+| 20 | Manage Rubrics | US-QBK-001 |
+| 21 | Create Assignment with AI | US-AIG-001 |
+| 22 | Create Template with AI | US-AIG-002 |
+| 23 | Manage AI Service | US-AIG-003 |
+| 24 | Manage Text Essay | US-ASM-007 |
+| 25 | Manage Quiz | US-QBK-002, US-ASM-006 |
+| 26 | Manage Diagram Essay | US-ASM-004 |
+| 27 | Manage Code Lab | US-ASM-005 |
+| 28 | Manage Assignments | US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
+| 29 | View Assigned Work | US-ASM-003 |
+| 30 | Submit Assignment | US-ASM-003, US-ASM-004, US-ASM-005, US-GRD-001 |
+| 31 | Review Attempts | US-ASM-003 |
+| 32 | Review Submissions | US-GRD-003 |
+| 33 | Grade Submissions | US-GRD-002, US-GRD-003 |
+| 34 | Finalize Grades | US-GRD-003, US-GRD-005 |
+| 35 | View Grades | US-GRD-004 |
+| 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-003 |
+| 37 | Buy AI Credits | US-PAY-001, US-PAY-002 |
+| 38 | View Notifications | US-NTF-001 |
+| 39 | View Audit Log | US-AUD-001 |
+| 40 | Grade Practice with AI | US-ASM-012 |
+
+## 15. Ràng buộc phi chức năng và kỹ thuật downstream
 
 | Requirement | Xử lý tại User Stories | Stage xác minh chi tiết |
 |---|---|---|
@@ -1278,7 +1326,7 @@
 | SEC-001 đến SEC-007 | Được gắn trên stories có hành vi quan sát được; phạm vi rút gọn cho đồ án | NFR Design, Infrastructure Design, Code Generation, Build and Test |
 | REL-001 đến REL-004 | Timeout và fail-closed gắn vào story tích hợp; topology, DR, monitoring và incident process ngoài phạm vi đồ án | Application Design, NFR Design, Infrastructure Design, Build and Test |
 
-## 15. Kiểm tra INVEST
+## 16. Kiểm tra INVEST
 
 | Tiêu chí | Kết quả | Bằng chứng |
 |---|---|---|
@@ -1289,7 +1337,7 @@
 | Small | Đạt | Các hành trình lớn được tách theo kích hoạt, nội dung, tạo AI, phát hành, nộp, chấm và công bố |
 | Testable | Đạt | Cả 49 story MVP có acceptance criteria Given/When/Then và truy vết requirements |
 
-## 16. Security Compliance tại User Stories
+## 17. Security Compliance tại User Stories
 
 > Bảng này lập trước khi rút gọn phạm vi (2026-09-24). Hiện chỉ SECURITY-03, 04, 05, 08, 09, 12, 15 và RESILIENCY-04, 06, 10 còn áp dụng; các rule khác là N/A "ngoài phạm vi đồ án", kể cả những dòng ghi "downstream" (xem `requirements.md` mục 12-13).
 
@@ -1313,7 +1361,7 @@
 
 Không có blocking security finding tại User Stories.
 
-## 17. Resiliency Compliance tại User Stories
+## 18. Resiliency Compliance tại User Stories
 
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|
