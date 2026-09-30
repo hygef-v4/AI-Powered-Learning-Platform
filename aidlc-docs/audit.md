@@ -2801,3 +2801,31 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only use-case catalog refinement. Security and Resiliency extensions remain enabled under the project's reduced scope; their existing authorization and data-integrity requirements remain unchanged. Property-Based Testing is disabled and N/A.
 
 ---
+
+## Consolidate use-case table to 41 entries
+**Timestamp**: 2026-09-30T16:00:00Z
+**User Input**: "Chỉ sửa usecase table trước, sau đó tôi sẽ đồng bộ lại các tài liệu khác sau.
+-đổi và gộp các usecase view/create/update lại thành manage, gộp các usecase sau lại với nhau: (7,8) - account management; (10,11,12,13,14,21,22,24)-class management; (16,17)- content management; (43,44,45,46)-assignment submission; (41,48,49,50)- assignment management; (52,53)-grading, (54,55)-grade finalization; (57,58,60)-submission monitoring; (28,59)- learning overview
+-usecase 25 nằm trong usecase 40 chứ không để là 1 usecase riêng.
+-sửa lại usecase 31 là manage quiz.
+-bỏ usecase 31, 33"
+**AI Response**: "Asked to resolve the UC31 conflict; user chose: rename UC37 to Manage Quiz, remove UC31 and UC33, and add an Actor column. Rewrote docs/use-case-table.md only: renamed view/create/update cases to Manage, applied the requested merges, folded UC25 into Create Group Assignment, renumbered 1-41 and added a merged-ID map. Other documents are left for the user to synchronize."
+**Context**: Documentation-only use-case table revision; no other artifacts or code changed.
+
+---
+
+## Rename assignment-type cases and merge into Manage Assignments
+**Timestamp**: 2026-09-30T16:10:00Z
+**User Input**: "đổi 24, 26, 27 thành manage luôn và gộp 23 và 28 vào 29 (trong manage assignments sẽ có thêm quản lí group assignments)"
+**AI Response**: "Renamed Create Text Essay, Create Diagram Essay and Create Code Lab to Manage Text Essay, Manage Diagram Essay and Manage Code Lab. Merged View Managed Assignments and Create Group Assignment into Manage Assignments, which now covers group assignment management. Renumbered the table to 39 use cases and updated the merged-ID map in docs/use-case-table.md only."
+**Context**: Documentation-only use-case table revision; other documents remain for the user to synchronize.
+
+---
+
+## Restore Create Template with AI
+**Timestamp**: 2026-09-30T16:25:00Z
+**User Input**: "B"
+**AI Response**: "Restored Create Template with AI as a separate Subject Manager use case (UC22, previous UC33) in docs/use-case-table.md, renumbered the following cases to a 40-case table and updated the merged-ID map."
+**Context**: Documentation-only use-case table revision aligning with FR-006; other documents remain for the user to synchronize.
+
+---

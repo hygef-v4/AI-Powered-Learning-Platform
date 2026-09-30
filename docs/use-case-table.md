@@ -2,72 +2,73 @@
 
 > Review draft: names and IDs in this table have not yet been synchronized to other documents.
 
-This table contains 64 active MVP use cases, numbered consecutively from 1 to 64. Related actions are joined with `/` where appropriate. A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. The previous IDs remain in older documents until this draft is reviewed; Simulation Exam is outside the MVP.
+This table contains 40 active MVP use cases, numbered consecutively from 1 to 40. Same-actor view, create and update actions are merged into a single "Manage" use case, and related use cases are merged where listed in [Merged IDs](#merged-ids). A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. Simulation Exam and the separate question bank are outside the MVP use-case catalog.
 
-| ID | Use Case | Feature | Use Case Description |
-|---|---|---|---|
-| 1 | Activate Account | Authentication | Lets a user request activation for a school-issued account using a school email, verify an emailed OTP and set a password. The user can request another OTP within the rate limit; responses do not reveal whether an account exists. |
-| 2 | Sign In | Authentication | Lets a user sign in with the school email and password, with account status checks, attempt limits and safe error messages. |
-| 3 | Sign Out | Authentication | Lets a signed-in user end the current session and revoke the related credentials. |
-| 4 | Recover Password | Authentication | Lets a user request a password reset, verify an OTP and set a new password without revealing whether the account exists. |
-| 5 | Change Password | Authentication | Lets a signed-in user change the password after verifying the current one and meeting the password policy. |
-| 6 | View/Update Profile | Profile Management | Lets a signed-in user view their own profile and update permitted fields, but not their identifying email or role. |
-| 7 | View/Create/Update Accounts | Account Management | Lets the administrator browse accounts by role or status; create one school-issued account in PENDING without setting its password or sending email; update account information, highest role and active status with privilege checks, without deleting history. Temporary sign-in restrictions remain with LoginThrottle. |
-| 8 | Import Accounts | Account Management | Lets the administrator import school-issued accounts from a file into PENDING, receive per-row success or error results, and send no email during import. |
-| 9 | View/Create/Update Subjects | Subject Management | Lets the administrator view subjects with their details, manager and classes; create a subject with a valid code; update its information without losing history; and assign an account with a suitable role as its subject manager. |
-| 10 | View Classes | Class Management | Lets an authorized user view the class list and class details within the assigned scope. |
-| 11 | Create Class | Class Management | Lets the administrator create a class that belongs to exactly one subject. |
-| 12 | Update Class/Assign Teacher | Class Management | Lets the administrator or assigned teacher update class information within their permissions. Only the administrator can assign or change the class's one primary teacher. |
-| 13 | Open/Archive Class | Class Lifecycle | Lets the class manager open or archive a class while keeping its content and learning history. |
-| 14 | View/Enroll/Remove Students | Enrollment | Lets the class manager view current or past enrollments, enroll a student only once with a notification, and remove access while keeping learning history. |
-| 15 | Join Class | Enrollment | Lets a student self-enroll into an open class with a valid invite code, with attempt limits and no class information disclosed for an invalid code. |
-| 16 | View/Upload/Update Materials | Subject Content | Lets the subject manager view, upload, update, archive and index learning materials of an assigned subject for RAG. This includes adding a YouTube video or playlist, using existing captions without transcribing audio, and tracking timestamped transcript processing within the subject scope. |
-| 17 | Create/Update/Publish Content | Class Content | Lets the teacher view, create, upload, update, reorder, archive and publish valid content to enrolled students in an assigned class. This includes adding a YouTube video or playlist as a lesson RAG source, using existing captions without transcribing audio, and tracking timestamped transcript processing within the class scope. |
-| 18 | Access Lesson | Learning Content | Lets an enrolled student open published content and download the permitted files. |
-| 19 | Post Class Announcement | Class Communication | Lets the teacher post an announcement to an assigned class. |
-| 20 | Discuss in Class Q&A | Class Communication | Lets class members post questions and replies within the scope of their class. |
-| 21 | View Group Information | Group Management | Lets an authorized user view groups, leaders, members and contribution status in a class. |
-| 22 | Create/Update Groups | Group Management | Lets the teacher create or update groups, add or remove members and appoint exactly one leader. |
-| 23 | Request Leader Change | Leader Management | Lets a member submit a reason and a proposed new leader for the teacher to review. |
-| 24 | Review Leader Change | Leader Management | Lets the teacher approve or reject a leader-change request and notify the decision. |
-| 25 | Define Group Sections | Group Assignment | Lets the teacher prepare a group document with sections for members to claim. The teacher or group leader can release a section claim when needed. |
-| 26 | Submit Group Document | Group Submission | Lets group members view the shared document as it updates. The leader submits it; the system submits the current document automatically when the deadline passes. |
-| 27 | Grade Group Document | Group Grading | Lets the teacher review the submitted shared document and each member's contribution, assess integration and consistency, and decide each member's final grade without an automatic formula. |
-| 28 | View Learning Overview | Learning Overview | Lets the student see enrolled classes, upcoming assignments and notifications. Submission status and published grades appear in the personal results dashboard. |
-| 29 | Access Enrolled Class | Learning Dashboard | Lets the student open an enrolled class with its content, assignments and groups within the permitted scope. |
-| 30 | View/Create/Update Rubrics | Rubric Bank | Lets an authorized user view, create, update, clone and version rubrics within the permitted scope. |
-| 31 | View/Create/Update Questions | Question Bank | Lets an authorized user view, create, update, clone and preview questions within the permitted scope. |
-| 32 | Create Assignment with AI | AI Creation | Lets the teacher ask the AI service to create an assignment draft from class content, review the sources, edit, accept or discard the result before publishing. |
-| 33 | Create Template with AI | AI Creation | Lets the subject manager ask the AI service to create a subject-level template or question draft grounded in subject RAG, review its sources, edit, accept or discard the result. |
-| 34 | View/Configure AI Service | AI Administration | Lets the administrator view AI usage, quota and cost, configure the allowed model and enable or disable the AI service. |
-| 35 | View Managed Assignments | Assignment Management | Lets an authorized user view the assignment list and assignment details within the assigned scope. |
-| 36 | Create Text Essay | Assignment Creation | Lets an authorized user create a Text Essay in GRADED or PRACTICE mode with instructions, limits and a rubric. |
-| 37 | Create Multiple-Choice Quiz | Assignment Creation | Lets an authorized user create a GRADED or PRACTICE multiple-choice quiz with questions, answer keys and scoring rules. Self-study quizzes are PRACTICE; subject-manager templates may use either mode; teacher class quizzes follow the selected mode. |
-| 38 | Create Diagram Essay | Assignment Creation | Lets an authorized user create a GRADED or PRACTICE Diagram Essay using the DOCUMENT editor, an outline, optional DOCX import and embedded Draw.io diagrams with XML validation. |
-| 39 | Create Code Lab | Assignment Creation | Lets an authorized user create a GRADED or PRACTICE Code Lab, configure the coding problem, language, quota and test cases, and run the sample solution in the sandbox. |
-| 40 | Create Group Assignment | Assignment Creation | Lets the teacher create a GRADED group document assignment with a section outline and rubric for collaborative work. |
-| 41 | Publish Assignment | Assignment Publication | Lets the teacher configure a valid GRADED or PRACTICE mode, schedule and attempts, then preview, approve and publish an assignment to an assigned class. |
-| 42 | View Assigned Work | Assignment Delivery | Lets the student view assigned work with its requirements, rubric, deadline, attempts and status. |
-| 43 | Complete and Submit Essay | Assignment Workspace | Lets the student write, autosave and submit an open-ended answer while the assignment is open. |
-| 44 | Complete and Submit Quiz | Assignment Workspace | Lets the student answer, autosave and submit a quiz; closed questions are auto-scored against the answer-key version. |
-| 45 | Submit Diagram Essay | Diagram Assignment | Lets the student write a document, preview and import DOCX into the active attempt, draw on the embedded Draw.io canvas, save a draft and submit it with the full Draw.io XML. |
-| 46 | Submit Code Lab | Code Assignment | Lets the student write code, run it in the sandbox, autosave and submit the source within the assignment limits. |
-| 47 | Review Attempts | Submission | Lets the student view their attempts and create a new attempt while time and attempts remain. |
-| 48 | Clone/Version/Retire Assignment | Assignment Lifecycle | Lets an authorized user clone, create a new version of or retire an assignment without changing historical data. |
-| 49 | Publish and Copy Templates | Assignment Template | Lets the subject manager publish a versioned subject template, including PRACTICE or GRADED quizzes, and a teacher copy it into an independent class draft. |
-| 50 | Copy Class Assignment | Assignment Reuse | Lets a teacher copy assignment content and its rubric between classes they teach without copying schedules, attempts, submissions or grades. |
-| 51 | Review Submissions | Submission Review | Lets the teacher view GRADED submissions, student work, rubric, attempts and auto-scored results of an assigned class; PRACTICE is outside the teacher grading queue. |
-| 52 | Grade Manually | Manual Grading | Lets the teacher enter the score and feedback for an individual submission without calling the AI service. |
-| 53 | Grade with AI Assistance | AI-Assisted Grading | Lets the teacher request, review, accept or override an AI grading proposal; the AI never decides the final score. |
-| 54 | Publish Grades | Grade Finalization | Lets the teacher confirm the final score and publish the score and feedback to the right student. |
-| 55 | Bulk Finalize Grades | Grade Finalization | Lets the teacher check eligibility and finalize many valid scores in a class at once. |
-| 56 | View Grades | Gradebook | Lets the student view their own published final score and feedback. |
-| 57 | View Gradebook History | Gradebook | Lets an authorized user view the gradebook together with the change history, actor, timestamp and reason. |
-| 58 | Monitor Submission Status | Submission Monitoring | Lets the teacher view submission status in an assigned class. The system automatically reminds students who have not submitted 24 hours before the deadline. |
-| 59 | View Results Dashboard | Learning Analytics | Lets the student view upcoming assignments, submission status and published grades. An anonymized class distribution is shown only when its privacy conditions are met. |
-| 60 | Export Gradebook | Grade Export | Lets an authorized user export a CSV or XLSX gradebook for a class or assignment, containing only data within their permitted scope. |
-| 61 | Buy AI Credits | Payment | Lets an ACTIVE Student, Teacher, Subject Manager or Administrator view AI credit packages, pay and track payment status. Verified PayOS payment grants purchased credits exactly once. Student credit use is limited to Practice Text/Diagram Essay grading. |
-| 62 | View Notifications | Notification | Lets a user receive and read notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
-| 63 | View Audit Log | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
-| 64 | Grade Practice with AI | Practice Feedback | Lets a student receive one AI score and feedback for each submitted PRACTICE Text or Diagram Essay attempt when enough credits are available. Without enough credits the attempt is submitted without an AI score; the student must submit a new attempt after buying credits. Practice results stay outside the official gradebook. |
+| ID | Use Case | Actor | Feature | Use Case Description |
+|---|---|---|---|---|
+| 1 | Activate Account | All roles | Authentication | Lets a user request activation for a school-issued account using a school email, verify an emailed OTP and set a password. The user can request another OTP within the rate limit; responses do not reveal whether an account exists. |
+| 2 | Sign In | All roles | Authentication | Lets a user sign in with the school email and password, with account status checks, attempt limits and safe error messages. |
+| 3 | Sign Out | All roles | Authentication | Lets a signed-in user end the current session and revoke the related credentials. |
+| 4 | Recover Password | All roles | Authentication | Lets a user request a password reset, verify an OTP and set a new password without revealing whether the account exists. |
+| 5 | Change Password | All roles | Authentication | Lets a signed-in user change the password after verifying the current one and meeting the password policy. |
+| 6 | Manage Profile | All roles | Profile Management | Lets a signed-in user view their own profile and update permitted fields, but not their identifying email or role. |
+| 7 | Manage Accounts | Administrator | Account Management | Lets the administrator browse accounts by role or status; create one school-issued account in PENDING without setting its password or sending email; import school-issued accounts from a file into PENDING with per-row success or error results and no email sent; and update account information, highest role and active status with privilege checks, without deleting history. |
+| 8 | Manage Subjects | Administrator | Subject Management | Lets the administrator view subjects with their details, manager and classes; create a subject with a valid code; update its information without losing history; and assign an account with a suitable role as its subject manager. |
+| 9 | Manage Classes | Administrator, Teacher, Subject Manager | Class Management | Lets an authorized user view the class list and class details within the assigned scope. The administrator creates a class that belongs to exactly one subject and is the only one who assigns or changes its one primary teacher. The class manager updates class information, opens or archives the class while keeping its content and learning history, views current or past enrollments, enrolls a student only once with a notification and removes access while keeping learning history. The teacher views groups, leaders, members and contribution status; creates or updates groups, adds or removes members and appoints exactly one leader; and approves or rejects a leader-change request with a notification of the decision. |
+| 10 | Join Class | Student | Enrollment | Lets a student self-enroll into an open class with a valid invite code, with attempt limits and no class information disclosed for an invalid code. |
+| 11 | Manage Content | Subject Manager, Teacher | Content Management | Lets the subject manager view, upload, update, archive and index learning materials of an assigned subject for RAG, and lets the teacher view, create, upload, update, reorder, archive and publish valid content to enrolled students in an assigned class. Both can add a YouTube video or playlist as a RAG source, using existing captions without transcribing audio, and track timestamped transcript processing within their subject or class scope. |
+| 12 | Access Lesson | Student | Learning Content | Lets an enrolled student open published content and download the permitted files. |
+| 13 | Post Class Announcement | Teacher | Class Communication | Lets the teacher post an announcement to an assigned class. |
+| 14 | Discuss in Class Q&A | Student, Teacher | Class Communication | Lets class members post questions and replies within the scope of their class. |
+| 15 | Request Leader Change | Student | Leader Management | Lets a member submit a reason and a proposed new leader for the teacher to review. |
+| 16 | Submit Group Document | Student | Group Submission | Lets group members view the shared document as it updates. The leader submits it; the system submits the current document automatically when the deadline passes. |
+| 17 | Grade Group Document | Teacher | Group Grading | Lets the teacher review the submitted shared document and each member's contribution, assess integration and consistency, and decide each member's final grade without an automatic formula. |
+| 18 | View Learning Overview | Student | Learning Overview | Lets the student see enrolled classes, upcoming assignments, notifications, submission status and published grades. An anonymized class distribution is shown only when its privacy conditions are met. |
+| 19 | Access Enrolled Class | Student | Learning Dashboard | Lets the student open an enrolled class with its content, assignments and groups within the permitted scope. |
+| 20 | Manage Rubrics | Teacher, Subject Manager | Rubric Bank | Lets an authorized user view, create, update, clone and version rubrics within the permitted scope. |
+| 21 | Create Assignment with AI | Teacher | AI Creation | Lets the teacher ask the AI service to create an assignment draft from class content, review the sources, edit, accept or discard the result before publishing. |
+| 22 | Create Template with AI | Subject Manager | AI Creation | Lets the subject manager ask the AI service to create a subject-level template or question draft grounded in subject RAG, review its sources, edit, accept or discard the result. |
+| 23 | Manage AI Service | Administrator | AI Administration | Lets the administrator view AI usage, quota and cost, configure the allowed model and enable or disable the AI service. |
+| 24 | Manage Text Essay | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a Text Essay in GRADED or PRACTICE mode with instructions, limits and a rubric. |
+| 25 | Manage Quiz | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE multiple-choice quiz with its single-answer and multiple-answer questions, answer keys and scoring rules. The subject manager prepares subject-level quizzes in either mode; the teacher publishes quizzes to an assigned class. Students only take assigned PRACTICE quizzes and never create quizzes. |
+| 26 | Manage Diagram Essay | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE Diagram Essay using the DOCUMENT editor, an outline, optional DOCX import and embedded Draw.io diagrams with XML validation. |
+| 27 | Manage Code Lab | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE Code Lab, configure the coding problem, language, quota and test cases, and run the sample solution in the sandbox. |
+| 28 | Manage Assignments | Teacher, Subject Manager | Assignment Management | Lets an authorized user view the assignment list and assignment details within the assigned scope. The teacher creates and updates a GRADED group document assignment with a rubric and prepares its sections for members to claim; the teacher or group leader can release a section claim when needed. The teacher configures a valid GRADED or PRACTICE mode, schedule and attempts, then previews, approves and publishes an assignment to an assigned class. An authorized user can clone, create a new version of or retire an assignment without changing historical data. The subject manager publishes a versioned subject template, including PRACTICE or GRADED quizzes, and a teacher copies it into an independent class draft. A teacher can copy assignment content and its rubric between classes they teach without copying schedules, attempts, submissions or grades. |
+| 29 | View Assigned Work | Student | Assignment Delivery | Lets the student view assigned work with its requirements, rubric, deadline, attempts and status. |
+| 30 | Submit Assignment | Student | Assignment Submission | Lets the student complete and submit an individual assignment while it is open, with autosave and a submission receipt: write an open-ended Text Essay; answer a quiz whose closed questions are auto-scored against the answer-key version; write a Diagram Essay document, preview and import DOCX into the active attempt and draw on the embedded Draw.io canvas, submitting the full Draw.io XML; or write code, run it in the sandbox and submit the source within the assignment limits. |
+| 31 | Review Attempts | Student | Submission | Lets the student view their attempts and create a new attempt while time and attempts remain. |
+| 32 | Review Submissions | Teacher | Submission Review | Lets the teacher view GRADED submissions, student work, rubric, attempts and auto-scored results of an assigned class; PRACTICE is outside the teacher grading queue. |
+| 33 | Grade Submissions | Teacher | Grading | Lets the teacher enter the score and feedback for an individual submission manually, or request, review, accept or override an AI grading proposal; the AI never decides the final score. |
+| 34 | Finalize Grades | Teacher | Grade Finalization | Lets the teacher confirm the final score and publish the score and feedback to the right student, or check eligibility and finalize many valid scores in a class at once. |
+| 35 | View Grades | Student | Gradebook | Lets the student view their own published final score and feedback. |
+| 36 | Monitor Submissions | Teacher, Subject Manager, Administrator | Submission Monitoring | Lets the teacher view submission status in an assigned class; the system automatically reminds students who have not submitted 24 hours before the deadline. An authorized user can view the gradebook together with the change history, actor, timestamp and reason, and export a CSV or XLSX gradebook for a class or assignment containing only data within their permitted scope. |
+| 37 | Buy AI Credits | Student, Teacher, Subject Manager, Administrator | Payment | Lets an ACTIVE Student, Teacher, Subject Manager or Administrator view AI credit packages, pay and track payment status. Verified PayOS payment grants purchased credits exactly once. Student credit use is limited to Practice Text/Diagram Essay grading. |
+| 38 | View Notifications | All roles | Notification | Lets a user receive and read notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
+| 39 | View Audit Log | Administrator | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
+| 40 | Grade Practice with AI | Student | Practice Feedback | Lets a student receive one AI score and feedback for each submitted PRACTICE Text or Diagram Essay attempt when enough credits are available. Without enough credits the attempt is submitted without an AI score; the student must submit a new attempt after buying credits. Practice results stay outside the official gradebook. |
 
+## Merged IDs
+
+Previous IDs refer to the 64-case draft that this table replaces.
+
+| New ID | Use Case | Previous IDs |
+|---|---|---|
+| 6 | Manage Profile | 6 |
+| 7 | Manage Accounts | 7, 8 |
+| 8 | Manage Subjects | 9 |
+| 9 | Manage Classes | 10, 11, 12, 13, 14, 21, 22, 24 |
+| 11 | Manage Content | 16, 17 |
+| 18 | View Learning Overview | 28, 59 |
+| 20 | Manage Rubrics | 30 |
+| 22 | Create Template with AI | 33 |
+| 23 | Manage AI Service | 34 |
+| 24 | Manage Text Essay | 36 |
+| 25 | Manage Quiz | 37 |
+| 26 | Manage Diagram Essay | 38 |
+| 27 | Manage Code Lab | 39 |
+| 28 | Manage Assignments | 25, 35, 40, 41, 48, 49, 50 |
+| 30 | Submit Assignment | 43, 44, 45, 46 |
+| 33 | Grade Submissions | 52, 53 |
+| 34 | Finalize Grades | 54, 55 |
+| 36 | Monitor Submissions | 57, 58, 60 |
+| — | Removed: View/Create/Update Questions | 31 |
