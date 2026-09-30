@@ -1,11 +1,16 @@
-# 4.2 Use Cases (UC)
+# 4.2 Các ca sử dụng (UC)
 
-> Review draft: names and IDs in this table have not yet been synchronized to other documents.
+> Bản nháp chờ rà soát: tên và ID trong bảng này chưa được đồng bộ với các tài liệu khác.
 
+<<<<<<< Updated upstream
 This table contains 33 active MVP use cases, numbered consecutively from 1 to 33. A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. Simulation Exam is outside the MVP.
+=======
+Bảng này gồm 64 ca sử dụng đang thuộc phạm vi MVP, được đánh số liên tiếp từ 1 đến 64. Các thao tác liên quan được ghép bằng dấu `/` khi phù hợp. Người quản lý môn học có thể thêm nguồn YouTube vào học liệu của môn học; giáo viên có thể thêm các nguồn này vào nội dung lớp học. Các tài liệu cũ vẫn giữ ID trước đây cho đến khi bản nháp này được rà soát; chức năng thi mô phỏng nằm ngoài phạm vi MVP.
+>>>>>>> Stashed changes
 
-| ID | Use Case | Feature | Use Case Description |
+| ID | Ca sử dụng | Chức năng | Mô tả ca sử dụng |
 |---|---|---|---|
+<<<<<<< Updated upstream
 | 1 | Activate Account | Authentication | Lets a user request activation for a school-issued account using a school email, verify an emailed OTP and set a password. The user can request another OTP within the rate limit; responses do not reveal whether an account exists. |
 | 2 | Sign In | Authentication | Lets a user sign in with the school email and password, with account status checks, attempt limits and safe error messages. |
 | 3 | Sign Out | Authentication | Lets a signed-in user end the current session and revoke the related credentials. |
@@ -39,3 +44,69 @@ This table contains 33 active MVP use cases, numbered consecutively from 1 to 33
 | 31 | Buy AI Credits | Payment | Lets an ACTIVE Student, Teacher, Subject Manager or Administrator view AI credit packages, pay and track payment status. The administrator also creates, edits and hides packages. Verified PayOS payment grants purchased credits exactly once. Student credit use is limited to Practice Text/Diagram Essay grading. |
 | 32 | View Notifications | Notification | Lets a user receive, read and configure notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
 | 33 | View Audit Log | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
+=======
+| 1 | Kích hoạt tài khoản | Xác thực | Cho phép người dùng yêu cầu kích hoạt tài khoản do nhà trường cấp bằng email trường, xác minh mã OTP được gửi qua email và đặt mật khẩu. Người dùng có thể yêu cầu gửi lại OTP trong giới hạn tần suất cho phép; phản hồi không tiết lộ tài khoản có tồn tại hay không. |
+| 2 | Đăng nhập | Xác thực | Cho phép người dùng đăng nhập bằng email trường và mật khẩu, đồng thời kiểm tra trạng thái tài khoản, giới hạn số lần thử và hiển thị thông báo lỗi an toàn. |
+| 3 | Đăng xuất | Xác thực | Cho phép người dùng đã đăng nhập kết thúc phiên hiện tại và thu hồi thông tin xác thực liên quan. |
+| 4 | Khôi phục mật khẩu | Xác thực | Cho phép người dùng yêu cầu đặt lại mật khẩu, xác minh OTP và đặt mật khẩu mới mà không tiết lộ tài khoản có tồn tại hay không. |
+| 5 | Đổi mật khẩu | Xác thực | Cho phép người dùng đã đăng nhập đổi mật khẩu sau khi xác minh mật khẩu hiện tại và đáp ứng chính sách mật khẩu. |
+| 6 | Xem/Cập nhật hồ sơ cá nhân | Quản lý hồ sơ cá nhân | Cho phép người dùng đã đăng nhập xem hồ sơ của mình và cập nhật các trường được phép, nhưng không được thay đổi email định danh hoặc vai trò. |
+| 7 | Xem/Tạo/Cập nhật tài khoản | Quản lý tài khoản | Cho phép quản trị viên xem danh sách tài khoản theo vai trò hoặc trạng thái; tạo một tài khoản do nhà trường cấp ở trạng thái PENDING (chờ kích hoạt) mà không đặt mật khẩu hoặc gửi email; cập nhật thông tin tài khoản, vai trò cao nhất và trạng thái hoạt động sau khi kiểm tra quyền, không xóa lịch sử. Các hạn chế đăng nhập tạm thời vẫn do LoginThrottle quản lý. |
+| 8 | Nhập tài khoản từ tệp | Quản lý tài khoản | Cho phép quản trị viên nhập tài khoản do nhà trường cấp từ tệp vào trạng thái PENDING (chờ kích hoạt), nhận kết quả thành công hoặc lỗi theo từng dòng và không gửi email trong quá trình nhập. |
+| 9 | Xem/Tạo/Cập nhật môn học | Quản lý môn học | Cho phép quản trị viên xem môn học cùng thông tin chi tiết, người quản lý và các lớp; tạo môn học với mã hợp lệ; cập nhật thông tin mà không làm mất lịch sử; và phân công tài khoản có vai trò phù hợp làm người quản lý môn học. |
+| 10 | Xem lớp học | Quản lý lớp học | Cho phép người dùng có quyền xem danh sách và thông tin chi tiết của lớp học trong phạm vi được phân công. |
+| 11 | Tạo lớp học | Quản lý lớp học | Cho phép quản trị viên tạo lớp học thuộc đúng một môn học. |
+| 12 | Cập nhật lớp học/Phân công giáo viên | Quản lý lớp học | Cho phép quản trị viên hoặc giáo viên được phân công cập nhật thông tin lớp học trong phạm vi quyền hạn. Chỉ quản trị viên được phân công hoặc thay đổi giáo viên chính duy nhất của lớp. |
+| 13 | Mở/Lưu trữ lớp học | Vòng đời lớp học | Cho phép người quản lý lớp mở hoặc lưu trữ lớp học, đồng thời giữ lại nội dung và lịch sử học tập. |
+| 14 | Xem/Thêm/Xóa học sinh khỏi lớp | Ghi danh | Cho phép người quản lý lớp xem các lượt ghi danh hiện tại hoặc trước đây, ghi danh mỗi học sinh một lần duy nhất kèm thông báo và thu hồi quyền truy cập mà vẫn giữ lịch sử học tập. |
+| 15 | Tham gia lớp học | Ghi danh | Cho phép học sinh tự ghi danh vào lớp đang mở bằng mã mời hợp lệ, có giới hạn số lần thử và không tiết lộ thông tin lớp khi mã không hợp lệ. |
+| 16 | Xem/Tải lên/Cập nhật học liệu | Nội dung môn học | Cho phép người quản lý môn học xem, tải lên, cập nhật, lưu trữ và lập chỉ mục học liệu của môn học được phân công để phục vụ RAG. Bao gồm thêm video hoặc danh sách phát YouTube, sử dụng phụ đề có sẵn mà không chuyển âm thanh thành văn bản và theo dõi việc xử lý bản chép lời có mốc thời gian trong phạm vi môn học. |
+| 17 | Tạo/Cập nhật/Công bố nội dung | Nội dung lớp học | Cho phép giáo viên xem, tạo, tải lên, cập nhật, sắp xếp lại, lưu trữ và công bố nội dung hợp lệ cho học sinh đã ghi danh trong lớp được phân công. Bao gồm thêm video hoặc danh sách phát YouTube làm nguồn RAG cho bài học, sử dụng phụ đề có sẵn mà không chuyển âm thanh thành văn bản và theo dõi việc xử lý bản chép lời có mốc thời gian trong phạm vi lớp học. |
+| 18 | Truy cập bài học | Nội dung học tập | Cho phép học sinh đã ghi danh mở nội dung đã công bố và tải xuống các tệp được phép. |
+| 19 | Đăng thông báo lớp học | Trao đổi trong lớp | Cho phép giáo viên đăng thông báo cho lớp được phân công. |
+| 20 | Thảo luận trong mục hỏi đáp của lớp | Trao đổi trong lớp | Cho phép thành viên lớp đăng câu hỏi và trả lời trong phạm vi lớp của mình. |
+| 21 | Xem thông tin nhóm | Quản lý nhóm | Cho phép người dùng có quyền xem các nhóm, trưởng nhóm, thành viên và tình trạng đóng góp trong lớp. |
+| 22 | Tạo/Cập nhật nhóm | Quản lý nhóm | Cho phép giáo viên tạo hoặc cập nhật nhóm, thêm hoặc xóa thành viên và chỉ định đúng một trưởng nhóm. |
+| 23 | Yêu cầu đổi trưởng nhóm | Quản lý trưởng nhóm | Cho phép thành viên gửi lý do và đề xuất trưởng nhóm mới để giáo viên xem xét. |
+| 24 | Xét duyệt yêu cầu đổi trưởng nhóm | Quản lý trưởng nhóm | Cho phép giáo viên chấp thuận hoặc từ chối yêu cầu đổi trưởng nhóm và thông báo quyết định. |
+| 25 | Thiết lập các phần trong tài liệu nhóm | Bài tập nhóm | Cho phép giáo viên chuẩn bị tài liệu nhóm với các phần để thành viên đăng ký phụ trách. Giáo viên hoặc trưởng nhóm có thể hủy đăng ký phụ trách một phần khi cần. |
+| 26 | Nộp tài liệu nhóm | Nộp bài nhóm | Cho phép thành viên nhóm xem tài liệu dùng chung khi nội dung được cập nhật. Trưởng nhóm nộp tài liệu; hệ thống tự động nộp tài liệu hiện tại khi hết hạn. |
+| 27 | Chấm tài liệu nhóm | Chấm điểm nhóm | Cho phép giáo viên xem tài liệu dùng chung đã nộp và đóng góp của từng thành viên, đánh giá mức độ tích hợp và tính nhất quán, đồng thời quyết định điểm cuối cùng của từng thành viên mà không áp dụng công thức tự động. |
+| 28 | Xem tổng quan học tập | Tổng quan học tập | Cho phép học sinh xem các lớp đã ghi danh, bài tập sắp đến hạn và thông báo. Trạng thái nộp bài và điểm đã công bố được hiển thị trên bảng tổng quan kết quả cá nhân. |
+| 29 | Truy cập lớp đã ghi danh | Bảng tổng quan học tập | Cho phép học sinh mở lớp đã ghi danh để truy cập nội dung, bài tập và nhóm trong phạm vi được phép. |
+| 30 | Xem/Tạo/Cập nhật bảng tiêu chí chấm điểm | Kho bảng tiêu chí chấm điểm | Cho phép người dùng có quyền xem, tạo, cập nhật, sao chép và quản lý phiên bản bảng tiêu chí chấm điểm trong phạm vi được phép. |
+| 31 | Xem/Tạo/Cập nhật câu hỏi | Ngân hàng câu hỏi | Cho phép người dùng có quyền xem, tạo, cập nhật, sao chép và xem trước câu hỏi trong phạm vi được phép. |
+| 32 | Tạo bài tập bằng AI | Tạo nội dung bằng AI | Cho phép giáo viên yêu cầu dịch vụ AI tạo bản nháp bài tập từ nội dung lớp học, kiểm tra nguồn, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi công bố. |
+| 33 | Tạo mẫu bằng AI | Tạo nội dung bằng AI | Cho phép người quản lý môn học yêu cầu dịch vụ AI tạo mẫu cấp môn học hoặc bản nháp câu hỏi dựa trên RAG của môn học, kiểm tra nguồn, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả. |
+| 34 | Xem/Cấu hình dịch vụ AI | Quản trị AI | Cho phép quản trị viên xem mức sử dụng, hạn mức và chi phí AI, cấu hình mô hình được phép sử dụng và bật hoặc tắt dịch vụ AI. |
+| 35 | Xem bài tập được quản lý | Quản lý bài tập | Cho phép người dùng có quyền xem danh sách và thông tin chi tiết của bài tập trong phạm vi được phân công. |
+| 36 | Tạo bài tự luận văn bản | Tạo bài tập | Cho phép người dùng có quyền tạo bài tự luận văn bản ở chế độ GRADED (có tính điểm) hoặc PRACTICE (luyện tập), kèm hướng dẫn, các giới hạn và bảng tiêu chí chấm điểm. |
+| 37 | Tạo bài kiểm tra trắc nghiệm | Tạo bài tập | Cho phép người dùng có quyền tạo bài kiểm tra trắc nghiệm ở chế độ GRADED hoặc PRACTICE, kèm câu hỏi, đáp án và quy tắc tính điểm. Bài kiểm tra tự học dùng chế độ PRACTICE; mẫu của người quản lý môn học có thể dùng một trong hai chế độ; bài kiểm tra của giáo viên trong lớp tuân theo chế độ đã chọn. |
+| 38 | Tạo bài tự luận sơ đồ | Tạo bài tập | Cho phép người dùng có quyền tạo bài tự luận sơ đồ ở chế độ GRADED hoặc PRACTICE bằng trình soạn thảo DOCUMENT, với dàn ý, tùy chọn nhập tệp DOCX và sơ đồ Draw.io nhúng có kiểm tra tính hợp lệ của XML. |
+| 39 | Tạo bài thực hành lập trình | Tạo bài tập | Cho phép người dùng có quyền tạo bài thực hành lập trình ở chế độ GRADED hoặc PRACTICE, cấu hình đề bài, ngôn ngữ, hạn mức và các ca kiểm thử, đồng thời chạy lời giải mẫu trong môi trường thực thi cách ly. |
+| 40 | Tạo bài tập nhóm | Tạo bài tập | Cho phép giáo viên tạo bài tập tài liệu nhóm ở chế độ GRADED, với dàn ý các phần và bảng tiêu chí chấm điểm để các thành viên cùng thực hiện. |
+| 41 | Công bố bài tập | Công bố bài tập | Cho phép giáo viên cấu hình chế độ GRADED hoặc PRACTICE hợp lệ, lịch thực hiện và số lượt làm bài, sau đó xem trước, phê duyệt và công bố bài tập cho lớp được phân công. |
+| 42 | Xem bài tập được giao | Giao bài tập | Cho phép học sinh xem bài tập được giao cùng yêu cầu, bảng tiêu chí chấm điểm, hạn nộp, số lượt làm bài và trạng thái. |
+| 43 | Làm và nộp bài tự luận | Không gian làm bài | Cho phép học sinh viết câu trả lời tự luận, tự động lưu và nộp bài khi bài tập còn mở. |
+| 44 | Làm và nộp bài trắc nghiệm | Không gian làm bài | Cho phép học sinh trả lời, tự động lưu và nộp bài trắc nghiệm; các câu hỏi đóng được chấm tự động theo phiên bản đáp án. |
+| 45 | Nộp bài tự luận sơ đồ | Bài tập sơ đồ | Cho phép học sinh soạn tài liệu, xem trước và nhập tệp DOCX vào lượt làm bài hiện tại, vẽ trên vùng vẽ Draw.io nhúng, lưu bản nháp và nộp bài kèm toàn bộ XML của Draw.io. |
+| 46 | Nộp bài thực hành lập trình | Bài tập lập trình | Cho phép học sinh viết mã, chạy mã trong môi trường thực thi cách ly, tự động lưu và nộp mã nguồn trong các giới hạn của bài tập. |
+| 47 | Xem lại các lượt làm bài | Nộp bài | Cho phép học sinh xem các lượt làm bài của mình và tạo lượt mới khi còn thời gian và số lượt cho phép. |
+| 48 | Sao chép/Tạo phiên bản/Ngừng sử dụng bài tập | Vòng đời bài tập | Cho phép người dùng có quyền sao chép, tạo phiên bản mới hoặc ngừng sử dụng bài tập mà không thay đổi dữ liệu lịch sử. |
+| 49 | Công bố và sao chép mẫu bài tập | Mẫu bài tập | Cho phép người quản lý môn học công bố mẫu môn học có quản lý phiên bản, bao gồm bài kiểm tra ở chế độ PRACTICE hoặc GRADED, và cho phép giáo viên sao chép mẫu thành bản nháp độc lập của lớp. |
+| 50 | Sao chép bài tập giữa các lớp | Tái sử dụng bài tập | Cho phép giáo viên sao chép nội dung bài tập và bảng tiêu chí chấm điểm giữa các lớp mình giảng dạy mà không sao chép lịch thực hiện, lượt làm bài, bài nộp hoặc điểm. |
+| 51 | Xem xét bài nộp | Xem xét bài nộp | Cho phép giáo viên xem bài nộp ở chế độ GRADED, bài làm của học sinh, bảng tiêu chí chấm điểm, các lượt làm bài và kết quả chấm tự động trong lớp được phân công; bài PRACTICE không nằm trong danh sách chờ giáo viên chấm điểm. |
+| 52 | Chấm điểm thủ công | Chấm điểm thủ công | Cho phép giáo viên nhập điểm và nhận xét cho từng bài nộp cá nhân mà không gọi dịch vụ AI. |
+| 53 | Chấm điểm với sự hỗ trợ của AI | Chấm điểm có AI hỗ trợ | Cho phép giáo viên yêu cầu, xem xét, chấp nhận hoặc điều chỉnh đề xuất chấm điểm của AI; AI không bao giờ quyết định điểm cuối cùng. |
+| 54 | Công bố điểm | Chốt điểm | Cho phép giáo viên xác nhận điểm cuối cùng và công bố điểm cùng nhận xét cho đúng học sinh. |
+| 55 | Chốt điểm hàng loạt | Chốt điểm | Cho phép giáo viên kiểm tra điều kiện và chốt nhiều điểm hợp lệ trong một lớp cùng lúc. |
+| 56 | Xem điểm | Sổ điểm | Cho phép học sinh xem điểm cuối cùng và nhận xét đã công bố của chính mình. |
+| 57 | Xem lịch sử sổ điểm | Sổ điểm | Cho phép người dùng có quyền xem sổ điểm cùng lịch sử thay đổi, người thực hiện, mốc thời gian và lý do. |
+| 58 | Theo dõi trạng thái nộp bài | Theo dõi nộp bài | Cho phép giáo viên xem trạng thái nộp bài trong lớp được phân công. Hệ thống tự động nhắc học sinh chưa nộp bài vào thời điểm 24 giờ trước hạn nộp. |
+| 59 | Xem bảng tổng quan kết quả | Phân tích học tập | Cho phép học sinh xem bài tập sắp đến hạn, trạng thái nộp bài và điểm đã công bố. Phân bố kết quả của lớp đã được ẩn danh chỉ được hiển thị khi đáp ứng các điều kiện bảo vệ quyền riêng tư. |
+| 60 | Xuất sổ điểm | Xuất điểm | Cho phép người dùng có quyền xuất sổ điểm của lớp hoặc bài tập dưới dạng CSV hoặc XLSX, chỉ bao gồm dữ liệu trong phạm vi được phép. |
+| 61 | Mua tín dụng AI | Thanh toán | Cho phép học sinh, giáo viên, người quản lý môn học hoặc quản trị viên ở trạng thái ACTIVE (đang hoạt động) xem các gói tín dụng AI, thanh toán và theo dõi trạng thái thanh toán. Thanh toán PayOS đã được xác minh sẽ cấp tín dụng đã mua đúng một lần. Học sinh chỉ được sử dụng tín dụng để chấm bài tự luận văn bản hoặc sơ đồ ở chế độ PRACTICE. |
+| 62 | Xem thông báo | Thông báo | Cho phép người dùng nhận và đọc thông báo về bài đăng và hỏi đáp trong lớp, bài tập, hạn nộp, nhóm, điểm và thanh toán trong phạm vi của mình. |
+| 63 | Xem nhật ký kiểm toán | Kiểm toán | Cho phép quản trị viên có quyền xem các sự kiện kiểm toán theo người thực hiện, hành động, đối tượng, kết quả và thời gian; bản ghi kiểm toán không thể bị sửa hoặc xóa. |
+| 64 | Chấm bài luyện tập bằng AI | Phản hồi luyện tập | Cho phép học sinh nhận một điểm số và nhận xét từ AI cho mỗi lượt làm bài tự luận văn bản hoặc sơ đồ ở chế độ PRACTICE đã nộp khi có đủ tín dụng. Nếu không đủ tín dụng, lượt làm bài vẫn được nộp nhưng không có điểm AI; học sinh phải nộp một lượt làm bài mới sau khi mua tín dụng. Kết quả luyện tập không được đưa vào sổ điểm chính thức. |
+>>>>>>> Stashed changes
