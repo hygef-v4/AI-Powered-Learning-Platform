@@ -2853,3 +2853,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only synchronization; screen-flow remains for the user to synchronize.
 
 ---
+
+## Synchronize screen flow with the 40-case table
+**Timestamp**: 2026-09-30T17:20:00Z
+**User Input**: "đồng bộ lại screen-flow theo bảng mới"
+**AI Response**: "Replaced every legacy UC-XXX-NN code in docs/screen-flow.md with the new 1-40 IDs, added UC references to the role narratives, updated the learner flow with AI credit purchase and PRACTICE AI results, added the Student role to the credit screens, and noted the mappings for question-bank, credit-package and invite-code screens. screen-flow.drawio contains no UC codes and was not changed."
+**Context**: Documentation-only synchronization with docs/use-case-table.md.
+
+---
+
+## Open AI credit purchase screen to all roles in screen flow
+**Timestamp**: 2026-10-01T00:10:00Z
+**User Input**: "sửa drawio luôn rồi commit, chưa push"
+**AI Response**: "Renamed the 'AI Credit Purchase (Staff)' cell in docs/screen-flow.drawio to 'AI Credit Purchase'. The cell sits in the shared Navigation header reached from Sign In, so no Learner Menu edge was added. Aligned the matching screen-flow.md rows (screen name, opened from Header (all roles)) and committed without pushing."
+**Context**: Documentation-only synchronization with UC 37 Buy AI Credits.
+
+---
