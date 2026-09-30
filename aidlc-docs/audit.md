@@ -2845,3 +2845,11 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only use-case table revision.
 
 ---
+
+## Synchronize README and business flow with the 40-case table
+**Timestamp**: 2026-09-30T17:05:00Z
+**User Input**: "đồng bộ lại README và business-flow theo bảng mới"
+**AI Response**: "Updated docs/README.md to 40 use cases, the five-column table, the new specifications row and a working use-case link, noting that screen-flow UC codes are not yet synchronized. Rewrote docs/business-flow.md with related UC IDs per page, removed Simulation Exam and learner AI Q&A, added GRADED/PRACTICE handling, and allowed Student credit purchase limited to PRACTICE Text/Diagram Essay grading. Updated matching labels in docs/business-flow.drawio without changing its layout."
+**Context**: Documentation-only synchronization; screen-flow remains for the user to synchronize.
+
+---
