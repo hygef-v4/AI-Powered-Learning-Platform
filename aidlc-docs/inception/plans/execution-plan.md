@@ -1,6 +1,6 @@
 # AI-DLC Execution Plan
 
-> Lưu ý cập nhật: các bảng unit U01-U08 bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit trong `aidlc-docs/inception/application-design/unit-of-work.md`; Learning Access thuộc U04. Theo yêu cầu ngày 2026-09-24, Construction bắt đầu với Functional Design U01 Account & Access; kế hoạch recovery cũ đã được thay thế.
+> Lưu ý cập nhật: các bảng unit U01-U08, mốc 77 use case và mô tả Simulation Exam/bốn loại bài bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit và 69 use case trong `aidlc-docs/inception/application-design/unit-of-work.md`; phạm vi gồm năm dạng bài, Student mua credit để AI chấm Practice Text/Diagram Essay, không có Simulation Exam. Learning Access thuộc U04. Construction đã hoàn thành thiết kế; các code plan cập nhật chờ checkpoint riêng.
 
 ## 1. Detailed Analysis Summary
 
@@ -131,7 +131,7 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case thuộc phạm vi MVP. Danh mục use case hiện hành đã bỏ các UC ngoài phạm vi.
+- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case tại mốc duyệt ban đầu. Danh mục hiện hành còn 69 UC sau khi gộp các thao tác CRUD cùng actor và bỏ mã lịch sử.
 - [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
 - [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
 - [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.
@@ -160,7 +160,7 @@ Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấ
 
 - Identity/authorization và academic scope.
 - Subject/class content và private file/RAG ingestion.
-- Group/leader management, individual work packages, composite generation/version và instructor finalization.
+- Group/leader management, individual work packages, composite generation/version và teacher finalization.
 - Learning access and entitlement; lesson completion/position progress is out of scope.
 - AI authoring và assessment delivery.
 - Submission, grading và gradebook.

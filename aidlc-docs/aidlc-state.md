@@ -4,15 +4,15 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 1 - messaging redesign (2026-09-26): audit written in-transaction, cross-unit reactions via ports + jobs, 7 job queues, Redis/RabbitMQ renamed. Plans of U02, U05, U07, U08, U11-U16 await re-approval; others approved.
-- **Resume action**: Re-approve plans of U02, U05, U07, U08, U11-U16, then start Code Generation Part 2 (wave 1: U01 and U02 in parallel; shared skeleton is U01 steps 1-6).
+- **Current Stage**: Use-case catalog consolidated to 40 cases (`docs/use-case-table.md`); docs, Inception and Construction traces synchronized on 2026-10-01, including class-level groups, leader-managed group sections and the group-document REVIEW state. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
+- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
 
 ## Workspace State
 - **Existing Code**: No
 - **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)
 - **Build System**: None yet (planned: Maven, npm)
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `C:\Users\admin\Documents\GitHub\AI-Powered-Learning-Platform`
+- **Workspace Root**: `D:\Github\AI-Powered-Learning-Platform`
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)
@@ -44,7 +44,7 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [ ] Code Generation Part 1 (plans) - U02, U05, U08, U11-U16 updated for messaging redesign; U07 updated for AI/credit eligibility; awaiting re-approval
+- [ ] Code Generation Part 1 (plans) - 2026-09-29 role, assignment-mode and Student credit changes synchronized; plans await approval at the existing code checkpoint
 - [ ] Code Generation Part 2 (code) - not started
 - [ ] Build and Test
 - [ ] Operations (placeholder)
@@ -59,25 +59,30 @@
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
 | U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
 | U06 Rubric & Question Bank | Done | Approved | - |
-| U07 Payment & AI Credit | Done, AI/credit eligibility updated | Updated, re-approval needed | - |
+| U07 Payment & AI Credit | Done, AI/credit eligibility updated; packages traced to UC 23 | Updated, re-approval needed | - |
 | U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
 | U09 Question Type Authoring | Done | Approved | - |
-| U10 Template, Copy & Simulation | Done | Approved | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired | Updated, re-approval needed | - |
 | U11 Attempt & Submission | Done | Updated, re-approval needed | - |
-| U12 Group & Allocation | Done | Updated, re-approval needed | - |
+| U12 Group & Allocation | Done, groups moved to class level (2026-10-01) | Updated, re-approval needed | - |
 | U13 AI & Code Execution | Done | Updated, re-approval needed | - |
-| U14 Group Document & Submission | Done | Updated, re-approval needed | - |
+| U14 Group Document & Submission | Done, `group_documents`, leader sections and REVIEW (2026-10-01) | Updated, re-approval needed | - |
 | U15 Grading | Done | Updated, re-approval needed | - |
 | U16 Reporting & Notification | Done | Updated, re-approval needed | - |
 
 ## Open Items
 
+- Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm mỗi attempt Practice Text/Diagram Essay khi đủ credit; thiếu credit vẫn nộp nhưng không điểm AI và không chấm bù. Teacher chỉ chấm bài Graded.
 - Chính sách hoàn tiền credit AI chưa chốt. Tài liệu PayOS hiện công bố API hủy link chưa trả và API lệnh chi riêng, chưa thấy API đảo ngược trực tiếp một payment đã `PAID`; cần quyết định phạm vi, điều kiện thu hồi credit đã mua và cách chuyển tiền trước khi thiết kế luồng hoàn tiền.
-- Nhóm chỉ triển khai một MVP: 49 story và 77 use case. US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục hiện hành đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
+- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 là các mốc gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
 - Critical path (by plan steps): U01 → U04 → U05 → U08 → U09 → U10 → U11 → U15 → U16.
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-01: Đồng bộ toàn bộ docs với bảng 40 use case: bỏ ghi chú bản nháp, thêm bảng Legacy UC codes, thay mã `UC-XXX-NN` trong thiết kế unit và code plan, viết lại story map/unit-of-work theo UC 1–40, sửa context diagram (Student mua credit), ERD 46 bảng (bỏ cột Simulation, thêm `grading_mode` và cột Practice, `group_documents`, nhóm theo lớp), nhãn Student/Teacher trong screen flow. Theo quyết định của người dùng: gói credit và mức tặng thuộc UC 23; phân bố điểm ẩn danh do giảng viên bật thuộc UC 36 (UC 18 giữ là UC của sinh viên); nhóm chia trong danh sách sinh viên của lớp, có chia ngẫu nhiên, bỏ dùng lại nhóm; giảng viên soạn mục chính, trưởng nhóm thêm/sửa/giao mục chi tiết; tài liệu nhóm vào `REVIEW` khi mọi mục xong rồi trưởng nhóm mới nộp; UC 25 ghi rõ tìm, nhập hàng loạt và dùng lại câu hỏi. Plan U12/U14 cần duyệt lại.
+- 2026-09-30: Bảng use case gộp còn 40 UC; đồng bộ đặc tả, README, business flow, screen flow, stories (ma trận story ↔ UC) và requirements.
+- 2026-09-29: Bảng use case gộp CRUD cùng actor: profile 07→06, account 09/11/12→08, subject 14/15→13, roster 23/24→22; đổi tên tất cả UC còn hiệu lực thành tối đa bốn từ. Còn 69 UC, 49 story; ID lịch sử không tái sử dụng.
+- 2026-09-29: Người dùng xác nhận bản requirements đã làm rõ, yêu cầu sửa tài liệu Inception/Construction. Đồng bộ stories, personas, use-case catalog (49 story/77 UC; mã Simulation Exam retired, mã AI Practice mới), application design, per-unit functional/NFR/infrastructure designs và code plans. Không sinh mã ứng dụng.
 - 2026-09-12..22: Inception completed and revised through several change requests (roles, Draw.io, group work, templates/simulation).
 - 2026-09-24: Application Design corrected; unit split reworked from 17 to the current 16 units with four non-blocking waves; security/resiliency scope reduced; Construction started with U01.
 - 2026-09-24..25: Per-unit design stages and code plans for U01-U16; decisions synced back to Inception (payment = AI credits, DRAWIO → DOCUMENT, no subject-wide assignments, versioning after retire, group work as a shared document, auto-grading on submit, automatic deadline reminders only).
@@ -89,8 +94,9 @@
 - 2026-09-25: Nhóm chọn lại ba tính năng số 2, 7, 8 của danh sách cũ cho MVP: thông báo/hỏi đáp lớp (US-CNT-004), dashboard cá nhân (US-RPT-002), xuất bảng điểm (US-RPT-003). Phạm vi lúc đó là 50 story/78 use case; sáu story còn lại ngoài phạm vi. Quyết định này thay thế dòng phạm vi 47/74 ở trên.
 - 2026-09-25: Xóa 12 UC ngoài phạm vi khỏi danh mục use case theo yêu cầu; catalog UC lúc đó có 78 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-25: Xóa 9 story ngoài phạm vi khỏi danh mục user story theo yêu cầu; catalog story lúc đó có 50 mục MVP, mã đã xóa không được tái sử dụng.
-- 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi hiện hành: 49 story/77 use case.
+- 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi tại thời điểm đó: 49 story/77 use case.
 - 2026-09-26: Data model consolidated from 62 to 45 PostgreSQL tables (keep only tables that must stand alone, are listed by a use case, or tie to an external system; 1-1 data becomes columns). Five shared tables with owner-unit migrations and extension ports. Domain entities rewritten for all units; FD/NFR/Infra/plans/ERD synced. Account status `PENDING_ACTIVATION` renamed `PENDING`.
-- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; queues `jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`, `jobs.notification` (+ temporary `jobs.realtime.{instanceId}`). Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`.
+- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; eight U02 job queues (`jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`), U16's `jobs.notification`, and temporary `jobs.realtime.{instanceId}` queues. Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`. The affected code plans await re-approval.
 - 2026-09-27: Screen flow (`docs/screen-flow.drawio`) chốt theo bản nhóm vẽ; frontend gộp theo đó: nhập CSV thành `ImportAccountsPanel` trên danh sách tài khoản (U01), cài đặt email thành toggle trên trang thông báo (U16), tổng quan tài liệu nhóm thành panel trong danh sách bài nộp (U14), chấm nhóm thành chế độ `groups` của `GradingWorkspacePage` (U15). Plan U01/U14/U15/U16 chỉ đổi tên component tương ứng.
+- 2026-09-27: Updated UC56, UC57 and UC75 in `docs/use-case-specifications.md` to match the current design; this documentation change did not advance the Construction stage.
 - Full chronological log: `audit.md`.

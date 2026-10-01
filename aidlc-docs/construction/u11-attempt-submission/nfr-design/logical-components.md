@@ -19,7 +19,7 @@
  worker: AutoSubmitHandler --> AttemptSubmitter
 ```
 
-**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài, tạo job tự nộp), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter` (gọi `SubmissionSubmittedPort` của U15 trong cùng transaction). Khi bài bị ngừng giao, U08 gọi `PublicationLifecycleAdapter` để tạo job tự nộp mọi lượt dở. Worker chạy job tự nộp đúng hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
+**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài, tạo job tự nộp), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter`. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` của U15 trong cùng transaction; bài `PRACTICE` đi theo scorer hoặc U13 và lưu kết quả riêng. Khi bài bị ngừng giao, U08 gọi `PublicationLifecycleAdapter` để tạo job tự nộp mọi lượt dở. Worker chạy job tự nộp đúng hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
 
 ## 2. Thành phần
 

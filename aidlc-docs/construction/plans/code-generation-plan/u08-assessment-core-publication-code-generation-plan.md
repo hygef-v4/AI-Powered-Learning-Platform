@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3. **Use case**: UC-ASM-01, UC-ASM-07.
+- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3. **Use case**: UC 28.
 - **Thiết kế nguồn**: `construction/u08-assessment-core-publication/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -35,9 +35,9 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICAT
 ```
 /backend/src/main/java/edu/aiplatform/
   assessments/
-    api/                AssignmentController, PublicationController, LearnerAssignmentController, DTO
+    api/                AssignmentController, PublicationController, StudentAssignmentController, DTO
     application/        AssignmentService, ReviewValidator, PublicationService,
-                        AssignmentQueryService, LearnerViewMapper
+                        AssignmentQueryService, StudentViewMapper
     domain/             Assignment, AssignmentComponent, Publication, trạng thái,
                         SubmissionWindow
     infrastructure/     JPA repository, PassTypeConfigCheckAdapter, UnavailableAiDraftAdapter
@@ -60,13 +60,13 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICAT
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain: `Assignment` (aggregate, khóa khi không `DRAFT`), `AssignmentComponent` (một nguồn), `Publication`, `SubmissionWindow` (P1, P3, BR-U08-10…14, 33).
-- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`, `PublicationLifecyclePort` (adapter rỗng); `AssignmentExtensionPort` cho U09, U10, U15 ghi value object của mình (cấu hình loại bài, khung, lineage, chính sách thi thử, công bố điểm) vào bài/publication khi trạng thái cho phép.
+- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`, `PublicationLifecyclePort` (adapter rỗng); `AssignmentExtensionPort` cho U09, U10, U15 ghi cấu hình loại bài, khung, lineage và công bố điểm. U08 sở hữu `gradingMode` và ràng buộc năm dạng bài.
 - [ ] **Bước 4** - `AssignmentService`: tạo, thêm từ ngân hàng/câu riêng, điểm, sửa, xóa nháp, nhân bản, tạo version mới sau khi ngừng giao/đóng, lưu trữ, audit (F1, F7, BR-U08-01, 10…15, 41…44).
 - [ ] **Bước 5** - AI draft: gọi `AiDraftPort`, thêm câu giữ lại với `origin = AI` (F2, BR-U08-21).
 - [ ] **Bước 6** - `ReviewValidator` và duyệt (F3, P5, BR-U08-20, 22).
 - [ ] **Bước 7** - `PublicationService`: phát hành một lớp, kiểm lịch/nộp trễ/số lượt, khóa bài, tạo job, sửa lịch, ngưng giao, audit (F4, F6, F7, P2, BR-U08-02, 30…34, 40).
 - [ ] **Bước 8** - `PublicationScheduleHandler` (UPDATE có điều kiện; mở bài gọi `PublicationLifecyclePort.onOpened` trong transaction rồi phát `assignment.opened` sau commit); ngưng giao gọi `onRetired` trong transaction (F5, F6, P2, P6, BR-U08-35, 36, 40). Port khai báo ở Bước 3 kèm adapter rỗng tới khi U11/U14 có.
-- [ ] **Bước 9** - `AssignmentQueryService`, `LearnerViewMapper` và `AssignmentExtensionService` (cài `AssignmentExtensionPort`: chỉ cho U09 ghi cấu hình/khung khi bài `DRAFT`, U10 ghi lineage lúc tạo bài và chính sách thi thử trước khi khóa, U15 ghi công bố điểm) (F8, P3, P4, BR-U08-03).
+- [ ] **Bước 9** - `AssignmentQueryService`, `StudentViewMapper` và `AssignmentExtensionService` (cài `AssignmentExtensionPort`: chỉ cho U09 ghi cấu hình/khung khi bài `DRAFT`, U10 ghi lineage lúc tạo bài, U15 ghi công bố điểm `GRADED`) (F8, P3, P4, BR-U08-03).
 - [ ] **Bước 10** - Unit test mọi `BR-U08-xx`, gồm ranh giới `closesAt`/`lateUntil` và bài `LOCKED` không sửa được.
 - [ ] **Bước 11** - Tóm tắt: `aidlc-docs/construction/u08-assessment-core-publication/code/business-logic-summary.md`.
 
@@ -101,12 +101,12 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICAT
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-001 S1 (UC-ASM-07) | 6, 7, 8, 21, 22 |
+| US-ASM-001 S1 (UC 28) | 6, 7, 8, 21, 22 |
 | US-ASM-001 S2 | 6, 7, 18 |
-| UC-ASM-01 | 9, 20 |
+| UC 28 | 9, 20 |
 | US-QBK-002 S2, S3 (khóa nội dung) | 2, 4, 10, 18 |
 | FR-006 (AI draft vào bản nháp) | 5, 21 |
 
 ## 5. Ngoài phạm vi
 
-- Cấu hình riêng từng loại bài và đề chung cấp môn (U09); template/copy/simulation (U10); lượt làm (U11); nhóm (U12); AI thật (U13).
+- Cấu hình riêng từng loại bài (U09); template/copy (U10); lượt làm (U11); nhóm (U12); AI thật (U13). Simulation Exam đã rút.

@@ -9,7 +9,7 @@
                                                   |
  Trình duyệt <==SSE== backend: SseHub <-----------+
  Trình duyệt --REST--> backend: NotificationController, PreferenceController, ProgressController,
-                          LearnerDashboardController, GradebookExportController
+                          StudentDashboardController, GradebookExportController
  worker: EmailDispatcher (P2) --> EmailSendHandler (P3) --> SMTP (Gmail / Mailpit)
  worker: DeadlineReminderHandler (P4) --> NotificationFanout
 ```
@@ -25,7 +25,7 @@
 | `DeadlineReminderHandler` | worker | F3; P4 |
 | `NotificationController`, `PreferenceController` | backend | F4 |
 | `ProgressController`, `ProgressService` | backend | F5; P5 |
-| `LearnerDashboardController`, `LearnerDashboardService` | backend | F6; chỉ đọc điểm đã công bố |
+| `StudentDashboardController`, `StudentDashboardService` | backend | F6; chỉ đọc điểm đã công bố |
 | `GradebookExportController`, `GradebookExportService` | backend | F7; CSV/XLSX theo yêu cầu |
 
 ## 3. Cấu hình

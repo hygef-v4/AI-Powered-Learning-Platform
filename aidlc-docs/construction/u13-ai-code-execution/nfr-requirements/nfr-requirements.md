@@ -6,7 +6,7 @@
 |---|---|---|
 | NFR-U13-01 | Đề xuất 10 câu hỏi hoàn tất ≤ 60 s (p90) khi Gemini bình thường. | NFR-003 |
 | NFR-U13-02 | Đề xuất chấm một bài tài liệu ≤ 20 trang ≤ 120 s (p90). | NFR-003 |
-| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC-ASM-13 |
+| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 30 |
 | NFR-U13-04 | Chấm code (`GRADE`) 50 test ≤ 2 phút; 100 bài nộp dồn cuối hạn xử lý hết ≤ 30 phút. | NFR-003 |
 | NFR-U13-05 | Worker chạy tối đa 3 job AI và 2 job chạy code cùng lúc (cấu hình). | Tài nguyên VPS |
 
@@ -26,7 +26,7 @@
 | NFR-U13-20 | Judge0 nằm trong mạng Docker riêng `sandbox`, không route ra Internet, không truy cập được `postgres`, `redis`, `rabbitmq` của hệ thống; chỉ `worker` và `backend` nói chuyện với Judge0 server. | US-ASM-005 S2, SEC-003 |
 | NFR-U13-21 | Judge0 bật giới hạn per-process (thời gian, bộ nhớ, số tiến trình, kích thước file), tắt `enable_network`. | BR-U13-32 |
 | NFR-U13-22 | `GEMINI_API_KEY` chỉ ở backend/worker; `JUDGE0_AUTH_TOKEN` cho server Judge0. Không log. | SEC-006 |
-| NFR-U13-23 | Lời giải mẫu, test ẩn, đề xuất AI không bao giờ ra API người học. | SEC-002 |
+| NFR-U13-23 | Lời giải mẫu, test ẩn và đề xuất AI cho bài `GRADED` không bao giờ ra API Student. `PRACTICE_RESULT` chỉ chủ attempt xem được. | SEC-002, FR-030 |
 | NFR-U13-24 | Đầu ra AI kiểm bằng JSON schema và quy tắc nghiệp vụ trước khi lưu; văn bản AI hiển thị dạng văn bản thuần/markdown đã làm sạch. | SEC-003 |
 
 ## 4. Khả dụng

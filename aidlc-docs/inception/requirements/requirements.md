@@ -9,16 +9,19 @@
 - **Độ phức tạp**: Phức tạp
 - **Mức độ chi tiết**: Comprehensive
 - **Mục tiêu**: Xây dựng MVP nền tảng học tập ứng dụng AI đồng thời duy trì bộ tài liệu và checkpoint AI-DLC có thể tái sử dụng
+- **Thay đổi đã được xác nhận (2026-09-29)**: Đổi mã vai trò `LEARNER`/`INSTRUCTOR` thành `STUDENT`/`TEACHER`; cho Student mua credit để chấm AI bài luyện tập dạng Text Essay hoặc Diagram Essay; phân loại assignment theo hình đính kèm và câu trả lời làm rõ, đồng thời bỏ Simulation Exam.
+- **Thay đổi đã được xác nhận (2026-10-01)**: Nhóm thuộc lớp, được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên, không có dùng lại nhóm) và dùng chung cho mọi bài nhóm của lớp. Giảng viên chuẩn bị các mục chính của bài nhóm; trưởng nhóm thêm/sửa mục chi tiết và giao mục cho thành viên. Khi mọi mục xong, tài liệu nhóm vào trạng thái review để cả nhóm xem lại rồi trưởng nhóm mới nộp. Quản lý gói credit và mức tặng hằng tháng thuộc UC 23 Manage AI Service; giảng viên bật phân bố điểm ẩn danh trong UC 36 Monitor Submissions.
+- **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 25 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên.
 
 ## 2. Bối cảnh và phạm vi
 
 ### 2.1 Người dùng và mô hình vận hành
 
-Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. Bốn vai trò chính là người học, giảng viên, Chủ nhiệm môn (Subject Manager) và quản trị viên. Một môn học có thể có nhiều lớp; Chủ nhiệm môn chịu trách nhiệm học thuật và tài nguyên dùng chung của các môn được phân công, còn giảng viên phụ trách hoạt động và nội dung riêng của các lớp được giao. Phiên bản đầu vận hành trong phạm vi một tổ chức; multi-tenancy không thuộc MVP.
+Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. Bốn vai trò chính là Student (sinh viên), Teacher (giảng viên), Subject Manager (Chủ nhiệm môn) và Administrator (quản trị viên). `STUDENT` thay `LEARNER`; `TEACHER` thay `INSTRUCTOR` trong mã vai trò, API, giao diện và tài liệu hiện hành. Một môn học có thể có nhiều lớp; Chủ nhiệm môn chịu trách nhiệm học thuật và tài nguyên dùng chung của các môn được phân công, còn giảng viên phụ trách hoạt động và nội dung riêng của các lớp được giao. Phiên bản đầu vận hành trong phạm vi một tổ chức; multi-tenancy không thuộc MVP.
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric/câu hỏi có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, thi thử giới hạn số lượt, theo dõi trạng thái bài nộp và kết quả đánh giá, đánh giá theo bốn loại trắc nghiệm, bài viết, bài tài liệu có sơ đồ Draw.io nhúng và Code Lab, tạo câu hỏi/bài tập bằng AI, phản hồi hoặc chấm điểm có hỗ trợ AI, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric và câu hỏi quiz có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, theo dõi trạng thái bài nộp và kết quả đánh giá, năm dạng assignment Code Lab, Text Essay, Diagram Essay, Group Assignment và Multiple-Choice Quiz với chế độ `GRADED`/`PRACTICE` theo từng dạng, tạo câu hỏi/bài tập bằng AI, chấm bài luyện tập Text Essay/Diagram Essay bằng credit của Student, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. Simulation Exam được bỏ khỏi MVP. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -27,6 +30,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 - Multi-tenancy và cô lập dữ liệu giữa nhiều tổ chức
 - Đồng bộ LMS hoặc SSO của tổ chức
 - Chức năng dành riêng cho vai trò Head of Department/Trưởng bộ môn
+- Simulation Exam và kỳ thi chính thức/proctored exam
 - Mọi nội dung dạng viết được mô hình hóa chung là bài viết luận
 - Active/active đa region
 - Lưu vị trí học, đánh dấu hoàn thành hoặc báo cáo tiến độ hoàn thành từng bài học
@@ -40,7 +44,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 |---|---|
 | Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
-| Chủ nhiệm môn | Quản lý kho học liệu/RAG, ngân hàng và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
+| Chủ nhiệm môn | Quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
 | Đơn vị đào tạo | Vận hành thử nghiệm ổn định, bảo vệ dữ liệu người học và đo hiệu quả MVP |
 | Nhóm phát triển | Quy trình AI-DLC rõ ràng, test tự động, container local và hướng dẫn triển khai |
@@ -60,11 +64,11 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 
 ### FR-002 - Phân quyền
 
-Hệ thống phải cung cấp bốn vai trò: người học, giảng viên, Chủ nhiệm môn và quản trị viên; mọi thao tác đặc quyền phải được kiểm tra phía server.
+Hệ thống phải cung cấp bốn vai trò: `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` và `ADMIN`; mọi thao tác đặc quyền phải được kiểm tra phía server. Các tên `LEARNER` và `INSTRUCTOR` không còn là mã vai trò hiện hành.
 
 **Tiêu chí chấp nhận:**
 
-- Người học không thể gọi chức năng của giảng viên, Chủ nhiệm môn hoặc quản trị viên.
+- Student không thể gọi chức năng của Teacher, Subject Manager hoặc Administrator; Student chỉ có quyền AI/credit được nêu tại FR-010 và FR-030.
 - Giảng viên chỉ truy cập lớp học và bài nộp được phân công.
 - Chủ nhiệm môn chỉ có quyền cấp môn đối với các môn được phân công, kể cả các lớp do giảng viên khác phụ trách trong những môn đó.
 - Quản trị viên có thể quản lý người dùng, phân vai trò và gán phạm vi môn học cho Chủ nhiệm môn.
@@ -115,23 +119,24 @@ Giảng viên phải có thể yêu cầu AI tạo câu hỏi hoặc bài tập 
 
 ### FR-007 - Đánh giá và bài nộp
 
-Giảng viên phải có thể xuất bản bài đánh giá riêng cho lớp được phân công. Không có bài đánh giá chung cấp môn: chỉ giảng viên của lớp (kể cả Chủ nhiệm môn khi là giảng viên của lớp đó) phát hành bài cho lớp. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
+Giảng viên phải có thể xuất bản assignment riêng cho lớp được phân công với dạng và chế độ hợp lệ theo FR-017. Không có bài đánh giá chung cấp môn: chỉ giảng viên của lớp (kể cả Chủ nhiệm môn khi là giảng viên của lớp đó) phát hành bài cho lớp. Chủ nhiệm môn có thể chuẩn bị quiz/template `PRACTICE` hoặc `GRADED` ở cấp môn để giảng viên copy vào lớp. Student không tự tạo quiz hoặc chọn câu hỏi: mục `Self` trong hình nghĩa là Student tự làm quiz `PRACTICE` đã được giao. Người học được phép phải có thể làm và nộp bài trong thời gian hiệu lực.
 
 **Tiêu chí chấp nhận:**
 
-- Hệ thống lưu bài nộp, thời điểm nộp và trạng thái chấm.
+- Hệ thống lưu dạng assignment, chế độ `GRADED`/`PRACTICE`, bài nộp, thời điểm nộp và trạng thái đánh giá theo từng attempt.
+- `PRACTICE` chỉ dành cho luyện tập: không tạo điểm chính thức, không vào sổ điểm/xuất bảng điểm và không vào hàng đợi Teacher chấm.
 - Một người học không thể đọc hoặc sửa bài nộp của người khác.
 - Quy tắc số lần làm và hạn nộp được thực thi phía server.
 - Mỗi lần phát hành lưu actor và lớp đích trong audit.
 
 ### FR-008 - Chấm điểm và phản hồi tự động
 
-Sau khi người học nộp bài, bài nộp chuyển tới giảng viên phụ trách. Giảng viên quyết định chấm thủ công hoặc yêu cầu AI đề xuất điểm/phản hồi; AI không tự động chấm nếu chưa có lựa chọn của giảng viên và không bao giờ quyết định điểm cuối.
+Chỉ bài `GRADED` mới chuyển tới quy trình chấm và chốt điểm của Teacher. Với câu trả lời mở, Teacher quyết định chấm thủ công hoặc yêu cầu AI đề xuất điểm/phản hồi; AI không tự động chấm bài `GRADED` nếu chưa có lựa chọn của Teacher và không bao giờ quyết định điểm cuối. Bài `PRACTICE` không do Teacher chấm; quy trình phản hồi luyện tập được nêu tại FR-030.
 
 **Tiêu chí chấp nhận:**
 
-- Trắc nghiệm và Code Lab tự chấm ngay khi nộp; điểm tự động có kèm trạng thái và phương thức chấm. Mọi loại bài hiển thị điểm dạng "x / tổng điểm của bài"; sổ điểm không tính điểm tổng.
-- Mỗi bài nộp mới ở trạng thái chờ giảng viên xử lý; lựa chọn chấm tay hoặc nhờ AI được lưu theo actor/thời gian.
+- Trắc nghiệm và Code Lab tự chấm ngay khi nộp; kết quả tự động có kèm trạng thái và phương thức chấm. Điểm `GRADED` hiển thị dạng "x / tổng điểm của bài" khi được phép công bố; kết quả `PRACTICE` hiển thị riêng như phản hồi luyện tập. Sổ điểm không tính điểm tổng.
+- Mỗi bài nộp `GRADED` cần Teacher xử lý được đưa vào hàng đợi chấm; lựa chọn chấm tay hoặc nhờ AI được lưu theo actor/thời gian. Bài `PRACTICE` không tạo grade record chờ Teacher.
 - Kết quả AI chưa duyệt không được coi là quyết định cuối đối với câu trả lời mở.
 - Mọi lần ghi đè điểm lưu người thực hiện, thời gian và lý do.
 
@@ -143,9 +148,9 @@ Người học phải xem được điểm, phản hồi và trạng thái bài 
 
 Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
-Chỉ tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên được cấp, mua và sử dụng credit AI theo quyền nghiệp vụ. Người học không được gọi chức năng AI, không được cấp credit hằng tháng, không có ví/trang credit hoặc quyền mua credit; backend phải từ chối cả khi gọi trực tiếp API. Người học vẫn làm/nộp bài, chạy Code Lab và xem điểm/phản hồi đã công bố; các thao tác này không tiêu credit hay gọi dịch vụ AI dưới danh nghĩa Người học. Nếu giảng viên yêu cầu AI hỗ trợ chấm bài của Người học, credit được tính cho giảng viên và chỉ kết quả cuối do giảng viên công bố mới hiển thị cho Người học.
+Tài khoản `ACTIVE` với vai trò Student, Teacher, Subject Manager hoặc Administrator có thể mua và xem credit của chính mình. Student chỉ được tiêu credit cho yêu cầu AI chấm một attempt `PRACTICE` dạng Text Essay hoặc Diagram Essay mà mình đã nộp; Teacher/Subject Manager/Administrator tiếp tục dùng credit cho các tính năng AI đúng quyền. Student không được dùng AI soạn đề, xử lý học liệu hoặc chấm bài `GRADED`. Code Lab, Quiz và bài nhóm không dùng credit Student để chấm. Nếu Teacher yêu cầu AI hỗ trợ chấm bài `GRADED`, credit được tính cho Teacher và chỉ kết quả cuối do Teacher công bố mới hiển thị cho Student.
 
-Nếu một tài khoản có nhiều vai trò, quyền AI/credit chỉ áp dụng khi thao tác trong phạm vi Giảng viên, Chủ nhiệm môn hoặc Quản trị viên; góc nhìn và thao tác Người học không có AI/credit.
+Nếu một tài khoản có nhiều vai trò, quyền dùng AI được kiểm theo ngữ cảnh và đối tượng: trong ngữ cảnh Student chỉ có chức năng chấm `PRACTICE` được nêu tại FR-030; các quyền AI của Teacher, Subject Manager và Administrator không tự chuyển sang ngữ cảnh Student. Mọi khoản trừ credit gắn với tài khoản thực hiện và loại tác vụ.
 
 **Tiêu chí chấp nhận:**
 
@@ -153,6 +158,7 @@ Nếu một tài khoản có nhiều vai trò, quyền AI/credit chỉ áp dụn
 - Job định kỳ tự đối soát trạng thái thanh toán với nhà cung cấp khi thiếu webhook; không có thao tác admin đối soát thủ công.
 - Thanh toán lỗi, hết hạn hoặc chưa xác minh thì không cộng credit.
 - Quyền lợi mua được là credit AI (quy đổi ra token khi gọi AI); thanh toán không mở hay chặn quyền vào lớp và nội dung học.
+- Student có thể xem package, balance, lịch sử credit và tự thanh toán; backend kiểm quyền trên attempt và từ chối yêu cầu AI ngoài `PRACTICE` Text Essay/Diagram Essay trước khi giữ hoặc trừ credit.
 
 ### FR-011 - Email và thông báo
 
@@ -174,9 +180,9 @@ Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai 
 
 Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
-### FR-016 - Ngân hàng rubric và câu hỏi
+### FR-016 - Ngân hàng rubric và câu hỏi quiz
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Rubric được quản lý tại UC 20 Manage Rubrics; câu hỏi trắc nghiệm được tạo, sửa, tìm, nhập hàng loạt và dùng lại trong chức năng quản lý quiz (UC 25 Manage Quiz), không có use case ngân hàng câu hỏi riêng. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
 
 **Tiêu chí chấp nhận:**
 
@@ -187,7 +193,9 @@ Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm 
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
-Hệ thống phải hỗ trợ trắc nghiệm, bài viết (ESSAY, văn bản thường, không giới hạn số từ), bài tài liệu (DOCUMENT: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; giảng viên có thể nhập khung từ DOCX; người học có thể nhập DOCX vào lượt DOCUMENT đang làm, xem trước rồi xác nhận để thêm nội dung của mình mà không sửa khung giảng viên; bài nộp xuất được ra DOCX) và Code Lab. Với khối sơ đồ, người học vẽ trên canvas Draw.io nhúng trong web và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để giảng viên xem/chấm và phải được giữ nguyên; chỉ khi giảng viên yêu cầu AI chấm, hệ thống mới tạo một bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, giảng viên hoặc Chủ nhiệm môn phải xem trước và kiểm tra được cấu hình đặc thù của từng loại bài.
+Hệ thống phải hỗ trợ năm dạng assignment sau: `CODE_LAB` (`GRADED` hoặc `PRACTICE`), `TEXT_ESSAY` (`GRADED` hoặc `PRACTICE`), `DIAGRAM_ESSAY` (`GRADED` hoặc `PRACTICE`), `GROUP_ASSIGNMENT` (chỉ `GRADED`) và `MULTIPLE_CHOICE_QUIZ` (`GRADED` hoặc `PRACTICE`). Không có Simulation Exam. `TEXT_ESSAY` là bài viết văn bản thường, không giới hạn số từ. `DIAGRAM_ESSAY` dùng nền tảng `DOCUMENT` hiện có: trang soạn thảo kiểu Google Docs có heading, bảng, ảnh và khối sơ đồ Draw.io nhúng; Teacher có thể nhập khung từ DOCX; Student có thể nhập DOCX vào lượt đang làm, xem trước rồi xác nhận để thêm nội dung của mình mà không sửa khung Teacher; bài nộp xuất được ra DOCX. Với khối sơ đồ, Student vẽ trên canvas Draw.io nhúng và lưu XML Draw.io đầy đủ. Bản đầy đủ là bài nộp chuẩn để xem/chấm và phải được giữ nguyên; khi Teacher yêu cầu AI hỗ trợ chấm bài `GRADED` hoặc Student yêu cầu AI chấm bài `PRACTICE`, hệ thống mới tạo bản XML rút gọn dẫn xuất theo schema/allowlist để gửi AI. Trước khi phát hành, Teacher hoặc Subject Manager phải xem trước và kiểm tra được cấu hình đặc thù của từng dạng bài.
+
+Với Quiz, `Self` nghĩa Student tự làm bài `PRACTICE` đã được giao, không tự tạo quiz hoặc chọn câu hỏi; Subject Manager có thể chuẩn bị quiz/template `PRACTICE` và `GRADED` cấp môn, Teacher phát hành bản copy vào lớp. Quiz `GRADED` do Teacher phát hành trong lớp. Quiz `PRACTICE` được tự chấm theo đáp án; Code Lab `PRACTICE` được tự chấm theo test. Kết quả luyện tập chỉ hiển thị cho Student, không vào sổ điểm chính thức.
 
 ### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
 
@@ -221,21 +229,24 @@ MVP cung cấp dashboard cho người học gồm bài sắp hạn, trạng thá
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
-Giảng viên phải có thể chia sinh viên của lớp được phân công thành nhiều nhóm và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
+Trong danh sách sinh viên của lớp được phân công, giảng viên phải có thể chia sinh viên thành nhiều nhóm bằng cách tạo tay hoặc chia ngẫu nhiên các sinh viên chưa có nhóm, và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Nhóm thuộc lớp và được dùng cho mọi bài nhóm của lớp; không có chức năng dùng lại nhóm của bài khác. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
 
 **Tiêu chí chấp nhận:**
 
 - Mỗi nhóm luôn có đúng một trưởng nhóm đang hiệu lực trước khi nhận bài nhóm.
-- Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó.
+- Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó; mỗi sinh viên thuộc tối đa một nhóm trong lớp.
+- Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 
 ### FR-026 - Bài tập nhóm: tài liệu chung và phần đóng góp cá nhân
 
-Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục việc (ví dụ sơ đồ use case, activity); nhóm có thể thêm mục. Thành viên tự nhận mục còn trống, mục bị khóa cho người đó; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung để cả nhóm review và mục được mở khóa cho người khác nhận sửa. Trưởng nhóm nộp tài liệu chung, hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
+Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục chính (ví dụ sơ đồ use case, activity). Trưởng nhóm có thể thêm, sửa, sắp xếp hoặc xóa các mục chi tiết dưới mục chính để phân công công việc cụ thể hơn và giao mục cho thành viên; thành viên cũng có thể tự nhận mục còn trống. Mục bị khóa cho người đang giữ; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung và mục được mở khóa. Khi mọi mục đã xong, tài liệu chuyển sang trạng thái review để cả nhóm cùng xem lại và bình luận; muốn sửa thì nhận lại mục và tài liệu quay về trạng thái đang làm. Trưởng nhóm chỉ nộp khi tài liệu đang review; hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
 **Tiêu chí chấp nhận:**
 
-- Mỗi mục có trạng thái (trống, đang nhận, chờ review) và lịch sử phiên bản theo tác giả; cả bài dùng chung một hạn.
+- Mỗi mục có trạng thái (trống, đang làm, xong) và lịch sử phiên bản theo tác giả; tài liệu có trạng thái đang làm hoặc review; cả bài dùng chung một hạn.
+- Chỉ trưởng nhóm thêm/sửa/xóa mục chi tiết và giao mục; mục chính của giảng viên không bị xóa hay đổi tên.
+- Trưởng nhóm chỉ nộp được khi mọi mục đã xong và tài liệu đang review.
 - Tại một thời điểm mỗi mục chỉ một thành viên nhận và sửa; trưởng nhóm hoặc giảng viên có thể nhả khóa mục khi cần, có audit.
 - Tài liệu chung được cập nhật realtime khi một mục xong; bản trưởng nhóm nộp (hoặc tự nộp khi hết hạn) là bản bất biến dùng để chấm, giữ tác giả từng mục.
 - Giảng viên xem được bản nộp cuối của tài liệu chung cùng tác giả từng mục; bản nộp đó là bản dùng để chấm.
@@ -266,17 +277,22 @@ Giảng viên phải có thể copy assignment và rubric từ một lớp sang 
 - Assignment copy loại bỏ lịch phát hành, deadline, attempt, bài nộp và điểm; rubric copy giữ cấu trúc/tiêu chí nhưng có identity/version riêng ở lớp đích.
 - Không cho copy sang lớp ngoài phạm vi được phân công, kể cả khi thuộc cùng môn.
 
-### FR-029 - Simulation exam
+### FR-029 - Đã rút khỏi phạm vi: Simulation Exam
 
-Hệ thống phải cung cấp simulation exam để sinh viên thi thử. Không có chế độ kỳ thi chính thức có giám sát; giảng viên có thể cấu hình một simulation exam tính hoặc không tính vào điểm thành phần.
+Theo câu trả lời làm rõ ngày 2026-09-29, Simulation Exam được bỏ hoàn toàn khỏi MVP; mã FR-029 giữ làm dấu vết và không dùng lại.
+
+### FR-030 - Student dùng credit AI để chấm bài luyện tập
+
+Student có thể mua credit để AI chấm khi nộp một attempt `PRACTICE` dạng `TEXT_ESSAY` hoặc `DIAGRAM_ESSAY` của chính mình. Mỗi attempt được gọi AI chấm tối đa một lần tại thời điểm nộp nếu Student đủ credit; làm lại tạo attempt mới và có thể được chấm lần tiếp theo. Nếu không đủ credit, attempt vẫn được nộp nhưng không có điểm hoặc phản hồi AI và không được chấm bù sau khi nạp credit; muốn có điểm luyện tập, Student cần làm và nộp attempt mới. Kết quả luyện tập chỉ dành cho Student, không phải điểm chính thức và không cần Teacher duyệt. Teacher không chấm bài `PRACTICE`.
 
 **Tiêu chí chấp nhận:**
 
-- Thi thử mặc định 3 lượt mỗi người học; giảng viên có thể chỉnh giới hạn từ 1 đến 10 lượt trước khi lượt đầu tiên bắt đầu, không có lựa chọn không giới hạn. Giảng viên cấu hình cửa sổ làm bài, cách lấy kết quả cao nhất/gần nhất/trung bình và thời điểm hiển thị đáp án.
-- Server thực thi giới hạn lượt và thời gian; mỗi attempt giữ snapshot đề/version riêng.
-- Nếu được cấu hình không tính điểm, kết quả chỉ phục vụ luyện tập/phản hồi và không đi vào điểm chính thức.
-- Nếu được cấu hình tính điểm thành phần, chính sách lấy kết quả được khóa khi đã có attempt; thay đổi sau đó cần version mới và audit.
-- Giao diện và báo cáo phải ghi rõ đây là thi thử, có hay không tính điểm, không được mô tả là kỳ thi chính thức/proctored exam.
+- Backend kiểm tra tài khoản `ACTIVE`, enrollment, quyền trên assignment/attempt, chế độ `PRACTICE`, dạng bài hợp lệ và credit trước khi gọi AI; gọi API trực tiếp không vượt qua các kiểm tra này.
+- Khi Student nộp và đủ credit, hệ thống tạo một yêu cầu chấm AI cho attempt đó và tính credit theo token thực dùng; retry kỹ thuật hoặc gửi lại cùng yêu cầu không tạo lần chấm hay khoản trừ credit thứ hai.
+- Nếu Student không đủ credit, bài `PRACTICE` vẫn được nộp với trạng thái chưa có điểm AI; hệ thống không gọi AI, không trừ credit và không tự chấm bù attempt đó sau khi Student mua credit. Chỉ attempt mới được xét chấm ở lần nộp tiếp theo.
+- AI lỗi, hết quota hoặc kết quả không hợp lệ không làm mất bài nộp; credit chưa dùng được trả lại theo chính sách ledger hiện hành. Retry kỹ thuật cho cùng yêu cầu chấm không vượt quá một kết quả hợp lệ cho attempt đó.
+- Code Lab và Quiz `PRACTICE` dùng test/đáp án để tự chấm, không gọi AI và không trừ credit Student. `GROUP_ASSIGNMENT` không có `PRACTICE`.
+- Kết quả luyện tập được tách khỏi gradebook, dashboard điểm chính thức và file xuất điểm; Teacher không có hàng đợi chấm/chốt/công bố điểm cho bài này.
 
 ## 5. Luồng người dùng chính
 
@@ -286,7 +302,7 @@ Trong lớp được quản trị viên tạo và phân công, giảng viên nh�
 
 ### USCN-001A - Quản lý học liệu, ngân hàng và template cấp môn
 
-Chủ nhiệm môn quản lý kho học liệu/RAG, ngân hàng câu hỏi/rubric và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
+Chủ nhiệm môn quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
 
 ### USCN-002 - Học và nhận phản hồi
 
@@ -402,15 +418,15 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 ## 9. Ràng buộc và giả định đã xác nhận
 
 - Chỉ một tổ chức trong MVP.
-- Bốn vai trò trong MVP gồm người học, giảng viên, Chủ nhiệm môn và quản trị viên.
+- Bốn vai trò trong MVP gồm `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` và `ADMIN`; `LEARNER`/`INSTRUCTOR` là tên cũ cần được thay thế ở các tài liệu và thiết kế phụ thuộc.
 - Không có role Head of Department/Trưởng bộ môn trong hệ thống.
 - Chủ nhiệm môn là vai trò RBAC riêng, được gán phạm vi một hoặc nhiều môn; giảng viên vẫn quản lý nội dung riêng của lớp được phân công.
 - Chỉ web responsive.
 - Nội dung được nhập trực tiếp hoặc tải PDF/DOCX/slide.
-- Bốn loại bài đánh giá là trắc nghiệm, bài viết (ESSAY), bài tài liệu (DOCUMENT, có sơ đồ Draw.io nhúng) và Code Lab; sơ đồ lưu XML Draw.io đầy đủ trong tài liệu, XML rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi giảng viên chủ động yêu cầu.
+- Năm dạng assignment hiện hành là Code Lab, Text Essay, Diagram Essay (dùng nền tảng DOCUMENT và Draw.io), Group Assignment và Multiple-Choice Quiz; chế độ hợp lệ theo FR-017. XML sơ đồ đầy đủ được giữ trong bài nộp, bản rút gọn chỉ là dữ liệu dẫn xuất gửi AI khi Teacher yêu cầu với bài `GRADED` hoặc Student yêu cầu với bài `PRACTICE`.
 - Bài tập nhóm là một tài liệu chung theo khung của giảng viên; mỗi mục tại một thời điểm chỉ một thành viên sửa, thay đổi được ghép realtime khi mục xong; không soạn đồng thời từng phím gõ.
 - Mỗi nhóm có đúng một trưởng nhóm do giảng viên chỉ định; thành viên tự nhận mục, trưởng nhóm nộp tài liệu chung (hết hạn thì hệ thống tự nộp), giảng viên chấm tay tài liệu chung.
-- Không có loại kỳ thi chính thức/proctored exam; simulation exam có thể được cấu hình tính hoặc không tính điểm thành phần.
+- Không có Simulation Exam hoặc kỳ thi chính thức/proctored exam.
 - Template cấp môn và bản copy giữa lớp luôn tạo bản độc lập có truy vết nguồn, không đồng bộ hoặc mang theo dữ liệu phát hành/kết quả.
 - Tích hợp bắt buộc gồm AI/LLM, lưu trữ tệp, thanh toán mua credit AI và email/thông báo.
 - Triển khai đợt đầu ưu tiên local container.
@@ -421,9 +437,9 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 ## 10. Tiêu chí thành công của MVP
 
 - Một giảng viên có thể tạo lớp, đưa nội dung vào hệ thống, dùng AI tạo và duyệt bài đánh giá.
-- Một giảng viên có thể quản lý rubric/câu hỏi theo version, copy assignment/rubric giữa các lớp được phân công, tổ chức simulation exam giới hạn lượt, theo dõi nộp bài và chốt điểm hàng loạt.
+- Một giảng viên có thể quản lý rubric/câu hỏi theo version, copy assignment/rubric giữa các lớp được phân công, giao bài `GRADED` hoặc `PRACTICE` đúng dạng, theo dõi nộp bài `GRADED` và chốt điểm hàng loạt.
 - Một Chủ nhiệm môn có thể quản lý kho học liệu/RAG gồm nguồn YouTube theo bài giảng, phát hành template đề có version cho giảng viên các lớp thuộc môn copy.
-- Một người học được ghi danh có thể học, nộp bài và nhận điểm/phản hồi đúng quyền.
+- Một Student được ghi danh có thể học, nộp bài, xem điểm chính thức đúng quyền, mua credit và nhận điểm/phản hồi AI cho mỗi attempt luyện tập Text Essay/Diagram Essay được nộp khi đủ credit; attempt nộp lúc thiếu credit không có điểm AI.
 - Bản nháp và lịch sử lần nộp của người học được bảo toàn qua gián đoạn mà không bị coi nhầm là bài nộp chính thức.
 - Quản trị viên có thể quản lý vòng đời tài khoản và kiểm soát quota/kill-switch/chi phí AI mà không khóa hệ thống vào một provider.
 - Một nhóm cùng làm tài liệu chung theo mục và trưởng nhóm nộp; AI chỉ hỗ trợ chấm phần đóng góp của từng thành viên, còn giảng viên tự chấm tài liệu chung, xử lý lỗi không nhất quán và quyết định điểm cuối từng thành viên.
@@ -447,6 +463,9 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Đối chiếu `uc1.pdf` và yêu cầu ngày 2026-09-13 | FR-015 đến FR-024; loại Head of Department; dùng chung loại bài viết luận; phân tách MVP và Phase 2 |
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
+| Change request và câu trả lời ngày 2026-09-29 | FR-002, FR-007, FR-008, FR-010, FR-017, FR-029 (rút), FR-030; đổi role, năm dạng assignment, Practice/Graded, Student mua credit và chấm AI bài luyện tập |
+| Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 23, 25, 28, 36 |
+| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case, câu hỏi quiz thuộc UC 25 Manage Quiz. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline
 

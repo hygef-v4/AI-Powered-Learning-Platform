@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - Infrastructure Design Plan
+# U10 Template & Copy - Infrastructure Design Plan (đã bỏ Simulation Exam; tên tệp giữ để truy vết)
 
 - [x] Đọc NFR Design U10 và `shared-infrastructure.md`.
 - [x] Đánh giá 7 nhóm câu hỏi: không thêm hạ tầng; **không có câu hỏi mới**.

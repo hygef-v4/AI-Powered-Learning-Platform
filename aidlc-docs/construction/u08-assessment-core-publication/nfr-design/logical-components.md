@@ -12,7 +12,7 @@
  |                                  +--> ReviewValidator --> TypeConfigPort |
  |                                                           (U09, C)            |
  | PublicationController --> PublicationService --> JobPort (U02)               |
- | AssignmentQueryService (AssignmentQueryPort, LearnerAssignmentView)          |
+ | AssignmentQueryService (AssignmentQueryPort, StudentAssignmentView)          |
  | Repository (PostgreSQL: assignments, assignment_components, publications)    |
  +------------------------------------------------------------------------------+
                   | job PUBLICATION_OPEN / CLOSE
@@ -30,7 +30,7 @@
 | `ReviewValidator` | backend | P5 |
 | `PublicationService` | backend | F4, F6, F7; P2 |
 | `PublicationScheduleHandler` | worker | F5; P2, P6 |
-| `AssignmentQueryService`, `LearnerViewMapper` | backend | F8; P3, P4 |
+| `AssignmentQueryService`, `StudentViewMapper` | backend | F8; P3, P4 |
 
 ## 3. Cấu hình
 

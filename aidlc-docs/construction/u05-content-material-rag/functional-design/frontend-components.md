@@ -15,7 +15,7 @@ app/teaching/classes/[id]/content/      ClassContentPage     (giảng viên)
     IngestionStatusBadge  Chờ / Đang xử lý / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Lỗi + Thử lại
   SubjectLessonPicker     (chỉ trang lớp) chọn bài cấp môn đưa vào lớp
 shared/content/
-  LessonViewer            dùng trong LearnerClassPage của U04
+  LessonViewer            dùng trong StudentClassPage của U04
     TextItemView          markdown đã làm sạch
     FileItemView          nút Tải (PDF: thêm nút Xem)
     YoutubeItemView       iframe youtube-nocookie

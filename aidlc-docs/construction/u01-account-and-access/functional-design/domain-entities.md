@@ -1,6 +1,6 @@
 # U01 Account & Access - Domain Entities
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`, `UC-IAM-01`…`UC-IAM-12`.
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 1–7 theo `docs/use-case-table.md`.
 
 ## 1. Tổng quan
 
@@ -26,7 +26,7 @@ U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), file ảnh
 |---|---|---|
 | `accountId` | Định danh | Bất biến |
 | `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong `u01.allowedEmailDomains`; **không đổi sau khi tạo** |
-| `role` | Vai trò cao nhất | `LEARNER`, `INSTRUCTOR`, `SUBJECT_MANAGER`, `ADMIN` |
+| `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN` |
 | `status` | Trạng thái vòng đời | `PENDING`, `ACTIVE`, `DISABLED` |
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
@@ -79,7 +79,7 @@ stateDiagram-v2
 | `freePeriod` | Tháng của phần tặng (`yyyy-MM`) |
 | `purchasedBalance` | Credit đã mua còn lại |
 
-U07 chỉ tạo/ghi ví nghiệp vụ cho tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên, khóa dòng tài khoản khi giữ/trừ credit và luôn ghi sổ cái trong cùng transaction. Các cột vật lý trên `accounts` không đồng nghĩa Người học có ví: tài khoản chỉ có vai trò Người học giữ số dư 0, không có `MONTHLY_GRANT` và không được truy cập API credit. Quy tắc nghiệp vụ ở U07.
+U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN`, khóa dòng tài khoản khi giữ/trừ credit và ghi sổ cái trong cùng transaction. Student có thể mua credit và xem ví của mình nhưng không nhận `MONTHLY_GRANT`; chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
 
 ## 7. `AppSetting`
 

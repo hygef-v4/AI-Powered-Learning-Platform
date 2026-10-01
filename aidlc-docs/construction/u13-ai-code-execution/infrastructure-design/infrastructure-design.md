@@ -9,7 +9,7 @@
 | Bảng `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs` (index `(owner_ref, kind, created_at)` để lấy lần `VERIFY` mới nhất); khóa `u13.*` trong `app_settings` | `postgres` |
 | Trần chi phí ngày, rate limit | `redis`, khóa `gemini:daily-cost:*`, `ratelimit:ai-request:*`, `ratelimit:code-try:*` |
 | Queue | `jobs.gemini`, `jobs.code` |
-| Event | Không phát event; điểm Code Lab báo U15 qua `CodeGradedPort` trong transaction; đề xuất AI xem bằng cách hỏi trạng thái |
+| Event | Không phát event; điểm Code Lab `GRADED` báo U15 qua `CodeGradedPort`, `PRACTICE` trả U11; kết quả AI xem bằng cách hỏi trạng thái theo quyền |
 | Chạy code | 4 container Judge0 trong mạng `sandbox` |
 
 ## 2. Judge0 (theo `demo_do_an`)
@@ -32,7 +32,7 @@
 
 ## 4. Migration
 
-`V20260925_2000__u13_ai_code.sql`: 6 bảng ở §1; seed `ai_task_configs` 4 việc với model mặc định; `REVOKE UPDATE, DELETE ON ai_calls FROM app`; index `ai_calls (created_at, task)`, `code_runs (owner_ref)`.
+`V20260925_2000__u13_ai_code.sql`: các bảng ở §1; seed `ai_task_configs` 5 việc (gồm `PRACTICE_GRADING`) với model mặc định; ràng buộc duy nhất `PRACTICE_RESULT` theo attempt; `REVOKE UPDATE, DELETE ON ai_calls FROM app`; index `ai_calls (created_at, task)`, `code_runs (owner_ref)`.
 
 ## 5. Tài nguyên VPS
 

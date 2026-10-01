@@ -5,7 +5,7 @@
 ## 1. Bối cảnh
 
 - **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005 (bản đơn giản), US-LRN-001.
-- **Use case**: UC-CAT-01..13, UC-LRN-01, UC-LRN-02, UC-CNT-04.
+- **Use case hiện hành**: UC 8, UC 9, UC 10, UC 12, UC 18, UC 19.
 - **Thiết kế nguồn**: `construction/u04-subject-class-enrollment/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -35,7 +35,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
     api/                SubjectController, ClassController, EnrollmentController,
                         MeClassController, DTO
     application/        SubjectService, ClassService, EnrollmentService,
-                        EnrollmentGuard, InviteCodeService, LearnerClassService,
+                        EnrollmentGuard, InviteCodeService, StudentClassService,
                         ScopeQueryService
     domain/             Subject, CourseClass, Enrollment, trạng thái, EnrollmentRowResult,
                         InviteCodeGenerator
@@ -66,7 +66,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 - [ ] **Bước 6** - `EnrollmentGuard` (advisory lock theo người học + môn, khóa theo thứ tự khi mở lại) (P2).
 - [ ] **Bước 7** - `EnrollmentService`: tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, ghi danh lại, phát event (BR-U04-20…26, P3).
 - [ ] **Bước 8** - `InviteCodeService`: bật/tắt/đổi mã, tự ghi danh, rate limit Bucket4j chỉ trừ khi sai, thông báo chung (BR-U04-30…34, P6).
-- [ ] **Bước 9** - `LearnerClassService`: danh sách lớp "Đang học"/"Đã kết thúc", trang lớp có nội dung, U05 lỗi thì vẫn trả thông tin lớp (BR-U04-40…44, P8).
+- [ ] **Bước 9** - `StudentClassService`: danh sách lớp "Đang học"/"Đã kết thúc", trang lớp có nội dung, U05 lỗi thì vẫn trả thông tin lớp (BR-U04-40…44, P8).
 - [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`; bỏ `NoAssignmentScopeAdapter` của U01 (P1).
 - [ ] **Bước 11** - `loadForActor` che giấu đối tượng ngoài quyền và audit theo BR-U04-51, 52.
 - [ ] **Bước 12** - Unit test cho mọi `BR-U04-xx`.
@@ -89,9 +89,9 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 ### Nhóm E - Frontend
 
 - [ ] **Bước 22** - Admin: `SubjectListPage`, `SubjectFormDialog`, `AssignManagerDialog`.
-- [ ] **Bước 23** - Quản lý lớp: `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học viên, Mã mời), `AssignInstructorDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
-- [ ] **Bước 24** - Ghi danh: `AddLearnerSearch`, `AddLearnersListDialog`, `EnrollmentResultTable`, `EnrollmentTable`.
-- [ ] **Bước 25** - Người học: `MyClassesPage`, `JoinByCodeDialog`, `LearnerClassPage`.
+- [ ] **Bước 23** - Quản lý lớp: `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học viên, Mã mời), `AssignTeacherDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
+- [ ] **Bước 24** - Ghi danh: `AddStudentSearch`, `AddStudentsListDialog`, `EnrollmentResultTable`, `EnrollmentTable`.
+- [ ] **Bước 25** - Người học: `MyClassesPage`, `JoinByCodeDialog`, `StudentClassPage`.
 - [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, lỗi chung khi mã sai.
 - [ ] **Bước 27** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -104,11 +104,11 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 
 | Nguồn | Bước |
 |---|---|
-| US-CAT-001 (UC-CAT-01..04, 06, 08) | 4, 5, 22, 23 |
-| US-CAT-002 (UC-CAT-05, 07, 09) | 5, 11, 23 |
-| US-CAT-003 (UC-CAT-10..12) | 6, 7, 16, 24 |
-| US-CAT-005 (UC-CAT-13) | 8, 25 |
-| US-LRN-001 (UC-LRN-01, 02, UC-CNT-04) | 9, 25 |
+| US-CAT-001 (UC 8, UC 9) | 4, 5, 22, 23 |
+| US-CAT-002 (UC 9) | 5, 11, 23 |
+| US-CAT-003 (UC 9) | 6, 7, 16, 24 |
+| US-CAT-005 (UC 10) | 8, 25 |
+| US-LRN-001 (UC 18, UC 19, UC 12) | 9, 25 |
 | Contract cho U01 và U05-U15 | 3, 10 |
 
 ## 5. Ngoài phạm vi

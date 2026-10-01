@@ -39,7 +39,7 @@
 
 ## F8 - Người học xem lớp
 1. `listMyClasses`: ghi danh `ACTIVE`, chia "Đang học"/"Đã kết thúc" (BR-U04-40).
-2. `getLearnerClass(classId)`: kiểm BR-U04-41, 42; trả thông tin lớp, giảng viên, nội dung qua `PublishedContentPort`. Tải file đi qua API của U05 (U05 hỏi `ClassAccessPort`).
+2. `getStudentClass(classId)`: kiểm BR-U04-41, 42; trả thông tin lớp, giảng viên, nội dung qua `PublishedContentPort`. Tải file đi qua API của U05 (U05 hỏi `ClassAccessPort`).
 3. Dashboard: frontend ghép danh sách lớp của U04 với API assignment (U08) và thông báo (U16) khi có.
 
 ## F9 - Contract cho unit khác

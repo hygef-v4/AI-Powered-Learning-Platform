@@ -9,9 +9,11 @@
 - Lỗi tích hợp được mô tả trong acceptance criteria của story nghiệp vụ liên quan.
 - Mỗi story ghi mã requirements liên quan; ràng buộc kỹ thuật thuần túy được giữ trong ma trận downstream thay vì tạo system story.
 - Danh mục hiện hành chỉ gồm story thuộc MVP. Các mã story đã loại không được tái sử dụng; lịch sử quyết định nằm trong `audit.md`.
-- Hệ thống chỉ có bốn persona người dùng: Người học, Giảng viên, Chủ nhiệm môn và Quản trị viên; không có Head of Department/Trưởng bộ môn.
+- Hệ thống chỉ có bốn persona người dùng: Student, Teacher, Subject Manager và Administrator; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
-- Phạm vi triển khai: **49 story MVP**, được ánh xạ tới 77 use case hiện hành.
+- Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
+- Từ 2026-10-01, nhóm thuộc lớp và được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên); trưởng nhóm thêm/giao mục chi tiết; tài liệu nhóm vào review khi mọi mục xong rồi trưởng nhóm mới nộp.
+- Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi quiz được quản lý trong UC 25 Manage Quiz, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
 
 ## 2. Miền Identity and Access
 
@@ -381,7 +383,7 @@
 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
 
-**Story**: Là giảng viên, tôi muốn tạo bộ nhóm cho từng bài nhóm của lớp được phân công (tạo tay, chia ngẫu nhiên hoặc dùng lại nhóm của bài khác) và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
+**Story**: Là giảng viên, tôi muốn chia sinh viên của lớp được phân công thành nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên) và chỉ định một trưởng nhóm cho mỗi nhóm để mọi bài tập nhóm của lớp có trách nhiệm rõ ràng.
 
 **Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -393,9 +395,15 @@
 - **When** giảng viên tạo nhóm, thêm thành viên và chọn trưởng nhóm
 - **Then** mỗi nhóm có đúng một trưởng nhóm, thành viên thuộc đúng lớp và thay đổi được audit
 
+#### Scenario 3 - Chia ngẫu nhiên
+
+- **Given** lớp còn sinh viên chưa có nhóm
+- **When** giảng viên chọn chia ngẫu nhiên với sĩ số tối đa
+- **Then** hệ thống chỉ chia sinh viên chưa có nhóm thành các nhóm chênh nhau tối đa một người, chọn ngẫu nhiên trưởng nhóm và cho giảng viên xem trước, sửa rồi mới lưu
+
 #### Scenario 2 - Thành viên hoặc trưởng nhóm không hợp lệ
 
-- **Given** sinh viên ngoài lớp, đã thuộc nhóm khác trong cùng bộ chia nhóm hoặc trưởng nhóm không phải thành viên
+- **Given** sinh viên ngoài lớp, đã thuộc nhóm khác trong lớp hoặc trưởng nhóm không phải thành viên
 - **When** giảng viên lưu cấu hình
 - **Then** hệ thống từ chối phần cấu hình không nhất quán và không mở rộng quyền ngoài lớp
 
@@ -421,7 +429,7 @@
 
 ### US-GRP-003 - Tạo bài tập nhóm dạng tài liệu chung
 
-**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục việc để các thành viên tự nhận và cùng hoàn thành một sản phẩm nhóm.
+**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục chính để nhóm chia việc chi tiết và cùng hoàn thành một sản phẩm nhóm.
 
 **Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -429,9 +437,9 @@
 
 #### Scenario 1 - Khung có mục việc
 
-- **Given** lớp đã có bộ nhóm hợp lệ cho bài
-- **When** giảng viên soạn khung tài liệu với các mục việc (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
-- **Then** mỗi nhóm nhận một tài liệu chung theo khung; các mục ở trạng thái trống để thành viên nhận
+- **Given** lớp đã có nhóm hợp lệ
+- **When** giảng viên soạn khung tài liệu với các mục chính (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
+- **Then** mỗi nhóm của lớp nhận một tài liệu chung theo khung; các mục chính ở trạng thái trống để trưởng nhóm chia nhỏ, giao hoặc để thành viên nhận
 
 #### Scenario 2 - Nhả khóa mục khi cần
 
@@ -441,7 +449,7 @@
 
 ### US-GRP-004 - Nhận và làm mục trong tài liệu nhóm
 
-**Story**: Là thành viên nhóm, tôi muốn nhận một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
+**Story**: Là thành viên nhóm, tôi muốn nhận hoặc được trưởng nhóm giao một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
 
 **Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -453,11 +461,17 @@
 - **When** thành viên nhận mục
 - **Then** mục bị khóa cho thành viên đó, mở ra trong trang riêng như bài DOCUMENT thường; thành viên khác không sửa được mục đó
 
+#### Scenario 1b - Trưởng nhóm chia việc chi tiết
+
+- **Given** tài liệu nhóm có các mục chính của giảng viên
+- **When** trưởng nhóm thêm hoặc sửa mục chi tiết dưới một mục chính và giao mục cho một thành viên
+- **Then** mục được khóa cho thành viên được giao, mục chính của giảng viên không bị xóa hay đổi tên, thành viên khác không thêm/sửa/giao được mục và thao tác được audit
+
 #### Scenario 2 - Xong và review
 
 - **Given** thành viên làm xong mục
 - **When** thành viên bấm "Xong"
-- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang chờ review và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản
+- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang xong và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản; khi mọi mục đều xong, tài liệu chuyển sang review và cả nhóm được báo để xem lại
 
 #### Scenario 3 - Giảng viên chọn phương thức chấm phần của từng người
 
@@ -481,8 +495,8 @@
 
 #### Scenario 2 - Trưởng nhóm nộp
 
-- **Given** tài liệu chung còn trong hạn
-- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn mục trống hoặc đang nhận)
+- **Given** tài liệu chung còn trong hạn và đang ở trạng thái review vì mọi mục đã xong
+- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn bình luận chưa giải quyết; tài liệu chưa review thì không cho nộp)
 - **Then** hệ thống lưu một bản bất biến kèm tác giả từng mục; trưởng nhóm có thể nộp lại trước hạn, bản nộp cuối được chấm
 
 #### Scenario 3 - Hết hạn
@@ -551,7 +565,7 @@
 - **When** người học dùng URL/ID trực tiếp
 - **Then** hệ thống từ chối mà không tiết lộ nội dung hoặc metadata nhạy cảm
 
-## 6. Miền Question and Rubric Bank
+## 6. Miền Rubric Bank and Quiz Questions
 
 ### US-QBK-001 - Quản lý ngân hàng rubric
 
@@ -573,9 +587,9 @@
 - **When** người dùng sửa hoặc xóa
 - **Then** hệ thống tạo phiên bản mới hoặc chặn xóa để kết quả lịch sử không thay đổi
 
-### US-QBK-002 - Quản lý ngân hàng câu hỏi
+### US-QBK-002 - Quản lý câu hỏi trong quiz
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm và nhập câu hỏi hàng loạt để tái sử dụng nội dung đánh giá có kiểm soát.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt và dùng lại câu hỏi khi quản lý quiz để tái sử dụng nội dung đánh giá có kiểm soát.
 
 **Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -590,8 +604,8 @@
 #### Scenario 2 - Câu hỏi đã được dùng trong bài
 
 - **Given** câu hỏi đã thuộc một bài được phát hành
-- **When** người dùng sửa câu hỏi trong ngân hàng
-- **Then** hệ thống tạo version mới trong ngân hàng; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
+- **When** người dùng sửa câu hỏi
+- **Then** hệ thống tạo version mới của câu hỏi; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
 
 #### Scenario 3 - Muốn đổi nội dung bài đã phát hành
 
@@ -629,7 +643,7 @@
 
 ### US-AIG-002 - Tạo bản nháp template/câu hỏi cấp môn bằng AI
 
-**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi ngân hàng cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
+**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi quiz cấp môn từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
 
 **Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -655,7 +669,7 @@
 
 ### US-AIG-003 - Cấu hình và giám sát sử dụng AI
 
-**Story**: Là quản trị viên, tôi muốn cấu hình giới hạn và giám sát việc sử dụng AI để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
+**Story**: Là quản trị viên, tôi muốn cấu hình giới hạn, giám sát việc sử dụng AI và quản lý gói credit cùng mức tặng hằng tháng để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
 
 **Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -678,6 +692,12 @@
 - **Given** quota/giới hạn đã đạt hoặc kill-switch đang bật
 - **When** người dùng yêu cầu chức năng AI
 - **Then** hệ thống từ chối trước khi gọi provider, giữ dữ liệu nghiệp vụ và giải thích phương án tiếp tục không dùng AI khi có thể
+
+#### Scenario 4 - Quản lý gói credit và mức tặng
+
+- **Given** quản trị viên có quyền
+- **When** quản trị viên tạo, sửa hoặc ẩn một gói credit, hoặc đổi mức credit tặng hằng tháng cho Teacher, Subject Manager và Administrator
+- **Then** thay đổi chỉ áp dụng cho giao dịch hoặc kỳ tặng sau, giao dịch đã tạo giữ snapshot giá và số credit, Student không được tặng credit và thay đổi được audit
 
 ## 8. Miền Assessment Delivery
 
@@ -769,7 +789,7 @@
 
 - **Given** người học có lượt `DOCUMENT` đang làm và DOCX hợp lệ trong giới hạn
 - **When** người học tải DOCX lên, xem trước các block được chuyển đổi rồi xác nhận
-- **Then** hệ thống thêm các block với `origin = LEARNER` vào bản nháp hiện tại, không sửa hoặc xóa khung giảng viên; phần không hỗ trợ được báo rõ, lỗi nhập không làm mất bản nháp
+- **Then** hệ thống thêm các block với `origin = STUDENT` vào bản nháp hiện tại, không sửa hoặc xóa khung giảng viên; phần không hỗ trợ được báo rõ, lỗi nhập không làm mất bản nháp
 
 ### US-ASM-005 - Soạn và kiểm thử Code Lab
 
@@ -891,31 +911,37 @@
 - **When** yêu cầu copy được gửi
 - **Then** hệ thống từ chối ở mức đối tượng và không tiết lộ nội dung lớp đích
 
-### US-ASM-011 - Làm simulation exam giới hạn lượt
+### US-ASM-012 - Nộp bài Practice và nhận phản hồi AI khi đủ credit
 
-**Story**: Là người học, tôi muốn làm simulation exam theo số lượt và chính sách rõ ràng để luyện tập hoặc nhận điểm thành phần mà không nhầm đây là kỳ thi chính thức.
+**Story**: Là Student, tôi muốn nộp bài luyện tập Text Essay hoặc Diagram Essay và nhận một lần điểm/phản hồi AI cho mỗi attempt khi đủ credit để biết mình cần cải thiện gì.
 
-**Truy vết**: FR-002, FR-007, FR-014, FR-018, FR-029, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-007, FR-010, FR-017, FR-018, FR-030, SEC-002, SEC-003, SEC-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Làm trong giới hạn
+#### Scenario 1 - Đủ credit
 
-- **Given** simulation exam đang mở và người học còn lượt
-- **When** người học bắt đầu và nộp attempt
-- **Then** hệ thống giữ snapshot đề/version, cập nhật số lượt (mặc định 3, giảng viên chỉnh từ 1 đến 10) và áp dụng chính sách kết quả cao nhất/gần nhất/trung bình đã công bố
+- **Given** Student có quyền làm bài `PRACTICE` dạng Text Essay hoặc Diagram Essay và đủ credit
+- **When** Student nộp attempt
+- **Then** hệ thống giữ bài nộp, gọi AI chấm tối đa một lần cho attempt, tính credit theo token thực dùng và chỉ Student xem được kết quả luyện tập
 
-#### Scenario 2 - Công bố và tính điểm
+#### Scenario 2 - Thiếu credit
 
-- **Given** giảng viên đã cấu hình thời điểm hiện đáp án và trạng thái tính điểm thành phần
-- **When** attempt được hoàn tất hoặc cửa sổ bài đóng
-- **Then** hệ thống chỉ hiển thị đáp án đúng thời điểm và đưa kết quả vào điểm thành phần chỉ khi cấu hình cho phép
+- **Given** Student thiếu credit tại thời điểm nộp
+- **When** Student nộp attempt
+- **Then** bài vẫn được lưu nhưng không có điểm/phản hồi AI, không trừ credit và không vào hàng đợi Teacher; mua credit sau đó không chấm bù attempt cũ
 
-#### Scenario 3 - Không phải kỳ thi chính thức
+#### Scenario 3 - Làm lại
 
-- **Given** người học hoặc giảng viên xem simulation exam
-- **When** giao diện hiển thị thông tin bài
-- **Then** hệ thống ghi rõ đây là thi thử, số lượt, cách lấy kết quả và việc có/không tính điểm; không hiển thị như proctored exam
+- **Given** Student còn lượt và đã nộp một attempt
+- **When** Student làm lại và nộp attempt mới
+- **Then** attempt mới được xét chấm riêng nếu đủ credit; retry kỹ thuật không tạo kết quả hoặc khoản trừ trùng
+
+#### Scenario 4 - Các dạng luyện tập tự chấm
+
+- **Given** bài `PRACTICE` dạng Code Lab hoặc Quiz
+- **When** Student nộp bài
+- **Then** hệ thống chấm theo test/đáp án mà không gọi AI hoặc trừ credit Student; kết quả không vào sổ điểm chính thức
 
 ## 9. Miền Grading and Progress
 
@@ -1087,7 +1113,7 @@
 
 #### Scenario 2 - Phân bố lớp ẩn danh
 
-- **Given** lớp cho phép hiển thị so sánh
+- **Given** giảng viên đã bật hiển thị phân bố điểm ẩn danh cho lớp (UC 36) và lớp đủ điều kiện riêng tư
 - **When** người học xem phân bố điểm
 - **Then** dữ liệu được tổng hợp/ẩn danh và không suy ra danh tính hoặc điểm của người học khác
 
@@ -1115,7 +1141,7 @@
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là Student, Teacher, Subject Manager hoặc Administrator, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
 **Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -1123,15 +1149,15 @@
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên và gói credit hợp lệ
+- **Given** tài khoản `ACTIVE` có một trong bốn vai trò hiện hành và gói credit hợp lệ
 - **When** người dùng bắt đầu thanh toán
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
 
-#### Scenario 3 - Người học không có AI hoặc credit
+#### Scenario 3 - Student không được dùng AI ngoài bài Practice hợp lệ
 
-- **Given** tài khoản chỉ có vai trò Người học đã đăng nhập
-- **When** tài khoản gọi API AI, số dư/sổ cái credit, gói mua hoặc tạo giao dịch, kể cả bằng cách gọi trực tiếp API
-- **Then** hệ thống từ chối theo quyền, không cấp/giữ/trừ credit và không tạo giao dịch hay link PayOS
+- **Given** tài khoản chỉ có vai trò Student đã đăng nhập
+- **When** tài khoản yêu cầu AI tạo đề, xử lý học liệu hoặc chấm bài `GRADED`, kể cả bằng cách gọi trực tiếp API
+- **Then** hệ thống từ chối theo quyền, không giữ/trừ credit và không gọi AI; Student vẫn được xem ví, mua credit và dùng cho bài `PRACTICE` Text Essay/Diagram Essay của chính mình
 
 #### Scenario 2 - Provider lỗi
 
@@ -1141,7 +1167,7 @@
 
 ### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là Giảng viên, Chủ nhiệm môn hoặc Quản trị viên đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là Student, Teacher, Subject Manager hoặc Administrator đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
 **Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
@@ -1235,7 +1261,7 @@
 | FR-004 | US-CNT-001, US-CNT-002, US-CNT-005, US-AIG-002 |
 | FR-005 | US-LRN-001 |
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-004 đến US-ASM-007 |
-| FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-011 |
+| FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-012 |
 | FR-008 | US-GRD-001 đến US-GRD-005 |
 | FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
 | FR-010 | US-PAY-001, US-PAY-002 |
@@ -1257,9 +1283,57 @@
 | FR-026 | US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |
 | FR-027 | US-ASM-009 |
 | FR-028 | US-ASM-010 |
-| FR-029 | US-ASM-011 |
+| FR-029 | Đã rút khỏi phạm vi; `US-ASM-011` chỉ còn là mã lịch sử |
+| FR-030 | US-ASM-012, US-PAY-001, US-PAY-002 |
 
-## 14. Ràng buộc phi chức năng và kỹ thuật downstream
+## 14. Ma trận story ↔ use case
+
+Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi story thuộc ít nhất một use case; một use case gộp có thể gồm nhiều story.
+
+| ID | Use Case | Stories |
+|---|---|---|
+| 1 | Activate Account | US-IAM-001 |
+| 2 | Sign In | US-IAM-002 |
+| 3 | Sign Out | US-IAM-002 |
+| 4 | Recover Password | US-IAM-003 |
+| 5 | Change Password | US-IAM-006 |
+| 6 | Manage Profile | US-IAM-004 |
+| 7 | Manage Accounts | US-IAM-005, US-IAM-007 |
+| 8 | Manage Subjects | US-IAM-005, US-CAT-001 |
+| 9 | Manage Classes | US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-GRP-001, US-GRP-002 |
+| 10 | Join Class | US-CAT-005 |
+| 11 | Manage Content | US-CNT-001, US-CNT-002, US-CNT-005 |
+| 12 | Access Lesson | US-LRN-001 |
+| 13 | Post Class Announcement | US-CNT-004 |
+| 14 | Discuss in Class Q&A | US-CNT-004 |
+| 15 | Request Leader Change | US-GRP-002 |
+| 16 | Submit Group Document | US-GRP-004, US-GRP-005 |
+| 17 | Grade Group Document | US-GRP-004, US-GRP-006 |
+| 18 | View Learning Overview | US-RPT-002 |
+| 19 | Access Enrolled Class | US-LRN-001 |
+| 20 | Manage Rubrics | US-QBK-001 |
+| 21 | Create Assignment with AI | US-AIG-001 |
+| 22 | Create Template with AI | US-AIG-002 |
+| 23 | Manage AI Service | US-AIG-003 |
+| 24 | Manage Text Essay | US-ASM-007 |
+| 25 | Manage Quiz | US-QBK-002, US-ASM-006 |
+| 26 | Manage Diagram Essay | US-ASM-004 |
+| 27 | Manage Code Lab | US-ASM-005 |
+| 28 | Manage Assignments | US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
+| 29 | View Assigned Work | US-ASM-003 |
+| 30 | Submit Assignment | US-ASM-003, US-ASM-004, US-ASM-005, US-GRD-001 |
+| 31 | Review Attempts | US-ASM-003 |
+| 32 | Review Submissions | US-GRD-003 |
+| 33 | Grade Submissions | US-GRD-002, US-GRD-003 |
+| 34 | Finalize Grades | US-GRD-003, US-GRD-005 |
+| 35 | View Grades | US-GRD-004 |
+| 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-002, US-RPT-003 |
+| 37 | Buy AI Credits | US-PAY-001, US-PAY-002 |
+| 38 | View Notifications | US-NTF-001 |
+| 39 | View Audit Log | US-AUD-001 |
+| 40 | Grade Practice with AI | US-ASM-012 |
+
+## 15. Ràng buộc phi chức năng và kỹ thuật downstream
 
 | Requirement | Xử lý tại User Stories | Stage xác minh chi tiết |
 |---|---|---|
@@ -1271,7 +1345,7 @@
 | SEC-001 đến SEC-007 | Được gắn trên stories có hành vi quan sát được; phạm vi rút gọn cho đồ án | NFR Design, Infrastructure Design, Code Generation, Build and Test |
 | REL-001 đến REL-004 | Timeout và fail-closed gắn vào story tích hợp; topology, DR, monitoring và incident process ngoài phạm vi đồ án | Application Design, NFR Design, Infrastructure Design, Build and Test |
 
-## 15. Kiểm tra INVEST
+## 16. Kiểm tra INVEST
 
 | Tiêu chí | Kết quả | Bằng chứng |
 |---|---|---|
@@ -1282,7 +1356,7 @@
 | Small | Đạt | Các hành trình lớn được tách theo kích hoạt, nội dung, tạo AI, phát hành, nộp, chấm và công bố |
 | Testable | Đạt | Cả 49 story MVP có acceptance criteria Given/When/Then và truy vết requirements |
 
-## 16. Security Compliance tại User Stories
+## 17. Security Compliance tại User Stories
 
 > Bảng này lập trước khi rút gọn phạm vi (2026-09-24). Hiện chỉ SECURITY-03, 04, 05, 08, 09, 12, 15 và RESILIENCY-04, 06, 10 còn áp dụng; các rule khác là N/A "ngoài phạm vi đồ án", kể cả những dòng ghi "downstream" (xem `requirements.md` mục 12-13).
 
@@ -1306,7 +1380,7 @@
 
 Không có blocking security finding tại User Stories.
 
-## 17. Resiliency Compliance tại User Stories
+## 18. Resiliency Compliance tại User Stories
 
 | Rule | Trạng thái | Áp dụng/N/A |
 |---|---|---|

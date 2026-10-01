@@ -4,7 +4,7 @@
 
 Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trường học hoặc trung tâm đào tạo. Persona mô tả mục tiêu và hành vi nghiệp vụ; không thay thế đặc tả authorization phía server trong thiết kế.
 
-## 2. P-LEARNER - Người học
+## 2. P-STUDENT - Người học
 
 ### Hồ sơ
 
@@ -20,16 +20,16 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Truy cập lớp và học liệu đã phát hành; xem bài sắp hạn, trạng thái nộp và điểm đã công bố trên dashboard cá nhân.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
 - Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
-- Nhận và làm mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
-- Làm simulation exam trong giới hạn lượt, biết rõ bài có hoặc không tính điểm thành phần và chính sách lấy kết quả.
-- Không có ví/credit AI, không gọi dịch vụ AI hoặc mua credit; vẫn làm bài, chạy Code Lab không dùng AI và xem điểm/phản hồi đã công bố.
+- Nhận hoặc được trưởng nhóm giao mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung, cùng review khi mọi mục xong; trưởng nhóm thêm/giao mục chi tiết và nộp khi tài liệu đang review; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
+- Làm bài `PRACTICE` đúng dạng; Code Lab và Quiz tự chấm theo test/đáp án, Text Essay và Diagram Essay được AI chấm một lần khi nộp và đủ credit.
+- Xem ví, mua credit AI và theo dõi lịch sử của mình. Khi thiếu credit, bài Text Essay/Diagram Essay `PRACTICE` vẫn nộp được nhưng attempt đó không có điểm AI; làm lại để được xét chấm sau khi mua credit.
 - Nhận thông báo thiết yếu.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-011`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-012`, `US-GRD-001`, `US-GRD-004`, `US-RPT-002`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
-## 3. P-INSTRUCTOR - Giảng viên
+## 3. P-TEACHER - Giảng viên
 
 ### Hồ sơ
 
@@ -43,19 +43,19 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 - Quản lý vòng đời lớp được phân công (sửa, mở, lưu trữ) và nội dung riêng của lớp.
 - Ghi danh người học khi được cấp quyền.
-- Chia nhóm cho bài nhóm, chỉ định trưởng nhóm, soạn khung mục việc và xử lý yêu cầu đổi trưởng nhóm.
-- Định nghĩa cấu trúc bài nhóm, xem trước tài liệu do hệ thống tổng hợp, điều chỉnh thứ tự/phần được dùng và chốt version để chấm.
+- Chia nhóm trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), chỉ định trưởng nhóm, soạn các mục chính của bài nhóm và xử lý yêu cầu đổi trưởng nhóm.
+- Xem tiến độ tài liệu nhóm, nhả khóa mục khi cần, chấm tay tài liệu chung và quyết định điểm cuối từng thành viên.
 - Nhờ AI đề xuất feedback cho phần đóng góp của từng thành viên, tự chấm tài liệu chung và quyết định điểm cuối từng sinh viên dựa trên hai nguồn mà không bị hệ thống ép công thức.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
 - Mua credit AI để dùng cho các chức năng AI thuộc phạm vi lớp được phân công; theo dõi thanh toán và số dư của mình.
 - Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
-- Soạn, xem trước từng loại bài đánh giá và cấu hình simulation exam giới hạn lượt, có thể tính hoặc không tính điểm thành phần.
+- Soạn, xem trước và phát hành các dạng bài `GRADED`/`PRACTICE` hợp lệ; chỉ bài `GRADED` vào quy trình chấm/chốt điểm của Teacher.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
 - Xem tiến độ nộp, chốt điểm, xuất bảng điểm của lớp được phân công; hệ thống tự nhắc người chưa nộp trước hạn.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-011`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CAT-002`, `US-CAT-003`, `US-GRP-001` đến `US-GRP-006`, `US-CNT-002`, `US-CNT-004`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-001`, `US-ASM-001`, `US-ASM-003` đến `US-ASM-010`, `US-GRD-001` đến `US-GRD-005`, `US-RPT-001`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 4. P-SUBJECT-MANAGER - Chủ nhiệm môn
 
@@ -106,7 +106,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 | Persona | Danh tính | Học thuật/nội dung | Nhóm | Học tập | AI/đánh giá | Điểm | Thanh toán | Thông báo | Audit |
 |---|---|---|---|---|---|---|---|---|---|
-| Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài, không dùng AI | Xem cá nhân | Không có credit/thanh toán | Nhận | Không |
+| Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài, dùng AI chấm Practice Essay khi đủ credit | Xem cá nhân | Mua/xem credit cá nhân | Nhận | Không |
 | Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Mua credit cá nhân | Nhận | Qua hành động được ghi |
 | Chủ nhiệm môn | Chính | Quản lý cấp môn | Không mặc định | Không trực tiếp | Tạo template đề | Không mặc định | Mua credit cá nhân | Nhận | Qua hành động được ghi |
 | Quản trị viên | Quản trị | Quản trị cấu trúc | Không mặc định | Theo quyền | Theo quyền quản trị | Tổng hợp | Cấu hình gói/mua credit | Cấu hình/nhận | Chính |

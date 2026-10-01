@@ -16,12 +16,12 @@
 4. Giảng viên chỉnh rồi lưu như F2 bước 3 (BR-U09-44).
 
 ## F3a - Người học nhập DOCX vào lượt DOCUMENT
-1. U11 kiểm lượt thuộc người học, `IN_PROGRESS`, còn thời hạn; U09 kiểm tệp bằng `SafeZipGuard` rồi dùng `DocxImporter` hiện có, gắn `origin = LEARNER` cho block mới.
+1. U11 kiểm lượt thuộc người học, `IN_PROGRESS`, còn thời hạn; U09 kiểm tệp bằng `SafeZipGuard` rồi dùng `DocxImporter` hiện có, gắn `origin = STUDENT` cho block mới.
 2. Trả xem trước và báo cáo phần bỏ qua, không ghi đè bản nháp. Người học xác nhận thì U11 thêm block qua luồng lưu nháp với `contentVersion` hiện tại; xung đột hoặc lỗi giữ nguyên bản nháp cũ.
 3. Kiểm lại `validateForSave`; mọi block `TEACHER` và thứ tự tương đối của chúng không đổi.
 
 ## F4 - Kiểm duyệt (`TypeConfigPort`)
-- `QUIZ`: BR-U09-14. `ESSAY`: luôn đạt. `DOCUMENT`: khung (nếu có) hợp lệ, `requiredDiagrams` hợp lệ.
+- `MULTIPLE_CHOICE_QUIZ`: BR-U09-14. `TEXT_ESSAY`: luôn đạt. `DIAGRAM_ESSAY`: khung `DOCUMENT` (nếu có) và `requiredDiagrams` hợp lệ.
 
 ## F5 - Kiểm tài liệu của người học (U11 gọi)
 - Lưu nháp: `validateForSave` (BR-U09-36).

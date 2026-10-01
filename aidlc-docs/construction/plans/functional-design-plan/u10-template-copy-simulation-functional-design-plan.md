@@ -1,4 +1,4 @@
-# U10 Template, Copy & Simulation - Functional Design Plan
+# U10 Template & Copy - Functional Design Plan (đã bỏ Simulation Exam; tên tệp giữ để truy vết)
 
 - [x] Đọc định nghĩa U10, US-ASM-008..011, UC-ASM-15..18, FR-027..029.
 - [x] Hỏi 6 điểm qua giao diện; ghi vào `../functional-design-questions/u10-template-copy-simulation-functional-design-questions.md`.

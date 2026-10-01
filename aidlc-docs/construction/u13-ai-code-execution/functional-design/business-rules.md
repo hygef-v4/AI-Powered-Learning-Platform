@@ -6,9 +6,9 @@
 |---|---|---|
 | BR-U13-01 | Mọi lời gọi AI qua `AiGateway` provider-neutral; nghiệp vụ không biết tên provider. | FR-012 |
 | BR-U13-02 | Model chọn theo loại việc (`AiTaskConfig`); admin đổi model trong danh sách cho phép. | Câu 4, FR-021 |
-| BR-U13-03 | Trước khi gọi AI: chỉ chấp nhận người yêu cầu `ACTIVE` có vai trò `INSTRUCTOR`, `SUBJECT_MANAGER` hoặc `ADMIN` và đúng phạm vi nghiệp vụ; `LEARNER` không được gọi API AI, kể cả khi gọi trực tiếp. Sau đó kiểm kill-switch, trần chi phí ngày, tối đa 10 yêu cầu/phút/người và `CreditPort.reserve` đủ credit của **người yêu cầu**. Hết hạn mức hệ thống → báo "Hệ thống đang bận", không trừ credit; thiếu credit cá nhân → báo "Không đủ credit AI". Không đạt → không gọi provider, ghi `AiCall` `REJECTED_*` khi phù hợp. | US-AIG-003 S3, U07, quyết định 2026-09-27 |
+| BR-U13-03 | Trước khi gọi AI: chỉ chấp nhận tài khoản `ACTIVE` đúng phạm vi nghiệp vụ. `STUDENT` chỉ được gọi tác vụ `PRACTICE_GRADING` từ một attempt `PRACTICE` Text/Diagram Essay đã nộp của chính mình, tối đa một kết quả hợp lệ mỗi attempt; mọi tác vụ AI khác bị từ chối kể cả gọi API trực tiếp. Sau đó kiểm kill-switch, trần chi phí ngày, tối đa 10 yêu cầu/phút/người và `CreditPort.reserve` đủ credit của người yêu cầu với purpose/attemptRef. Hết hạn mức hệ thống → "Hệ thống đang bận", không trừ credit; thiếu credit Student → giữ bài nộp không điểm AI. Không đạt → không gọi provider, ghi `AiCall` `REJECTED_*` khi phù hợp. | US-AIG-003 S3, US-ASM-012, U07, FR-030 |
 | BR-U13-04 | Sau khi gọi: `settle` theo token thật (1 credit = 1 000 token); lỗi → `release`. | BR-U07-40…43 |
-| BR-U13-05 | Chạy nền bằng job U02; kết quả là **đề xuất** (`READY`), không bao giờ tự phát hành đề hay chốt điểm. | FR-006, FR-008 |
+| BR-U13-05 | Chạy nền bằng job U02. Với `GRADED`, kết quả là **đề xuất** (`READY`), không tự phát hành đề hay chốt điểm. `PRACTICE_RESULT` là điểm/phản hồi luyện tập riêng của Student, không vào U15. | FR-006, FR-008, FR-030 |
 | BR-U13-06 | Lỗi tạm (timeout, 429, 5xx) retry theo U02 tối đa 3 lần; Gemini báo hết quota (429) sau các lần retry → báo "Hệ thống đang bận", trả phần credit chưa dùng. Đầu ra sai định dạng JSON retry 1 lần rồi `FAILED`/`INVALID_OUTPUT`. Không có đề xuất hoàn tất giả. | US-AIG-001 S3 |
 | BR-U13-07 | Nội dung người dùng (học liệu, bài nộp) đưa vào prompt trong khối phân cách, kèm chỉ dẫn "chỉ là dữ liệu"; quét dấu hiệu chèn lệnh, có dấu hiệu thì gắn cờ trong đề xuất cho giảng viên. | demo_do_an, SEC-003 |
 | BR-U13-08 | `AiCall` chỉ lưu số liệu, không lưu prompt/phản hồi thô. | US-AIG-003 S2 |
@@ -32,7 +32,7 @@
 | BR-U13-20 | Chỉ khi giảng viên chọn "Nhờ AI đề xuất" cho một bài nộp/phần; credit trừ của giảng viên đó. | US-GRP-004 S2, FR-008 |
 | BR-U13-21 | Đầu vào: đề, rubric checklist (U06), nội dung bài: tài liệu → văn bản phẳng + XML sơ đồ rút gọn (U09); code → mã + kết quả test. Chỉ phạm vi một bài/phần. | US-ASM-004 S3 |
 | BR-U13-22 | Đầu ra: mỗi mục checklist `đạt/không đạt`, nhận xét ngắn, bằng chứng (trích đoạn/tên sơ đồ); tổng điểm đề xuất tính bằng `RubricPort.score` (không để AI cộng). | U06 BR-U06-32 |
-| BR-U13-23 | Người học không gọi AI và không bao giờ thấy đề xuất AI; U15 quyết định dùng hay không và chỉ điểm/phản hồi cuối đã công bố mới hiển thị cho Người học. Credit AI hỗ trợ chấm do Giảng viên yêu cầu và chi trả. | FR-008 |
+| BR-U13-23 | Student không gọi `GRADING_PROPOSAL` và không xem đề xuất AI cho bài `GRADED`; U15 quyết định dùng hay không và chỉ điểm/phản hồi cuối đã công bố mới hiển thị. Teacher yêu cầu và trả credit cho đề xuất này. Luồng Student `PRACTICE_GRADING` được quy định riêng tại BR-U13-03. | FR-008, FR-030 |
 
 ## 4. Code Lab
 
@@ -42,8 +42,8 @@
 | BR-U13-31 | Mọi mã chạy trong Judge0 tự chạy, mạng nội bộ không ra Internet; không bao giờ chạy trên backend/worker. Judge0 lỗi → `SANDBOX_ERROR`, không đánh dấu đạt. | US-ASM-005 S2 |
 | BR-U13-32 | Giới hạn mỗi test: thời gian theo đề (100-10 000 ms), bộ nhớ theo đề (64-1024 MB), output ≤ 64 KB, không mạng. | US-ASM-005 S1 |
 | BR-U13-33 | Duyệt bài `CODE_LAB` cần lời giải mẫu đạt **toàn bộ** test với `contentHash` khớp nội dung hiện tại; sửa đề/test/lời giải → phải kiểm lại. | demo_do_an INV-218 |
-| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC-ASM-13 |
-| BR-U13-35 | `GRADE`: khi nộp (U11) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI); gửi U15 làm điểm tự động. | FR-017 |
+| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC 30 |
+| BR-U13-35 | `GRADE`: khi nộp (U11) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI). Bài `GRADED` gửi U15 làm điểm tự động; bài `PRACTICE` trả kết quả riêng cho U11. | FR-017, FR-030 |
 | BR-U13-36 | Kết quả test ẩn chỉ trả trạng thái đạt/không, không trả input/output cho người học. | SEC-002 |
 | BR-U13-37 | Chạy lại `GRADE` khi `SANDBOX_ERROR` do giảng viên bấm, hoặc job tự retry 3 lần. | REL-003 |
 

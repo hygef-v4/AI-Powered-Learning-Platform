@@ -1,6 +1,6 @@
 # U09 Question Type Authoring - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; `UC-ASM-02`, `03`, `04`, `06`.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; UC 24, UC 25, UC 26, UC 28.
 
 ## 1. Tổng quan
 
@@ -12,15 +12,15 @@ Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; 
 | `Block` | Value object của `Document` | Như trên | Như trên |
 | `DocxImportPreview` | Kết quả trả về | Không lưu | U09 |
 
-U09 sở hữu nghiệp vụ: cấu hình riêng của bài `QUIZ`, `ESSAY`, `DOCUMENT`; **mô hình tài liệu** (dùng chung cho soạn khung, làm bài, chấm); nhập khung từ DOCX và chuyển DOCX của người học thành block nháp; xuất DOCX; nhận sơ đồ Draw.io nhúng trong ảnh; kiểm và rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
+U09 sở hữu cấu hình riêng của assignment `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY` và mô hình `DOCUMENT` dùng cho Diagram Essay/Group Assignment; nhập khung từ DOCX, chuyển DOCX của Student thành block nháp, xuất DOCX và kiểm/rút gọn XML Draw.io. U09 **không** sở hữu: bài/publication và `gradingMode` (U08), câu hỏi ngân hàng (U06), bài làm (U11), Code Lab (U13). Không có đề chung cấp môn.
 
 ## 2. `QuestionTypeConfig`
 
 | Loại bài | Nội dung cấu hình |
 |---|---|
-| `QUIZ` | `shuffleQuestions`, `shuffleOptions` (bool); `timeLimitMinutes` (rỗng hoặc 1-300); `showScoreAfterSubmit` (bool); `showCorrectAnswers` (`NEVER`, `AFTER_SUBMIT`, `AFTER_CLOSE`) |
-| `ESSAY` | `richText` (luôn `true`: đoạn văn, heading, danh sách, đậm/nghiêng); không giới hạn số từ |
-| `DOCUMENT` | Có hoặc không có `DocumentSkeleton` (không có = trang trắng); `requiredDiagrams` (loại sơ đồ → số tối thiểu, tùy chọn) |
+| `MULTIPLE_CHOICE_QUIZ` | `shuffleQuestions`, `shuffleOptions` (bool); `timeLimitMinutes` (rỗng hoặc 1-300); `showScoreAfterSubmit` (bool); `showCorrectAnswers` (`NEVER`, `AFTER_SUBMIT`, `AFTER_CLOSE`) |
+| `TEXT_ESSAY` | `richText` (luôn `true`: đoạn văn, heading, danh sách, đậm/nghiêng); không giới hạn số từ |
+| `DIAGRAM_ESSAY` | Có hoặc không có `DocumentSkeleton` (không có = trang trắng); `requiredDiagrams` (loại sơ đồ → số tối thiểu, tùy chọn) |
 
 Chỉ sửa khi bài `DRAFT`; khi tạo version mới hoặc nhân bản thì được sao chép qua `TypeConfigPort.copy`.
 
@@ -38,7 +38,7 @@ Chỉ sửa khi bài `DRAFT`; khi tạo version mới hoặc nhân bản thì đ
 Document
   blocks[]                      thứ tự trong tài liệu
     id                          UUID do client/server sinh, duy nhất trong tài liệu
-    origin                      TEACHER | LEARNER
+    origin                      TEACHER | STUDENT
     type                        HEADING | PARAGRAPH | LIST | TABLE | IMAGE | DIAGRAM
     HEADING    level 1-6, text, workSection (bài nhóm: heading đánh dấu một mục việc để thành viên nhận)
     PARAGRAPH  runs[] (text, bold, italic, underline, code)
@@ -65,7 +65,7 @@ Quyền sửa theo block:
 
 | Thuộc tính | Ý nghĩa |
 |---|---|
-| `blocks[]` | Block sẽ thêm (khung giảng viên: `TEACHER`; bài làm: `LEARNER`) |
+| `blocks[]` | Block sẽ thêm (khung giảng viên: `TEACHER`; bài làm: `STUDENT`) |
 | `diagramCount`, `imageCount` | Số sơ đồ nhận ra, số ảnh giữ nguyên |
 | `droppedParts[]` | Phần không chuyển được, báo cho người dùng |
 
@@ -80,7 +80,7 @@ File DOCX chỉ xử lý trong bộ nhớ, không lưu.
 | `TypeConfigPort` | U08 khai báo (`C`), U10 dùng | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` sao chép cấu hình và khung tài liệu |
 | `DocumentModelPort` | U06 (`C`), U11, U13, U14, U15 | `validateSkeleton`, `validateForSave`, `validateForSubmit(skeleton, doc, requiredDiagrams)`, `toPlainText` |
 | `DocxExportPort` | U11, U14, U15 | Tài liệu → DOCX |
-| `DocxLearnerImportPort` | U11 | DOCX → `DocxImportPreview`; U11 xác nhận và lưu nháp bằng kiểm phiên bản |
+| `DocxStudentImportPort` | U11 | DOCX → `DocxImportPreview`; U11 xác nhận và lưu nháp bằng kiểm phiên bản |
 | `DiagramCompactPort` | U13 | XML đầy đủ → XML rút gọn theo allowlist, trong bộ nhớ |
 
 ### Port U09 dùng

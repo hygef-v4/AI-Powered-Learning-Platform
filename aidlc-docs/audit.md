@@ -2886,3 +2886,161 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **Context**: Design discussion; no decision recorded yet.
 
 ---
+
+## AI-DLC state synchronization
+**Timestamp**: 2026-09-28T13:53:28Z
+**User Input**: "giúp tôi cập nmhaajt aidlc state đc k"
+**AI Response**: "Updated aidlc-docs/aidlc-state.md against the latest audit and shared infrastructure: kept the pending code-plan re-approval gate, corrected the RabbitMQ count to eight U02 job queues plus the U16 notification queue, corrected the workspace path, and recorded the 2026-09-27 UC specification update. No application code or stage advancement."
+**Context**: Documentation-only state maintenance.
+
+---
+
+## Requirements change request — roles, practice grading and credits
+**Timestamp**: 2026-09-29T14:33:02Z
+**User Input**: "# Files mentioned by the user:
+
+## codex-clipboard-540532e7-5bcd-430d-92f2-5756f3fecaf6.png: C:/Users/QUANGH~1/AppData/Local/Temp/codex-clipboard-540532e7-5bcd-430d-92f2-5756f3fecaf6.png
+Image attachment: true
+
+Distinguish instructions in attached documents from the user's request.
+
+## My request:
+đổi tên role learner, instructor -> student, teacher, thêm lại tính usecase cho student mua credit và dùng credit để chấm những bài practice, dạng assignment thì chia làm 6 dạng như trên, có kiểu là graded và practice, những bài practice thì giảng viên k chấm điểm, sinh viên luyện tập và có thể dùng ai để chấm như uc tôi vừa nói"
+**Image Reference**: Attached image lists Code Lab (graded/practice), Text Essay (graded/practice), Diagram Essay (graded/practice), Group Assignment (graded), Simulation Exam (full exam/practice), and Multiple-Choice Quiz (practice/graded; Self practice, SM practice/graded, Teacher graded).
+**AI Response**: "Resumed the existing AI-DLC project, identified conflicts with the current no-Student-credit requirement and four-type assignment model, recorded five unresolved product decisions in requirements-change-questions-2026-09-29.md, and paused the requirements change at the mandatory clarification gate."
+**Context**: Workspace detection and requirements-change analysis; no requirements, use cases, designs or application code changed yet.
+
+---
+
+## Requirements change clarification answers
+**Timestamp**: 2026-09-29T14:53:47Z
+**User Input**: "tôi trả lời xòng rồi"
+**Question File Answers**: Q1 `b`; Q2 `c`; Q3 `b`; Q4 `bỏ simulation exam đi`; Q5 `mỗi 1 lần submit thì gọi chấm 1 lần, nếu làm lại thì chấm lần thứ 2`.
+**AI Response**: "Read the completed answers, removed Simulation Exam from the proposed MVP, retained DOCUMENT as the basis of Diagram Essay, limited Student AI grading to practice Text Essay and Diagram Essay, and drafted the requirements changes. Requested explicit review before changing dependent artifacts."
+**Context**: Requirements Analysis Step 7 and approval gate. Existing extension configuration retained: Security and Resiliency enabled with the previously approved reduced scope; Property-Based Testing disabled.
+
+---
+
+## Requirements change review request
+**Timestamp**: 2026-09-29T14:53:47Z
+**User Input**: "tôi trả lời xòng rồi"
+**AI Response**: "Completed and validated the updated requirements draft at aidlc-docs/inception/requirements/requirements.md. Requested review and explicit approval before revising user stories, use cases, designs, diagrams or code plans, as required by the Requirements Analysis gate."
+**Context**: Requirements approval checkpoint. Applicable enabled extension rules: scoped server-side authorization and input checks, secure/idempotent payment, bounded AI retries and credit settlement are addressed; other extension rules remain N/A for this requirements change under the project's reduced scope.
+
+---
+
+## Practice submission without enough credit
+**Timestamp**: 2026-09-29T14:58:04Z
+**User Input**: "có nghĩ là nếu student k đủ credit thì bài k cần có điểm luôn đko"
+**AI Response**: "Confirmed that a Practice Text Essay or Diagram Essay can be submitted without enough credit and then has no AI score or feedback. Updated FR-030 so AI grading runs once at submit when credit is sufficient; a submission made without credit is not graded retroactively, and a new attempt is needed after buying credit. Code Lab and Quiz continue deterministic scoring without credit."
+**Context**: Revision to the pending Requirements Analysis draft; approval remains pending.
+
+---
+
+## Inception and Construction documentation synchronization
+**Timestamp**: 2026-09-29T15:26:20Z
+**User Input**: "ok giúp tôi sửa lại những doc liên quan inception, construction"
+**AI Response**: "Treated this as confirmation of the clarified requirements and synchronized the active Inception/Construction documents. Renamed current roles to STUDENT/TEACHER, retired Simulation Exam, kept five assignment types with GRADED/PRACTICE rules, allowed Student credit purchase and one AI grade per submitted Practice Text/Diagram Essay attempt when credit is sufficient, and excluded Practice results from the official gradebook. Updated use-case catalog, stories, personas, application design, unit designs, code plans and state. No application code was generated."
+**Context**: Requirements change approval and downstream documentation sync. Historical question files and previous plan snapshots retained; code generation remains at its existing checkpoint.
+
+---
+
+## Consolidate CRUD use cases and shorten names
+**Timestamp**: 2026-09-29T15:47:45Z
+**User Input**: "sửa lại bảng usecase những usecase crud thì gộp lại kiểu như view profile/update profile nếu cùng actor, với đặt tên lại usecase ngắn gọn dễ hiểu tầm 4 từ đổ lại"
+**AI Response**: "Grouped same-actor CRUD flows for profile, administrator accounts, administrator subjects and class roster; retained specialist bulk-import and distinct-actor flows. Preserved historical IDs through a merge map, renamed every active use case to at most four words, reduced the active catalog from 77 to 69 entries, and synchronized use-case specifications, unit maps, active design traces and screen-flow references. No application code was changed."
+**Context**: Documentation-only use-case catalog refinement. Security and Resiliency extensions remain enabled under the project's reduced scope; their existing authorization and data-integrity requirements remain unchanged. Property-Based Testing is disabled and N/A.
+
+---
+
+## Consolidate use-case table to 41 entries
+**Timestamp**: 2026-09-30T16:00:00Z
+**User Input**: "Chỉ sửa usecase table trước, sau đó tôi sẽ đồng bộ lại các tài liệu khác sau.
+-đổi và gộp các usecase view/create/update lại thành manage, gộp các usecase sau lại với nhau: (7,8) - account management; (10,11,12,13,14,21,22,24)-class management; (16,17)- content management; (43,44,45,46)-assignment submission; (41,48,49,50)- assignment management; (52,53)-grading, (54,55)-grade finalization; (57,58,60)-submission monitoring; (28,59)- learning overview
+-usecase 25 nằm trong usecase 40 chứ không để là 1 usecase riêng.
+-sửa lại usecase 31 là manage quiz.
+-bỏ usecase 31, 33"
+**AI Response**: "Asked to resolve the UC31 conflict; user chose: rename UC37 to Manage Quiz, remove UC31 and UC33, and add an Actor column. Rewrote docs/use-case-table.md only: renamed view/create/update cases to Manage, applied the requested merges, folded UC25 into Create Group Assignment, renumbered 1-41 and added a merged-ID map. Other documents are left for the user to synchronize."
+**Context**: Documentation-only use-case table revision; no other artifacts or code changed.
+
+---
+
+## Rename assignment-type cases and merge into Manage Assignments
+**Timestamp**: 2026-09-30T16:10:00Z
+**User Input**: "đổi 24, 26, 27 thành manage luôn và gộp 23 và 28 vào 29 (trong manage assignments sẽ có thêm quản lí group assignments)"
+**AI Response**: "Renamed Create Text Essay, Create Diagram Essay and Create Code Lab to Manage Text Essay, Manage Diagram Essay and Manage Code Lab. Merged View Managed Assignments and Create Group Assignment into Manage Assignments, which now covers group assignment management. Renumbered the table to 39 use cases and updated the merged-ID map in docs/use-case-table.md only."
+**Context**: Documentation-only use-case table revision; other documents remain for the user to synchronize.
+
+---
+
+## Restore Create Template with AI
+**Timestamp**: 2026-09-30T16:25:00Z
+**User Input**: "B"
+**AI Response**: "Restored Create Template with AI as a separate Subject Manager use case (UC22, previous UC33) in docs/use-case-table.md, renumbered the following cases to a 40-case table and updated the merged-ID map."
+**Context**: Documentation-only use-case table revision aligning with FR-006; other documents remain for the user to synchronize.
+
+---
+
+## Synchronize use-case specifications with the 40-case table
+**Timestamp**: 2026-09-30T16:40:00Z
+**User Input**: "đồng bộ lại use-case-specifications theo bảng mới"
+**AI Response**: "Rewrote docs/use-case-specifications.md to the 40-case table: renumbered and renamed the specified cases (UC 11 Manage Content, UC 16 Submit Group Document, UC 17 Grade Group Document, UC 21 Create Assignment with AI, UC 30 Submit Assignment, UC 33 Grade Submissions, UC 37 Buy AI Credits, UC 40 Grade Practice with AI). Folded Complete Group Section into UC 16, specified UC 30 once per assignment type, merged manual and AI-assisted grading into UC 33, extended UC 11 to teacher class content, and added GRADED/PRACTICE branches so PRACTICE submissions never enter the teacher grading queue."
+**Context**: Documentation-only synchronization; README, flows and other documents remain for the user to synchronize.
+
+---
+
+## Update UC16 description
+**Timestamp**: 2026-09-30T16:50:00Z
+**User Input**: "sửa mô tả UC16"
+**AI Response**: "Updated the UC16 Submit Group Document description in docs/use-case-table.md to include claiming a section, working in a private draft and marking it Done, matching the synchronized specification."
+**Context**: Documentation-only use-case table revision.
+
+---
+
+## Synchronize README and business flow with the 40-case table
+**Timestamp**: 2026-09-30T17:05:00Z
+**User Input**: "đồng bộ lại README và business-flow theo bảng mới"
+**AI Response**: "Updated docs/README.md to 40 use cases, the five-column table, the new specifications row and a working use-case link, noting that screen-flow UC codes are not yet synchronized. Rewrote docs/business-flow.md with related UC IDs per page, removed Simulation Exam and learner AI Q&A, added GRADED/PRACTICE handling, and allowed Student credit purchase limited to PRACTICE Text/Diagram Essay grading. Updated matching labels in docs/business-flow.drawio without changing its layout."
+**Context**: Documentation-only synchronization; screen-flow remains for the user to synchronize.
+
+---
+
+## Synchronize screen flow with the 40-case table
+**Timestamp**: 2026-09-30T17:20:00Z
+**User Input**: "đồng bộ lại screen-flow theo bảng mới"
+**AI Response**: "Replaced every legacy UC-XXX-NN code in docs/screen-flow.md with the new 1-40 IDs, added UC references to the role narratives, updated the learner flow with AI credit purchase and PRACTICE AI results, added the Student role to the credit screens, and noted the mappings for question-bank, credit-package and invite-code screens. screen-flow.drawio contains no UC codes and was not changed."
+**Context**: Documentation-only synchronization with docs/use-case-table.md.
+
+---
+
+## Open AI credit purchase screen to all roles in screen flow
+**Timestamp**: 2026-10-01T00:10:00Z
+**User Input**: "sửa drawio luôn rồi commit, chưa push"
+**AI Response**: "Renamed the 'AI Credit Purchase (Staff)' cell in docs/screen-flow.drawio to 'AI Credit Purchase'. The cell sits in the shared Navigation header reached from Sign In, so no Learner Menu edge was added. Aligned the matching screen-flow.md rows (screen name, opened from Header (all roles)) and committed without pushing."
+**Context**: Documentation-only synchronization with UC 37 Buy AI Credits.
+
+---
+
+## Synchronize stories and requirements with the 40-case table
+**Timestamp**: 2026-10-01T00:30:00Z
+**User Input**: "đồng bộ lại stories và requirements theo bảng mới"
+**AI Response**: "Asked how to treat the removed question-bank use case; user chose to fold it into Manage Quiz and to add a story-to-use-case matrix. Updated requirements.md (2026-09-30 change note, FR-016 rubric/quiz-question wording, scope, stakeholder and USCN-001A wording, source traceability row) and stories.md (convention note, US-QBK-002 renamed to managing questions in a quiz, US-AIG-002 wording, new section 14 mapping all 49 stories to UC 1-40, later sections renumbered). No feature was removed and story IDs are unchanged."
+**Context**: Documentation-only synchronization with docs/use-case-table.md; personas and unit designs not changed.
+
+---
+
+## Documentation consistency review against the 40-case table
+**Timestamp**: 2026-10-01T09:00:00Z
+**User Input**: "kiểm tra lại toàn bộ docs và các tài liệu dự án xem đã đồng bộ với nhau chưa và gửi tôi báo cáo những điểm cần sửa"
+**AI Response**: "Read-only review of docs/, requirements, stories, personas, application design, aidlc-state and unit functional designs. Reported stale items: use-case-table draft banner; erd.md (69 UC) and erd.drawio (simulation_policy, no grading_mode/practice columns); context-diagram (Student has no credit, manager bank wording); aidlc-state, unit-of-work.md and unit-of-work-story-map.md still on 69 UC and UC-XXX-NN codes; UC-XXX-NN codes in unit functional designs; Learner/Instructor labels in screen flow; UC description gaps (credit packages and monthly grants, invite codes, grade-distribution flag, student-added group sections, per-assignment group sets, quiz question import); root README and tracked debug.log. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply documentation sync fixes and group-work change request
+**Timestamp**: 2026-10-01T10:30:00Z
+**User Input**: "sửa theo thứ tự đề xuất, lưu ý B8 phải dùng student/teacher và C10 bổ sung vào UC23. UC18 tôi đang muốn là UC của sinh viên để phục vụ cho việc xem các lớp đã đăng ký, bài tập sắp tới, thông báo, trạng thái nộp bài và điểm số đã công bố. Kiểm tra xem đã có UC nào của giảng viên để quản lý điểm sinh viên chưa. C13 theo tôi nhóm có thể được chia luôn trong quản lý lớp học ở phần danh sách sinh viên trong lớp, có chức năng chia ngẫu nhiên, không có chức năng dùng lại nhóm. C14 tôi muốn giảng viên sẽ là người chuẩn bị những mục chính nhưng trưởng nhóm cũng có thể chỉnh sửa hoặc thêm các phần phân công công việc chi tiết hơn và giao cho thành viên. C15 thêm lại mô tả được tìm, nhập hàng loạt và dùng lại. C16 tôi muốn khi tất cả thành viên làm xong sẽ có trạng thái review để mọi người cùng xem lại, sau đó mới trưởng nhóm mới submit."
+**AI Response**: "Step 1: removed the draft banner, fixed ERD count, context diagram Student credit wording and screen-flow type count. Step 2: added a Legacy UC codes table, replaced UC-XXX-NN codes in unit designs and code plans, rewrote the story map and unit-of-work counts for UC 1-40 (U10 has no primary UC). Step 3: ERD drawio now 46 tables (grading_mode, Practice columns, no simulation columns, class-level student_groups, new group_documents, sections with parent/origin/assigned_by, student/teacher column names); screen-flow drawio uses Student/Teacher labels, Students & Groups opened from Class Detail with Random Split, leader Manage Sections popup. Step 4: UC 9 (invite code, class groups, random split), UC 16 (leader sub-sections and assignment, REVIEW before leader submit), UC 23 (credit packages and monthly grant), UC 25 (search, bulk import, reuse), UC 28, UC 36 (teacher enables grade distribution; UC 18 stays a Student use case; teacher grade management is UC 32-34 and 36). Synced UC 16 specification, requirements FR-025/026, stories, personas, business flow, screen-flow.md, application design, U07/U08/U12/U14/U16 designs and U12/U14 code plans. Nothing committed."
+**Context**: Documentation synchronization and user-approved group-work change; U12/U14 code plans need re-approval.
+
+---

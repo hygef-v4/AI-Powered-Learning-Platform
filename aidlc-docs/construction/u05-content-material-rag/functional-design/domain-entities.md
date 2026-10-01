@@ -1,6 +1,6 @@
 # U05 Content, Material & RAG - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; `UC-CNT-01`…`03`, `06`…`08`.
+Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 11, UC 13, UC 14.
 
 ## 1. Tổng quan
 

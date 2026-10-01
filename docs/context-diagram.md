@@ -21,10 +21,10 @@ flowchart LR
     payos["PayOS · thanh toán credit"]
     smtp["SMTP · OTP/email"]
     judge["Judge0 · chạy code cô lập"]
-    learner -->|"học, làm/nộp bài, xem điểm"| web
+    learner -->|"học, làm/nộp bài, xem điểm, mua credit chấm Practice"| web
     teacher -->|"lớp, học liệu, đề, nhóm, chấm điểm, mua credit"| web
-    manager -->|"học liệu, ngân hàng, template cấp môn, mua credit"| web
-    admin -->|"tài khoản, AI, gói và mua credit, audit"| web
+    manager -->|"học liệu, rubric, câu hỏi quiz, template cấp môn, mua credit"| web
+    admin -->|"tài khoản, dịch vụ AI và gói credit, mua credit, audit"| web
     backend -->|"AI theo yêu cầu và trừ credit người dùng"| ai
     worker -->|"embedding nguồn, caption có sẵn"| youtube
     worker -->|"embedding và đề xuất AI"| ai
@@ -37,7 +37,7 @@ flowchart LR
     worker -->|"chấm code"| judge
 ```
 
-**Diễn giải bằng chữ:** Người học, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Chỉ ba vai trò sau được cấp/dùng/mua credit AI khi tài khoản `ACTIVE`; người học không có credit và không gọi Gemini. Backend kiểm quyền trước khi tạo giao dịch hoặc xử lý yêu cầu AI, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm theo yêu cầu của người có quyền; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập cho Code Lab mà không dùng AI; SMTP gửi OTP và email. Người học vẫn xem được điểm/phản hồi cuối sau khi giảng viên công bố; giảng viên quyết định điểm cuối. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit của người yêu cầu AI là lỗi riêng.
+**Diễn giải bằng chữ:** Người học, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Cả bốn vai trò được mua và xem credit AI của mình khi tài khoản `ACTIVE`. Giảng viên, Chủ nhiệm môn và quản trị viên được tặng credit hằng tháng và dùng credit cho các chức năng AI đúng quyền; người học không được tặng credit và chỉ dùng credit để Gemini chấm bài `PRACTICE` Text Essay/Diagram Essay của chính mình (UC 37, UC 40). Backend kiểm quyền trước khi tạo giao dịch hoặc xử lý yêu cầu AI, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm theo yêu cầu của người có quyền; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập cho Code Lab mà không dùng AI; SMTP gửi OTP và email. Người học xem được điểm/phản hồi cuối sau khi giảng viên công bố; giảng viên quyết định điểm cuối của bài `GRADED`. Kết quả AI của bài `PRACTICE` chỉ hiện cho người học và không vào sổ điểm. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit của người yêu cầu AI là lỗi riêng.
 
 ## Ranh giới nội bộ
 
