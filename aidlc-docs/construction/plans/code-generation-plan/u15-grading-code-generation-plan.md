@@ -108,9 +108,9 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 |---|---|
 | US-GRD-001 | 3, 13 |
 | US-GRD-002 (UC 32, UC 33) | 4, 20 |
-| US-GRD-003 (UC 33, UC 34) | 2, 4, 5, 20 |
+| US-GRD-003 (UC 32, UC 33) | 2, 4, 20 |
 | US-GRD-004 (UC 35, UC 36) | 7, 22 |
-| US-GRD-005 (UC 34) | 5, 19 |
+| US-GRD-005 (UC 34) | 2, 5, 19, 20 |
 | US-GRP-004 S3, US-GRP-006 (UC 17) | 6, 21 |
 
 ## 5. Ngoài phạm vi

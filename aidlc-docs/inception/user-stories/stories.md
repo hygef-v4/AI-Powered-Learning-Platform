@@ -1009,31 +1009,31 @@
 - **When** giảng viên yêu cầu AI chấm
 - **Then** hệ thống từ chối trước khi gửi dữ liệu tới provider
 
-### US-GRD-003 - Duyệt, ghi đè và công bố điểm
+### US-GRD-003 - Chấm thủ công, duyệt và ghi đè đề xuất AI
 
-**Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI rồi công bố kết quả để chịu trách nhiệm cho quyết định học thuật cuối cùng.
+**Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI và lưu thành điểm nháp để chịu trách nhiệm cho quyết định học thuật trước khi chốt và công bố (US-GRD-005).
 
-**Truy vết**: FR-002, FR-008, FR-009, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-008, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
 #### Scenario 1 - Chấp nhận đề xuất
 
 - **Given** đề xuất AI chưa duyệt thuộc lớp được phân công
-- **When** giảng viên chấp nhận và công bố
-- **Then** kết quả trở thành điểm cuối, lưu actor/thời gian/phương thức và hiển thị theo chính sách
+- **When** giảng viên chấp nhận đề xuất và lưu
+- **Then** kết quả trở thành điểm nháp do giảng viên quyết định, lưu actor/thời gian/phương thức và người học chưa thấy điểm cho đến khi được chốt và công bố
 
 #### Scenario 2 - Ghi đè đề xuất
 
 - **Given** giảng viên không đồng ý với đề xuất
-- **When** nhập điểm/phản hồi mới cùng lý do và công bố
-- **Then** điểm cuối được cập nhật, đề xuất gốc vẫn truy vết được và audit ghi người thực hiện, thời gian, lý do
+- **When** nhập điểm/phản hồi mới cùng lý do và lưu
+- **Then** điểm nháp được cập nhật, đề xuất gốc vẫn truy vết được và audit ghi người thực hiện, thời gian, lý do
 
 #### Scenario 3 - Chấm hoàn toàn thủ công
 
 - **Given** giảng viên đã chọn chấm thủ công cho bài nộp thuộc lớp được phân công
-- **When** nhập điểm/phản hồi hợp lệ và công bố
-- **Then** điểm trở thành kết quả cuối với phương thức chấm thủ công, actor/thời gian và không có lời gọi AI nào cho bài nộp đó
+- **When** nhập điểm/phản hồi hợp lệ và lưu
+- **Then** điểm nháp được lưu với phương thức chấm thủ công, actor/thời gian và không có lời gọi AI nào cho bài nộp đó
 
 #### Scenario 4 - Thao túng điểm ngoài quyền
 
@@ -1067,11 +1067,11 @@
 - **When** yêu cầu dữ liệu theo phạm vi quản trị
 - **Then** hệ thống trả đúng phạm vi, không mở quyền sửa điểm nếu chưa được cấp riêng
 
-### US-GRD-005 - Kiểm tra và chốt điểm hàng loạt
+### US-GRD-005 - Chốt và công bố điểm từng bài hoặc hàng loạt
 
-**Story**: Là giảng viên, tôi muốn kiểm tra và chốt điểm hàng loạt cho lớp được phân công để công bố kết quả nhất quán và có kiểm soát.
+**Story**: Là giảng viên, tôi muốn chốt điểm nháp đã chấm (US-GRD-003) cho từng bài hoặc hàng loạt trong lớp được phân công rồi công bố để người học nhận kết quả nhất quán và có kiểm soát.
 
-**Truy vết**: FR-002, FR-008, FR-014, FR-020, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-008, FR-009, FR-014, FR-020, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
@@ -1086,6 +1086,12 @@
 - **Given** danh sách có bài ngoài lớp, thiếu điểm hoặc đã bị thay đổi đồng thời
 - **When** yêu cầu được xử lý
 - **Then** hệ thống không chốt nhầm, báo rõ từng mục thất bại và không mở rộng quyền từ các mục hợp lệ
+
+#### Scenario 3 - Chốt và công bố một bài
+
+- **Given** giảng viên quản lý lớp và một bài có điểm nháp hợp lệ
+- **When** giảng viên chốt rồi công bố bài đó
+- **Then** điểm trở thành điểm cuối, người học đúng bài thấy điểm và phản hồi theo chính sách, đề xuất AI không bị lộ và audit ghi actor/thời gian
 
 ## 10. Miền Reporting and Analytics
 
@@ -1275,7 +1281,7 @@
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-004 đến US-ASM-007 |
 | FR-007 | US-ASM-001, US-ASM-003, US-ASM-008, US-ASM-012 |
 | FR-008 | US-GRD-001 đến US-GRD-005 |
-| FR-009 | US-GRD-004, US-RPT-002, US-RPT-003 |
+| FR-009 | US-GRD-004, US-GRD-005, US-RPT-002, US-RPT-003 |
 | FR-010 | US-PAY-001, US-PAY-002 |
 | FR-011 | US-IAM-001, US-IAM-003, US-CAT-003, US-CNT-004, US-RPT-001, US-NTF-001 |
 | FR-012 | US-CNT-001, US-AIG-001, US-AIG-002, US-AIG-003, US-GRD-002 |
@@ -1337,7 +1343,7 @@ Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi s
 | 31 | Review Attempts | US-ASM-003 |
 | 32 | Review Submissions | US-GRD-003 |
 | 33 | Grade Submissions | US-GRD-002, US-GRD-003 |
-| 34 | Finalize Grades | US-GRD-003, US-GRD-005 |
+| 34 | Finalize Grades | US-GRD-005 |
 | 35 | View Grades | US-GRD-004 |
 | 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-002, US-RPT-003 |
 | 37 | Buy AI Credits | US-PAY-001, US-PAY-002 |

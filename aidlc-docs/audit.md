@@ -3025,3 +3025,33 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation verification; no stage advanced.
 
 ---
+
+## Question: why authoring is split by type but student work is not
+**Timestamp**: 2026-10-01T12:50:00Z
+**User Input**: "tại sao UC29,30 (phần làm bài của sinh viên cho từng dạng bài) không tách ra thành nhiều UC mà phần tạo đề cho từng dạng bài lại được tách ra (như trong ảnh)"
+**AI Response**: "Explained the modeling choice: authoring UCs differ in the object being managed (answer keys and scoring, test cases and sandbox sample solution, Draw.io/XML document, group sections), in actors and in question-bank data, while student submission shares one goal and one attempt lifecycle (open window, attempts, autosave, receipt, late rules) with only the editor differing; old IDs 43-46 were merged into Submit Assignment for that reason and UC 30 is already specified per type. Noted UC 29 is a shared overview. Offered splitting UC 30 into four cases if symmetry is preferred. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+## Question: merge UC 33 and UC 34
+**Timestamp**: 2026-10-01T13:00:00Z
+**User Input**: "có nên gộp 2 uc33,34 không"
+**AI Response**: "Recommended keeping UC 33 Grade Submissions and UC 34 Finalize Grades separate (different goal, single vs bulk scope, publication is the irreversible student-facing step with its own FR-020/US-GRD-005), but fixing the overlap: UC 33 should end at an unpublished draft grade and UC 34 should own finalization and publication for one or many submissions; US-GRD-003 was mapped to both. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Clarify UC 33 / UC 34 boundary
+**Timestamp**: 2026-10-01T13:10:00Z
+**User Input**: "ok cập nhật theo ranh giới đó đi"
+**AI Response**: "UC 33 now ends at a draft grade with nothing published; UC 34 finalizes one or many draft grades and publishes them (use-case-table.md). US-GRD-003 renamed to 'Chấm thủ công, duyệt và ghi đè đề xuất AI' with scenarios 1-3 ending in a saved draft (scenario numbering kept for BR-U15 references). US-GRD-005 renamed to 'Chốt và công bố điểm từng bài hoặc hàng loạt' with new Scenario 3 for single-submission finalize and publish. Story-UC matrix: UC 34 -> US-GRD-005 only. U15 code-generation plan traceability: US-GRD-003 (UC 32, UC 33) steps 2, 4, 20; US-GRD-005 (UC 34) steps 2, 5, 19, 20. Story count unchanged (49)."
+**Context**: Documentation update after User Stories; no stage advanced.
+
+---
+## Move FR-009 trace to US-GRD-005
+**Timestamp**: 2026-10-01T13:20:00Z
+**User Input**: "ừ chuyển FR-009 sang US-GRD-005 luôn"
+**AI Response**: "Removed FR-009 from the US-GRD-003 trace and added it to US-GRD-005 (publication now makes grades visible to students); added US-GRD-005 to the FR-009 row of the requirements-to-story matrix in stories.md. requirements.md has no per-story trace for FR-009, so no change there."
+**Context**: Documentation update; no stage advanced.
+
+---
