@@ -2985,3 +2985,35 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Version control only; no content changes.
 
 ---
+
+## Split group assignment out of Manage Assignments
+**Timestamp**: 2026-10-01T12:00:00Z
+**User Input**: "tách phần tạo bài tập nhóm trong uc28 thành 1 uc riêng để rõ ràng hơn"
+**AI Response**: "Interpreted the screenshot's UC 27 Manage Assignments as the target. Added UC 27 Manage Group Assignment (Teacher, Assignment Creation: view, create, update and preview a GRADED group document assignment with rubric, main sections written or reused from a bank skeleton, leader sub-sections via UC 16, release of section claims; published only when class groups are valid, lifecycle via UC 28). Manage Assignments became UC 28 without the group-specific text; old UC 28-39 became 29-40 (40 cases). Merged IDs: 27 = 25, 40; 28 = 32, 35, 41, 48, 49, 50. Legacy codes: UC-ASM-06 and UC-GRP-05 -> 27; UC-ASM-01, 07, 15, 16, 17 and UC-AIG-01 -> 28. Renumbered docs, Inception and Construction references; group-assignment references keep UC 27, other former UC 27 references moved to UC 28. Story matrix: UC 27 = US-QBK-002, US-GRP-003. Story map: U14 owns UC 16, 27. Requirements change note and traceability row added; counts 39 -> 40 updated. audit.md and aidlc-state history keep old numbers."
+**Context**: Documentation-only use-case catalog change with full synchronization; no stage advanced.
+
+---
+
+## Question: rename UC 28 to Manage Assignment Publication
+**Timestamp**: 2026-10-01T12:10:00Z
+**User Input**: "tôi có nên đổi tên uc28 thành Manage Assignment Publication không, tại sao"
+**AI Response**: "Recommended keeping Manage Assignments: UC 28 also covers viewing, clone/version/retire, template copy, class-to-class copy and AI drafting, which are not publication; renaming would only fit if those flows moved out. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Question: split UC 29 View Assigned Work by assignment type
+**Timestamp**: 2026-10-01T12:20:00Z
+**User Input**: "tôi có nên tách UC29 ra thành nhiều UC với từng dạng bài làm không vì UI của từng màn sẽ khác nhau ( ví dụ màn làm quiz khác màn làm diagram essay)"
+**AI Response**: "Recommended not splitting UC 29: it is the shared Assignment Overview screen; the type-specific work screens belong to UC 30 Submit Assignment, which is already specified once per type in use-case-specifications section 4. UI differences belong in the screen flow and specifications, not in separate use cases. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Commit group assignment split
+**Timestamp**: 2026-10-01T12:30:00Z
+**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
+**AI Response**: "Committed the UC 27 Manage Group Assignment split and the full documentation synchronization locally without pushing."
+**Context**: Version control only; no content changes.
+
+---

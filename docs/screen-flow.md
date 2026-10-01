@@ -53,7 +53,7 @@ flowchart LR
     shell --> credits --> payment --> credits
 ```
 
-**Diễn giải bằng chữ:** Sinh viên đăng nhập hoặc kích hoạt/khôi phục tài khoản (UC 1–6), vào các lớp đã ghi danh hoặc nhập mã mời (UC 10, UC 19), xem bài học và hỏi đáp (UC 12–14), mở bài được giao rồi bắt đầu một lượt (UC 28–30). Bài Diagram Essay cho phép xem trước DOCX và thêm block vào lượt đang làm; Code Lab cho chạy thử bằng Judge0, không dùng AI. Bài `PRACTICE` Text/Diagram Essay hiện điểm và phản hồi AI trong lượt đã nộp nếu sinh viên đủ credit khi nộp (UC 39). Bài nhóm mở tài liệu chung: trưởng nhóm thêm/sửa mục chi tiết dưới mục chính và giao cho thành viên, thành viên nhận hoặc làm mục được giao rồi bấm “Xong”; khi mọi mục xong, tài liệu vào review để cả nhóm xem lại, sau đó trưởng nhóm nộp (UC 15, UC 16). Sinh viên xem điểm đã công bố, dashboard và thông báo (UC 18, UC 34, UC 37), và có thể mua credit AI chỉ để dùng cho bài `PRACTICE` (UC 36).
+**Diễn giải bằng chữ:** Sinh viên đăng nhập hoặc kích hoạt/khôi phục tài khoản (UC 1–6), vào các lớp đã ghi danh hoặc nhập mã mời (UC 10, UC 19), xem bài học và hỏi đáp (UC 12–14), mở bài được giao rồi bắt đầu một lượt (UC 29–31). Bài Diagram Essay cho phép xem trước DOCX và thêm block vào lượt đang làm; Code Lab cho chạy thử bằng Judge0, không dùng AI. Bài `PRACTICE` Text/Diagram Essay hiện điểm và phản hồi AI trong lượt đã nộp nếu sinh viên đủ credit khi nộp (UC 40). Bài nhóm mở tài liệu chung: trưởng nhóm thêm/sửa mục chi tiết dưới mục chính và giao cho thành viên, thành viên nhận hoặc làm mục được giao rồi bấm “Xong”; khi mọi mục xong, tài liệu vào review để cả nhóm xem lại, sau đó trưởng nhóm nộp (UC 15, UC 16). Sinh viên xem điểm đã công bố, dashboard và thông báo (UC 18, UC 35, UC 38), và có thể mua credit AI chỉ để dùng cho bài `PRACTICE` (UC 37).
 
 ## 2. Giảng viên và Chủ nhiệm môn
 
@@ -97,7 +97,7 @@ flowchart LR
     home --> credits --> payment --> credits
 ```
 
-**Diễn giải bằng chữ:** Giảng viên quản lý lớp, chia nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), nội dung và bài giao (UC 9, UC 11, UC 13); soạn một trong bốn loại bài cá nhân (UC 23–26) hoặc bài nhóm Group Assignment kèm các mục chính (UC 27), duyệt rồi phát hành và có thể nhờ AI soạn đề từ nội dung lớp (UC 27). Sau khi có bài nộp `GRADED`, giảng viên theo dõi tiến độ, chấm tay hoặc yêu cầu AI đề xuất cho bài/phần được phép, chốt và công bố điểm, rồi xem/xuất sổ điểm và bật phân bố điểm ẩn danh cho sinh viên (UC 17, UC 31–33, UC 35). Bài `PRACTICE` không vào hàng đợi chấm. Chủ nhiệm môn có thêm học liệu RAG, rubric, ngân hàng câu hỏi của mọi dạng bài và template cấp môn: tạo template thủ công hoặc nhờ AI tạo từ RAG cấp môn rồi chỉnh sửa, sửa và xoá template đã tạo (UC 21), cùng học liệu, rubric và ngân hàng câu hỏi (UC 11, UC 20, UC 23–27); template phải được copy về lớp trước khi dùng. Cả hai vai trò được mua credit AI cho tài khoản của mình (UC 36). Bài đã phát hành bị khóa nội dung; khi mọi lần giao của version đã đóng/ngưng, nút sửa tạo version mới.
+**Diễn giải bằng chữ:** Giảng viên quản lý lớp, chia nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), nội dung và bài giao (UC 9, UC 11, UC 13); soạn một trong bốn loại bài cá nhân (UC 23–26) hoặc bài nhóm Group Assignment kèm các mục chính (UC 27), duyệt rồi phát hành (UC 28) và có thể nhờ AI soạn đề từ nội dung lớp (UC 28). Sau khi có bài nộp `GRADED`, giảng viên theo dõi tiến độ, chấm tay hoặc yêu cầu AI đề xuất cho bài/phần được phép, chốt và công bố điểm, rồi xem/xuất sổ điểm và bật phân bố điểm ẩn danh cho sinh viên (UC 17, UC 32–34, UC 36). Bài `PRACTICE` không vào hàng đợi chấm. Chủ nhiệm môn có thêm học liệu RAG, rubric, ngân hàng câu hỏi của mọi dạng bài và template cấp môn: tạo template thủ công hoặc nhờ AI tạo từ RAG cấp môn rồi chỉnh sửa, sửa và xoá template đã tạo (UC 21), cùng học liệu, rubric và ngân hàng câu hỏi (UC 11, UC 20, UC 23–27); template phải được copy về lớp trước khi dùng. Cả hai vai trò được mua credit AI cho tài khoản của mình (UC 37). Bài đã phát hành bị khóa nội dung; khi mọi lần giao của version đã đóng/ngưng, nút sửa tạo version mới.
 
 ## 3. Quản trị viên
 
@@ -122,7 +122,7 @@ flowchart LR
     admin --> audit
 ```
 
-**Diễn giải bằng chữ:** Quản trị viên tạo/nhập tài khoản (UC 7), phân công môn/lớp (UC 8, UC 9), cấu hình và giám sát AI, quản lý gói credit và mức tặng hằng tháng (UC 22), có thể mua credit cho tài khoản của mình (UC 36) và xem audit (UC 38). Không có màn hình hoàn tiền trong MVP hiện tại vì chính sách chưa chốt.
+**Diễn giải bằng chữ:** Quản trị viên tạo/nhập tài khoản (UC 7), phân công môn/lớp (UC 8, UC 9), cấu hình và giám sát AI, quản lý gói credit và mức tặng hằng tháng (UC 22), có thể mua credit cho tài khoản của mình (UC 37) và xem audit (UC 39). Không có màn hình hoàn tiền trong MVP hiện tại vì chính sách chưa chốt.
 
 ## Màn hình theo unit và UC
 
@@ -130,9 +130,9 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 
 - **Không có dashboard chung.** Đăng nhập xong U01 điều hướng theo vai trò tới trang đích (ghi `landing`): sinh viên → Dashboard (tổng quan học tập của UC 18: lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái nộp, điểm đã công bố), giảng viên và Chủ nhiệm môn → My Teaching Classes, quản trị viên → Account List. Navigation là thanh đầu trang của mọi vai trò, chứa Profile, AI Credit Purchase và Notification.
 - Chủ nhiệm môn thấy cả Teacher Menu (cùng link `/teaching`) và thêm Subject Manager Menu; trang cùng link chỉ vẽ một lần. Các màn hình nhóm Class Screens mở từ Class Detail của giảng viên.
-- Sơ đồ chỉ vẽ màn hình và popup **tạo, sửa dữ liệu** hoặc **tải file**. Các thao tác sau nằm trong màn hình đã vẽ, không có ô riêng: nhập mã mời (My Classes, UC 10); bật, tắt hoặc tạo lại mã mời và bật phân bố điểm ẩn danh (tab `InviteCodeTab` và nút `GradeDistributionToggle` trên Class Detail của giảng viên, UC 9, UC 35); nhập tài khoản từ file (Account List, UC 7); nhập câu hỏi từ file và nhân bản (Question Bank, UC 23–27); copy template hoặc bài giữa lớp, phát hành và ngưng giao (Create Assignment, Assignment Detail, UC 27); AI soạn đề (Create Assignment, UC 27; Create Template, UC 21); xoá template (Subject Templates, UC 21); xem trước và nhập DOCX, chạy thử Code Lab (Attempt, UC 29); chấm bài nhóm, chốt và công bố điểm (Grading Detail, Grading Queue, UC 17, UC 33); cài đặt email thông báo (Notification, UC 37). Trang thanh toán PayOS là hệ thống ngoài, không vẽ thành ô.
+- Sơ đồ chỉ vẽ màn hình và popup **tạo, sửa dữ liệu** hoặc **tải file**. Các thao tác sau nằm trong màn hình đã vẽ, không có ô riêng: nhập mã mời (My Classes, UC 10); bật, tắt hoặc tạo lại mã mời và bật phân bố điểm ẩn danh (tab `InviteCodeTab` và nút `GradeDistributionToggle` trên Class Detail của giảng viên, UC 9, UC 36); nhập tài khoản từ file (Account List, UC 7); nhập câu hỏi từ file và nhân bản (Question Bank, UC 23–27); copy template hoặc bài giữa lớp, phát hành và ngưng giao (Create Assignment, Assignment Detail, UC 28); AI soạn đề (Create Assignment, UC 28; Create Template, UC 21); xoá template (Subject Templates, UC 21); xem trước và nhập DOCX, chạy thử Code Lab (Attempt, UC 30); chấm bài nhóm, chốt và công bố điểm (Grading Detail, Grading Queue, UC 17, UC 34); cài đặt email thông báo (Notification, UC 38). Trang thanh toán PayOS là hệ thống ngoài, không vẽ thành ô.
 - Ô có nhiều unit: unit đầu dựng trang, unit sau cung cấp component nhúng (ví dụ `AiDraftDialog` của U13 trong trình soạn U08). Tên component chi tiết nằm trong `frontend-components.md` của từng unit.
-- Bảng phủ 39/39 UC và 16/16 unit. Mã cũ dạng `UC-XXX-NN` tra ở bảng Legacy UC codes của bảng use case.
+- Bảng phủ 40/40 UC và 16/16 unit. Mã cũ dạng `UC-XXX-NN` tra ở bảng Legacy UC codes của bảng use case.
 
 | Unit | Số ô có tham gia |
 |---|---|
@@ -161,9 +161,9 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U01, U07, U16 | Navigation | Menu (không phải màn hình) | Chung | Sign In | - |
 | U01, U03 | Profile | Màn hình | Chung | Navigation | UC 3 (nút đăng xuất), UC 6 |
 | U01 | Change Password | Popup | Chung | Profile | UC 5 |
-| U07 | AI Credit Purchase | Màn hình | Chung (cả bốn vai trò) | Navigation | UC 36 |
-| U07 | Payment Result | Màn hình | Chung | AI Credit Purchase (sau PayOS) | UC 36 |
-| U16 | Notification | Màn hình | Chung | Navigation | UC 37 |
+| U07 | AI Credit Purchase | Màn hình | Chung (cả bốn vai trò) | Navigation | UC 37 |
+| U07 | Payment Result | Màn hình | Chung | AI Credit Purchase (sau PayOS) | UC 37 |
+| U16 | Notification | Màn hình | Chung | Navigation | UC 38 |
 | U01 | Student Menu | Menu (không phải màn hình) | Sinh viên | Sign In | - |
 | U16 | Dashboard (landing) | Màn hình | Sinh viên | Student Menu | UC 18 |
 | U04 | My Classes | Màn hình | Sinh viên | Student Menu | UC 10 (nhập mã mời), UC 19 |
@@ -171,16 +171,16 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U04, U05 | Lesson Detail | Màn hình | Sinh viên | Class Detail | UC 12 |
 | U05, U03 | Download Lesson | Popup | Sinh viên | Lesson Detail | UC 12 |
 | U05 | Ask Question | Popup | Sinh viên | Class Detail | UC 14 |
-| U08, U11 | Assignment Overview | Màn hình | Sinh viên | Class Detail | UC 28, UC 30 |
-| U11, U09, U13 | Attempt | Màn hình | Sinh viên | Assignment Overview | UC 29 |
-| U11 | Submitted Attempt View | Màn hình | Sinh viên | Attempt | UC 29, UC 30, UC 39 |
+| U08, U11 | Assignment Overview | Màn hình | Sinh viên | Class Detail | UC 29, UC 31 |
+| U11, U09, U13 | Attempt | Màn hình | Sinh viên | Assignment Overview | UC 30 |
+| U11 | Submitted Attempt View | Màn hình | Sinh viên | Attempt | UC 30, UC 31, UC 40 |
 | U12 | My Group | Màn hình | Sinh viên | Assignment Overview | UC 15, UC 16 |
 | U12 | Leader Change Request | Popup | Sinh viên | My Group | UC 15 |
 | U14 | Group Document | Màn hình | Sinh viên | My Group | UC 16 |
 | U14 | Manage Sections (Leader) | Popup | Sinh viên (trưởng nhóm) | Group Document | UC 16 |
 | U14 | Section Work | Màn hình | Sinh viên | Group Document | UC 16 |
-| U15 | My Grades | Màn hình | Sinh viên | Student Menu | UC 34 |
-| U15 | Grade Detail | Màn hình | Sinh viên | My Grades | UC 34 |
+| U15 | My Grades | Màn hình | Sinh viên | Student Menu | UC 35 |
+| U15 | Grade Detail | Màn hình | Sinh viên | My Grades | UC 35 |
 | U01 | Admin Menu | Menu (không phải màn hình) | Quản trị viên | Sign In | - |
 | U01 | Account List (landing) | Màn hình | Quản trị viên | Admin Menu | UC 7 |
 | U01 | Create Account | Popup | Quản trị viên | Account List | UC 7 |
@@ -196,14 +196,14 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U04 | Add Student | Popup | Quản trị viên | Class Detail | UC 9 |
 | U04 | Edit Class | Popup | Quản trị viên | Class Detail | UC 9 |
 | U04 | Assign Teacher | Popup | Quản trị viên | Class Detail | UC 9 |
-| U15, U16 | Gradebook | Màn hình | Quản trị viên | Class Detail | UC 35 |
-| U16 | Export Gradebook | Popup | Quản trị viên | Gradebook | UC 35 |
+| U15, U16 | Gradebook | Màn hình | Quản trị viên | Class Detail | UC 36 |
+| U16 | Export Gradebook | Popup | Quản trị viên | Gradebook | UC 36 |
 | U13 | AI Settings | Màn hình | Quản trị viên | Admin Menu | UC 22 |
 | U13 | AI Usage Dashboard | Màn hình | Quản trị viên | AI Settings | UC 22 |
 | U07 | Credit Packages | Màn hình | Quản trị viên | Admin Menu | UC 22 (gói credit, mức tặng hằng tháng) |
 | U07 | Create Package | Popup | Quản trị viên | Credit Packages | UC 22 |
 | U07 | Edit Package | Popup | Quản trị viên | Credit Packages | UC 22 |
-| U02 | Audit Log | Màn hình | Quản trị viên | Admin Menu | UC 38 |
+| U02 | Audit Log | Màn hình | Quản trị viên | Admin Menu | UC 39 |
 | U04 | Subject Manager Menu | Menu (không phải màn hình) | Chủ nhiệm môn | Sign In | - |
 | U04 | My Subjects | Màn hình | Chủ nhiệm môn | Subject Manager Menu | UC 11 |
 | U05 | Subject Content | Màn hình | Chủ nhiệm môn | My Subjects | UC 11 |
@@ -211,7 +211,7 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U05 | Edit Lesson | Popup | Chủ nhiệm môn | Subject Content | UC 11 |
 | U04 | Subject Class List | Màn hình | Chủ nhiệm môn | My Subjects | UC 9 |
 | U04 | Class Detail | Màn hình | Chủ nhiệm môn | Subject Class List | UC 9 |
-| U10 | Subject Templates | Màn hình | Chủ nhiệm môn | Subject Manager Menu | UC 21, UC 27 |
+| U10 | Subject Templates | Màn hình | Chủ nhiệm môn | Subject Manager Menu | UC 21, UC 28 |
 | U10, U09, U13 | Create Template | Popup | Chủ nhiệm môn | Subject Templates | UC 21, UC 23–27 |
 | U10, U09, U13 | Edit Template | Popup | Chủ nhiệm môn | Subject Templates | UC 21, UC 23–27 |
 | U01 | Teacher Menu | Menu (không phải màn hình) | GV và CN môn | Sign In | - |
@@ -221,7 +221,7 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U06 | Edit Question | Popup | GV và CN môn | Question Bank | UC 23–27 |
 | U06 | Create Rubric | Popup | GV và CN môn | Question Bank | UC 20 |
 | U06 | Edit Rubric | Popup | GV và CN môn | Question Bank | UC 20 |
-| U04 | Class Detail | Màn hình | Giảng viên | My Teaching Classes | UC 9 (InviteCodeTab: mã mời), UC 35 (GradeDistributionToggle: bật phân bố điểm) |
+| U04 | Class Detail | Màn hình | Giảng viên | My Teaching Classes | UC 9 (InviteCodeTab: mã mời), UC 36 (GradeDistributionToggle: bật phân bố điểm) |
 | U04 | Add Student | Popup | Giảng viên | Class Detail | UC 9 |
 | U04 | Edit Class | Popup | Giảng viên | Class Detail | UC 9 |
 | U05 | Class Content | Màn hình | Giảng viên | Class Detail | UC 11 |
@@ -235,19 +235,19 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U12 | Edit Group | Popup | Giảng viên | Students & Groups | UC 9 |
 | U12 | Random Split | Popup | Giảng viên | Students & Groups | UC 9 |
 | U12 | Leader Change Request List | Popup | Giảng viên | Students & Groups | UC 9 (duyệt/từ chối yêu cầu của UC 15) |
-| U08 | Assignment List | Màn hình | Giảng viên | Class Detail | UC 27 |
-| U08, U09, U10, U13 | Create Assignment | Popup | Giảng viên | Assignment List | UC 23–27 |
-| U08, U09, U13 | Edit Assignment | Popup | Giảng viên | Assignment List | UC 23–27 |
-| U08 | Assignment Detail | Màn hình | Giảng viên | Assignment List | UC 27 |
-| U10 | Version History | Màn hình | Giảng viên | Assignment Detail | UC 27 |
-| U11, U14 | Submission List | Màn hình | Giảng viên | Assignment Detail | UC 27 (nhả khóa mục), UC 31 |
-| U11 | Submission Detail | Màn hình | Giảng viên | Submission List | UC 31 |
-| U16 | Submission Progress | Màn hình | Giảng viên | Submission List | UC 35 |
-| U15 | Grading Queue | Màn hình | Giảng viên | Submission List | UC 31, UC 33 |
-| U15 | Grading Detail | Màn hình | Giảng viên | Grading Queue | UC 17, UC 32, UC 33 |
-| U13, U15 | AI Grading Suggestion | Popup | Giảng viên | Grading Detail | UC 17, UC 32 |
-| U15, U16 | Gradebook | Màn hình | Giảng viên | Class Detail | UC 33, UC 35 |
-| U16 | Export Gradebook | Popup | GV và CN môn | Gradebook | UC 35 |
+| U08 | Assignment List | Màn hình | Giảng viên | Class Detail | UC 27, UC 28 |
+| U08, U09, U10, U13 | Create Assignment | Popup | Giảng viên | Assignment List | UC 23–28 |
+| U08, U09, U13 | Edit Assignment | Popup | Giảng viên | Assignment List | UC 23–28 |
+| U08 | Assignment Detail | Màn hình | Giảng viên | Assignment List | UC 27, UC 28 |
+| U10 | Version History | Màn hình | Giảng viên | Assignment Detail | UC 28 |
+| U11, U14 | Submission List | Màn hình | Giảng viên | Assignment Detail | UC 27 (nhả khóa mục), UC 32 |
+| U11 | Submission Detail | Màn hình | Giảng viên | Submission List | UC 32 |
+| U16 | Submission Progress | Màn hình | Giảng viên | Submission List | UC 36 |
+| U15 | Grading Queue | Màn hình | Giảng viên | Submission List | UC 32, UC 34 |
+| U15 | Grading Detail | Màn hình | Giảng viên | Grading Queue | UC 17, UC 33, UC 34 |
+| U13, U15 | AI Grading Suggestion | Popup | Giảng viên | Grading Detail | UC 17, UC 33 |
+| U15, U16 | Gradebook | Màn hình | Giảng viên | Class Detail | UC 34, UC 36 |
+| U16 | Export Gradebook | Popup | GV và CN môn | Gradebook | UC 36 |
 
 ## Điểm điều hướng và quyền cần giữ
 

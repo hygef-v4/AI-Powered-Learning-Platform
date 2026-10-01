@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010; nhận bản nháp AI của US-AIG-002. **Use case**: UC 21 (chủ trì), UC 27. Simulation Exam đã rút; tên thư mục cũ giữ để ổn định liên kết.
+- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010; nhận bản nháp AI của US-AIG-002. **Use case**: UC 21 (chủ trì), UC 28. Simulation Exam đã rút; tên thư mục cũ giữ để ổn định liên kết.
 - **Thiết kế nguồn**: `construction/u10-template-copy-simulation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -94,10 +94,10 @@ PostgreSQL `template_releases` và cột lineage của `assignments` (U08 tạo 
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-008 (UC 27) | 5, 19 |
-| US-ASM-009 (UC 21, UC 27) | 3, 4, 16, 18 |
+| US-ASM-008 (UC 28) | 5, 19 |
+| US-ASM-009 (UC 21, UC 28) | 3, 4, 16, 18 |
 | US-AIG-002 (UC 21, nhận bản nháp AI) | 3, 18 |
-| US-ASM-010 (UC 27) | 4, 18 |
+| US-ASM-010 (UC 28) | 4, 18 |
 
 ## 5. Ngoài phạm vi
 

@@ -75,7 +75,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
 - Phát hành template có version để giảng viên copy thành bài của lớp.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
-- Theo dõi tiến độ nộp bài và xem/xuất bảng điểm CSV/XLSX của các lớp thuộc môn được phân công (UC 35); không chấm hoặc chốt điểm thay giảng viên.
+- Theo dõi tiến độ nộp bài và xem/xuất bảng điểm CSV/XLSX của các lớp thuộc môn được phân công (UC 36); không chấm hoặc chốt điểm thay giảng viên.
 
 ### Stories liên quan
 

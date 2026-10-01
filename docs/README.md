@@ -1,13 +1,13 @@
 # Sơ đồ MVP
 
-Các sơ đồ này được tổng hợp từ thiết kế Construction của 16 unit, đối chiếu với danh mục **49 user story / 39 use case** hiện hành. Chúng mô tả thiết kế dự kiến; dự án chưa sinh mã ứng dụng hoặc migration.
+Các sơ đồ này được tổng hợp từ thiết kế Construction của 16 unit, đối chiếu với danh mục **49 user story / 40 use case** hiện hành. Chúng mô tả thiết kế dự kiến; dự án chưa sinh mã ứng dụng hoặc migration.
 
 | Sơ đồ | Nội dung |
 |---|---|
 | [ERD draw.io](erd.drawio) · [chú giải](erd.md) | Cả 46 bảng trên một canvas, có thuộc tính/khóa và quan hệ |
-| [Screen flow draw.io](screen-flow.drawio) · [diễn giải](screen-flow.md) | Toàn bộ màn hình và popup ghi dữ liệu/tải file trên một canvas, tỏa ra từ Sign In theo menu từng vai trò, bảng unit và UC từng ô trong phần diễn giải; bản Mermaid theo từng vai trò. Mã UC theo bảng 39 use case |
+| [Screen flow draw.io](screen-flow.drawio) · [diễn giải](screen-flow.md) | Toàn bộ màn hình và popup ghi dữ liệu/tải file trên một canvas, tỏa ra từ Sign In theo menu từng vai trò, bảng unit và UC từng ô trong phần diễn giải; bản Mermaid theo từng vai trò. Mã UC theo bảng 40 use case |
 | [Business flow draw.io](business-flow.drawio) · [diễn giải](business-flow.md) | 5 trang swimlane cho học liệu/RAG, bài cá nhân, bài nhóm, credit AI và thông báo/báo cáo; mỗi trang ghi các UC liên quan |
-| [Bảng use case SRS](use-case-table.md) | Một bảng tiếng Anh gồm 39 use case với năm cột ID, Use Case, Actor, Feature, Use Case Description; bảng Merged IDs ghi rõ mã cũ đã gộp hoặc bỏ |
+| [Bảng use case SRS](use-case-table.md) | Một bảng tiếng Anh gồm 40 use case với năm cột ID, Use Case, Actor, Feature, Use Case Description; bảng Merged IDs ghi rõ mã cũ đã gộp hoặc bỏ |
 | [Đặc tả use case](use-case-specifications.md) | Đặc tả chi tiết 8 use case chính: tác nhân, tiền điều kiện, luồng chính, luồng thay thế và hậu điều kiện |
 | [Context diagram](context-diagram.md) | Ranh giới nền tảng, người dùng và hệ thống ngoài |
 

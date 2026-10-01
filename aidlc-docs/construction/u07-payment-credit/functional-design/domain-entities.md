@@ -1,6 +1,6 @@
 # U07 Payment & AI Credit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 36, UC 22 (gói credit và mức tặng hằng tháng).
+Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 37, UC 22 (gói credit và mức tặng hằng tháng).
 
 ## 1. Tổng quan
 

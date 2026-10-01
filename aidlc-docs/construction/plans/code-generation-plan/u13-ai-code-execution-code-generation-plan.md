@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-AIG-001, US-AIG-002, US-AIG-003, US-ASM-005. **Use case**: UC 22, UC 26; luồng AI soạn bản nháp của UC 21 (template) và UC 27 (bài của lớp); phần chạy thử của UC 29.
+- **Story**: US-AIG-001, US-AIG-002, US-AIG-003, US-ASM-005. **Use case**: UC 22, UC 26; luồng AI soạn bản nháp của UC 21 (template) và UC 28 (bài của lớp); phần chạy thử của UC 30.
 - **Thiết kế nguồn**: `construction/u13-ai-code-execution/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`Judge0CodeRunner`, `SolutionVerifier`, `PromptInjectionScanner`, `docker-compose.yml`, `judge0.conf`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -114,7 +114,7 @@ PostgreSQL `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs`; khóa `u1
 
 | Nguồn | Bước |
 |---|---|
-| US-AIG-001 (UC 27, luồng AI) | 4, 5, 6, 24 |
+| US-AIG-001 (UC 28, luồng AI) | 4, 5, 6, 24 |
 | US-AIG-002 (UC 21, luồng AI) | 6, 24 |
 | US-AIG-003 (UC 22) | 4, 9, 26 |
 | US-ASM-005 (UC 26) | 2, 10, 11, 12, 25 |

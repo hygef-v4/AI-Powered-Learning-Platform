@@ -5,7 +5,7 @@
 | Luồng | Nguồn |
 |---|---|
 | A1 Ghi audit | US-AUD-001 S2, S3 |
-| A2 Tra cứu audit | US-AUD-001 S1, UC 38 |
+| A2 Tra cứu audit | US-AUD-001 S1, UC 39 |
 | J1 Tạo job | Mọi unit có tác vụ nền |
 | J2 Worker xử lý job | component-methods `claim/complete/fail` |
 | J3 Quét job kẹt | Câu 8 |

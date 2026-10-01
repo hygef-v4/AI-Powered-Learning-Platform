@@ -2,7 +2,7 @@
 
 ## 1. Phạm vi và quy tắc
 
-Đây là 16 unit lập kế hoạch, được đối chiếu với **39 use case và 49 story** trong phạm vi MVP (`docs/use-case-table.md`). Phần Learning Access trước đây đứng riêng đã được gộp vào U04 vì chỉ còn một story và không sở hữu bảng nào. Chúng là module logic trong một backend Spring Boot, không phải 16 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. Mỗi story có một primary unit; hai catalog hiện hành chỉ chứa phạm vi MVP.
+Đây là 16 unit lập kế hoạch, được đối chiếu với **40 use case và 49 story** trong phạm vi MVP (`docs/use-case-table.md`). Phần Learning Access trước đây đứng riêng đã được gộp vào U04 vì chỉ còn một story và không sở hữu bảng nào. Chúng là module logic trong một backend Spring Boot, không phải 16 service triển khai độc lập. Frontend Next.js và worker process dùng contract có version. Mỗi story có một primary unit; hai catalog hiện hành chỉ chứa phạm vi MVP.
 
 - Mỗi unit sở hữu dữ liệu và quy tắc nghiệp vụ của mình; unit khác gọi public contract, không đọc bảng/repository trực tiếp. Bốn bảng dùng chung (`accounts`, `app_settings`, `assignments`, `publications`) cho unit khác thêm cột của mình và ghi qua port của unit chủ (xem `component-dependency.md` mục 3a). Tài liệu nhóm nằm ở bảng `group_documents` riêng của U14.
 - U01 kiểm quyền actor/object; U02 giữ audit/job/event và phát triển song song với U01 qua authorization contract có version; U03 giữ file/artifact. Tách unit không thay đổi một backend deployable.

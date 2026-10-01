@@ -1,6 +1,6 @@
 # U11 Attempt & Submission - Business Logic Model
 
-## F1 - Danh sách bài của người học (UC 28)
+## F1 - Danh sách bài của người học (UC 29)
 1. Lấy publication `OPEN`/`CLOSED` của lớp đang ghi danh (U08), kèm trạng thái của người học: chưa làm, đang làm, đã nộp (số lượt, trễ), hết hạn.
 
 ## F2 - Bắt đầu lượt

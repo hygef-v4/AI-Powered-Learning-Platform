@@ -19,7 +19,7 @@
 | BR-U11-12 | Lưu nháp kiểm cấu trúc (`DocumentModelPort.validateForSave` cho tài liệu; câu/lựa chọn tồn tại cho quiz). | BR-U09-36 |
 | BR-U11-13 | Bản nháp không phải bài nộp; chỉ chính người học đọc/sửa. | US-ASM-003 S4 |
 | BR-U11-14 | Lưu sau `deadlineAt` bị từ chối (trừ lần lưu cuối gửi trong 30 giây ân hạn mạng). | Thiết kế |
-| BR-U11-15 | Code Lab: nút "Chạy thử" gọi U13 với test công khai; không tính là nộp. | UC 29 |
+| BR-U11-15 | Code Lab: nút "Chạy thử" gọi U13 với test công khai; không tính là nộp. | UC 30 |
 
 ## 3. Nộp
 
@@ -27,7 +27,7 @@
 |---|---|---|
 | BR-U11-20 | Nộp tay kiểm: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (+30 giây ân hạn), nội dung hợp lệ (`validateForSubmit` cho tài liệu). | US-ASM-003 S1, S2 |
 | BR-U11-21 | Nộp: nội dung → bất biến, `submittedAt` theo giờ server, `late` nếu sau `closesAt`, `receiptHash`. Chỉ `GRADED` gọi `SubmissionSubmittedPort` để U15 tạo job; `PRACTICE` Quiz/Code Lab tự chấm; `PRACTICE` Text/Diagram Essay đủ credit tạo tối đa một job AI qua U13; thiếu credit vẫn lưu bài không điểm AI. | FR-007, FR-030 |
-| BR-U11-22 | Biên nhận hiển thị: mã lượt, thời điểm nộp, lượt thứ mấy, trễ hay không, mã băm. | UC 30 |
+| BR-U11-22 | Biên nhận hiển thị: mã lượt, thời điểm nộp, lượt thứ mấy, trễ hay không, mã băm. | UC 31 |
 | BR-U11-23 | Tự nộp **bài hiện tại** (bản đã lưu gần nhất, kể cả lần lưu cuối client gửi khi hết giờ) khi: hết giới hạn giờ (`AUTO_TIME_LIMIT`), hết hạn (`AUTO_DEADLINE`), giảng viên ngừng giao (`AUTO_RETIRED`). Không kiểm điều kiện nộp; lỗi điều kiện ghi thành cảnh báo cho giảng viên. | Câu 3, 4 |
 | BR-U11-24 | Lượt rỗng (chưa lưu gì) khi tự nộp vẫn được nộp với nội dung rỗng. | Câu 3 |
 

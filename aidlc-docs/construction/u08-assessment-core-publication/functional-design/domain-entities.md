@@ -1,6 +1,6 @@
 # U08 Assessment Core & Publication - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-001`; UC 27; khóa nội dung cho `US-QBK-002` S2, S3.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-001`; UC 28; khóa nội dung cho `US-QBK-002` S2, S3.
 
 ## 1. Tổng quan
 

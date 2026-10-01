@@ -1,6 +1,6 @@
 # 4.2 Use Cases (UC)
 
-This table contains 39 active MVP use cases, numbered consecutively from 1 to 39. Same-actor view, create and update actions are merged into a single "Manage" use case, and related use cases are merged where listed in [Merged IDs](#merged-ids). A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. Simulation Exam is outside the MVP. Every assignment type keeps its questions in one versioned question bank: Text Essay, quiz, Diagram Essay and Code Lab questions, and document skeletons with main sections for group assignments. Questions are created, searched, imported and reused inside UC 23–27 for the matching type rather than in a separate question-bank use case.
+This table contains 40 active MVP use cases, numbered consecutively from 1 to 40. Same-actor view, create and update actions are merged into a single "Manage" use case, and related use cases are merged where listed in [Merged IDs](#merged-ids). A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. Simulation Exam is outside the MVP. Every assignment type keeps its questions in one versioned question bank: Text Essay, quiz, Diagram Essay and Code Lab questions, and document skeletons with main sections for group assignments. Questions are created, searched, imported and reused inside UC 23–27 for the matching type rather than in a separate question-bank use case.
 
 | ID | Use Case | Actor | Feature | Use Case Description |
 |---|---|---|---|---|
@@ -30,19 +30,20 @@ This table contains 39 active MVP use cases, numbered consecutively from 1 to 39
 | 24 | Manage Quiz | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE multiple-choice quiz with its single-answer and multiple-answer questions, answer keys and scoring rules. Questions are versioned in the question bank and can be searched, imported in bulk from a file and reused across quizzes within the permitted scope; editing a question used by a published quiz creates a new version. The subject manager prepares subject-level quizzes in either mode; the teacher publishes quizzes to an assigned class. Students take assigned quizzes but never create them. |
 | 25 | Manage Diagram Essay | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE Diagram Essay using the DOCUMENT editor, an outline, optional DOCX import and embedded Draw.io diagrams with XML validation. Its questions are versioned in the question bank and can be searched, imported in bulk from a file and reused within the permitted scope; editing a question used by a published assignment creates a new version. |
 | 26 | Manage Code Lab | Teacher, Subject Manager | Assignment Creation | Lets an authorized user view, create, update, clone and preview a GRADED or PRACTICE Code Lab, configure the coding problem, language, quota and test cases, and run the sample solution in the sandbox. Its questions are versioned in the question bank and can be searched, imported in bulk from a file and reused within the permitted scope; editing a question used by a published assignment creates a new version. |
-| 27 | Manage Assignments | Teacher, Subject Manager | Assignment Management | Lets an authorized user view the assignment list and assignment details within the assigned scope. The teacher creates and updates a GRADED group document assignment with a rubric and prepares its main sections, writing them or reusing a document skeleton with main sections from the question bank; the group leader can then add detailed sub-sections and assign sections to members (UC 16), and the teacher or group leader can release a section claim when needed. A group assignment is published only when the class groups are valid. The teacher configures a valid GRADED or PRACTICE mode, schedule and attempts, then previews, approves and publishes an assignment to an assigned class. An authorized user can clone, create a new version of or retire an assignment without changing historical data. The subject manager publishes a versioned subject template, including PRACTICE or GRADED quizzes, and a teacher copies it into an independent class draft. A teacher can copy assignment content and its rubric between classes they teach without copying schedules, attempts, submissions or grades. The teacher can also ask the AI service to create an assignment draft from class content, review the sources, edit, accept or discard the result before publishing. |
-| 28 | View Assigned Work | Student | Assignment Delivery | Lets the student view assigned work with its requirements, rubric, deadline, attempts and status. |
-| 29 | Submit Assignment | Student | Assignment Submission | Lets the student complete and submit an individual assignment while it is open, with autosave and a submission receipt: write an open-ended Text Essay; answer a quiz whose closed questions are auto-scored against the answer-key version; write a Diagram Essay document, preview and import DOCX into the active attempt and draw on the embedded Draw.io canvas, submitting the full Draw.io XML; or write code, run it in the sandbox and submit the source within the assignment limits. |
-| 30 | Review Attempts | Student | Submission | Lets the student view their attempts and create a new attempt while time and attempts remain. |
-| 31 | Review Submissions | Teacher | Submission Review | Lets the teacher view GRADED submissions, student work, rubric, attempts and auto-scored results of an assigned class; PRACTICE is outside the teacher grading queue. |
-| 32 | Grade Submissions | Teacher | Grading | Lets the teacher enter the score and feedback for an individual submission manually, or request, review, accept or override an AI grading proposal; the AI never decides the final score. |
-| 33 | Finalize Grades | Teacher | Grade Finalization | Lets the teacher confirm the final score and publish the score and feedback to the right student, or check eligibility and finalize many valid scores in a class at once. |
-| 34 | View Grades | Student | Gradebook | Lets the student view their own published final score and feedback. |
-| 35 | Monitor Submissions | Teacher, Subject Manager, Administrator | Submission Monitoring | Lets the teacher view submission status in an assigned class; the system automatically reminds students who have not submitted 24 hours before the deadline. The teacher can enable an anonymized class grade distribution that students see in their learning overview when its privacy conditions are met. An authorized user can view the gradebook together with the change history, actor, timestamp and reason, and export a CSV or XLSX gradebook for a class or assignment containing only data within their permitted scope. |
-| 36 | Buy AI Credits | Student, Teacher, Subject Manager, Administrator | Payment | Lets an ACTIVE Student, Teacher, Subject Manager or Administrator view AI credit packages, pay and track payment status. Verified PayOS payment grants purchased credits exactly once. Student credit use is limited to Practice Text/Diagram Essay grading. |
-| 37 | View Notifications | All roles | Notification | Lets a user receive and read notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
-| 38 | View Audit Log | Administrator | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
-| 39 | Grade Practice with AI | Student | Practice Feedback | Lets a student receive one AI score and feedback for each submitted PRACTICE Text or Diagram Essay attempt when enough credits are available. Without enough credits the attempt is submitted without an AI score; the student must submit a new attempt after buying credits. Practice results stay outside the official gradebook. |
+| 27 | Manage Group Assignment | Teacher | Assignment Creation | Lets the teacher view, create, update and preview a GRADED group document assignment with a rubric for an assigned class. The teacher prepares its main sections by writing them or reusing a document skeleton with main sections from the question bank; the group leader then adds detailed sub-sections and assigns sections to members (UC 16), and the teacher or group leader can release a section claim when needed. The assignment uses the class groups managed in UC 9 and is published only when the class groups are valid; publishing, cloning, versioning and retiring follow UC 28. |
+| 28 | Manage Assignments | Teacher, Subject Manager | Assignment Management | Lets an authorized user view the assignment list and assignment details within the assigned scope. The teacher configures a valid GRADED or PRACTICE mode, schedule and attempts, then previews, approves and publishes an assignment to an assigned class; a group assignment (UC 27) is published only when the class groups are valid. An authorized user can clone, create a new version of or retire an assignment without changing historical data. The subject manager publishes a versioned subject template, including PRACTICE or GRADED quizzes, and a teacher copies it into an independent class draft. A teacher can copy assignment content and its rubric between classes they teach without copying schedules, attempts, submissions or grades. The teacher can also ask the AI service to create an assignment draft from class content, review the sources, edit, accept or discard the result before publishing. |
+| 29 | View Assigned Work | Student | Assignment Delivery | Lets the student view assigned work with its requirements, rubric, deadline, attempts and status. |
+| 30 | Submit Assignment | Student | Assignment Submission | Lets the student complete and submit an individual assignment while it is open, with autosave and a submission receipt: write an open-ended Text Essay; answer a quiz whose closed questions are auto-scored against the answer-key version; write a Diagram Essay document, preview and import DOCX into the active attempt and draw on the embedded Draw.io canvas, submitting the full Draw.io XML; or write code, run it in the sandbox and submit the source within the assignment limits. |
+| 31 | Review Attempts | Student | Submission | Lets the student view their attempts and create a new attempt while time and attempts remain. |
+| 32 | Review Submissions | Teacher | Submission Review | Lets the teacher view GRADED submissions, student work, rubric, attempts and auto-scored results of an assigned class; PRACTICE is outside the teacher grading queue. |
+| 33 | Grade Submissions | Teacher | Grading | Lets the teacher enter the score and feedback for an individual submission manually, or request, review, accept or override an AI grading proposal; the AI never decides the final score. |
+| 34 | Finalize Grades | Teacher | Grade Finalization | Lets the teacher confirm the final score and publish the score and feedback to the right student, or check eligibility and finalize many valid scores in a class at once. |
+| 35 | View Grades | Student | Gradebook | Lets the student view their own published final score and feedback. |
+| 36 | Monitor Submissions | Teacher, Subject Manager, Administrator | Submission Monitoring | Lets the teacher view submission status in an assigned class; the system automatically reminds students who have not submitted 24 hours before the deadline. The teacher can enable an anonymized class grade distribution that students see in their learning overview when its privacy conditions are met. An authorized user can view the gradebook together with the change history, actor, timestamp and reason, and export a CSV or XLSX gradebook for a class or assignment containing only data within their permitted scope. |
+| 37 | Buy AI Credits | Student, Teacher, Subject Manager, Administrator | Payment | Lets an ACTIVE Student, Teacher, Subject Manager or Administrator view AI credit packages, pay and track payment status. Verified PayOS payment grants purchased credits exactly once. Student credit use is limited to Practice Text/Diagram Essay grading. |
+| 38 | View Notifications | All roles | Notification | Lets a user receive and read notifications about class posts and Q&A, assignments, deadlines, groups, grades and payments within their scope. |
+| 39 | View Audit Log | Administrator | Audit | Lets an authorized administrator view audit events by actor, action, object, result and time; audit records cannot be edited or deleted. |
+| 40 | Grade Practice with AI | Student | Practice Feedback | Lets a student receive one AI score and feedback for each submitted PRACTICE Text or Diagram Essay attempt when enough credits are available. Without enough credits the attempt is submitted without an AI score; the student must submit a new attempt after buying credits. Practice results stay outside the official gradebook. |
 
 ## Merged IDs
 
@@ -63,11 +64,12 @@ Previous IDs refer to the 64-case draft that this table replaces.
 | 24 | Manage Quiz | 31, 37 |
 | 25 | Manage Diagram Essay | 38 |
 | 26 | Manage Code Lab | 39 |
-| 27 | Manage Assignments | 25, 32, 35, 40, 41, 48, 49, 50 |
-| 29 | Submit Assignment | 43, 44, 45, 46 |
-| 32 | Grade Submissions | 52, 53 |
-| 33 | Finalize Grades | 54, 55 |
-| 35 | Monitor Submissions | 57, 58, 60 |
+| 27 | Manage Group Assignment | 25, 40 |
+| 28 | Manage Assignments | 32, 35, 41, 48, 49, 50 |
+| 30 | Submit Assignment | 43, 44, 45, 46 |
+| 33 | Grade Submissions | 52, 53 |
+| 34 | Finalize Grades | 54, 55 |
+| 36 | Monitor Submissions | 57, 58, 60 |
 
 ## Legacy UC codes
 
@@ -91,23 +93,24 @@ Design files written before 2026-09-29 used domain codes such as `UC-IAM-01`. Li
 | UC-LRN-01, UC-RPT-02 | 18 |
 | UC-LRN-02 | 19 |
 | UC-QBK-01 | 20 |
-| UC-AIG-01 | 27 |
+| UC-AIG-01 | 28 |
 | UC-AIG-02, 03 | 21, 22 |
 | UC-ASM-02 | 23 |
 | UC-QBK-02, UC-ASM-03 | 24 |
 | UC-ASM-04 | 25 |
 | UC-ASM-05 | 26 |
-| UC-ASM-01, 06, 07, 15, 16, 17; UC-GRP-05 | 27 |
-| UC-ASM-09 | 28 |
-| UC-ASM-10 … UC-ASM-13 | 29 |
-| UC-ASM-14 | 30 |
-| UC-GRD-01 | 31 |
-| UC-GRD-02, 03 | 32 |
-| UC-GRD-04, 05 | 33 |
-| UC-GRD-06 | 34 |
-| UC-GRD-07, UC-RPT-01, UC-RPT-03 | 35 |
-| UC-PAY-01 | 36 |
-| UC-OPS-01 | 37 |
-| UC-OPS-02 | 38 |
-| UC-ASM-19 | 39 |
+| UC-ASM-06; UC-GRP-05 | 27 |
+| UC-ASM-01, 07, 15, 16, 17 | 28 |
+| UC-ASM-09 | 29 |
+| UC-ASM-10 … UC-ASM-13 | 30 |
+| UC-ASM-14 | 31 |
+| UC-GRD-01 | 32 |
+| UC-GRD-02, 03 | 33 |
+| UC-GRD-04, 05 | 34 |
+| UC-GRD-06 | 35 |
+| UC-GRD-07, UC-RPT-01, UC-RPT-03 | 36 |
+| UC-PAY-01 | 37 |
+| UC-OPS-01 | 38 |
+| UC-OPS-02 | 39 |
+| UC-ASM-19 | 40 |
 | UC-ASM-18 (Simulation Exam), UC-PAY-02 (manual reconciliation) | Retired, not reused |

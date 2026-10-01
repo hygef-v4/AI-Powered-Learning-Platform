@@ -54,4 +54,4 @@
 |---|---|---|
 | BR-U07-53 | Sau khi `PAID`, phát event `payment.paid` (sau commit) để U16 báo trong app. | U16 |
 | BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát tự động, đổi mức tặng tháng. | FR-014, SEC-005 |
-| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, sổ cái và lịch sử giao dịch của chính mình. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC 36 |
+| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, sổ cái và lịch sử giao dịch của chính mình. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC 37 |

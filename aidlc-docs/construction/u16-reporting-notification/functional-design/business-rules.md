@@ -7,7 +7,7 @@
 | BR-U16-01 | Thông báo tạo từ event sau khi giao dịch nghiệp vụ đã commit; U16 lỗi không làm rollback nghiệp vụ. | US-NTF-001 S2 |
 | BR-U16-02 | Mỗi `(sourceEventId, recipientId, type)` tạo một thông báo; event lặp không tạo trùng. | US-NTF-001 S2 |
 | BR-U16-03 | Nội dung chỉ về chính người nhận; không ghi điểm số trong thông báo/email, chỉ báo "có điểm mới" và đường dẫn. | US-NTF-001 S1 |
-| BR-U16-04 | Thông báo trong app hiển thị realtime (SSE dùng chung hạ tầng U14) và danh sách có đánh dấu đã đọc. | Câu 4, UC 37 |
+| BR-U16-04 | Thông báo trong app hiển thị realtime (SSE dùng chung hạ tầng U14) và danh sách có đánh dấu đã đọc. | Câu 4, UC 38 |
 | BR-U16-05 | Giữ thông báo 180 ngày rồi xóa. | Thiết kế |
 | BR-U16-06 | Nhận sự kiện thông báo lớp, câu hỏi và câu trả lời từ U05; chỉ tạo thông báo trong app cho người nhận còn quyền trong lớp, trừ actor, và chống trùng theo BR-U16-02. | US-CNT-004 |
 

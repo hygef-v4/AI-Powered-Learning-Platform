@@ -42,7 +42,7 @@
 | BR-U13-31 | Mọi mã chạy trong Judge0 tự chạy, mạng nội bộ không ra Internet; không bao giờ chạy trên backend/worker. Judge0 lỗi → `SANDBOX_ERROR`, không đánh dấu đạt. | US-ASM-005 S2 |
 | BR-U13-32 | Giới hạn mỗi test: thời gian theo đề (100-10 000 ms), bộ nhớ theo đề (64-1024 MB), output ≤ 64 KB, không mạng. | US-ASM-005 S1 |
 | BR-U13-33 | Duyệt bài `CODE_LAB` cần lời giải mẫu đạt **toàn bộ** test với `contentHash` khớp nội dung hiện tại; sửa đề/test/lời giải → phải kiểm lại. | demo_do_an INV-218 |
-| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC 29 |
+| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC 30 |
 | BR-U13-35 | `GRADE`: khi nộp (U11) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI). Bài `GRADED` gửi U15 làm điểm tự động; bài `PRACTICE` trả kết quả riêng cho U11. | FR-017, FR-030 |
 | BR-U13-36 | Kết quả test ẩn chỉ trả trạng thái đạt/không, không trả input/output cho người học. | SEC-002 |
 | BR-U13-37 | Chạy lại `GRADE` khi `SANDBOX_ERROR` do giảng viên bấm, hoặc job tự retry 3 lần. | REL-003 |

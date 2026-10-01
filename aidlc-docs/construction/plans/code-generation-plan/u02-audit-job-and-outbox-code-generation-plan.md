@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-AUD-001. **Use case**: UC 38.
+- **Story**: US-AUD-001. **Use case**: UC 39.
 - **Thiết kế nguồn**: `construction/u02-audit-job-and-outbox/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -101,7 +101,7 @@ PostgreSQL `jobs`, `audit_events`; RabbitMQ exchange `jobs`, `platform.events` v
 | US-AUD-001 S1 (tra cứu) | 10, 13, 17-19, 21 |
 | US-AUD-001 S2 (không sửa/xóa) | 8, 13, 15, 19 |
 | US-AUD-001 S3 (sự kiện bắt buộc) | 6, 8 (unit khác gọi `AuditPort` trong transaction) |
-| UC 38 | 10, 18, 21 |
+| UC 39 | 10, 18, 21 |
 | Job platform (không có story) | 3, 5, 7, 9, 13-15, 22 |
 
 ## 5. Ngoài phạm vi
