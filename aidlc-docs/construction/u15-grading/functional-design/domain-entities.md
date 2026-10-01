@@ -1,6 +1,6 @@
 # U15 Grading - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRD-001`…`005`, `US-GRP-006`; UC 32, UC 33, UC 34, UC 35, UC 36, UC 17.
+Thiết kế độc lập công nghệ. Truy vết: `US-GRD-001`…`005`, `US-GRP-006`; UC 31, UC 32, UC 33, UC 34, UC 35, UC 17.
 
 ## 1. Tổng quan
 

@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Use-case catalog consolidated to 40 cases (`docs/use-case-table.md`); docs, Inception and Construction traces synchronized on 2026-10-01, including class-level groups, leader-managed group sections and the group-document REVIEW state. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
-- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
+- **Current Stage**: Use-case catalog consolidated to 39 cases (`docs/use-case-table.md`; UC 21 Manage Templates, AI assignment drafting merged into UC 27 Manage Assignments); docs, Inception and Construction traces synchronized on 2026-10-01, including class-level groups, leader-managed group sections and the group-document REVIEW state. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
+- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 39 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
 
 ## Workspace State
 - **Existing Code**: No
@@ -59,10 +59,10 @@
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
 | U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
 | U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Updated, re-approval needed | - |
-| U07 Payment & AI Credit | Done, AI/credit eligibility updated; packages traced to UC 23 | Updated, re-approval needed | - |
+| U07 Payment & AI Credit | Done, AI/credit eligibility updated; packages traced to UC 22 | Updated, re-approval needed | - |
 | U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
 | U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Updated, re-approval needed | - |
-| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired | Updated, re-approval needed | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired; owns UC 21 Manage Templates with create/AI draft/delete (2026-10-01) | Updated, re-approval needed | - |
 | U11 Attempt & Submission | Done | Updated, re-approval needed | - |
 | U12 Group & Allocation | Done, groups moved to class level (2026-10-01) | Updated, re-approval needed | - |
 | U13 AI & Code Execution | Done | Updated, re-approval needed | - |
@@ -74,11 +74,12 @@
 
 - Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm mỗi attempt Practice Text/Diagram Essay khi đủ credit; thiếu credit vẫn nộp nhưng không điểm AI và không chấm bù. Teacher chỉ chấm bài Graded.
 - Chính sách hoàn tiền credit AI chưa chốt. Tài liệu PayOS hiện công bố API hủy link chưa trả và API lệnh chi riêng, chưa thấy API đảo ngược trực tiếp một payment đã `PAID`; cần quyết định phạm vi, điều kiện thu hồi credit đã mua và cách chuyển tiền trước khi thiết kế luồng hoàn tiền.
-- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 là các mốc gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
+- Nhóm chỉ triển khai một MVP: 49 story và 39 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 → 39 là các mốc gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
 - Critical path (by plan steps): U01 → U04 → U05 → U08 → U09 → U10 → U11 → U15 → U16.
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-01 (lần 6): Bảng use case còn 39 UC: Create Assignment with AI gộp vào UC 27 Manage Assignments, Create Template with AI thành UC 21 Manage Templates (tạo thủ công hoặc bằng AI, sửa, xoá); UC 23–40 cũ thành 22–39. Đánh số lại toàn bộ docs, Inception và Construction (trừ audit và mục lịch sử). U10 chủ trì UC 21 (BR-U10-06, 07: bản nháp AI, xoá template), U13 chủ trì UC 22, 26 và cung cấp luồng AI cho UC 21, 27. FR-006/FR-027, US-ASM-009 (Scenario 3), đặc tả UC 27 và screen flow cập nhật theo.
 - 2026-10-01 (lần 5): BR-U01-48 đổi đích Teacher/Subject Manager thành `/teaching/classes` (route `ClassListPage` của U04). `screen-flow.md` gán mã mời và phân bố điểm cho `InviteCodeTab`/`GradeDistributionToggle` trên Class Detail của giảng viên theo U04 (người dùng chọn). Plan U09 Bước 6 thêm lấy khung từ ngân hàng; plan U09 cần duyệt lại.
 - 2026-10-01 (lần 4): Dashboard sinh viên (UC 18) gồm lớp đã ghi danh, bài sắp hạn, thông báo chưa đọc, trạng thái nộp và điểm đã công bố ở BR-U16-40, `StudentDashboard`, F6, frontend và plan U16, US-RPT-002. Thêm BR-U01-48: đăng nhập xong Student → `/learn/dashboard`, Teacher/Subject Manager → `/teaching/classes`, Admin → `/admin/accounts`. Plan U01 cần duyệt lại.
 - 2026-10-01 (lần 3): Thêm lại SEC-006 vào US-RPT-003 (lần sửa trước xóa nhầm); bỏ chữ "câu hỏi quiz" còn sót ở requirements, context diagram và US-AIG-002; persona Chủ nhiệm môn có xem/xuất bảng điểm (US-RPT-001, US-RPT-003). Theo quyết định của người dùng, giữ trang Dashboard riêng của sinh viên (UC 18, U16) làm trang đích: thêm ô Dashboard vào `screen-flow.drawio` và bảng `screen-flow.md` (93 ô).

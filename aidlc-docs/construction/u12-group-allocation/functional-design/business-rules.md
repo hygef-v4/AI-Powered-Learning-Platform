@@ -27,7 +27,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-20 | Giảng viên **không** giao mục cho từng sinh viên; giảng viên chuẩn bị mục chính, trưởng nhóm thêm mục chi tiết và giao mục cho thành viên trong tài liệu nhóm (U14). | UC 16, UC 28 |
+| BR-U12-20 | Giảng viên **không** giao mục cho từng sinh viên; giảng viên chuẩn bị mục chính, trưởng nhóm thêm mục chi tiết và giao mục cho thành viên trong tài liệu nhóm (U14). | UC 16, UC 27 |
 | BR-U12-21 | Bài `GROUP` sẵn sàng phát hành khi lớp có ít nhất một nhóm, mọi nhóm hợp lệ (BR-U12-03) và mọi sinh viên đang ghi danh đã có nhóm (cảnh báo nếu còn người chưa có nhóm, giảng viên xác nhận vẫn phát hành). | FR-025 |
 | BR-U12-22 | Đổi thành viên khi lớp có bài nhóm đang mở được phép; mục đang do người bị bỏ giữ tự nhả khóa (U14), nội dung đã viết giữ nguyên với tên tác giả. Bản nộp đã có không đổi. | U12 Câu 7, U14 |
 

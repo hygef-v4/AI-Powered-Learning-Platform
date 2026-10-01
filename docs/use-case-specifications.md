@@ -1,6 +1,6 @@
 # II. Use Case Specifications — 8 Key Use Cases
 
-These eight use cases were selected from the 40 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table. UC 30 Submit Assignment is specified once per assignment type because each type has its own editing and scoring rules. Same-actor management actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
+These eight use cases were selected from the 39 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table. UC 29 Submit Assignment is specified once per assignment type because each type has its own editing and scoring rules. For UC 27 Manage Assignments, only the AI assignment-draft flow is specified; its other management actions are described in the table. Same-actor management actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
 
 ## 1. Content Management
 
@@ -33,7 +33,7 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 | Primary Actors | Student (group member; group leader) |
 | Secondary Actors | None |
 | Description | The group leader breaks the teacher's main sections into detailed sub-sections and assigns them to members. Members work on their sections in a private workspace and mark them Done so the completed content appears in the shared document in real time. When every section is Done, the document enters REVIEW for the whole group to read and comment on, and the leader then submits it; the system submits the current version when the deadline passes. |
-| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 28, and its publication still accepts work. |
+| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 27, and its publication still accepts work. |
 | Normal Flow | 1. A group member opens the document; the system checks access and shows shared content, main sections and sub-sections, section states, assignees and the document state (IN_PROGRESS or REVIEW). |
 |  | 2. The leader may add, rename, reorder or remove detailed sub-sections under a main section and assign a section to a member. The system locks an assigned section to that member. |
 |  | 3. A member opens an assigned section or claims an OPEN or DONE section. The system conditionally claims it, locks it to that student, and copies its current published blocks into a private draft. |
@@ -65,23 +65,23 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 | Normal Flow | 1. The teacher opens the latest group submission and the contribution view for every member. |
 |  | 2. The system shows the immutable shared document, section revisions and authors, and separate areas for shared-document, contribution, and member-final scores. |
 |  | 3. The teacher grades the shared document manually against the rubric, including integration and consistency. |
-|  | 4. The teacher reviews each member's authored sections and assesses individual contribution, manually or with an optional AI proposal for that contribution only (UC 33). |
-|  | 5. The teacher enters each member's final score, records required reasons, and saves the grade decisions for finalization and publication (UC 34). |
+|  | 4. The teacher reviews each member's authored sections and assesses individual contribution, manually or with an optional AI proposal for that contribution only (UC 32). |
+|  | 5. The teacher enters each member's final score, records required reasons, and saves the grade decisions for finalization and publication (UC 33). |
 | Alternative Flows | **A1 — Request to send the shared document to AI for grading:** Reject that path; the shared document is graded manually. |
 |  | **A2 — Member's final score differs from the shared-document score:** Require a reason; do not calculate the final score from a fixed formula. |
 |  | **A3 — Additional deduction for an integration problem attributed to one member:** Require a reason and a reference to the relevant section. |
 |  | **A4 — AI proposal for a member fails:** Preserve the submission and current grades; the teacher may grade that contribution manually. |
 | Postconditions | The shared-document assessment, individual contribution assessments, and per-member final draft scores are stored with the teacher's decisions. They are not visible to students until finalized and published. |
 
-## 3. AI Creation
+## 3. AI-Assisted Assignment Authoring
 
-### 3.1 UC 21 — Create Assignment with AI
+### 3.1 UC 27 — Manage Assignments: Create an Assignment Draft with AI
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Teacher |
 | Secondary Actors | AI Service |
-| Description | A teacher requests assignment suggestions grounded in published class content, then selects, edits, or discards the proposed questions. |
+| Description | Within assignment management, a teacher requests assignment suggestions grounded in published class content, reviews their sources, then selects, edits, or discards the proposed questions before publishing. |
 | Preconditions | The teacher manages the class and has a DRAFT assignment. Source materials are published and indexed within the class scope, and the teacher has sufficient AI credits. |
 | Normal Flow | 1. The teacher selects the question type, quantity, difficulty, and optional chapter or lesson scope. |
 |  | 2. The system checks permission, sources, AI limits, and reserves estimated credits from the teacher. |
@@ -96,9 +96,9 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 
 ## 4. Assignment Submission
 
-### 4.1 UC 30 — Submit Assignment
+### 4.1 UC 29 — Submit Assignment
 
-The four specifications below share the primary actor and attempt rules of UC 30. A GRADED submission enters the teacher's grading queue (UC 32). A PRACTICE submission never creates a teacher grade record; its result is shown only to the student and stays outside the official gradebook.
+The four specifications below share the primary actor and attempt rules of UC 29. A GRADED submission enters the teacher's grading queue (UC 31). A PRACTICE submission never creates a teacher grade record; its result is shown only to the student and stays outside the official gradebook.
 
 #### 4.1.1 Text Essay
 
@@ -112,7 +112,7 @@ The four specifications below share the primary actor and attempt rules of UC 30
 |  | 2. The student writes the response using basic formatting only: paragraphs, headings, lists, bold and italic. |
 |  | 3. The system autosaves 10 seconds after the last edit and when the student leaves the page. Each save carries a content version, and the screen shows the last saved time. |
 |  | 4. The student submits before the deadline. The system validates the attempt and content, locks the submitted answer, and issues a receipt showing the attempt ID, attempt number, server submission time, late flag and hash. Work submitted after the closing time but within the late-submission limit is marked LATE. |
-|  | 5. For a GRADED assignment, in the same transaction the system creates a PENDING grade record so that the submission enters the teacher grading queue. For a PRACTICE assignment, no grade record is created and AI practice grading follows UC 40. |
+|  | 5. For a GRADED assignment, in the same transaction the system creates a PENDING grade record so that the submission enters the teacher grading queue. For a PRACTICE assignment, no grade record is created and AI practice grading follows UC 39. |
 | Alternative Flows | **A1 — No attempt remains or the publication is not accepting submissions:** Refuse to start a new attempt and explain the restriction (MSG07). |
 |  | **A2 — Stale draft version (the attempt is open elsewhere):** Return a conflict instead of overwriting the newer saved answer; the student reloads before continuing (MSG05). |
 |  | **A3 — Deadline passes or the publication is retired before manual submission:** Automatically submit the latest saved answer, including an empty answer if nothing was saved, and record any validation warning for the teacher. |
@@ -153,7 +153,7 @@ The four specifications below share the primary actor and attempt rules of UC 30
 |  | 2. The student edits permitted blocks while preserving the teacher's locked blocks. |
 |  | 3. The student creates or edits diagrams in the embedded Draw.io canvas; the system retains the full XML. |
 |  | 4. The system autosaves the draft with a content version and shows the last saved time. |
-|  | 5. The student submits. The system validates the document, diagrams, and deadline, makes the submission immutable, and returns a receipt. A GRADED submission enters the teacher grading queue; a PRACTICE submission follows UC 40. |
+|  | 5. The student submits. The system validates the document, diagrams, and deadline, makes the submission immutable, and returns a receipt. A GRADED submission enters the teacher grading queue; a PRACTICE submission follows UC 39. |
 | Alternative Flows | **A1 — DOCX import:** Show a preview and unsupported-content report. Add imported student blocks only after confirmation; do not replace teacher blocks. |
 |  | **A2 — Invalid diagram XML or missing required diagrams:** Reject manual submission and keep the draft available for correction. |
 |  | **A3 — Stale content version:** Return conflict 409 instead of silently overwriting a newer draft. |
@@ -181,7 +181,7 @@ The four specifications below share the primary actor and attempt rules of UC 30
 
 ## 5. Grading
 
-### 5.1 UC 33 — Grade Submissions
+### 5.1 UC 32 — Grade Submissions
 
 | Field | Specification |
 |---|---|
@@ -189,12 +189,12 @@ The four specifications below share the primary actor and attempt rules of UC 30
 | Secondary Actors | AI Service (only when AI assistance is requested) |
 | Description | The teacher grades an individual GRADED submission, or a group member's contribution, manually or with an AI grading proposal, and records the draft score and feedback. |
 | Preconditions | The teacher is assigned to the class. A GRADED submission and suitable content or rubric are available. For AI assistance, AI is enabled and the teacher has sufficient credits. |
-| Normal Flow | 1. The teacher opens a submission from the grading queue (UC 32) and reviews the work, rubric, attempts and any auto-scored result. |
+| Normal Flow | 1. The teacher opens a submission from the grading queue (UC 31) and reviews the work, rubric, attempts and any auto-scored result. |
 |  | 2. The teacher chooses manual grading or AI assistance. For manual grading, the teacher enters criterion scores and feedback against the rubric without calling AI and continues at step 6. |
 |  | 3. For AI assistance, the system checks authorization and AI limits, reserves the teacher's credits, and sends only the relevant submission or contribution and rubric. |
 |  | 4. The AI service proposes outcomes for rubric criteria; the system validates the response and calculates the proposed total from the rubric rather than relying on AI arithmetic. |
 |  | 5. The teacher reviews evidence and comments, then accepts or overrides the proposal. |
-|  | 6. The system records the teacher's draft score, feedback, grading method, actor and time. Finalization and publication occur separately (UC 34). |
+|  | 6. The system records the teacher's draft score, feedback, grading method, actor and time. Finalization and publication occur separately (UC 33). |
 | Alternative Flows | **A1 — AI unavailable or invalid response:** Keep the submission unchanged; the teacher may retry or grade manually. |
 |  | **A2 — Insufficient credits or a usage limit:** Do not call AI; manual grading remains available. |
 |  | **A3 — Teacher disagrees with the AI proposal:** Enter a different score or feedback; a reason is required when finalizing a score that differs from the proposal. |
@@ -204,7 +204,7 @@ The four specifications below share the primary actor and attempt rules of UC 30
 
 ## 6. Payment
 
-### 6.1 UC 37 — Buy AI Credits
+### 6.1 UC 36 — Buy AI Credits
 
 | Field | Specification |
 |---|---|
@@ -217,7 +217,7 @@ The four specifications below share the primary actor and attempt rules of UC 30
 |  | 3. The user pays on PayOS. On return, the result page polls the payment status every 3 seconds for up to 2 minutes; the return page never grants credits. |
 |  | 4. The system receives the PayOS webhook and verifies the HMAC-SHA256 signature, order code, amount and successful result. |
 |  | 5. In one database transaction, the system marks the payment PAID, writes one PURCHASE ledger entry, adds the credits to the purchased balance and records an audit event. After commit, an in-app notification is sent. The user can view the updated balance and history. |
-| Alternative Flows | **A0 — Student attempts an unauthorized AI task:** Allow wallet and checkout access, but reject AI authoring, learning-material processing and GRADED submission grading before reserving credits or calling AI. Student credits are used only for Practice Text/Diagram Essay grading of their own attempt (UC 40). |
+| Alternative Flows | **A0 — Student attempts an unauthorized AI task:** Allow wallet and checkout access, but reject AI authoring, learning-material processing and GRADED submission grading before reserving credits or calling AI. Student credits are used only for Practice Text/Diagram Essay grading of their own attempt (UC 39). |
 |  | **A1 — PayOS cannot create a link:** Mark the payment FAILED and grant no credits; the user may start a new checkout. |
 |  | **A2 — User returns before verification:** Keep the payment PENDING and grant no credits yet (MSG11). |
 |  | **A3 — Invalid signature, or mismatched order code or amount:** Record the event as REJECTED, write a security audit event, and grant no credits (MSG12). |
@@ -231,13 +231,13 @@ The four specifications below share the primary actor and attempt rules of UC 30
 
 ## 7. Practice Feedback
 
-### 7.1 UC 40 — Grade Practice with AI
+### 7.1 UC 39 — Grade Practice with AI
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Student |
 | Secondary Actors | AI Service |
-| Description | A student submits a PRACTICE Text Essay or Diagram Essay (UC 30). If enough credits are available, the system grades that attempt once with AI and shows private practice feedback. The teacher does not grade or publish an official score for PRACTICE. |
+| Description | A student submits a PRACTICE Text Essay or Diagram Essay (UC 29). If enough credits are available, the system grades that attempt once with AI and shows private practice feedback. The teacher does not grade or publish an official score for PRACTICE. |
 | Preconditions | The student has an ACTIVE account and enrollment, owns the attempt, the assignment is PRACTICE and of a supported type, and the publication accepts submission. |
 | Normal Flow | 1. The student submits the attempt; the system locks its content and issues a receipt. |
 |  | 2. The system checks the student's credit balance, AI limits, supported type and attempt ownership. If eligible, it reserves estimated credits with an idempotent attempt reference and queues one AI grading job. |

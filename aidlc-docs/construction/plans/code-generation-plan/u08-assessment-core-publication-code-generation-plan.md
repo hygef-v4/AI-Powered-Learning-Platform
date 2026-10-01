@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3. **Use case**: UC 28.
+- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3. **Use case**: UC 27.
 - **Thiết kế nguồn**: `construction/u08-assessment-core-publication/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -101,9 +101,9 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICAT
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-001 S1 (UC 28) | 6, 7, 8, 21, 22 |
+| US-ASM-001 S1 (UC 27) | 6, 7, 8, 21, 22 |
 | US-ASM-001 S2 | 6, 7, 18 |
-| UC 28 | 9, 20 |
+| UC 27 | 9, 20 |
 | US-QBK-002 S2, S3 (khóa nội dung) | 2, 4, 10, 18 |
 | FR-006 (AI draft vào bản nháp) | 5, 21 |
 

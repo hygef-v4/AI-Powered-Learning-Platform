@@ -1,6 +1,6 @@
 # U10 Template & Copy - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`; UC 28. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`, `US-AIG-002` (nhận bản nháp AI); UC 21, UC 27. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
 
 ## 1. Tổng quan
 
@@ -31,7 +31,7 @@ stateDiagram-v2
     RELEASED --> WITHDRAWN: Thu hồi
 ```
 
-**Text alternative**: Mỗi version template được Chủ nhiệm môn phát hành ở `RELEASED`, giảng viên các lớp thuộc môn copy được. Thu hồi thì `WITHDRAWN`, không copy được nữa; bản đã copy không bị ảnh hưởng.
+**Text alternative**: Mỗi version template được Chủ nhiệm môn phát hành ở `RELEASED`, giảng viên các lớp thuộc môn copy được. Thu hồi thì `WITHDRAWN`, không copy được nữa; bản đã copy không bị ảnh hưởng. Xoá template đã phát hành cũng chuyển mọi release về `WITHDRAWN` và lưu trữ các version (BR-U10-07).
 
 ## 3. `AssignmentLineage`
 

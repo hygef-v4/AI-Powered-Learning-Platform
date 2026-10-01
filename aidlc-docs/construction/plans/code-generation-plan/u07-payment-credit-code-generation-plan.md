@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-PAY-001, US-PAY-002. **Use case**: UC 37. Job tự đối soát thuộc US-PAY-002; không có thao tác admin đối soát hoặc điều chỉnh credit thủ công.
+- **Story**: US-PAY-001, US-PAY-002. **Use case**: UC 36. Job tự đối soát thuộc US-PAY-002; không có thao tác admin đối soát hoặc điều chỉnh credit thủ công.
 - **Thiết kế nguồn**: `construction/u07-payment-credit/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -100,8 +100,8 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledg
 
 | Nguồn | Bước |
 |---|---|
-| US-PAY-001 (UC 37) | 5, 6, 15, 22 |
-| US-PAY-002 (UC 37) | 7, 9, 16, 20 |
+| US-PAY-001 (UC 36) | 5, 6, 15, 22 |
+| US-PAY-002 (UC 36) | 7, 9, 16, 20 |
 | Credit cho U13 | 4, 8, 16 |
 
 ## 5. Ngoài phạm vi

@@ -13,7 +13,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U08-10 | Mỗi bài một trong năm dạng `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY`, `CODE_LAB`, `GROUP_ASSIGNMENT`; thành phần phải khớp dạng. Chế độ là `GRADED` hoặc `PRACTICE`, riêng `GROUP_ASSIGNMENT` chỉ `GRADED`. | FR-017, U09, quyết định 2026-09-29 |
-| BR-U08-11 | Thành phần lấy từ ngân hàng (phiên bản `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng kiểm theo quy tắc U06. Câu ngân hàng phải khớp dạng bài theo BR-U06-28 (ngân hàng có câu cho cả năm dạng). | Câu 2, UC 24–28 |
+| BR-U08-11 | Thành phần lấy từ ngân hàng (phiên bản `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng kiểm theo quy tắc U06. Câu ngân hàng phải khớp dạng bài theo BR-U06-28 (ngân hàng có câu cho cả năm dạng). | Câu 2, UC 23–27 |
 | BR-U08-12 | Điểm từng thành phần > 0; `totalPoints` = tổng, tự tính. | Thiết kế |
 | BR-U08-13 | Bài 1-200 câu (`MULTIPLE_CHOICE_QUIZ`), 1-20 câu cho dạng khác. | Thiết kế |
 | BR-U08-14 | Chỉ sửa khi `DRAFT`; sửa bài `REVIEWED` đưa về `DRAFT`. | Câu 3 |

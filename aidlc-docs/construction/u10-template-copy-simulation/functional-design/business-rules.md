@@ -4,10 +4,12 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U10-01 | Chỉ Chủ nhiệm môn soạn template (bài U08 `SUBJECT_TEMPLATE`, dùng cùng trình soạn) và phát hành version template. | FR-027 |
+| BR-U10-01 | Chỉ Chủ nhiệm môn tạo, sửa, xoá template (bài U08 `SUBJECT_TEMPLATE`, dùng cùng trình soạn) và phát hành version template. Chủ nhiệm môn chỉ sửa/xoá template do mình tạo trong môn mình đang phụ trách. | FR-027, UC 21 |
 | BR-U10-02 | Template không có publication; không giao thẳng cho lớp. | FR-027, không có đề chung |
 | BR-U10-03 | Version template đã phát hành chỉ đọc; sửa template tạo version mới (quy tắc BR-U08-43 áp dụng: version đang phát hành không sửa). | FR-027, US-ASM-009 S2 |
 | BR-U10-04 | Rút template (`WITHDRAWN`): không copy thêm; bản đã copy không bị ảnh hưởng. | Thiết kế |
+| BR-U10-06 | Tạo template thủ công, hoặc nhờ AI soạn bản nháp từ RAG cấp môn qua `AiDraftPort` (U13, BR-U13-11). Bản nháp AI chỉ vào template khi Chủ nhiệm môn chấp nhận (có thể sửa trước); bỏ thì template không đổi. | FR-006, FR-027, UC 21 |
+| BR-U10-07 | Xoá template: nếu chưa phát hành version nào thì xoá bản nháp (BR-U08-15); nếu đã phát hành thì mọi release còn `RELEASED` chuyển `WITHDRAWN`, các version template chuyển `ARCHIVED` và ẩn khỏi danh sách. Không copy thêm được; bài lớp đã copy, lineage và audit giữ nguyên. | FR-027, UC 21 |
 | BR-U10-05 | Giảng viên của lớp thuộc môn copy một version `RELEASED` thành bài `DRAFT` của lớp mình; lưu lineage `TEMPLATE_COPY`; không đồng bộ khi template có version mới. | US-ASM-009 S1 |
 
 ## 2. Copy giữa lớp
@@ -32,4 +34,4 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U10-40 | Audit: phát hành/rút template và copy template/bài giữa lớp (nguồn, đích, actor). | FR-014, FR-027, FR-028 |
+| BR-U10-40 | Audit: tạo, xoá, phát hành/rút template và copy template/bài giữa lớp (nguồn, đích, actor). | FR-014, FR-027, FR-028 |

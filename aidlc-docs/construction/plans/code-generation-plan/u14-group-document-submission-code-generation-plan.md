@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16, UC 28.
+- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16, UC 27.
 - **Thay đổi 2026-10-01**: tài liệu nhóm ở bảng `group_documents` (một nhóm của lớp × một publication); trưởng nhóm thêm mục chi tiết và giao mục; tài liệu vào `REVIEW` khi mọi mục lá xong và trưởng nhóm chỉ nộp ở `REVIEW`. Plan cần duyệt lại.
 - **Thiết kế nguồn**: `construction/u14-group-document-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -105,7 +105,7 @@ PostgreSQL: `group_documents`, `sections`, `section_revisions`, `section_comment
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-003 (UC 28) | 3, 4, 22 |
+| US-GRP-003 (UC 27) | 3, 4, 22 |
 | US-GRP-004 (UC 16) | 4, 5, 20, 21 |
 | US-GRP-005 (UC 16) | 5, 7, 20 |
 | US-GRP-006 (dữ liệu cho U15) | 8 |

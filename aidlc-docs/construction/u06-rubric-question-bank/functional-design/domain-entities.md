@@ -1,6 +1,6 @@
 # U06 Rubric & Question Bank - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 24–28.
+Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 23–27.
 
 ## 1. Tổng quan
 
@@ -61,11 +61,11 @@ Ngân hàng giữ câu hỏi của cả năm dạng bài (thay đổi 2026-10-01
 
 | Dạng bài (U08) | `questionType` | Use case |
 |---|---|---|
-| `TEXT_ESSAY` | `ESSAY` | UC 24 |
-| `MULTIPLE_CHOICE_QUIZ` | `MCQ_SINGLE`, `MCQ_MULTI` | UC 25 |
-| `DIAGRAM_ESSAY` | `DOCUMENT` | UC 26 |
-| `CODE_LAB` | `CODE` | UC 27 |
-| `GROUP_ASSIGNMENT` | `DOCUMENT` có `skeleton` chứa ít nhất một heading `workSection` (mục chính) | UC 28 |
+| `TEXT_ESSAY` | `ESSAY` | UC 23 |
+| `MULTIPLE_CHOICE_QUIZ` | `MCQ_SINGLE`, `MCQ_MULTI` | UC 24 |
+| `DIAGRAM_ESSAY` | `DOCUMENT` | UC 25 |
+| `CODE_LAB` | `CODE` | UC 26 |
+| `GROUP_ASSIGNMENT` | `DOCUMENT` có `skeleton` chứa ít nhất một heading `workSection` (mục chính) | UC 27 |
 
 Một câu `DOCUMENT` có mục việc vẫn dùng được cho Diagram Essay; khi đó cờ `workSection` bị bỏ qua.
 

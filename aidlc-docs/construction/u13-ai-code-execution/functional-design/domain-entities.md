@@ -1,6 +1,6 @@
 # U13 AI & Code Execution - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AIG-001`…`003`, `US-ASM-005`; UC 21, UC 22, UC 23, UC 27.
+Thiết kế độc lập công nghệ. Truy vết: `US-AIG-001`…`003`, `US-ASM-005`; UC 22, UC 26 và luồng AI soạn bản nháp của UC 21, UC 27.
 
 ## 1. Tổng quan
 

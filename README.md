@@ -8,7 +8,7 @@ Dự án đang ở giai đoạn thiết kế theo quy trình AI-DLC; chưa có m
 
 | Tài liệu | Nội dung |
 |---|---|
-| [docs/](docs/README.md) | Bảng 40 use case, đặc tả use case chính, ERD, screen flow, business flow, context diagram |
+| [docs/](docs/README.md) | Bảng 39 use case, đặc tả use case chính, ERD, screen flow, business flow, context diagram |
 | [Requirements](aidlc-docs/inception/requirements/requirements.md) | Yêu cầu chức năng và phi chức năng |
 | [User stories](aidlc-docs/inception/user-stories/stories.md) | 49 story MVP và ma trận story ↔ use case |
 | [Application design](aidlc-docs/inception/application-design/unit-of-work.md) | 16 unit, phụ thuộc và story map |

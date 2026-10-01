@@ -51,6 +51,6 @@
 |---|---|---|
 | BR-U15-50 | Sổ điểm lớp chỉ gồm publication `GRADED`: hàng = Student, cột = lượt phát hành; ô = điểm lượt nộp cuối "x / tổng" và trạng thái (chưa nộp, trễ, chờ chấm, đã chốt, đã công bố). Không đưa kết quả `PRACTICE` hoặc điểm AI luyện tập vào sổ điểm/xuất bảng điểm. **Không tính điểm tổng.** | FR-030, US-GRD-004 S2 |
 | BR-U15-51 | Người học: danh sách bài của mình với điểm đã công bố và phản hồi. | US-GRD-004 S1 |
-| BR-U15-52 | Lịch sử điểm (ai, khi nào, trước/sau, lý do) xem được bởi giảng viên lớp và ADMIN. | UC 36 |
+| BR-U15-52 | Lịch sử điểm (ai, khi nào, trước/sau, lý do) xem được bởi giảng viên lớp và ADMIN. | UC 35 |
 | BR-U15-53 | Audit: chọn phương thức chấm, chấp nhận/ghi đè AI, chốt, công bố, sửa điểm, truy cập trái phép. | FR-014 |
 | BR-U15-54 | Xin gia hạn cá nhân, phúc khảo điểm và kiểm tra tương đồng bài nộp nằm ngoài phạm vi dự án, không thiết kế hoặc triển khai. | Quyết định phạm vi 2026-09-25 |

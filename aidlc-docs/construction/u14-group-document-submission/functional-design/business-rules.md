@@ -4,7 +4,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U14-01 | Bài nhóm là bài `DOCUMENT` làm nhóm; khi publication mở, mỗi nhóm của lớp (U12) có một tài liệu nhóm cho publication đó, dựng từ khung: mỗi heading `workSection` thành một mục chính `TEACHER`, block còn lại là phần chung khóa. | Câu 4, 5; UC 28 |
+| BR-U14-01 | Bài nhóm là bài `DOCUMENT` làm nhóm; khi publication mở, mỗi nhóm của lớp (U12) có một tài liệu nhóm cho publication đó, dựng từ khung: mỗi heading `workSection` thành một mục chính `TEACHER`, block còn lại là phần chung khóa. | Câu 4, 5; UC 27 |
 | BR-U14-02 | Chỉ trưởng nhóm thêm mục chi tiết `GROUP` (tiêu đề + vị trí) dưới một mục chính, sửa tiêu đề, đổi thứ tự trong cùng mục chính, và xóa mục `GROUP` khi mục đang `OPEN` và rỗng. Mục `TEACHER` không xóa, đổi tên hay di chuyển. | UC 16, thay đổi 2026-10-01 |
 | BR-U14-03 | Chỉ thành viên của nhóm (U12) và giảng viên lớp xem tài liệu nhóm; nhóm khác không thấy. | SEC-002 |
 | BR-U14-04 | Mọi thao tác sửa chỉ khi publication còn nhận bài (U08) và chưa qua hạn cuối nhận bài. | FR-007 |

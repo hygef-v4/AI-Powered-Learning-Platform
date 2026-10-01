@@ -6,7 +6,7 @@
 |---|---|---|
 | NFR-U13-01 | Đề xuất 10 câu hỏi hoàn tất ≤ 60 s (p90) khi Gemini bình thường. | NFR-003 |
 | NFR-U13-02 | Đề xuất chấm một bài tài liệu ≤ 20 trang ≤ 120 s (p90). | NFR-003 |
-| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 30 |
+| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 29 |
 | NFR-U13-04 | Chấm code (`GRADE`) 50 test ≤ 2 phút; 100 bài nộp dồn cuối hạn xử lý hết ≤ 30 phút. | NFR-003 |
 | NFR-U13-05 | Worker chạy tối đa 3 job AI và 2 job chạy code cùng lúc (cấu hình). | Tài nguyên VPS |
 

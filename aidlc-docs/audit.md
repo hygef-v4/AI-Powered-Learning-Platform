@@ -2960,3 +2960,28 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization; no stage advanced.
 
 ---
+
+## Manage Templates and merge AI assignment drafting into Manage Assignments
+**Timestamp**: 2026-10-01T11:00:00Z
+**User Input**: "-Sửa lại UC22 thành manage template (cho phép tạo template thủ công bằng tay hoặc tạo bằng AI và chỉnh sửa lại, sửa và xoá các template đã tạo)
+-Gộp UC21 vào UC28"
+**AI Response**: "Updated docs/use-case-table.md only. Merged UC21 Create Assignment with AI into Manage Assignments (teacher AI draft from class content with source review, edit, accept or discard). Replaced Create Template with AI with Manage Templates (Subject Manager views, creates manually or with AI, edits, updates and deletes own templates; deleting does not change class copies). Renumbered to 39 use cases: Manage Templates is UC 21, Manage Assignments is UC 27 and former UC 23-40 are now 22-39; updated the intro, merged-ID map (Manage Assignments adds previous 32) and legacy-code map (UC-AIG-01 -> 27). Other documents still use the 40-case numbering."
+**Context**: Documentation-only use-case table revision; specifications, flows, requirements, stories and designs remain to be synchronized.
+
+---
+
+## Synchronize all documents with the 39-case table
+**Timestamp**: 2026-10-01T11:30:00Z
+**User Input**: "đồng bộ lại toàn bộ tài liệu theo bảng mới"
+**AI Response**: "Renumbered UC references in 49 docs, Inception and Construction files (old 21 -> 27, old 22 -> 21, old 23-40 -> 22-39), keeping audit.md and aidlc-state history entries unchanged. Content updates: use-case-specifications section 3 is now the AI draft flow of UC 27 Manage Assignments; business-flow and screen-flow reference UC 21 Manage Templates (create manually or with AI, edit, delete) and drop the duplicate AI-assignment codes; stories matrix (21 Manage Templates: US-AIG-002, US-ASM-009; 27 adds US-AIG-001) and US-ASM-009 story text plus Scenario 3 template deletion; requirements FR-027 and change notes; story map and unit-of-work: U10 owns UC 21, U13 owns UC 22, 26 and supplies AI drafts for UC 21, 27; U10 BR-U10-01/06/07/40, F1, entities, frontend (create, AI draft, delete) and code plan; U13 plan and entities; README, ERD and plan counts 40 -> 39; aidlc-state current stage and history. Nothing committed."
+**Context**: Documentation synchronization with docs/use-case-table.md; U10 and U13 code plans need re-approval.
+
+---
+
+## Commit 39-case synchronization
+**Timestamp**: 2026-10-01T11:40:00Z
+**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
+**AI Response**: "Committed the use-case table change and the full documentation synchronization locally without pushing."
+**Context**: Version control only; no content changes.
+
+---

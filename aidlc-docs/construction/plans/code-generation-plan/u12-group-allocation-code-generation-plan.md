@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-001, US-GRP-002, US-GRP-003. **Use case**: UC 9, UC 15, UC 28.
+- **Story**: US-GRP-001, US-GRP-002, US-GRP-003. **Use case**: UC 9, UC 15, UC 27.
 - **Thay đổi 2026-10-01**: nhóm thuộc lớp, quản lý trong danh sách sinh viên của lớp, có chia ngẫu nhiên, không có dùng lại nhóm; tài liệu nhóm chuyển sang bảng `group_documents` của U14. Plan cần duyệt lại.
 - **Thiết kế nguồn**: `construction/u12-group-allocation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo: `../demo_do_an/docs/ai-dlc/PLAN-bai-tap-nhom.md` (chia ngẫu nhiên, đổi leader).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.

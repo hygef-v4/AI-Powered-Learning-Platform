@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010. **Use case**: UC 28. Simulation Exam đã rút; tên thư mục cũ giữ để ổn định liên kết.
+- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010; nhận bản nháp AI của US-AIG-002. **Use case**: UC 21 (chủ trì), UC 27. Simulation Exam đã rút; tên thư mục cũ giữ để ổn định liên kết.
 - **Thiết kế nguồn**: `construction/u10-template-copy-simulation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -23,7 +23,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `BankCopyPort` | U06 | Dùng thật (sao chép cấp lớp → lớp) |
 | `AssignmentQueryPort`, `AssignmentService`, `AssignmentExtensionPort`, `PublishDialog` | U08 | Dùng thật; U08 cần có `ownerType`, version, `createDraftFrom`; ghi lineage qua `AssignmentExtensionPort` |
 | `TypeConfigPort.copy` | U09 | Dùng thật |
-| `AiDraftPort` | U13 (`C`) | Chưa có U13: ẩn nút "Nhờ AI tạo câu hỏi" trong trình soạn template; U13 thay bằng bản thật |
+| `AiDraftPort` | U13 (`C`) | Chưa có U13: ẩn nút "Nhờ AI tạo template" trong trình soạn template; U13 thay bằng bản thật |
 
 ### Dữ liệu U10 sở hữu
 
@@ -55,7 +55,7 @@ PostgreSQL `template_releases` và cột lineage của `assignments` (U08 tạo 
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain `TemplateRelease`, `AssignmentLineage`, `AssignmentDiff`; port `BankCopyPort`.
-- [ ] **Bước 3** - `TemplateService`: phát hành/rút template (F1, BR-U10-01…04).
+- [ ] **Bước 3** - `TemplateService`: tạo thủ công hoặc nhận bản nháp AI, phát hành/rút, xoá template (F1, BR-U10-01…04, 06, 07).
 - [ ] **Bước 4** - `ScopeGuard` và `AssignmentCopier` (template → lớp, lớp → lớp; sao chép câu/rubric cấp lớp; `TypeConfigPort.copy`; lineage; một transaction) (F2, F3, P1, BR-U10-05, 10…14).
 - [ ] **Bước 5** - `AssignmentDiffer` (F4, P2, BR-U10-20…22).
 - [ ] **Bước 6** - Kiểm invariants khi copy: bản nháp mới giữ `gradingMode` hợp lệ, không copy lịch, attempt, submission hoặc grade; test cho copy template và copy giữa lớp.
@@ -74,12 +74,12 @@ PostgreSQL `template_releases` và cột lineage của `assignments` (U08 tạo 
 
 - [ ] **Bước 14** - `/contracts/openapi/u10-template-copy.yaml`.
 - [ ] **Bước 15** - Controller + DTO + validation.
-- [ ] **Bước 16** - Test MockMvc: Teacher không dạy lớp đích bị `404`; Teacher thường không phát hành template; Student không copy bài.
+- [ ] **Bước 16** - Test MockMvc: Teacher không dạy lớp đích bị `404`; Teacher thường không tạo/phát hành/xoá template; Chủ nhiệm môn không xoá template người khác tạo; Student không copy bài.
 - [ ] **Bước 17** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 18** - `TemplateListPage`, `CopyFromTemplateDialog`, `CopyToClassDialog`.
+- [ ] **Bước 18** - `TemplateListPage` (tạo thủ công/AI, sửa, xoá), `CopyFromTemplateDialog`, `CopyToClassDialog`.
 - [ ] **Bước 19** - `VersionHistoryPanel`, `AssignmentDiffView`.
 - [ ] **Bước 20** - Hiển thị nguồn template/version và lineage trên `VersionHistoryPanel`.
 - [ ] **Bước 21** - Test frontend: diff đánh dấu đúng loại thay đổi và bản copy không mang lịch/lượt/điểm.
@@ -94,9 +94,10 @@ PostgreSQL `template_releases` và cột lineage của `assignments` (U08 tạo 
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-008 (UC 28) | 5, 19 |
-| US-ASM-009 (UC 28) | 3, 4, 18 |
-| US-ASM-010 (UC 28) | 4, 18 |
+| US-ASM-008 (UC 27) | 5, 19 |
+| US-ASM-009 (UC 21, UC 27) | 3, 4, 16, 18 |
+| US-AIG-002 (UC 21, nhận bản nháp AI) | 3, 18 |
+| US-ASM-010 (UC 27) | 4, 18 |
 
 ## 5. Ngoài phạm vi
 

@@ -1,6 +1,6 @@
 # U02 Audit, Job & Event - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 39. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; unit không có bảng outbox.
+Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 38. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; unit không có bảng outbox.
 
 ## 1. Tổng quan
 

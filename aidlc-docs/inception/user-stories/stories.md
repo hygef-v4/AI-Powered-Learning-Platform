@@ -13,7 +13,7 @@
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
 - Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
 - Từ 2026-10-01, nhóm thuộc lớp và được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên); trưởng nhóm thêm/giao mục chi tiết; tài liệu nhóm vào review khi mọi mục xong rồi trưởng nhóm mới nộp.
-- Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi của mọi dạng bài nằm trong ngân hàng câu hỏi có version và được quản lý trong UC 24–28 theo dạng bài, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
+- Từ 2026-09-30, danh mục use case gộp còn 40 use case (từ 2026-10-01 còn 39: UC Create Assignment with AI gộp vào Manage Assignments, Create Template with AI thành Manage Templates) trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi của mọi dạng bài nằm trong ngân hàng câu hỏi có version và được quản lý trong UC 23–27 theo dạng bài, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
 
 ## 2. Miền Identity and Access
 
@@ -879,7 +879,7 @@
 
 ### US-ASM-009 - Phát hành và sử dụng template đề cấp môn
 
-**Story**: Là Chủ nhiệm môn, tôi muốn phát hành template đề có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
+**Story**: Là Chủ nhiệm môn, tôi muốn tạo template đề thủ công hoặc từ bản nháp AI (US-AIG-002), sửa, xoá template mình đã tạo và phát hành template có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
 
 **Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -896,6 +896,12 @@
 - **Given** giảng viên không phụ trách lớp đích hoặc cố sửa trực tiếp template chỉ đọc
 - **When** yêu cầu được gửi
 - **Then** hệ thống từ chối phía server và giữ nguyên template
+
+#### Scenario 3 - Xoá template
+
+- **Given** Chủ nhiệm môn của môn có template do mình tạo, kể cả template đã có bản copy ở lớp
+- **When** Chủ nhiệm môn xoá template
+- **Then** template biến khỏi danh sách và không copy thêm được; các bài lớp đã copy, lineage và audit giữ nguyên
 
 ### US-ASM-010 - Copy assignment và rubric giữa các lớp
 
@@ -1119,7 +1125,7 @@
 
 #### Scenario 2 - Phân bố lớp ẩn danh
 
-- **Given** giảng viên đã bật hiển thị phân bố điểm ẩn danh cho lớp (UC 36) và lớp đủ điều kiện riêng tư
+- **Given** giảng viên đã bật hiển thị phân bố điểm ẩn danh cho lớp (UC 35) và lớp đủ điều kiện riêng tư
 - **When** người học xem phân bố điểm
 - **Then** dữ liệu được tổng hợp/ẩn danh và không suy ra danh tính hoặc điểm của người học khác
 
@@ -1294,7 +1300,7 @@
 
 ## 14. Ma trận story ↔ use case
 
-Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi story thuộc ít nhất một use case; một use case gộp có thể gồm nhiều story.
+Mã use case theo [bảng 39 use case](../../../docs/use-case-table.md). Mỗi story thuộc ít nhất một use case; một use case gộp có thể gồm nhiều story.
 
 | ID | Use Case | Stories |
 |---|---|---|
@@ -1318,26 +1324,25 @@ Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi s
 | 18 | View Learning Overview | US-RPT-002 |
 | 19 | Access Enrolled Class | US-LRN-001 |
 | 20 | Manage Rubrics | US-QBK-001 |
-| 21 | Create Assignment with AI | US-AIG-001 |
-| 22 | Create Template with AI | US-AIG-002 |
-| 23 | Manage AI Service | US-AIG-003 |
-| 24 | Manage Text Essay | US-QBK-002, US-ASM-007 |
-| 25 | Manage Quiz | US-QBK-002, US-ASM-006 |
-| 26 | Manage Diagram Essay | US-QBK-002, US-ASM-004 |
-| 27 | Manage Code Lab | US-QBK-002, US-ASM-005 |
-| 28 | Manage Assignments | US-QBK-002, US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
-| 29 | View Assigned Work | US-ASM-003 |
-| 30 | Submit Assignment | US-ASM-003, US-ASM-004, US-ASM-005, US-GRD-001 |
-| 31 | Review Attempts | US-ASM-003 |
-| 32 | Review Submissions | US-GRD-003 |
-| 33 | Grade Submissions | US-GRD-002, US-GRD-003 |
-| 34 | Finalize Grades | US-GRD-003, US-GRD-005 |
-| 35 | View Grades | US-GRD-004 |
-| 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-002, US-RPT-003 |
-| 37 | Buy AI Credits | US-PAY-001, US-PAY-002 |
-| 38 | View Notifications | US-NTF-001 |
-| 39 | View Audit Log | US-AUD-001 |
-| 40 | Grade Practice with AI | US-ASM-012 |
+| 21 | Manage Templates | US-AIG-002, US-ASM-009 |
+| 22 | Manage AI Service | US-AIG-003 |
+| 23 | Manage Text Essay | US-QBK-002, US-ASM-007 |
+| 24 | Manage Quiz | US-QBK-002, US-ASM-006 |
+| 25 | Manage Diagram Essay | US-QBK-002, US-ASM-004 |
+| 26 | Manage Code Lab | US-QBK-002, US-ASM-005 |
+| 27 | Manage Assignments | US-QBK-002, US-GRP-003, US-AIG-001, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
+| 28 | View Assigned Work | US-ASM-003 |
+| 29 | Submit Assignment | US-ASM-003, US-ASM-004, US-ASM-005, US-GRD-001 |
+| 30 | Review Attempts | US-ASM-003 |
+| 31 | Review Submissions | US-GRD-003 |
+| 32 | Grade Submissions | US-GRD-002, US-GRD-003 |
+| 33 | Finalize Grades | US-GRD-003, US-GRD-005 |
+| 34 | View Grades | US-GRD-004 |
+| 35 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-002, US-RPT-003 |
+| 36 | Buy AI Credits | US-PAY-001, US-PAY-002 |
+| 37 | View Notifications | US-NTF-001 |
+| 38 | View Audit Log | US-AUD-001 |
+| 39 | Grade Practice with AI | US-ASM-012 |
 
 ## 15. Ràng buộc phi chức năng và kỹ thuật downstream
 

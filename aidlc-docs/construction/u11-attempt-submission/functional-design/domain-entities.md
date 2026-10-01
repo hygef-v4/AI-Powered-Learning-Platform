@@ -1,6 +1,6 @@
 # U11 Attempt & Submission - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 29, UC 30, UC 31, UC 40.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 28, UC 29, UC 30, UC 39.
 
 ## 1. Tổng quan
 

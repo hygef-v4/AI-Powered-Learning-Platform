@@ -1,6 +1,6 @@
 # U14 Group Document & Submission - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-003`…`005`; UC 16, UC 28.
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-003`…`005`; UC 16, UC 27.
 
 ## 1. Tổng quan
 

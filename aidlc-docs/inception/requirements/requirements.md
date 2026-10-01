@@ -10,8 +10,9 @@
 - **Mức độ chi tiết**: Comprehensive
 - **Mục tiêu**: Xây dựng MVP nền tảng học tập ứng dụng AI đồng thời duy trì bộ tài liệu và checkpoint AI-DLC có thể tái sử dụng
 - **Thay đổi đã được xác nhận (2026-09-29)**: Đổi mã vai trò `LEARNER`/`INSTRUCTOR` thành `STUDENT`/`TEACHER`; cho Student mua credit để chấm AI bài luyện tập dạng Text Essay hoặc Diagram Essay; phân loại assignment theo hình đính kèm và câu trả lời làm rõ, đồng thời bỏ Simulation Exam.
-- **Thay đổi đã được xác nhận (2026-10-01)**: Nhóm thuộc lớp, được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên, không có dùng lại nhóm) và dùng chung cho mọi bài nhóm của lớp. Giảng viên chuẩn bị các mục chính của bài nhóm; trưởng nhóm thêm/sửa mục chi tiết và giao mục cho thành viên. Khi mọi mục xong, tài liệu nhóm vào trạng thái review để cả nhóm xem lại rồi trưởng nhóm mới nộp. Quản lý gói credit và mức tặng hằng tháng thuộc UC 23 Manage AI Service; giảng viên bật phân bố điểm ẩn danh trong UC 36 Monitor Submissions. Ngân hàng câu hỏi có version chứa câu hỏi của mọi dạng bài (Text Essay, trắc nghiệm, Diagram Essay, Code Lab và khung tài liệu có mục chính cho bài nhóm); câu hỏi được tạo, tìm, nhập hàng loạt và dùng lại trong UC 24–28 theo đúng dạng bài. Chủ nhiệm môn được xuất bảng điểm của môn mình phụ trách (UC 36).
-- **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 25 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên. Ngày 2026-10-01 phạm vi ngân hàng được mở cho mọi dạng bài (UC 24–28).
+- **Thay đổi đã được xác nhận (2026-10-01)**: Nhóm thuộc lớp, được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên, không có dùng lại nhóm) và dùng chung cho mọi bài nhóm của lớp. Giảng viên chuẩn bị các mục chính của bài nhóm; trưởng nhóm thêm/sửa mục chi tiết và giao mục cho thành viên. Khi mọi mục xong, tài liệu nhóm vào trạng thái review để cả nhóm xem lại rồi trưởng nhóm mới nộp. Quản lý gói credit và mức tặng hằng tháng thuộc UC 22 Manage AI Service; giảng viên bật phân bố điểm ẩn danh trong UC 35 Monitor Submissions. Ngân hàng câu hỏi có version chứa câu hỏi của mọi dạng bài (Text Essay, trắc nghiệm, Diagram Essay, Code Lab và khung tài liệu có mục chính cho bài nhóm); câu hỏi được tạo, tìm, nhập hàng loạt và dùng lại trong UC 23–27 theo đúng dạng bài. Chủ nhiệm môn được xuất bảng điểm của môn mình phụ trách (UC 35).
+- **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 24 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên. Ngày 2026-10-01 phạm vi ngân hàng được mở cho mọi dạng bài (UC 23–27).
+- **Thay đổi đã được xác nhận (2026-10-01, danh mục 39 use case)**: Use case tạo bài bằng AI của giảng viên gộp vào UC 27 Manage Assignments; use case tạo template bằng AI thành UC 21 Manage Templates, nơi Chủ nhiệm môn tạo template thủ công hoặc bằng AI rồi chỉnh sửa, sửa và xoá template đã tạo (FR-006, FR-027).
 
 ## 2. Bối cảnh và phạm vi
 
@@ -182,7 +183,7 @@ Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/m
 
 ### FR-016 - Ngân hàng rubric và câu hỏi
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Rubric được quản lý tại UC 20 Manage Rubrics; ngân hàng câu hỏi chứa câu hỏi của mọi dạng bài: Text Essay (`ESSAY`), trắc nghiệm một/nhiều đáp án (`MCQ_SINGLE`, `MCQ_MULTI`), Diagram Essay (`DOCUMENT`), Code Lab (`CODE`) và khung tài liệu có mục chính cho bài nhóm (`DOCUMENT` có mục việc). Câu hỏi được tạo, sửa, tìm, nhập hàng loạt từ file và dùng lại trong chức năng quản lý của dạng bài tương ứng (UC 24 Manage Text Essay, UC 25 Manage Quiz, UC 26 Manage Diagram Essay, UC 27 Manage Code Lab, UC 28 Manage Assignments cho bài nhóm), không có use case ngân hàng câu hỏi riêng. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Rubric được quản lý tại UC 20 Manage Rubrics; ngân hàng câu hỏi chứa câu hỏi của mọi dạng bài: Text Essay (`ESSAY`), trắc nghiệm một/nhiều đáp án (`MCQ_SINGLE`, `MCQ_MULTI`), Diagram Essay (`DOCUMENT`), Code Lab (`CODE`) và khung tài liệu có mục chính cho bài nhóm (`DOCUMENT` có mục việc). Câu hỏi được tạo, sửa, tìm, nhập hàng loạt từ file và dùng lại trong chức năng quản lý của dạng bài tương ứng (UC 23 Manage Text Essay, UC 24 Manage Quiz, UC 25 Manage Diagram Essay, UC 26 Manage Code Lab, UC 27 Manage Assignments cho bài nhóm), không có use case ngân hàng câu hỏi riêng. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
 
 **Tiêu chí chấp nhận:**
 
@@ -215,7 +216,7 @@ Quản trị viên phải có thể cấu hình model được phép, quota, gi�
 
 Mỗi lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của tài khoản chịu phí theo token sử dụng. Embedding học liệu chạy nền tính cho người tải/phát hành học liệu; embedding truy xuất tính cho người yêu cầu AI. Nếu hệ thống hết hạn mức AI, trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối; thiếu credit cá nhân được báo riêng.
 
-Quản trị viên quản lý gói credit AI (tên, giá, số credit, bật/ẩn; gói đã có giao dịch không bị xóa) và mức credit tặng hằng tháng cho Teacher, Subject Manager và Administrator (UC 23). Student không được tặng credit. Đổi mức tặng có hiệu lực từ lần đặt lại kế tiếp; đổi giá gói không ảnh hưởng giao dịch đã tạo.
+Quản trị viên quản lý gói credit AI (tên, giá, số credit, bật/ẩn; gói đã có giao dịch không bị xóa) và mức credit tặng hằng tháng cho Teacher, Subject Manager và Administrator (UC 22). Student không được tặng credit. Đổi mức tặng có hiệu lực từ lần đặt lại kế tiếp; đổi giá gói không ảnh hưởng giao dịch đã tạo.
 
 ### FR-022 - Tự ghi danh bằng mã mời lớp
 
@@ -227,7 +228,7 @@ MVP cho phép giảng viên đăng thông báo tới lớp mình dạy; thành v
 
 ### FR-024 - Dashboard cá nhân và xuất bảng điểm
 
-MVP cung cấp dashboard cho người học gồm lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái bài nộp và điểm đã công bố của chính mình (UC 18); phân bố lớp chỉ hiển thị khi lớp cho phép và đủ điều kiện ẩn danh. Giảng viên của lớp, Chủ nhiệm môn của môn được phân công và quản trị viên có quyền xuất bảng điểm CSV hoặc XLSX theo lớp/bài (UC 36); kiểm phạm vi trước khi tạo tệp, ghi rõ mục chưa nộp/chưa chốt và không tự tính điểm tổng theo hệ số. Phân tích chất lượng câu hỏi và báo cáo thống kê độ lệch giữa điểm AI đề xuất với điểm chốt nằm ngoài phạm vi. Bước AI đề xuất và giảng viên chốt từng bài vẫn thuộc MVP (FR-008).
+MVP cung cấp dashboard cho người học gồm lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái bài nộp và điểm đã công bố của chính mình (UC 18); phân bố lớp chỉ hiển thị khi lớp cho phép và đủ điều kiện ẩn danh. Giảng viên của lớp, Chủ nhiệm môn của môn được phân công và quản trị viên có quyền xuất bảng điểm CSV hoặc XLSX theo lớp/bài (UC 35); kiểm phạm vi trước khi tạo tệp, ghi rõ mục chưa nộp/chưa chốt và không tự tính điểm tổng theo hệ số. Phân tích chất lượng câu hỏi và báo cáo thống kê độ lệch giữa điểm AI đề xuất với điểm chốt nằm ngoài phạm vi. Bước AI đề xuất và giảng viên chốt từng bài vẫn thuộc MVP (FR-008).
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -259,7 +260,7 @@ Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giản
 
 ### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
 
-Chủ nhiệm môn phải có thể phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
+Chủ nhiệm môn phải có thể tạo template đề cấp môn thủ công hoặc từ bản nháp AI (FR-006), chỉnh sửa, xoá template mình đã tạo và phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
 
 **Tiêu chí chấp nhận:**
 
@@ -267,6 +268,7 @@ Chủ nhiệm môn phải có thể phát hành một template đề chỉ đọ
 - Bản copy thuộc lớp đích và độc lập với template nguồn; cập nhật template không tự ghi đè bản đã copy.
 - Hệ thống lưu `source template/version`, người copy, lớp đích và thời gian để truy vết.
 - Bản copy không mang theo lịch phát hành, attempt, bài nộp hoặc điểm từ nguồn.
+- Xoá template làm template biến khỏi danh sách và không copy thêm được; bài lớp đã copy, lineage và audit được giữ nguyên.
 
 ### FR-028 - Sao chép assignment và rubric giữa các lớp
 
@@ -466,8 +468,9 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 | Change request và câu trả lời ngày 2026-09-29 | FR-002, FR-007, FR-008, FR-010, FR-017, FR-029 (rút), FR-030; đổi role, năm dạng assignment, Practice/Graded, Student mua credit và chấm AI bài luyện tập |
-| Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 23, 25, 28, 36 |
-| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case; từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 24–28. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
+| Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 22, 24, 27, 35 |
+| Gộp danh mục use case ngày 2026-10-01 | FR-006, FR-027; bảng 39 use case: AI soạn bài thuộc UC 27 Manage Assignments, UC 21 Manage Templates gồm tạo thủ công/AI, sửa, xoá template |
+| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case (nay 39); từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 23–27. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline
 

@@ -5,7 +5,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-01 | Tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN` có ví credit của chính mình, được xem gói, số dư, sổ cái và mua credit. Backend kiểm quyền chủ ví trước khi tạo giao dịch/link PayOS. Credit đã mua chỉ thuộc tài khoản mua. | FR-010, quyết định 2026-09-29 |
-| BR-U07-02 | Chỉ ADMIN tạo/sửa/ẩn gói; không xóa gói đã có giao dịch. Đổi giá chỉ áp dụng giao dịch mới. | Câu 3, UC 23 |
+| BR-U07-02 | Chỉ ADMIN tạo/sửa/ẩn gói; không xóa gói đã có giao dịch. Đổi giá chỉ áp dụng giao dịch mới. | Câu 3, UC 22 |
 | BR-U07-03 | Giao dịch chụp `credits`, `amountVnd` lúc tạo. | Câu 3 |
 | BR-U07-04 | Tạo giao dịch cần `Idempotency-Key`; gửi lại cùng khóa trả lại giao dịch cũ nếu còn `PENDING`. | SEC-007 |
 | BR-U07-05 | Mỗi tài khoản tối đa 3 giao dịch `PENDING` cùng lúc. | Thiết kế |
@@ -54,4 +54,4 @@
 |---|---|---|
 | BR-U07-53 | Sau khi `PAID`, phát event `payment.paid` (sau commit) để U16 báo trong app. | U16 |
 | BR-U07-51 | Audit: tạo/sửa/ẩn gói, `PAID`, webhook `REJECTED`, đối soát tự động, đổi mức tặng tháng. | FR-014, SEC-005 |
-| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, sổ cái và lịch sử giao dịch của chính mình. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC 37 |
+| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, sổ cái và lịch sử giao dịch của chính mình. Không ai xem giao dịch/sổ cái của tài khoản khác. | UC 36 |

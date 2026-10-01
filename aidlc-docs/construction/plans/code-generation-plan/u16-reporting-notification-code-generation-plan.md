@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story trong phạm vi**: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. **Use case**: UC 18, UC 36, UC 38. Báo cáo độ lệch điểm AI nằm ngoài phạm vi.
+- **Story trong phạm vi**: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. **Use case**: UC 18, UC 35, UC 37. Báo cáo độ lệch điểm AI nằm ngoài phạm vi.
 - **Thiết kế nguồn**: `construction/u16-reporting-notification/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -106,10 +106,10 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 
 | Nguồn | Bước |
 |---|---|
-| US-NTF-001 (UC 38) | 2, 3, 4, 5, 19, 20 |
-| US-RPT-001 (UC 36) | 6, 7, 20 |
+| US-NTF-001 (UC 37) | 2, 3, 4, 5, 19, 20 |
+| US-RPT-001 (UC 35) | 6, 7, 20 |
 | US-RPT-002 (UC 18) | 7a, 15-17, 20 |
-| US-RPT-003 (UC 36) | 7a, 15-17, 20 |
+| US-RPT-003 (UC 35) | 7a, 15-17, 20 |
 
 ## 5. Ngoài phạm vi
 
