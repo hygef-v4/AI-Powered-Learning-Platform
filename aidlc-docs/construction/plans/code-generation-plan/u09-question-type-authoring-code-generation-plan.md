@@ -5,7 +5,7 @@
 ## 1. Bối cảnh
 
 - **Story**: US-ASM-004 (soạn khung, kiểm/xuất tài liệu; phần làm bài ở U11), US-ASM-006, US-ASM-007. Đề chung cấp môn đã loại.
-- **Use case**: UC-ASM-02, 03, 04.
+- **Use case**: UC 24, UC 25, UC 26.
 - **Thiết kế nguồn**: `construction/u09-question-type-authoring/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`DocxOutlineImporter`, `DocxExporter`, `DiagramRasterizer`, `DiagramContentCleaner`, `EssayDocument`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -104,10 +104,10 @@ PostgreSQL: cột `type_config`, `skeleton` của `assignments` (U08 tạo bản
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-004 S1, S2 (UC-ASM-04) | 2, 3, 4, 6, 7, 21, 22 |
+| US-ASM-004 S1, S2 (UC 26) | 2, 3, 4, 6, 7, 21, 22 |
 | US-ASM-004 S3 | 9 |
-| US-ASM-006 (UC-ASM-03) | 5, 23 |
-| US-ASM-007 (UC-ASM-02) | 4, 5, 23 |
+| US-ASM-006 (UC 25) | 5, 23 |
+| US-ASM-007 (UC 24) | 4, 5, 23 |
 | Xuất DOCX | 8 |
 
 ## 5. Ngoài phạm vi

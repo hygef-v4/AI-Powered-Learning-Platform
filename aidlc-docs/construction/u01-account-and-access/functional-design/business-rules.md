@@ -9,13 +9,13 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
 | BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình `u01.allowedEmailDomains` (`app_settings`); sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
-| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC-IAM-06, UC-IAM-08 |
+| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 6, UC 7 |
 
 ## 2. Kích hoạt
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC-IAM-08, UC-IAM-10 |
+| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 7 |
 | BR-U01-11 | OTP kích hoạt chỉ được gửi khi người dùng tự yêu cầu từ liên kết "Kích hoạt tài khoản lần đầu". Admin không có thao tác gửi OTP. | US-IAM-001, Câu hỏi FU3 |
 | BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING`. | US-IAM-001 S2 |
 | BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa OTP, ghi audit. Không tự đăng nhập; người dùng đăng nhập lại. | US-IAM-001 S1 |
@@ -62,7 +62,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-50 | Người dùng chỉ sửa hồ sơ của chính mình: tên hiển thị, số điện thoại, ảnh đại diện. | US-IAM-004, Câu 11 |
-| BR-U01-51 | Không tự sửa email, role, trạng thái. | UC-IAM-06 |
+| BR-U01-51 | Không tự sửa email, role, trạng thái. | UC 6 |
 | BR-U01-52 | Ảnh đại diện chỉ nhận tham chiếu `AvatarPort` xác nhận là của chính người dùng và đúng mục đích `AVATAR`. Khi U03 chưa sẵn sàng, chức năng đổi ảnh tắt; phần hồ sơ còn lại vẫn chạy. | Câu 12 |
 | BR-U01-53 | Số điện thoại là dữ liệu cá nhân: không ghi log, chỉ chủ tài khoản và admin xem. | US-IAM-004 S1 |
 | BR-U01-54 | Định danh người khác trong request sửa hồ sơ bị từ chối phía server, không lộ dữ liệu đối tượng. | US-IAM-004 S2 |
@@ -85,9 +85,9 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-70 | Chỉ có 3 trạng thái: `PENDING`, `ACTIVE`, `DISABLED`. | Câu 10 |
-| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC-IAM-08 |
+| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 7 |
 | BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING` nếu chưa. | Câu 10 |
-| BR-U01-73 | Không có thao tác xóa tài khoản. | UC-IAM-08 |
+| BR-U01-73 | Không có thao tác xóa tài khoản. | UC 7 |
 
 ## 9. Nhập hàng loạt
 

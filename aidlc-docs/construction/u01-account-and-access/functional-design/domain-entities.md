@@ -1,6 +1,6 @@
 # U01 Account & Access - Domain Entities
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC hiện hành `UC-IAM-01`…`06`, `08`, `10` (các mã CRUD đã gộp không dùng lại).
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 1–7 theo `docs/use-case-table.md`.
 
 ## 1. Tổng quan
 

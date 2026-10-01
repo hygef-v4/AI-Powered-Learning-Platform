@@ -6,18 +6,18 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 | Luồng | Use case | Story |
 |---|---|---|
-| F1 Yêu cầu kích hoạt | UC-IAM-01 | US-IAM-001 |
-| F2 Hoàn tất kích hoạt | UC-IAM-01 | US-IAM-001 |
-| F3 Đăng nhập | UC-IAM-02 | US-IAM-002 |
-| F4 Đăng xuất | UC-IAM-03 | US-IAM-002 |
-| F5 Quên mật khẩu | UC-IAM-04 | US-IAM-003 |
-| F6 Đổi mật khẩu | UC-IAM-05 | US-IAM-006 |
-| F7 Xem và sửa hồ sơ | UC-IAM-06 | US-IAM-004 |
-| F8 Xem tài khoản | UC-IAM-08 | US-IAM-007 |
-| F9 Tạo tài khoản | UC-IAM-08 | US-IAM-007 |
-| F10 Nhập hàng loạt | UC-IAM-10 | US-IAM-007 |
-| F11 Đổi role | UC-IAM-08 | US-IAM-005, US-IAM-007 |
-| F12 Vô hiệu hóa và mở lại | UC-IAM-08 | US-IAM-007 |
+| F1 Yêu cầu kích hoạt | UC 1 | US-IAM-001 |
+| F2 Hoàn tất kích hoạt | UC 1 | US-IAM-001 |
+| F3 Đăng nhập | UC 2 | US-IAM-002 |
+| F4 Đăng xuất | UC 3 | US-IAM-002 |
+| F5 Quên mật khẩu | UC 4 | US-IAM-003 |
+| F6 Đổi mật khẩu | UC 5 | US-IAM-006 |
+| F7 Xem và sửa hồ sơ | UC 6 | US-IAM-004 |
+| F8 Xem tài khoản | UC 7 | US-IAM-007 |
+| F9 Tạo tài khoản | UC 7 | US-IAM-007 |
+| F10 Nhập hàng loạt | UC 7 | US-IAM-007 |
+| F11 Đổi role | UC 7 | US-IAM-005, US-IAM-007 |
+| F12 Vô hiệu hóa và mở lại | UC 7 | US-IAM-007 |
 | F13 Quyết định phân quyền | Mọi UC có kiểm quyền | US-IAM-005 |
 
 ## 2. Luồng kích hoạt

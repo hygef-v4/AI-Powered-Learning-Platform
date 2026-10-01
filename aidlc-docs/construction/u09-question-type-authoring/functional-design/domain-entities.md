@@ -1,6 +1,6 @@
 # U09 Question Type Authoring - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; `UC-ASM-02`, `03`, `04`, `06`.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`, `006`, `007`; UC 24, UC 25, UC 26, UC 28.
 
 ## 1. Tổng quan
 

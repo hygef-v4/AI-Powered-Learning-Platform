@@ -5,7 +5,7 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-QBK-001, US-QBK-002 (Scenario 1; Scenario 2, 3 thuộc U08/U11). Phân tích chất lượng câu hỏi không thuộc MVP.
-- **Use case**: UC-QBK-01, UC-QBK-02.
+- **Use case**: UC 20, UC 25.
 - **Thiết kế nguồn**: `construction/u06-rubric-question-bank/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -103,8 +103,8 @@ PostgreSQL `bank_items`.
 
 | Nguồn | Bước |
 |---|---|
-| US-QBK-001 (UC-QBK-01) | 2, 3, 6, 7, 22 |
-| US-QBK-002 S1 (UC-QBK-02) | 2, 3, 6, 8, 9, 10, 21-24 |
+| US-QBK-001 (UC 20) | 2, 3, 6, 7, 22 |
+| US-QBK-002 S1 (UC 25) | 2, 3, 6, 8, 9, 10, 21-24 |
 | Contract cho U08-U15 | 4, 7, 8, 23 |
 
 ## 5. Ngoài phạm vi

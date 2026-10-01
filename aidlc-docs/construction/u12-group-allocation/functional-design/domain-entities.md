@@ -1,6 +1,6 @@
 # U12 Group & Allocation - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; `UC-GRP-01`…`04`.
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 9, UC 15.
 
 ## 1. Tổng quan
 

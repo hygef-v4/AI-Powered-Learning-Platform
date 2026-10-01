@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC-GRP-05..07.
+- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16, UC 28.
 - **Thiết kế nguồn**: `construction/u14-group-document-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -104,9 +104,9 @@ PostgreSQL: cột tài liệu nhóm trong `student_groups` (qua `GroupDocumentSt
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-003 (UC-GRP-05) | 3, 4, 22 |
-| US-GRP-004 (UC-GRP-06) | 4, 5, 20, 21 |
-| US-GRP-005 (UC-GRP-07) | 5, 7, 20 |
+| US-GRP-003 (UC 28) | 3, 4, 22 |
+| US-GRP-004 (UC 16) | 4, 5, 20, 21 |
+| US-GRP-005 (UC 16) | 5, 7, 20 |
 | US-GRP-006 (dữ liệu cho U15) | 8 |
 
 ## 5. Ngoài phạm vi

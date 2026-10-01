@@ -10,7 +10,7 @@
 | BR-U02-04 | Ghi audit lỗi (ví dụ DB lỗi) thì thao tác nghiệp vụ cùng transaction cũng rollback; audit bắt buộc không bị mất âm thầm. | Quyết định 2026-09-26 |
 | BR-U02-05 | `beforeData`/`afterData` không chứa mật khẩu, OTP, token, số điện thoại; unit gọi chịu trách nhiệm che, U02 từ chối lưu nếu phát hiện khóa thuộc danh sách cấm (`password`, `otp`, `token`, `secret`, `phone`). | SEC-005 |
 | BR-U02-06 | Audit giữ vĩnh viễn. | Câu 6 |
-| BR-U02-07 | Chỉ `ADMIN` được tra cứu audit; mọi lần tra cứu cũng được audit. | Câu 7, UC-OPS-02 |
+| BR-U02-07 | Chỉ `ADMIN` được tra cứu audit; mọi lần tra cứu cũng được audit. | Câu 7, UC 39 |
 | BR-U02-08 | Tra cứu lọc theo actor, action, resource, result, khoảng thời gian; sắp xếp mới nhất trước; mỗi trang tối đa 100 bản ghi. | US-AUD-001 S1 |
 
 ## 2. Job

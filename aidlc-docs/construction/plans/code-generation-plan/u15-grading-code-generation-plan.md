@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story trong phạm vi**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004. **Use case**: UC-GRD-01..07, UC-GRP-08. Gia hạn/phúc khảo/kiểm tra tương đồng nằm ngoài phạm vi.
+- **Story trong phạm vi**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004. **Use case**: UC 32, UC 33, UC 34, UC 35, UC 36, UC 17. Gia hạn/phúc khảo/kiểm tra tương đồng nằm ngoài phạm vi.
 - **Thiết kế nguồn**: `construction/u15-grading/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -107,11 +107,11 @@ PostgreSQL `grades`, `grade_history`; cột `grades_released_by`, `grades_releas
 | Nguồn | Bước |
 |---|---|
 | US-GRD-001 | 3, 13 |
-| US-GRD-002 (UC-GRD-01, 03) | 4, 20 |
-| US-GRD-003 (UC-GRD-02, 04) | 2, 4, 5, 20 |
-| US-GRD-004 (UC-GRD-06, 07) | 7, 22 |
-| US-GRD-005 (UC-GRD-05) | 5, 19 |
-| US-GRP-004 S3, US-GRP-006 (UC-GRP-08) | 6, 21 |
+| US-GRD-002 (UC 32, UC 33) | 4, 20 |
+| US-GRD-003 (UC 33, UC 34) | 2, 4, 5, 20 |
+| US-GRD-004 (UC 35, UC 36) | 7, 22 |
+| US-GRD-005 (UC 34) | 5, 19 |
+| US-GRP-004 S3, US-GRP-006 (UC 17) | 6, 21 |
 
 ## 5. Ngoài phạm vi
 

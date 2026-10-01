@@ -1,6 +1,6 @@
 # U10 Template & Copy - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`; `UC-ASM-15`…`17`. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`; UC 28. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
 
 ## 1. Tổng quan
 

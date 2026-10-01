@@ -5,7 +5,7 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Catalog chỉ chứa story MVP.
-- **Use case**: UC-CNT-01, 02, 03, 06, 07, 08; hỗ trợ UC-CNT-04 (qua U04).
+- **Use case**: UC 11, UC 13, UC 14; hỗ trợ UC 12 (qua U04).
 - **Thiết kế nguồn**: `construction/u05-content-material-rag/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -105,7 +105,7 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 - [ ] **Bước 25** - `ChapterList`, `LessonEditor`, `VersionBar`, `ItemList` với `TextItemEditor`, `FileItemEditor`, `YoutubeItemEditor`.
 - [ ] **Bước 26** - `IngestionStatusBadge` (poll, Thử lại) và `SubjectLessonPicker`.
 - [ ] **Bước 27** - `LessonViewer` dùng chung (`TextItemView` với `rehype-sanitize`, `FileItemView`, `YoutubeItemView`); gắn vào `StudentClassPage` của U04.
-- [ ] **Bước 27a** - Trang thông báo/hỏi đáp lớp, biểu mẫu đăng bài và trả lời, trạng thái ẩn; người dùng chỉ thấy lớp được phép truy cập (UC-CNT-06, 07).
+- [ ] **Bước 27a** - Trang thông báo/hỏi đáp lớp, biểu mẫu đăng bài và trả lời, trạng thái ẩn; người dùng chỉ thấy lớp được phép truy cập (UC 13, UC 14).
 - [ ] **Bước 28** - Test frontend: markdown có script bị lọc, URL YouTube sai bị chặn, poll dừng ở trạng thái cuối; badge phân biệt "Hệ thống đang bận" và "Không đủ credit AI".
 - [ ] **Bước 29** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -118,11 +118,11 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 
 | Nguồn | Bước |
 |---|---|
-| US-CNT-001 (UC-CNT-01) | 5, 6, 9, 10, 11, 25, 26 |
-| US-CNT-002 (UC-CNT-02, 03) | 5, 6, 7, 25 |
-| US-CNT-005 (UC-CNT-08) | 3, 6, 10, 18 |
-| US-CNT-004 (UC-CNT-06, 07) | 13a, 16, 21-23, 27a |
-| UC-CNT-04 (qua U04) | 12, 27 |
+| US-CNT-001 (UC 11) | 5, 6, 9, 10, 11, 25, 26 |
+| US-CNT-002 (UC 11) | 5, 6, 7, 25 |
+| US-CNT-005 (UC 11) | 3, 6, 10, 18 |
+| US-CNT-004 (UC 13, UC 14) | 13a, 16, 21-23, 27a |
+| UC 12 (qua U04) | 12, 27 |
 | RAG cho U13 | 8, 13, 17, 19 |
 
 ## 5. Ngoài phạm vi

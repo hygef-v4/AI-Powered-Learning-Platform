@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-001, US-GRP-002, US-GRP-003. **Use case**: UC-GRP-01..05, UC-ASM-06.
+- **Story**: US-GRP-001, US-GRP-002, US-GRP-003. **Use case**: UC 9, UC 15, UC 28.
 - **Thiết kế nguồn**: `construction/u12-group-allocation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo: `../demo_do_an/docs/ai-dlc/PLAN-bai-tap-nhom.md` (chia ngẫu nhiên, đổi leader).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -94,8 +94,8 @@ PostgreSQL `student_groups` (U14 thêm cột tài liệu nhóm), `group_members`
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-001 (UC-GRP-01..03) | 1, 2, 3, 16 |
-| US-GRP-002 (UC-GRP-04, 05) | 4, 17, 18 |
+| US-GRP-001 (UC 9) | 1, 2, 3, 16 |
+| US-GRP-002 (UC 9, UC 15) | 4, 17, 18 |
 | US-GRP-003 (bộ nhóm của bài nhóm) | 1, 2, 5, 17 |
 
 ## 5. Ngoài phạm vi

@@ -1,6 +1,6 @@
 # U16 Reporting & Notification - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-NTF-001`, `US-RPT-001`…`003`; `UC-OPS-01`, `UC-RPT-01`…`03`.
+Thiết kế độc lập công nghệ. Truy vết: `US-NTF-001`, `US-RPT-001`…`003`; UC 18, UC 36, UC 38.
 
 ## 1. Tổng quan
 

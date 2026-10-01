@@ -1,6 +1,6 @@
 # U06 Rubric & Question Bank - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; `UC-QBK-01`, `02`.
+Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 25.
 
 ## 1. Tổng quan
 

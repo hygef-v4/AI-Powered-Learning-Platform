@@ -17,7 +17,7 @@
 | BR-U05-11 | Sửa bài đã phát hành tạo bản `DRAFT` mới (sao chép mục); học viên vẫn thấy bản `PUBLISHED` tới khi bản mới được phát hành. | Câu 5 |
 | BR-U05-12 | Phát hành: bản `DRAFT` → `PUBLISHED`, bản cũ → `SUPERSEDED`; audit. Phiên bản cũ giữ nguyên để trích dẫn AI còn đúng. | Câu 5, FR-014 |
 | BR-U05-13 | Phát hành cần ít nhất 1 mục; mục `FILE`/`YOUTUBE` **không** cần xử lý RAG xong mới phát hành. | Thiết kế |
-| BR-U05-14 | Không xóa chương/bài; chỉ lưu trữ (ẩn với học viên, không còn trong RAG). | UC-CNT-01 |
+| BR-U05-14 | Không xóa chương/bài; chỉ lưu trữ (ẩn với học viên, không còn trong RAG). | UC 11 |
 | BR-U05-15 | Lớp liên kết bài cấp môn luôn hiển thị bản `PUBLISHED` mới nhất. | Câu 12 |
 
 ## 3. Mục nội dung
@@ -59,8 +59,8 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-60 | Giảng viên được phân công lớp (hoặc ADMIN) đăng thông báo cho lớp `OPEN`; chỉ thành viên đang ghi danh và người quản lý có quyền đọc. Chủ nhiệm môn chỉ đăng khi cũng là giảng viên lớp. | US-CNT-004, UC-CNT-06 |
-| BR-U05-61 | Người học `ACTIVE` trong lớp `OPEN` và giảng viên lớp được đặt câu hỏi hoặc trả lời trong lớp đó; ngoài phạm vi trả `404`. | US-CNT-004, UC-CNT-07 |
+| BR-U05-60 | Giảng viên được phân công lớp (hoặc ADMIN) đăng thông báo cho lớp `OPEN`; chỉ thành viên đang ghi danh và người quản lý có quyền đọc. Chủ nhiệm môn chỉ đăng khi cũng là giảng viên lớp. | US-CNT-004, UC 13 |
+| BR-U05-61 | Người học `ACTIVE` trong lớp `OPEN` và giảng viên lớp được đặt câu hỏi hoặc trả lời trong lớp đó; ngoài phạm vi trả `404`. | US-CNT-004, UC 14 |
 | BR-U05-62 | Tiêu đề ≤ 200 ký tự, nội dung ≤ 5 000 ký tự; lưu văn bản/markdown đã làm sạch, không HTML thô hoặc tệp đính kèm trong MVP. | SEC-003 |
 | BR-U05-63 | Bài đăng giữ tác giả và thời điểm; sau đăng chỉ giảng viên lớp/ADMIN được ẩn nội dung vi phạm với lý do, không xóa cứng. Người dùng không sửa bài đã gửi. | FR-014, SEC-005 |
 | BR-U05-64 | Sau commit phát sự kiện: thông báo lớp mới tới người học đang ghi danh; câu hỏi mới tới giảng viên lớp; câu trả lời tới người hỏi và giảng viên lớp, trừ người vừa đăng. U16 tạo thông báo trong app, không gửi email cho các loại này. | US-CNT-004, U16 |

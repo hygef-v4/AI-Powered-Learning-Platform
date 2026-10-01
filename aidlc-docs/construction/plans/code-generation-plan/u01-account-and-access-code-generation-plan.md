@@ -7,7 +7,7 @@
 ## 1. Bối cảnh
 
 - **Loại dự án**: greenfield, workspace root `AI-Powered-Learning-Platform/`. Code **không** nằm trong `aidlc-docs/`.
-- **Story**: US-IAM-001…007. **Use case hiện hành**: UC-IAM-01…06, 08, 10 (mã 07, 09, 11, 12 đã gộp). Phần "gán phạm vi môn" của US-IAM-005 thuộc U04 (BR-U04-01); U01 chỉ đổi role.
+- **Story**: US-IAM-001…007. **Use case hiện hành**: UC 1–7 theo `docs/use-case-table.md`. Phần "gán phạm vi môn" của US-IAM-005 thuộc U04 (BR-U04-01); U01 chỉ đổi role.
 - **Thiết kế nguồn**: `construction/u01-account-and-access/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Thứ tự**: U01 và U02 cùng wave 1, code song song. U03, U04 code sau U01.

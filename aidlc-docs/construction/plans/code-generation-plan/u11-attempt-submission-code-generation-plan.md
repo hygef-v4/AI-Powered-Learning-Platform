@@ -4,7 +4,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-003, US-ASM-012; phần làm bài của US-ASM-004. **Use case**: UC-ASM-09..14, UC-ASM-19 (UC-ASM-13 phần chạy code ở U13).
+- **Story**: US-ASM-003, US-ASM-012; phần làm bài của US-ASM-004. **Use case**: UC 29, UC 30, UC 31, UC 40 (UC 30 phần chạy code ở U13).
 - **Thiết kế nguồn**: `construction/u11-attempt-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -104,12 +104,12 @@ PostgreSQL `submissions` (gồm nội dung bài làm); Redis `ratelimit:attempt-
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-003 S1 (UC-ASM-10..13) | 3, 4, 6, 21 |
+| US-ASM-003 S1 (UC 30) | 3, 4, 6, 21 |
 | US-ASM-003 S2 | 3, 6, 18 |
 | US-ASM-003 S3 | 8, 18 |
 | US-ASM-003 S4 | 5, 22 |
-| US-ASM-003 S5 (UC-ASM-14) | 8, 20 |
-| UC-ASM-09 | 8, 20 |
+| US-ASM-003 S5 (UC 31) | 8, 20 |
+| UC 29 | 8, 20 |
 | US-ASM-012 (Practice và AI theo credit) | 2, 3, 6, 8, 12, 14; phối hợp U07/U13 |
 
 ## 5. Ngoài phạm vi

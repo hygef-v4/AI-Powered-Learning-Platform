@@ -1,6 +1,6 @@
 # U07 Payment & AI Credit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`; `UC-PAY-01`.
+Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`; UC 37.
 
 ## 1. Tổng quan
 

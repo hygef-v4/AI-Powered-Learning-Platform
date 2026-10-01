@@ -1,6 +1,6 @@
 # U04 Subject, Class, Enrollment & Learning Access - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CAT-005`, `US-LRN-001`; `UC-CAT-01`…`13`, `UC-LRN-01`, `02`, `UC-CNT-04`.
+Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CAT-005`, `US-LRN-001`; UC 8, UC 9, UC 10, UC 12, UC 18, UC 19.
 
 ## 1. Tổng quan
 

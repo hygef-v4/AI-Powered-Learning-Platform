@@ -33,6 +33,6 @@
 2. Sửa sau khi ngừng giao/đóng: kiểm BR-U08-43, 44 → tạo version `DRAFT` mới, gọi `TypeConfigPort.copy`; audit.
 
 ## F8 - Truy vấn
-1. Giảng viên: danh sách bài theo lớp/trạng thái, chi tiết, publication (UC-ASM-01).
+1. Giảng viên: danh sách bài theo lớp/trạng thái, chi tiết, publication (UC 28).
 2. Người học: bài của lớp theo BR-U08-03 (dùng bởi U11 và dashboard U04).
 3. `isSubmissionOpen(publicationId, now)` trả `ON_TIME`, `LATE`, `CLOSED` cho U11.

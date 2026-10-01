@@ -26,5 +26,5 @@ app/learn/attempts/[id]/
 | `DrawioPanel` | Nhận `save` từ iframe: `xml` + `svg`; đóng panel | - |
 | `DocxImportDialog` | Hiện "Nhận được N sơ đồ, M ảnh giữ nguyên, K phần bị bỏ" | `POST /api/v1/assignments/{id}/skeleton:import-docx` |
 | `StudentDocxImportDialog` | Chỉ hiện với lượt DOCUMENT đang làm; xem trước rồi xác nhận thêm block bằng luồng lưu nháp U11 và báo xung đột bản nháp | `POST /api/v1/attempts/{id}/docx:preview`, `PUT /api/v1/attempts/{id}/content` |
-| `SkeletonEditor` | Lưu khung; với bài `GROUP`, bật/tắt "Mục việc" trên heading để U14 dựng mục `TEACHER` (UC-GRP-05) | `PUT /api/v1/assignments/{id}/skeleton` |
+| `SkeletonEditor` | Lưu khung; với bài `GROUP`, bật/tắt "Mục việc" trên heading để U14 dựng mục `TEACHER` (UC 28) | `PUT /api/v1/assignments/{id}/skeleton` |
 | Nút "Tải DOCX" | Ở trang bài làm (U11) và trang chấm (U15) | `GET` của U11/U15 → `DocxExportPort` |

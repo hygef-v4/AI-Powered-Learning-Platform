@@ -70,3 +70,45 @@ Previous IDs refer to the 64-case draft that this table replaces.
 | 34 | Finalize Grades | 54, 55 |
 | 36 | Monitor Submissions | 57, 58, 60 |
 | — | Removed: View/Create/Update Questions | 31 |
+
+## Legacy UC codes
+
+Design files written before 2026-09-29 used domain codes such as `UC-IAM-01`. Live Inception and Construction documents now use the IDs above; this table keeps older plans, question files and `audit.md` traceable.
+
+| Legacy codes | New ID |
+|---|---|
+| UC-IAM-01 … UC-IAM-05 | 1 … 5 |
+| UC-IAM-06, 07 | 6 |
+| UC-IAM-08 … UC-IAM-12 | 7 |
+| UC-CAT-01 … UC-CAT-04 | 8 |
+| UC-CAT-05 … UC-CAT-12; UC-GRP-01, 02, 04 | 9 |
+| UC-CAT-13 | 10 |
+| UC-CNT-01, 02, 03, 08 | 11 |
+| UC-CNT-04 | 12 |
+| UC-CNT-06 | 13 |
+| UC-CNT-07 | 14 |
+| UC-GRP-03 | 15 |
+| UC-GRP-06, 07 | 16 |
+| UC-GRP-08 | 17 |
+| UC-LRN-01, UC-RPT-02 | 18 |
+| UC-LRN-02 | 19 |
+| UC-QBK-01 | 20 |
+| UC-AIG-01, 02, 03 | 21, 22, 23 |
+| UC-ASM-02 | 24 |
+| UC-QBK-02, UC-ASM-03 | 25 |
+| UC-ASM-04 | 26 |
+| UC-ASM-05 | 27 |
+| UC-ASM-01, 06, 07, 15, 16, 17; UC-GRP-05 | 28 |
+| UC-ASM-09 | 29 |
+| UC-ASM-10 … UC-ASM-13 | 30 |
+| UC-ASM-14 | 31 |
+| UC-GRD-01 | 32 |
+| UC-GRD-02, 03 | 33 |
+| UC-GRD-04, 05 | 34 |
+| UC-GRD-06 | 35 |
+| UC-GRD-07, UC-RPT-01, UC-RPT-03 | 36 |
+| UC-PAY-01 | 37 |
+| UC-OPS-01 | 38 |
+| UC-OPS-02 | 39 |
+| UC-ASM-19 | 40 |
+| UC-ASM-18 (Simulation Exam), UC-PAY-02 (manual reconciliation) | Retired, not reused |

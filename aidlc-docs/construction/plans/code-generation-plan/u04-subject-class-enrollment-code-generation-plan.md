@@ -5,7 +5,7 @@
 ## 1. Bối cảnh
 
 - **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005 (bản đơn giản), US-LRN-001.
-- **Use case hiện hành**: UC-CAT-01, 04..10, 13; UC-LRN-01, UC-LRN-02, UC-CNT-04. Mã 02, 03 đã gộp vào 01; 11, 12 đã gộp vào 10.
+- **Use case hiện hành**: UC 8, UC 9, UC 10, UC 12, UC 18, UC 19.
 - **Thiết kế nguồn**: `construction/u04-subject-class-enrollment/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -104,11 +104,11 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 
 | Nguồn | Bước |
 |---|---|
-| US-CAT-001 (UC-CAT-01, 04, 06, 08) | 4, 5, 22, 23 |
-| US-CAT-002 (UC-CAT-05, 07, 09) | 5, 11, 23 |
-| US-CAT-003 (UC-CAT-10) | 6, 7, 16, 24 |
-| US-CAT-005 (UC-CAT-13) | 8, 25 |
-| US-LRN-001 (UC-LRN-01, 02, UC-CNT-04) | 9, 25 |
+| US-CAT-001 (UC 8, UC 9) | 4, 5, 22, 23 |
+| US-CAT-002 (UC 9) | 5, 11, 23 |
+| US-CAT-003 (UC 9) | 6, 7, 16, 24 |
+| US-CAT-005 (UC 10) | 8, 25 |
+| US-LRN-001 (UC 18, UC 19, UC 12) | 9, 25 |
 | Contract cho U01 và U05-U15 | 3, 10 |
 
 ## 5. Ngoài phạm vi

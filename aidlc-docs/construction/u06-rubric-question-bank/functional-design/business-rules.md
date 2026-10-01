@@ -16,7 +16,7 @@
 | BR-U06-10 | Mỗi dòng là một phiên bản bất biến sau khi `ACTIVE`; chỉ `DRAFT` được sửa. | FR-016 |
 | BR-U06-11 | Sửa bản `ACTIVE` tạo phiên bản `DRAFT` mới (`versionNo + 1`); mỗi `stableKey` tối đa 1 `DRAFT`. | FR-016, US-QBK-001 S2 |
 | BR-U06-12 | Bài của U08 lưu `id` phiên bản; phiên bản mới **không** tự áp dụng và **không** báo cho bài đang dùng bản cũ. | Câu 7 |
-| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `stableKey`; người quản lý xem được lịch sử phiên bản. | UC-QBK-02 |
+| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `stableKey`; người quản lý xem được lịch sử phiên bản. | UC 25 |
 | BR-U06-14 | `RETIRED`: không còn trong tìm kiếm để thêm vào bài mới; bài đang dùng vẫn đọc được. | Thiết kế |
 | BR-U06-15 | Chỉ xóa được bản `DRAFT` chưa từng kích hoạt; bản đã `ACTIVE` không bao giờ xóa. | US-QBK-001 S2 |
 | BR-U06-16 | Sửa câu hỏi của bài đang giao (US-QBK-002 S2, S3: snapshot lượt làm, gia hạn, làm lại) thuộc U08/U11, không thuộc U06. | Câu 7 |
