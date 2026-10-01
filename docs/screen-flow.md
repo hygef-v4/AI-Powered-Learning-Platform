@@ -126,9 +126,9 @@ flowchart LR
 
 ## Màn hình theo unit và UC
 
-Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.drawio): 49 màn hình, 38 popup và 5 menu điều hướng (không tính chú giải màu). Sơ đồ chỉ ghi tên ô; unit và UC tra ở bảng này. Mã UC theo [bảng use case hiện hành](use-case-table.md); unit theo [story map](../aidlc-docs/inception/application-design/unit-of-work-story-map.md). Bảng xếp theo nhóm màu của chú giải "Role-Based Screen Classification": Common, Student, Admin, Subject Manager, Teacher và Class Screens.
+Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.drawio): 50 màn hình, 38 popup và 5 menu điều hướng (không tính chú giải màu). Sơ đồ chỉ ghi tên ô; unit và UC tra ở bảng này. Mã UC theo [bảng use case hiện hành](use-case-table.md); unit theo [story map](../aidlc-docs/inception/application-design/unit-of-work-story-map.md). Bảng xếp theo nhóm màu của chú giải "Role-Based Screen Classification": Common, Student, Admin, Subject Manager, Teacher và Class Screens.
 
-- **Không có dashboard chung.** Đăng nhập xong U01 điều hướng theo vai trò tới trang đích (ghi `landing`): sinh viên → My Classes (kèm tổng quan học tập của UC 18), giảng viên và Chủ nhiệm môn → My Teaching Classes, quản trị viên → Account List. Navigation là thanh đầu trang của mọi vai trò, chứa Profile, AI Credit Purchase và Notification.
+- **Không có dashboard chung.** Đăng nhập xong U01 điều hướng theo vai trò tới trang đích (ghi `landing`): sinh viên → Dashboard (tổng quan học tập của UC 18: lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái nộp, điểm đã công bố), giảng viên và Chủ nhiệm môn → My Teaching Classes, quản trị viên → Account List. Navigation là thanh đầu trang của mọi vai trò, chứa Profile, AI Credit Purchase và Notification.
 - Chủ nhiệm môn thấy cả Teacher Menu (cùng link `/teaching`) và thêm Subject Manager Menu; trang cùng link chỉ vẽ một lần. Các màn hình nhóm Class Screens mở từ Class Detail của giảng viên.
 - Sơ đồ chỉ vẽ màn hình và popup **tạo, sửa dữ liệu** hoặc **tải file**. Các thao tác sau nằm trong màn hình đã vẽ, không có ô riêng: nhập mã mời (My Classes, UC 10); nhập tài khoản từ file (Account List, UC 7); nhập câu hỏi từ file và nhân bản (Question Bank, UC 24–28); copy template hoặc bài giữa lớp, phát hành và ngưng giao (Create Assignment, Assignment Detail, UC 28); AI soạn đề (Create Assignment, Create Template, UC 21–22); xem trước và nhập DOCX, chạy thử Code Lab (Attempt, UC 30); chấm bài nhóm, chốt và công bố điểm (Grading Detail, Grading Queue, UC 17, UC 34); cài đặt email thông báo (Notification, UC 38). Trang thanh toán PayOS là hệ thống ngoài, không vẽ thành ô.
 - Ô có nhiều unit: unit đầu dựng trang, unit sau cung cấp component nhúng (ví dụ `AiDraftDialog` của U13 trong trình soạn U08). Tên component chi tiết nằm trong `frontend-components.md` của từng unit.
@@ -165,7 +165,8 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U07 | Payment Result | Màn hình | Chung | AI Credit Purchase (sau PayOS) | UC 37 |
 | U16 | Notification | Màn hình | Chung | Navigation | UC 38 |
 | U01 | Student Menu | Menu (không phải màn hình) | Sinh viên | Sign In | - |
-| U04, U16 | My Classes (landing) | Màn hình | Sinh viên | Student Menu | UC 10 (nhập mã mời), UC 18, UC 19 |
+| U16 | Dashboard (landing) | Màn hình | Sinh viên | Student Menu | UC 18 |
+| U04 | My Classes | Màn hình | Sinh viên | Student Menu | UC 10 (nhập mã mời), UC 19 |
 | U04 | Class Detail | Màn hình | Sinh viên | My Classes | UC 19 |
 | U04, U05 | Lesson Detail | Màn hình | Sinh viên | Class Detail | UC 12 |
 | U05, U03 | Download Lesson | Popup | Sinh viên | Lesson Detail | UC 12 |

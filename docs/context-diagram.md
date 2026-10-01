@@ -23,7 +23,7 @@ flowchart LR
     judge["Judge0 · chạy code cô lập"]
     learner -->|"học, làm/nộp bài, xem điểm, mua credit chấm Practice"| web
     teacher -->|"lớp, học liệu, đề, nhóm, chấm điểm, mua credit"| web
-    manager -->|"học liệu, rubric, câu hỏi quiz, template cấp môn, mua credit"| web
+    manager -->|"học liệu, rubric, ngân hàng câu hỏi, template cấp môn, mua credit"| web
     admin -->|"tài khoản, dịch vụ AI và gói credit, mua credit, audit"| web
     backend -->|"AI theo yêu cầu và trừ credit người dùng"| ai
     worker -->|"embedding nguồn, caption có sẵn"| youtube

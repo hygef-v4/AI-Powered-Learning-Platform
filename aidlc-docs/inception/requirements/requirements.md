@@ -21,7 +21,7 @@ Nền tảng phục vụ một trường học hoặc trung tâm đào tạo. B�
 
 ### 2.2 Phạm vi MVP
 
-MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric và câu hỏi quiz có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, theo dõi trạng thái bài nộp và kết quả đánh giá, năm dạng assignment Code Lab, Text Essay, Diagram Essay, Group Assignment và Multiple-Choice Quiz với chế độ `GRADED`/`PRACTICE` theo từng dạng, tạo câu hỏi/bài tập bằng AI, chấm bài luyện tập Text Essay/Diagram Essay bằng credit của Student, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. Simulation Exam được bỏ khỏi MVP. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
+MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quyền, quản lý môn học/lớp học, nhóm học tập, bài nhóm là một tài liệu chung mà thành viên tự nhận và làm từng mục, kho học liệu và RAG cấp môn/bài giảng từ tài liệu hoặc YouTube, nội dung riêng của lớp, tải tài liệu, ngân hàng rubric và câu hỏi cho cả năm dạng bài có versioning, template đề cấp môn, sao chép assignment/rubric giữa các lớp của cùng giảng viên, theo dõi trạng thái bài nộp và kết quả đánh giá, năm dạng assignment Code Lab, Text Essay, Diagram Essay, Group Assignment và Multiple-Choice Quiz với chế độ `GRADED`/`PRACTICE` theo từng dạng, tạo câu hỏi/bài tập bằng AI, chấm bài luyện tập Text Essay/Diagram Essay bằng credit của Student, giám sát sử dụng AI, thanh toán mua credit AI và email/thông báo. Simulation Exam được bỏ khỏi MVP. MVP không lưu tiến độ hoàn thành hoặc vị trí học của từng bài. Sản phẩm là web desktop-first cho người học; giao diện mobile chỉ cần đáp ứng các thao tác đọc/cơ bản, không tối ưu canvas vẽ sơ đồ hoặc trải nghiệm làm bài phức tạp.
 
 ### 2.3 Ngoài phạm vi MVP
 
@@ -44,7 +44,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 |---|---|
 | Người học | Truy cập lớp học, học nội dung, làm bài, nhận phản hồi và xem kết quả/trạng thái bài nộp |
 | Giảng viên | Quản lý nội dung/lớp học, dùng AI tạo bài, duyệt kết quả và theo dõi người học |
-| Chủ nhiệm môn | Quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
+| Chủ nhiệm môn | Quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và template đề cấp môn; chỉ phát hành bài cho lớp mà chính họ là giảng viên |
 | Quản trị viên | Quản lý người dùng, vai trò, cấu hình nền tảng, thanh toán và audit |
 | Đơn vị đào tạo | Vận hành thử nghiệm ổn định, bảo vệ dữ liệu người học và đo hiệu quả MVP |
 | Nhóm phát triển | Quy trình AI-DLC rõ ràng, test tự động, container local và hướng dẫn triển khai |
@@ -304,7 +304,7 @@ Trong lớp được quản trị viên tạo và phân công, giảng viên nh�
 
 ### USCN-001A - Quản lý học liệu, ngân hàng và template cấp môn
 
-Chủ nhiệm môn quản lý kho học liệu/RAG, rubric, câu hỏi quiz và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
+Chủ nhiệm môn quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và template đề của môn được phân công, có thể dùng AI tạo bản nháp; giảng viên các lớp copy template thành bài của lớp. Không có đề chung giao thẳng cho mọi lớp; hệ thống bảo đảm phạm vi môn và ghi audit.
 
 ### USCN-002 - Học và nhận phản hồi
 

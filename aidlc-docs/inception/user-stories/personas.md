@@ -75,10 +75,11 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
 - Phát hành template có version để giảng viên copy thành bài của lớp.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
+- Theo dõi tiến độ nộp bài và xem/xuất bảng điểm CSV/XLSX của các lớp thuộc môn được phân công (UC 36); không chấm hoặc chốt điểm thay giảng viên.
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-004`, `US-IAM-006`, `US-CNT-001`, `US-CNT-005`, `US-QBK-001`, `US-QBK-002`, `US-AIG-002`, `US-ASM-004` đến `US-ASM-009`, `US-RPT-001`, `US-RPT-003`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 5. P-ADMIN - Quản trị viên
 

@@ -2912,3 +2912,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization and user-approved scope changes (Subject Manager export, full question bank).
 
 ---
+
+## Documentation consistency review (third pass)
+**Timestamp**: 2026-10-01T03:27:37Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit be9914e. Consistent: 49 stories in story-UC matrix, 40 UC names, ERD 46 tables vs domain entities, screen-flow table vs drawio (92/92 cells), event publishers vs U16 listeners, question bank across U06/U08/U09/U10/U13. Reported: SEC-006 wrongly removed from US-RPT-003 in the previous fix (SEC-006 is an in-scope requirement mapped to SECURITY-09/15); quiz-only bank wording left in requirements (lines 24, 47, 307), context-diagram and US-AIG-002; Subject Manager persona lacks gradebook export and US-RPT-003; student dashboard (UC 18) has its own U16 page but no drawio cell, and screen-flow.md maps it to My Classes. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply third review fixes
+**Timestamp**: 2026-10-01T03:31:19Z
+**User Input**: "sửa đi, mục 4  giữ trang dashboard riêng"
+**AI Response**: "Restored SEC-006 in US-RPT-003; replaced leftover quiz-only bank wording in requirements (lines 24, 47, 307), context-diagram and US-AIG-002; added gradebook export behavior and US-RPT-001/US-RPT-003 to the Subject Manager persona. Kept the separate student Dashboard (UC 18, U16 StudentResultDashboard) as the student landing page: added a Dashboard cell and edge from Student Menu in screen-flow.drawio and a matching row in screen-flow.md (50 screens, 38 popups, 5 menus; 93/93 cells match). aidlc-state updated. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---
