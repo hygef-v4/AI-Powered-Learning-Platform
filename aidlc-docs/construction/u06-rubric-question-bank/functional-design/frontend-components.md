@@ -2,12 +2,12 @@
 
 ```
 app/teaching/bank/                 BankPage (chọn phạm vi: môn hoặc lớp)
-  BankFilters                      loại, độ khó, tag, chương/bài, trạng thái, từ khóa
+  BankFilters                      dạng bài, loại câu, độ khó, tag, chương/bài, trạng thái, từ khóa
   BankItemTable                    tiêu đề, loại, phiên bản, trạng thái, hành động
   QuestionEditor
     McqEditor                      lựa chọn 2-6, chọn đáp án đúng
     EssayEditor
-    DocumentQuestionEditor         DocumentEditor (U09, chế độ soạn khung) + sơ đồ bắt buộc
+    DocumentQuestionEditor         DocumentEditor (U09, chế độ soạn khung) + sơ đồ bắt buộc; nút "Mục việc" trên heading (workSection) để dùng cho bài nhóm
     CodeEditor                     ngôn ngữ, code mẫu, bảng test case
     ClassificationFields           độ khó, tag, chương/bài (U05)
   RubricEditor                     tiêu chí → mục checklist + điểm, tổng tự tính

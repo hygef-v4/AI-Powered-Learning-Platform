@@ -29,7 +29,7 @@
 | BR-U14-20 | Người đang mở tài liệu nhóm nhận sự kiện: mục được thêm/sửa/giao/nhận/nhả/xong, đổi trạng thái tài liệu, bình luận, bản nộp. Cập nhật ≤ 2 giây. | Câu 3 |
 | BR-U14-21 | Realtime chỉ đẩy thay đổi đã "Xong" (không đồng bộ từng phím gõ); mỗi mục tại một thời điểm chỉ một người sửa nên không có xung đột soạn đồng thời. | Câu 1 |
 | BR-U14-22 | Mất kết nối thì client tải lại trạng thái đầy đủ khi kết nối lại. | REL-003 |
-| BR-U14-24 | Khi mọi mục lá đều `DONE`, tài liệu tự chuyển `IN_PROGRESS` → `REVIEW` và mọi thành viên được báo để cùng xem lại, bình luận. | UC 16, thay đổi 2026-10-01 |
+| BR-U14-24 | Khi mọi mục lá đều `DONE`, tài liệu tự chuyển `IN_PROGRESS` → `REVIEW`; sau commit phát `group.document-review` để U16 báo mọi thành viên cùng xem lại, bình luận. | UC 16, thay đổi 2026-10-01 |
 | BR-U14-25 | Trong `REVIEW`, nhận lại, giao lại hoặc thêm mục làm tài liệu về `IN_PROGRESS`; tài liệu chỉ quay lại `REVIEW` khi mọi mục lá lại `DONE`. | UC 16, thay đổi 2026-10-01 |
 
 ## 4. Nộp bài nhóm

@@ -73,7 +73,7 @@ stateDiagram-v2
 |---|---|---|
 | `GroupReadinessPort` | U08 khai báo (`C`) | Nhóm của lớp đủ điều kiện phát hành bài `GROUP` |
 | `GroupMembershipPort` | U14, U16 | `groupOf(studentId, classId)`, `groupsOf(classId)`, `members(groupId)`, `leaderOf(groupId)`, lịch sử thành viên |
-| Event `group.membership-changed`, `group.leader-changed` | U16 | Sau commit |
+| Event `group.membership-changed`, `group.leader-changed`, `group.leader-request-rejected` | U16 | Sau commit, chỉ cho thông báo |
 
 ### Port U12 dùng
 

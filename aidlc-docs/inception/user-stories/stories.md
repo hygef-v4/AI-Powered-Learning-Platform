@@ -13,7 +13,7 @@
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
 - Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
 - Từ 2026-10-01, nhóm thuộc lớp và được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên); trưởng nhóm thêm/giao mục chi tiết; tài liệu nhóm vào review khi mọi mục xong rồi trưởng nhóm mới nộp.
-- Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi quiz được quản lý trong UC 25 Manage Quiz, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
+- Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi của mọi dạng bài nằm trong ngân hàng câu hỏi có version và được quản lý trong UC 24–28 theo dạng bài, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
 
 ## 2. Miền Identity and Access
 
@@ -587,9 +587,9 @@
 - **When** người dùng sửa hoặc xóa
 - **Then** hệ thống tạo phiên bản mới hoặc chặn xóa để kết quả lịch sử không thay đổi
 
-### US-QBK-002 - Quản lý câu hỏi trong quiz
+### US-QBK-002 - Quản lý ngân hàng câu hỏi
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt và dùng lại câu hỏi khi quản lý quiz để tái sử dụng nội dung đánh giá có kiểm soát.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt và dùng lại câu hỏi của mọi dạng bài (Text Essay, trắc nghiệm, Diagram Essay, Code Lab, khung tài liệu bài nhóm) khi soạn bài để tái sử dụng nội dung đánh giá có kiểm soát.
 
 **Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -600,6 +600,12 @@
 - **Given** người dùng có quyền và câu hỏi/đáp án/cấu hình điểm hợp lệ
 - **When** người dùng tạo, sửa, tìm kiếm hoặc nhập tệp
 - **Then** câu hỏi được lưu đúng lớp/môn, kết quả nhập báo theo dòng và không tạo bản ghi lỗi
+
+#### Scenario 1a - Dùng lại câu hỏi đúng dạng bài
+
+- **Given** ngân hàng có câu hỏi `ACTIVE` thuộc nhiều dạng trong phạm vi người dùng
+- **When** người dùng thêm câu hỏi từ ngân hàng vào một bài Text Essay, quiz, Diagram Essay, Code Lab hoặc bài nhóm
+- **Then** hệ thống chỉ cho chọn câu hỏi khớp dạng bài (bài nhóm dùng khung tài liệu có ít nhất một mục chính), ghim đúng version đã chọn và không sao chép đáp án hoặc lời giải mẫu cho sinh viên
 
 #### Scenario 2 - Câu hỏi đã được dùng trong bài
 
@@ -1119,9 +1125,9 @@
 
 ### US-RPT-003 - Xuất bảng điểm
 
-**Story**: Là giảng viên hoặc quản trị viên có quyền, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
+**Story**: Là giảng viên, Chủ nhiệm môn hoặc quản trị viên có quyền, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
 
-**Truy vết**: FR-002, FR-009, FR-024, SEC-005, SEC-002, SEC-003, SEC-006.
+**Truy vết**: FR-002, FR-009, FR-024, SEC-005, SEC-002, SEC-003.
 
 **Acceptance criteria**
 
@@ -1315,11 +1321,11 @@ Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi s
 | 21 | Create Assignment with AI | US-AIG-001 |
 | 22 | Create Template with AI | US-AIG-002 |
 | 23 | Manage AI Service | US-AIG-003 |
-| 24 | Manage Text Essay | US-ASM-007 |
+| 24 | Manage Text Essay | US-QBK-002, US-ASM-007 |
 | 25 | Manage Quiz | US-QBK-002, US-ASM-006 |
-| 26 | Manage Diagram Essay | US-ASM-004 |
-| 27 | Manage Code Lab | US-ASM-005 |
-| 28 | Manage Assignments | US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
+| 26 | Manage Diagram Essay | US-QBK-002, US-ASM-004 |
+| 27 | Manage Code Lab | US-QBK-002, US-ASM-005 |
+| 28 | Manage Assignments | US-QBK-002, US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
 | 29 | View Assigned Work | US-ASM-003 |
 | 30 | Submit Assignment | US-ASM-003, US-ASM-004, US-ASM-005, US-GRD-001 |
 | 31 | Review Attempts | US-ASM-003 |

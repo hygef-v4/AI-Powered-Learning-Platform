@@ -273,7 +273,7 @@
         <mxCell id="h" parent="lane_2" vertex="1" value="Lưu snapshot&lt;br/&gt;bài nhóm" style="rounded=1;arcSize=12;html=1;whiteSpace=wrap;fillColor=#DDEBFF;strokeColor=#7DA9DB;strokeWidth=1.4;fontSize=12;fontColor=#1F2D3D;align=center;verticalAlign=middle;">
           <mxGeometry x="1755" y="35" width="185" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="i" parent="lane_0" vertex="1" value="Xem đóng góp;&lt;br/&gt;chấm thủ công" style="rounded=1;arcSize=12;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#82B386;strokeWidth=1.4;fontSize=12;fontColor=#1F2D3D;align=center;verticalAlign=middle;">
+        <mxCell id="i" parent="lane_0" vertex="1" value="Chấm tay tài liệu chung;&lt;br/&gt;đóng góp: tay hoặc AI đề xuất" style="rounded=1;arcSize=12;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#82B386;strokeWidth=1.4;fontSize=12;fontColor=#1F2D3D;align=center;verticalAlign=middle;">
           <mxGeometry x="1985" y="35" width="185" height="70" as="geometry" />
         </mxCell>
         <mxCell id="j" parent="lane_0" vertex="1" value="Chốt điểm cuối&lt;br/&gt;từng người" style="rounded=1;arcSize=12;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#82B386;strokeWidth=1.4;fontSize=12;fontColor=#1F2D3D;align=center;verticalAlign=middle;">
@@ -318,7 +318,7 @@
         <mxCell id="edge_11" parent="1" edge="1" source="j" target="k" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#44566B;strokeWidth=1.5;fontSize=11;fontColor=#34475D;labelBackgroundColor=#FFFFFF;">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="note" parent="1" vertex="1" value="Giảng viên xem phần đóng góp và tự quyết định điểm từng người; không có công thức tự động ghép điểm." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#455A70;">
+        <mxCell id="note" parent="1" vertex="1" value="Giảng viên tự chấm tài liệu chung; phần đóng góp có thể nhờ AI đề xuất. Giảng viên tự quyết định điểm từng người; không có công thức tự động ghép điểm." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#455A70;">
           <mxGeometry x="55" y="1113" width="2770" height="35" as="geometry" />
         </mxCell>
       </root>
@@ -434,7 +434,7 @@
         <mxCell id="edge_13" parent="1" edge="1" source="k" target="l" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#44566B;strokeWidth=1.5;fontSize=11;fontColor=#34475D;labelBackgroundColor=#FFFFFF;">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="note" parent="1" vertex="1" value="Chỉ giao dịch đã xác minh mới cộng credit. Lời gọi bị từ chối trước khi xử lý không tiêu credit. Sinh viên chỉ dùng credit cho AI chấm bài PRACTICE Text/Diagram Essay." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#455A70;">
+        <mxCell id="note" parent="1" vertex="1" value="Chỉ giao dịch đã xác minh mới cộng credit. Lời gọi bị từ chối trước khi xử lý không tiêu credit. Sinh viên chỉ dùng credit cho AI chấm bài PRACTICE Text/Diagram Essay. GV, CN môn và Admin được tặng credit hằng tháng theo mức quản trị viên đặt (UC 23); sinh viên không được tặng." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#455A70;">
           <mxGeometry x="55" y="1113" width="3230" height="35" as="geometry" />
         </mxCell>
       </root>

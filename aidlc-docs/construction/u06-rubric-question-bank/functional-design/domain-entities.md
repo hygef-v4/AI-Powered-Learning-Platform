@@ -1,6 +1,6 @@
 # U06 Rubric & Question Bank - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 25.
+Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 24–28.
 
 ## 1. Tổng quan
 
@@ -55,6 +55,20 @@ stateDiagram-v2
 
 Mọi câu có `defaultPoints` (> 0, tối đa 2 chữ số thập phân).
 
+### Dạng bài dùng được
+
+Ngân hàng giữ câu hỏi của cả năm dạng bài (thay đổi 2026-10-01). Dạng bài dùng được suy ra từ `questionType`, không lưu cột riêng:
+
+| Dạng bài (U08) | `questionType` | Use case |
+|---|---|---|
+| `TEXT_ESSAY` | `ESSAY` | UC 24 |
+| `MULTIPLE_CHOICE_QUIZ` | `MCQ_SINGLE`, `MCQ_MULTI` | UC 25 |
+| `DIAGRAM_ESSAY` | `DOCUMENT` | UC 26 |
+| `CODE_LAB` | `CODE` | UC 27 |
+| `GROUP_ASSIGNMENT` | `DOCUMENT` có `skeleton` chứa ít nhất một heading `workSection` (mục chính) | UC 28 |
+
+Một câu `DOCUMENT` có mục việc vẫn dùng được cho Diagram Essay; khi đó cờ `workSection` bị bỏ qua.
+
 ## 4. `RubricDefinition`
 
 ```text
@@ -72,7 +86,7 @@ Rubric
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `BankQueryPort` | U08, U09, U10, U13 | `getVersion(id)` (bản bất biến), `search(scope, filter)` chỉ trả `ACTIVE` |
+| `BankQueryPort` | U08, U09, U10, U13 | `getVersion(id)` (bản bất biến), `search(scope, filter)` chỉ trả `ACTIVE`; `filter` có dạng bài để chỉ trả câu khớp dạng (§3) |
 | `RubricPort` | U11, U15 | `getRubric(id)`, `score(rubricId, checkedItemIds)` |
 
 ### Port U06 dùng

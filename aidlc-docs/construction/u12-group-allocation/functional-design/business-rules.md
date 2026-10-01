@@ -36,5 +36,5 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U12-30 | Sinh viên thấy nhóm của mình trong lớp: tên nhóm, thành viên, trưởng nhóm và tài liệu nhóm của từng bài nhóm. Không thấy nhóm khác. | FR-025 |
-| BR-U12-31 | Thành viên rời nhóm, nhóm mới khi lớp có bài nhóm đang mở: báo U14 qua `GroupChangePort` trong cùng transaction (nhả khóa mục, tạo tài liệu nhóm). Event `GROUP_MEMBERSHIP_CHANGED`, `GROUP_LEADER_CHANGED` sau commit chỉ cho U16 báo trong app; quyền của trưởng nhóm U14 đọc trực tiếp qua `GroupMembershipPort`. | FR-011 |
+| BR-U12-31 | Thành viên rời nhóm, nhóm mới khi lớp có bài nhóm đang mở: báo U14 qua `GroupChangePort` trong cùng transaction (nhả khóa mục, tạo tài liệu nhóm). Event `group.membership-changed`, `group.leader-changed`, `group.leader-request-rejected` sau commit chỉ cho U16 báo trong app; quyền của trưởng nhóm U14 đọc trực tiếp qua `GroupMembershipPort`. | FR-011 |
 | BR-U12-32 | Audit: tạo/sửa/xóa nhóm, chia ngẫu nhiên, đổi trưởng nhóm, duyệt/từ chối yêu cầu. | FR-014 |

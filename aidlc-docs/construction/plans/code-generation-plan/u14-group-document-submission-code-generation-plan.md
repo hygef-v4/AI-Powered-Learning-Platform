@@ -25,7 +25,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật; U14 cài `PublicationLifecyclePort` của U08 |
 | `DocumentModelPort`, `DocxExportPort`, `DocumentEditor` | U09 | Dùng thật |
 | `GroupMembershipPort` | U12 | Dùng thật; U14 cài `GroupChangePort` của U12 |
-| U14 cung cấp `GroupSubmissionQueryPort` (U13, U15, U16), event `group.submitted` (U16); khai báo `GroupSubmittedPort` (U15 cài, adapter rỗng tới khi có U15) | cho U13, U15, U16 | Các unit đó dùng khi được code |
+| U14 cung cấp `GroupSubmissionQueryPort` (U13, U15, U16), event `group.document-review`, `group.submitted` (U16); khai báo `GroupSubmittedPort` (U15 cài, adapter rỗng tới khi có U15) | cho U13, U15, U16 | Các unit đó dùng khi được code |
 
 ### Dữ liệu U14 sở hữu
 

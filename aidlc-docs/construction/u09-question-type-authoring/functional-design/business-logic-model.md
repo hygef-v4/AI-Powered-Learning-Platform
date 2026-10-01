@@ -8,6 +8,7 @@
 1. Mở `DocumentEditor` chế độ khung; mọi block tạo ra là `TEACHER`.
 2. Thêm/sửa/xóa/sắp xếp block; sơ đồ mở Draw.io nhúng, lưu XML + SVG (BR-U09-35, 38).
 3. Lưu khung: kiểm `validateSkeleton`, tính `contentHash` từng block.
+4. Lấy khung từ ngân hàng (UC 26, UC 28): chọn câu `DOCUMENT` `ACTIVE` khớp dạng (BR-U06-28), sao khung và `requiredDiagrams` vào bài làm điểm xuất phát; giảng viên sửa tiếp, bản ngân hàng không đổi. Bài nhóm giữ các heading `workSection` làm mục chính.
 
 ## F3 - Nhập khung từ DOCX
 1. Upload DOCX (tạm, không lưu lâu) (BR-U09-40).

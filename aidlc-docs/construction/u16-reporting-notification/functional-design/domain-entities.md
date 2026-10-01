@@ -22,7 +22,7 @@ U16 **không** sở hữu: email OTP tài khoản (U01 qua U02), điểm/bài n�
 |---|---|---|
 | `id` | UUID | |
 | `recipientId` | UUID | |
-| `type` | enum | `ENROLLED`, `ASSIGNMENT_OPENED`, `DEADLINE_REMINDER`, `GRADE_PUBLISHED`, `GROUP_LEADER_CHANGED`, `GROUP_MEMBERSHIP_CHANGED`, `GROUP_SUBMITTED`, `PAYMENT_PAID`, `CLASS_ANNOUNCEMENT`, `CLASS_QUESTION`, `CLASS_ANSWER` |
+| `type` | enum | `ENROLLED`, `ASSIGNMENT_OPENED`, `DEADLINE_REMINDER`, `GRADE_PUBLISHED`, `GROUP_LEADER_CHANGED`, `GROUP_LEADER_REQUEST_REJECTED`, `GROUP_MEMBERSHIP_CHANGED`, `GROUP_DOCUMENT_REVIEW`, `GROUP_SUBMITTED`, `PAYMENT_PAID`, `CLASS_ANNOUNCEMENT`, `CLASS_QUESTION`, `CLASS_ANSWER` |
 | `title`, `body` | chuỗi | Không chứa điểm số, dữ liệu người khác |
 | `link` | chuỗi | Đường dẫn nội bộ |
 | `sourceEventId` | UUID | Unique theo `(sourceEventId, recipientId, type)` (chống trùng) |
@@ -92,9 +92,10 @@ Mỗi publication có một job U02 `DEADLINE_REMINDER` (`idempotencyKey` = `pub
 | `enrollment.activated` | U04 | `ENROLLED` (app + email) |
 | `assignment.opened` | U08 | `ASSIGNMENT_OPENED` cho người học của lớp (app + email); tạo job nhắc hạn |
 | `grade.published` | U15 | `GRADE_PUBLISHED` (app + email, không ghi điểm) |
-| `group.leader-changed`, `group.membership-changed` | U12 | App |
-| `group.document-review` | U14 | App cho thành viên nhóm: tài liệu đã vào review |
-| `group.submitted` | U14 | App cho thành viên nhóm |
+| `group.leader-changed`, `group.membership-changed` | U12 | `GROUP_LEADER_CHANGED`, `GROUP_MEMBERSHIP_CHANGED` (app) |
+| `group.leader-request-rejected` | U12 | `GROUP_LEADER_REQUEST_REJECTED` (app) cho người gửi yêu cầu, kèm lý do từ chối |
+| `group.document-review` | U14 | `GROUP_DOCUMENT_REVIEW` (app) cho thành viên nhóm: tài liệu đã vào review |
+| `group.submitted` | U14 | `GROUP_SUBMITTED` (app) cho thành viên nhóm |
 | `payment.paid` | U07 | App |
 | `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U05 | App cho người còn quyền trong lớp (BR-U16-06); không gửi email |
 

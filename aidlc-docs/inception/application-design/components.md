@@ -30,7 +30,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | File & Artifact (U03) | Upload qua backend (avatar, học liệu, ảnh trong tài liệu), kiểm magic bytes, lưu Google Drive, token tải 5 phút |
 | Academic & Learning Access (U04) | Môn, lớp `DRAFT/OPEN/ARCHIVED`, giảng viên, Chủ nhiệm môn, ghi danh, mã mời, lớp của người học |
 | Content & RAG (U05) | Chương → bài → mục, phiên bản bài, bài cấp môn liên kết vào lớp, YouTube (chỉ caption có sẵn), trích chữ, embedding Gemini + pgvector, `retrieve`; thông báo và hỏi đáp lớp |
-| Question Bank (U06) | Câu hỏi 5 loại và rubric checklist có phiên bản, cấp môn/lớp, nhập Excel/CSV |
+| Question Bank (U06) | Câu hỏi cho cả năm dạng bài (trắc nghiệm, Text Essay, tài liệu/Diagram Essay, Code Lab, khung bài nhóm) và rubric checklist có phiên bản, cấp môn/lớp, nhập Excel/CSV |
 | Payment & AI Credit (U07) | Gói credit, PayOS, webhook có chữ ký, tự đối soát định kỳ, ví credit (tặng tháng + mua), giữ/trừ/trả credit |
 | Assessment Core (U08) | Bài có version, thành phần, duyệt, phát hành từng lớp, nộp trễ, khóa nội dung, ngưng giao, nhân bản, lịch mở/đóng |
 | Question Types & Documents (U09) | Cấu hình trắc nghiệm/bài viết/tài liệu, mô hình tài liệu, khung, nhập/xuất DOCX, nhận sơ đồ trong ảnh, rút gọn XML |

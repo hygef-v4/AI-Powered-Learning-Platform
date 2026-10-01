@@ -23,7 +23,7 @@
 
 ## F6 - Trưởng nhóm
 1. Sinh viên gửi/hủy yêu cầu (BR-U12-10, 11).
-2. Giảng viên duyệt/từ chối (ghi chú lý do) hoặc đổi trực tiếp (BR-U12-11, 12); event `GROUP_LEADER_CHANGED`.
+2. Giảng viên duyệt/từ chối (ghi chú lý do) hoặc đổi trực tiếp (BR-U12-11, 12). Sau commit: duyệt hoặc đổi trực tiếp phát `group.leader-changed`; từ chối phát `group.leader-request-rejected` để U16 báo người gửi yêu cầu.
 
 ## F7 - Sinh viên xem nhóm
 - Theo BR-U12-30.

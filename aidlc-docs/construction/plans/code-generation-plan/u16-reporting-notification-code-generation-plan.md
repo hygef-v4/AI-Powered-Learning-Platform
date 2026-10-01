@@ -25,7 +25,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AssignmentQueryPort`, event `assignment.opened` | U08 | Dùng thật |
 | `SubmissionQueryPort` | U11 | Dùng thật |
 | `GroupMembershipPort`, `group.*` | U12 | Dùng thật |
-| `GroupSubmissionQueryPort`, `group.submitted`, `SseHub`, `platform.realtime` | U14 | Dùng thật (thêm kênh theo `accountId`) |
+| `GroupSubmissionQueryPort`, `group.document-review`, `group.submitted`, `SseHub`, `platform.realtime` | U14 | Dùng thật (thêm kênh theo `accountId`) |
 | `grade.published` | U15 | Dùng thật |
 | `GradebookQueryPort`, `GradeQueryPort` | U15 | Chỉ đọc điểm giảng viên đã chốt/công bố; không lấy điểm AI đề xuất |
 
@@ -65,7 +65,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain và loại thông báo; mẫu email tiếng Việt (ghi danh, bài mới mở, điểm công bố, nhắc hạn) không chứa điểm/nội dung (BR-U16-03, 10).
+- [ ] **Bước 2** - Domain và loại thông báo (gồm `GROUP_DOCUMENT_REVIEW`, `GROUP_LEADER_REQUEST_REJECTED`); mẫu email tiếng Việt (ghi danh, bài mới mở, điểm công bố, nhắc hạn) không chứa điểm/nội dung (BR-U16-03, 10).
 - [ ] **Bước 3** - `NotificationListener` cho mọi event, gồm bài đăng/câu hỏi/trả lời lớp từ U05, + `NotificationFanout` theo lô, idempotent, preference, tín hiệu realtime (F1, P1, BR-U16-01…06, 11).
 - [ ] **Bước 4** - `SseHub` (U14) thêm kênh theo người dùng; endpoint SSE chuông thông báo.
 - [ ] **Bước 5** - `EmailDispatcher` (ưu tiên, trần Redis, dời ngày sau, 1 email/giây) và `EmailSendHandler` (idempotent, retry, `FAILED`, bỏ nhắc đã quá hạn) (F2, P2, P3, BR-U16-12…14).
@@ -93,7 +93,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 ### Nhóm E - Frontend
 
 - [ ] **Bước 19** - `NotificationBell` (SSE), `NotificationDropdown`, `NotificationListPage`.
-- [ ] **Bước 20** - `NotificationEmailToggles` trên `NotificationListPage`; `SubmissionProgressPage` (`ProgressSummary`, `ProgressTable`); dashboard kết quả cá nhân và nút xuất bảng điểm CSV/XLSX cho giảng viên có quyền.
+- [ ] **Bước 20** - `NotificationEmailToggles` trên `NotificationListPage`; `SubmissionProgressPage` (`ProgressSummary`, `ProgressTable`); dashboard kết quả cá nhân và nút xuất bảng điểm CSV/XLSX cho giảng viên, Chủ nhiệm môn và quản trị viên có quyền (BR-U16-43).
 - [ ] **Bước 21** - Test frontend: số chưa đọc cập nhật qua SSE, tắt email từng loại.
 - [ ] **Bước 22** - Tóm tắt: `code/frontend-summary.md`.
 

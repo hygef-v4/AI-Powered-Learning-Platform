@@ -4,7 +4,7 @@ Sơ đồ ngữ cảnh cho **một MVP**. Người dùng truy cập giao diện 
 
 ```mermaid
 flowchart LR
-    learner["Người học"]
+    learner["Sinh viên"]
     teacher["Giảng viên"]
     manager["Chủ nhiệm môn"]
     admin["Quản trị viên"]
@@ -37,7 +37,7 @@ flowchart LR
     worker -->|"chấm code"| judge
 ```
 
-**Diễn giải bằng chữ:** Người học, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Cả bốn vai trò được mua và xem credit AI của mình khi tài khoản `ACTIVE`. Giảng viên, Chủ nhiệm môn và quản trị viên được tặng credit hằng tháng và dùng credit cho các chức năng AI đúng quyền; người học không được tặng credit và chỉ dùng credit để Gemini chấm bài `PRACTICE` Text Essay/Diagram Essay của chính mình (UC 37, UC 40). Backend kiểm quyền trước khi tạo giao dịch hoặc xử lý yêu cầu AI, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm theo yêu cầu của người có quyền; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập cho Code Lab mà không dùng AI; SMTP gửi OTP và email. Người học xem được điểm/phản hồi cuối sau khi giảng viên công bố; giảng viên quyết định điểm cuối của bài `GRADED`. Kết quả AI của bài `PRACTICE` chỉ hiện cho người học và không vào sổ điểm. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit của người yêu cầu AI là lỗi riêng.
+**Diễn giải bằng chữ:** Sinh viên, giảng viên, Chủ nhiệm môn và quản trị viên dùng web app. Cả bốn vai trò được mua và xem credit AI của mình khi tài khoản `ACTIVE`. Giảng viên, Chủ nhiệm môn và quản trị viên được tặng credit hằng tháng và dùng credit cho các chức năng AI đúng quyền; sinh viên không được tặng credit và chỉ dùng credit để Gemini chấm bài `PRACTICE` Text Essay/Diagram Essay của chính mình (UC 37, UC 40). Backend kiểm quyền trước khi tạo giao dịch hoặc xử lý yêu cầu AI, giữ trạng thái nghiệp vụ và gọi worker cho tác vụ nền. Google Drive giữ byte file; PayOS xử lý chuyển khoản và gửi webhook để backend xác minh trước khi cộng credit; Gemini tạo embedding/bản nháp/đề xuất chấm theo yêu cầu của người có quyền; YouTube cung cấp video và caption sẵn có; Judge0 chạy mã cô lập cho Code Lab mà không dùng AI; SMTP gửi OTP và email. Sinh viên xem được điểm/phản hồi cuối sau khi giảng viên công bố; giảng viên quyết định điểm cuối của bài `GRADED`. Kết quả AI của bài `PRACTICE` chỉ hiện cho sinh viên và không vào sổ điểm. Khi quota AI hệ thống hết, ứng dụng báo “Hệ thống đang bận”; thiếu credit của người yêu cầu AI là lỗi riêng.
 
 ## Ranh giới nội bộ
 

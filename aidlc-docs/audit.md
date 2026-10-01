@@ -2893,3 +2893,22 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization and user-approved group-work change; U12/U14 code plans need re-approval.
 
 ---
+
+## Documentation consistency review (second pass)
+**Timestamp**: 2026-10-01T03:02:07Z
+**User Input**: "kiểm tra lại toàn bộ các tài liệu dự án xem đã đồng bộ với nhau chưa và gửi tôi báo cáo"
+**AI Response**: "Read-only review after the 2026-10-01 sync. Consistent: 40 UC coverage in story map, story-UC matrix (49 stories), ERD 46 tables vs unit domain entities, class-level groups and REVIEW state across U12/U14/U15, credit rules, 24-hour reminder. Reported: screen-flow.md table does not match screen-flow.drawio (claims 57 screens/15 tabs/80 popups; drawio has about 50 screens and 38 popups with different names); erd.drawio title says 45 tables; plan headers still say 69 current use cases; group.document-review event missing from U16 notification types, U14 infrastructure and U16 code plan, and no notification for a rejected leader change; U06 question bank keeps ESSAY/DOCUMENT/CODE items and imports while UC 25/FR-016/US-QBK-002 cover quiz questions only; Subject Manager gradebook export allowed in UC 36/U16 but not in FR-024/US-RPT-003; FR-010/FR-021 lack credit packages and monthly grant; minor wording and legacy codes in functional design plans; debug.log tracked; root README empty. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply second review fixes
+**Timestamp**: 2026-10-01T03:16:47Z
+**User Input**: "sửa theo thứ tự đề xuất
+  2. Cho phép chủ nhiệm môn xuất bảng điểm
+
+3. Tôi muốn ngân hàng câu hỏi có đầy đủ các loại bài"
+**AI Response**: "Step 1: ERD drawio title 46 tables; plan headers 69 to 40 UC; context-diagram/screen-flow wording 'sinh viên'; debug.log untracked and ignored; root README written; UC 25 student wording. Step 2: added group.document-review (GROUP_DOCUMENT_REVIEW) to U14 infra/rules/plan and U16 types/plan, and group.leader-request-rejected (GROUP_LEADER_REQUEST_REJECTED) to U12/U16; Subject Manager gradebook export in FR-024, US-RPT-003 (dropped SEC-006), screen-flow and U16 plan; FR-010/FR-021 credit packages and monthly grant; business-flow drawio labels for group grading and monthly grant. Step 3: question bank holds questions for all five assignment types, reused in UC 24-28: use-case table, FR-016, change notes, US-QBK-002 (new Scenario 1a), story-UC matrix, story map, application design, screen-flow rows, U06 entities/rules/frontend/code plan (BR-U06-28), U08 BR-U08-11, U09 F2. Step 4: rebuilt the screen-flow.md table from screen-flow.drawio (49 screens, 38 popups, 5 menus; 40/40 UC, 16/16 units). aidlc-state updated; U06 plan needs re-approval. Nothing committed."
+**Context**: Documentation synchronization and user-approved scope changes (Subject Manager export, full question bank).
+
+---

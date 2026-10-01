@@ -26,7 +26,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 
 ### Dữ liệu U12 sở hữu
 
-PostgreSQL `student_groups` (nhóm của lớp), `group_members`, `leader_change_requests`; event `group.leader-changed`, `group.membership-changed` (chỉ cho thông báo U16); khai báo `GroupChangePort` (U14 cài, adapter rỗng tới khi có U14).
+PostgreSQL `student_groups` (nhóm của lớp), `group_members`, `leader_change_requests`; event `group.leader-changed`, `group.leader-request-rejected`, `group.membership-changed` (chỉ cho thông báo U16); khai báo `GroupChangePort` (U14 cài, adapter rỗng tới khi có U14).
 
 ## 2. Cấu trúc
 
