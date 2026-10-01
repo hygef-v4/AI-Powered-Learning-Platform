@@ -2877,3 +2877,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation-only synchronization with docs/use-case-table.md; personas and unit designs not changed.
 
 ---
+
+## Documentation consistency review against the 40-case table
+**Timestamp**: 2026-10-01T09:00:00Z
+**User Input**: "kiểm tra lại toàn bộ docs và các tài liệu dự án xem đã đồng bộ với nhau chưa và gửi tôi báo cáo những điểm cần sửa"
+**AI Response**: "Read-only review of docs/, requirements, stories, personas, application design, aidlc-state and unit functional designs. Reported stale items: use-case-table draft banner; erd.md (69 UC) and erd.drawio (simulation_policy, no grading_mode/practice columns); context-diagram (Student has no credit, manager bank wording); aidlc-state, unit-of-work.md and unit-of-work-story-map.md still on 69 UC and UC-XXX-NN codes; UC-XXX-NN codes in unit functional designs; Learner/Instructor labels in screen flow; UC description gaps (credit packages and monthly grants, invite codes, grade-distribution flag, student-added group sections, per-assignment group sets, quiz question import); root README and tracked debug.log. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply documentation sync fixes and group-work change request
+**Timestamp**: 2026-10-01T10:30:00Z
+**User Input**: "sửa theo thứ tự đề xuất, lưu ý B8 phải dùng student/teacher và C10 bổ sung vào UC23. UC18 tôi đang muốn là UC của sinh viên để phục vụ cho việc xem các lớp đã đăng ký, bài tập sắp tới, thông báo, trạng thái nộp bài và điểm số đã công bố. Kiểm tra xem đã có UC nào của giảng viên để quản lý điểm sinh viên chưa. C13 theo tôi nhóm có thể được chia luôn trong quản lý lớp học ở phần danh sách sinh viên trong lớp, có chức năng chia ngẫu nhiên, không có chức năng dùng lại nhóm. C14 tôi muốn giảng viên sẽ là người chuẩn bị những mục chính nhưng trưởng nhóm cũng có thể chỉnh sửa hoặc thêm các phần phân công công việc chi tiết hơn và giao cho thành viên. C15 thêm lại mô tả được tìm, nhập hàng loạt và dùng lại. C16 tôi muốn khi tất cả thành viên làm xong sẽ có trạng thái review để mọi người cùng xem lại, sau đó mới trưởng nhóm mới submit."
+**AI Response**: "Step 1: removed the draft banner, fixed ERD count, context diagram Student credit wording and screen-flow type count. Step 2: added a Legacy UC codes table, replaced UC-XXX-NN codes in unit designs and code plans, rewrote the story map and unit-of-work counts for UC 1-40 (U10 has no primary UC). Step 3: ERD drawio now 46 tables (grading_mode, Practice columns, no simulation columns, class-level student_groups, new group_documents, sections with parent/origin/assigned_by, student/teacher column names); screen-flow drawio uses Student/Teacher labels, Students & Groups opened from Class Detail with Random Split, leader Manage Sections popup. Step 4: UC 9 (invite code, class groups, random split), UC 16 (leader sub-sections and assignment, REVIEW before leader submit), UC 23 (credit packages and monthly grant), UC 25 (search, bulk import, reuse), UC 28, UC 36 (teacher enables grade distribution; UC 18 stays a Student use case; teacher grade management is UC 32-34 and 36). Synced UC 16 specification, requirements FR-025/026, stories, personas, business flow, screen-flow.md, application design, U07/U08/U12/U14/U16 designs and U12/U14 code plans. Nothing committed."
+**Context**: Documentation synchronization and user-approved group-work change; U12/U14 code plans need re-approval.
+
+---

@@ -10,6 +10,7 @@
 - **Mức độ chi tiết**: Comprehensive
 - **Mục tiêu**: Xây dựng MVP nền tảng học tập ứng dụng AI đồng thời duy trì bộ tài liệu và checkpoint AI-DLC có thể tái sử dụng
 - **Thay đổi đã được xác nhận (2026-09-29)**: Đổi mã vai trò `LEARNER`/`INSTRUCTOR` thành `STUDENT`/`TEACHER`; cho Student mua credit để chấm AI bài luyện tập dạng Text Essay hoặc Diagram Essay; phân loại assignment theo hình đính kèm và câu trả lời làm rõ, đồng thời bỏ Simulation Exam.
+- **Thay đổi đã được xác nhận (2026-10-01)**: Nhóm thuộc lớp, được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên, không có dùng lại nhóm) và dùng chung cho mọi bài nhóm của lớp. Giảng viên chuẩn bị các mục chính của bài nhóm; trưởng nhóm thêm/sửa mục chi tiết và giao mục cho thành viên. Khi mọi mục xong, tài liệu nhóm vào trạng thái review để cả nhóm xem lại rồi trưởng nhóm mới nộp. Quản lý gói credit và mức tặng hằng tháng thuộc UC 23 Manage AI Service; giảng viên bật phân bố điểm ẩn danh trong UC 36 Monitor Submissions.
 - **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 25 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên.
 
 ## 2. Bối cảnh và phạm vi
@@ -228,21 +229,24 @@ MVP cung cấp dashboard cho người học gồm bài sắp hạn, trạng thá
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
-Giảng viên phải có thể chia sinh viên của lớp được phân công thành nhiều nhóm và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
+Trong danh sách sinh viên của lớp được phân công, giảng viên phải có thể chia sinh viên thành nhiều nhóm bằng cách tạo tay hoặc chia ngẫu nhiên các sinh viên chưa có nhóm, và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Nhóm thuộc lớp và được dùng cho mọi bài nhóm của lớp; không có chức năng dùng lại nhóm của bài khác. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
 
 **Tiêu chí chấp nhận:**
 
 - Mỗi nhóm luôn có đúng một trưởng nhóm đang hiệu lực trước khi nhận bài nhóm.
-- Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó.
+- Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó; mỗi sinh viên thuộc tối đa một nhóm trong lớp.
+- Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 
 ### FR-026 - Bài tập nhóm: tài liệu chung và phần đóng góp cá nhân
 
-Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục việc (ví dụ sơ đồ use case, activity); nhóm có thể thêm mục. Thành viên tự nhận mục còn trống, mục bị khóa cho người đó; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung để cả nhóm review và mục được mở khóa cho người khác nhận sửa. Trưởng nhóm nộp tài liệu chung, hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
+Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giảng viên soạn khung gồm các mục chính (ví dụ sơ đồ use case, activity). Trưởng nhóm có thể thêm, sửa, sắp xếp hoặc xóa các mục chi tiết dưới mục chính để phân công công việc cụ thể hơn và giao mục cho thành viên; thành viên cũng có thể tự nhận mục còn trống. Mục bị khóa cho người đang giữ; người đó làm mục trong một trang riêng như bài DOCUMENT thường, bấm "Xong" thì nội dung được ghép realtime vào tài liệu chung và mục được mở khóa. Khi mọi mục đã xong, tài liệu chuyển sang trạng thái review để cả nhóm cùng xem lại và bình luận; muốn sửa thì nhận lại mục và tài liệu quay về trạng thái đang làm. Trưởng nhóm chỉ nộp khi tài liệu đang review; hết hạn thì hệ thống tự nộp bản hiện tại. Giảng viên có thể nhờ AI đề xuất điểm/phản hồi cho phần cá nhân nhưng phải tự chấm tài liệu chung và tự quyết định điểm cuối của từng sinh viên.
 
 **Tiêu chí chấp nhận:**
 
-- Mỗi mục có trạng thái (trống, đang nhận, chờ review) và lịch sử phiên bản theo tác giả; cả bài dùng chung một hạn.
+- Mỗi mục có trạng thái (trống, đang làm, xong) và lịch sử phiên bản theo tác giả; tài liệu có trạng thái đang làm hoặc review; cả bài dùng chung một hạn.
+- Chỉ trưởng nhóm thêm/sửa/xóa mục chi tiết và giao mục; mục chính của giảng viên không bị xóa hay đổi tên.
+- Trưởng nhóm chỉ nộp được khi mọi mục đã xong và tài liệu đang review.
 - Tại một thời điểm mỗi mục chỉ một thành viên nhận và sửa; trưởng nhóm hoặc giảng viên có thể nhả khóa mục khi cần, có audit.
 - Tài liệu chung được cập nhật realtime khi một mục xong; bản trưởng nhóm nộp (hoặc tự nộp khi hết hạn) là bản bất biến dùng để chấm, giữ tác giả từng mục.
 - Giảng viên xem được bản nộp cuối của tài liệu chung cùng tác giả từng mục; bản nộp đó là bản dùng để chấm.
@@ -460,6 +464,7 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Yêu cầu bài tập nhóm ngày 2026-09-13 | FR-025, FR-026; nhóm/leader và phần cá nhân; cơ chế trưởng nhóm nộp DOCX chung đã được change request 2026-09-22 thay thế bằng tài liệu do hệ thống tổng hợp |
 | Change request và làm rõ ngày 2026-09-22 | FR-004, FR-016, FR-026 đến FR-029; YouTube RAG, question version, template/copy, simulation exam và tổng hợp/chấm bài nhóm |
 | Change request và câu trả lời ngày 2026-09-29 | FR-002, FR-007, FR-008, FR-010, FR-017, FR-029 (rút), FR-030; đổi role, năm dạng assignment, Practice/Graded, Student mua credit và chấm AI bài luyện tập |
+| Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 23, 25, 28, 36 |
 | Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case, câu hỏi quiz thuộc UC 25 Manage Quiz. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline

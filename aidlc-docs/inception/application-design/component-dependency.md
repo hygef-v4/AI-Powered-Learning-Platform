@@ -64,7 +64,7 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 | Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U10, U11, U13-U15 |
 | Template và lineage | U10 | U08, U11 |
 | Lượt làm, bài nộp | U11 | U13, U15, U16 |
-| Bộ nhóm, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
+| Nhóm của lớp, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
 | Cấu hình AI, đề xuất AI, lần chạy code | U13 | U05, U06, U08, U10, U11, U15 |
 | Tài liệu nhóm, mục, bản nộp nhóm | U14 | U13, U15, U16 |
 | Điểm, lịch sử điểm, sổ điểm đọc qua port | U15 | U11, U16 |

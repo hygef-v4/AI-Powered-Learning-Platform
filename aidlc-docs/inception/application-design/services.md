@@ -21,9 +21,9 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | TypeConfigService, DocumentService (U09) | Cấu hình loại bài, mô hình tài liệu, DOCX | Không cho sửa block khóa của giảng viên |
 | TemplateService, CopyService (U10) | Template, copy và diff version | Không copy lịch, lượt làm, bài nộp, điểm |
 | AttemptService (U11) | Bắt đầu lượt, tự lưu, nộp, tự nộp | Không sửa bài đã nộp |
-| GroupService (U12) | Bộ nhóm, trưởng nhóm, yêu cầu đổi trưởng nhóm | Không phân công phần (thành viên tự nhận mục ở U14) |
+| GroupService (U12) | Nhóm của lớp, chia ngẫu nhiên, trưởng nhóm, yêu cầu đổi trưởng nhóm | Giảng viên không giao mục cho từng sinh viên (trưởng nhóm giao mục ở U14) |
 | AiService, CodeRunService (U13) | Kiểm trần/credit, gọi Gemini, kiểm đầu ra; chạy Judge0 | Không phát hành đề, không chốt điểm; không chạy mã ngoài sandbox |
-| GroupDocumentService (U14) | Tài liệu nhóm, khóa mục, Xong → realtime, nộp | Không cho hai người sửa cùng một mục |
+| GroupDocumentService (U14) | Tài liệu nhóm, mục chi tiết và giao mục của trưởng nhóm, khóa mục, Xong → realtime, review, nộp | Không cho hai người sửa cùng một mục; chỉ nộp tay khi `REVIEW` |
 | GradingService (U15) | Tự chấm, chấm tay/AI, chốt, công bố, sổ điểm | Không để AI hay công thức quyết định điểm cuối |
 | NotificationService, ReportingService (U16) | Thông báo, email có trần, nhắc hạn, tiến độ, dashboard cá nhân và xuất bảng điểm | Không rollback nghiệp vụ khi gửi email lỗi; không công bố điểm nháp hoặc điểm AI đề xuất |
 
@@ -37,10 +37,10 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 5. Giảng viên dùng/sửa đề xuất, chốt, công bố (U15); U16 báo người học.
 
 ### Bài nhóm
-1. U12 tạo bộ nhóm cho bài nhóm, đúng một trưởng nhóm.
-2. Bài mở: U08 gọi `PublicationLifecyclePort.onOpened` trong transaction; U14 tạo job `GROUP_DOC_CREATE` dựng tài liệu nhóm từ khung (mục việc).
-3. Thành viên nhận mục, làm ở trang riêng, bấm Xong → ghép realtime (SSE qua `platform.realtime`).
-4. Trưởng nhóm nộp (hoặc tự nộp khi hết hạn); U15 chấm tay tài liệu chung, chấm phần đóng góp từng thành viên (tay/AI), nhập điểm cuối từng người.
+1. Giảng viên chia nhóm trong danh sách sinh viên của lớp (U12), mỗi nhóm đúng một trưởng nhóm; mọi bài nhóm của lớp dùng chung các nhóm này.
+2. Bài mở: U08 gọi `PublicationLifecyclePort.onOpened` trong transaction; U14 tạo job `GROUP_DOC_CREATE` dựng tài liệu cho mọi nhóm của lớp từ khung (mục chính).
+3. Trưởng nhóm thêm/giao mục chi tiết; thành viên nhận hoặc làm mục được giao ở trang riêng, bấm Xong → ghép realtime (SSE qua `platform.realtime`). Mọi mục xong → tài liệu `REVIEW` để cả nhóm xem lại.
+4. Trưởng nhóm nộp khi tài liệu ở `REVIEW` (hoặc tự nộp khi hết hạn); U15 chấm tay tài liệu chung, chấm phần đóng góp từng thành viên (tay/AI), nhập điểm cuối từng người.
 
 ### Tạo và phát hành bài
 1. Giảng viên tạo bài trong lớp mình dạy (U08), lấy câu từ ngân hàng (U06) hoặc câu riêng, hoặc AI đề xuất (U13, dùng RAG U05).
@@ -71,7 +71,7 @@ Mỗi job type thuộc đúng một trong 8 queue theo tính chất (U02 BR-U02-
 | `CREDIT_RESERVATION_SWEEP` (U07) | `jobs.scheduled` | Theo lịch | Theo dòng giữ credit |
 | `PUBLICATION_OPEN`, `PUBLICATION_CLOSE` (U08) | `jobs.scheduled` | Chạy lại bỏ qua nếu lịch đổi | Theo `expectedAt` |
 | `ATTEMPT_AUTO_SUBMIT` (U11), `GROUP_AUTO_SUBMIT` (U14) | `jobs.scheduled` | Chạy lại không nộp trùng | Theo lượt / tài liệu nhóm |
-| `GROUP_DOC_CREATE` (U14) | `jobs.triggered` | Chạy lại không tạo trùng | Theo nhóm |
+| `GROUP_DOC_CREATE` (U14) | `jobs.triggered` | Chạy lại không tạo trùng | Theo nhóm × publication |
 | `GRADE_INIT` (U15) | `jobs.triggered` | Chạy lại không tạo điểm trùng | Theo bài nộp + người học |
 | `AI_TASK` (U13) | `jobs.gemini` | Lỗi tạm tối đa 3 lần | Theo proposal |
 | `CODE_RUN` (U13) | `jobs.code` | Lỗi sandbox retry; lỗi code của người học không retry | Theo run ID |

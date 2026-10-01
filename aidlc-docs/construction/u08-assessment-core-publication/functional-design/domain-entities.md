@@ -119,7 +119,7 @@ stateDiagram-v2
 | Port | Cài bởi | Mô tả |
 |---|---|---|
 | `TypeConfigPort` | U09 (`C`) | `check` cấu hình đủ để duyệt; `copy(fromId, toId)` khi tạo version mới hoặc nhân bản; chưa có U09 → bỏ qua |
-| `GroupReadinessPort` | U12 (`C`) | Bài nhóm đủ nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi Student có nhóm; chưa có U12 → không cho phát hành bài `GROUP_ASSIGNMENT` |
+| `GroupReadinessPort` | U12 (`C`) | Lớp của bài nhóm có nhóm hợp lệ, mỗi nhóm một trưởng nhóm, mọi Student có nhóm; chưa có U12 → không cho phát hành bài `GROUP_ASSIGNMENT` |
 | `CodeLabCheckPort` | U13 (`C`) | Bài `CODE_LAB` đã kiểm lời giải mẫu với nội dung hiện tại |
 | `PublicationLifecyclePort` | U11, U14 (`C`) | `onOpened(publicationId)`, `onRetired(publicationId)` gọi trong transaction mở bài/ngưng giao; cài đặt chỉ tạo job của unit nhận (tạo tài liệu nhóm, tự nộp). Chưa có U11/U14 → adapter rỗng |
 

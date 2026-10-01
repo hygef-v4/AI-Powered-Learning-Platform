@@ -20,7 +20,7 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 - Truy cập lớp và học liệu đã phát hành; xem bài sắp hạn, trạng thái nộp và điểm đã công bố trên dashboard cá nhân.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
 - Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
-- Nhận và làm mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
+- Nhận hoặc được trưởng nhóm giao mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung, cùng review khi mọi mục xong; trưởng nhóm thêm/giao mục chi tiết và nộp khi tài liệu đang review; xem phản hồi phần đóng góp và điểm cuối do giảng viên quyết định.
 - Làm bài `PRACTICE` đúng dạng; Code Lab và Quiz tự chấm theo test/đáp án, Text Essay và Diagram Essay được AI chấm một lần khi nộp và đủ credit.
 - Xem ví, mua credit AI và theo dõi lịch sử của mình. Khi thiếu credit, bài Text Essay/Diagram Essay `PRACTICE` vẫn nộp được nhưng attempt đó không có điểm AI; làm lại để được xét chấm sau khi mua credit.
 - Nhận thông báo thiết yếu.
@@ -43,8 +43,8 @@ Bộ persona đại diện cho bốn vai trò RBAC của MVP trong một trườ
 
 - Quản lý vòng đời lớp được phân công (sửa, mở, lưu trữ) và nội dung riêng của lớp.
 - Ghi danh người học khi được cấp quyền.
-- Chia nhóm cho bài nhóm, chỉ định trưởng nhóm, soạn khung mục việc và xử lý yêu cầu đổi trưởng nhóm.
-- Định nghĩa cấu trúc bài nhóm, xem trước tài liệu do hệ thống tổng hợp, điều chỉnh thứ tự/phần được dùng và chốt version để chấm.
+- Chia nhóm trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), chỉ định trưởng nhóm, soạn các mục chính của bài nhóm và xử lý yêu cầu đổi trưởng nhóm.
+- Xem tiến độ tài liệu nhóm, nhả khóa mục khi cần, chấm tay tài liệu chung và quyết định điểm cuối từng thành viên.
 - Nhờ AI đề xuất feedback cho phần đóng góp của từng thành viên, tự chấm tài liệu chung và quyết định điểm cuối từng sinh viên dựa trên hai nguồn mà không bị hệ thống ép công thức.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
 - Mua credit AI để dùng cho các chức năng AI thuộc phạm vi lớp được phân công; theo dõi thanh toán và số dư của mình.

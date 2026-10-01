@@ -27,13 +27,13 @@ File [business-flow.drawio](business-flow.drawio) gồm 5 trang swimlane có th�
 
 **Use case liên quan:** UC 9 Manage Classes (nhóm, trưởng nhóm), UC 15 Request Leader Change, UC 28 Manage Assignments, UC 16 Submit Group Document, UC 17 Grade Group Document, UC 33 Grade Submissions, UC 34 Finalize Grades.
 
-**Diễn giải bằng chữ:** Giảng viên tạo nhóm, chỉ định trưởng nhóm và soạn bài nhóm `GRADED` gồm các mục. Nhóm làm một tài liệu chung: thành viên tự nhận mục còn trống, sửa riêng rồi bấm “Xong” để ghép vào bản chung realtime. Lịch sử revision giữ tác giả. Trưởng nhóm nộp; hệ thống tự nộp bản hiện tại khi hết hạn. Giảng viên tự chấm tài liệu chung; phần đóng góp có thể được AI đề xuất theo yêu cầu, sau đó giảng viên nhập điểm cuối từng người. Không có công thức tự động ghép hai nguồn điểm.
+**Diễn giải bằng chữ:** Giảng viên chia nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), chỉ định trưởng nhóm và soạn bài nhóm `GRADED` gồm các mục chính; mọi bài nhóm của lớp dùng chung các nhóm này. Mỗi nhóm làm một tài liệu chung: trưởng nhóm thêm/sửa mục chi tiết dưới mục chính và giao cho thành viên, thành viên cũng có thể tự nhận mục còn trống; người giữ mục sửa riêng rồi bấm “Xong” để ghép vào bản chung realtime. Lịch sử revision giữ tác giả. Khi mọi mục đã xong, tài liệu chuyển sang review để cả nhóm xem lại và bình luận; cần sửa thì nhận lại mục và tài liệu quay về đang làm. Trưởng nhóm chỉ nộp khi tài liệu đang review; hệ thống tự nộp bản hiện tại khi hết hạn. Giảng viên tự chấm tài liệu chung; phần đóng góp có thể được AI đề xuất theo yêu cầu, sau đó giảng viên nhập điểm cuối từng người. Không có công thức tự động ghép hai nguồn điểm.
 
 ## 4. Mua và dùng credit AI
 
 **Sơ đồ swimlane:** [Mở trang 4 — Mua và sử dụng credit AI](business-flow.drawio).
 
-**Use case liên quan:** UC 37 Buy AI Credits, UC 23 Manage AI Service; các UC tiêu credit là UC 11, UC 21, UC 22, UC 33 và UC 40.
+**Use case liên quan:** UC 37 Buy AI Credits, UC 23 Manage AI Service (gói credit, mức tặng hằng tháng); các UC tiêu credit là UC 11, UC 21, UC 22, UC 33 và UC 40.
 
 **Diễn giải bằng chữ:** Tài khoản `ACTIVE` có vai trò Sinh viên, Giảng viên, Chủ nhiệm môn hoặc Quản trị viên có thể mua và xem credit của chính mình. Chỉ webhook hợp lệ hoặc job tự đối soát xác thực mới cộng credit cho người mua; trang PayOS quay về không tự cộng. Giảng viên, Chủ nhiệm môn và Quản trị viên được tặng credit hằng tháng và dùng credit cho các chức năng AI đúng quyền; credit tặng được trừ trước credit mua. Sinh viên không được tặng credit và chỉ dùng credit để AI chấm bài `PRACTICE` Text Essay/Diagram Essay của chính mình; làm bài, chạy Code Lab và xem điểm không tiêu credit. Trước mỗi lời gọi AI, hệ thống kiểm quyền và trần quota rồi giữ credit; hoàn tất thì quyết toán theo token, lỗi trước khi nhà cung cấp xử lý thì trả phần giữ. Hết quota hệ thống báo bận và không trừ credit cho lời gọi bị từ chối. Chính sách hoàn tiền cho giao dịch đã `PAID` chưa chốt, không nằm trong luồng này.
 

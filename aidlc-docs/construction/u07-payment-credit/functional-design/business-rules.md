@@ -5,7 +5,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-01 | Tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN` có ví credit của chính mình, được xem gói, số dư, sổ cái và mua credit. Backend kiểm quyền chủ ví trước khi tạo giao dịch/link PayOS. Credit đã mua chỉ thuộc tài khoản mua. | FR-010, quyết định 2026-09-29 |
-| BR-U07-02 | Chỉ ADMIN tạo/sửa/ẩn gói; không xóa gói đã có giao dịch. Đổi giá chỉ áp dụng giao dịch mới. | Câu 3 |
+| BR-U07-02 | Chỉ ADMIN tạo/sửa/ẩn gói; không xóa gói đã có giao dịch. Đổi giá chỉ áp dụng giao dịch mới. | Câu 3, UC 23 |
 | BR-U07-03 | Giao dịch chụp `credits`, `amountVnd` lúc tạo. | Câu 3 |
 | BR-U07-04 | Tạo giao dịch cần `Idempotency-Key`; gửi lại cùng khóa trả lại giao dịch cũ nếu còn `PENDING`. | SEC-007 |
 | BR-U07-05 | Mỗi tài khoản tối đa 3 giao dịch `PENDING` cùng lúc. | Thiết kế |

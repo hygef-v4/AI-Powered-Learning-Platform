@@ -12,6 +12,7 @@
 - Hệ thống chỉ có bốn persona người dùng: Student, Teacher, Subject Manager và Administrator; không có Head of Department/Trưởng bộ môn.
 - Các bài dùng ngôn ngữ tự nhiên được mô hình hóa chung là bài viết luận.
 - Phạm vi sau thay đổi 2026-09-29: **49 story MVP**; `US-ASM-011` về Simulation Exam đã rút, thay bằng `US-ASM-012` về bài Practice có AI. Danh mục use case đã bỏ use case Simulation Exam và bổ sung use case Student dùng AI chấm Practice, giữ mã lịch sử không tái sử dụng.
+- Từ 2026-10-01, nhóm thuộc lớp và được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên); trưởng nhóm thêm/giao mục chi tiết; tài liệu nhóm vào review khi mọi mục xong rồi trưởng nhóm mới nộp.
 - Từ 2026-09-30, danh mục use case gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md); mục 14 ghi story thuộc use case nào. Câu hỏi quiz được quản lý trong UC 25 Manage Quiz, không có use case ngân hàng câu hỏi riêng; mã story giữ nguyên.
 
 ## 2. Miền Identity and Access
@@ -382,7 +383,7 @@
 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
 
-**Story**: Là giảng viên, tôi muốn tạo bộ nhóm cho từng bài nhóm của lớp được phân công (tạo tay, chia ngẫu nhiên hoặc dùng lại nhóm của bài khác) và chỉ định một trưởng nhóm cho mỗi nhóm để tổ chức bài tập nhóm rõ trách nhiệm.
+**Story**: Là giảng viên, tôi muốn chia sinh viên của lớp được phân công thành nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên) và chỉ định một trưởng nhóm cho mỗi nhóm để mọi bài tập nhóm của lớp có trách nhiệm rõ ràng.
 
 **Truy vết**: FR-002, FR-003, FR-025, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -394,9 +395,15 @@
 - **When** giảng viên tạo nhóm, thêm thành viên và chọn trưởng nhóm
 - **Then** mỗi nhóm có đúng một trưởng nhóm, thành viên thuộc đúng lớp và thay đổi được audit
 
+#### Scenario 3 - Chia ngẫu nhiên
+
+- **Given** lớp còn sinh viên chưa có nhóm
+- **When** giảng viên chọn chia ngẫu nhiên với sĩ số tối đa
+- **Then** hệ thống chỉ chia sinh viên chưa có nhóm thành các nhóm chênh nhau tối đa một người, chọn ngẫu nhiên trưởng nhóm và cho giảng viên xem trước, sửa rồi mới lưu
+
 #### Scenario 2 - Thành viên hoặc trưởng nhóm không hợp lệ
 
-- **Given** sinh viên ngoài lớp, đã thuộc nhóm khác trong cùng bộ chia nhóm hoặc trưởng nhóm không phải thành viên
+- **Given** sinh viên ngoài lớp, đã thuộc nhóm khác trong lớp hoặc trưởng nhóm không phải thành viên
 - **When** giảng viên lưu cấu hình
 - **Then** hệ thống từ chối phần cấu hình không nhất quán và không mở rộng quyền ngoài lớp
 
@@ -422,7 +429,7 @@
 
 ### US-GRP-003 - Tạo bài tập nhóm dạng tài liệu chung
 
-**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục việc để các thành viên tự nhận và cùng hoàn thành một sản phẩm nhóm.
+**Story**: Là giảng viên, tôi muốn tạo bài tập nhóm là một tài liệu chung có các mục chính để nhóm chia việc chi tiết và cùng hoàn thành một sản phẩm nhóm.
 
 **Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -430,9 +437,9 @@
 
 #### Scenario 1 - Khung có mục việc
 
-- **Given** lớp đã có bộ nhóm hợp lệ cho bài
-- **When** giảng viên soạn khung tài liệu với các mục việc (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
-- **Then** mỗi nhóm nhận một tài liệu chung theo khung; các mục ở trạng thái trống để thành viên nhận
+- **Given** lớp đã có nhóm hợp lệ
+- **When** giảng viên soạn khung tài liệu với các mục chính (ví dụ use case diagram, activity diagram) và rubric rồi phát hành
+- **Then** mỗi nhóm của lớp nhận một tài liệu chung theo khung; các mục chính ở trạng thái trống để trưởng nhóm chia nhỏ, giao hoặc để thành viên nhận
 
 #### Scenario 2 - Nhả khóa mục khi cần
 
@@ -442,7 +449,7 @@
 
 ### US-GRP-004 - Nhận và làm mục trong tài liệu nhóm
 
-**Story**: Là thành viên nhóm, tôi muốn nhận một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
+**Story**: Là thành viên nhóm, tôi muốn nhận hoặc được trưởng nhóm giao một mục trong tài liệu nhóm, làm mục đó trong trang riêng rồi đưa vào tài liệu chung để nhóm review.
 
 **Truy vết**: FR-002, FR-007, FR-008, FR-018, FR-026, FR-014, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -454,11 +461,17 @@
 - **When** thành viên nhận mục
 - **Then** mục bị khóa cho thành viên đó, mở ra trong trang riêng như bài DOCUMENT thường; thành viên khác không sửa được mục đó
 
+#### Scenario 1b - Trưởng nhóm chia việc chi tiết
+
+- **Given** tài liệu nhóm có các mục chính của giảng viên
+- **When** trưởng nhóm thêm hoặc sửa mục chi tiết dưới một mục chính và giao mục cho một thành viên
+- **Then** mục được khóa cho thành viên được giao, mục chính của giảng viên không bị xóa hay đổi tên, thành viên khác không thêm/sửa/giao được mục và thao tác được audit
+
 #### Scenario 2 - Xong và review
 
 - **Given** thành viên làm xong mục
 - **When** thành viên bấm "Xong"
-- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang chờ review và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản
+- **Then** nội dung được ghép realtime vào tài liệu chung, mục chuyển sang xong và mở khóa để thành viên khác có thể nhận sửa; lịch sử ghi tác giả phiên bản; khi mọi mục đều xong, tài liệu chuyển sang review và cả nhóm được báo để xem lại
 
 #### Scenario 3 - Giảng viên chọn phương thức chấm phần của từng người
 
@@ -482,8 +495,8 @@
 
 #### Scenario 2 - Trưởng nhóm nộp
 
-- **Given** tài liệu chung còn trong hạn
-- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn mục trống hoặc đang nhận)
+- **Given** tài liệu chung còn trong hạn và đang ở trạng thái review vì mọi mục đã xong
+- **When** trưởng nhóm nộp (hệ thống cảnh báo nếu còn bình luận chưa giải quyết; tài liệu chưa review thì không cho nộp)
 - **Then** hệ thống lưu một bản bất biến kèm tác giả từng mục; trưởng nhóm có thể nộp lại trước hạn, bản nộp cuối được chấm
 
 #### Scenario 3 - Hết hạn
@@ -656,7 +669,7 @@
 
 ### US-AIG-003 - Cấu hình và giám sát sử dụng AI
 
-**Story**: Là quản trị viên, tôi muốn cấu hình giới hạn và giám sát việc sử dụng AI để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
+**Story**: Là quản trị viên, tôi muốn cấu hình giới hạn, giám sát việc sử dụng AI và quản lý gói credit cùng mức tặng hằng tháng để kiểm soát chi phí, rủi ro và khả năng vận hành của nền tảng.
 
 **Truy vết**: FR-012, FR-014, FR-021, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -679,6 +692,12 @@
 - **Given** quota/giới hạn đã đạt hoặc kill-switch đang bật
 - **When** người dùng yêu cầu chức năng AI
 - **Then** hệ thống từ chối trước khi gọi provider, giữ dữ liệu nghiệp vụ và giải thích phương án tiếp tục không dùng AI khi có thể
+
+#### Scenario 4 - Quản lý gói credit và mức tặng
+
+- **Given** quản trị viên có quyền
+- **When** quản trị viên tạo, sửa hoặc ẩn một gói credit, hoặc đổi mức credit tặng hằng tháng cho Teacher, Subject Manager và Administrator
+- **Then** thay đổi chỉ áp dụng cho giao dịch hoặc kỳ tặng sau, giao dịch đã tạo giữ snapshot giá và số credit, Student không được tặng credit và thay đổi được audit
 
 ## 8. Miền Assessment Delivery
 
@@ -1094,7 +1113,7 @@
 
 #### Scenario 2 - Phân bố lớp ẩn danh
 
-- **Given** lớp cho phép hiển thị so sánh
+- **Given** giảng viên đã bật hiển thị phân bố điểm ẩn danh cho lớp (UC 36) và lớp đủ điều kiện riêng tư
 - **When** người học xem phân bố điểm
 - **Then** dữ liệu được tổng hợp/ẩn danh và không suy ra danh tính hoặc điểm của người học khác
 
@@ -1281,7 +1300,7 @@ Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi s
 | 6 | Manage Profile | US-IAM-004 |
 | 7 | Manage Accounts | US-IAM-005, US-IAM-007 |
 | 8 | Manage Subjects | US-IAM-005, US-CAT-001 |
-| 9 | Manage Classes | US-CAT-001, US-CAT-002, US-CAT-003, US-GRP-001, US-GRP-002 |
+| 9 | Manage Classes | US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-GRP-001, US-GRP-002 |
 | 10 | Join Class | US-CAT-005 |
 | 11 | Manage Content | US-CNT-001, US-CNT-002, US-CNT-005 |
 | 12 | Access Lesson | US-LRN-001 |
@@ -1308,7 +1327,7 @@ Mã use case theo [bảng 40 use case](../../../docs/use-case-table.md). Mỗi s
 | 33 | Grade Submissions | US-GRD-002, US-GRD-003 |
 | 34 | Finalize Grades | US-GRD-003, US-GRD-005 |
 | 35 | View Grades | US-GRD-004 |
-| 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-003 |
+| 36 | Monitor Submissions | US-GRD-004, US-RPT-001, US-RPT-002, US-RPT-003 |
 | 37 | Buy AI Credits | US-PAY-001, US-PAY-002 |
 | 38 | View Notifications | US-NTF-001 |
 | 39 | View Audit Log | US-AUD-001 |

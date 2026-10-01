@@ -16,19 +16,19 @@
                                           worker: GroupDocInitializer; AutoSubmitHandler --> GroupSubmitter
 ```
 
-**Text alternative**: Thành viên và giảng viên thao tác qua REST tới `GroupDocController`; `SectionService` khóa/lưu/xong mục bằng UPDATE có điều kiện, `GroupSubmitter` tạo bản nộp. Sau mỗi thay đổi, `GroupDocEventPublisher` gửi sự kiện lên fanout `platform.realtime`; mỗi backend nhận qua queue riêng và `SseHub` đẩy tới trình duyệt đang mở tài liệu qua SSE. `GroupDocInitializer` dựng tài liệu khi bài mở; `MembershipListener` nhả khóa và đóng kênh khi thành viên rời nhóm. Worker chạy job tự nộp tại hạn và cũng phát sự kiện qua fanout.
+**Text alternative**: Thành viên và giảng viên thao tác qua REST tới `GroupDocController`; `SectionService` thêm/giao/khóa/lưu/xong mục bằng UPDATE có điều kiện và chuyển tài liệu giữa `IN_PROGRESS` và `REVIEW`, `GroupSubmitter` tạo bản nộp. Sau mỗi thay đổi, `GroupDocEventPublisher` gửi sự kiện lên fanout `platform.realtime`; mỗi backend nhận qua queue riêng và `SseHub` đẩy tới trình duyệt đang mở tài liệu qua SSE. `GroupDocInitializer` dựng tài liệu cho mọi nhóm của lớp khi bài mở; `MembershipListener` nhả khóa và đóng kênh khi thành viên rời nhóm. Worker chạy job tự nộp tại hạn và cũng phát sự kiện qua fanout.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `GroupDocInitializer` | worker | F1; P5 |
-| `SectionService` | backend | F3-F6; P1 |
-| `GroupSubmitter` | backend, worker | F7; P4 |
+| `SectionService` | backend | F3-F7; P1, P6 |
+| `GroupSubmitter` | backend, worker | F8; P4 |
 | `GroupDocEventPublisher`, `SseHub` | backend, worker (chỉ phát) | P2 |
 | `GroupChangeAdapter`, `PublicationLifecycleAdapter` | backend, worker | Cài port của U12, U08: tạo job tạo tài liệu nhóm, tự nộp; nhả khóa khi rời nhóm (P3) |
 | `AutoSubmitHandler` | worker | BR-U14-33 |
-| `GroupSubmissionQueryService` | backend | F8 |
+| `GroupSubmissionQueryService` | backend | F9 |
 
 ## 3. Cấu hình
 

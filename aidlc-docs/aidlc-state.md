@@ -4,8 +4,8 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Use-case catalog and active Inception/Construction traces synchronized at 69 cases after grouping same-actor CRUD actions; every active use-case name has at most four words. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
-- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Historical use-case IDs, question files and older plan snapshots remain as audit evidence.
+- **Current Stage**: Use-case catalog consolidated to 40 cases (`docs/use-case-table.md`); docs, Inception and Construction traces synchronized on 2026-10-01, including class-level groups, leader-managed group sections and the group-document REVIEW state. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
+- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
 
 ## Workspace State
 - **Existing Code**: No
@@ -59,14 +59,14 @@
 | U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
 | U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
 | U06 Rubric & Question Bank | Done | Approved | - |
-| U07 Payment & AI Credit | Done, AI/credit eligibility updated | Updated, re-approval needed | - |
+| U07 Payment & AI Credit | Done, AI/credit eligibility updated; packages traced to UC 23 | Updated, re-approval needed | - |
 | U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
 | U09 Question Type Authoring | Done | Approved | - |
 | U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired | Updated, re-approval needed | - |
 | U11 Attempt & Submission | Done | Updated, re-approval needed | - |
-| U12 Group & Allocation | Done | Updated, re-approval needed | - |
+| U12 Group & Allocation | Done, groups moved to class level (2026-10-01) | Updated, re-approval needed | - |
 | U13 AI & Code Execution | Done | Updated, re-approval needed | - |
-| U14 Group Document & Submission | Done | Updated, re-approval needed | - |
+| U14 Group Document & Submission | Done, `group_documents`, leader sections and REVIEW (2026-10-01) | Updated, re-approval needed | - |
 | U15 Grading | Done | Updated, re-approval needed | - |
 | U16 Reporting & Notification | Done | Updated, re-approval needed | - |
 
@@ -79,6 +79,8 @@
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-01: Đồng bộ toàn bộ docs với bảng 40 use case: bỏ ghi chú bản nháp, thêm bảng Legacy UC codes, thay mã `UC-XXX-NN` trong thiết kế unit và code plan, viết lại story map/unit-of-work theo UC 1–40, sửa context diagram (Student mua credit), ERD 46 bảng (bỏ cột Simulation, thêm `grading_mode` và cột Practice, `group_documents`, nhóm theo lớp), nhãn Student/Teacher trong screen flow. Theo quyết định của người dùng: gói credit và mức tặng thuộc UC 23; phân bố điểm ẩn danh do giảng viên bật thuộc UC 36 (UC 18 giữ là UC của sinh viên); nhóm chia trong danh sách sinh viên của lớp, có chia ngẫu nhiên, bỏ dùng lại nhóm; giảng viên soạn mục chính, trưởng nhóm thêm/sửa/giao mục chi tiết; tài liệu nhóm vào `REVIEW` khi mọi mục xong rồi trưởng nhóm mới nộp; UC 25 ghi rõ tìm, nhập hàng loạt và dùng lại câu hỏi. Plan U12/U14 cần duyệt lại.
+- 2026-09-30: Bảng use case gộp còn 40 UC; đồng bộ đặc tả, README, business flow, screen flow, stories (ma trận story ↔ UC) và requirements.
 - 2026-09-29: Bảng use case gộp CRUD cùng actor: profile 07→06, account 09/11/12→08, subject 14/15→13, roster 23/24→22; đổi tên tất cả UC còn hiệu lực thành tối đa bốn từ. Còn 69 UC, 49 story; ID lịch sử không tái sử dụng.
 - 2026-09-29: Người dùng xác nhận bản requirements đã làm rõ, yêu cầu sửa tài liệu Inception/Construction. Đồng bộ stories, personas, use-case catalog (49 story/77 UC; mã Simulation Exam retired, mã AI Practice mới), application design, per-unit functional/NFR/infrastructure designs và code plans. Không sinh mã ứng dụng.
 - 2026-09-12..22: Inception completed and revised through several change requests (roles, Draw.io, group work, templates/simulation).

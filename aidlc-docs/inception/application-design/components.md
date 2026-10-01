@@ -15,7 +15,7 @@ MVP dùng modular monolith: frontend Next.js, một backend Spring Boot chia th�
 | Bank Console | Ngân hàng câu hỏi/rubric cấp môn và lớp, nhập Excel/CSV | U06 |
 | Assignment Console | Soạn năm dạng bài và chọn chế độ `GRADED`/`PRACTICE` hợp lệ, AI draft, duyệt, phát hành, version/diff, template và copy | U08, U09, U10, U13 |
 | Document Editor | Trình soạn tài liệu theo block, khung khóa, sơ đồ Draw.io nhúng (iframe `embed.diagrams.net`), nhập/xuất DOCX | U09 (dùng ở U06, U11, U14, U15) |
-| Group Workspace | Bộ nhóm, trưởng nhóm, tài liệu nhóm, nhận mục, ghép realtime (SSE), nộp | U12, U14 |
+| Group Workspace | Nhóm của lớp (trong danh sách sinh viên), trưởng nhóm, tài liệu nhóm, trưởng nhóm thêm/giao mục, nhận mục, ghép realtime (SSE), review, nộp | U12, U14 |
 | Grading Console | Hàng chờ chấm, chấm tay/AI đề xuất theo rubric checklist, chốt, công bố, sổ điểm, tiến độ nộp, xuất CSV/XLSX | U15, U16 |
 | Code Editor | Monaco nhiều file, chạy thử, kết quả test | U13 |
 
@@ -36,9 +36,9 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Question Types & Documents (U09) | Cấu hình trắc nghiệm/bài viết/tài liệu, mô hình tài liệu, khung, nhập/xuất DOCX, nhận sơ đồ trong ảnh, rút gọn XML |
 | Template & Copy (U10) | Template cấp môn, copy giữa lớp, lineage, diff version |
 | Attempt & Submission (U11) | Lượt làm, snapshot, tự lưu, nộp, tự nộp, biên nhận |
-| Group (U12) | Bộ nhóm theo bài nhóm, trưởng nhóm, yêu cầu đổi trưởng nhóm |
+| Group (U12) | Nhóm của lớp (tạo tay, chia ngẫu nhiên), trưởng nhóm, yêu cầu đổi trưởng nhóm |
 | AI & Code Execution (U13) | Cổng AI (Gemini, model theo việc), trần/kill-switch/credit, đề xuất câu hỏi và chấm, Judge0 (7 ngôn ngữ), kiểm lời giải mẫu |
-| Group Document (U14) | Tài liệu nhóm, nhận/khóa mục, Xong → ghép realtime, bình luận, trưởng nhóm nộp |
+| Group Document (U14) | Tài liệu nhóm theo từng bài, trưởng nhóm thêm/giao mục chi tiết, nhận/khóa mục, Xong → ghép realtime, review và bình luận, trưởng nhóm nộp |
 | Grading (U15) | Tự chấm trắc nghiệm/code, chấm tay/AI, chốt, công bố, sửa có lý do, bài nhóm, sổ điểm |
 | Reporting & Notification (U16) | Thông báo trong app (SSE), email có trần, nhắc hạn, tiến độ nộp, dashboard cá nhân, xuất bảng điểm CSV/XLSX |
 

@@ -90,7 +90,7 @@ Wave biểu thị nhóm và checkpoint kết quả, không buộc toàn bộ uni
 |---|---|---|
 | G1 | U01-U04 | Authorization, audit/job, artifact/checksum và class/enrollment scope |
 | G2 | U05-U08 và phần Learning Access của U04 | Content/bank versions, verified payment event, Learning access và đề thủ công/publication |
-| G3 | U09-U13 | Question type/tài liệu, template/copy, bộ nhóm, AI/Code, attempt/submission và chấm Practice theo credit |
+| G3 | U09-U13 | Question type/tài liệu, template/copy, nhóm của lớp, AI/Code, attempt/submission và chấm Practice theo credit |
 | G4 | U14-U16 | Tài liệu nhóm realtime/nộp, final grade, reporting/notification đúng scope |
 
 Gate tổng kiểm tra toàn bộ phạm vi của wave; nhánh ở wave sau được mở ngay khi provider trực tiếp đạt kiểm tra tương ứng, không phải chờ gate tổng.

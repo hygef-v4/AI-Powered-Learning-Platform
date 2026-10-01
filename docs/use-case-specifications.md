@@ -32,24 +32,26 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 |---|---|
 | Primary Actors | Student (group member; group leader) |
 | Secondary Actors | None |
-| Description | Group members claim sections of the shared document, work on them in a private workspace, and mark them Done so the completed content appears in the shared document in real time. The leader submits the current version, or the system submits it when the deadline passes. |
-| Preconditions | The student belongs to the group. The group document and its sections were prepared under UC 28, and its publication still accepts work. |
-| Normal Flow | 1. A group member opens the document; the system checks access and shows shared content, completed sections, section states, and assignees. |
-|  | 2. The member selects an OPEN or IN_REVIEW section. The system conditionally claims it, locks it to that student, and copies its current published blocks into a private draft. |
-|  | 3. The member edits only that section. The system autosaves the versioned draft, which other members cannot yet see. |
-|  | 4. The member marks the section Done. The system validates the blocks, stores a revision and its author, publishes the completed blocks, releases the claim, and pushes the update to members currently viewing the document. |
-|  | 5. The group leader reviews the current document and requests submission. |
-|  | 6. The system checks the leader role and deadline, warning about unfinished sections while allowing submission. |
-|  | 7. The system snapshots the shared document and section authors into an immutable group submission, returns a receipt, and starts the grading workflow. |
+| Description | The group leader breaks the teacher's main sections into detailed sub-sections and assigns them to members. Members work on their sections in a private workspace and mark them Done so the completed content appears in the shared document in real time. When every section is Done, the document enters REVIEW for the whole group to read and comment on, and the leader then submits it; the system submits the current version when the deadline passes. |
+| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 28, and its publication still accepts work. |
+| Normal Flow | 1. A group member opens the document; the system checks access and shows shared content, main sections and sub-sections, section states, assignees and the document state (IN_PROGRESS or REVIEW). |
+|  | 2. The leader may add, rename, reorder or remove detailed sub-sections under a main section and assign a section to a member. The system locks an assigned section to that member. |
+|  | 3. A member opens an assigned section or claims an OPEN or DONE section. The system conditionally claims it, locks it to that student, and copies its current published blocks into a private draft. |
+|  | 4. The member edits only that section. The system autosaves the versioned draft, which other members cannot yet see. |
+|  | 5. The member marks the section Done. The system validates the blocks, stores a revision and its author, publishes the completed blocks, releases the claim, and pushes the update to members currently viewing the document. |
+|  | 6. When every section is Done, the system moves the document to REVIEW and notifies the members. Members read the whole document and comment on sections. |
+|  | 7. The group leader requests submission. The system checks the leader role, the deadline and the REVIEW state, and warns about unresolved comments while allowing submission. |
+|  | 8. The system snapshots the shared document and section authors into an immutable group submission, returns a receipt, and starts the grading workflow. |
 | Alternative Flows | **A1 — Another member claims the section first:** Reject the competing claim and show its current state; do not overwrite the existing claim. |
 |  | **A2 — Draft version conflict or invalid blocks:** Reject the save or Done action without replacing the last valid draft or published content. |
-|  | **A3 — The member releases the claim, or the leader or teacher releases it:** Unlock the section; uncompleted private edits do not enter the shared document. |
-|  | **A4 — The member leaves the group:** Release the claim while retaining draft history, without publishing unfinished work. |
-|  | **A5 — Connection drops:** Reload the full section and shared-document state after reconnection. |
-|  | **A6 — A member other than the leader attempts submission:** Reject submission while retaining their viewing access. |
-|  | **A7 — A section is claimed but not marked Done:** Include only its last published content, never the owner's private draft. |
-|  | **A8 — Leader resubmits before the deadline:** Keep both submissions; the latest submission is the one to grade. |
-|  | **A9 — Deadline passes or publication is retired:** Automatically submit the current document and record warnings for unfinished sections. |
+|  | **A3 — The member releases the claim, the leader reassigns the section, or the leader or teacher releases it:** Unlock the section (and lock it to the new assignee when reassigned); uncompleted private edits do not enter the shared document. |
+|  | **A4 — A member other than the leader tries to add, edit, remove or assign sections:** Reject the change. The teacher's main sections cannot be removed or renamed by the group. |
+|  | **A5 — A section must change during REVIEW:** A member reclaims the section or the leader reassigns it; the document returns to IN_PROGRESS and re-enters REVIEW only when every section is Done again. |
+|  | **A6 — The member leaves the group:** Release the claim while retaining draft history, without publishing unfinished work. |
+|  | **A7 — Connection drops:** Reload the full section and shared-document state after reconnection. |
+|  | **A8 — Submission attempted by a non-leader, or before the document reaches REVIEW:** Reject submission and explain the reason; viewing access remains. |
+|  | **A9 — Leader resubmits before the deadline:** The document must be back in REVIEW; keep both submissions, and the latest submission is the one to grade. |
+|  | **A10 — Deadline passes or publication is retired:** Automatically submit the current document in any state, take only published content of claimed sections, and record warnings for unfinished sections or a document that was not reviewed. |
 | Postconditions | Each completed section has a recorded revision and author. The group submission, receipt, and submission history are stored. The document becomes read-only after the final submission deadline. |
 
 ### 2.2 UC 17 — Grade Group Document

@@ -93,6 +93,7 @@ Mỗi publication có một job U02 `DEADLINE_REMINDER` (`idempotencyKey` = `pub
 | `assignment.opened` | U08 | `ASSIGNMENT_OPENED` cho người học của lớp (app + email); tạo job nhắc hạn |
 | `grade.published` | U15 | `GRADE_PUBLISHED` (app + email, không ghi điểm) |
 | `group.leader-changed`, `group.membership-changed` | U12 | App |
+| `group.document-review` | U14 | App cho thành viên nhóm: tài liệu đã vào review |
 | `group.submitted` | U14 | App cho thành viên nhóm |
 | `payment.paid` | U07 | App |
 | `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U05 | App cho người còn quyền trong lớp (BR-U16-06); không gửi email |

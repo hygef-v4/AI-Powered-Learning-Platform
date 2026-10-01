@@ -125,15 +125,17 @@ diff(fromAssignmentId, toAssignmentId) -> AssignmentDiff
 startAttempt(student, publicationId) -> AttemptSnapshot
 saveAttempt(student, attemptId, content, contentVersion) -> SaveReceipt
 submitAttempt(student, attemptId) -> SubmissionReceipt
-saveGroupSet(teacher, assignmentId, groups[], versions) -> GroupSet
-randomSplit(teacher, assignmentId, maxSize) -> GroupSetPreview
+saveClassGroups(teacher, classId, groups[], versions) -> ClassGroups
+randomSplit(teacher, classId, maxSize) -> ClassGroupsPreview
 requestLeaderChange(student, groupId, reason, proposedLeaderId?) -> LeaderChangeRequest
 decideLeaderChange(teacher, requestId, decision) -> Group
+addOrEditSubSection(leader, groupDocumentId, parentSectionId, title, orderNo) -> Section
+assignSection(leader, sectionId, memberId) -> Section
 claimSection(student, sectionId) -> Section
 saveSectionDraft(student, sectionId, blocks, version) -> Section
 markSectionDone(student, sectionId) -> SectionRevision
 releaseSection(actor, sectionId) -> Section
-submitGroupDocument(leader, groupId) -> GroupSubmission
+submitGroupDocument(leader, groupDocumentId) -> GroupSubmission   // only when status = REVIEW
 ```
 
 ## AI, Code Execution, Grading, Notification (U13, U15, U16)
