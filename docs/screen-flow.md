@@ -130,7 +130,7 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 
 - **Không có dashboard chung.** Đăng nhập xong U01 điều hướng theo vai trò tới trang đích (ghi `landing`): sinh viên → Dashboard (tổng quan học tập của UC 18: lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái nộp, điểm đã công bố), giảng viên và Chủ nhiệm môn → My Teaching Classes, quản trị viên → Account List. Navigation là thanh đầu trang của mọi vai trò, chứa Profile, AI Credit Purchase và Notification.
 - Chủ nhiệm môn thấy cả Teacher Menu (cùng link `/teaching`) và thêm Subject Manager Menu; trang cùng link chỉ vẽ một lần. Các màn hình nhóm Class Screens mở từ Class Detail của giảng viên.
-- Sơ đồ chỉ vẽ màn hình và popup **tạo, sửa dữ liệu** hoặc **tải file**. Các thao tác sau nằm trong màn hình đã vẽ, không có ô riêng: nhập mã mời (My Classes, UC 10); nhập tài khoản từ file (Account List, UC 7); nhập câu hỏi từ file và nhân bản (Question Bank, UC 24–28); copy template hoặc bài giữa lớp, phát hành và ngưng giao (Create Assignment, Assignment Detail, UC 28); AI soạn đề (Create Assignment, Create Template, UC 21–22); xem trước và nhập DOCX, chạy thử Code Lab (Attempt, UC 30); chấm bài nhóm, chốt và công bố điểm (Grading Detail, Grading Queue, UC 17, UC 34); cài đặt email thông báo (Notification, UC 38). Trang thanh toán PayOS là hệ thống ngoài, không vẽ thành ô.
+- Sơ đồ chỉ vẽ màn hình và popup **tạo, sửa dữ liệu** hoặc **tải file**. Các thao tác sau nằm trong màn hình đã vẽ, không có ô riêng: nhập mã mời (My Classes, UC 10); bật, tắt hoặc tạo lại mã mời và bật phân bố điểm ẩn danh (tab `InviteCodeTab` và nút `GradeDistributionToggle` trên Class Detail của giảng viên, UC 9, UC 36); nhập tài khoản từ file (Account List, UC 7); nhập câu hỏi từ file và nhân bản (Question Bank, UC 24–28); copy template hoặc bài giữa lớp, phát hành và ngưng giao (Create Assignment, Assignment Detail, UC 28); AI soạn đề (Create Assignment, Create Template, UC 21–22); xem trước và nhập DOCX, chạy thử Code Lab (Attempt, UC 30); chấm bài nhóm, chốt và công bố điểm (Grading Detail, Grading Queue, UC 17, UC 34); cài đặt email thông báo (Notification, UC 38). Trang thanh toán PayOS là hệ thống ngoài, không vẽ thành ô.
 - Ô có nhiều unit: unit đầu dựng trang, unit sau cung cấp component nhúng (ví dụ `AiDraftDialog` của U13 trong trình soạn U08). Tên component chi tiết nằm trong `frontend-components.md` của từng unit.
 - Bảng phủ 40/40 UC và 16/16 unit. Mã cũ dạng `UC-XXX-NN` tra ở bảng Legacy UC codes của bảng use case.
 
@@ -221,9 +221,9 @@ Bảng dưới liệt kê đúng các ô trong [screen-flow.drawio](screen-flow.
 | U06 | Edit Question | Popup | GV và CN môn | Question Bank | UC 24–28 |
 | U06 | Create Rubric | Popup | GV và CN môn | Question Bank | UC 20 |
 | U06 | Edit Rubric | Popup | GV và CN môn | Question Bank | UC 20 |
-| U04 | Class Detail | Màn hình | Giảng viên | My Teaching Classes | UC 9 |
+| U04 | Class Detail | Màn hình | Giảng viên | My Teaching Classes | UC 9 (InviteCodeTab: mã mời), UC 36 (GradeDistributionToggle: bật phân bố điểm) |
 | U04 | Add Student | Popup | Giảng viên | Class Detail | UC 9 |
-| U04 | Edit Class | Popup | Giảng viên | Class Detail | UC 9 (mã mời), UC 36 (bật phân bố điểm) |
+| U04 | Edit Class | Popup | Giảng viên | Class Detail | UC 9 |
 | U05 | Class Content | Màn hình | Giảng viên | Class Detail | UC 11 |
 | U05 | Add Lesson | Popup | Giảng viên | Class Content | UC 11 |
 | U05 | Edit Lesson | Popup | Giảng viên | Class Content | UC 11 |

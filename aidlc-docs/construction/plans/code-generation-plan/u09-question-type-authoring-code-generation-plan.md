@@ -22,7 +22,7 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `AuditPort` | U02 | Dùng thật |
 | `ArtifactPort` | U03 | Dùng thật (purpose `DOCUMENT_IMAGE`) |
 | `ClassAccessPort` | U04 | Dùng thật |
-| `BankQueryPort` | U06 | Dùng thật (kiểm câu quiz khi duyệt) |
+| `BankQueryPort` | U06 | Dùng thật (kiểm câu quiz khi duyệt; lấy khung `DOCUMENT` từ ngân hàng) |
 | `AssignmentQueryPort`, `AssignmentExtensionPort`, `TypeConfigSlot` | U08 | Dùng thật (ghi cấu hình loại bài và khung qua `AssignmentExtensionPort`) |
 | U09 cài `TypeConfigPort` (U08), `DocumentModelPort` (U06, U11, U15) | | Thay adapter tạm của U08 và U06 |
 
@@ -65,7 +65,7 @@ PostgreSQL: cột `type_config`, `skeleton` của `assignments` (U08 tạo bản
 - [ ] **Bước 3** - `SafeDrawioParser`, `SvgSanitizer` (P5, BR-U09-35).
 - [ ] **Bước 4** - `DocumentValidator`: `validateSkeleton`, `validateForSave` (hash khóa block), `validateForSubmit` (block giảng viên đủ, sơ đồ không rỗng, `requiredDiagrams`, có nội dung người học); ESSAY chỉ block chữ, trần 1 000 000 ký tự (F5, P2, BR-U09-20…21, 30…38).
 - [ ] **Bước 5** - `TypeConfigService` và `TypeConfigPort` (`check`, `copy`) cho QUIZ/ESSAY/DOCUMENT (F1, F4, BR-U09-01…03, 10…14).
-- [ ] **Bước 6** - `SkeletonService` (lưu khung, hash, làm sạch SVG) (F2).
+- [ ] **Bước 6** - `SkeletonService` (lưu khung, hash, làm sạch SVG; lấy khung từ câu `DOCUMENT` của ngân hàng khớp dạng bài qua `BankQueryPort`, giữ heading `workSection` cho bài nhóm) (F2, BR-U06-28).
 - [ ] **Bước 7** - Nhập DOCX: `SafeZipGuard`, `DocxImporter`, `BlockMapper`, `PngChunkReader`, `DiagramDetector` (PNG `tEXt`/`zTXt`/`iTXt`, SVG `content`, giải nén diagram nén), báo cáo nhập. Hỗ trợ cả khung giảng viên và preview block `STUDENT` cho U11 (F3, F3a, P3, BR-U09-40…48).
 - [ ] **Bước 8** - Xuất DOCX: `DocxExportService`, `JsvgRasterizer`, `PngChunkWriter`, semaphore 2 (F6, P4, BR-U09-50…52).
 - [ ] **Bước 9** - `DiagramCompactor` (F7, BR-U09-60).

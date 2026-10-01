@@ -2944,3 +2944,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization; no stage advanced.
 
 ---
+
+## Documentation consistency review (fifth pass)
+**Timestamp**: 2026-10-01T03:41:04Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit 7d4f9e4. Structural checks all pass (49 stories, 40 UC, ERD 46, screen flow 93/93, 0 broken links, no undefined BR or trace IDs). Reported: BR-U01-48 sends Teacher/Subject Manager to /teaching but no unit defines a page there (My Teaching Classes is app/teaching/classes in U04); screen-flow.md maps invite code and grade distribution to the Edit Class popup while U04 puts them in InviteCodeTab and GradeDistributionToggle on Class Detail; U09 F2 step 4 (copy skeleton from bank) is not in U09 code plan step 6 and the U09 plan is still marked Approved. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply fifth review fixes
+**Timestamp**: 2026-10-01T03:45:33Z
+**User Input**: "2. tôi muốn giữ là InviteCodeTab và GradeDistributionToggle nằm trên trang Class Detail."
+**AI Response**: "Applied all three reported items. Screen flow: invite code and grade distribution moved from the Edit Class popup to the teacher Class Detail row (InviteCodeTab, GradeDistributionToggle) with a matching note. BR-U01-48 and LoginForm now send Teacher/Subject Manager to /teaching/classes. U09 code plan step 6 and port table cover copying a DOCUMENT skeleton from the bank; U09 domain entities list BankQueryPort; U09 plan marked for re-approval in aidlc-state. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---

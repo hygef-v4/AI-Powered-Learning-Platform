@@ -51,7 +51,7 @@ shared/
 | Validation phía client | Email đúng định dạng, mật khẩu không rỗng |
 | API | `authenticate` |
 | Hành vi lỗi | Mọi thất bại hiện **một** câu: "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng." Không phân biệt khóa tạm, chưa kích hoạt hay không tồn tại |
-| Thành công | Điều hướng theo role (BR-U01-48): Student → `/learn/dashboard`, Teacher và Subject Manager → `/teaching`, Admin → `/admin/accounts` |
+| Thành công | Điều hướng theo role (BR-U01-48): Student → `/learn/dashboard`, Teacher và Subject Manager → `/teaching/classes`, Admin → `/admin/accounts` |
 
 ### ActivationPage / PasswordResetPage
 

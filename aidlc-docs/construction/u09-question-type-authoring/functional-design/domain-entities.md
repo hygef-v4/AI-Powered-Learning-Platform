@@ -89,3 +89,4 @@ File DOCX chỉ xử lý trong bộ nhớ, không lưu.
 |---|---|---|
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Đọc loại bài/trạng thái; ghi cấu hình và khung |
 | `ArtifactPort` | U03 | Ảnh `DOCUMENT_IMAGE` |
+| `BankQueryPort` | U06 | Kiểm câu quiz khi duyệt; đọc khung câu `DOCUMENT` để làm điểm xuất phát cho Diagram Essay hoặc bài nhóm (F2 bước 4) |
