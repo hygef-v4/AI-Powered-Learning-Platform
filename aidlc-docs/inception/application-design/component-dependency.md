@@ -4,7 +4,7 @@
 
 - Dependency đi từ controller/adapter vào application/domain rồi ra port; domain không phụ thuộc SDK provider.
 - Ghi liên module chỉ qua port công khai hoặc event sau commit.
-- Dùng chung một PostgreSQL (45 bảng). Mỗi bảng có một unit chủ tạo migration; phần lớn bảng chỉ unit chủ đọc/ghi. Năm bảng dùng chung (mục 4a) cho phép unit khác thêm cột của mình bằng migration riêng và ghi qua port của unit chủ; không unit nào đọc/ghi repository của unit khác trực tiếp.
+- Dùng chung một PostgreSQL (46 bảng). Mỗi bảng có một unit chủ tạo migration; phần lớn bảng chỉ unit chủ đọc/ghi. Bốn bảng dùng chung (mục 3a) cho phép unit khác thêm cột của mình bằng migration riêng và ghi qua port của unit chủ; không unit nào đọc/ghi repository của unit khác trực tiếp.
 - Worker dùng cùng contract và không vượt phạm vi quyền của job nguồn.
 
 ## 2. Dependency matrix
@@ -48,7 +48,6 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 | `app_settings` | U01 | U07, U13 | Khóa `u07.*`, `u13.*` | Mỗi unit chỉ ghi khóa có tiền tố của mình |
 | `assignments` | U08 | U09, U10 | Cấu hình loại bài, khung (U09); lineage (U10) | `AssignmentExtensionPort` |
 | `publications` | U08 | U15 | Công bố điểm `GRADED` (U15); chế độ bài `GRADED`/`PRACTICE` do U08 sở hữu | `AssignmentExtensionPort` |
-| `student_groups` | U12 | U14 | Tài liệu nhóm | `GroupDocumentStorePort` |
 
 ## 4. Data ownership
 
