@@ -472,7 +472,7 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 22, 24, 27, 36 |
 | Tách bài nhóm ngày 2026-10-01 | FR-025, FR-026; bảng 40 use case: UC 27 Manage Group Assignment (tạo, sửa bài nhóm, mục chính, nhả khóa mục), UC 28 Manage Assignments; UC 28–39 cũ thành 29–40 |
 | Gộp danh mục use case ngày 2026-10-01 | FR-006, FR-027; bảng 39 use case (nay 40): AI soạn bài thuộc Manage Assignments (nay UC 28), UC 21 Manage Templates gồm tạo thủ công/AI, sửa, xoá template |
-| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case (nay 39); từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 23–27. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
+| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case (sau đó 39, nay 40); từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 23–27. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline
 

@@ -3017,3 +3017,11 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Version control only; no content changes.
 
 ---
+
+## Verify synchronization of the 40-case table
+**Timestamp**: 2026-10-01T12:40:00Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Checked all Markdown and draw.io files: table IDs 1-40 consecutive; every 'UC N <name>' reference matches the table (only the lần 6 history entry in aidlc-state keeps the old name by design); stories matrix names match; story map assigns each of UC 1-40 to exactly one unit; no UC28/UC-28/'use case 28' variants; no stale 39 counts outside history notes; UC 27/28 references reviewed by meaning. Fixed one stale note in requirements.md traceability ('bảng 40 use case (nay 39)' -> '(sau đó 39, nay 40)')."
+**Context**: Documentation verification; no stage advanced.
+
+---
