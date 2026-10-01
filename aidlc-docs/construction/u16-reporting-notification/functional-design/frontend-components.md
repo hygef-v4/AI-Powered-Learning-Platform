@@ -9,7 +9,7 @@ app/notifications/         NotificationListPage (phân trang)
 app/teaching/publications/[id]/progress   SubmissionProgressPage
   ProgressSummary          đã nộp / đang làm / chưa bắt đầu / trễ, thời gian còn lại
   ProgressTable            người học (hoặc nhóm), trạng thái, thời điểm nộp
-app/learn/dashboard/       StudentResultDashboard (bài sắp hạn, trạng thái, điểm công bố)
+app/learn/dashboard/       StudentResultDashboard (trang đích Student: lớp đã ghi danh, bài sắp hạn, thông báo, trạng thái, điểm công bố)
 app/teaching/classes/[id]/gradebook/  GradebookExportAction (CSV/XLSX theo lớp hoặc bài)
 ```
 

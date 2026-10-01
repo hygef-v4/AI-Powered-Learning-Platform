@@ -116,7 +116,7 @@ PostgreSQL `accounts` (U07 thêm cột số dư credit bằng migration của U0
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 30** - Trang auth: `LoginPage`, `ActivationPage`, `PasswordResetPage` với `RequestOtpStep` và `VerifyOtpAndSetPasswordStep` dùng chung.
+- [ ] **Bước 30** - Trang auth: `LoginPage` (điều hướng theo role sau đăng nhập, BR-U01-48), `ActivationPage`, `PasswordResetPage` với `RequestOtpStep` và `VerifyOtpAndSetPasswordStep` dùng chung.
 - [ ] **Bước 31** - `ProfilePage`: `ProfileForm`, `AvatarUploader` (bọc `FileUploader` của U03 với `purpose = AVATAR`; ẩn khi backend báo chưa hỗ trợ), `ChangePasswordForm`, `LogoutButton`.
 - [ ] **Bước 32** - Admin: `AccountListPage`, `CreateAccountDialog`, `AccountDetailPage` (`RoleChangeDialog`, `StatusToggleDialog`), `ImportAccountsPanel` (trên `AccountListPage`).
 - [ ] **Bước 33** - Test frontend: validation form, thông điệp trung tính, hành vi nút theo phản hồi backend.

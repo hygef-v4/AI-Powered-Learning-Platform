@@ -59,7 +59,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 4. Trạng thái khác `ACTIVE` → lỗi trung tính (BR-U01-40).
 5. Sai mật khẩu → tăng `failedLoginCount`; chạm 5 thì đặt `lockedUntil` + 15 phút và ghi audit `ACCOUNT_TEMP_LOCKED`. Trả lỗi trung tính, ghi audit `LOGIN_FAILED`.
 6. Đúng → xóa `failedLoginCount`, `lockedUntil`.
-7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên và điểm đến theo role (BR-U01-44). Không có bước MFA (BR-U01-47).
+7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên và điểm đến theo role (BR-U01-44, 48). Không có bước MFA (BR-U01-47).
 
 **Ra**: phiên đăng nhập hoặc lỗi trung tính **giống nhau** cho mọi nguyên nhân thất bại.
 

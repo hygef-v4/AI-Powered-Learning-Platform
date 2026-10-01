@@ -1105,7 +1105,7 @@
 
 ### US-RPT-002 - Dashboard kết quả cá nhân
 
-**Story**: Là người học, tôi muốn xem dashboard điểm, trạng thái bài nộp và bài sắp đến hạn để ưu tiên việc học của mình.
+**Story**: Là người học, tôi muốn xem dashboard gồm lớp đã ghi danh, bài sắp đến hạn, thông báo, trạng thái bài nộp và điểm đã công bố để ưu tiên việc học của mình.
 
 **Truy vết**: FR-002, FR-009, FR-024, NFR-002, SEC-005, SEC-002, SEC-003.
 

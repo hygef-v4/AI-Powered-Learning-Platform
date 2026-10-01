@@ -23,7 +23,7 @@
 1. Giảng viên chọn lượt phát hành → tổng hợp theo BR-U16-30.
 
 ## F6 - Dashboard cá nhân
-1. Lấy lớp đang ghi danh qua U04, bài đang mở/sắp hạn qua U08, trạng thái/lượt của chính người học qua U11/U14, điểm `PUBLISHED` qua U15 (BR-U16-40, 41).
+1. Lấy lớp đang ghi danh qua U04, bài đang mở/sắp hạn qua U08, trạng thái/lượt của chính người học qua U11/U14, điểm `PUBLISHED` qua U15, thông báo chưa đọc mới nhất từ bảng `notifications` của U16 (BR-U16-40, 41).
 2. Nếu lớp bật phân bố, U15 tổng hợp điểm công bố theo bài; U16 chỉ trả các khoảng đáp ứng BR-U16-42. Không trả điểm của người khác.
 
 ## F7 - Xuất bảng điểm

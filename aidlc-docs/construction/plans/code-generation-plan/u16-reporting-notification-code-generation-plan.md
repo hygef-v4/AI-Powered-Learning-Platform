@@ -71,7 +71,7 @@ PostgreSQL `notifications`, `email_outbox`, `notification_preferences`; nhắc h
 - [ ] **Bước 5** - `EmailDispatcher` (ưu tiên, trần Redis, dời ngày sau, 1 email/giây) và `EmailSendHandler` (idempotent, retry, `FAILED`, bỏ nhắc đã quá hạn) (F2, P2, P3, BR-U16-12…14).
 - [ ] **Bước 6** - `DeadlineReminderHandler`: tạo job khi bài mở; khi chạy bỏ qua nếu hạn đã đổi hoặc bài không còn `OPEN`; chỉ gửi người chưa nộp (F3, P4, BR-U16-20…22).
 - [ ] **Bước 7** - `PreferenceService`, `ProgressService` (một query), `RetentionHandler` 180 ngày (F4, F5, P5, BR-U16-05, 30, 31).
-- [ ] **Bước 7a** - `StudentDashboardService` và `GradebookExportService`: chỉ điểm `GRADED` đã công bố; kết quả `PRACTICE` và AI luyện tập nằm ngoài điểm chính thức/phân bố/CSV/XLSX; phân bố lớp chỉ khi bật cờ và đủ ngưỡng; không lưu tệp, không có điểm tổng/hệ số (F6, F7, BR-U16-40…45, FR-030).
+- [ ] **Bước 7a** - `StudentDashboardService` (lớp đã ghi danh, bài sắp hạn, thông báo chưa đọc mới nhất, trạng thái nộp, điểm đã công bố; BR-U16-40) và `GradebookExportService`: chỉ điểm `GRADED` đã công bố; kết quả `PRACTICE` và AI luyện tập nằm ngoài điểm chính thức/phân bố/CSV/XLSX; phân bố lớp chỉ khi bật cờ và đủ ngưỡng; không lưu tệp, không có điểm tổng/hệ số (F6, F7, BR-U16-40…45, FR-030).
 - [ ] **Bước 8** - U07 phát `payment.paid` sau commit (BR-U07-53) nếu U07 chưa có.
 - [ ] **Bước 9** - Unit test mọi `BR-U16-xx`.
 - [ ] **Bước 10** - Tóm tắt: `aidlc-docs/construction/u16-reporting-notification/code/business-logic-summary.md`.

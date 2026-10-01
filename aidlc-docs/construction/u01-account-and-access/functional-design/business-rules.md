@@ -56,6 +56,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
 | BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
+| BR-U01-48 | Đăng nhập thành công trả điểm đến theo role: `STUDENT` → `/learn/dashboard` (Dashboard, U16), `TEACHER` và `SUBJECT_MANAGER` → `/teaching` (My Teaching Classes, U04), `ADMIN` → `/admin/accounts` (Account List). | docs/screen-flow.md |
 
 ## 6. Hồ sơ
 

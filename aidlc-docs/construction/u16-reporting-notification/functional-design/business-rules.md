@@ -41,7 +41,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U16-40 | Dashboard chỉ cho Student đang đăng nhập: lớp đang ghi danh, bài sắp hạn, trạng thái lượt/bài nộp của chính mình và điểm `GRADED` đã `PUBLISHED` từ U15; kết quả `PRACTICE`/AI luyện tập chỉ nằm trong lịch sử attempt riêng, không trộn vào điểm chính thức. | US-RPT-002 S1, FR-030 |
+| BR-U16-40 | Dashboard (trang đích của Student, `/learn/dashboard`) chỉ cho Student đang đăng nhập: lớp đang ghi danh, bài sắp hạn, thông báo chưa đọc mới nhất, trạng thái lượt/bài nộp của chính mình và điểm `GRADED` đã `PUBLISHED` từ U15; kết quả `PRACTICE`/AI luyện tập chỉ nằm trong lịch sử attempt riêng, không trộn vào điểm chính thức. | US-RPT-002 S1, FR-030 |
 | BR-U16-41 | Dashboard không tính điểm tổng hay hệ số; sắp bài sắp hạn tăng dần, không đưa bài đã ngừng giao vào danh sách cần làm. | Quyết định 2026-09-25 |
 | BR-U16-42 | Phân bố điểm lớp chỉ hiện khi `showGradeDistribution` của U04 bật và có ít nhất 20 người học có điểm `PUBLISHED` cho bài đó; trả các khoảng điểm tổng hợp, ẩn khoảng có dưới 5 người, không trả tên/điểm cá nhân người khác. | US-RPT-002 S2, SEC-005 |
 | BR-U16-43 | Chỉ giảng viên lớp, Chủ nhiệm môn được gán môn hoặc ADMIN xuất bảng điểm lớp/bài mình được xem. Kiểm toàn bộ bộ lọc trước khi tạo CSV/XLSX; ngoài quyền `404`. | US-RPT-003 |

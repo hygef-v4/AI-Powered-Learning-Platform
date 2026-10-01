@@ -79,7 +79,7 @@ Mỗi publication có một job U02 `DEADLINE_REMINDER` (`idempotencyKey` = `pub
 
 | Kết quả | Nội dung |
 |---|---|
-| `StudentDashboard` | Lớp đang ghi danh, bài sắp hạn, trạng thái lượt/bài nộp của chính người học, điểm `PUBLISHED`; phân bố điểm ẩn danh khi lớp bật và đủ mẫu (BR-U16-42) |
+| `StudentDashboard` | Lớp đang ghi danh, bài sắp hạn, thông báo chưa đọc mới nhất, trạng thái lượt/bài nộp của chính người học, điểm `PUBLISHED`; phân bố điểm ẩn danh khi lớp bật và đủ mẫu (BR-U16-42) |
 | `GradebookExport` | CSV/XLSX theo lớp/bài: người học, trạng thái nộp/chấm, thời gian nộp, điểm cuối đã chốt hoặc công bố, phản hồi; không có điểm tổng, không có đề xuất AI; stream, không lưu |
 | `SubmissionProgress` | Theo lượt phát hành: đã nộp, chưa nộp, đang làm, nộp trễ, thời gian còn lại |
 

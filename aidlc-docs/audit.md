@@ -2928,3 +2928,19 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization; no stage advanced.
 
 ---
+
+## Documentation consistency review (fourth pass)
+**Timestamp**: 2026-10-01T03:34:22Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit dde50f0. Consistent: stories/matrix/UC names, spec UC names, persona and trace IDs, ERD, screen flow (93/93), events, question bank, application design, 0 broken links in 302 Markdown files, every BR-Uxx-nn reference defined. Reported: student dashboard content differs (UC 18/FR-024 list enrolled classes and notifications; BR-U16-40, StudentDashboard and U16 frontend omit notifications; US-RPT-002 statement omits classes and notifications) and the student landing route is not defined (U04 app/learn is MyClassesPage, U16 app/learn/dashboard, U01 has no role redirect). Legacy UC codes in functional-design plans remain by design. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply fourth review fixes
+**Timestamp**: 2026-10-01T03:37:09Z
+**User Input**: "sửa đi"
+**AI Response**: "Aligned the student dashboard with UC 18/FR-024 (enrolled classes, upcoming work, latest unread notifications, submission status, published grades) in BR-U16-40, StudentDashboard, U16 F6, U16 frontend, U16 code plan step 7a and US-RPT-002. Added BR-U01-48 role landing (Student /learn/dashboard, Teacher and Subject Manager /teaching, Admin /admin/accounts) to U01 rules, F3, LoginForm and code plan step 30; U01 plan needs re-approval. aidlc-state updated. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---
