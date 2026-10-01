@@ -1,7 +1,5 @@
 # 4.2 Use Cases (UC)
 
-> Review draft: names and IDs in this table have not yet been synchronized to other documents.
-
 This table contains 40 active MVP use cases, numbered consecutively from 1 to 40. Same-actor view, create and update actions are merged into a single "Manage" use case, and related use cases are merged where listed in [Merged IDs](#merged-ids). A subject manager can add YouTube sources to subject materials; a teacher can add them to class content. Simulation Exam and the separate question bank are outside the MVP use-case catalog.
 
 | ID | Use Case | Actor | Feature | Use Case Description |

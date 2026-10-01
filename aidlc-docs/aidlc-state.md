@@ -12,7 +12,7 @@
 - **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)
 - **Build System**: None yet (planned: Maven, npm)
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `F:\code\git\AI-Powered-Learning-Platform`
+- **Workspace Root**: `D:\Github\AI-Powered-Learning-Platform`
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)
@@ -72,9 +72,9 @@
 
 ## Open Items
 
-- Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm mỗi attempt Practice Text/Diagram Essay khi đủ credit; thiếu credit vẫn nộp nhưng không điểm AI và không chấm bù. Teacher chỉ chấm bài Graded. Các sơ đồ Draw.io trong `docs/` chưa được cập nhật trong lượt đồng bộ tài liệu này.
+- Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm mỗi attempt Practice Text/Diagram Essay khi đủ credit; thiếu credit vẫn nộp nhưng không điểm AI và không chấm bù. Teacher chỉ chấm bài Graded.
 - Chính sách hoàn tiền credit AI chưa chốt. Tài liệu PayOS hiện công bố API hủy link chưa trả và API lệnh chi riêng, chưa thấy API đảo ngược trực tiếp một payment đã `PAID`; cần quyết định phạm vi, điều kiện thu hồi credit đã mua và cách chuyển tiền trước khi thiết kế luồng hoàn tiền.
-- Nhóm chỉ triển khai một MVP: 49 story và 69 use case hiện hành sau khi gộp CRUD cùng actor (77 là mốc trước khi gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
+- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 là các mốc gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
 - Critical path (by plan steps): U01 → U04 → U05 → U08 → U09 → U10 → U11 → U15 → U16.
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
