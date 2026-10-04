@@ -22,7 +22,7 @@ app/teaching/bank/                 BankPage (chọn phạm vi: môn hoặc lớp
 |---|---|---|
 | `BankItemTable` | Phân trang 50, hiện bản `ACTIVE` mới nhất và cờ "có bản nháp" | `GET /api/v1/bank/items` |
 | `QuestionEditor`, `RubricEditor` | Lưu nháp; nút Kích hoạt hiện lỗi theo trường. Question Bank không có nút "Tạo rubric" | `POST`, `PATCH /api/v1/bank/items`, `POST .../{id}/activate` |
-| `RubricEditor` | Thêm/xóa/sắp xếp tiêu chí và mục; tổng điểm cập nhật ngay; lưu tạo phiên bản mới (bài còn `DRAFT` chuyển sang bản mới, bài đã phát hành giữ bản cũ) | như trên |
+| `RubricEditor` | Thêm/xóa/sắp xếp tiêu chí và mục; tổng điểm cập nhật ngay; lưu tạo phiên bản mới (chỉ bài còn `DRAFT` chuyển sang bản mới; bài đã duyệt (`REVIEWED`) hoặc đã phát hành giữ phiên bản rubric đã ghim, theo BR-U06-36) | như trên |
 | `VersionHistoryDrawer` | Danh sách phiên bản, xem từng bản | `GET /api/v1/bank/items/{lineageId}/versions` |
 | `PreviewDialog` | Render bằng component hiển thị câu hỏi dùng chung với U11 | `GET /api/v1/bank/items/{id}/preview` |
 | `ImportDialog` | 4 file mẫu tải về; kết quả từng dòng | `GET /api/v1/bank/import-templates/{type}`, `POST /api/v1/bank/imports` |

@@ -1,254 +1,376 @@
-# II. Use Case Specifications — 8 Key Use Cases
+# II. Use Case Specifications — 15 Key Use Cases
 
-These eight use cases were selected from the 40 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table. UC 30 Submit Assignment is specified once per assignment type because each type has its own editing and scoring rules. For UC 28 Manage Assignments, only the AI assignment-draft flow is specified; its other management actions are described in the table. Same-actor management actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
+These fifteen use cases are selected from the [40 active MVP use cases](use-case-table.md) to cover the main journey from learning materials and subject templates through all five assignment types, submission, grading/publication and AI credit purchasing. IDs, names and actors follow the current catalog. Business behavior is specified here; implementation details remain in the AI-DLC unit designs.
 
-## 1. Content Management
+| ID | Use Case | Reason for Selection |
+|---|---|---|
+| 11 | Manage Content | Shared modules, scoped learning materials and RAG |
+| 21 | Manage Templates | Versioned subject templates and independent class copies |
+| 28 | Manage Assignments | Shared lifecycle, sources, schedules, copies and AI drafts |
+| 23 | Manage Text Essay | Versioned essay questions and per-question rubrics |
+| 24 | Manage Quiz | Answer keys, exact-match scoring, shuffling and visibility |
+| 25 | Manage Diagram Essay | Mandatory skeleton, leaf parts, Draw.io/DOCX and AI drafts |
+| 26 | Manage Code Lab | Scored tests, isolated execution and sample verification |
+| 27 | Manage Group Assignment | Fixed skeleton parts, rubrics and class-group readiness |
+| 30 | Submit Assignment | Four individual types and immutable attempts |
+| 16 | Submit Group Document | Section claims, live collaboration and automatic submission |
+| 33 | Grade Submissions | Checklist grading, AI batches and teacher decisions |
+| 17 | Grade Group Document | Shared-document rubrics and member contribution scores |
+| 34 | Finalize Grades | Finalization, publication and score corrections |
+| 37 | Buy AI Credits | Verified payments and exactly-once credit grants |
+| 40 | Grade with AI | Explicit requests, credits, timeouts and retries |
 
-### 1.1 UC 11 — Manage Content
+Subject Managers perform Teacher actions only when assigned as the class teacher; otherwise they author subject templates under UC 21. The platform itself is not a secondary actor. UC 23–27 inherit the common lifecycle in UC 28, and detail only type-specific authoring and validation. UC 30 covers student editing/submission; UC 16 inherits its common submission rules for groups.
+
+## 1. UC 11 — Manage Content
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Subject Manager; Teacher |
 | Secondary Actors | Google Drive; YouTube; AI Service |
-| Description | The subject manager manages subject learning materials and the teacher manages class content. Each organizes lessons, uploads or updates content, monitors RAG processing, and publishes lesson versions within the assigned subject or class. |
-| Preconditions | The user is signed in and is the subject manager of the subject or the assigned teacher of the class. An uploaded file, if any, uses a supported format and meets the size limit. |
-| Normal Flow | 1. The user selects a subject or class, then a chapter and lesson. |
-|  | 2. The system checks scope; the user creates or edits a DRAFT and adds text, file or YouTube items. |
-|  | 3. For a new file, the system validates its type, stores it through Google Drive, and creates a PENDING source document. For a YouTube video or playlist, the system fetches existing captions without transcribing audio and keeps the transcript with its language and timestamps. |
-|  | 4. A background job extracts text, splits it into chunks, requests embeddings from the AI service, and updates processing status. |
-|  | 5. The user reviews the status and publishes a valid draft. The previously published version becomes SUPERSEDED. Published class content becomes visible to enrolled students. |
-| Alternative Flows | **A1 — Editing a published lesson:** Create a new draft while students continue to see the current published version. |
-|  | **A2 — Identical source already indexed:** Reuse its index without another AI call or credit charge. |
-|  | **A3 — Insufficient text (including a YouTube video without captions), AI failure, or insufficient credits:** Show the appropriate NO_TEXT or FAILED status and do not index the source. The material may still be published, and the user can retry processing after resolving the issue. |
-|  | **A4 — Draft with no items:** Reject publication. |
-|  | **A5 — Teacher attempts to change subject materials:** Reject the change; a teacher manages only the content of an assigned class. |
-| Postconditions | The content and version history are saved. Published content is visible within the permitted scope. A RAG failure does not erase the learning material. |
+| Description | Manage subject modules and scoped materials, then process uploaded text/captions for RAG. Materials are visible immediately without publication or versioning. |
+| Preconditions | The user is signed in and manages the subject or teaches the class within the authorized scope. |
+| Normal Flow | 1. The Subject Manager opens Subject Detail and creates, renames, reorders or archives modules. All current and future classes share this module structure. |
+| | 2. The user opens Upload Learning Materials from a module and uploads PDF/DOCX/PPTX files or a single YouTube video link. Each source becomes one material. |
+| | 3. Uploads from Subject Detail are subject materials; Teacher uploads from Class Detail are class-only materials. The system validates sources, stores files through Google Drive and saves their scope. |
+| | 4. Materials become viewable immediately. Background processing extracts text or existing captions, checks AI eligibility and uploader credits, creates an embedding and records processing status. |
+| | 5. Authorized users inspect scan status, retry processing and rename, reorder or archive materials. |
+| Alternative Flows | **A1 — Invalid source:** Reject unsupported files, files over 50 MB, invalid links and playlists. OCR and audio transcription are unsupported. |
+| | **A2 — No text/captions:** Record NO_TEXT/NO_CAPTION and skip indexing; the material remains viewable. |
+| | **A3 — Credit or system limit:** Record NO_CREDIT/BUSY without charging for an unmade AI call; allow later retry. |
+| | **A4 — Processing failure:** Apply bounded retries, then record FAILED and release reserved credits as applicable; retain the material. |
+| | **A5 — Unauthorized change:** Teachers cannot edit subject modules/materials. The current Subject Manager may manage materials throughout the assigned subject. |
+| | **A6 — Archive:** Hide the material without hard deletion; archiving a module hides its contents. |
+| Postconditions | Materials and processing status are retained within scope. AI failure does not remove viewing access. Only INDEXED materials are eligible for RAG. |
+| Traceability | U05 F1–F4; U03 file handling; U13 AI usage; UC 12 student access. |
 
-## 2. Group Assignment
+## 2. UC 21 — Manage Templates
 
-### 2.1 UC 16 — Submit Group Document
+| Field | Specification |
+|---|---|
+| Primary Actors | Subject Manager |
+| Secondary Actors | AI Service (when drafting); Google Drive (document assets) |
+| Description | Manage versioned subject templates for independent class copies, including templates inherited from previous managers. |
+| Preconditions | The user is the current manager of the subject. AI drafting requires eligible INDEXED subject sources, enabled AI and sufficient manager credits. |
+| Normal Flow | 1. Open Template List from Subject Detail and select assignment type/mode. Group templates are GRADED only. |
+| | 2. Author in Template Editor using UC 23–27 editors. Text Essay has one rubric per question; Diagram Essay/group templates have one per skeleton part. |
+| | 3. Optionally request AI questions for Quiz/Text Essay/Code Lab or a skeleton with guidance and per-part rubric suggestions for Diagram Essay/group work, using subject materials and manager credits. |
+| | 4. Preview citations/content, edit and accept or discard. Skeleton replacement requires confirmation and a warning when existing content will be replaced. |
+| | 5. Preview, review and release the valid template. Released versions are read-only and available to teachers of the subject. |
+| | 6. A Teacher copies a matching released template under UC 28 into an independent class draft with cloned rubrics. |
+| Alternative Flows | **A1 — Edit released template:** Create a new version; existing class copies remain unchanged. |
+| | **A2 — Delete:** Delete an unreleased draft; withdraw released versions, prevent further copying and preserve existing copies/history. |
+| | **A3 — AI/source/credit failure:** Reject invalid requests, release unused reservations on failure and permit manual authoring. |
+| | **A4 — Invalid rubric/configuration/sample solution:** Refuse review/release and identify the failed checks. |
+| | **A5 — Unauthorized manager:** Reject changes even if the user originally created the template. |
+| Postconditions | Released templates can be copied without schedules or group attachments. Templates are never delivered directly to students or synchronized into existing copies. |
+| Traceability | U10 F1–F2; U09 authoring; U13 F1; UC 20 and 28. |
+
+## 3. UC 28 — Manage Assignments
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | AI Service (when drafting) |
+| Description | Manage assignment drafts, sources, review, publication, schedules, copies and retirement. Subject Managers manage subject templates under UC 21; they edit class assignments only when teaching that class. |
+| Preconditions | The user has the appropriate scope. Content changes require DRAFT state. AI requests require permitted INDEXED sources, enabled AI and sufficient requester credits. |
+| Normal Flow | 1. The Teacher selects type and valid GRADED/PRACTICE mode; group work is GRADED only. |
+| | 2. Start empty, copy a matching released subject template or copy from another class they teach. Copies clone rubrics and omit schedules, attempts, submissions and grades. |
+| | 3. Author through UC 23–27. Quiz/Text Essay/Code Lab use bank/private questions; Diagram Essay/group work use mandatory skeletons without assignment-question rows. |
+| | 4. For AI drafts, choose source scope and options. Check permissions, indexing, limits and credits, reserve estimated credits and process in the background. |
+| | 5. Show validated questions or a heading skeleton with guidance, rubric suggestions and citations. Edit/select questions to retain, or confirm skeleton replacement after preview. Discarding leaves the draft unchanged; settle actual usage. |
+| | 6. Preview and review. Validate questions, configurations and rubrics, verified Code Lab sample solutions and group readiness. |
+| | 7. Publish with opening/closing times, late-submission policy and attempt limits. Lock content; open/close on schedule and notify students when work opens. |
+| Alternative Flows | **A1 — Invalid RAG source:** Reject outside-scope/unindexed sources before calling AI. |
+| | **A2 — AI/credit limit:** Reject without charging for an unmade call; manual authoring remains available. |
+| | **A3 — AI failure/invalid output:** Apply bounded retries, release unused reservations after final failure and preserve the draft. |
+| | **A4 — Invalid content/rubric/sample solution:** Refuse review/publication and show failed checks. |
+| | **A5 — Group readiness:** Require at least one valid group and one leader per group; warn about ungrouped students. |
+| | **A6 — Schedule change:** Validate times; an OPEN assignment may only have its deadline extended. |
+| | **A7 — Retirement:** Require a reason, stop further work and automatically submit current attempts/group documents. Retired work stays visible to students with a published score or Practice result. |
+| | **A8 — Clone/new version:** Create an independent draft with cloned rubrics and keep historical work/grades. Published content cannot be edited in place. |
+| Postconditions | Accepted AI content remains draft until human review/publication. The assignment has a valid lifecycle and schedule; AI never approves or publishes it. |
+| Traceability | U08 F1–F8; U09 authoring; U10 copies; U12 readiness; U13 F1; UC 21 and 23–27. |
+
+## 4. UC 23 — Manage Text Essay
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | AI Service (when drafting questions) |
+| Description | Author a GRADED or PRACTICE Text Essay with versioned questions and one checklist rubric per question. Extends the common lifecycle in UC 28; subject templates follow UC 21. |
+| Preconditions | The Teacher teaches the class or the Subject Manager manages the template's subject. The target is DRAFT with TEXT_ESSAY type and a valid mode. |
+| Normal Flow | 1. Open Assignment Editor or Template Editor through UC 28/21 and enter the title and instructions. |
+| | 2. Write private essay questions or search and select versioned bank questions by type, difficulty, tags and module. Optionally bulk-import essay questions or request AI questions through UC 28/21. |
+| | 3. Create one checklist rubric per question in the editor under UC 20. |
+| | 4. Calculate each question's maximum points from its rubric; calculate assignment points as the sum of question totals. Points are not entered independently of the rubric. |
+| | 5. Preview the student view and request review. Validate the question count and a valid ACTIVE rubric for every question; publication, copying and versioning follow UC 28. |
+| Alternative Flows | **A1 — Missing rubric or invalid question:** Refuse review and identify the question requiring correction. Text Essay supports 1–20 questions. |
+| | **A2 — Edit a question used by published work:** Create a new question version; existing assignments/attempts keep their pinned version. |
+| | **A3 — Edit a rubric:** Create a new version and repoint only a DRAFT owner. Reviewed/published work keeps its pinned rubric; copies clone rubrics. |
+| | **A4 — Bulk-import errors:** Validate each row, create valid question drafts and report invalid rows. Importing questions does not create rubrics; the author must add them in the editor. |
+| | **A5 — AI or credit failure:** Follow UC 28/21 alternatives; retain the draft and allow manual authoring. |
+| Postconditions | The draft contains essay questions and independent per-question rubrics with calculated points. Student answers use basic text formatting without tables, images or diagrams and no word/line limit beyond the technical cap. GRADED work is teacher-graded; Practice AI is requested explicitly under UC 40. |
+| Traceability | U09 BR-U09-20–23; U06 question/rubric versions and imports; U08 review; UC 20, 21 and 28. |
+
+## 5. UC 24 — Manage Quiz
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | AI Service (when drafting questions) |
+| Description | Author a GRADED or PRACTICE multiple-choice quiz with answer keys, scoring and display policies. Extends UC 28; subject templates follow UC 21. |
+| Preconditions | The author has class/template scope and a DRAFT MULTIPLE_CHOICE_QUIZ with a valid mode. |
+| Normal Flow | 1. Open the appropriate editor and enter instructions. |
+| | 2. Create single-answer/multiple-answer questions or search, select, bulk-import or reuse bank versions. Bank selection may be manual or random with preview under UC 28. |
+| | 3. Specify answer choices, correct answers and positive question points. Single-answer questions have 2–6 choices with exactly one correct answer. |
+| | 4. Configure question/answer shuffling, optional time limit, immediate score visibility and correct-answer visibility (NEVER, AFTER_SUBMIT or AFTER_CLOSE). |
+| | 5. Preview and review. Validate 1–200 questions with valid answer keys and positive points; publish/schedule/copy through UC 28 or release the template through UC 21. |
+| Alternative Flows | **A1 — Invalid answer key or points:** Refuse review and report the exact question. |
+| | **A2 — Invalid import row:** Report per-row errors; valid rows become bank drafts and no rubric is created. |
+| | **A3 — Edit a bank question used by published work:** Create a new version; keep published versions and attempt answer keys unchanged. |
+| | **A4 — Random selection unavailable:** Report insufficient matching questions without duplicating already selected questions; permit filter changes or manual selection. |
+| | **A5 — AI failure/insufficient credits:** Preserve draft questions and permit manual authoring. |
+| Postconditions | The draft has versioned questions, scoring and visibility configuration without rubrics. Multiple-answer questions earn points only for the exact correct answer set. Each student attempt retains its shuffle seed/answer-key snapshot; students do not author quizzes. |
+| Traceability | U09 BR-U09-10–14; U06 question validation; U08 question selection; UC 21, 28 and 30. |
+
+## 6. UC 25 — Manage Diagram Essay
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | AI Service (when drafting a skeleton); Google Drive (document assets) |
+| Description | Author a GRADED or PRACTICE Diagram Essay with a mandatory document skeleton, leaf-heading parts and one rubric per part. Extends UC 28 and reuses UC 21 for subject templates. |
+| Preconditions | The author has class/template scope and a DRAFT DIAGRAM_ESSAY with a valid mode. |
+| Normal Flow | 1. Open the DOCUMENT skeleton editor and write the teacher blocks, copy a DOCUMENT skeleton from the bank, or import DOCX with a preview and unsupported-content report. |
+| | 2. Optionally request SKELETON_DRAFT through UC 28/21: preview a heading tree, guidance, per-part rubric suggestions and citations. Confirm replacement of the existing skeleton, with a warning if content already exists. |
+| | 3. Use Heading 1–6 to build nested structure. Automatically identify leaf headings as parts; title/subtitle and content before the first heading are shared content. A skeleton without headings is one part. |
+| | 4. Create one checklist rubric per part; calculate part points from rubric items and the assignment total from part totals. AI suggestions must be reviewed and saved as rubrics by the author. |
+| | 5. Add embedded Draw.io diagrams and optionally specify required diagram types/counts. Display diagram previews rather than raw XML. |
+| | 6. Preview and request review. Validate the skeleton, diagram XML and an ACTIVE rubric for every part; follow UC 28 for publication or UC 21 for template release. |
+| Alternative Flows | **A1 — Missing skeleton/rubric:** Refuse review. The skeleton is mandatory; no blank-page assignment is allowed. |
+| | **A2 — Change heading structure:** Recalculate leaf parts. New parts need rubrics; headings that cease to be leaves lose their rubric association. Preserve unchanged part identity. |
+| | **A3 — Invalid or oversized DOCX:** Reject files over 20 MB or unsafe imports. Preview accepted/omitted content before replacing the skeleton. |
+| | **A4 — Invalid diagram XML:** Reject unsafe/invalid XML and preserve valid draft content. If required diagrams are configured, each type has a minimum of 1–20. |
+| | **A5 — AI discarded/fails:** Keep the existing skeleton; apply UC 28/21 credit/error rules. AI proposes no diagrams and replacement is never automatic. |
+| | **A6 — Copy or new version:** Clone part rubrics; copying a bank skeleton does not make edits update the bank source. |
+| Postconditions | The skeleton, parts and rubric references are stored in assignment configuration without assignment-question rows. Every teacher block is locked for students; they add/edit only their own blocks under UC 30. |
+| Traceability | U09 F2/F2a/F2c/F3 and BR-U09-24–48; U06 rubrics; U13 SKELETON_DRAFT; UC 20, 21 and 28. |
+
+## 7. UC 26 — Manage Code Lab
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | Code Sandbox; AI Service (when drafting questions) |
+| Description | Author a GRADED or PRACTICE Code Lab with versioned problems, scored tests, resource limits and verified sample solutions. Extends UC 28; subject templates follow UC 21. |
+| Preconditions | The author has class/template scope and a DRAFT CODE_LAB with a valid mode. |
+| Normal Flow | 1. Open the code configuration editor; author questions or create/search/import/reuse bank versions. Code Lab supports 1–20 questions. |
+| | 2. Configure language, starter files, sample solution, public/hidden tests and test points. Supported languages are Java, Python, C, C++, JavaScript, Dart and C#. |
+| | 3. Set per-test time and memory limits: 100–10,000 ms and 64–1024 MB. |
+| | 4. Press Verify Sample Solution. Run all tests in an isolated sandbox and retain verification tied to the current question content. |
+| | 5. Preview and request review. Require every sample solution to pass all tests for the current content; publication/versioning follow UC 28 and template release follows UC 21. |
+| Alternative Flows | **A1 — Sample solution fails:** Show verification results, refuse review and allow corrections/reverification. |
+| | **A2 — Change problem, tests or sample solution:** Invalidate the prior verification and require a new run. |
+| | **A3 — Sandbox unavailable:** Report verification failure/unavailability; never mark an unverified solution as passing. Code does not run on the application server. |
+| | **A4 — Invalid language, resource limits, tests or import:** Reject invalid configuration/rows and preserve valid drafts. |
+| | **A5 — Edit a used bank question:** Create a new version, preserving published assignment/attempt snapshots. AI question generation follows UC 28/21 and does not bypass sample verification. |
+| Postconditions | The draft contains coding questions and current successful verification before review. Scoring is deterministic from passed tests without a rubric or AI scoring. Students receive only permitted public-test details and pass/fail for hidden tests. |
+| Traceability | U09 type configuration; U06 CODE definitions; U13 BR-U13-30–37; UC 21, 28 and 30. |
+
+## 8. UC 27 — Manage Group Assignment
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Teacher; Subject Manager |
+| Secondary Actors | AI Service (when drafting a skeleton); Google Drive (document assets) |
+| Description | Author a GRADED group-document assignment with fixed skeleton parts, independent per-part rubrics and valid class groups. Extends UC 28; Subject Managers author group templates under UC 21. |
+| Preconditions | The Teacher teaches the class or the Subject Manager manages the template subject. The target is DRAFT GROUP_ASSIGNMENT and its mode is GRADED. |
+| Normal Flow | 1. Open the appropriate editor and prepare the mandatory teacher skeleton manually, from the DOCUMENT bank or by supported DOCX import. |
+| | 2. Optionally preview AI skeleton headings, guidance and rubric suggestions. Confirm replacing the current skeleton with a warning for existing content, as in UC 25. |
+| | 3. Derive fixed work parts from leaf headings and create one rubric per part under UC 20. Calculate the document maximum from part totals. |
+| | 4. Preview/review the assignment. Before class publication under UC 28, check the groups managed in UC 9: at least one group, valid membership and exactly one leader per group. |
+| | 5. Publish with the class schedule. When work opens, initialize one shared document per group from the fixed skeleton; groups created later also receive documents for open group assignments. |
+| | 6. The Teacher monitors group submissions and may release section claims. Leaders assign parts and students collaborate/submit under UC 16. |
+| Alternative Flows | **A1 — PRACTICE mode:** Reject; group work is GRADED only. |
+| | **A2 — Missing parts/rubrics:** Refuse review. Recalculate parts when headings change and require a rubric for every new leaf. |
+| | **A3 — Invalid/no groups:** Refuse class publication. Warn about ungrouped students rather than treating the warning alone as a publication failure. |
+| | **A4 — Subject template:** Do not attach groups or a schedule; check class groups only when its class copy is published. |
+| | **A5 — Change/retire published work:** Follow UC 28; retirement triggers automatic group submission under UC 16. |
+| | **A6 — Invalid source/import or AI failure:** Preserve the draft and follow UC 25/28/21 alternatives. |
+| Postconditions | The class draft has fixed skeleton parts and per-part rubrics without assignment-question rows. The Teacher does not assign parts to students; the leader does. No student may add/delete/rename/move skeleton sections. Published work uses class groups and is assessed under UC 17. |
+| Traceability | U09 skeleton authoring; U12 group readiness; U14 F1/F7; U13 AI drafts; UC 9, 16, 17, 20, 21 and 28. |
+
+## 9. UC 30 — Submit Assignment
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Student |
+| Secondary Actors | Code Sandbox (Code Lab); Google Drive (document assets) |
+| Description | Complete individual work with autosave, immutable submission snapshots, receipts and type-appropriate scoring. UC 16 handles group work using common submission rules. |
+| Preconditions | ACTIVE enrollment in an OPEN class, work still accepted and an attempt available. Starting a new attempt consumes one attempt; only one IN_PROGRESS attempt per student/assignment exists. |
+| Normal Flow | 1. Start or resume an attempt. Snapshot the assignment, questions/rubrics and policies, including quiz shuffle seed. The attempt deadline is the earlier of the time limit and final submission deadline. |
+| | 2. Complete the type-specific work below. Autosave 10 seconds after the last edit and when leaving, with a content version and last-saved indicator. |
+| | 3. Submit: validate ownership, deadline and content, freeze the snapshot, record server time/lateness and return attempt ID/number, timestamp, late flag and receipt hash. |
+| | 4. GRADED work creates an evaluation through U15. Score Quiz directly from the snapshot answer key; run all Code Lab tests asynchronously. PRACTICE Quiz/Code Lab returns private results; Practice Text/Diagram Essay stays ungraded until explicit UC 40. |
+| Alternative Flows | **A1 — Attempts exhausted or assignment unavailable:** Reject a new attempt. Resuming the existing attempt does not consume another. |
+| | **A2 — Version conflict:** Require reload without overwriting the latest valid draft. |
+| | **A3 — Invalid manual submission:** Preserve the draft for correction while work is accepted. |
+| | **A4 — Time limit/deadline/retirement:** Submit the latest saved content automatically, including final saves within the 30-second network grace period. Empty/incomplete work is still submitted, with validation warnings as applicable. |
+| | **A5 — After deadline plus grace:** Reject. An autosave or code trial alone is not submission. |
+| Postconditions | Submitted attempts/receipts are immutable. New attempts do not overwrite previous ones; the last GRADED submission is official. Practice results stay outside teacher grading, official gradebooks and exports. Automatic GRADED score visibility follows publication policy. |
+| Traceability | U11 F2–F5; U09 validation; U13 code execution; U15 F1/F8; UC 31 and 40. |
+
+### Type-specific flows
+
+| Type | Editing and Validation | Scoring and Alternatives |
+|---|---|---|
+| Text Essay | Basic paragraphs, headings, lists, bold/italic; no tables, images or diagrams. No word/line limit beyond technical character limits. Snapshot each question and rubric. | GRADED answers await teacher rubric grading. Practice is submitted without automatic AI grading; UC 40 is available afterwards. |
+| Multiple-Choice Quiz | Answer single/multiple-answer questions in the attempt's fixed shuffled order, with countdown if configured. Invalid references cannot replace saved valid answers. | Score from captured answer keys without a grading job. Multiple-answer questions require the exact correct answer set. GRADED scores publish immediately only if configured, otherwise await finalization/publication. Practice results are private; answer visibility follows NEVER, AFTER_SUBMIT or AFTER_CLOSE. |
+| Diagram Essay | Edit student blocks while retaining every locked teacher block. Store validated full Draw.io XML and display previews. DOCX import shows a preview/report and adds STUDENT blocks only after confirmation, without replacing teacher content. | Manual submission validates structure, required/nonempty diagrams and student content; failures require correction. GRADED work awaits per-part rubric grading; Practice is eligible for explicit UC 40. |
+| Code Lab | Autosave source in the configured language; run public tests in an isolated sandbox at most five times per minute. Hidden-test inputs/outputs stay private. | Run all tests on submitted source, with resource limits and no rubric. Sandbox failure preserves the submission, applies retry policy and reports pending/unavailable scoring without inventing a result. |
+
+## 10. UC 16 — Submit Group Document
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Student (group member; group leader) |
 | Secondary Actors | None |
-| Description | The group leader breaks the teacher's main sections into detailed sub-sections and assigns them to members. Members work on their sections in a private workspace and mark them Done so the completed content appears in the shared document in real time. When every section is Done, the document enters REVIEW for the whole group to read and comment on, and the leader then submits it; the system submits the current version when the deadline passes. |
-| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 27, and its publication still accepts work. |
-| Normal Flow | 1. A group member opens the document; the system checks access and shows shared content, main sections and sub-sections, section states, assignees and the document state (IN_PROGRESS or REVIEW). |
-|  | 2. The leader may add, rename, reorder or remove detailed sub-sections under a main section and assign a section to a member. The system locks an assigned section to that member. |
-|  | 3. A member opens an assigned section or claims an OPEN or DONE section. The system conditionally claims it, locks it to that student, and copies its current published blocks into a private draft. |
-|  | 4. The member edits only that section. The system autosaves the versioned draft, which other members cannot yet see. |
-|  | 5. The member marks the section Done. The system validates the blocks, stores a revision and its author, publishes the completed blocks, releases the claim, and pushes the update to members currently viewing the document. |
-|  | 6. When every section is Done, the system moves the document to REVIEW and notifies the members. Members read the whole document and comment on sections. |
-|  | 7. The group leader requests submission. The system checks the leader role, the deadline and the REVIEW state, and warns about unresolved comments while allowing submission. |
-|  | 8. The system snapshots the shared document and section authors into an immutable group submission, returns a receipt, and starts the grading workflow. |
-| Alternative Flows | **A1 — Another member claims the section first:** Reject the competing claim and show its current state; do not overwrite the existing claim. |
-|  | **A2 — Draft version conflict or invalid blocks:** Reject the save or Done action without replacing the last valid draft or published content. |
-|  | **A3 — The member releases the claim, the leader reassigns the section, or the leader or teacher releases it:** Unlock the section (and lock it to the new assignee when reassigned); uncompleted private edits do not enter the shared document. |
-|  | **A4 — A member other than the leader tries to add, edit, remove or assign sections:** Reject the change. The teacher's main sections cannot be removed or renamed by the group. |
-|  | **A5 — A section must change during REVIEW:** A member reclaims the section or the leader reassigns it; the document returns to IN_PROGRESS and re-enters REVIEW only when every section is Done again. |
-|  | **A6 — The member leaves the group:** Release the claim while retaining draft history, without publishing unfinished work. |
-|  | **A7 — Connection drops:** Reload the full section and shared-document state after reconnection. |
-|  | **A8 — Submission attempted by a non-leader, or before the document reaches REVIEW:** Reject submission and explain the reason; viewing access remains. |
-|  | **A9 — Leader resubmits before the deadline:** The document must be back in REVIEW; keep both submissions, and the latest submission is the one to grade. |
-|  | **A10 — Deadline passes or publication is retired:** Automatically submit the current document in any state, take only published content of claimed sections, and record warnings for unfinished sections or a document that was not reviewed. |
-| Postconditions | Each completed section has a recorded revision and author. The group submission, receipt, and submission history are stored. The document becomes read-only after the final submission deadline. |
+| Description | Collaborate on fixed skeleton sections, merge completed private drafts into a shared document and submit manually or automatically. There is no REVIEW stage or section commenting. |
+| Preconditions | The student is a current group member. A GRADED group assignment accepts work and has a shared document initialized from its teacher skeleton. |
+| Normal Flow | 1. A member opens Assignment Workspace or the document from My Group. The system verifies access and shows shared content, section states, assignees and holders. |
+| | 2. The leader assigns a section, or a member claims an OPEN/DONE section. One member holds each section; its completed content becomes their private draft. |
+| | 3. The holder edits in a full-page popup showing the section and its ancestor heading branch, excluding sibling branches. The system autosaves a versioned private draft. |
+| | 4. Done validates content, records revision/authorship, merges completed blocks and releases the claim. The popup closes and all viewers receive the update. |
+| | 5. The leader requests submission before the deadline. Unfinished sections trigger a warning but do not prevent submission; unfinished private drafts are excluded from manual submission. |
+| | 6. The system snapshots shared content/authors, returns a receipt, creates or resets pending group/member evaluations and notifies the group. |
+| Alternative Flows | **A1 — Competing claim or version conflict:** Reject without replacing the current claim or last valid saved content. |
+| | **A2 — Invalid content or changed teacher blocks:** Reject. No student, including the leader, may add, delete, rename or move skeleton sections. |
+| | **A3 — Release/reassign:** The holder, leader or teacher may release a claim. Warn before manual release that unfinished edits will be discarded. Return to DONE if completed content exists, otherwise OPEN. Leaving the group also releases claims. |
+| | **A4 — Non-leader submission:** Reject. Completing all sections does not change document state or send a review notification. |
+| | **A5 — Resubmit before the deadline:** Replace the latest submitted snapshot; retain submission metadata in audit and previous scores in evaluation history. Grade only the latest submission. |
+| | **A6 — Deadline or retirement:** At the final deadline plus 30-second final-save grace, or on retirement, submit the latest saved document including claimed private drafts, record revisions and close the document. All viewers see a submitting indicator then Submitted Assignment. |
+| | **A7 — Connection loss:** Reload document/claim state on reconnection and recheck access and deadline. |
+| Postconditions | Completed content has recorded authorship. The latest submission and receipt are preserved. Manual submission permits editing/resubmission before the deadline; an automatically closed document is read-only. |
+| Traceability | U14 F1–F9; U12 membership; U15 evaluations; UC 30 common submission rules. |
 
-### 2.2 UC 17 — Grade Group Document
+## 11. UC 33 — Grade Submissions
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Teacher |
-| Secondary Actors | AI Service (only for an individual member's contribution, when requested) |
-| Description | The teacher reviews the group's latest submitted document and each member's recorded contribution, evaluates the shared work, and assigns a final score to each student. |
-| Preconditions | The teacher is assigned to the class. The group has a submitted document, section authorship history, and an applicable rubric. |
-| Normal Flow | 1. The teacher opens the latest group submission and the contribution view for every member. |
-|  | 2. The system shows the immutable shared document, section revisions and authors, and separate areas for shared-document, contribution, and member-final scores. |
-|  | 3. The teacher grades the shared document manually against the rubric, including integration and consistency. |
-|  | 4. The teacher reviews each member's authored sections and assesses individual contribution, manually or with an optional AI proposal for that contribution only (UC 33). |
-|  | 5. The teacher enters each member's final score, records required reasons, and saves the grade decisions for finalization and publication (UC 34). |
-| Alternative Flows | **A1 — Request to send the shared document to AI for grading:** Reject that path; the shared document is graded manually. |
-|  | **A2 — Member's final score differs from the shared-document score:** Require a reason; do not calculate the final score from a fixed formula. |
-|  | **A3 — Additional deduction for an integration problem attributed to one member:** Require a reason and a reference to the relevant section. |
-|  | **A4 — AI proposal for a member fails:** Preserve the submission and current grades; the teacher may grade that contribution manually. |
-| Postconditions | The shared-document assessment, individual contribution assessments, and per-member final draft scores are stored with the teacher's decisions. They are not visible to students until finalized and published. |
+| Secondary Actors | AI Service (when assistance is requested) |
+| Description | Grade individual/shared group GRADED documents using checklist rubrics or reviewed AI proposals and save teacher-controlled drafts. Individual member contribution grading remains manual under UC 17. |
+| Preconditions | The Teacher teaches the class and has eligible submitted GRADED work with applicable rubrics. AI additionally requires enabled service and sufficient teacher credits. Practice is excluded. |
+| Normal Flow | 1. Open work from Grading Queue and inspect pinned rubrics, attempts and automatic scores. |
+| | 2. For manual rubric grading, check items per Text Essay question or Diagram Essay/group part. Compute rubric totals; feedback is optional. |
+| | 3. Optionally request UC 40, review checklist/evidence/comments and press Use Proposal to fill the checklist/explanation; the Teacher may edit both. |
+| | 4. For batch AI assistance, select submissions. Check each scope and sufficient credits for the whole batch before creating one request per submission. |
+| | 5. Confirm each batch result in Grading Workspace. Previous/next controls navigate the filtered queue/batch; saving advances to the next submission. |
+| | 6. Save draft score, feedback, grader and time through the same path for manual/AI-assisted grading. Finalization/publication are separate under UC 34. |
+| Alternative Flows | **A1 — AI failure/timeout:** Preserve work/drafts; permit manual grading or retry. |
+| | **A2 — Insufficient batch credits:** Reject the entire batch before AI runs. |
+| | **A3 — Disagree with AI:** Edit checklist/explanation; differing from AI alone does not require a reason. |
+| | **A4 — Change automatic Quiz/Code Lab score:** Require a reason and retain history. |
+| | **A5 — Concurrent edit or unauthorized work:** Reject without overwriting newer data or exposing another class's work. |
+| Postconditions | Draft evaluations are saved without publication. Students cannot see drafts or AI proposals; the Teacher controls the score. |
+| Traceability | U15 F2, BR-U15-20–25; U13 F2; UC 17, 32, 34 and 40. |
 
-## 3. AI-Assisted Assignment Authoring
-
-### 3.1 UC 28 — Manage Assignments: Create an Assignment Draft with AI
-
-| Field | Specification |
-|---|---|
-| Primary Actors | Teacher |
-| Secondary Actors | AI Service |
-| Description | Within assignment management, a teacher requests assignment suggestions grounded in published class content, reviews their sources, then selects, edits, or discards the proposed questions before publishing. |
-| Preconditions | The teacher manages the class and has a DRAFT assignment. Source materials are published and indexed within the class scope, and the teacher has sufficient AI credits. |
-| Normal Flow | 1. The teacher selects the question type, quantity, difficulty, and optional chapter or lesson scope. |
-|  | 2. The system checks permission, sources, AI limits, and reserves estimated credits from the teacher. |
-|  | 3. A background job retrieves relevant learning-material passages, calls the AI service, and validates the proposed questions. |
-|  | 4. The system displays valid proposals with source citations and settles credits against actual use. |
-|  | 5. The teacher chooses and edits questions to keep; the system adds them to the DRAFT assignment. |
-| Alternative Flows | **A1 — Source outside scope or not indexed:** Reject the request before calling AI and explain which source is unavailable. |
-|  | **A2 — AI disabled, system limit reached, or insufficient credits:** Do not call AI; report the relevant condition without charging for a rejected call. |
-|  | **A3 — AI error or invalid output:** Retry according to job policy; if still unsuccessful, mark the proposal FAILED and release unused reserved credits. |
-|  | **A4 — Teacher discards the proposal:** Mark it DISCARDED and add nothing to the assignment. |
-| Postconditions | Accepted questions remain draft content. AI does not approve or publish the assignment, and invalid proposals do not become official questions. |
-
-## 4. Assignment Submission
-
-### 4.1 UC 30 — Submit Assignment
-
-The four specifications below share the primary actor and attempt rules of UC 30. A GRADED submission enters the teacher's grading queue (UC 32). A PRACTICE submission never creates a teacher grade record; its result is shown only to the student and stays outside the official gradebook.
-
-#### 4.1.1 Text Essay
-
-| Field | Specification |
-|---|---|
-| Primary Actors | Student |
-| Secondary Actors | None |
-| Description | The student writes an open-ended answer, the system autosaves the draft, and the student submits it. |
-| Preconditions | The student has an ACTIVE enrollment in an OPEN class. The Text Essay publication accepts submissions (on time or within the late-submission period). The attempt limit has not been reached; starting an attempt consumes one attempt. |
-| Normal Flow | 1. The student starts a new attempt or resumes the single IN_PROGRESS attempt. The system snapshots the assignment version and rubric and sets the attempt deadline to the closing time, or to the late-submission limit when late work is allowed. |
-|  | 2. The student writes the response using basic formatting only: paragraphs, headings, lists, bold and italic. |
-|  | 3. The system autosaves 10 seconds after the last edit and when the student leaves the page. Each save carries a content version, and the screen shows the last saved time. |
-|  | 4. The student submits before the deadline. The system validates the attempt and content, locks the submitted answer, and issues a receipt showing the attempt ID, attempt number, server submission time, late flag and hash. Work submitted after the closing time but within the late-submission limit is marked LATE. |
-|  | 5. For a GRADED assignment, in the same transaction the system creates a PENDING grade record so that the submission enters the teacher grading queue. For a PRACTICE assignment, no grade record is created and AI practice grading follows UC 40. |
-| Alternative Flows | **A1 — No attempt remains or the publication is not accepting submissions:** Refuse to start a new attempt and explain the restriction (MSG07). |
-|  | **A2 — Stale draft version (the attempt is open elsewhere):** Return a conflict instead of overwriting the newer saved answer; the student reloads before continuing (MSG05). |
-|  | **A3 — Deadline passes or the publication is retired before manual submission:** Automatically submit the latest saved answer, including an empty answer if nothing was saved, and record any validation warning for the teacher. |
-|  | **A4 — Content exceeds the size limit or uses unsupported formatting:** Reject the submission and keep the draft available for correction while the attempt remains open. |
-|  | **A5 — Submission after the final deadline (the closing time when late work is not allowed, otherwise the late-submission limit):** Reject the submission (MSG06). A 30-second grace period absorbs network delay. |
-| Postconditions | The submitted essay and receipt are immutable. A GRADED essay awaits the teacher's grading decision; a PRACTICE essay receives only practice feedback. Saving a draft alone does not submit it. For a GRADED assignment, the last submitted attempt is the one graded. |
-
-#### 4.1.2 Multiple-Choice Quiz
-
-| Field | Specification |
-|---|---|
-| Primary Actors | Student |
-| Secondary Actors | None |
-| Description | The student answers and submits a quiz of single-answer and multiple-answer questions; the system scores it against the answer key captured for the attempt. |
-| Preconditions | The student has an ACTIVE enrollment in an OPEN class. The quiz publication accepts submissions. The attempt limit has not been reached; starting an attempt consumes one attempt. |
-| Normal Flow | 1. The student starts a new attempt or resumes the IN_PROGRESS attempt. The system snapshots the quiz version and answer key and stores a per-attempt seed for question and option order. The attempt deadline is the earlier of the start time plus the time limit (if any) and the submission deadline. |
-|  | 2. The student answers questions and reviews the current responses. A countdown is shown when the quiz has a time limit. |
-|  | 3. The system autosaves valid responses with a content version and shows the last saved time. |
-|  | 4. The student submits before the deadline. The system locks the answers and issues a receipt showing the attempt ID, attempt number, submission time, late flag and hash. |
-|  | 5. A grading job created in the submission transaction scores each question. A single-answer question earns full points when correct; a multiple-answer question earns points only when all correct options and no wrong options are selected. |
-|  | 6. For a GRADED quiz, the score is published immediately if "show score after submit" is enabled; otherwise it awaits teacher finalization and publication. For a PRACTICE quiz, the score is shown only to the student as practice feedback. Correct answers are shown according to the NEVER, AFTER_SUBMIT or AFTER_CLOSE setting. |
-| Alternative Flows | **A1 — Invalid question or option reference:** Reject that draft update without replacing the last valid saved answers. |
-|  | **A2 — Stale draft version:** Return a conflict and require the student to reload instead of silently overwriting answers (MSG05). |
-|  | **A3 — Time limit, deadline, or publication retirement occurs before manual submission:** Automatically submit the latest saved answers, even if incomplete or empty. |
-|  | **A4 — Grading job is delayed or fails:** Preserve the submission and receipt; keep the score pending until grading succeeds, without inventing a result. |
-|  | **A5 — No attempt remains, or submission after the final deadline (including the 30-second grace period):** Reject the request (MSG07 / MSG06). |
-| Postconditions | The submitted answers and receipt are immutable. The score is calculated against that attempt's answer-key version, and its visibility follows the quiz settings. For a GRADED quiz, the teacher may change an automatic score with a recorded reason. |
-
-#### 4.1.3 Diagram Essay
-
-| Field | Specification |
-|---|---|
-| Primary Actors | Student |
-| Secondary Actors | None |
-| Description | The student edits a Diagram Essay document, may preview and import a DOCX file, uses the embedded Draw.io canvas, and submits the complete document. |
-| Preconditions | The student has an ACTIVE enrollment. The Diagram Essay publication accepts submissions, and the student has an available attempt that has not reached its deadline. |
-| Normal Flow | 1. The student starts an attempt; the system snapshots the assignment, document outline, and deadline. |
-|  | 2. The student edits permitted blocks while preserving the teacher's locked blocks. |
-|  | 3. The student creates or edits diagrams in the embedded Draw.io canvas; the system retains the full XML. |
-|  | 4. The system autosaves the draft with a content version and shows the last saved time. |
-|  | 5. The student submits. The system validates the document, diagrams, and deadline, makes the submission immutable, and returns a receipt. A GRADED submission enters the teacher grading queue; a PRACTICE submission follows UC 40. |
-| Alternative Flows | **A1 — DOCX import:** Show a preview and unsupported-content report. Add imported student blocks only after confirmation; do not replace teacher blocks. |
-|  | **A2 — Invalid diagram XML or missing required diagrams:** Reject manual submission and keep the draft available for correction. |
-|  | **A3 — Stale content version:** Return conflict 409 instead of silently overwriting a newer draft. |
-|  | **A4 — Deadline reached while editing:** Automatically submit the latest saved content, even if it does not meet manual-submission checks, and record a warning for the teacher. |
-| Postconditions | The submitted attempt contains the document and full Draw.io XML, an immutable receipt, and a preserved history. An autosaved draft alone is not a submission. |
-
-#### 4.1.4 Code Lab
-
-| Field | Specification |
-|---|---|
-| Primary Actors | Student |
-| Secondary Actors | Code Sandbox |
-| Description | The student writes code, runs public tests, and submits source code. The submitted version is graded in an isolated sandbox. |
-| Preconditions | The student may access the class. The Code Lab publication accepts submissions, and an attempt remains available and within its deadline. |
-| Normal Flow | 1. The student starts an attempt; the system snapshots the task, language, limits, and deadline. |
-|  | 2. The student writes code and the system autosaves the versioned source. |
-|  | 3. The student may run the code against public tests in the Code Sandbox under resource limits. |
-|  | 4. The student submits; the system locks the source, issues a receipt, and queues grading. |
-|  | 5. The Code Sandbox runs all tests for the submitted version. The system records the deterministic result for teacher review (GRADED) or shows it to the student as practice feedback (PRACTICE). |
-| Alternative Flows | **A1 — More than five trial runs per minute:** Reject the extra trial without losing the source draft. |
-|  | **A2 — Trial tests fail:** Show permitted results; never disclose hidden-test inputs or outputs. |
-|  | **A3 — Sandbox failure during grading:** Preserve the submission, show that grading is pending or unavailable, and retry by policy; do not invent a score. |
-|  | **A4 — Deadline reached before manual submission:** Automatically submit the latest saved source. |
-| Postconditions | Submitted source and its receipt are immutable. A trial run is not a submission; an automatic score exists only after successful grading. |
-
-## 5. Grading
-
-### 5.1 UC 33 — Grade Submissions
+## 12. UC 17 — Grade Group Document
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Teacher |
-| Secondary Actors | AI Service (only when AI assistance is requested) |
-| Description | The teacher grades an individual GRADED submission, or a group member's contribution, manually or with an AI grading proposal, and records the draft score and feedback. |
-| Preconditions | The teacher is assigned to the class. A GRADED submission and suitable content or rubric are available. For AI assistance, AI is enabled and the teacher has sufficient credits. |
-| Normal Flow | 1. The teacher opens a submission from the grading queue (UC 32) and reviews the work, rubric, attempts and any auto-scored result. |
-|  | 2. The teacher chooses manual grading or AI assistance. For manual grading, the teacher enters criterion scores and feedback against the rubric without calling AI and continues at step 6. |
-|  | 3. For AI assistance, the system checks authorization and AI limits, reserves the teacher's credits, and sends only the relevant submission or contribution and rubric. |
-|  | 4. The AI service proposes outcomes for rubric criteria; the system validates the response and calculates the proposed total from the rubric rather than relying on AI arithmetic. |
-|  | 5. The teacher reviews evidence and comments, then accepts or overrides the proposal. |
-|  | 6. The system records the teacher's draft score, feedback, grading method, actor and time. Finalization and publication occur separately (UC 34). |
-| Alternative Flows | **A1 — AI unavailable or invalid response:** Keep the submission unchanged; the teacher may retry or grade manually. |
-|  | **A2 — Insufficient credits or a usage limit:** Do not call AI; manual grading remains available. |
-|  | **A3 — Teacher disagrees with the AI proposal:** Enter a different score or feedback; a reason is required when finalizing a score that differs from the proposal. |
-|  | **A4 — Shared group document:** Do not send the shared document for AI grading; only an individual member's contribution may receive a proposal (UC 17). |
-|  | **A5 — Teacher changes an automatic quiz or Code Lab score:** Require a reason and record the actor and time. |
-| Postconditions | The teacher controls a draft score. Students cannot see an AI proposal or an unpublished grade. |
+| Secondary Actors | AI Service (when assistance is requested) |
+| Description | Grade the shared group document by part rubrics and assign member contribution scores without an automatic combining formula. |
+| Preconditions | The Teacher teaches the class. The group has a submitted snapshot with a rubric for each skeleton part. |
+| Normal Flow | 1. Open the latest submission in Grading Workspace as an ordinary DOCUMENT without author coloring. |
+| | 2. Check part rubrics manually or request an AI proposal for the shared document through UC 40, then review/edit the checklist. |
+| | 3. Sum part scores for the document score. Integration inconsistencies affect relevant part rubrics; there is no separate integration score. |
+| | 4. Set each member's contribution score initially equal to the document score. The Teacher may adjust individual scores manually with an optional reason before finalization. |
+| | 5. Save drafts and finalize/publish through UC 34. |
+| Alternative Flows | **A1 — AI for individual contribution:** Reject; AI assists only with the shared document. |
+| | **A2 — AI failure/insufficient credits:** Preserve work and drafts; allow manual grading or retry. |
+| | **A3 — Group resubmits:** Reset group/member evaluations to PENDING for the latest snapshot and keep previous scores in history. |
+| | **A4 — Change finalized/published score:** Require a reason and retain before/after values, actor and time; the optional reason for initial contribution grading does not override this rule. |
+| Postconditions | Shared-document/member draft evaluations are saved. Students see their own final results only after publication; AI never finalizes grades. |
+| Traceability | U15 F6, BR-U15-40–44; U14 F9; UC 33, 34 and 40. |
 
-## 6. Payment
-
-### 6.1 UC 37 — Buy AI Credits
+## 13. UC 34 — Finalize Grades
 
 | Field | Specification |
 |---|---|
-| Primary Actors | Student, Teacher, Subject Manager, Administrator |
+| Primary Actors | Teacher |
+| Secondary Actors | None |
+| Description | Finalize valid draft evaluations and publish scores/feedback individually or in selected batches. |
+| Preconditions | The Teacher teaches the class. Finalization requires GRADED DRAFT evaluations with valid scores and matching versions; publication requires FINALIZED evaluations. |
+| Normal Flow | 1. Select a draft or batch in Grading Queue and request finalization. |
+| | 2. Check scope, state, score and version per evaluation. Mark valid items FINALIZED and record audit/history. |
+| | 3. Publish one finalized submission from Grading Workspace or selected finalized submissions in a batch from Grading Queue. |
+| | 4. Mark eligible items PUBLISHED and record the assignment's first grade-release timestamp. |
+| | 5. Students see their own final score/feedback on Assignment List. Send notifications after commit without scores in notification/email content. |
+| Alternative Flows | **A1 — Invalid/concurrently changed item:** Reject that item and return its error; other valid batch items may succeed independently. |
+| | **A2 — Difference from AI:** Do not require a reason solely for differing from the proposal. |
+| | **A3 — Edit finalized/published score:** Require a reason and retain before/after values, actor/time. Published corrections display an updated indicator. |
+| | **A4 — Practice or unauthorized target:** Reject; Practice has a separate private result flow. |
+| | **A5 — Notification failure:** Keep the committed grade and retry notification delivery by policy. |
+| Postconditions | Valid final grades are available only to authorized students. Failed batch items stay unchanged; history is retained and AI proposals remain private. |
+| Traceability | U15 F3–F5, BR-U15-31–35; U16 notifications; UC 35. |
+
+## 14. UC 37 — Buy AI Credits
+
+| Field | Specification |
+|---|---|
+| Primary Actors | Student; Teacher; Subject Manager; Administrator |
 | Secondary Actors | PayOS Payment Gateway |
-| Description | An authorized Student, Teacher, Subject Manager or Administrator selects a credit package, pays through PayOS, and receives purchased AI credits exactly once after verification. Student may spend credits only on Practice Text/Diagram Essay grading. |
-| Preconditions | The buyer is signed in with an ACTIVE account and one of the four current roles. The package is active, and the account has fewer than three PENDING payments. |
-| Normal Flow | 1. The user selects a package and starts checkout; the request carries an Idempotency-Key. |
-|  | 2. The system creates a CREATED payment with a snapshot of the package price and credits, and requests a PayOS checkout link valid for 15 minutes. When the link is created, the payment becomes PENDING and the user is redirected to PayOS. |
-|  | 3. The user pays on PayOS. On return, the result page polls the payment status every 3 seconds for up to 2 minutes; the return page never grants credits. |
-|  | 4. The system receives the PayOS webhook and verifies the HMAC-SHA256 signature, order code, amount and successful result. |
-|  | 5. In one database transaction, the system marks the payment PAID, writes one PURCHASE ledger entry, adds the credits to the purchased balance and records an audit event. After commit, an in-app notification is sent. The user can view the updated balance and history. |
-| Alternative Flows | **A0 — Student attempts an unauthorized AI task:** Allow wallet and checkout access, but reject AI authoring, learning-material processing and GRADED submission grading before reserving credits or calling AI. Student credits are used only for Practice Text/Diagram Essay grading of their own attempt (UC 40). |
-|  | **A1 — PayOS cannot create a link:** Mark the payment FAILED and grant no credits; the user may start a new checkout. |
-|  | **A2 — User returns before verification:** Keep the payment PENDING and grant no credits yet (MSG11). |
-|  | **A3 — Invalid signature, or mismatched order code or amount:** Record the event as REJECTED, write a security audit event, and grant no credits (MSG12). |
-|  | **A4 — Duplicate webhook:** Record it as DUPLICATE and return success to PayOS without granting extra credits. |
-|  | **A5 — Missing webhook:** A reconciliation job runs every 10 minutes, checks PENDING payments older than 5 minutes and payments EXPIRED within the last 24 hours with PayOS, and applies the same exactly-once purchase rule. If PayOS does not respond, the status is kept and checked again on the next run. |
-|  | **A6 — User cancels on PayOS:** The system confirms with PayOS and marks the payment CANCELLED if it has not been paid. |
-|  | **A7 — Link not paid within 15 minutes:** Mark the payment EXPIRED. |
-|  | **A8 — Valid payment arrives after expiration or cancellation:** Mark it PAID and grant the credits because the money was received. |
-|  | **A9 — Same Idempotency-Key resubmitted, or three payments already PENDING:** Return the existing PENDING payment for the same key; refuse to create a fourth concurrent PENDING payment. |
-| Postconditions | A verified payment creates exactly one purchase ledger entry and increases the balance. Purchased credits do not expire. Unverified, failed or rejected payments do not increase the balance. |
+| Description | Purchase fixed packages and receive credits exactly once after payment verification. All four roles receive the same fixed monthly free-credit grant. |
+| Preconditions | ACTIVE signed-in buyer accessing their own wallet; active package and fewer than three PENDING payments for a new checkout. |
+| Normal Flow | 1. Open AI Credits to view balance, packages, purchases and usage. First balance access in a new month resets free credits to the configured grant without accumulating prior grants. |
+| | 2. Select a package and send an idempotent checkout request. Snapshot price/credits, create a CREATED payment and request a PayOS link valid for 15 minutes. |
+| | 3. Mark PENDING after link creation and redirect. Payment Result checks status on return but never grants credits. |
+| | 4. Receive the webhook; verify signature, order code, amount and successful status. |
+| | 5. In one transaction change an unpaid payment to PAID, add purchased credits once and record audit. Notify the buyer after commit. |
+| Alternative Flows | **A1 — Link creation fails:** Mark FAILED, grant nothing and permit a new checkout. |
+| | **A2 — Invalid signature/mismatch:** Reject, write security audit and grant nothing. |
+| | **A3 — Duplicate webhook/checkout:** Do not duplicate payment or credit. Return the existing checkout/status as applicable; reject a fourth PENDING payment. |
+| | **A4 — Missing webhook:** Every ten minutes reconcile PENDING payments older than five minutes and EXPIRED payments within 24 hours, using the same exactly-once rule. Provider errors keep status for later retry. |
+| | **A5 — Cancel/expiry:** Verify cancellation or expire unpaid links without granting credit. A later verified payment still grants credits because money was received. |
+| | **A6 — Unauthorized Student AI request:** Retain wallet/checkout access but reject AI authoring, materials processing and GRADED grading. Students spend credit only on their own Practice Text/Diagram Essay under UC 40. |
+| Postconditions | Verified payment increases purchased balance once. Free credits are spent first; purchased credits do not expire. Packages/monthly grants are fixed deployment configuration. Purchases are retained in payments and AI credit usage in ai_suggestions; there is no separate purchase ledger or webhook-event table. Refunds are outside MVP. |
+| Traceability | U07 F1–F7; U13 usage; UC 22 and 40. |
 
-## 7. Practice Feedback
-
-### 7.1 UC 40 — Grade Practice with AI
+## 15. UC 40 — Grade with AI
 
 | Field | Specification |
 |---|---|
-| Primary Actors | Student |
+| Primary Actors | Student; Teacher |
 | Secondary Actors | AI Service |
-| Description | A student submits a PRACTICE Text Essay or Diagram Essay (UC 30). If enough credits are available, the system grades that attempt once with AI and shows private practice feedback. The teacher does not grade or publish an official score for PRACTICE. |
-| Preconditions | The student has an ACTIVE account and enrollment, owns the attempt, the assignment is PRACTICE and of a supported type, and the publication accepts submission. |
-| Normal Flow | 1. The student submits the attempt; the system locks its content and issues a receipt. |
-|  | 2. The system checks the student's credit balance, AI limits, supported type and attempt ownership. If eligible, it reserves estimated credits with an idempotent attempt reference and queues one AI grading job. |
-|  | 3. AI evaluates the submitted snapshot against the rubric; the system validates the response, calculates the score and settles actual credit usage. |
-|  | 4. Only the student sees the practice score and feedback in that attempt's history. The result is excluded from the official gradebook, dashboard grade distribution and exports. |
-| Alternative Flows | **A1 — Insufficient credits:** Keep the submitted attempt without an AI score or feedback and charge nothing. Buying credits later does not grade that attempt; a new submission is needed. |
-|  | **A2 — AI unavailable or invalid output:** Keep the submission, release unused reserved credits and show that no valid AI score is available. Technical retries use the same request reference and cannot duplicate a score or debit. |
-|  | **A3 — Unsupported type or GRADED mode:** Do not queue AI grading and charge nothing. Practice Quiz and Code Lab use answer keys or tests instead; Group Assignment has no PRACTICE mode. |
-| Postconditions | At most one valid AI result and one settled debit exist per submitted attempt. A submission without enough credits remains ungraded by AI, and no PRACTICE result becomes an official grade. |
+| Description | Explicitly request private Practice grading for the student's submitted Text/Diagram Essay, or a Teacher proposal for a GRADED individual/shared group document. Practice submission does not invoke AI automatically. |
+| Preconditions | ACTIVE requester with target access. Student targets are their own submitted PRACTICE Text/Diagram Essay with no valid AI result; Teacher targets are GRADED work in a class they teach. Check AI eligibility/credits at request time. |
+| Normal Flow | 1. Student opens the popup from Submitted Assignment and presses Grade with AI; Teacher opens it from Grading Workspace and requests a proposal. |
+| | 2. Check scope/type, limits and credits, reserve requester credits and create an AI request. Technical retries use the same reference. |
+| | 3. Process the immutable submitted snapshot with pinned rubrics and compacted Draw.io content if needed; validate AI checklist outcomes, comments and evidence. |
+| | 4. Compute the rubric score, settle actual credit usage and mark the result ready. |
+| | 5. Student mode saves one private PRACTICE evaluation and displays score/feedback. Teacher mode shows a proposal; Use Proposal fills the checklist/explanation for confirmation under UC 33/17. |
+| Alternative Flows | **A1 — Insufficient credits:** Do not call AI or charge. Buying credits permits another request on the same submitted attempt without a new submission. |
+| | **A2 — AI disabled/quota reached:** Reject without charging for an unmade call; Teacher manual grading remains available. |
+| | **A3 — Failure/invalid output:** Preserve submitted work, release reserved credits after final failure and permit a new request. Technical retries cannot duplicate a valid result/debit. |
+| | **A4 — Timeout:** After five minutes from the request, mark failed, release credits and allow retry; discard late results. Batch items have five minutes from the start of their processing. |
+| | **A5 — Existing result/concurrent request:** Return the existing result/state instead of duplicating successful Practice grading. |
+| | **A6 — Unsupported Student target:** Reject other users' attempts, GRADED work and authoring requests. Practice Quiz/Code Lab use answer keys/tests; group work has no Practice mode. |
+| | **A7 — Member contribution score:** Reject AI for individual contributions; Teacher assistance applies to the shared group document only. |
+| Postconditions | At most one valid Practice AI result exists per attempt, without duplicate settlement. Practice stays outside official gradebooks, distributions and exports. Teacher proposals remain private and never finalize/publish grades. The assignment need not still accept submissions for Student grading, but access to the submitted attempt must remain authorized. |
+| Traceability | U11 BR-U11-35; U13 F2/F3a, BR-U13-24; U07 F6; U15 F2/F8. |
 
 ## Sources
 
-- [Use case IDs, names, actors, features, and descriptions](use-case-table.md)
-- Unit business designs: [U05](../aidlc-docs/construction/u05-content-material-rag/functional-design/business-logic-model.md), [U07](../aidlc-docs/construction/u07-payment-credit/functional-design/business-logic-model.md), [U08](../aidlc-docs/construction/u08-assessment-core-publication/functional-design/business-logic-model.md), [U09](../aidlc-docs/construction/u09-question-type-authoring/functional-design/business-logic-model.md), [U11](../aidlc-docs/construction/u11-attempt-submission/functional-design/business-logic-model.md), [U13](../aidlc-docs/construction/u13-ai-code-execution/functional-design/business-logic-model.md), [U14](../aidlc-docs/construction/u14-group-document-submission/functional-design/business-logic-model.md), [U15](../aidlc-docs/construction/u15-grading/functional-design/business-logic-model.md)
+- [Current use-case catalog](use-case-table.md)
+- [U05 content business rules](../aidlc-docs/construction/u05-content-material-rag/functional-design/business-rules.md)
+- [U07 payment and credit flows](../aidlc-docs/construction/u07-payment-credit/functional-design/business-logic-model.md)
+- [U08 assignment lifecycle](../aidlc-docs/construction/u08-assessment-core-publication/functional-design/business-logic-model.md)
+- [U09 authoring and document rules](../aidlc-docs/construction/u09-question-type-authoring/functional-design/business-rules.md)
+- [U10 template rules](../aidlc-docs/construction/u10-template-copy-simulation/functional-design/business-rules.md)
+- [U11 attempts and submissions](../aidlc-docs/construction/u11-attempt-submission/functional-design/business-rules.md)
+- [U13 AI and code execution](../aidlc-docs/construction/u13-ai-code-execution/functional-design/business-rules.md)
+- [U14 group document flows](../aidlc-docs/construction/u14-group-document-submission/functional-design/business-logic-model.md)
+- [U15 grading rules](../aidlc-docs/construction/u15-grading/functional-design/business-rules.md)
