@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "canvas-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "C:/Users/PC/AppData/Local/Temp/claude/G--STUDY-2026-AI-Powered-Learning-Platform/8d2bbb6f-17ac-42fb-b41b-fa0743391f4f/scratchpad/cd_v4"],
+      "port": 8765
+    }
+  ]
+}
