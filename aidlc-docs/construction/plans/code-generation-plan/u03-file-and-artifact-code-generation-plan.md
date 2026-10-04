@@ -1,6 +1,8 @@
 # U03 File, Job & Event - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U03. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -50,20 +52,20 @@ Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Sh
     adapter/fake/       FakeAuthorizationPort (từ chối), LoggingAuditAdapter
 /frontend/src/shared/files/          FileUploader, FileLink, useFileUpload
 /frontend/src/shared/status/         StatusBadge, usePollStatus
-/contracts/messages/u03-*.json
-/contracts/openapi/u03-files.yaml
+/contracts/messages/job-message.json, domain-event.json
+/contracts/openapi/files.yaml
 ```
 
 ## 3. Các bước
 
 ### Nhóm K - Khung dự án (dùng chung, chuyển từ plan U01)
 
-- [ ] **Bước K1** - Tạo `/backend/pom.xml`: Spring Boot 3.x, Java 17, Web, Security, Data JPA, Validation, Data Redis, Actuator, Flyway, PostgreSQL, Spring AMQP, Mail, Bucket4j + Redis, jjwt, Commons CSV, Testcontainers (PostgreSQL, Redis, RabbitMQ), JUnit 5. Khóa phiên bản.
-- [ ] **Bước K2** - `PlatformApplication`, `application.yml` (đọc cấu hình từ biến môi trường; mỗi unit thêm khóa của mình), profile `worker`, `application-local.yml`.
-- [ ] **Bước K3** - Hạ tầng dùng chung trong `shared/`: global error handler trả problem-details an toàn, filter correlation ID, bộ che dữ liệu nhạy cảm trong log, cấu hình Spring Security mặc định từ chối, `ForbiddenKeyGuard` (khóa `password`, `otp`, `token`, `secret`, `phone`) dùng chung cho audit (U02) và payload việc nền (U03).
-- [ ] **Bước K4** - Khung `/frontend`: Next.js + TypeScript strict + Tailwind, ESLint, Vitest + Testing Library, `src/lib/api` gửi cookie, component UI cơ bản (Button, Input, PasswordField, OtpInput, Dialog, Table, Alert).
-- [ ] **Bước K5** - `/infra/docker-compose.yml` và `docker-compose.local.yml`: nginx, frontend, backend, postgres (`pgvector/pgvector:pg16`), redis, rabbitmq, mailpit (local); mạng `edge`/`internal`, giới hạn tài nguyên, healthcheck. Service `worker` (cùng image backend, profile `worker`, chỉ mạng `internal`, healthcheck); RabbitMQ vhost `/platform`, user `app`, tắt `guest`; PostgreSQL hai user `migrator` (Flyway) và `app` (runtime).
-- [ ] **Bước K6** - `.github/workflows/ci.yml`: test backend + frontend, build image tag SHA. Bước deploy qua SSH để dạng khung, chưa bật.
+- [x] **Bước K1** - Tạo `/backend/pom.xml`: Spring Boot 3.x, Java 17, Web, Security, Data JPA, Validation, Data Redis, Actuator, Flyway, PostgreSQL, Spring AMQP, Mail, Bucket4j + Redis, jjwt, Commons CSV, Testcontainers (PostgreSQL, Redis, RabbitMQ), JUnit 5. Khóa phiên bản.
+- [x] **Bước K2** - `PlatformApplication`, `application.yml` (đọc cấu hình từ biến môi trường; mỗi unit thêm khóa của mình), profile `worker`, `application-local.yml`.
+- [x] **Bước K3** - Hạ tầng dùng chung trong `shared/`: global error handler trả problem-details an toàn, filter correlation ID, bộ che dữ liệu nhạy cảm trong log, cấu hình Spring Security mặc định từ chối, `ForbiddenKeyGuard` (khóa `password`, `otp`, `token`, `secret`, `phone`) dùng chung cho audit (U02) và payload việc nền (U03).
+- [x] **Bước K4** - Khung `/frontend`: Next.js + TypeScript strict + Tailwind, ESLint, Vitest + Testing Library, `src/lib/api` gửi cookie, component UI cơ bản (Button, Input, PasswordField, OtpInput, Dialog, Table, Alert).
+- [x] **Bước K5** - `/infra/docker-compose.yml` và `docker-compose.local.yml`: nginx, frontend, backend, postgres (`pgvector/pgvector:pg16`), redis, rabbitmq, mailpit (local); mạng `edge`/`internal`, giới hạn tài nguyên, healthcheck. Service `worker` (cùng image backend, profile `worker`, chỉ mạng `internal`, healthcheck); RabbitMQ vhost `/platform`, user `app`, tắt `guest`; PostgreSQL hai user `migrator` (Flyway) và `app` (runtime).
+- [x] **Bước K6** - `.github/workflows/ci.yml`: test backend + frontend, build image tag SHA. Bước deploy qua SSH để dạng khung, chưa bật.
 
 ### Nhóm J - Việc nền, worker và sự kiện (chuyển từ U02, 2026-10-04)
 
@@ -75,8 +77,8 @@ Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Sh
 - [ ] **Bước J6** - Worker: `JobHandlerRegistry` (`jobType` → handler, `onFailed`, queue), `JobListener` cho 7 queue với số luồng theo P11 (`jobs.email` là priority queue), `JobRetryPublisher` (vào `jobs.retry.*` theo lượt, hết 5 lượt gọi `onFailed`) (BR-U03-53, 56, 57, 63, P9, P11).
 - [ ] **Bước J7** - `PendingSweepRunner` và `ScheduledScanRunner` mỗi phút (BR-U03-58, 60, P10).
 - [ ] **Bước J8** - Unit test mọi `BR-U03-50…71`.
-- [ ] **Bước J9** - Integration test Testcontainers (PostgreSQL, RabbitMQ): gửi sau commit, rollback không gửi, gửi ngay khi không có transaction, retry theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner chạy lại không trùng (NFR-U03-55).
-- [ ] **Bước J10** - JSON schema message: `/contracts/messages/u03-job-message.json`, `u03-domain-event.json`.
+- [ ] **Bước J9** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, RabbitMQ): gửi sau commit, rollback không gửi, gửi ngay khi không có transaction, retry theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner chạy lại không trùng (NFR-U03-55).
+- [x] **Bước J10** - JSON schema message: `/contracts/messages/job-message.json`, `domain-event.json`.
 - [ ] **Bước J11** - Frontend dùng chung: `usePollStatus` (poll 3 giây, dừng ở trạng thái cuối), `StatusBadge`; test hook dừng poll.
 - [ ] **Bước J12** - README: chạy worker, xem RabbitMQ qua SSH tunnel, cách một unit thêm loại việc nền (chọn 1 trong 7 queue theo BR-U03-63, đăng ký handler, `onFailed`, `PendingSweeper`; không tạo queue mới) và việc hẹn giờ (đăng ký `ScheduledScanner`).
 
@@ -107,12 +109,12 @@ Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Sh
 - [ ] **Bước 15** - `GoogleDriveStorageAdapter`: đọc key base64 từ `.env`, thư mục theo `purpose` (tạo khi khởi động), timeout 5/60/120 s, retry 3 lần cho 429/5xx, nhận diện `cannotDownloadAbusiveFile` → lỗi "file không khả dụng" (P5, P6, BR-U03-24).
 - [ ] **Bước 16** - `LocalFolderStorageAdapter`; chọn adapter theo có key hay không, cảnh báo khi khởi động (P5).
 - [ ] **Bước 17** - `DriveHealthIndicator`: `drives.get` cache 60 s, Drive lỗi không làm backend `DOWN` (P7).
-- [ ] **Bước 18** - Integration test Testcontainers (Redis) với `LocalFolderStorageAdapter`: upload → attach → cấp token → tải; token và `FileRef` hết hạn; ghi `appProperties` lỗi thì dọn Drive hoặc gửi việc `DRIVE_CLEANUP`; adapter Drive test bằng mock HTTP (lỗi 429, abuse).
+- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (Redis) với `LocalFolderStorageAdapter`: upload → attach → cấp token → tải; token và `FileRef` hết hạn; ghi `appProperties` lỗi thì dọn Drive hoặc gửi việc `DRIVE_CLEANUP`; adapter Drive test bằng mock HTTP (lỗi 429, abuse).
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 20** - `/contracts/openapi/u03-files.yaml`: `POST /api/v1/files` (multipart `purpose`, `file`), `GET /api/v1/files/download/{token}`.
+- [x] **Bước 20** - `/contracts/openapi/files.yaml`: `POST /api/v1/files` (multipart `purpose`, `file`), `GET /api/v1/files/download/{token}`.
 - [ ] **Bước 21** - `FileUploadController`, `DownloadController` (`StreamingResponseBody`, bộ đệm 64 KB, header `Content-Type`, `Content-Disposition` RFC 5987, `nosniff`, `Cache-Control: private, no-store`; SVG thêm CSP sandbox; Drive báo abuse → `410`) (BR-U03-10, 22, 23, P2).
 - [ ] **Bước 22** - Test MockMvc: không trả `providerFileId`, header đúng (gồm CSP cho SVG), sai `purpose`/vai trò bị từ chối, file quá lớn `413`.
 - [ ] **Bước 23** - Tóm tắt: `code/api-summary.md`.

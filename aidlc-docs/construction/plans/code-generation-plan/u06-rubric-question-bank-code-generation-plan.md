@@ -1,6 +1,8 @@
 # U06 Rubric & Question Bank - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U06. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -45,11 +47,11 @@ PostgreSQL `questions`, `rubrics`.
     infrastructure/     BankItemRepository, PermissiveContentRefAdapter
     port/               BankQueryPort, RubricPort, InlineQuestionPort, BankCopyPort,
                         QuestionVerificationPort, ContentRefPort, RubricOwnerPort
-/backend/src/main/resources/db/migration/u06/
-/backend/src/main/resources/u06/import-templates/   4 file mẫu xlsx + csv
+/backend/src/main/resources/db/migration/questionbank/
+/backend/src/main/resources/questionbank/import-templates/   4 file mẫu xlsx + csv
 /frontend/src/app/teaching/bank/
 /frontend/src/shared/question/        QuestionView (dùng chung với U11)
-/contracts/openapi/u06-bank.yaml
+/contracts/openapi/question-bank.yaml
 ```
 
 ## 3. Các bước
@@ -77,12 +79,12 @@ PostgreSQL `questions`, `rubrics`.
 
 - [ ] **Bước 13** - Flyway `V20260925_1300__u06_questions_rubrics.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 14** - `BankItemRepository` với query `DISTINCT ON` và lọc tag GIN.
-- [ ] **Bước 15** - Integration test Testcontainers: hai người tạo bản nháp cùng lúc → một `409`; tìm kiếm chỉ trả bản `ACTIVE` mới nhất; nhập 500 dòng ≤ 10 s.
+- [ ] **Bước 15** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers: hai người tạo bản nháp cùng lúc → một `409`; tìm kiếm chỉ trả bản `ACTIVE` mới nhất; nhập 500 dòng ≤ 10 s.
 - [ ] **Bước 16** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 17** - `/contracts/openapi/u06-bank.yaml` (endpoint theo `frontend-components.md`).
+- [x] **Bước 17** - `/contracts/openapi/question-bank.yaml` (endpoint theo `frontend-components.md`).
 - [ ] **Bước 18** - Controller + DTO + validation; lỗi `{field, message}`.
 - [ ] **Bước 19** - Test MockMvc: giảng viên không sửa ngân hàng cấp môn, không thấy ngân hàng lớp khác, người học không gọi được API U06.
 - [ ] **Bước 20** - Tóm tắt: `code/api-summary.md`.

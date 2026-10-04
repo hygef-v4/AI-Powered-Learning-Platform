@@ -1,6 +1,8 @@
 # U15 Grading - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U15. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -49,13 +51,13 @@ PostgreSQL `evaluations` (lịch sử trong cột `history`); cột `grades_rele
     adapter/            SubmissionSubmittedAdapter, GroupSubmittedAdapter, CodeGradedAdapter,
                         PracticeResultAdapter
     port/               GradeQueryPort, GradebookQueryPort
-/backend/src/main/resources/db/migration/u15/
+/backend/src/main/resources/db/migration/grading/
 /frontend/src/app/teaching/assignments/[id]/grading/
 /frontend/src/app/teaching/grading/
 /frontend/src/app/teaching/classes/[id]/gradebook/
 /frontend/src/components/grades/ (AssignmentGradeCell gắn vào MyAssignmentsPage của U11)
-/contracts/openapi/u15-grading.yaml
-/contracts/messages/u15-grade-published.json
+/contracts/openapi/grading.yaml
+/contracts/messages/grade-events.json
 ```
 
 ## 3. Các bước
@@ -81,12 +83,12 @@ PostgreSQL `evaluations` (lịch sử trong cột `history`); cột `grades_rele
 
 - [ ] **Bước 11** - Flyway `V20260925_1950__u15_grading.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 12** - JPA repository và query sổ điểm.
-- [ ] **Bước 13** - Integration test: nộp `GRADED` → tự chấm → hiện đúng chính sách; `PRACTICE` không vào gradebook hoặc hàng đợi Teacher; gọi port nộp lặp không tạo điểm trùng; chốt hàng loạt có mục lệch version; lịch sử chỉ thêm; sổ điểm 200 × 30 ≤ 1 s.
+- [ ] **Bước 13** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: nộp `GRADED` → tự chấm → hiện đúng chính sách; `PRACTICE` không vào gradebook hoặc hàng đợi Teacher; gọi port nộp lặp không tạo điểm trùng; chốt hàng loạt có mục lệch version; lịch sử chỉ thêm; sổ điểm 200 × 30 ≤ 1 s.
 - [ ] **Bước 14** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 15** - `/contracts/openapi/u15-grading.yaml` và schema event.
+- [x] **Bước 15** - `/contracts/openapi/grading.yaml` và schema event.
 - [ ] **Bước 16** - Controller + DTO + validation.
 - [ ] **Bước 17** - Test MockMvc: người học không thấy điểm chưa công bố/đề xuất AI; giảng viên lớp khác `404` + audit; sửa không lý do bị từ chối.
 - [ ] **Bước 18** - Tóm tắt: `code/api-summary.md`.

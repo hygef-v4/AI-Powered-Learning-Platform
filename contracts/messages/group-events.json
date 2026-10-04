@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/group-events.json",
+  "title": "U12 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "group.membership-changed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groupId",
+        "classId",
+        "addedIds",
+        "removedIds"
+      ],
+      "properties": {
+        "groupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "addedIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "removedIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "description": "Thành viên nhóm thay đổi (nguồn U12)"
+    },
+    "group.leader-changed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groupId",
+        "classId",
+        "newLeaderId"
+      ],
+      "properties": {
+        "groupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "newLeaderId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "description": "Đổi trưởng nhóm (nguồn U12)"
+    },
+    "group.leader-requested": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "groupId",
+        "classId",
+        "requesterId"
+      ],
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "groupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "requesterId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "description": "Thành viên gửi yêu cầu đổi trưởng nhóm (nguồn U12)"
+    },
+    "group.leader-request-rejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "groupId",
+        "requesterId",
+        "decisionReason"
+      ],
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "groupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "requesterId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "decisionReason": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "description": "Giảng viên từ chối yêu cầu đổi trưởng nhóm (nguồn U12)"
+    }
+  }
+}

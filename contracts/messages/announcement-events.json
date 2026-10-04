@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/announcement-events.json",
+  "title": "U05 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "class.announcement-posted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "announcementId",
+        "actorId",
+        "classId"
+      ],
+      "properties": {
+        "announcementId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "actorId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "description": "Giảng viên đăng thông báo lớp (nguồn U05)"
+    }
+  }
+}

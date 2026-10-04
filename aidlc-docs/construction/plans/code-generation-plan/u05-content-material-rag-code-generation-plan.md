@@ -1,6 +1,8 @@
 # U05 Content, Material & RAG - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U05. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -51,11 +53,11 @@ PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding 
     worker/             LessonScanHandler, LessonPendingSweeper
     port/               PublishedContentPort, RagRetrievalPort, ContentRefPort,
                         EmbeddingPort, YoutubePort, AiUsagePort
-/backend/src/main/resources/db/migration/u05/
+/backend/src/main/resources/db/migration/content/
 /infra/postgres/init/01-extensions.sql
 /frontend/src/shared/content/
 /frontend/src/app/classes/[id]/communication/
-/contracts/openapi/u05-content.yaml
+/contracts/openapi/content.yaml
 ```
 
 ## 3. Các bước
@@ -85,12 +87,12 @@ PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding 
 - [ ] **Bước 14** - Flyway `V20260925_1200__u05_content.sql` theo `infrastructure-design.md` §4.
 - [ ] **Bước 15** - JPA repository; `LessonVectorRepository` (lọc lesson trong phạm vi, `<=>`) (P4).
 - [ ] **Bước 16** - `GeminiEmbeddingAdapter` (768 chiều, key trong header, timeout) và `YoutubeAdapter` (phụ đề ưu tiên vi → en → tự động) (P5).
-- [ ] **Bước 17** - Integration test Testcontainers (image pgvector, Redis, RabbitMQ) với adapter giả: tải lên → quét → `INDEXED`; `retrieve` không trả lesson lưu trữ/lớp khác/môn khác, phạm vi môn không trả học liệu của lớp; lớp khác không thấy học liệu riêng của lớp; quét chạy lại không trừ credit hai lần; thiếu credit khác `BUSY`. Adapter thật test bằng mock HTTP (429, 403).
+- [ ] **Bước 17** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (image pgvector, Redis, RabbitMQ) với adapter giả: tải lên → quét → `INDEXED`; `retrieve` không trả lesson lưu trữ/lớp khác/môn khác, phạm vi môn không trả học liệu của lớp; lớp khác không thấy học liệu riêng của lớp; quét chạy lại không trừ credit hai lần; thiếu credit khác `BUSY`. Adapter thật test bằng mock HTTP (429, 403).
 - [ ] **Bước 18** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 19** - `/contracts/openapi/u05-content.yaml` (endpoint theo `frontend-components.md`).
+- [x] **Bước 19** - `/contracts/openapi/content.yaml` (endpoint theo `frontend-components.md`).
 - [ ] **Bước 20** - Controller + DTO + validation.
 - [ ] **Bước 21** - Test MockMvc: giảng viên không sửa được học liệu của môn, học viên lớp khác không tải được tệp hoặc bình luận, người học không đăng được thông báo, giảng viên không tạo được module, không có endpoint `retrieve` công khai.
 - [ ] **Bước 22** - Tóm tắt: `code/api-summary.md`.

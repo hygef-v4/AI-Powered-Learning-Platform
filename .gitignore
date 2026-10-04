@@ -1,3 +1,16 @@
 aidlc-docs/.work/
 deliverables/
 debug.log
+
+# Build output
+backend/target/
+frontend/node_modules/
+frontend/.next/
+frontend/coverage/
+
+# Secrets
+.env
+infra/.env
+frontend/next-env.d.ts
+frontend/*.tsbuildinfo
+infra/.env.local

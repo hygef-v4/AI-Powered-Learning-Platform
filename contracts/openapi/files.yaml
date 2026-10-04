@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: U03 - File & Artifact
+  version: 1.0.0
+  description: 'Upload tệp (trả FileRef ký HMAC, hạn 1 giờ, để unit sở hữu `attach`) và tải bằng token 5 phút. URL tải do
+    API của unit sở hữu cấp sau khi kiểm quyền.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U03 File & Artifact
+  description: Upload tệp (trả FileRef ký HMAC, hạn 1 giờ, để unit sở hữu `attach`) và tải bằng token 5 phút.
+paths:
+  /api/v1/files:
+    post:
+      operationId: uploadFile
+      summary: Upload tệp
+      description: Trần 50 MB (MATERIAL) hoặc 5 MB (AVATAR, DOCUMENT_IMAGE); quá 5 upload đồng thời trả 503.
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                purpose:
+                  type: string
+                  enum:
+                  - AVATAR
+                  - MATERIAL
+                  - DOCUMENT_IMAGE
+                file:
+                  type: string
+                  format: binary
+              required:
+              - purpose
+              - file
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fileRef:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  mediaType:
+                    type: string
+                  byteSize:
+                    type: integer
+                    format: int64
+                  originalFileName:
+                    type: string
+                required:
+                - fileRef
+                - expiresAt
+                - mediaType
+                - byteSize
+                - originalFileName
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U03 File & Artifact
+  /api/v1/files/download/{token}:
+    get:
+      operationId: downloadFile
+      summary: Tải tệp bằng token
+      description: Token gắn với người được cấp; dùng sai người trả 404. Tệp bị Drive đánh dấu lạm dụng trả 410.
+      x-roles: []
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      security: []
+      tags:
+      - U03 File & Artifact
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas: {}

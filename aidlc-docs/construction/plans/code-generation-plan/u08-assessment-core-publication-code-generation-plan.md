@@ -1,6 +1,8 @@
 # U08 Assessment Core & Publication - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U08. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -50,11 +52,11 @@ PostgreSQL `assignments` (gồm lịch mở/đóng), `assignment_questions`; sca
     worker/             AssignmentScheduleScanner
     port/               AssignmentQueryPort, AssignmentExtensionPort, TypeConfigPort, AiDraftPort,
                         AssignmentLifecyclePort, GroupReadinessPort, CodeLabCheckPort
-/backend/src/main/resources/db/migration/u08/
+/backend/src/main/resources/db/migration/assessments/
 /frontend/src/app/teaching/classes/[id]/assignments/
 /frontend/src/app/teaching/assignments/[id]/
-/contracts/openapi/u08-assessment.yaml
-/contracts/messages/u08-assignment-events.json
+/contracts/openapi/assessments.yaml
+/contracts/messages/assignment-events.json
 ```
 
 ## 3. Các bước
@@ -81,12 +83,12 @@ PostgreSQL `assignments` (gồm lịch mở/đóng), `assignment_questions`; sca
 
 - [ ] **Bước 12** - Flyway `V20260925_1500__u08_assessment.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test Testcontainers: scanner mở/đóng chạy lặp, đổi lịch rồi quét, phát hành bài đã phát hành bị chặn, hai người sửa cùng bài chạy lần lượt (khóa dòng), event gửi sau commit.
+- [ ] **Bước 14** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers: scanner mở/đóng chạy lặp, đổi lịch rồi quét, phát hành bài đã phát hành bị chặn, hai người sửa cùng bài chạy lần lượt (khóa dòng), event gửi sau commit.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 16** - `/contracts/openapi/u08-assessment.yaml` và schema event.
+- [x] **Bước 16** - `/contracts/openapi/assessments.yaml` và schema event.
 - [ ] **Bước 17** - Controller + DTO + validation (giờ nhận ISO 8601 có offset).
 - [ ] **Bước 18** - Test MockMvc: phát hành sai lớp bị từ chối và audit, người học không thấy đáp án, không thấy bài `SCHEDULED`/`RETIRED`, sửa bài đã phát hành trả `409`.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.

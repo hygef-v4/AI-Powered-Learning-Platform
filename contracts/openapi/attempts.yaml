@@ -1,0 +1,583 @@
+openapi: 3.1.0
+info:
+  title: U11 - Attempt & Submission
+  version: 1.0.0
+  description: 'Người học xem bài, bắt đầu lượt, lưu nháp (khóa lạc quan `contentVersion`), nộp, xem lượt đã nộp, chấm Practice
+    bằng AI.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U11 Attempt & Submission
+  description: Người học xem bài, bắt đầu lượt, lưu nháp (khóa lạc quan `contentVersion`), nộp, xem lượt đã nộp, chấm Practice
+    bằng AI.
+paths:
+  /api/v1/classes/{classId}/my-assignments:
+    get:
+      operationId: listMyAssignments
+      summary: Assignment List của người học
+      x-roles: &id001
+      - STUDENT
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyAssignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/assignments/{assignmentId}/overview:
+    get:
+      operationId: getAssignmentOverview
+      summary: Assignment Overview
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentOverview'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/assignments/{assignmentId}/attempts:
+    post:
+      operationId: startAttempt
+      summary: Bắt đầu lượt (tính 1 lượt)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/assignments/{assignmentId}/attempts/mine:
+    get:
+      operationId: listMyAttempts
+      summary: Lượt của tôi
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttemptSummary'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}:
+    get:
+      operationId: getAttempt
+      summary: Lượt làm (đang làm hoặc đã nộp)
+      x-roles: *id001
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}/content:
+    put:
+      operationId: saveAttemptContent
+      summary: Lưu nháp
+      description: 409 khi contentVersion cũ (tab khác đã lưu) hoặc lượt đã nộp.
+      x-roles: *id001
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentVersion:
+                  type: integer
+                content:
+                  type: object
+                  additionalProperties: true
+              required:
+              - contentVersion
+              - content
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contentVersion:
+                    type: integer
+                  savedAt:
+                    type: string
+                    format: date-time
+                required:
+                - contentVersion
+                - savedAt
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}/submit:
+    post:
+      operationId: submitAttempt
+      summary: Nộp bài
+      description: 422 kèm lỗi theo blockId (thiếu sơ đồ bắt buộc, khung bị sửa…).
+      x-roles: *id001
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentVersion:
+                  type: integer
+              required:
+              - contentVersion
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}/export.docx:
+    get:
+      operationId: exportAttemptDocx
+      summary: Tải DOCX bài DOCUMENT
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}/ai-grading:
+    post:
+      operationId: requestPracticeGrading
+      summary: Chấm Practice bằng AI (Text/Diagram Essay)
+      x-roles: *id001
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  estimatedCredits:
+                    type: integer
+                required:
+                - suggestionId
+                - status
+                - estimatedCredits
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U11 Attempt & Submission
+  /api/v1/attempts/{attemptId}/practice-result:
+    get:
+      operationId: getPracticeResult
+      summary: Kết quả Practice
+      x-roles: *id001
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  score:
+                    type: number
+                  maxScore:
+                    type: number
+                  feedback:
+                    type: string
+                  detail:
+                    type: object
+                    additionalProperties: true
+                required:
+                - status
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U11 Attempt & Submission
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    MyAssignment:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum: &id002
+          - MULTIPLE_CHOICE_QUIZ
+          - TEXT_ESSAY
+          - DIAGRAM_ESSAY
+          - CODE_LAB
+          - GROUP_ASSIGNMENT
+        gradingMode:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+        closesAt:
+          type: string
+          format: date-time
+        lateUntil:
+          type: string
+          format: date-time
+        latestAttempt:
+          $ref: '#/components/schemas/AttemptSummary'
+      required:
+      - assignmentId
+      - title
+      - type
+      - gradingMode
+      - closesAt
+    AssignmentOverview:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        instructions:
+          type: string
+        type:
+          type: string
+          enum: *id002
+        gradingMode:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+        opensAt:
+          type: string
+          format: date-time
+        closesAt:
+          type: string
+          format: date-time
+        lateUntil:
+          type: string
+          format: date-time
+        attemptsLeft:
+          type: integer
+        timeLimitMinutes:
+          type: integer
+        groupDocumentId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: 'Bài nhóm: mở tài liệu nhóm (U14).'
+      required:
+      - assignmentId
+      - title
+      - instructions
+      - type
+      - gradingMode
+      - opensAt
+      - closesAt
+      - attemptsLeft
+    AttemptSummary:
+      type: object
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        attemptNo:
+          type: integer
+        status:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - SUBMITTED
+        submittedAt:
+          type: string
+          format: date-time
+        late:
+          type: boolean
+        gradedAttempt:
+          type: boolean
+        score:
+          type: number
+        maxScore:
+          type: number
+      required:
+      - attemptId
+      - attemptNo
+      - status
+      - late
+      - gradedAttempt
+    Attempt:
+      type: object
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        assignmentId:
+          type: string
+          format: uuid
+        attemptNo:
+          type: integer
+        status:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - SUBMITTED
+        deadlineAt:
+          type: string
+          format: date-time
+        contentVersion:
+          type: integer
+        snapshot:
+          type: object
+          additionalProperties: true
+        content:
+          type: object
+          additionalProperties: true
+        runResult:
+          type: object
+          additionalProperties: true
+        submitMode:
+          type: string
+          enum:
+          - MANUAL
+          - AUTO_TIME_LIMIT
+          - AUTO_DEADLINE
+          - AUTO_RETIRED
+        submittedAt:
+          type: string
+          format: date-time
+        late:
+          type: boolean
+      required:
+      - attemptId
+      - assignmentId
+      - attemptNo
+      - status
+      - deadlineAt
+      - contentVersion
+      - snapshot
+      - content
+      - late
+    Receipt:
+      type: object
+      properties:
+        attemptId:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+        late:
+          type: boolean
+        receiptHash:
+          type: string
+      required:
+      - attemptId
+      - submittedAt
+      - late
+      - receiptHash

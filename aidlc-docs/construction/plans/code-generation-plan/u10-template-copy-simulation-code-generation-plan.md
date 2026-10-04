@@ -1,6 +1,8 @@
 # U10 Template & Copy - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U10. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -21,7 +23,7 @@ Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bư
 | `AuditPort` | U02 | Dùng thật |
 | `ClassAccessPort`, `SubjectScopePort` | U04 | Dùng thật |
 | `BankCopyPort`, `InlineQuestionPort` | U06 | Dùng thật (sao câu cấp lớp và câu riêng) |
-| `AssignmentQueryPort`, `AssignmentService`, `AssignmentExtensionPort`; các phần của `AssignmentEditorPage` | U08 | Dùng thật; `createDraftFrom`, ghi `subject_id`, trạng thái template, lineage qua `AssignmentExtensionPort`; Template Editor dùng lại trình soạn của U08 (không có lịch) |
+| `AssignmentQueryPort`, `AssignmentDraftPort`, `AssignmentExtensionPort`; các phần của `AssignmentEditorPage` | U08 | Dùng thật; `createDraftFrom`, ghi `subject_id`, trạng thái template, lineage qua `AssignmentExtensionPort`; Template Editor dùng lại trình soạn của U08 (không có lịch) |
 | Bước 2 của `CreateAssignmentDialog` | U08 | U10 gắn `CopyFromTemplateDialog`, `CopyFromClassDialog` vào (U08 lượt trước chỉ có "Bài trống") |
 | `TypeConfigPort.copy` | U09 | Dùng thật |
 | `AiDraftPort` | U13 (`C`, code ngay sau U10 trong wave 4) | Chưa có U13: ẩn `AiDraftDialog` trong Template Editor; U13 thay bằng bản thật |
@@ -42,7 +44,7 @@ PostgreSQL: dòng `assignments` của môn (template) và cột `source_assignme
     (không có port riêng; dùng port của U04, U06, U08, U09, U13)
 /frontend/src/app/teaching/subjects/[id]/templates/
 /frontend/src/app/teaching/assignments/[id]/   (VersionHistoryPanel, AssignmentDiffView)
-/contracts/openapi/u10-template-copy.yaml
+/contracts/openapi/templates.yaml
 ```
 
 ## 3. Các bước
@@ -67,12 +69,12 @@ PostgreSQL: dòng `assignments` của môn (template) và cột `source_assignme
 
 - [ ] **Bước 10** - Không có migration (template và lineage dùng `assignments` của U08).
 - [ ] **Bước 11** - JPA repository.
-- [ ] **Bước 12** - Integration test: copy lỗi giữa chừng không để lại dữ liệu; `source_assignment_id` không đổi sau khi tạo.
+- [ ] **Bước 12** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: copy lỗi giữa chừng không để lại dữ liệu; `source_assignment_id` không đổi sau khi tạo.
 - [ ] **Bước 13** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 14** - `/contracts/openapi/u10-template-copy.yaml`.
+- [x] **Bước 14** - `/contracts/openapi/templates.yaml`.
 - [ ] **Bước 15** - Controller + DTO + validation.
 - [ ] **Bước 16** - Test MockMvc: Teacher không dạy lớp đích bị `404`; Teacher thường không tạo/phát hành/xoá template; Chủ nhiệm môn không sửa/xoá template của môn khác, Chủ nhiệm môn hiện tại sửa/xoá được template do Chủ nhiệm môn trước tạo; Student không copy bài.
 - [ ] **Bước 17** - Tóm tắt: `code/api-summary.md`.

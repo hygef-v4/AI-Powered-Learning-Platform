@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/domain-event.json",
+  "title": "DomainEvent",
+  "description": "Khung chung của event trên exchange `platform.events` (topic, routing key = `eventType`). Chỉ dùng cho thông báo U16; gửi sau commit, mất thì chấp nhận (BR-U03-70).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "eventType",
+    "sourceUnit",
+    "occurredAt",
+    "correlationId",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "enum": [
+        "enrollment.activated",
+        "class.announcement-posted",
+        "payment.paid",
+        "assignment.opened",
+        "group.membership-changed",
+        "group.leader-changed",
+        "group.leader-requested",
+        "group.leader-request-rejected",
+        "group.submitted",
+        "grade.published"
+      ]
+    },
+    "sourceUnit": {
+      "type": "string",
+      "pattern": "^U(0[1-9]|1[0-6])$"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correlationId": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "enrollment.activated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "enrollment-events.json#/$defs/enrollment.activated"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "class.announcement-posted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "announcement-events.json#/$defs/class.announcement-posted"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "payment.paid"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "payment-events.json#/$defs/payment.paid"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "assignment.opened"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "assignment-events.json#/$defs/assignment.opened"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "group.membership-changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "group-events.json#/$defs/group.membership-changed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "group.leader-changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "group-events.json#/$defs/group.leader-changed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "group.leader-requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "group-events.json#/$defs/group.leader-requested"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "group.leader-request-rejected"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "group-events.json#/$defs/group.leader-request-rejected"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "group.submitted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "group-submission-events.json#/$defs/group.submitted"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "grade.published"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "grade-events.json#/$defs/grade.published"
+          }
+        }
+      }
+    }
+  ]
+}

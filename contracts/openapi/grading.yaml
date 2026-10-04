@@ -1,0 +1,623 @@
+openapi: 3.1.0
+info:
+  title: U15 - Grading
+  version: 1.0.0
+  description: 'Hàng chờ chấm, chấm theo rubric (tay hoặc dùng đề xuất AI), chốt, công bố, sổ điểm và điểm của người học.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U15 Grading
+  description: Hàng chờ chấm, chấm theo rubric (tay hoặc dùng đề xuất AI), chốt, công bố, sổ điểm và điểm của người học.
+paths:
+  /api/v1/assignments/{assignmentId}/evaluations:
+    get:
+      operationId: listEvaluations
+      summary: Hàng chờ chấm
+      x-roles: &id001
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id002
+          - PENDING
+          - DRAFT
+          - FINALIZED
+          - PUBLISHED
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvaluationSummary'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+  /api/v1/evaluations/{evaluationId}:
+    get:
+      operationId: getEvaluation
+      summary: Chi tiết bài chấm
+      x-roles: *id001
+      parameters:
+      - name: evaluationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+    put:
+      operationId: saveEvaluation
+      summary: Lưu điểm theo rubric
+      description: 422 `OVERRIDE_REASON_REQUIRED` khi sửa điểm tự chấm hoặc điểm đã chốt mà không có lý do.
+      x-roles: *id001
+      parameters:
+      - name: evaluationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                rubricChecks:
+                  type: object
+                  additionalProperties: true
+                feedback:
+                  type: string
+                  maxLength: 10000
+                finalize:
+                  type: boolean
+                overrideReason:
+                  type: string
+                  maxLength: 1000
+                memberScores:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      accountId:
+                        type: string
+                        format: uuid
+                      score:
+                        type: number
+                      reason:
+                        type: string
+                        maxLength: 1000
+                    required:
+                    - accountId
+                    - score
+              required:
+              - version
+              - rubricChecks
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U15 Grading
+  /api/v1/evaluations/{evaluationId}/ai-proposal:
+    post:
+      operationId: requestAiProposal
+      summary: Nhờ AI đề xuất chấm
+      x-roles: *id001
+      parameters:
+      - name: evaluationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  estimatedCredits:
+                    type: integer
+                required:
+                - suggestionId
+                - status
+                - estimatedCredits
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U15 Grading
+  /api/v1/evaluations:ai-proposal-batch:
+    post:
+      operationId: requestAiProposalBatch
+      summary: Chấm hàng loạt bằng AI
+      description: Kiểm đủ credit cho cả lô trước khi chạy.
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evaluationIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+              - evaluationIds
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestionIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  estimatedCredits:
+                    type: integer
+                required:
+                - suggestionIds
+                - estimatedCredits
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U15 Grading
+  /api/v1/evaluations:finalize:
+    post:
+      operationId: finalizeEvaluations
+      summary: Chốt hàng loạt
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evaluationIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+              - evaluationIds
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: ./common.yaml#/components/schemas/ItemResult
+                required:
+                - results
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+  /api/v1/evaluations:publish:
+    post:
+      operationId: publishEvaluations
+      summary: Công bố hàng loạt (chỉ FINALIZED)
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                evaluationIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+              - evaluationIds
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: ./common.yaml#/components/schemas/ItemResult
+                required:
+                - results
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+  /api/v1/evaluations/{evaluationId}/publish:
+    post:
+      operationId: publishEvaluation
+      summary: Công bố một bài
+      x-roles: *id001
+      parameters:
+      - name: evaluationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U15 Grading
+  /api/v1/classes/{classId}/gradebook:
+    get:
+      operationId: getGradebook
+      summary: Sổ điểm theo sinh viên
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradebookStudent'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+  /api/v1/me/evaluations:
+    get:
+      operationId: listMyPublishedGrades
+      summary: Điểm đã công bố của tôi
+      x-roles:
+      - STUDENT
+      parameters:
+      - name: classId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyGrade'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U15 Grading
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    EvaluationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - ATTEMPT
+          - GROUP_DOCUMENT
+        targetName:
+          type: string
+        attemptNo:
+          type: integer
+        late:
+          type: boolean
+        score:
+          type: number
+        maxScore:
+          type: number
+        status:
+          type: string
+          enum: *id002
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - kind
+      - targetName
+      - late
+      - maxScore
+      - status
+    Evaluation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - ATTEMPT
+          - GROUP_DOCUMENT
+          - MEMBER
+        attemptId:
+          type: string
+          format: uuid
+        groupDocumentId:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum:
+          - DETERMINISTIC
+          - MANUAL
+        score:
+          type: number
+        maxScore:
+          type: number
+        rubricChecks:
+          type: object
+          additionalProperties: true
+        feedback:
+          type: string
+        status:
+          type: string
+          enum: *id002
+        version:
+          type: integer
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              changedBy:
+                type: string
+              changedAt:
+                type: string
+                format: date-time
+              score:
+                type: number
+              status:
+                type: string
+              reason:
+                type: string
+            required:
+            - changedBy
+            - changedAt
+            - status
+        memberScores:
+          type: array
+          items:
+            type: object
+            properties:
+              accountId:
+                type: string
+                format: uuid
+              displayName:
+                type: string
+              score:
+                type: number
+            required:
+            - accountId
+            - displayName
+            - score
+      required:
+      - id
+      - kind
+      - method
+      - maxScore
+      - status
+      - version
+      - history
+    GradebookStudent:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        grades:
+          type: array
+          items:
+            type: object
+            properties:
+              assignmentId:
+                type: string
+                format: uuid
+              title:
+                type: string
+              score:
+                type: number
+              maxScore:
+                type: number
+              status:
+                type: string
+              submittedAt:
+                type: string
+                format: date-time
+            required:
+            - assignmentId
+            - title
+            - maxScore
+            - status
+      required:
+      - accountId
+      - displayName
+      - grades
+    MyGrade:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        score:
+          type: number
+        maxScore:
+          type: number
+        feedback:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        updated:
+          type: boolean
+      required:
+      - assignmentId
+      - score
+      - maxScore
+      - publishedAt
+      - updated

@@ -1,6 +1,8 @@
 # U16 Reporting & Notification - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U16. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -47,13 +49,13 @@ PostgreSQL `notifications` (kèm `email_status`); cột `accounts.email_preferen
     domain/             Notification, NotificationType, EmailStatus, EmailPreferences
     infrastructure/     JPA repository
     worker/             NotificationListener, DeadlineReminderScanner, NotificationRetentionScanner
-/backend/src/main/resources/db/migration/u16/
+/backend/src/main/resources/db/migration/reporting/
 /backend/src/main/resources/templates/email/u16/
 /frontend/src/components/notifications/
 /frontend/src/app/notifications/
 /frontend/src/components/progress/, /frontend/src/components/reporting/
 /frontend/src/app/admin/ (AdminStatisticsPanel), /frontend/src/app/teaching/classes/[id]/gradebook/
-/contracts/openapi/u16-notifications.yaml
+/contracts/openapi/reporting.yaml
 ```
 
 ## 3. Các bước
@@ -80,12 +82,12 @@ PostgreSQL `notifications` (kèm `email_status`); cột `accounts.email_preferen
 
 - [ ] **Bước 11** - Flyway `V20260925_2300__u16_notifications.sql` theo `infrastructure-design.md` §3.
 - [ ] **Bước 12** - JPA repository.
-- [ ] **Bước 13** - Integration test với Mailpit (Testcontainers): event lặp không gửi trùng; hết trần dời sang ngày sau; SMTP lỗi retry; scanner không nhắc bài ngừng giao và nhắc lại đúng một lần khi gia hạn; SSE chuông nhận thông báo; xuất CSV/XLSX chỉ có điểm cuối hợp lệ.
+- [ ] **Bước 13** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test với Mailpit (Testcontainers): event lặp không gửi trùng; hết trần dời sang ngày sau; SMTP lỗi retry; scanner không nhắc bài ngừng giao và nhắc lại đúng một lần khi gia hạn; SSE chuông nhận thông báo; xuất CSV/XLSX chỉ có điểm cuối hợp lệ.
 - [ ] **Bước 14** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 15** - `/contracts/openapi/u16-notifications.yaml` (gồm SSE).
+- [x] **Bước 15** - `/contracts/openapi/reporting.yaml` (gồm SSE).
 - [ ] **Bước 16** - Controller + DTO + validation.
 - [ ] **Bước 17** - Test MockMvc: không đọc thông báo người khác; thống kê ngoài `ADMIN` bị `403` và không trả dữ liệu cá nhân; báo cáo tiến độ và xuất bảng điểm ngoài quyền `404`; CSV chống công thức; nhóm nhỏ không lộ phân bố lớp.
 - [ ] **Bước 18** - Tóm tắt: `code/api-summary.md`.

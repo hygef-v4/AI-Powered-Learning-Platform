@@ -1,6 +1,8 @@
 # U12 Group & Allocation - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U12. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -42,11 +44,11 @@ PostgreSQL `student_groups` (nhóm của lớp), `group_members`, `leader_change
                         LeaderChangeRequest, ClassGroupsValidator, RandomSplitter
     infrastructure/     JPA repository, NoopGroupChangeAdapter
     port/               GroupMembershipPort, GroupChangePort
-/backend/src/main/resources/db/migration/u12/
+/backend/src/main/resources/db/migration/groups/
 /frontend/src/app/teaching/classes/[id]/students/   (panel nhóm trong danh sách sinh viên)
 /frontend/src/app/learning/classes/[classId]/group/
-/contracts/openapi/u12-groups.yaml
-/contracts/messages/u12-group-events.json
+/contracts/openapi/groups.yaml
+/contracts/messages/group-events.json
 ```
 
 ## 3. Các bước
@@ -69,12 +71,12 @@ PostgreSQL `student_groups` (nhóm của lớp), `group_members`, `leader_change
 
 - [ ] **Bước 8** - Flyway `V20260925_1450__u12_groups.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 9** - JPA repository.
-- [ ] **Bước 10** - Integration test: hai lần lưu đồng thời → một `409`; hai yêu cầu đổi trưởng nhóm đồng thời → một thành công; `app` không xóa được `leader_change_requests`; nhóm có `hasGroupWork` = true (adapter giả) không xóa được; `GroupReadinessService` trả lỗi khi lớp chưa có nhóm hoặc nhóm thiếu trưởng nhóm và cảnh báo khi còn sinh viên chưa có nhóm (U08 chặn phát hành kiểm ở plan U08).
+- [ ] **Bước 10** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: hai lần lưu đồng thời → một `409`; hai yêu cầu đổi trưởng nhóm đồng thời → một thành công; `app` không xóa được `leader_change_requests`; nhóm có `hasGroupWork` = true (adapter giả) không xóa được; `GroupReadinessService` trả lỗi khi lớp chưa có nhóm hoặc nhóm thiếu trưởng nhóm và cảnh báo khi còn sinh viên chưa có nhóm (U08 chặn phát hành kiểm ở plan U08).
 - [ ] **Bước 11** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 12** - `/contracts/openapi/u12-groups.yaml` và schema event.
+- [x] **Bước 12** - `/contracts/openapi/groups.yaml` và schema event.
 - [ ] **Bước 13** - Controller + DTO + validation.
 - [ ] **Bước 14** - Test MockMvc: sinh viên không sửa nhóm, không thấy nhóm khác; giảng viên lớp khác `404`.
 - [ ] **Bước 15** - Tóm tắt: `code/api-summary.md`.

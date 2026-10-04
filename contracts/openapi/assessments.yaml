@@ -1,0 +1,801 @@
+openapi: 3.1.0
+info:
+  title: U08 - Assessment Core & Publication
+  version: 1.0.0
+  description: 'Bài tập của lớp: tạo, câu hỏi, duyệt, phát hành, lịch, ngưng giao, nhân bản và version mới. Cấu hình riêng
+    loại bài nằm ở U09.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U08 Assessment Core & Publication
+  description: 'Bài tập của lớp: tạo, câu hỏi, duyệt, phát hành, lịch, ngưng giao, nhân bản và version mới.'
+paths:
+  /api/v1/classes/{classId}/assignments:
+    get:
+      operationId: listClassAssignments
+      summary: Danh sách bài của lớp (giảng viên)
+      x-roles: &id001
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id003
+          - DRAFT
+          - REVIEWED
+          - SCHEDULED
+          - OPEN
+          - CLOSED
+          - RETIRED
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id002
+          - MULTIPLE_CHOICE_QUIZ
+          - TEXT_ESSAY
+          - DIAGRAM_ESSAY
+          - CODE_LAB
+          - GROUP_ASSIGNMENT
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssignmentSummary'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U08 Assessment Core & Publication
+    post:
+      operationId: createAssignment
+      summary: Tạo bài trống
+      description: GROUP_ASSIGNMENT chỉ cho GRADED.
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: *id002
+                gradingMode:
+                  type: string
+                  enum:
+                  - GRADED
+                  - PRACTICE
+                title:
+                  type: string
+                  maxLength: 200
+              required:
+              - type
+              - gradingMode
+              - title
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}:
+    get:
+      operationId: getAssignment
+      summary: Chi tiết bài
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U08 Assessment Core & Publication
+    patch:
+      operationId: updateAssignment
+      summary: Sửa tiêu đề, hướng dẫn (DRAFT)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                instructions:
+                  type: string
+                  maxLength: 20000
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/questions:
+    post:
+      operationId: addQuestions
+      summary: Thêm câu từ ngân hàng hoặc câu riêng
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bankQuestionIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                inlineQuestion:
+                  type: object
+                  additionalProperties: true
+                random:
+                  type: object
+                  properties:
+                    count:
+                      type: integer
+                    filter:
+                      type: object
+                      additionalProperties: true
+                    excludeIds:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                  required:
+                  - count
+                  - filter
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U08 Assessment Core & Publication
+    patch:
+      operationId: reorderQuestions
+      summary: Đổi thứ tự hoặc điểm câu
+      description: Điểm câu Text Essay bằng tổng rubric, không sửa tay.
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      questionId:
+                        type: string
+                        format: uuid
+                      orderNo:
+                        type: integer
+                      points:
+                        type: number
+                    required:
+                    - questionId
+                    - orderNo
+              required:
+              - items
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U08 Assessment Core & Publication
+    delete:
+      operationId: removeQuestions
+      summary: Xóa câu
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: questionIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/ai-drafts:
+    post:
+      operationId: requestAiQuestionDraft
+      summary: Nhờ AI đề xuất câu (Quiz, Text Essay, Code Lab)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                questionType:
+                  type: string
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                difficulty:
+                  type: string
+                moduleIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                lessonIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                note:
+                  type: string
+                  maxLength: 1000
+              required:
+              - questionType
+              - count
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  estimatedCredits:
+                    type: integer
+                required:
+                - suggestionId
+                - status
+                - estimatedCredits
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/review:
+    post:
+      operationId: reviewAssignment
+      summary: Duyệt (DRAFT → REVIEWED)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/Assignment'
+                - type: object
+                  properties:
+                    issues:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ReviewIssue'
+                  required:
+                  - issues
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/publish:
+    post:
+      operationId: publishAssignment
+      summary: Phát hành và đặt lịch
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/schedule:
+    patch:
+      operationId: updateSchedule
+      summary: Sửa lịch
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/retire:
+    post:
+      operationId: retireAssignment
+      summary: Ngưng giao
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 1000
+              required:
+              - reason
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/clone:
+    post:
+      operationId: cloneAssignment
+      summary: Nhân bản thành bài nháp mới
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U08 Assessment Core & Publication
+  /api/v1/assignments/{assignmentId}/versions:
+    post:
+      operationId: createNewVersion
+      summary: Tạo version mới (CLOSED/RETIRED)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U08 Assessment Core & Publication
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    AssignmentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum: *id002
+        gradingMode:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+        status:
+          type: string
+          enum: *id003
+        version:
+          type: integer
+        opensAt:
+          type: string
+          format: date-time
+        closesAt:
+          type: string
+          format: date-time
+        totalPoints:
+          type: number
+      required:
+      - id
+      - title
+      - type
+      - gradingMode
+      - status
+      - version
+      - totalPoints
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        classId:
+          type: string
+          format: uuid
+        subjectId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        instructions:
+          type: string
+        type:
+          type: string
+          enum: *id002
+        gradingMode:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+        status:
+          type: string
+          enum: *id003
+        version:
+          type: integer
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentQuestion'
+        totalPoints:
+          type: number
+        config:
+          type: object
+          additionalProperties: true
+        locked:
+          type: boolean
+      required:
+      - id
+      - title
+      - type
+      - gradingMode
+      - status
+      - version
+      - questions
+      - totalPoints
+      - locked
+    AssignmentQuestion:
+      type: object
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        orderNo:
+          type: integer
+        points:
+          type: number
+        questionType:
+          type: string
+        title:
+          type: string
+        inline:
+          type: boolean
+      required:
+      - questionId
+      - orderNo
+      - points
+      - questionType
+      - title
+      - inline
+    Schedule:
+      type: object
+      properties:
+        opensAt:
+          type: string
+          format: date-time
+        closesAt:
+          type: string
+          format: date-time
+        lateUntil:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        maxAttempts:
+          type: integer
+          minimum: 1
+          maximum: 10
+      required:
+      - opensAt
+      - closesAt
+      - maxAttempts
+    ReviewIssue:
+      type: object
+      properties:
+        code:
+          type: string
+        ref:
+          type: string
+        message:
+          type: string
+      required:
+      - code
+      - message

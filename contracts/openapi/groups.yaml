@@ -1,0 +1,561 @@
+openapi: 3.1.0
+info:
+  title: U12 - Group & Allocation
+  version: 1.0.0
+  description: 'Nhóm của lớp, chia ngẫu nhiên, trưởng nhóm và yêu cầu đổi trưởng nhóm.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U12 Group & Allocation
+  description: Nhóm của lớp, chia ngẫu nhiên, trưởng nhóm và yêu cầu đổi trưởng nhóm.
+paths:
+  /api/v1/classes/{classId}/groups:
+    get:
+      operationId: getClassGroups
+      summary: Nhóm của lớp và sinh viên chưa có nhóm
+      x-roles: &id001
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroups'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U12 Group & Allocation
+    put:
+      operationId: saveClassGroups
+      summary: Lưu nguyên khối các nhóm
+      description: 422 khi xóa nhóm đã có bài làm hoặc thành viên không hợp lệ.
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                groups:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                        maxLength: 100
+                      leaderId:
+                        type: string
+                        format: uuid
+                      memberIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
+                    required:
+                    - name
+                    - leaderId
+                    - memberIds
+              required:
+              - version
+              - groups
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroups'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U12 Group & Allocation
+  /api/v1/classes/{classId}/groups:random-split:
+    post:
+      operationId: previewRandomSplit
+      summary: Xem trước chia ngẫu nhiên
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxSize:
+                  type: integer
+                  minimum: 2
+              required:
+              - maxSize
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroups'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U12 Group & Allocation
+  /api/v1/classes/{classId}/groups/readiness:
+    get:
+      operationId: getGroupReadiness
+      summary: Kiểm nhóm trước khi phát hành bài nhóm
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    $ref: '#/components/schemas/IssueList'
+                  warnings:
+                    $ref: '#/components/schemas/IssueList'
+                required:
+                - errors
+                - warnings
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U12 Group & Allocation
+  /api/v1/classes/{classId}/leader-requests:
+    get:
+      operationId: listLeaderRequests
+      summary: Yêu cầu đổi trưởng nhóm
+      x-roles: *id001
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - CANCELLED
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderRequest'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U12 Group & Allocation
+  /api/v1/leader-requests/{requestId}/approve:
+    post:
+      operationId: approveLeaderRequest
+      summary: Duyệt
+      x-roles: *id001
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newLeaderId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderRequest'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U12 Group & Allocation
+  /api/v1/leader-requests/{requestId}/reject:
+    post:
+      operationId: rejectLeaderRequest
+      summary: Từ chối (bắt buộc lý do)
+      x-roles: *id001
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decisionReason:
+                  type: string
+                  maxLength: 1000
+              required:
+              - decisionReason
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderRequest'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U12 Group & Allocation
+  /api/v1/groups/{groupId}/leader-requests:
+    post:
+      operationId: requestLeaderChange
+      summary: Gửi yêu cầu đổi trưởng nhóm
+      x-roles: &id002
+      - STUDENT
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomineeId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+              required:
+              - nomineeId
+              - reason
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderRequest'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U12 Group & Allocation
+  /api/v1/leader-requests/{requestId}/cancel:
+    post:
+      operationId: cancelLeaderRequest
+      summary: Hủy yêu cầu đang chờ
+      x-roles: *id002
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderRequest'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U12 Group & Allocation
+  /api/v1/classes/{classId}/my-group:
+    get:
+      operationId: getMyGroup
+      summary: Nhóm của tôi và tài liệu nhóm theo bài
+      x-roles: *id002
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  group:
+                    $ref: '#/components/schemas/Group'
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        assignmentId:
+                          type: string
+                          format: uuid
+                        title:
+                          type: string
+                        groupDocumentId:
+                          type: string
+                          format: uuid
+                      required:
+                      - assignmentId
+                      - title
+                      - groupDocumentId
+                required:
+                - group
+                - documents
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U12 Group & Allocation
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    Member:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        isLeader:
+          type: boolean
+      required:
+      - accountId
+      - displayName
+      - isLeader
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        classId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+        hasGroupWork:
+          type: boolean
+      required:
+      - id
+      - classId
+      - name
+      - members
+      - hasGroupWork
+    ClassGroups:
+      type: object
+      properties:
+        version:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        ungrouped:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+      required:
+      - version
+      - groups
+      - ungrouped
+    IssueList:
+      type: array
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+          ref:
+            type: string
+          message:
+            type: string
+        required:
+        - code
+        - message
+    LeaderRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        groupName:
+          type: string
+        requesterId:
+          type: string
+          format: uuid
+        nomineeId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - CANCELLED
+        decisionReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - groupId
+      - groupName
+      - requesterId
+      - nomineeId
+      - reason
+      - status
+      - createdAt

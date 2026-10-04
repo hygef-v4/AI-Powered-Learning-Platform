@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/job-message.json",
+  "title": "JobMessage",
+  "description": "Message việc nền trên exchange `jobs` (routing key = tên queue). Payload chỉ chứa ID/tham chiếu, không chứa dữ liệu nhạy cảm (BR-U03-52). Handler phải idempotent theo `idempotencyKey`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "jobType",
+    "idempotencyKey",
+    "payload",
+    "attempt",
+    "correlationId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "jobType": {
+      "enum": [
+        "OTP_DELIVERY",
+        "EMAIL_SEND",
+        "DRIVE_CLEANUP",
+        "LESSON_SCAN",
+        "YOUTUBE_CAPTION",
+        "PAYOS_CHECK",
+        "GROUP_DOC_CREATE",
+        "AI_TASK",
+        "CODE_RUN"
+      ],
+      "description": "OTP_DELIVERY: U01 → jobs.email; EMAIL_SEND: U16 → jobs.email; DRIVE_CLEANUP: U03 → jobs.drive; LESSON_SCAN: U05 → jobs.gemini; YOUTUBE_CAPTION: U05 → jobs.youtube; PAYOS_CHECK: U07 → jobs.payos; GROUP_DOC_CREATE: U14 → jobs.triggered; AI_TASK: U13 → jobs.gemini; CODE_RUN: U13 → jobs.code"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "pattern": "(?i)(password|otp|token|secret|phone)"
+        }
+      },
+      "additionalProperties": {
+        "type": [
+          "string",
+          "integer",
+          "boolean",
+          "array"
+        ]
+      }
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Lượt thử lại; backoff 30 s, 1, 2, 4, 8 phút; hết 5 lượt gọi `onFailed`."
+    },
+    "correlationId": {
+      "type": "string"
+    }
+  }
+}

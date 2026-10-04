@@ -1,0 +1,60 @@
+# Ghép với docker-compose.yml khi chạy local/test:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up --build
+# Build từ mã nguồn, Nginx không TLS, thêm Mailpit, mở cổng datastore để debug.
+services:
+  nginx:
+    ports: !override
+      - "8088:80"
+    environment:
+      DOMAIN: localhost
+    volumes: !override
+      - ./nginx/local:/etc/nginx/templates:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+
+  certbot: !reset {}
+
+  frontend:
+    image: platform-frontend:local
+    build: ../frontend
+
+  backend:
+    image: platform-backend:local
+    build: ../backend
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_AUTH_ENABLED: "false"
+      SMTP_STARTTLS_ENABLED: "false"
+      SMTP_FROM: no-reply@platform.local
+    ports:
+      - "8080:8080"
+
+  worker:
+    image: platform-backend:local
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_AUTH_ENABLED: "false"
+      SMTP_STARTTLS_ENABLED: "false"
+      SMTP_FROM: no-reply@platform.local
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks: [internal]
