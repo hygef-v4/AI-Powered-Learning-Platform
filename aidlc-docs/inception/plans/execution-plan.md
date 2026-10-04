@@ -1,6 +1,6 @@
 # AI-DLC Execution Plan
 
-> Lưu ý cập nhật: các bảng unit U01-U08, mốc 77 use case và mô tả Simulation Exam/bốn loại bài bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit và 69 use case trong `aidlc-docs/inception/application-design/unit-of-work.md`; phạm vi gồm năm dạng bài, Student mua credit để AI chấm Practice Text/Diagram Essay, không có Simulation Exam. Learning Access thuộc U04. Construction đã hoàn thành thiết kế; các code plan cập nhật chờ checkpoint riêng.
+> Lưu ý cập nhật: các bảng unit U01-U08, mốc 77 use case và mô tả Simulation Exam/bốn loại bài bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit và 40 use case (`docs/use-case-table.md`) trong `aidlc-docs/inception/application-design/unit-of-work.md`; phạm vi gồm năm dạng bài, Student mua credit để AI chấm Practice Text/Diagram Essay, không có Simulation Exam. Learning Access thuộc U04. Construction đã hoàn thành thiết kế; các code plan cập nhật chờ checkpoint riêng.
 
 ## 1. Detailed Analysis Summary
 
@@ -131,7 +131,7 @@ flowchart TD
 - [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
 - [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
 - [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
-- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case tại mốc duyệt ban đầu. Danh mục hiện hành còn 69 UC sau khi gộp các thao tác CRUD cùng actor và bỏ mã lịch sử.
+- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case tại mốc duyệt ban đầu. Danh mục hiện hành có 40 UC sau các lần gộp và tách (77 → 69 → 64 → 40 → 39 → 40) và bỏ mã lịch sử.
 - [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
 - [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
 - [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.

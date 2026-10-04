@@ -11,19 +11,19 @@
 3. Đặt tên "Nhóm N" tiếp theo; chọn trưởng nhóm ngẫu nhiên; trả bản xem trước để giảng viên sửa rồi lưu.
 
 ## F3 - (Đã bỏ) Phân công phần của giảng viên
-- Giảng viên chỉ chuẩn bị các mục chính trong khung bài nhóm (U09/U14). Trưởng nhóm thêm mục chi tiết và giao mục cho thành viên trong tài liệu nhóm (U14).
+- Khung bài nhóm tự chia thành các phần theo heading (U09). Trưởng nhóm giao phần cho thành viên trong tài liệu nhóm (U14).
 
 ## F4 - Sẵn sàng phát hành (`GroupReadinessPort`)
-- U08 gọi khi phát hành bài `GROUP`: kiểm BR-U12-21 trên nhóm của lớp, trả danh sách lỗi/cảnh báo (lớp chưa có nhóm, nhóm thiếu trưởng nhóm, sinh viên chưa có nhóm).
+- U08 gọi khi phát hành bài nhóm (`GROUP_ASSIGNMENT`): kiểm BR-U12-21 trên nhóm của lớp, trả danh sách lỗi/cảnh báo (lớp chưa có nhóm, nhóm thiếu trưởng nhóm, sinh viên chưa có nhóm).
 
 ## F5 - Đổi nhóm khi lớp đã có bài nhóm đang mở
 1. Thêm/bớt thành viên, đổi nhóm, tạo nhóm mới (BR-U12-22) trong một transaction.
-2. Nhóm mới: gọi `GroupChangePort.onGroupCreated(groupId)` → U14 tạo tài liệu nhóm cho mọi publication bài nhóm đang mở của lớp. Thành viên rời nhóm: gọi `GroupChangePort.onMemberRemoved(groupId, studentId)` → U14 nhả khóa mục của người đó ở mọi tài liệu nhóm đang mở. Cả hai trong cùng transaction.
+2. Nhóm mới: gọi `GroupChangePort.onGroupCreated(groupId)` → U14 tạo tài liệu nhóm cho mọi bài nhóm đang mở của lớp. Thành viên rời nhóm: gọi `GroupChangePort.onMemberRemoved(groupId, studentId)` → U14 nhả khóa mục của người đó ở mọi tài liệu nhóm đang mở. Cả hai trong cùng transaction.
 3. Audit; sau commit phát event `group.membership-changed` cho thông báo.
 
 ## F6 - Trưởng nhóm
-1. Sinh viên gửi/hủy yêu cầu (BR-U12-10, 11).
-2. Giảng viên duyệt/từ chối (ghi chú lý do) hoặc đổi trực tiếp (BR-U12-11, 12); event `GROUP_LEADER_CHANGED`.
+1. Sinh viên gửi/hủy yêu cầu (BR-U12-10, 11). Gửi yêu cầu: sau commit phát `group.leader-requested` để U16 báo giảng viên lớp.
+2. Giảng viên duyệt/từ chối (ghi chú lý do) hoặc đổi trực tiếp (BR-U12-11, 12). Sau commit: duyệt hoặc đổi trực tiếp phát `group.leader-changed`; từ chối phát `group.leader-request-rejected` để U16 báo người gửi yêu cầu.
 
 ## F7 - Sinh viên xem nhóm
 - Theo BR-U12-30.

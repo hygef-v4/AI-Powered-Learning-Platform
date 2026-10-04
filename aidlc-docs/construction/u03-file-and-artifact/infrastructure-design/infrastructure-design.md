@@ -1,4 +1,4 @@
-# U03 File & Artifact - Infrastructure Design
+# U03 File, Job & Event - Infrastructure Design
 
 ## 1. Ánh xạ
 
@@ -6,7 +6,10 @@
 |---|---|
 | `FileUploadController`, `UploadService`, `ContentInspector`, `DownloadController`, `DownloadTokenService`, `ArtifactService` | `backend` |
 | `DriveJobHandler` | `worker` |
-| Bảng `artifacts` | `postgres` |
+| `JobPublisher`, `EventPublisherPort`, `AmqpPublisher` | `backend`, `worker` |
+| `JobListener`, `JobRetryPublisher`, `JobHandlerRegistry`, `PendingSweepRunner`, `ScheduledScanRunner` | `worker` |
+| Exchange, queue | `rabbitmq` |
+| Metadata tệp | Thuộc tính `appProperties` của tệp trên Google Shared Drive; không có bảng PostgreSQL |
 | Download token | `redis`, tiền tố `file:download-token:` |
 | Byte file | Google Shared Drive (ngoài VPS); local dùng volume `files-local` |
 
@@ -31,9 +34,32 @@
 
 ## 4. Migration
 
-`V20260925_1000__u03_artifacts.sql`: bảng `artifacts` theo `domain-entities.md` (không có `scan_status`, `source_artifact_id`, `deleted_at`; `status` chỉ `ACTIVE`/`BLOCKED`); index `(scope_type, scope_id)`, unique `provider_file_id`.
+U03 không có migration: không có bảng PostgreSQL. Bảng sở hữu lưu `file_id` (xem [database](../../../../docs/database.md)).
 
-## 5. Compliance
+## 5. RabbitMQ (chuyển từ U02)
+
+| Mục | Giá trị |
+|---|---|
+| vhost | `/platform` |
+| User | `app` với quyền trên `/platform`; tắt `guest` |
+| Exchange | `jobs` (direct), `jobs.retry` (direct), `platform.events` (topic) durable; `platform.realtime` (fanout) do U14 khai báo |
+| Queue việc nền | 7 queue durable do U03 khai báo: `jobs.triggered`, `jobs.email` (priority), `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`; mỗi unit đăng ký `jobType` → queue |
+| Queue thử lại | 5 queue không consumer `jobs.retry.30s`, `.1m`, `.2m`, `.4m`, `.8m` có TTL cố định, dead-letter về exchange `jobs` giữ nguyên routing key |
+| Queue thông báo | `jobs.notification` do U16 khai báo, bind `platform.events` |
+| Khai báo | Spring AMQP khai báo lúc khởi động bằng `Declarables`; không cấu hình tay |
+| Management UI | Cổng 15672 chỉ trên mạng `internal`, vào qua SSH tunnel |
+
+## 6. Worker
+
+| Mục | Giá trị |
+|---|---|
+| Image | Cùng image backend, biến `SPRING_PROFILES_ACTIVE=worker` |
+| Giới hạn | 1 CPU, 1,5 GB (như shared-infrastructure; VPS < 8 GB: 1 GB) |
+| Mạng | Chỉ `internal` |
+| Healthcheck | `/health` kiểm PostgreSQL, RabbitMQ |
+| Số instance | 1 (scanner và sweeper không cần khóa phân tán) |
+
+## 7. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|

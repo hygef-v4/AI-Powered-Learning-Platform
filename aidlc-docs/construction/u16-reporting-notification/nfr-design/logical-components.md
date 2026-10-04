@@ -9,23 +9,25 @@
                                                   |
  Trình duyệt <==SSE== backend: SseHub <-----------+
  Trình duyệt --REST--> backend: NotificationController, PreferenceController, ProgressController,
-                          StudentDashboardController, GradebookExportController
- worker: EmailDispatcher (P2) --> EmailSendHandler (P3) --> SMTP (Gmail / Mailpit)
- worker: DeadlineReminderHandler (P4) --> NotificationFanout
+                          StatisticsController, GradeDistributionController, GradebookExportController
+ worker: jobs.email --> EmailSendHandler (P2, P3) --> SMTP (Gmail / Mailpit); EmailDeferredScanner (P2)
+ worker: DeadlineReminderScanner (P4) --> NotificationFanout
 ```
 
-**Text alternative**: Worker nghe event của các unit, kể cả bài đăng và hỏi đáp lớp từ U05, tạo thông báo theo lô và phát tín hiệu realtime; backend đẩy tới trình duyệt qua SSE. Người dùng đọc thông báo, cài đặt email; giảng viên xem tiến độ và xuất bảng điểm; học viên xem dashboard điểm cá nhân qua REST. Worker điều phối email theo trần và ưu tiên, gửi qua SMTP; job nhắc hạn tạo thông báo cho người chưa nộp.
+**Text alternative**: Worker nghe event của các unit, kể cả thông báo lớp từ U05, tạo thông báo theo lô và phát tín hiệu realtime; backend đẩy tới trình duyệt qua SSE. Người dùng đọc thông báo, cài đặt email; giảng viên xem tiến độ và xuất bảng điểm; Administrator xem thống kê; Student xem phân bố điểm qua REST. Worker gửi email từ queue `jobs.email` theo trần và ưu tiên qua SMTP; scanner nhắc hạn tạo thông báo cho người chưa nộp.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `NotificationListener`, `NotificationFanout` | worker | F1; P1 |
-| `EmailDispatcher`, `EmailSendHandler` | worker | F2; P2, P3 |
-| `DeadlineReminderHandler` | worker | F3; P4 |
+| `EmailSendHandler`, `EmailDeferredScanner` | worker | F2; P2, P3 |
+| `DeadlineReminderScanner` | worker | F3; P4 |
+| `NotificationRetentionScanner` | worker | Xóa thông báo quá 180 ngày |
 | `NotificationController`, `PreferenceController` | backend | F4 |
 | `ProgressController`, `ProgressService` | backend | F5; P5 |
-| `StudentDashboardController`, `StudentDashboardService` | backend | F6; chỉ đọc điểm đã công bố |
+| `StatisticsController`, `StatisticsService` | backend | F6 bước 1; chỉ `ADMIN`, chỉ số đếm |
+| `GradeDistributionController`, `GradeDistributionService` | backend | F6 bước 2; chỉ đọc điểm đã công bố, ngưỡng BR-U16-42 |
 | `GradebookExportController`, `GradebookExportService` | backend | F7; CSV/XLSX theo yêu cầu |
 
 ## 3. Cấu hình

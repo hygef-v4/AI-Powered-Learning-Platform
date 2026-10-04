@@ -6,21 +6,24 @@
  Trình duyệt (GV, CN môn)                       U09 / U10 / U11 / U04 / U16
    |                                                  |
    v                                                  v
- +------------------------------- backend -------------------------------------+
- | AssignmentController --> AssignmentService --> BankQueryPort (U06)           |
- |                                  |          --> AiDraftPort (U13, C)          |
- |                                  +--> ReviewValidator --> TypeConfigPort |
- |                                                           (U09, C)            |
- | PublicationController --> PublicationService --> JobPort (U02)               |
- | AssignmentQueryService (AssignmentQueryPort, StudentAssignmentView)          |
- | Repository (PostgreSQL: assignments, assignment_components, publications)    |
- +------------------------------------------------------------------------------+
-                  | job PUBLICATION_OPEN / CLOSE
+ +------------------------------- backend ---------------------------------------------+
+ | AssignmentController --> AssignmentService --> BankQueryPort,                       |
+ |                                  |             InlineQuestionPort (U06)             |
+ |                                  |          --> AiDraftPort (U13, C)                |
+ |                                  +--> ReviewValidator --> TypeConfigPort (U09, C)   |
+ |                                                       --> CodeLabCheckPort (U13, C) |
+ | ScheduleController --> ScheduleService (phát hành, sửa lịch, ngưng giao)            |
+ |                                  +--> GroupReadinessPort (U12)                      |
+ | AssignmentQueryService (AssignmentQueryPort, StudentAssignmentView)                 |
+ | Repository (PostgreSQL: assignments, assignment_questions)                          |
+ +-------------------------------------------------------------------------------------+
+                  | scanner mỗi phút (U03)
                   v
- worker: PublicationScheduleHandler --> EventPublisherPort (U02) --> U11, U16
+ worker: AssignmentScheduleScanner --> AssignmentLifecyclePort (U11, U14)
+                                   --> EventPublisherPort (U03) --> U16
 ```
 
-**Text alternative**: Giảng viên soạn bài qua `AssignmentController`; `AssignmentService` lấy câu từ ngân hàng U06, gọi AI qua U13, và dùng `ReviewValidator` (có kiểm cấu hình loại bài của U09) khi duyệt. `PublicationController` phát hành và tạo job mở/đóng qua U02. Các unit khác đọc bài qua `AssignmentQueryService`. Trong worker, `PublicationScheduleHandler` đổi trạng thái theo lịch và phát event cho U11, U16.
+**Text alternative**: Giảng viên soạn bài qua `AssignmentController`; `AssignmentService` lấy câu từ ngân hàng U06 hoặc lưu câu riêng qua U06, gọi AI qua U13 (rubric từng câu/từng phần do U09 tạo, sửa và nhân bản qua `TypeConfigPort`), và dùng `ReviewValidator` (kiểm cấu hình loại bài của U09, lời giải mẫu Code Lab của U13) khi duyệt. Phát hành bài nhóm hỏi U12 nhóm đã sẵn sàng chưa. `ScheduleController` phát hành (ghi lịch), sửa lịch và ngưng giao. Các unit khác đọc bài qua `AssignmentQueryService`. Trong worker, `AssignmentScheduleScanner` đổi trạng thái theo lịch, gọi U11/U14 trong transaction và phát event cho U16.
 
 ## 2. Thành phần
 
@@ -28,8 +31,8 @@
 |---|---|---|
 | `AssignmentService` | backend | F1-F3, F7; P1 |
 | `ReviewValidator` | backend | P5 |
-| `PublicationService` | backend | F4, F6, F7; P2 |
-| `PublicationScheduleHandler` | worker | F5; P2, P6 |
+| `ScheduleService` | backend | F4, F6, F7 |
+| `AssignmentScheduleScanner` | worker | F5; P2, P6 |
 | `AssignmentQueryService`, `StudentViewMapper` | backend | F8; P3, P4 |
 
 ## 3. Cấu hình

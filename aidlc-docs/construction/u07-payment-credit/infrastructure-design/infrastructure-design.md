@@ -4,11 +4,11 @@
 
 | Thành phần | Chạy ở |
 |---|---|
-| Controller mua/ví/admin, `WebhookController`, `CreditPortService` | `backend` |
-| `ReconcileHandler`, `ReservationSweepHandler` | `worker` |
-| Bảng `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; cột số dư trong `accounts` (U01 tạo); khóa `u07.*` trong `app_settings` | `postgres` |
+| Controller mua/ví, `WebhookController`, `CreditPortService` | `backend` |
+| `PaymentScanner` (scanner U03), `PayosCheckHandler` | `worker` |
+| Bảng `credit_packages`, `payments`; cột số dư trong `accounts` (U01 tạo) | `postgres` |
 | Rate limit webhook | `redis`, khóa `ratelimit:payos-webhook:{ip}` |
-| Queue | `jobs.payos` (`PAYOS_RECONCILE`), `jobs.scheduled` (`CREDIT_RESERVATION_SWEEP`) |
+| Queue | `jobs.payos` (`PAYOS_CHECK`); phát `payment.paid` lên exchange `platform.events` (chỉ cho thông báo U16); trả credit giữ quá hạn do scanner của U13 |
 
 ## 2. PayOS
 
@@ -26,11 +26,11 @@
 ## 4. Migration
 
 `V20260925_1400__u07_payment_credit.sql`:
-- Unique: `payments.order_code`, `(account_id, idempotency_key)`, `payment_webhook_events.event_key`; partial unique `credit_ledger (ref_id) WHERE type = 'PURCHASE'`, `credit_ledger (request_ref) WHERE type = 'RESERVE'`, `credit_ledger (ref_id) WHERE type IN ('SETTLE','RELEASE')`; index `credit_ledger (account_id, created_at)`.
+- `credit_packages`, `payments` theo [database](../../../../docs/database.md). Unique: `payments.order_code`, `payments.idempotency_key`; index `payments (account_id, created_at)`, `(status, created_at)` cho scanner.
 - `ALTER TABLE accounts ADD COLUMN free_balance bigint NOT NULL DEFAULT 0, free_period char(7), purchased_balance bigint NOT NULL DEFAULT 0` kèm `CHECK (free_balance >= 0 AND purchased_balance >= 0)` (bảng do U01 tạo; chỉ U07 ghi các cột này).
 - Kiểu: tiền `bigint`, credit `bigint`.
-- Quyền: `REVOKE UPDATE, DELETE ON credit_ledger, payment_webhook_events FROM app`.
-- Seed `app_settings`: `u07.monthlyFreeCredits` (từ `U07_MONTHLY_FREE_CREDITS`), `u07.tokensPerCredit` = 1000.
+- Quyền: `REVOKE DELETE ON payments FROM app`.
+- Gói nạp từ `U07_PACKAGES` khi khởi động; mức tặng tháng và tỷ lệ token đọc từ biến môi trường, không có bảng cấu hình.
 
 ## 5. Compliance
 

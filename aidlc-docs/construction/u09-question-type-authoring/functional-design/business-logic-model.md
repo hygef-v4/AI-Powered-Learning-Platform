@@ -8,6 +8,21 @@
 1. Mở `DocumentEditor` chế độ khung; mọi block tạo ra là `TEACHER`.
 2. Thêm/sửa/xóa/sắp xếp block; sơ đồ mở Draw.io nhúng, lưu XML + SVG (BR-U09-35, 38).
 3. Lưu khung: kiểm `validateSkeleton`, tính `contentHash` từng block.
+4. Lấy khung từ ngân hàng (UC 25, UC 27): chọn câu `DOCUMENT` `ACTIVE` khớp dạng (BR-U06-28), sao khung và `requiredDiagrams` vào `config` của bài làm điểm xuất phát (không thêm dòng `assignment_questions`); giảng viên sửa tiếp, bản ngân hàng không đổi. Heading của khung ngân hàng giữ nguyên nên các phần được tính lại như khung tự soạn.
+
+## F2a - Chia phần và rubric từng phần (Diagram Essay, bài nhóm)
+1. Mỗi lần lưu khung, hệ thống dựng cây heading (Tiêu đề 1–6) và lấy heading nhỏ nhất của mỗi nhánh làm phần (BR-U09-25); `config.parts[] = {partId, headingBlockId, ancestorHeadingIds[], title, rubricId}`. Người soạn không bật/tắt phần.
+2. Với mỗi phần (heading nhỏ nhất), người soạn tạo rubric trong `PartRubricPanel` (dùng `RubricEditor` của U06) → `RubricPort.createForAssignment`; lưu `rubricId` vào phần (BR-U09-26).
+3. Sửa rubric một phần: `RubricPort.revise` rồi ghi `rubricId` mới; U08 gọi `TypeConfigPort.repointRubric(old, new)` khi rubric được sửa ở Question Bank (BR-U09-28).
+
+## F2b - Rubric từng câu (Text Essay)
+1. Mỗi câu tự luận trong bài có một rubric: người soạn tạo trong `QuestionRubricPanel` (`RubricEditor` của U06) → `RubricPort.createForAssignment`; lưu `config.questionRubrics[] = {questionId, rubricId}` và đặt điểm của câu bằng tổng điểm rubric (`assignment_questions.points`, qua `AssignmentExtensionPort`) (BR-U09-23).
+2. Sửa, nhân bản, chuyển phiên bản như rubric từng phần (BR-U09-27, 28).
+
+## F2c - Khung do AI đề xuất (Diagram Essay, bài nhóm)
+1. Người soạn bấm "Nhờ AI soạn khung" (mô tả, module/học liệu tùy chọn) → U09 gọi `AiDraftPort.request` loại `SKELETON_DRAFT` (U13 giữ credit, dùng RAG phạm vi lớp hoặc môn).
+2. Poll đề xuất; hiện bản xem trước: cây heading, đoạn hướng dẫn, gợi ý rubric từng phần, trích dẫn (BR-U09-24).
+3. Xác nhận: khung đề xuất thay khung hiện tại (cảnh báo nếu đã có nội dung), kiểm `validateSkeleton`, tính lại phần (F2a), U13 chuyển đề xuất `ACCEPTED`; gợi ý rubric điền sẵn vào `PartRubricPanel`, người soạn sửa rồi lưu rubric từng phần như F2a bước 2. Bỏ → `DISCARDED`, khung không đổi.
 
 ## F3 - Nhập khung từ DOCX
 1. Upload DOCX (tạm, không lưu lâu) (BR-U09-40).
@@ -21,7 +36,7 @@
 3. Kiểm lại `validateForSave`; mọi block `TEACHER` và thứ tự tương đối của chúng không đổi.
 
 ## F4 - Kiểm duyệt (`TypeConfigPort`)
-- `MULTIPLE_CHOICE_QUIZ`: BR-U09-14. `TEXT_ESSAY`: luôn đạt. `DIAGRAM_ESSAY`: khung `DOCUMENT` (nếu có) và `requiredDiagrams` hợp lệ.
+- `MULTIPLE_CHOICE_QUIZ`: BR-U09-14. `TEXT_ESSAY`: mọi câu có rubric `ACTIVE` (BR-U09-23). `DIAGRAM_ESSAY`: có khung (bắt buộc), `requiredDiagrams` hợp lệ và mọi phần có rubric `ACTIVE`. `GROUP_ASSIGNMENT`: khung có ít nhất một phần, mọi phần có rubric `ACTIVE` (BR-U09-25…27). `CODE_LAB`: cấu hình câu `CODE` đủ (lời giải mẫu do `CodeLabCheckPort` của U08 kiểm).
 
 ## F5 - Kiểm tài liệu của người học (U11 gọi)
 - Lưu nháp: `validateForSave` (BR-U09-36).

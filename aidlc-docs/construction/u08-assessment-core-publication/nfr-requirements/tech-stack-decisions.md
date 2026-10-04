@@ -2,7 +2,7 @@
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu | PostgreSQL + JPA; `inlineDefinition` `jsonb` dùng lại record của U06 | Một định dạng câu hỏi |
-| Lịch | Job U02 với `next_attempt_at = opensAt/closesAt` (`PUBLICATION_OPEN`, `PUBLICATION_CLOSE`) | Không thêm scheduler |
+| Lưu | PostgreSQL + JPA; câu riêng của bài lưu ở `questions` của U06 (`scope_type = ASSIGNMENT`) qua `InlineQuestionPort`, `config` là `jsonb` | Một định dạng câu hỏi |
+| Lịch | `AssignmentScheduleScanner` (U03 `ScheduledScanner`, mỗi phút) đọc `opens_at`/`closes_at` của `assignments` | Không thêm scheduler, không có bảng job |
 | Giờ | `java.time.Instant`/`OffsetDateTime`; frontend `date-fns-tz` | Chuẩn |
-| Frontend | Next.js + Tailwind; dùng lại `QuestionEditor`, `QuestionView` của U06 | Tránh viết lại |
+| Frontend | Next.js + Tailwind; dùng lại `QuestionEditor`, `QuestionView` của U06 (`RubricEditor` dùng trong panel rubric của U09) | Tránh viết lại |

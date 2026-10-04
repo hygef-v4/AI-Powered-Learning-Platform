@@ -4,12 +4,12 @@
 
 | Thành phần | Chạy ở |
 |---|---|
-| `AiGuard`, `AiProposalService`, `CodeRunService` (TRY đồng bộ), `CodeLabCheckService`, `AiAdminService` | `backend` |
-| `AiTaskHandler`, `CodeRunHandler` | `worker` |
-| Bảng `ai_task_configs`, `ai_calls`, `ai_proposals`, `code_runs` (index `(owner_ref, kind, created_at)` để lấy lần `VERIFY` mới nhất); khóa `u13.*` trong `app_settings` | `postgres` |
+| `AiGuard`, `AiSuggestionService`, `AiUsageService` (`AiUsagePort` cho U05), `CodeRunService` (TRY đồng bộ), `CodeLabCheckService`, `AiAdminService` | `backend` |
+| `AiTaskHandler`, `CodeRunHandler`, `CreditReservationScanner`, `AiPendingSweeper` | `worker` |
+| Bảng `ai_services`, `ai_suggestions`; kết quả chạy code trong `attempts.run_result` (U11) và `questions.definition` (U06) | `postgres` |
 | Trần chi phí ngày, rate limit | `redis`, khóa `gemini:daily-cost:*`, `ratelimit:ai-request:*`, `ratelimit:code-try:*` |
 | Queue | `jobs.gemini`, `jobs.code` |
-| Event | Không phát event; điểm Code Lab `GRADED` báo U15 qua `CodeGradedPort`, `PRACTICE` trả U11; kết quả AI xem bằng cách hỏi trạng thái theo quyền |
+| Event | Không phát event; điểm Code Lab `GRADED` báo U15 qua `CodeGradedPort`, `PRACTICE` qua `PracticeResultPort`; kết quả AI xem bằng cách hỏi trạng thái theo quyền |
 | Chạy code | 4 container Judge0 trong mạng `sandbox` |
 
 ## 2. Judge0 (theo `demo_do_an`)
@@ -28,15 +28,15 @@
 ## 3. Gemini
 
 - Backend, worker gọi `generativelanguage.googleapis.com:443` (đã mở ở U05).
-- Bảng giá model (USD/1M token vào/ra) để trong `ai_task_configs`; admin cập nhật khi Google đổi giá.
+- Bảng giá model (USD/1M token vào/ra) là cấu hình triển khai `U13_MODEL_PRICES`; cập nhật bằng lần triển khai mới khi Google đổi giá.
 
 ## 4. Migration
 
-`V20260925_2000__u13_ai_code.sql`: các bảng ở §1; seed `ai_task_configs` 5 việc (gồm `PRACTICE_GRADING`) với model mặc định; ràng buộc duy nhất `PRACTICE_RESULT` theo attempt; `REVOKE UPDATE, DELETE ON ai_calls FROM app`; index `ai_calls (created_at, task)`, `code_runs (owner_ref)`.
+`V20260925_2000__u13_ai.sql`: `ai_services` (unique `task_type`; seed `GLOBAL` và 6 loại việc gồm `SKELETON_DRAFT`, `PRACTICE_GRADING`, `EMBEDDING` với model mặc định), `ai_suggestions` (FK `ai_service_id`, `requested_by`; partial unique `(target_id) WHERE target_type = 'PRACTICE_ATTEMPT' AND status IN ('QUEUED','RUNNING','READY')` (một kết quả hợp lệ mỗi attempt, vẫn cho bấm lại sau `FAILED`/`NO_CREDIT`); index `(created_at, ai_service_id)`, `(requested_by, created_at)`, `(credit_status, created_at)` cho scanner trả credit); `REVOKE DELETE ON ai_suggestions FROM app`.
 
 ## 5. Tài nguyên VPS
 
-Tổng giới hạn các container sau khi thêm Judge0 ≈ 7 GB → VPS gợi ý **4 vCPU, 8 GB RAM, 60 GB SSD**. VPS nhỏ hơn: giảm Judge0 workers về 1, `U05_INGEST_CONCURRENCY=2`, `U13_CODE_CONCURRENCY=1`.
+Tổng giới hạn các container sau khi thêm Judge0 ≈ 7 GB → VPS gợi ý **4 vCPU, 8 GB RAM, 60 GB SSD**. VPS nhỏ hơn: giảm Judge0 workers về 1, `U05_SCAN_CONCURRENCY=2`, `U13_CODE_CONCURRENCY=1`.
 
 ## 6. Compliance
 

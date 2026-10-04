@@ -1,39 +1,32 @@
 # U05 Content, Material & RAG - Frontend Components
 
+Màn hình theo [screen flow](../../../../docs/screen-flow.md): học liệu không có trang riêng. Chủ nhiệm môn quản lý module và học liệu của môn trên Subject Detail; Class Detail hiện cùng bộ module (giảng viên tải học liệu của lớp, người học xem). Mỗi module có nút "Tải tệp" và "Gắn link video" mở popup Upload Learning Materials đã chọn sẵn module; người học xem ở popup View Learning Material. Thông báo và bình luận ở màn Announcements.
+
 ```
-app/teaching/subjects/[id]/content/     SubjectContentPage   (Chủ nhiệm môn)
-app/teaching/classes/[id]/content/      ClassContentPage     (giảng viên)
-  ChapterList
-    ChapterRow            tiêu đề, lên/xuống, lưu trữ
-    LessonRow             tiêu đề, trạng thái bản, lên/xuống, lưu trữ
-  LessonEditor
-    VersionBar            "Đang phát hành: bản N" / "Bản nháp", nút Phát hành
-    ItemList
-      TextItemEditor      markdown + xem trước
-      FileItemEditor      FileUploader (U03, purpose MATERIAL)
-      YoutubeItemEditor   ô URL, danh sách video
-    IngestionStatusBadge  Chờ / Đang xử lý / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Lỗi + Thử lại
-  SubjectLessonPicker     (chỉ trang lớp) chọn bài cấp môn đưa vào lớp
 shared/content/
-  LessonViewer            dùng trong StudentClassPage của U04
-    TextItemView          markdown đã làm sạch
-    FileItemView          nút Tải (PDF: thêm nút Xem)
-    YoutubeItemView       iframe youtube-nocookie
-app/classes/[id]/communication/
-  ClassAnnouncementList  thông báo lớp, phân trang
-  ClassDiscussionList    câu hỏi và câu trả lời, phân trang
-  ClassPostForm          giảng viên đăng thông báo; thành viên đặt câu hỏi/trả lời
+  ModuleList                 danh sách module của môn; gắn vào Subject Detail (U04, chế độ môn: Chủ nhiệm môn thêm, đổi tên, lên/xuống, lưu trữ module và tải học liệu của môn) và Class Detail (U04, chế độ lớp: module chỉ đọc, giảng viên tải học liệu của lớp, người học xem)
+    ModuleItem               tiêu đề module, nút "Tải tệp", "Gắn link video" (Chủ nhiệm môn ở chế độ môn, giảng viên lớp ở chế độ lớp), danh sách lesson
+      LessonRow              tên, nhãn "Của môn"/"Của lớp", ScanStatusBadge, đổi tên, lên/xuống, lưu trữ (theo quyền BR-U05-02); người học bấm mở View Learning Material
+      ScanStatusBadge        Chờ / Đang quét / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Không đủ credit AI / Hệ thống đang bận / Lỗi + Quét lại
+  UploadLearningMaterialsDialog   popup Upload Learning Materials (UC 11), mở từ nút của một module
+    MaterialFileInput        FileUploader (U03, purpose MATERIAL), nhiều tệp (chế độ "Tải tệp")
+    YoutubeUrlInput          ô URL một video (chế độ "Gắn link video")
+  ViewLearningMaterialDialog           popup View Learning Material của Student (UC 12)
+    FileView                 PDF xem trực tiếp, nút Tải
+    YoutubeView              iframe youtube-nocookie
+app/classes/[id]/communication/   màn Announcements (UC 13, UC 14)
+  AnnouncementFeed           thông báo lớp, phân trang, mới nhất trước
+    AnnouncementCard         nội dung; 2 bình luận mới nhất, tổng số bình luận, nút "Xem thêm bình luận", ô viết bình luận
+  AnnouncementForm           giảng viên đăng thông báo
+  CommentsDialog             popup toàn bộ bình luận của một thông báo (phân trang, cũ → mới) kèm ô viết bình luận; giảng viên ẩn bình luận có lý do
 ```
 
 | Component | Hành vi | API |
 |---|---|---|
-| `ChapterList` | Cây chương/bài, nút lên/xuống thay kéo thả | `GET /api/v1/content/{scopeType}/{scopeId}/chapters` |
-| `LessonEditor` | Mở bài: có `DRAFT` thì sửa `DRAFT`, không thì nút "Sửa" tạo bản nháp | `GET`, `POST /api/v1/lessons/{id}/draft` |
-| `VersionBar` | Phát hành có hộp xác nhận | `POST /api/v1/lessons/{id}/publish` |
-| `ItemList` | Thêm/sửa/xóa/đổi thứ tự mục trong bản nháp | `POST`, `PATCH`, `DELETE /api/v1/lesson-drafts/{id}/items` |
-| `YoutubeItemEditor` | Kiểm URL phía client; sau khi lưu hiện từng video và trạng thái | như trên |
-| `IngestionStatusBadge` | Poll 5 giây khi đang `PENDING`/`PROCESSING`; `BUSY` hiện "Hệ thống đang bận", `INSUFFICIENT_CREDIT` hiện "Không đủ credit AI"; nút Thử lại khi `FAILED` | `POST /api/v1/source-documents/{id}/retry` |
-| `SubjectLessonPicker` | Danh sách bài cấp môn đã phát hành, chọn chương đích | `POST`, `DELETE /api/v1/classes/{id}/lesson-links` |
-| `FileItemView` | Gọi API lấy URL tải (token 5 phút) khi bấm | `POST /api/v1/classes/{classId}/items/{itemId}/download` |
-| `ClassAnnouncementList` | Thành viên lớp xem; giảng viên đăng hoặc ẩn có lý do | `GET`, `POST /api/v1/classes/{id}/announcements`, `POST /api/v1/classes/{id}/announcements/{postId}:hide` |
-| `ClassDiscussionList` | Thành viên lớp đặt câu hỏi/trả lời; giảng viên ẩn nội dung vi phạm có lý do | `GET`, `POST /api/v1/classes/{id}/questions`, `GET`, `POST /api/v1/classes/{id}/questions/{questionId}/answers`, `POST /api/v1/classes/{id}/questions/{questionId}:hide`, `POST /api/v1/classes/{id}/questions/{questionId}/answers/{answerId}:hide` |
+| `ModuleList` | Chế độ môn (Subject Detail): Chủ nhiệm môn thêm, đổi tên, đổi thứ tự, lưu trữ module, xem học liệu của môn. Chế độ lớp (Class Detail): module chỉ đọc, kèm học liệu của môn và của lớp | `GET /api/v1/subjects/{subjectId}/modules`, `POST /api/v1/subjects/{subjectId}/modules`, `PATCH /api/v1/modules/{id}`, `GET /api/v1/classes/{classId}/modules` |
+| `LessonRow` | Sửa tên, đổi thứ tự, lưu trữ theo quyền; người học mở View Learning Material | `PATCH /api/v1/lessons/{id}` |
+| `UploadLearningMaterialsDialog` | Mở từ nút của module; tải nhiều tệp hoặc một link video; đóng popup là xong, quét chạy nền | Học liệu của môn: `POST /api/v1/subjects/{subjectId}/modules/{moduleId}/lessons`; học liệu của lớp: `POST /api/v1/classes/{classId}/modules/{moduleId}/lessons` |
+| `ScanStatusBadge` | Poll 3 giây khi `PENDING`/`SCANNING` (`usePollStatus` của U03); nút Quét lại khi `FAILED`, `BUSY`, `NO_CREDIT` | `GET /api/v1/lessons/{id}/scan`, `POST /api/v1/lessons/{id}/scan` |
+| `ViewLearningMaterialDialog` | Lấy URL tải (token 5 phút) khi mở tệp | `POST /api/v1/classes/{classId}/lessons/{lessonId}/download` |
+| `AnnouncementFeed`, `AnnouncementForm` | Thành viên lớp xem; giảng viên đăng hoặc ẩn có lý do; mỗi thông báo kèm 2 bình luận mới nhất | `GET`, `POST /api/v1/classes/{id}/announcements`, `POST /api/v1/classes/{id}/announcements/{announcementId}:hide` |
+| `AnnouncementCard`, `CommentsDialog` | Viết bình luận (≤ 2 000 ký tự); "Xem thêm bình luận" mở popup toàn bộ; giảng viên ẩn bình luận có lý do | `GET`, `POST /api/v1/announcements/{id}/comments`, `POST /api/v1/announcement-comments/{id}:hide` |

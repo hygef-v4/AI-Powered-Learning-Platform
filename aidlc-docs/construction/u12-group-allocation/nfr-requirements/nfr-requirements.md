@@ -12,8 +12,8 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U12-10 | Lưu nhóm của lớp trong một transaction có khóa theo lớp (advisory lock) và khóa lạc quan `version` trên từng nhóm; lệch → `409`. | BR-U12-07 |
-| NFR-U12-11 | Một sinh viên tối đa một nhóm đang hiệu lực trong lớp (kiểm trong transaction có khóa theo lớp); một yêu cầu `PENDING` mỗi nhóm. | BR-U12-02, 10, 20 |
-| NFR-U12-12 | Lịch sử thành viên và yêu cầu đổi trưởng nhóm chỉ thêm, không xóa. | BR-U12-22 |
+| NFR-U12-11 | Một sinh viên tối đa một nhóm đang hiệu lực trong lớp (kiểm trong transaction có khóa theo lớp); một yêu cầu `PENDING` mỗi nhóm. | BR-U12-02, 10 |
+| NFR-U12-12 | Yêu cầu đổi trưởng nhóm không bị xóa (`REVOKE DELETE`); lịch sử thành viên (thêm, gỡ, đổi trưởng nhóm) nằm trong audit. | BR-U12-08, 32 |
 | NFR-U12-13 | Chia ngẫu nhiên dùng `SecureRandom`; kết quả là bản xem trước, chỉ ghi khi giảng viên lưu. | BR-U12-05 |
 
 ## 3. Bảo mật

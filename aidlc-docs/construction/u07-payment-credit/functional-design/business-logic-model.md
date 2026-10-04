@@ -7,32 +7,31 @@
 4. Thành công → `PENDING`, trả `checkoutUrl`; lỗi → `FAILED` (BR-U07-07).
 5. Frontend chuyển người dùng sang trang PayOS (QR chuyển khoản).
 
-## F2 - Trang quay về
-1. PayOS chuyển về `returnUrl` hoặc `cancelUrl` với `orderCode`.
+## F2 - Màn Payment Result
+1. PayOS chuyển về `returnUrl` hoặc `cancelUrl` (màn Payment Result `/credits/result`) với `orderCode`.
 2. Frontend gọi trạng thái giao dịch, poll 3 giây tối đa 2 phút; không cộng credit ở bước này (BR-U07-10).
 3. `cancelUrl` → backend gọi PayOS kiểm; nếu chưa trả thì `CANCELLED`.
 
 ## F3 - Webhook
-1. Kiểm chữ ký; sai → lưu `REJECTED`, audit, trả `401` (BR-U07-10).
-2. Tìm `Payment` theo `orderCode`, kiểm số tiền và mã kết quả (BR-U07-11).
-3. Một transaction: INSERT `PaymentWebhookEvent` (unique `eventKey`) → nếu trùng thì `DUPLICATE`; `Payment` → `PAID` (khi chưa `PAID`) → ghi sổ `PURCHASE` + tăng `purchasedBalance` (BR-U07-12, 13); audit.
-4. Trả `200`.
+1. Kiểm chữ ký; sai → audit, trả `401` (BR-U07-10).
+2. Tìm `payments` theo `order_code`, kiểm số tiền và mã kết quả (BR-U07-11).
+3. Một transaction: `UPDATE payments SET status = 'PAID', paid_at, provider_reference WHERE order_code = :code AND status <> 'PAID'`; cập nhật một dòng → khóa dòng tài khoản, tăng `purchased_balance` (BR-U07-12, 13); audit. Không dòng nào → đã cộng trước đó, không làm gì.
+4. Sau commit phát `payment.paid`; trả `200`.
 
 ## F4 - Tự đối soát
-1. Job U02 `PAYOS_RECONCILE` mỗi 10 phút (BR-U07-20).
-2. Gọi PayOS lấy trạng thái theo `orderCode`.
+1. `ScheduledScanner` của U07 mỗi 10 phút chọn giao dịch `PENDING` quá 5 phút và `EXPIRED` trong 24 giờ qua, gửi việc `PAYOS_CHECK` cho từng giao dịch (BR-U07-20); cùng scanner đổi `PENDING` quá hạn sang `EXPIRED` (BR-U07-06).
+2. Handler gọi PayOS lấy trạng thái theo `order_code`.
 3. `PAID` → áp dụng như F3 bước 3; `CANCELLED`/`EXPIRED` → cập nhật; lỗi → giữ nguyên (BR-U07-22).
 
 ## F5 - Số dư và tặng tháng
-1. Kiểm tài khoản `ACTIVE` và chủ ví; cả bốn vai trò được đọc số dư. Student không nhận `MONTHLY_GRANT` (BR-U07-01, 31).
-2. Với Teacher, Subject Manager hoặc Admin, đọc số dư (khóa dòng tài khoản): nếu `freePeriod` khác tháng hiện tại → đặt `freeBalance = u07.monthlyFreeCredits`, ghi sổ `MONTHLY_GRANT` với delta tương ứng. Student chỉ có số dư mua.
+1. Kiểm tài khoản `ACTIVE` và chủ ví; cả bốn vai trò được đọc số dư và được tặng tháng (BR-U07-01, 31).
+2. Đọc số dư (khóa dòng tài khoản): nếu `free_period` khác tháng hiện tại → đặt `free_balance = U07_MONTHLY_FREE_CREDITS`, `free_period` = tháng hiện tại. Áp dụng như nhau cho cả bốn vai trò.
 
-## F6 - Giữ và trừ credit (U05 và U13 gọi)
-1. `reserve`: kiểm tài khoản `ACTIVE`, chủ ví và `purpose`; `STUDENT` chỉ hợp lệ cho `PRACTICE_GRADING` của attempt Practice Text/Diagram Essay đã xác minh. Sau đó kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), ghi dòng sổ `RESERVE` (có `requestRef`, `expiresAt`); `requestRef` đã có → trả dòng cũ. Thiếu credit cho Practice → không giữ credit, U11 vẫn lưu attempt không điểm AI.
-2. `settle`: tính chênh lệch với phần giữ, trả lại hoặc trừ thêm (BR-U07-42), ghi dòng sổ `SETTLE` trỏ về dòng `RESERVE` → `SETTLED`.
-3. `release`: trả lại phần giữ, ghi dòng sổ `RELEASE` trỏ về dòng `RESERVE` → `RELEASED`.
-4. Job quét mỗi 5 phút tìm dòng `RESERVE` chưa đóng quá `expiresAt` và `release` (BR-U07-43).
+## F6 - Giữ và trừ credit (U13 gọi trong transaction của mình)
+1. `reserve`: kiểm tài khoản `ACTIVE`, chủ ví và `purpose`; `STUDENT` chỉ hợp lệ cho `PRACTICE_GRADING` của attempt Practice Text/Diagram Essay đã xác minh. Áp tặng tháng như F5, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), trả `{reserved, fromFree}` để U13 lưu vào `ai_suggestions`. Thiếu credit → lỗi `INSUFFICIENT_CREDIT`, không trừ gì (BR-U07-40).
+2. `settle`: tính chênh lệch với phần giữ; dư thì trả lại (vào credit tặng trước theo `fromFree` nếu vẫn cùng tháng, phần còn lại vào credit mua), thiếu thì trừ thêm tối đa số dư còn lại, không để âm (BR-U07-42).
+3. `release`: trả lại toàn bộ phần giữ theo cùng quy tắc (BR-U07-43).
 
-## F7 - Quản trị
-1. Gói: tạo/sửa/ẩn (BR-U07-02).
-2. Mức tặng tháng: sửa khóa `u07.monthlyFreeCredits` trong `app_settings`, có hiệu lực từ lần đặt lại kế tiếp.
+## F7 - Cấu hình cố định
+1. Gói: nạp từ `U07_PACKAGES` khi khởi động (thêm gói mới, cập nhật giá cho giao dịch sau); không có thao tác quản trị (BR-U07-02).
+2. Mức tặng tháng: `U07_MONTHLY_FREE_CREDITS`; đổi bằng lần triển khai mới, có hiệu lực từ lần đặt lại kế tiếp.

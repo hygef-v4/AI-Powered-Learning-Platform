@@ -1,218 +1,122 @@
 # U05 Content, Material & RAG - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 11, UC 13, UC 14.
+Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 11, UC 12, UC 13, UC 14 (Comment on Announcement). Bảng theo [database](../../../../docs/database.md).
+
+Quyết định 2026-10-03: học liệu chỉ **tải lên rồi quét**. Không soạn nội dung trực tiếp, không phiên bản, không phát hành. Quyết định 2026-10-04: chapter đổi thành **module của môn** do Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung; mỗi lesson là một tài liệu trong module, là học liệu của môn hoặc của một lớp; hỏi đáp lớp đổi thành bình luận dưới thông báo.
 
 ## 1. Tổng quan
 
-| Entity | Loại | Lưu ở | Unit ghi |
+| Entity | Thực thể ERD | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `Chapter` | Aggregate root | `chapters` | U05 |
-| `Lesson` | Aggregate root | `lessons` | U05 |
-| `LessonVersion` | Entity | `lesson_versions` | U05 |
-| `LessonItem` | Entity | `lesson_items` | U05 |
-| `ClassLessonLink` | Entity | `class_lesson_links` | U05 |
-| `YoutubeSource` | Entity | `youtube_sources` | U05 |
-| `SourceDocument` | Aggregate root | `source_documents` | U05 |
-| `RagChunk` | Entity | `rag_chunks` | U05 |
-| `ClassAnnouncement` | Aggregate root | `class_announcements` | U05 |
-| `ClassQuestion` | Aggregate root | `class_questions` | U05 |
-| `ClassAnswer` | Entity | `class_answers` | U05 |
+| `Module` | `MODULE` | `modules` | U05 |
+| `Lesson` | `LESSON` | `lessons` (gồm kết quả quét và embedding) | U05 |
+| `Announcement` | `ANNOUNCEMENT` | `announcements` | U05 |
+| `AnnouncementComment` | Bảng nối ACCOUNT commenting_on ANNOUNCEMENT | `announcement_comments` | U05 |
 
-U05 **không** sở hữu: byte file (U03), quyền vào lớp (U04), gọi LLM tạo đề/chấm (U13), credit (U07), job (U02), hộp thông báo (U16).
+U05 **không** sở hữu: byte file (U03), quyền vào lớp (U04), gọi LLM tạo đề/chấm và ghi nhận chi phí AI (U13), số dư credit (U07), hàng đợi (U03), hộp thông báo (U16).
 
-## 2. `Chapter`
+## 2. `Module`
 
-| Thuộc tính | Kiểu | Ràng buộc |
+| Cột | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `scopeType` | enum | `SUBJECT`, `CLASS` |
-| `subjectId` | UUID | Luôn có |
-| `classId` | UUID | Có khi `scopeType = CLASS` |
+| `subject_id` | UUID | Môn sở hữu; Chủ nhiệm môn quản lý trên Subject Detail; mọi lớp của môn (kể cả lớp tạo sau) dùng chung, không sao chép |
 | `title` | chuỗi ≤ 200 | |
-| `orderNo` | số | Thứ tự trong phạm vi |
-| `archived` | bool | Lưu trữ thì ẩn khỏi người học, không xóa |
+| `order_no` | số | Thứ tự module trong môn |
+| `status` | enum | `ACTIVE`, `ARCHIVED`; lưu trữ thì ẩn module và mọi lesson bên trong, không xóa |
 
 ## 3. `Lesson`
 
-| Thuộc tính | Kiểu | Ràng buộc |
+| Cột | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `chapterId` | UUID | |
-| `orderNo` | số | |
-| `archived` | bool | |
+| `module_id` | UUID | Module chứa lesson |
+| `class_id` | UUID | Rỗng: học liệu của môn (Chủ nhiệm môn tải, mọi lớp thấy); có giá trị: học liệu của lớp đó (giảng viên lớp tải); lớp phải thuộc môn của module |
+| `title` | chuỗi ≤ 200 | Mặc định là tên tệp hoặc tiêu đề video |
+| `order_no` | số | Thứ tự trong module, tính riêng cho học liệu của môn và học liệu của từng lớp; khi hiển thị học liệu của môn đứng trước |
+| `source_type` | enum | `FILE`, `YOUTUBE` |
+| `file_id`, `file_name`, `mime_type`, `size_bytes` | | Khi `FILE`: tệp PDF/DOCX/PPTX đã gắn qua U03 (purpose `MATERIAL`) |
+| `youtube_url` | chuỗi | Khi `YOUTUBE`: một video (`watch?v=` hoặc `youtu.be/`); không nhận playlist |
+| `scan_status` | enum | `PENDING`, `SCANNING`, `INDEXED`, `NO_TEXT`, `NO_CAPTION`, `NO_CREDIT`, `BUSY`, `FAILED` |
+| `extracted_text` | văn bản | Chữ trích từ tệp hoặc phụ đề, tối đa 2 000 000 ký tự |
+| `embedding` | vector 768 | `gemini-embedding-001`, tính từ phần đầu `extracted_text` |
+| `scanned_at` | thời gian | Lần đổi trạng thái quét gần nhất (đặt khi `PENDING`, `SCANNING` và khi kết thúc); sweeper dùng để tìm lesson `PENDING` quá 5 phút (bảng không có `updated_at`) |
+| `status` | enum | `ACTIVE`, `ARCHIVED` |
 
-## 4. `LessonVersion`
+Tải lên là hiển thị ngay cho người học trong phạm vi (mọi lớp của môn, hoặc chỉ lớp đó); quét chạy nền và không chặn việc xem.
 
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `lessonId` | UUID | |
-| `versionNo` | số | Tăng dần, duy nhất theo bài |
-| `title` | chuỗi ≤ 200 | |
-| `status` | enum | `DRAFT`, `PUBLISHED`, `SUPERSEDED` |
-| `publishedAt`, `publishedBy` | | Khi phát hành |
-
-Mỗi bài tối đa 1 `DRAFT` và 1 `PUBLISHED`.
-
-### Trạng thái
+### Trạng thái quét
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DRAFT: Tạo hoặc sửa bài
-    DRAFT --> PUBLISHED: Phát hành
-    PUBLISHED --> SUPERSEDED: Phiên bản mới được phát hành
-    SUPERSEDED --> [*]
+    [*] --> PENDING: Tải lên hoặc Quét lại
+    PENDING --> SCANNING: Worker nhận
+    SCANNING --> INDEXED: Trích chữ và embedding xong
+    SCANNING --> NO_TEXT: Tệp không có chữ
+    SCANNING --> NO_CAPTION: Video không có phụ đề
+    SCANNING --> NO_CREDIT: Người tải lên không đủ credit
+    SCANNING --> BUSY: Hết trần AI hệ thống hoặc AI bị tắt
+    SCANNING --> FAILED: Lỗi vĩnh viễn hoặc hết lượt thử lại
+    NO_CREDIT --> PENDING: Quét lại
+    BUSY --> PENDING: Quét lại
+    FAILED --> PENDING: Quét lại
 ```
 
-**Text alternative**: Phiên bản bài tạo ra ở `DRAFT`. Phát hành thì thành `PUBLISHED`; khi một phiên bản mới của cùng bài được phát hành, bản đang `PUBLISHED` chuyển `SUPERSEDED` và không đổi nữa.
+**Text alternative**: Học liệu tải lên ở `PENDING`. Worker nhận thì sang `SCANNING`. Xong thì `INDEXED`. Tệp không có chữ kết thúc ở `NO_TEXT`, video không có phụ đề ở `NO_CAPTION`. Thiếu credit sang `NO_CREDIT`, hết trần AI hoặc AI bị tắt sang `BUSY`, lỗi vĩnh viễn hoặc hết lượt sang `FAILED`; ba trạng thái này có nút Quét lại để về `PENDING`.
 
-## 5. `LessonItem`
+## 4. `Announcement`
 
-| Thuộc tính | Kiểu | Ràng buộc |
+| Cột | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `lessonVersionId` | UUID | |
-| `orderNo` | số | |
-| `type` | enum | `TEXT`, `FILE`, `YOUTUBE` |
-| `title` | chuỗi ≤ 200 | |
-| `body` | markdown ≤ 50 000 ký tự | Khi `TEXT` |
-| `artifactId` | UUID | Khi `FILE` (U03, purpose `MATERIAL`) |
-| `youtubeSourceId` | UUID | Khi `YOUTUBE`; mỗi phiên bản bài tối đa 1 mục YouTube |
-| `sourceDocumentId` | UUID | Tài liệu RAG tương ứng (`TEXT`, `FILE`) |
-
-## 6. `ClassLessonLink`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `classChapterId` | UUID | Chương của lớp |
-| `subjectLessonId` | UUID | Bài cấp môn được đưa vào lớp |
-| `orderNo` | số | |
-
-Lớp hiển thị **bản `PUBLISHED` mới nhất** của bài cấp môn; bài cấp môn bị lưu trữ hoặc chưa có bản phát hành thì không hiện.
-
-## 7. `YoutubeSource`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `url` | chuỗi | URL video hoặc playlist |
-| `kind` | enum | `VIDEO`, `PLAYLIST` |
-| `externalId` | chuỗi | Mã video/playlist trên YouTube |
-| `chargedToAccountId` | UUID | Người thêm nguồn, trả credit embedding |
-| `status` | enum | `PENDING`, `RESOLVED`, `FAILED` |
-
-Mỗi video (lẻ hoặc thuộc playlist) là một `SourceDocument` loại `YOUTUBE_VIDEO` trỏ về nguồn này. Danh sách video của playlist = các `SourceDocument` cùng `youtubeSourceId`, sắp theo `orderNo`.
-
-### Trạng thái
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING: Gắn URL vào bài
-    PENDING --> RESOLVED: Giải ra danh sách video
-    PENDING --> FAILED: URL sai, riêng tư hoặc lỗi vĩnh viễn
-    FAILED --> PENDING: Người quản lý bấm Thử lại
-```
-
-**Text alternative**: Nguồn YouTube tạo ra ở `PENDING`. Giải được video (một video hoặc ≤ 50 video của playlist) thì `RESOLVED` và mỗi video sinh một tài liệu RAG. Lỗi vĩnh viễn thì `FAILED`; người quản lý có thể bấm thử lại để về `PENDING`.
-
-## 8. `SourceDocument`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `kind` | enum | `TEXT`, `FILE`, `YOUTUBE_VIDEO` |
-| `contentKey` | chuỗi | SHA-256 nội dung (`TEXT`), `artifactId` (`FILE`) hoặc `videoId` (`YOUTUBE_VIDEO`); duy nhất, dùng lại khi phiên bản mới giữ nguyên mục |
-| `chargedToAccountId` | UUID | Người tải/phát hành đã tạo nguồn mới; job ingest và retry trừ credit embedding của tài khoản này |
-| `indexStatus` | enum | `PENDING`, `PROCESSING`, `INDEXED`, `NO_TEXT`, `NO_CAPTION`, `FAILED` |
-| `errorCode` | chuỗi | Mã lỗi an toàn |
-| `chunkCount` | số | |
-| `language` | chuỗi | Ngôn ngữ caption |
-| `youtubeSourceId` | UUID | Chỉ `YOUTUBE_VIDEO`: nguồn đã sinh ra video này |
-| `videoTitle`, `orderNo` | chuỗi, số | Chỉ `YOUTUBE_VIDEO`: tiêu đề và thứ tự trong playlist |
-
-### Trạng thái
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING: Nguồn mới
-    PENDING --> PROCESSING: Job ingest nhận
-    PROCESSING --> INDEXED: Cắt đoạn và embedding xong
-    PROCESSING --> NO_TEXT: File không có chữ
-    PROCESSING --> NO_CAPTION: Video không có caption
-    PROCESSING --> FAILED: Lỗi vĩnh viễn hoặc hết lượt retry
-    FAILED --> PENDING: Người quản lý bấm Thử lại
-```
-
-**Text alternative**: Tài liệu RAG đi từ `PENDING` sang `PROCESSING` khi job ingest nhận. Xong thì `INDEXED`. File không có chữ kết thúc ở `NO_TEXT`, video không có caption kết thúc ở `NO_CAPTION` (không retry). Lỗi vĩnh viễn hoặc hết lượt thì `FAILED`, có thể thử lại thủ công về `PENDING`.
-
-## 9. `RagChunk`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `sourceDocumentId` | UUID | |
-| `chunkNo` | số | |
-| `text` | chuỗi ≤ ~3 000 ký tự | |
-| `pageNo` hoặc `startMs`/`endMs` | số | Vị trí trích dẫn |
-| `embedding` | vector 768 chiều | `gemini-embedding-001` |
-
-## 10. `ClassAnnouncement`
-
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `classId` | UUID | |
+| `class_id` | UUID | |
+| `author_id` | UUID | Giảng viên của lớp (BR-U05-60) |
 | `title`, `body` | chuỗi | Tiêu đề ≤ 200, nội dung ≤ 5 000 ký tự; không sửa sau khi đăng |
-| `authorId` | UUID | Giảng viên của lớp hoặc ADMIN (BR-U05-60) |
-| `status` | enum | `VISIBLE`, `HIDDEN` |
-| `createdAt` | thời gian | |
-| `hiddenAt`, `hiddenBy`, `hideReason` | | Khi ẩn |
+| `posted_at` | thời gian | |
+| `status`, `hidden_reason` | enum, chuỗi | `VISIBLE`, `HIDDEN`; lý do khi ẩn |
 
-## 11. `ClassQuestion`
+## 5. `AnnouncementComment`
 
-Thuộc tính như `ClassAnnouncement`; `authorId` là người học đang ghi danh hoặc giảng viên của lớp (BR-U05-61).
-
-## 12. `ClassAnswer`
-
-| Thuộc tính | Kiểu | Ràng buộc |
+| Cột | Kiểu | Ràng buộc |
 |---|---|---|
-| `id` | UUID | |
-| `questionId` | UUID | Luôn thuộc lớp của câu hỏi |
-| `authorId` | UUID | |
-| `body` | chuỗi | |
-| `status` | enum | `VISIBLE`, `HIDDEN` |
-| `createdAt`, `hiddenAt`, `hiddenBy`, `hideReason` | | |
+| `id` | UUID | Một người bình luận nhiều lần dưới một thông báo |
+| `announcement_id` | UUID | Thông báo được bình luận |
+| `account_id` | UUID | Người học `ACTIVE` hoặc giảng viên của lớp (BR-U05-61) |
+| `body` | chuỗi ≤ 2 000 | Văn bản thuần; không sửa sau khi gửi |
+| `posted_at` | thời gian | |
+| `status`, `hidden_reason` | enum, chuỗi | `VISIBLE`, `HIDDEN`; lý do khi ẩn |
 
-### Trạng thái (thông báo, câu hỏi, câu trả lời)
+### Trạng thái (thông báo, bình luận)
 
 ```mermaid
 stateDiagram-v2
     [*] --> VISIBLE: Đăng
-    VISIBLE --> HIDDEN: Giảng viên lớp hoặc ADMIN ẩn, có lý do
+    VISIBLE --> HIDDEN: Giảng viên lớp ẩn, có lý do
     HIDDEN --> [*]
 ```
 
-**Text alternative**: Thông báo, câu hỏi và câu trả lời đăng ra ở `VISIBLE`. Giảng viên lớp hoặc ADMIN ẩn nội dung vi phạm (ghi người ẩn, lý do) thì sang `HIDDEN`. Không sửa, không xóa cứng.
+**Text alternative**: Thông báo và bình luận đăng ra ở trạng thái hiển thị. Giảng viên lớp ẩn nội dung vi phạm (ghi lý do, người ẩn ghi trong audit) thì sang `HIDDEN`. Không sửa, không xóa cứng.
 
-## 13. Contract
+## 6. Contract
 
 ### Port U05 cung cấp
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `PublishedContentPort` | U04 (`C`) | `listForClass(classId)`: chương, bài, mục đã phát hành (của lớp và bài cấp môn đã liên kết) |
-| `RagRetrievalPort` | U13 | `retrieve(scope, query, k, requesterId, requestRef)` → đoạn kèm nguồn; embedding câu hỏi tính credit cho `requesterId` |
-| `ContentRefPort` | U08 | Kiểm `lessonVersionId` tồn tại, thuộc phạm vi |
-| Event `class.announcement-posted`, `class.question-posted`, `class.answer-posted` | U16 | Phát sau commit; payload gồm eventId, id đối tượng, actorId, classId; sự kiện trả lời có thêm questionAuthorId |
+| `PublishedContentPort` | U04 (`C`) | `listForClass(classId)`: module `ACTIVE` của môn, mỗi module gồm lesson `ACTIVE` của môn và của lớp |
+| `RagRetrievalPort` | U13 | `retrieve(scope, query, k, requesterId)` → lesson gần nhất kèm đoạn trích; embedding câu hỏi ghi nhận qua `AiUsagePort` cho `requesterId` |
+| `ContentRefPort` | U06, U08 | Kiểm `moduleId`/`lessonId` tồn tại, thuộc phạm vi (phân loại câu hỏi, phạm vi AI soạn đề) |
+| Event `class.announcement-posted` | U16 | Phát sau commit; payload gồm eventId, announcementId, actorId, classId. Bình luận không phát sự kiện |
 
 ### Port U05 dùng
 
 | Port | Unit | Mô tả |
 |---|---|---|
+| `AuthorizationPort` | U01 | Tài khoản `ACTIVE`, vai trò |
 | `ClassAccessPort` | U04 | Ghi danh, phạm vi lớp |
 | `ArtifactPort` | U03 | `attach`, `open`, `issueDownloadToken` |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Job ingest, audit, event lớp |
-| `CreditPort` | U07 (`C`) | Giữ/trừ/trả credit cho embedding |
-| `AiBudgetPort` | U13 (`C`) | Kill-switch và trần chi phí Gemini/ngày dùng chung: `tryReserve`, `settle`, `release` |
+| `AuditPort` | U02 | Audit |
+| `JobPort`, `EventPublisherPort`, `PendingSweeper` | U03 | Việc `LESSON_SCAN`, `YOUTUBE_CAPTION`, gửi lại việc bị mất, event thông báo lớp |
+| `AiUsagePort` | U13 (`C`) | Kiểm AI bật, trần chi phí, giữ/trừ credit và ghi `ai_suggestions` cho mỗi lần embedding |
 | `EmbeddingPort` | Adapter Gemini | `embed(texts)` → vector |
-| `YoutubePort` | Adapter YouTube | Giải playlist, lấy caption |
+| `YoutubePort` | Adapter YouTube | Lấy phụ đề video |

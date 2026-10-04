@@ -4,9 +4,9 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U06-01 | Ngân hàng cấp môn: Chủ nhiệm môn và ADMIN tạo/sửa/kích hoạt/ngưng; mọi giảng viên có lớp thuộc môn được xem và dùng bản `ACTIVE`. | Câu 1 |
-| BR-U06-02 | Ngân hàng cấp lớp: giảng viên của lớp, Chủ nhiệm môn, ADMIN tạo/sửa; chỉ người quản lý lớp đó thấy. | Câu 1 |
-| BR-U06-03 | Nhân bản: câu/rubric cấp lớp → cấp môn chỉ Chủ nhiệm môn làm; cấp môn → cấp lớp mọi người quản lý lớp làm được; cấp lớp → cấp lớp khác chỉ giảng viên dạy cả hai lớp (FR-028). Bản nhân bản là `DRAFT` mới, lưu `clonedFrom`. | Câu 1 |
+| BR-U06-01 | Ngân hàng cấp môn: Chủ nhiệm môn của môn tạo/sửa/kích hoạt/ngưng (màn Question Bank chỉ có Teacher, Subject Manager); mọi giảng viên có lớp thuộc môn được xem và dùng bản `ACTIVE`. | Câu 1 |
+| BR-U06-02 | Ngân hàng cấp lớp: giảng viên của lớp, Chủ nhiệm môn của môn tạo/sửa; chỉ người quản lý lớp đó thấy. | Câu 1 |
+| BR-U06-03 | Nhân bản câu hỏi: câu cấp lớp → cấp môn chỉ Chủ nhiệm môn làm; cấp môn → cấp lớp mọi người quản lý lớp làm được; cấp lớp → cấp lớp khác chỉ giảng viên dạy cả hai lớp (FR-028). Bản nhân bản là `DRAFT` mới, lưu `clonedFrom`. Rubric không nhân bản riêng (BR-U06-35). | Câu 1 |
 | BR-U06-04 | Ngoài phạm vi → "không tìm thấy". | SEC-002 |
 
 ## 2. Phiên bản
@@ -14,9 +14,9 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U06-10 | Mỗi dòng là một phiên bản bất biến sau khi `ACTIVE`; chỉ `DRAFT` được sửa. | FR-016 |
-| BR-U06-11 | Sửa bản `ACTIVE` tạo phiên bản `DRAFT` mới (`versionNo + 1`); mỗi `stableKey` tối đa 1 `DRAFT`. | FR-016, US-QBK-001 S2 |
+| BR-U06-11 | Sửa bản `ACTIVE` tạo phiên bản `DRAFT` mới (`version + 1`, cùng `lineage_id`); mỗi `lineage_id` tối đa 1 `DRAFT`. | FR-016, US-QBK-001 S2 |
 | BR-U06-12 | Bài của U08 lưu `id` phiên bản; phiên bản mới **không** tự áp dụng và **không** báo cho bài đang dùng bản cũ. | Câu 7 |
-| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `stableKey`; người quản lý xem được lịch sử phiên bản. | UC 25 |
+| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `lineage_id`; người quản lý xem được lịch sử phiên bản. | UC 23–27 |
 | BR-U06-14 | `RETIRED`: không còn trong tìm kiếm để thêm vào bài mới; bài đang dùng vẫn đọc được. | Thiết kế |
 | BR-U06-15 | Chỉ xóa được bản `DRAFT` chưa từng kích hoạt; bản đã `ACTIVE` không bao giờ xóa. | US-QBK-001 S2 |
 | BR-U06-16 | Sửa câu hỏi của bài đang giao (US-QBK-002 S2, S3: snapshot lượt làm, gia hạn, làm lại) thuộc U08/U11, không thuộc U06. | Câu 7 |
@@ -26,13 +26,14 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U06-20 | `MCQ_SINGLE`: 2-6 lựa chọn, đúng 1 đáp án. `MCQ_MULTI`: ≥ 1 đáp án đúng. Lựa chọn không trùng nội dung. | FR-017 |
-| BR-U06-21 | `ESSAY`: `stem` bắt buộc; không giới hạn số từ. | FR-017, U09 Câu 3 |
+| BR-U06-21 | `ESSAY`: `stem` bắt buộc; không giới hạn số từ hay số dòng. | FR-017, U09 Câu 3 |
 | BR-U06-22 | `DOCUMENT` (thay `DRAWIO`): `stem` bắt buộc; `skeleton` hợp lệ theo mô hình tài liệu của U09; `requiredDiagrams` mỗi loại 1-20. | U09 Câu 5-8 |
 | BR-U06-23 | `CODE`: `language` thuộc `JAVA`, `PYTHON`, `C`, `CPP`, `JAVASCRIPT`, `DART`, `CSHARP` (U13 hỗ trợ); ≤ 20 file, mỗi file ≤ 64 KB; `memoryLimitMb` 64-1024; 1-50 test case, ≥ 1 test không ẩn; `timeLimitMs` 100-10 000; tổng điểm test = `defaultPoints`. | FR-017 |
-| BR-U06-24 | `rubricId` (nếu có) phải là rubric `ACTIVE` cùng phạm vi hoặc cấp môn của lớp. | US-QBK-001 |
+| BR-U06-24 | Câu hỏi không gắn rubric: rubric gắn vào từng câu của bài Text Essay (`config.questionRubrics`) hoặc từng phần của khung (`config.parts`, Diagram Essay và bài nhóm) (BR-U06-34) để hai bài không dùng chung rubric. | Người dùng chốt 2026-10-03 |
 | BR-U06-25 | `stem`, lựa chọn, hướng dẫn là markdown ≤ 20 000 ký tự, hiển thị đã làm sạch. | SEC-003 |
 | BR-U06-26 | Kích hoạt câu hỏi yêu cầu `definition` hợp lệ theo loại. | FR-017 |
-| BR-U06-27 | `lessonRefs` phải là chương/bài U05 thuộc cùng môn (hoặc lớp). | Câu 9 |
+| BR-U06-27 | `lessonRefs` phải là module/học liệu U05 thuộc cùng môn (học liệu của lớp chỉ dùng cho câu hỏi của lớp đó). | Câu 9 |
+| BR-U06-28 | Ngân hàng chứa câu hỏi của mọi dạng bài theo bảng dạng bài ở `domain-entities.md` §3. Tìm kiếm lọc được theo dạng bài; khi thêm vào bài, U08 chỉ nhận câu khớp dạng (BR-U08-10, 11). Câu `DOCUMENT` dùng được cho cả Diagram Essay và bài nhóm; phần tự tính theo heading nhỏ nhất của mỗi nhánh, khung không có heading là một phần (BR-U09-25). | UC 23–27, thay đổi 2026-10-01 |
 
 ## 4. Rubric
 
@@ -42,6 +43,9 @@
 | BR-U06-31 | `scaleMax` = tổng điểm mọi mục (tự tính, không nhập tay). | Câu 5 |
 | BR-U06-32 | Chấm: mục đạt/không đạt; điểm tiêu chí = tổng mục đạt; điểm rubric = tổng tiêu chí. `score` từ chối `itemId` không thuộc rubric. | Câu 5 |
 | BR-U06-33 | Rubric đã dùng chấm không bị ghi đè (BR-U06-10). | FR-016 |
+| BR-U06-34 | Rubric được tạo khi soạn đề: trong Assignment Editor (U08) hoặc Template Editor (U10), U09 gọi `RubricPort.createForAssignment`, U06 lưu rubric cùng phạm vi với bài (lớp hoặc môn); U09 ghi `rubricId` vào `config`: Text Essay mỗi câu một rubric, Diagram Essay và bài nhóm mỗi phần một rubric (BR-U09-23, 26). Quiz và Code Lab không có rubric. Question Bank chỉ xem và sửa rubric đã có; không có thao tác tạo rubric ở Question Bank. | Người dùng chốt 2026-10-03 |
+| BR-U06-35 | Rubric nhân bản theo đề: khi bài được nhân bản, tạo version mới, copy từ template hoặc copy sang lớp khác, U09 (`TypeConfigPort.copy`) gọi `RubricPort.cloneForAssignment` để U06 nhân bản rubric của từng câu hoặc từng phần thành rubric mới (`lineage_id` mới, phạm vi của bài mới); không có nhân bản rubric riêng và hai bài không dùng chung một rubric. Bản được nhân bản là phiên bản `ACTIVE` mới nhất của rubric. | Người dùng chốt 2026-10-03 |
+| BR-U06-36 | Sửa rubric luôn tạo phiên bản mới (`ACTIVE` không bị ghi đè). Bài sở hữu rubric còn `DRAFT` thì chuyển sang phiên bản mới ngay: sửa trong Assignment Editor/Template Editor thì U09 ghi `rubricId` mới vào câu hoặc phần; sửa trong Question Bank thì U06 báo U08 qua `RubricOwnerPort.repoint(oldId, newId)`. Bài đã duyệt/phát hành giữ phiên bản đã ghim (BR-U06-12); phiên bản mới dùng khi bài được nhân bản, tạo version mới hoặc copy (BR-U06-35). | US-QBK-001 S2 |
 
 ## 5. Nhập hàng loạt
 

@@ -14,7 +14,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U13-10 | Trần chi phí AI ngày mặc định 2 USD (`AI_DAILY_COST_CAP_USD`), ước tính theo bảng giá model trong cấu hình; đạt trần → từ chối mới với "Hệ thống đang bận", không trừ credit người dùng; job đang chạy được hoàn tất. | REL-005, FR-021, quyết định đồng bộ 2026-09-25 |
+| NFR-U13-10 | Trần chi phí AI ngày mặc định 2 USD (seed `daily_cost_cap` của dòng `GLOBAL`, Admin sửa trong AI Setting), ước tính theo bảng giá model `U13_MODEL_PRICES`; đạt trần → từ chối mới với "Hệ thống đang bận", không trừ credit người dùng; job đang chạy được hoàn tất. | REL-005, FR-021, quyết định đồng bộ 2026-09-25 |
 | NFR-U13-11 | Ước tính token trước khi gọi để `reserve` credit: độ dài prompt/4 + `maxOutputTokens`. | U07 |
 | NFR-U13-12 | Timeout Gemini: kết nối 5 s, đọc 90 s (`pro`: 150 s). | REL-003 |
 | NFR-U13-13 | Judge0 gọi qua mạng nội bộ, timeout 30 s mỗi lô; Judge0 không phản hồi → `SANDBOX_ERROR` sau 3 lần retry. | REL-003 |
@@ -26,7 +26,7 @@
 | NFR-U13-20 | Judge0 nằm trong mạng Docker riêng `sandbox`, không route ra Internet, không truy cập được `postgres`, `redis`, `rabbitmq` của hệ thống; chỉ `worker` và `backend` nói chuyện với Judge0 server. | US-ASM-005 S2, SEC-003 |
 | NFR-U13-21 | Judge0 bật giới hạn per-process (thời gian, bộ nhớ, số tiến trình, kích thước file), tắt `enable_network`. | BR-U13-32 |
 | NFR-U13-22 | `GEMINI_API_KEY` chỉ ở backend/worker; `JUDGE0_AUTH_TOKEN` cho server Judge0. Không log. | SEC-006 |
-| NFR-U13-23 | Lời giải mẫu, test ẩn và đề xuất AI cho bài `GRADED` không bao giờ ra API Student. `PRACTICE_RESULT` chỉ chủ attempt xem được. | SEC-002, FR-030 |
+| NFR-U13-23 | Lời giải mẫu, test ẩn và đề xuất AI cho bài `GRADED` không bao giờ ra API Student. Kết quả `PRACTICE` chỉ chủ attempt xem được. | SEC-002, FR-030 |
 | NFR-U13-24 | Đầu ra AI kiểm bằng JSON schema và quy tắc nghiệp vụ trước khi lưu; văn bản AI hiển thị dạng văn bản thuần/markdown đã làm sạch. | SEC-003 |
 
 ## 4. Khả dụng
@@ -48,7 +48,7 @@
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-03 | Compliant | NFR-U13-22, `AiCall` không lưu nội dung |
+| SECURITY-03 | Compliant | NFR-U13-22, `ai_suggestions` không lưu prompt thô |
 | SECURITY-05 | Compliant | NFR-U13-24 |
 | SECURITY-08 | Compliant | NFR-U13-23 |
 | SECURITY-09 | Compliant | Key trong `.env` |

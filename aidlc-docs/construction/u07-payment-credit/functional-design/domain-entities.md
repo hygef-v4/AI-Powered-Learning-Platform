@@ -1,20 +1,19 @@
 # U07 Payment & AI Credit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 37, UC 23 (gói credit và mức tặng hằng tháng).
+Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 37. Gói credit và mức tặng hằng tháng là cấu hình cố định (không thuộc UC 22 từ 2026-10-03).
 
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `CreditPackage` | Aggregate root | `credit_packages` | U07 |
-| `Payment` | Aggregate root | `payments` | U07 |
-| `PaymentWebhookEvent` | Entity bất biến | `payment_webhook_events` | U07 |
-| `CreditLedgerEntry` | Entity bất biến (sổ cái) | `credit_ledger` | U07 |
-| `CreditReservation` | Khái niệm suy ra từ sổ cái | `credit_ledger` | U07 |
-| `CreditBalance` | Value object của `Account` (U01) | `accounts` | U07 |
-| `CreditSettings` | Cấu hình | `app_settings` (khóa `u07.*`) | U07 |
+| `CreditPackage` | Thực thể `CREDIT_PACKAGE` | `credit_packages` | U07 (seed khi triển khai) |
+| `Payment` | Bảng nối ACCOUNT purchasing CREDIT_PACKAGE | `payments` | U07 |
+| `CreditBalance` | Value object của `Account` (U01) | `accounts` (`free_balance`, `free_period`, `purchased_balance`) | U07 |
+| `CreditSettings` | Cấu hình triển khai | Biến môi trường `U07_*` | - |
 
-U07 **không** sở hữu: gọi Gemini và tính token thực tế (U05 cho embedding, U13 cho tạo nội dung), kill-switch/quota AI toàn hệ thống (U13), quyền vào lớp (U04, không liên quan).
+Không có bảng sổ cái hay bảng sự kiện webhook (database chỉ gồm bảng của ERD, quyết định 2026-10-03): lần mua nằm ở `payments`; lần giữ/trừ credit nằm ở dòng `ai_suggestions` của U13 (`credits_reserved`, `free_credits_reserved`, `credits_used`, `credit_status`).
+
+U07 **không** sở hữu: gọi Gemini, tính token và ghi lần gọi AI (U13), kill-switch/quota AI toàn hệ thống (U13), quyền vào lớp (U04, không liên quan).
 
 ## 2. `CreditPackage`
 
@@ -24,7 +23,7 @@ U07 **không** sở hữu: gọi Gemini và tính token thực tế (U05 cho emb
 | `name` | chuỗi ≤ 100 | |
 | `credits` | số nguyên > 0 | |
 | `priceVnd` | số nguyên ≥ 2 000 | Đơn vị VND |
-| `active` | bool | Ẩn thay vì xóa; không xóa gói đã có giao dịch |
+| `active` | bool | Đặt trong seed; không xóa gói đã có giao dịch |
 
 ## 3. `Payment`
 
@@ -35,10 +34,10 @@ U07 **không** sở hữu: gọi Gemini và tính token thực tế (U05 cho emb
 | `accountId` | UUID | Người mua |
 | `packageId` | UUID | |
 | `credits`, `amountVnd` | số | Chụp lại lúc tạo, không đổi khi gói đổi giá |
-| `status` | enum | `CREATED`, `PENDING`, `PAID`, `CANCELLED`, `EXPIRED`, `FAILED` |
+| `status` | enum | `CREATED`, `PENDING`, `PAID`, `CANCELLED`, `EXPIRED`, `FAILED`; `PAID` chỉ đặt một lần, dùng làm khóa chống cộng trùng |
 | `checkoutUrl` | chuỗi | Link PayOS |
 | `providerReference` | chuỗi | Mã tham chiếu PayOS khi đã trả |
-| `idempotencyKey` | chuỗi | Duy nhất theo `accountId` |
+| `idempotencyKey` | chuỗi | Duy nhất |
 | `expiresAt` | thời gian | Tạo + 15 phút |
 | `paidAt`, `createdAt` | thời gian | |
 
@@ -49,7 +48,7 @@ stateDiagram-v2
     [*] --> CREATED: Người dùng chọn gói
     CREATED --> PENDING: Tạo link PayOS thành công
     CREATED --> FAILED: PayOS lỗi
-    PENDING --> PAID: Webhook hợp lệ hoặc job tự đối soát
+    PENDING --> PAID: Webhook hợp lệ hoặc tự đối soát
     PENDING --> CANCELLED: Người dùng hủy
     PENDING --> EXPIRED: Quá 15 phút
     CANCELLED --> PAID: Tiền về sau khi hủy
@@ -58,67 +57,42 @@ stateDiagram-v2
 
 **Text alternative**: Giao dịch tạo ở `CREATED`; tạo link PayOS thành công thì `PENDING`, lỗi thì `FAILED`. Từ `PENDING`, xác nhận đã trả (webhook có chữ ký hợp lệ hoặc job tự đối soát) thì `PAID` và cộng credit đúng một lần; người dùng hủy thì `CANCELLED`; quá 15 phút thì `EXPIRED`. Nếu tiền vẫn về hợp lệ sau khi `CANCELLED`/`EXPIRED`, giao dịch vẫn chuyển `PAID` (BR-U07-13).
 
-## 4. `PaymentWebhookEvent`
+## 4. Webhook và chống cộng trùng
 
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `orderCode` | số | |
-| `eventKey` | chuỗi | Duy nhất: `orderCode` + `reference` của PayOS |
-| `signatureValid` | bool | |
-| `result` | enum | `APPLIED`, `DUPLICATE`, `REJECTED` |
-| `receivedAt` | thời gian | |
+Không lưu từng webhook. Webhook hợp lệ được áp dụng bằng câu lệnh có điều kiện `UPDATE payments SET status = 'PAID' ... WHERE order_code = :code AND status <> 'PAID'`; cộng `purchased_balance` chỉ khi câu lệnh cập nhật đúng một dòng. Webhook trùng không cập nhật dòng nào nên không cộng thêm. Webhook sai chữ ký hoặc lệch số tiền ghi audit. Không lưu dữ liệu thẻ (PayOS là chuyển khoản).
 
-Không lưu dữ liệu thẻ (PayOS là chuyển khoản).
+## 5. `CreditBalance`
 
-## 5. `CreditLedgerEntry`
+Cột `free_balance`, `free_period` (`yyyy-MM`), `purchased_balance` của `accounts`. Cả bốn vai trò được tặng tháng cùng một mức và được mua credit. Student chỉ tiêu credit (tặng hay mua) cho `PRACTICE_GRADING` hợp lệ. Mọi thay đổi số dư khóa dòng tài khoản (`SELECT ... FOR UPDATE`) và đi cùng transaction với dòng nghiệp vụ tạo ra thay đổi (`payments` khi mua, `ai_suggestions` khi giữ/trừ).
 
-| Thuộc tính | Kiểu | Ràng buộc |
-|---|---|---|
-| `id` | UUID | |
-| `accountId` | UUID | |
-| `type` | enum | `PURCHASE`, `MONTHLY_GRANT`, `RESERVE`, `SETTLE`, `RELEASE` |
-| `freeDelta`, `purchasedDelta` | số nguyên | Âm hoặc dương |
-| `refType`, `refId` | | `PAYMENT` (với `PURCHASE`); id dòng `RESERVE` (với `SETTLE`, `RELEASE`) |
-| `requestRef` | chuỗi | Chỉ `RESERVE`: mã yêu cầu do U05/U13 đặt; duy nhất trong các dòng `RESERVE` |
-| `expiresAt` | thời gian | Chỉ `RESERVE`: tạo + 30 phút |
-| `actorId`, `createdAt` | | |
+## 6. Giữ và trừ credit
 
-Sổ cái chỉ thêm, không sửa, không xóa. `CreditBalance` = tổng sổ cái (kiểm được bằng query). Mọi thay đổi số dư khóa dòng tài khoản và ghi một dòng sổ cái trong cùng transaction.
-
-## 6. `CreditReservation`
-
-Một lần giữ credit là một dòng `RESERVE` (delta âm = phần giữ). Trạng thái suy ra từ các dòng trỏ tới nó; mỗi lần giữ chỉ được đóng một lần (unique `refId` trên các dòng `SETTLE`/`RELEASE`).
-
-### Trạng thái
+Một lần giữ là một dòng `ai_suggestions` của U13 ở `credit_status = RESERVED`, ghi tổng credit giữ và phần lấy từ credit tặng. U13 chỉ gọi `CreditPort` khi chuyển trạng thái của dòng đó trong cùng transaction, nên mỗi lần giữ chỉ được đóng một lần.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> HELD: Dòng RESERVE
-    HELD --> SETTLED: Dòng SETTLE, AI xong
-    HELD --> RELEASED: Dòng RELEASE, AI lỗi hoặc quá 30 phút
+    [*] --> RESERVED: reserve
+    RESERVED --> SETTLED: settle, AI xong
+    RESERVED --> RELEASED: release, AI lỗi hoặc quá 30 phút
 ```
 
-**Text alternative**: Giữ credit tạo một dòng `RESERVE` và ở trạng thái `HELD`. AI chạy xong thì ghi dòng `SETTLE` (hoàn phần chênh lệch nếu dùng ít hơn), thành `SETTLED`. AI lỗi, hoặc job quét thấy quá 30 phút, thì ghi dòng `RELEASE` hoàn toàn bộ, thành `RELEASED`.
+**Text alternative**: Giữ credit đặt dòng `ai_suggestions` sang `RESERVED` và trừ số dư. AI chạy xong thì `settle` (trả phần dư nếu dùng ít hơn), thành `SETTLED`. AI lỗi, hoặc scanner thấy quá 30 phút, thì `release` trả toàn bộ, thành `RELEASED`.
 
-## 7. `CreditBalance`
+## 7. `CreditSettings`
 
-Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của mọi tài khoản `ACTIVE` có vai trò hiện hành (xem U01). Student có ví và được mua credit nhưng không nhận `MONTHLY_GRANT`; chỉ tiêu credit cho `PRACTICE_GRADING` hợp lệ. Với vai trò được tặng tháng, `freeBalance` đặt lại bằng mức tặng; trừ credit tặng trước, credit mua sau; không bao giờ âm.
-
-## 8. `CreditSettings`
-
-| Khóa | Ý nghĩa |
+| Biến | Ý nghĩa |
 |---|---|
-| `u07.monthlyFreeCredits` | Credit tặng mỗi tháng cho Giảng viên, Chủ nhiệm môn và Quản trị viên đủ điều kiện; không cấp cho Người học; ADMIN sửa, có audit |
-| `u07.tokensPerCredit` | Quy đổi token Gemini ra credit |
+| `U07_MONTHLY_FREE_CREDITS` | Credit tặng mỗi tháng cho mọi tài khoản `ACTIVE` (Người học, Giảng viên, Chủ nhiệm môn, Quản trị viên); đổi bằng lần triển khai mới |
+| `U07_TOKENS_PER_CREDIT` | Quy đổi token Gemini ra credit (mặc định 1 000) |
+| `U07_PACKAGES` | Danh sách gói nạp vào `credit_packages` khi khởi động |
 
-## 9. Contract
+## 8. Contract
 
 ### Port U07 cung cấp
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `CreditPort` | U05, U13 | `reserve(accountId, credits, requestRef, purpose, attemptRef?)`, `settle(reservationId, actualCredits)`, `release(reservationId)` (`reservationId` = id dòng `RESERVE`), `balance(accountId)`; Student chỉ được reserve cho `PRACTICE_GRADING` với attempt hợp lệ |
+| `CreditPort` | U13 | `reserve(accountId, credits, purpose, attemptRef?)` → `{reserved, fromFree}`, `settle(accountId, reserved, fromFree, actualCredits)`, `release(accountId, reserved, fromFree)`, `balance(accountId)`; gọi trong transaction của U13; Student chỉ được reserve cho `PRACTICE_GRADING` với attempt hợp lệ |
 | Event `payment.paid` | U16 | Báo mua credit thành công |
 
 ### Port U07 dùng
@@ -126,5 +100,7 @@ Thuộc tính `freeBalance`, `freePeriod` (`yyyy-MM`), `purchasedBalance` của 
 | Port | Unit | Mô tả |
 |---|---|---|
 | `PaymentProviderPort` | Adapter PayOS | Tạo link, lấy trạng thái, kiểm chữ ký webhook |
-| `AuthorizationPort` | U01 | Quyền admin |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Job tự đối soát và trả phần giữ quá hạn, audit, event |
+| `AuthorizationPort` | U01 | Tài khoản `ACTIVE`, vai trò và chủ ví |
+| `AuditPort` | U02 | Audit |
+| `JobPort`, `JobHandler`, `ScheduledScanner`, `EventPublisherPort` | U03 | Việc `PAYOS_CHECK`, scanner đối soát và hết hạn giao dịch, event `payment.paid` |
+| `CreditUsagePort` | U13 (`C`, U07 khai báo) | `listUsage(accountId, page)` → lần dùng credit của chính chủ ví từ `ai_suggestions` (thời điểm, tác vụ, `credits_used`, `credit_status`). U07 không đọc thẳng bảng của U13; chưa có U13 → adapter rỗng (bảng trống) |

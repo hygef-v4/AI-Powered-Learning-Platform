@@ -5,28 +5,31 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ) và **Admin Console** (qu�
 ## 1. Cây component
 
 ```
-web-shell/auth/
+app/(auth)/                 (Web Shell)
   LoginPage
     LoginForm
     ActivationLink          -> ActivationPage
     ForgotPasswordLink      -> PasswordResetPage
-  ActivationPage
+  ActivationPage            màn Account Activation
     RequestOtpStep
-    VerifyOtpAndSetPasswordStep
-  PasswordResetPage
+    VerifyOtpStep           bước 2: chỉ nhập OTP
+    SetNewPasswordStep      bước 3: chỉ mở sau khi OTP đúng
+  PasswordResetPage         màn Password Recovery
     RequestOtpStep          (dùng chung)
-    VerifyOtpAndSetPasswordStep (dùng chung)
-web-shell/profile/
+    VerifyOtpStep           (dùng chung)
+    SetNewPasswordStep      (dùng chung)
+app/profile/
   ProfilePage
     ProfileForm
     AvatarUploader          (tắt khi AvatarPort chưa sẵn sàng)
-    ChangePasswordForm
-    LogoutButton
-admin-console/accounts/
-  AccountListPage
+    ChangePasswordDialog    popup Change Password mở từ Profile
+components/navigation/
+  SignOutDialog             popup Sign Out mở từ Navigation
+app/admin/accounts/         (Admin Console)
+  AccountListPage           màn Account List
     AccountFilters
     AccountTable
-  AccountDetailPage
+  AccountDetailPage         màn Account Detail
     AccountSummary
     RoleChangeDialog
     StatusToggleDialog
@@ -51,11 +54,11 @@ shared/
 | Validation phía client | Email đúng định dạng, mật khẩu không rỗng |
 | API | `authenticate` |
 | Hành vi lỗi | Mọi thất bại hiện **một** câu: "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng." Không phân biệt khóa tạm, chưa kích hoạt hay không tồn tại |
-| Thành công | Điều hướng theo role |
+| Thành công | Điều hướng theo role (BR-U01-48): Student → `/learning` (Student Menu), Teacher và Subject Manager → `/teaching` (Teacher Menu), Admin → `/admin` (Admin Menu) |
 
 ### ActivationPage / PasswordResetPage
 
-Hai trang dùng chung `RequestOtpStep` và `VerifyOtpAndSetPasswordStep`, khác `purpose`.
+Hai trang dùng chung ba bước `RequestOtpStep` → `VerifyOtpStep` → `SetNewPasswordStep`, khác `purpose`; ô mật khẩu chỉ hiện sau khi OTP được xác minh (BR-U01-28).
 
 **RequestOtpStep**
 
@@ -65,24 +68,34 @@ Hai trang dùng chung `RequestOtpStep` và `VerifyOtpAndSetPasswordStep`, khác 
 | API | `requestActivation` hoặc `requestPasswordReset` |
 | Sau khi gửi | Luôn hiện: "Nếu email hợp lệ, mã gồm 6 chữ số sẽ được gửi. Mã có hiệu lực 10 phút. Không nhận được mã, hãy liên hệ quản trị." Khóa nút "Gửi lại" trong thời gian chờ |
 
-**VerifyOtpAndSetPasswordStep**
+**VerifyOtpStep**
 
 | Mục | Nội dung |
 |---|---|
-| State | `otpCode`, `newPassword`, `confirmPassword`, `errorMessage` |
-| Validation phía client | OTP đúng 6 chữ số; mật khẩu ≥ 8 ký tự có chữ và số; hai ô mật khẩu khớp |
-| API | `activateAccount` hoặc `resetPassword` |
-| Lỗi | Mã sai hoặc hết hạn: "Mã không hợp lệ hoặc đã hết hạn." Mật khẩu bị backend từ chối: hiện lý do chính sách |
-| Thành công | Chuyển về `LoginPage` kèm thông báo; không tự đăng nhập |
+| State | `otpCode`, `errorMessage` |
+| Validation phía client | OTP đúng 6 chữ số |
+| API | `verifyActivationOtp` hoặc `verifyPasswordResetOtp` → `otpTicket` |
+| Lỗi | Mã sai hoặc hết hạn: "Mã không hợp lệ hoặc đã hết hạn." Ở lại bước này |
+| Thành công | Giữ `otpTicket` trong bộ nhớ trang, chuyển sang `SetNewPasswordStep` |
+
+**SetNewPasswordStep**
+
+| Mục | Nội dung |
+|---|---|
+| State | `newPassword`, `confirmPassword`, `errorMessage` |
+| Validation phía client | Mật khẩu ≥ 8 ký tự có chữ và số; hai ô khớp |
+| API | `activateAccount(otpTicket, newPassword)` hoặc `resetPassword(otpTicket, newPassword)` |
+| Lỗi | Mật khẩu bị backend từ chối: hiện lý do chính sách, nhập lại; ticket hết hạn: quay về `RequestOtpStep` |
+| Thành công | Kích hoạt: backend đã tạo phiên, chuyển thẳng tới menu theo role như `LoginPage` (BR-U01-13, 48). Đặt lại mật khẩu: chuyển về `LoginPage` kèm thông báo |
 
 ### ProfilePage
 
 | Component | State | API | Ghi chú |
 |---|---|---|---|
 | `ProfileForm` | `displayName`, `phoneNumber`, `dirty`, `saving` | `getProfile`, `updateProfile` | Email và role chỉ đọc |
-| `AvatarUploader` | `file`, `uploading` | U03 upload → `updateProfile(avatarRef)` | Chỉ nhận ảnh; ẩn nếu backend báo chưa hỗ trợ |
-| `ChangePasswordForm` | `currentPassword`, `newPassword`, `confirmPassword` | `changePassword` | Thành công báo "Các thiết bị khác đã bị đăng xuất" |
-| `LogoutButton` | - | `logout` | Chỉ phiên hiện tại |
+| `AvatarUploader` | `file`, `uploading` | U03 upload → `updateProfile(avatarFileId)` | Chỉ nhận ảnh; ẩn nếu backend báo chưa hỗ trợ |
+| `ChangePasswordDialog` | `currentPassword`, `newPassword`, `confirmPassword` | `changePassword` | Thành công báo "Các thiết bị khác đã bị đăng xuất" |
+| `SignOutDialog` | - | `logout` | Xác nhận rồi đăng xuất phiên hiện tại |
 
 ## 3. Admin Console
 

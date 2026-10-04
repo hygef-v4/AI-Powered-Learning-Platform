@@ -3,6 +3,6 @@
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Diff văn bản | `java-diff-utils` (`io.github.java-diff-utils`) | Diff theo dòng, nhẹ |
-| Diff thành phần | So khớp theo `bankItemId`/`stableKey` hoặc hash `inlineDefinition`, rồi so thứ tự và điểm | Không cần thư viện |
+| Diff thành phần | So khớp theo `question_id`/`lineage_id` hoặc hash `definition` của câu riêng, rồi so thứ tự và điểm | Không cần thư viện |
 | Lưu | PostgreSQL + JPA | Như các unit trước |
 | Frontend | Next.js + Tailwind, component tự viết | Như các unit trước |

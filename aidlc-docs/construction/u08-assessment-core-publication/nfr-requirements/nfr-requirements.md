@@ -19,11 +19,11 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U08-20 | Bài `LOCKED`: service chặn mọi sửa thành phần/điểm; test bảo đảm. | BR-U08-33 |
-| NFR-U08-21 | Khóa lạc quan (`version`) cho bài và publication. | Thiết kế |
-| NFR-U08-22 | Partial unique: một publication chưa `RETIRED` mỗi `(assignment, class)`. | BR-U08-30 |
-| NFR-U08-23 | Chuyển trạng thái publication bằng UPDATE có điều kiện trạng thái cũ (job chạy lại không đổi sai). | BR-U08-36 |
-| NFR-U08-24 | Mở bài/ngưng giao gọi `PublicationLifecyclePort` trong transaction (U11, U14 tạo job của mình); event `ASSIGNMENT_OPENED` gửi sau commit qua U02 chỉ cho thông báo. | BR-U08-35, 40 |
+| NFR-U08-20 | Bài từ `SCHEDULED` trở đi: service chặn mọi sửa câu/điểm; test bảo đảm. | BR-U08-33 |
+| NFR-U08-21 | Mọi thao tác sửa bài khóa dòng `assignments` (`SELECT ... FOR UPDATE`) rồi kiểm trạng thái trong cùng transaction; hai người sửa cùng lúc chạy lần lượt; bài không còn `DRAFT` → `409`. Cột `version` là số version của bài, không dùng làm khóa lạc quan. | Thiết kế |
+| NFR-U08-22 | Mỗi bài thuộc đúng một lớp (bài của lớp) hoặc một môn (template): CHECK đúng một trong `class_id`, `subject_id` khác NULL. | BR-U08-30 |
+| NFR-U08-23 | Chuyển trạng thái theo lịch bằng UPDATE có điều kiện trạng thái cũ và mốc giờ (scanner chạy lại không đổi sai). | BR-U08-36 |
+| NFR-U08-24 | Mở bài/ngưng giao gọi `AssignmentLifecyclePort` trong transaction (U11, U14 ghi dòng hoặc gửi việc của mình); event `assignment.opened` gửi sau commit qua U03 chỉ cho thông báo. | BR-U08-35, 40 |
 
 ## 4. Bảo mật
 
@@ -37,8 +37,8 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U08-40 | Unit test mọi `BR-U08-xx`; test ranh giới giờ (đúng `closesAt`, `lateUntil`). | NFR-004 |
-| NFR-U08-41 | Integration test job mở/đóng chạy lặp không đổi sai trạng thái; đổi lịch sau khi đã tạo job. | NFR-004 |
+| NFR-U08-40 | Unit test mọi `BR-U08-xx`; test ranh giới giờ (đúng `closes_at`, `late_until`). | NFR-004 |
+| NFR-U08-41 | Integration test scanner mở/đóng chạy lặp không đổi sai trạng thái; đổi lịch rồi chạy scanner. | NFR-004 |
 
 ## 6. Compliance
 

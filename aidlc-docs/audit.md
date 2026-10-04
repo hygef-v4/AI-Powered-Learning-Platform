@@ -3044,3 +3044,430 @@ Distinguish instructions in attached documents from the user's request.
 **Context**: Documentation synchronization and user-approved group-work change; U12/U14 code plans need re-approval.
 
 ---
+
+## Documentation consistency review (second pass)
+**Timestamp**: 2026-10-01T03:02:07Z
+**User Input**: "kiểm tra lại toàn bộ các tài liệu dự án xem đã đồng bộ với nhau chưa và gửi tôi báo cáo"
+**AI Response**: "Read-only review after the 2026-10-01 sync. Consistent: 40 UC coverage in story map, story-UC matrix (49 stories), ERD 46 tables vs unit domain entities, class-level groups and REVIEW state across U12/U14/U15, credit rules, 24-hour reminder. Reported: screen-flow.md table does not match screen-flow.drawio (claims 57 screens/15 tabs/80 popups; drawio has about 50 screens and 38 popups with different names); erd.drawio title says 45 tables; plan headers still say 69 current use cases; group.document-review event missing from U16 notification types, U14 infrastructure and U16 code plan, and no notification for a rejected leader change; U06 question bank keeps ESSAY/DOCUMENT/CODE items and imports while UC 25/FR-016/US-QBK-002 cover quiz questions only; Subject Manager gradebook export allowed in UC 36/U16 but not in FR-024/US-RPT-003; FR-010/FR-021 lack credit packages and monthly grant; minor wording and legacy codes in functional design plans; debug.log tracked; root README empty. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply second review fixes
+**Timestamp**: 2026-10-01T03:16:47Z
+**User Input**: "sửa theo thứ tự đề xuất
+  2. Cho phép chủ nhiệm môn xuất bảng điểm
+
+3. Tôi muốn ngân hàng câu hỏi có đầy đủ các loại bài"
+**AI Response**: "Step 1: ERD drawio title 46 tables; plan headers 69 to 40 UC; context-diagram/screen-flow wording 'sinh viên'; debug.log untracked and ignored; root README written; UC 25 student wording. Step 2: added group.document-review (GROUP_DOCUMENT_REVIEW) to U14 infra/rules/plan and U16 types/plan, and group.leader-request-rejected (GROUP_LEADER_REQUEST_REJECTED) to U12/U16; Subject Manager gradebook export in FR-024, US-RPT-003 (dropped SEC-006), screen-flow and U16 plan; FR-010/FR-021 credit packages and monthly grant; business-flow drawio labels for group grading and monthly grant. Step 3: question bank holds questions for all five assignment types, reused in UC 24-28: use-case table, FR-016, change notes, US-QBK-002 (new Scenario 1a), story-UC matrix, story map, application design, screen-flow rows, U06 entities/rules/frontend/code plan (BR-U06-28), U08 BR-U08-11, U09 F2. Step 4: rebuilt the screen-flow.md table from screen-flow.drawio (49 screens, 38 popups, 5 menus; 40/40 UC, 16/16 units). aidlc-state updated; U06 plan needs re-approval. Nothing committed."
+**Context**: Documentation synchronization and user-approved scope changes (Subject Manager export, full question bank).
+
+---
+
+## Documentation consistency review (third pass)
+**Timestamp**: 2026-10-01T03:27:37Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit be9914e. Consistent: 49 stories in story-UC matrix, 40 UC names, ERD 46 tables vs domain entities, screen-flow table vs drawio (92/92 cells), event publishers vs U16 listeners, question bank across U06/U08/U09/U10/U13. Reported: SEC-006 wrongly removed from US-RPT-003 in the previous fix (SEC-006 is an in-scope requirement mapped to SECURITY-09/15); quiz-only bank wording left in requirements (lines 24, 47, 307), context-diagram and US-AIG-002; Subject Manager persona lacks gradebook export and US-RPT-003; student dashboard (UC 18) has its own U16 page but no drawio cell, and screen-flow.md maps it to My Classes. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply third review fixes
+**Timestamp**: 2026-10-01T03:31:19Z
+**User Input**: "sửa đi, mục 4  giữ trang dashboard riêng"
+**AI Response**: "Restored SEC-006 in US-RPT-003; replaced leftover quiz-only bank wording in requirements (lines 24, 47, 307), context-diagram and US-AIG-002; added gradebook export behavior and US-RPT-001/US-RPT-003 to the Subject Manager persona. Kept the separate student Dashboard (UC 18, U16 StudentResultDashboard) as the student landing page: added a Dashboard cell and edge from Student Menu in screen-flow.drawio and a matching row in screen-flow.md (50 screens, 38 popups, 5 menus; 93/93 cells match). aidlc-state updated. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---
+
+## Documentation consistency review (fourth pass)
+**Timestamp**: 2026-10-01T03:34:22Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit dde50f0. Consistent: stories/matrix/UC names, spec UC names, persona and trace IDs, ERD, screen flow (93/93), events, question bank, application design, 0 broken links in 302 Markdown files, every BR-Uxx-nn reference defined. Reported: student dashboard content differs (UC 18/FR-024 list enrolled classes and notifications; BR-U16-40, StudentDashboard and U16 frontend omit notifications; US-RPT-002 statement omits classes and notifications) and the student landing route is not defined (U04 app/learn is MyClassesPage, U16 app/learn/dashboard, U01 has no role redirect). Legacy UC codes in functional-design plans remain by design. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply fourth review fixes
+**Timestamp**: 2026-10-01T03:37:09Z
+**User Input**: "sửa đi"
+**AI Response**: "Aligned the student dashboard with UC 18/FR-024 (enrolled classes, upcoming work, latest unread notifications, submission status, published grades) in BR-U16-40, StudentDashboard, U16 F6, U16 frontend, U16 code plan step 7a and US-RPT-002. Added BR-U01-48 role landing (Student /learn/dashboard, Teacher and Subject Manager /teaching, Admin /admin/accounts) to U01 rules, F3, LoginForm and code plan step 30; U01 plan needs re-approval. aidlc-state updated. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---
+
+## Documentation consistency review (fifth pass)
+**Timestamp**: 2026-10-01T03:41:04Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Read-only review after commit 7d4f9e4. Structural checks all pass (49 stories, 40 UC, ERD 46, screen flow 93/93, 0 broken links, no undefined BR or trace IDs). Reported: BR-U01-48 sends Teacher/Subject Manager to /teaching but no unit defines a page there (My Teaching Classes is app/teaching/classes in U04); screen-flow.md maps invite code and grade distribution to the Edit Class popup while U04 puts them in InviteCodeTab and GradeDistributionToggle on Class Detail; U09 F2 step 4 (copy skeleton from bank) is not in U09 code plan step 6 and the U09 plan is still marked Approved. No files other than this log were changed."
+**Context**: Documentation review only; no stage advanced.
+
+---
+
+## Apply fifth review fixes
+**Timestamp**: 2026-10-01T03:45:33Z
+**User Input**: "2. tôi muốn giữ là InviteCodeTab và GradeDistributionToggle nằm trên trang Class Detail."
+**AI Response**: "Applied all three reported items. Screen flow: invite code and grade distribution moved from the Edit Class popup to the teacher Class Detail row (InviteCodeTab, GradeDistributionToggle) with a matching note. BR-U01-48 and LoginForm now send Teacher/Subject Manager to /teaching/classes. U09 code plan step 6 and port table cover copying a DOCUMENT skeleton from the bank; U09 domain entities list BankQueryPort; U09 plan marked for re-approval in aidlc-state. Nothing committed."
+**Context**: Documentation synchronization; no stage advanced.
+
+---
+
+## Manage Templates and merge AI assignment drafting into Manage Assignments
+**Timestamp**: 2026-10-01T11:00:00Z
+**User Input**: "-Sửa lại UC22 thành manage template (cho phép tạo template thủ công bằng tay hoặc tạo bằng AI và chỉnh sửa lại, sửa và xoá các template đã tạo)
+-Gộp UC21 vào UC28"
+**AI Response**: "Updated docs/use-case-table.md only. Merged UC21 Create Assignment with AI into Manage Assignments (teacher AI draft from class content with source review, edit, accept or discard). Replaced Create Template with AI with Manage Templates (Subject Manager views, creates manually or with AI, edits, updates and deletes own templates; deleting does not change class copies). Renumbered to 39 use cases: Manage Templates is UC 21, Manage Assignments is UC 27 and former UC 23-40 are now 22-39; updated the intro, merged-ID map (Manage Assignments adds previous 32) and legacy-code map (UC-AIG-01 -> 27). Other documents still use the 40-case numbering."
+**Context**: Documentation-only use-case table revision; specifications, flows, requirements, stories and designs remain to be synchronized.
+
+---
+
+## Synchronize all documents with the 39-case table
+**Timestamp**: 2026-10-01T11:30:00Z
+**User Input**: "đồng bộ lại toàn bộ tài liệu theo bảng mới"
+**AI Response**: "Renumbered UC references in 49 docs, Inception and Construction files (old 21 -> 27, old 22 -> 21, old 23-40 -> 22-39), keeping audit.md and aidlc-state history entries unchanged. Content updates: use-case-specifications section 3 is now the AI draft flow of UC 27 Manage Assignments; business-flow and screen-flow reference UC 21 Manage Templates (create manually or with AI, edit, delete) and drop the duplicate AI-assignment codes; stories matrix (21 Manage Templates: US-AIG-002, US-ASM-009; 27 adds US-AIG-001) and US-ASM-009 story text plus Scenario 3 template deletion; requirements FR-027 and change notes; story map and unit-of-work: U10 owns UC 21, U13 owns UC 22, 26 and supplies AI drafts for UC 21, 27; U10 BR-U10-01/06/07/40, F1, entities, frontend (create, AI draft, delete) and code plan; U13 plan and entities; README, ERD and plan counts 40 -> 39; aidlc-state current stage and history. Nothing committed."
+**Context**: Documentation synchronization with docs/use-case-table.md; U10 and U13 code plans need re-approval.
+
+---
+
+## Commit 39-case synchronization
+**Timestamp**: 2026-10-01T11:40:00Z
+**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
+**AI Response**: "Committed the use-case table change and the full documentation synchronization locally without pushing."
+**Context**: Version control only; no content changes.
+
+---
+
+## Split group assignment out of Manage Assignments
+**Timestamp**: 2026-10-01T12:00:00Z
+**User Input**: "tách phần tạo bài tập nhóm trong uc28 thành 1 uc riêng để rõ ràng hơn"
+**AI Response**: "Interpreted the screenshot's UC 27 Manage Assignments as the target. Added UC 27 Manage Group Assignment (Teacher, Assignment Creation: view, create, update and preview a GRADED group document assignment with rubric, main sections written or reused from a bank skeleton, leader sub-sections via UC 16, release of section claims; published only when class groups are valid, lifecycle via UC 28). Manage Assignments became UC 28 without the group-specific text; old UC 28-39 became 29-40 (40 cases). Merged IDs: 27 = 25, 40; 28 = 32, 35, 41, 48, 49, 50. Legacy codes: UC-ASM-06 and UC-GRP-05 -> 27; UC-ASM-01, 07, 15, 16, 17 and UC-AIG-01 -> 28. Renumbered docs, Inception and Construction references; group-assignment references keep UC 27, other former UC 27 references moved to UC 28. Story matrix: UC 27 = US-QBK-002, US-GRP-003. Story map: U14 owns UC 16, 27. Requirements change note and traceability row added; counts 39 -> 40 updated. audit.md and aidlc-state history keep old numbers."
+**Context**: Documentation-only use-case catalog change with full synchronization; no stage advanced.
+
+---
+
+## Question: rename UC 28 to Manage Assignment Publication
+**Timestamp**: 2026-10-01T12:10:00Z
+**User Input**: "tôi có nên đổi tên uc28 thành Manage Assignment Publication không, tại sao"
+**AI Response**: "Recommended keeping Manage Assignments: UC 28 also covers viewing, clone/version/retire, template copy, class-to-class copy and AI drafting, which are not publication; renaming would only fit if those flows moved out. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Question: split UC 29 View Assigned Work by assignment type
+**Timestamp**: 2026-10-01T12:20:00Z
+**User Input**: "tôi có nên tách UC29 ra thành nhiều UC với từng dạng bài làm không vì UI của từng màn sẽ khác nhau ( ví dụ màn làm quiz khác màn làm diagram essay)"
+**AI Response**: "Recommended not splitting UC 29: it is the shared Assignment Overview screen; the type-specific work screens belong to UC 30 Submit Assignment, which is already specified once per type in use-case-specifications section 4. UI differences belong in the screen flow and specifications, not in separate use cases. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Commit group assignment split
+**Timestamp**: 2026-10-01T12:30:00Z
+**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
+**AI Response**: "Committed the UC 27 Manage Group Assignment split and the full documentation synchronization locally without pushing."
+**Context**: Version control only; no content changes.
+
+---
+
+## Verify synchronization of the 40-case table
+**Timestamp**: 2026-10-01T12:40:00Z
+**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
+**AI Response**: "Checked all Markdown and draw.io files: table IDs 1-40 consecutive; every 'UC N <name>' reference matches the table (only the lần 6 history entry in aidlc-state keeps the old name by design); stories matrix names match; story map assigns each of UC 1-40 to exactly one unit; no UC28/UC-28/'use case 28' variants; no stale 39 counts outside history notes; UC 27/28 references reviewed by meaning. Fixed one stale note in requirements.md traceability ('bảng 40 use case (nay 39)' -> '(sau đó 39, nay 40)')."
+**Context**: Documentation verification; no stage advanced.
+
+---
+
+## Question: why authoring is split by type but student work is not
+**Timestamp**: 2026-10-01T12:50:00Z
+**User Input**: "tại sao UC29,30 (phần làm bài của sinh viên cho từng dạng bài) không tách ra thành nhiều UC mà phần tạo đề cho từng dạng bài lại được tách ra (như trong ảnh)"
+**AI Response**: "Explained the modeling choice: authoring UCs differ in the object being managed (answer keys and scoring, test cases and sandbox sample solution, Draw.io/XML document, group sections), in actors and in question-bank data, while student submission shares one goal and one attempt lifecycle (open window, attempts, autosave, receipt, late rules) with only the editor differing; old IDs 43-46 were merged into Submit Assignment for that reason and UC 30 is already specified per type. Noted UC 29 is a shared overview. Offered splitting UC 30 into four cases if symmetry is preferred. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+## Question: merge UC 33 and UC 34
+**Timestamp**: 2026-10-01T13:00:00Z
+**User Input**: "có nên gộp 2 uc33,34 không"
+**AI Response**: "Recommended keeping UC 33 Grade Submissions and UC 34 Finalize Grades separate (different goal, single vs bulk scope, publication is the irreversible student-facing step with its own FR-020/US-GRD-005), but fixing the overlap: UC 33 should end at an unpublished draft grade and UC 34 should own finalization and publication for one or many submissions; US-GRD-003 was mapped to both. No files changed."
+**Context**: Advisory question; no stage advanced.
+
+---
+
+## Clarify UC 33 / UC 34 boundary
+**Timestamp**: 2026-10-01T13:10:00Z
+**User Input**: "ok cập nhật theo ranh giới đó đi"
+**AI Response**: "UC 33 now ends at a draft grade with nothing published; UC 34 finalizes one or many draft grades and publishes them (use-case-table.md). US-GRD-003 renamed to 'Chấm thủ công, duyệt và ghi đè đề xuất AI' with scenarios 1-3 ending in a saved draft (scenario numbering kept for BR-U15 references). US-GRD-005 renamed to 'Chốt và công bố điểm từng bài hoặc hàng loạt' with new Scenario 3 for single-submission finalize and publish. Story-UC matrix: UC 34 -> US-GRD-005 only. U15 code-generation plan traceability: US-GRD-003 (UC 32, UC 33) steps 2, 4, 20; US-GRD-005 (UC 34) steps 2, 5, 19, 20. Story count unchanged (49)."
+**Context**: Documentation update after User Stories; no stage advanced.
+
+---
+## Move FR-009 trace to US-GRD-005
+**Timestamp**: 2026-10-01T13:20:00Z
+**User Input**: "ừ chuyển FR-009 sang US-GRD-005 luôn"
+**AI Response**: "Removed FR-009 from the US-GRD-003 trace and added it to US-GRD-005 (publication now makes grades visible to students); added US-GRD-005 to the FR-009 row of the requirements-to-story matrix in stories.md. requirements.md has no per-story trace for FR-009, so no change there."
+**Context**: Documentation update; no stage advanced.
+
+---
+
+## Change request: replace student dashboard with admin statistics; full sync review
+**Timestamp**: 2026-10-03T09:00:00Z
+**User Input**: "bỏ uc xem dashboard của học sinh thay bằng cho admin xem thống kê, kiểm tra lại tính đồng bộ của dự án giữa docs và aidlc (docs dựa vào mấy cái drawio), inception và construction, và giữa các unit của construction"
+**AI Response**: "Read the hand-edited docs/screen-flow.drawio: Student dashboard removed, Admin Menu -> View Statistics popup added, AI Usage -> AI Setting popup (inverted), Subject Detail -> Class List -> Class Detail added for Subject Manager. Asked scope questions for the replacement UC 18 before editing."
+**Context**: CONSTRUCTION phase change request; UC 18 replacement and cross-document sync review.
+
+---
+
+## Answers: UC 18 replacement scope
+**Timestamp**: 2026-10-03T09:10:00Z
+**User Input**: "Thống kê: Tài khoản (Recommended), Môn, lớp, ghi danh (Recommended) | Phân bố điểm: xem trong cùng trang với assignment list | Landing: Student Menu (Recommended) | SM Class: như admin"
+**AI Response**: "Decisions recorded: UC 18 becomes View Statistics for the Administrator (accounts by role and status; subjects, classes by status and enrollments); the anonymized grade distribution moves to the student's Assignment List; Student lands on Student Menu; Subject Manager manages the classes of the subjects they manage with the Administrator's class rights. Applying the change, then running the sync review."
+**Context**: CONSTRUCTION change request, decisions captured.
+
+---
+
+## Sync review: questions on blocking conflicts
+**Timestamp**: 2026-10-03T10:30:00Z
+**User Input**: "(none; AI asks)"
+**AI Response**: "Applied UC 18 -> View Statistics across docs, Inception and Construction (requirements FR-003/FR-024, US-RPT-001/002, US-CAT-001, personas, application design, U01, U04, U08, U11, U15, U16 designs and plans, screen-flow.md, business-flow.md/.drawio page 5). Applied safe sync fixes following the drawio: U13 AI Usage page + AI Setting popup, U15 grades inside student Class Detail, U01 Change Password and Sign Out popups, U04 Subject Detail pages, U14 workspace mapping, U06/U08 port tables, stale U10 references in U11/U15. Asked about: dependency/wave edges without ports (U12->U08, U11->U10, U15->U10), ERD drawio page replacement and conceptual ERD conflicts, credit package screen conflict, Administrator in UC 36 without a screen."
+**Context**: CONSTRUCTION change request; sync review decisions pending.
+
+---
+
+## Answers: sync review decisions
+**Timestamp**: 2026-10-03T10:40:00Z
+**User Input**: "Wave: Sửa cạnh và wave (Recommended) | ERD: markdown đang sai , drawio thì đang ở conceptial, dựa vào cái drawio để làm lại thêm các bảng quan hệ để thành database | Gói credit: Gói cố định (Recommended) | UC 36 Admin: Bỏ Admin khỏi UC 36 (Recommended)"
+**AI Response**: "Will drop the unsupported H edges and regroup waves, make credit packages fixed system configuration, remove Administrator from UC 36, and derive a database ERD (with junction tables) from the conceptual drawio, then rewrite erd.md. Asked which conceptual page is the base and how groups relate to classes."
+**Context**: CONSTRUCTION change request; decisions captured.
+
+---
+
+## Answers: ERD base and group ownership
+**Timestamp**: 2026-10-03T10:45:00Z
+**User Input**: "Trang gốc: erd_new2 (Recommended) | Nhóm: Nhóm thuộc lớp (Recommended)"
+**AI Response**: "Database ERD will be derived from erd_new2 with class-level groups; working_on becomes the group_documents junction (group x class assignment). The group relation on erd_new2 will be corrected."
+**Context**: CONSTRUCTION change request; ERD decisions captured.
+
+---
+
+## Change request completed: UC 18 View Statistics and sync review
+**Timestamp**: 2026-10-03T12:30:00Z
+**User Input**: "(none; completion report)"
+**AI Response**: "UC 18 replaced by View Statistics across docs, Inception and Construction. Applied: fixed credit packages, Administrator removed from UC 36, dependency edges U12->U08, U11->U10, U15->U10 removed and U12 moved to wave 1 (md, drawio, png re-exported), screen-flow sync fixes in U01/U04/U13/U14/U15/U16, port tables in U06/U08, ERD forming relation on erd_new2, new erd-database page and rewritten erd.md. Remaining open items reported to the user: ERD table names and structure differ from Construction, U05 content pages vs Upload Learning Materials popup, U10 Template Editor mapping, legacy UC-XXX-NN codes in 18 plan files, all code plans need re-approval."
+**Context**: CONSTRUCTION change request; sync review complete.
+
+---
+
+## Change request: conceptual ERD review, database from ERD, simple materials, screens per screen flow
+**Timestamp**: 2026-10-03T13:00:00Z
+**User Input**: "[pasted review of the conceptual ERD: MODULE -> CHAPTER; groups belong to COURSE_CLASS, drop STUDENT_GROUP working_on ASSIGNMENT; add GROUP_DOCUMENT, ATTEMPT only for individual work; EVALUATION independent of ATTEMPT and also for GROUP_DOCUMENT; ANNOUNCEMENT: COURSE_CLASS containing, ACCOUNT publishing; add RUBRIC and CLASS_DISCUSSION; 46-table database as current reference] Cái erd drawio sửa những cái này, với cả erd đang là conceptual nên bỏ hết các cái bảng quan hệ, sửa lại database theo erd nhưng thêm các bảng quan hệ vào (chỉ cái nào nhiều nhiều mới có bảng quan hệ
+Học liệu làm thành upload xong quét thôi
+Screen làm đúng theo screen flow ko thừa ko thiếu
+Còn lại gì sửa nốt đi"
+**AI Response**: "Asked scope questions (database vs Construction, table names, materials structure, undrawn dialogs) before editing."
+**Context**: CONSTRUCTION change request.
+
+---
+
+## Answers: database scope, names, materials, dialogs
+**Timestamp**: 2026-10-03T13:10:00Z
+**User Input**: "Phạm vi DB: Sửa cả Construction đúng y ERD | Tên bảng: Theo ERD | Học liệu: Chapter/Lesson làm thư mục (Recommended) | Hộp thoại: popup t ko vẽ đầy đủ cái nào cần thì cứ giữ nhưng đừng sửa drawio"
+**AI Response**: "Construction tables will be exactly the database derived from the conceptual ERD (entities + junction tables for many-to-many only), named after ERD entities. Learning materials: each Lesson is one uploaded file or YouTube link inside a Chapter, scanned automatically; no authoring, versions or publishing. Needed dialogs stay as components; screen-flow.drawio is not edited."
+**Context**: CONSTRUCTION change request; decisions captured.
+
+---
+
+## Construction - Đồng bộ U14-U16 với database theo ERD
+**Timestamp**: 2026-10-03T12:00:00Z
+**User Input**: "(tiếp tục yêu cầu trước) Còn lại gì sửa nốt đi"
+**AI Response**: "U14: mục/bình luận/lịch sử/bản nộp gộp vào cột JSON của `group_documents`, tự nộp bằng `GroupAutoSubmitScanner`, SectionWorkPage gộp vào Assignment Workspace. U15: `grades`/`grade_history` thay bằng `evaluations` (kind ATTEMPT/GROUP_DOCUMENT/MEMBER/PRACTICE, history JSON), bỏ job GRADE_INIT. U16: bỏ `email_outbox`/`notification_preferences` (trạng thái email trên `notifications`, sở thích ở `accounts.email_preferences`), nhắc hạn bằng `DeadlineReminderScanner` + `assignments.reminder_sent_at`. Inception services.md/component-dependency.md cập nhật bảng việc nền."
+**Context**: Construction docs sync; còn lại: thêm cột mới vào database.drawio/md/png, unit-of-work.md, components.md, application-design.md, context-diagram.md (8→7 queue), yêu cầu/stories học liệu, mã UC cũ trong plan, aidlc-state.md.
+
+---
+
+## Construction - Hoàn tất đồng bộ database theo ERD
+**Timestamp**: 2026-10-03T14:00:00Z
+**User Input**: "reset limit rồi làm tiếp đi"
+**AI Response**: "Thêm cột mới vào database (notifications email_status/source_event_id/email_sent_at, evaluations.method, group_documents.updated_at, attempts.submit_mode, ai_suggestions.free_credits_reserved, payments.checkout_url/provider_reference, status/hidden_reason cho announcements và discussion_posts), dựng lại database.drawio/md/png. Inception (application-design, components, services, unit-of-work, component-dependency, unit-of-work-dependency) bỏ bảng job/8 queue; FR-004/FR-005, US-CNT-001/002/005, US-LRN-001, UC 11/12 đổi sang tải lên rồi quét. Đổi mã UC cũ trong functional-design-plan. Bổ sung `AttemptRunResultPort` (U11), `QuestionVerificationPort` (U06). Cập nhật aidlc-state.md."
+**Context**: Construction docs sync hoàn tất; mọi code plan cần duyệt lại.
+
+---
+
+## Construction - Rà soát đồng bộ và bản đồ UC theo wave
+**Timestamp**: 2026-10-03T16:00:00Z
+**User Input**: "soát lại  lần nữa giữa docs và aidlc, inception và construction và giữa các unit, nếu chưa đồng bộ thì sửa, sau đó ghi 1 file giống uc-wave-map.md giống cái để trong Downloads, chia theo wave và sắp xếp theo các uc làm trước đến sau"
+**AI Response**: "Kiểm lại 18 điểm lệch của bản rà ngày 2026-10-02 và chạy lại các kiểm tra (story/UC, story map, bảng ↔ unit, screen flow ↔ frontend, event, port ↔ ma trận). Sửa 16 chỗ lệch (xem mục 2 của uc-wave-map.md). Viết aidlc-docs/construction/uc-wave-map.md: 40 UC theo wave 1–4 và thứ tự code, mỗi UC có actor, bước code plan, bảng ghi/đọc (25 bảng), màn hình, nghiệp vụ, ngoại lệ, tham chiếu. Ghi lại 5 điểm còn mở cần sửa screen-flow.drawio hoặc quyết định."
+**Context**: Construction docs sync; screen-flow.drawio không bị sửa.
+
+---
+
+## Construction - Sửa các mục còn mở theo screen flow
+**Timestamp**: 2026-10-03T17:00:00Z
+**User Input**: "mấy cái còn mở tất cả đều sửa theo screen flow"
+**AI Response**: "UC 40 đổi thành Grade with AI (Student, Teacher), popup GradeWithAiDialog của U11 dùng cả phía giảng viên (U15 nhúng), bỏ AiGradingDialog của U13, UC 33 xin đề xuất qua UC 40, ma trận story UC 40 thêm US-GRD-002. Class Detail của Teacher là màn U04, panel nhóm U12 nhúng vào. UC 35 thêm Teacher, Subject Manager xem Gradebook; UC 36 giữ lịch sử và xuất. MVP không hoàn tiền (BR-U07-08), bỏ khỏi Open Items. Dời ô 'Đánh dấu không lập chỉ mục' sang lane Worker ở business-flow trang 1. Cập nhật uc-wave-map.md. Không sửa screen-flow.drawio."
+**Context**: Construction docs sync; không còn mục mở.
+
+---
+
+## Construction - Sửa UC 1, 2, 4, 5 theo yêu cầu và screen flow
+**Timestamp**: 2026-10-03T18:00:00Z
+**User Input**: "uc01 và 04 người dùng nhập otp hệ thống kiểm tra xong mới cho nhập mật khẩu
+Uc2 sao lại đưa admin tới account list m có nhìn screen flow ko đấy
+Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk mới"
+**AI Response**: "UC 1, 4: nhập OTP trước, đúng mới cấp otpTicket và mở bước mật khẩu (BR-U01-28, F2/F5, VerifyOtpStep + SetNewPasswordStep, endpoint *-otp-verifications, Redis ticket:*). UC 5: nhập mật khẩu hiện tại trước, đúng mới cấp passwordChangeTicket và mở bước mật khẩu mới (BR-U01-33, F6, ChangePasswordDialog hai bước, giới hạn 5 lần sai/15 phút). UC 2: Admin vào Admin Menu đúng screen flow (BR-U01-48, frontend, screen-flow.md bỏ nhãn landing sai). Sửa thêm domain-entities U01 còn AppSetting/sổ cái. Cập nhật use-case-table, stories US-IAM-001/003/006, plan U01, uc-wave-map."
+**Context**: U01 design sync.
+
+---
+
+## Construction - Hoàn tác thay đổi UC 5
+**Timestamp**: 2026-10-03T18:20:00Z
+**User Input**: "thôi sửa lại cái uc5 như ban đầu đi"
+**AI Response**: "Đưa UC 5 Change Password về một bước (nhập mật khẩu hiện tại và mật khẩu mới cùng lúc): BR-U01-33, F6, ChangePasswordDialog, plan U01, Redis key, use-case-table, US-IAM-006, uc-wave-map. Giữ nguyên thay đổi UC 1, 2, 4."
+**Context**: U01 design sync.
+
+---
+
+## Construction - Viết lại nghiệp vụ trong uc-wave-map theo AIDLC docs
+**Timestamp**: 2026-10-03T18:40:00Z
+**User Input**: "sửa lại cái uc-wave những cái đang dựa vào swimlane diễn giải lại khi ko dựa vào swimlane (tức là dựa vào aidlc doc"
+**AI Response**: "Viết lại phần Nghiệp vụ của 26 UC từng dựa vào swimlane (UC 9, 11, 12, 15–18, 21–38, 40) theo business-logic-model và business-rules của unit, mỗi bước ghi luồng F/BR làm căn cứ; bỏ nhãn swimlane ở cả 40 UC. Trong lúc đối chiếu sửa thêm: U06 còn stableKey/versionNo (đổi lineage_id/version), ADMIN trong BR-U05-01/02, BR-U06-01/02, thực thể và NFR thông báo lớp U05 (screen flow không có Admin ở các màn này), BR-U07-51 webhook REJECTED, BR-U13-10 học liệu 'đã phát hành', tech-stack U10 bankItemId/stableKey."
+**Context**: Construction docs sync.
+
+---
+
+## Construction - Viết lại từ đầu 26 mục UC trong uc-wave-map
+**Timestamp**: 2026-10-03T19:00:00Z
+**User Input**: "t vẫn thấy nó như swimlane ấy, xoá sạch đi xong viết lại từ đầu các uc đấy trong uc-wave-map, ko refer lại bản cũ"
+**AI Response**: "Xoá toàn bộ nội dung 26 mục UC từng dựa vào swimlane (UC 9, 11, 12, 15–18, 21–38, 40) và viết lại từ business-logic-model/business-rules: Actor, unit chủ trì/đóng góp, bước code plan, dữ liệu ghi/đọc, màn hình, 'Nghiệp vụ theo thiết kế' (mỗi dòng một luồng F của một unit), 'Quy tắc chính' (BR), 'Hạ tầng'. Cập nhật mục Cách đọc."
+**Context**: Construction docs.
+
+---
+
+## Construction - Đưa 26 mục UC về đúng mẫu chung
+**Timestamp**: 2026-10-03T19:20:00Z
+**User Input**: "ko đc ghi theo đúng form của các cái khác mà đừng sáng tạo vớ vẩn" (kèm ảnh mục UC 8 làm mẫu)
+**AI Response**: "Viết lại 26 mục (UC 9, 11, 12, 15–18, 21–38, 40) đúng mẫu UC 8: Actor + Bước code plan, Bảng ghi, Bảng đọc, Màn hình, Nghiệp vụ (bước đánh số), Ngoại lệ và quy tắc, Tham chiếu thiết kế, Ghi chú; bỏ các mục tự đặt (Unit chủ trì, Dữ liệu, Nghiệp vụ theo thiết kế, Quy tắc chính, Hạ tầng). Nội dung lấy từ business-logic-model/business-rules."
+**Context**: Construction docs.
+
+---
+
+## Construction - Rubric tạo khi soạn đề, nhân bản theo đề
+**Timestamp**: 2026-10-03T19:40:00Z
+**User Input**: "uc06 lúc tạo đề là phải tạo rubric r mở bank ra chỉ edit thôi, với cả rubric nhân bản theo đề"
+**AI Response**: "BR-U06-34 (tạo rubric trong Assignment Editor/Template Editor qua RubricPort.createForAssignment; Question Bank chỉ xem/sửa), BR-U06-35 (rubric nhân bản theo đề khi nhân bản, version mới, copy template/lớp; không nhân bản riêng, không dùng chung). U06 F8, RubricPort, frontend (không nút tạo ở bank, CloneDialog chỉ câu hỏi). U08 BR-U08-16 (Text Essay, Diagram Essay, bài nhóm bắt buộc có rubric; Quiz, Code Lab không), BR-U08-20/41/43, RubricSection. U10 BR-U10-13/14. UC 20 table, US-QBK-001, FR-016, component-methods, plan U06/U08/U10, uc-wave-map UC 20, 23, 25, 27, 28."
+**Context**: U06/U08/U10 design.
+
+---
+
+## Construction - Chọn dạng/chế độ trước khi copy, chọn câu ngẫu nhiên từ ngân hàng
+**Timestamp**: 2026-10-03T20:00:00Z
+**User Input**: "uc09 chịn dạng và chế độ xong mới copy, có thể chọn ngẫu nhiễn từ bank"
+**AI Response**: "BR-U08-17: tạo bài chọn dạng và chế độ trước, rồi mới chọn nguồn (trống, copy template, copy bài lớp khác) và chỉ hiện nguồn cùng dạng/chế độ. BR-U08-18: thêm câu từ ngân hàng chọn tay hoặc ngẫu nhiên N câu khớp dạng và bộ lọc (ghim vào bài, xem lại, bốc lại từng câu). U06 BankQueryPort.pickRandom; U08 F1, CreateAssignmentDialog, AddFromBankDialog; U10 BR-U10-05/10, F1/F2, frontend; plan U06/U08; UC 28; component-methods; uc-wave-map UC 28."
+**Context**: U08/U06/U10 design.
+
+---
+
+## Construction - UC 40 chấm khi bấm nút, UC 29 bài ngưng giao có điểm, UC 31 lượt gần nhất
+**Timestamp**: 2026-10-04T09:00:00Z
+**User Input**: "uc40 học sinh nộp bài xong ko tự chấm, bấm nút chấm với ai sẽ chấm, với lại quá 5 phút thì trả lỗi luôn\nUc29 ngưng giao nhưng có điểm thì vx show\nuc31 trong assignment list sẽ hiện lượt gần nhất, trong trang submitted sẽ hiện cái gần nhất nhưng có nút <> để chuyển giữa các lần"
+**AI Response**: "UC 40: nộp không tự chấm; Student bấm 'Chấm với AI' trên Submitted Assignment, kiểm credit lúc bấm, thiếu thì báo và bấm lại được; mọi yêu cầu chấm AI quá 5 phút chuyển FAILED, trả credit, báo lỗi (BR-U11-21/33/35, BR-U13-24, U11 F4, U13 F3a, FR-030, US-ASM-012, đặc tả UC 40). UC 29: BR-U08-03 bài RETIRED vẫn hiện khi sinh viên đã có điểm. UC 31: BR-U11-36 Assignment List hiện lượt gần nhất, Submitted Assignment mở lượt gần nhất có nút ‹ ›. Cập nhật frontend/plan U11, use-case-table, business-flow, uc-wave-map."
+**Context**: U08/U11/U13 design.
+
+---
+
+## Construction - UC 27 theo cách UC 28; UC 16 bỏ REVIEW, sửa mục trong popup, tự nộp khi hết giờ
+**Timestamp**: 2026-10-04T09:30:00Z
+**User Input**: "cái uc27 sửa giống uc28\nUc16  ko cho student sửa xoá các mục teacher làm,  trưởng nhóm có thể giao việc hoặc thành viên có thể tự nhận, người giữ phần nào sẽ mở một cái popup che kin trang chỉ có các phần của trang đấy rồi sửa, bấm xong thì sửa realtime asignment workspace, mọi mục xong thì ko chuyển sang review hay báo để đọc lại gì hết, trưởng nhóm nộp hay hết giờ thì lưu lại, nếu hết giờ thì các thành viên đang làm sẽ tự động nộp (tự động nộp thì ko quay về trang workspace mà sang trang nộp sau khi quay quay chờ nộp xong, mục giữ quá lâu ko lưu thì ko gợi ý nhả gì hết"
+**AI Response**: "UC 27: mô tả và mục uc-wave-map viết theo cách UC 28 (chọn dạng trước, nguồn copy, khung, rubric, duyệt, phát hành có lịch, tự mở/đóng, sửa lịch, ngưng giao, nhân bản, version). UC 16/U14: BR-U14-02 sinh viên không sửa/xóa/di chuyển mục và phần chung của giảng viên; BR-U14-11 popup che kín trang chỉ có block của mục; BR-U14-12 Xong đóng popup, workspace cập nhật realtime; bỏ BR-U14-14 (gợi ý nhả mục 48 giờ) và BR-U14-25; BR-U14-24 không có bước review; BR-U14-30/32 trưởng nhóm nộp bất kỳ lúc nào trước hạn; BR-U14-33 tự nộp sau hạn 30 giây, chốt mục đang giữ bằng bản nháp đã lưu, tài liệu CLOSED; BR-U14-36 client đang sửa hiện vòng chờ rồi sang Submitted Assignment. Trạng thái tài liệu IN_PROGRESS/CLOSED. Cập nhật BLM, domain, frontend (SectionEditorDialog, AutoSubmitOverlay, GroupSubmissionView), NFR, patterns (bỏ P6), logical, infra, plan U14; U16 bỏ group.document-review/GROUP_DOCUMENT_REVIEW; inception (components, unit-of-work, services, component-methods, FR-026, USCN-006, US-GRP-004/005); docs (use-case-table UC 16/27, đặc tả UC 16, screen-flow.md, business-flow md + drawio trang 3, erd.md); uc-wave-map UC 16, 27, 38."
+**Context**: U14 design; không sửa screen-flow.drawio.
+
+---
+
+## Construction - Chấm hàng loạt, bỏ lý do khi khác AI, tự nộp nhóm cho người xem, chấm nhóm như DOCUMENT, xem điểm trên Assignment List
+**Timestamp**: 2026-10-04T11:00:00Z
+**User Input**: "Uc33 trong quêu có thể chọn chấm hàng loạt rồi dùng batch process để chấm hàng loạt, xong thì chuyển sang trang workspace từng cái để xác nhận từng cái, trong workspace có thể có nút <> để chuyển các bài nộp, chấm xong bài này sẽ tự động sang bài kế
+Uc34 điểm khác ai thì ko cần ghi lý do mà chỉ cần sửa lý do giải thích của ai thôi (nếu thích)
+Uc16 cái thành viên đang xem workspace mà nộp thì cũng hiện vòng chờ rồi chuyển trang submitted
+Uc17 tài liệu chung ko cần tô màu, tài liệu chung gửi ai như dạng bài document thôi, chấm đóng góp thì chấm tay hoặc để mặc định các thành viên giống nhau, cái ghi lý do cũng là tự chọn nếu thích ghi, nộp lại thì sử lý như bài document bình thường thôi
+Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng viên gom các bài lại thành một cái đóng mở đc theo học sinh"
+**AI Response**: "U15 BR-U15-22 (khác đề xuất không cần lý do, sửa giải thích AI tùy ý), BR-U15-24 chấm hàng loạt, BR-U15-25 nút ‹ › và tự sang bài kế, BR-U15-40..44 (tài liệu chung chấm như DOCUMENT, điểm thành viên mặc định bằng nhau, lý do tùy chọn, nộp lại như lượt mới), BR-U15-50/51 (Gradebook gom theo sinh viên đóng/mở; sinh viên xem điểm trên Assignment List); BLM, domain, frontend (BulkAiGradingDialog, SubmissionNavigator, MemberScoresPanel, AssignmentGradeCell), patterns, plan U15. U13 BR-U13-20/24, F2 requestBatch. U14 BR-U14-36/40, AutoSubmitOverlay cho cả người xem. U11/U04 frontend. Inception (requirements, stories US-GRP-004/005/006, US-GRD-002/003/004, personas, application design), docs (use-case-table, đặc tả UC 16/17/33/40, screen-flow.md, business-flow md + drawio trang 3, erd.md), uc-wave-map UC 16, 17, 19, 29, 33, 34, 35, 40."
+**Context**: U15/U13/U14 design; không sửa screen-flow.drawio.
+
+---
+
+## Construction - UC 18 thống kê hiện ngay trên Admin Menu
+**Timestamp**: 2026-10-04T11:05:00Z
+**User Input**: "uc18 view statistic hiện ngay trên admin menu chứ ko phải bấm nút nào, kiểu admin menu sẽ chứa statistic và các nút để dẫn tới các trang manage khác"
+**AI Response**: "BR-U16-40/41: thống kê hiện ngay trên Admin Menu, đếm mỗi lần mở, không popup; ViewStatisticsDialog → AdminStatisticsPanel (frontend, plan U16); use-case-table UC 18, requirements, US-RPT-002, personas, screen-flow.md (bỏ popup View Statistics), uc-wave-map UC 18."
+**Context**: U16 design; không sửa screen-flow.drawio.
+
+---
+
+## Construction - UC 17 giữ điểm đóng góp riêng, mặc định bằng điểm tài liệu chung
+**Timestamp**: 2026-10-04T11:20:00Z
+**User Input**: "điểm đóng góp riêng vẫn có, mặc định là điểm kia thôi"
+**AI Response**: "Mỗi thành viên có điểm đóng góp riêng (`MEMBER.score`), mặc định bằng điểm tài liệu chung, giảng viên chấm tay từng người; bỏ câu 'không có điểm đóng góp riêng'. Cập nhật BR-U15-41/42, BLM F6, domain, frontend, plan U15, FR-026, US-GRP-006, personas, application design, docs (use-case-table, đặc tả UC 17, business-flow md + drawio), uc-wave-map UC 17."
+**Context**: U15 design.
+
+---
+
+## Inception - Vẽ lại dependency graph theo wave mới của người dùng
+**Timestamp**: 2026-10-04T11:40:00Z
+**User Input**: "T chia wave theo thế này thì vẽ lại cái dependecy graph đi, mấy cái ass tách ra khỏi unit khác và về hết unit 9 có 5 cái loại ass ấy)" (kèm bảng unit/wave/số UC/trọng số và bảng phân việc 5 người)
+**AI Response**: "Sửa trực tiếp unit-of-work-dependency.drawio của người dùng: U13 sang wave 4, U15 sang wave 3, U10 dời trong wave 4; cạnh U13 → U15 đảo thành U15 → U13 (U13 cắm implementation vào port của U15); thêm hộp 'U09: 5 loại bài' (Text Essay, Quiz, Diagram Essay, Code Lab, Group). Chưa sửa bảng wave trong unit-of-work-dependency.md và file png."
+**Context**: Inception application design; chỉ sửa hình.
+
+---
+
+## Inception - Kiểm tra mũi tên dependency graph
+**Timestamp**: 2026-10-04T11:55:00Z
+**User Input**: "kiểm tra lại các mũi tên xem có đung ko và giải thích"
+**AI Response**: "So 25 mũi tên với rút gọn bắc cầu các cạnh H của ma trận: 24 đúng; mũi tên U15 → U13 sai (ma trận là U13 → U15 H, chiều ngược U13 → U15 chỉ là C) nên đã xóa. Ghi chú: để U13 ở wave 4 thì U15 → U13 trong ma trận phải đổi H thành C (AI chấm cắm vào port của U15); việc chuyển 5 loại bài vào U09 thêm phụ thuộc U09 → U12 (nhóm hợp lệ) và U09 → U13 (chạy code, C), chưa cập nhật ma trận."
+**Context**: Inception application design.
+
+---
+
+## Inception - Đính chính kiểm tra mũi tên
+**Timestamp**: 2026-10-04T11:58:00Z
+**User Input**: "(không có, đính chính mục trước)"
+**AI Response**: "Người dùng đã sửa lại file trong draw.io (dời U10, U16, bỏ hộp loại bài, vẽ lại U15 → U13). Không xóa mũi tên U15 → U13; chỉ báo lại cho người dùng để quyết định."
+**Context**: Inception application design; không ghi đè file người dùng đang sửa.
+
+---
+
+## Inception - U15 phụ thuộc U13 qua contract
+**Timestamp**: 2026-10-04T12:10:00Z
+**User Input**: "thế sửa theo cách 1 đi"
+**AI Response**: "Ma trận: U15 → U13 đổi H thành C (AiGradingPort, CodeRunPort; chấm tay chạy với adapter giả, U13 ở wave 4 cắm vào sau). Xóa mũi tên U15 → U13 trong unit-of-work-dependency.drawio; cập nhật danh sách cạnh C và diễn giải trong unit-of-work-dependency.md."
+**Context**: Inception application design.
+
+---
+
+## Construction - Phân lại uc-wave-map theo dependency graph mới
+**Timestamp**: 2026-10-04T12:20:00Z
+**User Input**: "bây giờ phân lại cái uc wave map theo dependecy này"
+**AI Response**: "uc-wave-map.md xếp lại theo wave mới: W1 U01, U02, U03, U04; W2 U05, U06, U07, U12, U08; W3 U09 (gồm UC 23–27, chuyển UC 26 từ U13 và UC 27 từ U14), U11, U14, U15; W4 U10, U13, U16. Đánh số lại 1–40, nội dung từng UC giữ nguyên; §1 ghi thứ tự unit mới và U15 phụ thuộc U13 qua C."
+**Context**: Construction tra cứu.
+
+---
+
+## Đồng bộ - Wave mới và U09 chủ trì năm loại bài
+**Timestamp**: 2026-10-04T12:40:00Z
+**User Input**: "bây giờ đồng bộ lại giữa docs à aidlc, inception và construction, các unit"
+**AI Response**: "Inception: unit-of-work (U09 soạn cả năm loại bài, bảng wave và gate G1–G4 mới), unit-of-work-dependency (ma trận U09 → U13 `C`, danh sách cạnh `C`, diễn giải hình, bảng wave §5, gate, đường bài nhóm), story map (U09 UC 23–27, U13 UC 22, U14 UC 16). Construction: BR-U09-03, domain U09/U13/U14, plan U09 (UC 26/27, CodeLabConfigForm, GroupAssignmentConfigForm, adapter giả cho U13), plan U13/U14 (chỉ phần hỗ trợ), plan U15 và U13 (thứ tự code: U13 sau U11/U14/U15), uc-wave-map bước code UC 26/27. aidlc-state: wave mới, U12 wave 2. docs không ghi unit theo wave nên không đổi."
+**Context**: Đồng bộ toàn bộ sau khi đổi wave.
+
+---
+
+## Construction - Rà soát lại và viết cách code từng unit
+**Timestamp**: 2026-10-04T13:00:00Z
+**User Input**: "Rà soát kỹ từng cái 1 lần nữa sau đó ghi cho t cách mà m hiểu unit sẽ tiến hành  code frontend và backend cùng những database của unit đo (sau khi ghi đầy đủ bảng quanheej (ghi rõ cái nào theo erd caais nào là bảng quan hệ))"
+**AI Response**: "Chạy lại các script kiểm (refs, UC ↔ unit, ma trận ↔ port, port, màn hình). Sửa: U09 domain thêm cấu hình CODE_LAB, GROUP_ASSIGNMENT và port dùng CodeLabCheckPort/CodeRunPort của U13; U13 domain ghi U09 dùng CodeLabCheckPort; story map ghi U11 góp UC 35. Còn lại là cảnh báo giả của script (port tự khai báo, adapter ngoài, US-ASM-011 là mã lịch sử). Viết construction/unit-implementation-guide.md: 25 bảng (20 bảng thực thể theo ERD, 5 bảng quan hệ), 27 quan hệ 1–N bằng khóa ngoại, 37 khóa ngoại; cách code chung; từng unit theo wave gồm database, backend, frontend."
+**Context**: Rà soát và tài liệu hướng dẫn code.
+
+---
+
+## Construction - Soát tay U01 và ghi cách code
+**Timestamp**: 2026-10-04T13:30:00Z
+**User Input**: "tự soát đừng dùng script, soát lại construction xem giống cái uc wavemap chưa, sau đó kiểm tra chỗ plan inception của nó, soát xong t bảo ghi những cái trên ra mà, bắt đầu từ unit 1 đi"
+**AI Response**: "Đọc tay uc-wave-map UC 1–7, functional design U01, plan U01, inception (unit-of-work, story map, US-IAM-001…007, FR-001, FR-015, component-methods). Sửa: BR-U01-48 Admin Menu hiện thống kê ngay trên trang; plan U01 thêm Redis `ticket:*` và `countByRoleAndStatus`; component-methods U01 viết lại theo OTP hai bước, đổi mật khẩu, quản trị tài khoản, nhập CSV hai bước; FR-001 bỏ 'đồng bộ từ nguồn danh tính'. Ghi mục U01 chi tiết (database, backend, frontend, thứ tự code) trong unit-implementation-guide.md."
+**Context**: Soát từng unit, bắt đầu U01.
+
+---

@@ -417,6 +417,12 @@
                 <mxCell id="n2" parent="1" style="rounded=0;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F9C6F2;strokeColor=#C05CB0;strokeWidth=1;fontSize=11;fontStyle=1;imageHeight=24;" value="Student Menu" vertex="1">
                     <mxGeometry height="40" width="160" x="1510" y="502" as="geometry"/>
                 </mxCell>
+                <mxCell id="sync-student-dashboard" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F9C6F2;strokeColor=#C05CB0;fontSize=11;" value="Dashboard" vertex="1">
+                    <mxGeometry height="40" width="160" x="1300" y="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="sync-edge-student-dashboard" edge="1" parent="1" source="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=4;strokeColor=#4D4D4D;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="sync-student-dashboard">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
                 <mxCell id="n36" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF59D;strokeColor=#BFA900;fontSize=11;" value="Profile" vertex="1">
                     <mxGeometry height="40" width="160" x="1827.5" y="646" as="geometry"/>
                 </mxCell>

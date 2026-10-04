@@ -5,27 +5,28 @@
 ## 1. Bối cảnh
 
 - **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005 (bản đơn giản), US-LRN-001.
-- **Use case hiện hành**: UC 8, UC 9, UC 10, UC 12, UC 18, UC 19.
+- **Use case hiện hành**: UC 8, UC 9, UC 10, UC 12, UC 19 (chủ trì); đóng góp số đếm môn/lớp/ghi danh cho UC 18 (U16).
 - **Thiết kế nguồn**: `construction/u04-subject-class-enrollment/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
 | `AuthorizationPort`, `AccountLookupPort` | U01 (`H`) | Dùng U01 thật; U04 mở sau U01 |
-| `AuditPort`, `EventPublisherPort` | U02 (`H`) | Dùng U02 thật |
+| `AuditPort` | U02 (`H`) | Audit |
+| `EventPublisherPort` | U03 (`H`) | Dùng U03 thật |
 | `PublishedContentPort` | U05 (`C`) | Adapter tạm trả danh sách rỗng; U05 thay bằng implementation thật ở wave 2 |
 | U04 cung cấp `SubjectScopePort`, `ClassScopePort` | cho U01 | Thay adapter giả của U01 bằng implementation thật |
 
 ### Dữ liệu U04 sở hữu
 
-PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`; routing key `enrollment.activated`.
+PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(class_id, account_id)`); Redis `ratelimit:invite-code:*`; routing key `enrollment.activated`.
 
 ## 2. Cấu trúc
 
@@ -44,8 +45,9 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
                         (SubjectScopePort, ClassScopePort do U01 khai báo; U04 cài)
 /backend/src/main/resources/db/migration/u04/
 /frontend/src/app/admin/subjects/
-/frontend/src/app/teaching/classes/
-/frontend/src/app/learn/
+/frontend/src/app/teaching/ (Teacher Menu, subjects/, classes/)
+/frontend/src/app/admin/classes/
+/frontend/src/app/learning/
 /contracts/openapi/u04-academic.yaml
 /contracts/messages/u04-enrollment-activated.json
 ```
@@ -54,7 +56,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 
 ### Nhóm A - Khung
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
 - [ ] **Bước 1** - Thêm biến cấu hình U04 theo `logical-components.md` §3 vào `application.yml`.
 
 ### Nhóm B - Domain và logic
@@ -67,7 +69,7 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 - [ ] **Bước 7** - `EnrollmentService`: tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, ghi danh lại, phát event (BR-U04-20…26, P3).
 - [ ] **Bước 8** - `InviteCodeService`: bật/tắt/đổi mã, tự ghi danh, rate limit Bucket4j chỉ trừ khi sai, thông báo chung (BR-U04-30…34, P6).
 - [ ] **Bước 9** - `StudentClassService`: danh sách lớp "Đang học"/"Đã kết thúc", trang lớp có nội dung, U05 lỗi thì vẫn trả thông tin lớp (BR-U04-40…44, P8).
-- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort`; bỏ `NoAssignmentScopeAdapter` của U01 (P1).
+- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort` (gồm `countSubjectsByStatus`, `countClassesByStatus`, `countActiveEnrollments` cho UC 18); bỏ `NoAssignmentScopeAdapter` của U01 (P1).
 - [ ] **Bước 11** - `loadForActor` che giấu đối tượng ngoài quyền và audit theo BR-U04-51, 52.
 - [ ] **Bước 12** - Unit test cho mọi `BR-U04-xx`.
 - [ ] **Bước 13** - Tóm tắt: `aidlc-docs/construction/u04-subject-class-enrollment/code/business-logic-summary.md`.
@@ -88,8 +90,8 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 22** - Admin: `SubjectListPage`, `SubjectFormDialog`, `AssignManagerDialog`.
-- [ ] **Bước 23** - Quản lý lớp: `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học viên, Mã mời), `AssignTeacherDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
+- [ ] **Bước 22** - Admin: `SubjectListPage`, `SubjectDetailPage`, `SubjectFormDialog`, `AssignManagerDialog`, Class List/Class Detail dưới `app/admin/classes/`; Chủ nhiệm môn: `SubjectManagerMenuPage`, `SubjectHubPage` (gắn `ModuleList` U05 chế độ môn) và `ClassListPage` lọc theo môn.
+- [ ] **Bước 23** - Quản lý lớp: `TeacherMenuPage` (Teacher Menu, đích sau đăng nhập `/teaching`), `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học liệu (gắn `ModuleList` U05 chế độ lớp), Học viên (U12 nhúng panel nhóm khi được code), Mã mời; `ClassNavLinks` tới Announcements, Assignment List, Gradebook), `AssignTeacherDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
 - [ ] **Bước 24** - Ghi danh: `AddStudentSearch`, `AddStudentsListDialog`, `EnrollmentResultTable`, `EnrollmentTable`.
 - [ ] **Bước 25** - Người học: `MyClassesPage`, `JoinByCodeDialog`, `StudentClassPage`.
 - [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, lỗi chung khi mã sai.
@@ -108,11 +110,12 @@ PostgreSQL `subjects`, `classes`, `enrollments`; Redis `ratelimit:invite-code:*`
 | US-CAT-002 (UC 9) | 5, 11, 23 |
 | US-CAT-003 (UC 9) | 6, 7, 16, 24 |
 | US-CAT-005 (UC 10) | 8, 25 |
-| US-LRN-001 (UC 18, UC 19, UC 12) | 9, 25 |
-| Contract cho U01 và U05-U15 | 3, 10 |
+| US-LRN-001 (UC 19, UC 12) | 9, 25 |
+| UC 18 (số đếm cho U16) | 10 |
+| Contract cho U01 và U05-U16 | 3, 10 |
 
 ## 5. Ngoài phạm vi
 
 - Implementation thật của `PublishedContentPort` (U05).
 - Gửi thông báo và email ghi danh, giới hạn 300 email/ngày (U16).
-- Dashboard ghép assignment (U08) và thông báo (U16).
+- Không có dashboard cá nhân; Student Menu (`MyClassesPage`) là trang đích của Student.

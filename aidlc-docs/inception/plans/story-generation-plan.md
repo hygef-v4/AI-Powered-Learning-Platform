@@ -1,8 +1,8 @@
 # Kế hoạch tạo User Stories
 
-> Lịch sử lập kế hoạch: các mục nhắc "Phase 2", bốn loại bài hoặc Simulation Exam bên dưới phản ánh quyết định cũ. Phạm vi hiện hành gồm 49 story/69 use case sau khi gộp CRUD cùng actor, năm dạng bài, không có Simulation Exam; xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
+> Lịch sử lập kế hoạch: các mục nhắc "Phase 2", bốn loại bài hoặc Simulation Exam bên dưới phản ánh quyết định cũ. Phạm vi hiện hành gồm 49 story/40 use case sau các lần gộp và tách use case, năm dạng bài, không có Simulation Exam; xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
 
-> Bổ sung 2026-09-29: Catalog 69 use case hiện hành ở `docs/use-case-table.md`; mã Simulation Exam đã rút, mã AI chấm Practice được thêm, các mã CRUD gộp không tái sử dụng. Các số lượng và đường dẫn cũ bên dưới chỉ là lịch sử.
+> Bổ sung 2026-09-29: Catalog use case hiện hành (40 UC từ 2026-09-30, 39 UC rồi 40 UC từ 2026-10-01) ở `docs/use-case-table.md`; mã Simulation Exam đã rút, mã AI chấm Practice được thêm, các mã CRUD gộp không tái sử dụng. Các số lượng và đường dẫn cũ bên dưới chỉ là lịch sử.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -221,7 +221,7 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Thay `US-GRP-005` bằng luồng tổng hợp/chốt tài liệu và mở rộng `US-GRP-006` cho chấm nhất quán/điểm cuối.
 - [x] Mở rộng `US-QBK-002` với snapshot/version theo attempt.
 - [x] Thêm `US-ASM-009` đến `US-ASM-011` cho template, copy giữa lớp và simulation exam.
-- [x] Cập nhật personas và use cases; danh mục lúc đó truy vết đủ 49/49 story MVP tới 77 UC. Sau khi gộp CRUD cùng actor, catalog hiện hành có 69 UC; quyết định lịch sử còn trong audit.
+- [x] Cập nhật personas và use cases; danh mục lúc đó truy vết đủ 49/49 story MVP tới 77 UC. Sau khi gộp CRUD cùng actor, catalog có 69 UC; từ 2026-09-30 catalog có 40 UC và từ 2026-10-01 còn 39 UC, sau đó tách bài nhóm thành UC 27 Manage Group Assignment nên còn 40 UC; quyết định lịch sử còn trong audit.
 - [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
 - [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
 - [x] Trình người dùng checkpoint phê duyệt lại User Stories.

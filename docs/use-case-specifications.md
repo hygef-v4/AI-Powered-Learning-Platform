@@ -1,6 +1,6 @@
 # II. Use Case Specifications — 8 Key Use Cases
 
-These eight use cases were selected from the 40 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table. UC 30 Submit Assignment is specified once per assignment type because each type has its own editing and scoring rules. Same-actor management actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
+These eight use cases were selected from the 40 active cases in [the use case table](use-case-table.md) because they represent distinctive learning and assessment workflows with significant business rules or failure paths. The numeric IDs and names below match that table. UC 30 Submit Assignment is specified once per assignment type because each type has its own editing and scoring rules. For UC 28 Manage Assignments, only the AI assignment-draft flow is specified; its other management actions are described in the table. Same-actor management actions are grouped in the table; their detailed validation remains in the Functional Requirements and unit designs. The system being specified is not listed as a secondary actor. Secondary actors are external services that directly participate in a flow.
 
 ## 1. Content Management
 
@@ -33,7 +33,7 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 | Primary Actors | Student (group member; group leader) |
 | Secondary Actors | None |
 | Description | The group leader breaks the teacher's main sections into detailed sub-sections and assigns them to members. Members work on their sections in a private workspace and mark them Done so the completed content appears in the shared document in real time. When every section is Done, the document enters REVIEW for the whole group to read and comment on, and the leader then submits it; the system submits the current version when the deadline passes. |
-| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 28, and its publication still accepts work. |
+| Preconditions | The student belongs to a group of the class (UC 9). The group assignment and its main sections were prepared under UC 27, and its publication still accepts work. |
 | Normal Flow | 1. A group member opens the document; the system checks access and shows shared content, main sections and sub-sections, section states, assignees and the document state (IN_PROGRESS or REVIEW). |
 |  | 2. The leader may add, rename, reorder or remove detailed sub-sections under a main section and assign a section to a member. The system locks an assigned section to that member. |
 |  | 3. A member opens an assigned section or claims an OPEN or DONE section. The system conditionally claims it, locks it to that student, and copies its current published blocks into a private draft. |
@@ -73,15 +73,15 @@ These eight use cases were selected from the 40 active cases in [the use case ta
 |  | **A4 — AI proposal for a member fails:** Preserve the submission and current grades; the teacher may grade that contribution manually. |
 | Postconditions | The shared-document assessment, individual contribution assessments, and per-member final draft scores are stored with the teacher's decisions. They are not visible to students until finalized and published. |
 
-## 3. AI Creation
+## 3. AI-Assisted Assignment Authoring
 
-### 3.1 UC 21 — Create Assignment with AI
+### 3.1 UC 28 — Manage Assignments: Create an Assignment Draft with AI
 
 | Field | Specification |
 |---|---|
 | Primary Actors | Teacher |
 | Secondary Actors | AI Service |
-| Description | A teacher requests assignment suggestions grounded in published class content, then selects, edits, or discards the proposed questions. |
+| Description | Within assignment management, a teacher requests assignment suggestions grounded in published class content, reviews their sources, then selects, edits, or discards the proposed questions before publishing. |
 | Preconditions | The teacher manages the class and has a DRAFT assignment. Source materials are published and indexed within the class scope, and the teacher has sufficient AI credits. |
 | Normal Flow | 1. The teacher selects the question type, quantity, difficulty, and optional chapter or lesson scope. |
 |  | 2. The system checks permission, sources, AI limits, and reserves estimated credits from the teacher. |

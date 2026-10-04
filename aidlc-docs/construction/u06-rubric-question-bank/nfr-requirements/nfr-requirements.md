@@ -12,7 +12,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U06-10 | Unique `(stable_key, version_no)`; partial unique 1 `DRAFT` mỗi `stable_key`. | BR-U06-11 |
+| NFR-U06-10 | Unique `(lineage_id, version)` trên `questions` và `rubrics`; partial unique 1 `DRAFT` mỗi `lineage_id`. | BR-U06-11 |
 | NFR-U06-11 | Bản `ACTIVE`/`RETIRED` bất biến: service chặn sửa `definition`; test bảo đảm. | BR-U06-10 |
 | NFR-U06-12 | Điểm lưu dạng `numeric(6,2)`, không dùng số thực dấu phẩy động. | BR-U06-30 |
 | NFR-U06-13 | Nhập file: mỗi dòng một transaction; lỗi một dòng không ảnh hưởng dòng khác. | BR-U06-41 |

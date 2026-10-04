@@ -1,4 +1,4 @@
-# U03 File & Artifact - Tech Stack Decisions
+# U03 File, Job & Event - Tech Stack Decisions
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
@@ -8,3 +8,13 @@
 | Giới hạn đồng thời | `Semaphore` 5 permit trong service upload | Đơn giản, đủ cho một instance backend |
 | Download token | Redis, TTL 5 phút | Đã có Redis |
 | Local/test | `LocalFolderStorageAdapter` thay Drive | Chạy được khi chưa có credential |
+
+## Việc nền (chuyển từ U02)
+
+| Hạng mục | Chọn | Lý do |
+|---|---|---|
+| Messaging | Spring AMQP với RabbitMQ | Đã chốt RabbitMQ; Spring AMQP có ack thủ công, prefetch, tự kết nối lại |
+| Thử lại | Queue `jobs.retry.*` có TTL, dead-letter về `jobs` | Không có bảng job (database chỉ gồm bảng của ERD); không cần plugin delayed message |
+| Sweeper, scanner | `@Scheduled` trong worker | Chỉ một worker, không cần khóa phân tán |
+| Worker | Cùng project Maven backend, profile `worker` | Không phải duy trì hai codebase |
+| Test | JUnit 5, Testcontainers (PostgreSQL, RabbitMQ) | Theo NFR-004 |

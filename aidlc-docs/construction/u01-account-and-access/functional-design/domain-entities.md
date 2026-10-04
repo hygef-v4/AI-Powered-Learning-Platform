@@ -10,9 +10,10 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `PasswordCredential` | Value object của `Account` | `accounts` | U01 |
 | `Profile` | Value object của `Account` | `accounts` | U01 |
 | `LoginThrottle` | Value object của `Account` | `accounts` | U01 |
-| `CreditBalance` | Value object của `Account` | `accounts` | U07 |
-| `AppSetting` | Entity cấu hình dùng chung | `app_settings` | U01 tạo bảng; mỗi unit ghi khóa của mình |
+| `CreditBalance` | Value object của `Account` | `accounts` (`free_balance`, `free_period`, `purchased_balance`) | U07 |
+| `EmailPreferences` | Value object của `Account` | `accounts.email_preferences` | U16 |
 | `OtpChallenge` | Entity tạm thời | Redis | U01 |
+| `VerificationTicket` | Entity tạm thời (`otpTicket`) | Redis | U01 |
 | `Session` | Entity tạm thời | Redis | U01 |
 | `RequestThrottle` | Bộ đếm tạm thời | Redis | U01 |
 | `AccountImportResult` | Kết quả trả về | Không lưu | U01 |
@@ -25,13 +26,13 @@ U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), file ảnh
 | Thuộc tính | Ý nghĩa | Ràng buộc |
 |---|---|---|
 | `accountId` | Định danh | Bất biến |
-| `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong `u01.allowedEmailDomains`; **không đổi sau khi tạo** |
+| `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong biến triển khai `U01_ALLOWED_EMAIL_DOMAINS`; **không đổi sau khi tạo** |
 | `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN` |
 | `status` | Trạng thái vòng đời | `PENDING`, `ACTIVE`, `DISABLED` |
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
 | `throttle` | `LoginThrottle` | Mặc định không khóa |
-| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi mật khẩu, đổi role, vô hiệu hóa; mọi phiên có version cũ không làm mới được |
+| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa; mọi phiên có version cũ không làm mới được |
 | `credit` | `CreditBalance` | Do U07 ghi; U01 không đọc/ghi |
 | `createdAt`, `updatedAt`, `version` | Thời gian và khóa lạc quan | Hệ thống quản lý |
 
@@ -62,7 +63,7 @@ stateDiagram-v2
 |---|---|
 | `displayName` | Bắt buộc, 1-150 ký tự sau khi cắt khoảng trắng |
 | `phoneNumber` | Tùy chọn; chỉ chữ số, dấu `+` ở đầu, 8-15 chữ số; là dữ liệu cá nhân, không ghi log |
-| `avatarRef` | Tùy chọn; tham chiếu ảnh do `AvatarPort` (U03) xác nhận; U01 không lưu byte ảnh |
+| `avatarFileId` | Tùy chọn; cột `avatar_file_id`, mã tệp Google Drive do `AvatarPort` (U03) xác nhận; U01 không lưu byte ảnh |
 
 ## 5. `LoginThrottle`
 
@@ -79,17 +80,11 @@ stateDiagram-v2
 | `freePeriod` | Tháng của phần tặng (`yyyy-MM`) |
 | `purchasedBalance` | Credit đã mua còn lại |
 
-U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN`, khóa dòng tài khoản khi giữ/trừ credit và ghi sổ cái trong cùng transaction. Student có thể mua credit và xem ví của mình nhưng không nhận `MONTHLY_GRANT`; chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
+U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN`, khóa dòng tài khoản khi giữ/trừ credit (phần giữ/trừ nằm trên `ai_suggestions`, không có sổ cái). Cả bốn vai trò được tặng credit hằng tháng và mua credit; Student chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
 
-## 7. `AppSetting`
+## 7. Cấu hình U01
 
-| Thuộc tính | Ý nghĩa |
-|---|---|
-| `key` | Khóa có tiền tố unit, ví dụ `u01.allowedEmailDomains`, `u07.monthlyFreeCredits`, `u13.killSwitch` |
-| `value` | JSON |
-| `updatedBy`, `updatedAt` | ADMIN sửa gần nhất |
-
-Mỗi unit chỉ đọc/ghi khóa có tiền tố của mình; mọi thay đổi ghi audit. Khóa của U01: `u01.allowedEmailDomains` (danh sách tên miền email trường).
+Không có bảng cấu hình (database chỉ gồm bảng của ERD). Tên miền email trường là biến triển khai `U01_ALLOWED_EMAIL_DOMAINS` (BR-U01-03).
 
 ## 8. `OtpChallenge`
 
@@ -102,6 +97,16 @@ Mỗi unit chỉ đọc/ghi khóa có tiền tố của mình; mọi thay đổi
 | `attemptsLeft` | Bắt đầu 5; về 0 thì xóa challenge |
 
 Mỗi `(accountId, purpose)` có tối đa **một** challenge còn hiệu lực. Tạo mã mới xóa mã cũ.
+
+### `VerificationTicket`
+
+| Thuộc tính | Ràng buộc |
+|---|---|
+| `kind` | `OTP_ACTIVATION` hoặc `OTP_PASSWORD_RESET` (cấp sau khi OTP đúng, 10 phút) |
+| `accountId` | Tài khoản đích |
+| `tokenHash` | Băm của ticket ngẫu nhiên trả cho client |
+
+Dùng một lần; xóa khi đặt mật khẩu thành công (BR-U01-28).
 
 ## 9. `Session`
 
@@ -153,15 +158,15 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 | Port | Dùng bởi | Ghi chú |
 |---|---|---|
 | `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
-| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; không trả mật khẩu hay số điện thoại |
+| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; `countByRoleAndStatus()` trả số đếm cho UC 18 View Statistics (U16); không trả mật khẩu hay số điện thoại |
 
 ### Port U01 dùng
 
 | Port | Cung cấp bởi | Cạnh | Dùng để |
 |---|---|---|---|
-| `AuditPort.recordAudit` | U02 | `C` | Ghi sự kiện bảo mật/nghiệp vụ |
-| `JobPort.enqueue` | U02 | `C` | Tạo job gửi OTP trong cùng giao dịch; U02 gửi sang RabbitMQ sau commit; handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
-| `AvatarPort` | U01 khai báo, U03 cài | `C` | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR` |
-| `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài | `C` | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
+| `AuditPort.record` | U02 | `H` | Ghi sự kiện bảo mật/nghiệp vụ (U02 code trước U01) |
+| `JobPort.enqueue` | U03 | `H` | Gửi việc `OTP_DELIVERY` sang RabbitMQ sau commit (không có bảng job); handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
+| `AvatarPort` | U03 (chữ ký theo thiết kế U01) | `H` (U03 code trước) | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR` |
+| `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài | `C` (U04 code sau U01) | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 
-Trước khi U03/U04 được code, U01 dùng adapter tạm (xem code generation plan).
+U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng adapter tạm (xem code generation plan).

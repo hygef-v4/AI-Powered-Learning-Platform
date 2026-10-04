@@ -4,11 +4,11 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U07-01 | Mọi thay đổi số dư đi qua một hàm duy nhất: khóa dòng tài khoản chứa số dư (`SELECT ... FOR UPDATE`), ghi sổ cái, cập nhật số dư trong cùng transaction. | BR-U07-12, 34 |
-| NFR-U07-02 | Unique DB: `orderCode`, `(account_id, idempotency_key)`, `eventKey`, `requestRef`; cộng credit `PURCHASE` unique theo `payment_id`. | BR-U07-04, 12, 41 |
+| NFR-U07-01 | Mọi thay đổi số dư đi qua một hàm duy nhất: khóa dòng tài khoản chứa số dư (`SELECT ... FOR UPDATE`), cập nhật số dư trong cùng transaction với dòng `payments` hoặc `ai_suggestions` gây ra thay đổi. | BR-U07-12, 34 |
+| NFR-U07-02 | Unique DB: `payments.order_code`, `payments.idempotency_key`; cộng credit mua chỉ khi `payments` chuyển `PAID` lần đầu; giữ/trừ chỉ khi `ai_suggestions.credit_status` chuyển trạng thái. | BR-U07-04, 12, 41 |
 | NFR-U07-03 | Tiền lưu số nguyên VND (`bigint`), credit số nguyên; không dùng số thực. | Thiết kế |
-| NFR-U07-04 | User `app` không được UPDATE/DELETE bảng sổ cái (chỉ INSERT, SELECT). | BR-U07 sổ cái |
-| NFR-U07-05 | Test tổng sổ cái = số dư sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời). | NFR-004 |
+| NFR-U07-04 | User `app` không được DELETE `payments`; CHECK `free_balance >= 0`, `purchased_balance >= 0` trên `accounts`. | BR-U07-34 |
+| NFR-U07-05 | Test số dư = tặng tháng + tổng mua `PAID` − tổng `credits_used` sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời) trong một tháng. | NFR-004 |
 
 ## 2. PayOS
 
@@ -32,10 +32,10 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U07-30 | Người dùng chỉ thấy giao dịch/sổ cái của mình; ngoài quyền trả `404`. | SEC-002 |
+| NFR-U07-30 | Người dùng chỉ thấy giao dịch và lần dùng credit của mình; ngoài quyền trả `404`. | SEC-002 |
 | NFR-U07-31 | `CreditPort` chỉ gọi nội bộ, không có endpoint HTTP cho `reserve`/`settle`. | Thiết kế |
 | NFR-U07-32 | Không lưu dữ liệu thẻ/ngân hàng của người dùng; chỉ lưu mã tham chiếu PayOS. | SEC-007 |
-| NFR-U07-33 | Mọi API credit (gói mua, thanh toán, số dư, sổ cái, lịch sử) yêu cầu tài khoản `ACTIVE` và chỉ trả dữ liệu của chính chủ ví; Student được mua và xem ví. `CreditPort.reserve` kiểm `purpose` và attempt: Student chỉ được giữ credit cho `PRACTICE_GRADING` Text/Diagram Essay của chính mình; các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
+| NFR-U07-33 | Mọi API credit (gói mua, thanh toán, số dư, lịch sử) yêu cầu tài khoản `ACTIVE` và chỉ trả dữ liệu của chính chủ ví; Student được mua và xem ví. `CreditPort.reserve` kiểm `purpose` và attempt: Student chỉ được giữ credit cho `PRACTICE_GRADING` Text/Diagram Essay của chính mình; các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
 
 ## 5. Compliance
 

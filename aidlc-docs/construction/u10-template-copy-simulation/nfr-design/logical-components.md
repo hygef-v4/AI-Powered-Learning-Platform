@@ -2,7 +2,7 @@
 
 ## 1. Sơ đồ
 
-TemplateController gọi TemplateService và U08 để phát hành template. CopyController gọi AssignmentCopier, ScopeGuard (U04), U08, U06 và U09 trong một transaction. DiffController gọi AssignmentDiffer và đọc version từ U08. U10 lưu `template_releases` và lineage qua `AssignmentExtensionPort`.
+TemplateController gọi TemplateService và U08 để tạo, sửa, phát hành template (dòng `assignments` của môn). CopyController gọi AssignmentCopier, ScopeGuard (U04), U08, U06 và U09 trong một transaction. DiffController gọi AssignmentDiffer và đọc version từ U08. U10 lưu template và lineage trong `assignments` (qua U08) qua `AssignmentExtensionPort`.
 
 **Text alternative**: Chủ nhiệm môn phát hành template qua `TemplateService` (template là bài U08). Giảng viên copy qua `AssignmentCopier`, kiểm quyền hai phía qua U04 rồi gọi U08, U06, U09 trong một transaction. `AssignmentDiffer` đọc hai version từ U08 để so sánh.
 

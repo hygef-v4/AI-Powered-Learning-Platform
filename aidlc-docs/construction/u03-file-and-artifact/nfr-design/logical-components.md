@@ -1,4 +1,4 @@
-# U03 File & Artifact - Logical Components
+# U03 File, Job & Event - Logical Components
 
 ## 1. Sơ đồ
 
@@ -12,18 +12,16 @@
  |                              v                                      |
  |                         StoragePort --------> GoogleDriveStorage /  |
  |                              |                LocalFolderStorage    |
- |                              v                                      |
- |                       ArtifactRepository (PostgreSQL)               |
  |                                                                     |
  | DownloadController --> DownloadTokenService (Redis) --> StoragePort |
  | ArtifactPort (cho unit khác): attach, issueDownloadToken, open      |
  +---------------------------------------------------------------------+
-                          | job DRIVE_CLEANUP
+                          | việc DRIVE_CLEANUP
                           v
-                 worker (U02) --> DriveJobHandler --> StoragePort
+                 worker --> DriveJobHandler --> StoragePort
 ```
 
-**Text alternative**: Trình duyệt upload qua `FileUploadController`; `UploadService` giới hạn 5 upload cùng lúc, ghi file tạm, cho `ContentInspector` kiểm loại file, đẩy file qua `StoragePort` (Google Drive, hoặc thư mục local khi không có key) và lưu metadata vào PostgreSQL. Tải về đi qua `DownloadController`, kiểm token trong Redis rồi stream từ `StoragePort`. Các unit khác dùng `ArtifactPort`. Dọn file Drive còn sót khi upload lỗi chạy bằng job của U02, do `DriveJobHandler` trong worker xử lý.
+**Text alternative**: Trình duyệt upload qua `FileUploadController`; `UploadService` giới hạn 5 upload cùng lúc, ghi file tạm, cho `ContentInspector` kiểm loại file, đẩy file và metadata qua `StoragePort` (Google Drive, hoặc thư mục local khi không có key); không có bảng PostgreSQL. Tải về đi qua `DownloadController`, kiểm token trong Redis rồi stream từ `StoragePort`. Các unit khác dùng `ArtifactPort`. Dọn file Drive còn sót khi upload lỗi chạy bằng việc nền (mục 4), do `DriveJobHandler` trong worker xử lý.
 
 ## 2. Thành phần
 
@@ -33,11 +31,10 @@
 | `UploadService` | backend | P1 |
 | `ContentInspector` | backend | P3 |
 | `StoragePort` + 2 adapter | backend, worker | P5, P6 |
-| `ArtifactRepository` | backend, worker | Bảng `artifacts` |
-| `ArtifactService` (`ArtifactPort`) | backend, worker | `attach`, `open`, `issueDownloadToken` |
+| `ArtifactService` (`ArtifactPort`) | backend, worker | `attach` (kiểm `FileRef` có chữ ký), `open`, `issueDownloadToken` |
 | `DownloadTokenService` | backend | P4 |
 | `DownloadController` | backend | P2 |
-| `DriveJobHandler` | worker | Job `DRIVE_CLEANUP` |
+| `DriveJobHandler` | worker | Việc `DRIVE_CLEANUP` |
 
 ## 3. Cấu hình
 
@@ -49,9 +46,70 @@
 | `U03_MAX_CONCURRENT_UPLOADS` | 5 |
 | `U03_UPLOAD_TMP_DIR` | `/tmp/uploads` |
 | `U03_DOWNLOAD_TOKEN_TTL` | 5m |
+| `U03_FILEREF_SECRET` | Khóa HMAC ký `FileRef` (bí mật) |
+| `U03_FILEREF_TTL` | 1h |
 | `U03_LOCAL_STORAGE_DIR` | `./data/files` (chỉ local) |
 
-## 4. Compliance
+## 4. Việc nền và sự kiện (chuyển từ U02)
+
+```
+ Backend (unit bất kỳ)                         Worker (profile worker)
+ +------------------------------+              +--------------------------------+
+ | service nghiệp vụ            |              | JobListener (mỗi queue một cái)|
+ |   -> ghi dòng nghiệp vụ      |              |   -> handler của unit sở hữu   |
+ |   -> JobPort.enqueue         |              |   -> JobRetryPublisher         |
+ |   -> EventPublisherPort      |              | PendingSweepRunner (mỗi phút)  |
+ | afterCommit/ngay -> AmqpPublisher --+       | ScheduledScanRunner (mỗi phút) |
+ +------------------------------+      |       +--------------------------------+
+                                       v                ^
+                                   RabbitMQ ------------+
+                     7 queue jobs.*, jobs.retry.*, platform.events
+```
+
+**Text alternative**: Service nghiệp vụ ghi dòng nghiệp vụ và gọi `JobPort.enqueue` hoặc `EventPublisherPort`. `AmqpPublisher` gửi message sau commit (hoặc ngay khi không có transaction) sang RabbitMQ. Worker có một `JobListener` cho mỗi queue, gọi handler của unit sở hữu; lỗi tạm thì `JobRetryPublisher` gửi vào queue thử lại có TTL. `PendingSweepRunner` gửi lại việc bị mất; `ScheduledScanRunner` chạy việc hẹn giờ của các unit.
+
+| Thành phần | Chạy ở | Trách nhiệm |
+|---|---|---|
+| `JobPort` / `JobPublisher` | Backend, worker | P8: gửi sau commit hoặc ngay, kiểm payload bằng `ForbiddenKeyGuard` |
+| `EventPublisherPort` | Backend, worker | Gửi `platform.events` sau commit |
+| `AmqpPublisher` | Backend, worker | Gửi message, publisher confirm, log lỗi |
+| `JobListener` | Worker | Mỗi queue một listener, số luồng cấu hình |
+| `JobHandlerRegistry` | Worker | Ánh xạ `jobType` → handler, `onFailed`, queue |
+| `JobRetryPublisher` | Worker | P9 |
+| `PendingSweepRunner` | Worker | P10: gọi các `PendingSweeper` đã đăng ký |
+| `ScheduledScanRunner` | Worker | P10: gọi các `ScheduledScanner` đã đăng ký |
+
+### RabbitMQ
+
+| Thành phần | Kiểu | Ghi chú |
+|---|---|---|
+| `jobs` exchange | direct | Routing key = `jobType` |
+| `jobs.triggered` | queue durable | Việc nội bộ sau thao tác: `GROUP_DOC_CREATE` |
+| `jobs.email` | queue durable, priority | SMTP: `OTP_DELIVERY` (ưu tiên 9), `EMAIL_SEND` (ưu tiên 1) |
+| `jobs.gemini` | queue durable | Gemini: `LESSON_SCAN`, `AI_TASK` |
+| `jobs.youtube` | queue durable | `YOUTUBE_CAPTION` |
+| `jobs.code` | queue durable | Judge0: `CODE_RUN` |
+| `jobs.drive` | queue durable | Google Drive: `DRIVE_CLEANUP` |
+| `jobs.payos` | queue durable | PayOS: `PAYOS_CHECK` |
+| `jobs.retry` exchange | direct | `JobRetryPublisher` gửi bản sao vào đúng queue thử lại theo lượt |
+| `jobs.retry.30s` … `jobs.retry.8m` | queue durable, TTL cố định, không consumer | Dead-letter về `jobs` giữ routing key gốc |
+| `platform.events` | topic exchange | Chỉ cho thông báo; U16 bind queue `jobs.notification` |
+
+Không có DLQ; việc hết lượt chỉ để dòng nghiệp vụ ở trạng thái lỗi và log ERROR.
+
+### Cấu hình việc nền
+
+| Khóa | Mặc định |
+|---|---|
+| `U03_JOB_MAX_ATTEMPTS` | 5 |
+| `U03_JOB_BACKOFF` | 30s,1m,2m,4m,8m |
+| `U03_SWEEP_INTERVAL` / `U03_SWEEP_REPUBLISH_AFTER` | 1m / 5m |
+| `U03_SCAN_INTERVAL` | 1m |
+| `U03_JOB_HANDLER_TIMEOUT` | 60s |
+| `U03_WORKER_MAX_CONCURRENCY` | 4 |
+| `RABBITMQ_HOST`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD` | Mật khẩu là bí mật |
+
+## 5. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|

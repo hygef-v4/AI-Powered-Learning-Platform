@@ -10,7 +10,7 @@
  | BankController --> BankItemService --> DefinitionValidator                 |
  |                        |          --> BankScopeGuard (U04)                 |
  |                        v                                                   |
- |                 BankItemRepository (PostgreSQL bank_items)                 |
+ |                 BankItemRepository (PostgreSQL questions, rubrics)         |
  | ImportController --> ImportService --> XlsxRowReader / CsvRowReader        |
  |                                    --> RowMapper --> BankItemService       |
  |                                    --> DocumentModelPort (U09, C)          |
@@ -18,7 +18,7 @@
  +----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `BankController`; `BankItemService` kiểm phạm vi qua U04, kiểm `definition` rồi lưu vào bảng `bank_items`. Nhập file đi qua `ImportController` và `ImportService`, đọc xlsx hoặc csv, ánh xạ từng dòng rồi dùng lại `BankItemService`; khung tài liệu kiểm qua U09. Các unit khác đọc phiên bản qua `BankQueryService` và tính điểm rubric qua `RubricScorer`.
+**Text alternative**: Chủ nhiệm môn và giảng viên thao tác qua `BankController`; `BankItemService` kiểm phạm vi qua U04, kiểm `definition` rồi lưu vào bảng `questions` hoặc `rubrics`. Nhập file đi qua `ImportController` và `ImportService`, đọc xlsx hoặc csv, ánh xạ từng dòng rồi dùng lại `BankItemService`; khung tài liệu kiểm qua U09. Các unit khác đọc phiên bản qua `BankQueryService` và tính điểm rubric qua `RubricScorer`.
 
 ## 2. Thành phần
 
@@ -28,7 +28,7 @@
 | `DefinitionValidator` | P2 |
 | `BankScopeGuard` | BR-U06-01…04 |
 | `ImportService`, `XlsxRowReader`, `CsvRowReader`, `RowMapper` | F6; P3 |
-| `BankQueryService` | F5, F7; P5, P6 |
+| `BankQueryService` | F5, F9; P5, P6 |
 | `RubricScorer` | P4 |
 
 ## 3. Cấu hình

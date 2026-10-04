@@ -4,7 +4,7 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Use-case catalog consolidated to 40 cases (`docs/use-case-table.md`); docs, Inception and Construction traces synchronized on 2026-10-01, including class-level groups, leader-managed group sections and the group-document REVIEW state. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
+- **Current Stage**: Use-case catalog has 40 cases (`docs/use-case-table.md`); docs, Inception and Construction re-synchronized on 2026-10-04: 24-table database from a 19-entity ERD (subject modules, announcement comments), job platform and project skeleton in U03 (wave 1 order U03 and U02 in parallel, then U01, then U04), five assignment types authored in U09, group documents without a REVIEW state, grading per the UC 33/34/17/35 changes. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
 - **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
 
 ## Workspace State
@@ -12,7 +12,7 @@
 - **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)
 - **Build System**: None yet (planned: Maven, npm)
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `D:\Github\AI-Powered-Learning-Platform`
+- **Workspace Root**: `C:\Users\admin\Documents\GitHub\AI-Powered-Learning-Platform`
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)
@@ -53,32 +53,45 @@
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
-| U01 Account & Access | Done | Approved | - |
-| U02 Audit, Job & Event | Done | Updated, re-approval needed | - |
-| U03 File & Artifact | Done | Approved | - |
-| U04 Subject, Class, Enrollment & Learning Access | Done | Approved | - |
-| U05 Content, Material & RAG | Done | Updated, re-approval needed | - |
-| U06 Rubric & Question Bank | Done | Approved | - |
-| U07 Payment & AI Credit | Done, AI/credit eligibility updated; packages traced to UC 23 | Updated, re-approval needed | - |
-| U08 Assessment Core & Publication | Done | Updated, re-approval needed | - |
-| U09 Question Type Authoring | Done | Approved | - |
-| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired | Updated, re-approval needed | - |
-| U11 Attempt & Submission | Done | Updated, re-approval needed | - |
-| U12 Group & Allocation | Done, groups moved to class level (2026-10-01) | Updated, re-approval needed | - |
-| U13 AI & Code Execution | Done | Updated, re-approval needed | - |
-| U14 Group Document & Submission | Done, `group_documents`, leader sections and REVIEW (2026-10-01) | Updated, re-approval needed | - |
-| U15 Grading | Done | Updated, re-approval needed | - |
-| U16 Reporting & Notification | Done | Updated, re-approval needed | - |
+| U01 Account & Access | Done, điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Updated, re-approval needed | - |
+| U02 Audit | Done; chỉ còn audit (`audit_logs`, UC 39); việc nền chuyển sang U03 (2026-10-04) | Updated, re-approval needed | - |
+| U03 File, Job & Event | Done; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Updated, re-approval needed | - |
+| U04 Subject, Class, Enrollment & Learning Access | Done, Chủ nhiệm môn quản lý lớp của môn như ADMIN; Subject Detail pages; Student lands on Student Menu (2026-10-03) | Updated, re-approval needed | - |
+| U05 Content, Material & RAG | Done; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Updated, re-approval needed | - |
+| U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Updated, re-approval needed | - |
+| U07 Payment & AI Credit | Done, credit packages and monthly grant are fixed configuration, no admin screen (2026-10-03) | Updated, re-approval needed | - |
+| U08 Assessment Core & Publication | Done; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Updated, re-approval needed | - |
+| U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Updated, re-approval needed | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired; owns UC 21 Manage Templates with create/AI draft/delete (2026-10-01) | Updated, re-approval needed | - |
+| U11 Attempt & Submission | Done; bảng `attempts` (2026-10-03) | Updated, re-approval needed | - |
+| U12 Group & Allocation | Done, groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Updated, re-approval needed | - |
+| U13 AI & Code Execution | Done; `ai_services`, `ai_suggestions` (2026-10-03) | Updated, re-approval needed | - |
+| U14 Group Document & Submission | Done; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Updated, re-approval needed | - |
+| U15 Grading | Done; bảng `evaluations` (2026-10-03) | Updated, re-approval needed | - |
+| U16 Reporting & Notification | Done, UC 18 View Statistics for Administrator, grade distribution on student Assignment List (2026-10-03) | Updated, re-approval needed | - |
 
 ## Open Items
 
-- Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm mỗi attempt Practice Text/Diagram Essay khi đủ credit; thiếu credit vẫn nộp nhưng không điểm AI và không chấm bù. Teacher chỉ chấm bài Graded.
-- Chính sách hoàn tiền credit AI chưa chốt. Tài liệu PayOS hiện công bố API hủy link chưa trả và API lệnh chi riêng, chưa thấy API đảo ngược trực tiếp một payment đã `PAID`; cần quyết định phạm vi, điều kiện thu hồi credit đã mua và cách chuyển tiền trước khi thiết kế luồng hoàn tiền.
-- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 là các mốc gộp). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
-- Critical path (by plan steps): U01 → U04 → U05 → U08 → U09 → U10 → U11 → U15 → U16.
+- Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm attempt Practice Text/Diagram Essay của mình: nộp không tự chấm, Student bấm "Chấm với AI" và cần đủ credit lúc bấm; thiếu credit thì mua thêm rồi bấm lại (cập nhật 2026-10-04). Teacher chỉ chấm bài Graded.
+- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 → 39 → 40 là các mốc gộp/tách). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
+- Critical path (by H edges, 2026-10-04): U02 hoặc U03 → U01 → U04 → U05 (hoặc U06) → U08 → U09 → U11 (hoặc U14) → U15 → U16. Waves: W1 U03 ∥ U02 → U01 → U04; W2 U05–U08, U12; W3 U09 (năm loại bài, UC 23–27), U11, U14, U15; W4 U10, U13, U16. U15 → U13 và U09 → U13 là `C`; U03 → U01, U02 là `C`.
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-04: CHAPTER đổi thành MODULE của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp kể cả lớp tạo sau dùng chung; mỗi module có nút tải tệp/gắn link; `lessons.class_id` phân biệt học liệu của môn và của lớp). UC 14 đổi thành Comment on Announcement: chỉ giảng viên đăng thông báo, sinh viên và giảng viên bình luận dưới thông báo (2 bình luận mới nhất, popup xem thêm, không thông báo); bỏ `class_discussions`, `discussion_posts`, thêm bảng nối `announcement_comments`. ERD 19 thực thể/31 quan hệ, database 24 bảng/36 khóa ngoại.
+- 2026-10-04: Việc nền, worker, RabbitMQ và sự kiện thông báo chuyển từ U02 sang U03 (U02 chỉ còn audit, U03 thành File, Job & Event); khung dự án chuyển từ plan U01 sang plan U03; thứ tự wave 1: U03 ∥ U02 → U01 → U04. Sửa thiết kế U01–U03, plan, port của các unit dùng việc nền, ma trận và hình phụ thuộc, uc-wave-map.
+- 2026-10-04: Wave mới theo dependency graph của người dùng; U09 chủ trì cả năm loại bài (UC 26 từ U13, UC 27 từ U14); U15 và U09 dùng U13 qua `C`. Đồng bộ unit-of-work, dependency (ma trận, wave, gate), story map, thiết kế và plan U09/U13/U14, uc-wave-map.
+- 2026-10-04: UC 33 chấm hàng loạt bằng AI, workspace có ‹ › và tự sang bài kế; UC 34 điểm khác AI không cần lý do; UC 16 người đang xem cũng thấy vòng chờ khi tự nộp; UC 17 tài liệu chung chấm như DOCUMENT, điểm đóng góp riêng từng thành viên mặc định bằng điểm tài liệu chung, lý do tùy chọn, nộp lại như lượt mới; UC 35 sinh viên xem điểm trên Assignment List, Gradebook gom theo sinh viên; UC 18 thống kê hiện ngay trên Admin Menu.
+- 2026-10-04: UC 16 bỏ trạng thái REVIEW và thông báo đọc lại; người giữ mục sửa trong popup che kín trang; sinh viên không sửa/xóa mục của giảng viên; trưởng nhóm nộp bất kỳ lúc nào trước hạn; hết hạn tự nộp gồm bản nháp của mục đang giữ, người đang sửa được chuyển sang Submitted Assignment; bỏ gợi ý nhả mục giữ lâu. UC 27 viết lại theo cách của UC 28. UC 40 chấm AI khi bấm nút, quá 5 phút báo lỗi; UC 29 hiện bài ngưng giao đã có điểm; UC 31 lượt gần nhất và nút chuyển lượt.
+- 2026-10-03 (lần 3): Rà soát đồng bộ docs ↔ aidlc, inception ↔ construction, giữa các unit; sửa 16 chỗ lệch (thanh toán bốn vai trò, `payment.paid` do U07 phát, component-methods, học liệu tải lên rồi quét trong FR/story/UC/business flow, UC 27 có Subject Manager qua template, bỏ rút template riêng, event `group.leader-requested`, port thiếu, truy vết UC 18). Thêm `construction/uc-wave-map.md` (40 UC theo wave và thứ tự code). Sau đó sửa mọi mục còn mở theo screen flow: UC 40 thành Grade with AI (Student, Teacher; popup U11 dùng cả ở Grading Workspace), Class Detail của Teacher là màn U04 nhúng panel U12, UC 35 gồm Gradebook của giảng viên, MVP không hoàn tiền, dời ô chồng ở business flow trang 1.
+- 2026-10-03 (lần 2): Theo review ERD: ERD conceptual `erd_new2` (20 thực thể, CHAPTER thay MODULE, nhóm thuộc lớp, GROUP_DOCUMENT, EVALUATION độc lập, RUBRIC, CLASS_DISCUSSION, ANNOUNCEMENT); database 25 bảng (chỉ quan hệ nhiều-nhiều có bảng nối: enrollments, group_members, assignment_questions, payments, discussion_posts) trong `docs/database.drawio`/`.md`/`.png`. Construction U01-U16 viết lại theo đúng bảng này: bỏ bảng job/outbox/artifact/ledger/publication/grade_history/email_outbox; học liệu = tải lên rồi quét; màn hình khớp screen flow (không sửa `screen-flow.drawio`). Requirements/stories/UC 11, 12 đồng bộ.
+- 2026-10-03: UC 18 thành View Statistics (Administrator: tài khoản theo role/trạng thái, môn, lớp, ghi danh; popup trên Admin Menu); bỏ dashboard Student, Student vào Student Menu; phân bố điểm ẩn danh hiện trên Assignment List (US-RPT-001 S3); US-RPT-002 viết lại. Chủ nhiệm môn quản lý lớp của môn như ADMIN (FR-003, US-CAT-001 S3, BR-U04-10/12). Gói credit và mức tặng cố định (UC 22, FR-021, US-AIG-003 S4, U07). Bỏ Administrator khỏi UC 36. Sửa ma trận phụ thuộc: bỏ U12→U08, U11→U10, U15→U10; U12 lên wave 1; vẽ lại unit-of-work-dependency.drawio/png. Đồng bộ frontend theo screen flow drawio (U01 popup, U13 AI Usage + AI Setting, U15 điểm trong Class Detail, U16 popup, U04 Subject Detail), port U06/U08. ERD: thêm `forming` vào erd_new2, thêm trang erd-database 19 bảng, viết lại erd.md (tên bảng còn khác Construction).
+- 2026-10-01 (lần 7): Tách bài nhóm khỏi Manage Assignments thành UC 27 Manage Group Assignment (Teacher: tạo, sửa, xem trước bài nhóm có rubric, mục chính, nhả khóa mục; phát hành khi nhóm hợp lệ); Manage Assignments thành UC 28, UC 28–39 cũ thành 29–40 (bảng 40 UC). Merged IDs: 27 = 25, 40; 28 = 32, 35, 41, 48–50. Legacy: UC-ASM-06, UC-GRP-05 → 27. Đánh số lại docs, Inception, Construction; tham chiếu bài nhóm giữ UC 27, phần còn lại sang UC 28. U14 chủ trì UC 16, 27; ma trận story: UC 27 = US-QBK-002, US-GRP-003. Lịch sử và audit giữ số cũ.
+- 2026-10-01 (lần 6): Bảng use case còn 39 UC: Create Assignment with AI gộp vào UC 27 Manage Assignments, Create Template with AI thành UC 21 Manage Templates (tạo thủ công hoặc bằng AI, sửa, xoá); UC 23–40 cũ thành 22–39. Đánh số lại toàn bộ docs, Inception và Construction (trừ audit và mục lịch sử). U10 chủ trì UC 21 (BR-U10-06, 07: bản nháp AI, xoá template), U13 chủ trì UC 22, 26 và cung cấp luồng AI cho UC 21, 27. FR-006/FR-027, US-ASM-009 (Scenario 3), đặc tả UC 27 và screen flow cập nhật theo.
+- 2026-10-01 (lần 5): BR-U01-48 đổi đích Teacher/Subject Manager thành `/teaching/classes` (route `ClassListPage` của U04). `screen-flow.md` gán mã mời và phân bố điểm cho `InviteCodeTab`/`GradeDistributionToggle` trên Class Detail của giảng viên theo U04 (người dùng chọn). Plan U09 Bước 6 thêm lấy khung từ ngân hàng; plan U09 cần duyệt lại.
+- 2026-10-01 (lần 4): Dashboard sinh viên (UC 18) gồm lớp đã ghi danh, bài sắp hạn, thông báo chưa đọc, trạng thái nộp và điểm đã công bố ở BR-U16-40, `StudentDashboard`, F6, frontend và plan U16, US-RPT-002. Thêm BR-U01-48: đăng nhập xong Student → `/learn/dashboard`, Teacher/Subject Manager → `/teaching/classes`, Admin → `/admin/accounts`. Plan U01 cần duyệt lại.
+- 2026-10-01 (lần 3): Thêm lại SEC-006 vào US-RPT-003 (lần sửa trước xóa nhầm); bỏ chữ "câu hỏi quiz" còn sót ở requirements, context diagram và US-AIG-002; persona Chủ nhiệm môn có xem/xuất bảng điểm (US-RPT-001, US-RPT-003). Theo quyết định của người dùng, giữ trang Dashboard riêng của sinh viên (UC 18, U16) làm trang đích: thêm ô Dashboard vào `screen-flow.drawio` và bảng `screen-flow.md` (93 ô).
+- 2026-10-01 (lần 2): Sửa theo báo cáo rà soát thứ hai. Sửa tiêu đề ERD 46 bảng, đầu các plan còn ghi 69 UC, thuật ngữ "sinh viên" trong docs, bỏ theo dõi `debug.log`, viết README gốc. Thêm event `group.document-review` (loại `GROUP_DOCUMENT_REVIEW`) và `group.leader-request-rejected` (loại `GROUP_LEADER_REQUEST_REJECTED`) vào U12/U14/U16. Theo quyết định của người dùng: Chủ nhiệm môn được xuất bảng điểm (FR-024, US-RPT-003); ngân hàng câu hỏi chứa câu hỏi của cả năm dạng bài, dùng trong UC 24–28 (bảng UC, FR-016, US-QBK-002, ma trận story ↔ UC, story map, U06/U08/U09). FR-010/FR-021 thêm gói credit và mức tặng. Bảng màn hình trong `screen-flow.md` dựng lại đúng 92 ô của `screen-flow.drawio`. Plan U06 cần duyệt lại.
 - 2026-10-01: Đồng bộ toàn bộ docs với bảng 40 use case: bỏ ghi chú bản nháp, thêm bảng Legacy UC codes, thay mã `UC-XXX-NN` trong thiết kế unit và code plan, viết lại story map/unit-of-work theo UC 1–40, sửa context diagram (Student mua credit), ERD 46 bảng (bỏ cột Simulation, thêm `grading_mode` và cột Practice, `group_documents`, nhóm theo lớp), nhãn Student/Teacher trong screen flow. Theo quyết định của người dùng: gói credit và mức tặng thuộc UC 23; phân bố điểm ẩn danh do giảng viên bật thuộc UC 36 (UC 18 giữ là UC của sinh viên); nhóm chia trong danh sách sinh viên của lớp, có chia ngẫu nhiên, bỏ dùng lại nhóm; giảng viên soạn mục chính, trưởng nhóm thêm/sửa/giao mục chi tiết; tài liệu nhóm vào `REVIEW` khi mọi mục xong rồi trưởng nhóm mới nộp; UC 25 ghi rõ tìm, nhập hàng loạt và dùng lại câu hỏi. Plan U12/U14 cần duyệt lại.
 - 2026-09-30: Bảng use case gộp còn 40 UC; đồng bộ đặc tả, README, business flow, screen flow, stories (ma trận story ↔ UC) và requirements.
 - 2026-09-29: Bảng use case gộp CRUD cùng actor: profile 07→06, account 09/11/12→08, subject 14/15→13, roster 23/24→22; đổi tên tất cả UC còn hiệu lực thành tối đa bốn từ. Còn 69 UC, 49 story; ID lịch sử không tái sử dụng.

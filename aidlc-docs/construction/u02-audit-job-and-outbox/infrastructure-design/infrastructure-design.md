@@ -1,50 +1,24 @@
-# U02 Audit, Job & Event - Infrastructure Design
+# U02 Audit - Infrastructure Design
 
-Hạ tầng chung ở `construction/shared-infrastructure.md`.
+Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [database](../../../../docs/database.md). RabbitMQ và worker thuộc U03.
 
 ## 1. Ánh xạ thành phần
 
 | Thành phần | Container |
 |---|---|
-| `JobEnqueueService`, `AuditStore`, `EventPublisherPort`, `JobStatusService`, `AuditQueryService` | `backend` |
-| `JobListener`, `JobClaimService`, `JobCompletionService`, `StuckJobSweeper` | `worker` |
-| Bảng `jobs`, `audit_events` | `postgres` |
-| Exchange, queue | `rabbitmq` |
+| `AuditStore`, `AuditQueryService`, `AuditController` | `backend` (và `worker` khi handler ghi audit) |
+| Bảng `audit_logs` | `postgres` |
 
 ## 2. PostgreSQL
 
 | Mục | Giá trị |
 |---|---|
-| User migration | `migrator`, chủ sở hữu schema, chỉ Flyway dùng lúc khởi động backend |
-| User ứng dụng | `app`, quyền `SELECT, INSERT, UPDATE, DELETE` trên bảng nghiệp vụ; riêng `audit_events` chỉ `SELECT, INSERT` |
-| Migration U02 | `V20260925_0900__u02_jobs_audit.sql`: bảng `jobs` (unique `(job_type, idempotency_key)`, index `(status, next_attempt_at)`, `lease_expires_at`), bảng `audit_events` + 4 index, `REVOKE UPDATE, DELETE, TRUNCATE ON audit_events FROM app` |
+| User migration | `migrator`, chủ sở hữu schema, chỉ Flyway dùng lúc khởi động backend (tạo trong khung dự án, plan U03) |
+| User ứng dụng | `app`, quyền `SELECT, INSERT, UPDATE, DELETE` trên bảng nghiệp vụ; riêng `audit_logs` chỉ `SELECT, INSERT` |
+| Migration U02 | `V20260925_0900__u02_audit_logs.sql`: bảng `audit_logs` (chưa có FK; migration `V20260925_0930__u01_accounts.sql` của U01 thêm FK `actor_id` → `accounts`) + index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app` |
 
-## 3. RabbitMQ
-
-| Mục | Giá trị |
-|---|---|
-| vhost | `/platform` |
-| User | `app` với quyền trên `/platform`; tắt `guest` |
-| Exchange | `jobs` (direct), `platform.events` (topic) durable; `platform.realtime` (fanout) do U14 khai báo |
-| Queue | 8 queue job durable do U02 khai báo: `jobs.scheduled`, `jobs.triggered`, `jobs.email` (priority), `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`; mỗi unit chỉ đăng ký `jobType` → queue (binding theo `jobType`). Queue nghe event `jobs.notification` do U16 khai báo |
-| Khai báo | Spring AMQP khai báo lúc khởi động bằng `Declarables`; không cấu hình tay |
-| Management UI | Cổng 15672 chỉ trên mạng `internal`, vào qua SSH tunnel |
-
-## 4. Worker
-
-| Mục | Giá trị |
-|---|---|
-| Image | Cùng image backend, biến `SPRING_PROFILES_ACTIVE=worker` |
-| Giới hạn | 0.5 CPU, 768 MB (như shared-infrastructure) |
-| Mạng | Chỉ `internal` |
-| Healthcheck | `/health` kiểm PostgreSQL, RabbitMQ |
-| Số instance | 1 |
-
-## 5. Compliance
+## 3. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
-| SECURITY-09 | Compliant | Tắt `guest`, user riêng, `app` không sửa được audit |
-| RESILIENCY-04 | Compliant | Worker deploy cùng Compose, rollback theo tag |
-| RESILIENCY-06 | Compliant | Healthcheck worker |
 | Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |

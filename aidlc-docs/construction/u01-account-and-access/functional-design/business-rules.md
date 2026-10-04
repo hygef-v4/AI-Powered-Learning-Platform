@@ -8,7 +8,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
-| BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình `u01.allowedEmailDomains` (`app_settings`); sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
+| BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình triển khai `U01_ALLOWED_EMAIL_DOMAINS`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
 | BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 6, UC 7 |
 
 ## 2. Kích hoạt
@@ -18,7 +18,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 7 |
 | BR-U01-11 | OTP kích hoạt chỉ được gửi khi người dùng tự yêu cầu từ liên kết "Kích hoạt tài khoản lần đầu". Admin không có thao tác gửi OTP. | US-IAM-001, Câu hỏi FU3 |
 | BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING`. | US-IAM-001 S2 |
-| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa OTP, ghi audit. Không tự đăng nhập; người dùng đăng nhập lại. | US-IAM-001 S1 |
+| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa ticket, ghi audit, rồi **tự đăng nhập**: tạo phiên như đăng nhập (BR-U01-44) và đưa người dùng tới menu theo role (BR-U01-48). Đặt lại mật khẩu (UC 4) không tự đăng nhập. | US-IAM-001 S1; người dùng chốt 2026-10-04 |
 
 ## 3. OTP (kích hoạt và đặt lại)
 
@@ -31,6 +31,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-24 | OTP dùng một lần; xóa ngay khi dùng thành công. | component-methods |
 | BR-U01-25 | Yêu cầu gửi OTP bị giới hạn tần suất theo email và theo client; vượt giới hạn thì không gửi nhưng vẫn trả phản hồi trung tính. | US-IAM-001 S3 |
 | BR-U01-26 | OTP của mục đích này không dùng được cho mục đích kia. | Thiết kế |
+| BR-U01-28 | Nhập OTP và đặt mật khẩu là hai bước: người dùng nhập OTP trước; chỉ khi OTP đúng hệ thống mới xóa challenge, cấp `otpTicket` (dùng một lần, 10 phút, gắn tài khoản và mục đích) và mở bước nhập mật khẩu mới. Mật khẩu không đạt chính sách thì nhập lại với cùng ticket; ticket hết hạn phải xin OTP mới. | Người dùng chốt 2026-10-03 |
 | BR-U01-27 | OTP không xuất hiện trong log, audit, phản hồi API hay màn hình admin. | SECURITY-03 |
 
 ## 4. Mật khẩu
@@ -56,6 +57,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
 | BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
+| BR-U01-48 | Đăng nhập thành công trả điểm đến theo role, đúng các menu nối từ Login trên screen flow: `STUDENT` → `/learning` (Student Menu: `MyClassesPage`, U04), `TEACHER` và `SUBJECT_MANAGER` → `/teaching` (Teacher Menu: danh sách lớp đang dạy, U04), `ADMIN` → `/admin` (Admin Menu: thống kê UC 18 hiện ngay trên trang, U16, cùng các nút tới Account List, Subject List, Class List, AI Usage, Audit Log). | docs/screen-flow.md |
 
 ## 6. Hồ sơ
 
