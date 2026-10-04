@@ -7,7 +7,7 @@
 
 ## F2 - Gửi email
 1. Handler `EMAIL_SEND`: chỉ gửi khi `email_status IN ('QUEUED','DEFERRED')`; `INCR email:daily-count:{yyyyMMdd}`; hết trần → `DEFERRED` (BR-U16-12).
-2. Còn trần: tra email (U01), render mẫu tiếng Việt, gửi SMTP (Gmail/Mailpit) → `SENT`; lỗi tạm → retry qua queue `jobs.retry.*` của U03, quá 5 lần → `FAILED` (BR-U16-14).
+2. Còn trần: tra email (U01), render mẫu tiếng Việt, gửi SMTP (Brevo/Mailpit) → `SENT`; lỗi tạm → retry qua queue `jobs.retry.*` của U03, quá 5 lần → `FAILED` (BR-U16-14).
 3. `EmailDeferredScanner` lúc 00:05 chuyển `DEFERRED` → `QUEUED` theo ưu tiên, thời điểm tạo và gửi lại việc; `PendingSweeper` gửi lại việc cho dòng `QUEUED` quá 5 phút.
 
 ## F3 - Nhắc hạn nộp

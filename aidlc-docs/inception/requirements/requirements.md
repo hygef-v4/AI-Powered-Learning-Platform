@@ -422,7 +422,7 @@ Không có multi-zone, auto-scaling, backup, DR, runbook failover, chaos testing
 
 ### REL-005 - Không phát sinh chi phí
 
-Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Gmail SMTP (App Password) khi demo.
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP khi demo/production (trong hạn mức gói miễn phí).
 
 Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): ưu tiên gói miễn phí, được phép tốn ít chi phí nhưng phải có trần quota/chi phí và kill-switch theo FR-021.
 
@@ -443,7 +443,7 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 - Triển khai đợt đầu ưu tiên local container.
 - MVP phải có test tự động (bao gồm unit test, integration test, system test, e2e test), tài liệu chạy và khả năng triển khai thử nghiệm.
 - Quản trị quy trình AI-DLC: Repository phải duy trì state tracking, audit trail, requirements, user stories, thiết kế, kế hoạch code, kết quả kiểm thử và các checkpoint phê duyệt trong `aidlc-docs/`; mã nguồn ứng dụng không được đặt trong thư mục này.
-- Nhà cung cấp được chọn ở Construction: Gemini (AI), PayOS (thanh toán), SMTP Gmail App Password/Mailpit (email), Google Shared Drive (file), PostgreSQL + pgvector (database), VPS chạy Docker Compose (xem `construction/shared-infrastructure.md`).
+- Nhà cung cấp được chọn ở Construction: Gemini (AI), PayOS (thanh toán), Brevo SMTP/Mailpit (email), Google Shared Drive (file), PostgreSQL + pgvector (database), VPS chạy Docker Compose (xem `construction/shared-infrastructure.md`).
 
 ## 10. Tiêu chí thành công của MVP
 

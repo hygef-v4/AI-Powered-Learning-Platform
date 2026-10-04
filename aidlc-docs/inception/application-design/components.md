@@ -51,7 +51,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 | Code Runner Port | Judge0 CE 1.13.1 tự chạy trong mạng `sandbox` |
 | Payment Provider Port | PayOS; adapter giả cho local |
 | YouTube Port | YouTube Data API v3 + đọc caption công khai |
-| Mail Port | SMTP Gmail (App Password) khi demo, Mailpit khi dev |
+| Mail Port | Brevo SMTP khi demo/production, Mailpit khi dev |
 | Cache/Session Port | Redis |
 | Message Broker Port | RabbitMQ (`jobs.*`, `platform.events`, `platform.realtime`) |
 

@@ -6,7 +6,7 @@
 |---|---|---|
 | NFR-U16-01 | Thông báo trong app xuất hiện ≤ 5 s sau khi nghiệp vụ commit. | BR-U16-04 |
 | NFR-U16-02 | Một event cho lớp 200 người tạo xong thông báo ≤ 5 s (INSERT theo lô). | BR-U16-01 |
-| NFR-U16-03 | Gửi email tối đa 1 email/giây (tránh Gmail chặn), trong trần 300/ngày. | BR-U16-12 |
+| NFR-U16-03 | Gửi email tối đa 1 email/giây (giới hạn tốc độ ở ứng dụng), trong trần thông báo 300/ngày (cấu hình). Trần phải phù hợp quota Brevo và chừa dung lượng cho OTP dùng chung tài khoản, theo shared-infrastructure §8. | BR-U16-12 |
 | NFR-U16-04 | Báo cáo tiến độ 200 người p95 ≤ 1 s. | BR-U16-30 |
 | NFR-U16-05 | Thống kê quản trị và phân bố điểm p95 ≤ 1 s; xuất bảng điểm lớp 200 người × 30 bài p95 ≤ 5 s khi dữ liệu nguồn bình thường. | US-RPT-002, 003 |
 

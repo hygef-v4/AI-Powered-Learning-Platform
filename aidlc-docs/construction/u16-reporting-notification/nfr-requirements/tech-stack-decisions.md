@@ -2,7 +2,7 @@
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Email | Spring `JavaMailSender` (SMTP Gmail App Password; Mailpit khi dev), timeout 10 s | Như U01 |
+| Email | Spring `JavaMailSender` (Brevo SMTP; Mailpit khi dev), timeout 10 s | Như U01 |
 | Mẫu email | Thymeleaf text/HTML, tiếng Việt | Escape mặc định |
 | Realtime | SSE dùng chung `SseHub` (U14) với kênh theo người dùng | Không thêm hạ tầng |
 | Lịch | `ScheduledScanner` của U03 (nhắc hạn mỗi phút, xếp lại email dời, dọn dẹp) và queue `jobs.email` | Dùng lại U03, không cần bảng job |

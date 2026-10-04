@@ -99,7 +99,7 @@ PostgreSQL `notifications` (kèm `email_status`); cột `accounts.email_preferen
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 23** - Cập nhật `README.md`: cấu hình SMTP (Gmail App Password, Mailpit), trần email, cách unit khác phát event để có thông báo.
+- [ ] **Bước 23** - Cập nhật `README.md`: cấu hình SMTP (Brevo SMTP, Mailpit), trần email, cách unit khác phát event để có thông báo.
 - [ ] **Bước 24** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết

@@ -37,7 +37,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/demo dùng Mailpit, không gửi mail thật. Khi demo dùng Gmail SMTP với App Password (miễn phí, ~500 mail/ngày), cấu hình bằng biến môi trường. | Câu N8, NFR-005 |
+| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/test dùng Mailpit, không gửi mail thật. Demo/production dùng Brevo SMTP với SMTP login và SMTP key, cấu hình bằng biến môi trường; không dùng API key cho SMTP. | Câu N8, NFR-005 |
 | NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì message retry tối đa 5 lần với backoff tăng dần qua queue retry của U03; hết lượt thì ghi log ERROR, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
 | NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-005 |
 

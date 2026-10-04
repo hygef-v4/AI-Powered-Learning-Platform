@@ -3353,3 +3353,11 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: User approved the previously proposed list of 15 key use cases. Documentation-only update.
 
 ---
+
+## Documentation update - Brevo email provider
+**Timestamp**: 2026-10-04T15:02:52Z
+**User Input**: "giúp tôi sửa aidlc doc hiện tại thành brevo"
+**AI Response**: Updated current Inception and Construction email provider decisions from Gmail SMTP to Brevo SMTP, retaining Mailpit for local/test. Synchronized U01/U16 requirements, design, infrastructure and code-generation references; documented SMTP credentials, STARTTLS, sender verification and shared provider quota for OTP/notifications.
+**Context**: User-authorized documentation-only provider change. Historical audit entries and original question options preserved. No application code generated; existing code-generation checkpoints unchanged.
+
+---

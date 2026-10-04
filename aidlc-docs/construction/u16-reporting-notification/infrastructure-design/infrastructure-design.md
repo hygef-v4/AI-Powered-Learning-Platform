@@ -9,7 +9,7 @@
 | Bảng `notifications`; cột `accounts.email_preferences` (U01 tạo bảng), `assignments.reminder_sent_at` (U08 tạo bảng) | `postgres` |
 | Bộ đếm trần email | `redis`, khóa `email:daily-count:{yyyyMMdd}` (TTL 48 giờ) |
 | RabbitMQ | queue `jobs.notification` (U16 khai báo) bind `platform.events` với `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`; việc `EMAIL_SEND` trên `jobs.email` (priority queue); nhắc hạn, email dời và dọn dẹp chạy bằng `ScheduledScanner`; phát realtime qua fanout `platform.realtime` |
-| SMTP | Gmail `smtp.gmail.com:587` STARTTLS (App Password) khi demo; `mailpit:1025` khi dev |
+| SMTP | Brevo `smtp-relay.brevo.com:587` STARTTLS (SMTP login + SMTP key) khi demo/production; `mailpit:1025` khi dev |
 
 - Dùng chung fanout `platform.realtime` với U14; `SseHub` phân kênh theo khóa: `groupDocumentId` (tài liệu nhóm U14) và `accountId` (U16).
 

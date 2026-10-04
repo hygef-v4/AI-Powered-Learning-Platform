@@ -11,7 +11,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 | Bảng `accounts` (gồm cột số dư credit do U07 ghi, `email_preferences` do U16 ghi) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |
 | Việc nền | Message RabbitMQ gửi sau commit, không có bảng job | U03 sở hữu |
-| Gửi mail | SMTP bên ngoài ở production; Mailpit ở local | Cấu hình `SMTP_*` |
+| Gửi mail | Brevo SMTP ở demo/production; Mailpit ở local/test | Cấu hình `SMTP_*` |
 
 ## 2. RabbitMQ
 
