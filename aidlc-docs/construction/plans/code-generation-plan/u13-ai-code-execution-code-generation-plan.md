@@ -1,6 +1,8 @@
 # U13 AI & Code Execution - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U13. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -50,12 +52,12 @@ PostgreSQL `ai_services`, `ai_suggestions`; kết quả chạy code ghi vào `at
     worker/             AiTaskHandler, CodeRunHandler, AiPendingSweeper, CreditReservationScanner
     port/               AiDraftPort, AiGradingPort, PracticeGradingPort, CodeRunPort, CodeLabCheckPort,
                         AiUsagePort, CreditUsagePort
-/backend/src/main/resources/db/migration/u13/
+/backend/src/main/resources/db/migration/aiexecution/
 /infra/judge0/judge0.conf
 /frontend/src/shared/ai/        AiDraftDialog
 /frontend/src/shared/codelab/   CodeEditor, CodeRunResult, VerifySolutionButton
 /frontend/src/app/admin/ai/     AiUsagePage, AiSettingsDialog
-/contracts/openapi/u13-ai-code.yaml
+/contracts/openapi/ai-execution.yaml
 ```
 
 ## 3. Các bước
@@ -89,12 +91,12 @@ PostgreSQL `ai_services`, `ai_suggestions`; kết quả chạy code ghi vào `at
 
 - [ ] **Bước 16** - Flyway `V20260925_2000__u13_ai.sql` theo `infrastructure-design.md` §4 (seed `GLOBAL` với trần 2 USD và 6 loại việc; partial unique `PRACTICE_ATTEMPT` theo trạng thái hợp lệ).
 - [ ] **Bước 17** - JPA repository.
-- [ ] **Bước 18** - Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày và quota Gemini báo "Hệ thống đang bận"; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED` và trả credit rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn.
+- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày và quota Gemini báo "Hệ thống đang bận"; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED` và trả credit rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn.
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm E - API
 
-- [ ] **Bước 20** - `/contracts/openapi/u13-ai-code.yaml` (U13 không phát event).
+- [x] **Bước 20** - `/contracts/openapi/ai-execution.yaml` (U13 không phát event).
 - [ ] **Bước 21** - Controller + DTO + validation.
 - [ ] **Bước 22** - Test MockMvc: Student chỉ xem kết quả AI Practice của chính mình, không gọi task AI khác hoặc đọc đề xuất của Teacher; Code Lab `TRY` dùng Judge0 không trừ credit; không phải ADMIN không sửa cấu hình; `TRY` quá 5/phút `429`.
 - [ ] **Bước 23** - Tóm tắt: `code/api-summary.md`.

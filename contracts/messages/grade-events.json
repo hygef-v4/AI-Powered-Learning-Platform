@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/grade-events.json",
+  "title": "U15 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "grade.published": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assignmentId",
+        "classId",
+        "accountIds"
+      ],
+      "properties": {
+        "assignmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "accountIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "description": "Điểm được công bố cho người học (nguồn U15)"
+    }
+  }
+}

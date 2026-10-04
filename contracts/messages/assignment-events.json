@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/assignment-events.json",
+  "title": "U08 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "assignment.opened": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assignmentId",
+        "classId"
+      ],
+      "properties": {
+        "assignmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "description": "Bài tập chuyển sang OPEN (nguồn U08)"
+    }
+  }
+}

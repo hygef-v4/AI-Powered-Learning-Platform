@@ -1,0 +1,804 @@
+openapi: 3.1.0
+info:
+  title: U01 - Account & Access
+  version: 1.0.0
+  description: 'Đăng nhập, kích hoạt bằng OTP, đặt lại mật khẩu, hồ sơ và quản trị tài khoản. Đăng nhập thành công đặt cookie
+    `access_token` (Path=/api) và `refresh_token` (Path=/api/v1/auth/refresh, SameSite=Strict). Thông báo lỗi xác thực không
+    tiết lộ tài khoản có tồn tại hay không.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U01 Account & Access
+  description: Đăng nhập, kích hoạt bằng OTP, đặt lại mật khẩu, hồ sơ và quản trị tài khoản.
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: authenticate
+      summary: Đăng nhập
+      description: Mọi thất bại trả 401 với cùng một thông điệp.
+      x-roles: &id001 []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+                password:
+                  type: string
+                  maxLength: 128
+              required:
+              - email
+              - password
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/refresh:
+    post:
+      operationId: refreshSession
+      summary: Làm mới phiên bằng cookie refresh_token
+      x-roles: *id001
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      summary: Đăng xuất phiên hiện tại
+      x-roles: &id002
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      responses:
+        '204':
+          description: Thành công
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/activation/request-otp:
+    post:
+      operationId: requestActivation
+      summary: Gửi OTP kích hoạt
+      description: Luôn trả 202 với cùng thông điệp, kể cả email không hợp lệ.
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+              required:
+              - email
+      responses:
+        '202':
+          description: Thành công
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/activation/verify-otp:
+    post:
+      operationId: verifyActivationOtp
+      summary: Xác minh OTP kích hoạt
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+                otpCode:
+                  type: string
+                  pattern: ^[0-9]{6}$
+              required:
+              - email
+              - otpCode
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  otpTicket:
+                    type: string
+                required:
+                - otpTicket
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/activation/complete:
+    post:
+      operationId: activateAccount
+      summary: Đặt mật khẩu và kích hoạt; tạo phiên
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otpTicket:
+                  type: string
+                newPassword:
+                  type: string
+                  maxLength: 128
+              required:
+              - otpTicket
+              - newPassword
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/password-reset/request-otp:
+    post:
+      operationId: requestPasswordReset
+      summary: Gửi OTP đặt lại mật khẩu
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+              required:
+              - email
+      responses:
+        '202':
+          description: Thành công
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/password-reset/verify-otp:
+    post:
+      operationId: verifyPasswordResetOtp
+      summary: Xác minh OTP đặt lại mật khẩu
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+                otpCode:
+                  type: string
+                  pattern: ^[0-9]{6}$
+              required:
+              - email
+              - otpCode
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  otpTicket:
+                    type: string
+                required:
+                - otpTicket
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/auth/password-reset/complete:
+    post:
+      operationId: resetPassword
+      summary: Đặt mật khẩu mới; thu hồi mọi phiên
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otpTicket:
+                  type: string
+                newPassword:
+                  type: string
+                  maxLength: 128
+              required:
+              - otpTicket
+              - newPassword
+      responses:
+        '204':
+          description: Thành công
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      security: []
+      tags:
+      - U01 Account & Access
+  /api/v1/me/profile:
+    get:
+      operationId: getProfile
+      summary: Hồ sơ của tôi
+      x-roles: *id002
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U01 Account & Access
+    patch:
+      operationId: updateProfile
+      summary: Sửa hồ sơ
+      x-roles: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  maxLength: 150
+                phoneNumber:
+                  type:
+                  - string
+                  - 'null'
+                  pattern: ^\+?[0-9]{8,15}$
+                avatarFileRef:
+                  type:
+                  - string
+                  - 'null'
+                  description: FileRef từ POST /api/v1/files (purpose AVATAR); null để gỡ ảnh.
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+      tags:
+      - U01 Account & Access
+  /api/v1/me/password:
+    post:
+      operationId: changePassword
+      summary: Đổi mật khẩu; đăng xuất các thiết bị khác
+      x-roles: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                  maxLength: 128
+                newPassword:
+                  type: string
+                  maxLength: 128
+              required:
+              - currentPassword
+              - newPassword
+      responses:
+        '204':
+          description: Thành công
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      tags:
+      - U01 Account & Access
+  /api/v1/me/avatar/download:
+    get:
+      operationId: getAvatarDownload
+      summary: URL tải ảnh đại diện (token 5 phút)
+      x-roles: *id002
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLink'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts:
+    get:
+      operationId: listAccounts
+      summary: Danh sách tài khoản
+      x-roles: &id003
+      - ADMIN
+      parameters:
+      - name: email
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: role
+        in: query
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/Role
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id004
+          - PENDING
+          - ACTIVE
+          - DISABLED
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./common.yaml#/components/schemas/PageMeta
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Account'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U01 Account & Access
+    post:
+      operationId: createAccount
+      summary: Tạo tài khoản PENDING (không gửi mail)
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+                displayName:
+                  type: string
+                  maxLength: 150
+                role:
+                  $ref: ./common.yaml#/components/schemas/Role
+              required:
+              - email
+              - displayName
+              - role
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts/{accountId}:
+    get:
+      operationId: getAccount
+      summary: Chi tiết tài khoản
+      x-roles: *id003
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts/{accountId}/role:
+    put:
+      operationId: assignRole
+      summary: Đổi vai trò
+      description: 422 `ROLE_DOWNGRADE_BLOCKED` kèm `subjects`/`classes` còn phụ trách; không tự hạ quyền mình.
+      x-roles: *id003
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: ./common.yaml#/components/schemas/Role
+              required:
+              - role
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts/{accountId}/status:
+    put:
+      operationId: changeAccountStatus
+      summary: Vô hiệu hóa hoặc mở lại
+      description: 422 `LAST_ADMIN` khi vô hiệu hóa admin cuối cùng; không tự vô hiệu hóa mình.
+      x-roles: *id003
+      parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - ACTIVE
+                  - DISABLED
+              required:
+              - status
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts/imports:validate:
+    post:
+      operationId: validateAccountImport
+      summary: Kiểm tra CSV (không ghi)
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+      tags:
+      - U01 Account & Access
+  /api/v1/admin/accounts/imports:commit:
+    post:
+      operationId: commitAccountImport
+      summary: Kiểm lại và tạo các dòng hợp lệ
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+      tags:
+      - U01 Account & Access
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    SessionInfo:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        role:
+          $ref: ./common.yaml#/components/schemas/Role
+        homePath:
+          type: string
+          enum:
+          - /learning
+          - /teaching
+          - /admin
+      required:
+      - accountId
+      - displayName
+      - role
+      - homePath
+    Profile:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        schoolEmail:
+          type: string
+        displayName:
+          type: string
+        role:
+          $ref: ./common.yaml#/components/schemas/Role
+        phoneNumber:
+          type:
+          - string
+          - 'null'
+        hasAvatar:
+          type: boolean
+      required:
+      - accountId
+      - schoolEmail
+      - displayName
+      - role
+      - hasAvatar
+    Account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        schoolEmail:
+          type: string
+        displayName:
+          type: string
+        role:
+          $ref: ./common.yaml#/components/schemas/Role
+        status:
+          type: string
+          enum: *id004
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - accountId
+      - schoolEmail
+      - displayName
+      - role
+      - status
+      - createdAt
+    DownloadLink:
+      type: object
+      properties:
+        url:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+      - url
+      - expiresAt
+    ImportResult:
+      type: object
+      properties:
+        validCount:
+          type: integer
+        errorCount:
+          type: integer
+        createdCount:
+          type: integer
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportRow'
+      required:
+      - validCount
+      - errorCount
+      - rows
+    ImportRow:
+      type: object
+      properties:
+        lineNo:
+          type: integer
+        email:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+        result:
+          type: string
+          enum:
+          - VALID
+          - CREATED
+          - ERROR
+        reason:
+          type: string
+      required:
+      - lineNo
+      - email
+      - result

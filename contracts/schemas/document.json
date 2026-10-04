@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/schemas/document.json",
+  "title": "Document",
+  "description": "Mô hình tài liệu dùng chung (U09 §4): khung Diagram Essay/bài nhóm, bài làm DOCUMENT (U11), tài liệu nhóm (U14), câu DOCUMENT trong ngân hàng (U06). H1-H6 tạo cây cha-con; heading nhỏ nhất của mỗi nhánh là một phần (BR-U09-25). Block TEACHER bị khóa với người học.",
+  "$ref": "#/$defs/document",
+  "$defs": {
+    "origin": {
+      "enum": [
+        "TEACHER",
+        "STUDENT"
+      ]
+    },
+    "diagramType": {
+      "enum": [
+        "USE_CASE",
+        "CLASS",
+        "SEQUENCE",
+        "ACTIVITY",
+        "ER",
+        "COMPONENT",
+        "STATE",
+        "OTHER"
+      ]
+    },
+    "textRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "boolean"
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blocks"
+      ],
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        }
+      }
+    },
+    "skeleton": {
+      "description": "DocumentSkeleton (U09 §3): toàn bộ block có origin TEACHER.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blocks",
+        "contentHash"
+      ],
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "sourceDocxName": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "contentHash": {
+          "type": "object",
+          "description": "blockId → SHA-256 của block, phát hiện block khóa bị sửa.",
+          "propertyNames": {
+            "format": "uuid"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "skeletonPart": {
+      "description": "Phần tử của config.parts[] (U09 §3).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "partId",
+        "headingBlockId",
+        "title"
+      ],
+      "properties": {
+        "partId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "headingBlockId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ancestorHeadingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "title": {
+          "type": "string",
+          "description": "Đường dẫn tiêu đề, ví dụ \"H1 › H2.1 › H3.1\"."
+        },
+        "rubricId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Bắt buộc khi duyệt."
+        }
+      }
+    },
+    "block": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/headingBlock"
+        },
+        {
+          "$ref": "#/$defs/paragraphBlock"
+        },
+        {
+          "$ref": "#/$defs/listBlock"
+        },
+        {
+          "$ref": "#/$defs/tableBlock"
+        },
+        {
+          "$ref": "#/$defs/imageBlock"
+        },
+        {
+          "$ref": "#/$defs/diagramBlock"
+        }
+      ]
+    },
+    "headingBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "style",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "HEADING"
+        },
+        "style": {
+          "enum": [
+            "TITLE",
+            "SUBTITLE",
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "paragraphBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "runs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "PARAGRAPH"
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/textRun"
+          }
+        }
+      }
+    },
+    "listBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "ordered",
+        "items"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "LIST"
+        },
+        "ordered": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "runs",
+              "level"
+            ],
+            "properties": {
+              "runs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/textRun"
+                }
+              },
+              "level": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              }
+            }
+          }
+        }
+      }
+    },
+    "tableBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "rows",
+        "headerRow"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "TABLE"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/textRun"
+              }
+            }
+          }
+        },
+        "headerRow": {
+          "type": "boolean"
+        }
+      }
+    },
+    "imageBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "fileId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "IMAGE"
+        },
+        "fileId": {
+          "type": "string",
+          "description": "File U03 purpose DOCUMENT_IMAGE."
+        },
+        "alt": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "diagramBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "diagramType",
+        "xml",
+        "svgPreview"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/origin"
+        },
+        "type": {
+          "const": "DIAGRAM"
+        },
+        "diagramType": {
+          "$ref": "#/$defs/diagramType"
+        },
+        "xml": {
+          "type": "string",
+          "description": "mxfile Draw.io đầy đủ."
+        },
+        "svgPreview": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

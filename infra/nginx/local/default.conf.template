@@ -1,0 +1,8 @@
+# Local/test: không TLS (NFR-005).
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    include /etc/nginx/snippets/security-headers.conf;
+    include /etc/nginx/snippets/locations.conf;
+}

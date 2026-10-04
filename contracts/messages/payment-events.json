@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/payment-events.json",
+  "title": "U07 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "payment.paid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paymentId",
+        "accountId",
+        "credits"
+      ],
+      "properties": {
+        "paymentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "accountId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "credits": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "description": "Thanh toán PayOS thành công, đã cộng credit (nguồn U07)"
+    }
+  }
+}

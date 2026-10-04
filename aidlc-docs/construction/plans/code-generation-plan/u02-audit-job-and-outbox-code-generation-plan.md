@@ -3,6 +3,8 @@
 > Plan này là nguồn duy nhất cho Code Generation của U02. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > Cập nhật 2026-10-04: việc nền, worker, RabbitMQ và sự kiện thông báo chuyển sang U03; U02 chỉ còn audit. Đánh số bước lại.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -37,9 +39,9 @@ PostgreSQL `audit_logs`.
     infrastructure/     JPA repository
     port/               AuditPort, AuditQueryPort, AuthorizationPort
     adapter/fake/       FakeAuthorizationPort (từ chối)
-/backend/src/main/resources/db/migration/u02/
+/backend/src/main/resources/db/migration/audit/
 /frontend/src/app/admin/audit/
-/contracts/openapi/u02-audit.yaml
+/contracts/openapi/audit.yaml
 ```
 
 ## 3. Các bước
@@ -62,12 +64,12 @@ PostgreSQL `audit_logs`.
 
 - [ ] **Bước 8** - Flyway `V20260925_0900__u02_audit_logs.sql`: bảng `audit_logs` + 4 index (`occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`), `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app`. U02 code trước U01 nên chưa tạo FK `actor_id`; migration `accounts` của U01 (`V20260925_0930`) thêm FK `actor_id` → `accounts`.
 - [ ] **Bước 9** - JPA repository.
-- [ ] **Bước 10** - Integration test Testcontainers (PostgreSQL): audit trùng `id`, rollback vẫn còn `DENIED`/`FAILURE`, `app` không UPDATE/DELETE được `audit_logs` (NFR-U02-50).
+- [ ] **Bước 10** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL): audit trùng `id`, rollback vẫn còn `DENIED`/`FAILURE`, `app` không UPDATE/DELETE được `audit_logs` (NFR-U02-50).
 - [ ] **Bước 11** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 12** - `/contracts/openapi/u02-audit.yaml` (`GET /api/v1/admin/audit-logs`).
+- [x] **Bước 12** - `/contracts/openapi/audit.yaml` (`GET /api/v1/admin/audit-logs`).
 - [ ] **Bước 13** - Controller + DTO + validation bộ lọc.
 - [ ] **Bước 14** - Test MockMvc, gồm từ chối người không phải ADMIN, không có endpoint sửa/xóa audit.
 - [ ] **Bước 15** - Tóm tắt: `code/api-summary.md`.

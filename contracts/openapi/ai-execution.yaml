@@ -1,0 +1,553 @@
+openapi: 3.1.0
+info:
+  title: U13 - AI & Code Execution
+  version: 1.0.0
+  description: 'Đề xuất AI (poll trạng thái, nhận/bỏ), chạy code Judge0, thống kê và cấu hình AI cho ADMIN. Chấm AI của giảng
+    viên gửi qua U15; Practice qua U11; AI soạn khung qua U09.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U13 AI & Code Execution
+  description: Đề xuất AI (poll trạng thái, nhận/bỏ), chạy code Judge0, thống kê và cấu hình AI cho ADMIN.
+paths:
+  /api/v1/ai/question-drafts:
+    post:
+      operationId: requestQuestionDraft
+      summary: AI đề xuất câu cho Question Bank/Template
+      x-roles: &id001
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetType:
+                  type: string
+                  enum:
+                  - BANK
+                  - TEMPLATE
+                targetId:
+                  type: string
+                  format: uuid
+                questionType:
+                  type: string
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                difficulty:
+                  type: string
+                moduleIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                lessonIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                note:
+                  type: string
+                  maxLength: 1000
+              required:
+              - targetType
+              - targetId
+              - questionType
+              - count
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestion'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/ai-suggestions/{suggestionId}:
+    get:
+      operationId: getSuggestion
+      summary: Trạng thái và kết quả đề xuất
+      x-roles: &id002
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: suggestionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestion'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/ai-suggestions:
+    get:
+      operationId: listSuggestions
+      summary: Nhiều đề xuất (theo dõi lô chấm)
+      x-roles: *id001
+      parameters:
+      - name: ids
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Suggestion'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/ai-suggestions/{suggestionId}/accept:
+    post:
+      operationId: acceptSuggestion
+      summary: Nhận câu đề xuất đã chọn
+      x-roles: *id001
+      parameters:
+      - name: suggestionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selectedIndexes:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestion'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/ai-suggestions/{suggestionId}/discard:
+    post:
+      operationId: discardSuggestion
+      summary: Bỏ đề xuất
+      x-roles: *id001
+      parameters:
+      - name: suggestionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestion'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/code-runs:
+    post:
+      operationId: createCodeRun
+      summary: Chạy thử (TRY, người học) hoặc kiểm lời giải mẫu (VERIFY)
+      description: 'TRY: chỉ test công khai, 5 lần/phút.'
+      x-roles: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                properties:
+                  kind:
+                    const: TRY
+                  attemptId:
+                    type: string
+                    format: uuid
+                  files:
+                    type: object
+                    additionalProperties:
+                      type: string
+                required:
+                - kind
+                - attemptId
+                - files
+              - type: object
+                properties:
+                  kind:
+                    const: VERIFY
+                  questionId:
+                    type: string
+                    format: uuid
+                required:
+                - kind
+                - questionId
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRun'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/code-runs/{runId}:
+    get:
+      operationId: getCodeRun
+      summary: Kết quả chạy
+      x-roles: *id002
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRun'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/admin/ai/usage:
+    get:
+      operationId: getAiUsage
+      summary: Thống kê AI theo ngày/việc/model
+      x-roles: &id003
+      - ADMIN
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiUsageRow'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U13 AI & Code Execution
+  /api/v1/admin/ai/settings:
+    get:
+      operationId: getAiSettings
+      summary: Cấu hình AI
+      x-roles: *id003
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiSettings'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U13 AI & Code Execution
+    put:
+      operationId: updateAiSettings
+      summary: Sửa cấu hình AI
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiSettings'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiSettings'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U13 AI & Code Execution
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        taskType:
+          type: string
+          enum:
+          - QUESTION_DRAFT
+          - SKELETON_DRAFT
+          - GRADING_PROPOSAL
+          - PRACTICE_GRADING
+        status:
+          type: string
+          enum:
+          - QUEUED
+          - RUNNING
+          - READY
+          - FAILED
+          - ACCEPTED
+          - DISCARDED
+          - REJECTED_BUSY
+          - NO_CREDIT
+        estimatedCredits:
+          type: integer
+        creditsUsed:
+          type: integer
+        result:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - taskType
+      - status
+      - createdAt
+    CodeRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - TRY
+          - VERIFY
+          - GRADE
+        status:
+          type: string
+          enum:
+          - QUEUED
+          - RUNNING
+          - DONE
+          - SANDBOX_ERROR
+        tests:
+          type: array
+          items:
+            type: object
+            properties:
+              testId:
+                type: string
+              hidden:
+                type: boolean
+              status:
+                type: string
+              timeSeconds:
+                type: number
+              memoryKb:
+                type: integer
+              stdout:
+                type: string
+              stderr:
+                type: string
+            required:
+            - testId
+            - hidden
+            - status
+        score:
+          type: number
+        contentHash:
+          type: string
+      required:
+      - id
+      - kind
+      - status
+    AiUsageRow:
+      type: object
+      properties:
+        day:
+          type: string
+          format: date
+        taskType:
+          type: string
+        model:
+          type: string
+        calls:
+          type: integer
+        failures:
+          type: integer
+        avgLatencyMs:
+          type: integer
+        inputTokens:
+          type: integer
+          format: int64
+        outputTokens:
+          type: integer
+          format: int64
+        costUsd:
+          type: number
+      required:
+      - day
+      - taskType
+      - model
+      - calls
+      - failures
+      - avgLatencyMs
+      - inputTokens
+      - outputTokens
+      - costUsd
+    AiSettings:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        dailyCostCapUsd:
+          type: number
+        ratePerMinute:
+          type: integer
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              taskType:
+                type: string
+              model:
+                type: string
+                enum:
+                - gemini-2.5-flash-lite
+                - gemini-2.5-flash
+                - gemini-2.5-pro
+                - gemini-embedding-001
+              enabled:
+                type: boolean
+            required:
+            - taskType
+            - model
+            - enabled
+      required:
+      - enabled
+      - dailyCostCapUsd
+      - ratePerMinute
+      - services

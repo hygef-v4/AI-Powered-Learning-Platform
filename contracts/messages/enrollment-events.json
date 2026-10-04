@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/enrollment-events.json",
+  "title": "U04 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "enrollment.activated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classId",
+        "accountId"
+      ],
+      "properties": {
+        "classId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "accountId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "description": "Người học được ghi danh hoặc ghi danh lại vào lớp (nguồn U04)"
+    }
+  }
+}

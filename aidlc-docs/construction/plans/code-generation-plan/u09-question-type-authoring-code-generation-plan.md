@@ -1,6 +1,8 @@
 # U09 Question Type Authoring - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U09. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -50,7 +52,7 @@ PostgreSQL: cột `config` của `assignments` (U08 tạo bảng, U09 ghi qua `A
 /contracts/schemas/document.json
 /frontend/src/shared/document/            DocumentEditor, các block, DrawioPanel, EssayEditor
 /frontend/src/app/teaching/assignments/[id]/type-config/
-/contracts/openapi/u09-question-type.yaml
+/contracts/openapi/authoring.yaml
 ```
 
 ## 3. Các bước
@@ -78,12 +80,12 @@ PostgreSQL: cột `config` của `assignments` (U08 tạo bảng, U09 ghi qua `A
 
 - [ ] **Bước 13** - Không có migration: kiểm schema JSON của `assignments.config` (cấu hình loại bài, khung tài liệu, `parts[]` kèm `rubricId`) khi đọc/ghi.
 - [ ] **Bước 14** - JPA repository.
-- [ ] **Bước 15** - Integration test: sửa cấu hình khi bài không `DRAFT` bị chặn; U08 duyệt gọi `TypeConfigPort` thật.
+- [ ] **Bước 15** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: sửa cấu hình khi bài không `DRAFT` bị chặn; U08 duyệt gọi `TypeConfigPort` thật.
 - [ ] **Bước 16** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 17** - `/contracts/openapi/u09-question-type.yaml`.
+- [x] **Bước 17** - `/contracts/openapi/authoring.yaml`.
 - [ ] **Bước 18** - Controller + DTO + validation.
 - [ ] **Bước 19** - Test MockMvc: chỉ giảng viên của lớp sửa cấu hình/khung; DOCX quá lớn `413`; lỗi kiểm trả theo `blockId`.
 - [ ] **Bước 20** - Tóm tắt: `code/api-summary.md`.

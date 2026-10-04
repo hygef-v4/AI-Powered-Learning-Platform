@@ -1,0 +1,146 @@
+openapi: 3.1.0
+info:
+  title: U02 - Audit
+  version: 1.0.0
+  description: 'Tra cứu nhật ký audit (UC 39). Chỉ đọc; không có API sửa/xóa.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U02 Audit
+  description: Tra cứu nhật ký audit (UC 39).
+paths:
+  /api/v1/admin/audit-logs:
+    get:
+      operationId: listAuditLogs
+      summary: Tra cứu audit (mặc định 7 ngày gần nhất)
+      x-roles:
+      - ADMIN
+      parameters:
+      - name: actorId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: action
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: objectId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: result
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - SUCCESS
+          - DENIED
+          - FAILURE
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./common.yaml#/components/schemas/PageMeta
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/AuditLog'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U02 Audit
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        actorId:
+          type: string
+          format: uuid
+        actorEmail:
+          type: string
+        action:
+          type: string
+        objectType:
+          type: string
+        objectId:
+          type: string
+        result:
+          type: string
+          enum:
+          - SUCCESS
+          - DENIED
+          - FAILURE
+        reason:
+          type: string
+        details:
+          type: object
+          description: Đã che dữ liệu nhạy cảm.
+      required:
+      - id
+      - occurredAt
+      - action
+      - objectType
+      - result
+      - details

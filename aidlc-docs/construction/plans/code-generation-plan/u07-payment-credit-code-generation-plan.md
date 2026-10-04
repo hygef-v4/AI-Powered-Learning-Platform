@@ -1,6 +1,8 @@
 # U07 Payment & AI Credit - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U07. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -42,10 +44,10 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
                         FakePayosAdapter
     worker/             PaymentScanner, PayosCheckHandler
     port/               CreditPort, PaymentProviderPort, CreditUsagePort
-/backend/src/main/resources/db/migration/u07/
+/backend/src/main/resources/db/migration/billing/
 /frontend/src/app/credits/
 /frontend/src/components/credits/
-/contracts/openapi/u07-payment-credit.yaml
+/contracts/openapi/billing.yaml
 ```
 
 ## 3. Các bước
@@ -74,12 +76,12 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 - [ ] **Bước 13** - Flyway `V20260925_1400__u07_payment_credit.sql` theo `infrastructure-design.md` §4: tạo `credit_packages`, `payments`, thêm cột số dư và CHECK vào `accounts` (cần migration U01 chạy trước).
 - [ ] **Bước 14** - JPA repository (khóa `PESSIMISTIC_WRITE` trên `accounts`).
 - [ ] **Bước 15** - `PayosAdapter` (tạo link, tra cứu, timeout 5/10 s).
-- [ ] **Bước 16** - Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm số dư; số dư khớp tặng tháng + mua − dùng; `app` không DELETE được `payments`. `PayosAdapter` test bằng mock HTTP.
+- [ ] **Bước 16** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm số dư; số dư khớp tặng tháng + mua − dùng; `app` không DELETE được `payments`. `PayosAdapter` test bằng mock HTTP.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 18** - `/contracts/openapi/u07-payment-credit.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
+- [x] **Bước 18** - `/contracts/openapi/billing.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
 - [ ] **Bước 19** - Controller + DTO + validation; rate limit webhook.
 - [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví, nhận tặng tháng và mua credit của mình; không xem giao dịch người khác; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.

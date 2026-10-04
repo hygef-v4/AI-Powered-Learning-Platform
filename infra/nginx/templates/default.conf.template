@@ -1,0 +1,30 @@
+# Production: HTTPS bằng chứng chỉ Let's Encrypt (certbot). Cổng 80 chỉ chuyển hướng và phục vụ ACME.
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location = /nginx-health {
+        access_log off;
+        return 200 "ok";
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    include /etc/nginx/snippets/security-headers.conf;
+    include /etc/nginx/snippets/locations.conf;
+}

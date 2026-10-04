@@ -1,0 +1,152 @@
+openapi: 3.1.0
+info:
+  title: Common components
+  version: 1.0.0
+paths: {}
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: JWT HMAC-SHA256 15 phút, cookie HttpOnly, Secure, SameSite=Lax, Path=/api.
+  schemas:
+    Problem:
+      type: object
+      required:
+      - status
+      - code
+      - title
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          description: Thông điệp an toàn, tiếng Việt.
+        status:
+          type: integer
+        code:
+          type: string
+          description: Mã lỗi ổn định cho frontend.
+        correlationId:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+            required:
+            - field
+            - message
+    PageMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        page:
+          type: integer
+        size:
+          type: integer
+      required:
+      - total
+      - page
+      - size
+    Role:
+      type: string
+      enum:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+    ItemResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ok:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+      required:
+      - id
+      - ok
+  responses:
+    BadRequest:
+      description: Dữ liệu không hợp lệ
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Chưa đăng nhập hoặc phiên hết hạn
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Không có quyền
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Không tìm thấy hoặc không thuộc phạm vi
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Xung đột trạng thái hoặc phiên bản
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PayloadTooLarge:
+      description: Tệp hoặc body quá lớn
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unprocessable:
+      description: Vi phạm quy tắc nghiệp vụ
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TooManyRequests:
+      description: Vượt giới hạn tần suất
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Hệ thống đang bận
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  parameters:
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
