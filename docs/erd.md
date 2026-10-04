@@ -1,4 +1,6 @@
-# ERD MVP — một canvas draw.io
+# ERD MVP — bản lịch sử
+
+> **Không dùng file này để viết migration.** Thiết kế vật lý hiện hành cho SDS nằm ở [database.drawio](database.drawio) và [database.md](database.md): 24 bảng PostgreSQL, thuộc tính, kiểu dữ liệu, khóa và ràng buộc. `erd.drawio` là canvas 46 bảng của thiết kế trước đợt hợp nhất ngày 2026-10-03 và chỉ được giữ để đối chiếu lịch sử.
 
 [Mở sơ đồ ERD có thể chỉnh sửa](erd.drawio)
 
