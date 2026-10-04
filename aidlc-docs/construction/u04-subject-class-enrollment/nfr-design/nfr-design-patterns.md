@@ -1,8 +1,8 @@
 # U04 Subject, Class, Enrollment & Learning Access - NFR Design Patterns
 
 ## P1 - Kiểm phạm vi bằng query có index
-- `isTeacherOf`: `classes(id, teacher_account_id)`; `isSubjectManager`: `subjects(id, manager_account_id)`; `isActiveStudent`: unique `(class_id, student_account_id)` + lọc `status = 'ACTIVE'`.
-- Không cache (NFR-U04-01). Index thêm: `classes(subject_id, status)`, `classes(teacher_account_id)`, `subjects(manager_account_id)`, `enrollments(student_account_id, status)`.
+- `isTeacherOf`: `course_classes(id, teacher_id)`; `isSubjectManager`: `subjects(id, manager_id)`; `isActiveStudent`: khóa chính `enrollments(class_id, account_id)` + lọc `status = 'ACTIVE'`.
+- Không cache (NFR-U04-01). Index thêm: `course_classes(subject_id, status)`, `course_classes(teacher_id)`, `subjects(manager_id)`, `enrollments(account_id, status)`.
 
 ## P2 - Khóa theo người học và môn
 - Trước khi ghi danh (thêm, khôi phục, mã mời): `pg_advisory_xact_lock(hash(studentId, subjectId))` trong transaction, rồi kiểm BR-U04-22 (NFR-U04-11).
@@ -19,7 +19,7 @@
 - Cột `version` (`@Version`); client gửi `version` khi sửa/đổi trạng thái; lệch → `409` (NFR-U04-12).
 
 ## P5 - Event sau commit
-- `ENROLLMENT_ACTIVATED {enrollmentId, classId, studentAccountId}` gửi qua `EventPublisherPort` (U02, gửi sau commit). Mở lớp `DRAFT → OPEN` gửi một event cho mỗi ghi danh `ACTIVE` (NFR-U04-13).
+- `enrollment.activated {classId, accountId}` gửi qua `EventPublisherPort` (U03, gửi sau commit). Mở lớp `DRAFT → OPEN` gửi một event cho mỗi ghi danh `ACTIVE` (NFR-U04-13).
 
 ## P6 - Mã mời
 - Sinh 8 ký tự từ bảng chữ BR-U04-30 bằng `SecureRandom`; trùng unique → sinh lại, tối đa 3 lần.

@@ -59,11 +59,11 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 - Pool PostgreSQL tối đa 10 kết nối; pool Redis tối đa 16.
 - Gửi mail chạy ở worker, tách khỏi thread xử lý request (RESILIENCY-10).
 
-### P9 - Gửi OTP qua job U02
-- Request chỉ tạo job `OTP_DELIVERY(accountId, purpose)` trong giao dịch PostgreSQL rồi trả `202`. Không sinh mã ở request.
+### P9 - Gửi OTP qua job U03
+- Request không ghi database: gọi `JobPort.enqueue` gửi message `OTP_DELIVERY(accountId, purpose)` sang queue `jobs.email` của RabbitMQ (không có bảng job) rồi trả `202`. Không sinh mã ở request.
 - Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi SMTP. Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
-- SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → job `FAILED` + log ERROR (U02 không có dead-letter) (NFR-U01-31).
-- Redis lỗi lúc worker chạy → job retry như lỗi SMTP.
+- SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
+- Redis lỗi lúc worker chạy → message retry như lỗi SMTP.
 - Hạn 10 phút của OTP tính từ lúc worker ghi mã, không phải lúc người dùng bấm.
 
 ## 4. Quan sát

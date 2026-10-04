@@ -11,20 +11,22 @@
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
-| `AuthorizationPort` | U01 | Dùng thật |
-| `JobPort`, `JobHandler`, `AuditPort` | U02 | Dùng thật |
-| U07 cung cấp `CreditPort` | cho U05 và U13 | U05 dùng cho embedding, U13 dùng cho tạo nội dung AI |
+| `AuthorizationPort` | U01 | Dùng thật (tài khoản `ACTIVE`, vai trò, chủ ví) |
+| `AuditPort` | U02 | Dùng thật |
+| `JobPort`, `JobHandler`, `ScheduledScanner`, `EventPublisherPort` | U03 | Dùng thật |
+| U07 cung cấp `CreditPort` | cho U13 | U13 gọi cho mọi lần dùng AI (kể cả embedding của U05 qua `AiUsagePort`) |
+| `CreditUsagePort` | U13 (`C`, U07 khai báo) | Adapter rỗng: bảng "Lần dùng credit" trống tới khi U13 (wave 4) cài bản thật đọc `ai_suggestions` |
 | `PaymentProviderPort` | PayOS | Adapter thật + adapter giả khi không có key (không bật ở prod) |
 
 ### Dữ liệu U07 sở hữu
 
-PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledger`; ghi cột số dư của `accounts` (U01 tạo) và khóa `u07.*` trong `app_settings`; Redis `ratelimit:payos-webhook:*`; queue `jobs.payos` (`PAYOS_RECONCILE`), `jobs.scheduled` (`CREDIT_RESERVATION_SWEEP`).
+PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U01 tạo); Redis `ratelimit:payos-webhook:*`; queue `jobs.payos` (`PAYOS_CHECK`). Không có bảng sổ cái, webhook hay cấu hình. Phát event `payment.paid` lên `platform.events` sau commit (BR-U07-53).
 
 ## 2. Cấu trúc
 
@@ -32,18 +34,16 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledg
 /backend/src/main/java/edu/aiplatform/
   billing/
     api/                PaymentController, WebhookController, CreditController,
-                        AdminCreditController, DTO
-    application/        PaymentService, PaymentSettlement, CreditLedgerService,
+                        DTO
+    application/        PaymentService, PaymentSettlement, BalanceService,
                         CreditPortService, PackageService
-    domain/             CreditPackage, Payment, PaymentStatus, PaymentWebhookEvent,
-                        CreditBalance, CreditLedgerEntry, CreditReservation (suy ra từ sổ cái)
+    domain/             CreditPackage, Payment, PaymentStatus, CreditBalance
     infrastructure/     JPA repository, PayosAdapter, PayosSignatureVerifier,
                         FakePayosAdapter
-    worker/             ReconcileHandler, ReservationSweepHandler
-    port/               CreditPort, PaymentProviderPort
+    worker/             PaymentScanner, PayosCheckHandler
+    port/               CreditPort, PaymentProviderPort, CreditUsagePort
 /backend/src/main/resources/db/migration/u07/
 /frontend/src/app/credits/
-/frontend/src/app/admin/credits/
 /frontend/src/components/credits/
 /contracts/openapi/u07-payment-credit.yaml
 ```
@@ -52,48 +52,48 @@ PostgreSQL `credit_packages`, `payments`, `payment_webhook_events`, `credit_ledg
 
 ### Nhóm A - Khung
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
 - [ ] **Bước 1** - Biến cấu hình U07 theo `logical-components.md` §3; Compose truyền `PAYOS_*`, `APP_PUBLIC_URL`; Nginx route webhook 16 KB.
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, webhook event, số dư, sổ cái, lần giữ suy ra từ sổ cái (BR-U07-01…08).
-- [ ] **Bước 3** - Port `CreditPort`, `PaymentProviderPort`; `FakePayosAdapter` (chỉ khi không phải prod).
-- [ ] **Bước 4** - `CreditLedgerService.apply` với khóa dòng tài khoản; cả bốn vai trò `ACTIVE` có ví, chỉ Teacher/Subject Manager/Admin được tặng tháng, Student chỉ có credit mua; chặn số dư âm (F5, P1, BR-U07-01, 30…34).
-- [ ] **Bước 5** - `PackageService` và cấu hình mức tặng tháng qua `app_settings` (F7, BR-U07-02).
+- [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, số dư (BR-U07-01…08).
+- [ ] **Bước 3** - Port `CreditPort`, `PaymentProviderPort`, `CreditUsagePort` (adapter rỗng tới khi có U13); `FakePayosAdapter` (chỉ khi không phải prod).
+- [ ] **Bước 4** - `BalanceService.apply` với khóa dòng tài khoản; cả bốn vai trò `ACTIVE` có ví và được tặng tháng cùng mức; chặn số dư âm (F5, P1, BR-U07-01, 30…34).
+- [ ] **Bước 5** - `PackageService` nạp gói từ `U07_PACKAGES` khi khởi động, đọc mức tặng tháng từ `U07_MONTHLY_FREE_CREDITS` (F7, BR-U07-02).
 - [ ] **Bước 6** - `PaymentService`: kiểm tài khoản `ACTIVE` thuộc bốn vai trò hiện hành và chủ ví trước khi tạo giao dịch hoặc gọi PayOS; idempotency, giới hạn 3 `PENDING`, `orderCode`, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-01, 03…07).
-- [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13).
-- [ ] **Bước 8** - `CreditPortService`: `reserve`/`settle`/`release`/`balance` idempotent; `reserve` kiểm purpose/attemptRef, Student chỉ được `PRACTICE_GRADING` Text/Diagram Essay của mình (F6, P5, BR-U07-01, 40…43).
-- [ ] **Bước 9** - Worker: `ReconcileHandler` (10 phút, ≤ 100 giao dịch) và `ReservationSweepHandler` (5 phút, `SKIP LOCKED`) (F4, P5, P6, BR-U07-20, BR-U07-22).
-- [ ] **Bước 10** - Audit sự kiện `PAID`, webhook bị từ chối, job tự đối soát và thay đổi cấu hình gói (BR-U07-51).
-- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: Student có ví và mua credit nhưng không có `MONTHLY_GRANT`; chỉ reserve cho Practice hợp lệ; chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng tháng sang tháng mới cho vai trò có quyền.
+- [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13); sau commit phát `payment.paid` qua `EventPublisherPort` (BR-U07-53).
+- [ ] **Bước 8** - `CreditPortService`: `reserve` (trả `{reserved, fromFree}`), `settle`, `release`, `balance`, chạy trong transaction của U13; `reserve` kiểm purpose/attemptRef, Student chỉ được `PRACTICE_GRADING` Text/Diagram Essay của mình (F6, P5, BR-U07-01, 40…43).
+- [ ] **Bước 9** - Worker: `PaymentScanner` (scanner U03, 10 phút, ≤ 100 giao dịch, đổi `PENDING` quá hạn sang `EXPIRED`) và `PayosCheckHandler` (F4, P6, BR-U07-06, 20, 22).
+- [ ] **Bước 10** - Audit sự kiện `PAID`, webhook bị từ chối, tự đối soát (BR-U07-51).
+- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: Student có ví, được tặng tháng và mua credit; chỉ reserve cho Practice hợp lệ; chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng tháng sang tháng mới cho cả bốn vai trò.
 - [ ] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u07-payment-credit/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu và PayOS
 
-- [ ] **Bước 13** - Flyway `V20260925_1400__u07_payment_credit.sql` theo `infrastructure-design.md` §4: tạo bảng của U07, thêm cột số dư vào `accounts`, seed khóa `u07.*` trong `app_settings` (cần migration U01 chạy trước).
-- [ ] **Bước 14** - JPA repository (khóa `PESSIMISTIC_WRITE`, `SKIP LOCKED`).
+- [ ] **Bước 13** - Flyway `V20260925_1400__u07_payment_credit.sql` theo `infrastructure-design.md` §4: tạo `credit_packages`, `payments`, thêm cột số dư và CHECK vào `accounts` (cần migration U01 chạy trước).
+- [ ] **Bước 14** - JPA repository (khóa `PESSIMISTIC_WRITE` trên `accounts`).
 - [ ] **Bước 15** - `PayosAdapter` (tạo link, tra cứu, timeout 5/10 s).
-- [ ] **Bước 16** - Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm số dư; `settle` gọi hai lần chỉ đóng một lần; tổng sổ cái = số dư; `app` không UPDATE/DELETE được sổ cái. `PayosAdapter` test bằng mock HTTP.
+- [ ] **Bước 16** - Integration test Testcontainers: 20 webhook trùng song song chỉ cộng một lần; 50 `reserve` song song không làm âm số dư; số dư khớp tặng tháng + mua − dùng; `app` không DELETE được `payments`. `PayosAdapter` test bằng mock HTTP.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
 - [ ] **Bước 18** - `/contracts/openapi/u07-payment-credit.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
 - [ ] **Bước 19** - Controller + DTO + validation; rate limit webhook.
-- [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví và mua credit của mình nhưng không có `MONTHLY_GRANT`; không xem giao dịch người khác; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
+- [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví, nhận tặng tháng và mua credit của mình; không xem giao dịch người khác; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage`, `PackageList`, checkout và `PaymentResultPage` cho cả bốn vai trò; Student xem ví và mua credit để chấm Practice.
-- [ ] **Bước 23** - Admin: `PackageAdminPage` cho gói và mức tặng; trang thanh toán giả cho local.
+- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage` (`PackageList`, `PaymentHistoryTable`, `CreditUsageTable`), checkout và `PaymentResultPage` cho cả bốn vai trò; Student xem ví và mua credit để chấm Practice (UC 40).
+- [ ] **Bước 23** - Trang thanh toán giả cho local (không có màn quản lý gói).
 - [ ] **Bước 24** - Test frontend: trang kết quả không báo thành công khi chưa `PAID`.
 - [ ] **Bước 25** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 26** - Cập nhật `README.md`: đăng ký PayOS, đăng ký webhook, test bằng gói 2 000đ, chạy local với adapter giả, cách U05/U13 dùng `CreditPort`.
+- [ ] **Bước 26** - Cập nhật `README.md`: đăng ký PayOS, đăng ký webhook, test bằng gói 2 000đ, chạy local với adapter giả, cách U13 dùng `CreditPort`.
 - [ ] **Bước 27** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết

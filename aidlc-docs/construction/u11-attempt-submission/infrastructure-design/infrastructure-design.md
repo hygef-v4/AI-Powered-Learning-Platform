@@ -5,10 +5,9 @@
 | Thành phần | Chạy ở |
 |---|---|
 | `AttemptStarter`, `DraftSaver`, `AttemptSubmitter`, `AttemptQueryService` | `backend` |
-| `AutoSubmitHandler` | `worker` |
-| Bảng `submissions` (gồm nội dung bài làm) | `postgres` |
-| Rate limit lưu | `redis`, khóa `ratelimit:attempt-save:{studentId}` |
-| Queue | `jobs.scheduled` (job `ATTEMPT_AUTO_SUBMIT`) |
+| Bảng `attempts` (gồm nội dung bài làm) | `postgres` |
+| Rate limit lưu | `redis`, khóa `ratelimit:attempt-save:{accountId}` |
+| Tự nộp | `AttemptDeadlineScanner` (scanner U03) trong `worker` |
 | Event phát | Không; chỉ bài `GRADED` báo U15 qua `SubmissionSubmittedPort` trong transaction; Practice có kết quả riêng |
 
 ## 2. Nginx
@@ -18,9 +17,9 @@
 ## 3. Migration
 
 `V20260925_1800__u11_attempts.sql`:
-- `submissions` theo `domain-entities.md` §2; unique `(publication_id, student_id, attempt_no)`; partial unique `(publication_id, student_id) WHERE status = 'IN_PROGRESS'`; index `(publication_id, status)`, `(student_id)`.
-- `submissions` có `content jsonb`, `content_version`, `warnings jsonb`, `practice_feedback_status`, `practice_result jsonb`, `practice_result_ref`; truy vấn danh sách lượt chỉ chọn cột metadata, không đọc `content`.
-- Trigger `trg_submissions_immutable` chặn UPDATE `content` khi lượt đã `SUBMITTED`.
+- `attempts` theo [database](../../../../docs/database.md): FK `assignment_id`, `account_id`; unique `(assignment_id, account_id, attempt_no)`; partial unique `(assignment_id, account_id) WHERE status = 'IN_PROGRESS'`; index `(assignment_id, status)`, `(account_id)`, `(status, deadline_at)` cho scanner.
+- `attempts` có `snapshot jsonb`, `content jsonb` (gồm cảnh báo kiểm và thời điểm lưu cuối), `content_version`, `run_result jsonb`, `submit_mode`; truy vấn danh sách lượt chỉ chọn cột metadata, không đọc `content`.
+- Trigger `trg_attempts_immutable` chặn UPDATE `content` khi lượt đã `SUBMITTED`.
 
 ## 4. Compliance
 

@@ -2,7 +2,7 @@
 
 ## 1. Service layer pattern
 
-Mỗi module có application service làm transaction boundary. Controller nhận REST request, validate hình thức, tạo actor context rồi gọi service. Domain object thực thi invariants; repository/port xử lý persistence hoặc dịch vụ ngoài. Workflow liên module dùng port đồng bộ hoặc event phát sau commit (U02); job dài chạy trong `worker`.
+Mỗi module có application service làm transaction boundary. Controller nhận REST request, validate hình thức, tạo actor context rồi gọi service. Domain object thực thi invariants; repository/port xử lý persistence hoặc dịch vụ ngoài. Workflow liên module dùng port đồng bộ hoặc event phát sau commit (U03); job dài chạy trong `worker`.
 
 ## 2. Dịch vụ nghiệp vụ
 
@@ -11,10 +11,10 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | Service (unit) | Orchestration chính | Không được làm |
 |---|---|---|
 | AccountService, AuthorizationService (U01) | Kích hoạt OTP, phiên, khôi phục, role; quyết định quyền theo role + phạm vi U04 | Không cho admin đặt/xem mật khẩu hay OTP; không tin quyền do frontend gửi |
-| AuditService, JobService (U02) | Audit append-only ghi trong transaction; enqueue trong transaction, gửi sau commit vào 1 trong 8 queue, retry theo DB, sweeper | Không cung cấp update/delete audit; không quyết định nghiệp vụ |
+| AuditService (U02), JobService (U03) | Audit append-only ghi trong transaction; gửi sau commit vào 1 trong 7 queue, retry bằng queue TTL, `PendingSweeper` gửi lại dòng chờ, `ScheduledScanner` cho việc theo thời gian | Không cung cấp update/delete audit; không quyết định nghiệp vụ |
 | FileArtifactService (U03) | Upload, kiểm loại/dung lượng file, lưu Drive, token tải | Không tự quyết ai được xem file; không dùng `acknowledgeAbuse` |
 | AcademicService (U04) | Môn, lớp, phân công, ghi danh, mã mời, lớp của người học | Không xóa lịch sử ghi danh; không kiểm thanh toán |
-| ContentService, ClassCommunicationService (U05) | Chương/bài/phiên bản, liên kết bài cấp môn, ingest RAG, `retrieve`; thông báo/hỏi đáp lớp và sự kiện U16 | Không tự phiên âm; không xử lý ingest trong request; không cho lớp khác đọc/ghi |
+| ContentService, ClassCommunicationService (U05) | Module, học liệu tải lên của môn/lớp, ingest RAG, `retrieve`; thông báo, bình luận dưới thông báo và sự kiện thông báo cho U16 | Không tự phiên âm; không xử lý ingest trong request; không cho lớp khác đọc/ghi |
 | BankService (U06) | Phiên bản câu hỏi/rubric, nhập file, tính điểm rubric | Không sửa bản đã `ACTIVE` |
 | PaymentService, CreditService (U07) | PayOS, webhook, tự đối soát định kỳ, ví credit, giữ/trừ/trả | Không tin browser redirect; không để số dư âm |
 | AssessmentService (U08) | Bài, duyệt, phát hành, lịch, khóa, version mới, ngưng giao | Không sửa version đã phát hành; không có đề chung |
@@ -23,63 +23,59 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 | AttemptService (U11) | Bắt đầu lượt, tự lưu, nộp, tự nộp | Không sửa bài đã nộp |
 | GroupService (U12) | Nhóm của lớp, chia ngẫu nhiên, trưởng nhóm, yêu cầu đổi trưởng nhóm | Giảng viên không giao mục cho từng sinh viên (trưởng nhóm giao mục ở U14) |
 | AiService, CodeRunService (U13) | Kiểm trần/credit, gọi Gemini, kiểm đầu ra; chạy Judge0 | Không phát hành đề, không chốt điểm; không chạy mã ngoài sandbox |
-| GroupDocumentService (U14) | Tài liệu nhóm, mục chi tiết và giao mục của trưởng nhóm, khóa mục, Xong → realtime, review, nộp | Không cho hai người sửa cùng một mục; chỉ nộp tay khi `REVIEW` |
+| GroupDocumentService (U14) | Tài liệu nhóm theo các phần của khung, giao phần của trưởng nhóm, khóa phần, Xong → realtime, nộp, tự nộp khi hết hạn | Không cho hai người sửa cùng một mục; không cho sinh viên sửa/xóa mục của giảng viên |
 | GradingService (U15) | Tự chấm, chấm tay/AI, chốt, công bố, sổ điểm | Không để AI hay công thức quyết định điểm cuối |
-| NotificationService, ReportingService (U16) | Thông báo, email có trần, nhắc hạn, tiến độ, dashboard cá nhân và xuất bảng điểm | Không rollback nghiệp vụ khi gửi email lỗi; không công bố điểm nháp hoặc điểm AI đề xuất |
+| NotificationService, ReportingService (U16) | Thông báo, email có trần, nhắc hạn, tiến độ, phân bố điểm ẩn danh, thống kê quản trị và xuất bảng điểm | Không rollback nghiệp vụ khi gửi email lỗi; không công bố điểm nháp hoặc điểm AI đề xuất |
 
 ## 3. Orchestration quan trọng
 
 ### Bài tài liệu có sơ đồ và AI đề xuất chấm
 1. Người học soạn tài liệu (U09 `DocumentEditor`), có thể nhập DOCX vào lượt DOCUMENT sau khi xem trước, vẽ sơ đồ trong iframe Draw.io; U11 tự lưu và kiểm tài liệu qua U09, không cho DOCX sửa khung giảng viên.
-2. Nộp: U11 khóa nội dung. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` trong cùng transaction để U15 tạo job `GRADE_INIT`; bài `PRACTICE` dùng scorer đáp án/test hoặc AI của U13 và lưu kết quả riêng.
+2. Nộp: U11 khóa nội dung. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` trong cùng transaction để U15 tạo dòng `evaluations` `PENDING`; bài `PRACTICE` dùng scorer đáp án/test hoặc AI của U13 và ghi `evaluations` `kind = PRACTICE`.
 3. U15 tạo điểm `PENDING`; giảng viên chọn chấm tay hoặc "Nhờ AI đề xuất".
 4. U13 kiểm trần và credit, lấy văn bản phẳng + XML rút gọn (U09), gọi Gemini, kiểm đầu ra, trả đề xuất.
 5. Giảng viên dùng/sửa đề xuất, chốt, công bố (U15); U16 báo người học.
 
 ### Bài nhóm
 1. Giảng viên chia nhóm trong danh sách sinh viên của lớp (U12), mỗi nhóm đúng một trưởng nhóm; mọi bài nhóm của lớp dùng chung các nhóm này.
-2. Bài mở: U08 gọi `PublicationLifecyclePort.onOpened` trong transaction; U14 tạo job `GROUP_DOC_CREATE` dựng tài liệu cho mọi nhóm của lớp từ khung (mục chính).
-3. Trưởng nhóm thêm/giao mục chi tiết; thành viên nhận hoặc làm mục được giao ở trang riêng, bấm Xong → ghép realtime (SSE qua `platform.realtime`). Mọi mục xong → tài liệu `REVIEW` để cả nhóm xem lại.
-4. Trưởng nhóm nộp khi tài liệu ở `REVIEW` (hoặc tự nộp khi hết hạn); U15 chấm tay tài liệu chung, chấm phần đóng góp từng thành viên (tay/AI), nhập điểm cuối từng người.
+2. Bài mở: U08 gọi `AssignmentLifecyclePort.onOpened` trong transaction; U14 gửi việc `GROUP_DOC_CREATE` dựng tài liệu cho mọi nhóm của lớp từ các phần của khung.
+3. Trưởng nhóm giao phần; thành viên nhận hoặc làm phần được giao trong popup che kín trang, bấm Xong → ghép realtime vào Assignment Workspace (SSE qua `platform.realtime`).
+4. Trưởng nhóm nộp bất kỳ lúc nào trước hạn; hết hạn thì tự nộp, gồm phần đang làm của thành viên; U15 chấm tài liệu chung như bài `DOCUMENT` (tay/AI), điểm đóng góp thành viên mặc định bằng điểm tài liệu chung, chấm tay từng người.
 
 ### Tạo và phát hành bài
-1. Giảng viên tạo bài trong lớp mình dạy (U08), lấy câu từ ngân hàng (U06) hoặc câu riêng, hoặc AI đề xuất (U13, dùng RAG U05).
+1. Giảng viên tạo bài trong lớp mình dạy (U08), lấy câu từ ngân hàng (U06) hoặc câu riêng, hoặc AI đề xuất (U13, dùng RAG U05); Diagram Essay và bài nhóm soạn khung (U09), có thể nhờ AI đề xuất khung.
 2. Cấu hình một trong năm dạng bài và chế độ `GRADED`/`PRACTICE` hợp lệ (U08/U09); duyệt; phát hành cho một lớp với lịch, nộp trễ và số lượt.
 3. Phát hành khóa nội dung; muốn đổi thì ngưng giao/đợi đóng rồi tạo version mới.
 
-### Nạp nguồn RAG
-1. Giảng viên/Chủ nhiệm môn thêm file hoặc YouTube vào bài (U05).
-2. Worker trích chữ (không OCR) hoặc lấy caption có sẵn (không tự phiên âm), cắt đoạn; kiểm trần hệ thống và giữ credit của người tạo nguồn học liệu qua U07, rồi gọi Gemini embedding, ghi pgvector và quyết toán credit. Hết trần hệ thống báo "Hệ thống đang bận"; không trừ credit cho lô bị từ chối.
+### Quét học liệu cho RAG
+1. Chủ nhiệm môn tạo module; Chủ nhiệm môn hoặc giảng viên tải tệp hoặc link một video YouTube vào module (U05); lesson hiển thị ngay.
+2. Worker trích chữ (không OCR) hoặc lấy caption có sẵn (không tự phiên âm); qua `AiUsagePort` (U13) kiểm trần hệ thống và giữ credit của người tải lên, gọi Gemini embedding một lần, ghi chữ và vector lên lesson. Hết trần báo "Hệ thống đang bận" (`BUSY`), thiếu credit `NO_CREDIT`; không trừ credit cho lời gọi bị từ chối.
 
 ### Thanh toán mua credit AI
-1. U07 chỉ cho tài khoản `ACTIVE` có vai trò Giảng viên, Chủ nhiệm môn hoặc Quản trị viên tạo giao dịch PayOS với idempotency key; backend từ chối Người học trước khi tạo payment/link, trang quay về chỉ hiển thị.
-2. Webhook có chữ ký hoặc job tự đối soát → `PAID` và cộng credit đúng một lần.
+1. U07 cho tài khoản `ACTIVE` thuộc cả bốn vai trò (Sinh viên, Giảng viên, Chủ nhiệm môn, Quản trị viên) tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị. Sinh viên chỉ dùng credit cho AI chấm bài `PRACTICE` (UC 40).
+2. Webhook có chữ ký hoặc `PaymentScanner` + việc `PAYOS_CHECK` → `UPDATE ... WHERE status <> 'PAID'` chuyển `PAID` và cộng số dư mua đúng một lần; sau commit phát `payment.paid`.
 
 ## 4. Job policies
 
-Mỗi job type thuộc đúng một trong 8 queue theo tính chất (U02 BR-U02-33): `jobs.scheduled` cho việc nội bộ hẹn giờ, `jobs.triggered` cho việc nội bộ phát sinh sau thao tác, còn lại mỗi hệ thống ngoài có giới hạn riêng một queue.
+Không có bảng job: việc gửi sau commit lên một trong 7 queue (U03 BR-U03-63), trạng thái nằm ở dòng nghiệp vụ; `PendingSweeper` gửi lại dòng chờ quá 5 phút; việc theo thời gian chạy bằng `ScheduledScanner` mỗi phút.
 
-| Job type (unit) | Queue | Retry | Idempotency |
+| Việc (unit) | Queue / cơ chế | Retry | Idempotency |
 |---|---|---|---|
-| `OTP_DELIVERY` (U01) | `jobs.email` (ưu tiên cao) | Backoff U02, tối đa 5 lần | Theo tài khoản + mục đích + phút |
-| `EMAIL_SEND` (U16) | `jobs.email` | Backoff U02, tối đa 5 lần | Theo bản ghi email; trần 300/ngày |
-| `EMAIL_DISPATCH`, `DEADLINE_REMINDER` (U16) | `jobs.scheduled` | Nhắc hạn bỏ qua nếu hạn đổi | Theo publication + hạn |
-| `DRIVE_CLEANUP` (U03) | `jobs.drive` | Backoff U02 | Theo `providerFileId` |
-| `RAG_INGEST` (U05) | `jobs.gemini` | Lỗi tạm retry; lỗi vĩnh viễn/`BUSY` không | Theo `contentKey` |
-| `YOUTUBE_RESOLVE` (U05) | `jobs.youtube` | Lỗi tạm retry | Theo nguồn YouTube |
-| `PAYOS_RECONCILE` (U07) | `jobs.payos` | Theo lịch | Theo `orderCode` |
-| `CREDIT_RESERVATION_SWEEP` (U07) | `jobs.scheduled` | Theo lịch | Theo dòng giữ credit |
-| `PUBLICATION_OPEN`, `PUBLICATION_CLOSE` (U08) | `jobs.scheduled` | Chạy lại bỏ qua nếu lịch đổi | Theo `expectedAt` |
-| `ATTEMPT_AUTO_SUBMIT` (U11), `GROUP_AUTO_SUBMIT` (U14) | `jobs.scheduled` | Chạy lại không nộp trùng | Theo lượt / tài liệu nhóm |
-| `GROUP_DOC_CREATE` (U14) | `jobs.triggered` | Chạy lại không tạo trùng | Theo nhóm × publication |
-| `GRADE_INIT` (U15) | `jobs.triggered` | Chạy lại không tạo điểm trùng | Theo bài nộp + người học |
-| `AI_TASK` (U13) | `jobs.gemini` | Lỗi tạm tối đa 3 lần | Theo proposal |
-| `CODE_RUN` (U13) | `jobs.code` | Lỗi sandbox retry; lỗi code của người học không retry | Theo run ID |
+| `OTP_DELIVERY` (U01) | `jobs.email` (ưu tiên cao) | Backoff U03, tối đa 5 lần | Theo tài khoản + mục đích + phút |
+| `EMAIL_SEND` (U16) | `jobs.email` | Backoff U03, tối đa 5 lần | Theo `notifications.email_status`; trần 300/ngày |
+| `DRIVE_CLEANUP` (U03) | `jobs.drive` | Backoff U03 | Theo `file_id` |
+| `LESSON_SCAN` (U05) | `jobs.gemini` | Lỗi tạm retry; `BUSY`/`NO_CREDIT` không | Theo `lessons.scan_status` |
+| `YOUTUBE_CAPTION` (U05) | `jobs.youtube` | Lỗi tạm retry | Theo lesson |
+| `PAYOS_CHECK` (U07) | `jobs.payos` | Backoff U03 | Theo `order_code` |
+| `GROUP_DOC_CREATE` (U14) | `jobs.triggered` | Chạy lại không tạo trùng | Unique nhóm × bài |
+| `AI_TASK` (U13) | `jobs.gemini` | Lỗi tạm tối đa 3 lần | Theo `ai_suggestions.id` |
+| `CODE_RUN` (U13) | `jobs.code` | Lỗi sandbox retry; lỗi code của người học không retry | Theo lượt / câu hỏi |
+| `AssignmentScheduleScanner` (U08), `AttemptDeadlineScanner` (U11), `GroupAutoSubmitScanner` (U14), `CreditReservationScanner`, `AiPendingSweeper` (U13), `PaymentScanner` (U07), `DeadlineReminderScanner`, `EmailDeferredScanner`, `NotificationRetentionScanner` (U16) | `ScheduledScanner` | Lần quét sau làm lại | Điều kiện trên dòng nghiệp vụ |
 
 ## 5. REST contract
 
 - Base path `/api/v1`; OpenAPI mỗi unit trong `/contracts/openapi/`.
 - Command quan trọng dùng `Idempotency-Key` hoặc `version` (khóa lạc quan).
 - Lỗi dạng problem-details an toàn, có correlation ID, không lộ stack trace.
-- Job dài trả `202` + job ID; trạng thái qua `GET /api/v1/jobs/{id}`.
+- Việc dài trả `202`; trạng thái đọc qua API của unit sở hữu (cột trạng thái của dòng nghiệp vụ, ví dụ `lessons.scan_status`), không có API trạng thái job chung (BR-U03-61).
 - Realtime bằng SSE cho tài liệu nhóm (U14) và thông báo (U16).

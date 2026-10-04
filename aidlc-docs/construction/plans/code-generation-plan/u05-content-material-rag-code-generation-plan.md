@@ -5,58 +5,56 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Catalog chỉ chứa story MVP.
-- **Use case**: UC 11, UC 13, UC 14; hỗ trợ UC 12 (qua U04).
-- **Thiết kế nguồn**: `construction/u05-content-material-rag/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
+- **Use case**: UC 11, UC 12 (popup View Learning Material), UC 13, UC 14 (Comment on Announcement).
+- **Quyết định 2026-10-04**: chapter đổi thành module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung); mỗi module có nút tải tệp/gắn link; học liệu của môn (`class_id` rỗng) hoặc của lớp; hỏi đáp lớp đổi thành bình luận dưới thông báo, hiện 2 bình luận mới nhất, popup xem thêm.
+- **Thiết kế nguồn**: `construction/u05-content-material-rag/` (functional-design, nfr-requirements, nfr-design, infrastructure-design), `construction/shared-infrastructure.md` và [database](../../../../docs/database.md).
+- **Quyết định 2026-10-03**: học liệu chỉ tải lên rồi quét; không soạn markdown, không phiên bản, không phát hành.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
 | `AuthorizationPort` | U01 | Dùng thật |
-| `JobPort`, `JobHandler`, `AuditPort` | U02 | Dùng thật |
+| `AuditPort` | U02 | Dùng thật |
+| `JobPort`, `JobHandler`, `PendingSweeper` | U03 | Dùng thật |
 | `ArtifactPort`, `FileUploader` | U03 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật; U05 thay `EmptyPublishedContentAdapter` của U04 bằng `PublishedContentService` |
-| `EventPublisherPort` | U02 | Phát sự kiện bài đăng/câu hỏi/trả lời sau commit; U16 tiêu thụ và tạo thông báo trong ứng dụng |
-| `AiBudgetPort` | U13 (`C`) | Tạm đọc `AI_KILL_SWITCH` từ `.env`, chưa có trần chi phí chung; U13 thay bằng bản thật (kill-switch + trần `gemini:daily-cost`) |
-| `CreditPort` | U07 | Contract `C`; có thể phát triển song song qua adapter giả, nhưng phải nối adapter thật trước khi bật Gemini |
+| `EventPublisherPort` | U03 | Phát sự kiện thông báo lớp sau commit (bình luận không phát); U16 tiêu thụ |
+| `AiUsagePort` | U13 (`C`) | Adapter tạm đọc `AI_KILL_SWITCH` từ `.env`, không trừ credit; U13 thay bằng bản thật (`ai_services`, trần chi phí, `ai_suggestions`, credit U07) trước khi bật Gemini |
 | `EmbeddingPort`, `YoutubePort` | Gemini, YouTube | Adapter thật + adapter giả khi không có key |
 
 ### Dữ liệu U05 sở hữu
 
-PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_lesson_links`, `youtube_sources`, `source_documents` (gồm cả video YouTube), `rag_chunks`, `class_announcements`, `class_questions`, `class_answers`; không có key Redis riêng (trần chi phí Gemini dùng chung của U13 qua `AiBudgetPort`); job `YOUTUBE_RESOLVE` trên `jobs.youtube`, `RAG_INGEST` trên `jobs.gemini` (U02 khai báo queue).
+PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding vector(768)`), `announcements`, `announcement_comments` (bảng nối); việc `LESSON_SCAN` trên `jobs.gemini`, `YOUTUBE_CAPTION` trên `jobs.youtube` (U03 khai báo queue).
 
 ## 2. Cấu trúc
 
 ```
 /backend/src/main/java/edu/aiplatform/
   content/
-    api/                ContentController, LessonController, StudentDownloadController,
+    api/                ContentController, StudentDownloadController,
                         ClassCommunicationController, DTO
-    application/        ChapterService, LessonService, ItemService, PublishedContentService,
-                        RetrievalService, EmbeddingBudget, EmbeddingCreditService,
-                        ClassCommunicationService
-    domain/             Chapter, Lesson, LessonVersion, LessonItem, ClassLessonLink,
-                        YoutubeSource, SourceDocument, RagChunk, YoutubeUrlParser,
-                        ClassAnnouncement, ClassQuestion, ClassAnswer
-    ingest/             TextExtractor, Chunker, ChunkWriter
-    infrastructure/     JPA repository, VectorSearchRepository (JdbcTemplate),
+    application/        ModuleService, LessonService, PublishedContentService,
+                        RetrievalService, ClassCommunicationService
+    domain/             Module, Lesson, ScanStatus, YoutubeUrlParser,
+                        Announcement, AnnouncementComment
+    scan/               TextExtractor, CaptionFetcher, PassageSelector
+    infrastructure/     JPA repository, LessonVectorRepository (JdbcTemplate),
                         GeminiEmbeddingAdapter, YoutubeAdapter, FakeEmbeddingAdapter,
-                        FakeYoutubeAdapter, EnvAiKillSwitchAdapter
-    worker/             YoutubeResolveHandler, IngestJobHandler
+                        FakeYoutubeAdapter, EnvAiUsageAdapter
+    worker/             LessonScanHandler, LessonPendingSweeper
     port/               PublishedContentPort, RagRetrievalPort, ContentRefPort,
-                        EmbeddingPort, YoutubePort, AiBudgetPort, CreditPort
+                        EmbeddingPort, YoutubePort, AiUsagePort
 /backend/src/main/resources/db/migration/u05/
 /infra/postgres/init/01-extensions.sql
-/frontend/src/app/teaching/subjects/[id]/content/
-/frontend/src/app/teaching/classes/[id]/content/
-/frontend/src/app/classes/[id]/communication/
 /frontend/src/shared/content/
+/frontend/src/app/classes/[id]/communication/
 /contracts/openapi/u05-content.yaml
 ```
 
@@ -64,69 +62,66 @@ PostgreSQL `chapters`, `lessons`, `lesson_versions`, `lesson_items`, `class_less
 
 ### Nhóm A - Khung và hạ tầng
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
-- [ ] **Bước 1** - `pom.xml`: `tika-parsers-standard-package`, `com.pgvector:pgvector`, thư viện đọc caption YouTube, `commonmark`. Biến cấu hình U05 theo `logical-components.md` §3.
-- [ ] **Bước 2** - Docker Compose: image `pgvector/pgvector:pg16`, script `infra/postgres/init/01-extensions.sql` (`CREATE EXTENSION vector`), RAM worker 1,5 GB, truyền `GEMINI_API_KEY`, `YOUTUBE_API_KEY`, `AI_KILL_SWITCH`. Nginx CSP thêm `frame-src https://www.youtube-nocookie.com`.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
+- [ ] **Bước 1** - `pom.xml`: `tika-parsers-standard-package`, `com.pgvector:pgvector`, thư viện đọc phụ đề YouTube. Biến cấu hình U05 theo `logical-components.md` §3.
+- [ ] **Bước 2** - Docker Compose (image `pgvector/pgvector:pg16` đã có từ khung): script `infra/postgres/init/01-extensions.sql` (`CREATE EXTENSION vector`), RAM worker 1,5 GB, truyền `GEMINI_API_KEY`, `YOUTUBE_API_KEY`, `AI_KILL_SWITCH`. Nginx CSP thêm `frame-src https://www.youtube-nocookie.com`.
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 3** - Domain: chương, bài, phiên bản (1 `DRAFT` + 1 `PUBLISHED`), mục, liên kết, YouTube, `SourceDocument` và chuyển trạng thái; `YoutubeUrlParser` (regex ID) (BR-U05-10…15, 22, NFR-U05-21).
-- [ ] **Bước 4** - Port và adapter giả: `EmbeddingPort`, `YoutubePort`, `AiBudgetPort`, `CreditPort`, `PublishedContentPort`, `RagRetrievalPort`, `ContentRefPort` (P8).
-- [ ] **Bước 5** - `ChapterService`, `LessonService`: tạo/sửa/đổi thứ tự/lưu trữ, tạo bản nháp sao chép mục, phát hành, audit (F1-F3, BR-U05-01, 02, 11-14, 50).
-- [ ] **Bước 6** - `ItemService`: mục `TEXT`/`FILE`/`YOUTUBE`, dùng lại `SourceDocument` theo `contentKey`, ghi tài khoản chịu phí cho nguồn mới, tạo job (F2, BR-U05-20…22, 30, 31, 39).
-- [ ] **Bước 7** - Liên kết bài cấp môn vào lớp (F4, BR-U05-03, 15).
-- [ ] **Bước 8** - `EmbeddingBudget` gọi `AiBudgetPort` của U13 (kill-switch và trần chi phí Gemini chung, không có bộ đếm Redis riêng) và `EmbeddingCreditService` giữ/quyết toán/trả credit U07; tách lỗi hệ thống bận khỏi thiếu credit (P4, BR-U05-39, 44).
-- [ ] **Bước 9** - `TextExtractor` (Tika theo luồng, giới hạn ký tự, `NO_TEXT`), `Chunker` (P2, P3).
-- [ ] **Bước 10** - `YoutubeResolveHandler` và `IngestJobHandler` (claim idempotent, concurrency, lỗi tạm/vĩnh viễn/`BUSY`, ghi đoạn một transaction) (F5, F6, P1).
-- [ ] **Bước 11** - Retry thủ công (F7).
-- [ ] **Bước 12** - `PublishedContentService` và `StudentDownloadController` (kiểm ghi danh, lớp `OPEN`, mục hiển thị) (F8, BR-U05-04, 23).
-- [ ] **Bước 13** - `RetrievalService` (kiểm phạm vi, trần, credit `requesterId`, vector câu hỏi, k ≤ 20) (F9, BR-U05-40…44).
-- [ ] **Bước 13a** - `ClassCommunicationService`: thông báo, câu hỏi, trả lời của lớp; kiểm quyền U04, lọc markdown, ẩn nội dung có lý do; phát event U16 sau commit (F10, BR-U05-60…64).
-- [ ] **Bước 14** - Unit test cho mọi `BR-U05-xx`: URL YouTube giả mạo, markdown có script, PDF không chữ, video không caption, vượt trần.
-- [ ] **Bước 15** - Tóm tắt: `aidlc-docs/construction/u05-content-material-rag/code/business-logic-summary.md`.
+- [ ] **Bước 3** - Domain: `Module` (thuộc môn), `Lesson` (`FILE`/`YOUTUBE`, của môn hoặc của lớp) với `ScanStatus` và chuyển trạng thái; `YoutubeUrlParser` (chỉ một video, regex ID) (BR-U05-02, 10, 11, 14, 22, NFR-U05-21).
+- [ ] **Bước 4** - Port và adapter giả: `EmbeddingPort`, `YoutubePort`, `AiUsagePort`, `PublishedContentPort`, `RagRetrievalPort`, `ContentRefPort` (P7).
+- [ ] **Bước 5** - `ModuleService`: Chủ nhiệm môn tạo, đổi tên, đổi thứ tự, lưu trữ module của môn trên Subject Detail (mọi lớp dùng chung, không sao chép); audit (F1, BR-U05-01, 14, 50).
+- [ ] **Bước 6** - `LessonService`: tải tệp (đổi `FileRef` qua `ArtifactPort.attach`) hoặc link video vào module; Chủ nhiệm môn tải trên Subject Detail → `class_id` rỗng, giảng viên tải trên Class Detail → `class_id` của lớp (BR-U05-02, 12); `PENDING` + gửi việc trong cùng transaction, Quét lại, lưu trữ (F2, F4, BR-U05-21, 22, 30, 37).
+- [ ] **Bước 7** - `TextExtractor` (Tika theo luồng, giới hạn ký tự, `NO_TEXT`), `CaptionFetcher` (vi → en → tự động, `NO_CAPTION`) (P2, BR-U05-32, 33).
+- [ ] **Bước 8** - `LessonScanHandler` (cập nhật có điều kiện, semaphore, `AiUsagePort` begin/complete/fail, một vector, ghi một transaction, `BUSY`/`NO_CREDIT`/`FAILED`) và `LessonPendingSweeper` (lesson `PENDING` có `scanned_at` quá 5 phút) (F3, P1, P3, BR-U05-35…39).
+- [ ] **Bước 9** - `PublishedContentService` và `StudentDownloadController` (kiểm ghi danh, lớp `OPEN`, lesson `ACTIVE`) (F5, BR-U05-04, 23).
+- [ ] **Bước 10** - `RetrievalService` (kiểm phạm vi, `AiUsagePort` cho `requesterId`, vector câu hỏi, k ≤ 10, `PassageSelector` ≤ 12 000 ký tự) (F6, P4, BR-U05-40…44).
+- [ ] **Bước 11** - `ClassCommunicationService`: giảng viên đăng thông báo (phát event U16 sau commit), thành viên lớp bình luận (không phát event), danh sách kèm 2 bình luận mới nhất, xem toàn bộ bình luận, ẩn có lý do; kiểm quyền U04, lọc markdown (F7, F8, BR-U05-60…65).
+- [ ] **Bước 12** - Unit test cho mọi `BR-U05-xx`: URL YouTube giả mạo hoặc playlist, markdown có script, PDF không chữ, video không phụ đề, vượt trần, thiếu credit.
+- [ ] **Bước 13** - Tóm tắt: `aidlc-docs/construction/u05-content-material-rag/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu và adapter ngoài
 
-- [ ] **Bước 16** - Flyway `V20260925_1200__u05_content_rag.sql` theo `infrastructure-design.md` §4, gồm `charged_to_account_id` cho nguồn học liệu/YouTube và ba bảng trao đổi lớp.
-- [ ] **Bước 17** - JPA repository; `VectorSearchRepository` (lọc tài liệu trong phạm vi, `<=>`, `ef_search`) (P6).
-- [ ] **Bước 18** - `GeminiEmbeddingAdapter` (`batchEmbedContents`, 768 chiều, key trong header, timeout) và `YoutubeAdapter` (Data API playlist, caption ưu tiên vi → en → tự động) (P5).
-- [ ] **Bước 19** - Integration test Testcontainers (image pgvector, Redis, RabbitMQ) với adapter giả: ingest end-to-end; `retrieve` không trả đoạn của bài nháp/lưu trữ/lớp khác; phiên bản mới giữ mục không ingest lại; credit U07 trừ đúng người, `requestRef` retry không trừ trùng, thiếu credit khác `BUSY`. Adapter thật test bằng mock HTTP (429, 403, playlist nhiều trang).
-- [ ] **Bước 20** - Tóm tắt: `code/repository-summary.md`.
+- [ ] **Bước 14** - Flyway `V20260925_1200__u05_content.sql` theo `infrastructure-design.md` §4.
+- [ ] **Bước 15** - JPA repository; `LessonVectorRepository` (lọc lesson trong phạm vi, `<=>`) (P4).
+- [ ] **Bước 16** - `GeminiEmbeddingAdapter` (768 chiều, key trong header, timeout) và `YoutubeAdapter` (phụ đề ưu tiên vi → en → tự động) (P5).
+- [ ] **Bước 17** - Integration test Testcontainers (image pgvector, Redis, RabbitMQ) với adapter giả: tải lên → quét → `INDEXED`; `retrieve` không trả lesson lưu trữ/lớp khác/môn khác, phạm vi môn không trả học liệu của lớp; lớp khác không thấy học liệu riêng của lớp; quét chạy lại không trừ credit hai lần; thiếu credit khác `BUSY`. Adapter thật test bằng mock HTTP (429, 403).
+- [ ] **Bước 18** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 21** - `/contracts/openapi/u05-content.yaml` (endpoint theo `frontend-components.md`).
-- [ ] **Bước 22** - Controller + DTO + validation.
-- [ ] **Bước 23** - Test MockMvc: giảng viên không sửa được nội dung cấp môn, học viên lớp khác không tải được file hoặc tham gia hỏi đáp, không có endpoint `retrieve` công khai.
-- [ ] **Bước 24** - Tóm tắt: `code/api-summary.md`.
+- [ ] **Bước 19** - `/contracts/openapi/u05-content.yaml` (endpoint theo `frontend-components.md`).
+- [ ] **Bước 20** - Controller + DTO + validation.
+- [ ] **Bước 21** - Test MockMvc: giảng viên không sửa được học liệu của môn, học viên lớp khác không tải được tệp hoặc bình luận, người học không đăng được thông báo, giảng viên không tạo được module, không có endpoint `retrieve` công khai.
+- [ ] **Bước 22** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 25** - `ChapterList`, `LessonEditor`, `VersionBar`, `ItemList` với `TextItemEditor`, `FileItemEditor`, `YoutubeItemEditor`.
-- [ ] **Bước 26** - `IngestionStatusBadge` (poll, Thử lại) và `SubjectLessonPicker`.
-- [ ] **Bước 27** - `LessonViewer` dùng chung (`TextItemView` với `rehype-sanitize`, `FileItemView`, `YoutubeItemView`); gắn vào `StudentClassPage` của U04.
-- [ ] **Bước 27a** - Trang thông báo/hỏi đáp lớp, biểu mẫu đăng bài và trả lời, trạng thái ẩn; người dùng chỉ thấy lớp được phép truy cập (UC 13, UC 14).
-- [ ] **Bước 28** - Test frontend: markdown có script bị lọc, URL YouTube sai bị chặn, poll dừng ở trạng thái cuối; badge phân biệt "Hệ thống đang bận" và "Không đủ credit AI".
-- [ ] **Bước 29** - Tóm tắt: `code/frontend-summary.md`.
+- [ ] **Bước 23** - `ModuleList`, `ModuleItem` (nút "Tải tệp", "Gắn link video"), `LessonRow` gắn vào Subject Detail (chế độ môn) và Class Detail (chế độ lớp) của U04; `ScanStatusBadge` (poll, Quét lại).
+- [ ] **Bước 24** - Popup `UploadLearningMaterialsDialog` mở từ nút của module (nhiều tệp hoặc một link video, module đã chọn sẵn).
+- [ ] **Bước 25** - Popup `ViewLearningMaterialDialog` cho Student (PDF xem trực tiếp, tải tệp, video `youtube-nocookie`).
+- [ ] **Bước 26** - Màn Announcements: `AnnouncementFeed`, `AnnouncementForm` (giảng viên), `AnnouncementCard` (2 bình luận mới nhất, ô bình luận), popup `CommentsDialog` (xem thêm), trạng thái ẩn (UC 13, UC 14).
+- [ ] **Bước 27** - Test frontend: markdown có script bị lọc, URL YouTube sai hoặc playlist bị chặn, poll dừng ở trạng thái cuối; badge phân biệt "Hệ thống đang bận" và "Không đủ credit AI".
+- [ ] **Bước 28** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 30** - Cập nhật `README.md`: tạo `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; chạy local không có key; hạ `U05_INGEST_CONCURRENCY` khi VPS nhỏ; cách U13 dùng `RagRetrievalPort`.
-- [ ] **Bước 31** - Chạy toàn bộ test, ghi `code/test-results.md`.
+- [ ] **Bước 29** - Cập nhật `README.md`: tạo `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; chạy local không có key; hạ `U05_SCAN_CONCURRENCY` khi VPS nhỏ; cách U13 dùng `RagRetrievalPort`.
+- [ ] **Bước 30** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết
 
 | Nguồn | Bước |
 |---|---|
-| US-CNT-001 (UC 11) | 5, 6, 9, 10, 11, 25, 26 |
-| US-CNT-002 (UC 11) | 5, 6, 7, 25 |
-| US-CNT-005 (UC 11) | 3, 6, 10, 18 |
-| US-CNT-004 (UC 13, UC 14) | 13a, 16, 21-23, 27a |
-| UC 12 (qua U04) | 12, 27 |
-| RAG cho U13 | 8, 13, 17, 19 |
+| US-CNT-001 (UC 11) | 5, 6, 7, 8, 23, 24 |
+| US-CNT-002 (UC 11) | 5, 6, 23, 24 |
+| US-CNT-005 (UC 11) | 3, 6, 8, 16 |
+| US-CNT-004 (UC 13, UC 14) | 11, 14, 19-21, 26 |
+| UC 12 | 9, 25 |
+| RAG cho U13 | 10, 15, 17 |
 
 ## 5. Ngoài phạm vi
 
+- Soạn nội dung trực tiếp, phiên bản, phát hành học liệu, playlist YouTube (bỏ ngày 2026-10-03).
 - Tìm kiếm/tóm tắt học liệu cho người dùng (ngoài phạm vi dự án).
 - Gọi LLM tạo đề/chấm (U13, U15).
-- Cờ kill-switch AI thật và cấu hình quota trên UI (U13, FR-021).

@@ -5,18 +5,18 @@
 | Thành phần | Chạy ở |
 |---|---|
 | Controller, service, `EnrollmentGuard`, `InviteCodeService`, `ScopeQueryService` | `backend` |
-| Bảng `subjects`, `classes`, `enrollments` | `postgres` |
+| Bảng `subjects`, `course_classes`, `enrollments` | `postgres` |
 | Bộ đếm nhập sai mã mời | `redis`, khóa `ratelimit:invite-code:{accountId}`, TTL 1 giờ |
-| Event `ENROLLMENT_ACTIVATED` | RabbitMQ exchange `platform.events` của U02, routing key `enrollment.activated` |
+| Event `enrollment.activated` | RabbitMQ exchange `platform.events` của U03 |
 
 U04 không chạy gì trong `worker`, không có queue riêng, không có secret riêng, không gọi dịch vụ ngoài.
 
 ## 2. Migration
 
 `V20260925_1100__u04_subjects_classes_enrollments.sql`:
-- `subjects`: unique `code`, index `manager_account_id`, cột `version`.
-- `classes`: unique `(subject_id, code)`, unique `invite_code` (cho phép rỗng), index `(subject_id, status)`, `teacher_account_id`, `show_grade_distribution BOOLEAN NOT NULL DEFAULT FALSE`, cột `version`.
-- `enrollments`: unique `(class_id, student_account_id)`, index `(student_account_id, status)`.
+- `subjects`: unique `code`, FK `manager_id` → `accounts`, cột `version`.
+- `course_classes`: unique `(subject_id, code)`, unique `invite_code` (cho phép rỗng), index `(subject_id, status)`, FK `teacher_id` → `accounts`, `show_grade_distribution BOOLEAN NOT NULL DEFAULT FALSE`, cột `version`.
+- `enrollments` (bảng nối): khóa chính `(class_id, account_id)`, index `(account_id, status)`; người thực hiện ghi danh nằm trong audit.
 - Quyền: user `app` được SELECT/INSERT/UPDATE, **không** DELETE trên ba bảng (không xóa lịch sử).
 
 ## 3. Compliance

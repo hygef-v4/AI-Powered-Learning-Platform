@@ -3,30 +3,31 @@
 ## 1. Sơ đồ
 
 ```
- Trình duyệt: DocumentEditor --postMessage--> iframe embed.diagrams.net
+ Trình duyệt: DocumentEditor, PartRubricPanel --postMessage--> iframe embed.diagrams.net
       |
       v
- +------------------------------ backend -------------------------------------+
- | TypeConfigController --> TypeConfigService (TypeConfigPort cho U08)   |
- | SkeletonController --> SkeletonService --> DocumentValidator, SvgSanitizer  |
- | DocxImportController --> DocxImporter --> SafeZipGuard, BlockMapper,       |
- |                                          DiagramDetector --> SafeDrawioParser|
- |                                          ArtifactPort (U03 DOCUMENT_IMAGE)  |
- | DocxExportService (DocxExportPort) --> JsvgRasterizer, PngChunkWriter      |
- | DocumentModelService (DocumentModelPort cho U06, U11, U15)                 |
- | DiagramCompactor (DiagramCompactPort cho U13)                              |
- | Ghi qua AssignmentExtensionPort (U08): type_config, skeleton               |
- +----------------------------------------------------------------------------+
+ +------------------------------ backend ----------------------------------------+
+ | TypeConfigController --> TypeConfigService (TypeConfigPort cho U08)           |
+ | SkeletonController --> SkeletonService --> DocumentValidator, SvgSanitizer    |
+ |                                        --> RubricPort (U06), AiDraftPort (U13)|
+ | DocxImportController --> DocxImporter --> SafeZipGuard, BlockMapper,          |
+ |                                          DiagramDetector --> SafeDrawioParser |
+ |                                          ArtifactPort (U03 DOCUMENT_IMAGE)    |
+ | DocxExportService (DocxExportPort) --> JsvgRasterizer, PngChunkWriter         |
+ | DocumentModelService (DocumentModelPort cho U06, U11, U13, U14, U15)          |
+ | DiagramCompactor (DiagramCompactPort cho U13)                                 |
+ | Ghi qua AssignmentExtensionPort (U08): config (cấu hình, khung, parts)        |
+ +-------------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Trình soạn tài liệu trong trình duyệt trao đổi với iframe Draw.io qua `postMessage`. Ở backend, `TypeConfigService` quản lý cấu hình loại bài và trả lời kiểm duyệt cho U08; `SkeletonService` lưu khung sau khi kiểm và làm sạch SVG; `DocxImporter` nhập DOCX an toàn, nhận sơ đồ Draw.io trong ảnh và lưu ảnh qua U03; `DocxExportService` dựng DOCX với sơ đồ thành PNG có nhúng XML; `DocumentModelService` cho U06, U11, U15 kiểm tài liệu; `DiagramCompactor` rút gọn XML cho U13.
+**Text alternative**: Trình soạn tài liệu và bảng rubric từng phần chạy trong trình duyệt; trình soạn trao đổi với iframe Draw.io qua `postMessage`. Ở backend, `TypeConfigService` quản lý cấu hình loại bài và trả lời kiểm duyệt cho U08; `SkeletonService` lưu khung, chia phần, nhận khung AI đề xuất qua `AiDraftPort` của U13 và tạo/sửa rubric từng phần qua `RubricPort` của U06 (rubric từng câu Text Essay do `TypeConfigService` tạo); `DocxImporter` nhập DOCX an toàn và nhận sơ đồ Draw.io nhúng trong ảnh; `DocxExportService` xuất DOCX có nhúng lại XML sơ đồ; `DocumentModelService` kiểm tài liệu cho U06, U11, U14, U15; `DiagramCompactor` rút gọn XML cho U13. Mọi cấu hình ghi vào `assignments.config` qua U08.
 
 ## 2. Thành phần
 
 | Thành phần | Trách nhiệm |
 |---|---|
-| `TypeConfigService` | F1, F4 |
-| `SkeletonService` | F2; P2 |
+| `TypeConfigService` | F1, F2b (rubric từng câu, điểm câu), F4 |
+| `SkeletonService` | F2, F2a (chia phần, rubric từng phần qua `RubricPort`), F2c (khung AI); P2 |
 | `DocumentValidator`, `DocumentModelService` | F5; P1, P2 |
 | `DocxImporter`, `SafeZipGuard`, `BlockMapper`, `DiagramDetector` | F3; P3 |
 | `DocxExportService`, `JsvgRasterizer`, `PngChunkWriter` | F6; P4 |

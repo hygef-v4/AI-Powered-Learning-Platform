@@ -4,9 +4,9 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U11-01 | Chỉ người học đang ghi danh `ACTIVE` của lớp, lớp `OPEN`, publication đang nhận bài (`ON_TIME` hoặc `LATE`). | FR-007, US-ASM-003 S2 |
+| BR-U11-01 | Chỉ người học đang ghi danh `ACTIVE` của lớp, lớp `OPEN`, bài đang nhận bài nộp (`ON_TIME` hoặc `LATE`). | FR-007, US-ASM-003 S2 |
 | BR-U11-02 | Bấm "Bắt đầu làm" tạo lượt và tính vào số lượt; chụp version bài, cấu hình, chính sách và seed trộn. | Câu 2 |
-| BR-U11-03 | Mỗi người học tối đa một lượt `IN_PROGRESS` mỗi publication; bấm lại thì mở lượt đang làm. | Câu 2 |
+| BR-U11-03 | Mỗi người học tối đa một lượt `IN_PROGRESS` mỗi bài; bấm lại thì mở lượt đang làm. | Câu 2 |
 | BR-U11-04 | Số lượt theo `maxAttempts` của U08 cho cả `GRADED` và `PRACTICE`; hết lượt → từ chối. | FR-007 |
 | BR-U11-06 | `deadlineAt` = sớm nhất giữa `startedAt + timeLimit` (nếu có) và hạn cuối nhận bài (`lateUntil` nếu cho nộp trễ, không thì `closesAt`). | BR-U09-12 |
 
@@ -26,7 +26,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U11-20 | Nộp tay kiểm: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (+30 giây ân hạn), nội dung hợp lệ (`validateForSubmit` cho tài liệu). | US-ASM-003 S1, S2 |
-| BR-U11-21 | Nộp: nội dung → bất biến, `submittedAt` theo giờ server, `late` nếu sau `closesAt`, `receiptHash`. Chỉ `GRADED` gọi `SubmissionSubmittedPort` để U15 tạo job; `PRACTICE` Quiz/Code Lab tự chấm; `PRACTICE` Text/Diagram Essay đủ credit tạo tối đa một job AI qua U13; thiếu credit vẫn lưu bài không điểm AI. | FR-007, FR-030 |
+| BR-U11-21 | Nộp: nội dung → bất biến, `submittedAt` theo giờ server, `late` nếu sau `closesAt`, `receiptHash`. Chỉ `GRADED` gọi `SubmissionSubmittedPort` để U15 tạo dòng đánh giá chờ chấm; `PRACTICE` Quiz gọi `PracticeResultPort.scoreQuiz` (U15 chấm bằng `QuizScorer`, cùng hàm với bài `GRADED`), `PRACTICE` Code Lab gọi `CodeRunPort.grade` (U13 chạy mọi test rồi ghi kết quả qua U15); `PRACTICE` Text/Diagram Essay **không tự chấm khi nộp**: lượt ở trạng thái chưa chấm AI, chờ Student bấm chấm (BR-U11-35). | FR-007, FR-030 |
 | BR-U11-22 | Biên nhận hiển thị: mã lượt, thời điểm nộp, lượt thứ mấy, trễ hay không, mã băm. | UC 31 |
 | BR-U11-23 | Tự nộp **bài hiện tại** (bản đã lưu gần nhất, kể cả lần lưu cuối client gửi khi hết giờ) khi: hết giới hạn giờ (`AUTO_TIME_LIMIT`), hết hạn (`AUTO_DEADLINE`), giảng viên ngừng giao (`AUTO_RETIRED`). Không kiểm điều kiện nộp; lỗi điều kiện ghi thành cảnh báo cho giảng viên. | Câu 3, 4 |
 | BR-U11-24 | Lượt rỗng (chưa lưu gì) khi tự nộp vẫn được nộp với nội dung rỗng. | Câu 3 |
@@ -38,8 +38,10 @@
 | BR-U11-30 | Mỗi lượt giữ nguyên, lượt mới không ghi đè. | US-ASM-003 S5 |
 | BR-U11-31 | Bài `GRADED`: lượt được chấm chính thức là **lượt nộp cuối**; giao diện đánh dấu rõ. Bài `PRACTICE`: mỗi attempt giữ kết quả luyện tập riêng, không chọn lượt cho sổ điểm. | FR-007, FR-030 |
 | BR-U11-32 | Người học chỉ xem lượt của mình; ID của người khác → "không tìm thấy". | US-ASM-003 S3 |
-| BR-U11-33 | `GRADED` hiển thị điểm/đáp án theo cấu hình và quyền công bố của U15; `PRACTICE` hiển thị kết quả từng attempt riêng, hoặc trạng thái không điểm khi thiếu credit. | BR-U09-13, FR-030 |
+| BR-U11-33 | `GRADED` hiển thị điểm/đáp án theo cấu hình và quyền công bố của U15; `PRACTICE` hiển thị kết quả từng attempt riêng, hoặc trạng thái "chưa chấm AI" kèm nút chấm. | BR-U09-13, FR-030 |
 | BR-U11-34 | Người học tải bài tài liệu/bài viết của mình ra DOCX (U09). | BR-U09-52 |
+| BR-U11-35 | Chấm AI bài Practice: trên Submitted Assignment, Student mở popup Grade with AI và bấm "Chấm với AI"; U11 kiểm chủ lượt, lượt đã nộp, bài `PRACTICE` Text/Diagram Essay rồi gọi `PracticeGradingPort` (U13); U13 kiểm credit tại lúc bấm. Thiếu credit thì báo "Không đủ credit AI", không gọi AI; mua thêm rồi bấm lại được. Mỗi lượt tối đa một kết quả AI hợp lệ; quá 5 phút chưa có kết quả thì báo lỗi (BR-U13-24) và được bấm lại. | Người dùng chốt 2026-10-04 |
+| BR-U11-36 | Assignment List hiện lượt gần nhất của Student cho mỗi bài (trạng thái, trễ, điểm nếu được hiện). Submitted Assignment mở lượt gần nhất và có nút ‹ › để chuyển giữa các lượt đã nộp. | Người dùng chốt 2026-10-04 |
 
 ## 5. Audit
 

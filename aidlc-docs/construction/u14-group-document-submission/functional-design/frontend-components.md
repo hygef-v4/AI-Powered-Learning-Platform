@@ -1,29 +1,32 @@
 # U14 Group Document & Submission - Frontend Components
 
 ```
-app/learn/group-docs/[id]/                  GroupDocumentPage (tài liệu chung)
-  GroupDocHeader            tên nhóm, trưởng nhóm, hạn, trạng thái tài liệu (Đang làm / Review), trạng thái nộp, nút Nộp (trưởng nhóm, chỉ khi Review), Tải DOCX
-  SectionOutline            cây mục chính/mục chi tiết: trạng thái (Trống / Đang làm bởi X / Xong), người giao, nút Nhận
-  SharedBlocksView          phần chung của khung (chỉ đọc)
-  SectionView               publishedBlocks (chỉ đọc) + bình luận
-  ManageSectionsDialog      (trưởng nhóm) thêm/sửa/đổi thứ tự/xóa mục chi tiết, giao mục cho thành viên
-  ReleaseLockButton         (trưởng nhóm; giảng viên ở trang giảng viên)
-  ReviewBanner              báo tài liệu đã vào Review, mời cả nhóm xem lại và bình luận
-  SubmitGroupDialog         cảnh báo bình luận chưa giải quyết
+app/learning/group-docs/[id]/                  GroupDocumentPage (màn Assignment Workspace của bài nhóm, mở từ Assignment Overview hoặc My Group)
+  GroupDocHeader            tên nhóm, trưởng nhóm, hạn, đồng hồ đếm ngược, trạng thái nộp, nút Nộp (chỉ trưởng nhóm), Tải DOCX
+  SectionOutline            danh sách mục (phần của khung): trạng thái (Trống / Đang làm bởi X / Xong), người giao, nút Nhận
+  SharedBlocksView          phần chung của khung giảng viên (chỉ đọc)
+  SectionView               publishedBlocks (chỉ đọc); mục và phần chung của giảng viên không có nút sửa/xóa
+  AssignSectionsDialog      (trưởng nhóm) giao từng mục cho thành viên
+  SectionEditorDialog       popup che kín trang khi người giữ mở mục: các heading trên nhánh của mục và nội dung của chúng + các block của mục, không hiện nhánh khác (DocumentEditor U09, mode STUDENT), "Đã lưu lúc …", nút Xong, nút Nhả (hộp xác nhận: bản nháp chưa Xong sẽ bị bỏ)
+  ReleaseLockButton         (trưởng nhóm; giảng viên ở trang giảng viên); hộp xác nhận: bản nháp chưa Xong của người giữ sẽ bị bỏ
+  SubmitGroupDialog         trưởng nhóm xác nhận nộp; cảnh báo các mục chưa xong
+  AutoSubmitOverlay         khi tự nộp, với mọi người đang mở tài liệu (đang sửa mục hoặc chỉ xem): khóa trang, người đang sửa gửi lần lưu cuối, vòng chờ "Đang nộp…"; nộp xong chuyển sang Submitted Assignment
   useGroupDocStream         kết nối SSE, áp dụng sự kiện, tải lại khi kết nối lại
-app/learn/group-docs/[id]/sections/[sectionId]   SectionWorkPage
-  DocumentEditor (U09, mode STUDENT, chỉ block của mục), "Đã lưu lúc …", nút Xong, nút Nhả
-shared/group-docs/GroupDocsOverviewPanel       (giảng viên; hiện trong danh sách bài nộp của publication khi bài là GROUP, thay bảng theo từng sinh viên)
-  bảng nhóm: trạng thái tài liệu, số mục xong/đang làm/trống, bản nộp, xem tài liệu (mở chi tiết bài nộp của nhóm), nhả khóa
+shared/group-docs/GroupSubmissionView       bản nộp của nhóm (chỉ đọc, tác giả từng mục, tải DOCX); hiện trong màn Submitted Assignment (U11) khi bài là bài nhóm
+shared/group-docs/GroupDocsOverviewPanel    (giảng viên; hiện trong Grading Queue (U15) khi là bài nhóm, thay bảng theo từng sinh viên)
+  bảng nhóm: số mục xong/đang làm/trống, bản nộp, xem tài liệu (mở chi tiết bài nộp của nhóm), nhả khóa
 ```
+
+Phần soạn bài nhóm (khung, chia phần, rubric từng phần) trên Assignment Editor, Question Bank và Template Editor (UC 27) thuộc U09/U06; U14 chỉ dựng mỗi phần thành một mục khi bài mở trong lớp.
 
 | Component | Hành vi | API |
 |---|---|---|
 | `GroupDocumentPage` | | `GET /api/v1/group-docs/{id}` |
 | `useGroupDocStream` | SSE; mất kết nối → thử lại, tải lại toàn bộ | `GET /api/v1/group-docs/{id}/events` (SSE) |
 | `SectionOutline` Nhận | | `POST /api/v1/group-docs/{id}/sections/{sid}/claim` |
-| `ManageSectionsDialog` | Chỉ trưởng nhóm | `POST /api/v1/group-docs/{id}/sections`, `PATCH`, `DELETE .../sections/{sid}`, `POST .../sections/{sid}/assign` |
-| `SectionWorkPage` | Tự lưu 10 s | `PUT .../sections/{sid}/draft`, `POST .../done`, `POST .../release` |
-| Bình luận | | `POST .../sections/{sid}/comments`, `POST .../comments/{cid}/resolve` |
-| `SubmitGroupDialog` | Bật khi tài liệu `REVIEW` | `POST /api/v1/group-docs/{id}/submissions` |
+| `AssignSectionsDialog` | Chỉ trưởng nhóm; không thêm/xóa/sửa mục | `POST /api/v1/group-docs/{id}/sections/{sid}/assign` |
+| `SectionEditorDialog` | Mở toàn màn hình; tự lưu 10 s; Xong đóng popup, workspace của mọi người cập nhật realtime | `PUT .../sections/{sid}/draft`, `POST .../done`, `POST .../release` |
+| `SubmitGroupDialog` | Chỉ trưởng nhóm, bất kỳ lúc nào khi bài còn nhận | `POST /api/v1/group-docs/{id}/submissions` |
+| `AutoSubmitOverlay` | Chờ sự kiện `GROUP_SUBMITTED` (mất kết nối thì hỏi trạng thái) rồi chuyển trang | `GET /api/v1/group-docs/{id}/submission` |
+| `GroupSubmissionView` | | `GET /api/v1/group-docs/{id}/submission` |
 | Tải DOCX | | `GET /api/v1/group-docs/{id}/export.docx?submission=` |

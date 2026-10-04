@@ -1,10 +1,9 @@
-# U02 Audit, Job & Event - Tech Stack Decisions
+# U02 Audit - Tech Stack Decisions
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Messaging | Spring AMQP với RabbitMQ | Đã chốt RabbitMQ; Spring AMQP có ack thủ công, prefetch, tự kết nối lại |
-| Bảng `jobs`, `audit_events` | PostgreSQL + Spring Data JPA | Đã chốt; `claim` dùng `UPDATE ... WHERE status = 'PENDING'` để chỉ một worker thắng |
-| Lượt quét | `@Scheduled` trong worker | Chỉ một worker, không cần khóa phân tán |
-| Worker | Cùng project Maven backend, profile `worker` | Không phải duy trì hai codebase |
+| Bảng `audit_logs` | PostgreSQL + Spring Data JPA | Đã chốt |
 | Lưu JSON audit | Cột `jsonb` | Đã chốt ở Application Design |
-| Test | JUnit 5, Testcontainers (PostgreSQL, RabbitMQ) | Theo NFR-004 |
+| Test | JUnit 5, Testcontainers (PostgreSQL) | Theo NFR-004 |
+
+Messaging, worker, sweeper và scanner thuộc U03 (xem `u03-file-and-artifact/nfr-requirements/tech-stack-decisions.md`).

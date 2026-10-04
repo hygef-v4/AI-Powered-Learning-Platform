@@ -11,38 +11,45 @@
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
 | `AuthorizationPort` | U01 | Dùng thật |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Dùng thật |
+| `AuditPort` | U02 | Dùng thật |
+| `ScheduledScanner`, `EventPublisherPort` | U03 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật |
-| `BankQueryPort`, `DefinitionValidationPort`, `QuestionEditor`, `QuestionView` | U06 | Dùng thật |
-| `ContentRefPort` | U05 | Dùng thật (câu riêng gắn chương/bài) |
+| `BankQueryPort`, `InlineQuestionPort`, `QuestionEditor`, `QuestionView` | U06 | Dùng thật |
+| U08 cài `RubricOwnerPort` (U06 khai báo) | cho U06 | Thay adapter rỗng của U06: sửa rubric ở Question Bank thì bài `DRAFT` chuyển sang phiên bản mới (BR-U06-36) |
+| `ContentRefPort` | U05 | Dùng thật (module/lesson trong bộ lọc chọn ngẫu nhiên và phạm vi yêu cầu AI) |
 | `TypeConfigPort` | U09 (`C`) | Adapter tạm luôn đạt; U09 thay |
-| `GroupReadinessPort` | U12 (`C`) | Adapter tạm trả "chưa sẵn sàng" (chặn phát hành bài `GROUP`); U12 thay |
+| `GroupReadinessPort` | U12 (`C`) | Dùng thật: U12 code trước U08 trong wave 2; U08 khai báo port và cắm `GroupReadinessService` của U12 |
+| `CodeLabCheckPort` | U13 (`C`) | Adapter tạm luôn đạt (bỏ qua kiểm lời giải mẫu); U13 thay |
+| `AssignmentLifecyclePort` | U11, U14 (`C`) | Adapter rỗng; U11, U14 (wave 3) thay |
+| Copy template, copy bài lớp khác | U10 (wave 4) | `CreateAssignmentDialog` chỉ có "Bài trống"; U10 gắn hai lựa chọn copy vào |
 | `AiDraftPort` | U13 (`C`) | Adapter tạm báo "AI chưa sẵn sàng"; ẩn nút AI khi chưa có; U13 thay |
 
 ### Dữ liệu U08 sở hữu
 
-PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICATION_OPEN`, `PUBLICATION_CLOSE` trên queue `jobs.scheduled`; event `assignment.opened` (chỉ cho thông báo U16).
+PostgreSQL `assignments` (gồm lịch mở/đóng), `assignment_questions`; scanner mở/đóng theo lịch trong worker; event `assignment.opened` (chỉ cho thông báo U16).
 
 ## 2. Cấu trúc
 
 ```
 /backend/src/main/java/edu/aiplatform/
   assessments/
-    api/                AssignmentController, PublicationController, StudentAssignmentController, DTO
-    application/        AssignmentService, ReviewValidator, PublicationService,
+    api/                AssignmentController, ScheduleController, StudentAssignmentController, DTO
+    application/        AssignmentService, ReviewValidator, ScheduleService,
                         AssignmentQueryService, StudentViewMapper
-    domain/             Assignment, AssignmentComponent, Publication, trạng thái,
+    domain/             Assignment, AssignmentQuestion, trạng thái,
                         SubmissionWindow
-    infrastructure/     JPA repository, PassTypeConfigCheckAdapter, UnavailableAiDraftAdapter
-    worker/             PublicationScheduleHandler
-    port/               AssignmentQueryPort, TypeConfigPort, AiDraftPort
+    infrastructure/     JPA repository, PassTypeConfigCheckAdapter, PassCodeLabCheckAdapter,
+                        UnavailableAiDraftAdapter, NoopLifecycleAdapter, GroupReadinessAdapter (gọi U12)
+    worker/             AssignmentScheduleScanner
+    port/               AssignmentQueryPort, AssignmentExtensionPort, TypeConfigPort, AiDraftPort,
+                        AssignmentLifecyclePort, GroupReadinessPort, CodeLabCheckPort
 /backend/src/main/resources/db/migration/u08/
 /frontend/src/app/teaching/classes/[id]/assignments/
 /frontend/src/app/teaching/assignments/[id]/
@@ -54,41 +61,41 @@ PostgreSQL `assignments`, `assignment_components`, `publications`; job `PUBLICAT
 
 ### Nhóm A - Khung
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
 - [ ] **Bước 1** - Biến cấu hình U08 theo `logical-components.md` §3; `TZ=UTC` cho `backend`/`worker`.
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain: `Assignment` (aggregate, khóa khi không `DRAFT`), `AssignmentComponent` (một nguồn), `Publication`, `SubmissionWindow` (P1, P3, BR-U08-10…14, 33).
-- [ ] **Bước 3** - Port và adapter tạm: `AssignmentQueryPort`, `TypeConfigPort`, `AiDraftPort`, `PublicationLifecyclePort` (adapter rỗng); `AssignmentExtensionPort` cho U09, U10, U15 ghi cấu hình loại bài, khung, lineage và công bố điểm. U08 sở hữu `gradingMode` và ràng buộc năm dạng bài.
-- [ ] **Bước 4** - `AssignmentService`: tạo, thêm từ ngân hàng/câu riêng, điểm, sửa, xóa nháp, nhân bản, tạo version mới sau khi ngừng giao/đóng, lưu trữ, audit (F1, F7, BR-U08-01, 10…15, 41…44).
-- [ ] **Bước 5** - AI draft: gọi `AiDraftPort`, thêm câu giữ lại với `origin = AI` (F2, BR-U08-21).
-- [ ] **Bước 6** - `ReviewValidator` và duyệt (F3, P5, BR-U08-20, 22).
-- [ ] **Bước 7** - `PublicationService`: phát hành một lớp, kiểm lịch/nộp trễ/số lượt, khóa bài, tạo job, sửa lịch, ngưng giao, audit (F4, F6, F7, P2, BR-U08-02, 30…34, 40).
-- [ ] **Bước 8** - `PublicationScheduleHandler` (UPDATE có điều kiện; mở bài gọi `PublicationLifecyclePort.onOpened` trong transaction rồi phát `assignment.opened` sau commit); ngưng giao gọi `onRetired` trong transaction (F5, F6, P2, P6, BR-U08-35, 36, 40). Port khai báo ở Bước 3 kèm adapter rỗng tới khi U11/U14 có.
-- [ ] **Bước 9** - `AssignmentQueryService`, `StudentViewMapper` và `AssignmentExtensionService` (cài `AssignmentExtensionPort`: chỉ cho U09 ghi cấu hình/khung khi bài `DRAFT`, U10 ghi lineage lúc tạo bài, U15 ghi công bố điểm `GRADED`) (F8, P3, P4, BR-U08-03).
-- [ ] **Bước 10** - Unit test mọi `BR-U08-xx`, gồm ranh giới `closesAt`/`lateUntil` và bài `LOCKED` không sửa được.
+- [ ] **Bước 2** - Domain: `Assignment` (aggregate, khóa từ `SCHEDULED`, gồm lịch), `AssignmentQuestion`, `SubmissionWindow` (P1, P3, BR-U08-10…14, 33).
+- [ ] **Bước 3** - Port và adapter: `AssignmentQueryPort`; port khai báo `TypeConfigPort` (luôn đạt), `CodeLabCheckPort` (luôn đạt), `AiDraftPort` (báo chưa sẵn sàng), `AssignmentLifecyclePort` (rỗng), `GroupReadinessPort` (cắm U12); `AssignmentExtensionPort` cho U09, U10, U15, U16 ghi cấu hình loại bài, template/lineage, công bố điểm, mốc nhắc hạn. U08 sở hữu `gradingMode` và ràng buộc năm dạng bài.
+- [ ] **Bước 4** - `AssignmentService`: tạo (chọn dạng và chế độ trước, BR-U08-17), thêm câu từ ngân hàng (chọn tay hoặc ngẫu nhiên qua `BankQueryPort.pickRandom`, BR-U08-18) hoặc câu riêng (qua `InlineQuestionPort`), cài `RubricOwnerPort.repoint` qua `TypeConfigPort.repointRubric` (rubric do U09 tạo, BR-U08-16, BR-U06-36), nhân bản rubric qua `TypeConfigPort.copy` khi nhân bản/tạo version (BR-U06-35), điểm, sửa, xóa nháp, nhân bản, tạo version mới sau khi ngừng giao/đóng, audit (F1, F7, BR-U08-01, 10…15, 41…44).
+- [ ] **Bước 5** - AI draft: gọi `AiDraftPort`, lưu câu giữ lại thành câu riêng của bài qua `InlineQuestionPort` (F2, BR-U08-21).
+- [ ] **Bước 6** - `ReviewValidator` (câu, điểm; cấu hình và rubric qua `TypeConfigPort`; `CodeLabCheckPort`) và duyệt (F3, P5, BR-U08-20, 22).
+- [ ] **Bước 7** - `ScheduleService`: phát hành (ghi lịch, kiểm lịch/nộp trễ/số lượt, bài nhóm hỏi `GroupReadinessPort`, khóa bài), sửa lịch, ngưng giao gọi `onRetired` trong transaction, audit (F4, F6, F7, BR-U08-02, 30…34, 40).
+- [ ] **Bước 8** - `AssignmentScheduleScanner` đăng ký với U03 (UPDATE có điều kiện mỗi phút; mở bài gọi `AssignmentLifecyclePort.onOpened` trong transaction rồi phát `assignment.opened` sau commit; đóng bài theo `closes_at`/`late_until`) (F5, P2, P6, BR-U08-35, 36). Port khai báo ở Bước 3 kèm adapter rỗng tới khi U11/U14 có.
+- [ ] **Bước 9** - `AssignmentQueryService`, `StudentViewMapper` và `AssignmentExtensionService` (cài `AssignmentExtensionPort`: chỉ cho U09 ghi `config` và điểm câu Text Essay theo rubric khi bài `DRAFT`, U10 ghi `subject_id`/`source_assignment_id`/trạng thái template, U15 ghi `grades_released_at` bài `GRADED`, U16 ghi `reminder_sent_at`) (F8, P3, P4, BR-U08-03).
+- [ ] **Bước 10** - Unit test mọi `BR-U08-xx`, gồm ranh giới `closes_at`/`late_until`, bài đã phát hành không sửa được, chọn ngẫu nhiên không trùng câu đã có, nhân bản bài nhân bản đủ rubric từng câu/phần.
 - [ ] **Bước 11** - Tóm tắt: `aidlc-docs/construction/u08-assessment-core-publication/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu
 
 - [ ] **Bước 12** - Flyway `V20260925_1500__u08_assessment.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test Testcontainers: job mở/đóng chạy lặp, đổi lịch sau khi tạo job, hai lượt phát hành cùng lớp bị chặn, event gửi sau commit.
+- [ ] **Bước 14** - Integration test Testcontainers: scanner mở/đóng chạy lặp, đổi lịch rồi quét, phát hành bài đã phát hành bị chặn, hai người sửa cùng bài chạy lần lượt (khóa dòng), event gửi sau commit.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
 - [ ] **Bước 16** - `/contracts/openapi/u08-assessment.yaml` và schema event.
 - [ ] **Bước 17** - Controller + DTO + validation (giờ nhận ISO 8601 có offset).
-- [ ] **Bước 18** - Test MockMvc: phát hành sai lớp bị từ chối và audit, người học không thấy đáp án, không thấy bài `SCHEDULED`/`RETIRED`, sửa bài `LOCKED` trả `409`.
+- [ ] **Bước 18** - Test MockMvc: phát hành sai lớp bị từ chối và audit, người học không thấy đáp án, không thấy bài `SCHEDULED`/`RETIRED`, sửa bài đã phát hành trả `409`.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 20** - `AssignmentListPage`, `AssignmentEditorPage` (`ComponentList`, `AddFromBankDialog`, `InlineQuestionEditor`, `TypeConfigSlot`).
+- [ ] **Bước 20** - `AssignmentListPage` (`CreateAssignmentDialog`: dạng + chế độ rồi nguồn; lượt này chỉ "Bài trống", U10 gắn copy), `AssignmentEditorPage` (`QuestionList`, `AddFromBankDialog` có tab chọn ngẫu nhiên, `InlineQuestionEditor`, `TypeConfigSlot`).
 - [ ] **Bước 21** - `AiDraftDialog` (ẩn khi AI chưa sẵn sàng), `PreviewDialog`, `ReviewButton`.
-- [ ] **Bước 22** - `PublishDialog`, `PublicationList` (sửa lịch, ngưng giao), `CloneButton`, `ArchiveButton`.
+- [ ] **Bước 22** - `PublishDialog`, `ScheduleSection` (sửa lịch, ngưng giao), `CloneButton`, `NewVersionButton`.
 - [ ] **Bước 23** - Test frontend: cảnh báo khóa khi phát hành, kiểm lịch phía client, giờ hiển thị Việt Nam.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 

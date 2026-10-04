@@ -4,32 +4,34 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16, UC 27.
-- **Thay đổi 2026-10-01**: tài liệu nhóm ở bảng `group_documents` (một nhóm của lớp × một publication); trưởng nhóm thêm mục chi tiết và giao mục; tài liệu vào `REVIEW` khi mọi mục lá xong và trưởng nhóm chỉ nộp ở `REVIEW`. Plan cần duyệt lại.
+- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16; dựng tài liệu nhóm và nhả khóa mục cho UC 27 (U09 chủ trì).
+- **Thay đổi 2026-10-04**: tài liệu nhóm ở bảng `group_documents` (một nhóm của lớp × một bài nhóm); mỗi phần của khung là một mục, trưởng nhóm giao mục (không có mục chi tiết); người giữ sửa mục trong popup che kín trang; không có bước review; trưởng nhóm nộp bất kỳ lúc nào trước hạn; hết hạn tự nộp gồm phần đang làm.
 - **Thiết kế nguồn**: `construction/u14-group-document-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
 | Port | Unit thật | Xử lý lượt này |
 |---|---|---|
 | `AuthorizationPort` | U01 | Dùng thật |
-| `JobPort`, `AuditPort`, `EventPublisherPort` | U02 | Dùng thật |
+| `AuditPort` | U02 | Dùng thật |
+| `JobPort`, `ScheduledScanner`, `EventPublisherPort` | U03 | Dùng thật |
 | `ArtifactPort` | U03 | Dùng thật |
 | `ClassAccessPort` | U04 | Dùng thật |
-| `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật; U14 cài `PublicationLifecyclePort` của U08 |
+| `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Dùng thật; U14 cài `AssignmentLifecyclePort` của U08 |
 | `DocumentModelPort`, `DocxExportPort`, `DocumentEditor` | U09 | Dùng thật |
 | `GroupMembershipPort` | U12 | Dùng thật; U14 cài `GroupChangePort` của U12 |
-| U14 cung cấp `GroupSubmissionQueryPort` (U13, U15, U16), event `group.document-review`, `group.submitted` (U16); khai báo `GroupSubmittedPort` (U15 cài, adapter rỗng tới khi có U15) | cho U13, U15, U16 | Các unit đó dùng khi được code |
+| U14 cung cấp `GroupSubmissionQueryPort` (U13, U15, U16), event `group.submitted` (U16) | cho U13, U15, U16 | Các unit đó dùng khi được code |
+| `GroupSubmittedPort` | U15 (`C`, U14 khai báo) | Adapter rỗng: bản nộp nhóm chưa vào hàng chấm; U15 (ngay sau U14 trong wave 3) cài |
 
 ### Dữ liệu U14 sở hữu
 
-PostgreSQL: `group_documents`, `sections`, `section_revisions`, `section_comments`, `group_submissions`; Redis `ratelimit:section-save:*`; RabbitMQ fanout `platform.realtime` và queue tạm `jobs.realtime.{instanceId}` mỗi backend; job `GROUP_DOC_CREATE` trên `jobs.triggered`, `GROUP_AUTO_SUBMIT` trên `jobs.scheduled`.
+PostgreSQL: `group_documents` (mục, lịch sử, bản nộp nằm trong cột JSON của bảng này); Redis `ratelimit:section-save:*`; RabbitMQ fanout `platform.realtime` và queue tạm `jobs.realtime.{instanceId}` mỗi backend; việc `GROUP_DOC_CREATE` trên `jobs.triggered`; `GroupAutoSubmitScanner` đăng ký `ScheduledScanner` (U03).
 
 ## 2. Cấu trúc
 
@@ -41,13 +43,13 @@ PostgreSQL: `group_documents`, `sections`, `section_revisions`, `section_comment
                         GroupSubmissionQueryService
     realtime/           GroupDocEventPublisher, SseHub, RealtimeListener
     domain/             GroupDocument, Section, SectionStatus, SectionRevision,
-                        SectionComment, GroupSubmission
-    infrastructure/     JPA repository
-    worker/             AutoSubmitHandler, GroupDocCreateHandler
-    adapter/            PublicationLifecycleAdapter (U08), GroupChangeAdapter (U12)
-    port/               GroupSubmissionQueryPort
+                        GroupSubmission
+    infrastructure/     JPA repository, NoopGroupSubmittedAdapter
+    worker/             GroupAutoSubmitScanner, GroupDocCreateHandler
+    adapter/            AssignmentLifecycleAdapter (U08), GroupChangeAdapter (U12)
+    port/               GroupSubmissionQueryPort, GroupSubmittedPort
 /backend/src/main/resources/db/migration/u14/
-/frontend/src/app/learn/group-docs/
+/frontend/src/app/learning/group-docs/
 /frontend/src/components/group-docs/ (GroupDocsOverviewPanel)
 /frontend/src/features/group-doc/useGroupDocStream.ts
 /contracts/openapi/u14-group-docs.yaml
@@ -58,17 +60,17 @@ PostgreSQL: `group_documents`, `sections`, `section_revisions`, `section_comment
 
 ### Nhóm A - Khung
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
 - [ ] **Bước 1** - Cấu hình U14 theo `logical-components.md` §3; Tomcat async/timeout; Nginx route SSE và lưu nháp mục.
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain, trạng thái mục lá/mục cha và trạng thái tài liệu `IN_PROGRESS`/`REVIEW` (BR-U14-06, 10…15, 24, 25); port `GroupSubmissionQueryPort`.
-- [ ] **Bước 3** - `GroupDocInitializer`: dựng tài liệu cho mọi nhóm của lớp từ khung theo `workSection` khi bài mở, cho nhóm mới sau đó (F1, P5, BR-U14-01).
-- [ ] **Bước 4** - `SectionService`: trưởng nhóm thêm/sửa/xóa mục chi tiết và giao mục; nhận, lưu nháp, Xong (revision), nhả, bình luận; chuyển `REVIEW`/`IN_PROGRESS`; UPDATE có điều kiện (F3-F7, P1, P6, BR-U14-02, 05, 10…15, 24, 25).
-- [ ] **Bước 5** - Realtime: `GroupDocEventPublisher` (sau commit → fanout), `RealtimeListener` (queue tạm `jobs.realtime.{instanceId}`), `SseHub` (heartbeat, timeout, đóng kênh người bị bỏ) (P2, P3, BR-U14-20…22).
-- [ ] **Bước 6** - `GroupChangeAdapter` (`onGroupCreated` tạo job `GROUP_DOC_CREATE`; `onMemberRemoved` nhả khóa, đóng kênh người rời nhóm) và `PublicationLifecycleAdapter` (`onOpened` tạo job `GROUP_DOC_CREATE` cho mọi nhóm; `onRetired` tạo job `GROUP_AUTO_SUBMIT`) (F1, F8, BR-U14-13, 33).
-- [ ] **Bước 7** - `GroupSubmitter` một đường (trưởng nhóm, tự nộp tại hạn, ngừng giao), nộp tay chỉ khi `REVIEW`, bản chụp nhất quán, biên nhận, event (F8, P4, BR-U14-30…34).
+- [ ] **Bước 2** - Domain, trạng thái mục và trạng thái tài liệu `IN_PROGRESS`/`CLOSED` (BR-U14-10…13, 24); port `GroupSubmissionQueryPort`, `GroupSubmittedPort` (adapter rỗng).
+- [ ] **Bước 3** - `GroupDocInitializer`: dựng tài liệu cho mọi nhóm của lớp từ các phần của khung (`config.parts`) khi bài mở, cho nhóm mới sau đó (F1, P5, BR-U14-01).
+- [ ] **Bước 4** - `SectionService`: trưởng nhóm giao mục; nhận, lưu nháp, Xong (revision), nhả (xóa bản nháp chưa Xong); khóa dòng `group_documents`; không ai thêm/xóa/sửa mục (F3-F7, P1, BR-U14-02, 05, 10…13, 24).
+- [ ] **Bước 5** - Realtime: `GroupDocEventPublisher` (sau commit → fanout), `RealtimeListener` (queue tạm `jobs.realtime.{instanceId}`), `SseHub` phân kênh theo khóa tổng quát để U16 dùng lại (heartbeat, timeout, đóng kênh người bị bỏ) (P2, P3, BR-U14-20…22).
+- [ ] **Bước 6** - `GroupChangeAdapter` (`onGroupCreated` gửi việc `GROUP_DOC_CREATE`; `onMemberRemoved` nhả khóa, đóng kênh người rời nhóm) và `AssignmentLifecycleAdapter` (`onOpened` gửi việc `GROUP_DOC_CREATE` cho mọi nhóm) và `GroupAutoSubmitScanner` (tự nộp khi quá hạn hoặc bài `RETIRED`) (F1, F8, P4, BR-U14-13, 33).
+- [ ] **Bước 7** - `GroupSubmitter` một đường (trưởng nhóm nộp bất kỳ lúc nào trước hạn; tự nộp tại hạn + 30 giây hoặc ngừng giao, chốt mục đang giữ bằng bản nháp đã lưu, tài liệu `CLOSED`), bản chụp nhất quán, biên nhận, event (F8, P4, BR-U14-30…34, 36).
 - [ ] **Bước 8** - `GroupSubmissionQueryService`: bản nộp cuối, mục theo tác giả; xuất DOCX (F9, BR-U14-35, 40).
 - [ ] **Bước 9** - Audit theo BR-U14-50.
 - [ ] **Bước 10** - Unit test mọi `BR-U14-xx`.
@@ -76,36 +78,36 @@ PostgreSQL: `group_documents`, `sections`, `section_revisions`, `section_comment
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 12** - Flyway `V20260925_2100__u14_group_workspace.sql` theo `infrastructure-design.md` §4.
+- [ ] **Bước 12** - Flyway `V20260925_1850__u14_group_workspace.sql` theo `infrastructure-design.md` §4.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test: hai người nhận cùng mục; giao mục đang có người giữ; Xong mục lá cuối → `REVIEW`, nhận lại → `IN_PROGRESS`; rời nhóm nhả khóa; tự nộp tại hạn và không nộp trùng; hai client SSE nhận đúng sự kiện; `app` không sửa được revision/bản nộp.
+- [ ] **Bước 14** - Integration test: hai người nhận cùng mục; giao mục đang có người giữ; mọi mục xong không đổi trạng thái; rời nhóm hoặc nhả bằng tay thì xóa bản nháp chưa Xong, mục về đúng `OPEN`/`DONE`; tự nộp tại hạn lấy bản nháp của mục đang giữ, tài liệu `CLOSED`, không nộp trùng; hai client SSE nhận đúng sự kiện; nộp lại ghi đè `submitted_snapshot` và ghi audit.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
 - [ ] **Bước 16** - `/contracts/openapi/u14-group-docs.yaml` (gồm SSE) và schema event.
 - [ ] **Bước 17** - Controller + DTO + validation; controller SSE.
-- [ ] **Bước 18** - Test MockMvc: nhóm khác `404`; người không giữ mục không lưu được; chỉ trưởng nhóm thêm/giao mục; chỉ trưởng nhóm nộp và chỉ khi `REVIEW`.
+- [ ] **Bước 18** - Test MockMvc: nhóm khác `404`; người không giữ mục không lưu được; chỉ trưởng nhóm giao mục; không ai thêm/sửa/xóa mục; chỉ trưởng nhóm nộp.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 20** - `GroupDocumentPage` (`GroupDocHeader`, `SectionOutline`, `SharedBlocksView`, `SectionView` + bình luận, `ManageSectionsDialog`, `ReviewBanner`, `SubmitGroupDialog`), `useGroupDocStream`.
-- [ ] **Bước 21** - `SectionWorkPage` (`DocumentEditor` của U09, tự lưu, Xong, Nhả).
-- [ ] **Bước 22** - `GroupDocsOverviewPanel` cho giảng viên, gắn vào danh sách bài nộp của bài GROUP (tiến độ, nhả khóa, xem bản nộp).
+- [ ] **Bước 20** - `GroupDocumentPage` (`GroupDocHeader`, `SectionOutline`, `SharedBlocksView`, `SectionView`, `AssignSectionsDialog`, `SubmitGroupDialog`, `AutoSubmitOverlay`), `useGroupDocStream`; `GroupSubmissionView` cho màn Submitted Assignment.
+- [ ] **Bước 21** - `SectionEditorDialog` popup che kín trang, hiện các heading trên nhánh của mục cùng nội dung của chúng và các block của mục, không hiện nhánh khác (`DocumentEditor` của U09, tự lưu, Xong, Nhả có hộp xác nhận bỏ bản nháp); Xong đóng popup và workspace cập nhật realtime.
+- [ ] **Bước 22** - `GroupDocsOverviewPanel` cho giảng viên, gắn vào Grading Queue (U15) của bài nhóm (tiến độ, nhả khóa, xem bản nộp).
 - [ ] **Bước 23** - Test frontend: nhận mục bị người khác nhận trước hiện thông báo; sự kiện SSE cập nhật trạng thái mục; mất kết nối thì tải lại.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
 
-- [ ] **Bước 25** - Cập nhật `README.md`: luồng bài nhóm (giảng viên soạn mục chính → trưởng nhóm thêm/giao mục chi tiết → thành viên làm và Xong → tài liệu Review → trưởng nhóm nộp), cấu hình SSE qua Nginx.
+- [ ] **Bước 25** - Cập nhật `README.md`: luồng bài nhóm (giảng viên soạn khung, hệ thống tự chia phần, rubric từng phần → trưởng nhóm giao phần → thành viên làm trong popup và Xong → trưởng nhóm nộp, hoặc hết hạn tự nộp), cấu hình SSE qua Nginx.
 - [ ] **Bước 26** - Chạy toàn bộ test, ghi `code/test-results.md`.
 
 ## 4. Truy vết
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-003 (UC 27) | 3, 4, 22 |
+| US-GRP-003 (UC 27, phần tài liệu nhóm; U09 chủ trì) | 3, 4, 22 |
 | US-GRP-004 (UC 16) | 4, 5, 20, 21 |
 | US-GRP-005 (UC 16) | 5, 7, 20 |
 | US-GRP-006 (dữ liệu cho U15) | 8 |

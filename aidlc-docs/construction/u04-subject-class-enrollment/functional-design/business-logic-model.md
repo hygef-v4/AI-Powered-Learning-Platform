@@ -6,7 +6,7 @@
 3. Gán Chủ nhiệm môn: tra U01, kiểm role (BR-U04-03), thay người cũ, audit.
 4. Lưu trữ/mở lại: kiểm mọi lớp đã `ARCHIVED` (BR-U04-04), audit.
 
-## F2 - Tạo lớp và gán giảng viên (ADMIN)
+## F2 - Tạo lớp và gán giảng viên (ADMIN hoặc Chủ nhiệm môn của môn)
 1. Tạo lớp trong môn `ACTIVE`, `DRAFT`, kiểm `code` trong môn (BR-U04-10, 11).
 2. Gán/đổi giảng viên: tra U01, kiểm role (BR-U04-12), audit.
 
@@ -15,7 +15,7 @@
 2. Sửa `name`, `description`, `term`.
 3. Đổi trạng thái theo BR-U04-14; mở lại kiểm BR-U04-15.
 4. Người quản lý có thể bật/tắt `showGradeDistribution`; mặc định tắt và U16 chỉ dùng khi đủ mẫu (BR-U04-17).
-5. `DRAFT→OPEN`: phát `ENROLLMENT_ACTIVATED` cho mọi ghi danh `ACTIVE` (BR-U04-26).
+5. `DRAFT→OPEN`: phát `enrollment.activated` cho mọi ghi danh `ACTIVE` (BR-U04-26).
 6. Audit.
 
 ## F4 - Ghi danh từng người
@@ -40,8 +40,8 @@
 ## F8 - Người học xem lớp
 1. `listMyClasses`: ghi danh `ACTIVE`, chia "Đang học"/"Đã kết thúc" (BR-U04-40).
 2. `getStudentClass(classId)`: kiểm BR-U04-41, 42; trả thông tin lớp, giảng viên, nội dung qua `PublishedContentPort`. Tải file đi qua API của U05 (U05 hỏi `ClassAccessPort`).
-3. Dashboard: frontend ghép danh sách lớp của U04 với API assignment (U08) và thông báo (U16) khi có.
+3. `MyClassesPage` là Student Menu, trang đích của Student sau khi đăng nhập (BR-U01-48); không có dashboard cá nhân.
 
 ## F9 - Contract cho unit khác
 - `ClassScopePort`/`SubjectScopePort` cho U01 quyết định quyền và chặn hạ role.
-- `ClassAccessPort` cho U05, U06, U08-U12, U14-U16 kiểm ghi danh và lấy danh sách người học.
+- `ClassAccessPort` cho U05, U06, U08-U16 kiểm ghi danh và lấy danh sách người học.

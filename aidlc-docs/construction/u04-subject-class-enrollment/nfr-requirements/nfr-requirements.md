@@ -13,16 +13,16 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U04-10 | Unique trong DB: `subjects.code`; `(subject_id, code)` của lớp; `invite_code`; `(class_id, student_account_id)` của ghi danh. | BR-U04-02, 11, 21, 30 |
+| NFR-U04-10 | Unique trong DB: `subjects.code`; `(subject_id, code)` của lớp; `invite_code`; khóa chính `(class_id, account_id)` của ghi danh. | BR-U04-02, 11, 21, 30 |
 | NFR-U04-11 | Quy tắc "1 lớp chưa lưu trữ mỗi môn" (BR-U04-22) kiểm trong transaction có khóa hàng theo `(student, subject)` để hai yêu cầu đồng thời không cùng qua. | BR-U04-22 |
 | NFR-U04-12 | Đổi trạng thái lớp dùng khóa lạc quan (`version`); xung đột → "dữ liệu đã thay đổi, tải lại". | BR-U04-14 |
-| NFR-U04-13 | Event `ENROLLMENT_ACTIVATED` gửi sau commit qua `EventPublisherPort` của U02. | BR-U04-26 |
+| NFR-U04-13 | Event `enrollment.activated` gửi sau commit qua `EventPublisherPort` của U03. | BR-U04-26 |
 
 ## 3. Thông báo
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U04-20 | Mỗi event ghi danh sinh thông báo trong app ngay; email gửi qua job U02, **tối đa 300 email/ngày** cho email ghi danh, phần vượt dời sang ngày sau. Giới hạn này do U16 thực hiện, ghi ở đây để U16 nhận làm yêu cầu. | Câu N2, REL-005 |
+| NFR-U04-20 | Mỗi event ghi danh sinh thông báo trong app ngay; email gửi qua việc nền U03 trong trần chung **300 email/ngày** của mọi email thông báo, phần vượt dời sang ngày sau. Giới hạn này do U16 thực hiện, ghi ở đây để U16 nhận làm yêu cầu. | Câu N2, REL-005 |
 
 ## 4. Bảo mật
 

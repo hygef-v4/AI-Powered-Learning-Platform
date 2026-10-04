@@ -1,38 +1,38 @@
 # U11 Attempt & Submission - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 29, UC 30, UC 31, UC 40.
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 29, UC 30, UC 31, UC 40. UC 30 là phần nộp bài chung; UC 16 (U14) kế thừa UC 30 cho bài nhóm.
 
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `Attempt` | Aggregate root (một bản ghi = một lượt làm) | `submissions` | U11 |
-| `AttemptContent` | Value object của `Attempt` | `submissions` | U11 |
-| `AttemptSnapshot` | Value object của `Attempt` | `submissions` | U11 |
+| `Attempt` | Thực thể `ATTEMPT` (một dòng = một lượt làm cá nhân) | `attempts` | U11 |
+| `AttemptContent` | Value object của `Attempt` | `attempts.content` | U11 |
+| `AttemptSnapshot` | Value object của `Attempt` | `attempts.snapshot` | U11 |
+| Kết quả Practice | Dòng `evaluations` `kind = PRACTICE` (U15 sở hữu bảng) | `evaluations` | U11 (Quiz/Code Lab), U13 (AI) qua `PracticeResultPort` của U15 |
 | `SubmissionReceipt` | Kết quả trả về khi nộp | Không lưu riêng (băm nằm trong `Attempt`) | U11 |
 
-U11 **không** sở hữu: bài/publication (U08), cấu hình loại bài và mô hình tài liệu (U09), tài liệu bài nhóm (U14), chạy code và AI (U13), điểm chính thức (U15).
+U11 **không** sở hữu: bài và lịch bài (U08), cấu hình loại bài và mô hình tài liệu (U09), tài liệu bài nhóm (U14), chạy code và AI (U13), điểm chính thức (U15).
 
 ## 2. `Attempt`
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
 | `id` | UUID | |
-| `publicationId` | UUID | |
-| `studentId` | UUID | |
-| `attemptNo` | số | Duy nhất theo `(publicationId, studentId)` |
-| `assignmentVersionId` | UUID | Version bài lúc bắt đầu (bất biến, U08 `LOCKED`) |
+| `assignmentId` | UUID | Bài (một version, đã khóa từ khi phát hành) |
+| `accountId` | UUID | Cột `account_id`, Student làm bài |
+| `attemptNo` | số | Duy nhất theo `(assignmentId, accountId)` |
 | `snapshot` | `AttemptSnapshot` | Chụp lúc bắt đầu |
 | `content` | `AttemptContent` | Bản nháp khi đang làm, bản nộp sau khi nộp |
 | `status` | enum | `IN_PROGRESS`, `SUBMITTED` |
-| `submitMode` | enum | `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_DEADLINE`, `AUTO_RETIRED` |
-| `late` | bool | Nộp sau `closesAt` trong thời gian cho phép trễ |
-| `startedAt`, `deadlineAt`, `lastSavedAt`, `submittedAt` | thời gian | `deadlineAt` = sớm nhất giữa (`startedAt` + giới hạn giờ) và hạn cuối nhận bài |
+| `submitMode` | enum | Cột `submit_mode`: `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_DEADLINE`, `AUTO_RETIRED` |
+| `late` | bool | Cột `is_late`; nộp sau `closes_at` trong thời gian cho phép trễ |
+| `startedAt`, `deadlineAt`, `submittedAt` | thời gian | Thời điểm lưu cuối nằm trong `content`; `deadlineAt` = sớm nhất giữa (`startedAt` + giới hạn giờ) và hạn cuối nhận bài |
 | `contentVersion` | số | Tăng mỗi lần lưu (chống ghi đè giữa hai tab) |
 | `receiptHash` | chuỗi | SHA-256 nội dung lúc nộp |
-| `practiceFeedbackStatus` | enum/nullable | `NOT_REQUESTED`, `PENDING`, `SCORED`, `NO_CREDIT`, `FAILED`; chỉ cho `PRACTICE` |
-| `practiceResult` | JSON/nullable | Điểm/phản hồi xác định của Quiz/Code Lab theo từng attempt; không phải grade U15 |
-| `practiceResultRef` | UUID/nullable | Trỏ tới `PRACTICE_RESULT` của U13 cho Text/Diagram Essay khi AI chấm thành công |
+| `runResult` | JSON | Cột `run_result`: kết quả chạy thử/chấm test gần nhất của Code Lab (U13) |
+
+Kết quả Practice không nằm trong `attempts`: điểm/phản hồi xác định của Quiz/Code Lab và điểm AI của Text/Diagram Essay là dòng `evaluations` `kind = PRACTICE` gắn `attempt_id`; trạng thái chấm AI (`PENDING`, `SCORED`, `NO_CREDIT`, `FAILED`) đọc từ `ai_suggestions` của U13 có `target` là lượt này.
 
 ### Trạng thái
 
@@ -51,7 +51,7 @@ stateDiagram-v2
 | Loại bài | Nội dung |
 |---|---|
 | `MULTIPLE_CHOICE_QUIZ` | `answers`: câu → danh sách `optionId` đã chọn |
-| `TEXT_ESSAY` | `Document` (mô hình U09, chỉ block chữ) |
+| `TEXT_ESSAY` | `answers`: câu tự luận → `Document` (mô hình U09, chỉ block chữ); mỗi câu chấm theo rubric riêng của câu |
 | `DIAGRAM_ESSAY` | `Document` (mô hình U09: khung + block Student; sơ đồ gồm XML + SVG; ảnh qua U03 `DOCUMENT_IMAGE`) |
 | `CODE_LAB` | `files`: tên → nội dung; `language` |
 
@@ -72,19 +72,24 @@ Cấu hình dạng/chế độ bài, chính sách (hạn, nộp trễ, giờ là
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
 | `SubmissionQueryPort` | U13, U15, U16 | Bài nộp, nội dung, lượt được chấm |
-| `PublicationLifecyclePort.onRetired` | U08 khai báo (`C`) | Tạo job tự nộp mọi lượt dở khi bài bị ngưng giao |
+| `AssignmentLifecyclePort.onRetired` | U08 khai báo (`C`) | Đặt mọi lượt dở của bài về hạn ngay và `submit_mode = AUTO_RETIRED`; scanner tự nộp. `onOpened` không làm gì (bài cá nhân không cần chuẩn bị khi mở) |
+| `AttemptRunResultPort` | U13 | Ghi kết quả chạy thử/chấm test Code Lab mới nhất vào `attempts.run_result` |
 
 ### Port U11 dùng
 
 | Port | Unit | Mô tả |
 |---|---|---|
-| `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Bài, publication, hạn |
+| `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Bài, lịch, hạn |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxStudentImportPort` | U09 | Cấu hình, kiểm tài liệu, xuất DOCX, xem trước nhập DOCX của người học |
 | `BankQueryPort` | U06 | Góc nhìn người học của câu hỏi |
-| `CodeRunPort` | U13 (`C`) | Chạy thử code khi đang làm |
+| `RubricPort` | U06 | `getRubric` để hiện rubric từng câu (Text Essay) hoặc từng phần (Diagram Essay) cho người học (UC 29) |
+| `CodeRunPort` | U13 (`C`) | `try` khi đang làm; `grade` khi nộp Practice Code Lab |
 | `PracticeGradingPort` | U13 (`C`) | Xác minh và xếp một lần chấm AI cho attempt Practice Text/Diagram Essay khi đủ credit |
 | `GradeQueryPort` | U15 (`C`: ẩn điểm tới khi U15 có) | Hiển thị điểm/đáp án theo BR-U11-33 |
-| `SubmissionSubmittedPort` | U11 khai báo, U15 cài (`C`) | Chỉ bài `GRADED`: gọi trong transaction nộp để U15 tạo job chấm. Bài `PRACTICE` đi theo scorer đáp án/test hoặc U13 AI riêng; chưa có U15 → adapter rỗng |
-| `JobPort`, `AuditPort` | U02 | Tự nộp, audit |
+| `SubmissionSubmittedPort` | U11 khai báo, U15 cài (`C`) | Chỉ bài `GRADED`: gọi trong transaction nộp để U15 tạo dòng `evaluations` `PENDING`. Bài `PRACTICE` đi theo scorer đáp án/test hoặc U13 AI riêng; chưa có U15 → adapter rỗng |
+| `AuditPort` | U02 | Audit |
+| `ScheduledScanner` | U03 | Tự nộp theo hạn, audit |
+| `PracticeResultPort` | U15 (`C`) | `scoreQuiz(attemptId)`: U15 chấm Practice Quiz bằng `QuizScorer` và ghi `evaluations` `kind = PRACTICE`; chưa có U15 → adapter rỗng, Practice Quiz hiện "chưa có kết quả" |
+| `AuthorizationPort` | U01 | Tài khoản `ACTIVE`, vai trò |
 | `ClassAccessPort` | U04 | Ghi danh |
 | `ArtifactPort` | U03 | Ảnh trong tài liệu |

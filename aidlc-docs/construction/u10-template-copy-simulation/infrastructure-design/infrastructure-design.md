@@ -5,15 +5,14 @@
 | Thành phần | Chạy ở |
 |---|---|
 | Template, copy và diff | `backend` |
-| Bảng `template_releases` và cột lineage của `assignments` (U08 tạo bảng) | `postgres` |
+| Template và lineage trong bảng `assignments` (U08 tạo bảng; cột `subject_id`, `source_assignment_id`, `status`, `config.origin`) | `postgres` |
 
 U10 không chạy trong `worker`, không có queue, Redis key, secret hay dịch vụ ngoài.
 
 ## 2. Migration
 
-Migration U10 (giữ tiền tố version đã dự kiến, đổi mô tả thành `u10_template_copy` khi sinh mã):
-- `template_releases` (FK `assignments`), unique `(template_assignment_id)`, index `(subject_id, status)`.
-- `ALTER TABLE assignments ADD COLUMN lineage_kind, source_class_id, lineage_actor_id, lineage_at` (dùng cùng `source_assignment_id` của U08); lineage ghi một lần khi tạo bài, service không cho sửa.
+U10 không có migration: template dùng `assignments` với `subject_id` (index `(subject_id, status)` do U08 tạo).
+- Lineage là `source_assignment_id` + `config.origin`, ghi một lần khi tạo bài; người copy và thời điểm nằm trong audit.
 
 ## 3. Compliance
 

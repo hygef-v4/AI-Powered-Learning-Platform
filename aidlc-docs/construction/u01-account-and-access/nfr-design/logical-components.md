@@ -18,16 +18,16 @@
  |       AuthorizationService   OtpService                       AvatarPort  |
  |                |                |                              (-> U03)   |
  |                v                v                                         |
- |   Subject/ClassScopePort (U04)   JobPort (-> U02)                         |
+ |   Subject/ClassScopePort (U04)   JobPort (-> U03)                         |
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
    PostgreSQL           Redis              Worker: OtpMailHandler --> SMTP
-   accounts,         refresh, OTP,                                (Mailpit local)
-   app_settings      rate buckets
+   accounts          refresh, OTP,                                (Mailpit local)
+                     rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort`/`ClassScopePort`, U01 khai báo, U04 cài) và `OtpService` (tạo job qua U02). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận job từ RabbitMQ và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort`/`ClassScopePort`, U01 khai báo, U04 cài) và `OtpService` (gửi việc qua U03). `ProfileService` dùng `AvatarPort` do U03 cung cấp. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
 
 ## 2. Thành phần
 
@@ -44,17 +44,18 @@
 | `AccountAdminService` | Tạo, đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F9, F11, F12 |
 | `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
 | `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối | F13 |
-| `OtpMailHandler` (worker) | Nhận job, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì job `FAILED` | NFR-U01-30, 31 |
+| `OtpMailHandler` (worker) | Nhận message, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì log ERROR | NFR-U01-30, 31 |
 | `SensitiveDataMasker` | Che dữ liệu nhạy cảm trong log | NFR-U01-50 |
 
 ## 3. Kho dữ liệu
 
 | Kho | Khóa / bảng | TTL |
 |---|---|---|
-| PostgreSQL | `accounts`, `app_settings` | Vĩnh viễn |
-| Redis | `refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
+| PostgreSQL | `accounts` | Vĩnh viễn |
+| Redis | `session:refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
 | Redis | `otp:{accountId}:{purpose}` | 10 phút |
-| Redis | `rl:*` (Bucket4j) | Theo cửa sổ nạp lại |
+| Redis | `ticket:{hash}` | 10 phút |
+| Redis | `ratelimit:auth:*` (Bucket4j) | Theo cửa sổ nạp lại |
 
 ## 4. Cấu hình (biến môi trường)
 

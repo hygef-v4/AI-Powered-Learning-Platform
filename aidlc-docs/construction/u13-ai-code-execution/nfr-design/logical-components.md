@@ -7,7 +7,7 @@
         |                           |                          |                  |
         v                           v                          v                  v
  +-------------------------------------- backend ---------------------------------------+
- | AiProposalService --> AiGuard (kill-switch, trần, rate, CreditPort U07) --> JobPort  |
+ | AiSuggestionService --> AiGuard (kill-switch, trần, rate, CreditPort U07) --> JobPort|
  | CodeRunService --> TRY: CodeRunnerPort (đồng bộ)   VERIFY/GRADE: JobPort             |
  | CodeLabCheckService (cho U08)      AiAdminService (cấu hình, báo cáo)                |
  +--------------------------------------------------------------------------------------+
@@ -22,14 +22,15 @@
  +-------------------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Các unit gọi `AiProposalService` để tạo đề xuất; `AiGuard` kiểm kill-switch, trần chi phí, giới hạn tần suất và giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài (U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định và phát event cho U15. Admin cấu hình và xem báo cáo qua `AiAdminService`.
+**Text alternative**: Các unit gọi `AiSuggestionService` để tạo đề xuất (U05 gọi `AiUsagePort` cho embedding); `AiGuard` kiểm kill-switch, trần chi phí, giới hạn tần suất và giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài nộp (U11, U14; văn bản phẳng và XML rút gọn qua U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định, ghi kết quả vào lượt (U11) và báo điểm cho U15 qua port. Admin cấu hình và xem báo cáo qua `AiAdminService`.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `AiGuard` | backend | P1 |
-| `AiProposalService`, `AiTaskHandler` | backend, worker | F1, F2; P3-P5 |
+| `AiSuggestionService`, `AiUsageService`, `AiTaskHandler` | backend, worker | F1, F2; P3-P5 |
+| `AiPendingSweeper`, `CreditReservationScanner` | worker | P5 |
 | `AiGateway`, `GeminiAdapter`, `FakeAiGateway` | worker | P2 |
 | `CodeRunService`, `CodeRunHandler`, `Judge0Adapter`, `CodeScorer` | backend, worker | F3, F4; P6-P8 |
 | `CodeLabCheckService` | backend | BR-U13-33 |
@@ -40,8 +41,8 @@
 | Khóa | Mặc định |
 |---|---|
 | `GEMINI_API_KEY` | Rỗng → `FakeAiGateway` |
-| `AI_DAILY_COST_CAP_USD` | 2 |
-| `AI_PER_USER_PER_MINUTE` | 10 |
+| `U13_MODEL_PRICES` | Bảng giá USD/1M token vào/ra theo model |
+| Trần chi phí ngày, giới hạn/phút | Không phải biến môi trường: seed dòng `GLOBAL` của `ai_services` (2 USD, 10/phút), Admin sửa trong AI Setting |
 | `U13_AI_CONCURRENCY` | 3 |
 | `U13_CODE_CONCURRENCY` | 2 |
 | `JUDGE0_URL` | `http://judge0-server:2358` |

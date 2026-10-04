@@ -4,22 +4,25 @@
 
 ```
  Trình duyệt (người học)
-   |  bắt đầu / lưu (gzip) / nộp
+   |  bắt đầu / lưu (gzip) / nộp / chấm AI Practice
    v
- +------------------------------- backend -----------------------------------+
- | AttemptController --> AttemptStarter (advisory lock) --> JobPort (U02)    |
- |                   --> DraftSaver --> DocumentModelPort (U09)              |
- |                   --> AttemptSubmitter --> SubmissionSubmittedPort (U15)  |
- | PublicationLifecycleAdapter (onRetired) --> JobPort (U02)                 |
- | AttemptQueryService (SubmissionQueryPort cho U13, U15, U16)               |
- | Repository (submissions + trigger bất biến)                               |
- +---------------------------------------------------------------------------+
-            | job ATTEMPT_AUTO_SUBMIT
+ +------------------------------- backend ---------------------------------------------+
+ | AttemptController --> AttemptStarter (advisory lock) --> U08 (đề, lượt)             |
+ |                   --> DraftSaver --> DocumentModelPort (U09)                        |
+ |                   --> AttemptSubmitter --> SubmissionSubmittedPort (U15, GRADED)    |
+ |                                        --> PracticeResultPort (U15, Practice Quiz)  |
+ |                                        --> CodeRunPort.grade (U13, Code Lab)        |
+ |                   --> "Chấm với AI" --> PracticeGradingPort (U13)                   |
+ | AssignmentLifecycleAdapter (onRetired) --> đặt deadline_at = now                    |
+ | AttemptQueryService (SubmissionQueryPort cho U13, U15, U16)                         |
+ | Repository (attempts + trigger bất biến)                                            |
+ +-------------------------------------------------------------------------------------+
+            | scanner tự nộp (U03)
             v
- worker: AutoSubmitHandler --> AttemptSubmitter
+ worker: AttemptDeadlineScanner --> AttemptSubmitter
 ```
 
-**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài, tạo job tự nộp), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter`. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` của U15 trong cùng transaction; bài `PRACTICE` đi theo scorer hoặc U13 và lưu kết quả riêng. Khi bài bị ngừng giao, U08 gọi `PublicationLifecycleAdapter` để tạo job tự nộp mọi lượt dở. Worker chạy job tự nộp đúng hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
+**Text alternative**: Người học bắt đầu lượt qua `AttemptStarter` (khóa theo người học và bài), lưu nháp qua `DraftSaver` (kiểm tài liệu bằng U09), nộp qua `AttemptSubmitter`. Chỉ bài `GRADED` gọi `SubmissionSubmittedPort` của U15 trong cùng transaction; bài `PRACTICE` Quiz nhờ U15 chấm qua `PracticeResultPort`, Code Lab nhờ U13 chạy test, Text/Diagram Essay chỉ gọi `PracticeGradingPort` khi Student bấm "Chấm với AI". Khi bài bị ngưng giao, U08 gọi `AssignmentLifecycleAdapter` để đặt hạn ngay cho mọi lượt dở; `AttemptDeadlineScanner` trong worker tự nộp chúng ở lượt quét kế tiếp, cũng như lượt hết hạn. Các unit khác đọc bài nộp qua `AttemptQueryService`.
 
 ## 2. Thành phần
 
@@ -28,8 +31,8 @@
 | `AttemptStarter` | backend | F2; P1 |
 | `DraftSaver` | backend | F3; P2, P6 |
 | `AttemptSubmitter` | backend, worker | F4, F5; P3 |
-| `AutoSubmitHandler` | worker | F5; P5 |
-| `PublicationLifecycleAdapter` | backend, worker | Cài `PublicationLifecyclePort.onRetired` của U08: tạo job tự nộp |
+| `AttemptDeadlineScanner` | worker | F5; P5 |
+| `AssignmentLifecycleAdapter` | backend, worker | Cài `AssignmentLifecyclePort.onRetired` của U08: đặt hạn ngay cho lượt dở |
 | `AttemptQueryService` | backend | F1, F6, F7 |
 
 ## 3. Cấu hình

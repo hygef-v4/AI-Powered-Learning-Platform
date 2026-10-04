@@ -5,7 +5,7 @@
 - `DocumentValidator` thuần (không I/O) cho `validateSkeleton`, `validateForSave`, `validateForSubmit` (NFR-U09-01).
 
 ## P2 - Khóa block bằng hash
-- Khi lưu khung: `contentHash = sha256(canonical JSON)` cho block `TEACHER` loại chữ/ảnh; bảng/sơ đồ lưu hash của "vỏ" (id, loại, vị trí tương đối).
+- Khi lưu khung: `contentHash = sha256(canonical JSON)` cho mọi block `TEACHER` (chữ, ảnh, bảng, sơ đồ); khung khóa hoàn toàn.
 - `validateForSave`: mọi block `TEACHER` có mặt đúng thứ tự tương đối; block khóa phải trùng hash; người học không đổi `origin` (NFR-U09-31).
 
 ## P3 - Nhập DOCX theo luồng

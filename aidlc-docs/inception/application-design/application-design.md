@@ -7,15 +7,15 @@
 | Backend | Spring Boot modular monolith, 16 module theo unit, cùng image cho `backend` và `worker` |
 | Frontend | Next.js desktop-first, gọi REST `/api/v1` |
 | Contract | OpenAPI mỗi unit; backend authorization là nguồn chuẩn |
-| Tác vụ dài | Bảng `jobs` + RabbitMQ, retry theo DB, worker riêng |
-| File | Google Shared Drive qua port lưu trữ; metadata trong PostgreSQL |
+| Tác vụ dài | RabbitMQ (gửi sau commit, retry bằng queue TTL), trạng thái trên dòng nghiệp vụ, `PendingSweeper`/`ScheduledScanner`, worker riêng; không có bảng job |
+| File | Google Shared Drive qua port lưu trữ; metadata trong thuộc tính tệp (`appProperties`), bảng sở hữu giữ `file_id` |
 | AI | Gemini qua port provider-neutral, model theo loại việc, trừ credit AI |
 | Realtime | SSE cho tài liệu nhóm và thông báo; còn lại polling trạng thái job |
 | Triển khai | Docker Compose trên VPS, Nginx + Let's Encrypt (xem `construction/shared-infrastructure.md`) |
 
 ## 2. Các domain module
 
-16 module trùng với 16 unit: Identity & Access, Audit/Job/Event, File & Artifact, Academic & Learning Access, Content & RAG, Question Bank, Payment & AI Credit, Assessment Core, Question Types & Documents, Template & Copy, Attempt & Submission, Group, AI & Code Execution, Group Document, Grading, Reporting & Notification.
+16 module trùng với 16 unit: Identity & Access, Audit, File/Job/Event, Academic & Learning Access, Content & RAG, Question Bank, Payment & AI Credit, Assessment Core, Question Types & Documents, Template & Copy, Attempt & Submission, Group, AI & Code Execution, Group Document, Grading, Reporting & Notification.
 
 Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký), `services.md` (orchestration), `component-dependency.md` (luồng dữ liệu), `unit-of-work*.md` (unit, phụ thuộc, story). Thiết kế chi tiết và bảng dữ liệu của từng module nằm trong `aidlc-docs/construction/uXX-*/`.
 
@@ -23,14 +23,14 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 1. Quyền role và phạm vi đối tượng được kiểm tra phía server cho mọi use case.
 2. Chủ nhiệm môn quản lý phạm vi môn (học liệu, ngân hàng, template); chỉ phát hành bài cho lớp mà chính họ là giảng viên. Không có đề chung cấp môn.
-3. Mỗi nhóm có đúng một trưởng nhóm; bài nhóm là một tài liệu chung, thành viên tự nhận mục, mỗi mục tại một thời điểm chỉ một người sửa; trưởng nhóm nộp.
+3. Mỗi nhóm có đúng một trưởng nhóm; bài nhóm là một tài liệu chung gồm các phần của khung, trưởng nhóm giao phần hoặc thành viên tự nhận phần, mỗi phần tại một thời điểm chỉ một người sửa; trưởng nhóm nộp.
 4. Bài đã phát hành bị khóa nội dung; thay đổi bằng version mới sau khi ngưng giao/đóng, hoặc nhân bản. Bài nộp bất biến sau khi nộp.
-5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi giảng viên yêu cầu AI chấm.
+5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi có yêu cầu AI chấm (giảng viên hoặc Student với bài `PRACTICE`).
 6. AI chỉ tạo đề xuất; giảng viên giữ quyết định phát hành đề và điểm cuối.
-7. Tài liệu nhóm luôn chấm tay; AI chỉ hỗ trợ phần đóng góp của từng thành viên; điểm cuối từng người do giảng viên nhập, không có công thức bắt buộc.
-8. Cả bốn vai trò `ACTIVE` có thể mua và xem credit của chính mình. Student chỉ dùng credit để AI chấm một lần khi nộp attempt `PRACTICE` Text/Diagram Essay đủ credit; thiếu credit thì bài vẫn nộp không điểm AI. Quiz/Code Lab Practice tự chấm không dùng AI. Teacher chỉ chấm và quyết định điểm cuối bài `GRADED`; AI đề xuất cho bài đó tính credit Teacher. Credit mua chỉ cộng từ webhook đã xác minh hoặc job tự đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
+7. Tài liệu nhóm chấm như bài `DOCUMENT` (tay hoặc AI đề xuất); điểm đóng góp từng thành viên mặc định bằng điểm tài liệu chung, giảng viên chấm tay khi cần.
+8. Cả bốn vai trò `ACTIVE` có thể mua và xem credit của chính mình. Student chỉ dùng credit để AI chấm attempt `PRACTICE` Text/Diagram Essay đã nộp: bấm chấm khi đủ credit, mỗi attempt tối đa một kết quả; thiếu credit thì mua thêm rồi bấm lại. Quiz/Code Lab Practice tự chấm không dùng AI. Teacher chỉ chấm và quyết định điểm cuối bài `GRADED`; AI đề xuất cho bài đó tính credit Teacher. Credit mua chỉ cộng từ webhook đã xác minh hoặc job tự đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
 9. Không sao chép khóa học/lớp; template/copy bài tạo identity mới có lineage, không copy lịch, lượt làm, bài nộp, điểm.
-10. Bài `PRACTICE` Text/Diagram Essay nộp khi đủ credit chỉ kích hoạt một lần AI chấm cho mỗi attempt; thiếu credit thì lưu bài không điểm AI. Kết quả Practice không vào sổ điểm và Teacher không chấm.
+10. Bài `PRACTICE` Text/Diagram Essay không tự chấm khi nộp; mỗi attempt có tối đa một kết quả AI hợp lệ khi Student bấm chấm và đủ credit. Kết quả Practice không vào sổ điểm và Teacher không chấm.
 11. Audit chỉ thêm, không sửa, không xóa.
 
 ## 4. Luồng triển khai
@@ -41,7 +41,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 ## 5. Traceability
 
-Toàn bộ story và use case trong hai catalog hiện hành thuộc MVP và được gán cho unit trong `unit-of-work-story-map.md`. Thông báo/hỏi đáp lớp, dashboard cá nhân và xuất bảng điểm đều thuộc MVP.
+Toàn bộ story và use case trong hai catalog hiện hành thuộc MVP và được gán cho unit trong `unit-of-work-story-map.md`. Thông báo và bình luận lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; không có dashboard cá nhân của Student.
 
 | Story domain | Unit chủ đạo |
 |---|---|

@@ -5,14 +5,14 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-QBK-001, US-QBK-002 (Scenario 1; Scenario 2, 3 thuộc U08/U11). Phân tích chất lượng câu hỏi không thuộc MVP.
-- **Use case**: UC 20, UC 23–27 (ngân hàng giữ câu hỏi của mọi dạng bài, thay đổi 2026-10-01; plan cần duyệt lại).
+- **Use case**: UC 20, UC 23–27 (ngân hàng giữ câu hỏi của mọi dạng bài, thay đổi 2026-10-01).
 - **Thiết kế nguồn**: `construction/u06-rubric-question-bank/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
 
 ### Khung dự án dùng chung
 
-Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trước thì làm; unit sau đánh dấu `[x]`. Bước 0 kiểm điều kiện này.
+Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
 
 ### Phụ thuộc
 
@@ -25,10 +25,11 @@ Khung dự án là **Bước 1-6 của plan U01**. Unit nào được code trư�
 | `DocumentModelPort` | U09 (`C`) | Chưa có U09: chỉ kiểm cấu trúc JSON; U09 thay |
 | `ContentRefPort` | U05 (`C`) | Chưa có U05: adapter tạm chấp nhận mọi ID (chỉ lưu); U05 thay bằng bản thật |
 | `AiDraftPort` | U13 (`C`) | Chưa có U13: ẩn nút "Nhờ AI tạo câu hỏi"; U13 thay bằng bản thật |
+| `RubricOwnerPort` | U08 (`C`, U06 khai báo) | U08 code sau U06: adapter rỗng (không đổi bài nào); U08 cài thật |
 
 ### Dữ liệu U06 sở hữu
 
-PostgreSQL `bank_items`.
+PostgreSQL `questions`, `rubrics`.
 
 ## 2. Cấu trúc
 
@@ -42,7 +43,8 @@ PostgreSQL `bank_items`.
                         Code, Rubric), DefinitionValidator
     importer/           XlsxRowReader, CsvRowReader, RowMapper (4 loại)
     infrastructure/     BankItemRepository, PermissiveContentRefAdapter
-    port/               BankQueryPort, RubricPort, ContentRefPort
+    port/               BankQueryPort, RubricPort, InlineQuestionPort, BankCopyPort,
+                        QuestionVerificationPort, ContentRefPort, RubricOwnerPort
 /backend/src/main/resources/db/migration/u06/
 /backend/src/main/resources/u06/import-templates/   4 file mẫu xlsx + csv
 /frontend/src/app/teaching/bank/
@@ -54,18 +56,18 @@ PostgreSQL `bank_items`.
 
 ### Nhóm A - Khung
 
-- [ ] **Bước 0** - Kiểm khung dự án. Chưa có thì thực hiện Bước 1-6 của plan U01 trước rồi đánh dấu ở cả hai plan.
+- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
 - [ ] **Bước 1** - `pom.xml`: Apache POI (`poi-ooxml`), Commons CSV. Biến cấu hình U06 theo `logical-components.md` §3.
 
 ### Nhóm B - Domain và logic
 
 - [ ] **Bước 2** - Domain `BankItem` và trạng thái; record `definition` 5 loại với Jackson polymorphic (P1, P2).
-- [ ] **Bước 3** - `DefinitionValidator` hai mức cho 4 loại câu và rubric (BR-U06-20…28, 30, 31); suy dạng bài dùng được từ `questionType` và `workSection`.
-- [ ] **Bước 4** - Port `BankQueryPort`, `RubricPort`, `ContentRefPort`; `PermissiveContentRefAdapter`.
+- [ ] **Bước 3** - `DefinitionValidator` hai mức cho 4 loại câu và rubric (BR-U06-20…28, 30, 31); suy dạng bài dùng được từ `questionType` và heading của khung.
+- [ ] **Bước 4** - Port cung cấp: `BankQueryPort` (gồm `pickRandom`, BR-U08-18), `RubricPort` (`createForAssignment`, `revise`, `cloneForAssignment`, BR-U06-34…36), `InlineQuestionPort` (U08, U10), `BankCopyPort` (U10), `QuestionVerificationPort` (U13). Port khai báo: `ContentRefPort` (`PermissiveContentRefAdapter`), `RubricOwnerPort` (adapter rỗng tới khi có U08).
 - [ ] **Bước 5** - `BankScopeGuard` (BR-U06-01…04).
-- [ ] **Bước 6** - `BankItemService`: tạo/sửa nháp, bản nháp mới từ `ACTIVE`, kích hoạt, ngưng, xóa nháp, nhân bản, audit (F1-F4, BR-U06-10…16, 50).
+- [ ] **Bước 6** - `BankItemService`: tạo/sửa nháp, bản nháp mới từ `ACTIVE`, kích hoạt, ngưng, xóa nháp, nhân bản, audit (F1-F4, BR-U06-10…16, 50); rubric theo đề: tạo, sửa tạo phiên bản mới và báo `RubricOwnerPort`, nhân bản phiên bản mới nhất (F8, BR-U06-34…36).
 - [ ] **Bước 7** - `RubricScorer` (P4, BR-U06-32).
-- [ ] **Bước 8** - `BankQueryService`: tìm kiếm bản `ACTIVE` mới nhất (lọc theo dạng bài, BR-U06-28), lịch sử, xem trước, `getVersion`, `getStudentView` (F5, F7, P5, P6).
+- [ ] **Bước 8** - `BankQueryService`: tìm kiếm bản `ACTIVE` mới nhất (lọc theo dạng bài, BR-U06-28), lịch sử, xem trước, `getVersion`, `getStudentView` (F5, F9, P5, P6).
 - [ ] **Bước 9** - Nhập file: `XlsxRowReader`, `CsvRowReader`, `RowMapper` 4 loại, `ImportService` mỗi dòng một transaction (F6, BR-U06-40…43, P3).
 - [ ] **Bước 10** - 4 file mẫu nhập (xlsx và csv) theo BR-U06-42.
 - [ ] **Bước 11** - Unit test mọi `BR-U06-xx`: từng loại câu, rubric, điểm `BigDecimal`, bản `ACTIVE` không sửa được, file nhập lỗi/zip bomb/CSV sai mã hóa.
@@ -73,7 +75,7 @@ PostgreSQL `bank_items`.
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 13** - Flyway `V20260925_1300__u06_bank_items.sql` theo `infrastructure-design.md` §2.
+- [ ] **Bước 13** - Flyway `V20260925_1300__u06_questions_rubrics.sql` theo `infrastructure-design.md` §2.
 - [ ] **Bước 14** - `BankItemRepository` với query `DISTINCT ON` và lọc tag GIN.
 - [ ] **Bước 15** - Integration test Testcontainers: hai người tạo bản nháp cùng lúc → một `409`; tìm kiếm chỉ trả bản `ACTIVE` mới nhất; nhập 500 dòng ≤ 10 s.
 - [ ] **Bước 16** - Tóm tắt: `code/repository-summary.md`.
@@ -88,7 +90,7 @@ PostgreSQL `bank_items`.
 ### Nhóm E - Frontend
 
 - [ ] **Bước 21** - `BankPage`, `BankFilters`, `BankItemTable`, `VersionHistoryDrawer`, `CloneDialog`.
-- [ ] **Bước 22** - `QuestionEditor` (4 loại + `ClassificationFields`) và `RubricEditor` (tổng điểm tự tính).
+- [ ] **Bước 22** - `QuestionEditor` (4 loại + `ClassificationFields`) và `RubricEditor` (tổng điểm tự tính; ở Question Bank chỉ sửa rubric đã có, component dùng lại cho panel rubric của U09 khi tạo đề).
 - [ ] **Bước 23** - `QuestionView` dùng chung và `PreviewDialog` (bật/tắt đáp án).
 - [ ] **Bước 24** - `ImportDialog` (tải mẫu, kết quả từng dòng).
 - [ ] **Bước 25** - Test frontend: MCQ 1 đáp án chặn chọn 2, tổng điểm rubric, bảng kết quả nhập.

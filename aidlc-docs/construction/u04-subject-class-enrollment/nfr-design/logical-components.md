@@ -16,16 +16,16 @@
  |        |                  |      (advisory lock)  (Bucket4j/Redis)  |      |
  |        +--------+---------+-------------+---------------------------+      |
  |                 v                                                          |
- |       Repository (PostgreSQL: subjects, classes, enrollments)              |
+ |       Repository (PostgreSQL: subjects, course_classes, enrollments)       |
  |                                                                            |
  | ScopeQueryService --> SubjectScopePort, ClassScopePort (cho U01)           |
- |                   --> ClassAccessPort (cho U05, U06, U08-U12, U14-U16)     |
+ |                   --> ClassAccessPort (cho U05, U06, U08-U16)              |
  | Dùng: AuthorizationPort, AccountLookupPort (U01); PublishedContentPort     |
- |       (U05); AuditPort, EventPublisherPort (U02)                           |
+ |       (U05); AuditPort (U02), EventPublisherPort (U03)                           |
  +----------------------------------------------------------------------------+
 ```
 
-**Text alternative**: Bốn controller nhận yêu cầu của admin, giảng viên và người học, gọi service tương ứng. `EnrollmentService` dùng `EnrollmentGuard` để khóa theo người học và môn, `InviteCodeService` kiểm rate limit trên Redis. Mọi service ghi PostgreSQL qua repository. `ScopeQueryService` cung cấp port kiểm phạm vi cho U01 và các unit khác. U04 dùng U01 để kiểm quyền và tra tài khoản, U05 để lấy nội dung đã phát hành, U02 để ghi audit và phát event.
+**Text alternative**: Bốn controller nhận yêu cầu của admin, giảng viên và người học, gọi service tương ứng. `EnrollmentService` dùng `EnrollmentGuard` để khóa theo người học và môn, `InviteCodeService` kiểm rate limit trên Redis. Mọi service ghi PostgreSQL qua repository. `ScopeQueryService` cung cấp port kiểm phạm vi cho U01 và các unit khác. U04 dùng U01 để kiểm quyền và tra tài khoản, U05 để lấy học liệu đang hiển thị, U02 để ghi audit và U03 để phát event.
 
 ## 2. Thành phần
 

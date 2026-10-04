@@ -62,6 +62,8 @@ X) Khác (mô tả sau thẻ [Answer]: bên dưới)
 
 > Diễn giải theo quyết định mới: mức tặng bằng nhau **giữa các tài khoản đủ điều kiện** (Giảng viên, Chủ nhiệm môn, Quản trị viên); Người học không nhận credit.
 
+> Cập nhật 2026-10-04 (người dùng chốt): Người học cũng được tặng, cùng mức với Giảng viên, Chủ nhiệm môn, Quản trị viên; Người học chỉ dùng credit cho AI chấm Practice (UC 40).
+
 ## Câu 6 - Admin điều chỉnh thủ công
 
 A) Được, bắt buộc lý do + audit

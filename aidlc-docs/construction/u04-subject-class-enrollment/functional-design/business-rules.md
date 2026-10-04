@@ -13,14 +13,14 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U04-10 | Chỉ ADMIN tạo lớp; lớp thuộc đúng 1 môn `ACTIVE`, bắt đầu ở `DRAFT`. | Câu 11, UC 9 |
+| BR-U04-10 | ADMIN, hoặc Chủ nhiệm môn của môn đó, tạo lớp; lớp thuộc đúng 1 môn `ACTIVE`, bắt đầu ở `DRAFT`. | Câu 11, UC 9, quyết định 2026-10-03 |
 | BR-U04-11 | `code` lớp duy nhất trong môn, không đổi; `subjectId` không đổi. | Thiết kế |
-| BR-U04-12 | Mỗi lớp đúng 1 giảng viên chính, role `TEACHER` hoặc `SUBJECT_MANAGER`, không `DISABLED`. Chỉ ADMIN gán/đổi. Bỏ trống giảng viên chỉ khi lớp không ở `OPEN`. | Câu 2, UC 9 |
+| BR-U04-12 | Mỗi lớp đúng 1 giảng viên chính, role `TEACHER` hoặc `SUBJECT_MANAGER`, không `DISABLED`. Chỉ ADMIN hoặc Chủ nhiệm môn của môn gán/đổi. Bỏ trống giảng viên chỉ khi lớp không ở `OPEN`. | Câu 2, UC 9, quyết định 2026-10-03 |
 | BR-U04-13 | Người quản lý lớp = ADMIN, giảng viên của lớp, Chủ nhiệm môn của môn. Người quản lý lớp được sửa `name`, `description`, `term`, đổi trạng thái, ghi danh, quản lý mã mời. | Câu 11, FR-002 |
 | BR-U04-14 | Chuyển trạng thái hợp lệ: `DRAFT→OPEN`, `DRAFT→ARCHIVED`, `OPEN→ARCHIVED`, `ARCHIVED→OPEN`. `OPEN` cần có giảng viên và môn `ACTIVE`. | Câu 1 |
 | BR-U04-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có người học `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U04-22 |
 | BR-U04-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc với người quản lý. | UC 9 |
-| BR-U04-17 | Người quản lý lớp bật/tắt `showGradeDistribution`; mặc định tắt. U16 chỉ hiện phân bố điểm ẩn danh khi cờ bật và đủ mẫu theo BR-U16-42. | US-RPT-002 |
+| BR-U04-17 | Người quản lý lớp bật/tắt `showGradeDistribution`; mặc định tắt. U16 chỉ hiện phân bố điểm ẩn danh trên Assignment List của Student khi cờ bật và đủ mẫu theo BR-U16-42. | US-RPT-001 S3 |
 
 ## 3. Ghi danh
 
@@ -32,7 +32,7 @@
 | BR-U04-23 | Thêm từng người: tìm theo email/tên (≤ 20 kết quả, chỉ `STUDENT`). Thêm theo danh sách: dán email hoặc CSV 1 cột, ≤ 200 dòng; xử lý từng dòng, dòng hợp lệ vẫn được ghi danh. | Câu 4 |
 | BR-U04-24 | Kết quả từng dòng: `ENROLLED`, `RESTORED`, `ALREADY_ENROLLED`, `NOT_FOUND`, `NOT_STUDENT`, `DISABLED`, `IN_OTHER_CLASS`, `INVALID_EMAIL`, `DUPLICATE_IN_LIST`. | Câu 4 |
 | BR-U04-25 | Gỡ ghi danh: chuyển `REMOVED`, giữ lịch sử; quyền mới bị thu hồi ngay. Cần xác nhận trên UI. | US-CAT-003 S3 |
-| BR-U04-26 | Khi ghi danh có hiệu lực với người học (ghi danh vào lớp `OPEN`, hoặc lớp `DRAFT` chuyển `OPEN` thì với mọi ghi danh `ACTIVE`), phát event `ENROLLMENT_ACTIVATED`; U16 gửi thông báo trong app **và** email. | Câu 6 |
+| BR-U04-26 | Khi ghi danh có hiệu lực với người học (ghi danh vào lớp `OPEN`, hoặc lớp `DRAFT` chuyển `OPEN` thì với mọi ghi danh `ACTIVE`), phát event `enrollment.activated`; U16 gửi thông báo trong app **và** email. | Câu 6 |
 
 ## 4. Mã mời
 
@@ -49,7 +49,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U04-40 | Người học thấy danh sách lớp mình `ACTIVE`: lớp `OPEN` ở mục "Đang học", lớp `ARCHIVED` ở mục "Đã kết thúc" (chỉ thông tin lớp). Lớp `DRAFT` không hiện. | US-LRN-001, US-CAT-002 S2 |
-| BR-U04-41 | Nội dung lớp chỉ trả khi ghi danh `ACTIVE` và lớp `OPEN`; lấy nội dung đã phát hành của lớp và của môn qua `PublishedContentPort`. | US-LRN-001 S1, FR-003 |
+| BR-U04-41 | Nội dung lớp chỉ trả khi ghi danh `ACTIVE` và lớp `OPEN`; lấy module `ACTIVE` của môn kèm học liệu đang hiển thị (`ACTIVE`) của môn và của lớp qua `PublishedContentPort` (học liệu không có bước phát hành). | US-LRN-001 S1, FR-003 |
 | BR-U04-42 | Không ghi danh, bị gỡ, hoặc lớp không mở → trả "không tìm thấy", không lộ tên hay metadata lớp. | US-LRN-001 S2 |
 | BR-U04-43 | Thanh toán không ảnh hưởng quyền vào lớp; U04 không gọi U07. | Câu 7 |
 | BR-U04-44 | Không lưu tiến độ, lộ trình hay trạng thái hoàn thành bài học. | unit-of-work.md |

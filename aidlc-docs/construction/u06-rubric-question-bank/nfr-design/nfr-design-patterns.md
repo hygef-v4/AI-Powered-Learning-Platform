@@ -3,7 +3,7 @@
 ## P1 - Phiên bản bất biến
 - Entity `BankItem` chỉ có phương thức sửa `definition` khi `status = DRAFT`; `activate()`, `retire()` đổi trạng thái.
 - Repository không có `update` tự do; `newDraftFrom(activeId)` sao chép sang dòng mới (NFR-U06-11).
-- Tạo bản nháp đồng thời: unique partial index 1 `DRAFT`/`stableKey`; vi phạm → `409` "đã có bản nháp".
+- Tạo bản nháp đồng thời: unique partial index 1 `DRAFT`/`lineage_id` trên `questions` và `rubrics`; vi phạm → `409` "đã có bản nháp".
 
 ## P2 - `definition` đa hình
 - Jackson `@JsonTypeInfo(property = "questionType")` ánh xạ `McqDefinition`, `EssayDefinition`, `DocumentDefinition`, `CodeDefinition`, `RubricDefinition`.
@@ -20,7 +20,7 @@
 - `RubricScorer.score(definition, checkedItemIds)` hàm thuần, dùng `BigDecimal` scale 2; ID lạ → lỗi (BR-U06-32, NFR-U06-12).
 
 ## P5 - Tìm kiếm
-- Query "bản `ACTIVE` mới nhất mỗi `stableKey`" bằng `DISTINCT ON (stable_key) ORDER BY stable_key, version_no DESC` có lọc; GIN `tags`; `ILIKE` tiêu đề (NFR-U06-01).
+- Query "bản `ACTIVE` mới nhất mỗi `lineage_id`" bằng `DISTINCT ON (lineage_id) ORDER BY lineage_id, version DESC` có lọc; GIN `tags`; `ILIKE` tiêu đề (NFR-U06-01).
 
 ## P6 - Ẩn đáp án
 - DTO tách: `BankItemManagerView` (đủ) cho API của U06; `QuestionStudentView` (bỏ `correctOptionIds`, `answerGuide`, test ẩn) do U06 cung cấp qua `BankQueryPort.getStudentView(id)` để U11 dùng (NFR-U06-22).

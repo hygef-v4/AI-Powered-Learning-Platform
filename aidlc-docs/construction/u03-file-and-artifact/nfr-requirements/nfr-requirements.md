@@ -1,4 +1,4 @@
-# U03 File & Artifact - NFR Requirements
+# U03 File, Job & Event - NFR Requirements
 
 ## 1. Hiệu năng và tài nguyên
 
@@ -39,7 +39,28 @@
 | NFR-U03-30 | Unit test mọi `BR-U03-xx`, gồm SVG có script (header CSP), file đổi đuôi, file vượt trần theo `purpose` (50 MB / 5 MB), token dùng sai người. | NFR-004 |
 | NFR-U03-31 | Drive được thay bằng adapter giả lưu ra thư mục tạm trong test và khi chạy local không có credential. | NFR-004, NFR-005 |
 
-## 5. Compliance
+## 5. Việc nền, RabbitMQ và worker (chuyển từ U02, 2026-10-04)
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U03-40 | `JobPort.enqueue` không thêm câu SQL nào; gửi message không chặn request quá 50 ms. `EventPublisherPort.publish` cũng không chặn quá 50 ms, gửi lỗi thì trả ngay. | NFR-003 |
+| NFR-U03-41 | Frontend poll trạng thái việc nền mỗi 3 giây, dừng ở trạng thái cuối. | frontend-components |
+| NFR-U03-42 | Worker là container riêng, dùng cùng mã nguồn backend với profile `worker`. | Câu N1 (U02) |
+| NFR-U03-43 | Mỗi queue có luồng xử lý riêng; việc chậm của Gemini/Judge0 không chặn email và việc nội bộ. | Câu N3 (U02) |
+| NFR-U03-44 | Thử lại tối đa 5 lượt với backoff 30 s, 1, 2, 4, 8 phút qua các queue `jobs.retry.*`. | BR-U03-56 |
+| NFR-U03-45 | Sweeper và scanner chạy mỗi phút trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U03-58, 60 |
+| NFR-U03-46 | Mỗi loại việc có timeout xử lý do unit sở hữu khai báo; mặc định 60 giây, quá hạn coi như lỗi tạm. | REL-003 |
+| NFR-U03-47 | Queue durable, message persistent; RabbitMQ khởi động lại không mất message đang chờ. | Câu N2 (U02) |
+| NFR-U03-48 | Consumer ack thủ công, chỉ ack sau khi handler đã cập nhật PostgreSQL. | BR-U03-53 |
+| NFR-U03-49 | Prefetch bằng số luồng xử lý của từng queue (P11). | Câu N3 (U02) |
+| NFR-U03-50 | Kết nối RabbitMQ có timeout 5 s và tự kết nối lại; publisher confirm chờ tối đa 2 s. | REL-003 |
+| NFR-U03-51 | Tài khoản RabbitMQ riêng cho ứng dụng, mật khẩu từ biến môi trường; tắt tài khoản `guest`. | SEC-006 |
+| NFR-U03-52 | RabbitMQ không khả dụng: thao tác nghiệp vụ vẫn thành công; dòng nghiệp vụ nằm ở trạng thái chờ đến khi sweeper gửi lại; event thông báo có thể mất (chấp nhận). | BR-U03-58, 70 |
+| NFR-U03-53 | Worker chết giữa chừng: message chưa ack được RabbitMQ giao lại; handler idempotent. | BR-U03-59 |
+| NFR-U03-54 | Healthcheck worker kiểm PostgreSQL và RabbitMQ. | REL-002 |
+| NFR-U03-55 | Integration test với PostgreSQL và RabbitMQ bằng Testcontainers: gửi sau commit, rollback không gửi, gửi ngay khi không có transaction, retry theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner chạy lại không trùng. | NFR-004 |
+
+## 6. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|

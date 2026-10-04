@@ -1,5 +1,7 @@
 # U03 File & Artifact - Functional Design Plan
 
+> Ghi chú hiện hành: plan này ghi phạm vi lúc thiết kế. Hiện U03 không có bảng PostgreSQL (metadata tệp ở `appProperties` trên Google Drive, không còn bảng `artifacts`) và nhận thêm việc nền, worker, sự kiện thông báo từ U02 (2026-10-04).
+
 ## 1. Phạm vi
 
 - Unit hạ tầng, không có use case hay story riêng. Phục vụ U01 (ảnh đại diện), U05 (học liệu), U06/U09/U11/U14 (ảnh trong tài liệu). Caption YouTube thuộc U05; XML Draw.io thuộc U09; U16 xuất bảng điểm trực tiếp, không lưu qua U03.

@@ -1,15 +1,17 @@
 # U02 Audit, Job & Event - Functional Design Plan
 
+> Ghi chú hiện hành: plan này ghi phạm vi lúc thiết kế. Từ 2026-10-04 U02 chỉ còn audit (bảng `audit_logs`); việc nền, worker và sự kiện chuyển sang U03; không có bảng `jobs`, `audit_events`.
+
 ## 1. Phạm vi
 
-- Unit U02 trong kế hoạch 16 unit. Story `US-AUD-001`; use case `UC-OPS-02`.
+- Unit U02 trong kế hoạch 16 unit. Story `US-AUD-001`; use case UC 39.
 - Sở hữu: audit append-only, bảng `jobs` và vòng đời job, publish sự kiện sang RabbitMQ, retry/dead-letter, correlation.
 - Không sở hữu: nội dung nghiệp vụ của job (thuộc unit gọi), gửi thông báo (U16), phân quyền (U01).
 - Thay đổi quy trình: thiết kế U02 trước khi code U01 theo yêu cầu người dùng; plan code U01 tạm dừng.
 
 ## 2. Việc cần làm
 
-- [x] Đọc unit-of-work, story map, US-AUD-001, UC-OPS-02, component-methods, services và mô hình dữ liệu U02.
+- [x] Đọc unit-of-work, story map, US-AUD-001, UC 39, component-methods, services và mô hình dữ liệu U02.
 - [x] Hỏi người dùng qua giao diện, ghi vào `../functional-design-questions/u02-audit-job-and-outbox-functional-design-questions.md`.
 - [x] Tạo `business-logic-model.md`, `business-rules.md`, `domain-entities.md`, `frontend-components.md`.
 - [x] Đồng bộ tài liệu U01: `OutboxPort` thành `JobPort`, không còn bảng outbox.

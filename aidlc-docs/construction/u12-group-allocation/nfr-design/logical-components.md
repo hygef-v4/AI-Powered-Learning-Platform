@@ -9,6 +9,7 @@
  +------------------------------ backend -------------------------------------+
  | ClassGroupsController --> ClassGroupsSaver --> ClassGroupsValidator        |
  |                       --> RandomSplitter                                   |
+ |                       --> GroupChangePort (U14, C), EventPublisherPort     |
  | LeaderRequestController --> LeaderRequestService                           |
  | GroupReadinessService (GroupReadinessPort cho U08)                         |
  | MembershipQueryService (GroupMembershipPort cho U14, U16)                  |

@@ -1,15 +1,15 @@
 # U13 AI & Code Execution - NFR Design Patterns
 
 ## P1 - AiGuard trước mọi lời gọi
-Thứ tự, dừng ở bước đầu tiên không đạt, ghi `AiCall` `REJECTED_*`:
-1. `killSwitch` (đọc cache 30 s từ DB).
-2. Trần ngày: Redis `gemini:daily-cost:{yyyyMMdd}` (giờ Việt Nam) so `dailyCostCapUsd`, dùng chung với embedding của U05 qua `AiBudgetPort`; hết trần trả "Hệ thống đang bận", không giữ/trừ credit.
-3. Rate limit Bucket4j `ratelimit:ai-request:{userId}` 10/phút.
-4. `CreditPort.reserve(userId, estimate, requestRef = proposalId)`.
+Thứ tự, dừng ở bước đầu tiên không đạt, ghi dòng `ai_suggestions` `REJECTED_BUSY` hoặc `NO_CREDIT`:
+1. Kill-switch: dòng `GLOBAL` và dòng loại việc trong `ai_services` (cache 30 s).
+2. Trần ngày: Redis `gemini:daily-cost:{yyyyMMdd}` (giờ Việt Nam) so `daily_cost_cap` của dòng `GLOBAL`, dùng chung với embedding của U05 qua `AiUsagePort`; hết trần trả "Hệ thống đang bận", không giữ/trừ credit.
+3. Rate limit Bucket4j `ratelimit:ai-request:{userId}` theo `rate_per_minute` (mặc định 10/phút).
+4. Trong một transaction: tạo dòng `ai_suggestions`, `CreditPort.reserve(userId, estimate, purpose, attemptRef)`, lưu `credits_reserved`, `free_credits_reserved`, `credit_status = RESERVED`.
 
 ## P2 - AiGateway provider-neutral
 - `AiGateway.generate(task, AiPrompt, JsonSchema)` → `AiResult(json, inputTokens, outputTokens)`; `GeminiAdapter` là cài đặt duy nhất; `FakeAiGateway` cho test/local.
-- Model lấy từ `AiTaskConfig` theo `task`; bảng giá theo model trong cấu hình để ước tính chi phí; sau gọi `INCRBYFLOAT` Redis chi phí ngày.
+- Model lấy từ `ai_services` theo `task_type`; bảng giá theo model trong cấu hình triển khai để ước tính chi phí; sau gọi `INCRBYFLOAT` Redis chi phí ngày.
 
 ## P3 - Prompt có ranh giới dữ liệu
 - System instruction cố định theo task (trong code, có version).
@@ -21,8 +21,8 @@ Thứ tự, dừng ở bước đầu tiên không đạt, ghi `AiCall` `REJECTE
 2. Quy tắc nghiệp vụ: câu hỏi qua `DefinitionValidator` (U06); chấm: mỗi `itemId` thuộc rubric, không thiếu mục.
 
 ## P5 - Job AI bền vững
-- Job U02 `AI_TASK {proposalId}`; lỗi tạm → ném để U02 retry (tối đa 3); lỗi vĩnh viễn → `FAILED` + `release` credit chưa dùng. Khi U05 từ chối embedding trước khi gọi Gemini, trả phần giữ của U13; credit embedding dùng `requestRef` riêng.
-- Idempotent: job chạy lại khi đề xuất đã `READY` → bỏ qua.
+- Việc U03 `AI_TASK {suggestionId}`; lỗi tạm → ném để U03 thử lại; lỗi vĩnh viễn hoặc hết lượt → `onFailed`: `FAILED` + `release` credit chưa dùng (đổi `credit_status` có điều kiện). Embedding của U05 dùng dòng `ai_suggestions` riêng.
+- Idempotent: việc chạy lại khi dòng đã `READY` → bỏ qua. `AiPendingSweeper` mỗi phút: dòng chấm (`PRACTICE_GRADING`, `GRADING_PROPOSAL`) quá 5 phút chưa `READY` → `FAILED` + `release` (BR-U13-24), kết quả về muộn bị bỏ; dòng loại khác `QUEUED` quá 5 phút → gửi lại việc. `CreditReservationScanner` mỗi 5 phút `release` dòng còn `RESERVED` quá 30 phút (BR-U07-43).
 
 ## P6 - CodeRunner qua Judge0
 - `CodeRunnerPort.run(language, files, entryPoint, tests[], limits)`; `Judge0Adapter` gửi batch `POST /submissions/batch?base64_encoded=true` với `additional_files` (zip các file) + `compile_script`/`run_script` theo ngôn ngữ; poll `GET /submissions/batch` mỗi 1 s tới khi xong hoặc 30 s.
