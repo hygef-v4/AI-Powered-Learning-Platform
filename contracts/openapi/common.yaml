@@ -110,8 +110,20 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    Gone:
+      description: Tài nguyên không còn khả dụng
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     PayloadTooLarge:
       description: Tệp hoặc body quá lớn
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnsupportedMediaType:
+      description: Loại tệp không được hỗ trợ
       content:
         application/problem+json:
           schema:

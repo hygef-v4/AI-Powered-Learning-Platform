@@ -9,7 +9,7 @@ RUN mvn -B -q -DskipTests package
 FROM eclipse-temurin:17-jre-alpine
 RUN addgroup -S app && adduser -S app -G app \
     && apk add --no-cache wget \
-    && mkdir -p /tmp/uploads && chown app:app /tmp/uploads
+    && mkdir -p /tmp/uploads /app/data/files && chown -R app:app /tmp/uploads /app/data
 WORKDIR /app
 COPY --from=build /src/target/platform-backend-*.jar app.jar
 USER app

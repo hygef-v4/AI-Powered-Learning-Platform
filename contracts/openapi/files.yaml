@@ -20,8 +20,9 @@ paths:
     post:
       operationId: uploadFile
       summary: Upload tệp
-      description: Trần 50 MB (MATERIAL) hoặc 5 MB (AVATAR, DOCUMENT_IMAGE); quá 5 upload đồng thời trả 503.
-      x-roles:
+      description: Trần 50 MB (AVATAR, MATERIAL) hoặc 5 MB (DOCUMENT_IMAGE); loại tệp xác định theo nội dung, không theo đuôi
+        (415 nếu không thuộc allowlist); quá 5 upload đồng thời trả 503.
+      x-roles: &id001
       - STUDENT
       - TEACHER
       - SUBJECT_MANAGER
@@ -79,6 +80,8 @@ paths:
           $ref: ./common.yaml#/components/responses/Forbidden
         '413':
           $ref: ./common.yaml#/components/responses/PayloadTooLarge
+        '415':
+          $ref: ./common.yaml#/components/responses/UnsupportedMediaType
         '503':
           $ref: ./common.yaml#/components/responses/ServiceUnavailable
       tags:
@@ -87,8 +90,10 @@ paths:
     get:
       operationId: downloadFile
       summary: Tải tệp bằng token
-      description: Token gắn với người được cấp; dùng sai người trả 404. Tệp bị Drive đánh dấu lạm dụng trả 410.
-      x-roles: []
+      description: 'Token 5 phút do API của unit sở hữu cấp, gắn với người được cấp: phải đăng nhập đúng tài khoản đó, sai
+        người trả 404. Ảnh/PDF `inline`, còn lại `attachment`; SVG kèm CSP sandbox; `X-Content-Type-Options: nosniff`, `Cache-Control:
+        private, no-store`. Tệp bị Drive chặn vì abuse trả 410.'
+      x-roles: *id001
       parameters:
       - name: token
         in: path
@@ -103,9 +108,14 @@ paths:
               schema:
                 type: string
                 format: binary
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
         '404':
           $ref: ./common.yaml#/components/responses/NotFound
-      security: []
+        '410':
+          $ref: ./common.yaml#/components/responses/Gone
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
       tags:
       - U03 File & Artifact
 components:
