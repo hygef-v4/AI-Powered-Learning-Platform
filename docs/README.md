@@ -4,7 +4,8 @@ Các sơ đồ này được tổng hợp từ thiết kế Construction của 1
 
 | Sơ đồ | Nội dung |
 |---|---|
-| [ERD draw.io](erd.drawio) · [chú giải](erd.md) | Cả 46 bảng trên một canvas, có thuộc tính/khóa và quan hệ |
+| [Database design draw.io](database.drawio) · [đặc tả SDS](database.md) | Thiết kế vật lý PostgreSQL hiện hành: 24 bảng, thuộc tính/kiểu dữ liệu, PK/FK/UK/check constraint và quan hệ |
+| [ERD cũ](erd.drawio) · [ghi chú](erd.md) | Canvas 46 bảng của thiết kế trước ngày 2026-10-03; chỉ giữ để đối chiếu lịch sử, không dùng để viết migration |
 | [Screen flow draw.io](screen-flow.drawio) · [diễn giải](screen-flow.md) | Toàn bộ màn hình và popup ghi dữ liệu/tải file trên một canvas, tỏa ra từ Sign In theo menu từng vai trò, bảng unit và UC từng ô trong phần diễn giải; bản Mermaid theo từng vai trò. Mã UC theo bảng 40 use case |
 | [Business flow draw.io](business-flow.drawio) · [diễn giải](business-flow.md) | 5 trang swimlane cho học liệu/RAG, bài cá nhân, bài nhóm, credit AI và thông báo/báo cáo; mỗi trang ghi các UC liên quan |
 | [Bảng use case SRS](use-case-table.md) | Một bảng tiếng Anh gồm 40 use case với năm cột ID, Use Case, Actor, Feature, Use Case Description; bảng Merged IDs ghi rõ mã cũ đã gộp hoặc bỏ |
@@ -14,7 +15,7 @@ Các sơ đồ này được tổng hợp từ thiết kế Construction của 1
 ## Quy ước
 
 - **Unit** là ranh giới sở hữu dữ liệu trong cùng backend modular monolith; không phải một database hay service riêng.
-- ERD draw.io đặt toàn bộ bảng trên một canvas. Nét đứt đánh dấu tham chiếu qua unit; xử lý nghiệp vụ vẫn đi qua public contract của owner.
+- `database.drawio` là nguồn sơ đồ vật lý cho SDS. Đường liền là FK được PostgreSQL thực thi; đường đứt là tham chiếu logic do service sở hữu kiểm tra.
 - Redis lưu OTP, phiên và bộ đếm có TTL; RabbitMQ chuyển job/event; Google Drive giữ byte file. Các thành phần này không được vẽ thành bảng PostgreSQL.
 - Dashboard, bản diff, tệp xuất CSV/XLSX và kết quả xem trước DOCX được tính khi yêu cầu; không có bảng lưu riêng. Không có bảng tiến độ hoàn thành bài học, đề chung cấp môn, báo cáo độ lệch điểm AI hoặc luồng hoàn tiền đã chốt.
 

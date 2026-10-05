@@ -60,7 +60,7 @@ Ghi một lần khi tạo bài bằng copy/nhân bản/version mới; không đ�
 
 | Port | Unit | Mô tả |
 |---|---|---|
-| `AssignmentQueryPort`, `AssignmentService`, `AssignmentExtensionPort` | U08 | Đọc version, tạo bài nháp, ghi `subject_id`, trạng thái template, `source_assignment_id` |
+| `AssignmentQueryPort`, `AssignmentDraftPort`, `AssignmentExtensionPort` | U08 | Đọc version, tạo bài nháp, ghi `subject_id`, trạng thái template, `source_assignment_id` |
 | `TypeConfigPort` | U09 | Sao chép cấu hình/khung và nhân bản rubric từng câu/phần |
 | `BankCopyPort`, `InlineQuestionPort` | U06 | Sao chép câu cấp lớp sang lớp đích; sao câu riêng của bài (rubric nhân bản qua `TypeConfigPort.copy` của U09) |
 | `ClassAccessPort`, `SubjectScopePort` | U04 | Giảng viên của lớp nguồn/đích; Chủ nhiệm môn hiện tại của môn |

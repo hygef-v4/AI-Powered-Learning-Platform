@@ -9,7 +9,7 @@
 | Lưu refresh, OTP, rate limit | Redis | Đã chốt ở Application Design; có TTL và bộ đếm nguyên tử | Application Design |
 | Dữ liệu tài khoản | PostgreSQL | Đã chốt ở Application Design | Application Design |
 | Băm mật khẩu | bcrypt, cost ≥ 12 | Người dùng chọn | Câu N4 |
-| Gửi mail | SMTP qua Mail Port; demo dùng Gmail SMTP + App Password | Miễn phí, đổi nhà cung cấp chỉ bằng cấu hình | Câu N8, REL-005 |
+| Gửi mail | SMTP qua Mail Port; demo dùng Brevo SMTP + SMTP key | Dùng trong hạn mức miễn phí của Brevo; đổi nhà cung cấp SMTP bằng cấu hình | Câu N8, REL-005 |
 | Mail local/demo | Mailpit trong container | Không tốn lượt mail thật, xem được OTP khi test | Câu N8 |
 | Gửi mail bất đồng bộ | Job của U03 + worker | Lỗi mail không làm hỏng yêu cầu | BR-U01-92 |
 | Đọc CSV | Thư viện CSV chuẩn của Java (Apache Commons CSV hoặc tương đương) | Xử lý đúng dấu phẩy và ngoặc kép trong tên | BR-U01-80 |

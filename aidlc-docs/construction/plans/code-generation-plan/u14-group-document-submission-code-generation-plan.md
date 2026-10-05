@@ -1,6 +1,8 @@
 # U14 Group Document & Submission - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U14. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -48,12 +50,12 @@ PostgreSQL: `group_documents` (mục, lịch sử, bản nộp nằm trong cột
     worker/             GroupAutoSubmitScanner, GroupDocCreateHandler
     adapter/            AssignmentLifecycleAdapter (U08), GroupChangeAdapter (U12)
     port/               GroupSubmissionQueryPort, GroupSubmittedPort
-/backend/src/main/resources/db/migration/u14/
+/backend/src/main/resources/db/migration/groupdocs/
 /frontend/src/app/learning/group-docs/
 /frontend/src/components/group-docs/ (GroupDocsOverviewPanel)
 /frontend/src/features/group-doc/useGroupDocStream.ts
-/contracts/openapi/u14-group-docs.yaml
-/contracts/messages/u14-events.json
+/contracts/openapi/group-docs.yaml
+/contracts/messages/group-submission-events.json
 ```
 
 ## 3. Các bước
@@ -80,12 +82,12 @@ PostgreSQL: `group_documents` (mục, lịch sử, bản nộp nằm trong cột
 
 - [ ] **Bước 12** - Flyway `V20260925_1850__u14_group_workspace.sql` theo `infrastructure-design.md` §4.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test: hai người nhận cùng mục; giao mục đang có người giữ; mọi mục xong không đổi trạng thái; rời nhóm hoặc nhả bằng tay thì xóa bản nháp chưa Xong, mục về đúng `OPEN`/`DONE`; tự nộp tại hạn lấy bản nháp của mục đang giữ, tài liệu `CLOSED`, không nộp trùng; hai client SSE nhận đúng sự kiện; nộp lại ghi đè `submitted_snapshot` và ghi audit.
+- [ ] **Bước 14** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: hai người nhận cùng mục; giao mục đang có người giữ; mọi mục xong không đổi trạng thái; rời nhóm hoặc nhả bằng tay thì xóa bản nháp chưa Xong, mục về đúng `OPEN`/`DONE`; tự nộp tại hạn lấy bản nháp của mục đang giữ, tài liệu `CLOSED`, không nộp trùng; hai client SSE nhận đúng sự kiện; nộp lại ghi đè `submitted_snapshot` và ghi audit.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 16** - `/contracts/openapi/u14-group-docs.yaml` (gồm SSE) và schema event.
+- [x] **Bước 16** - `/contracts/openapi/group-docs.yaml` (gồm SSE) và schema event.
 - [ ] **Bước 17** - Controller + DTO + validation; controller SSE.
 - [ ] **Bước 18** - Test MockMvc: nhóm khác `404`; người không giữ mục không lưu được; chỉ trưởng nhóm giao mục; không ai thêm/sửa/xóa mục; chỉ trưởng nhóm nộp.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.

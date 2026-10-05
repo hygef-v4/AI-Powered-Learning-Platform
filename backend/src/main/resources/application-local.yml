@@ -1,0 +1,16 @@
+# Chạy local: Mailpit, lưu file vào thư mục local (không có key Google Drive), log chi tiết.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/platform
+  data:
+    redis:
+      host: localhost
+  rabbitmq:
+    host: localhost
+  mail:
+    host: localhost
+    port: 1025
+
+logging:
+  level:
+    edu.aiplatform: DEBUG

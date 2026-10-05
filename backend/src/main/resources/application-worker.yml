@@ -1,0 +1,12 @@
+# Container `worker`: cùng image backend, chỉ mạng `internal`; nhận 7 queue việc nền, chạy sweeper và scanner mỗi phút.
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: true
+        acknowledge-mode: manual
+        prefetch: 1
+
+platform:
+  worker:
+    enabled: true

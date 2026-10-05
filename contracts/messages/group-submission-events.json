@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiplatform.edu/contracts/messages/group-submission-events.json",
+  "title": "U14 events",
+  "description": "Payload của event trên exchange `platform.events`; khung chung ở `domain-event.json`.",
+  "$defs": {
+    "group.submitted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groupDocumentId",
+        "groupId",
+        "assignmentId",
+        "submitMode"
+      ],
+      "properties": {
+        "groupDocumentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "groupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "assignmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "submitMode": {
+          "enum": [
+            "MANUAL",
+            "AUTO_DEADLINE",
+            "AUTO_RETIRED"
+          ]
+        }
+      },
+      "description": "Nhóm nộp bài (trưởng nhóm nộp hoặc tự nộp) (nguồn U14)"
+    }
+  }
+}

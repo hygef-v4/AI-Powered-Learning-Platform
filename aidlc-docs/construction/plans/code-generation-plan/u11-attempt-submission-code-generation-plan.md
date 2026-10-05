@@ -1,6 +1,8 @@
 # U11 Attempt & Submission - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U11. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -51,12 +53,12 @@ PostgreSQL `attempts` (gồm nội dung bài làm); Redis `ratelimit:attempt-sav
     adapter/            AssignmentLifecycleAdapter (cài port của U08)
     port/               SubmissionQueryPort, AttemptRunResultPort, SubmissionSubmittedPort,
                         CodeRunPort, PracticeGradingPort, PracticeResultPort, GradeQueryPort
-/backend/src/main/resources/db/migration/u11/
+/backend/src/main/resources/db/migration/attempts/
 /frontend/src/app/learning/...                (MyAssignmentsPage, AssignmentOverviewPage,
                                             AttemptWorkspacePage, SubmittedAttemptView)
 /frontend/src/features/attempt/useAutosave.ts
-/contracts/openapi/u11-attempt.yaml
-/tests/load/u11-autosave.js               (k6)
+/contracts/openapi/attempts.yaml
+/tests/load/attempt-autosave.js               (k6)
 ```
 
 ## 3. Các bước
@@ -83,12 +85,12 @@ PostgreSQL `attempts` (gồm nội dung bài làm); Redis `ratelimit:attempt-sav
 
 - [ ] **Bước 12** - Flyway `V20260925_1800__u11_attempts.sql` theo `infrastructure-design.md` §3, bảng `attempts` theo [database](../../../../docs/database.md), cột `submit_mode` và trigger bất biến nội dung sau nộp.
 - [ ] **Bước 13** - JPA repository.
-- [ ] **Bước 14** - Integration test: hai lần bắt đầu đồng thời; nộp tay và tự nộp đồng thời; ngừng giao tự nộp hàng loạt; nộp Practice không tự chấm; bấm "Chấm với AI" gọi `PracticeGradingPort` (adapter giả trả đủ/thiếu credit, quá 5 phút) và hiện đúng thông báo, lượt không phải Practice Text/Diagram Essay bị từ chối (luồng credit thật kiểm ở U13); bài `RETIRED` có điểm vẫn hiện; lượt gần nhất và chuyển lượt ‹ ›; trigger chặn sửa sau nộp.
+- [ ] **Bước 14** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: hai lần bắt đầu đồng thời; nộp tay và tự nộp đồng thời; ngừng giao tự nộp hàng loạt; nộp Practice không tự chấm; bấm "Chấm với AI" gọi `PracticeGradingPort` (adapter giả trả đủ/thiếu credit, quá 5 phút) và hiện đúng thông báo, lượt không phải Practice Text/Diagram Essay bị từ chối (luồng credit thật kiểm ở U13); bài `RETIRED` có điểm vẫn hiện; lượt gần nhất và chuyển lượt ‹ ›; trigger chặn sửa sau nộp.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 16** - `/contracts/openapi/u11-attempt.yaml` (U11 không phát event).
+- [x] **Bước 16** - `/contracts/openapi/attempts.yaml` (U11 không phát event).
 - [ ] **Bước 17** - Controller + DTO + validation, gồm `POST /api/v1/attempts/{id}/docx:preview` chỉ cho chủ lượt DOCUMENT đang làm; xác nhận dùng `PUT /api/v1/attempts/{id}/content`.
 - [ ] **Bước 18** - Test MockMvc: lượt người khác `404`; hết lượt/quá hạn bị từ chối; đề không chứa đáp án; "Chấm với AI" trên lượt của người khác hoặc bài `GRADED` bị từ chối.
 - [ ] **Bước 19** - Tóm tắt: `code/api-summary.md`.

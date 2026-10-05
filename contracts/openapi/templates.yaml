@@ -1,0 +1,594 @@
+openapi: 3.1.0
+info:
+  title: U10 - Template & Copy
+  version: 1.0.0
+  description: 'Template của môn (Chủ nhiệm môn), copy từ template hoặc từ lớp khác, lịch sử version và so sánh.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U10 Template & Copy
+  description: Template của môn (Chủ nhiệm môn), copy từ template hoặc từ lớp khác, lịch sử version và so sánh.
+paths:
+  /api/v1/subjects/{subjectId}/templates:
+    get:
+      operationId: listTemplates
+      summary: Template của môn
+      x-roles: &id002
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id001
+          - MULTIPLE_CHOICE_QUIZ
+          - TEXT_ESSAY
+          - DIAGRAM_ESSAY
+          - CODE_LAB
+          - GROUP_ASSIGNMENT
+      - name: mode
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: &id004
+          - DRAFT
+          - REVIEWED
+          - RELEASED
+          - WITHDRAWN
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemplateSummary'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+  /api/v1/templates:
+    post:
+      operationId: createTemplate
+      summary: Tạo template
+      x-roles: &id003
+      - SUBJECT_MANAGER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subjectId:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                  enum: *id001
+                gradingMode:
+                  type: string
+                  enum:
+                  - GRADED
+                  - PRACTICE
+                title:
+                  type: string
+                  maxLength: 200
+              required:
+              - subjectId
+              - type
+              - gradingMode
+              - title
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U10 Template & Copy
+  /api/v1/templates/{templateId}:
+    get:
+      operationId: getTemplate
+      summary: Chi tiết template
+      x-roles: *id002
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+    patch:
+      operationId: updateTemplate
+      summary: Sửa template (DRAFT)
+      x-roles: *id003
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                instructions:
+                  type: string
+                  maxLength: 20000
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U10 Template & Copy
+    delete:
+      operationId: deleteTemplate
+      summary: Xóa template (bản đã copy không ảnh hưởng)
+      x-roles: *id003
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Thành công
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U10 Template & Copy
+  /api/v1/templates/{templateId}/release:
+    post:
+      operationId: releaseTemplate
+      summary: Phát hành version template
+      x-roles: *id003
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U10 Template & Copy
+  /api/v1/templates/{templateId}/versions:
+    post:
+      operationId: createTemplateVersion
+      summary: Tạo version template mới
+      x-roles: *id003
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+  /api/v1/classes/{classId}/assignments:copy-from-template:
+    post:
+      operationId: copyFromTemplate
+      summary: Copy template RELEASED vào lớp
+      x-roles: *id002
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templateId:
+                  type: string
+                  format: uuid
+              required:
+              - templateId
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U10 Template & Copy
+  /api/v1/classes/{classId}/copy-sources:
+    get:
+      operationId: listCopySources
+      summary: Bài cùng dạng/chế độ ở lớp mình dạy
+      x-roles: *id002
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum: *id001
+      - name: mode
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CopySource'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+  /api/v1/classes/{classId}/assignments:copy-from-class:
+    post:
+      operationId: copyFromClass
+      summary: Copy bài từ lớp khác
+      x-roles: *id002
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceAssignmentId:
+                  type: string
+                  format: uuid
+              required:
+              - sourceAssignmentId
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: ./assessments.yaml#/components/schemas/Assignment
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U10 Template & Copy
+  /api/v1/assignments/{assignmentId}/lineage:
+    get:
+      operationId: getLineage
+      summary: Lịch sử version và nguồn
+      x-roles: *id002
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LineageEntry'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+  /api/v1/assignments/diff:
+    get:
+      operationId: diffAssignments
+      summary: So sánh hai version/nguồn
+      x-roles: *id002
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentDiff'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U10 Template & Copy
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    TemplateSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum: *id001
+        gradingMode:
+          type: string
+          enum:
+          - GRADED
+          - PRACTICE
+        status:
+          type: string
+          enum: *id004
+        version:
+          type: integer
+      required:
+      - id
+      - title
+      - type
+      - gradingMode
+      - status
+      - version
+    CopySource:
+      type: object
+      properties:
+        classId:
+          type: string
+          format: uuid
+        className:
+          type: string
+        assignmentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        version:
+          type: integer
+      required:
+      - classId
+      - className
+      - assignmentId
+      - title
+      - version
+    LineageEntry:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        origin:
+          type: string
+          enum:
+          - MANUAL
+          - CLONE
+          - NEW_VERSION
+          - TEMPLATE_COPY
+          - CLASS_COPY
+        sourceAssignmentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - assignmentId
+      - version
+      - origin
+      - createdAt
+    AssignmentDiff:
+      type: object
+      properties:
+        fromId:
+          type: string
+          format: uuid
+        toId:
+          type: string
+          format: uuid
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              change:
+                type: string
+                enum:
+                - ADDED
+                - REMOVED
+                - CHANGED
+              before: {}
+              after: {}
+            required:
+            - path
+            - change
+      required:
+      - fromId
+      - toId
+      - changes

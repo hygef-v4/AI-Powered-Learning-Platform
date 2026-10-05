@@ -10,7 +10,7 @@
  Trình duyệt <==SSE== backend: SseHub <-----------+
  Trình duyệt --REST--> backend: NotificationController, PreferenceController, ProgressController,
                           StatisticsController, GradeDistributionController, GradebookExportController
- worker: jobs.email --> EmailSendHandler (P2, P3) --> SMTP (Gmail / Mailpit); EmailDeferredScanner (P2)
+ worker: jobs.email --> EmailSendHandler (P2, P3) --> SMTP (Brevo / Mailpit); EmailDeferredScanner (P2)
  worker: DeadlineReminderScanner (P4) --> NotificationFanout
 ```
 

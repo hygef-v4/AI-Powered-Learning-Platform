@@ -1,0 +1,361 @@
+openapi: 3.1.0
+info:
+  title: U07 - Payment & AI Credit
+  version: 1.0.0
+  description: 'Số dư credit, mua gói qua PayOS, lịch sử mua và dùng credit.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U07 Payment & AI Credit
+  description: Số dư credit, mua gói qua PayOS, lịch sử mua và dùng credit.
+paths:
+  /api/v1/me/credits:
+    get:
+      operationId: getMyCredits
+      summary: Số dư credit của tôi
+      x-roles: &id001
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  freeBalance:
+                    type: integer
+                    format: int64
+                  freePeriod:
+                    type: string
+                  purchasedBalance:
+                    type: integer
+                    format: int64
+                  total:
+                    type: integer
+                    format: int64
+                required:
+                - freeBalance
+                - freePeriod
+                - purchasedBalance
+                - total
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/credit-packages:
+    get:
+      operationId: listCreditPackages
+      summary: Gói credit đang bán
+      x-roles: *id001
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditPackage'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/payments:
+    post:
+      operationId: createPayment
+      summary: Tạo link thanh toán PayOS
+      x-roles: *id001
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                packageId:
+                  type: string
+                  format: uuid
+              required:
+              - packageId
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/payments/{orderCode}:
+    get:
+      operationId: getPayment
+      summary: Trạng thái giao dịch của tôi
+      x-roles: *id001
+      parameters:
+      - name: orderCode
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/me/payments:
+    get:
+      operationId: listMyPayments
+      summary: Lịch sử mua
+      x-roles: *id001
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./common.yaml#/components/schemas/PageMeta
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/me/credit-usage:
+    get:
+      operationId: listMyCreditUsage
+      summary: Lịch sử dùng credit
+      x-roles: *id001
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./common.yaml#/components/schemas/PageMeta
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CreditUsage'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U07 Payment & AI Credit
+  /api/v1/payments/payos/webhook:
+    post:
+      operationId: payosWebhook
+      summary: Webhook PayOS (kiểm chữ ký)
+      description: Không cần đăng nhập; chữ ký sai trả 400. Cộng credit đúng một lần khi PAID.
+      x-roles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                desc:
+                  type: string
+                success:
+                  type: boolean
+                data:
+                  type: object
+                  additionalProperties: true
+                signature:
+                  type: string
+              required:
+              - code
+              - desc
+              - success
+              - data
+              - signature
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                - success
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      security: []
+      tags:
+      - U07 Payment & AI Credit
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    CreditPackage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        credits:
+          type: integer
+        priceVnd:
+          type: integer
+      required:
+      - id
+      - name
+      - credits
+      - priceVnd
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderCode:
+          type: integer
+          format: int64
+        packageId:
+          type: string
+          format: uuid
+        packageName:
+          type: string
+        credits:
+          type: integer
+        amountVnd:
+          type: integer
+        status:
+          type: string
+          enum:
+          - CREATED
+          - PENDING
+          - PAID
+          - CANCELLED
+          - EXPIRED
+          - FAILED
+        checkoutUrl:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - orderCode
+      - packageId
+      - packageName
+      - credits
+      - amountVnd
+      - status
+      - expiresAt
+      - createdAt
+    CreditUsage:
+      type: object
+      properties:
+        suggestionId:
+          type: string
+          format: uuid
+        taskType:
+          type: string
+        creditsUsed:
+          type: integer
+          format: int64
+        creditStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - suggestionId
+      - taskType
+      - creditsUsed
+      - creditStatus
+      - createdAt

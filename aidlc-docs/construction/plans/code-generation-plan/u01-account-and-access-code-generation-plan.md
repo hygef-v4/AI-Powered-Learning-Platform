@@ -3,6 +3,8 @@
 > Plan này là nguồn duy nhất cho Code Generation của U01. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > Cập nhật 2026-10-04: việc nền và worker chuyển từ U02 sang U03; thứ tự wave 1 là U03 và U02 song song → U01 → U04. U01 dùng `JobPort` của U03 và `AuditPort` của U02 đều thật; khung dự án nằm ở plan U03.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -56,14 +58,14 @@ PostgreSQL `accounts` (U07 thêm cột số dư credit, U16 thêm `email_prefere
       adapter/temp/           NoAssignmentScopeAdapter
   src/main/resources/
     application.yml, application-local.yml
-    db/migration/u01/         Flyway
-  src/test/java/...           unit + integration (Testcontainers)
+    db/migration/identity/         Flyway
+  src/test/java/...           unit test
 /frontend                     Next.js App Router
   src/app/(auth)/...          login, activate, reset-password
   src/app/profile/...
   src/app/admin/accounts/...
   src/components/ui/, src/lib/api/   (khung, plan U03 K4, gồm PasswordField, OtpInput)
-/contracts/openapi/u01-identity.yaml
+/contracts/openapi/identity.yaml
 /infra/nginx/                 route của U01 (Docker Compose, CI là khung, plan U03 K5-K6)
 ```
 
@@ -78,7 +80,7 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 - [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, kiểm tên miền theo `U01_ALLOWED_EMAIL_DOMAINS`, chuyển trạng thái hợp lệ (BR-U01-03, 70…73).
 - [ ] **Bước 8** - `PasswordPolicy` (BR-U01-30, 31; ≤ 72 byte), `PasswordHasher` bcrypt cost cấu hình.
 - [ ] **Bước 9** - Port: dùng `AvatarPort` của U03; khai báo `SubjectScopePort`, `ClassScopePort` + `NoAssignmentScopeAdapter`; cài `AuthorizationPort` (interface đã có từ U02, U03), khai báo `AccountLookupPort`. Dùng `AuditPort` của U02 và `JobPort` của U03.
-- [ ] **Bước 10** - `OtpService` gửi việc `OTP_DELIVERY` qua `JobPort.enqueue` (yêu cầu OTP không ghi database nên message gửi ngay) (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U03: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi SMTP; lỗi thì U03 retry theo backoff, hết lượt thì log ERROR `OTP_DELIVERY_FAILED` (BR-U01-20…27, NFR-U01-30, 31).
+- [ ] **Bước 10** - `OtpService` gửi việc `OTP_DELIVERY` qua `JobPort.enqueue` (yêu cầu OTP không ghi database nên message gửi ngay) (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U03: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi qua Mail Port (Brevo SMTP ở demo/production, Mailpit local/test; cấu hình và SMTP key theo shared-infrastructure §8); lỗi thì U03 retry theo backoff, hết lượt thì log ERROR `OTP_DELIVERY_FAILED` (BR-U01-20…27, NFR-U01-30, 31).
 - [ ] **Bước 11** - `ActivationService`: F1, F2 hai bước — xác minh OTP cấp `otpTicket`, rồi đặt mật khẩu bằng ticket (BR-U01-28; US-IAM-001); xong thì tự đăng nhập qua `TokenService` (BR-U01-13). `VerificationTicketStore` (Redis `ticket:*`) dùng chung cho F5.
 - [ ] **Bước 12** - `TokenService`: JWT HMAC 15 phút; refresh ngẫu nhiên lưu băm, idle 2 giờ, trần 7 ngày, xoay vòng, phát hiện dùng lại; refresh kiểm `credentialVersion` (BR-U01-44…46, P1).
 - [ ] **Bước 13** - `AuthService`: đăng nhập với hash giả cho email không tồn tại, khóa tạm 5 lần/15 phút, refresh, đăng xuất (chỉ phiên hiện tại), quên mật khẩu (xác minh OTP rồi mới đặt mật khẩu, BR-U01-28), đổi mật khẩu tăng `credentialVersion` (F3-F6; US-IAM-002, 003, 006).
@@ -95,12 +97,12 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 
 - [ ] **Bước 22** - Flyway `V20260925_0930__u01_accounts.sql` (sau `V20260925_0900` của U02): `accounts` (email duy nhất, status 3 giá trị `PENDING`/`ACTIVE`/`DISABLED`, `credential_version`, `failed_login_count`, `locked_until`, `phone_number`, `avatar_file_id`); seed một ADMIN ở trạng thái `PENDING` lấy email từ biến môi trường; thêm FK `audit_logs.actor_id` → `accounts` (bảng `audit_logs` của U02 đã có).
 - [ ] **Bước 23** - Repository JPA, adapter Redis cho refresh/OTP, Bucket4j proxy manager.
-- [ ] **Bước 24** - Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ, Mailpit): kích hoạt đầu-cuối qua message `OTP_DELIVERY` + worker của U03, đăng nhập, khóa tạm, refresh dùng lại, import lặp lại cùng file.
+- [ ] **Bước 24** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ, Mailpit): kích hoạt đầu-cuối qua message `OTP_DELIVERY` + worker của U03, đăng nhập, khóa tạm, refresh dùng lại, import lặp lại cùng file.
 - [ ] **Bước 25** - Tóm tắt repository: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 26** - `/contracts/openapi/u01-identity.yaml`: toàn bộ endpoint U01, lỗi problem-details, cookie.
+- [x] **Bước 26** - `/contracts/openapi/identity.yaml`: toàn bộ endpoint U01, lỗi problem-details, cookie.
 - [ ] **Bước 27** - Controller + DTO + validation: `auth` (login, refresh, logout, activation-requests, activation-otp-verifications, activations, password-reset-requests, password-reset-otp-verifications, password-resets), `me` (profile, password), `admin/accounts` (list, create, role, status, imports). `RateLimitFilter`, `JwtAuthFilter`, cookie theo P2.
 - [ ] **Bước 28** - Test API: MockMvc cho mọi endpoint, gồm negative test bảo mật (NFR-U01-61).
 - [ ] **Bước 29** - Tóm tắt API: `code/api-summary.md`.

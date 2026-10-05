@@ -7,6 +7,9 @@
 - **Current Stage**: Use-case catalog has 40 cases (`docs/use-case-table.md`); docs, Inception and Construction re-synchronized on 2026-10-04: 24-table database from a 19-entity ERD (subject modules, announcement comments), job platform and project skeleton in U03 (wave 1 order U03 and U02 in parallel, then U01, then U04), five assignment types authored in U09, group documents without a REVIEW state, grading per the UC 33/34/17/35 changes. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
 - **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
 
+## Latest documentation decision
+- **2026-10-04**: Email provider changed to Brevo SMTP for demo/production; Mailpit retained for local/tests. U01/U16 email design, shared infrastructure, Inception provider selection and code-generation references synchronized. Existing code-generation approval checkpoints remain unchanged.
+
 ## Workspace State
 - **Existing Code**: No
 - **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)

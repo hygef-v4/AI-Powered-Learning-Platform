@@ -7,7 +7,7 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | Hạng mục | Chọn | Nguồn |
 |---|---|---|
 | Production | VPS Linux nhóm đã có, chạy Docker Compose | Câu I1 |
-| Local/demo | Cùng file Compose, thêm Mailpit, tắt Nginx TLS | NFR-005 |
+| Local/test | Cùng file Compose, thêm Mailpit, tắt Nginx TLS | NFR-005 |
 | Reverse proxy, HTTPS | Nginx + certbot (Let's Encrypt); tên miền có sẵn hoặc subdomain DuckDNS miễn phí | Câu I6 |
 | Database | PostgreSQL container; user `migrator` cho Flyway, user `app` cho runtime (tạo ở khung dự án, plan U03 K5); `app` không sửa/xóa `audit_logs` | U03, U02 |
 | Cache, phiên, rate limit | Redis container; 13 nhóm key đặt tên theo mục đích: `otp:*`, `ticket:*`, `session:refresh:*`, `file:download-token:*`, `gemini:daily-cost:*`, `email:daily-count:*` và 7 nhóm `ratelimit:*` (`auth`, `invite-code`, `payos-webhook`, `attempt-save`, `section-save`, `ai-request`, `code-try`). Mọi key có TTL; mất Redis chỉ làm đăng xuất và reset bộ đếm | U01, U03, U04, U07, U11, U13, U14, U16 |
@@ -15,7 +15,7 @@ Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design
 | Quan sát | `docker compose logs` + healthcheck; không có monitoring stack | Rút gọn phạm vi đồ án |
 | Secret | Biến môi trường trong CI/CD, ghi ra file `.env` quyền 600 trên VPS khi deploy | Câu I4 |
 | Registry image | GitHub Container Registry (miễn phí với repo public), tag theo commit SHA, không dùng `latest` | NFR-005 |
-| Email | Mailpit khi dev; Gmail SMTP với App Password khi demo (~500 mail/ngày, miễn phí) | REL-005 |
+| Email | Mailpit khi dev; Brevo SMTP khi demo/production (SMTP login + SMTP key; dùng trong hạn mức gói miễn phí) | REL-005 |
 | Backup | **Không có** (ngoại lệ) | Câu I5 |
 | Mã hóa at rest | **Không có** (ngoại lệ) | Câu I7 |
 
@@ -52,7 +52,7 @@ VPS gợi ý: 4 vCPU, 8 GB RAM, 60 GB SSD (có Judge0). VPS nhỏ hơn: xem U13 
 - SSE tài liệu nhóm `GET /api/v1/group-docs/*/events` và chuông thông báo `GET /api/v1/me/notifications/stream`: `proxy_buffering off`, `proxy_read_timeout 1h`, `proxy_http_version 1.1`.
 - Nhập DOCX `/api/v1/assignments/*/skeleton:import-docx` (khung giảng viên) và `/api/v1/attempts/*/docx:preview` (người học, bài DOCUMENT): `client_max_body_size 20m`, `proxy_read_timeout 60s`.
 - `client_max_body_size 50m`; riêng `/api/v1/files` tắt đệm request (`proxy_request_buffering off`) và `proxy_read_timeout 120s`.
-- Backend và worker cần kết nối ra `www.googleapis.com:443` (Google Drive, YouTube Data API), `generativelanguage.googleapis.com:443` (Gemini), `www.youtube.com:443` (caption) và `api-merchant.payos.vn:443` (PayOS); firewall chỉ chặn chiều vào.
+- Backend và worker cần kết nối ra `www.googleapis.com:443` (Google Drive, YouTube Data API), `generativelanguage.googleapis.com:443` (Gemini), `www.youtube.com:443` (caption), `api-merchant.payos.vn:443` (PayOS) và `smtp-relay.brevo.com:587` (Brevo SMTP, STARTTLS); firewall chỉ chặn chiều vào.
 
 ## 4. Secret
 
@@ -77,3 +77,11 @@ VPS gợi ý: 4 vCPU, 8 GB RAM, 60 GB SSD (có Judge0). VPS nhỏ hơn: xem U13 
 ## 7. Ngoài phạm vi đồ án
 
 Theo phạm vi rút gọn ở `requirements.md` mục 12-13: không multi-zone, không backup, không mã hóa at rest, không TLS giữa các container, không monitoring/alerting. Hệ quả cần biết: VPS hỏng thì hệ thống dừng và **mất toàn bộ dữ liệu**.
+
+## 8. Email provider - Brevo (quyết định 2026-10-04)
+
+- Mail Port của U01/U16 dùng Brevo SMTP cho OTP và email thông báo ở demo/production; local/test tiếp tục dùng Mailpit.
+- Cấu hình: SMTP_HOST=smtp-relay.brevo.com, SMTP_PORT=587, SMTP_USER là SMTP login trong Brevo, SMTP_PASSWORD là SMTP key (không phải API key), SMTP_STARTTLS_ENABLED=true, SMTP_FROM là địa chỉ người gửi đã xác minh trong Brevo. Các secret chỉ lấy từ môi trường/secret store.
+- Trần email thông báo của U16 là giới hạn ứng dụng, không phải cam kết quota nhà cung cấp. OTP và thông báo cùng sử dụng quota của tài khoản Brevo; cấu hình trần thông báo phải chừa dung lượng cho OTP và phù hợp hạn mức tài khoản. Khi provider từ chối hoặc hết quota, áp dụng timeout/retry hữu hạn đã chốt, không ghi nhận SENT giả.
+- SENT chỉ nghĩa là SMTP chấp nhận gửi; không bảo đảm thư đã tới hộp thư người nhận. Không thêm tích hợp delivery webhook trong thay đổi này.
+- Tham chiếu cấu hình: [Brevo SMTP](https://help.brevo.com/hc/en-us/articles/7924908994450-Send-transactional-emails-using-Brevo-SMTP).

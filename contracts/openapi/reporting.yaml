@@ -1,0 +1,440 @@
+openapi: 3.1.0
+info:
+  title: U16 - Reporting & Notification
+  version: 1.0.0
+  description: 'Thông báo trong app (SSE), tùy chọn email, tiến độ nộp, phân bố điểm ẩn danh, thống kê quản trị, xuất bảng
+    điểm.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U16 Reporting & Notification
+  description: Thông báo trong app (SSE), tùy chọn email, tiến độ nộp, phân bố điểm ẩn danh, thống kê quản trị, xuất bảng
+    điểm.
+paths:
+  /api/v1/me/notifications:
+    get:
+      operationId: listNotifications
+      summary: Thông báo của tôi
+      x-roles: &id001
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./common.yaml#/components/schemas/PageMeta
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/notifications/unread-count:
+    get:
+      operationId: getUnreadCount
+      summary: Số chưa đọc
+      x-roles: *id001
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                required:
+                - count
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/notifications/stream:
+    get:
+      operationId: streamNotifications
+      summary: SSE chuông thông báo
+      x-roles: *id001
+      responses:
+        '200':
+          description: Thành công
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: 'event: NOTIFICATION; data: Notification JSON'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/notifications/{notificationId}/read:
+    post:
+      operationId: markNotificationRead
+      summary: Đánh dấu đã đọc
+      x-roles: *id001
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Thành công
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      summary: Đánh dấu tất cả đã đọc
+      x-roles: *id001
+      responses:
+        '204':
+          description: Thành công
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/email-preferences:
+    get:
+      operationId: getEmailPreferences
+      summary: Bật/tắt email từng loại
+      x-roles: *id001
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferences'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+      tags:
+      - U16 Reporting & Notification
+    put:
+      operationId: updateEmailPreferences
+      summary: Lưu tùy chọn email
+      x-roles: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailPreferences'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferences'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/assignments/{assignmentId}/progress:
+    get:
+      operationId: getSubmissionProgress
+      summary: Tiến độ nộp bài
+      x-roles: &id002
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/me/classes/{classId}/grade-distribution:
+    get:
+      operationId: getGradeDistribution
+      summary: Phân bố điểm ẩn danh
+      description: Chỉ trả bài đủ mẫu khi lớp bật; khoảng < 5 người bị ẩn.
+      x-roles:
+      - STUDENT
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeDistribution'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/admin/statistics:
+    get:
+      operationId: getAdminStatistics
+      summary: Thống kê quản trị
+      x-roles:
+      - ADMIN
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatistics'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+      tags:
+      - U16 Reporting & Notification
+  /api/v1/classes/{classId}/gradebook/export:
+    get:
+      operationId: exportGradebook
+      summary: Xuất bảng điểm
+      x-roles: *id002
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: format
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+      - name: assignmentId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U16 Reporting & Notification
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: &id003
+          - ENROLLED
+          - ASSIGNMENT_OPENED
+          - DEADLINE_REMINDER
+          - GRADE_PUBLISHED
+          - GROUP_LEADER_CHANGED
+          - GROUP_LEADER_REQUESTED
+          - GROUP_LEADER_REQUEST_REJECTED
+          - GROUP_MEMBERSHIP_CHANGED
+          - GROUP_SUBMITTED
+          - ANNOUNCEMENT_POSTED
+          - PAYMENT_PAID
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          type: string
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - type
+      - title
+      - read
+      - createdAt
+    EmailPreferences:
+      type: object
+      description: Loại thông báo → bật/tắt email.
+      propertyNames:
+        enum: *id003
+      additionalProperties:
+        type: boolean
+    Progress:
+      type: object
+      properties:
+        submitted:
+          type: integer
+        inProgress:
+          type: integer
+        notStarted:
+          type: integer
+        late:
+          type: integer
+        remainingSeconds:
+          type: integer
+          format: int64
+        rows:
+          type: array
+          items:
+            type: object
+            properties:
+              targetId:
+                type: string
+                format: uuid
+              targetName:
+                type: string
+              status:
+                type: string
+                enum:
+                - SUBMITTED
+                - IN_PROGRESS
+                - NOT_STARTED
+              late:
+                type: boolean
+              submittedAt:
+                type: string
+                format: date-time
+            required:
+            - targetId
+            - targetName
+            - status
+            - late
+      required:
+      - submitted
+      - inProgress
+      - notStarted
+      - late
+      - rows
+    GradeDistribution:
+      type: object
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        buckets:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: number
+              to:
+                type: number
+              count:
+                type:
+                - integer
+                - 'null'
+            required:
+            - to
+      required:
+      - assignmentId
+      - buckets
+    AdminStatistics:
+      type: object
+      properties:
+        totalAccounts:
+          type: integer
+          format: int64
+        accountsByRoleAndStatus:
+          type: object
+          additionalProperties: true
+        subjectsByStatus:
+          type: object
+          additionalProperties: true
+        classesByStatus:
+          type: object
+          additionalProperties: true
+        activeEnrollments:
+          type: integer
+          format: int64
+      required:
+      - totalAccounts
+      - accountsByRoleAndStatus
+      - subjectsByStatus
+      - classesByStatus
+      - activeEnrollments

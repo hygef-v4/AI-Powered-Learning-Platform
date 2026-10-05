@@ -68,7 +68,7 @@
 | `U01_OTP_TTL` / `U01_OTP_MAX_ATTEMPTS` | 10m / 5 | Không |
 | `U01_LOGIN_LOCK_THRESHOLD` / `U01_LOGIN_LOCK_DURATION` | 5 / 15m | Không |
 | `U01_RL_*` | Theo bảng P6 | Không |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | Mailpit ở local | Mật khẩu là bí mật |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production theo shared-infrastructure §8 | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
 
 ## 5. Compliance
 

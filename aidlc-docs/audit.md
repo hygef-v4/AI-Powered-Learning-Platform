@@ -3471,3 +3471,44 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: Soát từng unit, bắt đầu U01.
 
 ---
+
+## Documentation synchronization - Use-case catalog
+**Timestamp**: 2026-10-04T13:24:26Z
+**User Input**: "giúp tôi sửa lại bảng usecase table theo cái file tôi vừa gửi"
+**AI Response**: "Updated docs/use-case-table.md against the supplied uc-wave-map (1).md and current AI-DLC business rules. Preserved all 40 IDs and historical mappings; synchronized names, actors, materials, rubrics, groups, AI grading and reporting. Clarified reasons for finalized/published score changes."
+**Context**: Documentation-only update; code-generation approval checkpoints are unchanged.
+
+---
+
+## Documentation synchronization - Ten key use-case specifications
+**Timestamp**: 2026-10-04T13:43:29Z
+**User Input**: "ok giúp tôi sửa usecase spec md theo bảng mới này"
+**User Follow-up**: "kiểu uc spec là tầm 10 cái uc quan trọng nhất ấy thì b giúp tôi pick ra và viết lại vào đấy"
+**AI Response**: "Rewrote docs/use-case-specifications.md for UC 11, 16, 17, 21, 28, 30, 33, 34, 37 and 40. Synchronized actors, main/alternative flows and postconditions with the updated catalog and AI-DLC. UC 30 covers four individual assignment types."
+**Context**: Documentation-only update; code-generation checkpoints remain unchanged.
+
+---
+
+## Construction documentation review - Rubric pinning and AI skeleton drafts
+**Timestamp**: 2026-10-04T13:49:24Z
+**User Input**: "giúp tôi xem xết mục sửa 3,4 trong doc aidlc"
+**AI Response**: "Verified item 3: BR-U06-36 and U06 business flow already preserve pinned rubric versions for reviewed/published assignments. Clarified the U06 RubricEditor description to include REVIEWED. Verified item 4: SKELETON_DRAFT is already documented in U09 F2c, U13 task configuration/business rules and U13 code plan step 6; no additional AI behavior was needed."
+**Context**: Review of the user's screenshots, scoped to Construction documentation. No change to rubric behavior or AI implementation scope.
+
+---
+
+## Documentation update - Five type-specific authoring specifications
+**Timestamp**: 2026-10-04T13:59:23Z
+**User Input**: "ok giúp tôi sửa"
+**AI Response**: "Expanded use-case-specifications.md from 10 to 15 key use cases by adding complete UC 23-27 authoring specifications. Reordered and renumbered the document around the learning/assessment journey; preserved the existing ten flows and source references. Common lifecycle actions remain in UC 28; UC 30 and UC 16 cover submission."
+**Context**: User approved the previously proposed list of 15 key use cases. Documentation-only update.
+
+---
+
+## Documentation update - Brevo email provider
+**Timestamp**: 2026-10-04T15:02:52Z
+**User Input**: "giúp tôi sửa aidlc doc hiện tại thành brevo"
+**AI Response**: Updated current Inception and Construction email provider decisions from Gmail SMTP to Brevo SMTP, retaining Mailpit for local/test. Synchronized U01/U16 requirements, design, infrastructure and code-generation references; documented SMTP credentials, STARTTLS, sender verification and shared provider quota for OTP/notifications.
+**Context**: User-authorized documentation-only provider change. Historical audit entries and original question options preserved. No application code generated; existing code-generation checkpoints unchanged.
+
+---

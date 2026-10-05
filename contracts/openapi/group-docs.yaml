@@ -1,0 +1,614 @@
+openapi: 3.1.0
+info:
+  title: U14 - Group Document & Submission
+  version: 1.0.0
+  description: 'Tài liệu nhóm: nhận/giao mục, lưu nháp mục, xong, nhả, nộp (trưởng nhóm), SSE realtime, bản nộp và xuất DOCX.
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U14 Group Document & Submission
+  description: 'Tài liệu nhóm: nhận/giao mục, lưu nháp mục, xong, nhả, nộp (trưởng nhóm), SSE realtime, bản nộp và xuất DOCX.'
+paths:
+  /api/v1/group-docs/{groupDocumentId}:
+    get:
+      operationId: getGroupDocument
+      summary: Tài liệu nhóm
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDocument'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/events:
+    get:
+      operationId: streamGroupDocument
+      summary: SSE sự kiện tài liệu nhóm
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: 'event: SECTION_CLAIMED | SECTION_ASSIGNED | SECTION_DONE | SECTION_RELEASED | GROUP_SUBMITTED
+                  | AUTO_SUBMITTING; data: JSON'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/sections/{sectionId}/claim:
+    post:
+      operationId: claimSection
+      summary: Nhận mục
+      x-roles: &id001
+      - STUDENT
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/sections/{sectionId}/assign:
+    post:
+      operationId: assignSection
+      summary: Trưởng nhóm giao mục
+      x-roles: *id001
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                  format: uuid
+              required:
+              - accountId
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/sections/{sectionId}/draft:
+    put:
+      operationId: saveSectionDraft
+      summary: Lưu nháp mục (người giữ)
+      x-roles: *id001
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                draftVersion:
+                  type: integer
+                blocks:
+                  type: array
+                  items:
+                    $ref: ../schemas/document.json#/$defs/block
+              required:
+              - draftVersion
+              - blocks
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draftVersion:
+                    type: integer
+                  savedAt:
+                    type: string
+                    format: date-time
+                required:
+                - draftVersion
+                - savedAt
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/sections/{sectionId}/done:
+    post:
+      operationId: markSectionDone
+      summary: Xong mục (đăng nội dung)
+      x-roles: *id001
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/sections/{sectionId}/release:
+    post:
+      operationId: releaseSection
+      summary: Nhả mục (bỏ nháp chưa Xong)
+      description: Người giữ, trưởng nhóm hoặc giảng viên lớp.
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sectionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/submissions:
+    post:
+      operationId: submitGroupDocument
+      summary: Trưởng nhóm nộp
+      x-roles: *id001
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupSubmission'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/submission:
+    get:
+      operationId: getGroupSubmission
+      summary: Bản nộp mới nhất
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupSubmission'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/group-docs/{groupDocumentId}/export.docx:
+    get:
+      operationId: exportGroupDocx
+      summary: Tải DOCX
+      x-roles:
+      - STUDENT
+      - TEACHER
+      - SUBJECT_MANAGER
+      parameters:
+      - name: groupDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: submission
+        in: query
+        required: false
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U14 Group Document & Submission
+  /api/v1/assignments/{assignmentId}/group-docs:
+    get:
+      operationId: listGroupDocsOverview
+      summary: Tiến độ các nhóm (giảng viên)
+      x-roles:
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupDocOverview'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U14 Group Document & Submission
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    Section:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        partId:
+          type: string
+          format: uuid
+        orderNo:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+          - OPEN
+          - CLAIMED
+          - DONE
+        holderId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        holderName:
+          type: string
+        assignedBy:
+          type: string
+          format: uuid
+        ancestorHeadings:
+          type: array
+          items:
+            $ref: ../schemas/document.json#/$defs/headingBlock
+        publishedBlocks:
+          type: array
+          items:
+            $ref: ../schemas/document.json#/$defs/block
+        draftBlocks:
+          type: array
+          items:
+            $ref: ../schemas/document.json#/$defs/block
+          description: Chỉ trả cho người giữ.
+        draftVersion:
+          type: integer
+      required:
+      - id
+      - partId
+      - orderNo
+      - title
+      - status
+      - publishedBlocks
+    GroupDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        groupName:
+          type: string
+        leaderId:
+          type: string
+          format: uuid
+        assignmentId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        closesAt:
+          type: string
+          format: date-time
+        lateUntil:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - CLOSED
+        sharedBlocks:
+          type: array
+          items:
+            $ref: ../schemas/document.json#/$defs/block
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+        submittedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - groupId
+      - groupName
+      - leaderId
+      - assignmentId
+      - title
+      - closesAt
+      - status
+      - sharedBlocks
+      - sections
+    GroupSubmission:
+      type: object
+      properties:
+        groupDocumentId:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+        submittedBy:
+          type: string
+        submitMode:
+          type: string
+          enum:
+          - MANUAL
+          - AUTO_DEADLINE
+          - AUTO_RETIRED
+        late:
+          type: boolean
+        document:
+          $ref: ../schemas/document.json#/$defs/document
+        sectionAuthors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              format: uuid
+      required:
+      - groupDocumentId
+      - submittedAt
+      - submittedBy
+      - submitMode
+      - late
+      - document
+      - sectionAuthors
+    GroupDocOverview:
+      type: object
+      properties:
+        groupDocumentId:
+          type: string
+          format: uuid
+        groupName:
+          type: string
+        open:
+          type: integer
+        claimed:
+          type: integer
+        done:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        late:
+          type: boolean
+      required:
+      - groupDocumentId
+      - groupName
+      - open
+      - claimed
+      - done

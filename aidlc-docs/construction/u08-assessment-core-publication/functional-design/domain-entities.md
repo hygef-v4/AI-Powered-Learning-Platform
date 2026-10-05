@@ -75,7 +75,7 @@ Loại câu phải khớp `type`: `MULTIPLE_CHOICE_QUIZ` ↔ `MCQ_*`, `TEXT_ESSA
 |---|---|---|
 | `RubricOwnerPort` (U06 khai báo) | U06 | `repoint(oldRubricId, newRubricId)`: bài `DRAFT` đang trỏ phiên bản cũ chuyển sang phiên bản mới qua `TypeConfigPort.repointRubric` (BR-U06-36) |
 | `AssignmentQueryPort` | U09-U11, U14-U16 | Bài, câu, lịch; `isSubmissionOpen(assignmentId, now)` |
-| `AssignmentService` | U10 | Tạo bài nháp (copy, template) |
+| `AssignmentDraftPort` | U10 | Tạo bài nháp (copy, template); `AssignmentService` cài |
 | `AssignmentExtensionPort` | U09, U10, U15, U16 | Ghi cột/value object của mình vào bài khi trạng thái cho phép (U09: cấu hình, khung, điểm câu Text Essay theo rubric) |
 
 ### Port U08 khai báo, unit khác cài

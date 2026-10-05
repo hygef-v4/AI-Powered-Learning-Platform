@@ -18,12 +18,12 @@
  |   [postgres]           [redis]                      [rabbitmq]     |
  |        ^                   ^                             |         |
  |        |                   |                             v         |
- |        +-------------------+--------------------- [worker] --------+--> SMTP bên ngoài
+ |        +-------------------+--------------------- [worker] --------+--> Brevo SMTP
  |                                                                    |
  +--------------------------------------------------------------------+
 ```
 
-**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gửi mail tới SMTP bên ngoài.
+**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gửi mail tới Brevo SMTP.
 
 ## 2. Local/demo
 

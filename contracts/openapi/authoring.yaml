@@ -1,0 +1,606 @@
+openapi: 3.1.0
+info:
+  title: U09 - Question Type Authoring
+  version: 1.0.0
+  description: 'Cấu hình riêng loại bài, khung tài liệu (Diagram Essay, bài nhóm), rubric từng câu/từng phần, nhập/xuất DOCX,
+    AI soạn khung. Chỉ sửa khi bài DRAFT. Dùng cho cả bài của lớp và template (U10).
+
+
+    Lỗi trả về dạng problem-details (`common.yaml`). `x-roles`: vai trò được gọi; quyền theo phạm vi (lớp, môn, chủ sở hữu)
+    vẫn do backend kiểm.'
+servers:
+- url: /
+security:
+- cookieAuth: []
+tags:
+- name: U09 Question Type Authoring
+  description: Cấu hình riêng loại bài, khung tài liệu (Diagram Essay, bài nhóm), rubric từng câu/từng phần, nhập/xuất DOCX,
+    AI soạn khung.
+paths:
+  /api/v1/assignments/{assignmentId}/type-config:
+    put:
+      operationId: updateTypeConfig
+      summary: Cấu hình Quiz/Code Lab
+      x-roles: &id001
+      - TEACHER
+      - SUBJECT_MANAGER
+      - ADMIN
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/QuizConfig'
+              - $ref: '#/components/schemas/CodeLabConfig'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypeConfig'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U09 Question Type Authoring
+    get:
+      operationId: getTypeConfig
+      summary: Đọc cấu hình
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypeConfig'
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/skeleton:
+    put:
+      operationId: saveSkeleton
+      summary: Lưu khung; tính lại phần theo heading nhỏ nhất
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blocks:
+                  type: array
+                  items:
+                    $ref: ../schemas/document.json#/$defs/block
+                requiredDiagrams:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                    minimum: 1
+              required:
+              - blocks
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skeleton:
+                    $ref: ../schemas/document.json#/$defs/skeleton
+                  parts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Part'
+                required:
+                - skeleton
+                - parts
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/skeleton:import-docx:
+    post:
+      operationId: importSkeletonDocx
+      summary: Nhập khung từ DOCX (xem trước)
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skeleton:
+                    $ref: ../schemas/document.json#/$defs/skeleton
+                  diagramCount:
+                    type: integer
+                  imageCount:
+                    type: integer
+                  droppedParts:
+                    type: array
+                    items:
+                      type: string
+                required:
+                - skeleton
+                - diagramCount
+                - imageCount
+                - droppedParts
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/skeleton:ai-draft:
+    post:
+      operationId: requestAiSkeletonDraft
+      summary: Nhờ AI soạn khung
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 4000
+                moduleIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                lessonIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+              - description
+      responses:
+        '202':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestionId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  estimatedCredits:
+                    type: integer
+                required:
+                - suggestionId
+                - status
+                - estimatedCredits
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common.yaml#/components/responses/Unprocessable
+        '429':
+          $ref: ./common.yaml#/components/responses/TooManyRequests
+        '503':
+          $ref: ./common.yaml#/components/responses/ServiceUnavailable
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/skeleton:apply-ai-draft:
+    post:
+      operationId: applyAiSkeletonDraft
+      summary: Thay khung bằng khung AI đã xem trước
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                suggestionId:
+                  type: string
+                  format: uuid
+              required:
+              - suggestionId
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skeleton:
+                    $ref: ../schemas/document.json#/$defs/skeleton
+                  parts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Part'
+                  rubricSuggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RubricSuggestion'
+                required:
+                - skeleton
+                - parts
+                - rubricSuggestions
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/questions/{questionId}/rubric:
+    put:
+      operationId: saveQuestionRubric
+      summary: Tạo/sửa rubric câu Text Essay
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: questionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                criteria:
+                  $ref: ./question-bank.yaml#/components/schemas/RubricCriteria
+              required:
+              - criteria
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rubricId:
+                    type: string
+                    format: uuid
+                  totalPoints:
+                    type: number
+                  questionPoints:
+                    type: number
+                required:
+                - rubricId
+                - totalPoints
+                - questionPoints
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/assignments/{assignmentId}/parts/{partId}/rubric:
+    put:
+      operationId: savePartRubric
+      summary: Tạo/sửa rubric một phần
+      x-roles: *id001
+      parameters:
+      - name: assignmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: partId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                criteria:
+                  $ref: ./question-bank.yaml#/components/schemas/RubricCriteria
+              required:
+              - criteria
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rubricId:
+                    type: string
+                    format: uuid
+                  totalPoints:
+                    type: number
+                  assignmentTotal:
+                    type: number
+                required:
+                - rubricId
+                - totalPoints
+                - assignmentTotal
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+      tags:
+      - U09 Question Type Authoring
+  /api/v1/attempts/{attemptId}/docx:preview:
+    post:
+      operationId: previewStudentDocx
+      summary: Xem trước DOCX của người học
+      description: Chỉ lượt DOCUMENT đang làm của chính mình; block gắn origin STUDENT.
+      x-roles:
+      - STUDENT
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blocks:
+                    type: array
+                    items:
+                      $ref: ../schemas/document.json#/$defs/block
+                  diagramCount:
+                    type: integer
+                  imageCount:
+                    type: integer
+                  droppedParts:
+                    type: array
+                    items:
+                      type: string
+                required:
+                - blocks
+                - diagramCount
+                - imageCount
+                - droppedParts
+        '401':
+          $ref: ./common.yaml#/components/responses/Unauthorized
+        '400':
+          $ref: ./common.yaml#/components/responses/BadRequest
+        '403':
+          $ref: ./common.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ./common.yaml#/components/responses/NotFound
+        '409':
+          $ref: ./common.yaml#/components/responses/Conflict
+        '413':
+          $ref: ./common.yaml#/components/responses/PayloadTooLarge
+      tags:
+      - U09 Question Type Authoring
+components:
+  securitySchemes:
+    cookieAuth:
+      $ref: ./common.yaml#/components/securitySchemes/cookieAuth
+  schemas:
+    QuizConfig:
+      type: object
+      properties:
+        shuffleQuestions:
+          type: boolean
+        shuffleOptions:
+          type: boolean
+        timeLimitMinutes:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 300
+        showScoreAfterSubmit:
+          type: boolean
+        showCorrectAnswers:
+          type: string
+          enum:
+          - NEVER
+          - AFTER_SUBMIT
+          - AFTER_CLOSE
+      required:
+      - shuffleQuestions
+      - shuffleOptions
+      - showScoreAfterSubmit
+      - showCorrectAnswers
+    CodeLabConfig:
+      type: object
+      properties:
+        questionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        verifyBeforeReview:
+          type: boolean
+      required:
+      - questionIds
+    TypeConfig:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - MULTIPLE_CHOICE_QUIZ
+          - TEXT_ESSAY
+          - DIAGRAM_ESSAY
+          - CODE_LAB
+          - GROUP_ASSIGNMENT
+        config:
+          type: object
+          additionalProperties: true
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+        missingRubrics:
+          type: array
+          items:
+            type: string
+      required:
+      - type
+      - config
+    Part:
+      $ref: ../schemas/document.json#/$defs/skeletonPart
+    RubricSuggestion:
+      type: object
+      properties:
+        partId:
+          type: string
+          format: uuid
+        criteria:
+          $ref: ./question-bank.yaml#/components/schemas/RubricCriteria
+      required:
+      - partId
+      - criteria

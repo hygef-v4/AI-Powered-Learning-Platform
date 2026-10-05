@@ -1,6 +1,8 @@
 # U04 Subject, Class, Enrollment & Learning Access - Code Generation Plan
 
 > Plan này là nguồn duy nhất cho Code Generation của U04. Mỗi bước xong thì đánh `[x]` ngay.
+>
+> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
 
 ## 1. Bối cảnh
 
@@ -43,13 +45,13 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
     infrastructure/     JPA repository, EmptyPublishedContentAdapter
     port/               ClassAccessPort, PublishedContentPort
                         (SubjectScopePort, ClassScopePort do U01 khai báo; U04 cài)
-/backend/src/main/resources/db/migration/u04/
+/backend/src/main/resources/db/migration/academics/
 /frontend/src/app/admin/subjects/
 /frontend/src/app/teaching/ (Teacher Menu, subjects/, classes/)
 /frontend/src/app/admin/classes/
 /frontend/src/app/learning/
-/contracts/openapi/u04-academic.yaml
-/contracts/messages/u04-enrollment-activated.json
+/contracts/openapi/academics.yaml
+/contracts/messages/enrollment-events.json
 ```
 
 ## 3. Các bước
@@ -78,12 +80,12 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
 
 - [ ] **Bước 14** - Flyway `V20260925_1100__u04_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm cờ `show_grade_distribution` mặc định false và `REVOKE DELETE` khỏi `app`.
 - [ ] **Bước 15** - JPA repository và query phạm vi có index.
-- [ ] **Bước 16** - Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ): hai yêu cầu ghi danh đồng thời vào hai lớp cùng môn chỉ một thành công; ghi danh 200 dòng ≤ 5 s; event gửi sau commit; `app` không DELETE được.
+- [ ] **Bước 16** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ): hai yêu cầu ghi danh đồng thời vào hai lớp cùng môn chỉ một thành công; ghi danh 200 dòng ≤ 5 s; event gửi sau commit; `app` không DELETE được.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm D - API
 
-- [ ] **Bước 18** - `/contracts/openapi/u04-academic.yaml` (endpoint theo `frontend-components.md`) và schema event `u04-enrollment-activated.json`.
+- [x] **Bước 18** - `/contracts/openapi/academics.yaml` (endpoint theo `frontend-components.md`) và schema event `enrollment-events.json`.
 - [ ] **Bước 19** - Controller + DTO + validation (định dạng mã, email, CSV ≤ 200 dòng/100 KB).
 - [ ] **Bước 20** - Test MockMvc: 4 role trên mọi endpoint, ID lớp người khác trả 404, `409` khi lệch `version`, `429` khi vượt rate limit mã mời.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
