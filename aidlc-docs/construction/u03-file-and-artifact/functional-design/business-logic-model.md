@@ -44,7 +44,7 @@ Luồng F1–F5 cho tệp; J1–J4 cho việc nền, E1 cho sự kiện thông b
 ### J1 - Gửi việc nền
 1. Unit gọi ghi dòng nghiệp vụ ở trạng thái chờ trong transaction của mình (ví dụ `lessons.scan_status = PENDING`).
 2. Gọi `JobPort.enqueue(jobType, payload, idempotencyKey)`; U03 kiểm payload (BR-U03-52); có transaction thì đăng ký gửi sau commit, không có thì gửi ngay.
-3. Sau commit: gửi `JobMessage` (attempt = 1) tới exchange `jobs`, routing key = `jobType`. Lỗi gửi → log WARN; J3 sẽ gửi lại.
+3. Sau commit: gửi `JobMessage` (`attempt = 0`, tức số lần đã thử lại) tới exchange `jobs`, routing key = `jobType`. Lỗi gửi → log WARN; J3 sẽ gửi lại.
 
 ### J2 - Worker xử lý việc nền
 1. Nhận `JobMessage`, gọi handler của unit sở hữu với `payload`.

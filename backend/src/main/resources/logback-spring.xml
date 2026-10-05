@@ -1,6 +1,6 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <conversionRule conversionWord="maskedMsg" converterClass="edu.aiplatform.shared.logging.MaskingMessageConverter"/>
+    <conversionRule conversionWord="maskedMsg" class="edu.aiplatform.shared.logging.MaskingMessageConverter"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

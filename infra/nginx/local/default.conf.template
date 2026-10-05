@@ -1,3 +1,9 @@
+# CSP: trang do Next.js tự gắn (có nonce, frontend/src/proxy.ts); nginx chỉ gắn cho /api (SEC-004).
+map $uri $api_csp {
+    ~^/api/  "default-src 'self'; frame-src https://www.youtube-nocookie.com https://embed.diagrams.net";
+    default  "";
+}
+
 # Local/test: không TLS (NFR-005).
 server {
     listen 80;

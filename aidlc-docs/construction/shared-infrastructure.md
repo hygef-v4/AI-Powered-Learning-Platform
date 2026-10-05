@@ -45,7 +45,7 @@ VPS gợi ý: 4 vCPU, 8 GB RAM, 60 GB SSD (có Judge0). VPS nhỏ hơn: xem U13 
 - Chỉ Nginx publish cổng 80/443. Cổng 80 chỉ chuyển hướng sang 443 và phục vụ ACME của certbot.
 - Firewall VPS: chặn mọi cổng trừ 80, 443 và SSH. SSH chỉ bằng khóa, tắt đăng nhập mật khẩu và root.
 - RabbitMQ management **không public**; truy cập qua SSH tunnel.
-- Nginx thêm header của SEC-004: CSP `default-src 'self'; frame-src https://www.youtube-nocookie.com https://embed.diagrams.net`, HSTS 1 năm, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- Header của SEC-004: Nginx thêm HSTS 1 năm, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` cho mọi phản hồi, và CSP `default-src 'self'; frame-src https://www.youtube-nocookie.com https://embed.diagrams.net` cho `/api/*`. CSP của trang do Next.js tự gắn (`frontend/src/proxy.ts`): `default-src 'self'`, script/style chỉ chạy khi có nonce của request, cùng `frame-src` YouTube và Draw.io; CSP tĩnh `default-src 'self'` chặn script inline của Next.js nên trang không chạy được (phát hiện khi chạy thử stack 2026-10-05).
 - Định tuyến: `/api/*` → backend, còn lại → frontend.
 - Webhook PayOS `/api/v1/payments/payos/webhook`: `client_max_body_size 16k`.
 - Lưu nháp bài làm `PUT /api/v1/attempts/*/content` và mục bài nhóm `PUT /api/v1/group-docs/*/sections/*/draft`: `client_max_body_size 12m`.
