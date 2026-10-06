@@ -262,7 +262,7 @@ Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giản
 - Tài liệu chung chấm như bài `DOCUMENT`: chấm tay theo rubric của từng phần (điểm tài liệu chung là tổng các phần) hoặc AI đề xuất khi giảng viên yêu cầu; tài liệu hiển thị bình thường, không tô màu theo tác giả.
 - Không có điểm tích hợp riêng: lỗi các phần không khớp nhau khi ghép được trừ ở rubric của phần liên quan, điểm tài liệu chung là tổng các phần; một thành viên chỉ bị trừ thêm (qua điểm đóng góp) khi giảng viên xác định được phần hoặc thành viên gây lỗi.
 - Mỗi sinh viên có điểm đóng góp riêng, mặc định bằng điểm tài liệu chung nên mọi thành viên như nhau; giảng viên có thể chấm tay điểm đóng góp từng người. Không có công thức tự động.
-- Lý do khi sửa điểm một thành viên hoặc quy kết lỗi cho một thành viên là tùy chọn; mọi thay đổi audit actor/thời gian. Nhóm nộp lại thì xử lý như lượt nộp mới của bài `DOCUMENT`: bản nộp cuối được chấm lại.
+- Lý do khi sửa điểm một thành viên hoặc quy kết lỗi cho một thành viên là tùy chọn; mọi thay đổi audit actor/thời gian. Nhóm nộp lại thì bản nộp mới ghi đè bản nộp trước của tài liệu nhóm (không tạo lượt mới); bản nộp cuối được chấm lại, điểm cũ giữ trong lịch sử (quyết định 2026-10-06).
 
 ### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
 

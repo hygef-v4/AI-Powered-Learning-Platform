@@ -3512,3 +3512,55 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: User-authorized documentation-only provider change. Historical audit entries and original question options preserved. No application code generated; existing code-generation checkpoints unchanged.
 
 ---
+
+## Business Flow Review
+**Timestamp**: 2026-10-06T03:00:00Z
+**User Input**: "kiểm tra businessflow dự án xem đã đúng chưa, nếu chưa gửi tôi báo cáo các điểm cần sửa"
+**AI Response**: "Reported that the business flows are not correct. main-business-flows/ (11 BF, 2026-09-27) predates the 2026-10-01 to 2026-10-04 decisions (77-UC count, Learner/Instructor, Simulation Exam, lesson publication, per-assignment group sets, IN_REVIEW parts, group graded manually only, AI override needing a reason, PostgreSQL job records). The newer 5-page docs/business-flow.* only existed in a GitHub Desktop stash because PR #2 removed docs/. Listed 13 fixes for the 5-page set (module creation by Subject Manager only, upload rejection, FAILED scan branch, GRADED/PRACTICE decision, publish checks, instant results, group readiness, leader change steps, resubmission conflict between BR-U14-32 and FR-026/BR-U15-44, payment FAILED/EXPIRED/REJECTED branches, notification starts, missing account and enrollment flows). No files changed."
+**Context**: Documentation review; no workflow stage change.
+
+---
+
+## Main Business Flows - Rebuild
+**Timestamp**: 2026-10-06T05:00:00Z
+**User Input**: "1. nhóm tôi đã quyết định bỏ docs/
+2. sửa theo bạn đề xuất
+3. sửa theo bạn đề xuất
+4. ghi đè
+5. vẽ lại bộ business flow mới theo phong cách của  bộ cũ 11 BF (như trong ảnh)" (attached screenshot of the old BF-01 swimlane)
+**AI Response**: "Kept docs/ removed and left the GitHub Desktop stash untouched. Rebuilt aidlc-docs/inception/main-business-flows/ as fourteen swimlane flows in the original BF style (pool, horizontal lanes, Start/End ellipses, labelled decisions, orthogonal connectors): BF-01 Account Activation and Sign-In, BF-02 Subject and Class Setup and Enrollment, BF-03 Learning Material Upload and Scanning, BF-04 Class Material Access, BF-05 Assignment Authoring, Review and Publication, BF-06 Class Groups and Leader Change, BF-07 Individual Attempt and Submission, BF-08 Group Document Collaboration and Submission, BF-09 Grading and Grade Publication, BF-10 Practice Result and Grade with AI, BF-11 AI Credit Purchase, BF-12 AI Credit Usage, BF-13 Notification and Deadline Reminder, BF-14 Submission Progress, Gradebook Export and Statistics. Applied all reported fixes. Regenerated the combined file, individual files and PNG exports (diagrams.net viewer); automated checks found no connector through a shape, no overlapping or crossing connectors, two labelled exits per decision and an outcome on every End. Rewrote README (flow table with UC 1-40 and units, text alternatives, conventions). Decision 4: a group resubmission overwrites the previous snapshot; aligned FR-026, US-GRP-005 Scenario 6, BR-U15-44 and U15 NFR design pattern with BR-U14-32."
+**Context**: Supplementary business flow documentation update and one requirement clarification; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Main Actors Only
+**Timestamp**: 2026-10-06T06:00:00Z
+**User Input**: "tôi muốn businessflow chỉ có các actor chính (chẳng hạn BF1 là user, system chứ không có redis, worker,...)"
+**AI Response**: "Redrew all fourteen flows with only the main actors: the people involved plus one System lane covering backend, worker, PostgreSQL, Redis, RabbitMQ, Google Drive, Gemini, YouTube, Judge0 and SMTP; PayOS keeps its own lane in BF-11 because the user pays on its checkout. Merged purely technical steps (for example OTP generation, storage and email in BF-01). Business rules and outcomes unchanged. Regenerated the combined file, individual files and PNG exports; automated checks passed (no connector through a shape, no overlap or crossing, labelled decision exits, outcome on every End). Updated the README swimlane column and conventions."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Main Flows Only
+**Timestamp**: 2026-10-06T06:30:00Z
+**User Input**: "chỉ chọn các luồng chính để làm BF"
+**AI Response**: "Kept eight main flows matching USCN-001 to USCN-006 and renumbered them: BF-01 Subject and Class Setup and Enrollment, BF-02 Learning Material Upload and Scanning, BF-03 Assignment Authoring, Review and Publication, BF-04 Individual Attempt and Submission, BF-05 Group Document Collaboration and Submission, BF-06 Grading and Grade Publication, BF-07 Practice Result and Grade with AI, BF-08 AI Credit Purchase. Removed the supporting flows (account activation and sign-in, material access, class groups and leader change, AI credit usage, notifications, reports and statistics) from the BF set; their rules stay in the unit designs. Regenerated the eight-page file, individual files and PNG exports (automated layout checks passed) and updated the README table, details and cross-references."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Concise Trigger and End Condition
+**Timestamp**: 2026-10-06T07:00:00Z
+**User Input**: "viết trigger và end condition cho các BF trên (ngắn gọn súc tích như trong ảnh)" (attached screenshot of SRS section 2.1 with Trigger and End condition for BF-01)
+**AI Response**: "Wrote one-sentence Trigger and End condition for BF-01 to BF-08 and updated them in main-business-flows/README.md."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Readability
+**Timestamp**: 2026-10-06T07:30:00Z
+**User Input**: "kiểm tra lại các BF xem chữ có bị thừa ra khỏi khung không, sửa lại để các bước trong BF viết ngắn gọn, súc tích hơn, đồng thời chỉnh khoảng cách và cỡ chữ hợp lí để không cần phóng to vẫn có thể đọc được rõ chữ" (attached screenshots of BF-01 where the "Valid rows" label overlapped two steps)
+**AI Response**: "Shortened every step, decision and End label in BF-01 to BF-08 (details stay in the README text alternatives), removed the label on the short connector between adjacent steps, merged the BF-03 publication steps into one, enlarged shapes and fonts (steps and decisions 14 px, End 13 px, lanes 16 px, title 18 px, connector labels 13 px bold) and compacted the layout by placing consecutive steps of different lanes in the same column, cutting the width by about 30 to 40 percent. Added generator checks for text overflow and connector labels overlapping shapes; all eight flows passed and the rendered PNGs were reviewed."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---

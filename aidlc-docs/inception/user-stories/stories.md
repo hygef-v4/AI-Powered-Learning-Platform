@@ -565,7 +565,7 @@
 
 - **Given** nhóm nộp lại trước hạn sau khi đã được chấm
 - **When** bản nộp mới được lưu
-- **Then** xử lý như lượt nộp mới của bài `DOCUMENT`: bài về chờ chấm theo bản mới, điểm cũ giữ trong lịch sử
+- **Then** bản nộp mới ghi đè bản nộp trước của tài liệu nhóm (không tạo lượt mới); bài về chờ chấm theo bản mới, điểm cũ giữ trong lịch sử
 
 ## 5. Miền Learning Journey
 

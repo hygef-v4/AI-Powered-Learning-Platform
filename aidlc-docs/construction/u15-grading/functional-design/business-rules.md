@@ -46,7 +46,7 @@
 | BR-U15-41 | Mỗi thành viên có điểm đóng góp riêng (`MEMBER.score`), mặc định bằng điểm tài liệu chung nên mọi thành viên như nhau; giảng viên chấm tay điểm đóng góp từng người nếu cần. Điểm đóng góp không gửi AI chấm. | Người dùng chốt 2026-10-04 |
 | BR-U15-42 | Không áp công thức ghép điểm; khi điểm đóng góp của một thành viên khác điểm tài liệu chung, ghi lý do là tùy chọn. | Người dùng chốt 2026-10-04 |
 | BR-U15-43 | Không có điểm tích hợp riêng: lỗi các phần không khớp nhau khi ghép (ví dụ tên, phần tử lệch giữa các sơ đồ) trừ ở rubric của phần liên quan, nên điểm tài liệu chung vẫn bằng tổng các phần. Trừ thêm cho một thành viên thì giảng viên sửa điểm đóng góp của người đó, ghi lý do và phần liên quan nếu muốn. | US-GRP-006 S4; người dùng chốt 2026-10-04 |
-| BR-U15-44 | Nhóm nộp lại xử lý như lượt nộp mới của bài `DOCUMENT`: bản nộp cuối là bản được chấm; đánh giá `GROUP_DOCUMENT` và `MEMBER` quay về `PENDING` cho bản mới, điểm trước đó giữ trong `history`. | Người dùng chốt 2026-10-04 |
+| BR-U15-44 | Nhóm nộp lại: bản nộp mới ghi đè `submitted_snapshot` của tài liệu nhóm, không tạo lượt mới (BR-U14-32, quyết định 2026-10-06); bản nộp cuối là bản được chấm; đánh giá `GROUP_DOCUMENT` và `MEMBER` quay về `PENDING` cho bản mới, điểm trước đó giữ trong `history`. | Người dùng chốt 2026-10-04 |
 
 ## 6. Sổ điểm
 

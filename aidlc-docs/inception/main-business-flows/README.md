@@ -1,118 +1,93 @@
 # Main Business Flows
 
-The eleven swimlane flows follow the current MVP design: 16 units, 77 use cases and 49 stories. They are derived from the approved requirements, the use case catalog (`docs/use-case-table.md`) and the `business-logic-model.md` / `business-rules.md` of each unit under `aidlc-docs/construction/`. There is no lesson progress tracking, no AI summarization or lesson splitting, and no payment-based class access. Payment only buys AI credits.
+The eight main business flows follow the current MVP: 16 units, 40 use cases and 49 stories, five assignment types with `GRADED`/`PRACTICE` modes, roles `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` and `ADMIN`. They are derived from the approved requirements (`../requirements/requirements.md`, decisions up to 2026-10-04) and the `business-logic-model.md` / `business-rules.md` of each unit under `aidlc-docs/construction/`. Learning materials have no publication step, groups belong to the class, a group document has no review stage, there is no Simulation Exam, no lesson progress tracking and no refund. Payment only buys AI credits.
 
-This directory contains one eleven-page draw.io file, eleven individual draw.io files, and eleven PNG images ready for insertion into the SRS. The PNG files in `exports/` are rendered from the individual draw.io files with the diagrams.net viewer, so they match what draw.io displays.
+They cover the core journeys of the requirements (USCN-001 to USCN-006): class setup and enrollment, learning materials for AI authoring, assignment publication, individual and group submission, teacher grading, AI practice grading and AI credit purchase. Supporting flows (account activation and sign-in, material viewing, class groups and leader change, AI credit usage, notifications, reports and statistics) are not drawn as BF; their rules are in the unit designs (U01, U04, U05, U07, U12, U13, U16).
+
+This directory contains one eight-page draw.io file, eight individual draw.io files, and eight PNG images for the SRS. The PNG files in `exports/` are rendered from the individual draw.io files with the diagrams.net viewer, so they match what draw.io displays.
 
 | ID | Business flow | Swimlanes | End outcomes | Use cases | Units |
 |---|---|---|---|---|---|
-| BF-01 | Account Activation and Sign-In | User, Backend, Redis, Worker and SMTP, PostgreSQL | Neutral response, no email; Neutral sign-in error; Signed in | UC01, UC02 | U01, U02 |
-| BF-02 | Subject and Class Setup, Staff Assignment and Enrollment | Administrator, Instructor, Learner, Backend, PostgreSQL | Generic invalid-code message; Learner enrolled | UC14, UC16, UC18, UC20, UC21, UC23, UC25 | U04 |
-| BF-03 | Learning Material Upload and RAG Indexing | Instructor or Subject Manager, Backend, Google Drive, Worker, Gemini and YouTube, PostgreSQL | Upload rejected; NO_TEXT or NO_CAPTION; FAILED (busy or no credit); Source indexed | UC26, UC27, UC32 | U03, U05, U07 |
-| BF-04 | Assignment Authoring, Review and Publication | Instructor, Backend, Worker and Gemini, PostgreSQL, Learner | Assignment available to learners | UC45, UC49–UC54 | U06, U08, U09, U13 |
-| BF-05 | Lesson Publication and Class Content Access | Instructor, Learner, Backend, Google Drive, PostgreSQL | Publication refused; Access denied; Lesson viewed; File downloaded | UC28, UC29, UC42 | U03, U04, U05 |
-| BF-06 | Group Set Setup and Leader Change | Instructor, Learner, Backend, PostgreSQL | Leader unchanged; Leader changed | UC34, UC35, UC36 | U12 |
-| BF-07 | Individual Attempt and Submission | Learner, Backend, Worker, PostgreSQL | Attempt refused; Submission recorded | UC55–UC60, UC64 | U08, U09, U11, U13 |
-| BF-08 | Group Document Collaboration and Submission | Group Member, Group Leader, Backend, Worker, PostgreSQL | Group submission recorded | UC37, UC38, UC39 | U12, U14 |
-| BF-09 | Grading and Grade Publication | Instructor, Backend, Worker, Gemini and Judge0, PostgreSQL, Learner | Learner sees final grade and feedback | UC40, UC65–UC70 | U13, U15 |
-| BF-10 | AI Credit Purchase | User, Backend, PayOS, Worker, PostgreSQL | Payment FAILED; Event stored as REJECTED; Credits granted | UC75 | U07 |
-| BF-11 | Notification and Deadline Reminder | Backend, Worker, PostgreSQL, SMTP, User | In-app notification received; Notification and email received | UC72, UC76 | U16 |
+| BF-01 | Subject and Class Setup, Staff Assignment and Enrollment | Administrator, Administrator or Subject Manager, Class Manager, Student, System | Generic invalid-code message; Enrolled | UC 8, 9, 10 | U04 |
+| BF-02 | Learning Material Upload and Scanning | Subject Manager or Teacher, System | Upload rejected; NO_TEXT or NO_CAPTION; BUSY or NO_CREDIT; FAILED; Indexed | UC 11 | U03, U05, U07, U13 |
+| BF-03 | Assignment Authoring, Review and Publication | Teacher, System, Student | Publication refused; Assignment visible to students | UC 20, 21, 23–28 | U06, U08, U09, U10, U12, U13 |
+| BF-04 | Individual Attempt and Submission | Student, System | Attempt refused; Submission recorded | UC 29, 30, 31 | U08, U09, U11, U13 |
+| BF-05 | Group Document Collaboration and Submission | Group Member, Group Leader, System | Group submission recorded | UC 16, 27 | U12, U14 |
+| BF-06 | Grading and Grade Publication (GRADED) | Teacher, System, Student | Student sees grade and feedback | UC 17, 32–35, 40 | U13, U15 |
+| BF-07 | Practice Result and Grade with AI | Student, System | Practice result shown; Refused or not enough credit; Error with credit released; AI practice feedback shown | UC 30, 31, 40 | U11, U13, U07 |
+| BF-08 | AI Credit Purchase | User, System, PayOS | Payment FAILED; Rejected; Credits added | UC 37 | U07 |
 
 ## Flow details
 
-### BF-01 Account Activation and Sign-In
+### BF-01 Subject and Class Setup, Staff Assignment and Enrollment
 
-**Trigger**: A user with a school-issued account requests activation or signs in with their school email.
+**Trigger**: An administrator creates a subject and assigns its Subject Manager.
 
-**End condition**: The user is signed in with the correct role, or receives a neutral error.
+**End condition**: The class is set up with its teacher and students are enrolled, or the invite code is rejected.
 
-**Text alternative**: The user asks to activate a school account. If the request limit is exceeded or the account is not a PENDING school account, the backend returns the same neutral response and sends no email. Otherwise a job is saved, the worker generates an OTP, stores its hash in Redis with an expiry and emails the code. The user enters the OTP and a new password. A wrong code or weak password loops back for another try. A valid entry saves the password hash, sets the account ACTIVE and deletes the OTP. On sign-in the backend checks the rate limit, lock, status and password, and locks the account for 15 minutes after five failures. Every failure gets one neutral error. Success creates a refresh session in Redis and a 15-minute access token.
+**Text alternative**: Only the administrator creates a subject and assigns one Subject Manager, who must hold the `SUBJECT_MANAGER` role and not be `DISABLED`. The administrator or the subject's Subject Manager creates a `DRAFT` class in an `ACTIVE` subject and assigns exactly one primary teacher with the `TEACHER` or `SUBJECT_MANAGER` role. Invalid input loops back for correction, and each save is audited. A class manager (the administrator, the class teacher or the Subject Manager) opens the class, which needs a teacher and an `ACTIVE` subject, and manages the invite code. Students are added by search, pasted emails or a one-column CSV of up to 200 rows; each row is checked separately and valid rows are enrolled. A student can also self-enroll with an invite code; the backend checks the attempt limit, that the code is enabled and unexpired, that the class is `OPEN` and that the caller is a student. An invalid code gets a generic message that reveals nothing about the class. Each student is enrolled once as `ACTIVE`, the enrollment is audited, and when the class is `OPEN` the `enrollment.activated` event leads to an in-app notification and an email.
 
-### BF-02 Subject and Class Setup, Staff Assignment and Enrollment
+### BF-02 Learning Material Upload and Scanning
 
-**Trigger**: An administrator creates a subject or class and assigns its staff.
+**Trigger**: A Subject Manager or teacher uploads a file or attaches a YouTube video to a module.
 
-**End condition**: The subject and class are saved with their staff, and learners are enrolled.
+**End condition**: The material is visible to students and indexed for AI, or it is rejected or awaits a rescan.
 
-**Text alternative**: The administrator creates a subject and assigns its Subject Manager, then creates a DRAFT class with exactly one primary instructor. Invalid codes or roles loop back for correction. The instructor opens the class and enrolls learners from an email list or CSV (up to 200 emails, with per-row results), or learners self-enroll with an invite code. An invalid code gets a generic message that reveals no class information. Each learner is enrolled once as ACTIVE, the enrollment is audited, and a notification event is emitted.
+**Text alternative**: Only the Subject Manager creates, orders and archives subject modules; every class of the subject uses them. In a module the Subject Manager uploads a subject material (visible to all classes) and a class teacher uploads a class material (visible to that class only). Each lesson is one PDF, DOCX or PPTX file, or one YouTube video; playlists are not accepted. The backend checks the scope, the file type by magic bytes, the 50 MB size limit and the single-video URL, and rejects invalid input with a reason. Files are stored in the Shared Drive. The lesson is saved as `ACTIVE` and is visible to students at once; there is no draft, version or publication step. Its scan status is `PENDING` and a scan job is queued. The worker extracts text without OCR or fetches existing captions without transcription. Without text the status is `NO_TEXT` or `NO_CAPTION` and the lesson stays visible. The worker then checks the AI switch and the daily cost cap and reserves the uploader's credit; a refused call ends as `BUSY` or `NO_CREDIT` with no charge. Gemini creates the lesson embedding. Transient errors are retried; when retries run out, or the error is permanent, the status is `FAILED`. On success the text, embedding and `INDEXED` status are saved in one transaction and the credit is settled. The uploader and the scope manager can select Rescan for `BUSY`, `NO_CREDIT` and `FAILED`.
 
-### BF-03 Learning Material Upload and RAG Indexing
+### BF-03 Assignment Authoring, Review and Publication
 
-**Trigger**: An instructor or Subject Manager adds a file, text or YouTube section to a lesson.
+**Trigger**: A teacher creates an assignment for a class they teach.
 
-**End condition**: The source is indexed for AI authoring, or it is rejected or marked failed with a reason.
+**End condition**: The assignment opens for students, or its publication is refused.
 
-**Text alternative**: An authorized user adds a section to a lesson draft. Uploaded files are checked for permission, size and magic bytes, then stored in Google Shared Drive. Text sections are saved directly, and YouTube URLs are validated (a playlist resolves to up to 50 videos). Each new source is saved as PENDING and gets an ingest job. A source that is already indexed is reused without new cost. The worker extracts text or fetches existing captions. Audio is never transcribed. Sources without text are marked NO_TEXT or NO_CAPTION. The worker then checks the system AI quota and reserves the uploader's credit. If the quota is exhausted the flow reports "system busy". Otherwise Gemini creates embeddings, and the chunks are saved as INDEXED while the credit is settled. A lesson can be published before indexing finishes.
+**Text alternative**: The teacher creates a `DRAFT` assignment, chooses one of the five types and the `GRADED` or `PRACTICE` mode (a group assignment is always `GRADED`), and starts blank, from a copied subject template or from a copy of another class's assignment. For an AI draft the backend checks the AI switch, the daily cap and the rate limit and reserves the teacher's credit. If AI is busy or credit is short, the teacher writes items or picks them from the question bank. Otherwise the worker retrieves the subject and class materials through RAG, drafts items, or a document skeleton with rubric suggestions for Diagram Essay and group work, and settles the credit. The teacher keeps and edits the selected items. The teacher arranges the items and sets points and rubrics: one rubric per Text Essay question and one per document part; Quiz and Code Lab have none. After a preview the backend validates the items, the type configuration and the rubrics, and checks that a Code Lab sample solution passes every test; failures loop back. A valid assignment becomes `REVIEWED`. The teacher sets the opening and closing times, the late policy, 1 to 10 attempts and the instant-results option, then publishes. The backend checks that the version is `REVIEWED`, the class is `OPEN` and the opening time is before the closing time. Group work also needs ready class groups: at least one group and exactly one leader in each; ungrouped students only produce a warning. A refused publication lists the reasons. Otherwise the assignment becomes `SCHEDULED`, its content is locked and the publication is audited. At the opening time it becomes `OPEN`, `assignment.opened` is emitted, group documents are created, and students see the assignment and receive an in-app notice and an email.
 
-### BF-04 Assignment Authoring, Review and Publication
+### BF-04 Individual Attempt and Submission
 
-**Trigger**: An instructor creates an assignment, manually or with an AI draft.
-
-**End condition**: The reviewed version is locked and published, and learners can see it when it opens.
-
-**Text alternative**: The instructor creates a DRAFT assignment (Quiz, Essay, DOCUMENT or Code Lab). An optional AI draft passes the AI switch, daily cap, rate limit and credit reservation first. The worker then retrieves class RAG sources, generates items with Gemini and validates them. The instructor keeps the selected items. When AI is busy or credit is insufficient, the instructor authors items manually or from the bank. After preview, the backend validates items, type configuration and Code Lab sample solutions, and failures loop back. A REVIEWED version is published to an OPEN class with a schedule, attempt limit and late policy. Group work also needs a ready group set. Publishing locks the version and schedules open/close jobs. At the open time the assignment becomes OPEN for learners.
-
-### BF-05 Lesson Publication and Class Content Access
-
-**Trigger**: An instructor publishes a lesson and an enrolled learner opens the class.
-
-**End condition**: The learner views the lesson or downloads its file, or access is denied.
-
-**Text alternative**: The instructor publishes a lesson draft that has at least one section, and the previous version becomes SUPERSEDED. A learner opens an enrolled class. Access requires an ACTIVE enrollment and an OPEN class. The learner reads the published lessons. A file download uses a 5-minute token bound to the account and is streamed from Shared Drive. No completion or progress is recorded.
-
-### BF-06 Group Set Setup and Leader Change
-
-**Trigger**: An instructor sets up groups for a group assignment, or a member requests a leader change.
-
-**End condition**: Every group has exactly one leader, and the leader-change request is approved or rejected.
-
-**Text alternative**: For a group assignment the instructor builds groups manually, reuses another assignment's groups, or splits learners randomly and then adjusts the result. The backend requires enrolled members, no duplicates and exactly one leader per group. A member can request a leader change with a reason, and each group can have only one PENDING request. The instructor rejects the request with a note, or approves it and confirms the new leader, which emits a leader-changed event.
-
-### BF-07 Individual Attempt and Submission
-
-**Trigger**: A learner starts an attempt on an open individual assignment.
+**Trigger**: A student starts an attempt on an open individual assignment.
 
 **End condition**: The submission is recorded with a receipt, or the attempt is refused.
 
-**Text alternative**: The learner starts an attempt. The backend checks enrollment, the submission window, the remaining attempts and that only one attempt is in progress. The attempt stores a snapshot, a deadline and an auto-submit job. The learner answers with autosave, and Code Lab runs public tests in Judge0. A manual submission is validated (DOCUMENT requires the full Draw.io XML) and invalid content loops back. When the time limit or deadline passes, or the assignment is retired, the worker auto-submits the latest saved content. The frozen submission gets a late flag, a receipt hash and a grading job. Simulation exams use the same flow within their attempt policy.
+**Text alternative**: The backend checks the `ACTIVE` enrollment, the `OPEN` class, the submission window and the remaining attempts for both `GRADED` and `PRACTICE`. A student has at most one attempt in progress; starting again reopens it. A new attempt stores a snapshot of the version and policy, and its deadline is the earlier of the time limit and the final deadline. The student answers with autosave every 10 seconds; Code Lab can run the public tests in Judge0 up to 5 times a minute without submitting. A manual submission is validated (a document needs the full Draw.io XML) and invalid content loops back. At the time limit, the deadline (plus a 30-second network grace) or on retirement, the worker submits the last saved draft. The submission is frozen with the server time, a late flag, a receipt hash and an audit entry. Quiz is scored by its answer key and Code Lab by all tests; essays wait for BF-06 (`GRADED`) or BF-07 (`PRACTICE`).
 
-### BF-08 Group Document Collaboration and Submission
+### BF-05 Group Document Collaboration and Submission
 
-**Trigger**: A group assignment opens.
+**Trigger**: A group assignment opens for the class groups.
 
-**End condition**: The shared document is submitted by the leader or automatically at the deadline.
+**End condition**: The group document is submitted by the leader, or automatically at the deadline.
 
-**Text alternative**: When a group assignment opens, the worker creates a group document with sections from the outline and schedules auto-submission. Members claim an open section; a section already taken loops back. Each member edits the claimed section in a personal workspace and marks it Done. The backend validates the section, merges it into the shared document and pushes the update over SSE. A revision is recorded with its author. The leader submits the shared document before the deadline, or the worker auto-submits the current document when the deadline passes. The frozen submission keeps the section authors and creates a grading job.
+**Text alternative**: When the assignment opens, the worker creates one group document for each class group, including groups added later, and turns each leaf part of the teacher's skeleton into a fixed part with its own rubric. Nobody, including the leader, adds, deletes, renames or moves parts. Members open the document with live updates over SSE. The leader may assign parts to members, and members can also take an assigned part or claim one that is `OPEN` or `DONE`. Each part has one holder at a time; a taken part loops back. The holder edits a private draft with autosave in a full-screen popup that shows only the headings of that part's branch, then selects Done. The backend validates the blocks, publishes them into the shared document, pushes the update and records a revision with its author; the part becomes `DONE` and the lock is released. The leader or the teacher can release a held part after a warning that the unfinished draft will be discarded. There is no review stage. The leader can submit or resubmit at any time before the deadline, with a warning if parts are unfinished; drafts that are not Done are excluded. Thirty seconds after the final deadline, or when the assignment is retired, the worker submits the current document including held drafts and closes it. The frozen snapshot keeps the part authors, a resubmission overwrites the previous snapshot, and grading is queued.
 
-### BF-09 Grading and Grade Publication
+### BF-06 Grading and Grade Publication (GRADED)
 
-**Trigger**: A submission is recorded.
+**Trigger**: A student or group submits GRADED work.
 
-**End condition**: The instructor finalizes and publishes the grade, and the learner sees it.
+**End condition**: The teacher publishes the final grade, and the student sees it with feedback.
 
-**Text alternative**: Each submission gets a PENDING grade. Quiz and Code Lab are auto-scored by answer key or Judge0 tests and saved as DRAFT. The score is published immediately only if instant results are enabled. For other work the instructor grades manually with the rubric checklist, or requests an AI proposal that reserves the instructor's credit. A proposal is reference only; overriding it requires a reason, and an AI failure falls back to manual grading. A group document is always graded manually, and each member's final grade is entered without a formula. Finalized grades keep their history, and publishing makes grades and feedback visible to learners.
+**Text alternative**: A `PENDING` evaluation is created for the last submitted attempt, or for the group document plus one per member. Quiz is scored by its answer key and Code Lab by all Judge0 tests; a sandbox error keeps the grade `PENDING`. The auto score is saved as `DRAFT`, or is `PUBLISHED` at once when instant results are on. For other work the teacher opens the Grading Queue and Workspace. The teacher can ask for an AI proposal for one submission or a selected batch: the backend checks the AI switch and caps and reserves the teacher's credit, and Gemini proposes a rubric checklist, comments and evidence. An error, or no result within 5 minutes, releases the credit and the teacher grades manually. The teacher ticks the rubric checklist per question or part, prefilled when a proposal is ready; a score that differs from the proposal needs no reason. For a group document the score is the sum of the parts, and each member's score starts at the document score and can be changed manually with an optional reason. Overriding an auto score, or changing a finalized or published grade, requires a reason. The teacher saves a `DRAFT`, then finalizes one or many grades; history and audit are kept. Publishing, one by one or for the selected finalized grades, sets `PUBLISHED` and emits `grade.published`. The student sees "x / total" and the feedback. A group resubmission returns the evaluations to `PENDING` and keeps earlier scores in the history.
 
-### BF-10 AI Credit Purchase
+### BF-07 Practice Result and Grade with AI
+
+**Trigger**: A student submits a PRACTICE attempt.
+
+**End condition**: The student sees a private practice result, or the AI request ends with no credit charged.
+
+**Text alternative**: `PRACTICE` work never goes to the teacher queue, the gradebook or exports. Quiz and Code Lab results come from the answer key or the tests and use no credit. Submitting an essay does not call AI. On a submitted Text Essay or Diagram Essay attempt the student selects Grade with AI. The backend checks that the account is `ACTIVE`, the student owns the attempt and is enrolled, the attempt is a submitted `PRACTICE` Text or Diagram Essay without a valid AI result, the AI switch and quota allow the call, and enough credit can be reserved. A refusal or a lack of credit costs nothing; the student can buy credits and select Grade with AI again. Gemini grades against the rubric using a compact diagram XML derived from the full submission. An error, an invalid output or no result within 5 minutes releases the credit and allows a retry. Otherwise the one practice evaluation for the attempt is saved and the credit is settled by tokens.
+
+### BF-08 AI Credit Purchase
 
 **Trigger**: A user buys an AI credit package.
 
-**End condition**: Credits are added once after verified payment, or the payment fails with no credit.
+**End condition**: Credits are added once after a verified payment, or no credit is added.
 
-**Text alternative**: The user picks an active credit package. The backend creates a payment with an order code, a price snapshot and an idempotency key. PayOS creates a 15-minute payment link, and if the link fails the payment is FAILED. The user pays by QR. PayOS sends a signed webhook. The backend verifies the signature, amount and result code, and stores invalid events as REJECTED without credit. A valid event is recorded once, sets the payment PAID and adds PURCHASE credits; duplicates are ignored. Every 10 minutes the worker checks PENDING payments that have no webhook and applies the same step when PayOS reports PAID. The return page never grants credit.
-
-### BF-11 Notification and Deadline Reminder
-
-**Trigger**: A business change is saved, or 24 hours remain before a deadline.
-
-**End condition**: Recipients receive an in-app notification, and an email when enabled.
-
-**Text alternative**: After a business change commits, the owning unit emits a notification event. Separately, a deadline reminder runs 24 hours before the deadline for learners who have not submitted, provided the assignment is still OPEN and the deadline has not changed. The worker resolves recipients within the class or group scope and inserts notifications, skipping duplicates. Every recipient gets the in-app notification over SSE. Email is queued only for email-enabled types the user has not opted out of. It is dispatched within the daily cap, deferred to the next day when the cap is reached, and sent by SMTP.
+**Text alternative**: The user chooses one of the fixed packages configured at deployment. The backend creates a `PENDING` payment with an order code, a price snapshot and an `Idempotency-Key`; a user can have at most three pending payments. PayOS creates a payment link valid for 15 minutes; if that fails the payment is `FAILED` and the user starts a new one. The user pays by QR, and the return page only shows the status. PayOS sends a signed webhook. The backend verifies the HMAC signature, the order code, the amount and the result code; an invalid webhook is rejected and audited as a security event with no credit. A valid one sets `PAID` and adds purchased credits once in a single transaction, and duplicates are ignored. A valid payment that arrives after the link has `EXPIRED` is still credited. Every 10 minutes the worker queries PayOS for payments that have been `PENDING` for more than 5 minutes or `EXPIRED` in the last 24 hours, applies the same step when PayOS reports them paid, and expires stale links. There are no refunds and purchased credits do not expire.
 
 ## Diagram conventions
 
-- Each page shows one pool named after the business flow, with horizontal lanes for actors, the backend, the worker, external services and data stores.
-- Lane colors: green for people, yellow for the backend, blue for the platform's own storage and worker (PostgreSQL, Redis, Google Drive, Worker), and purple for external services (Gemini, YouTube, Judge0, PayOS, SMTP).
-- Every End shape states its business outcome, and every decision branch is labelled. A lane can hold a second Start when a scheduled job starts the same flow.
-- Connectors have fixed exit and entry points and never pass through a shape or overlap another connector. Loop-backs run along the top or bottom edge of a lane.
-- Terminology follows the current catalog: Learner, Instructor, Subject Manager, Administrator.
-- PostgreSQL holds business state and job records, Redis holds OTP, sessions and download tokens with a TTL, and Google Drive holds file bytes.
+- Each page shows one pool named after the business flow, with horizontal lanes for the main actors only: the people involved and one **System** lane. The System lane covers everything inside the platform and the services it calls on its own (backend, worker, PostgreSQL, Redis, RabbitMQ, Google Drive, Gemini, YouTube, Judge0, SMTP). PayOS keeps its own lane in BF-08 because the user pays on the PayOS checkout.
+- Lane colors: green for people, yellow for the System, purple for PayOS.
+- Every End shape states its business outcome, and every decision branch is labelled. A lane can hold a second Start when a scheduled job or another actor starts part of the same flow; a Start in the System lane marks a system trigger.
+- Connectors have fixed exit and entry points and never pass through a shape, overlap or cross another connector. Loop-backs and bypass routes run along the top or bottom edge of a lane.
+- Terminology follows the current catalog: Student, Teacher, Subject Manager, Administrator.
+- Technical placement stays in the text alternatives and unit designs: PostgreSQL holds business state, RabbitMQ carries jobs, Redis holds OTP, sessions and download tokens with a TTL, and Google Drive holds file bytes.

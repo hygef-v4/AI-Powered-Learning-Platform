@@ -5,7 +5,7 @@
 
 ## P2 - Tạo đánh giá idempotent
 - Unique một phần trên `evaluations` (xem infrastructure-design §2); port nộp dùng `INSERT ... ON CONFLICT DO NOTHING` rồi cập nhật qua P1 (NFR-U15-13).
-- Bản nộp nhóm mới ghi đè cùng `group_document_id`: như lượt nộp mới của bài `DOCUMENT`, đánh giá `GROUP_DOCUMENT` và `MEMBER` về `PENDING` cho bản mới, điểm cũ thêm vào `history` (BR-U15-44).
+- Bản nộp nhóm mới ghi đè cùng `group_document_id` (không tạo lượt mới), đánh giá `GROUP_DOCUMENT` và `MEMBER` về `PENDING` cho bản mới, điểm cũ thêm vào `history` (BR-U15-44).
 
 ## P3 - Chấm xác định
 - `QuizScorer` thuần: nhận câu (góc nhìn đầy đủ từ U06/câu riêng U08) và đáp án; trả `items` + tổng `BigDecimal`.
