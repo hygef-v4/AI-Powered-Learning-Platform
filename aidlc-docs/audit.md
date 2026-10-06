@@ -3564,3 +3564,45 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: Supplementary business flow documentation update; no workflow stage change.
 
 ---
+
+## Main Business Flows - Check and SRS Trigger/End Condition
+**Timestamp**: 2026-10-06T13:00:00Z
+**User Input**: "kiểm tra bộ BF hiện tại đã đúng chưa, viết cho tôi trigger và end condition cho từng BF (ngắn gọn và súc tích như trong ảnh)" (attached screenshot of SRS section 2.1 "Account Activation and Sign-In (BF-01)")
+**AI Response**: "Confirmed the eight BF match the README and drawio files. Noted the SRS still uses the old numbering (BF-01 Account Activation and Sign-In is no longer a BF), the README BF-02 end condition wrongly implies NO_TEXT can be rescanned, and the README BF-01 end condition does not match the diagram ends. Wrote one-sentence Trigger and End condition for BF-01 to BF-08 in chat; no files changed."
+**Context**: Supplementary business flow documentation review; no workflow stage change.
+
+---
+
+## Main Business Flows - One Lane per Actor and Page-Readable Layout
+**Timestamp**: 2026-10-06T13:30:00Z
+**User Input**: "sửa lại trong BF actor class manager phải thành teacher, tại sao actor administrator lại có ở tận 2 lane, sửa lại để mỗi actor chỉ 1 lane. Ngoài ra chỉnh lại kích thước và font chữ để không cần zoom to tài liệu vẫn có thể đọc được" (attached screenshots of the SRS with BF-01 inserted)
+**AI Response**: "BF-01 lanes are now Administrator, Subject Manager, Teacher, Student, System (one lane per actor; Class Manager renamed Teacher, the Subject Manager creates the class and assigns the teacher, other permitted roles stay in the text alternative). Redrew all eight flows with vertical lanes and a top-to-bottom flow so they fit a portrait page: width 600 to 1060 px instead of up to 2615 px, steps 16 px, decisions and ends 15 px bold, lane headers 18 px, title 20 px, edge labels 14 px. Generator checks (no connector through a shape, no overlap or crossing, labelled decision exits, text fit, edge labels clear of shapes) passed for all eight; PNG exports re-rendered at 2x and reviewed. README updated (BF-01 swimlanes, text alternative, conventions)."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Back to Horizontal Lanes
+**Timestamp**: 2026-10-06T14:30:00Z
+**User Input**: "tôi vẫn muốn vẽ theo chiều ngang"
+**AI Response**: "Redrew all eight flows with horizontal lanes and a left-to-right flow, keeping one lane per actor (BF-01: Administrator, Subject Manager, Teacher, Student, System). To keep them readable, each check step was merged into its decision diamond and purely technical steps were folded into neighbours, cutting the flows to six to nine columns (1250 to 1770 px wide instead of up to 2615 px); shapes are compact with 15 px text, 16 px lane headers, 20 px title, 14 px connector labels, and column gaps widen only where a branch label needs room. Generator checks passed for all eight; PNG exports re-rendered at 2x and reviewed. README updated (layout note: insert at full width on a landscape page; conventions). Business rules unchanged; details stay in the text alternatives."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## SRS Report 3 Review
+**Timestamp**: 2026-10-06T15:00:00Z
+**User Input**: "@\"D:\Download\Report-3_Software Requirement Specification (1).docx\"
+kiểm tra xem tài liệu này đã đúng chưa, nếu chưa gửi tôi các điểm cần chỉnh sửa và bổ sung" / "bạn đánh giá bản doc này bao nhiêu điểm" / "@\"D:\Download\Report-3_Software Requirement Specification (3).docx\"
+kiểm tra bản này xem đã đúng chưa"
+**AI Response**: "Reviewed the SRS against aidlc-docs and reported 15 issues (old 11-BF set, View Statistics screen contradicting UC 18, INACTIVE/OPEN instead of DISABLED/ACTIVE, student code field absent from the data model, wrong UC reference on Profile, Screen List inconsistencies, unfinished entity descriptions, ERD missing Payment/Enrollment/Comment/Leader Change Request/Audit Log, acronyms, change log, UC specification coverage, UC diagram links, actor naming, traceability, minor formatting); scored about 7/10. Version (3) only replaced section I.2 with the eight new BF; reported four remaining BF points (BF-07 missing 'not AI-graded' end, BF-08 missing expiry branch, BF-05 'Submit now? No' jumping straight to auto-submit, SRS/README wording drift and missing figure captions); scored about 7.3/10. No files changed."
+**Context**: SRS report review; no workflow stage change.
+
+---
+
+## Main Business Flows - Fix Four Review Points
+**Timestamp**: 2026-10-06T15:30:00Z
+**User Input**: "sửa 4 điểm BF trong repo luôn"
+**AI Response**: "BF-05: 'Submit now? No' now loops back to editing parts, and the deadline auto-submit starts from a separate System Start 'Deadline reached'. BF-07: the student's choice is a decision 'Request AI grading?' with a new End 'Saved, not AI-graded'. BF-08: reconciliation leads to a 'Paid?' decision with a new End 'Expired, no credit'. Regenerated the combined file, individual files and the BF-05/07/08 PNG exports with the existing generator (all eight flows passed its layout checks) and reviewed the renders. README: Trigger and End condition aligned with the SRS version (3) wording and the new ends, end-outcome table, text alternatives of BF-05/07/08 and the width note updated. Figure captions belong to the SRS document and were not changed here."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
