@@ -4,16 +4,16 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Use-case catalog has 40 cases (`docs/use-case-table.md`); docs, Inception and Construction re-synchronized on 2026-10-04: 24-table database from a 19-entity ERD (subject modules, announcement comments), job platform and project skeleton in U03 (wave 1 order U03 and U02 in parallel, then U01, then U04), five assignment types authored in U09, group documents without a REVIEW state, grading per the UC 33/34/17/35 changes. Code Generation Part 1 plan approvals remain pending. No application code has been generated.
-- **Resume action**: Review the updated code generation plans at their existing checkpoint before starting application code. Legacy `UC-XXX-NN` codes in question files and older plan snapshots map to the 40 IDs via the Legacy UC codes table in `docs/use-case-table.md`.
+- **Current Stage**: Code Generation Part 2. All 16 code plans approved on 2026-10-05. Project skeleton (U03 K1-K6), cross-unit contracts (`contracts/`), port interfaces and stub implementations with final class names are merged (PR #1). U03 code generated on branch `feat/files-and-jobs`, awaiting review.
+- **Resume action**: Review U03 generated code (steps J9, 18 are integration tests left to the tester). After approval continue wave 1 with U02, then U01, U04. Integration tests are not written by units (dedicated tester, 2026-10-05).
 
 ## Latest documentation decision
 - **2026-10-04**: Email provider changed to Brevo SMTP for demo/production; Mailpit retained for local/tests. U01/U16 email design, shared infrastructure, Inception provider selection and code-generation references synchronized. Existing code-generation approval checkpoints remain unchanged.
 
 ## Workspace State
-- **Existing Code**: No
-- **Programming Languages**: None yet (planned: Java 17 / Spring Boot 3, TypeScript / Next.js)
-- **Build System**: None yet (planned: Maven, npm)
+- **Existing Code**: Yes (skeleton, contracts, port stubs)
+- **Programming Languages**: Java 17 / Spring Boot 3.5, TypeScript / Next.js 16
+- **Build System**: Maven, npm
 - **Reverse Engineering Needed**: No
 - **Workspace Root**: `C:\Users\admin\Documents\GitHub\AI-Powered-Learning-Platform`
 
@@ -47,8 +47,8 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [ ] Code Generation Part 1 (plans) - 2026-09-29 role, assignment-mode and Student credit changes synchronized; plans await approval at the existing code checkpoint
-- [ ] Code Generation Part 2 (code) - not started
+- [x] Code Generation Part 1 (plans) - all 16 plans approved 2026-10-05
+- [ ] Code Generation Part 2 (code) - in progress: U03 (wave 1)
 - [ ] Build and Test
 - [ ] Operations (placeholder)
 
@@ -56,22 +56,22 @@
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
-| U01 Account & Access | Done, điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Updated, re-approval needed | - |
-| U02 Audit | Done; chỉ còn audit (`audit_logs`, UC 39); việc nền chuyển sang U03 (2026-10-04) | Updated, re-approval needed | - |
-| U03 File, Job & Event | Done; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Updated, re-approval needed | - |
-| U04 Subject, Class, Enrollment & Learning Access | Done, Chủ nhiệm môn quản lý lớp của môn như ADMIN; Subject Detail pages; Student lands on Student Menu (2026-10-03) | Updated, re-approval needed | - |
-| U05 Content, Material & RAG | Done; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Updated, re-approval needed | - |
-| U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Updated, re-approval needed | - |
-| U07 Payment & AI Credit | Done, credit packages and monthly grant are fixed configuration, no admin screen (2026-10-03) | Updated, re-approval needed | - |
-| U08 Assessment Core & Publication | Done; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Updated, re-approval needed | - |
-| U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Updated, re-approval needed | - |
-| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired; owns UC 21 Manage Templates with create/AI draft/delete (2026-10-01) | Updated, re-approval needed | - |
-| U11 Attempt & Submission | Done; bảng `attempts` (2026-10-03) | Updated, re-approval needed | - |
-| U12 Group & Allocation | Done, groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Updated, re-approval needed | - |
-| U13 AI & Code Execution | Done; `ai_services`, `ai_suggestions` (2026-10-03) | Updated, re-approval needed | - |
-| U14 Group Document & Submission | Done; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Updated, re-approval needed | - |
-| U15 Grading | Done; bảng `evaluations` (2026-10-03) | Updated, re-approval needed | - |
-| U16 Reporting & Notification | Done, UC 18 View Statistics for Administrator, grade distribution on student Assignment List (2026-10-03) | Updated, re-approval needed | - |
+| U01 Account & Access | Done, điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Approved 2026-10-05 | - |
+| U02 Audit | Done; chỉ còn audit (`audit_logs`, UC 39); việc nền chuyển sang U03 (2026-10-04) | Approved 2026-10-05 | - |
+| U03 File, Job & Event | Done; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Approved 2026-10-05 | Generated 2026-10-05, awaiting review (branch `feat/files-and-jobs`) |
+| U04 Subject, Class, Enrollment & Learning Access | Done, Chủ nhiệm môn quản lý lớp của môn như ADMIN; Subject Detail pages; Student lands on Student Menu (2026-10-03) | Approved 2026-10-05 | - |
+| U05 Content, Material & RAG | Done; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Approved 2026-10-05 | - |
+| U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Approved 2026-10-05 | - |
+| U07 Payment & AI Credit | Done, credit packages and monthly grant are fixed configuration, no admin screen (2026-10-03) | Approved 2026-10-05 | - |
+| U08 Assessment Core & Publication | Done; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Approved 2026-10-05 | - |
+| U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Approved 2026-10-05 | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired; owns UC 21 Manage Templates with create/AI draft/delete (2026-10-01) | Approved 2026-10-05 | - |
+| U11 Attempt & Submission | Done; bảng `attempts` (2026-10-03) | Approved 2026-10-05 | - |
+| U12 Group & Allocation | Done, groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Approved 2026-10-05 | - |
+| U13 AI & Code Execution | Done; `ai_services`, `ai_suggestions` (2026-10-03) | Approved 2026-10-05 | - |
+| U14 Group Document & Submission | Done; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Approved 2026-10-05 | - |
+| U15 Grading | Done; bảng `evaluations` (2026-10-03) | Approved 2026-10-05 | - |
+| U16 Reporting & Notification | Done, UC 18 View Statistics for Administrator, grade distribution on student Assignment List (2026-10-03) | Approved 2026-10-05 | - |
 
 ## Open Items
 

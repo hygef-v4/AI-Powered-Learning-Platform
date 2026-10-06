@@ -2,6 +2,8 @@
 
 > Plan này là nguồn duy nhất cho Code Generation của U01. Mỗi bước xong thì đánh `[x]` ngay.
 >
+> **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
+>
 > Cập nhật 2026-10-04: việc nền và worker chuyển từ U02 sang U03; thứ tự wave 1 là U03 và U02 song song → U01 → U04. U01 dùng `JobPort` của U03 và `AuditPort` của U02 đều thật; khung dự án nằm ở plan U03.
 >
 > Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.

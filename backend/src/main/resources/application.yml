@@ -34,6 +34,7 @@ spring:
     username: ${RABBITMQ_USER:app}
     password: ${RABBITMQ_PASSWORD}
     publisher-confirm-type: correlated
+    connection-timeout: 5s
     listener:
       simple:
         # Chỉ profile worker nhận việc nền.
@@ -51,10 +52,10 @@ spring:
       mail.smtp.writetimeout: 10000
   servlet:
     multipart:
-      max-file-size: 50MB
+      max-file-size: ${U03_MAX_FILE_SIZE:50MB}
       max-request-size: 51MB
       file-size-threshold: 0
-      location: /tmp/uploads
+      location: ${U03_UPLOAD_TMP_DIR:/tmp/uploads}
 
 server:
   port: 8080
@@ -73,6 +74,11 @@ management:
     health:
       probes:
         enabled: true
+      # Google Drive lỗi chỉ làm health `DEGRADED` (HTTP 200), backend vẫn chạy (U03 P7).
+      status:
+        order: down,out-of-service,degraded,unknown,up
+        http-mapping:
+          degraded: 200
       group:
         ready:
           include: readinessState,db,redis,rabbit
@@ -82,6 +88,28 @@ platform:
   mail-from: ${SMTP_FROM:no-reply@localhost}
   worker:
     enabled: false
+  # Tệp (U03, logical-components §3). Không có key Google Drive thì lưu vào thư mục local.
+  files:
+    max-concurrent-uploads: ${U03_MAX_CONCURRENT_UPLOADS:5}
+    upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:/tmp/uploads}
+    download-token-ttl: ${U03_DOWNLOAD_TOKEN_TTL:5m}
+    file-ref-secret: ${U03_FILEREF_SECRET:}
+    file-ref-ttl: ${U03_FILEREF_TTL:1h}
+    local-storage-dir: ${U03_LOCAL_STORAGE_DIR:./data/files}
+    # true ở production/demo: thiếu key Drive thì báo không khả dụng thay vì lưu vào thư mục local.
+    require-drive: ${U03_REQUIRE_DRIVE:false}
+    drive:
+      service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
+      shared-drive-id: ${GOOGLE_SHARED_DRIVE_ID:}
+  # Việc nền (U03, logical-components §4). Số mức backoff = số lượt thử lại tối đa.
+  jobs:
+    max-attempts: ${U03_JOB_MAX_ATTEMPTS:5}
+    backoff: ${U03_JOB_BACKOFF:30s,1m,2m,4m,8m}
+    sweep-interval: ${U03_SWEEP_INTERVAL:1m}
+    sweep-republish-after: ${U03_SWEEP_REPUBLISH_AFTER:5m}
+    scan-interval: ${U03_SCAN_INTERVAL:1m}
+    handler-timeout: ${U03_JOB_HANDLER_TIMEOUT:60s}
+    worker-max-concurrency: ${U03_WORKER_MAX_CONCURRENCY:4}
 
 logging:
   pattern:
