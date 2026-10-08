@@ -3419,3 +3419,12 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: User-authorized Git commit of existing documentation updates; implementation checkpoints unchanged. Runtime checks are N/A to this commit; enabled documentation constraints preserved and disabled Property-Based Testing skipped.
 
 ---
+
+## Documentation update - Latest screen-flow labels and template screens
+**Timestamp**: 2026-10-08T06:56:55Z
+**User Input**: "giúp tôi sửa lại tên màn hình theo screen flow mới"
+**Attachment**: `C:/Users/Quang Hung/Downloads/screen-flow (1).drawio`.
+**AI Response**: Compared the latest diagram with the committed screen-flow.drawio by cell ID, label, parent, style, geometry and edge endpoints. Found two renamed screens (Teacher My Classes → Assigned Classes; Class List → Subject Classes), two added screens (Subject Template, Template Editor) and one new edge between the template screens. Existing cells and edges otherwise unchanged; Student My Classes remains unchanged. Updated docs/use-cases-and-screens.md, related current Inception descriptions, template screen mappings for UC 53-54 and state. Linked the catalog to the user's renamed diagram file, which is byte-identical to the attachment. Preserved all 70 UC IDs/names/actors and 51-story/16-unit traceability.
+**Context**: User-authorized screen-label/mapping correction; the user's diagram file was read, not edited. Earlier missing-template notes in dated comparison records remain historical and are superseded by the latest plan revision. No application/Construction changes or new commit. Existing enabled authorization/resiliency constraints retained; runtime checks N/A and disabled Property-Based Testing skipped.
+
+---

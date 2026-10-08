@@ -40,7 +40,7 @@ US-PAY-004/005 bổ sung quản trị gói/lịch sử thanh toán. US-AUD-001 c
 | Nhóm và bài nhóm (UC 15–16, 23, 43) | U12 nhóm; U14 làm/nộp; U09 soạn | U04 roster, U08 lifecycle, U15 grade |
 | Học liệu/viewer (UC 14, 29–30, 51–52) | U05 | U03 Drive, U04 scope, U13 embedding |
 | Class/Subject Question Bank (UC 32–33, 55–56) | U06 | Dùng cùng scope/version; phân công lớp R3/R4 hoặc môn R2 |
-| Template cấp môn (UC 53–54) | U10 | U08 assignment, U09 types, U13 draft; chưa có màn template trong Drawio |
+| Template cấp môn (UC 53–54) | U10 | U08 assignment, U09 types, U13 draft; Subject Template và Template Editor |
 | Credit và thanh toán (UC 08–10, 67–69) | U07 | U01 quyền Admin/chủ tài khoản, U02 audit, U03 jobs, PayOS |
 | Audit Log (UC 70) | U02 | U01 Admin authorization; không cập nhật/xóa log |
 

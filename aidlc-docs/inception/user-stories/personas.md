@@ -91,7 +91,7 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 - Mua credit AI để xử lý học liệu/RAG và tạo câu hỏi trong các môn được phân công; theo dõi thanh toán và số dư của mình.
 - Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
 - Phát hành template có version để giảng viên copy thành bài của lớp.
-- Mở Class List từ Subject Detail để tạo lớp, gán giảng viên chính, mở/lưu trữ lớp và ghi danh trong các môn được phân công.
+- Mở Subject Classes từ Subject Detail để tạo lớp, gán giảng viên chính, mở/lưu trữ lớp và ghi danh trong các môn được phân công.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
 - Chỉ khi chính tài khoản được giao dạy lớp (R4), dùng chức năng Teacher để xem submissions, chấm và xem/xuất bảng điểm lớp. Phân công quản lý môn không tự cấp các quyền này.
 

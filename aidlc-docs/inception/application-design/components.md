@@ -19,7 +19,7 @@ MVP dùng modular monolith: frontend Next.js, một backend Spring Boot chia th�
 | Grading Console | Hàng chờ chấm, chấm tay/AI đề xuất theo rubric checklist, chốt, công bố, sổ điểm, tiến độ nộp, xuất CSV/XLSX | U15, U16 |
 | Code Editor | Monaco nhiều file, chạy thử, kết quả test | U13 |
 
-Frontend không quyết định authorization. Tên màn theo `docs/use-cases-and-screens.md` và Drawio mới: Credit Packages, Learning Material, Class/Subject Question Bank, Question Editor, Student Submissions, Submission History, Assignment List của Teacher và năm danh sách bài của Student. Template UC 53–54 vẫn thuộc MVP nhưng chưa có màn trong Drawio.
+Frontend không quyết định authorization. Tên màn theo `docs/use-cases-and-screens.md` và Drawio mới: Credit Packages, Learning Material, Class/Subject Question Bank, Question Editor, Student Submissions, Submission History, Assignment List của Teacher và năm danh sách bài của Student. Teacher dùng Assigned Classes, quản lý lớp môn dùng Subject Classes; My Classes giữ cho Student. UC 53–54 dùng Subject Template và Template Editor.
 
 ## 3. Thành phần backend
 

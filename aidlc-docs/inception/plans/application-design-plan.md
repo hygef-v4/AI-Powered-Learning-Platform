@@ -119,6 +119,6 @@ X) Other (mô tả sau `[Answer]:`)
 
 - [x] Đồng bộ components/methods/services với gói credit Admin, payment history, announcement CRUD, không avatar và scope R2/R4.
 - [x] Truy vết 70 UC/51 story qua 16 unit; Audit Log là UC 70/U02.
-- [x] Đồng bộ tên màn Drawio và ghi rõ template UC 53–54 chưa có màn.
+- [x] Đồng bộ tên màn Drawio mới: Assigned Classes, Subject Classes; UC 53–54 dùng Subject Template và Template Editor.
 - [x] Giữ invariant version/snapshot, audit và xử lý lỗi; không đổi hướng dependency.
 - [x] Ghi nhận Construction/code plans cần đồng bộ riêng, không kế thừa phê duyệt cũ cho yêu cầu đã đổi.

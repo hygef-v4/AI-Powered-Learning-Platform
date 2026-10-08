@@ -8,7 +8,7 @@
 - Student/Teacher/Subject Manager/Administrator theo R1–R5; Admin có chức năng Teacher chỉ khi được giao lớp và tài nguyên môn chỉ khi được giao môn.
 - Hồ sơ không cập nhật avatar; announcement có tạo/sửa/xóa; ngân hàng lớp/môn riêng; AI Practice UC 25 và Teacher proposals UC 35 riêng.
 - U07 thêm/sửa gói và đọc lịch sử toàn nền tảng; U02 chủ trì UC 70. Inception đã đồng bộ; Construction U01/U03/U04/U05/U06/U07/U10/U11/U13/U15/U16 và các code plans liên quan còn cần rà theo bản mới.
-- Tên màn theo Drawio mới, template UC 53–54 chưa có màn. Tài liệu/code chưa được coi là triển khai các chức năng chỉ vì đã sửa Inception.
+- Tên màn theo `screen-flow (1).drawio` mới: Assigned Classes, Subject Classes; template UC 53–54 dùng Subject Template/Template Editor. Tài liệu/code chưa được coi là triển khai các chức năng chỉ vì đã sửa Inception.
 - Không đổi kiến trúc/wave/gate; nội dung phạm vi, công nghệ hoặc phân chia cũ bên dưới chỉ lưu lịch sử. Trước khi code phần thay đổi, dùng Inception hiện hành để cập nhật thiết kế/contracts và kế hoạch unit liên quan.
 
 ## 1. Detailed Analysis Summary

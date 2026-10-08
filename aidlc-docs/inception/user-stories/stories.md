@@ -11,7 +11,7 @@
 - Chấm Practice riêng tư của Student là UC 25; AI Grading Proposals để Teacher duyệt là UC 35. Không gộp hai quyền này.
 - Nhóm thuộc lớp, leader giao phần và nộp bất kỳ lúc nào trước hạn; không có mục chi tiết/bước review. Không có Simulation Exam hay tiến độ hoàn thành bài học.
 - Mỗi UC có một primary unit; story có một primary unit cho acceptance criteria. Luồng hỗ trợ đã có không bị xóa chỉ vì không có UC độc lập. US-AIG-003 là vận hành hỗ trợ không có UC trực tiếp; Audit có UC 70.
-- Dùng nhãn màn từ Drawio mới; UC 53–54 chưa có màn template trong hình. Mốc/câu trả lời cũ được giữ trong audit và tài liệu lịch sử.
+- Dùng nhãn màn từ `screen-flow (1).drawio`: Assigned Classes cho Teacher, Subject Classes cho quản lý lớp môn; UC 53–54 dùng Subject Template và Template Editor. Mốc/câu trả lời cũ được giữ trong audit và tài liệu lịch sử.
 
 ## 2. Miền Identity and Access
 
@@ -222,13 +222,13 @@
 #### Scenario 3 - Chủ nhiệm môn quản lý lớp của môn
 
 - **Given** Chủ nhiệm môn được phân công một môn `ACTIVE`
-- **When** mở Class List từ Subject Detail để tạo lớp, gán/đổi giảng viên chính, sửa, mở/lưu trữ lớp hoặc ghi danh
+- **When** mở Subject Classes từ Subject Detail để tạo lớp, gán/đổi giảng viên chính, sửa, mở/lưu trữ lớp hoặc ghi danh
 - **Then** thao tác được thực hiện như với quản trị viên và được audit; cùng thao tác trên lớp của môn không được phân công bị từ chối ở mức đối tượng
 
 #### Scenario 4 - Xem môn và lớp theo scope
 
 - **Given** Administrator hoặc Subject Manager có phân công môn
-- **When** mở Subject List/Subject Detail hoặc Class List/Class Detail
+- **When** mở Subject List/Subject Detail hoặc Subject Classes/Class Detail
 - **Then** Admin thấy cấu trúc toàn nền tảng, Subject Manager chỉ môn/lớp được giao; quyền cấu trúc không tự cấp gradebook/chấm
 
 ### US-CAT-002 - Xem và quản lý vòng đời lớp theo quyền
@@ -260,7 +260,7 @@
 #### Scenario 4 - Xem lớp được giao
 
 - **Given** Teacher có phân công lớp theo R3 hoặc vai trò kế thừa có phân công theo R4
-- **When** mở My Classes rồi Class Detail
+- **When** mở Assigned Classes rồi Class Detail
 - **Then** chỉ liệt kê lớp được giao và các lối vào học liệu, thông báo, ngân hàng, bài, submissions/gradebook được phép
 
 ### US-CAT-003 - Ghi danh người học
@@ -1019,7 +1019,7 @@
 
 - **Given** người quản lý môn có R2
 - **When** xem danh sách/chi tiết template
-- **Then** chỉ trả template của môn được giao và quyền tạo/sửa/xóa theo lifecycle; UC 53–54 giữ chức năng dù Drawio chưa có màn template
+- **Then** chỉ trả template của môn được giao và quyền tạo/sửa/xóa theo lifecycle; UC 53 mở Subject Template; UC 54 tạo/sửa nội dung trên Template Editor và xóa theo lifecycle từ Subject Template
 
 ### US-ASM-010 - Copy assignment và rubric giữa các lớp
 

@@ -16,6 +16,9 @@
                 <mxCell id="t_editor" parent="69pM4l-UctspkIdLlSmS-6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B2F0E8;strokeColor=#3FA89A;fontSize=13;fontStyle=1;fontColor=#000000;" value="Assignment List" vertex="1">
                     <mxGeometry height="44" width="112" x="619" y="101.99999999999977" as="geometry"/>
                 </mxCell>
+                <mxCell id="HIpSkX6x8uWT7aWW-8yq-1" parent="69pM4l-UctspkIdLlSmS-6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Subject Template" vertex="1">
+                    <mxGeometry height="46.91" width="112" x="468.9999999999999" y="22" as="geometry"/>
+                </mxCell>
                 <mxCell id="login" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF59D;strokeColor=#BFA900;fontSize=13;fontStyle=1;fontColor=#000000;" value="Login" vertex="1">
                     <mxGeometry height="40" width="130" x="144.75" y="120" as="geometry"/>
                 </mxCell>
@@ -172,13 +175,13 @@
                 <mxCell id="sm_subdetail" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Subject Detail" vertex="1">
                     <mxGeometry height="44" width="112" x="600.08" y="439" as="geometry"/>
                 </mxCell>
-                <mxCell id="69pM4l-UctspkIdLlSmS-64" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Class List" vertex="1">
+                <mxCell id="69pM4l-UctspkIdLlSmS-64" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Subject Classes" vertex="1">
                     <mxGeometry height="44" width="112" x="750.08" y="439" as="geometry"/>
                 </mxCell>
                 <mxCell id="69pM4l-UctspkIdLlSmS-68" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Subject Question Bank" vertex="1">
                     <mxGeometry height="46.91" width="112" x="900.08" y="440.00000000000006" as="geometry"/>
                 </mxCell>
-                <mxCell id="t_menu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B2F0E8;strokeColor=#3FA89A;fontSize=13;fontStyle=1;fontColor=#000000;" value="My Classes" vertex="1">
+                <mxCell id="t_menu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B2F0E8;strokeColor=#3FA89A;fontSize=13;fontStyle=1;fontColor=#000000;" value="Assigned Classes" vertex="1">
                     <mxGeometry height="46.91" width="112" x="600.08" y="519" as="geometry"/>
                 </mxCell>
                 <mxCell id="gJ56q3zyjRtBeFR-bcLf-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B2F0E8;strokeColor=#3FA89A;fontSize=13;fontStyle=1;fontColor=#000000;" value="Uploaded Learning Materials" vertex="1">
@@ -454,6 +457,12 @@
                 </mxCell>
                 <mxCell id="audit" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFD8A8;strokeColor=#D08A3C;fontSize=13;fontStyle=1;fontColor=#000000;" value="Audit Log" vertex="1">
                     <mxGeometry height="44" width="112" x="1500.08" y="-10.999999999999972" as="geometry"/>
+                </mxCell>
+                <mxCell id="HIpSkX6x8uWT7aWW-8yq-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#8A73C4;fontSize=13;fontStyle=1;fontColor=#000000;" value="Template Editor" vertex="1">
+                    <mxGeometry height="46.91" width="112" x="1050" y="360.46000000000004" as="geometry"/>
+                </mxCell>
+                <mxCell id="HIpSkX6x8uWT7aWW-8yq-3" edge="1" parent="1" source="HIpSkX6x8uWT7aWW-8yq-1" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;curved=0;" target="HIpSkX6x8uWT7aWW-8yq-2">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

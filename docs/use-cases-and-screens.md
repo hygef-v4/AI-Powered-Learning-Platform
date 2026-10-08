@@ -4,8 +4,8 @@
 
 - `User` gồm Student, Teacher, Subject Manager và Administrator, sử dụng các chức năng chung của tài khoản.
 - Chức năng của Student chỉ áp dụng cho lớp đã ghi danh và dữ liệu được phép xem. Subject Manager và Administrator thực hiện chức năng Teacher khi được giao dạy lớp tương ứng; chức năng học liệu, template và ngân hàng câu hỏi cấp môn yêu cầu được giao quản lý môn tương ứng, theo mục 4.4.
-- Cột **Màn** dùng đúng nhãn trong [Screen Flow](screen-flow.drawio), đối chiếu với file `screen-flow.drawio` mới được cung cấp ngày 2026-10-08. Phần trong ngoặc mô tả vai trò hoặc thao tác trên màn, không phải tên màn riêng.
-- UC 17 dùng năm màn danh sách bài theo loại bài của Student. UC 24 có màn `Submission History` riêng. UC 53–54 về subject templates chưa có màn trong Drawio mới nên được đánh dấu để bổ sung. Đổi mật khẩu, notifications, rubric và Gradebook/export được ghi là thao tác trên màn chứa chúng; Drawio chưa thể hiện riêng các thao tác này.
+- Cột **Màn** dùng đúng nhãn trong [Screen Flow](screen-flow%20%281%29.drawio), đối chiếu với file `screen-flow (1).drawio` mới được cung cấp ngày 2026-10-08. Phần trong ngoặc mô tả vai trò hoặc thao tác trên màn, không phải tên màn riêng.
+- UC 17 dùng năm màn danh sách bài theo loại bài của Student. UC 24 có màn `Submission History` riêng. UC 53–54 dùng Subject Template và Template Editor trong Drawio mới. Đổi mật khẩu, notifications, rubric và Gradebook/export được ghi là thao tác trên màn chứa chúng; Drawio chưa thể hiện riêng các thao tác này.
 
 | ID | Use Case | Actor | Màn |
 |---|---|---|---|
@@ -38,7 +38,7 @@
 | 25 | Grade Practice Assignment | Student | Assignment Detail (yêu cầu chấm Practice bằng AI) |
 | 26 | View Class Announcements | Student; Teacher; Subject Manager; Administrator | Class Announcements |
 | **Teacher: lớp học, bài tập và chấm điểm** | | | |
-| 27 | View Assigned Class List | Teacher; Subject Manager; Administrator | My Classes (Teacher) |
+| 27 | View Assigned Class List | Teacher; Subject Manager; Administrator | Assigned Classes (Teacher) |
 | 28 | View Assigned Class Detail | Teacher; Subject Manager; Administrator | Class Detail (Teacher) |
 | 29 | View Uploaded Learning Materials | Teacher; Subject Manager; Administrator | Uploaded Learning Materials |
 | 30 | Add/Update/Delete Learning Material | Teacher; Subject Manager; Administrator | Uploaded Learning Materials (thêm/sửa/xóa) |
@@ -57,16 +57,16 @@
 | 43 | Create/Update/Delete Group Assignment | Teacher; Subject Manager; Administrator | Assignment List, Group Essay Editor |
 | 44 | Add/Update Rubric | Teacher; Subject Manager; Administrator | Text Essay Editor, Diagram Essay Editor, Group Essay Editor (rubric) |
 | **Subject Manager: môn học và lớp** | | | |
-| 45 | View Managed Subject Classes | Subject Manager; Administrator | Class List (Subject Manager/Administrator) |
+| 45 | View Managed Subject Classes | Subject Manager; Administrator | Subject Classes (Subject Manager/Administrator) |
 | 46 | View Managed Class Detail | Subject Manager; Administrator | Class Detail (Subject Manager/Administrator) |
-| 47 | Create Class | Subject Manager; Administrator | Class List (tạo lớp) |
+| 47 | Create Class | Subject Manager; Administrator | Subject Classes (tạo lớp) |
 | 48 | Assign Teacher To Class | Subject Manager; Administrator | Class Detail (gán giảng viên) |
 | 49 | Edit Class Information | Subject Manager; Administrator | Class Detail (sửa thông tin lớp) |
 | 50 | View Managed Subject | Subject Manager; Administrator | Subject Detail (Subject Manager); Subject List, Subject Detail (Administrator) |
 | 51 | View Subject Materials | Subject Manager; Administrator | Subject Detail (học liệu môn), Learning Material |
 | 52 | Add/Update/Delete Subject Material | Subject Manager; Administrator | Subject Detail (thêm/sửa/xóa học liệu môn) |
-| 53 | View Subject Templates | Subject Manager; Administrator | Chưa có màn trong Drawio |
-| 54 | Create/Update/Delete Template | Subject Manager; Administrator | Chưa có màn trong Drawio |
+| 53 | View Subject Templates | Subject Manager; Administrator | Subject Template |
+| 54 | Create/Update/Delete Template | Subject Manager; Administrator | Subject Template, Template Editor (tạo/sửa/xóa) |
 | 55 | View Subject Question Bank | Subject Manager; Administrator | Subject Question Bank |
 | 56 | Create/Update/Delete Subject Question | Subject Manager; Administrator | Subject Question Bank, Question Editor (phạm vi môn) |
 | **Administrator: quản trị hệ thống** | | | |

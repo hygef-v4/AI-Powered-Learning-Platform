@@ -143,4 +143,4 @@ Không có blocking Resiliency finding ở Units Generation.
 
 ## 9. Đồng bộ SRS 2026-10-08
 
-69 UC ban đầu được bổ sung UC 70 View Audit Log theo yêu cầu. Bản hiện hành có 70 UC/51 story; primary ownership và số lượng theo unit-of-work-story-map.md. U07 quản trị gói và đọc lịch sử; U05 tạo/sửa/xóa thông báo; U06 ngân hàng lớp/môn; U01 hồ sơ không đổi avatar. Template UC 53–54 còn thiếu màn trong Drawio. Các chi tiết Construction cũ cần đồng bộ riêng trước khi dùng cho phần thay đổi này.
+69 UC ban đầu được bổ sung UC 70 View Audit Log theo yêu cầu. Bản hiện hành có 70 UC/51 story; primary ownership và số lượng theo unit-of-work-story-map.md. U07 quản trị gói và đọc lịch sử; U05 tạo/sửa/xóa thông báo; U06 ngân hàng lớp/môn; U01 hồ sơ không đổi avatar. Template UC 53–54 dùng Subject Template và Template Editor trong Drawio mới. Các chi tiết Construction cũ cần đồng bộ riêng trước khi dùng cho phần thay đổi này.

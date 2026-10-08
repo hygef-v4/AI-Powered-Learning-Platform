@@ -27,3 +27,13 @@ Retain enabled Security rules for authorization, validation, audit, credentials 
 - Checked Markdown table columns, code fences, local links and whitespace. The supplied Drawio already contains Audit Log and was not edited. UC 53-54 still have no screen in that diagram.
 - Construction unit designs, contracts, code plans and older local UC specification catalogs remain on the previous baseline and require a separate synchronization. Existing historical approvals do not cover the revised scope; no application code was generated.
 - Enabled authorization/audit requirements and resiliency constraints are preserved. Runtime verification is N/A to this documentation-only revision; the disabled Property-Based Testing extension was skipped.
+
+## Follow-up - Latest screen flow
+
+Source: `docs/screen-flow (1).drawio`, identical to the user's latest attachment in Downloads. This supersedes the earlier screen-mapping gap above; the earlier comparison remains a record of that revision.
+
+- [x] Compare all existing cell IDs, labels, parents, styles, geometry and edge endpoints against the committed diagram.
+- [x] Align Teacher My Classes → Assigned Classes and Class List → Subject Classes; retain Student My Classes.
+- [x] Map UC 53 to Subject Template and UC 54 to Subject Template/Template Editor. The new diagram adds these two screens and one edge between them; it does not alter existing edges.
+- [x] Update active Inception screen references, the catalog's renamed-file link, state and audit. Preserve UC IDs/names/actors and business rules.
+- [x] Validate all 70 catalog screen mappings against diagram labels, traceability coverage, file links, XML and whitespace. Construction and code remain outside this screen-label correction.

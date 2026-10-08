@@ -10,7 +10,7 @@
 - **Phạm vi tài liệu**: 70 UC, 51 story, 16 unit; thêm US-PAY-004/005, không tái sử dụng US-PAY-003 đã rút.
 - **Giữ các chi tiết đã chốt**: Năm dạng bài, Practice/Graded, version/snapshot, rubric từng câu/phần, nhóm thuộc lớp, leader giao phần và nộp; không có Simulation Exam hoặc tiến độ hoàn thành bài học.
 - **Luồng hỗ trợ**: Ghi danh/mã mời, chia nhóm, bình luận, AI soạn nháp, duyệt/phát hành/version/copy, chốt/công bố điểm, audit và hạn mức vẫn thuộc requirement/story liên quan; không tự thêm UC vào bảng mới.
-- **Screen Flow**: Dùng nhãn Drawio mới; template UC 53–54 chưa có màn trong hình, không có nghĩa bỏ template. Các mốc/câu trả lời cũ là lịch sử, không thay thế bản hiệu lực này.
+- **Screen Flow**: Dùng nhãn `screen-flow (1).drawio` mới: Student dùng My Classes; Teacher dùng Assigned Classes; quản lý lớp môn dùng Subject Classes; UC 53–54 dùng Subject Template và Template Editor. Các mốc/câu trả lời cũ là lịch sử, không thay thế bản hiệu lực này.
 
 ## 2. Bối cảnh và phạm vi
 
