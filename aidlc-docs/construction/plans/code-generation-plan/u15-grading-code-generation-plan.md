@@ -1,5 +1,9 @@
 # U15 Grading - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 34, 35, 36, 37; primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U15. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story trong phạm vi**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004. **Use case**: UC 32, UC 33, UC 34, UC 35, UC 36, UC 17. Gia hạn/phúc khảo/kiểm tra tương đồng nằm ngoài phạm vi.
+- **Story trong phạm vi**: US-GRD-001..005, US-GRP-006; phần chấm của US-GRP-004.
+- **Primary UC hiện hành**: UC 34, 35, 36, 37. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u15-grading/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -30,7 +35,7 @@ Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bư
 | `TypeConfigPort`, `DocumentEditor` | U09 | Dùng thật |
 | `SubmissionQueryPort` | U11 | Dùng thật; U15 cài `SubmissionSubmittedPort` của U11 |
 | `AiGradingPort`, `CodeRunPort` | U13 (`C`) | U13 ở wave 4, code sau U15: adapter tạm báo "AI chưa sẵn sàng" (ẩn nút Nhờ AI, chấm hàng loạt) và Code Lab "chưa chấm được"; U13 thay bằng bản thật. U15 cài `CodeGradedPort` của U13 |
-| `GradeWithAiDialog` | U11 | Popup Grade with AI (UC 40) chế độ `TEACHER_PROPOSAL` |
+| `GradeWithAiDialog` | U11 | Popup Grade with AI (UC 35) chế độ `TEACHER_PROPOSAL` |
 | `GroupSubmissionQueryPort` | U14 | Dùng thật; U15 cài `GroupSubmittedPort` của U14 |
 | U15 cài `SubmissionSubmittedPort`, `PracticeResultPort` (`scoreQuiz`), `GradeQueryPort` cho U11; `GroupSubmittedPort` cho U14 | cho U11, U14 | Thay adapter rỗng của U11, U14 (code trước U15 trong wave 3): bài `GRADED` vào hàng chấm, Practice Quiz có kết quả, điểm hiện cho Student |
 | U15 cung cấp `GradeQueryPort`, `GradebookQueryPort`, event `grade.published` | cho U11, U16 | U11 bật hiển thị điểm; U16 đọc điểm cuối/trạng thái công bố cho phân bố điểm và tệp xuất |
@@ -100,7 +105,7 @@ PostgreSQL `evaluations` (lịch sử trong cột `history`); cột `grades_rele
 - [ ] **Bước 19** - `GradingQueuePage` (lọc, chọn nhiều, `BulkAiGradingDialog`, `FinalizeGradesDialog`, `BulkPublishButton`; bài nhóm nhúng `GroupDocsOverviewPanel` của U14).
 - [ ] **Bước 20** - `GradingWorkspacePage` (`SubmissionNavigator` ‹ › và tự sang bài kế, `SubmissionViewer`, `MethodChooser`, `RubricChecklistForm`, `GradeWithAiDialog` (U11), `FeedbackEditor`, `OverrideReasonDialog`, `GradeHistoryDrawer`, `PublishButton`).
 - [ ] **Bước 21** - `GroupGradingMode` trong `GradingWorkspacePage` khi `targetKind = groups` (tài liệu chung như bài `DOCUMENT`, `MemberScoresPanel` điểm mặc định bằng nhau).
-- [ ] **Bước 22** - `GradebookPage` (gom theo sinh viên, mỗi sinh viên đóng/mở), `AssignmentGradeCell` trên Assignment List của Student (không có trang My Grades riêng); bật phần điểm trong trang bài đã nộp của U11.
+- [ ] **Bước 22** - `GradebookPage` (gom theo sinh viên, mỗi sinh viên đóng/mở), `AssignmentGradeCell` trên các danh sách bài theo loại của Student (không có trang My Grades riêng); bật phần điểm trong trang bài đã nộp của U11.
 - [ ] **Bước 23** - Test frontend: điểm hiển thị "x / tổng", sửa điểm đã chốt bắt lý do còn khác đề xuất AI thì không, ‹ › và tự sang bài kế, sổ điểm đóng/mở theo sinh viên không có điểm tổng.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -114,12 +119,16 @@ PostgreSQL `evaluations` (lịch sử trong cột `history`); cột `grades_rele
 | Nguồn | Bước |
 |---|---|
 | US-GRD-001 | 3, 13 |
-| US-GRD-002 (UC 33) | 4, 20 |
-| US-GRD-003 (UC 32, UC 33) | 2, 4, 20 |
-| US-GRD-004 (UC 35; lịch sử điểm của UC 36) | 7, 22 |
-| US-GRD-005 (UC 34) | 2, 5, 19, 20 |
-| US-GRP-004 S3, US-GRP-006 (UC 17) | 6, 21 |
+| US-GRD-002 (UC 35) | 4, 20 |
+| US-GRD-003 (UC 34, 35) | 2, 4, 20 |
+| US-GRD-004 (UC 17, 18, 24, 37; lịch sử điểm của UC 37) | 7, 22 |
+| US-GRD-005 (UC 36) | 2, 5, 19, 20 |
+| US-GRP-004 S3, US-GRP-006 (UC 35, 36) | 6, 21 |
 
 ## 5. Ngoài phạm vi
 
 - Gia hạn/phúc khảo/kiểm tra tương đồng ngoài phạm vi dự án; U16 sở hữu xuất bảng điểm trong MVP và thông báo hệ thống.
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] R3/R4 cho submissions/grading/Gradebook; Admin được giao dạy được phép, SM chỉ phụ trách môn bị từ chối.
+- [ ] Student Submissions UC 34, Grading Workspace UC 35–36 với AI Grading Proposals, Gradebook trong Class Detail UC 37; private Practice vẫn riêng.

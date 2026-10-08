@@ -1,6 +1,8 @@
 # U16 Reporting & Notification - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-NTF-001`, `US-RPT-001`…`003`; UC 18 View Statistics, UC 36, UC 38. Bảng theo [database](../../../../docs/database.md): U16 chỉ có bảng `notifications`; không có `email_outbox`, `notification_preferences` (quyết định 2026-10-03).
+**Bản tài liệu 2026-10-08**: UC 11, 57; primary stories: US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-NTF-001`, `US-RPT-001`…`003`; UC 57 View Statistics, UC 11, 37. Bảng theo [mô hình dữ liệu của unit](domain-entities.md): U16 chỉ có bảng `notifications`; không có `email_outbox`, `notification_preferences` (quyết định 2026-10-03).
 
 ## 1. Tổng quan
 
@@ -97,8 +99,8 @@ Không có bảng hay job hẹn giờ riêng. `DeadlineReminderScanner` (U03 `Sc
 
 | Port | Unit | Mô tả |
 |---|---|---|
-| `AccountLookupPort` | U01 | Email tài khoản, `email_preferences`; `countByRoleAndStatus()` cho thống kê (UC 18) |
-| `ClassAccessPort` | U04 | Lớp người học đang ghi danh, người quản lý lớp, `showGradeDistribution`; `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` cho thống kê (UC 18) |
+| `AccountLookupPort` | U01 | Email tài khoản, `email_preferences`; `countByRoleAndStatus()` cho thống kê (UC 57) |
+| `ClassAccessPort` | U04 | Lớp người học đang ghi danh, người quản lý lớp, `showGradeDistribution`; `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` cho thống kê (UC 57) |
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Bài, lịch, hạn; ghi `reminder_sent_at` |
 | `SubmissionQueryPort` | U11 | Tiến độ nộp bài cá nhân |
 | `GroupMembershipPort` | U12 | Thành viên nhóm để chọn người nhận |

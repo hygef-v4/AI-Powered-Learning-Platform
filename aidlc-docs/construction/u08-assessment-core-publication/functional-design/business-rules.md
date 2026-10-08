@@ -1,10 +1,12 @@
 # U08 Assessment Core & Publication - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Quyền
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U08-01 | Chỉ giảng viên của lớp tạo/sửa/duyệt/phát hành/ngưng bài của lớp (Chủ nhiệm môn chỉ khi chính họ là giảng viên của lớp); Chủ nhiệm môn của môn và ADMIN chỉ xem. Không có đề chung cấp môn. | FR-007, U09 Câu 9 |
+| BR-U08-01 | Teacher hoặc Subject Manager/Administrator được giao dạy lớp R3/R4 tạo/sửa/xóa nháp/duyệt/phát hành/ngưng bài lớp. Full cấu trúc hoặc quản lý môn không tự cấp đọc/sửa bài giảng dạy. Template môn theo R2/U10, không giao đề chung mọi lớp. | FR-002/007, UC 38–43 |
 | BR-U08-02 | Bài chỉ phát hành cho chính lớp chứa nó; lớp ngoài phạm vi người phát hành → từ chối, audit. | US-ASM-001 S2 |
 | BR-U08-03 | Người học chỉ thấy bài `OPEN`/`CLOSED` của lớp mình đang ghi danh; `DRAFT`, `REVIEWED`, `SCHEDULED` ẩn. Bài `RETIRED` ẩn, trừ khi người học đã có điểm ở bài đó (điểm đã công bố hoặc kết quả Practice): vẫn hiện để xem, không làm hay nộp thêm. | FR-007 |
 
@@ -13,7 +15,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U08-10 | Mỗi bài một trong năm dạng `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY`, `CODE_LAB`, `GROUP_ASSIGNMENT`; câu phải khớp dạng. Chế độ là `GRADED` hoặc `PRACTICE`, riêng `GROUP_ASSIGNMENT` chỉ `GRADED`. | FR-017, U09, quyết định 2026-09-29 |
-| BR-U08-11 | Câu lấy từ ngân hàng (version `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng được U06 kiểm theo quy tắc ngân hàng và lưu thành dòng `questions` phạm vi bài. Câu ngân hàng phải khớp dạng bài theo BR-U06-28. | Câu 2, UC 23–27 |
+| BR-U08-11 | Câu lấy từ ngân hàng (version `ACTIVE`, ghim) hoặc là câu riêng của bài; câu riêng được U06 kiểm theo quy tắc ngân hàng và lưu thành dòng `questions` phạm vi bài. Câu ngân hàng phải khớp dạng bài theo BR-U06-28. | Câu 2, UC 39, 40, 41, 42, 43 |
 | BR-U08-17 | Tạo bài bắt đầu bằng chọn dạng bài và chế độ; chỉ sau đó mới chọn nguồn: bài trống, copy template `RELEASED` của môn hoặc copy bài của lớp khác mình dạy. Danh sách nguồn copy chỉ gồm template/bài cùng dạng và cùng chế độ đã chọn. | Người dùng chốt 2026-10-03 |
 | BR-U08-18 | Thêm câu từ ngân hàng theo hai cách: chọn tay, hoặc chọn ngẫu nhiên N câu `ACTIVE` khớp dạng bài và bộ lọc (độ khó, tag, module/lesson), không trùng câu đã có trong bài; N không vượt số câu còn thiếu theo BR-U08-13 và số câu khớp. Kết quả ngẫu nhiên ghim vào bài như chọn tay (mọi sinh viên cùng bộ câu); người soạn xem lại, bỏ hoặc bốc lại từng câu trước khi lưu. | Người dùng chốt 2026-10-03 |
 | BR-U08-12 | Điểm từng câu > 0: Quiz và Code Lab do người soạn đặt; Text Essay bằng tổng điểm rubric của câu (U09 ghi khi tạo/sửa rubric, không sửa tay). Tổng điểm bài tính khi đọc: tổng điểm các câu; Diagram Essay và bài nhóm là tổng điểm rubric các phần (BR-U09-26). | Thiết kế; người dùng chốt 2026-10-04 |

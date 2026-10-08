@@ -1,5 +1,7 @@
 # U06 Rubric & Question Bank - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Tạo và sửa bản nháp
 1. Kiểm quyền theo phạm vi (BR-U06-01, 02).
 2. Tạo `lineage_id` mới, `version = 1`, `DRAFT`; hoặc sửa `DRAFT` hiện có.

@@ -1,5 +1,7 @@
 # U14 Group Document & Submission - Infrastructure Design
 
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
@@ -23,7 +25,7 @@
 ## 4. Migration
 
 `V20260925_1850__u14_group_workspace.sql`:
-- `group_documents (id, group_id FK, assignment_id FK, status, sections jsonb, revisions jsonb, submitted_snapshot jsonb, submit_mode, submitted_at, updated_at, version)` unique `(group_id, assignment_id)`; FK tới `student_groups`, `assignments` theo [database](../../../../docs/database.md).
+- `group_documents (id, group_id FK, assignment_id FK, status, sections jsonb, revisions jsonb, submitted_snapshot jsonb, submit_mode, submitted_at, updated_at, version)` unique `(group_id, assignment_id)`; FK tới `student_groups`, `assignments` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md).
 - `sections` = `{sharedBlocks, items[]}` (mỗi mục: id, partId, orderNo, title, status, claimedBy, claimedAt, assignedBy, publishedBlocks, draftBlocks, lastAuthorId); `revisions` là mảng chỉ thêm.
 - Index `(assignment_id, submitted_at)` cho scanner tự nộp.
 - Không có bảng `sections`, `section_revisions`, `section_comments`, `group_submissions`.

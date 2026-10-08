@@ -1,5 +1,7 @@
 # U07 Payment & AI Credit - Logical Components
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Sơ đồ
 
 ```
@@ -18,7 +20,7 @@
  worker: PaymentScanner --> PAYOS_CHECK --> PayosCheckHandler --> PayosAdapter --> PaymentSettlement
 ```
 
-**Text alternative**: Student, Teacher, Subject Manager và Admin có tài khoản `ACTIVE` đều có ví và mua credit qua `PaymentController`; controller kiểm chủ ví trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `BalanceService`. U13 gọi `CreditPortService` để giữ, trừ và trả credit (U05 đi qua U13); Student chỉ được giữ cho `PRACTICE_GRADING` của attempt Text/Diagram Essay hợp lệ. Gói và mức tặng tháng là cấu hình triển khai. Worker đối soát PayOS; trả phần credit giữ quá hạn do scanner của U13.
+**Text alternative**: Student, Teacher, Subject Manager và Admin có tài khoản `ACTIVE` đều có ví và mua credit qua `PaymentController`; controller kiểm chủ ví trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `BalanceService`. U13 gọi `CreditPortService` để giữ, trừ và trả credit (U05 đi qua U13); Student chỉ được giữ cho `PRACTICE_GRADING` của attempt Text/Diagram Essay hợp lệ. Admin add/edit gói; chỉ mức tặng tháng là cấu hình triển khai. Worker đối soát PayOS; trả phần credit giữ quá hạn do scanner của U13.
 
 ## 2. Thành phần
 
@@ -50,8 +52,11 @@
 |---|---|---|
 | SECURITY-03 | Compliant | Không log key, payload đầy đủ |
 | SECURITY-05 | Compliant | P3 kích thước, chữ ký |
-| SECURITY-08 | Compliant | Chỉ chủ tài khoản xem ví/lịch sử; gói và mức tặng cố định, không có API sửa; `CreditPort` nội bộ |
+| SECURITY-08 | Compliant | Owner R1 cho me/result; ADMIN riêng cho quản trị gói/history, version/audit/snapshot; monthly grant cấu hình, CreditPort nội bộ |
 | SECURITY-09 | Compliant | Key trong `.env`; adapter giả không bật ở prod |
 | SECURITY-15 | Compliant | P2, P3 fail closed |
 | RESILIENCY-10 | Compliant | Timeout PayOS |
 | Rule còn lại | N/A | Ngoài phạm vi đồ án |
+
+## Admin components
+PackageAdminController/PackageAdminService ghi gói với validation/version/U02 audit. PaymentAdminQueryService đọc phân trang an toàn. PackageSeeder chỉ INSERT thiếu theo ID/code ổn định, không ghi đè; dùng repository U07, AuthorizationPort U01, không thêm service triển khai độc lập.

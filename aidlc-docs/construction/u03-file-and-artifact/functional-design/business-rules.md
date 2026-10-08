@@ -1,13 +1,15 @@
 # U03 File, Job & Event - Business Rules
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Upload
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U03-01 | Upload đi qua backend trong một request multipart. | Câu 2 |
-| BR-U03-02 | Trần dung lượng theo `purpose`: `AVATAR`, `MATERIAL` ≤ 50 MB; `DOCUMENT_IMAGE` ≤ 5 MB. Vượt thì từ chối trước khi đọc hết. | Câu 4, BR-U09-34 |
+| BR-U03-02 | MATERIAL ≤ 50 MB; DOCUMENT_IMAGE ≤ 5 MB. Vượt thì từ chối trước đọc hết; AVATAR không thuộc purpose mới. | FR-001/004, BR-U09-34 |
 | BR-U03-03 | Loại file xác định bằng nội dung (magic bytes), phải khớp allowlist của `purpose`. Đuôi file và `Content-Type` của trình duyệt chỉ để tham khảo. | Câu 5 |
-| BR-U03-04 | Quyền upload theo mục đích: `AVATAR` mọi người đã đăng nhập; `MATERIAL` giảng viên, chủ nhiệm môn (UC 11); `DOCUMENT_IMAGE` (ảnh trong khung đề, bài làm, tài liệu nhóm) giảng viên, chủ nhiệm môn và người học. U03 không có file do hệ thống tạo. | SEC-002 |
+| BR-U03-04 | MATERIAL: tài khoản dạy/quản lý môn hợp lệ (Teacher/Subject Manager/Administrator) theo unit nghiệp vụ R2/R3/R4; DOCUMENT_IMAGE: actor được phép sửa tài liệu (gồm Student R5). U03 kiểm role/owner/purpose, unit gọi kiểm scope; không upload AVATAR. | FR-002/004, SEC-002 |
 | BR-U03-05 | Tính SHA-256 khi nhận; lưu vào thuộc tính tệp trên Drive. | services.md |
 | BR-U03-06 | Chỉ khi file và thuộc tính đã lên Drive mới trả về `FileRef`. Lỗi ở bất kỳ bước nào → xóa file trên Drive nếu đã tạo (lỗi xóa thì gửi việc `DRIVE_CLEANUP`). | Câu 7 |
 | BR-U03-07 | Upload thành công được giữ kể cả khi chưa gắn vào đối tượng nào; không có việc dọn file chưa gắn. | Câu 7 |
@@ -24,7 +26,7 @@
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-20 | U03 **không tự quyết** ai được xem file. Unit sở hữu kiểm quyền nghiệp vụ rồi gọi `issueDownloadToken`. Riêng `AVATAR`: mọi người đã đăng nhập được xem. | components.md |
+| BR-U03-20 | Unit sở hữu kiểm quyền nghiệp vụ rồi gọi issueDownloadToken; U03 không tự cấp quyền xem file. Token gắn đúng accountId/TTL; không có ngoại lệ xem avatar cho mọi tài khoản. | FR-001/002 |
 | BR-U03-21 | Token hạn 5 phút, gắn với đúng `accountId`; người khác dùng token → từ chối. | Câu 3 |
 | BR-U03-22 | Backend stream file từ Drive; không bao giờ trả `fileId` hay link Drive cho frontend. | SEC-002 |
 | BR-U03-23 | Header tải về: `Content-Type` đã xác định, `X-Content-Type-Options: nosniff`; file không phải ảnh/PDF luôn `attachment`. | SEC-004 |

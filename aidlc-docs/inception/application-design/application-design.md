@@ -43,7 +43,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 ## 5. Traceability
 
-Bản hiệu lực có 70 UC và 51 story, ánh xạ trong `unit-of-work-story-map.md` và `stories.md` mục 14. UC/màn từ `docs/use-cases-and-screens.md`; US-AIG-003 giữ là vận hành hỗ trợ không có UC trực tiếp. Construction/code plans vẫn cần đồng bộ tiếp cho các thay đổi ngày 2026-10-08. Thông báo và bình luận lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; không có dashboard cá nhân của Student.
+Bản hiệu lực có 70 UC và 51 story, ánh xạ trong `unit-of-work-story-map.md` và `stories.md` mục 14. UC/màn từ `docs/use-cases-and-screens.md`; US-AIG-003 giữ là vận hành hỗ trợ không có UC trực tiếp. Construction/code plans đã đồng bộ cho các thay đổi ngày 2026-10-08; contracts/code còn cần triển khai theo các revision tasks. Thông báo và bình luận lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; không có dashboard cá nhân của Student.
 
 | Story domain | Unit chủ đạo |
 |---|---|

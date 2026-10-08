@@ -1,5 +1,7 @@
 # U12 Group & Allocation - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 15, 16; primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Lưu nguyên khối theo trạng thái mong muốn
 - Client gửi toàn bộ nhóm của lớp (nhóm, thành viên, trưởng nhóm) + `version`.
 - `ClassGroupsSaver`: khóa theo lớp bằng `pg_advisory_xact_lock(class_id)` và kiểm `version` của từng nhóm → `ClassGroupsValidator` (thuần) kiểm BR-U12-02, 03, 08, 21, 22 trên trạng thái mới so với trạng thái cũ → tính khác biệt: thêm nhóm/thành viên, xóa dòng `group_members` của người bị gỡ, xóa nhóm chưa dùng (`GroupChangePort.hasGroupWork` = false), đổi cờ `is_leader` → ghi trong cùng transaction, gọi `GroupChangePort.onGroupCreated/onMemberRemoved` khi lớp có bài nhóm đang mở, audit; sau commit phát `group.membership-changed`.

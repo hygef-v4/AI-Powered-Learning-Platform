@@ -1,5 +1,7 @@
 # U01 Account & Access - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "chốt ở NFR" là tham số cấu hình, không cố định ở đây.
 
 ## 1. Định danh và email
@@ -9,16 +11,16 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
 | BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình triển khai `U01_ALLOWED_EMAIL_DOMAINS`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
-| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 6, UC 7 |
+| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 06, 07, 58, 59, 60, 61, 62 |
 
 ## 2. Kích hoạt
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 7 |
+| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 58, 59, 60, 61, 62 |
 | BR-U01-11 | OTP kích hoạt chỉ được gửi khi người dùng tự yêu cầu từ liên kết "Kích hoạt tài khoản lần đầu". Admin không có thao tác gửi OTP. | US-IAM-001, Câu hỏi FU3 |
 | BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING`. | US-IAM-001 S2 |
-| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa ticket, ghi audit, rồi **tự đăng nhập**: tạo phiên như đăng nhập (BR-U01-44) và đưa người dùng tới menu theo role (BR-U01-48). Đặt lại mật khẩu (UC 4) không tự đăng nhập. | US-IAM-001 S1; người dùng chốt 2026-10-04 |
+| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa ticket, ghi audit, rồi **tự đăng nhập**: tạo phiên như đăng nhập (BR-U01-44) và đưa người dùng tới menu theo role (BR-U01-48). Đặt lại mật khẩu (UC 04) không tự đăng nhập. | US-IAM-001 S1; người dùng chốt 2026-10-04 |
 
 ## 3. OTP (kích hoạt và đặt lại)
 
@@ -57,15 +59,15 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
 | BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
-| BR-U01-48 | Đăng nhập thành công trả điểm đến theo role, đúng các menu nối từ Login trên screen flow: `STUDENT` → `/learning` (Student Menu: `MyClassesPage`, U04), `TEACHER` và `SUBJECT_MANAGER` → `/teaching` (Teacher Menu: danh sách lớp đang dạy, U04), `ADMIN` → `/admin` (Admin Menu: thống kê UC 18 hiện ngay trên trang, U16, cùng các nút tới Account List, Subject List, Class List, AI Usage, Audit Log). | docs/screen-flow.md |
+| BR-U01-48 | STUDENT → /learning (My Classes); TEACHER/SUBJECT_MANAGER → /teaching (Assigned Classes); ADMIN → /admin (Statistic UC 57 và lối vào quản trị). Vai trò kế thừa dùng chức năng môn/lớp khi có R2/R4; Subject Classes chỉ quản lý cấu trúc, không tự cấp dạy/chấm. | SRS Screen Flow, FR-002/003 |
 
 ## 6. Hồ sơ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-50 | Người dùng chỉ sửa hồ sơ của chính mình: tên hiển thị, số điện thoại, ảnh đại diện. | US-IAM-004, Câu 11 |
-| BR-U01-51 | Không tự sửa email, role, trạng thái. | UC 6 |
-| BR-U01-52 | Ảnh đại diện chỉ nhận tham chiếu `AvatarPort` xác nhận là của chính người dùng và đúng mục đích `AVATAR`. Khi U03 chưa sẵn sàng, chức năng đổi ảnh tắt; phần hồ sơ còn lại vẫn chạy. | Câu 12 |
+| BR-U01-50 | Chỉ sửa tên hiển thị/số điện thoại của chính mình; không cập nhật avatar. | FR-001, UC 06–07 |
+| BR-U01-51 | Không tự sửa email, role, trạng thái. | UC 06, 07 |
+| BR-U01-52 | DTO hồ sơ chỉ nhận displayName/phoneNumber; từ chối avatar/fileRef/email/role/status và ID người khác. Không gọi U03 đổi ảnh. | FR-001, UC 07 |
 | BR-U01-53 | Số điện thoại là dữ liệu cá nhân: không ghi log, chỉ chủ tài khoản và admin xem. | US-IAM-004 S1 |
 | BR-U01-54 | Định danh người khác trong request sửa hồ sơ bị từ chối phía server, không lộ dữ liệu đối tượng. | US-IAM-004 S2 |
 
@@ -73,7 +75,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-60 | Mỗi tài khoản có đúng một role cao nhất. `SUBJECT_MANAGER` kế thừa chức năng `TEACHER`. | FR-002 |
+| BR-U01-60 | Một role cao nhất; Student → User, Teacher → User, Subject Manager → Teacher, Administrator → Subject Manager. R1 chỉ dữ liệu mình; R2/R3/R4 cần phân công hiện thời và ACTIVE. Không kế thừa quyền Student. | FR-002, SRS 4.4 |
 | BR-U01-61 | U01 chỉ đặt role. Gán môn/lớp cụ thể là việc của U04. | Câu 7 |
 | BR-U01-62 | Mọi quyết định quyền chạy phía server, mặc định từ chối, kết hợp role của U01 với phạm vi của U04. | SECURITY-08 |
 | BR-U01-63 | Đổi role tăng `credentialVersion`: refresh token của người đó hết hiệu lực ngay; access token còn hạn dùng tối đa 15 phút (BR-U01-44). | Câu 6, US-IAM-005 S2 |
@@ -87,9 +89,9 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-70 | Chỉ có 3 trạng thái: `PENDING`, `ACTIVE`, `DISABLED`. | Câu 10 |
-| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 7 |
+| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 58, 59, 60, 61, 62 |
 | BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING` nếu chưa. | Câu 10 |
-| BR-U01-73 | Không có thao tác xóa tài khoản. | UC 7 |
+| BR-U01-73 | Không có thao tác xóa tài khoản. | UC 58, 59, 60, 61, 62 |
 
 ## 9. Nhập hàng loạt
 

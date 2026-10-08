@@ -1,5 +1,7 @@
 # U08 Assessment Core & Publication - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Tạo và soạn bài
 1. Kiểm quyền lớp (BR-U08-01); người soạn chọn dạng bài và chế độ trước (BR-U08-10, 17).
 1a. Chọn nguồn: bài trống → tạo `assignments` `DRAFT` với `class_id`, dạng, chế độ; copy template hoặc copy bài lớp khác → U10 F2/F3, chỉ liệt kê nguồn cùng dạng và chế độ (BR-U08-17).
@@ -35,6 +37,6 @@
 2. Sửa sau khi đóng/ngưng: kiểm BR-U08-43, 44 → tạo version `DRAFT` mới, sao chép câu, gọi `TypeConfigPort.copy`; audit.
 
 ## F8 - Truy vấn
-1. Giảng viên: danh sách bài theo lớp/trạng thái, chi tiết, lịch (UC 28).
-2. Người học: bài của lớp theo BR-U08-03 (dùng bởi Assignment List của U11).
+1. Giảng viên: danh sách bài theo lớp/trạng thái, chi tiết, lịch (UC 38, 39, 40, 41, 42, 43).
+2. Người học: bài của lớp theo BR-U08-03 (dùng bởi danh sách bài theo loại của U11 (UC 17)).
 3. `isSubmissionOpen(assignmentId, now)` trả `ON_TIME`, `LATE`, `CLOSED` cho U11.

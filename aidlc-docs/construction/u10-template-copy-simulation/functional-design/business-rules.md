@@ -1,17 +1,19 @@
 # U10 Template & Copy - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Template cấp môn
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U10-01 | Chỉ Chủ nhiệm môn hiện tại của môn (`subjects.manager_id`) tạo, sửa, duyệt, phát hành và xoá template của môn (dòng `assignments` có `subject_id`, soạn trong Template Editor), kể cả template do Chủ nhiệm môn trước tạo; không lưu người tạo trên bài (người tạo nằm trong audit). Giảng viên chỉ xem và copy template `RELEASED`. | FR-027, UC 21; người dùng chốt 2026-10-04 |
+| BR-U10-01 | Subject Manager/Administrator hiện được giao môn qua subjects.manager_id R2 xem/tạo/sửa/duyệt/phát hành/xóa template, kể cả của người quản lý trước. Teacher chỉ đọc/copy template RELEASED được phép vào lớp mình dạy; role Admin không bypass R2. | FR-027, UC 53–54 |
 | BR-U10-02 | Template không có lịch mở/đóng; không giao thẳng cho lớp. | FR-027, không có đề chung |
 | BR-U10-03 | Version template đã phát hành chỉ đọc; sửa template tạo version mới (quy tắc BR-U08-43 áp dụng: version đang phát hành không sửa). | FR-027, US-ASM-009 S2 |
-| BR-U10-04 | Không có thao tác rút riêng: template chỉ vào `WITHDRAWN` khi Chủ nhiệm môn xoá template đã phát hành (BR-U10-07); không copy thêm, bản đã copy không bị ảnh hưởng. | UC 21 |
+| BR-U10-04 | Không có thao tác rút riêng: template chỉ vào `WITHDRAWN` khi Chủ nhiệm môn xoá template đã phát hành (BR-U10-07); không copy thêm, bản đã copy không bị ảnh hưởng. | UC 53, 54 |
 | BR-U10-05 | Giảng viên của lớp thuộc môn, sau khi đã chọn dạng và chế độ (BR-U08-17), copy một version `RELEASED` cùng dạng và chế độ thành bài `DRAFT` của lớp mình; lưu `source_assignment_id` và `config.origin = TEMPLATE_COPY`; không đồng bộ khi template có version mới. | US-ASM-009 S1 |
-| BR-U10-06 | Tạo template (chọn dạng và chế độ trước) rồi soạn thủ công, hoặc trong Template Editor nhờ AI đề xuất câu từ RAG cấp môn (chỉ học liệu `class_id` NULL) qua `AiDraftPort` (U13, BR-U13-11). Câu Chủ nhiệm môn giữ lại (có thể sửa trước) lưu thành câu riêng của template như BR-U08-21; template Diagram Essay hoặc bài nhóm thì AI đề xuất khung kèm gợi ý rubric từng phần (BR-U09-24); bỏ thì template không đổi. Credit AI trừ của Chủ nhiệm môn. | FR-006, FR-027, UC 21 |
-| BR-U10-07 | Xoá template: nếu chưa phát hành version nào thì xoá bản nháp (BR-U08-15); nếu đã phát hành thì mọi version còn `RELEASED` chuyển `WITHDRAWN` và ẩn khỏi danh sách. Không copy thêm được; bài lớp đã copy, lineage và audit giữ nguyên. | FR-027, UC 21 |
-| BR-U10-08 | Template có thể là bài nhóm (`GROUP_ASSIGNMENT`, chỉ `GRADED`) với khung chia phần và rubric từng phần soạn bằng trình soạn khung U09 (UC 27). Template không gắn nhóm; giảng viên copy vào lớp rồi phát hành khi nhóm của lớp hợp lệ (U12). | screen flow (Template Editor), UC 27 |
+| BR-U10-06 | Tạo template (chọn dạng và chế độ trước) rồi soạn thủ công, hoặc trong Template Editor nhờ AI đề xuất câu từ RAG cấp môn (chỉ học liệu `class_id` NULL) qua `AiDraftPort` (U13, BR-U13-11). Câu Chủ nhiệm môn giữ lại (có thể sửa trước) lưu thành câu riêng của template như BR-U08-21; template Diagram Essay hoặc bài nhóm thì AI đề xuất khung kèm gợi ý rubric từng phần (BR-U09-24); bỏ thì template không đổi. Credit AI trừ của Chủ nhiệm môn. | FR-006, FR-027, UC 53, 54 |
+| BR-U10-07 | Xoá template: nếu chưa phát hành version nào thì xoá bản nháp (BR-U08-15); nếu đã phát hành thì mọi version còn `RELEASED` chuyển `WITHDRAWN` và ẩn khỏi danh sách. Không copy thêm được; bài lớp đã copy, lineage và audit giữ nguyên. | FR-027, UC 53, 54 |
+| BR-U10-08 | Template có thể là bài nhóm (`GROUP_ASSIGNMENT`, chỉ `GRADED`) với khung chia phần và rubric từng phần soạn bằng trình soạn khung U09 (UC 43). Template không gắn nhóm; giảng viên copy vào lớp rồi phát hành khi nhóm của lớp hợp lệ (U12). | screen flow (Template Editor), UC 43 |
 
 ## 2. Copy giữa lớp
 

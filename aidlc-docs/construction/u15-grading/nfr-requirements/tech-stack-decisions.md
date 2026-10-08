@@ -1,5 +1,7 @@
 # U15 Grading - Tech Stack Decisions
 
+**Bản tài liệu 2026-10-08**: UC 34, 35, 36, 37; primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Lưu | PostgreSQL + JPA; `rubric_checks`, `history` là `jsonb` | Như các unit trước |

@@ -1,5 +1,7 @@
 # U02 Audit, Job & Event - Functional Design Plan
 
+**Lịch sử plan baseline trước 2026-10-08**: giữ nguyên các bước đã hoàn thành và mã UC tại thời điểm đó. Thiết kế hiện hành và revision code plan theo [current SRS contract](../../current-srs-contract.md); task đồng bộ ở [construction-sync](../construction-sync-2026-10-08.md), không dùng checklist cũ như phạm vi mới.
+
 > Ghi chú hiện hành: plan này ghi phạm vi lúc thiết kế. Từ 2026-10-04 U02 chỉ còn audit (bảng `audit_logs`); việc nền, worker và sự kiện chuyển sang U03; không có bảng `jobs`, `audit_events`.
 
 ## 1. Phạm vi

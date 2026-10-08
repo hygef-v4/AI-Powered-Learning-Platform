@@ -1,12 +1,14 @@
 # U07 Payment & AI Credit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 37. Gói credit và mức tặng hằng tháng là cấu hình cố định (không thuộc UC 22 từ 2026-10-03).
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-PAY-001`, `002`, `US-AIG-003` S4; UC 37. Gói có Admin add/edit theo US-PAY-004; US-PAY-005 đọc lịch sử toàn nền tảng. Mức tặng tháng vẫn cấu hình triển khai.
 
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `CreditPackage` | Thực thể `CREDIT_PACKAGE` | `credit_packages` | U07 (seed khi triển khai) |
+| `CreditPackage` | Thực thể `CREDIT_PACKAGE` | `credit_packages` | U07 (Admin add/edit; seed ban đầu) |
 | `Payment` | Bảng nối ACCOUNT purchasing CREDIT_PACKAGE | `payments` | U07 |
 | `CreditBalance` | Value object của `Account` (U01) | `accounts` (`free_balance`, `free_period`, `purchased_balance`) | U07 |
 | `CreditSettings` | Cấu hình triển khai | Biến môi trường `U07_*` | - |
@@ -23,7 +25,10 @@ U07 **không** sở hữu: gọi Gemini, tính token và ghi lần gọi AI (U13
 | `name` | chuỗi ≤ 100 | |
 | `credits` | số nguyên > 0 | |
 | `priceVnd` | số nguyên ≥ 2 000 | Đơn vị VND |
-| `active` | bool | Đặt trong seed; không xóa gói đã có giao dịch |
+| `active` | bool | Cấu hình bán hiện hành; UC 68 không cấp xóa gói |
+| `information` | chuỗi ≤ 2 000 | Mô tả bán, văn bản làm sạch |
+| `version` | số nguyên | Optimistic lock khi sửa |
+| `created_at`, `updated_at`, `updated_by` | thời gian, UUID | Actor/thời gian thay đổi; audit qua U02 |
 
 ## 3. `Payment`
 
@@ -84,7 +89,7 @@ stateDiagram-v2
 |---|---|
 | `U07_MONTHLY_FREE_CREDITS` | Credit tặng mỗi tháng cho mọi tài khoản `ACTIVE` (Người học, Giảng viên, Chủ nhiệm môn, Quản trị viên); đổi bằng lần triển khai mới |
 | `U07_TOKENS_PER_CREDIT` | Quy đổi token Gemini ra credit (mặc định 1 000) |
-| `U07_PACKAGES` | Danh sách gói nạp vào `credit_packages` khi khởi động |
+| `U07_PACKAGES` | Dữ liệu seed ban đầu; INSERT thiếu, không update gói Admin đã sửa |
 
 ## 8. Contract
 
@@ -104,3 +109,7 @@ stateDiagram-v2
 | `AuditPort` | U02 | Audit |
 | `JobPort`, `JobHandler`, `ScheduledScanner`, `EventPublisherPort` | U03 | Việc `PAYOS_CHECK`, scanner đối soát và hết hạn giao dịch, event `payment.paid` |
 | `CreditUsagePort` | U13 (`C`, U07 khai báo) | `listUsage(accountId, page)` → lần dùng credit của chính chủ ví từ `ai_suggestions` (thời điểm, tác vụ, `credits_used`, `credit_status`). U07 không đọc thẳng bảng của U13; chưa có U13 → adapter rỗng (bảng trống) |
+
+## Admin package/payment query
+GET/POST /api/v1/admin/credit-packages; PATCH /api/v1/admin/credit-packages/{id} với version. GET /api/v1/admin/payments với accountId/packageId/from/to/status/page (20 mặc định, tối đa 100), whitelist sort. DTO trả người mua, snapshot gói/giá/credit, trạng thái/thời gian; không checksum key/token/checkout secret. Payment snapshot bổ sung packageName/information lúc tạo để lịch sử không đổi theo gói mới.
+Giao dịch cũ thiếu snapshot tên dùng dữ liệu được audit/xác minh nếu có, không tự suy đó là tên gói tại thời điểm mua. Không có API sửa/xóa payment/đổi credit thủ công.

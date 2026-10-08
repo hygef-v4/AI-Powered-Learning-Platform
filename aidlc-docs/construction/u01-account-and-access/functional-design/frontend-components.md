@@ -1,5 +1,7 @@
 # U01 Account & Access - Frontend Components
 
+**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 U01 nằm trong **Web Shell** (xác thực, hồ sơ) và **Admin Console** (quản trị tài khoản). Ẩn/hiện UI chỉ hỗ trợ trải nghiệm; quyền thật do backend quyết định. Tên API là tên nghiệp vụ, đường dẫn cuối cùng chốt ở OpenAPI.
 
 ## 1. Cây component
@@ -21,7 +23,6 @@ app/(auth)/                 (Web Shell)
 app/profile/
   ProfilePage
     ProfileForm
-    AvatarUploader          (tắt khi AvatarPort chưa sẵn sàng)
     ChangePasswordDialog    popup Change Password mở từ Profile
 components/navigation/
   SignOutDialog             popup Sign Out mở từ Navigation
@@ -54,7 +55,7 @@ shared/
 | Validation phía client | Email đúng định dạng, mật khẩu không rỗng |
 | API | `authenticate` |
 | Hành vi lỗi | Mọi thất bại hiện **một** câu: "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng." Không phân biệt khóa tạm, chưa kích hoạt hay không tồn tại |
-| Thành công | Điều hướng theo role (BR-U01-48): Student → `/learning` (Student Menu), Teacher và Subject Manager → `/teaching` (Teacher Menu), Admin → `/admin` (Admin Menu) |
+| Thành công | Điều hướng theo role (BR-U01-48): Student → `/learning` (My Classes), Teacher và Subject Manager → `/teaching` (Assigned Classes), Admin → `/admin` (Statistic, điều hướng qua Admin Sidebar) |
 
 ### ActivationPage / PasswordResetPage
 
@@ -93,7 +94,6 @@ Hai trang dùng chung ba bước `RequestOtpStep` → `VerifyOtpStep` → `SetNe
 | Component | State | API | Ghi chú |
 |---|---|---|---|
 | `ProfileForm` | `displayName`, `phoneNumber`, `dirty`, `saving` | `getProfile`, `updateProfile` | Email và role chỉ đọc |
-| `AvatarUploader` | `file`, `uploading` | U03 upload → `updateProfile(avatarFileId)` | Chỉ nhận ảnh; ẩn nếu backend báo chưa hỗ trợ |
 | `ChangePasswordDialog` | `currentPassword`, `newPassword`, `confirmPassword` | `changePassword` | Thành công báo "Các thiết bị khác đã bị đăng xuất" |
 | `SignOutDialog` | - | `logout` | Xác nhận rồi đăng xuất phiên hiện tại |
 
@@ -141,3 +141,6 @@ Nút "Nhập CSV" trên `AccountListPage` mở vùng nhập ngay trong trang; da
 - Thông báo lỗi xác thực không bao giờ tiết lộ tài khoản có tồn tại hay trạng thái của nó.
 - Route admin có guard theo role để trải nghiệm tốt, nhưng mọi API vẫn tự kiểm quyền phía server.
 - Nhãn tiếng Việt, thiết kế desktop-first.
+
+## Account Detail (UC 60–62)
+AccountDetailPage mở từ Account List, GET /api/v1/admin/accounts/{id}; form PATCH cùng URL với displayName/phoneNumber/version. Email chỉ đọc; role/status qua endpoint riêng với bảo vệ Admin cuối/phân công. Profile không có tải avatar.

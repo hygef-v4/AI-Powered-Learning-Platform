@@ -69,4 +69,4 @@ Frontend không quyết định authorization. Tên màn theo `docs/use-cases-an
 
 ## 6. Phạm vi authorization theo SRS mới
 
-User chung theo R1; Student theo R5; Teacher theo R3; Subject Manager/Administrator dùng Teacher theo R4 và tài nguyên môn theo R2. Admin quản trị cấu trúc Full không cấp quyền đọc/chấm gradebook toàn nền tảng. Question Bank dùng hai scope CLASS/SUBJECT; Audit Log chỉ Admin và chỉ đọc. Inception hiệu lực có 70 UC/51 story; thiết kế Construction chưa được đồng bộ trong lần sửa này.
+User chung theo R1; Student theo R5; Teacher theo R3; Subject Manager/Administrator dùng Teacher theo R4 và tài nguyên môn theo R2. Admin quản trị cấu trúc Full không cấp quyền đọc/chấm gradebook toàn nền tảng. Question Bank dùng hai scope CLASS/SUBJECT; Audit Log chỉ Admin và chỉ đọc. Inception hiệu lực có 70 UC/51 story; thiết kế và code plans Construction đã đồng bộ trong revision 2026-10-08; contracts/code chưa triển khai revision.

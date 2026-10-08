@@ -1,5 +1,7 @@
 # U10 Template & Copy - Deployment Architecture
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
  Trình duyệt --HTTPS--> [nginx] --> [backend: U10 --gọi trong tiến trình--> U06, U08, U09]
                                           |

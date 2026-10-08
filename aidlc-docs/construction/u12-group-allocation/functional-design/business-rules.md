@@ -1,10 +1,12 @@
 # U12 Group & Allocation - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 15, 16; primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Nhóm của lớp
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-01 | Nhóm thuộc lớp và được quản lý trong danh sách sinh viên của lớp; mọi bài nhóm (`GROUP_ASSIGNMENT`) của lớp dùng chung các nhóm này. Chỉ giảng viên của lớp tạo/sửa. | UC 9, FR-025, thay đổi 2026-10-01 |
+| BR-U12-01 | Nhóm thuộc lớp và được quản lý trong danh sách sinh viên của lớp; mọi bài nhóm (`GROUP_ASSIGNMENT`) của lớp dùng chung các nhóm này. Chỉ giảng viên của lớp tạo/sửa. | UC 45, 46, 47, 48, 49, FR-025, thay đổi 2026-10-01 |
 | BR-U12-02 | Chỉ sinh viên đang ghi danh `ACTIVE` của lớp được vào nhóm; mỗi sinh viên tối đa một nhóm đang hiệu lực trong lớp. | US-GRP-001 S2 |
 | BR-U12-03 | Mỗi nhóm ≥ 1 thành viên và đúng một trưởng nhóm là thành viên. | FR-025 |
 | BR-U12-04 | Tạo tay: tạo nhóm, thêm/bớt thành viên, chọn trưởng nhóm. | Câu 3 |
@@ -27,7 +29,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-20 | Giảng viên **không** giao phần cho từng sinh viên; khung bài nhóm tự chia thành các phần theo heading nhỏ nhất (U09), trưởng nhóm giao phần cho thành viên trong tài liệu nhóm (U14). | UC 16, UC 27; người dùng chốt 2026-10-04 |
+| BR-U12-20 | Giảng viên **không** giao phần cho từng sinh viên; khung bài nhóm tự chia thành các phần theo heading nhỏ nhất (U09), trưởng nhóm giao phần cho thành viên trong tài liệu nhóm (U14). | UC 23, 43; người dùng chốt 2026-10-04 |
 | BR-U12-21 | Bài nhóm (`GROUP_ASSIGNMENT`) sẵn sàng phát hành khi lớp có ít nhất một nhóm và mọi nhóm hợp lệ (BR-U12-03). Còn sinh viên đang ghi danh chưa có nhóm chỉ là cảnh báo: giảng viên xác nhận thì vẫn phát hành. | FR-025 |
 | BR-U12-22 | Đổi thành viên khi lớp có bài nhóm đang mở được phép; mục đang do người bị bỏ giữ tự nhả khóa (U14), bản nháp chưa "Xong" của người đó bị bỏ, nội dung đã "Xong" giữ nguyên với tên tác giả. Bản nộp đã có không đổi. | U12 Câu 7, U14 |
 

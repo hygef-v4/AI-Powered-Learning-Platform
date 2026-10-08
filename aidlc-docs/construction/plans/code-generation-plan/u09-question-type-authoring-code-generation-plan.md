@@ -1,5 +1,9 @@
 # U09 Question Type Authoring - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U09. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -9,7 +13,7 @@
 ## 1. Bối cảnh
 
 - **Story**: US-ASM-004 (soạn khung, kiểm/xuất tài liệu; phần làm bài ở U11), US-ASM-005 (soạn Code Lab), US-ASM-006, US-ASM-007, US-GRP-003 (soạn bài nhóm). Đề chung cấp môn đã loại.
-- **Use case**: UC 23, UC 24, UC 25, UC 26, UC 27 (cả năm loại bài, quyết định 2026-10-04); cả năm kế thừa UC 28 Manage Assignments của U08, U09 chỉ làm phần riêng của dạng bài.
+- **Primary UC hiện hành**: UC 39, 40, 41, 42, 43. Supporting flows theo current-srs-contract.md.
 - **Wave**: 3. U13 (wave 4) cung cấp `CodeLabCheckPort`, `VerifySolutionButton` và `AiDraftPort` (AI soạn khung) qua `C`: trước khi có U13 dùng adapter giả báo "chưa kiểm được lời giải" và ẩn nút AI soạn khung.
 - **Thiết kế nguồn**: `construction/u09-question-type-authoring/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`DocxOutlineImporter`, `DocxExporter`, `DiagramRasterizer`, `DiagramContentCleaner`, `EssayDocument`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -109,14 +113,18 @@ PostgreSQL: cột `config` của `assignments` (U08 tạo bảng, U09 ghi qua `A
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-004 S1, S2 (UC 25) | 2, 3, 4, 5, 6, 7, 21, 22, 23 |
+| US-ASM-004 S1, S2 (UC 42) | 2, 3, 4, 5, 6, 7, 21, 22, 23 |
 | US-ASM-004 S3 | 9 |
-| US-ASM-006 (UC 24) | 5, 23 |
-| US-ASM-005 (UC 26) | 5, 23 |
-| US-GRP-003 (UC 27, phần soạn bài) | 6, 23 |
-| US-ASM-007 (UC 23) | 4, 5, 23 |
+| US-ASM-006 (UC 39) | 5, 23 |
+| US-ASM-005 (UC 41) | 5, 23 |
+| US-GRP-003 (UC 43, phần soạn bài) | 6, 23 |
+| US-ASM-007 (UC 40) | 4, 5, 23 |
 | Xuất DOCX | 8 |
 
 ## 5. Ngoài phạm vi
 
 - Làm bài và lưu bài nộp (U11), chấm và hiển thị chấm (U15), Code Lab (U13), đề chung cấp môn (đã loại).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Màn Text Essay/Quiz/Codelab/Diagram Essay/Group Essay Editor đúng type UC 39–43; rubric UC 44 theo R3/R4 hoặc template R2.
+- [ ] Chữ ký actor là tài khoản có action/scope hợp lệ, không kiểm literal TEACHER bỏ qua SM/ADMIN được phân công.

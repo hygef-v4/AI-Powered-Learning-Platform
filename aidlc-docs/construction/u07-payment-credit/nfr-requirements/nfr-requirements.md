@@ -1,5 +1,7 @@
 # U07 Payment & AI Credit - NFR Requirements
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Toàn vẹn tiền và credit
 
 | Mã | Yêu cầu | Nguồn |
@@ -35,7 +37,7 @@
 | NFR-U07-30 | Người dùng chỉ thấy giao dịch và lần dùng credit của mình; ngoài quyền trả `404`. | SEC-002 |
 | NFR-U07-31 | `CreditPort` chỉ gọi nội bộ, không có endpoint HTTP cho `reserve`/`settle`. | Thiết kế |
 | NFR-U07-32 | Không lưu dữ liệu thẻ/ngân hàng của người dùng; chỉ lưu mã tham chiếu PayOS. | SEC-007 |
-| NFR-U07-33 | Mọi API credit (gói mua, thanh toán, số dư, lịch sử) yêu cầu tài khoản `ACTIVE` và chỉ trả dữ liệu của chính chủ ví; Student được mua và xem ví. `CreditPort.reserve` kiểm `purpose` và attempt: Student chỉ được giữ credit cho `PRACTICE_GRADING` Text/Diagram Essay của chính mình; các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
+| NFR-U07-33 | API mua/Payment Result/ví/lịch sử cá nhân yêu cầu ACTIVE và owner R1; Admin package add/edit và platform history là endpoint riêng chỉ ADMIN ACTIVE; Student được mua và xem ví. `CreditPort.reserve` kiểm `purpose` và attempt: Student chỉ được giữ credit cho `PRACTICE_GRADING` Text/Diagram Essay của chính mình; các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
 
 ## 5. Compliance
 
@@ -48,3 +50,6 @@
 | SECURITY-15 | Compliant | Webhook sai → từ chối, không cộng |
 | RESILIENCY-10 | Compliant | NFR-U07-12 |
 | Rule còn lại | N/A | Ngoài phạm vi đồ án |
+
+## Admin revision
+Admin package writes atomic với optimistic version/audit, snapshot giao dịch bất biến; seed không ghi đè config sửa. Query lịch sử phân trang tối đa 100, whitelist bộ lọc/sort, không secret/dữ liệu thẻ. Role khác bị từ chối ở API, không thêm hoàn tiền/đối soát tay/điều chỉnh credit.

@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - Deployment Architecture
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
  Trình duyệt ------ iframe ------> embed.diagrams.net (Internet)
      |

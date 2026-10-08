@@ -1,6 +1,8 @@
 # U08 Assessment Core & Publication - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-001`; UC 28; khóa nội dung cho `US-QBK-002` S2, S3. Bảng theo [database](../../../../docs/database.md).
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-001`; UC 38, 39, 40, 41, 42, 43; khóa nội dung cho `US-QBK-002` S2, S3. Bảng theo [mô hình dữ liệu của unit](domain-entities.md).
 
 Quyết định 2026-10-03: không có bảng `publications`; mỗi dòng `assignments` của lớp mang luôn lịch mở/đóng (quan hệ COURSE_CLASS scheduling ASSIGNMENT). Phát hành cùng nội dung cho lớp khác là copy bài sang lớp đó (U10).
 

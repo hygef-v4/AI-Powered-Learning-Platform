@@ -3428,3 +3428,45 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: User-authorized screen-label/mapping correction; the user's diagram file was read, not edited. Earlier missing-template notes in dated comparison records remain historical and are superseded by the latest plan revision. No application/Construction changes or new commit. Existing enabled authorization/resiliency constraints retained; runtime checks N/A and disabled Property-Based Testing skipped.
 
 ---
+
+## Construction consistency review - Current SRS and Inception
+**Timestamp**: 2026-10-08T07:06:46Z
+**User Input**: "check construction doc theo doc mới, inception docs"
+**AI Response**: Reviewed Construction documentation against the current 70-UC catalog, revised 51-story/16-unit Inception and latest screen flow. Saved construction/plans/construction-consistency-review-2026-10-08.md with ten finding groups and source evidence: class structure permissions, Administrator inheritance/assignment eligibility, subject-versus-teaching scopes, missing Admin package management/global payment history, prohibited announcement updates, removed avatar updates still present, legacy UC traceability, outdated screen mappings and 21 broken local source links. Distinguished already-designed audit/template/AI behaviors and supporting flows from actual requirement gaps; proposed a synchronization order without modifying the designs or code.
+**Context**: User-authorized documentation review, not implementation. Historical questions/approvals and generated-code summaries were treated as earlier-baseline evidence. Existing permission descriptions do not yet meet revised authorization requirements; enabled Resiliency constraints retained, runtime checks N/A and disabled Property-Based Testing skipped. No stage/checkpoint advanced; no commit created.
+
+---
+
+## Construction documentation synchronization - 70-UC revision
+**Timestamp**: 2026-10-08T07:34:25Z
+**User Input**: "giúp tôi sửa lại doc construction theo inception và doc mới"
+**AI Response**: Synchronized all 16 units' functional, NFR and infrastructure designs and code-plan scope with the current 70-UC catalog, 51-story Inception and latest screen-flow (1).drawio. Corrected class structure versus teaching permissions, conditional inherited roles/ACTIVE assignment eligibility, subject versus class resource scopes, Admin account detail/update, package add/edit and read-only global payment history, versioned announcement update/soft-delete and removed active avatar updates. Rebuilt primary ownership and function-specific UC references, aligned screen labels and entries (including Assignment Detail for Student Practice AI, Uploaded Learning Materials as a list, Admin Statistic/Sidebar and separate Class List), and replaced broken global database/screen-source links. Added current-srs-contract.md, the synchronization checklist and resolution evidence for R01-R10; updated state and current Inception status notes.
+**Validation**: Checked 244 active Construction documents, 160 current design headers, 16 code plans, unique 70-UC/51-story ownership, local links, balanced fences and whitespace. Compared 64 historical stage-plan bodies and U03's completed baseline/checked steps against Git HEAD; preserved them. Application code, contracts, migrations, questions, generated-code summaries and the user's diagram were not edited.
+**Context**: Authorized documentation revision only. Historical approvals apply to their old baseline; new implementation work remains unchecked in revised code plans. Enabled Security and Resiliency constraints retained in design, runtime checks N/A, disabled Property-Based Testing skipped. No commit or new implementation/stage approval created.
+
+---
+
+## pgvector purpose explanation
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "pgvector là dùng trong việc gì"
+**AI Response**: Explained the existing U05/U13 design: pgvector stores and searches lesson embeddings to retrieve authorized learning-material excerpts for AI question/assignment drafting. Distinguished database retrieval from model-generated embeddings/content.
+**Context**: Read-only explanation of current design. Entry recorded at commit preparation.
+
+---
+
+## pgvector removal options discussion
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "tôi k muốn dùng pgvector nữa thì sao"
+**AI Response**: Explained that AI drafting can remain with directly selected learning materials and extracted text; PostgreSQL keyword search is another option. Recommended direct source selection for a simpler project design, and identified Inception/U05/U13/database/code-plan/credit changes that would be required.
+**Context**: Discussion only; pgvector removal was not applied. Entry recorded at commit preparation; this commit retains the existing pgvector/embedding design.
+
+---
+
+## Commit preparation - Construction documentation synchronization
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "ok giúp tôi commit change construction hiện tại đi đã, nhớ ghi description change đầy đủ"
+**AI Response**: Prepared a local commit of current Construction synchronization, related Inception status notes and state/audit. Wrote a detailed commit description covering authorization, new Admin flows, announcement lifecycle, profile fields, UC/story/screen mappings, source links, historical-plan preservation and validation.
+**Validation**: Construction check passes for 244 documents, 160 current design headers, 16 code plans, 64 preserved historical stage-plan bodies and U03 completed baseline; 70 unique UC and 51 unique stories. Inception coverage and local links pass; whitespace passes. No application/contracts/migrations/diagram changes.
+**Context**: User-authorized commit on the current branch. No push or pgvector-removal change requested for this commit. Existing implementation checkpoints unchanged; runtime checks N/A, enabled documentation constraints retained and disabled Property-Based Testing skipped.
+
+---

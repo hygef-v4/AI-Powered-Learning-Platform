@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Cấu hình bài
 1. U08 tạo bài → U09 tạo `QuestionTypeConfig` mặc định theo loại.
 2. Giảng viên sửa cấu hình khi bài `DRAFT` (BR-U09-01).
@@ -8,7 +10,7 @@
 1. Mở `DocumentEditor` chế độ khung; mọi block tạo ra là `TEACHER`.
 2. Thêm/sửa/xóa/sắp xếp block; sơ đồ mở Draw.io nhúng, lưu XML + SVG (BR-U09-35, 38).
 3. Lưu khung: kiểm `validateSkeleton`, tính `contentHash` từng block.
-4. Lấy khung từ ngân hàng (UC 25, UC 27): chọn câu `DOCUMENT` `ACTIVE` khớp dạng (BR-U06-28), sao khung và `requiredDiagrams` vào `config` của bài làm điểm xuất phát (không thêm dòng `assignment_questions`); giảng viên sửa tiếp, bản ngân hàng không đổi. Heading của khung ngân hàng giữ nguyên nên các phần được tính lại như khung tự soạn.
+4. Lấy khung từ ngân hàng (UC 42, 43): chọn câu `DOCUMENT` `ACTIVE` khớp dạng (BR-U06-28), sao khung và `requiredDiagrams` vào `config` của bài làm điểm xuất phát (không thêm dòng `assignment_questions`); giảng viên sửa tiếp, bản ngân hàng không đổi. Heading của khung ngân hàng giữ nguyên nên các phần được tính lại như khung tự soạn.
 
 ## F2a - Chia phần và rubric từng phần (Diagram Essay, bài nhóm)
 1. Mỗi lần lưu khung, hệ thống dựng cây heading (Tiêu đề 1–6) và lấy heading nhỏ nhất của mỗi nhánh làm phần (BR-U09-25); `config.parts[] = {partId, headingBlockId, ancestorHeadingIds[], title, rubricId}`. Người soạn không bật/tắt phần.

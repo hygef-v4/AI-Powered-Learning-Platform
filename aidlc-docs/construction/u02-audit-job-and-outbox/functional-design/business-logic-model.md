@@ -1,11 +1,13 @@
 # U02 Audit - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 70; primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Truy vết
 
 | Luồng | Nguồn |
 |---|---|
 | A1 Ghi audit | US-AUD-001 S2, S3 |
-| A2 Tra cứu audit | US-AUD-001 S1, UC 39 |
+| A2 Tra cứu audit | US-AUD-001 S1, UC 70 |
 
 ## 2. Audit
 

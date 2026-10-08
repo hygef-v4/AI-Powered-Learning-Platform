@@ -1,5 +1,7 @@
 # U07 Payment & AI Credit - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Mua credit
 1. Backend kiểm tài khoản `ACTIVE` thuộc một trong bốn vai trò hiện hành và quyền trên chính ví trước khi hiển thị gói hay tạo thanh toán. Người mua hợp lệ chọn gói `active`, gửi kèm `Idempotency-Key` (BR-U07-01, 04, 05).
 2. Tạo `Payment` `CREATED`, sinh `orderCode` duy nhất, chụp giá (BR-U07-03).
@@ -32,6 +34,17 @@
 2. `settle`: tính chênh lệch với phần giữ; dư thì trả lại (vào credit tặng trước theo `fromFree` nếu vẫn cùng tháng, phần còn lại vào credit mua), thiếu thì trừ thêm tối đa số dư còn lại, không để âm (BR-U07-42).
 3. `release`: trả lại toàn bộ phần giữ theo cùng quy tắc (BR-U07-43).
 
-## F7 - Cấu hình cố định
-1. Gói: nạp từ `U07_PACKAGES` khi khởi động (thêm gói mới, cập nhật giá cho giao dịch sau); không có thao tác quản trị (BR-U07-02).
+## F7 - Seed ban đầu và cấu hình tặng tháng
+1. U07_PACKAGES chỉ seed gói chưa có; không cập nhật giá/ghi đè gói Admin đã sửa. Quản trị gói dùng F8.
 2. Mức tặng tháng: `U07_MONTHLY_FREE_CREDITS`; đổi bằng lần triển khai mới, có hiệu lực từ lần đặt lại kế tiếp.
+
+## F8 - Admin quản trị gói (UC 67–68)
+1. authorize ADMIN ACTIVE; GET danh sách/chi tiết cấu hình bán.
+2. POST/PATCH name/information/priceVnd/credits hợp lệ; patch cần version; thiếu/sai/version cũ từ chối, không ghi một phần.
+3. Khóa optimistic, lưu và audit actor/thời gian/trước-sau trong transaction; trả version mới.
+4. Payment đã tạo giữ credits/amount/name snapshot; không đổi ví hoặc mức tặng tháng. Không delete gói.
+
+## F9 - Admin Payment History (UC 69)
+1. authorize ADMIN ACTIVE, endpoint riêng khác /me/payments và Payment Result.
+2. Kiểm bộ lọc account/package/time/status, khoảng thời gian và pagination hợp lệ, limit ≤ 100; query read-only.
+3. Trả người mua/snapshot gói/số tiền/thời gian/trạng thái; không secret hoặc dữ liệu thẻ. Vai trò khác từ chối; không có update/delete payment hay đối soát tay.

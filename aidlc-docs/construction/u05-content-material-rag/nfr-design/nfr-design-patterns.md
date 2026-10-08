@@ -1,5 +1,7 @@
 # U05 Content, Material & RAG - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Quét trong worker
 1. `LessonScanHandler` nhận `LESSON_SCAN {lessonId}` hoặc `YOUTUBE_CAPTION {lessonId}`; giữ semaphore `U05_SCAN_CONCURRENCY` (mặc định 4) (NFR-U05-01).
 2. `UPDATE lessons SET scan_status = 'SCANNING' WHERE id = :id AND scan_status = 'PENDING'`; không dòng nào bị cập nhật thì bỏ qua (idempotent).

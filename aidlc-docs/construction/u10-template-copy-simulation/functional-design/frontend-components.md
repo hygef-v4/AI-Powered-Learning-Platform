@@ -1,7 +1,9 @@
 # U10 Template & Copy - Frontend Components
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
-app/teaching/subjects/[id]/templates/      TemplateListPage (màn Template List của CN môn)
+app/teaching/subjects/[id]/templates/      TemplateListPage (màn Subject Template của CN môn)
   CreateTemplateButton (chọn dạng và chế độ trước), DeleteTemplateButton
 app/teaching/subjects/[id]/templates/[templateId]/   TemplateEditorPage (màn Template Editor)
   dùng lại các phần của AssignmentEditorPage (U08: câu, xem trước, duyệt) và TypeConfigSlot (U09: cấu hình, khung, rubric từng câu/phần, AI soạn khung) cho mọi dạng bài, kể cả bài nhóm; không có lịch

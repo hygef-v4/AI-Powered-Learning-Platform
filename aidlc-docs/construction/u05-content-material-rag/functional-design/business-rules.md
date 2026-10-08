@@ -1,11 +1,13 @@
 # U05 Content, Material & RAG - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Quyền
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-01 | Module thuộc môn. Chỉ Chủ nhiệm môn của môn tạo, đổi tên, đổi thứ tự, lưu trữ module, trên Subject Detail (trang quản lý môn của Chủ nhiệm môn). Mọi lớp của môn, kể cả lớp tạo sau, tự dùng đúng bộ module này (không sao chép, không chỉnh theo từng lớp); Class Detail không sửa được module. | Người dùng chốt 2026-10-04 |
-| BR-U05-02 | Học liệu tải vào module: Chủ nhiệm môn tải trên Subject Detail là **học liệu của môn** (`class_id` rỗng), mọi lớp của môn thấy; giảng viên của lớp (kể cả Chủ nhiệm môn đang dạy lớp đó) tải trên Class Detail là **học liệu của lớp** (`class_id` = lớp), chỉ lớp đó thấy. Giảng viên không tạo/sửa module và không sửa học liệu của môn; Chủ nhiệm môn sửa, lưu trữ được mọi học liệu trong môn. | Người dùng chốt 2026-10-04 |
+| BR-U05-01 | Module thuộc môn; Subject Manager/Administrator được giao môn R2 tạo/đổi/sắp xếp/lưu trữ trên Subject Detail. Mọi lớp dùng chung, không chỉnh theo lớp. | FR-004, R2 |
+| BR-U05-02 | Học liệu môn (class_id rỗng) quản lý theo R2; học liệu lớp theo R3/R4. Subject Manager/Administrator phụ trách môn không tự sửa/lưu trữ học liệu riêng lớp nếu không dạy lớp. Kiểm module/môn/lớp cùng scope; Teacher chỉ đọc học liệu môn được phép. | FR-004/005, UC 29–30, 51–52 |
 | BR-U05-04 | Người học thấy module `ACTIVE` của môn, trong đó học liệu `ACTIVE` của môn và của lớp mình, qua U04 (ghi danh `ACTIVE`, lớp `OPEN`); ngoài quyền → "không tìm thấy". | US-LRN-001 |
 
 ## 2. Cấu trúc
@@ -14,8 +16,8 @@
 |---|---|---|
 | BR-U05-10 | Module là nhóm học liệu của môn; mỗi lesson là đúng một tài liệu (tệp hoặc một video) và thuộc đúng một module. Thứ tự module và lesson chỉnh bằng `order_no`; trong một module, học liệu của môn hiện trước, học liệu của lớp hiện sau, mỗi nhóm theo `order_no` riêng (giảng viên chỉ đổi thứ tự học liệu của lớp mình). | Người dùng chốt 2026-10-04 |
 | BR-U05-11 | Không soạn nội dung trực tiếp, không phiên bản, không phát hành: tải lên xong là hiển thị cho người học; thay tài liệu thì tải lesson mới và lưu trữ lesson cũ. | Quyết định 2026-10-03 |
-| BR-U05-12 | Mỗi module (trên Subject Detail với Chủ nhiệm môn, trên Class Detail với giảng viên của lớp) có hai nút "Tải tệp" và "Gắn link video"; bấm mở popup Upload Learning Materials đã chọn sẵn module đó. Không có bước chọn module trong popup. | Người dùng chốt 2026-10-04 |
-| BR-U05-14 | Không xóa module/lesson; chỉ lưu trữ (ẩn với người học, không còn trong RAG). Lưu trữ module ẩn mọi lesson trong module. | UC 11 |
+| BR-U05-12 | Mỗi module (trên Subject Detail với Chủ nhiệm môn, trên Class Detail với giảng viên của lớp) có hai nút "Tải tệp" và "Gắn link video"; bấm mở form thêm học liệu hỗ trợ đã chọn sẵn module đó. Không có bước chọn module trong popup. | Người dùng chốt 2026-10-04 |
+| BR-U05-14 | Không xóa module/lesson; chỉ lưu trữ (ẩn với người học, không còn trong RAG). Lưu trữ module ẩn mọi lesson trong module. | UC 29, 30, 51, 52 |
 
 ## 3. Tải lên
 
@@ -53,10 +55,10 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-60 | Chỉ giảng viên được phân công lớp đăng thông báo (UC 13) cho lớp `OPEN`; chỉ thành viên đang ghi danh và người quản lý có quyền đọc. Chủ nhiệm môn chỉ đăng khi cũng là giảng viên lớp. | US-CNT-004, UC 13 |
-| BR-U05-61 | Người học `ACTIVE` trong lớp `OPEN` và giảng viên lớp bình luận dưới thông báo (UC 14), như bình luận bài đăng; không có chủ đề hỏi đáp riêng, người học không tạo bài đăng. Ngoài phạm vi trả `404`. | Người dùng chốt 2026-10-04 |
+| BR-U05-60 | Teacher hoặc Subject Manager/Administrator được giao dạy lớp R3/R4 tạo/sửa/xóa thông báo lớp OPEN; Student ghi danh và tài khoản R3/R4 đọc. Full cấu trúc không tự cấp chức năng Teacher. | FR-023, UC 26/31 |
+| BR-U05-61 | Người học `ACTIVE` trong lớp `OPEN` và giảng viên lớp bình luận dưới thông báo (UC 26, 31), như bình luận bài đăng; không có chủ đề hỏi đáp riêng, người học không tạo bài đăng. Ngoài phạm vi trả `404`. | Người dùng chốt 2026-10-04 |
 | BR-U05-62 | Thông báo: tiêu đề ≤ 200, nội dung ≤ 5 000 ký tự, markdown đã làm sạch. Bình luận: văn bản thuần ≤ 2 000 ký tự. Không HTML thô, không tệp đính kèm. | SEC-003 |
-| BR-U05-63 | Thông báo và bình luận giữ tác giả và thời điểm; không sửa sau khi gửi, không xóa cứng; giảng viên lớp ẩn nội dung vi phạm với lý do. | FR-014, SEC-005 |
+| BR-U05-63 | Thông báo giữ tác giả/thời điểm gốc; sửa title/body kiểm version, updated_by/updated_at và audit trước/sau. Xóa mềm DELETED với deleted_by/deleted_at, loại khỏi feed, giữ tham chiếu/audit. Bình luận không sửa sau gửi, chỉ ẩn vi phạm có lý do; không xóa cứng. | FR-023, UC 31 |
 | BR-U05-64 | Thông báo mới: sau commit phát sự kiện, U16 báo trong app cho người học đang ghi danh (không email). Bình luận **không** tạo thông báo. | Người dùng chốt 2026-10-04 |
 | BR-U05-65 | Dưới mỗi thông báo hiện 2 bình luận mới nhất và tổng số bình luận; bấm "Xem thêm bình luận" mở popup hiện toàn bộ (phân trang, cũ → mới) kèm ô viết bình luận. | Người dùng chốt 2026-10-04 |
 
@@ -64,5 +66,5 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-50 | Audit: tạo/lưu trữ module, tải lên, lưu trữ lesson, quét lại thủ công, ẩn thông báo hoặc bình luận. Không audit từng lần người học xem. | FR-014 |
+| BR-U05-50 | Audit tạo/lưu trữ module, tải/cập nhật/lưu trữ lesson, quét lại, tạo/sửa/xóa mềm thông báo và ẩn bình luận; che dữ liệu nhạy cảm, không audit từng lần xem. | FR-014/023 |
 | BR-U05-51 | Tìm kiếm/tóm tắt học liệu cho người dùng nằm ngoài phạm vi dự án. Truy xuất RAG nội bộ phục vụ U13 vẫn thuộc MVP; thông báo và bình luận không gọi RAG. | Quyết định phạm vi 2026-09-25 |

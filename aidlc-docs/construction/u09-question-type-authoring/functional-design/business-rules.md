@@ -1,12 +1,14 @@
 # U09 Question Type Authoring - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Chung
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U09-01 | Cấu hình chỉ sửa khi bài `DRAFT`; người sửa là giảng viên của lớp (theo BR-U08-01). | U08 |
 | BR-U09-02 | Không có đề chung cấp môn; Chủ nhiệm môn chỉ phát hành khi là giảng viên của lớp. | Câu 4, 8, 12 |
-| BR-U09-03 | Dạng assignment hiện hành: `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY`, `CODE_LAB`, `GROUP_ASSIGNMENT`, cả năm do U09 soạn cấu hình (UC 23–27, quyết định 2026-10-04); U13 chạy kiểm lời giải mẫu Code Lab qua `CodeLabCheckPort`, U14 dựng tài liệu nhóm khi bài mở. UC 23–27 kế thừa UC 28 Manage Assignments (U08): danh sách, nguồn tạo, chọn câu ngân hàng, duyệt, phát hành, nhân bản, version, ngưng giao theo U08; U09 chỉ soạn phần riêng của dạng bài. `DIAGRAM_ESSAY` dùng mô hình `DOCUMENT`/Draw.io hiện có; tên `QUIZ`/`ESSAY`/`DOCUMENT` vẫn có thể là loại câu hỏi ngân hàng U06. | FR-017, quyết định 2026-09-29 |
+| BR-U09-03 | Dạng assignment hiện hành: `MULTIPLE_CHOICE_QUIZ`, `TEXT_ESSAY`, `DIAGRAM_ESSAY`, `CODE_LAB`, `GROUP_ASSIGNMENT`, cả năm do U09 soạn cấu hình (UC 39, 40, 41, 42, 43, quyết định 2026-10-04); U13 chạy kiểm lời giải mẫu Code Lab qua `CodeLabCheckPort`, U14 dựng tài liệu nhóm khi bài mở. UC 39–43 dùng lifecycle chung của U08 (UC 38 cho danh sách Teacher và supporting flows): danh sách, nguồn tạo, chọn câu ngân hàng, duyệt, phát hành, nhân bản, version, ngưng giao theo U08; U09 chỉ soạn phần riêng của dạng bài. `DIAGRAM_ESSAY` dùng mô hình `DOCUMENT`/Draw.io hiện có; tên `QUIZ`/`ESSAY`/`DOCUMENT` vẫn có thể là loại câu hỏi ngân hàng U06. | FR-017, quyết định 2026-09-29 |
 
 ## 2. Trắc nghiệm
 

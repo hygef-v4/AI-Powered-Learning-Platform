@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Code Generation Plan
 
+**Baseline code đã sinh**: nội dung/checklist trước mục 6 giữ nguyên theo code 2026-10-05. Hợp đồng mục tiêu hiện hành theo [current SRS contract](../../current-srs-contract.md); mục 6 ghi việc implementation còn chưa làm.
+
 > Plan này là nguồn duy nhất cho Code Generation của U03. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -152,3 +154,9 @@ Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Sh
 - Kiểm và rút gọn XML Draw.io (U09, trong bộ nhớ); file dẫn xuất; xóa file.
 - Adapter `AuthorizationPort` thật (U01 Bước 15) và `AuditPort` thật (U02).
 - Handler nghiệp vụ, `PendingSweeper` và `ScheduledScanner` của từng unit (thuộc unit sở hữu).
+
+## 6. Current revision - Documentation only (2026-10-08)
+Các bước [x], chữ ký/avatar và summaries trên phản ánh code đã sinh theo baseline cũ; không đánh dấu lại là chưa làm hoặc giả vờ đã bỏ khỏi code. Hợp đồng mục tiêu xem functional-design và current-srs-contract.md: không cập nhật avatar từ U01.
+- [ ] Rà call site/AvatarPort/PurposePolicy đã sinh và các contracts hiện có; bỏ hoặc cô lập AVATAR khi triển khai revision, không xóa file/schema lịch sử.
+- [ ] Actor MATERIAL/DOCUMENT_IMAGE được unit nghiệp vụ kiểm R2/R3/R4/R5; không giới hạn sai Admin được giao môn/lớp.
+- [ ] Kiểm tương thích hợp đồng/port thực tế trước khi code unit khác; tài liệu cập nhật không xác nhận runtime đã theo baseline mới.

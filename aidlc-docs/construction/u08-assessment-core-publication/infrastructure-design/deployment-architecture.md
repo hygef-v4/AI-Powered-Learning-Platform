@@ -1,5 +1,7 @@
 # U08 Assessment Core & Publication - Deployment Architecture
 
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
  Trình duyệt --HTTPS--> [nginx] --> [backend: U08] --> [postgres: assignments, assignment_questions]
                                                               ^

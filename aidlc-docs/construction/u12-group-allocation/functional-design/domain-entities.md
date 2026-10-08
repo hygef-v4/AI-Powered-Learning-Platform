@@ -1,6 +1,8 @@
 # U12 Group & Allocation - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 9, UC 15.
+**Bản tài liệu 2026-10-08**: UC 15, 16; primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 16, 45, 46, 47, 48, 49.
 
 ## 1. Tổng quan
 

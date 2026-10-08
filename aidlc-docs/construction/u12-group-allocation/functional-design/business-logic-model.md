@@ -1,5 +1,7 @@
 # U12 Group & Allocation - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 15, 16; primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Quản lý nhóm của lớp
 1. Giảng viên mở danh sách sinh viên của lớp (Class Detail, U04) → xem các nhóm của lớp (mọi `StudentGroup` cùng `classId`, rỗng nếu chưa có) cùng sinh viên chưa có nhóm.
 2. Chọn cách: tạo/sửa tay (BR-U12-04) hoặc chia ngẫu nhiên (BR-U12-05).

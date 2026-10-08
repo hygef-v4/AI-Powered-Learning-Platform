@@ -1,5 +1,7 @@
 # U14 Group Document & Submission - Logical Components
 
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Sơ đồ
 
 ```

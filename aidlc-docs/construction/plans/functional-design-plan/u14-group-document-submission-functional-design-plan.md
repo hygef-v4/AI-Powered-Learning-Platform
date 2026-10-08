@@ -1,5 +1,7 @@
 # U14 Group Document & Submission - Functional Design Plan
 
+**Lịch sử plan baseline trước 2026-10-08**: giữ nguyên các bước đã hoàn thành và mã UC tại thời điểm đó. Thiết kế hiện hành và revision code plan theo [current SRS contract](../../current-srs-contract.md); task đồng bộ ở [construction-sync](../construction-sync-2026-10-08.md), không dùng checklist cũ như phạm vi mới.
+
 - [x] Đọc định nghĩa U14, US-GRP-004..006, UC 16, UC 17, FR-026.
 - [x] Hỏi 8 điểm qua giao diện; ghi vào `../functional-design-questions/u14-group-document-submission-functional-design-questions.md`.
 - [x] Đồng bộ lớn: bài nhóm = bài `DOCUMENT` chung, thành viên tự nhận mục, ghép realtime, trưởng nhóm nộp. Sửa FR-026, US-GRP-003..005, UC 16, UC 27, unit-of-work (U12, U14), story map, ma trận/Mermaid/draw.io (bỏ U11→U14, thêm U09→U14, U11→U15), U12 (bỏ phân công, `GroupMembershipPort`), U08 (bài `GROUP`), U09 (`workSection`), U11, U13.

@@ -1,5 +1,7 @@
 # U15 Grading - NFR Requirements
 
+**Bản tài liệu 2026-10-08**: UC 34, 35, 36, 37; primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng
 
 | Mã | Yêu cầu | Nguồn |
@@ -22,7 +24,7 @@
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U15-20 | API người học chỉ trả điểm `PUBLISHED` của chính mình; không trả đề xuất AI, điểm tự chấm chưa công bố, lịch sử. | US-GRD-001 S2, US-GRD-004 |
-| NFR-U15-21 | Chỉ giảng viên lớp sửa; Chủ nhiệm môn của môn chỉ đọc, ADMIN không xem; vi phạm → `404` và audit. | US-GRD-003 S4 |
+| NFR-U15-21 | Đọc/chấm/sửa/xuất chỉ R3/R4 cho Teacher/Subject Manager/Administrator; quản lý môn/Full cấu trúc không đủ; vi phạm 404 và audit. | US-GRD-003 S4 |
 | NFR-U15-22 | Phản hồi markdown hiển thị đã làm sạch; lý do sửa ≤ 1 000 ký tự văn bản thuần. | SEC-003 |
 
 ## 4. Kiểm thử

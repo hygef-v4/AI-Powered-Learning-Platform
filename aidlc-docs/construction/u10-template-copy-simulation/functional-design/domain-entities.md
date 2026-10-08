@@ -1,6 +1,8 @@
 # U10 Template & Copy - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`, `US-AIG-002` (nhận bản nháp AI); UC 21, UC 28. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-008`…`010`, `US-AIG-002` (nhận bản nháp AI); UC 38, 39, 40, 41, 42, 43, 53, 54. Tên thư mục lịch sử được giữ để các liên kết cũ vẫn hoạt động.
 
 ## 1. Tổng quan
 

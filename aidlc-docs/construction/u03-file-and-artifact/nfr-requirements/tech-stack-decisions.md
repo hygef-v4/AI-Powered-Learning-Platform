@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Tech Stack Decisions
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Google Drive | Google Drive API v3 Java client + google-auth-library, xác thực bằng JSON key service account từ `.env` | Chính thức; một key duy nhất, không phụ thuộc tài khoản cá nhân |

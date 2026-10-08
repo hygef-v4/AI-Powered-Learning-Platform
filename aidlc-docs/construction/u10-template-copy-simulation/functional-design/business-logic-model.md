@@ -1,5 +1,7 @@
 # U10 Template & Copy - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Template
 1. Chủ nhiệm môn hiện tại chọn dạng và chế độ rồi tạo template (dòng `assignments` có `subject_id`, `DRAFT`) và soạn trong Template Editor như bài thường (câu ngân hàng, câu riêng, rubric, cấu hình loại bài qua U06, U08, U09); có thể nhờ AI đề xuất câu, hoặc khung với Diagram Essay và bài nhóm (U13, U09), rồi xem nguồn, sửa, giữ hoặc bỏ (BR-U10-01, 06).
 2. Duyệt (U08) → phát hành template: `REVIEWED` → `RELEASED`, nội dung khóa; audit (BR-U10-01…03).

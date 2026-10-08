@@ -1,5 +1,9 @@
 # U02 Audit - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 70; primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U02. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -10,8 +14,9 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-AUD-001. **Use case**: UC 39.
-- **Thiết kế nguồn**: `construction/u02-audit-job-and-outbox/` (functional-design, nfr-requirements, nfr-design, infrastructure-design), `construction/shared-infrastructure.md` và [database](../../../../docs/database.md).
+- **Story**: US-AUD-001.
+- **Primary UC hiện hành**: UC 70. Supporting flows theo current-srs-contract.md.
+- **Thiết kế nguồn**: `construction/u02-audit-job-and-outbox/` (functional-design, nfr-requirements, nfr-design, infrastructure-design), `construction/shared-infrastructure.md` và [mô hình dữ liệu của unit](../../u02-audit-job-and-outbox/functional-design/domain-entities.md).
 - **Stack**: Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Thứ tự**: wave 1, song song với U03 (U03 dựng khung); U01 code sau.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -94,7 +99,7 @@ PostgreSQL `audit_logs`.
 | US-AUD-001 S1 (tra cứu) | 5, 8, 12-14, 16 |
 | US-AUD-001 S2 (không sửa/xóa) | 4, 8, 10, 14 |
 | US-AUD-001 S3 (sự kiện bắt buộc) | 3, 4 (unit khác gọi `AuditPort` trong transaction) |
-| UC 39 | 5, 13, 16 |
+| UC 70 | 5, 13, 16 |
 
 ## 5. Ngoài phạm vi
 

@@ -1,5 +1,7 @@
 # U03 File, Job & Event - NFR Requirements
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng và tài nguyên
 
 | Mã | Yêu cầu | Nguồn |

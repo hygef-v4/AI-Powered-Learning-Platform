@@ -1,5 +1,7 @@
 # U13 AI & Code Execution - Tech Stack Decisions
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Gọi Gemini | REST `generateContent` bằng Spring `RestClient`, `responseMimeType: application/json` + `responseSchema` | Không phụ thuộc SDK; JSON có cấu trúc |

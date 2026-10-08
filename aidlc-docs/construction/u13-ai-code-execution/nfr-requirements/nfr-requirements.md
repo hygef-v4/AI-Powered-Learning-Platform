@@ -1,12 +1,14 @@
 # U13 AI & Code Execution - NFR Requirements
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U13-01 | Đề xuất 10 câu hỏi hoàn tất ≤ 60 s (p90) khi Gemini bình thường. | NFR-003 |
 | NFR-U13-02 | Đề xuất chấm một bài tài liệu ≤ 20 trang ≤ 120 s (p90). | NFR-003 |
-| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 30 |
+| NFR-U13-03 | Chạy thử code (`TRY`) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 21 |
 | NFR-U13-04 | Chấm code (`GRADE`) 50 test ≤ 2 phút; 100 bài nộp dồn cuối hạn xử lý hết ≤ 30 phút. | NFR-003 |
 | NFR-U13-05 | Worker chạy tối đa 3 job AI và 2 job chạy code cùng lúc (cấu hình). | Tài nguyên VPS |
 

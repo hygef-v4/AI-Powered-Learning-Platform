@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Mô hình tài liệu dùng chung một nơi
 - Java: `sealed interface Block` + record từng loại, Jackson polymorphic theo `type`; TypeScript: kiểu sinh từ JSON schema `contracts/schemas/document.json` (một nguồn cho backend, frontend, U11, U15).
 - `DocumentValidator` thuần (không I/O) cho `validateSkeleton`, `validateForSave`, `validateForSubmit` (NFR-U09-01).

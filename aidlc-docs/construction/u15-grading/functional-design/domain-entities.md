@@ -1,6 +1,8 @@
 # U15 Grading - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRD-001`…`005`, `US-GRP-006`; UC 32, UC 33, UC 34, UC 35, UC 17; lịch sử điểm trên Gradebook của UC 36 (U16 chủ trì). Bảng theo [database](../../../../docs/database.md).
+**Bản tài liệu 2026-10-08**: UC 34, 35, 36, 37; primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-GRD-001`…`005`, `US-GRP-006`; UC 34, 35, 36, 37; lịch sử điểm trên Gradebook của UC 37 (U16 chủ trì). Bảng theo [mô hình dữ liệu của unit](domain-entities.md).
 
 ## 1. Tổng quan
 
@@ -88,7 +90,7 @@ Sổ điểm lớp: chỉ bài `GRADED`, gom theo sinh viên (mỗi sinh viên m
 
 | Port | Unit | Mô tả |
 |---|---|---|
-| `ClassAccessPort` | U04 | Giảng viên lớp, Chủ nhiệm môn của môn, danh sách ghi danh cho sổ điểm (P6) |
+| `ClassAccessPort` | U04 | Phân công dạy lớp R3/R4 cho Teacher/Subject Manager/Administrator, roster cho sổ điểm (P6) |
 | `SubmissionQueryPort` | U11 | Lượt, nội dung, lượt được chấm |
 | `GroupSubmissionQueryPort` | U14 | Bản nộp nhóm, mục theo tác giả |
 | `BankQueryPort`, `RubricPort` | U06 | Đáp án (chấm trắc nghiệm), rubric, `score` |

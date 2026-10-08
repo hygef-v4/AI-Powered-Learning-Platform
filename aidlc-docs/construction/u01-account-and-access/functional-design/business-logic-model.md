@@ -1,23 +1,25 @@
 # U01 Account & Access - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-U01-xx` trong `business-rules.md`) và truy vết. Mọi lỗi trả về client đều ở dạng an toàn.
 
 ## 1. Bảng truy vết
 
 | Luồng | Use case | Story |
 |---|---|---|
-| F1 Yêu cầu kích hoạt | UC 1 | US-IAM-001 |
-| F2 Hoàn tất kích hoạt | UC 1 | US-IAM-001 |
-| F3 Đăng nhập | UC 2 | US-IAM-002 |
-| F4 Đăng xuất | UC 3 | US-IAM-002 |
-| F5 Quên mật khẩu | UC 4 | US-IAM-003 |
-| F6 Đổi mật khẩu | UC 5 | US-IAM-006 |
-| F7 Xem và sửa hồ sơ | UC 6 | US-IAM-004 |
-| F8 Xem tài khoản | UC 7 | US-IAM-007 |
-| F9 Tạo tài khoản | UC 7 | US-IAM-007 |
-| F10 Nhập hàng loạt | UC 7 | US-IAM-007 |
-| F11 Đổi role | UC 7 | US-IAM-005, US-IAM-007 |
-| F12 Vô hiệu hóa và mở lại | UC 7 | US-IAM-007 |
+| F1 Yêu cầu kích hoạt | UC 01 | US-IAM-001 |
+| F2 Hoàn tất kích hoạt | UC 01 | US-IAM-001 |
+| F3 Đăng nhập | UC 02 | US-IAM-002 |
+| F4 Đăng xuất | UC 03 | US-IAM-002 |
+| F5 Quên mật khẩu | UC 04 | US-IAM-003 |
+| F6 Đổi mật khẩu | UC 05 | US-IAM-006 |
+| F7 Xem và sửa hồ sơ | UC 06, 07 | US-IAM-004 |
+| F8 Xem tài khoản | UC 58, 59, 60, 61, 62 | US-IAM-007 |
+| F9 Tạo tài khoản | UC 58, 59, 60, 61, 62 | US-IAM-007 |
+| F10 Nhập hàng loạt | UC 58, 59, 60, 61, 62 | US-IAM-007 |
+| F11 Đổi role | UC 58, 59, 60, 61, 62 | US-IAM-005, US-IAM-007 |
+| F12 Vô hiệu hóa và mở lại | UC 58, 59, 60, 61, 62 | US-IAM-007 |
 | F13 Quyết định phân quyền | Mọi UC có kiểm quyền | US-IAM-005 |
 
 ## 2. Luồng kích hoạt
@@ -100,7 +102,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 1. Chỉ thao tác trên `accountId` của phiên; định danh khác bị từ chối (BR-U01-54).
 2. Sửa `displayName`, `phoneNumber` theo ràng buộc; email, role, trạng thái không sửa được (BR-U01-51).
-3. Đổi ảnh: người dùng tải ảnh lên U03 trước, rồi gửi mã tệp; U01 hỏi `AvatarPort` xác nhận chủ sở hữu và mục đích `AVATAR` (BR-U01-52), rồi lưu `avatar_file_id`.
+3. DTO chỉ nhận tên/số điện thoại; avatar/email/role/status hoặc ID người khác bị từ chối trước ghi.
 4. Ghi audit `PROFILE_UPDATED` với tên trường đã đổi, không ghi giá trị số điện thoại.
 
 ## 5. Quản trị tài khoản
@@ -161,7 +163,7 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 5. Không gọi được U04 → **từ chối** (BR-U01-93).
 6. Trả `AuthorizationDecision`. Mọi lần từ chối trên hành động nhạy cảm ghi audit `ACCESS_DENIED`.
 
-`SUBJECT_MANAGER` được mọi quyền của `TEACHER` nhưng vẫn bị giới hạn bởi phạm vi ở bước 4.
+Subject Manager/Administrator dùng chức năng Teacher chỉ khi isTeacherOf R4; tài nguyên môn khi isSubjectManager R2. Admin Full chỉ cấu trúc/tài khoản/statistic/gói/lịch sử/audit. Đọc scope hiện thời ở backend, không suy từ role hoặc cache dữ liệu cũ.
 
 ## 7. Sự kiện U01 phát ra
 
@@ -171,3 +173,8 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
+
+## F14 - Account Detail/Update Account Information (UC 60–61)
+1. ADMIN GET theo ID: thông tin được phép, không hash/OTP/token.
+2. PATCH displayName/phoneNumber hợp lệ với version; 409 nếu thay đổi cạnh tranh. Email bất biến; role/status dùng F11/F12, không đổi mật khẩu/gửi OTP.
+3. Audit actor/thời gian/tên trường, không log số điện thoại.

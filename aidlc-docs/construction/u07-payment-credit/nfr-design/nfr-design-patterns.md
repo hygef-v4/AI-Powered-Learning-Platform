@@ -1,5 +1,7 @@
 # U07 Payment & AI Credit - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Một đường ghi số dư (BalanceService)
 - `apply(accountId, freeDelta, purchasedDelta, reason)`:
   1. Kiểm tài khoản `ACTIVE` và chủ ví; cả bốn vai trò được tặng tháng; Student chỉ được giữ credit cho `PRACTICE_GRADING` hợp lệ.

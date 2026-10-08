@@ -1,11 +1,13 @@
 # U07 Payment & AI Credit - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Gói và mua
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-01 | Tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN` có ví credit của chính mình, được xem gói, số dư, lịch sử mua và lần dùng credit, và mua credit. Backend kiểm quyền chủ ví trước khi tạo giao dịch/link PayOS. Credit đã mua chỉ thuộc tài khoản mua. | FR-010, quyết định 2026-09-29 |
-| BR-U07-02 | Gói credit cố định, nạp bằng migration/cấu hình khi triển khai; không có màn hay API tạo/sửa/ẩn gói. Gói đã có giao dịch không bị xóa; đổi giá ở lần triển khai sau chỉ áp dụng giao dịch mới. | Câu 3, quyết định 2026-10-03 |
+| BR-U07-02 | ADMIN xem/thêm/sửa gói qua Credit Package Setting (UC 67–68). Name/information/priceVnd/credits hợp lệ, giá dương theo trần tối thiểu PayOS, credit nguyên dương; version và audit trước/sau. Giao dịch cũ giữ snapshot. Không xóa gói; seed ban đầu không ghi đè sửa của Admin. Mức tặng tháng vẫn cấu hình triển khai. | FR-031, US-PAY-004 |
 | BR-U07-03 | Giao dịch chụp `credits`, `amountVnd` lúc tạo. | Câu 3 |
 | BR-U07-04 | Tạo giao dịch cần `Idempotency-Key`; gửi lại cùng khóa trả lại giao dịch cũ nếu còn `PENDING`. | SEC-007 |
 | BR-U07-05 | Mỗi tài khoản tối đa 3 giao dịch `PENDING` cùng lúc. | Thiết kế |
@@ -53,5 +55,5 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-51 | Audit: `PAID`, webhook bị từ chối (chữ ký/số tiền sai), đối soát tự động. | FR-014, SEC-005 |
-| BR-U07-52 | Cả bốn vai trò hiện hành được xem số dư, lịch sử mua (`payments`) và lần dùng credit (`ai_suggestions`) của chính mình. Không ai xem giao dịch của tài khoản khác. | UC 37 |
+| BR-U07-52 | Endpoint ví/lịch sử cá nhân/Payment Result chỉ chủ tài khoản R1. ADMIN có query lịch sử toàn nền tảng riêng UC 69 (account/package/time/status/pagination), chỉ đọc, không secret/dữ liệu thẻ và không sửa payment/credit. Quyền Admin history không bypass owner check endpoint me. | FR-032, US-PAY-005, UC 69 |
 | BR-U07-53 | Sau khi `PAID`, phát event `payment.paid` (sau commit) để U16 báo trong app. | U16 |

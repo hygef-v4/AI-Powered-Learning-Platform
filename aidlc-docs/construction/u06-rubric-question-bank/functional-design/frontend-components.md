@@ -1,5 +1,7 @@
 # U06 Rubric & Question Bank - Frontend Components
 
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
 app/teaching/bank/                 BankPage (chọn phạm vi: môn hoặc lớp)
   BankFilters                      dạng bài, loại câu, độ khó, tag, module/học liệu, trạng thái, từ khóa
@@ -26,3 +28,6 @@ app/teaching/bank/                 BankPage (chọn phạm vi: môn hoặc lớp
 | `VersionHistoryDrawer` | Danh sách phiên bản, xem từng bản | `GET /api/v1/bank/items/{lineageId}/versions` |
 | `PreviewDialog` | Render bằng component hiển thị câu hỏi dùng chung với U11 | `GET /api/v1/bank/items/{id}/preview` |
 | `ImportDialog` | 4 file mẫu tải về; kết quả từng dòng | `GET /api/v1/bank/import-templates/{type}`, `POST /api/v1/bank/imports` |
+
+## Screen/scope mapping
+BankPage có hai entry: Class Question Bank UC 32 và Subject Question Bank UC 55; Question Editor UC 33/56 dùng scope từ entry, server xác minh lại. R3/R4 cho bank lớp, R2 cho bank môn. Teacher chỉ dùng câu ACTIVE cấp môn trong selector soạn bài. DeleteQuestionAction DELETE /api/v1/bank/items/{id} với version; Draft chưa dùng xóa, bản đã ACTIVE/tham chiếu chuyển RETIRED, giữ lịch sử.

@@ -1,5 +1,9 @@
 # U06 Rubric & Question Bank - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U06. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -9,7 +13,7 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-QBK-001, US-QBK-002 (Scenario 1; Scenario 2, 3 thuộc U08/U11). Phân tích chất lượng câu hỏi không thuộc MVP.
-- **Use case**: UC 20, UC 23–27 (ngân hàng giữ câu hỏi của mọi dạng bài, thay đổi 2026-10-01).
+- **Primary UC hiện hành**: UC 32, 33, 44, 55, 56. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u06-rubric-question-bank/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -109,11 +113,16 @@ PostgreSQL `questions`, `rubrics`.
 
 | Nguồn | Bước |
 |---|---|
-| US-QBK-001 (UC 20) | 2, 3, 6, 7, 22 |
-| US-QBK-002 S1, S1a (UC 23–27) | 2, 3, 6, 8, 9, 10, 21-24 |
+| US-QBK-001 (UC 32, 33, 44, 55, 56) | 2, 3, 6, 7, 22 |
+| US-QBK-002 S1, S1a (UC 39, 40, 41, 42, 43) | 2, 3, 6, 8, 9, 10, 21-24 |
 | Contract cho U08-U15 | 4, 7, 8, 23 |
 
 ## 5. Ngoài phạm vi
 
 - US-QBK-002 S2, S3 thuộc U08/U11; phân tích chất lượng câu hỏi ngoài phạm vi dự án.
 - Chạy test case Code Lab (U13), chấm theo rubric (U15).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Class Question Bank R3/R4; Subject Question Bank R2; Teacher chỉ selector câu ACTIVE cấp môn, không standalone management.
+- [ ] DELETE /bank/items/{id} với version: Draft chưa dùng xóa, bản từng ACTIVE/tham chiếu RETIRED; test preservation/pinned version.
+- [ ] Admin có phân công được phép, SM chỉ quản lý môn không sửa bank lớp; Class/Subject entries dùng Question Editor chung theo scope.

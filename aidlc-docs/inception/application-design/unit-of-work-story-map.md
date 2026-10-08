@@ -58,4 +58,4 @@ US-PAY-004/005 bổ sung quản trị gói/lịch sử thanh toán. US-AUD-001 c
 - Danh mục có ID 01–70 liên tục, không trùng; mỗi ID có đúng một unit và có story trong stories.md mục 14.
 - 51 mã story xuất hiện đúng một lần ở cột Story chủ trì. Không tạo lại US-PAY-003 hoặc US-ASM-011 đã rút.
 - UC 17/38 tách Student/Teacher; UC 33/56 tách Class/Subject Question; UC 25/35 tách AI Practice/Teacher proposals.
-- Cấu trúc 16 unit và hướng dependency được giữ. Thiết kế Construction/code plans cũ còn cần đồng bộ; không coi việc sửa Inception là đã triển khai các UC mới.
+- Cấu trúc 16 unit và hướng dependency được giữ. Thiết kế Construction/code plans đã đồng bộ ngày 2026-10-08; contracts/code chưa triển khai các UC mới.

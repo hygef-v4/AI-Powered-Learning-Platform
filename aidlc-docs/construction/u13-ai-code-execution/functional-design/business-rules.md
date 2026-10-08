@@ -1,5 +1,7 @@
 # U13 AI & Code Execution - Business Rules
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Chung cho AI
 
 | Mã | Quy tắc | Nguồn |
@@ -29,7 +31,7 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U13-20 | Chỉ khi giảng viên chọn "Nhờ AI đề xuất" cho một bài nộp (bài cá nhân hoặc tài liệu chung của bài nhóm), hoặc chấm hàng loạt nhiều bài đã chọn trong Grading Queue; credit trừ của giảng viên đó. | US-GRP-004 S2, FR-008; người dùng chốt 2026-10-04 |
+| BR-U13-20 | Chỉ khi giảng viên chọn "Nhờ AI đề xuất" cho một bài nộp (bài cá nhân hoặc tài liệu chung của bài nhóm), hoặc chấm hàng loạt nhiều bài đã chọn trong Student Submissions; credit trừ của giảng viên đó. | US-GRP-004 S2, FR-008; người dùng chốt 2026-10-04 |
 | BR-U13-21 | Đầu vào: đề, rubric checklist (U06; Text Essay: rubric của từng câu; Diagram Essay và bài nhóm: rubric của từng phần, nội dung tách theo phần), nội dung bài: tài liệu → văn bản phẳng + XML sơ đồ rút gọn (U09); code → mã + kết quả test. Chỉ phạm vi một bài/phần. | US-ASM-004 S3 |
 | BR-U13-22 | Đầu ra: mỗi mục checklist `đạt/không đạt`, nhận xét ngắn, bằng chứng (trích đoạn/tên sơ đồ); tổng điểm đề xuất tính bằng `RubricPort.score` cho từng câu (Text Essay) hoặc từng phần (Diagram Essay, bài nhóm) rồi cộng (không để AI cộng). | U06 BR-U06-32 |
 | BR-U13-23 | Student không gọi `GRADING_PROPOSAL` và không xem đề xuất AI cho bài `GRADED`; U15 quyết định dùng hay không và chỉ điểm/phản hồi cuối đã công bố mới hiển thị. Teacher yêu cầu và trả credit cho đề xuất này. Luồng Student `PRACTICE_GRADING` được quy định riêng tại BR-U13-03. | FR-008, FR-030 |
@@ -43,7 +45,7 @@
 | BR-U13-31 | Mọi mã chạy trong Judge0 tự chạy, mạng nội bộ không ra Internet; không bao giờ chạy trên backend/worker. Judge0 lỗi → `SANDBOX_ERROR`, không đánh dấu đạt. | US-ASM-005 S2 |
 | BR-U13-32 | Giới hạn mỗi test: thời gian theo đề (100-10 000 ms), bộ nhớ theo đề (64-1024 MB), output ≤ 64 KB, không mạng. | US-ASM-005 S1 |
 | BR-U13-33 | Duyệt bài `CODE_LAB` cần lời giải mẫu đạt **toàn bộ** test với `contentHash` khớp nội dung hiện tại; sửa đề/test/lời giải → phải kiểm lại. | demo_do_an INV-218 |
-| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC 30 |
+| BR-U13-34 | `TRY`: người học chạy test công khai, 5 lần/phút; không tính là nộp. | UC 21 |
 | BR-U13-35 | `GRADE`: khi nộp (U11) chạy mọi test; điểm = tổng điểm test đạt, xác định (không AI). Bài `GRADED` gửi U15 làm điểm tự động; bài `PRACTICE` trả kết quả riêng cho U11. | FR-017, FR-030 |
 | BR-U13-36 | Kết quả test ẩn chỉ trả trạng thái đạt/không, không trả input/output cho người học. | SEC-002 |
 | BR-U13-37 | Chạy lại `GRADE` khi `SANDBOX_ERROR` do giảng viên bấm, hoặc job tự retry 3 lần. | REL-003 |

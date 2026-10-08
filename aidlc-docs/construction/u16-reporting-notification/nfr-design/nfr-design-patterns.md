@@ -1,5 +1,7 @@
 # U16 Reporting & Notification - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 11, 57; primary stories: US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Fan-out thông báo theo lô
 - `NotificationFanout.create(event, recipients[])`: một `INSERT ... SELECT unnest(...) ON CONFLICT DO NOTHING` cho thông báo (kèm `email_status`); đọc `email_preferences` một lần cho cả lô (NFR-U16-02); sau commit gửi việc `EMAIL_SEND` cho các dòng `QUEUED`.
 - Sau commit: phát `notification.created {recipientIds}` lên fanout `platform.realtime` (dùng chung với U14) → `SseHub` đẩy tới kênh người dùng.

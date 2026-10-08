@@ -1,5 +1,9 @@
 # U08 Assessment Core & Publication - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U08. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3. **Use case**: UC 28.
+- **Story**: US-ASM-001; khóa nội dung cho US-QBK-002 S2, S3.
+- **Primary UC hiện hành**: UC 38. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u08-assessment-core-publication/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -112,12 +117,16 @@ PostgreSQL `assignments` (gồm lịch mở/đóng), `assignment_questions`; sca
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-001 S1 (UC 28) | 6, 7, 8, 21, 22 |
+| US-ASM-001 S1 (UC 38, 39, 40, 41, 42, 43) | 6, 7, 8, 21, 22 |
 | US-ASM-001 S2 | 6, 7, 18 |
-| UC 28 | 9, 20 |
+| UC 38, 39, 40, 41, 42, 43 | 9, 20 |
 | US-QBK-002 S2, S3 (khóa nội dung) | 2, 4, 10, 18 |
 | FR-006 (AI draft vào bản nháp) | 5, 21 |
 
 ## 5. Ngoài phạm vi
 
 - Cấu hình riêng từng loại bài (U09); template/copy (U10); lượt làm (U11); nhóm (U12); AI thật (U13). Simulation Exam đã rút.
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] R3/R4 cho Assignment List và CRUD/lifecycle; Admin không assignment không đọc/sửa bài dạy, Admin/SM được giao dạy thực hiện như Teacher.
+- [ ] UC 38 danh sách Teacher, UC 39–43 phần loại bài do U09 chủ trì; giữ supporting review/publish/version/copy.

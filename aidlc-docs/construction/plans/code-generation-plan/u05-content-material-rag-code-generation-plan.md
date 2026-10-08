@@ -1,5 +1,9 @@
 # U05 Content, Material & RAG - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U05. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -9,9 +13,9 @@
 ## 1. Bối cảnh
 
 - **Story trong phạm vi**: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Catalog chỉ chứa story MVP.
-- **Use case**: UC 11, UC 12 (popup View Learning Material), UC 13, UC 14 (Comment on Announcement).
+- **Primary UC hiện hành**: UC 14, 26, 29, 30, 31, 51, 52. Supporting flows theo current-srs-contract.md.
 - **Quyết định 2026-10-04**: chapter đổi thành module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung); mỗi module có nút tải tệp/gắn link; học liệu của môn (`class_id` rỗng) hoặc của lớp; hỏi đáp lớp đổi thành bình luận dưới thông báo, hiện 2 bình luận mới nhất, popup xem thêm.
-- **Thiết kế nguồn**: `construction/u05-content-material-rag/` (functional-design, nfr-requirements, nfr-design, infrastructure-design), `construction/shared-infrastructure.md` và [database](../../../../docs/database.md).
+- **Thiết kế nguồn**: `construction/u05-content-material-rag/` (functional-design, nfr-requirements, nfr-design, infrastructure-design), `construction/shared-infrastructure.md` và [mô hình dữ liệu của unit](../../u05-content-material-rag/functional-design/domain-entities.md).
 - **Quyết định 2026-10-03**: học liệu chỉ tải lên rồi quét; không soạn markdown, không phiên bản, không phát hành.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -104,7 +108,7 @@ PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding 
 - [ ] **Bước 23** - `ModuleList`, `ModuleItem` (nút "Tải tệp", "Gắn link video"), `LessonRow` gắn vào Subject Detail (chế độ môn) và Class Detail (chế độ lớp) của U04; `ScanStatusBadge` (poll, Quét lại).
 - [ ] **Bước 24** - Popup `UploadLearningMaterialsDialog` mở từ nút của module (nhiều tệp hoặc một link video, module đã chọn sẵn).
 - [ ] **Bước 25** - Popup `ViewLearningMaterialDialog` cho Student (PDF xem trực tiếp, tải tệp, video `youtube-nocookie`).
-- [ ] **Bước 26** - Màn Announcements: `AnnouncementFeed`, `AnnouncementForm` (giảng viên), `AnnouncementCard` (2 bình luận mới nhất, ô bình luận), popup `CommentsDialog` (xem thêm), trạng thái ẩn (UC 13, UC 14).
+- [ ] **Bước 26** - Màn Announcements: `AnnouncementFeed`, `AnnouncementForm` (giảng viên), `AnnouncementCard` (2 bình luận mới nhất, ô bình luận), popup `CommentsDialog` (xem thêm), trạng thái ẩn (UC 26, 31).
 - [ ] **Bước 27** - Test frontend: markdown có script bị lọc, URL YouTube sai hoặc playlist bị chặn, poll dừng ở trạng thái cuối; badge phân biệt "Hệ thống đang bận" và "Không đủ credit AI".
 - [ ] **Bước 28** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -117,11 +121,11 @@ PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding 
 
 | Nguồn | Bước |
 |---|---|
-| US-CNT-001 (UC 11) | 5, 6, 7, 8, 23, 24 |
-| US-CNT-002 (UC 11) | 5, 6, 23, 24 |
-| US-CNT-005 (UC 11) | 3, 6, 8, 16 |
-| US-CNT-004 (UC 13, UC 14) | 11, 14, 19-21, 26 |
-| UC 12 | 9, 25 |
+| US-CNT-001 (UC 29, 30, 51, 52) | 5, 6, 7, 8, 23, 24 |
+| US-CNT-002 (UC 29, 30, 51, 52) | 5, 6, 23, 24 |
+| US-CNT-005 (UC 29, 30, 51, 52) | 3, 6, 8, 16 |
+| US-CNT-004 (UC 26, 31) | 11, 14, 19-21, 26 |
+| UC 14 | 9, 25 |
 | RAG cho U13 | 10, 15, 17 |
 
 ## 5. Ngoài phạm vi
@@ -129,3 +133,10 @@ PostgreSQL `modules`, `lessons` (gồm `class_id`, `extracted_text`, `embedding 
 - Soạn nội dung trực tiếp, phiên bản, phát hành học liệu, playlist YouTube (bỏ ngày 2026-10-03).
 - Tìm kiếm/tóm tắt học liệu cho người dùng (ngoài phạm vi dự án).
 - Gọi LLM tạo đề/chấm (U13, U15).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] AnnouncementService update/delete với version, updated/deleted actor/time, DELETED khỏi feed; DTO/PATCH/DELETE, form và audit trước/sau.
+- [ ] Migration forward-only announcements version/updated/deleted fields/status; giữ comment FK/history. Test stale version 409, foreign class 404, không mất audit.
+- [ ] Tạo mới notification một lần; update/delete không gửi class.announcement-posted; comments vẫn không sửa sau gửi.
+- [ ] Learning Material viewer/download cho actor R2/R3/R4/R5; quản lý môn không sửa học liệu lớp không dạy.
+- [ ] Uploaded Learning Materials/Class Announcements đúng nhãn; thay nguồn giữ lesson cũ, quét nguồn mới.

@@ -1,5 +1,9 @@
 # U11 Attempt & Submission - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 17, 18, 19, 20, 21, 22, 24, 25; primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U11. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-003, US-ASM-012; phần làm bài của US-ASM-004. **Use case**: UC 29, UC 30, UC 31, UC 40 (UC 30 phần chạy code ở U13).
+- **Story**: US-ASM-003, US-ASM-012; phần làm bài của US-ASM-004.
+- **Primary UC hiện hành**: UC 17, 18, 19, 20, 21, 22, 24, 25. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u11-attempt-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -85,7 +90,7 @@ PostgreSQL `attempts` (gồm nội dung bài làm); Redis `ratelimit:attempt-sav
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 12** - Flyway `V20260925_1800__u11_attempts.sql` theo `infrastructure-design.md` §3, bảng `attempts` theo [database](../../../../docs/database.md), cột `submit_mode` và trigger bất biến nội dung sau nộp.
+- [ ] **Bước 12** - Flyway `V20260925_1800__u11_attempts.sql` theo `infrastructure-design.md` §3, bảng `attempts` theo [mô hình dữ liệu của unit](../../u11-attempt-submission/functional-design/domain-entities.md), cột `submit_mode` và trigger bất biến nội dung sau nộp.
 - [ ] **Bước 13** - JPA repository.
 - [ ] **Bước 14** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: hai lần bắt đầu đồng thời; nộp tay và tự nộp đồng thời; ngừng giao tự nộp hàng loạt; nộp Practice không tự chấm; bấm "Chấm với AI" gọi `PracticeGradingPort` (adapter giả trả đủ/thiếu credit, quá 5 phút) và hiện đúng thông báo, lượt không phải Practice Text/Diagram Essay bị từ chối (luồng credit thật kiểm ở U13); bài `RETIRED` có điểm vẫn hiện; lượt gần nhất và chuyển lượt ‹ ›; trigger chặn sửa sau nộp.
 - [ ] **Bước 15** - Tóm tắt: `code/repository-summary.md`.
@@ -101,7 +106,7 @@ PostgreSQL `attempts` (gồm nội dung bài làm); Redis `ratelimit:attempt-sav
 
 - [ ] **Bước 20** - `MyAssignmentsPage`, `AssignmentOverviewPage` (`AssignmentInfo`, `StartAttemptButton`, `AttemptHistoryList`).
 - [ ] **Bước 21** - `AttemptWorkspacePage` với `QuizWorkspace`, `EssayWorkspace`, `DocumentWorkspace` (gồm `StudentDocxImportDialog`), `CodeWorkspace`, `AttemptHeader` (đồng hồ).
-- [ ] **Bước 22** - `useAutosave` (P7), `SubmitConfirmDialog`, `ReceiptView`, `SubmittedAttemptView` (lượt gần nhất, nút ‹ › chuyển lượt, BR-U11-36), `GradeWithAiDialog` (popup Grade with AI, UC 40: nút "Chấm với AI", lỗi sau 5 phút; chế độ `STUDENT_PRACTICE` và `TEACHER_PROPOSAL` để U15 nhúng).
+- [ ] **Bước 22** - `useAutosave` (P7), `SubmitConfirmDialog`, `ReceiptView`, `SubmittedAttemptView` (lượt gần nhất, nút ‹ › chuyển lượt, BR-U11-36), `GradeWithAiDialog` (popup Grade with AI, UC 25, 35: nút "Chấm với AI", lỗi sau 5 phút; chế độ `STUDENT_PRACTICE` và `TEACHER_PROPOSAL` để U15 nhúng).
 - [ ] **Bước 23** - Test frontend: tự lưu không gửi chồng, `409` dừng tự lưu, hết giờ tự chuyển biên nhận.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -115,14 +120,18 @@ PostgreSQL `attempts` (gồm nội dung bài làm); Redis `ratelimit:attempt-sav
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-003 S1 (UC 30) | 3, 4, 6, 21 |
+| US-ASM-003 S1 (UC 19, 20, 21, 22) | 3, 4, 6, 21 |
 | US-ASM-003 S2 | 3, 6, 18 |
 | US-ASM-003 S3 | 8, 18 |
 | US-ASM-003 S4 | 5, 22 |
-| US-ASM-003 S5 (UC 31) | 8, 20 |
-| UC 29 | 8, 20 |
+| US-ASM-003 S5 (UC 24) | 8, 20 |
+| UC 17, 18 | 8, 20 |
 | US-ASM-012 (Practice và AI theo credit) | 2, 6, 8, 14, 17, 22; phối hợp U07/U13 |
 
 ## 5. Ngoài phạm vi
 
 - Chạy code (U13), bài nhóm (U14), chấm và điểm (U15), thông báo (U16).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Năm danh sách Student và Assignment Detail/Submission History; component chung filter type cố định từ entry, không sửa UC IDs.
+- [ ] Student AI UC 25 mở từ Assignment Detail cho own submitted Practice Essay/Diagram, Teacher AI UC 35 từ U15; component chung không gộp quyền.

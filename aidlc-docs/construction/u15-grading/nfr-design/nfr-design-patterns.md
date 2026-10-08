@@ -1,5 +1,7 @@
 # U15 Grading - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 34, 35, 36, 37; primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Một đường ghi điểm
 - `GradeWriter.apply(evaluationId, change, actor, reason?)`: khóa theo `version` → kiểm luật (lý do bắt buộc khi sửa điểm tự chấm hoặc điểm đã chốt; khác đề xuất AI không cần lý do; `0 ≤ score ≤ max`) → UPDATE kèm thêm phần tử `history` → audit → event sau commit nếu `PUBLISHED`. Mọi luồng (tự chấm, chấm tay, dùng đề xuất, chốt, công bố, sửa) đi qua đây (NFR-U15-11, 12).
 

@@ -1,5 +1,7 @@
 # U08 Assessment Core & Publication - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 38; primary stories: US-ASM-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Aggregate có khóa trạng thái
 - `Assignment` là aggregate root; mọi thay đổi câu đi qua `assignment.editQuestions(...)`, ném `AssignmentLockedException` khi không phải `DRAFT` (NFR-U08-20).
 - Mỗi thao tác sửa khóa dòng `assignments` (`SELECT ... FOR UPDATE`) rồi kiểm `DRAFT`; không còn `DRAFT` → `409` (NFR-U08-21).

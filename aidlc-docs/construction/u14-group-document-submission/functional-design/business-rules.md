@@ -1,14 +1,16 @@
 # U14 Group Document & Submission - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Tài liệu nhóm và mục
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U14-01 | Bài nhóm là bài `DOCUMENT` làm nhóm; khi bài mở, mỗi nhóm của lớp (U12) có một tài liệu nhóm cho bài đó, dựng từ khung: mỗi phần của khung (`config.parts`, BR-U09-25) thành một mục; block không thuộc phần nào là phần chung (`sharedBlocks`), khóa. | Câu 4, 5; UC 27; người dùng chốt 2026-10-04 |
-| BR-U14-02 | Không ai trong nhóm, kể cả trưởng nhóm, được thêm, xóa, đổi tên hay di chuyển mục (phần của khung); phần chung của giảng viên chỉ đọc. Không có mục chi tiết. | UC 16; người dùng chốt 2026-10-04 |
+| BR-U14-01 | Bài nhóm là bài `DOCUMENT` làm nhóm; khi bài mở, mỗi nhóm của lớp (U12) có một tài liệu nhóm cho bài đó, dựng từ khung: mỗi phần của khung (`config.parts`, BR-U09-25) thành một mục; block không thuộc phần nào là phần chung (`sharedBlocks`), khóa. | Câu 4, 5; UC 43; người dùng chốt 2026-10-04 |
+| BR-U14-02 | Không ai trong nhóm, kể cả trưởng nhóm, được thêm, xóa, đổi tên hay di chuyển mục (phần của khung); phần chung của giảng viên chỉ đọc. Không có mục chi tiết. | UC 23; người dùng chốt 2026-10-04 |
 | BR-U14-03 | Chỉ thành viên của nhóm (U12) và giảng viên lớp xem tài liệu nhóm; nhóm khác không thấy. | SEC-002 |
 | BR-U14-04 | Mọi thao tác sửa chỉ khi bài còn nhận bài nộp (U08) và chưa qua hạn cuối nhận bài. | FR-007 |
-| BR-U14-05 | Trưởng nhóm giao một mục cho một thành viên của nhóm: mục thành `CLAIMED` cho người đó, ghi `assignedBy`. Mục đang do người khác giữ thì nhả khóa người cũ trước (BR-U14-13). Thành viên vẫn tự nhận được mục còn `OPEN` hoặc `DONE`. | UC 16, thay đổi 2026-10-01 |
+| BR-U14-05 | Trưởng nhóm giao một mục cho một thành viên của nhóm: mục thành `CLAIMED` cho người đó, ghi `assignedBy`. Mục đang do người khác giữ thì nhả khóa người cũ trước (BR-U14-13). Thành viên vẫn tự nhận được mục còn `OPEN` hoặc `DONE`. | UC 23, thay đổi 2026-10-01 |
 
 ## 2. Nhận, làm và xong mục
 
@@ -38,7 +40,7 @@
 | BR-U14-33 | Hạn chung của bài (và nộp trễ theo U08). Quá hạn cuối nhận bài 30 giây (để nhận lần lưu cuối của client), hoặc khi bài bị ngưng giao, hệ thống tự nộp bản hiện tại (`AUTO_DEADLINE`, `AUTO_RETIRED`) nếu chưa có bản nộp sau lần sửa cuối. Mục đang `CLAIMED` được chốt bằng bản nháp đã lưu gần nhất của người giữ (thêm `revisions`, mục `DONE`), nên phần đang làm của thành viên được nộp theo. Tài liệu chuyển `CLOSED`. | Câu 2, 8; người dùng chốt 2026-10-04 |
 | BR-U14-34 | Sau khi trưởng nhóm nộp vẫn sửa được tới hạn (nộp lại); tài liệu `CLOSED` chỉ đọc. | FR-007 |
 | BR-U14-35 | Thành viên và giảng viên tải DOCX bản hiện tại hoặc bản nộp (U09). | BR-U09-52 |
-| BR-U14-36 | Khi tự nộp (hết hạn hoặc ngưng giao), mọi thành viên đang mở tài liệu nhóm, dù đang sửa mục trong popup hay chỉ xem Assignment Workspace: client khóa trang (người đang sửa thì gửi lần lưu cuối) và hiện vòng chờ "Đang nộp…"; tự nộp xong (sự kiện `GROUP_SUBMITTED`) chuyển sang trang bài đã nộp (Submitted Assignment), không quay về Assignment Workspace. | Người dùng chốt 2026-10-04 |
+| BR-U14-36 | Khi tự nộp (hết hạn hoặc ngưng giao), mọi thành viên đang mở tài liệu nhóm, dù đang sửa mục trong popup hay chỉ xem Assignment Workspace: client khóa trang (người đang sửa thì gửi lần lưu cuối) và hiện vòng chờ "Đang nộp…"; tự nộp xong (sự kiện `GROUP_SUBMITTED`) chuyển sang trang bài đã nộp (Submission History), không quay về Assignment Workspace. | Người dùng chốt 2026-10-04 |
 
 ## 5. Hỗ trợ chấm (U15)
 

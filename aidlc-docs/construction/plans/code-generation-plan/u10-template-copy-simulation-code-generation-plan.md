@@ -1,5 +1,9 @@
 # U10 Template & Copy - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U10. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010; nhận bản nháp AI của US-AIG-002. **Use case**: UC 21 (chủ trì), UC 28. Simulation Exam đã rút; tên thư mục cũ giữ để ổn định liên kết.
+- **Story**: US-ASM-008 (diff version), US-ASM-009, US-ASM-010; nhận bản nháp AI của US-AIG-002.
+- **Primary UC hiện hành**: UC 53, 54. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u10-template-copy-simulation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -98,11 +103,15 @@ PostgreSQL: dòng `assignments` của môn (template) và cột `source_assignme
 
 | Nguồn | Bước |
 |---|---|
-| US-ASM-008 (UC 28) | 5, 19 |
-| US-ASM-009 (UC 21, UC 28) | 3, 4, 16, 18 |
-| US-AIG-002 (UC 21, nhận bản nháp AI) | 3, 18 |
-| US-ASM-010 (UC 28) | 4, 18 |
+| US-ASM-008 (UC 38, 39, 40, 41, 42, 43) | 5, 19 |
+| US-ASM-009 (UC 38, 39, 40, 41, 42, 43, 53, 54) | 3, 4, 16, 18 |
+| US-AIG-002 (UC 53, 54, nhận bản nháp AI) | 3, 18 |
+| US-ASM-010 (UC 38, 39, 40, 41, 42, 43) | 4, 18 |
 
 ## 5. Ngoài phạm vi
 
 - Tạo version mới sau khi ngừng giao (U08), nộp bài (U11) và tính điểm chính thức (U15).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] R2 cho Subject Manager/Administrator được giao môn hiện thời; role ADMIN không bypass scope.
+- [ ] Nhãn Subject Template UC 53 và Template Editor UC 54, giữ delete/version/copy lifecycle; test SM/Admin có/không assignment và Teacher selector-only.

@@ -1,5 +1,7 @@
 # U01 Account & Access - Functional Design Plan
 
+**Lịch sử plan baseline trước 2026-10-08**: giữ nguyên các bước đã hoàn thành và mã UC tại thời điểm đó. Thiết kế hiện hành và revision code plan theo [current SRS contract](../../current-srs-contract.md); task đồng bộ ở [construction-sync](../construction-sync-2026-10-08.md), không dùng checklist cũ như phạm vi mới.
+
 > Ghi chú hiện hành: các mục 1, 2 và 7 dưới đây là bối cảnh lúc lập plan. Thiết kế hiện hành: không có MFA; kích hoạt xong tự đăng nhập (BR-U01-13); gửi OTP qua việc nền của U03 (không còn outbox/job của U02); U01 phục vụ UC 1–7.
 
 ## 1. Scope and sources

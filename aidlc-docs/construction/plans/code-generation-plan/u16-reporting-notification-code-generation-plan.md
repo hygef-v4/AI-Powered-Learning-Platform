@@ -1,5 +1,9 @@
 # U16 Reporting & Notification - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 11, 57; primary stories: US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U16. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story trong phạm vi**: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. **Use case**: UC 18 View Statistics, UC 36, UC 38. Báo cáo độ lệch điểm AI nằm ngoài phạm vi.
+- **Story trong phạm vi**: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003.
+- **Primary UC hiện hành**: UC 11, 57. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u16-reporting-notification/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -97,7 +102,7 @@ PostgreSQL `notifications` (kèm `email_status`); cột `accounts.email_preferen
 ### Nhóm E - Frontend
 
 - [ ] **Bước 19** - `NotificationBell` (SSE), `NotificationDropdown`, `NotificationListPage`.
-- [ ] **Bước 20** - `NotificationEmailToggles` trên `NotificationListPage`; `CheckProgressDialog` (`ProgressSummary`, `ProgressTable`) mở từ Assignment List; `AdminStatisticsPanel` trên Admin Menu; `GradeDistributionBadge` cho Assignment List của Student (U11 gắn vào); nút xuất bảng điểm CSV/XLSX cho giảng viên và Chủ nhiệm môn có quyền (BR-U16-43).
+- [ ] **Bước 20** - `NotificationEmailToggles` trên `NotificationListPage`; `CheckProgressDialog` (`ProgressSummary`, `ProgressTable`) mở từ Assignment List; `AdminStatisticsPanel` trên Statistic; `GradeDistributionBadge` cho các danh sách bài theo loại của Student (U11 gắn vào); nút xuất bảng điểm CSV/XLSX cho giảng viên và Chủ nhiệm môn có quyền (BR-U16-43).
 - [ ] **Bước 21** - Test frontend: số chưa đọc cập nhật qua SSE, tắt email từng loại.
 - [ ] **Bước 22** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -110,11 +115,15 @@ PostgreSQL `notifications` (kèm `email_status`); cột `accounts.email_preferen
 
 | Nguồn | Bước |
 |---|---|
-| US-NTF-001 (UC 38) | 2, 3, 4, 5, 19, 20 |
-| US-RPT-001 (UC 36) | 6, 7, 7a, 20 |
-| US-RPT-002 (UC 18 View Statistics) | 7a, 15-17, 20 |
-| US-RPT-003 (UC 36) | 7a, 15-17, 20 |
+| US-NTF-001 (UC 11) | 2, 3, 4, 5, 19, 20 |
+| US-RPT-001 (UC 37) | 6, 7, 7a, 20 |
+| US-RPT-002 (UC 57 View Statistics) | 7a, 15-17, 20 |
+| US-RPT-003 (UC 37) | 7a, 15-17, 20 |
 
 ## 5. Ngoài phạm vi
 
 - Báo cáo độ lệch điểm AI ngoài phạm vi dự án; email OTP tài khoản thuộc U01.
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Progress/export chỉ R3/R4, không grant theo subject manager; test SM/Admin có/không phân công dạy, ngoài scope 404.
+- [ ] Notification Navigation Bar UC 11, Statistic UC 57, GradebookExportAction support UC 37; các luồng email/nhắc hạn/phân bố giữ nguyên.

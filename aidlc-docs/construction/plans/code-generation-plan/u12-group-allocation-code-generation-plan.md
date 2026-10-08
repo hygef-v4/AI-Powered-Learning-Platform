@@ -1,5 +1,9 @@
 # U12 Group & Allocation - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 15, 16; primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U12. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-001, US-GRP-002 (đóng góp US-GRP-003). **Use case**: UC 15 (chủ trì); đóng góp UC 9 (nhóm, trưởng nhóm) và UC 27 (kiểm nhóm hợp lệ).
+- **Story**: US-GRP-001, US-GRP-002 (đóng góp US-GRP-003).
+- **Primary UC hiện hành**: UC 15, 16. Supporting flows theo current-srs-contract.md.
 - **Thay đổi 2026-10-01**: nhóm thuộc lớp, quản lý trong danh sách sinh viên của lớp, có chia ngẫu nhiên, không có dùng lại nhóm; tài liệu nhóm chuyển sang bảng `group_documents` của U14.
 - **Thiết kế nguồn**: `construction/u12-group-allocation/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo: `../demo_do_an/docs/ai-dlc/PLAN-bai-tap-nhom.md` (chia ngẫu nhiên, đổi leader).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -100,10 +105,13 @@ PostgreSQL `student_groups` (nhóm của lớp), `group_members`, `leader_change
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-001 (UC 9) | 1, 2, 3, 16 |
-| US-GRP-002 (UC 9, UC 15) | 4, 17, 18 |
+| US-GRP-001 (UC 45, 46, 47, 48, 49) | 1, 2, 3, 16 |
+| US-GRP-002 (UC 16, 45, 46, 47, 48, 49) | 4, 17, 18 |
 | US-GRP-003 (bài nhóm dùng nhóm của lớp) | 1, 2, 5, 17 |
 
 ## 5. Ngoài phạm vi
 
 - Tài liệu nhóm, nhận mục, nộp bài nhóm (U14), chấm (U15), thông báo (U16).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] My Group UC 15/Request Leader Change UC 16: Student own membership; duyệt/chia nhóm support chỉ dạy lớp R3/R4, gồm SM/Admin đã được phân công.

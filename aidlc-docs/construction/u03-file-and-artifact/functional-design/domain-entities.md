@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Domain Entities
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 Thiết kế độc lập công nghệ. Unit hạ tầng, không có use case/story riêng: tệp cho U01 (ảnh đại diện), U05 (học liệu), U06/U09/U11/U14 (ảnh trong tài liệu); việc nền, worker và sự kiện thông báo cho mọi unit (chuyển từ U02, 2026-10-04). Việc nền không có bảng: trạng thái nằm ở dòng nghiệp vụ của unit sở hữu (ví dụ `lessons.scan_status`, `ai_suggestions.status`, `payments.status`).
 
 ## 1. Tổng quan
@@ -19,7 +21,7 @@ U03 không có bảng PostgreSQL (database chỉ gồm bảng của ERD, quyết
 
 | Thuộc tính | Ở đâu | Ràng buộc |
 |---|---|---|
-| `fileId` | Mã tệp Drive; unit sở hữu lưu vào cột của mình (`lessons.file_id`, `accounts.avatar_file_id`, ảnh trong JSON tài liệu) | Không trả cho frontend; frontend chỉ thấy `FileRef` khi vừa tải lên và URL tải có token |
+| `fileId` | Mã tệp Drive; unit sở hữu lưu vào cột của mình (`lessons.file_id`, ảnh trong JSON tài liệu) | Không trả cho frontend; frontend chỉ thấy `FileRef` khi vừa tải lên và URL tải có token |
 | `ownerAccountId` | `appProperties` của tệp | Người tải lên |
 | `purpose` | `appProperties` | Một giá trị của `ArtifactPurpose` |
 | `originalFileName` | `appProperties` | Đã làm sạch ký tự điều khiển và đường dẫn |
@@ -34,7 +36,6 @@ Byte file không đổi sau khi tạo. Không có file dẫn xuất và không x
 
 | Giá trị | Loại file | Trần | Dùng bởi |
 |---|---|---|---|
-| `AVATAR` | JPG, PNG, WebP | 50 MB | U01 |
 | `MATERIAL` | PDF, DOCX, PPTX | 50 MB | U05 |
 | `DOCUMENT_IMAGE` | PNG, JPEG, GIF, SVG | 5 MB | U06, U09, U11, U14 (ảnh trong khung đề, bài làm, tài liệu nhóm) |
 
@@ -69,7 +70,6 @@ Token dùng lại nhiều lần trong 5 phút (để ảnh và PDF viewer tải 
 | `ArtifactPort.attach(fileRef, actor, purpose)` → `{fileId, mediaType, byteSize, originalFileName}` | Unit sở hữu khi gắn file vào đối tượng; unit lưu `fileId` vào dòng của mình |
 | `ArtifactPort.issueDownloadToken(fileId, accountId)` | Unit sở hữu, **sau khi** tự kiểm quyền |
 | `ArtifactPort.open(fileId)` | Worker U05 đọc học liệu để quét; U09 nhúng ảnh khi xuất DOCX |
-| `AvatarPort.validateAvatar(fileRef, actor)` → `fileId` | U01 (chữ ký theo thiết kế U01; U03 code trước nên tạo interface và cài) |
 | `JobPort.enqueue(jobType, payload, idempotencyKey)` | Mọi unit có việc nền; trong transaction thì gửi sau commit, ngoài transaction thì gửi ngay; không ghi DB |
 | `JobHandler` + `JobHandlerRegistry` | Unit sở hữu đăng ký handler và `onFailed` cho `jobType`, chọn 1 trong 7 queue |
 | `PendingSweeper` | Unit sở hữu đăng ký truy vấn dòng còn chờ để gửi lại message bị mất |
@@ -82,3 +82,6 @@ Token dùng lại nhiều lần trong 5 phút (để ảnh và PDF viewer tải 
 |---|---|---|
 | `AuthorizationPort` | U01 | `C` - kiểm đăng nhập và role được phép upload mục đích đó; U03 code trước U01 nên dùng adapter giả luôn từ chối |
 | `AuditPort` | U02 | `C` - audit; U02 code song song, chưa có thì adapter giả ghi log |
+
+## Tương thích code đã sinh
+U03 đã sinh hỗ trợ avatar theo baseline trước; code summary/checkbox đã hoàn thành giữ nguyên làm bằng chứng. Hợp đồng mục tiêu chỉ MATERIAL/DOCUMENT_IMAGE; lúc triển khai revision rà purpose cũ, bỏ call site U01 và xử lý tương thích trước khi bỏ port. Không khẳng định mã hiện tại đã đổi.

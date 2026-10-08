@@ -1,5 +1,7 @@
 # U10 Template & Copy - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Copy nguyên khối
 - `AssignmentCopier.copy(source, target, kind, actor)` trong một `@Transactional`:
   1. `ScopeGuard` kiểm nguồn và đích (NFR-U10-20).

@@ -1,6 +1,6 @@
 # Component Methods
 
-Các chữ ký là contract cấp cao, cập nhật theo 70 UC/SRS 4.4 ngày 2026-10-08. DTO/API và method đã đổi/bổ sung cần đồng bộ tiếp vào Functional Design/code plan tại Construction; không coi tài liệu Construction cũ là chuẩn cho các thay đổi mới.
+Các chữ ký là contract cấp cao, cập nhật theo 70 UC/SRS 4.4 ngày 2026-10-08. DTO/API và method đã đổi/bổ sung đã được phản ánh vào Functional Design/code plan tại Construction; existing contracts/code cần triển khai revision theo thiết kế hiện hành.
 
 ## Identity & Access (U01)
 

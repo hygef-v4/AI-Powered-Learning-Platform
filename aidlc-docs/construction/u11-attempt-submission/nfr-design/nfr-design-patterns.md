@@ -1,5 +1,7 @@
 # U11 Attempt & Submission - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 17, 18, 19, 20, 21, 22, 24, 25; primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Bắt đầu lượt an toàn đồng thời
 - Transaction: `pg_advisory_xact_lock(hash(assignmentId, accountId))` → có `IN_PROGRESS` thì trả lại → đếm lượt đã có, so giới hạn → INSERT (`attemptNo = count + 1`) + nội dung rỗng; `deadline_at` tính sẵn để scanner tự nộp (NFR-U11-10).
 - Partial unique index là chốt chặn cuối.

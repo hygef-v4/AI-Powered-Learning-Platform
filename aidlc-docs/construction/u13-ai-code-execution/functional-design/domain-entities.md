@@ -1,6 +1,8 @@
 # U13 AI & Code Execution - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AIG-001`…`003`, `US-ASM-005`; UC 22; kiểm lời giải mẫu và chạy code cho UC 26 (U09 chủ trì) và luồng AI soạn bản nháp của UC 21, UC 28. Bảng theo [database](../../../../docs/database.md).
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-AIG-001`…`003`, `US-ASM-005`; vận hành AI (không UC trực tiếp); kiểm lời giải mẫu và chạy code cho UC 41 (U09 chủ trì) và luồng AI soạn bản nháp của UC 38, 39, 40, 41, 42, 43, 53, 54. Bảng theo [mô hình dữ liệu của unit](domain-entities.md).
 
 ## 1. Tổng quan
 
@@ -100,7 +102,7 @@ Kiểm lời giải mẫu hiện hành = `questions.definition.verification` có
 | `PracticeGradingPort` | U11 | Xác minh attempt, giữ credit, gửi việc và ghi kết quả AI `PRACTICE` qua U15 |
 | `CodeRunPort` | U11 (`C`), U15 | `try`, `grade`, kết quả |
 | `CodeLabCheckPort` | U08 khai báo (`C`), U09 dùng khi soạn Code Lab | Bài `CODE_LAB` đã kiểm lời giải mẫu với đúng nội dung hiện tại |
-| `CreditUsagePort` | U07 (`C`, U07 khai báo) | `listUsage(accountId, page)`: lần dùng credit của chính chủ ví từ `ai_suggestions` cho màn AI Credits |
+| `CreditUsagePort` | U07 (`C`, U07 khai báo) | `listUsage(accountId, page)`: lần dùng credit của chính chủ ví từ `ai_suggestions` cho phần lịch sử dùng credit trên Credit Packages |
 | `AiUsagePort` | U05 (`C`) | `begin(task, requestedBy, target)` (kill-switch, trần, tần suất, giữ credit, tạo dòng `ai_suggestions`), `complete(id, tokens, cost)`, `fail(id)` |
 
 ### Port U13 dùng

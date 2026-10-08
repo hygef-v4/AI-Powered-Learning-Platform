@@ -1,5 +1,7 @@
 # U05 Content, Material & RAG - Tech Stack Decisions
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Vector | pgvector trong PostgreSQL, cột `lessons.embedding`, index HNSW, khoảng cách cosine | Không thêm dịch vụ; một vector mỗi lesson theo database |

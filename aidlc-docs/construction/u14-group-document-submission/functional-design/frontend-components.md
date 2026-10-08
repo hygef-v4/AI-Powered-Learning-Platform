@@ -1,7 +1,9 @@
 # U14 Group Document & Submission - Frontend Components
 
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
-app/learning/group-docs/[id]/                  GroupDocumentPage (màn Assignment Workspace của bài nhóm, mở từ Assignment Overview hoặc My Group)
+app/learning/group-docs/[id]/                  GroupDocumentPage (màn Group Essay Workspace, mở từ Assignment Detail hoặc My Group)
   GroupDocHeader            tên nhóm, trưởng nhóm, hạn, đồng hồ đếm ngược, trạng thái nộp, nút Nộp (chỉ trưởng nhóm), Tải DOCX
   SectionOutline            danh sách mục (phần của khung): trạng thái (Trống / Đang làm bởi X / Xong), người giao, nút Nhận
   SharedBlocksView          phần chung của khung giảng viên (chỉ đọc)
@@ -10,14 +12,14 @@ app/learning/group-docs/[id]/                  GroupDocumentPage (màn Assignmen
   SectionEditorDialog       popup che kín trang khi người giữ mở mục: các heading trên nhánh của mục và nội dung của chúng + các block của mục, không hiện nhánh khác (DocumentEditor U09, mode STUDENT), "Đã lưu lúc …", nút Xong, nút Nhả (hộp xác nhận: bản nháp chưa Xong sẽ bị bỏ)
   ReleaseLockButton         (trưởng nhóm; giảng viên ở trang giảng viên); hộp xác nhận: bản nháp chưa Xong của người giữ sẽ bị bỏ
   SubmitGroupDialog         trưởng nhóm xác nhận nộp; cảnh báo các mục chưa xong
-  AutoSubmitOverlay         khi tự nộp, với mọi người đang mở tài liệu (đang sửa mục hoặc chỉ xem): khóa trang, người đang sửa gửi lần lưu cuối, vòng chờ "Đang nộp…"; nộp xong chuyển sang Submitted Assignment
+  AutoSubmitOverlay         khi tự nộp, với mọi người đang mở tài liệu (đang sửa mục hoặc chỉ xem): khóa trang, người đang sửa gửi lần lưu cuối, vòng chờ "Đang nộp…"; nộp xong chuyển sang Submission History
   useGroupDocStream         kết nối SSE, áp dụng sự kiện, tải lại khi kết nối lại
-shared/group-docs/GroupSubmissionView       bản nộp của nhóm (chỉ đọc, tác giả từng mục, tải DOCX); hiện trong màn Submitted Assignment (U11) khi bài là bài nhóm
-shared/group-docs/GroupDocsOverviewPanel    (giảng viên; hiện trong Grading Queue (U15) khi là bài nhóm, thay bảng theo từng sinh viên)
+shared/group-docs/GroupSubmissionView       bản nộp của nhóm (chỉ đọc, tác giả từng mục, tải DOCX); hiện trong màn Submission History (U11) khi bài là bài nhóm
+shared/group-docs/GroupDocsOverviewPanel    (giảng viên; hiện trong Student Submissions (U15) khi là bài nhóm, thay bảng theo từng sinh viên)
   bảng nhóm: số mục xong/đang làm/trống, bản nộp, xem tài liệu (mở chi tiết bài nộp của nhóm), nhả khóa
 ```
 
-Phần soạn bài nhóm (khung, chia phần, rubric từng phần) trên Assignment Editor, Question Bank và Template Editor (UC 27) thuộc U09/U06; U14 chỉ dựng mỗi phần thành một mục khi bài mở trong lớp.
+Phần soạn bài nhóm (khung, chia phần, rubric từng phần) trên Assignment Editor, Question Bank và Template Editor (UC 43) thuộc U09/U06; U14 chỉ dựng mỗi phần thành một mục khi bài mở trong lớp.
 
 | Component | Hành vi | API |
 |---|---|---|

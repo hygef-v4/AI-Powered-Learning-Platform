@@ -1,5 +1,7 @@
 # U05 Content, Material & RAG - NFR Requirements
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng và tài nguyên
 
 | Mã | Yêu cầu | Nguồn |
@@ -54,3 +56,6 @@
 | RESILIENCY-06 | N/A | Health dùng chung backend |
 | RESILIENCY-10 | Compliant | NFR-U05-14 |
 | Rule còn lại | N/A | Ngoài phạm vi đồ án |
+
+## Announcement revision
+PATCH/DELETE kiểm R3/R4 + object scope ở backend, optimistic version, đầu vào sạch, audit nguyên tử; stale version 409 không ghi dở. Chỉ tạo mới phát notification, edit/delete không gửi lặp. Actor quản lý môn không tự được sửa thông báo lớp.

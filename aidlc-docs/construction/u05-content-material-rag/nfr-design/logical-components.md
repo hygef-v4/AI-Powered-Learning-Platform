@@ -1,5 +1,7 @@
 # U05 Content, Material & RAG - Logical Components
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Sơ đồ
 
 ```
@@ -64,3 +66,6 @@
 | SECURITY-15 | Compliant | P1 transaction |
 | RESILIENCY-10 | Compliant | P5 timeout |
 | Rule còn lại | N/A | Ngoài phạm vi đồ án |
+
+## Announcement lifecycle
+AnnouncementService có updateAnnouncement/deleteAnnouncement theo version, R3/R4 và audit cùng transaction; feed bỏ DELETED. Event class.announcement-posted chỉ từ create, không từ update/delete.

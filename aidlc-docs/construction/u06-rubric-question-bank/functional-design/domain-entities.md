@@ -1,6 +1,8 @@
 # U06 Rubric & Question Bank - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 20, UC 23–27.
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-QBK-001`, `002`; UC 32, 33, 39, 40, 41, 42, 43, 44, 55, 56.
 
 ## 1. Tổng quan
 
@@ -60,11 +62,11 @@ Ngân hàng giữ câu hỏi của cả năm dạng bài (thay đổi 2026-10-01
 
 | Dạng bài (U08) | `questionType` | Use case |
 |---|---|---|
-| `TEXT_ESSAY` | `ESSAY` | UC 23 |
-| `MULTIPLE_CHOICE_QUIZ` | `MCQ_SINGLE`, `MCQ_MULTI` | UC 24 |
-| `DIAGRAM_ESSAY` | `DOCUMENT` | UC 25 |
-| `CODE_LAB` | `CODE` | UC 26 |
-| `GROUP_ASSIGNMENT` | `DOCUMENT` (cùng loại câu với Diagram Essay; phần tự tính theo heading, không có heading thì cả khung là một phần) | UC 27 |
+| `TEXT_ESSAY` | `ESSAY` | UC 40 |
+| `MULTIPLE_CHOICE_QUIZ` | `MCQ_SINGLE`, `MCQ_MULTI` | UC 39 |
+| `DIAGRAM_ESSAY` | `DOCUMENT` | UC 42 |
+| `CODE_LAB` | `CODE` | UC 41 |
+| `GROUP_ASSIGNMENT` | `DOCUMENT` (cùng loại câu với Diagram Essay; phần tự tính theo heading, không có heading thì cả khung là một phần) | UC 43 |
 
 Một câu `DOCUMENT` dùng được cho cả Diagram Essay và bài nhóm (phần tự tính theo heading nhỏ nhất khi đưa vào bài); rubric từng phần tạo khi soạn bài, không lưu trong câu.
 

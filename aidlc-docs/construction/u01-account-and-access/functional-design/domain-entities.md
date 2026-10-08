@@ -1,6 +1,8 @@
 # U01 Account & Access - Domain Entities
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 1–7 theo `docs/use-case-table.md`.
+**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62 theo `docs/use-cases-and-screens.md`.
 
 ## 1. Tổng quan
 
@@ -63,7 +65,6 @@ stateDiagram-v2
 |---|---|
 | `displayName` | Bắt buộc, 1-150 ký tự sau khi cắt khoảng trắng |
 | `phoneNumber` | Tùy chọn; chỉ chữ số, dấu `+` ở đầu, 8-15 chữ số; là dữ liệu cá nhân, không ghi log |
-| `avatarFileId` | Tùy chọn; cột `avatar_file_id`, mã tệp Google Drive do `AvatarPort` (U03) xác nhận; U01 không lưu byte ảnh |
 
 ## 5. `LoginThrottle`
 
@@ -158,7 +159,7 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 | Port | Dùng bởi | Ghi chú |
 |---|---|---|
 | `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
-| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; `countByRoleAndStatus()` trả số đếm cho UC 18 View Statistics (U16); không trả mật khẩu hay số điện thoại |
+| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; `countByRoleAndStatus()` trả số đếm cho UC 57 View Statistics (U16); không trả mật khẩu hay số điện thoại |
 
 ### Port U01 dùng
 
@@ -166,7 +167,9 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 |---|---|---|---|
 | `AuditPort.record` | U02 | `H` | Ghi sự kiện bảo mật/nghiệp vụ (U02 code trước U01) |
 | `JobPort.enqueue` | U03 | `H` | Gửi việc `OTP_DELIVERY` sang RabbitMQ sau commit (không có bảng job); handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
-| `AvatarPort` | U03 (chữ ký theo thiết kế U01) | `H` (U03 code trước) | Xác nhận ảnh thuộc người dùng, đúng mục đích `AVATAR` |
 | `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài | `C` (U04 code sau U01) | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 
 U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng adapter tạm (xem code generation plan).
+
+## Account/Profile API revision
+Profile không có avatar port/field. GET /api/v1/admin/accounts/{id} UC 60; PATCH cùng URL với displayName/phoneNumber/version UC 61, không email/role/status. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.

@@ -1,6 +1,8 @@
 # U02 Audit - Infrastructure Design
 
-Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [database](../../../../docs/database.md). RabbitMQ và worker thuộc U03.
+**Bản tài liệu 2026-10-08**: UC 70; primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md). RabbitMQ và worker thuộc U03.
 
 ## 1. Ánh xạ thành phần
 

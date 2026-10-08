@@ -1,5 +1,7 @@
 # U16 Reporting & Notification - Infrastructure Design
 
+**Bản tài liệu 2026-10-08**: UC 11, 57; primary stories: US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
@@ -21,7 +23,7 @@
 ## 3. Migration
 
 `V20260925_2300__u16_notifications.sql`:
-- `notifications (id, account_id FK, type, title, body, link, source_event_id, email_status, email_sent_at, read_at, created_at)` theo [database](../../../../docs/database.md); unique `(source_event_id, account_id, type)`, index `(account_id, read_at, created_at)`, `(email_status, created_at)`.
+- `notifications (id, account_id FK, type, title, body, link, source_event_id, email_status, email_sent_at, read_at, created_at)` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md); unique `(source_event_id, account_id, type)`, index `(account_id, read_at, created_at)`, `(email_status, created_at)`.
 - `ALTER TABLE accounts ADD COLUMN email_preferences jsonb NOT NULL DEFAULT '{}'` (cần migration U01 chạy trước).
 - `NotificationRetentionScanner` hằng ngày xóa thông báo quá 180 ngày.
 

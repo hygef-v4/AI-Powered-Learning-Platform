@@ -1,6 +1,8 @@
 # U11 Attempt & Submission - Business Logic Model
 
-## F1 - Danh sách bài của người học (UC 29)
+**Bản tài liệu 2026-10-08**: UC 17, 18, 19, 20, 21, 22, 24, 25; primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+## F1 - Danh sách bài của người học (UC 17, 18)
 1. Lấy bài của lớp đang ghi danh theo BR-U08-03 (U08): `OPEN`/`CLOSED`, và bài `RETIRED` mà người học đã có điểm; kèm lượt gần nhất của người học: chưa làm, đang làm, đã nộp (trễ, điểm nếu được hiện), hết hạn (BR-U11-36).
 
 ## F2 - Bắt đầu lượt
@@ -21,7 +23,7 @@
 ## F4 - Nộp tay
 1. Kiểm BR-U11-20.
 2. Chuyển `SUBMITTED` theo BR-U11-21; chỉ bài `GRADED` gọi `SubmissionSubmittedPort` (U15); Practice Quiz gọi `PracticeResultPort.scoreQuiz` (U15 chấm, ghi `evaluations` `kind = PRACTICE`); Practice Code Lab gọi `CodeRunPort.grade` (U13 chạy test sau commit rồi ghi qua U15); trả biên nhận; audit.
-3. Với `PRACTICE` Text/Diagram Essay, nộp xong không gọi AI; lượt ở trạng thái chưa chấm AI. Student bấm "Chấm với AI" trên Submitted Assignment (`POST /api/v1/attempts/{id}/ai-grading`) thì U11 kiểm chủ lượt, lượt `SUBMITTED`, dạng/chế độ rồi gọi `PracticeGradingPort` của U13; kết quả đọc lại bằng `GET /api/v1/attempts/{id}/practice-result` (BR-U11-35, U13 F3a).
+3. Với `PRACTICE` Text/Diagram Essay, nộp xong không gọi AI; lượt ở trạng thái chưa chấm AI. Student bấm "Chấm với AI" trên Assignment Detail (`POST /api/v1/attempts/{id}/ai-grading`) thì U11 kiểm chủ lượt, lượt `SUBMITTED`, dạng/chế độ rồi gọi `PracticeGradingPort` của U13; kết quả đọc lại bằng `GET /api/v1/attempts/{id}/practice-result` (BR-U11-35, U13 F3a).
 
 ## F5 - Tự nộp
 1. `AttemptDeadlineScanner` (scanner U03, mỗi phút): lượt còn `IN_PROGRESS` có `deadline_at + 30 s` đã qua → nộp nội dung hiện có với `submit_mode` tương ứng (BR-U11-23, 24).

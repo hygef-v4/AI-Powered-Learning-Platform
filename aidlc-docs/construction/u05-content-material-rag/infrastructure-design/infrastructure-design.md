@@ -1,5 +1,7 @@
 # U05 Content, Material & RAG - Infrastructure Design
 
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
@@ -44,3 +46,6 @@
 | RESILIENCY-04 | Compliant | Deploy cùng Compose |
 | RESILIENCY-06 | N/A | Health dùng chung; Gemini lỗi không làm backend `DOWN` |
 | Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
+
+## Migration revision - Announcement update/removal
+Bổ sung announcements.version (NOT NULL default 0), updated_at/updated_by, deleted_at/deleted_by; status nhận DELETED. FK actor về accounts theo mô hình hiện có; index feed (class_id,status,posted_at). Nếu migration cũ đã áp dụng thì thêm migration forward-only, không sửa lịch sử schema. Audit trước/sau và cập nhật cùng transaction; comment FK/records giữ nguyên.

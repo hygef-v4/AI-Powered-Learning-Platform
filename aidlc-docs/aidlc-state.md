@@ -4,11 +4,11 @@
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 2. All 16 code plans approved on 2026-10-05. Project skeleton (U03 K1-K6), cross-unit contracts (`contracts/`), port interfaces and stub implementations with final class names are merged (PR #1). U03 code generated on branch `feat/files-and-jobs`, awaiting review.
-- **Resume action**: Before implementing changed requirements, synchronize affected Construction designs, contracts and code plans with the 70-UC SRS and revised Inception. Review U03 generated code (steps J9, 18 are integration tests left to the tester). After approval continue wave 1 with U02, then U01, U04. Integration tests are not written by units (dedicated tester, 2026-10-05).
+- **Current Stage**: Code Generation Part 2. All 16 code plans approved on 2026-10-05 under the previous baseline; Construction designs and revised code plans synchronized to 70 UC on 2026-10-08 (documentation only). Project skeleton (U03 K1-K6), cross-unit contracts (`contracts/`), port interfaces and stub implementations with final class names are merged (PR #1). U03 code generated on branch `feat/files-and-jobs`, awaiting review.
+- **Resume action**: Construction designs/code plans now match the 70-UC SRS and revised Inception. Before implementing changed requirements, revise existing contracts/DTOs, migrations and application code against the current designs and unchecked revision tasks. Review U03 generated code (steps J9, 18 are integration tests left to the tester). After approval continue wave 1 with U02, then U01, U04. Integration tests are not written by units (dedicated tester, 2026-10-05).
 
 ## Latest documentation decision
-- **2026-10-08**: Added UC 70 View Audit Log and its Administrator-only permission row to the Google SRS; verified the saved document. Synchronized `docs/use-cases-and-screens.md` and active Inception requirements, personas, stories, application design and planning summaries with 70 UC, 51 stories and 16 units. UC 70 belongs to U02 and uses the existing Audit Log screen. Screen names now match the latest `screen-flow (1).drawio`: Teacher Assigned Classes, Subject Classes, Subject Template and Template Editor (UC 53-54). Student My Classes is unchanged. Construction designs, contracts, code plans and older local specification catalogs still require a separate synchronization. The user's diagram was not edited; implementation checkpoints and historical audit records are preserved.
+- **2026-10-08**: Added UC 70 View Audit Log and its Administrator-only permission row to the Google SRS; verified the saved document. Synchronized `docs/use-cases-and-screens.md` and active Inception requirements, personas, stories, application design and planning summaries with 70 UC, 51 stories and 16 units. UC 70 belongs to U02 and uses the existing Audit Log screen. Screen names now match the latest `screen-flow (1).drawio`: Teacher Assigned Classes, Subject Classes, Subject Template and Template Editor (UC 53-54). Student My Classes is unchanged. Construction designs and code plans were synchronized in the follow-up revision; existing contracts/application code and older local specification catalogs are not automatically updated. The user's diagram was not edited; implementation checkpoints and historical audit records are preserved.
 - **2026-10-04**: Email provider changed to Brevo SMTP for demo/production; Mailpit retained for local/tests. U01/U16 email design, shared infrastructure, Inception provider selection and code-generation references synchronized. Existing code-generation approval checkpoints remain unchanged.
 
 ## Workspace State
@@ -16,7 +16,7 @@
 - **Programming Languages**: Java 17 / Spring Boot 3.5, TypeScript / Next.js 16
 - **Build System**: Maven, npm
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `C:\Users\admin\Documents\GitHub\AI-Powered-Learning-Platform`
+- **Workspace Root**: `F:/code/git/AI-Powered-Learning-Platform`
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)
@@ -48,33 +48,32 @@
 - [x] NFR Requirements - all 16 units
 - [x] NFR Design - all 16 units
 - [x] Infrastructure Design - all 16 units (+ `construction/shared-infrastructure.md`)
-- [x] Code Generation Part 1 (plans) - all 16 plans approved 2026-10-05
+- [x] Code Generation Part 1 (plans) - all 16 plans approved 2026-10-05 for the previous baseline; scope revision documented 2026-10-08
 - [ ] Code Generation Part 2 (code) - in progress: U03 (wave 1)
 - [ ] Build and Test
 - [ ] Operations (placeholder)
 
 ## Unit Progress
 
-The completed design stages and approvals below describe the previous Construction baseline. The 2026-10-08 Inception revision does not approve or implement changed scope. In particular, conditional role inheritance, profile fields, package administration, payment-history viewing, announcement changes and revised UC references require review in affected Construction artifacts before implementation.
-
+All 16 units' functional/NFR/infrastructure designs and current code-plan scope are synchronized on 2026-10-08. Approvals dated 2026-10-05 remain historical; the revision does not approve or implement changed scope. Contracts/application code still need the unchecked implementation work, including U03 avatar cleanup.
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
-| U01 Account & Access | Done, điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Approved 2026-10-05 | - |
-| U02 Audit | Done under the previous baseline; Inception now maps View Audit Log to UC 70; Construction references pending synchronization | Approved 2026-10-05 (previous baseline) | - |
-| U03 File, Job & Event | Done; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Approved 2026-10-05 | Generated 2026-10-05, awaiting review (branch `feat/files-and-jobs`) |
-| U04 Subject, Class, Enrollment & Learning Access | Done under the previous baseline; revised Inception uses My Classes for Student, Assigned Classes for Teacher, Subject Classes for subject administration and conditional subject/class assignments from SRS 4.4; Construction pending synchronization | Approved 2026-10-05 (previous baseline) | - |
-| U05 Content, Material & RAG | Done; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Approved 2026-10-05 | - |
-| U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Approved 2026-10-05 | - |
-| U07 Payment & AI Credit | Done under the previous baseline; revised Inception adds Admin package add/edit (UC 67-68) and platform payment history (UC 69); monthly grant remains configuration; Construction pending synchronization | Approved 2026-10-05 (previous baseline) | - |
-| U08 Assessment Core & Publication | Done; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Approved 2026-10-05 | - |
-| U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Approved 2026-10-05 | - |
-| U10 Template & Copy (legacy directory name includes simulation) | Done under the previous baseline; Simulation Exam retired; Inception maps subject templates to UC 53-54 with Subject Template/Template Editor screens; Construction synchronization pending | Approved 2026-10-05 (previous baseline) | - |
-| U11 Attempt & Submission | Done; bảng `attempts` (2026-10-03) | Approved 2026-10-05 | - |
-| U12 Group & Allocation | Done, groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Approved 2026-10-05 | - |
-| U13 AI & Code Execution | Done; `ai_services`, `ai_suggestions` (2026-10-03) | Approved 2026-10-05 | - |
-| U14 Group Document & Submission | Done; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Approved 2026-10-05 | - |
-| U15 Grading | Done; bảng `evaluations` (2026-10-03) | Approved 2026-10-05 | - |
-| U16 Reporting & Notification | Done under the previous baseline; Inception maps View Notifications to UC 11 and View Statistic to UC 57; grade distribution remains on Student assignment lists; Construction references pending synchronization | Approved 2026-10-05 (previous baseline) | - |
+| U01 Account & Access | Design synchronized 2026-10-08; điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U02 Audit | Design synchronized 2026-10-08; Inception now maps View Audit Log to UC 70; Construction references synchronized 2026-10-08; implementation pending | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U03 File, Job & Event | Design synchronized 2026-10-08; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | Generated 2026-10-05, awaiting review (branch `feat/files-and-jobs`) |
+| U04 Subject, Class, Enrollment & Learning Access | Design synchronized 2026-10-08; revised Inception uses My Classes for Student, Assigned Classes for Teacher, Subject Classes for subject administration and conditional subject/class assignments from SRS 4.4; Construction synchronized 2026-10-08; implementation pending | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U05 Content, Material & RAG | Design synchronized 2026-10-08; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U06 Rubric & Question Bank | Design synchronized 2026-10-08; ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U07 Payment & AI Credit | Design synchronized 2026-10-08; revised Inception adds Admin package add/edit (UC 67-68) and platform payment history (UC 69); monthly grant remains configuration; Construction synchronized 2026-10-08; implementation pending | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U08 Assessment Core & Publication | Design synchronized 2026-10-08; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U09 Question Type Authoring | Design synchronized 2026-10-08; lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Design synchronized 2026-10-08; Simulation Exam retired; Inception maps subject templates to UC 53-54 with Subject Template/Template Editor screens; Construction synchronized 2026-10-08; implementation pending | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U11 Attempt & Submission | Design synchronized 2026-10-08; bảng `attempts` (2026-10-03) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U12 Group & Allocation | Design synchronized 2026-10-08; groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U13 AI & Code Execution | Design synchronized 2026-10-08; `ai_services`, `ai_suggestions` (2026-10-03) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U14 Group Document & Submission | Design synchronized 2026-10-08; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U15 Grading | Design synchronized 2026-10-08; bảng `evaluations` (2026-10-03) | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
+| U16 Reporting & Notification | Design synchronized 2026-10-08; Inception maps View Notifications to UC 11 and View Statistic to UC 57; grade distribution remains on Student assignment lists; Construction references synchronized 2026-10-08; implementation pending | Approved 2026-10-05 (previous baseline); revision tasks unchecked | - |
 
 ## Open Items
 
@@ -84,6 +83,7 @@ The completed design stages and approvals below describe the previous Constructi
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-08: Đồng bộ Construction của 16 unit theo 70 UC/51 story, quyền R1–R5/Full, màn mới, package/history Admin, announcement lifecycle và bỏ avatar; giữ lịch sử approvals/bước code đã hoàn thành. Code/contracts chưa triển khai revision.
 - 2026-10-08: Đồng bộ Inception theo SRS mới: 70 UC, 51 story, 16 unit; thêm UC 70 View Audit Log vào Google SRS/bảng quyền và danh mục màn hình. Quyền kế thừa theo phạm vi tài nguyên; thêm quản lý gói credit và lịch sử thanh toán của Admin. Construction và code plans vẫn ở baseline trước, cần đồng bộ riêng.
 - 2026-10-04: CHAPTER đổi thành MODULE của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp kể cả lớp tạo sau dùng chung; mỗi module có nút tải tệp/gắn link; `lessons.class_id` phân biệt học liệu của môn và của lớp). UC 14 đổi thành Comment on Announcement: chỉ giảng viên đăng thông báo, sinh viên và giảng viên bình luận dưới thông báo (2 bình luận mới nhất, popup xem thêm, không thông báo); bỏ `class_discussions`, `discussion_posts`, thêm bảng nối `announcement_comments`. ERD 19 thực thể/31 quan hệ, database 24 bảng/36 khóa ngoại.
 - 2026-10-04: Việc nền, worker, RabbitMQ và sự kiện thông báo chuyển từ U02 sang U03 (U02 chỉ còn audit, U03 thành File, Job & Event); khung dự án chuyển từ plan U01 sang plan U03; thứ tự wave 1: U03 ∥ U02 → U01 → U04. Sửa thiết kế U01–U03, plan, port của các unit dùng việc nền, ma trận và hình phụ thuộc, uc-wave-map.

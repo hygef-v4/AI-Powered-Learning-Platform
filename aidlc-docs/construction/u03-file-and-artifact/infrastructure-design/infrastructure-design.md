@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Infrastructure Design
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
@@ -34,7 +36,7 @@
 
 ## 4. Migration
 
-U03 không có migration: không có bảng PostgreSQL. Bảng sở hữu lưu `file_id` (xem [database](../../../../docs/database.md)).
+U03 không có migration: không có bảng PostgreSQL. Bảng sở hữu lưu `file_id` (xem [mô hình dữ liệu của unit](../functional-design/domain-entities.md)).
 
 ## 5. RabbitMQ (chuyển từ U02)
 

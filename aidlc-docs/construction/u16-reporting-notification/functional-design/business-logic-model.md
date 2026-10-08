@@ -1,5 +1,7 @@
 # U16 Reporting & Notification - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: UC 11, 57; primary stories: US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## F1 - Nhận event
 1. Listener cho mỗi event ở `domain-entities.md` §7 → xác định người nhận (từ payload như `grade.published` kèm danh sách người học, hoặc tra U04/U12/U14) → INSERT `notifications` (ON CONFLICT bỏ qua) (BR-U16-01…03).
 2. Loại có email → `email_status = QUEUED` (`SKIPPED` nếu `accounts.email_preferences` tắt loại đó), ngược lại `NONE`; sau commit gửi việc `EMAIL_SEND {notificationId}` lên `jobs.email` với độ ưu tiên theo loại (BR-U16-10…12).
@@ -24,7 +26,7 @@
 
 ## F6 - Thống kê quản trị và phân bố điểm
 1. Thống kê: kiểm actor là `ADMIN`; lấy số tài khoản theo vai trò × trạng thái qua `AccountLookupPort` (U01), số môn/lớp theo trạng thái và số ghi danh `ACTIVE` qua `ClassAccessPort` (U04); ghép thành `AdminStatistics` và trả về, không lưu (BR-U16-40, 41).
-2. Phân bố điểm: Assignment List của Student (U11) nhúng `GradeDistributionBadge`; badge gọi API của U16 với `classId`; U16 kiểm Student đang ghi danh lớp và cờ `showGradeDistribution` của U04, lấy điểm `PUBLISHED` theo bài qua `GradeQueryPort` (U15) và chỉ trả các khoảng đáp ứng BR-U16-42. Không trả điểm của người khác.
+2. Phân bố điểm: các danh sách bài theo loại của Student (U11) nhúng `GradeDistributionBadge`; badge gọi API của U16 với `classId`; U16 kiểm Student đang ghi danh lớp và cờ `showGradeDistribution` của U04, lấy điểm `PUBLISHED` theo bài qua `GradeQueryPort` (U15) và chỉ trả các khoảng đáp ứng BR-U16-42. Không trả điểm của người khác.
 
 ## F7 - Xuất bảng điểm
 1. Kiểm quyền lớp/bài và bộ lọc trước khi đọc dữ liệu; lấy bảng điểm từ U15, trạng thái nộp từ U11/U14 (BR-U16-43, 44).

@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - Frontend Components
 
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
 shared/document/
   DocumentEditor            mode: SKELETON | STUDENT | READONLY
@@ -30,8 +32,11 @@ app/learning/attempts/[id]/
 | `DrawioPanel` | Nhận `save` từ iframe: `xml` + `svg`; đóng panel | - |
 | `DocxImportDialog` | Hiện "Nhận được N sơ đồ, M ảnh giữ nguyên, K phần bị bỏ" | `POST /api/v1/assignments/{id}/skeleton:import-docx` |
 | `StudentDocxImportDialog` | Chỉ hiện với lượt DOCUMENT đang làm; xem trước rồi xác nhận thêm block bằng luồng lưu nháp U11 và báo xung đột bản nháp | `POST /api/v1/attempts/{id}/docx:preview`, `PUT /api/v1/attempts/{id}/content` |
-| `SkeletonEditor` | Lưu khung; hệ thống tính lại phần theo heading nhỏ nhất (bài nhóm: U14 dựng mỗi phần thành một mục, UC 27) | `PUT /api/v1/assignments/{id}/skeleton` |
+| `SkeletonEditor` | Lưu khung; hệ thống tính lại phần theo heading nhỏ nhất (bài nhóm: U14 dựng mỗi phần thành một mục, UC 43) | `PUT /api/v1/assignments/{id}/skeleton` |
 | `QuestionRubricPanel` | Text Essay: tạo/sửa rubric từng câu; điểm câu tự bằng tổng điểm rubric; báo câu chưa có rubric; tổng điểm bài = tổng các câu | `PUT /api/v1/assignments/{id}/questions/{questionId}/rubric` |
 | `PartRubricPanel` | Tạo/sửa rubric từng phần (có thể điền sẵn từ gợi ý AI); tổng điểm bài = tổng các phần | `PUT /api/v1/assignments/{id}/parts/{partId}/rubric` |
 | `AiSkeletonDraftDialog` | Ẩn khi chưa có U13; phân biệt "Không đủ credit AI" và "Hệ thống đang bận"; xác nhận thì cảnh báo nếu khung đã có nội dung | `POST /api/v1/assignments/{id}/skeleton:ai-draft`, `GET /api/v1/ai-suggestions/{id}` (U13), `POST /api/v1/assignments/{id}/skeleton:apply-ai-draft` |
 | Nút "Tải DOCX" | Ở trang bài làm (U11) và trang chấm (U15) | `GET` của U11/U15 → `DocxExportPort` |
+
+## Type editor labels
+TypeConfigSlot dùng chung component nhưng tên màn theo type: Text Essay Editor (UC 39), Quiz Editor (UC 40), Codelab Editor (UC 41), Diagram Essay Editor (UC 42), Group Essay Editor (UC 43). Rubric trong Text/Diagram/Group Editor là UC 44; Template Editor dùng cùng form theo R2. Internal component/route có thể giữ tên kỹ thuật.

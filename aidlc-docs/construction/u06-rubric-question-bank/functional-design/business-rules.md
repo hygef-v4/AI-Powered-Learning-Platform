@@ -1,12 +1,14 @@
 # U06 Rubric & Question Bank - Business Rules
 
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Phạm vi và quyền
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U06-01 | Ngân hàng cấp môn: Chủ nhiệm môn của môn tạo/sửa/kích hoạt/ngưng (màn Question Bank chỉ có Teacher, Subject Manager); mọi giảng viên có lớp thuộc môn được xem và dùng bản `ACTIVE`. | Câu 1 |
-| BR-U06-02 | Ngân hàng cấp lớp: giảng viên của lớp, Chủ nhiệm môn của môn tạo/sửa; chỉ người quản lý lớp đó thấy. | Câu 1 |
-| BR-U06-03 | Nhân bản câu hỏi: câu cấp lớp → cấp môn chỉ Chủ nhiệm môn làm; cấp môn → cấp lớp mọi người quản lý lớp làm được; cấp lớp → cấp lớp khác chỉ giảng viên dạy cả hai lớp (FR-028). Bản nhân bản là `DRAFT` mới, lưu `clonedFrom`. Rubric không nhân bản riêng (BR-U06-35). | Câu 1 |
+| BR-U06-01 | Subject Question Bank UC 55–56: Subject Manager/Administrator được giao môn R2 tạo/sửa/xóa theo lifecycle. Teacher chỉ đọc/dùng câu ACTIVE được phép trong selector soạn bài, không quản trị/mở bank môn độc lập. | FR-016, R2 |
+| BR-U06-02 | Class Question Bank UC 32–33: Teacher hoặc Subject Manager/Administrator được giao dạy lớp R3/R4. Quản lý môn/Full cấu trúc không đủ đọc/sửa bank lớp. | FR-016, R3/R4 |
+| BR-U06-03 | Clone lớp → môn cần đọc lớp R3/R4 và ghi môn R2; môn → lớp cần dùng câu ACTIVE hợp lệ và ghi lớp R3/R4; lớp → lớp cần dạy cả hai lớp. Bản clone DRAFT với clonedFrom; rubric clone theo bài. | FR-028 |
 | BR-U06-04 | Ngoài phạm vi → "không tìm thấy". | SEC-002 |
 
 ## 2. Phiên bản
@@ -16,9 +18,9 @@
 | BR-U06-10 | Mỗi dòng là một phiên bản bất biến sau khi `ACTIVE`; chỉ `DRAFT` được sửa. | FR-016 |
 | BR-U06-11 | Sửa bản `ACTIVE` tạo phiên bản `DRAFT` mới (`version + 1`, cùng `lineage_id`); mỗi `lineage_id` tối đa 1 `DRAFT`. | FR-016, US-QBK-001 S2 |
 | BR-U06-12 | Bài của U08 lưu `id` phiên bản; phiên bản mới **không** tự áp dụng và **không** báo cho bài đang dùng bản cũ. | Câu 7 |
-| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `lineage_id`; người quản lý xem được lịch sử phiên bản. | UC 23–27 |
+| BR-U06-13 | Tìm kiếm hiển thị bản `ACTIVE` mới nhất mỗi `lineage_id`; người quản lý xem được lịch sử phiên bản. | UC 39, 40, 41, 42, 43 |
 | BR-U06-14 | `RETIRED`: không còn trong tìm kiếm để thêm vào bài mới; bài đang dùng vẫn đọc được. | Thiết kế |
-| BR-U06-15 | Chỉ xóa được bản `DRAFT` chưa từng kích hoạt; bản đã `ACTIVE` không bao giờ xóa. | US-QBK-001 S2 |
+| BR-U06-15 | Xóa DRAFT chưa dùng/chưa từng ACTIVE theo scope/version; bản có tham chiếu hoặc từng ACTIVE chỉ RETIRED, ẩn khỏi chọn mới và giữ version cho bài/lượt cũ; không xóa lịch sử. | FR-016, UC 33/56 |
 | BR-U06-16 | Sửa câu hỏi của bài đang giao (US-QBK-002 S2, S3: snapshot lượt làm, gia hạn, làm lại) thuộc U08/U11, không thuộc U06. | Câu 7 |
 
 ## 3. Câu hỏi
@@ -33,7 +35,7 @@
 | BR-U06-25 | `stem`, lựa chọn, hướng dẫn là markdown ≤ 20 000 ký tự, hiển thị đã làm sạch. | SEC-003 |
 | BR-U06-26 | Kích hoạt câu hỏi yêu cầu `definition` hợp lệ theo loại. | FR-017 |
 | BR-U06-27 | `lessonRefs` phải là module/học liệu U05 thuộc cùng môn (học liệu của lớp chỉ dùng cho câu hỏi của lớp đó). | Câu 9 |
-| BR-U06-28 | Ngân hàng chứa câu hỏi của mọi dạng bài theo bảng dạng bài ở `domain-entities.md` §3. Tìm kiếm lọc được theo dạng bài; khi thêm vào bài, U08 chỉ nhận câu khớp dạng (BR-U08-10, 11). Câu `DOCUMENT` dùng được cho cả Diagram Essay và bài nhóm; phần tự tính theo heading nhỏ nhất của mỗi nhánh, khung không có heading là một phần (BR-U09-25). | UC 23–27, thay đổi 2026-10-01 |
+| BR-U06-28 | Ngân hàng chứa câu hỏi của mọi dạng bài theo bảng dạng bài ở `domain-entities.md` §3. Tìm kiếm lọc được theo dạng bài; khi thêm vào bài, U08 chỉ nhận câu khớp dạng (BR-U08-10, 11). Câu `DOCUMENT` dùng được cho cả Diagram Essay và bài nhóm; phần tự tính theo heading nhỏ nhất của mỗi nhánh, khung không có heading là một phần (BR-U09-25). | UC 39, 40, 41, 42, 43, thay đổi 2026-10-01 |
 
 ## 4. Rubric
 

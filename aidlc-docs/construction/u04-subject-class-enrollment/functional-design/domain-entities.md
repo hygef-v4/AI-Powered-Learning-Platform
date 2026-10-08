@@ -1,6 +1,8 @@
 # U04 Subject, Class, Enrollment & Learning Access - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CAT-005`, `US-LRN-001`; UC 8, UC 9, UC 10, UC 12, UC 19; cấp số đếm cho UC 18 View Statistics (U16).
+**Bản tài liệu 2026-10-08**: UC 12, 13, 27, 28, 45, 46, 47, 48, 49, 50, 63, 64, 65, 66; primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-CAT-005`, `US-LRN-001`; UC 12, 13, 14, 28, 45, 46, 47, 48, 49, 63, 64, 65, 66; cấp số đếm cho UC 57 View Statistics (U16).
 
 ## 1. Tổng quan
 
@@ -50,7 +52,7 @@ stateDiagram-v2
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
 | `teacherAccountId` | UUID | Cột `teacher_id` → `accounts`; giảng viên chính; bắt buộc trước khi `OPEN` |
 | `invite` | `InviteCode` | Cột `invite_code`, `invite_enabled`, `invite_expires_at`; có thể rỗng |
-| `showGradeDistribution` | bool | Mặc định `false`; bật phân bố điểm ẩn danh trên Assignment List của Student khi đủ mẫu |
+| `showGradeDistribution` | bool | Mặc định `false`; bật phân bố điểm ẩn danh trên danh sách bài theo loại của Student (UC 17) khi đủ mẫu |
 | `version` | số | Khóa lạc quan |
 
 ### Trạng thái
@@ -107,7 +109,7 @@ Tính khi người học mở lớp: kiểm ghi danh `ACTIVE` và lớp `OPEN`, 
 |---|---|---|
 | `SubjectScopePort`, `ClassScopePort` | U01 (U01 khai báo, U04 cài); U06, U10 dùng `SubjectScopePort` | `isSubjectManager`, `isTeacherOf`, `subjectOfClass`, `listAssignments(accountId)` (để chặn hạ role); U06, U10 kiểm Chủ nhiệm môn hiện tại của môn |
 | Event `enrollment.activated` | U16 | Sau commit, chỉ cho thông báo ghi danh (BR-U04-26) |
-| `ClassAccessPort` | U05, U06, U08-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`; cho U16 thêm `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` (UC 18) |
+| `ClassAccessPort` | U05, U06, U08-U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`; cho U16 thêm `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` (UC 57) |
 
 ### Port U04 dùng
 

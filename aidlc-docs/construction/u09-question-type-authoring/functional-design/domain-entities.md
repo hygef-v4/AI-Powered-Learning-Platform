@@ -1,6 +1,8 @@
 # U09 Question Type Authoring - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`…`007`, `US-GRP-003` (phần soạn bài); UC 23, UC 24, UC 25, UC 26, UC 27.
+**Bản tài liệu 2026-10-08**: UC 39, 40, 41, 42, 43; primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-004`…`007`, `US-GRP-003` (phần soạn bài); UC 39, 40, 41, 42, 43.
 
 ## 1. Tổng quan
 
@@ -106,6 +108,6 @@ File DOCX chỉ xử lý trong bộ nhớ, không lưu.
 | `RubricPort` | U06 | `createForAssignment`, `revise`, `cloneForAssignment`, `getRubric` cho rubric từng câu và từng phần (BR-U09-23, 26…28) |
 | `AssignmentQueryPort`, `AssignmentExtensionPort` | U08 | Đọc loại bài/trạng thái; ghi cấu hình, khung và điểm câu Text Essay theo rubric |
 | `ArtifactPort` | U03 | Ảnh `DOCUMENT_IMAGE` |
-| `CodeLabCheckPort` | U13 (`C`) | Trạng thái kiểm lời giải mẫu Code Lab khi soạn (UC 26); nút chạy kiểm là `VerifySolutionButton` của U13 (`CODE_RUN` loại `VERIFY`); chưa có U13 thì adapter giả báo "chưa kiểm được lời giải" |
+| `CodeLabCheckPort` | U13 (`C`) | Trạng thái kiểm lời giải mẫu Code Lab khi soạn (UC 41); nút chạy kiểm là `VerifySolutionButton` của U13 (`CODE_RUN` loại `VERIFY`); chưa có U13 thì adapter giả báo "chưa kiểm được lời giải" |
 | `AiDraftPort` | U13 (`C`) | AI soạn khung `SKELETON_DRAFT` cho Diagram Essay, bài nhóm (BR-U09-24); chưa có U13 thì ẩn nút AI |
 | `BankQueryPort` | U06 | Kiểm câu quiz khi duyệt; đọc khung câu `DOCUMENT` để làm điểm xuất phát cho Diagram Essay hoặc bài nhóm (F2 bước 4) |

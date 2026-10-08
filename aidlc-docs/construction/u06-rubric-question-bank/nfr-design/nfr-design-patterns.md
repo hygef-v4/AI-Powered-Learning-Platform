@@ -1,5 +1,7 @@
 # U06 Rubric & Question Bank - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: UC 32, 33, 44, 55, 56; primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Phiên bản bất biến
 - Entity `BankItem` chỉ có phương thức sửa `definition` khi `status = DRAFT`; `activate()`, `retire()` đổi trạng thái.
 - Repository không có `update` tự do; `newDraftFrom(activeId)` sao chép sang dòng mới (NFR-U06-11).

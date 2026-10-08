@@ -1,5 +1,7 @@
 # U11 Attempt & Submission - Infrastructure Design
 
+**Bản tài liệu 2026-10-08**: UC 17, 18, 19, 20, 21, 22, 24, 25; primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
@@ -17,7 +19,7 @@
 ## 3. Migration
 
 `V20260925_1800__u11_attempts.sql`:
-- `attempts` theo [database](../../../../docs/database.md): FK `assignment_id`, `account_id`; unique `(assignment_id, account_id, attempt_no)`; partial unique `(assignment_id, account_id) WHERE status = 'IN_PROGRESS'`; index `(assignment_id, status)`, `(account_id)`, `(status, deadline_at)` cho scanner.
+- `attempts` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md): FK `assignment_id`, `account_id`; unique `(assignment_id, account_id, attempt_no)`; partial unique `(assignment_id, account_id) WHERE status = 'IN_PROGRESS'`; index `(assignment_id, status)`, `(account_id)`, `(status, deadline_at)` cho scanner.
 - `attempts` có `snapshot jsonb`, `content jsonb` (gồm cảnh báo kiểm và thời điểm lưu cuối), `content_version`, `run_result jsonb`, `submit_mode`; truy vấn danh sách lượt chỉ chọn cột metadata, không đọc `content`.
 - Trigger `trg_attempts_immutable` chặn UPDATE `content` khi lượt đã `SUBMITTED`.
 

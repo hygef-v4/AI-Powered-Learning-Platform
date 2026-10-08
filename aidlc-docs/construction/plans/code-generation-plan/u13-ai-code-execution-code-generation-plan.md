@@ -1,5 +1,9 @@
 # U13 AI & Code Execution - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U13. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-AIG-001, US-AIG-002, US-AIG-003, US-ASM-005. **Use case**: UC 22; kiểm lời giải mẫu và chạy code cho UC 26 (U09 chủ trì); luồng AI soạn bản nháp của UC 21 (template) và UC 28 (bài của lớp); phần chạy thử của UC 30.
+- **Story**: US-AIG-001, US-AIG-002, US-AIG-003, US-ASM-005.
+- **Primary UC hiện hành**: Không primary UC (support). Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u13-ai-code-execution/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`Judge0CodeRunner`, `SolutionVerifier`, `PromptInjectionScanner`, `docker-compose.yml`, `judge0.conf`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -105,9 +110,9 @@ PostgreSQL `ai_services`, `ai_suggestions`; kết quả chạy code ghi vào `at
 
 ### Nhóm F - Frontend
 
-- [ ] **Bước 24** - `AiDraftDialog` (credit ước tính, trích dẫn, chọn câu) gắn vào U08, U06, U10; API đề xuất chấm cho `GradeWithAiDialog` của U11 (UC 40).
+- [ ] **Bước 24** - `AiDraftDialog` (credit ước tính, trích dẫn, chọn câu) gắn vào U08, U06, U10; API đề xuất chấm cho `GradeWithAiDialog` của U11 (UC 25, 35).
 - [ ] **Bước 25** - `CodeEditor` (Monaco, nhiều file), `CodeRunResult`, `VerifySolutionButton`; gắn vào `CodeWorkspace` (U11), trình soạn câu `CODE` (U06) và `CodeLabConfigForm` (U09).
-- [ ] **Bước 26** - `AiUsagePage` (màn AI Usage từ Admin Menu) và `AiSettingsDialog` (popup AI Setting trên AI Usage).
+- [ ] **Bước 26** - `AiUsagePage` (màn AI Usage từ Admin Sidebar) và `AiSettingsDialog` (popup AI Setting trên AI Usage).
 - [ ] **Bước 27** - Test frontend: dialog phân biệt "Không đủ credit AI", "Hệ thống đang bận" và "AI đang tắt"; kết quả test ẩn chỉ đạt/không.
 - [ ] **Bước 28** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -120,12 +125,16 @@ PostgreSQL `ai_services`, `ai_suggestions`; kết quả chạy code ghi vào `at
 
 | Nguồn | Bước |
 |---|---|
-| US-AIG-001 (UC 28, luồng AI) | 4, 5, 6, 24 |
-| US-AIG-002 (UC 21, luồng AI) | 6, 24 |
-| US-AIG-003 (UC 22) | 4, 9, 26 |
-| US-ASM-005 (UC 26, phần chạy kiểm; U09 chủ trì) | 2, 10, 11, 12, 25 |
+| US-AIG-001 (UC 38, 39, 40, 41, 42, 43, luồng AI) | 4, 5, 6, 24 |
+| US-AIG-002 (UC 53, 54, luồng AI) | 6, 24 |
+| US-AIG-003 (vận hành AI (không UC trực tiếp)) | 4, 9, 26 |
+| US-ASM-005 (UC 41, phần chạy kiểm; U09 chủ trì) | 2, 10, 11, 12, 25 |
 | Chấm code tự động, đề xuất chấm | 7, 11, 12 |
 
 ## 5. Ngoài phạm vi
 
 - Quyết định dùng đề xuất chấm và chốt điểm (U15); lưu câu AI vào bài/ngân hàng/template (U08/U06/U10).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Không primary UC; hỗ trợ AI UC 25/35, draft UC 39–43/54/56, Judge0 UC 21/41. Admin vận hành AI là US-AIG-003, không tạo UC riêng.
+- [ ] Unit gọi xác minh R2/R3/R4/R5; giữ provider-neutral business descriptions và provider Gemini trong adapter/config.

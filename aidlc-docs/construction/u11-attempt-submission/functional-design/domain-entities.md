@@ -1,6 +1,8 @@
 # U11 Attempt & Submission - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 29, UC 30, UC 31, UC 40. UC 30 là phần nộp bài chung; UC 16 (U14) kế thừa UC 30 cho bài nhóm.
+**Bản tài liệu 2026-10-08**: UC 17, 18, 19, 20, 21, 22, 24, 25; primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-ASM-003`, `US-ASM-012`; phần làm bài của `US-ASM-004`; UC 17, 18, 19, 20, 21, 22, 24, 25, 35. UC 19, 20, 21, 22 là phần nộp bài chung; UC 23 (U14) kế thừa UC 19, 20, 21, 22 cho bài nhóm.
 
 ## 1. Tổng quan
 
@@ -82,7 +84,7 @@ Cấu hình dạng/chế độ bài, chính sách (hạn, nộp trễ, giờ là
 | `AssignmentQueryPort`, `isSubmissionOpen` | U08 | Bài, lịch, hạn |
 | `TypeConfigPort`, `DocumentModelPort`, `DocxExportPort`, `DocxStudentImportPort` | U09 | Cấu hình, kiểm tài liệu, xuất DOCX, xem trước nhập DOCX của người học |
 | `BankQueryPort` | U06 | Góc nhìn người học của câu hỏi |
-| `RubricPort` | U06 | `getRubric` để hiện rubric từng câu (Text Essay) hoặc từng phần (Diagram Essay) cho người học (UC 29) |
+| `RubricPort` | U06 | `getRubric` để hiện rubric từng câu (Text Essay) hoặc từng phần (Diagram Essay) cho người học (UC 17, 18) |
 | `CodeRunPort` | U13 (`C`) | `try` khi đang làm; `grade` khi nộp Practice Code Lab |
 | `PracticeGradingPort` | U13 (`C`) | Xác minh và xếp một lần chấm AI cho attempt Practice Text/Diagram Essay khi đủ credit |
 | `GradeQueryPort` | U15 (`C`: ẩn điểm tới khi U15 có) | Hiển thị điểm/đáp án theo BR-U11-33 |

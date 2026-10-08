@@ -1,5 +1,9 @@
 # U14 Group Document & Submission - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U14. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15). **Use case**: UC 16; dựng tài liệu nhóm và nhả khóa mục cho UC 27 (U09 chủ trì).
+- **Story**: US-GRP-003 (phần tài liệu nhóm), US-GRP-004, US-GRP-005; hỗ trợ US-GRP-006 (dữ liệu cho U15).
+- **Primary UC hiện hành**: UC 23. Supporting flows theo current-srs-contract.md.
 - **Thay đổi 2026-10-04**: tài liệu nhóm ở bảng `group_documents` (một nhóm của lớp × một bài nhóm); mỗi phần của khung là một mục, trưởng nhóm giao mục (không có mục chi tiết); người giữ sửa mục trong popup che kín trang; không có bước review; trưởng nhóm nộp bất kỳ lúc nào trước hạn; hết hạn tự nộp gồm phần đang làm.
 - **Thiết kế nguồn**: `construction/u14-group-document-submission/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
@@ -96,9 +101,9 @@ PostgreSQL: `group_documents` (mục, lịch sử, bản nộp nằm trong cột
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 20** - `GroupDocumentPage` (`GroupDocHeader`, `SectionOutline`, `SharedBlocksView`, `SectionView`, `AssignSectionsDialog`, `SubmitGroupDialog`, `AutoSubmitOverlay`), `useGroupDocStream`; `GroupSubmissionView` cho màn Submitted Assignment.
+- [ ] **Bước 20** - `GroupDocumentPage` (`GroupDocHeader`, `SectionOutline`, `SharedBlocksView`, `SectionView`, `AssignSectionsDialog`, `SubmitGroupDialog`, `AutoSubmitOverlay`), `useGroupDocStream`; `GroupSubmissionView` cho màn Submission History.
 - [ ] **Bước 21** - `SectionEditorDialog` popup che kín trang, hiện các heading trên nhánh của mục cùng nội dung của chúng và các block của mục, không hiện nhánh khác (`DocumentEditor` của U09, tự lưu, Xong, Nhả có hộp xác nhận bỏ bản nháp); Xong đóng popup và workspace cập nhật realtime.
-- [ ] **Bước 22** - `GroupDocsOverviewPanel` cho giảng viên, gắn vào Grading Queue (U15) của bài nhóm (tiến độ, nhả khóa, xem bản nộp).
+- [ ] **Bước 22** - `GroupDocsOverviewPanel` cho giảng viên, gắn vào Student Submissions (U15) của bài nhóm (tiến độ, nhả khóa, xem bản nộp).
 - [ ] **Bước 23** - Test frontend: nhận mục bị người khác nhận trước hiện thông báo; sự kiện SSE cập nhật trạng thái mục; mất kết nối thì tải lại.
 - [ ] **Bước 24** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -111,11 +116,14 @@ PostgreSQL: `group_documents` (mục, lịch sử, bản nộp nằm trong cột
 
 | Nguồn | Bước |
 |---|---|
-| US-GRP-003 (UC 27, phần tài liệu nhóm; U09 chủ trì) | 3, 4, 22 |
-| US-GRP-004 (UC 16) | 4, 5, 20, 21 |
-| US-GRP-005 (UC 16) | 5, 7, 20 |
+| US-GRP-003 (UC 43, phần tài liệu nhóm; U09 chủ trì) | 3, 4, 22 |
+| US-GRP-004 (UC 23) | 4, 5, 20, 21 |
+| US-GRP-005 (UC 23) | 5, 7, 20 |
 | US-GRP-006 (dữ liệu cho U15) | 8 |
 
 ## 5. Ngoài phạm vi
 
 - Chấm và điểm cuối (U15), thông báo (U16), nhóm của lớp (U12).
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Primary UC 23 Complete Group Assignment; authoring UC 43 do U09. Group Essay Workspace/Submission History/Student Submissions đúng nhãn, R5 membership và Teacher support R3/R4.

@@ -1,5 +1,9 @@
 # U07 Payment & AI Credit - Code Generation Plan
 
+**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U07. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -8,7 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-PAY-001, US-PAY-002. **Use case**: UC 37. Job tự đối soát thuộc US-PAY-002; không có thao tác admin đối soát hoặc điều chỉnh credit thủ công.
+- **Story**: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005.
+- **Primary UC hiện hành**: UC 08, 09, 10, 67, 68, 69. Supporting flows theo current-srs-contract.md.
 - **Thiết kế nguồn**: `construction/u07-payment-credit/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -64,7 +69,7 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 - [ ] **Bước 2** - Domain: gói, giao dịch và chuyển trạng thái, số dư (BR-U07-01…08).
 - [ ] **Bước 3** - Port `CreditPort`, `PaymentProviderPort`, `CreditUsagePort` (adapter rỗng tới khi có U13); `FakePayosAdapter` (chỉ khi không phải prod).
 - [ ] **Bước 4** - `BalanceService.apply` với khóa dòng tài khoản; cả bốn vai trò `ACTIVE` có ví và được tặng tháng cùng mức; chặn số dư âm (F5, P1, BR-U07-01, 30…34).
-- [ ] **Bước 5** - `PackageService` nạp gói từ `U07_PACKAGES` khi khởi động, đọc mức tặng tháng từ `U07_MONTHLY_FREE_CREDITS` (F7, BR-U07-02).
+- [ ] **Bước 5** - PackageService/AdminService đọc/thêm/sửa gói với version/audit; U07_PACKAGES chỉ INSERT seed thiếu, không ghi đè Admin; monthly grant đọc U07_MONTHLY_FREE_CREDITS (F7–F8).
 - [ ] **Bước 6** - `PaymentService`: kiểm tài khoản `ACTIVE` thuộc bốn vai trò hiện hành và chủ ví trước khi tạo giao dịch hoặc gọi PayOS; idempotency, giới hạn 3 `PENDING`, `orderCode`, `FAILED`, hủy/hết hạn (F1, F2, P4, BR-U07-01, 03…07).
 - [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13); sau commit phát `payment.paid` qua `EventPublisherPort` (BR-U07-53).
 - [ ] **Bước 8** - `CreditPortService`: `reserve` (trả `{reserved, fromFree}`), `settle`, `release`, `balance`, chạy trong transaction của U13; `reserve` kiểm purpose/attemptRef, Student chỉ được `PRACTICE_GRADING` Text/Diagram Essay của mình (F6, P5, BR-U07-01, 40…43).
@@ -85,13 +90,13 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 
 - [x] **Bước 18** - `/contracts/openapi/billing.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
 - [ ] **Bước 19** - Controller + DTO + validation; rate limit webhook.
-- [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví, nhận tặng tháng và mua credit của mình; không xem giao dịch người khác; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
+- [ ] **Bước 20** - Test MockMvc: Student `ACTIVE` được xem gói/ví, nhận tặng tháng và mua credit của mình; owner endpoint không xem người khác; ADMIN query riêng xem global history chỉ đọc; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage` (`PackageList`, `PaymentHistoryTable`, `CreditUsageTable`), checkout và `PaymentResultPage` cho cả bốn vai trò; Student xem ví và mua credit để chấm Practice (UC 40).
-- [ ] **Bước 23** - Trang thanh toán giả cho local (không có màn quản lý gói).
+- [ ] **Bước 22** - `CreditBalanceBadge`, `CreditsPage` (`PackageList`, `PaymentHistoryTable`, `CreditUsageTable`), checkout và `PaymentResultPage` cho cả bốn vai trò; Student xem ví và mua credit để chấm Practice (UC 25).
+- [ ] **Bước 23** - Trang thanh toán giả local, CreditPackageSettingPage/Admin form và PaymentHistoryPage query toàn hệ thống theo F8–F9.
 - [ ] **Bước 24** - Test frontend: trang kết quả không báo thành công khi chưa `PAID`.
 - [ ] **Bước 25** - Tóm tắt: `code/frontend-summary.md`.
 
@@ -104,11 +109,18 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 
 | Nguồn | Bước |
 |---|---|
-| US-PAY-001 (UC 37) | 5, 6, 15, 22 |
-| US-PAY-002 (UC 37) | 7, 9, 16, 20 |
+| US-PAY-001 (UC 08, 09, 10) | 5, 6, 15, 22 |
+| US-PAY-002 (UC 08, 09, 10) | 7, 9, 16, 20 |
 | Credit cho U13 | 4, 8, 16 |
 
 ## 5. Ngoài phạm vi
 
 - Tính token thực tế, kill-switch và quota AI (U13).
 - Hoàn tiền.
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] PackageAdminController/Service GET/POST /admin/credit-packages và PATCH /{id} với version; name/information/price/credits validate, audit atomic, không DELETE.
+- [ ] PaymentAdminQueryService GET /admin/payments, account/package/time/status filters, pagination ≤ 100; ADMIN only, trả snapshot-safe DTO không secret.
+- [ ] Migration information/version/actor-time cho packages; packageName/information snapshot cho payment mới, tương thích payment cũ. Seed không ghi đè gói đã sửa.
+- [ ] Test old PENDING/PAID snapshot không đổi sau edit; version cũ bị 409; role khác không add/edit/query global; /me/result vẫn owner-only.
+- [ ] UI Credit Packages/Credit Package Setting/Payment History; không manual balance, reconciliation, refund, package delete hay sửa monthly grant.

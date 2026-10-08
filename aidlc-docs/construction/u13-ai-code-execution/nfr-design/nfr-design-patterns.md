@@ -1,5 +1,7 @@
 # U13 AI & Code Execution - NFR Design Patterns
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - AiGuard trước mọi lời gọi
 Thứ tự, dừng ở bước đầu tiên không đạt, ghi dòng `ai_suggestions` `REJECTED_BUSY` hoặc `NO_CREDIT`:
 1. Kill-switch: dòng `GLOBAL` và dòng loại việc trong `ai_services` (cache 30 s).

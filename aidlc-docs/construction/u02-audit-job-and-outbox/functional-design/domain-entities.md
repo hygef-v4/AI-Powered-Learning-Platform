@@ -1,6 +1,8 @@
 # U02 Audit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 39. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
+**Bản tài liệu 2026-10-08**: UC 70; primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 70. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
 
 ## 1. Tổng quan
 

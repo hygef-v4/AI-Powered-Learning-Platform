@@ -1,6 +1,8 @@
 # U14 Group Document & Submission - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-003`…`005`; UC 16 (kế thừa UC 30 Submit Assignment của U11: tự lưu, biên nhận, trễ, tự nộp khi hết hạn/ngưng giao; U14 làm phần riêng của bài nhóm); dựng tài liệu nhóm và nhả khóa mục cho UC 27 (U09 chủ trì). Bảng theo [database](../../../../docs/database.md): toàn bộ tài liệu nhóm nằm trong một dòng `group_documents` (thực thể `GROUP_DOCUMENT`); không có bảng `sections`, `section_revisions`, `section_comments`, `group_submissions` (quyết định 2026-10-03).
+**Bản tài liệu 2026-10-08**: UC 23; primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-003`…`005`; UC 23 (kế thừa UC 19, 20, 21, 22 Submit Assignment của U11: tự lưu, biên nhận, trễ, tự nộp khi hết hạn/ngưng giao; U14 làm phần riêng của bài nhóm); dựng tài liệu nhóm và nhả khóa mục cho UC 43 (U09 chủ trì). Bảng theo [mô hình dữ liệu của unit](domain-entities.md): toàn bộ tài liệu nhóm nằm trong một dòng `group_documents` (thực thể `GROUP_DOCUMENT`); không có bảng `sections`, `section_revisions`, `section_comments`, `group_submissions` (quyết định 2026-10-03).
 
 ## 1. Tổng quan
 

@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Business Logic Model
 
+**Bản tài liệu 2026-10-08**: không primary UC; primary stories: không primary story. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 Luồng F1–F5 cho tệp; J1–J4 cho việc nền, E1 cho sự kiện thông báo.
 
 ## 1. F1 - Upload
@@ -37,7 +39,6 @@ Luồng F1–F5 cho tệp; J1–J4 cho việc nền, E1 cho sự kiện thông b
 
 ## 5. F5 - Kiểm ảnh đại diện (cho U01)
 
-`validateAvatar(fileRef, actor)`: như `attach` với `purpose = AVATAR`; trả `fileId` để U01 lưu `avatar_file_id`.
 
 ## 6. Việc nền (J1–J4, chuyển từ U02)
 

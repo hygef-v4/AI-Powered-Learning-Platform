@@ -1,5 +1,7 @@
 # U10 Template & Copy - Logical Components
 
+**Bản tài liệu 2026-10-08**: UC 53, 54; primary stories: US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Sơ đồ
 
 TemplateController gọi TemplateService và U08 để tạo, sửa, phát hành template (dòng `assignments` của môn). CopyController gọi AssignmentCopier, ScopeGuard (U04), U08, U06 và U09 trong một transaction. DiffController gọi AssignmentDiffer và đọc version từ U08. U10 lưu template và lineage trong `assignments` (qua U08) qua `AssignmentExtensionPort`.

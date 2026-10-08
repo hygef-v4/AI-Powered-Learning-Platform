@@ -1,6 +1,8 @@
 # U05 Content, Material & RAG - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 11, UC 12, UC 13, UC 14 (Comment on Announcement). Bảng theo [database](../../../../docs/database.md).
+**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 14, 26, 29–31, 51–52; comment là supporting flow của thông báo. Bảng theo [mô hình dữ liệu của unit](domain-entities.md).
 
 Quyết định 2026-10-03: học liệu chỉ **tải lên rồi quét**. Không soạn nội dung trực tiếp, không phiên bản, không phát hành. Quyết định 2026-10-04: chapter đổi thành **module của môn** do Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung; mỗi lesson là một tài liệu trong module, là học liệu của môn hoặc của một lớp; hỏi đáp lớp đổi thành bình luận dưới thông báo.
 
@@ -71,9 +73,11 @@ stateDiagram-v2
 | `id` | UUID | |
 | `class_id` | UUID | |
 | `author_id` | UUID | Giảng viên của lớp (BR-U05-60) |
-| `title`, `body` | chuỗi | Tiêu đề ≤ 200, nội dung ≤ 5 000 ký tự; không sửa sau khi đăng |
+| `title`, `body` | chuỗi | Tiêu đề ≤ 200, nội dung ≤ 5 000; R3/R4 sửa với version |
 | `posted_at` | thời gian | |
-| `status`, `hidden_reason` | enum, chuỗi | `VISIBLE`, `HIDDEN`; lý do khi ẩn |
+| `status`, `hidden_reason` | enum, chuỗi | Announcement: VISIBLE/HIDDEN/DELETED; xóa mềm khỏi feed, giữ audit/tham chiếu |
+| `version`, `updated_at`, `updated_by` | số, thời gian, UUID | Kiểm optimistic lock, actor/thời điểm sửa |
+| `deleted_at`, `deleted_by` | thời gian, UUID | Khi DELETED; không xóa dòng |
 
 ## 5. `AnnouncementComment`
 
@@ -86,7 +90,7 @@ stateDiagram-v2
 | `posted_at` | thời gian | |
 | `status`, `hidden_reason` | enum, chuỗi | `VISIBLE`, `HIDDEN`; lý do khi ẩn |
 
-### Trạng thái (thông báo, bình luận)
+### Trạng thái bình luận (thông báo còn có DELETED)
 
 ```mermaid
 stateDiagram-v2
@@ -95,7 +99,7 @@ stateDiagram-v2
     HIDDEN --> [*]
 ```
 
-**Text alternative**: Thông báo và bình luận đăng ra ở trạng thái hiển thị. Giảng viên lớp ẩn nội dung vi phạm (ghi lý do, người ẩn ghi trong audit) thì sang `HIDDEN`. Không sửa, không xóa cứng.
+**Text alternative**: Bình luận đăng VISIBLE, giảng viên lớp ẩn vi phạm với lý do thì HIDDEN, không sửa/xóa cứng. Announcement riêng: VISIBLE hoặc HIDDEN có thể cập nhật theo version; delete chuyển DELETED và ẩn khỏi feed, giữ dòng/tham chiếu/audit; không sửa hay bình luận mới khi DELETED.
 
 ## 6. Contract
 
@@ -120,3 +124,6 @@ stateDiagram-v2
 | `AiUsagePort` | U13 (`C`) | Kiểm AI bật, trần chi phí, giữ/trừ credit và ghi `ai_suggestions` cho mỗi lần embedding |
 | `EmbeddingPort` | Adapter Gemini | `embed(texts)` → vector |
 | `YoutubePort` | Adapter YouTube | Lấy phụ đề video |
+
+## API thông báo
+GET/POST /api/v1/classes/{id}/announcements; PATCH/DELETE /api/v1/announcements/{id} với version và R3/R4. updateAnnouncement/deleteAnnouncement ghi audit cùng transaction; chỉ POST mới phát class.announcement-posted. Danh sách bỏ DELETED; API comment từ chối thông báo đã xóa.
