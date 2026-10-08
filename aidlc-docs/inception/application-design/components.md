@@ -9,7 +9,7 @@ MVP dùng modular monolith: frontend Next.js, một backend Spring Boot chia th�
 | Component | Trách nhiệm | Unit |
 |---|---|---|
 | Web Shell | Điều hướng, phiên, layout desktop-first, chuông thông báo (SSE) | U01, U16 |
-| Account & Admin Console | Kích hoạt, đăng nhập, hồ sơ, quản lý tài khoản/role, audit, cấu hình AI, thống kê hệ thống | U01, U02, U07, U13, U16 |
+| Account & Admin Console | Kích hoạt, đăng nhập, hồ sơ (không đổi avatar), quản lý tài khoản/role, Audit Log (UC 70), Credit Package Setting, Payment History, cấu hình AI và Statistic | U01, U02, U07, U13, U16 |
 | Class Console | Môn, lớp, ghi danh, mã mời, module và học liệu, thông báo và bình luận lớp | U04, U05 |
 | Student Space | Lớp của tôi, học liệu, bình luận thông báo, làm bài, lịch sử nộp, điểm, phân bố điểm ẩn danh; ví/credit và kết quả AI Practice Text/Diagram Essay theo từng attempt | U04, U05, U07, U11, U13, U15, U16 |
 | Bank Console | Ngân hàng câu hỏi/rubric cấp môn và lớp, nhập Excel/CSV | U06 |
@@ -19,7 +19,7 @@ MVP dùng modular monolith: frontend Next.js, một backend Spring Boot chia th�
 | Grading Console | Hàng chờ chấm, chấm tay/AI đề xuất theo rubric checklist, chốt, công bố, sổ điểm, tiến độ nộp, xuất CSV/XLSX | U15, U16 |
 | Code Editor | Monaco nhiều file, chạy thử, kết quả test | U13 |
 
-Frontend không phải nguồn quyết định authorization; ẩn/hiện UI chỉ hỗ trợ trải nghiệm.
+Frontend không quyết định authorization. Tên màn theo `docs/use-cases-and-screens.md` và Drawio mới: Credit Packages, Learning Material, Class/Subject Question Bank, Question Editor, Student Submissions, Submission History, Assignment List của Teacher và năm danh sách bài của Student. Template UC 53–54 vẫn thuộc MVP nhưng chưa có màn trong Drawio.
 
 ## 3. Thành phần backend
 
@@ -27,11 +27,11 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 |---|---|
 | Identity & Access (U01) | Tài khoản `PENDING/ACTIVE/DISABLED`, OTP kích hoạt/khôi phục, JWT + refresh cookie, hồ sơ, role, nhập CSV, `authorize` |
 | Audit (U02) | Audit append-only ghi trong transaction, tra cứu cho Admin |
-| File, Job & Event (U03) | Upload qua backend (avatar, học liệu, ảnh trong tài liệu), kiểm magic bytes, lưu Google Drive, token tải 5 phút; 7 queue RabbitMQ theo tính chất (gửi sau commit, retry bằng queue TTL, trạng thái trên dòng nghiệp vụ, `PendingSweeper`, `ScheduledScanner`), worker, sự kiện thông báo; không có bảng job |
+| File, Job & Event (U03) | Upload qua backend (học liệu, ảnh trong tài liệu), kiểm magic bytes, lưu Google Drive, token tải 5 phút; 7 queue RabbitMQ theo tính chất (gửi sau commit, retry bằng queue TTL, trạng thái trên dòng nghiệp vụ, `PendingSweeper`, `ScheduledScanner`), worker, sự kiện thông báo; không có bảng job |
 | Academic & Learning Access (U04) | Môn, lớp `DRAFT/OPEN/ARCHIVED`, giảng viên, Chủ nhiệm môn, ghi danh, mã mời, lớp của người học |
-| Content & RAG (U05) | Module của môn (Chủ nhiệm môn tạo), học liệu tải lên của môn hoặc của lớp (tệp, YouTube chỉ caption có sẵn), trích chữ, embedding Gemini + pgvector, `retrieve`; thông báo và bình luận lớp |
+| Content & RAG (U05) | Module của môn (Chủ nhiệm môn tạo), học liệu tải lên của môn hoặc của lớp (tệp, YouTube chỉ caption có sẵn), trích chữ, embedding AI + pgvector, `retrieve`; thông báo lớp tạo/sửa/xóa theo phân công và bình luận hỗ trợ |
 | Question Bank (U06) | Câu hỏi cho cả năm dạng bài (trắc nghiệm, Text Essay, tài liệu/Diagram Essay, Code Lab, khung bài nhóm) và rubric checklist có phiên bản, cấp môn/lớp, nhập Excel/CSV |
-| Payment & AI Credit (U07) | Gói credit cố định, PayOS, webhook có chữ ký, tự đối soát định kỳ, ví credit (tặng tháng + mua), giữ/trừ/trả credit |
+| Payment & AI Credit (U07) | Gói credit do Admin xem/thêm/sửa (UC 67–68), Payment History toàn nền tảng (UC 69), PayOS/webhook/tự đối soát, ví credit (tặng tháng cấu hình + mua), giữ/trừ/trả; snapshot giá/credit của giao dịch |
 | Assessment Core (U08) | Bài có version, thành phần, duyệt, phát hành từng lớp, nộp trễ, khóa nội dung, ngưng giao, nhân bản, lịch mở/đóng |
 | Question Types & Documents (U09) | Cấu hình trắc nghiệm/bài viết/tài liệu, mô hình tài liệu, khung, nhập/xuất DOCX, nhận sơ đồ trong ảnh, rút gọn XML |
 | Template & Copy (U10) | Template cấp môn, copy giữa lớp, lineage, diff version |
@@ -66,3 +66,7 @@ Frontend không phải nguồn quyết định authorization; ẩn/hiện UI ch�
 - Thanh toán chỉ cộng credit AI sau webhook đã xác minh hoặc job tự đối soát; không ảnh hưởng quyền vào lớp.
 - Không có đề chung cấp môn; không sao chép khóa học/lớp.
 - Hệ thống không tự quét malware; file bị Google Drive gắn cờ abuse bị coi là không dùng được.
+
+## 6. Phạm vi authorization theo SRS mới
+
+User chung theo R1; Student theo R5; Teacher theo R3; Subject Manager/Administrator dùng Teacher theo R4 và tài nguyên môn theo R2. Admin quản trị cấu trúc Full không cấp quyền đọc/chấm gradebook toàn nền tảng. Question Bank dùng hai scope CLASS/SUBJECT; Audit Log chỉ Admin và chỉ đọc. Inception hiệu lực có 70 UC/51 story; thiết kế Construction chưa được đồng bộ trong lần sửa này.

@@ -4,7 +4,7 @@
 
 ## Mục tiêu
 
-Phân rã modular monolith thành các đơn vị lập kế hoạch/triển khai có ranh giới rõ, dependency order hợp lý và truy vết đủ 59 user story. Các module vẫn nằm trong một backend Spring Boot deployable; “unit of work” dùng để tổ chức thiết kế và phát triển tuần tự.
+Phân rã modular monolith thành các đơn vị lập kế hoạch/triển khai có ranh giới rõ, dependency order hợp lý và truy vết đủ 51 user story và 70 UC theo SRS mới. Các module vẫn nằm trong một backend Spring Boot deployable; “unit of work” dùng để tổ chức thiết kế và phát triển tuần tự.
 
 ## Các bước Part 1 - Planning
 
@@ -20,7 +20,7 @@ Phân rã modular monolith thành các đơn vị lập kế hoạch/triển kha
 
 - [x] Sinh `unit-of-work.md` với định nghĩa, trách nhiệm và code organization
 - [x] Sinh `unit-of-work-dependency.md` với dependency matrix và critical path
-- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 49 story MVP và 40 UC hiện hành (`docs/use-case-table.md`).
+- [x] Sinh `unit-of-work-story-map.md` ánh xạ đủ 51 story MVP và 70 UC hiện hành (`docs/use-cases-and-screens.md`).
 - [x] Validate ranh giới và dependency
 - [x] Validate mọi story được gán đúng unit
 - [x] Cập nhật trạng thái và trình checkpoint Units Generation
@@ -234,3 +234,11 @@ Tất cả câu hỏi đã được trả lời và kiểm tra. Part 2 chỉ b�
 - [x] Đồng bộ requirements, stories và use cases để tiến độ bài học nằm ngoài phạm vi, trong khi trạng thái bài nộp/điểm vẫn được giữ.
 - [x] Ghi nhận yêu cầu "review lại doc và giúp tôi triển khai construction phase" là chỉ dẫn bắt đầu Construction theo bộ 16 unit sau khi review.
 - [x] Bắt đầu Functional Design U01 Account & Access; tạo kế hoạch và câu hỏi riêng, chưa sinh thiết kế chi tiết khi còn câu hỏi chưa trả lời.
+
+## Revision 2026-10-08 - Coverage hiện hành
+
+- [x] Giữ 16 unit/wave/dependency hiện có.
+- [x] Mỗi UC 01–70 có đúng một primary unit; U02 chủ trì UC 70, U03/U13 không có UC trực tiếp.
+- [x] Mỗi story trong bộ 51 có đúng một primary unit; US-GRP-003 chỉ đếm tại U09, U14 đóng góp.
+- [x] Thêm package/payment-history stories cho U07 và scope kiểm quyền theo SRS 4.4.
+- [x] Cập nhật tên màn và điểm thiếu template; ghi rõ Construction cần đồng bộ tiếp.

@@ -5,9 +5,10 @@
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
 - **Current Stage**: Code Generation Part 2. All 16 code plans approved on 2026-10-05. Project skeleton (U03 K1-K6), cross-unit contracts (`contracts/`), port interfaces and stub implementations with final class names are merged (PR #1). U03 code generated on branch `feat/files-and-jobs`, awaiting review.
-- **Resume action**: Review U03 generated code (steps J9, 18 are integration tests left to the tester). After approval continue wave 1 with U02, then U01, U04. Integration tests are not written by units (dedicated tester, 2026-10-05).
+- **Resume action**: Before implementing changed requirements, synchronize affected Construction designs, contracts and code plans with the 70-UC SRS and revised Inception. Review U03 generated code (steps J9, 18 are integration tests left to the tester). After approval continue wave 1 with U02, then U01, U04. Integration tests are not written by units (dedicated tester, 2026-10-05).
 
 ## Latest documentation decision
+- **2026-10-08**: Added UC 70 View Audit Log and its Administrator-only permission row to the Google SRS; verified the saved document. Synchronized `docs/use-cases-and-screens.md` and active Inception requirements, personas, stories, application design and planning summaries with 70 UC, 51 stories and 16 units. UC 70 belongs to U02 and uses the existing Audit Log screen. Screen names match the supplied `screen-flow.drawio`; UC 53-54 remain explicitly unmapped because that diagram has no subject-template screens. Construction designs, contracts, code plans and older local specification catalogs still require a separate synchronization. The user's diagram was not edited; implementation checkpoints and historical audit records are preserved.
 - **2026-10-04**: Email provider changed to Brevo SMTP for demo/production; Mailpit retained for local/tests. U01/U16 email design, shared infrastructure, Inception provider selection and code-generation references synchronized. Existing code-generation approval checkpoints remain unchanged.
 
 ## Workspace State
@@ -39,7 +40,7 @@
 - [x] Requirements Analysis
 - [x] User Stories
 - [x] Workflow Planning
-- [x] Application Design (synchronized with unit designs 2026-09-25; global ERD removed - tables are defined per unit)
+- [x] Application Design (revised for the 70-UC SRS on 2026-10-08; global ERD removed - tables are defined per unit)
 - [x] Units Generation (16 units)
 
 ### CONSTRUCTION
@@ -54,33 +55,36 @@
 
 ## Unit Progress
 
+The completed design stages and approvals below describe the previous Construction baseline. The 2026-10-08 Inception revision does not approve or implement changed scope. In particular, conditional role inheritance, profile fields, package administration, payment-history viewing, announcement changes and revised UC references require review in affected Construction artifacts before implementation.
+
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
 | U01 Account & Access | Done, điều hướng theo role sau đăng nhập (BR-U01-48, 2026-10-01) | Approved 2026-10-05 | - |
-| U02 Audit | Done; chỉ còn audit (`audit_logs`, UC 39); việc nền chuyển sang U03 (2026-10-04) | Approved 2026-10-05 | - |
+| U02 Audit | Done under the previous baseline; Inception now maps View Audit Log to UC 70; Construction references pending synchronization | Approved 2026-10-05 (previous baseline) | - |
 | U03 File, Job & Event | Done; tệp trên Google Drive, không có bảng; nhận việc nền, worker, sự kiện thông báo và khung dự án từ U02/U01, code đầu tiên (2026-10-04) | Approved 2026-10-05 | Generated 2026-10-05, awaiting review (branch `feat/files-and-jobs`) |
-| U04 Subject, Class, Enrollment & Learning Access | Done, Chủ nhiệm môn quản lý lớp của môn như ADMIN; Subject Detail pages; Student lands on Student Menu (2026-10-03) | Approved 2026-10-05 | - |
+| U04 Subject, Class, Enrollment & Learning Access | Done under the previous baseline; revised Inception uses My Classes and conditional subject/class assignments from SRS 4.4; Construction pending synchronization | Approved 2026-10-05 (previous baseline) | - |
 | U05 Content, Material & RAG | Done; module của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp dùng chung), học liệu của môn/lớp tải lên rồi quét; bình luận dưới thông báo thay hỏi đáp lớp (2026-10-04) | Approved 2026-10-05 | - |
 | U06 Rubric & Question Bank | Done, ngân hàng câu hỏi cho cả năm dạng bài (2026-10-01) | Approved 2026-10-05 | - |
-| U07 Payment & AI Credit | Done, credit packages and monthly grant are fixed configuration, no admin screen (2026-10-03) | Approved 2026-10-05 | - |
+| U07 Payment & AI Credit | Done under the previous baseline; revised Inception adds Admin package add/edit (UC 67-68) and platform payment history (UC 69); monthly grant remains configuration; Construction pending synchronization | Approved 2026-10-05 (previous baseline) | - |
 | U08 Assessment Core & Publication | Done; lịch bài nằm trên `assignments`, không có `publications` (2026-10-03) | Approved 2026-10-05 | - |
 | U09 Question Type Authoring | Done, lấy khung tài liệu từ ngân hàng (F2 bước 4, 2026-10-01) | Approved 2026-10-05 | - |
-| U10 Template & Copy (legacy directory name includes simulation) | Done, Simulation Exam retired; owns UC 21 Manage Templates with create/AI draft/delete (2026-10-01) | Approved 2026-10-05 | - |
+| U10 Template & Copy (legacy directory name includes simulation) | Done under the previous baseline; Simulation Exam retired; Inception maps subject templates to UC 53-54; diagram screens and Construction synchronization pending | Approved 2026-10-05 (previous baseline) | - |
 | U11 Attempt & Submission | Done; bảng `attempts` (2026-10-03) | Approved 2026-10-05 | - |
 | U12 Group & Allocation | Done, groups moved to class level (2026-10-01); wave 2 sau U04 (2026-10-04) | Approved 2026-10-05 | - |
 | U13 AI & Code Execution | Done; `ai_services`, `ai_suggestions` (2026-10-03) | Approved 2026-10-05 | - |
 | U14 Group Document & Submission | Done; mục/bình luận/bản nộp gộp vào `group_documents`; sửa mục trong popup che kín trang, bỏ bước REVIEW, hết hạn tự nộp gồm phần đang làm (2026-10-04) | Approved 2026-10-05 | - |
 | U15 Grading | Done; bảng `evaluations` (2026-10-03) | Approved 2026-10-05 | - |
-| U16 Reporting & Notification | Done, UC 18 View Statistics for Administrator, grade distribution on student Assignment List (2026-10-03) | Approved 2026-10-05 | - |
+| U16 Reporting & Notification | Done under the previous baseline; Inception maps View Notifications to UC 11 and View Statistic to UC 57; grade distribution remains on Student assignment lists; Construction references pending synchronization | Approved 2026-10-05 (previous baseline) | - |
 
 ## Open Items
 
 - Thay đổi ngày 2026-09-29 đã được người dùng xác nhận và đồng bộ vào Inception/Construction: `STUDENT`/`TEACHER`; năm dạng bài (Code Lab, Text Essay, Diagram Essay, Group Assignment, Multiple-Choice Quiz), không có Simulation Exam; `GRADED` và `PRACTICE` theo ràng buộc từng dạng. Student có thể mua credit, chỉ dùng AI chấm attempt Practice Text/Diagram Essay của mình: nộp không tự chấm, Student bấm "Chấm với AI" và cần đủ credit lúc bấm; thiếu credit thì mua thêm rồi bấm lại (cập nhật 2026-10-04). Teacher chỉ chấm bài Graded.
-- Nhóm chỉ triển khai một MVP: 49 story và 40 use case hiện hành (`docs/use-case-table.md`; 77 → 69 → 64 → 40 → 39 → 40 là các mốc gộp/tách). US-CNT-004, US-RPT-002 và US-RPT-003 thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2.
-- Critical path (by H edges, 2026-10-04): U02 hoặc U03 → U01 → U04 → U05 (hoặc U06) → U08 → U09 → U11 (hoặc U14) → U15 → U16. Waves: W1 U03 ∥ U02 → U01 → U04; W2 U05–U08, U12; W3 U09 (năm loại bài, UC 23–27), U11, U14, U15; W4 U10, U13, U16. U15 → U13 và U09 → U13 là `C`; U03 → U01, U02 là `C`.
+- Nhóm chỉ triển khai một MVP: 51 story và 70 use case hiện hành theo SRS và `docs/use-cases-and-screens.md`. Hai story mới là `US-PAY-004` (Admin quản lý gói credit) và `US-PAY-005` (Admin xem lịch sử thanh toán toàn hệ thống). US-CNT-004, US-RPT-002 và US-RPT-003 vẫn thuộc MVP. Danh mục đã bỏ `US-PAY-003`/`UC-PAY-02`; đối soát PayOS chỉ còn job tự động trong `US-PAY-002`. Không có kế hoạch triển khai Phase 2. Các mốc UC cũ trong lịch sử không được đánh số lại.
+- Critical path (by H edges, 2026-10-04): U02 hoặc U03 → U01 → U04 → U05 (hoặc U06) → U08 → U09 → U11 (hoặc U14) → U15 → U16. Waves: W1 U03 ∥ U02 → U01 → U04; W2 U05–U08, U12; W3 U09 (năm loại bài, UC 39–43 hiện hành), U11, U14, U15; W4 U10, U13, U16. U15 → U13 và U09 → U13 là `C`; U03 → U01, U02 là `C`.
 - VPS sizing suggestion: 4 vCPU / 8 GB RAM / 60 GB SSD (Judge0 included).
 
 ## History (summary)
+- 2026-10-08: Đồng bộ Inception theo SRS mới: 70 UC, 51 story, 16 unit; thêm UC 70 View Audit Log vào Google SRS/bảng quyền và danh mục màn hình. Quyền kế thừa theo phạm vi tài nguyên; thêm quản lý gói credit và lịch sử thanh toán của Admin. Construction và code plans vẫn ở baseline trước, cần đồng bộ riêng.
 - 2026-10-04: CHAPTER đổi thành MODULE của môn (Chủ nhiệm môn tạo trên Subject Detail, mọi lớp kể cả lớp tạo sau dùng chung; mỗi module có nút tải tệp/gắn link; `lessons.class_id` phân biệt học liệu của môn và của lớp). UC 14 đổi thành Comment on Announcement: chỉ giảng viên đăng thông báo, sinh viên và giảng viên bình luận dưới thông báo (2 bình luận mới nhất, popup xem thêm, không thông báo); bỏ `class_discussions`, `discussion_posts`, thêm bảng nối `announcement_comments`. ERD 19 thực thể/31 quan hệ, database 24 bảng/36 khóa ngoại.
 - 2026-10-04: Việc nền, worker, RabbitMQ và sự kiện thông báo chuyển từ U02 sang U03 (U02 chỉ còn audit, U03 thành File, Job & Event); khung dự án chuyển từ plan U01 sang plan U03; thứ tự wave 1: U03 ∥ U02 → U01 → U04. Sửa thiết kế U01–U03, plan, port của các unit dùng việc nền, ma trận và hình phụ thuộc, uc-wave-map.
 - 2026-10-04: Wave mới theo dependency graph của người dùng; U09 chủ trì cả năm loại bài (UC 26 từ U13, UC 27 từ U14); U15 và U09 dùng U13 qua `C`. Đồng bộ unit-of-work, dependency (ma trận, wave, gate), story map, thiết kế và plan U09/U13/U14, uc-wave-map.

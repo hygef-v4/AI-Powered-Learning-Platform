@@ -2,20 +2,15 @@
 
 ## 1. Tóm tắt phân tích ý định
 
-- **Yêu cầu ban đầu**: "giúp tôi triển khai quy trình ai dlc"
-- **Loại yêu cầu**: Dự án mới
-- **Độ rõ ban đầu**: Mơ hồ; đã được làm rõ qua ba vòng câu hỏi
-- **Phạm vi ước tính**: Toàn hệ thống, gồm web frontend, backend, dữ liệu, tích hợp AI, lưu trữ tệp, thanh toán, email và tài liệu quy trình AI-DLC
-- **Độ phức tạp**: Phức tạp
-- **Mức độ chi tiết**: Comprehensive
-- **Mục tiêu**: Xây dựng MVP nền tảng học tập ứng dụng AI đồng thời duy trì bộ tài liệu và checkpoint AI-DLC có thể tái sử dụng
-- **Thay đổi đã được xác nhận (2026-09-29)**: Đổi mã vai trò `LEARNER`/`INSTRUCTOR` thành `STUDENT`/`TEACHER`; cho Student mua credit để chấm AI bài luyện tập dạng Text Essay hoặc Diagram Essay; phân loại assignment theo hình đính kèm và câu trả lời làm rõ, đồng thời bỏ Simulation Exam.
-- **Thay đổi đã được xác nhận (2026-10-01)**: Nhóm thuộc lớp, được chia trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên, không có dùng lại nhóm) và dùng chung cho mọi bài nhóm của lớp. Giảng viên chuẩn bị các mục chính của bài nhóm; trưởng nhóm thêm/sửa mục chi tiết và giao mục cho thành viên. Khi mọi mục xong, tài liệu nhóm vào trạng thái review để cả nhóm xem lại rồi trưởng nhóm mới nộp. Gói credit và mức tặng hằng tháng là cấu hình cố định của hệ thống (quyết định 2026-10-03, trước đó thuộc UC 22); giảng viên bật phân bố điểm ẩn danh trong UC 36 Monitor Submissions. Ngân hàng câu hỏi có version chứa câu hỏi của mọi dạng bài (Text Essay, trắc nghiệm, Diagram Essay, Code Lab và khung tài liệu chia phần cho Diagram Essay và bài nhóm); câu hỏi được tạo, tìm, nhập hàng loạt và dùng lại trong UC 23–27 theo đúng dạng bài. Chủ nhiệm môn được xuất bảng điểm của môn mình phụ trách (UC 36).
-- **Thay đổi đã được xác nhận (2026-09-30)**: Danh mục use case được gộp còn 40 use case trong [bảng use case](../../../docs/use-case-table.md). Ngân hàng câu hỏi không còn là use case riêng mà thuộc quản lý quiz (UC 24 Manage Quiz); chức năng tạo, sửa, tìm, nhập và dùng lại câu hỏi có version được giữ nguyên. Ngày 2026-10-01 phạm vi ngân hàng được mở cho mọi dạng bài (UC 23–27).
-- **Thay đổi đã được xác nhận (2026-10-01, danh mục 39 use case)**: Use case tạo bài bằng AI của giảng viên gộp vào Manage Assignments (nay UC 28); use case tạo template bằng AI thành UC 21 Manage Templates, nơi Chủ nhiệm môn tạo template thủ công hoặc bằng AI rồi chỉnh sửa, sửa và xoá template đã tạo (FR-006, FR-027).
-- **Thay đổi đã được xác nhận (2026-10-01, danh mục 40 use case)**: Phần bài tập nhóm tách khỏi Manage Assignments thành UC 27 Manage Group Assignment: giảng viên tạo, sửa và xem trước bài nhóm dạng tài liệu có rubric, chuẩn bị mục chính (tự viết hoặc dùng khung từ ngân hàng câu hỏi), giảng viên hoặc trưởng nhóm nhả khóa mục; bài nhóm chỉ phát hành khi nhóm của lớp hợp lệ. Manage Assignments thành UC 28 và giữ phát hành, nhân bản, version, ngưng giao, template, copy giữa lớp và AI soạn bài; UC 28–39 cũ thành 29–40 (FR-025, FR-026, FR-027).
-- **Thay đổi đã được xác nhận (2026-10-04)**: UC 23–27 kế thừa UC 28 Manage Assignments (UC 28 là phần chung, các UC dạng bài chỉ thêm phần riêng). Text Essay không giới hạn số từ hay số dòng, mỗi câu một rubric. Diagram Essay bắt buộc có khung. Khung của Diagram Essay và bài nhóm lưu ở `config`, không thêm câu vào bài; mọi rubric lưu trong `config`, bỏ cột `assignments.rubric_id`. Diagram Essay và bài nhóm: khung tự chia thành phần theo heading nhỏ nhất của mỗi nhánh trong cây heading (kiểu Word), mỗi phần một rubric; popup làm phần được giao của bài nhóm hiện các heading trên nhánh của phần, không hiện nhánh khác, các màn xem khác hiện toàn bộ tài liệu; điểm bài là tổng các phần; bài nhóm bỏ mục chi tiết, các phần là thứ trưởng nhóm giao cho thành viên. Quiz và Code Lab không có rubric. UC 30 Submit Assignment là phần nộp bài chung; UC 16 Submit Group Document kế thừa UC 30.
-- **Thay đổi đã được xác nhận (2026-10-03)**: Bỏ dashboard của Student; UC 18 thành View Statistics: thống kê hiện ngay trên Admin Menu (trang đích của Administrator, kèm các nút dẫn tới trang quản lý), gồm số tài khoản theo vai trò và trạng thái, số môn và lớp theo trạng thái, số ghi danh đang hiệu lực (FR-024). Student vào Student Menu sau khi đăng nhập. Phân bố điểm ẩn danh của lớp hiện trên Assignment List của Student. Chủ nhiệm môn có quyền quản lý lớp như quản trị viên trong các môn được phân công, gồm tạo lớp và phân công giảng viên chính (FR-003).
+- **Yêu cầu ban đầu**: "giúp tôi triển khai quy trình ai dlc".
+- **Mục tiêu**: MVP web cho một tổ chức, có frontend, backend, AI, tệp, thanh toán, email và tài liệu/checkpoint AI-DLC.
+- **Bản hiệu lực (2026-10-08)**: [SRS](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit) mục 4.1 Actors, 4.2 gồm **70 UC**, 4.4 Permission Matrix; danh mục/màn hình tại [use-cases-and-screens.md](../../../docs/use-cases-and-screens.md).
+- **Thay đổi chính**: Bỏ cập nhật avatar; tách danh sách bài Student/Teacher, ngân hàng câu hỏi cấp lớp/cấp môn và chấm AI Practice/AI Grading Proposals; thêm quản trị gói credit và lịch sử thanh toán Admin; bổ sung sửa/xóa thông báo.
+- **Quyền**: Student và Teacher kế thừa User; Subject Manager kế thừa Teacher; Administrator kế thừa Subject Manager. Quyền kế thừa luôn cần đúng phân công môn/lớp theo R1–R5.
+- **Phạm vi tài liệu**: 70 UC, 51 story, 16 unit; thêm US-PAY-004/005, không tái sử dụng US-PAY-003 đã rút.
+- **Giữ các chi tiết đã chốt**: Năm dạng bài, Practice/Graded, version/snapshot, rubric từng câu/phần, nhóm thuộc lớp, leader giao phần và nộp; không có Simulation Exam hoặc tiến độ hoàn thành bài học.
+- **Luồng hỗ trợ**: Ghi danh/mã mời, chia nhóm, bình luận, AI soạn nháp, duyệt/phát hành/version/copy, chốt/công bố điểm, audit và hạn mức vẫn thuộc requirement/story liên quan; không tự thêm UC vào bảng mới.
+- **Screen Flow**: Dùng nhãn Drawio mới; template UC 53–54 chưa có màn trong hình, không có nghĩa bỏ template. Các mốc/câu trả lời cũ là lịch sử, không thay thế bản hiệu lực này.
 
 ## 2. Bối cảnh và phạm vi
 
@@ -57,7 +52,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 
 ### FR-001 - Xác thực và tài khoản trường cấp
 
-Hệ thống phải dùng email do trường cấp làm định danh đăng nhập cho người học và giảng viên. Tài khoản do quản trị viên tạo hoặc nhập từ file CSV; không có đăng ký công khai. Hệ thống phải hỗ trợ kích hoạt lần đầu khi cần, đăng nhập, đăng xuất, khôi phục mật khẩu và quản lý hồ sơ tối thiểu.
+Hệ thống phải dùng email do trường cấp làm định danh đăng nhập cho người học và giảng viên. Tài khoản do quản trị viên tạo hoặc nhập từ file CSV; không có đăng ký công khai. Hệ thống hỗ trợ OTP qua Brevo để kích hoạt/khôi phục, đăng nhập, đăng xuất, đổi mật khẩu và xem/cập nhật hồ sơ (UC 01–07). Người dùng cập nhật display name và phone number hợp lệ; không cập nhật avatar, email định danh, role hoặc status trong hồ sơ cá nhân.
 
 **Tiêu chí chấp nhận:**
 
@@ -68,25 +63,28 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 
 ### FR-002 - Phân quyền
 
-Hệ thống phải cung cấp bốn vai trò: `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` và `ADMIN`; mọi thao tác đặc quyền phải được kiểm tra phía server. Các tên `LEARNER` và `INSTRUCTOR` không còn là mã vai trò hiện hành.
+Bốn vai trò là `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`; User là actor trừu tượng của chức năng chung. Kế thừa: Student → User, Teacher → User, Subject Manager → Teacher, Administrator → Subject Manager. Backend kiểm quyền theo chức năng và đối tượng theo SRS 4.4.
 
 **Tiêu chí chấp nhận:**
 
-- Student không thể gọi chức năng của Teacher, Subject Manager hoặc Administrator; Student chỉ có quyền AI/credit được nêu tại FR-010 và FR-030.
-- Giảng viên chỉ truy cập lớp học và bài nộp được phân công.
-- Chủ nhiệm môn chỉ có quyền cấp môn đối với các môn được phân công, kể cả các lớp do giảng viên khác phụ trách trong những môn đó.
-- Quản trị viên có thể quản lý người dùng, phân vai trò và gán phạm vi môn học cho Chủ nhiệm môn.
+- **R1**: Hồ sơ, ví, kết quả thanh toán và thông báo chỉ của chính tài khoản; activation/recovery có quy tắc xác thực riêng.
+- **R2**: Subject Manager/Administrator dùng học liệu, template và ngân hàng cấp môn khi được phân công quản lý môn. Administrator quản trị cấu trúc môn/lớp và tài khoản toàn nền tảng theo các hàng Full.
+- **R3**: Teacher dùng chức năng giảng dạy trong lớp được giao.
+- **R4**: Subject Manager/Administrator dùng chức năng Teacher, bao gồm ngân hàng lớp, bài tập, chấm và xem/xuất gradebook, chỉ khi chính tài khoản được giao dạy lớp. Phân công quản lý môn không thay thế phân công giảng viên lớp.
+- **R5**: Student chỉ dùng lớp đã ghi danh và dữ liệu được phép; thành viên làm tài liệu nhóm, chỉ leader nộp tài liệu nhóm.
+- Kế thừa không cấp ngược chức năng Student cho vai trò khác. Yêu cầu qua ID/URL ngoài scope bị từ chối phía server; thu hồi scope không cho tiếp tục dùng dữ liệu cũ.
 
 ### FR-003 - Quản lý môn học và lớp học
 
-Quản trị viên phải có thể quản lý môn học, gán Chủ nhiệm môn và tổ chức các lớp thuộc môn. Chỉ quản trị viên tạo môn. Quản trị viên, hoặc Chủ nhiệm môn với các môn được phân công, tạo lớp và phân công giảng viên chính; Chủ nhiệm môn mở các lớp này từ Subject Detail. Người quản lý lớp (quản trị viên, giảng viên của lớp, Chủ nhiệm môn của môn) sửa thông tin, mở/lưu trữ lớp và ghi danh người học. Hệ thống không có thực thể "khóa học" riêng; mỗi lớp thuộc một môn.
+Administrator xem danh sách/chi tiết, tạo/cập nhật môn và gán người quản lý môn (UC 63–66). Administrator quản lý lớp toàn nền tảng; Subject Manager xem danh sách/chi tiết, tạo lớp, gán giảng viên và sửa lớp trong môn được giao (UC 45–50). Teacher xem lớp được giao (UC 27–28); Student xem lớp đã ghi danh (UC 12–13).
 
 **Tiêu chí chấp nhận:**
 
-- Học liệu đã lưu trữ không hiển thị cho người học.
-- Người học chỉ truy cập lớp mình được ghi danh.
-- Mỗi lớp thuộc một môn và tự dùng module, học liệu của môn; giảng viên copy template đề cấp môn thành bài của lớp.
-- Các thay đổi quan trọng về môn/lớp được ghi audit.
+- Mỗi lớp thuộc một môn, dùng chung module/học liệu môn; không có thực thể khóa học riêng.
+- Người quản lý môn có role Subject Manager hoặc Administrator ACTIVE; giảng viên chính có role Teacher, Subject Manager hoặc Administrator ACTIVE. Các phân công là điều kiện R2/R4 và được audit.
+- Sửa thông tin/vòng đời lớp thuộc Administrator hoặc Subject Manager đúng môn; quyền đọc của Teacher không tự cấp UC 49.
+- Ghi danh/mã mời/roster là luồng hỗ trợ đã có, người thực hiện phải có quyền quản lý roster của lớp; không suy quyền ghi từ quyền đọc.
+- Student truy cập theo enrollment; học liệu lưu trữ không hiển thị; thay đổi cấu trúc/phân công được audit.
 
 ### FR-004 - Nhập và quản lý nội dung học
 
@@ -98,14 +96,15 @@ Học liệu tổ chức theo module của môn: Chủ nhiệm môn tạo module
 - Chỉ Chủ nhiệm môn tạo, sửa, sắp xếp, lưu trữ module của môn trên Subject Detail; module dùng chung cho mọi lớp của môn, kể cả lớp tạo sau, và mỗi module có nút tải tệp, gắn link video.
 - Tệp hợp lệ được lưu riêng tư và gắn đúng module và phạm vi: Chủ nhiệm môn tải là học liệu của môn (mọi lớp thấy), giảng viên tải là học liệu riêng của lớp.
 - Người tải lên và người quản lý được ủy quyền xem được trạng thái chờ, đang xử lý, thành công hoặc thất bại.
-- Giảng viên không thể sửa kho học liệu/RAG cấp môn nếu không có quyền Chủ nhiệm môn tương ứng.
+- Giảng viên không sửa học liệu/RAG cấp môn nếu không có phân công quản lý môn; Subject Manager/Administrator áp dụng R2, quản lý học liệu lớp áp dụng R3/R4.
+- UC 29–30 dùng Uploaded Learning Materials, UC 51–52 dùng Subject Detail. Cập nhật metadata/thay nguồn phải kiểm quyền và quét lại nguồn mới; loại bỏ học liệu bằng lưu trữ/ẩn, giữ lịch sử và tham chiếu.
 - Lesson YouTube là một video (không nhận playlist); hệ thống chỉ dùng caption có sẵn (kể cả caption tự động của YouTube), không tự phiên âm audio; video không có caption được báo rõ (`NO_CAPTION`) và không lập chỉ mục.
 - Chữ trích được và embedding lưu trên chính lesson; chỉ lesson quét thành công mới được dùng cho RAG trong đúng phạm vi môn/lớp.
 - Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái quét và bấm "Quét lại" khi quét thất bại, hệ thống bận hoặc thiếu credit.
 
 ### FR-005 - Truy cập nội dung theo lớp
 
-Người học phải có thể xem học liệu đang hiển thị (chưa lưu trữ) của môn và của lớp được ghi danh. Hệ thống không lưu trạng thái hoàn thành hoặc vị trí học của từng bài.
+Người dùng được phép xem trước/tải học liệu bằng Learning Material (UC 14); Student theo enrollment, Teacher theo R3, Subject Manager/Administrator theo R2/R4. Hệ thống không lưu trạng thái hoàn thành hoặc vị trí học của từng bài.
 
 **Tiêu chí chấp nhận:**
 
@@ -149,15 +148,17 @@ Chỉ bài `GRADED` mới chuyển tới quy trình chấm và chốt điểm c�
 
 ### FR-009 - Sổ điểm và trạng thái bài nộp
 
-Người học phải xem được điểm, phản hồi và trạng thái bài nộp của chính mình; giảng viên xem được tổng hợp theo lớp được phân công; Chủ nhiệm môn xem chỉ đọc các lớp thuộc môn được phân công; quản trị viên không xem sổ điểm (quyết định 2026-10-03). Yêu cầu này không bao gồm tiến độ hoàn thành hoặc vị trí học theo bài.
+Student xem điểm đã công bố, phản hồi và trạng thái của chính mình qua năm danh sách bài, Assignment Detail và Submission History (UC 17–18, 24). Teacher xem/xuất gradebook lớp được giao (UC 37); Subject Manager/Administrator chỉ có quyền này khi được giao dạy lớp theo R4. Không có quyền xem mọi lớp chỉ dựa trên role quản lý môn/quản trị.
+
+Sổ điểm chỉ chứa bài GRADED, không tính điểm tổng theo hệ số và không chứa AI Practice. Không lưu tiến độ hoàn thành hay vị trí học theo bài.
 
 ### FR-010 - Thanh toán
 
 Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
-Tài khoản `ACTIVE` với vai trò Student, Teacher, Subject Manager hoặc Administrator có thể mua và xem credit của chính mình theo các gói credit cố định của hệ thống và được tặng cùng một mức credit hằng tháng (FR-021). Student chỉ được tiêu credit cho yêu cầu AI chấm một attempt `PRACTICE` dạng Text Essay hoặc Diagram Essay mà mình đã nộp; Teacher/Subject Manager/Administrator tiếp tục dùng credit cho các tính năng AI đúng quyền. Student không được dùng AI soạn đề, xử lý học liệu hoặc chấm bài `GRADED`. Code Lab, Quiz và bài nhóm không dùng credit Student để chấm. Nếu Teacher yêu cầu AI hỗ trợ chấm bài `GRADED`, credit được tính cho Teacher và chỉ kết quả cuối do Teacher công bố mới hiển thị cho Student.
+Tài khoản `ACTIVE` với vai trò Student, Teacher, Subject Manager hoặc Administrator có thể mua và xem credit của chính mình theo các gói credit do Administrator quản lý (FR-031) và được tặng cùng một mức credit hằng tháng (FR-021). Student chỉ được tiêu credit cho yêu cầu AI chấm một attempt `PRACTICE` dạng Text Essay hoặc Diagram Essay mà mình đã nộp; Teacher/Subject Manager/Administrator tiếp tục dùng credit cho các tính năng AI đúng quyền. Student không được dùng AI soạn đề, xử lý học liệu hoặc chấm bài `GRADED`. Code Lab, Quiz và bài nhóm không dùng credit Student để chấm. Nếu Teacher yêu cầu AI hỗ trợ chấm bài `GRADED`, credit được tính cho Teacher và chỉ kết quả cuối do Teacher công bố mới hiển thị cho Student.
 
-Nếu một tài khoản có nhiều vai trò, quyền dùng AI được kiểm theo ngữ cảnh và đối tượng: trong ngữ cảnh Student chỉ có chức năng chấm `PRACTICE` được nêu tại FR-030; các quyền AI của Teacher, Subject Manager và Administrator không tự chuyển sang ngữ cảnh Student. Mọi khoản trừ credit gắn với tài khoản thực hiện và loại tác vụ.
+Quyền dùng AI được kiểm theo vai trò hiện hành, quyền kế thừa và scope đối tượng: trong ngữ cảnh Student chỉ có chức năng chấm `PRACTICE` được nêu tại FR-030; các quyền AI của Teacher, Subject Manager và Administrator không tự chuyển sang ngữ cảnh Student. Mọi khoản trừ credit gắn với tài khoản thực hiện và loại tác vụ.
 
 **Tiêu chí chấp nhận:**
 
@@ -165,6 +166,7 @@ Nếu một tài khoản có nhiều vai trò, quyền dùng AI được kiểm 
 - Job định kỳ tự đối soát trạng thái thanh toán với nhà cung cấp khi thiếu webhook; không có thao tác admin đối soát thủ công.
 - Thanh toán lỗi, hết hạn hoặc chưa xác minh thì không cộng credit.
 - Quyền lợi mua được là credit AI (quy đổi ra token khi gọi AI); thanh toán không mở hay chặn quyền vào lớp và nội dung học.
+- UC 08–10 dùng Credit Packages và Payment Result, chỉ cho xem kết quả pending/success/cancelled/failed của chính mình; lịch sử toàn hệ thống thuộc FR-032.
 - Student có thể xem package, balance, lịch sử credit và tự thanh toán; backend kiểm quyền trên attempt và từ chối yêu cầu AI ngoài `PRACTICE` Text Essay/Diagram Essay trước khi giữ hoặc trừ credit.
 
 ### FR-011 - Email và thông báo
@@ -181,22 +183,25 @@ Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riê
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
+Administrator xem/tìm Audit Log (UC 70) theo actor, action, object, result và thời gian; chỉ đọc, không sửa/xóa log. Vai trò khác không có quyền tra cứu audit toàn nền tảng.
+
 Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi học liệu, thay đổi điểm, phát hành bài và template, sự kiện thanh toán và truy cập đặc quyền.
 
 ### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
 
-Quản trị viên phải có thể tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản; thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
+Quản trị viên xem danh sách/chi tiết, tìm kiếm, tạo, cập nhật thông tin được phép/role và khóa/mở khóa tài khoản (UC 58–62); thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
 ### FR-016 - Ngân hàng rubric và câu hỏi
 
-Giảng viên và Chủ nhiệm môn phải có thể tạo, sửa, tìm kiếm và tái sử dụng rubric/câu hỏi trong đúng phạm vi lớp hoặc môn. Rubric được tạo khi soạn đề (Text Essay một rubric mỗi câu; Diagram Essay và bài nhóm một rubric mỗi phần của khung; Quiz, Code Lab không có) và nhân bản theo đề; Question Bank (UC 20 Manage Rubrics) chỉ xem và sửa rubric; ngân hàng câu hỏi chứa câu hỏi của mọi dạng bài: Text Essay (`ESSAY`), trắc nghiệm một/nhiều đáp án (`MCQ_SINGLE`, `MCQ_MULTI`), Diagram Essay (`DOCUMENT`), Code Lab (`CODE`) và khung tài liệu chia phần cho Diagram Essay và bài nhóm (`DOCUMENT`; phần tự tính theo heading Tiêu đề 1–6, khung không có heading là một phần). Câu hỏi được tạo, sửa, tìm, nhập hàng loạt từ file và dùng lại trong chức năng quản lý của dạng bài tương ứng (UC 23 Manage Text Essay, UC 24 Manage Quiz, UC 25 Manage Diagram Essay, UC 26 Manage Code Lab, UC 27 Manage Group Assignment cho bài nhóm), không có use case ngân hàng câu hỏi riêng. Mọi lần sửa tạo version truy vết được. Version đã gắn với lượt làm hoặc kết quả chấm phải được bảo toàn để không làm thay đổi bài đang làm và kết quả lịch sử.
+Class Question Bank (UC 32–33) do Teacher hoặc vai trò kế thừa có phân công lớp quản lý; Subject Question Bank (UC 55–56) do Subject Manager/Administrator được phân công môn quản lý. Cùng mô hình scope CLASS/SUBJECT và versioning, không cần hai mô hình dữ liệu.
 
 **Tiêu chí chấp nhận:**
 
-- Câu hỏi chưa publish có thể sửa trong draft hiện tại.
-- Assignment đã phát hành bị khóa nội dung (kể cả khi chưa ai làm); muốn thay đổi thì ngưng giao (hoặc đợi đóng) rồi sửa để tạo version mới; version cũ giữ nguyên cho bài nộp cũ và xem được khác biệt giữa các version. Hệ thống lưu version câu hỏi được dùng cho từng attempt.
-- Sửa câu hỏi trong ngân hàng tạo version mới và không ảnh hưởng assignment đã dùng version cũ.
-- Rubric đã dùng để chấm không bị ghi đè; thay đổi tạo version mới cho lần sử dụng sau.
+- Tạo/sửa/xóa, tìm, nhập và dùng lại câu hỏi kiểm scope và loại ESSAY, MCQ_SINGLE/MCQ_MULTI, CODE, DOCUMENT (khung Diagram/Group).
+- Sửa câu hỏi tạo version mới; không thay bài đã phát hành/attempt lịch sử. Xóa Draft chưa dùng hoặc ngưng bản đã tham chiếu để giữ lịch sử.
+- Câu hỏi được dùng trong UC 39–43. Teacher có thể đọc/dùng câu ACTIVE cấp môn được phép nhưng không quản trị ngân hàng môn chỉ vì dạy lớp của môn.
+- Add/Update Rubric (UC 44) khi soạn bài: mỗi câu Essay một rubric, mỗi phần Diagram/Group một rubric; Quiz/Code Lab dùng đáp án/test. Template môn dùng rubric trong UC 54 theo R2.
+- Rubric đã dùng được bảo toàn; sửa tạo version mới cho Draft phù hợp; copy bài tạo rubric độc lập.
 
 ### FR-017 - Các loại bài đánh giá và kiểm thử trước phát hành
 
@@ -218,11 +223,11 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 ### FR-021 - Quản trị và giám sát dịch vụ AI
 
-Quản trị viên phải có thể cấu hình model được phép, quota, giới hạn chi phí và kill-switch qua ranh giới provider-neutral; xem nhật ký trạng thái/chi phí mà không lộ prompt, dữ liệu học tập hoặc secret ngoài quyền.
+Administrator cấu hình model, quota, trần chi phí, kill-switch và xem trạng thái/chi phí an toàn qua port provider-neutral. Đây là năng lực vận hành hỗ trợ, không có UC riêng trong bảng 70 UC; không thay thế quản trị gói credit UC 67–68.
 
-Mỗi lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của tài khoản chịu phí theo token sử dụng. Embedding học liệu chạy nền tính cho người tải học liệu lên; embedding truy xuất tính cho người yêu cầu AI. Nếu hệ thống hết hạn mức AI, trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối; thiếu credit cá nhân được báo riêng.
+Mỗi lời gọi AI tạo nội dung/embedding tính credit theo token: embedding học liệu tính người tải, truy xuất tính người yêu cầu. Vượt hạn mức hệ thống báo "Hệ thống đang bận"; yêu cầu bị từ chối không trừ credit.
 
-Gói credit AI và mức credit tặng hằng tháng là cấu hình cố định của hệ thống, nạp khi triển khai (migration/cấu hình), không có màn hay API quản lý (quyết định 2026-10-03). Mức tặng áp dụng như nhau cho Student, Teacher, Subject Manager và Administrator (Student chỉ dùng credit cho AI chấm Practice). Khi đổi cấu hình bằng lần triển khai mới, mức tặng có hiệu lực từ lần đặt lại kế tiếp và giao dịch đã tạo giữ snapshot giá, số credit.
+Mức tặng hằng tháng vẫn là cấu hình triển khai áp dụng như nhau cho bốn vai trò, đổi có hiệu lực từ kỳ đặt lại kế tiếp. Gói bán do Administrator thêm/sửa theo FR-031; giao dịch giữ snapshot giá/credit.
 
 ### FR-022 - Tự ghi danh bằng mã mời lớp
 
@@ -230,11 +235,23 @@ MVP (bản đơn giản, U04) hỗ trợ người học tự ghi danh bằng mã
 
 ### FR-023 - Thông báo và bình luận lớp
 
-MVP cho phép giảng viên đăng thông báo tới lớp mình dạy (chỉ giảng viên đăng); người học và giảng viên của lớp bình luận dưới thông báo như bình luận bài đăng, mỗi thông báo hiện 2 bình luận mới nhất và nút xem thêm mở popup toàn bộ bình luận (quyết định 2026-10-04). Nội dung cần kiểm quyền theo lớp, lọc đầu vào không an toàn, lưu người tạo và thời gian; thông báo mới gửi thông báo trong ứng dụng cho người học; bình luận không tạo thông báo. RAG nội bộ phục vụ AI soạn đề vẫn thuộc MVP. Tìm kiếm/tóm tắt học liệu cho người dùng, gia hạn nộp bài cá nhân, phúc khảo và kiểm tra tương đồng nằm ngoài phạm vi dự án.
+Teacher của lớp (hoặc Subject Manager/Administrator được giao dạy theo R4) tạo/cập nhật/xóa thông báo (UC 31); Student ghi danh và giảng viên có quyền xem (UC 26) trên Class Announcements.
+
+**Tiêu chí chấp nhận:**
+
+- Chỉ tài khoản được giao dạy lớp tạo/sửa/xóa; Student không đăng thông báo.
+- Tạo mới gửi in-app notification cho Student đang ghi danh; lưu actor/thời gian. Sửa kiểm version, audit trước/sau, không gửi lại sự kiện tạo mới.
+- Xóa đánh dấu đã xóa và loại khỏi feed, giữ audit/tham chiếu; quy tắc cũ cấm sửa thông báo không còn áp dụng.
+- Đọc/sửa/xóa ngoài lớp bị từ chối; kiểm giới hạn và đầu vào không an toàn.
+- Bình luận là luồng hỗ trợ đã có: Student/giảng viên của lớp bình luận, hai bình luận gần nhất và popup xem thêm; bình luận không tạo notification. Quy tắc không sửa sau gửi vẫn áp dụng cho bình luận.
 
 ### FR-024 - Thống kê quản trị và xuất bảng điểm
 
-MVP cung cấp cho quản trị viên thống kê hiện ngay trên Admin Menu (UC 18) gồm số tài khoản theo vai trò và trạng thái, số môn và số lớp theo trạng thái, số ghi danh đang hiệu lực; số liệu tính khi yêu cầu, chỉ là số đếm, không chứa dữ liệu cá nhân. Không có dashboard cá nhân của người học. Phân bố điểm ẩn danh của lớp, khi giảng viên bật và đủ điều kiện ẩn danh, hiện trên Assignment List của người học (UC 36). Giảng viên của lớp và Chủ nhiệm môn của môn được phân công xuất bảng điểm CSV hoặc XLSX theo lớp/bài (UC 36); kiểm phạm vi trước khi tạo tệp, ghi rõ mục chưa nộp/chưa chốt và không tự tính điểm tổng theo hệ số. Phân tích chất lượng câu hỏi và báo cáo thống kê độ lệch giữa điểm AI đề xuất với điểm chốt nằm ngoài phạm vi. Bước AI đề xuất và giảng viên chốt từng bài vẫn thuộc MVP (FR-008).
+Administrator xem Statistic (UC 57): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; chỉ số đếm, không có dữ liệu cá nhân hoặc dashboard Student.
+
+Teacher được giao lớp, Subject Manager/Administrator được giao dạy theo R4 xem/xuất GradeBook CSV/XLSX (UC 37). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng và không xuất Practice.
+
+Phân bố điểm ẩn danh, khi được bật và đủ mẫu riêng tư, hiện trên năm danh sách bài Student (UC 17); tiến độ nộp thuộc UC 34. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi; AI Grading Proposals và Teacher quyết định điểm cuối thuộc UC 35–36.
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -266,11 +283,11 @@ Bài tập nhóm là một bài tài liệu (DOCUMENT) chung của nhóm. Giản
 
 ### FR-027 - Template đề cấp môn và đề lấy điểm thành phần
 
-Chủ nhiệm môn phải có thể tạo template đề cấp môn thủ công hoặc từ bản nháp AI (FR-006), chỉnh sửa, xoá mọi template của môn mình phụ trách (kể cả template do Chủ nhiệm môn trước tạo) và phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
+Subject Manager/Administrator được phân công môn theo R2 xem template (UC 53), tạo/sửa/xóa template (UC 54) và phải có thể tạo template đề cấp môn thủ công hoặc từ bản nháp AI (FR-006), chỉnh sửa, xoá mọi template của môn mình phụ trách (kể cả template do Chủ nhiệm môn trước tạo) và phát hành một template đề chỉ đọc, có version, cho giảng viên các lớp thuộc môn. Giảng viên copy template thành draft riêng của lớp, chỉnh sửa và phát hành cho sinh viên làm hoặc lấy điểm thành phần trong phạm vi lớp được giao.
 
 **Tiêu chí chấp nhận:**
 
-- Chỉ Chủ nhiệm môn có quyền phát hành hoặc tạo version mới của template cấp môn.
+- Chỉ tài khoản được phân công quản lý môn theo R2 phát hành/tạo version template; phân công giảng viên lớp không đủ quyền sửa nguồn.
 - Bản copy thuộc lớp đích và độc lập với template nguồn; cập nhật template không tự ghi đè bản đã copy.
 - Hệ thống lưu `source template/version`, người copy, lớp đích và thời gian để truy vết.
 - Bản copy không mang theo lịch phát hành, attempt, bài nộp hoặc điểm từ nguồn.
@@ -305,6 +322,27 @@ Student có thể dùng credit để AI chấm một attempt `PRACTICE` dạng `
 - Code Lab và Quiz `PRACTICE` dùng test/đáp án để tự chấm, không gọi AI và không trừ credit Student. `GROUP_ASSIGNMENT` không có `PRACTICE`.
 - Kết quả luyện tập được tách khỏi gradebook, phân bố điểm và file xuất điểm; Teacher không có hàng đợi chấm/chốt/công bố điểm cho bài này.
 
+### FR-031 - Quản trị gói credit
+
+Administrator xem Credit Package Setting (UC 67), thêm/sửa thông tin, giá và số credit (UC 68). Mức tặng hằng tháng không thuộc thao tác này.
+
+**Tiêu chí chấp nhận:**
+
+- Chỉ Administrator thực hiện; gói có thông tin định danh hợp lệ, giá dương và credit nguyên dương.
+- Thêm/sửa kiểm dữ liệu/version và audit actor/thời gian/giá trị trước-sau; cập nhật chỉ áp dụng giao dịch tạo sau đó.
+- Giao dịch đã tạo giữ package ID và snapshot thông tin/giá/credit; sửa gói không sửa giao dịch hoặc số dư đã cấp.
+- Không thêm chức năng xóa gói, hoàn tiền hoặc chỉnh credit người dùng thủ công.
+
+### FR-032 - Lịch sử thanh toán toàn nền tảng
+
+Administrator xem Payment History (UC 69): tài khoản mua, gói, số tiền, thời gian và trạng thái.
+
+**Tiêu chí chấp nhận:**
+
+- Chỉ Administrator đọc toàn nền tảng; vai trò khác chỉ xem kết quả/lịch sử của chính mình.
+- Phân trang và lọc tài khoản/gói/thời gian/trạng thái, sử dụng snapshot giao dịch.
+- Đọc không đổi status, không cộng/trừ credit và không đối soát thủ công; không lộ secret PayOS hoặc dữ liệu thẻ.
+
 ## 5. Luồng người dùng chính
 
 ### USCN-001 - Chuẩn bị và giao bài cấp lớp bằng AI
@@ -323,9 +361,9 @@ Người học đăng nhập, truy cập lớp được ghi danh, học nội du
 
 Sau khi nhận bài nộp, giảng viên chọn chấm thủ công hoặc yêu cầu AI đề xuất điểm theo rubric. Nếu dùng AI, giảng viên kiểm tra, chấp nhận hoặc ghi đè đề xuất trước khi công bố; điểm lưu như chấm tay (không ghi riêng là dùng AI) và audit quyết định cuối.
 
-### USCN-004 - Thanh toán và cấp quyền
+### USCN-004 - Thanh toán và cộng credit
 
-Người dùng bắt đầu thanh toán; nhà cung cấp xử lý giao dịch; backend xác minh webhook idempotent; hệ thống chỉ cấp quyền sau trạng thái thanh toán hợp lệ.
+Người dùng chọn gói trên Credit Packages; PayOS xử lý; Payment Result chỉ hiển thị kết quả. Backend xác minh webhook hoặc tự đối soát idempotent rồi cộng credit đúng một lần; mua credit không thay đổi enrollment/quyền xem lớp.
 
 ### USCN-005 - Xử lý lỗi phụ thuộc
 
@@ -462,8 +500,12 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 
 ## 11. Truy vết nguồn yêu cầu
 
+Các dòng theo ngày trước 2026-10-08 là nguồn lịch sử; mã UC ở đó là mã tại thời điểm tương ứng. Bản hiện hành dùng 70 UC mới.
+
+
 | Nguồn | Yêu cầu liên quan |
 |---|---|
+| SRS 4.1/4.2/4.4 và Screen Flow mới, 2026-10-08 | 70 UC; FR-001–003, FR-004–010, FR-015–016, FR-023–024, FR-027, FR-030–032; story/UC/unit map và màn mới |
 | Phiếu xác minh Q1-Q14 | FR-001 đến FR-014, NFR-001 đến NFR-005 |
 | Security Baseline Q15 | SEC-001 đến SEC-007 và mục 12 (phạm vi rút gọn) |
 | Resiliency Baseline Q16 | REL-001 đến REL-004 và mục 13 (phạm vi rút gọn) |
@@ -477,8 +519,8 @@ Ngoại lệ duy nhất là lời gọi AI (Google Gemini: LLM và embedding): �
 | Change request và câu trả lời ngày 2026-09-29 | FR-002, FR-007, FR-008, FR-010, FR-017, FR-029 (rút), FR-030; đổi role, năm dạng assignment, Practice/Graded, Student mua credit và chấm AI bài luyện tập |
 | Đồng bộ tài liệu ngày 2026-10-01 | FR-025, FR-026; nhóm cấp lớp và chia ngẫu nhiên, trưởng nhóm thêm/giao mục chi tiết, trạng thái review trước khi nộp; UC 9, 16, 22, 24, 27, 36 |
 | Tách bài nhóm ngày 2026-10-01 | FR-025, FR-026; bảng 40 use case: UC 27 Manage Group Assignment (tạo, sửa bài nhóm, mục chính, nhả khóa mục), UC 28 Manage Assignments; UC 28–39 cũ thành 29–40 |
-| Gộp danh mục use case ngày 2026-10-01 | FR-006, FR-027; bảng 39 use case (nay 40): AI soạn bài thuộc Manage Assignments (nay UC 28), UC 21 Manage Templates gồm tạo thủ công/AI, sửa, xoá template |
-| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case (sau đó 39, nay 40); từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 23–27. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
+| Gộp danh mục use case ngày 2026-10-01 | FR-006, FR-027; bảng 39 use case (40 tại thời điểm đó): AI soạn bài thuộc Manage Assignments (UC 28 tại thời điểm đó), UC 21 Manage Templates gồm tạo thủ công/AI, sửa, xoá template |
+| Gộp danh mục use case ngày 2026-09-30 | FR-016; bảng 40 use case (sau đó 39 rồi 40 tại thời điểm đó); từ 2026-10-01 câu hỏi mọi dạng bài thuộc ngân hàng, dùng trong UC 23–27. Truy vết story ↔ use case nằm trong `stories.md` mục 14 |
 
 ## 12. Phạm vi Security Baseline
 

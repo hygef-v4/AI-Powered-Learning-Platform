@@ -21,8 +21,8 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 ## 3. Các invariants thiết kế
 
-1. Quyền role và phạm vi đối tượng được kiểm tra phía server cho mọi use case.
-2. Chủ nhiệm môn quản lý phạm vi môn (học liệu, ngân hàng, template); chỉ phát hành bài cho lớp mà chính họ là giảng viên. Không có đề chung cấp môn.
+1. 70 UC theo SRS 4.2; quyền User R1, Student R5, Teacher R3, Subject Manager/Administrator R2/R4 được kiểm phía server. Admin Full chỉ cho chức năng quản trị cấu trúc/tài khoản/gói/lịch sử/statistics/audit được nêu.
+2. Subject Manager/Administrator quản lý tài nguyên môn khi có R2; chỉ dùng chức năng Teacher (bài/chấm/gradebook) khi chính họ được giao lớp R4. Người được phân công môn/lớp có thể có role Admin; không có đề chung cấp môn.
 3. Mỗi nhóm có đúng một trưởng nhóm; bài nhóm là một tài liệu chung gồm các phần của khung, trưởng nhóm giao phần hoặc thành viên tự nhận phần, mỗi phần tại một thời điểm chỉ một người sửa; trưởng nhóm nộp.
 4. Bài đã phát hành bị khóa nội dung; thay đổi bằng version mới sau khi ngưng giao/đóng, hoặc nhân bản. Bài nộp bất biến sau khi nộp.
 5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi có yêu cầu AI chấm (giảng viên hoặc Student với bài `PRACTICE`).
@@ -31,7 +31,9 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 8. Cả bốn vai trò `ACTIVE` có thể mua và xem credit của chính mình. Student chỉ dùng credit để AI chấm attempt `PRACTICE` Text/Diagram Essay đã nộp: bấm chấm khi đủ credit, mỗi attempt tối đa một kết quả; thiếu credit thì mua thêm rồi bấm lại. Quiz/Code Lab Practice tự chấm không dùng AI. Teacher chỉ chấm và quyết định điểm cuối bài `GRADED`; AI đề xuất cho bài đó tính credit Teacher. Credit mua chỉ cộng từ webhook đã xác minh hoặc job tự đối soát, đúng một lần; không ảnh hưởng quyền vào lớp.
 9. Không sao chép khóa học/lớp; template/copy bài tạo identity mới có lineage, không copy lịch, lượt làm, bài nộp, điểm.
 10. Bài `PRACTICE` Text/Diagram Essay không tự chấm khi nộp; mỗi attempt có tối đa một kết quả AI hợp lệ khi Student bấm chấm và đủ credit. Kết quả Practice không vào sổ điểm và Teacher không chấm.
-11. Audit chỉ thêm, không sửa, không xóa.
+11. Audit chỉ thêm, không sửa/xóa; Administrator tra cứu Audit Log bằng UC 70.
+12. Administrator thêm/sửa gói credit và đọc lịch sử thanh toán toàn nền tảng (UC 67–69); giao dịch giữ snapshot, mức tặng tháng vẫn cấu hình triển khai. Không chỉnh credit thủ công.
+13. Hồ sơ không cập nhật avatar. Thông báo lớp được Teacher tạo/sửa/xóa có audit và scope. Class/Subject Question Bank có UC riêng, cùng mô hình scope.
 
 ## 4. Luồng triển khai
 
@@ -41,7 +43,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 
 ## 5. Traceability
 
-Toàn bộ story và use case trong hai catalog hiện hành thuộc MVP và được gán cho unit trong `unit-of-work-story-map.md`. Thông báo và bình luận lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; không có dashboard cá nhân của Student.
+Bản hiệu lực có 70 UC và 51 story, ánh xạ trong `unit-of-work-story-map.md` và `stories.md` mục 14. UC/màn từ `docs/use-cases-and-screens.md`; US-AIG-003 giữ là vận hành hỗ trợ không có UC trực tiếp. Construction/code plans vẫn cần đồng bộ tiếp cho các thay đổi ngày 2026-10-08. Thông báo và bình luận lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; không có dashboard cá nhân của Student.
 
 | Story domain | Unit chủ đạo |
 |---|---|
