@@ -89,7 +89,7 @@ PostgreSQL `ai_suggestions`, `code_runs`; kết quả chạy code mới nhất c
 - [ ] **Bước 5** - `PromptBuilder` (khối `<data>`, prompt theo task có version), `InjectionScanner`, `OutputValidator` (schema + U06/U09/rubric) (P3, P4, BR-U13-07).
 - [ ] **Bước 6** - `AiSuggestionService` + `AiTaskHandler`: `QUESTION_DRAFT` (đích ngân hàng môn R2, quiz/bài của lớp R3/R4, quiz/bài của môn R2; RAG phạm vi lớp hoặc môn; trích dẫn; nhận/bỏ) và `SKELETON_DRAFT` cho U09 (kiểm `validateSkeleton`, BR-U06-30) (F1, BR-U13-10…15).
 - [ ] **Bước 7** - `GRADING_PROPOSAL` cho giảng viên chính của lớp (từng bài và `requestBatch`, hạn 5 phút tính từ lúc xử lý từng bài; bài của môn chỉ sinh viên lớp mình) và `PRACTICE_GRADING` cho Student (văn bản phẳng + XML rút gọn U09, rubric khóa và `RubricPort.score`); Practice tối đa một dòng hợp lệ mỗi attempt, ghi qua `PracticeResultPort.record`, không vào sổ điểm (F2, F3a, BR-U13-20…24).
-- [ ] **Bước 8** - Settle/release credit theo `credit_status`, số liệu và `model` trên `ai_suggestions`, việc idempotent, thử lại, `AiPendingSweeper` (chấm quá 5 phút → `FAILED` + trả credit; soạn đề `QUEUED` quá 5 phút → gửi lại), `CreditReservationScanner` theo `reserve_expires_at` (30 phút; dòng giữ `MATERIAL_SUMMARY` 25 giờ) (P5, BR-U13-04…06, 08, 24, 53).
+- [ ] **Bước 8** - Settle/release credit theo `credit_status`, số liệu và `model` trên `ai_suggestions`, việc idempotent, thử lại, `AiPendingSweeper` (chấm quá 5 phút → `FAILED` + chốt lượng dùng thật/trả dư; soạn đề `QUEUED` quá 5 phút → gửi lại), `CreditReservationScanner` theo `reserve_expires_at` (30 phút; dòng giữ `MATERIAL_SUMMARY` 25 giờ) (P5, BR-U13-04…06, 08, 24, 53).
 - [ ] **Bước 9** - `AiUsageService` cài `AiUsagePort` cho U05: `quote`, `hold`, `begin` (có `holdId`), `complete`, `fail`, `release` (F6, P9, BR-U13-50…53); cài `CreditUsagePort` cho U07; `AiUsageStatsService` cài `AiUsageStatsPort` cho U16 (BR-U13-41).
 
 ### Nhóm C - Code Lab
@@ -105,7 +105,7 @@ PostgreSQL `ai_suggestions`, `code_runs`; kết quả chạy code mới nhất c
 
 - [ ] **Bước 16** - Flyway `db/migration/aiexecution/V20260925_2000__create_ai_suggestions_code_runs.sql` theo `infrastructure-design.md` §4 (`ai_suggestions` có `task_type`, `model`, `hold_id`, `request_ref`, `reserve_expires_at`; `code_runs`; không tạo `ai_services`, không seed).
 - [ ] **Bước 17** - JPA repository.
-- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: AI bị từ chối không trừ credit; lỗi release credit; trần ngày và quota Gemini báo "Hệ thống đang bận"; đổi `ai.enabled` trên Settings có hiệu lực ≤ 30 giây; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry; tải học liệu thiếu credit không tạo học liệu, `NO_TEXT` trả toàn bộ, `BUSY` giữ credit tới khi quét xong. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED` và trả credit rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn; kiểm lời giải rồi sửa test → duyệt bị chặn.
+- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: AI bị từ chối không trừ credit; lỗi chốt lượng dùng thật và trả dư, chưa dùng mới hoàn toàn bộ; trần ngày và quota Gemini báo "Hệ thống đang bận"; đổi `ai.enabled` trên Settings có hiệu lực ≤ 30 giây; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry; tải học liệu thiếu credit không tạo học liệu, `NO_TEXT` trả toàn bộ, `BUSY` giữ credit tới khi quét xong. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED`, chốt lượng dùng thật/trả dư rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn; kiểm lời giải rồi sửa test → duyệt bị chặn.
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm E - API
@@ -177,3 +177,15 @@ Port và code (khung hiện có trong `backend/src/main/java/edu/aiplatform`):
 
 Migration:
 - [ ] Đổi `V20260925_2000__u13_ai.sql` thành `db/migration/aiexecution/V20260925_2000__create_ai_suggestions_code_runs.sql` (chưa áp dụng nên sửa tại chỗ): bỏ `ai_services` và seed; `ai_suggestions` dùng `task_type`, `model` thay FK `ai_service_id`, thêm `hold_id`, `request_ref`, `reserve_expires_at`; thêm bảng `code_runs`.
+
+## 9. Hold và checkpoint học liệu — 2026-10-09
+
+- [ ] HOLD requestRef riêng `lessonId:HOLD`, child calls theo SUMMARY:chunkIndex/SUMMARY:MERGE/EMBEDDING với hold_id; result checkpoint có cấu trúc, không prompt thô. Lookup hold theo lesson/requestRef giữ cố định.
+- [ ] Complete và cộng tổng dùng vào hold nguyên tử/idempotent; dùng lại checkpoint READY, release terminal settle phần AI đã dùng thật và trả dư, chưa gọi AI trả toàn bộ; hold scanner 25 giờ dự phòng deadline scan 24 giờ.
+- [ ] Unit test nhiều chunk, retry sau chunk hoàn tất, duplicate complete/release, lỗi embedding sau summary, lỗi/timeout provider và scanner hết hạn không settle hai lần.
+
+## Bổ sung sau recheck 2026-10-09 — checkpoint và settlement
+
+- [ ] Cài findHold, HoldSnapshot, UsageStart/CallSnapshot và complete(ticket, tokens, cost, checkpoint), fail(ticket, usage?) theo contract U05; begin trả checkpoint khi REPLAY, ticket có metadata scanClaimId khi RUN. Không thêm bảng/cột checkpoint hoặc HTTP API.
+- [ ] Kiểm ticket/claim metadata và khóa HOLD khi complete/fail/release; READY không cộng lại, stale ticket/HOLD đã chốt bị từ chối. Scanner chỉ xử lý RESERVED, chốt lượng đã dùng bằng CreditPort.settle, bằng 0 mới CreditPort.release.
+- [ ] Kịch bản kiểm: lỗi embedding sau summary, scanner 25 giờ với lượng dùng > 0/0, child NONE không hoàn HOLD, READY replay và complete cạnh tranh release. Đây là việc chưa triển khai, không thay dấu hoàn tất cũ.

@@ -28,19 +28,19 @@
 3. Xác định phạm vi theo nơi tải: Material List → học liệu của môn (`class_id` rỗng); tab Materials → học liệu của lớp (`class_id` = lớp) (BR-U05-02).
 4. `FILE`: frontend tải tệp qua U03 (purpose `MATERIAL`, giới hạn lấy từ Settings) nhận `FileRef` → U05 gọi `ArtifactPort.attach` → tạo `lessons` với `module_id`, `class_id`, `file_id`, `file_name`, `mime_type`, `size_bytes`, `uploaded_by` (BR-U05-21).
 5. `YOUTUBE`: kiểm URL một video (BR-U05-22) → tạo `lessons` với `youtube_url`, `uploaded_by`.
-6. Cùng transaction: `AiUsagePort.hold(MATERIAL_SUMMARY, uploader, LESSON, lessonId)` giữ credit cho lần quét; thiếu credit → từ chối "Không đủ credit AI", không tạo học liệu (BR-U05-39).
-7. Đủ credit: `scan_status = PENDING`, `scanned_at = now`, gửi việc `LESSON_SCAN` hoặc `YOUTUBE_CAPTION` qua `JobPort.enqueue`; audit. Học liệu hiện ngay cho người học trong phạm vi (BR-U05-11, 30).
+6. Cùng transaction: `AiUsagePort.hold(MATERIAL_SUMMARY, uploader, LESSON, lessonId, lessonId:HOLD)` giữ credit cho lần quét; thiếu credit → từ chối "Không đủ credit AI", không tạo học liệu (BR-U05-39).
+7. Đủ credit: `scan_status = PENDING`, `scanned_at = now`, `scan_expires_at = now + 24 giờ`, retry count 0, gửi việc `LESSON_SCAN` hoặc `YOUTUBE_CAPTION` qua `JobPort.enqueue`; audit. Học liệu hiện ngay cho người học trong phạm vi (BR-U05-11, 30).
 
-## F6 - Việc `LESSON_SCAN` / `YOUTUBE_CAPTION` (worker)
-1. Cập nhật `scan_status = SCANNING` khi đang `PENDING` hoặc `BUSY`; trạng thái khác thì bỏ qua (idempotent).
-2. Lấy chữ: `FILE` mở qua `ArtifactPort.open` và trích chữ theo trang; `YOUTUBE` lấy phụ đề (BR-U05-32, 33).
-3. Không có chữ → `NO_TEXT`; không phụ đề → `NO_CAPTION`; `AiUsagePort.release` trả credit đã giữ; kết thúc (BR-U05-46).
-4. Lesson chưa có `summary`: `AiUsagePort.begin(MATERIAL_SUMMARY, ...)` dùng phần credit đã giữ, kiểm AI bật và trần chi phí. AI tắt hoặc hết trần → `BUSY`, giữ nguyên credit, kết thúc; sweeper tự gửi lại (bước 9).
-5. Tóm tắt: lấy tối đa 200 000 ký tự đầu, chia đoạn ≤ 30 000 ký tự, gọi `SummaryPort` tóm tắt từng đoạn rồi gộp thành một bản ≤ 4 000 ký tự; `AiUsagePort.complete` trừ theo tổng token; ghi `summary` ngay để lần thử lại không tóm tắt và trừ credit lần nữa (BR-U05-45, 47).
-6. `AiUsagePort.begin(EMBEDDING, ...)` (AI tắt hoặc hết trần xử lý như bước 4), rồi `EmbeddingPort` với bản tóm tắt; `AiUsagePort.complete` theo token đã dùng (BR-U05-35).
-7. Một transaction: ghi `extracted_text`, `embedding`, `scanned_at`, `INDEXED`; `AiUsagePort.release` trả phần credit còn dư (BR-U05-36, 39).
-8. Lỗi tạm → U03 tự thử lại (bước 4–5 bỏ qua nếu đã có `summary`); hết lượt hoặc lỗi vĩnh viễn → `onFailed` đặt `FAILED`, `AiUsagePort.release` trả phần credit còn giữ (BR-U05-37).
-9. `LessonPendingSweeper`: gửi lại việc cho lesson `PENDING` quá 5 phút và lesson `BUSY` mỗi 30 phút; `BUSY` quá 24 giờ → `FAILED` và trả credit (BR-U05-37).
+## F6 - Việc LESSON_SCAN / YOUTUBE_CAPTION (worker)
+1. Trong transaction ngắn claim bằng UPDATE có điều kiện: PENDING/BUSY, scan_retry_at đã tới, scan_expires_at còn hạn, không lease đang giữ. Đặt SCANNING, scan_claim_id mới, lease 5 phút; không claim được thì bỏ message trùng. Mọi ghi kết quả và gia hạn lease kiểm claim/hạn; worker bị thay claim bỏ kết quả muộn.
+2. Trích chữ hoặc caption. NO_TEXT/NO_CAPTION chuyển trạng thái cuối và chốt AiUsagePort.release(holdId), chưa gọi AI trả toàn bộ.
+3. Chưa có summary: dùng requestRef riêng ổn định `lessonId:SUMMARY:chunkIndex` cho từng đoạn và `lessonId:SUMMARY:MERGE` cho gộp. AiUsagePort.begin(..., holdId, scanClaimId) dưới claim hợp lệ trả RUN với ticket hoặc REPLAY với CallSnapshot/checkpoint READY; REPLAY không gọi provider. BUSY giữ credit, đặt scan_retry_at = now + 30 phút; IN_PROGRESS không gọi trùng, CLOSED kết thúc quét an toàn. Worker lấy kết quả qua port, không đọc ai_suggestions trực tiếp.
+4. SummaryPort tóm tắt tối đa 200 000 ký tự theo đoạn ≤ 30 000, gộp ≤ 4 000 ký tự. complete(ticket, tokens, cost, checkpoint) kiểm/khóa claim lesson rồi ghi kết quả/usage qua U13 cùng transaction; ticket/claim cũ rollback, READY replay không cộng lại; khi gộp xong ghi lessons.summary ngay. Summary đã có thì bỏ toàn bộ bước này khi retry.
+5. Embedding dùng `lessonId:EMBEDDING`, AiUsagePort.begin(..., holdId, scanClaimId): REPLAY nhận vector checkpoint, RUN mới embed(summary) rồi complete với checkpoint EMBEDDING. Lời gọi bị chặn trước provider không trừ credit. Giữ kết quả đã complete làm checkpoint; chưa chắc provider đã xử lý khi timeout thì xử lý lỗi hữu hạn, không tuyên bố exactly-once cho lời gọi bên ngoài.
+6. Transaction kiểm claim: ghi extracted_text, embedding, INDEXED, scanned_at và chốt hold (settle phần dùng thật, trả dư). Terminal NO_TEXT/NO_CAPTION/FAILED cũng chốt hold idempotent. Embedding FAILED không xóa summary đã lưu; lesson chỉ vào RAG khi INDEXED.
+7. Lỗi tạm: nếu còn claim và chưa hết hạn/retry, tăng scan_retry_count, chuyển SCANNING → PENDING, xóa claim/lease, đặt scan_retry_at theo U03 backoff rồi ném RetryableJobException. Hết 5 retry, lỗi vĩnh viễn hoặc tới scan_expires_at → FAILED và chốt hold. onFailed dùng cùng kiểm claim/trạng thái, không thay trạng thái cuối đã ghi bởi worker khác.
+8. LessonPendingSweeper mỗi phút: PENDING quá 5 phút và retry_at tới thì gửi lại; BUSY chỉ gửi khi retry_at tới (30 phút). SCANNING lease hết hạn: CAS thu hồi claim, tăng retry/recovery count, chuyển PENDING hoặc FAILED khi hết giới hạn; worker cũ không ghi được. Mọi trạng thái chưa cuối tới scan_expires_at (24 giờ cố định từ tạo lesson) → FAILED và chốt hold.
+9. HoldId tra qua AiUsagePort.findHold(LESSON, lessonId, lessonId:HOLD) trả HoldSnapshot, không đọc repository U13; không dựa vào bộ nhớ worker. Scanner 25 giờ của U13 là phương án dự phòng trả credit nếu luồng terminal thất lạc.
 
 ## F7 - Không có quét lại thủ công (bỏ 2026-10-09)
 Quét chỉ chạy một lần khi tải lên; lỗi thì hệ thống tự thử lại theo F6 bước 8–9. Người dùng không có nút Quét lại (BR-U05-30, 37).

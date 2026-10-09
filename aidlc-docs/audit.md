@@ -3470,3 +3470,48 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: User-authorized commit on the current branch. No push or pgvector-removal change requested for this commit. Existing implementation checkpoints unchanged; runtime checks N/A, enabled documentation constraints retained and disabled Property-Based Testing skipped.
 
 ---
+
+## Inception and Construction documentation review - 73-UC baseline
+**Timestamp**: 2026-10-09T06:09:48Z
+**User Input**: "giúp tôi check lại doc construction với inception"
+**AI Response**: Reviewed the current local 73-UC catalog and G21_Diagrams.drawio Page-2 against Inception requirements, stories, architecture, ownership and current Construction designs/code plans. Saved construction/plans/inception-construction-review-2026-10-09.md with nine finding groups: contradictory Administrator permissions, stale 70-UC/16-unit ownership after U10 removal and Settings addition, retired features still in active Inception, lesson-scan retry/state recovery contradictions, failed-scan credit/summary inconsistencies, obsolete Admin wallet eligibility, incomplete Inception ingestion orchestration, stale U05 AI configuration instructions, and broken catalog links/outdated screen labels.
+**Validation**: Structural scan of 163 current Markdown documents found five broken local links across four files and no odd code fences; Drawio XML parsed. Local catalog has 73 UC rows, story catalog 51 story headings, and Construction 15 unit directories. Findings distinguish active documentation from historical approvals/questions/generated summaries. No application runtime, Google SRS or live integration verification performed.
+**Context**: Documentation review only; existing designs, code, diagrams, approvals and stage checkpoints unchanged. SECURITY-08 and dependency retry/state concerns remain findings; other runtime checks N/A. Disabled Property-Based Testing skipped. No commit or new stage approval.
+
+---
+
+## AI-DLC documentation revision — 73-UC baseline
+**Timestamp**: 2026-10-09T06:33:49Z
+**User Input**: "tôi muốn sửa doc aidlc theo uc mới"
+**AI Response**: Synchronized current Inception and Construction documentation to local use-cases-73.md and G21_Diagrams.drawio Page-2: 73 UC, 51 stories, 15 units. Rebuilt primary ownership and traceability; assigned Settings to U03 and subject assignments/version/copy to U08; removed U10 from current architecture/waves. Aligned Admin authorization/wallet restrictions, Subject Manager teaching scope, retired features, screen names and source links. Repaired lesson-scan retry/lease/deadline recovery, durable child-call checkpoints, credit settlement and summary retention; runtime AI configuration uses U03 Settings. Updated current state and planning preambles; added review resolution and revision checklist.
+**Validation**: Checked 179 active documents and 150 design headers: 73 continuous UC and 51 unique stories each have exactly one primary unit, no broken local links or odd fences, no hard-dependency cycle. Preserved 64 historical stage plans, U03 completed code plan and state history. Drawio XML parses; git diff --check passes; substantive tracked changes are confined to aidlc-docs.
+**Context**: Authorized documentation revision only. Existing approvals, implementation checkpoints, application code, contracts and source diagrams preserved; legacy dependency images explicitly historical. No commit, new stage approval, live SRS or runtime/integration verification. Enabled security/resiliency design constraints retained; runtime/deployment/health checks N/A and disabled Property-Based Testing skipped.
+
+---
+
+## Inception/Construction post-revision recheck
+**Timestamp**: 2026-10-09T06:44:29Z
+**User Input**: "check lại inception với construction đã đồng bộ chưa"
+**AI Response**: Rechecked the current documentation and recorded construction/plans/inception-construction-recheck-2026-10-09.md. Primary mappings are aligned, but semantic synchronization is incomplete: U07 reserve/refund instructions conflict with U05/U13 lesson HOLD settlement, FR-024 retains obsolete UC numbers/screens, grading/reporting stories retain old entries and an incorrect grade-distribution toggle actor, AiUsagePort lacks explicit checkpoint recovery/result contract details, and shared infrastructure still says 16 units. No current design or code was changed by this recheck.
+**Validation**: Fresh checks over 178 active documents: 73 continuous UC, 73 exact-name trace rows, 51 unique stories, 15 primary units, 150 aligned design headers, no broken local links or odd fences, no hard-dependency cycles. Git diff --check passes. Structural success does not resolve the five semantic findings.
+**Context**: Documentation review only; no stage approval, commit, application/runtime or live SRS verification. SECURITY-08 actor inconsistency remains a finding; other runtime security/deployment/health verification N/A. Recovery-contract review does not certify RESILIENCY-10 runtime behavior; disabled Property-Based Testing skipped.
+
+---
+
+## AI-DLC follow-up synchronization — close recheck findings
+**Timestamp**: 2026-10-09T06:58:35Z
+**User Input**: "giúp tôi đồng bộ lại doc"
+**AI Response**: Resolved documentation findings C01–C05 using existing decisions. Aligned U07/U05/U13 credit semantics: one lesson HOLD, no child reserve, settle recorded actual usage on success/failure/expiry and refund only the unused part; CreditPort.release fully refunds only zero usage. Updated FR-024 UC references, reporting/grading story screen entries and Subject Manager-only grade-distribution toggle. Specified AiUsagePort HoldSnapshot/findHold, UsageStart RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED, CallSnapshot/checkpoint and scanClaimId fencing with shared-transaction validation and serialized HOLD settlement. Updated consumer/provider designs and pending code-plan tasks, shared infrastructure to 15 units, state decision, sync checklist and recheck resolution.
+**Validation**: Fresh checks pass for 178 active documents and 150 design headers; 73 UC and 51 stories each have one primary owner in 15 units; exact-name story trace rows match catalog; no broken local links, odd fences or hard-dependency cycles. Targeted checks for C01–C05 pass. Preserved 64 historical stage plans, all completed code-plan checkbox lines, U03 completed plan and state history. Git diff --check passes; tracked changes are documentation-only. No application tests were run for this documentation revision.
+**Context**: No new business decision, stage approval, commit or code/contract/source-diagram change. Runtime/provider/integration verification remains pending. SECURITY-08 actor inconsistency resolved in specification; other enabled security constraints retained with runtime N/A. RESILIENCY-04/06 deployment/health N/A; RESILIENCY-10 timeouts retained and recovery contract clarified. Rules outside project scope N/A; disabled Property-Based Testing skipped.
+
+---
+
+## Commit preparation — 73-UC AI-DLC synchronization
+**Timestamp**: 2026-10-09T07:02:14Z
+**User Input**: "giúp tôi commit nhớ ghi rõ description sửa gì"
+**AI Response**: Prepared a user-authorized local commit of current AI-DLC documentation changes and the three review/synchronization artifacts. Wrote a detailed commit description covering 73 UC/51 stories/15 units, ownership and wave changes, Administrator and Subject Manager permissions, retired features, current screen/UC references, lesson-scan retry/lease/deadline recovery, checkpoint replay/fencing, one-HOLD credit settlement, runtime Settings configuration and review resolutions.
+**Validation**: Fresh checks pass for 178 current documents, 150 design headers, 73 continuous/exact-name UC mappings, 51 unique stories and 15 primary units. No broken local links, odd fences or hard-dependency cycles; whitespace passes. Preserved 64 historical stage plans, completed code-plan checkbox lines, the U03 completed plan and state history. Changes are confined to aidlc-docs.
+**Context**: Commit only, no push requested. Application code, contract files, migrations, source diagrams, approvals and implementation progress remain unchanged. Runtime/provider/integration checks N/A for this documentation commit; disabled Property-Based Testing skipped.
+
+---

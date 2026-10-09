@@ -4,12 +4,12 @@
 
 - Dependency đi từ controller/adapter vào application/domain rồi ra port; domain không phụ thuộc SDK provider.
 - Ghi liên module chỉ qua port công khai hoặc event sau commit.
-- Dùng chung một PostgreSQL (24 bảng, `docs/database.md`). Mỗi bảng có một unit chủ tạo migration; phần lớn bảng chỉ unit chủ đọc/ghi. Hai bảng dùng chung (mục 3a) cho phép unit khác ghi cột của mình qua port của unit chủ (`accounts`: U07, U16 thêm cột bằng migration riêng; `assignments`: U08 tạo sẵn mọi cột); không unit nào đọc/ghi repository của unit khác trực tiếp.
+- Dùng chung PostgreSQL; danh sách bảng theo domain-entities/infrastructure-design của từng unit, không dùng số bảng/catalog database cũ. Unit khác đọc/ghi qua port của owner; accounts có cột credit/preferences, assignments có type config theo contract; system_settings do U03 sở hữu.
 - Worker dùng cùng contract và không vượt phạm vi quyền của job nguồn.
 
 ## 2. Dependency matrix
 
-Ma trận phụ thuộc giữa module là ma trận 16 unit trong `unit-of-work-dependency.md` §2 (ký hiệu `H` phụ thuộc cứng, `C` contract qua port trung lập, `E` event), kèm hình đồ thị phụ thuộc.
+Ma trận phụ thuộc giữa module là ma trận 15 unit trong `unit-of-work-dependency.md` §2 (ký hiệu `H` phụ thuộc cứng, `C` contract qua port trung lập, `E` event), kèm hình đồ thị phụ thuộc.
 
 ## 3. Sơ đồ runtime
 
@@ -45,8 +45,8 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 | Bảng | Unit chủ (tạo bảng) | Unit khác ghi | Phần ghi | Qua |
 |---|---|---|---|---|
 | `accounts` | U01 | U07, U16 | Số dư credit (U07); `email_preferences` (U16) | Migration của unit đó thêm cột; chỉ `CreditService` của U07 ghi số dư |
-| `assignments` | U08 | U09, U10 | Cấu hình loại bài, khung (U09); lineage (U10) | `AssignmentExtensionPort` |
-| `assignments` (cột `grades_released_at`, `reminder_sent_at`) | U08 | U15, U16 | Công bố điểm `GRADED` (U15), mốc nhắc hạn (U16); chế độ bài `GRADED`/`PRACTICE` do U08 sở hữu | `AssignmentExtensionPort` |
+| `assignments` | U08 | U09 | Cấu hình dạng và khung của U09; lineage/copy do U08 giữ | AssignmentExtensionPort |
+| `assignments` (cột `reminder_sent_at`) | U08 | U16 | Mốc nhắc hạn; công bố điểm theo evaluations của U15 tại (bài, lớp), không grades_released_at trên bài | AssignmentExtensionPort |
 
 ## 4. Data ownership
 
@@ -54,18 +54,18 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
 |---|---|---|
 | Tài khoản, role, phiên, OTP | U01 | Mọi module |
 | Audit | U02 | Mọi module |
+| Settings (`system_settings`, U07/U13 khai báo nhóm) | U03 | U07, U13; Settings Admin UI của U03 |
 | Cơ chế việc nền, worker, sự kiện thông báo (không có bảng job) | U03 | Mọi module có việc nền hoặc thông báo |
-| File (metadata trên Google Drive, `FileRef`, token tải; không có bảng) | U03 | U01, U05, U06, U09, U11, U14 |
-| Môn, lớp, ghi danh, mã mời | U04 | U01, U05, U06, U08-U16 |
-| Module của môn, học liệu tải lên (tệp/YouTube) kèm kết quả quét và embedding, thông báo và bình luận lớp | U05 | U04, U06, U08, U13, U16 (event lớp) |
-| Câu hỏi, rubric (phiên bản) | U06 | U08-U11, U13, U15 |
+| File (metadata trên Google Drive, `FileRef`, token tải; không có bảng) | U03 | U05, U06, U09, U11, U14 |
+| Môn, lớp, ghi danh | U04 | U01, U05, U06, U08/U09/U11-U16 |
+| Module của môn, học liệu tải lên (tệp/YouTube) kèm kết quả quét, summary và embedding, thông báo lớp | U05 | U04, U06, U08, U13, U16 (event lớp) |
+| Câu hỏi, rubric (phiên bản) | U06 | U08/U09/U11, U13, U15 |
 | Giao dịch, gói credit, số dư trên `accounts` (giữ/trừ nằm ở `ai_suggestions`) | U07 | U05, U13, U16 |
-| Bài, câu của bài, lịch | U08 | U09-U11, U14-U16 |
-| Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U10, U11, U13-U15 |
-| Template và lineage | U10 | U08 |
+| Bài, câu của bài, lịch | U08 | U09/U11, U14-U16 |
+| Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U11, U13-U15 |
 | Lượt làm, bài nộp | U11 | U13, U15, U16 |
 | Nhóm của lớp, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
-| Cấu hình AI (`ai_services`), đề xuất và số liệu AI (`ai_suggestions`); kết quả chạy code ghi vào lượt/câu hỏi | U13 | U05, U06, U08, U10, U11, U15 |
+| Đề xuất/số liệu/credit holds (`ai_suggestions`), code_runs (VERIFY/GRADE) | U13 | U05, U06, U08, U09, U11, U15, U16 |
 | Tài liệu nhóm (mục, lịch sử, bản nộp trong `group_documents`) | U14 | U13, U15, U16 |
 | Đánh giá (`evaluations`, lịch sử trong cột `history`), sổ điểm đọc qua port | U15 | U11, U16 |
 | Thông báo (kèm trạng thái email), nhắc hạn, thống kê quản trị và xuất bảng điểm theo yêu cầu | U16 | - |
@@ -89,10 +89,10 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
   - U12 → U14 (`C`): `GroupChangePort.onGroupCreated/onMemberRemoved` → việc tạo tài liệu nhóm, nhả khóa mục.
 - Event trên `platform.events` chỉ dùng cho thông báo U16 (mất thì chấp nhận): `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`. U16 nghe bằng queue `jobs.notification`.
 - U14 → U16: realtime qua `platform.realtime`.
-- U07 ← U13: `CreditPort.reserve/settle/release` chỉ U13 gọi, trong transaction đổi `ai_suggestions.credit_status`. U13 → U07 (`C`): `CreditUsagePort.listUsage` cho bảng lần dùng credit trên màn Credit Packages (U07 khai báo, adapter rỗng tới khi có U13). U13 ← U05 (`C`): `AiUsagePort.begin/complete/fail` cho mọi lời gọi Gemini của U05 (quét học liệu, embedding): kill-switch, trần chi phí/ngày, tần suất và giữ credit của người tải học liệu; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
+- U07 ← U13: `CreditPort.reserve/settle/release` chỉ U13 gọi, trong transaction đổi `ai_suggestions.credit_status`. U13 → U07 (`C`): `CreditUsagePort.listUsage` cho bảng lần dùng credit trên màn My Credit Package (U07 khai báo, adapter rỗng tới khi có U13). U13 ← U05 (`C`): `AiUsagePort.quote/hold/begin/complete/fail/release` cho mọi lời gọi Gemini của U05 (quét học liệu, embedding): kill-switch, trần chi phí/ngày, tần suất và giữ credit của người tải khi tạo lesson, settle lượng thật và trả phần dư; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
 - U08 ← U09/U12/U13 (`C`): `TypeConfigPort`, `GroupReadinessPort`, `CodeLabCheckPort` khi duyệt/phát hành.
 - U04 ← U05 (`C`): `PublishedContentPort` cho trang lớp của người học.
 
-## Đồng bộ SRS 2026-10-08
+## Baseline 2026-10-09
 
-U07 sở hữu gói bán do Admin thêm/sửa, snapshot giao dịch và query lịch sử toàn nền tảng; không thêm dependency kiểm enrollment vào thanh toán. U05 sửa/xóa thông báo cần U01/U04 scope và U02 audit. U02 chủ trì UC 70 Audit Log; U03 và U13 không chủ trì UC trực tiếp. Scope kế thừa cần phân công R2/R4, không chỉ role. Các thay đổi không làm đổi hướng dependency/16 unit hiện có.
+73 UC/51 story/15 unit theo unit map; U10 đã bỏ, copy/version/bài của môn do U08 giữ. U03 Settings UC 70–71, U02 Audit UC 73; U13 khai báo nhóm AI qua SettingsPort của U03, lưu code_runs thay cho verification trên questions. U11 đọc ContentRefPort của U05 để kiểm học liệu quiz còn hiển thị; U16 đọc AiUsageStatsPort của U13 qua C. Admin không học thuật/ví/AI; toàn bộ object scope kiểm trước trả dữ liệu.

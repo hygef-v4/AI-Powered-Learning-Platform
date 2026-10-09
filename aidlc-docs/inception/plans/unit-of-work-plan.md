@@ -1,6 +1,8 @@
 # Unit of Work Plan
 
-> Bản hiệu lực là bộ 16 unit hiện tại trong `application-design/unit-of-work.md`, `unit-of-work-dependency.md` và `unit-of-work-story-map.md`. Các revision 17 unit phía dưới đã được thay thế bởi commit `docs: Rework application design into 16-unit plan`.
+> Baseline hiện hành 2026-10-09: 73 UC, 51 story, 15 unit theo unit-of-work-story-map.md; U10 đã bỏ, Settings U03, copy/bài môn U08. Các câu trả lời/checklist phê duyệt cũ phía dưới giữ lịch sử, không xác nhận revision đã triển khai.
+
+> Baseline lịch sử trước 2026-10-09 là bộ 16 unit trong `application-design/unit-of-work.md`, `unit-of-work-dependency.md` và `unit-of-work-story-map.md`. Các revision 17 unit phía dưới đã được thay thế bởi commit `docs: Rework application design into 16-unit plan`.
 
 ## Mục tiêu
 

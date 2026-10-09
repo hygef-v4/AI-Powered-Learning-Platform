@@ -56,7 +56,7 @@
 | BR-U03-52 | Payload chỉ chứa ID/tham chiếu; U03 từ chối payload có khóa thuộc danh sách cấm ở BR-U02-05 (dùng `ForbiddenKeyGuard` trong `shared/`). | Worker payload rule |
 | BR-U03-53 | Worker ack thủ công, chỉ sau khi handler đã cập nhật dòng nghiệp vụ. | Thiết kế |
 | BR-U03-56 | Handler lỗi tạm và `attempt` < 5: ack message gốc, gửi lại vào hàng chờ thử lại có TTL theo lượt (30 s, 1, 2, 4, 8 phút); hết TTL message quay về queue gốc. Lỗi vĩnh viễn hoặc hết lượt: gọi `onFailed` của unit sở hữu để chuyển dòng nghiệp vụ sang trạng thái lỗi, log ERROR. | REL-003 |
-| BR-U03-57 | Không có màn hình hay nút chạy lại việc nền; người dùng thao tác lại từ màn nghiệp vụ khi màn đó cho phép (ví dụ quét lại học liệu). | Câu 3 |
+| BR-U03-57 | Không có màn hình hay nút chạy lại việc nền; người dùng thao tác lại từ màn nghiệp vụ khi màn đó cho phép (ví dụ tạo yêu cầu AI mới sau lỗi nếu nghiệp vụ cho phép; học liệu không có quét lại thủ công). | Câu 3 |
 | BR-U03-58 | Message có thể mất nếu backend dừng giữa commit và gửi, hoặc RabbitMQ không nhận. Mỗi unit có việc nền đăng ký một `PendingSweeper`: mỗi phút, dòng còn ở trạng thái chờ quá 5 phút được gửi lại message. | Câu 8 |
 | BR-U03-59 | Handler của unit sở hữu phải idempotent vì một việc có thể được gửi hơn một lần. | Thiết kế |
 | BR-U03-60 | Việc hẹn giờ (mở/đóng bài, tự nộp khi hết giờ, nhắc hạn, trả credit giữ quá hạn, đối soát PayOS) không dùng message hẹn giờ: mỗi unit đăng ký `ScheduledScanner` chạy mỗi phút trong worker, đọc mốc thời gian trên bảng của mình và cập nhật idempotent. | Quyết định 2026-10-03 |

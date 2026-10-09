@@ -1,17 +1,12 @@
 # AI-DLC Execution Plan
 
-> Bản hiệu lực 2026-10-08: 16 unit, 70 UC và 51 story; xem requirements.md, stories.md và unit-of-work-story-map.md. Các bảng phân tích/stage và checkpoint ban đầu bên dưới là lịch sử lập kế hoạch, không phải ánh xạ UC hay phê duyệt phạm vi mới. Code generation đang diễn ra; thiết kế/code plans Construction đã đồng bộ; implementation revision chưa hoàn thành.
+> Baseline hiện hành 2026-10-09: 73 UC, 51 story, 15 unit theo unit-of-work-story-map.md; U10 đã bỏ, Settings U03, copy/bài môn U08. Các câu trả lời/checklist phê duyệt cũ phía dưới giữ lịch sử, không xác nhận revision đã triển khai.
 
-## 0. Phạm vi thực hiện hiện hành - 2026-10-08
+## 0. Baseline hiện hành — 2026-10-09
 
-- 70 UC theo SRS mới và UC 70 Audit Log vừa bổ sung, 51 story (thêm US-PAY-004/005), 16 unit hiện có.
-- Student/Teacher/Subject Manager/Administrator theo R1–R5; Admin có chức năng Teacher chỉ khi được giao lớp và tài nguyên môn chỉ khi được giao môn.
-- Hồ sơ không cập nhật avatar; announcement có tạo/sửa/xóa; ngân hàng lớp/môn riêng; AI Practice UC 25 và Teacher proposals UC 35 riêng.
-- U07 thêm/sửa gói và đọc lịch sử toàn nền tảng; U02 chủ trì UC 70. Inception và thiết kế/code plans của 16 unit Construction đã đồng bộ ngày 2026-10-08; existing contracts/code cần cập nhật và kiểm chứng riêng theo revision tasks.
-- Tên màn theo `screen-flow (1).drawio` mới: Assigned Classes, Subject Classes; template UC 53–54 dùng Subject Template/Template Editor. Tài liệu/code chưa được coi là triển khai các chức năng chỉ vì đã sửa Inception.
-- Không đổi kiến trúc/wave/gate; nội dung phạm vi, công nghệ hoặc phân chia cũ bên dưới chỉ lưu lịch sử. Trước khi code phần thay đổi, dùng Inception hiện hành để cập nhật thiết kế/contracts và kế hoạch unit liên quan.
+73 UC/51 story/15 unit theo catalog local và Page-2 G21_Diagrams.drawio. Admin chỉ User/quản trị, không ví/AI/phân công môn/lớp. U03 Settings 70–71; U02 Audit 73. U10 bỏ; bài môn/copy/version U08; chỉ ngân hàng môn, quiz riêng gắn học liệu, không comments/mã mời. Dùng unit-of-work*.md hiện hành cho wave/ownership; approvals/checklists cũ giữ lịch sử, không xác nhận implementation revision.
 
-## 1. Detailed Analysis Summary
+## 1. Lịch sử planning — Detailed Analysis Summary
 
 ### Project and scope
 

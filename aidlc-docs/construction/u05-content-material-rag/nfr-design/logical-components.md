@@ -45,7 +45,7 @@
 | `RetrievalService`, `LessonVectorRepository` | backend | F10, P4 |
 | `LessonScanHandler`, `TextExtractor`, `CaptionFetcher` | worker | F6, P1, P2 |
 | `LessonSummarizer` | worker | Chia đoạn, gọi `SummaryPort` từng đoạn rồi gộp (BR-U05-45…47) |
-| `LessonPendingSweeper` | worker | BR-U03-58; gửi lại `PENDING` quá 5 phút và `BUSY` mỗi 30 phút, `BUSY` quá 24 giờ → `FAILED` (BR-U05-37) |
+| `LessonPendingSweeper` | worker | Gửi lại PENDING/BUSY khi đến retry_at; phục hồi SCANNING lease hết hạn bằng CAS; deadline tuyệt đối 24 giờ, terminal chốt credit (BR-U05-37) |
 | `GeminiEmbeddingAdapter`, `GeminiSummaryAdapter`, `YoutubeAdapter` + adapter giả | backend, worker | P5, P7 |
 
 ## 3. Cấu hình

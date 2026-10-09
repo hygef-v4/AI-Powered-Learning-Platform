@@ -24,9 +24,9 @@ Thứ tự, dừng ở bước đầu tiên không đạt, ghi dòng `ai_suggest
 2. Quy tắc nghiệp vụ: câu hỏi qua `DefinitionValidator` (U06); khung qua `validateSkeleton` (U09); chấm: mỗi `itemId` thuộc rubric, không thiếu mục.
 
 ## P5 - Job AI bền vững
-- Việc U03 `AI_TASK {suggestionId}`; lỗi tạm → ném để U03 thử lại; lỗi vĩnh viễn hoặc hết lượt → `onFailed`: `FAILED` + `release` credit chưa dùng (đổi `credit_status` có điều kiện).
-- Idempotent: việc chạy lại khi dòng đã `READY` → bỏ qua. `AiPendingSweeper` mỗi phút: dòng chấm (`PRACTICE_GRADING`, `GRADING_PROPOSAL`) quá 5 phút chưa `READY` → `FAILED` + `release` (BR-U13-24), kết quả về muộn bị bỏ; dòng `QUESTION_DRAFT`, `SKELETON_DRAFT` `QUEUED` quá 5 phút → gửi lại việc.
-- `CreditReservationScanner` mỗi 5 phút `release` dòng `RESERVED` có `reserve_expires_at` đã qua: 30 phút cho dòng thường, 25 giờ cho dòng giữ `MATERIAL_SUMMARY` (BR-U13-53, BR-U07-43).
+- Việc U03 `AI_TASK {suggestionId}`; lỗi tạm → ném để U03 thử lại; lỗi vĩnh viễn hoặc hết lượt → `onFailed`: `FAILED` + chốt lượng dùng thật, trả dư (CreditPort.release chỉ khi chưa dùng) (đổi `credit_status` có điều kiện).
+- Idempotent: việc chạy lại khi dòng đã `READY` → bỏ qua. `AiPendingSweeper` mỗi phút: dòng chấm (`PRACTICE_GRADING`, `GRADING_PROPOSAL`) quá 5 phút chưa `READY` → `FAILED` + chốt lượng dùng thật/trả dư (BR-U13-24), kết quả về muộn bị bỏ; dòng `QUESTION_DRAFT`, `SKELETON_DRAFT` `QUEUED` quá 5 phút → gửi lại việc.
+- `CreditReservationScanner` mỗi 5 phút chốt dòng `RESERVED` có `reserve_expires_at` đã qua: 30 phút dòng thường, 25 giờ HOLD `MATERIAL_SUMMARY`. Chốt qua U13: lượng dùng > 0 gọi CreditPort.settle và trả dư; lượng dùng = 0 gọi CreditPort.release hoàn toàn bộ. Child call NONE không được scanner hoàn HOLD (BR-U13-53, BR-U07-43).
 
 ## P6 - CodeRunner qua Judge0
 - `CodeRunnerPort.run(language, files, entryPoint, tests[], limits)`; `Judge0Adapter` gửi batch `POST /submissions/batch?base64_encoded=true` với `additional_files` (zip các file) + `compile_script`/`run_script` theo ngôn ngữ; poll `GET /submissions/batch` mỗi 1 s tới khi xong hoặc 30 s.
@@ -46,3 +46,7 @@ Thứ tự, dừng ở bước đầu tiên không đạt, ghi dòng `ai_suggest
 ## P9 - Giữ credit khi tải học liệu
 - `hold` chạy trong transaction của U05: insert dòng giữ (`request_ref` duy nhất) + `CreditPort.reserve`; lỗi thiếu credit ném ra để U05 rollback cả học liệu.
 - `begin(..., holdId)` khóa dòng giữ (`SELECT ... FOR UPDATE`), kiểm kill-switch và trần; `complete` cộng `credits_used` vào dòng giữ; `release(holdId)` gọi `CreditPort.settle(reserved, fromFree, credits_used)` (bằng 0 thì như trả toàn bộ) và đặt `credit_status` có điều kiện, nên gọi lặp không trừ trùng.
+
+## AiUsagePort recovery và checkpoint
+
+findHold và begin(REPLAY) cấp dữ liệu phục hồi qua DTO, không shared repository. complete(ticket, tokens, cost, checkpoint) và fail(ticket, usage?) kiểm ticket/metadata scanClaimId, khóa HOLD RESERVED, chuyển status có điều kiện và cộng usage một lần. U05 kiểm claim lesson trong cùng transaction; U13 không callback/đọc bảng lesson. Scanner và release dùng cùng khóa HOLD, settle lượng đã commit trước khi trả dư. Schema DTO/REPLAY theo [contract U05](../../u05-content-material-rag/functional-design/domain-entities.md).

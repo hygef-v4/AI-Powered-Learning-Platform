@@ -77,11 +77,11 @@ Một lần giữ là một dòng `ai_suggestions` của U13 ở `credit_status 
 ```mermaid
 stateDiagram-v2
     [*] --> RESERVED: reserve
-    RESERVED --> SETTLED: settle, AI xong
-    RESERVED --> RELEASED: release, AI lỗi hoặc quá hạn giữ
+    RESERVED --> SETTLED: Terminal có lượng dùng thật, settle và trả dư
+    RESERVED --> RELEASED: Terminal chưa dùng AI, trả toàn bộ
 ```
 
-**Text alternative**: Giữ credit đặt dòng `ai_suggestions` sang `RESERVED` và trừ số dư. AI chạy xong thì `settle` (trả phần dư nếu dùng ít hơn), thành `SETTLED`. AI lỗi, hoặc scanner thấy quá hạn giữ (30 phút; giữ khi tải học liệu tối đa 25 giờ), thì `release` trả toàn bộ, thành `RELEASED`.
+**Text alternative**: Giữ credit đặt dòng `ai_suggestions` sang `RESERVED` và trừ số dư. Kết thúc thành công, lỗi hoặc quá hạn: có lượng dùng thật thì `settle(actualCredits)` và trả phần dư, thành `SETTLED`; lượng dùng bằng 0 mới `CreditPort.release` hoàn toàn bộ, thành `RELEASED`. HOLD học liệu giữ một lần cho chunk/merge/embedding, các child call credit_status NONE không reserve thêm. Scanner U13 dùng cùng cách chốt: 30 phút dòng thường, 25 giờ HOLD học liệu (deadline scan U05 là 24 giờ). `AiUsagePort.release(holdId)` của U13 chọn thao tác CreditPort thích hợp, không đồng nghĩa hoàn toàn bộ.
 
 ## 7. Cấu hình
 

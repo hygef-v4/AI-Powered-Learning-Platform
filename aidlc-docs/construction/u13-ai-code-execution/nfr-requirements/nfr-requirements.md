@@ -47,7 +47,7 @@
 |---|---|---|
 | NFR-U13-40 | Unit test mọi `BR-U13-xx` với `FakeAiGateway` (trả JSON cố định/sai định dạng/timeout), `FakeCodeRunner` và `SettingsPort` giả. | NFR-004 |
 | NFR-U13-41 | Kịch bản Judge0 thật (7 ngôn ngữ chạy "hello" + một test đúng/sai/quá giờ/quá bộ nhớ; mã cố mở kết nối mạng bị chặn) chuyển cho tester; unit không viết integration test. | US-ASM-005, quyết định 2026-10-05 |
-| NFR-U13-42 | Test trừ credit: thành công settle đúng, lỗi release, bị từ chối không trừ; giữ khi tải học liệu: thiếu credit từ chối, `NO_TEXT` trả toàn bộ, thử lại không trừ trùng, quá 25 giờ tự trả. | U07, BR-U13-50…53 |
+| NFR-U13-42 | Test trừ credit: thành công settle đúng; lỗi/quá hạn sau sử dụng settle phần dùng thật và trả dư, chưa dùng mới hoàn toàn bộ; bị từ chối không trừ. Học liệu: một HOLD, child calls không reserve thêm; thiếu credit từ chối, NO_TEXT hoàn toàn bộ, retry/replay không cộng trùng, quá 25 giờ chốt đúng lượng đã dùng; embedding lỗi giữ summary. | U07, BR-U13-50…53 |
 
 ## 6. Compliance
 

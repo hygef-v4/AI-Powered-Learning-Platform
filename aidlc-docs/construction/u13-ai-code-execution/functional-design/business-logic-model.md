@@ -37,7 +37,7 @@
 1. Student bấm "Chấm với AI" trên Submission History (nút của U11) cho một lượt `PRACTICE` Text/Diagram Essay đã nộp; U11 gọi `PracticeGradingPort.request`. U13 kiểm chủ attempt, dạng/chế độ bài, lượt chưa có kết quả hợp lệ, `AiGuard`, rồi giữ credit U07 với `purpose = PRACTICE_GRADING` tại lúc bấm.
 2. Thiếu credit: "Không đủ credit AI", không gọi AI, không ghi `evaluations`; Student mua thêm (My Credit Package, Public Credit Packages) rồi bấm lại được.
 3. Đủ credit: tạo đúng một dòng `ai_suggestions` `PRACTICE_GRADING` cho attempt và việc AI. Worker dùng nội dung snapshot, rubric và XML Draw.io rút gọn nếu có; kiểm kết quả, tính điểm theo rubric, `settle` credit thực dùng rồi ghi điểm/phản hồi vào `evaluations` `kind = PRACTICE` qua `PracticeResultPort` (U15), chỉ Student đó xem.
-4. Thử lại kỹ thuật dùng cùng dòng; không tạo kết quả hoặc khoản trừ trùng. Lỗi cuối cùng, hoặc quá 5 phút chưa `READY` (`AiPendingSweeper` kiểm mỗi phút), chuyển `FAILED`, trả credit và báo lỗi; Student bấm lại tạo dòng mới (BR-U13-24).
+4. Thử lại kỹ thuật dùng cùng dòng; không tạo kết quả hoặc khoản trừ trùng. Lỗi cuối cùng, hoặc quá 5 phút chưa `READY` (`AiPendingSweeper` kiểm mỗi phút), chuyển `FAILED`, chốt lượng dùng thật đã ghi và trả phần dư (chưa dùng mới hoàn toàn bộ), báo lỗi; Student bấm lại tạo dòng mới (BR-U13-24).
 
 ## F4 - Chạy thử và chấm code (UC 25)
 1. `TRY`: Student trên Codelab Workspace; kiểm chủ lượt đang làm, rate limit 5/phút; chạy đồng bộ chỉ test công khai, trả kết quả và ghi bản mới nhất vào `attempts.run_result` (BR-U13-34, 36).
@@ -53,6 +53,10 @@
 ## F6 - Credit khi tải và quét học liệu (U05)
 1. Form tải lên (U05) gọi `AiUsagePort.quote(uploader)` → mức giữ và số dư (BR-U13-50).
 2. U05 tạo học liệu và gọi `hold(...)` trong cùng transaction: U13 tạo dòng giữ `MATERIAL_SUMMARY` và `CreditPort.reserve`; thiếu credit → U05 rollback, không tạo học liệu (BR-U13-51).
-3. Worker U05: `begin(MATERIAL_SUMMARY, …, holdId)` → AI tắt/hết trần thì `BUSY`; được thì tóm tắt, `complete` ghi token và cộng credit dùng thật. Sau đó `begin(EMBEDDING, …, holdId)` tạo dòng embedding gắn `hold_id`, `complete` (BR-U13-52).
+3. Worker U05: begin(MATERIAL_SUMMARY, …, requestRef từng chunk/merge, holdId) tạo/nhận child call; AI tắt/hết trần BUSY. begin trả UsageStart: REPLAY dùng lại checkpoint, RUN mới gọi provider; complete(ticket, tokens, cost, checkpoint) lưu result và lượng dùng, cộng vào hold idempotent. U05 kiểm claim trong cùng transaction; ticket scanClaimId cũ bị từ chối. Embedding là child call requestRef riêng có hold_id; không ghi số liệu provider trên dòng HOLD.
 4. Quét kết thúc (`INDEXED`, `NO_TEXT`, `NO_CAPTION`, `FAILED`) → `release(holdId)`: `settle` theo tổng dùng thật và trả phần còn giữ; không gọi AI thì trả toàn bộ (BR-U13-52).
-5. `CreditReservationScanner` trả dòng giữ quá 25 giờ (BR-U13-53).
+5. `CreditReservationScanner` chốt HOLD quá 25 giờ bằng cùng `release(holdId)`: đã dùng thì settle và trả dư, chưa dùng mới hoàn toàn bộ; không quét child call credit_status NONE (BR-U13-53).
+
+## Checkpoint học liệu và hold
+
+Hold MATERIAL_SUMMARY là dòng `lessonId:HOLD`. Mỗi call có requestRef chunkIndex/MERGE/EMBEDDING riêng và hold_id; complete ghi result cấu trúc cùng lượng dùng, cộng vào hold một lần. Worker U05 tra hold theo lesson, đọc checkpoint hoàn tất trước gọi provider. Release terminal settle lượng thật, trả dư; scan U05 hết hạn tuyệt đối 24 giờ, scanner hold U13 25 giờ chỉ dự phòng. Embedding thất bại không xóa summary. Thiết kế này không bảo đảm exactly-once gọi provider khi tiến trình chết giữa phản hồi provider và commit.

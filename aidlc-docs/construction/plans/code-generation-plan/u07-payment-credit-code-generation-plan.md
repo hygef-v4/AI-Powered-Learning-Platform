@@ -137,3 +137,9 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 - [ ] Thêm API Admin vào `billing.yaml`: `GET`, `POST /api/v1/admin/credit-packages`, `PATCH /api/v1/admin/credit-packages/{id}`, `GET /api/v1/admin/payments`.
 - [ ] `CreditPurpose` thêm `MATERIAL_SUMMARY`; phần giữ cho quét học liệu tối đa 25 giờ (scanner của U13, ghi vào plan U13 khi sửa U13).
 - [ ] Màn theo screen flow: My Credit Package, Public Credit Packages, Credit Package Checkout (Class Dashboard); Credit Package List, popup Credit Package Detail, Payment History (Admin Dashboard).
+
+## Bổ sung sau recheck 2026-10-09 — credit cho HOLD học liệu
+
+- [ ] Đồng bộ contract/code U07 với BR-U07-40/43: một reserve cho HOLD khi tạo lesson; child summary/merge/embedding không reserve thêm. CreditPort.release chỉ hoàn toàn bộ khi usage = 0; đã dùng thì settle(actualCredits), kể cả terminal lỗi/quá hạn.
+- [ ] Unit scenarios: hoàn toàn bộ trước AI, summary thành công rồi embedding lỗi chỉ tính summary, HOLD quá hạn trả dư, retry/replay không reserve/charge lại; bảo toàn phân bổ credit tặng/mua theo fromFree.
+- [ ] Rà tích hợp scanner U13 qua cùng settlement policy; không sửa completed steps hoặc coi contract/code hiện tại đã được cập nhật bởi revision tài liệu.

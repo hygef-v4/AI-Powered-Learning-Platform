@@ -1,6 +1,6 @@
 # Component Methods
 
-Các chữ ký là contract cấp cao, cập nhật theo 70 UC/SRS 4.4 ngày 2026-10-08. DTO/API và method đã đổi/bổ sung đã được phản ánh vào Functional Design/code plan tại Construction; existing contracts/code cần triển khai revision theo thiết kế hiện hành.
+Các chữ ký là contract cấp cao, cập nhật theo 73 UC ngày 2026-10-09. DTO/API và method đã đổi/bổ sung đã được phản ánh vào Functional Design/code plan tại Construction; existing contracts/code cần triển khai revision theo thiết kế hiện hành.
 
 ## Identity & Access (U01)
 
@@ -17,16 +17,16 @@ resetPassword(otpTicket, newPassword) -> void
 changePassword(actor, currentPassword, newPassword) -> Session
 getProfile(actor) -> Profile                                  // UC 06
 updateProfile(actor, profilePatch) -> Profile                 // UC 07: displayName/phoneNumber, không avatar/email/role/status
-listAccounts(admin, filter, page) -> Page<AccountSummary>    // UC 58
-getAccount(admin, userId) -> AccountDetail                    // UC 60
-updateAccountInformation(admin, userId, patch, version) -> Account // UC 61
+listAccounts(admin, filter, page) -> Page<AccountSummary>    // UC 59
+getAccount(admin, userId) -> AccountDetail                    // UC 61
+updateAccountInformation(admin, userId, patch, version) -> Account // UC 62
 createAccount(admin, schoolEmail, displayName, role) -> Account
 changeRole(admin, userId, role) -> Account
 changeAccountStatus(admin, userId, status) -> Account
 validateAccountImport(admin, csvFile) -> AccountImportResult
 commitAccountImport(admin, csvFile) -> AccountImportResult
 authorize(actor, action, resourceRef) -> AuthorizationDecision
-countByRoleAndStatus() -> Map<Role, Map<Status, Long>>      // AccountLookupPort, UC 57
+countByRoleAndStatus() -> Map<Role, Map<Status, Long>>      // AccountLookupPort, UC 58
 ```
 
 ## Audit (U02)
@@ -47,114 +47,103 @@ store(actor, purpose, file) -> FileRef
 attach(fileRef, actor, purpose) -> FileInfo
 issueDownloadToken(fileId, accountId) -> DownloadToken
 open(fileId) -> Stream
+listSettings(admin, group, page) -> SettingPage              // UC 70
+getSetting(admin, key) -> SettingDetail
+updateSetting(admin, key, value, version) -> SettingDetail  // UC 71; audit nguyên tử
+getSettingValue(key) -> TypedValue                          // SettingsPort, cache tối đa 30 giây
 ```
 
 ## Academic & Learning Access (U04)
 
 ```text
-createSubject(admin, command) -> Subject
-updateSubject(admin, subjectId, patch, version) -> Subject
-changeSubjectState(admin, subjectId, targetState) -> Subject   // lưu trữ khi mọi lớp ARCHIVED
-assignSubjectManager(admin, subjectId, accountId) -> Subject  // R2: SUBJECT_MANAGER hoặc ADMIN ACTIVE
-listSubjects(actor, filter, page) -> Page<SubjectSummary>    // Admin Full / managed subjects R2
-getSubject(actor, subjectId) -> SubjectDetail                 // UC 50, 65
-listManagedClasses(actor, subjectId, page) -> Page<ClassSummary> // UC 45
-getManagedClass(actor, classId) -> ClassDetail                 // UC 46
-listAssignedClasses(actor, page) -> Page<ClassSummary>        // UC 27, R3/R4
-getAssignedClass(actor, classId) -> ClassDetail                // UC 28, R3/R4
-createClass(adminOrSubjectManager, subjectId, command) -> Class
-assignTeacher(adminOrSubjectManager, classId, accountId) -> Class // UC 48: TEACHER/SUBJECT_MANAGER/ADMIN ACTIVE
-updateClass(actor, classId, patch, version) -> Class
-changeClassState(actor, classId, targetState, version) -> Class
-setGradeDistribution(actor, classId, enabled) -> Class
-enrollStudents(actor, classId, emailsOrIds) -> EnrollmentRowResult[]
-removeEnrollment(actor, classId, studentId) -> Enrollment
-setInviteCode(actor, classId, enabled, expiresAt) -> InviteCode
-joinByInviteCode(student, code) -> Enrollment
-listMyClasses(student) -> ClassList   // Đang học / Đã kết thúc
-getStudentClass(student, classId) -> StudentClassView
-isActiveStudent(accountId, classId) -> boolean
-listActiveStudents(classId) -> AccountRef[]
-countSubjectsByStatus() / countClassesByStatus() / countActiveEnrollments() -> Counts   // UC 57
+listSubjects(admin, filter, page) / getSubject(admin, subjectId)   // UC 64/66; related classes read-only
+createSubject(admin, command) / updateSubject(admin, subjectId, patch, version) // UC 65/67
+assignSubjectManager(admin, subjectId, accountId) -> Subject // chỉ SUBJECT_MANAGER ACTIVE
+listManagedSubjects(subjectManager) -> Subject[]           // UC 53, R2
+listManagedClasses(subjectManager, subjectId, page) / getManagedClass(subjectManager, classId) // UC 47/48
+createClass(subjectManager, subjectId, command) -> Class    // UC 49, R2
+assignTeacher(subjectManager, classId, accountId) -> Class  // UC 50; TEACHER/SUBJECT_MANAGER ACTIVE
+updateClass(subjectManager, classId, patch, version) -> Class // UC 52, gồm lifecycle/distribution
+enrollStudents(subjectManager, classId, studentIds) / removeEnrollment(subjectManager, classId, studentId) // UC 51
+listAssignedClasses(teacher, page) / getAssignedClass(teacher, classId) // UC 31/32, R3/R4
+listMyClasses(student) / getStudentClass(student, classId)  // UC 13/14, R5
+isActiveStudent(accountId, classId) / listActiveStudents(classId)
+listOpenClassesOf(accountId) -> ClassRef[]                  // feed announcements, current enrollment/teaching
+countSubjectsByStatus() / countClassesByStatus() / countActiveEnrollments() // UC 58
 ```
+
+Admin không tạo/sửa lớp hay enrollment; phân công quản lý môn không cấp quyền chấm lớp. Không mã mời.
 
 ## Content & RAG (U05)
 
 ```text
-createModule(subjectManager, subjectId, title) -> Module      // trên Subject Detail; mọi lớp của môn dùng chung
-updateModule(subjectManager, moduleId, patch) -> Module       // đổi tên, thứ tự, lưu trữ
-uploadLessons(actor, moduleId, classId?, fileRefs[] | youtubeUrl) -> Lesson[]   // không classId (Subject Detail, CN môn) → học liệu của môn; có classId (Class Detail, GV) → của lớp
-updateLesson(actor, lessonId, patch) -> Lesson                // đổi tên, thứ tự, lưu trữ theo quyền
-rescan(actor, lessonId) -> Lesson
-listModulesForSubject(subjectManager, subjectId) -> ModuleLessonTree   // Subject Detail: module và học liệu của môn
-listForClass(classId) -> ModuleLessonTree                     // PublishedContentPort cho U04
-getLearningMaterial(actor, lessonId) -> MaterialView          // UC 14, R2/R3/R4/R5
-issueLessonDownload(actor, classId, lessonId) -> DownloadToken // quyền actor + học liệu
-retrieve(scope, query, k, requesterId) -> LessonPassage[]
-postClassAnnouncement(teacher, classId, title, body) -> Announcement
-listAnnouncements(actor, classId, page) -> AnnouncementWithLatestComments[]   // 2 bình luận mới nhất mỗi thông báo
-commentOnAnnouncement(actor, announcementId, body) -> AnnouncementComment
-listComments(actor, announcementId, page) -> AnnouncementComment[]
-updateAnnouncement(actor, announcementId, patch, version) -> Announcement // UC 31, R3/R4; audit trước/sau
-deleteAnnouncement(actor, announcementId, version) -> void    // UC 31, loại khỏi feed, giữ audit
-hideComment(teacher, commentId, reason) -> void               // luồng bình luận hỗ trợ
+createModule(subjectManager, subjectId, title) / updateModule(subjectManager, moduleId, patch) // Material List, R2
+uploadLessons(actor, moduleId, classId?, fileRefs[] | youtubeUrl) -> Lesson[] // hold cùng transaction tạo lesson; R2/R3/R4
+quoteUploadCredit(actor) -> CreditQuote
+updateLesson(actor, lessonId, patch) -> Lesson              // thông tin/archive, không thay tệp/link
+listModulesForSubject(subjectManager, subjectId) / listForClass(classId) -> ModuleLessonTree
+getLearningMaterial(actor, lessonId, classId?) -> MaterialView // UC 15; summary, scoped source
+issueLessonDownload(actor, classId?, lessonId) -> DownloadToken
+getLessonRef(lessonId) -> LessonRef                        // ContentRefPort U06/U08/U09/U11
+retrieve(scope, query, k, requesterId, requestRef) -> LessonPassage[]
+postClassAnnouncement(teacher, classId, title, body) -> Announcement // UC 36
+listAnnouncements(actor, classId?, page) -> AnnouncementPage // UC 30, classes OPEN học/dạy
+updateAnnouncement(teacher, announcementId, patch, version) / deleteAnnouncement(teacher, announcementId, version) // UC 36
 ```
 
-## Question Bank (U06)
+Không comments hoặc rescan API; worker summary/embedding và retry theo U05. Update/delete announcement không phát notification mới.
+
+## Rubric & Subject Question Bank (U06)
 
 ```text
-listClassQuestions(actor, classId, filter, page) -> Page<BankItem> // UC 32, R3/R4
-listSubjectQuestions(actor, subjectId, filter, page) -> Page<BankItem> // UC 55, R2
-getQuestion(actor, bankItemId) -> BankItem                      // Question Editor theo scope
-createDraft(actor, scope, kind, definition) -> BankItem      // kind = QUESTION | RUBRIC
-activate(actor, bankItemId) -> BankItem
-newDraftFrom(actor, activeId) -> BankItem
-retire(actor, bankItemId) -> BankItem
-deleteQuestion(actor, bankItemId, version) -> void            // UC 33/56: Draft chưa dùng; bản có tham chiếu ngưng dùng
-clone(actor, bankItemId, targetScope) -> BankItem
-search(actor, scope, filter) -> Page<BankItem>
-pickRandom(actor, scope, filter, n, excludeIds) -> BankItem[]   // chọn ngẫu nhiên khi soạn đề
-importItems(actor, scope, questionType, file) -> ImportRowResult[]
-saveInlineQuestion(actor, assignmentId, definition) -> Question   // scope_type = ASSIGNMENT
-createRubricForAssignment(actor, scope, criteria) -> Rubric   // tạo khi soạn đề
-reviseRubric(actor, rubricId, criteria) -> Rubric             // phiên bản mới; bài DRAFT chuyển sang bản mới
-cloneRubricForAssignment(rubricId, targetScope) -> Rubric     // nhân bản theo đề
+listSubjectQuestions(subjectManager, subjectId, filter, page) / getQuestion(subjectManager, questionId) // UC 56, R2
+createDraft(subjectManager, subjectId, type, definition) / updateDraft(subjectManager, questionId, definition, version)
+activate(subjectManager, questionId) / newDraftFrom(subjectManager, activeId) / retire(subjectManager, questionId)
+deleteQuestion(subjectManager, questionId, version)         // UC 57, chưa dùng mới xóa; bản đã dùng giữ history
+pickRandom(actor, subjectId, filter, n, excludeIds) -> QuestionVersion[] // selector U08 kiểm quyền bài
+importItems(subjectManager, subjectId, type, file) -> ImportRowResult[]
+saveInlineQuestion(actor, assignmentId, definition) / copyToAssignment(sourceQuestionId, targetAssignmentId) // ASSIGNMENT
+ensureRubricForQuestion(assignmentId, questionId) / ensureRubricForPart(assignmentId, partId) // tự tạo trống khi soạn
+getRubric(actor, rubricId) / saveRubric(actor, rubricId, criteria, version) // UC 46, bài DRAFT R2/R3/R4
+lockForAssignment(assignmentId) -> void                    // còn rubric trống thì từ chối publish
 score(rubricId, checkedItemIds) -> Score
 ```
+
+Không ngân hàng lớp hoặc rubric dùng chung trong ngân hàng. Rubric tự tạo/xóa theo câu/phần; rubric khóa khi phát hành. Tên port/method chi tiết theo Functional Design của U06.
 
 ## Payment & AI Credit (U07)
 
 ```text
-listCreditPackages(account) -> CreditPackage[]               // UC 08
-getCreditPackageSettings(admin, filter, page) -> Page<CreditPackage> // UC 67
-addCreditPackage(admin, command) -> CreditPackage              // UC 68
-editCreditPackage(admin, packageId, patch, version) -> CreditPackage // UC 68; không sửa snapshot giao dịch
-listPlatformPayments(admin, filter, page) -> Page<PaymentSummary> // UC 69, chỉ đọc
-getPaymentResult(account, paymentId) -> PaymentResult          // UC 10, chỉ chủ giao dịch
+listCreditPackages(account) -> CreditPackage[]               // UC 09
+getCreditPackageSettings(admin, filter, page) -> Page<CreditPackage> // UC 68
+addCreditPackage(admin, command) -> CreditPackage              // UC 69
+editCreditPackage(admin, packageId, patch, version) -> CreditPackage // UC 69; không sửa snapshot giao dịch
+listPlatformPayments(admin, filter, page) -> Page<PaymentSummary> // UC 72, chỉ đọc
+getPaymentResult(account, paymentId) -> PaymentResult          // UC 11, chỉ chủ giao dịch
 createPayment(account, packageId, idempotencyKey) -> CheckoutLink
 handlePayosWebhook(rawBody, signature) -> WebhookResult
 checkPayment(orderCode) -> PaymentStatus                // PaymentScanner + PAYOS_CHECK
 balance(account) -> Balance                             // tặng tháng đặt lại khi đọc
 reserve(accountId, credits, purpose, attemptRef?) -> {reserved, fromFree}   // U13 gọi trong transaction
 settle(accountId, reserved, fromFree, actualCredits) -> void            // trả phần dư hoặc trừ thêm, không âm
-release(accountId, reserved, fromFree) -> void                          // AI lỗi hoặc giữ quá 30 phút
+release(accountId, reserved, fromFree) -> void                          // hoàn toàn bộ chỉ khi actualCredits = 0; đã dùng thì settle, kể cả lỗi/quá hạn
 listCreditUsage(account, page) -> Page<CreditUsage>     // qua CreditUsagePort (U13 cài)
 ```
 
-Các method thanh toán và số dư phục vụ tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN`; không có sổ cái, phần giữ/trừ nằm trên `ai_suggestions`. `STUDENT` chỉ được dùng credit cho AI chấm attempt `PRACTICE` Text Essay/Diagram Essay của chính mình; mọi yêu cầu AI khác bị backend từ chối.
+Các method thanh toán và số dư phục vụ tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` (Admin không có ví); không có sổ cái, phần giữ/trừ nằm trên `ai_suggestions`. `STUDENT` chỉ được dùng credit cho AI chấm attempt `PRACTICE` Text Essay/Diagram Essay của chính mình; mọi yêu cầu AI khác bị backend từ chối.
 
-## Assessment, Types, Template & Copy (U08-U10)
+## Assessment, Types & Copy (U08, U09)
 
 ```text
-listTeacherAssignments(actor, classId, filter, page) -> Page<AssignmentSummary> // UC 38
-createAssignment(teacher, classId, type, gradingMode) -> Assignment   // bài trống; copy do U10
+listTeacherAssignments(actor, classId, filter, page) -> Page<AssignmentSummary> // UC 41
+createAssignment(teacher, classId, type, gradingMode) -> Assignment   // bài lớp, vòng đời U08
 editComponents(actor, assignmentId, changes) -> Assignment          // khóa dòng, chỉ DRAFT
 pickRandomQuestions(actor, assignmentId, filter, n) -> QuestionPreview[]
 addAiQuestions(actor, assignmentId, suggestionId, kept[]) -> Assignment
 review(actor, assignmentId) -> ReviewResult
 publish(teacher, assignmentId, schedule, latePolicy, attempts) -> Assignment
 updateSchedule(teacher, assignmentId, schedule) -> Assignment
-deleteDraftAssignment(actor, assignmentId, version) -> void   // UC 39–43: DRAFT chưa từng phát hành
+deleteDraftAssignment(actor, assignmentId, version) -> void   // UC 35/42–45: DRAFT chưa từng phát hành
 retireAssignment(actor, assignmentId, reason) -> Assignment
 newVersion(actor, assignmentId) -> Assignment
 cloneAssignment(actor, assignmentId) -> Assignment
@@ -167,27 +156,26 @@ applySkeletonDraft(actor, assignmentId, suggestionId) -> Skeleton         // xem
 importSkeletonDocx(actor, assignmentId, docx) -> SkeletonPreview
 previewStudentDocx(student, attemptId, docx) -> StudentBlockPreview
 exportDocx(document) -> Stream
-listSubjectTemplates(actor, subjectId, page) -> Page<TemplateSummary> // UC 53, R2
-createSubjectTemplate(actor, subjectId, type, command) -> Assignment // UC 54, R2
-updateSubjectTemplate(actor, templateId, patch, version) -> Assignment // UC 54, R2
-releaseTemplate(subjectManager, templateId) -> Assignment   // template = dòng assignments có subject_id
-deleteTemplate(subjectManager, templateId) -> void          // CN môn hiện tại; đã phát hành thì WITHDRAWN
-copyTemplateToClass(teacher, templateId, classId) -> Assignment      // bước 2 tạo bài, cùng dạng và chế độ
+listSubjectAssignments(subjectManager, subjectId, filter, page) -> AssignmentPage // R2, bài của môn
+createSubjectAssignment(subjectManager, subjectId, type, mode) -> Assignment // không GROUP; lịch chung
+createQuiz(actor, lessonId, command) -> Assignment          // quiz lớp hoặc môn, không lịch
 copyFromClass(teacher, sourceAssignmentId, targetClassId) -> Assignment // dạy cả hai lớp; rubric đi theo bài
-diff(fromAssignmentId, toAssignmentId) -> AssignmentDiff
 ```
 
 ## Attempt, Group & Group Document (U11, U12, U14)
 
 ```text
-listStudentAssignments(student, classId, type, page) -> Page<AssignmentSummary> // UC 17: năm loại danh sách
-getStudentAssignment(student, assignmentId) -> AssignmentDetail // UC 18
-listSubmissionHistory(student, assignmentId, page) -> Page<SubmissionSummary> // UC 24
-getMyGroup(student, classId) -> GroupView                      // UC 15, U12
-startAttempt(student, assignmentId) -> AttemptSnapshot
+listQuizPracticeHistory(student, classId?, page) -> QuizHistoryPage // UC 18
+getQuizPracticeDetail(student, quizId, classId) / getQuizResult(student, attemptId) // UC 19/21
+listQuizzesOfLesson(lessonId, classId) -> QuizSummary[]      // Learning Material
+listStudentAssignments(student, classId, type, page) -> Page<AssignmentSummary> // UC 22: gộp bốn dạng bài, không quiz
+getStudentAssignment(student, assignmentId) -> AssignmentDetail // UC 23
+listSubmissionHistory(student, assignmentId, page) -> Page<SubmissionSummary> // UC 28
+getMyGroup(student, classId) -> GroupView                      // UC 16, U12
+startAttempt(student, assignmentId, classId) -> AttemptSnapshot
 saveAttempt(student, attemptId, content, contentVersion) -> SaveReceipt
 submitAttempt(student, attemptId) -> SubmissionReceipt
-requestPracticeAiGrading(student, attemptId) -> AiSuggestion   // UC 25: Student bấm chấm, U11 gọi PracticeGradingPort (U13)
+requestPracticeAiGrading(student, attemptId) -> AiSuggestion   // UC 29: Student bấm chấm, U11 gọi PracticeGradingPort (U13)
 saveClassGroups(teacher, classId, groups[], versions) -> ClassGroups
 randomSplit(teacher, classId, maxSize) -> ClassGroupsPreview
 requestLeaderChange(student, groupId, reason, proposedLeaderId?) -> LeaderChangeRequest
@@ -203,16 +191,22 @@ submitGroupDocument(leader, groupDocumentId) -> SubmissionReceipt      // bất 
 ## AI, Code Execution, Grading, Notification (U13, U15, U16)
 
 ```text
+quote(accountId) -> CreditQuote
+hold(task, actor, targetType, targetId, requestRef) -> HoldSnapshot
+findHold(targetType, targetId, requestRef) -> HoldSnapshot?
+begin(task, actor, target, requestRef, holdId?, scanClaimId?) -> UsageStart // RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED
+complete(ticket, tokens, cost, checkpoint?) / fail(ticket, usage?) -> CallSnapshot
+release(holdId) -> HoldSnapshot // AiUsagePort U05 khai báo, U13 cài; settle đã dùng, hoàn toàn bộ khi chưa dùng
 requestQuestionDraft(actor, target, params) -> AiSuggestion
 requestSkeletonDraft(actor, target, params) -> AiSuggestion   // SKELETON_DRAFT cho U09
-listStudentSubmissions(actor, classId, assignmentId, filter, page) -> Page<SubmissionSummary> // UC 34, R3/R4
-requestGradingProposal(teacher, evaluationId) -> AiSuggestion    // UC 35: AI Grading Proposals
+listStudentSubmissions(actor, classId, assignmentId, filter, page) -> Page<SubmissionSummary> // UC 37, R3/R4
+requestGradingProposal(teacher, evaluationId) -> AiSuggestion    // UC 38: AI Grading Proposals
 requestGradingProposalBatch(teacher, evaluationIds) -> AiSuggestion[]   // chấm hàng loạt, xác nhận từng bài sau
-runCode(actor, kind, ownerRef, files) -> CodeRunResult    // TRY | VERIFY | GRADE; ghi vào attempts/questions
+runCode(actor, kind, ownerRef, files) -> CodeRunResult    // TRY | VERIFY | GRADE; VERIFY/GRADE ở code_runs; kết quả mới nhất ở attempts.run_result
 gradeManually(teacher, evaluationId, rubricChecks, feedback, version) -> Evaluation   // checklist rubric; dùng đề xuất AI cũng lưu bằng hàm này
 finalizeGrades(teacher, evaluationIds) -> FinalizeResult[]
 publishGrade(teacher, evaluationId) -> Evaluation          // công bố một bài nộp đã chốt
-publishGrades(teacher, evaluationIds) -> PublishResult[]  // công bố hàng loạt; lần đầu ghi assignments.grades_released_at
+publishGrades(teacher, evaluationIds) -> PublishResult[]  // công bố hàng loạt; công bố theo bài/lớp, suy từ evaluations; không grades_released_at trên assignments
 overrideGrade(teacher, evaluationId, score, reason) -> Evaluation
 getGradebook(actor, classId) -> Gradebook
 listNotifications(account, page) -> Page<Notification>
@@ -223,4 +217,4 @@ getGradeDistribution(student, classId) -> List<GradeDistribution>
 exportGradebook(actor, classId, assignmentId, format) -> Stream
 ```
 
-Vai trò ghi `teacher`/`subjectManager` trong chữ ký là ngữ cảnh chức năng: Subject Manager/Administrator được dùng `teacher` khi có R4, Administrator được dùng `subjectManager` khi có R2. Không suy quyền từ thứ bậc role mà bỏ kiểm phân công. Mọi command mới cần validate, optimistic version khi cập nhật và audit; mọi query phải kiểm scope trước khi trả dữ liệu.
+Vai trò teacher chỉ Teacher hoặc Subject Manager được giao dạy lớp R3/R4; subjectManager chỉ Subject Manager được giao môn R2. Admin không được dùng hai ngữ cảnh học thuật đó. Mọi command validate/version/audit; query kiểm scope hiện thời trước khi trả dữ liệu. Method catalogue cấp cao; chữ ký DTO chi tiết ở thiết kế unit, code/contracts còn cần revision.

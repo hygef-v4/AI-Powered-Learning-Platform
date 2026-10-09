@@ -44,8 +44,8 @@ Model embedding cố định `gemini-embedding-001` trong mã (đổi model làm
 | `model` | chuỗi | Model đọc từ Settings lúc gọi; rỗng khi chưa gọi |
 | `requested_by` | UUID | Người chịu phí (Student, Teacher, Subject Manager; không bao giờ là Admin) |
 | `target_type`, `target_id` | | `BANK` (ngân hàng của môn), `ASSIGNMENT` (bài của lớp, bài của môn hoặc quiz), `ATTEMPT` (đề xuất chấm bài `GRADED`), `PRACTICE_ATTEMPT` (chấm Practice), `GROUP_DOCUMENT`, `LESSON` (tóm tắt, embedding học liệu), `QUERY` (embedding câu truy xuất); mỗi `PRACTICE_ATTEMPT` tối đa một dòng `QUEUED`/`RUNNING`/`READY` |
-| `hold_id` | UUID | Dòng giữ credit khi tải học liệu mà lần gọi này tính vào (embedding học liệu); rỗng với dòng tự giữ credit |
-| `request_ref` | chuỗi | Khóa idempotent do unit gọi truyền (U05: `lessonId:scanNo:task`); duy nhất khi có giá trị |
+| `hold_id` | UUID | Dòng giữ credit khi tải học liệu mà lần gọi này tính vào (tóm tắt từng chunk/merge hoặc embedding học liệu); rỗng với dòng tự giữ credit |
+| `request_ref` | chuỗi | Khóa idempotent do unit gọi truyền (U05: `lessonId:HOLD`, `lessonId:SUMMARY:chunkIndex`, `lessonId:SUMMARY:MERGE`, `lessonId:EMBEDDING`); duy nhất khi có giá trị |
 | `status` | enum | `QUEUED`, `RUNNING`, `READY`, `FAILED`, `ACCEPTED`, `DISCARDED`, `REJECTED_BUSY`, `NO_CREDIT` |
 | `input_tokens`, `output_tokens`, `cost_usd`, `latency_ms` | số | Số liệu vận hành; không lưu prompt thô |
 | `credits_reserved`, `free_credits_reserved`, `credits_used`, `credit_status` | | Phần giữ, phần lấy từ credit tặng, phần đã dùng; `credit_status` `NONE`, `RESERVED`, `SETTLED`, `RELEASED` (U07 đổi số dư cùng transaction) |
@@ -53,7 +53,7 @@ Model embedding cố định `gemini-embedding-001` trong mã (đổi model làm
 | `result` | JSON | Tham số yêu cầu và kết quả: câu hỏi đề xuất kèm trích dẫn; khung đề xuất kèm gợi ý rubric từng phần và trích dẫn; hoặc từng mục checklist đạt/không + điểm/nhận xét/bằng chứng; cờ `suspectedInjection` |
 | `created_at`, `completed_at` | thời gian | |
 
-Dòng giữ khi tải học liệu: `task_type = MATERIAL_SUMMARY`, `target_type = LESSON`, giữ credit tối đa của một lần quét (tóm tắt + embedding); lần tóm tắt ghi số liệu trên chính dòng này, lần embedding là dòng riêng có `hold_id` trỏ về, `credit_status = NONE`, credit cộng vào `credits_used` của dòng giữ.
+Dòng giữ MATERIAL_SUMMARY/LESSON có request_ref `lessonId:HOLD`, giữ tối đa tóm tắt + embedding; không đại diện cho lời gọi provider. Mỗi lời gọi chunk/merge/embedding là dòng riêng có hold_id trỏ về và credit_status NONE; result giữ checkpoint tóm tắt có cấu trúc hoặc embedding, không prompt thô. Complete idempotent cộng credits_used vào hold đúng một lần; terminal release(holdId) settle tổng đã dùng và trả dư. Tra hold theo target lesson + requestRef giữ cố định để worker phục hồi sau restart.
 
 ### Trạng thái
 
@@ -70,7 +70,7 @@ stateDiagram-v2
     READY --> DISCARDED: Người dùng bỏ
 ```
 
-**Text alternative**: Yêu cầu AI qua được kiểm tra (vai trò, phạm vi, kill-switch, trần chi phí, tần suất, credit) thì tạo dòng ở `QUEUED`; AI tắt hoặc hết trần thì dòng ghi `REJECTED_BUSY`, thiếu credit ghi `NO_CREDIT`, không gọi AI. Worker nhận thì `RUNNING`; đầu ra hợp lệ thì `READY`, lỗi hoặc sai định dạng sau thử lại thì `FAILED` và trả credit chưa dùng. Với đề xuất câu hỏi và khung, người dùng chấp nhận (`ACCEPTED`) hoặc bỏ (`DISCARDED`). Dòng giữ credit khi tải học liệu ở `QUEUED` tới khi worker tóm tắt; học liệu không có chữ, không phụ đề hoặc quét thất bại trước khi gọi AI thì dòng sang `FAILED` và trả toàn bộ credit. Embedding đi `QUEUED` → `RUNNING` → `READY` trong cùng lời gọi.
+**Text alternative**: Yêu cầu AI qua được kiểm tra (vai trò, phạm vi, kill-switch, trần chi phí, tần suất, credit) thì tạo dòng ở `QUEUED`; AI tắt hoặc hết trần thì dòng ghi `REJECTED_BUSY`, thiếu credit ghi `NO_CREDIT`, không gọi AI. Worker nhận thì `RUNNING`; đầu ra hợp lệ thì `READY`, lỗi hoặc sai định dạng sau thử lại thì `FAILED` và trả credit chưa dùng. Với đề xuất câu hỏi và khung, người dùng chấp nhận (`ACCEPTED`) hoặc bỏ (`DISCARDED`). Dòng HOLD ở `QUEUED` trong khi quét; terminal INDEXED chuyển HOLD sang `READY`, terminal lỗi sang `FAILED`. HOLD chỉ tổng hợp credit, không chạy provider. Từng child call chunk/merge/embedding đi `QUEUED` → `RUNNING` → `READY` hoặc `FAILED`; checkpoint READY được dùng lại khi retry. Terminal settle phần dùng thật, chỉ trả toàn bộ khi chưa dùng AI.
 
 ### Trạng thái credit
 
@@ -78,11 +78,11 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> NONE: Bị từ chối, hoặc lần gọi tính vào dòng giữ
     [*] --> RESERVED: CreditPort.reserve
-    RESERVED --> SETTLED: Xong, trừ theo token thật, trả phần dư
-    RESERVED --> RELEASED: Lỗi, quá hạn, hoặc không gọi AI
+    RESERVED --> SETTLED: Terminal có lượng dùng thật, trả phần dư
+    RESERVED --> RELEASED: Terminal chưa dùng AI, trả toàn bộ
 ```
 
-**Text alternative**: Dòng bị từ chối hoặc lần embedding tính vào dòng giữ khi tải học liệu có `credit_status = NONE`. Dòng tự giữ credit sang `RESERVED` khi `CreditPort.reserve` thành công. Xong việc thì `SETTLED`: trừ theo token thật và trả phần dư. Lỗi, quá hạn (30 phút; dòng giữ khi tải học liệu 25 giờ) hoặc không gọi AI thì `RELEASED`, trả toàn bộ phần giữ. Mỗi lần đổi đi cùng một lời gọi `CreditPort` trong cùng transaction nên thử lại không giữ hay trừ trùng.
+**Text alternative**: Dòng bị từ chối hoặc child call tính vào HOLD có `credit_status = NONE`. Dòng tự giữ credit sang `RESERVED` khi `CreditPort.reserve` thành công. Khi kết thúc hoặc quá hạn (30 phút cho dòng thường; 25 giờ cho HOLD học liệu), nếu có lượng dùng thật thì `SETTLED`: trừ lượng đó và trả phần dư; nếu chưa dùng AI thì `RELEASED`, trả toàn bộ phần giữ. Mỗi lần đổi đi cùng một lời gọi `CreditPort` trong cùng transaction nên thử lại không giữ hay trừ trùng.
 
 ## 4. `CodeRun`
 
@@ -138,7 +138,7 @@ stateDiagram-v2
 | `PracticeGradingPort` | U11 (`C`) | `request(student, attemptId)`: xác minh attempt, giữ credit, gửi việc; `latest(attemptId)`; kết quả ghi qua `PracticeResultPort` của U15 |
 | `CodeRunPort` | U11 (`C`), U15 (`C`) | `tryRun` (đồng bộ, test công khai), `grade(attemptId)` (tạo `code_runs` `GRADE`, gửi việc); `regrade(attemptId)` khi `SANDBOX_ERROR` |
 | `CodeLabCheckPort` | U08 khai báo (`C`, duyệt bài), U09 (hiện trạng thái) | `check(assignmentId)` → danh sách câu `CODE` chưa kiểm/không đạt/kiểm cho nội dung cũ; `statusOf(assignmentId)` → trạng thái từng câu (`NOT_VERIFIED`, `RUNNING`, `PASSED`, `FAILED`, `OUTDATED`, `SANDBOX_ERROR`) |
-| `AiUsagePort` | U05 khai báo (`C`) | `quote(accountId)` → mức credit giữ cho một lần quét và số dư; `hold(MATERIAL_SUMMARY, uploader, LESSON, lessonId, requestRef)` giữ credit khi tạo học liệu (cùng transaction của U05); `begin(task, requestedBy, target, requestRef, holdId?)` kiểm AI bật, trần chi phí, tạo/nhận dòng; `complete(ticket, tokens, cost)`; `fail(ticket)`; `release(holdId)` chốt credit đã dùng và trả phần còn giữ |
+| `AiUsagePort` | U05 khai báo (`C`) | `quote(accountId)` → CreditQuote; `hold(task, actor, targetType, targetId, requestRef)` → HoldSnapshot; `findHold(targetType, targetId, requestRef)` → HoldSnapshot?; `begin(task, actor, target, requestRef, holdId?, scanClaimId?)` → UsageStart; `complete(ticket, tokens, cost, checkpoint?)`, `fail(ticket, usage?)` → CallSnapshot; `release(holdId)` → HoldSnapshot. DTO, RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED và điều kiện claim theo [contract U05](../../u05-content-material-rag/functional-design/domain-entities.md); U13 sở hữu lưu HOLD/checkpoint |
 | `CreditUsagePort` | U07 khai báo (`C`) | `listUsage(accountId, page)`: lần dùng credit của chính chủ ví từ `ai_suggestions` (thời điểm, loại việc, `credits_used`, `credit_status`) cho My Credit Package (UC 08) |
 | `AiUsageStatsPort` | U16 (`C`, Admin Dashboard UC 58) | `summarize(from, to)`: số lượt, lỗi, độ trễ trung bình, token, chi phí ước tính theo ngày/loại việc/model; chỉ số đếm, không nội dung |
 | `SettingDefinition` (`AiSettingDefinitions`) | U03 | Khai báo các mục nhóm AI (mục 2) |
@@ -174,3 +174,7 @@ stateDiagram-v2
 | `GET /api/v1/code-runs/{runId}` | Poll kết quả kiểm lời giải mẫu | Assignment Form, UC 43 | Như `VERIFY` |
 
 AI chấm Practice (UC 29) gọi qua API của U11 (`POST /api/v1/attempts/{id}/ai-grading`, `GET /api/v1/attempts/{id}/practice-result`); AI đề xuất chấm (UC 38) qua API của U15 (`POST /api/v1/evaluations/{id}/ai-proposal`, `POST /api/v1/evaluations:ai-proposal-batch`); AI soạn câu cho bài/quiz qua U08 (`POST /api/v1/assignments/{id}/ai-drafts`); AI soạn khung qua U09 (`POST .../skeleton:ai-draft`); cấu hình AI qua Settings của U03 (`GET /api/v1/admin/settings`, `PATCH /api/v1/admin/settings/{key}`); lần dùng credit qua U07 (`GET /api/v1/me/credit-usage`); mức giữ khi tải học liệu qua U05 (`GET /api/v1/lessons/upload-credit`). Bỏ `GET /api/v1/admin/ai/usage`, `GET`/`PUT /api/v1/admin/ai/settings`. Mọi API AI từ chối `ADMIN`.
+
+## AiUsagePort checkpoint — triển khai contract U05
+
+Theo [contract U05](../../u05-content-material-rag/functional-design/domain-entities.md), result của child call lưu metadata scanClaimId, checkpoint có kind/sourceHash/model/payload và usage; READY chỉ replay. begin phục hồi/rebind child RUNNING/FAILED dưới claim hợp lệ do U05 kiểm trong cùng transaction; ticket cũ bị từ chối. complete/fail và chốt HOLD khóa cùng dòng HOLD để serialize cập nhật lượng dùng; không cập nhật HOLD đã chốt. U05 nhận DTO qua port, không đọc repository U13. Không thêm bảng checkpoint riêng hay callback claim về U05.

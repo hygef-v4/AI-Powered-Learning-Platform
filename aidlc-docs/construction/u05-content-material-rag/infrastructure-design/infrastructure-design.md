@@ -21,7 +21,7 @@
 | Worker | Giới hạn RAM 768 MB → **1,5 GB** vì 4 việc quét học liệu song song; VPS cần ≥ 8 GB RAM. VPS nhỏ hơn: `U05_SCAN_CONCURRENCY=2`, giữ 1 GB |
 | CSP | Thêm `frame-src https://www.youtube-nocookie.com` |
 | Kết nối ra | Backend, worker tới `generativelanguage.googleapis.com:443`; worker tới `www.googleapis.com:443` (YouTube Data API: tiêu đề video) và `www.youtube.com:443` (caption) |
-| Secret CI/CD | `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; biến thường `AI_KILL_SWITCH=false` |
+| Secret CI/CD | `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; cấu hình runtime AI đọc SettingsPort của U03 qua U13, không AI_KILL_SWITCH cho adapter thật |
 
 ## 3. Tạo key và giới hạn chi phí
 
@@ -45,4 +45,3 @@
 | RESILIENCY-04 | Compliant | Deploy cùng Compose |
 | RESILIENCY-06 | N/A | Health dùng chung; Gemini lỗi không làm backend `DOWN` |
 | Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
-

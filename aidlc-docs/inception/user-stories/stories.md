@@ -2,16 +2,16 @@
 
 ## 1. Quy ước
 
-- Bản hiệu lực 2026-10-08: **70 UC, 51 story MVP**, đối chiếu SRS 4.1/4.2/4.4 và [bảng UC/màn](../../../docs/use-cases-and-screens.md). UC 70 View Audit Log được bổ sung theo yêu cầu.
-- Stories nhóm theo miền, dùng mã US-{DOMAIN}-{NNN}, acceptance criteria Given/When/Then và requirements liên quan. Giữ 49 mã đã có, thêm US-PAY-004/005; không tái sử dụng US-PAY-003 và US-ASM-011 đã rút.
+- Bản hiệu lực 2026-10-09: **73 UC, 51 story MVP, 15 unit**, theo [catalog](../../../docs/use-cases-73.md) và Page-2 của `docs/G21_Diagrams.drawio`. US-CAT-005 đã rút; US-SET-001 thêm vào U03; U10 đã bỏ.
+- Stories dùng US-{DOMAIN}-{NNN}, criteria Given/When/Then và FR/NFR. Baseline giữ 51 story: bỏ US-CAT-005, thêm US-SET-001; không dùng lại các mã US-PAY-003/US-ASM-011 đã rút.
 - User là actor trừu tượng; bốn persona là Student, Teacher, Subject Manager, Administrator. Tên AI trong nghiệp vụ không khóa provider; tên Gemini vẫn dùng trong adapter kỹ thuật.
-- Khi story ghi Teacher/giảng viên, Subject Manager hoặc Administrator chỉ kế thừa chức năng đó khi được giao dạy lớp theo R4. Khi ghi Subject Manager/người quản lý môn, Administrator cần phân công quản lý môn theo R2. Quyền quản trị cấu trúc môn/lớp và tài khoản của Administrator là Full; không suy quyền chấm/xem gradebook từ quyền quản trị cấu trúc.
+- Khi story ghi Teacher/giảng viên, Subject Manager chỉ dùng chức năng đó khi được giao dạy lớp R4; quản lý học liệu/bài/ngân hàng môn cần R2. Admin không kế thừa Teacher/Subject Manager, không nhận phân công môn/lớp và không có ví credit.
 - Student theo R5/enrollment, hồ sơ/ví/kết quả/thông báo theo R1; Teacher theo R3. Các tiêu chí kiểm scope áp dụng ở backend kể cả gọi API trực tiếp.
-- Ngân hàng cấp lớp và cấp môn có UC riêng (32–33, 55–56), cùng mô hình scope/version. Rubric thuộc UC 44 hoặc authoring template UC 54.
-- Chấm Practice riêng tư của Student là UC 25; AI Grading Proposals để Teacher duyệt là UC 35. Không gộp hai quyền này.
+- Chỉ ngân hàng môn UC 56–57 (Question List/Detail); Teacher dùng câu ACTIVE trong selector soạn bài. Rubric UC 46 thuộc từng bài, tự tạo trống theo câu/phần, điền đủ và khóa khi phát hành.
+- Chấm Practice riêng tư Student UC 29; Teacher AI Grading Proposals UC 38. Kết quả tách quyền, không gộp hoặc đưa Practice vào gradebook.
 - Nhóm thuộc lớp, leader giao phần và nộp bất kỳ lúc nào trước hạn; không có mục chi tiết/bước review. Không có Simulation Exam hay tiến độ hoàn thành bài học.
-- Mỗi UC có một primary unit; story có một primary unit cho acceptance criteria. Luồng hỗ trợ đã có không bị xóa chỉ vì không có UC độc lập. US-AIG-003 là vận hành hỗ trợ không có UC trực tiếp; Audit có UC 70.
-- Dùng nhãn màn từ `screen-flow (1).drawio`: Assigned Classes cho Teacher, Subject Classes cho quản lý lớp môn; UC 53–54 dùng Subject Template và Template Editor. Mốc/câu trả lời cũ được giữ trong audit và tài liệu lịch sử.
+- Mỗi UC/story có một primary unit; supporting flows không tạo UC giả. US-AIG-003 hỗ trợ Settings UC 70–71 và AI stats Admin Dashboard UC 58; Audit UC 73; US-SET-001 primary U03.
+- Màn theo Page-2 G21_Diagrams.drawio: Class/Manager/Admin Dashboard, Student Assignments, Quiz Practice và Settings. Mốc/câu trả lời/approvals cũ giữ lịch sử.
 
 ## 2. Miền Identity and Access
 
@@ -745,9 +745,9 @@
 - **When** giảng viên nhờ AI soạn khung, xem trước rồi xác nhận
 - **Then** khung đề xuất (cây heading, hướng dẫn, gợi ý rubric từng phần, kèm nguồn, không có sơ đồ) thay khung hiện tại sau cảnh báo nếu khung đã có nội dung; phần được tính lại và giảng viên sửa gợi ý rubric trước khi tạo rubric từng phần
 
-### US-AIG-002 - Tạo bản nháp template/câu hỏi cấp môn bằng AI
+### US-AIG-002 - Tạo bản nháp bài/câu hỏi cấp môn bằng AI
 
-**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo bản nháp template đề hoặc câu hỏi cấp môn (theo dạng bài; Diagram Essay và bài nhóm là khung kèm gợi ý rubric từng phần) từ kho học liệu/RAG của môn để giảng viên các lớp dùng lại (không có đề chung giao thẳng cho lớp).
+**Story**: Là Chủ nhiệm môn, tôi muốn dùng AI tạo câu ngân hàng hoặc bản nháp quiz/bài của môn từ học liệu của môn. Text Essay/Code Lab dùng câu; Diagram Essay dùng khung kèm gợi ý rubric; không có bài nhóm cấp môn. Bài của môn được duyệt/phát hành cho mọi lớp OPEN với một lịch chung; giảng viên từng lớp chấm sinh viên lớp mình.
 
 **Truy vết**: FR-002, FR-004, FR-006, FR-012, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -801,7 +801,7 @@
 
 - **Given** mức tặng tháng được nạp từ cấu hình triển khai
 - **When** bắt đầu kỳ đặt lại của tài khoản
-- **Then** bốn vai trò nhận cùng mức tặng; thay cấu hình có hiệu lực từ kỳ sau, không sửa snapshot thanh toán; tạo/sửa gói bán dùng US-PAY-004
+- **Then** ba vai trò Student, Teacher, Subject Manager nhận cùng mức tặng; thay cấu hình có hiệu lực từ kỳ sau, không sửa snapshot thanh toán; tạo/sửa gói bán dùng US-PAY-004
 
 ## 8. Miền Assessment Delivery
 
@@ -1069,7 +1069,7 @@
 
 - **Given** yêu cầu chấm đã gửi
 - **When** quá 5 phút chưa có kết quả
-- **Then** hệ thống báo lỗi, trả credit đã giữ và cho Student bấm lại
+- **Then** hệ thống báo lỗi, chốt lượng AI đã dùng thật nếu có và trả phần credit còn giữ (chưa dùng AI thì hoàn toàn bộ), cho Student bấm lại; không tính trùng kết quả đã hoàn tất
 
 #### Scenario 3 - Làm lại
 
@@ -1186,7 +1186,7 @@
 #### Scenario 1 - Người học xem dữ liệu cá nhân
 
 - **Given** kết quả đã được công bố
-- **When** người học mở một trong năm danh sách bài theo loại của lớp
+- **When** người học mở Student Assignments của lớp (UC 22)
 - **Then** cạnh từng bài chỉ hiện điểm, phản hồi và trạng thái bài nộp của chính người học
 
 #### Scenario 2 - Giảng viên xem lớp
@@ -1199,7 +1199,7 @@
 
 - **Given** Subject Manager hoặc Administrator
 - **When** mở gradebook lớp
-- **Then** chỉ được xem khi chính tài khoản được giao dạy lớp theo R4; chỉ quản lý môn hoặc có role Admin mà không có phân công lớp bị từ chối
+- **Then** chỉ được xem khi chính tài khoản được giao dạy lớp theo R4; chỉ quản lý môn mà không được giao dạy lớp, hoặc mọi tài khoản Admin, bị từ chối
 
 ### US-GRD-005 - Chốt và công bố điểm từng bài hoặc hàng loạt
 
@@ -1251,13 +1251,13 @@
 
 #### Scenario 3 - Phân bố điểm ẩn danh trên danh sách bài Student
 
-- **Given** giảng viên đã bật hiển thị phân bố điểm ẩn danh cho lớp và bài đủ điều kiện riêng tư
-- **When** người học mở một trong năm danh sách bài theo loại của lớp
-- **Then** bài có điểm đã công bố hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng quá ít người; không suy ra danh tính hoặc điểm của người học khác
+- **Given** Chủ nhiệm môn của môn đã bật hiển thị phân bố điểm trong Edit Class Information (UC 52), bài GRADED đủ điều kiện riêng tư và điểm đã công bố theo lớp
+- **When** người học mở Student Assignments của lớp (UC 22)
+- **Then** bài GRADED có điểm đã công bố hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng quá ít người; quiz/Practice không có phân bố; không suy ra danh tính hoặc điểm của người học khác; Teacher chỉ được giao dạy không có quyền bật/tắt cài đặt này
 
 ### US-RPT-002 - Thống kê hệ thống cho quản trị viên
 
-**Story**: Là quản trị viên, tôi muốn thấy thống kê ngay trên Statistic để nắm quy mô người dùng, môn, lớp và ghi danh của hệ thống.
+**Story**: Là quản trị viên, tôi muốn thấy thống kê ngay trên Admin Dashboard (UC 58) để nắm quy mô người dùng, môn, lớp và ghi danh của hệ thống.
 
 **Truy vết**: FR-002, FR-024, NFR-002, SEC-005, SEC-002, SEC-003.
 
@@ -1266,7 +1266,7 @@
 #### Scenario 1 - Xem số liệu tổng hợp
 
 - **Given** quản trị viên đã đăng nhập
-- **When** vào Statistic
+- **When** vào Admin Dashboard (UC 58)
 - **Then** hệ thống hiển thị số tài khoản theo vai trò và trạng thái (`PENDING`, `ACTIVE`, `DISABLED`), số môn theo trạng thái, số lớp theo trạng thái (`DRAFT`, `OPEN`, `ARCHIVED`) và số ghi danh `ACTIVE`, tính tại thời điểm mở, chỉ là số đếm, không có tên/email
 
 #### Scenario 2 - Từ chối vai trò khác
@@ -1277,7 +1277,7 @@
 
 ### US-RPT-003 - Xuất bảng điểm
 
-**Story**: Là Teacher hoặc Subject Manager/Administrator được giao dạy lớp theo R4, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
+**Story**: Là Teacher hoặc Subject Manager được giao dạy lớp theo R4, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
 
 **Truy vết**: FR-002, FR-009, FR-024, SEC-005, SEC-002, SEC-003, SEC-006.
 
@@ -1469,7 +1469,7 @@
 
 #### Scenario 3 - Sự kiện bắt buộc
 
-- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài/template, thanh toán, thay đổi cài đặt hệ thống (Settings) hoặc truy cập đặc quyền
+- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài lớp/môn hoặc quiz, thanh toán, thay đổi cài đặt hệ thống (Settings) hoặc truy cập đặc quyền
 - **When** hành động hoàn tất hoặc bị từ chối
 - **Then** sự kiện tương ứng được ghi với actor, thời gian, đối tượng và kết quả phù hợp
 
@@ -1543,88 +1543,85 @@
 | FR-032 | US-PAY-005 |
 | FR-033 | US-SET-001 |
 
-## 14. Ma trận story ↔ use case
+## 14. Story ↔ use case hiện hành
 
-Mã/tên theo [bảng 70 UC](../../../docs/use-cases-and-screens.md). Một UC có đúng một primary unit; các story trong hàng có thể cung cấp cả luồng chính và luồng hỗ trợ. Một story chỉ có một primary unit trong unit-of-work-story-map.md.
+Tên/ID theo [73 UC](../../../docs/use-cases-73.md). Primary unit là owner của UC; các story trong hàng có thể do unit khác đóng góp. Primary story ownership theo [unit map](../application-design/unit-of-work-story-map.md).
 
-| ID | Use Case | Stories | Primary unit |
+| UC | Use case | Stories liên quan | Primary unit |
 |---|---|---|---|
 | 01 | Activate Account | US-IAM-001 | U01 |
 | 02 | Login | US-IAM-002 | U01 |
 | 03 | Logout | US-IAM-002 | U01 |
-| 04 | Forgot Password | US-IAM-003 | U01 |
+| 04 | Reset Password | US-IAM-003 | U01 |
 | 05 | Change Password | US-IAM-006 | U01 |
 | 06 | View Profile Information | US-IAM-004 | U01 |
 | 07 | Update Profile Information | US-IAM-004 | U01 |
-| 08 | View Credit Package | US-PAY-001 | U07 |
-| 09 | Purchase Credit Package | US-PAY-001, US-PAY-002 | U07 |
-| 10 | View Payment Result | US-PAY-002 | U07 |
-| 11 | View Notifications | US-NTF-001 | U16 |
-| 12 | View Enrolled Classes | US-LRN-001 | U04 |
-| 13 | View Enrolled Class Detail | US-LRN-001 | U04 |
-| 14 | View Learning Material | US-LRN-001, US-CNT-001, US-CNT-002, US-CNT-005 | U05 |
-| 15 | View My Group | US-GRP-001, US-GRP-002 | U12 |
-| 16 | Request Leader Change | US-GRP-002 | U12 |
-| 17 | View Student Assignment List | US-ASM-003, US-GRD-004, US-RPT-001 | U11 |
-| 18 | View Assignment Detail | US-ASM-003 | U11 |
-| 19 | Complete Essay Assignment | US-ASM-003, US-ASM-007 | U11 |
-| 20 | Complete Quiz Assignment | US-ASM-003, US-ASM-006, US-GRD-001 | U11 |
-| 21 | Complete Code Lab | US-ASM-003, US-ASM-005, US-GRD-001 | U11 |
-| 22 | Complete Diagram Assignment | US-ASM-003, US-ASM-004 | U11 |
-| 23 | Complete Group Assignment | US-GRP-004, US-GRP-005 | U14 |
-| 24 | View Submission History | US-ASM-003, US-GRD-004 | U11 |
-| 25 | Grade Practice Assignment | US-ASM-012 | U11 |
-| 26 | View Class Announcements | US-CNT-004 | U05 |
-| 27 | View Assigned Class List | US-CAT-002 | U04 |
-| 28 | View Assigned Class Detail | US-CAT-002, US-CAT-003, US-GRP-001 | U04 |
-| 29 | View Uploaded Learning Materials | US-CNT-002 | U05 |
-| 30 | Add/Update/Delete Learning Material | US-CNT-002, US-CNT-005 | U05 |
-| 31 | Create/Update/Delete Announcement | US-CNT-004 | U05 |
-| 32 | View Class Question Bank | US-QBK-002 | U06 |
-| 33 | Create/Update/Delete Class Question | US-QBK-002 | U06 |
-| 34 | View Student Submissions | US-GRD-003, US-RPT-001, US-GRP-006 | U15 |
-| 35 | Grade Submission With AI | US-GRD-002, US-GRP-006 | U15 |
-| 36 | Grade Submissions Manually | US-GRD-003, US-GRD-005, US-GRP-006 | U15 |
-| 37 | View/Export GradeBook | US-GRD-004, US-RPT-003 | U15 |
-| 38 | View Teacher Assignment List | US-ASM-001, US-ASM-008 | U08 |
-| 39 | Create/Update/Delete Essay | US-ASM-007, US-ASM-001, US-ASM-008, US-ASM-010, US-AIG-001, US-QBK-002 | U09 |
-| 40 | Create/Update/Delete Quiz | US-ASM-006, US-ASM-001, US-ASM-008, US-ASM-010, US-AIG-001, US-QBK-002 | U09 |
-| 41 | Create/Update/Delete Code Lab | US-ASM-005, US-ASM-001, US-ASM-008, US-ASM-010, US-AIG-001, US-QBK-002 | U09 |
-| 42 | Create/Update/Delete Diagram Assignment | US-ASM-004, US-ASM-001, US-ASM-008, US-ASM-010, US-AIG-001, US-QBK-002 | U09 |
-| 43 | Create/Update/Delete Group Assignment | US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-010, US-AIG-001, US-QBK-002 | U09 |
-| 44 | Add/Update Rubric | US-QBK-001 | U06 |
-| 45 | View Managed Subject Classes | US-CAT-001, US-CAT-002 | U04 |
-| 46 | View Managed Class Detail | US-CAT-001, US-CAT-002 | U04 |
-| 47 | Create Class | US-CAT-001 | U04 |
-| 48 | Assign Teacher To Class | US-CAT-001 | U04 |
-| 49 | Edit Class Information | US-CAT-002 | U04 |
-| 50 | View Managed Subject | US-CAT-001, US-IAM-005 | U04 |
-| 51 | View Subject Materials | US-CNT-001 | U05 |
-| 52 | Add/Update/Delete Subject Material | US-CNT-001, US-CNT-005 | U05 |
-| 53 | View Subject Templates | US-ASM-009 | U10 |
-| 54 | Create/Update/Delete Template | US-ASM-009, US-AIG-002, US-QBK-001 | U10 |
-| 55 | View Subject Question Bank | US-QBK-002 | U06 |
-| 56 | Create/Update/Delete Subject Question | US-QBK-002, US-AIG-002 | U06 |
-| 57 | View Statistic | US-RPT-002 | U16 |
-| 58 | View Account List | US-IAM-007 | U01 |
-| 59 | Add Account | US-IAM-007 | U01 |
-| 60 | View Account Detail | US-IAM-007 | U01 |
-| 61 | Update Account Information | US-IAM-007, US-IAM-005 | U01 |
-| 62 | Change Account Status | US-IAM-007 | U01 |
-| 63 | View Subject List | US-CAT-001 | U04 |
-| 64 | Add Subject | US-CAT-001, US-IAM-005 | U04 |
-| 65 | View Subject Detail | US-CAT-001 | U04 |
-| 66 | Update Subject Information | US-CAT-001, US-IAM-005 | U04 |
-| 67 | View Credit Package Setting | US-PAY-004 | U07 |
-| 68 | Add/Edit Credit Package | US-PAY-004 | U07 |
-| 69 | View Payment History | US-PAY-005 | U07 |
-| 70 | View Audit Log | US-AUD-001 | U02 |
-
-### Luồng hỗ trợ không có UC độc lập
-
-- US-AIG-003 thuộc U13: model/quota/cost/kill-switch hỗ trợ tất cả luồng gọi AI; không gán một UC quản trị AI giả vào danh mục.
-- Mã mời/ghi danh hỗ trợ UC 12–13 và 45–49; chia nhóm hỗ trợ UC 15–16, 28, 43; bình luận thuộc UC 26/31; AI draft thuộc UC 39–43, 54/56.
-- Duyệt/phát hành, version/copy/retire là luồng chung UC 39–43 qua U08/U10; chốt/công bố điểm là bước của UC 35–36 qua U15. Không gộp UC 25 vào UC 35.
+| 08 | View My Credit Package | US-PAY-001, US-PAY-002 | U07 |
+| 09 | View Public Credit Package | US-PAY-001 | U07 |
+| 10 | Purchase Credit Package | US-PAY-001, US-PAY-002 | U07 |
+| 11 | View Payment Result | US-PAY-002 | U07 |
+| 12 | View Notifications | US-NTF-001 | U16 |
+| 13 | View Enrolled Classes | US-LRN-001 | U04 |
+| 14 | View Enrolled Class Detail | US-LRN-001 | U04 |
+| 15 | View Learning Material | US-CNT-001, US-CNT-002, US-CNT-005 | U05 |
+| 16 | View My Group | US-GRP-001 | U12 |
+| 17 | Request Leader Change | US-GRP-002 | U12 |
+| 18 | View Quiz Practice History | US-ASM-006, US-ASM-003 | U11 |
+| 19 | View Quiz Practice Detail | US-ASM-006, US-ASM-003 | U11 |
+| 20 | Take Quiz | US-ASM-006, US-ASM-003 | U11 |
+| 21 | View Quiz Result | US-ASM-006, US-GRD-001 | U11 |
+| 22 | View Student Assignment List | US-ASM-003, US-RPT-001 | U11 |
+| 23 | View Assignment Detail | US-ASM-003 | U11 |
+| 24 | Complete Essay Assignment | US-ASM-003, US-ASM-007 | U11 |
+| 25 | Complete Code Lab | US-ASM-003, US-ASM-005 | U11 |
+| 26 | Complete Diagram Assignment | US-ASM-003, US-ASM-004 | U11 |
+| 27 | Complete Group Assignment | US-GRP-004, US-GRP-005 | U14 |
+| 28 | View Submission History | US-ASM-003, US-ASM-012 | U11 |
+| 29 | Grade Practice Assignment | US-ASM-012 | U11 |
+| 30 | View Class Announcements | US-CNT-004 | U05 |
+| 31 | View Assigned Class List | US-CAT-002 | U04 |
+| 32 | View Assigned Class Detail | US-CAT-002, US-GRP-001 | U04 |
+| 33 | View Uploaded Learning Materials | US-CNT-002 | U05 |
+| 34 | Add/Update/Delete Learning Material | US-CNT-002, US-CNT-005 | U05 |
+| 35 | Create/Update/Delete Quiz | US-ASM-006, US-ASM-001, US-AIG-001, US-AIG-002 | U09 |
+| 36 | Create/Update/Delete Announcement | US-CNT-004 | U05 |
+| 37 | View Student Submissions | US-GRD-004, US-RPT-001 | U15 |
+| 38 | Grade Submission With AI | US-GRD-002, US-GRP-006 | U15 |
+| 39 | Grade Submissions Manually | US-GRD-003, US-GRD-005, US-GRP-006 | U15 |
+| 40 | View/Export GradeBook | US-GRD-004, US-RPT-003 | U15 |
+| 41 | View Teacher Assignment List | US-ASM-001, US-ASM-008, US-ASM-009 | U08 |
+| 42 | Create/Update/Delete Essay | US-ASM-007, US-ASM-001, US-ASM-008, US-ASM-010, US-QBK-001, US-QBK-002, US-AIG-001, US-ASM-009, US-AIG-002 | U09 |
+| 43 | Create/Update/Delete Code Lab | US-ASM-005, US-ASM-001, US-ASM-008, US-ASM-010, US-QBK-001, US-QBK-002, US-AIG-001, US-ASM-009, US-AIG-002 | U09 |
+| 44 | Create/Update/Delete Diagram Assignment | US-ASM-004, US-ASM-001, US-ASM-008, US-ASM-010, US-QBK-001, US-QBK-002, US-AIG-001, US-ASM-009, US-AIG-002 | U09 |
+| 45 | Create/Update/Delete Group Assignment | US-GRP-003, US-ASM-001, US-ASM-008, US-ASM-010, US-QBK-001, US-QBK-002, US-AIG-001 | U09 |
+| 46 | Add/Update/Delete Rubric | US-QBK-001 | U06 |
+| 47 | View Managed Subject Classes | US-CAT-002 | U04 |
+| 48 | View Managed Class Detail | US-CAT-002 | U04 |
+| 49 | Create Class | US-CAT-001 | U04 |
+| 50 | Assign Teacher To Class | US-CAT-001 | U04 |
+| 51 | Add/Remove Class Students | US-CAT-003 | U04 |
+| 52 | Edit Class Information | US-CAT-002, US-RPT-001 | U04 |
+| 53 | View Managed Subject | US-CAT-001, US-ASM-009 | U04 |
+| 54 | View Subject Materials | US-CNT-001 | U05 |
+| 55 | Add/Update/Delete Subject Material | US-CNT-001, US-CNT-005 | U05 |
+| 56 | View Subject Question Bank | US-QBK-002 | U06 |
+| 57 | Create/Update/Delete Subject Question | US-QBK-002, US-AIG-002 | U06 |
+| 58 | View Admin Dashboard | US-RPT-002, US-AIG-003 | U16 |
+| 59 | View Account List | US-IAM-007 | U01 |
+| 60 | Add Account | US-IAM-001, US-IAM-007 | U01 |
+| 61 | View Account Detail | US-IAM-007 | U01 |
+| 62 | Update Account Information | US-IAM-005, US-IAM-007 | U01 |
+| 63 | Change Account Status | US-IAM-007 | U01 |
+| 64 | View Subject List | US-CAT-001 | U04 |
+| 65 | Add Subject | US-CAT-001 | U04 |
+| 66 | View Subject Detail | US-CAT-001 | U04 |
+| 67 | Update Subject Information | US-CAT-001, US-IAM-005 | U04 |
+| 68 | View Credit Package Setting | US-PAY-004 | U07 |
+| 69 | Add/Edit Credit Package | US-PAY-004 | U07 |
+| 70 | View Settings | US-SET-001, US-AIG-003 | U03 |
+| 71 | Edit Setting | US-SET-001, US-AIG-003 | U03 |
+| 72 | View Payment History | US-PAY-005 | U07 |
+| 73 | View Audit Log | US-AUD-001 | U02 |
 
 ## 15. Ràng buộc phi chức năng và kỹ thuật downstream
 

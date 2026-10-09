@@ -9,8 +9,8 @@ Bốn persona đại diện cho bốn vai trò RBAC. User là actor trừu tư�
 | User | Abstract actor representing the platform's account holders. Uses shared account, profile, credit-purchase and notification functions. |
 | Student | Learner enrolled in classes. Accesses learning materials, completes individual/group assignments and requests private AI grading of eligible Practice submissions. |
 | Teacher | Instructor assigned to classes. Manages class materials, announcements, questions and assignments, grades submissions and views/exports the gradebook. |
-| Subject Manager | Academic staff member responsible for assigned subjects. Manages subject classes, materials, templates and question banks. |
-| Administrator | Platform administrator. Manages accounts, subjects and classes, credit packages, payment history, system statistics and audit logs. |
+| Subject Manager | Academic staff member responsible for assigned subjects. Manages subject classes, materials, subject assignments and question banks. |
+| Administrator | Platform administrator. Manages accounts and subjects; related class information is read-only. Manages settings, credit packages, payment history, system statistics and audit logs. |
 | Brevo | External email delivery service. Sends account-activation and password-recovery OTP messages and eligible notification emails. |
 | PayOS | External payment gateway. Processes credit purchases and provides payment confirmations/status. |
 | Google Drive | External file-storage service. Stores learning materials and document assets and supplies authorized files. |
@@ -19,7 +19,7 @@ Bốn persona đại diện cho bốn vai trò RBAC. User là actor trừu tư�
 | Drawio | Embedded diagram editor. Lets students create/edit diagrams in Diagram Assignments. |
 | YouTube | External video platform. Supplies linked videos, metadata and available captions for learning materials. |
 
-Student → User; Teacher → User; Subject Manager → Teacher; Administrator → Subject Manager. Inheritance grants available functions only within assigned resource scope, not unrestricted academic data access.
+Student → User; Teacher → User; Subject Manager → Teacher chỉ khi được giao dạy lớp. Administrator chỉ User và quản trị, không kế thừa Subject Manager/Teacher và không nhận phân công môn/lớp. Mọi quyền học thuật cần scope hiện thời.
 
 ## 2. P-STUDENT - Người học
 
@@ -34,7 +34,7 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 ### Hành vi điển hình
 
 - Đăng nhập bằng email trường đã được cấp, quản lý hồ sơ và khôi phục mật khẩu; không tự đăng ký tài khoản công khai.
-- Sau khi đăng nhập vào My Classes (Student) (danh sách lớp đã ghi danh); mở lớp để xem học liệu đang hiển thị, bài được giao, trạng thái nộp, điểm đã công bố và phân bố điểm ẩn danh khi lớp cho phép.
+- Sau khi đăng nhập vào Class Dashboard (Student) (danh sách lớp đã ghi danh); mở lớp để xem học liệu đang hiển thị, bài được giao, trạng thái nộp, điểm đã công bố và phân bố điểm ẩn danh khi lớp cho phép.
 - Làm bài, nộp bài và xem kết quả sau khi được công bố.
 - Làm trắc nghiệm, bài viết, bài tài liệu (có sơ đồ Draw.io nhúng) và Code Lab; lưu nháp, khôi phục và xem lịch sử lần nộp.
 - Nhận hoặc được trưởng nhóm giao mục trong tài liệu nhóm, bấm Xong để ghép vào tài liệu chung, trưởng nhóm giao các phần của khung và nộp bất kỳ lúc nào trước hạn; xem điểm và phản hồi do giảng viên quyết định.
@@ -79,10 +79,10 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 ### Hồ sơ
 
 - **Bối cảnh**: Giảng viên được giao trách nhiệm học thuật cấp môn cho một hoặc nhiều môn; mỗi môn có thể gồm nhiều lớp do các giảng viên khác nhau đứng lớp.
-- **Mục tiêu**: Duy trì nguồn học liệu chuẩn cấp môn và cung cấp template đề và ngân hàng cấp môn để các lớp dùng thống nhất.
+- **Mục tiêu**: Duy trì nguồn học liệu chuẩn cấp môn và soạn bài của môn và ngân hàng cấp môn để các lớp dùng thống nhất.
 - **Động lực**: Nâng chất lượng học thuật và giảm việc biên soạn trùng lặp giữa các lớp.
 - **Khó khăn**: Cần thao tác xuyên lớp nhưng tuyệt đối không vượt sang môn chưa được phân công; cần biết tài liệu nào đã xử lý thành công để dùng cho RAG.
-- **Nhu cầu truy cập**: Quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và template đề của các môn được gán; tạo và quản lý lớp của các môn được gán như quản trị viên (tạo lớp, gán giảng viên chính, mở/lưu trữ, ghi danh); quyền quản lý môn không thay phân công giảng viên; chỉ dùng chức năng Teacher/chấm/gradebook khi chính tài khoản được giao lớp theo R4.
+- **Nhu cầu truy cập**: Quản lý kho học liệu/RAG, rubric, ngân hàng câu hỏi và bài của các môn được gán; tạo và quản lý lớp của các môn được gán theo R2 (tạo lớp, gán giảng viên chính, mở/lưu trữ, ghi danh); quyền quản lý môn không thay phân công giảng viên; chỉ dùng chức năng Teacher/chấm/gradebook khi chính tài khoản được giao lớp theo R4.
 
 ### Hành vi điển hình
 
@@ -90,8 +90,8 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
 - Mua credit AI để xử lý học liệu/RAG và tạo câu hỏi trong các môn được phân công; theo dõi thanh toán và số dư của mình.
 - Quản lý ngân hàng câu hỏi của môn (Question List, Question Detail), rubric của bài cấp môn và xem trước các loại bài dùng chung của môn.
-- Phát hành template có version để giảng viên copy thành bài của lớp.
-- Mở Subject Classes từ Subject Detail để tạo lớp, gán giảng viên chính, mở/lưu trữ lớp và ghi danh trong các môn được phân công.
+- Duyệt và phát hành bài của môn cho mọi lớp OPEN với một lịch chung, không bài nhóm; giảng viên của từng lớp chấm và công bố điểm lớp mình.
+- Mở Class List/Class Detail từ Manager Dashboard để tạo/quản lý lớp của môn, gán Teacher/Subject Manager ACTIVE, ghi danh và mở/lưu trữ.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
 - Chỉ khi chính tài khoản được giao dạy lớp (R4), dùng chức năng Teacher để xem submissions, chấm và xem/xuất bảng điểm lớp. Phân công quản lý môn không tự cấp các quyền này.
 
@@ -113,15 +113,15 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 
 - Quản lý tài khoản, bốn vai trò và phạm vi môn của Chủ nhiệm môn.
 - Cấu hình quota, model, giới hạn chi phí/kill-switch và giám sát dịch vụ AI theo cách không khóa nhà cung cấp.
-- Tạo cấu trúc môn/lớp, phân công và ghi danh.
-- Xem/thêm/sửa gói credit trên Credit Package Setting; xem lịch sử mua credit toàn nền tảng trên Payment History. Xác minh thanh toán chạy tự động, không chỉnh credit/đối soát thủ công.
-- Kế thừa chức năng quản lý học liệu/template/ngân hàng môn khi được giao môn (R2), và chức năng Teacher khi được giao dạy lớp (R4).
+- Tạo/sửa/lưu trữ môn, gán Subject Manager; Subject Detail chỉ xem danh sách lớp. Tạo/sửa lớp và ghi danh thuộc Chủ nhiệm môn, không Admin.
+- Xem/thêm/sửa gói credit trên Credit Package List/Detail; xem lịch sử mua credit toàn nền tảng trên Payment History. Xác minh thanh toán chạy tự động, không chỉnh credit/đối soát thủ công.
+- Chỉ dùng chức năng User/quản trị; không dùng R2/R3/R4, không có ví credit, không vào Manager Dashboard hay Class Dashboard.
 - Tra cứu audit theo phạm vi quản trị.
-- Xem thống kê tài khoản, môn, lớp và ghi danh ngay trên Statistic.
+- Xem thống kê tài khoản, môn, lớp và ghi danh ngay trên Admin Dashboard.
 
 ### Stories liên quan
 
-`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001`, `US-CAT-003`, `US-AIG-003`, `US-PAY-001`, `US-PAY-002`, `US-PAY-004`, `US-PAY-005`, `US-RPT-002`, `US-AUD-001`, `US-NTF-001`. Các story cấp môn/Teacher cũng áp dụng khi có R2/R4 tương ứng.
+`US-IAM-002`, `US-IAM-004` đến `US-IAM-007`, `US-CAT-001` (phần quản trị môn), `US-AIG-003` (cấu hình/số liệu), `US-SET-001`, `US-PAY-004`, `US-PAY-005`, `US-RPT-002`, `US-AUD-001`, `US-NTF-001`. Không áp dụng story giảng dạy/học liệu/credit cá nhân cho Admin.
 
 ## 6. Ma trận persona - miền nghiệp vụ
 
@@ -129,14 +129,14 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 |---|---|---|---|---|---|---|---|---|---|
 | Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài, dùng AI chấm Practice Essay khi đủ credit | Xem cá nhân | Mua/xem credit cá nhân | Nhận | Không |
 | Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Mua credit cá nhân | Nhận | Qua hành động được ghi |
-| Chủ nhiệm môn | Chính | Quản lý môn được giao | Theo phân công dạy lớp | Không có chức năng Student | Template môn; Teacher khi R4 | Theo R4 | Mua credit cá nhân | Nhận | Hành động được ghi |
-| Quản trị viên | Quản trị | Cấu trúc toàn nền tảng; nội dung môn theo R2 | Theo phân công dạy lớp | Không có chức năng Student | Nội dung môn R2; Teacher R4 | Theo R4 | Gói credit/lịch sử toàn nền tảng; không có ví | Cấu hình/nhận | Xem/tìm, không sửa/xóa |
+| Chủ nhiệm môn | Chính | Quản lý môn được giao | Theo phân công dạy lớp | Không có chức năng Student | Bài của môn; Teacher khi R4 | Theo R4 | Mua credit cá nhân | Nhận | Hành động được ghi |
+| Quản trị viên | Quản trị/User | Quản trị môn; lớp liên quan chỉ đọc, không học liệu | Không | Không có chức năng Student | Cấu hình và xem số liệu, không dùng AI | Không gradebook/chấm | Gói/history toàn nền tảng; không ví | Nhận | Xem/tìm, không sửa/xóa |
 
 ## 7. Nguyên tắc phân quyền xuyên persona
 
 - Quyền được kiểm tra phía server ở cả mức chức năng và đối tượng.
 - Quyền dùng vai trò hiện hành, kế thừa actor và phân công tài nguyên; không tự thêm role Student hoặc bỏ điều kiện R2/R4 cho vai trò cao hơn.
-- Quyền học liệu/template/ngân hàng câu hỏi môn của Chủ nhiệm môn cần phân công môn (R2); giảng dạy, rubric của bài lớp, chấm và gradebook cần phân công lớp (R3/R4). Admin không có quyền R2/R3/R4.
+- Quyền học liệu/bài của môn/ngân hàng câu hỏi môn của Chủ nhiệm môn cần phân công môn (R2); giảng dạy, rubric của bài lớp, chấm và gradebook cần phân công lớp (R3/R4). Admin không có quyền R2/R3/R4.
 - Giảng viên không được truy cập lớp hoặc bài nộp ngoài phân công.
 - Người học không được đọc dữ liệu của người học khác.
 - Quản trị viên không được sửa hoặc xóa audit log của ứng dụng.
@@ -144,4 +144,4 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 
 ## 8. Truy vết nguồn
 
-Bản hiệu lực đối chiếu SRS 4.1/4.4 và 70 UC. Các persona được dẫn xuất từ `FR-001` đến `FR-032`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-001`, `SEC-002`, `SEC-003`, `SEC-005`, `SEC-007`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.
+Bản hiệu lực đối chiếu SRS 4.1/4.4 và 73 UC. Các persona được dẫn xuất từ `FR-001` đến `FR-033`, đặc biệt `FR-002`, `FR-003`, `FR-004`, `FR-006`, `FR-007`, `FR-009`, `FR-015` đến `FR-026`; đồng thời tuân theo `SEC-001`, `SEC-002`, `SEC-003`, `SEC-005`, `SEC-007`, các quyết định làm rõ User Stories Q1-Q3 và quyết định loại Head of Department/Trưởng bộ môn.
