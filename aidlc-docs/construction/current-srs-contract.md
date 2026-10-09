@@ -63,4 +63,8 @@ Enabled Security-03/04/05/08/09/12/15 và Resiliency-04/06/10 giữ hiệu lực
 
 ## Credit và checkpoint học liệu — sau recheck 2026-10-09
 
-Học liệu chỉ reserve một HOLD khi tạo lesson; các child call tóm tắt/chunk/merge/embedding không reserve thêm. AiUsagePort.release(holdId) của U13 chốt tổng: đã dùng AI thì CreditPort.settle và trả dư, bằng 0 mới CreditPort.release hoàn toàn bộ. Scanner dùng cùng quy tắc; child creditStatus NONE không hoàn HOLD riêng. U05 phục hồi qua findHold/UsageStart REPLAY/CallSnapshot, không đọc repository U13; complete ghi checkpoint/usage cùng transaction với kiểm claim hợp lệ. Chi tiết ở [contract U05](u05-content-material-rag/functional-design/domain-entities.md).
+Học liệu chỉ reserve một HOLD khi chấp nhận yêu cầu tóm tắt; các child call tóm tắt/chunk/merge/embedding không reserve thêm. AiUsagePort.release(holdId) của U13 chốt tổng: đã dùng AI thì CreditPort.settle và trả dư, bằng 0 mới CreditPort.release hoàn toàn bộ. Scanner dùng cùng quy tắc; child creditStatus NONE không hoàn HOLD riêng. U05 phục hồi qua findHold/UsageStart REPLAY/CallSnapshot, không đọc repository U13; complete ghi checkpoint/usage cùng transaction với kiểm claim hợp lệ. Chi tiết ở [contract U05](u05-content-material-rag/functional-design/domain-entities.md).
+
+## Revision View Material — 2026-10-09 (ưu tiên yêu cầu mới)
+
+Upload qua U03/tạo lesson U05 chỉ lưu và trích chữ/phụ đề, không AI/credit. Student, Teacher, Subject Manager có quyền xem bấm Tóm tắt tài liệu trên Learning Material/Material Detail. HOLD chỉ tạo lúc nhận yêu cầu, payer là người bấm; một summary dùng chung, không giữ/trừ lại khi xem hoặc bấm trùng. Student được MATERIAL_SUMMARY và child EMBEDDING của HOLD này ngoài Practice grading, không được embedding/RAG độc lập. EXTRACTED chưa summary không vào RAG; AI deadline 24 giờ và HOLD fallback 25 giờ tính từ yêu cầu, không từ upload. Quyền sửa/upload không mở rộng cho Student; Admin denied.

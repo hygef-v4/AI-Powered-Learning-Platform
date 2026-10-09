@@ -20,7 +20,7 @@
  worker: PaymentScanner --> PAYOS_CHECK --> PayosCheckHandler --> PayosAdapter --> PaymentSettlement
 ```
 
-**Text alternative**: Student, Teacher và Subject Manager có tài khoản `ACTIVE` có ví, xem số dư và mua credit qua `PaymentController` (Admin không có ví); controller kiểm chủ ví trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `BalanceService`; màn Checkout đọc lại trạng thái. U13 gọi `CreditPortService` để giữ, trừ và trả credit (U05 đi qua U13); Student chỉ được giữ cho `PRACTICE_GRADING` của attempt Text/Diagram Essay hợp lệ. Admin thêm/sửa gói; mức tặng định kỳ đọc từ Settings của U03. Worker đối soát PayOS; trả phần credit giữ quá hạn do scanner của U13.
+**Text alternative**: Student, Teacher và Subject Manager có tài khoản `ACTIVE` có ví, xem số dư và mua credit qua `PaymentController` (Admin không có ví); controller kiểm chủ ví trước khi `PaymentService` tạo giao dịch và gọi PayOS qua `PayosAdapter`. PayOS gửi webhook tới `WebhookController`, chữ ký được kiểm rồi `PaymentSettlement` đánh dấu đã trả và cộng credit qua `BalanceService`; màn Checkout đọc lại trạng thái. U13 gọi `CreditPortService` để giữ, trừ và trả credit (U05 đi qua U13); Student được giữ cho PRACTICE_GRADING của attempt Text/Diagram Essay hợp lệ hoặc MATERIAL_SUMMARY qua U05 khi có quyền xem. Admin thêm/sửa gói; mức tặng định kỳ đọc từ Settings của U03. Worker đối soát PayOS; trả phần credit giữ quá hạn do scanner của U13.
 
 ## 2. Thành phần
 

@@ -29,7 +29,7 @@ Frontend không quyết định authorization. Màn/entry theo [shared contract]
 | Audit (U02) | Audit append-only ghi trong transaction, tra cứu cho Admin |
 | File, Job, Event & Settings (U03) | Tệp Drive/token, worker/7 queue/retry/sweeper/scanner/events; Settings chung với schema khai báo bởi U03/U07/U13, version/audit và cache tối đa 30 giây; không bảng job |
 | Academic & Learning Access (U04) | Môn do Admin quản trị; lớp và enrollment do Subject Manager của môn quản lý; Teacher chỉ lớp được giao; Student lớp đã ghi danh |
-| Content & RAG (U05) | Module/học liệu môn hoặc lớp; giữ credit khi tạo lesson, trích chữ/summary/embedding từ summary, RAG; thông báo create/update/soft-delete; không bình luận hay quét lại thủ công |
+| Content & RAG (U05) | Module/học liệu môn hoặc lớp; upload trích chữ không AI/credit; nút trên View Material nhận yêu cầu, giữ credit người bấm rồi summary/embedding từ summary, RAG; thông báo create/update/soft-delete; không bình luận hay quét lại thủ công |
 | Question Bank (U06) | Ngân hàng môn có version; câu riêng ASSIGNMENT qua InlineQuestionPort; rubric thuộc từng bài/câu/phần, tự tạo trống và khóa khi phát hành; nhập Excel/CSV |
 | Payment & AI Credit (U07) | UC 08–11 ví của Student/Teacher/Subject Manager; Admin UC 68–69 quản trị gói/UC 72 history; grant từ Settings; verified payment và snapshot; giữ/trừ/trả credit |
 | Assessment Core (U08) | Bài lớp/bài môn và quiz gắn học liệu; vòng đời/review/publish, lịch bài môn chung mọi lớp OPEN, khóa nội dung, version/clone/copy; không template/U10 |
@@ -61,7 +61,7 @@ Frontend không quyết định authorization. Màn/entry theo [shared contract]
 - Bài đã phát hành bị khóa nội dung; muốn đổi thì ngưng giao rồi tạo version mới, hoặc nhân bản. Lượt làm giữ version đã dùng.
 - Bài nộp bất biến sau khi nộp; Grading chỉ tham chiếu bài nộp.
 - XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi có yêu cầu AI chấm (giảng viên đề xuất bài `GRADED` hoặc Student chấm `PRACTICE`).
-- AI chỉ trả đề xuất; không phát hành đề, không chốt điểm. Lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của người yêu cầu; embedding học liệu chạy nền trừ người đã tải học liệu. Nếu hết hạn mức AI của hệ thống, báo "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
+- AI chỉ trả đề xuất; không phát hành đề, không chốt điểm. Lời gọi Gemini tạo nội dung hoặc embedding trừ credit AI của người yêu cầu; summary/embedding học liệu chỉ chạy sau nút trên màn xem, trừ người yêu cầu. Nếu hết hạn mức AI của hệ thống, báo "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
 - Thanh toán chỉ cộng credit AI sau webhook đã xác minh hoặc job tự đối soát; không ảnh hưởng quyền vào lớp.
 - Có bài của môn cho mọi lớp OPEN; không sao chép khóa học/lớp.
 - Hệ thống không tự quét malware; file bị Google Drive gắn cờ abuse bị coi là không dùng được.

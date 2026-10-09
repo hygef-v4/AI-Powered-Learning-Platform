@@ -3515,3 +3515,28 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Context**: Commit only, no push requested. Application code, contract files, migrations, source diagrams, approvals and implementation progress remain unchanged. Runtime/provider/integration checks N/A for this documentation commit; disabled Property-Based Testing skipped.
 
 ---
+
+## Material summary revision — user request
+**Timestamp**: 2026-10-09T07:23:17Z
+**User Input**: "sửa lại unit 3 upload material lên thì chưa tóm tắt vội mà trong view material thì cho nút student , teacher, subject manager tóm tắt tài liệu, sửa lại trong aidlc"
+**AI Response**: Resume existing workflow for documentation revision. Update U03 upload boundary and U05 material viewing/summary flow, then synchronize Inception, U07/U13 credit/authorization and pending code plans. Upload/extraction uses no AI credit; summary begins only from the scoped viewer button. Preserve shared summary and one-HOLD settlement; payer becomes requesting viewer.
+**Context**: User explicitly requests AI-DLC changes. No code generation, Google document write or new commit. Earlier SRS IV/V review is superseded where this new decision changes the baseline.
+
+---
+
+## Material summary revision — documentation complete
+**Timestamp**: 2026-10-09T07:33:09Z
+**AI Response**: Synchronized Inception requirements/stories/application contracts and U03/U05/U07/U13 designs plus pending code plans. Upload/tạo lesson only stores and extracts text/captions without Gemini or credit; EXTRACTED awaits the viewer request. View Material (Learning Material/Material Detail) offers Tóm tắt tài liệu to scoped Student, Teacher and Subject Manager. One atomic request/HOLD records requester as payer; duplicate/concurrent clicks and shared cached summaries do not reserve again. AI worker/checkpoint/settlement remains bounded, with AI deadline 24 hours and fallback HOLD expiry 25 hours from request. Student material-summary permission does not allow upload, standalone embedding/RAG, authoring or Graded AI. Settings/guard, no-text/error states, API polling, queue mapping and migration design were synchronized.
+**Validation**: 43 tracked documentation files reviewed; 10 targeted contract checks pass. Local links and code fences pass, existing completed code-plan checkbox lines preserved, stale upload-credit/automatic-upload-summary rules absent in active design scope, git diff --check passes. Added and completed material-summary-on-demand revision checklist. No application test or implementation completion claim.
+**Context**: Documentation only; code, source diagrams, 73-UC/51-story/15-unit catalog and old approvals unchanged. No commit/push or online SRS write. SECURITY-08 authorization documented; existing SECURITY-03/04/05/09/12/15 constraints retained, runtime N/A. RESILIENCY-10 timeout/recovery retained; RESILIENCY-04/06 infrastructure unchanged/runtime N/A. Rules outside project scope N/A; disabled Property-Based Testing skipped.
+
+---
+
+## Commit preparation — on-demand material summary
+**Timestamp**: 2026-10-09T07:36:20Z
+**User Input**: "giúp tôi commit nhớ ghi rõ description"
+**AI Response**: Prepare a local documentation commit with a detailed description of upload without AI/credit, View Material summary action for scoped Student/Teacher/Subject Manager, requester-owned one-HOLD billing and shared result reuse, two-stage extraction/AI lifecycle, queue/API/migration design and synchronized Inception/U03/U05/U07/U13 pending plans.
+**Validation**: Fresh working-tree scope and diff checks confirm documentation-only changes; git diff --check passes. Prior revision validation records 10 contract checks, local links/fences and preserved completed code-plan lines. Application tests N/A for documentation-only commit.
+**Context**: User authorizes commit; no push. Existing implementation status and historical approvals remain unchanged.
+
+---

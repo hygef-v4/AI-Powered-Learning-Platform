@@ -4,7 +4,7 @@
 
 ## P1 - Một đường ghi số dư (BalanceService)
 - `apply(accountId, freeDelta, purchasedDelta, reason)`:
-  1. Kiểm tài khoản `ACTIVE` có ví (Student, Teacher, Subject Manager; Admin không có ví) và chủ ví; Student chỉ được giữ credit cho `PRACTICE_GRADING` hợp lệ.
+  1. Kiểm tài khoản `ACTIVE` có ví (Student, Teacher, Subject Manager; Admin không có ví) và chủ ví; Student được giữ credit cho PRACTICE_GRADING hợp lệ hoặc MATERIAL_SUMMARY qua U05 đã kiểm quyền xem.
   2. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`); sang tháng mới thì đặt lại tặng định kỳ bằng `credit.monthlyFreeCredits` đọc qua `SettingsPort`.
   3. Kiểm số dư sau thay đổi ≥ 0 (CHECK trong DB là chốt chặn cuối).
   4. UPDATE cột số dư trong `accounts`.

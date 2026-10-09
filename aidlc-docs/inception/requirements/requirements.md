@@ -5,11 +5,11 @@
 - **Yêu cầu ban đầu**: "giúp tôi triển khai quy trình ai dlc".
 - **Mục tiêu**: MVP web cho một tổ chức, có frontend, backend, AI, tệp, thanh toán, email và tài liệu/checkpoint AI-DLC.
 - **Bản hiệu lực (2026-10-09)**: [catalog 73 UC](../../../docs/use-cases-73.md) và Page-2 của `docs/G21_Diagrams.drawio` là nguồn local cho revision này; các quyết định FR bên dưới bổ sung scope và permission. Google SRS đã được dùng ở các mốc trước; revision này không xác minh lại tài liệu online.
-- **Thay đổi chính**: Admin chỉ quản trị; chỉ ngân hàng môn; bỏ mã mời/bình luận/template/U10; bài của môn giao mọi lớp; quiz luyện tập gắn học liệu; Settings chung U03; summary/credit khi tải học liệu.
+- **Thay đổi chính**: Admin chỉ quản trị; chỉ ngân hàng môn; bỏ mã mời/bình luận/template/U10; bài của môn giao mọi lớp; quiz luyện tập gắn học liệu; Settings chung U03; summary/credit khi người xem yêu cầu.
 - **Quyền**: Student và Teacher → User; Subject Manager → Teacher có điều kiện phân công R4. Administrator chỉ User/quản trị, không phân công môn/lớp, không ví/AI; scope R1–R5 kiểm tại server.
 - **Phạm vi tài liệu**: 73 UC, 51 story, 15 unit; US-CAT-005 đã rút, US-SET-001 thuộc U03; version/copy/bài của môn thuộc U08, không U10.
 - **Giữ các chi tiết đã chốt**: Năm dạng bài, Practice/Graded, version/snapshot, rubric từng câu/phần, nhóm thuộc lớp, leader giao phần và nộp; không có Simulation Exam hoặc tiến độ hoàn thành bài học.
-- **Luồng hỗ trợ**: Ghi danh, chia nhóm, AI soạn nháp, tóm tắt học liệu khi tải lên, duyệt/phát hành/version/copy, chốt/công bố điểm, audit và hạn mức vẫn thuộc requirement/story liên quan; không tự thêm UC vào bảng mới.
+- **Luồng hỗ trợ**: Ghi danh, chia nhóm, AI soạn nháp, tóm tắt học liệu từ nút trên màn xem, duyệt/phát hành/version/copy, chốt/công bố điểm, audit và hạn mức vẫn thuộc requirement/story liên quan; không tự thêm UC vào bảng mới.
 - **Screen Flow**: Page-2 `docs/G21_Diagrams.drawio`; Class Dashboard, Manager Dashboard, Admin Dashboard; Student Assignments và Quiz Practice tách; màn Settings/gói quản trị theo diagram. Các mốc/câu trả lời cũ giữ làm lịch sử.
 
 ## 2. Bối cảnh và phạm vi
@@ -24,7 +24,7 @@ MVP bao gồm tài khoản và vòng đời tài khoản quản trị, phân quy
 
 ### 2.3 Ngoài phạm vi MVP
 
-- Dự án chỉ có một phạm vi MVP, không chia đợt Phase 2. Thông báo lớp, thống kê cho quản trị viên và xuất bảng điểm thuộc MVP; dashboard cá nhân của Student đã bỏ (2026-10-03). Tự tóm tắt học liệu bằng AI khi tải lên thuộc MVP (FR-004, người dùng chốt 2026-10-09). Các chức năng đã loại gồm bình luận dưới thông báo và mã mời vào lớp (2026-10-09), tìm kiếm học liệu theo yêu cầu người dùng, yêu cầu tóm tắt riêng ngoài lúc tải lên, phân tích chất lượng câu hỏi, gia hạn nộp bài cá nhân, phúc khảo điểm, kiểm tra tương đồng, báo cáo độ lệch điểm AI, tiến độ hoàn thành bài học và template đề cấp môn; chúng không có story hoặc UC trong catalog hiện hành. Quy trình AI đề xuất điểm rồi giảng viên quyết định điểm cuối vẫn thuộc MVP.
+- Dự án chỉ có một phạm vi MVP, không chia đợt Phase 2. Thông báo lớp, thống kê cho quản trị viên và xuất bảng điểm thuộc MVP; dashboard cá nhân của Student đã bỏ (2026-10-03). Tóm tắt học liệu bằng AI từ nút trên màn xem thuộc MVP (FR-004, người dùng chốt 2026-10-09). Các chức năng đã loại gồm bình luận dưới thông báo và mã mời vào lớp (2026-10-09), tìm kiếm học liệu theo yêu cầu người dùng, phân tích chất lượng câu hỏi, gia hạn nộp bài cá nhân, phúc khảo điểm, kiểm tra tương đồng, báo cáo độ lệch điểm AI, tiến độ hoàn thành bài học và template đề cấp môn; chúng không có story hoặc UC trong catalog hiện hành. Quy trình AI đề xuất điểm rồi giảng viên quyết định điểm cuối vẫn thuộc MVP.
 - Ứng dụng mobile native
 - Multi-tenancy và cô lập dữ liệu giữa nhiều tổ chức
 - Đồng bộ LMS hoặc SSO của tổ chức
@@ -88,7 +88,7 @@ Administrator xem danh sách/chi tiết, thêm và sửa môn, gán Chủ nhiệ
 
 ### FR-004 - Nhập và quản lý nội dung học
 
-Học liệu tổ chức theo module của môn: Chủ nhiệm môn tạo module trên Material List, mọi lớp của môn (kể cả lớp tạo sau) dùng chung, không chỉnh từng lớp; mỗi module có nút tải tệp và gắn link video. Mỗi bài học (lesson) là đúng một tệp PDF, DOCX hoặc PPTX tải lên, hoặc một link video YouTube. Không soạn nội dung trực tiếp, không có phiên bản hay bước xuất bản: tải lên xong là hiển thị cho người học và hệ thống tự quét nền (trích chữ hoặc lấy phụ đề, tóm tắt, tạo embedding) cho RAG. Chủ nhiệm môn tải lên trên Material List là học liệu của môn (mọi lớp thấy, UC 54–55); giảng viên tải lên trên tab Materials của Teacher Class Detail là học liệu riêng của lớp được phân công (UC 33–34); Material Detail dùng chung để xem, sửa thông tin và xóa; mỗi học liệu chỉ quét một lần khi tải lên, lỗi thì hệ thống tự thử lại. Việc quét phải có trạng thái, giới hạn hợp lệ và thông báo lỗi an toàn (quyết định 2026-10-03, 2026-10-04, 2026-10-09).
+Học liệu tổ chức theo module của môn: Chủ nhiệm môn tạo module trên Material List, mọi lớp của môn (kể cả lớp tạo sau) dùng chung, không chỉnh từng lớp; mỗi module có nút tải tệp và gắn link video. Mỗi bài học (lesson) là đúng một tệp PDF, DOCX hoặc PPTX tải lên, hoặc một link video YouTube. Không soạn nội dung trực tiếp, không có phiên bản hay bước xuất bản: tải lên xong là hiển thị cho người học và hệ thống trích chữ hoặc lấy phụ đề chạy nền, chưa gọi AI; tóm tắt và embedding chỉ bắt đầu sau khi người có quyền xem yêu cầu. Chủ nhiệm môn tải lên trên Material List là học liệu của môn (mọi lớp thấy, UC 54–55); giảng viên tải lên trên tab Materials của Teacher Class Detail là học liệu riêng của lớp được phân công (UC 33–34); Material Detail dùng chung để xem, sửa thông tin và xóa; trích chữ chạy một lần sau upload; tóm tắt/embedding chỉ bắt đầu khi người xem yêu cầu; mỗi giai đoạn lỗi tạm thì tự retry hữu hạn. Việc quét phải có trạng thái, giới hạn hợp lệ và thông báo lỗi an toàn (quyết định 2026-10-03, 2026-10-04, 2026-10-09).
 
 **Tiêu chí chấp nhận:**
 
@@ -100,9 +100,9 @@ Học liệu tổ chức theo module của môn: Chủ nhiệm môn tạo module
 - UC 33–34 dùng tab Materials và Material Detail, UC 54–55 dùng Material List và Material Detail. Sửa chỉ đổi thông tin (tên, thứ tự), không thay được tệp hay link; muốn đổi tài liệu thì xóa rồi tải học liệu mới; xóa học liệu là lưu trữ, giữ lịch sử và tham chiếu, quiz gắn với học liệu không còn hiện cho người học.
 - Lesson YouTube là một video (không nhận playlist); hệ thống chỉ dùng caption có sẵn (kể cả caption tự động của YouTube), không tự phiên âm audio; video không có caption được báo rõ (`NO_CAPTION`) và không lập chỉ mục.
 - Chữ trích được, bản tóm tắt và embedding lưu trên chính lesson; chỉ lesson quét thành công mới được dùng cho RAG trong đúng phạm vi môn/lớp.
-- Khi tải lên, hệ thống tự tóm tắt học liệu bằng AI trong bước quét (luồng phụ của việc tải học liệu, không có UC riêng). Người tải lên là người tạo bản tóm tắt và chịu credit; credit được giữ trước khi tải lên và chỉ trừ theo lượng thật sự gọi AI bên ngoài. Không đủ credit thì không tải lên được.
+- Upload/tạo lesson không giữ credit và không tự tóm tắt hoặc embedding. Trích chữ thành công lưu `extracted_text` và trạng thái `EXTRACTED`; chưa có summary thì chưa vào RAG. Trên View Material (Learning Material hoặc Material Detail), Student, Teacher và Subject Manager có quyền xem được bấm "Tóm tắt tài liệu". Hệ thống kiểm lại quyền xem và credit của người bấm; một HOLD được tạo cùng transaction chấp nhận yêu cầu, thiếu credit không tạo yêu cầu nhưng học liệu vẫn xem/tải được. Summary dùng chung mỗi lesson, người xem sau dùng lại không trả thêm credit. Không thêm UC độc lập: luồng phụ UC 15, 34, 55.
 - Vector RAG của mỗi học liệu được tạo từ bản tóm tắt, để tìm theo nội dung chính của cả tài liệu.
-- Giảng viên hoặc Chủ nhiệm môn có quyền xem trạng thái quét; không có nút "Quét lại": lỗi tạm hoặc hệ thống bận thì hệ thống tự thử lại, quá giới hạn thì báo quét lỗi và trả credit.
+- Người có quyền xem thấy trạng thái trích chữ/tóm tắt. Không có nút Quét lại; nút Tóm tắt tài liệu chỉ mở khi trích chữ xong, chưa nhận yêu cầu và chưa có summary. Yêu cầu đã nhận tự retry hữu hạn; deadline 24 giờ từ lúc nhận yêu cầu, HOLD scanner 25 giờ dự phòng. Chốt chỉ lượng AI thực dùng, trả dư; trích chữ sau upload không có HOLD.
 
 ### FR-005 - Truy cập nội dung theo lớp
 
@@ -112,7 +112,7 @@ Student xem trước/tải học liệu trên Learning Material (UC 15) theo ghi
 
 - Người học chỉ nhận học liệu đang hiển thị trong lớp mình được ghi danh. Thanh toán không ảnh hưởng quyền vào lớp hay xem nội dung.
 - Truy cập trực tiếp bằng URL/ID không vượt qua kiểm tra enrollment hoặc trạng thái học liệu.
-- Learning Material hiện bản tóm tắt do AI tạo (nếu đã có) cho người được xem học liệu đó.
+- View Material hiện nút Tóm tắt tài liệu cho Student/Teacher/Subject Manager trong phạm vi; đang trích chữ/đang xử lý thì khóa nút, có summary thì hiện kết quả dùng chung và không gọi lại AI.
 - Learning Material hiện danh sách quiz gắn với học liệu và nút làm quiz (quiz soạn theo UC 35, làm theo UC 20).
 
 ### FR-006 - Tạo câu hỏi và bài tập bằng AI
@@ -161,9 +161,9 @@ Sổ điểm chỉ chứa bài GRADED, không tính điểm tổng theo hệ s�
 
 Hệ thống phải tích hợp một nhà cung cấp thanh toán để tạo giao dịch, nhận kết quả qua webhook và cộng credit AI tương ứng mà không lưu dữ liệu thẻ thanh toán thô.
 
-Tài khoản `ACTIVE` với vai trò Student, Teacher hoặc Subject Manager có thể mua và xem credit của chính mình theo các gói credit do Administrator quản lý (FR-031) và được tặng cùng một mức credit hằng tháng (FR-021). Administrator không có ví credit vì không dùng chức năng AI (người dùng chốt 2026-10-09). Student chỉ được tiêu credit cho yêu cầu AI chấm một attempt `PRACTICE` dạng Text Essay hoặc Diagram Essay mà mình đã nộp; Teacher/Subject Manager tiếp tục dùng credit cho các tính năng AI đúng quyền. Student không được dùng AI soạn đề, xử lý học liệu hoặc chấm bài `GRADED`. Code Lab, Quiz và bài nhóm không dùng credit Student để chấm. Nếu Teacher yêu cầu AI hỗ trợ chấm bài `GRADED`, credit được tính cho Teacher và chỉ kết quả cuối do Teacher công bố mới hiển thị cho Student.
+Tài khoản `ACTIVE` với vai trò Student, Teacher hoặc Subject Manager có thể mua và xem credit của chính mình theo các gói credit do Administrator quản lý (FR-031) và được tặng cùng một mức credit hằng tháng (FR-021). Administrator không có ví credit vì không dùng chức năng AI (người dùng chốt 2026-10-09). Student được tiêu credit cho yêu cầu AI chấm attempt PRACTICE Text/Diagram Essay đã nộp của mình hoặc yêu cầu tóm tắt học liệu có quyền xem; Teacher/Subject Manager tiếp tục dùng credit cho các tính năng AI đúng quyền. Student không được AI soạn đề/chấm Graded hoặc embedding/RAG độc lập; được MATERIAL_SUMMARY và child embedding của cùng HOLD đã xác minh quyền xem. Code Lab, Quiz và bài nhóm không dùng credit Student để chấm. Nếu Teacher yêu cầu AI hỗ trợ chấm bài `GRADED`, credit được tính cho Teacher và chỉ kết quả cuối do Teacher công bố mới hiển thị cho Student.
 
-Quyền dùng AI được kiểm theo vai trò hiện hành, quyền kế thừa và scope đối tượng: trong ngữ cảnh Student chỉ có chức năng chấm `PRACTICE` được nêu tại FR-030; các quyền AI của Teacher và Subject Manager không tự chuyển sang ngữ cảnh Student. Mọi khoản trừ credit gắn với tài khoản thực hiện và loại tác vụ.
+Quyền dùng AI được kiểm theo vai trò hiện hành, quyền kế thừa và scope đối tượng: trong ngữ cảnh Student có chấm PRACTICE (FR-030) và tóm tắt học liệu từ View Material (FR-004/005); các quyền AI của Teacher và Subject Manager không tự chuyển sang ngữ cảnh Student. Mọi khoản trừ credit gắn với tài khoản thực hiện và loại tác vụ.
 
 **Tiêu chí chấp nhận:**
 
@@ -229,7 +229,7 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 Administrator cấu hình model, quota, trần chi phí, kill-switch và xem trạng thái/chi phí an toàn qua port provider-neutral. Cấu hình AI nằm trên màn Settings (UC 70–71, FR-033); không thay thế quản trị gói credit.
 
-Mỗi lời gọi AI tạo nội dung/embedding tính credit theo token: embedding học liệu tính người tải, truy xuất tính người yêu cầu. Vượt hạn mức hệ thống báo "Hệ thống đang bận"; yêu cầu bị từ chối không trừ credit.
+Mỗi lời gọi AI tạo nội dung/embedding tính credit theo token: tóm tắt và embedding học liệu tính người bấm nút, truy xuất tính người yêu cầu AI. Student được yêu cầu tóm tắt học liệu trong quyền xem; không được truy xuất RAG/soạn đề. Vượt hạn mức hệ thống báo "Hệ thống đang bận"; yêu cầu bị từ chối không trừ credit.
 
 Mức tặng credit định kỳ do Administrator chỉnh trên Settings (UC 70–71, FR-033), áp dụng như nhau cho Student, Teacher và Subject Manager, đổi có hiệu lực từ kỳ đặt lại kế tiếp. Gói bán do Administrator thêm/sửa theo FR-031; giao dịch giữ snapshot giá/credit.
 

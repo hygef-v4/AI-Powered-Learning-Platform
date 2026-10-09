@@ -4,7 +4,7 @@
 
 Thiết kế độc lập công nghệ. Truy vết: `US-CNT-001`, `002`, `004`, `005`; UC 15, 30, 33, 34, 36, 54, 55. Tóm tắt học liệu và truy xuất RAG cho AI soạn đề là luồng phụ.
 
-Quyết định 2026-10-03: học liệu chỉ **tải lên rồi quét**. Không soạn nội dung trực tiếp, không phiên bản, không phát hành. Quyết định 2026-10-04: chapter đổi thành **module của môn**, mọi lớp dùng chung; mỗi lesson là một tài liệu trong module, là học liệu của môn hoặc của một lớp. Quyết định 2026-10-09: Chủ nhiệm môn quản lý module và học liệu của môn trên Material List; giảng viên quản lý học liệu của lớp trên tab Materials; quiz gắn với học liệu (U09 soạn, U11 cho làm); tự tóm tắt khi tải lên; mỗi học liệu chỉ quét một lần lúc tải lên, lỗi thì hệ thống tự thử lại; không đủ credit thì không tải lên; Sửa chỉ đổi thông tin, không thay tài liệu; bỏ bình luận dưới thông báo.
+Quyết định 2026-10-03: học liệu chỉ **tải lên rồi quét**. Không soạn nội dung trực tiếp, không phiên bản, không phát hành. Quyết định 2026-10-04: chapter đổi thành **module của môn**, mọi lớp dùng chung; mỗi lesson là một tài liệu trong module, là học liệu của môn hoặc của một lớp. Quyết định 2026-10-09: Chủ nhiệm môn quản lý module và học liệu của môn trên Material List; giảng viên quản lý học liệu của lớp trên tab Materials; quiz gắn với học liệu (U09 soạn, U11 cho làm); chỉ tóm tắt khi người xem bấm Tóm tắt tài liệu; upload trích chữ một lần; AI chỉ sau yêu cầu người xem, lỗi tạm tự retry hữu hạn; upload không kiểm credit; giữ credit của người bấm khi yêu cầu tóm tắt; Sửa chỉ đổi thông tin, không thay tài liệu; bỏ bình luận dưới thông báo.
 
 ## 1. Tổng quan
 
@@ -38,13 +38,14 @@ U05 **không** sở hữu: byte file (U03), quyền vào lớp (U04), quiz (U08,
 | `source_type` | enum | `FILE`, `YOUTUBE`; nguồn (tệp hoặc link) không đổi sau khi tạo |
 | `file_id`, `file_name`, `mime_type`, `size_bytes` | | Khi `FILE`: tệp PDF/DOCX/PPTX đã gắn qua U03 (purpose `MATERIAL`) |
 | `youtube_url` | chuỗi | Khi `YOUTUBE`: một video (`watch?v=` hoặc `youtu.be/`); không nhận playlist |
-| `uploaded_by`, `uploaded_at` | UUID, thời gian | Người tải lên (chịu credit tóm tắt và embedding, BR-U05-46) và thời điểm tải; hiện trên Material Detail |
-| `scan_status` | enum | `PENDING`, `SCANNING`, `INDEXED`, `NO_TEXT`, `NO_CAPTION`, `BUSY`, `FAILED` |
+| `uploaded_by`, `uploaded_at` | UUID, thời gian | Người tải lên (không chịu phí AI chỉ vì upload) và thời điểm tải; hiện trên Material Detail |
+| `scan_status` | enum | `PENDING`, `SCANNING`, `EXTRACTED`, `INDEXED`, `NO_TEXT`, `NO_CAPTION`, `BUSY`, `FAILED` |
 | `extracted_text` | văn bản | Chữ trích từ tệp hoặc phụ đề, tối đa 2 000 000 ký tự |
-| `summary` | văn bản ≤ 4 000 ký tự | Bản tóm tắt do AI tạo khi quét (BR-U05-45, 47); rỗng nếu chưa tạo được summary; summary hoàn tất được giữ/hiển thị kể cả embedding FAILED, không đưa lesson FAILED vào RAG |
+| `summary` | văn bản ≤ 4 000 ký tự | Bản tóm tắt do AI tạo sau yêu cầu trên màn xem (BR-U05-45, 47); rỗng nếu chưa tạo được summary; summary hoàn tất được giữ/hiển thị kể cả embedding FAILED, không đưa lesson FAILED vào RAG |
+| `summary_requested_by`, `summary_requested_at` | UUID, thời gian/rỗng | Actor chịu phí và thời điểm nhận yêu cầu; rỗng sau upload. Chỉ đặt một lần cùng HOLD khi nhận yêu cầu; không đổi bởi người bấm trùng/poll. |
 | `embedding` | vector 768 | `gemini-embedding-001`, tính từ `summary` (BR-U05-35) |
 | `scanned_at` | thời gian | Lần đổi trạng thái quét gần nhất (đặt khi `PENDING`, `SCANNING` và khi kết thúc); sweeper dùng để tìm lesson `PENDING` quá 5 phút (bảng không có `updated_at`) |
-| `scan_expires_at` | thời gian | Cố định lúc tạo = now + 24 giờ; không đổi khi retry/BUSY |
+| `scan_expires_at` | thời gian | Deadline giai đoạn: upload + 24 giờ cho trích chữ; nhận yêu cầu + 24 giờ cho AI; chỉ reset khi chuyển EXTRACTED sang yêu cầu AI, không đổi khi retry/BUSY |
 | `scan_retry_at` | thời gian/rỗng | Lần sớm nhất được gửi lại; backoff lỗi tạm hoặc BUSY 30 phút |
 | `scan_claim_id`, `scan_lease_until` | UUID, thời gian/rỗng | Claim của worker, lease 5 phút gia hạn khi đang xử lý; mọi ghi kết quả kiểm claim và hạn; claim hết hạn được sweeper thu hồi |
 | `scan_retry_count` | số | Retry/recovery hữu hạn tối đa 5; BUSY chờ trần không tính lỗi tạm nhưng vẫn bị hạn tuyệt đối 24 giờ |
@@ -56,9 +57,11 @@ Tải lên là hiển thị ngay cho người học trong phạm vi (mọi lớp
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: Tải lên, đã giữ credit
+    [*] --> PENDING: Upload không AI hoặc credit
     PENDING --> SCANNING: Worker nhận
-    SCANNING --> INDEXED: Trích chữ, tóm tắt và embedding xong
+    SCANNING --> EXTRACTED: Trích chữ xong, chưa yêu cầu AI
+    EXTRACTED --> PENDING: Người xem bấm tóm tắt, giữ credit
+    SCANNING --> INDEXED: Yêu cầu AI hoàn tất
     SCANNING --> NO_TEXT: Tệp không có chữ
     SCANNING --> NO_CAPTION: Video không có phụ đề
     SCANNING --> BUSY: Hết trần AI hoặc AI bị tắt
@@ -68,7 +71,7 @@ stateDiagram-v2
     SCANNING --> FAILED: Lỗi vĩnh viễn, hết retry hoặc hết hạn tuyệt đối
 ```
 
-**Text alternative**: Giữ đủ credit rồi lesson PENDING; worker claim hợp lệ chuyển SCANNING. Xong INDEXED; không chữ/phụ đề NO_TEXT/NO_CAPTION. Lỗi tạm hoặc lease hết hạn phục hồi về PENDING có backoff/retry count; BUSY thử lại sau 30 phút. Mốc scan_expires_at cố định 24 giờ không kéo dài. Hết retry/lỗi vĩnh viễn/hết hạn thành FAILED. Kết thúc settle credit đã dùng, trả phần dư; summary hoàn tất vẫn giữ nếu embedding lỗi. Không quét lại thủ công.
+**Text alternative**: Upload PENDING → SCANNING → EXTRACTED (không AI/credit), hoặc NO_TEXT/NO_CAPTION/FAILED. Sau nút Tóm tắt tài liệu và HOLD, EXTRACTED → PENDING → SCANNING → INDEXED. Phân biệt hai giai đoạn bằng summary_requested_at. Mỗi giai đoạn deadline 24 giờ từ lúc bắt đầu; AI BUSY chờ 30 phút. Retry/lease/CAS hữu hạn; chỉ giai đoạn AI chốt HOLD và scanner dự phòng 25 giờ từ yêu cầu. Summary đã hoàn tất giữ khi embedding lỗi.
 
 ## 4. `Announcement`
 
@@ -114,8 +117,8 @@ stateDiagram-v2
 | `ClassAccessPort` | U04 | Ghi danh `ACTIVE`, lớp `OPEN`, môn của lớp; `listOpenClassesOf(accountId)` cho feed Class Announcements |
 | `ArtifactPort` | U03 | `attach`, `open`, `issueDownloadToken` |
 | `AuditPort` | U02 | Audit |
-| `JobPort`, `EventPublisherPort`, `PendingSweeper` | U03 | Việc `LESSON_SCAN`, `YOUTUBE_CAPTION`, gửi lại việc bị mất và việc `BUSY`, event thông báo lớp |
-| `AiUsagePort` | U13 (`C`) | `quote` → CreditQuote; `hold` → HoldSnapshot, `findHold` phục hồi holdId; `begin(task, actor, target, requestRef, holdId?, scanClaimId?)` → UsageStart (RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED); `complete(ticket, tokens, cost, checkpoint?)`, `fail(ticket, usage?)` → CallSnapshot; `release(holdId)` chốt tổng đã dùng/trả dư. DTO, idempotency và fencing theo mục AiUsagePort phía dưới; scanner 25 giờ cùng cách chốt |
+| `JobPort`, `EventPublisherPort`, `PendingSweeper` | U03 | Việc `LESSON_SCAN`, `YOUTUBE_CAPTION`, `MATERIAL_SUMMARY`, gửi lại việc bị mất và việc `BUSY`, event thông báo lớp |
+| `AiUsagePort` | U13 (`C`) | `checkAvailability(task, actor, target)` → allowed/reason theo AiGuard, không giữ credit; `quote` → CreditQuote; `hold` → HoldSnapshot, `findHold` phục hồi holdId; `begin(task, actor, target, requestRef, holdId?, scanClaimId?)` → UsageStart (RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED); `complete(ticket, tokens, cost, checkpoint?)`, `fail(ticket, usage?)` → CallSnapshot; `release(holdId)` chốt tổng đã dùng/trả dư. DTO, idempotency và fencing theo mục AiUsagePort phía dưới; scanner 25 giờ cùng cách chốt |
 | `EmbeddingPort` | Adapter Gemini | `embed(texts)` → vector |
 | `SummaryPort` | Adapter Gemini | `summarize(chunks, model)` → bản tóm tắt và số token đã dùng (BR-U05-47) |
 | `YoutubePort` | Adapter YouTube | Lấy phụ đề video |
@@ -127,14 +130,15 @@ stateDiagram-v2
 | `GET /api/v1/subjects/{subjectId}/modules` | Module và học liệu của môn kèm trạng thái quét | Material List, UC 54 | R2 |
 | `POST /api/v1/subjects/{subjectId}/modules` | Thêm module | Material List, UC 55 | R2 |
 | `PATCH /api/v1/modules/{moduleId}` | Đổi tên, đổi thứ tự, lưu trữ module | Material List, UC 55 | R2 |
-| `GET /api/v1/lessons/upload-credit` | Mức credit cần giữ cho mỗi học liệu và số dư của người tải, để chặn nút tải khi không đủ | Form thêm học liệu, UC 34, 55 | R2, R3/R4 |
-| `POST /api/v1/subjects/{subjectId}/modules/{moduleId}/lessons` | Thêm học liệu của môn; giữ credit, thiếu thì trả lỗi "Không đủ credit AI" | Material List, UC 55 | R2 |
+| `POST /api/v1/subjects/{subjectId}/modules/{moduleId}/lessons` | Thêm học liệu của môn; không giữ credit/không AI | Material List, UC 55 | R2 |
 | `GET /api/v1/classes/{classId}/modules` | Module của môn kèm học liệu của môn (chỉ đọc) và của lớp, kèm trạng thái quét | Tab Materials, UC 33 | R3/R4 |
-| `POST /api/v1/classes/{classId}/modules/{moduleId}/lessons` | Thêm học liệu của lớp; giữ credit, thiếu thì trả lỗi "Không đủ credit AI" | Tab Materials, UC 34 | R3/R4 |
+| `POST /api/v1/classes/{classId}/modules/{moduleId}/lessons` | Thêm học liệu của lớp; không giữ credit/không AI | Tab Materials, UC 34 | R3/R4 |
 | `GET /api/v1/lessons/{lessonId}?classId=` | Thông tin, nguồn, bản tóm tắt; người quản lý thấy thêm trạng thái quét và người tải. Có `classId` khi mở từ một lớp | Material Detail, Learning Material, UC 15, 34, 55 | R2, R3/R4, R5 |
+| `GET /api/v1/lessons/{lessonId}/summary-credit?classId=` | Quote theo người đang xem; quyền xem, không cấp quyền từ quote | View Material, UC 15, 34, 55 | R2, R3/R4, R5 |
+| `POST /api/v1/lessons/{lessonId}/summary?classId=` | Nút Tóm tắt tài liệu, Idempotency-Key; nhận yêu cầu và HOLD một lần hoặc trả kết quả/trạng thái sẵn có | View Material, UC 15, 34, 55 | R2, R3/R4, R5; Admin denied |
 | `POST /api/v1/lessons/{lessonId}/download?classId=` | URL tải hoặc xem tệp (token 5 phút) | Material Detail, Learning Material, UC 15, 34, 55 | R2, R3/R4, R5 |
 | `PATCH /api/v1/lessons/{lessonId}` | Sửa thông tin (tên, thứ tự), xóa (lưu trữ) học liệu; không đổi tệp hay link | Material Detail, UC 34, 55 | Người quản lý học liệu |
-| `GET /api/v1/lessons/{lessonId}/scan` | Poll trạng thái quét (chỉ xem, không có quét lại) | Material Detail, Material List, tab Materials | Người quản lý học liệu |
+| `GET /api/v1/lessons/{lessonId}/scan?classId=` | Poll giai đoạn/trạng thái trích chữ và tóm tắt; không lộ HOLD/chi phí của người khác | View Material và danh sách học liệu | Quyền xem R2, R3/R4, R5 |
 | `GET /api/v1/me/announcements?classId=` | Feed thông báo của các lớp `OPEN` mình học hoặc dạy, lọc theo lớp | Class Announcements, UC 30 | R5, R3/R4 |
 | `POST /api/v1/classes/{classId}/announcements` | Tạo thông báo | Class Announcements, UC 36 | R3/R4 |
 | `PATCH /api/v1/announcements/{announcementId}` | Sửa thông báo kèm `version` | Class Announcements, UC 36 | R3/R4 |
@@ -147,6 +151,7 @@ stateDiagram-v2
 U05 khai báo port; U13 cài và sở hữu ai_suggestions. Đây là contract nội bộ, không thêm HTTP API và không cho U05 đọc repository U13. Chữ ký logic:
 
 ```text
+checkAvailability(task, actor, target) -> allowed/reason
 quote(accountId) -> CreditQuote
 hold(task, actor, targetType, targetId, requestRef) -> HoldSnapshot
 findHold(targetType, targetId, requestRef) -> HoldSnapshot?
@@ -162,3 +167,7 @@ release(holdId) -> HoldSnapshot
 - complete trong transaction ngắn khóa HOLD còn RESERVED và kiểm ticket/scanClaimId đang gắn với child call; chỉ chuyển RUNNING sang READY một lần, lưu checkpoint/usage và cộng creditsUsed vào HOLD cùng transaction. Gọi lặp ticket đã READY trả lại snapshot, không cộng lại. fail có thể nhận usage thật đã biết, ghi FAILED và cộng lượng đó một lần; chưa gọi AI có usage 0. fail child không đóng/hoàn HOLD, không xóa READY đã lưu. Timeout không chứng minh provider chưa dùng; không tạo số usage giả hoặc cam kết exactly-once provider.
 - U05 kiểm/khóa lesson với scan_claim_id và lease/deadline còn hợp lệ trong cùng transaction trước begin, complete hoặc fail; nếu claim mất thì rollback toàn bộ ghi checkpoint/credit. scanClaimId được U13 gắn vào metadata child call để ticket cũ không ghi sau rebind. Worker phục hồi có claim mới mới được tiếp quản child RUNNING/FAILED chưa READY; READY chỉ REPLAY. U13 không kiểm claim bằng callback hay đọc bảng lesson; điều kiện claim thuộc U05. Không giữ transaction trong lúc gọi provider.
 - release của U13 khóa HOLD, chốt tổng đã ghi đúng một lần: có sử dụng thì CreditPort.settle và trả dư, chưa sử dụng mới CreditPort.release hoàn toàn bộ. Child NONE không được scanner đóng riêng. complete đến sau khi HOLD đã chốt bị từ chối; complete/release cùng khóa HOLD nên không bỏ sót lượng dùng đã commit. U05 terminal và scanner 25 giờ gọi cùng thao tác.
+
+## Phân biệt hai giai đoạn
+
+`scan_phase` suy ra từ summary_requested_at, trả trong DTO chứ không thêm cột; phase TEXT/AI. `summary_requested_at` rỗng: handler chỉ trích chữ/phụ đề, không AiUsagePort/HOLD; thành công EXTRACTED. Có giá trị: handler MATERIAL_SUMMARY dùng chữ đã lưu và HOLD của summary_requested_by. Message trích chữ cũ bị bỏ nếu giai đoạn đã đổi; message AI chỉ xử lý khi có yêu cầu/HOLD hợp lệ. State/lease/retry thuộc giai đoạn hiện thời. Yêu cầu trùng và terminal không mở lại HOLD.

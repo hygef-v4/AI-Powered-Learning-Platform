@@ -6,9 +6,9 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U05-01 | Worker quét tối đa **4** lesson cùng lúc; cần VPS ≥ 8 GB RAM, nếu VPS nhỏ hơn hạ về 2 qua cấu hình. | Câu N2 |
+| NFR-U05-01 | Worker trích chữ tối đa **4** lesson cùng lúc; AI summary/embedding theo concurrency Gemini của U13; cần VPS ≥ 8 GB RAM, nếu VPS nhỏ hơn hạ về 2 qua cấu hình. | Câu N2 |
 | NFR-U05-02 | Trích chữ đọc file theo luồng từ U03, không nạp cả file 50 MB vào RAM; lưu tối đa 2 000 000 ký tự mỗi lesson, vượt thì chỉ lấy phần đầu. | Thiết kế |
-| NFR-U05-03 | Tài liệu 50 trang quét xong ≤ 1 phút khi Gemini bình thường. | NFR-003 |
+| NFR-U05-03 | Trích chữ tài liệu 50 trang mục tiêu ≤ 1 phút, không phụ thuộc Gemini. AI tóm tắt sau yêu cầu chạy nền với timeout từng call và deadline theo NFR-U05-18; không tính từ upload. | NFR-003 |
 | NFR-U05-04 | `retrieve` p95 ≤ 1,5 s (gồm gọi Gemini tạo vector câu hỏi); tìm vector trong DB p95 ≤ 200 ms với ≤ 50 000 lesson. | NFR-003 |
 | NFR-U05-05 | Danh sách module/học liệu trên Material List và tab Materials p95 ≤ 300 ms; feed Class Announcements p95 ≤ 300 ms. | NFR-003 |
 
@@ -20,9 +20,9 @@
 | NFR-U05-11 | Hết trần hoặc Gemini báo hết quota sau các lần thử lại: lesson sang `BUSY` hiển thị "Hệ thống đang bận"; `retrieve` trả `503`. Không trừ credit cho lời gọi chưa được Gemini xử lý. | Câu N1 |
 | NFR-U05-13 | `GEMINI_API_KEY` và `YOUTUBE_API_KEY` đọc từ `.env`, không commit, không log. | Câu N3, SEC-006 |
 | NFR-U05-14 | Timeout: Gemini kết nối 5 s, đọc 30 s; YouTube 5 s/15 s. 429/5xx thử lại theo U03; lỗi 400/403 không thử lại. | REL-003 |
-| NFR-U05-16 | Credit embedding: 1 credit = 1 000 token, làm tròn lên mỗi lần gọi; quét tính cho người tải lên, truy xuất tính cho người yêu cầu AI; thử lại không trừ trùng (U13 giữ một dòng hold và các dòng lời gọi theo requestRef chunk/merge/embedding, complete idempotent). | BR-U05-39, 44 |
-| NFR-U05-17 | Tóm tắt khi quét: tối đa 200 000 ký tự đầu, chia đoạn 30 000 ký tự, bản tóm tắt ≤ 4 000 ký tự; mỗi lời gọi Gemini dùng timeout như NFR-U05-14; credit 1 credit = 1 000 token như embedding, tính cho người tải lên và chỉ khi thật sự gọi Gemini. | BR-U05-45…47 |
-| NFR-U05-18 | Hold/tạo lesson cùng transaction; terminal settle lượng AI thật, trả dư. scan_expires_at cố định 24 giờ từ tạo lesson; hold scanner U13 25 giờ là dự phòng. Claim/lease/CAS phục hồi SCANNING hết hạn; thử lại không xử lý trùng đồng thời hoặc cộng lại checkpoint complete. Summary có rồi được giữ nếu embedding lỗi. | BR-U05-37, 39, 46 |
+| NFR-U05-16 | Credit embedding: 1 credit = 1 000 token, làm tròn lên mỗi lần gọi; quét tính cho người yêu cầu tóm tắt, truy xuất tính cho người yêu cầu AI; thử lại không trừ trùng (U13 giữ một dòng hold và các dòng lời gọi theo requestRef chunk/merge/embedding, complete idempotent). | BR-U05-39, 44 |
+| NFR-U05-17 | Tóm tắt sau khi người xem yêu cầu: tối đa 200 000 ký tự đầu, chia đoạn 30 000 ký tự, bản tóm tắt ≤ 4 000 ký tự; mỗi lời gọi Gemini dùng timeout như NFR-U05-14; credit 1 credit = 1 000 token như embedding, tính cho người yêu cầu tóm tắt và chỉ khi thật sự gọi Gemini. | BR-U05-45…47 |
+| NFR-U05-18 | Hold/nhận yêu cầu tóm tắt cùng transaction; upload/trích chữ không HOLD, EXTRACTED chưa yêu cầu không expiry; AI deadline 24 giờ/hold 25 giờ từ yêu cầu; terminal AI settle lượng AI thật, trả dư. scan_expires_at cố định 24 giờ từ khi bắt đầu giai đoạn (tạo lesson cho trích chữ; chấp nhận yêu cầu cho tóm tắt); hold scanner U13 25 giờ là dự phòng. Claim/lease/CAS phục hồi SCANNING hết hạn; thử lại không xử lý trùng đồng thời hoặc cộng lại checkpoint complete. Summary có rồi được giữ nếu embedding lỗi. | BR-U05-37, 39, 46 |
 
 ## 3. Bảo mật
 

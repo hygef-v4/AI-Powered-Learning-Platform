@@ -68,7 +68,7 @@ Không lưu từng webhook. Webhook hợp lệ được áp dụng bằng câu l
 
 ## 5. `CreditBalance`
 
-Cột `free_balance`, `free_period` (`yyyy-MM`), `purchased_balance` của `accounts`. Student, Teacher, Subject Manager được tặng định kỳ cùng một mức và được mua credit; tài khoản Admin không dùng các cột này. Student chỉ tiêu credit (tặng hay mua) cho `PRACTICE_GRADING` hợp lệ. Mọi thay đổi số dư khóa dòng tài khoản (`SELECT ... FOR UPDATE`) và đi cùng transaction với dòng nghiệp vụ tạo ra thay đổi (`payments` khi mua, `ai_suggestions` khi giữ/trừ).
+Cột `free_balance`, `free_period` (`yyyy-MM`), `purchased_balance` của `accounts`. Student, Teacher, Subject Manager được tặng định kỳ cùng một mức và được mua credit; tài khoản Admin không dùng các cột này. Student tiêu credit (tặng hay mua) cho PRACTICE_GRADING hợp lệ hoặc MATERIAL_SUMMARY đã kiểm quyền xem. Mọi thay đổi số dư khóa dòng tài khoản (`SELECT ... FOR UPDATE`) và đi cùng transaction với dòng nghiệp vụ tạo ra thay đổi (`payments` khi mua, `ai_suggestions` khi giữ/trừ).
 
 ## 6. Giữ và trừ credit
 
@@ -97,7 +97,7 @@ stateDiagram-v2
 
 | Port | Dùng bởi | Mô tả |
 |---|---|---|
-| `CreditPort` | U13 | `reserve(accountId, credits, purpose, attemptRef?)` → `{reserved, fromFree}`, `settle(accountId, reserved, fromFree, actualCredits)`, `release(accountId, reserved, fromFree)`, `balance(accountId)`; gọi trong transaction của U13; Admin không có ví; Student chỉ được reserve cho `PRACTICE_GRADING` với attempt hợp lệ |
+| `CreditPort` | U13 | `reserve(accountId, credits, purpose, attemptRef?)` → `{reserved, fromFree}`, `settle(accountId, reserved, fromFree, actualCredits)`, `release(accountId, reserved, fromFree)`, `balance(accountId)`; gọi trong transaction của U13; Admin không có ví; Student reserve cho PRACTICE_GRADING với attempt hợp lệ hoặc MATERIAL_SUMMARY đã xác minh qua U05/U13; child EMBEDDING không reserve riêng |
 | `SettingDefinition` `credit.monthlyFreeCredits` | U03 | Khai báo mục Credit cho màn Settings |
 | Event `payment.paid` | U16 | Báo mua credit thành công |
 

@@ -175,3 +175,14 @@ Thực tế code: không có `FakeAuthorizationPort` và `LoggingAuditAdapter` n
 - [ ] **Bước S6** - API `GET /api/v1/files/policies` (người đã đăng nhập) trả giới hạn hiện hành; sửa `files.yaml` (bỏ `AVATAR`, thêm API này); `frontend/src/shared/files/purposes.ts` lấy giới hạn từ API thay vì cố định.
 - [ ] **Bước S7** - Frontend `SettingListPage` (màn Setting List, mở từ Admin Dashboard), `SettingDetailPage` + `SettingValueForm` (màn Setting Detail).
 - [ ] **Bước S8** - Unit test và MockMvc: chỉ Admin, version lệch `409`, giá trị ngoài giới hạn `400`, khởi tạo không ghi đè, upload theo giới hạn mới (NFR-U03-63).
+
+## Revision: nút tóm tắt trên View Material — 2026-10-09
+
+Các bước cũ giả định summary/credit lúc upload được thay bởi yêu cầu hiện hành dưới đây; dấu [x] implementation cũ giữ lịch sử, không xác nhận code mới.
+
+- [ ] Upload MATERIAL và tạo lesson không gọi Gemini/quote/hold, không chặn vì thiếu credit; extraction worker lưu EXTRACTED, không summary/vector.
+- [ ] Migration/DTO U05 thêm EXTRACTED, summary_requested_by/at; hai giai đoạn deadline và guard jobType; U03 nhận MATERIAL_SUMMARY trên jobs.gemini.
+- [ ] View Material có SummaryAction cho Student/Teacher/Subject Manager theo quyền xem, kể cả Teacher xem học liệu môn chỉ đọc; Admin denied. GET lesson summary-credit/scan và POST summary (classId, Idempotency-Key).
+- [ ] Nhận yêu cầu atomically khóa lesson + kiểm quyền xem/AI guard + HOLD của requester + metadata/deadline + enqueue. Student MATERIAL_SUMMARY hợp lệ; child EMBEDDING cùng HOLD, không cho embedding độc lập. Hai actor bấm chỉ một payer; kết quả dùng chung, không charge lại.
+- [ ] Worker phục hồi/checkpoint/lease/fencing, một HOLD summary+embedding; AI deadline 24 giờ và HOLD fallback 25 giờ từ yêu cầu; lỗi settle thực dùng/trả dư, giữ summary khi embedding lỗi.
+- [ ] Kiểm upload zero-credit/no-AI; 3 role hợp lệ, ngoài scope/Admin denied; hai actor bấm đồng thời/duplicate; late first request sau upload >24 giờ vẫn hợp lệ; thiếu credit/AI guard trước nhận giữ EXTRACTED; no text/caption; cache summary; retry/crash/embedding lỗi; Student không truy xuất RAG hoặc soạn/chấm Graded.

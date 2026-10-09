@@ -28,7 +28,7 @@ Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký)
 5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi có yêu cầu AI chấm (giảng viên hoặc Student với bài `PRACTICE`).
 6. AI chỉ tạo đề xuất; giảng viên giữ quyết định phát hành đề và điểm cuối.
 7. Tài liệu nhóm chấm như bài `DOCUMENT` (tay hoặc AI đề xuất); điểm đóng góp từng thành viên mặc định bằng điểm tài liệu chung, giảng viên chấm tay khi cần.
-8. Chỉ Student, Teacher, Subject Manager ACTIVE có ví, grant tháng và mua credit. Student chỉ AI chấm Practice Text/Diagram Essay đã nộp (UC 29); Teacher AI proposals UC 38. Quiz/Code Lab tự chấm, không credit AI. Payment chỉ cộng credit khi webhook/đối soát đã xác minh, đúng một lần.
+8. Chỉ Student, Teacher, Subject Manager ACTIVE có ví, grant tháng và mua credit. Student được AI chấm Practice Text/Diagram Essay đã nộp (UC 29) và tóm tắt học liệu có quyền xem (luồng phụ UC 15); Teacher AI proposals UC 38. Quiz/Code Lab tự chấm, không credit AI. Payment chỉ cộng credit khi webhook/đối soát đã xác minh, đúng một lần.
 9. U08 giữ version/clone/copy; chỉ giảng viên dạy cả lớp nguồn/đích mới copy bài lớp. Không copy lịch, attempt, submission hoặc điểm; rubric sao thành rubric của bài đích, câu ngân hàng ghim version; không template/U10/diff screen.
 10. Bài `PRACTICE` Text/Diagram Essay không tự chấm khi nộp; mỗi attempt có tối đa một kết quả AI hợp lệ khi Student bấm chấm và đủ credit. Kết quả Practice không vào sổ điểm và Teacher không chấm.
 11. Audit chỉ thêm, không sửa/xóa; Admin tra cứu UC 73.

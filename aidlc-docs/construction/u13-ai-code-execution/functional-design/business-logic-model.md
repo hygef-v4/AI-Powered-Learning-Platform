@@ -1,6 +1,6 @@
 # U13 AI & Code Execution - Business Logic Model
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding học liệu (UC 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## Phân vai theo UC
 
@@ -12,7 +12,7 @@
 | 43 Create/Update/Delete Code Lab | Assignment Form (U08, U09) | Kiểm lời giải mẫu, lưu theo `contentHash`, trả lời `CodeLabCheckPort` (F3) |
 | 70–71 View Settings, Edit Setting | Setting List, Setting Detail (U03) | Khai báo và dùng mục nhóm AI (F5) |
 | 35, 42–45, 57 (luồng phụ) | Quiz Detail, Assignment Form (U08, U09), Question List (U06) | AI soạn câu hoặc khung (F1) |
-| 34, 55 (luồng phụ) | Material List, tab Materials (U05) | Giữ credit khi tải, ghi nhận tóm tắt/embedding (F6) |
+| 15, 34, 55 (luồng phụ) | View Material (U05) | Giữ credit khi bấm Tóm tắt tài liệu, ghi nhận summary/embedding (F6) |
 
 ## F1 - Tạo đề xuất câu hỏi hoặc khung
 1. Nhận yêu cầu: U06 (Question List, câu ngân hàng, R2) qua API U13; U08 (quiz, Text Essay, Code Lab của lớp hoặc của môn) và U09 (khung `SKELETON_DRAFT` Diagram Essay, bài nhóm) qua `AiDraftPort`. Kiểm vai trò (từ chối `ADMIN`, `STUDENT`), phạm vi R2/R3/R4, đích `DRAFT` và tham số (BR-U13-03, 10…13).
@@ -50,12 +50,12 @@
 3. `AiGuard`, `AiTaskHandler` đọc giá trị qua `SettingsPort` (cache 30 giây); giá trị mới áp cho yêu cầu kế tiếp.
 4. U16 hiển thị số liệu AI trên Admin Dashboard qua `AiUsageStatsPort.summarize(from, to)` gộp từ `ai_suggestions` (BR-U13-41).
 
-## F6 - Credit khi tải và quét học liệu (U05)
-1. Form tải lên (U05) gọi `AiUsagePort.quote(uploader)` → mức giữ và số dư (BR-U13-50).
-2. U05 tạo học liệu và gọi `hold(...)` trong cùng transaction: U13 tạo dòng giữ `MATERIAL_SUMMARY` và `CreditPort.reserve`; thiếu credit → U05 rollback, không tạo học liệu (BR-U13-51).
-3. Worker U05: begin(MATERIAL_SUMMARY, …, requestRef từng chunk/merge, holdId) tạo/nhận child call; AI tắt/hết trần BUSY. begin trả UsageStart: REPLAY dùng lại checkpoint, RUN mới gọi provider; complete(ticket, tokens, cost, checkpoint) lưu result và lượng dùng, cộng vào hold idempotent. U05 kiểm claim trong cùng transaction; ticket scanClaimId cũ bị từ chối. Embedding là child call requestRef riêng có hold_id; không ghi số liệu provider trên dòng HOLD.
-4. Quét kết thúc (`INDEXED`, `NO_TEXT`, `NO_CAPTION`, `FAILED`) → `release(holdId)`: `settle` theo tổng dùng thật và trả phần còn giữ; không gọi AI thì trả toàn bộ (BR-U13-52).
-5. `CreditReservationScanner` chốt HOLD quá 25 giờ bằng cùng `release(holdId)`: đã dùng thì settle và trả dư, chưa dùng mới hoàn toàn bộ; không quét child call credit_status NONE (BR-U13-53).
+## F6 - Credit khi người xem yêu cầu tóm tắt (U05)
+1. Upload/trích chữ không gọi U13. View Material gọi quote(requester) qua U05 sau kiểm quyền xem.
+2. U05 khóa lesson EXTRACTED chưa yêu cầu, kiểm quyền xem/AI guard, gọi hold cùng transaction ghi summary_requested_by/at và enqueue MATERIAL_SUMMARY. Student/Teacher/Subject Manager trong scope đều hợp lệ; thiếu credit rollback yêu cầu, giữ lesson. Hai người bấm chỉ một payer/HOLD.
+3. Worker dùng requester đã lưu và HOLD, begin theo chunk/merge/embedding: RUN gọi provider, REPLAY checkpoint, BUSY chờ; child calls không reserve thêm. U05 kiểm claim/hạn và U13 kiểm ticket cùng transaction complete/fail; không đọc repository chung.
+4. INDEXED/FAILED/hết hạn chốt lượng dùng thật, trả dư; embedding lỗi giữ summary. Giai đoạn AI có deadline 24 giờ từ nhận yêu cầu, HOLD 25 giờ từ nhận yêu cầu là dự phòng. Giai đoạn trích chữ trước yêu cầu không có HOLD.
+5. Người xem khác dùng summary/trạng thái có sẵn; không giữ credit của người poll hoặc người bấm trùng. Student không được truy xuất RAG, soạn đề hoặc gọi EMBEDDING độc lập.
 
 ## Checkpoint học liệu và hold
 

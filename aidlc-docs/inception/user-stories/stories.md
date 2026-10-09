@@ -327,11 +327,13 @@
 - **When** sửa thông tin hoặc xóa học liệu của môn trên Material Detail
 - **Then** sửa chỉ đổi tên, không đổi tệp hay link; học liệu bị xóa được lưu trữ, không hiển thị/dùng cho RAG; tham chiếu lịch sử và audit được giữ
 
-#### Scenario 6 - Tự tóm tắt khi tải lên
+#### Scenario 6 - Upload chưa tóm tắt; Chủ nhiệm môn yêu cầu khi xem
 
-- **Given** Chủ nhiệm môn tải lên một học liệu có chữ hoặc video có phụ đề
-- **When** bước quét chạy
-- **Then** AI tạo bản tóm tắt, trừ credit của Chủ nhiệm môn theo lượng sử dụng thật trên phần đã giữ lúc tải lên; học liệu không có chữ thì trả lại credit; không đủ credit thì không tải lên được
+- **Given** Chủ nhiệm môn có R2 tải học liệu hợp lệ, kể cả khi số dư credit bằng 0
+- **When** upload và trích chữ hoàn tất
+- **Then** học liệu xem/tải được, chưa có summary/embedding và không giữ/trừ credit
+- **When** Chủ nhiệm môn bấm "Tóm tắt tài liệu" trên Material Detail
+- **Then** server kiểm quyền xem, giữ credit của người bấm và chạy tóm tắt/embedding; thiếu credit thì học liệu vẫn còn, có thể mua thêm rồi yêu cầu; kết quả dùng chung trong phạm vi
 
 ### US-CNT-002 - Quản lý nội dung riêng của lớp
 
@@ -365,11 +367,11 @@
 - **When** mở tab Materials, chọn Material Detail rồi sửa thông tin hoặc xóa học liệu
 - **Then** chỉ tác động học liệu của lớp, học liệu của môn chỉ đọc; sửa không đổi tệp hay link, học liệu bị xóa được lưu trữ, không xóa tham chiếu lịch sử
 
-#### Scenario 5 - Tự tóm tắt khi tải lên
+#### Scenario 5 - Teacher yêu cầu tóm tắt khi xem
 
-- **Given** giảng viên tải lên một học liệu lớp có chữ hoặc video có phụ đề
-- **When** bước quét chạy
-- **Then** AI tạo bản tóm tắt, trừ credit của giảng viên chỉ khi thật sự gọi AI; người học trong lớp thấy bản tóm tắt trên Learning Material
+- **Given** Teacher/Subject Manager có R3/R4 xem học liệu của lớp hoặc học liệu của môn dùng trong lớp mình dạy
+- **When** bấm "Tóm tắt tài liệu" trên Material Detail sau khi trích chữ xong
+- **Then** quyền xem đủ để yêu cầu, không cần quyền sửa học liệu của môn; người bấm chịu credit, upload trước đó không giữ credit; có summary sẵn thì dùng lại không gọi/trừ thêm
 
 ### US-CNT-004 - Thông báo trong lớp
 
@@ -633,7 +635,16 @@
 - **When** người học dùng URL/ID trực tiếp
 - **Then** hệ thống từ chối mà không tiết lộ nội dung hoặc metadata nhạy cảm
 
+#### Scenario - Student tóm tắt tài liệu được xem
+
+- **Given** Student ghi danh ACTIVE, lớp OPEN, module/lesson ACTIVE thuộc phạm vi lớp và đã trích chữ thành công
+- **When** bấm "Tóm tắt tài liệu" trên Learning Material
+- **Then** server kiểm lại quyền xem và số dư của Student; một yêu cầu dùng chung cùng một HOLD, chỉ tính AI thật; thiếu credit/AI đang tắt trước nhận yêu cầu không ảnh hưởng xem/tải
+- **Given** hai người cùng bấm hoặc người khác mở sau khi có summary
+- **Then** chỉ một yêu cầu được nhận, chỉ người tạo yêu cầu chịu credit; người còn lại thấy trạng thái/kết quả, không giữ credit thêm; không cho Student gọi embedding độc lập hay AI soạn/chấm Graded
+
 ## 6. Miền Rubric Bank and Quiz Questions
+
 
 ### US-QBK-001 - Quản lý rubric của bài
 

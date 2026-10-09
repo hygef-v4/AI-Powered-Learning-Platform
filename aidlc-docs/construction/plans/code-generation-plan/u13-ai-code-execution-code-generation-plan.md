@@ -1,6 +1,6 @@
 # U13 AI & Code Execution - Code Generation Plan
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding học liệu (UC 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 **Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
 
@@ -13,8 +13,8 @@
 ## 1. Bối cảnh
 
 - **Story**: US-AIG-001, US-AIG-002, US-AIG-003, US-ASM-005 (phần chạy kiểm), US-ASM-012 (phần AI chấm Practice).
-- **Primary UC hiện hành**: Không primary UC (support). U13 chạy AI/Judge0 cho UC 25 (U11), 29 (U11), 38 (U15), 43 (U08, U09); khai báo mục nhóm AI cho Settings UC 70–71 (U03); luồng phụ AI soạn đề của UC 35, 42–45 (U08, U09), 57 (U06) và giữ/ghi nhận credit khi tải học liệu UC 34, 55 (U05). Supporting flows theo current-srs-contract.md.
-- **Quyết định 2026-10-09**: Admin không có ví, không dùng AI; cấu hình AI là `SettingDefinition` nhóm AI trên Settings của U03 (bỏ bảng `ai_services`, popup AI Setting, màn AI Usage và API `/admin/ai/*`); số liệu AI cho Admin Dashboard (U16) qua `AiUsageStatsPort`; U10 đã xóa (không còn template; AI soạn câu cho bài của môn qua U08); không còn ngân hàng lớp; U13 tự lưu kết quả kiểm lời giải mẫu theo `contentHash` của phiên bản câu `CODE` (bảng `code_runs`, bỏ `QuestionVerificationPort`); tóm tắt học liệu `MATERIAL_SUMMARY` và giữ credit khi tải lên (`AiUsagePort.quote/hold/release`).
+- **Primary UC hiện hành**: Không primary UC (support). U13 chạy AI/Judge0 cho UC 25 (U11), 29 (U11), 38 (U15), 43 (U08, U09); khai báo mục nhóm AI cho Settings UC 70–71 (U03); luồng phụ AI soạn đề của UC 35, 42–45 (U08, U09), 57 (U06) và giữ/ghi nhận credit khi người xem yêu cầu tóm tắt UC 15, 34, 55 (U05). Supporting flows theo current-srs-contract.md.
+- **Quyết định 2026-10-09**: Admin không có ví, không dùng AI; cấu hình AI là `SettingDefinition` nhóm AI trên Settings của U03 (bỏ bảng `ai_services`, popup AI Setting, màn AI Usage và API `/admin/ai/*`); số liệu AI cho Admin Dashboard (U16) qua `AiUsageStatsPort`; U10 đã xóa (không còn template; AI soạn câu cho bài của môn qua U08); không còn ngân hàng lớp; U13 tự lưu kết quả kiểm lời giải mẫu theo `contentHash` của phiên bản câu `CODE` (bảng `code_runs`, bỏ `QuestionVerificationPort`); tóm tắt học liệu `MATERIAL_SUMMARY` và giữ credit khi bấm Tóm tắt tài liệu (`AiUsagePort.quote/hold/release`).
 - **Thiết kế nguồn**: `construction/u13-ai-code-execution/` (functional-design, nfr-requirements, nfr-design, infrastructure-design). Tham khảo code: `../demo_do_an` (`Judge0CodeRunner`, `SolutionVerifier`, `PromptInjectionScanner`, `docker-compose.yml`, `judge0.conf`).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -85,7 +85,7 @@ PostgreSQL `ai_suggestions`, `code_runs`; kết quả chạy code mới nhất c
 ### Nhóm B - AI
 
 - [ ] **Bước 3** - Domain AI (`AiSuggestion`, `AiTaskType` 6 giá trị); `AiGateway` + `GeminiAdapter` (`generateContent`, JSON schema, token, timeout theo model) + `FakeAiGateway` (P2).
-- [ ] **Bước 4** - `AiSettingDefinitions` (các mục `ai.*` theo `domain-entities.md` §2) và `AiSettings` đọc qua `SettingsPort`; `AiGuard`: từ chối `ADMIN`; Student chỉ `PRACTICE_GRADING` cho attempt Text/Diagram Essay của mình; Teacher/Subject Manager theo R2/R3/R4; kill-switch, trần ngày Redis, rate limit theo Settings và `CreditPort.reserve` theo purpose/attemptRef (P1, BR-U13-02, 03, 40).
+- [ ] **Bước 4** - `AiSettingDefinitions` (các mục `ai.*` theo `domain-entities.md` §2) và `AiSettings` đọc qua `SettingsPort`; `AiGuard`: từ chối `ADMIN`; Student được PRACTICE_GRADING cho attempt Text/Diagram Essay của mình hoặc MATERIAL_SUMMARY qua U05 theo quyền xem; Teacher/Subject Manager theo R2/R3/R4; kill-switch, trần ngày Redis, rate limit theo Settings và `CreditPort.reserve` theo purpose/attemptRef (P1, BR-U13-02, 03, 40).
 - [ ] **Bước 5** - `PromptBuilder` (khối `<data>`, prompt theo task có version), `InjectionScanner`, `OutputValidator` (schema + U06/U09/rubric) (P3, P4, BR-U13-07).
 - [ ] **Bước 6** - `AiSuggestionService` + `AiTaskHandler`: `QUESTION_DRAFT` (đích ngân hàng môn R2, quiz/bài của lớp R3/R4, quiz/bài của môn R2; RAG phạm vi lớp hoặc môn; trích dẫn; nhận/bỏ) và `SKELETON_DRAFT` cho U09 (kiểm `validateSkeleton`, BR-U06-30) (F1, BR-U13-10…15).
 - [ ] **Bước 7** - `GRADING_PROPOSAL` cho giảng viên chính của lớp (từng bài và `requestBatch`, hạn 5 phút tính từ lúc xử lý từng bài; bài của môn chỉ sinh viên lớp mình) và `PRACTICE_GRADING` cho Student (văn bản phẳng + XML rút gọn U09, rubric khóa và `RubricPort.score`); Practice tối đa một dòng hợp lệ mỗi attempt, ghi qua `PracticeResultPort.record`, không vào sổ điểm (F2, F3a, BR-U13-20…24).
@@ -98,21 +98,21 @@ PostgreSQL `ai_suggestions`, `code_runs`; kết quả chạy code mới nhất c
 - [ ] **Bước 11** - `CodeRunService`: `TRY` đồng bộ + rate limit (chủ lượt đang làm); `VERIFY` (R3/R4 bài của lớp hoặc R2 bài của môn, bài `DRAFT`, câu thuộc bài; `ContentHasher`; dùng lại dòng cùng hash) và `GRADE`/`regrade` qua `code_runs` + job; `CodeScorer`; ẩn chi tiết test ẩn; `CodeRunPendingSweeper` (F3, F4, P7, P8, BR-U13-30…37).
 - [ ] **Bước 12** - `CodeLabCheckService` cài `CodeLabCheckPort` (`check` cho duyệt U08, `statusOf` cho U09) từ dòng `code_runs` `VERIFY` mới nhất cùng `contentHash`; `CodeRunHandler` `GRADE`: bài `GRADED` gọi `CodeGradedPort.onGraded`, bài `PRACTICE` gọi `PracticeResultPort.record`; ghi `attempts.run_result` qua `AttemptRunResultPort`.
 - [ ] **Bước 13** - Thay adapter tạm: `AiDraftPort` (U06, U08, U09), `CodeRunPort` và `PracticeGradingPort` (U11), `AiGradingPort` và `CodeRunPort` (U15), `CodeLabCheckPort` (U08, U09), `AiUsagePort` (U05), `CreditUsagePort` (U07: đọc `ai_suggestions` của chính chủ ví, phân trang 20, cho My Credit Package).
-- [ ] **Bước 14** - Unit test mọi `BR-U13-xx` với `FakeAiGateway`/`FakeCodeRunner`/`SettingsPort` giả (gồm Admin bị từ chối, kill-switch đọc từ Settings, giữ credit khi tải học liệu, kiểm lời giải theo hash).
+- [ ] **Bước 14** - Unit test mọi `BR-U13-xx` với `FakeAiGateway`/`FakeCodeRunner`/`SettingsPort` giả (gồm Admin bị từ chối, kill-switch đọc từ Settings, giữ credit khi yêu cầu tóm tắt học liệu, kiểm lời giải theo hash).
 - [ ] **Bước 15** - Tóm tắt: `aidlc-docs/construction/u13-ai-code-execution/code/business-logic-summary.md`.
 
 ### Nhóm D - Dữ liệu và tích hợp
 
 - [ ] **Bước 16** - Flyway `db/migration/aiexecution/V20260925_2000__create_ai_suggestions_code_runs.sql` theo `infrastructure-design.md` §4 (`ai_suggestions` có `task_type`, `model`, `hold_id`, `request_ref`, `reserve_expires_at`; `code_runs`; không tạo `ai_services`, không seed).
 - [ ] **Bước 17** - JPA repository.
-- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: AI bị từ chối không trừ credit; lỗi chốt lượng dùng thật và trả dư, chưa dùng mới hoàn toàn bộ; trần ngày và quota Gemini báo "Hệ thống đang bận"; đổi `ai.enabled` trên Settings có hiệu lực ≤ 30 giây; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry; tải học liệu thiếu credit không tạo học liệu, `NO_TEXT` trả toàn bộ, `BUSY` giữ credit tới khi quét xong. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED`, chốt lượng dùng thật/trả dư rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn; kiểm lời giải rồi sửa test → duyệt bị chặn.
+- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test: AI bị từ chối không trừ credit; lỗi chốt lượng dùng thật và trả dư, chưa dùng mới hoàn toàn bộ; trần ngày và quota Gemini báo "Hệ thống đang bận"; đổi `ai.enabled` trên Settings có hiệu lực ≤ 30 giây; U05 embedding và U13 tạo nội dung dùng `requestRef` riêng, không trừ trùng khi retry; upload thiếu credit vẫn tạo học liệu/trích chữ; chỉ thiếu credit lúc yêu cầu summary mới từ chối yêu cầu; NO_TEXT không có HOLD; BUSY sau nhận giữ HOLD tới terminal/deadline. Chấm Practice: đủ/thiếu credit, quá 5 phút → `FAILED`, chốt lượng dùng thật/trả dư rồi bấm lại được, chỉ một kết quả hợp lệ mỗi attempt. Judge0 thật: 7 ngôn ngữ, đúng/sai/quá giờ/quá bộ nhớ, mã mở mạng bị chặn; kiểm lời giải rồi sửa test → duyệt bị chặn.
 - [ ] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
 
 ### Nhóm E - API
 
 - [x] **Bước 20** - `/contracts/openapi/ai-execution.yaml` (U13 không phát event); cần sửa theo mục 8.
 - [ ] **Bước 21** - Controller + DTO + validation.
-- [ ] **Bước 22** - Test MockMvc: Admin bị từ chối mọi API U13; Student chỉ `TRY` lượt của mình và đọc kết quả Practice của chính mình, không gọi task AI khác hoặc đọc đề xuất của giảng viên; `TRY` dùng Judge0 không trừ credit; `TRY` quá 5/phút `429`; `VERIFY` ngoài phạm vi bài `403`.
+- [ ] **Bước 22** - Test MockMvc: Admin bị từ chối mọi API U13; Student TRY lượt của mình, đọc kết quả Practice của mình và yêu cầu summary qua U05 theo quyền xem, không gọi các task AI khác hoặc đọc đề xuất của giảng viên; `TRY` dùng Judge0 không trừ credit; `TRY` quá 5/phút `429`; `VERIFY` ngoài phạm vi bài `403`.
 - [ ] **Bước 23** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm F - Frontend
@@ -152,7 +152,7 @@ PostgreSQL `ai_suggestions`, `code_runs`; kết quả chạy code mới nhất c
 
 ## 7. Tóm tắt học liệu - 2026-10-09
 
-- [ ] Thêm loại việc `MATERIAL_SUMMARY` (model mặc định `gemini-2.5-flash`): `AiUsagePort.begin` nhận loại việc này cho người tải lên học liệu (Teacher, Subject Manager); thêm giá trị tương ứng vào `CreditPurpose` của U07.
+- [ ] Thêm loại việc `MATERIAL_SUMMARY` (model mặc định `gemini-2.5-flash`): `AiUsagePort.begin` nhận loại việc này cho người bấm Tóm tắt tài liệu (Student, Teacher, Subject Manager) đã có quyền xem; thêm giá trị tương ứng vào `CreditPurpose` của U07.
 - [ ] Khai báo model của `MATERIAL_SUMMARY` trong nhóm AI trên Settings (`ai.materialSummary.model`, U03 giữ chung Settings).
 
 ## 8. Revision theo bản 73 UC - 2026-10-09
@@ -173,7 +173,7 @@ Port và code (khung hiện có trong `backend/src/main/java/edu/aiplatform`):
 - [ ] `AiDraftPort`, `DraftRequest`: bỏ đích template; đích là ngân hàng môn, quiz/bài của lớp, quiz/bài của môn; javadoc người dùng U06, U08, U09 (bỏ U10).
 - [ ] Thêm `AiSettingDefinitions` (`SettingDefinition` nhóm `AI`); bỏ `AiAdminService`, `AiAdminController`, `AiUsagePage`, `AiSettingsDialog`.
 - [ ] `AiGuard` từ chối `ADMIN` cho mọi task (kể cả gọi API trực tiếp).
-- [ ] Mức giữ credit tối đa khi tải học liệu (giới hạn đầu vào 200 000 ký tự giữ nguyên) không vượt mức tặng mặc định 100 credit/tháng (U07 đổi mặc định `credit.monthlyFreeCredits`, người dùng chốt 2026-10-09); unit test kiểm.
+- [ ] Mức giữ credit tối đa khi yêu cầu tóm tắt học liệu (giới hạn đầu vào 200 000 ký tự giữ nguyên) không vượt mức tặng mặc định 100 credit/tháng (Settings credit.monthlyFreeCredits); upload không phụ thuộc mức giữ; unit test kiểm.
 
 Migration:
 - [ ] Đổi `V20260925_2000__u13_ai.sql` thành `db/migration/aiexecution/V20260925_2000__create_ai_suggestions_code_runs.sql` (chưa áp dụng nên sửa tại chỗ): bỏ `ai_services` và seed; `ai_suggestions` dùng `task_type`, `model` thay FK `ai_service_id`, thêm `hold_id`, `request_ref`, `reserve_expires_at`; thêm bảng `code_runs`.
@@ -189,3 +189,16 @@ Migration:
 - [ ] Cài findHold, HoldSnapshot, UsageStart/CallSnapshot và complete(ticket, tokens, cost, checkpoint), fail(ticket, usage?) theo contract U05; begin trả checkpoint khi REPLAY, ticket có metadata scanClaimId khi RUN. Không thêm bảng/cột checkpoint hoặc HTTP API.
 - [ ] Kiểm ticket/claim metadata và khóa HOLD khi complete/fail/release; READY không cộng lại, stale ticket/HOLD đã chốt bị từ chối. Scanner chỉ xử lý RESERVED, chốt lượng đã dùng bằng CreditPort.settle, bằng 0 mới CreditPort.release.
 - [ ] Kịch bản kiểm: lỗi embedding sau summary, scanner 25 giờ với lượng dùng > 0/0, child NONE không hoàn HOLD, READY replay và complete cạnh tranh release. Đây là việc chưa triển khai, không thay dấu hoàn tất cũ.
+
+## Revision: nút tóm tắt trên View Material — 2026-10-09
+
+Các bước cũ giả định summary/credit lúc upload được thay bởi yêu cầu hiện hành dưới đây; dấu [x] implementation cũ giữ lịch sử, không xác nhận code mới.
+
+- [ ] Upload MATERIAL và tạo lesson không gọi Gemini/quote/hold, không chặn vì thiếu credit; extraction worker lưu EXTRACTED, không summary/vector.
+- [ ] Migration/DTO U05 thêm EXTRACTED, summary_requested_by/at; hai giai đoạn deadline và guard jobType; U03 nhận MATERIAL_SUMMARY trên jobs.gemini.
+- [ ] View Material có SummaryAction cho Student/Teacher/Subject Manager theo quyền xem, kể cả Teacher xem học liệu môn chỉ đọc; Admin denied. GET lesson summary-credit/scan và POST summary (classId, Idempotency-Key).
+- [ ] Nhận yêu cầu atomically khóa lesson + kiểm quyền xem/AI guard + HOLD của requester + metadata/deadline + enqueue. Student MATERIAL_SUMMARY hợp lệ; child EMBEDDING cùng HOLD, không cho embedding độc lập. Hai actor bấm chỉ một payer; kết quả dùng chung, không charge lại.
+- [ ] Worker phục hồi/checkpoint/lease/fencing, một HOLD summary+embedding; AI deadline 24 giờ và HOLD fallback 25 giờ từ yêu cầu; lỗi settle thực dùng/trả dư, giữ summary khi embedding lỗi.
+- [ ] Kiểm upload zero-credit/no-AI; 3 role hợp lệ, ngoài scope/Admin denied; hai actor bấm đồng thời/duplicate; late first request sau upload >24 giờ vẫn hợp lệ; thiếu credit/AI guard trước nhận giữ EXTRACTED; no text/caption; cache summary; retry/crash/embedding lỗi; Student không truy xuất RAG hoặc soạn/chấm Graded.
+
+AiUsagePort.checkAvailability(task, actor, target) dùng AiGuard U13, trả allowed/reason trước nhận yêu cầu, không reserve; hold cũng kiểm guard để tránh khoảng trống giữa preflight và nhận. Worker begin kiểm lại guard; nếu bị chặn sau nhận thì BUSY/retry theo deadline. U13 không đọc bảng lesson: U05 truyền target/context đã kiểm, rồi U13 xác minh actor/task/target/HOLD.

@@ -61,7 +61,7 @@
 | BR-U03-59 | Handler của unit sở hữu phải idempotent vì một việc có thể được gửi hơn một lần. | Thiết kế |
 | BR-U03-60 | Việc hẹn giờ (mở/đóng bài, tự nộp khi hết giờ, nhắc hạn, trả credit giữ quá hạn, đối soát PayOS) không dùng message hẹn giờ: mỗi unit đăng ký `ScheduledScanner` chạy mỗi phút trong worker, đọc mốc thời gian trên bảng của mình và cập nhật idempotent. | Quyết định 2026-10-03 |
 | BR-U03-61 | Frontend xem trạng thái việc nền qua API của unit sở hữu (cột trạng thái của dòng nghiệp vụ); U03 không có API trạng thái job. | SEC-006 |
-| BR-U03-63 | Mỗi `jobType` thuộc đúng một trong 7 queue: `jobs.triggered` (việc nội bộ phát sinh sau thao tác người dùng, ví dụ tạo tài liệu nhóm cho nhóm mới), `jobs.email` (SMTP; priority: OTP trước email thông báo), `jobs.gemini` (gọi Gemini: quét học liệu, việc AI), `jobs.youtube` (YouTube Data API và phụ đề), `jobs.code` (Judge0), `jobs.drive` (dọn tệp Google Drive), `jobs.payos` (tra PayOS). | Câu N3 |
+| BR-U03-63 | Mỗi `jobType` thuộc đúng một trong 7 queue: `jobs.triggered` (việc nội bộ phát sinh sau thao tác người dùng: tạo tài liệu nhóm, LESSON_SCAN trích chữ không AI), `jobs.email` (SMTP; priority: OTP trước email thông báo), `jobs.gemini` (gọi Gemini: MATERIAL_SUMMARY sau nút View Material, việc AI), `jobs.youtube` (YouTube Data API và phụ đề), `jobs.code` (Judge0), `jobs.drive` (dọn tệp Google Drive), `jobs.payos` (tra PayOS). | Câu N3 |
 | BR-U03-64 | Phản ứng nghiệp vụ bắt buộc giữa các unit (tạo đánh giá khi nộp, tự nộp khi ngưng giao, nhận điểm Code Lab) **không** dùng event: unit nguồn gọi port do unit nhận cài, trong cùng transaction; cài đặt port ghi dòng của unit nhận hoặc gọi `JobPort.enqueue`. | Quyết định 2026-09-26 |
 
 ## 7. Sự kiện thông báo
@@ -83,3 +83,7 @@
 | BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký) không phải cài đặt, vẫn là biến môi trường. | SEC-006 |
 | BR-U03-86 | Giá trị mới có hiệu lực trong tối đa 30 giây ở mọi instance backend và worker; thao tác đang chạy giữ giá trị cũ; dữ liệu đã tạo (tệp đã tải, giao dịch cũ) không bị ảnh hưởng. | FR-033 |
 | BR-U03-87 | Mục nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). Trần 50 MB do Nginx và thư mục tạm; trần 5 MB theo BR-U09-34. | FR-013, FR-033 |
+
+## Upload material và nút tóm tắt (revision 2026-10-09)
+
+U03 upload MATERIAL chỉ lưu tệp và trả FileRef; không tóm tắt, không gọi Gemini, không quote/hold/reserve credit. U05 gắn tệp/tạo lesson và trích chữ/phụ đề không AI. Student, Teacher và Subject Manager yêu cầu từ nút Tóm tắt tài liệu trên View Material theo quyền xem U05/U04; U05 gọi U13 giữ credit của người bấm rồi enqueue MATERIAL_SUMMARY qua JobPort U03 (jobs.gemini). Quyền upload vẫn chỉ Teacher/Subject Manager; Student có nút tóm tắt không được upload MATERIAL. Generic worker retry không tự tạo yêu cầu AI cho upload.

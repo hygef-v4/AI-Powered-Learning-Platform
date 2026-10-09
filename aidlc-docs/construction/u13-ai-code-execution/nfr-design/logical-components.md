@@ -1,6 +1,6 @@
 # U13 AI & Code Execution - Logical Components
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding học liệu (UC 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## 1. Sơ đồ
 
@@ -28,7 +28,7 @@
  +--------------------------------------------------------------------------------------+
 ```
 
-**Text alternative**: U06, U08, U09 gọi `AiSuggestionService` để tạo đề xuất câu hoặc khung; U15 gọi để đề xuất chấm; U11 gọi để chấm Practice, chạy thử và chấm code; U05 gọi `AiUsageService` để báo mức giữ, giữ credit khi tải học liệu và ghi nhận lần tóm tắt/embedding. `AiGuard` kiểm vai trò, đọc kill-switch, trần và tần suất từ Settings (U03), giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài nộp (văn bản phẳng và XML rút gọn qua U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo dòng `code_runs` và job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định và báo U15. `CodeLabCheckService` trả trạng thái kiểm lời giải cho U08, U09. `AiSettingDefinitions` khai báo mục AI cho Settings; `AiUsageStatsService` cấp số liệu cho Admin Dashboard của U16. Các sweeper và scanner gửi lại việc bị mất, hết hạn chấm và trả credit giữ quá hạn.
+**Text alternative**: U06, U08, U09 gọi `AiSuggestionService` để tạo đề xuất câu hoặc khung; U15 gọi để đề xuất chấm; U11 gọi để chấm Practice, chạy thử và chấm code; U05 gọi `AiUsageService` để báo mức giữ, giữ credit khi yêu cầu tóm tắt học liệu và ghi nhận lần tóm tắt/embedding. `AiGuard` kiểm vai trò, đọc kill-switch, trần và tần suất từ Settings (U03), giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài nộp (văn bản phẳng và XML rút gọn qua U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo dòng `code_runs` và job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định và báo U15. `CodeLabCheckService` trả trạng thái kiểm lời giải cho U08, U09. `AiSettingDefinitions` khai báo mục AI cho Settings; `AiUsageStatsService` cấp số liệu cho Admin Dashboard của U16. Các sweeper và scanner gửi lại việc bị mất, hết hạn chấm và trả credit giữ quá hạn.
 
 ## 2. Thành phần
 

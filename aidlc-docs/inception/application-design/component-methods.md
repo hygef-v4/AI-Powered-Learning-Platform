@@ -91,7 +91,7 @@ listAnnouncements(actor, classId?, page) -> AnnouncementPage // UC 30, classes O
 updateAnnouncement(teacher, announcementId, patch, version) / deleteAnnouncement(teacher, announcementId, version) // UC 36
 ```
 
-Không comments hoặc rescan API; worker summary/embedding và retry theo U05. Update/delete announcement không phát notification mới.
+Không comments hoặc rescan API; requestMaterialSummary(actor, lessonId, classId?, idempotencyKey) từ màn xem: quyền xem R2/R3/R4/R5, giữ credit của requester; upload không AI/credit. Worker summary/embedding và retry theo U05. Update/delete announcement không phát notification mới.
 
 ## Rubric & Subject Question Bank (U06)
 
@@ -130,7 +130,7 @@ release(accountId, reserved, fromFree) -> void                          // hoàn
 listCreditUsage(account, page) -> Page<CreditUsage>     // qua CreditUsagePort (U13 cài)
 ```
 
-Các method thanh toán và số dư phục vụ tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` (Admin không có ví); không có sổ cái, phần giữ/trừ nằm trên `ai_suggestions`. `STUDENT` chỉ được dùng credit cho AI chấm attempt `PRACTICE` Text Essay/Diagram Essay của chính mình; mọi yêu cầu AI khác bị backend từ chối.
+Các method thanh toán và số dư phục vụ tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` (Admin không có ví); không có sổ cái, phần giữ/trừ nằm trên `ai_suggestions`. `STUDENT` dùng credit cho AI chấm attempt PRACTICE Text/Diagram Essay của mình hoặc MATERIAL_SUMMARY qua U05 khi có quyền xem; EMBEDDING chỉ child của HOLD này. Các AI khác bị từ chối.
 
 ## Assessment, Types & Copy (U08, U09)
 

@@ -6,11 +6,11 @@
 
 | Thành phần | Chạy ở |
 |---|---|
-| `ContentController`, `LessonViewController`, service quản lý học liệu, `PublishedContentService`, `RetrievalService`, `AnnouncementController/Service` | `backend` |
-| `LessonScanHandler`, `LessonPendingSweeper` | `worker` |
+| `ContentController`, `LessonViewController`, service quản lý học liệu, SummaryRequestService, `PublishedContentService`, `RetrievalService`, `AnnouncementController/Service` | `backend` |
+| `LessonScanHandler`, `MaterialSummaryHandler`, `LessonPendingSweeper` | `worker` |
 | Bảng `modules`, `lessons` (cột `summary`, `embedding vector(768)`), `announcements` | `postgres` (image có pgvector) |
 | Trần chi phí Gemini, credit | Qua `AiUsagePort` của U13 (U05 không có key Redis riêng) |
-| Queue | `jobs.gemini` (`LESSON_SCAN`, concurrency 4), `jobs.youtube` (`YOUTUBE_CAPTION`) |
+| Queue | `jobs.triggered` (`LESSON_SCAN`, trích chữ concurrency 4), `jobs.gemini` (`MATERIAL_SUMMARY`, theo concurrency AI U13), `jobs.youtube` (`YOUTUBE_CAPTION`) |
 | Event | `EventPublisherPort` (U03) phát sau commit trên `platform.events`: `class.announcement-posted` (U16 tiêu thụ) |
 
 ## 2. Thay đổi hạ tầng dùng chung
@@ -33,7 +33,7 @@
 
 `db/migration/content/V20260925_1200__create_modules_lessons_announcements.sql` (chưa áp dụng nên sửa trực tiếp, không cần migration bổ sung):
 - `modules` (FK `subject_id` → `subjects`, index `(subject_id, order_no)`).
-- `lessons` (FK `module_id` → `modules`, `class_id` → `course_classes` cho phép rỗng, `uploaded_by` → `accounts`; cột `uploaded_at`, `summary` ≤ 4 000 ký tự cho phép rỗng; CHECK `source_type` khớp cột tệp/YouTube; `embedding vector(768)` với index `USING hnsw (embedding vector_cosine_ops)`; index `(module_id, class_id, order_no)`, `(scan_status, scanned_at)` cho sweeper).
+- `lessons` (FK `module_id` → `modules`, `class_id` → `course_classes` cho phép rỗng, `uploaded_by` → `accounts`; cột uploaded_at, summary_requested_by (FK accounts, rỗng trước yêu cầu), summary_requested_at, scan_status gồm EXTRACTED, scan_expires_at/retry/claim/lease; `summary` ≤ 4 000 ký tự cho phép rỗng; CHECK `source_type` khớp cột tệp/YouTube; `embedding vector(768)` với index `USING hnsw (embedding vector_cosine_ops)`; index `(module_id, class_id, order_no)`, `(scan_status, scanned_at)` cho sweeper).
 - `announcements` (FK `class_id` → `course_classes`, `author_id`, `updated_by`, `deleted_by` → `accounts`; `status` `VISIBLE`/`DELETED`; `version` NOT NULL mặc định 0; `updated_at`, `deleted_at`; index `(class_id, status, posted_at)` cho feed).
 
 ## 5. Compliance

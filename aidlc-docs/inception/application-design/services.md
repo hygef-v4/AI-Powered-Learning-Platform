@@ -50,13 +50,13 @@ Tên service dưới đây là tên logic của module; tên class cụ thể (v
 4. Nội dung đã phát hành bất biến; version/clone/copy ở U08, không template/U10. Copy chỉ bài lớp và người copy phải dạy cả lớp nguồn/đích.
 
 ### Quét học liệu cho RAG
-1. Chủ nhiệm môn tạo module trên Material List; học liệu môn tải từ đó, học liệu lớp tải từ tab Materials của Teacher Class Detail. API U05 kiểm scope và giữ credit trước tạo lesson trong cùng transaction; thiếu credit không tạo lesson. U03 upload byte là bước staging riêng, không đồng nghĩa đã tạo học liệu.
-2. Lesson hiện ngay; worker claim bằng lease, trích chữ/caption, tóm tắt theo đoạn, lưu summary đã hoàn thành rồi embedding từ summary. Mỗi lời gọi qua AiUsagePort/Settings kiểm trần và ghi lượng sử dụng thật vào hold của uploader. Không OCR/phiên âm và không quét lại thủ công.
-3. Lỗi tạm chuyển PENDING trước retry; BUSY tự gửi lại mỗi 30 phút tới scan_expires_at tuyệt đối (24 giờ từ khi tạo). Lease SCANNING hết hạn được sweeper phục hồi; fencing token ngăn worker cũ ghi kết quả. Job trùng không xử lý đồng thời cùng lesson.
-4. INDEXED/NO_TEXT/NO_CAPTION/FAILED chốt hold: chỉ settle lời gọi AI thật, trả phần chưa dùng; chưa gọi AI thì trả toàn bộ. Embedding lỗi sau summary không xóa summary đã có. Hold scanner U13 ở 25 giờ là dự phòng, không thay giới hạn scan 24 giờ.
+1. Chủ nhiệm môn tạo module trên Material List; học liệu môn tải từ đó, học liệu lớp tải từ tab Materials của Teacher Class Detail. API U05 kiểm scope và tạo lesson không AI/credit; khi người xem bấm Tóm tắt tài liệu mới kiểm quyền xem và giữ credit trong transaction nhận yêu cầu. U03 upload byte là bước staging riêng, không đồng nghĩa đã tạo học liệu.
+2. Lesson hiện ngay; worker chỉ trích chữ/caption tới EXTRACTED. Sau nút Tóm tắt tài liệu mới claim giai đoạn AI, tóm tắt theo đoạn, lưu summary rồi embedding từ summary. Mỗi lời gọi qua AiUsagePort/Settings kiểm trần và ghi lượng sử dụng thật vào hold của người yêu cầu tóm tắt. Không OCR/phiên âm và không quét lại thủ công.
+3. Lỗi tạm chuyển PENDING trước retry; BUSY tự gửi lại mỗi 30 phút tới scan_expires_at tuyệt đối (trích chữ: 24 giờ từ upload; AI: 24 giờ từ yêu cầu). Lease SCANNING hết hạn được sweeper phục hồi; fencing token ngăn worker cũ ghi kết quả. Job trùng không xử lý đồng thời cùng lesson.
+4. Terminal của giai đoạn AI chốt HOLD; NO_TEXT/NO_CAPTION ở giai đoạn trích chữ không HOLD: chỉ settle lời gọi AI thật, trả phần chưa dùng; chưa gọi AI thì trả toàn bộ. Embedding lỗi sau summary không xóa summary đã có. Hold scanner U13 ở 25 giờ từ nhận yêu cầu là dự phòng cho AI deadline 24 giờ; EXTRACTED chờ người dùng yêu cầu không có hạn HOLD.
 
 ### Thanh toán mua credit AI
-1. U07 cho tài khoản `ACTIVE` thuộc Student, Teacher hoặc Subject Manager (Admin không có ví) tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị. Sinh viên chỉ dùng credit cho AI chấm bài `PRACTICE` (UC 29).
+1. U07 cho tài khoản `ACTIVE` thuộc Student, Teacher hoặc Subject Manager (Admin không có ví) tạo giao dịch PayOS với idempotency key; trang quay về chỉ hiển thị. Sinh viên dùng credit cho AI chấm Practice (UC 29) hoặc tóm tắt học liệu được xem (UC 15).
 2. Webhook có chữ ký hoặc `PaymentScanner` + việc `PAYOS_CHECK` → `UPDATE ... WHERE status <> 'PAID'` chuyển `PAID` và cộng số dư mua đúng một lần; sau commit phát `payment.paid`.
 
 

@@ -104,3 +104,7 @@ Luồng F1–F4, F6 cho tệp; S1–S4 cho cài đặt hệ thống (UC 70–71)
 1. Khi backend khởi động, gom mọi `SettingDefinition` đã khai báo (U03, U07, U13).
 2. Mục chưa có trong `system_settings` → thêm với giá trị mặc định, `version` 1, chưa có người sửa.
 3. Mục đã có → giữ nguyên giá trị Admin đã sửa (BR-U03-84).
+
+## Upload material và nút tóm tắt (revision 2026-10-09)
+
+U03 upload MATERIAL chỉ lưu tệp và trả FileRef; không tóm tắt, không gọi Gemini, không quote/hold/reserve credit. U05 gắn tệp/tạo lesson và trích chữ/phụ đề không AI. Student, Teacher và Subject Manager yêu cầu từ nút Tóm tắt tài liệu trên View Material theo quyền xem U05/U04; U05 gọi U13 giữ credit của người bấm rồi enqueue MATERIAL_SUMMARY qua JobPort U03 (jobs.gemini). Quyền upload vẫn chỉ Teacher/Subject Manager; Student có nút tóm tắt không được upload MATERIAL. Generic worker retry không tự tạo yêu cầu AI cho upload.

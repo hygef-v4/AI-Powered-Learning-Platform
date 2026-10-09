@@ -20,30 +20,27 @@
 ## F4 - Material Detail (UC 34, 55)
 1. Mở từ Material List (học liệu của môn, R2) hoặc từ tab Materials (kèm `classId`, R3/R4); kiểm phạm vi, ngoài phạm vi → "không tìm thấy" (BR-U05-02).
 2. Hiện tiêu đề, module, nguồn, người tải, trạng thái quét và bản tóm tắt; xem trước PDF hoặc video, tải tệp qua token 5 phút (BR-U05-23, 24, 48).
-3. Người quản lý học liệu có nút Sửa (đổi thông tin) và Xóa (F8); không có nút Quét lại hay thay tài liệu. Teacher xem học liệu của môn ở chế độ chỉ đọc.
+3. Người quản lý học liệu có nút Sửa (đổi thông tin) và Xóa (F8); không có nút Quét lại hay thay tài liệu. Teacher xem học liệu của môn chỉ đọc nội dung; vẫn có nút Tóm tắt tài liệu theo quyền xem (F7).
 
 ## F5 - Thêm học liệu (UC 34, 55)
-1. Người dùng bấm "Tải tệp" hoặc "Gắn link video" trên một module (Chủ nhiệm môn trên Material List, giảng viên trên tab Materials); form mở với module đã chọn sẵn (BR-U05-12).
-2. Form hiện mức credit cần giữ cho mỗi học liệu và số dư của người tải; không đủ thì chặn nút tải (BR-U05-39).
-3. Xác định phạm vi theo nơi tải: Material List → học liệu của môn (`class_id` rỗng); tab Materials → học liệu của lớp (`class_id` = lớp) (BR-U05-02).
-4. `FILE`: frontend tải tệp qua U03 (purpose `MATERIAL`, giới hạn lấy từ Settings) nhận `FileRef` → U05 gọi `ArtifactPort.attach` → tạo `lessons` với `module_id`, `class_id`, `file_id`, `file_name`, `mime_type`, `size_bytes`, `uploaded_by` (BR-U05-21).
-5. `YOUTUBE`: kiểm URL một video (BR-U05-22) → tạo `lessons` với `youtube_url`, `uploaded_by`.
-6. Cùng transaction: `AiUsagePort.hold(MATERIAL_SUMMARY, uploader, LESSON, lessonId, lessonId:HOLD)` giữ credit cho lần quét; thiếu credit → từ chối "Không đủ credit AI", không tạo học liệu (BR-U05-39).
-7. Đủ credit: `scan_status = PENDING`, `scanned_at = now`, `scan_expires_at = now + 24 giờ`, retry count 0, gửi việc `LESSON_SCAN` hoặc `YOUTUBE_CAPTION` qua `JobPort.enqueue`; audit. Học liệu hiện ngay cho người học trong phạm vi (BR-U05-11, 30).
+1. Người quản lý tải tệp qua U03 purpose MATERIAL hoặc gắn một link YouTube; kiểm R2 cho môn hoặc R3/R4 cho lớp, Settings loại/dung lượng, module và nguồn hợp lệ.
+2. Gắn FileRef và tạo lesson với uploaded_by; không quote/hold/reserve AI, không chặn upload khi thiếu credit.
+3. Cùng transaction đặt scan_status PENDING, scanned_at now, scan_expires_at now + 24 giờ, retry count 0, summary_requested_by/at rỗng; enqueue LESSON_SCAN (jobs.triggered) hoặc YOUTUBE_CAPTION (jobs.youtube) và ghi audit. Học liệu hiện ngay trong phạm vi.
 
-## F6 - Việc LESSON_SCAN / YOUTUBE_CAPTION (worker)
-1. Trong transaction ngắn claim bằng UPDATE có điều kiện: PENDING/BUSY, scan_retry_at đã tới, scan_expires_at còn hạn, không lease đang giữ. Đặt SCANNING, scan_claim_id mới, lease 5 phút; không claim được thì bỏ message trùng. Mọi ghi kết quả và gia hạn lease kiểm claim/hạn; worker bị thay claim bỏ kết quả muộn.
-2. Trích chữ hoặc caption. NO_TEXT/NO_CAPTION chuyển trạng thái cuối và chốt AiUsagePort.release(holdId), chưa gọi AI trả toàn bộ.
-3. Chưa có summary: dùng requestRef riêng ổn định `lessonId:SUMMARY:chunkIndex` cho từng đoạn và `lessonId:SUMMARY:MERGE` cho gộp. AiUsagePort.begin(..., holdId, scanClaimId) dưới claim hợp lệ trả RUN với ticket hoặc REPLAY với CallSnapshot/checkpoint READY; REPLAY không gọi provider. BUSY giữ credit, đặt scan_retry_at = now + 30 phút; IN_PROGRESS không gọi trùng, CLOSED kết thúc quét an toàn. Worker lấy kết quả qua port, không đọc ai_suggestions trực tiếp.
-4. SummaryPort tóm tắt tối đa 200 000 ký tự theo đoạn ≤ 30 000, gộp ≤ 4 000 ký tự. complete(ticket, tokens, cost, checkpoint) kiểm/khóa claim lesson rồi ghi kết quả/usage qua U13 cùng transaction; ticket/claim cũ rollback, READY replay không cộng lại; khi gộp xong ghi lessons.summary ngay. Summary đã có thì bỏ toàn bộ bước này khi retry.
-5. Embedding dùng `lessonId:EMBEDDING`, AiUsagePort.begin(..., holdId, scanClaimId): REPLAY nhận vector checkpoint, RUN mới embed(summary) rồi complete với checkpoint EMBEDDING. Lời gọi bị chặn trước provider không trừ credit. Giữ kết quả đã complete làm checkpoint; chưa chắc provider đã xử lý khi timeout thì xử lý lỗi hữu hạn, không tuyên bố exactly-once cho lời gọi bên ngoài.
-6. Transaction kiểm claim: ghi extracted_text, embedding, INDEXED, scanned_at và chốt hold (settle phần dùng thật, trả dư). Terminal NO_TEXT/NO_CAPTION/FAILED cũng chốt hold idempotent. Embedding FAILED không xóa summary đã lưu; lesson chỉ vào RAG khi INDEXED.
-7. Lỗi tạm: nếu còn claim và chưa hết hạn/retry, tăng scan_retry_count, chuyển SCANNING → PENDING, xóa claim/lease, đặt scan_retry_at theo U03 backoff rồi ném RetryableJobException. Hết 5 retry, lỗi vĩnh viễn hoặc tới scan_expires_at → FAILED và chốt hold. onFailed dùng cùng kiểm claim/trạng thái, không thay trạng thái cuối đã ghi bởi worker khác.
-8. LessonPendingSweeper mỗi phút: PENDING quá 5 phút và retry_at tới thì gửi lại; BUSY chỉ gửi khi retry_at tới (30 phút). SCANNING lease hết hạn: CAS thu hồi claim, tăng retry/recovery count, chuyển PENDING hoặc FAILED khi hết giới hạn; worker cũ không ghi được. Mọi trạng thái chưa cuối tới scan_expires_at (24 giờ cố định từ tạo lesson) → FAILED và chốt hold.
-9. HoldId tra qua AiUsagePort.findHold(LESSON, lessonId, lessonId:HOLD) trả HoldSnapshot, không đọc repository U13; không dựa vào bộ nhớ worker. Scanner 25 giờ của U13 là phương án dự phòng trả credit nếu luồng terminal thất lạc.
+## F6 - Trích chữ/phụ đề sau upload (worker)
+1. CAS claim PENDING; lease 5 phút, deadline từ upload, mọi ghi kiểm claim/hạn. Trích chữ/phụ đề theo giới hạn, không gọi AI/credit.
+2. Thành công lưu extracted_text và EXTRACTED, kết thúc giai đoạn. Không chữ/phụ đề thành NO_TEXT/NO_CAPTION; nguồn vẫn xem/tải được.
+3. Lỗi tạm hoặc lease mất phục hồi PENDING qua sweeper mỗi phút, tối đa 5 retry/recovery/backoff U03; hết hạn/lỗi vĩnh viễn thành FAILED. Không có HOLD để hoàn.
 
-## F7 - Không có quét lại thủ công (bỏ 2026-10-09)
-Quét chỉ chạy một lần khi tải lên; lỗi thì hệ thống tự thử lại theo F6 bước 8–9. Người dùng không có nút Quét lại (BR-U05-30, 37).
+## F7 - Yêu cầu Tóm tắt tài liệu từ View Material
+1. Student, Teacher hoặc Subject Manager bấm nút; server kiểm lại quyền xem như F4/F9, actor/module/lesson ACTIVE, Student ghi danh ACTIVE và lớp OPEN. Teacher được tóm tắt học liệu môn đang xem dù không được sửa; Admin bị từ chối.
+2. Khóa lesson trong transaction. Có summary hoặc yêu cầu đã nhận: trả trạng thái/kết quả hiện có, không giữ thêm credit. Chưa EXTRACTED hoặc NO_TEXT/NO_CAPTION/FAILED: báo chưa thể tóm tắt. Gọi AiUsagePort.checkAvailability (U13, Settings/kill-switch/trần/rate) trước nhận; bị chặn hoặc thiếu credit giữ EXTRACTED, không lưu yêu cầu/HOLD, có thể bấm sau.
+3. GET summary-credit lấy quote; POST summary với Idempotency-Key: hold(MATERIAL_SUMMARY, requester, LESSON, lessonId, lessonId:HOLD). Cùng transaction ghi summary_requested_by/at, scan_status PENDING, scanned_at now, scan_expires_at now + 24 giờ, reset retry/claim, enqueue MATERIAL_SUMMARY; audit MATERIAL_SUMMARY_REQUESTED (lessonId, actorId, thời điểm, không nội dung/tệp/prompt) cùng transaction. Ràng buộc một yêu cầu/lesson và lock bảo đảm hai người bấm chỉ một payer; lỗi reserve rollback toàn bộ bước nhận yêu cầu.
+4. Worker MATERIAL_SUMMARY lấy payer từ summary_requested_by và HOLD (không uploaded_by), CAS claim/lease. Dùng extracted_text đã lưu; requestRef lessonId:SUMMARY:chunkIndex, lessonId:SUMMARY:MERGE; begin trả RUN/REPLAY/BUSY/IN_PROGRESS/CLOSED. READY replay không gọi provider; BUSY chờ 30 phút, không kéo dài hạn. Không đọc repository U13 trực tiếp.
+5. SummaryPort chia tối đa 200 000 ký tự thành đoạn ≤ 30 000, gộp tiếng Việt ≤ 4 000. complete/checkpoint cùng transaction kiểm claim; ghi summary ngay khi gộp xong. Retry bỏ lời gọi đã có checkpoint, không tóm tắt lại nếu có summary.
+6. Embedding dùng requestRef lessonId:EMBEDDING, cùng HOLD (không reserve thêm); hoàn tất ghi embedding/INDEXED và chốt HOLD. Embedding lỗi giữ summary; chưa INDEXED không vào RAG.
+7. Retry/recovery hữu hạn như F6; deadline 24 giờ từ summary_requested_at. Lỗi/hết hạn chốt lượng AI thật và trả dư. findHold phục hồi qua DTO; scanner U13 25 giờ từ yêu cầu dự phòng. Complete/release serialize khóa HOLD; worker cũ mất claim không ghi được. Không hứa exactly-once provider khi timeout/crash.
+8. Không có nút Quét lại hoặc tạo lại sau yêu cầu đã nhận; lỗi tạm tự retry. Người khác xem dùng cùng trạng thái/summary, không trả thêm credit. Lưu trữ trước worker bắt đầu hủy yêu cầu/chốt HOLD; nếu đã chạy, kiểm lại trạng thái trước ghi, chốt lượng dùng thật và không đưa lesson lưu trữ vào RAG.
 
 ## F8 - Sửa, xóa học liệu (UC 34, 55)
 1. Kiểm phạm vi: học liệu của môn cần R2, học liệu của lớp cần R3/R4 của đúng lớp đó; Chủ nhiệm môn không sửa học liệu của lớp chỉ vì quản lý môn; ngoài phạm vi → "không tìm thấy" (BR-U05-02).
@@ -54,7 +51,7 @@ Quét chỉ chạy một lần khi tải lên; lỗi thì hệ thống tự th�
 ## F9 - Learning Material (Student, UC 15)
 1. Student Class Detail hiện module và học liệu qua `PublishedContentPort.listForClass(classId)` (U04 gọi sau khi kiểm ghi danh): module `ACTIVE` của môn, mỗi module gồm học liệu `ACTIVE` của môn và của lớp (BR-U05-04, 10).
 2. Bấm một học liệu → Learning Material (kèm `classId`): kiểm ghi danh `ACTIVE`, lớp `OPEN`, học liệu `ACTIVE` thuộc môn của lớp hoặc thuộc đúng lớp; ngoài quyền → "không tìm thấy" (BR-U05-04).
-3. PDF xem trực tiếp hoặc tải (token 5 phút của U03); video nhúng `youtube-nocookie`; khối "Tóm tắt do AI tạo" nếu đã có bản tóm tắt (BR-U05-23, 24, 48).
+3. PDF xem trực tiếp hoặc tải (token 5 phút của U03); video nhúng youtube-nocookie; nút Tóm tắt tài liệu/trạng thái/kết quả dùng chung theo F7 (BR-U05-23, 24, 48).
 4. Dưới học liệu là danh sách quiz của học liệu (component và API của U11); bấm "Làm quiz" → Quiz Taking (U11) (BR-U05-03).
 
 ## F10 - `retrieve(scope, query, k, requesterId)` (U13 gọi)
