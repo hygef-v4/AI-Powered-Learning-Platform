@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Logical Components
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Sơ đồ
 
 ```
@@ -35,6 +37,11 @@
 | `DownloadTokenService` | backend | P4 |
 | `DownloadController` | backend | P2 |
 | `DriveJobHandler` | worker | Việc `DRIVE_CLEANUP` |
+| `FilePolicyService` | backend | Đọc trần và loại tệp hiện hành từ `SettingsPort` cho upload và cho `GET /api/v1/files/policies` |
+| `SettingsController` | backend | `GET /api/v1/admin/settings`, `GET`, `PATCH /api/v1/admin/settings/{key}` |
+| `SettingsService` (`SettingsPort`) | backend, worker | P14: đọc có cache 30 s, sửa kèm version, kiểm theo khai báo, audit |
+| `SettingDefinitionRegistry` | backend | Gom `SettingDefinition` của U03, U07, U13; tạo mục còn thiếu lúc khởi động |
+| `FileSettingDefinitions` | backend | Khai báo 4 mục nhóm Tệp (BR-U03-87) |
 
 ## 3. Cấu hình
 
@@ -42,7 +49,8 @@
 |---|---|
 | `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY` | Rỗng → dùng thư mục local |
 | `GOOGLE_SHARED_DRIVE_ID` | - |
-| `U03_MAX_FILE_SIZE` | 50MB (`DOCUMENT_IMAGE` 5MB) |
+| `U03_MAX_FILE_SIZE` | 50MB: trần cứng của multipart; trần đang dùng theo `purpose` lấy từ Settings |
+| `U03_SETTINGS_CACHE_TTL` | 30s |
 | `U03_MAX_CONCURRENT_UPLOADS` | 5 |
 | `U03_UPLOAD_TMP_DIR` | `/tmp/uploads` |
 | `U03_DOWNLOAD_TOKEN_TTL` | 5m |

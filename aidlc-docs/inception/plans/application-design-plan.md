@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 49 user story thuộc MVP, persona và 40 use case hiện hành (`docs/use-case-table.md`, sau các lần gộp 77 → 69 → 64 → 40 → 39). Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
+Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 51 user story thuộc MVP, persona và 70 use case hiện hành (`docs/use-cases-and-screens.md`, SRS 4.1/4.2/4.4 ngày 2026-10-08). Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.
 
 ## Các bước thực hiện
 
@@ -114,3 +114,11 @@ X) Other (mô tả sau `[Answer]:`)
 ## Hướng dẫn trả lời
 
 Điền một lựa chọn hợp lệ sau mỗi `[Answer]:`. Nếu chọn `X`, ghi rõ quyết định ngay sau chữ X. Vui lòng hoàn tất toàn bộ câu hỏi trước khi yêu cầu sinh artifact Application Design.
+
+## Revision 2026-10-08 - SRS 70 UC
+
+- [x] Đồng bộ components/methods/services với gói credit Admin, payment history, announcement CRUD, không avatar và scope R2/R4.
+- [x] Truy vết 70 UC/51 story qua 16 unit; Audit Log là UC 70/U02.
+- [x] Đồng bộ tên màn Drawio mới: Assigned Classes, Subject Classes; UC 53–54 dùng Subject Template và Template Editor.
+- [x] Giữ invariant version/snapshot, audit và xử lý lỗi; không đổi hướng dependency.
+- [x] Ghi nhận Construction/code plans cần đồng bộ riêng, không kế thừa phê duyệt cũ cho yêu cầu đã đổi.

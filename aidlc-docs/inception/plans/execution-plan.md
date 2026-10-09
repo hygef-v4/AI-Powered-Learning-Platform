@@ -1,6 +1,15 @@
 # AI-DLC Execution Plan
 
-> Lưu ý cập nhật: các bảng unit U01-U08, mốc 77 use case và mô tả Simulation Exam/bốn loại bài bên dưới là lịch sử. Bản phân chia hiện hành gồm 16 unit và 40 use case (`docs/use-case-table.md`) trong `aidlc-docs/inception/application-design/unit-of-work.md`; phạm vi gồm năm dạng bài, Student mua credit để AI chấm Practice Text/Diagram Essay, không có Simulation Exam. Learning Access thuộc U04. Construction đã hoàn thành thiết kế; các code plan cập nhật chờ checkpoint riêng.
+> Bản hiệu lực 2026-10-08: 16 unit, 70 UC và 51 story; xem requirements.md, stories.md và unit-of-work-story-map.md. Các bảng phân tích/stage và checkpoint ban đầu bên dưới là lịch sử lập kế hoạch, không phải ánh xạ UC hay phê duyệt phạm vi mới. Code generation đang diễn ra; thiết kế/code plans Construction đã đồng bộ; implementation revision chưa hoàn thành.
+
+## 0. Phạm vi thực hiện hiện hành - 2026-10-08
+
+- 70 UC theo SRS mới và UC 70 Audit Log vừa bổ sung, 51 story (thêm US-PAY-004/005), 16 unit hiện có.
+- Student/Teacher/Subject Manager/Administrator theo R1–R5; Admin có chức năng Teacher chỉ khi được giao lớp và tài nguyên môn chỉ khi được giao môn.
+- Hồ sơ không cập nhật avatar; announcement có tạo/sửa/xóa; ngân hàng lớp/môn riêng; AI Practice UC 25 và Teacher proposals UC 35 riêng.
+- U07 thêm/sửa gói và đọc lịch sử toàn nền tảng; U02 chủ trì UC 70. Inception và thiết kế/code plans của 16 unit Construction đã đồng bộ ngày 2026-10-08; existing contracts/code cần cập nhật và kiểm chứng riêng theo revision tasks.
+- Tên màn theo `screen-flow (1).drawio` mới: Assigned Classes, Subject Classes; template UC 53–54 dùng Subject Template/Template Editor. Tài liệu/code chưa được coi là triển khai các chức năng chỉ vì đã sửa Inception.
+- Không đổi kiến trúc/wave/gate; nội dung phạm vi, công nghệ hoặc phân chia cũ bên dưới chỉ lưu lịch sử. Trước khi code phần thay đổi, dùng Inception hiện hành để cập nhật thiết kế/contracts và kế hoạch unit liên quan.
 
 ## 1. Detailed Analysis Summary
 

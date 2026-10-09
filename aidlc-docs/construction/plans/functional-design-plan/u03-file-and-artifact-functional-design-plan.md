@@ -1,5 +1,7 @@
 # U03 File & Artifact - Functional Design Plan
 
+**Lịch sử plan baseline trước 2026-10-08**: giữ nguyên các bước đã hoàn thành và mã UC tại thời điểm đó. Thiết kế hiện hành và revision code plan theo [current SRS contract](../../current-srs-contract.md); task đồng bộ ở [construction-sync](../construction-sync-2026-10-08.md), không dùng checklist cũ như phạm vi mới.
+
 > Ghi chú hiện hành: plan này ghi phạm vi lúc thiết kế. Hiện U03 không có bảng PostgreSQL (metadata tệp ở `appProperties` trên Google Drive, không còn bảng `artifacts`) và nhận thêm việc nền, worker, sự kiện thông báo từ U02 (2026-10-04).
 
 ## 1. Phạm vi

@@ -1,5 +1,7 @@
 # U03 File, Job & Event - NFR Requirements
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng và tài nguyên
 
 | Mã | Yêu cầu | Nguồn |
@@ -36,7 +38,7 @@
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-30 | Unit test mọi `BR-U03-xx`, gồm SVG có script (header CSP), file đổi đuôi, file vượt trần theo `purpose` (50 MB / 5 MB), token dùng sai người. | NFR-004 |
+| NFR-U03-30 | Unit test mọi `BR-U03-xx`, gồm SVG có script (header CSP), file đổi đuôi, file vượt trần theo `purpose` lấy từ Settings, token dùng sai người. | NFR-004 |
 | NFR-U03-31 | Drive được thay bằng adapter giả lưu ra thư mục tạm trong test và khi chạy local không có credential. | NFR-004, NFR-005 |
 
 ## 5. Việc nền, RabbitMQ và worker (chuyển từ U02, 2026-10-04)
@@ -60,14 +62,23 @@
 | NFR-U03-54 | Healthcheck worker kiểm PostgreSQL và RabbitMQ. | REL-002 |
 | NFR-U03-55 | Integration test với PostgreSQL và RabbitMQ bằng Testcontainers: gửi sau commit, rollback không gửi, gửi ngay khi không có transaction, retry theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner chạy lại không trùng. | NFR-004 |
 
-## 6. Compliance
+## 6. Cài đặt hệ thống (UC 70–71)
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U03-60 | Đọc cài đặt qua `SettingsPort` dùng cache trong bộ nhớ, hết hạn sau 30 giây; giá trị mới có hiệu lực ở mọi instance trong tối đa 30 giây. | BR-U03-86 |
+| NFR-U03-61 | Xem và sửa cài đặt p95 ≤ 300 ms. | NFR-003 |
+| NFR-U03-62 | API Settings chỉ cho `ADMIN`; không trả và không lưu bí mật. | BR-U03-80, 85 |
+| NFR-U03-63 | Unit test: kiểm giới hạn từng kiểu, version lệch trả `409`, khởi tạo không ghi đè giá trị đã sửa, người không phải Admin bị từ chối. | NFR-004 |
+
+## 7. Compliance
 
 | Rule | Trạng thái | Căn cứ |
 |---|---|---|
 | SECURITY-03 | Compliant | NFR-U03-24 |
 | SECURITY-04 | Compliant | NFR-U03-23 |
 | SECURITY-05 | Compliant | Kiểm loại, kích thước theo `purpose` |
-| SECURITY-08 | Compliant | Unit sở hữu kiểm quyền; token gắn người dùng |
+| SECURITY-08 | Compliant | Unit sở hữu kiểm quyền; token gắn người dùng; Settings chỉ cho `ADMIN` |
 | SECURITY-09 | Compliant | Credential từ `.env`, không commit |
 | SECURITY-12 | N/A | U03 không xác thực người dùng |
 | SECURITY-15 | Compliant | NFR-U03-14, dọn file khi lỗi |

@@ -1,11 +1,13 @@
 # U05 Content, Material & RAG - NFR Design Patterns
 
+**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Quét trong worker
 1. `LessonScanHandler` nhận `LESSON_SCAN {lessonId}` hoặc `YOUTUBE_CAPTION {lessonId}`; giữ semaphore `U05_SCAN_CONCURRENCY` (mặc định 4) (NFR-U05-01).
 2. `UPDATE lessons SET scan_status = 'SCANNING' WHERE id = :id AND scan_status = 'PENDING'`; không dòng nào bị cập nhật thì bỏ qua (idempotent).
-3. `TextExtractor` hoặc `CaptionFetcher` → `AiUsagePort.begin` (một `requestRef` = `lessonId:scanNo`, cố định qua thử lại) → `EmbeddingPort.embed` → `AiUsagePort.complete` → ghi kết quả trong một transaction (BR-U05-35, 36, 39).
-4. Lỗi tạm ném `RetryableJobException` cho U03; `BUSY`/`NO_CREDIT` ghi trạng thái và kết thúc; hết lượt → `onFailed` ghi `FAILED` và `AiUsagePort.fail`.
-5. `LessonPendingSweeper` trả lesson `PENDING` có `scanned_at` quá 5 phút để U03 gửi lại.
+3. `TextExtractor` hoặc `CaptionFetcher` → nếu chưa có `summary`: `AiUsagePort.begin(MATERIAL_SUMMARY)` → `LessonSummarizer` → `complete` → ghi `summary` ngay → `AiUsagePort.begin(EMBEDDING)` → `EmbeddingPort.embed(summary)` → `complete` → ghi kết quả trong một transaction. Mỗi lần gọi có `requestRef` = `lessonId:scanNo:task`, cố định qua thử lại (BR-U05-35, 36, 39, 45).
+4. Lỗi tạm ném `RetryableJobException` cho U03; `BUSY` ghi trạng thái, giữ nguyên credit và kết thúc; hết lượt → `onFailed` ghi `FAILED` và `AiUsagePort.release`. Credit đã giữ lúc tải lên (`AiUsagePort.hold`) nên quét không gặp thiếu credit.
+5. `LessonPendingSweeper` trả lesson `PENDING` có `scanned_at` quá 5 phút và lesson `BUSY` mỗi 30 phút để U03 gửi lại; `BUSY` quá 24 giờ → `FAILED`, trả credit.
 
 ## P2 - Trích chữ theo luồng
 - `TextExtractor` dùng Tika với `InputStream` từ `ArtifactPort.open`, trả chữ theo trang (PDF) hoặc theo slide/đoạn (PPTX/DOCX).
@@ -13,7 +15,7 @@
 - Trung bình < 50 ký tự/trang → `NO_TEXT` (BR-U05-32).
 
 ## P3 - Một vector mỗi lesson
-- Lấy phần đầu `extracted_text` trong giới hạn đầu vào của `gemini-embedding-001` (khoảng 2 000 token), gọi một lần, lưu `embedding vector(768)`.
+- Tạo vector từ `summary` (≤ 4 000 ký tự, vừa giới hạn đầu vào của `gemini-embedding-001`), gọi một lần, lưu `embedding vector(768)` (BR-U05-35).
 - Index HNSW `vector_cosine_ops` trên `lessons.embedding`.
 
 ## P4 - Truy xuất

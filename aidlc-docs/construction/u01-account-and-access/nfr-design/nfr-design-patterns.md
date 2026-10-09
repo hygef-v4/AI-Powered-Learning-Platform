@@ -1,5 +1,7 @@
 # U01 Account & Access - NFR Design Patterns
 
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 
 ## 1. Bảo mật
@@ -50,7 +52,6 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 | PostgreSQL | Kết nối 2 s, truy vấn 3 s | Lỗi an toàn `503` | NFR-U01-41 |
 | Redis | Kết nối 1 s, lệnh 500 ms | Đăng nhập, refresh, OTP trả `503` "hệ thống tạm bận"; access còn hạn vẫn chạy | NFR-U01-40 |
 | U04 (phạm vi) | 1 s | Từ chối quyền | NFR-U01-42 |
-| U03 (`AvatarPort`) | 2 s | Tắt đổi ảnh, hồ sơ còn lại chạy | NFR-U01-43 |
 | SMTP | Kết nối 5 s, gửi 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
 
 - **Không dùng circuit breaker** (Câu D2): quy mô ≤ 100 người đồng thời, timeout ngắn và pool hữu hạn là đủ.

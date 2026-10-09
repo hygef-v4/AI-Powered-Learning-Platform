@@ -1,5 +1,7 @@
 # U03 File, Job & Event - NFR Design Patterns
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Upload an toàn giao dịch với dọn dẹp bù trừ
 1. `Semaphore.tryAcquire()` (5 permit); không lấy được → `503` (NFR-U03-01).
 2. Spring ghi multipart ra thư mục tạm `/tmp/uploads` (NFR-U03-02).
@@ -59,3 +61,11 @@
 
 ## P13 - Health worker
 - Worker `/health` kiểm PostgreSQL và RabbitMQ (NFR-U03-54).
+
+## Cài đặt hệ thống (thêm 2026-10-09)
+
+## P14 - Cài đặt có cache ngắn và khóa lạc quan
+- `SettingsService` giữ cache trong bộ nhớ theo khóa, hết hạn sau `U03_SETTINGS_CACHE_TTL` (30 s); sửa xong xóa cache ở instance hiện tại, instance khác tự lấy giá trị mới khi cache hết hạn (NFR-U03-60).
+- Sửa bằng `UPDATE system_settings SET value = ?, version = version + 1 ... WHERE key = ? AND version = ?`; 0 dòng thì trả `409` (BR-U03-82).
+- Kiểm giá trị theo `SettingDefinition` trước khi ghi; audit `SETTING_UPDATED` cùng transaction (BR-U03-83).
+- Khởi động: `INSERT ... ON CONFLICT (key) DO NOTHING` cho mỗi khai báo, nên không ghi đè giá trị đã sửa (BR-U03-84).

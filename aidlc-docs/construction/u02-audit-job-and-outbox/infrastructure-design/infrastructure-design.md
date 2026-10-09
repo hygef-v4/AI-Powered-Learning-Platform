@@ -1,6 +1,8 @@
 # U02 Audit - Infrastructure Design
 
-Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [database](../../../../docs/database.md). RabbitMQ và worker thuộc U03.
+**Bản tài liệu 2026-10-09**: UC 73 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md). RabbitMQ và worker thuộc U03.
 
 ## 1. Ánh xạ thành phần
 
@@ -15,7 +17,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [data
 |---|---|
 | User migration | `migrator`, chủ sở hữu schema, chỉ Flyway dùng lúc khởi động backend (tạo trong khung dự án, plan U03) |
 | User ứng dụng | `app`, quyền `SELECT, INSERT, UPDATE, DELETE` trên bảng nghiệp vụ; riêng `audit_logs` chỉ `SELECT, INSERT` |
-| Migration U02 | `V20260925_0900__u02_audit_logs.sql`: bảng `audit_logs` (chưa có FK; migration `V20260925_0930__u01_accounts.sql` của U01 thêm FK `actor_id` → `accounts`) + index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app` |
+| Migration U02 | `db/migration/audit/V20260925_0900__create_audit_logs.sql`: bảng `audit_logs` (chưa có FK; migration `V20260925_0930__create_accounts.sql` của U01 thêm FK `actor_id` → `accounts`) + index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app` |
 
 ## 3. Compliance
 

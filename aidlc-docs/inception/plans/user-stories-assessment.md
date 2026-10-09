@@ -9,7 +9,7 @@
 
 ## Tiêu chí đánh giá được đáp ứng
 
-- [x] **Ưu tiên cao - Tính năng mới hướng người dùng**: Toàn bộ MVP cung cấp chức năng mới mà ba vai trò sử dụng trực tiếp.
+- [x] **Ưu tiên cao - Tính năng mới hướng người dùng**: Toàn bộ MVP cung cấp chức năng mới mà bốn vai trò sử dụng trực tiếp.
 - [x] **Ưu tiên cao - Hệ thống nhiều persona**: Người học, giảng viên, Chủ nhiệm môn và quản trị viên có mục tiêu, quyền và hành trình khác nhau.
 - [x] **Ưu tiên cao - Logic nghiệp vụ phức tạp**: Xuất bản nội dung, ghi danh, số lần làm bài, chấm AI có duyệt, webhook idempotent và phân quyền theo đối tượng đều cần tiêu chí chấp nhận rõ.
 - [x] **Yếu tố trung bình - Nhiều điểm chạm và tích hợp**: Các hành trình đi qua frontend, backend, dữ liệu và dịch vụ AI, lưu trữ, thanh toán, email.
@@ -34,3 +34,7 @@
 - **Security Baseline**: Compliant - đánh giá xác định các luồng phân quyền, dữ liệu, audit và thanh toán cần stories/acceptance criteria kiểm thử được.
 - **Resiliency Baseline**: Compliant - đánh giá xác định các tình huống lỗi dependency và phục hồi cần được thể hiện ở hành vi người dùng/hệ thống phù hợp.
 - **Property-Based Testing**: N/A - extension đã bị tắt trong Requirements Analysis.
+
+## Đồng bộ 2026-10-08
+
+Bản hiệu lực: 70 UC/51 story. Giữ bốn persona, thêm hai story quản trị gói/lịch sử thanh toán, cập nhật authorization và acceptance criteria; Audit Log ánh xạ UC 70. Đây là sửa tài liệu theo nguồn đã được người dùng chỉ định, không mở lại khảo sát hay sinh code. Construction/checkpoints cũ còn cần cập nhật theo phần yêu cầu thay đổi.

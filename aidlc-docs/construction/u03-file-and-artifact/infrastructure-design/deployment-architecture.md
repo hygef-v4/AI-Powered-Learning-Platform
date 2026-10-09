@@ -1,5 +1,7 @@
 # U03 File, Job & Event - Deployment Architecture
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ```
  Trình duyệt --HTTPS--> [nginx] --(không đệm, 50 MB)--> [backend]
                                                      |  /tmp/uploads (volume)

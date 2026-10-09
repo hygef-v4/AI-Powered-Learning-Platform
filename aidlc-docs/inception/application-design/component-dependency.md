@@ -89,6 +89,10 @@ Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc 
   - U12 → U14 (`C`): `GroupChangePort.onGroupCreated/onMemberRemoved` → việc tạo tài liệu nhóm, nhả khóa mục.
 - Event trên `platform.events` chỉ dùng cho thông báo U16 (mất thì chấp nhận): `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`. U16 nghe bằng queue `jobs.notification`.
 - U14 → U16: realtime qua `platform.realtime`.
-- U07 ← U13: `CreditPort.reserve/settle/release` chỉ U13 gọi, trong transaction đổi `ai_suggestions.credit_status`. U13 → U07 (`C`): `CreditUsagePort.listUsage` cho bảng lần dùng credit trên màn AI Credits (U07 khai báo, adapter rỗng tới khi có U13). U13 ← U05 (`C`): `AiUsagePort.begin/complete/fail` cho mọi lời gọi Gemini của U05 (quét học liệu, embedding): kill-switch, trần chi phí/ngày, tần suất và giữ credit của người tải học liệu; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
+- U07 ← U13: `CreditPort.reserve/settle/release` chỉ U13 gọi, trong transaction đổi `ai_suggestions.credit_status`. U13 → U07 (`C`): `CreditUsagePort.listUsage` cho bảng lần dùng credit trên màn Credit Packages (U07 khai báo, adapter rỗng tới khi có U13). U13 ← U05 (`C`): `AiUsagePort.begin/complete/fail` cho mọi lời gọi Gemini của U05 (quét học liệu, embedding): kill-switch, trần chi phí/ngày, tần suất và giữ credit của người tải học liệu; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
 - U08 ← U09/U12/U13 (`C`): `TypeConfigPort`, `GroupReadinessPort`, `CodeLabCheckPort` khi duyệt/phát hành.
 - U04 ← U05 (`C`): `PublishedContentPort` cho trang lớp của người học.
+
+## Đồng bộ SRS 2026-10-08
+
+U07 sở hữu gói bán do Admin thêm/sửa, snapshot giao dịch và query lịch sử toàn nền tảng; không thêm dependency kiểm enrollment vào thanh toán. U05 sửa/xóa thông báo cần U01/U04 scope và U02 audit. U02 chủ trì UC 70 Audit Log; U03 và U13 không chủ trì UC trực tiếp. Scope kế thừa cần phân công R2/R4, không chỉ role. Các thay đổi không làm đổi hướng dependency/16 unit hiện có.

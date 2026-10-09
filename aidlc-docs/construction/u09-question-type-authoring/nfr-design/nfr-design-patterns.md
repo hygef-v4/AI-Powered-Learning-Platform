@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - NFR Design Patterns
 
+**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## P1 - Mô hình tài liệu dùng chung một nơi
 - Java: `sealed interface Block` + record từng loại, Jackson polymorphic theo `type`; TypeScript: kiểu sinh từ JSON schema `contracts/schemas/document.json` (một nguồn cho backend, frontend, U11, U15).
 - `DocumentValidator` thuần (không I/O) cho `validateSkeleton`, `validateForSave`, `validateForSubmit` (NFR-U09-01).
@@ -33,3 +35,8 @@
 
 ## P7 - Soạn thảo lớn
 - `DocumentEditor` giữ state dạng mảng block bất biến; render ảo hóa (`react-window`) khi > 200 block (NFR-U09-04).
+
+## P8 - Đồng bộ rubric theo câu và phần
+- `syncQuestionRubrics` chạy trong transaction U08 thêm/bỏ câu Text Essay; lưu khung chạy trong transaction của U09; cả hai khóa dòng `assignments` (bài phải `DRAFT`), so danh sách câu/phần mới với danh sách cũ theo `questionId`/`partId`.
+- Câu/phần mới → `RubricPort.create` (rubric trống) và ghi `rubricId`; câu/phần không còn → `RubricPort.delete`; câu/phần còn giữ nguyên `rubricId` nên rubric đã điền không mất (BR-U09-23, 26, 27).
+- Ghi `config` qua `AssignmentExtensionPort` cùng transaction; lỗi ở bước nào thì rollback cả rubric lẫn `config`.

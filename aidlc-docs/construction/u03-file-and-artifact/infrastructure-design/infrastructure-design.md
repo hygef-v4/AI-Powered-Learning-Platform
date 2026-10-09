@@ -1,11 +1,15 @@
 # U03 File, Job & Event - Infrastructure Design
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
 |---|---|
 | `FileUploadController`, `UploadService`, `ContentInspector`, `DownloadController`, `DownloadTokenService`, `ArtifactService` | `backend` |
 | `DriveJobHandler` | `worker` |
+| `SettingsController`, `SettingsService`, `SettingDefinitionRegistry`, `FilePolicyService` | `backend` (worker đọc cài đặt qua `SettingsPort`) |
+| Bảng `system_settings` | `postgres` |
 | `JobPublisher`, `EventPublisherPort`, `AmqpPublisher` | `backend`, `worker` |
 | `JobListener`, `JobRetryPublisher`, `JobHandlerRegistry`, `PendingSweepRunner`, `ScheduledScanRunner` | `worker` |
 | Exchange, queue | `rabbitmq` |
@@ -34,7 +38,9 @@
 
 ## 4. Migration
 
-U03 không có migration: không có bảng PostgreSQL. Bảng sở hữu lưu `file_id` (xem [database](../../../../docs/database.md)).
+Tệp không có bảng: bảng sở hữu lưu `file_id` (xem [mô hình dữ liệu của unit](../functional-design/domain-entities.md)).
+
+Cài đặt hệ thống (thêm 2026-10-09): migration `db/migration/settings/V20260925_0910__create_system_settings.sql` tạo bảng `system_settings` (khóa chính `key`, `value` jsonb, `version`, `updated_by`, `updated_at`). U03 code trước U01 nên chưa tạo FK; migration `accounts` của U01 thêm FK `updated_by` → `accounts`, như với `audit_logs`.
 
 ## 5. RabbitMQ (chuyển từ U02)
 

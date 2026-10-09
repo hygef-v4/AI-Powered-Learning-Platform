@@ -1,13 +1,15 @@
 # U03 File, Job & Event - Business Rules
 
+**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Upload
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U03-01 | Upload đi qua backend trong một request multipart. | Câu 2 |
-| BR-U03-02 | Trần dung lượng theo `purpose`: `AVATAR`, `MATERIAL` ≤ 50 MB; `DOCUMENT_IMAGE` ≤ 5 MB. Vượt thì từ chối trước khi đọc hết. | Câu 4, BR-U09-34 |
-| BR-U03-03 | Loại file xác định bằng nội dung (magic bytes), phải khớp allowlist của `purpose`. Đuôi file và `Content-Type` của trình duyệt chỉ để tham khảo. | Câu 5 |
-| BR-U03-04 | Quyền upload theo mục đích: `AVATAR` mọi người đã đăng nhập; `MATERIAL` giảng viên, chủ nhiệm môn (UC 11); `DOCUMENT_IMAGE` (ảnh trong khung đề, bài làm, tài liệu nhóm) giảng viên, chủ nhiệm môn và người học. U03 không có file do hệ thống tạo. | SEC-002 |
+| BR-U03-02 | Trần dung lượng theo `purpose` lấy từ Settings (BR-U03-87): `MATERIAL` mặc định và tối đa 50 MB; `DOCUMENT_IMAGE` mặc định và tối đa 5 MB. Vượt thì từ chối trước khi đọc hết. Không còn purpose `AVATAR`. | FR-013, FR-033, BR-U09-34 |
+| BR-U03-03 | Loại file xác định bằng nội dung (magic bytes), phải khớp danh sách loại tệp cho phép của `purpose` lấy từ Settings (BR-U03-87). Đuôi file và `Content-Type` của trình duyệt chỉ để tham khảo. | Câu 5, FR-033 |
+| BR-U03-04 | `MATERIAL`: Teacher hoặc Subject Manager; unit nghiệp vụ kiểm thêm phân công R2/R3/R4. `DOCUMENT_IMAGE`: Student, Teacher hoặc Subject Manager đang được sửa tài liệu đó (R3/R4/R5). Admin không upload vì không dạy và không quản lý môn (người dùng chốt 2026-10-09). U03 kiểm role và `purpose`, unit gọi kiểm phạm vi. | FR-002, FR-004, SEC-002 |
 | BR-U03-05 | Tính SHA-256 khi nhận; lưu vào thuộc tính tệp trên Drive. | services.md |
 | BR-U03-06 | Chỉ khi file và thuộc tính đã lên Drive mới trả về `FileRef`. Lỗi ở bất kỳ bước nào → xóa file trên Drive nếu đã tạo (lỗi xóa thì gửi việc `DRIVE_CLEANUP`). | Câu 7 |
 | BR-U03-07 | Upload thành công được giữ kể cả khi chưa gắn vào đối tượng nào; không có việc dọn file chưa gắn. | Câu 7 |
@@ -24,7 +26,7 @@
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-20 | U03 **không tự quyết** ai được xem file. Unit sở hữu kiểm quyền nghiệp vụ rồi gọi `issueDownloadToken`. Riêng `AVATAR`: mọi người đã đăng nhập được xem. | components.md |
+| BR-U03-20 | Unit sở hữu kiểm quyền nghiệp vụ rồi gọi issueDownloadToken; U03 không tự cấp quyền xem file. Token gắn đúng accountId/TTL; không có ngoại lệ xem avatar cho mọi tài khoản. | FR-001/002 |
 | BR-U03-21 | Token hạn 5 phút, gắn với đúng `accountId`; người khác dùng token → từ chối. | Câu 3 |
 | BR-U03-22 | Backend stream file từ Drive; không bao giờ trả `fileId` hay link Drive cho frontend. | SEC-002 |
 | BR-U03-23 | Header tải về: `Content-Type` đã xác định, `X-Content-Type-Options: nosniff`; file không phải ảnh/PDF luôn `attachment`. | SEC-004 |
@@ -68,3 +70,16 @@
 |---|---|---|
 | BR-U03-70 | `EventPublisherPort.publish` gửi sau commit, không đảm bảo giao hàng; chỉ dùng cho thông báo (U16), nên mất sự kiện được chấp nhận. | Câu 2 |
 | BR-U03-71 | Mọi message có `schemaVersion`; consumer bỏ qua và log WARN nếu gặp phiên bản không hỗ trợ. | Contract rule |
+
+## 8. Cài đặt hệ thống (UC 70–71, thêm 2026-10-09)
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U03-80 | Chỉ `ADMIN` đang `ACTIVE` xem (UC 70) và sửa (UC 71) cài đặt; vai trò khác bị từ chối và ghi audit; không kiểm được quyền thì từ chối. | FR-033, SEC-002 |
+| BR-U03-81 | Cài đặt chia 3 nhóm: Tệp (U03), Credit tặng định kỳ (U07), AI (U13). Mỗi mục do unit sở hữu khai báo trong code (`SettingDefinition`): khóa, nhóm, tên hiển thị, mô tả, kiểu, giá trị mặc định, giới hạn hợp lệ. U03 lưu, hiển thị và kiểm theo khai báo; unit sở hữu dùng giá trị. Nhóm Credit: `credit.monthlyFreeCredits` (U07, 0–10 000, mặc định 100). Nhóm AI (U13): `ai.enabled`, `ai.dailyCostCapUsd`, `ai.ratePerMinute`, `ai.{task}.model`, `ai.{task}.enabled`. | FR-033 |
+| BR-U03-82 | Sửa phải gửi kèm `version` hiện tại; version lệch thì trả `409`. Giá trị sai kiểu hoặc ngoài giới hạn thì trả `400` kèm lý do, không ghi gì. | FR-033 |
+| BR-U03-83 | Mỗi lần sửa ghi audit `SETTING_UPDATED`: khóa, giá trị trước và sau, người sửa, thời điểm; ghi trong cùng transaction với lần sửa. | FR-014, FR-033 |
+| BR-U03-84 | Không thêm hay xóa mục từ giao diện. Khi khởi động, mục đã khai báo mà chưa có trong bảng được tạo với giá trị mặc định; mục đã có giữ nguyên giá trị Admin đã sửa. | FR-033 |
+| BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký) không phải cài đặt, vẫn là biến môi trường. | SEC-006 |
+| BR-U03-86 | Giá trị mới có hiệu lực trong tối đa 30 giây ở mọi instance backend và worker; thao tác đang chạy giữ giá trị cũ; dữ liệu đã tạo (tệp đã tải, giao dịch cũ) không bị ảnh hưởng. | FR-033 |
+| BR-U03-87 | Mục nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). Trần 50 MB do Nginx và thư mục tạm; trần 5 MB theo BR-U09-34. | FR-013, FR-033 |

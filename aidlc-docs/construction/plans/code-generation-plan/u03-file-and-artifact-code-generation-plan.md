@@ -1,5 +1,9 @@
 # U03 File, Job & Event - Code Generation Plan
 
+**Baseline code đã sinh**: nội dung/checklist trước mục 6 giữ nguyên theo code 2026-10-05. Hợp đồng mục tiêu hiện hành theo [current SRS contract](../../current-srs-contract.md); mục 6 ghi việc implementation còn chưa làm.
+
+**Bản 73 UC (2026-10-09)**: U03 chủ trì UC 70 View Settings và UC 71 Edit Setting (người dùng chốt U03 giữ chung Settings), story US-SET-001. Việc cần làm ở mục 7.
+
 > Plan này là nguồn duy nhất cho Code Generation của U03. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -152,3 +156,22 @@ Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Sh
 - Kiểm và rút gọn XML Draw.io (U09, trong bộ nhớ); file dẫn xuất; xóa file.
 - Adapter `AuthorizationPort` thật (U01 Bước 15) và `AuditPort` thật (U02).
 - Handler nghiệp vụ, `PendingSweeper` và `ScheduledScanner` của từng unit (thuộc unit sở hữu).
+
+## 6. Current revision - Documentation only (2026-10-08)
+Các bước [x], chữ ký/avatar và summaries trên phản ánh code đã sinh theo baseline cũ; không đánh dấu lại là chưa làm hoặc giả vờ đã bỏ khỏi code. Hợp đồng mục tiêu xem functional-design và current-srs-contract.md: không cập nhật avatar từ U01.
+- [ ] Rà call site/AvatarPort/PurposePolicy đã sinh và các contracts hiện có; bỏ hoặc cô lập AVATAR khi triển khai revision, không xóa file/schema lịch sử.
+- [ ] Actor MATERIAL/DOCUMENT_IMAGE được unit nghiệp vụ kiểm R2/R3/R4/R5. Theo quyết định 2026-10-09 Admin không dạy, không quản lý môn nên không upload; `PurposePolicy` đã sinh (không có `ADMIN` cho hai purpose này) là đúng.
+- [ ] Kiểm tương thích hợp đồng/port thực tế trước khi code unit khác; tài liệu cập nhật không xác nhận runtime đã theo baseline mới.
+
+## 7. Revision theo bản 73 UC - 2026-10-09
+
+Thực tế code: không có `FakeAuthorizationPort` và `LoggingAuditAdapter` như cấu trúc mục 2; U03 đang dùng `AuthorizationService` khung của U01 (luôn từ chối) và `AuditStore` khung của U02 (chỉ ghi log).
+
+- [ ] **Bước S1** - Migration `db/migration/settings/V20260925_0910__create_system_settings.sql`: bảng `system_settings` (`key` khóa chính, `group`, `value` jsonb, `version`, `updated_by`, `updated_at`); FK `updated_by` do migration `accounts` của U01 thêm.
+- [ ] **Bước S2** - Port `SettingsPort` (đọc giá trị hiện hành theo khóa) và `SettingDefinition` (unit sở hữu khai báo mục); `SettingDefinitionRegistry` gom khai báo, lúc khởi động thêm mục còn thiếu với giá trị mặc định, không ghi đè (BR-U03-81, 84).
+- [ ] **Bước S3** - `SettingsService`: danh sách, chi tiết, sửa kèm `version`, kiểm theo khai báo, audit `SETTING_UPDATED`, cache 30 s (BR-U03-80…86, P14).
+- [ ] **Bước S4** - `SettingsController`: `GET /api/v1/admin/settings`, `GET`, `PATCH /api/v1/admin/settings/{key}`; contract mới `contracts/openapi/settings.yaml`.
+- [ ] **Bước S5** - `FileSettingDefinitions` (4 mục nhóm Tệp, BR-U03-87) và `FilePolicyService`; `PurposePolicy` đọc trần và loại tệp từ `SettingsPort`; bỏ purpose `AVATAR` và `AvatarPort`.
+- [ ] **Bước S6** - API `GET /api/v1/files/policies` (người đã đăng nhập) trả giới hạn hiện hành; sửa `files.yaml` (bỏ `AVATAR`, thêm API này); `frontend/src/shared/files/purposes.ts` lấy giới hạn từ API thay vì cố định.
+- [ ] **Bước S7** - Frontend `SettingListPage` (màn Setting List, mở từ Admin Dashboard), `SettingDetailPage` + `SettingValueForm` (màn Setting Detail).
+- [ ] **Bước S8** - Unit test và MockMvc: chỉ Admin, version lệch `409`, giá trị ngoài giới hạn `400`, khởi tạo không ghi đè, upload theo giới hạn mới (NFR-U03-63).

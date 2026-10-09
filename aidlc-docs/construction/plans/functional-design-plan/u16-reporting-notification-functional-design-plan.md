@@ -1,5 +1,7 @@
 # U16 Reporting & Notification - Functional Design Plan
 
+**Lịch sử plan baseline trước 2026-10-08**: giữ nguyên các bước đã hoàn thành và mã UC tại thời điểm đó. Thiết kế hiện hành và revision code plan theo [current SRS contract](../../current-srs-contract.md); task đồng bộ ở [construction-sync](../construction-sync-2026-10-08.md), không dùng checklist cũ như phạm vi mới.
+
 - [x] Đọc định nghĩa U16, US-RPT-001..003 và US-NTF-001, UC 36 (và một mã đã bỏ) và UC 38, FR-011, FR-019, FR-024; event từ U04, U05, U07, U08, U12, U14, U15 (trần 300 email/ngày). Báo cáo độ lệch điểm AI ngoài phạm vi.
 - [x] Hỏi 4 điểm qua giao diện; ghi vào `../functional-design-questions/u16-reporting-notification-functional-design-questions.md`.
 - [x] Đồng bộ: FR-019, US-RPT-001, UC 36 (chỉ tự nhắc 24 giờ trước hạn, không nhắc tay).

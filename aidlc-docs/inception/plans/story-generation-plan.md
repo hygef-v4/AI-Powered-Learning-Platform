@@ -1,8 +1,8 @@
 # Kế hoạch tạo User Stories
 
-> Lịch sử lập kế hoạch: các mục nhắc "Phase 2", bốn loại bài hoặc Simulation Exam bên dưới phản ánh quyết định cũ. Phạm vi hiện hành gồm 49 story/40 use case sau các lần gộp và tách use case, năm dạng bài, không có Simulation Exam; xem `stories.md` và `unit-of-work-story-map.md` để triển khai.
+> Bản hiệu lực 2026-10-08 có 70 UC/51 story, năm loại bài và scope SRS 4.4. Các mục Phase 2, Simulation Exam và catalog theo mốc cũ bên dưới là lịch sử; xem stories.md và unit-of-work-story-map.md hiện hành để triển khai.
 
-> Bổ sung 2026-09-29: Catalog use case hiện hành (40 UC từ 2026-09-30, 39 UC rồi 40 UC từ 2026-10-01) ở `docs/use-case-table.md`; mã Simulation Exam đã rút, mã AI chấm Practice được thêm, các mã CRUD gộp không tái sử dụng. Các số lượng và đường dẫn cũ bên dưới chỉ là lịch sử.
+> Các câu hỏi/câu trả lời và revision trước 2026-10-08 được giữ nguyên theo ngày, không dùng mã UC cũ làm mã hiện hành. Danh mục hiệu lực ở `docs/use-cases-and-screens.md`; mã story rút không tái sử dụng.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -225,3 +225,11 @@ X) Khác (vui lòng mô tả sau thẻ `[Answer]:` bên dưới)
 - [x] Cập nhật traceability FR-004, FR-007, FR-016 và FR-027 đến FR-029.
 - [x] Kiểm tra Security/Resiliency và tính nhất quán với requirements đã duyệt.
 - [x] Trình người dùng checkpoint phê duyệt lại User Stories.
+
+## Revision 2026-10-08 - Đồng bộ SRS
+
+- [x] Giữ 49 story đã có, bổ sung US-PAY-004 và US-PAY-005: tổng 51.
+- [x] Cập nhật acceptance criteria cho profile, announcement CRUD, scope kế thừa, hai ngân hàng, gradebook và thanh toán.
+- [x] Ánh xạ đủ 70 UC đúng ID/tên, Audit UC 70; US-AIG-003 là vận hành hỗ trợ không có UC trực tiếp.
+- [x] Persona/actors đúng mô tả và quyền SRS; thuật ngữ nghiệp vụ dùng AI.
+- [x] Giữ lịch sử và checkpoint triển khai, không coi catalog mới là thay đổi code đã xong.

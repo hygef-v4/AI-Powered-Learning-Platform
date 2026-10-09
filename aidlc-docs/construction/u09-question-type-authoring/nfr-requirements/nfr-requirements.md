@@ -1,5 +1,7 @@
 # U09 Question Type Authoring - NFR Requirements
 
+**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Hiệu năng
 
 | Mã | Yêu cầu | Nguồn |
@@ -33,7 +35,7 @@
 | NFR-U09-30 | Unit test mọi `BR-U09-xx`; bộ DOCX mẫu: có PNG draw.io nhúng XML, SVG draw.io, ảnh thường, ảnh PNG đã nén lại (mất XML), bảng gộp ô, textbox. | NFR-004 |
 | NFR-U09-31 | Test chặn: sửa, xóa hoặc di chuyển bất kỳ block giảng viên nào (kể cả bảng, sơ đồ), DOCX zip bomb, SVG có script, XML có DOCTYPE; nhập DOCX của người học không đổi khung và lỗi không mất bản nháp. | NFR-004 |
 | NFR-U09-32 | Test vòng tròn: xuất DOCX rồi nhập lại → sơ đồ vẫn nhận được (XML nhúng còn). | BR-U09-51 |
-| NFR-U09-33 | Test phần và rubric: duyệt bị chặn khi có câu Text Essay hoặc phần thiếu rubric; nhân bản/version/copy tạo rubric mới cho từng câu/phần; sửa rubric khi bài `DRAFT` chuyển sang phiên bản mới; điểm câu Text Essay bằng tổng rubric của câu; điểm tối đa của bài bằng tổng các câu hoặc các phần; khung AI chỉ thay khung sau khi xác nhận. | BR-U09-23…28 |
+| NFR-U09-33 | Test câu, phần và rubric: U08 thêm câu Text Essay hoặc phần mới xuất hiện thì tự tạo rubric trống, bỏ câu/phần thì rubric bị xóa; duyệt bị chặn khi còn rubric trống; nhân bản/version/copy tạo rubric mới cho từng câu/phần; điểm câu Text Essay bằng tổng rubric; khung sao từ ngân hàng không đổi câu gốc; khung AI chỉ thay khung sau khi xác nhận. | BR-U09-23…28 |
 
 ## 5. Compliance
 

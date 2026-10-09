@@ -1,5 +1,9 @@
 # U01 Account & Access - Code Generation Plan
 
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+
 > Plan này là nguồn duy nhất cho Code Generation của U01. Mỗi bước xong thì đánh `[x]` ngay.
 >
 > **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
@@ -11,7 +15,8 @@
 ## 1. Bối cảnh
 
 - **Loại dự án**: greenfield, workspace root `AI-Powered-Learning-Platform/`. Code **không** nằm trong `aidlc-docs/`.
-- **Story**: US-IAM-001…007. **Use case hiện hành**: UC 1–7 theo `docs/use-case-table.md`. Phần "gán phạm vi môn" của US-IAM-005 thuộc U04 (BR-U04-01); U01 chỉ đổi role.
+- **Story**: US-IAM-001…007.
+- **Primary UC hiện hành**: UC 01–07, 59–63 (bản 73 UC). Nhập CSV là luồng phụ của UC 60 (người dùng chốt giữ 2026-10-09).
 - **Thiết kế nguồn**: `construction/u01-account-and-access/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Thứ tự**: wave 1, sau U03 và U02 (hai unit đó code song song trước); U04 code sau U01.
@@ -26,15 +31,14 @@ Khung dự án (Maven, cấu hình, `shared/`, frontend, Docker Compose, CI) là
 |---|---|---|
 | `AuditPort` | U02 khai báo và cài | **Dùng U02 thật** (U02 code trước U01) |
 | `JobPort`, `JobHandler`, `JobHandlerRegistry` | U03 khai báo và cài | **Dùng U03 thật** (U03 code trước U01): đăng ký `OtpMailHandler` vào queue `jobs.email` |
-| `AvatarPort` | U03 tạo interface theo chữ ký của U01 và cài | U03 code trước nên dùng thật ngay (U03 Bước 7); không cần adapter tạm |
 | `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài (`C`) | U04 code sau: adapter tạm `NoAssignmentScopeAdapter` trả "không phụ trách môn/lớp nào", nên hành động cần phạm vi bị **từ chối** (fail closed); kiểm hạ role cho qua vì chưa có phân công. U04 Bước 10 cài thật và bỏ adapter tạm |
 
 ### U01 cung cấp
 
 | Port | Cho | Ghi chú |
 |---|---|---|
-| `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Thay `FakeAuthorizationPort` của U02 và U03 |
-| `AccountLookupPort` | U04, U16 | `findStudents(query, limit ≤ 20)`, `findByEmails(emails)`, `getContact(accountId)` (email, tên hiển thị, role, trạng thái), `countByRoleAndStatus()` (UC 18, U16); không trả mật khẩu, số điện thoại |
+| `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Cài thật thân `AuthorizationService` (U02, U03 đang dùng bản khung luôn từ chối) |
+| `AccountLookupPort` | U02, U04, U16 | `findStudents(query, limit ≤ 20)`, `findByEmails(emails)`, `getContact(accountId)` (email, tên hiển thị, role, trạng thái), `countByRoleAndStatus()` (UC 58 Admin Dashboard, U16); không trả mật khẩu, số điện thoại |
 
 ### Dữ liệu U01 sở hữu
 
@@ -64,8 +68,10 @@ PostgreSQL `accounts` (U07 thêm cột số dư credit, U16 thêm `email_prefere
   src/test/java/...           unit test
 /frontend                     Next.js App Router
   src/app/(auth)/...          login, activate, reset-password
-  src/app/profile/...
-  src/app/admin/accounts/...
+  src/app/post-login/         PostLoginRedirect
+  src/components/shell/       AccountMenu, SignOutDialog, RoleGuard
+  src/app/profile/...         User Profile, profile/password (Password Change)
+  src/app/admin/accounts/...  Account List, new (New Account), [id] (Account Detail)
   src/components/ui/, src/lib/api/   (khung, plan U03 K4, gồm PasswordField, OtpInput)
 /contracts/openapi/identity.yaml
 /infra/nginx/                 route của U01 (Docker Compose, CI là khung, plan U03 K5-K6)
@@ -81,23 +87,23 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 
 - [ ] **Bước 7** - Domain: `Account`, `AccountStatus` (3 trạng thái), `Role`, `Profile`, `LoginThrottle`, chuẩn hóa email, kiểm tên miền theo `U01_ALLOWED_EMAIL_DOMAINS`, chuyển trạng thái hợp lệ (BR-U01-03, 70…73).
 - [ ] **Bước 8** - `PasswordPolicy` (BR-U01-30, 31; ≤ 72 byte), `PasswordHasher` bcrypt cost cấu hình.
-- [ ] **Bước 9** - Port: dùng `AvatarPort` của U03; khai báo `SubjectScopePort`, `ClassScopePort` + `NoAssignmentScopeAdapter`; cài `AuthorizationPort` (interface đã có từ U02, U03), khai báo `AccountLookupPort`. Dùng `AuditPort` của U02 và `JobPort` của U03.
+- [ ] **Bước 9** - Port: không dùng AvatarPort; khai báo `SubjectScopePort`, `ClassScopePort` + `NoAssignmentScopeAdapter`; cài `AuthorizationPort` (interface đã có từ U02, U03), khai báo `AccountLookupPort`. Dùng `AuditPort` của U02 và `JobPort` của U03.
 - [ ] **Bước 10** - `OtpService` gửi việc `OTP_DELIVERY` qua `JobPort.enqueue` (yêu cầu OTP không ghi database nên message gửi ngay) (idempotency key `accountId:purpose:phút`); `OtpMailHandler` chạy ở `worker`, đăng ký với `JobHandlerRegistry` của U03: sinh mã 6 số, lưu băm Redis 10 phút, 5 lượt, gửi qua Mail Port (Brevo SMTP ở demo/production, Mailpit local/test; cấu hình và SMTP key theo shared-infrastructure §8); lỗi thì U03 retry theo backoff, hết lượt thì log ERROR `OTP_DELIVERY_FAILED` (BR-U01-20…27, NFR-U01-30, 31).
 - [ ] **Bước 11** - `ActivationService`: F1, F2 hai bước — xác minh OTP cấp `otpTicket`, rồi đặt mật khẩu bằng ticket (BR-U01-28; US-IAM-001); xong thì tự đăng nhập qua `TokenService` (BR-U01-13). `VerificationTicketStore` (Redis `ticket:*`) dùng chung cho F5.
 - [ ] **Bước 12** - `TokenService`: JWT HMAC 15 phút; refresh ngẫu nhiên lưu băm, idle 2 giờ, trần 7 ngày, xoay vòng, phát hiện dùng lại; refresh kiểm `credentialVersion` (BR-U01-44…46, P1).
-- [ ] **Bước 13** - `AuthService`: đăng nhập với hash giả cho email không tồn tại, khóa tạm 5 lần/15 phút, refresh, đăng xuất (chỉ phiên hiện tại), quên mật khẩu (xác minh OTP rồi mới đặt mật khẩu, BR-U01-28), đổi mật khẩu tăng `credentialVersion` (F3-F6; US-IAM-002, 003, 006).
-- [ ] **Bước 14** - `ProfileService`: F7 (US-IAM-004); đổi ảnh qua `AvatarPort.validateAvatar` của U03.
-- [ ] **Bước 15** - `AuthorizationService` cài `AuthorizationPort`: mặc định từ chối, kết hợp role + `SubjectScopePort`/`ClassScopePort`; không gọi được U04 → từ chối (F13; BR-U01-62, 93; US-IAM-005). Thay `FakeAuthorizationPort` của U02 và U03 bằng bean này.
-- [ ] **Bước 16** - `AccountAdminService`: tạo, danh sách, đổi role (tăng `credentialVersion`, BR-U01-63), vô hiệu hóa/mở lại, bảo vệ admin tự hạ và admin cuối, chặn hạ role khi còn phụ trách môn/lớp (F8, F9, F11, F12; BR-U01-64; US-IAM-005, 007).
-- [ ] **Bước 17** - `AccountImportService`: CSV ≤ 1000 dòng, kiểm từng dòng, trả kết quả không lưu; xác nhận thì kiểm lại và tạo dòng hợp lệ trong một transaction; audit kèm checksum; cấm tạo ADMIN (F10; BR-U01-80…83; US-IAM-007).
-- [ ] **Bước 18** - `AccountLookupService` cài `AccountLookupPort` cho U04, U16 (chỉ trả email, tên hiển thị, role, trạng thái; `countByRoleAndStatus()` cho UC 18).
+- [ ] **Bước 13** - `AuthService`: đăng nhập với hash giả cho email không tồn tại, khóa tạm 5 lần/15 phút, trả `homePath` theo role (BR-U01-48: `/classes`, `/manager`, `/admin`), refresh, đăng xuất (chỉ phiên hiện tại), đặt lại mật khẩu (xác minh OTP rồi mới đặt mật khẩu, BR-U01-28), đổi mật khẩu tăng `credentialVersion` (F3-F6, F15; US-IAM-002, 003, 006).
+- [ ] **Bước 14** - ProfileService: F7 (US-IAM-004), chỉ displayName/phoneNumber, từ chối avatar/ID người khác.
+- [ ] **Bước 15** - `AuthorizationService` cài `AuthorizationPort`: mặc định từ chối, kết hợp role + `SubjectScopePort`/`ClassScopePort`; `ADMIN` bị từ chối mọi hành động cần phân công môn/lớp; không gọi được U04 → từ chối (F13; BR-U01-60, 62, 93; US-IAM-005). U02, U03 đang dùng bản khung luôn từ chối; bước này cài thật.
+- [ ] **Bước 16** - `AccountAdminService`: danh sách (UC 59), tạo (UC 60), chi tiết (UC 61), sửa tên/số điện thoại kèm `version` (UC 62), đổi role (UC 62, tăng `credentialVersion`, BR-U01-63), vô hiệu hóa/mở lại (UC 63), bảo vệ admin tự hạ và admin cuối, chặn đổi role khi role mới không giữ được phân công môn/lớp, gồm cả đổi sang `ADMIN` (F8, F9, F11, F12, F14; BR-U01-64; US-IAM-005, 007).
+- [ ] **Bước 17** - `AccountImportService` (luồng phụ của UC 60): CSV ≤ 1000 dòng, kiểm từng dòng, trả kết quả không lưu; xác nhận thì kiểm lại và tạo dòng hợp lệ trong một transaction; audit kèm checksum; cấm tạo ADMIN (F10; BR-U01-80…85; US-IAM-007).
+- [ ] **Bước 18** - `AccountLookupService` cài `AccountLookupPort` cho U04, U16 (chỉ trả email, tên hiển thị, role, trạng thái; `countByRoleAndStatus()` cho UC 58).
 - [ ] **Bước 19** - Audit qua `AuditPort` của U02 mọi sự kiện BR-U01-90; không đưa mật khẩu, OTP, token, số điện thoại vào payload.
 - [ ] **Bước 20** - Unit test cho mọi `BR-U01-xx` ở bước 7-19 (mock port của U02, U03, U04).
 - [ ] **Bước 21** - Tóm tắt business logic: `aidlc-docs/construction/u01-account-and-access/code/business-logic-summary.md`.
 
 ### Nhóm C - Repository và migration
 
-- [ ] **Bước 22** - Flyway `V20260925_0930__u01_accounts.sql` (sau `V20260925_0900` của U02): `accounts` (email duy nhất, status 3 giá trị `PENDING`/`ACTIVE`/`DISABLED`, `credential_version`, `failed_login_count`, `locked_until`, `phone_number`, `avatar_file_id`); seed một ADMIN ở trạng thái `PENDING` lấy email từ biến môi trường; thêm FK `audit_logs.actor_id` → `accounts` (bảng `audit_logs` của U02 đã có).
+- [ ] **Bước 22** - Flyway `db/migration/identity/V20260925_0930__create_accounts.sql` (sau `V20260925_0900` của U02): `accounts` (email duy nhất, status 3 giá trị `PENDING`/`ACTIVE`/`DISABLED`, `credential_version`, `failed_login_count`, `locked_until`, `phone_number`); seed một ADMIN ở trạng thái `PENDING` lấy email từ biến môi trường; thêm FK `audit_logs.actor_id` → `accounts` (bảng `audit_logs` của U02 đã có) và FK `system_settings.updated_by` → `accounts` (bảng của U03).
 - [ ] **Bước 23** - Repository JPA, adapter Redis cho refresh/OTP, Bucket4j proxy manager.
 - [ ] **Bước 24** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ, Mailpit): kích hoạt đầu-cuối qua message `OTP_DELIVERY` + worker của U03, đăng nhập, khóa tạm, refresh dùng lại, import lặp lại cùng file.
 - [ ] **Bước 25** - Tóm tắt repository: `code/repository-summary.md`.
@@ -105,21 +111,21 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 ### Nhóm D - API
 
 - [x] **Bước 26** - `/contracts/openapi/identity.yaml`: toàn bộ endpoint U01, lỗi problem-details, cookie.
-- [ ] **Bước 27** - Controller + DTO + validation: `auth` (login, refresh, logout, activation-requests, activation-otp-verifications, activations, password-reset-requests, password-reset-otp-verifications, password-resets), `me` (profile, password), `admin/accounts` (list, create, role, status, imports). `RateLimitFilter`, `JwtAuthFilter`, cookie theo P2.
+- [ ] **Bước 27** - Controller + DTO + validation: `auth` (login, refresh, logout, activation-requests, activation-otp-verifications, activations, password-reset-requests, password-reset-otp-verifications, password-resets), `me` (profile, password), admin/accounts (list, create, get detail, patch displayName/phoneNumber với version, role, status, imports). Login trả `SessionInfo.homePath`. `RateLimitFilter`, `JwtAuthFilter`, cookie theo P2.
 - [ ] **Bước 28** - Test API: MockMvc cho mọi endpoint, gồm negative test bảo mật (NFR-U01-61).
 - [ ] **Bước 29** - Tóm tắt API: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 30** - Trang auth: `LoginPage` (điều hướng theo role sau đăng nhập tới Student Menu, Teacher Menu hoặc Admin Menu, BR-U01-48), `ActivationPage`, `PasswordResetPage` với `RequestOtpStep`, `VerifyOtpStep`, `SetNewPasswordStep` (ô mật khẩu chỉ mở sau khi OTP đúng, BR-U01-28) dùng chung; kích hoạt xong vào thẳng menu theo role, đặt lại mật khẩu xong về Login.
-- [ ] **Bước 31** - `ProfilePage`: `ProfileForm`, `AvatarUploader` (bọc `FileUploader` của U03 với `purpose = AVATAR`), `ChangePasswordDialog` (popup trên Profile); `SignOutDialog` (popup trên Navigation).
-- [ ] **Bước 32** - Admin: `AccountListPage`, `CreateAccountDialog`, `AccountDetailPage` (`RoleChangeDialog`, `StatusToggleDialog`), `ImportAccountsPanel` (trên `AccountListPage`).
+- [ ] **Bước 30** - Trang auth: `LoginPage` (màn User Login), `ActivationPage` (màn Activate Account), `PasswordResetPage` (màn Password Reset) với `RequestOtpStep`, `VerifyOtpStep`, `SetNewPasswordStep` (ô mật khẩu chỉ mở sau khi OTP đúng, BR-U01-28) dùng chung; `PostLoginRedirect` chuyển tới `homePath` (Class Dashboard, Manager Dashboard, Admin Dashboard; BR-U01-48). Kích hoạt xong vào thẳng dashboard theo role, đặt lại mật khẩu xong về User Login.
+- [ ] **Bước 31** - Khung sau đăng nhập: `AccountMenu` (User Profile, Logout; Subject Manager có nút sang Class Dashboard), `SignOutDialog`, `RoleGuard` (Admin không vào `/manager`, `/classes`). `ProfilePage` (màn User Profile: ProfileForm displayName/phoneNumber), `PasswordChangeDialog` (popup Password Change); gắn `NotificationBell` của U16 vào khung cho mọi vai trò.
+- [ ] **Bước 32** - Admin: `AccountListPage` (màn Account List), `NewAccountDialog` (popup New Account trên Account List), `AccountDetailPage` (màn Account Detail: `AccountSummary`, `AccountEditForm`, `RoleChangeDialog`, `StatusToggleDialog`), `ImportAccountsPanel` (trên `AccountListPage`).
 - [ ] **Bước 33** - Test frontend: validation form, thông điệp trung tính, hành vi nút theo phản hồi backend.
 - [ ] **Bước 34** - Tóm tắt frontend: `code/frontend-summary.md`.
 
 ### Nhóm F - Tài liệu và triển khai
 
-- [ ] **Bước 35** - Nginx (khung ở U03 K5): thêm route `auth`, `me`, `admin/accounts`, header SEC-004 (CSP theo `shared-infrastructure.md`).
+- [ ] **Bước 35** - Nginx (khung ở U03 K5): `location /api/` đã chuyển mọi API sang backend nên U01 không thêm route; chỉ kiểm header SEC-004 (CSP theo `shared-infrastructure.md`) và giới hạn kích thước request đủ cho file CSV.
 - [ ] **Bước 36** - `README.md` ở root: chạy local bằng Docker Compose (gồm `worker`), biến môi trường, tài khoản admin seed, cách xem OTP trong Mailpit, chạy test.
 - [ ] **Bước 37** - Chạy toàn bộ test backend và frontend; ghi kết quả vào `code/test-results.md`.
 
@@ -129,13 +135,13 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 |---|---|
 | US-IAM-001 Kích hoạt | 7, 8, 10, 11, 22, 24, 27, 30 |
 | US-IAM-002 Đăng nhập/đăng xuất | 12, 13, 27, 30, 31 |
-| US-IAM-003 Quên mật khẩu | 10, 13, 27, 30 |
+| US-IAM-003 Đặt lại mật khẩu | 10, 13, 27, 30 |
 | US-IAM-004 Hồ sơ | 14, 27, 31 |
 | US-IAM-005 Role (phạm vi môn ở U04) | 15, 16, 19, 27, 32 |
 | US-IAM-006 Đổi mật khẩu | 8, 13, 27, 31 |
 | US-IAM-007 Vòng đời tài khoản | 16, 17, 19, 22, 27, 32 |
 | Contract cho unit khác (`AuthorizationPort` thay adapter giả của U02, U03; `AccountLookupPort`) | 9, 15, 18 |
-| UC 18 (số tài khoản cho U16) | 18 |
+| UC 58 (số tài khoản cho Admin Dashboard của U16) | 18 |
 
 ## 5. Ngoài phạm vi lượt này
 
@@ -143,3 +149,15 @@ Bước 1-6 đã chuyển sang plan U03 (Bước K1-K6, quyết định 2026-10-
 - Code của U03 (khung, việc nền, worker) và U02 (audit); U01 chỉ đăng ký handler `OTP_DELIVERY`.
 - Bật bước deploy SSH trong CI.
 - Test chịu lỗi (RESILIENCY-14) ngoài phạm vi đồ án.
+
+## 6. Revision implementation scope - 2026-10-08
+- [ ] Áp R1–R5 theo current-srs-contract.md: không vai trò nào kế thừa Student; denial matrix cho assignment có/không.
+- [ ] Account Detail UC 61 và Update Account Information UC 62 với version/audit; không trả hash/OTP/token, không sửa email/mật khẩu qua Admin.
+- [ ] Bỏ cập nhật avatar khỏi DTO/UI/call site U01; rà cột/port code cũ riêng, không xóa dữ liệu lịch sử tự động.
+
+## 7. Revision theo bản 73 UC - 2026-10-09
+
+- [ ] Sửa `contracts/openapi/identity.yaml`: `SessionInfo.homePath` thành `/classes`, `/manager`, `/admin`; thêm `PATCH /api/v1/admin/accounts/{accountId}` (`updateAccount`); bỏ `GET /api/v1/me/avatar/download`, schema `DownloadLink` và `Profile.hasAvatar`; thêm `phoneNumber`, `version` vào dữ liệu chi tiết tài khoản (UC 61–62).
+- [ ] `ADMIN` không dùng chức năng Subject Manager/Teacher: `AuthorizationService` từ chối hành động cần phân công môn/lớp của Admin; `RoleGuard` chặn `/manager`, `/classes` (BR-U01-48, 60).
+- [ ] Chặn đổi role khi role mới không giữ được phân công hiện có, gồm cả đổi sang `ADMIN` (BR-U01-64).
+- [ ] Màn mới theo screen flow: New Account và Password Change là trang riêng; Logout ở khung sau đăng nhập.

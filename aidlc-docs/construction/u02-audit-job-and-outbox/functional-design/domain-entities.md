@@ -1,6 +1,8 @@
 # U02 Audit - Domain Entities
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 39. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
+**Bản tài liệu 2026-10-09**: UC 73 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AUD-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 73. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
 
 ## 1. Tổng quan
 
@@ -32,10 +34,12 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 | Port | Dùng bởi |
 |---|---|
 | `AuditPort.record(event)` | Mọi unit; ghi trong transaction của unit gọi |
-| `AuditQueryPort.query(actor, filters, page)` | Trang audit của admin |
+| `AuditPort.recordDenied(event)`, `AuditPort.recordFailure(event)` | Mọi unit; ghi sự kiện bị từ chối hoặc lỗi bằng transaction riêng |
+| `AuditQueryPort.query(actor, filter, page)` | `AuditController` của màn Audit Log (UC 73) |
 
 ### Port U02 dùng
 
 | Port | Unit | Cạnh |
 |---|---|---|
-| `AuthorizationPort.authorize` | U01 | `C` - chỉ cho API đọc audit; U01 code sau U02 nên dùng adapter giả luôn từ chối |
+| `AuthorizationPort.authorize` | U01 | `C` - chỉ cho API đọc audit; U01 code sau U02 nên dùng `AuthorizationService` khung của U01 (luôn từ chối) |
+| `AccountLookupPort.getContact` | U01 | `C` - lấy email người thực hiện để hiện trên Audit Log; khi U01 chưa cài thì để trống email |

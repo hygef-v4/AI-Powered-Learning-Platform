@@ -3606,3 +3606,112 @@ kiểm tra bản này xem đã đúng chưa"
 **Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
 
 ---
+
+## Documentation update - Use cases and screens aligned with new SRS
+**Timestamp**: 2026-10-08T05:58:38Z
+**User Input**: "giúp tôi sửa lại cái bảng này trước"
+**Attachment**: `C:/Users/QUANGH~1/AppData/Local/Temp/codex-clipboard-b6975ae1-253a-44ef-9718-0dbea2aba508.png` identifies `docs/use-cases-and-screens.md`.
+**AI Response**: "Updated docs/use-cases-and-screens.md from 44 to 69 UC using the latest SRS IDs and exact names. Preserved the four renamed UC, separated Student Practice AI grading from Teacher AI Grading Proposals, mapped actor inheritance to SRS section 4.4 and mapped each UC to its screen/action. Added proposed credit-package administration and Admin payment-history screen mappings. Verified all 69 IDs/names against SRS and Markdown table structure."
+**Context**: Scoped documentation correction requested after the AI-DLC consistency review; requirements, stories, unit designs, code plans, application code and screen-flow.drawio are not modified. Existing AI-DLC 40-UC references remain pending synchronization; no code-generation checkpoint advanced. Security/resiliency extensions are N/A for this catalog-only edit; disabled property-based-testing extension skipped.
+
+---
+
+## Documentation update - Screen names aligned with supplied Drawio
+**Timestamp**: 2026-10-08T06:10:30Z
+**User Input**: "sửa lại tên screen heo file drawio  mới"
+**Attachment**: `C:/Users/Quang Hung/Downloads/screen-flow.drawio`.
+**AI Response**: "Aligned the screen column in docs/use-cases-and-screens.md with decoded labels in the supplied Drawio. Replaced old screen aliases, mapped Student assignment lists to the five type-specific screens and Submission History to its own screen, and marked UC 53-54 as missing screen mappings because no subject-template screen appears in the new diagram. Verified every mapped screen label exists in the supplied file and all 69 UC IDs, names and actors are unchanged. The supplied diagram and existing repository diagram have identical SHA256 hashes."
+**Context**: Documentation-only screen-name correction. The user's modified docs/screen-flow.drawio was read, not edited. Other AI-DLC designs and code-generation plans remain pending synchronization. Security/resiliency extensions are N/A for screen-name mapping; disabled property-based-testing extension skipped. Existing implementation checkpoints unchanged.
+
+---
+
+## Inception documentation synchronization - New SRS catalog
+**Timestamp**: 2026-10-08T06:43:21Z
+**User Input**: "giúp tôi sửa lại doc inception ai dlc theo doc mới"
+**AI Response**: Synchronized active Inception requirements, personas, stories, application components, method contracts, services, unit coverage and planning summaries with the new SRS and supplied screen-flow diagram. Incorporated conditional actor inheritance and resource scopes, profile updates without avatar changes, AI terminology, separate class/subject question banks and Student/Teacher assignment lists, announcement update/removal, Admin package configuration and global payment-history viewing. Preserved 49 existing stories and added US-PAY-004/005, for 51 stories. Rebuilt direct UC-to-story-to-unit mappings for the final 70-UC catalog, with exactly one primary owner per UC/story across 16 units. Historical questions, decisions, approvals and UC numbers were retained.
+**Context**: Authorized Inception documentation correction. Construction designs, contracts, code plans and older local specification catalogs remain pending synchronization; no application code generated and no implementation checkpoint advanced. Enabled Security and Resiliency constraints retained; runtime-only verification N/A and disabled Property-Based Testing skipped. Validated Markdown structure, local links, requirement references, unique IDs and complete coverage; whitespace checks passed.
+
+---
+
+## SRS and Inception update - View Audit Log
+**Timestamp**: 2026-10-08T06:43:21Z
+**User Input**: "ôi tôi thiếu uc view audit log rồi giúp tôi bổ sung uc đó vào bảng uc trên gg doc và usecase and screen, với đồng bộ lại"
+**AI Response**: Added UC 70 View Audit Log (Audit Management) to section 4.2 and an Administrator-only view/search row to section 4.4 of the user's existing Google SRS document (file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n). Audit records are read-only. Appended UC 70 / Administrator / Audit Log to docs/use-cases-and-screens.md and synchronized current Inception requirements, audit story traceability, U02 ownership, plan summaries and state to 70 UC. Fetched a fresh source before upload to preserve concurrent document edits, verified the saved cloud content and visually checked both affected table pages. Only the DOCX document-body part changed; all other package entries, styles and media were preserved.
+**Context**: User-authorized cloud document edit and local synchronization. Audit Log already exists in the user's supplied diagram; docs/screen-flow.drawio was not edited. UC 53-54 remain explicitly unmapped because the diagram has no subject-template screens. Historical records retained and Construction/code plans left for a separate synchronization.
+
+---
+
+## Inception synchronization explanation
+**Timestamp**: 2026-10-08T06:48:00Z
+**User Input**: "inception đã đồng bộ những gì"
+**AI Response**: Explained updated requirements, actors/personas, 51 user stories, application design, 70-UC traceability across 16 units, plans and state/audit. Clarified that Construction/contracts/code plans still require synchronization and UC 53-54 have no screens in the supplied diagram.
+**Context**: Documentation explanation; no new scope or implementation checkpoint change. Timestamp records the interaction log entry.
+
+---
+
+## Inception UC traceability explanation
+**Timestamp**: 2026-10-08T06:48:00Z
+**User Input**: "trong doc inception thì doc nào cần đến uc id"
+**AI Response**: Recommended keeping UC IDs primarily in the story-to-UC matrix in stories.md and the UC/story/unit mapping in unit-of-work-story-map.md. Unit scope may reference them; requirements use FR IDs and stories use US IDs. Actor/persona descriptions do not need UC IDs; architecture and plan documents may link to the mapping when useful.
+**Context**: Read-only review and explanation; no documentation restructuring requested. Timestamp records the interaction log entry.
+
+---
+
+## Commit preparation - Inception and docs synchronization
+**Timestamp**: 2026-10-08T06:48:00Z
+**User Input**: "giúp tôi commit update inception doc với mấy phần trong docs"
+**AI Response**: Prepared a local documentation commit covering revised Inception, related state/audit, the 70-UC screen catalog and the user's updated screen-flow.drawio. Validated UC/story/unit coverage, Markdown links/structure, Drawio XML and whitespace before staging. No application or Construction files included; no push requested.
+**Context**: User-authorized Git commit of existing documentation updates; implementation checkpoints unchanged. Runtime checks are N/A to this commit; enabled documentation constraints preserved and disabled Property-Based Testing skipped.
+
+---
+
+## Documentation update - Latest screen-flow labels and template screens
+**Timestamp**: 2026-10-08T06:56:55Z
+**User Input**: "giúp tôi sửa lại tên màn hình theo screen flow mới"
+**Attachment**: `C:/Users/Quang Hung/Downloads/screen-flow (1).drawio`.
+**AI Response**: Compared the latest diagram with the committed screen-flow.drawio by cell ID, label, parent, style, geometry and edge endpoints. Found two renamed screens (Teacher My Classes → Assigned Classes; Class List → Subject Classes), two added screens (Subject Template, Template Editor) and one new edge between the template screens. Existing cells and edges otherwise unchanged; Student My Classes remains unchanged. Updated docs/use-cases-and-screens.md, related current Inception descriptions, template screen mappings for UC 53-54 and state. Linked the catalog to the user's renamed diagram file, which is byte-identical to the attachment. Preserved all 70 UC IDs/names/actors and 51-story/16-unit traceability.
+**Context**: User-authorized screen-label/mapping correction; the user's diagram file was read, not edited. Earlier missing-template notes in dated comparison records remain historical and are superseded by the latest plan revision. No application/Construction changes or new commit. Existing enabled authorization/resiliency constraints retained; runtime checks N/A and disabled Property-Based Testing skipped.
+
+---
+
+## Construction consistency review - Current SRS and Inception
+**Timestamp**: 2026-10-08T07:06:46Z
+**User Input**: "check construction doc theo doc mới, inception docs"
+**AI Response**: Reviewed Construction documentation against the current 70-UC catalog, revised 51-story/16-unit Inception and latest screen flow. Saved construction/plans/construction-consistency-review-2026-10-08.md with ten finding groups and source evidence: class structure permissions, Administrator inheritance/assignment eligibility, subject-versus-teaching scopes, missing Admin package management/global payment history, prohibited announcement updates, removed avatar updates still present, legacy UC traceability, outdated screen mappings and 21 broken local source links. Distinguished already-designed audit/template/AI behaviors and supporting flows from actual requirement gaps; proposed a synchronization order without modifying the designs or code.
+**Context**: User-authorized documentation review, not implementation. Historical questions/approvals and generated-code summaries were treated as earlier-baseline evidence. Existing permission descriptions do not yet meet revised authorization requirements; enabled Resiliency constraints retained, runtime checks N/A and disabled Property-Based Testing skipped. No stage/checkpoint advanced; no commit created.
+
+---
+
+## Construction documentation synchronization - 70-UC revision
+**Timestamp**: 2026-10-08T07:34:25Z
+**User Input**: "giúp tôi sửa lại doc construction theo inception và doc mới"
+**AI Response**: Synchronized all 16 units' functional, NFR and infrastructure designs and code-plan scope with the current 70-UC catalog, 51-story Inception and latest screen-flow (1).drawio. Corrected class structure versus teaching permissions, conditional inherited roles/ACTIVE assignment eligibility, subject versus class resource scopes, Admin account detail/update, package add/edit and read-only global payment history, versioned announcement update/soft-delete and removed active avatar updates. Rebuilt primary ownership and function-specific UC references, aligned screen labels and entries (including Assignment Detail for Student Practice AI, Uploaded Learning Materials as a list, Admin Statistic/Sidebar and separate Class List), and replaced broken global database/screen-source links. Added current-srs-contract.md, the synchronization checklist and resolution evidence for R01-R10; updated state and current Inception status notes.
+**Validation**: Checked 244 active Construction documents, 160 current design headers, 16 code plans, unique 70-UC/51-story ownership, local links, balanced fences and whitespace. Compared 64 historical stage-plan bodies and U03's completed baseline/checked steps against Git HEAD; preserved them. Application code, contracts, migrations, questions, generated-code summaries and the user's diagram were not edited.
+**Context**: Authorized documentation revision only. Historical approvals apply to their old baseline; new implementation work remains unchecked in revised code plans. Enabled Security and Resiliency constraints retained in design, runtime checks N/A, disabled Property-Based Testing skipped. No commit or new implementation/stage approval created.
+
+---
+
+## pgvector purpose explanation
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "pgvector là dùng trong việc gì"
+**AI Response**: Explained the existing U05/U13 design: pgvector stores and searches lesson embeddings to retrieve authorized learning-material excerpts for AI question/assignment drafting. Distinguished database retrieval from model-generated embeddings/content.
+**Context**: Read-only explanation of current design. Entry recorded at commit preparation.
+
+---
+
+## pgvector removal options discussion
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "tôi k muốn dùng pgvector nữa thì sao"
+**AI Response**: Explained that AI drafting can remain with directly selected learning materials and extracted text; PostgreSQL keyword search is another option. Recommended direct source selection for a simpler project design, and identified Inception/U05/U13/database/code-plan/credit changes that would be required.
+**Context**: Discussion only; pgvector removal was not applied. Entry recorded at commit preparation; this commit retains the existing pgvector/embedding design.
+
+---
+
+## Commit preparation - Construction documentation synchronization
+**Timestamp**: 2026-10-08T07:40:37Z
+**User Input**: "ok giúp tôi commit change construction hiện tại đi đã, nhớ ghi description change đầy đủ"
+**AI Response**: Prepared a local commit of current Construction synchronization, related Inception status notes and state/audit. Wrote a detailed commit description covering authorization, new Admin flows, announcement lifecycle, profile fields, UC/story/screen mappings, source links, historical-plan preservation and validation.
+**Validation**: Construction check passes for 244 documents, 160 current design headers, 16 code plans, 64 preserved historical stage-plan bodies and U03 completed baseline; 70 unique UC and 51 unique stories. Inception coverage and local links pass; whitespace passes. No application/contracts/migrations/diagram changes.
+**Context**: User-authorized commit on the current branch. No push or pgvector-removal change requested for this commit. Existing implementation checkpoints unchanged; runtime checks N/A, enabled documentation constraints retained and disabled Property-Based Testing skipped.
+
+---

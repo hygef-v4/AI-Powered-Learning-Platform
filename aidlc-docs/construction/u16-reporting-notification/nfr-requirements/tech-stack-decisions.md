@@ -1,9 +1,11 @@
 # U16 Reporting & Notification - Tech Stack Decisions
 
+**Bản tài liệu 2026-10-09**: UC 12, 58 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); luồng phụ: phân bố điểm của UC 22, tiến độ nộp của UC 37, phần xuất tệp của UC 40; primary stories: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Email | Spring `JavaMailSender` (Brevo SMTP; Mailpit khi dev), timeout 10 s | Như U01 |
 | Mẫu email | Thymeleaf text/HTML, tiếng Việt | Escape mặc định |
 | Realtime | SSE dùng chung `SseHub` (U14) với kênh theo người dùng | Không thêm hạ tầng |
-| Lịch | `ScheduledScanner` của U03 (nhắc hạn mỗi phút, xếp lại email dời, dọn dẹp) và queue `jobs.email` | Dùng lại U03, không cần bảng job |
+| Lịch | `ScheduledScanner` của U03 (nhắc hạn bài tập mỗi phút, xếp lại email dời, dọn dẹp) và queue `jobs.email` | Dùng lại U03, không cần bảng job |
 | Xuất bảng điểm | Apache POI XSSF cho XLSX; CSV ghi stream UTF-8, escape công thức | Dùng thư viện POI đã có ở U09; không cần lưu file xuất |

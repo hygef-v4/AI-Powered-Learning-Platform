@@ -1,15 +1,17 @@
 # U05 Content, Material & RAG - Infrastructure Design
 
+**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
 ## 1. Ánh xạ
 
 | Thành phần | Chạy ở |
 |---|---|
-| Controller, service quản lý học liệu, `PublishedContentService`, `RetrievalService`, `ClassCommunicationController/Service` | `backend` |
+| `ContentController`, `LessonViewController`, service quản lý học liệu, `PublishedContentService`, `RetrievalService`, `AnnouncementController/Service` | `backend` |
 | `LessonScanHandler`, `LessonPendingSweeper` | `worker` |
-| Bảng `modules`, `lessons` (cột `embedding vector(768)`), `announcements`, `announcement_comments` | `postgres` (image có pgvector) |
+| Bảng `modules`, `lessons` (cột `summary`, `embedding vector(768)`), `announcements` | `postgres` (image có pgvector) |
 | Trần chi phí Gemini, credit | Qua `AiUsagePort` của U13 (U05 không có key Redis riêng) |
 | Queue | `jobs.gemini` (`LESSON_SCAN`, concurrency 4), `jobs.youtube` (`YOUTUBE_CAPTION`) |
-| Event lớp | `EventPublisherPort` (U03) phát sau commit trên `platform.events`: `class.announcement-posted`; U16 tiêu thụ. Bình luận không phát sự kiện |
+| Event | `EventPublisherPort` (U03) phát sau commit trên `platform.events`: `class.announcement-posted` (U16 tiêu thụ) |
 
 ## 2. Thay đổi hạ tầng dùng chung
 
@@ -29,11 +31,10 @@
 
 ## 4. Migration
 
-`V20260925_1200__u05_content.sql`:
+`db/migration/content/V20260925_1200__create_modules_lessons_announcements.sql` (chưa áp dụng nên sửa trực tiếp, không cần migration bổ sung):
 - `modules` (FK `subject_id` → `subjects`, index `(subject_id, order_no)`).
-- `lessons` (FK `module_id` → `modules`, `class_id` → `course_classes` cho phép rỗng; CHECK `source_type` khớp cột tệp/YouTube; `embedding vector(768)` với index `USING hnsw (embedding vector_cosine_ops)`; index `(module_id, class_id, order_no)`, `(scan_status, scanned_at)` cho sweeper).
-- `announcements` (FK `class_id`, `author_id` → `accounts`; index `(class_id, posted_at)`).
-- `announcement_comments` (bảng nối: FK `announcement_id` → `announcements`, `account_id` → `accounts`; index `(announcement_id, posted_at)`).
+- `lessons` (FK `module_id` → `modules`, `class_id` → `course_classes` cho phép rỗng, `uploaded_by` → `accounts`; cột `uploaded_at`, `summary` ≤ 4 000 ký tự cho phép rỗng; CHECK `source_type` khớp cột tệp/YouTube; `embedding vector(768)` với index `USING hnsw (embedding vector_cosine_ops)`; index `(module_id, class_id, order_no)`, `(scan_status, scanned_at)` cho sweeper).
+- `announcements` (FK `class_id` → `course_classes`, `author_id`, `updated_by`, `deleted_by` → `accounts`; `status` `VISIBLE`/`DELETED`; `version` NOT NULL mặc định 0; `updated_at`, `deleted_at`; index `(class_id, status, posted_at)` cho feed).
 
 ## 5. Compliance
 
@@ -44,3 +45,4 @@
 | RESILIENCY-04 | Compliant | Deploy cùng Compose |
 | RESILIENCY-06 | N/A | Health dùng chung; Gemini lỗi không làm backend `DOWN` |
 | Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
+
