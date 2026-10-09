@@ -1,13 +1,13 @@
 # U04 Subject, Class, Enrollment & Learning Access - NFR Design Patterns
 
-**Bản tài liệu 2026-10-08**: UC 12, 13, 27, 28, 45, 46, 47, 48, 49, 50, 63, 64, 65, 66; primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## P1 - Kiểm phạm vi bằng query có index
 - `isTeacherOf`: `course_classes(id, teacher_id)`; `isSubjectManager`: `subjects(id, manager_id)`; `isActiveStudent`: khóa chính `enrollments(class_id, account_id)` + lọc `status = 'ACTIVE'`.
 - Không cache (NFR-U04-01). Index thêm: `course_classes(subject_id, status)`, `course_classes(teacher_id)`, `subjects(manager_id)`, `enrollments(account_id, status)`.
 
 ## P2 - Khóa theo người học và môn
-- Trước khi ghi danh (thêm, khôi phục, mã mời): `pg_advisory_xact_lock(hash(studentId, subjectId))` trong transaction, rồi kiểm BR-U04-22 (NFR-U04-11).
+- Trước khi ghi danh (thêm, thêm lại): `pg_advisory_xact_lock(hash(studentId, subjectId))` trong transaction, rồi kiểm BR-U04-22 (NFR-U04-11).
 - Hàng chưa tồn tại không khóa được bằng `FOR UPDATE`, nên dùng advisory lock; khóa tự nhả khi transaction kết thúc.
 - Mở lại lớp: lấy khóa cho mọi người học `ACTIVE` của lớp theo thứ tự `studentId` tăng dần để tránh deadlock, rồi kiểm BR-U04-15.
 
@@ -24,9 +24,7 @@
 - `enrollment.activated {classId, accountId}` gửi qua `EventPublisherPort` (U03, gửi sau commit). Mở lớp `DRAFT → OPEN` gửi một event cho mỗi ghi danh `ACTIVE` (NFR-U04-13).
 
 ## P6 - Mã mời
-- Sinh 8 ký tự từ bảng chữ BR-U04-30 bằng `SecureRandom`; trùng unique → sinh lại, tối đa 3 lần.
-- Rate limit Bucket4j, khóa Redis `ratelimit:invite-code:{accountId}`, 10 token/giờ; **chỉ trừ khi nhập sai**; hết token → `429` và audit. Redis lỗi → từ chối (NFR-U04-31).
-- Mã so sánh sau khi viết hoa, bỏ khoảng trắng.
+- Bỏ ngày 2026-10-09 cùng chức năng tự ghi danh bằng mã mời.
 
 ## P7 - Che giấu đối tượng ngoài quyền
 - Mọi truy vấn theo ID đi qua một hàm `loadForActor(actor, classId)`: không thấy hoặc không có quyền → cùng `404` (BR-U04-42, 51).

@@ -1,6 +1,6 @@
 # U04 Subject, Class, Enrollment & Learning Access - Code Generation Plan
 
-**Bản tài liệu 2026-10-08**: UC 12, 13, 27, 28, 45, 46, 47, 48, 49, 50, 63, 64, 65, 66; primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 **Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
 
@@ -12,8 +12,8 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005 (bản đơn giản), US-LRN-001.
-- **Primary UC hiện hành**: UC 12, 13, 27, 28, 45, 46, 47, 48, 49, 50, 63, 64, 65, 66. Supporting flows theo current-srs-contract.md.
+- **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001 (US-CAT-005 mã mời đã bỏ 2026-10-09).
+- **Primary UC hiện hành**: UC 13, 14, 31, 32, 47–53, 64–67 (bản 73 UC).
 - **Thiết kế nguồn**: `construction/u04-subject-class-enrollment/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -34,7 +34,7 @@ Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bư
 
 ### Dữ liệu U04 sở hữu
 
-PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(class_id, account_id)`); Redis `ratelimit:invite-code:*`; routing key `enrollment.activated`.
+PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(class_id, account_id)`); routing key `enrollment.activated`.
 
 ## 2. Cấu trúc
 
@@ -44,18 +44,16 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
     api/                SubjectController, ClassController, EnrollmentController,
                         MeClassController, DTO
     application/        SubjectService, ClassService, EnrollmentService,
-                        EnrollmentGuard, InviteCodeService, StudentClassService,
+                        EnrollmentGuard, StudentClassService, ManagerViewService,
                         ScopeQueryService
-    domain/             Subject, CourseClass, Enrollment, trạng thái, EnrollmentRowResult,
-                        InviteCodeGenerator
+    domain/             Subject, CourseClass, Enrollment, trạng thái, EnrollmentRowResult
     infrastructure/     JPA repository, EmptyPublishedContentAdapter
     port/               ClassAccessPort, PublishedContentPort
                         (SubjectScopePort, ClassScopePort do U01 khai báo; U04 cài)
 /backend/src/main/resources/db/migration/academics/
-/frontend/src/app/admin/subjects/
-/frontend/src/app/teaching/ (Assigned Classes, subjects/, classes/)
-/frontend/src/app/admin/classes/
-/frontend/src/app/learning/
+/frontend/src/app/classes/          (Class Dashboard, Student/Teacher Class Detail, Student Detail)
+/frontend/src/app/manager/          (Manager Dashboard, Subject Detail, Class List, Class Detail)
+/frontend/src/app/admin/subjects/   (Subject List, Subject Detail)
 /contracts/openapi/academics.yaml
 /contracts/messages/enrollment-events.json
 ```
@@ -69,22 +67,22 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
 
 ### Nhóm B - Domain và logic
 
-- [ ] **Bước 2** - Domain: `Subject`, `CourseClass` (gồm `showGradeDistribution` mặc định false), `Enrollment` với trạng thái và chuyển trạng thái hợp lệ; `InviteCodeGenerator` (BR-U04-02, 11, 14, 17, 21, 30).
+- [ ] **Bước 2** - Domain: `Subject`, `CourseClass` (gồm `showGradeDistribution` mặc định false), `Enrollment` với trạng thái và chuyển trạng thái hợp lệ (BR-U04-02, 11, 14, 17, 21).
 - [ ] **Bước 3** - Port: `ClassAccessPort`, `PublishedContentPort`; `EmptyPublishedContentAdapter`. `SubjectScopePort`, `ClassScopePort` dùng interface U01 đã khai báo.
-- [ ] **Bước 4** - `SubjectService`: tạo, sửa, gán Chủ nhiệm môn, lưu trữ/mở lại (BR-U04-01…04).
-- [ ] **Bước 5** - `ClassService`: tạo lớp, gán giảng viên, sửa, đổi trạng thái, bật/tắt phân bố điểm, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (BR-U04-10…17, 26, P4, P5).
+- [ ] **Bước 4** - `SubjectService`: danh sách, thêm môn kèm chọn Chủ nhiệm môn `SUBJECT_MANAGER` `ACTIVE`, chi tiết có danh sách lớp chỉ đọc, sửa, đổi Chủ nhiệm môn, lưu trữ/mở lại (UC 64–67; BR-U04-01…05).
+- [ ] **Bước 5** - `ClassService` (chỉ Chủ nhiệm môn của môn): tạo lớp, gán giảng viên `TEACHER`/`SUBJECT_MANAGER`, sửa, đổi trạng thái, bật/tắt phân bố điểm, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (UC 49, 50, 52; BR-U04-10…17, 26, P4, P5).
 - [ ] **Bước 6** - `EnrollmentGuard` (advisory lock theo người học + môn, khóa theo thứ tự khi mở lại) (P2).
-- [ ] **Bước 7** - `EnrollmentService`: tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, ghi danh lại, phát event (BR-U04-20…26, P3).
-- [ ] **Bước 8** - `InviteCodeService`: bật/tắt/đổi mã, tự ghi danh, rate limit Bucket4j chỉ trừ khi sai, thông báo chung (BR-U04-30…34, P6).
-- [ ] **Bước 9** - `StudentClassService`: danh sách lớp "Đang học"/"Đã kết thúc", trang lớp có nội dung, U05 lỗi thì vẫn trả thông tin lớp (BR-U04-40…44, P8).
-- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort` (gồm `countSubjectsByStatus`, `countClassesByStatus`, `countActiveEnrollments` cho UC 57); bỏ `NoAssignmentScopeAdapter` của U01 (P1).
+- [ ] **Bước 7** - `EnrollmentService` (chỉ Chủ nhiệm môn của môn): tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, thêm lại, phát event (UC 51; BR-U04-20…26, P3).
+- [ ] **Bước 8** - (Bỏ 2026-10-09) `InviteCodeService`: không làm, chức năng mã mời đã bỏ.
+- [ ] **Bước 9** - `StudentClassService`: Class Dashboard của Student (UC 13) và Teacher (UC 31), Student Class Detail (UC 14), Teacher Class Detail (UC 32), Student Detail chỉ thông tin cơ bản; U05 lỗi thì vẫn trả thông tin lớp. `ManagerViewService`: Manager Dashboard, Subject Detail, Class List, Class Detail của Chủ nhiệm môn (UC 47, 48, 53) (BR-U04-40…49, P8).
+- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort` (gồm `countSubjectsByStatus`, `countClassesByStatus`, `countActiveEnrollments` cho UC 58; `isClassManager` = Chủ nhiệm môn của môn chứa lớp); bỏ `NoAssignmentScopeAdapter` của U01 (P1).
 - [ ] **Bước 11** - `loadForActor` che giấu đối tượng ngoài quyền và audit theo BR-U04-51, 52.
 - [ ] **Bước 12** - Unit test cho mọi `BR-U04-xx`.
 - [ ] **Bước 13** - Tóm tắt: `aidlc-docs/construction/u04-subject-class-enrollment/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu
 
-- [ ] **Bước 14** - Flyway `V20260925_1100__u04_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm cờ `show_grade_distribution` mặc định false và `REVOKE DELETE` khỏi `app`.
+- [ ] **Bước 14** - Flyway `db/migration/academics/V20260925_1100__create_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm cờ `show_grade_distribution` mặc định false và `REVOKE DELETE` khỏi `app`.
 - [ ] **Bước 15** - JPA repository và query phạm vi có index.
 - [ ] **Bước 16** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ): hai yêu cầu ghi danh đồng thời vào hai lớp cùng môn chỉ một thành công; ghi danh 200 dòng ≤ 5 s; event gửi sau commit; `app` không DELETE được.
 - [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
@@ -92,17 +90,17 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
 ### Nhóm D - API
 
 - [x] **Bước 18** - `/contracts/openapi/academics.yaml` (endpoint theo `frontend-components.md`) và schema event `enrollment-events.json`.
-- [ ] **Bước 19** - Controller + DTO + validation (định dạng mã, email, CSV ≤ 200 dòng/100 KB).
-- [ ] **Bước 20** - Test MockMvc: 4 role trên mọi endpoint, ID lớp người khác trả 404, `409` khi lệch `version`, `429` khi vượt rate limit mã mời.
+- [ ] **Bước 19** - Controller + DTO + validation (định dạng mã môn/lớp, email, CSV ≤ 200 dòng/100 KB).
+- [ ] **Bước 20** - Test MockMvc: 4 role trên mọi endpoint, ID lớp người khác trả 404, `409` khi lệch `version`; Teacher và Admin bị từ chối khi sửa lớp hoặc thêm/gỡ sinh viên.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
 
-- [ ] **Bước 22** - Admin: `SubjectListPage`, `SubjectDetailPage`, `SubjectFormDialog`, `AssignManagerDialog`, Subject Classes/Class Detail dưới `app/admin/classes/`; Chủ nhiệm môn: `SubjectManagerMenuPage`, `SubjectHubPage` (gắn `ModuleList` U05 chế độ môn) và `ClassListPage` lọc theo môn.
-- [ ] **Bước 23** - Quản lý lớp: `TeacherMenuPage` (Assigned Classes, đích sau đăng nhập `/teaching`), `ClassListPage`, `ClassFormDialog`, `ClassDetailPage` (tab Thông tin, Học liệu (gắn `ModuleList` U05 chế độ lớp), Học viên (U12 nhúng panel nhóm khi được code), Mã mời; `ClassNavLinks` tới Announcements, Assignment List, Gradebook), `AssignTeacherDialog`, `ClassStateActions`, `GradeDistributionToggle` (mặc định tắt, BR-U04-17).
-- [ ] **Bước 24** - Ghi danh: `AddStudentSearch`, `AddStudentsListDialog`, `EnrollmentResultTable`, `EnrollmentTable`.
-- [ ] **Bước 25** - Người học: `MyClassesPage`, `JoinByCodeDialog`, `StudentClassPage`.
-- [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, lỗi chung khi mã sai.
+- [ ] **Bước 22** - Admin: `SubjectListPage` (màn Subject List), `SubjectFormDialog` (thêm môn, chọn Chủ nhiệm môn), `SubjectDetailPage` (màn Subject Detail: `SubjectEditForm`, `SubjectClassesTable` chỉ đọc).
+- [ ] **Bước 23** - Subject Manager: `ManagerDashboardPage` (màn Manager Dashboard, trang đích), `ManagedSubjectPage` (Subject Detail), `ClassListPage` + `ClassFormDialog` (Class List), `ManagedClassPage` (Class Detail: `ClassInfoForm`, `ClassStateActions`, `GradeDistributionToggle`, `AssignTeacherDialog`).
+- [ ] **Bước 24** - Ghi danh trên `ManagedClassPage`: `AddStudentSearch`, `AddStudentsListDialog`, `EnrollmentResultTable`, `EnrollmentTable` (gỡ, thêm lại).
+- [ ] **Bước 25** - Student và Teacher: `ClassDashboardPage` (màn Class Dashboard), `StudentClassPage` (Student Class Detail), `TeacherClassPage` (Teacher Class Detail: `ClassInfoTab`, `StudentsTab`), `StudentDetailPage` (Student Detail).
+- [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, Teacher không thấy nút sửa lớp hay thêm/gỡ sinh viên.
 - [ ] **Bước 27** - Tóm tắt: `code/frontend-summary.md`.
 
 ### Nhóm F - Hoàn tất
@@ -114,22 +112,33 @@ PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(cl
 
 | Nguồn | Bước |
 |---|---|
-| US-CAT-001 (UC 45, 46, 47, 48, 49, 63, 64, 65, 66) | 4, 5, 22, 23 |
-| US-CAT-002 (UC 45, 46, 47, 48, 49) | 5, 11, 23 |
-| US-CAT-003 (UC 45, 46, 47, 48, 49) | 6, 7, 16, 24 |
-| US-CAT-005 (UC 28, 46) | 8, 25 |
-| US-LRN-001 (UC 12, 13, 14) | 9, 25 |
-| UC 57 (số đếm cho U16) | 10 |
+| US-CAT-001 (UC 47–50, 53, 64–67) | 4, 5, 22, 23 |
+| US-CAT-002 (UC 31, 32, 48, 52) | 5, 9, 11, 23, 25 |
+| US-CAT-003 (UC 51) | 6, 7, 16, 24 |
+| US-LRN-001 (UC 13, 14) | 9, 25 |
+| UC 58 (số đếm cho Admin Dashboard của U16) | 10 |
 | Contract cho U01 và U05-U16 | 3, 10 |
 
 ## 5. Ngoài phạm vi
 
 - Implementation thật của `PublishedContentPort` (U05).
 - Gửi thông báo và email ghi danh, giới hạn 300 email/ngày (U16).
-- Không có dashboard cá nhân; My Classes (`MyClassesPage`) là trang đích của Student.
+- Class Dashboard là trang đích của Student và Teacher, Manager Dashboard của Subject Manager; không có dashboard cá nhân có số liệu học tập.
 
 ## 6. Revision implementation scope - 2026-10-08
-- [ ] Gán manager SUBJECT_MANAGER/ADMIN ACTIVE; teacher TEACHER/SUBJECT_MANAGER/ADMIN ACTIVE, từ chối PENDING/DISABLED.
+- [ ] Gán manager chỉ SUBJECT_MANAGER ACTIVE; teacher TEACHER/SUBJECT_MANAGER ACTIVE; từ chối ADMIN, PENDING, DISABLED (chốt 2026-10-09).
 - [ ] Tách STRUCTURE_EDIT với TEACHING/ROSTER; Teacher-only bị từ chối UC 49 dù xem được Class Detail.
-- [ ] ScopeQueryService isTeacherOf/isSubjectManager theo actor hiện thời; Admin Full cấu trúc không bypass tài nguyên dạy; kiểm thu hồi scope.
-- [ ] Màn My Classes / Assigned Classes / Subject Classes dùng query scope khác nhau; ClassInfo/State và Gradebook panel kiểm action riêng.
+- [ ] ScopeQueryService isTeacherOf/isSubjectManager theo actor hiện thời; Admin không có phân công môn/lớp; kiểm thu hồi scope.
+- [ ] Class Dashboard (Student, Teacher) / Class List (Subject Manager) dùng query scope khác nhau; ClassInfo/State và Gradebook panel kiểm action riêng.
+
+## 7. Revision theo bản 73 UC - 2026-10-09
+
+- [ ] Bỏ mã mời: cột `invite_*`, `InviteCodeService`, API `PUT /classes/{id}/invite` và `POST /me/classes:join`, giá trị `INVITE` của `enrollments.source`, khóa Redis `ratelimit:invite-code:*`.
+- [ ] Chỉ Chủ nhiệm môn tạo lớp, gán giảng viên, sửa/đổi trạng thái lớp, bật phân bố điểm, thêm/gỡ sinh viên (UC 49–52); Admin không có API lớp ngoài danh sách chỉ đọc trong Subject Detail (UC 66).
+- [ ] Admin chọn Chủ nhiệm môn ngay khi thêm môn (UC 65); `POST /subjects` nhận `managerId`.
+- [ ] API mới `GET /api/v1/classes/{id}/students/{accountId}` cho Student Detail (thông tin cơ bản).
+- [ ] Sửa `contracts/openapi/academics.yaml` theo các mục trên và `x-roles` mới; sửa chú thích `ClassAccessPort.isClassManager` thành "Chủ nhiệm môn của môn chứa lớp".
+- [ ] `ClassAccessPort` thêm `listOpenClassesOf(accountId)`: lớp `OPEN` mà tài khoản đang học (ghi danh `ACTIVE`) hoặc dạy (giảng viên chính), kèm mã và tên lớp; U05 dùng cho feed Class Announcements.
+- [ ] `ClassAccessPort` thêm `listOpenClassesOfSubject(subjectId)`: lớp `OPEN` của một môn, cho bài/quiz của môn (U08, U11, U16).
+- [ ] Student Detail là popup (`StudentDetailDialog`) trên tab Students theo screen flow; nhóm lấy từ dữ liệu của U12; `TeacherClassPage` có chỗ gắn tab Evals (U08), Materials (U05), nhóm (U12).
+- [ ] Màn mới theo screen flow: Class Dashboard, Student Class Detail, Teacher Class Detail, Student Detail, Manager Dashboard, Subject Detail (Subject Manager), Class List, Class Detail (Subject Manager); bỏ màn lớp của Admin và popup Join Class.

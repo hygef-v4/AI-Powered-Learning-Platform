@@ -1,8 +1,8 @@
 # U01 Account & Access - Domain Entities
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62 theo `docs/use-cases-and-screens.md`.
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 59–63 theo `docs/use-cases-73.md`.
 
 ## 1. Tổng quan
 
@@ -21,7 +21,7 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `AccountImportResult` | Kết quả trả về | Không lưu | U01 |
 | `AuthorizationDecision` | Kết quả trả về | Không lưu | U01 |
 
-U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), file ảnh (U03), nghiệp vụ credit (U07).
+U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), nghiệp vụ credit (U07).
 
 ## 2. `Account`
 
@@ -29,7 +29,7 @@ U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), file ảnh
 |---|---|---|
 | `accountId` | Định danh | Bất biến |
 | `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong biến triển khai `U01_ALLOWED_EMAIL_DOMAINS`; **không đổi sau khi tạo** |
-| `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN` |
+| `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`; `ADMIN` không nhận phân công môn/lớp (BR-U01-60) |
 | `status` | Trạng thái vòng đời | `PENDING`, `ACTIVE`, `DISABLED` |
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
@@ -159,7 +159,7 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 | Port | Dùng bởi | Ghi chú |
 |---|---|---|
 | `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
-| `AccountLookupPort` | U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái; `countByRoleAndStatus()` trả số đếm cho UC 57 View Statistics (U16); không trả mật khẩu hay số điện thoại |
+| `AccountLookupPort` | U02, U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái (U02 dùng để hiện email người thực hiện trên Audit Log); `countByRoleAndStatus()` trả số đếm cho UC 58 View Admin Dashboard (U16); không trả mật khẩu hay số điện thoại |
 
 ### Port U01 dùng
 
@@ -171,5 +171,18 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 
 U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng adapter tạm (xem code generation plan).
 
-## Account/Profile API revision
-Profile không có avatar port/field. GET /api/v1/admin/accounts/{id} UC 60; PATCH cùng URL với displayName/phoneNumber/version UC 61, không email/role/status. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.
+## 14. API tài khoản và phiên
+
+| API | UC | Ghi chú |
+|---|---|---|
+| `POST /api/v1/auth/login` | 02 | Trả `SessionInfo { accountId, displayName, role, homePath }`; `homePath` theo BR-U01-48: Class Dashboard, Manager Dashboard hoặc Admin Dashboard |
+| `GET`, `PATCH /api/v1/me/profile` | 06, 07 | Chỉ `displayName`, `phoneNumber`; không có avatar |
+| `GET /api/v1/admin/accounts` | 59 | Lọc role, trạng thái, email; phân trang |
+| `POST /api/v1/admin/accounts` | 60 | Tạo một tài khoản `PENDING` |
+| `GET /api/v1/admin/accounts/{id}` | 61 | Không trả hash, OTP, token |
+| `PATCH /api/v1/admin/accounts/{id}` | 62 | `displayName`, `phoneNumber`, `version`; không email/role/status |
+| `PUT /api/v1/admin/accounts/{id}/role` | 62 | Đổi role theo F11 |
+| `PUT /api/v1/admin/accounts/{id}/status` | 63 | Vô hiệu hóa hoặc mở lại theo F12 |
+| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 60 | Kiểm rồi xác nhận nhập CSV theo F10 |
+
+Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.

@@ -1,6 +1,6 @@
 # U01 Account & Access - Logical Components
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## 1. Sơ đồ
 
@@ -16,9 +16,9 @@
  |  AuthService     ActivationService  AccountAdminService   ProfileService  |
  |        |                |                |                          |     |
  |        +-------+--------+-------+--------+                          |     |
- |                v                v                                   v     |
+ |                v                v                                         |
  |       AuthorizationService   OtpService                                   |
- |                |                |                              (-> U03)   |
+ |                |                |                                         |
  |                v                v                                         |
  |   Subject/ClassScopePort (U04)   JobPort (-> U03)                         |
  +---------------------------------------------------------------------------+
@@ -42,10 +42,10 @@
 | `OtpService` | Tạo job gửi OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
 | `PasswordPolicy` | ≥ 8 ký tự, chữ + số, không chứa tên email, ≤ 72 byte | BR-U01-30, 31, NFR-U01-14 |
 | `TokenService` | Phát và xoay JWT/refresh; kiểm `credentialVersion` khi refresh | NFR-U01-10, 11 |
-| `ProfileService` | Sửa tên, số điện thoại, ảnh | F7 |
-| `AccountAdminService` | Tạo, đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F9, F11, F12 |
+| `ProfileService` | Xem và sửa tên, số điện thoại của chính mình | F7 |
+| `AccountAdminService` | Danh sách, chi tiết, tạo, sửa thông tin (version), đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F8, F9, F11, F12, F14 |
 | `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
-| `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối | F13 |
+| `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối; `ADMIN` bị từ chối mọi hành động cần phân công môn/lớp | F13 |
 | `OtpMailHandler` (worker) | Nhận message, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì log ERROR | NFR-U01-30, 31 |
 | `SensitiveDataMasker` | Che dữ liệu nhạy cảm trong log | NFR-U01-50 |
 

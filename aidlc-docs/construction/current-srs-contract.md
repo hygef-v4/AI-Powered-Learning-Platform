@@ -7,24 +7,25 @@
 | Phạm vi | Kiểm tra tại backend |
 |---|---|
 | R1 - User | Hồ sơ, ví, Payment Result, notification của chính tài khoản; activation/recovery có quy tắc riêng |
-| R2 - Tài nguyên môn | Subject Manager/Administrator ACTIVE có subjects.manager_id tương ứng, không role-only; materials/template/Subject Question Bank |
-| R3/R4 - Giảng dạy lớp | Teacher/Subject Manager/Administrator ACTIVE có teacher_id tương ứng; materials lớp, Class Question Bank, bài, submissions/chấm/Gradebook/export |
+| R2 - Tài nguyên môn | Subject Manager ACTIVE có subjects.manager_id tương ứng, không role-only; materials/template/Subject Question Bank |
+| R3/R4 - Giảng dạy lớp | Teacher/Subject Manager ACTIVE có teacher_id tương ứng; materials lớp, bài, submissions/chấm/Gradebook/export |
 | R5 - Student | Enrollment/membership và nội dung được phép của chính mình; chỉ leader nộp bài nhóm |
-| Admin Full cấu trúc | Account/Subject/Class cấu trúc, Statistic, package administration, global Payment History và Audit Log; không bypass R2/R4 cho nội dung giảng dạy |
+| Admin Full | Account, Subject (gồm gán Chủ nhiệm môn), Admin Dashboard, Credit Package, Settings, global Payment History và Audit Log. Không vào Manager Dashboard hay Class Dashboard, không nhận phân công môn/lớp, không dùng R2/R3/R4 (người dùng chốt 2026-10-09) |
 
-Subject Manager → Teacher; Administrator → Subject Manager; không kế thừa Student. Mỗi tài khoản giữ một role cao nhất, cộng scope phân công hiện thời. Trong mô tả unit, “giảng viên lớp” nghĩa là actor đủ R3/R4, “Chủ nhiệm môn hiện tại” nghĩa là actor đủ R2 (có thể là Administrator), không kiểm literal role để loại vai trò kế thừa. Quyền đọc Class Detail cấu trúc không cấp quyền dạy. Teacher không sửa thông tin/vòng đời lớp; roster/mã mời/nhóm là support action kiểm riêng.
+Subject Manager → Teacher; Teacher, Student → User; Administrator chỉ dùng chức năng User và quản trị; không vai trò nào kế thừa Student. Mỗi tài khoản giữ một role cao nhất, cộng scope phân công hiện thời. Trong mô tả unit, “giảng viên lớp” nghĩa là actor đủ R3/R4 (Teacher hoặc Subject Manager được giao dạy lớp), “Chủ nhiệm môn hiện tại” nghĩa là Subject Manager đủ R2, không kiểm literal role để loại Subject Manager khỏi chức năng Teacher. Quyền đọc Class Detail cấu trúc không cấp quyền dạy. Teacher không sửa thông tin/vòng đời lớp và không thêm/gỡ sinh viên (chỉ Chủ nhiệm môn, UC 51–52); mã mời đã bỏ (2026-10-09); nhóm là support action kiểm riêng.
 
 Scope được đọc ở server trên hành động tài nguyên, không dựa vào UI hoặc cache role; ngoài scope trả lỗi an toàn/fail closed và audit theo unit. Thay phân công thu hồi quyền tài nguyên ngay ở request sau; cửa sổ JWT cũ không thay thế việc kiểm scope hiện thời.
 
 ## Phạm vi chức năng đã đổi
 
 - Profile UC 07 chỉ displayName/phoneNumber, không avatar. Account Detail/patch Admin UC 60/61 riêng, email định danh bất biến.
-- Subject/Class bank cùng mô hình scope/version; Teacher dùng câu ACTIVE cấp môn trong assignment selector, không quản trị bank môn. Draft chưa dùng có thể xóa; bản đã dùng/ACTIVE chỉ ngưng dùng và giữ lịch sử.
-- Announcement UC 31 có create/update/soft-delete, version/audit; create mới gửi notification, update/delete không gửi lại. Comment không sửa sau gửi.
-- Credit Package Setting UC 67–68: Admin xem/add/edit với version/audit, giữ snapshot giao dịch; không delete gói, không sửa monthly grant.
-- Payment History UC 69: Admin query toàn nền tảng read-only; /me và Payment Result vẫn owner-only; không refund/manual balance/reconciliation.
+- Chỉ có Subject Question Bank (UC 56–57), giữ câu của mọi dạng bài (quiz, Text Essay, Code Lab, khung tài liệu), có version; không có Class Question Bank. Teacher chọn câu ACTIVE của môn khi soạn bài/quiz, không quản trị ngân hàng. Draft chưa dùng có thể xóa; bản đã dùng/ACTIVE chỉ ngưng dùng và giữ lịch sử. Rubric (UC 46) bắt buộc, tự tạo trống cho mỗi câu Text Essay hoặc phần Diagram/Group; sửa khi bài còn nháp, phải điền đủ trước khi phát hành, khóa khi phát hành.
+- Announcement UC 36 có create/update/soft-delete, version/audit; create mới gửi notification, update/delete không gửi lại. Không có bình luận dưới thông báo (bỏ 2026-10-09).
+- Credit Package List/Detail UC 68–69: Admin xem/add/edit với version/audit, giữ snapshot giao dịch; không delete gói; mức tặng định kỳ sửa trên Settings (UC 70–71). Chỉ Student, Teacher, Subject Manager có ví (UC 08–11); Admin không có ví.
+- Payment History UC 72: Admin query toàn nền tảng read-only; /me và kết quả giao dịch trên Credit Package Checkout vẫn owner-only; không refund/manual balance/reconciliation.
 - Audit UC 70: Admin read/search, append-only records, không sửa/xóa.
 - Student Practice AI UC 25 và Teacher AI Grading Proposals UC 35 riêng quyền/kết quả; không chấm Essay Practice chỉ vì submit. Chấm chính thức theo rubric/Teacher final và không đưa Practice vào Gradebook.
+- Bài của môn (FR-027, người dùng chốt 2026-10-09): Chủ nhiệm môn soạn, duyệt, phát hành cho mọi lớp của môn với một lịch chung (không có bài nhóm); giảng viên từng lớp chỉ xem và chấm sinh viên lớp mình. Quiz là quiz luyện tập gắn học liệu, không lịch, không vào sổ điểm. Mọi bài qua bước duyệt trước khi phát hành.
 
 ## Primary ownership hiện hành
 

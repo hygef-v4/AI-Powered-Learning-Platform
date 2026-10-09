@@ -44,7 +44,7 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 
 ### Stories liên quan
 
-`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-CAT-005`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-012`, `US-GRD-001`, `US-GRD-004`, `US-RPT-001`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
+`US-IAM-001`, `US-IAM-002`, `US-IAM-003`, `US-IAM-004`, `US-IAM-006`, `US-GRP-002`, `US-GRP-004`, `US-CNT-004`, `US-LRN-001`, `US-ASM-003`, `US-ASM-012`, `US-GRD-001`, `US-GRD-004`, `US-RPT-001`, `US-PAY-001`, `US-PAY-002`, `US-NTF-001`.
 
 ## 3. P-TEACHER - Giảng viên
 
@@ -60,12 +60,12 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 
 - Quản lý vòng đời lớp được phân công (sửa, mở, lưu trữ) và nội dung riêng của lớp.
 - Ghi danh người học khi được cấp quyền.
-- Chia nhóm trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), chỉ định trưởng nhóm, soạn khung bài nhóm (tự viết, lấy từ ngân hàng hoặc nhờ AI đề xuất; khung tự chia phần) và tạo rubric từng phần và xử lý yêu cầu đổi trưởng nhóm.
+- Chia nhóm trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên), chỉ định trưởng nhóm, soạn khung bài nhóm (tự viết hoặc nhờ AI đề xuất; khung tự chia phần) và tạo rubric từng phần và xử lý yêu cầu đổi trưởng nhóm.
 - Xem tiến độ tài liệu nhóm, nhả khóa mục khi cần, chấm tài liệu chung như bài tài liệu và chấm điểm đóng góp từng thành viên.
 - Nhờ AI đề xuất cho từng bài hoặc chấm hàng loạt rồi xác nhận từng bài; điểm đóng góp thành viên nhóm mặc định bằng điểm tài liệu chung, chấm tay khi cần.
 - Dùng AI tạo bản nháp câu hỏi từ nội dung được phép.
 - Mua credit AI để dùng cho các chức năng AI thuộc phạm vi lớp được phân công; theo dõi thanh toán và số dư của mình.
-- Quản lý rubric/ngân hàng câu hỏi theo version; copy assignment/rubric giữa các lớp mình phụ trách.
+- Soạn rubric cho bài của lớp trong Rubric Detail; chọn câu của ngân hàng môn khi soạn bài và quiz; copy assignment/rubric giữa các lớp mình phụ trách.
 - Soạn, xem trước và phát hành các dạng bài `GRADED`/`PRACTICE` hợp lệ; chỉ bài `GRADED` vào quy trình chấm/chốt điểm của Teacher.
 - Duyệt, xuất bản bài riêng của lớp; sau khi nhận bài, chủ động chọn chấm thủ công hoặc nhờ AI đề xuất rồi tự quyết định điểm cuối.
 - Xem tiến độ nộp, chốt điểm, xuất bảng điểm của lớp được phân công; hệ thống tự nhắc người chưa nộp trước hạn.
@@ -89,7 +89,7 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 - Tạo module của môn, tải học liệu của môn (tệp hoặc video YouTube) vào module và theo dõi trạng thái quét/lập chỉ mục.
 - Yêu cầu AI tạo câu hỏi từ đúng nguồn của môn.
 - Mua credit AI để xử lý học liệu/RAG và tạo câu hỏi trong các môn được phân công; theo dõi thanh toán và số dư của mình.
-- Quản lý rubric/ngân hàng câu hỏi và xem trước các loại bài dùng chung của môn.
+- Quản lý ngân hàng câu hỏi của môn (Question List, Question Detail), rubric của bài cấp môn và xem trước các loại bài dùng chung của môn.
 - Phát hành template có version để giảng viên copy thành bài của lớp.
 - Mở Subject Classes từ Subject Detail để tạo lớp, gán giảng viên chính, mở/lưu trữ lớp và ghi danh trong các môn được phân công.
 - Theo dõi trạng thái xử lý tài liệu và nhận thông báo liên quan.
@@ -130,13 +130,13 @@ Student → User; Teacher → User; Subject Manager → Teacher; Administrator �
 | Người học | Chính | Đọc theo ghi danh | Thành viên/leader | Chính | Làm/nộp bài, dùng AI chấm Practice Essay khi đủ credit | Xem cá nhân | Mua/xem credit cá nhân | Nhận | Không |
 | Giảng viên | Chính | Quản lý lớp | Tạo nhóm, chỉ định leader | Theo dõi | Tạo/giao/chấm bài lớp | Duyệt lớp | Mua credit cá nhân | Nhận | Qua hành động được ghi |
 | Chủ nhiệm môn | Chính | Quản lý môn được giao | Theo phân công dạy lớp | Không có chức năng Student | Template môn; Teacher khi R4 | Theo R4 | Mua credit cá nhân | Nhận | Hành động được ghi |
-| Quản trị viên | Quản trị | Cấu trúc toàn nền tảng; nội dung môn theo R2 | Theo phân công dạy lớp | Không có chức năng Student | Nội dung môn R2; Teacher R4 | Theo R4 | Gói credit/lịch sử toàn nền tảng; ví cá nhân | Cấu hình/nhận | Xem/tìm, không sửa/xóa |
+| Quản trị viên | Quản trị | Cấu trúc toàn nền tảng; nội dung môn theo R2 | Theo phân công dạy lớp | Không có chức năng Student | Nội dung môn R2; Teacher R4 | Theo R4 | Gói credit/lịch sử toàn nền tảng; không có ví | Cấu hình/nhận | Xem/tìm, không sửa/xóa |
 
 ## 7. Nguyên tắc phân quyền xuyên persona
 
 - Quyền được kiểm tra phía server ở cả mức chức năng và đối tượng.
 - Quyền dùng vai trò hiện hành, kế thừa actor và phân công tài nguyên; không tự thêm role Student hoặc bỏ điều kiện R2/R4 cho vai trò cao hơn.
-- Quyền học liệu/template/ngân hàng môn của Subject Manager/Administrator cần phân công môn (R2); giảng dạy, ngân hàng lớp, chấm và gradebook cần phân công lớp (R3/R4). Quyền quản trị cấu trúc Full của Admin không bỏ điều kiện này.
+- Quyền học liệu/template/ngân hàng câu hỏi môn của Chủ nhiệm môn cần phân công môn (R2); giảng dạy, rubric của bài lớp, chấm và gradebook cần phân công lớp (R3/R4). Admin không có quyền R2/R3/R4.
 - Giảng viên không được truy cập lớp hoặc bài nộp ngoài phân công.
 - Người học không được đọc dữ liệu của người học khác.
 - Quản trị viên không được sửa hoặc xóa audit log của ứng dụng.

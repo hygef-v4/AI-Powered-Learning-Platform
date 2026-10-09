@@ -1,59 +1,84 @@
 # U05 Content, Material & RAG - Business Logic Model
 
-**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
-## F1 - Quản lý module (Chủ nhiệm môn, trên Subject Detail)
+## F1 - Material List (Subject Manager, UC 54)
+1. Từ Manager Dashboard bấm Material List, chọn một môn mình quản lý; U05 kiểm actor là Chủ nhiệm môn của môn (BR-U05-01, 02).
+2. Hiện module của môn theo thứ tự, mỗi module gồm học liệu của môn (`class_id` rỗng) kèm trạng thái quét; lọc `ACTIVE`/`ARCHIVED`.
+3. Bấm một học liệu → Material Detail (F4).
+
+## F2 - Quản lý module (Subject Manager, trên Material List, UC 55)
 1. Kiểm actor là Chủ nhiệm môn của môn (BR-U05-01).
-2. Tạo, đổi tên, đổi thứ tự, lưu trữ module của môn; audit tạo và lưu trữ.
-3. Không có bước gắn module vào lớp: Class Detail của mọi lớp thuộc môn (kể cả lớp tạo sau) đọc module của môn qua `listForClass` nên thay đổi có hiệu lực ngay ở mọi lớp.
+2. Tạo, đổi tên, đổi thứ tự, lưu trữ module; audit tạo và lưu trữ (BR-U05-14, 50).
+3. Không có bước gắn module vào lớp: mọi lớp của môn (kể cả lớp tạo sau) đọc module của môn nên thay đổi có hiệu lực ngay.
 
-## F2 - Tải học liệu vào module (nút "Tải tệp" / "Gắn link video" của module)
-1. Người dùng bấm nút trên một module (Chủ nhiệm môn trên Subject Detail, giảng viên trên Class Detail); form thêm học liệu hỗ trợ mở với module đã chọn (BR-U05-12).
-2. Xác định phạm vi học liệu theo nơi tải: Subject Detail → học liệu của môn (`class_id` rỗng); Class Detail → học liệu của lớp (`class_id` = lớp) (BR-U05-02).
-3. `FILE`: frontend tải tệp qua U03 (`MATERIAL`) nhận `FileRef` → U05 gọi `ArtifactPort.attach` → tạo `lessons` với `module_id`, `class_id`, `file_id`, `file_name`, `mime_type`, `size_bytes`.
-4. `YOUTUBE`: kiểm URL một video (BR-U05-22) → tạo `lessons` với `youtube_url`.
-5. Cùng transaction: `scan_status = PENDING`, `scanned_at = now`, gửi việc `LESSON_SCAN` hoặc `YOUTUBE_CAPTION` qua `JobPort.enqueue`; audit. Lesson hiển thị ngay cho người học trong phạm vi (BR-U05-11, 30).
+## F3 - Tab Materials của Teacher Class Detail (Teacher, UC 33)
+1. Teacher hoặc Subject Manager được giao dạy lớp mở tab Materials; U05 kiểm `isTeacherOf` (BR-U05-02).
+2. Hiện module `ACTIVE` của môn; trong mỗi module, học liệu của môn (chỉ đọc) rồi học liệu của lớp (quản lý được), kèm trạng thái quét (BR-U05-10).
+3. Bấm một học liệu → Material Detail (F4).
 
-## F3 - Việc `LESSON_SCAN` / `YOUTUBE_CAPTION` (worker)
-1. Cập nhật `scan_status = SCANNING` khi đang `PENDING`; trạng thái khác thì bỏ qua (idempotent).
+## F4 - Material Detail (UC 34, 55)
+1. Mở từ Material List (học liệu của môn, R2) hoặc từ tab Materials (kèm `classId`, R3/R4); kiểm phạm vi, ngoài phạm vi → "không tìm thấy" (BR-U05-02).
+2. Hiện tiêu đề, module, nguồn, người tải, trạng thái quét và bản tóm tắt; xem trước PDF hoặc video, tải tệp qua token 5 phút (BR-U05-23, 24, 48).
+3. Người quản lý học liệu có nút Sửa (đổi thông tin) và Xóa (F8); không có nút Quét lại hay thay tài liệu. Teacher xem học liệu của môn ở chế độ chỉ đọc.
+
+## F5 - Thêm học liệu (UC 34, 55)
+1. Người dùng bấm "Tải tệp" hoặc "Gắn link video" trên một module (Chủ nhiệm môn trên Material List, giảng viên trên tab Materials); form mở với module đã chọn sẵn (BR-U05-12).
+2. Form hiện mức credit cần giữ cho mỗi học liệu và số dư của người tải; không đủ thì chặn nút tải (BR-U05-39).
+3. Xác định phạm vi theo nơi tải: Material List → học liệu của môn (`class_id` rỗng); tab Materials → học liệu của lớp (`class_id` = lớp) (BR-U05-02).
+4. `FILE`: frontend tải tệp qua U03 (purpose `MATERIAL`, giới hạn lấy từ Settings) nhận `FileRef` → U05 gọi `ArtifactPort.attach` → tạo `lessons` với `module_id`, `class_id`, `file_id`, `file_name`, `mime_type`, `size_bytes`, `uploaded_by` (BR-U05-21).
+5. `YOUTUBE`: kiểm URL một video (BR-U05-22) → tạo `lessons` với `youtube_url`, `uploaded_by`.
+6. Cùng transaction: `AiUsagePort.hold(MATERIAL_SUMMARY, uploader, LESSON, lessonId)` giữ credit cho lần quét; thiếu credit → từ chối "Không đủ credit AI", không tạo học liệu (BR-U05-39).
+7. Đủ credit: `scan_status = PENDING`, `scanned_at = now`, gửi việc `LESSON_SCAN` hoặc `YOUTUBE_CAPTION` qua `JobPort.enqueue`; audit. Học liệu hiện ngay cho người học trong phạm vi (BR-U05-11, 30).
+
+## F6 - Việc `LESSON_SCAN` / `YOUTUBE_CAPTION` (worker)
+1. Cập nhật `scan_status = SCANNING` khi đang `PENDING` hoặc `BUSY`; trạng thái khác thì bỏ qua (idempotent).
 2. Lấy chữ: `FILE` mở qua `ArtifactPort.open` và trích chữ theo trang; `YOUTUBE` lấy phụ đề (BR-U05-32, 33).
-3. Không có chữ → `NO_TEXT`; không phụ đề → `NO_CAPTION`; kết thúc.
-4. Gọi `AiUsagePort.begin(EMBEDDING, uploader, LESSON, lessonId)`: AI tắt hoặc hết trần → `BUSY`; thiếu credit → `NO_CREDIT`; kết thúc.
-5. Gọi `EmbeddingPort` với phần đầu văn bản, rồi `AiUsagePort.complete` theo token đã dùng.
-6. Một transaction: ghi `extracted_text`, `embedding`, `scanned_at`, `INDEXED` (BR-U05-35, 36).
-7. Lỗi tạm → U03 thử lại; hết lượt hoặc lỗi vĩnh viễn → `onFailed` đặt `FAILED`, `AiUsagePort.fail` trả phần credit đã giữ (BR-U05-37, 39).
-8. `PendingSweeper` của U05 gửi lại việc cho lesson còn `PENDING` quá 5 phút.
+3. Không có chữ → `NO_TEXT`; không phụ đề → `NO_CAPTION`; `AiUsagePort.release` trả credit đã giữ; kết thúc (BR-U05-46).
+4. Lesson chưa có `summary`: `AiUsagePort.begin(MATERIAL_SUMMARY, ...)` dùng phần credit đã giữ, kiểm AI bật và trần chi phí. AI tắt hoặc hết trần → `BUSY`, giữ nguyên credit, kết thúc; sweeper tự gửi lại (bước 9).
+5. Tóm tắt: lấy tối đa 200 000 ký tự đầu, chia đoạn ≤ 30 000 ký tự, gọi `SummaryPort` tóm tắt từng đoạn rồi gộp thành một bản ≤ 4 000 ký tự; `AiUsagePort.complete` trừ theo tổng token; ghi `summary` ngay để lần thử lại không tóm tắt và trừ credit lần nữa (BR-U05-45, 47).
+6. `AiUsagePort.begin(EMBEDDING, ...)` (AI tắt hoặc hết trần xử lý như bước 4), rồi `EmbeddingPort` với bản tóm tắt; `AiUsagePort.complete` theo token đã dùng (BR-U05-35).
+7. Một transaction: ghi `extracted_text`, `embedding`, `scanned_at`, `INDEXED`; `AiUsagePort.release` trả phần credit còn dư (BR-U05-36, 39).
+8. Lỗi tạm → U03 tự thử lại (bước 4–5 bỏ qua nếu đã có `summary`); hết lượt hoặc lỗi vĩnh viễn → `onFailed` đặt `FAILED`, `AiUsagePort.release` trả phần credit còn giữ (BR-U05-37).
+9. `LessonPendingSweeper`: gửi lại việc cho lesson `PENDING` quá 5 phút và lesson `BUSY` mỗi 30 phút; `BUSY` quá 24 giờ → `FAILED` và trả credit (BR-U05-37).
 
-## F4 - Quét lại thủ công
-1. Người quản lý bấm "Quét lại" trên lesson `FAILED`, `BUSY` hoặc `NO_CREDIT` → `PENDING`, gửi việc mới; audit.
+## F7 - Không có quét lại thủ công (bỏ 2026-10-09)
+Quét chỉ chạy một lần khi tải lên; lỗi thì hệ thống tự thử lại theo F6 bước 8–9. Người dùng không có nút Quét lại (BR-U05-30, 37).
 
-## F5 - Người học xem và tải
-1. U04 gọi `PublishedContentPort.listForClass(classId)` sau khi đã kiểm ghi danh; trả module `ACTIVE` của môn, mỗi module gồm lesson `ACTIVE` của môn (`class_id` rỗng) và của lớp đó.
-2. Popup Learning Material: tệp PDF xem trực tiếp hoặc tải; video nhúng `youtube-nocookie`.
-3. Xem/tải Learning Material: xác định lesson scope; Student cần enrollment/lớp OPEN/lesson ACTIVE R5; dạy lớp R3/R4 hoặc quản lý học liệu môn R2 dùng phạm vi tương ứng. Kiểm isTeacherOf/isSubjectManager/enrollment ở server rồi cấp token cho đúng actor, không bắt mọi vai trò phải là Student.
+## F8 - Sửa, xóa học liệu (UC 34, 55)
+1. Kiểm phạm vi: học liệu của môn cần R2, học liệu của lớp cần R3/R4 của đúng lớp đó; Chủ nhiệm môn không sửa học liệu của lớp chỉ vì quản lý môn; ngoài phạm vi → "không tìm thấy" (BR-U05-02).
+2. Sửa chỉ đổi thông tin: tên trên Material Detail, thứ tự trên danh sách; không đổi tệp hay link; audit (BR-U05-11).
+3. Xóa là lưu trữ: học liệu ẩn với người học, không còn trong RAG, quiz của học liệu không hiện cho người học; audit (BR-U05-03, 14).
+4. Muốn đổi tài liệu: xóa học liệu rồi tải học liệu mới theo F5; quiz của học liệu cũ không tự chuyển (BR-U05-11).
 
-## F6 - `retrieve(scope, query, k, requesterId)`
+## F9 - Learning Material (Student, UC 15)
+1. Student Class Detail hiện module và học liệu qua `PublishedContentPort.listForClass(classId)` (U04 gọi sau khi kiểm ghi danh): module `ACTIVE` của môn, mỗi module gồm học liệu `ACTIVE` của môn và của lớp (BR-U05-04, 10).
+2. Bấm một học liệu → Learning Material (kèm `classId`): kiểm ghi danh `ACTIVE`, lớp `OPEN`, học liệu `ACTIVE` thuộc môn của lớp hoặc thuộc đúng lớp; ngoài quyền → "không tìm thấy" (BR-U05-04).
+3. PDF xem trực tiếp hoặc tải (token 5 phút của U03); video nhúng `youtube-nocookie`; khối "Tóm tắt do AI tạo" nếu đã có bản tóm tắt (BR-U05-23, 24, 48).
+4. Dưới học liệu là danh sách quiz của học liệu (component và API của U11); bấm "Làm quiz" → Quiz Taking (U11) (BR-U05-03).
+
+## F10 - `retrieve(scope, query, k, requesterId)` (U13 gọi)
 1. Kiểm phạm vi (BR-U05-40); lấy lesson `ACTIVE`, `INDEXED` trong phạm vi (BR-U05-41).
 2. `AiUsagePort.begin(EMBEDDING, requesterId, QUERY, null)`, tạo vector câu hỏi, `complete`; lỗi trước khi gọi Gemini thì `fail` để trả phần credit đã giữ (BR-U05-44).
-3. Lấy `k` lesson gần nhất (cosine); trong từng `extracted_text` chọn đoạn chứa nhiều từ của câu hỏi nhất, tổng ≤ 12 000 ký tự; trả kèm nguồn (BR-U05-42).
+3. Lấy `k` lesson gần nhất (cosine trên vector của bản tóm tắt); mỗi lesson trả bản tóm tắt và đoạn trong `extracted_text` chứa nhiều từ của câu hỏi nhất, tổng ≤ 12 000 ký tự; trả kèm nguồn (BR-U05-35, 42).
 
-## F7 - Thông báo (UC 31)
-1. U04 kiểm actor là giảng viên lớp `OPEN`; U05 kiểm lại `classId`. Ngoài phạm vi trả `404`.
-2. Giảng viên đăng `announcements`: kiểm giới hạn, làm sạch markdown, lưu tác giả và thời gian (BR-U05-60, 62, 63).
-3. Sau commit phát `class.announcement-posted` cho U16 (thông báo trong app cho người học đang ghi danh) (BR-U05-64).
-4. Danh sách thông báo phân trang, mới nhất trước; mỗi thông báo kèm 2 bình luận mới nhất và tổng số bình luận (BR-U05-65). Giảng viên ẩn thông báo vi phạm với lý do và audit.
+## F11 - Xem thông báo (Class Announcements, UC 30)
+1. Từ Class Dashboard bấm Class Announcements; mở từ Student Class Detail thì lọc sẵn lớp đó (BR-U05-65).
+2. U05 lấy các lớp `OPEN` mà actor đang học (ghi danh `ACTIVE`) hoặc đang dạy (giảng viên chính) qua `ClassAccessPort` (U04).
+3. Trả thông báo `VISIBLE` của các lớp đó (hoặc của lớp đang lọc), mới nhất trước, phân trang, kèm mã và tên lớp; lọc lớp ngoài phạm vi → "không tìm thấy".
 
-## F8 - Bình luận dưới thông báo (UC 26, 31)
-1. Kiểm actor là người học `ACTIVE` hoặc giảng viên của lớp `OPEN` chứa thông báo đang hiển thị (BR-U05-61).
-2. Ghi `announcement_comments` (văn bản thuần ≤ 2 000 ký tự, tác giả, thời gian) (BR-U05-62, 63). Không phát sự kiện, không tạo thông báo (BR-U05-64).
-3. "Xem thêm bình luận": trả toàn bộ bình luận đang hiển thị của thông báo, phân trang cũ → mới (BR-U05-65).
-4. Giảng viên lớp ẩn bình luận vi phạm với lý do; audit. Không sửa, không xóa cứng.
+## F12 - Tạo thông báo (UC 36)
+1. Giảng viên bấm "Tạo thông báo" trên Class Announcements và chọn một lớp `OPEN` mình dạy.
+2. Kiểm actor `ACTIVE` và `isTeacherOf` lớp (R3/R4); kiểm giới hạn, làm sạch markdown; lưu tác giả, thời gian, `version = 0`; audit (BR-U05-60, 62, 63).
+3. Sau commit phát `class.announcement-posted` để U16 báo trong app cho người học đang ghi danh (BR-U05-64).
 
-## F9 - Cập nhật/xóa thông báo (UC 31)
-1. Actor ACTIVE và isTeacherOf lớp R3/R4; kiểm announcement thuộc lớp và chưa DELETED. Version khác trả 409, sai quyền 404.
-2. PATCH title/body làm sạch/kiểm giới hạn; tăng version, updated_by/updated_at; audit trước/sau cùng transaction. Không phát lại class.announcement-posted.
-3. DELETE với version đánh dấu DELETED, deleted_by/deleted_at, tăng version/audit; giữ tác giả/thời điểm gốc, comment và tham chiếu. Feed và comment mới không dùng thông báo DELETED.
-4. Comment vẫn không sửa sau gửi; ẩn bình luận vi phạm là luồng riêng.
+## F13 - Sửa, xóa thông báo (UC 36)
+1. Kiểm actor `ACTIVE` và `isTeacherOf` lớp của thông báo, thông báo chưa `DELETED`; sai quyền → `404`, `version` khác → `409`.
+2. Sửa title/body: làm sạch, kiểm giới hạn; tăng `version`, ghi `updated_by`/`updated_at`; audit trước/sau cùng transaction; không phát lại `class.announcement-posted`.
+3. Xóa (kèm `version`): đặt `DELETED`, `deleted_by`/`deleted_at`, tăng `version`, audit; giữ tác giả, thời điểm gốc và tham chiếu; feed không hiện thông báo `DELETED`.
 
-## F10 - Cập nhật học liệu theo scope
-Tên/thứ tự/trạng thái theo R2 hoặc R3/R4, audit. Thay nguồn giữ lesson cũ ở ARCHIVED, tạo lesson mới cùng phạm vi để không ghi đè tham chiếu cũ, kiểm tệp/link rồi quét lại nguồn mới. Ngoài scope bị từ chối; học liệu lớp không được sửa chỉ vì quản lý môn.
+## F14 - Contract cho unit khác
+- `PublishedContentPort` (U04 khai báo, U05 cài): module và học liệu đang hiện cho Student Class Detail.
+- `ContentRefPort`: U06 kiểm `lessonRefs` của câu hỏi, U08 kiểm bộ lọc chọn câu ngẫu nhiên, U09 kiểm học liệu gắn quiz, U11 kiểm học liệu còn hiện trong lớp khi hiện và làm quiz.
+- `RagRetrievalPort`: U13 lấy đoạn học liệu khi AI soạn đề.
+- Event `class.announcement-posted` cho U16.

@@ -1,6 +1,6 @@
 # U01 Account & Access - Infrastructure Design
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ ghi phần U01 dùng.
 
@@ -8,7 +8,7 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 
 | Thành phần (NFR Design) | Chạy ở | Ghi chú |
 |---|---|---|
-| `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `u01` | Một backend modular monolith |
+| `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `edu.aiplatform.identity` | Một backend modular monolith |
 | `OtpMailHandler` | Container `worker` | Handler của việc `OTP_DELIVERY`, nhận từ queue `jobs.email` |
 | Bảng `accounts` (gồm cột số dư credit do U07 ghi, `email_preferences` do U16 ghi) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |

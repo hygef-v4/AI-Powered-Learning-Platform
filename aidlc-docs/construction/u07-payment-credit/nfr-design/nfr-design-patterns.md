@@ -1,11 +1,11 @@
 # U07 Payment & AI Credit - NFR Design Patterns
 
-**Bản tài liệu 2026-10-08**: UC 08, 09, 10, 67, 68, 69; primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 08, 09, 10, 11, 68, 69, 72 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); mục credit tặng định kỳ của Settings (UC 70–71); primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## P1 - Một đường ghi số dư (BalanceService)
 - `apply(accountId, freeDelta, purchasedDelta, reason)`:
-  1. Kiểm tài khoản `ACTIVE` và chủ ví; cả bốn vai trò được tặng tháng; Student chỉ được giữ credit cho `PRACTICE_GRADING` hợp lệ.
-  2. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`); đặt lại tặng tháng nếu sang tháng mới.
+  1. Kiểm tài khoản `ACTIVE` có ví (Student, Teacher, Subject Manager; Admin không có ví) và chủ ví; Student chỉ được giữ credit cho `PRACTICE_GRADING` hợp lệ.
+  2. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`); sang tháng mới thì đặt lại tặng định kỳ bằng `credit.monthlyFreeCredits` đọc qua `SettingsPort`.
   3. Kiểm số dư sau thay đổi ≥ 0 (CHECK trong DB là chốt chặn cuối).
   4. UPDATE cột số dư trong `accounts`.
 - Mọi luồng (mua, giữ, trừ, trả) gọi hàm này trong transaction cùng dòng nghiệp vụ gây ra thay đổi (`payments` hoặc `ai_suggestions`) (NFR-U07-01).
@@ -35,4 +35,4 @@
 - `PaymentScanner` (scanner U03) mỗi 10 phút lấy tối đa 100 giao dịch cần kiểm, gửi việc `PAYOS_CHECK`; handler gọi PayOS; `PAID` → P2 với `source = RECONCILE`; lỗi mạng → thử lại theo U03 rồi để lần quét sau.
 
 ## P7 - Adapter giả
-- `FakePayosAdapter`: `checkoutUrl` trỏ về `/credits/fake-checkout?orderCode=...` có nút "Đã trả" gọi webhook giả có chữ ký bằng key test. Chỉ bật khi profile khác `prod` và không có `PAYOS_*` (NFR-U07-15).
+- `FakePayosAdapter`: `checkoutUrl` trỏ về `/credits/fake-checkout?orderCode=...` có nút "Đã trả" gọi webhook giả có chữ ký bằng key test rồi quay về Credit Package Checkout. Chỉ bật khi profile khác `prod` và không có `PAYOS_*` (NFR-U07-15).

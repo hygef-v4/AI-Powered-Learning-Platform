@@ -1,48 +1,76 @@
 # U04 Subject, Class, Enrollment & Learning Access - Frontend Components
 
-**Bản tài liệu 2026-10-08**: UC 12, 13, 27, 28, 45, 46, 47, 48, 49, 50, 63, 64, 65, 66; primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-CAT-005, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+## 1. Màn hình theo screen flow
+
+| Màn | Component | UC | Role |
+|---|---|---|---|
+| Class Dashboard | `ClassDashboardPage` | 13, 31 | Student, Teacher, Subject Manager |
+| Student Class Detail | `StudentClassPage` | 14 | Student |
+| Teacher Class Detail | `TeacherClassPage` | 32 | Teacher, Subject Manager được giao dạy |
+| Student Detail (popup) | `StudentDetailDialog` | 32 | Teacher, Subject Manager được giao dạy |
+| Manager Dashboard | `ManagerDashboardPage` | 53 | Subject Manager |
+| Subject Detail (Subject Manager) | `ManagedSubjectPage` | 53 | Subject Manager |
+| Class List | `ClassListPage` | 47, 49 | Subject Manager |
+| Class Detail (Subject Manager) | `ManagedClassPage` | 48, 50, 51, 52 | Subject Manager |
+| Subject List | `SubjectListPage` | 64, 65 | Admin |
+| Subject Detail (Admin) | `SubjectDetailPage` | 66, 67 | Admin |
+
+## 2. Cây component
 
 ```
-app/admin/subjects/          SubjectListPage (màn Subject List), SubjectFormDialog, AssignManagerDialog
-app/admin/subjects/[id]/     SubjectDetailPage (Admin: thông tin môn, Chủ nhiệm môn, trạng thái)
-app/teaching/subjects/[id]/  SubjectHubPage (Subject Detail của Chủ nhiệm môn: phần Học liệu gắn ModuleList U05 chế độ môn (module và học liệu của môn); liên kết Template U10, Lớp U04)
-app/teaching/                TeacherMenuPage (Assigned Classes, đích sau đăng nhập của Teacher/Subject Manager: lớp đang dạy, chọn một lớp mở thẳng Class Detail; lối vào Class Question Bank U06; Subject Manager thấy thêm lối vào điều hướng môn được phân công)
-app/teaching/subjects/       SubjectManagerMenuPage (điều hướng môn được phân công: môn được phân công, chọn một môn mở Subject Detail)
-app/admin/classes/           ClassListPage, ClassDetailPage (Class List, Class Detail cấu trúc của Admin, mở từ Admin Sidebar; dùng chung component với app/teaching/classes/)
-app/teaching/classes/        ClassListPage, ClassFormDialog (ADMIN hoặc Chủ nhiệm môn của môn tạo), ClassDetailPage
-app/teaching/subjects/[id]/classes/  ClassListPage lọc theo môn, mở từ Subject Detail của Chủ nhiệm môn; cùng ClassDetailPage
-  ClassDetailPage
-    ClassInfoTab             sửa name/description/term, ClassStateActions
-    MaterialsTab             ModuleList của U05 chế độ lớp: module của môn chỉ đọc; giảng viên tải học liệu của lớp bằng nút của từng module
-    EnrollmentTab            EnrollmentTable, AddStudentSearch, AddStudentsListDialog, EnrollmentResultTable; nhúng ClassStudentsGroupsPanel, LeaderRequestsPanel của U12
-    InviteCodeTab            InviteCodePanel
-    GradeDistributionToggle  người quản lý lớp bật hoặc tắt phân bố điểm ẩn danh; mặc định tắt
-    AssignTeacherDialog   (ADMIN hoặc Chủ nhiệm môn của môn)
-    ClassNavLinks         lối vào Class Announcements (U05), Assignment List (U08), Gradebook (U15) của lớp
-app/learning/                   MyClassesPage (My Classes), StudentClassPage (Class Detail của Student; gắn ModuleList (chỉ xem) + ViewLearningMaterialDialog U05 (Learning Material); điểm xem trên danh sách bài theo loại của U11 (UC 17)), JoinByCodeDialog (popup Join Class trên My Classes)
-app/learning/classes/[id]/group/  MyGroupPage (màn My Group: khung trang trong lớp, nội dung là MyGroupPanel của U12)
+app/classes/                              ClassDashboardPage   màn Class Dashboard
+app/classes/[id]/                         StudentClassPage     màn Student Class Detail
+app/classes/[id]/teaching/                TeacherClassPage     màn Teacher Class Detail
+  ClassInfoTab                            thông tin lớp chỉ đọc
+  StudentsTab                             danh sách sinh viên ACTIVE; chỗ gắn ClassStudentsGroupsPanel (U12)
+    StudentDetailDialog                   popup Student Detail (bấm một sinh viên)
+app/manager/                              ManagerDashboardPage màn Manager Dashboard
+app/manager/subjects/[id]/                ManagedSubjectPage   màn Subject Detail của Subject Manager
+app/manager/classes/                      ClassListPage        màn Class List
+  ClassFormDialog                         tạo lớp (UC 49)
+app/manager/classes/[id]/                 ManagedClassPage     màn Class Detail của Subject Manager
+  ClassInfoForm                           sửa name/description/term (UC 52)
+  ClassStateActions                       Mở / Lưu trữ / Mở lại (UC 52)
+  GradeDistributionToggle                 bật/tắt phân bố điểm (UC 52)
+  AssignTeacherDialog                     gán/đổi giảng viên (UC 50)
+  EnrollmentTable                         danh sách sinh viên, nút Gỡ (UC 51)
+  AddStudentSearch                        thêm từng người (UC 51)
+  AddStudentsListDialog                   thêm theo danh sách (UC 51)
+  EnrollmentResultTable                   kết quả từng dòng
+app/admin/subjects/                       SubjectListPage      màn Subject List
+  SubjectFormDialog                       thêm môn, chọn Chủ nhiệm môn (UC 65)
+app/admin/subjects/[id]/                  SubjectDetailPage    màn Subject Detail của Admin
+  SubjectEditForm                         sửa môn, đổi Chủ nhiệm môn, lưu trữ/mở lại (UC 67)
+  SubjectClassesTable                     lớp của môn, chỉ đọc (UC 66)
 ```
+
+Route theo `RoleGuard` của U01: `/classes/*` cho Student, Teacher, Subject Manager; `/manager/*` cho Subject Manager; `/admin/*` cho Admin. Backend vẫn kiểm quan hệ thật (ghi danh, giảng viên chính, Chủ nhiệm môn).
+
+## 3. Component và API
 
 | Component | Hành vi | API |
 |---|---|---|
-| `SubjectListPage` | Bảng môn, tìm, lọc trạng thái, phân trang | `GET /api/v1/subjects` |
-| `SubjectDetailPage` | Admin xem/sửa môn, gán Chủ nhiệm môn, lưu trữ/mở lại | `GET`, `PATCH /api/v1/subjects/{id}` |
-| `SubjectHubPage` | Chủ nhiệm môn chỉ mở môn được phân công; phần Học liệu (module, học liệu của môn), lối vào Template, Subject Classes | `GET /api/v1/subjects/{id}` |
-| `SubjectFormDialog` | Tạo/sửa; `code` khóa khi sửa; kiểm định dạng phía client | `POST`, `PATCH /api/v1/subjects/{id}` |
-| `AssignManagerDialog` | Tìm tài khoản ACTIVE role SUBJECT_MANAGER hoặc ADMIN | `PUT /api/v1/subjects/{id}/manager` |
-| `ClassListPage` | Danh sách lớp theo phạm vi, lọc môn/trạng thái/học kỳ; Chủ nhiệm môn mở theo môn từ Subject Detail | `GET /api/v1/classes?subjectId=` |
-| `ClassStateActions` | Nút Mở / Lưu trữ / Mở lại theo trạng thái; hộp xác nhận; hiện danh sách người vướng khi mở lại bị từ chối | `POST /api/v1/classes/{id}/state` |
-| `AddStudentSearch` | Ô tìm theo email/tên, debounce 300 ms | `GET /api/v1/classes/{id}/student-candidates?q=` |
-| `AddStudentsListDialog` | Dán email hoặc chọn CSV; đếm dòng, chặn > 200 | `POST /api/v1/classes/{id}/enrollments:bulk` |
+| `ClassDashboardPage` | Student: "Đang học" / "Đã kết thúc" (UC 13). Teacher, Subject Manager: "Sắp mở" / "Đang dạy" / "Đã kết thúc" (UC 31). Có lối vào Student Assignments, Quiz Practice History (U11), Class Announcements (U05), My Credit Package và Public Credit Packages (U07) | `GET /api/v1/me/classes`, `GET /api/v1/classes?teacher=me` |
+| `StudentClassPage` | Thông tin lớp, giảng viên, module và học liệu `ACTIVE` (gắn `ModuleList` chỉ xem + Learning Material của U05); lối vào Student Assignments (U11) và Class Announcements (U05) lọc sẵn lớp; phần Nhóm của tôi do U12 gắn vào (UC 14) | `GET /api/v1/me/classes/{id}` |
+| `TeacherClassPage` | Tab Class Detail (chỉ đọc), tab Students (U04, nhóm của U12); tab Evals (U08: bài, quiz, bài nộp và sổ điểm của U15) và tab Materials (U05) gắn vào (UC 32) | `GET /api/v1/classes/{id}`, `GET /api/v1/classes/{id}/enrollments` |
+| `StudentDetailDialog` | Popup chỉ đọc: email, tên hiển thị, ngày ghi danh; nhóm lấy từ dữ liệu nhóm của U12 đã tải ở tab Students | `GET /api/v1/classes/{id}/students/{accountId}` |
+| `ManagerDashboardPage` | Danh sách môn được giao; lối vào Subject Detail, Class List, Material List, Question List, Quiz List, Assignment List; nút sang Class Dashboard nếu có dạy lớp (UC 53) | `GET /api/v1/subjects?manager=me` |
+| `ManagedSubjectPage` | Thông tin môn, số lớp theo trạng thái (UC 53) | `GET /api/v1/subjects/{id}` |
+| `ClassListPage` | Lớp của môn được giao, lọc môn/trạng thái/học kỳ, phân trang (UC 47); nút Tạo lớp | `GET /api/v1/classes?subjectId=` |
+| `ClassFormDialog` | Tạo lớp trong môn mình quản lý; `code` kiểm định dạng phía client (UC 49) | `POST /api/v1/classes` |
+| `ClassInfoForm` | Sửa name/description/term kèm `version`; `409` báo tải lại (UC 52) | `PATCH /api/v1/classes/{id}` |
+| `ClassStateActions` | Nút Mở / Lưu trữ / Mở lại theo trạng thái; hộp xác nhận; hiện danh sách người vướng khi mở lại bị từ chối (UC 52) | `POST /api/v1/classes/{id}/state` |
+| `GradeDistributionToggle` | Hiện trạng thái, xác nhận khi bật (UC 52) | `PATCH /api/v1/classes/{id}/grade-distribution` |
+| `AssignTeacherDialog` | Tìm tài khoản `TEACHER`/`SUBJECT_MANAGER` `ACTIVE` (UC 50) | `PUT /api/v1/classes/{id}/teacher` |
+| `EnrollmentTable` | Sinh viên `ACTIVE`/`REMOVED`, nút Gỡ (xác nhận), Thêm lại (UC 51) | `GET`, `DELETE`, `POST .../enrollments` |
+| `AddStudentSearch` | Ô tìm theo email/tên, debounce 300 ms (UC 51) | `GET /api/v1/classes/{id}/student-candidates?q=` |
+| `AddStudentsListDialog` | Dán email hoặc chọn CSV; đếm dòng, chặn > 200 (UC 51) | `POST /api/v1/classes/{id}/enrollments:bulk` |
 | `EnrollmentResultTable` | Kết quả từng dòng với nhãn tiếng Việt | - |
-| `EnrollmentTable` | Người học `ACTIVE`/`REMOVED`, nút Gỡ (xác nhận), Ghi danh lại | `GET`, `DELETE`, `POST .../enrollments` |
-| `InviteCodePanel` | Hiện mã, hạn, bật/tắt, đổi mã, sao chép | `PUT /api/v1/classes/{id}/invite` |
-| `GradeDistributionToggle` | Hiện trạng thái và xác nhận khi bật; chỉ người quản lý lớp thao tác | `PATCH /api/v1/classes/{id}/grade-distribution` |
-| `MyClassesPage` | Hai mục "Đang học" / "Đã kết thúc"; nút "Tham gia bằng mã" | `GET /api/v1/me/classes` |
-| `JoinByCodeDialog` | Ô 8 ký tự, tự viết hoa; lỗi chung | `POST /api/v1/me/classes:join` |
-| `TeacherMenuPage` | Lớp đang dạy (giảng viên chính); Subject Manager thấy thêm nút điều hướng môn được phân công | `GET /api/v1/classes?teacher=me` |
-| `SubjectManagerMenuPage` | Môn được phân công làm Chủ nhiệm môn | `GET /api/v1/subjects?manager=me` |
-| `StudentClassPage` | Thông tin lớp, giảng viên, module và học liệu `ACTIVE`; lối vào danh sách bài theo loại (U11, UC 17), Class Announcements (U05), My Group | `GET /api/v1/me/classes/{id}` |
+| `SubjectListPage` | Bảng môn, tìm, lọc trạng thái, phân trang (UC 64) | `GET /api/v1/subjects` |
+| `SubjectFormDialog` | Thêm môn, chọn Chủ nhiệm môn (tài khoản `SUBJECT_MANAGER` `ACTIVE`) (UC 65) | `POST /api/v1/subjects` |
+| `SubjectDetailPage` | Thông tin môn, Chủ nhiệm môn, lớp của môn chỉ đọc (UC 66) | `GET /api/v1/subjects/{id}`, `GET /api/v1/classes?subjectId=` |
+| `SubjectEditForm` | Sửa name/description, đổi Chủ nhiệm môn, lưu trữ/mở lại; `code` khóa (UC 67) | `PATCH /api/v1/subjects/{id}`, `PUT /api/v1/subjects/{id}/manager` |
 
-## Hành động trên Class Detail
-ClassInfoTab/ClassStateActions/AssignTeacherDialog chỉ quyền cấu trúc (Admin Full hoặc Subject Manager đúng môn). Teacher/vai trò kế thừa được giao dạy chỉ thao tác roster/mã mời/phân bố và giảng dạy được cấp. Gradebook, bank, submissions/học liệu lớp kiểm R3/R4 dù đã mở được cấu trúc lớp.
+Không còn popup Join Class và mã mời (bỏ 2026-10-09). Admin không có màn lớp riêng; Teacher chỉ xem thông tin lớp và danh sách sinh viên.

@@ -1,26 +1,28 @@
 # U01 Account & Access - Business Logic Model
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-U01-xx` trong `business-rules.md`) và truy vết. Mọi lỗi trả về client đều ở dạng an toàn.
 
 ## 1. Bảng truy vết
 
-| Luồng | Use case | Story |
-|---|---|---|
-| F1 Yêu cầu kích hoạt | UC 01 | US-IAM-001 |
-| F2 Hoàn tất kích hoạt | UC 01 | US-IAM-001 |
-| F3 Đăng nhập | UC 02 | US-IAM-002 |
-| F4 Đăng xuất | UC 03 | US-IAM-002 |
-| F5 Quên mật khẩu | UC 04 | US-IAM-003 |
-| F6 Đổi mật khẩu | UC 05 | US-IAM-006 |
-| F7 Xem và sửa hồ sơ | UC 06, 07 | US-IAM-004 |
-| F8 Xem tài khoản | UC 58, 59, 60, 61, 62 | US-IAM-007 |
-| F9 Tạo tài khoản | UC 58, 59, 60, 61, 62 | US-IAM-007 |
-| F10 Nhập hàng loạt | UC 58, 59, 60, 61, 62 | US-IAM-007 |
-| F11 Đổi role | UC 58, 59, 60, 61, 62 | US-IAM-005, US-IAM-007 |
-| F12 Vô hiệu hóa và mở lại | UC 58, 59, 60, 61, 62 | US-IAM-007 |
-| F13 Quyết định phân quyền | Mọi UC có kiểm quyền | US-IAM-005 |
+| Luồng | Use case | Màn (screen flow) | Story |
+|---|---|---|---|
+| F1 Yêu cầu kích hoạt | UC 01 | Activate Account | US-IAM-001 |
+| F2 Hoàn tất kích hoạt | UC 01 | Activate Account | US-IAM-001 |
+| F3 Đăng nhập | UC 02 | User Login | US-IAM-002 |
+| F4 Đăng xuất | UC 03 | Khung sau đăng nhập (Post-Login) | US-IAM-002 |
+| F15 Điều hướng sau đăng nhập | UC 01, 02 | Post-Login → dashboard theo role | US-IAM-002 |
+| F5 Đặt lại mật khẩu | UC 04 | Password Reset | US-IAM-003 |
+| F6 Đổi mật khẩu | UC 05 | Password Change | US-IAM-006 |
+| F7 Xem và sửa hồ sơ | UC 06, 07 | User Profile | US-IAM-004 |
+| F8 Xem danh sách tài khoản | UC 59 | Account List | US-IAM-007 |
+| F9 Tạo tài khoản | UC 60 | New Account | US-IAM-007 |
+| F10 Nhập hàng loạt | Luồng phụ của UC 60 | Account List (nút Nhập CSV) | US-IAM-007 |
+| F14 Xem chi tiết và sửa thông tin tài khoản | UC 61, 62 | Account Detail | US-IAM-007 |
+| F11 Đổi role | UC 62 | Account Detail | US-IAM-005, US-IAM-007 |
+| F12 Vô hiệu hóa và mở lại | UC 63 | Account Detail | US-IAM-007 |
+| F13 Quyết định phân quyền | Mọi UC có kiểm quyền | - | US-IAM-005 |
 
 ## 2. Luồng kích hoạt
 
@@ -53,7 +55,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 7. Ghi audit `ACCOUNT_ACTIVATED`.
 8. Tự đăng nhập: xóa `failedLoginCount`, tạo refresh session gắn `credentialVersion`, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
 
-**Ra**: phiên đăng nhập và điểm đến theo role (BR-U01-48); người dùng vào thẳng menu của mình.
+**Ra**: phiên đăng nhập; người dùng qua Post-Login vào thẳng dashboard theo role (F15, BR-U01-48).
 
 ## 3. Luồng xác thực
 
@@ -67,16 +69,28 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 4. Trạng thái khác `ACTIVE` → lỗi trung tính (BR-U01-40).
 5. Sai mật khẩu → tăng `failedLoginCount`; chạm 5 thì đặt `lockedUntil` + 15 phút và ghi audit `ACCOUNT_TEMP_LOCKED`. Trả lỗi trung tính, ghi audit `LOGIN_FAILED`.
 6. Đúng → xóa `failedLoginCount`, `lockedUntil`.
-7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên và điểm đến theo role (BR-U01-44, 48). Không có bước MFA (BR-U01-47).
+7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
 
 **Ra**: phiên đăng nhập hoặc lỗi trung tính **giống nhau** cho mọi nguyên nhân thất bại.
 
 ### F4 - Đăng xuất
 
+Nút Logout nằm trong khung sau đăng nhập (Post-Login), hỏi xác nhận rồi gọi API.
+
 1. Xóa `Session` hiện tại (BR-U01-45).
 2. Phiên khác của người dùng giữ nguyên.
+3. Xóa cookie, chuyển về User Login.
 
-### F5 - Quên mật khẩu
+### F15 - Điều hướng sau đăng nhập (Post-Login)
+
+1. Đăng nhập (F3) hoặc kích hoạt (F2) thành công trả `homePath` theo role (BR-U01-48): Student, Teacher → Class Dashboard; Subject Manager → Manager Dashboard; Admin → Admin Dashboard.
+2. Khung sau đăng nhập có lối vào User Profile (F7) và Logout (F4); Subject Manager có thêm nút sang Class Dashboard để vào lớp mình được giao dạy.
+3. Admin không vào Manager Dashboard hay Class Dashboard: frontend ẩn lối vào và chặn route; backend từ chối mọi hành động cần phân công môn/lớp của Admin (F13, BR-U01-60).
+4. Mở lại trang hoặc vào thẳng một URL: frontend đọc role từ `GET /me/profile` rồi áp cùng quy tắc.
+
+### F5 - Đặt lại mật khẩu (Reset Password)
+
+Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đặt mật khẩu mới.
 
 **Vào**: `schoolEmail`.
 
@@ -89,6 +103,8 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 ### F6 - Đổi mật khẩu
 
+Màn Password Change, mở từ User Profile.
+
 **Vào**: phiên hợp lệ, `currentPassword`, `newPassword`.
 
 1. Sai mật khẩu hiện tại → từ chối, không đổi gì (US-IAM-006 S2).
@@ -100,6 +116,8 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 ### F7 - Xem và sửa hồ sơ
 
+Màn User Profile, mở từ khung sau đăng nhập; hiện email, tên, số điện thoại, role, trạng thái của chính mình (UC 06) và cho sửa tên, số điện thoại (UC 07).
+
 1. Chỉ thao tác trên `accountId` của phiên; định danh khác bị từ chối (BR-U01-54).
 2. Sửa `displayName`, `phoneNumber` theo ràng buộc; email, role, trạng thái không sửa được (BR-U01-51).
 3. DTO chỉ nhận tên/số điện thoại; avatar/email/role/status hoặc ID người khác bị từ chối trước ghi.
@@ -107,11 +125,15 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 ## 5. Quản trị tài khoản
 
-### F8 - Xem tài khoản
+Mọi màn quản trị tài khoản mở từ Admin Dashboard và chỉ dành cho `ADMIN`.
 
-Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP hay token.
+### F8 - Xem danh sách tài khoản (Account List)
 
-### F9 - Tạo tài khoản
+Admin lọc theo role, trạng thái, email; chọn một dòng mở Account Detail (F14). Kết quả không có hash, OTP hay token.
+
+### F9 - Tạo tài khoản (New Account)
+
+Màn New Account mở từ nút "Thêm tài khoản" trên Account List; tạo xong quay về Account List.
 
 **Vào**: `schoolEmail`, `displayName`, `role`.
 
@@ -121,7 +143,9 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 4. Tạo `ADMIN` bắt buộc qua luồng này, không qua nhập hàng loạt (BR-U01-84).
 5. Ghi audit `ACCOUNT_CREATED`.
 
-### F10 - Nhập hàng loạt
+### F10 - Nhập hàng loạt (luồng phụ của UC 60)
+
+Nút "Nhập CSV" trên Account List; giữ theo quyết định của người dùng ngày 2026-10-09.
 
 1. Kiểm quyền admin; kiểm file là CSV, ≤ 1000 dòng (BR-U01-80).
 2. Kiểm từng dòng, trả `AccountImportResult` trong response, không lưu (BR-U01-82, 84).
@@ -129,18 +153,18 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 4. Kiểm lại toàn bộ file (dữ liệu có thể đã đổi), tạo các dòng hợp lệ ở `PENDING` trong một transaction, không gửi mail (BR-U01-85). Email đã tồn tại (kể cả do lần nhập trước) báo lỗi dòng nên nhập lại cùng file không tạo trùng (BR-U01-83).
 5. Ghi một audit `ACCOUNTS_IMPORTED` kèm checksum file, số dòng tạo và bị từ chối.
 
-### F11 - Đổi role
+### F11 - Đổi role (UC 62, trên Account Detail)
 
 **Vào**: `accountId` đích, `newRole`.
 
 1. Kiểm quyền admin.
 2. Đích là chính mình và là hạ quyền → từ chối (BR-U01-65).
 3. Đích là `ADMIN` đang hoạt động cuối cùng và role mới khác `ADMIN` → từ chối (BR-U01-66).
-4. Role mới thấp hơn và đích còn phụ trách môn/lớp (hỏi U04) → từ chối, nêu môn/lớp (BR-U01-64).
+4. Role mới không giữ được phân công hiện có của đích (hỏi U04) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
 5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
-### F12 - Vô hiệu hóa và mở lại
+### F12 - Vô hiệu hóa và mở lại (UC 63, trên Account Detail)
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
@@ -151,6 +175,12 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 1. Có mật khẩu → `ACTIVE`; chưa có → `PENDING` (BR-U01-72).
 2. Xóa `failedLoginCount`, `lockedUntil`.
 3. Ghi audit `ACCOUNT_ENABLED`.
+
+### F14 - Xem chi tiết và sửa thông tin tài khoản (UC 61, 62)
+
+1. ADMIN mở Account Detail từ Account List; GET theo ID trả email, tên hiển thị, số điện thoại, role, trạng thái, ngày tạo, `version`; không có hash, OTP hay token (UC 61).
+2. Sửa `displayName`, `phoneNumber` bằng PATCH kèm `version`; version lệch → `409`, tải lại rồi sửa. Email không đổi được; role đổi theo F11, trạng thái theo F12; Admin không đặt mật khẩu hay gửi OTP (UC 62).
+3. Ghi audit `ACCOUNT_UPDATED` với actor, thời điểm, tên trường đã đổi; không ghi giá trị số điện thoại.
 
 ## 6. Phân quyền
 
@@ -163,18 +193,22 @@ Admin lọc theo role, trạng thái, email. Kết quả không có hash, OTP ha
 5. Không gọi được U04 → **từ chối** (BR-U01-93).
 6. Trả `AuthorizationDecision`. Mọi lần từ chối trên hành động nhạy cảm ghi audit `ACCESS_DENIED`.
 
-Subject Manager/Administrator dùng chức năng Teacher chỉ khi isTeacherOf R4; tài nguyên môn khi isSubjectManager R2. Admin Full chỉ cấu trúc/tài khoản/statistic/gói/lịch sử/audit. Đọc scope hiện thời ở backend, không suy từ role hoặc cache dữ liệu cũ.
+Quy tắc theo role (BR-U01-60):
+
+| Role | Được dùng |
+|---|---|
+| `STUDENT` | Chức năng User và lớp mình đã ghi danh (R5) |
+| `TEACHER` | Chức năng User và lớp mình được giao dạy (R3) |
+| `SUBJECT_MANAGER` | Chức năng Teacher cho lớp được giao dạy (R4) và tài nguyên của môn được giao quản lý (R2) |
+| `ADMIN` | Chức năng User và chức năng quản trị: tài khoản, môn, gói credit, Settings, lịch sử thanh toán, audit. Không dùng chức năng Subject Manager/Teacher, không nhận phân công môn/lớp |
+
+Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy từ role hoặc dữ liệu cache cũ.
 
 ## 7. Sự kiện U01 phát ra
 
 | Sự kiện | Người nhận |
 |---|---|
-| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U16 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
+| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U16 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
-
-## F14 - Account Detail/Update Account Information (UC 60–61)
-1. ADMIN GET theo ID: thông tin được phép, không hash/OTP/token.
-2. PATCH displayName/phoneNumber hợp lệ với version; 409 nếu thay đổi cạnh tranh. Email bất biến; role/status dùng F11/F12, không đổi mật khẩu/gửi OTP.
-3. Audit actor/thời gian/tên trường, không log số điện thoại.

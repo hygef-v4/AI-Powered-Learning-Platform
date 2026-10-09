@@ -1,39 +1,64 @@
 # U05 Content, Material & RAG - Frontend Components
 
-**Bản tài liệu 2026-10-08**: UC 14, 26, 29, 30, 31, 51, 52; primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
-Màn hình theo [UC/màn hình hiện hành](../../../../docs/use-cases-and-screens.md): Uploaded Learning Materials là danh sách học liệu lớp cho actor R3/R4, mở từ Class Detail (UC 29–30). Subject Detail chứa học liệu/module của môn cho R2 (UC 51–52); Class Detail hiện cùng bộ module, module chỉ đọc trong phạm vi lớp. Danh sách dùng lại ModuleList/LessonRow. Nút "Tải tệp" hoặc "Gắn link video" mở form hỗ trợ đã chọn module; form này không phải màn Uploaded Learning Materials. Learning Material là màn xem học liệu theo quyền UC 14. Thông báo và bình luận ở Class Announcements.
+## 1. Màn hình theo screen flow
+
+| Màn | Component | UC | Role | Mở từ |
+|---|---|---|---|---|
+| Material List | `MaterialListPage` | 54, 55 | Subject Manager | Manager Dashboard |
+| Material Detail | `MaterialDetailPage` | 34, 55 | Subject Manager (học liệu của môn), Teacher hoặc Subject Manager được giao dạy (học liệu của lớp) | Material List, tab Materials của Teacher Class Detail |
+| Tab Materials | `MaterialsTab` (gắn vào `TeacherClassPage` của U04) | 33, 34 | Teacher, Subject Manager được giao dạy | Teacher Class Detail |
+| Learning Material | `LearningMaterialPage` | 15 | Student | Student Class Detail |
+| Class Announcements | `ClassAnnouncementsPage` | 30, 36 | Student, Teacher, Subject Manager | Class Dashboard; Student Class Detail (lọc sẵn lớp) |
+
+## 2. Cây component
 
 ```
+app/manager/materials/                           MaterialListPage        màn Material List
+  SubjectPicker                                  chọn môn mình quản lý
+  ModuleList (chế độ môn)                        thêm, đổi tên, lên/xuống, lưu trữ module; học liệu của môn
+app/manager/materials/[lessonId]/                MaterialDetailPage      màn Material Detail, học liệu của môn
+app/classes/[id]/teaching/  MaterialsTab         tab Materials, ModuleList chế độ lớp
+app/classes/[id]/teaching/materials/[lessonId]/  MaterialDetailPage      màn Material Detail, mở từ lớp
+app/classes/[id]/materials/[lessonId]/           LearningMaterialPage    màn Learning Material
+  LessonQuizList                                 chỗ gắn component của U11: quiz của học liệu, nút "Làm quiz"
+app/classes/announcements/                       ClassAnnouncementsPage  màn Class Announcements
+  ClassFilter                                    lọc theo lớp mình học hoặc dạy
+  AnnouncementFeed                               thông báo mới nhất trước, phân trang
+    AnnouncementCard                             lớp, tác giả, thời gian, nội dung; nút Sửa, Xóa cho giảng viên lớp
+  AnnouncementForm                               tạo (chọn lớp) hoặc sửa thông báo
+  DeleteAnnouncementDialog                       xác nhận xóa
 shared/content/
-  UploadedLearningMaterialsView  màn Uploaded Learning Materials (UC 29–30), danh sách trong phạm vi lớp, reuse ModuleList/LessonRow
-  ModuleList                 danh sách module của môn; gắn vào Subject Detail (U04, chế độ môn: Chủ nhiệm môn thêm, đổi tên, lên/xuống, lưu trữ module và tải học liệu của môn) và Class Detail (U04, chế độ lớp: module chỉ đọc, giảng viên tải học liệu của lớp, người học xem)
-    ModuleItem               tiêu đề module, nút "Tải tệp", "Gắn link video" (Chủ nhiệm môn ở chế độ môn, giảng viên lớp ở chế độ lớp), danh sách lesson
-      LessonRow              tên, nhãn "Của môn"/"Của lớp", ScanStatusBadge, đổi tên, lên/xuống, lưu trữ (theo quyền BR-U05-02); người học bấm mở Learning Material
-      ScanStatusBadge        Chờ / Đang quét / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Không đủ credit AI / Hệ thống đang bận / Lỗi + Quét lại
-  UploadLearningMaterialsDialog   form hỗ trợ thêm học liệu UC 30/52, mở từ nút của một module
-    MaterialFileInput        FileUploader (U03, purpose MATERIAL), nhiều tệp (chế độ "Tải tệp")
-    YoutubeUrlInput          ô URL một video (chế độ "Gắn link video")
-  ViewLearningMaterialDialog           màn Learning Material theo R2/R3/R4/R5 (UC 14)
-    FileView                 PDF xem trực tiếp, nút Tải
-    YoutubeView              iframe youtube-nocookie
-app/classes/[id]/communication/   màn Class Announcements (UC 26, 31)
-  AnnouncementFeed           thông báo lớp, phân trang, mới nhất trước
-    AnnouncementCard         nội dung; 2 bình luận mới nhất, tổng số bình luận, nút "Xem thêm bình luận", ô viết bình luận
-  AnnouncementForm           giảng viên đăng thông báo
-  CommentsDialog             popup toàn bộ bình luận của một thông báo (phân trang, cũ → mới) kèm ô viết bình luận; giảng viên ẩn bình luận có lý do
+  ModuleList                                     danh sách module của môn (chế độ môn hoặc chế độ lớp)
+    ModuleItem                                   tiêu đề module, nút "Tải tệp", "Gắn link video", danh sách lesson
+      LessonRow                                  tên, nhãn "Của môn"/"Của lớp", ScanStatusBadge, lên/xuống; bấm mở Material Detail
+  ScanStatusBadge                                Chờ / Đang quét / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Hệ thống đang bận, sẽ tự thử lại / Quét lỗi
+  UploadLearningMaterialsDialog                  form thêm học liệu, mở từ nút của một module
+    MaterialFileInput                            FileUploader (U03, purpose MATERIAL), nhiều tệp
+    YoutubeUrlInput                              ô URL một video
+  MaterialViewer                                 PDF xem trực tiếp và nút Tải (FileView), iframe youtube-nocookie (YoutubeView)
+  SummaryBlock                                   "Tóm tắt do AI tạo"
+  MaterialEditForm                               sửa thông tin học liệu (tên), không đổi tệp hay link
+  DeleteMaterialDialog                           xác nhận xóa (lưu trữ)
 ```
+
+Route theo `RoleGuard` của U01: `/manager/*` cho Subject Manager; `/classes/*` cho Student, Teacher, Subject Manager. Backend vẫn kiểm quan hệ thật (Chủ nhiệm môn, giảng viên chính, ghi danh).
+
+## 3. Component và API
 
 | Component | Hành vi | API |
 |---|---|---|
-| `ModuleList` | Chế độ môn (Subject Detail): Chủ nhiệm môn thêm, đổi tên, đổi thứ tự, lưu trữ module, xem học liệu của môn. Chế độ lớp (Class Detail): module chỉ đọc, kèm học liệu của môn và của lớp | `GET /api/v1/subjects/{subjectId}/modules`, `POST /api/v1/subjects/{subjectId}/modules`, `PATCH /api/v1/modules/{id}`, `GET /api/v1/classes/{classId}/modules` |
-| `LessonRow` | Sửa tên, đổi thứ tự, lưu trữ theo quyền; người học mở Learning Material | `PATCH /api/v1/lessons/{id}` |
-| `UploadLearningMaterialsDialog` | Mở từ nút của module; tải nhiều tệp hoặc một link video; đóng popup là xong, quét chạy nền | Học liệu của môn: `POST /api/v1/subjects/{subjectId}/modules/{moduleId}/lessons`; học liệu của lớp: `POST /api/v1/classes/{classId}/modules/{moduleId}/lessons` |
-| `ScanStatusBadge` | Poll 3 giây khi `PENDING`/`SCANNING` (`usePollStatus` của U03); nút Quét lại khi `FAILED`, `BUSY`, `NO_CREDIT` | `GET /api/v1/lessons/{id}/scan`, `POST /api/v1/lessons/{id}/scan` |
-| `ViewLearningMaterialDialog` | Xem học liệu được phép, lấy URL tải (token 5 phút) | `GET /api/v1/lessons/{id}`, `POST /api/v1/lessons/{id}/download` |
-| `AnnouncementFeed`, `AnnouncementForm` | R5 hoặc R3/R4 xem; R3/R4 tạo/sửa/xóa; mỗi thông báo kèm 2 bình luận mới nhất | `GET`, `POST /api/v1/classes/{id}/announcements`; `PATCH`, `DELETE /api/v1/announcements/{id}` với version |
-| `AnnouncementCard`, `CommentsDialog` | Viết bình luận (≤ 2 000 ký tự); "Xem thêm bình luận" mở popup toàn bộ; giảng viên ẩn bình luận có lý do | `GET`, `POST /api/v1/announcements/{id}/comments`, `POST /api/v1/announcement-comments/{id}:hide` |
+| `MaterialListPage`, `ModuleList` (chế độ môn) | Chọn môn; thêm, đổi tên, đổi thứ tự, lưu trữ module; xem học liệu của môn kèm trạng thái quét; lọc `ACTIVE`/`ARCHIVED` (UC 54, 55) | `GET /api/v1/subjects/{subjectId}/modules`, `POST /api/v1/subjects/{subjectId}/modules`, `PATCH /api/v1/modules/{id}` |
+| `MaterialsTab`, `ModuleList` (chế độ lớp) | Module chỉ đọc; học liệu của môn chỉ đọc, học liệu của lớp quản lý được (UC 33) | `GET /api/v1/classes/{classId}/modules` |
+| `LessonRow` | Đổi thứ tự theo quyền; bấm mở Material Detail | `PATCH /api/v1/lessons/{id}` |
+| `UploadLearningMaterialsDialog` | Mở từ nút của module; tải nhiều tệp hoặc một link video; đóng popup là xong, quét chạy nền. Hiện mức credit cần giữ cho mỗi học liệu và số dư; không đủ thì chặn nút tải, lỗi từ server báo "Không đủ credit AI". Ghi chú: hệ thống tự tóm tắt bằng AI một lần và chỉ trừ credit theo lượng dùng thật (BR-U05-39, 45, 46) | `GET /api/v1/lessons/upload-credit`; học liệu của môn: `POST /api/v1/subjects/{subjectId}/modules/{moduleId}/lessons`; học liệu của lớp: `POST /api/v1/classes/{classId}/modules/{moduleId}/lessons` |
+| `MaterialDetailPage` | Thông tin, nguồn, người tải, trạng thái quét, bản tóm tắt; xem và tải tệp; người quản lý học liệu có Sửa (đổi thông tin) và Xóa, không có Quét lại hay thay tài liệu; Teacher xem học liệu của môn chỉ đọc (UC 34, 55) | `GET /api/v1/lessons/{id}?classId=`, `POST /api/v1/lessons/{id}/download?classId=` |
+| `MaterialEditForm`, `DeleteMaterialDialog` | Sửa tên, không đổi tệp hay link; xóa là lưu trữ, cảnh báo quiz của học liệu sẽ không còn hiện cho người học | `PATCH /api/v1/lessons/{id}` |
+| `ScanStatusBadge` | Poll 3 giây khi `PENDING`/`SCANNING`/`BUSY` (`usePollStatus` của U03); không có nút Quét lại, `BUSY` báo hệ thống sẽ tự thử lại | `GET /api/v1/lessons/{id}/scan` |
+| `LearningMaterialPage` | Xem học liệu được phép, tải tệp (token 5 phút), khối "Tóm tắt do AI tạo" nếu đã có (BR-U05-48); `LessonQuizList` của U11 hiện quiz của học liệu, "Làm quiz" → Quiz Taking (UC 15) | `GET /api/v1/lessons/{id}?classId=`, `POST /api/v1/lessons/{id}/download?classId=`; quiz qua API của U11 |
+| `ClassAnnouncementsPage`, `ClassFilter`, `AnnouncementFeed` | Feed thông báo của các lớp `OPEN` mình học hoặc dạy, lọc theo lớp, mới nhất trước (UC 30) | `GET /api/v1/me/announcements?classId=` |
+| `AnnouncementForm` | Giảng viên tạo thông báo (chọn lớp mình dạy) hoặc sửa kèm `version`; `409` yêu cầu tải lại (UC 36) | `POST /api/v1/classes/{classId}/announcements`, `PATCH /api/v1/announcements/{id}` |
+| `DeleteAnnouncementDialog` | Xác nhận rồi xóa mềm kèm `version`; bỏ khỏi feed sau khi thành công (UC 36) | `DELETE /api/v1/announcements/{id}` |
 
-## Update/Delete trên Class Announcements (UC 31)
-AnnouncementForm dùng cho create/edit; PATCH /api/v1/announcements/{id} với version. DeleteAnnouncementAction xác nhận và DELETE cùng URL/version; bỏ khỏi feed sau thành công. Chỉ R3/R4 có nút; 409 yêu cầu tải lại. Không gửi notification tạo mới khi edit/delete. Comment giữ quy tắc chỉ tạo/ẩn vi phạm.
-Learning Material dùng GET /api/v1/lessons/{id} và POST /api/v1/lessons/{id}/download theo actor R2/R3/R4/R5; endpoint lớp cũ có thể giữ alias nhưng không ép Teacher/Admin thành Student.
+Danh sách lớp để chọn khi tạo thông báo lấy từ API lớp của U04 (`GET /api/v1/classes?teacher=me`, lớp `OPEN`). Không có bình luận dưới thông báo (bỏ 2026-10-09). Tạo mới gửi thông báo trong app một lần; sửa hoặc xóa không gửi lại.

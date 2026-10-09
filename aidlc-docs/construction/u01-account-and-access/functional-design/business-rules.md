@@ -1,6 +1,6 @@
 # U01 Account & Access - Business Rules
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "chốt ở NFR" là tham số cấu hình, không cố định ở đây.
 
@@ -11,16 +11,16 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
 | BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình triển khai `U01_ALLOWED_EMAIL_DOMAINS`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
-| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 06, 07, 58, 59, 60, 61, 62 |
+| BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 06, 07, 60, 62 |
 
 ## 2. Kích hoạt
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 58, 59, 60, 61, 62 |
+| BR-U01-10 | Tạo hoặc nhập tài khoản cho trạng thái `PENDING`, **không gửi email**, admin không đặt mật khẩu. | FR-015, UC 60 |
 | BR-U01-11 | OTP kích hoạt chỉ được gửi khi người dùng tự yêu cầu từ liên kết "Kích hoạt tài khoản lần đầu". Admin không có thao tác gửi OTP. | US-IAM-001, Câu hỏi FU3 |
 | BR-U01-12 | Yêu cầu kích hoạt luôn trả phản hồi trung tính giống nhau. Chỉ gửi OTP khi email khớp tài khoản `PENDING`. | US-IAM-001 S2 |
-| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa ticket, ghi audit, rồi **tự đăng nhập**: tạo phiên như đăng nhập (BR-U01-44) và đưa người dùng tới menu theo role (BR-U01-48). Đặt lại mật khẩu (UC 04) không tự đăng nhập. | US-IAM-001 S1; người dùng chốt 2026-10-04 |
+| BR-U01-13 | Kích hoạt thành công: lưu mật khẩu, chuyển `ACTIVE`, xóa ticket, ghi audit, rồi **tự đăng nhập**: tạo phiên như đăng nhập (BR-U01-44) và đưa người dùng tới dashboard theo role (BR-U01-48). Đặt lại mật khẩu (UC 04) không tự đăng nhập. | US-IAM-001 S1; người dùng chốt 2026-10-04 |
 
 ## 3. OTP (kích hoạt và đặt lại)
 
@@ -59,7 +59,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
 | BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
-| BR-U01-48 | STUDENT → /learning (My Classes); TEACHER/SUBJECT_MANAGER → /teaching (Assigned Classes); ADMIN → /admin (Statistic UC 57 và lối vào quản trị). Vai trò kế thừa dùng chức năng môn/lớp khi có R2/R4; Subject Classes chỉ quản lý cấu trúc, không tự cấp dạy/chấm. | SRS Screen Flow, FR-002/003 |
+| BR-U01-48 | Đăng nhập hoặc kích hoạt thành công đi qua Post-Login rồi tới dashboard theo role (`homePath`): `STUDENT`, `TEACHER` → Class Dashboard; `SUBJECT_MANAGER` → Manager Dashboard, có nút sang Class Dashboard để vào lớp được giao dạy; `ADMIN` → Admin Dashboard. Admin không vào Manager Dashboard hay Class Dashboard. Khung sau đăng nhập có lối vào User Profile và Logout. | Screen flow G21 Page-2; người dùng chốt 2026-10-09 |
 
 ## 6. Hồ sơ
 
@@ -75,11 +75,11 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-60 | Một role cao nhất; Student → User, Teacher → User, Subject Manager → Teacher, Administrator → Subject Manager. R1 chỉ dữ liệu mình; R2/R3/R4 cần phân công hiện thời và ACTIVE. Không kế thừa quyền Student. | FR-002, SRS 4.4 |
+| BR-U01-60 | Mỗi tài khoản một role. Student → User, Teacher → User, Subject Manager → Teacher. `ADMIN` chỉ dùng chức năng User và chức năng quản trị; không dùng chức năng Subject Manager/Teacher và không nhận phân công môn/lớp. R1 chỉ dữ liệu của mình; R2 (môn) và R3/R4 (lớp) cần phân công hiện thời và tài khoản `ACTIVE`. Không vai trò nào kế thừa quyền Student. | FR-002; người dùng chốt 2026-10-09 |
 | BR-U01-61 | U01 chỉ đặt role. Gán môn/lớp cụ thể là việc của U04. | Câu 7 |
 | BR-U01-62 | Mọi quyết định quyền chạy phía server, mặc định từ chối, kết hợp role của U01 với phạm vi của U04. | SECURITY-08 |
 | BR-U01-63 | Đổi role tăng `credentialVersion`: refresh token của người đó hết hiệu lực ngay; access token còn hạn dùng tối đa 15 phút (BR-U01-44). | Câu 6, US-IAM-005 S2 |
-| BR-U01-64 | Hạ role bị chặn nếu người đó đang là Chủ nhiệm môn hoặc giảng viên chính của lớp; lỗi nêu môn/lớp còn phụ trách. | Câu 8 |
+| BR-U01-64 | Đổi role bị chặn nếu role mới không giữ được phân công hiện có: Chủ nhiệm môn cần `SUBJECT_MANAGER`; giảng viên lớp cần `TEACHER` hoặc `SUBJECT_MANAGER`. Gồm cả hạ role và đổi sang `ADMIN`. Lỗi nêu môn/lớp còn phụ trách. | Câu 8; người dùng chốt 2026-10-09 |
 | BR-U01-65 | Admin không được tự hạ role hoặc tự vô hiệu hóa chính mình. | Câu 9 |
 | BR-U01-66 | Không được hạ role hoặc vô hiệu hóa `ADMIN` đang hoạt động cuối cùng. | Câu 9 |
 | BR-U01-67 | Chỉ `ADMIN` được đổi role và trạng thái; lần gọi trái phép bị từ chối và ghi audit. | US-IAM-005 S3, US-IAM-007 S3 |
@@ -89,15 +89,15 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-70 | Chỉ có 3 trạng thái: `PENDING`, `ACTIVE`, `DISABLED`. | Câu 10 |
-| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 58, 59, 60, 61, 62 |
+| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, tăng `credentialVersion`, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 63 |
 | BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING` nếu chưa. | Câu 10 |
-| BR-U01-73 | Không có thao tác xóa tài khoản. | UC 58, 59, 60, 61, 62 |
+| BR-U01-73 | Không có thao tác xóa tài khoản. | UC 59–63 |
 
-## 9. Nhập hàng loạt
+## 9. Nhập hàng loạt (luồng phụ của UC 60)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-80 | Chỉ nhận CSV, tối đa 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13 |
+| BR-U01-80 | Nút "Nhập CSV" trên Account List. Chỉ nhận CSV, tối đa 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13; người dùng chốt giữ 2026-10-09 |
 | BR-U01-81 | Kiểm tra toàn bộ file trước, trả kết quả từng dòng; admin xác nhận thì mới tạo các dòng hợp lệ. | US-IAM-007 S2 |
 | BR-U01-82 | Email đã tồn tại hoặc trùng trong file bị báo lỗi dòng, không ghi đè. | Câu 13 |
 | BR-U01-83 | Nhập lại cùng file không tạo trùng: email đã tồn tại bị báo lỗi dòng (BR-U01-82). Kết quả nhập không lưu; audit ghi checksum file. | US-IAM-007 S2 |
@@ -108,7 +108,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-90 | Ghi audit qua U02: đăng nhập thất bại, khóa tạm, kích hoạt, đổi/đặt lại mật khẩu, đổi hồ sơ, đổi role (trước/sau), đổi trạng thái, nhập hàng loạt, truy cập bị từ chối. | FR-014, SECURITY-03 |
+| BR-U01-90 | Ghi audit qua U02: đăng nhập thất bại, khóa tạm, kích hoạt, đổi/đặt lại mật khẩu, đổi hồ sơ, Admin sửa thông tin tài khoản, đổi role (trước/sau), đổi trạng thái, nhập hàng loạt, truy cập bị từ chối. | FR-014, SECURITY-03 |
 | BR-U01-91 | Audit và log không chứa mật khẩu, OTP, token, số điện thoại. | SECURITY-03 |
 | BR-U01-92 | Lỗi gửi email không làm hỏng yêu cầu: người dùng vẫn nhận phản hồi trung tính, job retry hữu hạn. | US-IAM-003 S2, RESILIENCY |
 | BR-U01-93 | Khi không kiểm được quyền (phụ thuộc lỗi) thì từ chối. | SECURITY-15 |

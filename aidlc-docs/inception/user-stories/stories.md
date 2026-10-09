@@ -27,7 +27,7 @@
 
 - **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt với email thuộc miền của trường
 - **When** ở lần đăng nhập đầu người dùng nhập email trường, yêu cầu kích hoạt, nhập OTP hệ thống gửi qua email và sau khi OTP được xác minh thì đặt mật khẩu đạt chính sách
-- **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng được tự đăng nhập, vào thẳng menu theo vai trò
+- **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng được tự đăng nhập, vào thẳng dashboard theo vai trò
 
 #### Scenario 1a - OTP sai
 
@@ -116,7 +116,7 @@
 #### Scenario 3 - Xem hồ sơ
 
 - **Given** người dùng đã xác thực
-- **When** mở Profile
+- **When** mở User Profile
 - **Then** hệ thống hiển thị thông tin tài khoản và role của chính người đó; không trả hồ sơ khác bằng ID ngoài quyền
 
 ### US-IAM-005 - Quản lý vai trò và phạm vi môn
@@ -131,7 +131,7 @@
 
 - **Given** quản trị viên đã xác thực và một môn hợp lệ
 - **When** quản trị viên gán vai trò Chủ nhiệm môn cùng phạm vi môn
-- **Then** quyền cấp môn chỉ có hiệu lực với môn đó và thay đổi được ghi actor, thời gian, giá trị trước/sau
+- **Then** quyền cấp môn chỉ có hiệu lực với môn đó và thay đổi được ghi actor, thời gian, giá trị trước/sau; tài khoản Administrator không được gán làm Chủ nhiệm môn hay giảng viên lớp
 
 #### Scenario 2 - Thu hồi quyền
 
@@ -201,7 +201,7 @@
 
 ### US-CAT-001 - Quản lý cấu trúc môn và lớp
 
-**Story**: Là quản trị viên, tôi muốn tạo môn, tạo lớp thuộc môn và phân công vai trò để cấu trúc học thuật phản ánh đúng hoạt động đào tạo; Chủ nhiệm môn có cùng quyền với lớp của các môn được phân công.
+**Story**: Là quản trị viên, tôi muốn tạo môn và giao môn cho Chủ nhiệm môn; là Chủ nhiệm môn, tôi muốn tạo lớp thuộc môn mình và giao giảng viên để cấu trúc học thuật phản ánh đúng hoạt động đào tạo.
 
 **Truy vết**: FR-002, FR-003, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -209,31 +209,31 @@
 
 #### Scenario 1 - Tạo cấu trúc hợp lệ
 
-- **Given** quản trị viên và các tài khoản được phân công hợp lệ
-- **When** quản trị viên tạo môn, lớp và gán giảng viên/Chủ nhiệm môn
-- **Then** mỗi lớp thuộc một môn; người quản lý môn là Subject Manager hoặc Administrator ACTIVE, giảng viên chính là Teacher/Subject Manager/Administrator ACTIVE; phân công được lưu và thay đổi được audit
+- **Given** quản trị viên và tài khoản Subject Manager ACTIVE
+- **When** quản trị viên thêm môn và chọn Chủ nhiệm môn; Chủ nhiệm môn tạo lớp và gán giảng viên
+- **Then** mỗi lớp thuộc một môn; Chủ nhiệm môn là Subject Manager ACTIVE, giảng viên chính là Teacher hoặc Subject Manager ACTIVE; Administrator không được gán; phân công được lưu và audit
 
 #### Scenario 2 - Tham chiếu không hợp lệ
 
 - **Given** môn, lớp hoặc người dùng không tồn tại/không phù hợp vai trò
-- **When** quản trị viên gửi cấu hình
+- **When** gửi cấu hình
 - **Then** hệ thống từ chối toàn bộ thay đổi không hợp lệ và trả hướng dẫn khắc phục an toàn
 
 #### Scenario 3 - Chủ nhiệm môn quản lý lớp của môn
 
 - **Given** Chủ nhiệm môn được phân công một môn `ACTIVE`
-- **When** mở Subject Classes từ Subject Detail để tạo lớp, gán/đổi giảng viên chính, sửa, mở/lưu trữ lớp hoặc ghi danh
-- **Then** thao tác được thực hiện như với quản trị viên và được audit; cùng thao tác trên lớp của môn không được phân công bị từ chối ở mức đối tượng
+- **When** mở Class List từ Manager Dashboard để tạo lớp, gán/đổi giảng viên chính, sửa, mở/lưu trữ lớp hoặc thêm/gỡ sinh viên
+- **Then** thao tác được thực hiện và audit; cùng thao tác trên lớp của môn không được phân công bị từ chối ở mức đối tượng
 
 #### Scenario 4 - Xem môn và lớp theo scope
 
-- **Given** Administrator hoặc Subject Manager có phân công môn
-- **When** mở Subject List/Subject Detail hoặc Subject Classes/Class Detail
-- **Then** Admin thấy cấu trúc toàn nền tảng, Subject Manager chỉ môn/lớp được giao; quyền cấu trúc không tự cấp gradebook/chấm
+- **Given** Administrator, hoặc Subject Manager có phân công môn
+- **When** Administrator mở Subject List/Subject Detail; Subject Manager mở Manager Dashboard, Class List/Class Detail
+- **Then** Administrator thấy mọi môn và danh sách lớp của môn chỉ đọc; Subject Manager chỉ thấy môn/lớp được giao; quyền cấu trúc không tự cấp gradebook/chấm
 
 ### US-CAT-002 - Xem và quản lý vòng đời lớp theo quyền
 
-**Story**: Là Administrator hoặc Subject Manager đúng môn, tôi muốn sửa/mở/lưu trữ lớp; là Teacher của lớp, tôi muốn xem danh sách/chi tiết lớp được giao để quản lý hoạt động giảng dạy.
+**Story**: Là Chủ nhiệm môn, tôi muốn sửa/mở/lưu trữ lớp của môn mình; là Teacher của lớp, tôi muốn xem danh sách/chi tiết lớp được giao để quản lý hoạt động giảng dạy.
 
 **Truy vết**: FR-002, FR-003, FR-014, NFR-002, SEC-002, SEC-003, SEC-005, SEC-006.
 
@@ -241,7 +241,7 @@
 
 #### Scenario 1 - Mở lớp
 
-- **Given** Administrator hoặc Subject Manager được phân công môn, lớp DRAFT có giảng viên chính và môn ACTIVE
+- **Given** Chủ nhiệm môn của môn, lớp DRAFT có giảng viên chính và môn ACTIVE
 - **When** mở lớp
 - **Then** lớp chuyển OPEN, Student ghi danh thấy lớp/học liệu được phép; sự kiện ghi danh được gửi và thay đổi audit
 
@@ -253,19 +253,19 @@
 
 #### Scenario 3 - Quyền đọc không cấp quyền sửa
 
-- **Given** Teacher chỉ có phân công dạy lớp, hoặc Subject Manager không được giao môn
-- **When** sửa thông tin/vòng đời lớp bằng UC 49
-- **Then** backend từ chối; quyền đọc Class Detail không đủ quyền sửa cấu trúc
+- **Given** Teacher chỉ có phân công dạy lớp, Administrator, hoặc Subject Manager không được giao môn
+- **When** sửa thông tin/vòng đời lớp (UC 52)
+- **Then** backend từ chối; quyền xem lớp không đủ quyền sửa cấu trúc
 
 #### Scenario 4 - Xem lớp được giao
 
-- **Given** Teacher có phân công lớp theo R3 hoặc vai trò kế thừa có phân công theo R4
-- **When** mở Assigned Classes rồi Class Detail
-- **Then** chỉ liệt kê lớp được giao và các lối vào học liệu, thông báo, ngân hàng, bài, submissions/gradebook được phép
+- **Given** Teacher hoặc Subject Manager được giao dạy lớp
+- **When** mở Class Dashboard rồi Teacher Class Detail
+- **Then** chỉ liệt kê lớp được giao; tab Students chỉ xem danh sách và thông tin cơ bản của sinh viên; các lối vào học liệu, quiz, bài, bài nộp/gradebook theo quyền
 
 ### US-CAT-003 - Ghi danh người học
 
-**Story**: Là giảng viên hoặc quản trị viên được phép, tôi muốn ghi danh người học vào lớp để họ nhận đúng nội dung và bài tập.
+**Story**: Là Chủ nhiệm môn, tôi muốn thêm và gỡ sinh viên trong lớp của môn mình để họ nhận đúng nội dung và bài tập.
 
 **Truy vết**: FR-002, FR-003, FR-011, FR-014, SEC-002, SEC-003, SEC-005, SEC-006.
 
@@ -273,45 +273,25 @@
 
 #### Scenario 1 - Ghi danh hợp lệ
 
-- **Given** lớp `DRAFT` hoặc `OPEN` và người thực hiện quản lý lớp
+- **Given** lớp `DRAFT` hoặc `OPEN` và người thực hiện là Chủ nhiệm môn của môn
 - **When** người học được ghi danh
 - **Then** ghi danh được tạo một lần; thông báo ghi danh được xếp gửi khi lớp đã `OPEN`
 
 #### Scenario 2 - Ghi danh trùng hoặc ngoài quyền
 
-- **Given** người học đã được ghi danh hoặc người thực hiện không quản lý lớp
+- **Given** người học đã được ghi danh, hoặc người thực hiện không phải Chủ nhiệm môn của môn (kể cả Teacher của lớp)
 - **When** yêu cầu được gửi
 - **Then** hệ thống không tạo bản ghi trùng, không mở rộng quyền và trả kết quả an toàn
 
 #### Scenario 3 - Gỡ người học khỏi lớp
 
-- **Given** người thực hiện quản lý lớp và người học đang được ghi danh
+- **Given** Chủ nhiệm môn của môn và người học đang được ghi danh
 - **When** người thực hiện xác nhận gỡ ghi danh
 - **Then** quyền truy cập mới bị thu hồi, dữ liệu học tập lịch sử được giữ theo chính sách và thay đổi được audit
 
-### US-CAT-005 - Tự ghi danh bằng mã mời
-
-**Story**: Là người học, tôi muốn dùng mã mời để tự ghi danh vào lớp được phép mà không phải chờ nhập thủ công.
-
-**Truy vết**: FR-002, FR-003, FR-022, SEC-002, SEC-003, SEC-006.
-
-**Acceptance criteria**
-
-#### Scenario 1 - Mã mời hợp lệ
-
-- **Given** mã mời còn hiệu lực, lớp còn mở và người học đủ điều kiện
-- **When** người học xác nhận tham gia
-- **Then** hệ thống tạo đúng một ghi danh và gửi thông báo xác nhận
-
-#### Scenario 2 - Mã sai, hết hạn hoặc bị lạm dụng
-
-- **Given** mã không hợp lệ, hết hạn, đã thu hồi hoặc vượt giới hạn thử
-- **When** người học gửi mã
-- **Then** hệ thống không tiết lộ thông tin lớp, không ghi danh và áp dụng rate limit phù hợp
-
 ### US-CNT-001 - Quản lý kho học liệu và RAG cấp môn
 
-**Story**: Là Chủ nhiệm môn, tôi muốn tạo các module của môn và tải học liệu (tệp hoặc video YouTube) vào module để mọi lớp của môn dùng chung nguồn đã kiểm soát, đồng thời theo dõi trạng thái quét RAG.
+**Story**: Là Chủ nhiệm môn, tôi muốn tạo các module của môn và tải học liệu (tệp hoặc video YouTube) vào module trên Material List để mọi lớp của môn dùng chung nguồn đã kiểm soát, đồng thời theo dõi trạng thái quét RAG.
 
 **Truy vết**: FR-002, FR-004, FR-012, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
@@ -320,7 +300,7 @@
 #### Scenario 1 - Tải tài liệu hợp lệ
 
 - **Given** Chủ nhiệm môn được gán môn và tệp PDF/DOCX/PPTX nằm trong giới hạn
-- **When** Chủ nhiệm môn bấm nút tải tệp trên một module ở Subject Detail
+- **When** Chủ nhiệm môn bấm nút tải tệp trên một module ở Material List
 - **Then** tệp được lưu riêng tư, tạo một lesson của môn hiển thị ngay cho người học mọi lớp của môn và trạng thái quét chuyển qua chờ/đang quét/thành công hoặc thất bại
 
 #### Scenario 2 - Tệp không hợp lệ
@@ -344,12 +324,18 @@
 #### Scenario 5 - Cập nhật và loại bỏ học liệu môn
 
 - **Given** người quản lý môn có R2
-- **When** cập nhật metadata/thay nguồn hoặc loại bỏ học liệu trên Subject Detail
-- **Then** nguồn mới được kiểm và quét lại, học liệu loại bỏ không hiển thị/dùng cho RAG; tham chiếu lịch sử và audit được giữ
+- **When** sửa thông tin hoặc xóa học liệu của môn trên Material Detail
+- **Then** sửa chỉ đổi tên, không đổi tệp hay link; học liệu bị xóa được lưu trữ, không hiển thị/dùng cho RAG; tham chiếu lịch sử và audit được giữ
+
+#### Scenario 6 - Tự tóm tắt khi tải lên
+
+- **Given** Chủ nhiệm môn tải lên một học liệu có chữ hoặc video có phụ đề
+- **When** bước quét chạy
+- **Then** AI tạo bản tóm tắt, trừ credit của Chủ nhiệm môn theo lượng sử dụng thật trên phần đã giữ lúc tải lên; học liệu không có chữ thì trả lại credit; không đủ credit thì không tải lên được
 
 ### US-CNT-002 - Quản lý nội dung riêng của lớp
 
-**Story**: Là giảng viên, tôi muốn tải học liệu riêng của lớp được phân công vào các module của môn để bổ sung học liệu phù hợp với lớp mình.
+**Story**: Là giảng viên, tôi muốn tải học liệu riêng của lớp được phân công vào các module của môn trên tab Materials để bổ sung học liệu phù hợp với lớp mình.
 
 **Truy vết**: FR-002, FR-003, FR-004, FR-013, FR-014, NFR-003, SEC-005, SEC-002, SEC-003, SEC-006, REL-003.
 
@@ -376,12 +362,18 @@
 #### Scenario 4 - Xem và loại bỏ học liệu lớp
 
 - **Given** tài khoản được giao lớp theo R3/R4
-- **When** mở Uploaded Learning Materials, chọn Learning Material hoặc cập nhật/loại bỏ nguồn
-- **Then** chỉ tác động học liệu lớp, nguồn thay được quét lại và học liệu loại bỏ được lưu trữ/ẩn, không xóa tham chiếu lịch sử
+- **When** mở tab Materials, chọn Material Detail rồi sửa thông tin hoặc xóa học liệu
+- **Then** chỉ tác động học liệu của lớp, học liệu của môn chỉ đọc; sửa không đổi tệp hay link, học liệu bị xóa được lưu trữ, không xóa tham chiếu lịch sử
 
-### US-CNT-004 - Thông báo và bình luận trong lớp
+#### Scenario 5 - Tự tóm tắt khi tải lên
 
-**Story**: Là thành viên lớp, tôi muốn đọc thông báo và bình luận bên dưới; giảng viên của lớp tạo/sửa/xóa thông báo để trao đổi trong đúng lớp tại một nơi.
+- **Given** giảng viên tải lên một học liệu lớp có chữ hoặc video có phụ đề
+- **When** bước quét chạy
+- **Then** AI tạo bản tóm tắt, trừ credit của giảng viên chỉ khi thật sự gọi AI; người học trong lớp thấy bản tóm tắt trên Learning Material
+
+### US-CNT-004 - Thông báo trong lớp
+
+**Story**: Là thành viên lớp, tôi muốn đọc thông báo của các lớp mình học hoặc dạy tại một nơi; giảng viên của lớp tạo/sửa/xóa thông báo để thông tin đến đúng lớp.
 
 **Truy vết**: FR-002, FR-003, FR-011, FR-023, SEC-002, SEC-003, SEC-005, SEC-006.
 
@@ -393,11 +385,11 @@
 - **When** giảng viên đăng thông báo
 - **Then** thông báo chỉ hiển thị trong lớp, người học đang ghi danh nhận thông báo trong ứng dụng và actor/thời gian được lưu; người học không đăng được thông báo
 
-#### Scenario 2 - Bình luận dưới thông báo
+#### Scenario 2 - Xem thông báo các lớp
 
-- **Given** người học được ghi danh hoặc giảng viên của lớp
-- **When** người dùng viết bình luận dưới một thông báo
-- **Then** bình luận được lưu kèm actor/thời gian, không tạo thông báo; dưới thông báo hiện 2 bình luận mới nhất và nút "Xem thêm bình luận" mở popup toàn bộ bình luận
+- **Given** người học được ghi danh hoặc giảng viên của lớp `OPEN`
+- **When** người dùng mở Class Announcements từ Class Dashboard
+- **Then** hiện thông báo của mọi lớp mình học hoặc dạy, mới nhất trước, lọc được theo lớp; không có bình luận dưới thông báo
 
 #### Scenario 3 - Nội dung không hợp lệ hoặc ngoài lớp
 
@@ -441,7 +433,7 @@
 
 - **Given** URL không hợp lệ, video không truy cập được, lấy caption thất bại hoặc module ngoài quyền
 - **When** yêu cầu được xử lý
-- **Then** hệ thống không lập chỉ mục kết quả lỗi/ngoài quyền, giữ trạng thái có thể quét lại và không ghi kết quả quét giả
+- **Then** hệ thống không lập chỉ mục kết quả lỗi/ngoài quyền, tự thử lại khi lỗi tạm, báo quét lỗi khi hết lượt và không ghi kết quả quét giả
 
 ## 4. Miền Group Assignment
 
@@ -499,7 +491,7 @@
 
 ### US-GRP-003 - Tạo bài tập nhóm dạng tài liệu chung
 
-**Story**: Là giảng viên (hoặc Chủ nhiệm môn soạn sẵn dưới dạng template của môn), tôi muốn tạo bài tập nhóm là một tài liệu chung có khung chia thành các phần, mỗi phần một rubric, để nhóm chia các phần cho thành viên và cùng hoàn thành một sản phẩm nhóm.
+**Story**: Là giảng viên của lớp (bài nhóm chỉ có ở lớp, không có ở cấp môn), tôi muốn tạo bài tập nhóm là một tài liệu chung có khung chia thành các phần, mỗi phần một rubric, để nhóm chia các phần cho thành viên và cùng hoàn thành một sản phẩm nhóm.
 
 **Truy vết**: FR-002, FR-007, FR-016, FR-017, FR-026, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -508,7 +500,7 @@
 #### Scenario 1 - Khung chia phần
 
 - **Given** lớp đã có nhóm hợp lệ
-- **When** giảng viên soạn khung tài liệu, hệ thống tự chia khung thành các phần theo heading nhỏ nhất của mỗi nhánh (ví dụ use case diagram, activity diagram), giảng viên tạo rubric cho từng phần rồi phát hành
+- **When** giảng viên soạn khung tài liệu, hệ thống tự chia khung thành các phần theo heading nhỏ nhất của mỗi nhánh (ví dụ use case diagram, activity diagram) và tự tạo rubric trống cho từng phần, giảng viên điền rubric rồi duyệt và phát hành
 - **Then** mỗi nhóm của lớp nhận một tài liệu chung theo khung; mỗi phần là một mục ở trạng thái trống để trưởng nhóm giao hoặc để thành viên nhận
 
 #### Scenario 2 - Nhả khóa mục khi cần
@@ -643,9 +635,9 @@
 
 ## 6. Miền Rubric Bank and Quiz Questions
 
-### US-QBK-001 - Quản lý ngân hàng rubric
+### US-QBK-001 - Quản lý rubric của bài
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo rubric ngay khi soạn đề, rồi xem và sửa rubric trong ngân hàng để chấm bài nhất quán.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn mỗi câu hoặc phần của bài tự có rubric để tôi điền và sửa trong Rubric Detail khi soạn bài, giúp chấm bài nhất quán.
 
 **Truy vết**: FR-002, FR-016, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -653,25 +645,31 @@
 
 #### Scenario 1 - Quản lý rubric hợp lệ
 
-- **Given** người dùng có quyền với lớp hoặc môn và rubric có các mục checklist hợp lệ
-- **When** người dùng tạo rubric khi soạn đề hoặc sửa rubric trong ngân hàng
-- **Then** rubric được lưu đúng phạm vi của bài; mỗi tiêu chí gồm các mục checklist có điểm và điểm rubric là tổng điểm các mục đạt
+- **Given** người dùng có quyền với bài (lớp mình dạy hoặc môn mình quản lý), bài còn nháp và rubric có các mục checklist hợp lệ
+- **When** người dùng thêm câu Text Essay hoặc khung Diagram Essay/bài nhóm được chia phần, rồi điền tiêu chí và mục trong Rubric Detail
+- **Then** mỗi câu hoặc phần đã có sẵn một rubric trống; rubric được lưu cho đúng câu hoặc phần; mỗi tiêu chí gồm các mục checklist có điểm và điểm rubric là tổng điểm các mục đạt; sửa ghi đè trực tiếp; bỏ câu hoặc phần thì rubric bị xóa theo
 
-#### Scenario 2 - Rubric đã được sử dụng
+#### Scenario 2 - Bài đã phát hành
 
-- **Given** rubric đã gắn với bài đánh giá hoặc kết quả chấm
-- **When** người dùng sửa hoặc xóa
-- **Then** hệ thống tạo phiên bản mới hoặc chặn xóa để kết quả lịch sử không thay đổi
+- **Given** bài sở hữu rubric đã được phát hành
+- **When** người dùng sửa hoặc xóa rubric
+- **Then** hệ thống từ chối vì rubric đã khóa, để kết quả chấm không thay đổi
+
+#### Scenario 2a - Rubric còn trống
+
+- **Given** bài còn câu hoặc phần có rubric trống hoặc chưa hợp lệ
+- **When** người dùng phát hành bài
+- **Then** hệ thống từ chối và chỉ ra câu hoặc phần cần điền rubric
 
 #### Scenario 3 - Nhân bản đề
 
 - **Given** bài đã có rubric
 - **When** bài được nhân bản, tạo version mới hoặc copy sang lớp khác
-- **Then** rubric được nhân bản thành rubric mới của bài đích; hai bài không dùng chung rubric
+- **Then** rubric được nhân bản thành rubric mới, chưa khóa, của bài đích; hai bài không dùng chung rubric
 
-### US-QBK-002 - Quản lý ngân hàng câu hỏi
+### US-QBK-002 - Quản lý ngân hàng câu hỏi của môn
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt và dùng lại câu hỏi của mọi dạng bài (Text Essay, trắc nghiệm, Diagram Essay, Code Lab, khung tài liệu bài nhóm) khi soạn bài để tái sử dụng nội dung đánh giá có kiểm soát.
+**Story**: Là Chủ nhiệm môn, tôi muốn tạo, sửa, tìm kiếm, nhập hàng loạt câu hỏi của mọi dạng bài (trắc nghiệm, tự luận, code, khung tài liệu) trên Question List và Question Detail để tôi và giảng viên dùng lại khi soạn bài và quiz.
 
 **Truy vết**: FR-002, FR-016, FR-017, FR-014, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -679,38 +677,38 @@
 
 #### Scenario 1 - Quản lý câu hỏi đúng phạm vi
 
-- **Given** người dùng có quyền và câu hỏi/đáp án/cấu hình điểm hợp lệ
+- **Given** Chủ nhiệm môn được gán môn và câu hỏi/đáp án/điểm hợp lệ
 - **When** người dùng tạo, sửa, tìm kiếm hoặc nhập tệp
-- **Then** câu hỏi được lưu đúng lớp/môn, kết quả nhập báo theo dòng và không tạo bản ghi lỗi
+- **Then** câu hỏi được lưu vào ngân hàng của môn, kết quả nhập báo theo dòng và không tạo bản ghi lỗi
 
 #### Scenario 1a - Dùng lại câu hỏi đúng dạng bài
 
-- **Given** ngân hàng có câu hỏi `ACTIVE` thuộc nhiều dạng trong phạm vi người dùng
-- **When** người dùng thêm câu hỏi từ ngân hàng vào một bài Text Essay, quiz, Diagram Essay, Code Lab hoặc bài nhóm
-- **Then** hệ thống chỉ cho chọn câu hỏi khớp dạng bài; Quiz, Text Essay, Code Lab ghim đúng version đã chọn, còn Diagram Essay và bài nhóm sao khung của câu `DOCUMENT` vào bài (không ghim câu); đáp án và lời giải mẫu không lộ cho sinh viên
+- **Given** ngân hàng của môn có câu `ACTIVE` thuộc nhiều dạng
+- **When** giảng viên của một lớp thuộc môn hoặc Chủ nhiệm môn thêm câu từ ngân hàng vào quiz, Text Essay, Code Lab, hoặc lấy khung cho Diagram Essay/bài nhóm
+- **Then** hệ thống chỉ cho chọn câu khớp dạng; quiz, Text Essay, Code Lab ghim đúng version đã chọn, còn Diagram Essay và bài nhóm sao khung của câu `DOCUMENT` vào bài; đáp án và lời giải mẫu không lộ cho sinh viên
 
-#### Scenario 2 - Câu hỏi đã được dùng trong bài
+#### Scenario 2 - Câu hỏi đã được dùng trong quiz
 
-- **Given** câu hỏi đã thuộc một bài được phát hành
-- **When** người dùng sửa câu hỏi
+- **Given** câu hỏi đã thuộc một bài hoặc quiz được phát hành
+- **When** Chủ nhiệm môn sửa câu hỏi
 - **Then** hệ thống tạo version mới của câu hỏi; bài đã phát hành vẫn dùng version cũ và không bị thay đổi
 
 #### Scenario 3 - Muốn đổi nội dung bài đã phát hành
 
-- **Given** bài đã phát hành cần thay đổi nội dung hoặc đáp án
-- **When** giảng viên thử sửa bài
-- **Then** hệ thống không cho sửa version đang giao; sau khi ngưng giao hoặc bài đóng, giảng viên sửa để tạo version mới, version cũ giữ nguyên cho bài nộp cũ, thao tác được audit
+- **Given** bài hoặc quiz đã phát hành cần thay đổi nội dung hoặc đáp án
+- **When** người soạn thử sửa bài
+- **Then** hệ thống không cho sửa version đang giao; sau khi ngưng giao hoặc bài đóng, người soạn sửa để tạo version mới, version cũ giữ nguyên cho lượt làm cũ, thao tác được audit
 
-#### Scenario 4 - Phân biệt hai ngân hàng
+#### Scenario 4 - Chỉ Chủ nhiệm môn quản lý ngân hàng
 
-- **Given** tài khoản được giao dạy lớp theo R3/R4 hoặc quản lý môn theo R2
-- **When** mở Class Question Bank hoặc Subject Question Bank rồi Question Editor
-- **Then** tạo/sửa/xóa chỉ có hiệu lực đúng scope; phân công quản lý môn không tự cho sửa ngân hàng lớp và phân công dạy lớp không tự cho sửa ngân hàng môn
+- **Given** tài khoản được giao dạy lớp theo R3/R4 nhưng không quản lý môn, hoặc tài khoản Admin
+- **When** tài khoản đó thử tạo, sửa hoặc xóa câu trong ngân hàng của môn
+- **Then** hệ thống từ chối; giảng viên chỉ chọn được câu `ACTIVE` khi soạn bài hoặc quiz, không có ngân hàng của lớp
 
 #### Scenario 5 - Xóa câu hỏi có tham chiếu
 
 - **Given** câu Draft chưa được dùng hoặc version câu đã gắn với bài/lượt làm
-- **When** người quản lý đúng scope xóa câu
+- **When** Chủ nhiệm môn xóa câu
 - **Then** Draft chưa dùng được xóa; câu có tham chiếu ngưng dùng cho lần chọn mới nhưng snapshot/lịch sử vẫn giữ
 
 ## 7. Miền AI-Assisted Authoring
@@ -809,7 +807,7 @@
 
 ### US-ASM-001 - Duyệt và xuất bản bài đánh giá của lớp
 
-**Story**: Là giảng viên, tôi muốn chỉnh sửa, duyệt và xuất bản bản nháp đánh giá cho lớp được phân công để kiểm soát chất lượng trước khi giao.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn chỉnh sửa, duyệt và xuất bản bản nháp bài tập cho lớp được phân công hoặc cho mọi lớp của môn mình quản lý để kiểm soát chất lượng trước khi giao.
 
 **Truy vết**: FR-002, FR-006, FR-007, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007.
 
@@ -830,8 +828,14 @@
 #### Scenario 3 - Xem danh sách bài Teacher
 
 - **Given** tài khoản được giao lớp theo R3/R4
-- **When** mở Assignment List
-- **Then** hiển thị bài của lớp với loại/chế độ/trạng thái và lối vào editor phù hợp; không dùng danh sách này để trả Student assignments
+- **When** mở tab Evals của Teacher Class Detail
+- **Then** hiển thị bài của lớp và bài của môn (chỉ đọc) với loại/chế độ/trạng thái, quiz của lớp và của môn, cùng lối vào Assignment Form, Quiz Detail phù hợp
+
+#### Scenario 4 - Bài của môn
+
+- **Given** Chủ nhiệm môn đã duyệt một bài Text Essay, Diagram Essay hoặc Code Lab của môn
+- **When** Chủ nhiệm môn phát hành với một lịch
+- **Then** bài hiện ở mọi lớp `OPEN` của môn theo lịch đó; giảng viên lớp không sửa hay ngưng giao được, chỉ chấm bài nộp của sinh viên lớp mình
 
 ### US-ASM-003 - Làm và nộp bài
 
@@ -911,7 +915,7 @@
 
 ### US-ASM-005 - Soạn và kiểm thử Code Lab
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn cấu hình Code Lab cùng test công khai/test ẩn và chạy thử để xác nhận bài có thể chấm tự động.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn đưa câu Code Lab vào bài (lấy từ ngân hàng của môn hoặc viết riêng: đề bài, code khởi đầu, lời giải mẫu, test công khai/test ẩn) và chạy thử lời giải mẫu để xác nhận bài có thể chấm tự động.
 
 **Truy vết**: FR-002, FR-006, FR-017, FR-014, NFR-003, SEC-002, SEC-003, SEC-005, SEC-006, REL-003.
 
@@ -931,7 +935,7 @@
 
 ### US-ASM-006 - Soạn và kiểm tra bài trắc nghiệm
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài trắc nghiệm với đáp án và quy tắc điểm để hệ thống có thể chấm nhất quán.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn quiz luyện tập gắn với học liệu, với câu trắc nghiệm, đáp án, điểm và cài đặt quiz để hệ thống tự chấm nhất quán.
 
 **Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -951,7 +955,7 @@
 
 ### US-ASM-007 - Soạn bài viết luận
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài viết luận với hướng dẫn và rubric để đánh giá câu trả lời mở theo tiêu chí rõ ràng.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn soạn bài viết luận với các câu lấy từ ngân hàng của môn hoặc viết riêng, mỗi câu tự có một rubric để điền, để đánh giá câu trả lời mở theo tiêu chí rõ ràng.
 
 **Truy vết**: FR-002, FR-006, FR-016, FR-017, SEC-002, SEC-003, SEC-005, SEC-007.
 
@@ -971,7 +975,7 @@
 
 ### US-ASM-008 - Nhân bản, sửa phiên bản và ngừng giao bài
 
-**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, xem thay đổi phiên bản và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
+**Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn nhân bản bài cũ thành bài mới, tạo version mới và ngừng nhận bài mới khi cần để tái sử dụng nội dung mà không sửa dữ liệu đã phát sinh.
 
 **Truy vết**: FR-002, FR-007, FR-016, FR-028, FR-014, SEC-002, SEC-003, SEC-007.
 
@@ -981,7 +985,7 @@
 
 - **Given** người dùng có quyền với bài nguồn
 - **When** người dùng sửa hoặc nhân bản
-- **Then** sửa bài đã ngừng giao/đóng tạo version mới, xem được diff giữa hai version; nhân bản tạo định danh mới; không sao chép bài nộp/điểm
+- **Then** sửa bài đã ngừng giao/đóng tạo version mới; nhân bản tạo định danh mới; không sao chép bài nộp/điểm; không có màn so sánh version (bỏ 2026-10-09)
 
 #### Scenario 2 - Ngừng giao hoặc nhận bài mới
 
@@ -989,37 +993,37 @@
 - **When** người dùng xác nhận ngừng giao/nhận bài mới
 - **Then** bài biến mất khỏi danh sách cần làm hoặc khóa lượt nộp mới theo chính sách, nhưng cấu hình đã phát hành, bài nộp và điểm cũ vẫn chỉ đọc được để truy vết
 
-### US-ASM-009 - Phát hành và sử dụng template đề cấp môn
+### US-ASM-009 - Phát hành bài của môn cho mọi lớp
 
-**Story**: Là Chủ nhiệm môn, tôi muốn tạo template đề thủ công hoặc từ bản nháp AI (US-AIG-002), sửa, xoá template của môn mình phụ trách (kể cả template do Chủ nhiệm môn trước tạo) và phát hành template có version để giảng viên copy và điều chỉnh cho lớp mà không làm thay đổi template gốc.
+**Story**: Là Chủ nhiệm môn, tôi muốn soạn bài của môn thủ công hoặc nhờ AI, duyệt và phát hành một lần cho mọi lớp của môn với một lịch chung để các lớp làm cùng một bài.
 
-**Truy vết**: FR-002, FR-014, FR-016, FR-027, SEC-002, SEC-003, SEC-005, SEC-007.
+**Truy vết**: FR-002, FR-007, FR-014, FR-016, FR-027, SEC-002, SEC-003, SEC-005, SEC-007.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Phát hành và copy template
+#### Scenario 1 - Phát hành bài của môn
 
-- **Given** Chủ nhiệm môn có quyền với môn và template hợp lệ
-- **When** Chủ nhiệm môn phát hành, sau đó giảng viên của lớp thuộc môn copy template
-- **Then** hệ thống tạo draft độc lập cho lớp, lưu source template/version và không tự đồng bộ cập nhật sau này
+- **Given** Chủ nhiệm môn có quyền với môn và bài của môn đã duyệt
+- **When** Chủ nhiệm môn phát hành với lịch hợp lệ
+- **Then** bài hiện ở mọi lớp `OPEN` của môn, kể cả lớp mở sau đó; người học làm theo lịch chung
 
-#### Scenario 2 - Sai phạm vi hoặc sửa nguồn
+#### Scenario 2 - Sai phạm vi hoặc sửa từ lớp
 
-- **Given** giảng viên không phụ trách lớp đích hoặc cố sửa trực tiếp template chỉ đọc
-- **When** yêu cầu được gửi
-- **Then** hệ thống từ chối phía server và giữ nguyên template
+- **Given** giảng viên của một lớp thuộc môn hoặc tài khoản không quản lý môn
+- **When** người đó cố sửa, phát hành hoặc ngưng giao bài của môn
+- **Then** hệ thống từ chối phía server và giữ nguyên bài
 
-#### Scenario 3 - Xoá template
+#### Scenario 3 - Chấm theo từng lớp
 
-- **Given** Chủ nhiệm môn hiện tại của môn có template của môn, kể cả template đã có bản copy ở lớp
-- **When** Chủ nhiệm môn xoá template
-- **Then** template biến khỏi danh sách và không copy thêm được; các bài lớp đã copy, lineage và audit giữ nguyên
+- **Given** sinh viên nhiều lớp đã nộp bài của môn
+- **When** giảng viên từng lớp chấm và công bố
+- **Then** mỗi giảng viên chỉ chấm và công bố cho sinh viên lớp mình; điểm vào sổ điểm của lớp đó
 
-#### Scenario 4 - Xem template đúng môn
+#### Scenario 4 - Xem bài đúng môn
 
 - **Given** người quản lý môn có R2
-- **When** xem danh sách/chi tiết template
-- **Then** chỉ trả template của môn được giao và quyền tạo/sửa/xóa theo lifecycle; UC 53 mở Subject Template; UC 54 tạo/sửa nội dung trên Template Editor và xóa theo lifecycle từ Subject Template
+- **When** mở Assignment List từ Manager Dashboard
+- **Then** chỉ trả bài của môn được giao; không có dạng bài nhóm ở cấp môn
 
 ### US-ASM-010 - Copy assignment và rubric giữa các lớp
 
@@ -1295,7 +1299,7 @@
 
 ### US-PAY-001 - Bắt đầu thanh toán an toàn
 
-**Story**: Là Student, Teacher, Subject Manager hoặc Administrator, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
+**Story**: Là Student, Teacher hoặc Subject Manager, tôi muốn bắt đầu thanh toán qua nhà cung cấp để mua credit AI mà nền tảng không lưu dữ liệu thẻ thô.
 
 **Truy vết**: FR-010, FR-014, NFR-002, SEC-005, SEC-002, SEC-003, SEC-006, SEC-007, REL-003.
 
@@ -1303,8 +1307,8 @@
 
 #### Scenario 1 - Tạo giao dịch
 
-- **Given** tài khoản `ACTIVE` có một trong bốn vai trò hiện hành và gói credit hợp lệ
-- **When** người dùng bắt đầu thanh toán
+- **Given** tài khoản `ACTIVE` có vai trò Student, Teacher hoặc Subject Manager và gói credit hợp lệ
+- **When** người dùng bấm Thanh toán trên Credit Package Checkout
 - **Then** hệ thống tạo giao dịch nội bộ duy nhất và chuyển sang luồng provider mà không thu/lưu dữ liệu thẻ thô
 
 #### Scenario 3 - Student không được dùng AI ngoài bài Practice hợp lệ
@@ -1321,13 +1325,13 @@
 
 #### Scenario 4 - Xem gói credit
 
-- **Given** tài khoản ACTIVE
-- **When** mở Credit Packages
-- **Then** hiển thị các gói hiện hành, giá và số credit do Administrator cấu hình, chỉ thông tin ví của chính tài khoản
+- **Given** tài khoản `ACTIVE` có ví (Student, Teacher, Subject Manager)
+- **When** mở Public Credit Packages hoặc My Credit Package từ Class Dashboard
+- **Then** hiển thị các gói đang bán, giá và số credit do Administrator cấu hình, cùng số dư và lịch sử của chính tài khoản; tài khoản Admin không có ví
 
 ### US-PAY-002 - Nhận credit AI sau xác nhận thanh toán
 
-**Story**: Là Student, Teacher, Subject Manager hoặc Administrator đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
+**Story**: Là Student, Teacher hoặc Subject Manager đã thanh toán, tôi muốn credit AI chỉ được cộng sau xác nhận hợp lệ để trạng thái mua hàng chính xác.
 
 **Truy vết**: FR-010, FR-014, SEC-002, SEC-003, SEC-005, SEC-006, SEC-007, REL-003.
 
@@ -1366,8 +1370,8 @@
 #### Scenario 6 - Xem kết quả thanh toán của chính mình
 
 - **Given** tài khoản sở hữu giao dịch
-- **When** mở Payment Result
-- **Then** trả trạng thái pending/success/cancelled/failed đã xác minh; redirect không tự cộng credit và ID giao dịch người khác bị từ chối
+- **When** PayOS quay về Credit Package Checkout
+- **Then** màn hiện trạng thái pending/success/cancelled/failed đã xác minh; redirect không tự cộng credit và ID giao dịch người khác bị từ chối
 
 ### US-PAY-004 - Quản trị gói credit
 
@@ -1380,8 +1384,8 @@
 #### Scenario 1 - Xem/thêm/sửa gói hợp lệ
 
 - **Given** Administrator đã xác thực
-- **When** mở Credit Package Setting và thêm/sửa tên, thông tin, giá dương và credit nguyên dương
-- **Then** gói được lưu với kiểm version, audit actor/thời gian/trước-sau; Credit Packages dùng cấu hình mới cho giao dịch tạo sau đó
+- **When** mở Credit Package List rồi thêm/sửa tên, thông tin, giá dương, credit nguyên dương và trạng thái bán trong popup Credit Package Detail
+- **Then** gói được lưu với kiểm version, audit actor/thời gian/trước-sau; Public Credit Packages dùng cấu hình mới cho giao dịch tạo sau đó
 
 #### Scenario 2 - Bảo toàn giao dịch đã tạo
 
@@ -1393,7 +1397,7 @@
 
 - **Given** vai trò khác hoặc dữ liệu/version không hợp lệ
 - **When** gọi API thêm/sửa
-- **Then** backend từ chối, không thay gói hoặc giao dịch; UC này không cấp quyền xóa gói/đổi mức tặng tháng
+- **Then** backend từ chối, không thay gói hoặc giao dịch; UC này không cấp quyền xóa gói; mức tặng tháng đổi trên Settings
 
 ### US-PAY-005 - Xem lịch sử thanh toán nền tảng
 
@@ -1415,7 +1419,7 @@
 - **When** gọi chức năng lịch sử toàn nền tảng
 - **Then** bị từ chối; đọc của Administrator không đổi status, không cộng/trừ credit và không đối soát thủ công
 
-## 12. Miền Notification and Audit
+## 12. Miền Notification, Audit and Settings
 
 ### US-NTF-001 - Nhận thông báo thiết yếu
 
@@ -1465,9 +1469,41 @@
 
 #### Scenario 3 - Sự kiện bắt buộc
 
-- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài/template, thanh toán hoặc truy cập đặc quyền
+- **Given** đăng nhập thất bại, thay đổi role/phạm vi môn, thay đổi nội dung/điểm, phát hành bài/template, thanh toán, thay đổi cài đặt hệ thống (Settings) hoặc truy cập đặc quyền
 - **When** hành động hoàn tất hoặc bị từ chối
 - **Then** sự kiện tương ứng được ghi với actor, thời gian, đối tượng và kết quả phù hợp
+
+### US-SET-001 - Quản lý cài đặt hệ thống
+
+**Story**: Là quản trị viên, tôi muốn xem và chỉnh cài đặt AI, credit tặng định kỳ và giới hạn tệp tải lên trong giới hạn cho phép để vận hành nền tảng mà không phải triển khai lại.
+
+**Truy vết**: FR-033, FR-013, FR-014, FR-021, SEC-002, SEC-005.
+
+**Acceptance criteria**
+
+#### Scenario 1 - Xem cài đặt
+
+- **Given** quản trị viên đã xác thực
+- **When** mở Setting List
+- **Then** thấy các mục theo nhóm AI, Credit, Tệp với giá trị hiện hành, người sửa và thời điểm sửa gần nhất; không thấy bí mật như API key
+
+#### Scenario 2 - Sửa cài đặt hợp lệ
+
+- **Given** quản trị viên mở Setting Detail của một mục
+- **When** nhập giá trị trong giới hạn và lưu với version hiện tại
+- **Then** giá trị mới được lưu, audit giá trị trước/sau và có hiệu lực trong tối đa 30 giây
+
+#### Scenario 3 - Giá trị không hợp lệ hoặc bị sửa đồng thời
+
+- **Given** giá trị ngoài giới hạn hoặc version đã cũ
+- **When** quản trị viên lưu
+- **Then** hệ thống từ chối, không thay đổi gì và báo lý do hoặc yêu cầu tải lại
+
+#### Scenario 4 - Người không phải quản trị viên
+
+- **Given** tài khoản không phải Administrator
+- **When** gọi xem hoặc sửa cài đặt
+- **Then** hệ thống từ chối phía server và ghi audit
 
 ## 13. Ma trận bao phủ yêu cầu chức năng
 
@@ -1475,7 +1511,7 @@
 |---|---|
 | FR-001 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-006 |
 | FR-002 | Quy tắc kiểm quyền xuyên suốt 51 story MVP; chi tiết actor và phạm vi nằm trong từng story/UC |
-| FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-003, US-CAT-005 |
+| FR-003 | US-IAM-005, US-CAT-001 đến US-CAT-003 |
 | FR-004 | US-CNT-001, US-CNT-002, US-CNT-005, US-AIG-002 |
 | FR-005 | US-LRN-001 |
 | FR-006 | US-AIG-001, US-AIG-002, US-ASM-001, US-ASM-004 đến US-ASM-007 |
@@ -1494,7 +1530,7 @@
 | FR-019 | US-RPT-001 |
 | FR-020 | US-GRD-005 |
 | FR-021 | US-AIG-003 |
-| FR-022 | US-CAT-005 |
+| FR-022 | Đã rút khỏi phạm vi (2026-10-09) |
 | FR-023 | US-CNT-004 |
 | FR-024 | US-RPT-001, US-RPT-002, US-RPT-003 |
 | FR-025 | US-GRP-001, US-GRP-002 |
@@ -1505,6 +1541,7 @@
 | FR-030 | US-ASM-012, US-PAY-001, US-PAY-002 |
 | FR-031 | US-PAY-004 |
 | FR-032 | US-PAY-005 |
+| FR-033 | US-SET-001 |
 
 ## 14. Ma trận story ↔ use case
 
@@ -1523,7 +1560,7 @@ Mã/tên theo [bảng 70 UC](../../../docs/use-cases-and-screens.md). Một UC c
 | 09 | Purchase Credit Package | US-PAY-001, US-PAY-002 | U07 |
 | 10 | View Payment Result | US-PAY-002 | U07 |
 | 11 | View Notifications | US-NTF-001 | U16 |
-| 12 | View Enrolled Classes | US-LRN-001, US-CAT-005 | U04 |
+| 12 | View Enrolled Classes | US-LRN-001 | U04 |
 | 13 | View Enrolled Class Detail | US-LRN-001 | U04 |
 | 14 | View Learning Material | US-LRN-001, US-CNT-001, US-CNT-002, US-CNT-005 | U05 |
 | 15 | View My Group | US-GRP-001, US-GRP-002 | U12 |

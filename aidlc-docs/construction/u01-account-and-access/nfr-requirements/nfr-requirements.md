@@ -1,6 +1,6 @@
 # U01 Account & Access - NFR Requirements
 
-**Bản tài liệu 2026-10-08**: UC 01, 02, 03, 04, 05, 06, 07, 58, 59, 60, 61, 62; primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết định: `aidlc-docs/construction/plans/nfr-requirements-questions/u01-account-and-access-nfr-requirements-questions.md`.
 
@@ -30,7 +30,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-20 | Yêu cầu OTP (kích hoạt, quên mật khẩu): chờ 60 giây giữa hai lần, tối đa 5 lần/giờ mỗi email, 20 lần/giờ mỗi IP. | Câu N7 |
+| NFR-U01-20 | Yêu cầu OTP (kích hoạt, đặt lại mật khẩu): chờ 60 giây giữa hai lần, tối đa 5 lần/giờ mỗi email, 20 lần/giờ mỗi IP. | Câu N7 |
 | NFR-U01-21 | Đăng nhập: khóa tạm tài khoản 15 phút sau 5 lần sai; giới hạn theo IP 30 lần/5 phút. | Câu 5 FD, BR-U01-43 |
 | NFR-U01-22 | Vượt giới hạn vẫn trả phản hồi trung tính cho OTP; đăng nhập trả cùng lỗi trung tính. | BR-U01-25, 40 |
 | NFR-U01-23 | Ngưỡng là cấu hình, không cố định trong code. | Bảo trì |
@@ -50,7 +50,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 | NFR-U01-40 | Redis không khả dụng: không đăng nhập mới, không refresh, không gửi OTP, trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | Câu N9, SEC-006 |
 | NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-006 |
 | NFR-U01-42 | U04 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
-| NFR-U01-43 | U03 không khả dụng: tắt đổi ảnh đại diện, phần hồ sơ còn lại vẫn chạy. | BR-U01-52 |
+| NFR-U01-43 | Hồ sơ không gọi U03 (không có ảnh đại diện). U03 lỗi chỉ ảnh hưởng việc gửi OTP, xử lý theo NFR-U01-31. | BR-U01-52 |
 | NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
 
 ## 6. Bảo mật dữ liệu và log
