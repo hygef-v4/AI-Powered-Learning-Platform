@@ -37,7 +37,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U07-30 | 1 credit = 1 000 token Gemini, làm tròn lên mỗi lần gọi. | Câu 4 |
-| BR-U07-31 | Mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER` được tặng cùng một số credit mỗi tháng. Mức tặng là mục `credit.monthlyFreeCredits` của Settings (nhóm Credit, U07 khai báo `SettingDefinition`, số nguyên 0–10 000, mặc định 100, đủ cho mức giữ tối đa khi tải một học liệu); Admin đổi trên Setting Detail (UC 71), có hiệu lực từ lần đặt lại kế tiếp. Tháng mới `freeBalance` đặt lại bằng mức tặng (không cộng dồn) khi đọc số dư lần đầu trong tháng. Student dùng credit tặng như credit mua, chỉ cho `PRACTICE_GRADING` hợp lệ. | Câu 4, 5; người dùng chốt 2026-10-04, 2026-10-09 |
+| BR-U07-31 | Mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER` được tặng cùng một số credit mỗi tháng. Mức tặng là mục `credit.monthlyFreeCredits` của Settings (nhóm Credit, U07 khai báo `SettingDefinition`, số nguyên 0–10 000, mặc định 100, đủ cho mức giữ tối đa khi yêu cầu tóm tắt một học liệu); Admin đổi trên Setting Detail (UC 71), có hiệu lực từ lần đặt lại kế tiếp. Tháng mới `freeBalance` đặt lại bằng mức tặng (không cộng dồn) khi đọc số dư lần đầu trong tháng. Student dùng credit tặng như credit mua, cho `PRACTICE_GRADING` hợp lệ hoặc `MATERIAL_SUMMARY` của học liệu được xem. | Câu 4, 5; người dùng chốt 2026-10-04, 2026-10-09 |
 | BR-U07-32 | Credit mua không hết hạn. | Câu 3 |
 | BR-U07-33 | Trừ credit tặng trước, credit mua sau. | Câu 4 |
 | BR-U07-34 | Số dư không bao giờ âm. | Thiết kế |
@@ -46,10 +46,10 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U07-40 | Trước mỗi lời gọi Gemini, U13 (cả khi U05 tải và quét học liệu hay truy xuất, qua `AiUsagePort`) `reserve` credit của tài khoản `ACTIVE` chịu phí và kèm `purpose` (`MATERIAL_SUMMARY`, `EMBEDDING`, soạn đề, chấm...). `STUDENT` chỉ được reserve với `purpose = PRACTICE_GRADING` sau khi U11/U13 xác minh attempt của chính mình, dạng Text/Diagram Essay và chế độ `PRACTICE`; mọi purpose khác bị từ chối. Teacher/Subject Manager dùng AI theo phạm vi nghiệp vụ. Thiếu credit → không gọi Gemini; với tải học liệu thì không tạo học liệu (BR-U05-39); với Practice, bài đã nộp vẫn ở trạng thái chưa chấm AI. Tóm tắt và embedding học liệu tính cho người tải lên; embedding truy xuất tính cho người yêu cầu AI. | FR-021, FR-030; người dùng chốt 2026-10-09 |
+| BR-U07-40 | Trước Gemini cần khoản giữ của actor ACTIVE chịu phí. Tóm tắt học liệu: U05 kiểm quyền xem, U13 reserve một HOLD tổng summary+embedding khi người xem yêu cầu; upload không reserve. Student được PRACTICE_GRADING hợp lệ hoặc MATERIAL_SUMMARY cho lesson có quyền xem; child EMBEDDING chỉ dùng cùng HOLD học liệu đã được xác minh, không cho Student reserve embedding độc lập/soạn đề/chấm Graded. Teacher/Subject Manager theo scope. Thiếu credit không nhận yêu cầu AI nhưng học liệu vẫn xem/tải được; requester chịu phí, retry/duplicate không reserve thêm. | Revision View Material 2026-10-09 |
 | BR-U07-41 | Mỗi lần giữ gắn với đúng một dòng `ai_suggestions` của U13; U13 chỉ gọi `reserve`, `settle`, `release` khi chuyển `credit_status` của dòng đó trong cùng transaction, nên thử lại không giữ hay trừ trùng. | Quyết định 2026-10-03 |
 | BR-U07-42 | `settle(actual)`: trừ đúng số thực tế; phần giữ dư trả lại; thực tế lớn hơn phần giữ → trừ thêm tối đa phần số dư còn lại, không để âm. | Thiết kế |
-| BR-U07-43 | `release`: trả lại toàn bộ khi AI lỗi hoặc hết hạn mức hệ thống trước khi gọi provider. Phần giữ quá hạn tự trả lại (scanner của U13): 30 phút; riêng phần giữ khi tải học liệu (`MATERIAL_SUMMARY`) giữ tới khi quét kết thúc, tối đa 25 giờ (BR-U05-37). | Thiết kế; người dùng chốt 2026-10-09 |
+| BR-U07-43 | `CreditPort.release(accountId, reserved, fromFree)` chỉ hoàn toàn bộ khi lượng dùng thật bằng 0; lỗi hoặc quá hạn sau khi đã dùng AI phải gọi `settle(actualCredits)` và trả dư. `AiUsagePort.release(holdId)` của U13 là thao tác chốt: chọn settle nếu đã dùng, CreditPort.release nếu chưa dùng. Scanner U13 áp cùng quy tắc cho phần giữ quá hạn (30 phút dòng thường; 25 giờ HOLD học liệu dự phòng cho deadline scan 24 giờ). Child call credit_status NONE không tự hoàn HOLD và không kéo dài hạn HOLD (BR-U05-37, BR-U13-52/53). | Thiết kế; người dùng chốt 2026-10-09 |
 
 ## 6. Audit và quyền xem
 

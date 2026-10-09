@@ -41,9 +41,9 @@
 2. Đọc số dư (khóa dòng tài khoản): nếu `free_period` khác tháng hiện tại → đặt `free_balance` = giá trị `credit.monthlyFreeCredits` đọc qua `SettingsPort` của U03, `free_period` = tháng hiện tại.
 
 ## F8 - Giữ và trừ credit (U13 gọi trong transaction của mình)
-1. `reserve`: kiểm tài khoản `ACTIVE` có ví, chủ ví và `purpose`; `STUDENT` chỉ hợp lệ cho `PRACTICE_GRADING` của attempt Practice Text/Diagram Essay đã xác minh. Áp tặng định kỳ như F7, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), trả `{reserved, fromFree}` để U13 lưu vào `ai_suggestions`. Thiếu credit → lỗi `INSUFFICIENT_CREDIT`, không trừ gì (BR-U07-40).
+1. `reserve`: kiểm tài khoản `ACTIVE` có ví, chủ ví và `purpose`; STUDENT hợp lệ cho PRACTICE_GRADING của attempt Practice Text/Diagram Essay đã xác minh hoặc MATERIAL_SUMMARY qua U05/U13 đã kiểm quyền xem. Áp tặng định kỳ như F7, kiểm đủ, trừ tặng trước rồi mua (BR-U07-33), trả `{reserved, fromFree}` để U13 lưu vào `ai_suggestions`. Thiếu credit → lỗi `INSUFFICIENT_CREDIT`, không trừ gì (BR-U07-40).
 2. `settle`: tính chênh lệch với phần giữ; dư thì trả lại (vào credit tặng trước theo `fromFree` nếu vẫn cùng tháng, phần còn lại vào credit mua), thiếu thì trừ thêm tối đa số dư còn lại, không để âm (BR-U07-42).
-3. `release`: trả lại toàn bộ phần giữ theo cùng quy tắc (BR-U07-43).
+3. `CreditPort.release`: chỉ khi lượng dùng thật bằng 0, trả toàn bộ theo cùng quy tắc (BR-U07-43). U13 chọn `settle(actualCredits)` khi kết thúc/lỗi/quá hạn mà đã dùng AI; scanner cũng dùng quy tắc này. Với học liệu, reserve một HOLD lúc chấp nhận yêu cầu tóm tắt, child calls không reserve thêm; terminal chốt tổng một lần qua `AiUsagePort.release(holdId)`.
 
 ## F9 - Seed gói và khai báo mục Settings
 1. `U07_PACKAGES` chỉ seed gói chưa có; không cập nhật giá/ghi đè gói Admin đã sửa. Quản trị gói dùng F10.

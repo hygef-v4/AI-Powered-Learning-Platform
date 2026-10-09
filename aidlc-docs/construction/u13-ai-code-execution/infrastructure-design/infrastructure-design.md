@@ -1,6 +1,6 @@
 # U13 AI & Code Execution - Infrastructure Design
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding học liệu (UC 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 ## 1. Ánh xạ
 
@@ -55,3 +55,9 @@ Tổng giới hạn các container sau khi thêm Judge0 ≈ 7 GB → VPS gợi �
 | RESILIENCY-04 | Compliant | Judge0 cùng Compose, image cố định phiên bản |
 | RESILIENCY-06 | Compliant | Healthcheck `judge0-server` (`/languages`) |
 | Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
+
+## Credit hold/checkpoint revision 2026-10-09
+
+`ai_suggestions.request_ref` unique khi không rỗng: HOLD và mỗi chunk/merge/embedding dùng khóa riêng. Dòng gọi có hold_id FK tới dòng HOLD, credit_status NONE; result chứa checkpoint có cấu trúc, không prompt thô. Complete phải cộng credits_used/checkpoint một lần trong cùng transaction bằng điều kiện status; release HOLD chuyển RESERVED → SETTLED/RELEASED idempotent, settle lượng thật. Tra hold bằng target LESSON/request_ref HOLD để worker restart không mất tham chiếu. Không thêm bảng job/checkpoint riêng.
+
+Metadata scanClaimId và checkpoint kind/sourceHash/model/payload nằm trong JSON result của child call, không thêm bảng/cột riêng. AiUsageService trả HoldSnapshot/UsageStart/CallSnapshot và đọc HOLD theo target/requestRef; chỉ U13 truy cập repository này. Transaction U05 kiểm claim rồi gọi U13 ghi checkpoint/usage; complete/release khóa cùng HOLD. Ticket cũ hoặc HOLD đã chốt bị từ chối, READY replay không ghi lại.

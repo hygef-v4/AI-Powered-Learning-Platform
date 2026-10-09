@@ -37,7 +37,7 @@
 | NFR-U07-30 | Người dùng chỉ thấy giao dịch và lần dùng credit của mình; ngoài quyền trả `404`. | SEC-002 |
 | NFR-U07-31 | `CreditPort` chỉ gọi nội bộ, không có endpoint HTTP cho `reserve`/`settle`. | Thiết kế |
 | NFR-U07-32 | Không lưu dữ liệu thẻ/ngân hàng của người dùng; chỉ lưu mã tham chiếu PayOS. | SEC-007 |
-| NFR-U07-33 | API mua/kết quả giao dịch/ví/lịch sử cá nhân yêu cầu tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER` và là chủ (R1); Admin bị từ chối (`403`) vì không có ví. API quản trị gói và lịch sử toàn nền tảng là endpoint riêng chỉ ADMIN `ACTIVE`. `CreditPort.reserve` kiểm `purpose` và attempt: Student chỉ được giữ credit cho `PRACTICE_GRADING` Text/Diagram Essay của chính mình; các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
+| NFR-U07-33 | API mua/kết quả giao dịch/ví/lịch sử cá nhân yêu cầu tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER` và là chủ (R1); Admin bị từ chối (`403`) vì không có ví. API quản trị gói và lịch sử toàn nền tảng là endpoint riêng chỉ ADMIN `ACTIVE`. `CreditPort.reserve` kiểm `purpose` và attempt: Student được PRACTICE_GRADING Text/Diagram Essay của chính mình hoặc MATERIAL_SUMMARY đã xác minh quyền xem qua U05/U13; EMBEDDING chỉ child cùng HOLD này, các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
 | NFR-U07-34 | Mức tặng định kỳ đọc qua `SettingsPort` (cache 30 giây); đổi mức chỉ áp từ lần đặt lại kế tiếp, không sửa số dư đang có. | BR-U07-31 |
 
 ## 5. Compliance

@@ -14,7 +14,7 @@
 
 - **Story**: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005.
 - **Primary UC hiện hành**: UC 08, 09, 10, 11, 68, 69, 72 theo bản 73 UC; mục credit tặng định kỳ của Settings (UC 70–71). Supporting flows theo current-srs-contract.md.
-- **Quyết định 2026-10-09**: chỉ Student, Teacher, Subject Manager có ví (Admin không); kết quả thanh toán hiện trên Credit Package Checkout, không có màn Payment Result riêng; mức tặng định kỳ là mục Settings `credit.monthlyFreeCredits`; giữ credit khi tải học liệu (`MATERIAL_SUMMARY`) tối đa 25 giờ.
+- **Quyết định 2026-10-09**: chỉ Student, Teacher, Subject Manager có ví (Admin không); kết quả thanh toán hiện trên Credit Package Checkout, không có màn Payment Result riêng; mức tặng định kỳ là mục Settings `credit.monthlyFreeCredits`; giữ credit khi yêu cầu tóm tắt học liệu (`MATERIAL_SUMMARY`) tối đa 25 giờ.
 - **Thiết kế nguồn**: `construction/u07-payment-credit/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
 - **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
 - **Code nằm ở workspace root**, không trong `aidlc-docs/`.
@@ -73,10 +73,10 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 - [ ] **Bước 5** - `PackageService`/`PackageAdminService` đọc/thêm/sửa gói với version/audit (F10); `U07_PACKAGES` chỉ INSERT seed thiếu, không ghi đè Admin; `CreditSettingDefinition` khai báo `credit.monthlyFreeCredits` (0–10 000, mặc định 100) (F9).
 - [ ] **Bước 6** - `PaymentService`: kiểm tài khoản `ACTIVE` có ví và chủ ví trước khi tạo giao dịch hoặc gọi PayOS; idempotency, giới hạn 3 `PENDING`, `orderCode`, snapshot gói, `returnUrl`/`cancelUrl` về Checkout, hủy khi về qua `cancelUrl`, `FAILED`, hết hạn (F3, F4, P4, BR-U07-01, 03…07, 14).
 - [ ] **Bước 7** - `PayosSignatureVerifier` và `PaymentSettlement.markPaid` dùng chung (F3, P2, P3, BR-U07-10…13); sau commit phát `payment.paid` qua `EventPublisherPort` (BR-U07-53).
-- [ ] **Bước 8** - `CreditPortService`: `reserve` (trả `{reserved, fromFree}`), `settle`, `release`, `balance`, chạy trong transaction của U13; `reserve` kiểm purpose/attemptRef, Admin bị từ chối, Student chỉ được `PRACTICE_GRADING` Text/Diagram Essay của mình; thêm purpose `MATERIAL_SUMMARY` (F8, P5, BR-U07-01, 40…43).
+- [ ] **Bước 8** - `CreditPortService`: `reserve` (trả `{reserved, fromFree}`), `settle`, `release`, `balance`, chạy trong transaction của U13; `reserve` kiểm purpose/attemptRef, Admin bị từ chối, Student được PRACTICE_GRADING Text/Diagram Essay của mình hoặc MATERIAL_SUMMARY qua U05 theo quyền xem; thêm purpose `MATERIAL_SUMMARY` (F8, P5, BR-U07-01, 40…43).
 - [ ] **Bước 9** - Worker: `PaymentScanner` (scanner U03, 10 phút, ≤ 100 giao dịch, đổi `PENDING` quá hạn sang `EXPIRED`) và `PayosCheckHandler` (F4, P6, BR-U07-06, 20, 22).
 - [ ] **Bước 10** - Audit sự kiện `PAID`, webhook bị từ chối, tự đối soát (BR-U07-51).
-- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: Student có ví, được tặng định kỳ và mua credit; Admin không có ví; mức tặng đổi trên Settings chỉ áp tháng sau; chỉ reserve cho Practice hợp lệ; chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng định kỳ sang tháng mới.
+- [ ] **Bước 11** - Unit test mọi `BR-U07-xx`: Student có ví, được tặng định kỳ và mua credit; Admin không có ví; mức tặng đổi trên Settings chỉ áp tháng sau; reserve cho Practice hợp lệ hoặc MATERIAL_SUMMARY đã kiểm quyền xem; chữ ký sai/đúng, số tiền lệch, webhook trùng, webhook sau `EXPIRED`, `settle` lớn hơn phần giữ, tặng định kỳ sang tháng mới.
 - [ ] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u07-payment-credit/code/business-logic-summary.md`.
 
 ### Nhóm C - Dữ liệu và PayOS
@@ -91,7 +91,7 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 
 - [x] **Bước 18** - `/contracts/openapi/billing.yaml` (endpoint theo `frontend-components.md`, gồm webhook).
 - [ ] **Bước 19** - Controller + DTO + validation; rate limit webhook.
-- [ ] **Bước 20** - Test MockMvc: Student/Teacher/Subject Manager `ACTIVE` được xem gói/ví, nhận tặng định kỳ và mua credit của mình; Admin gọi API ví/mua bị `403`; owner endpoint không xem người khác; ADMIN query riêng xem lịch sử toàn nền tảng chỉ đọc; `reserve` chỉ nội bộ và Student chỉ dùng cho Practice hợp lệ; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
+- [ ] **Bước 20** - Test MockMvc: Student/Teacher/Subject Manager `ACTIVE` được xem gói/ví, nhận tặng định kỳ và mua credit của mình; Admin gọi API ví/mua bị `403`; owner endpoint không xem người khác; ADMIN query riêng xem lịch sử toàn nền tảng chỉ đọc; `reserve` chỉ nội bộ và Student dùng cho Practice hợp lệ hoặc MATERIAL_SUMMARY qua U05 đã kiểm quyền xem; webhook không cần đăng nhập nhưng sai chữ ký trả `401`.
 - [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
 
 ### Nhóm E - Frontend
@@ -137,3 +137,20 @@ PostgreSQL `credit_packages`, `payments`; ghi cột số dư của `accounts` (U
 - [ ] Thêm API Admin vào `billing.yaml`: `GET`, `POST /api/v1/admin/credit-packages`, `PATCH /api/v1/admin/credit-packages/{id}`, `GET /api/v1/admin/payments`.
 - [ ] `CreditPurpose` thêm `MATERIAL_SUMMARY`; phần giữ cho quét học liệu tối đa 25 giờ (scanner của U13, ghi vào plan U13 khi sửa U13).
 - [ ] Màn theo screen flow: My Credit Package, Public Credit Packages, Credit Package Checkout (Class Dashboard); Credit Package List, popup Credit Package Detail, Payment History (Admin Dashboard).
+
+## Bổ sung sau recheck 2026-10-09 — credit cho HOLD học liệu
+
+- [ ] Đồng bộ contract/code U07 với BR-U07-40/43: một reserve cho HOLD khi chấp nhận yêu cầu tóm tắt; child summary/merge/embedding không reserve thêm. CreditPort.release chỉ hoàn toàn bộ khi usage = 0; đã dùng thì settle(actualCredits), kể cả terminal lỗi/quá hạn.
+- [ ] Unit scenarios: hoàn toàn bộ trước AI, summary thành công rồi embedding lỗi chỉ tính summary, HOLD quá hạn trả dư, retry/replay không reserve/charge lại; bảo toàn phân bổ credit tặng/mua theo fromFree.
+- [ ] Rà tích hợp scanner U13 qua cùng settlement policy; không sửa completed steps hoặc coi contract/code hiện tại đã được cập nhật bởi revision tài liệu.
+
+## Revision: nút tóm tắt trên View Material — 2026-10-09
+
+Các bước cũ giả định summary/credit lúc upload được thay bởi yêu cầu hiện hành dưới đây; dấu [x] implementation cũ giữ lịch sử, không xác nhận code mới.
+
+- [ ] Upload MATERIAL và tạo lesson không gọi Gemini/quote/hold, không chặn vì thiếu credit; extraction worker lưu EXTRACTED, không summary/vector.
+- [ ] Migration/DTO U05 thêm EXTRACTED, summary_requested_by/at; hai giai đoạn deadline và guard jobType; U03 nhận MATERIAL_SUMMARY trên jobs.gemini.
+- [ ] View Material có SummaryAction cho Student/Teacher/Subject Manager theo quyền xem, kể cả Teacher xem học liệu môn chỉ đọc; Admin denied. GET lesson summary-credit/scan và POST summary (classId, Idempotency-Key).
+- [ ] Nhận yêu cầu atomically khóa lesson + kiểm quyền xem/AI guard + HOLD của requester + metadata/deadline + enqueue. Student MATERIAL_SUMMARY hợp lệ; child EMBEDDING cùng HOLD, không cho embedding độc lập. Hai actor bấm chỉ một payer; kết quả dùng chung, không charge lại.
+- [ ] Worker phục hồi/checkpoint/lease/fencing, một HOLD summary+embedding; AI deadline 24 giờ và HOLD fallback 25 giờ từ yêu cầu; lỗi settle thực dùng/trả dư, giữ summary khi embedding lỗi.
+- [ ] Kiểm upload zero-credit/no-AI; 3 role hợp lệ, ngoài scope/Admin denied; hai actor bấm đồng thời/duplicate; late first request sau upload >24 giờ vẫn hợp lệ; thiếu credit/AI guard trước nhận giữ EXTRACTED; no text/caption; cache summary; retry/crash/embedding lỗi; Student không truy xuất RAG hoặc soạn/chấm Graded.

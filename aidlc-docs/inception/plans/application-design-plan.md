@@ -1,5 +1,7 @@
 # Application Design Plan
 
+> Baseline hiện hành 2026-10-09: 73 UC, 51 story, 15 unit theo unit-of-work-story-map.md; U10 đã bỏ, Settings U03, copy/bài môn U08. Các câu trả lời/checklist phê duyệt cũ phía dưới giữ lịch sử, không xác nhận revision đã triển khai.
+
 ## Mục tiêu
 
 Thiết kế boundary component/service cấp cao cho AI-Powered Learning Platform dựa trên requirements, 51 user story thuộc MVP, persona và 70 use case hiện hành (`docs/use-cases-and-screens.md`, SRS 4.1/4.2/4.4 ngày 2026-10-08). Thiết kế tập trung vào trách nhiệm, interface, orchestration, dependency và data flow; business rule chi tiết sẽ thực hiện ở Functional Design theo unit.

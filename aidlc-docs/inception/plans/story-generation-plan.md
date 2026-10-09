@@ -1,8 +1,10 @@
 # Kế hoạch tạo User Stories
 
-> Bản hiệu lực 2026-10-08 có 70 UC/51 story, năm loại bài và scope SRS 4.4. Các mục Phase 2, Simulation Exam và catalog theo mốc cũ bên dưới là lịch sử; xem stories.md và unit-of-work-story-map.md hiện hành để triển khai.
+> Baseline hiện hành 2026-10-09: 73 UC, 51 story, 15 unit theo unit-of-work-story-map.md; U10 đã bỏ, Settings U03, copy/bài môn U08. Các câu trả lời/checklist phê duyệt cũ phía dưới giữ lịch sử, không xác nhận revision đã triển khai.
 
-> Các câu hỏi/câu trả lời và revision trước 2026-10-08 được giữ nguyên theo ngày, không dùng mã UC cũ làm mã hiện hành. Danh mục hiệu lực ở `docs/use-cases-and-screens.md`; mã story rút không tái sử dụng.
+> Baseline lịch sử 2026-10-08 có 70 UC/51 story, năm loại bài và scope SRS 4.4. Các mục Phase 2, Simulation Exam và catalog theo mốc cũ bên dưới là lịch sử; xem stories.md và unit-of-work-story-map.md hiện hành để triển khai.
+
+> Các câu hỏi/câu trả lời và revision trước 2026-10-08 được giữ nguyên theo ngày, không dùng mã UC cũ làm mã hiện hành. Danh mục hiện hành ở `docs/use-cases-73.md`; mã story rút không tái sử dụng.
 
 ## 1. Mục tiêu và phạm vi
 

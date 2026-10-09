@@ -1,6 +1,6 @@
 # Shared Infrastructure
 
-Hạ tầng dùng chung cho cả 16 unit. Chốt tại U01 Infrastructure Design; khung dự án (Docker Compose, CI) do U03 dựng vì U03 code đầu tiên (2026-10-04); unit sau chỉ bổ sung phần riêng của mình.
+Hạ tầng dùng chung cho cả 15 unit hiện hành (U01–U09, U11–U16; U10 đã bỏ). Chốt tại U01 Infrastructure Design; khung dự án (Docker Compose, CI) do U03 dựng vì U03 code đầu tiên (2026-10-04); unit sau chỉ bổ sung phần riêng của mình.
 
 ## 1. Quyết định
 

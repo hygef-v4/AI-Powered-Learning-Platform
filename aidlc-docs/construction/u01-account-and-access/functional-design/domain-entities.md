@@ -81,7 +81,7 @@ stateDiagram-v2
 | `freePeriod` | Tháng của phần tặng (`yyyy-MM`) |
 | `purchasedBalance` | Credit đã mua còn lại |
 
-U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER`, `SUBJECT_MANAGER` hoặc `ADMIN`, khóa dòng tài khoản khi giữ/trừ credit (phần giữ/trừ nằm trên `ai_suggestions`, không có sổ cái). Cả bốn vai trò được tặng credit hằng tháng và mua credit; Student chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
+U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER`, khóa dòng tài khoản khi giữ/trừ credit (phần giữ/trừ nằm trên `ai_suggestions`, không có sổ cái). Chỉ ba vai trò trên được tặng credit hằng tháng và mua credit; Admin không có ví/không dùng AI; Student chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
 
 ## 7. Cấu hình U01
 

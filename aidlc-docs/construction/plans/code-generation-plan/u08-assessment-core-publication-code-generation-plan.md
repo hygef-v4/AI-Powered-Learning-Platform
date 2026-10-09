@@ -1,6 +1,6 @@
 # U08 Assessment Core & Publication - Code Generation Plan
 
-**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
 **Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
 
@@ -12,7 +12,7 @@
 
 ## 1. Bối cảnh
 
-- **Story**: US-ASM-001, US-ASM-008, US-ASM-010 (copy bài giữa lớp, gộp từ U10 đã xóa); khóa nội dung cho US-QBK-002 S2, S3.
+- **Story**: US-ASM-001, US-ASM-008, US-ASM-009 (bài của môn), US-ASM-010 (copy bài giữa lớp, gộp từ U10 đã xóa); khóa nội dung cho US-QBK-002 S2, S3.
 - **Primary UC hiện hành**: UC 41 và phần vòng đời của UC 35, 42–45 theo bản 73 UC. Supporting flows theo current-srs-contract.md.
 - **Quyết định 2026-10-09**: có bài của lớp (Teacher), bài của môn (Chủ nhiệm môn, giao cho mọi lớp của môn với một lịch chung, không có bài nhóm, giảng viên từng lớp chấm) và quiz luyện tập gắn học liệu (không lịch, không vào sổ điểm); giữ bước Duyệt; phát hành khóa rubric và chặn khi rubric trống; quiz, Text Essay, Code Lab dùng câu từ ngân hàng của môn hoặc câu riêng.
 - **Thiết kế nguồn**: `construction/u08-assessment-core-publication/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).

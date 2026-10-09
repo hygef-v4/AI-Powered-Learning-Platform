@@ -2,12 +2,12 @@
 
 **Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
 
-## P1 - Quét trong worker
-1. `LessonScanHandler` nhận `LESSON_SCAN {lessonId}` hoặc `YOUTUBE_CAPTION {lessonId}`; giữ semaphore `U05_SCAN_CONCURRENCY` (mặc định 4) (NFR-U05-01).
-2. `UPDATE lessons SET scan_status = 'SCANNING' WHERE id = :id AND scan_status = 'PENDING'`; không dòng nào bị cập nhật thì bỏ qua (idempotent).
-3. `TextExtractor` hoặc `CaptionFetcher` → nếu chưa có `summary`: `AiUsagePort.begin(MATERIAL_SUMMARY)` → `LessonSummarizer` → `complete` → ghi `summary` ngay → `AiUsagePort.begin(EMBEDDING)` → `EmbeddingPort.embed(summary)` → `complete` → ghi kết quả trong một transaction. Mỗi lần gọi có `requestRef` = `lessonId:scanNo:task`, cố định qua thử lại (BR-U05-35, 36, 39, 45).
-4. Lỗi tạm ném `RetryableJobException` cho U03; `BUSY` ghi trạng thái, giữ nguyên credit và kết thúc; hết lượt → `onFailed` ghi `FAILED` và `AiUsagePort.release`. Credit đã giữ lúc tải lên (`AiUsagePort.hold`) nên quét không gặp thiếu credit.
-5. `LessonPendingSweeper` trả lesson `PENDING` có `scanned_at` quá 5 phút và lesson `BUSY` mỗi 30 phút để U03 gửi lại; `BUSY` quá 24 giờ → `FAILED`, trả credit.
+## P1 - Quét trong worker, retry và credit
+1. LessonScanHandler (TEXT) nhận lessonId, semaphore extraction concurrency 4; MaterialSummaryHandler (AI) dùng semaphore/concurrency Gemini của U13; claim transaction ngắn bằng CAS từ PENDING/BUSY khi retry_at tới, scan_expires_at chưa tới và không lease đang giữ. Đặt SCANNING, claim UUID và lease 5 phút; mọi checkpoint/kết quả/gia hạn kiểm claim/hạn để ngăn worker cũ ghi muộn.
+2. Upload trích chữ/caption → EXTRACTED, không U13. Chỉ khi có summary_requested_at mới chạy MATERIAL_SUMMARY → AiUsagePort.begin với holdId tra từ U13. SummaryPort theo chunk/merge rồi embedding từ summary; requestRef ổn định `lessonId:SUMMARY:chunkIndex`, `lessonId:SUMMARY:MERGE`, `lessonId:EMBEDDING`. Complete và checkpoint ai_suggestions.result idempotent; không gọi lại chunk đã complete. Summary hoàn tất ghi ngay, dùng lại sau retry.
+3. Lỗi tạm chuyển SCANNING → PENDING, tăng retry count, đặt retry_at U03 backoff, xóa claim/lease rồi ném RetryableJobException. Tối đa 5 retry/recovery; BUSY đặt retry_at 30 phút, không đếm lỗi tạm. Giới hạn scan_expires_at 24 giờ từ khi bắt đầu giai đoạn (tạo lesson cho trích chữ; chấp nhận yêu cầu cho tóm tắt) không kéo dài; tới hạn/hết retry/lỗi vĩnh viễn → FAILED.
+4. Sweeper mỗi phút gửi PENDING quá 5 phút/retry_at tới và BUSY khi retry_at tới; SCANNING lease hết hạn thì CAS thu hồi claim và reset PENDING hoặc FAILED theo giới hạn. Worker cũ không tiếp tục ghi/settle. Hold U13 25 giờ từ yêu cầu là dự phòng; AI deadline 24 giờ từ yêu cầu, extraction deadline 24 giờ từ upload. EXTRACTED chưa yêu cầu không HOLD và không expiry bởi sweeper.
+5. Trích chữ terminal EXTRACTED/NO_TEXT/NO_CAPTION/FAILED không có HOLD. Chỉ giai đoạn AI terminal INDEXED/FAILED chốt HOLD trong transaction idempotent; settle chỉ tổng sử dụng thật, trả phần chưa dùng. Chưa gọi AI trả toàn bộ. FAILED sau summary giữ summary; không RAG khi chưa INDEXED. Timeout provider không có bảo đảm exactly-once bên ngoài; không cộng credit dùng trùng cùng checkpoint.
 
 ## P2 - Trích chữ theo luồng
 - `TextExtractor` dùng Tika với `InputStream` từ `ArtifactPort.open`, trả chữ theo trang (PDF) hoặc theo slide/đoạn (PPTX/DOCX).
@@ -32,3 +32,7 @@
 
 ## P7 - Adapter giả
 - `FakeEmbeddingAdapter` (vector băm từ nội dung, cố định) và `FakeYoutubeAdapter` (phụ đề mẫu) khi không có key hoặc trong test (NFR-U05-31).
+
+## Contract checkpoint qua port
+
+findHold trả HoldSnapshot; begin trả UsageStart, READY là REPLAY kèm CallSnapshot/checkpoint nên không gọi provider. RUN trả ticket gắn scanClaimId. U05 khóa/kiểm claim, lease và deadline trong cùng transaction khi begin/complete/fail; U13 kiểm ticket metadata và HOLD RESERVED. Khóa HOLD serialize complete với release/scanner; stale ticket hoặc HOLD đã chốt không ghi/cộng usage. Không giữ transaction qua provider; contract chi tiết ở [domain](../functional-design/domain-entities.md).

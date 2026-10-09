@@ -33,23 +33,23 @@
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-30 | Mỗi học liệu chỉ quét một lần, ngay khi tải lên: `scan_status = PENDING` và gửi việc `LESSON_SCAN` (tệp) hoặc `YOUTUBE_CAPTION` (video) qua U03; request không đợi. Không có nút Quét lại. | Quyết định 2026-10-03; người dùng chốt 2026-10-09 |
+| BR-U05-30 | Upload tạo lesson và gửi LESSON_SCAN/YOUTUBE_CAPTION chỉ để trích chữ/phụ đề; không gọi Gemini, không tạo summary/embedding hay giữ credit. Trích chữ xong chuyển EXTRACTED. Không có nút Quét lại. | Revision View Material 2026-10-09 |
 | BR-U05-32 | Trích chữ PDF/DOCX/PPTX; không OCR. Ít hơn 50 ký tự mỗi trang trung bình → `NO_TEXT`; tệp vẫn dùng được cho người học. | Câu 13 |
 | BR-U05-33 | YouTube: chỉ dùng phụ đề có sẵn, ưu tiên phụ đề thủ công tiếng Việt, rồi tiếng Anh, rồi phụ đề tự động; không có → `NO_CAPTION`. Không tự phiên âm. | Câu 3 |
 | BR-U05-35 | Tạo một vector cho mỗi lesson bằng Gemini `gemini-embedding-001` (768 chiều) từ bản tóm tắt của lesson (BR-U05-45), để RAG tìm theo nội dung chính của cả tài liệu thay vì chỉ phần đầu. | Quyết định 2026-10-03; người dùng chốt 2026-10-09 |
-| BR-U05-36 | Ghi `extracted_text`, `embedding`, `INDEXED` trong một transaction; lỗi giữa chừng không để lại kết quả dở. Riêng `summary` được ghi ngay khi tạo xong để lần chạy lại không tóm tắt và trừ credit lần nữa. | US-CNT-001 S3, US-CNT-005 S3 |
-| BR-U05-37 | Lỗi thì hệ thống tự quét lại, người dùng không phải bấm: lỗi tạm (mạng, 429, 5xx) thử lại theo U03; hết trần AI hoặc AI bị tắt → `BUSY` ("Hệ thống đang bận, sẽ tự thử lại"), sweeper tự gửi lại việc mỗi 30 phút trong tối đa 24 giờ. Hết lượt thử, quá 24 giờ hoặc lỗi vĩnh viễn (URL sai, video riêng tư) → `FAILED`, trả lại credit đã giữ; học liệu vẫn xem được nhưng không có tóm tắt và không vào RAG. | US-CNT-001 S3; người dùng chốt 2026-10-09 |
-| BR-U05-38 | Người tải lên và người quản lý phạm vi xem trạng thái quét của từng lesson. | FR-004 |
-| BR-U05-39 | Không đủ credit thì không tải lên được: khi tạo học liệu, U05 giữ trước credit của người tải lên qua `AiUsagePort.hold` của U13 theo mức tối đa của một lần quét (tóm tắt và embedding, tính từ giới hạn đầu vào BR-U05-47); thiếu credit → từ chối "Không đủ credit AI", không tạo học liệu. Form tải lên hiện mức cần giữ và số dư để chặn trước. Quét xong trừ theo token thật (mỗi lần gọi một dòng `ai_suggestions`, `target` là lesson) và trả phần dư; `NO_TEXT`, `NO_CAPTION`, `FAILED` trả lại toàn bộ phần còn giữ; tự thử lại không trừ trùng. | BR-U07-40…43; người dùng chốt 2026-10-09 |
+| BR-U05-36 | Trích chữ ghi extracted_text và EXTRACTED trong một transaction. Sau yêu cầu tóm tắt, ghi summary ngay khi hoàn tất; ghi embedding và INDEXED cùng transaction chốt HOLD. Giữ summary nếu embedding lỗi; chỉ INDEXED vào RAG. | Revision View Material 2026-10-09 |
+| BR-U05-37 | Mỗi giai đoạn có claim/lease 5 phút, CAS phục hồi lease và tối đa 5 retry/recovery theo U03. Trích chữ có deadline cố định 24 giờ từ upload, không HOLD. Yêu cầu tóm tắt có deadline cố định 24 giờ từ summary_requested_at, không kéo dài khi retry/BUSY; BUSY thử lại sau 30 phút. Terminal lỗi/hết hạn chốt HOLD nếu đã có. Worker cũ mất claim không ghi được; scanner HOLD 25 giờ từ nhận yêu cầu là dự phòng. | Revision View Material 2026-10-09 |
+| BR-U05-38 | Mọi actor có quyền xem học liệu xem được trạng thái trích chữ/tóm tắt; không lộ nội dung/chi phí/tài khoản ngoài phạm vi. | Revision View Material 2026-10-09 |
+| BR-U05-39 | Upload không phụ thuộc credit. Khi bấm Tóm tắt tài liệu, U05 khóa lesson, kiểm quyền xem và EXTRACTED/chưa có yêu cầu, rồi gọi AiUsagePort.hold cho tổng summary+embedding với actor là người bấm (Student, Teacher, Subject Manager). Thiếu credit rollback yêu cầu, giữ lesson EXTRACTED để bấm sau; học liệu vẫn xem/tải được. Yêu cầu trùng/đang chạy/đã có summary không reserve thêm; người thắng transaction là payer cố định. | Revision View Material 2026-10-09 |
 
 ## 4a. Tóm tắt học liệu (thêm 2026-10-09)
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U05-45 | Mỗi lesson mới (tệp có chữ hoặc video có phụ đề) được AI tự tóm tắt trong bước quét, sau khi trích chữ và trước khi tạo vector. Đây là luồng phụ của việc tải học liệu: Add/Update/Delete Learning Material và Add/Update/Delete Subject Material (UC 34, 55 theo bản 73 UC). Người dùng không có nút yêu cầu tóm tắt riêng. | Người dùng chốt 2026-10-09 |
-| BR-U05-46 | Người tải lên là người tạo bản tóm tắt và chịu credit. Chỉ trừ credit khi thật sự gọi AI bên ngoài (Gemini): không có chữ (`NO_TEXT`), không có phụ đề (`NO_CAPTION`) hoặc quét thất bại thì không trừ và trả lại phần đã giữ. Không đủ credit thì không tải lên được (BR-U05-39). | Người dùng chốt 2026-10-09, BR-U07-40…43 |
+| BR-U05-45 | Tóm tắt chỉ bắt đầu từ nút Tóm tắt tài liệu trên View Material: Learning Material của Student (UC 15) hoặc Material Detail của Teacher/Subject Manager (UC 34, 55). Kiểm quyền xem R5/R3/R4/R2 theo U04, không yêu cầu quyền sửa. Actor ACTIVE, module/lesson ACTIVE; Student cần lớp OPEN và ghi danh ACTIVE. Admin bị từ chối. Chỉ nhận sau trích chữ thành công; không AI khi upload hoặc chỉ mở trang. | Revision View Material 2026-10-09 |
+| BR-U05-46 | Người yêu cầu tóm tắt chịu credit summary và embedding, không mặc định uploader. Payer lấy từ summary_requested_by/HOLD, không từ actor poll hay người bấm trùng. Complete idempotent ghi lượng dùng thật; terminal settle đã dùng và trả dư, chưa gọi AI hoàn toàn bộ. Embedding lỗi giữ summary; không charge trùng kết quả/checkpoint. | Revision View Material 2026-10-09 |
 | BR-U05-47 | Đầu vào tóm tắt là tối đa 200 000 ký tự đầu của `extracted_text`, chia đoạn ≤ 30 000 ký tự; AI tóm tắt từng đoạn rồi gộp thành một bản bằng tiếng Việt, ≤ 4 000 ký tự, chỉ dựa trên nội dung học liệu. Model lấy từ mục AI trên Settings (U13 khai báo loại việc `MATERIAL_SUMMARY`). | Thiết kế 2026-10-09 |
-| BR-U05-48 | Bản tóm tắt hiện trên Learning Material cho mọi người được xem học liệu đó (Student, Teacher, Subject Manager trong phạm vi), kèm nhãn "Tóm tắt do AI tạo"; người quản lý xem thêm trên Material Detail. Không sửa tay. Mỗi học liệu chỉ được tóm tắt một lần; lần tự thử lại không tóm tắt lại nếu đã có `summary`. | Người dùng chốt 2026-10-09 |
+| BR-U05-48 | Một summary dùng chung mỗi lesson, hiện trên màn xem cho mọi người có quyền, nhãn Tóm tắt do AI tạo; không sửa tay. Nút Tóm tắt tài liệu chỉ bật ở EXTRACTED chưa nhận yêu cầu. Trích chữ/AI đang chạy thì khóa nút và hiện trạng thái; có summary thì xem kết quả, không tạo lại. NO_TEXT/NO_CAPTION/FAILED báo nguyên nhân; không có nút retry thủ công sau yêu cầu đã nhận, retry nền dùng lại checkpoint. | Revision View Material 2026-10-09 |
 
 ## 5. Truy xuất (retrieve)
 
@@ -76,4 +76,4 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U05-50 | Audit tạo/lưu trữ module, tải/sửa thông tin/lưu trữ lesson, tạo/sửa/xóa mềm thông báo; che dữ liệu nhạy cảm, không audit từng lần xem. | FR-014/023 |
-| BR-U05-51 | Tìm kiếm học liệu theo yêu cầu người dùng nằm ngoài phạm vi. Tóm tắt chỉ tạo tự động khi tải lên (BR-U05-45). Truy xuất RAG nội bộ phục vụ AI soạn đề của U13 vẫn thuộc MVP; thông báo không gọi RAG. | Quyết định phạm vi 2026-09-25; người dùng chốt 2026-10-09 |
+| BR-U05-51 | Tìm kiếm học liệu theo yêu cầu người dùng nằm ngoài phạm vi. Tóm tắt chỉ tạo khi người có quyền xem bấm Tóm tắt tài liệu (BR-U05-45). Truy xuất RAG nội bộ phục vụ AI soạn đề của U13 vẫn thuộc MVP; thông báo không gọi RAG. | Quyết định phạm vi 2026-09-25; người dùng chốt 2026-10-09 |
