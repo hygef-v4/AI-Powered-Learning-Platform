@@ -3715,3 +3715,37 @@ kiểm tra bản này xem đã đúng chưa"
 **Context**: User-authorized commit on the current branch. No push or pgvector-removal change requested for this commit. Existing implementation checkpoints unchanged; runtime checks N/A, enabled documentation constraints retained and disabled Property-Based Testing skipped.
 
 ---
+
+## Main Business Flows - Circle Start and End
+**Timestamp**: 2026-10-09T06:45:00Z
+**User Input**: "vẽ lại business flow (tôi muốn bắt đầu và kết thúc phải là hình tròn như trong ảnh) chứ không phải như ảnh 2"
+**AI Response**: "Replaced every Start (green oval) and End (red double oval) in the eight individual draw.io files and the combined file with 44 px BPMN-style circles at the same centre: Start is green, End is solid red. The 'Start'/'End' prefix was removed from the labels and the trigger/outcome text was moved outside the circle, on a side that no connector uses. Connectors and other shapes are unchanged. Re-rendered the eight PNG exports at 2x with the diagrams.net viewer and checked them visually; added a note about the shapes to the README."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Check Against Updated Reports 1-3
+**Timestamp**: 2026-10-09T07:20:00Z
+**User Input**: "@\"D:\Download\Report-1_Project Introduction (1).docx\" @\"D:\Download\Report-2_Project Management Plan (1).docx\" @\"D:\Download\Report-3_Software Requirement Specification (6).docx\"
+đây là tài liệu đã được cập nhật, kiểm tra xem BF hiện tại đã đúng chưa"
+**AI Response**: "Checked BF-01..BF-08 against SRS v6 (trigger/end conditions, UC 01-73, permission matrix, data business rules, BR01-BR30, UC specifications) and Reports 1-2. BF-02, BF-04, BF-05, BF-07, BF-08 match. BF-01 conflicts: the Teacher adds students (roster or invite code), but SRS UC 51 and the permission matrix give enrollment to the Subject Manager/Administrator and deny it to the Teacher; the invite-code path has no UC in the 73-UC list although Report 1, Report 2, SRS data rule 'One active class per subject' and the BF-01 end condition still mention it. Minor gaps: BF-06 omits the AI credit/availability refusal and failure path of UC 38 and sends deterministic scores through teacher finalization although the Evaluation lifecycle allows immediate publication; BF-03 does not show Code Lab sample verification explicitly. The SRS still embeds the previous oval-style BF images. Asked the user how to resolve the invite-code question before editing."
+**Context**: Supplementary business flow review; no files other than this log changed.
+
+---
+
+## Main Business Flows - BF-01 and BF-06 Correction
+**Timestamp**: 2026-10-09T07:40:00Z
+**User Input**: "BF-01: xử lý việc thêm sinh viên và mã mời thế nào?"="Bỏ mã mời (Recommended)", "Có sửa luôn các điểm nhỏ ở BF-06/BF-03 không?"="Sửa BF-06 (Recommended)"
+**AI Response**: "BF-01 redrawn per SRS v6 UC 49-51, the permission matrix and R3: Teacher lane removed; the Subject Manager (or Administrator) creates the class, assigns the teacher and selects students; System decision 'Students eligible?' leads to End 'Refused with reasons' or to saving the enrollment and End 'Student enrolled'. Invitation code and self-enrollment removed. BF-06: the AI path now reserves credit, then 'Proposal ready?'; No (refused, failed, invalid or over 5 minutes, credit released) loops back to 'Use AI proposal?' so the teacher retries or grades manually (UC 38 3.E1/4.E1). BF-03 unchanged. Updated both pages in the individual and combined draw.io files, re-rendered BF-01/BF-06 PNGs and checked them visually (no crossing connectors). README: BF-01 swimlanes, end outcomes, end condition and text alternative; BF-06 text alternative; use-case column renumbered to the 73-UC SRS. Not changed: the SRS/Report 1/Report 2 .docx files, which still mention invitation-code enrollment and the old BF-01 end condition and embed the old BF images."
+**Context**: Supplementary business flow update; no workflow stage change, no application code changed.
+
+---
+
+## SRS Report 3 (version 7) Review
+**Timestamp**: 2026-10-09T08:30:00Z
+**User Input**: "@\"D:\Download\Report-3_Software Requirement Specification (7).docx\"
+kiểm tra xem bản report3 này đã đúng chưa, được bao nhiêu điểm trên 10 và gửi tôi các điểm cần bổ sung/cải thiện"
+**AI Response**: "Reviewed SRS v7 end to end. Text is identical to v6; only images changed and all eight BF images now match the current exports. Score given: about 7/10. Main findings: table of contents still shows template headings; BF-01 end condition and the 'One active class per subject' data rule still mention invitation codes; contradictions between entity descriptions and UC/BR (Credit Package seeded vs Admin-managed, Announcement not editable vs UC 36/BR27, BR19 deployment-configured monthly grant vs UC 70-71, fixed 50 MB vs configurable upload limits); ERD lacks Payment, Enrollment, Audit Log, Group Section, Leader Change Request, Comment and credit ledger, has the typo 'Version Linage' and a placeholder link line; only 10 of 73 UCs have specifications; missing figure captions and acronyms; implementation jargon in jobs and Other Requirements; inconsistent assignment-type terms and untranslated Vietnamese labels; no enrollment-refusal message."
+**Context**: Supplementary documentation review; no files other than this log changed.
+
+---
