@@ -1,35 +1,35 @@
-# U11 Attempt & Submission - NFR Design Patterns
+# U11 Individual Work & Quiz Submission — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); danh sách quiz của học liệu trên Learning Material (UC 15, màn của U05); primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Bắt đầu lượt an toàn đồng thời
-- Transaction: kiểm ghi danh và phạm vi lớp (BR-U11-01, 05) → `pg_advisory_xact_lock(hash(assignmentId, accountId))` → có `IN_PROGRESS` thì trả lại → đếm lượt đã có, so `maxAttempts` (quiz không giới hạn thì bỏ qua) → INSERT (`attemptNo = count + 1`, `class_id`) + nội dung rỗng; `deadline_at` tính sẵn để scanner tự nộp, rỗng với quiz không giới hạn giờ (NFR-U11-10).
-- Partial unique index là chốt chặn cuối.
+**Primary UC:** 18, 19, 20, 21, 22, 23, 24, 26, 28, 29, 79. **Primary stories:** US-ASM-003, US-ASM-012. **Requirements:** FR-018/019/030/039.
 
-## P2 - Lưu nháp tối ưu
-- `UPDATE attempts SET content = ?, content_version = content_version + 1 WHERE id = ? AND content_version = ?` và điều kiện lượt `IN_PROGRESS`, `deadline_at IS NULL OR now <= deadline_at + 30s`; 0 dòng → phân biệt `409` (lệch version) hay `410` (hết hạn/đã nộp) bằng một SELECT (NFR-U11-11).
-- Kiểm tài liệu (`validateForSave`) trước UPDATE; request gzip giải nén qua filter giới hạn 10 MB sau giải nén (NFR-U11-02).
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u11-attempt-submission` không quyết định chức năng hiện hành.
 
-## P3 - Một đường nộp
-- `AttemptSubmitter.submit(attemptId, mode)` dùng cho nộp tay và scanner (hết giờ, hết hạn, ngưng giao):
-  1. `UPDATE attempts SET status = 'SUBMITTED', submitted_at = now(), submit_mode = COALESCE(submit_mode, ?), is_late = ? WHERE id = ? AND status = 'IN_PROGRESS'`.
-  2. 0 dòng → đã nộp trước đó, trả biên nhận cũ (idempotent) (NFR-U11-12).
-  3. Tính `receiptHash`; bài tập `GRADED` gọi `SubmissionSubmittedPort.onSubmitted(attemptId)` (U15 tạo dòng `evaluations` `PENDING`) trong cùng transaction. Quiz gọi `PracticeResultPort.scoreQuiz` (U15 chấm và ghi `evaluations` `kind = PRACTICE`); Practice Code Lab gọi `CodeRunPort.grade` (U13 chạy test sau commit); Practice Text/Diagram Essay **không** gọi AI khi nộp: Student bấm "Chấm với AI" trên Submission History, U11 mới gọi `PracticeGradingPort` (BR-U11-35).
-- Nộp tay: `validateForSubmit` trước bước 1; tự nộp: bỏ qua kiểm, lưu kết quả kiểm thành `warnings`.
+## Patterns áp dụng
 
-## P4 - Bất biến sau nộp
-- Trigger `BEFORE UPDATE ON attempts`: nếu dòng cũ đã `SUBMITTED` và `content` đổi → `RAISE EXCEPTION` (NFR-U11-13).
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Tự nộp theo lịch và khi ngưng giao
-- `AttemptDeadlineScanner` mỗi phút chọn lượt `IN_PROGRESS` có `deadline_at IS NOT NULL AND deadline_at + 30 s <= now()` (chờ lần lưu cuối trong ân hạn), gọi P3 theo lô 100.
-- Ngưng giao bài, ngưng quiz hoặc phát hành version mới của quiz: `AssignmentLifecycleAdapter.onRetired` đặt `deadline_at = now() - 30 s`, `submit_mode = 'AUTO_RETIRED'` cho mọi lượt `IN_PROGRESS` của bài trong transaction của U08; scanner nộp ở lượt kế tiếp.
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Rate limit lưu
-- Bucket4j Redis `ratelimit:attempt-save:{accountId}` 30/phút; vượt → `429`, client lùi 10 giây (NFR-U11-23).
+## Unit-specific patterns
 
-## P7 - Client tự lưu
-- `useAutosave`: debounce 10 s; `navigator.sendBeacon` không dùng được với PUT nên khi rời trang gọi `fetch(..., {keepalive: true})`; nén gzip; hàng đợi một yêu cầu (không gửi chồng); `409` → dừng tự lưu, hộp thoại tải lại.
+- Individual Assignment and Quiz Attempt owner; Group work U14, nhưng activity cả hai U11. Enrollment/current state/version always server checked.
+- Attempt IN_PROGRESS → SUBMITTED, snapshot immutable after submit; server determines time limits/deadline/late and MANUAL/AUTO_TIME_LIMIT/AUTO_DEADLINE/AUTO_RETIRED; receipt hash stable across replay. Autosave uses expectedContentVersion.
+- Assignment content Document with optional diagram, Quiz answers map optionIds; no runResult/files/language. Quiz result deterministic through U15 PracticeResultPort; not official Gradebook.
+- UC29 feedback own submitted Practice vs UC79 editable draft feedback; Graded draft allowStudentAiFeedback, personal API/MCP only for Student. Multiple feedback versioned/rate limited, no overwrite newer draft or grades.
+- ActivityEvent UNIQUE(actorId/workRef/clientEventId); authenticated own attempt or active group member, policy enabled in snapshot, state IN_PROGRESS. U14 delegates member events via ActivityWritePort; fields kind HIDDEN/VISIBLE, clientTime/sequence and serverReceivedAt.
+- Visibility intervals pair by work session, dedup blur/hidden, clamp invalid timestamps and flag missing/out-of-order/clock unreliable; lost connection yields UNKNOWN interval, never assumed continuous away or zero cheating. Draw.io iframe focus alone not page hidden.
+- ActivityQueryPort for U15 rechecks teacher/class and per-member; own Student projection allowed, Admin denied. Retention setting with no numeric default must be resolved/configured before capture.
+- Telemetry never auto-submit/penalize; actual deadline auto-submit remains separate. Personal agent draft writes expectedVersion; no MCP official submit initially.
 
-## P8 - Danh sách gộp theo lớp
-- Student Assignments và Quiz Practice History: lấy lớp `OPEN` mình ghi danh một lần (`listOpenClassesOf`), gọi `listForClass`/truy vấn lượt theo tập lớp; ghép lượt gần nhất bằng một truy vấn `DISTINCT ON (assignment_id)` trên `attempts` theo `account_id`, chỉ chọn cột metadata; phân trang 50 dòng (NFR-U11-05).
-- Lọc `classId` ngoài tập lớp của mình → `404`, không lộ tên lớp.
+## Validation matrix
+
+- Concurrent autosave stale conflict; double submit stable receipt; deadline controls server; enrollment revoke denies save/feedback/activity.
+- Monitoring off no events, dedup/out-of-order/offline gaps/iframe legitimate; wrong member/work reject; no grade side effects.
+- UC29 vs79 state distinctions; Student shared denied, Graded feedback disabled deny, stale feedback not overwrite.

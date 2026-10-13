@@ -1,12 +1,24 @@
-# U11 Attempt & Submission - Tech Stack Decisions
+# U11 Individual Work & Quiz Submission — tech-stack-decisions
 
-**Bản tài liệu 2026-10-09**: UC 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); danh sách quiz của học liệu trên Learning Material (UC 15, màn của U05); primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-| Hạng mục | Chọn | Lý do |
-|---|---|---|
-| Lưu nội dung | Cột `content jsonb` trong `attempts` (TOAST nén, lưu ngoài dòng khi lớn) | Danh sách lượt chọn cột metadata nên không phải đọc nội dung lớn; bớt một bảng |
-| Lớp của lượt | Cột `class_id` trong `attempts` | Bài và quiz của môn dùng chung cho nhiều lớp; lọc danh sách gộp và chấm theo lớp không cần tra ghi danh lại |
-| Tự nộp | Scanner U03 đọc `attempts.deadline_at`; ngưng giao đặt hạn ngay qua `AssignmentLifecyclePort` | Không cần bảng job; không mất phản ứng như event |
-| Nén request | Client gzip (`CompressionStream`), backend giải nén theo `Content-Encoding` | Giảm băng thông tự lưu |
-| Rate limit | Bucket4j + Redis | Đã có |
-| Tải thử | k6 (chạy trên máy dev) | Miễn phí |
+**Primary UC:** 18, 19, 20, 21, 22, 23, 24, 26, 28, 29, 79. **Primary stories:** US-ASM-003, US-ASM-012. **Requirements:** FR-018/019/030/039.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u11-attempt-submission` không quyết định chức năng hiện hành.
+
+## Stack giữ theo dự án
+
+Java 17/Spring Boot 3.5 modular monolith; Next.js 16/TypeScript, PostgreSQL/Redis/RabbitMQ, Nginx/Docker Compose, U03 Drive private và U01/U16 MailPort. Dependency lock/pin và actual APIs xác minh khi code; không chọn version SDK mới trong revision tài liệu.
+
+- Individual Assignment and Quiz Attempt owner; Group work U14, nhưng activity cả hai U11. Enrollment/current state/version always server checked.
+- Attempt IN_PROGRESS → SUBMITTED, snapshot immutable after submit; server determines time limits/deadline/late and MANUAL/AUTO_TIME_LIMIT/AUTO_DEADLINE/AUTO_RETIRED; receipt hash stable across replay. Autosave uses expectedContentVersion.
+- Assignment content Document with optional diagram, Quiz answers map optionIds; no runResult/files/language. Quiz result deterministic through U15 PracticeResultPort; not official Gradebook.
+- UC29 feedback own submitted Practice vs UC79 editable draft feedback; Graded draft allowStudentAiFeedback, personal API/MCP only for Student. Multiple feedback versioned/rate limited, no overwrite newer draft or grades.
+- ActivityEvent UNIQUE(actorId/workRef/clientEventId); authenticated own attempt or active group member, policy enabled in snapshot, state IN_PROGRESS. U14 delegates member events via ActivityWritePort; fields kind HIDDEN/VISIBLE, clientTime/sequence and serverReceivedAt.
+- Visibility intervals pair by work session, dedup blur/hidden, clamp invalid timestamps and flag missing/out-of-order/clock unreliable; lost connection yields UNKNOWN interval, never assumed continuous away or zero cheating. Draw.io iframe focus alone not page hidden.
+- ActivityQueryPort for U15 rechecks teacher/class and per-member; own Student projection allowed, Admin denied. Retention setting with no numeric default must be resolved/configured before capture.
+- Telemetry never auto-submit/penalize; actual deadline auto-submit remains separate. Personal agent draft writes expectedVersion; no MCP official submit initially.
+
+## Cost và extension
+
+AI API tổ chức/cá nhân do bên tương ứng trả, không giả định free/đã có key; infrastructure dùng resources nhóm có. Full Lesson/RAG không prerequisite; mọi embedding/provider config là extension riêng. Numeric policies D04/retention chưa giả định. Không thêm unit/container cho từng module.

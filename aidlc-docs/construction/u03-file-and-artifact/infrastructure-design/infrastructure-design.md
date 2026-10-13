@@ -1,75 +1,31 @@
-# U03 File, Job & Event - Infrastructure Design
+# U03 File, Job, Event & Settings — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 70. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
 
-| Thành phần | Chạy ở |
-|---|---|
-| `FileUploadController`, `UploadService`, `ContentInspector`, `DownloadController`, `DownloadTokenService`, `ArtifactService` | `backend` |
-| `DriveJobHandler` | `worker` |
-| `SettingsController`, `SettingsService`, `SettingDefinitionRegistry`, `FilePolicyService` | `backend` (worker đọc cài đặt qua `SettingsPort`) |
-| Bảng `system_settings` | `postgres` |
-| `JobPublisher`, `EventPublisherPort`, `AmqpPublisher` | `backend`, `worker` |
-| `JobListener`, `JobRetryPublisher`, `JobHandlerRegistry`, `PendingSweepRunner`, `ScheduledScanRunner` | `worker` |
-| Exchange, queue | `rabbitmq` |
-| Metadata tệp | Thuộc tính `appProperties` của tệp trên Google Shared Drive; không có bảng PostgreSQL |
-| Download token | `redis`, tiền tố `file:download-token:` |
-| Byte file | Google Shared Drive (ngoài VPS); local dùng volume `files-local` |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u03-file-and-artifact` không quyết định chức năng hiện hành.
 
-## 2. Google Drive
+## Mapping triển khai
 
-| Mục | Giá trị |
-|---|---|
-| Xác thực | JSON key service account trong `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY` (base64) |
-| Shared Drive | `GOOGLE_SHARED_DRIVE_ID`; service account là Content manager |
-| Thư mục | Mỗi `purpose` một thư mục, tạo lúc khởi động nếu chưa có |
-| Kết nối ra ngoài | Backend và worker cần đi được tới `www.googleapis.com:443`; firewall VPS không chặn chiều ra |
-| Chi phí | Dùng quota miễn phí của Drive API và dung lượng Shared Drive của trường |
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `files`; không tạo deployable riêng.
 
-## 3. Container
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-| Mục | Giá trị |
-|---|---|
-| Volume `upload-tmp` | Gắn vào `backend` tại `/tmp/uploads`, giới hạn 1 GB (5 × 50 MB có dư) |
-| Volume `files-local` | Chỉ khi chạy local không có key; gắn tại `./data/files` |
-| Nginx | `client_max_body_size 50m`; `proxy_request_buffering off` cho `/api/v1/files` để không đệm hai lần; `proxy_read_timeout 120s` |
-| Backend | `spring.servlet.multipart.max-file-size=50MB`, `max-request-size=51MB`, `file-size-threshold=0`, `location=/tmp/uploads` |
+- Admin Settings → validate version → U03 setting transaction hoặc U07 quota command → audit → result đúng owner.
+- Scheduler khóa một run cho lịch → dump nhất quán và chốt danh sách file version → copy immutable files/verify → encrypt archive → upload private backup folder/verify → SUCCESS → retention.
+- Backup failure → FAILED giữ last-good → outbox backup.failed → U16. SMTP failure không đổi BackupRun.
+- Restore isolated → decrypt bằng operator key → schema/data/files remap → verify domain invariants → restore evidence/audit; production cutover cần kế hoạch riêng.
 
-## 4. Migration
+## Deploy/rollback/secret
 
-Tệp không có bảng: bảng sở hữu lưu `file_id` (xem [mô hình dữ liệu của unit](../functional-design/domain-entities.md)).
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
 
-Cài đặt hệ thống (thêm 2026-10-09): migration `db/migration/settings/V20260925_0910__create_system_settings.sql` tạo bảng `system_settings` (khóa chính `key`, `value` jsonb, `version`, `updated_by`, `updated_at`). U03 code trước U01 nên chưa tạo FK; migration `accounts` của U01 thêm FK `updated_by` → `accounts`, như với `audit_logs`.
+## Unit integration risks
 
-## 5. RabbitMQ (chuyển từ U02)
-
-| Mục | Giá trị |
-|---|---|
-| vhost | `/platform` |
-| User | `app` với quyền trên `/platform`; tắt `guest` |
-| Exchange | `jobs` (direct), `jobs.retry` (direct), `platform.events` (topic) durable; `platform.realtime` (fanout) do U14 khai báo |
-| Queue việc nền | 7 queue durable do U03 khai báo: `jobs.triggered`, `jobs.email` (priority), `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`; mỗi unit đăng ký `jobType` → queue |
-| Queue thử lại | 5 queue không consumer `jobs.retry.30s`, `.1m`, `.2m`, `.4m`, `.8m` có TTL cố định, dead-letter về exchange `jobs` giữ nguyên routing key |
-| Queue thông báo | `jobs.notification` do U16 khai báo, bind `platform.events` |
-| Khai báo | Spring AMQP khai báo lúc khởi động bằng `Declarables`; không cấu hình tay |
-| Management UI | Cổng 15672 chỉ trên mạng `internal`, vào qua SSH tunnel |
-
-## 6. Worker
-
-| Mục | Giá trị |
-|---|---|
-| Image | Cùng image backend, biến `SPRING_PROFILES_ACTIVE=worker` |
-| Giới hạn | 1 CPU, 1,5 GB (như shared-infrastructure; VPS < 8 GB: 1 GB) |
-| Mạng | Chỉ `internal` |
-| Healthcheck | `/health` kiểm PostgreSQL, RabbitMQ |
-| Số instance | 1 (scanner và sweeper không cần khóa phân tán) |
-
-## 7. Compliance
-
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-09 | Compliant | Key từ `.env`, không commit; Drive không chia sẻ công khai |
-| RESILIENCY-04 | Compliant | Deploy cùng Compose |
-| RESILIENCY-06 | Compliant | Healthcheck có Drive |
-| Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
+- Settings invalid/version conflict/quota port down; no personal secret response.
+- Backup happy path, partial file/upload failure, key unavailable, disk full, retention giữ last-good, restore isolated XML/grades/usage/permissions.
+- Job duplicate/crash-after-commit/retry bounded; download expired/out-of-scope; file deletion không xóa backup.

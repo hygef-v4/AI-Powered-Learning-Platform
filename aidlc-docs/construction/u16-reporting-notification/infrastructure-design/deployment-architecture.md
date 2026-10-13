@@ -1,32 +1,30 @@
-# U16 Reporting & Notification - Deployment Architecture
+# U16 Reporting & Notification — deployment-architecture
 
-**Bản tài liệu 2026-10-09**: UC 12, 58 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); luồng phụ: phân bố điểm của UC 22, tiến độ nộp của UC 37, phần xuất tệp của UC 40; primary stories: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-```
-+---------------------------+      +----------------------------------+      +------------------------------+
-| rabbitmq platform.events  |----->| worker U16                       |----->| postgres                     |
-| queue jobs.notification   |      | NotificationListener, scanners   |      | notifications                |
-+---------------------------+      +----------------------------------+      | assignments.reminder_sent_at |
-                                       |                         |           +------------------------------+
-                                       | jobs.email              | platform.realtime
-                                       v                         v
-                     +----------------------------+   +----------------------------+
-                     | worker EmailSendHandler    |   | backend SseHub             |
-                     | redis email:daily-count    |   | kenh theo accountId        |
-                     +----------------------------+   +----------------------------+
-                                       |                         |
-                                       | SMTP                    | SSE chuong thong bao
-                                       v                         v
-                     +----------------------------+   +----------------------------+
-                     | Brevo 587, Mailpit 1025    |   | trinh duyet                |
-                     +----------------------------+   +----------------------------+
-                                                                 |
-                                                                 | REST
-                                                                 v
-                     +---------------------------------------------------------------+
-                     | nginx --> backend U16: thong bao, Admin Dashboard, tien do,   |
-                     | phan bo diem, xuat bang diem                                  |
-                     +---------------------------------------------------------------+
-```
+**Primary UC:** 12, 58. **Primary stories:** US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. **Requirements:** FR-011/019/023/024/038.
 
-**Text alternative**: Worker của U16 nghe event nghiệp vụ trên `platform.events` (queue `jobs.notification`), ghi thông báo (kèm trạng thái email) vào PostgreSQL và gửi việc email lên queue `jobs.email`; `EmailSendHandler` kiểm trần ngày bằng bộ đếm Redis rồi gửi qua SMTP (Brevo khi demo/production, Mailpit khi dev). Scanner của U16 nhắc hạn nộp, xếp lại email bị dời và xóa thông báo cũ. Worker phát tín hiệu lên `platform.realtime`; `SseHub` ở backend đẩy chuông thông báo xuống trình duyệt qua SSE. Trình duyệt gọi REST qua Nginx tới backend để đọc thông báo và cài đặt email (popup thông báo), xem Admin Dashboard, tiến độ nộp, phân bố điểm và xuất bảng điểm.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u16-reporting-notification` không quyết định chức năng hiện hành.
+
+## Mapping triển khai
+
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `reporting`; không tạo deployable riêng.
+
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
+
+- After-commit domain event → recipient resolver checks current access → in-app persistent + eligible email delivery → bounded retry → terminal.
+- Backup failed → Admin notification/email minimal metadata; error not rollback BackupRun.
+- UC58 summaries → scope/count ports U01/U04 plus U03 backup read → safe DTO; UC40 teacher export → U15 projection → U03 private file.
+
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- Important create vs edit; Admin backup receives; no raw grade/archive/key; current enrollment filters recipients.
+- Duplicate outbox/provider timeout/backoff/quota no endless retry; SENT only accepted; backup status unavailable distinct.
+- Export official-only/authorized teacher; reminder once and not after deadline; Admin count-only + backup metadata.

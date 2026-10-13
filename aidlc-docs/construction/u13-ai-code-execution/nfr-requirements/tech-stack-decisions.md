@@ -1,14 +1,26 @@
-# U13 AI & Code Execution - Tech Stack Decisions
+# U13 AI Connections & MCP — tech-stack-decisions
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-| Hạng mục | Chọn | Lý do |
-|---|---|---|
-| Gọi Gemini | REST `generateContent` bằng Spring `RestClient`, `responseMimeType: application/json` + `responseSchema` | Không phụ thuộc SDK; JSON có cấu trúc |
-| Kiểm JSON | `networknt/json-schema-validator` | Nhẹ |
-| Cấu hình AI | `SettingDefinition` nhóm AI, đọc qua `SettingsPort` của U03 (bảng `system_settings`, cache 30 s) | Admin sửa trên Settings, không cần bảng hay màn riêng |
-| Sandbox | Judge0 CE 1.13.1 (server, workers, postgres, redis riêng) như `demo_do_an`, gửi nhiều file bằng `additional_files` (zip base64) | Đã chạy được trong demo |
-| Ngôn ngữ Judge0 | Java (OpenJDK), Python 3, C (GCC), C++ (GCC), JavaScript (Node.js), Dart, C# (Mono); ánh xạ `language_id` trong cấu hình, kiểm bằng `/languages` khi khởi động | Đúng danh sách đã chọn |
-| Băm nội dung câu `CODE` | SHA-256 trên JSON chuẩn hóa (khóa sắp xếp) | Ổn định giữa các lần đọc |
-| Soạn code | Monaco Editor (`@monaco-editor/react`) | Miễn phí, tô màu 7 ngôn ngữ |
-| Giới hạn tần suất | Bucket4j + Redis | Đã có |
+**Primary UC:** 74, 75, 76. **Primary stories:** US-AIG-001, US-AIG-002, US-AIG-003, US-AIC-001, US-AIC-002. **Requirements:** FR-006/008/012/021/030/035/037.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u13-ai-code-execution` không quyết định chức năng hiện hành.
+
+## Stack giữ theo dự án
+
+Java 17/Spring Boot 3.5 modular monolith; Next.js 16/TypeScript, PostgreSQL/Redis/RabbitMQ, Nginx/Docker Compose, U03 Drive private và U01/U16 MailPort. Dependency lock/pin và actual APIs xác minh khi code; không chọn version SDK mới trong revision tài liệu.
+
+- U13 AI Connections & MCP primary UC74/75/76; package legacy aiexecution không giữ code execution. Gemini/OpenAI/Claude là API providers, không bảo đảm chat subscription cấp API hoặc mọi agent client hỗ trợ MCP.
+- Connection scope INSTITUTIONAL/PERSONAL; shared chỉ Admin manage/test/revoke bằng synthetic payload và không học vụ. Personal chính Student/Teacher/SubjectManager owner configure; credentials encrypted/keyVersion, masked không readback, không log/return key/ciphertext.
+- Provider endpoints/model allowlist cấu hình server, không user arbitrary URL tránh SSRF; model compatibility/test có evidence trước dùng. Test synthetic bounded call có thể bị provider tính phí phải hiển thị nguồn/bên trả; không dùng nội dung học vụ.
+- Request direct captures actor/target/version/context/source/model/requestRef, domain authorize/policy; institutional educator-only U07 reserve atomic trước dispatch. Personal owner/rate controls không shared grant; no auto fallback.
+- AiTask QUEUED/RUNNING/READY/FAILED/UNKNOWN/CANCELLED; record dispatch checkpoint/provider request id và output/usage provenance. Timeout unknown không blind retry có thể double bill, reconcile U07 giữ uncertainty. Domain accepts validated structured result/version not provider tự publish.
+- Minimal scoped context strips hidden keys/unpublished grades/other members private drafts. Graded Student draft feedback teacher allow; group own editable section D03. Source files outside scope filtered before provider/agent.
+- McpCredential gắn ALAP actor/scope/expiry/revokedAt và hash, không provider key; credential create/revoke owner; mỗi tool tái kiểm actor ACTIVE/session binding/academic permissions/version/state. Chosen HTTP transport/client auth needs compatibility test; no broad anonymous bearer secret.
+- Initial tools: read_assignment_context, read_authorized_material, read_own_work, read_authorized_submission (assigned educator only), save_assignment_draft(expectedVersion), record_private_feedback, record_grading_proposal. No submit official/publish_grade/restore/credential read tool. Returned data and incoming tool parameters untrusted schema/size/rate validated.
+- External agent calls own LLM; ALAP receives tool metadata and optionally externallyReported model/tokens, not providerMeasured. It cannot know external token usage without report; unavailable not zero, tool count not model tokens. MCP calls do not consume institutional API quota.
+- Audit connection/model/quota/provenance references not raw prompt/key. Revocation denies next call; running result must recheck current policy/rights and input version before domain apply. Tool replay expectedVersion/requestRef guards duplicate writes; no exactly-once external promise.
+
+## Cost và extension
+
+AI API tổ chức/cá nhân do bên tương ứng trả, không giả định free/đã có key; infrastructure dùng resources nhóm có. Full Lesson/RAG không prerequisite; mọi embedding/provider config là extension riêng. Numeric policies D04/retention chưa giả định. Không thêm unit/container cho từng module.

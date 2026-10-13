@@ -1,51 +1,37 @@
-# U16 Reporting & Notification - NFR Requirements
+# U16 Reporting & Notification — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: UC 12, 58 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); luồng phụ: phân bố điểm của UC 22, tiến độ nộp của UC 37, phần xuất tệp của UC 40; primary stories: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Hiệu năng
+**Primary UC:** 12, 58. **Primary stories:** US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. **Requirements:** FR-011/019/023/024/038.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U16-01 | Thông báo trong app xuất hiện ≤ 5 s sau khi nghiệp vụ commit. | BR-U16-04 |
-| NFR-U16-02 | Một event cho lớp 200 người tạo xong thông báo ≤ 5 s (INSERT theo lô). | BR-U16-01 |
-| NFR-U16-03 | Gửi email tối đa 1 email/giây (giới hạn tốc độ ở ứng dụng), trong trần thông báo 300/ngày (cấu hình). Trần phải phù hợp quota Brevo và chừa dung lượng cho OTP dùng chung tài khoản, theo shared-infrastructure §8. | BR-U16-12 |
-| NFR-U16-04 | Tiến độ nộp của một bài trong lớp 200 người p95 ≤ 1 s. | BR-U16-30 |
-| NFR-U16-05 | Admin Dashboard và phân bố điểm p95 ≤ 1 s; xuất bảng điểm lớp 200 người × 30 bài p95 ≤ 5 s khi dữ liệu nguồn bình thường. | US-RPT-002, 003 |
-| NFR-U16-06 | Một event bài/quiz của môn cho 10 lớp `OPEN` × 200 người tạo xong thông báo ≤ 15 s, chèn theo lô 500 dòng. | BR-U16-09 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u16-reporting-notification` không quyết định chức năng hiện hành.
 
-## 2. Toàn vẹn
+## Required controls
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U16-10 | Unique `(source_event_id, account_id, type)`; gửi email idempotent theo `notifications.id` và `email_status`; bộ đếm trần ngày trong Redis `email:daily-count:{yyyyMMdd}` tăng trước khi gửi, giảm lại nếu gửi lỗi vĩnh viễn. | BR-U16-02, 12, 14 |
-| NFR-U16-11 | Nhắc hạn tính theo hạn hiện tại mỗi lần quét; đổi hạn thì nhắc theo hạn mới, không nhắc trùng (`reminder_sent_at`); quiz không được chọn. | BR-U16-20, 22 |
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## 3. Bảo mật và riêng tư
+- Validation MIME/XML/schema/IDs/filter allowlists phù hợp unit, bounded payloads và rate limit phía server. Không log secret, raw prompt hoặc dữ liệu học vụ nhạy cảm.
+- Truy vấn phân trang/index theo owner/resource/time, timeout hữu hạn mọi port/provider; không promise external API p95 như query local.
+- Target baseline local APIs p95 500ms tại 100 concurrent/1000 accounts là mục tiêu cần benchmark, chưa có evidence; heavy files/AI/backup chạy worker và status queries.
+- Session/password/header controls giữ SEC-001–006; quota/backup/credential protected riêng, không yêu cầu mã hóa toàn DB.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U16-20 | Người dùng chỉ đọc/đánh dấu thông báo của mình; kênh SSE thông báo gắn với phiên đăng nhập; mở `link` không cấp quyền. | SEC-002, BR-U16-07 |
-| NFR-U16-21 | Email không chứa điểm, nội dung bài, dữ liệu người khác; chỉ tiêu đề ngắn và đường dẫn tới hệ thống. | BR-U16-03 |
-| NFR-U16-22 | `SMTP_*` trong `.env`; không log địa chỉ email người nhận (log `accountId`). | SEC-005, SEC-006 |
-| NFR-U16-23 | Mẫu email tiếng Việt, escape mọi giá trị chèn (tên lớp, tên bài). | SEC-003 |
-| NFR-U16-24 | Admin Dashboard chỉ cho `ADMIN` và chỉ trả số đếm; tiến độ và xuất bảng điểm chỉ R3/R4 của lớp (Admin, Chủ nhiệm môn không dạy lớp bị từ chối `404`); phân bố lớp cần cờ cho phép và ngưỡng BR-U16-42; export kiểm quyền trước khi tạo file và escape CSV formula injection. | US-RPT-001, 002, 003 |
+## Unit-specific NFR risks
 
-## 4. Kiểm thử
+- UC58 Admin summaries + BackupStatusPort U03; metadata only latest-good/history/time/size/safeError, no raw archive/keys/student content. Port down unavailable/lastKnown timestamp, not SUCCESS.
+- Notifications from outbox after commit, dedup eventId/recipientId/channel/type; delivery statuses PENDING/SENT/FAILED/SKIPPED/DEFERRED with bounded retries, no rollback domain.
+- Emails enrolled/assignment opened/grade published/deadline reminder, important announcement only new event selected by assigned teacher; learning preferences respected. Backup failure Admin policy separate; OTP remains U01 shared MailPort.
+- Check current recipient enrollment/role at handling; links require login/current permission, no grades/content/backups in email. SENT means SMTP accepted not inbox.
+- One reminder 24h before deadline for unsubmitted, cancelled/retired/sent cases excluded; retry past deadline SKIPPED. Email throttling/provider quota reserves room for OTP, values configurable not invented provider guarantee.
+- Admin notification popup can show backup alerts now; preferences learning types Student, operational type for Admin handled separately. Important edits no resend.
+- Gradebook export Teacher R3/R4 via U15, official Assignment-only, no Quiz/Practice, no overall weighted total; anonymous distribution opt-in manager via U04, privacy sample threshold baseline.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U16-30 | Unit test mọi `BR-U16-xx`; ưu tiên và dời khi hết trần; tắt email từng loại; quiz chỉ trong app; bài của môn gửi đủ người học các lớp `OPEN`. | NFR-004 |
-| NFR-U16-31 | Kịch bản chuyển tester (unit không viết integration test): với Mailpit, event lặp không gửi trùng; SMTP lỗi thì retry; nhắc hạn bị hủy khi ngừng giao. | NFR-004, quyết định 2026-10-05 |
-| NFR-U16-32 | Test MockMvc: sự kiện U05 gửi đúng người; Admin Dashboard từ chối vai trò khác `ADMIN` và không lộ dữ liệu cá nhân; phân bố lớp ẩn khi thiếu mẫu; tiến độ và export ngoài quyền (gồm Admin) bị từ chối. | US-CNT-004, US-RPT-001, 002, 003 |
+## Test evidence cần có
 
-## 5. Compliance
+- Important create vs edit; Admin backup receives; no raw grade/archive/key; current enrollment filters recipients.
+- Duplicate outbox/provider timeout/backoff/quota no endless retry; SENT only accepted; backup status unavailable distinct.
+- Export official-only/authorized teacher; reminder once and not after deadline; Admin count-only + backup metadata.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | NFR-U16-22 |
-| SECURITY-05 | Compliant | NFR-U16-23 |
-| SECURITY-08 | Compliant | NFR-U16-20, 24 |
-| SECURITY-09 | Compliant | SMTP trong `.env` |
-| SECURITY-15 | Compliant | Lỗi thông báo không rollback nghiệp vụ |
-| RESILIENCY-10 | Compliant | Timeout SMTP 10 s |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+Security enabled subset 03/04/05/08/09/12/15: constraints auth/input/audit/secret/failure được thể hiện, chưa runtime verified. Resiliency enabled subset 04/06/10: deployment/health/timeouts giữ; rule khác N/A theo state, PBT disabled.

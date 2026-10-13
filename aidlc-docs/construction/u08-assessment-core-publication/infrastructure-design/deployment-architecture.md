@@ -1,15 +1,29 @@
-# U08 Assessment Core & Publication - Deployment Architecture
+# U08 Assignment/Quiz Lifecycle & Copy — deployment-architecture
 
-**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-```
- Trình duyệt --HTTPS--> [nginx] --> [backend: U08] --> [postgres: assignments, assignment_questions]
-                                                              ^
-                                         scanner mỗi phút ----+----- [worker: U08]
-                                                                              |
-                                           port onOpened/onRetired --> U11, U14; event assignment.opened --> U16
-```
+**Primary UC:** 41. **Primary stories:** US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. **Requirements:** FR-007/017/027/028.
 
-**Text alternative**: Trình duyệt gọi qua Nginx tới module U08 trong backend; U08 lưu bài (gồm lịch) và câu của bài vào PostgreSQL. Scanner trong worker đổi trạng thái theo lịch mỗi phút; trong cùng transaction gọi `AssignmentLifecyclePort` để U11, U14 ghi dòng hoặc gửi việc của mình (tạo tài liệu nhóm, tự nộp), sau commit phát event `assignment.opened` cho U16 gửi thông báo.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u08-assessment-core-publication` không quyết định chức năng hiện hành.
 
-U08 không thêm container hay volume.
+## Mapping triển khai
+
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `assessments`; không tạo deployable riêng.
+
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
+
+- Create type/config → U09 validate document/Quiz → U06 rubric/questions → review → publish snapshot/readiness → opened event.
+- Student start gets published snapshot → U11/U14; retire schedules deterministic auto-submit/close after commit.
+- Copy current authorized version → new draft/config/rubric IDs → re-review; teacher cannot edit bài môn not owner.
+
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- All four Assignment combinations valid; Quiz no Lesson; Group at subject scope rejected.
+- Stale review/publication rejects; copy no reused submission/rubric IDs; late/retire snapshots stable; AI outage manual publication succeeds.

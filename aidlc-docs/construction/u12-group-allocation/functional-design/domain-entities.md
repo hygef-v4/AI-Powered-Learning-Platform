@@ -1,8 +1,12 @@
-# U12 Group & Allocation - Domain Entities
+# U12 Group & Allocation — domain-entities
 
-**Bản tài liệu 2026-10-09**: UC 16, 17 và luồng phụ nhóm (quản lý nhóm, duyệt yêu cầu đổi trưởng nhóm trong tab Students của UC 32; sẵn sàng phát hành bài nhóm của UC 45) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 16, 17 (primary); luồng phụ của UC 32 (tab Students, Student Detail), UC 45 (phát hành bài nhóm); dữ liệu nhóm cho UC 27 (U14).
+**Primary UC:** 16, 17. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 16, 17 (primary); luồng phụ của UC 32 (tab Students, Student Detail), UC 42 (phát hành bài nhóm); dữ liệu nhóm cho UC 27 (U14).
 
 ## 1. Tổng quan
 
@@ -18,7 +22,7 @@ U12 **không** sở hữu: lớp và ghi danh (U04), bài nhóm (U08), tài li�
 
 ## 2. `ClassGroups`
 
-Nhóm của một lớp = mọi `StudentGroup` cùng `classId`. Lưu nguyên khối (BR-U12-07) trong một transaction có khóa theo lớp; ràng buộc mỗi sinh viên tối đa một nhóm đang hiệu lực trong lớp được kiểm trong transaction đó. Mọi bài nhóm (`GROUP_ASSIGNMENT`, chỉ có ở lớp) của lớp dùng chung các nhóm này. Khi đọc, mỗi thành viên kèm cờ `activeEnrollment` (BR-U12-15) lấy từ `ClassAccessPort.listActiveStudents(classId)`.
+Nhóm của một lớp = mọi `StudentGroup` cùng `classId`. Lưu nguyên khối (BR-U12-07) trong một transaction có khóa theo lớp; ràng buộc mỗi sinh viên tối đa một nhóm đang hiệu lực trong lớp được kiểm trong transaction đó. Mọi bài nhóm (`ASSIGNMENT` với `submissionMode=GROUP`, chỉ có ở lớp) của lớp dùng chung các nhóm này. Khi đọc, mỗi thành viên kèm cờ `activeEnrollment` (BR-U12-15) lấy từ `ClassAccessPort.listActiveStudents(classId)`.
 
 ## 3. `StudentGroup`
 
@@ -102,7 +106,7 @@ Tính khi sinh viên mở Student Class Detail: kiểm R5, tìm nhóm của mìn
 | `GET /api/v1/classes/{classId}/groups` | Nhóm của lớp (thành viên, cờ `activeEnrollment`, trưởng nhóm, `hasGroupWork`) và sinh viên chưa có nhóm | Tab Students, popup Student Detail (UC 32) | R3/R4 |
 | `PUT /api/v1/classes/{classId}/groups` | Lưu nguyên khối: tạo, sửa, xóa nhóm chưa dùng, chuyển thành viên, đổi trưởng nhóm trực tiếp | Tab Students (UC 32) | R3/R4, lớp `DRAFT`/`OPEN` |
 | `POST /api/v1/classes/{classId}/groups:random-split` | Xem trước chia ngẫu nhiên sinh viên chưa có nhóm (sĩ số 2-20) | Popup chia ngẫu nhiên ở tab Students (UC 32) | R3/R4, lớp `DRAFT`/`OPEN` |
-| `GET /api/v1/classes/{classId}/groups/readiness` | Lỗi chặn, cảnh báo trước khi phát hành bài nhóm | Hộp phát hành của Assignment Form (UC 45) | R3/R4 |
+| `GET /api/v1/classes/{classId}/groups/readiness` | Lỗi chặn, cảnh báo trước khi phát hành bài nhóm | Hộp phát hành của Assignment Form (UC 42) | R3/R4 |
 | `GET /api/v1/classes/{classId}/leader-requests?status=` | Yêu cầu đổi trưởng nhóm của lớp | Tab Students (UC 32) | R3/R4 |
 | `POST /api/v1/leader-requests/{requestId}/approve` | Duyệt, chọn trưởng nhóm mới (bắt buộc khi không có đề cử) | Tab Students (UC 32) | R3/R4 của lớp chứa nhóm |
 | `POST /api/v1/leader-requests/{requestId}/reject` | Từ chối, bắt buộc lý do | Tab Students (UC 32) | R3/R4 của lớp chứa nhóm |
@@ -111,3 +115,20 @@ Tính khi sinh viên mở Student Class Detail: kiểm R5, tìm nhóm của mìn
 | `POST /api/v1/leader-requests/{requestId}/cancel` | Hủy yêu cầu đang chờ của mình | Student Class Detail (UC 17) | R5, người gửi |
 
 Ngoài phạm vi trả `404`, không lộ nhóm. Không có API nhóm cho Admin hay Chủ nhiệm môn không dạy lớp.
+
+## Quy tắc tích hợp revision hiện hành
+
+- Groups belong class, not assessment. Teacher assigned R3/R4 creates/allocates; Admin/manager without teaching assignment denied.
+- Members ACTIVE enrolled, one effective group/class; exactly one leader in members. Random assignment only ungrouped students, preserve existing groups, preview balanced difference <=1 before save.
+- Leader-change request PENDING/APPROVED/REJECTED/CANCELLED; max one pending/group; reason/proposed member validated. Only assigned teacher decides, requester may cancel pending.
+- Changing/removing leader must select replacement atomically. Removal current membership revokes edit/submit next call but preserves revision authorship.
+- Publication readiness for ASSIGNMENT submissionMode GROUP through GroupReadinessPort; không separate Group product type.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Balanced preview preserve grouped students; concurrent version conflict; exactly leader; nonteacher denied.
+- Member removal denies U14/AI context next call while historical author retained; group readiness missing leader blocks publish.

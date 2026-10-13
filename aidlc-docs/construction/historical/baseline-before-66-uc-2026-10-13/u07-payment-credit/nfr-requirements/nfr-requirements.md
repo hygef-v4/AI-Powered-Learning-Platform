@@ -1,0 +1,56 @@
+# U07 Payment & AI Credit - NFR Requirements
+
+**Bản tài liệu 2026-10-09**: UC 08, 09, 10, 11, 68, 69, 72 theo [73 UC](../../../../docs/history/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); mục credit tặng định kỳ của Settings (UC 70–71); primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+
+## 1. Toàn vẹn tiền và credit
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U07-01 | Mọi thay đổi số dư đi qua một hàm duy nhất: khóa dòng tài khoản chứa số dư (`SELECT ... FOR UPDATE`), cập nhật số dư trong cùng transaction với dòng `payments` hoặc `ai_suggestions` gây ra thay đổi. | BR-U07-12, 34 |
+| NFR-U07-02 | Unique DB: `payments.order_code`, `payments.idempotency_key`; cộng credit mua chỉ khi `payments` chuyển `PAID` lần đầu; giữ/trừ chỉ khi `ai_suggestions.credit_status` chuyển trạng thái. | BR-U07-04, 12, 41 |
+| NFR-U07-03 | Tiền lưu số nguyên VND (`bigint`), credit số nguyên; không dùng số thực. | Thiết kế |
+| NFR-U07-04 | User `app` không được DELETE `payments`; CHECK `free_balance >= 0`, `purchased_balance >= 0` trên `accounts`. | BR-U07-34 |
+| NFR-U07-05 | Test số dư = tặng tháng + tổng mua `PAID` − tổng `credits_used` sau mọi luồng (mua, tặng, giữ, trừ, trả, đồng thời) trong một tháng. | NFR-004 |
+
+## 2. PayOS
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U07-10 | `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` đọc từ `.env`; không log. | SEC-006 |
+| NFR-U07-11 | Kiểm chữ ký bằng so sánh hằng thời gian; trường ký sắp theo thứ tự PayOS quy định. | SEC-007 |
+| NFR-U07-12 | Timeout gọi PayOS: kết nối 5 s, đọc 10 s; không retry tạo link (người dùng tự thử lại), đối soát retry ở lần job kế. | REL-003 |
+| NFR-U07-13 | Webhook trả lời ≤ 2 s; chỉ nhận `POST` JSON ≤ 16 KB tại endpoint riêng, không cần đăng nhập, rate limit 60/phút/IP. | SEC-007 |
+| NFR-U07-14 | Webhook URL đăng ký với PayOS là HTTPS của domain hệ thống. | SEC-004 |
+| NFR-U07-15 | Không có `PAYOS_*` → dùng adapter giả (link giả trỏ về trang xác nhận nội bộ) cho local/test; tắt ở production. | NFR-005 |
+
+## 3. Hiệu năng
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U07-20 | `reserve`/`settle`/`release` p95 ≤ 50 ms. | U13 cần nhanh |
+| NFR-U07-21 | Đọc số dư p95 ≤ 50 ms. | NFR-003 |
+
+## 4. Bảo mật khác
+
+| Mã | Yêu cầu | Nguồn |
+|---|---|---|
+| NFR-U07-30 | Người dùng chỉ thấy giao dịch và lần dùng credit của mình; ngoài quyền trả `404`. | SEC-002 |
+| NFR-U07-31 | `CreditPort` chỉ gọi nội bộ, không có endpoint HTTP cho `reserve`/`settle`. | Thiết kế |
+| NFR-U07-32 | Không lưu dữ liệu thẻ/ngân hàng của người dùng; chỉ lưu mã tham chiếu PayOS. | SEC-007 |
+| NFR-U07-33 | API mua/kết quả giao dịch/ví/lịch sử cá nhân yêu cầu tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER` và là chủ (R1); Admin bị từ chối (`403`) vì không có ví. API quản trị gói và lịch sử toàn nền tảng là endpoint riêng chỉ ADMIN `ACTIVE`. `CreditPort.reserve` kiểm `purpose` và attempt: Student được PRACTICE_GRADING Text/Diagram Essay của chính mình hoặc MATERIAL_SUMMARY đã xác minh quyền xem qua U05/U13; EMBEDDING chỉ child cùng HOLD này, các purpose AI khác trả `403` trước khi gọi Gemini. Kiểm quyền ở backend trước khi tạo giao dịch hoặc gọi PayOS/Gemini. | BR-U07-01, BR-U07-31, BR-U07-40, SECURITY-08 |
+| NFR-U07-34 | Mức tặng định kỳ đọc qua `SettingsPort` (cache 30 giây); đổi mức chỉ áp từ lần đặt lại kế tiếp, không sửa số dư đang có. | BR-U07-31 |
+
+## 5. Compliance
+
+| Rule | Trạng thái | Căn cứ |
+|---|---|---|
+| SECURITY-03 | Compliant | NFR-U07-10 |
+| SECURITY-05 | Compliant | NFR-U07-11, 13 |
+| SECURITY-08 | Compliant | NFR-U07-30, 31 |
+| SECURITY-09 | Compliant | Key trong `.env` |
+| SECURITY-15 | Compliant | Webhook sai → từ chối, không cộng |
+| RESILIENCY-10 | Compliant | NFR-U07-12 |
+| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+
+## Admin revision
+Admin package writes atomic với optimistic version/audit, snapshot giao dịch bất biến; seed không ghi đè config sửa. Query lịch sử phân trang tối đa 100, whitelist bộ lọc/sort, không secret/dữ liệu thẻ. Role khác bị từ chối ở API, không thêm hoàn tiền/đối soát tay/điều chỉnh credit (UC 68, 69, 72).

@@ -1,6 +1,10 @@
-# U01 Account & Access - NFR Requirements
+# U01 Account & Access — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết định: `aidlc-docs/construction/plans/nfr-requirements-questions/u01-account-and-access-nfr-requirements-questions.md`.
 
@@ -11,7 +15,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 | NFR-U01-01 | Phục vụ tới 1.000 tài khoản và 100 người dùng đồng thời. | NFR-003 |
 | NFR-U01-02 | Đăng nhập, refresh, đăng xuất, hồ sơ, danh sách tài khoản: p95 ≤ 500 ms ở tải mục tiêu. Thời gian bcrypt được tính vào ngân sách này. | NFR-003 |
 | NFR-U01-03 | Yêu cầu OTP trả `Accepted` mà không chờ gửi mail; mail đi qua job U03. | NFR-003, BR-U01-92 |
-| NFR-U01-04 | Kiểm tra access token không gọi Redis hay database. | Câu N5 |
+| NFR-U01-04 | Chữ ký JWT kiểm local; trước domain action kiểm current account/session authority qua server store, không trust JWT role/version cũ. Lỗi authority fail closed. | Câu N5 |
 | NFR-U01-05 | Nhập CSV 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
 
 ## 2. Phiên và xác thực
@@ -21,7 +25,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 | NFR-U01-10 | Access token JWT ký bằng khóa bí mật phía server, sống 15 phút, chứa `accountId`, `role`, `credentialVersion`. | Câu N1, N5 |
 | NFR-U01-11 | Refresh token ngẫu nhiên, chỉ lưu bản băm ở Redis. Idle 2 giờ, tối đa 7 ngày. Mỗi lần refresh cấp token mới và hủy token cũ; phát hiện dùng lại thì thu hồi phiên. | Câu N2, BR-U01-46 |
 | NFR-U01-12 | Cả hai token nằm trong cookie `Secure`, `HttpOnly`, `SameSite=Lax`; không để trong local storage hay URL. | SEC-001 |
-| NFR-U01-13 | Thu hồi quyền (đổi role, vô hiệu hóa, đổi/đặt lại mật khẩu) chặn refresh ngay; access token còn hạn dùng tối đa 15 phút. **Rủi ro được chấp nhận.** | Câu N5 |
+| NFR-U01-13 | Thu hồi account/session/role có hiệu lực request tiếp theo qua authority checks, kể cả JWT chưa hết hạn; academic scope checks cùng nguyên tắc. Không còn grace window quyền 15 phút. | Câu N5 |
 | NFR-U01-14 | Mật khẩu băm bằng bcrypt, cost ≥ 12; cost cấu hình được. Mật khẩu dài quá 72 byte bị từ chối rõ ràng thay vì bị cắt ngầm. | Câu N4 |
 | NFR-U01-15 | Không có MFA; không kiểm danh sách mật khẩu bị lộ. **Ngoại lệ SECURITY-12 được chấp nhận.** | Câu N3, N6 |
 | NFR-U01-16 | So khớp mật khẩu cho email không tồn tại vẫn chạy bcrypt với hash giả để thời gian phản hồi đồng đều. | BR-U01-40 |
@@ -84,3 +88,19 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 | RESILIENCY-06 | Compliant | Healthcheck container, `/health` |
 | RESILIENCY-10 | Compliant | Timeout mọi phụ thuộc; không circuit breaker |
 | Rule còn lại | N/A | Ngoài phạm vi đồ án (`requirements.md` mục 12-13) |
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

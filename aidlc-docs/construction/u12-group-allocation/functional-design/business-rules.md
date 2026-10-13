@@ -1,12 +1,16 @@
-# U12 Group & Allocation - Business Rules
+# U12 Group & Allocation — business-rules
 
-**Bản tài liệu 2026-10-09**: UC 16, 17 và luồng phụ nhóm (quản lý nhóm, duyệt yêu cầu đổi trưởng nhóm trong tab Students của UC 32; sẵn sàng phát hành bài nhóm của UC 45) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-001, US-GRP-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 16, 17. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
 
 ## 1. Nhóm của lớp
 
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
-| BR-U12-01 | Nhóm thuộc lớp và được quản lý trong tab Students của Teacher Class Detail; mọi bài nhóm (`GROUP_ASSIGNMENT`, chỉ có ở lớp) của lớp dùng chung các nhóm này. Chỉ giảng viên lớp (R3/R4: Teacher hoặc Subject Manager là giảng viên chính) tạo/sửa. Admin và Chủ nhiệm môn không được giao dạy lớp không xem, không sửa nhóm. | UC 32, 45, FR-025; người dùng chốt 2026-10-09 |
+| BR-U12-01 | Nhóm thuộc lớp và được quản lý trong tab Students của Teacher Class Detail; mọi bài nhóm (`ASSIGNMENT` với `submissionMode=GROUP`, chỉ có ở lớp) của lớp dùng chung các nhóm này. Chỉ giảng viên lớp (R3/R4: Teacher hoặc Subject Manager là giảng viên chính) tạo/sửa. Admin và Chủ nhiệm môn không được giao dạy lớp không xem, không sửa nhóm. | UC 32, 45, FR-025; người dùng chốt 2026-10-09 |
 | BR-U12-02 | Chỉ sinh viên đang ghi danh `ACTIVE` của lớp được vào nhóm; mỗi sinh viên tối đa một nhóm đang hiệu lực trong lớp. | US-GRP-001 S2 |
 | BR-U12-03 | Mỗi nhóm ≥ 1 thành viên và đúng một trưởng nhóm là thành viên. | FR-025 |
 | BR-U12-04 | Tạo tay: tạo nhóm, thêm/bớt thành viên, chọn trưởng nhóm. | US-GRP-001 S1 |
@@ -32,7 +36,7 @@
 | Mã | Quy tắc | Nguồn |
 |---|---|---|
 | BR-U12-20 | Giảng viên **không** giao phần cho từng sinh viên; khung bài nhóm tự chia thành các phần theo heading nhỏ nhất (U09), trưởng nhóm giao phần cho thành viên trong tài liệu nhóm (U14). | UC 27, 45; người dùng chốt 2026-10-04 |
-| BR-U12-21 | Bài nhóm sẵn sàng phát hành khi lớp có ít nhất một nhóm và mọi nhóm hợp lệ (BR-U12-03, tính theo thành viên hiệu lực BR-U12-15). Lỗi chặn: `CLASS_WITHOUT_GROUP`, `GROUP_WITHOUT_LEADER`, `GROUP_WITHOUT_MEMBER`. Còn sinh viên đang ghi danh chưa có nhóm chỉ là cảnh báo `STUDENT_WITHOUT_GROUP`: giảng viên xác nhận thì vẫn phát hành. | UC 45, FR-025; người dùng chốt 2026-10-09 |
+| BR-U12-21 | Bài nhóm sẵn sàng phát hành khi lớp có ít nhất một nhóm và mọi nhóm hợp lệ (BR-U12-03, tính theo thành viên hiệu lực BR-U12-15). Lỗi chặn: `CLASS_WITHOUT_GROUP`, `GROUP_WITHOUT_LEADER`, `GROUP_WITHOUT_MEMBER`. Còn sinh viên đang ghi danh chưa có nhóm chỉ là cảnh báo `STUDENT_WITHOUT_GROUP`: giảng viên xác nhận thì vẫn phát hành. | UC 42, FR-025; người dùng chốt 2026-10-09 |
 | BR-U12-22 | Đổi thành viên khi lớp có bài nhóm đang mở được phép; mục đang do người bị bỏ giữ tự nhả khóa (U14), bản nháp chưa "Xong" của người đó bị bỏ, nội dung đã "Xong" giữ nguyên với tên tác giả. Bản nộp đã có không đổi. | US-GRP-003 S2, U14 |
 
 ## 4. Sinh viên và audit
@@ -43,3 +47,20 @@
 | BR-U12-31 | Thành viên rời nhóm, nhóm mới khi lớp có bài nhóm đang mở: báo U14 qua `GroupChangePort` trong cùng transaction (nhả khóa mục, tạo tài liệu nhóm). Event `group.membership-changed`, `group.leader-requested`, `group.leader-changed`, `group.leader-request-rejected` sau commit chỉ cho U16 báo trong app (yêu cầu mới báo giảng viên lớp); quyền của trưởng nhóm U14 đọc trực tiếp qua `GroupMembershipPort`. | FR-011 |
 | BR-U12-32 | Audit: tạo/sửa/xóa nhóm, chia ngẫu nhiên (khi lưu), đổi trưởng nhóm, gửi/hủy/duyệt/từ chối yêu cầu; truy cập ngoài phạm vi bị từ chối. | FR-014 |
 | BR-U12-33 | Popup Student Detail (U04, mở từ tab Students) hiện nhóm của sinh viên từ dữ liệu `GET /classes/{classId}/groups` đã tải; U12 không thêm API riêng và backend U04 không gọi U12. | UC 32; người dùng chốt 2026-10-09 |
+
+## Quy tắc tích hợp revision hiện hành
+
+- Groups belong class, not assessment. Teacher assigned R3/R4 creates/allocates; Admin/manager without teaching assignment denied.
+- Members ACTIVE enrolled, one effective group/class; exactly one leader in members. Random assignment only ungrouped students, preserve existing groups, preview balanced difference <=1 before save.
+- Leader-change request PENDING/APPROVED/REJECTED/CANCELLED; max one pending/group; reason/proposed member validated. Only assigned teacher decides, requester may cancel pending.
+- Changing/removing leader must select replacement atomically. Removal current membership revokes edit/submit next call but preserves revision authorship.
+- Publication readiness for ASSIGNMENT submissionMode GROUP through GroupReadinessPort; không separate Group product type.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Balanced preview preserve grouped students; concurrent version conflict; exactly leader; nonteacher denied.
+- Member removal denies U14/AI context next call while historical author retained; group readiness missing leader blocks publish.

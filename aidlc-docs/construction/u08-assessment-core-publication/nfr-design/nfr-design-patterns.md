@@ -1,37 +1,32 @@
-# U08 Assessment Core & Publication - NFR Design Patterns
+# U08 Assignment/Quiz Lifecycle & Copy — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Aggregate có khóa trạng thái
-- `Assignment` là aggregate root; mọi thay đổi câu đi qua `assignment.editQuestions(...)`, ném `AssignmentLockedException` khi không phải `DRAFT` (NFR-U08-20).
-- Mỗi thao tác sửa khóa dòng `assignments` (`SELECT ... FOR UPDATE`) rồi kiểm `DRAFT`; không còn `DRAFT` → `409` (NFR-U08-21).
+**Primary UC:** 41. **Primary stories:** US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. **Requirements:** FR-007/017/027/028.
 
-## P2 - Lịch bằng scanner
-- `AssignmentScheduleScanner` đăng ký với U03, chạy mỗi phút: `UPDATE assignments SET status = 'OPEN' WHERE status = 'SCHEDULED' AND opens_at <= now() RETURNING id, class_id` rồi gọi `AssignmentLifecyclePort.onOpened` cho từng bài trong cùng transaction; tương tự đóng bài tập khi `COALESCE(late_until, closes_at) <= now()`; quiz không có `closes_at` nên không bị đóng (NFR-U08-23).
-- Đổi lịch chỉ sửa cột; lần quét sau dùng lịch mới. Độ trễ ≤ 1 phút (NFR-U08-03).
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u08-assessment-core-publication` không quyết định chức năng hiện hành.
 
-## P3 - Trạng thái nộp tính tại chỗ
-- `isSubmissionOpen(assignment, now)`: quiz `OPEN` → `ON_TIME`; `RETIRED` hoặc `now < opens_at` → `CLOSED`; `now ≤ closes_at` → `ON_TIME`; `late_until` có và `now ≤ late_until` → `LATE`; còn lại `CLOSED`. Không phụ thuộc scanner (scanner chỉ để hiển thị và phát event) (NFR-U08-02, 11).
+## Patterns áp dụng
 
-## P4 - Chuyển đổi hiển thị cho người học
-- `StudentAssignmentView` dựng từ `assignment_questions`: mọi câu (ngân hàng hay riêng của bài) đọc qua `BankQueryPort.getStudentView`; khung Diagram Essay/bài nhóm lấy từ U09 (NFR-U08-30).
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Kiểm duyệt có thể mở rộng
-- `ReviewValidator` chạy danh sách `ReviewCheck`: kiểm của U08 (câu hợp lệ khớp dạng, điểm; quiz: học liệu còn `ACTIVE` qua `ContentRefPort`) + `TypeConfigPort` (U09, `C`: nội dung dạng bài, khung, rubric đã điền) + `CodeLabCheckPort` cho `CODE_LAB` (U13, `C`); khi chưa có U09/U13 hai kiểm này mặc định đạt.
-- Phát hành bài `GROUP_ASSIGNMENT` gọi thêm `GroupReadinessPort` (U12).
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Event sau commit
-- Mở bài và ngưng giao gọi `AssignmentLifecyclePort.onOpened/onRetired(assignmentId)` trong cùng transaction; các cài đặt (U11, U14) ghi dòng hoặc gửi việc của mình nên không mất phản ứng.
-- Sau commit phát `assignment.opened` `{assignmentId, classId | subjectId, type}` qua `EventPublisherPort` (U03) chỉ cho thông báo; bài của môn thì U16 tự lấy các lớp `OPEN` của môn (NFR-U08-24).
+## Unit-specific patterns
 
-## P7 - Khóa rubric khi phát hành
-- `ScheduleService.publish` khóa dòng `assignments`, ghi lịch, gọi `RubricPort.lockForAssignment(assignmentId)` rồi đổi trạng thái trong cùng transaction; U06 ném lỗi kèm danh sách câu/phần có rubric trống → rollback, trả `422` cho frontend hiện danh sách (BR-U08-33, BR-U06-37).
-- Quiz phát hành: đổi `OPEN`, đặt `opens_at = now()`, chuyển version cũ cùng nguồn sang `RETIRED` trong cùng transaction (BR-U08-64).
+- Assessment type chỉ ASSIGNMENT/QUIZ. Assignment submissionMode INDIVIDUAL/GROUP độc lập diagramEnabled; đủ bốn tổ hợp, không đổi gradingMode vì diagram.
+- Baseline Assignment cá nhân GRADED/PRACTICE; Group chỉ GRADED D02; Quiz tạm PRACTICE D01, không Gradebook/lịch Graded mới.
+- Owner R3/R4 bài lớp, R2 bài môn; bài môn chỉ INDIVIDUAL; Group bắt buộc class. Quiz không required lessonId, optional referenceIds.
+- Lifecycle DRAFT → REVIEWED → PUBLISHED → RETIRED; sửa nháp reset review; publication locks config/rubric snapshot. Assignment open/close/deadline và nhận trễ theo policy preserved.
+- Group publication kiểm groups/leader/enrollment readiness qua U12; không cần AI/indexing hoặc Lesson. Quiz publication cần valid keys/settings snapshot.
+- Version/copy tạo document/rubric/questions mới độc lập, không sao attempts/submissions/grades/AI connections/class groups/lịch mới. Published snapshot không mutate; retire giữ history và auto-close work theo rules.
 
-## P8 - Copy nguyên khối
-- `AssignmentCopier.copy(source, targetClass, actor)` trong một `@Transactional`:
-  1. Khóa và kiểm quyền cả lớp nguồn và lớp đích (NFR-U08-25).
-  2. Tạo dòng `assignments` `DRAFT` ở lớp đích, `source_assignment_id`, `config.origin = CLASS_COPY`.
-  3. Câu ngân hàng giữ nguyên `question_id`; câu riêng của bài nguồn sao bằng `InlineQuestionPort.copyToAssignment`.
-  4. `TypeConfigPort.copy` (U09) sao cấu hình, khung và nhân bản rubric.
-  5. Audit; lỗi ở bất kỳ bước nào thì rollback toàn bộ.
+## Validation matrix
+
+- All four Assignment combinations valid; Quiz no Lesson; Group at subject scope rejected.
+- Stale review/publication rejects; copy no reused submission/rubric IDs; late/retire snapshots stable; AI outage manual publication succeeds.

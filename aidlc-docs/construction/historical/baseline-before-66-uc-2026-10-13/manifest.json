@@ -1,0 +1,690 @@
+[
+  {
+    "path": "u01-account-and-access/functional-design/business-logic-model.md",
+    "sha256": "b132b401bb869f0e24bd726b00d4b90d1f7f2d126a684230fe2b6dbfee9049e0"
+  },
+  {
+    "path": "u01-account-and-access/functional-design/business-rules.md",
+    "sha256": "913daf95c014de21ed10b860859a7080422b1e6e1fe968500f7d0127ad5446ac"
+  },
+  {
+    "path": "u01-account-and-access/functional-design/domain-entities.md",
+    "sha256": "b6144d27656228c84d9df9c32ce6fd65f8fb1d58bbae22306f16ee226043b8c5"
+  },
+  {
+    "path": "u01-account-and-access/functional-design/frontend-components.md",
+    "sha256": "e3a5ac6acbb858d497285208947032241933eefd7f1a5e71da254776f62cbe0a"
+  },
+  {
+    "path": "u01-account-and-access/infrastructure-design/deployment-architecture.md",
+    "sha256": "510212c20e7f57a99c6b5c821a76fda421e15d6900191311489be511d5fcae0b"
+  },
+  {
+    "path": "u01-account-and-access/infrastructure-design/infrastructure-design.md",
+    "sha256": "78d1f4e7ae89acbab8ccfa18927220c83fa3e19d63b716993b1a8b2f12bc4607"
+  },
+  {
+    "path": "u01-account-and-access/nfr-design/logical-components.md",
+    "sha256": "1d8271076f53a8cc88967dbdf40a8b2bd4dd84ce1314a5fd6c2ea5e9f76d62c9"
+  },
+  {
+    "path": "u01-account-and-access/nfr-design/nfr-design-patterns.md",
+    "sha256": "3fb6b1232a2dd68306bc997ac56779c478111749c31aa0a4f8a0ffca26c24bef"
+  },
+  {
+    "path": "u01-account-and-access/nfr-requirements/nfr-requirements.md",
+    "sha256": "08223421b604e516c40a663c56973799433781711dc15e70d3c8bdaab0cdee6c"
+  },
+  {
+    "path": "u01-account-and-access/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "876346cfcdba1adbf452c22335e166abb67032e5f3e2ec870d9a611a27ef61ae"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/functional-design/business-logic-model.md",
+    "sha256": "592d15d9926f8c829c2ece9185055d0901d96f378ea283c58e58355e4a4ee56c"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/functional-design/business-rules.md",
+    "sha256": "8e2da4a36ce1e507a0dd0dade387c271c7f2ea0d3f18b1c4fe3ce3103d921e75"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/functional-design/domain-entities.md",
+    "sha256": "0fa4390c5f81e18ce75fb5c898e7f4d962d69b5860802acae6565bf3cd1b7b19"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/functional-design/frontend-components.md",
+    "sha256": "f6372e80f76b305e11e0de248cdbdc610f353786708087c6894b05cc692ac9f4"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/infrastructure-design/deployment-architecture.md",
+    "sha256": "5b1db4b597ed7a3fb8c34ac465a3a8927f1bee740f8fd0e65cbfe6774938c28a"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/infrastructure-design/infrastructure-design.md",
+    "sha256": "b6b366b37b59bbcb9b65fc4c0cf2e55d7248bea89179339c648c32dcb18f256d"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/nfr-design/logical-components.md",
+    "sha256": "90043626369363399f68c3df15e3b709d9334ab5a1bc57bf33d1039097cda3c9"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/nfr-design/nfr-design-patterns.md",
+    "sha256": "1c2360f62d8feeda9b43b9189d2805c6904716d22272a1dc7b8ae3583f335039"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/nfr-requirements/nfr-requirements.md",
+    "sha256": "c82f854717ef722efa1671956db16485cdbaafc1ccb6bb8c737f1498807b85fe"
+  },
+  {
+    "path": "u02-audit-job-and-outbox/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "1c964b6da31dd2c1936361ffc42664cab75c231aaf69f2d02d5bc7adea1387b9"
+  },
+  {
+    "path": "u03-file-and-artifact/code/api-summary.md",
+    "sha256": "d8b52a151c2dbeaf78a9582fa2890352fbe1db525cb9d9d1fe378288d60e283f"
+  },
+  {
+    "path": "u03-file-and-artifact/code/business-logic-summary.md",
+    "sha256": "fad82d858ae6a6721e1528c365449484b1b492ec0109fc92def5c901e872abd6"
+  },
+  {
+    "path": "u03-file-and-artifact/code/frontend-summary.md",
+    "sha256": "7dd7b54b14b0d3e57cbff3fe940426a06d07bc6805c59111e318caae91f194f5"
+  },
+  {
+    "path": "u03-file-and-artifact/code/repository-summary.md",
+    "sha256": "8fabae9e170dd5c39e4e04a1c87de66e5d15b617a23c1b7d11fe64f6711ea151"
+  },
+  {
+    "path": "u03-file-and-artifact/code/test-results.md",
+    "sha256": "9a35910c7e325d8521a5eb1f845567aeacc84ef53244ea4614e7f6db06adc0c3"
+  },
+  {
+    "path": "u03-file-and-artifact/functional-design/business-logic-model.md",
+    "sha256": "1eee81dc88415511a7ceebb0d9f95d50886ab21399ff687e7cacacdff73b0608"
+  },
+  {
+    "path": "u03-file-and-artifact/functional-design/business-rules.md",
+    "sha256": "dabce4de04f136db8e6d571d48bbd752fb9465c2dc2c3c60495265472e91edae"
+  },
+  {
+    "path": "u03-file-and-artifact/functional-design/domain-entities.md",
+    "sha256": "d65ad8831ae31c645c5cd75bf3e87a34d70c17af0490485d883b905d23b2f910"
+  },
+  {
+    "path": "u03-file-and-artifact/functional-design/frontend-components.md",
+    "sha256": "136514d45a5e444884ba2976f15122dd738d814a7e326c509abd01ee44ab5a48"
+  },
+  {
+    "path": "u03-file-and-artifact/infrastructure-design/deployment-architecture.md",
+    "sha256": "bf946fcd2fb44941cafa069ac19e09e0ccafddbde0282a8f2f0eeffdce75aa94"
+  },
+  {
+    "path": "u03-file-and-artifact/infrastructure-design/infrastructure-design.md",
+    "sha256": "a460113758b928d208af4ba308d0fa65fe20f47df6b6ffa822519b8f57ee19c9"
+  },
+  {
+    "path": "u03-file-and-artifact/nfr-design/logical-components.md",
+    "sha256": "24d43bdf605265ffa7f5b00c2be3283a69755a82668cab9b5f3734f620732e3c"
+  },
+  {
+    "path": "u03-file-and-artifact/nfr-design/nfr-design-patterns.md",
+    "sha256": "2d3139ea8c14557f6ad435a897484338e349104673119c1805b13fd79740adf6"
+  },
+  {
+    "path": "u03-file-and-artifact/nfr-requirements/nfr-requirements.md",
+    "sha256": "a3d5796a9e85beba6b1b5381060ab6c5850c2d6196e25f1166630714897cc5a1"
+  },
+  {
+    "path": "u03-file-and-artifact/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "438834f622c57a3aed2df8a1d3d9ef3ef0c7b0ee84f9de4db6aecdc7f2fe0e0a"
+  },
+  {
+    "path": "u04-subject-class-enrollment/functional-design/business-logic-model.md",
+    "sha256": "78e3437883a154d4c1b58974bad3721e890bd2d5c7f7592bb414c5207bc0d54d"
+  },
+  {
+    "path": "u04-subject-class-enrollment/functional-design/business-rules.md",
+    "sha256": "48c79c1c4e76ad5be2ae9e5d4e7b8772f0798cae1e9223f731e6a29f87944284"
+  },
+  {
+    "path": "u04-subject-class-enrollment/functional-design/domain-entities.md",
+    "sha256": "24c76193572eaafd400bd00f60a409f8671d653eb55eeb4abbc1b570c158a80e"
+  },
+  {
+    "path": "u04-subject-class-enrollment/functional-design/frontend-components.md",
+    "sha256": "5a1ef89ba7df72cc32d5011ba2fe680e5531695bede1342a0fe9d2b0b8f82d1d"
+  },
+  {
+    "path": "u04-subject-class-enrollment/infrastructure-design/deployment-architecture.md",
+    "sha256": "48c089e2f896be519b5be3f1589679b81e364632916c69e7bd3fe1e089704cb5"
+  },
+  {
+    "path": "u04-subject-class-enrollment/infrastructure-design/infrastructure-design.md",
+    "sha256": "a8985e6f65d52e029818dcf717d32a34f878a0a7606f5f856bad065fdc9a3a86"
+  },
+  {
+    "path": "u04-subject-class-enrollment/nfr-design/logical-components.md",
+    "sha256": "f8c225df19d2b528100bcd021cb809b14e957370c43fd45747cf60dc984f3139"
+  },
+  {
+    "path": "u04-subject-class-enrollment/nfr-design/nfr-design-patterns.md",
+    "sha256": "fcd38c996b81a26df303c5065c790d6b0abc5f37b65a57dfd1e12e01c6f2f8fb"
+  },
+  {
+    "path": "u04-subject-class-enrollment/nfr-requirements/nfr-requirements.md",
+    "sha256": "4610b1f73e18326d06e2407e3ef2a0b2c3d0a22cd05fac5d6eb33e79d944ca85"
+  },
+  {
+    "path": "u04-subject-class-enrollment/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "03746c319e7246685dfa5f5175de16c99cbe6b8624e99ad395370a4df2b14c44"
+  },
+  {
+    "path": "u05-content-material-rag/functional-design/business-logic-model.md",
+    "sha256": "715250e7339d6175cae66627ee27dcbc0201bde59ecdb478cf928a52ee6e63a3"
+  },
+  {
+    "path": "u05-content-material-rag/functional-design/business-rules.md",
+    "sha256": "a74ffe90f1da5d8da2133a7df17b7297a0b77e4e14a0db72db1d2d1b3b145a66"
+  },
+  {
+    "path": "u05-content-material-rag/functional-design/domain-entities.md",
+    "sha256": "dc02fe8aee4bc2ddd3d8fb709d52f471dc72870b4cfef57715fbbdb34aca0883"
+  },
+  {
+    "path": "u05-content-material-rag/functional-design/frontend-components.md",
+    "sha256": "870390eb864beb3ffcbd351440744341f9fc563b005328ad9c22bda46a087ce3"
+  },
+  {
+    "path": "u05-content-material-rag/infrastructure-design/deployment-architecture.md",
+    "sha256": "4f24cecd00bf0e274da128afe6103c17a188cf30032e5af73500e6adc5cee3a7"
+  },
+  {
+    "path": "u05-content-material-rag/infrastructure-design/infrastructure-design.md",
+    "sha256": "804a7ac6617d263a9f2761259736919b6e7add8cf16531c67ba584ec59c60121"
+  },
+  {
+    "path": "u05-content-material-rag/nfr-design/logical-components.md",
+    "sha256": "576c07383062b5654e4704f1b18a01a7e14d95863112ec9fd47c081a0ef44e13"
+  },
+  {
+    "path": "u05-content-material-rag/nfr-design/nfr-design-patterns.md",
+    "sha256": "62e22dfca70c6516a91e916261f8229b35dd5b7f011086f0eabd0e1a6268b002"
+  },
+  {
+    "path": "u05-content-material-rag/nfr-requirements/nfr-requirements.md",
+    "sha256": "8ce6fb645cbd38e8a08a75ab7308fc830044c8982bd49a082cef2bd88a61934b"
+  },
+  {
+    "path": "u05-content-material-rag/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "6e41b2beb5754e44459f916b53b3c327fe4f2a9f58944137382107d9a56cd6ab"
+  },
+  {
+    "path": "u06-rubric-question-bank/functional-design/business-logic-model.md",
+    "sha256": "b1e6ef8793dffa7faf1f060d65aa0cfe62180ae73954b7a1a68d31c926307aac"
+  },
+  {
+    "path": "u06-rubric-question-bank/functional-design/business-rules.md",
+    "sha256": "94d18d83459ace1a6301334769c1865f920bef5528024f63aa5e0e7caed45b5d"
+  },
+  {
+    "path": "u06-rubric-question-bank/functional-design/domain-entities.md",
+    "sha256": "67e6c36c36003ef9fd63e98a5473c8a34372c8ae90d6e988736e5ba5b4276fd6"
+  },
+  {
+    "path": "u06-rubric-question-bank/functional-design/frontend-components.md",
+    "sha256": "72b650807eeaf96a010f98d46b95dd34a230933e0889a340eaeff207ea277ced"
+  },
+  {
+    "path": "u06-rubric-question-bank/infrastructure-design/deployment-architecture.md",
+    "sha256": "3b1970945097a201bb34e47a4a84c7d49c8987fca01ea98c58b76a4ac29a76fa"
+  },
+  {
+    "path": "u06-rubric-question-bank/infrastructure-design/infrastructure-design.md",
+    "sha256": "1a4706d39ac2beca57b9fc12893bf688ade2ed7effee38dfce31ae6aa9929d18"
+  },
+  {
+    "path": "u06-rubric-question-bank/nfr-design/logical-components.md",
+    "sha256": "604efd34283420e9b3631637bb9d0de865dc1a3f1c0a7b6dda880a705e6ef73d"
+  },
+  {
+    "path": "u06-rubric-question-bank/nfr-design/nfr-design-patterns.md",
+    "sha256": "996aced203d667b528475a63df93a11c43b1f2abc532bf0d1769ddcc75b2e4fe"
+  },
+  {
+    "path": "u06-rubric-question-bank/nfr-requirements/nfr-requirements.md",
+    "sha256": "cfacac291c8e80dfe3a6f165c5855de11ebc783ed9fad03dfb27d5096076a77e"
+  },
+  {
+    "path": "u06-rubric-question-bank/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "50e85e4977e51a60bbf4ee890deabde4cfa78e2493660c95b0d041d3bd32e3b0"
+  },
+  {
+    "path": "u07-payment-credit/functional-design/business-logic-model.md",
+    "sha256": "835d7b4e29afa34fd4ccc755ea6a956cfb559dbe4147d2e3e2b2c9bb5b05bc8a"
+  },
+  {
+    "path": "u07-payment-credit/functional-design/business-rules.md",
+    "sha256": "1853ff046d6ebbb024fa0bd0d804e0d6901f0cd5f5f31c310335fbf9cb341cbb"
+  },
+  {
+    "path": "u07-payment-credit/functional-design/domain-entities.md",
+    "sha256": "49cc569ac719ac981b95cd9204b2baa566e82d4876eaa89d87bc78386e641b86"
+  },
+  {
+    "path": "u07-payment-credit/functional-design/frontend-components.md",
+    "sha256": "76dc9f818fe7f249c55798e2885cdbd71f474e03d35e4b68ad9546fcea009143"
+  },
+  {
+    "path": "u07-payment-credit/infrastructure-design/deployment-architecture.md",
+    "sha256": "1f9538b6bf917953da169c0965b442a9462ee3c90718c0f833d4d4c1a8498631"
+  },
+  {
+    "path": "u07-payment-credit/infrastructure-design/infrastructure-design.md",
+    "sha256": "a7193a1cc29296e8dd3cdf0dc67f61e25bf83d2f2d93420e017e3b629c4a7c6f"
+  },
+  {
+    "path": "u07-payment-credit/nfr-design/logical-components.md",
+    "sha256": "082bdbb3d2ba0f5a6899f52412ca16c408eb2f3973ff13332f53922becba05b1"
+  },
+  {
+    "path": "u07-payment-credit/nfr-design/nfr-design-patterns.md",
+    "sha256": "30bdb48d12877f2d04a2bd7bedd8cc31e8e0e9be8d24c98880843b4842fb19dd"
+  },
+  {
+    "path": "u07-payment-credit/nfr-requirements/nfr-requirements.md",
+    "sha256": "f9419641fc280a6f18f4453fae2ff88c83b89ad604242afe644b87b37d4c4db3"
+  },
+  {
+    "path": "u07-payment-credit/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "beaa5066f6e4d0baaba8215834cdb12d1552a38e4c2fb2528c4d379a8aa50f94"
+  },
+  {
+    "path": "u08-assessment-core-publication/functional-design/business-logic-model.md",
+    "sha256": "4a847df4508d84733e216b8738cf217ccdd315aa2663d81db938c2bfd74d2662"
+  },
+  {
+    "path": "u08-assessment-core-publication/functional-design/business-rules.md",
+    "sha256": "26f468737fba7443c87fc4b192f0c9fae1df52e422836dee6c41abd38a8a2a3b"
+  },
+  {
+    "path": "u08-assessment-core-publication/functional-design/domain-entities.md",
+    "sha256": "6acab44e2ca97a2f3823321034e0c2a008525a142c823b6f30a6c32da7aabfc0"
+  },
+  {
+    "path": "u08-assessment-core-publication/functional-design/frontend-components.md",
+    "sha256": "7d9225cfb44e35f94f07f129102a34c0c73e76137c2f436aff08f781cd5b28fe"
+  },
+  {
+    "path": "u08-assessment-core-publication/infrastructure-design/deployment-architecture.md",
+    "sha256": "b693b192ef5afffc2ce2192224883996fcfa14e3bd2f1206ecc2e5ec7ac22480"
+  },
+  {
+    "path": "u08-assessment-core-publication/infrastructure-design/infrastructure-design.md",
+    "sha256": "2f9684b7968292f7727c395a9e09605e83c316e3e9598d4c886a9fa8339d645b"
+  },
+  {
+    "path": "u08-assessment-core-publication/nfr-design/logical-components.md",
+    "sha256": "0385b09e80ce6fd3e9fbee643831f250d1fcdffe40888d6f0848363ed6075edf"
+  },
+  {
+    "path": "u08-assessment-core-publication/nfr-design/nfr-design-patterns.md",
+    "sha256": "5dbc1602a5463df471858521b31d2451f618d89d06a0972981485cea651daaf7"
+  },
+  {
+    "path": "u08-assessment-core-publication/nfr-requirements/nfr-requirements.md",
+    "sha256": "7bffb1ccab7a541c25c7b3430bc291581475afc8554489b6ffad6b21fed865a0"
+  },
+  {
+    "path": "u08-assessment-core-publication/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "a2db2290c18435f70e479452d64feadc10adda4294780b72b874f54c2f36f54f"
+  },
+  {
+    "path": "u09-question-type-authoring/functional-design/business-logic-model.md",
+    "sha256": "e581657c0deebb5f718c463fda822adb8be6cbd38f9578941bc118b3ad0ada4a"
+  },
+  {
+    "path": "u09-question-type-authoring/functional-design/business-rules.md",
+    "sha256": "59cd7ffaad27dced59813e9b681a5ca22706d48a90233ab422f85500d8f68fb2"
+  },
+  {
+    "path": "u09-question-type-authoring/functional-design/domain-entities.md",
+    "sha256": "ed3d38a5d3fad35a920c2aeebe7fed90ac92f7390b9ab516f8749ddf5639c821"
+  },
+  {
+    "path": "u09-question-type-authoring/functional-design/frontend-components.md",
+    "sha256": "cc1f222208314af2fb164afd68b2d08bddec25b11a527f73952ed26ccb3ae7df"
+  },
+  {
+    "path": "u09-question-type-authoring/infrastructure-design/deployment-architecture.md",
+    "sha256": "28c72930f8649cd910d8c6a2dec9c8db106dc4b11606e39c64d1c92494219f53"
+  },
+  {
+    "path": "u09-question-type-authoring/infrastructure-design/infrastructure-design.md",
+    "sha256": "9505a49c4fa5309ee0dabeea62683313348d9889dfa61fadeec5313a3d66a863"
+  },
+  {
+    "path": "u09-question-type-authoring/nfr-design/logical-components.md",
+    "sha256": "c8a0be82fc4fb3e193f9e49e7f05749eaea661c5f925fde9b96c3d39fb3d0153"
+  },
+  {
+    "path": "u09-question-type-authoring/nfr-design/nfr-design-patterns.md",
+    "sha256": "31c24d342a1d9df99fd6e2e14f9fd0552f17eb763cbebf86f4519c226b5e5484"
+  },
+  {
+    "path": "u09-question-type-authoring/nfr-requirements/nfr-requirements.md",
+    "sha256": "e2af7de528c724a6af6e30ac838ab9e2972aa6e8549a8ffe9d1b59a83a8f41f2"
+  },
+  {
+    "path": "u09-question-type-authoring/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "e65263972e118fdc7bdcbb182c1ce270d2027cabe66b34d8e502ae974d56aebc"
+  },
+  {
+    "path": "u11-attempt-submission/functional-design/business-logic-model.md",
+    "sha256": "0df93c21c6246aa8deefe90f5e76b13474bf23441ef466ff3635a6eab9fae571"
+  },
+  {
+    "path": "u11-attempt-submission/functional-design/business-rules.md",
+    "sha256": "70ea48156d6ee4c394220450c97255ab55df2d1fb8ee05b67dd7f9b0908fdd7e"
+  },
+  {
+    "path": "u11-attempt-submission/functional-design/domain-entities.md",
+    "sha256": "67e4f5639c2a824ac5e926eff06231922afb11426c33bf44fac502d5b2b94e53"
+  },
+  {
+    "path": "u11-attempt-submission/functional-design/frontend-components.md",
+    "sha256": "13ff16b3fffebbd9160d0b2dc052947a87fe9fd4acd893e24523a57853f0820b"
+  },
+  {
+    "path": "u11-attempt-submission/infrastructure-design/deployment-architecture.md",
+    "sha256": "62272f10efd17299f91c3cfcc9b7e3f507200717226e20774095af8ae33ac656"
+  },
+  {
+    "path": "u11-attempt-submission/infrastructure-design/infrastructure-design.md",
+    "sha256": "a28b22c2d5cfe18f6a9cab8acc4c73b24438461949ad779054f6ae89d737a751"
+  },
+  {
+    "path": "u11-attempt-submission/nfr-design/logical-components.md",
+    "sha256": "12c47a977bcc9e18e6ae50634d3331cac48912ff6864ff9db31310d76cb1d22a"
+  },
+  {
+    "path": "u11-attempt-submission/nfr-design/nfr-design-patterns.md",
+    "sha256": "805ac43a921c5e48f3aeb5c8869d45a6c13e932b5112786e511b31c9108df566"
+  },
+  {
+    "path": "u11-attempt-submission/nfr-requirements/nfr-requirements.md",
+    "sha256": "4956f35cd939c8be4f2cf12a9c26f2d878f68bfef2aae2a1c31b0a63bdee7736"
+  },
+  {
+    "path": "u11-attempt-submission/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "57e1b5a817ede2c4b7226c464e92caf18db7359954569f7a84d7ca20b829d733"
+  },
+  {
+    "path": "u12-group-allocation/functional-design/business-logic-model.md",
+    "sha256": "e1e89bfee94a255934a24a1361d640b915551ec0def6cf5d971a86a1134ff059"
+  },
+  {
+    "path": "u12-group-allocation/functional-design/business-rules.md",
+    "sha256": "eaa94bd21e916f1c03e4f962b0f04867905f314424df09f172e904f7d54e83b1"
+  },
+  {
+    "path": "u12-group-allocation/functional-design/domain-entities.md",
+    "sha256": "4b5e09833334427a3919a639dc4c82f8e7d415765e0c126c29cb4007a3fa7b62"
+  },
+  {
+    "path": "u12-group-allocation/functional-design/frontend-components.md",
+    "sha256": "f201f000a47f00f61ae7454cf4dd6239334ae38c6434fcbb3dc09d0faaf667ac"
+  },
+  {
+    "path": "u12-group-allocation/infrastructure-design/deployment-architecture.md",
+    "sha256": "b3693ee69afca45e31114910444f7cef5465d231bd9f804d171461bbbf04eb2e"
+  },
+  {
+    "path": "u12-group-allocation/infrastructure-design/infrastructure-design.md",
+    "sha256": "41cb470080079857ffd4b5e820fa26326baeac100b3b7482eec8a1ed701504ba"
+  },
+  {
+    "path": "u12-group-allocation/nfr-design/logical-components.md",
+    "sha256": "ad6654e32c67184081f8c9007ff4396aa2e5cbfd63e2424dd57ed155047fa347"
+  },
+  {
+    "path": "u12-group-allocation/nfr-design/nfr-design-patterns.md",
+    "sha256": "e6900465fd4de392eee202e4770754284a85a5b5d6c08b9c8c844e2bc2367cff"
+  },
+  {
+    "path": "u12-group-allocation/nfr-requirements/nfr-requirements.md",
+    "sha256": "a321e8363a2b2cfe950da9fdb2462fc11d5b9f4c4e369fdb6688fea2b7dac958"
+  },
+  {
+    "path": "u12-group-allocation/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "b9ee40f8c68a2a2880014d3f503c53edc818588a1f4fea23b8cd1201e7c11187"
+  },
+  {
+    "path": "u13-ai-code-execution/functional-design/business-logic-model.md",
+    "sha256": "c13f3ca91d5224335c10b32244348ee59217600cbf99f53d320a2ca7242329e5"
+  },
+  {
+    "path": "u13-ai-code-execution/functional-design/business-rules.md",
+    "sha256": "2928c6adca2d13ffc50721f0d1ff169b38558caaa1d9296f2a6ce9f4b1dea9ab"
+  },
+  {
+    "path": "u13-ai-code-execution/functional-design/domain-entities.md",
+    "sha256": "64c4af3fed8c19b6110c5b795aeae73a7b77fbf3a4ea8342592aeaff4e3bf558"
+  },
+  {
+    "path": "u13-ai-code-execution/functional-design/frontend-components.md",
+    "sha256": "27b994b722c35eae6a75090832cb159e109b89df0bac4f0d38f0ede89e58b1d0"
+  },
+  {
+    "path": "u13-ai-code-execution/infrastructure-design/deployment-architecture.md",
+    "sha256": "d42d6dd9a1df87c7ebe534ef6d642d7068e566af5a65bd5170105e6395275ee6"
+  },
+  {
+    "path": "u13-ai-code-execution/infrastructure-design/infrastructure-design.md",
+    "sha256": "61e366e8a2d119e35e835fabb8cb716952b304ed398f19be829a658b1b17083d"
+  },
+  {
+    "path": "u13-ai-code-execution/nfr-design/logical-components.md",
+    "sha256": "aefcd71b7f1376234be8a60fcc85f978fddb7e4f34c20e50743f62a29befe14f"
+  },
+  {
+    "path": "u13-ai-code-execution/nfr-design/nfr-design-patterns.md",
+    "sha256": "ad8b717daab3b69ad306cb73d21e9b078840e7209b605ab7e478fd0f3c5231cd"
+  },
+  {
+    "path": "u13-ai-code-execution/nfr-requirements/nfr-requirements.md",
+    "sha256": "e4f4e8c6b9b37ac6aefa71f4c01ac1c03073bcc607854d34ba978819568d107d"
+  },
+  {
+    "path": "u13-ai-code-execution/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "af2a0a739a4558c9751769cef8d7583d4808514dae01fc845a13de258a0a5e7b"
+  },
+  {
+    "path": "u14-group-document-submission/functional-design/business-logic-model.md",
+    "sha256": "22c65f2537171d280eef6d5163069570dddcd7b33f3e0e5146ceb0fda9448da4"
+  },
+  {
+    "path": "u14-group-document-submission/functional-design/business-rules.md",
+    "sha256": "dcd33c322a9a9e7d22051f117cf2737edf4e3af4bea9df57db1241f96c49a821"
+  },
+  {
+    "path": "u14-group-document-submission/functional-design/domain-entities.md",
+    "sha256": "4b034a6e3293f26af6b3c13d8f6394b1d34b622d54f79adacc8394bd17283c1a"
+  },
+  {
+    "path": "u14-group-document-submission/functional-design/frontend-components.md",
+    "sha256": "011d1a855aeabad33d80d30605672501605c11a84c419760594787ad744573cd"
+  },
+  {
+    "path": "u14-group-document-submission/infrastructure-design/deployment-architecture.md",
+    "sha256": "931e90736fbcccdbf9b0fc77715f95985ca5c2af6cfc51c97424f75ea6516a89"
+  },
+  {
+    "path": "u14-group-document-submission/infrastructure-design/infrastructure-design.md",
+    "sha256": "2d24e439f511fc7937dc4ff1d4237a8e0b12b5e16e42c1382814f27597ff3ef5"
+  },
+  {
+    "path": "u14-group-document-submission/nfr-design/logical-components.md",
+    "sha256": "d47a196cb4a14d2736dd123fd0a97f78c126f056c3affc8a61b7203fcb0eb7ad"
+  },
+  {
+    "path": "u14-group-document-submission/nfr-design/nfr-design-patterns.md",
+    "sha256": "6707c6a44dab3496e70a62e4b61a223a21cc4b9485dd0d61ea748176f063359e"
+  },
+  {
+    "path": "u14-group-document-submission/nfr-requirements/nfr-requirements.md",
+    "sha256": "edd48c6aedd6c00db54eb31e9b0ee9ae6b40a41ce4f6599aa8711a8ad0f60eae"
+  },
+  {
+    "path": "u14-group-document-submission/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "aaba7a90ba648b877135184b89a6fc7b257ad8c1d6eba2ef7dbafd7eb36f5d95"
+  },
+  {
+    "path": "u15-grading/functional-design/business-logic-model.md",
+    "sha256": "24fe8370fbd706575936f7be9b64e0a6f11b4106cf2832dd8e603aa29af7e00a"
+  },
+  {
+    "path": "u15-grading/functional-design/business-rules.md",
+    "sha256": "2cbc32bb3322098d5b0685eb669664558fdbeb0fee4194c9ae0b46698980e341"
+  },
+  {
+    "path": "u15-grading/functional-design/domain-entities.md",
+    "sha256": "6497fe66989928c33ecd695053fd95a589d03be667f90dca1ac0d0f86508c5f4"
+  },
+  {
+    "path": "u15-grading/functional-design/frontend-components.md",
+    "sha256": "b63088284205687fae38227dea2d60a87bd4a9930b97e588bfe182e14be3ba78"
+  },
+  {
+    "path": "u15-grading/infrastructure-design/deployment-architecture.md",
+    "sha256": "3ce6bcbb7a555a70cb5702ee551eb40215e0cde7fdd8c3d4e421bd0544b1dc7c"
+  },
+  {
+    "path": "u15-grading/infrastructure-design/infrastructure-design.md",
+    "sha256": "6f2dac884f614a90456ea97a046e96185499c7375d15bc29c93849e61edb4612"
+  },
+  {
+    "path": "u15-grading/nfr-design/logical-components.md",
+    "sha256": "df1edb26c2af8b2987f44d352f2e5f140747e0e9bace6b8ff1f0e8e049a6584a"
+  },
+  {
+    "path": "u15-grading/nfr-design/nfr-design-patterns.md",
+    "sha256": "0a5046372bb225a1807755faa1482e49fcd22274eaeaf5d7b34191aa1c68d1c0"
+  },
+  {
+    "path": "u15-grading/nfr-requirements/nfr-requirements.md",
+    "sha256": "8be75f3147f33cb00f9818ecb495ac56ab3eaee416c77469edeebbaf075bb015"
+  },
+  {
+    "path": "u15-grading/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "75ed567e516e2bd09219d83f00533b0d335b7e434c3d042bbb7dd38eb2c69361"
+  },
+  {
+    "path": "u16-reporting-notification/functional-design/business-logic-model.md",
+    "sha256": "9a5e19119fcf95f1666be5704ffd8e7e5489a196eb6d875eb88b58c7ef896d96"
+  },
+  {
+    "path": "u16-reporting-notification/functional-design/business-rules.md",
+    "sha256": "ed1344a001bb13dcef57a37e92f17521cef9c82e1abc20f97574e92031c2a634"
+  },
+  {
+    "path": "u16-reporting-notification/functional-design/domain-entities.md",
+    "sha256": "f5c4c032e2067f7c90b38c4da178ff549bef933457f5a3cdb76a10f6365cfe49"
+  },
+  {
+    "path": "u16-reporting-notification/functional-design/frontend-components.md",
+    "sha256": "9ec5fca31780156ade1a9f4c6a585c714dc0bb6ac109c4014eb0da92b523edf5"
+  },
+  {
+    "path": "u16-reporting-notification/infrastructure-design/deployment-architecture.md",
+    "sha256": "d01cf736d744fd3bf10d262879074eb9feb26104e4d08713b289ef23a63b1eb6"
+  },
+  {
+    "path": "u16-reporting-notification/infrastructure-design/infrastructure-design.md",
+    "sha256": "1d60245594dbf81e2f35c6259365ec5e9a272de27dd5836aa6b625e980c5d52f"
+  },
+  {
+    "path": "u16-reporting-notification/nfr-design/logical-components.md",
+    "sha256": "eab5aaef229acf34448c0d6a91f4bf50dfba8161e6f02d7b45678902efdb7dc5"
+  },
+  {
+    "path": "u16-reporting-notification/nfr-design/nfr-design-patterns.md",
+    "sha256": "3981e3cd80b3c90cdd60aa45940461b28615749303ba4bba3a687123e7fdcb2d"
+  },
+  {
+    "path": "u16-reporting-notification/nfr-requirements/nfr-requirements.md",
+    "sha256": "d3f4f030b1e74aa3bbd7b914f46e49ca3acf269070e76c4ac51c307f21f810a9"
+  },
+  {
+    "path": "u16-reporting-notification/nfr-requirements/tech-stack-decisions.md",
+    "sha256": "f139ad32a5fc0add679c541da9d04091b696e825a7313ea8b56993fc62e82606"
+  },
+  {
+    "path": "plans/code-generation-plan/u01-account-and-access-code-generation-plan.md",
+    "sha256": "2d28b70b88bc4295b68f89a28f35a960a84d7bc895a600a1e0c4c92876840b44"
+  },
+  {
+    "path": "plans/code-generation-plan/u02-audit-job-and-outbox-code-generation-plan.md",
+    "sha256": "64f951e81a889327b8f2517c07eb8aa0016a8b588600bcf311c610474473deea"
+  },
+  {
+    "path": "plans/code-generation-plan/u03-file-and-artifact-code-generation-plan.md",
+    "sha256": "776eeeede11476ab30520ee66f3ade2ad7b590fe244f0d66682aea9bd14ba008"
+  },
+  {
+    "path": "plans/code-generation-plan/u04-subject-class-enrollment-code-generation-plan.md",
+    "sha256": "8ce7ce72ad629a1230224ae73b610ec6faf1d0433106f3428817587740f0eb15"
+  },
+  {
+    "path": "plans/code-generation-plan/u05-content-material-rag-code-generation-plan.md",
+    "sha256": "0ae415aa875fbe281110555fea53803b8888f124e3f02e2dd6501957c390de3a"
+  },
+  {
+    "path": "plans/code-generation-plan/u06-rubric-question-bank-code-generation-plan.md",
+    "sha256": "da8bf04005063eb77d4ce442190992f37c457f831e0c65a2824acc5e6ee08a16"
+  },
+  {
+    "path": "plans/code-generation-plan/u07-payment-credit-code-generation-plan.md",
+    "sha256": "d74d12a7a0ddf3d9a82a0d642f8277c2b2c6830affe66f4b382f3a9918068cb2"
+  },
+  {
+    "path": "plans/code-generation-plan/u08-assessment-core-publication-code-generation-plan.md",
+    "sha256": "045a42c66643167b91d8ab8782e18f67404458dcc24de4aed4942de3869cfe64"
+  },
+  {
+    "path": "plans/code-generation-plan/u09-question-type-authoring-code-generation-plan.md",
+    "sha256": "7fa88ec1e45622ae39315caee4215054eabd27d0a6c1b71e71c0fe17b982965b"
+  },
+  {
+    "path": "plans/code-generation-plan/u11-attempt-submission-code-generation-plan.md",
+    "sha256": "76be0c9d38e874c19492f06629f40d95eed89aad69e0b2091b690df8fa19cc10"
+  },
+  {
+    "path": "plans/code-generation-plan/u12-group-allocation-code-generation-plan.md",
+    "sha256": "8c3a268150f85012e07989a97031ff316d534130f4018e41aa6cffd58afb29e3"
+  },
+  {
+    "path": "plans/code-generation-plan/u13-ai-code-execution-code-generation-plan.md",
+    "sha256": "1c650cd5e59cad9feedc3e89bcf4a97fc390242a95de4c2872ecb55287adc9ed"
+  },
+  {
+    "path": "plans/code-generation-plan/u14-group-document-submission-code-generation-plan.md",
+    "sha256": "e9b9b3e3c91860280b0521cf1727496052755fc9f8d63cb22119fb0fef5e72fc"
+  },
+  {
+    "path": "plans/code-generation-plan/u15-grading-code-generation-plan.md",
+    "sha256": "e6d43d3c901ab517bfcffbd7377973fd439a7698e73a3494032054c31f451a66"
+  },
+  {
+    "path": "plans/code-generation-plan/u16-reporting-notification-code-generation-plan.md",
+    "sha256": "012ac80c8ec99f1d3682545fa4926387501b07aa0bd74d406c9c840d2ff65aae"
+  },
+  {
+    "path": "shared-infrastructure.md",
+    "sha256": "2dc18b5c7436b9983b598826f8302d57a4f9764589a3fb827ec538d292951b00"
+  },
+  {
+    "path": "current-srs-contract.md",
+    "sha256": "5a6bd0f7b643c9c769dcf1a61655fdce4552c549de2ff0316b4d07965733a4b5"
+  }
+]

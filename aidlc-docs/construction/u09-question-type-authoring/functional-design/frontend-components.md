@@ -1,58 +1,32 @@
-# U09 Question Type Authoring - Frontend Components
+# U09 Assignment Documents & Quiz Authoring — frontend-components
 
-**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Gắn vào màn của U08
+**Primary UC:** 35, 42. **Primary stories:** US-GRP-003, US-ASM-004, US-ASM-006. **Requirements:** FR-006/016/017/039.
 
-| Màn | Chỗ gắn (U08) | Component U09 | UC |
-|---|---|---|---|
-| Assignment Form (Text Essay) | `TypeConfigSlot` | `QuestionRubricList` | 42 |
-| Assignment Form (Code Lab) | `TypeConfigSlot` | `CodeLabCheckPanel` | 43 |
-| Assignment Form (Diagram Essay) | `TypeConfigSlot` | `DocumentConfigForm` (có `RequiredDiagramsForm`) | 44 |
-| Assignment Form (bài nhóm) | `TypeConfigSlot` | `DocumentConfigForm` (không có `RequiredDiagramsForm`) | 45 |
-| Rubric Detail (popup) | Mở từ `QuestionRubricList`, `PartRubricList` | `RubricDetailDialog` (gắn `RubricEditor` của U06) | 46 |
-| Quiz Detail | `QuizSettingsSlot` | `QuizSettingsForm` | 35 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u09-question-type-authoring` không quyết định chức năng hiện hành.
 
-Assignment Form của bài của môn (Subject Manager) dùng cùng các form; giảng viên lớp mở bài của môn thì form chỉ đọc.
+## UI entry và API đề xuất
 
-## 2. Cây component
+- /api/v1/assignments/{id}/document-config; /api/v1/quizzes/{id}/config; skeleton:import-docx/export; DocumentModelPort/ActivityPolicyPort.
 
-```
-shared/document/
-  DocumentEditor            mode: SKELETON | STUDENT | READONLY
-    BlockToolbar            kiểu đoạn giống Word (Văn bản thường, Tiêu đề, Phụ đề, Tiêu đề 1–6), Danh sách, Bảng, Ảnh, Sơ đồ
-    HeadingBlock, ParagraphBlock, ListBlock, TableBlock, ImageBlock
-    DiagramBlock            hiển thị SVG; bấm mở DrawioPanel; nhãn loại sơ đồ
-    DrawioPanel             iframe embed.diagrams.net (proto=json), nửa màn hình
-    LockedBadge             đánh dấu block của khung (khóa hoàn toàn)
-  EssayEditor               DocumentEditor giới hạn Heading/Đoạn/Danh sách
-shared/authoring/
-  QuestionRubricList        câu Text Essay của bài (U08 quản lý câu): mỗi câu một nút Rubric, cảnh báo khi rubric trống
-  CodeLabCheckPanel         câu Code Lab của bài: trạng thái kiểm lời giải mẫu (`statusOf`), VerifySolutionButton của U13 (gửi kèm `assignmentId`)
-  DocumentConfigForm        Diagram Essay và bài nhóm
-    SkeletonEditor          DocumentEditor mode SKELETON; khung tự chia phần theo heading nhỏ nhất
-    SkeletonFromBankButton  QuestionPicker của U06 (câu DOCUMENT), sao khung vào bài
-    PartRubricList          cây heading, mỗi phần một nút Rubric (cảnh báo khi rubric trống)
-    DocxImportDialog        upload, xem trước, báo cáo nhập
-    AiSkeletonDraftDialog   nhờ AI soạn khung: yêu cầu, credit ước tính, xem trước khung + gợi ý rubric + trích dẫn, xác nhận thay khung
-    RequiredDiagramsForm    chỉ Diagram Essay
-  RubricDetailDialog        popup Rubric Detail: RubricEditor của U06; chỉ đọc khi bài đã phát hành
-  QuizSettingsForm          trộn câu/đáp án, thời gian, hiện điểm, hiện đáp án
-StudentDocxImportDialog     dùng trong Diagram Essay Workspace (U11): upload DOCX, xem trước block sẽ thêm và phần bị bỏ, xác nhận vào bản nháp
-```
+## Component/state contract
 
-## 3. Component và API
+- List/Detail/Editor phân theo quyền và entry UC hiện hành; query state loading/ready/empty/unavailable/error tách biệt.
+- Form state draft/dirty/saving/saved/conflict/invalid; save gửi expectedVersion và requestRef khi có idempotent command; lỗi không xóa draft.
+- State-changing requests không chỉ dựa ẩn nút; server authorize, version/policy errors cần refresh lại context trước retry.
+- UI không phơi bày raw keys, hidden Quiz answers, unpublished grades hoặc dữ liệu ngoài scope.
 
-| Component | Hành vi | API |
-|---|---|---|
-| `QuizSettingsForm` | Trộn câu/đáp án, giới hạn phút, hiện điểm, hiện đáp án (`NEVER`, `AFTER_SUBMIT`) | `GET`, `PUT /api/v1/assignments/{id}/type-config` |
-| `QuestionRubricList` | Câu thêm qua U08 thì có ngay rubric trống; bỏ câu thì rubric bị xóa theo; tổng điểm bài = tổng điểm rubric các câu (UC 42) | Câu: API U08; rubric: API rubric bên dưới |
-| `CodeLabCheckPanel` | Hiện trạng thái kiểm lời giải từng câu; câu riêng sửa nội dung thì báo cần kiểm lại (UC 43) | Kiểm lời giải qua API U13 |
-| `SkeletonEditor` | Lưu khung; hệ thống tính lại phần, tự tạo rubric cho phần mới và xóa rubric của phần không còn (bài nhóm: U14 dựng mỗi phần thành một mục) (UC 44, 45) | `GET`, `PUT /api/v1/assignments/{id}/skeleton` |
-| `DocxImportDialog` | Hiện "Nhận được N sơ đồ, M ảnh giữ nguyên, K phần bị bỏ" | `POST /api/v1/assignments/{id}/skeleton:import-docx` |
-| `AiSkeletonDraftDialog` | Ẩn khi chưa có U13; phân biệt "Không đủ credit AI" và "Hệ thống đang bận"; xác nhận thì cảnh báo nếu khung đã có nội dung | `POST .../skeleton:ai-draft`, `GET /api/v1/ai-suggestions/{id}` (U13), `POST .../skeleton:apply-ai-draft` |
-| `RubricDetailDialog` | Rubric đã tự tạo; thêm/xóa/sắp xếp tiêu chí và mục; Lưu ghi đè; không có nút xóa rubric (UC 46) | `GET`, `PUT /api/v1/assignments/{id}/questions/{questionId}/rubric`, `/parts/{partId}/rubric` |
-| `DocumentEditor` (`STUDENT`) | Mọi block khung khóa (không sửa, xóa, kéo); người học chèn và sửa block của mình ở mọi vị trí | Dùng bởi U11, U14 |
-| `DrawioPanel` | Nhận `save` từ iframe: `xml` + `svg`; đóng panel | - |
-| `StudentDocxImportDialog` | Chỉ hiện với lượt DOCUMENT đang làm; xem trước rồi xác nhận thêm block bằng luồng lưu nháp U11 và báo xung đột bản nháp | `POST /api/v1/attempts/{id}/docx:preview`, `PUT /api/v1/attempts/{id}/content` (U11) |
-| Nút "Tải DOCX" | Ở trang bài làm (U11) và trang chấm (U15) | `GET` của U11/U15 → `DocxExportPort` |
+## Hành vi riêng unit
+
+- Document common Assignment editor; heading/paragraph/list/table/image and DIAGRAM when enabled, structured Document JSON + full Draw.io XML + sanitized preview; không flattened XML as source.
+- Skeleton locked student vs editable content parts separated. Parts derived leaf heading per baseline; each partId links rubric. Author import/export DOCX scope/size/type verified; exact diagram roundtrip required or report unsupported representation, no silent loss.
+- Diagram disabled reject diagram blocks/imports; enabled validate XML limits/external refs and sanitize SVG/HTML, Draw.io iframe origin/message checks; no eval/import external entity.
+- Quiz authoring MCQ independent Lesson; immutable publication keys/options snapshot with question versions, hidden keys never Student context.
+- activityMonitoringEnabled default false, policy/notice/retention version in author config and attempt snapshot; changing published policy requires new version, no silent mid-attempt switch.
+- allowStudentAiFeedback for Graded default deny unless educator allows; assignment doc draft AI only authorized edit context; personal/shared/MCP chosen explicitly; author reviews outputs.
+
+## UI acceptance
+
+- Diagram XML roundtrip; malicious/oversized XML/SVG/import reject; disabled diagram reject; valid pure doc works.
+- Student cannot edit scaffold/key/rubric; Quiz keys stripped; policy snapshot unchanged mid-attempt; AI proposal stale rejected.

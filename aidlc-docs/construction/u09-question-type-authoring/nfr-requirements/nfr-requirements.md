@@ -1,49 +1,35 @@
-# U09 Question Type Authoring - NFR Requirements
+# U09 Assignment Documents & Quiz Authoring — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Hiệu năng
+**Primary UC:** 35, 42. **Primary stories:** US-GRP-003, US-ASM-004, US-ASM-006. **Requirements:** FR-006/016/017/039.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U09-01 | `validateForSave` p95 ≤ 200 ms với tài liệu 500 block, 20 sơ đồ. | U11 lưu nháp thường xuyên |
-| NFR-U09-02 | Nhập DOCX 50 trang, 20 ảnh ≤ 15 s (đồng bộ), áp dụng cho giảng viên và preview của người học. | BR-U09-40, 45 |
-| NFR-U09-03 | Xuất DOCX tài liệu 20 sơ đồ ≤ 20 s; tối đa 2 lần xuất đồng thời trên backend (semaphore), vượt → `503` thử lại sau. | BR-U09-50 |
-| NFR-U09-04 | Trình soạn tài liệu mượt với 500 block trên máy tính thông thường (chỉ render block trong vùng nhìn thấy khi > 200 block). | NFR-002 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u09-question-type-authoring` không quyết định chức năng hiện hành.
 
-## 2. Bảo mật
+## Required controls
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U09-10 | DOCX là ZIP: giới hạn 20 MB nén, 200 MB giải nén, ≤ 1 000 mục, tỉ lệ nén tối thiểu (chống zip bomb). | SEC-003 |
-| NFR-U09-11 | XML sơ đồ và XML trong DOCX parse với DTD/external entity/XInclude tắt. | BR-U09-35 |
-| NFR-U09-12 | Giải nén dữ liệu Draw.io trong PNG/SVG giới hạn 2 MB sau giải nén. | BR-U09-41 |
-| NFR-U09-13 | SVG xem trước từ client: server làm sạch (bỏ `script`, `foreignObject` chứa HTML, thuộc tính `on*`, `href` ngoài), frontend hiển thị bằng `<img>` từ data URL; không chèn SVG thô vào DOM. | SEC-003 |
-| NFR-U09-14 | Nội dung chữ render qua React (không `dangerouslySetInnerHTML`). | SEC-003 |
-| NFR-U09-15 | Iframe Draw.io từ `https://embed.diagrams.net` (CSP `frame-src`); chỉ nhận `postMessage` có `origin` đúng. Dữ liệu vẽ nằm trong trình duyệt, không gửi lên server draw.io. | Câu N1, SEC-004 |
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## 3. Khả dụng
+- Validation MIME/XML/schema/IDs/filter allowlists phù hợp unit, bounded payloads và rate limit phía server. Không log secret, raw prompt hoặc dữ liệu học vụ nhạy cảm.
+- Truy vấn phân trang/index theo owner/resource/time, timeout hữu hạn mọi port/provider; không promise external API p95 như query local.
+- Target baseline local APIs p95 500ms tại 100 concurrent/1000 accounts là mục tiêu cần benchmark, chưa có evidence; heavy files/AI/backup chạy worker và status queries.
+- Session/password/header controls giữ SEC-001–006; quota/backup/credential protected riêng, không yêu cầu mã hóa toàn DB.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U09-20 | `embed.diagrams.net` không tải được → khối sơ đồ vẫn hiện SVG, nút vẽ báo "trình vẽ tạm thời không khả dụng"; các block khác vẫn soạn được. | REL-003 |
+## Unit-specific NFR risks
 
-## 4. Kiểm thử
+- Document common Assignment editor; heading/paragraph/list/table/image and DIAGRAM when enabled, structured Document JSON + full Draw.io XML + sanitized preview; không flattened XML as source.
+- Skeleton locked student vs editable content parts separated. Parts derived leaf heading per baseline; each partId links rubric. Author import/export DOCX scope/size/type verified; exact diagram roundtrip required or report unsupported representation, no silent loss.
+- Diagram disabled reject diagram blocks/imports; enabled validate XML limits/external refs and sanitize SVG/HTML, Draw.io iframe origin/message checks; no eval/import external entity.
+- Quiz authoring MCQ independent Lesson; immutable publication keys/options snapshot with question versions, hidden keys never Student context.
+- activityMonitoringEnabled default false, policy/notice/retention version in author config and attempt snapshot; changing published policy requires new version, no silent mid-attempt switch.
+- allowStudentAiFeedback for Graded default deny unless educator allows; assignment doc draft AI only authorized edit context; personal/shared/MCP chosen explicitly; author reviews outputs.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U09-30 | Unit test mọi `BR-U09-xx`; bộ DOCX mẫu: có PNG draw.io nhúng XML, SVG draw.io, ảnh thường, ảnh PNG đã nén lại (mất XML), bảng gộp ô, textbox. | NFR-004 |
-| NFR-U09-31 | Test chặn: sửa, xóa hoặc di chuyển bất kỳ block giảng viên nào (kể cả bảng, sơ đồ), DOCX zip bomb, SVG có script, XML có DOCTYPE; nhập DOCX của người học không đổi khung và lỗi không mất bản nháp. | NFR-004 |
-| NFR-U09-32 | Test vòng tròn: xuất DOCX rồi nhập lại → sơ đồ vẫn nhận được (XML nhúng còn). | BR-U09-51 |
-| NFR-U09-33 | Test câu, phần và rubric: U08 thêm câu Text Essay hoặc phần mới xuất hiện thì tự tạo rubric trống, bỏ câu/phần thì rubric bị xóa; duyệt bị chặn khi còn rubric trống; nhân bản/version/copy tạo rubric mới cho từng câu/phần; điểm câu Text Essay bằng tổng rubric; khung sao từ ngân hàng không đổi câu gốc; khung AI chỉ thay khung sau khi xác nhận. | BR-U09-23…28 |
+## Test evidence cần có
 
-## 5. Compliance
+- Diagram XML roundtrip; malicious/oversized XML/SVG/import reject; disabled diagram reject; valid pure doc works.
+- Student cannot edit scaffold/key/rubric; Quiz keys stripped; policy snapshot unchanged mid-attempt; AI proposal stale rejected.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log nội dung tài liệu |
-| SECURITY-04 | Compliant | NFR-U09-15 |
-| SECURITY-05 | Compliant | NFR-U09-10…14 |
-| SECURITY-08 | Compliant | Quyền theo U08; khóa block phía server |
-| SECURITY-15 | Compliant | NFR-U09-20, lỗi nhập ảnh → giữ ảnh |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+Security enabled subset 03/04/05/08/09/12/15: constraints auth/input/audit/secret/failure được thể hiện, chưa runtime verified. Resiliency enabled subset 04/06/10: deployment/health/timeouts giữ; rule khác N/A theo state, PBT disabled.

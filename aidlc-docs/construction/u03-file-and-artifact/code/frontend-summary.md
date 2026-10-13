@@ -1,3 +1,5 @@
+> Historical generated-code summary: phản ánh baseline code trước 66 UC, không thiết kế/implementation current. Current design tại unit functional-design và delta code plan; không suy implementation mới từ summary này.
+
 # U03 - Frontend Summary
 
 Code: `frontend/src/shared/`.

@@ -1,53 +1,35 @@
-# U03 File, Job & Event - Frontend Components
+# U03 File, Job, Event & Settings — frontend-components
 
-**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-U03 có 2 màn Settings (UC 70–71) và các component dùng chung cho các unit.
+**Primary UC:** 70. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
 
-## Màn Settings (UC 70–71)
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u03-file-and-artifact` không quyết định chức năng hiện hành.
 
-```
-app/admin/settings/          SettingListPage      màn Setting List, mở từ Admin Dashboard
-  SettingGroupTable                               bảng theo nhóm Tệp, Credit, AI
-app/admin/settings/[key]/    SettingDetailPage    màn Setting Detail
-  SettingValueForm                                ô nhập theo kiểu của mục, kèm version
-```
+## UI entry và API đề xuất
 
-| Component | API | Hành vi |
-|---|---|---|
-| `SettingListPage` | `GET /api/v1/admin/settings` | Mỗi nhóm một bảng: tên mục, giá trị hiện hành, người sửa, thời điểm sửa; bấm một dòng mở Setting Detail (UC 70) |
-| `SettingDetailPage` | `GET /api/v1/admin/settings/{key}` | Hiện mô tả, giá trị hiện hành, giới hạn hợp lệ, lần sửa gần nhất |
-| `SettingValueForm` | `PATCH /api/v1/admin/settings/{key}` | Ô nhập theo kiểu (số, bật/tắt, chọn một, chọn nhiều); kiểm giới hạn phía client; `400` hiện lý do; `409` báo dữ liệu đã đổi và tải lại (UC 71) |
+- GET /api/v1/admin/settings; PATCH /api/v1/admin/settings/{key} expectedVersion; quota group delegates U07.
+- BackupStatusPort.list/latest dùng bởi U16; không REST endpoint tải raw archive cho Admin Dashboard. File endpoints giữ owner-scoped /api/v1/files.
 
-Route nằm dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN`; API vẫn tự kiểm quyền.
+## Component/state contract
 
-## Component dùng chung
+- List/Detail/Editor phân theo quyền và entry UC hiện hành; query state loading/ready/empty/unavailable/error tách biệt.
+- Form state draft/dirty/saving/saved/conflict/invalid; save gửi expectedVersion và requestRef khi có idempotent command; lỗi không xóa draft.
+- State-changing requests không chỉ dựa ẩn nút; server authorize, version/policy errors cần refresh lại context trước retry.
+- UI không phơi bày raw keys, hidden Quiz answers, unpublished grades hoặc dữ liệu ngoài scope.
 
-```
-shared/files/
-  FileUploader        (props: purpose, accept, maxBytes theo purpose, onUploaded)
-  FileLink            (props: getDownloadUrl, fileName)
-  useFileUpload       (hook: tiến trình, hủy, lỗi)
-shared/status/
-  StatusBadge
-  usePollStatus       (hook poll trạng thái của dòng nghiệp vụ)
-```
+## Hành vi riêng unit
 
-| Component | Hành vi |
-|---|---|
-| `FileUploader` | Chọn hoặc kéo thả file; kiểm sơ bộ đuôi và dung lượng theo giới hạn hiện hành lấy từ `GET /api/v1/files/policies`; hiện thanh tiến trình; nút Hủy dừng request; lỗi từ backend hiện nguyên thông điệp an toàn |
-| `useFileUpload` | Gửi `POST /api/v1/files` multipart với `purpose`; trả `fileRef` khi thành công; hủy giữa chừng thì backend không giữ lại gì |
-| `FileLink` | Khi bấm mới gọi API của unit sở hữu để lấy URL tải (token 5 phút), rồi mở URL; không lưu URL lâu |
+- UC 70 primary U03: Admin xem/sửa non-secret Settings; quota qua U07 TeacherQuotaPolicyPort có version/audit riêng. Không transaction nguyên tử Settings+quota; unavailable không báo saved.
+- File private, MIME/size/purpose/scope kiểm server trước upload/download; short-lived token hoặc server stream không cấp thêm quyền. File provider ID và secrets không đưa vào log.
+- Backup schedule/retention là cấu hình bắt buộc xác nhận, không tự gán số. Consistent PostgreSQL dump + version/schema + manifest và bản sao độc lập các tệp tại snapshot; bản live Drive không là backup.
+- BackupRun CREATED → RUNNING → SUCCESS/FAILED; SUCCESS chỉ sau toàn bộ dump/files/encrypted upload/checksum. Retention chỉ xóa bản thành công cũ sau khi giữ tối thiểu bản tốt gần nhất; bản lỗi không thay bản tốt.
+- Archive mã hóa bằng khóa giữ ngoài VPS/archive; protected AI credentials trong database vẫn là ciphertext, secret store/key recovery riêng. Lỗi upload/disk/permission retry hữu hạn, phát backup.failed sau ghi trạng thái.
+- Restore runbook vào môi trường cô lập; không web production-restore hoặc MCP restore tool. Kiểm records/scope/links/XML/submissions/grades/quota; đo RPO/RTO, không cam kết zero loss.
+- Jobs enqueue-after-commit qua outbox; claim/lease/dedup theo requestRef, retry bounded, terminal lỗi ghi rõ. DB job/outbox là nguồn bền vững; Redis mất không được reset quota bền vững.
 
-Unit dùng: U05 (`MATERIAL`), U06/U09/U11/U14 (`DOCUMENT_IMAGE` qua trình soạn tài liệu).
+## UI acceptance
 
-## Trạng thái việc nền dùng chung
-
-| Component | Props | Hành vi |
-|---|---|---|
-| `usePollStatus(url)` | `url` API của unit sở hữu, `intervalMs = 3000` | Poll; dừng khi trạng thái là trạng thái cuối do unit khai báo; dừng khi rời trang |
-| `StatusBadge` | `status`, `labels` | Nhãn tiếng Việt do unit truyền vào (ví dụ Đang quét, Đã lập chỉ mục, Lỗi) |
-
-Unit khác (U05, U13, U14...) dùng hai component này trên màn hình của mình.
-
-Không có màn quản lý hay chạy lại việc nền (BR-U03-57).
+- Settings invalid/version conflict/quota port down; no personal secret response.
+- Backup happy path, partial file/upload failure, key unavailable, disk full, retention giữ last-good, restore isolated XML/grades/usage/permissions.
+- Job duplicate/crash-after-commit/retry bounded; download expired/out-of-scope; file deletion không xóa backup.

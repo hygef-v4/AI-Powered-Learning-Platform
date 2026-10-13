@@ -1,63 +1,41 @@
-# U13 AI & Code Execution - NFR Requirements
+# U13 AI Connections & MCP — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Hiệu năng
+**Primary UC:** 74, 75, 76. **Primary stories:** US-AIG-001, US-AIG-002, US-AIG-003, US-AIC-001, US-AIC-002. **Requirements:** FR-006/008/012/021/030/035/037.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U13-01 | Đề xuất 10 câu hỏi hoàn tất ≤ 60 s (p90) khi Gemini bình thường. | NFR-003 |
-| NFR-U13-02 | Đề xuất chấm một bài tài liệu ≤ 20 trang ≤ 120 s (p90). | NFR-003 |
-| NFR-U13-03 | Chạy thử code (`TRY`, UC 25) trả kết quả ≤ 10 s (p90) với ≤ 10 test công khai. | UC 25 |
-| NFR-U13-04 | Chấm code (`GRADE`) 50 test ≤ 2 phút; 100 bài nộp dồn cuối hạn xử lý hết ≤ 30 phút. Kiểm lời giải mẫu (`VERIFY`, UC 43) ≤ 2 phút. | NFR-003 |
-| NFR-U13-05 | Worker chạy tối đa 3 job AI và 2 job chạy code cùng lúc (cấu hình). | Tài nguyên VPS |
-| NFR-U13-06 | `quote`, `hold` của `AiUsagePort` p95 ≤ 100 ms (chạy trong request tải học liệu). | BR-U13-50, 51 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u13-ai-code-execution` không quyết định chức năng hiện hành.
 
-## 2. Chi phí và giới hạn
+## Required controls
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U13-10 | Trần chi phí AI ngày là mục `ai.dailyCostCapUsd` trên Settings (mặc định 2 USD, Admin sửa trên Setting Detail), ước tính theo bảng giá model `U13_MODEL_PRICES`; đạt trần → từ chối mới với "Hệ thống đang bận", không trừ credit người dùng; job đang chạy được hoàn tất; quét học liệu của U05 sang `BUSY`. | REL-005, FR-021, FR-033 |
-| NFR-U13-11 | Ước tính token trước khi gọi để `reserve` credit: độ dài prompt/4 + `maxOutputTokens`; mức giữ khi yêu cầu tóm tắt học liệu tính theo BR-U13-50. | U07 |
-| NFR-U13-12 | Timeout Gemini: kết nối 5 s, đọc 90 s (`pro`: 150 s). | REL-003 |
-| NFR-U13-13 | Judge0 gọi qua mạng nội bộ, timeout 30 s mỗi lô; Judge0 không phản hồi → `SANDBOX_ERROR` sau 3 lần retry. | REL-003 |
-| NFR-U13-14 | Thay đổi cài đặt AI (kill-switch, trần, tần suất, model) có hiệu lực ở mọi instance trong tối đa 30 giây (cache của `SettingsPort`). | BR-U03-86 |
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## 3. Bảo mật
+- Validation MIME/XML/schema/IDs/filter allowlists phù hợp unit, bounded payloads và rate limit phía server. Không log secret, raw prompt hoặc dữ liệu học vụ nhạy cảm.
+- Truy vấn phân trang/index theo owner/resource/time, timeout hữu hạn mọi port/provider; không promise external API p95 như query local.
+- Target baseline local APIs p95 500ms tại 100 concurrent/1000 accounts là mục tiêu cần benchmark, chưa có evidence; heavy files/AI/backup chạy worker và status queries.
+- Session/password/header controls giữ SEC-001–006; quota/backup/credential protected riêng, không yêu cầu mã hóa toàn DB.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U13-20 | Judge0 nằm trong mạng Docker riêng `sandbox`, không route ra Internet, không truy cập được `postgres`, `redis`, `rabbitmq` của hệ thống; chỉ `worker` và `backend` nói chuyện với Judge0 server. | US-ASM-005 S2, SEC-003 |
-| NFR-U13-21 | Judge0 bật giới hạn per-process (thời gian, bộ nhớ, số tiến trình, kích thước file), tắt `enable_network`. | BR-U13-32 |
-| NFR-U13-22 | `GEMINI_API_KEY` chỉ ở backend/worker; `JUDGE0_AUTH_TOKEN` cho server Judge0. Không log, không đưa vào Settings. | SEC-006, BR-U03-85 |
-| NFR-U13-23 | Lời giải mẫu, test ẩn và đề xuất AI cho bài `GRADED` không bao giờ ra API Student. Kết quả `PRACTICE` chỉ chủ attempt xem được. | SEC-002, FR-030 |
-| NFR-U13-24 | Đầu ra AI kiểm bằng JSON schema và quy tắc nghiệp vụ trước khi lưu; văn bản AI hiển thị dạng văn bản thuần/markdown đã làm sạch. | SEC-003 |
-| NFR-U13-25 | Kiểm vai trò và phạm vi ở backend trước mọi lời gọi AI hoặc Judge0: `ADMIN` bị từ chối mọi API AI và chạy code; Student được TRY lượt của mình, PRACTICE_GRADING hợp lệ và MATERIAL_SUMMARY qua U05 theo quyền xem (child EMBEDDING cùng HOLD); R2/R3/R4 đọc hiện thời, không dựa cache vai trò. | SECURITY-08, current SRS contract |
+## Unit-specific NFR risks
 
-## 4. Khả dụng
+- U13 AI Connections & MCP primary UC74/75/76; package legacy aiexecution không giữ code execution. Gemini/OpenAI/Claude là API providers, không bảo đảm chat subscription cấp API hoặc mọi agent client hỗ trợ MCP.
+- Connection scope INSTITUTIONAL/PERSONAL; shared chỉ Admin manage/test/revoke bằng synthetic payload và không học vụ. Personal chính Student/Teacher/SubjectManager owner configure; credentials encrypted/keyVersion, masked không readback, không log/return key/ciphertext.
+- Provider endpoints/model allowlist cấu hình server, không user arbitrary URL tránh SSRF; model compatibility/test có evidence trước dùng. Test synthetic bounded call có thể bị provider tính phí phải hiển thị nguồn/bên trả; không dùng nội dung học vụ.
+- Request direct captures actor/target/version/context/source/model/requestRef, domain authorize/policy; institutional educator-only U07 reserve atomic trước dispatch. Personal owner/rate controls không shared grant; no auto fallback.
+- AiTask QUEUED/RUNNING/READY/FAILED/UNKNOWN/CANCELLED; record dispatch checkpoint/provider request id và output/usage provenance. Timeout unknown không blind retry có thể double bill, reconcile U07 giữ uncertainty. Domain accepts validated structured result/version not provider tự publish.
+- Minimal scoped context strips hidden keys/unpublished grades/other members private drafts. Graded Student draft feedback teacher allow; group own editable section D03. Source files outside scope filtered before provider/agent.
+- McpCredential gắn ALAP actor/scope/expiry/revokedAt và hash, không provider key; credential create/revoke owner; mỗi tool tái kiểm actor ACTIVE/session binding/academic permissions/version/state. Chosen HTTP transport/client auth needs compatibility test; no broad anonymous bearer secret.
+- Initial tools: read_assignment_context, read_authorized_material, read_own_work, read_authorized_submission (assigned educator only), save_assignment_draft(expectedVersion), record_private_feedback, record_grading_proposal. No submit official/publish_grade/restore/credential read tool. Returned data and incoming tool parameters untrusted schema/size/rate validated.
+- External agent calls own LLM; ALAP receives tool metadata and optionally externallyReported model/tokens, not providerMeasured. It cannot know external token usage without report; unavailable not zero, tool count not model tokens. MCP calls do not consume institutional API quota.
+- Audit connection/model/quota/provenance references not raw prompt/key. Revocation denies next call; running result must recheck current policy/rights and input version before domain apply. Tool replay expectedVersion/requestRef guards duplicate writes; no exactly-once external promise.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U13-30 | Gemini không khả dụng hoặc AI bị tắt: chức năng không dùng AI (soạn tay, chấm tay, tải học liệu) vẫn chạy đầy đủ. | US-AIG-003 S3 |
-| NFR-U13-31 | Judge0 không khả dụng: nộp bài vẫn lưu (U11); chấm code chờ và retry; giảng viên thấy "chưa chấm được"; kiểm lời giải báo "Chưa chạy được". | REL-003 |
+## Test evidence cần có
 
-## 5. Kiểm thử
+- Three provider adapters synthetic/invalid key/unsupported model, secret not in response/log, personal owner and Admin synthetic-only.
+- Student direct or MCP cannot institutional grant; quota exhausted no personal fallback; concurrency/idempotency/checkpoint unknown call not redelivered blindly.
+- MCP hidden answers/out-of-class/member drafts denied; revoked scope next request denied; save stale version conflict; no official publish tool.
+- External tokens reported/unavailable not measured/zero; prompt injection cannot alter tool allowlist/scope; late AI result cannot overwrite changed draft or grade.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U13-40 | Unit test mọi `BR-U13-xx` với `FakeAiGateway` (trả JSON cố định/sai định dạng/timeout), `FakeCodeRunner` và `SettingsPort` giả. | NFR-004 |
-| NFR-U13-41 | Kịch bản Judge0 thật (7 ngôn ngữ chạy "hello" + một test đúng/sai/quá giờ/quá bộ nhớ; mã cố mở kết nối mạng bị chặn) chuyển cho tester; unit không viết integration test. | US-ASM-005, quyết định 2026-10-05 |
-| NFR-U13-42 | Test trừ credit: thành công settle đúng; lỗi/quá hạn sau sử dụng settle phần dùng thật và trả dư, chưa dùng mới hoàn toàn bộ; bị từ chối không trừ. Học liệu: một HOLD, child calls không reserve thêm; thiếu credit từ chối, NO_TEXT hoàn toàn bộ, retry/replay không cộng trùng, quá 25 giờ chốt đúng lượng đã dùng; embedding lỗi giữ summary. | U07, BR-U13-50…53 |
-
-## 6. Compliance
-
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | NFR-U13-22, `ai_suggestions` không lưu prompt thô |
-| SECURITY-05 | Compliant | NFR-U13-24; giá trị cài đặt do U03 kiểm theo `SettingDefinition` |
-| SECURITY-08 | Compliant | NFR-U13-23, 25 |
-| SECURITY-09 | Compliant | Key trong `.env` |
-| SECURITY-15 | Compliant | NFR-U13-30, 31 |
-| RESILIENCY-06 | Compliant | Health Judge0 trong health backend (không làm backend `DOWN`) |
-| RESILIENCY-10 | Compliant | NFR-U13-12, 13 |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+Security enabled subset 03/04/05/08/09/12/15: constraints auth/input/audit/secret/failure được thể hiện, chưa runtime verified. Resiliency enabled subset 04/06/10: deployment/health/timeouts giữ; rule khác N/A theo state, PBT disabled.

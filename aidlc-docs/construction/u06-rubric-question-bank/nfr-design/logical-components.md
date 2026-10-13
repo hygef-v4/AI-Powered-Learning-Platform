@@ -1,55 +1,33 @@
-# U06 Rubric & Question Bank - Logical Components
+# U06 Rubrics & Subject Quiz Bank — logical-components
 
-**Bản tài liệu 2026-10-09**: UC 46, 56, 57 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Sơ đồ
+**Primary UC:** 46, 56, 57. **Primary stories:** US-QBK-001, US-QBK-002. **Requirements:** FR-016/008.
 
-```
- Trình duyệt (CN môn)                         U08 / U09 / U11 / U13 / U15
-   |                                               |
-   v                                               v
-+-----------------------------------------------------------------------------+
-| backend                                                                     |
-| QuestionController --> QuestionService --> DefinitionValidator              |
-|                            |          --> QuestionScopeGuard (U04)          |
-|                            |          --> ContentRefPort (U05)              |
-|                            |          --> DocumentModelPort (U09, C)        |
-|                            v                                                |
-|                    QuestionRepository (PostgreSQL questions)                |
-| ImportController --> ImportService --> XlsxRowReader / CsvRowReader         |
-|                                    --> RowMapper --> QuestionService        |
-| QuestionQueryService (BankQueryPort, InlineQuestionPort)                    |
-| RubricService (RubricPort) --> RubricScorer, RubricRepository (rubrics)     |
-+-----------------------------------------------------------------------------+
-```
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u06-rubric-question-bank` không quyết định chức năng hiện hành.
 
-**Text alternative**: Chủ nhiệm môn thao tác ngân hàng qua `QuestionController`; `QuestionService` kiểm phạm vi qua U04, kiểm `definition` theo loại (khung tài liệu qua U09) và `lessonRefs` (U05) rồi lưu vào bảng `questions`. Nhập file đi qua `ImportController` và `ImportService`, đọc xlsx hoặc csv, ánh xạ từng dòng rồi dùng lại `QuestionService`. Các unit khác tìm, chọn ngẫu nhiên và đọc câu qua `QuestionQueryService`; U09 thêm, sửa, xóa, nhân bản rubric và U08 khóa rubric qua `RubricService`, U15 tính điểm rubric qua `RubricScorer`.
+## Component responsibility
 
-## 2. Thành phần
-
-| Thành phần | Trách nhiệm |
+| Layer | Responsibility |
 |---|---|
-| `QuestionService` | F3-F5; P1 |
-| `DefinitionValidator` | P2 |
-| `QuestionScopeGuard` | BR-U06-01…04 |
-| `ImportService`, `XlsxRowReader`, `CsvRowReader`, `RowMapper` | F6; P3 |
-| `QuestionQueryService` | F1, F2, F9; P5, P6 |
-| `RubricService`, `RubricScorer` | F8; P4, P7 |
+| Controller / MCP adapter | Deserialize/validate, authenticated actor, minimal response; gọi domain service |
+| Application service | Scope/state/version, orchestration qua ports, transaction owner |
+| Domain policy/model | Rules, transitions, snapshot invariants |
+| Repository | Owned entities only; optimistic/locking/unique constraints |
+| Outbound adapters | Timeout/retry/provenance; không quyết định học vụ |
+| UI | Entry UC, form/query status, không client-only security |
 
-## 3. Cấu hình
+## Owner contract
 
-| Khóa | Mặc định |
-|---|---|
-| `U06_IMPORT_MAX_ROWS` | 500 |
-| `U06_IMPORT_MAX_BYTES` | 5MB |
-| `U06_CODE_LANGUAGES` | `java,python,c,cpp,javascript,dart,csharp` (khớp U13) |
+rubric CRUD/validate/lock/snapshot; MCQ bank version/select
 
-## 4. Compliance
+## Owned data
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log `definition` |
-| SECURITY-05 | Compliant | P2, P3 |
-| SECURITY-08 | Compliant | `QuestionScopeGuard`, P6 |
-| SECURITY-15 | Compliant | P3 transaction mỗi dòng, P7 khóa có điều kiện |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+- QuizBankQuestion: id/subjectId/version/status/stem/options[{id,text}]/correctOptionIds/maxScore; MCQ validation single/multiple selection theo cấu hình.
+- Rubric: id/assignmentPartId/version/checklist[{criterionId,text,points}]/maxScore/lockedAt; RubricSnapshot immutable.
+- ScoreResult: rubricVersion/itemOutcomes/total/evidence; không do AI cộng điểm ngoài rule.
+
+## Critical paths
+
+- Manager draft MCQ → validate options/key → publish/retire; author copies version snapshot into Quiz.
+- Document part add → empty rubric → educator fills checklist → validation/lock → scorer computes sum from validated item decisions.

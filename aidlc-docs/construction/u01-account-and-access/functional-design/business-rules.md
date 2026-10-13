@@ -1,6 +1,10 @@
-# U01 Account & Access - Business Rules
+# U01 Account & Access — business-rules
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "chốt ở NFR" là tham số cấu hình, không cố định ở đây.
 
@@ -55,7 +59,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-41 | Sai mật khẩu liên tiếp 5 lần thì đặt `lockedUntil` = hiện tại + 15 phút. Trong thời gian này mọi lần đăng nhập đều bị từ chối với cùng thông báo trung tính. | Câu 5, SECURITY-12 |
 | BR-U01-42 | Đăng nhập đúng xóa `failedLoginCount`. Hết `lockedUntil` thì tự mở, không cần admin. | Câu 5 |
 | BR-U01-43 | Ngoài khóa theo tài khoản còn giới hạn theo client để chặn thử nhiều tài khoản. | Câu 5 |
-| BR-U01-44 | Phiên gồm access token 15 phút và refresh token lưu phía server (idle 2 giờ, tối đa 7 ngày). Refresh chỉ thành công khi `credentialVersion` còn khớp. Access token còn hạn không bị kiểm lại, nên mọi thu hồi quyền có hiệu lực chậm **tối đa 15 phút** (được chấp nhận). | US-IAM-002 S1/S3, U01 NFR |
+| BR-U01-44 | Phiên gồm access token 15 phút và refresh token lưu phía server (idle 2 giờ, tối đa 7 ngày). Refresh chỉ thành công khi `credentialVersion` còn khớp. JWT TTL không là grace period: mỗi action kiểm account/session/credentialVersion hiện hành, quyền bị thu hồi có hiệu lực request tiếp theo. | US-IAM-002 S1/S3, U01 NFR |
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
 | BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
@@ -78,7 +82,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-60 | Mỗi tài khoản một role. Student → User, Teacher → User, Subject Manager → Teacher. `ADMIN` chỉ dùng chức năng User và chức năng quản trị; không dùng chức năng Subject Manager/Teacher và không nhận phân công môn/lớp. R1 chỉ dữ liệu của mình; R2 (môn) và R3/R4 (lớp) cần phân công hiện thời và tài khoản `ACTIVE`. Không vai trò nào kế thừa quyền Student. | FR-002; người dùng chốt 2026-10-09 |
 | BR-U01-61 | U01 chỉ đặt role. Gán môn/lớp cụ thể là việc của U04. | Câu 7 |
 | BR-U01-62 | Mọi quyết định quyền chạy phía server, mặc định từ chối, kết hợp role của U01 với phạm vi của U04. | SECURITY-08 |
-| BR-U01-63 | Đổi role tăng `credentialVersion`: refresh token của người đó hết hiệu lực ngay; access token còn hạn dùng tối đa 15 phút (BR-U01-44). | Câu 6, US-IAM-005 S2 |
+| BR-U01-63 | Đổi role tăng `credentialVersion`: refresh token của người đó hết hiệu lực ngay; access token version cũ bị từ chối ở request tiếp theo qua server authority (BR-U01-44). | Câu 6, US-IAM-005 S2 |
 | BR-U01-64 | Đổi role bị chặn nếu role mới không giữ được phân công hiện có: Chủ nhiệm môn cần `SUBJECT_MANAGER`; giảng viên lớp cần `TEACHER` hoặc `SUBJECT_MANAGER`. Gồm cả hạ role và đổi sang `ADMIN`. Lỗi nêu môn/lớp còn phụ trách. | Câu 8; người dùng chốt 2026-10-09 |
 | BR-U01-65 | Admin không được tự hạ role hoặc tự vô hiệu hóa chính mình. | Câu 9 |
 | BR-U01-66 | Không được hạ role hoặc vô hiệu hóa `ADMIN` đang hoạt động cuối cùng. | Câu 9 |
@@ -114,3 +118,19 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-93 | Khi không kiểm được quyền (phụ thuộc lỗi) thì từ chối. | SECURITY-15 |
 | BR-U01-94 | Lỗi trả client dạng an toàn, không lộ stack trace hay trạng thái tài khoản. | SECURITY-15 |
 | BR-U01-95 | Redis không khả dụng thì không tạo phiên mới, không refresh, không gửi OTP; trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | SEC-006, U01 NFR |
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

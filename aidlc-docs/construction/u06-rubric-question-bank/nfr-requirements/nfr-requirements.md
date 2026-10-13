@@ -1,48 +1,34 @@
-# U06 Rubric & Question Bank - NFR Requirements
+# U06 Rubrics & Subject Quiz Bank — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: UC 46, 56, 57 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Hiệu năng
+**Primary UC:** 46, 56, 57. **Primary stories:** US-QBK-001, US-QBK-002. **Requirements:** FR-016/008.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U06-01 | Tìm câu trên Question List và `QuestionPicker` p95 ≤ 300 ms với ≤ 20 000 phiên bản mỗi môn, trang ≤ 50. | NFR-003 |
-| NFR-U06-02 | Nhập file 500 dòng xử lý đồng bộ ≤ 10 giây. | BR-U06-40 |
-| NFR-U06-03 | `getVersion`, `getRubric` p95 ≤ 50 ms (đọc theo khóa chính). | NFR-003 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u06-rubric-question-bank` không quyết định chức năng hiện hành.
 
-## 2. Toàn vẹn dữ liệu
+## Required controls
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U06-10 | Unique `(lineage_id, version)` trên `questions`; partial unique 1 `DRAFT` mỗi `lineage_id`. | BR-U06-11 |
-| NFR-U06-11 | Bản `ACTIVE`/`RETIRED` bất biến: service chặn sửa `definition`; test bảo đảm. | BR-U06-10 |
-| NFR-U06-12 | Điểm lưu dạng `numeric(6,2)`, không dùng số thực dấu phẩy động. | BR-U06-30 |
-| NFR-U06-13 | Nhập file: mỗi dòng một transaction; lỗi một dòng không ảnh hưởng dòng khác. | BR-U06-41 |
-| NFR-U06-14 | Rubric đã khóa không sửa, không xóa: câu lệnh cập nhật có điều kiện `locked_at IS NULL`, không dòng nào đổi → `409`; khóa chạy trong transaction phát hành của U08. | BR-U06-33 |
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## 3. Bảo mật
+- Validation MIME/XML/schema/IDs/filter allowlists phù hợp unit, bounded payloads và rate limit phía server. Không log secret, raw prompt hoặc dữ liệu học vụ nhạy cảm.
+- Truy vấn phân trang/index theo owner/resource/time, timeout hữu hạn mọi port/provider; không promise external API p95 như query local.
+- Target baseline local APIs p95 500ms tại 100 concurrent/1000 accounts là mục tiêu cần benchmark, chưa có evidence; heavy files/AI/backup chạy worker và status queries.
+- Session/password/header controls giữ SEC-001–006; quota/backup/credential protected riêng, không yêu cầu mã hóa toàn DB.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U06-20 | Đọc xlsx có giới hạn: ≤ 5 MB, tỉ lệ nén tối thiểu (chống zip bomb), chỉ sheet đầu, ≤ 500 dòng, ô ≤ 32 000 ký tự; bỏ qua công thức (chỉ đọc giá trị). | SEC-003 |
-| NFR-U06-21 | CSV UTF-8, có BOM hoặc không; dòng ≤ 64 KB. | SEC-003 |
-| NFR-U06-22 | Đáp án đúng, giải thích, `answerGuide`, test ẩn, lời giải mẫu không bao giờ trả cho người học qua API của U06 (U06 chỉ phục vụ người soạn); U11 dùng `getStudentView`. | SEC-002 |
-| NFR-U06-23 | Sơ đồ Draw.io trong khung tài liệu kiểm bằng parser an toàn của U09. | BR-U09-35 |
-| NFR-U06-24 | Kiểm quyền theo phạm vi ở mọi endpoint; ngoài phạm vi trả `404`; giảng viên chỉ đọc câu `ACTIVE` của môn có lớp mình dạy. | SEC-002 |
+## Unit-specific NFR risks
 
-## 4. Kiểm thử
+- Subject bank chỉ MCQ cho Quiz, owner Subject Manager R2. Teacher chỉ chọn câu ACTIVE môn trong scope; không bank lớp.
+- Question version immutable khi được snapshot/published; sửa nháp dùng optimistic version, câu đã dùng retire không phá snapshot.
+- Rubric cho từng document part, auto-create empty rubric lúc thêm phần; checklist điểm không âm, tổng tính deterministic. Publication cần rubric đủ; lock/snapshot lúc phát hành.
+- Assignment có/không diagram dùng cùng rubric parts; diagram criteria chỉ nếu diagramEnabled. Không bank CODE/solution/test runner.
+- Quiz scorer validate option IDs theo snapshot và deterministic keys; chỉ trả answer/feedback đúng reveal policy.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U06-30 | Unit test mọi `BR-U06-xx`, gồm từng loại câu, rubric, `score` với mục không thuộc rubric, sửa/xóa rubric đã khóa bị từ chối, khóa bị từ chối khi còn rubric trống. | NFR-004 |
-| NFR-U06-31 | Test nhập: 4 file mẫu hợp lệ, file có dòng lỗi, xlsx nén bất thường, CSV sai mã hóa. | NFR-004 |
+## Test evidence cần có
 
-## 5. Compliance
+- No invalid correct keys/negative scores; archived question cannot edit published snapshots; rubric lock.
+- Same answer snapshot same Quiz score; Student context excludes hidden keys; diagram-off disallows diagram rubric requirement.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log nội dung đáp án |
-| SECURITY-05 | Compliant | NFR-U06-20, 21, 23 |
-| SECURITY-08 | Compliant | NFR-U06-22, 24 |
-| SECURITY-15 | Compliant | NFR-U06-13, 14 |
-| Rule còn lại | N/A | Dùng chung backend hoặc ngoài phạm vi đồ án |
+Security enabled subset 03/04/05/08/09/12/15: constraints auth/input/audit/secret/failure được thể hiện, chưa runtime verified. Resiliency enabled subset 04/06/10: deployment/health/timeouts giữ; rule khác N/A theo state, PBT disabled.

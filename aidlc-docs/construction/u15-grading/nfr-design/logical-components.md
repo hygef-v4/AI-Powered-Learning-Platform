@@ -1,55 +1,34 @@
-# U15 Grading - Logical Components
+# U15 Grading & Gradebook — logical-components
 
-**Bản tài liệu 2026-10-09**: UC 37, 38, 39, 40 (chốt và công bố là luồng phụ của UC 38, 39) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Sơ đồ
+**Primary UC:** 37, 38, 39, 40. **Primary stories:** US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001. **Requirements:** FR-008/009/020/039.
 
-```
-+----------------------------------------------------------+
-| U11, U14 nộp bài; U13 chấm Code Lab, chấm Practice xong  |
-+----------------------------------------------------------+
-                              |
-                              |  port do U15 cài, cùng transaction
-                              v
-+----------------------------------------------------------+
-| backend                                                  |
-| SubmissionSubmittedAdapter, GroupSubmittedAdapter,       |
-| CodeGradedAdapter, PracticeResultAdapter --> QuizScorer  |
-| GradingController --> GradingService (P1, P3)            |
-|   --> RubricPort (U06), AiGradingPort (U13)              |
-| BulkGradeService, PublishService (P4)                    |
-| GradebookService (P6), StudentGradeController (P5)       |
-| Mọi ghi điểm --> GradeWriter (P1)                        |
-| Repository: evaluations                                  |
-+----------------------------------------------------------+
-                              |
-                              |  event grade.published sau commit
-                              v
-+----------------------------------------------------------+
-| U16: thông báo, phân bố điểm, xuất bảng điểm             |
-+----------------------------------------------------------+
-```
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u15-grading` không quyết định chức năng hiện hành.
 
-**Text alternative**: U11 và U14 khi nộp, U13 khi chấm xong Code Lab hoặc có kết quả Practice, gọi port do U15 cài trong cùng transaction; adapter tạo dòng `evaluations` (kèm bài và lớp), chấm quiz luyện tập bằng `QuizScorer` hoặc cập nhật điểm Code Lab. Trong backend, giảng viên lớp xem bài nộp và chấm qua `GradingController`/`GradingService` (dùng rubric U06, đề xuất AI U13); chốt/công bố hàng loạt qua `BulkGradeService`/`PublishService`; sổ điểm qua `GradebookService`; Student chỉ đọc điểm đã công bố qua `StudentGradeController`. Mọi thay đổi điểm đi qua `GradeWriter`; dữ liệu nằm ở `evaluations` (thời điểm công bố theo lớp suy ra từ `published_at`). Công bố phát event `grade.published` cho U16.
+## Component responsibility
 
-## 2. Thành phần
+| Layer | Responsibility |
+|---|---|
+| Controller / MCP adapter | Deserialize/validate, authenticated actor, minimal response; gọi domain service |
+| Application service | Scope/state/version, orchestration qua ports, transaction owner |
+| Domain policy/model | Rules, transitions, snapshot invariants |
+| Repository | Owned entities only; optimistic/locking/unique constraints |
+| Outbound adapters | Timeout/retry/provenance; không quyết định học vụ |
+| UI | Entry UC, form/query status, không client-only security |
 
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `GradeWriter` | backend, worker | P1 |
-| `GradingScopeGuard` | backend | R3/R4 theo `class_id` của đánh giá; Admin và Chủ nhiệm môn không dạy lớp bị từ chối (BR-U15-01, 03) |
-| `QuizScorer` | backend | F9; P3 |
-| `SubmissionSubmittedAdapter`, `GroupSubmittedAdapter`, `CodeGradedAdapter`, `PracticeResultAdapter` | backend, worker | Cài port của U11, U14, U13: tạo dòng `evaluations` (P2), cập nhật điểm Code Lab, kết quả Practice |
-| `GradingController`, `GradingService` | backend | F2, F3, F6, F7 |
-| `BulkGradeService`, `PublishService` | backend | F4, F5; P4 |
-| `GradebookController`, `GradebookService`, `StudentGradeController` | backend | F8; P5, P6 |
+## Owner contract
 
-## 3. Compliance
+proposal validation; manual evaluation; finalize/publish/history/gradebook; reviewWorkActivity(authorizedTeacher, attempt/member) within UC 37 via U11 ActivityQueryPort
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log phản hồi |
-| SECURITY-05 | Compliant | Kiểm điểm, lý do |
-| SECURITY-08 | Compliant | P5, `GradingScopeGuard` |
-| SECURITY-15 | Compliant | P1, P2, P4 |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+## Owned data
+
+- Evaluation: id/submissionRef/classId/studentId/groupRef/kind(PRACTICE/OFFICIAL)/rubricVersion, outcomes/score/feedback/status/version/finalizedBy/publishedBy/timestamps.
+- GradingProposal: id/sourceTaskRef/submissionVersion/rubricVersion/providerProvenance/validatedOutcomes/status; acceptance expectedEvaluationVersion.
+- GradeHistory immutable: before/after/reason/actor/timestamp; group contribution adjustment explicit bounded per student; no ActivityEvent tables in U15.
+
+## Critical paths
+
+- Submission event → register scope/snapshot → teacher manual or selected-source AI request → validate proposal/rubric → teacher confirms → finalize → publish event.
+- Student view grade only published own; teacher export/Gradebook official Assignments only via U16.
+- UC37 activity tab → authorize → U11 scoped query → display known intervals/gaps; no grade mutation or verdict automation.

@@ -1,6 +1,10 @@
-# U01 Account & Access - Domain Entities
+# U01 Account & Access — domain-entities
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 59–63 theo `docs/use-cases-73.md`.
 
@@ -12,7 +16,6 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `PasswordCredential` | Value object của `Account` | `accounts` | U01 |
 | `Profile` | Value object của `Account` | `accounts` | U01 |
 | `LoginThrottle` | Value object của `Account` | `accounts` | U01 |
-| `CreditBalance` | Value object của `Account` | `accounts` (`free_balance`, `free_period`, `purchased_balance`) | U07 |
 | `EmailPreferences` | Value object của `Account` | `accounts.email_preferences` | U16 |
 | `OtpChallenge` | Entity tạm thời | Redis | U01 |
 | `VerificationTicket` | Entity tạm thời (`otpTicket`) | Redis | U01 |
@@ -21,7 +24,7 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `AccountImportResult` | Kết quả trả về | Không lưu | U01 |
 | `AuthorizationDecision` | Kết quả trả về | Không lưu | U01 |
 
-U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), nghiệp vụ credit (U07).
+U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), quota/usage (U07), AI connection secrets (U13).
 
 ## 2. `Account`
 
@@ -34,8 +37,7 @@ U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), nghiệp v
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
 | `throttle` | `LoginThrottle` | Mặc định không khóa |
-| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa; mọi phiên có version cũ không làm mới được |
-| `credit` | `CreditBalance` | Do U07 ghi; U01 không đọc/ghi |
+| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa; version cũ bị deny request tiếp theo và không refresh được |
 | `createdAt`, `updatedAt`, `version` | Thời gian và khóa lạc quan | Hệ thống quản lý |
 
 ### Trạng thái
@@ -73,15 +75,9 @@ stateDiagram-v2
 | `failedLoginCount` | Số lần sai liên tiếp |
 | `lockedUntil` | Mốc tự mở khóa; rỗng nếu không khóa |
 
-## 6. `CreditBalance`
+## 6. AI access boundary
 
-| Thuộc tính | Ý nghĩa |
-|---|---|
-| `freeBalance` | Credit tặng còn lại trong tháng |
-| `freePeriod` | Tháng của phần tặng (`yyyy-MM`) |
-| `purchasedBalance` | Credit đã mua còn lại |
-
-U07 tạo/ghi ví nghiệp vụ cho mọi tài khoản `ACTIVE` có vai trò `STUDENT`, `TEACHER` hoặc `SUBJECT_MANAGER`, khóa dòng tài khoản khi giữ/trừ credit (phần giữ/trừ nằm trên `ai_suggestions`, không có sổ cái). Chỉ ba vai trò trên được tặng credit hằng tháng và mua credit; Admin không có ví/không dùng AI; Student chỉ dùng credit cho AI chấm Practice Text/Diagram Essay hợp lệ. Quy tắc nghiệp vụ ở U07.
+Không số dư credit hoặc ví trong Account. U07 lưu quota educator và usage riêng; U13 bảo vệ kết nối cá nhân/tổ chức. Student không shared quota. Admin được cấu hình/test synthetic API chung, không gọi AI học vụ.
 
 ## 7. Cấu hình U01
 
@@ -115,7 +111,7 @@ Dùng một lần; xóa khi đặt mật khẩu thành công (BR-U01-28).
 |---|---|
 | `sessionId` | Định danh phiên |
 | `accountId` | Chủ phiên |
-| `credentialVersion` | Version lúc tạo; lệch với `Account.credentialVersion` thì không làm mới được |
+| `credentialVersion` | Version lúc tạo; lệch current `Account.credentialVersion` thì deny access/refresh |
 | `refreshTokenHash` | Băm refresh token; phát hiện dùng lại thì thu hồi phiên |
 | `issuedAt`, `lastUsedAt`, `expiresAt` | Idle 2 giờ tính từ `lastUsedAt`, tối đa 7 ngày tính từ `issuedAt`. Access token JWT sống 15 phút, không lưu phía server |
 
@@ -166,7 +162,7 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 | Port | Cung cấp bởi | Cạnh | Dùng để |
 |---|---|---|---|
 | `AuditPort.record` | U02 | `H` | Ghi sự kiện bảo mật/nghiệp vụ (U02 code trước U01) |
-| `JobPort.enqueue` | U03 | `H` | Gửi việc `OTP_DELIVERY` sang RabbitMQ sau commit (không có bảng job); handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
+| `JobPort.enqueue` | U03 | `H` | Gửi việc `OTP_DELIVERY` sang worker sau commit qua durable job/outbox U03 (U01 không sở hữu bảng job); handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
 | `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài | `C` (U04 code sau U01) | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
 
 U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng adapter tạm (xem code generation plan).
@@ -186,3 +182,19 @@ U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng 
 | `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 60 | Kiểm rồi xác nhận nhập CSV theo F10 |
 
 Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

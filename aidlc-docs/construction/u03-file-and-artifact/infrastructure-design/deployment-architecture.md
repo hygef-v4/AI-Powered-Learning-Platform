@@ -1,55 +1,31 @@
-# U03 File, Job & Event - Deployment Architecture
+# U03 File, Job, Event & Settings — deployment-architecture
 
-**Bản tài liệu 2026-10-09**: UC 70, 71 (Settings, người dùng chốt U03 giữ ngày 2026-10-09) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-SET-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-```
- Trình duyệt --HTTPS--> [nginx] --(không đệm, 50 MB)--> [backend]
-                                                     |  /tmp/uploads (volume)
-                                                     |
-                               +---------------------+----------------+
-                               v                                      v
-                           [redis]                          Google Shared Drive
-                           file:download-token:*            byte + appProperties (443)
-                                                                  ^
-                                         [worker] --DriveJobHandler+
-```
+**Primary UC:** 70. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
 
-**Text alternative**: Trình duyệt gửi file qua HTTPS tới Nginx; Nginx chuyển thẳng (không đệm) tới backend với giới hạn 50 MB. Backend ghi file tạm vào volume `/tmp/uploads`, đẩy byte file và metadata (`appProperties`) lên Google Shared Drive qua Internet, lưu token tải về vào Redis. U03 không ghi PostgreSQL. Worker xử lý việc dọn file Drive còn sót khi upload lỗi.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u03-file-and-artifact` không quyết định chức năng hiện hành.
 
-## Luồng upload
-1. Nginx chuyển stream sang backend.
-2. Backend ghi `/tmp/uploads`, kiểm tra, đẩy lên Drive kèm `appProperties`, xóa file tạm, trả `FileRef`.
+## Mapping triển khai
 
-## Luồng tải về
-1. Unit sở hữu cấp token.
-2. Trình duyệt gọi `/api/v1/files/download/{token}`; backend stream từ Drive qua Nginx.
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `files`; không tạo deployable riêng.
 
-## Chạy local không có key
-- Backend tự dùng `LocalFolderStorageAdapter`, lưu vào volume `files-local`.
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-## Việc nền (chuyển từ U02)
+- Admin Settings → validate version → U03 setting transaction hoặc U07 quota command → audit → result đúng owner.
+- Scheduler khóa một run cho lịch → dump nhất quán và chốt danh sách file version → copy immutable files/verify → encrypt archive → upload private backup folder/verify → SUCCESS → retention.
+- Backup failure → FAILED giữ last-good → outbox backup.failed → U16. SMTP failure không đổi BackupRun.
+- Restore isolated → decrypt bằng operator key → schema/data/files remap → verify domain invariants → restore evidence/audit; production cutover cần kế hoạch riêng.
 
-```
- mạng internal
- +--------------------------------------------------------------+
- |  [backend] --ghi dòng nghiệp vụ--> [postgres]|
- |      |                                          ^            |
- |      | afterCommit                              |            |
- |      v                                          |            |
- |  [rabbitmq]  7 queue jobs.* + jobs.retry.* --> [worker]      |
- |                       <-- sweeper / scanner đọc bảng --      |
- +--------------------------------------------------------------+
-```
+## Deploy/rollback/secret
 
-**Text alternative**: Backend ghi dòng nghiệp vụ vào PostgreSQL trong transaction, rồi gửi message việc nền sang RabbitMQ sau commit. Worker nhận message từ 7 queue `jobs.*`; lỗi tạm đi qua các queue `jobs.retry.*` có TTL rồi quay lại queue gốc. Worker chạy sweeper gửi lại việc bị mất và scanner cho việc hẹn giờ bằng cách đọc bảng nghiệp vụ. Cả bốn container nằm trên mạng `internal`, không container nào publish cổng ra ngoài.
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
 
-## Luồng việc nền
+## Unit integration risks
 
-1. Backend ghi dòng nghiệp vụ ở trạng thái chờ trong transaction nghiệp vụ, commit.
-2. `afterCommit` gửi `JobMessage` sang exchange `jobs`.
-3. Worker nhận, handler cập nhật dòng nghiệp vụ, ack.
-
-## Khi RabbitMQ khởi động lại
-
-- Message persistent vẫn còn.
-- Message gửi lỗi trong lúc RabbitMQ tắt: dòng nghiệp vụ vẫn ở trạng thái chờ, sweeper gửi lại sau tối đa 5 phút. Việc hẹn giờ đọc bảng nên không bị ảnh hưởng. Audit không đi qua RabbitMQ; chỉ event thông báo trong khoảng đó có thể mất.
+- Settings invalid/version conflict/quota port down; no personal secret response.
+- Backup happy path, partial file/upload failure, key unavailable, disk full, retention giữ last-good, restore isolated XML/grades/usage/permissions.
+- Job duplicate/crash-after-commit/retry bounded; download expired/out-of-scope; file deletion không xóa backup.

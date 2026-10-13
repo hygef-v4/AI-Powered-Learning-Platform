@@ -1,37 +1,29 @@
-# U09 Question Type Authoring - Infrastructure Design
+# U09 Assignment Documents & Quiz Authoring — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 35, 42. **Primary stories:** US-GRP-003, US-ASM-004, US-ASM-006. **Requirements:** FR-006/016/017/039.
 
-| Thành phần | Chạy ở |
-|---|---|
-| Cấu hình loại bài, khung, nhập/xuất DOCX, kiểm tài liệu, rút gọn XML | `backend` |
-| Cột `config` của `assignments` (U08 tạo bảng): cài đặt quiz, rubric từng câu Text Essay, khung, phần | `postgres` |
-| Ảnh trong tài liệu | U03 purpose `DOCUMENT_IMAGE` (Google Drive) |
-| Trình vẽ | `https://embed.diagrams.net` (trình duyệt tải trực tiếp, không qua server) |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u09-question-type-authoring` không quyết định chức năng hiện hành.
 
-U09 không chạy trong `worker`, không có queue, Redis key hay secret riêng.
+## Mapping triển khai
 
-## 2. Nginx
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `authoring`; không tạo deployable riêng.
 
-- `/api/v1/assignments/*/skeleton:import-docx`: `client_max_body_size 20m`, `proxy_read_timeout 60s`.
-- `/api/v1/attempts/*/docx:preview`: cùng giới hạn 20 MB và timeout 60 s; chỉ U11 cho lượt DOCUMENT đang làm.
-- Xuất DOCX trả stream: `proxy_read_timeout 60s`.
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-## 3. Bộ nhớ backend
+- Educator edits skeleton/settings → validates blocks/parts/rubric/policy → optimistic save → U08 review/publication.
+- Draw.io launch from enabled block → validate postMessage origin/source/request correlation → preserve full XML/version → regenerate safe preview.
+- AI proposal/import content → untrusted schema validation → educator diff/accept into draft only → update version; no auto-publication.
 
-- Nhập DOCX 20 MB và xuất 2 lượt đồng thời cần thêm khoảng 300 MB heap lúc cao điểm; backend giữ giới hạn hiện có, `-Xmx` đặt 75% RAM container.
+## Deploy/rollback/secret
 
-## 4. Migration
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
 
-U09 không có migration: cấu hình loại bài và khung tài liệu nằm trong `assignments.config` (`jsonb`, U08 tạo); U09 ghi qua `AssignmentExtensionPort`.
-- `config.questionRubrics[]` (câu Text Essay → `rubricId`), `config.parts[]` (phần kèm `rubricId`); `rubricId` không là khóa ngoại, U09 kiểm khi duyệt.
-- Khung của câu `DOCUMENT` trong ngân hàng nằm trong `questions.definition` của U06; U09 sao vào bài khi người soạn chọn và kiểm qua `DocumentModelPort`.
+## Unit integration risks
 
-## 5. Compliance
-
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-04 | Compliant | CSP chỉ mở `frame-src` cho `embed.diagrams.net`, `youtube-nocookie` |
-| Rule còn lại | N/A | Dùng chung deploy, health, secret của backend |
+- Diagram XML roundtrip; malicious/oversized XML/SVG/import reject; disabled diagram reject; valid pure doc works.
+- Student cannot edit scaffold/key/rubric; Quiz keys stripped; policy snapshot unchanged mid-attempt; AI proposal stale rejected.

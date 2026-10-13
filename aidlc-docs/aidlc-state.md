@@ -1,11 +1,32 @@
 # AI-DLC State Tracking
 
+## Current Inception revision — 2026-10-13
+
+- Người dùng yêu cầu sửa Inception sau khi chốt hai loại bài Assignment/Quiz, SWR/SWD, no Code/payment; Assignment cá nhân/nhóm với Draw.io tùy chọn; shared educator quota, personal API/MCP cho educator/Student.
+- Nguồn Inception: `inception/README.md`, `inception/requirements/requirements.md`, `inception/requirements/use-cases.md`; **66 active UC, 50 MVP stories + 1 extension story, 15 logical units**. U07 đổi thành Usage/Quota, U13 Connections/MCP; IDs cũ giữ và retired không reuse.
+- D01–D04 chưa chốt; D05 đã chốt bổ sung backup/activity/email/minh bạch AI theo request mới. Chi tiết tại `inception/requirements/council-features-2026-10-13.md`; Giữ Quiz Practice/Group Graded theo policy cũ, Student group context hạn chế, không gán numeric quota hay chứng nhận survey.
+- **Construction design/shared infrastructure/code plans đã revision theo 66 UC; contracts/code/migrations thực tế, Google Reports và diagrams chưa revision theo scope này.** Stage/approvals/progress dưới đây thuộc lịch sử 09/10 và không xác nhận scope mới đã implemented/approved.
+- Bảng report `docs/usecase_table.md` đã sync 66 UC; bản 73 UC giữ tại `docs/history/use-cases-73.md`, các liên kết baseline được chuyển tới bản lưu, không đổi scope Construction.
+- Không tạo workflow mới hoặc tiến sang code; documentation-only sync đã kiểm catalog/ownership/links. Bước tiếp theo cần review decisions và downstream impact trước code mới.
+
+
+- Consolidation đã chốt: UC 71/78 → 70 Manage System Settings; 80 → 58 Admin Dashboard; 81 → 37 View Student Submissions. Giữ ID lịch sử, chức năng/stories/unit services không bị loại.
+
+- Đồng bộ Inception chi tiết theo 66 UC: requirements/stories/personas/ports/orchestration/dependency và kế hoạch current đã review; xem `inception/plans/inception-66-uc-sync-2026-10-13.md`. Lịch sử bên dưới giữ nguyên.
+
+## Current Construction document revision — 2026-10-13
+
+- Design/plans current: construction/README.md/current-srs-contract.md/shared-infrastructure.md; 15 units, 66 active UC, 50 MVP + 1 extension và 39 FR IDs theo Inception.
+- Snapshot trước revision tại construction/historical/baseline-before-66-uc-2026-10-13 với hashes. Stage/approval/completed code checklists cũ giữ ở snapshot/history; current delta plans đều chưa triển khai.
+- U07 Usage/Teacher Quota; U13 Connections/MCP; Assignment/Quiz, diagram tùy chọn, lesson extension; backup/activity/email và merged UC70/58/37 được mô tả.
+- Next: review design/delta, resolve D01–D04 hoặc giữ defaults khi triển khai phần liên quan; actual contracts/code/schema/Compose và tests không được đánh complete chỉ vì docs đồng bộ.
+
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 2; tài liệu revision 2026-10-09 theo 73 UC/51 story/15 unit. Approvals 16 plan ngày 2026-10-05 thuộc baseline cũ; skeleton/contracts/ports và U03 generated code vẫn cần triển khai/kiểm review revision, không được coi đã đổi bởi sửa tài liệu.
-- **Resume action**: Dùng current-srs-contract.md, unit-of-work-story-map.md và checklist revision từng unit theo 73 UC. Settings U03, bài của môn/copy/version U08; U10 đã bỏ. Rà code/contracts/migration theo thiết kế hiện hành; U03 generated steps/integration tests chưa được đánh dấu hoàn tất. Sau U03/U02, tiếp tục U01/U04 theo dependency. Integration test do tester riêng.
+- **Current Stage**: Construction documentation revision theo 66 UC; current delta code plans chưa triển khai. Code Generation Part 2 và completed checkpoints trước revision là lịch sử, không xác nhận scope mới.
+- **Resume action**: Đọc construction/README.md, current-srs-contract.md, shared-infrastructure.md và plans/construction-66-uc-sync-2026-10-13.md. Review current delta plans và decisions D01–D04 trước code/contracts/migration; không chạy baseline payment/Code Lab hoặc kế thừa approval cũ cho scope mới. Tester riêng viết/chạy integration evidence.
 
 ## Latest documentation decision
 - **2026-10-09 (sau recheck)**: Đóng C01–C05 ở cấp tài liệu: U07/U05/U13 một HOLD và settle lượng dùng thật/trả dư; FR-024/story dùng đúng UC/màn và Chủ nhiệm môn bật phân bố điểm; AiUsagePort có findHold/UsageStart REPLAY/CallSnapshot/checkpoint/scanClaimId; shared infrastructure 15 unit. Các việc code/contracts/migration/integration theo checklist vẫn chưa triển khai; stage progress và approvals giữ nguyên.
