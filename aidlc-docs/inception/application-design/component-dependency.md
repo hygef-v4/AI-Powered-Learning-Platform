@@ -1,98 +1,37 @@
-# Component Dependencies and Data Flow
+# Component Dependencies — 2026-10-13
 
-## 1. Dependency principles
+> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
 
-- Dependency đi từ controller/adapter vào application/domain rồi ra port; domain không phụ thuộc SDK provider.
-- Ghi liên module chỉ qua port công khai hoặc event sau commit.
-- Dùng chung PostgreSQL; danh sách bảng theo domain-entities/infrastructure-design của từng unit, không dùng số bảng/catalog database cũ. Unit khác đọc/ghi qua port của owner; accounts có cột credit/preferences, assignments có type config theo contract; system_settings do U03 sở hữu.
-- Worker dùng cùng contract và không vượt phạm vi quyền của job nguồn.
+## Runtime (text alternative)
 
-## 2. Dependency matrix
+Web → Nginx → Spring Boot API → domain ports → PostgreSQL/Redis/Google Drive. Jobs sau commit → RabbitMQ → worker → provider API hoặc email. Agent ngoài → authenticated MCP adapter → cùng domain ports. AI direct dùng shared/personal connection; MCP agent gọi model riêng. Không PayOS, Judge0 hoặc thanh toán. RAG/YouTube chỉ extension.
 
-Ma trận phụ thuộc giữa module là ma trận 15 unit trong `unit-of-work-dependency.md` §2 (ký hiệu `H` phụ thuộc cứng, `C` contract qua port trung lập, `E` event), kèm hình đồ thị phụ thuộc.
+## Data ownership
 
-## 3. Sơ đồ runtime
+| Dữ liệu | Owner |
+|---|---|
+| Account/auth | U01 |
+| Audit | U02 |
+| File/job/Settings/backup manifests and status | U03 |
+| Academic/enrollment | U04 |
+| References/announcements, optional lessons | U05 |
+| Rubric/MCQ versions | U06 |
+| Quota reservations/usage windows/provenance | U07 |
+| ASSIGNMENT/QUIZ lifecycle, submissionMode/diagramEnabled | U08; cấu hình chi tiết qua U09 port |
+| Document/Quiz config | U09 |
+| Individual attempts/submission/feedback references; ActivityEvent including group via U14 port | U11 |
+| Groups/member/leader | U12 |
+| Protected AI connections/MCP credentials/tasks | U13 |
+| Group section versions/submissions | U14 |
+| Evaluations/proposals/official grades | U15 |
+| Notifications/exports/aggregates | U16 |
 
-```mermaid
-flowchart LR
-    Web["Next.js Web"] --> Nginx["Nginx"]
-    Nginx --> Api["Backend Spring Boot"]
-    Api --> Db["PostgreSQL pgvector"]
-    Api --> Redis["Redis"]
-    Api --> Mq["RabbitMQ"]
-    Mq --> Worker["Worker"]
-    Worker --> Db
-    Api --> Drive["Google Drive"]
-    Worker --> Drive
-    Worker --> Gemini["Gemini API"]
-    Api --> Gemini
-    Worker --> Judge0["Judge0 sandbox"]
-    Api --> Judge0
-    Api --> PayOS["PayOS"]
-    Worker --> PayOS
-    Worker --> Smtp["SMTP"]
-    Worker --> YouTube["YouTube"]
-```
+Credentials không cột plaintext accounts hoặc Settings value; database chi tiết cần Construction thiết kế mới. Unit gọi public port, không đọc repository khác. Giữ version/idempotency/audit.
 
-### Text alternative
+## Trust
 
-Trình duyệt gọi Nginx, Nginx chuyển tới backend Spring Boot. Backend lưu dữ liệu trong PostgreSQL (có pgvector), dùng Redis cho phiên/bộ đếm/token, gửi job và event qua RabbitMQ cho worker. Backend và worker lưu file lên Google Drive, gọi Gemini cho AI và embedding, gọi Judge0 trong mạng sandbox để chạy code, gọi PayOS cho thanh toán. Worker gửi email qua SMTP và lấy tiêu đề, caption video từ YouTube.
+AI output, agent/tool input, files/XML và callback là untrusted. Authorize current actor/resource mỗi call. Không key/raw prompt trong audit, không hidden answer trong context Student. Shared quota backend-enforced, Student denied. MCP draft ghi expectedVersion, không official decision. Đồ thị dependency hiện hành ở unit-of-work-dependency.md (text/table), hình cũ chỉ historical.
 
-## 3a. Bảng dùng chung
+## UC consolidation — 66 active UC
 
-Theo quyết định gộp bảng (2026-09-26): chỉ giữ bảng bắt buộc đứng riêng, có use case liệt kê, hoặc gắn hệ thống ngoài; quan hệ 1-1 thành cột của bảng kia.
-
-| Bảng | Unit chủ (tạo bảng) | Unit khác ghi | Phần ghi | Qua |
-|---|---|---|---|---|
-| `accounts` | U01 | U07, U16 | Số dư credit (U07); `email_preferences` (U16) | Migration của unit đó thêm cột; chỉ `CreditService` của U07 ghi số dư |
-| `assignments` | U08 | U09 | Cấu hình dạng và khung của U09; lineage/copy do U08 giữ | AssignmentExtensionPort |
-| `assignments` (cột `reminder_sent_at`) | U08 | U16 | Mốc nhắc hạn; công bố điểm theo evaluations của U15 tại (bài, lớp), không grades_released_at trên bài | AssignmentExtensionPort |
-
-## 4. Data ownership
-
-| Dữ liệu | Owner | Dùng bởi (qua port/event) |
-|---|---|---|
-| Tài khoản, role, phiên, OTP | U01 | Mọi module |
-| Audit | U02 | Mọi module |
-| Settings (`system_settings`, U07/U13 khai báo nhóm) | U03 | U07, U13; Settings Admin UI của U03 |
-| Cơ chế việc nền, worker, sự kiện thông báo (không có bảng job) | U03 | Mọi module có việc nền hoặc thông báo |
-| File (metadata trên Google Drive, `FileRef`, token tải; không có bảng) | U03 | U05, U06, U09, U11, U14 |
-| Môn, lớp, ghi danh | U04 | U01, U05, U06, U08/U09/U11-U16 |
-| Module của môn, học liệu tải lên (tệp/YouTube) kèm kết quả quét, summary và embedding, thông báo lớp | U05 | U04, U06, U08, U13, U16 (event lớp) |
-| Câu hỏi, rubric (phiên bản) | U06 | U08/U09/U11, U13, U15 |
-| Giao dịch, gói credit, số dư trên `accounts` (giữ/trừ nằm ở `ai_suggestions`) | U07 | U05, U13, U16 |
-| Bài, câu của bài, lịch | U08 | U09/U11, U14-U16 |
-| Cấu hình loại bài, khung tài liệu | U09 | U06, U08, U11, U13-U15 |
-| Lượt làm, bài nộp | U11 | U13, U15, U16 |
-| Nhóm của lớp, thành viên, trưởng nhóm | U12 | U08, U14, U16 |
-| Đề xuất/số liệu/credit holds (`ai_suggestions`), code_runs (VERIFY/GRADE) | U13 | U05, U06, U08, U09, U11, U15, U16 |
-| Tài liệu nhóm (mục, lịch sử, bản nộp trong `group_documents`) | U14 | U13, U15, U16 |
-| Đánh giá (`evaluations`, lịch sử trong cột `history`), sổ điểm đọc qua port | U15 | U11, U16 |
-| Thông báo (kèm trạng thái email), nhắc hạn, thống kê quản trị và xuất bảng điểm theo yêu cầu | U16 | - |
-
-## 5. Trust boundaries
-
-- Trình duyệt, file upload, webhook PayOS, phản hồi Gemini/YouTube/Judge0 đều là đầu vào không tin cậy.
-- Kiểm quyền chạy trước khi đọc/trả tài nguyên nhạy cảm.
-- Payload job chỉ chứa ID; worker đọc dữ liệu qua service có kiểm phạm vi.
-- Token tải file 5 phút gắn tài khoản; không lộ ID file Drive.
-- XML Draw.io đầy đủ không gửi thẳng sang AI; chỉ bản rút gọn tạo trong worker sau khi kiểm.
-- Judge0 nằm trong mạng `sandbox` không ra Internet, không chạm datastore của hệ thống.
-
-## 6. Contract liên module quan trọng
-
-- Phản ứng bắt buộc giữa unit đi qua **port gọi trong transaction** (port do unit nhận cài, ghi dòng hoặc gửi việc của unit nhận), không qua event:
-  - U11 → U15 (`C`): `SubmissionSubmittedPort` chỉ khi nộp bài `GRADED` → dòng `evaluations` `PENDING`.
-  - U14 → U15 (`C`): `GroupSubmittedPort` khi nộp bài nhóm → dòng `evaluations` `GROUP_DOCUMENT`/`MEMBER`.
-  - U13 → U15 (`C`): `CodeGradedPort` khi chấm Code Lab xong; `AiGradingPort` trả đề xuất, U15 quyết định.
-  - U08 → U11, U14 (`C`): `AssignmentLifecyclePort.onOpened/onRetired` khi mở bài/ngưng giao → việc tạo tài liệu nhóm; tự nộp do scanner của U11/U14.
-  - U12 → U14 (`C`): `GroupChangePort.onGroupCreated/onMemberRemoved` → việc tạo tài liệu nhóm, nhả khóa mục.
-- Event trên `platform.events` chỉ dùng cho thông báo U16 (mất thì chấp nhận): `enrollment.activated`, `class.*`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`. U16 nghe bằng queue `jobs.notification`.
-- U14 → U16: realtime qua `platform.realtime`.
-- U07 ← U13: `CreditPort.reserve/settle/release` chỉ U13 gọi, trong transaction đổi `ai_suggestions.credit_status`. U13 → U07 (`C`): `CreditUsagePort.listUsage` cho bảng lần dùng credit trên màn My Credit Package (U07 khai báo, adapter rỗng tới khi có U13). U13 ← U05 (`C`): `AiUsagePort.quote/hold/begin/complete/fail/release` cho mọi lời gọi Gemini của U05 (quét học liệu, embedding): kill-switch, trần chi phí/ngày, tần suất và giữ credit của người bấm khi nhận yêu cầu tóm tắt, settle lượng thật và trả phần dư; U13 truyền người yêu cầu khi truy xuất RAG. Hết hạn mức hệ thống thì trả "Hệ thống đang bận" và không trừ credit cho lời gọi bị từ chối.
-- U08 ← U09/U12/U13 (`C`): `TypeConfigPort`, `GroupReadinessPort`, `CodeLabCheckPort` khi duyệt/phát hành.
-- U04 ← U05 (`C`): `PublishedContentPort` cho trang lớp của người học.
-
-## Baseline 2026-10-09
-
-73 UC/51 story/15 unit theo unit map; U10 đã bỏ, copy/version/bài của môn do U08 giữ. U03 Settings UC 70–71, U02 Audit UC 73; U13 khai báo nhóm AI qua SettingsPort của U03, lưu code_runs thay cho verification trên questions. U11 đọc ContentRefPort của U05 để kiểm học liệu quiz còn hiển thị; U16 đọc AiUsageStatsPort của U13 qua C. Admin không học thuật/ví/AI; toàn bộ object scope kiểm trước trả dữ liệu.
+UC 70 Manage System Settings gộp 71/78: U03 primary; U07 giữ quota service/data và US-AIC-003. UC 58 gộp 80: U16 primary dashboard; U03 giữ backup service/data và US-OPS-001. UC 37 gộp 81: U15 primary review; U11/U14 giữ activity capture. UC 76 giữ riêng credentials/provider. Story count vẫn 50 MVP + 1 extension, 15 units; không bỏ chức năng hoặc acceptance vì gộp UC. Quiz Practice activity chỉ đọc trong scope/policy cho phép, không tự thêm Gradebook.

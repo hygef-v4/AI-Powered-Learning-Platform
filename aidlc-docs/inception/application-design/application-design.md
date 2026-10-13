@@ -1,67 +1,32 @@
-# Application Design - Consolidated
+# Application Design — 2026-10-13
 
-## 1. Quyết định kiến trúc
+> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
 
-| Chủ đề | Quyết định |
-|---|---|
-| Backend | Spring Boot modular monolith, 15 module theo unit, cùng image cho `backend` và `worker` |
-| Frontend | Next.js desktop-first, gọi REST `/api/v1` |
-| Contract | OpenAPI mỗi unit; backend authorization là nguồn chuẩn |
-| Tác vụ dài | RabbitMQ (gửi sau commit, retry bằng queue TTL), trạng thái trên dòng nghiệp vụ, `PendingSweeper`/`ScheduledScanner`, worker riêng; không có bảng job |
-| File | Google Shared Drive qua port lưu trữ; metadata trong thuộc tính tệp (`appProperties`), bảng sở hữu giữ `file_id` |
-| AI | Gemini qua port provider-neutral, model theo loại việc, trừ credit AI |
-| Realtime | SSE cho tài liệu nhóm và thông báo; còn lại polling trạng thái job |
-| Triển khai | Docker Compose trên VPS, Nginx + Let's Encrypt (xem `construction/shared-infrastructure.md`) |
+## Architecture
 
-## 2. Các domain module
+Giữ Next.js desktop-first, Spring Boot modular monolith, PostgreSQL, Redis, RabbitMQ, worker cùng code, Google Drive và email. 15 logical modules, không 15 deployable. MCP là authenticated inbound adapter gọi domain services; direct provider API là outbound adapter. Không Judge0/PayOS.
 
-15 module trùng với 15 unit: Identity & Access, Audit, File/Job/Event, Academic & Learning Access, Content & RAG, Question Bank, Payment & AI Credit, Assessment Core, Question Types & Documents, Attempt & Submission, Group, AI & Code Execution, Group Document, Grading, Reporting & Notification.
+## Invariants
 
-Chi tiết: `components.md` (trách nhiệm), `component-methods.md` (chữ ký), `services.md` (orchestration), `component-dependency.md` (luồng dữ liệu), `unit-of-work*.md` (unit, phụ thuộc, story). Thiết kế chi tiết và bảng dữ liệu của từng module nằm trong `aidlc-docs/construction/uXX-*/`.
+1. Chỉ ASSIGNMENT/QUIZ. Assignment = INDIVIDUAL/GROUP × diagramEnabled; doc model chung.
+2. Official grade/publication vẫn quyết định human; proposal/feedback không official.
+3. Subject/class/object authorization chạy cho web/API/MCP; key/agent không nới scope.
+4. Shared educator quota, không Student; personal API/agent không tự dùng shared account.
+5. Provider usage đo được khác externallyReported MCP. Unknown không = zero.
+6. Request gắn source/version/idempotency; stale output không overwrite. Autosave/submission không phụ thuộc AI.
+7. Group sections/leader submit, rubric snapshot; quyền full-group AI còn D03.
+8. Credentials riêng protected; Settings thường chỉ cấu hình non-secret, audit không raw key/prompt.
+9. Quiz Practice/Group Graded tạm giữ D01/D02; Lesson extension không bắt buộc.
+10. Construction/code/schema và diagrams hiện có chưa đồng bộ; không tự certify runtime.
 
-## 3. Các invariants thiết kế
+## Ownership và validation
 
-1. 73 UC theo catalog local. User R1, Student R5, Teacher R3; Subject Manager R2 hoặc R4 theo phân công. Admin chỉ User và chức năng quản trị, không phân công môn/lớp, không AI/credit wallet.
-2. Subject Manager quản lý môn R2, tạo/duyệt/phát hành bài của môn cho mọi lớp OPEN (một lịch chung, không nhóm). Chấm/gradebook theo từng lớp bởi Teacher/Subject Manager được giao dạy R3/R4; giảng viên lớp không sửa bài của môn.
-3. Mỗi nhóm có đúng một trưởng nhóm; bài nhóm là một tài liệu chung gồm các phần của khung, trưởng nhóm giao phần hoặc thành viên tự nhận phần, mỗi phần tại một thời điểm chỉ một người sửa; trưởng nhóm nộp.
-4. Bài đã phát hành bị khóa nội dung; thay đổi bằng version mới sau khi ngưng giao/đóng, hoặc nhân bản. Bài nộp bất biến sau khi nộp.
-5. XML Draw.io đầy đủ nằm trong bài tài liệu; XML rút gọn chỉ tạo khi có yêu cầu AI chấm (giảng viên hoặc Student với bài `PRACTICE`).
-6. AI chỉ tạo đề xuất; giảng viên giữ quyết định phát hành đề và điểm cuối.
-7. Tài liệu nhóm chấm như bài `DOCUMENT` (tay hoặc AI đề xuất); điểm đóng góp từng thành viên mặc định bằng điểm tài liệu chung, giảng viên chấm tay khi cần.
-8. Chỉ Student, Teacher, Subject Manager ACTIVE có ví, grant tháng và mua credit. Student được AI chấm Practice Text/Diagram Essay đã nộp (UC 29) và tóm tắt học liệu có quyền xem (luồng phụ UC 15); Teacher AI proposals UC 38. Quiz/Code Lab tự chấm, không credit AI. Payment chỉ cộng credit khi webhook/đối soát đã xác minh, đúng một lần.
-9. U08 giữ version/clone/copy; chỉ giảng viên dạy cả lớp nguồn/đích mới copy bài lớp. Không copy lịch, attempt, submission hoặc điểm; rubric sao thành rubric của bài đích, câu ngân hàng ghim version; không template/U10/diff screen.
-10. Bài `PRACTICE` Text/Diagram Essay không tự chấm khi nộp; mỗi attempt có tối đa một kết quả AI hợp lệ khi Student bấm chấm và đủ credit. Kết quả Practice không vào sổ điểm và Teacher không chấm.
-11. Audit chỉ thêm, không sửa/xóa; Admin tra cứu UC 73.
-12. Admin quản trị gói UC 68–69, history UC 72, Settings UC 70–71 (U03 lưu, U07/U13 khai báo nhóm credit/AI). Giao dịch giữ snapshot; thay monthly grant hiệu lực kỳ sau, không chỉnh credit tay.
-13. Hồ sơ không cập nhật avatar. Thông báo lớp create/update/soft-delete, không bình luận; ngân hàng chỉ môn. Quiz là luyện tập gắn học liệu, không lịch/gradebook; Student Assignments chỉ bốn dạng bài.
+Xem components.md, services.md, component-methods.md, component-dependency.md và unit-of-work*.md. Security enabled subset giữ validation/auth/audit/secret; Resiliency giữ timeout/health/deploy; PBT disabled. Không thay phê duyệt giai đoạn cũ.
 
-## 4. Luồng triển khai
+## Bổ sung hội đồng — current scope
 
-- Nginx, frontend, backend, worker, PostgreSQL (pgvector), Redis, RabbitMQ và 4 container Judge0 chạy bằng Docker Compose trên VPS của nhóm.
-- Worker xử lý: gửi email/OTP, ingest RAG, AI, chạy code, mở/đóng bài, tự nộp, tự đối soát PayOS, dọn file, nhắc hạn.
-- Dịch vụ ngoài (Google Drive, Gemini, YouTube, PayOS, SMTP) nằm sau port/adapter, có adapter giả để chạy local và test.
+Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích hợp), teacher review U15, email quan trọng/failure U16; minh bạch AI U07/U13. Không thêm unit hoặc đổi nhân sự. Xem [đặc tả hội đồng](../requirements/council-features-2026-10-13.md). D05 đã được người dùng yêu cầu bổ sung, D01–D04 còn mở. Đây là phạm vi tài liệu, chưa runtime evidence.
 
-## 5. Traceability
+## Ranh giới sau gộp UC
 
-Bản hiệu lực 2026-10-09 có 73 UC, 51 story và 15 unit, ánh xạ trong `unit-of-work-story-map.md` và `stories.md` mục 14. UC/màn từ `docs/use-cases-73.md`; US-AIG-003 giữ là vận hành hỗ trợ không có UC trực tiếp. Construction/code plans đã đồng bộ cho các thay đổi ngày 2026-10-09; contracts/code còn cần triển khai theo các revision tasks. Thông báo lớp, thống kê quản trị và xuất bảng điểm đều thuộc MVP; Class Dashboard chỉ điều hướng lớp; không dashboard thống kê cá nhân của Student.
-
-| Story domain | Unit chủ đạo |
-|---|---|
-| IAM | U01 |
-| AUD | U02 |
-| CAT, LRN | U04 |
-| CNT | U05 |
-| QBK | U06 |
-| PAY | U07 |
-| ASM | U08, U09, U11; U13 hỗ trợ AI |
-| SET | U03 |
-| AIG | U13 |
-| GRP | U12, U14, U15 |
-| GRD | U15 |
-| RPT, NTF | U16 |
-
-## 6. Security và resiliency compliance
-
-- **Security** (phạm vi rút gọn SECURITY-03, 04, 05, 08, 09, 12, 15): Compliant ở cấp thiết kế với kiểm quyền phía server, kiểm file/XML, cô lập sandbox, không log secret, audit bất biến, webhook có chữ ký.
-- **Resiliency** (RESILIENCY-04, 06, 10): Compliant với deploy/rollback bằng Compose, healthcheck, timeout cho mọi dịch vụ ngoài, retry hữu hạn qua job.
-- **Property-Based Testing**: N/A (extension tắt).
+Current catalog: 66 UC, 50 MVP stories + 1 extension, 15 logical units. UC owner là nơi điều phối trải nghiệm; data/service owner có thể khác. UC 70/U03 dùng quota U07, UC 58/U16 đọc backup U03, UC 37/U15 đọc activity U11/U14. Không repository access xuyên unit; thu gọn catalog không xóa requirement hoặc trộn trách nhiệm.
