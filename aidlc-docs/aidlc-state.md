@@ -2,7 +2,7 @@
 
 ## Latest authorized UC-table synchronization
 
-- 65 active UC, 50 MVP stories + 1 extension, 15 units. Inception and Construction docs now follow docs/usecase_table.md; snapshot at historical/baseline-before-uc-table-65-2026-10-13.
+- 65 active UC, 50 MVP stories + 1 extension, 15 units. Inception and Construction docs now follow docs/usecase_table.md. The untracked pre-sync snapshot in aidlc-docs/historical was removed at the user's request on 2026-10-14.
 - UC26/76/79 removed/consolidated; UC45/71 restored. YouTube video links are MVP. Student feedback only after submitting Practice work. Settings UI includes institutional AI API via U13 protected records.
 - This is documentation-only. Jira, runtime/code/contracts/migrations, Google Reports and diagram files are not updated; old stage/code approvals remain historical. D01–D04 remain open.
 

@@ -18,7 +18,7 @@ Use [docs/usecase_table.md](../../../docs/usecase_table.md) as the source of tru
 
 ## Preservation
 
-Previous active artifacts and state are preserved with SHA-256 hashes in [baseline snapshot](../../historical/baseline-before-uc-table-65-2026-10-13/README.md). Earlier dated sync reports retain their validation evidence and are explicitly superseded. Historical stage progress and approvals remain untouched; current delta plans remain unimplemented.
+Previous active artifacts and state were snapshotted and verified with SHA-256 hashes during synchronization. The untracked snapshot in aidlc-docs/historical was removed at the user's request on 2026-10-14 and is no longer available. Earlier dated sync reports retain their validation evidence and are explicitly superseded. Historical stage progress and approvals in tracked documents remain untouched; current delta plans remain unimplemented.
 
 ## Validation
 
