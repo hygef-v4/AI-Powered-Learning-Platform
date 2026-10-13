@@ -14,7 +14,7 @@ Nguồn [current contract](current-srs-contract.md), [Inception requirements](..
 | Google Drive | Private live files và independent encrypted backup folder; credential least privilege |
 | Brevo / Mailpit | Demo/production SMTP qua MailPort; local/test Mailpit; provider quota có giới hạn |
 
-Không deploy payment gateway, code-execution sandbox hoặc queue jobs.code/jobs.payos. Queue mục tiêu jobs.internal/jobs.email/jobs.ai/jobs.drive/jobs.backup và jobs.notification/realtime; extension YouTube/RAG chỉ bật khi chốt riêng. Queue count/concurrency/CPU/RAM phải benchmark hạ tầng hiện có, không giả lập bằng con số baseline có sandbox.
+Không deploy payment gateway, code-execution sandbox hoặc queue jobs.code/jobs.payos. Queue mục tiêu jobs.internal/jobs.email/jobs.ai/jobs.drive/jobs.backup và jobs.notification/realtime; link YouTube không cần processing queue; extension video-processing/RAG chỉ bật khi chốt riêng. Queue count/concurrency/CPU/RAM phải benchmark hạ tầng hiện có, không giả lập bằng con số baseline có sandbox.
 
 ## Network và secrets
 
@@ -47,3 +47,9 @@ Healthcheck readiness/logs và application backup failure alerts; không full mo
 ## Extensions
 
 Enabled Security subset 03/04/05/08/09/12/15 và Resiliency subset 04/06/10 được thể hiện auth/input/secrets/audit/failures/health/deploy. Other rules N/A theo state; PBT disabled. Runtime compliance chưa verified, không dựa design để đánh tests pass.
+
+## Current UC table integration
+
+UC70/71 Settings UI routes masked institutional API reads/mutations through U13; secret input is protected/encrypted at the connection owner and never exposed in logs or ordinary Settings JSON. U03 neutral adapters fail closed/unavailable when U13 is not ready; no hard dependency cycle is introduced.
+
+YouTube references store validated educational video URLs/title, without automatic download/transcription/AI jobs. Open externally or embed only when supported by validated source/origin and CSP. Invalid links, unavailable videos or disabled embedding return clear user-facing states; learning work remains usable.

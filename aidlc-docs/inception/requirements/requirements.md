@@ -13,7 +13,7 @@
 
 ### 2.1 Cốt lõi
 
-Assignment INDIVIDUAL/GROUP; tài liệu thuần hoặc diagramEnabled; Draw.io XML, rubric, workspace, lưu nháp, nộp/lịch sử, phản hồi sớm, chấm tay/AI proposal và công bố. Quiz độc lập Lesson. Bốn vai trò hiện hành; tài khoản trường cấp, môn/lớp/ghi danh, thông báo, export và audit giữ theo scope đã chốt.
+Assignment INDIVIDUAL/GROUP; tài liệu thuần hoặc diagramEnabled; Draw.io XML, rubric, workspace, lưu nháp, nộp/lịch sử, phản hồi sau nộp bài Practice, chấm tay/AI proposal và công bố. Quiz độc lập Lesson. Bốn vai trò hiện hành; tài khoản trường cấp, môn/lớp/ghi danh, thông báo, export và audit giữ theo scope đã chốt.
 
 ### 2.2 Kết nối AI
 
@@ -21,7 +21,7 @@ API chung của tổ chức chỉ giảng viên được cấp quota; API cá nh
 
 ### 2.3 Mở rộng và ngoài phạm vi
 
-- Lesson/module, YouTube, tóm tắt học liệu và RAG nâng cao chỉ mở rộng; không chặn luồng Assignment/Quiz.
+- Lesson/module processing, tóm tắt học liệu và RAG nâng cao chỉ mở rộng; link video YouTube dạy học thuộc MVP; không chặn luồng Assignment/Quiz.
 - Loại khỏi scope: Code Lab, Judge0, test runner, mua credit/token, ví, payment/PayOS.
 - Giữ exclusions trước: mobile native, multi-tenancy, LMS/SSO, mã mời, comments, Simulation/proctored Exam, grade appeal, gia hạn cá nhân và similarity checking chưa được chốt.
 - Không tuyên bố AS-IS đã khảo sát. Thu thập/validate quy trình của giảng viên và sinh viên SWR/SWD rồi cập nhật Report 1; không dựng bằng chứng giả.
@@ -83,7 +83,7 @@ MVP cho người có quyền gắn tài liệu tham khảo vào môn/lớp/Assig
 **Tiêu chí chấp nhận:**
 - Kiểm loại/kích thước tệp và scope trước lưu/đọc; tài liệu được lưu trữ vẫn giữ tham chiếu lịch sử.
 - Tạo Assignment/Quiz không yêu cầu có Lesson. Thiếu kết nối AI không chặn xem/tải tài liệu.
-- Lesson có module, YouTube/caption, summary/embedding và RAG nâng cao là mở rộng chưa cam kết trong MVP. Khi bật mở rộng phải chốt provider embedding, nguồn tài trợ, kiểm quyền và acceptance riêng; không dùng lại HOLD credit cũ.
+- Lesson có module, caption/transcription, summary/embedding và RAG nâng cao là mở rộng chưa cam kết trong MVP; lưu/mở link YouTube video dạy học là reference material MVP. Khi bật mở rộng phải chốt provider embedding, nguồn tài trợ, kiểm quyền và acceptance riêng; không dùng lại HOLD credit cũ.
 
 ### FR-005 - Truy cập tài liệu và lớp
 
@@ -220,7 +220,7 @@ Teacher của lớp (hoặc Subject Manager được giao dạy, R4) tạo/cập
 
 ### FR-024 - Thống kê quản trị và xuất bảng điểm
 
-Administrator xem Admin Dashboard (UC 58): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; bổ sung mục Backup gồm lần thành công gần nhất, trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize qua public port U03. Không dữ liệu học vụ cá nhân, tệp backup hoặc dashboard Student; lịch/retention được chỉnh tại UC 70, không Dashboard.
+Administrator xem Admin Dashboard (UC 58): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; bổ sung mục Backup gồm lần thành công gần nhất, trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize qua public port U03. Không dữ liệu học vụ cá nhân, tệp backup hoặc dashboard Student; lịch/retention được chỉnh tại UC 71, không Dashboard.
 
 Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 40). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
 
@@ -259,17 +259,16 @@ Giữ identity/lineage/version; copy trong scope tạo nội dung và rubric đ�
 
 Theo câu trả lời làm rõ ngày 2026-09-29, Simulation Exam được bỏ hoàn toàn khỏi MVP; mã FR-029 giữ làm dấu vết và không dùng lại.
 
-### FR-030 - Phản hồi sớm cho Student bằng kết nối cá nhân
+### FR-030 - Phản hồi bài Practice đã nộp bằng API cá nhân/MCP
 
-Mục tiêu là Student nhận phản hồi sớm để chỉnh sửa và luyện tập nhiều lần. Student dùng API cá nhân hoặc agent riêng MCP; không token/quota API chung của trường.
+Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC29), bằng API cá nhân hoặc agent MCP; không dùng quota chung. Feedback phục vụ lần luyện tập tiếp theo, không sửa snapshot cũ hoặc tạo điểm official.
 
 **Tiêu chí chấp nhận:**
-- Người dùng chủ động yêu cầu trên bản nháp/attempt của chính mình hoặc bài Practice đã nộp. Lưu contentVersion/hash, kết nối, trạng thái và phản hồi từng lần; bỏ giới hạn cứng một kết quả AI/attempt.
-- Bài GRADED trước nộp chỉ cho phản hồi nếu giảng viên bật allowStudentAiFeedback; mặc định tắt để không tự cho phép AI vào mọi bài tính điểm.
-- Practice phản hồi riêng, không Gradebook; không đáp án ẩn, lời giải mẫu hoặc dữ liệu người khác.
-- Giới hạn tần suất, chống request trùng và stale result; không tự gọi AI trên mỗi keystroke.
-- Student thiếu kết nối vẫn viết/lưu/nộp được; không gợi ý mua credit.
-- D03 còn mở: phần nhóm mặc định chỉ dữ liệu phần mình được sửa; mở toàn bài nhóm cần quyết định rõ.
+- Trước dispatch hoặc ghi kết quả API/MCP, server kiểm owner/current scope, SUBMITTED, PRACTICE và immutable submissionVersion/hash.
+- Draft/IN_PROGRESS, Graded và dữ liệu ngoài quyền bị từ chối; không có teacher opt-in cho feedback trước nộp. UC79 retired.
+- Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
+- Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
+- Student thiếu kết nối vẫn viết/lưu/nộp được. D03 giữ giới hạn ngữ cảnh nhóm, không tự mở toàn bài.
 
 ### FR-031 - Đã rút: quản trị gói credit
 
@@ -281,11 +280,11 @@ Không PayOS, payment history, webhook hoặc wallet. Lịch sử usage không p
 
 ### FR-033 - Settings và kết nối AI
 
-UC 70 — Manage System Settings gộp xem/sửa Settings và cấu hình quota giảng viên (IDs 71/78 đã gộp). U03 là primary UC owner; U07 vẫn sở hữu quota policy/data và xử lý giới hạn qua public port, không ghi quota trực tiếp vào Settings hoặc repository U07. U03 sở hữu Settings chung: định dạng/kích thước tệp, giới hạn vận hành; U07 khai báo quota, U13 khai báo provider/model. UI kết nối AI dùng bản ghi credentials riêng có bảo vệ, không lưu raw key trong Settings thường. Admin quản trị cấu hình chung; user quản lý personal connection. Kiểm version/audit, không monthly credit grant.
+UC70 View Settings và UC71 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota qua U07 và API chung qua U13 protected connection port. U03 primary UI/orchestration, không đọc/ghi repository U07/U13 hoặc lưu raw key trong Settings. UC76/78/82 consolidated, không còn chức năng độc lập; API cá nhân UC74 và MCP UC75 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
 
 ### FR-034 - Quota token API chung của giảng viên
 
-Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo giờ/ngày trong UC 70; U03 điều phối tới U07 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
+Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo giờ/ngày trong UC 71 (UC70 chỉ xem); U03 điều phối tới U07 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
 
 **Tiêu chí chấp nhận:**
 - Kiểm và reserve ngân sách ước tính trong transaction trước provider call; khóa/cập nhật nguyên tử để request đồng thời không vượt reservation.
@@ -454,13 +453,13 @@ Giữ SECURITY-03/04/05/08/09/12/15 và RESILIENCY-04/06/10 theo phạm vi đã 
 
 Construction design/shared infrastructure/code planning đã revision theo scope mới. Code/contracts implementation/migrations, Google Reports và diagram cũ cần revision riêng trước chạy scope mới. Không sửa tiến độ/approvals cũ thành hoàn thành mới.
 
-## UC consolidation — 66 active UC
+## UC consolidation — 65 active UC
 
-UC 70 Manage System Settings gộp 71/78: U03 primary; U07 giữ quota service/data và US-AIC-003. UC 58 gộp 80: U16 primary dashboard; U03 giữ backup service/data và US-OPS-001. UC 37 gộp 81: U15 primary review; U11/U14 giữ activity capture. UC 76 giữ riêng credentials/provider. Story count vẫn 50 MVP + 1 extension, 15 units; không bỏ chức năng hoặc acceptance vì gộp UC. Quiz Practice activity chỉ đọc trong scope/policy cho phép, không tự thêm Gradebook.
+UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
 
 ### Tiêu chí tích hợp UC đã gộp
 
-- UC 70: chỉ Admin xem/sửa; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Credentials vẫn UC 76.
+- UC70/71: chỉ Admin; UC70 chỉ xem, UC71 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC70/71 via U13 protected connection records, not ordinary Settings plaintext.
 - UC 58: U16 đọc BackupStatusPort của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
 - UC 37: U15 đọc ActivityQueryPort của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 

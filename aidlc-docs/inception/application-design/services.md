@@ -4,7 +4,7 @@
 
 ## Assignment
 
-Educator tạo ASSIGNMENT với submissionMode và diagramEnabled, cấu trúc/rubric → review/publish. Student autosave tài liệu, nhận feedback nếu policy cho phép → sửa/nộp trong hạn. U11/U14 giữ snapshot, U15 nhận submission. Group do leader nộp, member chỉ phần được phép.
+Educator tạo ASSIGNMENT với submissionMode và diagramEnabled, cấu trúc/rubric → review/publish. Student autosave tài liệu → nộp trong hạn; chỉ Assignment PRACTICE đã SUBMITTED mới request feedback UC29. U11/U14 giữ snapshot, U15 nhận submission. Group do leader nộp, member chỉ phần được phép.
 
 ## Quiz
 
@@ -28,7 +28,7 @@ Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích h
 
 ## Luồng các UC gộp
 
-Admin → UC 70/U03 → validate Settings hoặc gọi U07 TeacherQuotaPolicyPort → owner cập nhật theo version/audit → báo kết quả đúng thao tác. Không lưu API key qua Settings; credentials thuộc UC 76/U13. Hết quota không tự đổi kết nối.
+Admin → UC70 View Settings (masked read) / UC71 Edit Setting → U03 orchestrator → U07 TeacherQuotaPolicyPort hoặc U13 AiConnectionAdministrationPort → owner validate/version/audit → masked result. UI chung nhưng credentials giữ ở U13 protected records, không lưu raw key trong Settings. Provider chưa sẵn sàng báo unavailable, không false success. Hết quota không tự đổi kết nối.
 
 Admin → UC 58/U16 → U03 BackupStatusPort → metadata đã sanitize. BackupStatusUnavailable khác Failed/Success. Scheduler/restore vẫn U03/người vận hành; không thực hiện restore qua Dashboard.
 

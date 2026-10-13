@@ -1,103 +1,96 @@
-# Use case catalog — Inception revision 2026-10-13
+# Use case catalog — synchronized to the current UC table
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+**65 active UC; 50 MVP stories + 1 extension; 15 logical units.**
 
-**66 active UC**; giữ ID cũ, thêm các ID 74–79 còn hiệu lực; 71/78/80/81 đã gộp, xem migration, không tái sử dụng retired ID. Đây là catalog Inception mới, đã đồng bộ bảng tiếng Anh [docs/usecase_table.md](../../../docs/usecase_table.md); chưa đồng bộ Google SRS hoặc diagrams cũ.
+Source: [English UC table](../../../docs/usecase_table.md). User-approved catalog changes are documented in [sync plan](../plans/uc-table-65-sync-2026-10-13.md). Documentation-only; code, Jira, Google Reports and diagram files are not synchronized by this request.
 
 | ID | Use case | Primary unit | Scope/behavior |
 |---|---|---|---|
-| 01 | Activate Account | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 02 | Login | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 03 | Logout | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 04 | Reset Password | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 05 | Change Password | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 06 | View Profile Information | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 07 | Update Profile Information | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 12 | View Notifications | U16 | Theo FR liên quan; backend kiểm scope và state. |
-| 13 | View Enrolled Classes | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 14 | View Enrolled Class Detail | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 15 | View Learning Material | U05 | Tài liệu tham khảo MVP; Lesson/YouTube/summary/RAG chỉ mở rộng. |
-| 16 | View My Group | U12 | Theo FR liên quan; backend kiểm scope và state. |
-| 17 | Request Leader Change | U12 | Theo FR liên quan; backend kiểm scope và state. |
-| 18 | View Quiz Practice History | U11 | Quiz độc lập Lesson, tạm Practice theo D01. |
-| 19 | View Quiz Practice Detail | U11 | Quiz độc lập Lesson, tạm Practice theo D01. |
-| 20 | Take Quiz | U11 | Quiz độc lập Lesson, tạm Practice theo D01. |
-| 21 | View Quiz Result | U11 | Quiz độc lập Lesson, tạm Practice theo D01. |
-| 22 | View Assignment List | U11 | Theo FR liên quan; backend kiểm scope và state. |
-| 23 | View Assignment Detail | U11 | Theo FR liên quan; backend kiểm scope và state. |
-| 24 | Complete Individual Assignment | U11 | Theo FR liên quan; backend kiểm scope và state. |
-| 26 | Edit Assignment Diagram | U11 | Supporting workspace capability khi diagramEnabled, không loại Diagram Essay riêng. |
-| 27 | Complete Group Assignment | U14 | Assignment GROUP; leader nộp, diagram tùy chọn. |
-| 28 | View Submission History | U11 | Theo FR liên quan; backend kiểm scope và state. |
-| 29 | Request Practice Feedback | U11 | Private feedback Practice qua personal API/MCP, nhiều lượt theo version/rate limit. |
-| 30 | View Class Announcements | U05 | Theo FR liên quan; backend kiểm scope và state. |
-| 31 | View Assigned Class List | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 32 | View Assigned Class Detail | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 33 | View Uploaded Learning Materials | U05 | Tài liệu tham khảo MVP; Lesson/YouTube/summary/RAG chỉ mở rộng. |
-| 34 | Add/Update/Delete Learning Material | U05 | Tài liệu tham khảo MVP; Lesson/YouTube/summary/RAG chỉ mở rộng. |
-| 35 | Create/Update/Delete Quiz | U09 | Quiz độc lập Lesson, tạm Practice theo D01. |
-| 36 | Create/Update/Delete Announcement | U05 | Theo FR liên quan; backend kiểm scope và state. |
-| 37 | View Student Submissions | U15 | Giảng viên xem bài nộp cá nhân/nhóm và activity trong chi tiết bài làm/lượt Quiz được phép; policy bật mới có dữ liệu. Không tự kết luận cheating hoặc sửa điểm. |
-| 38 | Request AI Grading Proposal | U15 | Theo FR liên quan; backend kiểm scope và state. |
-| 39 | Grade Submissions Manually | U15 | Theo FR liên quan; backend kiểm scope và state. |
-| 40 | View/Export GradeBook | U15 | Theo FR liên quan; backend kiểm scope và state. |
-| 41 | View Teacher Assignment List | U08 | Theo FR liên quan; backend kiểm scope và state. |
-| 42 | Create/Update/Delete Assignment | U09 | Theo FR liên quan; backend kiểm scope và state. |
-| 46 | Manage Assignment Rubrics | U06 | Theo FR liên quan; backend kiểm scope và state. |
-| 47 | View Managed Subject Classes | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 48 | View Managed Class Detail | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 49 | Create Class | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 50 | Assign Teacher To Class | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 51 | Add/Remove Class Students | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 52 | Edit Class Information | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 53 | View Managed Subject | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 54 | View Subject Materials | U05 | Tài liệu tham khảo MVP; Lesson/YouTube/summary/RAG chỉ mở rộng. |
-| 55 | Add/Update/Delete Subject Material | U05 | Tài liệu tham khảo MVP; Lesson/YouTube/summary/RAG chỉ mở rộng. |
-| 56 | View Subject Question Bank | U06 | Theo FR liên quan; backend kiểm scope và state. |
-| 57 | Manage Subject Quiz Questions | U06 | Theo FR liên quan; backend kiểm scope và state. |
-| 58 | View Admin Dashboard | U16 | Admin xem thống kê vận hành và trạng thái/lịch sử backup từ U03: thời gian, dung lượng, lần thành công gần nhất, lỗi đã sanitize; không truy cập dữ liệu học vụ. |
-| 59 | View Account List | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 60 | Add Account | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 61 | View Account Detail | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 62 | Update Account Information | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 63 | Change Account Status | U01 | Theo FR liên quan; backend kiểm scope và state. |
-| 64 | View Subject List | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 65 | Add Subject | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 66 | View Subject Detail | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 67 | Update Subject Information | U04 | Theo FR liên quan; backend kiểm scope và state. |
-| 70 | Manage System Settings | U03 | Admin xem/sửa cấu hình vận hành, lịch/retention backup/activity và quota giảng viên; U07 hỗ trợ quota qua port. Credentials AI riêng qua UC 76. |
-| 73 | View Audit Log | U02 | Theo FR liên quan; backend kiểm scope và state. |
-| 74 | Manage Personal AI Connection | U13 | Chủ tài khoản thêm/test/thay/thu hồi personal API; Gemini/OpenAI/Claude. |
-| 75 | Connect/Revoke MCP Agent | U13 | Kết nối/revoke agent MCP và xem hướng dẫn client đã kiểm chứng. |
-| 76 | Manage Institutional AI Connection | U13 | Admin quản trị API chung, test synthetic payload, không học vụ. |
-| 77 | View AI Usage History | U07 | Usage/provenance của chính chủ; Admin chỉ thống kê chung theo quyền. |
-| 79 | Request Draft Feedback | U11 | Private feedback bản nháp; Graded cần teacher allowStudentAiFeedback. |
+| 01 | Activate Account | U01 | Allows a user to activate a school-issued account by verifying an OTP sent through Brevo and setting an initial password. |
+| 02 | Login | U01 | Allows a user with an active account to sign in using their email and password and access the functions available to their role. |
+| 03 | Logout | U01 | Allows a signed-in user to end the current session and return to the login screen. |
+| 04 | Reset Password | U01 | Allows a user to verify an OTP sent through Brevo and set a new password to recover account access. |
+| 05 | Change Password | U01 | Allows a signed-in user to change their password after verifying the current password. |
+| 06 | View Profile Information | U01 | Allows a signed-in user to view their own profile information, including account details and role. |
+| 07 | Update Profile Information | U01 | Allows a signed-in user to update permitted profile fields, such as display name and phone number. |
+| 12 | View Notifications | U16 | Allows a user to view their own notifications, open authorized related information and mark notifications as read. Important learning events may also generate email according to recipient preferences. |
+| 13 | View Enrolled Classes | U04 | Allows a student to view the classes in which they are enrolled and select a class to access. |
+| 14 | View Enrolled Class Detail | U04 | Allows a student to view an enrolled class's information and access its learning materials, assignments, announcements and group information. |
+| 15 | View Learning Material | U05 | Allows an authorized user to preview or download permitted reference files stored privately through Google Drive, or open and watch educational videos through YouTube links provided as learning materials. YouTube support means viewing linked videos; automatic transcription, AI summaries and advanced RAG are not required. |
+| 16 | View My Group | U12 | Allows a student to view their group in a class, including its members, leader and group-assignment documents. |
+| 17 | Request Leader Change | U12 | Allows a group member to submit a request to change the group leader, provide a reason and optionally propose a replacement. |
+| 18 | View Quiz Practice History | U11 | Allows a student to view their quiz practice history and select a quiz to inspect. |
+| 19 | View Quiz Practice Detail | U11 | Allows a student to view a quiz's information and available practice attempts. |
+| 20 | Take Quiz | U11 | Allows a student to answer quiz questions and submit an attempt for automatic scoring. |
+| 21 | View Quiz Result | U11 | Allows a student to view the score and permitted feedback for a completed quiz attempt. |
+| 22 | View Assignment List | U11 | Allows a student to view available individual or group Assignments in their enrolled classes. An Assignment may contain document content only or optional Draw.io diagrams; Quiz is a separate assessment type. |
+| 23 | View Assignment Detail | U11 | Allows a student to view an Assignment's instructions, document structure, rubric, submission mode, diagram requirements, deadline, attempt limits and applicable AI/activity policies. |
+| 24 | Complete Individual Assignment | U11 | Allows a student to start or resume an individual Assignment, edit permitted document sections, autosave drafts and submit the completed work. When the teacher enables diagrams, the student can optionally create or edit Draw.io diagram blocks within the workspace; full Draw.io XML and previews are preserved with the document. Diagram editing is part of Assignment completion, not a separate use case or assessment type. |
+| 27 | Complete Group Assignment | U14 | Allows group members to claim and edit authorized sections of a shared Assignment document. When the teacher enables diagrams, members can optionally create or edit Draw.io diagram blocks in sections they are permitted to edit; full Draw.io XML and previews are preserved with the document. The group leader submits the group document; version history and individual activity signals are retained when monitoring is enabled. |
+| 28 | View Submission History | U11 | Allows a student to view their previous submissions for an assignment, including submitted content, submission time and permitted scores or feedback. |
+| 29 | Request Practice Feedback | U11 | Allows a student to request private feedback on their own submitted Practice Assignment through a personal AI API connection or external MCP agent. Feedback is versioned and does not create official Gradebook grades; no shared AI token grant is provided to students. |
+| 30 | View Class Announcements | U05 | Allows authorized students and teachers to view announcements published in a class and read their contents. |
+| 31 | View Assigned Class List | U04 | Allows a teacher to view the classes assigned to them and select a class to manage. |
+| 32 | View Assigned Class Detail | U04 | Allows a teacher to view an assigned class's information and access its teaching and management functions. |
+| 33 | View Uploaded Learning Materials | U05 | Allows a teacher assigned to a class to view and manage its permitted reference files and educational YouTube video links. Full Lesson functionality remains an extension. |
+| 34 | Add/Update/Delete Learning Material | U05 | Allows an assigned teacher to add, update or remove class reference files stored privately through Google Drive and links to educational YouTube videos. File and link validation and historical references are preserved. YouTube links are part of the core scope; full Lesson processing, automatic transcription, AI summaries and advanced RAG remain extensions. |
+| 35 | Create/Update/Delete Quiz | U09 | Allows an assigned teacher to create, update or delete standalone multiple-choice Quizzes with answer keys, scoring, attempt/time limits and an optional activity-monitoring policy. A Lesson is not required. Practice is the current provisional mode; Graded Quiz remains an open decision. |
+| 36 | Create/Update/Delete Announcement | U05 | Allows an assigned teacher to create, update or delete class announcements. New announcements generate in-app notifications; the teacher may mark a new announcement important and select email delivery. Editing does not automatically resend the creation email. |
+| 37 | View Student Submissions | U15 | Allows a teacher assigned to the class to inspect individual/group submissions and grading status, and review available activity signals within permitted work or Quiz-attempt details when monitoring is enabled. Signals show page-leaving counts, duration, timelines and missing data per student; they do not automatically establish cheating or change grades. Quiz remains Practice under the current provisional policy. |
+| 38 | Grade Submission With AI | U15 | Allows an assigned teacher to use an institutional AI API within quota, a personal AI API or an external MCP agent to assess a submitted Assignment against its rubric and receive versioned scores and feedback. The teacher reviews and confirms the result; AI cannot finalize or publish official grades. |
+| 39 | Grade Submissions Manually | U15 | Allows a teacher to evaluate submitted work using the configured scoring criteria and record scores and feedback manually. |
+| 40 | View/Export GradeBook | U15 | Allows a teacher to view the class gradebook and export assignment scores and submission or grading status to a supported file format. |
+| 41 | View Teacher Assignment List | U08 | Allows an assigned teacher to view and manage individual or group Assignments, publication/version/copy status and submission settings. Draw.io is optional within Assignment; Code Lab is outside scope. |
+| 42 | Create/Update/Delete Individual Assignment | U09 | Allows an assigned teacher, or a subject manager within their authorized subject scope, to create, update or delete individual Assignments using document sections and rubrics. Each student completes and submits their own work. Draw.io diagrams are optional and enabled by the educator; optional activity monitoring is configured before publication. Student feedback is available only for submitted Practice Assignments, not editable drafts or Graded work. |
+| 45 | Create/Update/Delete Group Assignment | U09 | Allows a teacher assigned to a class to create, update or delete group Assignments using a shared document structure and section rubrics. Group members work on authorized sections and the group leader submits the document. Draw.io diagrams are optional and enabled by the teacher; optional activity monitoring is configured before publication. Group Assignments remain Graded under the provisional policy; subject-wide group authoring is not supported. |
+| 46 | Add/Update/Delete Rubric | U06 | Allows an authorized educator to add, update or delete rubrics for document sections in individual or group Assignments, including diagram criteria when diagrams are enabled. Rubrics are validated, locked at publication and snapshotted for attempts and submissions. |
+| 47 | View Managed Subject Classes | U04 | Allows a subject manager to view the classes belonging to the subjects they manage. |
+| 48 | View Managed Class Detail | U04 | Allows a subject manager to view a managed class's information, assigned teacher and enrolled students. |
+| 49 | Create Class | U04 | Allows a subject manager to create a class within a subject they manage and enter the required class information. |
+| 50 | Assign Teacher To Class | U04 | Allows a subject manager to assign or change the teacher responsible for a managed class. |
+| 51 | Add/Remove Class Students | U04 | Allows a subject manager to add selected students to a managed class or remove students from it. Removed students keep their history. |
+| 52 | Edit Class Information | U04 | Allows a subject manager to update permitted information and settings of a managed class, including opening, archiving or reopening the class and showing the anonymous grade distribution to students. |
+| 53 | View Managed Subject | U04 | Allows a subject manager to view the subjects assigned to them and access a subject's information and management functions. |
+| 54 | View Subject Materials | U05 | Allows a subject manager to view permitted reference files and educational YouTube video links in an assigned subject and inspect their versions or details. |
+| 55 | Add/Update/Delete Subject Material | U05 | Allows a subject manager to add, update or remove subject reference files stored privately through Google Drive and educational YouTube video links shared with authorized classes. YouTube links are part of the core scope; full Lesson processing, automatic transcription, AI summaries and advanced RAG remain extensions. |
+| 56 | View Subject Question Bank | U06 | Allows a subject manager to browse versioned multiple-choice questions and answer keys in an assigned subject's Quiz bank. Code questions and execution tests are outside scope. |
+| 57 | Create/Update/Delete Subject Question | U06 | Allows a subject manager to create, update or delete multiple-choice Quiz questions in an assigned subject's question bank. Question versions are preserved for published Quiz snapshots; no Code Lab questions are supported. |
+| 58 | View Admin Dashboard | U16 | Allows an administrator to view authorized platform summaries and backup status/history, including the latest successful backup, timestamps, size and sanitized errors. U03 supplies backup information; this view does not grant access to academic content or a production restore action. |
+| 59 | View Account List | U01 | Allows an administrator to view platform accounts and select an account to inspect or manage. |
+| 60 | Add Account | U01 | Allows an administrator to create a school-issued account and assign its initial information and role. The account holder completes account activation separately. |
+| 61 | View Account Detail | U01 | Allows an administrator to view an account's profile information, role and current status. |
+| 62 | Update Account Information | U01 | Allows an administrator to update permitted information and role settings of a selected account. |
+| 63 | Change Account Status | U01 | Allows an administrator to change an account's status and control its eligibility to access the platform. |
+| 64 | View Subject List | U04 | Allows an administrator to view the platform's subjects and select a subject to inspect or manage. |
+| 65 | Add Subject | U04 | Allows an administrator to create a subject with the required identifying information and subject-manager assignment. |
+| 66 | View Subject Detail | U04 | Allows an administrator to view a subject's information, assigned subject manager and related class information. |
+| 67 | Update Subject Information | U04 | Allows an administrator to update permitted subject information and its subject-manager assignment, and to archive or reopen the subject. |
+| 70 | View Settings | U03 | Allows an administrator to view permitted operational settings, file constraints, backup schedule/retention, activity retention and institutional AI token quota policies for eligible teachers and subject managers. The settings also show institutional Gemini, OpenAI or Claude API configuration, selected providers/models and connection status. API keys remain masked; viewing settings does not change configuration or grant academic content access. |
+| 71 | Edit Setting | U03 | Allows an administrator to update permitted operational settings, file constraints, backup schedule/retention, activity retention and institutional AI token quota policies for eligible teachers and subject managers. Within the same settings, the administrator can configure, replace or revoke institutional Gemini, OpenAI or Claude API keys, select supported models and test connections with synthetic data. Credentials are protected, and changes are validated, version-checked and audited. Shared API access is educator-only within quota; quota is not sold or allocated to students, and exhausted shared quota never automatically uses a personal API. Configuration does not grant academic content access; personal APIs and MCP agents remain separate through UC 74/75. |
+| 73 | View Audit Log | U02 | Allows an administrator to view and search audit logs by actor, action, affected object, result and time. Audit records are read-only and cannot be edited or deleted. |
+| 74 | Manage Personal AI API | U13 | Allows a student, teacher or subject manager to add their own Gemini, OpenAI or Claude API key, test the connection, replace the key or revoke it. API credentials are protected and masked; personal API access does not grant additional academic permissions or institutional quota. External MCP agents are managed separately through UC 75. |
+| 75 | Connect/Revoke MCP Agent | U13 | Allows an authorized user to connect or revoke their own agent through ALAP's authenticated MCP server and follow client-specific setup instructions. Each tool call checks current permissions, scope and state; official submission and grade publication are not initial MCP tools. |
+| 77 | View AI Usage History | U07 | Allows a user to view their own AI usage, connection source, provider/model when known and token counts with measured, estimated, externally reported or unavailable provenance. Administrators view authorized shared-usage aggregates. Unknown MCP model usage is not displayed as zero. |
 
-## Retired/migration
+## Retired and consolidated IDs
 
-| ID | Quyết định |
-|---|---|
-| 08 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 09 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 10 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 11 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 25 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 43 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 44 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 45 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 68 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 69 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
-| 72 | Retired 2026-10-13; payment/Code hoặc authoring riêng gộp Assignment. Giữ truy vết lịch sử, không reuse. |
 
-UC 44/45 authoring gộp UC 42; UC 26/27 giữ như capability/submission cá nhân có diagram/nhóm. Chỉ hai product types. Không suy ra số màn/API bằng số UC.
 
-## Consolidation 2026-10-13 — yêu cầu người dùng
+| Former ID | Change |
+| --- | --- |
+| 08, 09, 10, 11, 68, 69, 72 | Removed AI-credit packages, purchases, payment results and payment history. Institutional quota is not a purchase or wallet. |
+| 25, 43 | Removed Code Lab completion/authoring and Judge0 execution. |
+| 26 | Consolidated optional Draw.io diagram editing into UC 24 and UC 27. Diagram functionality is retained within Assignment workspaces; the separate UC ID is retired and not reused. |
+| 79 | Removed draft feedback by user decision; Student feedback is available only after submitting a Practice Assignment (UC 29). ID retained as retired. |
+| 44 | Consolidated separate Diagram Assignment authoring into UC 42 and UC 45 as optional Draw.io support. UC 45 is reinstated for its original Group Assignment authoring responsibility; UC 42 now covers Individual Assignment authoring. |
+| 78 | Educator quota configuration is included in UC 70 — View Settings and UC 71 — Edit Setting. UC 71 is reinstated for its original settings-editing responsibility; UC 78 remains retired. |
+| 80 | Consolidated backup status/history into UC 58 — View Admin Dashboard. |
+| 81 | Consolidated work-activity review into UC 37 — View Student Submissions. |
+| 76, 82 | Consolidated institutional AI API viewing, editing and connection testing into UC 70 — View Settings and UC 71 — Edit Setting. IDs retained as retired and not reused. |
 
-| Former ID | Current ID | Quyết định |
-|---|---|---|
-| 71 | 70 | Edit Settings gộp Manage System Settings; giữ xem/sửa/version/audit. |
-| 78 | 70 | Quota giảng viên là cấu hình con; U03 primary UC, U07 vẫn sở hữu xử lý quota qua public port. |
-| 80 | 58 | Trạng thái/lịch sử backup là mục Admin Dashboard; U16 primary UC, U03 vẫn sở hữu backup/job/manifest. |
-| 81 | 37 | Activity là luồng xem chi tiết bài làm/lượt được phép; U15 primary UC, U11 thu thập/U14 tích hợp. |
+Optional Draw.io diagram editing is described within UC 24 and UC 27; UC 26 is no longer a separate active use case. UC 27 remains the group-work/submission workflow. UC 29 concerns only submitted Practice Assignments. Requests on editable drafts or Graded Assignments are rejected. UC 79 is retired and its ID is not reused.
 
-Không đánh số lại hoặc tái sử dụng IDs đã gộp. Không bỏ FR-038/039 hoặc story backup/activity/quota. Quiz Practice không trở thành Graded vì giảng viên xem activity: chỉ đọc lượt trong lớp được phân công theo policy, không thêm điểm Quiz vào Gradebook.
+
+## Ownership boundary
+
+UC70/71 primary U03 orchestrate settings UI; U07 owns quota, U13 owns protected institutional API records and tests. UC42/45 primary U09 author Individual/Group work; UC24/27 keep optional diagrams without UC26. UC29 primary U11 accepts only submitted Practice work; UC79 retired. No new unit, microservice or approval is introduced.

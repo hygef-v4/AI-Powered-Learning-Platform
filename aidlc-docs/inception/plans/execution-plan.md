@@ -2,7 +2,7 @@
 
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
 
-66 active UC; 50 MVP stories + 1 extension; 15 logical units
+65 active UC; 50 MVP stories + 1 extension; 15 logical units
 ## Phạm vi request
 
 - [x] Đọc state, requirements, stories, application/unit artifacts và CLAUDE/rule details.
@@ -42,8 +42,8 @@ Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích h
 
 Iteration 1 bổ sung nền backup/config/status U03; email OTP vẫn U01. Activity/policy/review thuộc Iteration 2. Email backup/thông báo lớp tích hợp khi U16 sẵn sàng, không tuyên bố G1 đã có cảnh báo email. Trước demo phải kiểm restore với dữ liệu các unit.
 
-## UC consolidation — 66 active UC
+## UC consolidation — 65 active UC
 
-UC 70 Manage System Settings gộp 71/78: U03 primary; U07 giữ quota service/data và US-AIC-003. UC 58 gộp 80: U16 primary dashboard; U03 giữ backup service/data và US-OPS-001. UC 37 gộp 81: U15 primary review; U11/U14 giữ activity capture. UC 76 giữ riêng credentials/provider. Story count vẫn 50 MVP + 1 extension, 15 units; không bỏ chức năng hoặc acceptance vì gộp UC. Quiz Practice activity chỉ đọc trong scope/policy cho phép, không tự thêm Gradebook.
+UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
 
 Construction current docs: [README](../../construction/README.md), [sync plan](../../construction/plans/construction-66-uc-sync-2026-10-13.md). Stage approvals/code progress không thay vì revision tài liệu.

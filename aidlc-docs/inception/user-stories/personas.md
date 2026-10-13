@@ -5,7 +5,7 @@
 | Persona | Nhu cầu và trách nhiệm | AI access |
 |---|---|---|
 | P-STUDENT | Assignment tài liệu SWR/SWD cá nhân/nhóm, diagram tùy chọn, Quiz; autosave/nộp, sửa theo phản hồi | API/agent riêng, không quota chung; policy từng bài và ownership |
-| P-TEACHER | Soạn/giao/nhận/chấm bài lớp, rubric, phản hồi sớm và công bố điểm | API chung có quota hoặc API/MCP cá nhân; không auto-fallback |
+| P-TEACHER | Soạn/giao/nhận/chấm bài lớp, rubric, phản hồi sau nộp bài Practice và công bố điểm | API chung có quota hoặc API/MCP cá nhân; không auto-fallback |
 | P-SUBJECT-MANAGER | Tài nguyên/ngân hàng môn, triển khai lớp, phân công/ghi danh; bài cá nhân cấp môn | R2 cho môn; R4 khi dạy/chấm lớp; quota educator trong quyền |
 | P-ADMIN | Accounts/subjects/Settings, institutional connection/quota/audit, thống kê | Test synthetic connection, không đọc bài hay key cá nhân |
 
@@ -27,4 +27,4 @@ Stories và mapping: [stories.md](stories.md), [unit map](../application-design/
 Admin theo dõi trạng thái backup và cấu hình lịch/retention; quyền này không cấp quyền tải dữ liệu học vụ. Người vận hành giữ secrets khôi phục riêng và thực hiện restore theo runbook. Giảng viên được giao dạy chọn policy ghi nhận rời trang và xem timeline đúng lớp; sinh viên được thông báo policy và chỉ xem dữ liệu của mình. Không tự kết luận gian lận. Email quan trọng và minh bạch nguồn/token tuân [đặc tả hội đồng](../requirements/council-features-2026-10-13.md).
 
 
-Admin sử dụng UC 70 cho Settings/quota, UC 76 cho kết nối API chung, UC 58 cho trạng thái backup. Teacher/Subject Manager được giao dạy dùng UC 37 cho activity trong chi tiết bài làm/lượt được phép. Các ID 71/78/80/81 đã gộp, không chức năng độc lập.
+Admin sử dụng UC70 View Settings và UC71 Edit Setting cho Settings/quota/API chung, UC58 cho trạng thái backup. Teacher/Subject Manager được giao dạy dùng UC 37 cho activity trong chi tiết bài làm/lượt được phép. UC71 được khôi phục; IDs 26/76/78/79/80/81/82 không còn UC độc lập.

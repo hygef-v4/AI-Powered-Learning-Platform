@@ -1,5 +1,7 @@
 # Scope revision 2026-10-13
 
+> Historical synchronization record. Current scope and validation are superseded by [65-UC table synchronization](uc-table-65-sync-2026-10-13.md). Counts/checklists below retain the earlier revision evidence and are not current implementation approval.
+
 ## Authorization và intent
 
 User explicitly requested: "giúp tôi sửa lại doc inception" after confirming exactly two types Assignment/Quiz, diagram as Assignment option, scope SWR/SWD, no code/payment, shared educator API quota and personal API/MCP for educator/Student.

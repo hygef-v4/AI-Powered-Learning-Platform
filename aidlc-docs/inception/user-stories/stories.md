@@ -2,13 +2,15 @@
 
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
 
-**50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
+**50 MVP stories + 1 extension story**, 65 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
 
 Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Quiz Practice và GROUP Graded tạm giữ D01/D02. Chưa có bằng chứng survey; xem requirements/revision-decisions-2026-10-13.md.
 
 ### US-AIC-001 - Kết nối API cá nhân
 
 **Primary unit**: U13; **Scope**: MVP.
+
+**Current UC trace**: UC 74. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Student/educator, tôi quản lý API Gemini/OpenAI/Claude của mình.
 
@@ -25,6 +27,8 @@ Given Student, When chọn nguồn, Then personal API hoạt động đúng quy�
 ### US-AIC-002 - Kết nối agent riêng qua MCP
 
 **Primary unit**: U13; **Scope**: MVP.
+
+**Current UC trace**: UC 75. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là user, tôi kết nối agent vào tools ALAP với phạm vi cá nhân.
 
@@ -46,6 +50,8 @@ Given external agent, When ghi usage, Then chỉ reported/unavailable, không đ
 
 **Primary unit**: U07; **Scope**: MVP.
 
+**Current UC trace**: UC 70; UC 71. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Admin/educator, tôi cấp và sử dụng hạn mức token chung.
 
 **Truy vết**: FR-021/034. Primary unit U07.
@@ -64,7 +70,7 @@ Given usage response hoặc timeout, When settle, Then true usage/unknown đư�
 
 #### Scenario 4 - Truy vết quota sau gộp UC
 
-- **Given** Admin mở UC 70 Manage System Settings
+- **Given** Admin mở UC 70 View Settings / UC 71 Edit Setting
 - **When** xem hoặc chỉnh quota một giảng viên
 - **Then** UI thuộc UC 70 nhưng policy/data/reservation vẫn do U07 sở hữu; giá trị và kết quả được kiểm version/audit, không còn UC 78 độc lập.
 
@@ -73,6 +79,8 @@ Given usage response hoặc timeout, When settle, Then true usage/unknown đư�
 ### US-AIC-004 - Lịch sử usage theo nguồn
 
 **Primary unit**: U07; **Scope**: MVP.
+
+**Current UC trace**: UC 77. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là user, tôi xem lượng dùng AI và provenance của mình.
 
@@ -97,6 +105,8 @@ Given MCP không cung cấp usage, When xem, Then unavailable/tool metadata, kh�
 
 **Primary unit**: U13; **Scope**: MVP.
 
+**Current UC trace**: UC 35; UC 42; UC 45. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Teacher, tôi chọn shared/personal API hoặc agent MCP để hỗ trợ soạn bài.
 
 **Truy vết**: FR-006/012/034/035. Primary unit U13.
@@ -112,6 +122,8 @@ Given hết quota chung, When tiếp tục, Then chỉ personal sau lựa chọn
 ### US-AIG-002 - AI soạn bài cấp môn
 
 **Primary unit**: U13; **Scope**: MVP.
+
+**Current UC trace**: UC 35; UC 42. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Subject Manager, tôi dùng AI hỗ trợ Assignment INDIVIDUAL/Quiz cấp môn trong R2.
 
@@ -129,6 +141,8 @@ Given không được giao dạy lớp, When yêu cầu chấm lớp, Then bị 
 
 **Primary unit**: U13; **Scope**: MVP.
 
+**Current UC trace**: UC 70; UC 71. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Admin, tôi cấu hình API chung và provider/model, kiểm tra kết nối và giám sát trạng thái.
 
 **Truy vết**: FR-021/033/037. Primary unit U13.
@@ -141,9 +155,16 @@ Given Admin, When test connection, Then dùng synthetic payload, bảo vệ key 
 
 Given sửa/thu hồi cấu hình, When request mới, Then dùng cấu hình hiện hành và audit không chứa secret.
 
+
+#### Scenario - Settings API delegation
+
+Given authenticated Admin, When open View Settings or use Edit Setting for institutional connection configuration/test/revoke, Then U03 delegates to U13; responses are masked and version/audit verified, failures never report saved. No academic access is granted.
+
 ### US-ASM-001 - Duyệt và phát hành Assignment/Quiz
 
 **Primary unit**: U08; **Scope**: MVP.
+
+**Current UC trace**: UC 35; UC 41; UC 42; UC 45. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là educator có quyền, tôi soạn và duyệt bài trước khi giao.
 
@@ -165,6 +186,8 @@ Given published, When sửa nội dung, Then phải dùng version/copy theo poli
 
 **Primary unit**: U11; **Scope**: MVP.
 
+**Current UC trace**: UC 18; UC 19; UC 20; UC 21; UC 22; UC 23; UC 24; UC 28. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Student, tôi làm tài liệu hoặc Quiz và nộp theo policy.
 
 **Truy vết**: FR-007/008/018. Primary unit U11.
@@ -184,6 +207,8 @@ Given hết hạn/ngoài quyền, When submit API/MCP, Then từ chối an toàn
 ### US-ASM-004 - Assignment tài liệu với Draw.io tùy chọn
 
 **Primary unit**: U09; **Scope**: MVP.
+
+**Current UC trace**: UC 42; UC 45; UC 24; UC 27. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là educator/Student, tôi dùng workspace tài liệu cho Assignment thuần hoặc có sơ đồ.
 
@@ -205,6 +230,8 @@ Given cá nhân/nhóm, When cấu hình khung/rubric, Then dùng cùng document 
 
 **Primary unit**: U09; **Scope**: MVP.
 
+**Current UC trace**: UC 35. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là educator, tôi tạo Quiz với câu/đáp án và chính sách làm bài.
 
 **Truy vết**: FR-007/017. Primary unit U09.
@@ -220,6 +247,8 @@ Given câu single/multiple choice, When nộp, Then chấm theo đáp án snapsh
 ### US-ASM-008 - Version và ngừng giao bài
 
 **Primary unit**: U08; **Scope**: MVP.
+
+**Current UC trace**: UC 41; UC 42; UC 45. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là educator, tôi giữ lịch sử khi ngừng giao và tạo phiên bản mới.
 
@@ -237,6 +266,8 @@ Given bản mới, When cấu hình, Then giữ type ASSIGNMENT/QUIZ và cấu h
 
 **Primary unit**: U08; **Scope**: MVP.
 
+**Current UC trace**: UC 42. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Subject Manager, tôi giao Assignment cá nhân cho các lớp OPEN theo lịch chung.
 
 **Truy vết**: FR-027. Primary unit U08.
@@ -253,6 +284,8 @@ Given từng lớp, When grade, Then chỉ Teacher/Subject Manager được giao
 
 **Primary unit**: U08; **Scope**: MVP.
 
+**Current UC trace**: UC 42; UC 45. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Teacher có quyền, tôi copy nội dung bài và rubric giữa lớp phù hợp.
 
 **Truy vết**: FR-028. Primary unit U08.
@@ -265,9 +298,11 @@ Given đúng quyền nguồn/đích, When copy, Then identity/lineage và rubric
 
 Given copy, When lưu, Then không copy lịch, nhóm, kết nối AI, attempt, phản hồi và điểm.
 
-### US-ASM-012 - Phản hồi sớm và luyện tập nhiều lần
+### US-ASM-012 - Phản hồi sau nộp bài Practice và luyện tập nhiều lần
 
 **Primary unit**: U11; **Scope**: MVP.
+
+**Current UC trace**: UC 29. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Student, tôi dùng personal API/MCP để nhận phản hồi và cải thiện bài.
 
@@ -275,7 +310,7 @@ Given copy, When lưu, Then không copy lịch, nhóm, kết nối AI, attempt, 
 
 #### Scenario 1
 
-Given draft của mình và policy cho phép, When request feedback, Then lưu contentVersion/provenance và không dùng shared quota.
+Given Assignment PRACTICE của mình đã SUBMITTED, When request feedback, Then kiểm current scope/state và lưu submissionVersion/provenance, không dùng shared quota hoặc sửa snapshot bài nộp.
 
 #### Scenario 2
 
@@ -283,15 +318,17 @@ Given Practice đã nộp, When request nhiều lần hợp lệ, Then lưu lị
 
 #### Scenario 3
 
-Given Graded draft policy tắt hoặc dữ liệu ngoài quyền, When web/MCP request, Then từ chối; không đưa feedback vào Gradebook.
+Given draft/IN_PROGRESS, bài GRADED hoặc dữ liệu ngoài quyền, When web/MCP request hoặc ghi feedback, Then từ chối; không có teacher opt-in cho draft feedback và không đưa feedback vào Gradebook.
 
 #### Scenario 4
 
-Given AI lỗi/stale, When nhận kết quả, Then bài còn nguyên và không ghi đè version mới.
+Given AI lỗi/stale hoặc submissionVersion không khớp, When nhận kết quả, Then không apply sai snapshot và không thay đổi bài nộp/điểm.
 
 ### US-AUD-001 - Tra cứu audit nghiệp vụ và bảo mật
 
 **Primary unit**: U02; **Scope**: MVP.
+
+**Current UC trace**: UC 73. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là quản trị viên, tôi muốn tra cứu sự kiện audit theo phạm vi và thời gian để điều tra thay đổi nhạy cảm mà không thể sửa lịch sử.
@@ -323,6 +360,8 @@ Given AI lỗi/stale, When nhận kết quả, Then bài còn nguyên và không
 ### US-CAT-001 - Quản lý cấu trúc môn và lớp
 
 **Primary unit**: U04; **Scope**: MVP.
+
+**Current UC trace**: UC 47; UC 48; UC 49; UC 50; UC 53; UC 64; UC 65; UC 66; UC 67. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là quản trị viên, tôi muốn tạo môn và giao môn cho Chủ nhiệm môn; là Chủ nhiệm môn, tôi muốn tạo lớp thuộc môn mình và giao giảng viên để cấu trúc học thuật phản ánh đúng hoạt động đào tạo.
@@ -361,6 +400,8 @@ Given AI lỗi/stale, When nhận kết quả, Then bài còn nguyên và không
 
 **Primary unit**: U04; **Scope**: MVP.
 
+**Current UC trace**: UC 31; UC 32; UC 47; UC 48; UC 52. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là Chủ nhiệm môn, tôi muốn sửa/mở/lưu trữ lớp của môn mình; là Teacher của lớp, tôi muốn xem danh sách/chi tiết lớp được giao để quản lý hoạt động giảng dạy.
 
@@ -398,6 +439,8 @@ Given AI lỗi/stale, When nhận kết quả, Then bài còn nguyên và không
 
 **Primary unit**: U04; **Scope**: MVP.
 
+**Current UC trace**: UC 51. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là Chủ nhiệm môn, tôi muốn thêm và gỡ sinh viên trong lớp của môn mình để họ nhận đúng nội dung và bài tập.
 
@@ -429,6 +472,8 @@ Given AI lỗi/stale, When nhận kết quả, Then bài còn nguyên và không
 
 **Primary unit**: U05; **Scope**: MVP.
 
+**Current UC trace**: UC 15; UC 54; UC 55. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Subject Manager, tôi quản lý tài liệu tham khảo cho Assignment/Quiz của môn.
 
 **Truy vết**: FR-004/005. Primary unit U05.
@@ -441,9 +486,16 @@ Given có R2, When upload/gắn tài liệu hợp lệ, Then lưu riêng tư và
 
 Given không tài liệu/Lesson, When tạo bài, Then vẫn tạo Assignment/Quiz được.
 
+
+#### Scenario - Educational YouTube links
+
+Given authorized subject/class scope, When add/update/remove/list/open a valid teaching-video link, Then save title/url/version and preserve scoped/historical references; invalid links or unauthorized ALAP access are rejected. No transcription, summary or embedding is required.
+
 ### US-CNT-002 - Tài liệu tham khảo của lớp
 
 **Primary unit**: U05; **Scope**: MVP.
+
+**Current UC trace**: UC 15; UC 33; UC 34. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Teacher, tôi quản lý tài liệu của lớp được giao.
 
@@ -457,9 +509,16 @@ Given có R3/R4, When thêm/sửa/archive tài liệu, Then kiểm scope/version
 
 Given người ngoài lớp gọi web/MCP, When yêu cầu đọc, Then bị từ chối không lộ tài liệu.
 
+
+#### Scenario - Educational YouTube links
+
+Given authorized subject/class scope, When add/update/remove/list/open a valid teaching-video link, Then save title/url/version and preserve scoped/historical references; invalid links or unauthorized ALAP access are rejected. No transcription, summary or embedding is required.
+
 ### US-CNT-004 - Thông báo trong lớp
 
 **Primary unit**: U05; **Scope**: MVP.
+
+**Current UC trace**: UC 30; UC 36. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là thành viên lớp, tôi muốn đọc thông báo của các lớp mình học hoặc dạy tại một nơi; giảng viên của lớp tạo/sửa/xóa thông báo để thông tin đến đúng lớp.
@@ -505,9 +564,11 @@ Given người ngoài lớp gọi web/MCP, When yêu cầu đọc, Then bị t�
 - **Then** U16 gửi email tới người nhận hợp lệ theo preferences; sửa không tự gửi lại email tạo mới.
 
 
-### US-CNT-005 - Lesson/YouTube và RAG nâng cao (extension)
+### US-CNT-005 - Xử lý Lesson/video và RAG nâng cao (extension)
 
 **Primary unit**: U05; **Scope**: EXTENSION.
+
+**Current UC trace**: Extension only; no extra committed MVP UC. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là educator, tôi có thể muốn xử lý học liệu nâng cao sau scope cốt lõi.
 
@@ -515,7 +576,7 @@ Given người ngoài lớp gọi web/MCP, When yêu cầu đọc, Then bị t�
 
 #### Scenario 1
 
-Given extension chưa được chốt, When lập MVP, Then không coi YouTube/summary/embedding là prerequisite hoặc chức năng đã cam kết.
+Given extension chưa được chốt, When lập MVP, Then không coi xử lý video/caption/summary/embedding là prerequisite hoặc chức năng đã cam kết; link YouTube đơn thuần thuộc US-CNT-001/002 MVP.
 
 #### Scenario 2
 
@@ -524,6 +585,8 @@ Given extension được chọn sau, When thiết kế, Then chốt provider emb
 ### US-GRD-001 - Chấm Quiz xác định
 
 **Primary unit**: U15; **Scope**: MVP.
+
+**Current UC trace**: UC 21. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Student, tôi nhận kết quả Quiz theo đáp án.
 
@@ -536,6 +599,8 @@ Given Quiz Practice đã nộp, When score, Then dùng answer snapshot không AI
 ### US-GRD-002 - Đề xuất đánh giá Assignment
 
 **Primary unit**: U15; **Scope**: MVP.
+
+**Current UC trace**: UC 38. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Teacher, tôi yêu cầu AI hỗ trợ rubric qua nguồn được chọn.
 
@@ -552,6 +617,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 ### US-GRD-003 - Chấm thủ công, duyệt và ghi đè đề xuất AI
 
 **Primary unit**: U15; **Scope**: MVP.
+
+**Current UC trace**: UC 38; UC 39. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI và lưu thành điểm nháp để chịu trách nhiệm cho quyết định học thuật trước khi chốt và công bố (US-GRD-005).
@@ -590,6 +657,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U15; **Scope**: MVP.
 
+**Current UC trace**: UC 22; UC 40. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là người dùng, tôi muốn xem điểm, phản hồi và trạng thái bài nộp đúng phạm vi vai trò để theo dõi kết quả mà không lộ dữ liệu ngoài quyền.
 
@@ -621,6 +690,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U15; **Scope**: MVP.
 
+**Current UC trace**: UC 39; UC 40. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là giảng viên, tôi muốn chốt điểm nháp đã chấm (US-GRD-003) cho từng bài hoặc hàng loạt trong lớp được phân công rồi công bố để người học nhận kết quả nhất quán và có kiểm soát.
 
@@ -651,6 +722,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 ### US-GRP-001 - Chia lớp thành nhóm và chỉ định trưởng nhóm
 
 **Primary unit**: U12; **Scope**: MVP.
+
+**Current UC trace**: UC 16. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là giảng viên, tôi muốn chia sinh viên của lớp được phân công thành nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên) và chỉ định một trưởng nhóm cho mỗi nhóm để mọi bài tập nhóm của lớp có trách nhiệm rõ ràng.
@@ -689,6 +762,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U12; **Scope**: MVP.
 
+**Current UC trace**: UC 17. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là thành viên nhóm, tôi muốn gửi yêu cầu thay đổi trưởng nhóm để giảng viên xem xét khi phân công hiện tại không còn phù hợp.
 
@@ -714,6 +789,8 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U09; **Scope**: MVP.
 
+**Current UC trace**: UC 45. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Teacher, tôi soạn tài liệu nhóm với diagramEnabled tùy chọn.
 
 **Truy vết**: FR-007/017/026. Primary unit U09.
@@ -729,6 +806,8 @@ Given diagramEnabled=false/true, When cấu hình, Then không bắt buộc nhó
 ### US-GRP-004 - Nhận và làm phần Assignment nhóm
 
 **Primary unit**: U14; **Scope**: MVP.
+
+**Current UC trace**: UC 27. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là thành viên, tôi nhận phần và sửa nội dung theo quyền.
 
@@ -746,6 +825,8 @@ Given personal AI/MCP, When lấy ngữ cảnh, Then chỉ phần được phép
 
 **Primary unit**: U14; **Scope**: MVP.
 
+**Current UC trace**: UC 27. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là leader, tôi phối hợp và nộp bài tài liệu chung.
 
 **Truy vết**: FR-018/026. Primary unit U14.
@@ -762,6 +843,8 @@ Given hết hạn, When auto-submit, Then giữ quy tắc baseline cũ cho draft
 
 **Primary unit**: U15; **Scope**: MVP.
 
+**Current UC trace**: UC 37; UC 39. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Teacher, tôi chấm tài liệu nhóm và điều chỉnh điểm thành viên.
 
 **Truy vết**: FR-008/026. Primary unit U15.
@@ -777,6 +860,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 ### US-IAM-001 - Nhận và kích hoạt tài khoản trường cấp
 
 **Primary unit**: U01; **Scope**: MVP.
+
+**Current UC trace**: UC 01. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email trường để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
@@ -815,6 +900,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 **Primary unit**: U01; **Scope**: MVP.
 
+**Current UC trace**: UC 02; UC 03. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là người dùng, tôi muốn đăng nhập và đăng xuất an toàn để chỉ mình tôi sử dụng phiên đã xác thực.
 
@@ -846,6 +933,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 **Primary unit**: U01; **Scope**: MVP.
 
+**Current UC trace**: UC 04. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là người dùng quên mật khẩu, tôi muốn yêu cầu khôi phục mà không làm lộ trạng thái tài khoản để lấy lại quyền truy cập an toàn.
 
@@ -870,6 +959,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 ### US-IAM-004 - Quản lý hồ sơ cá nhân
 
 **Primary unit**: U01; **Scope**: MVP.
+
+**Current UC trace**: UC 06; UC 07. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là người dùng, tôi muốn xem và cập nhật thông tin hồ sơ tối thiểu của mình để dữ liệu tài khoản luôn chính xác.
@@ -902,6 +993,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 **Primary unit**: U01; **Scope**: MVP.
 
+**Current UC trace**: UC 62; UC 63. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là quản trị viên, tôi muốn gán hoặc thu hồi vai trò và phạm vi môn để người dùng chỉ có đúng quyền cần thiết.
 
@@ -933,6 +1026,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 **Primary unit**: U01; **Scope**: MVP.
 
+**Current UC trace**: UC 05. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là người dùng đã xác thực, tôi muốn đổi mật khẩu để chủ động bảo vệ tài khoản của mình.
 
@@ -957,6 +1052,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 ### US-IAM-007 - Quản trị vòng đời tài khoản
 
 **Primary unit**: U01; **Scope**: MVP.
+
+**Current UC trace**: UC 59; UC 60; UC 61; UC 62; UC 63. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là quản trị viên, tôi muốn tìm kiếm, tạo, cập nhật và khóa/mở khóa tài khoản để quản lý tài khoản người dùng trong tổ chức.
@@ -995,6 +1092,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 **Primary unit**: U04; **Scope**: MVP.
 
+**Current UC trace**: UC 13; UC 14. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Student, tôi vào lớp để xem tài liệu, Assignment/Quiz và nhóm được phép.
 
 **Truy vết**: FR-002/003/005. Primary unit U04.
@@ -1010,6 +1109,8 @@ Given bị gỡ khỏi lớp, When gọi trực tiếp API/MCP, Then không đ�
 ### US-NTF-001 - Nhận thông báo thiết yếu
 
 **Primary unit**: U16; **Scope**: MVP.
+
+**Current UC trace**: UC 12. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là người dùng, tôi muốn nhận thông báo về tài khoản, ghi danh, giao bài và kết quả để không bỏ lỡ hành động quan trọng.
@@ -1046,6 +1147,8 @@ Given bị gỡ khỏi lớp, When gọi trực tiếp API/MCP, Then không đ�
 ### US-QBK-001 - Quản lý rubric của bài
 
 **Primary unit**: U06; **Scope**: MVP.
+
+**Current UC trace**: UC 46. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là giảng viên hoặc Chủ nhiệm môn, tôi muốn mỗi phần của bài tự có rubric để tôi điền và sửa trong Rubric Detail khi soạn bài, giúp chấm bài nhất quán.
@@ -1084,6 +1187,8 @@ Given bị gỡ khỏi lớp, When gọi trực tiếp API/MCP, Then không đ�
 
 **Primary unit**: U06; **Scope**: MVP.
 
+**Current UC trace**: UC 56; UC 57. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Subject Manager, tôi quản lý câu Quiz/version và nguồn nội dung tài liệu được phép.
 
 **Truy vết**: FR-016. Primary unit U06.
@@ -1099,6 +1204,8 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 ### US-RPT-001 - Theo dõi tiến độ nộp bài và nhắc nhở
 
 **Primary unit**: U16; **Scope**: MVP.
+
+**Current UC trace**: UC 22; UC 37; UC 52. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là giảng viên, tôi muốn theo dõi trạng thái nộp bài, để hệ thống tự nhắc người học chưa nộp trước hạn và cho người học xem phân bố điểm ẩn danh của lớp, giúp họ hoàn thành đúng hạn và tự đánh giá kết quả.
@@ -1131,6 +1238,8 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 **Primary unit**: U16; **Scope**: MVP.
 
+**Current UC trace**: UC 58. Source: [current UC table](../../../docs/usecase_table.md).
+
 
 **Story**: Là quản trị viên, tôi muốn thấy thống kê ngay trên Admin Dashboard (UC 58) để nắm quy mô người dùng, môn, lớp và ghi danh của hệ thống.
 
@@ -1154,13 +1263,15 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 - **Given** Admin đang xác thực
 - **When** mở mục Backup trên Admin Dashboard
-- **Then** U16 đọc U03 port và hiển thị trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize; không tải archive hoặc restore production. Lỗi port hiện unavailable, không giả SUCCESS; sửa lịch/retention chuyển UC 70.
+- **Then** U16 đọc U03 port và hiển thị trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize; không tải archive hoặc restore production. Lỗi port hiện unavailable, không giả SUCCESS; sửa lịch/retention chuyển UC 71.
 
 
 
 ### US-RPT-003 - Xuất bảng điểm
 
 **Primary unit**: U16; **Scope**: MVP.
+
+**Current UC trace**: UC 40. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là Teacher hoặc Subject Manager được giao dạy lớp theo R4, tôi muốn xuất bảng điểm theo lớp/bài để phục vụ lưu trữ và xử lý nghiệp vụ ngoài hệ thống.
@@ -1187,6 +1298,8 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 **Primary unit**: U03; **Scope**: MVP.
 
+**Current UC trace**: UC 70; UC 71. Source: [current UC table](../../../docs/usecase_table.md).
+
 **Story**: Là Admin, tôi chỉnh cài đặt vận hành được phép.
 
 **Truy vết**: FR-033. Primary unit U03.
@@ -1199,10 +1312,10 @@ Given Settings version hợp lệ, When edit, Then validation/audit; không mont
 
 Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U13, không key plaintext trong Settings.
 
-#### Scenario 3 - Quota trong Settings UC 70
+#### Scenario 3 - Quota trong Settings UC70/71
 
 - **Given** Admin có quyền và quota policy/version hợp lệ
-- **When** chỉnh quota giảng viên trong Manage System Settings
+- **When** chỉnh quota giảng viên trong Edit Setting (UC71)
 - **Then** U03 gọi U07 port; U07 validate/update/audit, không sửa repository xuyên unit, không cấp Student hoặc lưu credentials; lỗi port không báo cập nhật thành công.
 
 
@@ -1210,6 +1323,8 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 ### US-OPS-001 - Backup và kiểm thử khôi phục
 
 **Primary unit**: U03; **Scope**: MVP.
+
+**Current UC trace**: UC 58; UC 70; UC 71. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là Admin, tôi muốn theo dõi backup độc lập trên Drive để người vận hành khôi phục được dữ liệu sau sự cố.
 
@@ -1237,13 +1352,15 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** dữ liệu backup/status thuộc U03
 - **When** Admin xem trạng thái qua UC 58/U16
-- **Then** chỉ metadata được trả qua port; cấu hình lịch/retention thuộc UC 70; story backup vẫn primary U03 dù UC xem là primary U16.
+- **Then** chỉ metadata được trả qua port; cấu hình lịch/retention thuộc UC 71 (UC70 chỉ xem); story backup vẫn primary U03 dù UC xem là primary U16.
 
 
 
 ### US-INT-001 - Xem dấu hiệu rời trang khi làm bài
 
 **Primary unit**: U15; **Scope**: MVP.
+
+**Current UC trace**: UC 37. Source: [current UC table](../../../docs/usecase_table.md).
 
 **Story**: Là giảng viên được giao dạy, tôi xem hoạt động làm bài để đối chiếu và trao đổi với sinh viên khi cần.
 

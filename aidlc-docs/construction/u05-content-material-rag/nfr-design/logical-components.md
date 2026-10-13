@@ -1,6 +1,6 @@
 # U05 Reference Content & Announcements — logical-components
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
 **Primary UC:** 15, 30, 33, 34, 36, 54, 55. **Primary stories:** US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. **Requirements:** FR-004/005/011/023.
 
@@ -32,3 +32,5 @@ attach/list/download references; announcements; optional Lesson extension
 - Attach reference → owner/scope + U03 validation → metadata persist; view/download tái kiểm scope.
 - Create important announcement → commit → U03 outbox → U16 resolves current recipients/preferences → email/in-app.
 - MCP reader → resource access → file excerpt/data minimum; advanced retrieval chỉ khi extension đã chốt/provider cấu hình riêng.
+
+Current material acceptance: authorized create/update/remove/list/open of FILE and YOUTUBE_LINK (UC15/33/34/54/55); keep kind/title/fileRef-or-videoUrl/scope/version and historical references. Validate URL/type/size, deny unauthorized ALAP access, handle unavailable videos and preserve no-automatic-summary behavior. No video upload/download, captions or embedding are required.

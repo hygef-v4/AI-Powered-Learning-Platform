@@ -1,10 +1,10 @@
-# Construction — nguồn hiện hành 66 UC
+# Construction — nguồn hiện hành 65 UC
 
-Revision 2026-10-13 đồng bộ Inception: 66 UC, 50 MVP + 1 extension story, 15 units, 39 FR IDs. Đây là detailed design/code planning, chưa implementation hoặc approval code mới.
+Revision 2026-10-13 đồng bộ Inception: 65 UC, 50 MVP + 1 extension story, 15 units, 39 FR IDs. Đây là detailed design/code planning, chưa implementation hoặc approval code mới.
 
 1. [Current contract](current-srs-contract.md) và [shared infrastructure](shared-infrastructure.md).
 2. Mỗi unit đọc functional-design, nfr-requirements, nfr-design và infrastructure-design tại đường dẫn trong bảng dưới.
-3. [Kế hoạch đồng bộ](plans/construction-66-uc-sync-2026-10-13.md) và plans/code-generation-plan/*.md là current delta chưa code.
+3. [Kế hoạch đồng bộ](../inception/plans/uc-table-65-sync-2026-10-13.md) và plans/code-generation-plan/*.md là current delta chưa code.
 4. [Inception ownership](../inception/application-design/unit-of-work-story-map.md) và [open decisions](../inception/requirements/revision-decisions-2026-10-13.md).
 
 | Unit | Current responsibility | Folder giữ để không phá refs |

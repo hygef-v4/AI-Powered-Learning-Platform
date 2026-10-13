@@ -1,5 +1,7 @@
 # Đồng bộ Inception theo 66 UC — 2026-10-13
 
+> Historical synchronization record. Current scope and validation are superseded by [65-UC table synchronization](uc-table-65-sync-2026-10-13.md). Counts/checklists below retain the earlier revision evidence and are not current implementation approval.
+
 Nguồn hiện hành: [bảng tiếng Anh](../../../docs/usecase_table.md), [catalog Inception](../requirements/use-cases.md). Request: “giúp tôi đồng bộ lại doc inception theo uc mới”. Documentation-only; giữ historical questions/plans/checkpoints, archive, Construction/code, diagram và Google Reports.
 
 ## Checklist

@@ -1,6 +1,6 @@
 # Construction — Current contract 2026-10-13
 
-**66 active UC; 50 MVP stories + 1 extension; 15 logical units; 39 FR IDs.** Nguồn [Inception requirements](../inception/requirements/requirements.md), [catalog](../inception/requirements/use-cases.md), [English table](../../docs/usecase_table.md), [story map](../inception/application-design/unit-of-work-story-map.md), [decisions](../inception/requirements/revision-decisions-2026-10-13.md).
+**65 active UC; 50 MVP stories + 1 extension; 15 logical units; 39 FR IDs.** Nguồn [Inception requirements](../inception/requirements/requirements.md), [catalog](../inception/requirements/use-cases.md), [English table](../../docs/usecase_table.md), [story map](../inception/application-design/unit-of-work-story-map.md), [decisions](../inception/requirements/revision-decisions-2026-10-13.md).
 
 Revision tài liệu theo yêu cầu người dùng; không implementation/approval/runtime evidence. [Snapshot cũ](historical/baseline-before-66-uc-2026-10-13/README.md) giữ checklist/phê duyệt trước, không source code mới. Các folder U07/U13 legacy không giữ trách nhiệm payment/code; ID unit không đổi.
 
@@ -10,16 +10,16 @@ Revision tài liệu theo yêu cầu người dùng; không implementation/appro
 |---|---|---|
 | U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 |
 | U02 | Audit | 73 |
-| U03 | File, Job, Event & Settings | 70 |
+| U03 | File, Job, Event & Settings | 70, 71 |
 | U04 | Subject, Class & Enrollment | 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 |
 | U05 | Reference Content & Announcements | 15, 30, 33, 34, 36, 54, 55 |
 | U06 | Rubrics & Subject Quiz Bank | 46, 56, 57 |
 | U07 | AI Usage & Teacher Quota | 77 |
 | U08 | Assignment/Quiz Lifecycle & Copy | 41 |
-| U09 | Assignment Documents & Quiz Authoring | 35, 42 |
-| U11 | Individual Work & Quiz Submission | 18, 19, 20, 21, 22, 23, 24, 26, 28, 29, 79 |
+| U09 | Assignment Documents & Quiz Authoring | 35, 42, 45 |
+| U11 | Individual Work & Quiz Submission | 18, 19, 20, 21, 22, 23, 24, 28, 29 |
 | U12 | Group & Allocation | 16, 17 |
-| U13 | AI Connections & MCP | 74, 75, 76 |
+| U13 | AI Connections & MCP | 74, 75 |
 | U14 | Group Workspace & Submission | 27 |
 | U15 | Grading & Gradebook | 37, 38, 39, 40 |
 | U16 | Reporting & Notification | 12, 58 |
@@ -32,20 +32,20 @@ Revision tài liệu theo yêu cầu người dùng; không implementation/appro
 | R2 subject manager | Quản lý môn/material/bank/bài cá nhân cấp môn; không tự quyền chấm lớp |
 | R3/R4 assigned teacher | Dạy/chấm/review/activity/export đúng lớp; shared quota nếu educator ACTIVE và scope hợp lệ |
 | R5 student | Enrollment/group membership current, own editable work; personal API/MCP, không shared quota |
-| Admin | Accounts/subjects, UC70 Settings/quota orchestration, UC76 shared credential/test synthetic, UC58 counts/backup metadata, UC73 audit; không học vụ |
+| Admin | Accounts/subjects, UC70 Settings/quota orchestration, UC70/71 shared credential/test synthetic through U13, UC58 counts/backup metadata, UC73 audit; không học vụ |
 
 Web/API/MCP đều current auth/resource/state/version; keys/client không mở rộng quyền; scope revoked deny request tiếp theo. Cookie-session state mutation phải có CSRF defense; MCP auth không thay provider credentials.
 
 ## Core invariants
 
 - Chỉ ASSIGNMENT/QUIZ; submissionMode INDIVIDUAL/GROUP và diagramEnabled độc lập. Bài nhóm chỉ lớp, tạm GRADED; Quiz tạm PRACTICE (D01/D02).
-- Lesson/YouTube/summary/advanced RAG extension, reference files MVP; không lesson/indexing prerequisite.
+- Reference files và educational YouTube links là MVP; Lesson processing/transcription/summary/advanced RAG là extension; không lesson/indexing prerequisite.
 - Quota không mua bán/wallet/payment; shared educator only, personal API hoặc external agent cho Student. Personal fallback cần user chọn.
 - Gemini/OpenAI/Claude direct provider adapters; MCP authenticated inbound domain tools, không mặc định proxy gọi LLM. External usage reported/unavailable, không trừ shared grant.
 - AI drafts/feedback/proposals validate snapshot/version; official grades/publication do người có quyền. No initial MCP submit/publish_grade tool.
 - Activity opt-in snapshot/default off, thông báo trước; no data khác zero; không auto verdict/penalty. Group activity per member U11 owner, U14 port.
-- Backup encrypted DB + independent files/manifest private Drive, SUCCESS only verified, isolated restore evidence; UC58 status, UC70 config, không restore UI.
-- UC71/78 gộp70, UC80 gộp58, UC81 gộp37. Backup/quota/activity stories vẫn giữ chủ dữ liệu; shared UI UC không chuyển ownership.
+- Backup encrypted DB + independent files/manifest private Drive, SUCCESS only verified, isolated restore evidence; UC58 status, UC70 view / UC71 config, không restore UI.
+- UC70 View Settings và UC71 Edit Setting giữ riêng; UC76/78/82 vào UC70/71, UC80 vào UC58, UC81 vào UC37; UC26 vào UC24/27; UC79 retired; UC42 Individual và UC45 Group authoring. Backup/quota/activity stories vẫn giữ chủ dữ liệu; shared UI UC không chuyển ownership.
 
 ## Contracts xuyên unit
 
@@ -55,7 +55,7 @@ Web/API/MCP đều current auth/resource/state/version; keys/client không mở 
 | AuditPort | U02 | All owner transactions; sanitize/append-only |
 | FileStoragePort / JobPort / OutboxPort | U03 | Owner-scoped private files, durable event/request refs |
 | BackupStatusPort | U03 | U16 metadata only, unavailable/lastKnown not false SUCCESS |
-| TeacherQuotaPolicyPort | U07 | U03 UC70 validates Admin; versioned quota policy transaction owned U07 |
+| TeacherQuotaPolicyPort | U07 | U03 UC70 read / UC71 mutation validate Admin; versioned quota policy transaction owned U07 |
 | QuotaReservationPort / UsagePort | U07 | U13 institutional calls; UNKNOWN retains uncertainty; provenance and request fingerprint |
 | AiConnectionPort / AiProviderPort | U13 | Connection owner authorization, protected secrets, normalized direct provider output/usage |
 | DocumentModelPort / AssessmentPolicyPort | U09 / U08 | Locked snapshots/config/version and current editability |
@@ -126,3 +126,11 @@ FR-010/022/029/031/032 retired theo Inception, không triển khai: giữ IDs v�
 - ActivityEventCommand(authenticatedActor, workKind/workId, sessionId, clientEventId, sequence, kind, clientTime) → accepted/deduplicated/rejected; actor/class/policy derived server. Query(assignedTeacher, workRef, memberId) → policyState/availability/intervals/count/knownDuration/unknownGaps; không fraud score/grade mutation.
 - AiTaskCommand(actor, sourceConnectionRef, taskType, targetRef, inputVersion, requestRef) → taskState/provenance. Draft/proposal apply expected targetVersion và current permissions; output chưa validated không tự applied.
 - MCP read_own_work phục vụ chủ bài; read_authorized_submission là supporting tool cho assigned educator đọc snapshot chấm bài đúng lớp, không hidden Quiz keys. Tools write expectedVersion, tool names/schema/transport có integration evidence trước public enable.
+
+## UC table synchronization — feedback, authoring and Settings
+
+- UC42 Create/Update/Delete Individual Assignment and UC45 Create/Update/Delete Group Assignment are distinct authoring entries using one Assignment document model. diagramEnabled is independent in both; UC24/27 include Draw.io XML/preview editing without a separate UC26.
+- UC29 Student feedback only on owned SUBMITTED PRACTICE snapshots. Deny draft/IN_PROGRESS/Graded and unauthorized requests or MCP writes; no draft-feedback policy remains. Teacher UC38 Grade Submission With AI remains a reviewed proposal workflow.
+- UC70 masked read and UC71 validated update/test/revoke contain institutional API configuration; U03 UI delegates to U13 protected connection records. Primary ownership does not move U13 credentials to U03.
+- AiConnectionAdministrationPort (U13) exposes masked config, versioned update/revoke and bounded synthetic test to U03; unavailable adapters do not report success. U07 quota and U13 credentials have separate owner transactions/audits.
+- Material references include private FILE and YOUTUBE_LINK with title/url/scope/version. Opening a public YouTube link does not give ALAP control over external video visibility. Transcript/summary/RAG processing is not required.

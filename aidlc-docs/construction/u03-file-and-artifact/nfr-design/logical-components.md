@@ -1,8 +1,8 @@
 # U03 File, Job, Event & Settings — logical-components
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 70. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
+**Primary UC:** 70, 71. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u03-file-and-artifact` không quyết định chức năng hiện hành.
 
@@ -19,7 +19,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 ## Owner contract
 
-file store/download scoped; jobs enqueue-after-commit/retry; typed Settings version/audit; manageSystemSettings (UC 70) delegates quota reads/writes via U07 port; runScheduledBackup/listBackupStatus; publishBackupFailure
+file store/download scoped; jobs enqueue-after-commit/retry; typed Settings version/audit; viewSettings (UC70) / editSetting (UC71) delegate quota via U07 and institutional AI configuration via U13 public ports; runScheduledBackup/listBackupStatus; publishBackupFailure
 
 ## Owned data
 

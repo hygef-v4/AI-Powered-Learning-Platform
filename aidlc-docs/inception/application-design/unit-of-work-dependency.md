@@ -8,7 +8,7 @@ H = provider behavior phải sẵn sàng trước tích hợp; C = public neutra
 
 | Consumer | Hard prerequisites | Contract/event integrations |
 |---|---|---|
-| U02/U03 | Khung tối thiểu | U01 authorization qua C, deny khi chưa có adapter thật; U03 → U07 quota-policy C cho UC 70, không hard prerequisite nền |
+| U02/U03 | Khung tối thiểu | U01 authorization qua C, deny khi chưa có adapter thật; U03 → U07 quota-policy C cho UC70/71 và U13 institutional-connection C; không hard prerequisite nền |
 | U01 | U02/U03 | Audit, OTP/jobs |
 | U04 | U01/U02/U03 | Tài liệu/bài của U05/U08 qua query ports |
 | U05/U06/U12 | U04 + nền | U08/U09 references qua C |
@@ -41,6 +41,6 @@ H = provider behavior phải sẵn sàng trước tích hợp; C = public neutra
 
 Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích hợp), teacher review U15, email quan trọng/failure U16; minh bạch AI U07/U13. Không thêm unit hoặc đổi nhân sự. Xem [đặc tả hội đồng](../requirements/council-features-2026-10-13.md). D05 đã được người dùng yêu cầu bổ sung, D01–D04 còn mở. Đây là phạm vi tài liệu, chưa runtime evidence.
 
-## UC consolidation — 66 active UC
+## UC consolidation — 65 active UC
 
-UC 70 Manage System Settings gộp 71/78: U03 primary; U07 giữ quota service/data và US-AIC-003. UC 58 gộp 80: U16 primary dashboard; U03 giữ backup service/data và US-OPS-001. UC 37 gộp 81: U15 primary review; U11/U14 giữ activity capture. UC 76 giữ riêng credentials/provider. Story count vẫn 50 MVP + 1 extension, 15 units; không bỏ chức năng hoặc acceptance vì gộp UC. Quiz Practice activity chỉ đọc trong scope/policy cho phép, không tự thêm Gradebook.
+UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.

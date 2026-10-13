@@ -1,5 +1,7 @@
 # Construction sync theo Inception 66 UC — 2026-10-13
 
+> Historical synchronization record. Current scope and validation are superseded by [65-UC table synchronization](../../inception/plans/uc-table-65-sync-2026-10-13.md). Counts/checklists below retain the earlier revision evidence and are not current implementation approval.
+
 **Raw request:** giúp tôi đồng bộ construction theo inception mới
 
 Documentation-only continuation; sửa các design/plan hiện hành cho scope người dùng đã chốt, không triển khai code hoặc tự chuyển stage approvals. Không hỏi lại các quyết định đã thống nhất; D01–D04 giữ pending và numeric backup/activity settings để vận hành xác nhận trước enable.
