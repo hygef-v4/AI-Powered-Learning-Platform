@@ -1,12 +1,12 @@
 # U02 Audit — domain-entities
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 73. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
+**Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u02-audit-job-and-outbox` không quyết định chức năng hiện hành.
 
-Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 73. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
+Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 13. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
 
 ## 1. Tổng quan
 
@@ -39,7 +39,7 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 |---|---|
 | `AuditPort.record(event)` | Mọi unit; ghi trong transaction của unit gọi |
 | `AuditPort.recordDenied(event)`, `AuditPort.recordFailure(event)` | Mọi unit; ghi sự kiện bị từ chối hoặc lỗi bằng transaction riêng |
-| `AuditQueryPort.query(actor, filter, page)` | `AuditController` của màn Audit Log (UC 73) |
+| `AuditQueryPort.query(actor, filter, page)` | `AuditController` của màn Audit Log (UC 13) |
 
 ### Port U02 dùng
 

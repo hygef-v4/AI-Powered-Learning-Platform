@@ -50,6 +50,6 @@ Enabled Security subset 03/04/05/08/09/12/15 và Resiliency subset 04/06/10 đư
 
 ## Current UC table integration
 
-UC70/71 Settings UI routes masked institutional API reads/mutations through U13; secret input is protected/encrypted at the connection owner and never exposed in logs or ordinary Settings JSON. U03 neutral adapters fail closed/unavailable when U13 is not ready; no hard dependency cycle is introduced.
+UC14/15 Settings UI routes masked institutional API reads/mutations through U13; secret input is protected/encrypted at the connection owner and never exposed in logs or ordinary Settings JSON. U03 neutral adapters fail closed/unavailable when U13 is not ready; no hard dependency cycle is introduced.
 
 YouTube references store validated educational video URLs/title, without automatic download/transcription/AI jobs. Open externally or embed only when supported by validated source/origin and CSP. Invalid links, unavailable videos or disabled embedding return clear user-facing states; learning work remains usable.

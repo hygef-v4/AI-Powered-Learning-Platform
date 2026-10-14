@@ -1,8 +1,8 @@
 # U12 Group & Allocation — nfr-requirements
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 16, 17. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
+**Primary UC:** 54, 55, 57. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
 
@@ -12,7 +12,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 |---|---|---|
 | NFR-U12-01 | Lưu nhóm của lớp 200 sinh viên, 50 nhóm ≤ 1 s. | BR-U12-07 |
 | NFR-U12-02 | `groupOf`/`leaderOf` p95 ≤ 20 ms (U14 gọi mỗi lần nhận mục/nộp), gồm kiểm ghi danh `ACTIVE`. | GroupMembershipPort, BR-U12-15 |
-| NFR-U12-03 | `my-group` (UC 16) p95 ≤ 300 ms, gồm đọc danh sách tài liệu nhóm từ U14. | BR-U12-30 |
+| NFR-U12-03 | `my-group` (UC 54) p95 ≤ 300 ms, gồm đọc danh sách tài liệu nhóm từ U14. | BR-U12-30 |
 
 ## 2. Toàn vẹn dữ liệu
 

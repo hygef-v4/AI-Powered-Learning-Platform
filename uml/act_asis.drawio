@@ -1,0 +1,315 @@
+<mxfile host="65bd71144e">
+    <diagram id="page-1" name="AS-IS: Learning and Review">
+        <mxGraphModel dx="1062" dy="656" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1803" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="lane_Subject_Manager" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#f3f9f1;strokeColor=#666666;" value="Subject Manager" vertex="1">
+                    <mxGeometry height="104" width="1446" x="64" y="122" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" parent="lane_Subject_Manager" style="ellipse;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="24" width="24" x="46" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="prepare" parent="lane_Subject_Manager" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Prepare learning&lt;br&gt;materials" vertex="1">
+                    <mxGeometry height="52" width="113" x="117" y="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="share" parent="lane_Subject_Manager" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Upload materials&lt;br&gt;to LMS" vertex="1">
+                    <mxGeometry height="52" width="122" x="274" y="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_Student" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#F3F9F1;strokeColor=#666666;" value="Student" vertex="1">
+                    <mxGeometry height="184" width="1446" x="64" y="226" as="geometry"/>
+                </mxCell>
+                <mxCell id="PjLWel4Coo9-SbaoCt_D-2" edge="1" parent="lane_Student" source="read" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="PjLWel4Coo9-SbaoCt_D-1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="read" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Download and&lt;br&gt;read materials" vertex="1">
+                    <mxGeometry height="52" width="113" x="446" y="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" parent="lane_Student" style="rhombus;html=1;whiteSpace=wrap;fontSize=11;spacing=0;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Review method?" vertex="1">
+                    <mxGeometry height="70" width="124" x="786" y="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="reread" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Extract key&lt;br&gt;points to learn" vertex="1">
+                    <mxGeometry height="67" width="129" x="996" y="24.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="practice" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Practice with&lt;br&gt;generated&lt;br&gt;questions" vertex="1">
+                    <mxGeometry height="67" width="108" x="1166" y="91.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" parent="lane_Student" style="ellipse;html=1;fillColor=#ea6b66;strokeColor=#b85450;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="28" width="28" x="1383.5" y="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="PjLWel4Coo9-SbaoCt_D-3" edge="1" parent="lane_Student" source="PjLWel4Coo9-SbaoCt_D-1" style="edgeStyle=none;html=1;">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="786" y="111" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="PjLWel4Coo9-SbaoCt_D-1" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Practice for exam" vertex="1">
+                    <mxGeometry height="52" width="113" x="616" y="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="lane_Student" source="practice" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="end" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1356" y="58" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="lane_Student" source="reread" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="end" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points"/>
+                        <mxPoint x="1356" y="58" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lane_LMS_(Google_Classroom)" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#fff2cc;swimlaneFillColor=#fffbee;strokeColor=#666666;" value="LMS" vertex="1">
+                    <mxGeometry height="104" width="1446" x="64" y="410" as="geometry"/>
+                </mxCell>
+                <mxCell id="publish" parent="lane_LMS_(Google_Classroom)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Show materials&lt;br&gt;to class students" vertex="1">
+                    <mxGeometry height="52" width="130" x="270" y="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_Gemini" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#e1d5e7;swimlaneFillColor=#f7f1f9;strokeColor=#666666;" value="AI Tool" vertex="1">
+                    <mxGeometry height="104" width="1446" x="64" y="514" as="geometry"/>
+                </mxCell>
+                <mxCell id="gen" parent="lane_Gemini" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Generate practice&lt;br&gt;questions" vertex="1">
+                    <mxGeometry height="52" width="125" x="1000" y="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="start" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="prepare" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="prepare" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="share" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="share" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="publish" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="publish" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="read" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.002;entryY=0.517;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="reread" value="[Self-study]">
+                    <mxGeometry relative="1" x="0.4225" y="15" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="1020" y="337"/>
+                            <mxPoint x="1020" y="285.1"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="gen" value="[Mock test]">
+                    <mxGeometry relative="1" x="0.7299" y="-10" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="1020" y="337"/>
+                            <mxPoint x="1020" y="566"/>
+                        </Array>
+                        <mxPoint x="1062.5" y="389" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="gen" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="practice" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="page-2" name="AS-IS: Practical Test">
+        <mxGraphModel dx="903" dy="558" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2143" pageHeight="1133" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="lane_Teacher_/_Subject_Manager" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#f3f9f1;strokeColor=#666666;" value="Teacher" vertex="1">
+                    <mxGeometry height="101" width="1736" x="64" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" parent="lane_Teacher_/_Subject_Manager" style="ellipse;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="24" width="24" x="48" y="38.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="write" parent="lane_Teacher_/_Subject_Manager" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Write test and rubric" vertex="1">
+                    <mxGeometry height="52" width="111" x="114" y="24.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="assign" parent="lane_Teacher_/_Subject_Manager" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Assign test to&lt;br&gt;students" vertex="1">
+                    <mxGeometry height="52" width="111" x="267" y="24.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_Student" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#F3F9F1;strokeColor=#666666;" value="Student" vertex="1">
+                    <mxGeometry height="169" width="1736" x="64" y="291" as="geometry"/>
+                </mxCell>
+                <mxCell id="receive" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Receive test" vertex="1">
+                    <mxGeometry height="40" width="103" x="436" y="22.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-3" edge="1" parent="lane_Student" source="paste" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;rounded=0;curved=0;" target="submit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-2" edge="1" parent="lane_Student" source="pack" style="edgeStyle=none;html=1;" target="submit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="lane_Student" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="draw" value="[Diagram]">
+                    <mxGeometry relative="1" x="0.6993" y="10" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="966" y="42.5"/>
+                            <mxPoint x="966" y="135.2"/>
+                        </Array>
+                        <mxPoint x="954" y="244.70000000000005" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d1" parent="lane_Student" style="rhombus;html=1;whiteSpace=wrap;fontSize=11;spacing=0;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Work type?" vertex="1">
+                    <mxGeometry height="67" width="146" x="776" y="9" as="geometry"/>
+                </mxCell>
+                <mxCell id="code" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Write code as&lt;br&gt;required" vertex="1">
+                    <mxGeometry height="52" width="109" x="1025.5" y="18.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="draw" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Draw diagrams" vertex="1">
+                    <mxGeometry height="40" width="118" x="1025.5" y="115.19999999999999" as="geometry"/>
+                </mxCell>
+                <mxCell id="paste" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Paste PNG into&lt;br&gt;document" vertex="1">
+                    <mxGeometry height="52" width="118" x="1240.5" y="109.19999999999999" as="geometry"/>
+                </mxCell>
+                <mxCell id="pack" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Pack code folder&lt;br&gt;with dependencies" vertex="1">
+                    <mxGeometry height="52" width="127" x="1236" y="18.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="submit" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Submit work" vertex="1">
+                    <mxGeometry height="40" width="104" x="1456" y="24.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-5" edge="1" parent="lane_Student" source="EEKhFvCX4tL9R1wqetNg-4" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="d1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-4" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Work on the test" vertex="1">
+                    <mxGeometry height="40" width="103" x="606" y="22.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="lane_Student" source="receive" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="EEKhFvCX4tL9R1wqetNg-4" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_Diagram_Tool_(Draw.io_/_Visual_Paradigm)" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#e1d5e7;swimlaneFillColor=#f7f1f9;strokeColor=#666666;" value="Diagram Tool" vertex="1">
+                    <mxGeometry height="110" width="1736" x="64" y="575" as="geometry"/>
+                </mxCell>
+                <mxCell id="export" parent="lane_Diagram_Tool_(Draw.io_/_Visual_Paradigm)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Export diagrams&lt;br&gt;as PNG" vertex="1">
+                    <mxGeometry height="52" width="125" x="1022" y="29" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="start" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="write" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="write" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="assign" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.4615;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="code" value="[Code]">
+                    <mxGeometry relative="1" x="0.43" y="7" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="code" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="pack" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_LMS_(Google_Classroom)" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#fff2cc;swimlaneFillColor=#fffbee;strokeColor=#666666;" value="LMS" vertex="1">
+                    <mxGeometry height="115" width="1736" x="64" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="deliver" parent="lane_LMS_(Google_Classroom)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Deliver test to&lt;br&gt;students" vertex="1">
+                    <mxGeometry height="52" width="112" x="266.5" y="29" as="geometry"/>
+                </mxCell>
+                <mxCell id="store" parent="lane_LMS_(Google_Classroom)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Store submission" vertex="1">
+                    <mxGeometry height="40" width="131" x="1442.5" y="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" parent="lane_LMS_(Google_Classroom)" style="ellipse;html=1;fillColor=#ea6b66;strokeColor=#b85450;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="28" width="28" x="1670" y="41" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" edge="1" parent="lane_LMS_(Google_Classroom)" source="store" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="end" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-7" edge="1" parent="1" source="draw" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" target="export">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-8" edge="1" parent="1" source="export" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;rounded=0;" target="paste">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-9" edge="1" parent="1" source="submit" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;curved=0;" target="store">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-10" edge="1" parent="1" source="deliver" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;rounded=0;curved=0;" target="receive">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="EEKhFvCX4tL9R1wqetNg-11" edge="1" parent="1" source="assign" style="edgeStyle=none;html=1;" target="deliver">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="page-3" name="AS-IS: Grading">
+        <mxGraphModel dx="903" dy="558" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1874" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="lane_Teacher" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#f3f9f1;strokeColor=#666666;" value="Teacher" vertex="1">
+                    <mxGeometry height="126" width="1356" x="64" y="128.2" as="geometry"/>
+                </mxCell>
+                <mxCell id="download" parent="lane_Teacher" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Download all&lt;br&gt;submissions" vertex="1">
+                    <mxGeometry height="52" width="104" x="128" y="23.499999999999993" as="geometry"/>
+                </mxCell>
+                <mxCell id="grade" parent="lane_Teacher" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Grade submission by rubrics" vertex="1">
+                    <mxGeometry height="52" width="113" x="306" y="23.499999999999993" as="geometry"/>
+                </mxCell>
+                <mxCell id="record" parent="lane_Teacher" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Record score" vertex="1">
+                    <mxGeometry height="52" width="120" x="506" y="24.199999999999996" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" parent="lane_Teacher" style="rhombus;html=1;whiteSpace=wrap;fontSize=11;spacing=0;fillColor=#ffe6cc;strokeColor=#d79b00;" value="More&lt;br&gt;submissions?" vertex="1">
+                    <mxGeometry height="67" width="120" x="716" y="16" as="geometry"/>
+                </mxCell>
+                <mxCell id="upload" parent="lane_Teacher" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="Upload grades" vertex="1">
+                    <mxGeometry height="52" width="132" x="897.5" y="23.499999999999993" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="lane_Teacher" source="download" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="grade" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="306" y="95.10000000000002" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="lane_Teacher" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="grade" value="[Yes]">
+                    <mxGeometry relative="1" x="-0.8008" y="-10" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="776" y="106"/>
+                            <mxPoint x="362.5" y="106"/>
+                        </Array>
+                        <mxPoint x="345" y="128.60000000000002" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lane_Student" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#d5e8d4;swimlaneFillColor=#F3F9F1;strokeColor=#666666;" value="Student" vertex="1">
+                    <mxGeometry height="92" width="1356" x="64" y="254.2" as="geometry"/>
+                </mxCell>
+                <mxCell id="view" parent="lane_Student" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" value="View grades" vertex="1">
+                    <mxGeometry height="40" width="102" x="1106" y="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" parent="lane_Student" style="ellipse;html=1;fillColor=#ea6b66;strokeColor=#b85450;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="28" width="28" x="1296" y="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane_LMS_(Google_Classroom)" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=30;horizontal=0;collapsible=0;container=1;fontStyle=1;fillColor=#fff2cc;swimlaneFillColor=#fffbee;strokeColor=#666666;" value="LMS" vertex="1">
+                    <mxGeometry height="103.8" width="1356" x="64" y="346.2" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" parent="lane_LMS_(Google_Classroom)" style="ellipse;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="24" width="24" x="46" y="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="close" parent="lane_LMS_(Google_Classroom)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Close submission&lt;br&gt;at deadline" vertex="1">
+                    <mxGeometry height="52" width="132" x="114" y="31" as="geometry"/>
+                </mxCell>
+                <mxCell id="publish" parent="lane_LMS_(Google_Classroom)" style="rounded=1;absoluteArcSize=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Publish grades" vertex="1">
+                    <mxGeometry height="40" width="115" x="906" y="37" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="start" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="close" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="close" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="download" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="grade" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="record" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="record" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="d1" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="d1" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="upload" value="[No]">
+                    <mxGeometry relative="1" x="-0.1429" y="9" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="upload" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="publish" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="publish" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;edgeStyle=orthogonalEdgeStyle;" target="view" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="view" style="html=1;rounded=0;fontSize=11;jumpStyle=arc;jumpSize=6;startSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=1;endSize=6;labelBackgroundColor=none;fontStyle=1;" target="end" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

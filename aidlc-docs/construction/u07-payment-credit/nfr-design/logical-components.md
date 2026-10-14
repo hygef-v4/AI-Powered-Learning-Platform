@@ -1,8 +1,8 @@
 # U07 AI Usage & Teacher Quota — logical-components
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 77. **Primary stories:** US-AIC-003, US-AIC-004. **Requirements:** FR-021/034/036.
+**Primary UC:** 33. **Primary stories:** US-AIC-003, US-AIC-004. **Requirements:** FR-021/034/036.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u07-payment-credit` không quyết định chức năng hiện hành.
 
@@ -19,7 +19,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 ## Owner contract
 
-reserveTeacherQuota(actor, connection, model, requestRef, estimate); reconcileUsage; markUsageUnknown; listOwnUsage; getTeacherQuotaPolicy/setTeacherQuota(admin, policy, version) (read UC70 / update UC71; owner U07)
+reserveTeacherQuota(actor, connection, model, requestRef, estimate); reconcileUsage; markUsageUnknown; listOwnUsage; getTeacherQuotaPolicy/setTeacherQuota(admin, policy, version) (read UC14 / update UC15; owner U07)
 
 ## Owned data
 
@@ -31,7 +31,7 @@ reserveTeacherQuota(actor, connection, model, requestRef, estimate); reconcileUs
 
 ## Critical paths
 
-- UC71 Admin quota edit via U03 → U07 validate ACTIVE/version/policy → audit; quota owner remains U07.
+- UC15 Admin quota edit via U03 → U07 validate ACTIVE/version/policy → audit; quota owner remains U07.
 - Shared request → authorize → reserve all applicable windows transaction → dispatch checkpoint → provider response → reconcile transaction → emit usage status.
 - Crash/timeout → UNKNOWN with conservative retained reservation → reconciliation task/operational resolution using evidence; no exactly-once provider promise.
-- UC77 own history → source/provenance/usage; Admin aggregate shared-only; external token report nullable not zero.
+- UC33 own history → source/provenance/usage; Admin aggregate shared-only; external token report nullable not zero.

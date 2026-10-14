@@ -4,21 +4,21 @@
 
 | Unit | Tên | Primary UC |
 |---|---|---|
-| U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 |
-| U02 | Audit | 73 |
-| U03 | File, Job, Event & Settings | 70, 71 |
-| U04 | Subject, Class & Enrollment | 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 |
-| U05 | Reference Content & Announcements | 15, 30, 33, 34, 36, 54, 55 |
-| U06 | Rubrics & Subject Quiz Bank | 46, 56, 57 |
-| U07 | AI Usage & Teacher Quota | 77 |
-| U08 | Assignment/Quiz Lifecycle & Copy | 41 |
-| U09 | Assignment Documents & Quiz Authoring | 35, 42, 45 |
-| U11 | Individual Work & Quiz Submission | 18, 19, 20, 21, 22, 23, 24, 28, 29 |
-| U12 | Group & Allocation | 16, 17 |
-| U13 | AI Connections & MCP | 74, 75 |
-| U14 | Group Workspace & Submission | 27 |
-| U15 | Grading & Gradebook | 37, 38, 39, 40 |
-| U16 | Reporting & Notification | 12, 58 |
+| U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
+| U02 | Audit | 13 |
+| U03 | File, Job, Event & Settings | 14, 15 |
+| U04 | Subject, Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 16, 17, 18, 19 |
+| U05 | Reference Content & Announcements | 62, 63, 60, 61, 64, 58, 59 |
+| U06 | Rubrics & Subject Quiz Bank | 36, 46, 47 |
+| U07 | AI Usage & Teacher Quota | 33 |
+| U08 | Assignment/Quiz Lifecycle & Copy | 34 |
+| U09 | Assignment Documents & Quiz Authoring | 48, 35, 53 |
+| U11 | Individual Work & Quiz Submission | 49, 50, 51, 52, 37, 38, 39, 40, 41 |
+| U12 | Group & Allocation | 54, 55 |
+| U13 | AI Connections & MCP | 31, 32 |
+| U14 | Group Workspace & Submission | 56 |
+| U15 | Grading & Gradebook | 42, 43, 44, 45 |
+| U16 | Reporting & Notification | 65, 66 |
 
 ## External ports
 
@@ -29,8 +29,8 @@
 | TeacherQuotaPort / UsagePort | U07 atomic reserve/reconcile, per-user/model/window and usage provenance |
 | McpTransportAdapter | U13 authenticated tools into domain ports; not LLM execution by default |
 | BackupStatusPort | U03 read-only backup metadata to U16; no archive/secrets |
-| TeacherQuotaPolicyPort | U07 policy read/write for Admin Settings UC 70; U03 orchestrates |
-| ActivityQueryPort | U11 scoped activity for U15 review UC 37, including U14 member events |
+| TeacherQuotaPolicyPort | U07 policy read/write for Admin Settings UC 14; U03 orchestrates |
+| ActivityQueryPort | U11 scoped activity for U15 review UC 42, including U14 member events |
 | FileStoragePort | Google Drive private file streams |
 | MailPort | Brevo demo/production, Mailpit local |
 
@@ -40,6 +40,6 @@ Không PaymentPort, CreditPort, CodeRunnerPort hoặc Judge0. Giữ public contr
 
 Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích hợp), teacher review U15, email quan trọng/failure U16; minh bạch AI U07/U13. Không thêm unit hoặc đổi nhân sự. Xem [đặc tả hội đồng](../requirements/council-features-2026-10-13.md). D05 đã được người dùng yêu cầu bổ sung, D01–D04 còn mở. Đây là phạm vi tài liệu, chưa runtime evidence.
 
-## UC consolidation — 65 active UC
+## UC consolidation — 66 active UC
 
-UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.

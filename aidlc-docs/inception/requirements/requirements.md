@@ -66,7 +66,7 @@ Giữ bốn vai trò STUDENT, TEACHER, SUBJECT_MANAGER, ADMIN và kiểm R1–R5
 
 ### FR-003 - Quản lý môn học và lớp học
 
-Administrator xem danh sách/chi tiết, thêm và sửa môn, gán Chủ nhiệm môn, lưu trữ/mở lại môn (UC 64–67); Subject Detail của Administrator chỉ xem danh sách lớp của môn. Subject Manager vào Manager Dashboard (UC 53), xem lớp của môn được giao, tạo lớp, gán giảng viên, thêm/gỡ sinh viên, sửa và mở/lưu trữ lớp (UC 47–52). Teacher xem lớp được giao trên Class Dashboard và Teacher Class Detail (UC 31–32); Student xem lớp đã ghi danh trên Class Dashboard và Student Class Detail (UC 13–14). Người dùng chốt 2026-10-09.
+Administrator xem danh sách/chi tiết, thêm và sửa môn, gán Chủ nhiệm môn, lưu trữ/mở lại môn (UC 16–19); Subject Detail của Administrator chỉ xem danh sách lớp của môn. Subject Manager vào Manager Dashboard (UC 30), xem lớp của môn được giao, tạo lớp, gán giảng viên, thêm/gỡ sinh viên, sửa và mở/lưu trữ lớp (UC 24–29). Teacher xem lớp được giao trên Class Dashboard và Teacher Class Detail (UC 22, 23); Student xem lớp đã ghi danh trên Class Dashboard và Student Class Detail (UC 20, 21). Người dùng chốt 2026-10-09.
 
 **Tiêu chí chấp nhận:**
 
@@ -123,7 +123,7 @@ Quiz chấm xác định bằng đáp án đã snapshot. Assignment chấm rubri
 
 ### FR-009 - Sổ điểm và trạng thái bài nộp
 
-Student xem điểm/phản hồi đã công bố và trạng thái của chính mình trên Student Assignments, Assignment Detail/Submission History (UC 22–23, 28); quiz trên Quiz Result (UC 21). Teacher hoặc Subject Manager được giao dạy R3/R4 xem/xuất gradebook lớp (UC 40); Admin bị từ chối, phân công quản lý môn không tự cấp quyền chấm/gradebook.
+Student xem điểm/phản hồi đã công bố và trạng thái của chính mình trên Student Assignments, Assignment Detail/Submission History (UC 37, 38, 40); quiz trên Quiz Result (UC 52). Teacher hoặc Subject Manager được giao dạy R3/R4 xem/xuất gradebook lớp (UC 45); Admin bị từ chối, phân công quản lý môn không tự cấp quyền chấm/gradebook.
 
 Sổ điểm chỉ chứa bài GRADED, không tính điểm tổng theo hệ số và không chứa AI Practice. Không lưu tiến độ hoàn thành hay vị trí học theo bài.
 
@@ -158,13 +158,13 @@ Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riê
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
-Administrator xem/tìm Audit Log (UC 73) theo actor, action, object, result và thời gian; chỉ đọc, không sửa/xóa log. Vai trò khác không có quyền tra cứu audit toàn nền tảng.
+Administrator xem/tìm Audit Log (UC 13) theo actor, action, object, result và thời gian; chỉ đọc, không sửa/xóa log. Vai trò khác không có quyền tra cứu audit toàn nền tảng.
 
 Hệ thống phải ghi sự kiện đăng nhập thất bại, thay đổi vai trò hoặc phạm vi môn, thay đổi học liệu, thay đổi điểm, phát hành bài của lớp/môn và quiz, thay đổi kết nối/quota AI, backup/restore và truy cập đặc quyền.
 
 ### FR-015 - Vòng đời tài khoản do quản trị viên quản lý
 
-Quản trị viên xem danh sách/chi tiết, tìm kiếm, tạo, cập nhật thông tin được phép/role và khóa/mở khóa tài khoản (UC 59–63 giữ ID từ baseline trước; nhập CSV là luồng phụ của UC 60); thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
+Quản trị viên xem danh sách/chi tiết, tìm kiếm, tạo, cập nhật thông tin được phép/role và khóa/mở khóa tài khoản (UC 08–12; nhập CSV là luồng phụ của UC 09); thao tác hàng loạt phải kiểm tra từng dòng và báo kết quả không làm mất các bản ghi hợp lệ. Quản trị viên không đặt, cấp hay xem mật khẩu người dùng và không kích hoạt việc gửi OTP. Tài khoản mới ở trạng thái chờ kích hoạt; tạo hoặc nhập tài khoản không gửi email. Chỉ khi người dùng yêu cầu kích hoạt ở lần đăng nhập đầu, hệ thống mới gửi OTP qua email để người dùng xác minh và tự đặt mật khẩu lần đầu. Yêu cầu gửi OTP được giới hạn tần suất.
 
 ### FR-016 - Ngân hàng Quiz và rubric Assignment
 
@@ -204,11 +204,11 @@ Admin cấu hình kết nối API chung, provider/model, kill-switch, quota gi�
 
 ### FR-022 - Đã rút khỏi phạm vi: Tự ghi danh bằng mã mời
 
-Người dùng chốt bỏ ngày 2026-10-09 vì không có trong 73 UC; sinh viên chỉ vào lớp khi Chủ nhiệm môn thêm (UC 51). Mã FR-022 giữ làm dấu vết và không dùng lại.
+Người dùng chốt bỏ ngày 2026-10-09 vì không có trong 73 UC; sinh viên chỉ vào lớp khi Chủ nhiệm môn thêm (UC 28). Mã FR-022 giữ làm dấu vết và không dùng lại.
 
 ### FR-023 - Thông báo lớp
 
-Teacher của lớp (hoặc Subject Manager được giao dạy, R4) tạo/cập nhật/xóa thông báo (UC 36); Student ghi danh và giảng viên của lớp xem (UC 30) trên Class Announcements. Màn mở từ Class Dashboard, gộp thông báo của các lớp mình học hoặc dạy và lọc được theo lớp.
+Teacher của lớp (hoặc Subject Manager được giao dạy, R4) tạo/cập nhật/xóa thông báo (UC 64); Student ghi danh và giảng viên của lớp xem (UC 63) trên Class Announcements. Màn mở từ Class Dashboard, gộp thông báo của các lớp mình học hoặc dạy và lọc được theo lớp.
 
 **Tiêu chí chấp nhận:**
 
@@ -220,11 +220,11 @@ Teacher của lớp (hoặc Subject Manager được giao dạy, R4) tạo/cập
 
 ### FR-024 - Thống kê quản trị và xuất bảng điểm
 
-Administrator xem Admin Dashboard (UC 58): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; bổ sung mục Backup gồm lần thành công gần nhất, trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize qua public port U03. Không dữ liệu học vụ cá nhân, tệp backup hoặc dashboard Student; lịch/retention được chỉnh tại UC 71, không Dashboard.
+Administrator xem Admin Dashboard (UC 66): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; bổ sung mục Backup gồm lần thành công gần nhất, trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize qua public port U03. Không dữ liệu học vụ cá nhân, tệp backup hoặc dashboard Student; lịch/retention được chỉnh tại UC 15, không Dashboard.
 
-Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 40). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
+Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 45). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
 
-Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 22): chỉ Chủ nhiệm môn bật/tắt cho lớp trong Edit Class Information (UC 52), mặc định tắt; chỉ bài GRADED đủ mẫu riêng tư, không quiz/Practice, bài của môn tính riêng từng lớp. Tiến độ nộp hiện trên Student Submissions (UC 37), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 38, chấm/chốt điểm thuộc UC 39, công bố/xem/xuất Gradebook thuộc UC 40. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
+Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): chỉ Chủ nhiệm môn bật/tắt cho lớp trong Edit Class Information (UC 29), mặc định tắt; chỉ bài GRADED đủ mẫu riêng tư, không quiz/Practice, bài của môn tính riêng từng lớp. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -261,11 +261,11 @@ Theo câu trả lời làm rõ ngày 2026-09-29, Simulation Exam được bỏ h
 
 ### FR-030 - Phản hồi bài Practice đã nộp bằng API cá nhân/MCP
 
-Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC29), bằng API cá nhân hoặc agent MCP; không dùng quota chung. Feedback phục vụ lần luyện tập tiếp theo, không sửa snapshot cũ hoặc tạo điểm official.
+Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC41), bằng API cá nhân hoặc agent MCP; không dùng quota chung. Feedback phục vụ lần luyện tập tiếp theo, không sửa snapshot cũ hoặc tạo điểm official.
 
 **Tiêu chí chấp nhận:**
 - Trước dispatch hoặc ghi kết quả API/MCP, server kiểm owner/current scope, SUBMITTED, PRACTICE và immutable submissionVersion/hash.
-- Draft/IN_PROGRESS, Graded và dữ liệu ngoài quyền bị từ chối; không có teacher opt-in cho feedback trước nộp. UC79 retired.
+- Draft/IN_PROGRESS, Graded và dữ liệu ngoài quyền bị từ chối; không có teacher opt-in cho feedback trước nộp. UC79 (ID cũ) retired.
 - Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
 - Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
 - Student thiếu kết nối vẫn viết/lưu/nộp được. D03 giữ giới hạn ngữ cảnh nhóm, không tự mở toàn bài.
@@ -280,11 +280,11 @@ Không PayOS, payment history, webhook hoặc wallet. Lịch sử usage không p
 
 ### FR-033 - Settings và kết nối AI
 
-UC70 View Settings và UC71 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota qua U07 và API chung qua U13 protected connection port. U03 primary UI/orchestration, không đọc/ghi repository U07/U13 hoặc lưu raw key trong Settings. UC76/78/82 consolidated, không còn chức năng độc lập; API cá nhân UC74 và MCP UC75 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
+UC14 View Settings và UC15 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota qua U07 và API chung qua U13 protected connection port. U03 primary UI/orchestration, không đọc/ghi repository U07/U13 hoặc lưu raw key trong Settings. UC76/78/82 (ID cũ) consolidated, không còn chức năng độc lập; API cá nhân UC31 và MCP UC32 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
 
 ### FR-034 - Quota token API chung của giảng viên
 
-Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo giờ/ngày trong UC 71 (UC70 chỉ xem); U03 điều phối tới U07 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
+Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo giờ/ngày trong UC 15 (UC14 chỉ xem); U03 điều phối tới U07 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
 
 **Tiêu chí chấp nhận:**
 - Kiểm và reserve ngân sách ước tính trong transaction trước provider call; khóa/cập nhật nguyên tử để request đồng thời không vượt reservation.
@@ -322,7 +322,7 @@ Có hướng dẫn kết nối API cho Gemini/OpenAI/Claude và hướng dẫn M
 
 ### FR-038 - Backup và khôi phục dữ liệu lên Google Drive
 
-U03 backup PostgreSQL nhất quán và bản sao tệp/manifest tương ứng lên thư mục Drive riêng tư, tách lưu trữ đang dùng; Admin xem trạng thái/lịch sử (UC 58) và chỉnh lịch/retention qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
+U03 backup PostgreSQL nhất quán và bản sao tệp/manifest tương ứng lên thư mục Drive riêng tư, tách lưu trữ đang dùng; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch/retention qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
 
 **Tiêu chí chấp nhận:**
 - Chỉ SUCCESS khi dump/tệp/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U16.
@@ -331,7 +331,7 @@ U03 backup PostgreSQL nhất quán và bản sao tệp/manifest tương ứng l�
 
 ### FR-039 - Ghi nhận dấu hiệu rời trang khi làm bài
 
-Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U11 ghi sự kiện hidden/visible cho cá nhân/Quiz và nhận sự kiện nhóm qua port U14; U15 hiển thị cho giảng viên được giao dạy trong UC 37 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
+Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U11 ghi sự kiện hidden/visible cho cá nhân/Quiz và nhận sự kiện nhóm qua port U14; U15 hiển thị cho giảng viên được giao dạy trong UC 42 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
 
 **Tiêu chí chấp nhận:**
 - Server kiểm actor/enrollment/attempt/group/state, dedup và giới hạn tần suất; không thu thập khi policy off.
@@ -453,14 +453,14 @@ Giữ SECURITY-03/04/05/08/09/12/15 và RESILIENCY-04/06/10 theo phạm vi đã 
 
 Construction design/shared infrastructure/code planning đã revision theo scope mới. Code/contracts implementation/migrations, Google Reports và diagram cũ cần revision riêng trước chạy scope mới. Không sửa tiến độ/approvals cũ thành hoàn thành mới.
 
-## UC consolidation — 65 active UC
+## UC consolidation — 66 active UC
 
-UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
 
 ### Tiêu chí tích hợp UC đã gộp
 
-- UC70/71: chỉ Admin; UC70 chỉ xem, UC71 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC70/71 via U13 protected connection records, not ordinary Settings plaintext.
-- UC 58: U16 đọc BackupStatusPort của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
-- UC 37: U15 đọc ActivityQueryPort của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
+- UC14/15: chỉ Admin; UC14 chỉ xem, UC15 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC14/15 via U13 protected connection records, not ordinary Settings plaintext.
+- UC 66: U16 đọc BackupStatusPort của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
+- UC 42: U15 đọc ActivityQueryPort của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 
 Construction current docs: [README](../../construction/README.md), [sync plan](../../construction/plans/construction-66-uc-sync-2026-10-13.md). Stage approvals/code progress không thay vì revision tài liệu.

@@ -1,8 +1,8 @@
 # U12 Group & Allocation — deployment-architecture
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 16, 17. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
+**Primary UC:** 54, 55, 57. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
 
@@ -14,7 +14,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
                                           +--ClassAccessPort--> U04
 ```
 
-**Text alternative**: Trình duyệt gọi qua Nginx tới module U12 trong backend; U12 lưu nhóm, thành viên và yêu cầu đổi trưởng nhóm vào PostgreSQL, hỏi U04 về lớp và ghi danh `ACTIVE`, phát event `group.*` qua RabbitMQ cho thông báo U16; nhóm mới hoặc thành viên rời nhóm thì báo U14 qua `GroupChangePort` trong cùng transaction, và đọc danh sách tài liệu nhóm từ U14 cho UC 16. Không có container hay volume mới.
+**Text alternative**: Trình duyệt gọi qua Nginx tới module U12 trong backend; U12 lưu nhóm, thành viên và yêu cầu đổi trưởng nhóm vào PostgreSQL, hỏi U04 về lớp và ghi danh `ACTIVE`, phát event `group.*` qua RabbitMQ cho thông báo U16; nhóm mới hoặc thành viên rời nhóm thì báo U14 qua `GroupChangePort` trong cùng transaction, và đọc danh sách tài liệu nhóm từ U14 cho UC 54. Không có container hay volume mới.
 
 ## Quy tắc tích hợp revision hiện hành
 

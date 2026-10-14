@@ -1,8 +1,8 @@
 # U12 Group & Allocation — frontend-components
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 16, 17. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
+**Primary UC:** 54, 55, 57. **Primary stories:** US-GRP-001, US-GRP-002. **Requirements:** FR-025.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
 
@@ -12,12 +12,12 @@ Screen flow không có màn nhóm riêng: U12 gắn component vào màn của U0
 
 | Màn | Component | UC | Role | Mở từ |
 |---|---|---|---|---|
-| Tab Students (Teacher Class Detail) | `ClassStudentsGroupsPanel` (gắn vào `StudentsTab` của U04) | 32 (luồng phụ nhóm, duyệt yêu cầu) | Teacher, Subject Manager được giao dạy | Class Dashboard → Teacher Class Detail |
-| Popup chia ngẫu nhiên | `RandomSplitDialog` | 32 | Teacher, Subject Manager được giao dạy | Tab Students |
-| Popup Student Detail (U04) | Dòng Nhóm đọc dữ liệu của `ClassStudentsGroupsPanel` | 32 | Teacher, Subject Manager được giao dạy | Tab Students |
-| Hộp phát hành của Assignment Form (U08) | `GroupReadinessPanel` | 45 | Teacher, Subject Manager được giao dạy | Tab Evals → Assignment Form |
-| Student Class Detail (U04) | `MyGroupPanel` | 16 | Student | Class Dashboard → Student Class Detail |
-| Popup Request Leader Change | `LeaderChangeRequestDialog` | 17 | Student (thành viên nhóm) | Student Class Detail |
+| Tab Students (Teacher Class Detail) | `ClassStudentsGroupsPanel` (gắn vào `StudentsTab` của U04) | 23 (luồng phụ nhóm, duyệt yêu cầu) | Teacher, Subject Manager được giao dạy | Class Dashboard → Teacher Class Detail |
+| Popup chia ngẫu nhiên | `RandomSplitDialog` | 23 | Teacher, Subject Manager được giao dạy | Tab Students |
+| Popup Student Detail (U04) | Dòng Nhóm đọc dữ liệu của `ClassStudentsGroupsPanel` | 23 | Teacher, Subject Manager được giao dạy | Tab Students |
+| Hộp phát hành của Assignment Form (U08) | `GroupReadinessPanel` | 53 | Teacher, Subject Manager được giao dạy | Tab Evals → Assignment Form |
+| Student Class Detail (U04) | `MyGroupPanel` | 54 | Student | Class Dashboard → Student Class Detail |
+| Popup Request Leader Change | `LeaderChangeRequestDialog` | 55 | Student (thành viên nhóm) | Student Class Detail |
 
 ## 2. Cây component
 
@@ -34,10 +34,10 @@ app/classes/[id]/teaching/assignments/[assignmentId]/  AssignmentFormPage (U08)
   PublishDialog (U08)
     GroupReadinessPanel                   lỗi chặn, cảnh báo cần xác nhận (bài nhóm)
 app/classes/[id]/                         StudentClassPage (U04)   màn Student Class Detail
-  MyGroupPanel                            phần Nhóm của tôi (UC 16)
+  MyGroupPanel                            phần Nhóm của tôi (UC 54)
     MyGroupCard                           tên nhóm, thành viên, trưởng nhóm; gắn GroupDocsOfGroupList (U14) cho tài liệu bài nhóm
     LeaderRequestStatus                   yêu cầu gần nhất của mình, nút Hủy khi còn chờ
-    LeaderChangeRequestDialog             popup Request Leader Change (UC 17)
+    LeaderChangeRequestDialog             popup Request Leader Change (UC 55)
 ```
 
 Route theo `RoleGuard` của U01 (`/classes/*` cho Student, Teacher, Subject Manager; Admin không vào). Backend vẫn kiểm R3/R4, R5.

@@ -29,4 +29,4 @@ Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích h
 
 ## Ranh giới sau gộp UC
 
-Current catalog: 65 UC, 50 MVP stories + 1 extension, 15 logical units. UC owner là nơi điều phối trải nghiệm; data/service owner có thể khác. UC 70/U03 dùng quota U07, UC 58/U16 đọc backup U03, UC 37/U15 đọc activity U11/U14. Không repository access xuyên unit; thu gọn catalog không xóa requirement hoặc trộn trách nhiệm.
+Current catalog: 66 UC, 50 MVP stories + 1 extension, 15 logical units. UC owner là nơi điều phối trải nghiệm; data/service owner có thể khác. UC 14/U03 dùng quota U07, UC 66/U16 đọc backup U03, UC 42/U15 đọc activity U11/U14. Không repository access xuyên unit; thu gọn catalog không xóa requirement hoặc trộn trách nhiệm.

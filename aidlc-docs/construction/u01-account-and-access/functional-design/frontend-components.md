@@ -1,8 +1,8 @@
 # U01 Account & Access — frontend-components
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
@@ -18,9 +18,9 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) v
 | Post-Login (khung sau đăng nhập) | `PostLoginRedirect`, `AccountMenu`, `SignOutDialog` | 01, 02, 03 |
 | User Profile | `ProfilePage` | 06, 07 |
 | Password Change (popup) | `PasswordChangeDialog` | 05 |
-| Account List | `AccountListPage`, `ImportAccountsPanel` | 59, luồng phụ của 60 |
-| New Account (popup) | `NewAccountDialog` | 60 |
-| Account Detail | `AccountDetailPage` | 61, 62, 63 |
+| Account List | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
+| New Account (popup) | `NewAccountDialog` | 09 |
+| Account Detail | `AccountDetailPage` | 10, 11, 12 |
 
 Class Dashboard, Manager Dashboard (U04) và Admin Dashboard (U16) là đích của Post-Login, không thuộc U01.
 
@@ -53,7 +53,7 @@ app/admin/accounts/               (Admin Console, mở từ Admin Dashboard)
   AccountListPage                 màn Account List
     AccountFilters
     AccountTable
-    ImportAccountsPanel           nút "Nhập CSV", luồng phụ của UC 60, hiện ngay trên trang
+    ImportAccountsPanel           nút "Nhập CSV", luồng phụ của UC 09, hiện ngay trên trang
       CsvUploadStep
       ImportPreviewTable
       ImportConfirmStep
@@ -160,12 +160,12 @@ Hai trang dùng chung ba bước `RequestOtpStep` → `VerifyOtpStep` → `SetNe
 
 | Component | API | Hành vi |
 |---|---|---|
-| `AccountSummary` | `getAccount` | Email, tên, số điện thoại, role, trạng thái, ngày tạo (UC 61) |
-| `AccountEditForm` | `updateAccount` (PATCH kèm `version`) | Sửa tên, số điện thoại; email chỉ đọc. `409` thì báo dữ liệu đã đổi và tải lại (UC 62) |
-| `RoleChangeDialog` | `assignRole` | Cảnh báo người dùng sẽ bị đăng xuất. Backend từ chối vì role mới không giữ được phân công môn/lớp thì hiện danh sách môn/lớp. Nút bị tắt với chính mình khi hạ quyền (UC 62) |
-| `StatusToggleDialog` | `changeAccountStatus` | "Vô hiệu hóa" hoặc "Mở lại". Tắt với chính mình. Backend từ chối admin cuối cùng thì hiện lý do (UC 63) |
+| `AccountSummary` | `getAccount` | Email, tên, số điện thoại, role, trạng thái, ngày tạo (UC 10) |
+| `AccountEditForm` | `updateAccount` (PATCH kèm `version`) | Sửa tên, số điện thoại; email chỉ đọc. `409` thì báo dữ liệu đã đổi và tải lại (UC 11) |
+| `RoleChangeDialog` | `assignRole` | Cảnh báo người dùng sẽ bị đăng xuất. Backend từ chối vì role mới không giữ được phân công môn/lớp thì hiện danh sách môn/lớp. Nút bị tắt với chính mình khi hạ quyền (UC 11) |
+| `StatusToggleDialog` | `changeAccountStatus` | "Vô hiệu hóa" hoặc "Mở lại". Tắt với chính mình. Backend từ chối admin cuối cùng thì hiện lý do (UC 12) |
 
-### ImportAccountsPanel (luồng phụ của UC 60)
+### ImportAccountsPanel (luồng phụ của UC 09)
 
 Nút "Nhập CSV" trên `AccountListPage` mở vùng nhập ngay trong trang; danh sách tài khoản tải lại sau khi xác nhận.
 

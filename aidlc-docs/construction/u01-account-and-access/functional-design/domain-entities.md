@@ -1,12 +1,12 @@
 # U01 Account & Access — domain-entities
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 59–63 theo `docs/use-cases-73.md`.
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 08–12 theo `docs/use-cases-73.md`.
 
 ## 1. Tổng quan
 
@@ -155,7 +155,7 @@ Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài)
 | Port | Dùng bởi | Ghi chú |
 |---|---|---|
 | `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
-| `AccountLookupPort` | U02, U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái (U02 dùng để hiện email người thực hiện trên Audit Log); `countByRoleAndStatus()` trả số đếm cho UC 58 View Admin Dashboard (U16); không trả mật khẩu hay số điện thoại |
+| `AccountLookupPort` | U02, U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái (U02 dùng để hiện email người thực hiện trên Audit Log); `countByRoleAndStatus()` trả số đếm cho UC 66 View Admin Dashboard (U16); không trả mật khẩu hay số điện thoại |
 
 ### Port U01 dùng
 
@@ -173,13 +173,13 @@ U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng 
 |---|---|---|
 | `POST /api/v1/auth/login` | 02 | Trả `SessionInfo { accountId, displayName, role, homePath }`; `homePath` theo BR-U01-48: Class Dashboard, Manager Dashboard hoặc Admin Dashboard |
 | `GET`, `PATCH /api/v1/me/profile` | 06, 07 | Chỉ `displayName`, `phoneNumber`; không có avatar |
-| `GET /api/v1/admin/accounts` | 59 | Lọc role, trạng thái, email; phân trang |
-| `POST /api/v1/admin/accounts` | 60 | Tạo một tài khoản `PENDING` |
-| `GET /api/v1/admin/accounts/{id}` | 61 | Không trả hash, OTP, token |
-| `PATCH /api/v1/admin/accounts/{id}` | 62 | `displayName`, `phoneNumber`, `version`; không email/role/status |
-| `PUT /api/v1/admin/accounts/{id}/role` | 62 | Đổi role theo F11 |
-| `PUT /api/v1/admin/accounts/{id}/status` | 63 | Vô hiệu hóa hoặc mở lại theo F12 |
-| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 60 | Kiểm rồi xác nhận nhập CSV theo F10 |
+| `GET /api/v1/admin/accounts` | 08 | Lọc role, trạng thái, email; phân trang |
+| `POST /api/v1/admin/accounts` | 09 | Tạo một tài khoản `PENDING` |
+| `GET /api/v1/admin/accounts/{id}` | 10 | Không trả hash, OTP, token |
+| `PATCH /api/v1/admin/accounts/{id}` | 11 | `displayName`, `phoneNumber`, `version`; không email/role/status |
+| `PUT /api/v1/admin/accounts/{id}/role` | 11 | Đổi role theo F11 |
+| `PUT /api/v1/admin/accounts/{id}/status` | 12 | Vô hiệu hóa hoặc mở lại theo F12 |
+| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 09 | Kiểm rồi xác nhận nhập CSV theo F10 |
 
 Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.
 

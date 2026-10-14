@@ -1,8 +1,8 @@
 # U02 Audit — business-logic-model
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 73. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
+**Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u02-audit-job-and-outbox` không quyết định chức năng hiện hành.
 
@@ -11,7 +11,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | Luồng | Nguồn |
 |---|---|
 | A1 Ghi audit | US-AUD-001 S2, S3 |
-| A2 Tra cứu audit | US-AUD-001 S1, UC 73 (màn Audit Log) |
+| A2 Tra cứu audit | US-AUD-001 S1, UC 13 (màn Audit Log) |
 
 ## 2. Audit
 

@@ -2,7 +2,7 @@
 
 Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây là phạm vi dự kiến triển khai và tiêu chí nghiệm thu, chưa phải bằng chứng tính năng đã chạy. Chỉ có hai loại bài ASSIGNMENT/QUIZ; không mở lại bán credit, Code Lab hoặc thi có giám sát toàn diện.
 
-## 1. Backup Google Drive — FR-038, UC 58, US-OPS-001
+## 1. Backup Google Drive — FR-038, UC 66, US-OPS-001
 
 - U03 thực hiện backup PostgreSQL nhất quán theo lịch cấu hình, kèm phiên bản schema/app, manifest tệp, thời gian, checksum và trạng thái hoàn tất. Admin cấu hình lịch/retention qua Settings và xem lần thành công gần nhất, lịch sử, dung lượng và lỗi. Lịch và số bản giữ cụ thể cần xác nhận trước triển khai.
 - Bản backup nằm trong thư mục Google Drive riêng tư, tách khỏi thư mục tệp đang dùng và khỏi VPS. Tệp học tập đang lưu trên Drive không tự được coi là backup: phải giữ bản sao độc lập hoặc phiên bản được bảo vệ để khôi phục cả tệp và tham chiếu tương ứng. Xóa tệp nguồn không tự xóa bản backup.
@@ -11,7 +11,7 @@ Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây 
 - Restore do người vận hành thực hiện theo runbook vào môi trường cô lập trước: kiểm số bản ghi, quyền, tài liệu, XML Draw.io, bài nộp, điểm và usage/quota; liên kết tệp phải được remap đúng. Không thêm nút ghi đè production hoặc MCP restore tool vào MVP.
 - Tiêu chí nghiệm thu: tạo backup hợp lệ; mô phỏng lỗi upload/thiếu tệp; khôi phục bản hợp lệ và ghi bằng chứng. Đo RPO/RTO từ lịch và bài thử, không cam kết không mất dữ liệu hoặc coi kiểm checksum là kiểm thử restore.
 
-## 2. Ghi nhận hoạt động làm bài — FR-039, UC 37, US-INT-001
+## 2. Ghi nhận hoạt động làm bài — FR-039, UC 42, US-INT-001
 
 - Giảng viên bật/tắt `activityMonitoringEnabled` cho từng Assignment/Quiz, mặc định tắt; policy được snapshot khi bắt đầu làm. Sinh viên được thông báo dữ liệu thu thập và mục đích trước khi làm; không thay chính sách âm thầm giữa lượt.
 - Khi bật, ghi nhận trang chuyển hidden/visible: thời điểm, số lần, khoảng thời gian rời trang và khoảng không xác định khi mất kết nối. Blur/focus nếu thu thập chỉ là tín hiệu phụ, không cộng trùng với visibility. Tương tác với iframe Draw.io trong trang không tự tính là rời trang.
@@ -49,6 +49,6 @@ Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây 
 
 Không đổi phân công nhân sự hoặc hạn cũ. Không thêm unit mới. D05 được chốt bổ sung tối thiểu theo yêu cầu người dùng; D01–D04 vẫn còn mở. Không tuyên bố đã khảo sát hoặc runtime đã nghiệm thu.
 
-## UC consolidation — 65 active UC
+## UC consolidation — 66 active UC
 
-UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.

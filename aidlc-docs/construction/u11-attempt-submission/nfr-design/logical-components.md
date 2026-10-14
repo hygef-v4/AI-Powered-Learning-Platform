@@ -1,8 +1,8 @@
 # U11 Individual Work & Quiz Submission — logical-components
 
-> Current Construction revision 2026-10-13: 65 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Primary UC:** 18, 19, 20, 21, 22, 23, 24, 28, 29. **Primary stories:** US-ASM-003, US-ASM-012. **Requirements:** FR-018/019/030/039.
+**Primary UC:** 49, 50, 51, 52, 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003, US-ASM-012. **Requirements:** FR-018/019/030/039.
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u11-attempt-submission` không quyết định chức năng hiện hành.
 
