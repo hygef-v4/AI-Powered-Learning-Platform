@@ -12,8 +12,8 @@ Screen flow không có màn nhóm riêng: U12 gắn component vào màn của U0
 
 | Màn | Component | UC | Role | Mở từ |
 |---|---|---|---|---|
-| Tab Students (Teacher Class Detail) | `ClassStudentsGroupsPanel` (gắn vào `StudentsTab` của U04) | 23 (luồng phụ nhóm, duyệt yêu cầu) | Teacher, Subject Manager được giao dạy | Class Dashboard → Teacher Class Detail |
-| Popup chia ngẫu nhiên | `RandomSplitDialog` | 23 | Teacher, Subject Manager được giao dạy | Tab Students |
+| Tab Students (Teacher Class Detail) | `ClassStudentsGroupsPanel` (gắn vào `StudentsTab` của U04) | 57 (tạo/sửa/xóa nhóm, thành viên, trưởng nhóm và duyệt yêu cầu; UC 23 là điểm truy cập) | Teacher, Subject Manager được giao dạy | Class Dashboard → Teacher Class Detail → Students → Groups |
+| Popup chia ngẫu nhiên | `RandomSplitDialog` | 57 | Teacher, Subject Manager được giao dạy | Tab Students → Groups |
 | Popup Student Detail (U04) | Dòng Nhóm đọc dữ liệu của `ClassStudentsGroupsPanel` | 23 | Teacher, Subject Manager được giao dạy | Tab Students |
 | Hộp phát hành của Assignment Form (U08) | `GroupReadinessPanel` | 53 | Teacher, Subject Manager được giao dạy | Tab Evals → Assignment Form |
 | Student Class Detail (U04) | `MyGroupPanel` | 54 | Student | Class Dashboard → Student Class Detail |

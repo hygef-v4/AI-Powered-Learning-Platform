@@ -8,13 +8,13 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 Actor: "giảng viên lớp" = Teacher hoặc Subject Manager là giảng viên chính của lớp (R3/R4); "sinh viên" = người ghi danh `ACTIVE` lớp `OPEN` (R5). Admin không có chức năng nhóm. Chủ nhiệm môn (R2) không quản lý nhóm nếu không phải giảng viên chính của lớp.
 
-## F1 - Quản lý nhóm của lớp (luồng phụ UC 23, tab Students)
+## F1 - Create/Update/Delete Class Group (UC 57, tab Students mở từ UC 23)
 1. Giảng viên lớp mở Teacher Class Detail (U04) → tab Students: thấy các nhóm của lớp (mọi `StudentGroup` cùng `classId`, rỗng nếu chưa có), sinh viên chưa có nhóm và thành viên đã rời lớp (BR-U12-15).
 2. Chọn cách: tạo/sửa tay (BR-U12-04) hoặc chia ngẫu nhiên (BR-U12-05); đổi trưởng nhóm trực tiếp trên thẻ nhóm (BR-U12-12).
 3. Lưu nguyên khối, kiểm BR-U12-02, 03, 07, 08, 09; audit.
 4. Bấm một sinh viên → popup Student Detail (U04) hiện nhóm của người đó lấy từ dữ liệu nhóm đã tải ở tab Students (BR-U12-33).
 
-## F2 - Chia ngẫu nhiên
+## F2 - Chia ngẫu nhiên (UC 57)
 1. Lấy sinh viên đang ghi danh `ACTIVE` chưa có nhóm trong lớp, xáo trộn.
 2. Số nhóm mới = trần(số người / sĩ số tối đa); chia vòng tròn để chênh ≤ 1.
 3. Đặt tên "Nhóm N" tiếp theo; chọn trưởng nhóm ngẫu nhiên; trả bản xem trước để giảng viên sửa rồi lưu (F1 bước 3).
@@ -22,18 +22,18 @@ Actor: "giảng viên lớp" = Teacher hoặc Subject Manager là giảng viên 
 ## F3 - (Đã bỏ) Phân công phần của giảng viên
 - Khung bài nhóm tự chia thành các phần theo heading (U09). Trưởng nhóm giao phần cho thành viên trong tài liệu nhóm (U14, UC 56).
 
-## F4 - Sẵn sàng phát hành (`GroupReadinessPort`, UC 35)
+## F4 - Sẵn sàng phát hành (`GroupReadinessPort`, UC 53)
 - Bài nhóm (`ASSIGNMENT` với `submissionMode=GROUP`) chỉ có ở lớp. U08 gọi khi giảng viên lớp phát hành bài nhóm: kiểm BR-U12-21 trên nhóm của lớp, trả lỗi chặn (lớp chưa có nhóm, nhóm thiếu trưởng nhóm, nhóm không còn thành viên) và cảnh báo (sinh viên chưa có nhóm) để giảng viên xác nhận.
 - Hộp phát hành của U08 nhúng `GroupReadinessPanel` để hiện trước danh sách này.
 
-## F5 - Đổi nhóm khi lớp đã có bài nhóm đang mở
+## F5 - Đổi nhóm khi lớp đã có bài nhóm đang mở (UC 57)
 1. Thêm/bớt thành viên, đổi nhóm, tạo nhóm mới (BR-U12-22) trong một transaction.
 2. Nhóm mới: gọi `GroupChangePort.onGroupCreated(groupId)` → U14 tạo tài liệu nhóm cho mọi bài nhóm đang mở của lớp. Thành viên rời nhóm: gọi `GroupChangePort.onMemberRemoved(groupId, studentId)` → U14 nhả khóa mục của người đó ở mọi tài liệu nhóm đang mở. Cả hai trong cùng transaction.
 3. Audit; sau commit phát event `group.membership-changed` cho thông báo.
 
-## F6 - Yêu cầu đổi trưởng nhóm (UC 55) và quyết định của giảng viên
+## F6 - Yêu cầu đổi trưởng nhóm (UC 55) và quyết định của giảng viên (UC 57)
 1. Sinh viên ở phần Nhóm của tôi bấm "Yêu cầu đổi trưởng nhóm" → popup: nhập lý do, có thể đề cử một thành viên khác (BR-U12-10). Gửi → `PENDING`; sau commit phát `group.leader-requested` để U16 báo giảng viên lớp. Người gửi hủy được khi còn `PENDING` (BR-U12-11).
-2. Giảng viên lớp xem yêu cầu ở tab Students (luồng phụ UC 23): duyệt (chọn trưởng nhóm mới, mặc định người được đề cử; bắt buộc chọn khi không có đề cử), từ chối (bắt buộc lý do), hoặc đổi trực tiếp (BR-U12-11, 12). Sau commit: duyệt hoặc đổi trực tiếp phát `group.leader-changed`; từ chối phát `group.leader-request-rejected` để U16 báo người gửi.
+2. Giảng viên lớp xử lý yêu cầu trong UC 57 tại tab Students, truy cập từ UC 23: duyệt (chọn trưởng nhóm mới, mặc định người được đề cử; bắt buộc chọn khi không có đề cử), từ chối (bắt buộc lý do), hoặc đổi trực tiếp (BR-U12-11, 12). Sau commit: duyệt hoặc đổi trực tiếp phát `group.leader-changed`; từ chối phát `group.leader-request-rejected` để U16 báo người gửi.
 
 ## F7 - Sinh viên xem nhóm (UC 54)
 1. Sinh viên mở Class Dashboard → Student Class Detail (U04); phần Nhóm của tôi (U12 gắn vào) gọi `my-group`.

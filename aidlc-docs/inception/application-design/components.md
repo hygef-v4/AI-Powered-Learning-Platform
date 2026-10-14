@@ -14,7 +14,7 @@
 | U08 | Assignment/Quiz Lifecycle & Copy | 34 |
 | U09 | Assignment Documents & Quiz Authoring | 48, 35, 53 |
 | U11 | Individual Work & Quiz Submission | 49, 50, 51, 52, 37, 38, 39, 40, 41 |
-| U12 | Group & Allocation | 54, 55 |
+| U12 | Group & Allocation | 54, 55, 57 |
 | U13 | AI Connections & MCP | 31, 32 |
 | U14 | Group Workspace & Submission | 56 |
 | U15 | Grading & Gradebook | 42, 43, 44, 45 |

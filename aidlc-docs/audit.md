@@ -3801,3 +3801,17 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **Action:** Authorized documentation-only continuation. Snapshotted 192 prior files/state/source with SHA-256 hashes. Synchronized Inception catalog/requirements/personas/51 stories/unit maps and current Construction designs/shared contracts/15 code delta plans to docs/usecase_table.md. Restored UC45 Group authoring and UC71 Edit Setting; UC42 Individual, UC70 View Settings; UC26 optional diagrams moved to UC24/27, UC79 retired and feedback UC29 limited to owned SUBMITTED PRACTICE snapshots. Institutional API configuration consolidated from UC76/82 into Settings UI via U13 protected port; U07 quota ownership retained. YouTube educational links admitted as MVP, automatic processing remains extension. Names match user choices. Older sync reports marked superseded; historical state approvals/checklists retained verbatim. D01–D04 not decided. Jira, application code/contracts/migrations, Google Reports and diagram files not changed; no commit/push.
 
 **Validation:** PASS across 190 active artifacts: exact 65 UC IDs/names/descriptions between source and catalog; four primary maps/unit headers agree; 50 MVP + 1 extension story ownership/trace agrees; 15 units/code plans, 39 stable FR IDs; Markdown fences/tables/local targets valid; all 192 snapshot hashes intact and historical state suffix unchanged. Enabled Security/Resiliency reduced-subset design constraints retained; runtime compliance not certified, other rules N/A; PBT disabled. No runtime tests for document-only revision. Summary: inception/plans/uc-table-65-sync-2026-10-13.md.
+
+## 2026-10-14T15:05:56Z — UC57 name correction
+
+**User Input**: đổi tên uc57 manage thành create/update/delete
+
+**AI Response**: Renamed UC57 to Create/Update/Delete Class Group in docs/usecase_table.md and inception/requirements/use-cases.md, following the name agreed in this conversation. Description, actor, ID and navigation unchanged. Documentation-only continuation; design/code/test stages skipped as not applicable. Verified both catalog rows agree and the former name is absent. Security/resiliency/testing extensions N/A to this naming-only change.
+
+## 2026-10-14T15:14:09Z — UC57 documentation synchronization
+
+**User Input**: giúp tôi đồng bộ doc aidlc theo uc57
+
+**AI Response**: Synchronized UC57 Create/Update/Delete Class Group across FR-025, group stories, component map, U12 business logic/rules/domain/frontend, U04 class entry/frontend, current shared contract and U12 pending code plan. UC23 is the navigation entry; UC54 views own group; UC55 requests/cancels leader change; UC57 owns teacher group operations and request decisions. Corrected group-publication trace to UC53. Existing group deletion constraints retained. Added completed documentation plan inception/plans/uc57-document-sync-2026-10-14.md and state record. Historical artifacts and pending implementation checklists preserved.
+
+**Validation**: PASS: 66 active catalog entries; UC57 names match source/catalog; Groups panel and random split map to UC57; stale UC23 group-operation mappings absent; git diff --check passed. Documentation-only; security/resiliency runtime compliance and PBT N/A. No code, diagram, Jira or Google updates, commit/push or stage approval advancement.

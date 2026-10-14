@@ -18,6 +18,8 @@ User chỉ yêu cầu đồng bộ tài liệu Construction theo Inception. Đâ
 
 ## Checklist delta
 
+Truy vết giao diện/API/test: UC 57 — Create/Update/Delete Class Group sở hữu thao tác tạo/chia/sửa/xóa nhóm, thành viên, trưởng nhóm và duyệt/từ chối yêu cầu. UC 23 chỉ cung cấp điểm truy cập Teacher Class Detail → Students → Groups và Student Detail chỉ đọc; không thêm trang nhóm riêng. UC 54 là xem nhóm của sinh viên; UC 55 là gửi/hủy yêu cầu. Khi viết test phải bao gồm xóa nhóm chưa dùng, từ chối xóa nhóm có tài liệu/bản nộp và từ chối người không được giao dạy lớp. Checklist triển khai bên dưới vẫn chưa thực hiện.
+
 - [ ] **Bước 1:** Inventory code/contracts/migrations baseline, xác định reuse/removal, mapping dữ liệu và exact paths; không drop records/snapshots trước backup/restore.
 - [ ] **Bước 2:** Review DTO/status/public ports theo U12 owner; authorizations hiện hành, expectedVersion/idempotency và error projection; replace adapters fail-closed trước tích hợp thật.
 - [ ] **Bước 3:** Migration owned entities/constraints/index/retention; preserve IDs/historical snapshots, validate old-to-new mapping trên copy database.

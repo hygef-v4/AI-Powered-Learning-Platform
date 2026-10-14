@@ -6,7 +6,7 @@
 
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u12-group-allocation` không quyết định chức năng hiện hành.
 
-Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 54, 55 (primary); luồng phụ của UC 23 (tab Students, Student Detail), UC 35 (phát hành bài nhóm); dữ liệu nhóm cho UC 56 (U14).
+Thiết kế độc lập công nghệ. Truy vết: `US-GRP-001`, `002`; UC 54 (sinh viên xem nhóm), UC 55 (sinh viên gửi/hủy yêu cầu đổi trưởng nhóm), UC 57 — Create/Update/Delete Class Group (giảng viên quản lý nhóm và duyệt/từ chối yêu cầu). UC 23 cung cấp điểm truy cập tab Students và Student Detail chỉ đọc; UC 53 kiểm sẵn sàng khi phát hành bài nhóm; dữ liệu nhóm cho UC 56 (U14).
 
 ## 1. Tổng quan
 

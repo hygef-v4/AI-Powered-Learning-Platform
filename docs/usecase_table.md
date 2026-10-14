@@ -64,7 +64,7 @@ Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; se
 | 54 | View My Group | Student Group | Allows a student to view their group members, leader and group-assignment documents in a class. |
 | 55 | Request Leader Change | Student Group | Allows a group member to request a leader change, provide a reason and optionally propose a replacement. |
 | 56 | Complete Group Assignment | Group Assignment Workspace | Allows group members to work on authorized document sections and optionally use Draw.io when enabled. The group leader submits the completed Assignment. |
-| 57 | Manage Class Groups | Class Group Management | Allows an assigned teacher to create class groups manually or randomly, add, move or remove members, appoint group leaders, and approve or reject leader-change requests. |
+| 57 | Create/Update/Delete Class Group | Class Group Management | Allows an assigned teacher to create class groups manually or randomly, add, move or remove members, appoint group leaders, and approve or reject leader-change requests. |
 | 58 | View Subject Materials | Subject Reference Materials | Allows a subject manager to view learning files and educational YouTube video links in an assigned subject. |
 | 59 | Add/Update/Delete Subject Material | Subject Reference Materials | Allows a subject manager to add, update or delete subject learning files and educational YouTube video links shared with authorized classes. |
 | 60 | View Uploaded Learning Materials | Class Reference Materials | Allows an assigned teacher to view a class's learning files and educational YouTube video links. |

@@ -53,7 +53,7 @@ Không còn tự ghi danh bằng mã mời; sinh viên chỉ vào lớp qua F4, 
 
 ## F10 - Teacher xem lớp (UC 22, 23)
 1. Class Dashboard (UC 22): lớp mình là giảng viên chính, chia "Sắp mở"/"Đang dạy"/"Đã kết thúc" (BR-U04-45).
-2. Teacher Class Detail (UC 23): kiểm actor là giảng viên chính (`isTeacherOf`); tab Class Detail hiện thông tin lớp chỉ đọc; tab Students hiện sinh viên `ACTIVE` (BR-U04-46).
+2. Teacher Class Detail (UC 23): kiểm actor là giảng viên chính (`isTeacherOf`); tab Class Detail hiện thông tin lớp chỉ đọc; tab Students hiện sinh viên `ACTIVE` (BR-U04-46). Phần Groups là điểm truy cập UC 57 — Create/Update/Delete Class Group do U12 cung cấp; các thao tác nhóm và duyệt yêu cầu đổi trưởng nhóm thuộc UC 57.
 3. Bấm một sinh viên → popup Student Detail: email, tên hiển thị, nhóm (frontend lấy từ API của U12), ngày ghi danh; chỉ đọc (BR-U04-47).
 
 ## F11 - Manager Dashboard và Subject Detail (Subject Manager, UC 30)

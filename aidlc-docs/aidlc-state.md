@@ -151,3 +151,16 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - 2026-09-27: Screen flow (`docs/screen-flow.drawio`) chốt theo bản nhóm vẽ; frontend gộp theo đó: nhập CSV thành `ImportAccountsPanel` trên danh sách tài khoản (U01), cài đặt email thành toggle trên trang thông báo (U16), tổng quan tài liệu nhóm thành panel trong danh sách bài nộp (U14), chấm nhóm thành chế độ `groups` của `GradingWorkspacePage` (U15). Plan U01/U14/U15/U16 chỉ đổi tên component tương ứng.
 - 2026-09-27: Updated UC56, UC57 and UC75 in `docs/use-case-specifications.md` to match the current design; this documentation change did not advance the Construction stage.
 - Full chronological log: `audit.md`.
+
+## UC57 naming correction — 2026-10-14
+
+- [x] Confirm requested name from conversation: Create/Update/Delete Class Group.
+- [x] Update English UC table and Inception catalog; verify names agree.
+- Documentation-only correction; no stage approval or application implementation advanced.
+
+## UC57 document synchronization — 2026-10-14
+
+- [x] Đồng bộ UC57 — Create/Update/Delete Class Group trong FR-025, stories, component map, thiết kế nhóm/lớp, shared contract và code generation plan.
+- [x] Tách truy vết: UC23 là điểm truy cập; UC54 xem nhóm; UC55 gửi/hủy yêu cầu; UC57 giảng viên thao tác nhóm và xử lý yêu cầu.
+- [x] Kiểm 66 UC hiện hành, tên UC57 nhất quán, ánh xạ giao diện và diff Markdown. Kết quả: `inception/plans/uc57-document-sync-2026-10-14.md`.
+- Không chuyển stage, duyệt hoặc triển khai code; folder unit legacy và tài liệu lịch sử giữ nguyên.

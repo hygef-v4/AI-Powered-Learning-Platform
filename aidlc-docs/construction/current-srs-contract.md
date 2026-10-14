@@ -28,6 +28,10 @@ Iteration, phụ thuộc và phân công: [unit-of-work.md](../inception/applica
 
 ## Authority và scope
 
+### UC 57 — Create/Update/Delete Class Group
+
+Giảng viên được giao dạy lớp (Teacher hoặc Subject Manager trong vai trò giảng viên lớp) tạo nhóm thủ công/ngẫu nhiên, sửa/xóa nhóm theo điều kiện, thêm/chuyển/gỡ thành viên, chỉ định trưởng nhóm và duyệt/từ chối yêu cầu đổi trưởng nhóm. Điểm truy cập: Class Dashboard → Teacher Class Detail (UC 23) → Students → Groups; UC 23 cung cấp màn lớp, UC 57 sở hữu thao tác nhóm. UC 54 là sinh viên xem nhóm; UC 55 là thành viên gửi/hủy yêu cầu; UC 53/56 là soạn/làm bài nhóm. Không thêm trang riêng hoặc chuyển quyền quản lý nhóm cho Admin hay Chủ nhiệm môn không được giao dạy lớp. Xóa chỉ khi nhóm chưa có tài liệu nhóm hoặc bản nộp; giữ các quy tắc và audit hiện hành.
+
 | Actor / scope | Quyền |
 |---|---|
 | R1 own data | Profile, connection cá nhân, usage/feedback/notification của chính actor |
