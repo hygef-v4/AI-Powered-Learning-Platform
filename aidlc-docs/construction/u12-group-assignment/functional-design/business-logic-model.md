@@ -28,7 +28,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 ## 2. Nhóm và trưởng nhóm
 
-### F1 - Quản lý nhóm (UC 57)
+### F1 - Create/Update/Delete Class Group (UC 57)
 1. Giảng viên mở tab Students; phần Nhóm do U12 gắn qua `TeacherClassTab`; frontend gọi `GET /api/v1/classes/{classId}/groups`.
 2. Kiểm giảng viên chính của lớp (BR-U12-01); trả nhóm, thành viên (người đã rời lớp có nhãn), trưởng nhóm, sinh viên chưa có nhóm, yêu cầu đang chờ, `version`.
 3. Giảng viên tạo nhóm, thêm, chuyển, gỡ thành viên, chọn trưởng nhóm trên bản sửa ở trình duyệt.

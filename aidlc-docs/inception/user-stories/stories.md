@@ -723,7 +723,7 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U12; **Scope**: MVP.
 
-**Current UC trace**: UC 57. Source: [current UC table](../../../docs/usecase_table.md).
+**Current UC trace**: UC 57 — Create/Update/Delete Class Group (giảng viên tạo/chia/sửa/xóa nhóm); UC 54 — View My Group (Scenario 4). UC 23 là điểm truy cập Teacher Class Detail → Students → Groups. Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là giảng viên, tôi muốn chia sinh viên của lớp được phân công thành nhóm ngay trong danh sách sinh viên của lớp (tạo tay hoặc chia ngẫu nhiên) và chỉ định một trưởng nhóm cho mỗi nhóm để mọi bài tập nhóm của lớp có trách nhiệm rõ ràng.
@@ -762,7 +762,7 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 **Primary unit**: U12; **Scope**: MVP.
 
-**Current UC trace**: UC 55; UC 57. Source: [current UC table](../../../docs/usecase_table.md).
+**Current UC trace**: UC 55 — Request Leader Change (thành viên gửi/hủy yêu cầu); UC 57 — Create/Update/Delete Class Group (giảng viên duyệt/từ chối hoặc đổi trưởng nhóm trực tiếp). Source: [current UC table](../../../docs/usecase_table.md).
 
 
 **Story**: Là thành viên nhóm, tôi muốn gửi yêu cầu thay đổi trưởng nhóm để giảng viên xem xét khi phân công hiện tại không còn phù hợp.

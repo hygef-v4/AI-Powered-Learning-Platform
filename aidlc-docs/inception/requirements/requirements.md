@@ -228,6 +228,8 @@ Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37)
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
+**Truy vết UC:** UC 57 — Create/Update/Delete Class Group cho giảng viên tạo/chia/sửa/xóa nhóm, quản lý thành viên, chỉ định trưởng nhóm và duyệt/từ chối yêu cầu đổi trưởng nhóm; UC 54 cho sinh viên xem nhóm; UC 55 cho thành viên gửi/hủy yêu cầu. Điểm truy cập UC 57: Class Dashboard → Teacher Class Detail (UC 23) → Students → Groups; không cần trang nhóm riêng. UC 53 soạn bài nhóm và UC 56 làm/nộp bài nhóm là nghiệp vụ riêng.
+
 Trong danh sách sinh viên của lớp được phân công, giảng viên phải có thể chia sinh viên thành nhiều nhóm bằng cách tạo tay hoặc chia ngẫu nhiên các sinh viên chưa có nhóm, và chỉ định chính xác một trưởng nhóm cho mỗi nhóm. Nhóm thuộc lớp và được dùng cho mọi bài nhóm của lớp; không có chức năng dùng lại nhóm của bài khác. Thành viên có thể gửi yêu cầu đổi trưởng nhóm nhưng chỉ giảng viên được phê duyệt/từ chối và chỉ định người thay thế.
 
 **Tiêu chí chấp nhận:**
@@ -236,6 +238,7 @@ Trong danh sách sinh viên của lớp được phân công, giảng viên ph�
 - Chỉ sinh viên đang ghi danh trong lớp mới được thêm vào nhóm của lớp đó; mỗi sinh viên thuộc tối đa một nhóm trong lớp.
 - Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
+- Giảng viên chỉ xóa nhóm chưa có tài liệu nhóm hoặc bản nộp; nhóm đã dùng chỉ được điều chỉnh thành viên theo quy tắc bảo toàn lịch sử.
 
 ### FR-026 - Assignment GROUP: tài liệu chung và đóng góp
 

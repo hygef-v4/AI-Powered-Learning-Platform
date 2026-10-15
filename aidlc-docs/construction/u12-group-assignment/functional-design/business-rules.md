@@ -10,7 +10,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U12-01 | Nhóm thuộc lớp, quản lý trong tab Students của Teacher Class Detail; mọi bài nhóm của lớp dùng chung các nhóm này. Chỉ giảng viên chính của lớp (R3/R4) tạo, sửa. Admin và Chủ nhiệm môn không dạy lớp không xem, không sửa. | UC 57, FR-025 |
+| BR-U12-01 | Nhóm thuộc lớp; tạo, chia, sửa, xóa nhóm, thành viên, trưởng nhóm và xử lý yêu cầu đổi trưởng nhóm thuộc UC 57 — Create/Update/Delete Class Group, làm trong tab Students của Teacher Class Detail (UC 23 chỉ là điểm truy cập, Student Detail chỉ đọc vẫn thuộc UC 23); mọi bài nhóm của lớp dùng chung các nhóm này. Chỉ giảng viên chính của lớp (R3/R4) tạo, sửa. Admin và Chủ nhiệm môn không dạy lớp không xem, không sửa. | UC 57, FR-025 |
 | BR-U12-02 | Chỉ sinh viên ghi danh `ACTIVE` của lớp được vào nhóm; mỗi sinh viên tối đa một nhóm trong lớp. Mỗi nhóm có tên (≤ 100, không trùng trong lớp), ít nhất một thành viên và đúng một trưởng nhóm là thành viên. | US-GRP-001 S1, S2 |
 | BR-U12-03 | Tạo tay: tạo nhóm, thêm, chuyển, gỡ thành viên, chọn trưởng nhóm. Chia ngẫu nhiên: nhập sĩ số tối đa 2–20; chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có; các nhóm mới chênh nhau tối đa một người; trưởng nhóm chọn ngẫu nhiên; kết quả là bản xem trước để sửa rồi mới lưu. | US-GRP-001 S1, S3 |
 | BR-U12-04 | Lưu cả bộ nhóm của lớp một lần kèm `version`; có chỗ mâu thuẫn thì từ chối toàn bộ và báo từng lỗi. | US-GRP-001 S2 |
