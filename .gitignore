@@ -1,4 +1,5 @@
 aidlc-docs/.work/
+.tmp/
 deliverables/
 debug.log
 

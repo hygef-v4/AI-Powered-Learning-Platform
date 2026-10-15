@@ -1,42 +1,34 @@
-# U09 Question Type Authoring - NFR Design Patterns
+# U09 Assignment Documents & Quiz Authoring — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Mô hình tài liệu dùng chung một nơi
-- Java: `sealed interface Block` + record từng loại, Jackson polymorphic theo `type`; TypeScript: kiểu sinh từ JSON schema `contracts/schemas/document.json` (một nguồn cho backend, frontend, U11, U15).
-- `DocumentValidator` thuần (không I/O) cho `validateSkeleton`, `validateForSave`, `validateForSubmit` (NFR-U09-01).
+**Primary UC:** 48, 35, 53. **Primary stories:** US-GRP-003, US-ASM-004, US-ASM-006. **Requirements:** FR-006/016/017/039.
 
-## P2 - Khóa block bằng hash
-- Khi lưu khung: `contentHash = sha256(canonical JSON)` cho mọi block `TEACHER` (chữ, ảnh, bảng, sơ đồ); khung khóa hoàn toàn.
-- `validateForSave`: mọi block `TEACHER` có mặt đúng thứ tự tương đối; block khóa phải trùng hash; người học không đổi `origin` (NFR-U09-31).
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u09-question-type-authoring` không quyết định chức năng hiện hành.
 
-## P3 - Nhập DOCX theo luồng
-1. `SafeZipGuard` duyệt mục ZIP trước khi mở: số mục, tổng giải nén, tỉ lệ nén (NFR-U09-10).
-2. POI `XWPFDocument` duyệt `IBodyElement` theo thứ tự → `BlockMapper`.
-3. Ảnh → `DiagramDetector`:
-   - PNG: đọc chunk; `tEXt`/`iTXt` khóa `mxfile` → URL-decode; `zTXt` → inflate rồi URL-decode; khóa `mxGraphModel` → định dạng cũ.
-   - SVG: parser an toàn, lấy thuộc tính `content` của `<svg>` → unescape.
-   - Nếu `<diagram>` bên trong nén (base64 + raw deflate + URL-encode) → giải nén (≤ 2 MB).
-   - Qua `SafeDrawioParser`; lỗi ở bất kỳ bước nào → trả `IMAGE` (BR-U09-42).
-4. Ảnh còn lại lưu qua `ArtifactPort.store(DOCUMENT_IMAGE)`.
-- Cùng parser phục vụ hai chế độ: nhập khung gắn `origin = TEACHER`; preview cho lượt DOCUMENT gắn `origin = STUDENT`. U11 kiểm chủ lượt/trạng thái trước khi gọi và chỉ lưu sau xác nhận qua `PUT /attempts/{id}/content` với `contentVersion`.
+## Patterns áp dụng
 
-## P4 - Xuất DOCX có giới hạn
-- `Semaphore(2)` (NFR-U09-03); `JsvgRasterizer` dựng PNG từ SVG đã làm sạch (scale 2x, tối đa 4000 px cạnh dài); `PngChunkWriter` chèn `tEXt` `mxfile` trước `IEND`.
-- Trả stream, không lưu file lâu dài.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Làm sạch SVG
-- `SvgSanitizer`: parser an toàn, allowlist thẻ (`svg`, `g`, `path`, `rect`, `ellipse`, `circle`, `line`, `polyline`, `polygon`, `text`, `tspan`, `defs`, `marker`, `use`, `image` với `data:` ảnh), bỏ `script`, `foreignObject`, thuộc tính `on*`, `href` không phải `#` hoặc `data:image` (NFR-U09-13).
-- Chạy khi lưu (khung và bài của người học); kết quả lưu thay SVG gốc.
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Draw.io nhúng
-- `DrawioPanel` mở iframe `https://embed.diagrams.net/?embed=1&proto=json&spin=1&ui=min&lang=vi`; gửi `{action: "load", xml}`; nhận `save`/`export` với `format: "svg"`; kiểm `event.origin === "https://embed.diagrams.net"` (NFR-U09-15).
-- Timeout tải 10 s → trạng thái "trình vẽ không khả dụng" (NFR-U09-20).
+## Unit-specific patterns
 
-## P7 - Soạn thảo lớn
-- `DocumentEditor` giữ state dạng mảng block bất biến; render ảo hóa (`react-window`) khi > 200 block (NFR-U09-04).
+- Document common Assignment editor; heading/paragraph/list/table/image and DIAGRAM when enabled, structured Document JSON + full Draw.io XML + sanitized preview; không flattened XML as source.
+- Skeleton locked student vs editable content parts separated. Parts derived leaf heading per baseline; each partId links rubric. Author import/export DOCX scope/size/type verified; exact diagram roundtrip required or report unsupported representation, no silent loss.
+- Diagram disabled reject diagram blocks/imports; enabled validate XML limits/external refs and sanitize SVG/HTML, Draw.io iframe origin/message checks; no eval/import external entity.
+- Quiz authoring MCQ independent Lesson; immutable publication keys/options snapshot with question versions, hidden keys never Student context.
+- activityMonitoringEnabled default false, policy/notice/retention version in author config and attempt snapshot; changing published policy requires new version, no silent mid-attempt switch.
+- No Student feedback on drafts or Graded work; remove allowStudentAiFeedback. UC41 requires an owned SUBMITTED PRACTICE snapshot. Educator AI-assisted authoring remains separately authorized with explicit source selection and reviewed outputs.
 
-## P8 - Đồng bộ rubric theo câu và phần
-- `syncQuestionRubrics` chạy trong transaction U08 thêm/bỏ câu Text Essay; lưu khung chạy trong transaction của U09; cả hai khóa dòng `assignments` (bài phải `DRAFT`), so danh sách câu/phần mới với danh sách cũ theo `questionId`/`partId`.
-- Câu/phần mới → `RubricPort.create` (rubric trống) và ghi `rubricId`; câu/phần không còn → `RubricPort.delete`; câu/phần còn giữ nguyên `rubricId` nên rubric đã điền không mất (BR-U09-23, 26, 27).
-- Ghi `config` qua `AssignmentExtensionPort` cùng transaction; lỗi ở bước nào thì rollback cả rubric lẫn `config`.
+## Validation matrix
+
+- Diagram XML roundtrip; malicious/oversized XML/SVG/import reject; disabled diagram reject; valid pure doc works.
+- Student cannot edit scaffold/key/rubric; Quiz keys stripped; policy snapshot unchanged mid-attempt; AI proposal stale rejected.
+
+Authoring coverage: UC35 Individual and UC53 Group are separate entries into the common Assignment document/rubric model. Validate INDIVIDUAL/GROUP independently of diagramEnabled; subject-level individual allowed within R2, group only assigned class. UC48 Quiz creation can open from View Learning Material with optional current-material reference; it remains independent of Lesson. No Student draft-feedback opt-in.

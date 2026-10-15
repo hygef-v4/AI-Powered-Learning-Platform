@@ -1,26 +1,29 @@
-# U15 Grading - Deployment Architecture
+# U15 Grading & Gradebook — deployment-architecture
 
-**Bản tài liệu 2026-10-09**: UC 37, 38, 39, 40 (chốt và công bố là luồng phụ của UC 38, 39) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-```
-+----------------------------------------------------------+
-| Trình duyệt: giảng viên lớp, Student                     |
-+----------------------------------------------------------+
-                              |
-                              |  HTTPS qua nginx
-                              v
-+----------------------------------------------------------+
-| backend: Submission Detail, chấm, chốt, công bố, sổ điểm |
-| port U15 trong transaction nộp của U11, U14              |
-| worker: U13 gọi CodeGradedPort, PracticeResultPort       |
-| grade.published --> rabbitmq platform.events --> U16     |
-+----------------------------------------------------------+
-                              |
-                              |  ghi evaluations
-                              v
-+----------------------------------------------------------+
-| postgres: evaluations                                    |
-+----------------------------------------------------------+
-```
+**Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001. **Requirements:** FR-008/009/020/039.
 
-**Text alternative**: Giảng viên lớp và Student dùng trình duyệt, đi qua Nginx tới backend. Backend phục vụ Submission Detail, Grading Workspace, chốt, công bố và sổ điểm; khi U11/U14 nộp bài, port của U15 chạy trong cùng transaction nộp; worker của U13 gọi `CodeGradedPort` khi chấm Code Lab xong và `PracticeResultPort` khi có kết quả Practice. Mọi điểm ghi vào bảng `evaluations` trong PostgreSQL; thời điểm công bố theo (bài, lớp) suy ra từ `published_at` của các đánh giá, không có bảng riêng. Công bố phát event `grade.published` qua RabbitMQ (exchange `platform.events`) cho U16. Không có container mới.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u15-grading` không quyết định chức năng hiện hành.
+
+## Mapping triển khai
+
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `grading`; không tạo deployable riêng.
+
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
+
+- Submission event → register scope/snapshot → teacher manual or selected-source AI request → validate proposal/rubric → teacher confirms → finalize → publish event.
+- Student view grade only published own; teacher export/Gradebook official Assignments only via U16.
+- UC42 activity tab → authorize → U11 scoped query → display known intervals/gaps; no grade mutation or verdict automation.
+
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- Admin/R2-only denied; stale proposal reject; AI cannot publish/finalize via REST/MCP; unpublished grade hidden.
+- Quiz Practice stays outside Gradebook; group adjustment bounds/audit; activity viewing never changes grade; masked missing intervals.

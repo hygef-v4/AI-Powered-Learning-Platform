@@ -1,6 +1,10 @@
-# U01 Account & Access - Frontend Components
+# U01 Account & Access — frontend-components
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) và **Admin Console** (quản trị tài khoản). Ẩn/hiện UI chỉ hỗ trợ trải nghiệm; quyền thật do backend quyết định. Tên API là tên nghiệp vụ, đường dẫn cuối cùng chốt ở OpenAPI.
 
@@ -14,9 +18,9 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) v
 | Post-Login (khung sau đăng nhập) | `PostLoginRedirect`, `AccountMenu`, `SignOutDialog` | 01, 02, 03 |
 | User Profile | `ProfilePage` | 06, 07 |
 | Password Change (popup) | `PasswordChangeDialog` | 05 |
-| Account List | `AccountListPage`, `ImportAccountsPanel` | 59, luồng phụ của 60 |
-| New Account (popup) | `NewAccountDialog` | 60 |
-| Account Detail | `AccountDetailPage` | 61, 62, 63 |
+| Account List | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
+| New Account (popup) | `NewAccountDialog` | 09 |
+| Account Detail | `AccountDetailPage` | 10, 11, 12 |
 
 Class Dashboard, Manager Dashboard (U04) và Admin Dashboard (U16) là đích của Post-Login, không thuộc U01.
 
@@ -49,7 +53,7 @@ app/admin/accounts/               (Admin Console, mở từ Admin Dashboard)
   AccountListPage                 màn Account List
     AccountFilters
     AccountTable
-    ImportAccountsPanel           nút "Nhập CSV", luồng phụ của UC 60, hiện ngay trên trang
+    ImportAccountsPanel           nút "Nhập CSV", luồng phụ của UC 09, hiện ngay trên trang
       CsvUploadStep
       ImportPreviewTable
       ImportConfirmStep
@@ -115,7 +119,7 @@ Hai trang dùng chung ba bước `RequestOtpStep` → `VerifyOtpStep` → `SetNe
 | `PostLoginRedirect` | Sau đăng nhập, kích hoạt, hoặc khi mở `/`: lấy `homePath` từ phiên (hoặc `GET /me/profile` khi tải lại trang) rồi chuyển tới dashboard |
 | `AccountMenu` | Hiện tên và role; lối vào User Profile và Logout. Subject Manager có thêm nút sang Class Dashboard |
 | `SignOutDialog` | Xác nhận rồi gọi `logout`, xóa trạng thái phía client, về User Login (UC 03) |
-| `RoleGuard` | `/admin/*` chỉ `ADMIN`; `/manager/*` chỉ `SUBJECT_MANAGER`; `/classes/*` và `/credits/*` chỉ `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`. Sai role thì chuyển về `homePath`. Admin không vào Manager Dashboard hay Class Dashboard (BR-U01-48). Backend vẫn tự kiểm quyền |
+| `RoleGuard` | `/admin/*` chỉ `ADMIN`; `/manager/*` chỉ `SUBJECT_MANAGER`; `/classes/*` chỉ `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`. Sai role thì chuyển về `homePath`. Admin không vào Manager Dashboard hay Class Dashboard (BR-U01-48). Backend vẫn tự kiểm quyền |
 
 ### ProfilePage (User Profile)
 
@@ -156,12 +160,12 @@ Hai trang dùng chung ba bước `RequestOtpStep` → `VerifyOtpStep` → `SetNe
 
 | Component | API | Hành vi |
 |---|---|---|
-| `AccountSummary` | `getAccount` | Email, tên, số điện thoại, role, trạng thái, ngày tạo (UC 61) |
-| `AccountEditForm` | `updateAccount` (PATCH kèm `version`) | Sửa tên, số điện thoại; email chỉ đọc. `409` thì báo dữ liệu đã đổi và tải lại (UC 62) |
-| `RoleChangeDialog` | `assignRole` | Cảnh báo người dùng sẽ bị đăng xuất. Backend từ chối vì role mới không giữ được phân công môn/lớp thì hiện danh sách môn/lớp. Nút bị tắt với chính mình khi hạ quyền (UC 62) |
-| `StatusToggleDialog` | `changeAccountStatus` | "Vô hiệu hóa" hoặc "Mở lại". Tắt với chính mình. Backend từ chối admin cuối cùng thì hiện lý do (UC 63) |
+| `AccountSummary` | `getAccount` | Email, tên, số điện thoại, role, trạng thái, ngày tạo (UC 10) |
+| `AccountEditForm` | `updateAccount` (PATCH kèm `version`) | Sửa tên, số điện thoại; email chỉ đọc. `409` thì báo dữ liệu đã đổi và tải lại (UC 11) |
+| `RoleChangeDialog` | `assignRole` | Cảnh báo người dùng sẽ bị đăng xuất. Backend từ chối vì role mới không giữ được phân công môn/lớp thì hiện danh sách môn/lớp. Nút bị tắt với chính mình khi hạ quyền (UC 11) |
+| `StatusToggleDialog` | `changeAccountStatus` | "Vô hiệu hóa" hoặc "Mở lại". Tắt với chính mình. Backend từ chối admin cuối cùng thì hiện lý do (UC 12) |
 
-### ImportAccountsPanel (luồng phụ của UC 60)
+### ImportAccountsPanel (luồng phụ của UC 09)
 
 Nút "Nhập CSV" trên `AccountListPage` mở vùng nhập ngay trong trang; danh sách tài khoản tải lại sau khi xác nhận.
 
@@ -179,3 +183,19 @@ Nút "Nhập CSV" trên `AccountListPage` mở vùng nhập ngay trong trang; da
 - Admin chỉ thấy Admin Dashboard và các màn quản trị; không có lối vào Manager Dashboard hay Class Dashboard.
 - Profile không có tải ảnh đại diện.
 - Nhãn tiếng Việt, thiết kế desktop-first.
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

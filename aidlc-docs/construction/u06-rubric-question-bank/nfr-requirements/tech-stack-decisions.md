@@ -1,12 +1,21 @@
-# U06 Rubric & Question Bank - Tech Stack Decisions
+# U06 Rubrics & Subject Quiz Bank — tech-stack-decisions
 
-**Bản tài liệu 2026-10-09**: UC 46, 56, 57 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-| Hạng mục | Chọn | Lý do |
-|---|---|---|
-| Lưu `definition`, `criteria` | PostgreSQL `jsonb`, ánh xạ sang Java record theo `questionType` (Jackson polymorphic) và `RubricDefinition` | Một bảng, kiểu an toàn trong code |
-| Kiểm hợp lệ | Bean Validation trên record + validator riêng từng loại câu và rubric | Thông báo lỗi theo trường |
-| Đọc xlsx | Apache POI (`XSSF` event API), cấu hình `ZipSecureFile` | Chuẩn, có chống zip bomb |
-| Đọc CSV | Apache Commons CSV | Xử lý dấu phẩy/xuống dòng trong ô |
-| Tìm kiếm | Index B-tree `(scope_type, scope_id, status)`, GIN trên `tags`, `ILIKE` tiêu đề | Đủ cho ≤ 20 000 bản |
-| Frontend | Next.js + Tailwind, component tự viết; `QuestionView`, `QuestionEditor`, `RubricEditor` dùng chung với U09, U11, U15 | Như các unit trước |
+**Primary UC:** 36, 46, 47. **Primary stories:** US-QBK-001, US-QBK-002. **Requirements:** FR-016/008.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u06-rubric-question-bank` không quyết định chức năng hiện hành.
+
+## Stack giữ theo dự án
+
+Java 17/Spring Boot 3.5 modular monolith; Next.js 16/TypeScript, PostgreSQL/Redis/RabbitMQ, Nginx/Docker Compose, U03 Drive private và U01/U16 MailPort. Dependency lock/pin và actual APIs xác minh khi code; không chọn version SDK mới trong revision tài liệu.
+
+- Subject bank chỉ MCQ cho Quiz, owner Subject Manager R2. Teacher chỉ chọn câu ACTIVE môn trong scope; không bank lớp.
+- Question version immutable khi được snapshot/published; sửa nháp dùng optimistic version, câu đã dùng retire không phá snapshot.
+- Rubric cho từng document part, auto-create empty rubric lúc thêm phần; checklist điểm không âm, tổng tính deterministic. Publication cần rubric đủ; lock/snapshot lúc phát hành.
+- Assignment có/không diagram dùng cùng rubric parts; diagram criteria chỉ nếu diagramEnabled. Không bank CODE/solution/test runner.
+- Quiz scorer validate option IDs theo snapshot và deterministic keys; chỉ trả answer/feedback đúng reveal policy.
+
+## Cost và extension
+
+AI API tổ chức/cá nhân do bên tương ứng trả, không giả định free/đã có key; infrastructure dùng resources nhóm có. Full Lesson/RAG không prerequisite; mọi embedding/provider config là extension riêng. Numeric policies D04/retention chưa giả định. Không thêm unit/container cho từng module.

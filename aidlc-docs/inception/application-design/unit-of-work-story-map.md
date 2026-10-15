@@ -1,52 +1,67 @@
-# Unit of Work Story and Use Case Map — 73 UC
+# Unit / Story / UC map — 2026-10-14
 
-## 1. Baseline và primary ownership
+> Revision 2026-10-14 theo yêu cầu người dùng: 15 unit chia lại thành 3 iteration, mỗi iteration 5 unit, mỗi unit nằm trọn một iteration; unit chia theo dữ liệu sở hữu để liên kết trong cao và liên kết ngoài thấp. Danh mục 66 UC, 50 MVP story + 1 extension giữ nguyên ID. Đây là revision tài liệu; thiết kế Construction vẫn nằm trong các folder unit cũ, chưa tách/gộp theo unit mới.
 
-Bản 2026-10-09 theo [73 UC](../../../docs/use-cases-73.md), [requirements](../requirements/requirements.md), [stories](../user-stories/stories.md) và Page-2 của `docs/G21_Diagrams.drawio`: **73 UC, 51 story, 15 unit**. ID unit giữ ổn định U01–U09, U11–U16; không đánh số lại sau khi bỏ U10.
+66 active UC; 50 MVP stories + 1 extension; 15 logical units
 
-| Unit | Primary UC | Primary stories |
+| Iter | Unit | Tên | Primary UC |
+|---|---|---|---|
+| 1 | U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
+| 1 | U02 | Audit | 13 |
+| 1 | U03 | File, Job, Settings & Backup | 14, 15 |
+| 1 | U04 | Subject Administration | 16, 17, 18, 19 |
+| 1 | U05 | Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 |
+| 2 | U06 | AI Connections & MCP | 31, 32, 33 |
+| 2 | U07 | Assignment Authoring | 34, 35, 36 |
+| 2 | U08 | Assignment Work | 37, 38, 39, 40, 41 |
+| 2 | U09 | Assignment Grading & Gradebook | 42, 43, 44, 45 |
+| 2 | U10 | Quiz Authoring & Bank | 46, 47, 48 |
+| 3 | U11 | Quiz Practice | 49, 50, 51, 52 |
+| 3 | U12 | Group Assignment | 53, 54, 55, 56, 57 |
+| 3 | U13 | Reference Materials | 58, 59, 60, 61, 62 |
+| 3 | U14 | Announcements & Notifications | 63, 64, 65 |
+| 3 | U15 | Admin Dashboard | 66 |
+
+## Story ownership
+
+| Unit | MVP stories | Extension stories |
 |---|---|---|
-| U01 | 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007 |
-| U02 | 73 | US-AUD-001 |
-| U03 | 70, 71 | US-SET-001 |
-| U04 | 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 | US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001 |
-| U05 | 15, 30, 33, 34, 36, 54, 55 | US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005 |
-| U06 | 46, 56, 57 | US-QBK-001, US-QBK-002 |
-| U07 | 08, 09, 10, 11, 68, 69, 72 | US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005 |
-| U08 | 41 | US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
-| U09 | 35, 42, 43, 44, 45 | US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007 |
-| U11 | 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29 | US-ASM-003, US-ASM-012 |
-| U12 | 16, 17 | US-GRP-001, US-GRP-002 |
-| U13 | Không primary UC; hỗ trợ AI/Judge0 | US-AIG-001, US-AIG-002, US-AIG-003 |
-| U14 | 27 | US-GRP-004, US-GRP-005 |
-| U15 | 37, 38, 39, 40 | US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005 |
-| U16 | 12, 58 | US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001 |
+| U01 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007 |  |
+| U02 | US-AUD-001 |  |
+| U03 | US-SET-001, US-OPS-001 |  |
+| U04 | US-CAT-001 |  |
+| U05 | US-CAT-002, US-CAT-003, US-LRN-001 |  |
+| U06 | US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003 |  |
+| U07 | US-ASM-001, US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001 |  |
+| U08 | US-ASM-003, US-ASM-012 |  |
+| U09 | US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001, US-RPT-001, US-RPT-003 |  |
+| U10 | US-QBK-002, US-ASM-006 |  |
+| U11 | US-GRD-001 |  |
+| U12 | US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |  |
+| U13 | US-CNT-001, US-CNT-002 | US-CNT-005 |
+| U14 | US-CNT-004, US-NTF-001 |  |
+| U15 | US-RPT-002 |  |
 
-## 2. Boundary và đóng góp
+Catalog source: [use-cases.md](../requirements/use-cases.md). Unit, iteration, phụ thuộc và phân công: [unit-of-work.md](unit-of-work.md).
 
-| Unit | Phạm vi/đóng góp |
-|---|---|
-| U01 | Role/authentication cho mọi unit; counts cho Admin Dashboard. |
-| U02 | Audit append-only trong transaction mọi command nhạy cảm. |
-| U03 | Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. |
-| U04 | R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. |
-| U05 | Tóm tắt/embedding và RAG cho AI; quiz/attempt do U08/U09/U11 giữ. |
-| U06 | Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. |
-| U07 | Ví của ba role; snapshot payment, verified webhook và grant định kỳ qua Settings. |
-| U08 | Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. |
-| U09 | Cấu hình quiz và bốn dạng assignment, document model; U08 vòng đời, U06 rubric. |
-| U11 | Quiz Practice tách Student Assignments; lần làm bài của môn ghi classId. |
-| U12 | Chia nhóm/leader hỗ trợ Teacher Class Detail và UC 45/27. |
-| U13 | AI draft, Practice grading UC 29, proposals UC 38, Judge0 UC 25/43, số liệu AI UC 58. |
-| U14 | Tài liệu nhóm chỉ ở lớp, GRADED; chỉ leader nộp. |
-| U15 | Bài của môn chấm/công bố theo từng lớp; Practice/quiz không vào gradebook. |
-| U16 | Progress/distribution và export của UC 40; thông báo bài của môn tới mọi lớp OPEN. |
+## Story trải nhiều unit
 
-## 3. Quyền và coverage assertions
+| Story | Unit sở hữu | Unit hỗ trợ |
+|---|---|---|
+| US-CAT-001 | U04 (môn) | U05 (tạo lớp, giao giảng viên) |
+| US-ASM-001 | U07 (duyệt, phát hành Assignment) | U10 (phát hành Quiz) |
+| US-ASM-003 | U08 (làm, nộp Assignment cá nhân) | U11 (làm Quiz) |
+| US-AIG-001, US-AIG-002 | U06 (gọi AI) | U07, U10 (nhận bản nháp) |
+| US-RPT-001 | U09 (theo dõi nộp bài) | U14 (nhắc hạn), U05 (bật phân bố điểm) |
+| US-INT-001 | U09 (giảng viên xem) | U08 (dữ liệu hoạt động), U11, U12 (ghi sự kiện) |
 
-- Student theo R5, Teacher theo R3, Subject Manager theo R2 hoặc R4 của lớp được giao. Admin chỉ User và quản trị, không nhận phân công môn/lớp, không ví và không AI.
-- 73 ID UC liên tục, đúng một primary unit mỗi UC; 51 story đúng một primary unit. US-SET-001 thuộc U03; US-ASM-009/010 thuộc U08; US-CAT-005, US-PAY-003 và US-ASM-011 đã rút.
-- U09 chủ trì authoring UC 35/42–45; U08 đóng góp vòng đời, lịch, version và copy. Subject Manager soạn bài của môn theo FR-027 là supporting flow trong các UC authoring; không tự thêm UC vào catalog.
-- U13 không chủ trì UC riêng; Settings do U03 giữ, cấu hình nhóm AI do U13 khai báo. U02 Audit UC 73; U16 notification UC 12/Admin Dashboard UC 58.
-- Câu riêng scope ASSIGNMENT và rubric scope CLASS/SUBJECT vẫn hợp lệ; chỉ ngân hàng lớp bị bỏ. Quiz gắn học liệu, không lịch/gradebook.
-- Code/contracts chưa được đồng bộ bởi revision tài liệu. Approvals trước đây giữ baseline cũ; thực hiện checklist revision trước khi coi yêu cầu đã triển khai.
+## Truy vết chức năng đã gộp
+
+| UC hiện hành | Requirement | Stories liên quan | Primary UC owner | Owner thực thi hỗ trợ |
+|---|---|---|---|---|
+| 14 View Settings / 15 Edit Setting | FR-033, FR-034, FR-038, FR-039 | US-SET-001, US-AIC-003, US-OPS-001 | U03 | U06 quota; U03 backup/activity retention settings |
+| 14 View Settings / 15 Edit Setting (API chung) | FR-012, FR-021, FR-037 | US-AIG-003 | U03 | U06 kết nối và credentials được bảo vệ |
+| 66 View Admin Dashboard | FR-024, FR-038 | US-RPT-002, US-OPS-001 | U15 | U03 backup metadata |
+| 42 View Student Submissions | FR-008, FR-019, FR-039 | US-RPT-001, US-INT-001 | U09 | U08 bài nộp và hoạt động; U12 bài nhóm |
+
+Story owner không buộc bằng primary UC owner: US-OPS-001 thuộc U03, US-AIC-003 thuộc U06, US-RPT-001 và US-INT-001 thuộc U09. Đây là truy vết chéo, không tạo primary owner thứ hai cho UC.

@@ -1,69 +1,33 @@
-# U05 Content, Material & RAG - Frontend Components
+# U05 Reference Content & Announcements — frontend-components
 
-**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Màn hình theo screen flow
+**Primary UC:** 62, 63, 60, 61, 64, 58, 59. **Primary stories:** US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. **Requirements:** FR-004/005/011/023.
 
-| Màn | Component | UC | Role | Mở từ |
-|---|---|---|---|---|
-| Material List | `MaterialListPage` | 54, 55 | Subject Manager | Manager Dashboard |
-| Material Detail | `MaterialDetailPage` | 34, 55 | Subject Manager (học liệu của môn), Teacher hoặc Subject Manager được giao dạy (học liệu của lớp) | Material List, tab Materials của Teacher Class Detail |
-| Tab Materials | `MaterialsTab` (gắn vào `TeacherClassPage` của U04) | 33, 34 | Teacher, Subject Manager được giao dạy | Teacher Class Detail |
-| Learning Material | `LearningMaterialPage` | 15 | Student | Student Class Detail |
-| Class Announcements | `ClassAnnouncementsPage` | 30, 36 | Student, Teacher, Subject Manager | Class Dashboard; Student Class Detail (lọc sẵn lớp) |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u05-content-material-rag` không quyết định chức năng hiện hành.
 
-## 2. Cây component
+## UI entry và API đề xuất
 
-```
-app/manager/materials/                           MaterialListPage        màn Material List
-  SubjectPicker                                  chọn môn mình quản lý
-  ModuleList (chế độ môn)                        thêm, đổi tên, lên/xuống, lưu trữ module; học liệu của môn
-app/manager/materials/[lessonId]/                MaterialDetailPage      màn Material Detail, học liệu của môn
-app/classes/[id]/teaching/  MaterialsTab         tab Materials, ModuleList chế độ lớp
-app/classes/[id]/teaching/materials/[lessonId]/  MaterialDetailPage      màn Material Detail, mở từ lớp
-app/classes/[id]/materials/[lessonId]/           LearningMaterialPage    màn Learning Material
-  LessonQuizList                                 chỗ gắn component của U11: quiz của học liệu, nút "Làm quiz"
-app/classes/announcements/                       ClassAnnouncementsPage  màn Class Announcements
-  ClassFilter                                    lọc theo lớp mình học hoặc dạy
-  AnnouncementFeed                               thông báo mới nhất trước, phân trang
-    AnnouncementCard                             lớp, tác giả, thời gian, nội dung; nút Sửa, Xóa cho giảng viên lớp
-  AnnouncementForm                               tạo (chọn lớp) hoặc sửa thông báo
-  DeleteAnnouncementDialog                       xác nhận xóa
-shared/content/
-  ModuleList                                     danh sách module của môn (chế độ môn hoặc chế độ lớp)
-    ModuleItem                                   tiêu đề module, nút "Tải tệp", "Gắn link video", danh sách lesson
-      LessonRow                                  tên, nhãn "Của môn"/"Của lớp", ScanStatusBadge, lên/xuống; bấm mở Material Detail
-  ScanStatusBadge                                Chờ trích chữ / Đang trích chữ / Sẵn sàng tóm tắt (EXTRACTED) / Đang tóm tắt / Đã lập chỉ mục / Không có chữ / Không có phụ đề / Hệ thống đang bận, sẽ tự thử lại / Quét lỗi
-  UploadLearningMaterialsDialog                  form thêm học liệu, mở từ nút của một module
-    MaterialFileInput                            FileUploader (U03, purpose MATERIAL), nhiều tệp
-    YoutubeUrlInput                              ô URL một video
-  MaterialViewer                                 PDF xem trực tiếp và nút Tải (FileView), iframe youtube-nocookie (YoutubeView)
-  SummaryAction                                  nút Tóm tắt tài liệu/trạng thái
-  SummaryBlock                                   "Tóm tắt do AI tạo"
-  MaterialEditForm                               sửa thông tin học liệu (tên), không đổi tệp hay link
-  DeleteMaterialDialog                           xác nhận xóa (lưu trữ)
-```
+- GET/POST/PATCH /api/v1/subjects/{id}/materials; class equivalents; /api/v1/classes/{id}/announcements.
 
-Route theo `RoleGuard` của U01: `/manager/*` cho Subject Manager; `/classes/*` cho Student, Teacher, Subject Manager. Backend vẫn kiểm quan hệ thật (Chủ nhiệm môn, giảng viên chính, ghi danh).
+## Component/state contract
 
-## 3. Component và API
+- List/Detail/Editor phân theo quyền và entry UC hiện hành; query state loading/ready/empty/unavailable/error tách biệt.
+- Form state draft/dirty/saving/saved/conflict/invalid; save gửi expectedVersion và requestRef khi có idempotent command; lỗi không xóa draft.
+- State-changing requests không chỉ dựa ẩn nút; server authorize, version/policy errors cần refresh lại context trước retry.
+- UI không phơi bày raw keys, hidden Quiz answers, unpublished grades hoặc dữ liệu ngoài scope.
 
-| Component | Hành vi | API |
-|---|---|---|
-| `MaterialListPage`, `ModuleList` (chế độ môn) | Chọn môn; thêm, đổi tên, đổi thứ tự, lưu trữ module; xem học liệu của môn kèm trạng thái quét; lọc `ACTIVE`/`ARCHIVED` (UC 54, 55) | `GET /api/v1/subjects/{subjectId}/modules`, `POST /api/v1/subjects/{subjectId}/modules`, `PATCH /api/v1/modules/{id}` |
-| `MaterialsTab`, `ModuleList` (chế độ lớp) | Module chỉ đọc; học liệu của môn chỉ đọc, học liệu của lớp quản lý được (UC 33) | `GET /api/v1/classes/{classId}/modules` |
-| `LessonRow` | Đổi thứ tự theo quyền; bấm mở Material Detail | `PATCH /api/v1/lessons/{id}` |
-| `UploadLearningMaterialsDialog` | Tải nhiều tệp hoặc một link vào module; upload/trích chữ không AI và không kiểm credit. Ghi chú: bấm Tóm tắt tài liệu trên màn xem khi cần | POST lesson của môn/lớp; U03 upload purpose MATERIAL |
-| `MaterialDetailPage` | Thông tin, nguồn, người tải, trạng thái; SummaryAction/SummaryBlock theo quyền xem (POST summary, GET summary-credit/scan); xem và tải tệp; người quản lý học liệu có Sửa (đổi thông tin) và Xóa, không có Quét lại hay thay tài liệu; Teacher xem học liệu của môn chỉ đọc nội dung nhưng được bấm Tóm tắt tài liệu (UC 34, 55) | `GET /api/v1/lessons/{id}?classId=`, `POST /api/v1/lessons/{id}/download?classId=` |
-| `MaterialEditForm`, `DeleteMaterialDialog` | Sửa tên, không đổi tệp hay link; xóa là lưu trữ, cảnh báo quiz của học liệu sẽ không còn hiện cho người học | `PATCH /api/v1/lessons/{id}` |
-| `ScanStatusBadge` | Poll 3 giây khi `PENDING`/`SCANNING`/`BUSY` (`usePollStatus` của U03); không có nút Quét lại, `BUSY` báo hệ thống sẽ tự thử lại | `GET /api/v1/lessons/{id}/scan` |
-| `LearningMaterialPage` | Student xem/tải học liệu; SummaryAction và SummaryBlock: nút Tóm tắt tài liệu, trạng thái và kết quả dùng chung; LessonQuizList của U11 | GET lesson/scan/summary-credit; POST summary với classId, Idempotency-Key; quiz qua U11 |
-| `ClassAnnouncementsPage`, `ClassFilter`, `AnnouncementFeed` | Feed thông báo của các lớp `OPEN` mình học hoặc dạy, lọc theo lớp, mới nhất trước (UC 30) | `GET /api/v1/me/announcements?classId=` |
-| `AnnouncementForm` | Giảng viên tạo thông báo (chọn lớp mình dạy) hoặc sửa kèm `version`; `409` yêu cầu tải lại (UC 36) | `POST /api/v1/classes/{classId}/announcements`, `PATCH /api/v1/announcements/{id}` |
-| `DeleteAnnouncementDialog` | Xác nhận rồi xóa mềm kèm `version`; bỏ khỏi feed sau khi thành công (UC 36) | `DELETE /api/v1/announcements/{id}` |
+## Hành vi riêng unit
 
-Danh sách lớp để chọn khi tạo thông báo lấy từ API lớp của U04 (`GET /api/v1/classes?teacher=me`, lớp `OPEN`). Không có bình luận dưới thông báo (bỏ 2026-10-09). Tạo mới gửi thông báo trong app một lần; sửa hoặc xóa không gửi lại.
+- MVP reference files môn/lớp/bài riêng tư qua U03, không bắt buộc Lesson/module/indexing/RAG để tạo/làm Assignment/Quiz.
+- Reference permission R2 môn, R3/R4 lớp, R5 Student. Archived source không cho truy cập mới nhưng preserve historical refs.
+- Announcement chỉ teacher lớp create/update/soft-delete; mới phát class.announcement-posted sau commit với important/sendEmail flag. Sửa/xóa không phát lại creation notification.
+- YouTube educational video links are MVP reference materials (store/update validated URL and title; authorized open/watch). Full Lesson processing, captions/transcription, summary/embedding/advanced RAG remain EXTENSION US-CNT-005; adding files or links never starts AI processing automatically.
+- Agent chỉ đọc authorized reference tối thiểu qua domain port; không coi prompt là instruction được phép override scope.
 
-## SummaryAction trên View Material
+## UI acceptance
 
-Student, Teacher và Subject Manager có quyền xem đều có nút. EXTRACTED chưa yêu cầu: hiển thị mức giữ và số dư chính mình, bấm gửi Idempotency-Key; thiếu credit hiện mua thêm rồi bấm lại, không chặn xem/tải. Trích chữ/PENDING/SCANNING/BUSY: khóa nút và poll; đã có summary: hiện kết quả dùng chung, không tạo lại. NO_TEXT/NO_CAPTION/FAILED: báo trạng thái, không có retry thủ công. Teacher xem học liệu môn vẫn dùng nút dù không được sửa. Server kiểm quyền mọi lần; 404 ngoài scope, 403 Admin, 409 chưa sẵn sàng, lỗi credit/AI guard trước nhận giữ EXTRACTED. Không hiện chi phí hay số dư payer cho người xem khác.
+- Upload/reference works khi AI/indexer absent; unauthorized link/MCP denied.
+- Important creation email event once; edit không resend; archived reference history preserved; no summary charge/job on upload.
+
+Current material acceptance: authorized create/update/remove/list/open of FILE and YOUTUBE_LINK (UC62/60/61/58/59); keep kind/title/fileRef-or-videoUrl/scope/version and historical references. Validate URL/type/size, deny unauthorized ALAP access, handle unavailable videos and preserve no-automatic-summary behavior. No video upload/download, captions or embedding are required.

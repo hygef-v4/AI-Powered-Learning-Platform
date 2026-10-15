@@ -1,0 +1,257 @@
+# AI-DLC Execution Plan
+
+> Baseline hiện hành 2026-10-09: 73 UC, 51 story, 15 unit theo unit-of-work-story-map.md; U10 đã bỏ, Settings U03, copy/bài môn U08. Các câu trả lời/checklist phê duyệt cũ phía dưới giữ lịch sử, không xác nhận revision đã triển khai.
+
+## 0. Baseline hiện hành — 2026-10-09
+
+73 UC/51 story/15 unit theo catalog local và Page-2 G21_Diagrams.drawio. Admin chỉ User/quản trị, không ví/AI/phân công môn/lớp. U03 Settings 70–71; U02 Audit 73. U10 bỏ; bài môn/copy/version U08; chỉ ngân hàng môn, quiz riêng gắn học liệu, không comments/mã mời. Dùng unit-of-work*.md hiện hành cho wave/ownership; approvals/checklists cũ giữ lịch sử, không xác nhận implementation revision.
+
+## 1. Lịch sử planning — Detailed Analysis Summary
+
+### Project and scope
+
+- **Project type**: Greenfield.
+- **Primary goal**: Xây dựng MVP web AI-Powered Learning Platform cho một tổ chức, đồng thời duy trì đầy đủ artifact/checkpoint AI-DLC.
+- **Business scope**: Bốn vai trò (không có Head of Department), quản lý môn/lớp/nhóm/nội dung, bài nhóm gồm phần cá nhân và tài liệu hệ thống tổng hợp, RAG theo bài giảng từ tài liệu/YouTube, tạo bài bằng AI, rubric/câu hỏi có version, template đề cấp môn, copy assignment/rubric giữa lớp, simulation exam, bốn loại bài đánh giá, học tập/tiến độ, chấm điểm, giám sát AI, thanh toán, thông báo và audit.
+- **Technical direction already fixed**: Next.js/TypeScript frontend, Java/Spring Boot backend, local container; provider/database/cloud cụ thể chưa được chọn.
+- **Brownfield transformation**: N/A; workspace không có application code nên Reverse Engineering và package-change analysis được bỏ qua.
+
+### Change Impact Assessment
+
+| Khu vực | Tác động | Nhận định |
+|---|---|---|
+| User-facing | Có - toàn hệ thống | 49 story MVP triển khai trên bốn persona |
+| Structural | Có - lớn | Cần xác định component/service boundary, async work và external adapters |
+| Data model | Có - lớn | User/role/scope môn, môn/lớp/nhóm/leader, source/transcript RAG, question/rubric/assessment version, template/copy lineage, simulation policy/attempt snapshot, group part/composite version, submission, grade, payment, notification, audit |
+| API/contracts | Có - lớn | Web API, upload/YouTube ingestion/status, version publication/copy, group aggregation, AI task, payment webhook và provider adapters |
+| NFR | Có - lớn | Security/Resiliency Baseline, p95, async processing, accessibility, observability, backup và multi-zone production |
+| Infrastructure | Có | Local container và thiết kế production single-region/multi-zone |
+| Operations | Có giới hạn | CI/CD, rollback, health, logs/metrics/traces, incident/DR artifacts; Operations stage vẫn là placeholder |
+
+### Risk Assessment
+
+- **Risk level**: High.
+- **Business criticality**: Medium theo Requirements; dùng thử với người thật và có phương án xử lý thủ công khi gián đoạn.
+- **Nguồn rủi ro chính**: Authorization bốn vai trò có scope môn/lớp, dữ liệu/điểm người học, file/RAG, AI không quyết định điểm cuối, webhook payment idempotent và dependency failure.
+- **Rollback complexity**: Moderate cho application image; Difficult nếu schema migration phá vỡ, vì vậy migration phải backward-compatible hoặc có recovery plan riêng.
+- **Testing complexity**: Complex; cần unit, integration, contract/webhook, system và e2e trong môi trường container.
+- **Giảm thiểu**: Phân rã units trước khi code, design gate theo unit, TDD trong Code Generation, system test toàn stack và kiểm tra Security/Resiliency ở từng stage.
+
+### Change request impact - 2026-09-22
+
+> Bảng dưới đây là lịch sử của sơ đồ 8 unit trước khi tách thành 16 unit. Tên/mã unit hiện hành và dependency dùng `unit-of-work.md` cùng `unit-of-work-dependency.md`; không dùng bảng này để phân công triển khai.
+
+| Unit hiện tại | Mức tác động | Nội dung cần đồng bộ |
+|---|---|---|
+| U01 Platform Foundation and Identity | Không đổi chức năng | Giữ nguyên checkpoint Functional Design; chỉ tiếp tục sau khi Inception change request hoàn tất |
+| U02 Academic Structure | Nhỏ | Kiểm tra authorization lớp nguồn/lớp đích và liên kết bài giảng |
+| U03 Content and Question Bank | Lớn | YouTube/caption/transcript ingestion, question/rubric version và template lineage |
+| U04 Assessment Authoring and Publication | Lớn | Template copy, cross-class copy, simulation policy và attempt snapshot |
+| U05 Submission and Group Work | Lớn | Thay leader-upload DOCX bằng composite generation/version/finalization |
+| U06 AI and Grading | Vừa | AI chỉ đề xuất phần cá nhân; manual shared grade, consistency rubric và manual final score |
+| U07 Reporting and Audit | Nhỏ | Audit version/copy/grade override và báo cáo simulation |
+| U08 Payment and Entitlement | Không đổi | Không có tác động trực tiếp |
+
+## 2. Workflow Visualization
+
+```mermaid
+flowchart TD
+    Start(["User Request"])
+    subgraph INCEPTION["INCEPTION PHASE"]
+        WD["Workspace Detection<br/><b>COMPLETED</b>"]
+        RE["Reverse Engineering<br/><b>SKIP</b>"]
+        RA["Requirements Analysis<br/><b>COMPLETED</b>"]
+        US["User Stories<br/><b>APPROVED</b>"]
+        WP["Workflow Planning<br/><b>REVALIDATED - REVIEW</b>"]
+        AD["Application Design<br/><b>EXECUTE</b>"]
+        UG["Units Generation<br/><b>EXECUTE</b>"]
+    end
+    subgraph CONSTRUCTION["CONSTRUCTION PHASE"]
+        FD["Functional Design<br/><b>EXECUTE PER UNIT</b>"]
+        NFRA["NFR Requirements<br/><b>EXECUTE PER UNIT</b>"]
+        NFRD["NFR Design<br/><b>EXECUTE PER UNIT</b>"]
+        ID["Infrastructure Design<br/><b>EXECUTE PER UNIT</b>"]
+        CG["Code Generation<br/><b>EXECUTE PER UNIT</b>"]
+        BT["Build and Test<br/><b>EXECUTE</b>"]
+    end
+    subgraph OPERATIONS["OPERATIONS PHASE"]
+        OPS["Operations<br/><b>PLACEHOLDER</b>"]
+    end
+    Start --> WD
+    WD --> RE
+    RE --> RA
+    RA --> US
+    US --> WP
+    WP --> AD
+    AD --> UG
+    UG --> FD
+    FD --> NFRA
+    NFRA --> NFRD
+    NFRD --> ID
+    ID --> CG
+    CG --> BT
+    BT -.-> OPS
+    BT --> End(["Workflow Complete"])
+
+    style WD fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style RE fill:#BDBDBD,stroke:#424242,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style RA fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style US fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style WP fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style AD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style UG fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style FD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style NFRA fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style NFRD fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style ID fill:#FFA726,stroke:#E65100,stroke-width:3px,stroke-dasharray:5 5,color:#000
+    style CG fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style BT fill:#4CAF50,stroke:#1B5E20,stroke-width:3px,color:#fff
+    style OPS fill:#BDBDBD,stroke:#424242,stroke-width:2px,stroke-dasharray:5 5,color:#000
+    style INCEPTION fill:#BBDEFB,stroke:#1565C0,stroke-width:3px,color:#000
+    style CONSTRUCTION fill:#C8E6C9,stroke:#2E7D32,stroke-width:3px,color:#000
+    style OPERATIONS fill:#FFF59D,stroke:#F57F17,stroke-width:3px,color:#000
+    style Start fill:#CE93D8,stroke:#6A1B9A,stroke-width:3px,color:#000
+    style End fill:#CE93D8,stroke:#6A1B9A,stroke-width:3px,color:#000
+    linkStyle default stroke:#333,stroke-width:2px
+```
+
+### Text alternative
+
+1. Workspace Detection - completed.
+2. Reverse Engineering - skipped because the workspace is greenfield.
+3. Requirements Analysis - completed.
+4. User Stories - approved.
+5. Workflow Planning - revalidated and awaiting approval.
+6. Application Design - synchronize affected artifacts after approval.
+7. Units Generation - synchronize unit boundaries/story maps after Application Design approval.
+8. For every generated unit: Functional Design, NFR Requirements, NFR Design, Infrastructure Design and Code Generation - execute in that order.
+9. After all units: Build and Test - execute.
+10. Operations - placeholder only.
+
+## 3. Stage Decisions
+
+### INCEPTION PHASE
+
+- [x] **Workspace Detection - COMPLETED**: Greenfield workspace confirmed.
+- [x] **Reverse Engineering - SKIPPED**: Không có application code hoặc kiến trúc hiện hữu để reverse engineer.
+- [x] **Requirements Analysis - COMPLETED**: Comprehensive requirements đã được duyệt và bổ sung vai trò Chủ nhiệm môn.
+- [x] **User Stories - APPROVED**: Bốn persona; 49 story và 77 use case tại mốc duyệt ban đầu. Danh mục hiện hành có 40 UC sau các lần gộp và tách (77 → 69 → 64 → 40 → 39 → 40) và bỏ mã lịch sử.
+- [x] **Workflow Planning - COMPLETED**: Execution plan đã được revalidate sau User Stories và Application Design.
+- [x] **Application Design - APPROVED/UPDATED**: Bộ thiết kế hiện hành và 16-unit decomposition là nguồn cho Construction.
+- [x] **Units Generation - COMPLETED FOR 16 UNITS**: Unit definitions, dependency graph và story map 16 unit được chọn theo yêu cầu bắt đầu Construction.
+
+### CONSTRUCTION PHASE - per-unit loop
+
+- [x] **Functional Design - EXECUTE PER UNIT**: Cần thiết cho authorization scope, subject/class inheritance, assessment lifecycle, grading, payment entitlement và audit rules.
+- [x] **NFR Requirements - EXECUTE PER UNIT**: Cần tinh chỉnh tech stack, performance, security, accessibility, testing và provider constraints theo từng unit.
+- [x] **NFR Design - EXECUTE PER UNIT**: Cần thiết kế timeout/retry/circuit breaker, async jobs, observability, security controls và resiliency patterns.
+- [x] **Infrastructure Design - EXECUTE PER UNIT**: Cần ánh xạ local containers và production single-region/multi-zone, storage, database, networking, secret, backup và scaling.
+- [ ] **Code Generation - EXECUTE PER UNIT (ALWAYS)**: Mỗi unit phải có code-generation plan được duyệt, TDD, implementation và verification riêng.
+
+### CONSTRUCTION PHASE - after all units
+
+- [ ] **Build and Test - EXECUTE (ALWAYS)**: Tổng hợp build instructions và chạy unit, integration, contract/webhook, system và e2e tests trên full stack container.
+
+### OPERATIONS PHASE
+
+- [ ] **Operations - PLACEHOLDER**: Không thực thi automation ngoài phạm vi hiện tại; các yêu cầu sẵn sàng vận hành vẫn được thiết kế và kiểm thử trong Construction.
+
+## 4. Sequencing and Coordination
+
+### Nguyên tắc phân rã
+
+Units Generation sẽ chốt tên và ranh giới units. Không khóa sớm cấu trúc package hoặc provider trong Workflow Planning. Phân rã phải tạo các lát cắt có thể thiết kế, code và test độc lập, đồng thời bao phủ:
+
+- Identity/authorization và academic scope.
+- Subject/class content và private file/RAG ingestion.
+- Group/leader management, individual work packages, composite generation/version và teacher finalization.
+- Learning access and entitlement; lesson completion/position progress is out of scope.
+- AI authoring và assessment delivery.
+- Submission, grading và gradebook.
+- Payment/entitlement.
+- Notification và audit.
+- Platform/infrastructure concerns dùng chung.
+
+### Trình tự phụ thuộc sơ bộ
+
+1. Dùng 16 boundary, dependency graph và story map hiện hành.
+2. Hoàn thiện từng unit theo vòng Functional Design → NFR Requirements → NFR Design → Infrastructure Design → Code Generation.
+3. Mở unit khi các dependency trực tiếp sẵn sàng; wave là checkpoint, không phải barrier đồng bộ.
+4. External adapter phải có sandbox/mock contract trước khi hành trình phụ thuộc được coi là hoàn tất.
+5. Sau tất cả units, thực hiện Build and Test toàn hệ thống.
+
+### Coordination gates
+
+- API/schema changes phải có contract và migration compatibility trước khi unit phụ thuộc triển khai.
+- Subject-level authorization phải được dùng nhất quán bởi content, AI và assessment units.
+- Payment entitlement phải idempotent trước khi nối vào access control.
+- Shared audit/event conventions phải ổn định trước khi các unit nghiệp vụ hoàn tất.
+- Mỗi unit chỉ được chuyển tiếp sau approval checkpoint bắt buộc của stage hiện tại.
+
+## 5. Testing Strategy
+
+- **Unit tests**: Business rules, authorization decisions, state transitions, grading calculations và idempotency.
+- **Integration tests**: Database, object storage abstraction, async jobs, provider adapters và security filters.
+- **Contract tests**: AI/email/storage adapter contracts và payment webhook signature/idempotency.
+- **System tests**: Next.js + Spring Boot + database + mock/sandbox AI/payment chạy trong container.
+- **End-to-end tests**: Question version không đổi attempt đang làm; Chủ nhiệm môn phát hành template và giảng viên copy; copy assignment/rubric đúng phạm vi; simulation exam thực thi lượt/chính sách điểm; YouTube chỉ lấy caption có sẵn cho RAG; thành viên nộp phần cá nhân, hệ thống tổng hợp, giảng viên chốt/chấm tài liệu chung và quyết định điểm cuối; payment cộng credit AI sau xác minh; thông báo/hỏi đáp lớp, dashboard cá nhân, xuất bảng điểm và authorization misuse cases.
+- **Non-functional tests**: p95 API target, upload limits, accessibility core flows, failure/degraded behavior, backup/restore instructions và security checks.
+
+## 6. Success Criteria and Quality Gates
+
+### Primary success
+
+MVP thực hiện được các hành trình trong Requirements thuộc phạm vi triển khai và 49 story trong catalog hiện hành với đúng bốn vai trò, chạy local bằng container và có bộ test tự động tái tạo được.
+
+### Key deliverables
+
+- Application Design và component diagram.
+- Unit decomposition, dependency map và story mapping.
+- Per-unit functional/NFR/infrastructure design artifacts.
+- Next.js frontend, Spring Boot backend, persistence, external adapters và container setup tại workspace root.
+- Build/test instructions và kết quả verification trong `aidlc-docs/construction/build-and-test/`.
+- State/audit/checkpoint AI-DLC luôn được cập nhật.
+
+### Quality gates
+
+- Không stage nào vượt approval gate bắt buộc.
+- Không plan step nào hoàn tất mà checkbox chưa được cập nhật cùng lượt.
+- Không code trước code-generation plan approval của unit tương ứng.
+- Tất cả FR và stories có implementation/test traceability.
+- Không có blocking Security hoặc Resiliency finding ở stage completion.
+- Không secret trong repository; dependency/image được pin; production error không lộ nội bộ.
+- Payment webhook signature/idempotency, object/function authorization và AI scope isolation phải có negative tests.
+- System/e2e test cốt lõi phải chạy trên môi trường container trước khi Build and Test được duyệt.
+
+## 7. Estimated Effort Boundary
+
+- **Stage types còn phải thực thi**: 8 loại - Application Design, Units Generation, năm stage per-unit và Build and Test.
+- **Số vòng per-unit**: 16 unit theo boundary hiện hành; tối đa năm unit triển khai đồng thời theo dependency map.
+- **Thời lượng lịch**: Chưa cam kết vì chưa có quy mô đội ngũ, năng lực triển khai hoặc provider choices; kế hoạch đo theo approval gates và deliverable thay vì ngày giả định.
+
+## 8. Extension Compliance tại Workflow Planning
+
+### Security Baseline
+
+| Nhóm rule | Trạng thái | Xử lý trong kế hoạch |
+|---|---|---|
+| SECURITY-01 đến SECURITY-05 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Data protection, logging, headers, validation được đưa vào NFR/design/code/test gates |
+| SECURITY-06 đến SECURITY-09 | Đã rút gọn 2026-09-24, xem requirements mục 12 | IAM/network least privilege, authorization và hardening bắt buộc trong design/infrastructure/code |
+| SECURITY-10 đến SECURITY-13 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Dependency/artifact integrity, abuse controls, auth/session và payment integrity có downstream gates |
+| SECURITY-14 đến SECURITY-15 | Đã rút gọn 2026-09-24, xem requirements mục 12 | Alerting/audit và fail-safe behavior được giữ xuyên design, code và test |
+
+Không có blocking security finding tại Workflow Planning.
+
+### Resiliency Baseline
+
+| Nhóm rule | Trạng thái | Xử lý trong kế hoạch |
+|---|---|---|
+| RESILIENCY-01 đến RESILIENCY-04 | Đã rút gọn 2026-09-24, xem requirements mục 13 | Impact, RTO/RPO, change, CI/CD/rollback được chuyển rõ tới Application/NFR/Infrastructure Design |
+| RESILIENCY-05 đến RESILIENCY-10 | Đã rút gọn 2026-09-24, xem requirements mục 13 | Observability, health, alarms, multi-zone, capacity và dependency isolation có stage thực thi bắt buộc |
+| RESILIENCY-11 đến RESILIENCY-15 | Đã rút gọn 2026-09-24, xem requirements mục 13 | DR, backup, recovery test gate và incident/COE được giữ cho design/build-test; RESILIENCY-14 phải hỏi tại NFR Design |
+
+Không có blocking resiliency finding tại Workflow Planning. Property-Based Testing đã bị tắt và được ghi N/A.
+
+## 9. User Control
+
+Người dùng có thể yêu cầu thêm, bỏ hoặc thay đổi độ sâu của bất kỳ conditional stage nào trước khi duyệt kế hoạch. Nếu thay đổi làm ảnh hưởng requirements hoặc stories, artifact nguồn phải được cập nhật và duyệt lại trước khi tiếp tục.

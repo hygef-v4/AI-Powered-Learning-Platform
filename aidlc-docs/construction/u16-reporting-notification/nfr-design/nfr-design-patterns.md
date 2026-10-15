@@ -1,30 +1,34 @@
-# U16 Reporting & Notification - NFR Design Patterns
+# U16 Reporting & Notification — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 12, 58 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); luồng phụ: phân bố điểm của UC 22, tiến độ nộp của UC 37, phần xuất tệp của UC 40; primary stories: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Fan-out thông báo theo lô
-- `NotificationFanout.create(event, recipients[])`: `INSERT ... SELECT unnest(...) ON CONFLICT DO NOTHING` theo lô `U16_FANOUT_BATCH_SIZE` dòng (kèm `email_status`); đọc `email_preferences` một lần cho cả lô (NFR-U16-02); sau commit gửi việc `EMAIL_SEND` cho các dòng `QUEUED`.
-- Bài/quiz của môn: lấy danh sách lớp `OPEN` của môn một lần qua U04, gộp người học `ACTIVE` từng lớp, khử trùng `accountId` trước khi chèn (BR-U16-09, NFR-U16-06).
-- `assignment.opened` có `type = MULTIPLE_CHOICE_QUIZ` → `QUIZ_PUBLISHED`, `email_status = NONE`.
-- Sau commit: phát `notification.created {recipientIds}` lên fanout `platform.realtime` (dùng chung với U14) → `SseHub` đẩy tới kênh người dùng.
+**Primary UC:** 65, 66. **Primary stories:** US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. **Requirements:** FR-011/019/023/024/038.
 
-## P2 - Email có trần và ưu tiên
-- Việc `EMAIL_SEND` đi trên `jobs.email` (priority queue: nhắc hạn > bài mới mở > điểm > ghi danh); consumer prefetch 1, Guava `RateLimiter` 1/s (NFR-U16-03, 10).
-- Mỗi email: `INCR email:daily-count:{yyyyMMdd}`; vượt 300 → `DECR`, `email_status = DEFERRED`, ack việc.
-- `EmailDeferredScanner` lúc 00:05: `UPDATE notifications SET email_status='QUEUED' WHERE email_status='DEFERRED' RETURNING id` theo ưu tiên, thời điểm tạo, rồi gửi lại việc.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u16-reporting-notification` không quyết định chức năng hiện hành.
 
-## P3 - Gửi idempotent
-- Handler: `UPDATE ... WHERE id=? AND email_status IN ('QUEUED','DEFERRED')` khóa dòng → gửi → `SENT`; lỗi tạm → ném để U03 retry; lỗi vĩnh viễn (địa chỉ sai) → `FAILED` + `DECR` bộ đếm. Việc trùng thấy `SENT` thì bỏ qua.
-- Nhắc hạn đã quá hạn nộp lúc gửi → `SKIPPED` (BR-U16-13).
+## Patterns áp dụng
 
-## P4 - Nhắc hạn bằng scanner
-- `DeadlineReminderScanner` mỗi phút theo điều kiện ở `domain-entities.md` §5 (bỏ quiz, chỉ bài có `closes_at`); tạo thông báo và ghi `reminder_sent_at` trong một transaction, khóa dòng bài bằng `FOR UPDATE SKIP LOCKED` nên hai worker không nhắc trùng (NFR-U16-11).
-- Bài của môn: người chưa nộp tính trên mọi lớp `OPEN` của môn, chèn theo lô như P1.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Tiến độ nộp một query
-- Người học `ACTIVE` của lớp (U04) LEFT JOIN trạng thái lượt (U11) hoặc bản nộp nhóm (U14) theo bài; bài của môn lọc theo `classId` được truyền và đã kiểm R3/R4.
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Admin Dashboard, phân bố điểm và xuất bảng điểm
-- Admin Dashboard chỉ cho `ADMIN`, đếm bằng truy vấn `COUNT ... GROUP BY` qua port U01/U04, không trả hàng dữ liệu cá nhân, không cache.
-- Phân bố điểm lấy `accountId` từ phiên đăng nhập, kiểm ghi danh và cờ lớp, đọc điểm `PUBLISHED` của lớp qua U15 (bài của môn theo lớp), áp ngưỡng BR-U16-42 trước khi trả dữ liệu; loại quiz và `PRACTICE`.
-- Export kiểm R3/R4 của lớp và bài trước query; đọc dữ liệu từ `GradebookQueryPort` và stream CSV/XLSX trực tiếp. Chuỗi CSV bắt đầu bằng `=`, `+`, `-`, `@` được escape; không log nội dung tệp.
+## Unit-specific patterns
+
+- UC66 Admin summaries + BackupStatusPort U03; metadata only latest-good/history/time/size/safeError, no raw archive/keys/student content. Port down unavailable/lastKnown timestamp, not SUCCESS.
+- Notifications from outbox after commit, dedup eventId/recipientId/channel/type; delivery statuses PENDING/SENT/FAILED/SKIPPED/DEFERRED with bounded retries, no rollback domain.
+- Emails enrolled/assignment opened/grade published/deadline reminder, important announcement only new event selected by assigned teacher; learning preferences respected. Backup failure Admin policy separate; OTP remains U01 shared MailPort.
+- Check current recipient enrollment/role at handling; links require login/current permission, no grades/content/backups in email. SENT means SMTP accepted not inbox.
+- One reminder 24h before deadline for unsubmitted, cancelled/retired/sent cases excluded; retry past deadline SKIPPED. Email throttling/provider quota reserves room for OTP, values configurable not invented provider guarantee.
+- Admin notification popup can show backup alerts now; preferences learning types Student, operational type for Admin handled separately. Important edits no resend.
+- Gradebook export Teacher R3/R4 via U15, official Assignment-only, no Quiz/Practice, no overall weighted total; anonymous distribution opt-in manager via U04, privacy sample threshold baseline.
+
+## Validation matrix
+
+- Important create vs edit; Admin backup receives; no raw grade/archive/key; current enrollment filters recipients.
+- Duplicate outbox/provider timeout/backoff/quota no endless retry; SENT only accepted; backup status unavailable distinct.
+- Export official-only/authorized teacher; reminder once and not after deadline; Admin count-only + backup metadata.

@@ -3819,3 +3819,277 @@ kiểm tra xem bản report3 này đã đúng chưa, được bao nhiêu điểm
 **Context**: Supplementary documentation review; no files other than this log changed.
 
 ---
+## SRS section 5 review — Screen Flow versus descriptions
+**Timestamp**: 2026-10-09T07:44:16Z
+**User Input**: "[https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.91vaopdapgz](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.91vaopdapgz)
+giúp tôi review lại doc check phần 5. System Functionalities phần diagram cập nhật r mà phần description bên dưới chưa cập nhật"
+**AI Response**: Read current SRS Office DOCX via Drive (modified 2026-10-09T07:32:04.569Z) and compare section 5.1.b with the user's attached Screen Flow, section III's 51-screen numbering and AI-DLC commit a4fce63. Found obsolete 55-row inventory, retired templates/class bank/comments, wrong Admin academic access, old split assignment lists/payment-result/settings entries and missing new dashboard/quiz/popup screens. Prepared a review with a complete proposed 51-row English replacement and scoped corrections for external API/background jobs and related III descriptions. Disclosed one residual internal component-methods contradiction without changing unrelated design.
+**Context**: Review only. Attached document content treated as source data, not instructions. No online document write, code generation, commit or push. Security authorization assessed at document level; runtime/deployment checks N/A; disabled Property-Based Testing skipped.
+
+---
+
+## SRS section 5 correction — applied to Drive
+**Timestamp**: 2026-10-09T07:54:21Z
+**User Input**: "ok giúp tôi ủa lại cả phần 5 đấy"
+**AI Response**: Corrected the existing SRS Office DOCX in place via Google Drive files.update, preserving file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n. Rebuilt section 5.1.b as 51 screens/popups aligned with the supplied diagram/current AI-DLC; synchronized eight external API descriptions and 17 background jobs, including JOB-17 explicit viewer-requested summary/indexing, requester-funded one-HOLD semantics and two-stage extraction/AI lifecycle. Section 5.1.a diagram and other sections were preserved.
+**Validation**: Source modification time unchanged immediately before write. Local package integrity passed; only word/document.xml changed, only the three target tables differ structurally, all 86 media parts and other package parts are identical. Packaged render failed because LibreOffice was unavailable; Microsoft Word hidden export succeeded, all 11 section-preview pages were rendered and visually inspected. Drive update succeeded at 2026-10-09T07:54:03.873Z; fresh connector readback confirms screen #51, JOB-17 and no obsolete Screen List names. Existing sharing/parents/name/MIME retained.
+**Context**: User authorized online section edit; Google Drive and Documents workflows used for existing Office file, no native conversion. No application code edit, commit or push. Related section III review findings remain outside this requested edit. Temporary local files cleaned after successful readback.
+
+---
+
+## SRS III.7, III.8, IV and V synchronization — applied to Drive
+**Timestamp**: 2026-10-09T10:08:39Z
+**User Input**: "## 7. Background Job Inventory, 8. External API Inventory, IV, V giúp tôi check lại các phần trên trong doc và sửa lại cho đồng bộ doc aidlc, chỉ sửa nội dung template troc doc vẫn giữ nguyên"
+**AI Response**: Reviewed and updated only III.7 Background Job Inventory, III.8 External API Inventory, IV Non-Functional Requirements and V Requirement Appendix of the existing SRS Office DOCX, file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n. Aligned 17 jobs and eight external integrations with current AI-DLC: upload/caption extraction without AI or credit, explicit viewer summary action, requester-owned shared HOLD, actual-usage settlement, fenced recovery and fixed 24/25-hour deadlines. Added JOB-17 using the existing job-section pattern. Corrected Admin scope/no wallet/AI/code, Subject Question Bank only, assignment-owned non-versioned rubrics, subject shared schedules, Practice-only unscheduled Quiz, Settings/monthly credit, announcement without comments, grading correction/distribution rights, notification budgets/fanout, security/reliability/testing descriptions and applicable BR/MSG content.
+**Validation**: Before write, Drive modification time still matched 2026-10-09T07:54:03.873Z. Scoped OOXML checks confirm all body nodes before III.7 and the terminal section properties are unchanged; every package part except word/document.xml is byte-identical, including styles, headers/footers and all media. Existing table geometry/properties and 30 BR / 31 MSG identifiers retained. Hidden Microsoft Word export and visual inspection of all 26 scoped-preview pages passed. Drive update succeeded at 2026-10-09T10:08:25.181Z; fresh connector readback confirms JOB-17, no Admin wallet, no rubric versions, the 25-hour threshold and revised insufficient-credit message.
+**Context**: Content synchronization within the user-authorized sections; retained template, figures, sharing, file ID/name/type and unrelated sections. No application changes, new approvals, implementation/test completion claim, commit or push. Enabled security authorization/validation/privacy and bounded resiliency requirements retained at specification level; runtime/deployment checks N/A. Disabled Property-Based Testing skipped.
+
+---
+
+## SRS III screen coverage and descriptions — review
+**Timestamp**: 2026-10-09T10:16:28Z
+**User Input**: "# III. Functional Requirements\n\nsoát lại phần này xem đủ màn chưa với lại cái, description chuẩn chưa, hình như description sai sai"
+**AI Response**: Read the current SRS directly through Drive and reviewed III.1–III.6 screen descriptions, action lists and all 51 Field Description tables against the local Page-2 diagram, 73-UC catalog and current AI-DLC rules. Confirmed 51 continuous screen IDs, 69 figure captions and 51 field tables. Related-use-case labels cover 71/73 UC; logout UC03 and shared notification popup UC12 lack descriptions but need no additional standalone screen. Recorded detailed findings and a full 51-screen checklist in construction/plans/srs-section-iii-review-2026-10-09.md. Main mismatches include Settings units/credit reset, question types/options/rubric ownership, Quiz mode/lifecycle, automatic material indexing/manual rescan/source replacement, missing summary UI, subject Assignment List scope, review/copy/rubric rules, removed announcement comments, Teacher Evals separation, fixed AI price and incomplete supporting functions/role labels.
+**Validation**: Source-backed comparison of descriptions and field tables; diagram labels extracted from Page-2. No screenshot-content correctness claim based only on captions. Whitespace check passes; no runtime tests apply to review.
+**Context**: Review only; no online SRS write, figure change, application change, commit or push. Earlier III.7/III.8 synchronization retained. Enabled security scope/privacy/validation requirements and bounded resiliency reviewed at document level; implementation/deployment verification N/A, disabled Property-Based Testing skipped.
+
+---
+
+## SRS III concise English descriptions — applied to Drive
+**Timestamp**: 2026-10-09T10:24:54Z
+**User Input**: "viết description ngắn gọn, viết bằng tiếng anh, name field thì có thể màn tiếng việt vì màn hình là tiếng việt"
+**AI Response**: Rewrote all 51 screen descriptions in III.1–III.6 as short English prose and synchronized related action lists/field descriptions with the review and current AI-DLC. Retained Vietnamese field/button labels. Corrected Settings, bank types/version/rubric ownership, Practice-only Quiz, explicit requester-paid material summary, subject Assignment List/schedule, authoring review/copy, rubric checklist/locking, removed comments, group versus individual controls, assigned teaching/grading scope, dynamic AI quote, monthly credit and role-aware checkout. Added shell logout/notification coverage and supporting fields within existing screens.
+**Validation**: Fresh raw source baseline 2026-10-09T10:10:31.750Z, unchanged immediately before upload. Only III.1–III.6 body content changed; all outside nodes, drawing paragraphs and all non-document.xml package parts remained identical. Hidden Word export rendered a 24-page prose/table preview, all pages visually inspected and affected pages rechecked after final edits. Drive update succeeded at 2026-10-09T10:24:41.089Z; fresh readback confirmed 51 descriptions/51 screen IDs, new material/Quiz/Settings/subject-assignment rules and absence of five obsolete phrases.
+**Context**: Existing same-ID Office DOCX updated in place; template, captions, images, sharing/name/type and earlier III.7/III.8/IV/V updates retained. Screenshot contents not claimed corrected. No implementation changes, approvals, commit or push. Enabled security scope/input/privacy and bounded resiliency retained at specification level; runtime/deployment verification N/A, disabled Property-Based Testing skipped.
+
+---
+
+## 2026-10-09T10:15:07Z — Project Management Plan comparison
+
+**User request (raw)**: [https://docs.google.com/document/d/1tqp6bc0Xeqh5cwGrj8PzjAV4a--N_XU9/edit](https://docs.google.com/document/d/1tqp6bc0Xeqh5cwGrj8PzjAV4a--N_XU9/edit)
+check lại project management plan so với doc aidlc mới của dự án
+
+**Action**: Read CLAUDE/common rules, current state and the Google Drive/Docs skills. Read Report 2 through connected Google Drive and compare its readable scope/tables with requirements, current-srs-contract, unit ownership/dependencies and the latest View Material revision. Continued documentation review; no development stage opened.
+**Result**: Added inception/plans/project-management-plan-review-2026-10-09.md. Report 2 baseline 40 UC/49 stories/16 units differs from current 73 UC/51 stories/15 units. Findings cover U10 removal/U08 copy and subject assignments, U03 Settings, invitation/comments removal, practice-only quiz, summary requester credits, authorization, banks/rubrics, gates/iterations and historical approvals. Capacity arithmetic is consistent; schedule feasibility/actual progress cannot be established from reviewed sources. execution-plan.md has stale baseline sections.
+**Validation and limits**: Review local links resolve and git diff --check passed. Google Doc, code, state and approvals unchanged; no runtime tests or new gate completion claimed. Security scope/validation/privacy and bounded resiliency retained in recommended acceptance checks; runtime checks N/A, Property-Based Testing disabled. Existing unrelated working-tree edits retained.
+
+## 2026-10-09 — Project Management Plan v1.4 synchronization
+
+**User request (raw)**: giúp tôi sửa lại, riêng cái work package vơi due date trong 3. Cost and Time Estimations thì giữ nguyên
+
+**Action**: Updated the existing Report-2_Project Management Plan.docx on Google Drive, file ID 1tqp6bc0Xeqh5cwGrj8PzjAV4a--N_XU9, using the Documents skill/OOXML-preserving edit and Google Drive update_file. Synchronized current 73 UC/51 stories/15 units, U03 Settings, U08 subject assignments/copy/version, removed U10, updated material requester credit/HOLD policy, role restrictions, subject bank/rubrics, practice-only quizzes, gates, iteration mapping, RACI, traceability, risks and approval/history wording. Added v1.4 change log and refreshed TOC.
+**Preservation**: Entire Section 3 WBS table is byte-identical at XML level, including Work Package, Effort, Due Date, formatting and all 42 rows. Other ZIP package parts are byte-identical; named RACI responsibilities retained except retired U10 row. No code, state or approval changes.
+**Validation**: Packaged renderer attempted but LibreOffice absent; hidden Microsoft Word PDF rendering succeeded. Inspected all 23 pages; final TOC-only update changes only page 2 visually. Immediate pre-write modifiedTime matched 2026-10-06T16:18:12.080Z. Drive update completed at 2026-10-09T10:27:41.345Z; connector text readback verifies new scope/settings/quiz/credit and U10 removal. Raw Drive readback is byte-identical to final upload and original WBS XML remains identical. No runtime tests/implementation completion claimed. Documentation authorization/privacy/validation and bounded retry requirements retained; runtime compliance N/A, Property-Based Testing disabled.
+
+---
+
+## 2026-10-09T10:37:22Z — Whole SRS visual and text review
+
+**User request (raw)**: [https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.6dilvao0se9m](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.6dilvao0se9m)
+rà soát lại toàn bộ doc nhớ nhìn cả ảnh diagram và soát text description xem khớp ko, phần system functionalities tôi vẫn thấy k khớp lắm
+
+**Action**: Read fresh connector text and original Office DOCX modified 2026-10-09T10:28:05.779Z; extracted ordered body and 86 embedded image occurrences. Displayed every image through contact sheets, plus original-resolution screen flow; compared I–V prose/tables with current SRS contract and unit rules. Created construction/plans/srs-whole-document-review-2026-10-09.md with 28 grouped findings, exact sections/figures, correction guidance and full image-coverage inventory.
+
+**Result**: 51 screen rows/descriptions and 69 mockup captions are present, but image/text/business behavior remains inconsistent. Confirmed obsolete upload-to-embedding flow, Admin inheritance/academic/wallet permissions, Graded Quiz, subject assignment list with Group/Quiz/class scope, bank-owned rubrics, material replacement/rescan, missing summary UI, comments, fixed AI price and essay limit. I.3/II retain old entity/actor/rubric/settlement rules. Identified and acknowledged prior prose errors: unsupported Admin AI metrics and generalizing batch processing-start deadlines to ordinary AI grading. Eight integrations and seventeen detailed jobs are substantially aligned; TOC omits JOB17 and retains old labels.
+
+**Validation and limits**: Online SRS/template/images unchanged; no implementation, approval, commit or push. Image review used contact sheets with original screen-flow recheck; no assertion that every tiny screenshot label was legible. Current authorization/privacy/input and bounded recovery decisions are retained in proposed corrections; runtime/deployment verification N/A and disabled Property-Based Testing skipped. Local report links and Markdown whitespace checked; unrelated working-tree edits preserved.
+
+---
+
+## 2026-10-09 — SRS UI descriptions aligned to displayed mockups
+
+**User request (raw)**: giúp tôi sửa lại phần màn hình ui thì cứ theo màn hình hiện tại trong doc cứ sửa lại description trc đã sau tôi update sau
+
+**Clarification (raw)**: Sửa description theo đúng UI đang hiển thị
+
+**Action**: Updated the same Report-3_Software Requirement Specification.docx (Drive ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n). Rewrote I.5.1.b Screen List descriptions and III.1–III.6 descriptions, action lists and field tables for all 51 screens, totaling 308 field entries. Descriptions are short English; displayed field/button labels remain Vietnamese. Screen 25 feature label is Assignment Management to match its class-based mockup.
+
+**Authority and preservation**: The user's explicit clarification makes current UI screenshots the source for this edit, including daily AI request limits, scan/retry/material replacement controls, Graded quiz labels, bank rubric indicators, comments and pictured sample credit/character values. Controls absent from the mockups are excluded from UI descriptions. This does not change AI-DLC requirements or resolve the mockup/business-rule differences documented in construction/plans/srs-whole-document-review-2026-10-09.md. Related-UC references, all headings/captions, all 86 embedded images, other sections and template styling are retained. Every non-target original body node and every ZIP part other than word/document.xml is identical. Existing TOC/page-field values were retained rather than refreshed.
+
+**Validation**: Hidden Word rendered the final document (145 pages) and the text/table-only QA preview (26 pages). Inspected all preview pages and 18 selected final-layout pages; tables remain readable, with continuation across pages using existing template behavior. Pre-upload modifiedTime matched 2026-10-09T10:28:08.261Z. Drive update succeeded at 2026-10-09T10:56:57.629Z; a fresh raw Drive readback matches the uploaded file byte-for-byte (SHA-256). No code, runtime tests, workflow gate, approval, commit or push. Existing unrelated local changes retained. Security/resiliency requirements remain unchanged; runtime compliance N/A, Property-Based Testing disabled.
+
+## 2026-10-09 — Project Management Plan readability and activity RACI
+
+**User request (raw)**: viết dễ đọc dễ hiểu hơn với lại cái bảng racii chart thì đừng chia unit được ko vì nhóm tôi đang chia fullstack mỗi người phục trách vài unit nma h chưa phân người thì b nghĩ nên trình bày sao
+
+**Action**: Updated existing Report 2 via Documents/Google Drive workflows to v1.5. Simplified prose about scope, capacity, dependencies, iteration outcomes, quality, tests, AI governance and document control. Added iteration review/improvement and test/defect/acceptance record procedures. Replaced unit RACI with 17 project activities, each with exactly one accountable role and at least one responsible role. All five members are fullstack developers with additional coordination duties; no feature/unit ownership invented. Unassigned work is allocated during team planning and tracked with developer, separate reviewer, estimate, target date, dependencies and status.
+**Preservation/validation**: Entire Section 3 WBS XML including Work Package/Effort/Due Date is identical; all package parts except document.xml retained. Refreshed TOC; inspected 23 rendered pages using hidden Word/PDF; final PDF is visually identical to the inspected version. Pre-write Drive modifiedTime matched 2026-10-09T10:34:35.517Z. Update succeeded at 2026-10-09T11:25:02.823Z; text readback verifies fullstack/Unassigned/activity RACI/v1.5, raw readback equals uploaded file and original WBS remains identical. No code, state, approvals or implementation progress changed. Runtime/security compliance verification N/A for prose revision; existing constraints retained and Property-Based Testing remains disabled.
+
+---
+
+## 2026-10-09 — SRS IV/V description simplification
+
+**User request (raw)**: [https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.232yfo84df1](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.232yfo84df1)
+check lại với viết mấy cái description phần iv v ngắn gọn dễ hiểu hơn đc ko, tôi thấy mấy cái security, busienss rule viết hơi dài.... phần decsription nào trong đấy viết dài quá thì viết ngắn lại
+
+**Action**: Simplified 86 text entries in IV/V of the same online SRS: interfaces, usability, five performance conditions, ten Security descriptions, reliability/testing, thirty Business Rules, eight long system messages and Other Requirements. Used shorter English sentences and removed repeated mechanics through explicit BR references. Edited text reduced from 2,920 to 2,379 words (18.5%). Kept role/resource restrictions, numeric limits, supported types, privacy, deadlines, HOLD/actual-usage settlement, human grade review and accepted exclusions. No requirement-policy changes intended.
+
+**Preservation**: Original headings, IDs, table shapes/styles, bold labels, diagrams, images, screen descriptions and non-target sections unchanged. Every non-target original body node and every package part other than word/document.xml is identical. TOC/page-field caches are unchanged; this was a prose-only edit.
+
+**Validation**: Hidden Word rendered the final file (143 pages) and IV/V preview (14 pages). Inspected all preview pages and final section-boundary pages; text/tables are readable in the retained template. Pre-write modifiedTime matched 2026-10-09T10:56:57.629Z. Drive update succeeded at 2026-10-09T11:32:24.966Z; fresh raw readback matches uploaded SHA-256 exactly. No implementation, runtime tests, workflow gate/approval, commit or push. Security/resiliency specification constraints retained; runtime compliance N/A; Property-Based Testing remains disabled. Unrelated local changes preserved.
+
+---
+
+## 2026-10-09 — Project Management Plan shorter sections and refreshed TOC
+
+**User request (raw)**: check lại và bỏ mấy cái đề cập ngày này đi kiểu approval from 5 october,... **1. Scope and Purpose** viết ngắn gọn hơn chút hiện tại hơi dài integration gate cũng thế viết dễ hiểu ngắn gọn hơn, test quality cx thế, sau đó đồng bộ lại table of content theo doc
+
+**Action**: Updated the same Report-2_Project Management Plan.docx (Drive ID 1tqp6bc0Xeqh5cwGrj8PzjAV4a--N_XU9) to v1.6. Shortened Scope and Purpose into a brief overview, grouped functions and exclusions. Simplified the four integration gates and six testing categories while retaining essential acceptance, access, credit, recovery and human-review conditions. Removed date-specific approval/revision commentary; kept dates in Change Log and project schedule. Refreshed TOC and its internal heading links.
+
+**Preservation**: Entire Section 3 WBS table (Work Package, Effort and Due Date) and the activity RACI are byte-identical at XML level. All ZIP package parts except document.xml remain identical. Fullstack allocation and unassigned unit owners retained. No implementation, workflow state or approval changes.
+
+**Validation**: Inspected all 22 rendered pages using hidden Word/PDF. Final document renders identically to the inspected version. Pre-write modifiedTime matched 2026-10-09T11:25:02.823Z; Drive update succeeded at 2026-10-09T11:38:18.641Z. Fresh raw readback is byte-identical to the upload; revised wording and removal verified. No runtime tests, commit or push; runtime compliance N/A, existing security/resiliency constraints retained and Property-Based Testing remains disabled. Unrelated local edits preserved.
+
+## 2026-10-09 — Attached context diagram review
+
+**User request (raw)**: check lại context diagram xem ổn chưa
+
+**Review**: Compared the attached diagram with current requirements, the 73-UC synchronization and viewer-requested material-summary contract. Its single system boundary, four roles and seven pictured external providers are broadly appropriate. Admin input Subjects, Classes & Enrollment wrongly suggests class/enrollment management; Admin manages subjects/manager assignments and reads aggregate class/enrollment data, while Subject Manager manages classes/enrollment. Subject Manager flows omit subject assignments/material quizzes/AI authoring. Teacher/Subject Manager common account/credit flows and all permitted viewers' summary requests/results are omitted. Practice quiz results must be separate from official grades. Suggested simplifying technical labels such as RAG, representing shared User functions once, and clarifying conditional Teacher functions for Subject Manager under class assignment (R4).
+
+**Limits**: Read-only assessment of supplied image and local specifications; no source diagram, online document, code, state or approval changes. Existing authorization/privacy/credit constraints used for review; runtime verification N/A and Property-Based Testing remains disabled.
+
+---
+
+## 2026-10-09 — SRS consistency recheck and synchronized Table of Contents
+
+**User request (raw)**: [https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.5h75f7v3dkia](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.5h75f7v3dkia)
+đọc lại doc check lại toàn bộ phần xem có đồng nhất ko, sau đó sửa table of content cho đôgfn bộ
+
+**Review**: Re-read I–V, use cases, screen/job/API inventories and all 86 embedded images, including diagrams and UI. Document is not fully consistent: Admin privileges/wallet, material upload versus explicit viewer summary, graded/scheduled Quiz, rubric ownership/versioning, announcements/comments, AI failure settlement, timeout starting points, settings and screen naming still differ across sections. Current UI descriptions remain the user's chosen source for screen descriptions. Recorded findings in construction/plans/srs-consistency-recheck-2026-10-09.md; no business-policy changes made.
+
+**Action**: Refreshed the same online SRS TOC with all 134 nonblank Heading 1–3 entries, current heading names/pages, missing JOB17, corrected JOB06/JOB09 titles, internal navigation and dot leaders. Retained template font, indentation and four-page TOC. Footer's stale total-page cache is reported separately and unchanged.
+
+**Preservation/validation**: Compared original versus final DOCX packages: only word/document.xml changed; every body node outside TOC is identical after removing the added JOB17 navigation bookmark. All media, styles, relationships and headers/footers are byte-identical. Hidden Word rendered 143 pages; all four TOC pages inspected visually and 134/134 cached page numbers match the corresponding heading bookmarks. Pre-write modifiedTime matched 2026-10-09T11:32:24.966Z. Drive update succeeded at 2026-10-09T11:46:11.015Z. Fresh raw readback is SHA-256 identical to upload.
+
+**Workflow**: Documentation-only review/edit; no stage transition, runtime implementation/tests, commit or push. Existing security/resiliency specification constraints retained; runtime compliance N/A; Property-Based Testing remains disabled. Unrelated local changes preserved.
+
+---
+
+## 2026-10-09 — Filled SRS Definition and Acronyms
+
+**User request (raw)**: điền vào doc luôn cho tôi [https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.imy6ttn0pvpe](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.imy6ttn0pvpe)
+
+**Action**: Replaced the ellipsis placeholder in Definition and Acronyms with AI-DLC, SRS, SDS, UC, UI, API, ERD, OTP, CRUD, SMTP, CSV and PDF, using concise English definitions. Preserved original ALAP, RAG, UML and AI entries; the live document consistently uses ALAP (25 occurrences, no APCLP). Kept original table properties and body styling. Updated 122 affected TOC cached page numbers after table expansion.
+
+**Validation**: Hidden Word rendered 144 pages and resolved all 134 TOC bookmark page locations. Inspected the acronym table and adjoining context pages. ZIP comparison confirms every part other than word/document.xml is byte-identical; all body nodes outside the acronym table and TOC are identical, as are the original five table rows. Pre-write modifiedTime matched 2026-10-09T11:46:11.015Z. Same-ID Drive update succeeded at 2026-10-09T12:06:49.796Z; fresh raw readback matches uploaded SHA-256. No policy changes, implementation, stage transition, runtime tests, commit or push; runtime compliance N/A. Unrelated local edits preserved.
+
+
+## Inception document revision 2026-10-13
+
+**Timestamp**: 2026-10-13T07:39:01Z
+
+**User Input (raw)**: giúp tôi sửa lại doc inception
+
+**Prior user confirmation (raw)**: thì bây h chỉ có 2 dạng bài làm là assignment hoặc là quiz . assignment thì có tùy chọn vẽ sơ đồ drawio
+
+**Scope source (raw)**:
+
+-Thay vì mua AI credit thì làm 1 MCP server để các giảng viên kết nối agent của bản thân vào. Hoặc là 1 hướng khác là tự gán api bên ngoài để dugnf các dịch vụ ai. 
+-Phạm vi chính: Assignment ( assignment thì có thể tích hợp vẽ drawio, hoặc là chỉ doc thuần), Quiz, , lesson chỉ là mở rộng thêm. Cần làm chỉn chu Assignment: có/không có diagram, cá nhân/nhóm.không làm code nữa, thêm quiz vào thôi. 
+-Đề xuất tập trung vào các môn làm doc SWR, SWD (những môn hay phải vẽ diagram ở trường đh  fpt )  
+-Trong trường học: hệ thống chỉ tạo platform để hỗ trợ thôi, người dùng tự kết nối Agent của bản thân. -> Bỏ mua AI token trên hệ thống. Hệ thống cho phép admin có thể tự kết nối api ai chung cho 1 lượng token nhất định cho các thầy cô /h/ngày, nếu hết thì các thầy cô tự kết nối AI của mình. 
+-Vấn đề: Dùng MCP gây khó cho người dùng -> phải có hướng dẫn kết nối cụ thể cho từng agent.
+-Cho phép sinh viên sử dụng kết nối AI api hoặc mcp. Không cấp cho sinh viên token. 
+-Xuất phát từ việc mình muốn phản hồi sớm cho sinh viên, sinh viên có thể luyện tập nhiều hơn
+-Support 3 hường: kết nối Gemini/OpenAI/Claude
+
+giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
+
+**AI Response/Action**: Revised 16 active Inception artifacts for the explicit scope; current catalog 68 active UC, 48 MVP stories plus 1 extension, 15 units. Archived previous active artifacts; preserved historical plans/questions, existing audit modifications and unrelated review plans. Retired payment/Code UC/story IDs; merged Assignment dimensions; added personal/shared API and MCP access, educator token quota, private draft feedback, usage provenance and unresolved D01–D05.
+
+**Validation**: Unique FR/UC/story IDs; 68 UC mapped exactly once; each story one owner; Markdown table/fences and local links passed. Inherited compatible NFR/SEC/REL retained. No code/runtime test/commit/push, Construction or Google edit, no fresh stage approval claimed. Enabled Security/Resiliency subset retained at design level; PBT disabled, runtime N/A.
+
+---
+
+
+## 2026-10-13T07:51:06.749058+00:00 — Bổ sung Inception theo hội đồng
+
+**Raw user request:** giúp tôi thêm những tính năng hội đồng recommend
+
+**Evidence:** Ảnh người dùng đính kèm nêu backup Google Drive, dấu hiệu chuyển màn hình, email hoạt động quan trọng và minh bạch credit. User trực tiếp yêu cầu bổ sung; áp dụng mô hình AI đã chốt, không tái tạo bán credit.
+
+**Action:** Documentation-only; thêm FR-038/039, UC 80/81, US-OPS-001/US-INT-001; mở rộng FR-011/023/036; sync catalog, stories, contracts, ownership, dependency, plan và current state. D05 đã chốt scope; D01–D04 giữ pending. Code/Construction/Google Reports/diagrams và historical approvals không đổi. Lịch/retention không tự gán số.
+
+**Validation:** Xem kết quả kiểm tra nội dung ở lượt này; chưa chạy runtime tests/restore. Enabled Security/Resiliency subset giữ nguyên: auth/input/secrets/audit/failure boundaries thể hiện trong requirements; PBT disabled, không thêm extension hay tuyên bố runtime compliant.
+
+**Validation result:** PASS: 39 FR IDs; 70 unique active UC and matching primary owners in all three unit catalogs; 50 MVP + 1 extension story and matching coverage/unit-story maps; active Markdown tables/fences/local links valid; Inception whitespace check passed. No runtime tests run: document-only change. Temporary updater removed.
+
+
+## 2026-10-13T07:58:28.146528+00:00 — Rename and sync use case table
+
+**Raw user request:** giúp tôi sủa lại file 73 usecase theo các usecase mới đổi tên file là usecase_table.md
+
+**Action:** Replaced docs/use-cases-73.md with docs/usecase_table.md: 70 active UC, stable IDs/names matching current Inception; detailed English feature descriptions revised for Assignment/Quiz, API/MCP/quota, backup/activity/email. Original bytes preserved in docs/history/use-cases-73.md. Historical Markdown links retargeted to archive without changing baseline feature scope; current source notices synchronized. No code/diagram edits or historical approval changes.
+
+**Validation:** PASS: 70 unique IDs/names exactly match active catalog; table structure and local links valid; historical catalog links resolve; old pathname removed. Documentation-only, no runtime tests required.
+
+
+## 2026-10-13T08:12:10.036074+00:00 — UC consolidation
+
+**Raw user request:** ok giúp tôi sửa lại usecase
+
+**Authorization context:** User accepted discussed merges: 70/71/78 into Manage System Settings; backup status UC 80 into dashboard UC 58; activity UC 81 into submissions UC 37.
+
+**Action:** Sync English table/current Inception catalog to 66 active UC. Preserve retired IDs and migration, FR/stories, U07 quota and U03 backup ownership, U11/U14 capture and U15 review. Current maps/counts/state updated; historical archives, Construction/code, diagrams and approvals untouched. Quiz Practice remains Practice; activity review requires assigned-class scope/policy.
+
+**Validation:** PASS: 66 unique active IDs/names match both catalogs; 3 primary-unit maps match; merged IDs absent from active tables; 39 FR and 51 stories retained; current Markdown tables/fences/local links valid. Documentation only, no runtime tests.
+
+
+## 2026-10-13T08:16:21.128429+00:00 — Full current Inception sync
+
+**Raw user request:** giúp tôi đồng bộ lại doc inception theo uc mới
+
+**Action:** Reviewed active scope against 66-UC table; updated requirements and affected story acceptance/personas, UC/FR/story cross-unit traceability, Settings/quota, Dashboard/backup and submission/activity ports/orchestration/dependencies. Corrected scope-plan D05 status and clearly labeled earlier validation historical. Current plan/source index/state updated; historical approvals/archives/Construction/code/Google/diagrams unchanged. No new feature decision or numerical quota assumed.
+
+**Validation:** PASS: 24 active artifacts; matching English/Inception 66-UC catalogs and 3 primary UC maps; 50 MVP + 1 extension stories with matching coverage/unit ownership; 39 unique FR; tables/fences/local links and story references valid. No runtime tests for document-only sync.
+
+
+## 2026-10-13T08:23:58.375936+00:00 — Inception/Construction consistency review
+
+**Raw user request:** check lại inception với construction đã đồng bộ chưa
+
+**Finding:** Not synchronized: active Inception 66 UC versus Construction 73-UC baseline. Evidence covers credit/payment, Code Lab/Judge0, assessment types, AI/API/MCP/personal connections/quota, backup exclusions, activity, Lesson dependency, early feedback, email recipients and code-generation ownership.
+
+**Action:** Added construction/plans/inception-construction-gap-review-2026-10-13.md with evidence, compatible principles and revision order. Review only; existing designs/code/approvals not changed, no automatic commit/push.
+
+**Validation:** Report links/tables/fences pass. No runtime tests; no claim every baseline line was read or runtime implemented.
+
+
+## 2026-10-13T08:42:59.035995+00:00 — Construction synchronized to current Inception
+
+**Raw user request:** giúp tôi đồng bộ construction theo inception mới
+
+**Action:** Documentation-only authorized continuation. Archived pre-sync design/plans/shared infrastructure/current contract with original hashes. Synced 15 unit designs, 15 code delta plans, shared contract/infra and source index against 66-UC Inception, 50 MVP + 1 extension/39 FR. Retained compatible detailed U01/U02/U04/U12 behaviors; revised other affected owners, protected API/MCP/usage, Assignment/Quiz, backup/restore/activity/email, authority/ports/event/migration semantics. Updated current state/Inception downstream notices; stage history and approvals untouched. No code/provider runtime, migration, diagram, Google or commit/push executed. D01–D04 pending, no numerical quota/retention invented.
+
+**Validation:** PASS: 169 current Construction + 24 Inception artifacts; 66 UC/51 stories primary owners matched, 34 active FR mapped, 172 snapshot hashes intact, Markdown links/tables/fences valid; current plans remain unimplemented. Semantic checks removed account credit/legacy types and inherited 15-minute revocation grace; authenticated current authority and scoped educator MCP submission reader aligned with Inception. Code summaries/gap review labeled historical. Enabled Security/Resiliency reduced subset design constraints retained; PBT disabled. No runtime compliance assertion/tests.
+
+## 2026-10-13 09:33:30 UTC — Jira AI-DLC setup
+
+**Raw user request:** giúp tôi  setup jira theo đề xuất, nma tôi chưa phân công hết người làm unit nào
+
+**Action:** Authorized Jira management/documentation setup against the current 66-UC, 50 MVP + 1 extension, 15-unit scope. Created 106 issues (16 Epics including a coordination container, 51 Stories and 39 Tasks) and 70 native links. Left new work To Do/Unassigned/no due date. Converted existing seven documentation/report Stories to Tasks, preserving assignees, In Progress state and 17 October deadlines. Preserved historical Done states with baseline labels/notes. Added D01–D04, G1–G4, unit review/testing tasks and operating guide. No application development, new policy decisions or stage approval advancement.
+
+**Verification:** Read all 120 KAN issues across two pages. All new keys, parents, links, unassigned statuses and preserved existing assignments/deadlines verified with no mismatches. Summary: inception/plans/jira-setup-2026-10-13.md; original-field/creation ledger: .tmp/jira-setup-2026-10-13-snapshot.json. Connector does not expose workflow validator configuration; reviewer/evidence DoD is documented, not automatically enforced. Security/Resiliency subset unchanged, runtime compliance N/A; PBT disabled. No runtime tests or automatic commit/push.
+
+
+## 2026-10-13T16:54:15Z — AI-DLC synchronized to user-edited 65-UC table
+
+**Raw user request:** giúp tôi đồng bộ doc aidlc theo bảng uc mới
+
+**Action:** Authorized documentation-only continuation. Snapshotted 192 prior files/state/source with SHA-256 hashes. Synchronized Inception catalog/requirements/personas/51 stories/unit maps and current Construction designs/shared contracts/15 code delta plans to docs/usecase_table.md. Restored UC45 Group authoring and UC71 Edit Setting; UC42 Individual, UC70 View Settings; UC26 optional diagrams moved to UC24/27, UC79 retired and feedback UC29 limited to owned SUBMITTED PRACTICE snapshots. Institutional API configuration consolidated from UC76/82 into Settings UI via U13 protected port; U07 quota ownership retained. YouTube educational links admitted as MVP, automatic processing remains extension. Names match user choices. Older sync reports marked superseded; historical state approvals/checklists retained verbatim. D01–D04 not decided. Jira, application code/contracts/migrations, Google Reports and diagram files not changed; no commit/push.
+
+**Validation:** PASS across 190 active artifacts: exact 65 UC IDs/names/descriptions between source and catalog; four primary maps/unit headers agree; 50 MVP + 1 extension story ownership/trace agrees; 15 units/code plans, 39 stable FR IDs; Markdown fences/tables/local targets valid; all 192 snapshot hashes intact and historical state suffix unchanged. Enabled Security/Resiliency reduced-subset design constraints retained; runtime compliance not certified, other rules N/A; PBT disabled. No runtime tests for document-only revision. Summary: inception/plans/uc-table-65-sync-2026-10-13.md.
+
+## 2026-10-14T15:05:56Z — UC57 name correction
+
+**User Input**: đổi tên uc57 manage thành create/update/delete
+
+**AI Response**: Renamed UC57 to Create/Update/Delete Class Group in docs/usecase_table.md and inception/requirements/use-cases.md, following the name agreed in this conversation. Description, actor, ID and navigation unchanged. Documentation-only continuation; design/code/test stages skipped as not applicable. Verified both catalog rows agree and the former name is absent. Security/resiliency/testing extensions N/A to this naming-only change.
+
+## 2026-10-14T15:14:09Z — UC57 documentation synchronization
+
+**User Input**: giúp tôi đồng bộ doc aidlc theo uc57
+
+**AI Response**: Synchronized UC57 Create/Update/Delete Class Group across FR-025, group stories, component map, U12 business logic/rules/domain/frontend, U04 class entry/frontend, current shared contract and U12 pending code plan. UC23 is the navigation entry; UC54 views own group; UC55 requests/cancels leader change; UC57 owns teacher group operations and request decisions. Corrected group-publication trace to UC53. Existing group deletion constraints retained. Added completed documentation plan inception/plans/uc57-document-sync-2026-10-14.md and state record. Historical artifacts and pending implementation checklists preserved.
+
+**Validation**: PASS: 66 active catalog entries; UC57 names match source/catalog; Groups panel and random split map to UC57; stale UC23 group-operation mappings absent; git diff --check passed. Documentation-only; security/resiliency runtime compliance and PBT N/A. No code, diagram, Jira or Google updates, commit/push or stage approval advancement.

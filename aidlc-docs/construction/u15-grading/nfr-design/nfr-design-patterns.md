@@ -1,27 +1,32 @@
-# U15 Grading - NFR Design Patterns
+# U15 Grading & Gradebook — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 37, 38, 39, 40 (chốt và công bố là luồng phụ của UC 38, 39) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Một đường ghi điểm
-- `GradeWriter.apply(evaluationId, change, actor, reason?)`: kiểm quyền theo `class_id` của đánh giá (`GradingScopeGuard`) → khóa theo `version` → kiểm luật (lý do bắt buộc khi sửa điểm tự chấm hoặc điểm đã chốt; khác đề xuất AI không cần lý do; `0 ≤ score ≤ max`) → UPDATE kèm thêm phần tử `history` → audit → event sau commit nếu `PUBLISHED`. Mọi luồng (tự chấm, chấm tay, dùng đề xuất, chốt, công bố, sửa) đi qua đây (NFR-U15-11, 12).
+**Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001. **Requirements:** FR-008/009/020/039.
 
-## P2 - Tạo đánh giá idempotent
-- Unique một phần trên `evaluations` (xem infrastructure-design §2); port nộp dùng `INSERT ... ON CONFLICT DO NOTHING` rồi cập nhật qua P1 (NFR-U15-13).
-- `assignment_id`, `class_id` ghi một lần khi tạo: lượt cá nhân lấy lớp của lượt từ `SubmissionQueryPort` (U11), bài nhóm lấy lớp của nhóm từ `GroupSubmissionQueryPort` (U14); không suy lớp từ ghi danh hiện tại.
-- Bản nộp nhóm mới ghi đè cùng `group_document_id`: như lượt nộp mới của bài `DOCUMENT`, đánh giá `GROUP_DOCUMENT` và `MEMBER` về `PENDING` cho bản mới, điểm cũ thêm vào `history` (BR-U15-44).
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u15-grading` không quyết định chức năng hiện hành.
 
-## P3 - Chấm xác định
-- `QuizScorer` thuần: nhận câu (version đã ghim từ U06, gồm câu riêng của quiz) và đáp án; trả `items` + tổng `BigDecimal`. Chỉ dùng cho quiz luyện tập.
-- Code Lab: nhận `score`, `results` qua `CodeGradedPort.onGraded` (bài `GRADED`) hoặc `PracticeResultPort.record` (Practice).
-- Practice: `PracticeResultPort` ghi `kind = PRACTICE`, `PUBLISHED` một lần cho mỗi lượt.
+## Patterns áp dụng
 
-## P4 - Hàng loạt theo từng mục, công bố theo lớp
-- Chốt/công bố hàng loạt: mỗi mục một transaction con qua P1 (`TransactionTemplate`), gom kết quả `{evaluationId, ok, error}`; mục ngoài lớp được dạy trả lỗi riêng, không ảnh hưởng mục khác (NFR-U15-02).
-- Công bố: transaction con chỉ đổi đánh giá sang `PUBLISHED` và đặt `published_at`; sau commit gom người học vừa có điểm theo (bài, lớp) và phát một `grade.published` cho mỗi cặp.
-- Thời điểm công bố của (bài, lớp) đọc bằng `MIN/MAX(published_at)` trên `evaluations` theo `assignment_id`, `class_id` (index `(assignment_id, class_id, status)`); không có bảng công bố riêng.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Góc nhìn tách biệt
-- `StudentGradeView` chỉ gồm điểm/phản hồi `PUBLISHED` (và kết quả Practice của chính mình); `TeacherGradeView` đủ (tự chấm, đề xuất, lịch sử). Controller của Student chỉ dùng `StudentGradeView` (NFR-U15-20).
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Sổ điểm
-- Một query: sinh viên đang ghi danh lớp (U04) × bài `GRADED` của lớp và của môn chứa lớp (U08 `listForClass`) LEFT JOIN `evaluations` cùng `class_id` của lượt được chấm (U11) hoặc đánh giá `MEMBER` → map trạng thái; không có cột tổng.
+## Unit-specific patterns
+
+- UC42 submissions/work detail plus activity review assigned teacher R3/R4. Admin or manager only R2 denied. Quiz Practice activity read does not create Gradebook.
+- Only human teacher confirms Assignment GRADED official result, finalizes/publishes. AI proposal separate PENDING/READY/ACCEPTED/REJECTED, never automatically final/publish.
+- Rubric scores deterministic by checklist/max, linked submission/rubric version; proposal stale if submission changed. Manual override requires reason/audit; batch finalize rejects/informs invalid rows, no silent grading.
+- Practice Quiz scorer and Assignment feedback not official; answer reveal follows snapshot policy; Student own published official grades only.
+- Group common document score + manual contribution adjustment, bounded and explained; activity/number edits cannot determine contribution or cheating score automatically.
+- ActivityQueryPort U11 projection per member/work, after current class/policy check; disabled/no data/unavailable distinct. Does not mutate grading entities from telemetry.
+
+## Validation matrix
+
+- Admin/R2-only denied; stale proposal reject; AI cannot publish/finalize via REST/MCP; unpublished grade hidden.
+- Quiz Practice stays outside Gradebook; group adjustment bounds/audit; activity viewing never changes grade; masked missing intervals.

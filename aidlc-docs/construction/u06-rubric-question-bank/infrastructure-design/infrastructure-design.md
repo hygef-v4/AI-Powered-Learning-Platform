@@ -1,26 +1,28 @@
-# U06 Rubric & Question Bank - Infrastructure Design
+# U06 Rubrics & Subject Quiz Bank — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 46, 56, 57 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-QBK-001, US-QBK-002. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 36, 46, 47. **Primary stories:** US-QBK-001, US-QBK-002. **Requirements:** FR-016/008.
 
-| Thành phần | Chạy ở |
-|---|---|
-| Controller, service, nhập file, `RubricScorer` | `backend` |
-| Bảng `questions`, `rubrics` | `postgres` |
-| Ảnh trong khung tài liệu | U03 (Google Drive) |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u06-rubric-question-bank` không quyết định chức năng hiện hành.
 
-U06 không chạy trong `worker`, không có queue, Redis key, secret hay kết nối ra ngoài riêng. Nhập file chạy đồng bộ trong request (≤ 10 s); file nhận vào đi qua multipart giới hạn 5 MB, không lưu lại.
+## Mapping triển khai
 
-## 2. Migration
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `questions`; không tạo deployable riêng.
 
-`db/migration/questionbank/V20260925_1300__create_questions_rubrics.sql` (chưa áp dụng nên sửa trực tiếp):
-- `questions` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md): unique `(lineage_id, version)`; partial unique `(lineage_id) WHERE status = 'DRAFT'`; CHECK `question_type IN ('MCQ_SINGLE', 'MCQ_MULTI', 'ESSAY', 'DOCUMENT', 'CODE')`, cột `assignment_type` để lọc, `scope_type IN ('SUBJECT', 'ASSIGNMENT')`; `definition jsonb`, `default_points numeric(6,2)`; index `(scope_type, scope_id, status)`, B-tree `lineage_id`, GIN `tags`.
-- `rubrics`: `assignment_id` (index), `scope_type IN ('CLASS', 'SUBJECT')`, `scope_id`, `criteria jsonb`, `total_points numeric(6,2)`, `locked_at`, `updated_at`. FK `assignment_id` → `assignments` thêm trong migration của U08 vì bảng `assignments` tạo sau.
-- User `app` được DELETE vì bản nháp câu hỏi chưa kích hoạt và rubric chưa khóa xóa được; service chặn xóa bản khác.
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-## 3. Compliance
+- Manager draft MCQ → validate options/key → publish/retire; author copies version snapshot into Quiz.
+- Document part add → empty rubric → educator fills checklist → validation/lock → scorer computes sum from validated item decisions.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| Mọi rule | N/A | Không thêm hạ tầng; dùng chung deploy, health, secret của backend |
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- No invalid correct keys/negative scores; archived question cannot edit published snapshots; rubric lock.
+- Same answer snapshot same Quiz score; Student context excludes hidden keys; diagram-off disallows diagram rubric requirement.

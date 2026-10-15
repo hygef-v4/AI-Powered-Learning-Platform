@@ -1,6 +1,10 @@
-# U01 Account & Access - Business Logic Model
+# U01 Account & Access — business-logic-model
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-U01-xx` trong `business-rules.md`) và truy vết. Mọi lỗi trả về client đều ở dạng an toàn.
 
@@ -16,12 +20,12 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 | F5 Đặt lại mật khẩu | UC 04 | Password Reset | US-IAM-003 |
 | F6 Đổi mật khẩu | UC 05 | Password Change | US-IAM-006 |
 | F7 Xem và sửa hồ sơ | UC 06, 07 | User Profile | US-IAM-004 |
-| F8 Xem danh sách tài khoản | UC 59 | Account List | US-IAM-007 |
-| F9 Tạo tài khoản | UC 60 | New Account | US-IAM-007 |
-| F10 Nhập hàng loạt | Luồng phụ của UC 60 | Account List (nút Nhập CSV) | US-IAM-007 |
-| F14 Xem chi tiết và sửa thông tin tài khoản | UC 61, 62 | Account Detail | US-IAM-007 |
-| F11 Đổi role | UC 62 | Account Detail | US-IAM-005, US-IAM-007 |
-| F12 Vô hiệu hóa và mở lại | UC 63 | Account Detail | US-IAM-007 |
+| F8 Xem danh sách tài khoản | UC 08 | Account List | US-IAM-007 |
+| F9 Tạo tài khoản | UC 09 | New Account | US-IAM-007 |
+| F10 Nhập hàng loạt | Luồng phụ của UC 09 | Account List (nút Nhập CSV) | US-IAM-007 |
+| F14 Xem chi tiết và sửa thông tin tài khoản | UC 10, 11 | Account Detail | US-IAM-007 |
+| F11 Đổi role | UC 11 | Account Detail | US-IAM-005, US-IAM-007 |
+| F12 Vô hiệu hóa và mở lại | UC 12 | Account Detail | US-IAM-007 |
 | F13 Quyết định phân quyền | Mọi UC có kiểm quyền | - | US-IAM-005 |
 
 ## 2. Luồng kích hoạt
@@ -143,7 +147,7 @@ Màn New Account mở từ nút "Thêm tài khoản" trên Account List; tạo x
 4. Tạo `ADMIN` bắt buộc qua luồng này, không qua nhập hàng loạt (BR-U01-84).
 5. Ghi audit `ACCOUNT_CREATED`.
 
-### F10 - Nhập hàng loạt (luồng phụ của UC 60)
+### F10 - Nhập hàng loạt (luồng phụ của UC 09)
 
 Nút "Nhập CSV" trên Account List; giữ theo quyết định của người dùng ngày 2026-10-09.
 
@@ -153,7 +157,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 4. Kiểm lại toàn bộ file (dữ liệu có thể đã đổi), tạo các dòng hợp lệ ở `PENDING` trong một transaction, không gửi mail (BR-U01-85). Email đã tồn tại (kể cả do lần nhập trước) báo lỗi dòng nên nhập lại cùng file không tạo trùng (BR-U01-83).
 5. Ghi một audit `ACCOUNTS_IMPORTED` kèm checksum file, số dòng tạo và bị từ chối.
 
-### F11 - Đổi role (UC 62, trên Account Detail)
+### F11 - Đổi role (UC 11, trên Account Detail)
 
 **Vào**: `accountId` đích, `newRole`.
 
@@ -164,7 +168,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
-### F12 - Vô hiệu hóa và mở lại (UC 63, trên Account Detail)
+### F12 - Vô hiệu hóa và mở lại (UC 12, trên Account Detail)
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
@@ -176,10 +180,10 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 2. Xóa `failedLoginCount`, `lockedUntil`.
 3. Ghi audit `ACCOUNT_ENABLED`.
 
-### F14 - Xem chi tiết và sửa thông tin tài khoản (UC 61, 62)
+### F14 - Xem chi tiết và sửa thông tin tài khoản (UC 10, 11)
 
-1. ADMIN mở Account Detail từ Account List; GET theo ID trả email, tên hiển thị, số điện thoại, role, trạng thái, ngày tạo, `version`; không có hash, OTP hay token (UC 61).
-2. Sửa `displayName`, `phoneNumber` bằng PATCH kèm `version`; version lệch → `409`, tải lại rồi sửa. Email không đổi được; role đổi theo F11, trạng thái theo F12; Admin không đặt mật khẩu hay gửi OTP (UC 62).
+1. ADMIN mở Account Detail từ Account List; GET theo ID trả email, tên hiển thị, số điện thoại, role, trạng thái, ngày tạo, `version`; không có hash, OTP hay token (UC 10).
+2. Sửa `displayName`, `phoneNumber` bằng PATCH kèm `version`; version lệch → `409`, tải lại rồi sửa. Email không đổi được; role đổi theo F11, trạng thái theo F12; Admin không đặt mật khẩu hay gửi OTP (UC 11).
 3. Ghi audit `ACCOUNT_UPDATED` với actor, thời điểm, tên trường đã đổi; không ghi giá trị số điện thoại.
 
 ## 6. Phân quyền
@@ -200,7 +204,7 @@ Quy tắc theo role (BR-U01-60):
 | `STUDENT` | Chức năng User và lớp mình đã ghi danh (R5) |
 | `TEACHER` | Chức năng User và lớp mình được giao dạy (R3) |
 | `SUBJECT_MANAGER` | Chức năng Teacher cho lớp được giao dạy (R4) và tài nguyên của môn được giao quản lý (R2) |
-| `ADMIN` | Chức năng User và chức năng quản trị: tài khoản, môn, gói credit, Settings, lịch sử thanh toán, audit. Không dùng chức năng Subject Manager/Teacher, không nhận phân công môn/lớp |
+| `ADMIN` | Chức năng User và chức năng quản trị: tài khoản, môn, Settings/quota, API chung (synthetic test), backup Dashboard, audit. Không dùng chức năng Subject Manager/Teacher, không nhận phân công môn/lớp |
 
 Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy từ role hoặc dữ liệu cache cũ.
 
@@ -212,3 +216,19 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

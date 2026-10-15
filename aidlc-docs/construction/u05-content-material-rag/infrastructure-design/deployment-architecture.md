@@ -1,15 +1,31 @@
-# U05 Content, Material & RAG - Deployment Architecture
+# U05 Reference Content & Announcements — deployment-architecture
 
-**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-Trình duyệt → Nginx → backend U05/U04 (quyền xem).
-Upload/trích chữ: backend → RabbitMQ jobs.triggered/jobs.youtube → worker → PostgreSQL EXTRACTED.
-Nút tóm tắt: backend U05 → U13 AiGuard/HOLD → jobs.gemini → worker → Gemini → PostgreSQL summary/vector.
-U03 cung cấp byte file; U13 quản lý Redis cost cap/credit; nguồn vẫn xem được trước AI.
-RAG chỉ lấy ACTIVE/INDEXED; video nhúng youtube-nocookie.
+**Primary UC:** 62, 63, 60, 61, 64, 58, 59. **Primary stories:** US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. **Requirements:** FR-004/005/011/023.
 
-**Text alternative**: Trình duyệt dùng màn học liệu qua Nginx tới module U05 trong backend và nhúng video bằng iframe `youtube-nocookie`. Backend lưu module và lesson vào PostgreSQL có pgvector và gửi việc trích chữ qua jobs.triggered/YouTube qua jobs.youtube; khi người xem bấm Tóm tắt tài liệu mới giữ credit requester và gửi MATERIAL_SUMMARY qua jobs.gemini. Worker trích chữ chỉ đọc tệp U03/phụ đề tới EXTRACTED. Worker MATERIAL_SUMMARY dùng chữ đã lưu, xin phép AI qua U13 (trần chi phí trong Redis), gọi Gemini tóm tắt và tạo một vector từ bản tóm tắt rồi ghi kết quả quét vào `lessons`. Khi U13 truy xuất, backend gọi Gemini tạo vector câu hỏi rồi tìm lesson gần nhất trong pgvector.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u05-content-material-rag` không quyết định chức năng hiện hành.
 
-## Lưu ý triển khai
-- Đổi image PostgreSQL giữ nguyên volume dữ liệu (cùng major 16).
-- Không có key → backend và worker dùng adapter giả, vẫn chạy được local.
+## Mapping triển khai
+
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `content`; không tạo deployable riêng.
+
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
+
+- Attach reference → owner/scope + U03 validation → metadata persist; view/download tái kiểm scope.
+- Create important announcement → commit → U03 outbox → U16 resolves current recipients/preferences → email/in-app.
+- MCP reader → resource access → file excerpt/data minimum; advanced retrieval chỉ khi extension đã chốt/provider cấu hình riêng.
+
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- Upload/reference works khi AI/indexer absent; unauthorized link/MCP denied.
+- Important creation email event once; edit không resend; archived reference history preserved; no summary charge/job on upload.
+
+Current material acceptance: authorized create/update/remove/list/open of FILE and YOUTUBE_LINK (UC62/60/61/58/59); keep kind/title/fileRef-or-videoUrl/scope/version and historical references. Validate URL/type/size, deny unauthorized ALAP access, handle unavailable videos and preserve no-automatic-summary behavior. No video upload/download, captions or embedding are required.

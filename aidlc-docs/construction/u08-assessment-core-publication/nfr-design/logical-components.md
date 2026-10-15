@@ -1,61 +1,34 @@
-# U08 Assessment Core & Publication - Logical Components
+# U08 Assignment/Quiz Lifecycle & Copy — logical-components
 
-**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Sơ đồ
+**Primary UC:** 34. **Primary stories:** US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. **Requirements:** FR-007/017/027/028.
 
-```
- Trình duyệt (GV, CN môn)                       U09 / U11 / U04 / U16
-   |                                                  |
-   v                                                  v
-+---------------------------------------------------------------------------------------+
-| backend                                                                               |
-| AssignmentController --> AssignmentService --> BankQueryPort,                         |
-|                                   |             InlineQuestionPort (U06)              |
-|                                   |          --> AiDraftPort (U13, C)                 |
-|                                   |          --> ContentRefPort (U05)                 |
-|                                   +--> ReviewValidator --> TypeConfigPort (U09, C)    |
-|                                                        --> CodeLabCheckPort (U13, C)  |
-| ScheduleController --> ScheduleService (phát hành, sửa lịch, ngưng giao)              |
-|                                   +--> RubricPort.lockForAssignment (U06)             |
-|                                   +--> GroupReadinessPort (U12)                       |
-| AssignmentQueryService (AssignmentQueryPort, StudentAssignmentView)                   |
-| Repository (PostgreSQL: assignments, assignment_questions)                            |
-+---------------------------------------------------------------------------------------+
-                  | scanner mỗi phút (U03)
-                  v
- worker: AssignmentScheduleScanner --> AssignmentLifecyclePort (U11, U14)
-                                   --> EventPublisherPort (U03) --> U16
-```
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u08-assessment-core-publication` không quyết định chức năng hiện hành.
 
-**Text alternative**: Giảng viên soạn bài của lớp, Chủ nhiệm môn soạn bài của môn qua `AssignmentController`; `AssignmentService` lấy câu khớp dạng từ ngân hàng U06 hoặc lưu câu riêng qua U06, kiểm học liệu của quiz qua U05, gọi AI qua U13, và dùng `ReviewValidator` (kiểm nội dung dạng bài và rubric của U09, lời giải mẫu Code Lab của U13) khi duyệt. `ScheduleController` phát hành (ghi lịch, khóa rubric qua U06, bài nhóm hỏi U12), sửa lịch và ngưng giao. Các unit khác đọc bài qua `AssignmentQueryService` (bài của lớp gồm cả bài của môn chứa lớp, quiz theo học liệu). Trong worker, `AssignmentScheduleScanner` đổi trạng thái theo lịch, gọi U11/U14 trong transaction và phát event cho U16.
+## Component responsibility
 
-## 2. Thành phần
-
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `AssignmentService` | backend | F1-F4, F7, F9, F10; P1 |
-| `ReviewValidator` | backend | P5 |
-| `ScheduleService` | backend | F5, F7, F9 bước 4-5; P7 |
-| `AssignmentCopier` | backend | F11; P8 |
-| `AssignmentScheduleScanner` | worker | F6; P2, P6 |
-| `AssignmentQueryService`, `StudentViewMapper` | backend | F8; P3, P4 |
-
-## 3. Cấu hình
-
-| Khóa | Mặc định |
+| Layer | Responsibility |
 |---|---|
-| `U08_MAX_QUIZ_QUESTIONS` | 200 |
-| `U08_MAX_ATTEMPTS` | 10 |
-| `U08_MAX_LATE_DAYS` | 30 |
-| `APP_TIMEZONE` | `Asia/Ho_Chi_Minh` |
+| Controller / MCP adapter | Deserialize/validate, authenticated actor, minimal response; gọi domain service |
+| Application service | Scope/state/version, orchestration qua ports, transaction owner |
+| Domain policy/model | Rules, transitions, snapshot invariants |
+| Repository | Owned entities only; optimistic/locking/unique constraints |
+| Outbound adapters | Timeout/retry/provenance; không quyết định học vụ |
+| UI | Entry UC, form/query status, không client-only security |
 
-## 4. Compliance
+## Owner contract
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log đáp án |
-| SECURITY-05 | Compliant | Kiểm lịch, đầu vào |
-| SECURITY-08 | Compliant | P4, kiểm phạm vi |
-| SECURITY-15 | Compliant | P2 UPDATE có điều kiện |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+createAssignment(actor, submissionMode, diagramEnabled); createQuiz; review/publish/retire/version/copy
+
+## Owned data
+
+- Assessment: id/type/title/subjectId/classId nullable/sourceScope/ownerId/status/gradingMode/version, schedule/latePolicy Assignment, referenceIds optional.
+- AssignmentSettings: submissionMode, diagramEnabled; QuizSettings: Practice mode, timeLimit/attemptLimit/reveal/shuffle; không enum bài riêng theo content.
+- AssessmentVersion: immutable config/rubric/quiz snapshot, policyVersion, reviewedBy/publishedBy/timestamps, lineage(sourceId/version).
+
+## Critical paths
+
+- Create type/config → U09 validate document/Quiz → U06 rubric/questions → review → publish snapshot/readiness → opened event.
+- Student start gets published snapshot → U11/U14; retire schedules deterministic auto-submit/close after commit.
+- Copy current authorized version → new draft/config/rubric IDs → re-review; teacher cannot edit bài môn not owner.

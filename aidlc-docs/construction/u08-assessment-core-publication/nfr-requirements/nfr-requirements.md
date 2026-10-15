@@ -1,55 +1,35 @@
-# U08 Assessment Core & Publication - NFR Requirements
+# U08 Assignment/Quiz Lifecycle & Copy — nfr-requirements
 
-**Bản tài liệu 2026-10-09**: UC 41 và vòng đời (tạo, xóa, duyệt, phát hành, lịch, ngưng giao, nhân bản, version) của UC 35, 42, 43, 44, 45 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Hiệu năng
+**Primary UC:** 34. **Primary stories:** US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010. **Requirements:** FR-007/017/027/028.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U08-01 | Danh sách bài của lớp (gồm bài của môn) p95 ≤ 300 ms; trình soạn bài/quiz 200 câu tải p95 ≤ 800 ms. | NFR-003 |
-| NFR-U08-02 | `isSubmissionOpen` p95 ≤ 20 ms (U11 gọi mỗi lần nộp). | NFR-003 |
-| NFR-U08-03 | Mở/đóng theo lịch trễ ≤ 1 phút so với giờ đặt. | BR-U08-36 |
-| NFR-U08-04 | Copy bài 200 câu từ lớp khác ≤ 5 s, đồng bộ. | BR-U08-46 |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u08-assessment-core-publication` không quyết định chức năng hiện hành.
 
-## 2. Thời gian
+## Required controls
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U08-10 | Lưu mọi thời điểm `timestamptz` (UTC); giao diện nhập/hiển thị giờ `Asia/Ho_Chi_Minh`. | Thiết kế |
-| NFR-U08-11 | Quyết định đúng hạn/trễ/đóng dựa trên giờ server khi nhận request, không tin giờ client. | FR-007 |
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## 3. Toàn vẹn dữ liệu
+- Validation MIME/XML/schema/IDs/filter allowlists phù hợp unit, bounded payloads và rate limit phía server. Không log secret, raw prompt hoặc dữ liệu học vụ nhạy cảm.
+- Truy vấn phân trang/index theo owner/resource/time, timeout hữu hạn mọi port/provider; không promise external API p95 như query local.
+- Target baseline local APIs p95 500ms tại 100 concurrent/1000 accounts là mục tiêu cần benchmark, chưa có evidence; heavy files/AI/backup chạy worker và status queries.
+- Session/password/header controls giữ SEC-001–006; quota/backup/credential protected riêng, không yêu cầu mã hóa toàn DB.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U08-20 | Bài tập từ `SCHEDULED`, quiz từ `OPEN` trở đi: service chặn mọi sửa câu/điểm/cấu hình; test bảo đảm. | BR-U08-33 |
-| NFR-U08-21 | Mọi thao tác sửa bài khóa dòng `assignments` (`SELECT ... FOR UPDATE`) rồi kiểm trạng thái trong cùng transaction; hai người sửa cùng lúc chạy lần lượt; bài không còn `DRAFT` → `409`. Cột `version` là số version của bài, không dùng làm khóa lạc quan. | Thiết kế |
-| NFR-U08-22 | Mỗi bài thuộc đúng một lớp hoặc một môn: CHECK đúng một trong `class_id`, `subject_id` khác NULL; quiz bắt buộc `lesson_id`, `PRACTICE`, không có `closes_at`; bài của môn không là `GROUP_ASSIGNMENT`. | BR-U08-10, 30, 60 |
-| NFR-U08-23 | Chuyển trạng thái theo lịch bằng UPDATE có điều kiện trạng thái cũ và mốc giờ (scanner chạy lại không đổi sai). | BR-U08-36 |
-| NFR-U08-24 | Mở bài/ngưng giao gọi `AssignmentLifecyclePort` trong transaction (U11, U14 ghi dòng hoặc gửi việc của mình); event `assignment.opened` gửi sau commit qua U03 chỉ cho thông báo. Phát hành gọi `RubricPort.lockForAssignment` trong cùng transaction; rubric trống → rollback toàn bộ. | BR-U08-33, 35, 40 |
-| NFR-U08-25 | Copy bài chạy trong một transaction: có đủ bài nháp, câu sao, cấu hình, rubric và lineage, hoặc không có gì; kiểm quyền cả lớp nguồn và lớp đích, ngoài quyền `404`, không lộ tên lớp. | BR-U08-45, 46 |
+## Unit-specific NFR risks
 
-## 4. Bảo mật
+- Assessment type chỉ ASSIGNMENT/QUIZ. Assignment submissionMode INDIVIDUAL/GROUP độc lập diagramEnabled; đủ bốn tổ hợp, không đổi gradingMode vì diagram.
+- Baseline Assignment cá nhân GRADED/PRACTICE; Group chỉ GRADED D02; Quiz tạm PRACTICE D01, không Gradebook/lịch Graded mới.
+- Owner R3/R4 bài lớp, R2 bài môn; bài môn chỉ INDIVIDUAL; Group bắt buộc class. Quiz không required lessonId, optional referenceIds.
+- Lifecycle DRAFT → REVIEWED → PUBLISHED → RETIRED; sửa nháp reset review; publication locks config/rubric snapshot. Assignment open/close/deadline và nhận trễ theo policy preserved.
+- Group publication kiểm groups/leader/enrollment readiness qua U12; không cần AI/indexing hoặc Lesson. Quiz publication cần valid keys/settings snapshot.
+- Version/copy tạo document/rubric/questions mới độc lập, không sao attempts/submissions/grades/AI connections/class groups/lịch mới. Published snapshot không mutate; retire giữ history và auto-close work theo rules.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U08-30 | API người học không bao giờ trả đáp án, giải thích, `answerGuide`, test ẩn, lời giải mẫu (dùng `QuestionStudentView` của U06, câu riêng lọc tương tự). | SEC-002 |
-| NFR-U08-31 | Kiểm phạm vi mọi endpoint: R3/R4 của đúng lớp với bài/quiz của lớp, R2 với bài/quiz của môn, giảng viên lớp chỉ đọc bài/quiz của môn, Admin bị từ chối; ngoài phạm vi `404`; phát hành sai phạm vi audit. | SEC-002, BR-U08-01, 02 |
-| NFR-U08-32 | Markdown hướng dẫn và câu hỏi hiển thị đã làm sạch. | SEC-003 |
+## Test evidence cần có
 
-## 5. Kiểm thử
+- All four Assignment combinations valid; Quiz no Lesson; Group at subject scope rejected.
+- Stale review/publication rejects; copy no reused submission/rubric IDs; late/retire snapshots stable; AI outage manual publication succeeds.
 
-| Mã | Yêu cầu | Nguồn |
-|---|---|---|
-| NFR-U08-40 | Unit test mọi `BR-U08-xx`; test ranh giới giờ (đúng `closes_at`, `late_until`). | NFR-004 |
-| NFR-U08-41 | Integration test scanner mở/đóng chạy lặp không đổi sai trạng thái; đổi lịch rồi chạy scanner. | NFR-004 |
-
-## 6. Compliance
-
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log nội dung đáp án |
-| SECURITY-05 | Compliant | NFR-U08-32, kiểm lịch/đầu vào |
-| SECURITY-08 | Compliant | NFR-U08-30, 31 |
-| SECURITY-15 | Compliant | NFR-U08-23 |
-| Rule còn lại | N/A | Dùng chung backend hoặc ngoài phạm vi đồ án |
+Security enabled subset 03/04/05/08/09/12/15: constraints auth/input/audit/secret/failure được thể hiện, chưa runtime verified. Resiliency enabled subset 04/06/10: deployment/health/timeouts giữ; rule khác N/A theo state, PBT disabled.

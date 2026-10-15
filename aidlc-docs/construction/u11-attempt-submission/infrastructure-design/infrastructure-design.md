@@ -1,32 +1,30 @@
-# U11 Attempt & Submission - Infrastructure Design
+# U11 Individual Work & Quiz Submission — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); danh sách quiz của học liệu trên Learning Material (UC 15, màn của U05); primary stories: US-ASM-003, US-ASM-012. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 49, 50, 51, 52, 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003, US-ASM-012. **Requirements:** FR-018/019/030/039.
 
-| Thành phần | Chạy ở |
-|---|---|
-| `AttemptStarter`, `DraftSaver`, `AttemptSubmitter`, `AttemptQueryService`, `StudentViewService` | `backend` |
-| Bảng `attempts` (gồm nội dung bài làm) | `postgres` |
-| Rate limit lưu | `redis`, khóa `ratelimit:attempt-save:{accountId}` |
-| Tự nộp | `AttemptDeadlineScanner` (scanner U03) trong `worker` |
-| Event phát | Không; chỉ bài tập `GRADED` báo U15 qua `SubmissionSubmittedPort` trong transaction; quiz và Practice có kết quả riêng |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u11-attempt-submission` không quyết định chức năng hiện hành.
 
-## 2. Nginx
+## Mapping triển khai
 
-- `PUT /api/v1/attempts/*/content`: `client_max_body_size 12m`, `gzip` request được backend tự giải nén (Nginx chỉ chuyển tiếp).
-- `POST /api/v1/attempts/*/docx:preview`: `client_max_body_size 20m`, `proxy_read_timeout 60s` (theo `shared-infrastructure.md`).
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `attempts`; không tạo deployable riêng.
 
-## 3. Migration
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-`db/migration/attempts/V20260925_1800__create_attempts.sql` (đổi tên từ `V20260925_1800__u11_attempts.sql`; chưa áp dụng nên sửa trực tiếp):
-- `attempts` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md): FK `assignment_id` → `assignments`, `class_id` → `course_classes`, `account_id` → `accounts`; unique `(assignment_id, account_id, attempt_no)`; partial unique `(assignment_id, account_id) WHERE status = 'IN_PROGRESS'`; index `(assignment_id, class_id, status)`, `(account_id, assignment_id)`, `(status, deadline_at)` cho scanner.
-- `deadline_at` cho phép NULL (quiz không giới hạn giờ); scanner chỉ chọn dòng có `deadline_at`.
-- `attempts` có `snapshot jsonb`, `content jsonb` (gồm cảnh báo kiểm và thời điểm lưu cuối), `content_version`, `run_result jsonb`, `submit_mode`; truy vấn danh sách lượt chỉ chọn cột metadata, không đọc `content`.
-- Trigger `trg_attempts_immutable` chặn UPDATE `content` khi lượt đã `SUBMITTED`.
+- Start snapshot/policy notice → autosave expectedVersion → submit transaction freezes snapshot/receipt → outbox submission → U15.
+- Draft feedback → verify ownership/teacher policy + capture contentVersion → U13 personal task → result linked version, never mutate official record.
+- Browser visibility event → authenticated minimal payload → dedup/rate/state/policy → persist; query → current authorization → trusted/missing-data flags and per-member timeline.
 
-## 4. Compliance
+## Deploy/rollback/secret
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| Mọi rule | N/A | Không thêm hạ tầng; dùng chung deploy, health, secret của backend |
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- Concurrent autosave stale conflict; double submit stable receipt; deadline controls server; enrollment revoke denies save/feedback/activity.
+- Monitoring off no events, dedup/out-of-order/offline gaps/iframe legitimate; wrong member/work reject; no grade side effects.
+- UC41 SUBMITTED/PRACTICE guards; deny draft/IN_PROGRESS and Graded feedback even through API/MCP, deny Student shared quota and reject stale feedback without changing submitted content or grades.

@@ -1,12 +1,16 @@
-# U01 Account & Access - Tech Stack Decisions
+# U01 Account & Access — tech-stack-decisions
 
-**Bản tài liệu 2026-10-09**: UC 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+
+**Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
 
 | Hạng mục | Chọn | Lý do | Nguồn |
 |---|---|---|---|
 | Ngôn ngữ/framework backend | Java + Spring Boot | Đã chốt ở requirements | NFR-001 |
 | Bảo mật | Spring Security | Có sẵn bcrypt, filter chain, xử lý cookie | NFR-001 |
-| Phiên | JWT access 15 phút + refresh token trong cookie HttpOnly | Người dùng chọn; kiểm access không cần tra Redis | Câu N1, N5 |
+| Phiên | JWT access 15 phút + refresh token trong cookie HttpOnly | Người dùng chọn; kiểm chữ ký local, rồi kiểm session/account authority hiện hành phía server | Câu N1, N5 |
 | Ký JWT | HMAC-SHA256 với khóa bí mật lấy từ secret | Một backend duy nhất ký và kiểm, không cần khóa công khai | NFR-U01-10 |
 | Lưu refresh, OTP, rate limit | Redis | Đã chốt ở Application Design; có TTL và bộ đếm nguyên tử | Application Design |
 | Dữ liệu tài khoản | PostgreSQL | Đã chốt ở Application Design | Application Design |
@@ -27,3 +31,19 @@
 | Session cookie opaque | Người dùng chọn JWT |
 | Argon2id | Người dùng chọn bcrypt |
 | Lưu refresh token ở PostgreSQL | Người dùng chọn fail-closed khi Redis lỗi |
+
+## Quy tắc tích hợp revision hiện hành
+
+- Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
+- Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
+- Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
+- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
+- Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.

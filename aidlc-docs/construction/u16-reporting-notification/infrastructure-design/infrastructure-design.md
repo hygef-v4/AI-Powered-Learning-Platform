@@ -1,37 +1,30 @@
-# U16 Reporting & Notification - Infrastructure Design
+# U16 Reporting & Notification — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 12, 58 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); luồng phụ: phân bố điểm của UC 22, tiến độ nộp của UC 37, phần xuất tệp của UC 40; primary stories: US-NTF-001, US-RPT-001, US-RPT-002, US-RPT-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 65, 66. **Primary stories:** US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001. **Requirements:** FR-011/019/023/024/038.
 
-| Thành phần | Chạy ở |
-|---|---|
-| `NotificationController`, `EmailPreferenceController`, `SubmissionProgressController`, `AdminDashboardController`, `GradeDistributionController`, `GradebookExportController`, kênh SSE thông báo | `backend` |
-| `NotificationListener`, `NotificationFanout`, `EmailSendHandler`, `EmailDeferredScanner`, `DeadlineReminderScanner`, `NotificationRetentionScanner` | `worker` |
-| Bảng `notifications`; cột `accounts.email_preferences` (U01 tạo bảng), `assignments.reminder_sent_at` (U08 tạo bảng) | `postgres` |
-| Bộ đếm trần email | `redis`, khóa `email:daily-count:{yyyyMMdd}` (TTL 48 giờ) |
-| RabbitMQ | queue `jobs.notification` (U16 khai báo) bind `platform.events` với `enrollment.activated`, `class.announcement-posted`, `payment.paid`, `assignment.opened`, `group.*`, `grade.published`; việc `EMAIL_SEND` trên `jobs.email` (priority queue); nhắc hạn, email dời và dọn dẹp chạy bằng `ScheduledScanner`; phát realtime qua fanout `platform.realtime` |
-| SMTP | Brevo `smtp-relay.brevo.com:587` STARTTLS (SMTP login + SMTP key) khi demo/production; `mailpit:1025` khi dev |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u16-reporting-notification` không quyết định chức năng hiện hành.
 
-- Dùng chung fanout `platform.realtime` với U14; `SseHub` phân kênh theo khóa: `groupDocumentId` (tài liệu nhóm U14) và `accountId` (U16).
-- Admin Dashboard là route frontend `/admin`; backend chỉ có `GET /api/v1/admin/statistics`, không thêm hạ tầng.
+## Mapping triển khai
 
-## 2. Nginx
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `reporting`; không tạo deployable riêng.
 
-- `GET /api/v1/me/notifications/stream` (SSE): cấu hình như SSE của U14 (`proxy_buffering off`, `proxy_read_timeout 1h`).
-- Export CSV/XLSX trả stream qua backend với `Content-Disposition: attachment`, không lưu vào U03; giới hạn lớp/bài theo quyền trước khi bắt đầu stream.
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-## 3. Migration
+- After-commit domain event → recipient resolver checks current access → in-app persistent + eligible email delivery → bounded retry → terminal.
+- Backup failed → Admin notification/email minimal metadata; error not rollback BackupRun.
+- UC66 summaries → scope/count ports U01/U04 plus U03 backup read → safe DTO; UC45 teacher export → U15 projection → U03 private file.
 
-`db/migration/reporting/V20260925_2300__create_notifications.sql` (chưa áp dụng nên sửa trực tiếp, thay tên cũ `V20260925_2300__u16_notifications.sql`; chạy sau migration `accounts` của U01 và `assignments` của U08):
-- `notifications (id, account_id FK, type, title, body, link, source_event_id, email_status, email_sent_at, read_at, created_at)` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md); `type` gồm `QUIZ_PUBLISHED` và `ANNOUNCEMENT_POSTED`; unique `(source_event_id, account_id, type)`, index `(account_id, read_at, created_at)`, `(email_status, created_at)`.
-- `ALTER TABLE accounts ADD COLUMN email_preferences jsonb NOT NULL DEFAULT '{}'`.
-- `NotificationRetentionScanner` hằng ngày xóa thông báo quá 180 ngày.
+## Deploy/rollback/secret
 
-## 4. Compliance
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-09 | Compliant | `SMTP_*` trong secret CI/CD (đã có) |
-| RESILIENCY-10 | Compliant | Timeout SMTP 10 s |
-| Rule còn lại | N/A | Dùng chung deploy, health của backend |
+## Unit integration risks
+
+- Important create vs edit; Admin backup receives; no raw grade/archive/key; current enrollment filters recipients.
+- Duplicate outbox/provider timeout/backoff/quota no endless retry; SENT only accepted; backup status unavailable distinct.
+- Export official-only/authorized teacher; reminder once and not after deadline; Admin count-only + backup metadata.

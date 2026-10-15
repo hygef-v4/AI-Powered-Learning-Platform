@@ -1,69 +1,37 @@
-# U09 Question Type Authoring - Business Logic Model
+# U09 Assignment Documents & Quiz Authoring — business-logic-model
 
-**Bản tài liệu 2026-10-09**: nội dung theo dạng bài của UC 35 (cài đặt quiz), 42, 43, 44, 45 và popup Rubric Detail của UC 46 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## F1 - Cấu hình mặc định và cài đặt quiz (UC 35)
-1. U08 tạo bài hoặc quiz → U09 tạo `config` mặc định theo dạng.
-2. Quiz Detail: người soạn sửa cài đặt quiz (trộn câu/đáp án, thời gian, hiện điểm, hiện đáp án) khi quiz `DRAFT` (BR-U09-01, 11…13).
+**Primary UC:** 48, 35, 53. **Primary stories:** US-GRP-003, US-ASM-004, US-ASM-006. **Requirements:** FR-006/016/017/039.
 
-## F2 - Rubric từng câu Text Essay (UC 42)
-1. U08 thêm câu `ESSAY` (từ ngân hàng hoặc câu riêng) vào bài rồi gọi `TypeConfigPort.syncQuestionRubrics` trong cùng transaction.
-2. U09 so danh sách câu: câu mới → `RubricPort.create` rubric trống, ghi `config.questionRubrics[]`; câu bị bỏ → `RubricPort.delete` (BR-U09-23).
-3. Assignment Form hiện nút Rubric cạnh từng câu → popup Rubric Detail (F7); điểm câu bằng tổng điểm rubric.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u09-question-type-authoring` không quyết định chức năng hiện hành.
 
-## F3 - Code Lab (UC 43)
-1. Câu `CODE` thêm vào bài qua U08 (từ ngân hàng hoặc câu riêng) (BR-U09-16).
-2. U09 hiện trạng thái kiểm lời giải mẫu từng câu qua `CodeLabCheckPort` (U13); nút "Kiểm lời giải mẫu" (`VerifySolutionButton` của U13) chạy lời giải với mọi test trong Judge0 (BR-U09-18).
-3. Câu riêng của bài sửa nội dung → phải kiểm lại.
+## Luồng xử lý
 
-## F4 - Soạn khung tài liệu (UC 44, 45)
-1. Mở `DocumentEditor` chế độ khung; mọi block tạo ra là `TEACHER`.
-2. Thêm/sửa/xóa/sắp xếp block; sơ đồ mở Draw.io nhúng, lưu XML + SVG (BR-U09-35, 38).
-3. Lưu khung: kiểm `validateSkeleton`, tính `contentHash` từng block.
-3a. Lấy khung từ ngân hàng: chọn câu `DOCUMENT` `ACTIVE` (`QuestionPicker`, `BankQueryPort`), sao khung và `requiredDiagrams` vào `config` làm điểm xuất phát; bản ngân hàng không đổi.
-4. Dựng cây heading (Tiêu đề 1–6), lấy heading nhỏ nhất của mỗi nhánh làm phần (BR-U09-25); `config.parts[] = {partId, headingBlockId, ancestorHeadingIds[], title, rubricId}`.
-5. So với danh sách phần cũ: phần mới → `RubricPort.create` rubric trống; phần không còn → `RubricPort.delete` (BR-U09-26, 27).
-6. Bài nhóm: khung có ít nhất một phần; U14 dựng mỗi phần thành một mục khi bài mở.
+- Educator edits skeleton/settings → validates blocks/parts/rubric/policy → optimistic save → U08 review/publication.
+- Draw.io launch from enabled block → validate postMessage origin/source/request correlation → preserve full XML/version → regenerate safe preview.
+- AI proposal/import content → untrusted schema validation → educator diff/accept into draft only → update version; no auto-publication.
 
-## F5 - Nhập khung từ DOCX
-1. Upload DOCX (tạm, không lưu lâu) (BR-U09-40).
-2. Duyệt tài liệu theo thứ tự, dựng block; mỗi ảnh chạy `DiagramDetector` (BR-U09-41, 42).
-3. Trả bản xem trước + báo cáo (số sơ đồ nhận được, ảnh giữ nguyên, nội dung bị bỏ) (BR-U09-43).
-4. Người soạn chỉnh rồi lưu như F4 bước 3–5 (BR-U09-44).
+## Public contracts
 
-## F6 - AI soạn khung (Diagram Essay, bài nhóm)
-1. Bấm "Nhờ AI soạn khung" (mô tả, module/học liệu tùy chọn) → `AiDraftPort.request` loại `SKELETON_DRAFT` (U13 giữ credit, RAG phạm vi lớp hoặc môn); xem trước cây heading, đoạn hướng dẫn, gợi ý rubric, trích dẫn; xác nhận thì thay khung, tính lại phần như F4 bước 4–5, gợi ý rubric điền vào rubric của từng phần; bỏ thì khung không đổi (BR-U09-24).
-2. AI soạn câu Text Essay, Code Lab, quiz do U08 xử lý (BR-U08-21).
+document skeleton/editor/import/export; validate diagramEnabled/XML; Quiz questions/config; versioned activityMonitoringPolicy
 
-## F7 - Rubric Detail (UC 46)
-1. Trong Assignment Form, bấm rubric của một câu Text Essay hoặc một phần → popup Rubric Detail gắn `RubricEditor` của U06; rubric đã có sẵn (tự tạo).
-2. Kiểm quyền theo bài và bài `DRAFT`; thêm, sửa, xóa tiêu chí và mục; Lưu → `RubricPort.update` (ghi đè) (BR-U06-35).
-3. Câu hoặc phần có rubric trống hiện cảnh báo; bài đã phát hành thì popup chỉ đọc (rubric đã khóa).
+## Invariants và failure
 
-## F8 - Kiểm duyệt (`TypeConfigPort.check`, U08 gọi)
-- Quiz: cài đặt hợp lệ (BR-U09-14).
-- Text Essay: mọi câu có rubric đã điền hợp lệ (BR-U09-23); số câu do U08 kiểm.
-- Code Lab: không có cấu hình riêng; kết quả kiểm lời giải do U08 hỏi `CodeLabCheckPort` của U13 (BR-U09-18).
-- Diagram Essay: có khung, `requiredDiagrams` hợp lệ, mọi rubric phần đã điền hợp lệ.
-- Bài nhóm: khung có ít nhất một phần, mọi rubric phần đã điền hợp lệ (BR-U09-25…27).
-- Trả danh sách lỗi theo câu, đề hoặc phần.
+- Document common Assignment editor; heading/paragraph/list/table/image and DIAGRAM when enabled, structured Document JSON + full Draw.io XML + sanitized preview; không flattened XML as source.
+- Skeleton locked student vs editable content parts separated. Parts derived leaf heading per baseline; each partId links rubric. Author import/export DOCX scope/size/type verified; exact diagram roundtrip required or report unsupported representation, no silent loss.
+- Diagram disabled reject diagram blocks/imports; enabled validate XML limits/external refs and sanitize SVG/HTML, Draw.io iframe origin/message checks; no eval/import external entity.
+- Quiz authoring MCQ independent Lesson; immutable publication keys/options snapshot with question versions, hidden keys never Student context.
+- activityMonitoringEnabled default false, policy/notice/retention version in author config and attempt snapshot; changing published policy requires new version, no silent mid-attempt switch.
+- No Student feedback on drafts or Graded work; remove allowStudentAiFeedback. UC41 requires an owned SUBMITTED PRACTICE snapshot. Educator AI-assisted authoring remains separately authorized with explicit source selection and reviewed outputs.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## F9 - Nhân bản, version, copy giữa lớp (`TypeConfigPort.copy`, U08 gọi)
-1. Sao `config` (cài đặt quiz, `questionRubrics`, khung, phần) sang bài đích; câu do U08 sao.
-2. Nhân bản rubric của từng câu/phần qua `RubricPort.cloneForAssignment`, ghi `rubricId` mới (BR-U09-28).
+## Kiểm nghiệm
 
-## F10 - Người học nhập DOCX vào lượt DOCUMENT (U11 gọi)
-1. U11 kiểm lượt thuộc người học, `IN_PROGRESS`, còn thời hạn; U09 kiểm tệp bằng `SafeZipGuard` rồi dùng `DocxImporter`, gắn `origin = STUDENT` cho block mới.
-2. Trả xem trước và báo cáo phần bỏ qua, không ghi đè bản nháp. Người học xác nhận thì U11 thêm block qua luồng lưu nháp với `contentVersion` hiện tại; xung đột hoặc lỗi giữ nguyên bản nháp cũ.
-3. Kiểm lại `validateForSave`; mọi block `TEACHER` và thứ tự tương đối của chúng không đổi.
+- Diagram XML roundtrip; malicious/oversized XML/SVG/import reject; disabled diagram reject; valid pure doc works.
+- Student cannot edit scaffold/key/rubric; Quiz keys stripped; policy snapshot unchanged mid-attempt; AI proposal stale rejected.
 
-## F11 - Kiểm tài liệu của người học (U11 gọi)
-- Lưu nháp: `validateForSave` (BR-U09-36).
-- Nộp: `validateForSubmit` (BR-U09-37); trả danh sách lỗi theo `blockId`.
-
-## F12 - Xuất DOCX
-1. Duyệt block, dựng DOCX bằng POI.
-2. Sơ đồ: SVG → PNG (rasterizer server), ghi chunk `tEXt` `mxfile` = XML đầy đủ đã URL-encode (BR-U09-51).
-
-## F13 - Rút gọn XML (U13 gọi)
-- `DiagramCompactor.compact(xml)` theo BR-U09-60.
+Authoring coverage: UC35 Individual and UC53 Group are separate entries into the common Assignment document/rubric model. Validate INDIVIDUAL/GROUP independently of diagramEnabled; subject-level individual allowed within R2, group only assigned class. UC48 Quiz creation can open from View Learning Material with optional current-material reference; it remains independent of Lesson. No Student draft-feedback opt-in.

@@ -1,31 +1,34 @@
-# U14 Group Document & Submission - NFR Design Patterns
+# U14 Group Workspace & Submission — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 27 và phần bài nhóm của UC 16, 23, 28, 37 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-004, US-GRP-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Khóa mục trong dòng tài liệu
-- Mọi thao tác mục (nhận, giao, lưu nháp, xong, nhả) chạy trong một transaction: kiểm quyền (P3) → `SELECT ... FROM group_documents WHERE id=? FOR UPDATE` → kiểm điều kiện trên phần tử của `sections.items` → ghi lại cột JSON, `version = version + 1`, `updated_at = now()`.
-- Nhận: chỉ khi `status IN ('OPEN','DONE')`; sai → trả `409` kèm người đang giữ (NFR-U14-10). Gán `draftBlocks = publishedBlocks`.
-- Giao (trưởng nhóm hiện tại theo `GroupMembershipPort.leaderOf`): nhả khóa người cũ nếu có rồi đặt `CLAIMED`, `claimedBy`, `assignedBy`.
-- Lưu nháp: chỉ khi `claimedBy` = người gọi và `version` của client khớp; sau hạn cuối nhận bài chỉ nhận trong 30 giây ân hạn; lưu nháp không chặn người khác vì khóa dòng chỉ giữ trong vài ms.
-- Xong: kiểm block (U09) → cập nhật mục → thêm phần tử `revisions` → `DONE`, bỏ `claimedBy`. Không đổi trạng thái tài liệu.
-- Nhả: xóa `draftBlocks` (client đã cảnh báo), trạng thái về `DONE` nếu `publishedBlocks` có nội dung, không thì `OPEN`.
+**Primary UC:** 56. **Primary stories:** US-GRP-004, US-GRP-005. **Requirements:** FR-018/025/026/030/039.
 
-## P2 - Realtime qua RabbitMQ fanout + SSE
-1. Sau commit, `GroupDocEventPublisher` gửi `{groupDocumentId, type, payload nhỏ, version}` lên exchange fanout `platform.realtime`. Loại sự kiện: `SECTION_ASSIGNED`, `SECTION_CLAIMED`, `SECTION_DONE`, `SECTION_RELEASED`, `GROUP_SUBMITTED`, `ASSIGNMENT_RETIRED`.
-2. Mỗi backend có queue tạm `jobs.realtime.{instanceId}` (exclusive, auto-delete) bind vào fanout; `SseHub` giữ map `khóa kênh → emitters` (U14 dùng `groupDocumentId`; U16 đăng ký `accountId` cho chuông thông báo), đẩy sự kiện tới emitter của kênh đó.
-3. Payload chỉ chứa ID, trạng thái, tác giả; nội dung mục lớn thì client gọi `GET` tài liệu theo `version` (tránh đẩy MB qua SSE).
-4. Heartbeat 25 s (comment `:ping`); emitter timeout 30 phút, client tự kết nối lại; kết nối lại → client `GET` toàn bộ tài liệu (NFR-U14-03).
-5. Worker (dựng tài liệu, scanner tự nộp) phát qua cùng fanout → backend đẩy.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u14-group-document-submission` không quyết định chức năng hiện hành.
 
-## P3 - Quyền theo đối tượng
-- Thành viên: `ClassAccessPort` (R5: ghi danh `ACTIVE`, lớp `OPEN`) và `GroupMembershipPort` (thành viên hiện tại của đúng nhóm của tài liệu); trưởng nhóm đọc trực tiếp `leaderOf` mỗi request. Giảng viên: `ClassAccessPort` R3/R4 của lớp chứa bài. Sai quyền, nhóm khác, `ADMIN` → `404`, audit truy cập bị chặn.
-- Kênh SSE chỉ mở cho thành viên nhóm. `GroupChangePort.onMemberRemoved` (U12 gọi trong transaction) → nhả khóa mục của người bị bỏ (P1); sau commit `SseHub` đóng emitter của họ (NFR-U14-20).
+## Patterns áp dụng
 
-## P4 - Nộp một đường, bất biến
-- `GroupSubmitter.submit(docId, mode, actor)` dùng cho trưởng nhóm và scanner; nộp tay khi `group_documents.status = IN_PROGRESS` và bài còn nhận (khóa hàng tài liệu bằng `SELECT ... FOR UPDATE`); chụp tài liệu từ chính dòng đang khóa nên nhất quán; ghi `submitted_snapshot`, `submit_mode`, `submitted_at`; gọi `GroupSubmittedPort` trong cùng transaction.
-- `GroupAutoSubmitScanner` (mỗi phút): chọn tài liệu `IN_PROGRESS` của bài nhóm (`GROUP_ASSIGNMENT`) đã quá `COALESCE(late_until, closes_at)` 30 giây hoặc bài `RETIRED`; trong một transaction mỗi tài liệu: chốt mục `CLAIMED` bằng `draftBlocks` đã lưu (thêm `revisions`, `DONE`), nộp nếu `submitted_at IS NULL OR updated_at > submitted_at` (NFR-U14-13, 14), đặt `status = CLOSED`. Chạy lại không nộp trùng vì chỉ chọn tài liệu `IN_PROGRESS`.
-- Ngưng giao: `AssignmentLifecycleAdapter.onRetired` không ghi DB; sau commit phát `ASSIGNMENT_RETIRED` cho mọi tài liệu của bài; scanner nộp ở lượt kế tiếp với `AUTO_RETIRED`.
-- Mọi client đang mở tài liệu (sửa mục hoặc chỉ xem): đồng hồ về 0 hoặc nhận `ASSIGNMENT_RETIRED` → khóa trang, người đang sửa gửi lần lưu cuối (chỉ khi hết hạn), hiện vòng chờ; nhận `GROUP_SUBMITTED` qua SSE (mất kết nối thì hỏi trạng thái bản nộp) rồi chuyển sang Submission History (BR-U14-36).
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Dựng tài liệu từ khung
-- Khi bài mở hoặc có nhóm mới: đọc khung và `config.parts` (U09) → mỗi phần một mục (khóa `partId`, sao `headingBlockId`, `ancestorHeadingIds`, `title`); heading cha và block ngoài phần → `sharedBlocks`; tạo `group_documents` cho mọi nhóm của lớp (U12), một transaction mỗi nhóm, `INSERT ... ON CONFLICT (group_id, assignment_id) DO NOTHING`. Việc lặp lại không tạo trùng.
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
+
+## Unit-specific patterns
+
+- Group Assignment is ASSIGNMENT submissionMode GROUP, class-only, GRADED default D02. Draw.io optional identical document model U09.
+- Preserve aggregate one GroupDocument per group/assessment version; sections/revisions/submitted snapshot JSON in group_documents, no unsolicited new sections tables.
+- Section OPEN/CLAIMED/DONE; one editor/section; leader assigns or member claims; finish writes immutable revision and publishedBlocks. Scaffold readonly; diagram disabled enforce U09.
+- GroupDocument IN_PROGRESS/CLOSED; leader MANUAL submit/resubmit before deadline snapshots immutable receipt/version; AUTO_DEADLINE/AUTO_RETIRED locks closest persisted drafts and records SYSTEM. Submission history retained; editing current document never mutates submitted snapshots.
+- Removing/replacing member/leader changes permissions next request, release claims safely per baseline warning/discard policy; audit authorship retained.
+- Student AI context default own editable section D03, no whole-group export automatically. Graded feedback teacher allowed; personal connection only; result tied section/document version.
+- Record per-member visibility through U11 ActivityWritePort under group snapshot policy. U14 does not own duplicate ActivityEvent store; teacher timeline through U15.
+- SSE per-account/document channels recheck membership, no private draft of others; clock/version from backend, no owner bypass through collaboration.
+
+## Validation matrix
+
+- Concurrent claims one wins; private draft not leaked; changing leader authority immediate; duplicate manual/auto close no duplicate receipt.
+- Draw.io enabled/disabled, pure doc group works; AI only own section and teacher policy; per-member activity no group guilt score.

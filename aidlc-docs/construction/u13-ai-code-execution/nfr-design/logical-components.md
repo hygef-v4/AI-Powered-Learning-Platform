@@ -1,73 +1,36 @@
-# U13 AI & Code Execution - Logical Components
+# U13 AI Connections & MCP — logical-components
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Sơ đồ
+**Primary UC:** 31, 32. **Primary stories:** US-AIG-001, US-AIG-002, US-AIG-003, US-AIC-001, US-AIC-002. **Requirements:** FR-006/008/012/021/030/035/037.
 
-```
- U06/U08/U09 (AI drafts)   U15 (AI proposal)   U11 (try, submit, practice)   U05 (upload)
-        |                        |                      |                         |
-        v                        v                      v                         v
- +-------------------------------------- backend ---------------------------------------+
- | AiSuggestionService --> AiGuard (role, SettingsPort U03, cap, rate, CreditPort U07)  |
- |                     --> JobPort (AI_TASK)                                            |
- | AiUsageService (AiUsagePort: quote, hold, begin, complete, release; CreditUsagePort) |
- | CodeRunService --> TRY: CodeRunnerPort (sync)    VERIFY/GRADE: code_runs + JobPort   |
- | CodeLabCheckService (CodeLabCheckPort for U08, U09)                                  |
- | AiSettingDefinitions (SettingDefinition for U03)   AiUsageStatsService (U16)         |
- +--------------------------------------------------------------------------------------+
-        | jobs.gemini                                  | jobs.code
-        v                                              v
- +-------------------------------------- worker ----------------------------------------+
- | AiTaskHandler --> RagRetrievalPort (U05), DocumentModelPort/DiagramCompactPort (U09) |
- |               --> PromptBuilder + InjectionScanner --> AiGateway --> GeminiAdapter   |
- |               --> OutputValidator (schema + U06/U09) --> CreditPort.settle           |
- | CodeRunHandler --> CodeRunnerPort --> Judge0Adapter --[sandbox network]--> Judge0    |
- |                --> CodeScorer --> CodeGradedPort / PracticeResultPort (U15)          |
- | AiPendingSweeper, CodeRunPendingSweeper, CreditReservationScanner                    |
- +--------------------------------------------------------------------------------------+
-```
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u13-ai-code-execution` không quyết định chức năng hiện hành.
 
-**Text alternative**: U06, U08, U09 gọi `AiSuggestionService` để tạo đề xuất câu hoặc khung; U15 gọi để đề xuất chấm; U11 gọi để chấm Practice, chạy thử và chấm code; U05 gọi `AiUsageService` để báo mức giữ, giữ credit khi yêu cầu tóm tắt học liệu và ghi nhận lần tóm tắt/embedding. `AiGuard` kiểm vai trò, đọc kill-switch, trần và tần suất từ Settings (U03), giữ credit U07 rồi tạo job. Trong worker, `AiTaskHandler` lấy học liệu (U05) hoặc nội dung bài nộp (văn bản phẳng và XML rút gọn qua U09), dựng prompt có ranh giới dữ liệu, gọi Gemini qua `AiGateway`, kiểm đầu ra rồi trừ credit. `CodeRunService` chạy thử đồng bộ hoặc tạo dòng `code_runs` và job kiểm lời giải/chấm; `CodeRunHandler` gửi mã sang Judge0 qua mạng sandbox, tính điểm xác định và báo U15. `CodeLabCheckService` trả trạng thái kiểm lời giải cho U08, U09. `AiSettingDefinitions` khai báo mục AI cho Settings; `AiUsageStatsService` cấp số liệu cho Admin Dashboard của U16. Các sweeper và scanner gửi lại việc bị mất, hết hạn chấm và trả credit giữ quá hạn.
+## Component responsibility
 
-## 2. Thành phần
-
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `AiGuard` | backend | P1 |
-| `AiSuggestionService`, `AiTaskHandler` | backend, worker | F1, F2, F3a; P3-P5 |
-| `AiUsageService` | backend, worker | `AiUsagePort` cho U05 (F6, P9), `CreditUsagePort` cho U07 |
-| `AiPendingSweeper`, `CreditReservationScanner` | worker | P5 |
-| `AiGateway`, `GeminiAdapter`, `FakeAiGateway` | worker | P2 |
-| `CodeRunService`, `CodeRunHandler`, `Judge0Adapter`, `CodeScorer`, `ContentHasher`, `CodeRunPendingSweeper` | backend, worker | F3, F4; P6-P8 |
-| `CodeLabCheckService` | backend | BR-U13-33 |
-| `AiSettingDefinitions` | backend | F5, BR-U13-40 |
-| `AiUsageStatsService` | backend | F5, BR-U13-41 (`AiUsageStatsPort` cho U16) |
-
-Bỏ `AiAdminService` (cấu hình chuyển sang Settings của U03, báo cáo chuyển sang Admin Dashboard của U16).
-
-## 3. Cấu hình
-
-| Khóa | Mặc định |
+| Layer | Responsibility |
 |---|---|
-| `GEMINI_API_KEY` | Rỗng → `FakeAiGateway` |
-| `U13_MODEL_PRICES` | Bảng giá USD/1M token vào/ra theo model |
-| Kill-switch, trần chi phí ngày, giới hạn/phút, model và bật/tắt từng loại việc | Không phải biến môi trường: mục nhóm AI trên Settings (`ai.enabled`, `ai.dailyCostCapUsd` 2, `ai.ratePerMinute` 10, `ai.{task}.model`, `ai.{task}.enabled`), Admin sửa trên Setting Detail |
-| `U13_AI_CONCURRENCY` | 3 |
-| `U13_CODE_CONCURRENCY` | 2 |
-| `JUDGE0_URL` | `http://judge0-server:2358` |
-| `JUDGE0_AUTH_TOKEN` | secret |
-| `U13_TRY_PER_MINUTE` | 5 |
+| Controller / MCP adapter | Deserialize/validate, authenticated actor, minimal response; gọi domain service |
+| Application service | Scope/state/version, orchestration qua ports, transaction owner |
+| Domain policy/model | Rules, transitions, snapshot invariants |
+| Repository | Owned entities only; optimistic/locking/unique constraints |
+| Outbound adapters | Timeout/retry/provenance; không quyết định học vụ |
+| UI | Entry UC, form/query status, không client-only security |
 
-## 4. Compliance
+## Owner contract
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-03 | Compliant | Không log prompt/phản hồi/key |
-| SECURITY-05 | Compliant | P3, P4 |
-| SECURITY-08 | Compliant | `AiGuard` từ chối Admin, giới hạn Student; chỉ người yêu cầu xem đề xuất |
-| SECURITY-09 | Compliant | Key, token trong `.env`, không trong Settings |
-| SECURITY-15 | Compliant | P1 từ chối trước khi gọi; P5, P9 release credit |
-| RESILIENCY-06 | Compliant | P6 kiểm Judge0 khi khởi động |
-| RESILIENCY-10 | Compliant | Timeout Gemini, Judge0 |
-| Rule còn lại | N/A | Ngoài phạm vi đồ án |
+managePersonalConnection; manageSharedConnection(admin); testSyntheticConnection; revoke; requestAi(task, scopedContext, connectionRef); create/revokeMcpCredential; scoped MCP tools
+
+## Owned data
+
+- AiConnection: id/ownerId nullable institutional/scope/provider/modelAllowlist/encryptedCredential/keyVersion/status/version/lastTestResult/timestamps; encrypted secret never DTO serialized.
+- McpCredential: id/actorId/tokenHash/allowedToolScopes/expiry/revokedAt/version; client label optional and no claim of LLM usage authority.
+- AiTask: id/requestRef unique/fingerprint/actorId/connectionRef/targetRef/contentVersion/taskType/source/model/policySnapshot/state/dispatchCheckpoint/providerRequestRef/resultRef/usageProvenance/safeError/timestamps.
+- CompatibilityInstruction: provider API setup and per-agent MCP tested client/transport/auth/version/date; untested clients labeled unverified, not universally supported.
+
+## Critical paths
+
+- UC31 owner personal or UC14/15 Admin institutional Settings delegated to U13 → validate provider/model/secret → encrypt server-side → audit → masked connection response; test synthetic and revoke independently.
+- Direct task → current domain context → source resolve → if shared U07 reserve → checkpoint dispatch → adapter timeout/bounded response → validate result/reconcile usage → domain draft/private feedback/proposal guarded version.
+- MCP authenticate ALAP actor → allowlist tool args → domain current authorization → minimal read or expectedVersion write → sanitize response/audit; agent calls model outside platform and reports proposal.
+- Source unavailable/revoked/permission stale → fail safely, retain user work; external unknown result does not silently resubmit call or publish grades.

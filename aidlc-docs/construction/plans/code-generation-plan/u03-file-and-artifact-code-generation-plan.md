@@ -1,188 +1,50 @@
-# U03 File, Job & Event - Code Generation Plan
+# U03 File, Job, Event & Settings — Code Generation Plan — revision chưa triển khai
 
-**Baseline code đã sinh**: nội dung/checklist trước mục 6 giữ nguyên theo code 2026-10-05. Hợp đồng mục tiêu hiện hành theo [current SRS contract](../../current-srs-contract.md); mục 6 ghi việc implementation còn chưa làm.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Bản 73 UC (2026-10-09)**: U03 chủ trì UC 70 View Settings và UC 71 Edit Setting (người dùng chốt U03 giữ chung Settings), story US-SET-001. Việc cần làm ở mục 7.
+**Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013/018/033/038; REL-001/002/003/004.
 
-> Plan này là nguồn duy nhất cho Code Generation của U03. Mỗi bước xong thì đánh `[x]` ngay.
->
-> **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
->
-> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u03-file-and-artifact` không quyết định chức năng hiện hành.
 
-## 1. Bối cảnh
+## Authorization và trạng thái
 
-- **Story/UC**: không có trực tiếp (hạ tầng dùng chung, kiểm ở gate G1). Phục vụ U01 (avatar), U05 (học liệu), U06/U09/U11/U14 (ảnh trong tài liệu); việc nền, worker và sự kiện thông báo cho mọi unit (chuyển từ U02, 2026-10-04).
-- **Thứ tự**: unit code **đầu tiên** của dự án, song song với U02. Làm Nhóm K (khung) → Nhóm J (việc nền) → phần tệp (Bước 0-28). U01 code sau U03 và U02.
-- **Thiết kế nguồn**: `construction/u03-file-and-artifact/` (functional-design, nfr-requirements, nfr-design, infrastructure-design) và `construction/shared-infrastructure.md`.
-- **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
-- **Code nằm ở workspace root**, không trong `aidlc-docs/`.
+User chỉ yêu cầu đồng bộ tài liệu Construction theo Inception. Đây là kế hoạch revision, không chạy Code Generation Part 2 hoặc đánh completed. Checklist/approval/code baseline giữ tại [plan cũ](../../historical/baseline-before-66-uc-2026-10-13/plans/code-generation-plan/u03-file-and-artifact-code-generation-plan.md); approval 05/10 không tự áp dụng scope mới. Không reset lịch sử code đã sinh thành chưa sinh; checklist dưới đây chỉ delta hiện hành.
 
-### Khung dự án dùng chung
+## Paths cần review trước sửa code
 
-U03 dựng khung dự án ở Nhóm K (Bước K1-K6, chuyển từ plan U01). Các unit khác kiểm ở Bước 0 của mình.
+- Existing backend owner/package: `backend/src/main/java/edu/aiplatform/files`; frontend `frontend/src`, public contracts `backend/src/main/java/edu/aiplatform/contracts` nếu tồn tại; migration `backend/src/main/resources/db/migration`; tests `backend/src/test` và frontend test files.
+- Exact classes/routes/migration numbers xác định qua repository inventory trước implementation; không invent files đã tồn tại. Legacy package/folder tên cũ không cho phép tiếp tục payment/code.
+- Source-of-truth [current shared contract](../../current-srs-contract.md), unit design theo current folder. [Inception dependency](../../../inception/application-design/unit-of-work-dependency.md) là thứ tự hiện hành.
 
-### Phụ thuộc
+## Checklist delta
 
-| Port | Unit thật | Xử lý lượt này |
-|---|---|---|
-| `AuthorizationPort` (quyền upload theo `purpose`, vai trò người dùng) | U01 (`C`) | U01 code sau: adapter giả **luôn từ chối** (fail closed), test dùng mock; U01 Bước 15 thay bằng bản thật. Việc nền (Nhóm J) không cần kiểm quyền nên chạy trọn được |
-| `AuditPort` | U02 (`C`) | U02 code song song: chưa có thì adapter giả ghi log; thay bằng U02 thật khi xong |
+- [ ] **Bước 1:** Inventory code/contracts/migrations baseline, xác định reuse/removal, mapping dữ liệu và exact paths; không drop records/snapshots trước backup/restore.
+- [ ] **Bước 2:** Review DTO/status/public ports theo U03 owner; authorizations hiện hành, expectedVersion/idempotency và error projection; replace adapters fail-closed trước tích hợp thật.
+- [ ] **Bước 3:** Migration owned entities/constraints/index/retention; preserve IDs/historical snapshots, validate old-to-new mapping trên copy database.
+- [ ] **Bước 4:** Domain rules/services/transactions và recovery theo functional-design; dependent services gọi port, không repositories xuyên owner.
+- [ ] **Bước 5:** API layer guards/validation/rate/CSRF, minimal projections, sanitized audit/outbox cùng owner transaction; external timeout/retry bounded.
+- [ ] **Bước 6:** Frontend state/forms/query permissions theo entry UC hiện hành; conflicts/unavailable rõ; không client-only policy/security.
+- [ ] **Bước 7:** Coder viết meaningful unit/service/API/UI tests của delta, negative permissions/state/duplicate/concurrency; không chỉ mirror implementation.
+- [ ] **Bước 8:** Tester khác viết integration cases từ requirements/design và chạy adapter thật/sandbox/local mock phù hợp, phân biệt cases viết xong và runtime pass.
+- [ ] **Bước 9:** Update deployment env/health/secret rotation và runbook; test migration/rollback/restore nếu unit tác động dữ liệu hoặc credentials.
+- [ ] **Bước 10:** Review evidence/FR-story-UC traceability, fix/retest; user review trước next code stage, không tự thay milestones/nhân sự.
 
-### Dữ liệu U03 sở hữu
+## Unit-specific implementation scope
 
-Không có bảng PostgreSQL; metadata tệp ở `appProperties` trên Google Shared Drive; Redis `file:download-token:*`. RabbitMQ: exchange `jobs`, `jobs.retry`, `platform.events`; 7 queue việc nền `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`; 5 queue thử lại `jobs.retry.*`. Không có bảng job hay outbox.
+- UC14 View Settings / UC15 Edit Setting primary U03. View returns masked institutional API configuration and quota/operational policies; edits delegate quota to U07 TeacherQuotaPolicyPort and protected credentials/provider/model/test/revoke to U13 AiConnectionAdministrationPort. Each owner validates version and audit; no cross-owner atomic transaction or raw key in ordinary Settings, and unavailable never reports saved. UC76/78/82 (ID cũ) retired.
+- File private, MIME/size/purpose/scope kiểm server trước upload/download; short-lived token hoặc server stream không cấp thêm quyền. File provider ID và secrets không đưa vào log.
+- Backup schedule/retention là cấu hình bắt buộc xác nhận, không tự gán số. Consistent PostgreSQL dump + version/schema + manifest và bản sao độc lập các tệp tại snapshot; bản live Drive không là backup.
+- BackupRun CREATED → RUNNING → SUCCESS/FAILED; SUCCESS chỉ sau toàn bộ dump/files/encrypted upload/checksum. Retention chỉ xóa bản thành công cũ sau khi giữ tối thiểu bản tốt gần nhất; bản lỗi không thay bản tốt.
+- Archive mã hóa bằng khóa giữ ngoài VPS/archive; protected AI credentials trong database vẫn là ciphertext, secret store/key recovery riêng. Lỗi upload/disk/permission retry hữu hạn, phát backup.failed sau ghi trạng thái.
+- Restore runbook vào môi trường cô lập; không web production-restore hoặc MCP restore tool. Kiểm records/scope/links/XML/submissions/grades/quota; đo RPO/RTO, không cam kết zero loss.
+- Jobs enqueue-after-commit qua outbox; claim/lease/dedup theo requestRef, retry bounded, terminal lỗi ghi rõ. DB job/outbox là nguồn bền vững; Redis mất không được reset quota bền vững.
 
-## 2. Cấu trúc
+## Independent integration acceptance
 
-```
-/backend/src/main/java/edu/aiplatform/
-  files/
-    api/                FileUploadController, DownloadController, DTO
-    application/        UploadService, ArtifactService (ArtifactPort),
-                        DownloadTokenService, ContentInspector
-    domain/             StoredFile, FileRef, ArtifactPurpose, PurposePolicy,
-                        FileNameSanitizer
-    infrastructure/     FileRefSigner (HMAC), GoogleDriveStorageAdapter,
-                        LocalFolderStorageAdapter, DriveHealthIndicator
-    worker/             DriveJobHandler
-    port/               ArtifactPort, StoragePort
-  jobs/                   (việc nền, chuyển từ U02)
-    application/        JobPublisher, EventPublisher
-    domain/             JobMessage, DomainEventMessage, BackoffPolicy
-    infrastructure/     AmqpPublisher, AmqpTopology
-    worker/             JobListener, JobRetryPublisher, JobHandlerRegistry,
-                        PendingSweepRunner, ScheduledScanRunner
-    port/               JobPort, EventPublisherPort, JobHandler, PendingSweeper,
-                        ScheduledScanner
-    adapter/fake/       FakeAuthorizationPort (từ chối), LoggingAuditAdapter
-/frontend/src/shared/files/          FileUploader, FileLink, useFileUpload
-/frontend/src/shared/status/         StatusBadge, usePollStatus
-/contracts/messages/job-message.json, domain-event.json
-/contracts/openapi/files.yaml
-```
+- Settings invalid/version conflict/quota port down; no personal secret response.
+- Backup happy path, partial file/upload failure, key unavailable, disk full, retention giữ last-good, restore isolated XML/grades/usage/permissions.
+- Job duplicate/crash-after-commit/retry bounded; download expired/out-of-scope; file deletion không xóa backup.
 
-## 3. Các bước
+## DoD
 
-### Nhóm K - Khung dự án (dùng chung, chuyển từ plan U01)
-
-- [x] **Bước K1** - Tạo `/backend/pom.xml`: Spring Boot 3.x, Java 17, Web, Security, Data JPA, Validation, Data Redis, Actuator, Flyway, PostgreSQL, Spring AMQP, Mail, Bucket4j + Redis, jjwt, Commons CSV, Testcontainers (PostgreSQL, Redis, RabbitMQ), JUnit 5. Khóa phiên bản.
-- [x] **Bước K2** - `PlatformApplication`, `application.yml` (đọc cấu hình từ biến môi trường; mỗi unit thêm khóa của mình), profile `worker`, `application-local.yml`.
-- [x] **Bước K3** - Hạ tầng dùng chung trong `shared/`: global error handler trả problem-details an toàn, filter correlation ID, bộ che dữ liệu nhạy cảm trong log, cấu hình Spring Security mặc định từ chối, `ForbiddenKeyGuard` (khóa `password`, `otp`, `token`, `secret`, `phone`) dùng chung cho audit (U02) và payload việc nền (U03).
-- [x] **Bước K4** - Khung `/frontend`: Next.js + TypeScript strict + Tailwind, ESLint, Vitest + Testing Library, `src/lib/api` gửi cookie, component UI cơ bản (Button, Input, PasswordField, OtpInput, Dialog, Table, Alert).
-- [x] **Bước K5** - `/infra/docker-compose.yml` và `docker-compose.local.yml`: nginx, frontend, backend, postgres (`pgvector/pgvector:pg16`), redis, rabbitmq, mailpit (local); mạng `edge`/`internal`, giới hạn tài nguyên, healthcheck. Service `worker` (cùng image backend, profile `worker`, chỉ mạng `internal`, healthcheck); RabbitMQ vhost `/platform`, user `app`, tắt `guest`; PostgreSQL hai user `migrator` (Flyway) và `app` (runtime).
-- [x] **Bước K6** - `.github/workflows/ci.yml`: test backend + frontend, build image tag SHA. Bước deploy qua SSH để dạng khung, chưa bật.
-
-### Nhóm J - Việc nền, worker và sự kiện (chuyển từ U02, 2026-10-04)
-
-- [x] **Bước J1** - Biến cấu hình việc nền theo `logical-components.md` §4 (`U03_JOB_*`, `U03_SWEEP_*`, `U03_SCAN_INTERVAL`, `RABBITMQ_*`).
-- [x] **Bước J2** - Domain: `JobMessage` (`schemaVersion`, `jobType`, `idempotencyKey`, `payload`, `attempt`, `correlationId`), `DomainEventMessage`, `BackoffPolicy` (30 s, 1, 2, 4, 8 phút).
-- [x] **Bước J3** - Port: `JobPort`, `EventPublisherPort`, `JobHandler` (xử lý + `onFailed`), `PendingSweeper`, `ScheduledScanner`. Port dùng: `AuthorizationPort` (U01) → `FakeAuthorizationPort` luôn từ chối; `AuditPort` (U02) → adapter giả ghi log nếu U02 chưa xong.
-- [x] **Bước J4** - `JobPublisher`: kiểm payload bằng `ForbiddenKeyGuard`; có transaction thì gửi sau commit, rollback không gửi; không có transaction thì gửi ngay. `EventPublisher` gửi `platform.events` sau commit, lỗi chỉ log (BR-U03-50…52, 70, 71, P8).
-- [x] **Bước J5** - `AmqpTopology` khai báo exchange `jobs`, `jobs.retry`, `platform.events`, 7 queue việc nền và 5 queue thử lại (TTL cố định, dead-letter về `jobs`) bằng `Declarables`; `AmqpPublisher` với publisher confirm 2 s.
-- [x] **Bước J6** - Worker: `JobHandlerRegistry` (`jobType` → handler, `onFailed`, queue), `JobListener` cho 7 queue với số luồng theo P11 (`jobs.email` là priority queue), `JobRetryPublisher` (vào `jobs.retry.*` theo lượt, hết 5 lượt gọi `onFailed`) (BR-U03-53, 56, 57, 63, P9, P11).
-- [x] **Bước J7** - `PendingSweepRunner` và `ScheduledScanRunner` mỗi phút (BR-U03-58, 60, P10).
-- [x] **Bước J8** - Unit test mọi `BR-U03-50…71`.
-- [ ] **Bước J9** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, RabbitMQ): gửi sau commit, rollback không gửi, gửi ngay khi không có transaction, retry theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner chạy lại không trùng (NFR-U03-55).
-- [x] **Bước J10** - JSON schema message: `/contracts/messages/job-message.json`, `domain-event.json`.
-- [x] **Bước J11** - Frontend dùng chung: `usePollStatus` (poll 3 giây, dừng ở trạng thái cuối), `StatusBadge`; test hook dừng poll.
-- [x] **Bước J12** - README: chạy worker, xem RabbitMQ qua SSH tunnel, cách một unit thêm loại việc nền (chọn 1 trong 7 queue theo BR-U03-63, đăng ký handler, `onFailed`, `PendingSweeper`; không tạo queue mới) và việc hẹn giờ (đăng ký `ScheduledScanner`).
-
-
-### Nhóm A - Khung
-
-- [x] **Bước 0** - Kiểm Nhóm K và J đã xong (phần tệp dùng `JobPort` cho `DRIVE_CLEANUP`).
-- [x] **Bước 1** - Thêm vào `pom.xml`: `google-api-services-drive` v3, `google-auth-library-oauth2-http`, `tika-core`. Thêm biến cấu hình U03 theo `logical-components.md` §3 và cấu hình multipart (`max-file-size=50MB`, `max-request-size=51MB`, `file-size-threshold=0`, `location=/tmp/uploads`).
-- [x] **Bước 2** - Docker Compose: volume `upload-tmp` gắn vào `backend`; volume `files-local` cho local; truyền `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`, `GOOGLE_SHARED_DRIVE_ID` vào `backend` và `worker`. Nginx: `client_max_body_size 50m`, riêng `/api/v1/files` `proxy_request_buffering off` và `proxy_read_timeout 120s`.
-
-### Nhóm B - Domain và logic
-
-- [x] **Bước 3** - Domain: `StoredFile` (metadata trong `appProperties`), `FileRef` có chữ ký HMAC hạn 1 giờ; `ArtifactPurpose` (`AVATAR`, `MATERIAL`, `DOCUMENT_IMAGE`); `PurposePolicy` (allowlist loại file, trần 50 MB / 5 MB, vai trò được upload); `FileNameSanitizer` (BR-U03-02, 03, 04, 08).
-- [x] **Bước 4** - Port: `ArtifactPort` (`store`, `attach`, `issueDownloadToken`, `open`), `StoragePort`. `AvatarPort` (chữ ký theo thiết kế U01: `validateAvatar(fileRef, actor)` → `fileId`): U03 code trước nên tạo interface và cài ở Bước 7; U01 dùng khi được code.
-- [x] **Bước 5** - `ContentInspector`: Tika trên 8 KB đầu, so allowlist của `purpose`; lỗi trả thông điệp chung (BR-U03-03, P3).
-- [x] **Bước 6** - `UploadService`: `Semaphore` 5 permit (hết → `503`), kiểm quyền, kiểm nội dung, SHA-256, đẩy file và `appProperties` qua `StoragePort` (không có bảng), dọn bù trừ khi lỗi (xóa thử 3 lần, vẫn lỗi thì gửi việc `DRIVE_CLEANUP`), `finally` xóa file tạm (BR-U03-01…07, 41, P1).
-- [x] **Bước 7** - `ArtifactService`: `attach` (kiểm chữ ký, hạn, người tải lên, `purpose`; trả `fileId` cho unit sở hữu lưu), `open`, `validateAvatar` (cài `AvatarPort` cho U01); không có hàm xóa (BR-U03-30…32, F4, F5).
-- [x] **Bước 8** - `DownloadTokenService`: token 32 byte base64url, Redis `file:download-token:{sha256}` TTL 5 phút gắn `accountId`; kiểm chủ token khi dùng, sai thì `404` và audit (BR-U03-20, 21, 40, P4).
-- [x] **Bước 9** - `DriveJobHandler` trong worker cho `DRIVE_CLEANUP`; đăng ký với `JobHandlerRegistry` (Bước J6) vào queue `jobs.drive`.
-- [x] **Bước 10** - Audit các sự kiện của BR-U03-40; không log `providerFileId`, key, token.
-- [x] **Bước 11** - Unit test cho mọi `BR-U03-xx`, gồm file đổi đuôi, file vượt trần theo `purpose` (50 MB / 5 MB), upload thứ 6 bị `503`, token dùng sai người, dọn Drive khi ghi `appProperties` lỗi.
-- [x] **Bước 12** - Tóm tắt: `aidlc-docs/construction/u03-file-and-artifact/code/business-logic-summary.md`.
-
-### Nhóm C - Dữ liệu và lưu trữ
-
-- [x] **Bước 13** - Không có migration (U03 không có bảng); kiểm `appProperties` ghi đủ `ownerAccountId`, `purpose`, `mediaType`, `originalFileName`, `sha256`.
-- [x] **Bước 14** - `FileRefSigner`: khóa HMAC từ biến môi trường `U03_FILEREF_SECRET`, xoay khóa bằng triển khai lại.
-- [x] **Bước 15** - `GoogleDriveStorageAdapter`: đọc key base64 từ `.env`, thư mục theo `purpose` (tạo khi khởi động), timeout 5/60/120 s, retry 3 lần cho 429/5xx, nhận diện `cannotDownloadAbusiveFile` → lỗi "file không khả dụng" (P5, P6, BR-U03-24).
-- [x] **Bước 16** - `LocalFolderStorageAdapter`; chọn adapter theo có key hay không, cảnh báo khi khởi động (P5).
-- [x] **Bước 17** - `DriveHealthIndicator`: `drives.get` cache 60 s, Drive lỗi không làm backend `DOWN` (P7).
-- [ ] **Bước 18** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (Redis) với `LocalFolderStorageAdapter`: upload → attach → cấp token → tải; token và `FileRef` hết hạn; ghi `appProperties` lỗi thì dọn Drive hoặc gửi việc `DRIVE_CLEANUP`; adapter Drive test bằng mock HTTP (lỗi 429, abuse).
-- [x] **Bước 19** - Tóm tắt: `code/repository-summary.md`.
-
-### Nhóm D - API
-
-- [x] **Bước 20** - `/contracts/openapi/files.yaml`: `POST /api/v1/files` (multipart `purpose`, `file`), `GET /api/v1/files/download/{token}`.
-- [x] **Bước 21** - `FileUploadController`, `DownloadController` (`StreamingResponseBody`, bộ đệm 64 KB, header `Content-Type`, `Content-Disposition` RFC 5987, `nosniff`, `Cache-Control: private, no-store`; SVG thêm CSP sandbox; Drive báo abuse → `410`) (BR-U03-10, 22, 23, P2).
-- [x] **Bước 22** - Test MockMvc: không trả `providerFileId`, header đúng (gồm CSP cho SVG), sai `purpose`/vai trò bị từ chối, file quá lớn `413`.
-- [x] **Bước 23** - Tóm tắt: `code/api-summary.md`.
-
-### Nhóm E - Frontend
-
-- [x] **Bước 24** - `useFileUpload` (XHR có tiến trình và hủy), `FileUploader` (chọn/kéo thả, kiểm sơ bộ đuôi và dung lượng), `FileLink` (lấy URL khi bấm, không lưu lâu).
-- [x] **Bước 25** - Test frontend: chặn file vượt trần theo `purpose` phía client, hủy upload, hiển thị lỗi backend.
-- [x] **Bước 26** - Tóm tắt: `code/frontend-summary.md`.
-
-### Nhóm F - Hoàn tất
-
-- [x] **Bước 27** - Cập nhật `README.md`: tạo service account, thêm vào Shared Drive, mã hóa key base64 vào `.env`; chạy local không có key; cách unit khác dùng `ArtifactPort`.
-- [x] **Bước 28** - Chạy toàn bộ test, ghi `code/test-results.md`.
-
-## 4. Truy vết
-
-| Nguồn | Bước |
-|---|---|
-| F1 Upload | 3, 5, 6, 13-16, 20-22, 24 |
-| F2 Gắn | 7 |
-| F3 Tải về | 8, 15, 21 |
-| F4 Worker đọc file | 7, 15 |
-| F5 Kiểm ảnh đại diện | 4, 7 |
-| NFR-U03 hiệu năng, Drive, bảo mật | 1, 2, 5, 6, 8, 15-17, 21 |
-| Gate G1 (hợp đồng U03) | 11, 18, 20, J8, J9 |
-| Khung dự án | K1-K6 |
-| Việc nền J1–J4, sự kiện E1 | J1-J12 |
-
-## 5. Ngoài phạm vi
-
-- Kiểm quyền nghiệp vụ trước khi cấp token (thuộc unit sở hữu).
-- Kiểm và rút gọn XML Draw.io (U09, trong bộ nhớ); file dẫn xuất; xóa file.
-- Adapter `AuthorizationPort` thật (U01 Bước 15) và `AuditPort` thật (U02).
-- Handler nghiệp vụ, `PendingSweeper` và `ScheduledScanner` của từng unit (thuộc unit sở hữu).
-
-## 6. Current revision - Documentation only (2026-10-08)
-Các bước [x], chữ ký/avatar và summaries trên phản ánh code đã sinh theo baseline cũ; không đánh dấu lại là chưa làm hoặc giả vờ đã bỏ khỏi code. Hợp đồng mục tiêu xem functional-design và current-srs-contract.md: không cập nhật avatar từ U01.
-- [ ] Rà call site/AvatarPort/PurposePolicy đã sinh và các contracts hiện có; bỏ hoặc cô lập AVATAR khi triển khai revision, không xóa file/schema lịch sử.
-- [ ] Actor MATERIAL/DOCUMENT_IMAGE được unit nghiệp vụ kiểm R2/R3/R4/R5. Theo quyết định 2026-10-09 Admin không dạy, không quản lý môn nên không upload; `PurposePolicy` đã sinh (không có `ADMIN` cho hai purpose này) là đúng.
-- [ ] Kiểm tương thích hợp đồng/port thực tế trước khi code unit khác; tài liệu cập nhật không xác nhận runtime đã theo baseline mới.
-
-## 7. Revision theo bản 73 UC - 2026-10-09
-
-Thực tế code: không có `FakeAuthorizationPort` và `LoggingAuditAdapter` như cấu trúc mục 2; U03 đang dùng `AuthorizationService` khung của U01 (luôn từ chối) và `AuditStore` khung của U02 (chỉ ghi log).
-
-- [ ] **Bước S1** - Migration `db/migration/settings/V20260925_0910__create_system_settings.sql`: bảng `system_settings` (`key` khóa chính, `group`, `value` jsonb, `version`, `updated_by`, `updated_at`); FK `updated_by` do migration `accounts` của U01 thêm.
-- [ ] **Bước S2** - Port `SettingsPort` (đọc giá trị hiện hành theo khóa) và `SettingDefinition` (unit sở hữu khai báo mục); `SettingDefinitionRegistry` gom khai báo, lúc khởi động thêm mục còn thiếu với giá trị mặc định, không ghi đè (BR-U03-81, 84).
-- [ ] **Bước S3** - `SettingsService`: danh sách, chi tiết, sửa kèm `version`, kiểm theo khai báo, audit `SETTING_UPDATED`, cache 30 s (BR-U03-80…86, P14).
-- [ ] **Bước S4** - `SettingsController`: `GET /api/v1/admin/settings`, `GET`, `PATCH /api/v1/admin/settings/{key}`; contract mới `contracts/openapi/settings.yaml`.
-- [ ] **Bước S5** - `FileSettingDefinitions` (4 mục nhóm Tệp, BR-U03-87) và `FilePolicyService`; `PurposePolicy` đọc trần và loại tệp từ `SettingsPort`; bỏ purpose `AVATAR` và `AvatarPort`.
-- [ ] **Bước S6** - API `GET /api/v1/files/policies` (người đã đăng nhập) trả giới hạn hiện hành; sửa `files.yaml` (bỏ `AVATAR`, thêm API này); `frontend/src/shared/files/purposes.ts` lấy giới hạn từ API thay vì cố định.
-- [ ] **Bước S7** - Frontend `SettingListPage` (màn Setting List, mở từ Admin Dashboard), `SettingDetailPage` + `SettingValueForm` (màn Setting Detail).
-- [ ] **Bước S8** - Unit test và MockMvc: chỉ Admin, version lệch `409`, giá trị ngoài giới hạn `400`, khởi tạo không ghi đè, upload theo giới hạn mới (NFR-U03-63).
-
-## Revision: nút tóm tắt trên View Material — 2026-10-09
-
-Các bước cũ giả định summary/credit lúc upload được thay bởi yêu cầu hiện hành dưới đây; dấu [x] implementation cũ giữ lịch sử, không xác nhận code mới.
-
-- [ ] Upload MATERIAL và tạo lesson không gọi Gemini/quote/hold, không chặn vì thiếu credit; extraction worker lưu EXTRACTED, không summary/vector.
-- [ ] Migration/DTO U05 thêm EXTRACTED, summary_requested_by/at; hai giai đoạn deadline và guard jobType; U03 nhận MATERIAL_SUMMARY trên jobs.gemini.
-- [ ] View Material có SummaryAction cho Student/Teacher/Subject Manager theo quyền xem, kể cả Teacher xem học liệu môn chỉ đọc; Admin denied. GET lesson summary-credit/scan và POST summary (classId, Idempotency-Key).
-- [ ] Nhận yêu cầu atomically khóa lesson + kiểm quyền xem/AI guard + HOLD của requester + metadata/deadline + enqueue. Student MATERIAL_SUMMARY hợp lệ; child EMBEDDING cùng HOLD, không cho embedding độc lập. Hai actor bấm chỉ một payer; kết quả dùng chung, không charge lại.
-- [ ] Worker phục hồi/checkpoint/lease/fencing, một HOLD summary+embedding; AI deadline 24 giờ và HOLD fallback 25 giờ từ yêu cầu; lỗi settle thực dùng/trả dư, giữ summary khi embedding lỗi.
-- [ ] Kiểm upload zero-credit/no-AI; 3 role hợp lệ, ngoài scope/Admin denied; hai actor bấm đồng thời/duplicate; late first request sau upload >24 giờ vẫn hợp lệ; thiếu credit/AI guard trước nhận giữ EXTRACTED; no text/caption; cache summary; retry/crash/embedding lỗi; Student không truy xuất RAG hoặc soạn/chấm Graded.
+Requirements owner, test-case owner, coder khác nhau theo nhóm; implementation readiness/compatibility và unresolved decisions xử lý trước enable feature tương ứng. No runtime pass/checklist tick chỉ vì docs viết xong; codes under workspace root, không aidlc-docs.

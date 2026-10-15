@@ -1,40 +1,39 @@
-# U13 AI & Code Execution - Frontend Components
+# U13 AI Connections & MCP — frontend-components
 
-**Bản tài liệu 2026-10-09**: không primary UC; phần chạy AI và Judge0 của UC 25, 29, 38, 43, nhóm AI của Settings UC 70–71, luồng phụ AI soạn đề (UC 35, 42–45, 57) và tóm tắt/embedding từ màn xem học liệu (UC 15, 34, 55) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-AIG-001, US-AIG-002, US-AIG-003. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-U13 không có màn riêng trong screen flow: bỏ màn AI Usage và popup AI Setting (cấu hình AI là mục nhóm AI trên Setting List/Setting Detail của U03; số liệu AI hiện trên Admin Dashboard của U16). U13 cung cấp component dùng chung gắn vào màn của unit khác.
+**Primary UC:** 31, 32. **Primary stories:** US-AIG-001, US-AIG-002, US-AIG-003, US-AIC-001, US-AIC-002. **Requirements:** FR-006/008/012/021/030/035/037.
 
-## 1. Màn có component của U13
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u13-ai-code-execution` không quyết định chức năng hiện hành.
 
-| Màn | Component | UC | Role | Mở từ |
-|---|---|---|---|---|
-| Codelab Workspace (U11) | `CodeEditor`, `CodeRunResult` | 25 | Student | Assignment Detail |
-| Assignment Form (U08, U09) | `VerifySolutionButton`, `CodeRunResult` trong `CodeLabCheckPanel` của U09 | 43 | Teacher (bài của lớp), Subject Manager (bài của môn) | Teacher Class Detail, Assignment List |
-| Assignment Form (U08) | `AiDraftDialog` (câu Text Essay, Code Lab) | 42, 43 (luồng phụ) | Teacher, Subject Manager | Teacher Class Detail, Assignment List |
-| Quiz Detail (U08) | `AiDraftDialog` (câu quiz) | 35 (luồng phụ) | Teacher, Subject Manager | Teacher Class Detail, Quiz List |
-| Question List (U06) | `AiDraftDialog` bên trong `AiQuestionDraftDialog` của U06 | 57 (luồng phụ) | Subject Manager | Manager Dashboard |
+## UI entry và API đề xuất
 
-Không dùng component U13 nhưng gọi API/port của U13: Submission History (U11, nút "Chấm với AI" của Student, UC 29), Grading Workspace (U15, panel AI đề xuất, UC 38) và Student Submissions (U15, chấm hàng loạt, UC 38), Setting List/Setting Detail (U03, mục nhóm AI, UC 70–71), Admin Dashboard (U16, số liệu AI, UC 58), My Credit Package (U07, lần dùng credit, UC 08), form tải học liệu (U05, mức giữ credit, UC 34, 55).
+- /api/v1/me/ai-connections CRUD/test/revoke; /api/v1/admin/ai-connections shared manage/test; /api/v1/me/mcp-credentials create/revoke; /mcp authenticated tool adapter with tested transport.
+- Domain AiRequestPort/AiConnectionPort/AiProviderPort; U07 QuotaReservationPort/UsagePort for shared, target readers/writers U08/U09/U11/U14/U15.
 
-## 2. Cây component
+## Component/state contract
 
-```
-shared/ai/
-  AiDraftDialog            tham số (loại câu, số câu, độ khó, module/học liệu, ghi chú), credit ước tính,
-                           poll đề xuất, danh sách câu đề xuất + trích dẫn, chọn và sửa câu giữ lại
-    AiErrorNotice          phân biệt "Không đủ credit AI", "Hệ thống đang bận", "AI đang tắt"
-shared/codelab/
-  CodeEditor               nhiều file, tô màu cú pháp 7 ngôn ngữ (Monaco)
-  CodeRunResult            bảng test: trạng thái, thời gian, bộ nhớ; test ẩn chỉ đạt/không
-  VerifySolutionButton     kiểm lời giải mẫu một câu CODE của bài, poll kết quả
-```
+- List/Detail/Editor phân theo quyền và entry UC hiện hành; query state loading/ready/empty/unavailable/error tách biệt.
+- Form state draft/dirty/saving/saved/conflict/invalid; save gửi expectedVersion và requestRef khi có idempotent command; lỗi không xóa draft.
+- State-changing requests không chỉ dựa ẩn nút; server authorize, version/policy errors cần refresh lại context trước retry.
+- UI không phơi bày raw keys, hidden Quiz answers, unpublished grades hoặc dữ liệu ngoài scope.
 
-## 3. Component và API
+## Hành vi riêng unit
 
-| Component | Hành vi | API |
-|---|---|---|
-| `AiDraftDialog` | Ẩn khi không có quyền; hiện credit ước tính trước khi gửi; poll 3 giây (`usePollStatus` của U03) tới `READY`/`FAILED`; câu giữ lại do màn chủ lưu (U08 qua `POST /api/v1/assignments/{id}/ai-drafts` rồi lưu câu riêng, U06 lưu câu nháp ngân hàng); bỏ thì gọi discard | Bài/quiz: `POST /api/v1/assignments/{id}/ai-drafts` (U08); ngân hàng: `POST /api/v1/ai/question-drafts`; chung: `GET /api/v1/ai-suggestions/{id}`, `POST /api/v1/ai-suggestions/{id}/accept`, `POST .../discard` |
-| `CodeEditor` + `CodeRunResult` | Student chạy thử test công khai trên Codelab Workspace, 5 lần/phút; lỗi `429` báo chờ; không trừ credit (UC 25) | `POST /api/v1/code-runs` (`TRY`) |
-| `VerifySolutionButton` | Trong `CodeLabCheckPanel` (U09) cho từng câu `CODE`; ẩn khi bài không còn `DRAFT`; hiện "Đạt", "Không đạt", "Cần kiểm lại" (nội dung đã sửa), "Chưa chạy được" (sandbox lỗi) (UC 43) | `POST /api/v1/code-runs` (`VERIFY`, `assignmentId`, `questionId`), `GET /api/v1/code-runs/{runId}` |
+- U13 AI Connections & MCP primary UC31/32; supports institutional configuration behind U03 UC14/15; package legacy aiexecution không giữ code execution. Gemini/OpenAI/Claude là API providers, không bảo đảm chat subscription cấp API hoặc mọi agent client hỗ trợ MCP.
+- Connection scope INSTITUTIONAL/PERSONAL; shared chỉ Admin manage/test/revoke bằng synthetic payload và không học vụ. Personal chính Student/Teacher/SubjectManager owner configure; credentials encrypted/keyVersion, masked không readback, không log/return key/ciphertext.
+- Provider endpoints/model allowlist cấu hình server, không user arbitrary URL tránh SSRF; model compatibility/test có evidence trước dùng. Test synthetic bounded call có thể bị provider tính phí phải hiển thị nguồn/bên trả; không dùng nội dung học vụ.
+- Request direct captures actor/target/version/context/source/model/requestRef, domain authorize/policy; institutional educator-only U07 reserve atomic trước dispatch. Personal owner/rate controls không shared grant; no auto fallback.
+- AiTask QUEUED/RUNNING/READY/FAILED/UNKNOWN/CANCELLED; record dispatch checkpoint/provider request id và output/usage provenance. Timeout unknown không blind retry có thể double bill, reconcile U07 giữ uncertainty. Domain accepts validated structured result/version not provider tự publish.
+- Minimal scoped context strips hidden keys/unpublished grades/other members private data. Student feedback dispatch/recording requires an owned SUBMITTED PRACTICE snapshot; draft/IN_PROGRESS and Graded requests are denied. Group access follows D03 where applicable. Educator authoring/proposals remain separate; source files outside scope are filtered.
+- McpCredential gắn ALAP actor/scope/expiry/revokedAt và hash, không provider key; credential create/revoke owner; mỗi tool tái kiểm actor ACTIVE/session binding/academic permissions/version/state. Chosen HTTP transport/client auth needs compatibility test; no broad anonymous bearer secret.
+- Initial tools: read_assignment_context, read_authorized_material, read_own_work, read_authorized_submission (assigned educator only), save_assignment_draft(expectedVersion), record_private_feedback, record_grading_proposal. No submit official/publish_grade/restore/credential read tool. Returned data and incoming tool parameters untrusted schema/size/rate validated.
+- External agent calls own LLM; ALAP receives tool metadata and optionally externallyReported model/tokens, not providerMeasured. It cannot know external token usage without report; unavailable not zero, tool count not model tokens. MCP calls do not consume institutional API quota.
+- Audit connection/model/quota/provenance references not raw prompt/key. Revocation denies next call; running result must recheck current policy/rights and input version before domain apply. Tool replay expectedVersion/requestRef guards duplicate writes; no exactly-once external promise.
 
-AI soạn khung dùng `AiSkeletonDraftDialog` của U09. Chấm AI không dùng component của U13: nút chấm Practice của Student là của U11 trên Submission History (UC 29), gọi API của U11; AI đề xuất chấm của giảng viên là panel của U15 trong Grading Workspace (UC 38), gọi API của U15 rồi poll `GET /api/v1/ai-suggestions/{id}`; chấm hàng loạt trên Student Submissions poll `GET /api/v1/ai-suggestions?ids=`. Không có route `app/admin/ai/`.
+## UI acceptance
+
+- Three provider adapters synthetic/invalid key/unsupported model, secret not in response/log, personal owner and Admin synthetic-only.
+- Student direct or MCP cannot institutional grant; quota exhausted no personal fallback; concurrency/idempotency/checkpoint unknown call not redelivered blindly.
+- MCP hidden answers/out-of-class/member drafts denied; revoked scope next request denied; save stale version conflict; no official publish tool.
+- External tokens reported/unavailable not measured/zero; prompt injection cannot alter tool allowlist/scope; late AI result cannot overwrite changed draft or grade.

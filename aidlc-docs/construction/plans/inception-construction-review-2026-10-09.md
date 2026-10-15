@@ -6,7 +6,7 @@
 
 Tài liệu **chưa đồng bộ hoàn toàn và chưa nên dùng làm baseline triển khai thống nhất**. Các thay đổi 2026-10-09 đã vào nhiều thiết kế Construction và requirements/story, nhưng kiến trúc Inception, ownership, shared contract và trạng thái vẫn chứa quy tắc 2026-10-08. Ngoài lệch baseline, thiết kế quét học liệu có mâu thuẫn về retry và credit.
 
-Nguồn đối chiếu tại checkout: [73 UC](../../../docs/use-cases-73.md), `docs/G21_Diagrams.drawio` (Page-2), [requirements](../../inception/requirements/requirements.md), [stories](../../inception/user-stories/stories.md) và thiết kế/code plans hiện hành. Không xác minh lại Google SRS, không kiểm thử code hay dịch vụ thật. Tài liệu lịch sử, câu hỏi cũ, approvals và U03 generated summaries không được coi là lỗi chỉ vì khác baseline mới.
+Nguồn đối chiếu tại checkout: [73 UC](../../../docs/history/use-cases-73.md), `docs/G21_Diagrams.drawio` (Page-2), [requirements](../../inception/requirements/requirements.md), [stories](../../inception/user-stories/stories.md) và thiết kế/code plans hiện hành. Không xác minh lại Google SRS, không kiểm thử code hay dịch vụ thật. Tài liệu lịch sử, câu hỏi cũ, approvals và U03 generated summaries không được coi là lỗi chỉ vì khác baseline mới.
 
 ## R01 — P1: Quyền Administrator còn hai cách hiểu trái nhau
 

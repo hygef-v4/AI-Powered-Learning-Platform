@@ -1,47 +1,31 @@
-# U05 Content, Material & RAG - Infrastructure Design
+# U05 Reference Content & Announcements — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 15, 30, 33, 34, 36, 54, 55 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 62, 63, 60, 61, 64, 58, 59. **Primary stories:** US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005. **Requirements:** FR-004/005/011/023.
 
-| Thành phần | Chạy ở |
-|---|---|
-| `ContentController`, `LessonViewController`, service quản lý học liệu, SummaryRequestService, `PublishedContentService`, `RetrievalService`, `AnnouncementController/Service` | `backend` |
-| `LessonScanHandler`, `MaterialSummaryHandler`, `LessonPendingSweeper` | `worker` |
-| Bảng `modules`, `lessons` (cột `summary`, `embedding vector(768)`), `announcements` | `postgres` (image có pgvector) |
-| Trần chi phí Gemini, credit | Qua `AiUsagePort` của U13 (U05 không có key Redis riêng) |
-| Queue | `jobs.triggered` (`LESSON_SCAN`, trích chữ concurrency 4), `jobs.gemini` (`MATERIAL_SUMMARY`, theo concurrency AI U13), `jobs.youtube` (`YOUTUBE_CAPTION`) |
-| Event | `EventPublisherPort` (U03) phát sau commit trên `platform.events`: `class.announcement-posted` (U16 tiêu thụ) |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u05-content-material-rag` không quyết định chức năng hiện hành.
 
-## 2. Thay đổi hạ tầng dùng chung
+## Mapping triển khai
 
-| Mục | Giá trị |
-|---|---|
-| PostgreSQL | Image `pgvector/pgvector:pg16` đã có từ khung dự án (plan U03 K5); `CREATE EXTENSION IF NOT EXISTS vector` trong script khởi tạo DB (chạy bằng user `postgres`), không cho `migrator` quyền superuser |
-| Worker | Giới hạn RAM 768 MB → **1,5 GB** vì 4 việc quét học liệu song song; VPS cần ≥ 8 GB RAM. VPS nhỏ hơn: `U05_SCAN_CONCURRENCY=2`, giữ 1 GB |
-| CSP | Thêm `frame-src https://www.youtube-nocookie.com` |
-| Kết nối ra | Backend, worker tới `generativelanguage.googleapis.com:443`; worker tới `www.googleapis.com:443` (YouTube Data API: tiêu đề video) và `www.youtube.com:443` (caption) |
-| Secret CI/CD | `GEMINI_API_KEY`, `YOUTUBE_API_KEY`; cấu hình runtime AI đọc SettingsPort của U03 qua U13, không AI_KILL_SWITCH cho adapter thật |
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `content`; không tạo deployable riêng.
 
-## 3. Tạo key và giới hạn chi phí
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-1. Tạo một Google Cloud project, bật **Generative Language API** và **YouTube Data API v3**.
-2. Tạo `GEMINI_API_KEY` trong Google AI Studio và `YOUTUBE_API_KEY` giới hạn chỉ cho YouTube Data API. Hạn mức/chi phí thực tế phụ thuộc cấu hình nhà cung cấp; hệ thống vẫn tính credit AI của người chịu phí khi embedding được xử lý.
-3. Đặt giới hạn quota/ngân sách trong Google Cloud nếu bật billing (REL-005).
+- Attach reference → owner/scope + U03 validation → metadata persist; view/download tái kiểm scope.
+- Create important announcement → commit → U03 outbox → U16 resolves current recipients/preferences → email/in-app.
+- MCP reader → resource access → file excerpt/data minimum; advanced retrieval chỉ khi extension đã chốt/provider cấu hình riêng.
 
-## 4. Migration
+## Deploy/rollback/secret
 
-`db/migration/content/V20260925_1200__create_modules_lessons_announcements.sql` (chưa áp dụng nên sửa trực tiếp, không cần migration bổ sung):
-- `modules` (FK `subject_id` → `subjects`, index `(subject_id, order_no)`).
-- `lessons` (FK `module_id` → `modules`, `class_id` → `course_classes` cho phép rỗng, `uploaded_by` → `accounts`; cột uploaded_at, summary_requested_by (FK accounts, rỗng trước yêu cầu), summary_requested_at, scan_status gồm EXTRACTED, scan_expires_at/retry/claim/lease; `summary` ≤ 4 000 ký tự cho phép rỗng; CHECK `source_type` khớp cột tệp/YouTube; `embedding vector(768)` với index `USING hnsw (embedding vector_cosine_ops)`; index `(module_id, class_id, order_no)`, `(scan_status, scanned_at)` cho sweeper).
-- `announcements` (FK `class_id` → `course_classes`, `author_id`, `updated_by`, `deleted_by` → `accounts`; `status` `VISIBLE`/`DELETED`; `version` NOT NULL mặc định 0; `updated_at`, `deleted_at`; index `(class_id, status, posted_at)` cho feed).
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
 
-## 5. Compliance
+## Unit integration risks
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| SECURITY-04 | Compliant | CSP chỉ mở `frame-src` cho `youtube-nocookie` |
-| SECURITY-09 | Compliant | Key trong secret CI/CD, không commit |
-| RESILIENCY-04 | Compliant | Deploy cùng Compose |
-| RESILIENCY-06 | N/A | Health dùng chung; Gemini lỗi không làm backend `DOWN` |
-| Rule còn lại | N/A | Đã xử lý ở mức ứng dụng hoặc ngoài phạm vi đồ án |
+- Upload/reference works khi AI/indexer absent; unauthorized link/MCP denied.
+- Important creation email event once; edit không resend; archived reference history preserved; no summary charge/job on upload.
+
+Current material acceptance: authorized create/update/remove/list/open of FILE and YOUTUBE_LINK (UC62/60/61/58/59); keep kind/title/fileRef-or-videoUrl/scope/version and historical references. Validate URL/type/size, deny unauthorized ALAP access, handle unavailable videos and preserve no-automatic-summary behavior. No video upload/download, captions or embedding are required.

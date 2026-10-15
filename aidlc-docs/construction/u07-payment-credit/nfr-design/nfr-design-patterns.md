@@ -1,38 +1,35 @@
-# U07 Payment & AI Credit - NFR Design Patterns
+# U07 AI Usage & Teacher Quota — nfr-design-patterns
 
-**Bản tài liệu 2026-10-09**: UC 08, 09, 10, 11, 68, 69, 72 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); mục credit tặng định kỳ của Settings (UC 70–71); primary stories: US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## P1 - Một đường ghi số dư (BalanceService)
-- `apply(accountId, freeDelta, purchasedDelta, reason)`:
-  1. Kiểm tài khoản `ACTIVE` có ví (Student, Teacher, Subject Manager; Admin không có ví) và chủ ví; Student được giữ credit cho PRACTICE_GRADING hợp lệ hoặc MATERIAL_SUMMARY qua U05 đã kiểm quyền xem.
-  2. Khóa dòng `accounts` của tài khoản (`SELECT ... FOR UPDATE`); sang tháng mới thì đặt lại tặng định kỳ bằng `credit.monthlyFreeCredits` đọc qua `SettingsPort`.
-  3. Kiểm số dư sau thay đổi ≥ 0 (CHECK trong DB là chốt chặn cuối).
-  4. UPDATE cột số dư trong `accounts`.
-- Mọi luồng (mua, giữ, trừ, trả) gọi hàm này trong transaction cùng dòng nghiệp vụ gây ra thay đổi (`payments` hoặc `ai_suggestions`) (NFR-U07-01).
+**Primary UC:** 33. **Primary stories:** US-AIC-003, US-AIC-004. **Requirements:** FR-021/034/036.
 
-## P2 - Áp dụng thanh toán idempotent (PaymentSettlement)
-- `markPaid(orderCode, providerReference, source)` dùng chung cho webhook và tự đối soát:
-  1. `UPDATE payments SET status = 'PAID', paid_at = now(), provider_reference = :ref WHERE order_code = :code AND status <> 'PAID' AND amount_vnd = :amount`.
-  2. Không dòng nào bị cập nhật → đã cộng trước đó hoặc lệch số tiền (kiểm lại để audit), trả thành công.
-  3. Một dòng → `BalanceService.apply(purchasedDelta = credits)` trong cùng transaction; audit.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u07-payment-credit` không quyết định chức năng hiện hành.
 
-## P3 - Webhook
-1. Filter giới hạn kích thước 16 KB và rate limit Bucket4j theo IP.
-2. `PayosSignatureVerifier`: sắp khóa `data` theo alphabet, nối `key=value&...`, HMAC-SHA256 với checksum key, so bằng `MessageDigest.isEqual`.
-3. Gọi P2 (không lưu webhook riêng).
-4. Trả `200 {"success": true}` cho cả lần áp dụng và lần trùng; chữ ký sai → `401` và audit.
+## Patterns áp dụng
 
-## P4 - Tạo link và idempotency
-- Unique `idempotency_key`; gặp trùng của cùng tài khoản → trả giao dịch cũ (kèm `checkout_url` nếu còn `PENDING`).
-- `orderCode` = số dương 53 bit ngẫu nhiên (`SecureRandom`), thử lại khi trùng unique (PayOS yêu cầu số nguyên, JavaScript an toàn).
-- Gọi PayOS **sau** khi commit `CREATED`; lỗi → cập nhật `FAILED` trong transaction riêng.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
 
-## P5 - Giữ credit
-- `CreditPort` không lưu gì ngoài số dư: U13 gọi `reserve`/`settle`/`release` trong transaction đổi `ai_suggestions.credit_status` (`NONE → RESERVED → SETTLED | RELEASED`) bằng câu lệnh có điều kiện, nên thử lại không giữ hay trừ trùng (BR-U07-41).
-- `reserve` trả `{reserved, fromFree}`; U13 lưu vào `credits_reserved`, `free_credits_reserved`. `settle`/`release` nhận lại hai số này để trả đúng phần tặng và phần mua.
+- Optimistic concurrency cho UI edits, transaction locks/unique constraints cho contested claims/quota/receipt và outbox. Request fingerprint/version để replay không ghi sai.
+- Failure retries chỉ khi adapter chứng minh safe; provider dispatch unknown không gọi lại ngầm; DB/outbox recovery dùng lease.
+- Snapshot model/value objects immutable; secrets không trả từ repository qua generic serializer. Data retention tác động qua policy/job riêng không phá lịch sử official.
 
-## P6 - Tự đối soát
-- `PaymentScanner` (scanner U03) mỗi 10 phút lấy tối đa 100 giao dịch cần kiểm, gửi việc `PAYOS_CHECK`; handler gọi PayOS; `PAID` → P2 với `source = RECONCILE`; lỗi mạng → thử lại theo U03 rồi để lần quét sau.
+## Unit-specific patterns
 
-## P7 - Adapter giả
-- `FakePayosAdapter`: `checkoutUrl` trỏ về `/credits/fake-checkout?orderCode=...` có nút "Đã trả" gọi webhook giả có chữ ký bằng key test rồi quay về Credit Package Checkout. Chỉ bật khi profile khác `prod` và không có `PAYOS_*` (NFR-U07-15).
+- U07 tên logic AI Usage & Teacher Quota; folder/package legacy chỉ để migration, không payment/wallet code mới. UC33 primary; quota read supports UC14; quota update supports UC15/U03.
+- Institutional connection Teacher/SubjectManager ACTIVE đúng scope, không Student; quota policy hour/day Asia/Ho_Chi_Minh + cap toàn nền tảng và model/provider; mức số cần D04 xác nhận.
+- Reserve estimate atomically trên durable DB windows trước dispatch; khóa theo thứ tự global/day/hour để tránh deadlock. Reservation dựa conservative bound theo input estimate + maxOutput cap model; estimate chưa đủ không dispatch shared request.
+- requestRef unique + fingerprint(actor/target/version/connection/model): replay same returns same state; ref reuse khác reject. Quota hết fail closed, không fallback personal hoặc buộc mua token.
+- Usage providerMeasured reconcile đúng request; reserved dư release chỉ khi số dùng known. Timeout/usage missing giữ UNKNOWN/PENDING_RECONCILIATION và remaining uncertainty, không tự hoàn quota hoặc retry tạo charge ẩn.
+- Provider usage có thể vượt estimate: ghi true usage/overage, block future nếu hết limit và flag policy; không cam kết provider billing cap cứng. Reservation trước call hạn chế concurrency vượt estimate, không xóa actual usage.
+- Personal usage record riêng không trừ shared grant. MCP tool calls không là token, externallyReported/unavailable không trừ quota API chung.
+- Redis cache không là nguồn quota; numeric token không đơn giá đồng nhất giữa providers/models. Admin aggregates không raw prompt/keys/content.
+
+## Validation matrix
+
+- Parallel reserves cannot exceed reservation limits; Student denied; same ref replay no second reserve; different fingerprint conflict.
+- Timeout/crash unknown retains uncertainty; retry not dispatch again silently; measured overage stored/blocks future.
+- Personal/MCP never subtract shared quota; no usage shown as 0 when missing; timezone hour/day boundaries and source switch explicit.

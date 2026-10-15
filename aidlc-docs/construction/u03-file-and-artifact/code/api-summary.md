@@ -1,3 +1,5 @@
+> Historical generated-code summary: phản ánh baseline code trước 66 UC, không thiết kế/implementation current. Current design tại unit functional-design và delta code plan; không suy implementation mới từ summary này.
+
 # U03 - API Summary
 
 Hợp đồng: `contracts/openapi/files.yaml`.

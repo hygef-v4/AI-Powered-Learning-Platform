@@ -1,144 +1,47 @@
-# U04 Subject, Class, Enrollment & Learning Access - Code Generation Plan
+# U04 Subject, Class & Enrollment — Code Generation Plan — revision chưa triển khai
 
-**Bản tài liệu 2026-10-09**: UC 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-**Phê duyệt 2026-10-05 là baseline trước revision**; checklist triển khai mới chưa hoàn thành, DTO/contracts/code cần rà theo thiết kế hiện hành.
+**Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 16, 17, 18, 19. **Primary stories:** US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. **Requirements:** FR-002/003/005/027.
 
-> Plan này là nguồn duy nhất cho Code Generation của U04. Mỗi bước xong thì đánh `[x]` ngay.
->
-> **Đã duyệt 2026-10-05** (người dùng duyệt cả 16 plan): bắt đầu Part 2 (sinh code) theo thứ tự wave.
->
-> Quyết định 2026-10-05: code xong unit **không viết integration test** (Testcontainers, kiểm đầu-cuối nhiều thành phần); tester riêng đảm nhận. Unit chỉ viết unit test (và test MockMvc/frontend nếu có trong plan). Bước integration test bên dưới giữ kịch bản để chuyển cho tester.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u04-subject-class-enrollment` không quyết định chức năng hiện hành.
 
-## 1. Bối cảnh
+## Authorization và trạng thái
 
-- **Story**: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001 (US-CAT-005 mã mời đã bỏ 2026-10-09).
-- **Primary UC hiện hành**: UC 13, 14, 31, 32, 47–53, 64–67 (bản 73 UC).
-- **Thiết kế nguồn**: `construction/u04-subject-class-enrollment/` (functional-design, nfr-requirements, nfr-design, infrastructure-design).
-- **Stack**: như U01 — Maven + Java 17 + Spring Boot 3.x; Next.js + TypeScript + npm + Tailwind, component tự viết.
-- **Code nằm ở workspace root**, không trong `aidlc-docs/`.
+User chỉ yêu cầu đồng bộ tài liệu Construction theo Inception. Đây là kế hoạch revision, không chạy Code Generation Part 2 hoặc đánh completed. Checklist/approval/code baseline giữ tại [plan cũ](../../historical/baseline-before-66-uc-2026-10-13/plans/code-generation-plan/u04-subject-class-enrollment-code-generation-plan.md); approval 05/10 không tự áp dụng scope mới. Không reset lịch sử code đã sinh thành chưa sinh; checklist dưới đây chỉ delta hiện hành.
 
-### Khung dự án dùng chung
+## Paths cần review trước sửa code
 
-Khung dự án là **Bước K1-K6 của plan U03** (U03 code đầu tiên). Bước 0 kiểm điều kiện này.
+- Existing backend owner/package: `backend/src/main/java/edu/aiplatform/academics`; frontend `frontend/src`, public contracts `backend/src/main/java/edu/aiplatform/contracts` nếu tồn tại; migration `backend/src/main/resources/db/migration`; tests `backend/src/test` và frontend test files.
+- Exact classes/routes/migration numbers xác định qua repository inventory trước implementation; không invent files đã tồn tại. Legacy package/folder tên cũ không cho phép tiếp tục payment/code.
+- Source-of-truth [current shared contract](../../current-srs-contract.md), unit design theo current folder. [Inception dependency](../../../inception/application-design/unit-of-work-dependency.md) là thứ tự hiện hành.
 
-### Phụ thuộc
+## Checklist delta
 
-| Port | Unit thật | Xử lý lượt này |
-|---|---|---|
-| `AuthorizationPort`, `AccountLookupPort` | U01 (`H`) | Dùng U01 thật; U04 mở sau U01 |
-| `AuditPort` | U02 (`H`) | Audit |
-| `EventPublisherPort` | U03 (`H`) | Dùng U03 thật |
-| `PublishedContentPort` | U05 (`C`) | Adapter tạm trả danh sách rỗng; U05 thay bằng implementation thật ở wave 2 |
-| U04 cung cấp `SubjectScopePort`, `ClassScopePort` | cho U01 | Thay adapter giả của U01 bằng implementation thật |
+- [ ] **Bước 1:** Inventory code/contracts/migrations baseline, xác định reuse/removal, mapping dữ liệu và exact paths; không drop records/snapshots trước backup/restore.
+- [ ] **Bước 2:** Review DTO/status/public ports theo U04 owner; authorizations hiện hành, expectedVersion/idempotency và error projection; replace adapters fail-closed trước tích hợp thật.
+- [ ] **Bước 3:** Migration owned entities/constraints/index/retention; preserve IDs/historical snapshots, validate old-to-new mapping trên copy database.
+- [ ] **Bước 4:** Domain rules/services/transactions và recovery theo functional-design; dependent services gọi port, không repositories xuyên owner.
+- [ ] **Bước 5:** API layer guards/validation/rate/CSRF, minimal projections, sanitized audit/outbox cùng owner transaction; external timeout/retry bounded.
+- [ ] **Bước 6:** Frontend state/forms/query permissions theo entry UC hiện hành; conflicts/unavailable rõ; không client-only policy/security.
+- [ ] **Bước 7:** Coder viết meaningful unit/service/API/UI tests của delta, negative permissions/state/duplicate/concurrency; không chỉ mirror implementation.
+- [ ] **Bước 8:** Tester khác viết integration cases từ requirements/design và chạy adapter thật/sandbox/local mock phù hợp, phân biệt cases viết xong và runtime pass.
+- [ ] **Bước 9:** Update deployment env/health/secret rotation và runbook; test migration/rollback/restore nếu unit tác động dữ liệu hoặc credentials.
+- [ ] **Bước 10:** Review evidence/FR-story-UC traceability, fix/retest; user review trước next code stage, không tự thay milestones/nhân sự.
 
-### Dữ liệu U04 sở hữu
+## Unit-specific implementation scope
 
-PostgreSQL `subjects`, `course_classes`, `enrollments` (bảng nối, khóa `(class_id, account_id)`); routing key `enrollment.activated`.
+- Admin CRUD/archive subjects và gán Subject Manager ACTIVE, chỉ xem class list metadata; không teacher hoặc manager assignment cho Admin.
+- Subject Manager của môn R2 tạo/lifecycle lớp, phân Teacher/Subject Manager ACTIVE và thêm/gỡ Student; Teacher chỉ xem lớp được giao, không enrollment/lifecycle.
+- Enrollment ACTIVE cấp R5, khi gỡ không xóa lịch sử bài/điểm nhưng deny thao tác tiếp theo. Mỗi sinh viên tối đa một lớp hiệu lực của một môn theo baseline.
+- Scope reader cho API/MCP/activity cùng current authority; group membership và teacher assignment kiểm mỗi call, không role-only.
+- Archived resource chỉ đọc lịch sử theo quyền; không tiếp tục edit/publish/enroll.
 
-## 2. Cấu trúc
+## Independent integration acceptance
 
-```
-/backend/src/main/java/edu/aiplatform/
-  academics/
-    api/                SubjectController, ClassController, EnrollmentController,
-                        MeClassController, DTO
-    application/        SubjectService, ClassService, EnrollmentService,
-                        EnrollmentGuard, StudentClassService, ManagerViewService,
-                        ScopeQueryService
-    domain/             Subject, CourseClass, Enrollment, trạng thái, EnrollmentRowResult
-    infrastructure/     JPA repository, EmptyPublishedContentAdapter
-    port/               ClassAccessPort, PublishedContentPort
-                        (SubjectScopePort, ClassScopePort do U01 khai báo; U04 cài)
-/backend/src/main/resources/db/migration/academics/
-/frontend/src/app/classes/          (Class Dashboard, Student/Teacher Class Detail, Student Detail)
-/frontend/src/app/manager/          (Manager Dashboard, Subject Detail, Class List, Class Detail)
-/frontend/src/app/admin/subjects/   (Subject List, Subject Detail)
-/contracts/openapi/academics.yaml
-/contracts/messages/enrollment-events.json
-```
+- Admin không dạy/chấm, manager không assigned teacher không được chấm, Teacher không enrollment edit.
+- Concurrent enrollment/assignment update có version; revoke enrollment deny next API/MCP/activity call; giữ lịch sử.
 
-## 3. Các bước
+## DoD
 
-### Nhóm A - Khung
-
-- [ ] **Bước 0** - Kiểm khung dự án (plan U03 Bước K1-K6) đã có.
-- [ ] **Bước 1** - Thêm biến cấu hình U04 theo `logical-components.md` §3 vào `application.yml`.
-
-### Nhóm B - Domain và logic
-
-- [ ] **Bước 2** - Domain: `Subject`, `CourseClass` (gồm `showGradeDistribution` mặc định false), `Enrollment` với trạng thái và chuyển trạng thái hợp lệ (BR-U04-02, 11, 14, 17, 21).
-- [ ] **Bước 3** - Port: `ClassAccessPort`, `PublishedContentPort`; `EmptyPublishedContentAdapter`. `SubjectScopePort`, `ClassScopePort` dùng interface U01 đã khai báo.
-- [ ] **Bước 4** - `SubjectService`: danh sách, thêm môn kèm chọn Chủ nhiệm môn `SUBJECT_MANAGER` `ACTIVE`, chi tiết có danh sách lớp chỉ đọc, sửa, đổi Chủ nhiệm môn, lưu trữ/mở lại (UC 64–67; BR-U04-01…05).
-- [ ] **Bước 5** - `ClassService` (chỉ Chủ nhiệm môn của môn): tạo lớp, gán giảng viên `TEACHER`/`SUBJECT_MANAGER`, sửa, đổi trạng thái, bật/tắt phân bố điểm, mở lại có kiểm vướng, khóa lạc quan, phát event khi mở lớp (UC 49, 50, 52; BR-U04-10…17, 26, P4, P5).
-- [ ] **Bước 6** - `EnrollmentGuard` (advisory lock theo người học + môn, khóa theo thứ tự khi mở lại) (P2).
-- [ ] **Bước 7** - `EnrollmentService` (chỉ Chủ nhiệm môn của môn): tìm người học, thêm từng người, thêm theo danh sách (mỗi dòng một transaction, tra U01 một lần), gỡ, thêm lại, phát event (UC 51; BR-U04-20…26, P3).
-- [ ] **Bước 8** - (Bỏ 2026-10-09) `InviteCodeService`: không làm, chức năng mã mời đã bỏ.
-- [ ] **Bước 9** - `StudentClassService`: Class Dashboard của Student (UC 13) và Teacher (UC 31), Student Class Detail (UC 14), Teacher Class Detail (UC 32), Student Detail chỉ thông tin cơ bản; U05 lỗi thì vẫn trả thông tin lớp. `ManagerViewService`: Manager Dashboard, Subject Detail, Class List, Class Detail của Chủ nhiệm môn (UC 47, 48, 53) (BR-U04-40…49, P8).
-- [ ] **Bước 10** - `ScopeQueryService` cài `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort` (gồm `countSubjectsByStatus`, `countClassesByStatus`, `countActiveEnrollments` cho UC 58; `isClassManager` = Chủ nhiệm môn của môn chứa lớp); bỏ `NoAssignmentScopeAdapter` của U01 (P1).
-- [ ] **Bước 11** - `loadForActor` che giấu đối tượng ngoài quyền và audit theo BR-U04-51, 52.
-- [ ] **Bước 12** - Unit test cho mọi `BR-U04-xx`.
-- [ ] **Bước 13** - Tóm tắt: `aidlc-docs/construction/u04-subject-class-enrollment/code/business-logic-summary.md`.
-
-### Nhóm C - Dữ liệu
-
-- [ ] **Bước 14** - Flyway `db/migration/academics/V20260925_1100__create_subjects_classes_enrollments.sql` theo `infrastructure-design.md` §2, gồm cờ `show_grade_distribution` mặc định false và `REVOKE DELETE` khỏi `app`.
-- [ ] **Bước 15** - JPA repository và query phạm vi có index.
-- [ ] **Bước 16** - **Không làm (tester riêng); kịch bản chuyển cho tester:** Integration test Testcontainers (PostgreSQL, Redis, RabbitMQ): hai yêu cầu ghi danh đồng thời vào hai lớp cùng môn chỉ một thành công; ghi danh 200 dòng ≤ 5 s; event gửi sau commit; `app` không DELETE được.
-- [ ] **Bước 17** - Tóm tắt: `code/repository-summary.md`.
-
-### Nhóm D - API
-
-- [x] **Bước 18** - `/contracts/openapi/academics.yaml` (endpoint theo `frontend-components.md`) và schema event `enrollment-events.json`.
-- [ ] **Bước 19** - Controller + DTO + validation (định dạng mã môn/lớp, email, CSV ≤ 200 dòng/100 KB).
-- [ ] **Bước 20** - Test MockMvc: 4 role trên mọi endpoint, ID lớp người khác trả 404, `409` khi lệch `version`; Teacher và Admin bị từ chối khi sửa lớp hoặc thêm/gỡ sinh viên.
-- [ ] **Bước 21** - Tóm tắt: `code/api-summary.md`.
-
-### Nhóm E - Frontend
-
-- [ ] **Bước 22** - Admin: `SubjectListPage` (màn Subject List), `SubjectFormDialog` (thêm môn, chọn Chủ nhiệm môn), `SubjectDetailPage` (màn Subject Detail: `SubjectEditForm`, `SubjectClassesTable` chỉ đọc).
-- [ ] **Bước 23** - Subject Manager: `ManagerDashboardPage` (màn Manager Dashboard, trang đích), `ManagedSubjectPage` (Subject Detail), `ClassListPage` + `ClassFormDialog` (Class List), `ManagedClassPage` (Class Detail: `ClassInfoForm`, `ClassStateActions`, `GradeDistributionToggle`, `AssignTeacherDialog`).
-- [ ] **Bước 24** - Ghi danh trên `ManagedClassPage`: `AddStudentSearch`, `AddStudentsListDialog`, `EnrollmentResultTable`, `EnrollmentTable` (gỡ, thêm lại).
-- [ ] **Bước 25** - Student và Teacher: `ClassDashboardPage` (màn Class Dashboard), `StudentClassPage` (Student Class Detail), `TeacherClassPage` (Teacher Class Detail: `ClassInfoTab`, `StudentsTab`), `StudentDetailPage` (Student Detail).
-- [ ] **Bước 26** - Test frontend: chặn > 200 dòng, hiện kết quả từng dòng, xác nhận gỡ, Teacher không thấy nút sửa lớp hay thêm/gỡ sinh viên.
-- [ ] **Bước 27** - Tóm tắt: `code/frontend-summary.md`.
-
-### Nhóm F - Hoàn tất
-
-- [ ] **Bước 28** - Cập nhật `README.md`: luồng tạo môn/lớp/ghi danh, cách unit khác dùng `ClassAccessPort`.
-- [ ] **Bước 29** - Chạy toàn bộ test, ghi `code/test-results.md`.
-
-## 4. Truy vết
-
-| Nguồn | Bước |
-|---|---|
-| US-CAT-001 (UC 47–50, 53, 64–67) | 4, 5, 22, 23 |
-| US-CAT-002 (UC 31, 32, 48, 52) | 5, 9, 11, 23, 25 |
-| US-CAT-003 (UC 51) | 6, 7, 16, 24 |
-| US-LRN-001 (UC 13, 14) | 9, 25 |
-| UC 58 (số đếm cho Admin Dashboard của U16) | 10 |
-| Contract cho U01 và U05-U16 | 3, 10 |
-
-## 5. Ngoài phạm vi
-
-- Implementation thật của `PublishedContentPort` (U05).
-- Gửi thông báo và email ghi danh, giới hạn 300 email/ngày (U16).
-- Class Dashboard là trang đích của Student và Teacher, Manager Dashboard của Subject Manager; không có dashboard cá nhân có số liệu học tập.
-
-## 6. Revision implementation scope - 2026-10-08
-- [ ] Gán manager chỉ SUBJECT_MANAGER ACTIVE; teacher TEACHER/SUBJECT_MANAGER ACTIVE; từ chối ADMIN, PENDING, DISABLED (chốt 2026-10-09).
-- [ ] Tách STRUCTURE_EDIT với TEACHING/ROSTER; Teacher-only bị từ chối UC 49 dù xem được Class Detail.
-- [ ] ScopeQueryService isTeacherOf/isSubjectManager theo actor hiện thời; Admin không có phân công môn/lớp; kiểm thu hồi scope.
-- [ ] Class Dashboard (Student, Teacher) / Class List (Subject Manager) dùng query scope khác nhau; ClassInfo/State và Gradebook panel kiểm action riêng.
-
-## 7. Revision theo bản 73 UC - 2026-10-09
-
-- [ ] Bỏ mã mời: cột `invite_*`, `InviteCodeService`, API `PUT /classes/{id}/invite` và `POST /me/classes:join`, giá trị `INVITE` của `enrollments.source`, khóa Redis `ratelimit:invite-code:*`.
-- [ ] Chỉ Chủ nhiệm môn tạo lớp, gán giảng viên, sửa/đổi trạng thái lớp, bật phân bố điểm, thêm/gỡ sinh viên (UC 49–52); Admin không có API lớp ngoài danh sách chỉ đọc trong Subject Detail (UC 66).
-- [ ] Admin chọn Chủ nhiệm môn ngay khi thêm môn (UC 65); `POST /subjects` nhận `managerId`.
-- [ ] API mới `GET /api/v1/classes/{id}/students/{accountId}` cho Student Detail (thông tin cơ bản).
-- [ ] Sửa `contracts/openapi/academics.yaml` theo các mục trên và `x-roles` mới; sửa chú thích `ClassAccessPort.isClassManager` thành "Chủ nhiệm môn của môn chứa lớp".
-- [ ] `ClassAccessPort` thêm `listOpenClassesOf(accountId)`: lớp `OPEN` mà tài khoản đang học (ghi danh `ACTIVE`) hoặc dạy (giảng viên chính), kèm mã và tên lớp; U05 dùng cho feed Class Announcements.
-- [ ] `ClassAccessPort` thêm `listOpenClassesOfSubject(subjectId)`: lớp `OPEN` của một môn, cho bài/quiz của môn (U08, U11, U16).
-- [ ] Student Detail là popup (`StudentDetailDialog`) trên tab Students theo screen flow; nhóm lấy từ dữ liệu của U12; `TeacherClassPage` có chỗ gắn tab Evals (U08), Materials (U05), nhóm (U12).
-- [ ] Màn mới theo screen flow: Class Dashboard, Student Class Detail, Teacher Class Detail, Student Detail, Manager Dashboard, Subject Detail (Subject Manager), Class List, Class Detail (Subject Manager); bỏ màn lớp của Admin và popup Join Class.
+Requirements owner, test-case owner, coder khác nhau theo nhóm; implementation readiness/compatibility và unresolved decisions xử lý trước enable feature tương ứng. No runtime pass/checklist tick chỉ vì docs viết xong; codes under workspace root, không aidlc-docs.

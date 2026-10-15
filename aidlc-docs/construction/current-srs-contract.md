@@ -1,70 +1,142 @@
-# Construction - Current SRS contract (2026-10-09)
+# Construction — Current contract 2026-10-13
 
-Đồng bộ theo [73 UC](../../docs/use-cases-73.md), [requirements](../inception/requirements/requirements.md), [51 stories](../inception/user-stories/stories.md) và [ownership 15 unit](../inception/application-design/unit-of-work-story-map.md). Nhãn màn từ `docs/G21_Diagrams.drawio` (Page-2).
+**66 active UC; 50 MVP stories + 1 extension; 15 logical units; 39 FR IDs.** Nguồn [Inception requirements](../inception/requirements/requirements.md), [catalog](../inception/requirements/use-cases.md), [English table](../../docs/usecase_table.md), [story map](../inception/application-design/unit-of-work-story-map.md), [decisions](../inception/requirements/revision-decisions-2026-10-13.md).
 
-## Quyền và thuật ngữ dùng trong mọi unit
+Revision tài liệu theo yêu cầu người dùng; không implementation/approval/runtime evidence. [Snapshot cũ](historical/baseline-before-66-uc-2026-10-13/README.md) giữ checklist/phê duyệt trước, không source code mới. Ngày 2026-10-14 15 unit được chia lại thành 3 iteration; các folder Construction giữ tên cũ, đối chiếu unit mới ở [unit-of-work.md](../inception/application-design/unit-of-work.md). Các ID unit nhắc trong phần còn lại của tài liệu này là ID cũ cho tới khi được rà lại.
 
-| Phạm vi | Kiểm tra tại backend |
+## Ownership
+
+| Iter | Unit | Tên | Primary UC |
+|---|---|---|---|
+| 1 | U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
+| 1 | U02 | Audit | 13 |
+| 1 | U03 | File, Job, Settings & Backup | 14, 15 |
+| 1 | U04 | Subject Administration | 16, 17, 18, 19 |
+| 1 | U05 | Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 |
+| 2 | U06 | AI Connections & MCP | 31, 32, 33 |
+| 2 | U07 | Assignment Authoring | 34, 35, 36 |
+| 2 | U08 | Assignment Work | 37, 38, 39, 40, 41 |
+| 2 | U09 | Assignment Grading & Gradebook | 42, 43, 44, 45 |
+| 2 | U10 | Quiz Authoring & Bank | 46, 47, 48 |
+| 3 | U11 | Quiz Practice | 49, 50, 51, 52 |
+| 3 | U12 | Group Assignment | 53, 54, 55, 56, 57 |
+| 3 | U13 | Reference Materials | 58, 59, 60, 61, 62 |
+| 3 | U14 | Announcements & Notifications | 63, 64, 65 |
+| 3 | U15 | Admin Dashboard | 66 |
+
+Iteration, phụ thuộc và phân công: [unit-of-work.md](../inception/application-design/unit-of-work.md).
+
+## Authority và scope
+
+### UC 57 — Create/Update/Delete Class Group
+
+Giảng viên được giao dạy lớp (Teacher hoặc Subject Manager trong vai trò giảng viên lớp) tạo nhóm thủ công/ngẫu nhiên, sửa/xóa nhóm theo điều kiện, thêm/chuyển/gỡ thành viên, chỉ định trưởng nhóm và duyệt/từ chối yêu cầu đổi trưởng nhóm. Điểm truy cập: Class Dashboard → Teacher Class Detail (UC 23) → Students → Groups; UC 23 cung cấp màn lớp, UC 57 sở hữu thao tác nhóm. UC 54 là sinh viên xem nhóm; UC 55 là thành viên gửi/hủy yêu cầu; UC 53/56 là soạn/làm bài nhóm. Không thêm trang riêng hoặc chuyển quyền quản lý nhóm cho Admin hay Chủ nhiệm môn không được giao dạy lớp. Xóa chỉ khi nhóm chưa có tài liệu nhóm hoặc bản nộp; giữ các quy tắc và audit hiện hành.
+
+| Actor / scope | Quyền |
 |---|---|
-| R1 - User | Hồ sơ và notification của chính User; ví và Payment Result chỉ Student/Teacher/Subject Manager của chính tài khoản; activation/recovery có quy tắc riêng |
-| R2 - Tài nguyên môn | Subject Manager ACTIVE có subjects.manager_id tương ứng, không role-only; materials/bài của môn/Subject Question Bank |
-| R3/R4 - Giảng dạy lớp | Teacher/Subject Manager ACTIVE có teacher_id tương ứng; materials lớp, bài, submissions/chấm/Gradebook/export |
-| R5 - Student | Enrollment/membership và nội dung được phép của chính mình; chỉ leader nộp bài nhóm |
-| Admin Full | Account, Subject (gồm gán Chủ nhiệm môn), Admin Dashboard, Credit Package, Settings, global Payment History và Audit Log. Không vào Manager Dashboard hay Class Dashboard, không nhận phân công môn/lớp, không dùng R2/R3/R4 (người dùng chốt 2026-10-09) |
+| R1 own data | Profile, connection cá nhân, usage/feedback/notification của chính actor |
+| R2 subject manager | Quản lý môn/material/bank/bài cá nhân cấp môn; không tự quyền chấm lớp |
+| R3/R4 assigned teacher | Dạy/chấm/review/activity/export đúng lớp; shared quota nếu educator ACTIVE và scope hợp lệ |
+| R5 student | Enrollment/group membership current, own editable work; personal API/MCP, không shared quota |
+| Admin | Accounts/subjects, UC14 Settings/quota orchestration, UC14/15 shared credential/test synthetic through U13, UC66 counts/backup metadata, UC13 audit; không học vụ |
 
-Subject Manager → Teacher; Teacher, Student → User; Administrator chỉ dùng chức năng User và quản trị; không vai trò nào kế thừa Student. Mỗi tài khoản giữ một role cao nhất, cộng scope phân công hiện thời. Trong mô tả unit, “giảng viên lớp” nghĩa là actor đủ R3/R4 (Teacher hoặc Subject Manager được giao dạy lớp), “Chủ nhiệm môn hiện tại” nghĩa là Subject Manager đủ R2, không kiểm literal role để loại Subject Manager khỏi chức năng Teacher. Quyền đọc Class Detail cấu trúc không cấp quyền dạy. Teacher không sửa thông tin/vòng đời lớp, không thêm/gỡ sinh viên và không bật/tắt phân bố điểm (chỉ Chủ nhiệm môn, UC 51–52); mã mời đã bỏ (2026-10-09); nhóm là support action kiểm riêng.
+Web/API/MCP đều current auth/resource/state/version; keys/client không mở rộng quyền; scope revoked deny request tiếp theo. Cookie-session state mutation phải có CSRF defense; MCP auth không thay provider credentials.
 
-Scope được đọc ở server trên hành động tài nguyên, không dựa vào UI hoặc cache role; ngoài scope trả lỗi an toàn/fail closed và audit theo unit. Thay phân công thu hồi quyền tài nguyên ngay ở request sau; cửa sổ JWT cũ không thay thế việc kiểm scope hiện thời.
+## Core invariants
 
-## Phạm vi chức năng đã đổi
+- Chỉ ASSIGNMENT/QUIZ; submissionMode INDIVIDUAL/GROUP và diagramEnabled độc lập. Bài nhóm chỉ lớp, tạm GRADED; Quiz tạm PRACTICE (D01/D02).
+- Reference files và educational YouTube links là MVP; Lesson processing/transcription/summary/advanced RAG là extension; không lesson/indexing prerequisite.
+- Quota không mua bán/wallet/payment; shared educator only, personal API hoặc external agent cho Student. Personal fallback cần user chọn.
+- Gemini/OpenAI/Claude direct provider adapters; MCP authenticated inbound domain tools, không mặc định proxy gọi LLM. External usage reported/unavailable, không trừ shared grant.
+- AI drafts/feedback/proposals validate snapshot/version; official grades/publication do người có quyền. No initial MCP submit/publish_grade tool.
+- Activity opt-in snapshot/default off, thông báo trước; no data khác zero; không auto verdict/penalty. Group activity per member U11 owner, U14 port.
+- Backup encrypted DB + independent files/manifest private Drive, SUCCESS only verified, isolated restore evidence; UC66 status, UC14 view / UC15 config, không restore UI.
+- UC14 View Settings và UC15 Edit Setting giữ riêng; UC76/78/82 (ID cũ) vào UC14/15, UC80 (ID cũ) vào UC66, UC81 (ID cũ) vào UC42; UC26 (ID cũ) vào UC39/56; UC79 (ID cũ) retired; UC35 Individual và UC53 Group authoring. Backup/quota/activity stories vẫn giữ chủ dữ liệu; shared UI UC không chuyển ownership.
 
-- Profile UC 07 chỉ displayName/phoneNumber, không avatar. Account Detail/patch Admin UC 61/62 riêng, email định danh bất biến.
-- Chỉ có Subject Question Bank (UC 56–57), giữ câu của mọi dạng bài (quiz, Text Essay, Code Lab, khung tài liệu), có version; không có Class Question Bank. Teacher chọn câu ACTIVE của môn khi soạn bài/quiz, không quản trị ngân hàng. Draft chưa dùng có thể xóa; bản đã dùng/ACTIVE chỉ ngưng dùng và giữ lịch sử. Rubric (UC 46) bắt buộc, tự tạo trống cho mỗi câu Text Essay hoặc phần Diagram/Group; sửa khi bài còn nháp, phải điền đủ trước khi phát hành, khóa khi phát hành.
-- Announcement UC 36 có create/update/soft-delete, version/audit; create mới gửi notification, update/delete không gửi lại. Không có bình luận dưới thông báo (bỏ 2026-10-09).
-- Credit Package List/Detail UC 68–69: Admin xem/add/edit với version/audit, giữ snapshot giao dịch; không delete gói; mức tặng định kỳ sửa trên Settings (UC 70–71). Chỉ Student, Teacher, Subject Manager có ví (UC 08–11); Admin không có ví.
-- Payment History UC 72: Admin query toàn nền tảng read-only; /me và kết quả giao dịch trên Credit Package Checkout vẫn owner-only; không refund/manual balance/reconciliation.
-- Audit UC 73: Admin read/search, append-only records, không sửa/xóa.
-- Student Practice AI UC 29 và Teacher AI Grading Proposals UC 38 riêng quyền/kết quả; không chấm Essay Practice chỉ vì submit. Chấm chính thức theo rubric/Teacher final và không đưa Practice vào Gradebook.
-- Bài của môn (FR-027, người dùng chốt 2026-10-09): Chủ nhiệm môn soạn, duyệt, phát hành cho mọi lớp của môn với một lịch chung (không có bài nhóm); giảng viên từng lớp chỉ xem và chấm sinh viên lớp mình. Quiz là quiz luyện tập gắn học liệu, không lịch, không vào sổ điểm. Mọi bài qua bước duyệt trước khi phát hành.
+## Contracts xuyên unit
 
-## Primary ownership hiện hành
-
-| Unit | Primary UC | Primary stories |
+| Port | Owner | Consumers / semantics |
 |---|---|---|
-| U01 | 01, 02, 03, 04, 05, 06, 07, 59, 60, 61, 62, 63 | US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007 |
-| U02 | 73 | US-AUD-001 |
-| U03 | 70, 71 | US-SET-001 |
-| U04 | 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 | US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001 |
-| U05 | 15, 30, 33, 34, 36, 54, 55 | US-CNT-001, US-CNT-002, US-CNT-004, US-CNT-005 |
-| U06 | 46, 56, 57 | US-QBK-001, US-QBK-002 |
-| U07 | 08, 09, 10, 11, 68, 69, 72 | US-PAY-001, US-PAY-002, US-PAY-004, US-PAY-005 |
-| U08 | 41 | US-ASM-001, US-ASM-008, US-ASM-009, US-ASM-010 |
-| U09 | 35, 42, 43, 44, 45 | US-GRP-003, US-ASM-004, US-ASM-005, US-ASM-006, US-ASM-007 |
-| U11 | 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29 | US-ASM-003, US-ASM-012 |
-| U12 | 16, 17 | US-GRP-001, US-GRP-002 |
-| U13 | Không primary UC; hỗ trợ AI/Judge0 | US-AIG-001, US-AIG-002, US-AIG-003 |
-| U14 | 27 | US-GRP-004, US-GRP-005 |
-| U15 | 37, 38, 39, 40 | US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005 |
-| U16 | 12, 58 | US-RPT-001, US-RPT-002, US-RPT-003, US-NTF-001 |
+| AuthorizationPort / AcademicScopePort | U01 / U04 | Current actor/object/scope; no caller actor spoofing |
+| AuditPort | U02 | All owner transactions; sanitize/append-only |
+| FileStoragePort / JobPort / OutboxPort | U03 | Owner-scoped private files, durable event/request refs |
+| BackupStatusPort | U03 | U16 metadata only, unavailable/lastKnown not false SUCCESS |
+| TeacherQuotaPolicyPort | U07 | U03 UC14 read / UC15 mutation validate Admin; versioned quota policy transaction owned U07 |
+| QuotaReservationPort / UsagePort | U07 | U13 institutional calls; UNKNOWN retains uncertainty; provenance and request fingerprint |
+| AiConnectionPort / AiProviderPort | U13 | Connection owner authorization, protected secrets, normalized direct provider output/usage |
+| DocumentModelPort / AssessmentPolicyPort | U09 / U08 | Locked snapshots/config/version and current editability |
+| GroupMembershipPort / GroupReadinessPort | U12 | U14/U08/U11 current enrolled member/leader |
+| ActivityWritePort / ActivityQueryPort | U11 | U14 member events, U15 teacher review, per-work/policy/scope validation |
+| SubmissionPort / PracticeResultPort | U11/U14 / U15 | Immutable versions/receipts; Quiz Practice outside Gradebook |
+| GradebookProjectionPort | U15 | U16 teacher-only export; no official Practice data |
+| MailPort | Shared U01/U16 | Brevo demo or Mailpit local, bounded failures and minimal data |
 
-Tổng 73 UC/51 story/15 unit; mỗi mục đúng một primary unit. U10 đã bỏ: version/copy và bài của môn chuyển U08; U09 chủ trì cấu hình/authoring, U08 vòng đời. U03 chủ trì Settings, U13 khai báo cấu hình AI và hỗ trợ qua port. Không tạo lại US-CAT-005 đã rút; US-SET-001 thay phần story đó trong catalog 51 story.
+Public DTOs không expose repository entities/credential ciphertext; contracts/types/schema implementation vẫn cần diff trước code. U03 nền không hard-depend U07/U16: define neutral contracts và deny/unavailable khi adapter chưa có, tránh dependency cycle.
 
-## Màn hình và contracts
+## Events
 
-Class Dashboard cho Student/Teacher và Subject Manager được giao dạy; Manager Dashboard cho Subject Manager quản lý môn; Admin Dashboard cho Admin. Student Class Detail/Teacher Class Detail tách theo quyền. Material List/Material Detail, Learning Material, Question List/Question Detail (ngân hàng môn), Quiz List/Quiz Detail, Quiz Practice History/Detail/Taking/Result, Student Assignments, Assignment Detail/Submission History, Assignment List/Assignment Form, Student Submissions/Submission Detail/Grading Workspace, Class Announcements, My Credit Package/Public Credit Packages/Credit Package Checkout, Credit Package List/Detail, Setting List/Detail, Payment History và Audit Log theo Page-2. UC 12 dùng chuông/popup chung, không có trang Notifications riêng.
+Outbox record cùng domain transaction, IDs/version/time/refs tối thiểu: assessment.opened/retired, submission.created, grade.published, class.announcement-posted(important/sendEmail), backup.failed/completed, enrollment.changed, group.membership-changed. Consumer checks current scope, dedup; email retry không rollback producer. Durable grade/backup/usage facts không chỉ Redis.
 
-Component/route nội bộ có thể giữ tên kỹ thuật và reuse; tài liệu phải chỉ rõ nhãn/entry và quyền tương ứng. Existing contracts/port interfaces và mã U03 đã sinh chưa tự đổi vì tài liệu đổi. Khi triển khai revision phải rà DTO/method/status/schema theo thiết kế mới, dùng migration forward-only nếu baseline cũ đã áp dụng.
+## Open decisions / migrations
 
-## Baseline và validation
+D01–D04 còn mở; backup schedule/retention và activity retention cần cấu hình trước enabled. Client MCP compatibility/schema/chosen transport được nghiệm thu theo client, không hứa mọi agent tự kết nối. Quota estimate/unknown semantics không promise exactly-once external billing.
 
-Thiết kế và code plans hiện hành được sửa theo yêu cầu; các câu hỏi/câu trả lời và phê duyệt cũ giữ nguyên làm lịch sử. U03 plan bước [x] và generated summaries là code thực tế baseline trước; revision implementation tasks giữ [ ] đến khi thực sự làm. Không ghi nhận approval/code/runtime checks mới từ việc sửa tài liệu.
+Mapping dữ liệu cũ: Text/Diagram/Group thành ASSIGNMENT + submissionMode/diagramEnabled; MCQ thành QUIZ, Code data chỉ archive/export/read-only historical, không silently convert. Retired payment/credit data lưu riêng không đổi thành quota balance. Không drop trước backup/restore và migration review. IDs/snapshots/grade history phải giữ, cả Essay answer theo câu phải có adapter thành document parts kèm rubric mapping, không thay receipt cũ.
 
-Enabled Security-03/04/05/08/09/12/15 và Resiliency-04/06/10 giữ hiệu lực theo phạm vi dự án; các sửa đổi có object authorization, validation, version/audit, bí mật an toàn, hữu hạn retries và deployment checks. Runtime verification N/A cho task documentation; Property-Based Testing disabled.
+## Functional requirement coverage
 
-## Credit và checkpoint học liệu — sau recheck 2026-10-09
+| FR active | Owners/support |
+|---|---|
+| FR-001 | U01 |
+| FR-002 | U01/U04; mọi unit |
+| FR-003 | U04 |
+| FR-004 | U05/U03 |
+| FR-005 | U04/U05 |
+| FR-006 | U09/U13 |
+| FR-007 | U08 |
+| FR-008 | U15/U06/U13 |
+| FR-009 | U15/U16 |
+| FR-011 | U01/U16 |
+| FR-012 | U13 |
+| FR-013 | U03 |
+| FR-014 | U02; mọi owner audit |
+| FR-015 | U01 |
+| FR-016 | U06 |
+| FR-017 | U08/U09 |
+| FR-018 | U11/U14/U03 |
+| FR-019 | U11/U16 |
+| FR-020 | U15 |
+| FR-021 | U07/U13 |
+| FR-023 | U05/U16 |
+| FR-024 | U16 |
+| FR-025 | U12/U14 |
+| FR-026 | U14 |
+| FR-027 | U04/U08 |
+| FR-028 | U08 |
+| FR-030 | U11/U14/U13 |
+| FR-033 | U03/U07/U13 |
+| FR-034 | U07 |
+| FR-035 | U13 |
+| FR-036 | U07/U13 |
+| FR-037 | U13 |
+| FR-038 | U03/U16 |
+| FR-039 | U09/U11/U14/U15 |
 
-Học liệu chỉ reserve một HOLD khi chấp nhận yêu cầu tóm tắt; các child call tóm tắt/chunk/merge/embedding không reserve thêm. AiUsagePort.release(holdId) của U13 chốt tổng: đã dùng AI thì CreditPort.settle và trả dư, bằng 0 mới CreditPort.release hoàn toàn bộ. Scanner dùng cùng quy tắc; child creditStatus NONE không hoàn HOLD riêng. U05 phục hồi qua findHold/UsageStart REPLAY/CallSnapshot, không đọc repository U13; complete ghi checkpoint/usage cùng transaction với kiểm claim hợp lệ. Chi tiết ở [contract U05](u05-content-material-rag/functional-design/domain-entities.md).
+FR-010/022/029/031/032 retired theo Inception, không triển khai: giữ IDs và lịch sử, không tái sử dụng. 34 active FR + 5 retired = 39 stable IDs. Coverage chỉ thiết kế, không runtime evidence.
 
-## Revision View Material — 2026-10-09 (ưu tiên yêu cầu mới)
+## Critical DTO/command shapes
 
-Upload qua U03/tạo lesson U05 chỉ lưu và trích chữ/phụ đề, không AI/credit. Student, Teacher, Subject Manager có quyền xem bấm Tóm tắt tài liệu trên Learning Material/Material Detail. HOLD chỉ tạo lúc nhận yêu cầu, payer là người bấm; một summary dùng chung, không giữ/trừ lại khi xem hoặc bấm trùng. Student được MATERIAL_SUMMARY và child EMBEDDING của HOLD này ngoài Practice grading, không được embedding/RAG độc lập. EXTRACTED chưa summary không vào RAG; AI deadline 24 giờ và HOLD fallback 25 giờ tính từ yêu cầu, không từ upload. Quyền sửa/upload không mở rộng cho Student; Admin denied.
+- QuotaPolicyCommand(adminActor, educatorId, provider/model, hourLimit/dayLimit, expectedVersion) → SavedPolicyVersion hoặc VALIDATION/CONFLICT/UNAVAILABLE. U03 UC14 không trả thành công nếu U07 chưa xử lý; không multi-owner atomic update.
+- ReserveCommand(actor, connectionRef, requestRef, targetRef/contentVersion, model, estimatedBound) → reservationRef/currentState/replay. UNKNOWN không tự release hoặc dispatch lại; provider overage được ghi đúng, không guarantee cứng ngân sách billing.
+- BackupStatusQuery(adminActor, page/filter) → status/latestGood/snapshotTime/bytes/safeError/observedAt/availability, không archiveRef download/secrets. Dashboard port lỗi khác backup FAILED.
+- ActivityEventCommand(authenticatedActor, workKind/workId, sessionId, clientEventId, sequence, kind, clientTime) → accepted/deduplicated/rejected; actor/class/policy derived server. Query(assignedTeacher, workRef, memberId) → policyState/availability/intervals/count/knownDuration/unknownGaps; không fraud score/grade mutation.
+- AiTaskCommand(actor, sourceConnectionRef, taskType, targetRef, inputVersion, requestRef) → taskState/provenance. Draft/proposal apply expected targetVersion và current permissions; output chưa validated không tự applied.
+- MCP read_own_work phục vụ chủ bài; read_authorized_submission là supporting tool cho assigned educator đọc snapshot chấm bài đúng lớp, không hidden Quiz keys. Tools write expectedVersion, tool names/schema/transport có integration evidence trước public enable.
+
+## UC table synchronization — feedback, authoring and Settings
+
+- UC35 Create/Update/Delete Individual Assignment and UC53 Create/Update/Delete Group Assignment are distinct authoring entries using one Assignment document model. diagramEnabled is independent in both; UC39/56 include Draw.io XML/preview editing without a separate UC26 (ID cũ).
+- UC41 Student feedback only on owned SUBMITTED PRACTICE snapshots. Deny draft/IN_PROGRESS/Graded and unauthorized requests or MCP writes; no draft-feedback policy remains. Teacher UC43 Grade Submission With AI remains a reviewed proposal workflow.
+- UC14 masked read and UC15 validated update/test/revoke contain institutional API configuration; U03 UI delegates to U13 protected connection records. Primary ownership does not move U13 credentials to U03.
+- AiConnectionAdministrationPort (U13) exposes masked config, versioned update/revoke and bounded synthetic test to U03; unavailable adapters do not report success. U07 quota and U13 credentials have separate owner transactions/audits.
+- Material references include private FILE and YOUTUBE_LINK with title/url/scope/version. Opening a public YouTube link does not give ALAP control over external video visibility. Transcript/summary/RAG processing is not required.

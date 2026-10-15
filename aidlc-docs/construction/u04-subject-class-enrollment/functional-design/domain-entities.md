@@ -1,8 +1,12 @@
-# U04 Subject, Class, Enrollment & Learning Access - Domain Entities
+# U04 Subject, Class & Enrollment — domain-entities
 
-**Bản tài liệu 2026-10-09**: UC 13, 14, 31, 32, 47, 48, 49, 50, 51, 52, 53, 64, 65, 66, 67 theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-LRN-001`; UC 13, 14, 31, 32, 47–53, 64–67; cấp số đếm cho UC 58 View Admin Dashboard (U16).
+**Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 16, 17, 18, 19. **Primary stories:** US-CAT-001, US-CAT-002, US-CAT-003, US-LRN-001. **Requirements:** FR-002/003/005/027.
+
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u04-subject-class-enrollment` không quyết định chức năng hiện hành.
+
+Thiết kế độc lập công nghệ. Truy vết: `US-CAT-001`…`003`, `US-LRN-001`; UC 20, 21, 22, 23, 24–30, 16–19; cấp số đếm cho UC 66 View Admin Dashboard (U16).
 
 ## 1. Tổng quan
 
@@ -36,7 +40,7 @@ stateDiagram-v2
     ARCHIVED --> ACTIVE: Mở lại
 ```
 
-**Text alternative**: Môn tạo ra ở `ACTIVE`. Chỉ lưu trữ được khi mọi lớp của môn đã `ARCHIVED`; môn `ARCHIVED` không tạo lớp mới và có thể mở lại về `ACTIVE`. Lưu trữ và mở lại là thao tác trong UC 67. Không xóa môn.
+**Text alternative**: Môn tạo ra ở `ACTIVE`. Chỉ lưu trữ được khi mọi lớp của môn đã `ARCHIVED`; môn `ARCHIVED` không tạo lớp mới và có thể mở lại về `ACTIVE`. Lưu trữ và mở lại là thao tác trong UC 19. Không xóa môn.
 
 ## 3. `CourseClass`
 
@@ -50,7 +54,7 @@ stateDiagram-v2
 | `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
 | `teacherAccountId` | UUID | Cột `teacher_id` → `accounts`; giảng viên chính, role `TEACHER` hoặc `SUBJECT_MANAGER`; bắt buộc trước khi `OPEN` |
-| `showGradeDistribution` | bool | Mặc định `false`; Chủ nhiệm môn bật trong UC 52 để Student Assignments hiện phân bố điểm ẩn danh khi đủ mẫu |
+| `showGradeDistribution` | bool | Mặc định `false`; Chủ nhiệm môn bật trong UC 29 để Student Assignments hiện phân bố điểm ẩn danh khi đủ mẫu |
 | `version` | số | Khóa lạc quan |
 
 ### Trạng thái
@@ -64,7 +68,7 @@ stateDiagram-v2
     ARCHIVED --> OPEN: Mở lại
 ```
 
-**Text alternative**: Chủ nhiệm môn tạo lớp ở `DRAFT`. Mở lớp cần có giảng viên chính và môn đang `ACTIVE`. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN`, không về `DRAFT`, và bị từ chối nếu có người học đang học lớp chưa lưu trữ khác cùng môn. Mọi chuyển trạng thái thuộc UC 52.
+**Text alternative**: Chủ nhiệm môn tạo lớp ở `DRAFT`. Mở lớp cần có giảng viên chính và môn đang `ACTIVE`. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN`, không về `DRAFT`, và bị từ chối nếu có người học đang học lớp chưa lưu trữ khác cùng môn. Mọi chuyển trạng thái thuộc UC 29.
 
 ## 4. `Enrollment`
 
@@ -85,7 +89,7 @@ stateDiagram-v2
     REMOVED --> ACTIVE: Thêm lại
 ```
 
-**Text alternative**: Ghi danh tạo ra ở `ACTIVE` khi Chủ nhiệm môn thêm sinh viên (UC 51); gỡ thì sang `REMOVED` nhưng giữ bản ghi và lịch sử; thêm lại dùng đúng bản ghi đó và chuyển về `ACTIVE`.
+**Text alternative**: Ghi danh tạo ra ở `ACTIVE` khi Chủ nhiệm môn thêm sinh viên (UC 28); gỡ thì sang `REMOVED` nhưng giữ bản ghi và lịch sử; thêm lại dùng đúng bản ghi đó và chuyển về `ACTIVE`.
 
 ## 5. `StudentClassView`
 
@@ -99,7 +103,7 @@ Tính khi người học mở Student Class Detail: kiểm ghi danh `ACTIVE` và
 |---|---|---|
 | `SubjectScopePort`, `ClassScopePort` | U01 (U01 khai báo, U04 cài); U05, U06 dùng `SubjectScopePort` | `isSubjectManager`, `listManagedSubjects`, `isTeacherOf`, `subjectOfClass`, `listTaughtClasses` (để chặn đổi role) |
 | Event `enrollment.activated` | U16 | Sau commit, chỉ cho thông báo ghi danh (BR-U04-26) |
-| `ClassAccessPort` | U05, U06, U08–U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)` (Chủ nhiệm môn của môn chứa lớp), `listOpenClassesOf(accountId)` (lớp `OPEN` đang học hoặc dạy, cho feed của U05, U11); `listOpenClassesOfSubject(subjectId)` (lớp `OPEN` của môn, cho bài/quiz của môn ở U08, U11, U16); cho U16 thêm `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` (UC 58) |
+| `ClassAccessPort` | U05, U06, U08–U16 | `getClassRef(classId)` (môn, trạng thái, giảng viên, `showGradeDistribution`), `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)` (Chủ nhiệm môn của môn chứa lớp), `listOpenClassesOf(accountId)` (lớp `OPEN` đang học hoặc dạy, cho feed của U05, U11); `listOpenClassesOfSubject(subjectId)` (lớp `OPEN` của môn, cho bài/quiz của môn ở U08, U11, U16); cho U16 thêm `countSubjectsByStatus()`, `countClassesByStatus()`, `countActiveEnrollments()` (UC 66) |
 
 ### Port U04 dùng
 
@@ -111,3 +115,20 @@ Tính khi người học mở Student Class Detail: kiểm ghi danh `ACTIVE` và
 | `EventPublisherPort` | U03 | Event `enrollment.activated` cho U16 |
 
 Nhóm của sinh viên trên Student Detail do frontend lấy từ API của U12; backend U04 không gọi U12.
+
+## Quy tắc tích hợp revision hiện hành
+
+- Admin CRUD/archive subjects và gán Subject Manager ACTIVE, chỉ xem class list metadata; không teacher hoặc manager assignment cho Admin.
+- Subject Manager của môn R2 tạo/lifecycle lớp, phân Teacher/Subject Manager ACTIVE và thêm/gỡ Student; Teacher chỉ xem lớp được giao, không enrollment/lifecycle.
+- Enrollment ACTIVE cấp R5, khi gỡ không xóa lịch sử bài/điểm nhưng deny thao tác tiếp theo. Mỗi sinh viên tối đa một lớp hiệu lực của một môn theo baseline.
+- Scope reader cho API/MCP/activity cùng current authority; group membership và teacher assignment kiểm mỗi call, không role-only.
+- Archived resource chỉ đọc lịch sử theo quyền; không tiếp tục edit/publish/enroll.
+- Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
+- expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
+- Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
+- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+
+## Kiểm tra revision bắt buộc
+
+- Admin không dạy/chấm, manager không assigned teacher không được chấm, Teacher không enrollment edit.
+- Concurrent enrollment/assignment update có version; revoke enrollment deny next API/MCP/activity call; giữ lịch sử.

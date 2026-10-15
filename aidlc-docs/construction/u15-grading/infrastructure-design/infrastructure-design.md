@@ -1,30 +1,29 @@
-# U15 Grading - Infrastructure Design
+# U15 Grading & Gradebook — infrastructure-design
 
-**Bản tài liệu 2026-10-09**: UC 37, 38, 39, 40 (chốt và công bố là luồng phụ của UC 38, 39) theo [73 UC](../../../../docs/use-cases-73.md) và screen flow `docs/G21_Diagrams.drawio` (Page-2); primary stories: US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005. Quyền và supporting flows theo [current SRS contract](../../current-srs-contract.md); đây là thiết kế/kế hoạch, không xác nhận implementation mới.
+> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
 
-## 1. Ánh xạ
+**Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRP-006, US-GRD-001, US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001. **Requirements:** FR-008/009/020/039.
 
-| Thành phần | Chạy ở |
-|---|---|
-| `GradingController`, `GradebookController`, `StudentGradeController`, `GradingService`, `BulkGradeService`, `PublishService`, `GradebookService` | `backend` |
-| `QuizScorer` | thư viện dùng trong `backend` (nộp quiz luyện tập) |
-| `SubmissionSubmittedAdapter`, `GroupSubmittedAdapter`, `CodeGradedAdapter`, `PracticeResultAdapter` | `backend`, `worker` |
-| Bảng `evaluations` | `postgres` |
-| RabbitMQ | Không có job riêng; phát `grade.published` (chỉ cho thông báo U16) |
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u15-grading` không quyết định chức năng hiện hành.
 
-U15 không có secret, Redis key hay dịch vụ ngoài riêng.
+## Mapping triển khai
 
-## 2. Migration
+Logical unit chạy trong backend/worker chung; data PostgreSQL theo owner, cache/rate Redis không nguồn durable business/quota. Package legacy mục tiêu review `grading`; không tạo deployable riêng.
 
-`db/migration/grading/V20260925_1950__create_evaluations.sql` (chạy sau migration của U04, U08, U11, U14):
-- `evaluations (id, kind, assignment_id FK assignments, class_id FK classes NULL, attempt_id FK attempts NULL, group_document_id FK group_documents NULL, account_id FK accounts NULL, method, score, max_score, rubric_checks jsonb, feedback, ai_score, ai_feedback, status, history jsonb, published_at, version)` theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md).
-- `CHECK ((attempt_id IS NOT NULL) <> (group_document_id IS NOT NULL))`; `CHECK (kind = 'PRACTICE' OR class_id IS NOT NULL)`; `CHECK (score IS NULL OR (score >= 0 AND score <= max_score))`.
-- Unique một phần: `(kind, attempt_id) WHERE attempt_id IS NOT NULL`; `(kind, group_document_id, coalesce(account_id, '00000000-0000-0000-0000-000000000000'))` khi có `group_document_id`.
-- Index `(assignment_id, class_id, status)` (Submission Detail, sổ điểm, thời điểm công bố theo lớp), `(account_id, kind)`, `(class_id)`.
-- Không có bảng công bố riêng (chỉ bảng của ERD); U15 không ghi cột `assignments.grades_released_at` (U08 bỏ cột). Thời điểm công bố của (bài, lớp) = MIN/MAX `published_at` của `evaluations` theo `assignment_id`, `class_id`.
+Nguồn hạ tầng: [shared-infrastructure](../../shared-infrastructure.md).
 
-## 3. Compliance
+- Submission event → register scope/snapshot → teacher manual or selected-source AI request → validate proposal/rubric → teacher confirms → finalize → publish event.
+- Student view grade only published own; teacher export/Gradebook official Assignments only via U16.
+- UC42 activity tab → authorize → U11 scoped query → display known intervals/gaps; no grade mutation or verdict automation.
 
-| Rule | Trạng thái | Căn cứ |
-|---|---|---|
-| Mọi rule | N/A | Không thêm hạ tầng; dùng chung deploy, health, secret của backend |
+## Deploy/rollback/secret
+
+- Docker image theo commit SHA, không latest; chỉ reverse proxy public; migration additive có data mapping/backup trước thay đổi và rollback compatibility.
+- Credentials protected field với encryption key ngoài DB; không plaintext Settings/environment dump/logs. Backup archive encryption key và recovery secrets lưu riêng.
+- Ready/health của dependencies rõ; ports down không trả empty/0/SUCCESS giả. AI unavailable không chặn manual work; event retry/lease tối đa hữu hạn.
+- Trước demo chạy isolated restore, negative authorization, migration validation và checklist unit; runtime chưa được chứng minh bởi revision docs.
+
+## Unit integration risks
+
+- Admin/R2-only denied; stale proposal reject; AI cannot publish/finalize via REST/MCP; unpublished grade hidden.
+- Quiz Practice stays outside Gradebook; group adjustment bounds/audit; activity viewing never changes grade; masked missing intervals.

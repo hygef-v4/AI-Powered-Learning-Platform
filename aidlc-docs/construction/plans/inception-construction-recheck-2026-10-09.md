@@ -6,7 +6,7 @@
 
 **Khung mapping đã đồng bộ, nội dung chưa đồng bộ hoàn toàn.** Lần rà lại sau revision tìm thấy năm nhóm còn sót. Kết quả resolution trong review trước chỉ phản ánh phạm vi sửa lúc đó; không dùng làm bằng chứng mọi nội dung đã nhất quán.
 
-Nguồn: [catalog 73 UC](../../../docs/use-cases-73.md), Page-2 `docs/G21_Diagrams.drawio`, requirements/stories, application design, shared contract và thiết kế unit tại checkout. Đây là review tài liệu, không sửa thiết kế hoặc code và không xác minh SRS online/runtime.
+Nguồn: [catalog 73 UC](../../../docs/history/use-cases-73.md), Page-2 `docs/G21_Diagrams.drawio`, requirements/stories, application design, shared contract và thiết kế unit tại checkout. Đây là review tài liệu, không sửa thiết kế hoặc code và không xác minh SRS online/runtime.
 
 ## C01 — P1: Credit của U07 còn trái luồng HOLD U05/U13
 
