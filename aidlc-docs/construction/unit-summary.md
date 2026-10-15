@@ -222,8 +222,7 @@ Iter 1, Người 2, UC 13. Thiết kế: [u02-audit-job-and-outbox](u02-audit-jo
 
 | Port | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuditPort` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit trong transaction của unit gọi; nghiệp vụ rollback thì audit cũng không còn (BR-U02-02) |
-| `AuditPort` | `recordDenied(AuditEvent)`, `recordFailure(AuditEvent)` | Mọi unit | Ghi sự kiện bị từ chối hoặc lỗi bằng transaction riêng để còn lại khi nghiệp vụ rollback |
+| `AuditPort` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
 | `AuditQueryPort` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
 
 Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, `action`, `objectType`, `objectId`, `result`, `reason`, `details` đã che, `occurredAt`), `AuditResult` (`SUCCESS`, `DENIED`, `FAILURE`), `AuditFilter`, `AuditLogView` (`AuditEvent` + `actorEmail`, rỗng nghĩa là hệ thống).
@@ -233,8 +232,8 @@ Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, 
 ##### A1 - Ghi audit
 1. Trong transaction nghiệp vụ, unit gọi `AuditPort.record(event)` với `id` mới, `occurred_at` là thời điểm thao tác.
 2. U02 kiểm danh sách khóa cấm trong `details` (BR-U02-05); vi phạm thì từ chối (lỗi lập trình, thao tác rollback).
-3. INSERT vào `audit_logs` trong cùng transaction; `id` đã tồn tại thì bỏ qua (BR-U02-02, 03).
-4. Sự kiện `DENIED`/`FAILURE` ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback.
+3. `result = SUCCESS`: INSERT vào `audit_logs` trong cùng transaction; `id` đã tồn tại thì bỏ qua (BR-U02-02, 03).
+4. `result = DENIED` hoặc `FAILURE`: cũng gọi `record`, U02 tự ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback (BR-U02-02).
 
 ##### A2 - Tra cứu audit
 1. Admin mở màn Audit Log từ Admin Dashboard; bộ lọc mặc định 7 ngày gần nhất.

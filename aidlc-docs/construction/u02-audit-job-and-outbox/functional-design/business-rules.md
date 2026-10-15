@@ -13,7 +13,7 @@ Việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U02-01 | Audit chỉ được thêm, không có API hay thao tác ứng dụng nào sửa hoặc xóa. | US-AUD-001 S2 |
-| BR-U02-02 | `AuditPort.record` ghi thẳng vào `audit_logs` **trong transaction của unit gọi**: thao tác nghiệp vụ commit thì audit có, rollback thì audit không có. Sự kiện bị từ chối (`DENIED`) và lỗi (`FAILURE`) được ghi trong transaction riêng để không mất khi nghiệp vụ rollback. Không đi qua RabbitMQ. | Quyết định 2026-09-26 |
+| BR-U02-02 | Mọi unit ghi audit bằng một hàm `AuditPort.record`; U02 chọn transaction theo `result`. `SUCCESS` ghi thẳng vào `audit_logs` **trong transaction của unit gọi**: thao tác nghiệp vụ commit thì audit có, rollback thì audit không có. `DENIED` và `FAILURE` được ghi trong transaction riêng để không mất khi nghiệp vụ rollback. Không đi qua RabbitMQ. | Quyết định 2026-09-26 |
 | BR-U02-03 | `id` do unit gọi tạo là khóa chính; ghi lại cùng `id` không tạo bản ghi thứ hai. | Thiết kế |
 | BR-U02-04 | Ghi audit lỗi (ví dụ DB lỗi) thì thao tác nghiệp vụ cùng transaction cũng rollback; audit bắt buộc không bị mất âm thầm. | Quyết định 2026-09-26 |
 | BR-U02-05 | `details` không chứa mật khẩu, OTP, token, số điện thoại; unit gọi chịu trách nhiệm che, U02 từ chối lưu nếu phát hiện khóa thuộc danh sách cấm (`password`, `otp`, `token`, `secret`, `phone`); danh sách và `ForbiddenKeyGuard` nằm ở `shared/` (khung dự án) để U03 dùng chung cho payload việc nền. | SEC-005 |

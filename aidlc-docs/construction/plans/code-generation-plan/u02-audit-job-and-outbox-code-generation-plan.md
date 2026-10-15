@@ -14,16 +14,16 @@ Plan mới theo unit 2026-10-15, chưa được duyệt và chưa code. Plan và
 
 | Path | Hiện trạng | Việc trong plan này |
 |---|---|---|
-| `backend/.../audit/port/` (`AuditPort`, `AuditQueryPort`, `AuditEvent`, `AuditFilter`, `AuditResult`) | Interface đã có | Giữ `AuditPort`; đổi kiểu trả về của `AuditQueryPort.query` sang `Page<AuditLogView>`; sửa chú thích "UC 39" cũ thành UC 13 |
+| `backend/.../audit/port/` (`AuditPort`, `AuditQueryPort`, `AuditEvent`, `AuditFilter`, `AuditResult`) | Interface đã có | Giữ `AuditPort` nhưng bỏ `recordDenied`, `recordFailure` (gộp vào `record`); đổi kiểu trả về của `AuditQueryPort.query` sang `Page<AuditLogView>`; sửa chú thích "UC 39" cũ thành UC 13 |
 | `backend/.../audit/application/AuditStore` | Adapter tạm chỉ ghi ra log | Thay bằng ghi bảng `audit_logs` |
 | `backend/.../audit/application/AuditQueryService` | Khung, trả trang rỗng | Cài A2 |
 | `backend/.../shared/security/ForbiddenKeyGuard` | Có (khung dự án) | Dùng để chặn khóa cấm trong `details` |
-| `backend/.../files/application/FileAudit` | U03 đang gọi `AuditPort` | Không sửa; chạy lại test của U03 sau khi đổi adapter |
+| `backend/.../files/application/FileAudit` | U03 đang gọi `recordDenied`, `recordFailure` | Đổi sang `record` (cùng `AuditEvent`, `result` giữ nguyên), sửa `UploadServiceTest`, `ArtifactAndTokenTest` theo; chạy lại test của U03 |
 
 ## Checklist
 
 - [ ] **Bước 1 — Migration:** tạo `db/migration/audit/V20260925_0900__create_audit_logs.sql`: bảng `audit_logs` theo domain-entities mục 2 (chưa có FK; U01 thêm FK `actor_id` → `accounts`), index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app`.
-- [ ] **Bước 2 — Ghi audit (A1):** `AuditStore` kiểm `details` bằng `ForbiddenKeyGuard` (BR-U02-05), `INSERT ... ON CONFLICT (id) DO NOTHING` (BR-U02-03); `record` chạy trong transaction hiện tại, `recordDenied` và `recordFailure` chạy `REQUIRES_NEW` (BR-U02-02).
+- [ ] **Bước 2 — Ghi audit (A1):** `AuditStore` kiểm `details` bằng `ForbiddenKeyGuard` (BR-U02-05), `INSERT ... ON CONFLICT (id) DO NOTHING` (BR-U02-03); `record` chạy trong transaction hiện tại khi `result = SUCCESS`, chạy `REQUIRES_NEW` qua `TransactionTemplate` khi `DENIED` hoặc `FAILURE` (BR-U02-02).
 - [ ] **Bước 3 — Tra cứu (A2):** `AuditQueryService` gọi `AuthorizationPort.authorize(actor, AUDIT_READ)` và từ chối khi lỗi (BR-U02-07, 50); kiểm bộ lọc (`from` ≤ `to`, `result` hợp lệ, trang ≤ 100); sắp `occurred_at` giảm dần; lấy email qua `AccountLookupPort.getContact` (BR-U02-09); ghi audit `AUDIT_QUERIED`.
 - [ ] **Bước 4 — API:** `AuditController` cho `GET /api/v1/admin/audit-logs`, lỗi trả dạng an toàn (BR-U02-51).
 - [ ] **Bước 5 — Frontend:** `AuditLogPage` với `AuditFilters` (mặc định 7 ngày, đổi email sang `actorId` qua API tài khoản của U01), `AuditTable` (50 dòng/trang), `AuditDetailDrawer` chỉ đọc.

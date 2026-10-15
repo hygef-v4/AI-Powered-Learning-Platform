@@ -37,8 +37,7 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 
 | Port | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuditPort` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit trong transaction của unit gọi; nghiệp vụ rollback thì audit cũng không còn (BR-U02-02) |
-| `AuditPort` | `recordDenied(AuditEvent)`, `recordFailure(AuditEvent)` | Mọi unit | Ghi sự kiện bị từ chối hoặc lỗi bằng transaction riêng để còn lại khi nghiệp vụ rollback |
+| `AuditPort` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
 | `AuditQueryPort` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
 
 Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, `action`, `objectType`, `objectId`, `result`, `reason`, `details` đã che, `occurredAt`), `AuditResult` (`SUCCESS`, `DENIED`, `FAILURE`), `AuditFilter`, `AuditLogView` (`AuditEvent` + `actorEmail`, rỗng nghĩa là hệ thống).

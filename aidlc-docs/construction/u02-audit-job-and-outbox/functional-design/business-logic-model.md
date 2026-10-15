@@ -18,8 +18,8 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 ### A1 - Ghi audit
 1. Trong transaction nghiệp vụ, unit gọi `AuditPort.record(event)` với `id` mới, `occurred_at` là thời điểm thao tác.
 2. U02 kiểm danh sách khóa cấm trong `details` (BR-U02-05); vi phạm thì từ chối (lỗi lập trình, thao tác rollback).
-3. INSERT vào `audit_logs` trong cùng transaction; `id` đã tồn tại thì bỏ qua (BR-U02-02, 03).
-4. Sự kiện `DENIED`/`FAILURE` ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback.
+3. `result = SUCCESS`: INSERT vào `audit_logs` trong cùng transaction; `id` đã tồn tại thì bỏ qua (BR-U02-02, 03).
+4. `result = DENIED` hoặc `FAILURE`: cũng gọi `record`, U02 tự ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback (BR-U02-02).
 
 ### A2 - Tra cứu audit
 1. Admin mở màn Audit Log từ Admin Dashboard; bộ lọc mặc định 7 ngày gần nhất.

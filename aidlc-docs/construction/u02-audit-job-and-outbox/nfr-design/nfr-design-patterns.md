@@ -7,8 +7,8 @@
 Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u02-audit-job-and-outbox` giữ tên cũ để không phá liên kết, là thiết kế của U02 Audit hiện hành.
 
 ## P1 - Audit ghi trong transaction
-- `AuditPort.record` INSERT vào `audit_logs` bằng transaction hiện tại của unit gọi (propagation `REQUIRED`): nghiệp vụ commit thì có audit, rollback thì không (BR-U02-02).
-- `recordDenied`/`recordFailure` dùng propagation `REQUIRES_NEW` để sự kiện bị từ chối hoặc lỗi còn lại dù nghiệp vụ rollback.
+- `AuditPort.record` với `result = SUCCESS` INSERT vào `audit_logs` bằng transaction hiện tại của unit gọi (propagation `REQUIRED`): nghiệp vụ commit thì có audit, rollback thì không (BR-U02-02).
+- `result = DENIED` hoặc `FAILURE`: cùng hàm `record` ghi bằng propagation `REQUIRES_NEW` (qua `TransactionTemplate`) để sự kiện còn lại dù nghiệp vụ rollback.
 - `INSERT ... ON CONFLICT (id) DO NOTHING` (BR-U02-03). Kiểm khóa cấm trong `details` trước khi ghi (BR-U02-05).
 
 ## P2 - Chặn sửa audit ở tầng database

@@ -25,7 +25,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
-| `AuditPort` / `AuditStore` | Backend, worker | P1: INSERT trong transaction của unit gọi, kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
+| `AuditPort` / `AuditStore` | Backend, worker | P1: một hàm `record`; `SUCCESS` INSERT trong transaction của unit gọi, `DENIED`/`FAILURE` bằng transaction riêng; kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
 | `AuditQueryService` | Backend | Tra cứu audit cho ADMIN, lấy email người thực hiện qua `AccountLookupPort` (U01), tự ghi `AUDIT_QUERIED` |
 | `AuditController` | Backend | `GET /api/v1/admin/audit-logs` |
 
