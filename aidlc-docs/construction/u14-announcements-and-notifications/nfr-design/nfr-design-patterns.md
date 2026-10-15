@@ -4,7 +4,7 @@
 
 **Primary UC:** 63, 64, 65. **Primary stories:** US-CNT-004, US-NTF-001; nhắc hạn của US-RPT-001. **Requirements:** FR-011, FR-019, FR-023.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 ## P1 - Tiêu thụ sự kiện idempotent
 - `INSERT ... ON CONFLICT (source_event_id, recipient_id, type) DO NOTHING`; tạo thông báo và bản ghi email trong một transaction; SSE sau commit.

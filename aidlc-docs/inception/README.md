@@ -6,16 +6,14 @@
 ## Đọc theo thứ tự
 
 1. requirements/requirements.md và requirements/use-cases.md.
-2. requirements/revision-decisions-2026-10-13.md: chi tiết chưa chốt.
-3. user-stories/stories.md và personas.md.
-4. application-design/*.md: logical architecture/unit/waves hiện hành.
-5. plans/execution-plan.md, scope-revision-2026-10-13.md và kết quả đồng bộ 65 UC.
+2. user-stories/stories.md và personas.md.
+3. application-design/*.md: logical architecture/unit/waves hiện hành.
 
 ## Historical sources
 
 Plans/questions có ngày trước 13/10 và answers/checkpoints trước đây là lịch sử; không làm source of truth của scope mới. docs/history/use-cases-73.md và docs/G21_Diagrams.drawio và unit-of-work-dependency.png/.drawio chưa sửa và không là catalog/diagram hiện hành. Construction design/plans đã revision theo 65 UC; runtime/contracts implementation vẫn baseline, không dùng revision docs để xác nhận đã chạy.
 
-Bổ sung đã chốt theo hội đồng: [backup, activity, email và minh bạch AI](requirements/council-features-2026-10-13.md). D05 đã chốt ở cấp phạm vi; D01–D04 còn mở.
+Bổ sung đã chốt theo hội đồng: [backup, activity, email và minh bạch AI](requirements/council-features-2026-10-13.md). D05 đã chốt ở cấp phạm vi; D01–D04 đã chốt 2026-10-15.
 
 Bảng use case tiếng Anh phục vụ report: [docs/usecase_table.md](../../docs/usecase_table.md), đã đồng bộ 65 UC hiện hành. Bảng 73 UC cũ lưu tại docs/history/use-cases-73.md cho các tham chiếu lịch sử.
 

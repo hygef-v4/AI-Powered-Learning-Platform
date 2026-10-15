@@ -108,7 +108,7 @@ Folder Construction giữ tên cũ để không phá liên kết; thiết kế c
 
 ## DoD và trạng thái
 
-Requirement, test case độc lập, code và bằng chứng kiểm thử liên kết với nhau; sửa tài liệu không thay cho kiểm thử runtime. D01–D04 trong [revision-decisions-2026-10-13.md](../requirements/revision-decisions-2026-10-13.md) đã chốt 2026-10-15: Quiz chỉ Practice, nhóm chỉ Graded, bài nhóm không có AI cho Student, quota theo ngày và trần hệ thống.
+Requirement, test case độc lập, code và bằng chứng kiểm thử liên kết với nhau; sửa tài liệu không thay cho kiểm thử runtime. D01–D04 đã chốt 2026-10-15: Quiz chỉ Practice, nhóm chỉ Graded, bài nhóm không có AI cho Student, quota theo ngày và trần hệ thống.
 
 ## UC consolidation — 66 active UC
 

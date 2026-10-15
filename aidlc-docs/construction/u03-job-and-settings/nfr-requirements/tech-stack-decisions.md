@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
@@ -20,5 +20,4 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | Cài đặt hệ thống | Bảng `system_settings` (`value` jsonb) + cache trong bộ nhớ TTL 30 giây | Ít mục, đọc nhiều sửa ít |
 | Dump database | `pg_dump` và `pg_restore` của PostgreSQL 16 cài trong image worker | Công cụ chuẩn, snapshot nhất quán |
 | Mã hóa backup | JCE có sẵn trong Java: AES-256-GCM cho dữ liệu, RSA-OAEP-256 bọc khóa | Không thêm thư viện; private key giữ ngoài VPS |
-| Bản sao tệp | Drive API `files.copy` vào thư mục backup | Bản sao độc lập với tệp đang dùng |
 | Test | JUnit 5; Testcontainers (PostgreSQL, RabbitMQ) cho integration test do tester viết | Theo NFR-004 |

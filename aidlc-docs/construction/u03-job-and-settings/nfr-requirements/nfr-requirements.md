@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 ## 1. Hiệu năng và tài nguyên
 
@@ -81,7 +81,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-30 | Người code viết unit test cho mọi `BR-U03-xx`, gồm SVG có script, tệp đổi đuôi, tệp vượt trần lấy từ Settings, token sai người, kiểm giới hạn cài đặt, version lệch, khởi tạo không ghi đè, trạng thái backup, giữ số bản, mã hóa và giải mã bằng khóa test. | NFR-004 |
+| NFR-U03-30 | Người code viết unit test cho mọi `BR-U03-xx`, gồm SVG có script, tệp đổi đuôi, tệp vượt trần lấy từ Settings, token sai người, kiểm giới hạn cài đặt, version lệch, khởi tạo không ghi đè, trạng thái backup, giữ bản 7 ngày, mã hóa và giải mã bằng khóa test. | NFR-004 |
 | NFR-U03-31 | Drive được thay bằng adapter giả lưu ra thư mục tạm trong test và khi chạy local không có credential. | NFR-004 |
 | NFR-U03-55 | Tester viết integration test với PostgreSQL và RabbitMQ thật trong container: gửi sau commit, rollback không gửi, thử lại theo backoff, `onFailed` sau 5 lượt, sweeper gửi lại, scanner không trùng, backup thành công và thất bại, khôi phục cô lập. | NFR-004 |
 

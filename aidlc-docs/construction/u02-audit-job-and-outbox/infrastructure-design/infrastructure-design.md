@@ -4,9 +4,9 @@
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u02-audit-job-and-outbox` giữ tên cũ để không phá liên kết, là thiết kế của U02 Audit hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u02-audit-job-and-outbox` giữ tên cũ để không phá liên kết, là thiết kế của U02 Audit hiện hành.
 
-Hạ tầng chung ở `construction/shared-infrastructure.md`. Bảng theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md). RabbitMQ và worker thuộc U03.
+Bảng theo [mô hình dữ liệu của unit](../functional-design/domain-entities.md). RabbitMQ và worker thuộc U03.
 
 ## 1. Ánh xạ thành phần
 

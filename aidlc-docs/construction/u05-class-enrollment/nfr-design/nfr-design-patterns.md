@@ -4,7 +4,7 @@
 
 **Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
 ## P1 - Đọc phạm vi không cache
 - `isTeacherOf`: `SELECT 1 FROM course_classes WHERE id = ? AND teacher_id = ?`; `isEnrolledStudent`: `SELECT 1 FROM enrollments WHERE class_id = ? AND account_id = ? AND status = 'ACTIVE'`; trạng thái lớp do unit gọi tự kiểm (BR-U05-31).

@@ -12,7 +12,7 @@ Web → Nginx → Spring Boot API → domain ports → PostgreSQL/Redis/Google D
 |---|---|
 | Account/auth | U01 |
 | Audit | U02 |
-| File/job/Settings/backup manifests and status | U03 |
+| File/job/Settings/backup status | U03 |
 | Academic/enrollment | U04 |
 | References/announcements, optional lessons | U05 |
 | Rubric/MCQ versions | U06 |

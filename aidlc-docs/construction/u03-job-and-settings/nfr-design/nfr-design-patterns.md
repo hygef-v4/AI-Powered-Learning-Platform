@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 ## P1 - Upload với dọn dẹp bù trừ
 1. `Semaphore.tryAcquire()` (5 permit); không lấy được thì `503`.
@@ -16,7 +16,6 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 
 ## P2 - Stream tải về
 - `StreamingResponseBody`, bộ đệm 64 KB; header theo BR-U03-23; SVG thêm CSP sandbox; abuse thì audit và `410`.
-- Đổi mã tệp qua `file_id_aliases` trước khi đọc (bảng rỗng ở môi trường bình thường nên không tốn thêm truy vấn nhờ cache "bảng rỗng").
 
 ## P3 - Kiểm nội dung tệp
 - Tika `detect()` trên 8 KB đầu, so danh sách cho phép của `purpose`.
@@ -63,15 +62,14 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 1. Scanner tạo `backup_runs` với `scheduled_for` duy nhất rồi gửi `BACKUP_RUN`.
 2. Handler chuyển `CREATED` → `RUNNING` bằng cập nhật có điều kiện.
 3. `pg_dump --format=custom` bằng role `backup_reader` ra volume tạm.
-4. Lập manifest, `files.copy` từng tệp vào thư mục `backup/{runId}/files`, so `md5Checksum` giữa bản gốc và bản sao.
-5. Mã hóa dump và manifest (P17), upload vào `backup/{runId}`, kiểm kích thước và checksum.
-6. Ghi `SUCCESS`, audit, rồi chạy retention (P18).
-7. Lỗi: thử lại theo P9; hết lượt thì `FAILED`, dọn thư mục của lần chạy qua `DRIVE_CLEANUP`, phát `backup.failed`.
+4. Mã hóa dump (P17), upload vào `backup/{runId}`, kiểm kích thước và checksum; không chép tệp Drive.
+5. Ghi `SUCCESS`, audit, rồi chạy retention (P18).
+6. Lỗi: thử lại theo P9; hết lượt thì `FAILED`, dọn thư mục của lần chạy qua `DRIVE_CLEANUP`, phát `backup.failed`.
 
 ## P17 - Mã hóa lai
 - Sinh khóa AES-256 và nonce ngẫu nhiên cho mỗi lần chạy; mã hóa luồng bằng AES-GCM.
 - Bọc khóa AES bằng public key RSA-OAEP-256 lấy từ `U03_BACKUP_PUBLIC_KEY`; ghi khóa đã bọc vào đầu archive.
 - Giải mã chỉ làm được với private key của người vận hành, giữ ngoài VPS.
 
-## P18 - Giữ số bản
-- Chọn các lần `SUCCESS` theo `snapshot_at` giảm dần, bỏ qua `retentionCount` bản đầu; xóa thư mục `backup/{runId}` của các lần còn lại, ghi `purged_at`. Không bao giờ xóa lần thành công mới nhất.
+## P18 - Giữ bản trong 7 ngày
+- Chọn các lần `SUCCESS` có `snapshot_at` cũ hơn 7 ngày, trừ lần thành công mới nhất; xóa thư mục `backup/{runId}` của các lần đó, ghi `purged_at`.

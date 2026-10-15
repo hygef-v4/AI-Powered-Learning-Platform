@@ -29,7 +29,7 @@ API chung của tổ chức chỉ giảng viên được cấp quota; API cá nh
 
 ### 2.4 Quyết định đã chốt
 
-Câu hỏi ở [revision-decisions-2026-10-13.md](revision-decisions-2026-10-13.md); người dùng chốt ngày 2026-10-15: D01 Quiz chỉ Practice; D02 bài nhóm chỉ Graded; D03 bỏ, bài nhóm không có tính năng AI cho Student; D04 quota API chung mỗi giảng viên theo ngày cộng trần ngày toàn hệ thống, số cụ thể do Admin đặt.
+Người dùng chốt ngày 2026-10-15: D01 Quiz chỉ Practice; D02 bài nhóm chỉ Graded; D03 bỏ, bài nhóm không có tính năng AI cho Student; D04 quota API chung mỗi giảng viên theo ngày cộng trần ngày toàn hệ thống, số cụ thể do Admin đặt.
 
 ## 3. Stakeholders
 
@@ -325,11 +325,11 @@ Có hướng dẫn kết nối API cho Gemini/OpenAI/Claude và hướng dẫn M
 
 ### FR-038 - Backup và khôi phục dữ liệu lên Google Drive
 
-U03 backup PostgreSQL nhất quán và bản sao tệp/manifest tương ứng lên thư mục Drive riêng tư, tách lưu trữ đang dùng; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch/retention qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
+U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
 
 **Tiêu chí chấp nhận:**
-- Chỉ SUCCESS khi dump/tệp/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U16.
-- Tệp trên Drive đang dùng không tự coi là backup; giữ bản độc lập để khôi phục sau xóa nguồn.
+- Chỉ SUCCESS khi dump/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U16.
+- Tệp người dùng trên Drive không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được (chốt 2026-10-15).
 - Người vận hành thử restore môi trường cô lập: quyền, tài liệu/XML, bài nộp/điểm và quota/usage; ghi bằng chứng và RPO/RTO đo được. Không có nút restore production/MCP restore trong MVP.
 
 ### FR-039 - Ghi nhận dấu hiệu rời trang khi làm bài

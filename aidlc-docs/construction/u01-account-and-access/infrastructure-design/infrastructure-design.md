@@ -4,9 +4,9 @@
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
-Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ ghi phần U01 dùng.
+File này chỉ ghi phần hạ tầng U01 dùng.
 
 ## 1. Ánh xạ thành phần logic
 
@@ -43,7 +43,7 @@ Redis **không bật persistence**: VPS khởi động lại thì mọi người
 
 ## 4. Cấu hình
 
-Biến môi trường như `logical-components.md` mục 4; giá trị bí mật lấy từ CI/CD (shared-infrastructure mục 4).
+Biến môi trường như `logical-components.md` mục 4; giá trị bí mật lấy từ CI/CD.
 
 ## 5. Quan sát riêng U01
 

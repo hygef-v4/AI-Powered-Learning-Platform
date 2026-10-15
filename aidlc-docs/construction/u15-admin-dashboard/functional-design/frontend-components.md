@@ -4,7 +4,7 @@
 
 **Primary UC:** 66. **Primary stories:** US-RPT-002. **Requirements:** FR-024, FR-038.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 ## 1. Màn hình theo screen flow
 

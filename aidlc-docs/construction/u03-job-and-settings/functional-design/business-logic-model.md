@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông báo, S1–S5 cho cài đặt (UC 14, 15), B1–B5 cho backup.
 
@@ -43,12 +43,12 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 2. Unit sở hữu gọi `issueDownloadToken(fileId, accountId)`; U03 sinh token ngẫu nhiên 256 bit, lưu bản băm vào Redis 5 phút.
 3. Frontend nhận URL `/api/v1/files/download/{token}` và mở.
 4. Khi tải: tìm token, kiểm `accountId` khớp phiên; sai người thì trả `404` và ghi audit (BR-U03-21, 40).
-5. Đổi `fileId` qua bảng ánh xạ khôi phục nếu có (BR-U03-99), đọc thuộc tính, stream từ Drive với header an toàn; SVG kèm CSP sandbox (BR-U03-10, 22, 23).
+5. Đọc thuộc tính, stream từ Drive với header an toàn; SVG kèm CSP sandbox (BR-U03-10, 22, 23).
 6. Drive báo abuse thì ghi audit và trả `410` (BR-U03-24).
 
 ### F4 - Đọc tệp phía server
-1. Unit cần đọc nội dung tệp gọi `ArtifactPort.open(fileId)`: U07, U08, U12 nhúng ảnh khi xuất DOCX; U03 khi chép tệp vào backup.
-2. U03 đổi mã qua bảng ánh xạ nếu có, trả stream từ Drive; abuse thì báo lỗi vĩnh viễn như F3.
+1. Unit cần đọc nội dung tệp gọi `ArtifactPort.open(fileId)`: U07, U08, U12 nhúng ảnh khi xuất DOCX.
+2. U03 trả stream từ Drive; abuse thì báo lỗi vĩnh viễn như F3.
 
 ### F5 - Giới hạn tải lên cho frontend
 1. Frontend gọi `GET /api/v1/files/policies` (người đã đăng nhập).
@@ -102,7 +102,7 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 1. Trên Setting Detail, Admin nhập giá trị mới và lưu; frontend gọi `PATCH /api/v1/admin/settings/{key}` kèm `value`, `version`.
 2. Kiểm quyền `ADMIN` (BR-U03-80).
 3. Tìm `SettingDefinition`; không có thì trả `404`.
-4. Kiểm kiểu, khoảng giá trị, tập cho phép; kiểm ràng buộc giữa các mục (ví dụ bật backup cần đã đặt giờ và số bản giữ); sai thì trả `400` kèm lý do (BR-U03-82, 88).
+4. Kiểm kiểu, khoảng giá trị, tập cho phép; kiểm ràng buộc giữa các mục (ví dụ bật backup cần đã đặt giờ); sai thì trả `400` kèm lý do (BR-U03-82, 88).
 5. Cập nhật có điều kiện `version` khớp; không khớp thì trả `409`, frontend báo tải lại.
 6. Ghi audit `SETTING_UPDATED` với giá trị trước và sau trong cùng transaction (BR-U03-83).
 7. Xóa cache của khóa ở instance hiện tại; instance khác nhận giá trị mới trong tối đa 30 giây (BR-U03-86).
@@ -136,17 +136,14 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 1. Handler nhận `BACKUP_RUN`, chuyển `CREATED` → `RUNNING` có điều kiện; dòng không còn `CREATED` thì bỏ (BR-U03-51).
 2. Kiểm dung lượng đĩa tạm; không đủ thì `FAILED` ngay.
 3. Chạy `pg_dump` ra tệp tạm (một snapshot nhất quán), ghi phiên bản schema (Flyway) và phiên bản ứng dụng.
-4. Lập manifest: liệt kê tệp trong các thư mục `MATERIAL`, `DOCUMENT_IMAGE` tạo trước thời điểm snapshot, kèm SHA-256 từ thuộc tính tệp.
-5. Chép từng tệp vào thư mục backup của lần chạy (bản sao độc lập trên Drive), so checksum; ghi vào manifest mã tệp gốc và mã bản sao (BR-U03-91, 94).
-6. Mã hóa dump và manifest (BR-U03-93), upload vào thư mục backup riêng, kiểm kích thước và checksum sau upload.
-7. Ghi `SUCCESS` với tham chiếu archive và manifest, dung lượng, thời điểm xong; ghi audit `BACKUP_COMPLETED` (BR-U03-92).
-8. Chạy B3.
-9. Xóa tệp tạm trong mọi trường hợp.
+4. Mã hóa dump (BR-U03-93), upload vào thư mục backup riêng, kiểm kích thước và checksum sau upload. Không chép tệp trên Drive (BR-U03-91).
+5. Ghi `SUCCESS` với tham chiếu archive, dung lượng, thời điểm xong; ghi audit `BACKUP_COMPLETED` (BR-U03-92).
+6. Chạy B3.
+7. Xóa tệp tạm trong mọi trường hợp.
 
-### B3 - Giữ số bản
-1. Đọc `backup.retentionCount`.
-2. Lấy các lần `SUCCESS` cũ hơn số bản cần giữ; luôn chừa bản thành công mới nhất.
-3. Xóa archive, manifest và thư mục bản sao tệp của các lần đó trên Drive; đánh dấu `purgedAt`, giữ dòng lịch sử (BR-U03-96).
+### B3 - Giữ bản trong 7 ngày
+1. Lấy các lần `SUCCESS` có `snapshot_at` cũ hơn 7 ngày; luôn chừa bản thành công mới nhất.
+2. Xóa archive của các lần đó trên Drive; đánh dấu `purgedAt`, giữ dòng lịch sử (BR-U03-96).
 
 ### B4 - Lỗi backup
 1. Lỗi tạm (Drive 429/5xx, mạng): handler thử lại theo J2.
@@ -156,6 +153,6 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 
 ### B5 - Xem trạng thái và khôi phục
 1. U15 gọi `BackupStatusPort.latest()` và `list(page)` để hiện trên Admin Dashboard: lần thành công gần nhất, lịch sử, dung lượng, lỗi; không có nút tải (BR-U03-97).
-2. Khôi phục do người vận hành làm theo runbook trong môi trường cô lập: tải archive và manifest, giải mã bằng khóa giữ ngoài VPS, `pg_restore` vào database mới.
-3. Chép bản sao tệp vào thư mục tệp của môi trường mới; ghi bảng ánh xạ mã tệp cũ sang mới (BR-U03-99).
+2. Khôi phục do người vận hành làm theo runbook trong môi trường cô lập: tải archive, giải mã bằng khóa giữ ngoài VPS, `pg_restore` vào database mới.
+3. Tệp trên Drive không được khôi phục: database trỏ tới tệp đang có trên Drive; tệp đã bị xóa sau thời điểm backup thì thiếu (BR-U03-91).
 4. Kiểm theo danh sách: số dòng các bảng chính, quyền, tài liệu và XML sơ đồ, bài nộp và điểm, quota và usage, audit; đo RPO/RTO và lưu bằng chứng (BR-U03-98).

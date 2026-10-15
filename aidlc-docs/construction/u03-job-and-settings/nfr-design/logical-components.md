@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 ## 1. Thành phần
 
@@ -15,7 +15,6 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | `DownloadController`, `DownloadTokenService` | backend | F3 tải về (P2, P4) |
 | `FilePolicyService` | backend | F5 `GET /api/v1/files/policies`, đọc giới hạn qua `SettingsPort` |
 | `StoragePort` + adapter Drive, local, chưa cấu hình | backend, worker | P5, P6 |
-| `FileIdAliasResolver` | backend, worker | Đổi mã tệp sau khôi phục (BR-U03-99) |
 | `DriveJobHandler` | worker | `DRIVE_CLEANUP` |
 | `JobPublisher`, `EventPublisher`, `AmqpPublisher`, `AmqpTopology` | backend, worker | J1, E1, P8 |
 | `JobListener`, `JobRetryPublisher`, `JobHandlerRegistry`, `PendingSweepRunner`, `ScheduledScanRunner` | worker | J2–J4, P9–P12 |

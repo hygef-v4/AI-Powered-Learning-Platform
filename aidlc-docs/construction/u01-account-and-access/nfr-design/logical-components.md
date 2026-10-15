@@ -4,7 +4,7 @@
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 ## 1. Sơ đồ
 
@@ -75,7 +75,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | `U01_OTP_TTL` / `U01_OTP_MAX_ATTEMPTS` | 10m / 5 | Không |
 | `U01_LOGIN_LOCK_THRESHOLD` / `U01_LOGIN_LOCK_DURATION` | 5 / 15m | Không |
 | `U01_RL_*` | Theo bảng P6 | Không |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production theo shared-infrastructure §8 | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
 
 ## 5. Compliance
 

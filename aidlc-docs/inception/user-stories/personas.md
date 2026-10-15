@@ -24,7 +24,7 @@ Giảng viên/sinh viên SWR/SWD và môn tương tự: cách giao/làm/nộp/ch
 Stories và mapping: [stories.md](stories.md), [unit map](../application-design/unit-of-work-story-map.md).
 ## Bổ sung trách nhiệm theo hội đồng — 2026-10-13
 
-Admin theo dõi trạng thái backup và cấu hình lịch/retention; quyền này không cấp quyền tải dữ liệu học vụ. Người vận hành giữ secrets khôi phục riêng và thực hiện restore theo runbook. Giảng viên được giao dạy chọn policy ghi nhận rời trang và xem timeline đúng lớp; sinh viên được thông báo policy và chỉ xem dữ liệu của mình. Không tự kết luận gian lận. Email quan trọng và minh bạch nguồn/token tuân [đặc tả hội đồng](../requirements/council-features-2026-10-13.md).
+Admin theo dõi trạng thái backup và cấu hình lịch; quyền này không cấp quyền tải dữ liệu học vụ. Người vận hành giữ secrets khôi phục riêng và thực hiện restore theo runbook. Giảng viên được giao dạy chọn policy ghi nhận rời trang và xem timeline đúng lớp; sinh viên được thông báo policy và chỉ xem dữ liệu của mình. Không tự kết luận gian lận. Email quan trọng và minh bạch nguồn/token tuân [đặc tả hội đồng](../requirements/council-features-2026-10-13.md).
 
 
 Admin sử dụng UC14 View Settings và UC15 Edit Setting cho Settings/quota/API chung, UC66 cho trạng thái backup. Teacher/Subject Manager được giao dạy dùng UC 42 cho activity trong chi tiết bài làm/lượt được phép. UC15 được khôi phục; IDs 26/76/78/79/80/81/82 không còn UC độc lập.

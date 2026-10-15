@@ -4,7 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệp và việc nền giữ như bản 2026-10-09 vì code đã sinh tham chiếu các mã này.
 
@@ -89,7 +89,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký, khóa backup) không phải cài đặt khóa–giá trị: hoặc là biến môi trường, hoặc do unit sở hữu lưu dạng bảo vệ (API AI chung của U06). | SEC-006 |
 | BR-U03-86 | Giá trị mới có hiệu lực trong tối đa 30 giây ở mọi instance backend và worker; thao tác đang chạy giữ giá trị cũ; dữ liệu đã tạo không bị ảnh hưởng. | FR-033 |
 | BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
-| BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định), `backup.retentionCount` (số bản thành công giữ lại, 1–30, không có mặc định). Chỉ bật được khi đã đặt giờ và số bản giữ; lịch và số bản cụ thể phải được xác nhận trước triển khai, hệ thống không tự gán. | FR-038, council features |
+| BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định). Chỉ bật được khi đã đặt giờ; giờ chạy phải được xác nhận trước triển khai, hệ thống không tự gán. Thời gian giữ bản cố định 7 ngày (BR-U03-96), không phải cài đặt. | FR-038, council features, chốt 2026-10-15 |
 | BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `SettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
 
 ## 9. Backup và khôi phục
@@ -97,15 +97,14 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U03-90 | Backup chạy theo lịch trong Settings, mỗi ngày tối đa một lần chạy theo lịch; không có nút backup thủ công trên giao diện. | FR-038 |
-| BR-U03-91 | Một lần backup gồm: bản dump PostgreSQL nhất quán tại một thời điểm, phiên bản schema và ứng dụng, danh sách tệp (manifest) tại thời điểm đó và bản sao độc lập của từng tệp. Tệp đang dùng trên Drive không được coi là backup. | FR-038 |
-| BR-U03-92 | Trạng thái lần chạy: `CREATED` → `RUNNING` → `SUCCESS` hoặc `FAILED`. Chỉ `SUCCESS` sau khi dump, toàn bộ bản sao tệp, upload archive và kiểm checksum đều xong. | FR-038 |
-| BR-U03-93 | Archive dump và manifest được mã hóa trước khi upload; khóa giải mã không nằm trên VPS và không nằm trong archive. Không xuất API key hay mật khẩu dạng rõ; bản ghi credential trong database vẫn là ciphertext. | FR-038, SEC-006 |
-| BR-U03-94 | Bản backup nằm trong thư mục Drive riêng tư tách khỏi thư mục tệp đang dùng. Xóa tệp nguồn không xóa bản sao trong backup. | FR-038 |
+| BR-U03-91 | Chỉ backup database: một lần backup gồm bản dump PostgreSQL nhất quán tại một thời điểm, phiên bản schema và ứng dụng. Tệp người dùng trên Drive (học liệu, ảnh trong tài liệu) không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được từ backup. | FR-038, chốt 2026-10-15 |
+| BR-U03-92 | Trạng thái lần chạy: `CREATED` → `RUNNING` → `SUCCESS` hoặc `FAILED`. Chỉ `SUCCESS` sau khi dump, upload archive và kiểm checksum đều xong. | FR-038 |
+| BR-U03-93 | Archive dump được mã hóa trước khi upload; khóa giải mã không nằm trên VPS và không nằm trong archive. Không xuất API key hay mật khẩu dạng rõ; bản ghi credential trong database vẫn là ciphertext. | FR-038, SEC-006 |
+| BR-U03-94 | Bản backup nằm trong thư mục Drive riêng tư tách khỏi thư mục tệp đang dùng. | FR-038 |
 | BR-U03-95 | Lỗi tạm (Drive, mạng) được thử lại hữu hạn; lỗi vĩnh viễn hoặc hết lượt thì `FAILED` kèm lỗi đã che, dọn phần upload dở, ghi audit và phát sự kiện `backup.failed` để U14 báo Admin. Lỗi gửi email không đổi kết quả backup. | FR-038 |
-| BR-U03-96 | Giữ lại `backup.retentionCount` bản `SUCCESS` mới nhất; bản cũ hơn bị xóa khỏi thư mục backup. Không bao giờ xóa bản thành công gần nhất; bản lỗi không thay bản tốt. | FR-038 |
+| BR-U03-96 | Giữ các bản `SUCCESS` trong 7 ngày gần nhất; bản cũ hơn bị xóa khỏi thư mục backup. Không bao giờ xóa bản thành công gần nhất, kể cả khi đã quá 7 ngày vì các lần sau đều lỗi; bản lỗi không thay bản tốt. | FR-038, chốt 2026-10-15 |
 | BR-U03-97 | Admin chỉ xem trạng thái, lịch sử, dung lượng và lỗi (qua Admin Dashboard của U15); quyền xem không cho tải archive hay dữ liệu học vụ. | FR-038, UC 66 |
-| BR-U03-98 | Khôi phục do người vận hành làm theo runbook, chỉ vào môi trường cô lập trước; không có nút khôi phục production hay tool MCP khôi phục. Sau khôi phục phải kiểm quyền, tài liệu và XML sơ đồ, bài nộp, điểm, quota và usage, số dòng audit; ghi bằng chứng và RPO/RTO đo được. Không cam kết không mất dữ liệu. | FR-038 |
-| BR-U03-99 | Mã tệp Drive không giữ được khi khôi phục: U03 ghi bảng ánh xạ mã cũ sang mã mới và tự đổi khi đọc tệp, nên các unit không phải sửa cột `file_id` của mình. | Thiết kế |
+| BR-U03-98 | Khôi phục do người vận hành làm theo runbook, chỉ vào môi trường cô lập trước; không có nút khôi phục production hay tool MCP khôi phục. Sau khôi phục phải kiểm quyền, tài liệu và XML sơ đồ, bài nộp, điểm, quota và usage, số dòng audit; ghi bằng chứng và RPO/RTO đo được. Tệp trên Drive không được khôi phục (BR-U03-91). Không cam kết không mất dữ liệu. | FR-038 |
 
 ## 10. Quy tắc chung
 

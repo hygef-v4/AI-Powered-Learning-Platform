@@ -4,7 +4,7 @@
 
 **Primary UC:** 49, 50, 51, 52. **Primary stories:** US-ASM-003 (phần Quiz); dữ liệu hoạt động lượt Quiz của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-039.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 ## P1 - Lưu có phiên bản
 - `UPDATE quiz_attempts SET answers = ?, answer_version = answer_version + 1 WHERE id = ? AND status = 'IN_PROGRESS' AND answer_version = ?`; 0 dòng thì `409`.

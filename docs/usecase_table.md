@@ -4,7 +4,7 @@
 
 The platform supports two assessment types: **ASSIGNMENT** and **QUIZ**. Assignment supports individual/group submission and optional Draw.io diagrams. Learning materials include private reference files and links to educational YouTube videos that learners can open or watch. AI uses institutional educator quotas, personal APIs or external agents through MCP; AI credits are not sold. Backup, work-activity signals and important-event email are included in the proposed scope. These are requirements, not implementation evidence.
 
-Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; see the old → new mapping at the end. Retired IDs keep their old numbers and are marked "(ID cũ)" where referenced. Decided on 2026-10-15: Quizzes are Practice only and Group Assignments are Graded only; see the [decision log](../aidlc-docs/inception/requirements/revision-decisions-2026-10-13.md).
+Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; see the old → new mapping at the end. Retired IDs keep their old numbers and are marked "(ID cũ)" where referenced. Decided on 2026-10-15: Quizzes are Practice only and Group Assignments are Graded only.
 
 | ID | Use Case | Feature | Use Case Description |
 | --- | --- | --- | --- |

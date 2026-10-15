@@ -4,7 +4,7 @@
 
 **Primary UC:** 16, 17, 18, 19. **Primary stories:** US-CAT-001 (phần môn). **Requirements:** FR-002, FR-003.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
 Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 cũ cho các rule về môn.
 

@@ -4,7 +4,7 @@
 
 **Primary UC:** 66. **Primary stories:** US-RPT-002. **Requirements:** FR-024, FR-038.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 ## P1 - Ghép nguồn độc lập
 - Mỗi nguồn là một lời gọi có timeout; lỗi một nguồn chỉ đánh dấu phần đó `UNAVAILABLE`.

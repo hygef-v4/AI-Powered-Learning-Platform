@@ -4,7 +4,7 @@
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 ## 1. Production (một VPS)
 
@@ -55,7 +55,7 @@ Cùng `docker-compose.yml` với file override `docker-compose.local.yml`:
 1. Dựng VPS mới, cài Docker, mở firewall.
 2. Chạy lại pipeline deploy với tag SHA đang dùng.
 3. Trỏ DNS sang IP mới; certbot cấp lại chứng chỉ.
-4. Khôi phục dữ liệu theo runbook U03/shared-infrastructure và backup hợp lệ; chưa đo RPO/RTO hoặc xác nhận restore thực tế.
+4. Khôi phục dữ liệu theo runbook của U03 và backup hợp lệ; chưa đo RPO/RTO hoặc xác nhận restore thực tế.
 
 ## Quy tắc tích hợp revision hiện hành
 

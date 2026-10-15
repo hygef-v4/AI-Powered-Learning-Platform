@@ -4,9 +4,9 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
-Thiết kế độc lập công nghệ. U03 là unit hạ tầng: tệp cho U07, U08, U12, U13; việc nền và sự kiện thông báo cho mọi unit; cài đặt hệ thống UC 14, 15; backup dữ liệu.
+Thiết kế độc lập công nghệ. U03 là unit hạ tầng: tệp cho U07, U08, U12, U13; việc nền và sự kiện thông báo cho mọi unit; cài đặt hệ thống UC 14, 15; backup database.
 
 ## 1. Tổng quan
 
@@ -21,8 +21,6 @@ Thiết kế độc lập công nghệ. U03 là unit hạ tầng: tệp cho U07,
 | `SystemSetting` | Entity | `system_settings` | U03 (Admin sửa qua UC 15) |
 | `SettingDefinition` | Khai báo trong code | Code | Unit sở hữu mục: U03, U08 |
 | `BackupRun` | Entity | `backup_runs` | U03 |
-| `BackupFileEntry` | Entity con của `BackupRun` | `backup_file_entries` | U03 |
-| `FileIdAlias` | Entity (chỉ có sau khôi phục) | `file_id_aliases` | U03 |
 
 U03 không sở hữu nội dung nghiệp vụ, quyết định ai được xem tệp, quota và kết nối AI (U06).
 
@@ -109,7 +107,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 | Nhóm | Mục | Unit khai báo |
 |---|---|---|
 | Tệp | `files.material.maxSizeMb`, `files.material.allowedTypes`, `files.documentImage.maxSizeMb`, `files.documentImage.allowedTypes` (BR-U03-87) | U03 |
-| Backup | `backup.enabled`, `backup.dailyAt`, `backup.retentionCount` (BR-U03-88) | U03 |
+| Backup | `backup.enabled`, `backup.dailyAt` (BR-U03-88); giữ bản 7 ngày cố định | U03 |
 | Hoạt động làm bài | `activity.retentionDays` (không có mặc định, chốt trước khi bật theo dõi) | U08 |
 
 ## 9. `BackupRun` (bảng `backup_runs`)
@@ -121,14 +119,10 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 | `state` | `CREATED`, `RUNNING`, `SUCCESS`, `FAILED` |
 | `snapshot_at` | Thời điểm dump |
 | `schema_version`, `app_version` | Phiên bản lúc dump |
-| `archive_ref`, `manifest_ref` | Mã tệp đã mã hóa trong thư mục backup |
-| `archive_sha256`, `byte_size`, `file_count` | Kiểm toàn vẹn và hiển thị |
+| `archive_ref` | Mã tệp archive dump đã mã hóa trong thư mục backup |
+| `archive_sha256`, `byte_size` | Kiểm toàn vẹn và hiển thị |
 | `started_at`, `completed_at`, `purged_at` | Mốc thời gian |
 | `safe_error` | Lỗi đã che, không có đường dẫn nội bộ hay bí mật |
-
-`BackupFileEntry` (bảng `backup_file_entries`): `run_id`, `source_file_id`, `purpose`, `sha256`, `backup_copy_id`, `byte_size`.
-
-`FileIdAlias` (bảng `file_id_aliases`): `old_file_id` (khóa chính), `new_file_id`, `restored_from_run`. Bảng rỗng ở môi trường chạy bình thường; chỉ có dữ liệu sau khôi phục (BR-U03-99).
 
 ## 10. Contract
 

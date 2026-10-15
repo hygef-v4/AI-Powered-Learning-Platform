@@ -4,9 +4,7 @@
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
-
-Hạ tầng chung ở [shared-infrastructure](../../shared-infrastructure.md).
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
 ## 1. Ánh xạ
 
@@ -14,7 +12,7 @@ Hạ tầng chung ở [shared-infrastructure](../../shared-infrastructure.md).
 |---|---|
 | Controller, service tệp và Settings | `backend` |
 | `DriveJobHandler`, `BackupJobHandler`, `BackupScheduleScanner`, runner việc nền | `worker` |
-| Bảng `system_settings`, `backup_runs`, `backup_file_entries`, `file_id_aliases` | `postgres` |
+| Bảng `system_settings`, `backup_runs` | `postgres` |
 | Download token, cache cài đặt (trong bộ nhớ) | `redis` (token), bộ nhớ instance (cache) |
 | Exchange và queue | `rabbitmq` |
 | Byte tệp đang dùng | Google Shared Drive, mỗi `purpose` một thư mục |
@@ -26,7 +24,7 @@ Hạ tầng chung ở [shared-infrastructure](../../shared-infrastructure.md).
 |---|---|
 | Xác thực | JSON key service account (base64) trong `.env` |
 | Thư mục tệp | `MATERIAL`, `DOCUMENT_IMAGE`, tạo lúc khởi động nếu chưa có |
-| Thư mục backup | `backup/{runId}/` chứa archive mã hóa, manifest mã hóa và `files/` (bản sao tệp) |
+| Thư mục backup | `backup/{runId}/` chứa archive dump đã mã hóa |
 | Kết nối ra | `www.googleapis.com:443` từ backend và worker |
 
 ## 3. Container và volume
@@ -44,7 +42,7 @@ Hạ tầng chung ở [shared-infrastructure](../../shared-infrastructure.md).
 | File | Nội dung |
 |---|---|
 | `db/migration/settings/V20260925_0910__create_system_settings.sql` | Bảng `system_settings`; FK `updated_by` do migration `accounts` của U01 thêm |
-| `db/migration/backup/V20260925_0920__create_backup_tables.sql` | `backup_runs` (unique `scheduled_for`), `backup_file_entries`, `file_id_aliases` |
+| `db/migration/backup/V20260925_0920__create_backup_tables.sql` | `backup_runs` (unique `scheduled_for`) |
 | Script khởi tạo role (`01-roles.sh`) | Thêm role `backup_reader` chỉ có `SELECT` trên mọi bảng |
 
 Thứ tự: `audit_logs` (U02, 0900) → `system_settings` (0910) → bảng backup (0920) → `accounts` (U01, 0930).

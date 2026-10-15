@@ -4,7 +4,7 @@
 
 **50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
 
-Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Đã chốt 2026-10-15: Quiz chỉ Practice (D01), GROUP chỉ Graded (D02), bài nhóm không có AI cho Student (D03 bỏ), quota chung theo ngày và trần hệ thống (D04). Chưa có bằng chứng survey; xem requirements/revision-decisions-2026-10-13.md.
+Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Đã chốt 2026-10-15: Quiz chỉ Practice (D01), GROUP chỉ Graded (D02), bài nhóm không có AI cho Student (D03 bỏ), quota chung theo ngày và trần hệ thống (D04). Chưa có bằng chứng survey.
 
 ### US-AIC-001 - Kết nối API cá nhân
 
@@ -1326,19 +1326,19 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 **Current UC trace**: UC 66; UC 14; UC 15. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là Admin, tôi muốn theo dõi backup độc lập trên Drive để người vận hành khôi phục được dữ liệu sau sự cố.
+**Story**: Là Admin, tôi muốn theo dõi backup database trên Drive để người vận hành khôi phục được dữ liệu sau sự cố.
 
 **Truy vết**: FR-038, FR-011, FR-033, REL-004; UC 66. Chi tiết trong requirements/council-features-2026-10-13.md.
 
 #### Scenario 1 - Backup hợp lệ
 
-- **Given** lịch/retention và Drive riêng tư đã cấu hình
-- **When** job dump nhất quán và upload archive/tệp/manifest được kiểm checksum
-- **Then** ghi SUCCESS/lịch sử, bảo vệ archive và giữ khóa giải mã riêng.
+- **Given** lịch và Drive riêng tư đã cấu hình
+- **When** job dump database nhất quán và upload archive được kiểm checksum
+- **Then** ghi SUCCESS/lịch sử, bảo vệ archive, giữ khóa giải mã riêng và chỉ giữ các bản trong 7 ngày gần nhất.
 
 #### Scenario 2 - Backup lỗi
 
-- **Given** upload lỗi hoặc tệp manifest thiếu
+- **Given** dump hoặc upload lỗi
 - **When** job kết thúc sau retry hữu hạn
 - **Then** không SUCCESS, giữ bản tốt trước và phát cảnh báo cho Admin qua U14.
 
@@ -1346,13 +1346,13 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** bản thành công và secrets khôi phục giữ riêng
 - **When** người vận hành restore vào môi trường cô lập
-- **Then** kiểm quyền, tài liệu/XML, bài nộp/điểm và usage/quota, remap tệp và lưu bằng chứng; không ghi đè production.
+- **Then** kiểm quyền, tài liệu/XML, bài nộp/điểm và usage/quota và lưu bằng chứng; tệp trên Drive không được khôi phục; không ghi đè production.
 
 #### Scenario 4 - Tách dashboard khỏi backup owner
 
 - **Given** dữ liệu backup/status thuộc U03
 - **When** Admin xem trạng thái qua UC 66/U15
-- **Then** chỉ metadata được trả qua port; cấu hình lịch/retention thuộc UC 15 (UC14 chỉ xem); story backup vẫn primary U03 dù UC xem là primary U15.
+- **Then** chỉ metadata được trả qua port; cấu hình lịch thuộc UC 15 (UC14 chỉ xem); story backup vẫn primary U03 dù UC xem là primary U15.
 
 
 
