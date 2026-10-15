@@ -925,7 +925,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** người dùng có phiên đang hoạt động
 - **When** người dùng đăng xuất hoặc phiên hết hạn
-- **Then** refresh token của phiên bị thu hồi phía server nên phiên không thể làm mới; access token còn lại hết hạn trong tối đa 15 phút (BR-U01-44, 45)
+- **Then** phiên bị xóa phía server nên không làm mới được và access token còn lại bị từ chối ở request tiếp theo (BR-U01-44, 45)
 
 
 
@@ -1012,7 +1012,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** một quyền hoặc phạm vi đang có hiệu lực
 - **When** quản trị viên thu hồi
-- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role làm refresh token hết hiệu lực ngay và access token còn lại hết hạn trong tối đa 15 phút (BR-U01-63)
+- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role xóa mọi phiên của người đó, request tiếp theo bị từ chối và phải đăng nhập lại (BR-U01-63)
 
 #### Scenario 3 - Người không phải quản trị viên thay đổi quyền
 
@@ -1039,7 +1039,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** người dùng xác nhận đúng mật khẩu hiện tại và mật khẩu mới đạt chính sách
 - **When** người dùng yêu cầu đổi mật khẩu
-- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác không làm mới được nữa (access token còn lại hết hạn trong tối đa 15 phút) và người dùng nhận xác nhận
+- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác bị xóa và bị từ chối ở request tiếp theo, phiên hiện tại giữ nguyên, và người dùng nhận xác nhận
 
 #### Scenario 2 - Thông tin không hợp lệ
 

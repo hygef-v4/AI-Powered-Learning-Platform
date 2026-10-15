@@ -52,7 +52,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 1. Mở tab MCP Agent; frontend gọi `GET /api/v1/me/mcp-credentials`.
 2. Bấm Tạo, nhập nhãn (tên agent), chọn quyền `READ_ONLY` hoặc `READ_WRITE` và hạn 7, 30 hoặc 90 ngày; frontend gọi `POST /api/v1/me/mcp-credentials`.
 3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
-4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối, `credentialVersion` của phiên hiện tại và hạn (BR-U06-31).
+4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối và hạn (BR-U06-31).
 5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token đúng một lần kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
 
 ### F5 - Thu hồi credential MCP (UC 32)
@@ -63,10 +63,10 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 ### F6 - Agent gọi tool MCP (UC 32)
 1. Agent gửi `POST /mcp` (JSON-RPC `initialize`, `tools/list`, `tools/call`) kèm `Authorization: Bearer`.
 2. Băm token, tìm credential; không có, đã thu hồi hoặc hết hạn thì trả `401`.
-3. Dựng actor từ tài khoản và `credentialVersion` lưu trong credential (BR-U06-33).
+3. Dựng actor từ tài khoản của credential (BR-U06-33).
 4. `tools/list`: trả các tool đăng ký qua `McpToolProvider` mà role của actor được dùng; credential `READ_ONLY` chỉ thấy tool đọc.
 5. `tools/call`: kiểm giới hạn 60 lời gọi mỗi phút; tìm tool; tool ghi cần `READ_WRITE`; kiểm tham số theo schema, không quá 64 KB.
-6. Gọi `McpToolProvider.call` của unit sở hữu; unit này gọi `AuthorizationPort.authorize` với actor (U01 kiểm `ACTIVE`, `credentialVersion`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
+6. Gọi `McpToolProvider.call` của unit sở hữu; unit này gọi `AuthorizationPort.authorize` với actor (U01 kiểm `ACTIVE`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
 7. Cắt kết quả không quá 256 KB; ghi usage nguồn `MCP` (tên tool, kết quả; token `UNAVAILABLE` hoặc `EXTERNALLY_REPORTED`); cập nhật `lastUsedAt`; ghi audit `MCP_TOOL_CALLED`.
 8. Bị từ chối thì trả lỗi JSON-RPC không lộ dữ liệu và ghi audit `ACCESS_DENIED`.
 

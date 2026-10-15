@@ -57,7 +57,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 5. Kiểm mật khẩu mới (BR-U01-30, 31). Không đạt → lỗi chính sách, ticket vẫn giữ để nhập lại.
 6. Băm mật khẩu, lưu `credential`, chuyển `ACTIVE`, xóa ticket (BR-U01-13, 32).
 7. Ghi audit `ACCOUNT_ACTIVATED`.
-8. Tự đăng nhập: xóa `failedLoginCount`, tạo refresh session gắn `credentialVersion`, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
+8. Tự đăng nhập: xóa `failedLoginCount`, tạo phiên mới, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
 
 **Ra**: phiên đăng nhập; người dùng qua Post-Login vào thẳng dashboard theo role (F15, BR-U01-48).
 
@@ -73,7 +73,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 4. Trạng thái khác `ACTIVE` → lỗi trung tính (BR-U01-40).
 5. Sai mật khẩu → tăng `failedLoginCount`; chạm 5 thì đặt `lockedUntil` + 15 phút và ghi audit `ACCOUNT_TEMP_LOCKED`. Trả lỗi trung tính, ghi audit `LOGIN_FAILED`.
 6. Đúng → xóa `failedLoginCount`, `lockedUntil`.
-7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
+7. Tạo phiên mới (refresh token lưu băm trên Redis), cấp access token 15 phút mang mã phiên `sid`. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
 
 **Ra**: phiên đăng nhập hoặc lỗi trung tính **giống nhau** cho mọi nguyên nhân thất bại.
 
@@ -103,7 +103,7 @@ Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đ�
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng nhập `otpCode`: xác minh như F2 bước 1-3 (mục đích `PASSWORD_RESET`), nhận `otpTicket`.
 5. Người dùng nhập `newPassword` kèm ticket: kiểm như F2 bước 4-5.
-6. Lưu mật khẩu mới, tăng `credentialVersion` → **mọi phiên** bị thu hồi, xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
+6. Lưu mật khẩu mới, xóa **mọi phiên** của tài khoản (BR-U01-34), xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
 
 ### F6 - Đổi mật khẩu
 
@@ -113,7 +113,7 @@ Màn Password Change, mở từ User Profile.
 
 1. Sai mật khẩu hiện tại → từ chối, không đổi gì (US-IAM-006 S2).
 2. Kiểm chính sách (BR-U01-30, 31).
-3. Lưu, tăng `credentialVersion`, cấp lại phiên hiện tại với version mới; phiên khác vô hiệu (BR-U01-34).
+3. Lưu, xóa mọi phiên khác của tài khoản, giữ phiên hiện tại (BR-U01-34).
 4. Ghi audit `PASSWORD_CHANGED`.
 
 ## 4. Hồ sơ
@@ -165,14 +165,14 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 2. Đích là chính mình và là hạ quyền → từ chối (BR-U01-65).
 3. Đích là `ADMIN` đang hoạt động cuối cùng và role mới khác `ADMIN` → từ chối (BR-U01-66).
 4. Role mới không giữ được phân công hiện có của đích (hỏi U04 về môn, U05 về lớp) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
-5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
+5. Lưu role, xóa mọi phiên của đích (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
 ### F12 - Vô hiệu hóa và mở lại (UC 12, trên Account Detail)
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
-2. Chuyển `DISABLED`, tăng `credentialVersion`, xóa OTP còn hiệu lực (BR-U01-71).
+2. Chuyển `DISABLED`, xóa mọi phiên, xóa OTP còn hiệu lực (BR-U01-71).
 3. Ghi audit `ACCOUNT_DISABLED`.
 
 **Mở lại**:
@@ -190,7 +190,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 
 ### F13 - `authorize(actor, action, resourceRef)`
 
-1. Access token không hợp lệ, hết hạn, hoặc mang `credentialVersion` khác version hiện tại của tài khoản → từ chối (BR-U01-44, 63). Actor từ MCP do U06 dựng từ credential MCP (tài khoản, `credentialVersion` lúc tạo) và được so như access token.
+1. Access token không hợp lệ, hết hạn, hoặc phiên `sid` của nó đã bị xóa → từ chối (BR-U01-44). Actor từ MCP do U06 dựng từ credential MCP còn hiệu lực (U06 tự kiểm hạn và thu hồi); các bước sau áp như với access token.
 2. Tài khoản không `ACTIVE` → từ chối.
 3. Role không có quyền với `action` → từ chối.
 4. `action` cần phạm vi → hỏi U04 (`SubjectScopePort`: actor có là Chủ nhiệm của môn) hoặc U05 (`ClassScopePort`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.

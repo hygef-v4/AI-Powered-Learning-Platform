@@ -37,7 +37,6 @@ U01 **không** sở hữu: phân công Chủ nhiệm môn (U04), lớp, giảng 
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
 | `throttle` | `LoginThrottle` | Mặc định không khóa |
-| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa; version cũ bị deny request tiếp theo và không refresh được |
 | `createdAt`, `updatedAt`, `version` | Thời gian và khóa lạc quan | Hệ thống quản lý |
 
 ### Trạng thái
@@ -109,9 +108,8 @@ Dùng một lần; xóa khi đặt mật khẩu thành công (BR-U01-28).
 
 | Thuộc tính | Ý nghĩa |
 |---|---|
-| `sessionId` | Định danh phiên |
+| `sessionId` | Định danh phiên (`sid`); access token mang mã này, xóa phiên là thu hồi |
 | `accountId` | Chủ phiên |
-| `credentialVersion` | Version lúc tạo; lệch current `Account.credentialVersion` thì deny access/refresh |
 | `refreshTokenHash` | Băm refresh token; phát hiện dùng lại thì thu hồi phiên |
 | `issuedAt`, `lastUsedAt`, `expiresAt` | Idle 2 giờ tính từ `lastUsedAt`, tối đa 7 ngày tính từ `issuedAt`. Access token JWT sống 15 phút, không lưu phía server |
 
@@ -154,7 +152,7 @@ Phạm vi môn đến từ `SubjectScopePort` (U04 cài), phạm vi lớp và gh
 
 | Port | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuthorizationPort` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, `credentialVersion`, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
+| `AuthorizationPort` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
 | `AccountLookupPort` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
 | `MailPort` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
 

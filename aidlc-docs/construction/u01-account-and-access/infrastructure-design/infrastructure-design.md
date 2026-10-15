@@ -32,7 +32,9 @@ Hạ tầng chung ở `construction/shared-infrastructure.md`. File này chỉ g
 
 | Tiền tố | Nội dung | TTL |
 |---|---|---|
-| `session:refresh:{hash}` | Refresh session | Idle 2 giờ, kiểm trần 7 ngày |
+| `session:{sid}` | Phiên: `accountId`, `issuedAt`, `lastUsedAt`; mỗi request kiểm phiên còn | Idle 2 giờ, kiểm trần 7 ngày |
+| `session:refresh:{hash}` | Băm refresh token → `sid` | Như phiên |
+| `account:sessions:{accountId}` | Các `sid` của tài khoản, để xóa khi đổi mật khẩu, đổi role, vô hiệu hóa | Theo phiên dài nhất còn lại |
 | `otp:{accountId}:{purpose}` | Băm OTP, số lượt còn lại | 10 phút |
 | `ticket:{hash}` | `VerificationTicket` sau khi OTP đúng | 10 phút |
 | `ratelimit:auth:*` | Bucket4j | Theo cửa sổ |

@@ -45,7 +45,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | `ActivationService` | Yêu cầu và hoàn tất kích hoạt | F1, F2 |
 | `OtpService` | Tạo job gửi OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
 | `PasswordPolicy` | ≥ 8 ký tự, chữ + số, không chứa tên email, ≤ 72 byte | BR-U01-30, 31, NFR-U01-14 |
-| `TokenService` | Phát và xoay JWT/refresh; kiểm `credentialVersion` khi refresh | NFR-U01-10, 11 |
+| `TokenService` | Phát và xoay JWT/refresh; kiểm phiên còn khi refresh; xóa phiên của tài khoản khi thu hồi | NFR-U01-10, 11 |
 | `ProfileService` | Xem và sửa tên, số điện thoại của chính mình | F7 |
 | `AccountAdminService` | Danh sách, chi tiết, tạo, sửa thông tin (version), đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F8, F9, F11, F12, F14 |
 | `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
@@ -58,7 +58,8 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | Kho | Khóa / bảng | TTL |
 |---|---|---|
 | PostgreSQL | `accounts` | Vĩnh viễn |
-| Redis | `session:refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
+| Redis | `session:{sid}`, `session:refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
+| Redis | `account:sessions:{accountId}` | Theo phiên dài nhất còn lại |
 | Redis | `otp:{accountId}:{purpose}` | 10 phút |
 | Redis | `ticket:{hash}` | 10 phút |
 | Redis | `ratelimit:auth:*` (Bucket4j) | Theo cửa sổ nạp lại |

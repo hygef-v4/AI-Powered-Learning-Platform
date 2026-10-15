@@ -22,7 +22,7 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 
 | Port | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuthorizationPort` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, `credentialVersion`, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
+| `AuthorizationPort` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
 | `AccountLookupPort` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
 | `MailPort` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
 
@@ -69,7 +69,7 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 5. Kiểm mật khẩu mới (BR-U01-30, 31). Không đạt → lỗi chính sách, ticket vẫn giữ để nhập lại.
 6. Băm mật khẩu, lưu `credential`, chuyển `ACTIVE`, xóa ticket (BR-U01-13, 32).
 7. Ghi audit `ACCOUNT_ACTIVATED`.
-8. Tự đăng nhập: xóa `failedLoginCount`, tạo refresh session gắn `credentialVersion`, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
+8. Tự đăng nhập: xóa `failedLoginCount`, tạo phiên mới, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
 
 **Ra**: phiên đăng nhập; người dùng qua Post-Login vào thẳng dashboard theo role (F15, BR-U01-48).
 
@@ -83,7 +83,7 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 4. Trạng thái khác `ACTIVE` → lỗi trung tính (BR-U01-40).
 5. Sai mật khẩu → tăng `failedLoginCount`; chạm 5 thì đặt `lockedUntil` + 15 phút và ghi audit `ACCOUNT_TEMP_LOCKED`. Trả lỗi trung tính, ghi audit `LOGIN_FAILED`.
 6. Đúng → xóa `failedLoginCount`, `lockedUntil`.
-7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
+7. Tạo phiên mới (refresh token lưu băm trên Redis), cấp access token 15 phút mang mã phiên `sid`. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
 
 **Ra**: phiên đăng nhập hoặc lỗi trung tính **giống nhau** cho mọi nguyên nhân thất bại.
 
@@ -113,7 +113,7 @@ Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đ�
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng nhập `otpCode`: xác minh như F2 bước 1-3 (mục đích `PASSWORD_RESET`), nhận `otpTicket`.
 5. Người dùng nhập `newPassword` kèm ticket: kiểm như F2 bước 4-5.
-6. Lưu mật khẩu mới, tăng `credentialVersion` → **mọi phiên** bị thu hồi, xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
+6. Lưu mật khẩu mới, xóa **mọi phiên** của tài khoản (BR-U01-34), xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
 
 ##### F6 - Đổi mật khẩu
 
@@ -123,7 +123,7 @@ Màn Password Change, mở từ User Profile.
 
 1. Sai mật khẩu hiện tại → từ chối, không đổi gì (US-IAM-006 S2).
 2. Kiểm chính sách (BR-U01-30, 31).
-3. Lưu, tăng `credentialVersion`, cấp lại phiên hiện tại với version mới; phiên khác vô hiệu (BR-U01-34).
+3. Lưu, xóa mọi phiên khác của tài khoản, giữ phiên hiện tại (BR-U01-34).
 4. Ghi audit `PASSWORD_CHANGED`.
 
 ##### F7 - Xem và sửa hồ sơ
@@ -171,14 +171,14 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 2. Đích là chính mình và là hạ quyền → từ chối (BR-U01-65).
 3. Đích là `ADMIN` đang hoạt động cuối cùng và role mới khác `ADMIN` → từ chối (BR-U01-66).
 4. Role mới không giữ được phân công hiện có của đích (hỏi U04 về môn, U05 về lớp) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
-5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
+5. Lưu role, xóa mọi phiên của đích (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
 ##### F12 - Vô hiệu hóa và mở lại (UC 12, trên Account Detail)
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
-2. Chuyển `DISABLED`, tăng `credentialVersion`, xóa OTP còn hiệu lực (BR-U01-71).
+2. Chuyển `DISABLED`, xóa mọi phiên, xóa OTP còn hiệu lực (BR-U01-71).
 3. Ghi audit `ACCOUNT_DISABLED`.
 
 **Mở lại**:
@@ -194,7 +194,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 
 ##### F13 - `authorize(actor, action, resourceRef)`
 
-1. Access token không hợp lệ, hết hạn, hoặc mang `credentialVersion` khác version hiện tại của tài khoản → từ chối (BR-U01-44, 63). Actor từ MCP do U06 dựng từ credential MCP (tài khoản, `credentialVersion` lúc tạo) và được so như access token.
+1. Access token không hợp lệ, hết hạn, hoặc phiên `sid` của nó đã bị xóa → từ chối (BR-U01-44). Actor từ MCP do U06 dựng từ credential MCP còn hiệu lực (U06 tự kiểm hạn và thu hồi); các bước sau áp như với access token.
 2. Tài khoản không `ACTIVE` → từ chối.
 3. Role không có quyền với `action` → từ chối.
 4. `action` cần phạm vi → hỏi U04 (`SubjectScopePort`: actor có là Chủ nhiệm của môn) hoặc U05 (`ClassScopePort`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.
@@ -688,7 +688,7 @@ Tool giai đoạn đầu theo FR-035:
 1. Mở tab MCP Agent; frontend gọi `GET /api/v1/me/mcp-credentials`.
 2. Bấm Tạo, nhập nhãn (tên agent), chọn quyền `READ_ONLY` hoặc `READ_WRITE` và hạn 7, 30 hoặc 90 ngày; frontend gọi `POST /api/v1/me/mcp-credentials`.
 3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
-4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối, `credentialVersion` của phiên hiện tại và hạn (BR-U06-31).
+4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối và hạn (BR-U06-31).
 5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token đúng một lần kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
 
 ##### F5 - Thu hồi credential MCP (UC 32)
@@ -699,10 +699,10 @@ Tool giai đoạn đầu theo FR-035:
 ##### F6 - Agent gọi tool MCP (UC 32)
 1. Agent gửi `POST /mcp` (JSON-RPC `initialize`, `tools/list`, `tools/call`) kèm `Authorization: Bearer`.
 2. Băm token, tìm credential; không có, đã thu hồi hoặc hết hạn thì trả `401`.
-3. Dựng actor từ tài khoản và `credentialVersion` lưu trong credential (BR-U06-33).
+3. Dựng actor từ tài khoản của credential (BR-U06-33).
 4. `tools/list`: trả các tool đăng ký qua `McpToolProvider` mà role của actor được dùng; credential `READ_ONLY` chỉ thấy tool đọc.
 5. `tools/call`: kiểm giới hạn 60 lời gọi mỗi phút; tìm tool; tool ghi cần `READ_WRITE`; kiểm tham số theo schema, không quá 64 KB.
-6. Gọi `McpToolProvider.call` của unit sở hữu; unit này gọi `AuthorizationPort.authorize` với actor (U01 kiểm `ACTIVE`, `credentialVersion`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
+6. Gọi `McpToolProvider.call` của unit sở hữu; unit này gọi `AuthorizationPort.authorize` với actor (U01 kiểm `ACTIVE`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
 7. Cắt kết quả không quá 256 KB; ghi usage nguồn `MCP` (tên tool, kết quả; token `UNAVAILABLE` hoặc `EXTERNALLY_REPORTED`); cập nhật `lastUsedAt`; ghi audit `MCP_TOOL_CALLED`.
 8. Bị từ chối thì trả lỗi JSON-RPC không lộ dữ liệu và ghi audit `ACCESS_DENIED`.
 

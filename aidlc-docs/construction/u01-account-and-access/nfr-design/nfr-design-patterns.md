@@ -11,9 +11,10 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 ## 1. Bảo mật
 
 ### P1 - Xác thực không trạng thái cho access, có trạng thái cho refresh
-- Access token JWT HMAC-SHA256, 15 phút, gồm `sub`, `role`, `cv` (credentialVersion), `exp`, `jti`, `sid` (server session ref). Filter kiểm chữ ký/hạn, sau đó SessionAuthorityPort kiểm session revocation, account ACTIVE và credentialVersion hiện hành. AuthorizationPort tiếp tục kiểm role/scope/resource từ authority hiện tại; dependency unavailable fail closed (NFR-U01-04, 10).
-- Refresh token là chuỗi ngẫu nhiên 256 bit; Redis lưu băm SHA-256 kèm `accountId`, `cv`, `issuedAt`, `lastUsedAt` (NFR-U01-11).
-- Refresh: đọc bản ghi, so `cv` với `accounts.credential_version`; lệch → xóa và từ chối. Khớp → cấp access mới, **xoay** refresh mới, xóa bản cũ. Refresh cũ bị dùng lại → xóa cả phiên (BR-U01-46).
+- Access token JWT HMAC-SHA256, 15 phút, gồm `sub`, `role`, `exp`, `jti`, `sid` (mã phiên). Filter kiểm chữ ký/hạn, sau đó SessionAuthorityPort kiểm phiên `sid` còn trên Redis và account `ACTIVE` trên PostgreSQL. AuthorizationPort tiếp tục kiểm role/scope/resource từ authority hiện tại; dependency unavailable fail closed (NFR-U01-04, 10).
+- Refresh token là chuỗi ngẫu nhiên 256 bit; Redis lưu băm SHA-256 kèm `sid`, `accountId`, `issuedAt`, `lastUsedAt` (NFR-U01-11).
+- Refresh: đọc bản ghi theo băm; phiên `sid` không còn → từ chối. Còn → cấp access mới, **xoay** refresh mới, xóa bản cũ. Refresh cũ bị dùng lại → xóa cả phiên (BR-U01-46).
+- Thu hồi phiên: `account:sessions:{accountId}` giữ các `sid` của tài khoản. Đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa xóa các phiên (đổi mật khẩu giữ phiên hiện tại) trước khi commit và xóa lại một lần sau commit để không sót phiên tạo chen giữa; Redis lỗi thì hủy thao tác, trả `503` (BR-U01-34, 63, 71).
 - Idle 2 giờ bằng TTL làm mới mỗi lần refresh; tối đa 7 ngày bằng kiểm `issuedAt` (NFR-U01-11).
 - Đăng xuất: xóa bản ghi refresh, xóa cả hai cookie. Access còn hạn không bị chặn (Câu D3, NFR-U01-13).
 
@@ -98,4 +99,4 @@ Không bắt buộc (RESILIENCY-14 ngoài phạm vi đồ án). Hành vi fail-cl
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
 
-SessionAuthorityPort xác minh sid/session revoked và account status/credentialVersion từ server authoritative state trước action; JWT không chứa quyền academic đầy đủ, role từ current account. Session unavailable fail closed; cache nếu dùng cần invalidation khi đổi role/status/logout, không TTL grace bỏ qua revoke.
+SessionAuthorityPort xác minh phiên `sid` còn (Redis) và account status (PostgreSQL) trước action; JWT không chứa quyền academic đầy đủ, role từ current account. PostgreSQL lỗi thì fail closed; Redis lỗi thì bỏ qua bước kiểm phiên theo NFR-U01-40; cache nếu dùng cần invalidation khi đổi role/status/logout, không TTL grace bỏ qua revoke.

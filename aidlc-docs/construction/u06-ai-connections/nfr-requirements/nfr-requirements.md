@@ -32,6 +32,6 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | SECURITY-09 | Compliant | Khóa mã hóa từ biến môi trường, không giá trị mặc định |
 | SECURITY-10 | Compliant | Khóa phiên bản MCP SDK và thư viện kiểm JSON schema |
 | SECURITY-11 | Compliant | Không nhận URL người dùng; gửi AI ngữ cảnh tối thiểu |
-| SECURITY-12 | Compliant | Token MCP băm, có hạn, thu hồi được, gắn `credentialVersion` |
+| SECURITY-12 | Compliant | Token MCP băm, có hạn, thu hồi được; tài khoản không `ACTIVE` thì bị từ chối |
 | SECURITY-15 | Compliant | Fail closed khi U01, U03 lỗi; không gọi lại provider khi không rõ kết quả |
 | Rule còn lại | N/A | Hạ tầng mạng, header, giám sát thuộc U03 và hạ tầng chung |

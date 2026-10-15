@@ -22,7 +22,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-10 | Access token JWT ký bằng khóa bí mật phía server, sống 15 phút, chứa `accountId`, `role`, `credentialVersion`. | Câu N1, N5 |
+| NFR-U01-10 | Access token JWT ký bằng khóa bí mật phía server, sống 15 phút, chứa `accountId`, `role`, `sid` (mã phiên). | Câu N1, N5 |
 | NFR-U01-11 | Refresh token ngẫu nhiên, chỉ lưu bản băm ở Redis. Idle 2 giờ, tối đa 7 ngày. Mỗi lần refresh cấp token mới và hủy token cũ; phát hiện dùng lại thì thu hồi phiên. | Câu N2, BR-U01-46 |
 | NFR-U01-12 | Cả hai token nằm trong cookie `Secure`, `HttpOnly`, `SameSite=Lax`; không để trong local storage hay URL. | SEC-001 |
 | NFR-U01-13 | Thu hồi account/session/role có hiệu lực request tiếp theo qua authority checks, kể cả JWT chưa hết hạn; academic scope checks cùng nguyên tắc. Không còn grace window quyền 15 phút. | Câu N5 |

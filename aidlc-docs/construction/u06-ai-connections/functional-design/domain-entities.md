@@ -103,7 +103,6 @@ stateDiagram-v2
 | `access` | enum | `READ_ONLY`, `READ_WRITE` |
 | `tokenHash` | chuỗi | SHA-256, duy nhất |
 | `tokenHint` | chuỗi 4 | 4 ký tự cuối |
-| `credentialVersion` | số | Của tài khoản lúc tạo |
 | `expiresAt`, `revokedAt`, `lastUsedAt`, `createdAt` | thời gian | Hạn tối đa 90 ngày |
 
 ## 6. Contract
