@@ -4,7 +4,7 @@
 
 The platform supports two assessment types: **ASSIGNMENT** and **QUIZ**. Assignment supports individual/group submission and optional Draw.io diagrams. Learning materials include private reference files and links to educational YouTube videos that learners can open or watch. AI uses institutional educator quotas, personal APIs or external agents through MCP; AI credits are not sold. Backup, work-activity signals and important-event email are included in the proposed scope. These are requirements, not implementation evidence.
 
-Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; see the old → new mapping at the end. Retired IDs keep their old numbers and are marked "(ID cũ)" where referenced. Quiz Practice and Group Graded are provisional policies; remaining decisions are recorded in the [decision log](../aidlc-docs/inception/requirements/revision-decisions-2026-10-13.md).
+Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; see the old → new mapping at the end. Retired IDs keep their old numbers and are marked "(ID cũ)" where referenced. Decided on 2026-10-15: Quizzes are Practice only and Group Assignments are Graded only; see the [decision log](../aidlc-docs/inception/requirements/revision-decisions-2026-10-13.md).
 
 | ID | Use Case | Feature | Use Case Description |
 | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; se
 | 31 | Manage Personal AI API | Personal AI API Configuration | Allows a student, teacher or subject manager to configure, test, replace or revoke their own Gemini, OpenAI or Claude API key. |
 | 32 | Connect/Revoke MCP Agent | External Agent Connection | Allows an authorized user to connect or revoke their own MCP agent and access platform tools within their permissions. |
 | 33 | View AI Usage History | AI Usage Transparency | Allows a user to view their own AI usage, source, provider/model and available token counts. Administrators can view permitted institutional usage summaries. |
-| 34 | View Teacher Assignment List | Assignment Lifecycle | Allows an assigned teacher to view and manage individual and group Assignments, including publication, version and copy status. |
+| 34 | View Teacher Assignment List | Assignment Lifecycle | Allows an assigned teacher to view and manage a class's individual and group Assignments, and a subject manager to view and manage subject-level individual Assignments, including publication, version and copy status. |
 | 35 | Create/Update/Delete Individual Assignment | Individual Assignment Authoring | Allows an assigned teacher or authorized subject manager to create, update or delete individual Assignments with document sections, rubrics and optional Draw.io diagrams. |
 | 36 | Add/Update/Delete Rubric | Assignment Rubrics | Allows an authorized educator to add, update or delete document-section rubrics while an Assignment is in draft. Rubrics are locked after publication. |
 | 37 | View Assignment List | Student Assignment Access | Allows a student to view available individual and group Assignments in their enrolled classes. |
@@ -55,7 +55,7 @@ Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; se
 | 45 | View/Export GradeBook | Gradebook | Allows an assigned teacher to view a class gradebook and export Assignment scores and submission or grading status. |
 | 46 | View Subject Question Bank | Subject Quiz Bank | Allows a subject manager to browse multiple-choice Quiz questions and answer keys in an assigned subject's question bank. |
 | 47 | Create/Update/Delete Subject Question | Subject Quiz Bank | Allows a subject manager to create, update or delete multiple-choice Quiz questions in an assigned subject's question bank. |
-| 48 | Create/Update/Delete Quiz | Quiz Authoring | Allows an assigned teacher to create, update or delete standalone multiple-choice Quizzes and configure answers, scoring, attempt limits and activity monitoring. |
+| 48 | Create/Update/Delete Quiz | Quiz Authoring | Allows an assigned teacher (class Quizzes) or a subject manager (subject-level Quizzes) to create, update or delete standalone multiple-choice Quizzes and configure answers, scoring, attempt limits and activity monitoring. |
 | 49 | View Quiz Practice History | Student Quiz Access | Allows a student to view their quiz practice history and select a quiz to inspect. |
 | 50 | View Quiz Practice Detail | Student Quiz Access | Allows a student to view a quiz's information and available practice attempts. |
 | 51 | Take Quiz | Student Quiz Completion | Allows a student to answer quiz questions and submit an attempt for automatic scoring. |

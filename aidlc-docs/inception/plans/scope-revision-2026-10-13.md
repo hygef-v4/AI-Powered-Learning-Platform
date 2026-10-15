@@ -1,6 +1,6 @@
 # Scope revision 2026-10-13
 
-> Historical synchronization record. Current scope and validation are superseded by [65-UC table synchronization](uc-table-65-sync-2026-10-13.md). Counts/checklists below retain the earlier revision evidence and are not current implementation approval.
+> Historical synchronization record. Current scope and validation are superseded by 65-UC table synchronization. Counts/checklists below retain the earlier revision evidence and are not current implementation approval.
 
 ## Authorization và intent
 
@@ -35,6 +35,6 @@ Security-03/04/05/08/09/12/15: design constraints retained for auth/input/secret
 
 ## Current revision sau bổ sung và gộp UC
 
-66 active UC; 50 MVP + 1 extension story; 15 units; 39 FR IDs kể cả retired. Current source là docs/usecase_table.md và requirements/use-cases.md. Truy vết qua unit-of-work-story-map.md; checklist và kết quả review mới ở [inception-66-uc-sync-2026-10-13.md](inception-66-uc-sync-2026-10-13.md). Không suy scope current từ kết quả revision đầu.
+66 active UC; 50 MVP + 1 extension story; 15 units; 39 FR IDs kể cả retired. Current source là docs/usecase_table.md và requirements/use-cases.md. Truy vết qua unit-of-work-story-map.md. Không suy scope current từ kết quả revision đầu.
 
-Construction current docs: [README](../../construction/README.md), [sync plan](../../construction/plans/construction-66-uc-sync-2026-10-13.md). Stage approvals/code progress không thay vì revision tài liệu.
+Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.

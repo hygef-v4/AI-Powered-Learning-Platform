@@ -1,10 +1,10 @@
 # U01 Account & Access — business-logic-model
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-U01-xx` trong `business-rules.md`) và truy vết. Mọi lỗi trả về client đều ở dạng an toàn.
 
@@ -164,7 +164,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 1. Kiểm quyền admin.
 2. Đích là chính mình và là hạ quyền → từ chối (BR-U01-65).
 3. Đích là `ADMIN` đang hoạt động cuối cùng và role mới khác `ADMIN` → từ chối (BR-U01-66).
-4. Role mới không giữ được phân công hiện có của đích (hỏi U04) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
+4. Role mới không giữ được phân công hiện có của đích (hỏi U04 về môn, U05 về lớp) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
 5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
@@ -190,11 +190,11 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 
 ### F13 - `authorize(actor, action, resourceRef)`
 
-1. Access token không hợp lệ hoặc hết hạn → từ chối. `credentialVersion` chỉ được kiểm lúc refresh (BR-U01-44).
+1. Access token không hợp lệ, hết hạn, hoặc mang `credentialVersion` khác version hiện tại của tài khoản → từ chối (BR-U01-44, 63). Actor từ MCP do U06 dựng từ credential MCP (tài khoản, `credentialVersion` lúc tạo) và được so như access token.
 2. Tài khoản không `ACTIVE` → từ chối.
 3. Role không có quyền với `action` → từ chối.
-4. `action` cần phạm vi → hỏi U04 xem actor có phụ trách môn/lớp chứa `resourceRef`. Không → từ chối.
-5. Không gọi được U04 → **từ chối** (BR-U01-93).
+4. `action` cần phạm vi → hỏi U04 (`SubjectScopePort`: actor có là Chủ nhiệm của môn) hoặc U05 (`ClassScopePort`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.
+5. Không gọi được U04/U05 → **từ chối** (BR-U01-93).
 6. Trả `AuthorizationDecision`. Mọi lần từ chối trên hành động nhạy cảm ghi audit `ACCESS_DENIED`.
 
 Quy tắc theo role (BR-U01-60):
@@ -212,7 +212,7 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 
 | Sự kiện | Người nhận |
 |---|---|
-| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U16 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
+| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U15 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
@@ -222,11 +222,11 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 

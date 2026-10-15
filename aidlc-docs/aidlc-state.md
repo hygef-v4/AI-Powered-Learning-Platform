@@ -18,12 +18,12 @@
 
 - Consolidation đã chốt: UC70 View Settings / UC71 Edit Setting riêng; UC76/78/82 vào Settings, UC26 vào UC24/27, UC79 retired; UC42 Individual / UC45 Group; UC80 vào58, UC81 vào37. Giữ ID lịch sử, chức năng/stories/unit services không bị loại.
 
-- Đồng bộ Inception chi tiết theo 65 UC: requirements/stories/personas/ports/orchestration/dependency và kế hoạch current đã review; xem `inception/plans/uc-table-65-sync-2026-10-13.md`. Lịch sử bên dưới giữ nguyên.
+- Đồng bộ Inception chi tiết theo 65 UC: requirements/stories/personas/ports/orchestration/dependency và kế hoạch current đã review. Lịch sử bên dưới giữ nguyên.
 
 ## Current Construction document revision — 2026-10-13
 
 - Design/plans current: construction/README.md/current-srs-contract.md/shared-infrastructure.md; 15 units, 65 active UC, 50 MVP + 1 extension và 39 FR IDs theo Inception.
-- Snapshot trước revision tại construction/historical/baseline-before-66-uc-2026-10-13 với hashes. Stage/approval/completed code checklists cũ giữ ở snapshot/history; current delta plans đều chưa triển khai.
+- Snapshot trước revision, plans/questions/reviews cũ và folder unit cũ đã xoá ngày 2026-10-15 (xem lại qua git history); current delta plans đều chưa triển khai.
 - U07 Usage/Teacher Quota; U13 Connections/MCP; Assignment/Quiz, diagram tùy chọn, YouTube links MVP; Lesson processing extension; backup/activity/email và merged UC70/58/37 được mô tả.
 - Next: review design/delta, resolve D01–D04 hoặc giữ defaults khi triển khai phần liên quan; actual contracts/code/schema/Compose và tests không được đánh complete chỉ vì docs đồng bộ.
 
@@ -32,7 +32,7 @@
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
 - **Current Stage**: Construction documentation revision theo 65 UC; current delta code plans chưa triển khai. Code Generation Part 2 và completed checkpoints trước revision là lịch sử, không xác nhận scope mới.
-- **Resume action**: Đọc construction/README.md, current-srs-contract.md, shared-infrastructure.md và inception/plans/uc-table-65-sync-2026-10-13.md. Review current delta plans và decisions D01–D04 trước code/contracts/migration; không chạy baseline payment/Code Lab hoặc kế thừa approval cũ cho scope mới. Tester riêng viết/chạy integration evidence.
+- **Resume action**: Đọc construction/README.md, current-srs-contract.md, shared-infrastructure.md và unit-summary.md. Review current delta plans và decisions D01–D04 trước code/contracts/migration; không chạy baseline payment/Code Lab hoặc kế thừa approval cũ cho scope mới. Tester riêng viết/chạy integration evidence.
 
 ## Latest documentation decision
 - **2026-10-09 (sau recheck)**: Đóng C01–C05 ở cấp tài liệu: U07/U05/U13 một HOLD và settle lượng dùng thật/trả dư; FR-024/story dùng đúng UC/màn và Chủ nhiệm môn bật phân bố điểm; AiUsagePort có findHold/UsageStart REPLAY/CallSnapshot/checkpoint/scanClaimId; shared infrastructure 15 unit. Các việc code/contracts/migration/integration theo checklist vẫn chưa triển khai; stage progress và approvals giữ nguyên.

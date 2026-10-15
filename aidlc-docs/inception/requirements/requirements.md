@@ -1,6 +1,6 @@
 # Yêu cầu sản phẩm ALAP — Inception revision 2026-10-13
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
 ## 1. Ý định, nguồn và trạng thái
 
@@ -27,9 +27,9 @@ API chung của tổ chức chỉ giảng viên được cấp quota; API cá nh
 - Không tuyên bố AS-IS đã khảo sát. Thu thập/validate quy trình của giảng viên và sinh viên SWR/SWD rồi cập nhật Report 1; không dựng bằng chứng giả.
 - Đã bổ sung backup Google Drive, ghi nhận activity khi làm Assignment/Quiz, email sự kiện quan trọng và minh bạch AI theo D05. Chi tiết: [council-features-2026-10-13.md](council-features-2026-10-13.md); không ghi đã triển khai.
 
-### 2.4 Quyết định còn mở
+### 2.4 Quyết định đã chốt
 
-Xem [revision-decisions-2026-10-13.md](revision-decisions-2026-10-13.md). Giữ chính sách cũ không mâu thuẫn: Quiz Practice, Group Graded. Không mặc định quota số cụ thể hoặc quyền Student gửi toàn bài nhóm ra agent.
+Câu hỏi ở [revision-decisions-2026-10-13.md](revision-decisions-2026-10-13.md); người dùng chốt ngày 2026-10-15: D01 Quiz chỉ Practice; D02 bài nhóm chỉ Graded; D03 bỏ, bài nhóm không có tính năng AI cho Student; D04 quota API chung mỗi giảng viên theo ngày cộng trần ngày toàn hệ thống, số cụ thể do Admin đặt.
 
 ## 3. Stakeholders
 
@@ -106,8 +106,8 @@ Chỉ hai loại bài cấp sản phẩm: ASSIGNMENT và QUIZ. Assignment là t�
 **Tiêu chí chấp nhận:**
 - Giữ review trước publication, trạng thái DRAFT/published/retired, version và snapshot khi làm/nộp.
 - Giữ bài cá nhân cấp môn theo baseline trước; bài nhóm thuộc lớp. Không tự mở nhóm cấp môn.
-- Giữ Assignment cá nhân GRADED/PRACTICE; nhóm GRADED theo baseline trước, nhóm Practice chưa chốt (D02).
-- Quiz không bắt buộc Lesson. Tạm giữ PRACTICE theo baseline trước; Quiz GRADED/lịch mở đóng chưa chốt (D01).
+- Giữ Assignment cá nhân GRADED/PRACTICE; nhóm chỉ GRADED (D02 chốt 2026-10-15).
+- Quiz không bắt buộc Lesson; Quiz chỉ PRACTICE, không lịch mở đóng, không vào sổ điểm (D01 chốt 2026-10-15).
 - Dạng bài, mode, deadline, số lượt và rubric được kiểm server-side; không suy ra mode từ diagramEnabled.
 
 ### FR-008 - Đánh giá và phản hồi
@@ -195,7 +195,7 @@ Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho l�
 
 ### FR-021 - Quản trị kết nối và usage AI
 
-Admin cấu hình kết nối API chung, provider/model, kill-switch, quota giờ/ngày và theo dõi usage tổng hợp. Không vào bài/học liệu để cấu hình. Kết nối cá nhân chỉ chủ tài khoản quản lý, Admin không xem key hoặc dùng thay người dùng.
+Admin cấu hình kết nối API chung, provider/model, kill-switch, quota theo ngày và theo dõi usage tổng hợp. Không vào bài/học liệu để cấu hình. Kết nối cá nhân chỉ chủ tài khoản quản lý, Admin không xem key hoặc dùng thay người dùng.
 
 **Tiêu chí chấp nhận:**
 - API chung dành cho giảng viên đủ quyền, không Student; quota hết thì báo và cho người dùng chủ động chọn personal API/MCP.
@@ -245,7 +245,7 @@ GROUP là cách làm của Assignment, không loại bài thứ ba. Giữ nhóm 
 - Thành viên chỉnh phần được giao/nhận; leader nộp, version-check, nội dung sau nộp bất biến.
 - Giữ lịch sử tác giả/thời điểm; giảng viên đánh giá đóng góp, không tự suy ra điểm từ số thao tác.
 - Manual submit/auto-submit theo quy tắc đã chốt của baseline cũ, không đổi vì gộp type.
-- GROUP vẫn GRADED cho đến D02 được chốt; quyền Student gửi toàn bài nhóm cho AI chờ D03, mặc định chỉ phần mình được sửa.
+- GROUP chỉ GRADED (D02 chốt 2026-10-15); bài nhóm không có tính năng AI cho Student (D03 bỏ).
 
 ### FR-027 - Assignment cấp môn
 
@@ -268,7 +268,7 @@ Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC41
 - Draft/IN_PROGRESS, Graded và dữ liệu ngoài quyền bị từ chối; không có teacher opt-in cho feedback trước nộp. UC79 (ID cũ) retired.
 - Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
 - Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
-- Student thiếu kết nối vẫn viết/lưu/nộp được. D03 giữ giới hạn ngữ cảnh nhóm, không tự mở toàn bài.
+- Student thiếu kết nối vẫn viết/lưu/nộp được. Bài nhóm không có phản hồi AI cho Student.
 
 ### FR-031 - Đã rút: quản trị gói credit
 
@@ -280,16 +280,16 @@ Không PayOS, payment history, webhook hoặc wallet. Lịch sử usage không p
 
 ### FR-033 - Settings và kết nối AI
 
-UC14 View Settings và UC15 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota qua U07 và API chung qua U13 protected connection port. U03 primary UI/orchestration, không đọc/ghi repository U07/U13 hoặc lưu raw key trong Settings. UC76/78/82 (ID cũ) consolidated, không còn chức năng độc lập; API cá nhân UC31 và MCP UC32 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
+UC14 View Settings và UC15 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota và API chung qua U06 (`SettingsSectionProvider`). U03 primary UI/orchestration, không đọc/ghi repository U06 hoặc lưu raw key trong Settings. UC76/78/82 (ID cũ) consolidated, không còn chức năng độc lập; API cá nhân UC31 và MCP UC32 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
 
 ### FR-034 - Quota token API chung của giảng viên
 
-Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo giờ/ngày trong UC 15 (UC14 chỉ xem); U03 điều phối tới U07 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
+Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo ngày trong UC 15 (UC14 chỉ xem); U03 điều phối tới U06 qua public port với kiểm quyền/version/audit riêng cho quota. Quota không mua bán, không cộng vào ví và không cấp Student.
 
 **Tiêu chí chấp nhận:**
 - Kiểm và reserve ngân sách ước tính trong transaction trước provider call; khóa/cập nhật nguyên tử để request đồng thời không vượt reservation.
 - Chốt usage thật khi provider trả, giải phóng phần chưa dùng; request lặp không tính hai lần. Usage chưa biết phải UNKNOWN/PENDING_RECONCILIATION, không ghi 0 giả hoặc retry miễn phí vô hạn.
-- Cửa sổ giờ/ngày tính theo Asia/Ho_Chi_Minh, không rollover. Mức cụ thể D04 chưa chốt.
+- Cửa sổ ngày tính theo Asia/Ho_Chi_Minh, không rollover; mỗi giảng viên một mức ngày cộng trần ngày toàn hệ thống (D04 chốt 2026-10-15); số cụ thể do Admin đặt.
 - Quota hết không tự dùng personal key; giảng viên chọn nguồn khác hoặc tiếp tục thao tác thủ công.
 - Token giữa model/provider không là một đơn giá tiền; lưu provider/model riêng và trần vận hành toàn hệ thống.
 
@@ -331,7 +331,7 @@ U03 backup PostgreSQL nhất quán và bản sao tệp/manifest tương ứng l�
 
 ### FR-039 - Ghi nhận dấu hiệu rời trang khi làm bài
 
-Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U11 ghi sự kiện hidden/visible cho cá nhân/Quiz và nhận sự kiện nhóm qua port U14; U15 hiển thị cho giảng viên được giao dạy trong UC 42 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
+Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U08 ghi sự kiện hidden/visible cho Assignment cá nhân và nhận sự kiện Quiz (U11), nhóm (U12) qua `ActivityWritePort`; U09 hiển thị cho giảng viên được giao dạy trong UC 42 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
 
 **Tiêu chí chấp nhận:**
 - Server kiểm actor/enrollment/attempt/group/state, dedup và giới hạn tần suất; không thu thập khi policy off.
@@ -455,7 +455,7 @@ Construction design/shared infrastructure/code planning đã revision theo scope
 
 ## UC consolidation — 66 active UC
 
-UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U06 giữ quota service/data và connection/provider/credentials bảo vệ, test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U15 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U09 review, U08 activity). UC 35 soạn Individual (U07), UC 53 soạn Group (U12); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; D01–D04 đã chốt 2026-10-15; không tự phê duyệt runtime.
 
 ### Tiêu chí tích hợp UC đã gộp
 
@@ -463,4 +463,4 @@ UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao g
 - UC 66: U16 đọc BackupStatusPort của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
 - UC 42: U15 đọc ActivityQueryPort của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 
-Construction current docs: [README](../../construction/README.md), [sync plan](../../construction/plans/construction-66-uc-sync-2026-10-13.md). Stage approvals/code progress không thay vì revision tài liệu.
+Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.

@@ -46,4 +46,4 @@ Iteration 1 bổ sung nền backup/config/status U03; email OTP vẫn U01. Activ
 
 UC 70 View Settings và UC 71 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 không còn độc lập. UC 58 gộp 80 (U16 dashboard, U03 backup); UC 37 gộp 81 (U15 review, U11/U14 activity). UC 42 soạn Individual, UC 45 soạn Group (U09); Draw.io tùy chọn trong UC 24/27, UC 26 retired. UC 79 retired; UC 29 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
 
-Construction current docs: [README](../../construction/README.md), [sync plan](../../construction/plans/construction-66-uc-sync-2026-10-13.md). Stage approvals/code progress không thay vì revision tài liệu.
+Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.

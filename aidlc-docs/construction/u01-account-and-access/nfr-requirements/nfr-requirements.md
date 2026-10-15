@@ -1,12 +1,12 @@
 # U01 Account & Access — nfr-requirements
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
-Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết định: `aidlc-docs/construction/plans/nfr-requirements-questions/u01-account-and-access-nfr-requirements-questions.md`.
+Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 
 ## 1. Quy mô và hiệu năng
 
@@ -53,9 +53,9 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 |---|---|---|
 | NFR-U01-40 | Redis không khả dụng: không đăng nhập mới, không refresh, không gửi OTP, trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | Câu N9, SEC-006 |
 | NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-006 |
-| NFR-U01-42 | U04 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
+| NFR-U01-42 | U04 hoặc U05 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
 | NFR-U01-43 | Hồ sơ không gọi U03 (không có ảnh đại diện). U03 lỗi chỉ ảnh hưởng việc gửi OTP, xử lý theo NFR-U01-31. | BR-U01-52 |
-| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
+| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, U05, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
 
 ## 6. Bảo mật dữ liệu và log
 
@@ -69,7 +69,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-60 | Unit test cho mọi `BR-U01-xx`; integration test với PostgreSQL và Redis thật trong container; test Mailpit nhận đúng OTP. | NFR-004 |
+| NFR-U01-60 | Người code viết unit test cho mọi `BR-U01-xx`; tester viết integration test với PostgreSQL và Redis thật trong container, kiểm Mailpit nhận đúng OTP. | NFR-004 |
 | NFR-U01-61 | Negative test bảo mật: dò tài khoản, brute-force, OTP sai/hết hạn, truy cập hồ sơ người khác, admin tự hạ quyền, hạ admin cuối cùng. | NFR-004, SECURITY-08 |
 | NFR-U01-62 | Form đăng nhập, kích hoạt, đổi mật khẩu dùng được bằng bàn phím, có nhãn cho trình đọc màn hình. | NFR-002 |
 
@@ -94,11 +94,11 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test. Nguồn quyết đ�
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 

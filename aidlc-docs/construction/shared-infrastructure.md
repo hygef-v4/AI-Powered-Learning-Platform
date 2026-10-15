@@ -1,6 +1,6 @@
 # Shared infrastructure — Construction revision 2026-10-13
 
-Nguồn [current contract](current-srs-contract.md), [Inception requirements](../inception/requirements/requirements.md). Documentation-only; không thay Compose/runtime/migration. Baseline cũ trong historical/baseline-before-66-uc-2026-10-13/.
+Nguồn [current contract](current-srs-contract.md), [Inception requirements](../inception/requirements/requirements.md). Documentation-only; không thay Compose/runtime/migration.
 
 ## Deployable và data
 

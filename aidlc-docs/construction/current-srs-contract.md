@@ -2,7 +2,7 @@
 
 **66 active UC; 50 MVP stories + 1 extension; 15 logical units; 39 FR IDs.** Nguồn [Inception requirements](../inception/requirements/requirements.md), [catalog](../inception/requirements/use-cases.md), [English table](../../docs/usecase_table.md), [story map](../inception/application-design/unit-of-work-story-map.md), [decisions](../inception/requirements/revision-decisions-2026-10-13.md).
 
-Revision tài liệu theo yêu cầu người dùng; không implementation/approval/runtime evidence. [Snapshot cũ](historical/baseline-before-66-uc-2026-10-13/README.md) giữ checklist/phê duyệt trước, không source code mới. Ngày 2026-10-14 15 unit được chia lại thành 3 iteration; các folder Construction giữ tên cũ, đối chiếu unit mới ở [unit-of-work.md](../inception/application-design/unit-of-work.md). Các ID unit nhắc trong phần còn lại của tài liệu này là ID cũ cho tới khi được rà lại.
+Revision tài liệu theo yêu cầu người dùng; không implementation/approval/runtime evidence. Snapshot cũ giữ checklist/phê duyệt trước, không source code mới. Ngày 2026-10-14 15 unit được chia lại thành 3 iteration; các folder Construction giữ tên cũ, đối chiếu unit mới ở [unit-of-work.md](../inception/application-design/unit-of-work.md). Các ID unit nhắc trong phần còn lại của tài liệu này là ID cũ cho tới khi được rà lại.
 
 ## Ownership
 
@@ -10,14 +10,14 @@ Revision tài liệu theo yêu cầu người dùng; không implementation/appro
 |---|---|---|---|
 | 1 | U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
 | 1 | U02 | Audit | 13 |
-| 1 | U03 | File, Job, Settings & Backup | 14, 15 |
+| 1 | U03 | Job and Settings | 14, 15 |
 | 1 | U04 | Subject Administration | 16, 17, 18, 19 |
 | 1 | U05 | Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 |
-| 2 | U06 | AI Connections & MCP | 31, 32, 33 |
+| 2 | U06 | AI Connections | 31, 32, 33 |
 | 2 | U07 | Assignment Authoring | 34, 35, 36 |
 | 2 | U08 | Assignment Work | 37, 38, 39, 40, 41 |
-| 2 | U09 | Assignment Grading & Gradebook | 42, 43, 44, 45 |
-| 2 | U10 | Quiz Authoring & Bank | 46, 47, 48 |
+| 2 | U09 | Assignment Grading | 42, 43, 44, 45 |
+| 2 | U10 | Quiz Authoring | 46, 47, 48 |
 | 3 | U11 | Quiz Practice | 49, 50, 51, 52 |
 | 3 | U12 | Group Assignment | 53, 54, 55, 56, 57 |
 | 3 | U13 | Reference Materials | 58, 59, 60, 61, 62 |
@@ -40,7 +40,7 @@ Web/API/MCP đều current auth/resource/state/version; keys/client không mở 
 
 ## Core invariants
 
-- Chỉ ASSIGNMENT/QUIZ; submissionMode INDIVIDUAL/GROUP và diagramEnabled độc lập. Bài nhóm chỉ lớp, tạm GRADED; Quiz tạm PRACTICE (D01/D02).
+- Chỉ ASSIGNMENT/QUIZ; submissionMode INDIVIDUAL/GROUP và diagramEnabled độc lập. Bài nhóm chỉ lớp, chỉ GRADED; Quiz chỉ PRACTICE (D01, D02 chốt 2026-10-15).
 - Reference files và educational YouTube links là MVP; Lesson processing/transcription/summary/advanced RAG là extension; không lesson/indexing prerequisite.
 - Quota không mua bán/wallet/payment; shared educator only, personal API hoặc external agent cho Student. Personal fallback cần user chọn.
 - Gemini/OpenAI/Claude direct provider adapters; MCP authenticated inbound domain tools, không mặc định proxy gọi LLM. External usage reported/unavailable, không trừ shared grant.
@@ -75,7 +75,7 @@ Outbox record cùng domain transaction, IDs/version/time/refs tối thiểu: ass
 
 ## Open decisions / migrations
 
-D01–D04 còn mở; backup schedule/retention và activity retention cần cấu hình trước enabled. Client MCP compatibility/schema/chosen transport được nghiệm thu theo client, không hứa mọi agent tự kết nối. Quota estimate/unknown semantics không promise exactly-once external billing.
+D01–D04 đã chốt 2026-10-15 (Quiz chỉ Practice; nhóm chỉ Graded; bài nhóm không có AI cho Student; quota theo ngày và trần hệ thống); backup schedule/retention và activity retention cần cấu hình trước enabled. Client MCP compatibility/schema/chosen transport được nghiệm thu theo client, không hứa mọi agent tự kết nối. Quota estimate/unknown semantics không promise exactly-once external billing.
 
 Mapping dữ liệu cũ: Text/Diagram/Group thành ASSIGNMENT + submissionMode/diagramEnabled; MCQ thành QUIZ, Code data chỉ archive/export/read-only historical, không silently convert. Retired payment/credit data lưu riêng không đổi thành quota balance. Không drop trước backup/restore và migration review. IDs/snapshots/grade history phải giữ, cả Essay answer theo câu phải có adapter thành document parts kèm rubric mapping, không thay receipt cũ.
 

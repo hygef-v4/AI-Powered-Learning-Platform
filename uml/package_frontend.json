@@ -1,0 +1,111 @@
+{
+  "diagram": "package",
+  "title": "AI-Powered Learning Platform - Frontend Packages",
+  "elements": [
+    {
+      "id": "fe_auth",
+      "type": "package",
+      "name": "Authentication & Account UI (U01)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_admin",
+      "type": "package",
+      "name": "Admin Console UI (U02, U03, U04, U15)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_class",
+      "type": "package",
+      "name": "Class & Enrollment UI (U05)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_ai",
+      "type": "package",
+      "name": "AI Connections UI (U06)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_asg",
+      "type": "package",
+      "name": "Assignment UI (U07, U08, U09)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_quiz",
+      "type": "package",
+      "name": "Quiz UI (U10, U11)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_grp",
+      "type": "package",
+      "name": "Group Assignment UI (U12)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_cnt",
+      "type": "package",
+      "name": "Materials & Notifications UI (U13, U14)",
+      "stereotype": "user interaction subsystem"
+    },
+    {
+      "id": "fe_api",
+      "type": "package",
+      "name": "Backend API Client",
+      "stereotype": "subsystem"
+    }
+  ],
+  "relations": [
+    {
+      "type": "dependency",
+      "from": "fe_auth",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_admin",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_class",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_ai",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_asg",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_quiz",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_grp",
+      "to": "fe_api",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "fe_cnt",
+      "to": "fe_api",
+      "stereotype": "use"
+    }
+  ],
+  "frame": false
+}

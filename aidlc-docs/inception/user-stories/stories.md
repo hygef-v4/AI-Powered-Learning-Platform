@@ -1,10 +1,10 @@
 # User Stories — Inception revision 2026-10-13
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
 **50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
 
-Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Quiz Practice và GROUP Graded tạm giữ D01/D02. Chưa có bằng chứng survey; xem requirements/revision-decisions-2026-10-13.md.
+Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Đã chốt 2026-10-15: Quiz chỉ Practice (D01), GROUP chỉ Graded (D02), bài nhóm không có AI cho Student (D03 bỏ), quota chung theo ngày và trần hệ thống (D04). Chưa có bằng chứng survey; xem requirements/revision-decisions-2026-10-13.md.
 
 ### US-AIC-001 - Kết nối API cá nhân
 
@@ -58,7 +58,7 @@ Given external agent, When ghi usage, Then chỉ reported/unavailable, không đ
 
 #### Scenario 1
 
-Given educator đúng quyền, When reserve đồng thời, Then quota atomic giờ/ngày theo cấu hình, không Student.
+Given educator đúng quyền, When reserve đồng thời, Then quota atomic theo ngày theo cấu hình, không Student.
 
 #### Scenario 2
 
@@ -176,7 +176,7 @@ Given ASSIGNMENT, When cấu hình, Then INDIVIDUAL/GROUP và diagramEnabled đ�
 
 #### Scenario 2
 
-Given QUIZ, When publish, Then không yêu cầu Lesson; Practice hiện hành D01.
+Given QUIZ, When publish, Then không yêu cầu Lesson; Quiz chỉ Practice (D01).
 
 #### Scenario 3
 
@@ -801,7 +801,7 @@ Given lớp và nhóm hợp lệ, When soạn, Then khung/phần/rubric dùng do
 
 #### Scenario 2
 
-Given diagramEnabled=false/true, When cấu hình, Then không bắt buộc nhóm có diagram; mode Graded giữ đến D02.
+Given diagramEnabled=false/true, When cấu hình, Then không bắt buộc nhóm có diagram; mode chỉ Graded (D02).
 
 ### US-GRP-004 - Nhận và làm phần Assignment nhóm
 
@@ -819,7 +819,7 @@ Given phần được giao/nhận, When edit, Then một editor/phần, version 
 
 #### Scenario 2
 
-Given personal AI/MCP, When lấy ngữ cảnh, Then chỉ phần được phép theo D03, không key hay bài khác.
+Given bài nhóm, When Student muốn dùng AI/MCP với tài liệu nhóm, Then không có tính năng AI cho bài nhóm; không lộ key hay bài khác.
 
 ### US-GRP-005 - Nộp tài liệu nhóm
 

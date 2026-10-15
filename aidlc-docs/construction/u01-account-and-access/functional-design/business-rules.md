@@ -1,10 +1,10 @@
 # U01 Account & Access — business-rules
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "chốt ở NFR" là tham số cấu hình, không cố định ở đây.
 
@@ -80,8 +80,8 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-60 | Mỗi tài khoản một role. Student → User, Teacher → User, Subject Manager → Teacher. `ADMIN` chỉ dùng chức năng User và chức năng quản trị; không dùng chức năng Subject Manager/Teacher và không nhận phân công môn/lớp. R1 chỉ dữ liệu của mình; R2 (môn) và R3/R4 (lớp) cần phân công hiện thời và tài khoản `ACTIVE`. Không vai trò nào kế thừa quyền Student. | FR-002; người dùng chốt 2026-10-09 |
-| BR-U01-61 | U01 chỉ đặt role. Gán môn/lớp cụ thể là việc của U04. | Câu 7 |
-| BR-U01-62 | Mọi quyết định quyền chạy phía server, mặc định từ chối, kết hợp role của U01 với phạm vi của U04. | SECURITY-08 |
+| BR-U01-61 | U01 chỉ đặt role. Gán Chủ nhiệm môn là việc của U04; gán giảng viên lớp và ghi danh sinh viên là việc của U05. | Câu 7 |
+| BR-U01-62 | Mọi quyết định quyền chạy phía server, mặc định từ chối, kết hợp role của U01 với phạm vi môn của U04 và phạm vi lớp của U05. | SECURITY-08 |
 | BR-U01-63 | Đổi role tăng `credentialVersion`: refresh token của người đó hết hiệu lực ngay; access token version cũ bị từ chối ở request tiếp theo qua server authority (BR-U01-44). | Câu 6, US-IAM-005 S2 |
 | BR-U01-64 | Đổi role bị chặn nếu role mới không giữ được phân công hiện có: Chủ nhiệm môn cần `SUBJECT_MANAGER`; giảng viên lớp cần `TEACHER` hoặc `SUBJECT_MANAGER`. Gồm cả hạ role và đổi sang `ADMIN`. Lỗi nêu môn/lớp còn phụ trách. | Câu 8; người dùng chốt 2026-10-09 |
 | BR-U01-65 | Admin không được tự hạ role hoặc tự vô hiệu hóa chính mình. | Câu 9 |
@@ -124,11 +124,11 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 
