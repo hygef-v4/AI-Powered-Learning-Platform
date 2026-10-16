@@ -4159,3 +4159,19 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **AI Response**: Reviewed staged changes: 10 draw.io files plus combined file, 10 PNG exports and README are consistent (layout checks and text-fit checks pass, no duplicate cell ids, README matches generator output, step references valid). Synced README Trigger/End condition wording with the concise text provided for the report. Committed locally; not pushed.
 
 ---
+
+## 2026-10-16T17:00:00Z — Project review focused on business flows
+
+**User Input**: "kiểm tra dự án và gửi tôi các điểm cần bổ sung/cải thiện hoặc sửa đổi. Đặc biệt tập trung vào phần businessflow"
+
+**AI Response**: Reviewed the 10 business flows (README tables, PNG exports) against docs/usecase_table.md and the backend code. Reported A) cross-cutting issues (missing account and class-group flows, cropped BF-07/BF-09 exports, missing time-trigger starts, missing failure branches/end events), B) per-flow issues for BF-01..BF-10 (including BF-09 claiming file copies while code and BR-U03-91 back up the database only), C) suggestions (UC x BF traceability, state diagrams). No files changed.
+
+---
+
+## 2026-10-17T00:00:00Z — Business flows revised (review items A and B)
+
+**User Input**: "Sửa lại mục A và B, mục C tạm thời để lại"
+
+**AI Response**: Rebuilt the business flows from the unit business rules: 12 swimlanes (new BF-11 Account Provisioning and Activation, BF-12 Class Group Setup and Leader Change); added time-trigger starts (BF-03 opening, BF-06 time limit, BF-09 daily backup), failure branches and labelled end events (BF-01 cannot open, BF-07 access refused, BF-08 quota/result/MCP refusals, BF-09 retry limit and restore failure, BF-10 retry limit); BF-01 per-row enrollment check (no capacity rule), BF-03/BF-06 REVIEWED step and Subject Manager authoring, BF-04 late window, auto-submit without submit checks and Practice AI feedback, BF-05 parallel assign/claim, lock release and submit check, BF-07 finalize vs publish and group member scores, BF-08 daily quota only and MCP agent lane, BF-09 database-only backup with fixed 7-day retention, BF-10 preference/daily cap/event table. Regenerated draw.io files (12 + combined 12-page file), PNG exports (rendered taller and cropped so the legend is no longer cut) and README with per-flow notes. Item C (traceability matrix, state diagrams) deferred by the user. Validation: layout checker (no shape overlap, crossing, unrelated touching or mixed in/out port), text-fit check, left-to-right numbering, loop-back references match edges, draw.io XML parses. No commit.
+
+---
