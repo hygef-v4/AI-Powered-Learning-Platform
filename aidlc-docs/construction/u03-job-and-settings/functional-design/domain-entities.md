@@ -35,7 +35,7 @@ U03 không sở hữu nội dung nghiệp vụ, quyết định ai được xem 
 | `mediaType` | Thuộc tính tệp | Xác định từ nội dung |
 | `byteSize` | Drive | ≤ trần của `purpose` |
 | `sha256` | Thuộc tính tệp | Tính khi nhận |
-| `FileRef` | Chuỗi ký HMAC gồm `fileId`, `ownerAccountId`, `purpose`, hạn 1 giờ | Unit sở hữu đổi `FileRef` lấy `fileId` qua `attach` |
+| `FileRef` | Chuỗi ký HMAC gồm `fileId`, `ownerAccountId`, `purpose`, loại, dung lượng, tên, SHA-256, hạn 1 giờ (để `attach` không phải gọi Drive) | Unit sở hữu đổi `FileRef` lấy `fileId` qua `attach` |
 
 ## 3. `ArtifactPurpose`
 
@@ -92,7 +92,7 @@ Bỏ so với bản cũ: `payment.paid`.
 | Cột | Ràng buộc |
 |---|---|
 | `key` | Khóa chính, ví dụ `files.material.maxSizeMb` |
-| `group` | `FILES`, `BACKUP`, `ACTIVITY` |
+| `setting_group` | `FILES`, `BACKUP`, `ACTIVITY` |
 | `value` | JSON theo kiểu của khai báo; rỗng là chưa cấu hình |
 | `version` | Tăng mỗi lần sửa; khóa lạc quan |
 | `updated_by` | FK `accounts`; rỗng khi là giá trị khởi tạo |
@@ -117,6 +117,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 | `id` | Định danh |
 | `scheduled_for` | Ngày chạy theo lịch; duy nhất |
 | `state` | `CREATED`, `RUNNING`, `SUCCESS`, `FAILED` |
+| `created_at` | Lúc scanner tạo; sweeper gửi lại lần chạy kẹt ở `CREATED` quá 5 phút |
 | `snapshot_at` | Thời điểm dump |
 | `schema_version`, `app_version` | Phiên bản lúc dump |
 | `archive_ref` | Mã tệp archive dump đã mã hóa trong thư mục backup |

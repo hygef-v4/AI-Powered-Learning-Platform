@@ -52,7 +52,7 @@ Thứ tự: `audit_logs` (U02, 0900) → `system_settings` (0910) → bảng bac
 | Mục | Giá trị |
 |---|---|
 | vhost, user | `/platform`, user `app`; tắt `guest` |
-| Exchange | `jobs` (direct), `jobs.retry` (direct), `platform.events` (topic) |
+| Exchange | `jobs` (direct), `jobs.retry.30s`, `.1m`, `.2m`, `.4m`, `.8m` (fanout, mỗi mức chờ một exchange), `platform.events` (topic) |
 | Queue việc nền | `jobs.triggered`, `jobs.email` (priority 10), `jobs.ai`, `jobs.drive`, `jobs.backup` |
 | Queue thử lại | `jobs.retry.30s`, `.1m`, `.2m`, `.4m`, `.8m` có TTL, dead-letter về `jobs` |
 | Queue thông báo | `jobs.notification` do U14 khai báo, bind `platform.events` |
