@@ -8,7 +8,9 @@ RUN mvn -B -q -DskipTests package
 
 FROM eclipse-temurin:17-jre-alpine
 # postgresql16-client cho pg_dump của worker (backup U03).
-RUN addgroup -S app && adduser -S app -G app \n    && apk add --no-cache wget postgresql16-client \n    && mkdir -p /tmp/uploads /tmp/backup /app/data && chown -R app:app /tmp/uploads /tmp/backup /app/data
+RUN addgroup -S app && adduser -S app -G app \
+    && apk add --no-cache wget postgresql16-client \
+    && mkdir -p /tmp/uploads /tmp/backup /app/data && chown -R app:app /tmp/uploads /tmp/backup /app/data
 WORKDIR /app
 COPY --from=build /src/target/platform-backend-*.jar app.jar
 USER app
