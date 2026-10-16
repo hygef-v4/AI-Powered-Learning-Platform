@@ -1,20 +1,18 @@
 package edu.aiplatform.files.application;
 
-import java.nio.file.Path;
-import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Cấu hình tệp `platform.files.*` (logical-components §3). */
-@ConfigurationProperties("platform.files")
-public record FilesProperties(
-        int maxConcurrentUploads,
-        Path uploadTmpDir,
-        Duration downloadTokenTtl,
-        String fileRefSecret,
-        Duration fileRefTtl,
-        Path localStorageDir,
-        boolean requireDrive,
-        Drive drive) {
+/**
+ * Cấu hình tệp: khóa ký {@code FileRef}, Drive, thư mục local khi chạy không có Drive.
+ *
+ * @param requireDrive production đặt {@code true}: thiếu Drive thì không lưu tệp vào container
+ */
+@ConfigurationProperties(prefix = "platform.files")
+public record FilesProperties(String filerefSecret, boolean requireDrive, String localStorageDir, String uploadTmpDir,
+                              String driveServiceAccountKey, String sharedDriveId) {
 
-    public record Drive(String serviceAccountKey, String sharedDriveId) {}
+    public boolean driveConfigured() {
+        return driveServiceAccountKey != null && !driveServiceAccountKey.isBlank()
+                && sharedDriveId != null && !sharedDriveId.isBlank();
+    }
 }

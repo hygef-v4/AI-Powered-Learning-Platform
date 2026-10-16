@@ -1,0 +1,189 @@
+{
+  "diagram": "package",
+  "title": "AI-Powered Learning Platform - Backend Subsystem Packages",
+  "elements": [
+    {
+      "id": "u01",
+      "type": "package",
+      "name": "U01 Account & Access",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u02",
+      "type": "package",
+      "name": "U02 Audit",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u03",
+      "type": "package",
+      "name": "U03 File, Job, Settings & Backup",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u04",
+      "type": "package",
+      "name": "U04 Subject Administration",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u05",
+      "type": "package",
+      "name": "U05 Class & Enrollment",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u06",
+      "type": "package",
+      "name": "U06 AI Connections & MCP",
+      "stereotype": "I/O subsystem"
+    },
+    {
+      "id": "u07",
+      "type": "package",
+      "name": "U07 Assignment Authoring",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u08",
+      "type": "package",
+      "name": "U08 Assignment Work",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u09",
+      "type": "package",
+      "name": "U09 Assignment Grading & Gradebook",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u10",
+      "type": "package",
+      "name": "U10 Quiz Authoring & Bank",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u11",
+      "type": "package",
+      "name": "U11 Quiz Practice",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u12",
+      "type": "package",
+      "name": "U12 Group Assignment",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u13",
+      "type": "package",
+      "name": "U13 Reference Materials",
+      "stereotype": "service subsystem"
+    },
+    {
+      "id": "u14",
+      "type": "package",
+      "name": "U14 Announcements & Notifications",
+      "stereotype": "output subsystem"
+    },
+    {
+      "id": "u15",
+      "type": "package",
+      "name": "U15 Admin Dashboard",
+      "stereotype": "service subsystem"
+    }
+  ],
+  "relations": [
+    {
+      "type": "dependency",
+      "from": "u01",
+      "to": "u02",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u01",
+      "to": "u03",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u04",
+      "to": "u01",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u05",
+      "to": "u04",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u06",
+      "to": "u01",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u07",
+      "to": "u05",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u10",
+      "to": "u05",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u08",
+      "to": "u06",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u08",
+      "to": "u07",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u09",
+      "to": "u08",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u12",
+      "to": "u09",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u11",
+      "to": "u10",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u13",
+      "to": "u05",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u14",
+      "to": "u05",
+      "stereotype": "use"
+    },
+    {
+      "type": "dependency",
+      "from": "u15",
+      "to": "u05",
+      "stereotype": "use"
+    }
+  ],
+  "frame": false
+}

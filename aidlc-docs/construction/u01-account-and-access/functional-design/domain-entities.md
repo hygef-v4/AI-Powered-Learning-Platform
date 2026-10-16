@@ -1,12 +1,12 @@
 # U01 Account & Access — domain-entities
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
-Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 08–12 theo `docs/use-cases-73.md`.
+Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệp vụ; kiểu cột cuối cùng chốt ở Code Generation. Truy vết: `US-IAM-001`…`US-IAM-007`; UC 01–07, 08–12 theo `docs/usecase_table.md`.
 
 ## 1. Tổng quan
 
@@ -16,7 +16,7 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `PasswordCredential` | Value object của `Account` | `accounts` | U01 |
 | `Profile` | Value object của `Account` | `accounts` | U01 |
 | `LoginThrottle` | Value object của `Account` | `accounts` | U01 |
-| `EmailPreferences` | Value object của `Account` | `accounts.email_preferences` | U16 |
+| `EmailPreferences` | Value object của `Account` | `accounts.email_preferences` | U14 |
 | `OtpChallenge` | Entity tạm thời | Redis | U01 |
 | `VerificationTicket` | Entity tạm thời (`otpTicket`) | Redis | U01 |
 | `Session` | Entity tạm thời | Redis | U01 |
@@ -24,7 +24,7 @@ Thiết kế độc lập công nghệ. Kiểu dữ liệu ghi ở mức nghiệ
 | `AccountImportResult` | Kết quả trả về | Không lưu | U01 |
 | `AuthorizationDecision` | Kết quả trả về | Không lưu | U01 |
 
-U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), quota/usage (U07), AI connection secrets (U13).
+U01 **không** sở hữu: phân công Chủ nhiệm môn (U04), lớp, giảng viên và ghi danh (U05), audit (U02), quota, usage và AI connection secrets (U06).
 
 ## 2. `Account`
 
@@ -37,7 +37,6 @@ U01 **không** sở hữu: phân công môn/lớp (U04), audit (U02), quota/usag
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
 | `profile` | `Profile` | Bắt buộc có `displayName` |
 | `throttle` | `LoginThrottle` | Mặc định không khóa |
-| `credentialVersion` | Số phiên bản quyền | Tăng khi đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa; version cũ bị deny request tiếp theo và không refresh được |
 | `createdAt`, `updatedAt`, `version` | Thời gian và khóa lạc quan | Hệ thống quản lý |
 
 ### Trạng thái
@@ -77,7 +76,7 @@ stateDiagram-v2
 
 ## 6. AI access boundary
 
-Không số dư credit hoặc ví trong Account. U07 lưu quota educator và usage riêng; U13 bảo vệ kết nối cá nhân/tổ chức. Student không shared quota. Admin được cấu hình/test synthetic API chung, không gọi AI học vụ.
+Không số dư credit hoặc ví trong Account. U06 lưu quota educator, usage và bảo vệ kết nối cá nhân/tổ chức. Student không shared quota. Admin được cấu hình/test synthetic API chung, không gọi AI học vụ.
 
 ## 7. Cấu hình U01
 
@@ -109,9 +108,8 @@ Dùng một lần; xóa khi đặt mật khẩu thành công (BR-U01-28).
 
 | Thuộc tính | Ý nghĩa |
 |---|---|
-| `sessionId` | Định danh phiên |
+| `sessionId` | Định danh phiên (`sid`); access token mang mã này, xóa phiên là thu hồi |
 | `accountId` | Chủ phiên |
-| `credentialVersion` | Version lúc tạo; lệch current `Account.credentialVersion` thì deny access/refresh |
 | `refreshTokenHash` | Băm refresh token; phát hiện dùng lại thì thu hồi phiên |
 | `issuedAt`, `lastUsedAt`, `expiresAt` | Idle 2 giờ tính từ `lastUsedAt`, tối đa 7 ngày tính từ `issuedAt`. Access token JWT sống 15 phút, không lưu phía server |
 
@@ -146,26 +144,40 @@ Không có use case xem lại lịch sử nhập nên kết quả không lưu. B
 | `reasonCode` | Mã lý do an toàn cho log, không trả chi tiết cho client |
 | `actorId`, `action`, `resourceRef` | Đầu vào đã đánh giá |
 
-Phạm vi môn/lớp đến từ `SubjectScopePort`, `ClassScopePort` (U04 cài). U01 kết hợp role và phạm vi để ra quyết định.
+Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi danh từ `IClassScope` (U05 cài). U01 kết hợp role và phạm vi để ra quyết định.
 
 ## 13. Contract
 
-### Port U01 cung cấp
+### Interface U01 cung cấp
 
-| Port | Dùng bởi | Ghi chú |
-|---|---|---|
-| `AuthorizationPort.authorize(actor, action, resourceRef)` | Mọi unit | Mặc định từ chối; kết hợp role và phạm vi U04 |
-| `AccountLookupPort` | U02, U04, U16 | Tìm người học theo email/tên (≤ 20 kết quả), tra theo danh sách email, lấy email/tên hiển thị/role/trạng thái (U02 dùng để hiện email người thực hiện trên Audit Log); `countByRoleAndStatus()` trả số đếm cho UC 66 View Admin Dashboard (U16); không trả mật khẩu hay số điện thoại |
-
-### Port U01 dùng
-
-| Port | Cung cấp bởi | Cạnh | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuditPort.record` | U02 | `H` | Ghi sự kiện bảo mật/nghiệp vụ (U02 code trước U01) |
-| `JobPort.enqueue` | U03 | `H` | Gửi việc `OTP_DELIVERY` sang worker sau commit qua durable job/outbox U03 (U01 không sở hữu bảng job); handler gửi mail do U01 sở hữu, chạy ở worker, retry hữu hạn |
-| `SubjectScopePort`, `ClassScopePort` | U01 khai báo, U04 cài | `C` (U04 code sau U01) | Đọc phạm vi phân công khi quyết định quyền và khi chặn hạ role |
+| `IAuthorization` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
+| `IAccountLookup` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
+| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
 
-U03 và U02 code trước U01; chỉ phạm vi môn/lớp (U04, code sau) dùng adapter tạm (xem code generation plan).
+### Interface U01 khai báo, unit khác cài
+
+| Interface | Phương thức | Cài bởi | Dùng để |
+|---|---|---|---|
+| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
+| `IClassScope` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
+
+### Contract frontend U01 khai báo
+
+| Contract | Cài bởi | Dùng để |
+|---|---|---|
+| `AccountMenuEntry` | U06 | Thêm mục AI Connection vào menu tài khoản mà U01 không phụ thuộc ngược U06 |
+| `HeaderWidget` | U14 | Gắn chuông thông báo lên thanh điều hướng cho mọi vai trò |
+
+### Interface U01 dùng
+
+| Interface | Cung cấp bởi | Dùng để |
+|---|---|---|
+| `IAudit.record` | U02 | Ghi sự kiện bảo mật và nghiệp vụ (mục 7 của business-logic-model) |
+| `IJob.enqueue` | U03 | Gửi việc `OTP_DELIVERY` sang worker qua RabbitMQ sau commit; handler gửi mail do U01 sở hữu, retry hữu hạn |
+
+U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U01. U04 và U05 code sau U01 trong Iter 1: tới lúc đó bản tạm trong khung (`IdentityContractStubs`) trả `true` cho `ISubjectScope`, `IClassScope` để các unit chạy tiếp; U04, U05 cài thật thì bản tạm tự tắt.
 
 ## 14. API tài khoản và phiên
 
@@ -188,11 +200,11 @@ Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có 
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 

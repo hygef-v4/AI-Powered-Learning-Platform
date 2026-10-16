@@ -4,12 +4,12 @@ Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây 
 
 ## 1. Backup Google Drive — FR-038, UC 66, US-OPS-001
 
-- U03 thực hiện backup PostgreSQL nhất quán theo lịch cấu hình, kèm phiên bản schema/app, manifest tệp, thời gian, checksum và trạng thái hoàn tất. Admin cấu hình lịch/retention qua Settings và xem lần thành công gần nhất, lịch sử, dung lượng và lỗi. Lịch và số bản giữ cụ thể cần xác nhận trước triển khai.
-- Bản backup nằm trong thư mục Google Drive riêng tư, tách khỏi thư mục tệp đang dùng và khỏi VPS. Tệp học tập đang lưu trên Drive không tự được coi là backup: phải giữ bản sao độc lập hoặc phiên bản được bảo vệ để khôi phục cả tệp và tham chiếu tương ứng. Xóa tệp nguồn không tự xóa bản backup.
+- U03 thực hiện backup PostgreSQL nhất quán theo lịch cấu hình, kèm phiên bản schema/app, thời gian, checksum và trạng thái hoàn tất; chỉ backup database. Admin cấu hình lịch qua Settings và xem lần thành công gần nhất, lịch sử, dung lượng và lỗi. Giờ chạy cần xác nhận trước triển khai; các bản được giữ 7 ngày (chốt 2026-10-15).
+- Bản backup nằm trong thư mục Google Drive riêng tư, tách khỏi thư mục tệp đang dùng và khỏi VPS. Tệp học tập đang lưu trên Drive không được backup (chốt 2026-10-15); tệp bị mất hoặc xóa thì không khôi phục được từ backup.
 - Archive chứa dữ liệu nhạy cảm phải được mã hóa trước upload; khóa giải mã và secrets cần để khôi phục do người vận hành giữ riêng ngoài archive/VPS. Không xuất API key hay thông tin xác thực dạng rõ. Quyền xem trạng thái không đồng nghĩa quyền tải toàn bộ dữ liệu học vụ.
-- Chỉ đánh dấu SUCCESS sau khi dump, các tệp thuộc manifest và upload/kiểm checksum thành công. Retry hữu hạn; lỗi hoặc thiếu dung lượng không xóa bản tốt gần nhất. U03 phát sự kiện backup thất bại để U16 gửi in-app/email cho Admin; lỗi email không thay đổi kết quả backup.
-- Restore do người vận hành thực hiện theo runbook vào môi trường cô lập trước: kiểm số bản ghi, quyền, tài liệu, XML Draw.io, bài nộp, điểm và usage/quota; liên kết tệp phải được remap đúng. Không thêm nút ghi đè production hoặc MCP restore tool vào MVP.
-- Tiêu chí nghiệm thu: tạo backup hợp lệ; mô phỏng lỗi upload/thiếu tệp; khôi phục bản hợp lệ và ghi bằng chứng. Đo RPO/RTO từ lịch và bài thử, không cam kết không mất dữ liệu hoặc coi kiểm checksum là kiểm thử restore.
+- Chỉ đánh dấu SUCCESS sau khi dump và upload/kiểm checksum thành công. Retry hữu hạn; lỗi hoặc thiếu dung lượng không xóa bản tốt gần nhất. U03 phát sự kiện backup thất bại để U16 gửi in-app/email cho Admin; lỗi email không thay đổi kết quả backup.
+- Restore do người vận hành thực hiện theo runbook vào môi trường cô lập trước: kiểm số bản ghi, quyền, tài liệu, XML Draw.io, bài nộp, điểm và usage/quota; tệp trên Drive không được khôi phục. Không thêm nút ghi đè production hoặc MCP restore tool vào MVP.
+- Tiêu chí nghiệm thu: tạo backup hợp lệ; mô phỏng lỗi upload; khôi phục bản hợp lệ và ghi bằng chứng. Đo RPO/RTO từ lịch và bài thử, không cam kết không mất dữ liệu hoặc coi kiểm checksum là kiểm thử restore.
 
 ## 2. Ghi nhận hoạt động làm bài — FR-039, UC 42, US-INT-001
 
@@ -24,7 +24,7 @@ Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây 
 
 - Giữ OTP kích hoạt/khôi phục, ghi danh, bài mới/mở giao, công bố điểm và nhắc hạn. Tạo/import tài khoản vẫn không tự gửi OTP; người dùng yêu cầu kích hoạt theo FR-015.
 - Giảng viên có thể đánh dấu thông báo lớp mới là quan trọng và chọn gửi email. Sửa thông báo không tự gửi lại email tạo mới. Backup thất bại gửi cho Admin; không gửi dữ liệu học vụ cho Admin.
-- U16 xử lý sau commit với khóa chống trùng theo sự kiện/người nhận/kênh, retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; chỉ SENT khi nhà cung cấp chấp nhận, không khẳng định đã vào inbox. OTP vẫn thuộc luồng U01, dùng MailPort chung.
+- U16 xử lý sau commit với khóa chống trùng theo sự kiện/người nhận/kênh, retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; chỉ SENT khi nhà cung cấp chấp nhận, không khẳng định đã vào inbox. OTP vẫn thuộc luồng U01, dùng IMail chung.
 - Email học tập tuân tùy chọn người nhận; OTP và cảnh báo vận hành theo chính sách riêng. Kiểm người nhận hiện hành, giới hạn tần suất/hạn mức nhà cung cấp. Email chỉ chứa nội dung tối thiểu và link yêu cầu đăng nhập; không raw điểm/bài nộp/API key hoặc backup attachment.
 - Tiêu chí nghiệm thu: đúng đối tượng, sự kiện lặp không gửi trùng, provider lỗi không rollback nghiệp vụ, vượt hạn mức ghi trạng thái rõ và không retry vô hạn.
 

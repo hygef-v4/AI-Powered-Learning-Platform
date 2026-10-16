@@ -3,82 +3,75 @@ package edu.aiplatform.jobs.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import edu.aiplatform.jobs.infrastructure.AmqpPublisher;
-import edu.aiplatform.jobs.port.JobMessage;
-import edu.aiplatform.jobs.port.JobTypes;
+import edu.aiplatform.jobs.contract.JobMessage;
+import edu.aiplatform.jobs.contract.JobTypes;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
-/** BR-U03-50, 52; P8. */
 class JobPublisherTest {
 
-    private final AmqpPublisher amqp = mock(AmqpPublisher.class);
-    private final JobPublisher publisher = new JobPublisher(amqp);
+    final IMessageSender sender = mock(IMessageSender.class);
+    final JobPublisher publisher = new JobPublisher(sender, new AfterCommitExecutor(Runnable::run));
 
     @AfterEach
     void clearTransaction() {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.clearSynchronization();
         }
-        TransactionSynchronizationManager.setActualTransactionActive(false);
     }
 
     @Test
-    void sendsImmediatelyWithoutTransaction() {
-        publisher.enqueue(JobTypes.OTP_DELIVERY, Map.of("accountId", "a1"), "a1:ACTIVATION:202610050900");
+    void sendsImmediatelyOutsideATransaction() {
+        publisher.enqueue(JobTypes.DRIVE_CLEANUP, Map.of("ref", "f1"), "cleanup:f1");
 
-        ArgumentCaptor<JobMessage> sent = ArgumentCaptor.forClass(JobMessage.class);
-        verify(amqp).publishJob(sent.capture());
-        assertThat(sent.getValue().jobType()).isEqualTo(JobTypes.OTP_DELIVERY);
-        assertThat(sent.getValue().attempt()).isZero();
-        assertThat(sent.getValue().schemaVersion()).isEqualTo(1);
-        assertThat(sent.getValue().correlationId()).isNotBlank();
+        ArgumentCaptor<JobMessage> message = ArgumentCaptor.forClass(JobMessage.class);
+        verify(sender).sendJob(message.capture());
+        assertThat(message.getValue().attempt()).isZero();
+        assertThat(message.getValue().schemaVersion()).isEqualTo(1);
+        assertThat(message.getValue().idempotencyKey()).isEqualTo("cleanup:f1");
     }
 
     @Test
-    void sendsOnlyAfterCommitInsideTransaction() {
-        beginTransaction();
-        publisher.enqueue(JobTypes.LESSON_SCAN, Map.of("lessonId", "l1"), "l1");
-        verify(amqp, never()).publishJob(any());
-
-        TransactionSynchronizationUtils.triggerAfterCommit();
-        verify(amqp).publishJob(any());
-    }
-
-    @Test
-    void doesNotSendWhenTransactionRollsBack() {
-        beginTransaction();
-        publisher.enqueue(JobTypes.LESSON_SCAN, Map.of("lessonId", "l1"), "l1");
-
-        TransactionSynchronizationUtils.triggerAfterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
-        verify(amqp, never()).publishJob(any());
-    }
-
-    @Test
-    void rejectsSensitivePayloadKeys() {
-        assertThatThrownBy(() -> publisher.enqueue(JobTypes.OTP_DELIVERY, Map.of("otpCode", "123456"), "k"))
-                .isInstanceOf(IllegalArgumentException.class);
-        verify(amqp, never()).publishJob(any());
-    }
-
-    @Test
-    void rejectsUnknownJobTypeAndMissingKey() {
-        assertThatThrownBy(() -> publisher.enqueue("NOPE", Map.of(), "k")).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> publisher.enqueue(JobTypes.CODE_RUN, Map.of(), " "))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    private static void beginTransaction() {
+    void sendsOnlyAfterCommitAndNothingOnRollback() {
         TransactionSynchronizationManager.initSynchronization();
-        TransactionSynchronizationManager.setActualTransactionActive(true);
+        publisher.enqueue(JobTypes.DRIVE_CLEANUP, Map.of("ref", "f1"), "k");
+        verify(sender, never()).sendJob(any());
+
+        for (TransactionSynchronization sync : TransactionSynchronizationManager.getSynchronizations()) {
+            sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+        }
+        verify(sender, never()).sendJob(any());
+
+        for (TransactionSynchronization sync : TransactionSynchronizationManager.getSynchronizations()) {
+            sync.afterCommit();
+        }
+        verify(sender).sendJob(any());
+    }
+
+    @Test
+    void rejectsUnknownJobTypesAndForbiddenKeys() {
+        assertThatThrownBy(() -> publisher.enqueue("CODE_RUN", Map.of(), "k"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> publisher.enqueue(JobTypes.EMAIL_SEND, Map.of("otp", "123456"), "k"))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(sender, never()).sendJob(any());
+    }
+
+    @Test
+    void brokerFailureDoesNotFailTheBusinessOperation() {
+        doThrow(new RuntimeException("broker down")).when(sender).sendJob(any());
+
+        publisher.enqueue(JobTypes.DRIVE_CLEANUP, Map.of(), "k");
+
+        verify(sender).sendJob(any());
     }
 }

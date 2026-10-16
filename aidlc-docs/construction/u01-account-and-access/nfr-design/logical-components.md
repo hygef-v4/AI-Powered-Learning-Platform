@@ -1,10 +1,10 @@
 # U01 Account & Access — logical-components
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 ## 1. Sơ đồ
 
@@ -24,7 +24,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
  |       AuthorizationService   OtpService                                   |
  |                |                |                                         |
  |                v                v                                         |
- |   Subject/ClassScopePort (U04)   JobPort (-> U03)                         |
+ |   Subject/IClassScope (U04/U05) IJob (-> U03)                       |
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
@@ -33,7 +33,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
                      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort`/`ClassScopePort`, U01 khai báo, U04 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
 
 ## 2. Thành phần
 
@@ -45,7 +45,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | `ActivationService` | Yêu cầu và hoàn tất kích hoạt | F1, F2 |
 | `OtpService` | Tạo job gửi OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
 | `PasswordPolicy` | ≥ 8 ký tự, chữ + số, không chứa tên email, ≤ 72 byte | BR-U01-30, 31, NFR-U01-14 |
-| `TokenService` | Phát và xoay JWT/refresh; kiểm `credentialVersion` khi refresh | NFR-U01-10, 11 |
+| `TokenService` | Phát và xoay JWT/refresh; kiểm phiên còn khi refresh; xóa phiên của tài khoản khi thu hồi | NFR-U01-10, 11 |
 | `ProfileService` | Xem và sửa tên, số điện thoại của chính mình | F7 |
 | `AccountAdminService` | Danh sách, chi tiết, tạo, sửa thông tin (version), đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F8, F9, F11, F12, F14 |
 | `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
@@ -58,7 +58,8 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | Kho | Khóa / bảng | TTL |
 |---|---|---|
 | PostgreSQL | `accounts` | Vĩnh viễn |
-| Redis | `session:refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
+| Redis | `session:{sid}`, `session:refresh:{hash}` | Idle 2 giờ, trần 7 ngày |
+| Redis | `account:sessions:{accountId}` | Theo phiên dài nhất còn lại |
 | Redis | `otp:{accountId}:{purpose}` | 10 phút |
 | Redis | `ticket:{hash}` | 10 phút |
 | Redis | `ratelimit:auth:*` (Bucket4j) | Theo cửa sổ nạp lại |
@@ -74,7 +75,7 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 | `U01_OTP_TTL` / `U01_OTP_MAX_ATTEMPTS` | 10m / 5 | Không |
 | `U01_LOGIN_LOCK_THRESHOLD` / `U01_LOGIN_LOCK_DURATION` | 5 / 15m | Không |
 | `U01_RL_*` | Theo bảng P6 | Không |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production theo shared-infrastructure §8 | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
 
 ## 5. Compliance
 
@@ -97,11 +98,11 @@ Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](.
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 

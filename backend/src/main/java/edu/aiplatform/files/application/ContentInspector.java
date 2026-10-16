@@ -1,31 +1,29 @@
 package edu.aiplatform.files.application;
 
+import edu.aiplatform.files.domain.FileType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Component;
 
 /**
- * Xác định loại tệp từ nội dung (magic bytes) bằng Tika trên 8 KB đầu (BR-U03-03, P3). Tên tệp chỉ là gợi ý:
- * Tika chỉ dùng đuôi để chọn kiểu con khi kiểu đó tương thích với nội dung (ví dụ ZIP → DOCX), không thể biến
- * một tệp thực thi thành ảnh. Header `Content-Type` của trình duyệt không được dùng.
+ * Nhận dạng loại tệp bằng magic bytes (Tika, P3). Tên tệp chỉ dùng để phân biệt các loại Office cùng nền ZIP;
+ * tệp đổi đuôi (ví dụ ảnh PNG đặt tên .pdf) vẫn nhận ra đúng là PNG.
  */
 @Component
 public class ContentInspector {
 
-    static final int PROBE_BYTES = 8 * 1024;
-
     private final Tika tika = new Tika();
 
-    public String detect(Path file, String fileName) {
+    public Optional<FileType> detect(Path file, String originalFileName) {
         try (InputStream in = Files.newInputStream(file)) {
-            byte[] probe = in.readNBytes(PROBE_BYTES);
-            return tika.detect(probe, fileName);
+            String mediaType = tika.detect(in, originalFileName);
+            return FileType.fromMediaType(mediaType);
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            return Optional.empty();
         }
     }
 }

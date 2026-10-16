@@ -18,12 +18,12 @@
 
 - Consolidation đã chốt: UC70 View Settings / UC71 Edit Setting riêng; UC76/78/82 vào Settings, UC26 vào UC24/27, UC79 retired; UC42 Individual / UC45 Group; UC80 vào58, UC81 vào37. Giữ ID lịch sử, chức năng/stories/unit services không bị loại.
 
-- Đồng bộ Inception chi tiết theo 65 UC: requirements/stories/personas/ports/orchestration/dependency và kế hoạch current đã review; xem `inception/plans/uc-table-65-sync-2026-10-13.md`. Lịch sử bên dưới giữ nguyên.
+- Đồng bộ Inception chi tiết theo 65 UC: requirements/stories/personas/ports/orchestration/dependency và kế hoạch current đã review. Lịch sử bên dưới giữ nguyên.
 
 ## Current Construction document revision — 2026-10-13
 
-- Design/plans current: construction/README.md/current-srs-contract.md/shared-infrastructure.md; 15 units, 65 active UC, 50 MVP + 1 extension và 39 FR IDs theo Inception.
-- Snapshot trước revision tại construction/historical/baseline-before-66-uc-2026-10-13 với hashes. Stage/approval/completed code checklists cũ giữ ở snapshot/history; current delta plans đều chưa triển khai.
+- Design/plans current: construction/README.md và unit-summary.md; 15 units, 65 active UC, 50 MVP + 1 extension và 39 FR IDs theo Inception.
+- Snapshot trước revision, plans/questions/reviews cũ và folder unit cũ đã xoá ngày 2026-10-15 (xem lại qua git history); current delta plans đều chưa triển khai.
 - U07 Usage/Teacher Quota; U13 Connections/MCP; Assignment/Quiz, diagram tùy chọn, YouTube links MVP; Lesson processing extension; backup/activity/email và merged UC70/58/37 được mô tả.
 - Next: review design/delta, resolve D01–D04 hoặc giữ defaults khi triển khai phần liên quan; actual contracts/code/schema/Compose và tests không được đánh complete chỉ vì docs đồng bộ.
 
@@ -32,16 +32,16 @@
 - **Start Date**: 2026-09-12T15:04:50Z
 - **Current Phase**: CONSTRUCTION
 - **Current Stage**: Construction documentation revision theo 65 UC; current delta code plans chưa triển khai. Code Generation Part 2 và completed checkpoints trước revision là lịch sử, không xác nhận scope mới.
-- **Resume action**: Đọc construction/README.md, current-srs-contract.md, shared-infrastructure.md và inception/plans/uc-table-65-sync-2026-10-13.md. Review current delta plans và decisions D01–D04 trước code/contracts/migration; không chạy baseline payment/Code Lab hoặc kế thừa approval cũ cho scope mới. Tester riêng viết/chạy integration evidence.
+- **Resume action**: Đọc construction/README.md và unit-summary.md. Review current delta plans và decisions D01–D04 trước code/contracts/migration; không chạy baseline payment/Code Lab hoặc kế thừa approval cũ cho scope mới. Tester riêng viết/chạy integration evidence.
 
 ## Latest documentation decision
-- **2026-10-09 (sau recheck)**: Đóng C01–C05 ở cấp tài liệu: U07/U05/U13 một HOLD và settle lượng dùng thật/trả dư; FR-024/story dùng đúng UC/màn và Chủ nhiệm môn bật phân bố điểm; AiUsagePort có findHold/UsageStart REPLAY/CallSnapshot/checkpoint/scanClaimId; shared infrastructure 15 unit. Các việc code/contracts/migration/integration theo checklist vẫn chưa triển khai; stage progress và approvals giữ nguyên.
+- **2026-10-09 (sau recheck)**: Đóng C01–C05 ở cấp tài liệu: U07/U05/U13 một HOLD và settle lượng dùng thật/trả dư; FR-024/story dùng đúng UC/màn và Chủ nhiệm môn bật phân bố điểm; IAiUsage có findHold/UsageStart REPLAY/CallSnapshot/checkpoint/scanClaimId; shared infrastructure 15 unit. Các việc code/contracts/migration/integration theo checklist vẫn chưa triển khai; stage progress và approvals giữ nguyên.
 - **2026-10-09**: Đồng bộ local 73 UC, 51 story và 15 unit; US-CAT-005 bỏ, US-SET-001 thêm U03; U10 bỏ, US-ASM-008/009/010 về U08. Sửa quyền Admin, mapping/kiến trúc/màn/nguồn, state/wave/gate và U05 retry/credit/summary. Google SRS/hình người dùng/code không sửa trong revision này; giữ approvals và code progress lịch sử.
 - **2026-10-08**: Added UC 70 View Audit Log and its Administrator-only permission row to the Google SRS; verified the saved document. Synchronized `docs/use-cases-73.md` and active Inception requirements, personas, stories, application design and planning summaries with 70 UC, 51 stories and 16 units. UC 70 belongs to U02 and uses the existing Audit Log screen. Screen names now match the latest `screen-flow (1).drawio`: Teacher Assigned Classes, Subject Classes, Subject Template and Template Editor (UC 53-54). Student My Classes is unchanged. Construction designs and code plans were synchronized in the follow-up revision; existing contracts/application code and older local specification catalogs are not automatically updated. The user's diagram was not edited; implementation checkpoints and historical audit records are preserved.
 - **2026-10-04**: Email provider changed to Brevo SMTP for demo/production; Mailpit retained for local/tests. U01/U16 email design, shared infrastructure, Inception provider selection and code-generation references synchronized. Existing code-generation approval checkpoints remain unchanged.
 
 ## Workspace State
-- **Existing Code**: Yes (skeleton, contracts, port stubs)
+- **Existing Code**: Yes (khung code tạo lại 2026-10-16: package của 15 unit, interface `Ixxx` trong `contract`, slot frontend; chưa có nghiệp vụ)
 - **Programming Languages**: Java 17 / Spring Boot 3.5, TypeScript / Next.js 16
 - **Build System**: Maven, npm
 - **Reverse Engineering Needed**: No
@@ -76,7 +76,7 @@
 - [x] Functional Design - 15 unit hiện hành; approvals baseline cũ giữ lịch sử
 - [x] NFR Requirements - 15 unit hiện hành; approvals baseline cũ giữ lịch sử
 - [x] NFR Design - 15 unit hiện hành; approvals baseline cũ giữ lịch sử
-- [x] Infrastructure Design - 15 unit hiện hành; approvals baseline cũ giữ lịch sử (+ `construction/shared-infrastructure.md`)
+- [x] Infrastructure Design - 15 unit hiện hành; approvals baseline cũ giữ lịch sử
 - [x] Code Generation Part 1 (plans) - 16 plans approved 2026-10-05 (historical; 15 unit hiện hành) for the previous baseline; scope revision documented 2026-10-09
 - [ ] Code Generation Part 2 (code) - in progress: U03 (wave 1)
 - [ ] Build and Test
@@ -84,13 +84,13 @@
 
 ## Unit Progress
 
-Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. U03 steps [x] và summaries giữ implementation cũ; revision tasks [ ] tới khi thực sự làm.
+Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16, mọi bước code của 15 unit còn [ ].
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
 | U01 Account & Access | Design revision 73 UC ngày 2026-10-09; Role/authentication cho mọi unit; counts cho Admin Dashboard. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U03 File, Job, Event & Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Generated 2026-10-05, awaiting review (branch `feat/files-and-jobs`) |
+| U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U05 Content, Material & RAG | Design revision 73 UC ngày 2026-10-09; Tóm tắt/embedding và RAG cho AI; quiz/attempt do U08/U09/U11 giữ. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U06 Rubric & Subject Question Bank | Design revision 73 UC ngày 2026-10-09; Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
@@ -147,7 +147,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - 2026-09-25: Xóa 9 story ngoài phạm vi khỏi danh mục user story theo yêu cầu; catalog story lúc đó có 50 mục MVP, mã đã xóa không được tái sử dụng.
 - 2026-09-26: Bỏ `UC-PAY-02` và `US-PAY-003` cùng thao tác admin đối soát/điều chỉnh credit thủ công; job tự đối soát được giữ trong `US-PAY-002`. Phạm vi tại thời điểm đó: 49 story/77 use case.
 - 2026-09-26: Data model consolidated from 62 to 45 PostgreSQL tables (keep only tables that must stand alone, are listed by a use case, or tie to an external system; 1-1 data becomes columns). Five shared tables with owner-unit migrations and extension ports. Domain entities rewritten for all units; FD/NFR/Infra/plans/ERD synced. Account status `PENDING_ACTIVATION` renamed `PENDING`.
-- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; eight U02 job queues (`jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`), U16's `jobs.notification`, and temporary `jobs.realtime.{instanceId}` queues. Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `AiBudgetPort`. The affected code plans await re-approval.
+- 2026-09-26: Messaging redesign: audit INSERT in the business transaction (no audit queue); required cross-unit reactions (grading on submit, auto-submit on retire, group docs on open/new group, lock release on member removal, Code Lab score) via ports that enqueue U02 jobs; events only for U16 notifications. RabbitMQ: exchanges `jobs`, `platform.events`, `platform.realtime`; eight U02 job queues (`jobs.scheduled`, `jobs.triggered`, `jobs.email`, `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.drive`, `jobs.payos`), U16's `jobs.notification`, and temporary `jobs.realtime.{instanceId}` queues. Redis: 12 key groups named by purpose; Gemini daily cost cap shared by U05/U13 via `IAiBudget`. The affected code plans await re-approval.
 - 2026-09-27: Screen flow (`docs/screen-flow.drawio`) chốt theo bản nhóm vẽ; frontend gộp theo đó: nhập CSV thành `ImportAccountsPanel` trên danh sách tài khoản (U01), cài đặt email thành toggle trên trang thông báo (U16), tổng quan tài liệu nhóm thành panel trong danh sách bài nộp (U14), chấm nhóm thành chế độ `groups` của `GradingWorkspacePage` (U15). Plan U01/U14/U15/U16 chỉ đổi tên component tương ứng.
 - 2026-09-27: Updated UC56, UC57 and UC75 in `docs/use-case-specifications.md` to match the current design; this documentation change did not advance the Construction stage.
 - Full chronological log: `audit.md`.

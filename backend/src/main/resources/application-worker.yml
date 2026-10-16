@@ -1,12 +1,6 @@
-# Container `worker`: cùng image backend, chỉ mạng `internal`; nhận 7 queue việc nền, chạy sweeper và scanner mỗi phút.
+# Worker: cùng image với backend, chạy việc nền, sweeper và scanner (U03). Nginx không chuyển request vào worker.
 spring:
-  rabbitmq:
-    listener:
-      simple:
-        auto-startup: true
-        acknowledge-mode: manual
-        prefetch: 1
-
-platform:
-  worker:
-    enabled: true
+  task:
+    scheduling:
+      pool:
+        size: 2

@@ -1,0 +1,52 @@
+package edu.aiplatform.files.domain;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.settings.contract.ISettings;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+class PurposePolicyTest {
+
+    final ISettings settings = mock(ISettings.class);
+    final PurposePolicy policy = new PurposePolicy(settings);
+
+    @Test
+    void usesHardCapsAndAllSupportedTypesWhenNotConfigured() {
+        when(settings.get(any())).thenReturn(Optional.empty());
+
+        PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
+        assertThat(material.maxSizeMb()).isEqualTo(50);
+        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
+        assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
+    }
+
+    @Test
+    void readsLimitsFromSettingsAndClampsToHardCap() {
+        when(settings.get(PurposePolicy.MATERIAL_MAX_MB)).thenReturn(Optional.of(10));
+        when(settings.get(PurposePolicy.MATERIAL_TYPES)).thenReturn(Optional.of(new String[]{"PDF"}));
+        when(settings.get(PurposePolicy.IMAGE_MAX_MB)).thenReturn(Optional.of(99));
+        when(settings.get(PurposePolicy.IMAGE_TYPES)).thenReturn(Optional.of(new String[]{"PNG", "PDF"}));
+
+        PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
+        assertThat(material.maxBytes()).isEqualTo(10L * 1024 * 1024);
+        assertThat(material.allowedTypes()).containsExactly(FileType.PDF);
+        PurposeLimits image = policy.limits(ArtifactPurpose.DOCUMENT_IMAGE);
+        assertThat(image.maxSizeMb()).isEqualTo(5);
+        assertThat(image.allowedTypes()).containsExactly(FileType.PNG);
+    }
+
+    @Test
+    void onlyEducatorsUploadMaterialsAndAdminUploadsNothing() {
+        assertThat(policy.canUpload(Role.TEACHER, ArtifactPurpose.MATERIAL)).isTrue();
+        assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.MATERIAL)).isFalse();
+        assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.DOCUMENT_IMAGE)).isTrue();
+        assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.DOCUMENT_IMAGE)).isFalse();
+        assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.MATERIAL)).isFalse();
+    }
+}

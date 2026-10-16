@@ -1,38 +1,36 @@
 package edu.aiplatform.jobs.application;
 
-import edu.aiplatform.jobs.infrastructure.AmqpPublisher;
-import edu.aiplatform.jobs.port.DomainEvent;
-import edu.aiplatform.jobs.port.EventPublisherPort;
+import edu.aiplatform.jobs.contract.DomainEvent;
+import edu.aiplatform.jobs.contract.IEventPublisher;
 import edu.aiplatform.shared.security.ForbiddenKeyGuard;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-/**
- * Phát event thông báo (E1): gửi sau commit, không đảm bảo giao hàng, lỗi chỉ log (BR-U03-70, 71).
- * Chỉ dùng cho thông báo U16; phản ứng bắt buộc giữa unit đi qua port (BR-U03-64).
- */
+/** Cài {@link IEventPublisher} (E1): gửi {@code platform.events} sau commit, lỗi chỉ log WARN (BR-U03-70). */
 @Service
-public class EventPublisher implements EventPublisherPort {
+public class EventPublisher implements IEventPublisher {
 
-    public static final int SCHEMA_VERSION = 1;
+    private static final Logger log = LoggerFactory.getLogger(EventPublisher.class);
 
-    private final AmqpPublisher amqp;
+    private final IMessageSender sender;
+    private final AfterCommitExecutor afterCommit;
 
-    public EventPublisher(AmqpPublisher amqp) {
-        this.amqp = amqp;
+    public EventPublisher(IMessageSender sender, AfterCommitExecutor afterCommit) {
+        this.sender = sender;
+        this.afterCommit = afterCommit;
     }
 
     @Override
     public void publish(DomainEvent event) {
-        if (event.schemaVersion() != SCHEMA_VERSION) {
-            throw new IllegalArgumentException("Unsupported schemaVersion: " + event.schemaVersion());
-        }
-        if (event.eventType() == null || event.eventType().isBlank()) {
-            throw new IllegalArgumentException("eventType is required");
-        }
-        ForbiddenKeyGuard.check(event.payload());
-        DomainEvent toSend = event.correlationId() != null ? event
-                : new DomainEvent(event.schemaVersion(), event.eventId(), event.eventType(), event.sourceUnit(),
-                        event.occurredAt(), AfterCommit.correlationId(), event.payload());
-        AfterCommit.run(() -> amqp.publishEvent(toSend));
+        ForbiddenKeyGuard.check(event.payload() == null ? Map.of() : event.payload());
+        afterCommit.run(() -> {
+            try {
+                sender.sendEvent(event);
+            } catch (RuntimeException e) {
+                log.warn("Gửi sự kiện {} lỗi, bỏ qua", event.eventType());
+            }
+        });
     }
 }

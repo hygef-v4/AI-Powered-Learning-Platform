@@ -8,14 +8,14 @@
 |---|---|---|---|
 | 1 | U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
 | 1 | U02 | Audit | 13 |
-| 1 | U03 | File, Job, Settings & Backup | 14, 15 |
+| 1 | U03 | Job and Settings | 14, 15 |
 | 1 | U04 | Subject Administration | 16, 17, 18, 19 |
 | 1 | U05 | Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 |
-| 2 | U06 | AI Connections & MCP | 31, 32, 33 |
+| 2 | U06 | AI Connections | 31, 32, 33 |
 | 2 | U07 | Assignment Authoring | 34, 35, 36 |
 | 2 | U08 | Assignment Work | 37, 38, 39, 40, 41 |
-| 2 | U09 | Assignment Grading & Gradebook | 42, 43, 44, 45 |
-| 2 | U10 | Quiz Authoring & Bank | 46, 47, 48 |
+| 2 | U09 | Assignment Grading | 42, 43, 44, 45 |
+| 2 | U10 | Quiz Authoring | 46, 47, 48 |
 | 3 | U11 | Quiz Practice | 49, 50, 51, 52 |
 | 3 | U12 | Group Assignment | 53, 54, 55, 56, 57 |
 | 3 | U13 | Reference Materials | 58, 59, 60, 61, 62 |

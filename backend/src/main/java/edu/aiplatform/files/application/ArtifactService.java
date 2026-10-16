@@ -1,72 +1,68 @@
 package edu.aiplatform.files.application;
 
-import edu.aiplatform.files.domain.FileRefClaims;
-import edu.aiplatform.files.domain.StoredFile;
-import edu.aiplatform.files.infrastructure.FileRefSigner;
-import edu.aiplatform.files.port.ArtifactPort;
-import edu.aiplatform.files.port.ArtifactPurpose;
-import edu.aiplatform.files.port.AvatarPort;
-import edu.aiplatform.files.port.DownloadToken;
-import edu.aiplatform.files.port.FileRef;
-import edu.aiplatform.files.port.StoragePort;
-import edu.aiplatform.files.port.StoredFileInfo;
-import edu.aiplatform.files.port.UploadedFile;
-import edu.aiplatform.shared.contract.ActorRef;
-import edu.aiplatform.shared.web.ApiException;
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.DownloadToken;
+import edu.aiplatform.files.contract.FileRef;
+import edu.aiplatform.files.contract.FileUpload;
+import edu.aiplatform.files.contract.IArtifact;
+import edu.aiplatform.files.contract.StoredFileInfo;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.shared.error.ApiException;
 import java.io.InputStream;
+import java.time.Clock;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-/**
- * Port tệp cho các unit khác (F2, F4, F5): `attach` đổi `FileRef` lấy `fileId` để unit sở hữu lưu vào dòng của mình;
- * unit sở hữu tự kiểm quyền rồi mới xin token tải (BR-U03-20). Không có hàm xóa (BR-U03-32).
- */
+/** Cài {@link IArtifact} cho U07, U08, U12, U13 (F1–F4). */
 @Service
-public class ArtifactService implements ArtifactPort, AvatarPort {
+public class ArtifactService implements IArtifact {
+
+    static final String DOWNLOAD_PATH = "/api/v1/files/download/";
 
     private final UploadService uploads;
     private final FileRefSigner signer;
-    private final StoragePort storage;
     private final DownloadTokenService tokens;
+    private final IStorage storage;
+    private final Clock clock;
 
-    public ArtifactService(UploadService uploads, FileRefSigner signer, StoragePort storage,
-                           DownloadTokenService tokens) {
+    public ArtifactService(UploadService uploads, FileRefSigner signer, DownloadTokenService tokens, IStorage storage,
+                           Clock clock) {
         this.uploads = uploads;
         this.signer = signer;
-        this.storage = storage;
         this.tokens = tokens;
+        this.storage = storage;
+        this.clock = clock;
     }
 
     @Override
-    public FileRef store(ActorRef actor, ArtifactPurpose purpose, UploadedFile file) {
+    public FileRef store(Actor actor, ArtifactPurpose purpose, FileUpload file) {
         return uploads.upload(actor, purpose, file).fileRef();
     }
 
-    /** Chữ ký đúng, còn hạn, người gắn là người tải lên, đúng `purpose` (BR-U03-30). */
+    /** Kiểm chữ ký, hạn, người gắn là người tải lên và đúng {@code purpose} (BR-U03-30). */
     @Override
-    public StoredFileInfo attach(FileRef fileRef, ActorRef actor, ArtifactPurpose purpose) {
-        FileRefClaims claims = signer.verify(fileRef)
-                .filter(c -> actor != null && c.ownerAccountId().equals(actor.accountId()))
-                .filter(c -> c.purpose() == purpose)
-                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_REF",
-                        "Tệp tải lên không hợp lệ hoặc đã hết hạn, vui lòng tải lại."));
-        return StoredFile.fromMetadata(claims.fileId(), storage.readMetadata(claims.fileId())).info();
+    public StoredFileInfo attach(FileRef fileRef, Actor actor, ArtifactPurpose purpose) {
+        FileRefSigner.Payload payload = signer.verify(fileRef)
+                .orElseThrow(() -> ApiException.badRequest("FILE_REF_INVALID", "Tham chiếu tệp không hợp lệ"));
+        if (payload.expiresAt().isBefore(clock.instant())) {
+            throw ApiException.badRequest("FILE_REF_EXPIRED", "Tham chiếu tệp đã hết hạn, tải tệp lên lại");
+        }
+        if (!payload.ownerAccountId().equals(actor.accountId()) || payload.purpose() != purpose) {
+            throw ApiException.forbidden("FILE_REF_NOT_OWNED");
+        }
+        return new StoredFileInfo(payload.fileId(), payload.ownerAccountId(), payload.purpose(),
+                payload.originalFileName(), payload.mediaType(), payload.byteSize(), payload.sha256());
     }
 
+    /** Unit sở hữu gọi sau khi đã tự kiểm quyền (BR-U03-20). */
     @Override
     public DownloadToken issueDownloadToken(String fileId, UUID accountId) {
-        return tokens.issue(fileId, accountId);
+        String token = tokens.issue(fileId, accountId);
+        return new DownloadToken(DOWNLOAD_PATH + token, clock.instant().plus(DownloadTokenService.TTL));
     }
 
     @Override
     public InputStream open(String fileId) {
-        return storage.get(fileId);
-    }
-
-    /** F5: như `attach` với `purpose = AVATAR`; trả `fileId` để U01 lưu `avatar_file_id`. */
-    @Override
-    public String validateAvatar(FileRef fileRef, ActorRef actor) {
-        return attach(fileRef, actor, ArtifactPurpose.AVATAR).fileId();
+        return storage.open(fileId);
     }
 }

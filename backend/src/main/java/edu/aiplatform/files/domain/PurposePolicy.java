@@ -1,46 +1,57 @@
 package edu.aiplatform.files.domain;
 
-import edu.aiplatform.files.port.ArtifactPurpose;
-import edu.aiplatform.shared.contract.Role;
-import java.util.EnumMap;
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.settings.contract.ISettings;
+import edu.aiplatform.settings.contract.SettingKey;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.stereotype.Component;
 
-/** Allowlist loại tệp, trần dung lượng và vai trò được upload theo `purpose` (BR-U03-02, 03, 04; domain-entities §3). */
-public record PurposePolicy(Set<String> mediaTypes, long maxBytes, Set<Role> uploaderRoles) {
+/**
+ * Quy tắc theo {@code purpose}: role được tải lên (BR-U03-04), trần dung lượng và loại cho phép lấy từ Settings
+ * (BR-U03-02, 87). Giá trị trong Settings luôn bị kẹp trong trần cứng 50 MB và 5 MB.
+ */
+@Component
+public class PurposePolicy {
 
-    public static final long MB = 1024L * 1024L;
+    public static final SettingKey<Integer> MATERIAL_MAX_MB = new SettingKey<>("files.material.maxSizeMb", Integer.class);
+    public static final SettingKey<String[]> MATERIAL_TYPES = new SettingKey<>("files.material.allowedTypes", String[].class);
+    public static final SettingKey<Integer> IMAGE_MAX_MB = new SettingKey<>("files.documentImage.maxSizeMb", Integer.class);
+    public static final SettingKey<String[]> IMAGE_TYPES = new SettingKey<>("files.documentImage.allowedTypes", String[].class);
 
-    public static final String PDF = "application/pdf";
-    public static final String DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    public static final String PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-    public static final String SVG = "image/svg+xml";
+    static final Map<ArtifactPurpose, Integer> HARD_CAP_MB = Map.of(ArtifactPurpose.MATERIAL, 50,
+            ArtifactPurpose.DOCUMENT_IMAGE, 5);
+    static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
+            ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX),
+            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.GIF, FileType.SVG));
+    static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(
+            ArtifactPurpose.MATERIAL, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),
+            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER));
 
-    private static final Map<ArtifactPurpose, PurposePolicy> POLICIES = new EnumMap<>(Map.of(
-            ArtifactPurpose.AVATAR, new PurposePolicy(
-                    Set.of("image/jpeg", "image/png", "image/webp"), 50 * MB,
-                    Set.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER, Role.ADMIN)),
-            ArtifactPurpose.MATERIAL, new PurposePolicy(
-                    Set.of(PDF, DOCX, PPTX), 50 * MB,
-                    Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)),
-            ArtifactPurpose.DOCUMENT_IMAGE, new PurposePolicy(
-                    Set.of("image/png", "image/jpeg", "image/gif", SVG), 5 * MB,
-                    Set.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER))));
+    private final ISettings settings;
 
-    public static PurposePolicy of(ArtifactPurpose purpose) {
-        return POLICIES.get(purpose);
+    public PurposePolicy(ISettings settings) {
+        this.settings = settings;
     }
 
-    public boolean allowsRole(Role role) {
-        return uploaderRoles.contains(role);
+    public boolean canUpload(Role role, ArtifactPurpose purpose) {
+        return UPLOADERS.get(purpose).contains(role);
     }
 
-    public boolean allowsMediaType(String mediaType) {
-        return mediaTypes.contains(mediaType);
-    }
-
-    /** Ảnh và PDF mở trong trình duyệt; còn lại luôn `attachment` (BR-U03-23). */
-    public static boolean isInline(String mediaType) {
-        return mediaType.startsWith("image/") || PDF.equals(mediaType);
+    public PurposeLimits limits(ArtifactPurpose purpose) {
+        int cap = HARD_CAP_MB.get(purpose);
+        SettingKey<Integer> sizeKey = purpose == ArtifactPurpose.MATERIAL ? MATERIAL_MAX_MB : IMAGE_MAX_MB;
+        SettingKey<String[]> typesKey = purpose == ArtifactPurpose.MATERIAL ? MATERIAL_TYPES : IMAGE_TYPES;
+        int size = settings.get(sizeKey).map(value -> Math.max(1, Math.min(cap, value))).orElse(cap);
+        Set<FileType> supported = SUPPORTED.get(purpose);
+        Set<FileType> allowed = settings.get(typesKey)
+                .map(names -> Arrays.stream(names).map(FileType::valueOf).filter(supported::contains)
+                        .collect(() -> EnumSet.noneOf(FileType.class), Set::add, Set::addAll))
+                .filter(set -> !set.isEmpty())
+                .orElseGet(() -> EnumSet.copyOf(supported));
+        return new PurposeLimits(purpose, size, allowed);
     }
 }

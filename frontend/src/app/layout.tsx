@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import type { ReactNode } from "react";
+import "@/features/register";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nền tảng học tập AI",
-  description: "AI-Powered Learning Platform",
+  title: "ALAP",
+  description: "Nền tảng học tập có hỗ trợ AI",
 };
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
-  // Đọc header để trang render theo từng request: nonce CSP (src/proxy.ts) khác nhau mỗi request.
-  await headers();
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
       <body>{children}</body>

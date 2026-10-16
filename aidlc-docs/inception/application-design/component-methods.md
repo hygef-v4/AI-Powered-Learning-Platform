@@ -19,8 +19,8 @@
 | U12 | groups/membership/leader/allocation |
 | U13 | managePersonalConnection; manageSharedConnection(admin); testSyntheticConnection; revoke; requestAi(task, scopedContext, connectionRef); create/revokeMcpCredential; scoped MCP tools |
 | U14 | claim/save group section; group context policy; leader submit/version; record own member activity through U11 port |
-| U15 | proposal validation; manual evaluation; finalize/publish/history/gradebook; reviewWorkActivity(authorizedTeacher, attempt/member) within UC 42 via U11 ActivityQueryPort |
-| U16 | notifications/email/reminders; aggregates/gradebook export via ports; dashboardBackupStatus (UC 66) via U03 BackupStatusPort; idempotent importantAnnouncement/backupFailure email |
+| U15 | proposal validation; manual evaluation; finalize/publish/history/gradebook; reviewWorkActivity(authorizedTeacher, attempt/member) within UC 42 via U11 IActivityQuery |
+| U16 | notifications/email/reminders; aggregates/gradebook export via ports; dashboardBackupStatus (UC 66) via U03 IBackupStatus; idempotent importantAnnouncement/backupFailure email |
 
 MCP tools minimum: read_assignment_context, read_authorized_material, read_own_work, read_authorized_submission (assigned educator only), save_assignment_draft(expectedVersion), record_private_feedback, record_grading_proposal. Names/spec schema cần chốt Construction. Không submit official hoặc publish_grade tool giai đoạn đầu. Token số liệu do agent gửi chỉ reported.
 
@@ -30,8 +30,8 @@ UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao g
 
 ## Current public contract clarifications
 
-- U03 viewSettings(UC14) / editSetting(UC15) authorize Admin; read masked institutional config and delegate mutations/testing/revocation to U13 AiConnectionAdministrationPort. Public contracts allow unavailable adapters without hard dependency cycles.
-- AiConnectionAdministrationPort U13: getMaskedInstitutionalConfiguration(adminActor), updateInstitutionalConfiguration(adminActor, provider/model, secretInput, expectedVersion), testInstitutionalConnection(adminActor, syntheticRequest), revokeInstitutionalConnection(adminActor, connectionRef, expectedVersion). No raw/ciphertext key readback; each operation validates and audits at its owner.
-- U07 TeacherQuotaPolicyPort provides separate read/update quota semantics. U03 does not write U07/U13 repositories or promise atomic multi-owner edits.
+- U03 viewSettings(UC14) / editSetting(UC15) authorize Admin; read masked institutional config and delegate mutations/testing/revocation to U13 IAiConnectionAdministration. Public contracts allow unavailable adapters without hard dependency cycles.
+- IAiConnectionAdministration U13: getMaskedInstitutionalConfiguration(adminActor), updateInstitutionalConfiguration(adminActor, provider/model, secretInput, expectedVersion), testInstitutionalConnection(adminActor, syntheticRequest), revokeInstitutionalConnection(adminActor, connectionRef, expectedVersion). No raw/ciphertext key readback; each operation validates and audits at its owner.
+- U07 ITeacherQuotaPolicy provides separate read/update quota semantics. U03 does not write U07/U13 repositories or promise atomic multi-owner edits.
 - record_private_feedback requires owned SUBMITTED PRACTICE Assignment and immutable submissionVersion, before saving incoming MCP results. Draft saves remain editing operations; they cannot bypass feedback restrictions.
 - U05 material commands support FILE and YOUTUBE_LINK. Links are validated reference URLs/title/version with current subject/class scope; no mandatory captions/download/LLM processing.

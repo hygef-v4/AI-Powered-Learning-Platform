@@ -1,43 +1,56 @@
 package edu.aiplatform.jobs.application;
 
-import edu.aiplatform.jobs.domain.JobRouting;
-import edu.aiplatform.jobs.infrastructure.AmqpPublisher;
-import edu.aiplatform.jobs.port.JobMessage;
-import edu.aiplatform.jobs.port.JobPort;
+import edu.aiplatform.jobs.contract.IJob;
+import edu.aiplatform.jobs.contract.JobMessage;
+import edu.aiplatform.jobs.contract.PendingJob;
 import edu.aiplatform.shared.security.ForbiddenKeyGuard;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-/**
- * Gửi việc nền (J1, P8): không ghi database; trong transaction thì gửi sau commit, rollback không gửi;
- * ngoài transaction thì gửi ngay (BR-U03-50, 52).
- */
+/** Cài {@link IJob} (J1): kiểm loại việc và khóa cấm, gửi {@code JobMessage} sau commit, không ghi database. */
 @Service
-public class JobPublisher implements JobPort {
+public class JobPublisher implements IJob {
 
     public static final int SCHEMA_VERSION = 1;
 
-    private final AmqpPublisher amqp;
+    private static final Logger log = LoggerFactory.getLogger(JobPublisher.class);
 
-    public JobPublisher(AmqpPublisher amqp) {
-        this.amqp = amqp;
+    private final IMessageSender sender;
+    private final AfterCommitExecutor afterCommit;
+
+    public JobPublisher(IMessageSender sender, AfterCommitExecutor afterCommit) {
+        this.sender = sender;
+        this.afterCommit = afterCommit;
     }
 
     @Override
     public void enqueue(String jobType, Map<String, Object> payload, String idempotencyKey) {
-        if (!JobRouting.isKnown(jobType)) {
-            throw new IllegalArgumentException("Unknown jobType: " + jobType);
+        JobMessage message = build(jobType, payload, idempotencyKey);
+        afterCommit.run(() -> send(message));
+    }
+
+    /** Gửi lại ngay việc còn chờ do {@code IPendingSweeper} trả (J3). */
+    public void resend(String jobType, PendingJob pending) {
+        send(build(jobType, pending.payload(), pending.idempotencyKey()));
+    }
+
+    static JobMessage build(String jobType, Map<String, Object> payload, String idempotencyKey) {
+        if (JobRouting.queueOf(jobType).isEmpty()) {
+            throw new IllegalArgumentException("Loại việc chưa đăng ký: " + jobType);
         }
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new IllegalArgumentException("idempotencyKey is required");
-        }
-        Map<String, Object> safePayload = payload == null ? Map.of()
-                : Collections.unmodifiableMap(new LinkedHashMap<>(payload));
+        Map<String, Object> safePayload = payload == null ? Map.of() : payload;
         ForbiddenKeyGuard.check(safePayload);
-        JobMessage message = new JobMessage(SCHEMA_VERSION, jobType, idempotencyKey, safePayload, 0,
-                AfterCommit.correlationId());
-        AfterCommit.run(() -> amqp.publishJob(message));
+        return new JobMessage(SCHEMA_VERSION, jobType, idempotencyKey, safePayload, 0, UUID.randomUUID().toString());
+    }
+
+    private void send(JobMessage message) {
+        try {
+            sender.sendJob(message);
+        } catch (RuntimeException e) {
+            log.warn("Gửi việc {} key={} lỗi; sweeper sẽ gửi lại", message.jobType(), message.idempotencyKey());
+        }
     }
 }

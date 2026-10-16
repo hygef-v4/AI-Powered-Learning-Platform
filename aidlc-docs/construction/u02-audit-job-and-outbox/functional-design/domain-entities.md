@@ -1,10 +1,10 @@
 # U02 Audit — domain-entities
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U02 Audit thuộc Iter 1, người code: Người 2; phạm vi UC 13 giữ như U02 cũ (chỉ audit; việc nền đã thuộc U03). 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u02-audit-job-and-outbox` không quyết định chức năng hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u02-audit-job-and-outbox` giữ tên cũ để không phá liên kết, là thiết kế của U02 Audit hiện hành.
 
 Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 13. Tên thư mục `u02-audit-job-and-outbox` giữ từ bản cũ; việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết định 2026-10-04).
 
@@ -12,7 +12,7 @@ Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 13. Tên th
 
 | Entity | Loại | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `AuditLog` (thực thể `AUDIT_LOG`) | Entity bất biến | `audit_logs` | U02 (mọi unit gửi qua `AuditPort`) |
+| `AuditLog` (thực thể `AUDIT_LOG`) | Entity bất biến | `audit_logs` | U02 (mọi unit gửi qua `IAudit`) |
 
 U02 **không** sở hữu quyền đọc audit (U01) và việc nền (U03).
 
@@ -33,20 +33,21 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 
 ## 3. Contract
 
-### Port U02 cung cấp
+### Interface U02 cung cấp
 
-| Port | Dùng bởi |
-|---|---|
-| `AuditPort.record(event)` | Mọi unit; ghi trong transaction của unit gọi |
-| `AuditPort.recordDenied(event)`, `AuditPort.recordFailure(event)` | Mọi unit; ghi sự kiện bị từ chối hoặc lỗi bằng transaction riêng |
-| `AuditQueryPort.query(actor, filter, page)` | `AuditController` của màn Audit Log (UC 13) |
+| Interface | Phương thức | Dùng bởi | Dùng để |
+|---|---|---|---|
+| `IAudit` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
+| `IAuditQuery` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
 
-### Port U02 dùng
+Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, `action`, `objectType`, `objectId`, `result`, `reason`, `details` đã che, `occurredAt`), `AuditResult` (`SUCCESS`, `DENIED`, `FAILURE`), `AuditFilter`, `AuditLogView` (`AuditEvent` + `actorEmail`, rỗng nghĩa là hệ thống).
 
-| Port | Unit | Cạnh |
+### Interface U02 dùng
+
+| Interface | Unit | Cạnh |
 |---|---|---|
-| `AuthorizationPort.authorize` | U01 | `C` - chỉ cho API đọc audit; U01 code sau U02 nên dùng `AuthorizationService` khung của U01 (luôn từ chối) |
-| `AccountLookupPort.getContact` | U01 | `C` - lấy email người thực hiện để hiện trên Audit Log; khi U01 chưa cài thì để trống email |
+| `IAuthorization.authorize` | U01 | `C` - chỉ cho API đọc audit. U02 code trước U01 trong Iter 1 nên tới khi U01 xong, bản tạm `IAuthorization` trong khung luôn cho phép |
+| `IAccountLookup.getContact` | U01 | `C` - lấy email người thực hiện để hiện trên Audit Log; khi U01 chưa cài thì để trống email |
 
 ## Quy tắc tích hợp revision hiện hành
 
@@ -56,7 +57,7 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 

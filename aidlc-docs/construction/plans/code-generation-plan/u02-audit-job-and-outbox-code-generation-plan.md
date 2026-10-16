@@ -1,44 +1,41 @@
-# U02 Audit — Code Generation Plan — revision chưa triển khai
+# U02 Audit — Code Generation Plan
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U02 Audit thuộc Iter 1, người code: Người 2; phạm vi UC 13 giữ như U02 cũ (chỉ audit; việc nền đã thuộc U03). 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u02-audit-job-and-outbox` không quyết định chức năng hiện hành.
+Thiết kế: [business-logic-model](../../u02-audit-job-and-outbox/functional-design/business-logic-model.md), [business-rules](../../u02-audit-job-and-outbox/functional-design/business-rules.md), [domain-entities](../../u02-audit-job-and-outbox/functional-design/domain-entities.md), [frontend-components](../../u02-audit-job-and-outbox/functional-design/frontend-components.md), [NFR](../../u02-audit-job-and-outbox/nfr-requirements/nfr-requirements.md), [NFR design](../../u02-audit-job-and-outbox/nfr-design/nfr-design-patterns.md), [infrastructure](../../u02-audit-job-and-outbox/infrastructure-design/infrastructure-design.md). Phụ thuộc và thứ tự: [unit-of-work](../../../inception/application-design/unit-of-work.md).
 
-## Authorization và trạng thái
+## Trạng thái
 
-User chỉ yêu cầu đồng bộ tài liệu Construction theo Inception. Đây là kế hoạch revision, không chạy Code Generation Part 2 hoặc đánh completed. Checklist/approval/code baseline giữ tại [plan cũ](../../historical/baseline-before-66-uc-2026-10-13/plans/code-generation-plan/u02-audit-job-and-outbox-code-generation-plan.md); approval 05/10 không tự áp dụng scope mới. Không reset lịch sử code đã sinh thành chưa sinh; checklist dưới đây chỉ delta hiện hành.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
-## Paths cần review trước sửa code
+## Code hiện có
 
-- Existing backend owner/package: `backend/src/main/java/edu/aiplatform/audit`; frontend `frontend/src`, public contracts `backend/src/main/java/edu/aiplatform/contracts` nếu tồn tại; migration `backend/src/main/resources/db/migration`; tests `backend/src/test` và frontend test files.
-- Exact classes/routes/migration numbers xác định qua repository inventory trước implementation; không invent files đã tồn tại. Legacy package/folder tên cũ không cho phép tiếp tục payment/code.
-- Source-of-truth [current shared contract](../../current-srs-contract.md), unit design theo current folder. [Inception dependency](../../../inception/application-design/unit-of-work-dependency.md) là thứ tự hiện hành.
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/audit/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../audit/contract/` | interface `IAudit`, `IAuditQuery`; kiểu dữ liệu `AuditEvent`, `AuditFilter`, `AuditLogView`, `AuditResult` |
+| `backend/.../audit/contract/stub/AuditContractStubs` | Bản tạm trả dữ liệu mẫu cho `IAudit`, `IAuditQuery` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
+| `frontend/src/features/audit/` | Chỉ có `index.ts` trống |
+| `backend/.../shared/security/ForbiddenKeyGuard` | Có, kèm unit test; dùng để chặn khóa cấm trong `details` |
 
-## Checklist delta
+## Checklist
 
-- [ ] **Bước 1:** Inventory code/contracts/migrations baseline, xác định reuse/removal, mapping dữ liệu và exact paths; không drop records/snapshots trước backup/restore.
-- [ ] **Bước 2:** Review DTO/status/public ports theo U02 owner; authorizations hiện hành, expectedVersion/idempotency và error projection; replace adapters fail-closed trước tích hợp thật.
-- [ ] **Bước 3:** Migration owned entities/constraints/index/retention; preserve IDs/historical snapshots, validate old-to-new mapping trên copy database.
-- [ ] **Bước 4:** Domain rules/services/transactions và recovery theo functional-design; dependent services gọi port, không repositories xuyên owner.
-- [ ] **Bước 5:** API layer guards/validation/rate/CSRF, minimal projections, sanitized audit/outbox cùng owner transaction; external timeout/retry bounded.
-- [ ] **Bước 6:** Frontend state/forms/query permissions theo entry UC hiện hành; conflicts/unavailable rõ; không client-only policy/security.
-- [ ] **Bước 7:** Coder viết meaningful unit/service/API/UI tests của delta, negative permissions/state/duplicate/concurrency; không chỉ mirror implementation.
-- [ ] **Bước 8:** Tester khác viết integration cases từ requirements/design và chạy adapter thật/sandbox/local mock phù hợp, phân biệt cases viết xong và runtime pass.
-- [ ] **Bước 9:** Update deployment env/health/secret rotation và runbook; test migration/rollback/restore nếu unit tác động dữ liệu hoặc credentials.
-- [ ] **Bước 10:** Review evidence/FR-story-UC traceability, fix/retest; user review trước next code stage, không tự thay milestones/nhân sự.
+- [ ] **Bước 1 — Migration:** tạo `db/migration/audit/V20260925_0900__create_audit_logs.sql`: bảng `audit_logs` theo domain-entities mục 2 (chưa có FK; U01 thêm FK `actor_id` → `accounts`), index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app`.
+- [ ] **Bước 2 — Ghi audit (A1):** `AuditStore` kiểm `details` bằng `ForbiddenKeyGuard` (BR-U02-05), `INSERT ... ON CONFLICT (id) DO NOTHING` (BR-U02-03); `record` chạy trong transaction hiện tại khi `result = SUCCESS`, chạy `REQUIRES_NEW` qua `TransactionTemplate` khi `DENIED` hoặc `FAILURE` (BR-U02-02).
+- [ ] **Bước 3 — Tra cứu (A2):** `AuditQueryService` gọi `IAuthorization.authorize(actor, AUDIT_READ)` và từ chối khi lỗi (BR-U02-07, 50); kiểm bộ lọc (`from` ≤ `to`, `result` hợp lệ, trang ≤ 100); sắp `occurred_at` giảm dần; lấy email qua `IAccountLookup.getContact` (BR-U02-09); ghi audit `AUDIT_QUERIED`.
+- [ ] **Bước 4 — API:** `AuditController` cho `GET /api/v1/admin/audit-logs`, lỗi trả dạng an toàn (BR-U02-51).
+- [ ] **Bước 5 — Frontend:** `AuditLogPage` với `AuditFilters` (mặc định 7 ngày, đổi email sang `actorId` qua API tài khoản của U01), `AuditTable` (50 dòng/trang), `AuditDetailDrawer` chỉ đọc.
+- [ ] **Bước 6 — Unit test (người code viết):** khóa cấm bị từ chối, ghi lại cùng `id` không tạo dòng mới, kiểm bộ lọc sai, người không phải Admin bị từ chối, `actor_id` rỗng hiện "Hệ thống"; test component frontend. Integration test do tester viết.
+- [ ] **Bước 7 — Review:** đối chiếu UC 13, US-AUD-001, BR-U02 với code; người dùng duyệt trước khi chuyển unit.
 
-## Unit-specific implementation scope
+## Integration test cases (tester viết)
 
-- Audit append-only; chỉ Admin query, không sửa/xóa. Ghi actor/action/object/result/occurredAt/correlationId; payload sanitize.
-- Success ghi cùng transaction owner; denied/failure dùng transaction riêng khi nghiệp vụ rollback. Audit id do caller cung cấp, dedup khóa chính.
-- Thêm actions AI_CONNECTION_CHANGED, QUOTA_CHANGED, MCP_REVOKED, BACKUP_COMPLETED/FAILED, RESTORE_VERIFIED và activity policy changed; không log secrets/raw prompt/nội dung nhạy cảm.
-
-## Independent integration acceptance
-
-- Id lặp không trùng; rollback denied vẫn ghi; field secrets/prompt bị loại; filter malformed từ chối; không Admin denied.
+- Ghi lại cùng `id` không tạo bản ghi thứ hai; nghiệp vụ rollback thì audit `SUCCESS` mất nhưng `DENIED`/`FAILURE` vẫn còn.
+- User `app` không `UPDATE`/`DELETE` được `audit_logs`.
+- `details` có khóa `password`, `otp`, `token`, `secret`, `phone` bị từ chối; người không phải Admin gọi API tra cứu bị từ chối.
 
 ## DoD
 
-Requirements owner, test-case owner, coder khác nhau theo nhóm; implementation readiness/compatibility và unresolved decisions xử lý trước enable feature tương ứng. No runtime pass/checklist tick chỉ vì docs viết xong; codes under workspace root, không aidlc-docs.
+Người viết requirement, người viết test case và người code là ba người khác nhau. Không đánh dấu bước hoàn thành khi chưa có code và test chạy được; code nằm ở thư mục gốc repo, không nằm trong `aidlc-docs`.

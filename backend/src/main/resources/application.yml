@@ -1,46 +1,40 @@
-# Mọi giá trị nhạy cảm đọc từ biến môi trường (.env quyền 600 trên VPS); mỗi unit thêm khóa của mình.
 spring:
   application:
-    name: platform
+    name: platform-backend
+  threads:
+    virtual:
+      enabled: true
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:${POSTGRES_PORT:5432}/${POSTGRES_DB:platform}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:platform}
     username: ${POSTGRES_APP_USER:app}
-    password: ${POSTGRES_APP_PASSWORD}
-    hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:10}
+    password: ${POSTGRES_APP_PASSWORD:}
+  flyway:
+    # Mỗi unit một thư mục con trong db/migration/<package>; Flyway quét cả thư mục con.
+    url: ${spring.datasource.url}
+    user: ${POSTGRES_MIGRATOR_USER:migrator}
+    password: ${POSTGRES_MIGRATOR_PASSWORD:}
+    locations: classpath:db/migration
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        jdbc.time_zone: UTC
-  flyway:
-    enabled: true
-    # Flyway dùng user `migrator`; runtime dùng user `app`.
-    user: ${POSTGRES_MIGRATOR_USER:migrator}
-    password: ${POSTGRES_MIGRATOR_PASSWORD}
-    locations: classpath:db/migration
   data:
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
-      timeout: 2s
+      password: ${REDIS_PASSWORD:}
+      timeout: 500ms
+      connect-timeout: 1s
   rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
+    host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    virtual-host: /platform
     username: ${RABBITMQ_USER:app}
-    password: ${RABBITMQ_PASSWORD}
-    publisher-confirm-type: correlated
+    password: ${RABBITMQ_PASSWORD:}
+    virtual-host: ${RABBITMQ_VHOST:/platform}
     connection-timeout: 5s
-    listener:
-      simple:
-        # Chỉ profile worker nhận việc nền.
-        auto-startup: false
+    publisher-confirm-type: simple
   mail:
-    host: ${SMTP_HOST:mailpit}
+    host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
     username: ${SMTP_USER:}
     password: ${SMTP_PASSWORD:}
@@ -50,19 +44,18 @@ spring:
       mail.smtp.connectiontimeout: 5000
       mail.smtp.timeout: 10000
       mail.smtp.writetimeout: 10000
+  mvc:
+    problemdetails:
+      enabled: true
   servlet:
     multipart:
-      max-file-size: ${U03_MAX_FILE_SIZE:50MB}
+      max-file-size: 50MB
       max-request-size: 51MB
-      file-size-threshold: 0
-      location: ${U03_UPLOAD_TMP_DIR:/tmp/uploads}
+      location: ${U03_UPLOAD_TMP_DIR:${java.io.tmpdir}}
 
 server:
   port: 8080
-  forward-headers-strategy: framework
-  error:
-    include-stacktrace: never
-    include-message: never
+  shutdown: graceful
 
 management:
   endpoints:
@@ -74,43 +67,31 @@ management:
     health:
       probes:
         enabled: true
-      # Google Drive lỗi chỉ làm health `DEGRADED` (HTTP 200), backend vẫn chạy (U03 P7).
-      status:
-        order: down,out-of-service,degraded,unknown,up
-        http-mapping:
-          degraded: 200
-      group:
-        ready:
-          include: readinessState,db,redis,rabbit
+  health:
+    # SMTP lỗi không làm backend thành unhealthy; lỗi gửi mail xử lý ở việc nền.
+    mail:
+      enabled: false
 
+# U03 Job and Settings
 platform:
-  public-url: ${APP_PUBLIC_URL:http://localhost:3000}
-  mail-from: ${SMTP_FROM:no-reply@localhost}
-  worker:
-    enabled: false
-  # Tệp (U03, logical-components §3). Không có key Google Drive thì lưu vào thư mục local.
   files:
-    max-concurrent-uploads: ${U03_MAX_CONCURRENT_UPLOADS:5}
-    upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:/tmp/uploads}
-    download-token-ttl: ${U03_DOWNLOAD_TOKEN_TTL:5m}
-    file-ref-secret: ${U03_FILEREF_SECRET:}
-    file-ref-ttl: ${U03_FILEREF_TTL:1h}
-    local-storage-dir: ${U03_LOCAL_STORAGE_DIR:./data/files}
-    # true ở production/demo: thiếu key Drive thì báo không khả dụng thay vì lưu vào thư mục local.
+    fileref-secret: ${U03_FILEREF_SECRET:}
     require-drive: ${U03_REQUIRE_DRIVE:false}
-    drive:
-      service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
-      shared-drive-id: ${GOOGLE_SHARED_DRIVE_ID:}
-  # Việc nền (U03, logical-components §4). Số mức backoff = số lượt thử lại tối đa.
+    local-storage-dir: ${U03_LOCAL_STORAGE_DIR:}
+    upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:}
+    drive-service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
+    shared-drive-id: ${GOOGLE_SHARED_DRIVE_ID:}
   jobs:
-    max-attempts: ${U03_JOB_MAX_ATTEMPTS:5}
-    backoff: ${U03_JOB_BACKOFF:30s,1m,2m,4m,8m}
-    sweep-interval: ${U03_SWEEP_INTERVAL:1m}
-    sweep-republish-after: ${U03_SWEEP_REPUBLISH_AFTER:5m}
-    scan-interval: ${U03_SCAN_INTERVAL:1m}
     handler-timeout: ${U03_JOB_HANDLER_TIMEOUT:60s}
-    worker-max-concurrency: ${U03_WORKER_MAX_CONCURRENCY:4}
-
-logging:
-  pattern:
-    level: "%5p [%X{correlationId:-}]"
+  settings:
+    cache-ttl: ${U03_SETTINGS_CACHE_TTL:30s}
+  backup:
+    folder-id: ${GOOGLE_BACKUP_FOLDER_ID:}
+    public-key: ${U03_BACKUP_PUBLIC_KEY:}
+    db-host: ${POSTGRES_HOST:localhost}
+    db-port: ${POSTGRES_PORT:5432}
+    db-name: ${POSTGRES_DB:platform}
+    db-user: backup_reader
+    db-password: ${BACKUP_DB_PASSWORD:}
+    tmp-dir: ${U03_BACKUP_TMP_DIR:}
+    local-dir: ${U03_LOCAL_BACKUP_DIR:}

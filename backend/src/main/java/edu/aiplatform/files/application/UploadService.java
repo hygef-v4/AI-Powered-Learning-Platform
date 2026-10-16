@@ -1,31 +1,23 @@
 package edu.aiplatform.files.application;
 
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.FileUpload;
 import edu.aiplatform.files.domain.FileNameSanitizer;
-import edu.aiplatform.files.domain.FileRefClaims;
+import edu.aiplatform.files.domain.FileType;
+import edu.aiplatform.files.domain.PurposeLimits;
 import edu.aiplatform.files.domain.PurposePolicy;
-import edu.aiplatform.files.domain.StoredFile;
-import edu.aiplatform.files.infrastructure.FileRefSigner;
-import edu.aiplatform.files.port.ArtifactPurpose;
-import edu.aiplatform.files.port.FileRef;
-import edu.aiplatform.files.port.StoragePort;
-import edu.aiplatform.files.port.StorageUnavailableException;
-import edu.aiplatform.files.port.StorageWriteException;
-import edu.aiplatform.files.port.UploadedFile;
-import edu.aiplatform.identity.port.AuthorizationDecision;
-import edu.aiplatform.identity.port.AuthorizationPort;
-import edu.aiplatform.jobs.port.JobPort;
-import edu.aiplatform.jobs.port.JobTypes;
-import edu.aiplatform.shared.contract.ActorRef;
-import edu.aiplatform.shared.contract.ResourceRef;
-import edu.aiplatform.shared.web.ApiException;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.IAuthorization;
+import edu.aiplatform.identity.contract.ResourceRef;
+import edu.aiplatform.jobs.contract.IJob;
+import edu.aiplatform.jobs.contract.JobTypes;
+import edu.aiplatform.shared.error.ApiException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestOutputStream;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
@@ -33,193 +25,168 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-/**
- * Upload (F1, P1): tối đa 5 upload cùng lúc; kiểm quyền, kích thước, loại tệp theo nội dung; SHA-256; đẩy tệp và
- * metadata qua {@link StoragePort}; lỗi giữa chừng thì dọn tệp đã tạo; luôn xóa tệp tạm (BR-U03-01…08, 41).
- */
+/** F1 Upload (P1): ghi ra tệp tạm, kiểm trần và loại theo Settings, lưu lên Drive, trả {@code FileRef}. */
 @Service
 public class UploadService {
 
+    static final Duration FILE_REF_TTL = Duration.ofHours(1);
+    static final int MAX_CONCURRENT_UPLOADS = 5;
+    static final int DELETE_ATTEMPTS = 3;
+
     private static final Logger log = LoggerFactory.getLogger(UploadService.class);
-    static final String UPLOAD_ACTION = "files.upload";
-    static final int CLEANUP_ATTEMPTS = 3;
 
-    private final StoragePort storage;
+    private final IAuthorization authorization;
+    private final PurposePolicy policy;
     private final ContentInspector inspector;
+    private final IStorage storage;
     private final FileRefSigner signer;
-    private final AuthorizationPort authorization;
-    private final FileAudit audit;
-    private final JobPort jobs;
-    private final Semaphore permits;
-    private final Path tmpDir;
-    private final Duration fileRefTtl;
+    private final FileAudit fileAudit;
+    private final IJob jobs;
     private final Clock clock;
+    private final Path tmpDir;
+    private final Semaphore permits = new Semaphore(MAX_CONCURRENT_UPLOADS);
 
-    @Autowired
-    public UploadService(StoragePort storage, ContentInspector inspector, FileRefSigner signer,
-                         AuthorizationPort authorization, FileAudit audit, JobPort jobs, FilesProperties properties) {
-        this(storage, inspector, signer, authorization, audit, jobs, properties.maxConcurrentUploads(),
-                properties.uploadTmpDir(), properties.fileRefTtl(), Clock.systemUTC());
-    }
-
-    UploadService(StoragePort storage, ContentInspector inspector, FileRefSigner signer, AuthorizationPort authorization,
-                  FileAudit audit, JobPort jobs, int maxConcurrent, Path tmpDir, Duration fileRefTtl, Clock clock) {
-        this.storage = storage;
-        this.inspector = inspector;
-        this.signer = signer;
+    public UploadService(IAuthorization authorization, PurposePolicy policy, ContentInspector inspector,
+                         IStorage storage, FileRefSigner signer, FileAudit fileAudit, IJob jobs, Clock clock,
+                         FilesProperties properties) {
         this.authorization = authorization;
-        this.audit = audit;
+        this.policy = policy;
+        this.inspector = inspector;
+        this.storage = storage;
+        this.signer = signer;
+        this.fileAudit = fileAudit;
         this.jobs = jobs;
-        this.permits = new Semaphore(maxConcurrent);
-        this.tmpDir = tmpDir;
-        this.fileRefTtl = fileRefTtl;
         this.clock = clock;
+        this.tmpDir = Path.of(properties.uploadTmpDir() == null || properties.uploadTmpDir().isBlank()
+                ? System.getProperty("java.io.tmpdir") : properties.uploadTmpDir());
     }
 
-    public UploadResult upload(ActorRef actor, ArtifactPurpose purpose, UploadedFile file) {
+    public UploadResult upload(Actor actor, ArtifactPurpose purpose, FileUpload file) {
         if (!permits.tryAcquire()) {
-            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "UPLOAD_BUSY",
-                    "Hệ thống đang bận, vui lòng thử lại sau.");
+            throw ApiException.unavailable("UPLOAD_BUSY", "Hệ thống đang bận, thử lại sau");
         }
-        Path tmp = null;
+        Path temp = null;
         try {
-            PurposePolicy policy = PurposePolicy.of(purpose);
-            authorize(actor, purpose, policy);
-            if (file.byteSize() > policy.maxBytes()) {
-                throw tooLarge(actor, purpose, policy);
+            checkAllowed(actor, purpose);
+            PurposeLimits limits = policy.limits(purpose);
+            String name = FileNameSanitizer.sanitize(file.originalFileName());
+            if (file.byteSize() > limits.maxBytes()) {
+                throw tooLarge(actor, purpose, limits);
             }
-            String fileName = FileNameSanitizer.sanitize(file.originalFileName());
-            tmp = Files.createTempFile(ensureTmpDir(), "upload-", ".part");
-            CopyResult copy = copyWithLimit(file.content(), tmp, policy.maxBytes());
-            if (copy == null) {
-                throw tooLarge(actor, purpose, policy);
+            Files.createDirectories(tmpDir);
+            temp = Files.createTempFile(tmpDir, "upload-", ".tmp");
+            CopyResult copy = copyWithLimit(file.content(), temp, limits.maxBytes());
+            if (copy.tooLarge()) {
+                throw tooLarge(actor, purpose, limits);
             }
-            String mediaType = inspector.detect(tmp, fileName);
-            if (!policy.allowsMediaType(mediaType)) {
-                audit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
-                        Map.of("purpose", purpose.name(), "mediaType", mediaType));
-                throw new ApiException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE_TYPE_NOT_ALLOWED",
-                        "Loại tệp không được hỗ trợ cho mục đích này.");
+            Optional<FileType> type = inspector.detect(temp, name);
+            if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
+                fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
+                        Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
+                throw ApiException.unsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
             }
-            String fileId = put(tmp, StoredFile.metadata(actor.accountId(), purpose, mediaType, fileName, copy.sha256()));
-            Instant expiresAt = clock.instant().plus(fileRefTtl);
-            FileRef ref = signer.sign(new FileRefClaims(fileId, actor.accountId(), purpose, expiresAt));
-            return new UploadResult(ref, expiresAt, mediaType, copy.byteSize(), fileName);
+            if (!storage.available()) {
+                throw ApiException.unavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
+            }
+            StoredMetadata metadata = new StoredMetadata(actor.accountId(), purpose, name, type.get().mediaType(),
+                    copy.bytes(), copy.sha256());
+            String fileId = store(purpose, temp, metadata);
+            return sign(fileId, metadata);
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            throw ApiException.unavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
         } finally {
-            deleteQuietly(tmp);
+            deleteQuietly(temp);
             permits.release();
         }
     }
 
-    private void authorize(ActorRef actor, ArtifactPurpose purpose, PurposePolicy policy) {
-        if (actor == null) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Vui lòng đăng nhập.");
-        }
-        boolean allowed = policy.allowsRole(actor.role());
-        String reason = "ROLE_NOT_ALLOWED";
-        if (allowed) {
-            AuthorizationDecision decision = authorization.authorize(actor, UPLOAD_ACTION,
-                    new ResourceRef("FILE_PURPOSE_" + purpose.name(), null));
-            allowed = decision.allowed();
-            reason = decision.reasonCode();
-        }
-        if (!allowed) {
-            audit.uploadDenied(actor.accountId(), reason, Map.of("purpose", purpose.name()));
-            throw new ApiException(HttpStatus.FORBIDDEN, "FILE_UPLOAD_FORBIDDEN",
-                    "Bạn không có quyền tải lên tệp cho mục đích này.");
+    private void checkAllowed(Actor actor, ArtifactPurpose purpose) {
+        if (!authorization.authorize(actor, "FILE_UPLOAD", ResourceRef.none()).allowed()
+                || !policy.canUpload(actor.role(), purpose)) {
+            fileAudit.uploadDenied(actor.accountId(), "ROLE_NOT_ALLOWED", Map.of("purpose", purpose.name()));
+            throw ApiException.forbidden("FILE_UPLOAD_FORBIDDEN");
         }
     }
 
-    private ApiException tooLarge(ActorRef actor, ArtifactPurpose purpose, PurposePolicy policy) {
-        audit.uploadDenied(actor.accountId(), "FILE_TOO_LARGE", Map.of("purpose", purpose.name()));
-        return new ApiException(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE",
-                "Tệp vượt quá " + (policy.maxBytes() / PurposePolicy.MB) + " MB.");
+    private ApiException tooLarge(Actor actor, ArtifactPurpose purpose, PurposeLimits limits) {
+        fileAudit.uploadDenied(actor.accountId(), "FILE_TOO_LARGE",
+                Map.of("purpose", purpose.name(), "maxSizeMb", limits.maxSizeMb()));
+        return ApiException.payloadTooLarge("FILE_TOO_LARGE", "Tệp vượt " + limits.maxSizeMb() + " MB");
     }
 
-    private String put(Path tmp, Map<String, String> metadata) {
+    private String store(ArtifactPurpose purpose, Path temp, StoredMetadata metadata) {
         try {
-            return storage.put(tmp, metadata);
-        } catch (StorageWriteException e) {
-            if (e.orphanFileId() != null) {
-                cleanup(e.orphanFileId());
-            }
-            throw unavailable(e);
+            return storage.put(purpose, temp, metadata);
         } catch (StorageUnavailableException e) {
-            throw unavailable(e);
+            throw ApiException.unavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
         }
     }
 
-    /** Xóa tệp ghi dở, thử 3 lần; vẫn lỗi thì giao cho worker qua việc `DRIVE_CLEANUP` (BR-U03-06, P1). */
-    void cleanup(String orphanFileId) {
-        for (int i = 0; i < CLEANUP_ATTEMPTS; i++) {
+    private UploadResult sign(String fileId, StoredMetadata metadata) {
+        try {
+            Instant expiresAt = clock.instant().plus(FILE_REF_TTL);
+            var payload = new FileRefSigner.Payload(fileId, metadata.ownerAccountId(), metadata.purpose(),
+                    metadata.mediaType(), metadata.byteSize(), metadata.originalFileName(), metadata.sha256(),
+                    expiresAt.getEpochSecond());
+            return new UploadResult(signer.sign(payload), metadata.mediaType(), metadata.byteSize(),
+                    metadata.originalFileName(), expiresAt);
+        } catch (RuntimeException e) {
+            compensate(fileId);
+            throw e;
+        }
+    }
+
+    /** Xóa tệp đã lên Drive khi bước sau lỗi; xóa không được thì gửi việc dọn (BR-U03-06). */
+    void compensate(String fileId) {
+        for (int attempt = 1; attempt <= DELETE_ATTEMPTS; attempt++) {
             try {
-                storage.delete(orphanFileId);
+                storage.delete(fileId);
                 return;
             } catch (RuntimeException e) {
-                log.warn("Cleanup of partial upload failed (attempt {}): {}", i + 1, e.toString());
+                log.warn("Xóa tệp dở dang lỗi, lần {}", attempt);
             }
         }
-        // Khóa idempotent không chứa fileId để không lộ ID tệp trong log (NFR-U03-24).
-        String key = "drive-cleanup:" + UUID.nameUUIDFromBytes(orphanFileId.getBytes(StandardCharsets.UTF_8));
-        jobs.enqueue(JobTypes.DRIVE_CLEANUP, Map.of("fileId", orphanFileId), key);
+        jobs.enqueue(JobTypes.DRIVE_CLEANUP, Map.of("storage", "FILES", "ref", fileId), "cleanup:" + fileId);
     }
 
-    private static ApiException unavailable(StorageUnavailableException e) {
-        log.warn("Storage unavailable during upload: {}", e.getMessage());
-        return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "STORAGE_UNAVAILABLE",
-                "Lưu trữ tệp tạm thời không khả dụng, vui lòng thử lại sau.");
+    record CopyResult(long bytes, String sha256, boolean tooLarge) {
     }
 
-    private record CopyResult(long byteSize, String sha256) {}
-
-    /** Ghi ra tệp tạm, đếm byte và tính SHA-256; `null` khi vượt trần (không đọc tiếp). */
-    private static CopyResult copyWithLimit(InputStream in, Path target, long maxBytes) throws IOException {
-        MessageDigest digest = sha256();
-        long total = 0;
-        byte[] buffer = new byte[64 * 1024];
-        try (InputStream source = in; OutputStream out = new DigestOutputStream(Files.newOutputStream(target), digest)) {
-            int n;
-            while ((n = source.read(buffer)) != -1) {
-                total += n;
-                if (total > maxBytes) {
-                    return null;
-                }
-                out.write(buffer, 0, n);
-            }
-        }
-        return new CopyResult(total, HexFormat.of().formatHex(digest.digest()));
-    }
-
-    private Path ensureTmpDir() throws IOException {
-        return Files.createDirectories(tmpDir);
-    }
-
-    private static void deleteQuietly(Path tmp) {
-        if (tmp == null) {
-            return;
-        }
+    static CopyResult copyWithLimit(InputStream in, Path target, long maxBytes) throws IOException {
+        MessageDigest digest;
         try {
-            Files.deleteIfExists(tmp);
-        } catch (IOException e) {
-            log.warn("Could not delete temp upload: {}", e.toString());
-        }
-    }
-
-    private static MessageDigest sha256() {
-        try {
-            return MessageDigest.getInstance("SHA-256");
+            digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
+        }
+        long total = 0;
+        try (InputStream source = new DigestInputStream(in, digest); OutputStream out = Files.newOutputStream(target)) {
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = source.read(buffer)) != -1) {
+                total += read;
+                if (total > maxBytes) {
+                    return new CopyResult(total, null, true);
+                }
+                out.write(buffer, 0, read);
+            }
+        }
+        return new CopyResult(total, HexFormat.of().formatHex(digest.digest()), false);
+    }
+
+    private static void deleteQuietly(Path path) {
+        if (path != null) {
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                log.warn("Không xóa được tệp tạm");
+            }
         }
     }
 }

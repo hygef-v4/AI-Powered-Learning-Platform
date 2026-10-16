@@ -10,20 +10,23 @@ import org.junit.jupiter.api.Test;
 class ForbiddenKeyGuardTest {
 
     @Test
-    void allowsIdsAndReferences() {
-        assertThatCode(() -> ForbiddenKeyGuard.check(Map.of("accountId", "a1", "purpose", "ACTIVATION")))
+    void allowsOrdinaryKeys() {
+        assertThatCode(() -> ForbiddenKeyGuard.check(Map.of("assignmentId", "a1", "inputTokens", 120)))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void rejectsTopLevelForbiddenKey() {
-        assertThatThrownBy(() -> ForbiddenKeyGuard.check(Map.of("otpCode", "123456")))
-                .isInstanceOf(IllegalArgumentException.class);
+    void rejectsForbiddenKeyIgnoringCase() {
+        assertThatThrownBy(() -> ForbiddenKeyGuard.check(Map.of("Password", "x")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("$.Password");
     }
 
     @Test
-    void rejectsNestedForbiddenKeyInMapsAndLists() {
-        Map<String, Object> payload = Map.of("items", List.of(Map.of("meta", Map.of("refreshToken", "x"))));
-        assertThatThrownBy(() -> ForbiddenKeyGuard.check(payload)).isInstanceOf(IllegalArgumentException.class);
+    void rejectsForbiddenKeyInNestedMapsAndLists() {
+        Map<String, Object> data = Map.of("items", List.of(Map.of("ok", 1), Map.of("meta", Map.of("otp", "123456"))));
+        assertThatThrownBy(() -> ForbiddenKeyGuard.check(data))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("$.items[1].meta.otp");
     }
 }

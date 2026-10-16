@@ -1,10 +1,10 @@
 # User Stories — Inception revision 2026-10-13
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
 **50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
 
-Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Quiz Practice và GROUP Graded tạm giữ D01/D02. Chưa có bằng chứng survey; xem requirements/revision-decisions-2026-10-13.md.
+Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Đã chốt 2026-10-15: Quiz chỉ Practice (D01), GROUP chỉ Graded (D02), bài nhóm không có AI cho Student (D03 bỏ), quota chung theo ngày và trần hệ thống (D04). Chưa có bằng chứng survey.
 
 ### US-AIC-001 - Kết nối API cá nhân
 
@@ -58,7 +58,7 @@ Given external agent, When ghi usage, Then chỉ reported/unavailable, không đ
 
 #### Scenario 1
 
-Given educator đúng quyền, When reserve đồng thời, Then quota atomic giờ/ngày theo cấu hình, không Student.
+Given educator đúng quyền, When reserve đồng thời, Then quota atomic theo ngày theo cấu hình, không Student.
 
 #### Scenario 2
 
@@ -176,7 +176,7 @@ Given ASSIGNMENT, When cấu hình, Then INDIVIDUAL/GROUP và diagramEnabled đ�
 
 #### Scenario 2
 
-Given QUIZ, When publish, Then không yêu cầu Lesson; Practice hiện hành D01.
+Given QUIZ, When publish, Then không yêu cầu Lesson; Quiz chỉ Practice (D01).
 
 #### Scenario 3
 
@@ -801,7 +801,7 @@ Given lớp và nhóm hợp lệ, When soạn, Then khung/phần/rubric dùng do
 
 #### Scenario 2
 
-Given diagramEnabled=false/true, When cấu hình, Then không bắt buộc nhóm có diagram; mode Graded giữ đến D02.
+Given diagramEnabled=false/true, When cấu hình, Then không bắt buộc nhóm có diagram; mode chỉ Graded (D02).
 
 ### US-GRP-004 - Nhận và làm phần Assignment nhóm
 
@@ -819,7 +819,7 @@ Given phần được giao/nhận, When edit, Then một editor/phần, version 
 
 #### Scenario 2
 
-Given personal AI/MCP, When lấy ngữ cảnh, Then chỉ phần được phép theo D03, không key hay bài khác.
+Given bài nhóm, When Student muốn dùng AI/MCP với tài liệu nhóm, Then không có tính năng AI cho bài nhóm; không lộ key hay bài khác.
 
 ### US-GRP-005 - Nộp tài liệu nhóm
 
@@ -925,7 +925,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** người dùng có phiên đang hoạt động
 - **When** người dùng đăng xuất hoặc phiên hết hạn
-- **Then** refresh token của phiên bị thu hồi phía server nên phiên không thể làm mới; access token còn lại hết hạn trong tối đa 15 phút (BR-U01-44, 45)
+- **Then** phiên bị xóa phía server nên không làm mới được và access token còn lại bị từ chối ở request tiếp theo (BR-U01-44, 45)
 
 
 
@@ -1012,7 +1012,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** một quyền hoặc phạm vi đang có hiệu lực
 - **When** quản trị viên thu hồi
-- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role làm refresh token hết hiệu lực ngay và access token còn lại hết hạn trong tối đa 15 phút (BR-U01-63)
+- **Then** thu hồi phạm vi môn/lớp có hiệu lực ngay ở request tiếp theo; đổi role xóa mọi phiên của người đó, request tiếp theo bị từ chối và phải đăng nhập lại (BR-U01-63)
 
 #### Scenario 3 - Người không phải quản trị viên thay đổi quyền
 
@@ -1039,7 +1039,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 - **Given** người dùng xác nhận đúng mật khẩu hiện tại và mật khẩu mới đạt chính sách
 - **When** người dùng yêu cầu đổi mật khẩu
-- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác không làm mới được nữa (access token còn lại hết hạn trong tối đa 15 phút) và người dùng nhận xác nhận
+- **Then** mật khẩu mới được lưu bằng cơ chế băm an toàn, các phiên khác bị xóa và bị từ chối ở request tiếp theo, phiên hiện tại giữ nguyên, và người dùng nhận xác nhận
 
 #### Scenario 2 - Thông tin không hợp lệ
 
@@ -1326,19 +1326,19 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 **Current UC trace**: UC 66; UC 14; UC 15. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là Admin, tôi muốn theo dõi backup độc lập trên Drive để người vận hành khôi phục được dữ liệu sau sự cố.
+**Story**: Là Admin, tôi muốn theo dõi backup database trên Drive để người vận hành khôi phục được dữ liệu sau sự cố.
 
 **Truy vết**: FR-038, FR-011, FR-033, REL-004; UC 66. Chi tiết trong requirements/council-features-2026-10-13.md.
 
 #### Scenario 1 - Backup hợp lệ
 
-- **Given** lịch/retention và Drive riêng tư đã cấu hình
-- **When** job dump nhất quán và upload archive/tệp/manifest được kiểm checksum
-- **Then** ghi SUCCESS/lịch sử, bảo vệ archive và giữ khóa giải mã riêng.
+- **Given** lịch và Drive riêng tư đã cấu hình
+- **When** job dump database nhất quán và upload archive được kiểm checksum
+- **Then** ghi SUCCESS/lịch sử, bảo vệ archive, giữ khóa giải mã riêng và chỉ giữ các bản trong 7 ngày gần nhất.
 
 #### Scenario 2 - Backup lỗi
 
-- **Given** upload lỗi hoặc tệp manifest thiếu
+- **Given** dump hoặc upload lỗi
 - **When** job kết thúc sau retry hữu hạn
 - **Then** không SUCCESS, giữ bản tốt trước và phát cảnh báo cho Admin qua U14.
 
@@ -1346,13 +1346,13 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** bản thành công và secrets khôi phục giữ riêng
 - **When** người vận hành restore vào môi trường cô lập
-- **Then** kiểm quyền, tài liệu/XML, bài nộp/điểm và usage/quota, remap tệp và lưu bằng chứng; không ghi đè production.
+- **Then** kiểm quyền, tài liệu/XML, bài nộp/điểm và usage/quota và lưu bằng chứng; tệp trên Drive không được khôi phục; không ghi đè production.
 
 #### Scenario 4 - Tách dashboard khỏi backup owner
 
 - **Given** dữ liệu backup/status thuộc U03
 - **When** Admin xem trạng thái qua UC 66/U15
-- **Then** chỉ metadata được trả qua port; cấu hình lịch/retention thuộc UC 15 (UC14 chỉ xem); story backup vẫn primary U03 dù UC xem là primary U15.
+- **Then** chỉ metadata được trả qua port; cấu hình lịch thuộc UC 15 (UC14 chỉ xem); story backup vẫn primary U03 dù UC xem là primary U15.
 
 
 

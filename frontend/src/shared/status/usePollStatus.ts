@@ -1,61 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { useEffect, useState } from "react";
 
-export type PollState<T> = {
-  data: T | undefined;
-  error: ApiError | undefined;
-  polling: boolean;
-};
-
-type Options<T> = {
-  /** Trạng thái cuối do unit sở hữu khai báo, ví dụ `INDEXED`, `FAILED`. */
-  isFinal: (data: T) => boolean;
-  intervalMs?: number;
-  /** `false` thì chưa poll (ví dụ chưa có id). */
-  enabled?: boolean;
-};
-
-/**
- * Poll API trạng thái của unit sở hữu mỗi 3 giây (NFR-U03-41); dừng ở trạng thái cuối, khi lỗi, hoặc khi rời trang.
- * U03 không có API trạng thái việc nền riêng (BR-U03-61).
- */
-export function usePollStatus<T>(path: string, { isFinal, intervalMs = 3000, enabled = true }: Options<T>): PollState<T> {
-  const [state, setState] = useState<PollState<T>>({ data: undefined, error: undefined, polling: enabled });
-  const isFinalRef = useRef(isFinal);
-  isFinalRef.current = isFinal;
+/** Poll trạng thái việc nền của unit sở hữu mỗi 3 giây, dừng ở trạng thái cuối hoặc khi rời trang (NFR-U03-41). */
+export function usePollStatus<T>(fetcher: () => Promise<T>, isFinal: (value: T) => boolean, intervalMs = 3000) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
-    if (!enabled) {
-      setState((s) => ({ ...s, polling: false }));
-      return;
-    }
-    let cancelled = false;
+    let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const controller = new AbortController();
-
-    const tick = async () => {
+    async function tick() {
       try {
-        const data = await apiFetch<T>(path, { signal: controller.signal });
-        if (cancelled) return;
-        const done = isFinalRef.current(data);
-        setState({ data, error: undefined, polling: !done });
-        if (!done) timer = setTimeout(tick, intervalMs);
+        const value = await fetcher();
+        if (stopped) return;
+        setData(value);
+        if (!isFinal(value)) timer = setTimeout(tick, intervalMs);
       } catch (e) {
-        if (cancelled) return;
-        setState((s) => ({ ...s, error: e instanceof ApiError ? e : undefined, polling: false }));
+        if (!stopped) setError(e);
       }
-    };
-
-    setState((s) => ({ ...s, polling: true }));
+    }
     void tick();
     return () => {
-      cancelled = true;
-      controller.abort();
+      stopped = true;
       if (timer) clearTimeout(timer);
     };
-  }, [path, intervalMs, enabled]);
+    // fetcher và isFinal do nơi gọi giữ ổn định; chỉ chạy lại khi đổi chu kỳ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intervalMs]);
 
-  return state;
+  return { data, error };
 }

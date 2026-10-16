@@ -2,63 +2,39 @@ package edu.aiplatform.jobs.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import edu.aiplatform.jobs.infrastructure.AmqpPublisher;
-import edu.aiplatform.jobs.port.DomainEvent;
-import edu.aiplatform.jobs.port.EventTypes;
+import edu.aiplatform.jobs.contract.DomainEvent;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
-/** BR-U03-70, 71. */
 class EventPublisherTest {
 
-    private final AmqpPublisher amqp = mock(AmqpPublisher.class);
-    private final EventPublisher publisher = new EventPublisher(amqp);
+    final IMessageSender sender = mock(IMessageSender.class);
+    final EventPublisher publisher = new EventPublisher(sender, new AfterCommitExecutor(Runnable::run));
 
-    @AfterEach
-    void clearTransaction() {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.clearSynchronization();
-        }
-        TransactionSynchronizationManager.setActualTransactionActive(false);
+    static DomainEvent event(Map<String, Object> payload) {
+        return new DomainEvent(1, UUID.randomUUID(), "backup.failed", "U03", Instant.now(), null, payload);
     }
 
     @Test
-    void publishesAfterCommit() {
-        TransactionSynchronizationManager.initSynchronization();
-        TransactionSynchronizationManager.setActualTransactionActive(true);
+    void lostEventsAreAcceptedSilently() {
+        doThrow(new RuntimeException("broker down")).when(sender).sendEvent(any());
 
-        publisher.publish(event(1, Map.of("classId", "c1", "accountId", "a1")));
-        verify(amqp, never()).publishEvent(any());
+        publisher.publish(event(Map.of("runId", "r")));
 
-        TransactionSynchronizationUtils.triggerAfterCommit();
-        verify(amqp).publishEvent(any());
+        verify(sender).sendEvent(any());
     }
 
     @Test
-    void publishesImmediatelyWithoutTransaction() {
-        publisher.publish(event(1, Map.of("classId", "c1")));
-        verify(amqp).publishEvent(any());
-    }
-
-    @Test
-    void rejectsUnsupportedSchemaVersionAndSecrets() {
-        assertThatThrownBy(() -> publisher.publish(event(2, Map.of()))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> publisher.publish(event(1, Map.of("resetToken", "x"))))
+    void forbiddenKeysAreRejected() {
+        assertThatThrownBy(() -> publisher.publish(event(Map.of("token", "x"))))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(amqp, never()).publishEvent(any());
-    }
-
-    private static DomainEvent event(int schemaVersion, Map<String, Object> payload) {
-        return new DomainEvent(schemaVersion, UUID.randomUUID(), EventTypes.ENROLLMENT_ACTIVATED, "U04", Instant.now(),
-                null, payload);
+        verify(sender, never()).sendEvent(any());
     }
 }

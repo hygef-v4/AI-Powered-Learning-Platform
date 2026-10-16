@@ -1,10 +1,10 @@
 # U01 Account & Access — business-logic-model
 
-> Current Construction revision 2026-10-13: 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Đồng bộ theo Inception, chỉ sửa tài liệu; chưa triển khai/kiểm runtime hoặc duyệt stage/code mới. Approval/checklist trước revision thuộc lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
-Nguồn: [shared contract](../../current-srs-contract.md), [Inception catalog](../../../inception/requirements/use-cases.md), [decisions](../../../inception/requirements/revision-decisions-2026-10-13.md). Baseline cũ: [snapshot](../../historical/baseline-before-66-uc-2026-10-13/README.md). Folder legacy `u01-account-and-access` không quyết định chức năng hiện hành.
+Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u01-account-and-access` là thiết kế của U01 hiện hành.
 
 Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-U01-xx` trong `business-rules.md`) và truy vết. Mọi lỗi trả về client đều ở dạng an toàn.
 
@@ -37,7 +37,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
 3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
-4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `JobPort.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
+4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `IJob.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
 
@@ -57,7 +57,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 5. Kiểm mật khẩu mới (BR-U01-30, 31). Không đạt → lỗi chính sách, ticket vẫn giữ để nhập lại.
 6. Băm mật khẩu, lưu `credential`, chuyển `ACTIVE`, xóa ticket (BR-U01-13, 32).
 7. Ghi audit `ACCOUNT_ACTIVATED`.
-8. Tự đăng nhập: xóa `failedLoginCount`, tạo refresh session gắn `credentialVersion`, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
+8. Tự đăng nhập: xóa `failedLoginCount`, tạo phiên mới, cấp access token 15 phút như F3 bước 7 (BR-U01-13, 44).
 
 **Ra**: phiên đăng nhập; người dùng qua Post-Login vào thẳng dashboard theo role (F15, BR-U01-48).
 
@@ -73,7 +73,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 4. Trạng thái khác `ACTIVE` → lỗi trung tính (BR-U01-40).
 5. Sai mật khẩu → tăng `failedLoginCount`; chạm 5 thì đặt `lockedUntil` + 15 phút và ghi audit `ACCOUNT_TEMP_LOCKED`. Trả lỗi trung tính, ghi audit `LOGIN_FAILED`.
 6. Đúng → xóa `failedLoginCount`, `lockedUntil`.
-7. Tạo refresh session gắn `credentialVersion` hiện tại, cấp access token 15 phút. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
+7. Tạo phiên mới (refresh token lưu băm trên Redis), cấp access token 15 phút mang mã phiên `sid`. Trả phiên kèm `homePath` theo role (BR-U01-44, 48; F15). Không có bước MFA (BR-U01-47).
 
 **Ra**: phiên đăng nhập hoặc lỗi trung tính **giống nhau** cho mọi nguyên nhân thất bại.
 
@@ -99,11 +99,11 @@ Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đ�
 **Vào**: `schoolEmail`.
 
 1. Chuẩn hóa, kiểm `RequestThrottle`.
-2. Chỉ khi tài khoản `ACTIVE`: gửi việc `OTP_DELIVERY(PASSWORD_RESET)` qua `JobPort.enqueue`; worker sinh mã và gửi mail như F1.
+2. Chỉ khi tài khoản `ACTIVE`: gửi việc `OTP_DELIVERY(PASSWORD_RESET)` qua `IJob.enqueue`; worker sinh mã và gửi mail như F1.
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng nhập `otpCode`: xác minh như F2 bước 1-3 (mục đích `PASSWORD_RESET`), nhận `otpTicket`.
 5. Người dùng nhập `newPassword` kèm ticket: kiểm như F2 bước 4-5.
-6. Lưu mật khẩu mới, tăng `credentialVersion` → **mọi phiên** bị thu hồi, xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
+6. Lưu mật khẩu mới, xóa **mọi phiên** của tài khoản (BR-U01-34), xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
 
 ### F6 - Đổi mật khẩu
 
@@ -113,7 +113,7 @@ Màn Password Change, mở từ User Profile.
 
 1. Sai mật khẩu hiện tại → từ chối, không đổi gì (US-IAM-006 S2).
 2. Kiểm chính sách (BR-U01-30, 31).
-3. Lưu, tăng `credentialVersion`, cấp lại phiên hiện tại với version mới; phiên khác vô hiệu (BR-U01-34).
+3. Lưu, xóa mọi phiên khác của tài khoản, giữ phiên hiện tại (BR-U01-34).
 4. Ghi audit `PASSWORD_CHANGED`.
 
 ## 4. Hồ sơ
@@ -164,15 +164,15 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 1. Kiểm quyền admin.
 2. Đích là chính mình và là hạ quyền → từ chối (BR-U01-65).
 3. Đích là `ADMIN` đang hoạt động cuối cùng và role mới khác `ADMIN` → từ chối (BR-U01-66).
-4. Role mới không giữ được phân công hiện có của đích (hỏi U04) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
-5. Lưu role, tăng `credentialVersion` → mọi phiên của đích bị thu hồi (BR-U01-63).
+4. Role mới không giữ được phân công hiện có của đích (hỏi U04 về môn, U05 về lớp) → từ chối, nêu môn/lớp (BR-U01-64). Ví dụ: hạ Subject Manager đang quản lý môn, hạ Teacher đang dạy lớp, hoặc đổi người đang phụ trách môn/lớp sang `ADMIN`.
+5. Lưu role, xóa mọi phiên của đích (BR-U01-63).
 6. Ghi audit `ROLE_CHANGED` với giá trị trước/sau.
 
 ### F12 - Vô hiệu hóa và mở lại (UC 12, trên Account Detail)
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
-2. Chuyển `DISABLED`, tăng `credentialVersion`, xóa OTP còn hiệu lực (BR-U01-71).
+2. Chuyển `DISABLED`, xóa mọi phiên, xóa OTP còn hiệu lực (BR-U01-71).
 3. Ghi audit `ACCOUNT_DISABLED`.
 
 **Mở lại**:
@@ -190,11 +190,11 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 
 ### F13 - `authorize(actor, action, resourceRef)`
 
-1. Access token không hợp lệ hoặc hết hạn → từ chối. `credentialVersion` chỉ được kiểm lúc refresh (BR-U01-44).
+1. Access token không hợp lệ, hết hạn, hoặc phiên `sid` của nó đã bị xóa → từ chối (BR-U01-44). Actor từ MCP do U06 dựng từ credential MCP còn hiệu lực (U06 tự kiểm hạn và thu hồi); các bước sau áp như với access token.
 2. Tài khoản không `ACTIVE` → từ chối.
 3. Role không có quyền với `action` → từ chối.
-4. `action` cần phạm vi → hỏi U04 xem actor có phụ trách môn/lớp chứa `resourceRef`. Không → từ chối.
-5. Không gọi được U04 → **từ chối** (BR-U01-93).
+4. `action` cần phạm vi → hỏi U04 (`ISubjectScope`: actor có là Chủ nhiệm của môn) hoặc U05 (`IClassScope`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.
+5. Không gọi được U04/U05 → **từ chối** (BR-U01-93).
 6. Trả `AuthorizationDecision`. Mọi lần từ chối trên hành động nhạy cảm ghi audit `ACCESS_DENIED`.
 
 Quy tắc theo role (BR-U01-60):
@@ -212,7 +212,7 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 
 | Sự kiện | Người nhận |
 |---|---|
-| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U16 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
+| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U15 đếm tài khoản qua `IAccountLookup`, không nghe sự kiện này) |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
@@ -222,11 +222,11 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U13 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
-- No fabricated survey/implementation evidence. D01 Quiz Practice, D02 Group Graded, D03 own-editable group AI context retained provisionally; numeric quota D04 and backup/activity retention require settings confirmation.
+- No fabricated survey/implementation evidence. Decided 2026-10-15: D01 Quiz Practice only, D02 Group Graded only, D03 dropped (no student AI for group work), D04 daily quota plus global cap. Backup/activity retention require settings confirmation.
 
 ## Kiểm tra revision bắt buộc
 
