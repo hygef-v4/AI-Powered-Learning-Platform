@@ -57,25 +57,25 @@ stateDiagram-v2
 
 ## 4. Contract
 
-### Port U08 cung cấp
+### Interface U08 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `SubmissionQueryPort` | `listSubmissions(assignmentId, classId)` → trạng thái từng sinh viên và lượt được chấm; `getSubmission(attemptId)` → nội dung, `receiptHash`, `submittedAt`, `late`, `classId`, `accountId`; `listStudentsWithoutSubmission(assignmentId, classId)` | U09, U14 | Chấm và theo dõi nộp bài; nhắc hạn người chưa nộp |
-| `ActivityWritePort` | `record(actor, workRef, events)` | U11, U12 | Ghi sự kiện rời trang của lượt Quiz và tài liệu nhóm sau khi unit đó đã kiểm quyền |
-| `ActivityQueryPort` | `summary(workRef, accountId)` → `ActivitySummary` | U09 | Hiện dữ liệu rời trang trong UC 42 sau khi U09 kiểm phân công |
-| `AssignmentLifecycleListener` (contract của U07, U08 cài) | `onRetired` (tự nộp lượt đang làm), `onOpened` (không làm gì) | U07 | Tự nộp khi bài bị ngưng giao |
+| `ISubmissionQuery` | `listSubmissions(assignmentId, classId)` → trạng thái từng sinh viên và lượt được chấm; `getSubmission(attemptId)` → nội dung, `receiptHash`, `submittedAt`, `late`, `classId`, `accountId`; `listStudentsWithoutSubmission(assignmentId, classId)` | U09, U14 | Chấm và theo dõi nộp bài; nhắc hạn người chưa nộp |
+| `IActivityWrite` | `record(actor, workRef, events)` | U11, U12 | Ghi sự kiện rời trang của lượt Quiz và tài liệu nhóm sau khi unit đó đã kiểm quyền |
+| `IActivityQuery` | `summary(workRef, accountId)` → `ActivitySummary` | U09 | Hiện dữ liệu rời trang trong UC 42 sau khi U09 kiểm phân công |
+| `IAssignmentLifecycleListener` (contract của U07, U08 cài) | `onRetired` (tự nộp lượt đang làm), `onOpened` (không làm gì) | U07 | Tự nộp khi bài bị ngưng giao |
 | `StudentClassSection`, `DashboardNavEntry` (contract của U05, U08 cài) | - | U05 | Phần Bài tập trên Student Class Detail; lối vào Student Assignments trên Class Dashboard |
-| `AiTaskResultHandler` cho `PRACTICE_FEEDBACK`, `McpToolProvider` (contract của U06, U08 cài) | - | U06 | Nhận phản hồi AI; tool `read_own_work`, `read_authorized_submission`, `record_private_feedback` |
-| `ScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; khai báo `activity.retentionDays` |
+| `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`, `IMcpToolProvider` (contract của U06, U08 cài) | - | U06 | Nhận phản hồi AI; tool `read_own_work`, `read_authorized_submission`, `record_private_feedback` |
+| `IScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; khai báo `activity.retentionDays` |
 | Hook `useActivityTracker`, component `ActivityTimeline` | - | Frontend U09, U11, U12 | Gửi sự kiện rời trang từ trình duyệt; hiện dòng thời gian cho giảng viên |
 
 ### Contract U08 khai báo (unit khác cài)
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `SubmissionListener` | `onSubmitted(attemptId)` | U09 | Tạo dòng chờ chấm trong cùng transaction nộp bài `GRADED` mà U08 không phụ thuộc ngược U09 |
-| `GroupWorkStatusPort` | `statusFor(accountId, assignmentIds)` | U12 | Trạng thái bài nhóm của người học trên Student Assignments |
+| `ISubmissionListener` | `onSubmitted(attemptId)` | U09 | Tạo dòng chờ chấm trong cùng transaction nộp bài `GRADED` mà U08 không phụ thuộc ngược U09 |
+| `IGroupWorkStatus` | `statusFor(accountId, assignmentIds)` | U12 | Trạng thái bài nhóm của người học trên Student Assignments |
 | Slot frontend `StudentAssignmentResult` | - | U09 | Điểm đã công bố và phân bố ẩn danh trên từng dòng Student Assignments |
 | Slot frontend `SubmissionResultSection` | - | U09 | Điểm và nhận xét đã công bố của lượt được chấm trên Submission History |
 | Slot frontend `GroupWorkEntry` | - | U12 | Nút mở bài nhóm trên Assignment Detail |
@@ -83,16 +83,16 @@ stateDiagram-v2
 
 Chưa có U09, U12, U13 thì: không tạo dòng chờ chấm, không hiện điểm; bài nhóm chỉ có nhãn, không có nút; không hiện tài liệu gắn kèm.
 
-### Port U08 dùng
+### Interface U08 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R5, R3/R4 |
-| `AuditPort` | U02 | Audit |
-| `ArtifactPort`, `SettingsPort` | U03 | Ảnh trong bài làm; thời hạn giữ dữ liệu hoạt động |
-| `ClassAccessPort` | U05 | Ghi danh, lớp đang mở của người học |
-| `AiTaskPort` | U06 | Gửi task phản hồi Practice |
-| `AssignmentQueryPort`, `RubricPort`, `DocumentModelPort`, `DocxPort` | U07 | Bài, lịch, khung, rubric; kiểm và chuyển đổi tài liệu |
+| `IAuthorization` | U01 | Kiểm R5, R3/R4 |
+| `IAudit` | U02 | Audit |
+| `IArtifact`, `ISettings` | U03 | Ảnh trong bài làm; thời hạn giữ dữ liệu hoạt động |
+| `IClassAccess` | U05 | Ghi danh, lớp đang mở của người học |
+| `IAiTask` | U06 | Gửi task phản hồi Practice |
+| `IAssignmentQuery`, `IRubric`, `IDocumentModel`, `IDocx` | U07 | Bài, lịch, khung, rubric; kiểm và chuyển đổi tài liệu |
 
 ## 5. API
 

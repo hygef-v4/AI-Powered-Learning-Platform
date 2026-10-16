@@ -10,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | Lưu trữ | PostgreSQL + Spring Data JPA | Như các unit khác |
 | Nhận sự kiện | Listener trên queue `jobs.notification` bind `platform.events` | Hạ tầng của U03 |
-| Email | Job `EMAIL_SEND` trên `jobs.email`, gửi bằng `MailPort` của U01 (Brevo, Mailpit) | Dùng chung SMTP |
+| Email | Job `EMAIL_SEND` trên `jobs.email`, gửi bằng `IMail` của U01 (Brevo, Mailpit) | Dùng chung SMTP |
 | Trần email | Biến `U14_EMAIL_DAILY_CAP` (mặc định 300, bằng hạn mức gói miễn phí của Brevo) | Đổi được khi đổi gói |
-| Realtime | `SseHub` của U12, kênh theo tài khoản | Dùng chung |
+| Realtime | `ISseHub` của U12, kênh theo tài khoản | Dùng chung |
 | Test | JUnit 5, Vitest; Testcontainers cho integration test do tester viết | Theo NFR-004 |

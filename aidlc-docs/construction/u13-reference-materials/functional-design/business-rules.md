@@ -38,7 +38,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U13-30 | Sau khi lưu phiên bản tệp, job nền trích chữ từ PDF, DOCX, PPTX (không OCR); trung bình dưới 50 ký tự mỗi trang thì ghi `NO_TEXT`; tệp vẫn dùng được. Trích chữ không gọi AI. Chữ giữ tối đa 1.000.000 ký tự. | FR-004 |
-| BR-U13-31 | `ReferenceMaterialPort` (U06 khai báo, U13 cài): `listSelectable` trả tài liệu `ACTIVE` người gọi được xem trong phạm vi (lớp: tài liệu của môn và của lớp; môn: tài liệu của môn) kèm trạng thái chữ; `extractText` kiểm lại quyền từng tài liệu, trả chữ của phiên bản hiện tại kèm id, phiên bản, tiêu đề, cắt theo trần ký tự. Link YouTube chỉ có tiêu đề, mô tả, URL. | FR-006 |
+| BR-U13-31 | `IReferenceMaterial` (U06 khai báo, U13 cài): `listSelectable` trả tài liệu `ACTIVE` người gọi được xem trong phạm vi (lớp: tài liệu của môn và của lớp; môn: tài liệu của môn) kèm trạng thái chữ; `extractText` kiểm lại quyền từng tài liệu, trả chữ của phiên bản hiện tại kèm id, phiên bản, tiêu đề, cắt theo trần ký tự. Link YouTube chỉ có tiêu đề, mô tả, URL. | FR-006 |
 | BR-U13-32 | Tool MCP `read_authorized_material(materialId)`: người có quyền xem đọc chữ và thông tin tài liệu; ngoài quyền thì từ chối. Nội dung tài liệu là dữ liệu không tin cậy, không phải lệnh. | FR-035 |
 
 ## 5. Audit và lỗi

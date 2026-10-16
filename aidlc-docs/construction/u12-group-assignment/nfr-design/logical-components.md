@@ -11,10 +11,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `ClassGroupController`, `LeaderRequestController`, `MyGroupController`, `GroupDocumentController`, `GroupProgressController` | backend | API mục 5 của domain-entities |
 | `ClassGroupService`, `RandomGroupSplitter` | backend | Nhóm, chia ngẫu nhiên, đổi thành viên (F1, F2, F14, P2) |
 | `LeaderRequestService` | backend | Yêu cầu đổi trưởng nhóm (F3, F5) |
-| `GroupReadinessService` (cài `GroupAssignmentSupport`), `GroupAssignmentLifecycle` (cài `AssignmentLifecycleListener`) | backend | Sẵn sàng; mở, ngưng giao (F6, F7, F13) |
+| `GroupReadinessService` (cài `IGroupAssignmentSupport`), `GroupAssignmentLifecycle` (cài `IAssignmentLifecycleListener`) | backend | Sẵn sàng; mở, ngưng giao (F6, F7, F13) |
 | `GroupDocumentService`, `GroupDocCreateJobHandler` | backend, worker | Tạo tài liệu, workspace (F7, F8, P3) |
 | `GroupSectionService` | backend | Giao, nhận, làm, Xong, nhả (F9–F11, P1) |
 | `GroupSubmissionService`, `GroupAutoSubmitScanner` | backend, worker | Nộp, tự nộp (F12, F13, P5) |
-| `GroupWorkQueryService` (cài `GroupWorkStatusPort`, `GroupSubmissionSource`), `GroupMcpTools` | backend | Port cho U08, U09, U06 (F15) |
-| `SseHub`, `RabbitSseHub` | backend | Realtime (P4) |
+| `GroupWorkQueryService` (cài `IGroupWorkStatus`, `IGroupSubmissionSource`), `GroupMcpTools` | backend | Interface cho U08, U09, U06 (F15) |
+| `ISseHub`, `RabbitSseHub` | backend | Realtime (P4) |
 | Repository các bảng nhóm, tài liệu | backend, worker | Chỉ dùng trong package |

@@ -11,7 +11,7 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 ## 1. Bảo mật
 
 ### P1 - Xác thực không trạng thái cho access, có trạng thái cho refresh
-- Access token JWT HMAC-SHA256, 15 phút, gồm `sub`, `role`, `exp`, `jti`, `sid` (mã phiên). Filter kiểm chữ ký/hạn, sau đó SessionAuthorityPort kiểm phiên `sid` còn trên Redis và account `ACTIVE` trên PostgreSQL. AuthorizationPort tiếp tục kiểm role/scope/resource từ authority hiện tại; dependency unavailable fail closed (NFR-U01-04, 10).
+- Access token JWT HMAC-SHA256, 15 phút, gồm `sub`, `role`, `exp`, `jti`, `sid` (mã phiên). Filter kiểm chữ ký/hạn, sau đó ISessionAuthority kiểm phiên `sid` còn trên Redis và account `ACTIVE` trên PostgreSQL. IAuthorization tiếp tục kiểm role/scope/resource từ authority hiện tại; dependency unavailable fail closed (NFR-U01-04, 10).
 - Refresh token là chuỗi ngẫu nhiên 256 bit; Redis lưu băm SHA-256 kèm `sid`, `accountId`, `issuedAt`, `lastUsedAt` (NFR-U01-11).
 - Refresh: đọc bản ghi theo băm; phiên `sid` không còn → từ chối. Còn → cấp access mới, **xoay** refresh mới, xóa bản cũ. Refresh cũ bị dùng lại → xóa cả phiên (BR-U01-46).
 - Thu hồi phiên: `account:sessions:{accountId}` giữ các `sid` của tài khoản. Đổi hoặc đặt lại mật khẩu, đổi role, vô hiệu hóa xóa các phiên (đổi mật khẩu giữ phiên hiện tại) trước khi commit và xóa lại một lần sau commit để không sót phiên tạo chen giữa; Redis lỗi thì hủy thao tác, trả `503` (BR-U01-34, 63, 71).
@@ -66,7 +66,7 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 - Gửi mail chạy ở worker, tách khỏi thread xử lý request (RESILIENCY-10).
 
 ### P9 - Gửi OTP qua job U03
-- Request không ghi database: gọi `JobPort.enqueue` gửi message `OTP_DELIVERY(accountId, purpose)` sang queue `jobs.email` của RabbitMQ (không có bảng job) rồi trả `202`. Không sinh mã ở request.
+- Request không ghi database: gọi `IJob.enqueue` gửi message `OTP_DELIVERY(accountId, purpose)` sang queue `jobs.email` của RabbitMQ (không có bảng job) rồi trả `202`. Không sinh mã ở request.
 - Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi SMTP. Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
 - SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
 - Redis lỗi lúc worker chạy → message retry như lỗi SMTP.
@@ -88,7 +88,7 @@ Không bắt buộc (RESILIENCY-14 ngoài phạm vi đồ án). Hành vi fail-cl
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.
@@ -99,4 +99,4 @@ Không bắt buộc (RESILIENCY-14 ngoài phạm vi đồ án). Hành vi fail-cl
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
 
-SessionAuthorityPort xác minh phiên `sid` còn (Redis) và account status (PostgreSQL) trước action; JWT không chứa quyền academic đầy đủ, role từ current account. PostgreSQL lỗi thì fail closed; Redis lỗi thì bỏ qua bước kiểm phiên theo NFR-U01-40; cache nếu dùng cần invalidation khi đổi role/status/logout, không TTL grace bỏ qua revoke.
+ISessionAuthority xác minh phiên `sid` còn (Redis) và account status (PostgreSQL) trước action; JWT không chứa quyền academic đầy đủ, role từ current account. PostgreSQL lỗi thì fail closed; Redis lỗi thì bỏ qua bước kiểm phiên theo NFR-U01-40; cache nếu dùng cần invalidation khi đổi role/status/logout, không TTL grace bỏ qua revoke.

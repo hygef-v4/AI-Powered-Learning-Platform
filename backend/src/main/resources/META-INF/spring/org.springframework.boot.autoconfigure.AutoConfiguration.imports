@@ -1,0 +1,14 @@
+edu.aiplatform.identity.contract.stub.IdentityContractStubs
+edu.aiplatform.audit.contract.stub.AuditContractStubs
+edu.aiplatform.files.contract.stub.FilesContractStubs
+edu.aiplatform.jobs.contract.stub.JobsContractStubs
+edu.aiplatform.settings.contract.stub.SettingsContractStubs
+edu.aiplatform.backup.contract.stub.BackupContractStubs
+edu.aiplatform.subjects.contract.stub.SubjectsContractStubs
+edu.aiplatform.academics.contract.stub.AcademicsContractStubs
+edu.aiplatform.ai.contract.stub.AiContractStubs
+edu.aiplatform.assignments.contract.stub.AssignmentsContractStubs
+edu.aiplatform.assignmentwork.contract.stub.AssignmentWorkContractStubs
+edu.aiplatform.grading.contract.stub.GradingContractStubs
+edu.aiplatform.quizzes.contract.stub.QuizzesContractStubs
+edu.aiplatform.groupdocs.contract.stub.GroupDocsContractStubs

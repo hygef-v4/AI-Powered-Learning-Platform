@@ -37,7 +37,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
 3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
-4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `JobPort.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
+4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `IJob.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
 
@@ -99,7 +99,7 @@ Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đ�
 **Vào**: `schoolEmail`.
 
 1. Chuẩn hóa, kiểm `RequestThrottle`.
-2. Chỉ khi tài khoản `ACTIVE`: gửi việc `OTP_DELIVERY(PASSWORD_RESET)` qua `JobPort.enqueue`; worker sinh mã và gửi mail như F1.
+2. Chỉ khi tài khoản `ACTIVE`: gửi việc `OTP_DELIVERY(PASSWORD_RESET)` qua `IJob.enqueue`; worker sinh mã và gửi mail như F1.
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng nhập `otpCode`: xác minh như F2 bước 1-3 (mục đích `PASSWORD_RESET`), nhận `otpTicket`.
 5. Người dùng nhập `newPassword` kèm ticket: kiểm như F2 bước 4-5.
@@ -193,7 +193,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 1. Access token không hợp lệ, hết hạn, hoặc phiên `sid` của nó đã bị xóa → từ chối (BR-U01-44). Actor từ MCP do U06 dựng từ credential MCP còn hiệu lực (U06 tự kiểm hạn và thu hồi); các bước sau áp như với access token.
 2. Tài khoản không `ACTIVE` → từ chối.
 3. Role không có quyền với `action` → từ chối.
-4. `action` cần phạm vi → hỏi U04 (`SubjectScopePort`: actor có là Chủ nhiệm của môn) hoặc U05 (`ClassScopePort`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.
+4. `action` cần phạm vi → hỏi U04 (`ISubjectScope`: actor có là Chủ nhiệm của môn) hoặc U05 (`IClassScope`: actor có dạy hoặc đang ghi danh vào lớp) chứa `resourceRef`. Không → từ chối.
 5. Không gọi được U04/U05 → **từ chối** (BR-U01-93).
 6. Trả `AuthorizationDecision`. Mọi lần từ chối trên hành động nhạy cảm ghi audit `ACCESS_DENIED`.
 
@@ -212,7 +212,7 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 
 | Sự kiện | Người nhận |
 |---|---|
-| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U15 đếm tài khoản qua `AccountLookupPort`, không nghe sự kiện này) |
+| `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U15 đếm tài khoản qua `IAccountLookup`, không nghe sự kiện này) |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
 | `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
@@ -222,7 +222,7 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.

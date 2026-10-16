@@ -1,6 +1,6 @@
 # U03 Job and Settings — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -81,7 +81,7 @@ Bỏ so với bản cũ: `LESSON_SCAN`, `YOUTUBE_CAPTION` (xử lý học liệu
 | `assignment.opened` | U07 |
 | `quiz.published` | U10 |
 | `grade.published` | U09 |
-| `group.membership-changed`, `group.leader-changed`, `group.leader-requested`, `group.leader-request-rejected`, `group.submitted` | U12 |
+| `group.membership-changed`, `group.leader-changed`, `group.leader-change-requested`, `group.leader-request-rejected`, `group.submitted` | U12 |
 | `class.announcement-posted` | U14 |
 | `backup.failed` | U03 |
 
@@ -126,29 +126,29 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 
 ## 10. Contract
 
-### Port U03 cung cấp
+### Interface U03 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ArtifactPort` | `store(actor, purpose, file)` → `FileRef`; `attach(fileRef, actor, purpose)` → `StoredFileInfo`; `issueDownloadToken(fileId, accountId)` → `DownloadToken`; `open(fileId)` → `InputStream` | U07, U08, U12 (ảnh trong tài liệu, nhúng ảnh khi xuất DOCX), U13 (học liệu) | Lưu tệp riêng tư, gắn tệp vào đối tượng, cấp link tải ngắn hạn sau khi unit sở hữu đã kiểm quyền, đọc tệp phía server |
-| `JobPort` | `enqueue(jobType, payload, idempotencyKey)` | U01, U03, U06, U12, U13, U14 | Gửi việc nền sau commit, không ghi database |
-| `EventPublisherPort` | `publish(DomainEvent)` | U03, U05, U07, U09, U10, U12, U14 | Phát sự kiện thông báo sau commit, không đảm bảo giao hàng |
-| `SettingsPort` | `get(key)` (có kiểu) | U03, U08 | Đọc giá trị cài đặt hiện hành, cache 30 giây |
-| `BackupStatusPort` | `latest()`, `list(page)` | U15 | Trạng thái và lịch sử backup cho Admin Dashboard, không có dữ liệu tải về |
+| `IArtifact` | `store(actor, purpose, file)` → `FileRef`; `attach(fileRef, actor, purpose)` → `StoredFileInfo`; `issueDownloadToken(fileId, accountId)` → `DownloadToken`; `open(fileId)` → `InputStream` | U07, U08, U12 (ảnh trong tài liệu, nhúng ảnh khi xuất DOCX), U13 (học liệu) | Lưu tệp riêng tư, gắn tệp vào đối tượng, cấp link tải ngắn hạn sau khi unit sở hữu đã kiểm quyền, đọc tệp phía server |
+| `IJob` | `enqueue(jobType, payload, idempotencyKey)` | U01, U03, U06, U12, U13, U14 | Gửi việc nền sau commit, không ghi database |
+| `IEventPublisher` | `publish(DomainEvent)` | U03, U05, U07, U09, U10, U12, U14 | Phát sự kiện thông báo sau commit, không đảm bảo giao hàng |
+| `ISettings` | `get(key)` (có kiểu) | U03, U08 | Đọc giá trị cài đặt hiện hành, cache 30 giây |
+| `IBackupStatus` | `latest()`, `list(page)` | U15 | Trạng thái và lịch sử backup cho Admin Dashboard, không có dữ liệu tải về |
 
 ### Contract U03 cung cấp (unit khác cài)
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `JobHandler` | `jobType()`, `queue()`, `handle(message)`, `onFailed(message, error)`, `timeout()` | U01, U03, U06, U12, U13, U14 | Xử lý một loại việc nền trong worker và chuyển dòng nghiệp vụ sang lỗi khi hết lượt |
-| `PendingSweeper` | `jobType()`, `findStalePending(olderThan)` | U03, U06, U12, U13, U14 | Trả các dòng còn chờ quá 5 phút để U03 gửi lại message bị mất |
-| `ScheduledScanner` | `name()`, `scan(now)` | U03 (lịch backup), U06 (giải phóng quota giữ quá hạn), U07 (mở, đóng bài theo lịch), U08 (tự nộp khi hết giờ, dọn dữ liệu hoạt động), U12 (tự nộp bài nhóm), U14 (nhắc hạn, gửi lại email hoãn) | Việc hẹn giờ chạy mỗi phút, cập nhật idempotent |
+| `IJobHandler` | `jobType()`, `queue()`, `handle(message)`, `onFailed(message, error)`, `timeout()` | U01, U03, U06, U12, U13, U14 | Xử lý một loại việc nền trong worker và chuyển dòng nghiệp vụ sang lỗi khi hết lượt |
+| `IPendingSweeper` | `jobType()`, `findStalePending(olderThan)` | U03, U06, U12, U13, U14 | Trả các dòng còn chờ quá 5 phút để U03 gửi lại message bị mất |
+| `IScheduledScanner` | `name()`, `scan(now)` | U03 (lịch backup), U06 (giải phóng quota giữ quá hạn), U07 (mở, đóng bài theo lịch), U08 (tự nộp khi hết giờ, dọn dữ liệu hoạt động), U12 (tự nộp bài nhóm), U14 (nhắc hạn, gửi lại email hoãn) | Việc hẹn giờ chạy mỗi phút, cập nhật idempotent |
 | `SettingDefinition` | khai báo `key`, nhóm, kiểu, mặc định, giới hạn | U03, U08 | Thêm mục cài đặt khóa–giá trị vào Settings |
-| `SettingsSectionProvider` | `sectionKey()`, `title()`, `summary()` | U06 | Thêm phần cài đặt do unit khác lưu (API AI chung, quota giảng viên) vào Setting List mà U03 không phụ thuộc ngược vào U06 |
+| `ISettingsSectionProvider` | `sectionKey()`, `title()`, `summary()` | U06 | Thêm phần cài đặt do unit khác lưu (API AI chung, quota giảng viên) vào Setting List mà U03 không phụ thuộc ngược vào U06 |
 
-### Port U03 dùng
+### Interface U03 dùng
 
-| Port | Unit | Cạnh |
+| Interface | Unit | Cạnh |
 |---|---|---|
-| `AuthorizationPort` | U01 | `C` - kiểm role upload và quyền `ADMIN` cho Settings; tới khi U01 xong, khung của U01 luôn từ chối |
-| `AuditPort` | U02 | `C` - audit; tới khi U02 xong, khung của U02 chỉ ghi ra log |
+| `IAuthorization` | U01 | `C` - kiểm role upload và quyền `ADMIN` cho Settings; tới khi U01 xong, bản tạm trong khung luôn cho phép |
+| `IAudit` | U02 | `C` - audit; tới khi U02 xong, bản tạm trong khung chỉ ghi ra log |

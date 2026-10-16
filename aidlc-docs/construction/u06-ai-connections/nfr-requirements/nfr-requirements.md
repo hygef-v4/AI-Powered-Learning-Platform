@@ -28,7 +28,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | SECURITY-01 | Compliant | Key mã hóa khi lưu; gọi provider qua HTTPS |
 | SECURITY-03 | Compliant | NFR-U06-30 |
 | SECURITY-05 | Compliant | Kiểm key, model, schema tham số tool và kết quả AI |
-| SECURITY-08 | Compliant | Chủ sở hữu hoặc Admin; tool kiểm quyền qua `AuthorizationPort` |
+| SECURITY-08 | Compliant | Chủ sở hữu hoặc Admin; tool kiểm quyền qua `IAuthorization` |
 | SECURITY-09 | Compliant | Khóa mã hóa từ biến môi trường, không giá trị mặc định |
 | SECURITY-10 | Compliant | Khóa phiên bản MCP SDK và thư viện kiểm JSON schema |
 | SECURITY-11 | Compliant | Không nhận URL người dùng; gửi AI ngữ cảnh tối thiểu |

@@ -23,10 +23,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Xem danh sách môn (UC 16)
 1. Admin mở Subject List từ Admin Dashboard; frontend gọi `GET /api/v1/admin/subjects` kèm từ khóa, trạng thái, trang.
-2. Kiểm quyền `ADMIN` qua `AuthorizationPort`; không phải thì `403` và audit (BR-U04-01, 51).
+2. Kiểm quyền `ADMIN` qua `IAuthorization`; không phải thì `403` và audit (BR-U04-01, 51).
 3. Truy vấn `subjects` theo mã hoặc tên, lọc trạng thái, sắp theo mã, tối đa 100 dòng (BR-U04-50).
-4. Lấy tên Chủ nhiệm môn của các dòng qua `AccountLookupPort.getContact`.
-5. Lấy số lớp của các môn trong trang qua `SubjectClassesPort.countClasses`; U05 chưa trả lời thì cột số lớp hiện "không khả dụng".
+4. Lấy tên Chủ nhiệm môn của các dòng qua `IAccountLookup.getContact`.
+5. Lấy số lớp của các môn trong trang qua `ISubjectClasses.countClasses`; U05 chưa trả lời thì cột số lớp hiện "không khả dụng".
 6. Trả danh sách; bấm một dòng mở Subject Detail.
 
 ### F2 - Thêm môn (UC 17)
@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Admin nhập mã, tên, mô tả; tùy chọn chọn Chủ nhiệm môn từ ô tìm (frontend gọi API tài khoản của U01, lọc role `SUBJECT_MANAGER`, trạng thái `ACTIVE`).
 3. Backend kiểm quyền `ADMIN`.
 4. Chuẩn hóa và kiểm mã: định dạng, độ dài, chưa tồn tại (BR-U04-02); kiểm tên, mô tả (BR-U04-06).
-5. Có Chủ nhiệm môn thì kiểm qua `AccountLookupPort.getContact`: phải `SUBJECT_MANAGER` và `ACTIVE` (BR-U04-03).
+5. Có Chủ nhiệm môn thì kiểm qua `IAccountLookup.getContact`: phải `SUBJECT_MANAGER` và `ACTIVE` (BR-U04-03).
 6. Lưu môn trạng thái `ACTIVE`, `version` 1.
 7. Ghi audit `SUBJECT_CREATED` (kèm Chủ nhiệm môn nếu có) trong cùng transaction.
 8. Đóng popup, danh sách tải lại.
@@ -43,7 +43,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Admin mở Subject Detail; frontend gọi `GET /api/v1/admin/subjects/{id}`.
 2. Kiểm quyền `ADMIN`; môn không tồn tại thì `404`.
 3. Trả mã, tên, mô tả, trạng thái, Chủ nhiệm môn (tên, email), `version`.
-4. Tab Lớp học gọi `GET /api/v1/admin/subjects/{id}/classes`; U04 lấy danh sách qua `SubjectClassesPort.listClassesOfSubject` và trả chỉ đọc (BR-U04-05). U05 không trả lời thì báo "không khả dụng".
+4. Tab Lớp học gọi `GET /api/v1/admin/subjects/{id}/classes`; U04 lấy danh sách qua `ISubjectClasses.listClassesOfSubject` và trả chỉ đọc (BR-U04-05). U05 không trả lời thì báo "không khả dụng".
 
 ### F4 - Sửa thông tin môn (UC 19)
 1. Trên tab Thông tin, Admin sửa tên hoặc mô tả, lưu kèm `version`; frontend gọi `PATCH /api/v1/admin/subjects/{id}`.
@@ -64,7 +64,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 **Lưu trữ**:
 1. Admin bấm Lưu trữ, xác nhận; frontend gọi `PUT /api/v1/admin/subjects/{id}/status` với `ARCHIVED` và `version`.
 2. Kiểm quyền `ADMIN`.
-3. Hỏi `SubjectClassesPort.countUnarchivedClasses`. Còn lớp chưa lưu trữ thì từ chối và trả danh sách lớp đó; U05 không trả lời thì từ chối (BR-U04-04).
+3. Hỏi `ISubjectClasses.countUnarchivedClasses`. Còn lớp chưa lưu trữ thì từ chối và trả danh sách lớp đó; U05 không trả lời thì từ chối (BR-U04-04).
 4. Chuyển `ARCHIVED` có điều kiện `version`; ghi audit `SUBJECT_ARCHIVED`.
 
 **Mở lại**:
@@ -72,11 +72,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm quyền, chuyển `ACTIVE`, ghi audit `SUBJECT_REOPENED`.
 
 ### F7 - Phạm vi môn cho phân quyền
-1. U01 gọi `SubjectScopePort.isSubjectManager(accountId, subjectId)` khi một hành động cần R2.
+1. U01 gọi `ISubjectScope.isSubjectManager(accountId, subjectId)` khi một hành động cần R2.
 2. U04 đọc `manager_id` hiện thời của môn, không cache; môn không tồn tại thì trả `false` (BR-U04-10).
 3. Khi U01 chặn đổi role (BR-U01-64), gọi `listManagedSubjects(accountId)` để biết người đó còn quản lý môn nào.
 
 ### F8 - Thông tin môn cho unit khác
-1. U05 gọi `SubjectQueryPort.isActive(subjectId)` trước khi tạo lớp, và `listManagedSubjects(accountId)` để dựng Manager Dashboard và Subject Detail của Subject Manager (UC 30).
+1. U05 gọi `ISubjectQuery.isActive(subjectId)` trước khi tạo lớp, và `listManagedSubjects(accountId)` để dựng Manager Dashboard và Subject Detail của Subject Manager (UC 30).
 2. U07, U10, U13 gọi `isActive` trước khi cho sửa tài nguyên cấp môn (BR-U04-07).
 3. U15 gọi `countSubjectsByStatus()` cho Admin Dashboard.

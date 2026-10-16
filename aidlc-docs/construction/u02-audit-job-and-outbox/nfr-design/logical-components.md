@@ -13,20 +13,20 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
  +------------------------------+         +-------------------------+
  | service nghiệp vụ            |         | AuditController         |
  |   -> ghi dòng nghiệp vụ      |         |   -> AuditQueryService  |
- |   -> AuditPort.record -------+-INSERT->|      (AuthorizationPort)|
+ |   -> IAudit.record -------+-INSERT->|      (IAuthorization)|
  +------------------------------+    |    +-----------+-------------+
                                      v                |
                            PostgreSQL: audit_logs <---+ SELECT
 ```
 
-**Text alternative**: Service nghiệp vụ của mọi unit gọi `AuditPort.record` để INSERT vào `audit_logs` trong cùng transaction. Admin tra cứu qua `AuditController` → `AuditQueryService`, kiểm quyền bằng `AuthorizationPort` của U01, đọc `audit_logs`, lấy email người thực hiện qua `AccountLookupPort` của U01 và tự ghi một dòng `AUDIT_QUERIED`. Worker cũng gọi `AuditPort` khi handler cần ghi audit.
+**Text alternative**: Service nghiệp vụ của mọi unit gọi `IAudit.record` để INSERT vào `audit_logs` trong cùng transaction. Admin tra cứu qua `AuditController` → `AuditQueryService`, kiểm quyền bằng `IAuthorization` của U01, đọc `audit_logs`, lấy email người thực hiện qua `IAccountLookup` của U01 và tự ghi một dòng `AUDIT_QUERIED`. Worker cũng gọi `IAudit` khi handler cần ghi audit.
 
 ## 2. Thành phần
 
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
-| `AuditPort` / `AuditStore` | Backend, worker | P1: một hàm `record`; `SUCCESS` INSERT trong transaction của unit gọi, `DENIED`/`FAILURE` bằng transaction riêng; kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
-| `AuditQueryService` | Backend | Tra cứu audit cho ADMIN, lấy email người thực hiện qua `AccountLookupPort` (U01), tự ghi `AUDIT_QUERIED` |
+| `IAudit` / `AuditStore` | Backend, worker | P1: một hàm `record`; `SUCCESS` INSERT trong transaction của unit gọi, `DENIED`/`FAILURE` bằng transaction riêng; kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
+| `AuditQueryService` | Backend | Tra cứu audit cho ADMIN, lấy email người thực hiện qua `IAccountLookup` (U01), tự ghi `AUDIT_QUERIED` |
 | `AuditController` | Backend | `GET /api/v1/admin/audit-logs` |
 
 ## 3. Cấu hình

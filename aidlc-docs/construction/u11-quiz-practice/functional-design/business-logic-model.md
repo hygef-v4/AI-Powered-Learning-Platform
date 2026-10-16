@@ -24,16 +24,16 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Lịch sử luyện tập (UC 49)
 1. Student mở Quiz Practice History từ thanh bên Class Dashboard (U11 đăng ký `DashboardNavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
-2. Lấy các lớp `OPEN` đang học (`ClassAccessPort.listOpenClassesOf`), Quiz đang mở của từng lớp (`QuizQueryPort.listForClass`) và các lượt của mình.
+2. Lấy các lớp `OPEN` đang học (`IClassAccess.listOpenClassesOf`), Quiz đang mở của từng lớp (`IQuizQuery.listForClass`) và các lượt của mình.
 3. Ghép thành danh sách Quiz: số lượt, điểm cao nhất, điểm lượt gần nhất (chỉ khi Quiz cho hiện điểm), nhãn "chưa làm"; Quiz đã ngưng mà có lượt thì hiện để xem lại (BR-U11-02).
 4. Bấm Quiz mở Quiz Practice Detail; bấm lượt đã nộp mở Quiz Result; lượt đang làm mở Quiz Taking.
 
 ### F2 - Chi tiết Quiz (UC 50)
 1. Frontend gọi `GET /api/v1/me/quizzes/{quizId}` kèm `classId`.
 2. Kiểm R5 với lớp và Quiz (BR-U11-01); không đạt thì "không tìm thấy".
-3. Trả thông tin theo BR-U11-03 (`QuizQueryPort.get`) và các lượt của mình.
+3. Trả thông tin theo BR-U11-03 (`IQuizQuery.get`) và các lượt của mình.
 4. Nút Làm Quiz hoặc Tiếp tục khi Quiz `OPEN` và còn lượt; không thì nêu lý do (đã ngưng, hết lượt).
-5. Learning Material (U13) nhúng `MaterialQuizList` của U11 qua slot `LearningMaterialSection`: Quiz gắn tài liệu đó (`QuizQueryPort.listByMaterial`) kèm lượt đã dùng, còn lại và nút Làm Quiz.
+5. Learning Material (U13) nhúng `MaterialQuizList` của U11 qua slot `LearningMaterialSection`: Quiz gắn tài liệu đó (`IQuizQuery.listByMaterial`) kèm lượt đã dùng, còn lại và nút Làm Quiz.
 
 ## 3. Làm Quiz
 
@@ -54,11 +54,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Bấm Nộp, xác nhận (báo số câu chưa trả lời); frontend lưu lần cuối rồi gọi `POST /api/v1/quiz-attempts/{attemptId}/submit`.
 2. Lượt đã nộp thì trả kết quả cũ.
 3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây; quá giờ thì audit `QUIZ_SUBMIT_REJECTED` (scanner sẽ tự nộp).
-4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL`; gọi `QuizScoringPort.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
+4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL`; gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
 5. Mở Quiz Result.
 
 ### F6 - Tự nộp
-1. `ScheduledScanner` của U11 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng câu trả lời đã lưu, `AUTO_TIME_LIMIT`, chấm như F5 bước 4.
+1. `IScheduledScanner` của U11 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng câu trả lời đã lưu, `AUTO_TIME_LIMIT`, chấm như F5 bước 4.
 2. U10 ngưng Quiz hoặc phát hành version mới thì gọi `onRetired` của U11: trong cùng transaction nộp và chấm mọi lượt `IN_PROGRESS` của Quiz đó với `AUTO_RETIRED`.
 3. Câu lệnh nộp có điều kiện trạng thái nên chạy lại không nộp hai lần.
 
@@ -73,10 +73,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F8 - Ghi dữ liệu hoạt động
 1. Lượt có chính sách bật thì `useActivityTracker` (U08) trên Quiz Taking gửi lô sự kiện tới `POST /api/v1/quiz-attempts/{attemptId}/activity`.
 2. U11 kiểm chủ lượt, `IN_PROGRESS`, chính sách đã chụp bật.
-3. Gọi `ActivityWritePort.record` với loại công việc `QUIZ_ATTEMPT`; U08 bỏ trùng, giới hạn tần suất, ghi giờ server.
+3. Gọi `IActivityWrite.record` với loại công việc `QUIZ_ATTEMPT`; U08 bỏ trùng, giới hạn tần suất, ghi giờ server.
 
 ### F9 - Giảng viên xem lượt (UC 42)
 1. Trên Quiz Detail (U10), phần Lượt làm do U11 gắn qua `QuizDetailSection`; frontend gọi `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`.
 2. Kiểm giảng viên chính của lớp; Quiz là Quiz của lớp hoặc của môn chứa lớp.
 3. Trả mỗi sinh viên: số lượt, điểm cao nhất, điểm lượt gần nhất, thời điểm nộp.
-4. Mở một lượt: câu trả lời chỉ đọc, điểm, và `ActivityTimeline` (U08) với dữ liệu từ `ActivityQueryPort.summary` (BR-U11-31).
+4. Mở một lượt: câu trả lời chỉ đọc, điểm, và `ActivityTimeline` (U08) với dữ liệu từ `IActivityQuery.summary` (BR-U11-31).

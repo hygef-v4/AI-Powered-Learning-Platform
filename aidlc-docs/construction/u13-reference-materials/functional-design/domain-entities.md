@@ -35,15 +35,15 @@ stateDiagram-v2
 
 ## 3. Contract
 
-### Port U13 cung cấp
+### Interface U13 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ReferenceMaterialPort` (contract của U06, U13 cài) | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U07, U10 | Người soạn chọn tài liệu và lấy chữ đưa vào prompt AI |
-| `McpToolProvider` (contract của U06, U13 cài) | tool `read_authorized_material` | U06 | Agent đọc tài liệu đúng quyền |
+| `IReferenceMaterial` (contract của U06, U13 cài) | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U07, U10 | Người soạn chọn tài liệu và lấy chữ đưa vào prompt AI |
+| `IMcpToolProvider` (contract của U06, U13 cài) | tool `read_authorized_material` | U06 | Agent đọc tài liệu đúng quyền |
 | `StudentClassSection`, `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U13 cài) | - | U05 | Phần Học liệu trên Student Class Detail; tab Materials; lối vào Material List |
 | Slot `AssignmentMaterialSection` (của U08), `QuizMaterialSection` (của U11), U13 cài bằng `MaterialLinkList` | - | U08, U11 | Hiện tài liệu gắn kèm Assignment, Quiz đúng quyền |
-| `JobHandler` cho `MATERIAL_TEXT_EXTRACT`, `PendingSweeper` (contract của U03, U13 cài) | - | U03 | Trích chữ nền, gửi lại message bị mất |
+| `IJobHandler` cho `MATERIAL_TEXT_EXTRACT`, `IPendingSweeper` (contract của U03, U13 cài) | - | U03 | Trích chữ nền, gửi lại message bị mất |
 
 ### Contract U13 khai báo (unit khác cài)
 
@@ -51,15 +51,15 @@ stateDiagram-v2
 |---|---|---|
 | Slot frontend `LearningMaterialSection` | U11 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 
-### Port U13 dùng
+### Interface U13 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R2, R3/R4, R5 |
-| `AuditPort` | U02 | Audit |
-| `ArtifactPort`, `JobPort` | U03 | Lưu, gắn, mở, cấp token tải tệp `MATERIAL`; job trích chữ |
-| `SubjectQueryPort` | U04 | Môn còn `ACTIVE`, Chủ nhiệm môn |
-| `ClassAccessPort` | U05 | Lớp, giảng viên, ghi danh, môn của lớp |
+| `IAuthorization` | U01 | Kiểm R2, R3/R4, R5 |
+| `IAudit` | U02 | Audit |
+| `IArtifact`, `IJob` | U03 | Lưu, gắn, mở, cấp token tải tệp `MATERIAL`; job trích chữ |
+| `ISubjectQuery` | U04 | Môn còn `ACTIVE`, Chủ nhiệm môn |
+| `IClassAccess` | U05 | Lớp, giảng viên, ghi danh, môn của lớp |
 
 ## 4. API
 

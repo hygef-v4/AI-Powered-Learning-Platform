@@ -13,10 +13,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | NFR-U08-03 | Nộp bài p95 ≤ 1 giây. | FR-018 |
 | NFR-U08-04 | Tự nộp chậm nhất 1 phút sau `deadlineAt` cộng 30 giây. | BR-U08-23 |
 | NFR-U08-05 | Ghi một lô sự kiện hoạt động p95 ≤ 100 ms. | FR-039 |
-| NFR-U08-10 | `contentVersion` chống ghi đè; nộp và tự nộp là câu lệnh có điều kiện trạng thái; `SubmissionListener` chạy trong cùng transaction. | FR-018 |
+| NFR-U08-10 | `contentVersion` chống ghi đè; nộp và tự nộp là câu lệnh có điều kiện trạng thái; `ISubmissionListener` chạy trong cùng transaction. | FR-018 |
 | NFR-U08-11 | Unique: một lượt `IN_PROGRESS` mỗi (bài, người học); (bài, người học, `attemptNo`); sự kiện theo `clientEventId`. Bắt đầu lượt khóa hàng theo (bài, người học). | BR-U08-11 |
 | NFR-U08-12 | Giới hạn tần suất sự kiện hoạt động và yêu cầu phản hồi bằng Bucket4j trên Redis. | BR-U08-44, 52 |
-| NFR-U08-30 | Tài liệu kiểm qua `DocumentModelPort` của U07 (XML an toàn, SVG sạch, trần kích thước); DOCX đọc trong bộ nhớ như U07. | SEC-003 |
+| NFR-U08-30 | Tài liệu kiểm qua `IDocumentModel` của U07 (XML an toàn, SVG sạch, trần kích thước); DOCX đọc trong bộ nhớ như U07. | SEC-003 |
 | NFR-U08-31 | Không log nội dung bài làm, phản hồi AI, prompt. | SEC-005 |
 | NFR-U08-40 | Người code viết unit test cho mọi `BR-U08-xx`; tester viết integration test, gồm hai tab lưu cùng lượt, nộp hai lần, tự nộp khi hết hạn và khi ngưng giao, phản hồi với hash cũ, sự kiện trùng và lệch thứ tự, và phân quyền 4 role trên mọi endpoint. | NFR-004 |
 

@@ -1,12 +1,12 @@
 # U03 Job and Settings — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [requirements](../../../inception/requirements/requirements.md), [council features](../../../inception/requirements/council-features-2026-10-13.md).
 
-Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệp và việc nền giữ như bản 2026-10-09 vì code đã sinh tham chiếu các mã này.
+Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệp và việc nền giữ như bản 2026-10-09.
 
 ## 1. Upload
 
@@ -57,15 +57,15 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-50 | `JobPort.enqueue` không ghi database: trong transaction của unit gọi, nó đăng ký gửi `JobMessage` sau commit, rollback thì không gửi; gọi ngoài transaction thì gửi ngay. Trạng thái việc nằm ở dòng nghiệp vụ của unit gọi. | Thiết kế |
+| BR-U03-50 | `IJob.enqueue` không ghi database: trong transaction của unit gọi, nó đăng ký gửi `JobMessage` sau commit, rollback thì không gửi; gọi ngoài transaction thì gửi ngay. Trạng thái việc nằm ở dòng nghiệp vụ của unit gọi. | Thiết kế |
 | BR-U03-51 | Chống xử lý trùng dựa vào trạng thái dòng nghiệp vụ: handler gặp dòng đã xử lý hoặc không còn chờ thì ack và bỏ. `idempotencyKey` đi trong message để log và đối chiếu. | Thiết kế |
 | BR-U03-52 | Payload chỉ chứa ID và tham chiếu; U03 từ chối payload có khóa cấm (`password`, `otp`, `token`, `secret`, `phone`) bằng `ForbiddenKeyGuard`. | SEC-005 |
 | BR-U03-53 | Worker ack thủ công, chỉ sau khi handler đã cập nhật dòng nghiệp vụ. | Thiết kế |
 | BR-U03-56 | Lỗi tạm và `attempt` < 5: gửi lại vào hàng chờ thử lại có TTL theo lượt (30 giây, 1, 2, 4, 8 phút), hết TTL thì quay về queue gốc. Lỗi vĩnh viễn hoặc hết lượt: gọi `onFailed` của unit sở hữu để chuyển dòng nghiệp vụ sang trạng thái lỗi, log ERROR. | REL-003 |
 | BR-U03-57 | Không có màn hình hay nút chạy lại việc nền; người dùng thao tác lại từ màn nghiệp vụ nếu màn đó cho phép. | Thiết kế |
-| BR-U03-58 | Message có thể mất nếu backend dừng giữa commit và gửi. Mỗi unit có việc nền đăng ký `PendingSweeper`: mỗi phút, dòng còn chờ quá 5 phút được gửi lại message. | REL-003 |
+| BR-U03-58 | Message có thể mất nếu backend dừng giữa commit và gửi. Mỗi unit có việc nền đăng ký `IPendingSweeper`: mỗi phút, dòng còn chờ quá 5 phút được gửi lại message. | REL-003 |
 | BR-U03-59 | Handler của unit sở hữu phải idempotent vì một việc có thể được gửi hơn một lần. | Thiết kế |
-| BR-U03-60 | Việc hẹn giờ không dùng message hẹn giờ: mỗi unit đăng ký `ScheduledScanner` chạy mỗi phút trong worker, đọc mốc thời gian trên bảng của mình và cập nhật idempotent. | Thiết kế |
+| BR-U03-60 | Việc hẹn giờ không dùng message hẹn giờ: mỗi unit đăng ký `IScheduledScanner` chạy mỗi phút trong worker, đọc mốc thời gian trên bảng của mình và cập nhật idempotent. | Thiết kế |
 | BR-U03-61 | Frontend xem trạng thái việc nền qua API của unit sở hữu; U03 không có API trạng thái job. | SEC-006 |
 | BR-U03-63 | Mỗi `jobType` thuộc đúng một trong 5 queue: `jobs.triggered` (việc nội bộ sau thao tác người dùng), `jobs.email` (SMTP, OTP ưu tiên hơn email thông báo), `jobs.ai` (gọi API AI), `jobs.drive` (dọn tệp Drive), `jobs.backup` (chạy backup). Các queue `jobs.gemini`, `jobs.youtube`, `jobs.code`, `jobs.payos` của bản cũ bị bỏ. | Phạm vi 66 UC |
 | BR-U03-64 | Phản ứng nghiệp vụ bắt buộc giữa các unit (tạo đánh giá khi nộp, tự nộp khi ngưng giao) không dùng event: unit nguồn gọi port do unit nhận cài, trong cùng transaction. | Thiết kế |
@@ -74,7 +74,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-70 | `EventPublisherPort.publish` gửi sau commit, không đảm bảo giao hàng; chỉ dùng cho thông báo của U14, nên mất sự kiện được chấp nhận. | Thiết kế |
+| BR-U03-70 | `IEventPublisher.publish` gửi sau commit, không đảm bảo giao hàng; chỉ dùng cho thông báo của U14, nên mất sự kiện được chấp nhận. | Thiết kế |
 | BR-U03-71 | Mọi message có `schemaVersion`; consumer bỏ qua và log WARN nếu gặp phiên bản không hỗ trợ. | Thiết kế |
 
 ## 8. Cài đặt hệ thống (UC 14, 15)
@@ -82,7 +82,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U03-80 | Chỉ `ADMIN` đang `ACTIVE` xem (UC 14) và sửa (UC 15) cài đặt; role khác bị từ chối và ghi audit; không kiểm được quyền thì từ chối. | FR-033, SEC-002 |
-| BR-U03-81 | Cài đặt dạng khóa–giá trị do unit sở hữu khai báo trong code (`SettingDefinition`): khóa, nhóm, tên, mô tả, kiểu, giá trị mặc định (có thể không có), giới hạn hợp lệ. U03 lưu, hiển thị và kiểm theo khai báo; unit sở hữu đọc giá trị qua `SettingsPort`. Nhóm hiện có: Tệp và Backup (U03), Hoạt động làm bài (U08). | FR-033 |
+| BR-U03-81 | Cài đặt dạng khóa–giá trị do unit sở hữu khai báo trong code (`SettingDefinition`): khóa, nhóm, tên, mô tả, kiểu, giá trị mặc định (có thể không có), giới hạn hợp lệ. U03 lưu, hiển thị và kiểm theo khai báo; unit sở hữu đọc giá trị qua `ISettings`. Nhóm hiện có: Tệp và Backup (U03), Hoạt động làm bài (U08). | FR-033 |
 | BR-U03-82 | Sửa phải gửi kèm `version` hiện tại; lệch thì trả `409`. Giá trị sai kiểu, ngoài giới hạn hoặc vi phạm ràng buộc giữa các mục thì trả `400` kèm lý do, không ghi gì. | FR-033 |
 | BR-U03-83 | Mỗi lần sửa ghi audit `SETTING_UPDATED` (khóa, giá trị trước và sau, người sửa, thời điểm) trong cùng transaction. | FR-014 |
 | BR-U03-84 | Không thêm hay xóa mục từ giao diện. Khi khởi động, mục đã khai báo mà chưa có trong bảng được tạo với giá trị mặc định (hoặc rỗng là "chưa cấu hình"); mục đã có giữ nguyên giá trị Admin đã sửa. | FR-033 |
@@ -90,7 +90,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-86 | Giá trị mới có hiệu lực trong tối đa 30 giây ở mọi instance backend và worker; thao tác đang chạy giữ giá trị cũ; dữ liệu đã tạo không bị ảnh hưởng. | FR-033 |
 | BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
 | BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định). Chỉ bật được khi đã đặt giờ; giờ chạy phải được xác nhận trước triển khai, hệ thống không tự gán. Thời gian giữ bản cố định 7 ngày (BR-U03-96), không phải cài đặt. | FR-038, council features, chốt 2026-10-15 |
-| BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `SettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
+| BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `ISettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
 
 ## 9. Backup và khôi phục
 

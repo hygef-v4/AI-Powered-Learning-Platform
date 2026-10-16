@@ -15,13 +15,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Mở Admin Dashboard (UC 66)
 1. Admin đăng nhập, Post-Login chuyển tới `/admin`; frontend gọi `GET /api/v1/admin/dashboard`.
-2. Kiểm `ADMIN` đang `ACTIVE` qua `AuthorizationPort`; vai trò khác trả `403` và ghi audit (BR-U15-01).
-3. Gọi song song: `AccountLookupPort.countByRoleAndStatus` (U01), `SubjectQueryPort.countSubjectsByStatus` (U04), `ClassAccessPort.countClassesByStatus` và `countActiveEnrollments` (U05), `BackupStatusPort.latest` (U03); mỗi lời gọi có timeout 2 giây.
+2. Kiểm `ADMIN` đang `ACTIVE` qua `IAuthorization`; vai trò khác trả `403` và ghi audit (BR-U15-01).
+3. Gọi song song: `IAccountLookup.countByRoleAndStatus` (U01), `ISubjectQuery.countSubjectsByStatus` (U04), `IClassAccess.countClassesByStatus` và `countActiveEnrollments` (U05), `IBackupStatus.latest` (U03); mỗi lời gọi có timeout 2 giây.
 4. Ghép kết quả; nguồn lỗi hoặc hết giờ thì phần đó là "không khả dụng" (BR-U15-12, 21).
 5. Trả số liệu và trạng thái backup; frontend hiện các thẻ, tổng số tài khoản, và lối vào bốn màn quản trị (BR-U15-30).
 
 ### F2 - Xem lịch sử backup (UC 66)
 1. Trong mục Backup bấm Lịch sử; frontend gọi `GET /api/v1/admin/dashboard/backups` kèm trang.
-2. Kiểm `ADMIN`; gọi `BackupStatusPort.list(page)`.
+2. Kiểm `ADMIN`; gọi `IBackupStatus.list(page)`.
 3. Trả các lần chạy (trạng thái, thời điểm, dung lượng, lỗi đã làm sạch); không có link tải.
 4. Nút "Cài đặt backup" mở Setting Detail của U03.

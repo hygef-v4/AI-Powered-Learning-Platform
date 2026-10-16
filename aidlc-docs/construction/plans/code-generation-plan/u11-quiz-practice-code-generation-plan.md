@@ -8,28 +8,28 @@ Thiết kế: [business-logic-model](../../u11-quiz-practice/functional-design/b
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay phần lượt Quiz của plan U11 cũ và chấm Quiz luyện tập của plan U15 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../attempts/port/PracticeResultPort`, `PracticeResult` | Port cũ để U15 cũ chấm Quiz | Xóa; U11 chấm qua `QuizScoringPort` của U10 và lưu kết quả trên lượt |
-| `contracts/openapi/attempts.yaml` | Đã thay ở plan U08 | Thêm `contracts/openapi/quiz-practice.yaml` |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/quizpractice/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../quizpractice/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/quizpractice/slots.ts` | Slot đã khai báo: `quizMaterialSections` |
 
 ## Checklist
 
-- [ ] **Bước 1 — Dọn code cũ, package:** xóa port ở bảng trên; tạo package `edu.aiplatform.quizpractice`.
-- [ ] **Bước 2 — Migration:** `db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql` theo infrastructure-design.
-- [ ] **Bước 3 — Domain:** `QuizAttempt` và enum; trộn có seed; repository chỉ dùng trong package.
-- [ ] **Bước 4 — Xem Quiz:** `QuizPracticeQueryService` (F1, F2).
-- [ ] **Bước 5 — Làm, nộp, chấm:** `QuizAttemptService` (F3–F5, F7, P1–P3).
-- [ ] **Bước 6 — Tự nộp:** `QuizAutoSubmitScanner`, `QuizRetiredHandler` (F6).
-- [ ] **Bước 7 — Hoạt động và giảng viên:** `QuizActivityService` (F8), `TeacherQuizAttemptService` (F9).
-- [ ] **Bước 8 — API:** controller theo domain-entities mục 4; `contracts/openapi/quiz-practice.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 9 — Frontend:** `QuizPracticeHistoryPage` (đăng ký `DashboardNavEntry`), `QuizPracticeDetailPage`, `QuizTakingPage`, `QuizResultPage`, `MaterialQuizList` (slot của U13), `QuizAttemptsSection` (slot của U10); khai báo slot `QuizMaterialSection` cho U13.
-- [ ] **Bước 10 — Unit test (người code viết):** điều kiện bắt đầu (ghi danh, Quiz mở, hết lượt, không giới hạn lượt); một lượt đang làm; trộn theo seed ổn định; lưu sau giờ và trong 30 giây ân hạn; nộp lặp; chấm `MCQ_MULTI`; tự nộp khi hết giờ và khi Quiz bị ngưng; kết quả theo cài đặt hiện điểm và đáp án; giảng viên lớp khác bị từ chối; component frontend. Integration test do tester viết.
-- [ ] **Bước 11 — Review:** đối chiếu UC 49–52, story, BR-U11 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 1 — Migration:** `db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `QuizAttempt` và enum; trộn có seed; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Xem Quiz:** `QuizPracticeQueryService` (F1, F2).
+- [ ] **Bước 4 — Làm, nộp, chấm:** `QuizAttemptService` (F3–F5, F7, P1–P3).
+- [ ] **Bước 5 — Tự nộp:** `QuizAutoSubmitScanner`, `QuizRetiredHandler` (F6).
+- [ ] **Bước 6 — Hoạt động và giảng viên:** `QuizActivityService` (F8), `TeacherQuizAttemptService` (F9).
+- [ ] **Bước 7 — API:** controller theo domain-entities mục 4; `contracts/openapi/quiz-practice.yaml`; ngoài phạm vi trả `404`.
+- [ ] **Bước 8 — Frontend:** `QuizPracticeHistoryPage` (đăng ký `DashboardNavEntry`), `QuizPracticeDetailPage`, `QuizTakingPage`, `QuizResultPage`, `MaterialQuizList` (slot của U13), `QuizAttemptsSection` (slot của U10); khai báo slot `QuizMaterialSection` cho U13.
+- [ ] **Bước 9 — Unit test (người code viết):** điều kiện bắt đầu (ghi danh, Quiz mở, hết lượt, không giới hạn lượt); một lượt đang làm; trộn theo seed ổn định; lưu sau giờ và trong 30 giây ân hạn; nộp lặp; chấm `MCQ_MULTI`; tự nộp khi hết giờ và khi Quiz bị ngưng; kết quả theo cài đặt hiện điểm và đáp án; giảng viên lớp khác bị từ chối; component frontend. Integration test do tester viết.
+- [ ] **Bước 10 — Review:** đối chiếu UC 49–52, story, BR-U11 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

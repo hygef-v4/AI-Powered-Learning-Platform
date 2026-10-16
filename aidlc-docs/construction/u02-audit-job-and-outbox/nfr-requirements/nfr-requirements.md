@@ -12,7 +12,7 @@ Việc nền, RabbitMQ và worker chuyển sang U03 (2026-10-04); yêu cầu c�
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U02-01 | `AuditPort.record` chỉ thêm một câu INSERT vào transaction của unit gọi. | NFR-003, BR-U02-02 |
+| NFR-U02-01 | `IAudit.record` chỉ thêm một câu INSERT vào transaction của unit gọi. | NFR-003, BR-U02-02 |
 | NFR-U02-03 | Tra cứu audit p95 ≤ 500 ms với tới 1 triệu bản ghi. Có index theo `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`. | NFR-003, BR-U02-08 |
 
 ## 2. Bảo mật

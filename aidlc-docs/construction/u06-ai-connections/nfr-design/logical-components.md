@@ -13,7 +13,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `AiConnectionService`, `ConnectionTestService`, `KeyCipher`, `ProviderCatalog` | backend | Lưu, che, mã hóa key; kiểm tra kết nối; model cho phép |
 | `GeminiAdapter`, `OpenAiAdapter`, `ClaudeAdapter` | backend, worker | Gọi provider, chuẩn hóa kết quả, usage, lỗi |
 | `QuotaPolicyService`, `QuotaReservationService`, `UsageSummaryService` | backend, worker | Mức quota, giữ chỗ, quyết toán, tổng hợp (P1) |
-| `AiTaskService` (cài `AiTaskPort`), `AiSourceService` | backend | Nhận task, kiểm nguồn, giữ chỗ, gửi job (F11) |
+| `AiTaskService` (cài `IAiTask`), `AiSourceService` | backend | Nhận task, kiểm nguồn, giữ chỗ, gửi job (F11) |
 | `AiTaskJobHandler`, `AiTaskResultHandlerRegistry`, `AiTaskPendingSweeper`, `AiTaskTimeoutScanner` | worker | Chạy task, gọi handler, dọn task quá hạn (F12, F13) |
 | `AiUsageService` | backend, worker | Ghi và đọc usage |
 | `McpServerConfig`, `McpAuthenticationFilter`, `McpToolRegistry`, `McpRateLimiter` | backend | MCP server và tool (F6) |

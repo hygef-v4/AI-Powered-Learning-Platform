@@ -8,33 +8,31 @@ Thiết kế: [business-logic-model](../../u09-assignment-grading/functional-des
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay phần chấm Assignment và sổ điểm của plan U15 cũ, phần tiến độ, phân bố điểm, xuất bảng điểm của plan U16 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../grading/` (`GradingService`, `GradebookService`, `GradePublished`, port `GradebookQueryPort`, `GradebookRow`, `GradeQueryPort`, `PublishedGrade`) | Khung cũ, chưa có test | Giữ package `grading`; viết lại theo thiết kế mới |
-| `backend/.../grading/adapter/SubmissionSubmittedAdapter` | Cài port cũ của U11 cũ | Thay bằng `EvaluationLifecycleService` cài `SubmissionListener` |
-| `backend/.../grading/adapter/GroupSubmittedAdapter` | Cài port cũ của U14 cũ | Thay bằng `GroupEvaluationPort` do U12 gọi |
-| `backend/.../grading/adapter/PracticeResultAdapter`, `CodeGradedAdapter` | Kết quả Quiz luyện tập, Code Lab | Xóa; kết quả Quiz để plan U11, Code Lab đã bỏ |
-| `contracts/openapi/grading.yaml`, `reporting.yaml`, `contracts/messages/grade-events.json` | Contract cũ | Cập nhật `grading.yaml` theo API mới (gồm xuất); `reporting.yaml` để plan U14, U15; `grade-events.json` theo `grade.published` |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/grading/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../grading/contract/` | interface `IGroupEvaluation`, `IGroupSubmissionSource`; kiểu dữ liệu `GroupSectionAuthor`, `GroupSubmissionStatus`, `GroupSubmissionView` |
+| `backend/.../grading/contract/stub/GradingContractStubs` | Bản tạm trả dữ liệu mẫu cho `IGroupEvaluation`, `IGroupSubmissionSource` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
+| `frontend/src/features/grading/` | Chỉ có `index.ts` trống |
 
 ## Checklist
 
-- [ ] **Bước 1 — Dọn code cũ:** theo bảng trên; code biên dịch được.
-- [ ] **Bước 2 — Migration:** `db/migration/grading/V20260925_1500__create_grading_tables.sql` theo infrastructure-design.
-- [ ] **Bước 3 — Domain:** `Evaluation`, `EvaluationHistory`, `GradingProposal` và enum; kiểm chuyển trạng thái; repository chỉ dùng trong package.
-- [ ] **Bước 4 — Tạo đánh giá:** `EvaluationLifecycleService` cài `SubmissionListener`, `GroupEvaluationPort`; contract `GroupSubmissionSource` với adapter rỗng (F1, F14).
-- [ ] **Bước 5 — Bài nộp:** `SubmissionReviewService` (F2, F3).
-- [ ] **Bước 6 — Chấm, chốt, công bố:** `GradingService` (F4, F8–F10, P1, P2, P4); phát `grade.published`.
-- [ ] **Bước 7 — AI đề xuất:** `GradingProposalService`, `GradingProposalResultHandler` (cài `AiTaskResultHandler` cho `GRADING_PROPOSAL`), `GradingMcpTools` (cài `McpToolProvider`) (F5–F7, P3).
-- [ ] **Bước 8 — Sổ điểm, xuất:** `GradebookService`, `GradebookExporter` CSV và XLSX (F11, F12).
-- [ ] **Bước 9 — Người học:** `StudentGradeService`, `GradeDistributionCalculator` (F13).
-- [ ] **Bước 10 — API:** controller theo domain-entities mục 5; `contracts/openapi/grading.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 11 — Frontend:** `ClassGradebookSection` (đăng ký `TeacherClassTab`), `SubmissionsLink` (đăng ký `AssignmentRowAction`), `SubmissionDetailPage`, `GradingWorkspacePage` và các panel, `StudentGradeCell`, `StudentGradePanel` (đăng ký slot của U08).
-- [ ] **Bước 12 — Unit test (người code viết):** tạo đánh giá chỉ với bài `GRADED`; lượt mới làm đánh giá cũ `SUPERSEDED`; điểm từ checklist và điều chỉnh có lý do; kẹp điểm; chốt hàng loạt có mục lỗi; công bố phát sự kiện đúng người; sửa sau chốt thiếu lý do bị từ chối; đề xuất sai id mục hoặc hash cũ; hết quota giữa lô; sổ điểm không có Quiz, Practice, điểm tổng; CSV chặn công thức; phân bố dưới 20 người hoặc khoảng dưới 5 người; Chủ nhiệm môn không dạy lớp bị từ chối; component frontend. Integration test do tester viết.
-- [ ] **Bước 13 — Review:** đối chiếu UC 42–45, story, BR-U09 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 1 — Migration:** `db/migration/grading/V20260925_1500__create_grading_tables.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `Evaluation`, `EvaluationHistory`, `GradingProposal` và enum; kiểm chuyển trạng thái; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Tạo đánh giá:** `EvaluationLifecycleService` cài `ISubmissionListener`, `IGroupEvaluation`; contract `IGroupSubmissionSource` với adapter rỗng (F1, F14).
+- [ ] **Bước 4 — Bài nộp:** `SubmissionReviewService` (F2, F3).
+- [ ] **Bước 5 — Chấm, chốt, công bố:** `GradingService` (F4, F8–F10, P1, P2, P4); phát `grade.published`.
+- [ ] **Bước 6 — AI đề xuất:** `GradingProposalService`, `GradingProposalResultHandler` (cài `IAiTaskResultHandler` cho `GRADING_PROPOSAL`), `GradingMcpTools` (cài `IMcpToolProvider`) (F5–F7, P3).
+- [ ] **Bước 7 — Sổ điểm, xuất:** `GradebookService`, `GradebookExporter` CSV và XLSX (F11, F12).
+- [ ] **Bước 8 — Người học:** `StudentGradeService`, `GradeDistributionCalculator` (F13).
+- [ ] **Bước 9 — API:** controller theo domain-entities mục 5; `contracts/openapi/grading.yaml`; ngoài phạm vi trả `404`.
+- [ ] **Bước 10 — Frontend:** `ClassGradebookSection` (đăng ký `TeacherClassTab`), `SubmissionsLink` (đăng ký `AssignmentRowAction`), `SubmissionDetailPage`, `GradingWorkspacePage` và các panel, `StudentGradeCell`, `StudentGradePanel` (đăng ký slot của U08).
+- [ ] **Bước 11 — Unit test (người code viết):** tạo đánh giá chỉ với bài `GRADED`; lượt mới làm đánh giá cũ `SUPERSEDED`; điểm từ checklist và điều chỉnh có lý do; kẹp điểm; chốt hàng loạt có mục lỗi; công bố phát sự kiện đúng người; sửa sau chốt thiếu lý do bị từ chối; đề xuất sai id mục hoặc hash cũ; hết quota giữa lô; sổ điểm không có Quiz, Practice, điểm tổng; CSV chặn công thức; phân bố dưới 20 người hoặc khoảng dưới 5 người; Chủ nhiệm môn không dạy lớp bị từ chối; component frontend. Integration test do tester viết.
+- [ ] **Bước 12 — Review:** đối chiếu UC 42–45, story, BR-U09 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

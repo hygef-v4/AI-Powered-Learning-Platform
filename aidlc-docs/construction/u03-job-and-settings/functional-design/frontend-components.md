@@ -1,6 +1,6 @@
 # U03 Job and Settings — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -47,6 +47,6 @@ shared/status/
 
 Route dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN` vào; API vẫn tự kiểm quyền.
 
-Trạng thái backup hiện trên Admin Dashboard do U15 làm (đọc qua `BackupStatusPort`); U03 không có màn backup riêng. Không có màn quản lý hay chạy lại việc nền.
+Trạng thái backup hiện trên Admin Dashboard do U15 làm (đọc qua `IBackupStatus`); U03 không có màn backup riêng. Không có màn quản lý hay chạy lại việc nền.
 
 Unit dùng component tệp: U13 (`MATERIAL`), U07, U08, U12 (`DOCUMENT_IMAGE` trong trình soạn tài liệu).

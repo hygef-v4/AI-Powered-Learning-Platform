@@ -144,24 +144,24 @@ Không có use case xem lại lịch sử nhập nên kết quả không lưu. B
 | `reasonCode` | Mã lý do an toàn cho log, không trả chi tiết cho client |
 | `actorId`, `action`, `resourceRef` | Đầu vào đã đánh giá |
 
-Phạm vi môn đến từ `SubjectScopePort` (U04 cài), phạm vi lớp và ghi danh từ `ClassScopePort` (U05 cài). U01 kết hợp role và phạm vi để ra quyết định.
+Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi danh từ `IClassScope` (U05 cài). U01 kết hợp role và phạm vi để ra quyết định.
 
 ## 13. Contract
 
-### Port U01 cung cấp
+### Interface U01 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuthorizationPort` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
-| `AccountLookupPort` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
-| `MailPort` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
+| `IAuthorization` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
+| `IAccountLookup` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
+| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
 
-### Port U01 khai báo, unit khác cài
+### Interface U01 khai báo, unit khác cài
 
-| Port | Phương thức | Cài bởi | Dùng để |
+| Interface | Phương thức | Cài bởi | Dùng để |
 |---|---|---|---|
-| `SubjectScopePort` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
-| `ClassScopePort` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
+| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
+| `IClassScope` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
 
 ### Contract frontend U01 khai báo
 
@@ -170,14 +170,14 @@ Phạm vi môn đến từ `SubjectScopePort` (U04 cài), phạm vi lớp và gh
 | `AccountMenuEntry` | U06 | Thêm mục AI Connection vào menu tài khoản mà U01 không phụ thuộc ngược U06 |
 | `HeaderWidget` | U14 | Gắn chuông thông báo lên thanh điều hướng cho mọi vai trò |
 
-### Port U01 dùng
+### Interface U01 dùng
 
-| Port | Cung cấp bởi | Dùng để |
+| Interface | Cung cấp bởi | Dùng để |
 |---|---|---|
-| `AuditPort.record` | U02 | Ghi sự kiện bảo mật và nghiệp vụ (mục 7 của business-logic-model) |
-| `JobPort.enqueue` | U03 | Gửi việc `OTP_DELIVERY` sang worker qua RabbitMQ sau commit; handler gửi mail do U01 sở hữu, retry hữu hạn |
+| `IAudit.record` | U02 | Ghi sự kiện bảo mật và nghiệp vụ (mục 7 của business-logic-model) |
+| `IJob.enqueue` | U03 | Gửi việc `OTP_DELIVERY` sang worker qua RabbitMQ sau commit; handler gửi mail do U01 sở hữu, retry hữu hạn |
 
-U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U01. U04 và U05 code sau U01 trong Iter 1: tới lúc đó U01 dùng adapter tạm trả "không có phạm vi" (fail closed), nên mọi hành động cần phạm vi môn/lớp bị từ chối cho tới khi nối adapter thật. Lớp `academics/application/ScopeQueryService` hiện có (code U04 cũ) đã cài hai port này và sẽ được U04/U05 tách ra.
+U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U01. U04 và U05 code sau U01 trong Iter 1: tới lúc đó bản tạm trong khung (`IdentityContractStubs`) trả `true` cho `ISubjectScope`, `IClassScope` để các unit chạy tiếp; U04, U05 cài thật thì bản tạm tự tắt.
 
 ## 14. API tài khoản và phiên
 
@@ -200,7 +200,7 @@ Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có 
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.

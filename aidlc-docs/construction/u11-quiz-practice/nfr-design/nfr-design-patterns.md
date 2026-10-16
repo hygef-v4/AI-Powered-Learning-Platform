@@ -13,4 +13,4 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - `UPDATE ... SET status = 'SUBMITTED' ... WHERE id = ? AND status = 'IN_PROGRESS'`, rồi chấm trong cùng transaction; nộp lặp đọc lại kết quả đã lưu.
 
 ## P3 - Đáp án ở U10
-- U11 chỉ nhận đúng sai và điểm từ `QuizScoringPort`; đáp án chỉ lấy qua `answerReview` khi trả Quiz Result đúng cài đặt.
+- U11 chỉ nhận đúng sai và điểm từ `IQuizScoring`; đáp án chỉ lấy qua `answerReview` khi trả Quiz Result đúng cài đặt.

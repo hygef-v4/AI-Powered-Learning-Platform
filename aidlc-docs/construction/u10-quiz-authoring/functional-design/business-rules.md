@@ -52,7 +52,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U10-40 | AI soạn câu cho Quiz `DRAFT` (giảng viên, Chủ nhiệm môn) hoặc cho ngân hàng (Chủ nhiệm môn): nhập số câu (1–50), loại, độ khó, chủ đề; chọn tài liệu tham khảo qua `ReferenceMaterialPort` (U06 khai báo, U13 cài); chọn nguồn AI trong popup của U06. | FR-006, US-AIG-001, 002 |
+| BR-U10-40 | AI soạn câu cho Quiz `DRAFT` (giảng viên, Chủ nhiệm môn) hoặc cho ngân hàng (Chủ nhiệm môn): nhập số câu (1–50), loại, độ khó, chủ đề; chọn tài liệu tham khảo qua `IReferenceMaterial` (U06 khai báo, U13 cài); chọn nguồn AI trong popup của U06. | FR-006, US-AIG-001, 002 |
 | BR-U10-41 | Đề xuất gồm câu, lựa chọn, đáp án, giải thích, kèm provenance. Người soạn chọn, sửa rồi chấp nhận: câu thành câu riêng của Quiz hoặc câu `DRAFT` của ngân hàng. AI không tự kích hoạt câu, không duyệt, không phát hành. Prompt không có dữ liệu người học. Không có AI vẫn soạn tay được. | FR-006 |
 | BR-U10-42 | Tool MCP chỉ cho giảng viên, Chủ nhiệm môn có quyền với Quiz: `read_quiz_context` (Quiz kèm đáp án) và `save_quiz_draft` (Quiz `DRAFT`, kèm `expectedVersion`); tool ghi chỉ lưu đề xuất chờ người soạn chấp nhận như BR-U10-41. Người học không có tool đọc Quiz. | FR-035 |
 

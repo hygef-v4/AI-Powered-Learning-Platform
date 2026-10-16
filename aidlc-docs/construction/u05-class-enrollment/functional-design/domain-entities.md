@@ -64,13 +64,13 @@ stateDiagram-v2
 
 ## 4. Contract
 
-### Port U05 cung cấp
+### Interface U05 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ClassScopePort` (contract của U01, U05 cài) | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)`, `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U01 | Kiểm R3/R4, R5 theo phân công và ghi danh hiện thời; chặn hạ role người đang dạy |
-| `SubjectClassesPort` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
-| `ClassAccessPort` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
+| `IClassScope` (contract của U01, U05 cài) | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)`, `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U01 | Kiểm R3/R4, R5 theo phân công và ghi danh hiện thời; chặn hạ role người đang dạy |
+| `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
+| `IClassAccess` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
 
 `ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution`. `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này.
@@ -84,14 +84,14 @@ stateDiagram-v2
 | `StudentDetailSection` | U12 (nhóm của sinh viên) | Gắn phần nhóm vào popup Student Detail |
 | `DashboardNavEntry` | U08 (Student Assignments), U11 (Quiz Practice History), U14 (Class Announcements) trên Class Dashboard; U07 (Assignment List), U10 (Question List, Quiz List), U13 (Material List) trên Manager Dashboard | Gắn lối vào màn của unit khác lên hai dashboard |
 
-### Port U05 dùng
+### Interface U05 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort` | U01 | Kiểm quyền; tìm sinh viên, giảng viên |
-| `SubjectQueryPort` | U04 | Môn còn `ACTIVE`, môn được giao quản lý |
-| `AuditPort` | U02 | Audit |
-| `EventPublisherPort` | U03 | Sự kiện `enrollment.activated` |
+| `IAuthorization`, `IAccountLookup` | U01 | Kiểm quyền; tìm sinh viên, giảng viên |
+| `ISubjectQuery` | U04 | Môn còn `ACTIVE`, môn được giao quản lý |
+| `IAudit` | U02 | Audit |
+| `IEventPublisher` | U03 | Sự kiện `enrollment.activated` |
 
 ## 5. API
 

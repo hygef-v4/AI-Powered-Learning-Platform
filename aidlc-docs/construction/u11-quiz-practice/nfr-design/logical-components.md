@@ -11,7 +11,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `MyQuizController`, `QuizAttemptController`, `ClassQuizAttemptController` | backend | API mục 4 của domain-entities |
 | `QuizPracticeQueryService` | backend | Lịch sử, chi tiết (F1, F2) |
 | `QuizAttemptService` | backend | Bắt đầu, lưu, nộp, chấm, kết quả (F3–F5, F7, P1–P3) |
-| `QuizAutoSubmitScanner` (cài `ScheduledScanner`), `QuizRetiredHandler` (cài `QuizLifecycleListener`) | worker, backend | Tự nộp (F6) |
+| `QuizAutoSubmitScanner` (cài `IScheduledScanner`), `QuizRetiredHandler` (cài `IQuizLifecycleListener`) | worker, backend | Tự nộp (F6) |
 | `QuizActivityService` | backend | Ghi sự kiện qua U08 (F8) |
 | `TeacherQuizAttemptService` | backend | Lượt cho giảng viên (F9) |
 | Repository `quiz_attempts` | backend, worker | Chỉ dùng trong package |

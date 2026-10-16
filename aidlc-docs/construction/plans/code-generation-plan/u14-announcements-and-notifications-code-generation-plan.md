@@ -8,30 +8,32 @@ Thiết kế: [business-logic-model](../../u14-announcements-and-notifications/f
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay phần thông báo lớp của plan U05 cũ và phần thông báo, email, nhắc hạn của plan U16 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../content/event/AnnouncementPosted` | Sự kiện thông báo lớp | Chuyển sang package `edu.aiplatform.announcements` |
-| Thông báo, email thông báo | Chưa có | Làm mới, package `edu.aiplatform.notifications` |
-| `contracts/messages/announcement-events.json`, `contracts/openapi/reporting.yaml` | Contract cũ | Cập nhật `announcement-events.json`; thêm `contracts/openapi/notifications.yaml`; phần thông báo trong `reporting.yaml` bỏ |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/announcements/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../announcements/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/announcements/` | Chỉ có `index.ts` trống |
+| `backend/src/main/java/edu/aiplatform/notifications/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../notifications/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/notifications/` | Chỉ có `index.ts` trống |
 
 ## Checklist
 
-- [ ] **Bước 1 — Package:** tạo `announcements`, `notifications`; chuyển `AnnouncementPosted`.
-- [ ] **Bước 2 — Migration:** `db/migration/notifications/V20260925_2000__create_notification_tables.sql` theo infrastructure-design.
-- [ ] **Bước 3 — Domain:** `Announcement`, `Notification`, `EmailDelivery`, `NotificationPreference`, `DeadlineReminder` và enum; repository chỉ dùng trong package.
-- [ ] **Bước 4 — Thông báo lớp:** `AnnouncementService` (F1–F3), phát `class.announcement-posted`.
-- [ ] **Bước 5 — Sự kiện:** khai báo queue `jobs.notification`; `NotificationEventListener`, `RecipientResolver`, `NotificationService` (F4, F5, P1).
-- [ ] **Bước 6 — Email:** `EmailDeliveryService`, `EmailSendJobHandler`, `EmailCapPolicy`, mẫu nội dung tối thiểu (F6, P2).
-- [ ] **Bước 7 — Nhắc hạn:** `DeadlineReminderScanner` (F7, P3).
-- [ ] **Bước 8 — Tùy chọn, dọn dữ liệu:** `NotificationPreferenceService` (F8), `NotificationMaintenanceScanner` (F9, P4).
-- [ ] **Bước 9 — API:** controller theo domain-entities mục 4; `contracts/openapi/notifications.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 10 — Frontend:** `ClassAnnouncementsPage` (đăng ký `DashboardNavEntry`), `ClassAnnouncementsCard` (`StudentClassSection`), `NotificationBell` và `NotificationPopup` (slot `HeaderWidget` của U01), `EmailPreferencePanel`.
-- [ ] **Bước 11 — Unit test (người code viết):** quyền tạo, sửa, xóa thông báo; sửa không phát lại sự kiện; người nhận theo từng loại sự kiện; bài của môn gửi cho mọi lớp mở; sự kiện lặp không tạo trùng; tắt email thì `SKIPPED`; chạm trần thì `DEFERRED` và thứ tự ưu tiên khi đưa lại; nhắc hạn một lần, đổi hạn nhắc lại, bài mở muộn không nhắc; nội dung email không có điểm; dọn 180 ngày; component frontend. Integration test do tester viết.
-- [ ] **Bước 12 — Review:** đối chiếu UC 63–65, story, BR-U14 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 1 — Migration:** `db/migration/notifications/V20260925_2000__create_notification_tables.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `Announcement`, `Notification`, `EmailDelivery`, `NotificationPreference`, `DeadlineReminder` và enum; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Thông báo lớp:** `AnnouncementService` (F1–F3), phát `class.announcement-posted`.
+- [ ] **Bước 4 — Sự kiện:** khai báo queue `jobs.notification`; `NotificationEventListener`, `RecipientResolver`, `NotificationService` (F4, F5, P1).
+- [ ] **Bước 5 — Email:** `EmailDeliveryService`, `EmailSendJobHandler`, `EmailCapPolicy`, mẫu nội dung tối thiểu (F6, P2).
+- [ ] **Bước 6 — Nhắc hạn:** `DeadlineReminderScanner` (F7, P3).
+- [ ] **Bước 7 — Tùy chọn, dọn dữ liệu:** `NotificationPreferenceService` (F8), `NotificationMaintenanceScanner` (F9, P4).
+- [ ] **Bước 8 — API:** controller theo domain-entities mục 4; `contracts/openapi/notifications.yaml`; ngoài phạm vi trả `404`.
+- [ ] **Bước 9 — Frontend:** `ClassAnnouncementsPage` (đăng ký `DashboardNavEntry`), `ClassAnnouncementsCard` (`StudentClassSection`), `NotificationBell` và `NotificationPopup` (slot `HeaderWidget` của U01), `EmailPreferencePanel`.
+- [ ] **Bước 10 — Unit test (người code viết):** quyền tạo, sửa, xóa thông báo; sửa không phát lại sự kiện; người nhận theo từng loại sự kiện; bài của môn gửi cho mọi lớp mở; sự kiện lặp không tạo trùng; tắt email thì `SKIPPED`; chạm trần thì `DEFERRED` và thứ tự ưu tiên khi đưa lại; nhắc hạn một lần, đổi hạn nhắc lại, bài mở muộn không nhắc; nội dung email không có điểm; dọn 180 ngày; component frontend. Integration test do tester viết.
+- [ ] **Bước 11 — Review:** đối chiếu UC 63–65, story, BR-U14 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

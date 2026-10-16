@@ -1,4 +1,4 @@
-// Healthcheck của container frontend (Compose gọi trực tiếp, không qua Nginx).
+// Healthcheck của container frontend; Nginx chuyển /api/* sang backend nên route này chỉ gọi được trong container.
 export function GET() {
   return Response.json({ status: "UP" });
 }

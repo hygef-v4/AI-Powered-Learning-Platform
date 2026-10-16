@@ -75,36 +75,36 @@ stateDiagram-v2
 
 ## 5. Contract
 
-### Port U10 cung cấp
+### Interface U10 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `QuizQueryPort` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án; `listByMaterial(materialId, classId)`; `get(quizId)` | U11, U13 | Hiện Quiz cho người học; Quiz gắn tài liệu trên Learning Material |
-| `QuizScoringPort` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
+| `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án; `listByMaterial(materialId, classId)`; `get(quizId)` | U11, U13 | Hiện Quiz cho người học; Quiz gắn tài liệu trên Learning Material |
+| `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
 | `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U10 cài) | - | U05 | Phần Quiz trong tab Evals; lối vào Question List, Quiz List trên Manager Dashboard |
-| `AiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `McpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
+| `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
 | Component `McqEditor` | - | Frontend U10 | Soạn câu trắc nghiệm, dùng ở Question Detail và câu riêng của Quiz |
 
 ### Contract U10 khai báo (unit khác cài)
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `QuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
+| `IQuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
 | Slot frontend `QuizDetailSection` | - | U11 | Lượt làm và dữ liệu hoạt động của lượt trên Quiz Detail cho giảng viên |
 
 Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt làm.
 
-### Port U10 dùng
+### Interface U10 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R2, R3/R4 |
-| `AuditPort` | U02 | Audit |
-| `EventPublisherPort`, `SettingsPort` | U03 | Sự kiện `quiz.published`; kiểm `activity.retentionDays` |
-| `SubjectQueryPort` | U04 | Môn còn `ACTIVE`, môn được giao |
-| `ClassAccessPort` | U05 | Lớp, giảng viên, môn của lớp |
-| `AiTaskPort`, `ReferenceMaterialPort` | U06 | Task AI soạn câu; chữ tài liệu tham khảo (U13 cài) |
+| `IAuthorization` | U01 | Kiểm R2, R3/R4 |
+| `IAudit` | U02 | Audit |
+| `IEventPublisher`, `ISettings` | U03 | Sự kiện `quiz.published`; kiểm `activity.retentionDays` |
+| `ISubjectQuery` | U04 | Môn còn `ACTIVE`, môn được giao |
+| `IClassAccess` | U05 | Lớp, giảng viên, môn của lớp |
+| `IAiTask`, `IReferenceMaterial` | U06 | Task AI soạn câu; chữ tài liệu tham khảo (U13 cài) |
 
 ## 6. API
 

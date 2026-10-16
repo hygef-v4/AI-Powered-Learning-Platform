@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Production: Nginx định tuyến /api/* sang backend. Dev: Next chuyển tiếp /api/v1/* sang BACKEND_URL.
+// Production: Nginx chuyển /api/* sang backend. Dev: Next chuyển tiếp /api/v1/* sang BACKEND_URL.
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 const nextConfig: NextConfig = {

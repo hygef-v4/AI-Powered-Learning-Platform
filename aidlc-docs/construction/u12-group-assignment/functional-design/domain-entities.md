@@ -60,35 +60,35 @@ stateDiagram-v2
 
 ## 4. Contract
 
-### Port U12 cung cấp
+### Interface U12 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `SseHub` | `publish(channelKey, event)`, `subscribe(channelKey)` | U12, U14 | Kênh realtime qua SSE cho mọi instance backend; U14 dùng cho chuông thông báo |
+| `ISseHub` | `publish(channelKey, event)`, `subscribe(channelKey)` | U12, U14 | Kênh realtime qua SSE cho mọi instance backend; U14 dùng cho chuông thông báo |
 | Sự kiện `group.membership-changed`, `group.leader-change-requested`, `group.leader-changed`, `group.leader-request-rejected`, `group.submitted` | - | U14 | Báo trong app cho đúng người (sự kiện mang danh sách người nhận) |
-| `GroupAssignmentSupport`, `AssignmentLifecycleListener` (contract của U07, U12 cài) | `checkReadiness(classId)`; `onOpened`, `onRetired` | U07 | Bật bài nhóm, kiểm sẵn sàng; tạo tài liệu khi mở, tự nộp khi ngưng giao |
+| `IGroupAssignmentSupport`, `IAssignmentLifecycleListener` (contract của U07, U12 cài) | `checkReadiness(classId)`; `onOpened`, `onRetired` | U07 | Bật bài nhóm, kiểm sẵn sàng; tạo tài liệu khi mở, tự nộp khi ngưng giao |
 | Slot `AssignmentFormSection` (của U07, U12 cài) | - | U07 | Phần Nhóm trên Assignment Form |
-| `GroupWorkStatusPort` (contract của U08, U12 cài), slot `GroupWorkEntry` | `statusFor(accountId, assignmentIds)` | U08 | Trạng thái bài nhóm trên Student Assignments; nút mở bài nhóm trên Assignment Detail |
-| `GroupSubmissionSource` (contract của U09, U12 cài) | `getGroupSubmission`, `listGroupSubmissions` | U09 | Hiện, chấm bài nhóm và tiến độ theo nhóm |
+| `IGroupWorkStatus` (contract của U08, U12 cài), slot `GroupWorkEntry` | `statusFor(accountId, assignmentIds)` | U08 | Trạng thái bài nhóm trên Student Assignments; nút mở bài nhóm trên Assignment Detail |
+| `IGroupSubmissionSource` (contract của U09, U12 cài) | `getGroupSubmission`, `listGroupSubmissions` | U09 | Hiện, chấm bài nhóm và tiến độ theo nhóm |
 | `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection` (contract của U05, U12 cài) | - | U05 | My Group; phần Nhóm trong tab Students; nhóm của sinh viên trong popup Student Detail |
-| `McpToolProvider` (contract của U06, U12 cài) | tool `read_authorized_group_submission` | U06 | Agent của giảng viên đọc bản nộp nhóm để đề xuất chấm |
-| `JobHandler` cho `GROUP_DOC_CREATE`, `PendingSweeper`, `ScheduledScanner` (contract của U03, U12 cài) | - | U03 | Tạo tài liệu nhóm khi bài mở; tự nộp khi hết hạn |
+| `IMcpToolProvider` (contract của U06, U12 cài) | tool `read_authorized_group_submission` | U06 | Agent của giảng viên đọc bản nộp nhóm để đề xuất chấm |
+| `IJobHandler` cho `GROUP_DOC_CREATE`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U12 cài) | - | U03 | Tạo tài liệu nhóm khi bài mở; tự nộp khi hết hạn |
 
 ### Contract U12 khai báo
 
 Không có.
 
-### Port U12 dùng
+### Interface U12 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort` | U01 | Kiểm quyền; tên thành viên |
-| `AuditPort` | U02 | Audit |
-| `JobPort`, `EventPublisherPort`, `ArtifactPort` | U03 | Job tạo tài liệu; sự kiện nhóm; ảnh trong tài liệu |
-| `ClassAccessPort` | U05 | Sinh viên đang học, trạng thái lớp, giảng viên |
-| `AssignmentQueryPort`, `DocumentModelPort`, `DocxPort`; `DocumentEditor`, `DocumentViewer` | U07 | Khung, phần, hạn; kiểm và xuất tài liệu; trình soạn |
-| `ActivityWritePort`; `useActivityTracker` | U08 | Dữ liệu rời trang của từng thành viên |
-| `GroupEvaluationPort` | U09 | Tạo đánh giá khi nhóm nộp |
+| `IAuthorization`, `IAccountLookup` | U01 | Kiểm quyền; tên thành viên |
+| `IAudit` | U02 | Audit |
+| `IJob`, `IEventPublisher`, `IArtifact` | U03 | Job tạo tài liệu; sự kiện nhóm; ảnh trong tài liệu |
+| `IClassAccess` | U05 | Sinh viên đang học, trạng thái lớp, giảng viên |
+| `IAssignmentQuery`, `IDocumentModel`, `IDocx`; `DocumentEditor`, `DocumentViewer` | U07 | Khung, phần, hạn; kiểm và xuất tài liệu; trình soạn |
+| `IActivityWrite`; `useActivityTracker` | U08 | Dữ liệu rời trang của từng thành viên |
+| `IGroupEvaluation` | U09 | Tạo đánh giá khi nhóm nộp |
 
 ## 5. API
 

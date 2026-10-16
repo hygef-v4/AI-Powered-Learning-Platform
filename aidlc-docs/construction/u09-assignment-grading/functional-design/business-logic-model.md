@@ -28,29 +28,29 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Bài nộp
 
 ### F1 - Tạo đánh giá khi nộp
-1. U08 gọi `SubmissionListener.onSubmitted(attemptId)` trong transaction nộp.
-2. U09 đọc lượt qua `SubmissionQueryPort.getSubmission` và bài qua `AssignmentQueryPort.get`; bài `PRACTICE` thì bỏ qua.
-3. Tạo đánh giá `PENDING` (lượt, bài, lớp, người học, `submissionHash`, tổng điểm từ `RubricPort.maxPoints`).
+1. U08 gọi `ISubmissionListener.onSubmitted(attemptId)` trong transaction nộp.
+2. U09 đọc lượt qua `ISubmissionQuery.getSubmission` và bài qua `IAssignmentQuery.get`; bài `PRACTICE` thì bỏ qua.
+3. Tạo đánh giá `PENDING` (lượt, bài, lớp, người học, `submissionHash`, tổng điểm từ `IRubric.maxPoints`).
 4. Đánh giá cũ chưa công bố của cùng (bài, người học) chuyển `SUPERSEDED` (BR-U09-10).
 
 ### F2 - Danh sách bài nộp và tiến độ (UC 42)
 1. Giảng viên bấm "Bài nộp" trên dòng bài ở tab Evals (U09 gắn qua slot `AssignmentRowAction` của U07); frontend gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/submissions`.
 2. Kiểm giảng viên chính của lớp (BR-U09-01); bài là `GRADED` của lớp hoặc của môn chứa lớp.
-3. Lấy tiến độ từng sinh viên qua `SubmissionQueryPort.listSubmissions` (bài nhóm qua `GroupSubmissionSource`), ghép với đánh giá của lớp.
+3. Lấy tiến độ từng sinh viên qua `ISubmissionQuery.listSubmissions` (bài nhóm qua `IGroupSubmissionSource`), ghép với đánh giá của lớp.
 4. Trả số đã nộp, đang làm, chưa nộp, nộp trễ, thời gian còn lại và bảng bài nộp (trạng thái chấm, điểm, trễ); lọc theo trạng thái, trễ.
 5. Từ đây: mở một bài (F3), AI chấm hàng loạt (F6), chốt (F8), công bố (F9).
 
 ### F3 - Mở bài để chấm (UC 42)
 1. Bấm một bài; frontend gọi `GET /api/v1/evaluations/{id}`.
 2. Kiểm giảng viên chính của lớp ghi trên đánh giá.
-3. Trả bài nộp (nội dung qua `SubmissionQueryPort.getSubmission` hoặc `GroupSubmissionSource`), rubric đã khóa từng phần (`RubricPort.listRubrics`), đánh giá, các đề xuất AI, lịch sử điểm.
-4. Bài có theo dõi hoạt động: hiện `ActivityTimeline` với dữ liệu từ `ActivityQueryPort.summary` (bài nhóm theo từng thành viên) (BR-U09-13).
+3. Trả bài nộp (nội dung qua `ISubmissionQuery.getSubmission` hoặc `IGroupSubmissionSource`), rubric đã khóa từng phần (`IRubric.listRubrics`), đánh giá, các đề xuất AI, lịch sử điểm.
+4. Bài có theo dõi hoạt động: hiện `ActivityTimeline` với dữ liệu từ `IActivityQuery.summary` (bài nhóm theo từng thành viên) (BR-U09-13).
 5. Nút ‹ › chuyển bài theo bộ lọc của Submission Detail hoặc theo lô vừa chấm AI.
 
 ## 3. Chấm
 
 ### F4 - Chấm tay (UC 44)
-1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua `RubricPort.score`.
+1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua `IRubric.score`.
 2. Tùy chọn nhập điều chỉnh (kèm lý do) và nhận xét.
 3. Lưu: `PUT /api/v1/evaluations/{id}` kèm `version`; kiểm quyền, đánh giá không `SUPERSEDED`, mục thuộc rubric, điều chỉnh có lý do, điểm cuối trong 0 tới tổng.
 4. Đánh giá `PENDING` hoặc `DRAFT` thành `DRAFT`; ghi người chấm, thời điểm; audit `GRADE_SAVED`. Đánh giá đã chốt hoặc đã công bố đi theo F10.
@@ -59,8 +59,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F5 - AI đề xuất một bài (UC 43)
 1. Trong Grading Workspace bấm "AI đề xuất"; `AiSourcePicker` của U06 hiện API chung (kèm quota còn lại) và kết nối cá nhân; giảng viên chọn.
 2. Frontend gọi `POST /api/v1/evaluations/{id}/ai-proposals` kèm nguồn, `requestRef`.
-3. Kiểm quyền, đánh giá chưa `SUPERSEDED`; dựng prompt theo BR-U09-31 (`AssignmentQueryPort.getContent`, `RubricPort.listRubrics`, `DocumentModelPort.toPlainText`, `compactDiagramXml`) kèm JSON schema.
-4. Gọi `AiTaskPort.submit` (loại `GRADING_PROPOSAL`, đích là đánh giá, `inputVersion` là `submissionHash`); tạo đề xuất `PENDING` version kế tiếp; audit `AI_GRADING_REQUESTED`.
+3. Kiểm quyền, đánh giá chưa `SUPERSEDED`; dựng prompt theo BR-U09-31 (`IAssignmentQuery.getContent`, `IRubric.listRubrics`, `IDocumentModel.toPlainText`, `compactDiagramXml`) kèm JSON schema.
+4. Gọi `IAiTask.submit` (loại `GRADING_PROPOSAL`, đích là đánh giá, `inputVersion` là `submissionHash`); tạo đề xuất `PENDING` version kế tiếp; audit `AI_GRADING_REQUESTED`.
 5. U06 gọi `onReady`: kiểm quyền người yêu cầu, hash còn khớp, schema, id mục thuộc rubric; đạt thì lưu đề xuất `READY` kèm provenance, không thì `STALE` hoặc `REJECTED`. `onFailed` chuyển `FAILED`.
 6. Giảng viên bấm "Dùng đề xuất": điền sẵn checklist và nhận xét; sửa nếu muốn rồi lưu như F4 bước 3–4; ghi đề xuất đã dùng.
 
@@ -101,7 +101,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F11 - Sổ điểm (UC 45)
 1. Giảng viên mở phần Sổ điểm trong tab Evals (U09 gắn qua `TeacherClassTab`); frontend gọi `GET /api/v1/classes/{classId}/gradebook`.
 2. Kiểm giảng viên chính của lớp.
-3. Lấy bài `GRADED` của lớp và của môn chứa lớp (`AssignmentQueryPort.listForClass`), sinh viên đang ghi danh (`ClassAccessPort.listActiveStudents`), đánh giá của lớp và tiến độ nộp (`SubmissionQueryPort`).
+3. Lấy bài `GRADED` của lớp và của môn chứa lớp (`IAssignmentQuery.listForClass`), sinh viên đang ghi danh (`IClassAccess.listActiveStudents`), đánh giá của lớp và tiến độ nộp (`ISubmissionQuery`).
 4. Trả mỗi sinh viên một mục đóng mở chứa từng bài: "x / tổng" của lượt được chấm và trạng thái (BR-U09-60); không có điểm tổng.
 
 ### F12 - Xuất bảng điểm (UC 45)
@@ -117,7 +117,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Submission History (U08) nhúng `StudentGradePanel` qua slot `SubmissionResultSection`; gọi `GET /api/v1/me/grades/attempts/{attemptId}`: điểm, nhận xét, mục rubric đạt, nhãn "đã cập nhật" nếu có; lượt chưa công bố thì trả "chưa có điểm".
 
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi `GroupEvaluationPort.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).
-2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `GroupSubmissionSource`, hiện từng phần kèm người làm.
+1. U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).
+2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.

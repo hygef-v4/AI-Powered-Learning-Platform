@@ -90,41 +90,41 @@ Part
 
 ## 5. Contract
 
-### Port U07 cung cấp
+### Interface U07 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AssignmentQueryPort` | `get(assignmentId)` → `AssignmentView`; `getContent(assignmentId)` → khung, phần, `requiredDiagrams`, rubric; `listForClass(classId)`; `submissionWindow(assignmentId, now)` → `ON_TIME`, `LATE`, `CLOSED`; `listClosingBetween(from, to)` | U08, U09, U12, U14 | Đọc bài, lịch, nội dung đã khóa; biết còn nhận bài không; nhắc hạn |
-| `RubricPort` | `listRubrics(assignmentId)`, `score(rubricId, checkedItemIds)`, `maxPoints(assignmentId)` | U08 (hiện rubric), U09 (chấm), U12 | Đọc rubric đã khóa, tính điểm theo mục đạt |
-| `DocumentModelPort` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm |
-| `DocxPort` | `export(document, title, diagramLinker)`, `importPreview(docx, origin, diagramEnabled, diagramResolver)` | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề |
+| `IAssignmentQuery` | `get(assignmentId)` → `AssignmentView`; `getContent(assignmentId)` → khung, phần, `requiredDiagrams`, rubric; `listForClass(classId)`; `submissionWindow(assignmentId, now)` → `ON_TIME`, `LATE`, `CLOSED`; `listClosingBetween(from, to)` | U08, U09, U12, U14 | Đọc bài, lịch, nội dung đã khóa; biết còn nhận bài không; nhắc hạn |
+| `IRubric` | `listRubrics(assignmentId)`, `score(rubricId, checkedItemIds)`, `maxPoints(assignmentId)` | U08 (hiện rubric), U09 (chấm), U12 | Đọc rubric đã khóa, tính điểm theo mục đạt |
+| `IDocumentModel` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm |
+| `IDocx` | `export(document, title, diagramLinker)`, `importPreview(docx, origin, diagramEnabled, diagramResolver)` | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề |
 | Sự kiện `assignment.opened` | - | U14 | Báo bài mới mở cho người học của lớp hoặc của mọi lớp `OPEN` thuộc môn |
 | `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U07 cài) | - | U05 | Phần Bài tập trong tab Evals; lối vào Assignment List trên Manager Dashboard |
-| `AiTaskResultHandler` cho `ASSIGNMENT_DRAFT`, `McpToolProvider` (contract của U06, U07 cài) | - | U06 | Nhận đề xuất AI; tool `read_assignment_context`, `save_assignment_draft` |
-| `ScheduledScanner` (contract của U03, U07 cài) | - | U03 | Mở, đóng bài theo lịch |
+| `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`, `IMcpToolProvider` (contract của U06, U07 cài) | - | U06 | Nhận đề xuất AI; tool `read_assignment_context`, `save_assignment_draft` |
+| `IScheduledScanner` (contract của U03, U07 cài) | - | U03 | Mở, đóng bài theo lịch |
 | Component `DocumentEditor`, `DiagramBlock`, `DocumentViewer`, `RubricViewer` | - | Frontend U08, U09, U12 | Trình soạn và xem tài liệu dùng chung, sơ đồ Draw.io, xem rubric |
 
 ### Contract U07 khai báo (unit khác cài)
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `AssignmentLifecycleListener` | `onOpened(assignmentId)`, `onRetired(assignmentId)` | U08 (tự nộp lượt đang làm khi ngưng giao), U12 (tạo tài liệu nhóm khi mở, tự nộp khi ngưng giao) | Phản ứng bắt buộc trong cùng transaction mở bài, ngưng giao mà U07 không phụ thuộc ngược |
-| `GroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành |
+| `IAssignmentLifecycleListener` | `onOpened(assignmentId)`, `onRetired(assignmentId)` | U08 (tự nộp lượt đang làm khi ngưng giao), U12 (tạo tài liệu nhóm khi mở, tự nộp khi ngưng giao) | Phản ứng bắt buộc trong cùng transaction mở bài, ngưng giao mà U07 không phụ thuộc ngược |
+| `IGroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành |
 | Slot frontend `AssignmentRowAction` | - | U09 | Lối vào bài nộp (Submission Detail) trên từng dòng bài |
 | Slot frontend `AssignmentFormSection` | - | U12 | Phần nhóm trên Assignment Form của bài `GROUP` |
 
-Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chưa có U13 thì `ReferenceMaterialPort` của U06 trả rỗng, AI soạn chỉ từ yêu cầu.
+Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chưa có U13 thì `IReferenceMaterial` của U06 trả rỗng, AI soạn chỉ từ yêu cầu.
 
-### Port U07 dùng
+### Interface U07 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R2, R3/R4, R5 |
-| `AuditPort` | U02 | Audit |
-| `ArtifactPort`, `EventPublisherPort`, `SettingsPort` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; kiểm `activity.retentionDays` khi bật theo dõi |
-| `SubjectQueryPort` | U04 | Môn còn `ACTIVE` |
-| `ClassAccessPort` | U05 | Trạng thái lớp, lớp của môn |
-| `AiTaskPort`, `ReferenceMaterialPort` | U06 | Gửi task AI soạn bản nháp; lấy chữ tài liệu tham khảo (U13 cài) |
+| `IAuthorization` | U01 | Kiểm R2, R3/R4, R5 |
+| `IAudit` | U02 | Audit |
+| `IArtifact`, `IEventPublisher`, `ISettings` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; kiểm `activity.retentionDays` khi bật theo dõi |
+| `ISubjectQuery` | U04 | Môn còn `ACTIVE` |
+| `IClassAccess` | U05 | Trạng thái lớp, lớp của môn |
+| `IAiTask`, `IReferenceMaterial` | U06 | Gửi task AI soạn bản nháp; lấy chữ tài liệu tham khảo (U13 cài) |
 
 ## 6. API
 

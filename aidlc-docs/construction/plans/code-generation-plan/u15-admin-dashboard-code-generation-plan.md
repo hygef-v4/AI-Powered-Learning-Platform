@@ -8,14 +8,15 @@ Thiết kế: [business-logic-model](../../u15-admin-dashboard/functional-design
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay phần Admin Dashboard của plan U16 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| Admin Dashboard | Chưa có | Làm mới, package `edu.aiplatform.admindashboard` |
-| `contracts/openapi/reporting.yaml` | Contract cũ | Thay bằng `contracts/openapi/admin-dashboard.yaml` |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/admindashboard/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../admindashboard/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/admindashboard/` | Chỉ có `index.ts` trống |
 
 ## Checklist
 

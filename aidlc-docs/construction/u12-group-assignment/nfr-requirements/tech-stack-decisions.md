@@ -9,6 +9,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
 | Lưu trữ | PostgreSQL + Spring Data JPA; nội dung mục, bản nộp dạng `jsonb`; mục và lịch sử ở bảng riêng | Lưu nháp từng mục không tranh khóa cả tài liệu |
-| Realtime | Server-Sent Events (Spring `SseEmitter`), phát giữa các instance qua RabbitMQ fanout `platform.realtime` | Chỉ cần đẩy một chiều; code `SseHub` đã có khung |
+| Realtime | Server-Sent Events (Spring `SseEmitter`), phát giữa các instance qua RabbitMQ fanout `platform.realtime` | Chỉ cần đẩy một chiều; code `ISseHub` đã có khung |
 | Trình soạn | `DocumentEditor`, `DocumentViewer` của U07 | Dùng chung |
 | Test | JUnit 5, Vitest; Testcontainers (PostgreSQL, RabbitMQ) cho integration test do tester viết | Theo NFR-004 |

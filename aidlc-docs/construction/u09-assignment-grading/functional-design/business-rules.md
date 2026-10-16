@@ -22,13 +22,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U09-10 | Bài `GRADED` được nộp (U08 gọi `onSubmitted`) tạo đánh giá `PENDING` gắn lượt đó. Chỉ lượt nộp cuối được chấm: có lượt mới thì đánh giá cũ chưa công bố chuyển `SUPERSEDED`; đánh giá cũ đã công bố giữ nguyên để người học xem, sổ điểm dùng lượt mới. | FR-007 |
 | BR-U09-11 | Submission Detail của một bài trong lớp: tiến độ (đã nộp, đang làm, chưa nộp, nộp trễ, thời gian còn lại) theo từng sinh viên, hoặc theo nhóm với bài nhóm; bảng bài nộp có trạng thái chấm, điểm, nhãn trễ; lọc theo trạng thái, trễ. | US-RPT-001 S1, FR-019 |
 | BR-U09-12 | Grading Workspace hiện bài nộp đầy đủ (văn bản, bảng, ảnh, sơ đồ; bài nhóm theo từng phần kèm người làm), rubric từng phần, đánh giá, đề xuất AI và lịch sử điểm; có nút ‹ › chuyển giữa các bài theo bộ lọc hiện tại; lưu một bài thì tự sang bài kế. | UC 42 |
-| BR-U09-13 | Bài có theo dõi hoạt động: Grading Workspace hiện dòng thời gian từ `ActivityQueryPort` của U08 (bài nhóm theo từng thành viên); phân biệt tắt, chưa có dữ liệu, có dữ liệu, đã hết hạn giữ. Dữ liệu chỉ để đối chiếu, không đổi điểm, không kết luận gian lận. Lượt Quiz và hoạt động của lượt Quiz do U11 hiện trên Quiz Detail (slot `QuizDetailSection` của U10). | FR-039, US-INT-001 |
+| BR-U09-13 | Bài có theo dõi hoạt động: Grading Workspace hiện dòng thời gian từ `IActivityQuery` của U08 (bài nhóm theo từng thành viên); phân biệt tắt, chưa có dữ liệu, có dữ liệu, đã hết hạn giữ. Dữ liệu chỉ để đối chiếu, không đổi điểm, không kết luận gian lận. Lượt Quiz và hoạt động của lượt Quiz do U11 hiện trên Quiz Detail (slot `QuizDetailSection` của U10). | FR-039, US-INT-001 |
 
 ## 3. Chấm tay (UC 44)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-20 | Chấm là tích mục checklist của rubric từng phần (rubric đã khóa của U07); điểm phần là tổng mục đạt qua `RubricPort.score`, điểm bài là tổng các phần. Không có ô nhập điểm tự do cho phần. | UC 44, BR-U07-22 |
+| BR-U09-20 | Chấm là tích mục checklist của rubric từng phần (rubric đã khóa của U07); điểm phần là tổng mục đạt qua `IRubric.score`, điểm bài là tổng các phần. Không có ô nhập điểm tự do cho phần. | UC 44, BR-U07-22 |
 | BR-U09-21 | Điều chỉnh tùy chọn (cộng hoặc trừ, ví dụ trừ nộp trễ) bắt buộc lý do; điểm cuối kẹp trong 0 tới tổng điểm. Hệ thống không tự trừ điểm trễ. | FR-008 |
 | BR-U09-22 | Nhận xét tùy chọn, ≤ 10.000 ký tự. Lưu thì đánh giá thành `DRAFT`, ghi người chấm và thời điểm; người học chưa thấy cho tới khi công bố. | US-GRD-003 S3 |
 | BR-U09-23 | Hiển thị "x / tổng điểm", 2 chữ số thập phân, không quy đổi thang 10. | Thiết kế |
@@ -37,8 +37,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-30 | Giảng viên chọn nguồn: API chung trong quota, API cá nhân (qua `AiTaskPort` của U06) hoặc agent MCP (đọc bài qua `read_authorized_submission`, ghi qua `record_grading_proposal`). Hết quota không tự chuyển nguồn. | UC 43, FR-012 |
-| BR-U09-31 | Prompt gồm hướng dẫn, khung, rubric (id và nội dung từng mục) và bài nộp dạng chữ, sơ đồ ở dạng XML rút gọn (`DocumentModelPort`); không có tên, email người học. Điểm đóng góp thành viên không gửi AI. | FR-008 |
+| BR-U09-30 | Giảng viên chọn nguồn: API chung trong quota, API cá nhân (qua `IAiTask` của U06) hoặc agent MCP (đọc bài qua `read_authorized_submission`, ghi qua `record_grading_proposal`). Hết quota không tự chuyển nguồn. | UC 43, FR-012 |
+| BR-U09-31 | Prompt gồm hướng dẫn, khung, rubric (id và nội dung từng mục) và bài nộp dạng chữ, sơ đồ ở dạng XML rút gọn (`IDocumentModel`); không có tên, email người học. Điểm đóng góp thành viên không gửi AI. | FR-008 |
 | BR-U09-32 | Đề xuất gồm mục đạt theo từng phần, nhận xét từng phần và nhận xét chung; phải đúng schema và chỉ dùng id mục của rubric đã khóa. Mỗi đề xuất gắn `submissionHash`; hash khác bài nộp hiện tại thì `STALE`, không dùng được. Mỗi đánh giá giữ nhiều đề xuất đánh số version. | US-GRD-002 S1, S2 |
 | BR-U09-33 | Đề xuất chỉ để tham khảo: "Dùng đề xuất" điền sẵn checklist và nhận xét; giảng viên sửa rồi lưu như chấm tay. Điểm khác đề xuất không cần lý do; đề xuất gốc vẫn truy vết được. AI không lưu, không chốt, không công bố điểm. | US-GRD-003 S1, S2 |
 | BR-U09-34 | Chấm hàng loạt bằng AI: chọn nhiều bài `PENDING` hoặc `DRAFT` trong Submission Detail và một nguồn; mỗi bài một task; trả kết quả từng mục (đã gửi, hết quota, ngoài quyền, không chấm được). Giảng viên xác nhận từng bài trong Grading Workspace. | UC 43 |
@@ -57,7 +57,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-50 | U12 gọi `GroupEvaluationPort.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` một đánh giá tài liệu nhóm và một đánh giá thành viên cho mỗi người; điểm trước đó vào lịch sử. | US-GRP-006 |
+| BR-U09-50 | U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` một đánh giá tài liệu nhóm và một đánh giá thành viên cho mỗi người; điểm trước đó vào lịch sử. | US-GRP-006 |
 | BR-U09-51 | Tài liệu nhóm chấm như bài cá nhân theo rubric từng phần; điểm thành viên mặc định bằng điểm tài liệu chung, giảng viên sửa từng người khi cần, lý do tùy chọn; không có công thức ghép điểm. | Người dùng chốt 2026-10-04 |
 
 ## 7. Sổ điểm, xuất, phân bố (UC 45)

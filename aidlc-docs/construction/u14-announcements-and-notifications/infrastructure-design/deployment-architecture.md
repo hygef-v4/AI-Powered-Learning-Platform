@@ -8,9 +8,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ```
 browser --> nginx --> backend (package announcements, notifications) --> postgres
-browser <--SSE-- nginx <-- backend (SseHub của U12)
+browser <--SSE-- nginx <-- backend (ISseHub của U12)
 RabbitMQ platform.events --> jobs.notification --> worker (tạo thông báo) --> postgres
-worker --> jobs.email --> worker (EmailSendJobHandler) --> MailPort (U01) --> Brevo / Mailpit
+worker --> jobs.email --> worker (EmailSendJobHandler) --> IMail (U01) --> Brevo / Mailpit
 ```
 
-**Text alternative**: Người dùng dùng trình duyệt qua Nginx tới backend để xem, đăng thông báo lớp và xem thông báo của mình; chuông nhận cập nhật qua SSE. Sự kiện nghiệp vụ trên exchange `platform.events` vào queue `jobs.notification`; worker tạo thông báo và bản ghi email, rồi job email gửi qua `MailPort` của U01 tới Brevo hoặc Mailpit.
+**Text alternative**: Người dùng dùng trình duyệt qua Nginx tới backend để xem, đăng thông báo lớp và xem thông báo của mình; chuông nhận cập nhật qua SSE. Sự kiện nghiệp vụ trên exchange `platform.events` vào queue `jobs.notification`; worker tạo thông báo và bản ghi email, rồi job email gửi qua `IMail` của U01 tới Brevo hoặc Mailpit.

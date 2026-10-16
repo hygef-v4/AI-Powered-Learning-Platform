@@ -9,7 +9,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Thành phần | Chạy ở | Trách nhiệm |
 |---|---|---|
 | `SubmissionReviewController`, `EvaluationController`, `GradingProposalController`, `GradebookController`, `MyGradeController` | backend | API mục 5 của domain-entities |
-| `EvaluationLifecycleService` (cài `SubmissionListener`, `GroupEvaluationPort`) | backend | Tạo, thay thế đánh giá (F1, F14) |
+| `EvaluationLifecycleService` (cài `ISubmissionListener`, `IGroupEvaluation`) | backend | Tạo, thay thế đánh giá (F1, F14) |
 | `SubmissionReviewService` | backend | Bài nộp và tiến độ, mở bài (F2, F3) |
 | `GradingService` | backend | Chấm, chốt, công bố, sửa (F4, F8–F10, P1, P2, P4) |
 | `GradingProposalService`, `GradingProposalResultHandler`, `GradingMcpTools` | backend, worker | AI đề xuất, hàng loạt, MCP (F5–F7, P3) |

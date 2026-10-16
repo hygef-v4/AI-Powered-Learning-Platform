@@ -8,32 +8,35 @@ Thiết kế: [business-logic-model](../../u12-group-assignment/functional-desig
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay plan U12 cũ và plan U14 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../groups/` (`GroupReadinessService`, `MembershipQueryService`, `GroupEvents`, port `GroupChangePort`, `GroupMembershipPort`, `GroupView`) | Khung cũ, chưa có test | Giữ package `groups`; `GroupReadinessService` cài `GroupAssignmentSupport` của U07; `GroupChangePort` thành gọi nội bộ |
-| `backend/.../groupdocs/` (`AssignmentLifecycleAdapter`, `GroupChangeAdapter`, `GroupSubmissionQueryService`, `GroupSubmitted`, port `GroupSubmissionQueryPort`, `GroupSubmissionView`, `GroupSubmittedPort`, `SseHub`, `RabbitSseHub`) | Khung cũ | Giữ package `groupdocs` và `SseHub`; adapter cài `AssignmentLifecycleListener`, `GroupWorkStatusPort`, `GroupSubmissionSource`; bỏ `GroupSubmittedPort` (dùng `GroupEvaluationPort` của U09) |
-| `contracts/openapi/groups.yaml`, `group-docs.yaml`, `contracts/messages/group-events.json`, `group-submission-events.json` | Contract cũ | Cập nhật theo API và sự kiện mới |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/groups/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../groups/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/groups/` | Chỉ có `index.ts` trống |
+| `backend/src/main/java/edu/aiplatform/groupdocs/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../groupdocs/contract/` | interface `ISseHub` |
+| `backend/.../groupdocs/contract/stub/GroupDocsContractStubs` | Bản tạm trả dữ liệu mẫu cho `ISseHub` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
+| `frontend/src/features/groupdocs/` | Chỉ có `index.ts` trống |
 
 ## Checklist
 
-- [ ] **Bước 1 — Dọn code cũ:** theo bảng trên; code biên dịch được.
-- [ ] **Bước 2 — Migration:** `db/migration/groups/V20260925_1800__create_group_tables.sql` theo infrastructure-design.
-- [ ] **Bước 3 — Domain:** `ClassGroup`, `GroupMember`, `LeaderChangeRequest`, `GroupDocument`, `GroupSection`, `SectionRevision` và enum; repository chỉ dùng trong package.
-- [ ] **Bước 4 — Nhóm:** `ClassGroupService`, `RandomGroupSplitter` (F1, F2, F14, P2).
-- [ ] **Bước 5 — Trưởng nhóm:** `LeaderRequestService` (F3, F5).
-- [ ] **Bước 6 — Bài nhóm:** `GroupReadinessService`, `GroupAssignmentLifecycle` (F6, F7, F13).
-- [ ] **Bước 7 — Tài liệu nhóm:** `GroupDocumentService`, `GroupDocCreateJobHandler`, `GroupSectionService` (F7–F11, P1, P3).
-- [ ] **Bước 8 — Nộp:** `GroupSubmissionService`, `GroupAutoSubmitScanner` (F12, F13, P5).
-- [ ] **Bước 9 — Realtime:** `SseHub`, `RabbitSseHub`, exchange `platform.realtime` (P4).
-- [ ] **Bước 10 — Port cho unit khác:** `GroupWorkQueryService` (cài `GroupWorkStatusPort`, `GroupSubmissionSource`), `GroupMcpTools` (tool `read_authorized_group_submission`), ghi dữ liệu hoạt động qua U08 (F15).
-- [ ] **Bước 11 — API:** controller theo domain-entities mục 5; cập nhật contract; ngoài phạm vi trả `404`.
-- [ ] **Bước 12 — Frontend:** `ClassGroupsPanel` (đăng ký `TeacherClassTab`), `StudentGroupInfo` (`StudentDetailSection`), `MyGroupSection` (`StudentClassSection`), `GroupAssignmentPanel` (`AssignmentFormSection`), `OpenGroupWorkButton` (`GroupWorkEntry`), `GroupWorkspacePage` và các component.
-- [ ] **Bước 13 — Unit test (người code viết):** mỗi sinh viên một nhóm, nhóm phải có trưởng nhóm; chia ngẫu nhiên chênh tối đa một người; lưu bộ nhóm mâu thuẫn bị từ chối cả bộ; xóa nhóm đã dùng bị từ chối; yêu cầu đổi trưởng nhóm (lý do, đề cử, một yêu cầu chờ, hủy khi đổi trực tiếp); sẵn sàng phát hành; dựng mục từ phần; nhận, giao, nhả, Xong và trạng thái mục; lưu nháp lệch `version`; chỉ trưởng nhóm nộp; tự nộp chốt bản nháp; người bị gỡ khỏi lớp mất quyền; component frontend. Integration test do tester viết.
-- [ ] **Bước 14 — Review:** đối chiếu UC 53–57, story, BR-U12 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 1 — Migration:** `db/migration/groups/V20260925_1800__create_group_tables.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `ClassGroup`, `GroupMember`, `LeaderChangeRequest`, `GroupDocument`, `GroupSection`, `SectionRevision` và enum; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Nhóm:** `ClassGroupService`, `RandomGroupSplitter` (F1, F2, F14, P2).
+- [ ] **Bước 4 — Trưởng nhóm:** `LeaderRequestService` (F3, F5).
+- [ ] **Bước 5 — Bài nhóm:** `GroupReadinessService`, `GroupAssignmentLifecycle` (F6, F7, F13).
+- [ ] **Bước 6 — Tài liệu nhóm:** `GroupDocumentService`, `GroupDocCreateJobHandler`, `GroupSectionService` (F7–F11, P1, P3).
+- [ ] **Bước 7 — Nộp:** `GroupSubmissionService`, `GroupAutoSubmitScanner` (F12, F13, P5).
+- [ ] **Bước 8 — Realtime:** `ISseHub`, `RabbitSseHub`, exchange `platform.realtime` (P4).
+- [ ] **Bước 9 — Interface cho unit khác:** `GroupWorkQueryService` (cài `IGroupWorkStatus`, `IGroupSubmissionSource`), `GroupMcpTools` (tool `read_authorized_group_submission`), ghi dữ liệu hoạt động qua U08 (F15).
+- [ ] **Bước 10 — API:** controller theo domain-entities mục 5; cập nhật contract; ngoài phạm vi trả `404`.
+- [ ] **Bước 11 — Frontend:** `ClassGroupsPanel` (đăng ký `TeacherClassTab`), `StudentGroupInfo` (`StudentDetailSection`), `MyGroupSection` (`StudentClassSection`), `GroupAssignmentPanel` (`AssignmentFormSection`), `OpenGroupWorkButton` (`GroupWorkEntry`), `GroupWorkspacePage` và các component.
+- [ ] **Bước 12 — Unit test (người code viết):** mỗi sinh viên một nhóm, nhóm phải có trưởng nhóm; chia ngẫu nhiên chênh tối đa một người; lưu bộ nhóm mâu thuẫn bị từ chối cả bộ; xóa nhóm đã dùng bị từ chối; yêu cầu đổi trưởng nhóm (lý do, đề cử, một yêu cầu chờ, hủy khi đổi trực tiếp); sẵn sàng phát hành; dựng mục từ phần; nhận, giao, nhả, Xong và trạng thái mục; lưu nháp lệch `version`; chỉ trưởng nhóm nộp; tự nộp chốt bản nháp; người bị gỡ khỏi lớp mất quyền; component frontend. Integration test do tester viết.
+- [ ] **Bước 13 — Review:** đối chiếu UC 53–57, story, BR-U12 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

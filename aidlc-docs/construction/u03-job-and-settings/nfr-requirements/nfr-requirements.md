@@ -1,6 +1,6 @@
 # U03 Job and Settings — nfr-requirements
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -42,7 +42,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-40 | `JobPort.enqueue` không thêm câu SQL nào; gửi message và phát sự kiện không chặn request quá 50 ms. | NFR-003 |
+| NFR-U03-40 | `IJob.enqueue` không thêm câu SQL nào; gửi message và phát sự kiện không chặn request quá 50 ms. | NFR-003 |
 | NFR-U03-41 | Frontend poll trạng thái việc nền mỗi 3 giây, dừng ở trạng thái cuối. | Thiết kế |
 | NFR-U03-42 | Worker là container riêng, cùng mã nguồn backend với profile `worker`. | Thiết kế |
 | NFR-U03-43 | Mỗi queue có luồng xử lý riêng; gọi AI hoặc backup chậm không chặn email và việc nội bộ. | Thiết kế |
@@ -60,7 +60,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U03-60 | `SettingsPort` dùng cache trong bộ nhớ hết hạn sau 30 giây. | BR-U03-86 |
+| NFR-U03-60 | `ISettings` dùng cache trong bộ nhớ hết hạn sau 30 giây. | BR-U03-86 |
 | NFR-U03-61 | Xem và sửa cài đặt p95 ≤ 300 ms, không tính phần ủy quyền. | NFR-003 |
 | NFR-U03-62 | API Settings chỉ cho `ADMIN`; không trả và không lưu bí mật. | BR-U03-80, 85 |
 | NFR-U03-64 | Gọi `summary()` của phần ủy quyền có timeout 1 giây; lỗi chỉ ảnh hưởng phần đó. | BR-U03-89 |

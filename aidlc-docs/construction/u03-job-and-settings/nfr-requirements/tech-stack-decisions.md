@@ -1,6 +1,6 @@
 # U03 Job and Settings — tech-stack-decisions
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -8,7 +8,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Google Drive | Google Drive API v3 Java client + google-auth-library, JSON key service account | Đã dùng trong code hiện có |
+| Google Drive | Google Drive API v3 Java client + google-auth-library, JSON key service account | Client chính thức cho Java |
 | Nhận dạng loại tệp | Apache Tika core | Đọc magic bytes |
 | Upload | Spring `MultipartFile` ghi ra thư mục tạm | Không giữ tệp trong RAM |
 | Giới hạn đồng thời | `Semaphore` 5 permit | Đủ cho một instance backend |

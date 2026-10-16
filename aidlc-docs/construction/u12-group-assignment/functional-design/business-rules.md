@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U12-20 | Bài nhóm là Assignment `submissionMode = GROUP` của U07: chỉ bài của lớp, chỉ `GRADED` (D02), sơ đồ tùy chọn; soạn đề, khung, rubric bằng Assignment Form của U07. U12 thêm phần nhóm trên form (slot `AssignmentFormSection`): số nhóm, trạng thái sẵn sàng, lối vào tab Students. | UC 53, US-GRP-003 |
 | BR-U12-21 | Giảng viên không giao phần cho từng sinh viên; mỗi phần của khung (heading nhỏ nhất của mỗi nhánh, U07) thành một mục, trưởng nhóm giao mục trong tài liệu nhóm. | Người dùng chốt 2026-10-04 |
-| BR-U12-22 | Sẵn sàng phát hành (`GroupAssignmentSupport.checkReadiness`): lỗi chặn `CLASS_WITHOUT_GROUP`, `GROUP_WITHOUT_LEADER`, `GROUP_WITHOUT_MEMBER` (tính theo thành viên hiệu lực); cảnh báo `STUDENT_WITHOUT_GROUP`, giảng viên xác nhận thì vẫn phát hành. | FR-025 |
+| BR-U12-22 | Sẵn sàng phát hành (`IGroupAssignmentSupport.checkReadiness`): lỗi chặn `CLASS_WITHOUT_GROUP`, `GROUP_WITHOUT_LEADER`, `GROUP_WITHOUT_MEMBER` (tính theo thành viên hiệu lực); cảnh báo `STUDENT_WITHOUT_GROUP`, giảng viên xác nhận thì vẫn phát hành. | FR-025 |
 
 ## 4. Tài liệu nhóm (UC 56)
 
@@ -44,17 +44,17 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U12-32 | Mọi thao tác sửa chỉ khi tài liệu `IN_PROGRESS` và bài còn nhận bài nộp (`submissionWindow` là `ON_TIME` hoặc `LATE`); lần lưu nháp cuối trong 30 giây ân hạn vẫn nhận; bài bị ngưng giao thì đóng ngay. | FR-007 |
 | BR-U12-33 | Trưởng nhóm giao một mục cho một thành viên: mục `CLAIMED` cho người đó, ghi người giao; mục đang do người khác giữ thì nhả trước (có cảnh báo). Thành viên tự nhận mục `OPEN` hoặc `DONE`; một người giữ được nhiều mục; mỗi mục một người sửa tại một thời điểm. | FR-026, US-GRP-004 S1 |
 | BR-U12-34 | Người giữ mở mục trong popup che kín trang: hiện các heading trên nhánh của phần kèm nội dung của chúng và nội dung phần, không hiện nhánh khác; trình soạn như bài cá nhân (block khung khóa). Chỉ popup này hiện theo nhánh; workspace và các màn khác hiện toàn bộ tài liệu. Tự lưu bản nháp 10 giây sau lần sửa cuối, kèm `version` của mục; chỉ người giữ thấy bản nháp. | Người dùng chốt 2026-10-04 |
-| BR-U12-35 | Bấm Xong: kiểm block qua `DocumentModelPort`; nội dung nháp thành nội dung đã đăng; thêm một bản lịch sử (tác giả, thời điểm); mục `DONE`, bỏ khóa; đẩy cập nhật realtime. | US-GRP-004 S2 |
+| BR-U12-35 | Bấm Xong: kiểm block qua `IDocumentModel`; nội dung nháp thành nội dung đã đăng; thêm một bản lịch sử (tác giả, thời điểm); mục `DONE`, bỏ khóa; đẩy cập nhật realtime. | US-GRP-004 S2 |
 | BR-U12-36 | Nhả khóa: người giữ, trưởng nhóm hoặc giảng viên chính của lớp; người giữ rời nhóm thì tự nhả. Cảnh báo "bản nháp chưa Xong sẽ bị bỏ"; bản nháp bị xóa; mục về `DONE` nếu đã có nội dung đăng, không thì `OPEN`. | FR-026 |
 | BR-U12-37 | Realtime qua SSE: thành viên đang mở workspace nhận sự kiện giao, nhận, nhả, xong, nộp, ngưng giao trong ≤ 2 giây; chỉ đẩy thay đổi đã Xong, không đồng bộ từng phím gõ; mất kết nối thì tải lại toàn bộ khi kết nối lại. | US-GRP-005 |
-| BR-U12-38 | Bài bật theo dõi: workspace của từng thành viên gửi sự kiện qua `useActivityTracker`; U12 kiểm thành viên, tài liệu `IN_PROGRESS`, chính sách rồi gọi `ActivityWritePort` (loại `GROUP_DOCUMENT`, theo từng thành viên). | FR-039 |
+| BR-U12-38 | Bài bật theo dõi: workspace của từng thành viên gửi sự kiện qua `useActivityTracker`; U12 kiểm thành viên, tài liệu `IN_PROGRESS`, chính sách rồi gọi `IActivityWrite` (loại `GROUP_DOCUMENT`, theo từng thành viên). | FR-039 |
 
 ## 5. Nộp (UC 56)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U12-40 | Chỉ trưởng nhóm hiện tại nộp, bất kỳ lúc nào bài còn nhận bài nộp; thành viên khác không nộp thay. Còn mục chưa Xong thì cảnh báo nhưng vẫn cho nộp, phần chưa Xong không vào bản nộp; tài liệu phải qua `validateForSubmit` (đủ sơ đồ bắt buộc, sơ đồ không rỗng). | US-GRP-005 S1 |
-| BR-U12-41 | Nộp chụp phần chung, nội dung đã đăng của các mục và tác giả từng mục thành bản bất biến kèm `receiptHash`, `late` nếu sau `closesAt`. Trong cùng transaction gọi `GroupEvaluationPort.onGroupSubmitted` của U09; sau commit phát `group.submitted`. | US-GRP-005 S1, BR-U03-64 |
+| BR-U12-41 | Nộp chụp phần chung, nội dung đã đăng của các mục và tác giả từng mục thành bản bất biến kèm `receiptHash`, `late` nếu sau `closesAt`. Trong cùng transaction gọi `IGroupEvaluation.onGroupSubmitted` của U09; sau commit phát `group.submitted`. | US-GRP-005 S1, BR-U03-64 |
 | BR-U12-42 | Trưởng nhóm nộp lại được trước hạn; bản nộp cuối thay bản trước và được chấm; người nộp, thời điểm, mã băm của mọi lần nộp nằm trong audit. Sau khi nộp vẫn sửa được tới hạn. | FR-026 |
 | BR-U12-43 | Tự nộp khi quá hạn cuối nhận bài 30 giây hoặc khi bài bị ngưng giao, nếu có thay đổi sau lần nộp cuối: mục đang `CLAIMED` được chốt bằng bản nháp đã lưu gần nhất (thêm lịch sử, `DONE`); chụp như BR-U12-41 với `AUTO_DEADLINE` hoặc `AUTO_RETIRED`; tài liệu `CLOSED`, chỉ đọc. Không phụ thuộc AI. Người đang mở workspace thấy trang khóa "Đang nộp…" rồi chuyển sang bản nộp. | US-GRP-005 S2 |
 | BR-U12-44 | Workspace có thẻ Bản nộp: bản nộp cuối với thời điểm, người nộp, cách nộp, trễ, biên nhận và tác giả từng mục. Thành viên tải DOCX bản hiện tại hoặc bản nộp; giảng viên chính của lớp tải DOCX bản nộp. | UC 56 |
@@ -64,8 +64,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U12-50 | My Group (phần trên Student Class Detail): tên nhóm, thành viên, trưởng nhóm, tài liệu nhóm của các bài nhóm đã mở kèm tiến độ và trạng thái nộp, yêu cầu đổi trưởng nhóm gần nhất của mình (trạng thái, lý do từ chối). Không thấy nhóm khác hay yêu cầu của người khác, chỉ biết nhóm đang có yêu cầu chờ. | UC 54, US-GRP-001 S4 |
-| BR-U12-51 | Student Assignments (U08) hiện trạng thái bài nhóm qua `GroupWorkStatusPort`; Assignment Detail có nút mở workspace (slot `GroupWorkEntry`) kèm nhóm, trưởng nhóm, số mục theo trạng thái. Popup Student Detail hiện nhóm của sinh viên (slot `StudentDetailSection`). | UC 37, 38, 23 |
-| BR-U12-52 | Giảng viên xem tiến độ từng nhóm theo bài nhóm trong tab Students: số mục xong, đang làm, trống, người giữ, đã nộp, trễ, cách nộp; nhả khóa mục; U09 lấy cùng dữ liệu qua `GroupSubmissionSource` cho Submission Detail và chấm. | UC 42, FR-026 |
+| BR-U12-51 | Student Assignments (U08) hiện trạng thái bài nhóm qua `IGroupWorkStatus`; Assignment Detail có nút mở workspace (slot `GroupWorkEntry`) kèm nhóm, trưởng nhóm, số mục theo trạng thái. Popup Student Detail hiện nhóm của sinh viên (slot `StudentDetailSection`). | UC 37, 38, 23 |
+| BR-U12-52 | Giảng viên xem tiến độ từng nhóm theo bài nhóm trong tab Students: số mục xong, đang làm, trống, người giữ, đã nộp, trễ, cách nộp; nhả khóa mục; U09 lấy cùng dữ liệu qua `IGroupSubmissionSource` cho Submission Detail và chấm. | UC 42, FR-026 |
 
 ## 7. AI, audit và lỗi
 

@@ -12,7 +12,7 @@ Thiết kế độc lập công nghệ. Truy vết: `US-AUD-001`, UC 13. Tên th
 
 | Entity | Loại | Lưu ở | Unit ghi |
 |---|---|---|---|
-| `AuditLog` (thực thể `AUDIT_LOG`) | Entity bất biến | `audit_logs` | U02 (mọi unit gửi qua `AuditPort`) |
+| `AuditLog` (thực thể `AUDIT_LOG`) | Entity bất biến | `audit_logs` | U02 (mọi unit gửi qua `IAudit`) |
 
 U02 **không** sở hữu quyền đọc audit (U01) và việc nền (U03).
 
@@ -33,21 +33,21 @@ Không có thao tác sửa hoặc xóa. Giữ **vĩnh viễn**.
 
 ## 3. Contract
 
-### Port U02 cung cấp
+### Interface U02 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AuditPort` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
-| `AuditQueryPort` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
+| `IAudit` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
+| `IAuditQuery` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
 
 Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, `action`, `objectType`, `objectId`, `result`, `reason`, `details` đã che, `occurredAt`), `AuditResult` (`SUCCESS`, `DENIED`, `FAILURE`), `AuditFilter`, `AuditLogView` (`AuditEvent` + `actorEmail`, rỗng nghĩa là hệ thống).
 
-### Port U02 dùng
+### Interface U02 dùng
 
-| Port | Unit | Cạnh |
+| Interface | Unit | Cạnh |
 |---|---|---|
-| `AuthorizationPort.authorize` | U01 | `C` - chỉ cho API đọc audit. U02 code trước U01 trong Iter 1 nên tới khi U01 xong, `AuthorizationService` khung của U01 luôn từ chối |
-| `AccountLookupPort.getContact` | U01 | `C` - lấy email người thực hiện để hiện trên Audit Log; khi U01 chưa cài thì để trống email |
+| `IAuthorization.authorize` | U01 | `C` - chỉ cho API đọc audit. U02 code trước U01 trong Iter 1 nên tới khi U01 xong, bản tạm `IAuthorization` trong khung luôn cho phép |
+| `IAccountLookup.getContact` | U01 | `C` - lấy email người thực hiện để hiện trên Audit Log; khi U01 chưa cài thì để trống email |
 
 ## Quy tắc tích hợp revision hiện hành
 

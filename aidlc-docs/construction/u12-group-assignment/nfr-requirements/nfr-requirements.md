@@ -15,7 +15,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | NFR-U12-10 | Thao tác trên mục khóa dòng mục và kiểm `version` của mục; nộp khóa dòng tài liệu; mỗi mục một người sửa. | BR-U12-33 |
 | NFR-U12-11 | Unique: (`classId`, `accountId`) với thành viên; (`groupId`, `assignmentId`) với tài liệu; một yêu cầu `PENDING` mỗi nhóm. Job tạo tài liệu idempotent. | BR-U12-02, 30 |
 | NFR-U12-12 | `onGroupSubmitted` của U09 chạy trong transaction nộp; sự kiện và SSE phát sau commit. | BR-U03-64 |
-| NFR-U12-30 | Tài liệu kiểm qua `DocumentModelPort` của U07; kênh SSE chỉ cho thành viên hiệu lực và giảng viên của lớp, kiểm khi mở kênh và khi đổi thành viên. | SEC-002, SEC-003 |
+| NFR-U12-30 | Tài liệu kiểm qua `IDocumentModel` của U07; kênh SSE chỉ cho thành viên hiệu lực và giảng viên của lớp, kiểm khi mở kênh và khi đổi thành viên. | SEC-002, SEC-003 |
 | NFR-U12-31 | Không log nội dung tài liệu, lý do yêu cầu. | SEC-005 |
 | NFR-U12-40 | Người code viết unit test cho mọi `BR-U12-xx`; tester viết integration test, gồm hai người nhận cùng một mục, trưởng nhóm giao mục đang có người giữ, tự nộp khi có mục đang làm, đổi thành viên khi bài đang mở, SSE trên hai instance, và phân quyền 4 role trên mọi endpoint. | NFR-004 |
 

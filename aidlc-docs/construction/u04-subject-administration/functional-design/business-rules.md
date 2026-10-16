@@ -18,7 +18,7 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 | BR-U04-04 | Lưu trữ và mở lại là thao tác trong UC 19. Chỉ lưu trữ khi mọi lớp của môn đã `ARCHIVED`; không kiểm được số lớp (U05 không trả lời) thì từ chối. Mở lại đưa môn về `ACTIVE`. Không xóa môn. | UC 19 |
 | BR-U04-05 | Subject Detail của Admin (UC 18) hiện thông tin môn, Chủ nhiệm môn và danh sách lớp của môn chỉ đọc (mã, tên, học kỳ, trạng thái, giảng viên, số sinh viên). Admin không mở chi tiết lớp và không sửa lớp. | UC 18 |
 | BR-U04-06 | `name` bắt buộc, tối đa 200 ký tự; `description` tùy chọn, tối đa 2.000 ký tự. Sửa phải gửi kèm `version`; lệch thì trả `409`. | UC 17, 19 |
-| BR-U04-07 | Môn `ARCHIVED`: không tạo lớp mới (U05 kiểm), tài nguyên cấp môn chỉ đọc (U07, U10, U13 kiểm qua `SubjectQueryPort.isActive`); lịch sử giữ nguyên. | UC 19 |
+| BR-U04-07 | Môn `ARCHIVED`: không tạo lớp mới (U05 kiểm), tài nguyên cấp môn chỉ đọc (U07, U10, U13 kiểm qua `ISubjectQuery.isActive`); lịch sử giữ nguyên. | UC 19 |
 
 ## 2. Phạm vi cho phân quyền
 
@@ -40,4 +40,4 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 ## 4. Quy tắc chung
 
 - Quyền kiểm phía server ở mọi request, mặc định từ chối; route đổi trạng thái có chống CSRF.
-- Repository của unit là riêng; unit khác đọc môn qua `SubjectQueryPort`, không đọc bảng `subjects`.
+- Repository của unit là riêng; unit khác đọc môn qua `ISubjectQuery`, không đọc bảng `subjects`.

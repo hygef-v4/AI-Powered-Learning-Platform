@@ -1,12 +1,9 @@
 #!/bin/sh
-# Chạy một lần khi khởi tạo volume. `migrator` sở hữu schema (Flyway), `app` chỉ đọc/ghi dữ liệu.
-# Quyền riêng của bảng `audit_logs` (app không UPDATE/DELETE) do migration U02 đặt.
+# Chạy một lần khi khởi tạo volume. `migrator` sở hữu schema (chỉ Flyway dùng), `app` chỉ đọc và ghi dữ liệu.
+# Quyền riêng của `audit_logs` (app không UPDATE, DELETE) do migration U02 đặt; role `backup_reader` do U03 thêm.
 set -eu
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 CREATE ROLE migrator LOGIN PASSWORD '${POSTGRES_MIGRATOR_PASSWORD}';
 CREATE ROLE app LOGIN PASSWORD '${POSTGRES_APP_PASSWORD}';
 

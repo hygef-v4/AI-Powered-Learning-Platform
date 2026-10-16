@@ -13,5 +13,5 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - `UPDATE subjects SET ..., version = version + 1 WHERE id = ? AND version = ?`; 0 dòng thì `409`.
 
 ## P3 - Gọi U05 qua contract có timeout
-- `SubjectClassesPort` được gọi với timeout 1 giây; lỗi trả "không khả dụng" ở phần hiển thị, và lưu trữ bị từ chối (fail closed).
-- Tới khi U05 xong, adapter tạm báo không khả dụng.
+- `ISubjectClasses` được gọi với timeout 1 giây; lỗi trả "không khả dụng" ở phần hiển thị, và lưu trữ bị từ chối (fail closed).
+- Tới khi U05 xong, bản tạm trong khung trả danh sách rỗng và số lớp 0.

@@ -41,12 +41,12 @@ stateDiagram-v2
 
 ## 3. Contract
 
-### Port U04 cung cấp
+### Interface U04 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `SubjectScopePort` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
-| `SubjectQueryPort` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
+| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
+| `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
 
 `SubjectRef`: `subjectId`, `code`, `name`, `status`, `managerId`.
 
@@ -54,16 +54,16 @@ stateDiagram-v2
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `SubjectClassesPort` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
+| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
 
 `SubjectClassSummary`: `classId`, `code`, `name`, `term`, `status`, `teacherName`, `activeStudentCount`.
 
-### Port U04 dùng
+### Interface U04 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort` | U01 | Kiểm quyền Admin; kiểm và hiện Chủ nhiệm môn |
-| `AuditPort` | U02 | Audit |
+| `IAuthorization`, `IAccountLookup` | U01 | Kiểm quyền Admin; kiểm và hiện Chủ nhiệm môn |
+| `IAudit` | U02 | Audit |
 
 ## 4. API
 

@@ -22,19 +22,19 @@
 
 ## External ports
 
-| Port | Adapter |
+| Interface | Adapter |
 |---|---|
-| AiProviderPort | Gemini/OpenAI/Claude direct APIs; normalized output/usage |
-| AiConnectionPort | U13 shared/personal credentials, test/revoke, ownership |
-| TeacherQuotaPort / UsagePort | U07 atomic reserve/reconcile, per-user/model/window and usage provenance |
+| IAiProvider | Gemini/OpenAI/Claude direct APIs; normalized output/usage |
+| IAiConnection | U13 shared/personal credentials, test/revoke, ownership |
+| ITeacherQuota / IUsage | U07 atomic reserve/reconcile, per-user/model/window and usage provenance |
 | McpTransportAdapter | U13 authenticated tools into domain ports; not LLM execution by default |
-| BackupStatusPort | U03 read-only backup metadata to U16; no archive/secrets |
-| TeacherQuotaPolicyPort | U07 policy read/write for Admin Settings UC 14; U03 orchestrates |
-| ActivityQueryPort | U11 scoped activity for U15 review UC 42, including U14 member events |
-| FileStoragePort | Google Drive private file streams |
-| MailPort | Brevo demo/production, Mailpit local |
+| IBackupStatus | U03 read-only backup metadata to U16; no archive/secrets |
+| ITeacherQuotaPolicy | U07 policy read/write for Admin Settings UC 14; U03 orchestrates |
+| IActivityQuery | U11 scoped activity for U15 review UC 42, including U14 member events |
+| IFileStorage | Google Drive private file streams |
+| IMail | Brevo demo/production, Mailpit local |
 
-Không PaymentPort, CreditPort, CodeRunnerPort hoặc Judge0. Giữ public contracts, không direct repository xuyên unit. U05 basic references MVP, Lesson/RAG optional.
+Không IPayment, ICredit, ICodeRunner hoặc Judge0. Giữ public contracts, không direct repository xuyên unit. U05 basic references MVP, Lesson/RAG optional.
 
 ## Bổ sung hội đồng — current scope
 

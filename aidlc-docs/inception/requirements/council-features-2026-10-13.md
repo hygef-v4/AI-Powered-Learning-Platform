@@ -24,7 +24,7 @@ Người dùng yêu cầu bổ sung các tính năng này vào Inception. Đây 
 
 - Giữ OTP kích hoạt/khôi phục, ghi danh, bài mới/mở giao, công bố điểm và nhắc hạn. Tạo/import tài khoản vẫn không tự gửi OTP; người dùng yêu cầu kích hoạt theo FR-015.
 - Giảng viên có thể đánh dấu thông báo lớp mới là quan trọng và chọn gửi email. Sửa thông báo không tự gửi lại email tạo mới. Backup thất bại gửi cho Admin; không gửi dữ liệu học vụ cho Admin.
-- U16 xử lý sau commit với khóa chống trùng theo sự kiện/người nhận/kênh, retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; chỉ SENT khi nhà cung cấp chấp nhận, không khẳng định đã vào inbox. OTP vẫn thuộc luồng U01, dùng MailPort chung.
+- U16 xử lý sau commit với khóa chống trùng theo sự kiện/người nhận/kênh, retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; chỉ SENT khi nhà cung cấp chấp nhận, không khẳng định đã vào inbox. OTP vẫn thuộc luồng U01, dùng IMail chung.
 - Email học tập tuân tùy chọn người nhận; OTP và cảnh báo vận hành theo chính sách riêng. Kiểm người nhận hiện hành, giới hạn tần suất/hạn mức nhà cung cấp. Email chỉ chứa nội dung tối thiểu và link yêu cầu đăng nhập; không raw điểm/bài nộp/API key hoặc backup attachment.
 - Tiêu chí nghiệm thu: đúng đối tượng, sự kiện lặp không gửi trùng, provider lỗi không rollback nghiệp vụ, vượt hạn mức ghi trạng thái rõ và không retry vô hạn.
 

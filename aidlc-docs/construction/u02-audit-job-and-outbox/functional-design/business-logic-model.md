@@ -16,7 +16,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 ## 2. Audit
 
 ### A1 - Ghi audit
-1. Trong transaction nghiệp vụ, unit gọi `AuditPort.record(event)` với `id` mới, `occurred_at` là thời điểm thao tác.
+1. Trong transaction nghiệp vụ, unit gọi `IAudit.record(event)` với `id` mới, `occurred_at` là thời điểm thao tác.
 2. U02 kiểm danh sách khóa cấm trong `details` (BR-U02-05); vi phạm thì từ chối (lỗi lập trình, thao tác rollback).
 3. `result = SUCCESS`: INSERT vào `audit_logs` trong cùng transaction; `id` đã tồn tại thì bỏ qua (BR-U02-02, 03).
 4. `result = DENIED` hoặc `FAILURE`: cũng gọi `record`, U02 tự ghi bằng transaction riêng (`REQUIRES_NEW`) để còn lại dù thao tác chính rollback (BR-U02-02).
@@ -27,7 +27,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 3. Gọi U01 `authorize(actor, AUDIT_READ)`. Không phải `ADMIN` hoặc U01 lỗi → từ chối (BR-U02-07, 50).
 4. Kiểm bộ lọc hợp lệ (`from` ≤ `to`, `result` đúng giá trị), trang ≤ 100.
 5. Truy vấn, sắp xếp `occurred_at` giảm dần.
-6. Lấy email của các người thực hiện trong trang qua `AccountLookupPort.getContact` (U01); `actor_id` rỗng hiện là hệ thống (BR-U02-09).
+6. Lấy email của các người thực hiện trong trang qua `IAccountLookup.getContact` (U01); `actor_id` rỗng hiện là hệ thống (BR-U02-09).
 7. Ghi audit `AUDIT_QUERIED` với bộ lọc đã dùng.
 
 ## Quy tắc tích hợp revision hiện hành

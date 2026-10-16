@@ -1,6 +1,6 @@
-# Production/demo trên VPS. Secret nằm trong infra/.env (quyền 600, CI ghi khi deploy).
-# Local: docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
-# Judge0 (4 container, mạng `sandbox`) do U13 thêm.
+# Production/demo trên VPS. Secret nằm trong infra/.env (quyền 600), không commit.
+#   docker compose --env-file .env up -d
+# Local: docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up --build
 name: platform
 
 x-logging: &logging
@@ -9,7 +9,9 @@ x-logging: &logging
     max-size: "10m"
     max-file: "3"
 
+# Biến cho backend và worker. Biến riêng của unit để trống được cho tới khi unit đó có code.
 x-backend-env: &backend-env
+  APP_PUBLIC_URL: ${APP_PUBLIC_URL:?}
   POSTGRES_HOST: postgres
   POSTGRES_DB: platform
   POSTGRES_APP_USER: app
@@ -21,6 +23,7 @@ x-backend-env: &backend-env
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_USER: app
   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?}
+  RABBITMQ_VHOST: /platform
   SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
   SMTP_PORT: ${SMTP_PORT:-587}
   SMTP_USER: ${SMTP_USER:-}
@@ -28,12 +31,17 @@ x-backend-env: &backend-env
   SMTP_AUTH_ENABLED: ${SMTP_AUTH_ENABLED:-true}
   SMTP_STARTTLS_ENABLED: ${SMTP_STARTTLS_ENABLED:-true}
   SMTP_FROM: ${SMTP_FROM:-}
-  APP_PUBLIC_URL: ${APP_PUBLIC_URL:?}
-  U01_JWT_SECRET: ${U01_JWT_SECRET:?}
-  U03_FILEREF_SECRET: ${U03_FILEREF_SECRET:?}
+  U01_ALLOWED_EMAIL_DOMAINS: ${U01_ALLOWED_EMAIL_DOMAINS:-}
+  U01_JWT_SECRET: ${U01_JWT_SECRET:-}
+  U03_FILEREF_SECRET: ${U03_FILEREF_SECRET:-}
+  U03_REQUIRE_DRIVE: ${U03_REQUIRE_DRIVE:-true}
   GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:-}
   GOOGLE_SHARED_DRIVE_ID: ${GOOGLE_SHARED_DRIVE_ID:-}
-  U03_REQUIRE_DRIVE: "true"
+  GOOGLE_BACKUP_FOLDER_ID: ${GOOGLE_BACKUP_FOLDER_ID:-}
+  U03_BACKUP_PUBLIC_KEY: ${U03_BACKUP_PUBLIC_KEY:-}
+  BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:-}
+  U06_AI_KEY_ENCRYPTION_KEY: ${U06_AI_KEY_ENCRYPTION_KEY:-}
+  U14_EMAIL_DAILY_CAP: ${U14_EMAIL_DAILY_CAP:-300}
 
 services:
   nginx:
@@ -96,6 +104,7 @@ services:
     logging: *logging
     restart: unless-stopped
 
+  # Cùng image với backend, profile worker; chỉ nằm trong mạng internal (U03).
   worker:
     image: ghcr.io/${GHCR_OWNER:-max2min}/platform-backend:${IMAGE_TAG:?}
     environment:
@@ -105,6 +114,8 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
+    volumes:
+      - backup-tmp:/tmp/backup
     networks: [internal]
     deploy:
       resources: { limits: { cpus: "1", memory: 1536M } }
@@ -112,7 +123,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: pgvector/pgvector:pg16
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: platform
       POSTGRES_USER: postgres
@@ -133,25 +144,26 @@ services:
     logging: *logging
     restart: unless-stopped
 
+  # Không bật persistence: khởi động lại thì phiên, OTP, token tải tệp mất (U01, U03).
   redis:
     image: redis:7.4-alpine
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "no"]
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "no", "--save", ""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
     networks: [internal]
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
       interval: 10s
       timeout: 3s
       retries: 10
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
     deploy:
       resources: { limits: { cpus: "0.25", memory: 256M } }
     logging: *logging
     restart: unless-stopped
 
+  # User mặc định là app nên RabbitMQ không tạo guest.
   rabbitmq:
     image: rabbitmq:4.1-management-alpine
-    # Đặt user mặc định là `app` nên RabbitMQ không tạo `guest`.
     environment:
       RABBITMQ_DEFAULT_USER: app
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?}
@@ -177,5 +189,6 @@ volumes:
   pgdata: {}
   rabbitmq-data: {}
   upload-tmp: {}
+  backup-tmp: {}
   letsencrypt: {}
   certbot-www: {}

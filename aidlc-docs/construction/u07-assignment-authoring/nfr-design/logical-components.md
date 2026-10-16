@@ -12,12 +12,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `AssignmentAuthoringService` | backend | Tạo, sửa, xóa, duyệt (F3, F4, F8, F14) |
 | `AssignmentPublicationService` | backend | Phát hành, sửa lịch, ngưng giao (F9, F11) |
 | `AssignmentCopyService` | backend | Nhân bản, version mới, copy giữa lớp (F12, F13) |
-| `SkeletonService`, `PartCalculator`, `DocumentModelService` (cài `DocumentModelPort`) | backend | Khung, phần, kiểm tài liệu (P1) |
-| `RubricService` (cài `RubricPort`) | backend | Rubric, khóa, nhân bản, tính điểm (F5) |
+| `SkeletonService`, `PartCalculator`, `DocumentModelService` (cài `IDocumentModel`) | backend | Khung, phần, kiểm tài liệu (P1) |
+| `RubricService` (cài `IRubric`) | backend | Rubric, khóa, nhân bản, tính điểm (F5) |
 | `DiagramXmlValidator`, `SvgSanitizer` | backend | Kiểm XML, làm sạch SVG |
-| `DocxExporter`, `DocxImporter` (cài `DocxPort`) | backend | Xuất, nhập DOCX (F7, P4) |
+| `DocxExporter`, `DocxImporter` (cài `IDocx`) | backend | Xuất, nhập DOCX (F7, P4) |
 | `AssignmentAiDraftService`, `AssignmentDraftResultHandler` | backend, worker | AI soạn bản nháp (F6, P5) |
-| `AssignmentMcpTools` (cài `McpToolProvider`) | backend | Tool MCP (F15) |
-| `AssignmentQueryService` (cài `AssignmentQueryPort`) | backend | Port cho unit khác (F16) |
-| `AssignmentScheduleScanner` (cài `ScheduledScanner`) | worker | Mở, đóng theo lịch (F10, P3) |
+| `AssignmentMcpTools` (cài `IMcpToolProvider`) | backend | Tool MCP (F15) |
+| `AssignmentQueryService` (cài `IAssignmentQuery`) | backend | Interface cho unit khác (F16) |
+| `AssignmentScheduleScanner` (cài `IScheduledScanner`) | worker | Mở, đóng theo lịch (F10, P3) |
 | Repository `assignments`, `assignment_rubrics`, `assignment_ai_drafts` | backend, worker | Chỉ dùng trong package |

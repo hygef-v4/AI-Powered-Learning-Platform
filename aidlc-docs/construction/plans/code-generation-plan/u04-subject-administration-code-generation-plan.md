@@ -8,27 +8,27 @@ Thiết kế: [business-logic-model](../../u04-subject-administration/functional
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay cho phần môn của plan U04 cũ; phần lớp và ghi danh chuyển sang [U05](u05-class-enrollment-code-generation-plan.md).
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../academics/application/ScopeQueryService` | Khung cài chung `SubjectScopePort`, `ClassScopePort`, `ClassAccessPort` (trả rỗng) | Bỏ phần `SubjectScopePort` và `countSubjectsByStatus` khỏi lớp này; phần lớp để U05 |
-| `backend/.../academics/port/SubjectStatus` | Có | Chuyển sang package `subjects` |
-| `backend/.../academics/port/ClassAccessPort.countSubjectsByStatus` | Có | Bỏ; U15 dùng `SubjectQueryPort.countSubjectsByStatus` |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/subjects/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../subjects/contract/` | interface `ISubjectClasses`, `ISubjectQuery`; kiểu dữ liệu `SubjectClassSummary`, `SubjectRef`, `SubjectStatus` |
+| `backend/.../subjects/contract/stub/SubjectsContractStubs` | Bản tạm trả dữ liệu mẫu cho `ISubjectQuery`, `ISubjectClasses` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
+| `frontend/src/features/subjects/` | Chỉ có `index.ts` trống |
 
 ## Checklist
 
 - [ ] **Bước 1 — Migration:** `db/migration/subjects/V20260925_1000__create_subjects.sql` theo infrastructure-design.
-- [ ] **Bước 2 — Domain:** package `edu.aiplatform.subjects`: `Subject`, `SubjectStatus`, `SubjectCode` (kiểm định dạng), `SubjectRepository` dùng trong package.
-- [ ] **Bước 3 — Port:** `SubjectQueryPort`, `SubjectRef`; contract `SubjectClassesPort`, `SubjectClassSummary`; `SubjectScopeService` cài `SubjectScopePort` của U01; `SubjectQueryService`; `UnavailableSubjectClassesAdapter` (fail closed) tới khi U05 cài.
-- [ ] **Bước 4 — Service:** `SubjectAdminService` cho F1–F6: kiểm `ADMIN`, kiểm mã và Chủ nhiệm môn qua `AccountLookupPort`, khóa lạc quan, chặn lưu trữ qua `SubjectClassesPort`, audit theo BR-U04-52.
+- [ ] **Bước 2 — Domain:** package `edu.aiplatform.subjects`: `Subject`, `SubjectStatus`, `SubjectCode` (kiểm định dạng), `ISubjectRepository` dùng trong package.
+- [ ] **Bước 3 — Interface:** `ISubjectQuery`, `SubjectRef`; contract `ISubjectClasses`, `SubjectClassSummary`; `SubjectScopeService` cài `ISubjectScope` của U01; `SubjectQueryService`; tới khi U05 cài, bản tạm `ISubjectClasses` trong khung trả danh sách rỗng và số lớp 0.
+- [ ] **Bước 4 — Service:** `SubjectAdminService` cho F1–F6: kiểm `ADMIN`, kiểm mã và Chủ nhiệm môn qua `IAccountLookup`, khóa lạc quan, chặn lưu trữ qua `ISubjectClasses`, audit theo BR-U04-52.
 - [ ] **Bước 5 — API:** `SubjectAdminController` cho 7 endpoint ở domain-entities mục 4; lỗi dạng an toàn.
-- [ ] **Bước 6 — Dọn code cũ:** bỏ phần môn khỏi `ScopeQueryService` và `ClassAccessPort`, chuyển `SubjectStatus`; sửa các chỗ đang import.
-- [ ] **Bước 7 — Frontend:** `SubjectListPage`, `SubjectFilters`, `SubjectTable`, `SubjectFormDialog`, `ManagerPicker`, `SubjectDetailPage`, `SubjectEditForm`, `ManagerCard`, `SubjectStatusActions`, `SubjectClassesTable`.
-- [ ] **Bước 8 — Unit test (người code viết):** mã sai định dạng và trùng, Chủ nhiệm môn sai role hoặc không `ACTIVE`, version lệch, lưu trữ khi còn lớp hoặc khi U05 không trả lời, đổi Chủ nhiệm môn làm người cũ mất quyền, người không phải Admin bị từ chối; test component frontend. Integration test do tester viết.
-- [ ] **Bước 9 — Review:** đối chiếu UC 16–19, US-CAT-001, BR-U04 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 6 — Frontend:** `SubjectListPage`, `SubjectFilters`, `SubjectTable`, `SubjectFormDialog`, `ManagerPicker`, `SubjectDetailPage`, `SubjectEditForm`, `ManagerCard`, `SubjectStatusActions`, `SubjectClassesTable`.
+- [ ] **Bước 7 — Unit test (người code viết):** mã sai định dạng và trùng, Chủ nhiệm môn sai role hoặc không `ACTIVE`, version lệch, lưu trữ khi còn lớp hoặc khi U05 không trả lời, đổi Chủ nhiệm môn làm người cũ mất quyền, người không phải Admin bị từ chối; test component frontend. Integration test do tester viết.
+- [ ] **Bước 8 — Review:** đối chiếu UC 16–19, US-CAT-001, BR-U04 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

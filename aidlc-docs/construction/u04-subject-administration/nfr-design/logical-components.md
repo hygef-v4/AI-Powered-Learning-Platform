@@ -10,9 +10,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | `SubjectAdminController` | backend | API mục 4 của domain-entities |
 | `SubjectAdminService` | backend | F1–F6, audit |
-| `SubjectScopeService` | backend | Cài `SubjectScopePort` (F7) |
-| `SubjectQueryService` | backend | Cài `SubjectQueryPort` (F8) |
-| `SubjectRepository` | backend | Bảng `subjects`, chỉ dùng trong package |
-| `UnavailableSubjectClassesAdapter` | backend | Adapter tạm của `SubjectClassesPort` tới khi U05 xong |
+| `SubjectScopeService` | backend | Cài `ISubjectScope` (F7) |
+| `SubjectQueryService` | backend | Cài `ISubjectQuery` (F8) |
+| `ISubjectRepository` | backend | Bảng `subjects`, chỉ dùng trong package |
+| `SubjectsContractStubs` (khung) | backend | Bản tạm `ISubjectClasses` tới khi U05 xong: danh sách rỗng, số lớp 0 |
 
 U04 không chạy gì trong worker, không có queue, không có secret, không gọi dịch vụ ngoài.

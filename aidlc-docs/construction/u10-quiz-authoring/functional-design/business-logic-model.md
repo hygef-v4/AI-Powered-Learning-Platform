@@ -23,7 +23,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F11 Nhân bản, version mới, copy | UC 48 | Quiz Detail, tab Evals |
 | F12 Xóa Quiz nháp | UC 48 | Quiz Detail |
 | F13 Tool MCP | UC 32 (U06) | - |
-| F14 Port cho unit khác | UC của U11, U13, U14 | - |
+| F14 Interface cho unit khác | UC của U11, U13, U14 | - |
 
 ## 2. Ngân hàng
 
@@ -47,9 +47,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Trả bảng kết quả từng dòng; audit `QUESTIONS_IMPORTED` một lần.
 
 ### F4 - AI soạn câu cho ngân hàng (UC 47)
-1. Trên Question List bấm "Soạn bằng AI": nhập số câu, loại, độ khó, chủ đề; chọn tài liệu tham khảo qua `ReferenceMaterialPort` (chưa có U13 thì bỏ qua); chọn nguồn trong `AiSourcePicker` của U06.
+1. Trên Question List bấm "Soạn bằng AI": nhập số câu, loại, độ khó, chủ đề; chọn tài liệu tham khảo qua `IReferenceMaterial` (chưa có U13 thì bỏ qua); chọn nguồn trong `AiSourcePicker` của U06.
 2. Frontend gọi `POST /api/v1/subjects/{subjectId}/question-ai-drafts`; kiểm R2.
-3. Lấy chữ tài liệu (`extractText`), dựng prompt kèm JSON schema; gọi `AiTaskPort.submit` (loại `QUIZ_QUESTION_DRAFT`, đích là ngân hàng môn); tạo đề xuất `PENDING`.
+3. Lấy chữ tài liệu (`extractText`), dựng prompt kèm JSON schema; gọi `IAiTask.submit` (loại `QUIZ_QUESTION_DRAFT`, đích là ngân hàng môn); tạo đề xuất `PENDING`.
 4. U06 gọi `onReady`: kiểm schema và quy tắc câu; lưu đề xuất `READY` kèm provenance.
 5. Chủ nhiệm môn chọn, sửa, chấp nhận câu: mỗi câu thành câu `DRAFT` của ngân hàng; audit `QUIZ_AI_DRAFT_ACCEPTED`. Kích hoạt như F2 bước 4.
 
@@ -70,21 +70,21 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Thêm câu ngân hàng: chọn tay (`GET /api/v1/subjects/{subjectId}/questions?status=ACTIVE`) hoặc bốc ngẫu nhiên (`POST /api/v1/quizzes/{id}/items:random-preview`); xem lại, bỏ hoặc bốc lại; lưu `PUT /api/v1/quizzes/{id}/items` kèm `version` (BR-U10-13, 14).
 3. Viết câu riêng: `POST /api/v1/quizzes/{id}/inline-questions` theo BR-U10-02, 03.
 4. Sắp thứ tự, đặt điểm từng câu; lưu kèm `version`.
-5. Sửa tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động, tài liệu gắn kèm: `PATCH /api/v1/quizzes/{id}` kèm `version`; bật theo dõi cần `activity.retentionDays` (đọc qua `SettingsPort`) (BR-U10-15).
+5. Sửa tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động, tài liệu gắn kèm: `PATCH /api/v1/quizzes/{id}` kèm `version`; bật theo dõi cần `activity.retentionDays` (đọc qua `ISettings`) (BR-U10-15).
 6. Quiz đang `REVIEWED` thì về `DRAFT`.
 
 ### F8 - AI soạn câu cho Quiz (UC 48)
 1. Trên Quiz Detail của Quiz `DRAFT` bấm "Soạn bằng AI", nhập yêu cầu, chọn tài liệu và nguồn như F4 bước 1.
 2. Frontend gọi `POST /api/v1/quizzes/{id}/ai-drafts`; kiểm quyền và `DRAFT`.
-3. Gọi `AiTaskPort.submit` (loại `QUIZ_QUESTION_DRAFT`, đích là Quiz, `inputVersion` là `version` hiện tại); tạo đề xuất `PENDING`.
+3. Gọi `IAiTask.submit` (loại `QUIZ_QUESTION_DRAFT`, đích là Quiz, `inputVersion` là `version` hiện tại); tạo đề xuất `PENDING`.
 4. `onReady`: Quiz còn `DRAFT` thì lưu đề xuất `READY`; không thì `REJECTED`.
 5. Người soạn chọn, sửa, chấp nhận: câu thành câu riêng của Quiz, thêm vào cuối danh sách (không vượt 200 câu); kèm `version`; audit `QUIZ_AI_DRAFT_ACCEPTED`.
 
 ### F9 - Xem trước, duyệt, phát hành (UC 48)
 1. Xem trước như người học: câu, lựa chọn, không có đáp án.
 2. Duyệt: `POST /api/v1/quizzes/{id}/review` kèm `version`; kiểm BR-U10-21; lỗi thì trả danh sách cần sửa; đạt thì `REVIEWED`; audit.
-3. Phát hành: `POST /api/v1/quizzes/{id}/publish` kèm `version`; kiểm lớp `OPEN` (`ClassAccessPort`) hoặc môn `ACTIVE` (`SubjectQueryPort`).
-4. Một transaction: Quiz `OPEN`, `publishedAt`; có version cũ đang `OPEN` thì chuyển `RETIRED` và gọi `QuizLifecycleListener.onRetired` của nó; audit `QUIZ_PUBLISHED`.
+3. Phát hành: `POST /api/v1/quizzes/{id}/publish` kèm `version`; kiểm lớp `OPEN` (`IClassAccess`) hoặc môn `ACTIVE` (`ISubjectQuery`).
+4. Một transaction: Quiz `OPEN`, `publishedAt`; có version cũ đang `OPEN` thì chuyển `RETIRED` và gọi `IQuizLifecycleListener.onRetired` của nó; audit `QUIZ_PUBLISHED`.
 5. Sau commit phát `quiz.published` (Quiz, lớp hoặc môn) cho U14.
 
 ### F10 - Ngưng Quiz (UC 48)
@@ -109,7 +109,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. `save_quiz_draft(quizId, expectedVersion, questions)`: credential `READ_WRITE`, Quiz `DRAFT`, `expectedVersion` khớp; kiểm câu theo BR-U10-02, 03; lưu thành đề xuất `READY` nguồn MCP; người soạn chấp nhận như F8 bước 5.
 3. Người học gọi thì bị từ chối (BR-U10-42).
 
-### F14 - Port cho unit khác
-1. U11 lấy Quiz người học được thấy (`QuizQueryPort.listForClass`), đề không có đáp án và cài đặt (`getStudentView`), chấm bài (`QuizScoringPort.score`) và đáp án để hiện sau khi nộp theo cài đặt (`answerReview`).
-2. U13 lấy Quiz gắn một tài liệu (`listByMaterial`) để hiện trên Learning Material; U11 cài `QuizLifecycleListener` và slot `QuizDetailSection`.
+### F14 - Interface cho unit khác
+1. U11 lấy Quiz người học được thấy (`IQuizQuery.listForClass`), đề không có đáp án và cài đặt (`getStudentView`), chấm bài (`IQuizScoring.score`) và đáp án để hiện sau khi nộp theo cài đặt (`answerReview`).
+2. U13 lấy Quiz gắn một tài liệu (`listByMaterial`) để hiện trên Learning Material; U11 cài `IQuizLifecycleListener` và slot `QuizDetailSection`.
 3. U14 nhận `quiz.published` để báo trong app.

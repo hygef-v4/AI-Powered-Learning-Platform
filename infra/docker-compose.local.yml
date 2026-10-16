@@ -1,6 +1,6 @@
-# Ghép với docker-compose.yml khi chạy local/test:
+# Ghép với docker-compose.yml khi chạy local:
 #   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up --build
-# Build từ mã nguồn, Nginx không TLS, thêm Mailpit, mở cổng datastore để debug.
+# Build từ mã nguồn, Nginx không TLS ở cổng 8088, thêm Mailpit, mở cổng datastore để debug.
 services:
   nginx:
     ports: !override
@@ -20,32 +20,19 @@ services:
   backend:
     image: platform-backend:local
     build: ../backend
-    environment:
-      SPRING_PROFILES_ACTIVE: default
+    environment: &local-mail
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       SMTP_AUTH_ENABLED: "false"
       SMTP_STARTTLS_ENABLED: "false"
       SMTP_FROM: no-reply@platform.local
-      U03_LOCAL_STORAGE_DIR: /app/data/files
       U03_REQUIRE_DRIVE: "false"
-    volumes:
-      - files-local:/app/data/files
     ports:
       - "8080:8080"
 
   worker:
     image: platform-backend:local
-    environment:
-      SMTP_HOST: mailpit
-      SMTP_PORT: "1025"
-      SMTP_AUTH_ENABLED: "false"
-      SMTP_STARTTLS_ENABLED: "false"
-      SMTP_FROM: no-reply@platform.local
-      U03_LOCAL_STORAGE_DIR: /app/data/files
-      U03_REQUIRE_DRIVE: "false"
-    volumes:
-      - files-local:/app/data/files
+    environment: *local-mail
 
   postgres:
     ports:
@@ -66,6 +53,3 @@ services:
       - "8025:8025"
       - "1025:1025"
     networks: [internal]
-
-volumes:
-  files-local: {}

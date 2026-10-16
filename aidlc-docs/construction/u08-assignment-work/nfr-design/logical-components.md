@@ -11,9 +11,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `StudentAssignmentController`, `AttemptController`, `PracticeFeedbackController`, `AttemptActivityController` | backend | API mục 5 của domain-entities |
 | `StudentAssignmentQueryService` | backend | Danh sách, chi tiết (F1, F2) |
 | `AttemptService` | backend | Bắt đầu, lưu, nộp, DOCX (F3–F6, P1, P2) |
-| `AutoSubmitScanner` (cài `ScheduledScanner`), `AssignmentRetiredHandler` (cài `AssignmentLifecycleListener`) | worker, backend | Tự nộp (F7) |
+| `AutoSubmitScanner` (cài `IScheduledScanner`), `AssignmentRetiredHandler` (cài `IAssignmentLifecycleListener`) | worker, backend | Tự nộp (F7) |
 | `SubmissionHistoryService` | backend | Lịch sử nộp (F8) |
 | `PracticeFeedbackService`, `PracticeFeedbackResultHandler`, `AssignmentWorkMcpTools` | backend, worker | Phản hồi Practice, tool MCP (F9, F10, P3) |
-| `ActivityService` (cài `ActivityWritePort`, `ActivityQueryPort`), `ActivitySummaryCalculator`, `ActivityRetentionScanner`, `ActivitySettingDefinitions` | backend, worker | Dữ liệu hoạt động (F11, F12, P4, P5) |
-| `SubmissionQueryService` (cài `SubmissionQueryPort`) | backend | Port cho U09, U14 (F13) |
+| `ActivityService` (cài `IActivityWrite`, `IActivityQuery`), `ActivitySummaryCalculator`, `ActivityRetentionScanner`, `ActivitySettingDefinitions` | backend, worker | Dữ liệu hoạt động (F11, F12, P4, P5) |
+| `SubmissionQueryService` (cài `ISubmissionQuery`) | backend | Interface cho U09, U14 (F13) |
 | Repository `assignment_attempts`, `practice_feedback`, `activity_events` | backend, worker | Chỉ dùng trong package |

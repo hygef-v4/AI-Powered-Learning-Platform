@@ -7,7 +7,7 @@
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 ## P1 - Điểm tính từ checklist
-- Điểm phần lấy từ `RubricPort.score` với mục đạt; điểm bài là tổng các phần cộng điều chỉnh, kẹp trong 0 tới tổng; không nhận điểm từ client.
+- Điểm phần lấy từ `IRubric.score` với mục đạt; điểm bài là tổng các phần cộng điều chỉnh, kẹp trong 0 tới tổng; không nhận điểm từ client.
 
 ## P2 - Hàng loạt từng mục
 - Chốt, công bố, AI hàng loạt xử lý từng mục trong transaction riêng, trả kết quả từng mục.

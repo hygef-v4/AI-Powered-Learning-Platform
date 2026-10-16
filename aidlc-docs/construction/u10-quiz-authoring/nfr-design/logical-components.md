@@ -14,5 +14,5 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `QuizPublicationService` | backend | Phát hành, ngưng (F9, F10, P3) |
 | `QuizCopyService` | backend | Nhân bản, version mới, copy (F11) |
 | `QuizAiDraftService`, `QuizDraftResultHandler`, `QuizMcpTools` | backend, worker | AI soạn câu, tool MCP (F4, F8, F13, P4) |
-| `QuizQueryService` (cài `QuizQueryPort`), `QuizScorer` (cài `QuizScoringPort`) | backend | Port cho U11, U13 (F14, P2) |
+| `QuizQueryService` (cài `IQuizQuery`), `QuizScorer` (cài `IQuizScoring`) | backend | Interface cho U11, U13 (F14, P2) |
 | Repository `questions`, `quizzes`, `quiz_items`, `quiz_ai_drafts` | backend, worker | Chỉ dùng trong package |

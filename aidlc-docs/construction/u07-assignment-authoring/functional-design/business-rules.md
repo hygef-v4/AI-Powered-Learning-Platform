@@ -12,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U07-01 | U07 soạn loại bài `ASSIGNMENT`; Quiz thuộc U10. Assignment có `submissionMode` (`INDIVIDUAL`, `GROUP`) và `diagramEnabled` độc lập, đủ bốn tổ hợp; `gradingMode` là `GRADED` hoặc `PRACTICE`, bài nhóm chỉ `GRADED` (D02). Không có loại Essay, Diagram, Group, Code riêng. | FR-007, FR-017, US-ASM-001 |
 | BR-U07-02 | Bài của lớp: giảng viên chính của lớp (R3/R4) soạn từ tab Evals. Bài của môn: Chủ nhiệm môn (R2) soạn từ Assignment List, chỉ `INDIVIDUAL`, giao cho mọi lớp `OPEN` của môn theo một lịch chung, kể cả lớp mở sau khi phát hành; giảng viên từng lớp chấm lớp mình. Giảng viên các lớp chỉ xem bài của môn. Admin không soạn, không xem. | FR-027, US-ASM-009 |
-| BR-U07-03 | `GROUP` chỉ có ở bài của lớp và chỉ dùng được khi U12 đã cài `GroupAssignmentSupport`; chưa có thì form không cho chọn, API từ chối. UC 53 của U12 dùng chính Assignment Form này với `GROUP`. | FR-026, UC 53 |
+| BR-U07-03 | `GROUP` chỉ có ở bài của lớp và chỉ dùng được khi U12 đã cài `IGroupAssignmentSupport`; chưa có thì form không cho chọn, API từ chối. UC 53 của U12 dùng chính Assignment Form này với `GROUP`. | FR-026, UC 53 |
 | BR-U07-04 | Lớp hoặc môn đã `ARCHIVED`: bài chỉ đọc (không tạo, sửa, phát hành). | BR-U05-16, BR-U04-07 |
 
 ## 2. Đề và khung tài liệu
@@ -24,9 +24,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U07-12 | Sơ đồ lưu XML Draw.io đầy đủ kèm SVG xem trước đã làm sạch. XML qua parser an toàn (không DOCTYPE, XXE, XInclude; gốc `mxfile` hoặc `mxGraphModel`). Trần: ≤ 2.000 block, ≤ 100 sơ đồ, mỗi XML ≤ 2 MB, cả khung ≤ 20 MB. Sơ đồ luôn hiện bằng ảnh xem trước; bấm vào mở Draw.io nhúng. | US-ASM-004 S2 |
 | BR-U07-13 | `requiredDiagrams` (tùy chọn, chỉ khi bật sơ đồ): loại sơ đồ (`USE_CASE`, `CLASS`, `SEQUENCE`, `ACTIVITY`, `ER`, `COMPONENT`, `STATE`, `OTHER`) → số tối thiểu 1–20; U08, U12 kiểm lúc nộp. | FR-017 |
 | BR-U07-14 | Tắt `diagramEnabled` khi khung còn sơ đồ, còn `requiredDiagrams` hoặc tiêu chí sơ đồ thì từ chối và liệt kê chỗ cần bỏ. | US-ASM-004 S1 |
-| BR-U07-15 | Khung khóa với người học: không sửa, xóa, di chuyển block của người soạn; người học chèn block của mình ở bất kỳ vị trí nào. U08, U12 kiểm qua `DocumentModelPort`. | FR-017 |
-| BR-U07-16 | `activityMonitoringEnabled` mặc định tắt, đặt trước khi phát hành kèm thông báo cho người học; chỉ bật được khi Admin đã đặt `activity.retentionDays` (đọc qua `SettingsPort`); muốn đổi sau phát hành phải tạo version mới. | UC 35, BR-U08-54 |
-| BR-U07-17 | Tùy chọn gắn tối đa 10 tài liệu tham khảo (khi U13 có), chọn qua `ReferenceMaterialPort.listSelectable` của U06: bài của môn chỉ chọn tài liệu của môn; bài của lớp chọn tài liệu của môn và của lớp. Người học thấy trên Assignment Detail (U13 hiện qua slot của U08). | FR-004 |
+| BR-U07-15 | Khung khóa với người học: không sửa, xóa, di chuyển block của người soạn; người học chèn block của mình ở bất kỳ vị trí nào. U08, U12 kiểm qua `IDocumentModel`. | FR-017 |
+| BR-U07-16 | `activityMonitoringEnabled` mặc định tắt, đặt trước khi phát hành kèm thông báo cho người học; chỉ bật được khi Admin đã đặt `activity.retentionDays` (đọc qua `ISettings`); muốn đổi sau phát hành phải tạo version mới. | UC 35, BR-U08-54 |
+| BR-U07-17 | Tùy chọn gắn tối đa 10 tài liệu tham khảo (khi U13 có), chọn qua `IReferenceMaterial.listSelectable` của U06: bài của môn chỉ chọn tài liệu của môn; bài của lớp chọn tài liệu của môn và của lớp. Người học thấy trên Assignment Detail (U13 hiện qua slot của U08). | FR-004 |
 
 ## 3. Rubric (UC 36)
 
@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U07-20 | Mỗi phần có đúng một rubric, tự tạo trống khi phần xuất hiện, tự xóa khi phần mất (bài còn nháp). Không có nút tạo hay xóa rubric riêng; người soạn thêm, sửa, xóa tiêu chí và mục trong Rubric Detail; lưu là ghi đè. Vì luôn có ít nhất một phần nên bài nào cũng có rubric. | US-QBK-001 S1 |
 | BR-U07-21 | Rubric hợp lệ: 1–20 tiêu chí, mỗi tiêu chí 1–20 mục checklist; mỗi mục điểm > 0, tối đa 2 chữ số thập phân. Tiêu chí loại `TEXT` hoặc `DIAGRAM`; `DIAGRAM` chỉ khi bật sơ đồ. Bài còn nháp thì rubric được trống hoặc chưa đủ. | UC 36 |
-| BR-U07-22 | Điểm tối đa của phần là tổng điểm các mục (tự tính, không nhập tay); điểm tối đa của bài là tổng các phần. Khi chấm, mỗi mục đạt hoặc không; điểm là tổng mục đạt (U09 gọi `RubricPort.score`). | US-QBK-001 S1 |
+| BR-U07-22 | Điểm tối đa của phần là tổng điểm các mục (tự tính, không nhập tay); điểm tối đa của bài là tổng các phần. Khi chấm, mỗi mục đạt hoặc không; điểm là tổng mục đạt (U09 gọi `IRubric.score`). | US-QBK-001 S1 |
 | BR-U07-23 | Rubric thuộc đúng một bài. Phát hành thì mọi rubric của bài bị khóa; rubric đã khóa không sửa, không xóa. | US-QBK-001 S2 |
 | BR-U07-24 | Duyệt hay phát hành khi còn rubric trống hoặc chưa hợp lệ thì từ chối và chỉ ra phần cần điền; Assignment Form cảnh báo trên phần có rubric trống. | US-QBK-001 S2a |
 | BR-U07-25 | Nhân bản, version mới, copy sang lớp khác: rubric được nhân bản thành rubric mới, chưa khóa, của bài đích; hai bài không dùng chung rubric. | US-QBK-001 S3 |
@@ -45,7 +45,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U07-30 | Trạng thái `DRAFT → REVIEWED → SCHEDULED → OPEN → CLOSED`; `SCHEDULED` hoặc `OPEN` → `RETIRED`. Chỉ sửa nội dung khi `DRAFT`; sửa bài `REVIEWED` đưa về `DRAFT`. | FR-007 |
 | BR-U07-31 | Xóa: chỉ bài `DRAFT` hoặc `REVIEWED` (chưa từng phát hành), xóa hẳn kèm rubric và đề xuất AI; bài đã phát hành dùng Ngưng giao. | UC 35 |
-| BR-U07-32 | Duyệt: chính người có quyền tự duyệt sau khi xem trước. Kiểm tiêu đề, khung hợp lệ, mọi rubric hợp lệ, sơ đồ đúng cờ; bài `GROUP` cần có `GroupAssignmentSupport`. | US-ASM-001 |
+| BR-U07-32 | Duyệt: chính người có quyền tự duyệt sau khi xem trước. Kiểm tiêu đề, khung hợp lệ, mọi rubric hợp lệ, sơ đồ đúng cờ; bài `GROUP` cần có `IGroupAssignmentSupport`. | US-ASM-001 |
 | BR-U07-33 | Phát hành từ `REVIEWED`: `opensAt < closesAt`, `maxAttempts` 1–10, `lateUntil` tùy chọn (`closesAt < lateUntil ≤ closesAt + 30 ngày`). Bài của lớp cần lớp `OPEN`; bài của môn cần môn `ACTIVE`; bài `GROUP` cần U12 báo nhóm sẵn sàng (lỗi thì chặn; sinh viên chưa có nhóm thì người phát hành phải xác nhận). Một transaction: ghi lịch, khóa rubric, chuyển `SCHEDULED`. | FR-007 |
 | BR-U07-34 | Mở, đóng tự động theo lịch, trễ ≤ 1 phút: tới `opensAt` thì `OPEN`, gọi `onOpened` và phát `assignment.opened`; tới `lateUntil` (hoặc `closesAt` nếu không có) thì `CLOSED`. Nộp sau `closesAt` mà trước `lateUntil` là nộp trễ. | FR-007 |
 | BR-U07-35 | Sửa lịch: `SCHEDULED` sửa tự do theo BR-U07-33; `OPEN` chỉ kéo dài `closesAt`, `lateUntil`, không rút ngắn, không đổi `maxAttempts`. Bài của môn chỉ Chủ nhiệm môn sửa lịch. | Thiết kế |

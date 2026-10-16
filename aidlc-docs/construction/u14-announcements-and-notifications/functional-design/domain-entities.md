@@ -45,30 +45,30 @@ stateDiagram-v2
 
 ## 3. Contract
 
-### Port U14 cung cấp
+### Interface U14 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
 | Sự kiện `class.announcement-posted` | - | U14 | Tạo thông báo lớp sau commit |
 | `StudentClassSection`, `DashboardNavEntry` (contract của U05, U14 cài) | - | U05 | Phần Thông báo trên Student Class Detail; lối vào Class Announcements trên Class Dashboard |
 | Slot `HeaderWidget` (của U01, U14 cài) | - | U01 | Chuông và popup thông báo cho mọi vai trò |
-| `JobHandler` cho `EMAIL_SEND`, `PendingSweeper`, `ScheduledScanner` (contract của U03, U14 cài) | - | U03 | Gửi email; gửi lại message bị mất; nhắc hạn, gửi email đã hoãn, dọn thông báo cũ |
+| `IJobHandler` cho `EMAIL_SEND`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U14 cài) | - | U03 | Gửi email; gửi lại message bị mất; nhắc hạn, gửi email đã hoãn, dọn thông báo cũ |
 
 ### Contract U14 khai báo
 
 Không có.
 
-### Port U14 dùng
+### Interface U14 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort`, `MailPort` | U01 | Kiểm quyền; địa chỉ, tên, danh sách Admin; gửi email |
-| `AuditPort` | U02 | Audit |
-| `JobPort`, `EventPublisherPort`; sự kiện trên `platform.events` | U03 | Job email; phát và nhận sự kiện |
-| `ClassAccessPort` | U05 | Người học, giảng viên, lớp mở của môn |
-| `AssignmentQueryPort` | U07 | Bài sắp hết hạn |
-| `SubmissionQueryPort` | U08 | Người chưa nộp |
-| `SseHub` | U12 | Đẩy thông báo realtime |
+| `IAuthorization`, `IAccountLookup`, `IMail` | U01 | Kiểm quyền; địa chỉ, tên, danh sách Admin; gửi email |
+| `IAudit` | U02 | Audit |
+| `IJob`, `IEventPublisher`; sự kiện trên `platform.events` | U03 | Job email; phát và nhận sự kiện |
+| `IClassAccess` | U05 | Người học, giảng viên, lớp mở của môn |
+| `IAssignmentQuery` | U07 | Bài sắp hết hạn |
+| `ISubmissionQuery` | U08 | Người chưa nộp |
+| `ISseHub` | U12 | Đẩy thông báo realtime |
 
 Sự kiện nhận: `enrollment.activated` (U05), `assignment.opened` (U07), `grade.published` (U09), `quiz.published` (U10), `group.*` (U12), `backup.failed` (U03), `class.announcement-posted` (U14).
 

@@ -136,7 +136,7 @@ Bỏ mua credit, gói giá, wallet, checkout, PayOS/webhook/đối soát và ho�
 Hệ thống gửi OTP kích hoạt/khôi phục, ghi danh, bài mới/mở giao, công bố điểm và nhắc hạn; thêm email thông báo lớp mới được giảng viên đánh dấu quan trọng và cảnh báo backup thất bại cho Admin. Không tự gửi OTP khi Admin tạo/import tài khoản.
 
 **Tiêu chí chấp nhận:**
-- U16 xếp gửi sau commit, kiểm người nhận và tùy chọn nhận email học tập, chống trùng theo event/recipient/channel; OTP thuộc U01, dùng MailPort chung.
+- U16 xếp gửi sau commit, kiểm người nhận và tùy chọn nhận email học tập, chống trùng theo event/recipient/channel; OTP thuộc U01, dùng IMail chung.
 - Retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; SENT là provider chấp nhận, không bảo đảm inbox. Lỗi email không rollback nghiệp vụ.
 - Nội dung tối thiểu, link yêu cầu đăng nhập, không gửi raw điểm/bài nộp/secrets/backup attachment. Tuân hạn mức nhà cung cấp; không retry vô hạn.
 - Thông báo lớp chỉnh sửa không tự gửi lại email tạo mới; backup failure chỉ tới Admin theo policy vận hành. Xem đặc tả góp ý hội đồng.
@@ -283,7 +283,7 @@ Không PayOS, payment history, webhook hoặc wallet. Lịch sử usage không p
 
 ### FR-033 - Settings và kết nối AI
 
-UC14 View Settings và UC15 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota và API chung qua U06 (`SettingsSectionProvider`). U03 primary UI/orchestration, không đọc/ghi repository U06 hoặc lưu raw key trong Settings. UC76/78/82 (ID cũ) consolidated, không còn chức năng độc lập; API cá nhân UC31 và MCP UC32 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
+UC14 View Settings và UC15 Edit Setting là hai chức năng Admin riêng; cùng màn cấu hình chứa non-secret policies, quota và API chung qua U06 (`ISettingsSectionProvider`). U03 primary UI/orchestration, không đọc/ghi repository U06 hoặc lưu raw key trong Settings. UC76/78/82 (ID cũ) consolidated, không còn chức năng độc lập; API cá nhân UC31 và MCP UC32 giữ riêng. Edits validate version/audit; synthetic test không cấp quyền học vụ.
 
 ### FR-034 - Quota token API chung của giảng viên
 
@@ -334,7 +334,7 @@ U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive ri
 
 ### FR-039 - Ghi nhận dấu hiệu rời trang khi làm bài
 
-Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U08 ghi sự kiện hidden/visible cho Assignment cá nhân và nhận sự kiện Quiz (U11), nhóm (U12) qua `ActivityWritePort`; U09 hiển thị cho giảng viên được giao dạy trong UC 42 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
+Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc định tắt; policy snapshot và thông báo cho Student. U08 ghi sự kiện hidden/visible cho Assignment cá nhân và nhận sự kiện Quiz (U11), nhóm (U12) qua `IActivityWrite`; U09 hiển thị cho giảng viên được giao dạy trong UC 42 — View Student Submissions, qua phần chi tiết bài làm/lượt Quiz được phép. Quiz Practice không có điểm official/Gradebook; quyền review activity không cho phép sửa kết quả Quiz hoặc bỏ qua policy/phân công lớp.
 
 **Tiêu chí chấp nhận:**
 - Server kiểm actor/enrollment/attempt/group/state, dedup và giới hạn tần suất; không thu thập khi policy off.
@@ -463,7 +463,7 @@ UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao g
 ### Tiêu chí tích hợp UC đã gộp
 
 - UC14/15: chỉ Admin; UC14 chỉ xem, UC15 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC14/15 via U13 protected connection records, not ordinary Settings plaintext.
-- UC 66: U16 đọc BackupStatusPort của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
-- UC 42: U15 đọc ActivityQueryPort của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
+- UC 66: U16 đọc IBackupStatus của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
+- UC 42: U15 đọc IActivityQuery của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 
 Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.

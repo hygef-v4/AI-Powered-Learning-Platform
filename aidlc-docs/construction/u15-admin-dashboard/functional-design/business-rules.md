@@ -25,7 +25,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U15-20 | Mục Backup đọc `BackupStatusPort` của U03: lần chạy gần nhất (trạng thái, thời điểm bắt đầu, kết thúc, dung lượng, lỗi đã làm sạch), thời điểm backup thành công gần nhất, lịch sử phân trang. | US-RPT-002 S3, FR-038 |
+| BR-U15-20 | Mục Backup đọc `IBackupStatus` của U03: lần chạy gần nhất (trạng thái, thời điểm bắt đầu, kết thúc, dung lượng, lỗi đã làm sạch), thời điểm backup thành công gần nhất, lịch sử phân trang. | US-RPT-002 S3, FR-038 |
 | BR-U15-21 | U03 lỗi thì mục Backup hiện "không khả dụng", không bao giờ hiện như thành công. Backup chưa bật thì ghi rõ "chưa bật" kèm lối sang Setting Detail. | US-RPT-002 S3 |
 | BR-U15-22 | Không tải bản backup, không khôi phục từ giao diện. Sửa lịch, số bản giữ qua Setting Detail (UC 15, U03). | FR-038 |
 

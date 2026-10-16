@@ -10,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - Sửa bản `ACTIVE` luôn tạo dòng mới; Quiz lưu id phiên bản; không cập nhật dây chuyền.
 
 ## P2 - Đáp án không rời U10
-- DTO cho người học tách khỏi DTO cho người soạn; U11 chấm bằng `QuizScoringPort.score`, chỉ nhận đúng sai và điểm.
+- DTO cho người học tách khỏi DTO cho người soạn; U11 chấm bằng `IQuizScoring.score`, chỉ nhận đúng sai và điểm.
 
 ## P3 - Phát hành thay version
 - Một transaction: Quiz mới `OPEN`, Quiz cũ `RETIRED` có điều kiện, gọi `onRetired`; lỗi thì rollback cả.

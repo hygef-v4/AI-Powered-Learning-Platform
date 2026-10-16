@@ -12,5 +12,5 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `MaterialService` | backend | Thêm, sửa, phiên bản, lưu trữ (F2, F4, P1) |
 | `MaterialQueryService`, `MaterialAccessPolicy` | backend | Danh sách, xem, token tải (F1, F3, F5, P3) |
 | `MaterialTextExtractJobHandler`, `MaterialTextExtractor` | worker | Trích chữ (F6, P2) |
-| `ReferenceMaterialService` (cài `ReferenceMaterialPort`), `MaterialMcpTools` | backend | Nguồn cho AI, tool MCP (F7) |
+| `ReferenceMaterialService` (cài `IReferenceMaterial`), `MaterialMcpTools` | backend | Nguồn cho AI, tool MCP (F7) |
 | Repository `materials`, `material_versions` | backend, worker | Chỉ dùng trong package |

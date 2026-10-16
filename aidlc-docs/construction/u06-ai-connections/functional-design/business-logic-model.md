@@ -64,9 +64,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Agent gửi `POST /mcp` (JSON-RPC `initialize`, `tools/list`, `tools/call`) kèm `Authorization: Bearer`.
 2. Băm token, tìm credential; không có, đã thu hồi hoặc hết hạn thì trả `401`.
 3. Dựng actor từ tài khoản của credential (BR-U06-33).
-4. `tools/list`: trả các tool đăng ký qua `McpToolProvider` mà role của actor được dùng; credential `READ_ONLY` chỉ thấy tool đọc.
+4. `tools/list`: trả các tool đăng ký qua `IMcpToolProvider` mà role của actor được dùng; credential `READ_ONLY` chỉ thấy tool đọc.
 5. `tools/call`: kiểm giới hạn 60 lời gọi mỗi phút; tìm tool; tool ghi cần `READ_WRITE`; kiểm tham số theo schema, không quá 64 KB.
-6. Gọi `McpToolProvider.call` của unit sở hữu; unit này gọi `AuthorizationPort.authorize` với actor (U01 kiểm `ACTIVE`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
+6. Gọi `IMcpToolProvider.call` của unit sở hữu; unit này gọi `IAuthorization.authorize` với actor (U01 kiểm `ACTIVE`, role, phạm vi lớp hoặc môn) và kiểm `expectedVersion` khi ghi.
 7. Cắt kết quả không quá 256 KB; ghi usage nguồn `MCP` (tên tool, kết quả; token `UNAVAILABLE` hoặc `EXTERNALLY_REPORTED`); cập nhật `lastUsedAt`; ghi audit `MCP_TOOL_CALLED`.
 8. Bị từ chối thì trả lỗi JSON-RPC không lộ dữ liệu và ghi audit `ACCESS_DENIED`.
 
@@ -90,7 +90,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F9 - Cấu hình quota (UC 14, 15)
 1. Bấm phần "Quota AI giảng viên" mở `TeacherQuotaPanel`; panel gọi `GET /api/v1/admin/ai/quota-policy` và `GET /api/v1/admin/ai/teacher-quotas?q=`.
 2. Đặt mức mặc định mỗi ngày và trần ngày toàn hệ thống: `PUT /api/v1/admin/ai/quota-policy` kèm `version`; số nguyên không âm.
-3. Đặt mức riêng: tìm giảng viên qua `AccountLookupPort.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` kèm `version`; bỏ mức riêng: `DELETE` để về mặc định.
+3. Đặt mức riêng: tìm giảng viên qua `IAccountLookup.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` kèm `version`; bỏ mức riêng: `DELETE` để về mặc định.
 4. Kiểm Admin; người được đặt phải là Teacher hoặc Subject Manager; lệch `version` thì `409`.
 5. Ghi audit `QUOTA_CHANGED` (trước, sau); mức mới áp cho lần giữ chỗ tiếp theo, không thu hồi phần đã dùng.
 
@@ -103,11 +103,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F11 - Chọn nguồn và gửi task AI
 1. Ở màn của unit gọi (soạn Assignment, soạn Quiz, xin phản hồi AI, đề xuất chấm), người dùng bấm nút AI; `AiSourcePicker` gọi `GET /api/v1/ai/sources`: API chung theo từng provider (chỉ Teacher, Subject Manager; kèm quota còn lại hoặc lý do không dùng được) và các kết nối cá nhân `ACTIVE`.
 2. Người dùng chọn nguồn; UI hiện bên chịu chi phí và số token ước tính có nhãn "ước tính" (BR-U06-27); không tự chọn thay.
-3. Frontend gọi API của unit gọi; unit này kiểm quyền trên đích, dựng prompt tối thiểu, gọi `AiTaskPort.submit` kèm `requestRef` (BR-U06-20).
+3. Frontend gọi API của unit gọi; unit này kiểm quyền trên đích, dựng prompt tối thiểu, gọi `IAiTask.submit` kèm `requestRef` (BR-U06-20).
 4. U06 kiểm `requestRef`: trùng dấu vân tay thì trả task cũ, khác thì `409` (BR-U06-21).
 5. Kiểm nguồn: `SHARED` chỉ Teacher, Subject Manager `ACTIVE` và kết nối chung `ACTIVE`; `PERSONAL` đúng chủ và `ACTIVE`; người gọi có ít hơn 3 task đang chờ hoặc chạy (BR-U06-11, 17).
 6. `SHARED`: giữ chỗ quota (BR-U06-13); không đủ thì từ chối, báo thời điểm có cửa sổ mới.
-7. Tạo task `QUEUED`, lưu prompt; sau commit gửi job `AI_TASK` qua `JobPort` với `idempotencyKey` là `taskId`.
+7. Tạo task `QUEUED`, lưu prompt; sau commit gửi job `AI_TASK` qua `IJob` với `idempotencyKey` là `taskId`.
 8. Trả `taskId`; `AiTaskStatus` hỏi `GET /api/v1/ai/tasks/{id}` mỗi 2 giây tới khi task kết thúc. Người gửi có thể hủy khi còn `QUEUED` (BR-U06-26).
 
 ### F12 - Worker chạy task
@@ -118,12 +118,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. Giải mã key, gọi adapter của provider (timeout 120 giây) với prompt, JSON schema, `maxOutputTokens`.
 6. Provider trả phản hồi: lưu kết quả và usage `PROVIDER_MEASURED`; quyết toán quota bằng token thật; đúng schema thì `READY`, sai thì `FAILED` (BR-U06-14, 23).
 7. Provider từ chối không tính token: `FAILED` với lỗi đã làm sạch, giải phóng giữ chỗ. Hết giờ hoặc mất kết nối sau khi gửi: `UNKNOWN`, tính giữ chỗ là đã dùng với nhãn `ESTIMATED`.
-8. `READY`: gọi `AiTaskResultHandler.onReady` của unit gọi trong transaction riêng; handler kiểm quyền và `inputVersion` rồi áp dụng (bản nháp, phản hồi, đề xuất) hoặc trả `STALE`; U06 ghi kết quả áp dụng. `FAILED`, `UNKNOWN`: gọi `onFailed`.
+8. `READY`: gọi `IAiTaskResultHandler.onReady` của unit gọi trong transaction riêng; handler kiểm quyền và `inputVersion` rồi áp dụng (bản nháp, phản hồi, đề xuất) hoặc trả `STALE`; U06 ghi kết quả áp dụng. `FAILED`, `UNKNOWN`: gọi `onFailed`.
 9. Xóa prompt và kết quả khỏi task; giữ thông tin task và usage (BR-U06-24).
 
 ### F13 - Dọn task quá hạn
-1. `PendingSweeper`: task `QUEUED` quá 5 phút được U03 gửi lại message.
-2. `ScheduledScanner` chạy mỗi phút: task `QUEUED` quá 30 phút chuyển `CANCELLED`, giải phóng giữ chỗ (chưa gửi provider).
+1. `IPendingSweeper`: task `QUEUED` quá 5 phút được U03 gửi lại message.
+2. `IScheduledScanner` chạy mỗi phút: task `QUEUED` quá 30 phút chuyển `CANCELLED`, giải phóng giữ chỗ (chưa gửi provider).
 3. Task `RUNNING` quá 10 phút chuyển `UNKNOWN`, tính giữ chỗ là đã dùng.
 
 ### F14 - Tóm tắt cho Setting List (UC 14)

@@ -17,7 +17,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-14 | Chuyển trạng thái hợp lệ: `DRAFT→OPEN`, `DRAFT→ARCHIVED`, `OPEN→ARCHIVED`, `ARCHIVED→OPEN`. Mở hoặc mở lại cần có giảng viên và môn `ACTIVE`. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
 | BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. | UC 29 |
-| BR-U05-17 | `showGradeDistribution` mặc định tắt, chỉ Chủ nhiệm môn bật/tắt trong UC 29. U09 đọc cờ qua `ClassAccessPort.getClassRef` và chỉ trả phân bố ẩn danh trên Student Assignments khi đủ mẫu. | FR-024, UC 29, US-RPT-001 |
+| BR-U05-17 | `showGradeDistribution` mặc định tắt, chỉ Chủ nhiệm môn bật/tắt trong UC 29. U09 đọc cờ qua `IClassAccess.getClassRef` và chỉ trả phân bố ẩn danh trên Student Assignments khi đủ mẫu. | FR-024, UC 29, US-RPT-001 |
 
 ## 2. Ghi danh (Subject Manager, UC 28)
 
@@ -36,7 +36,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U05-30 | `isTeacherOf` đọc `teacher_id` hiện thời, `isEnrolledStudent` đọc ghi danh `ACTIVE` hiện thời, mỗi lần gọi, không cache; đổi giảng viên hoặc gỡ sinh viên có hiệu lực ở request tiếp theo. | BR-U05-12, 25 |
-| BR-U05-31 | Phạm vi trả đúng quan hệ cả khi lớp `DRAFT` hoặc `ARCHIVED`; unit sở hữu tài nguyên tự chặn thao tác theo trạng thái lớp đọc từ `ClassAccessPort.getClassRef`. | BR-U05-16 |
+| BR-U05-31 | Phạm vi trả đúng quan hệ cả khi lớp `DRAFT` hoặc `ARCHIVED`; unit sở hữu tài nguyên tự chặn thao tác theo trạng thái lớp đọc từ `IClassAccess.getClassRef`. | BR-U05-16 |
 
 ## 4. Xem lớp
 

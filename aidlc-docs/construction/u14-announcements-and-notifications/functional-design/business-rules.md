@@ -24,7 +24,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-10 | Thông báo tạo từ sự kiện sau khi nghiệp vụ đã commit; U14 lỗi không làm rollback nghiệp vụ. Mỗi (sự kiện, người nhận, loại) tạo đúng một thông báo. | US-NTF-001 S1, S2 |
 | BR-U14-11 | Loại và người nhận: `ENROLLED` (người được ghi danh); `ASSIGNMENT_OPENED` (người học đang ghi danh của lớp, hoặc của mọi lớp `OPEN` thuộc môn với bài của môn); `QUIZ_PUBLISHED` (như trên); `GRADE_PUBLISHED` (người học vừa có điểm); `DEADLINE_REMINDER` (F7); `ANNOUNCEMENT` (người học của lớp, trừ người đăng); `LEADER_CHANGE_REQUESTED` (giảng viên của lớp); `LEADER_CHANGED`, `LEADER_REQUEST_REJECTED`, `GROUP_MEMBERSHIP_CHANGED`, `GROUP_SUBMITTED` (thành viên liên quan); `BACKUP_FAILED` (mọi Admin đang hoạt động). | FR-011 |
 | BR-U14-12 | Nội dung chỉ về chính người nhận; không ghi điểm, bài nộp, secret; chỉ báo "có điểm mới" và đường dẫn. Mở đường dẫn không cấp quyền: màn đích kiểm quyền hiện hành. | US-NTF-001 S3 |
-| BR-U14-13 | Chuông và popup trên thanh điều hướng của mọi vai trò: số chưa đọc, danh sách phân trang, đánh dấu đã đọc từng cái hoặc tất cả; cập nhật realtime qua `SseHub` của U12 (kênh theo tài khoản). Người dùng chỉ xem, sửa thông báo của mình. | UC 65 |
+| BR-U14-13 | Chuông và popup trên thanh điều hướng của mọi vai trò: số chưa đọc, danh sách phân trang, đánh dấu đã đọc từng cái hoặc tất cả; cập nhật realtime qua `ISseHub` của U12 (kênh theo tài khoản). Người dùng chỉ xem, sửa thông báo của mình. | UC 65 |
 | BR-U14-14 | Giữ thông báo 180 ngày rồi xóa. | Thiết kế |
 
 ## 3. Email
@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-20 | Loại có email: `ENROLLED`, `ASSIGNMENT_OPENED`, `GRADE_PUBLISHED`, `DEADLINE_REMINDER`, `ANNOUNCEMENT_IMPORTANT` (thông báo lớp quan trọng có chọn email), `BACKUP_FAILED` (Admin). Các loại khác chỉ trong app. | FR-011 |
 | BR-U14-21 | Người học bật, tắt email từng loại học tập trong popup thông báo; tắt thì email `SKIPPED`, thông báo trong app vẫn có. Email `BACKUP_FAILED` cho Admin luôn gửi. | US-NTF-001, FR-011 |
 | BR-U14-22 | Trần 300 email thông báo mỗi ngày (giờ Việt Nam, đặt bằng biến môi trường); vượt thì `DEFERRED` sang ngày sau theo thứ tự ưu tiên `BACKUP_FAILED` > `DEADLINE_REMINDER` > `ANNOUNCEMENT_IMPORTANT` > `ASSIGNMENT_OPENED` > `GRADE_PUBLISHED` > `ENROLLED`. Email OTP của U01 không tính. | FR-011 |
-| BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `MailPort` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. | US-NTF-001 S2, S4 |
+| BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `IMail` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. | US-NTF-001 S2, S4 |
 | BR-U14-24 | Email nhắc hạn đã bị hoãn mà tới lúc gửi đã qua hạn thì `SKIPPED`. | Thiết kế |
 
 ## 4. Nhắc hạn nộp (FR-019)

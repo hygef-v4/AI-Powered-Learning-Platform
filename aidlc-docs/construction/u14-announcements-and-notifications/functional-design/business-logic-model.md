@@ -24,7 +24,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Xem thông báo lớp (UC 63)
 1. Người dùng mở Class Announcements từ thanh bên Class Dashboard (U14 đăng ký `DashboardNavEntry`) hoặc từ phần Thông báo trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/announcements` kèm lớp.
-2. Lấy các lớp `OPEN` người dùng đang học hoặc đang dạy (`ClassAccessPort`); trả thông báo chưa xóa của các lớp đó, mới nhất trước, lọc theo lớp (BR-U14-06).
+2. Lấy các lớp `OPEN` người dùng đang học hoặc đang dạy (`IClassAccess`); trả thông báo chưa xóa của các lớp đó, mới nhất trước, lọc theo lớp (BR-U14-06).
 3. Thông báo của lớp ngoài quyền trả "không tìm thấy".
 
 ### F2 - Tạo thông báo lớp (UC 64)
@@ -40,10 +40,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F4 - Tạo thông báo từ sự kiện
 1. Listener của U14 nhận sự kiện trên queue `jobs.notification` (bind `platform.events` của U03); bỏ qua phiên bản sự kiện không hỗ trợ.
-2. Xác định người nhận theo BR-U14-11: người học đang ghi danh qua `ClassAccessPort.listActiveStudents` (bài, Quiz của môn thì qua `listOpenClassesOfSubject`), giảng viên qua `getClassRef`, Admin qua `AccountLookupPort`; người nhận đi kèm sự kiện thì dùng luôn.
+2. Xác định người nhận theo BR-U14-11: người học đang ghi danh qua `IClassAccess.listActiveStudents` (bài, Quiz của môn thì qua `listOpenClassesOfSubject`), giảng viên qua `getClassRef`, Admin qua `IAccountLookup`; người nhận đi kèm sự kiện thì dùng luôn.
 3. Với mỗi người nhận: chèn thông báo, trùng (sự kiện, người nhận, loại) thì bỏ qua (BR-U14-10).
 4. Loại có email: tạo bản ghi email (F6) theo tùy chọn (BR-U14-21).
-5. Sau commit đẩy sự kiện qua `SseHub` tới kênh của từng người nhận.
+5. Sau commit đẩy sự kiện qua `ISseHub` tới kênh của từng người nhận.
 
 ### F5 - Xem, đánh dấu đã đọc (UC 65)
 1. `NotificationBell` trên thanh điều hướng (U14 gắn qua slot `HeaderWidget` của U01) gọi `GET /api/v1/me/notifications/unread-count` và mở kênh `GET /api/v1/me/notifications/events`.
@@ -55,14 +55,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F6 - Gửi email
 1. Bản ghi email tạo cùng transaction với thông báo: người nhận tắt loại đó thì `SKIPPED`; đã chạm trần trong ngày thì `DEFERRED`; còn lại `PENDING` và gửi job `EMAIL_SEND` sau commit (BR-U14-22).
-2. Worker nhận job, đọc bản ghi; đã `SENT` thì bỏ qua; lấy địa chỉ qua `AccountLookupPort.getContact`; dựng nội dung tối thiểu kèm link; gửi qua `MailPort` của U01.
+2. Worker nhận job, đọc bản ghi; đã `SENT` thì bỏ qua; lấy địa chỉ qua `IAccountLookup.getContact`; dựng nội dung tối thiểu kèm link; gửi qua `IMail` của U01.
 3. Thành công thì `SENT`; lỗi tạm thì U03 thử lại; hết lượt thì `onFailed` ghi `FAILED` với lỗi đã làm sạch.
 
 ### F7 - Nhắc hạn nộp
-1. `ScheduledScanner` của U14 chạy mỗi phút: lấy bài có `closesAt` trong 24 giờ tới qua `AssignmentQueryPort.listClosingBetween` của U07.
+1. `IScheduledScanner` của U14 chạy mỗi phút: lấy bài có `closesAt` trong 24 giờ tới qua `IAssignmentQuery.listClosingBetween` của U07.
 2. Với mỗi (bài, lớp, `closesAt`) chưa xử lý: bỏ qua nếu bài không còn `OPEN` hoặc mở sau thời điểm nhắc (BR-U14-32).
 3. Lớp của bài cá nhân hoặc nhóm: lớp của bài; bài của môn: mọi lớp `OPEN` thuộc môn (`listOpenClassesOfSubject`).
-4. Lấy người chưa nộp qua `SubmissionQueryPort.listStudentsWithoutSubmission(assignmentId, classId)` của U08 (bài nhóm: U08 dựa vào trạng thái nhóm từ U12).
+4. Lấy người chưa nộp qua `ISubmissionQuery.listStudentsWithoutSubmission(assignmentId, classId)` của U08 (bài nhóm: U08 dựa vào trạng thái nhóm từ U12).
 5. Tạo thông báo `DEADLINE_REMINDER` và email như F4 bước 3–5; đánh dấu (bài, lớp, `closesAt`) đã nhắc.
 
 ### F8 - Tùy chọn email (UC 65)

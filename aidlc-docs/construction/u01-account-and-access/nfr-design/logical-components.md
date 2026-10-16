@@ -24,7 +24,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
  |       AuthorizationService   OtpService                                   |
  |                |                |                                         |
  |                v                v                                         |
- |   Subject/ClassScopePort (U04/U05) JobPort (-> U03)                       |
+ |   Subject/IClassScope (U04/U05) IJob (-> U03)                       |
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
                      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `SubjectScopePort` và U05 qua `ClassScopePort`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
 
 ## 2. Thành phần
 
@@ -98,7 +98,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 - Tài khoản trường cấp, không public registration. Admin tạo/import không gửi OTP hoặc đặt mật khẩu; người dùng yêu cầu activation ở login đầu và tự đặt mật khẩu sau OTP.
 - Account role cao nhất trong STUDENT/TEACHER/SUBJECT_MANAGER/ADMIN; authorization theo action/resource/current state, không chỉ role JWT. Admin chỉ quản trị, không học vụ.
 - Profile cá nhân chỉ displayName/phoneNumber, email định danh/role/status bất biến trong /me. Reset không tiết lộ account tồn tại.
-- MCP credentials xác thực actor qua U06 và cùng AuthorizationPort; không dùng provider API key làm ALAP authentication. Student không shared quota.
+- MCP credentials xác thực actor qua U06 và cùng IAuthorization; không dùng provider API key làm ALAP authentication. Student không shared quota.
 - Authorization current actor/resource on every web/API/MCP call, fail closed; CSRF protections for cookie-session state-changing routes; no user-supplied actor trusted.
 - expectedVersion on edits and idempotency on repeatable commands/events; conflicts do not overwrite current state, retry bounded, reference returned not secrets.
 - Unit repository private; cross-unit read/write through public ports. DB ownership is logical within one Spring Boot monolith; no 15 service deploys.

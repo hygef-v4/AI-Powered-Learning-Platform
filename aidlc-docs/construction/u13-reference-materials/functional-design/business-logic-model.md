@@ -26,7 +26,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. Bấm tài liệu mở Material Detail: `GET /api/v1/materials/{id}` gồm thông tin và lịch sử phiên bản.
 
 ### F2 - Thêm, sửa, lưu trữ tài liệu của môn (UC 59)
-1. Thêm tệp: chọn tệp, tải qua U03 (`ArtifactPort.store`, purpose `MATERIAL`) nhận `FileRef`; nhập tiêu đề, mô tả; `POST /api/v1/subjects/{subjectId}/materials` loại `FILE`.
+1. Thêm tệp: chọn tệp, tải qua U03 (`IArtifact.store`, purpose `MATERIAL`) nhận `FileRef`; nhập tiêu đề, mô tả; `POST /api/v1/subjects/{subjectId}/materials` loại `FILE`.
 2. Thêm link: nhập URL YouTube, tiêu đề, mô tả; `POST` loại `YOUTUBE_LINK`; kiểm dạng URL một video (BR-U13-10).
 3. Kiểm R2, môn `ACTIVE`; `attach` tệp; tạo tài liệu `ACTIVE` với phiên bản 1; gửi job trích chữ với tệp (F6); audit `MATERIAL_CREATED`.
 4. Sửa thông tin hoặc thứ tự: `PATCH /api/v1/materials/{id}` kèm `version`; audit `MATERIAL_UPDATED`.
@@ -47,7 +47,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F5 - Xem tài liệu (UC 62)
 1. Student Class Detail có phần Học liệu do U13 gắn qua `StudentClassSection`: `GET /api/v1/me/classes/{classId}/materials` trả tài liệu `ACTIVE` của môn và của lớp.
 2. Bấm tài liệu mở Learning Material: `GET /api/v1/materials/{id}/view` kèm `classId`; kiểm quyền xem (BR-U13-02).
-3. Tệp: frontend gọi `POST /api/v1/materials/{id}/download-token`; U13 kiểm quyền rồi gọi `ArtifactPort.issueDownloadToken`; PDF hiện ngay trên trang, tệp khác tải về.
+3. Tệp: frontend gọi `POST /api/v1/materials/{id}/download-token`; U13 kiểm quyền rồi gọi `IArtifact.issueDownloadToken`; PDF hiện ngay trên trang, tệp khác tải về.
 4. Link YouTube: trang nhúng `youtube-nocookie.com` theo id video đã lưu (BR-U13-20, 21).
 5. Vùng `LearningMaterialSection` hiện phần do unit khác gắn (U11: Quiz gắn tài liệu này).
 6. Giảng viên, Chủ nhiệm môn cũng mở được Learning Material của tài liệu mình có quyền xem.
@@ -56,11 +56,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 4. Nguồn cho AI
 
 ### F6 - Trích chữ
-1. Sau khi lưu phiên bản tệp, U13 gửi job `MATERIAL_TEXT_EXTRACT` qua `JobPort` (queue `jobs.triggered`); phiên bản ở `PENDING`.
-2. Worker đọc tệp qua `ArtifactPort.open`, trích chữ PDF, DOCX, PPTX bằng thư viện, không OCR.
+1. Sau khi lưu phiên bản tệp, U13 gửi job `MATERIAL_TEXT_EXTRACT` qua `IJob` (queue `jobs.triggered`); phiên bản ở `PENDING`.
+2. Worker đọc tệp qua `IArtifact.open`, trích chữ PDF, DOCX, PPTX bằng thư viện, không OCR.
 3. Ghi chữ (cắt ở 1.000.000 ký tự) và `EXTRACTED`; ít chữ thì `NO_TEXT`; lỗi sau các lần thử của U03 thì `FAILED`. Phiên bản bị thay trước khi job chạy thì bỏ qua.
 
 ### F7 - Nguồn cho AI và MCP
-1. U07, U10 gọi `ReferenceMaterialPort.listSelectable(actor, scopeRef)` để hiện danh sách tài liệu người soạn chọn được (BR-U13-31).
+1. U07, U10 gọi `IReferenceMaterial.listSelectable(actor, scopeRef)` để hiện danh sách tài liệu người soạn chọn được (BR-U13-31).
 2. Khi gửi task AI, U07, U10 gọi `extractText(actor, materialIds, maxChars)`: U13 kiểm lại quyền từng tài liệu, trả chữ phiên bản hiện tại kèm id, phiên bản, tiêu đề; tài liệu chưa có chữ được đánh dấu để người soạn biết.
 3. Agent gọi `read_authorized_material(materialId)` qua U06: U13 kiểm quyền xem của actor, trả chữ (cắt theo trần của tool) và thông tin tài liệu.

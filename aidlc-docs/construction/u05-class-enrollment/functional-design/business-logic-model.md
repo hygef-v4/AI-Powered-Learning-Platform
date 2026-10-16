@@ -58,7 +58,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F5 - Môn được giao quản lý (UC 30)
 1. Subject Manager đăng nhập vào Manager Dashboard; frontend gọi `GET /api/v1/manager/subjects`.
-2. Lấy các môn qua `SubjectQueryPort.listManagedSubjects` (U04); đếm lớp theo trạng thái của từng môn.
+2. Lấy các môn qua `ISubjectQuery.listManagedSubjects` (U04); đếm lớp theo trạng thái của từng môn.
 3. Hiện thẻ môn; lối vào My Subject, Class List và các màn của unit khác (Material List, Question List, Quiz List, Assignment List); nút sang Class Dashboard nếu có lớp đang dạy (BR-U05-48).
 4. Bấm một môn mở My Subject: `GET /api/v1/manager/subjects/{id}` kiểm người gọi là Chủ nhiệm môn; trả thông tin môn và số lớp theo trạng thái.
 
@@ -68,7 +68,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F7 - Tạo lớp (UC 26)
 1. Trên Class List bấm "Tạo lớp"; popup mở.
-2. Chọn môn, nhập mã, tên, mô tả, học kỳ; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `AccountLookupPort.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
+2. Chọn môn, nhập mã, tên, mô tả, học kỳ; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `IAccountLookup.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
 3. Kiểm người gọi là Chủ nhiệm môn của môn và môn `ACTIVE` (BR-U05-10).
 4. Kiểm mã trong môn (BR-U05-11); kiểm giảng viên nếu có (BR-U05-12).
 5. Tạo lớp `DRAFT`; ghi audit `CLASS_CREATED` (và `CLASS_TEACHER_CHANGED` nếu có giảng viên).
@@ -86,7 +86,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. Từ request tiếp theo, người cũ mất quyền dạy lớp.
 
 ### F10 - Thêm từng sinh viên (UC 28)
-1. Gõ email hoặc tên; frontend gọi `GET /api/v1/manager/classes/{id}/student-candidates?q=`, U05 tra `AccountLookupPort.findStudents` (tối đa 20).
+1. Gõ email hoặc tên; frontend gọi `GET /api/v1/manager/classes/{id}/student-candidates?q=`, U05 tra `IAccountLookup.findStudents` (tối đa 20).
 2. Chọn sinh viên; frontend gọi `POST /api/v1/manager/classes/{id}/enrollments`.
 3. Kiểm quyền Chủ nhiệm môn, lớp `DRAFT` hoặc `OPEN`, role `STUDENT`, trạng thái `ACTIVE` hoặc `PENDING` (BR-U05-20).
 4. Khóa hàng theo (sinh viên, môn), kiểm chưa `ACTIVE` ở lớp chưa lưu trữ khác cùng môn (BR-U05-22).
@@ -123,7 +123,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 5. Phạm vi cho unit khác
 
 ### F15 - Trả phạm vi lớp
-1. U01 gọi `ClassScopePort.isTeacherOf` (R3/R4) hoặc `isEnrolledStudent` (R5) khi quyết định quyền; U05 đọc `teacher_id` và ghi danh hiện thời, không cache (BR-U05-30).
+1. U01 gọi `IClassScope.isTeacherOf` (R3/R4) hoặc `isEnrolledStudent` (R5) khi quyết định quyền; U05 đọc `teacher_id` và ghi danh hiện thời, không cache (BR-U05-30).
 2. U01 gọi `listTaughtClasses` khi chặn hạ role người đang dạy lớp.
-3. U04 gọi `SubjectClassesPort` để hiện lớp của môn và chặn lưu trữ môn.
-4. U07–U15 gọi `ClassAccessPort`: thông tin lớp, sinh viên `ACTIVE`, Chủ nhiệm môn của lớp, lớp `OPEN` của một người hoặc của một môn, số đếm cho Admin Dashboard.
+3. U04 gọi `ISubjectClasses` để hiện lớp của môn và chặn lưu trữ môn.
+4. U07–U15 gọi `IClassAccess`: thông tin lớp, sinh viên `ACTIVE`, Chủ nhiệm môn của lớp, lớp `OPEN` của một người hoặc của một môn, số đếm cho Admin Dashboard.

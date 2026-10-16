@@ -8,30 +8,28 @@ Thiết kế: [business-logic-model](../../u13-reference-materials/functional-de
 
 ## Trạng thái
 
-Plan mới, chưa được duyệt và chưa code. Thay phần học liệu của plan U05 cũ.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
-| Path | Hiện trạng | Việc trong plan này |
-|---|---|---|
-| `backend/.../content/` (`ModuleService`, `PublishedContentService`, `RetrievalService`, `GeminiEmbeddingAdapter`, `YoutubeAdapter`, port `AiUsagePort`, `AiUsageTicket`, `ContentRefPort`, `EmbeddingPort`, `LessonPassage`, `RagRetrievalPort`, `RagScope`, `YoutubePort`) | Khung cũ có module, RAG, credit | Tạo package `edu.aiplatform.materials`; xóa module, RAG, embedding, credit, adapter YouTube |
-| `backend/.../content/event/AnnouncementPosted` | Sự kiện thông báo lớp | Để plan U14 chuyển |
-| `backend/.../academics/port/PublishedContentPort`, `ModuleView`, `LessonView` | Port cũ cho trang lớp | Xóa (trang lớp dùng slot của U05) |
-| `contracts/openapi/content.yaml` | Contract cũ | Thay bằng `contracts/openapi/materials.yaml` |
+| Path | Hiện trạng |
+|---|---|
+| `backend/src/main/java/edu/aiplatform/materials/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
+| `backend/.../materials/contract/` | Trống: unit không cung cấp interface mới, chỉ cài interface của unit trước |
+| `frontend/src/features/materials/slots.ts` | Slot đã khai báo: `learningMaterialSections` |
 
 ## Checklist
 
-- [ ] **Bước 1 — Dọn code cũ:** theo bảng trên; code biên dịch được.
-- [ ] **Bước 2 — Migration:** `db/migration/materials/V20260925_1900__create_material_tables.sql` theo infrastructure-design.
-- [ ] **Bước 3 — Domain:** `Material`, `MaterialVersion` và enum; repository chỉ dùng trong package.
-- [ ] **Bước 4 — Quản lý:** `MaterialService` (F2, F4, P1).
-- [ ] **Bước 5 — Xem:** `MaterialQueryService`, `MaterialAccessPolicy` (F1, F3, F5, P3).
-- [ ] **Bước 6 — Trích chữ:** `MaterialTextExtractJobHandler`, `MaterialTextExtractor`, thêm `MATERIAL_TEXT_EXTRACT` vào loại việc của U03 (F6, P2).
-- [ ] **Bước 7 — Nguồn cho AI:** `ReferenceMaterialService` (cài `ReferenceMaterialPort` của U06, thay adapter rỗng), `MaterialMcpTools` (tool `read_authorized_material`) (F7).
-- [ ] **Bước 8 — API:** controller theo domain-entities mục 4; `contracts/openapi/materials.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 9 — Frontend:** `SubjectMaterialListPage` (đăng ký `DashboardNavEntry`), `MaterialDetailPage`, `ClassMaterialsTab` (`TeacherClassTab`), `ClassMaterialsCard` (`StudentClassSection`), `LearningMaterialPage` với slot `LearningMaterialSection`; `MaterialLinkList` cài slot `AssignmentMaterialSection` (U08), `QuizMaterialSection` (U11).
-- [ ] **Bước 10 — Unit test (người code viết):** quyền theo phạm vi (Chủ nhiệm môn, giảng viên, người học, Admin); link YouTube hợp lệ và không hợp lệ (playlist, domain khác); thay phiên bản giữ phiên bản cũ; lưu trữ ẩn với người học; trích chữ `EXTRACTED`, `NO_TEXT`; `extractText` kiểm lại quyền và cắt theo trần; tool MCP từ chối ngoài quyền; component frontend. Integration test do tester viết.
-- [ ] **Bước 11 — Review:** đối chiếu UC 58–62, story, BR-U13 với code; người dùng duyệt trước khi chuyển unit.
+- [ ] **Bước 1 — Migration:** `db/migration/materials/V20260925_1900__create_material_tables.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `Material`, `MaterialVersion` và enum; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Quản lý:** `MaterialService` (F2, F4, P1).
+- [ ] **Bước 4 — Xem:** `MaterialQueryService`, `MaterialAccessPolicy` (F1, F3, F5, P3).
+- [ ] **Bước 5 — Trích chữ:** `MaterialTextExtractJobHandler`, `MaterialTextExtractor`, thêm `MATERIAL_TEXT_EXTRACT` vào loại việc của U03 (F6, P2).
+- [ ] **Bước 6 — Nguồn cho AI:** `ReferenceMaterialService` (cài `IReferenceMaterial` của U06, thay adapter rỗng), `MaterialMcpTools` (tool `read_authorized_material`) (F7).
+- [ ] **Bước 7 — API:** controller theo domain-entities mục 4; `contracts/openapi/materials.yaml`; ngoài phạm vi trả `404`.
+- [ ] **Bước 8 — Frontend:** `SubjectMaterialListPage` (đăng ký `DashboardNavEntry`), `MaterialDetailPage`, `ClassMaterialsTab` (`TeacherClassTab`), `ClassMaterialsCard` (`StudentClassSection`), `LearningMaterialPage` với slot `LearningMaterialSection`; `MaterialLinkList` cài slot `AssignmentMaterialSection` (U08), `QuizMaterialSection` (U11).
+- [ ] **Bước 9 — Unit test (người code viết):** quyền theo phạm vi (Chủ nhiệm môn, giảng viên, người học, Admin); link YouTube hợp lệ và không hợp lệ (playlist, domain khác); thay phiên bản giữ phiên bản cũ; lưu trữ ẩn với người học; trích chữ `EXTRACTED`, `NO_TEXT`; `extractText` kiểm lại quyền và cắt theo trần; tool MCP từ chối ngoài quyền; component frontend. Integration test do tester viết.
+- [ ] **Bước 10 — Review:** đối chiếu UC 58–62, story, BR-U13 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)
 

@@ -47,16 +47,16 @@ Mỗi unit chỉ phụ thuộc unit ở iteration trước hoặc cùng iteratio
 | Unit | Phụ thuộc bắt buộc | Contract / sự kiện |
 |---|---|---|
 | U01 | U02, U03 | Ghi audit qua U02; OTP và email qua job của U03 |
-| U02 | Không | Mọi unit ghi audit qua AuditPort |
+| U02 | Không | Mọi unit ghi audit qua IAudit |
 | U03 | Không | U06 khai báo mục cài đặt API chung và quota; U15 đọc trạng thái backup |
 | U04 | U01 | U05 đọc phạm vi môn |
-| U05 | U01, U04 | Các unit iter 2 và 3 kiểm phạm vi lớp qua ClassScopePort |
+| U05 | U01, U04 | Các unit iter 2 và 3 kiểm phạm vi lớp qua IClassScope |
 | U06 | U01, U03 | Port gọi AI cho U07–U10; MCP nhận tool do U07–U10 đăng ký, nên U06 không phụ thuộc ngược |
 | U07 | U03, U05 | Gọi U06 để AI soạn đề; phát sự kiện bài mới/mở cho U14 |
-| U08 | U03, U05, U06, U07 | Cung cấp bài nộp và ActivityQueryPort cho U09; ActivityWritePort cho U11, U12 |
+| U08 | U03, U05, U06, U07 | Cung cấp bài nộp và IActivityQuery cho U09; IActivityWrite cho U11, U12 |
 | U09 | U05, U06, U07, U08 | Phát sự kiện công bố điểm cho U14 |
 | U10 | U04, U05 | Gọi U06 để AI soạn câu hỏi; U11 đọc quiz đã phát hành |
-| U11 | U05, U10 | Ghi hoạt động làm quiz qua ActivityWritePort của U08 |
+| U11 | U05, U10 | Ghi hoạt động làm quiz qua IActivityWrite của U08 |
 | U12 | U05, U07, U08, U09 | Dùng khung tài liệu U07, workspace U08, chấm U09 |
 | U13 | U03, U05 | Không unit nào bắt buộc phụ thuộc học liệu |
 | U14 | U01, U03, U05 | Nhận sự kiện từ U07–U12; email qua job của U03 |

@@ -2,13 +2,13 @@ package edu.aiplatform;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 
-/** Modular monolith: một image chạy hai vai trò, `backend` (API) và `worker` (profile `worker`). */
-@SpringBootApplication
-@ConfigurationPropertiesScan
-@EnableScheduling
+/**
+ * Backend modular monolith của 15 unit. Mỗi unit là một package (hoặc vài package) dưới {@code edu.aiplatform};
+ * unit khác chỉ được dùng package {@code contract} của nó.
+ */
+@SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class PlatformApplication {
 
     public static void main(String[] args) {

@@ -8,14 +8,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U05-01 | Kiểm phạm vi (`ClassScopePort`, `ClassAccessPort`) là một truy vấn theo index, p95 ≤ 20 ms; không cache để đổi giảng viên và gỡ ghi danh có hiệu lực ngay. | BR-U05-12, 25 |
+| NFR-U05-01 | Kiểm phạm vi (`IClassScope`, `IClassAccess`) là một truy vấn theo index, p95 ≤ 20 ms; không cache để đổi giảng viên và gỡ ghi danh có hiệu lực ngay. | BR-U05-12, 25 |
 | NFR-U05-02 | API danh sách lớp và ghi danh p95 ≤ 300 ms, trang ≤ 100. | NFR-003 |
 | NFR-U05-03 | Thêm theo danh sách 200 email xử lý đồng bộ ≤ 5 giây, tra U01 theo lô. | BR-U05-23 |
 | NFR-U05-04 | Trang lớp của sinh viên p95 ≤ 300 ms phần của U05, chưa tính các phần do unit khác gắn vào. | NFR-003 |
 | NFR-U05-10 | Unique trong database: `(subject_id, code)` của lớp; khóa chính `(class_id, account_id)` của ghi danh. | BR-U05-11, 21 |
 | NFR-U05-11 | BR-U05-22 kiểm trong transaction có khóa hàng theo (sinh viên, môn) để hai yêu cầu đồng thời không cùng qua. | BR-U05-22 |
 | NFR-U05-12 | Sửa lớp, đổi giảng viên, đổi trạng thái dùng khóa lạc quan `version`. | BR-U05-14 |
-| NFR-U05-13 | Sự kiện `enrollment.activated` gửi sau commit qua `EventPublisherPort`. | BR-U05-26 |
+| NFR-U05-13 | Sự kiện `enrollment.activated` gửi sau commit qua `IEventPublisher`. | BR-U05-26 |
 | NFR-U05-30 | Mọi endpoint kiểm quyền phía server; ngoài phạm vi trả `404`. | SEC-002 |
 | NFR-U05-32 | Kiểm đầu vào: độ dài, định dạng mã lớp, email, CSV ≤ 200 dòng và ≤ 100 KB. | SEC-003 |
 | NFR-U05-33 | Không log email sinh viên trong log ứng dụng; audit ghi `accountId`. | SEC-005 |

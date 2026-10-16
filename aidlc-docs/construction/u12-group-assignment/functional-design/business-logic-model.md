@@ -24,7 +24,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F12 Nộp bài nhóm | UC 56 | Assignment Workspace |
 | F13 Tự nộp | - | - |
 | F14 Đổi thành viên khi có bài đang mở | UC 57 | Tab Students |
-| F15 Port cho unit khác, realtime | UC của U08, U09, U14 | - |
+| F15 Interface cho unit khác, realtime | UC của U08, U09, U14 | - |
 
 ## 2. Nhóm và trưởng nhóm
 
@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm giảng viên chính của lớp (BR-U12-01); trả nhóm, thành viên (người đã rời lớp có nhãn), trưởng nhóm, sinh viên chưa có nhóm, yêu cầu đang chờ, `version`.
 3. Giảng viên tạo nhóm, thêm, chuyển, gỡ thành viên, chọn trưởng nhóm trên bản sửa ở trình duyệt.
 4. Lưu: `PUT /api/v1/classes/{classId}/groups` kèm cả bộ nhóm và `version`.
-5. Kiểm lớp `DRAFT` hoặc `OPEN`, thành viên ghi danh `ACTIVE` (`ClassAccessPort`), mỗi người một nhóm, mỗi nhóm có trưởng nhóm là thành viên, nhóm bị xóa chưa có tài liệu có nội dung (BR-U12-02, 05, 06); lỗi thì trả từng lỗi, không lưu gì.
+5. Kiểm lớp `DRAFT` hoặc `OPEN`, thành viên ghi danh `ACTIVE` (`IClassAccess`), mỗi người một nhóm, mỗi nhóm có trưởng nhóm là thành viên, nhóm bị xóa chưa có tài liệu có nội dung (BR-U12-02, 05, 06); lỗi thì trả từng lỗi, không lưu gì.
 6. Một transaction: ghi nhóm; với thay đổi khi có bài nhóm đang mở chạy F14; audit; sau commit phát `group.membership-changed` và `group.leader-changed` (kèm người nhận).
 
 ### F2 - Chia ngẫu nhiên (UC 57)
@@ -65,12 +65,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F6 - Soạn và phát hành bài nhóm (UC 53)
 1. Giảng viên tạo bài trên tab Evals (U07), chọn `GROUP` (chỉ hiện khi U12 có), bật hay tắt sơ đồ; chế độ khóa `GRADED`.
 2. Soạn đề, khung, rubric trên Assignment Form của U07; phần Nhóm của U12 (slot `AssignmentFormSection`) hiện số nhóm, kết quả kiểm sẵn sàng, lối vào tab Students.
-3. Khi duyệt và phát hành, U07 gọi `GroupAssignmentSupport.checkReadiness(classId)`; U12 trả lỗi chặn và cảnh báo theo BR-U12-22.
+3. Khi duyệt và phát hành, U07 gọi `IGroupAssignmentSupport.checkReadiness(classId)`; U12 trả lỗi chặn và cảnh báo theo BR-U12-22.
 4. Có cảnh báo `STUDENT_WITHOUT_GROUP` thì giảng viên xác nhận để phát hành.
 
 ### F7 - Tạo tài liệu nhóm
-1. U07 mở bài nhóm và gọi `onOpened(assignmentId)` trong transaction mở bài; U12 gửi job `GROUP_DOC_CREATE` qua `JobPort` sau commit.
-2. Worker lấy khung và phần (`AssignmentQueryPort.getContent`), tạo một tài liệu cho mỗi nhóm hợp lệ của lớp: mục theo `partId`, phần chung chỉ đọc (BR-U12-30); làm lại không tạo trùng.
+1. U07 mở bài nhóm và gọi `onOpened(assignmentId)` trong transaction mở bài; U12 gửi job `GROUP_DOC_CREATE` qua `IJob` sau commit.
+2. Worker lấy khung và phần (`IAssignmentQuery.getContent`), tạo một tài liệu cho mỗi nhóm hợp lệ của lớp: mục theo `partId`, phần chung chỉ đọc (BR-U12-30); làm lại không tạo trùng.
 3. Người học mở trước khi job chạy xong thì tài liệu được tạo ngay khi truy cập.
 4. Nhóm mới tạo khi bài đang mở cũng được tạo tài liệu (F1 bước 6).
 
@@ -100,11 +100,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F12 - Nộp bài nhóm (UC 56)
 1. Trưởng nhóm bấm Nộp; hệ thống báo mục chưa Xong; frontend gọi `POST /api/v1/group-docs/{id}/submit` kèm `version`.
 2. Kiểm trưởng nhóm hiện tại, tài liệu `IN_PROGRESS`, bài còn nhận bài; `validateForSubmit`; lỗi thì trả danh sách cần sửa (BR-U12-40).
-3. Một transaction: chụp bản nộp (phần chung, nội dung đã đăng, tác giả từng mục), `receiptHash`, `late`, `MANUAL`; gọi `GroupEvaluationPort.onGroupSubmitted` (U09); audit.
+3. Một transaction: chụp bản nộp (phần chung, nội dung đã đăng, tác giả từng mục), `receiptHash`, `late`, `MANUAL`; gọi `IGroupEvaluation.onGroupSubmitted` (U09); audit.
 4. Sau commit phát `group.submitted`; đẩy SSE; trả biên nhận. Trưởng nhóm nộp lại được trước hạn (BR-U12-42).
 
 ### F13 - Tự nộp
-1. `ScheduledScanner` của U12 chạy mỗi phút: tài liệu `IN_PROGRESS` của bài đã quá hạn cuối 30 giây.
+1. `IScheduledScanner` của U12 chạy mỗi phút: tài liệu `IN_PROGRESS` của bài đã quá hạn cuối 30 giây.
 2. U07 ngưng giao bài thì gọi `onRetired`: U12 đánh dấu các tài liệu của bài để tự nộp ngay trong cùng transaction.
 3. Với từng tài liệu có thay đổi sau lần nộp cuối: chốt mục `CLAIMED` bằng bản nháp đã lưu, chụp bản nộp `AUTO_DEADLINE` hoặc `AUTO_RETIRED`, gọi `onGroupSubmitted`; tài liệu `CLOSED` (BR-U12-43).
 4. Đẩy SSE: client khóa trang "Đang nộp…" rồi chuyển sang thẻ Bản nộp; câu lệnh có điều kiện nên chạy lại không nộp hai lần.
@@ -114,10 +114,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Nhóm mới: tạo tài liệu cho mọi bài nhóm đang mở của lớp.
 3. Nội dung đã Xong giữ tên tác giả; bản nộp đã có không đổi (BR-U12-05).
 
-## 4. Port cho unit khác
+## 4. Interface cho unit khác
 
-### F15 - Port cho unit khác, realtime
-1. U08 hỏi `GroupWorkStatusPort.statusFor` cho Student Assignments; Assignment Detail nhúng nút của U12 qua `GroupWorkEntry`.
-2. U09 đọc bản nộp và tiến độ qua `GroupSubmissionSource`; agent của giảng viên đọc bản nộp qua tool `read_authorized_group_submission` (kiểm giảng viên chính của lớp).
-3. Ghi dữ liệu hoạt động: U12 kiểm thành viên hiệu lực, tài liệu `IN_PROGRESS`, chính sách đã chụp khi bài mở, rồi gọi `ActivityWritePort.record` loại `GROUP_DOCUMENT`.
-4. `SseHub` gửi sự kiện tới mọi instance backend qua exchange `platform.realtime`; U14 dùng `SseHub` cho chuông thông báo.
+### F15 - Interface cho unit khác, realtime
+1. U08 hỏi `IGroupWorkStatus.statusFor` cho Student Assignments; Assignment Detail nhúng nút của U12 qua `GroupWorkEntry`.
+2. U09 đọc bản nộp và tiến độ qua `IGroupSubmissionSource`; agent của giảng viên đọc bản nộp qua tool `read_authorized_group_submission` (kiểm giảng viên chính của lớp).
+3. Ghi dữ liệu hoạt động: U12 kiểm thành viên hiệu lực, tài liệu `IN_PROGRESS`, chính sách đã chụp khi bài mở, rồi gọi `IActivityWrite.record` loại `GROUP_DOCUMENT`.
+4. `ISseHub` gửi sự kiện tới mọi instance backend qua exchange `platform.realtime`; U14 dùng `ISseHub` cho chuông thông báo.

@@ -17,7 +17,7 @@ Thiết kế độc lập công nghệ. U15 không có bảng; mọi số liệu
 
 ## 2. Contract
 
-### Port U15 cung cấp
+### Interface U15 cung cấp
 
 Không có; U15 chỉ có màn và API cho Admin.
 
@@ -25,15 +25,15 @@ Không có; U15 chỉ có màn và API cho Admin.
 
 Không có.
 
-### Port U15 dùng
+### Interface U15 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort.countByRoleAndStatus` | U01 | Kiểm `ADMIN`; số tài khoản |
-| `AuditPort` | U02 | Ghi truy cập bị từ chối |
-| `BackupStatusPort` (`latest`, `list`) | U03 | Trạng thái, lịch sử backup |
-| `SubjectQueryPort.countSubjectsByStatus` | U04 | Số môn |
-| `ClassAccessPort.countClassesByStatus`, `countActiveEnrollments` | U05 | Số lớp, số ghi danh |
+| `IAuthorization`, `IAccountLookup.countByRoleAndStatus` | U01 | Kiểm `ADMIN`; số tài khoản |
+| `IAudit` | U02 | Ghi truy cập bị từ chối |
+| `IBackupStatus` (`latest`, `list`) | U03 | Trạng thái, lịch sử backup |
+| `ISubjectQuery.countSubjectsByStatus` | U04 | Số môn |
+| `IClassAccess.countClassesByStatus`, `countActiveEnrollments` | U05 | Số lớp, số ghi danh |
 
 ## 3. API
 

@@ -71,14 +71,14 @@ stateDiagram-v2
 
 ## 4. Contract
 
-### Port U09 cung cấp
+### Interface U09 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `GroupEvaluationPort` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Tạo hoặc đưa về chờ chấm đánh giá tài liệu nhóm và thành viên trong transaction nộp |
+| `IGroupEvaluation` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Tạo hoặc đưa về chờ chấm đánh giá tài liệu nhóm và thành viên trong transaction nộp |
 | Sự kiện `grade.published` | - | U14 | Báo người học vừa có điểm (bài, lớp, danh sách người học) |
-| `SubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
-| `AiTaskResultHandler` cho `GRADING_PROPOSAL`, `McpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |
+| `ISubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
+| `IAiTaskResultHandler` cho `GRADING_PROPOSAL`, `IMcpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |
 | `TeacherClassTab` (contract của U05, U09 cài) | - | U05 | Phần Sổ điểm trong tab Evals |
 | Slot `AssignmentRowAction` (của U07, U09 cài) | - | U07 | Lối vào Submission Detail kèm số đã nộp, chờ chấm trên dòng bài |
 | Slot `StudentAssignmentResult`, `SubmissionResultSection` (của U08, U09 cài) | - | U08 | Điểm đã công bố, phân bố ẩn danh; điểm và nhận xét của lượt được chấm |
@@ -87,21 +87,21 @@ stateDiagram-v2
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `GroupSubmissionSource` | `getGroupSubmission(groupDocumentId)` → nội dung, thành viên, người làm từng phần, thời điểm nộp, trễ, hash; `listGroupSubmissions(assignmentId, classId)` → trạng thái từng nhóm | U12 | Hiện và chấm bài nhóm, tiến độ theo nhóm mà U09 không phụ thuộc ngược U12 |
+| `IGroupSubmissionSource` | `getGroupSubmission(groupDocumentId)` → nội dung, thành viên, người làm từng phần, thời điểm nộp, trễ, hash; `listGroupSubmissions(assignmentId, classId)` → trạng thái từng nhóm | U12 | Hiện và chấm bài nhóm, tiến độ theo nhóm mà U09 không phụ thuộc ngược U12 |
 
 Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bài cá nhân.
 
-### Port U09 dùng
+### Interface U09 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R3/R4, R5 |
-| `AuditPort` | U02 | Audit |
-| `EventPublisherPort` | U03 | Sự kiện `grade.published` |
-| `ClassAccessPort` | U05 | Sinh viên đang ghi danh, cờ `showGradeDistribution` |
-| `AiTaskPort` | U06 | Task đề xuất chấm |
-| `AssignmentQueryPort`, `RubricPort`, `DocumentModelPort` | U07 | Bài, rubric đã khóa, tính điểm, chữ và XML rút gọn cho AI |
-| `SubmissionQueryPort`, `ActivityQueryPort` | U08 | Bài nộp, tiến độ, dữ liệu hoạt động |
+| `IAuthorization` | U01 | Kiểm R3/R4, R5 |
+| `IAudit` | U02 | Audit |
+| `IEventPublisher` | U03 | Sự kiện `grade.published` |
+| `IClassAccess` | U05 | Sinh viên đang ghi danh, cờ `showGradeDistribution` |
+| `IAiTask` | U06 | Task đề xuất chấm |
+| `IAssignmentQuery`, `IRubric`, `IDocumentModel` | U07 | Bài, rubric đã khóa, tính điểm, chữ và XML rút gọn cho AI |
+| `ISubmissionQuery`, `IActivityQuery` | U08 | Bài nộp, tiến độ, dữ liệu hoạt động |
 
 ## 5. API
 

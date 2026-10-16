@@ -25,7 +25,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F13 Copy bài giữa lớp | UC 35 | Tab Evals |
 | F14 Xóa bài nháp | UC 35 | Assignment Form |
 | F15 Tool MCP | UC 32 (U06) | - |
-| F16 Port cho unit khác | UC của U08, U09, U12, U14 | - |
+| F16 Interface cho unit khác | UC của U08, U09, U12, U14 | - |
 
 ## 2. Danh sách bài
 
@@ -63,10 +63,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. Bài đã phát hành: popup chỉ xem (BR-U07-23).
 
 ### F6 - AI soạn bản nháp (UC 35)
-1. Trên Assignment Form của bài `DRAFT`, bấm "Soạn bằng AI"; nhập yêu cầu (chủ đề, mức độ, số phần, gợi ý về rubric); chọn tài liệu tham khảo từ danh sách của U13 qua `ReferenceMaterialPort` (chưa có U13 thì bỏ qua bước này); chọn nguồn AI trong `AiSourcePicker` của U06.
+1. Trên Assignment Form của bài `DRAFT`, bấm "Soạn bằng AI"; nhập yêu cầu (chủ đề, mức độ, số phần, gợi ý về rubric); chọn tài liệu tham khảo từ danh sách của U13 qua `IReferenceMaterial` (chưa có U13 thì bỏ qua bước này); chọn nguồn AI trong `AiSourcePicker` của U06.
 2. Frontend gọi `POST /api/v1/assignments/{id}/ai-drafts`; kiểm quyền và bài `DRAFT`.
-3. Lấy chữ của tài liệu đã chọn qua `ReferenceMaterialPort.extractText` (U13 kiểm quyền, cắt theo trần); dựng prompt gồm yêu cầu, cài đặt bài, chữ tài liệu và JSON schema của kết quả (BR-U07-52).
-4. Gọi `AiTaskPort.submit` (loại `ASSIGNMENT_DRAFT`, đích là bài, `inputVersion` là `version` hiện tại, `requestRef`); tạo đề xuất `PENDING` kèm provenance; trả `taskId` cho `AiTaskStatus`.
+3. Lấy chữ của tài liệu đã chọn qua `IReferenceMaterial.extractText` (U13 kiểm quyền, cắt theo trần); dựng prompt gồm yêu cầu, cài đặt bài, chữ tài liệu và JSON schema của kết quả (BR-U07-52).
+4. Gọi `IAiTask.submit` (loại `ASSIGNMENT_DRAFT`, đích là bài, `inputVersion` là `version` hiện tại, `requestRef`); tạo đề xuất `PENDING` kèm provenance; trả `taskId` cho `AiTaskStatus`.
 5. U06 gọi `onReady`: bài còn `DRAFT` thì lưu đề xuất `READY` và trả `APPLIED`; bài đã xóa hoặc đã phát hành thì trả `REJECTED`. `onFailed` chuyển đề xuất sang `FAILED`.
 6. Người soạn xem đề xuất. Áp dụng: `POST .../ai-drafts/{draftId}:apply` kèm `version`; cảnh báo nếu khung đã có nội dung; thay khung (và hướng dẫn nếu chọn), tính lại phần như F4 bước 5, điền gợi ý rubric; đề xuất `APPLIED`; audit `ASSIGNMENT_AI_DRAFT_APPLIED`.
 7. Bỏ: đề xuất `DISCARDED`, bài không đổi.
@@ -93,16 +93,16 @@ Nhập:
 
 ### F9 - Phát hành (UC 35)
 1. Bài `REVIEWED`, bấm Phát hành, nhập `opensAt`, `closesAt`, `lateUntil` (tùy chọn), `maxAttempts`; frontend gọi `POST /api/v1/assignments/{id}/publish` kèm `version`.
-2. Kiểm quyền; bài của lớp cần lớp `OPEN` (`ClassAccessPort`), bài của môn cần môn `ACTIVE` (`SubjectQueryPort`); kiểm lịch (BR-U07-33); bật theo dõi hoạt động thì `activity.retentionDays` phải đã đặt (BR-U07-16).
-3. Bài `GROUP`: gọi `GroupAssignmentSupport.checkReadiness(classId)`; lỗi thì từ chối; có sinh viên chưa có nhóm thì cần `confirmUngroupedStudents`.
+2. Kiểm quyền; bài của lớp cần lớp `OPEN` (`IClassAccess`), bài của môn cần môn `ACTIVE` (`ISubjectQuery`); kiểm lịch (BR-U07-33); bật theo dõi hoạt động thì `activity.retentionDays` phải đã đặt (BR-U07-16).
+3. Bài `GROUP`: gọi `IGroupAssignmentSupport.checkReadiness(classId)`; lỗi thì từ chối; có sinh viên chưa có nhóm thì cần `confirmUngroupedStudents`.
 4. Một transaction: ghi lịch, kiểm lại rồi khóa mọi rubric, chuyển `SCHEDULED`; audit `ASSIGNMENT_PUBLISHED`.
 5. Từ đây khung, rubric, cài đặt không sửa được; muốn đổi thì nhân bản hoặc tạo version mới.
 
 ## 4. Sau phát hành
 
 ### F10 - Mở, đóng theo lịch
-1. `ScheduledScanner` của U07 chạy mỗi phút trong worker.
-2. Bài `SCHEDULED` có `opensAt` đã tới chuyển `OPEN` bằng câu lệnh có điều kiện; trong cùng transaction gọi `AssignmentLifecycleListener.onOpened` (U12 tạo tài liệu nhóm); sau commit phát `assignment.opened` kèm `classId` hoặc `subjectId`.
+1. `IScheduledScanner` của U07 chạy mỗi phút trong worker.
+2. Bài `SCHEDULED` có `opensAt` đã tới chuyển `OPEN` bằng câu lệnh có điều kiện; trong cùng transaction gọi `IAssignmentLifecycleListener.onOpened` (U12 tạo tài liệu nhóm); sau commit phát `assignment.opened` kèm `classId` hoặc `subjectId`.
 3. Bài `OPEN` có `lateUntil` (hoặc `closesAt`) đã qua chuyển `CLOSED`.
 4. Chạy lại không tạo trùng.
 
@@ -136,13 +136,13 @@ Ngưng giao:
 ## 5. MCP và unit khác
 
 ### F15 - Tool MCP
-1. U06 gọi `McpToolProvider.call` của U07 với actor dựng từ credential MCP.
-2. `read_assignment_context(assignmentId)`: kiểm quyền qua `AuthorizationPort`. Giảng viên có quyền với bài: trả tiêu đề, hướng dẫn, khung dạng chữ (sơ đồ ở dạng XML rút gọn), phần, rubric, `version`. Người học: chỉ bài `OPEN`, `CLOSED` của lớp đang học, nội dung như Assignment Detail.
+1. U06 gọi `IMcpToolProvider.call` của U07 với actor dựng từ credential MCP.
+2. `read_assignment_context(assignmentId)`: kiểm quyền qua `IAuthorization`. Giảng viên có quyền với bài: trả tiêu đề, hướng dẫn, khung dạng chữ (sơ đồ ở dạng XML rút gọn), phần, rubric, `version`. Người học: chỉ bài `OPEN`, `CLOSED` của lớp đang học, nội dung như Assignment Detail.
 3. `save_assignment_draft(assignmentId, expectedVersion, draft)`: chỉ giảng viên có quyền, bài `DRAFT`, `expectedVersion` khớp; kiểm `draft` theo schema của đề xuất AI; lưu thành đề xuất `READY` nguồn MCP (provenance: nhãn agent). Người soạn áp dụng như F6 bước 6.
 4. Ngoài quyền: trả lỗi cho U06, ghi audit.
 
-### F16 - Port cho unit khác
-1. U08 đọc bài, lịch, `submissionWindow` (`ON_TIME`, `LATE`, `CLOSED`) và nội dung đã khóa (khung, phần, `requiredDiagrams`, rubric) qua `AssignmentQueryPort`; kiểm bài làm qua `DocumentModelPort`.
-2. U09 đọc rubric đã khóa và tính điểm qua `RubricPort.score`; dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
-3. U12 đọc khung và phần cho tài liệu nhóm; cài `GroupAssignmentSupport` và `AssignmentLifecycleListener`.
+### F16 - Interface cho unit khác
+1. U08 đọc bài, lịch, `submissionWindow` (`ON_TIME`, `LATE`, `CLOSED`) và nội dung đã khóa (khung, phần, `requiredDiagrams`, rubric) qua `IAssignmentQuery`; kiểm bài làm qua `IDocumentModel`.
+2. U09 đọc rubric đã khóa và tính điểm qua `IRubric.score`; dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
+3. U12 đọc khung và phần cho tài liệu nhóm; cài `IGroupAssignmentSupport` và `IAssignmentLifecycleListener`.
 4. U14 nhận `assignment.opened`; đọc bài sắp hết hạn qua `listClosingBetween` để nhắc hạn.

@@ -1,6 +1,6 @@
 # U03 Job and Settings — nfr-design-patterns
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 (bản khớp với code tệp và việc nền đã sinh ngày 2026-10-05) theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; phần Settings và backup chưa có code.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -9,7 +9,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 ## P1 - Upload với dọn dẹp bù trừ
 1. `Semaphore.tryAcquire()` (5 permit); không lấy được thì `503`.
 2. Spring ghi multipart ra `/tmp/uploads`.
-3. Kiểm kích thước và loại theo giới hạn từ `SettingsPort`, tính SHA-256 trên tệp tạm.
+3. Kiểm kích thước và loại theo giới hạn từ `ISettings`, tính SHA-256 trên tệp tạm.
 4. Upload lên Drive kèm thuộc tính tệp, ký `FileRef` (HMAC, hạn 1 giờ); không ghi PostgreSQL.
 5. Lỗi thì xóa tệp Drive (3 lần), vẫn lỗi thì gửi `DRIVE_CLEANUP`.
 6. `finally`: xóa tệp tạm, trả permit.
@@ -24,7 +24,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - 32 byte `SecureRandom`, base64url; Redis `file:download-token:{sha256(token)}` = `{fileId, accountId, disposition}`, TTL 5 phút.
 
 ## P5 - Adapter lưu trữ thay được
-- `StoragePort` với `GoogleDriveStorageAdapter`, `LocalFolderStorageAdapter`, `UnconfiguredStorageAdapter`; chọn theo cấu hình.
+- `IStorage` với `GoogleDriveStorageAdapter`, `LocalFolderStorageAdapter`, `UnconfiguredStorageAdapter`; chọn theo cấu hình.
 
 ## P6 - Gọi Drive có timeout và thử lại
 - Kết nối 5 giây, đọc 60 giây, upload 120 giây; 429/5xx thử lại 3 lần backoff 1, 2, 4 giây có jitter.
@@ -56,7 +56,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Khởi động: `INSERT ... ON CONFLICT (key) DO NOTHING`.
 
 ## P15 - Phần cài đặt ủy quyền
-- `SettingsSectionRegistry` gom các `SettingsSectionProvider`; mỗi `summary()` gọi có timeout 1 giây và bắt lỗi riêng, nên phần của U06 lỗi không làm hỏng Setting List.
+- `SettingsSectionRegistry` gom các `ISettingsSectionProvider`; mỗi `summary()` gọi có timeout 1 giây và bắt lỗi riêng, nên phần của U06 lỗi không làm hỏng Setting List.
 
 ## P16 - Pipeline backup
 1. Scanner tạo `backup_runs` với `scheduled_for` duy nhất rồi gửi `BACKUP_RUN`.

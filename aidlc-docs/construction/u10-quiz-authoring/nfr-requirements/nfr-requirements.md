@@ -25,7 +25,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | SECURITY-03 | Compliant | NFR-U10-32 |
 | SECURITY-05 | Compliant | Kiểm câu, cài đặt, tệp nhập theo quy tắc |
 | SECURITY-08 | Compliant | R2 với ngân hàng và Quiz của môn; R3/R4 với Quiz của lớp |
-| SECURITY-11 | Compliant | NFR-U10-31; đáp án chỉ ở `QuizScoringPort` |
+| SECURITY-11 | Compliant | NFR-U10-31; đáp án chỉ ở `IQuizScoring` |
 | SECURITY-13 | Compliant | Phiên bản câu bất biến khi đã kích hoạt; Quiz ghim phiên bản |
 | SECURITY-15 | Compliant | Fail closed khi U01, U04, U05 lỗi |
 | Rule còn lại | N/A | Không có secret, không gọi dịch vụ ngoài trực tiếp |

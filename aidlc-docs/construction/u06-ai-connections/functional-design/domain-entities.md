@@ -107,13 +107,13 @@ stateDiagram-v2
 
 ## 6. Contract
 
-### Port U06 cung cấp
+### Interface U06 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `AiTaskPort` | `submit(AiTaskRequest)` → `AiTaskView`, `get(taskId)`, `cancel(actor, taskId)` | U07, U08, U09, U10 | Gửi task AI theo nguồn người dùng chọn, giữ chỗ quota, chạy nền, trả trạng thái |
-| `SettingsSectionProvider` (contract của U03, U06 cài: `AiConnectionsSection`, `TeacherQuotaSection`) | `sectionKey()`, `title()`, `summary()` | U03 | Hiện phần API AI của trường và quota giảng viên trên Setting List |
-| `JobHandler` (`AI_TASK`), `PendingSweeper`, `ScheduledScanner` (contract của U03, U06 cài) | theo U03 | U03 | Chạy task trong worker, gửi lại message bị mất, dọn task quá hạn |
+| `IAiTask` | `submit(AiTaskRequest)` → `AiTaskView`, `get(taskId)`, `cancel(actor, taskId)` | U07, U08, U09, U10 | Gửi task AI theo nguồn người dùng chọn, giữ chỗ quota, chạy nền, trả trạng thái |
+| `ISettingsSectionProvider` (contract của U03, U06 cài: `AiConnectionsSection`, `TeacherQuotaSection`) | `sectionKey()`, `title()`, `summary()` | U03 | Hiện phần API AI của trường và quota giảng viên trên Setting List |
+| `IJobHandler` (`AI_TASK`), `IPendingSweeper`, `IScheduledScanner` (contract của U03, U06 cài) | theo U03 | U03 | Chạy task trong worker, gửi lại message bị mất, dọn task quá hạn |
 | `AccountMenuEntry` (contract của U01, U06 cài) | - | U01 | Mục AI Connection trong menu tài khoản cho Student, Teacher, Subject Manager |
 | Component `AiSourcePicker`, `AiTaskStatus` | - | Frontend U07, U08, U09, U10 | Popup chọn nguồn AI có quota và ước tính; theo dõi trạng thái task |
 | Panel `AiConnectionsPanel`, `TeacherQuotaPanel` (đăng ký vào `settingsSectionRegistry` của U03) | - | U03 | Sửa API chung, quota và xem tổng hợp usage trong Setting Detail |
@@ -125,9 +125,9 @@ stateDiagram-v2
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `AiTaskResultHandler` | `taskType()`, `onReady(AiTaskResult)` → `APPLIED`, `STALE`, `REJECTED`; `onFailed(AiTaskFailure)` | U07 (soạn Assignment), U08 (phản hồi AI bài luyện tập, UC 41), U09 (đề xuất chấm, UC 43), U10 (soạn câu hỏi, Quiz) | Nhận kết quả task, kiểm quyền và phiên bản đích rồi áp dụng, để U06 không phụ thuộc ngược unit gọi |
-| `McpToolProvider` | `tools()` → `McpToolDefinition` (tên, mô tả, schema tham số, loại `READ` hoặc `WRITE`, role được dùng); `call(actor, toolName, args)` → `McpToolResult` | U07, U08, U09, U10, U12, U13 | Đăng ký tool MCP trên dữ liệu của mình; tự kiểm quyền và `expectedVersion` |
-| `ReferenceMaterialPort` | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U13 | Cho người soạn chọn tài liệu tham khảo được phép và lấy chữ đưa vào prompt; U07, U10 gọi khi AI soạn bài, soạn câu. Chưa có U13 thì trả rỗng |
+| `IAiTaskResultHandler` | `taskType()`, `onReady(AiTaskResult)` → `APPLIED`, `STALE`, `REJECTED`; `onFailed(AiTaskFailure)` | U07 (soạn Assignment), U08 (phản hồi AI bài luyện tập, UC 41), U09 (đề xuất chấm, UC 43), U10 (soạn câu hỏi, Quiz) | Nhận kết quả task, kiểm quyền và phiên bản đích rồi áp dụng, để U06 không phụ thuộc ngược unit gọi |
+| `IMcpToolProvider` | `tools()` → `McpToolDefinition` (tên, mô tả, schema tham số, loại `READ` hoặc `WRITE`, role được dùng); `call(actor, toolName, args)` → `McpToolResult` | U07, U08, U09, U10, U12, U13 | Đăng ký tool MCP trên dữ liệu của mình; tự kiểm quyền và `expectedVersion` |
+| `IReferenceMaterial` | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U13 | Cho người soạn chọn tài liệu tham khảo được phép và lấy chữ đưa vào prompt; U07, U10 gọi khi AI soạn bài, soạn câu. Chưa có U13 thì trả rỗng |
 
 Tool giai đoạn đầu theo FR-035:
 
@@ -143,13 +143,13 @@ Tool giai đoạn đầu theo FR-035:
 | `read_quiz_context`, `save_quiz_draft` (`expectedVersion`) | READ, WRITE | U10 |
 | `read_authorized_material` | READ | U13 |
 
-### Port U06 dùng
+### Interface U06 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort`, `AccountLookupPort` | U01 | Kiểm quyền, kể cả actor từ MCP; tìm giảng viên khi đặt quota |
-| `AuditPort` | U02 | Audit |
-| `JobPort` | U03 | Gửi job `AI_TASK` |
+| `IAuthorization`, `IAccountLookup` | U01 | Kiểm quyền, kể cả actor từ MCP; tìm giảng viên khi đặt quota |
+| `IAudit` | U02 | Audit |
+| `IJob` | U03 | Gửi job `AI_TASK` |
 
 ## 7. API
 

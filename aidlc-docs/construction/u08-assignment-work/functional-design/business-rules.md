@@ -22,16 +22,16 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U08-11 | Bấm Bắt đầu tạo lượt và tính vào số lượt (`maxAttempts` 1–10 của bài); hết lượt thì từ chối. Mỗi người tối đa một lượt `IN_PROGRESS` mỗi bài; bấm lại thì mở lượt đang làm. Lượt ghi `classId` là lớp người học làm bài (với bài của môn là lớp người học đang ghi danh trong môn) để giảng viên lớp đó chấm. | FR-007 |
 | BR-U08-12 | Lượt chụp version bài, chế độ, hạn (`closesAt`, `lateUntil`), `requiredDiagrams` và chính sách theo dõi hoạt động. Hạn của lượt (`deadlineAt`) là `lateUntil` nếu có, không thì `closesAt`; bài cá nhân không giới hạn giờ làm. Nội dung lượt mới bắt đầu từ khung của đề. | FR-018 |
 | BR-U08-13 | Tự lưu 10 giây sau lần sửa cuối và khi rời trang; hiện "Đã lưu lúc …". Lưu kèm `contentVersion`; lệch thì `409` "bài đang mở ở nơi khác, tải lại", không ghi đè im lặng. | FR-018 |
-| BR-U08-14 | Lưu kiểm qua `DocumentModelPort.validateForSave` của U07: block của người soạn không đổi, block của người học hợp lệ, sơ đồ chỉ khi bài bật sơ đồ, cả bài ≤ 20 MB. Ảnh qua U03 `DOCUMENT_IMAGE`. | BR-U07-15 |
+| BR-U08-14 | Lưu kiểm qua `IDocumentModel.validateForSave` của U07: block của người soạn không đổi, block của người học hợp lệ, sơ đồ chỉ khi bài bật sơ đồ, cả bài ≤ 20 MB. Ảnh qua U03 `DOCUMENT_IMAGE`. | BR-U07-15 |
 | BR-U08-15 | Bản nháp không phải bài nộp, chỉ chính người học đọc và sửa. Lưu sau `deadlineAt` bị từ chối, trừ lần lưu cuối gửi trong 30 giây ân hạn. | FR-018 |
-| BR-U08-16 | Nhập DOCX (≤ 20 MB) vào lượt đang làm qua `DocxPort` của U07: block của người học, xem trước rồi thêm vào cuối bản nháp kèm `contentVersion`, không đụng block của người soạn. Người học tải bài của mình ra DOCX. | BR-U07-60, 61 |
+| BR-U08-16 | Nhập DOCX (≤ 20 MB) vào lượt đang làm qua `IDocx` của U07: block của người học, xem trước rồi thêm vào cuối bản nháp kèm `contentVersion`, không đụng block của người soạn. Người học tải bài của mình ra DOCX. | BR-U07-60, 61 |
 
 ## 3. Nộp (UC 39)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U08-20 | Nộp tay: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (cộng 30 giây ân hạn), nội dung qua `validateForSubmit` (khung còn đủ, đủ `requiredDiagrams`, sơ đồ không rỗng, có nội dung của người học). | US-ASM-003 S1 |
-| BR-U08-21 | Nộp thì nội dung bất biến; `submittedAt` theo giờ server; `late` khi nộp sau `closesAt`; `receiptHash` là SHA-256 của nội dung. Trong cùng transaction gọi `SubmissionListener.onSubmitted` để U09 tạo dòng chờ chấm với bài `GRADED`. | FR-018, BR-U03-64 |
+| BR-U08-21 | Nộp thì nội dung bất biến; `submittedAt` theo giờ server; `late` khi nộp sau `closesAt`; `receiptHash` là SHA-256 của nội dung. Trong cùng transaction gọi `ISubmissionListener.onSubmitted` để U09 tạo dòng chờ chấm với bài `GRADED`. | FR-018, BR-U03-64 |
 | BR-U08-22 | Biên nhận gồm mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. Nộp lặp (bấm hai lần, mạng gửi lại) trả cùng biên nhận. | UC 39 |
 | BR-U08-23 | Tự nộp bản đã lưu gần nhất (kể cả rỗng), không kiểm điều kiện nộp, ghi cảnh báo cho giảng viên: khi hết `deadlineAt` (`AUTO_DEADLINE`, scanner mỗi phút) và khi bài bị ngưng giao (`AUTO_RETIRED`, trong `onRetired`). | FR-007 |
 
@@ -48,11 +48,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U08-40 | Chỉ xin phản hồi trên lượt `SUBMITTED` của chính mình, bài `PRACTICE`, khi còn ghi danh `ACTIVE`. Lượt đang làm, bài `GRADED`, dữ liệu ngoài quyền bị từ chối; không có tùy chọn bật phản hồi cho bản nháp. | FR-030, US-ASM-012 S3 |
-| BR-U08-41 | Nguồn: API cá nhân (qua `AiTaskPort`, nguồn `PERSONAL`; Student không có API chung) hoặc agent MCP (đọc qua `read_own_work`, ghi qua `record_private_feedback`). Không có kết nối nào vẫn làm và nộp bài bình thường. | FR-030 |
+| BR-U08-41 | Nguồn: API cá nhân (qua `IAiTask`, nguồn `PERSONAL`; Student không có API chung) hoặc agent MCP (đọc qua `read_own_work`, ghi qua `record_private_feedback`). Không có kết nối nào vẫn làm và nộp bài bình thường. | FR-030 |
 | BR-U08-42 | Phản hồi gồm nhận xét từng phần, gợi ý cải thiện và đánh giá ước tính theo từng mục rubric (đạt hay chưa, điểm ước tính) có nhãn "AI ước tính, không phải điểm chính thức"; không vào sổ điểm, không sửa bài nộp. | FR-030, FR-008 |
 | BR-U08-43 | Mỗi phản hồi gắn `submissionHash` của lượt; kết quả có hash khác, lượt không còn thuộc người học, hoặc sai schema thì không lưu. Một lượt có nhiều phản hồi, lưu thành lịch sử kèm provenance. | US-ASM-012 S2, S4 |
 | BR-U08-44 | Giới hạn: mỗi lượt tối đa một yêu cầu đang chờ; mỗi người tối đa 20 yêu cầu mỗi ngày (web và MCP cộng chung); `requestRef` chống gửi trùng. | FR-030 |
-| BR-U08-45 | Prompt gồm hướng dẫn, khung, rubric và bài nộp dạng chữ (sơ đồ ở dạng XML rút gọn qua `DocumentModelPort`); không có dữ liệu người khác, không có key. Chỉ chính người học xem phản hồi. | FR-030 |
+| BR-U08-45 | Prompt gồm hướng dẫn, khung, rubric và bài nộp dạng chữ (sơ đồ ở dạng XML rút gọn qua `IDocumentModel`); không có dữ liệu người khác, không có key. Chỉ chính người học xem phản hồi. | FR-030 |
 
 ## 6. Dữ liệu hoạt động (FR-039)
 
@@ -60,10 +60,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U08-50 | Chỉ thu khi lượt đã chụp chính sách bật và đang `IN_PROGRESS`; người học đã thấy thông báo trên Assignment Detail trước khi bắt đầu. Chính sách tắt thì không thu gì. | FR-039, US-INT-001 S1 |
 | BR-U08-51 | Trình duyệt gửi `SESSION_START`, `HIDDEN`, `VISIBLE` (theo trạng thái hiển thị của trang), `HEARTBEAT` mỗi 60 giây khi trang mở và `SESSION_END` khi rời trang (nếu gửi được); mỗi sự kiện có `sessionId`, `clientEventId`, `sequence`, giờ client. Chuyển vào iframe Draw.io không tính là rời trang. | FR-039 |
-| BR-U08-52 | Server kiểm actor là chủ lượt (lượt Quiz và tài liệu nhóm do U11, U12 kiểm rồi gọi `ActivityWritePort`), chính sách và trạng thái; bỏ trùng theo `clientEventId`; tối đa 60 sự kiện mỗi phút mỗi công việc; ghi giờ server. | FR-039 |
+| BR-U08-52 | Server kiểm actor là chủ lượt (lượt Quiz và tài liệu nhóm do U11, U12 kiểm rồi gọi `IActivityWrite`), chính sách và trạng thái; bỏ trùng theo `clientEventId`; tối đa 60 sự kiện mỗi phút mỗi công việc; ghi giờ server. | FR-039 |
 | BR-U08-53 | Tóm tắt: số lần rời trang, tổng thời gian rời đã biết, các khoảng rời, các khoảng thiếu dữ liệu ghi là "không rõ" (không có heartbeat quá 2 phút, sự kiện lệch thứ tự, giờ client bất thường); trạng thái `DISABLED`, `NO_DATA`, `AVAILABLE`, `EXPIRED`. Không kết luận gian lận, không đổi điểm, không tự nộp. | FR-039, US-INT-001 S2 |
 | BR-U08-54 | Giữ dữ liệu theo `activity.retentionDays` (U08 khai báo trong Settings nhóm `ACTIVITY`, 1–365, không có mặc định); chưa đặt thì U07, U10 không cho bật theo dõi; quá hạn thì scanner xóa. | FR-039 |
-| BR-U08-55 | Giảng viên xem qua U09 (U09 kiểm phân công lớp rồi gọi `ActivityQueryPort`); Admin không xem. | US-INT-001 |
+| BR-U08-55 | Giảng viên xem qua U09 (U09 kiểm phân công lớp rồi gọi `IActivityQuery`); Admin không xem. | US-INT-001 |
 
 ## 7. Phân quyền, audit và lỗi
 

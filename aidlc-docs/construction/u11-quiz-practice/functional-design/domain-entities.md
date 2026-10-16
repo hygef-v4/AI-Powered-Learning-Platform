@@ -44,15 +44,15 @@ stateDiagram-v2
 
 ## 3. Contract
 
-### Port U11 cung cấp
+### Interface U11 cung cấp
 
-| Port | Phương thức | Dùng bởi | Dùng để |
+| Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `QuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
+| `IQuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
 | Slot `QuizDetailSection` (của U10, U11 cài) | - | U10 | Phần Lượt làm và hoạt động cho giảng viên trên Quiz Detail |
 | Slot `LearningMaterialSection` (của U13, U11 cài) | - | U13 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 | `DashboardNavEntry` (contract của U05, U11 cài) | - | U05 | Lối vào Quiz Practice History trên Class Dashboard |
-| `ScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
+| `IScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
 
 ### Contract U11 khai báo (unit khác cài)
 
@@ -60,15 +60,15 @@ stateDiagram-v2
 |---|---|---|
 | Slot frontend `QuizMaterialSection` | U13 | Tài liệu gắn kèm Quiz trên Quiz Practice Detail |
 
-### Port U11 dùng
+### Interface U11 dùng
 
-| Port | Unit | Dùng để |
+| Interface | Unit | Dùng để |
 |---|---|---|
-| `AuthorizationPort` | U01 | Kiểm R5, R3/R4 |
-| `AuditPort` | U02 | Audit |
-| `ClassAccessPort` | U05 | Ghi danh, lớp đang mở của người học |
-| `ActivityWritePort`, `ActivityQueryPort`; `useActivityTracker`, `ActivityTimeline` | U08 | Ghi và xem dữ liệu rời trang của lượt Quiz |
-| `QuizQueryPort`, `QuizScoringPort` | U10 | Quiz, đề không có đáp án, chấm, đáp án sau khi nộp |
+| `IAuthorization` | U01 | Kiểm R5, R3/R4 |
+| `IAudit` | U02 | Audit |
+| `IClassAccess` | U05 | Ghi danh, lớp đang mở của người học |
+| `IActivityWrite`, `IActivityQuery`; `useActivityTracker`, `ActivityTimeline` | U08 | Ghi và xem dữ liệu rời trang của lượt Quiz |
+| `IQuizQuery`, `IQuizScoring` | U10 | Quiz, đề không có đáp án, chấm, đáp án sau khi nộp |
 
 ## 4. API
 

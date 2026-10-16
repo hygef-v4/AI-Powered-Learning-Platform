@@ -17,7 +17,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - `UPDATE course_classes SET ..., version = version + 1 WHERE id = ? AND version = ?`; 0 dòng thì `409`.
 
 ## P4 - Sự kiện sau commit
-- `enrollment.activated` gửi qua `EventPublisherPort` sau commit; mất sự kiện chỉ mất thông báo.
+- `enrollment.activated` gửi qua `IEventPublisher` sau commit; mất sự kiện chỉ mất thông báo.
 
 ## P5 - Slot frontend
 - Trang của U05 render vùng theo registry; unit chưa đăng ký thì vùng đó trống, không lỗi.

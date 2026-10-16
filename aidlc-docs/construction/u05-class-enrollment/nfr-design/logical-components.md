@@ -12,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `ClassViewService` | backend | F1–F6, F8 |
 | `ClassAdminService` | backend | F7, F9, F13, F14 |
 | `EnrollmentService` | backend | F10–F12, P2 |
-| `ClassScopeService` | backend | Cài `ClassScopePort`, `SubjectClassesPort`, `ClassAccessPort` (F15) |
-| `CourseClassRepository`, `EnrollmentRepository` | backend | Chỉ dùng trong package |
+| `ClassScopeService` | backend | Cài `IClassScope`, `ISubjectClasses`, `IClassAccess` (F15) |
+| `ICourseClassRepository`, `IEnrollmentRepository` | backend | Chỉ dùng trong package |
 
 U05 không chạy gì trong worker, không có queue, không có secret, không gọi dịch vụ ngoài.
