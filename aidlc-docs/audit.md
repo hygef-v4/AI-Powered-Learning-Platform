@@ -4093,3 +4093,69 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **AI Response**: Synchronized UC57 Create/Update/Delete Class Group across FR-025, group stories, component map, U12 business logic/rules/domain/frontend, U04 class entry/frontend, current shared contract and U12 pending code plan. UC23 is the navigation entry; UC54 views own group; UC55 requests/cancels leader change; UC57 owns teacher group operations and request decisions. Corrected group-publication trace to UC53. Existing group deletion constraints retained. Added completed documentation plan inception/plans/uc57-document-sync-2026-10-14.md and state record. Historical artifacts and pending implementation checklists preserved.
 
 **Validation**: PASS: 66 active catalog entries; UC57 names match source/catalog; Groups panel and random split map to UC57; stale UC23 group-operation mappings absent; git diff --check passed. Documentation-only; security/resiliency runtime compliance and PBT N/A. No code, diagram, Jira or Google updates, commit/push or stage approval advancement.
+
+## 2026-10-15T00:00:00Z — Council feedback compliance review
+
+**User Input**: "[Pasted council feedback: giới hạn scope 1–2 môn; bổ sung AS-IS qua khảo sát vào Report 1; Swimlane phân biệt System/Actor, ghi chú quy ước, đánh số và mô tả hoạt động; backup Google Drive; phát hiện chuyển màn hình (cheating); gửi email hoạt động quan trọng; cơ chế minh bạch credit AI] đây là nhận xét của hội đồng mà chúng tôi phải sửa theo, chúng tôi đã sửa lại dự án, kiểm tra xem đã đáp ứng được theo nhận xét trên chưa, nếu chưa cần sửa đổi/bổ sung điều gì"
+
+**AI Response**: Read-only review of requirements, council-features, decisions, UC table, main-business-flows and uml/act_asis.drawio. Text requirements cover scope SWR/SWD, backup, activity monitoring, email, AI transparency. Gaps reported: AS-IS not surveyed and diagram unnumbered/undescribed/includes Code; BF-01..08 swimlanes and README dated 2026-10-09 still on 73 UC/Code Lab/PayOS credit purchase, no numbering or System-lane convention note; G21 use case diagram still shows credit packages/PayOS/Judge0/Code Lab; no TO-BE flow for new features; features not implemented in code. No files changed besides this log.
+
+---
+
+## 2026-10-15T00:30:00Z — Business flow swimlanes redrawn per council feedback
+
+**User Input**: "tập trung vào phần swimlane (BF) cho tôi, sửa lại cho đúng với yêu cầu của hội đồng"
+
+**AI Response**: Redrew main business flows as 10 TO-BE swimlanes aligned with the 66-UC scope (no credit purchase/PayOS/Code Lab/Judge0): BF-01 subject/class/enrollment, BF-02 reference materials, BF-03 Assignment authoring/publication, BF-04 individual work with activity recording, BF-05 group work with per-member activity, BF-06 Quiz, BF-07 grading with human activity review, BF-08 AI source selection and usage transparency (replaces AI Credit Purchase), BF-09 Google Drive backup and restore verification, BF-10 important-event notification/email. Every activity/decision numbered; System lane limited to automated processing; modeling-convention note printed on each diagram; README rewritten with convention, council coverage map and per-flow activity tables. Old BF files with obsolete names removed; PNG exports regenerated.
+
+**Validation**: Generator checks passed for all 10 flows (no connector through a shape, no connector crossings, no port used for both in and out); draw.io XML parses (10 pages combined); README tables/links checked. Documentation-only; no code, AS-IS survey, use case diagram or Report edits; no commit.
+
+---
+
+## 2026-10-15T01:00:00Z — Business flow labels shortened
+
+**User Input**: "viết ngắn gọn, súc tích hơn" (with screenshots of BF-06 activity 1 and decision 5)
+
+**AI Response**: Shortened every activity, decision, start/end and branch label in BF-01..BF-10 to short verb-object phrases (e.g. "Build Quiz", "Attempt allowed?", "Create attempt, log page leaves"); full wording kept in the README activity tables (Description column). Reduced node, lane and column sizes accordingly; regenerated draw.io files, PNG exports and README. Layout checks passed for all 10 flows. No commit.
+
+---
+
+## 2026-10-15T01:20:00Z — Business flow edge labels and spacing
+
+**User Input**: "chữ Yes đang bị quá sát, chỉnh lại để 2 ô không quá sát nhau, nhãn không che mất mũi tên" (with screenshot of BF-01 decisions 5 and 8)
+
+**AI Response**: Widened columns (gap between a decision and the next activity about 33 px to 57 px) and moved every branch label off its connector: above horizontal segments, beside vertical segments, with no background box covering the line. Regenerated BF-01..BF-10 draw.io files, PNG exports and README; layout checks passed. No commit.
+
+---
+
+## 2026-10-15T02:00:00Z — Business flows resized for document readability
+
+**User Input**: "phóng to font chữ và thu hẹp khoảng cách lại để có thể nhìn rõ trên doc mà không cần zoom (giống trong ảnh)" (with screenshot of the earlier BF-01/BF-02 in the report)
+
+**AI Response**: Increased fonts (activities 18 px, lanes 18, events 16, branch labels 15, note 15) and compacted layouts: narrower lane headers, columns merged automatically where the layout stays valid, and redundant consecutive System steps merged (BF-02 store+save, BF-03 lock+open+notify, BF-04 confirm folded into "Ready to submit?", BF-05 leader submit folded into "Ready to submit?", BF-09 save+wait and restore+verify). Activities renumbered in flow order; back-references in descriptions and README coverage table updated automatically. Shortened long lane names. Added a check that rejects connectors running inside their own source/target. Regenerated draw.io files, PNG exports and README; all 10 flows pass layout checks. No commit.
+
+---
+
+## 2026-10-15T03:00:00Z — Business flow text fit and draw.io rendering fixes
+
+**User Input**: "không được để chữ tràn ra khỏi ô" (with draw.io screenshots of BF-06 decision 5 and BF-07 decisions 4/6)
+
+**AI Response**: Enlarged decision diamonds (150x104) with draw.io-matching inner padding and 14 px text; tasks 140x86. Added a fit check using conservative character widths (tasks at most 3 lines, decisions at most 2 lines) and shortened two labels ("Content valid?", "Needs follow-up?"). Found and fixed duplicate cell ids (edge ids e1/e2 collided with End event ids), which made draw.io drop some connectors. Loop labels on lane-edge channels moved off short segments. PNG exports are now rendered with the official draw.io viewer, so they match draw.io exactly. No commit.
+
+---
+
+## 2026-10-15T03:20:00Z — BF-10 retry label fix
+
+**User Input**: "BF10 chữ No, retry vẫn đang lỗi"
+
+**AI Response**: Branch labels on horizontal segments are now placed at least half their width plus a margin away from the corner, so longer labels such as "No, retry" no longer overlap the vertical part of the connector. Regenerated all draw.io files and PNG exports (draw.io viewer). No commit.
+
+---
+
+## 2026-10-16T00:00:00Z — Review and commit of business flow revision
+
+**User Input**: "kiểm tra lại các thay đổi hiện tại xem đã hợp lí chưa, viêt commit, chưa push vội"
+
+**AI Response**: Reviewed staged changes: 10 draw.io files plus combined file, 10 PNG exports and README are consistent (layout checks and text-fit checks pass, no duplicate cell ids, README matches generator output, step references valid). Synced README Trigger/End condition wording with the concise text provided for the report. Committed locally; not pushed.
+
+---
