@@ -27,12 +27,19 @@ services:
       SMTP_STARTTLS_ENABLED: "false"
       SMTP_FROM: no-reply@platform.local
       U03_REQUIRE_DRIVE: "false"
+      U03_LOCAL_STORAGE_DIR: /app/data/files
+      U03_LOCAL_BACKUP_DIR: /app/data/backups
+    volumes:
+      - files-local:/app/data/files
     ports:
       - "8080:8080"
 
   worker:
     image: platform-backend:local
     environment: *local-mail
+    volumes:
+      - files-local:/app/data/files
+      - backups-local:/app/data/backups
 
   postgres:
     ports:
@@ -53,3 +60,7 @@ services:
       - "8025:8025"
       - "1025:1025"
     networks: [internal]
+
+volumes:
+  files-local: {}
+  backups-local: {}

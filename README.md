@@ -53,4 +53,6 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --e
 ```
 
 - Ứng dụng ở <http://localhost:8088> (Nginx), backend trực tiếp ở cổng 8080 (`/health`), Mailpit ở <http://localhost:8025>.
+- Không điền `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY` thì tệp lưu ở volume `files-local`, backup database ở `backups-local`. Production đặt `U03_REQUIRE_DRIVE=true`: thiếu Drive thì upload, tải và backup báo tạm thời không khả dụng.
+- Backup cần `U03_BACKUP_PUBLIC_KEY` và `BACKUP_DB_PASSWORD`; tạo khóa và khôi phục theo [runbook](docs/runbooks/restore-isolated.md).
 - Test: `mvn test` trong `backend/`; `npm run lint`, `npm run typecheck`, `npm test` trong `frontend/`.

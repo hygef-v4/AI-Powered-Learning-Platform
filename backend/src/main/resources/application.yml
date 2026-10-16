@@ -31,6 +31,8 @@ spring:
     username: ${RABBITMQ_USER:app}
     password: ${RABBITMQ_PASSWORD:}
     virtual-host: ${RABBITMQ_VHOST:/platform}
+    connection-timeout: 5s
+    publisher-confirm-type: simple
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
@@ -45,6 +47,11 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 51MB
+      location: ${U03_UPLOAD_TMP_DIR:${java.io.tmpdir}}
 
 server:
   port: 8080
@@ -64,3 +71,27 @@ management:
     # SMTP lỗi không làm backend thành unhealthy; lỗi gửi mail xử lý ở việc nền.
     mail:
       enabled: false
+
+# U03 Job and Settings
+platform:
+  files:
+    fileref-secret: ${U03_FILEREF_SECRET:}
+    require-drive: ${U03_REQUIRE_DRIVE:false}
+    local-storage-dir: ${U03_LOCAL_STORAGE_DIR:}
+    upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:}
+    drive-service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
+    shared-drive-id: ${GOOGLE_SHARED_DRIVE_ID:}
+  jobs:
+    handler-timeout: ${U03_JOB_HANDLER_TIMEOUT:60s}
+  settings:
+    cache-ttl: ${U03_SETTINGS_CACHE_TTL:30s}
+  backup:
+    folder-id: ${GOOGLE_BACKUP_FOLDER_ID:}
+    public-key: ${U03_BACKUP_PUBLIC_KEY:}
+    db-host: ${POSTGRES_HOST:localhost}
+    db-port: ${POSTGRES_PORT:5432}
+    db-name: ${POSTGRES_DB:platform}
+    db-user: backup_reader
+    db-password: ${BACKUP_DB_PASSWORD:}
+    tmp-dir: ${U03_BACKUP_TMP_DIR:}
+    local-dir: ${U03_LOCAL_BACKUP_DIR:}

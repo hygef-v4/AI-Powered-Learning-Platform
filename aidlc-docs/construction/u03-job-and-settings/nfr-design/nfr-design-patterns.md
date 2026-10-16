@@ -21,7 +21,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Tika `detect()` trên 8 KB đầu, so danh sách cho phép của `purpose`.
 
 ## P4 - Download token
-- 32 byte `SecureRandom`, base64url; Redis `file:download-token:{sha256(token)}` = `{fileId, accountId, disposition}`, TTL 5 phút.
+- 32 byte `SecureRandom`, base64url; Redis `file:download-token:{sha256(token)}` = `{fileId, accountId}`, TTL 5 phút; `inline` hay `attachment` tính khi tải theo loại tệp.
 
 ## P5 - Adapter lưu trữ thay được
 - `IStorage` với `GoogleDriveStorageAdapter`, `LocalFolderStorageAdapter`, `UnconfiguredStorageAdapter`; chọn theo cấu hình.
@@ -36,7 +36,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Có transaction thì đăng ký `afterCommit`; không có thì gửi ngay; gửi trên luồng riêng để RabbitMQ chậm không chặn request; lỗi chỉ log.
 
 ## P9 - Thử lại qua queue có TTL
-- Bản sao `attempt + 1` vào `jobs.retry.{30s|1m|2m|4m|8m}`, TTL cố định, dead-letter về `jobs` giữ routing key.
+- Bản sao `attempt + 1` gửi tới exchange fanout `jobs.retry.{30s|1m|2m|4m|8m}` (routing key là loại việc) rồi vào queue cùng tên có TTL cố định; hết hạn thì dead-letter về `jobs` giữ routing key.
 
 ## P10 - Sweeper và scanner
 - `PendingSweepRunner` và `ScheduledScanRunner` chạy mỗi phút; scanner cập nhật có điều kiện nên chạy lại không trùng.
