@@ -3980,3 +3980,123 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **AI Response**: Rebuilt the business flows from the unit business rules: 12 swimlanes (new BF-11 Account Provisioning and Activation, BF-12 Class Group Setup and Leader Change); added time-trigger starts (BF-03 opening, BF-06 time limit, BF-09 daily backup), failure branches and labelled end events (BF-01 cannot open, BF-07 access refused, BF-08 quota/result/MCP refusals, BF-09 retry limit and restore failure, BF-10 retry limit); BF-01 per-row enrollment check (no capacity rule), BF-03/BF-06 REVIEWED step and Subject Manager authoring, BF-04 late window, auto-submit without submit checks and Practice AI feedback, BF-05 parallel assign/claim, lock release and submit check, BF-07 finalize vs publish and group member scores, BF-08 daily quota only and MCP agent lane, BF-09 database-only backup with fixed 7-day retention, BF-10 preference/daily cap/event table. Regenerated draw.io files (12 + combined 12-page file), PNG exports (rendered taller and cropped so the legend is no longer cut) and README with per-flow notes. Item C (traceability matrix, state diagrams) deferred by the user. Validation: layout checker (no shape overlap, crossing, unrelated touching or mixed in/out port), text-fit check, left-to-right numbering, loop-back references match edges, draw.io XML parses. No commit.
 
 ---
+
+## 2026-10-17T10:00:00Z — U01 detailed implementation working plan (temporary)
+
+**User Input** (relayed from the parent session): "Tôi cần triển khai unit U01 — Account & Access (Jira epic KAN-18: https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20ORDER%20BY%20cf%5B10019%5D%20ASC&selectedIssue=KAN-18). Hãy lập một kế hoạch thực hiện từng bước, cụ thể, chi tiết và rõ ràng để tôi tự kiểm soát và làm chủ code (tôi sẽ code theo kế hoạch, không phải bạn code hết ngay). Viết kế hoạch bằng tiếng Việt. Phạm vi U01 gồm 12 use case: UC01 Activate Account, UC02 Login, UC03 Logout, UC04 Reset Password, UC05 Change Password, UC06 View Profile Information, UC07 Update Profile Information, UC08 View Account List, UC09 Add Account, UC10 View Account Detail, UC11 Update Account Information, UC12 Change Account Status. U01 cần provider contract từ U02 Audit và U03 File, Job, Settings & Backup (xem unit-of-work.md: liên kết đó thể hiện contract đã sẵn sàng để tích hợp, không bắt buộc epic provider phải Done trước). Nguồn cần đọc trước khi lập kế hoạch: aidlc-docs/ (aidlc-state.md, inception/requirements, unit-of-work.md, construction/u01*/functional-design/business-rules.md, các design/NFR/code plan đã có của U01 nếu có), docs/usecase_table.md, và code hiện có ở backend/frontend để biết cái gì đã làm và quy ước của repo. SRS: D:\Downloads\Report-3_Software Requirement Specification.docx (1).md (file 3.8MB: đọc theo đoạn hoặc grep các phần UC01–UC12, screen list/screen flow, business rules, data model của Account/User). Thiết kế UI 4 màn hình người dùng gửi (ảnh 1.png–4.png; 5.png là ảnh chụp Jira). Các màn hình gồm: Đăng nhập (email trường + mật khẩu, "Quên mật khẩu?", "Lần đầu sử dụng? Kích hoạt tài khoản"); Khôi phục mật khẩu với stepper 3 bước (1. Email → 2. Mã OTP 6 chữ số, mã hết hạn sau 10 phút, có "Gửi lại mã" → 3. Mật khẩu mới); Kích hoạt tài khoản với stepper 3 bước (Email → OTP → Đặt mật khẩu, quy tắc mật khẩu: ít nhất 8 ký tự, có cả chữ và số, nút "Kích hoạt và đăng nhập"); Đặt lại mật khẩu (sau khi đặt lại thì các thiết bị khác bị đăng xuất). Mọi màn hình có layout 2 cột: form bên trái, panel gradient xanh-tím bên phải với khẩu hiệu "Học, nộp bài và nhận điểm — một nơi." Kế hoạch cần có: hiện trạng (cái gì đã có và cái gì còn thiếu cho U01), thứ tự thực hiện chia theo backend (data/migration, domain, service, API, bảo mật/JWT/session, OTP/email, tích hợp audit), frontend (route, các màn hình trên cùng các màn hình quản lý tài khoản và hồ sơ), test. Mỗi bước phải ghi rõ file cần tạo/sửa, business rule/UC liên quan, tiêu chí hoàn thành và cách tự kiểm tra. Chỉ ra các điểm chưa rõ hoặc mâu thuẫn giữa SRS, aidlc-docs, UI và code để tôi quyết định. Bạn tự quyết định đặt kế hoạch ở đâu: có thể đặt tạm trong tài liệu dự án (ví dụ aidlc-docs/construction/plans/) hoặc ngoài repo. Nếu đặt trong repo, phải ghi chú rõ đây là file tạm, phải xoá/dọn trước khi mở PR vào main. Không commit, không push, không cập nhật Jira khi chưa được tôi đồng ý."
+
+**AI Response**: Read U01 design (business rules, logic model, domain entities, frontend components, NFR, NFR design, infrastructure), unit-of-work, the official U01 code-generation plan, U02/U03 contracts and U03 code, frontend scaffold, the SRS sections for UC01–12/screens/business rules/messages, and the four UI images. Wrote a temporary working plan `aidlc-docs/construction/plans/TEMP-u01-implementation-working-plan.md` (marked to delete before any PR to main): current state, 22 open decisions Q01–Q22 (blocking: ArchitectureTest forbids identity → audit/jobs; audit_logs FK before U02 exists; JWT/CSV/rate-limit libraries; Redis-down vs per-request session check; missing authorization action catalog), roadmap M0–M7, backend steps B0–B15, frontend F0–F9, tests T1–T5, UC traceability and clean-up checklist. No application code, official plan, state or Jira changed; no commit.
+
+**Context**: Construction — U01 Code Generation preparation (working plan for the developer; official plan approval still pending).
+
+---
+
+## 2026-10-17T11:00:00Z — U01 working plan: decisions Q01–Q22
+
+**User Input**: "đề xuất cho tôi quyết định của bạn. Đối với các mẫu thuẫn thì làm theo các thiết kế đang có trong dự án, SRS sẽ sửa lại sau"
+
+**AI Response**: Filled section 3 of the temporary plan `aidlc-docs/construction/plans/TEMP-u01-implementation-working-plan.md` with decisions: conflicts follow the U01 aidlc-docs design (single login error message, immediate revocation, no school code, New Account without phone, no Account Detail history, separate role/status actions, design lifecycle, no password-reuse check, design routes with Admin temporarily at /admin/accounts, no version on own profile, imports:validate/commit, Bucket4j on Redis); internal design conflict Q04 resolved by the newest rule BR-U01-44 (fail closed, 503 when Redis is down). Proposals where the design is silent: narrow ArchitectureTest exception identity → audit.contract/jobs.contract (Q01), separate audit FK migration after U02 (Q02), jjwt + commons-csv (Q03), Actions/AccessPolicy catalog registering U02/U03 actions (Q14), cookie CSRF token (Q16). Marked items needing team agreement; synchronized backend/frontend/test steps. SRS and aidlc-docs fixes listed for later. No code, commit or Jira change.
+
+**Context**: Construction — U01 Code Generation preparation.
+
+---
+
+## 2026-10-17T11:30:00Z — U01 working plan: Q01 option A chosen
+
+**User Input**: "chọn A"
+
+**AI Response**: Recorded in the temporary plan that Q01 uses option A: a narrow ArchitectureTest exception letting `identity` depend only on `audit.contract` and `jobs.contract` (test-only change, no runtime change for U02/U03), with the team notice text and the steps that can proceed while waiting (B1, B2, B4, B5, B7 without audit, F0–F2). No code, commit or Jira change.
+
+**Context**: Construction — U01 Code Generation preparation.
+
+---
+
+## 2026-10-17T17:00:00Z — U01 code: milestones M0–M1
+
+**User Input**: "bắt tay vào làm luôn"
+
+**AI Response**: Implemented M0–M1 of the temporary U01 plan on branch `cuong` (uncommitted): pom dependencies (jjwt 0.12.6, commons-csv 1.12.0, bucket4j_jdk17 core/lettuce 8.14.0); ArchitectureTest exception letting `identity` use only `audit.contract`/`jobs.contract` (Q01 option A); `platform.identity` configuration (`IdentityProperties`, `IdentityConfig`, application.yml/application-local.yml, compose and .env.example variables incl. bootstrap Admin and local `U01_COOKIE_SECURE=false`); migration `identity/V20260925_0930__create_accounts.sql` (accounts + FK system_settings.updated_by, audit FK deferred per Q02); domain `Account`, `AccountSearch`, `EmailPolicy`, `PasswordPolicy`, `ProfilePolicy`, `AccountRepository` (JdbcClient). Unit tests: 18 new; `mvn test` 112 tests, 0 failures. Migration and repository SQL not yet run against PostgreSQL (Docker not running). No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestones M0–M1.
+
+---
+
+## 2026-10-17T17:20:00Z — U01 code: milestone M2
+
+**User Input**: "Review done, continue with M2: Redis session, JWT, filter, CSRF, IAuthorization, login/logout, Admin bootstrap and login screen."
+
+**AI Response**: Implemented M2 (uncommitted, branch `cuong`). Backend: `Hashing`, `SessionStore` (Redis sessions, hashed rotating refresh tokens, reuse revokes session, 2 h idle / 7 d ceiling), `RequestThrottle` (Bucket4j on Lettuce), `JwtService` (HS256, 15 min, secret ≥ 32 bytes), `AuthCookies`, `SessionAuthority` + `JwtAuthFilter` (Actor principal with current DB role, Redis/DB failure → 503), `IdentityHttpSecurity` (cookie CSRF, 401/403 Problem Detail, public `/api/v1/auth/**`) wired by one call in shared `SecurityConfig`; `Actions` contract + `AccessPolicy` + `AuthorizationService` (default deny, registers U02/U03 actions); `AuthService` login/refresh/logout with single neutral error, lockout, dummy bcrypt; `AuthController`, `MeController` (GET profile), `BootstrapAdminInitializer`; `GlobalExceptionHandler` maps Redis/DB unavailability to 503; `server.forward-headers-strategy: native`. Frontend: `shared/api/client.ts` CSRF header and one-shot refresh with `setUnauthenticatedHandler`; identity api/types/session; AuthLayout, BrandLogo, InfoCard, RecentWorkPreview, PasswordField; Login page; AppShell, AccountMenu, SignOutDialog, RoleGuard, AuthenticatedLayout; `/`, `/post-login`, `/admin` layout and temporary `/admin/accounts`. Added `.claude/launch.json` for the frontend dev preview. Results: `mvn test` 154 tests 0 failures (ArchitectureTest passes with identity → audit.contract); frontend typecheck, lint, 28 tests and `next build` pass; login page visually checked against the mock-up. Not yet run end-to-end with PostgreSQL/Redis (Docker not running). No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M2.
+
+---
+
+## 2026-10-17T17:45:00Z — U01 code: milestone M3
+
+**User Input**: "Continue with M3: OTP challenge/ticket stores, OtpService, OtpMailHandler, SmtpMailAdapter, activation and reset-password APIs, and the Activate/Reset screens with stepper and OTP input."
+
+**AI Response**: Implemented M3 (uncommitted, branch `cuong`). Backend: `OtpPurpose`; `OtpChallengeStore` (hashed 6-digit code per account+purpose, 10 min, 5 attempts, single use, purpose-bound hash, deleteAll for disable); `VerificationTicketStore` (hashed one-time ticket, purpose-bound, kept on policy failure); `OtpService` (neutral 202, throttle, eligibility, enqueue `OTP_DELIVERY` with IDs only; verify → ticket, single error); `OtpMailHandler` (`IJobHandler` on `jobs.email`, code generated in worker, Retryable on Redis/SMTP failure, `OTP_DELIVERY_FAILED` log); `SmtpMailAdapter` (real `IMail`); `ActivationService` (activate PENDING, audit, auto sign-in), `PasswordResetService` (update password, audit, revoke all sessions before and after commit, no sign-in); `OtpFlowController` (`/api/v1/auth/activation/*`, `/password-reset/*`); `PasswordPolicyException` + `IdentityExceptionHandler` (400 PASSWORD_POLICY with violations). Frontend: OTP API functions, `passwordRules`, Stepper, OtpInput, PasswordChecklist, `useCountdown`, `OtpFlow` (email → OTP with 10:00 expiry and 60 s resend → password), Activation and Password Reset pages, login notice after reset. Fixed a bug found in browser check: OtpInput now accepts a whole code autofilled into one cell. Results: `mvn test` 175 tests 0 failures; frontend typecheck, lint, 38 tests and build pass; reset flow checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis/RabbitMQ/Mailpit. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M3.
+
+---
+
+## 2026-10-17T18:05:00Z — U01 code: milestone M4
+
+**User Input**: "Continue with M4: PATCH /me/profile, POST /me/password, ProfilePage and PasswordChangeDialog."
+
+**AI Response**: Implemented M4 (uncommitted, branch `cuong`). Backend: `ProfileService.update` (own account only, trims, validates name/phone, no-op when unchanged, audit `PROFILE_UPDATED` with field names only, no version per Q18); `PasswordChangeService` (current password check, policy, audit `PASSWORD_CHANGED`, revoke other sessions before and after commit, keep current `sid`); `MeController` PATCH `/me/profile`, POST `/me/password`; `StrictRequest` rejects unknown body fields with 400 `INVALID_REQUEST` (a test showed `@JsonIgnoreProperties(ignoreUnknown = false)` from the plan has no effect under Spring Boot's global setting; plan text corrected). Frontend: `updateProfile`/`changePassword` API, `ProfileForm` (editable name/phone, read-only email/role/status, initials), `PasswordChangeDialog`, `ProfilePage`, `/profile` route with `AuthenticatedLayout`; `PostLoginRedirect` now shows a busy message instead of hanging when the backend errors (found during browser check). Results: `mvn test` 185 tests 0 failures; frontend typecheck, lint, 44 tests and build pass; profile edit checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M4.
+
+---
+
+## 2026-10-17T18:40:00Z — U01 code: milestone M5
+
+**User Input**: "Continue with M5: AccountAdminService (list, create, detail, update, role change, status change), CSV import, AdminAccountController, plus the Account List, New Account, Import CSV and Account Detail screens."
+
+**AI Response**: Implemented M5 (uncommitted, branch `cuong`). Backend: `AccountAdminService` (list/search/paging, create PENDING without password or mail, detail, update name/phone with version → 409, role change with BR-U01-64 assignment check via ISubjectScope/IClassScope, self-change block, last-active-Admin lock, session revocation before and after commit, status disable/reopen with OTP removal and reopen to ACTIVE/PENDING, ACCESS_DENIED audit on refusal); `AccountViews`; `RoleChangeBlockedException` → 409 with managedSubjects/taughtClasses; `AccountImportService` (UTF-8/BOM, header check, ≤1000 rows/1 MB, per-row reasons, duplicate-in-file, existing email, ADMIN not importable, validate without writes, commit re-validates in one transaction, audit checksum/created/rejected); `AdminAccountController` (`/api/v1/admin/accounts`, `/{id}`, `/{id}/role`, `/{id}/status`, `/imports:validate`, `/imports:commit`, strict bodies). Frontend: admin API, labels, `AccountListPage` (role tabs, status filter, search, paging in URL), `NewAccountDialog`, `ImportAccountsPanel` (template download, preview, confirm), `AccountDetailPage` (edit with version, role and status via confirm dialogs, self-guard, blocked-assignment list), routes `/admin/accounts` and `/admin/accounts/[id]`. Results: `mvn test` 201 tests 0 failures (incl. colon import path); frontend typecheck, lint, 50 tests and build pass; list and detail checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M5.
+
+---
+
+## 2026-10-17T19:00:00Z — U01 code: M6 and M7 cleanup
+
+**User Input**: "Continue with M6: implement the real IAccountLookup, check every action in AccessPolicy, then do the M7 cleanup (GlobalExceptionHandler, log check, code-summary)."
+
+**AI Response**: Added `AccountLookupService` (real `IAccountLookup`: active students, role-filtered accounts of any status, normalized email lookup, contact by id, counts by role/status; max 20 results; no phone or password) with repository `findForLookup`. Checked authorization actions used in code and designs (U03 `FILE_UPLOAD`, `SETTINGS_VIEW`, `SETTINGS_EDIT`; U02 `AUDIT_READ`) — all present in `AccessPolicy`; added a test that every `Actions` constant has a rule and Admin-only/upload role sets. Reviewed identity logs and audit details: no password, OTP, token or phone values. Kept `GlobalExceptionHandler` at the 503 mapping only (default Spring Problem Detail for validation and other errors, no catch-all to avoid changing U03 behaviour). Removed last `.gitkeep`. Wrote `construction/u01-account-and-access/code/code-summary.md`; updated the U01 row in `aidlc-state.md`; ticked the temporary plan. Results: `mvn test` 206 tests 0 failures; frontend typecheck, lint and 50 tests pass. End-to-end run with Docker datastores still pending. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestones M6–M7 (partial: manual T3 run and integration tests pending).
+
+---
+
+## 2026-10-17T19:15:00Z — U01 local end-to-end run preparation
+
+**User Input**: "Guide me to start Docker local and run the T3 scenarios (activate admin via Mailpit, login, reset, CSV import, role/status) end to end."
+
+**AI Response**: Docker daemon was not running, so nothing was started. Created gitignored `infra/.env.local` with random local-only secrets, `fpt.edu.vn` domain, bootstrap Admin `admin@fpt.edu.vn` and 1-minute login lock; passed `U01_LOGIN_LOCK_DURATION` through `docker-compose.local.yml`; created sample CSV `.tmp/u01-t3/tai-khoan-t3.csv` (gitignored). Validated the merged compose config (`docker compose config --quiet`). Gave the user step-by-step commands for starting the stack and running T3 scenarios. No commit.
+
+**Context**: Construction — U01 Build and Test preparation (manual T3).
+
+---
+
+## 2026-10-17T20:45:00Z — U01 end-to-end check on local Docker stack
+
+**User Input**: "tôi đã bật docker desktop, hãy kiểm tra cho tôi"
+
+**AI Response**: Started the local stack (backend, worker, frontend, Nginx, PostgreSQL, Redis, RabbitMQ, Mailpit). Host ports 5432 and 8080 were already taken (local PostgreSQL, AgentService) and the repo RabbitMQ healthcheck (5 s timeout) failed on this machine although RabbitMQ was up, so a temporary override `.tmp/u01-t3/docker-compose.ports.yml` remapped ports and relaxed the healthcheck (not committed; infra issue to report). Verified migrations, bootstrap Admin and real U01 beans. Activated the Admin through the UI with the OTP from Mailpit. Ran the T3 scenarios with a script through Nginx (`.tmp/u01-t3/t3.sh`): first run exposed a real bug — Spring `SessionManagementFilter` rotated the CSRF token after every JWT-authenticated request, so the next write got 403 CSRF_INVALID; fixed with `NullAuthenticatedSessionStrategy` on the CSRF config plus a regression test (confirmed failing without the fix). Also made the U01 exception handler take precedence (`@Order`) so malformed JSON returns `INVALID_REQUEST`, plus a test. Script issues (Windows curl encoding, temp paths) fixed. Final fresh run: 52/52 checks pass; Redis-down gives 503 and recovers; logs contain no secrets; profile save works in the real browser. Backend 208 tests pass. Updated code-summary. Stack left running. No commit, push or Jira change.
+
+**Context**: Construction — U01 Build and Test (manual T3 on local stack).
+
+---
+
+## 2026-10-17T21:00:00Z — U01 commits (not pushed)
+
+**User Input**: "viết commit rõ ràng, chưa push lên main để tôi kiểm tra lại"
+
+**AI Response**: Committed U01 on branch `cuong` in four commits without pushing and without Claude co-author lines: `5b05625` dependencies/config/ArchitectureTest exception, `00c57a4` backend UC 01–12 with tests, `f58d704` frontend screens with tests, and a docs commit (code summary, aidlc-state U01 row, this audit log). Left uncommitted on purpose: the temporary working plan `construction/plans/TEMP-u01-implementation-working-plan.md` (must be removed before any PR to main) and `.claude/launch.json` (local preview config).
+
+**Context**: Construction — U01 Code Generation Part 2, commit for user review.
+
+---

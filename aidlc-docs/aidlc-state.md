@@ -88,7 +88,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
-| U01 Account & Access | Design revision 73 UC ngày 2026-10-09; Role/authentication cho mọi unit; counts cho Admin Dashboard. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U01 Account & Access | Design revision 73 UC ngày 2026-10-09; Role/authentication cho mọi unit; counts cho Admin Dashboard. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết 2026-10-17 (UC 01–12, xem `u01-account-and-access/code/code-summary.md`; backend 206 test, frontend 50 test toàn repo), chưa chạy với datastore thật, chưa commit, chờ người dùng review |
 | U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
