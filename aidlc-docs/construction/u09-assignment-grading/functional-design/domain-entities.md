@@ -79,7 +79,7 @@ stateDiagram-v2
 | Sự kiện `grade.published` | - | U14 | Báo người học vừa có điểm (bài, lớp, danh sách người học) |
 | `ISubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
 | `IAiTaskResultHandler` cho `GRADING_PROPOSAL`, `IMcpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |
-| `TeacherClassTab` (contract của U05, U09 cài) | - | U05 | Phần Sổ điểm trong tab Evals |
+| `TeacherClassTab`, `StudentDetailSection` (contract của U05, U09 cài) | - | U05 | Tab Sổ điểm; tiến độ nộp, phân bố điểm trên tab Thông tin lớp; bài nộp và điểm trong popup Student Detail |
 | Slot `AssignmentRowAction` (của U07, U09 cài) | - | U07 | Lối vào Submission Detail kèm số đã nộp, chờ chấm trên dòng bài |
 | Slot `StudentAssignmentResult`, `SubmissionResultSection` (của U08, U09 cài) | - | U08 | Điểm đã công bố, phân bố ẩn danh; điểm và nhận xét của lượt được chấm |
 
@@ -112,4 +112,6 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `POST`, `GET /api/v1/evaluations/{id}/ai-proposals`; `POST /api/v1/evaluations:ai-proposals` | 43 |
 | `POST /api/v1/evaluations:finalize`, `POST /api/v1/evaluations:publish` | 43, 44 |
 | `GET /api/v1/classes/{classId}/gradebook`, `GET .../gradebook/export` | 45 |
+| `GET /api/v1/classes/{classId}/submission-progress`; `GET /api/v1/classes/{classId}/grade-distribution?assignmentId=` | 42, 45 (tab Thông tin lớp) |
+| `GET /api/v1/classes/{classId}/students/{accountId}/grades` | 45 (popup Student Detail) |
 | `GET /api/v1/me/grades`, `GET /api/v1/me/grades/attempts/{attemptId}`, `GET /api/v1/me/grade-distributions` | 37, 40 (U08) |

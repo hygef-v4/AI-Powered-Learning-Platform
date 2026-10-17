@@ -65,7 +65,7 @@ stateDiagram-v2
 | `IActivityWrite` | `record(actor, workRef, events)` | U11, U12 | Ghi sự kiện rời trang của lượt Quiz và tài liệu nhóm sau khi unit đó đã kiểm quyền |
 | `IActivityQuery` | `summary(workRef, accountId)` → `ActivitySummary` | U09 | Hiện dữ liệu rời trang trong UC 42 sau khi U09 kiểm phân công |
 | `IAssignmentLifecycleListener` (contract của U07, U08 cài) | `onRetired` (tự nộp lượt đang làm), `onOpened` (không làm gì) | U07 | Tự nộp khi bài bị ngưng giao |
-| `StudentClassSection`, `DashboardNavEntry` (contract của U05, U08 cài) | - | U05 | Phần Bài tập trên Student Class Detail; lối vào Student Assignments trên Class Dashboard |
+| `StudentClassSection`, `ClassCardSection` (contract của U05, U08 cài); `NavEntry` (contract của U01, U08 cài) | - | U05, U01 | Phần Bài tập sắp đến hạn trên Student Class Detail; dòng bài trên thẻ lớp ở Class Dashboard; mục Bài tập trên menu bên của Student |
 | `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`, `IMcpToolProvider` (contract của U06, U08 cài) | - | U06 | Nhận phản hồi AI; tool `read_own_work`, `read_authorized_submission`, `record_private_feedback` |
 | `IScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; khai báo `activity.retentionDays` |
 | Hook `useActivityTracker`, component `ActivityTimeline` | - | Frontend U09, U11, U12 | Gửi sự kiện rời trang từ trình duyệt; hiện dòng thời gian cho giảng viên |

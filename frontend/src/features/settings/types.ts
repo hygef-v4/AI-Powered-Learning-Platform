@@ -1,3 +1,6 @@
+import type { IconName } from "@/shared/ui/Icon";
+import type { Tone } from "@/shared/ui/tones";
+
 export type SettingType = "INTEGER" | "BOOLEAN" | "TIME_OF_DAY" | "ENUM" | "ENUM_SET";
 
 export type SettingValue = number | boolean | string | string[] | null;
@@ -33,8 +36,37 @@ export type SettingsOverview = {
   sections: SettingsSection[];
 };
 
-export const GROUP_LABELS: Record<string, string> = {
-  FILES: "Tệp",
-  BACKUP: "Backup",
-  ACTIVITY: "Hoạt động làm bài",
+export type GroupMeta = { label: string; description: string; icon: IconName; tone: Tone };
+
+export const GROUP_META: Record<string, GroupMeta> = {
+  FILES: {
+    label: "Tệp",
+    description: "Giới hạn khi tải học liệu và ảnh trong tài liệu",
+    icon: "folder",
+    tone: "primary",
+  },
+  BACKUP: {
+    label: "Backup",
+    description: "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
+    icon: "backup",
+    tone: "success",
+  },
+  ACTIVITY: {
+    label: "Hoạt động làm bài",
+    description: "Dữ liệu rời trang, ẩn tab khi bài bật Ghi nhận hoạt động",
+    icon: "monitoring",
+    tone: "warning",
+  },
+};
+
+export function groupMeta(group: string): GroupMeta {
+  return GROUP_META[group] ?? { label: group, description: "", icon: "tune", tone: "neutral" };
+}
+
+export const TYPE_LABELS: Record<SettingType, string> = {
+  INTEGER: "số nguyên",
+  BOOLEAN: "bật / tắt",
+  TIME_OF_DAY: "giờ:phút",
+  ENUM: "chọn một",
+  ENUM_SET: "chọn nhiều",
 };

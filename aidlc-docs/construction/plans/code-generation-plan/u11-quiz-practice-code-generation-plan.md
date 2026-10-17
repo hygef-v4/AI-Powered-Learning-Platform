@@ -27,7 +27,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 5 — Tự nộp:** `QuizAutoSubmitScanner`, `QuizRetiredHandler` (F6).
 - [ ] **Bước 6 — Hoạt động và giảng viên:** `QuizActivityService` (F8), `TeacherQuizAttemptService` (F9).
 - [ ] **Bước 7 — API:** controller theo domain-entities mục 4; `contracts/openapi/quiz-practice.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 8 — Frontend:** `QuizPracticeHistoryPage` (đăng ký `DashboardNavEntry`), `QuizPracticeDetailPage`, `QuizTakingPage`, `QuizResultPage`, `MaterialQuizList` (slot của U13), `QuizAttemptsSection` (slot của U10); khai báo slot `QuizMaterialSection` cho U13.
+- [ ] **Bước 8 — Frontend:** `QuizPracticeHistoryPage` (đăng ký `NavEntry`), `QuizPracticeDetailPage`, `QuizTakingPage`, `QuizResultPage`, `MaterialQuizList` (slot của U13), `QuizAttemptsSection`, `QuizAttemptCount` (slot của U10); khai báo slot `QuizMaterialSection` cho U13.
 - [ ] **Bước 9 — Unit test (người code viết):** điều kiện bắt đầu (ghi danh, Quiz mở, hết lượt, không giới hạn lượt); một lượt đang làm; trộn theo seed ổn định; lưu sau giờ và trong 30 giây ân hạn; nộp lặp; chấm `MCQ_MULTI`; tự nộp khi hết giờ và khi Quiz bị ngưng; kết quả theo cài đặt hiện điểm và đáp án; giảng viên lớp khác bị từ chối; component frontend. Integration test do tester viết.
 - [ ] **Bước 10 — Review:** đối chiếu UC 49–52, story, BR-U11 với code; người dùng duyệt trước khi chuyển unit.
 

@@ -72,6 +72,7 @@ stateDiagram-v2
 | `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
 | `IClassAccess` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
+| `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
 
 `ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution`. `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này.
 
@@ -79,10 +80,11 @@ stateDiagram-v2
 
 | Contract | Unit cài | Dùng để |
 |---|---|---|
-| `StudentClassSection` | U08 (bài tập của lớp), U12 (nhóm của tôi), U13 (học liệu), U14 (thông báo lớp) | Gắn phần nội dung vào Student Class Detail |
-| `TeacherClassTab` | U13 (tab Materials), U07, U09, U10 (tab Evals), U12 (phần nhóm trong tab Students) | Gắn tab hoặc phần vào Teacher Class Detail |
-| `StudentDetailSection` | U12 (nhóm của sinh viên) | Gắn phần nhóm vào popup Student Detail |
-| `DashboardNavEntry` | U08 (Student Assignments), U11 (Quiz Practice History), U14 (Class Announcements) trên Class Dashboard; U07 (Assignment List), U10 (Question List, Quiz List), U13 (Material List) trên Manager Dashboard | Gắn lối vào màn của unit khác lên hai dashboard |
+| `StudentClassSection` | U13 (học liệu), U08 (bài tập sắp đến hạn), U14 (thông báo lớp), U12 (nhóm của tôi) | Gắn phần nội dung vào Student Class Detail |
+| `TeacherClassTab` | Tab Thông tin lớp: U12 (số nhóm), U09 (tiến độ nộp, phân bố điểm); tab Sinh viên: U12 (nhóm); tab Học liệu: U13; tab Đánh giá: U07, U10; tab Sổ điểm: U09 | Gắn tab hoặc phần vào Teacher Class Detail |
+| `StudentDetailSection` | U12 (nhóm của sinh viên), U09 (bài nộp và điểm trong lớp) | Gắn phần vào popup Student Detail |
+| `SubjectSummarySection` | U13 (học liệu), U10 (câu hỏi, Quiz), U07 (bài tập của môn) | Số liệu theo môn trên Manager Dashboard và My Subject |
+| `ClassCardSection` | U08 (bài sắp đến hạn của Student) | Dòng tóm tắt trên thẻ lớp ở Class Dashboard |
 
 ### Interface U05 dùng
 

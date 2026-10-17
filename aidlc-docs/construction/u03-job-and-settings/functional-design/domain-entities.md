@@ -136,6 +136,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 | `IEventPublisher` | `publish(DomainEvent)` | U03, U05, U07, U09, U10, U12, U14 | Phát sự kiện thông báo sau commit, không đảm bảo giao hàng |
 | `ISettings` | `get(key)` (có kiểu) | U03, U08 | Đọc giá trị cài đặt hiện hành, cache 30 giây |
 | `IBackupStatus` | `latest()`, `list(page)` | U15 | Trạng thái và lịch sử backup cho Admin Dashboard, không có dữ liệu tải về |
+| `NavEntry` (contract frontend của U01, U03 cài) | - | U01 | Mục Cài đặt trên menu bên của Admin |
 
 ### Contract U03 cung cấp (unit khác cài)
 

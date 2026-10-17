@@ -36,7 +36,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Bấm bài mở Assignment Form; mỗi dòng có lối vào bài nộp do U09 gắn qua `AssignmentRowAction`; nút "Tạo bài" (F3).
 
 ### F2 - Danh sách bài của môn (UC 34)
-1. Chủ nhiệm môn bấm Assignment List trên Manager Dashboard (U07 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/assignments`.
+1. Chủ nhiệm môn bấm mục Bài tập trên menu bên (U07 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/assignments`.
 2. Kiểm R2; trả bài của môn kèm trạng thái, version, lịch; lọc; nút "Tạo bài".
 
 ## 3. Soạn bài
