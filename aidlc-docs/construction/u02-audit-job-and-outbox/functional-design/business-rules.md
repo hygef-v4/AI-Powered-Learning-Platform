@@ -19,7 +19,7 @@ Việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết
 | BR-U02-05 | `details` không chứa mật khẩu, OTP, token, số điện thoại; unit gọi chịu trách nhiệm che, U02 từ chối lưu nếu phát hiện khóa thuộc danh sách cấm (`password`, `otp`, `token`, `secret`, `phone`); danh sách và `ForbiddenKeyGuard` nằm ở `shared/` (khung dự án) để U03 dùng chung cho payload việc nền. | SEC-005 |
 | BR-U02-06 | Audit giữ vĩnh viễn. | Câu 6 |
 | BR-U02-07 | Chỉ `ADMIN` được tra cứu audit; mọi lần tra cứu cũng được audit. | Câu 7, UC 13 |
-| BR-U02-08 | Tra cứu lọc theo người thực hiện, action, đối tượng, result, khoảng thời gian; sắp xếp mới nhất trước; mỗi trang tối đa 100 bản ghi. Lọc người thực hiện theo `actorId`; màn Audit Log cho nhập email rồi đổi sang `accountId` bằng API danh sách tài khoản của U01. | US-AUD-001 S1, UC 13 |
+| BR-U02-08 | Tra cứu lọc theo người thực hiện, action, đối tượng, result, khoảng thời gian; sắp xếp mới nhất trước; mỗi trang tối đa 100 bản ghi. Lọc người thực hiện theo `actorId`; màn Audit Log cho nhập email rồi đổi sang `accountId` bằng API danh sách tài khoản của U01 (`GET /api/v1/admin/accounts?q=`). | US-AUD-001 S1, UC 13 |
 | BR-U02-09 | Kết quả tra cứu hiện email người thực hiện, lấy qua `IAccountLookup` của U01 lúc đọc (không lưu email vào `audit_logs`); `actor_id` rỗng là hệ thống hoặc worker. | UC 13, contract `audit.yaml` (`actorEmail`) |
 
 ## 2. Lỗi
