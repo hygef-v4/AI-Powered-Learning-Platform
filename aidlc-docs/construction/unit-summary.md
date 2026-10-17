@@ -37,7 +37,8 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 
 | Contract | Cài bởi | Dùng để |
 |---|---|---|
-| `AccountMenuEntry` | U06 | Thêm mục AI Connection vào menu tài khoản mà U01 không phụ thuộc ngược U06 |
+| `AccountMenuEntry` | U06 | Thêm lối vào trên thanh trên cùng (nút Kết nối AI) mà U01 không phụ thuộc ngược U06 |
+| `NavEntry` | U01, U02, U03, U04, U05, U07, U08, U10, U11, U13, U14, U15 | Mục menu bên theo role (nhãn, đường dẫn, icon, role, thứ tự); mỗi unit đăng ký mục của màn mình (bảng menu ở frontend-components U01) |
 | `HeaderWidget` | U14 | Gắn chuông thông báo lên thanh điều hướng cho mọi vai trò |
 
 #### Business flow
@@ -224,6 +225,7 @@ Iter 1, Người 2, UC 13. Thiết kế: [u02-audit-job-and-outbox](u02-audit-jo
 |---|---|---|---|
 | `IAudit` | `record(AuditEvent)` | Mọi unit, cả handler ở worker | Ghi audit, chọn transaction theo `result`: `SUCCESS` ghi trong transaction của unit gọi (nghiệp vụ rollback thì mất theo); `DENIED`, `FAILURE` ghi bằng transaction riêng để còn lại khi nghiệp vụ rollback (BR-U02-02) |
 | `IAuditQuery` | `query(actor, AuditFilter, PageRequest)` → `Page<AuditLogView>` | API `GET /api/v1/admin/audit-logs` của chính U02 (màn Audit Log, UC 13) | Tra cứu cho Admin; mỗi dòng kèm email người thực hiện lấy lúc đọc |
+| `NavEntry` (contract frontend của U01, U02 cài) | - | U01 | Mục Nhật ký audit trên menu bên của Admin |
 
 Kiểu dữ liệu đi kèm: `AuditEvent` (`id` do unit gọi tạo, `actorId`, `action`, `objectType`, `objectId`, `result`, `reason`, `details` đã che, `occurredAt`), `AuditResult` (`SUCCESS`, `DENIED`, `FAILURE`), `AuditFilter`, `AuditLogView` (`AuditEvent` + `actorEmail`, rỗng nghĩa là hệ thống).
 
@@ -259,6 +261,7 @@ Iter 1, Người 3, UC 14–15. Thiết kế: [u03-job-and-settings](u03-job-and
 | `IEventPublisher` | `publish(DomainEvent)` | U03, U05, U07, U09, U10, U12, U14 | Phát sự kiện thông báo sau commit, không đảm bảo giao hàng |
 | `ISettings` | `get(key)` (có kiểu) | U03, U08 | Đọc giá trị cài đặt hiện hành, cache 30 giây |
 | `IBackupStatus` | `latest()`, `list(page)` | U15 | Trạng thái và lịch sử backup cho Admin Dashboard, không có dữ liệu tải về |
+| `NavEntry` (contract frontend của U01, U03 cài) | - | U01 | Mục Cài đặt trên menu bên của Admin |
 
 ##### Contract U03 cung cấp (unit khác cài)
 
@@ -412,6 +415,7 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 |---|---|---|---|
 | `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
 | `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
+| `NavEntry` (contract frontend của U01, U04 cài) | - | U01 | Mục Môn học trên menu bên của Admin |
 
 `SubjectRef`: `subjectId`, `code`, `name`, `status`, `managerId`.
 
@@ -499,6 +503,7 @@ Iter 1, Người 5, UC 20–30. Thiết kế: [u05-class-enrollment](u05-class-e
 | `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
 | `IClassAccess` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
+| `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
 
 `ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution`. `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này.
 
@@ -506,10 +511,11 @@ Iter 1, Người 5, UC 20–30. Thiết kế: [u05-class-enrollment](u05-class-e
 
 | Contract | Unit cài | Dùng để |
 |---|---|---|
-| `StudentClassSection` | U08 (bài tập của lớp), U12 (nhóm của tôi), U13 (học liệu), U14 (thông báo lớp) | Gắn phần nội dung vào Student Class Detail |
-| `TeacherClassTab` | U13 (tab Materials), U07, U09, U10 (tab Evals), U12 (phần nhóm trong tab Students) | Gắn tab hoặc phần vào Teacher Class Detail |
-| `StudentDetailSection` | U12 (nhóm của sinh viên) | Gắn phần nhóm vào popup Student Detail |
-| `DashboardNavEntry` | U08 (Student Assignments), U11 (Quiz Practice History), U14 (Class Announcements) trên Class Dashboard; U07 (Assignment List), U10 (Question List, Quiz List), U13 (Material List) trên Manager Dashboard | Gắn lối vào màn của unit khác lên hai dashboard |
+| `StudentClassSection` | U13 (học liệu), U08 (bài tập sắp đến hạn), U14 (thông báo lớp), U12 (nhóm của tôi) | Gắn phần nội dung vào Student Class Detail |
+| `TeacherClassTab` | Tab Thông tin lớp: U12 (số nhóm), U09 (tiến độ nộp, phân bố điểm); tab Sinh viên: U12 (nhóm); tab Học liệu: U13; tab Đánh giá: U07, U10; tab Sổ điểm: U09 | Gắn tab hoặc phần vào Teacher Class Detail |
+| `StudentDetailSection` | U12 (nhóm của sinh viên), U09 (bài nộp và điểm trong lớp) | Gắn phần vào popup Student Detail |
+| `SubjectSummarySection` | U13 (học liệu), U10 (câu hỏi, Quiz), U07 (bài tập của môn) | Số liệu theo môn trên Manager Dashboard và My Subject |
+| `ClassCardSection` | U08 (bài sắp đến hạn của Student) | Dòng tóm tắt trên thẻ lớp ở Class Dashboard |
 
 #### Business flow
 
@@ -630,7 +636,7 @@ Iter 2, Người 5, UC 31–33. Thiết kế: [u06-ai-connections](u06-ai-connec
 | `IAiTask` | `submit(AiTaskRequest)` → `AiTaskView`, `get(taskId)`, `cancel(actor, taskId)` | U07, U08, U09, U10 | Gửi task AI theo nguồn người dùng chọn, giữ chỗ quota, chạy nền, trả trạng thái |
 | `ISettingsSectionProvider` (contract của U03, U06 cài: `AiConnectionsSection`, `TeacherQuotaSection`) | `sectionKey()`, `title()`, `summary()` | U03 | Hiện phần API AI của trường và quota giảng viên trên Setting List |
 | `IJobHandler` (`AI_TASK`), `IPendingSweeper`, `IScheduledScanner` (contract của U03, U06 cài) | theo U03 | U03 | Chạy task trong worker, gửi lại message bị mất, dọn task quá hạn |
-| `AccountMenuEntry` (contract của U01, U06 cài) | - | U01 | Mục AI Connection trong menu tài khoản cho Student, Teacher, Subject Manager |
+| `AccountMenuEntry` (contract của U01, U06 cài) | - | U01 | Nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager |
 | Component `AiSourcePicker`, `AiTaskStatus` | - | Frontend U07, U08, U09, U10 | Popup chọn nguồn AI có quota và ước tính; theo dõi trạng thái task |
 | Panel `AiConnectionsPanel`, `TeacherQuotaPanel` (đăng ký vào `settingsSectionRegistry` của U03) | - | U03 | Sửa API chung, quota và xem tổng hợp usage trong Setting Detail |
 | MCP server `/mcp` | `initialize`, `tools/list`, `tools/call` | Agent của người dùng | Cho agent đọc và ghi bản nháp đúng quyền |
@@ -771,7 +777,7 @@ Iter 2, Người 4, UC 34–36. Thiết kế: [u07-assignment-authoring](u07-ass
 | `IDocumentModel` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm |
 | `IDocx` | `export(document, title, diagramLinker)`, `importPreview(docx, origin, diagramEnabled, diagramResolver)` | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề |
 | Sự kiện `assignment.opened` | - | U14 | Báo bài mới mở cho người học của lớp hoặc của mọi lớp `OPEN` thuộc môn |
-| `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U07 cài) | - | U05 | Phần Bài tập trong tab Evals; lối vào Assignment List trên Manager Dashboard |
+| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U07 cài); `NavEntry` (contract của U01, U07 cài) | - | U05, U01 | Phần Bài tập trong tab Đánh giá; số bài tập của môn trên Manager Dashboard, My Subject; mục Bài tập trên menu bên của Subject Manager |
 | `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`, `IMcpToolProvider` (contract của U06, U07 cài) | - | U06 | Nhận đề xuất AI; tool `read_assignment_context`, `save_assignment_draft` |
 | `IScheduledScanner` (contract của U03, U07 cài) | - | U03 | Mở, đóng bài theo lịch |
 | Component `DocumentEditor`, `DiagramBlock`, `DocumentViewer`, `RubricViewer` | - | Frontend U08, U09, U12 | Trình soạn và xem tài liệu dùng chung, sơ đồ Draw.io, xem rubric |
@@ -796,7 +802,7 @@ Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chư
 4. Bấm bài mở Assignment Form; mỗi dòng có lối vào bài nộp do U09 gắn qua `AssignmentRowAction`; nút "Tạo bài" (F3).
 
 ##### F2 - Danh sách bài của môn (UC 34)
-1. Chủ nhiệm môn bấm Assignment List trên Manager Dashboard (U07 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/assignments`.
+1. Chủ nhiệm môn bấm mục Bài tập trên menu bên (U07 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/assignments`.
 2. Kiểm R2; trả bài của môn kèm trạng thái, version, lịch; lọc; nút "Tạo bài".
 
 ##### F3 - Tạo bài (UC 35)
@@ -915,7 +921,7 @@ Iter 2, Người 3, UC 37–41. Thiết kế: [u08-assignment-work](u08-assignme
 | `IActivityWrite` | `record(actor, workRef, events)` | U11, U12 | Ghi sự kiện rời trang của lượt Quiz và tài liệu nhóm sau khi unit đó đã kiểm quyền |
 | `IActivityQuery` | `summary(workRef, accountId)` → `ActivitySummary` | U09 | Hiện dữ liệu rời trang trong UC 42 sau khi U09 kiểm phân công |
 | `IAssignmentLifecycleListener` (contract của U07, U08 cài) | `onRetired` (tự nộp lượt đang làm), `onOpened` (không làm gì) | U07 | Tự nộp khi bài bị ngưng giao |
-| `StudentClassSection`, `DashboardNavEntry` (contract của U05, U08 cài) | - | U05 | Phần Bài tập trên Student Class Detail; lối vào Student Assignments trên Class Dashboard |
+| `StudentClassSection`, `ClassCardSection` (contract của U05, U08 cài); `NavEntry` (contract của U01, U08 cài) | - | U05, U01 | Phần Bài tập sắp đến hạn trên Student Class Detail; dòng bài trên thẻ lớp ở Class Dashboard; mục Bài tập trên menu bên của Student |
 | `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`, `IMcpToolProvider` (contract của U06, U08 cài) | - | U06 | Nhận phản hồi AI; tool `read_own_work`, `read_authorized_submission`, `record_private_feedback` |
 | `IScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; khai báo `activity.retentionDays` |
 | Hook `useActivityTracker`, component `ActivityTimeline` | - | Frontend U09, U11, U12 | Gửi sự kiện rời trang từ trình duyệt; hiện dòng thời gian cho giảng viên |
@@ -936,7 +942,7 @@ Chưa có U09, U12, U13 thì: không tạo dòng chờ chấm, không hiện đi
 #### Business flow
 
 ##### F1 - Danh sách bài của tôi (UC 37)
-1. Student mở Student Assignments từ thanh bên Class Dashboard (U08 đăng ký `DashboardNavEntry`) hoặc từ phần Bài tập trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/assignments` kèm lớp, trạng thái.
+1. Student mở Student Assignments từ mục Bài tập trên menu bên (U08 đăng ký `NavEntry`) hoặc từ phần Bài tập trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/assignments` kèm lớp, trạng thái.
 2. Lấy các lớp `OPEN` đang ghi danh (`IClassAccess.listOpenClassesOf`), rồi bài của từng lớp (`IAssignmentQuery.listForClass`, gồm bài của môn); bỏ bài người học không được thấy (BR-U08-01).
 3. Ghép trạng thái của mình: bài cá nhân từ lượt làm; bài nhóm từ `IGroupWorkStatus` (khi U12 có, chưa có thì chỉ hiện nhãn "Bài nhóm").
 4. Trả danh sách lọc theo lớp, trạng thái, sắp theo hạn gần nhất; cột điểm và phân bố ẩn danh do U09 gắn qua slot `StudentAssignmentResult`.
@@ -1036,7 +1042,7 @@ Iter 2, Người 2, UC 42–45. Thiết kế: [u09-assignment-grading](u09-assig
 | Sự kiện `grade.published` | - | U14 | Báo người học vừa có điểm (bài, lớp, danh sách người học) |
 | `ISubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
 | `IAiTaskResultHandler` cho `GRADING_PROPOSAL`, `IMcpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |
-| `TeacherClassTab` (contract của U05, U09 cài) | - | U05 | Phần Sổ điểm trong tab Evals |
+| `TeacherClassTab`, `StudentDetailSection` (contract của U05, U09 cài) | - | U05 | Tab Sổ điểm; tiến độ nộp, phân bố điểm trên tab Thông tin lớp; bài nộp và điểm trong popup Student Detail |
 | Slot `AssignmentRowAction` (của U07, U09 cài) | - | U07 | Lối vào Submission Detail kèm số đã nộp, chờ chấm trên dòng bài |
 | Slot `StudentAssignmentResult`, `SubmissionResultSection` (của U08, U09 cài) | - | U08 | Điểm đã công bố, phân bố ẩn danh; điểm và nhận xét của lượt được chấm |
 
@@ -1152,7 +1158,7 @@ Iter 2, Người 1, UC 46–48. Thiết kế: [u10-quiz-authoring](u10-quiz-auth
 | `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án; `listByMaterial(materialId, classId)`; `get(quizId)` | U11, U13 | Hiện Quiz cho người học; Quiz gắn tài liệu trên Learning Material |
 | `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
-| `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U10 cài) | - | U05 | Phần Quiz trong tab Evals; lối vào Question List, Quiz List trên Manager Dashboard |
+| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần Quiz trong tab Đánh giá; số câu hỏi, Quiz của môn trên Manager Dashboard, My Subject; mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager |
 | `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
 | Component `McqEditor` | - | Frontend U10 | Soạn câu trắc nghiệm, dùng ở Question Detail và câu riêng của Quiz |
 
@@ -1162,13 +1168,14 @@ Iter 2, Người 1, UC 46–48. Thiết kế: [u10-quiz-authoring](u10-quiz-auth
 |---|---|---|---|
 | `IQuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
 | Slot frontend `QuizDetailSection` | - | U11 | Lượt làm và dữ liệu hoạt động của lượt trên Quiz Detail cho giảng viên |
+| Slot frontend `QuizRowAction` | - | U11 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 
 Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt làm.
 
 #### Business flow
 
 ##### F1 - Xem ngân hàng (UC 46)
-1. Chủ nhiệm môn bấm Question List trên Manager Dashboard (U10 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/questions` kèm bộ lọc.
+1. Chủ nhiệm môn bấm mục Ngân hàng câu hỏi trên menu bên (U10 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/questions` kèm bộ lọc.
 2. Kiểm R2 (BR-U10-01).
 3. Trả bản `ACTIVE` mới nhất mỗi lineage kèm cờ "có bản nháp" và các câu mới chỉ có bản nháp (BR-U10-06).
 4. Bấm câu mở Question Detail: `GET /api/v1/questions/{id}` gồm nội dung, đáp án, giải thích và lịch sử phiên bản.
@@ -1247,7 +1254,7 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 
 ##### F14 - Interface cho unit khác
 1. U11 lấy Quiz người học được thấy (`IQuizQuery.listForClass`), đề không có đáp án và cài đặt (`getStudentView`), chấm bài (`IQuizScoring.score`) và đáp án để hiện sau khi nộp theo cài đặt (`answerReview`).
-2. U13 lấy Quiz gắn một tài liệu (`listByMaterial`) để hiện trên Learning Material; U11 cài `IQuizLifecycleListener` và slot `QuizDetailSection`.
+2. U13 lấy Quiz gắn một tài liệu (`listByMaterial`) để hiện trên Learning Material; U11 cài `IQuizLifecycleListener` và slot `QuizDetailSection`, `QuizRowAction`.
 3. U14 nhận `quiz.published` để báo trong app.
 
 ## Iter 3: phần thêm
@@ -1273,7 +1280,8 @@ Iter 3, Người 1, UC 49–52. Thiết kế: [u11-quiz-practice](u11-quiz-pract
 | `IQuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
 | Slot `QuizDetailSection` (của U10, U11 cài) | - | U10 | Phần Lượt làm và hoạt động cho giảng viên trên Quiz Detail |
 | Slot `LearningMaterialSection` (của U13, U11 cài) | - | U13 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
-| `DashboardNavEntry` (contract của U05, U11 cài) | - | U05 | Lối vào Quiz Practice History trên Class Dashboard |
+| `NavEntry` (contract của U01, U11 cài) | - | U01 | Mục Luyện tập Quiz trên menu bên của Student |
+| Slot `QuizRowAction` (của U10, U11 cài) | - | U10 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 | `IScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
 
 ##### Contract U11 khai báo (unit khác cài)
@@ -1285,7 +1293,7 @@ Iter 3, Người 1, UC 49–52. Thiết kế: [u11-quiz-practice](u11-quiz-pract
 #### Business flow
 
 ##### F1 - Lịch sử luyện tập (UC 49)
-1. Student mở Quiz Practice History từ thanh bên Class Dashboard (U11 đăng ký `DashboardNavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
+1. Student mở Quiz Practice History từ mục Luyện tập Quiz trên menu bên (U11 đăng ký `NavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
 2. Lấy các lớp `OPEN` đang học (`IClassAccess.listOpenClassesOf`), Quiz đang mở của từng lớp (`IQuizQuery.listForClass`) và các lượt của mình.
 3. Ghép thành danh sách Quiz: số lượt, điểm cao nhất, điểm lượt gần nhất (chỉ khi Quiz cho hiện điểm), nhãn "chưa làm"; Quiz đã ngưng mà có lượt thì hiện để xem lại (BR-U11-02).
 4. Bấm Quiz mở Quiz Practice Detail; bấm lượt đã nộp mở Quiz Result; lượt đang làm mở Quiz Taking.
@@ -1355,7 +1363,7 @@ Iter 3, Người 2, UC 53–57. Thiết kế: [u12-group-assignment](u12-group-a
 | Slot `AssignmentFormSection` (của U07, U12 cài) | - | U07 | Phần Nhóm trên Assignment Form |
 | `IGroupWorkStatus` (contract của U08, U12 cài), slot `GroupWorkEntry` | `statusFor(accountId, assignmentIds)` | U08 | Trạng thái bài nhóm trên Student Assignments; nút mở bài nhóm trên Assignment Detail |
 | `IGroupSubmissionSource` (contract của U09, U12 cài) | `getGroupSubmission`, `listGroupSubmissions` | U09 | Hiện, chấm bài nhóm và tiến độ theo nhóm |
-| `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection` (contract của U05, U12 cài) | - | U05 | My Group; phần Nhóm trong tab Students; nhóm của sinh viên trong popup Student Detail |
+| `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection` (contract của U05, U12 cài) | - | U05 | Thẻ Nhóm của tôi trên Student Class Detail; phần Nhóm trong tab Sinh viên và số nhóm trên tab Thông tin lớp; nhóm của sinh viên trong popup Student Detail |
 | `IMcpToolProvider` (contract của U06, U12 cài) | tool `read_authorized_group_submission` | U06 | Agent của giảng viên đọc bản nộp nhóm để đề xuất chấm |
 | `IJobHandler` cho `GROUP_DOC_CREATE`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U12 cài) | - | U03 | Tạo tài liệu nhóm khi bài mở; tự nộp khi hết hạn |
 
@@ -1467,7 +1475,7 @@ Iter 3, Người 4, UC 58–62. Thiết kế: [u13-reference-materials](u13-refe
 |---|---|---|---|
 | `IReferenceMaterial` (contract của U06, U13 cài) | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U07, U10 | Người soạn chọn tài liệu và lấy chữ đưa vào prompt AI |
 | `IMcpToolProvider` (contract của U06, U13 cài) | tool `read_authorized_material` | U06 | Agent đọc tài liệu đúng quyền |
-| `StudentClassSection`, `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U13 cài) | - | U05 | Phần Học liệu trên Student Class Detail; tab Materials; lối vào Material List |
+| `StudentClassSection`, `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U13 cài); `NavEntry` (contract của U01, U13 cài) | - | U05, U01 | Phần Học liệu trên Student Class Detail; tab Học liệu; số học liệu của môn trên Manager Dashboard, My Subject; mục Học liệu trên menu bên của Subject Manager |
 | Slot `AssignmentMaterialSection` (của U08), `QuizMaterialSection` (của U11), U13 cài bằng `MaterialLinkList` | - | U08, U11 | Hiện tài liệu gắn kèm Assignment, Quiz đúng quyền |
 | `IJobHandler` cho `MATERIAL_TEXT_EXTRACT`, `IPendingSweeper` (contract của U03, U13 cài) | - | U03 | Trích chữ nền, gửi lại message bị mất |
 
@@ -1480,7 +1488,7 @@ Iter 3, Người 4, UC 58–62. Thiết kế: [u13-reference-materials](u13-refe
 #### Business flow
 
 ##### F1 - Tài liệu của môn (UC 58)
-1. Chủ nhiệm môn bấm Material List trên Manager Dashboard (U13 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/materials`.
+1. Chủ nhiệm môn bấm mục Học liệu trên menu bên (U13 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/materials`.
 2. Kiểm R2 (BR-U13-01); trả tài liệu theo thứ tự, loại, phiên bản hiện tại, trạng thái chữ; lọc bỏ hoặc hiện tài liệu đã lưu trữ.
 3. Bấm tài liệu mở Material Detail: `GET /api/v1/materials/{id}` gồm thông tin và lịch sử phiên bản.
 
@@ -1531,7 +1539,7 @@ Iter 3, Người 3, UC 63–65. Thiết kế: [u14-announcements-and-notificatio
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
 | Sự kiện `class.announcement-posted` | - | U14 | Tạo thông báo lớp sau commit |
-| `StudentClassSection`, `DashboardNavEntry` (contract của U05, U14 cài) | - | U05 | Phần Thông báo trên Student Class Detail; lối vào Class Announcements trên Class Dashboard |
+| `StudentClassSection` (contract của U05, U14 cài); `NavEntry` (contract của U01, U14 cài) | - | U05, U01 | Phần Thông báo lớp trên Student Class Detail; mục Thông báo lớp trên menu bên của Student, Teacher |
 | Slot `HeaderWidget` (của U01, U14 cài) | - | U01 | Chuông và popup thông báo cho mọi vai trò |
 | `IJobHandler` cho `EMAIL_SEND`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U14 cài) | - | U03 | Gửi email; gửi lại message bị mất; nhắc hạn, gửi email đã hoãn, dọn thông báo cũ |
 
@@ -1542,7 +1550,7 @@ Không có.
 #### Business flow
 
 ##### F1 - Xem thông báo lớp (UC 63)
-1. Người dùng mở Class Announcements từ thanh bên Class Dashboard (U14 đăng ký `DashboardNavEntry`) hoặc từ phần Thông báo trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/announcements` kèm lớp.
+1. Người dùng mở Class Announcements từ mục Thông báo lớp trên menu bên (U14 đăng ký `NavEntry`) hoặc từ phần Thông báo trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/announcements` kèm lớp.
 2. Lấy các lớp `OPEN` người dùng đang học hoặc đang dạy (`IClassAccess`); trả thông báo chưa xóa của các lớp đó, mới nhất trước, lọc theo lớp (BR-U14-06).
 3. Thông báo của lớp ngoài quyền trả "không tìm thấy".
 
@@ -1597,7 +1605,7 @@ Iter 3, Người 5, UC 66. Thiết kế: [u15-admin-dashboard](u15-admin-dashboa
 
 ##### Interface U15 cung cấp
 
-Không có; U15 chỉ có màn và API cho Admin.
+Không có; U15 chỉ có màn và API cho Admin. Phía frontend U15 cài `NavEntry` của U01 (mục Tổng quan trên menu bên của Admin).
 
 ##### Contract U15 khai báo
 

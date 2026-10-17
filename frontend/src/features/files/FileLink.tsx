@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { Icon } from "@/shared/ui/Icon";
 
 type Props = {
   /** Gọi API của unit sở hữu (đã kiểm quyền) để lấy link tải 5 phút. */
@@ -12,10 +13,10 @@ type Props = {
 export function FileLink({ fetchUrl, children }: Props) {
   const [error, setError] = useState<string | null>(null);
   return (
-    <span>
+    <span className="inline-flex items-center gap-2">
       <button
         type="button"
-        className="text-blue-700 hover:underline"
+        className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline"
         onClick={async () => {
           setError(null);
           try {
@@ -26,9 +27,10 @@ export function FileLink({ fetchUrl, children }: Props) {
           }
         }}
       >
+        <Icon name="description" size={16} />
         {children}
       </button>
-      {error && <span className="ml-2 text-sm text-red-700">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </span>
   );
 }

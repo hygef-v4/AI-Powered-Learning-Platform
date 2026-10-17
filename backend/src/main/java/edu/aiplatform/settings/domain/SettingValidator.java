@@ -26,6 +26,8 @@ public final class SettingValidator {
     public static final String MAX = "max";
     public static final String OPTIONS = "options";
     public static final String NON_EMPTY = "nonEmpty";
+    /** Chỉ để hiển thị (ví dụ "MB"), không dùng khi kiểm. */
+    public static final String UNIT = "unit";
 
     private static final Pattern TIME_OF_DAY = Pattern.compile("([01]\\d|2[0-3]):[0-5]\\d");
 

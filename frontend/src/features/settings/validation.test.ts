@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { SettingItem } from "./types";
-import { formatSettingValue, validateSettingValue } from "./validation";
+import {
+  describeConstraints,
+  formatDateTime,
+  formatSettingValue,
+  formatShortDateTime,
+  validateSettingValue,
+} from "./validation";
 
 function item(overrides: Partial<SettingItem>): SettingItem {
   return {
@@ -44,5 +50,19 @@ describe("validateSettingValue", () => {
     expect(formatSettingValue({ type: "BOOLEAN", value: false })).toBe("Tắt");
     expect(formatSettingValue({ type: "TIME_OF_DAY", value: null })).toBe("Chưa cấu hình");
     expect(formatSettingValue({ type: "ENUM_SET", value: ["PDF", "DOCX"] })).toBe("PDF, DOCX");
+    expect(formatSettingValue({ type: "INTEGER", value: 50, constraints: { unit: "MB" } })).toBe("50 MB");
+    expect(formatSettingValue({ type: "ENUM_SET", value: [] })).toBe("Chưa cấu hình");
+  });
+
+  it("mô tả giới hạn hợp lệ theo kiểu", () => {
+    expect(describeConstraints(item({ constraints: { min: 1, max: 50, unit: "MB" } }))).toBe("Số nguyên từ 1 đến 50 (MB)");
+    const set = item({ type: "ENUM_SET", constraints: { options: ["PDF", "DOCX"], nonEmpty: true } });
+    expect(describeConstraints(set)).toBe("Chọn trong: PDF, DOCX (ít nhất một)");
+    expect(describeConstraints(item({ type: "BOOLEAN", constraints: {} }))).toBe("Bật hoặc tắt");
+  });
+
+  it("hiện thời điểm theo giờ Việt Nam", () => {
+    expect(formatShortDateTime("2026-10-02T07:15:00Z")).toBe("02/10 14:15");
+    expect(formatDateTime("2026-10-02T17:05:00Z")).toBe("03/10/2026 00:05");
   });
 });

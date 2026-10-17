@@ -17,7 +17,8 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 | `backend/src/main/java/edu/aiplatform/identity/` | Đủ 5 tầng `contract`, `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep` |
 | `backend/.../identity/contract/` | interface `IAccountLookup`, `IAuthorization`, `IClassScope`, `IMail`, `ISubjectScope`; kiểu dữ liệu `AccountContact`, `AccountStatus`, `Actor`, `AuthorizationDecision`, `MailMessage`, `ResourceRef`, `Role`, `ScopeKind` |
 | `backend/.../identity/contract/stub/IdentityContractStubs` | Bản tạm trả dữ liệu mẫu cho `IAuthorization`, `IAccountLookup`, `IMail`, `ISubjectScope`, `IClassScope` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
-| `frontend/src/features/identity/slots.ts` | Slot đã khai báo: `accountMenuEntries`, `headerWidgets` |
+| `frontend/src/features/identity/slots.ts` | Slot đã khai báo: `accountMenuEntries`, `headerWidgets`, `navEntries` (menu bên) |
+| `frontend/src/shared/layout/` | Khung `AppShell` (thanh trên cùng, menu bên, popup Đăng xuất) đã có, làm cùng U03 theo design |
 | `backend/.../shared/config/SecurityConfig` | Cấu hình nền: không phiên server, chỉ mở `/health`; U01 thêm filter JWT, cookie, CSRF |
 
 ## Checklist
@@ -30,7 +31,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 6 — Bảo mật web:** `JwtAuthFilter` (chữ ký, hạn 15 phút, phiên `sid` còn, trạng thái `ACTIVE`), `RateLimitFilter` theo email và client, cookie HttpOnly/Secure/SameSite, chống CSRF cho route đổi trạng thái, bcrypt.
 - [ ] **Bước 7 — API:** controller theo bảng API ở domain-entities mục 14, thêm các endpoint kích hoạt, đặt lại mật khẩu, refresh, đăng xuất; lỗi trả dạng an toàn và phản hồi trung tính theo BR-U01-12, 40.
 - [ ] **Bước 8 — Interface:** `AuthorizationService` cài `IAuthorization` (F13), `AccountLookupService` cài `IAccountLookup`, `SmtpMailAdapter` cài `IMail` (timeout NFR-U01-44); tới khi U04, U05 xong, bản tạm trong khung trả `true` cho `ISubjectScope`, `IClassScope`.
-- [ ] **Bước 9 — Frontend:** các màn và component theo frontend-components: `LoginPage`, `ActivationPage`, `PasswordResetPage`, `PostLoginRedirect`, `AccountMenu` (vẽ `accountMenuEntries`, `headerWidgets` đã khai báo trong `src/features/identity/slots.ts`), `SignOutDialog`, `RoleGuard`, `ProfilePage`, `PasswordChangeDialog`, `AccountListPage`, `ImportAccountsPanel`, `NewAccountDialog`, `AccountDetailPage`.
+- [ ] **Bước 9 — Frontend:** các màn và component theo frontend-components: `LoginPage`, `ActivationPage`, `PasswordResetPage`, `PostLoginRedirect`, nối `AppShell` có sẵn với phiên thật (thẻ hồ sơ, `SignOutDialog` gọi `logout`, menu bên vẽ `navEntries`, lối vào `accountMenuEntries`, vùng `headerWidgets`), `RoleGuard`, `ProfilePage`, `PasswordChangeDialog`, `AccountListPage`, `ImportAccountsPanel`, `NewAccountDialog`, `AccountDetailPage`, `RoleChangeDialog`, `RoleChangeRejectedDialog`, `StatusToggleDialog`; đăng ký `NavEntry` mục Tài khoản.
 - [ ] **Bước 10 — Unit test (người code viết):** chính sách mật khẩu, khóa tạm sau 5 lần sai, OTP hết hạn/sai 5 lần/mã mới thay mã cũ, phản hồi trung tính, thu hồi phiên khi đổi mật khẩu/role/trạng thái, chặn đổi role (BR-U01-64, 65, 66), kiểm CSV, `authorize` cho từng role; test form frontend. Integration test do tester viết, không thuộc bước này.
 - [ ] **Bước 11 — Cấu hình:** `U01_ALLOWED_EMAIL_DOMAINS`, khóa ký JWT, `SMTP_*`, Redis; cập nhật hướng dẫn chạy local.
 - [ ] **Bước 12 — Review:** đối chiếu UC, story, BR với code; người dùng duyệt trước khi chuyển unit.

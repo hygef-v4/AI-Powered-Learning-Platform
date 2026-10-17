@@ -23,7 +23,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Xem Quiz
 
 ### F1 - Lịch sử luyện tập (UC 49)
-1. Student mở Quiz Practice History từ thanh bên Class Dashboard (U11 đăng ký `DashboardNavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
+1. Student mở Quiz Practice History từ mục Luyện tập Quiz trên menu bên (U11 đăng ký `NavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
 2. Lấy các lớp `OPEN` đang học (`IClassAccess.listOpenClassesOf`), Quiz đang mở của từng lớp (`IQuizQuery.listForClass`) và các lượt của mình.
 3. Ghép thành danh sách Quiz: số lượt, điểm cao nhất, điểm lượt gần nhất (chỉ khi Quiz cho hiện điểm), nhãn "chưa làm"; Quiz đã ngưng mà có lượt thì hiện để xem lại (BR-U11-02).
 4. Bấm Quiz mở Quiz Practice Detail; bấm lượt đã nộp mở Quiz Result; lượt đang làm mở Quiz Taking.

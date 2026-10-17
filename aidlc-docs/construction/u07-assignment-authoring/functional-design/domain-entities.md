@@ -99,7 +99,7 @@ Part
 | `IDocumentModel` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm |
 | `IDocx` | `export(document, title, diagramLinker)`, `importPreview(docx, origin, diagramEnabled, diagramResolver)` | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề |
 | Sự kiện `assignment.opened` | - | U14 | Báo bài mới mở cho người học của lớp hoặc của mọi lớp `OPEN` thuộc môn |
-| `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U07 cài) | - | U05 | Phần Bài tập trong tab Evals; lối vào Assignment List trên Manager Dashboard |
+| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U07 cài); `NavEntry` (contract của U01, U07 cài) | - | U05, U01 | Phần Bài tập trong tab Đánh giá; số bài tập của môn trên Manager Dashboard, My Subject; mục Bài tập trên menu bên của Subject Manager |
 | `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`, `IMcpToolProvider` (contract của U06, U07 cài) | - | U06 | Nhận đề xuất AI; tool `read_assignment_context`, `save_assignment_draft` |
 | `IScheduledScanner` (contract của U03, U07 cài) | - | U03 | Mở, đóng bài theo lịch |
 | Component `DocumentEditor`, `DiagramBlock`, `DocumentViewer`, `RubricViewer` | - | Frontend U08, U09, U12 | Trình soạn và xem tài liệu dùng chung, sơ đồ Draw.io, xem rubric |

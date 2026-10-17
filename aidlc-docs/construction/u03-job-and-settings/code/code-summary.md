@@ -35,6 +35,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 - `features/settings`: `SettingGroupTable`, `DelegatedSectionCard`, `SettingValueForm` (kiểm sơ bộ, 400, 409), `SettingsSectionHost`.
 - `features/files`: `FileUploader` (kéo thả, tiến trình, Hủy), `useFileUpload`, `FileLink`, `purposes`.
 - `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối).
+- Giao diện theo design G21 (17/10): `shared/ui` (màu, nút, thẻ, bảng, ô nhập, nhãn, popup, icon Material Symbols dạng SVG tự host) và `shared/layout/AppShell` (thanh trên cùng, menu bên theo vai trò, popup Đăng xuất), gắn cho mọi màn `/admin/*` qua `app/admin/layout.tsx`. Menu bên lấy từ `NavEntry` (slot của U01); mỗi unit đăng ký mục của mình trong `features/<package>/register.ts` (đã đăng ký sẵn đủ mục theo design). Unit khác dùng lại, không tự vẽ khung.
 
 ## Hạ tầng
 
@@ -45,7 +46,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 ## Unit test
 
 - Backend 84 test: tên tệp, giới hạn theo Settings, nhận dạng theo nội dung (đổi đuôi, SVG có script), `FileRef` sai hoặc hết hạn, upload (role, vượt trần, sai loại, Drive lỗi, dọn tệp), token sai người, header tải, việc nền (gửi sau commit, rollback không gửi, khóa cấm, thử lại, hết lượt, timeout), Settings (giới hạn từng kiểu, ràng buộc backup, version lệch, chỉ Admin, cache 30 giây, khởi tạo không ghi đè, phần ủy quyền lỗi), backup (lịch theo giờ Việt Nam, không trùng ngày, giữ 7 ngày và bản mới nhất, mã hóa và giải mã bằng khóa test, archive bị sửa hoặc cắt, lỗi thì báo).
-- Frontend 12 test: kiểm giá trị cài đặt, form (lỗi giới hạn, 409, lưu), giới hạn tệp, `FileUploader`, `usePollStatus`.
+- Frontend 30 test: kiểm giá trị cài đặt, hiện giờ Việt Nam, form (lỗi giới hạn ngay khi nhập, 400, 409, Hủy, chọn nhiều, lưu), bảng nhóm cài đặt, giới hạn tệp, `FileUploader`, `usePollStatus`, khung trang (menu theo vai trò, mục đang mở, Đăng xuất), mục menu đúng thứ tự design, popup, công tắc, ô chọn nhiều.
 
 ## Khác với thiết kế
 

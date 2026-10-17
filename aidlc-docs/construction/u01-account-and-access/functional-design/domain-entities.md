@@ -167,7 +167,8 @@ Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi d
 
 | Contract | Cài bởi | Dùng để |
 |---|---|---|
-| `AccountMenuEntry` | U06 | Thêm mục AI Connection vào menu tài khoản mà U01 không phụ thuộc ngược U06 |
+| `AccountMenuEntry` | U06 | Thêm lối vào trên thanh trên cùng (nút Kết nối AI) mà U01 không phụ thuộc ngược U06 |
+| `NavEntry` | U01, U02, U03, U04, U05, U07, U08, U10, U11, U13, U14, U15 | Mục menu bên theo role (nhãn, đường dẫn, icon, role, thứ tự); mỗi unit đăng ký mục của màn mình (bảng menu ở frontend-components U01) |
 | `HeaderWidget` | U14 | Gắn chuông thông báo lên thanh điều hướng cho mọi vai trò |
 
 ### Interface U01 dùng
@@ -185,7 +186,7 @@ U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U
 |---|---|---|
 | `POST /api/v1/auth/login` | 02 | Trả `SessionInfo { accountId, displayName, role, homePath }`; `homePath` theo BR-U01-48: Class Dashboard, Manager Dashboard hoặc Admin Dashboard |
 | `GET`, `PATCH /api/v1/me/profile` | 06, 07 | Chỉ `displayName`, `phoneNumber`; không có avatar |
-| `GET /api/v1/admin/accounts` | 08 | Lọc role, trạng thái, email; phân trang |
+| `GET /api/v1/admin/accounts` | 08 | Lọc role, trạng thái, `email` (khớp đúng); `q` khớp một phần email hoặc họ tên; phân trang |
 | `POST /api/v1/admin/accounts` | 09 | Tạo một tài khoản `PENDING` |
 | `GET /api/v1/admin/accounts/{id}` | 10 | Không trả hash, OTP, token |
 | `PATCH /api/v1/admin/accounts/{id}` | 11 | `displayName`, `phoneNumber`, `version`; không email/role/status |

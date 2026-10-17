@@ -82,7 +82,7 @@ stateDiagram-v2
 | `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án; `listByMaterial(materialId, classId)`; `get(quizId)` | U11, U13 | Hiện Quiz cho người học; Quiz gắn tài liệu trên Learning Material |
 | `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
-| `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U10 cài) | - | U05 | Phần Quiz trong tab Evals; lối vào Question List, Quiz List trên Manager Dashboard |
+| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần Quiz trong tab Đánh giá; số câu hỏi, Quiz của môn trên Manager Dashboard, My Subject; mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager |
 | `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
 | Component `McqEditor` | - | Frontend U10 | Soạn câu trắc nghiệm, dùng ở Question Detail và câu riêng của Quiz |
 
@@ -92,6 +92,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `IQuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
 | Slot frontend `QuizDetailSection` | - | U11 | Lượt làm và dữ liệu hoạt động của lượt trên Quiz Detail cho giảng viên |
+| Slot frontend `QuizRowAction` | - | U11 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 
 Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt làm.
 

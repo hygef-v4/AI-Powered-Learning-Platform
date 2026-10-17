@@ -21,7 +21,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Quản lý tài liệu
 
 ### F1 - Tài liệu của môn (UC 58)
-1. Chủ nhiệm môn bấm Material List trên Manager Dashboard (U13 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/materials`.
+1. Chủ nhiệm môn bấm mục Học liệu trên menu bên (U13 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/materials`.
 2. Kiểm R2 (BR-U13-01); trả tài liệu theo thứ tự, loại, phiên bản hiện tại, trạng thái chữ; lọc bỏ hoặc hiện tài liệu đã lưu trữ.
 3. Bấm tài liệu mở Material Detail: `GET /api/v1/materials/{id}` gồm thông tin và lịch sử phiên bản.
 

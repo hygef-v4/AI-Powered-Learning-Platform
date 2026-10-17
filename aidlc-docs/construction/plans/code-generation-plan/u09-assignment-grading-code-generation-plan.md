@@ -30,7 +30,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 7 — Sổ điểm, xuất:** `GradebookService`, `GradebookExporter` CSV và XLSX (F11, F12).
 - [ ] **Bước 8 — Người học:** `StudentGradeService`, `GradeDistributionCalculator` (F13).
 - [ ] **Bước 9 — API:** controller theo domain-entities mục 5; `contracts/openapi/grading.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 10 — Frontend:** `ClassGradebookSection` (đăng ký `TeacherClassTab`), `SubmissionsLink` (đăng ký `AssignmentRowAction`), `SubmissionDetailPage`, `GradingWorkspacePage` và các panel, `StudentGradeCell`, `StudentGradePanel` (đăng ký slot của U08).
+- [ ] **Bước 10 — Frontend:** `ClassGradebookTab`, `GradebookExportDialog`, `ClassProgressSection` (đăng ký `TeacherClassTab`), `StudentGradesSection` (`StudentDetailSection`), `SubmissionsLink` (đăng ký `AssignmentRowAction`), `SubmissionDetailPage`, `GradingWorkspacePage` và các panel, `StudentGradeCell`, `StudentGradePanel` (đăng ký slot của U08).
 - [ ] **Bước 11 — Unit test (người code viết):** tạo đánh giá chỉ với bài `GRADED`; lượt mới làm đánh giá cũ `SUPERSEDED`; điểm từ checklist và điều chỉnh có lý do; kẹp điểm; chốt hàng loạt có mục lỗi; công bố phát sự kiện đúng người; sửa sau chốt thiếu lý do bị từ chối; đề xuất sai id mục hoặc hash cũ; hết quota giữa lô; sổ điểm không có Quiz, Practice, điểm tổng; CSV chặn công thức; phân bố dưới 20 người hoặc khoảng dưới 5 người; Chủ nhiệm môn không dạy lớp bị từ chối; component frontend. Integration test do tester viết.
 - [ ] **Bước 12 — Review:** đối chiếu UC 42–45, story, BR-U09 với code; người dùng duyệt trước khi chuyển unit.
 

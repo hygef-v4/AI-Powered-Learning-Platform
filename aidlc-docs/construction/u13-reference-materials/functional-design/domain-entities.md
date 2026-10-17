@@ -41,7 +41,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `IReferenceMaterial` (contract của U06, U13 cài) | `listSelectable(actor, scopeRef)`, `extractText(actor, materialIds, maxChars)` | U07, U10 | Người soạn chọn tài liệu và lấy chữ đưa vào prompt AI |
 | `IMcpToolProvider` (contract của U06, U13 cài) | tool `read_authorized_material` | U06 | Agent đọc tài liệu đúng quyền |
-| `StudentClassSection`, `TeacherClassTab`, `DashboardNavEntry` (contract của U05, U13 cài) | - | U05 | Phần Học liệu trên Student Class Detail; tab Materials; lối vào Material List |
+| `StudentClassSection`, `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U13 cài); `NavEntry` (contract của U01, U13 cài) | - | U05, U01 | Phần Học liệu trên Student Class Detail; tab Học liệu; số học liệu của môn trên Manager Dashboard, My Subject; mục Học liệu trên menu bên của Subject Manager |
 | Slot `AssignmentMaterialSection` (của U08), `QuizMaterialSection` (của U11), U13 cài bằng `MaterialLinkList` | - | U08, U11 | Hiện tài liệu gắn kèm Assignment, Quiz đúng quyền |
 | `IJobHandler` cho `MATERIAL_TEXT_EXTRACT`, `IPendingSweeper` (contract của U03, U13 cài) | - | U03 | Trích chữ nền, gửi lại message bị mất |
 
@@ -67,5 +67,6 @@ stateDiagram-v2
 |---|---|
 | `GET`, `POST /api/v1/subjects/{subjectId}/materials` | 58, 59 |
 | `GET`, `POST /api/v1/classes/{classId}/materials` | 60, 61 |
+| `PUT /api/v1/subjects/{subjectId}/materials:reorder`, `PUT /api/v1/classes/{classId}/materials:reorder` | 58, 60 (kéo sắp thứ tự) |
 | `GET`, `PATCH /api/v1/materials/{id}`; `POST .../versions`; `POST .../archive` | 58–61 |
 | `GET /api/v1/me/classes/{classId}/materials` (lọc được theo `ids`); `GET /api/v1/materials/{id}/view`; `POST .../download-token` | 62 |

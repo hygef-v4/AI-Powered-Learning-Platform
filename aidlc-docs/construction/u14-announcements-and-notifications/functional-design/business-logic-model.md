@@ -23,7 +23,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Thông báo lớp
 
 ### F1 - Xem thông báo lớp (UC 63)
-1. Người dùng mở Class Announcements từ thanh bên Class Dashboard (U14 đăng ký `DashboardNavEntry`) hoặc từ phần Thông báo trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/announcements` kèm lớp.
+1. Người dùng mở Class Announcements từ mục Thông báo lớp trên menu bên (U14 đăng ký `NavEntry`) hoặc từ phần Thông báo trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/announcements` kèm lớp.
 2. Lấy các lớp `OPEN` người dùng đang học hoặc đang dạy (`IClassAccess`); trả thông báo chưa xóa của các lớp đó, mới nhất trước, lọc theo lớp (BR-U14-06).
 3. Thông báo của lớp ngoài quyền trả "không tìm thấy".
 
