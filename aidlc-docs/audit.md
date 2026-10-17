@@ -589,36 +589,11 @@ giải thích"
 **AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
 ---
 
-## Main Business Flows - Draw.io Generation Request
-**Timestamp**: 2026-09-14T03:03:25Z
-**User Input**: "Vẽ đủ 9 sơ đồ draw\.io  "
-**AI Response**: "Started generating nine editable swimlane diagrams for BF-01 through BF-09 as supplementary inception documentation. This does not advance or bypass the pending User Stories approval gate."
-**Context**: INCEPTION - Supplementary Main Business Flow documentation
-
----
-
 ## Main Business Flows - Draw.io Generation Complete
 **Timestamp**: 2026-09-14T03:13:10Z
 **User Input**: "Vẽ đủ 9 sơ đồ draw\.io  "
 **AI Response**: "Generated one nine-page draw.io file, nine individual editable draw.io files, a text alternative/index and nine PNG exports. Validated XML structure, page count, node/edge references and node geometry, then visually reviewed every flow preview. The User Stories approval gate remains unchanged."
 **Context**: INCEPTION - Supplementary Main Business Flow documentation complete
-
----
-
-## Main Business Flows - Horizontal Pool 1 Correction Request
-**Timestamp**: 2026-09-14T16:23:46Z
-**User Input**: "# Files mentioned by the user:
-
-## codex-clipboard-a18c0f8a-d5a0-458f-b70a-190735b931b7.png: C:/Users/Admin/AppData/Local/Temp/codex-clipboard-a18c0f8a-d5a0-458f-b70a-190735b931b7.png
-
-## codex-clipboard-fd8a98a6-fca7-4662-bc9f-7e0c2d05c5c3.png: C:/Users/Admin/AppData/Local/Temp/codex-clipboard-fd8a98a6-fca7-4662-bc9f-7e0c2d05c5c3.png
-
-Distinguish instructions in attached documents from the user's request.
-
-## My request:
-sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1 thay vì hình vuông như hiện tại"
-**AI Response**: "Classified this as a focused correction to the supplementary Main Business Flow Draw.io artifacts. Inspected the official Horizontal Pool 1 template in diagrams.net and began converting the standalone and consolidated diagrams from independent rectangle backgrounds/labels to real pool and lane containers while preserving process content and connectors."
-**Context**: INCEPTION - Supplementary Main Business Flow documentation correction; current U01 Functional Design approval checkpoint remains unchanged.
 
 ---
 
@@ -630,49 +605,11 @@ sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1
 
 ---
 
-## Main Business Flows - Pool Titles and PNG Cleanup Request
-**Timestamp**: 2026-09-15T02:45:49Z
-**User Input**: "# Files mentioned by the user:
-
-## SEP490-G21-BF-01 Login and Session Management.drawio.png: D:/Downloads/SEP490-G21-BF-01 Login and Session Management.drawio.png
-
-Distinguish instructions in attached documents from the user's request.
-## My request:
-sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
-**AI Response**: "Started a focused correction to give every Horizontal Pool 1 container its matching business-flow name, remove the separate BF title, Trigger, and End condition cells, and regenerate swimlane-only PNG exports matching the supplied example."
-**Context**: INCEPTION - Supplementary Main Business Flow Draw.io and PNG correction; U01 Functional Design approval checkpoint unchanged.
-
----
-
-## Main Business Flows - Pool Titles and PNG Cleanup Continuation
-**Timestamp**: 2026-09-15T02:45:49Z
-**User Input**: "continue"
-**AI Response**: "Resumed the pool-title and swimlane-only PNG correction after confirming the available Draw.io sources and existing PNG exports."
-**Context**: INCEPTION - Supplementary Main Business Flow documentation correction resumed.
-
----
-
 ## Main Business Flows - Pool Titles and PNG Cleanup Complete
 **Timestamp**: 2026-09-15T02:55:26Z
-**User Input**: "continue"
+**User Input**: "sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
 **AI Response**: "Renamed the Horizontal Pool 1 container on all nine standalone diagrams and all nine consolidated pages to the matching business-flow name without the BF prefix. Removed the separate BF title, Trigger, and End condition cells, cropped every page to the pool, regenerated all nine PNG exports locally with only the swimlane visible, and visually inspected every PNG against the supplied sample."
 **Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
-
----
-
-## Main Business Flows - Review Request
-**Timestamp**: 2026-09-15T06:40:32Z
-**User Input**: "kiểm tra business flow đã ổn chưa, diagram có phải sửa gì không"
-**AI Response**: "Reviewed business-flows.md, all nine standalone Draw.io files, the consolidated nine-page file and the nine PNG exports against requirements FR-001, FR-010, FR-025 and FR-026. Confirmed every edge source/target in XML matches the intended logic and the standalone files match the consolidated pages. Reported findings without changing diagrams: auto-routed connectors pass through stacked Yes/No boxes so several PNGs appear to connect the wrong steps (BF-01, 02, 03, 05, 06, 07, 09), loop-back edges and branch labels are hidden (BF-02, 03, 04, 08), terminal/decision text overflows, and business-logic gaps (BF-08 discarded AI suggestion reaches publish without a grade, BF-09 gateway step order and invalid-signature handling, BF-07 file stored before confirmation, BF-05 data-store-to-data-store arrow), plus terminology and consistency issues (Subject Owner vs Subject Manager, Assignments vs staff assignments, Learner vs Student, stale README)."
-**Context**: INCEPTION - Supplementary Main Business Flow review; no artifact changed; U01 Functional Design approval checkpoint unchanged.
-
----
-
-## Main Business Flows - Review Findings Correction Request
-**Timestamp**: 2026-09-15T06:57:24Z
-**User Input**: "sửa luôn"
-**AI Response**: "Started correcting all review findings: rebuilding the nine standalone Draw.io flows and the consolidated nine-page file with explicit connector routing, separated decision branches and larger terminals; fixing business-logic gaps in BF-01, BF-04, BF-05, BF-06, BF-07, BF-08 and BF-09; aligning terminology (Subject Manager, staff assignments, Student); regenerating PNG exports with the draw.io viewer; and synchronizing business-flows.md Mermaid diagrams and README."
-**Context**: INCEPTION - Supplementary Main Business Flow correction; U01 Functional Design approval checkpoint unchanged.
 
 ---
 
@@ -2838,27 +2775,10 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 
 ---
 
-## Main Business Flows - Realignment Request
-**Timestamp**: 2026-09-27T07:28:37Z
-**User Input**: "dựa trên tài liệu dự án mới nhất, cập nhật chỉnh sửa lại business flow khớp"
-**Clarification**: User chose "Làm lại bộ BF của cuong" — rewrite the Draw.io set and PNG exports in aidlc-docs/inception/main-business-flows/ to match the latest 16-unit design, keeping the existing swimlane style; docs/business-flow.* left unchanged.
-**AI Response**: Started reviewing latest requirements, use cases, unit designs and construction business logic to realign the flows.
-**Context**: Supplementary business flow documentation update; no workflow stage change.
-
----
-
 ## Main Business Flows - Realignment Complete
 **Timestamp**: 2026-09-27T07:42:26Z
 **User Input**: (continuation of "dựa trên tài liệu dự án mới nhất, cập nhật chỉnh sửa lại business flow khớp")
 **AI Response**: "Rebuilt main-business-flows/ as eleven swimlane flows aligned with the 16-unit Construction design, 77-UC catalog and unit business rules: BF-01 Account Activation and Sign-In, BF-02 Subject/Class Setup and Enrollment, BF-03 Learning Material Upload and RAG Indexing, BF-04 Assignment Authoring, Review and Publication, BF-05 Lesson Publication and Class Content Access, BF-06 Group Set Setup and Leader Change, BF-07 Individual Attempt and Submission, BF-08 Group Document Collaboration and Submission, BF-09 Grading and Grade Publication, BF-10 AI Credit Purchase, BF-11 Notification and Deadline Reminder. Removed obsolete flows (AI summarization/lesson splitting, lesson progress, work allocation, shared DOCX submission, payment-based access grant). Regenerated the eleven-page consolidated file, eleven standalone files and PNG exports with the diagrams.net viewer; automated checks found no connector crossing a shape, no overlapping or crossing connectors, every decision has two labelled exits and every End states an outcome. Rewrote README with flow table, UC/unit traceability, text alternatives and conventions. docs/business-flow.* unchanged."
-**Context**: Supplementary business flow documentation update; no workflow stage change.
-
----
-
-## Main Business Flows - Trigger and End Condition
-**Timestamp**: 2026-09-27T10:06:13Z
-**User Input**: "viết trigger và end condition cho từng BF"
-**AI Response**: "Replaced the README Text alternatives list with a Flow details section: for each of BF-01 to BF-11, a Trigger, an End condition listing every End outcome shown in the diagram with its resulting state, and the existing text alternative. Diagrams unchanged."
 **Context**: Supplementary business flow documentation update; no workflow stage change.
 
 ---
@@ -2868,22 +2788,6 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **User Input**: "viết trigger và end condition thật ngắn gọn (ví dụ như trong ảnh)" (attached screenshot of SRS section 2 Main Business Flow)
 **AI Response**: "Shortened Trigger and End condition for BF-01 to BF-11 in the README to one sentence each, matching the SRS format in the screenshot."
 **Context**: Supplementary business flow documentation update; no workflow stage change.
-
----
-
-## Explain attempt limit in UC56
-**Timestamp**: 2026-09-27T07:20:00Z
-**User Input**: "UC 56 giải thích cho tôi phần attempt, tại sao lại bị giới hạn: The learner has an ACTIVE enrollment in an OPEN class. The ESSAY publication accepts submissions (on time or within the late-submission period). The attempt limit has not been reached; starting an attempt consumes one attempt."
-**AI Response**: "Explained the three preconditions and the attempt concept: maxAttempts is set per publication by the instructor (1-10, BR-U08-31, fixed once OPEN per BR-U08-34); an attempt is counted when started (U11 question 2 answer A, BR-U11-02); one IN_PROGRESS attempt at a time; last submitted attempt is graded (question 1 answer A); unfinished attempts are auto-submitted. Gave rationale and noted that unlimited attempts are not in the design."
-**Context**: Clarification; no files changed.
-
----
-
-## Should submissions be limited
-**Timestamp**: 2026-09-27T07:30:00Z
-**User Input**: "có nên giới hạn lượt nộp bài không"
-**AI Response**: "Recommended keeping the configurable 1-10 attempt limit (needed for QUIZ, simulation exams and Code Lab; harmless for ESSAY/DOCUMENT since the instructor can choose 10) and not adding an unlimited option in the MVP; suggested optionally defining a default per assignment type since none is specified. No files changed."
-**Context**: Design discussion; no decision recorded yet.
 
 ---
 
@@ -3513,14 +3417,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 
 ---
 
-## Business Flow Review
-**Timestamp**: 2026-10-06T03:00:00Z
-**User Input**: "kiểm tra businessflow dự án xem đã đúng chưa, nếu chưa gửi tôi báo cáo các điểm cần sửa"
-**AI Response**: "Reported that the business flows are not correct. main-business-flows/ (11 BF, 2026-09-27) predates the 2026-10-01 to 2026-10-04 decisions (77-UC count, Learner/Instructor, Simulation Exam, lesson publication, per-assignment group sets, IN_REVIEW parts, group graded manually only, AI override needing a reason, PostgreSQL job records). The newer 5-page docs/business-flow.* only existed in a GitHub Desktop stash because PR #2 removed docs/. Listed 13 fixes for the 5-page set (module creation by Subject Manager only, upload rejection, FAILED scan branch, GRADED/PRACTICE decision, publish checks, instant results, group readiness, leader change steps, resubmission conflict between BR-U14-32 and FR-026/BR-U15-44, payment FAILED/EXPIRED/REJECTED branches, notification starts, missing account and enrollment flows). No files changed."
-**Context**: Documentation review; no workflow stage change.
-
----
-
 ## Main Business Flows - Rebuild
 **Timestamp**: 2026-10-06T05:00:00Z
 **User Input**: "1. nhóm tôi đã quyết định bỏ docs/
@@ -3557,22 +3453,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 
 ---
 
-## Main Business Flows - Readability
-**Timestamp**: 2026-10-06T07:30:00Z
-**User Input**: "kiểm tra lại các BF xem chữ có bị thừa ra khỏi khung không, sửa lại để các bước trong BF viết ngắn gọn, súc tích hơn, đồng thời chỉnh khoảng cách và cỡ chữ hợp lí để không cần phóng to vẫn có thể đọc được rõ chữ" (attached screenshots of BF-01 where the "Valid rows" label overlapped two steps)
-**AI Response**: "Shortened every step, decision and End label in BF-01 to BF-08 (details stay in the README text alternatives), removed the label on the short connector between adjacent steps, merged the BF-03 publication steps into one, enlarged shapes and fonts (steps and decisions 14 px, End 13 px, lanes 16 px, title 18 px, connector labels 13 px bold) and compacted the layout by placing consecutive steps of different lanes in the same column, cutting the width by about 30 to 40 percent. Added generator checks for text overflow and connector labels overlapping shapes; all eight flows passed and the rendered PNGs were reviewed."
-**Context**: Supplementary business flow documentation update; no workflow stage change.
-
----
-
-## Main Business Flows - Check and SRS Trigger/End Condition
-**Timestamp**: 2026-10-06T13:00:00Z
-**User Input**: "kiểm tra bộ BF hiện tại đã đúng chưa, viết cho tôi trigger và end condition cho từng BF (ngắn gọn và súc tích như trong ảnh)" (attached screenshot of SRS section 2.1 "Account Activation and Sign-In (BF-01)")
-**AI Response**: "Confirmed the eight BF match the README and drawio files. Noted the SRS still uses the old numbering (BF-01 Account Activation and Sign-In is no longer a BF), the README BF-02 end condition wrongly implies NO_TEXT can be rescanned, and the README BF-01 end condition does not match the diagram ends. Wrote one-sentence Trigger and End condition for BF-01 to BF-08 in chat; no files changed."
-**Context**: Supplementary business flow documentation review; no workflow stage change.
-
----
-
 ## Main Business Flows - One Lane per Actor and Page-Readable Layout
 **Timestamp**: 2026-10-06T13:30:00Z
 **User Input**: "sửa lại trong BF actor class manager phải thành teacher, tại sao actor administrator lại có ở tận 2 lane, sửa lại để mỗi actor chỉ 1 lane. Ngoài ra chỉnh lại kích thước và font chữ để không cần zoom to tài liệu vẫn có thể đọc được" (attached screenshots of the SRS with BF-01 inserted)
@@ -3586,16 +3466,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **User Input**: "tôi vẫn muốn vẽ theo chiều ngang"
 **AI Response**: "Redrew all eight flows with horizontal lanes and a left-to-right flow, keeping one lane per actor (BF-01: Administrator, Subject Manager, Teacher, Student, System). To keep them readable, each check step was merged into its decision diamond and purely technical steps were folded into neighbours, cutting the flows to six to nine columns (1250 to 1770 px wide instead of up to 2615 px); shapes are compact with 15 px text, 16 px lane headers, 20 px title, 14 px connector labels, and column gaps widen only where a branch label needs room. Generator checks passed for all eight; PNG exports re-rendered at 2x and reviewed. README updated (layout note: insert at full width on a landscape page; conventions). Business rules unchanged; details stay in the text alternatives."
 **Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
-
----
-
-## SRS Report 3 Review
-**Timestamp**: 2026-10-06T15:00:00Z
-**User Input**: "@\"D:\Download\Report-3_Software Requirement Specification (1).docx\"
-kiểm tra xem tài liệu này đã đúng chưa, nếu chưa gửi tôi các điểm cần chỉnh sửa và bổ sung" / "bạn đánh giá bản doc này bao nhiêu điểm" / "@\"D:\Download\Report-3_Software Requirement Specification (3).docx\"
-kiểm tra bản này xem đã đúng chưa"
-**AI Response**: "Reviewed the SRS against aidlc-docs and reported 15 issues (old 11-BF set, View Statistics screen contradicting UC 18, INACTIVE/OPEN instead of DISABLED/ACTIVE, student code field absent from the data model, wrong UC reference on Profile, Screen List inconsistencies, unfinished entity descriptions, ERD missing Payment/Enrollment/Comment/Leader Change Request/Audit Log, acronyms, change log, UC specification coverage, UC diagram links, actor naming, traceability, minor formatting); scored about 7/10. Version (3) only replaced section I.2 with the eight new BF; reported four remaining BF points (BF-07 missing 'not AI-graded' end, BF-08 missing expiry branch, BF-05 'Submit now? No' jumping straight to auto-submit, SRS/README wording drift and missing figure captions); scored about 7.3/10. No files changed."
-**Context**: SRS report review; no workflow stage change.
 
 ---
 
@@ -3794,15 +3664,6 @@ kiểm tra bản này xem đã đúng chưa"
 
 ---
 
-## Main Business Flows - Check Against Updated Reports 1-3
-**Timestamp**: 2026-10-09T07:20:00Z
-**User Input**: "@\"D:\Download\Report-1_Project Introduction (1).docx\" @\"D:\Download\Report-2_Project Management Plan (1).docx\" @\"D:\Download\Report-3_Software Requirement Specification (6).docx\"
-đây là tài liệu đã được cập nhật, kiểm tra xem BF hiện tại đã đúng chưa"
-**AI Response**: "Checked BF-01..BF-08 against SRS v6 (trigger/end conditions, UC 01-73, permission matrix, data business rules, BR01-BR30, UC specifications) and Reports 1-2. BF-02, BF-04, BF-05, BF-07, BF-08 match. BF-01 conflicts: the Teacher adds students (roster or invite code), but SRS UC 51 and the permission matrix give enrollment to the Subject Manager/Administrator and deny it to the Teacher; the invite-code path has no UC in the 73-UC list although Report 1, Report 2, SRS data rule 'One active class per subject' and the BF-01 end condition still mention it. Minor gaps: BF-06 omits the AI credit/availability refusal and failure path of UC 38 and sends deterministic scores through teacher finalization although the Evaluation lifecycle allows immediate publication; BF-03 does not show Code Lab sample verification explicitly. The SRS still embeds the previous oval-style BF images. Asked the user how to resolve the invite-code question before editing."
-**Context**: Supplementary business flow review; no files other than this log changed.
-
----
-
 ## Main Business Flows - BF-01 and BF-06 Correction
 **Timestamp**: 2026-10-09T07:40:00Z
 **User Input**: "BF-01: xử lý việc thêm sinh viên và mã mời thế nào?"="Bỏ mã mời (Recommended)", "Có sửa luôn các điểm nhỏ ở BF-06/BF-03 không?"="Sửa BF-06 (Recommended)"
@@ -3811,14 +3672,6 @@ kiểm tra bản này xem đã đúng chưa"
 
 ---
 
-## SRS Report 3 (version 7) Review
-**Timestamp**: 2026-10-09T08:30:00Z
-**User Input**: "@\"D:\Download\Report-3_Software Requirement Specification (7).docx\"
-kiểm tra xem bản report3 này đã đúng chưa, được bao nhiêu điểm trên 10 và gửi tôi các điểm cần bổ sung/cải thiện"
-**AI Response**: "Reviewed SRS v7 end to end. Text is identical to v6; only images changed and all eight BF images now match the current exports. Score given: about 7/10. Main findings: table of contents still shows template headings; BF-01 end condition and the 'One active class per subject' data rule still mention invitation codes; contradictions between entity descriptions and UC/BR (Credit Package seeded vs Admin-managed, Announcement not editable vs UC 36/BR27, BR19 deployment-configured monthly grant vs UC 70-71, fixed 50 MB vs configurable upload limits); ERD lacks Payment, Enrollment, Audit Log, Group Section, Leader Change Request, Comment and credit ledger, has the typo 'Version Linage' and a placeholder link line; only 10 of 73 UCs have specifications; missing figure captions and acronyms; implementation jargon in jobs and Other Requirements; inconsistent assignment-type terms and untranslated Vietnamese labels; no enrollment-refusal message."
-**Context**: Supplementary documentation review; no files other than this log changed.
-
----
 ## SRS section 5 review — Screen Flow versus descriptions
 **Timestamp**: 2026-10-09T07:44:16Z
 **User Input**: "[https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.91vaopdapgz](https://docs.google.com/document/d/1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n/edit#heading=h.91vaopdapgz)
@@ -4109,54 +3962,6 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **AI Response**: Redrew main business flows as 10 TO-BE swimlanes aligned with the 66-UC scope (no credit purchase/PayOS/Code Lab/Judge0): BF-01 subject/class/enrollment, BF-02 reference materials, BF-03 Assignment authoring/publication, BF-04 individual work with activity recording, BF-05 group work with per-member activity, BF-06 Quiz, BF-07 grading with human activity review, BF-08 AI source selection and usage transparency (replaces AI Credit Purchase), BF-09 Google Drive backup and restore verification, BF-10 important-event notification/email. Every activity/decision numbered; System lane limited to automated processing; modeling-convention note printed on each diagram; README rewritten with convention, council coverage map and per-flow activity tables. Old BF files with obsolete names removed; PNG exports regenerated.
 
 **Validation**: Generator checks passed for all 10 flows (no connector through a shape, no connector crossings, no port used for both in and out); draw.io XML parses (10 pages combined); README tables/links checked. Documentation-only; no code, AS-IS survey, use case diagram or Report edits; no commit.
-
----
-
-## 2026-10-15T01:00:00Z — Business flow labels shortened
-
-**User Input**: "viết ngắn gọn, súc tích hơn" (with screenshots of BF-06 activity 1 and decision 5)
-
-**AI Response**: Shortened every activity, decision, start/end and branch label in BF-01..BF-10 to short verb-object phrases (e.g. "Build Quiz", "Attempt allowed?", "Create attempt, log page leaves"); full wording kept in the README activity tables (Description column). Reduced node, lane and column sizes accordingly; regenerated draw.io files, PNG exports and README. Layout checks passed for all 10 flows. No commit.
-
----
-
-## 2026-10-15T01:20:00Z — Business flow edge labels and spacing
-
-**User Input**: "chữ Yes đang bị quá sát, chỉnh lại để 2 ô không quá sát nhau, nhãn không che mất mũi tên" (with screenshot of BF-01 decisions 5 and 8)
-
-**AI Response**: Widened columns (gap between a decision and the next activity about 33 px to 57 px) and moved every branch label off its connector: above horizontal segments, beside vertical segments, with no background box covering the line. Regenerated BF-01..BF-10 draw.io files, PNG exports and README; layout checks passed. No commit.
-
----
-
-## 2026-10-15T02:00:00Z — Business flows resized for document readability
-
-**User Input**: "phóng to font chữ và thu hẹp khoảng cách lại để có thể nhìn rõ trên doc mà không cần zoom (giống trong ảnh)" (with screenshot of the earlier BF-01/BF-02 in the report)
-
-**AI Response**: Increased fonts (activities 18 px, lanes 18, events 16, branch labels 15, note 15) and compacted layouts: narrower lane headers, columns merged automatically where the layout stays valid, and redundant consecutive System steps merged (BF-02 store+save, BF-03 lock+open+notify, BF-04 confirm folded into "Ready to submit?", BF-05 leader submit folded into "Ready to submit?", BF-09 save+wait and restore+verify). Activities renumbered in flow order; back-references in descriptions and README coverage table updated automatically. Shortened long lane names. Added a check that rejects connectors running inside their own source/target. Regenerated draw.io files, PNG exports and README; all 10 flows pass layout checks. No commit.
-
----
-
-## 2026-10-15T03:00:00Z — Business flow text fit and draw.io rendering fixes
-
-**User Input**: "không được để chữ tràn ra khỏi ô" (with draw.io screenshots of BF-06 decision 5 and BF-07 decisions 4/6)
-
-**AI Response**: Enlarged decision diamonds (150x104) with draw.io-matching inner padding and 14 px text; tasks 140x86. Added a fit check using conservative character widths (tasks at most 3 lines, decisions at most 2 lines) and shortened two labels ("Content valid?", "Needs follow-up?"). Found and fixed duplicate cell ids (edge ids e1/e2 collided with End event ids), which made draw.io drop some connectors. Loop labels on lane-edge channels moved off short segments. PNG exports are now rendered with the official draw.io viewer, so they match draw.io exactly. No commit.
-
----
-
-## 2026-10-15T03:20:00Z — BF-10 retry label fix
-
-**User Input**: "BF10 chữ No, retry vẫn đang lỗi"
-
-**AI Response**: Branch labels on horizontal segments are now placed at least half their width plus a margin away from the corner, so longer labels such as "No, retry" no longer overlap the vertical part of the connector. Regenerated all draw.io files and PNG exports (draw.io viewer). No commit.
-
----
-
-## 2026-10-16T00:00:00Z — Review and commit of business flow revision
-
-**User Input**: "kiểm tra lại các thay đổi hiện tại xem đã hợp lí chưa, viêt commit, chưa push vội"
-
-**AI Response**: Reviewed staged changes: 10 draw.io files plus combined file, 10 PNG exports and README are consistent (layout checks and text-fit checks pass, no duplicate cell ids, README matches generator output, step references valid). Synced README Trigger/End condition wording with the concise text provided for the report. Committed locally; not pushed.
 
 ---
 
