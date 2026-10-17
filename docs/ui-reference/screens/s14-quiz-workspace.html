@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>#44 · Quiz Taking — Làm Quiz</title>
+<link rel="stylesheet" href="../css/s14-quiz-workspace.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap">
+<style>
+body{margin:0}
+body {
+font-family: 'Be Vietnam Pro', sans-serif;
+}
+.material-symbols-outlined {
+font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+display: inline-block;
+vertical-align: middle;
+line-height: 1;
+}
+.material-symbols-outlined.fill-icon {
+font-variation-settings: 'FILL' 1;
+}
+/* type scale: page title 18px, min text 12px */
+h1{font-size:18px!important;line-height:1.3!important;font-weight:700!important}
+.text-\[10px\]{font-size:11px!important}
+.text-\[11px\]{font-size:12px!important}
+td .inline-flex{white-space:nowrap}
+</style>
+
+</head>
+<body>
+<div class="light bg-surface-container-low text-on-surface min-h-screen flex flex-col antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<header class="h-16 w-full bg-white border-b border-[#E8EBF2] px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+<a class="flex items-center gap-3" href="#">
+<span class="w-9 h-9 rounded-xl bg-[#2F45B5] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">school</span></span>
+<span class="text-[17px] font-bold text-[#0F172A] tracking-tight">Nền tảng học tập</span>
+</a>
+<nav aria-label="Thanh điều hướng" class="flex items-center gap-2">
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] transition-colors text-[#475069] hover:bg-[#F4F6FB] hover:text-[#0F172A] font-medium" href="#"><span class="material-symbols-outlined text-[18px]">smart_toy</span><span>Kết nối AI</span></a>
+<button aria-label="Thông báo, 3 chưa đọc" type="button" style="position:relative;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475069;background:transparent;border:0;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px;line-height:1">notifications</span><span style="position:absolute;top:5px;right:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C93535;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center">3</span></button>
+<a class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 ml-1 rounded-xl transition-colors hover:bg-[#F4F6FB]" href="#" title="Hồ sơ">
+<span class="w-8 h-8 rounded-full font-bold text-[12px] flex items-center justify-center" style="background:#EAEDFB;color:#2F45B5">MT</span>
+<span class="flex flex-col text-left leading-tight"><span class="text-[13px] font-semibold text-[#0F172A]">Võ Minh Tài</span><span class="text-[11px] text-[#64708A]">Sinh viên</span></span>
+</a>
+<a aria-label="Đăng xuất" href="#" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#B42B2B;text-decoration:none"><span class="material-symbols-outlined" style="font-size:18px;line-height:1">logout</span><span>Đăng xuất</span></a>
+</nav>
+</header>
+<div class="w-full bg-surface-container-lowest border-b border-outline-variant/40 shadow-sm">
+<div class="w-full max-w-[1280px] mx-auto px-6 h-14 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="inline-flex items-center gap-1.5 text-secondary hover:text-on-surface text-[13px] font-medium transition-colors group" type="button">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform" data-icon="arrow_back">arrow_back</span>
+<span>Thóat</span>
+</button>
+<div class="h-4 w-px bg-outline-variant/60"></div>
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] font-semibold" data-icon="quiz">quiz</span>
+</div>
+<h1 class="font-headline text-[15px] font-bold text-on-surface tracking-tight">Quiz chương 3 — Thiết kế hướng đối tượng</h1>
+<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-surface-container text-secondary border border-outline-variant/40">
+            Practice
+          </span>
+</div>
+<div class="h-4 w-px bg-outline-variant/60 hidden sm:block"></div>
+<div class="hidden sm:flex items-center gap-1.5 text-secondary text-[12px]">
+<span class="material-symbols-outlined text-[16px] text-secondary/80" data-icon="cloud_done">cloud_done</span>
+<span>Tự động lưu</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200/80 px-3 py-1.5 rounded-lg text-[13px] font-bold">
+<span class="material-symbols-outlined text-[17px] text-amber-700" data-icon="schedule">schedule</span>
+<span>Còn 14:32</span>
+</div>
+<button class="bg-primary-container hover:bg-primary text-on-primary text-[13px] font-semibold px-5 py-2 rounded-lg transition-colors active:scale-[0.98] shadow-sm" type="button">
+          Nộp bài
+        </button>
+</div>
+</div>
+</div>
+<main class="w-full flex-1 max-w-[1280px] mx-auto px-6 py-6">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<section class="lg:col-span-9 bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-7 flex flex-col justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)] min-h-[580px]">
+<div>
+<div class="flex items-center justify-between pb-2">
+<span class="text-[13px] font-bold text-primary-container tracking-wide uppercase">Câu 4 / 6</span>
+<span class="text-[12px] text-secondary font-medium">Một đáp án đúng · 1 điểm</span>
+</div>
+<h2 class="font-headline text-[18px] font-bold text-on-surface leading-snug my-4">
+            Quan hệ nào biểu diễn “là một” giữa hai lớp?
+          </h2>
+<div class="h-px w-full bg-outline-variant/30 mb-6"></div>
+<fieldset aria-label="Danh sách các phương án trả lời" class="space-y-3.5" role="radiogroup">
+<legend class="sr-only">Các phương án đáp án cho câu hỏi 4</legend>
+<label class="group relative flex items-center p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low hover:border-outline cursor-pointer transition-all">
+<input class="sr-only" name="quiz_q4" type="radio" value="A"/>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant group-hover:border-outline flex items-center justify-center mr-3.5 transition-colors">
+<div class="w-2.5 h-2.5 rounded-full bg-transparent"></div>
+</div>
+<span class="text-[14px] text-on-surface font-normal">A. Kết hợp (Association)</span>
+</label>
+<label class="relative flex items-center p-4 rounded-xl border-2 border-primary-container bg-primary-fixed/20 shadow-sm cursor-pointer transition-all">
+<input checked="checked" class="sr-only" name="quiz_q4" type="radio" value="B"/>
+<div class="w-5 h-5 rounded-full border-2 border-primary-container flex items-center justify-center mr-3.5">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container"></div>
+</div>
+<span class="text-[14px] text-on-surface font-bold">B. Kế thừa (Inheritance)</span>
+</label>
+<label class="group relative flex items-center p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low hover:border-outline cursor-pointer transition-all">
+<input class="sr-only" name="quiz_q4" type="radio" value="C"/>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant group-hover:border-outline flex items-center justify-center mr-3.5 transition-colors">
+<div class="w-2.5 h-2.5 rounded-full bg-transparent"></div>
+</div>
+<span class="text-[14px] text-on-surface font-normal">C. Phụ thuộc (Dependency)</span>
+</label>
+<label class="group relative flex items-center p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low hover:border-outline cursor-pointer transition-all">
+<input class="sr-only" name="quiz_q4" type="radio" value="D"/>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant group-hover:border-outline flex items-center justify-center mr-3.5 transition-colors">
+<div class="w-2.5 h-2.5 rounded-full bg-transparent"></div>
+</div>
+<span class="text-[14px] text-on-surface font-normal">D. Hợp thành (Composition)</span>
+</label>
+</fieldset>
+</div>
+<div class="pt-8 border-t border-outline-variant/30 flex items-center justify-between mt-6">
+<button class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-outline-variant/70 bg-surface-container-lowest text-on-surface font-medium text-[13px] hover:bg-surface-container-low transition-colors active:scale-[0.98]" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="chevron_left">chevron_left</span>
+<span>Câu trước</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-semibold text-[13px] transition-colors shadow-sm active:scale-[0.98]" type="button">
+<span>Câu tiếp</span>
+<span class="material-symbols-outlined text-[18px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<aside class="lg:col-span-3 space-y-4">
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline text-[14px] font-bold text-on-surface">Danh sách câu</h3>
+<span class="text-[12px] text-secondary font-medium">3/6 đã làm</span>
+</div>
+<div aria-label="Bộ điều hướng câu hỏi" class="grid grid-cols-3 gap-2.5" role="navigation">
+<button class="h-11 rounded-lg bg-primary-container text-on-primary font-bold text-[13px] flex items-center justify-center hover:opacity-95 transition-opacity" title="Câu 1: Đã làm" type="button">
+              1
+            </button>
+<button class="h-11 rounded-lg bg-primary-container text-on-primary font-bold text-[13px] flex items-center justify-center hover:opacity-95 transition-opacity" title="Câu 2: Đã làm" type="button">
+              2
+            </button>
+<button class="h-11 rounded-lg bg-primary-container text-on-primary font-bold text-[13px] flex items-center justify-center hover:opacity-95 transition-opacity" title="Câu 3: Đã làm" type="button">
+              3
+            </button>
+<button class="h-11 rounded-lg border-2 border-primary-container bg-surface-container-lowest text-primary-container font-extrabold text-[14px] flex items-center justify-center ring-2 ring-primary-fixed" title="Câu 4: Đang làm" type="button">
+              4
+            </button>
+<button class="h-11 rounded-lg bg-surface-container text-secondary font-semibold text-[13px] flex items-center justify-center hover:bg-surface-container-high transition-colors" title="Câu 5: Chưa làm" type="button">
+              5
+            </button>
+<button class="h-11 rounded-lg bg-surface-container text-secondary font-semibold text-[13px] flex items-center justify-center hover:bg-surface-container-high transition-colors" title="Câu 6: Chưa làm" type="button">
+              6
+            </button>
+</div>
+<div class="h-px w-full bg-outline-variant/30 my-4"></div>
+<div></div>
+</div>
+<div class="bg-surface-container/60 rounded-xl p-4 border border-outline-variant/30 text-[12px] text-secondary space-y-2">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-sm bg-primary-container"></span>
+<span>Đã hoàn thành (3)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-sm border-2 border-primary-container bg-white"></span>
+<span>Đang trả lời (1)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-sm bg-surface-container border border-outline-variant/40"></span>
+<span>Chưa trả lời (2)</span>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<footer class="w-full bg-surface-container-lowest border-t border-outline-variant/40 mt-auto">
+<div class="w-full max-w-[1280px] mx-auto px-6 h-12 flex items-center justify-start">
+<p class="font-body text-[12px] text-secondary">
+        © 2026 Nền tảng học tập
+      </p>
+</div>
+</footer>
+</div>
+</body>
+</html>

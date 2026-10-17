@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>#17 · Manager Dashboard — Tổng quan môn phụ trách</title>
+<link rel="stylesheet" href="../css/m11-manager-dashboard.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap">
+<style>
+body{margin:0}
+body {
+font-family: 'Be Vietnam Pro', sans-serif;
+}
+.material-symbols-outlined {
+font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+/* type scale: page title 24px, min text 12px */
+h1{font-size:24px!important;line-height:1.3!important;font-weight:700!important}
+.text-\[10px\]{font-size:11px!important}
+.text-\[11px\]{font-size:12px!important}
+td .inline-flex{white-space:nowrap}
+</style>
+
+</head>
+<body>
+<div class="bg-background text-on-surface min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-primary">
+<header class="h-16 w-full bg-white border-b border-[#E8EBF2] px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+<a class="flex items-center gap-3" href="#">
+<span class="w-9 h-9 rounded-xl bg-[#2F45B5] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">school</span></span>
+<span class="text-[17px] font-bold text-[#0F172A] tracking-tight">Nền tảng học tập</span>
+</a>
+<nav aria-label="Thanh điều hướng" class="flex items-center gap-2">
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] transition-colors text-[#475069] hover:bg-[#F4F6FB] hover:text-[#0F172A] font-medium" href="#"><span class="material-symbols-outlined text-[18px]">smart_toy</span><span>Kết nối AI</span></a>
+<button aria-label="Thông báo, 3 chưa đọc" type="button" style="position:relative;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475069;background:transparent;border:0;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px;line-height:1">notifications</span><span style="position:absolute;top:5px;right:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C93535;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center">3</span></button>
+<a class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 ml-1 rounded-xl transition-colors hover:bg-[#F4F6FB]" href="#" title="Hồ sơ">
+<span class="w-8 h-8 rounded-full font-bold text-[12px] flex items-center justify-center" style="background:#F3ECF8;color:#7A3E8F">TH</span>
+<span class="flex flex-col text-left leading-tight"><span class="text-[13px] font-semibold text-[#0F172A]">Trần Thị Hoa</span><span class="text-[11px] text-[#64708A]">Chủ nhiệm môn</span></span>
+</a>
+<a aria-label="Đăng xuất" href="#" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#B42B2B;text-decoration:none"><span class="material-symbols-outlined" style="font-size:18px;line-height:1">logout</span><span>Đăng xuất</span></a>
+</nav>
+</header>
+<div class="flex flex-1 w-full max-w-[1440px] mx-auto">
+<aside class="w-[236px] shrink-0 bg-white border-r border-[#E8EBF2] flex flex-col justify-between py-5 px-3">
+<nav aria-label="Menu Chủ nhiệm môn" class="flex flex-col">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#2F45B5] text-white text-[13px] font-semibold shadow-sm" href="#" aria-current="page"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">space_dashboard</span><span>Tổng quan</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">menu_book</span><span>Môn học của tôi</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">help_center</span><span>Ngân hàng câu hỏi</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">quiz</span><span>Quiz</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">folder_open</span><span>Học liệu</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">assignment</span><span>Bài tập</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">groups</span><span>Lớp học</span></a>
+<div style="margin:12px 14px 4px;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#98A0B2;text-transform:uppercase">Giảng dạy</div><a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">class</span><span>Lớp được phân công</span></a>
+</div>
+</nav>
+</aside>
+<main style="flex:1;min-width:0;padding:28px 32px 40px;display:flex;flex-direction:column;gap:20px;background:#F7F9FE"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;"><div style="min-width:0"><h1 style="margin:0;font-size:24px;line-height:1.3;font-weight:700;color:#0F172A;letter-spacing:-.01em;display:flex;align-items:center;gap:10px">Tổng quan</h1><div style="font-size:13px;color:#64708A;margin-top:4px">Các môn bạn phụ trách</div></div></div><div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;"></div></div><div style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:11px;background:#EAEDFB;color:#2F45B5;font-size:12.5px;line-height:1.5"><span style="display:inline-flex;margin-top:1px"><span class="material-symbols-outlined" style="font-size:18px;line-height:1;vertical-align:middle">info</span></span><div style="min-width:0">Bạn đang dạy 1 lớp: <b>SE1805 · SWP391</b>. Bài nộp và chấm điểm của lớp nằm ở mục Lớp được phân công.</div><div style="margin-left:auto;flex-shrink:0"><button type="button" style="background:#EAEDFB;color:#2F45B5;border:1px solid #EAEDFB;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:5px 10px;border-radius:9px;font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer"><span class="material-symbols-outlined" style="font-size:16px;line-height:1;vertical-align:middle">arrow_forward</span>Mở Lớp được phân công</button></div></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;"><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:84px;background:linear-gradient(135deg,#2F45B5,#7B4282);padding:14px 16px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">SWP391</span></div><div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="font-size:15px;font-weight:700;color:#0F172A">Software Development Project</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#64708A;background:#EEF1F6;white-space:nowrap">Nháp</span> <b style="font-size:12px">1</b> <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#1C7A4A;background:#E7F6EE;white-space:nowrap">Đang mở</span> <b style="font-size:12px">6</b> <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">Lưu trữ</span> <b style="font-size:12px">1</b></div><div style="font-size:12px;color:#64708A">26 học liệu · 120 câu hỏi · 4 quiz · 12 bài tập</div><div style="border-top:1px solid #F1F3F8;padding-top:10px"><a href="#" style="display:inline-flex;align-items:center;gap:4px;color:#2F45B5;font-size:12px;font-weight:600;text-decoration:none">Truy cập quản lý môn<span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">arrow_forward</span></a></div></div></div><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:84px;background:linear-gradient(135deg,#0F172A,#475069);padding:14px 16px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">SWR302</span></div><div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="font-size:15px;font-weight:700;color:#0F172A">Software Requirements</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#64708A;background:#EEF1F6;white-space:nowrap">Nháp</span> <b style="font-size:12px">0</b> <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#1C7A4A;background:#E7F6EE;white-space:nowrap">Đang mở</span> <b style="font-size:12px">5</b> <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">Lưu trữ</span> <b style="font-size:12px">0</b></div><div style="font-size:12px;color:#64708A">18 học liệu · 64 câu hỏi · 2 quiz · 6 bài tập</div><div style="border-top:1px solid #F1F3F8;padding-top:10px"><a href="#" style="display:inline-flex;align-items:center;gap:4px;color:#2F45B5;font-size:12px;font-weight:600;text-decoration:none">Truy cập quản lý môn<span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">arrow_forward</span></a></div></div></div></div></main>
+</div>
+<footer class="h-11 w-full bg-surface-container-lowest border-t border-surface-variant flex items-center justify-between px-8 text-xs text-secondary shrink-0 z-40"><div>© 2026 Nền tảng học tập</div></footer>
+</div>
+</body>
+</html>

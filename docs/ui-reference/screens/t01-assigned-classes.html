@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>#30 · Class Dashboard — Giảng viên · Lớp được phân công</title>
+<link rel="stylesheet" href="../css/t01-assigned-classes.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+body {
+font-family: 'Be Vietnam Pro', sans-serif;
+-webkit-font-smoothing: antialiased;
+}
+/* Gradients matching SCREEN_4 card banners */
+.bg-gradient-swp {
+background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+.bg-gradient-prn {
+background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+.bg-gradient-swt {
+background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+}
+.bg-gradient-swd {
+background: linear-gradient(135deg, #334155 0%, #1e1b4b 100%);
+}
+/* type scale: page title 24px, min text 12px */
+h1{font-size:24px!important;line-height:1.3!important;font-weight:700!important}
+.text-\[10px\]{font-size:11px!important}
+.text-\[11px\]{font-size:12px!important}
+td .inline-flex{white-space:nowrap}
+</style>
+
+</head>
+<body>
+<div class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brand-100 selection:text-brand-700">
+<header class="h-16 w-full bg-white border-b border-[#E8EBF2] px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+<a class="flex items-center gap-3" href="#">
+<span class="w-9 h-9 rounded-xl bg-[#2F45B5] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">school</span></span>
+<span class="text-[17px] font-bold text-[#0F172A] tracking-tight">Nền tảng học tập</span>
+</a>
+<nav aria-label="Thanh điều hướng" class="flex items-center gap-2">
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] transition-colors text-[#475069] hover:bg-[#F4F6FB] hover:text-[#0F172A] font-medium" href="#"><span class="material-symbols-outlined text-[18px]">smart_toy</span><span>Kết nối AI</span></a>
+<button aria-label="Thông báo, 3 chưa đọc" type="button" style="position:relative;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475069;background:transparent;border:0;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px;line-height:1">notifications</span><span style="position:absolute;top:5px;right:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C93535;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center">3</span></button>
+<a class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 ml-1 rounded-xl transition-colors hover:bg-[#F4F6FB]" href="#" title="Hồ sơ">
+<span class="w-8 h-8 rounded-full font-bold text-[12px] flex items-center justify-center" style="background:#E7F6EE;color:#1C7A4A">KN</span>
+<span class="flex flex-col text-left leading-tight"><span class="text-[13px] font-semibold text-[#0F172A]">KienNT</span><span class="text-[11px] text-[#64708A]">Giảng viên</span></span>
+</a>
+<a aria-label="Đăng xuất" href="#" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#B42B2B;text-decoration:none"><span class="material-symbols-outlined" style="font-size:18px;line-height:1">logout</span><span>Đăng xuất</span></a>
+</nav>
+</header>
+<div class="flex flex-1 overflow-hidden" data-purpose="page-layout-container">
+<aside class="w-[236px] shrink-0 bg-white border-r border-[#E8EBF2] flex flex-col justify-between py-5 px-3">
+<nav aria-label="Menu Giảng viên" class="flex flex-col">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#2F45B5] text-white text-[13px] font-semibold shadow-sm" href="#" aria-current="page"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">class</span><span>Lớp được phân công</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">campaign</span><span>Thông báo lớp</span></a>
+</div>
+</nav>
+</aside>
+<main style="flex:1;min-width:0;padding:28px 32px 40px;display:flex;flex-direction:column;gap:20px;background:#F7F9FE"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;"><div style="min-width:0"><h1 style="margin:0;font-size:24px;line-height:1.3;font-weight:700;color:#0F172A;letter-spacing:-.01em;display:flex;align-items:center;gap:10px">Lớp được phân công</h1></div></div><div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;"></div></div><div style="display:flex;gap:26px;border-bottom:1px solid #E8EBF2;"><span style="padding:0 2px 11px;font-size:14px;font-weight:500;color:#64708A;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;cursor:pointer">Sắp mở <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:#EEF1F6;color:#64708A">1</span></span><span style="padding:0 2px 11px;font-size:14px;font-weight:700;color:#2F45B5;border-bottom:2px solid #2F45B5;margin-bottom:-1px;white-space:nowrap;cursor:pointer">Đang dạy <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:#EAEDFB;color:#2F45B5">4</span></span><span style="padding:0 2px 11px;font-size:14px;font-weight:500;color:#64708A;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;cursor:pointer">Đã kết thúc <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:#EEF1F6;color:#64708A">6</span></span></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start;"><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:78px;background:linear-gradient(135deg,#5B5BD6,#8E4FD8);padding:12px 14px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">SWP391</span></div><div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Software Development Project</div><div style="font-size:12px;color:#64708A">Lớp SE1801 · Học kỳ 2026-1</div><div style="font-size:12px;color:#475069;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">group</span> 32 sinh viên</div></div></div><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:78px;background:linear-gradient(135deg,#0E9F6E,#16B39A);padding:12px 14px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">PRN231</span></div><div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Cross-Platform Back-End with .NET</div><div style="font-size:12px;color:#64708A">Lớp SE1702 · Học kỳ 2026-1</div><div style="font-size:12px;color:#475069;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">group</span> 28 sinh viên</div></div></div><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:78px;background:linear-gradient(135deg,#1A7FA6,#22B5E0);padding:12px 14px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">SWT301</span></div><div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Software Testing</div><div style="font-size:12px;color:#64708A">Lớp SE1803 · Học kỳ 2026-1</div><div style="font-size:12px;color:#475069;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">group</span> 30 sinh viên</div></div></div><div style="background:#fff;border:1px solid #E8EBF2;border-radius:16px;overflow:hidden"><div style="height:78px;background:linear-gradient(135deg,#1E293B,#475569);padding:12px 14px;box-sizing:border-box"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;color:#2F45B5;background:#EAEDFB;white-space:nowrap">SWD392</span></div><div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Software Architecture and Design</div><div style="font-size:12px;color:#64708A">Lớp SE1805 · Học kỳ 2026-1</div><div style="font-size:12px;color:#475069;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:15px;line-height:1;vertical-align:middle">group</span> 30 sinh viên</div></div></div></div></main>
+</div>
+<footer class="h-12 bg-white border-t border-slate-200 px-8 flex items-center justify-between text-xs text-slate-500 flex-shrink-0" data-purpose="global-footer"><div>
+<span>© 2026 Nền tảng học tập</span>
+</div></footer>
+</div>
+</body>
+</html>

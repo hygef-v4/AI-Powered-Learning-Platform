@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>#42 · Quiz Practice History — Luyện tập Quiz</title>
+<link rel="stylesheet" href="../css/s20-quiz-practice-history.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+body{margin:0}
+body {
+font-family: 'Be Vietnam Pro', sans-serif;
+}
+.material-symbols-outlined {
+font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+.material-symbols-outlined.fill {
+font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+/* type scale: page title 24px, min text 12px */
+h1{font-size:24px!important;line-height:1.3!important;font-weight:700!important}
+.text-\[10px\]{font-size:11px!important}
+.text-\[11px\]{font-size:12px!important}
+td .inline-flex{white-space:nowrap}
+</style>
+
+</head>
+<body>
+<div class="bg-[#F4F6FB] text-slate-800 min-h-screen flex flex-col antialiased">
+<header class="h-16 w-full bg-white border-b border-[#E8EBF2] px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+<a class="flex items-center gap-3" href="#">
+<span class="w-9 h-9 rounded-xl bg-[#2F45B5] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">school</span></span>
+<span class="text-[17px] font-bold text-[#0F172A] tracking-tight">Nền tảng học tập</span>
+</a>
+<nav aria-label="Thanh điều hướng" class="flex items-center gap-2">
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] transition-colors text-[#475069] hover:bg-[#F4F6FB] hover:text-[#0F172A] font-medium" href="#"><span class="material-symbols-outlined text-[18px]">smart_toy</span><span>Kết nối AI</span></a>
+<button aria-label="Thông báo, 3 chưa đọc" type="button" style="position:relative;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475069;background:transparent;border:0;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px;line-height:1">notifications</span><span style="position:absolute;top:5px;right:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C93535;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center">3</span></button>
+<a class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 ml-1 rounded-xl transition-colors hover:bg-[#F4F6FB]" href="#" title="Hồ sơ">
+<span class="w-8 h-8 rounded-full font-bold text-[12px] flex items-center justify-center" style="background:#EAEDFB;color:#2F45B5">MT</span>
+<span class="flex flex-col text-left leading-tight"><span class="text-[13px] font-semibold text-[#0F172A]">Võ Minh Tài</span><span class="text-[11px] text-[#64708A]">Sinh viên</span></span>
+</a>
+<a aria-label="Đăng xuất" href="#" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#B42B2B;text-decoration:none"><span class="material-symbols-outlined" style="font-size:18px;line-height:1">logout</span><span>Đăng xuất</span></a>
+</nav>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-[236px] shrink-0 bg-white border-r border-[#E8EBF2] flex flex-col justify-between py-5 px-3">
+<nav aria-label="Menu Sinh viên" class="flex flex-col">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">school</span><span>Lớp của tôi</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">assignment</span><span>Bài tập</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#2F45B5] text-white text-[13px] font-semibold shadow-sm" href="#" aria-current="page"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">quiz</span><span>Luyện tập Quiz</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">campaign</span><span>Thông báo lớp</span></a>
+</div>
+</nav>
+</aside>
+<main class="flex-1 overflow-y-auto px-8 py-7">
+<div class="max-w-[1000px]">
+<div class="flex items-start justify-between mb-6">
+<div>
+<h1 class="text-xl font-bold text-slate-900 tracking-tight">Luyện tập Quiz</h1>
+<p class="text-xs text-slate-500 mt-1">Quiz Practice không tính vào sổ điểm</p>
+</div>
+<div class="relative">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 hover:border-slate-300 shadow-sm transition">
+<span>Lớp: Tất cả</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400">expand_more</span>
+</button>
+</div>
+</div>
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-slate-100 bg-slate-50/70 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+<th class="py-3 px-5">Quiz</th>
+<th class="py-3 px-4">Lớp</th>
+<th class="py-3 px-4 text-center">Số lần làm</th>
+<th class="py-3 px-4 text-center">Điểm cao nhất</th>
+<th class="py-3 px-4 text-center">Lần gần nhất</th>
+<th class="py-3 px-5 text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 text-xs">
+<tr class="hover:bg-slate-50/60 transition group">
+<td class="py-4 px-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+<div>
+<div class="font-semibold text-slate-900 group-hover:text-[#2F45B5] transition">Quiz chương 2 — Phân tích yêu cầu</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-medium text-slate-600">SWP391</td>
+<td class="py-4 px-4 text-center font-medium text-slate-700">3</td>
+<td class="py-4 px-4 text-center">
+<span class="inline-flex items-center justify-center font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-100">8/10</span>
+</td>
+<td class="py-4 px-4 text-center text-slate-500">05/10</td>
+<td class="py-4 px-5 text-right">
+<button class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                    Xem
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/60 transition group">
+<td class="py-4 px-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+<div>
+<div class="font-semibold text-slate-900 group-hover:text-[#2F45B5] transition">Quiz chương 3 — Thiết kế hướng đối tượng</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-medium text-slate-600">SWP391</td>
+<td class="py-4 px-4 text-center font-medium text-slate-700">1</td>
+<td class="py-4 px-4 text-center">
+<span class="inline-flex items-center justify-center font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-xs">6/10</span>
+</td>
+<td class="py-4 px-4 text-center text-slate-500">06/10</td>
+<td class="py-4 px-5 text-right">
+<button class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                    Xem
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/60 transition group">
+<td class="py-4 px-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">quiz</span>
+</div>
+<div>
+<div class="font-semibold text-slate-900 group-hover:text-[#2F45B5] transition">Quiz kỹ thuật kiểm thử hộp đen</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 font-medium text-slate-600">SWT301</td>
+<td class="py-4 px-4 text-center font-medium text-slate-400">0</td>
+<td class="py-4 px-4 text-center font-medium text-slate-400">—</td>
+<td class="py-4 px-4 text-center font-medium text-slate-400">—</td>
+<td class="py-4 px-5 text-right">
+<button class="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#2F45B5] hover:bg-[#263794] rounded-lg transition shadow-sm">
+                    Bắt đầu
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<footer class="h-10 border-t border-slate-200 bg-white flex items-center px-6 text-[12px] text-slate-400 flex-shrink-0">
+<div>© 2026 Nền tảng học tập</div>
+</footer>
+</div>
+</body>
+</html>

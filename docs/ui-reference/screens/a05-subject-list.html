@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>#15 · Subject List — Danh sách môn học</title>
+<link rel="stylesheet" href="../css/a05-subject-list.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap">
+<style>
+body{margin:0}
+.material-symbols-outlined {
+font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+font-size: 20px;
+display: inline-block;
+vertical-align: middle;
+line-height: 1;
+}
+.material-symbols-outlined.fill {
+font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+/* type scale: page title 24px, min text 12px */
+h1{font-size:24px!important;line-height:1.3!important;font-weight:700!important}
+.text-\[10px\]{font-size:11px!important}
+.text-\[11px\]{font-size:12px!important}
+td .inline-flex{white-space:nowrap}
+</style>
+
+</head>
+<body>
+<div class="bg-background text-on-surface font-body antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-primary">
+<header class="h-16 w-full bg-white border-b border-[#E8EBF2] px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+<a class="flex items-center gap-3" href="#">
+<span class="w-9 h-9 rounded-xl bg-[#2F45B5] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">school</span></span>
+<span class="text-[17px] font-bold text-[#0F172A] tracking-tight">Nền tảng học tập</span>
+</a>
+<nav aria-label="Thanh điều hướng" class="flex items-center gap-2">
+<button aria-label="Thông báo, 3 chưa đọc" type="button" style="position:relative;width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475069;background:transparent;border:0;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px;line-height:1">notifications</span><span style="position:absolute;top:5px;right:5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C93535;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center">3</span></button>
+<a class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 ml-1 rounded-xl transition-colors hover:bg-[#F4F6FB]" href="#" title="Hồ sơ">
+<span class="w-8 h-8 rounded-full font-bold text-[12px] flex items-center justify-center" style="background:#FFEDD5;color:#C2410C">PĐ</span>
+<span class="flex flex-col text-left leading-tight"><span class="text-[13px] font-semibold text-[#0F172A]">Phòng Đào tạo</span><span class="text-[11px] text-[#64708A]">Quản trị viên</span></span>
+</a>
+<a aria-label="Đăng xuất" href="#" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#B42B2B;text-decoration:none"><span class="material-symbols-outlined" style="font-size:18px;line-height:1">logout</span><span>Đăng xuất</span></a>
+</nav>
+</header>
+<div class="w-full flex-1 flex">
+<aside class="w-[236px] shrink-0 bg-white border-r border-[#E8EBF2] flex flex-col justify-between py-5 px-3">
+<nav aria-label="Menu Quản trị viên" class="flex flex-col">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">monitoring</span><span>Tổng quan</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">tune</span><span>Cài đặt</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">group</span><span>Tài khoản</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#2F45B5] text-white text-[13px] font-semibold shadow-sm" href="#" aria-current="page"><span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">menu_book</span><span>Môn học</span></a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[#475069] hover:text-[#0F172A] hover:bg-[#F4F6FB] text-[13px] font-medium transition-colors" href="#"><span class="material-symbols-outlined text-[20px] text-[#64708A]">history</span><span>Nhật ký audit</span></a>
+</div>
+</nav>
+</aside>
+<main class="flex-1 min-w-0 px-8 py-7">
+<div class="flex items-end justify-between pb-6">
+<div>
+<h1 class="text-[24px] font-bold text-on-surface tracking-tight leading-tight">Môn học</h1>
+<p class="text-[13px] font-medium text-secondary mt-0.5">18 môn</p>
+</div>
+<button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-primary text-on-primary font-medium text-[13px] shadow-sm hover:bg-primary/95 active:scale-[0.98] transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Thêm môn học</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-4">
+<button class="px-3.5 py-1.5 rounded-full bg-on-surface text-surface-container-lowest font-medium text-[12px] shadow-xs cursor-pointer" type="button">
+          Đang hoạt động
+        </button>
+<button class="px-3.5 py-1.5 rounded-full bg-surface-container-high/60 text-secondary hover:text-on-surface hover:bg-surface-container-high font-medium text-[12px] transition-colors cursor-pointer" type="button">
+          Đã lưu trữ
+        </button>
+<div style="margin-left:auto"><label style="display:flex;align-items:center;gap:8px;height:38px;width:260px;padding:0 12px;box-sizing:border-box;border:1px solid #E2E6EF;border-radius:10px;background:#fff;color:#64708A"><span class="material-symbols-outlined" style="font-size:18px">search</span><input type="text" placeholder="Tìm theo mã hoặc tên môn" style="flex:1;min-width:0;border:0;outline:0;padding:0;box-shadow:none;background:transparent;font:inherit;font-size:13px;color:#0F172A"></label></div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-[18px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#F7F8FC] border-b border-outline-variant text-[11px] font-semibold text-secondary uppercase tracking-wider">
+<th class="py-3 px-6 w-[120px]" scope="col">MÃ MÔN</th>
+<th class="py-3 px-6" scope="col">TÊN MÔN</th>
+<th class="py-3 px-6 w-[230px]" scope="col">CHỦ NHIỆM MÔN</th>
+<th class="py-3 px-6 text-center w-[100px]" scope="col">SỐ LỚP</th>
+<th class="py-3 px-6 w-[140px]" scope="col">TRẠNG THÁI</th>
+<th class="py-3 pr-6 pl-2 text-right w-[48px]" scope="col">
+<span class="sr-only">Hành động</span>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/60 text-[13px]">
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  SWP391
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Software Development Project
+                  </a>
+</td>
+<td class="py-3.5 px-6 text-on-surface font-normal">
+                  Trần Thị Hoa
+                </td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  8
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học SWP391" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  SWD392
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Software Architecture and Design
+                  </a>
+</td>
+<td class="py-3.5 px-6 text-on-surface font-normal">
+                  Phạm Minh Đức
+                </td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  6
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học SWD392" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  SWT301
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Software Testing
+                  </a>
+</td>
+<td class="py-3.5 px-6 text-on-surface font-normal">
+                  Ngô Thị Lan
+                </td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  5
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học SWT301" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  PRN231
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Cross-Platform Back-End with .NET
+                  </a>
+</td>
+<td class="py-3.5 px-6">
+<span class="inline-block px-2.5 py-0.5 rounded-[7px] bg-[#F1F3F8] text-[#475069] text-[11px] font-medium">
+                    Chưa phân công
+                  </span>
+</td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  4
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học PRN231" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  MLN111
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Philosophy of Marxism–Leninism
+                  </a>
+</td>
+<td class="py-3.5 px-6 text-on-surface font-normal">
+                  Lý Văn Sơn
+                </td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  10
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học MLN111" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/60 transition-colors group h-[52px]">
+<td class="py-3.5 px-6 font-mono font-semibold text-[13px] text-on-surface tracking-tight">
+                  DBI202
+                </td>
+<td class="py-3.5 px-6">
+<a class="text-primary font-medium hover:underline tracking-tight" href="#">
+                    Database Systems
+                  </a>
+</td>
+<td class="py-3.5 px-6 text-on-surface font-normal">
+                  Hoàng Anh Tuấn
+                </td>
+<td class="py-3.5 px-6 text-center text-on-surface font-semibold">
+                  7
+                </td>
+<td class="py-3.5 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[7px] bg-[#E7F6EE] text-[#1C7A4A] text-[11px] font-semibold tracking-tight border border-[#C5EBCE]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1C7A4A]"></span>
+                    Hoạt động
+                  </span>
+</td>
+<td class="py-3.5 pr-6 pl-2 text-right">
+<button aria-label="Chi tiết môn học DBI202" class="text-secondary/60 group-hover:text-primary transition-colors inline-flex items-center justify-center p-1 rounded hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-top:1px solid #E8EBF2;font-size:13px;color:#64708A"><span>Hiển thị <b style="color:#0F172A">1 – 6</b> trong <b style="color:#0F172A">18</b> môn</span><div style="display:flex;align-items:center;gap:6px"><button type="button" style="width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:0;background:#2F45B5;color:#fff">1</button><button type="button" style="width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid #E2E6EF;background:#fff;color:#475069">2</button><button type="button" style="width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid #E2E6EF;background:#fff;color:#475069">3</button><button type="button" aria-label="Trang sau" style="width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid #E2E6EF;background:#fff;color:#475069"><span class="material-symbols-outlined" style="font-size:18px">chevron_right</span></button></div></div>
+</div>
+</main>
+</div>
+<footer class="w-full bg-surface-container-lowest border-t border-outline-variant mt-10">
+<div class="max-w-[1280px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between text-[13px] text-secondary gap-3">
+<div class="font-normal text-secondary">
+        © 2026 Nền tảng học tập
+      </div>
+</div>
+</footer>
+</div>
+</body>
+</html>
