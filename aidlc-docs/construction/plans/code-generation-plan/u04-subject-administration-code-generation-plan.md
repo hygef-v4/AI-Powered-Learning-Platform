@@ -26,7 +26,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 3 — Interface:** `ISubjectQuery`, `SubjectRef`; contract `ISubjectClasses`, `SubjectClassSummary`; `SubjectScopeService` cài `ISubjectScope` của U01; `SubjectQueryService`; tới khi U05 cài, bản tạm `ISubjectClasses` trong khung trả danh sách rỗng và số lớp 0.
 - [ ] **Bước 4 — Service:** `SubjectAdminService` cho F1–F6: kiểm `ADMIN`, kiểm mã và Chủ nhiệm môn qua `IAccountLookup`, khóa lạc quan, chặn lưu trữ qua `ISubjectClasses`, audit theo BR-U04-52.
 - [ ] **Bước 5 — API:** `SubjectAdminController` cho 7 endpoint ở domain-entities mục 4; lỗi dạng an toàn.
-- [ ] **Bước 6 — Frontend:** `SubjectListPage`, `SubjectFilters`, `SubjectTable`, `SubjectFormDialog`, `ManagerPicker`, `SubjectDetailPage`, `SubjectEditForm`, `ManagerCard`, `SubjectStatusActions`, `SubjectClassesTable`.
+- [ ] **Bước 6 — Frontend:** `SubjectListPage`, `SubjectFilters`, `SubjectTable`, `SubjectFormDialog`, `ManagerPicker`, `SubjectDetailPage`, `SubjectEditForm`, `ManagerCard`, `ManagerChangeDialog`, `SubjectMetaCard`, `SubjectStatusActions`, `ArchiveRejectedDialog`, `SubjectClassesTable`; đăng ký `NavEntry` mục Môn học.
 - [ ] **Bước 7 — Unit test (người code viết):** mã sai định dạng và trùng, Chủ nhiệm môn sai role hoặc không `ACTIVE`, version lệch, lưu trữ khi còn lớp hoặc khi U05 không trả lời, đổi Chủ nhiệm môn làm người cũ mất quyền, người không phải Admin bị từ chối; test component frontend. Integration test do tester viết.
 - [ ] **Bước 8 — Review:** đối chiếu UC 16–19, US-CAT-001, BR-U04 với code; người dùng duyệt trước khi chuyển unit.
 

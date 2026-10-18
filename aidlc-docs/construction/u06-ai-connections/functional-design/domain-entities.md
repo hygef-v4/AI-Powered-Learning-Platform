@@ -114,7 +114,7 @@ stateDiagram-v2
 | `IAiTask` | `submit(AiTaskRequest)` → `AiTaskView`, `get(taskId)`, `cancel(actor, taskId)` | U07, U08, U09, U10 | Gửi task AI theo nguồn người dùng chọn, giữ chỗ quota, chạy nền, trả trạng thái |
 | `ISettingsSectionProvider` (contract của U03, U06 cài: `AiConnectionsSection`, `TeacherQuotaSection`) | `sectionKey()`, `title()`, `summary()` | U03 | Hiện phần API AI của trường và quota giảng viên trên Setting List |
 | `IJobHandler` (`AI_TASK`), `IPendingSweeper`, `IScheduledScanner` (contract của U03, U06 cài) | theo U03 | U03 | Chạy task trong worker, gửi lại message bị mất, dọn task quá hạn |
-| `AccountMenuEntry` (contract của U01, U06 cài) | - | U01 | Mục AI Connection trong menu tài khoản cho Student, Teacher, Subject Manager |
+| `AccountMenuEntry` (contract của U01, U06 cài) | - | U01 | Nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager |
 | Component `AiSourcePicker`, `AiTaskStatus` | - | Frontend U07, U08, U09, U10 | Popup chọn nguồn AI có quota và ước tính; theo dõi trạng thái task |
 | Panel `AiConnectionsPanel`, `TeacherQuotaPanel` (đăng ký vào `settingsSectionRegistry` của U03) | - | U03 | Sửa API chung, quota và xem tổng hợp usage trong Setting Detail |
 | MCP server `/mcp` | `initialize`, `tools/list`, `tools/call` | Agent của người dùng | Cho agent đọc và ghi bản nháp đúng quyền |

@@ -28,7 +28,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Ngân hàng
 
 ### F1 - Xem ngân hàng (UC 46)
-1. Chủ nhiệm môn bấm Question List trên Manager Dashboard (U10 đăng ký `DashboardNavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/questions` kèm bộ lọc.
+1. Chủ nhiệm môn bấm mục Ngân hàng câu hỏi trên menu bên (U10 đăng ký `NavEntry`), chọn môn mình quản lý; frontend gọi `GET /api/v1/subjects/{subjectId}/questions` kèm bộ lọc.
 2. Kiểm R2 (BR-U10-01).
 3. Trả bản `ACTIVE` mới nhất mỗi lineage kèm cờ "có bản nháp" và các câu mới chỉ có bản nháp (BR-U10-06).
 4. Bấm câu mở Question Detail: `GET /api/v1/questions/{id}` gồm nội dung, đáp án, giải thích và lịch sử phiên bản.

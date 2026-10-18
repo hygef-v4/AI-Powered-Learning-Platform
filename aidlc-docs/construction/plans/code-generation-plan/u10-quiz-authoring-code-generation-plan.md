@@ -30,7 +30,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 7 — AI và MCP:** `QuizAiDraftService`, `QuizDraftResultHandler` (cài `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`), dùng `IReferenceMaterial` của U06, `QuizMcpTools` (cài `IMcpToolProvider`) (F4, F8, F13, P4).
 - [ ] **Bước 8 — Interface cho unit khác:** `QuizQueryService` (cài `IQuizQuery`), `QuizScorer` (cài `IQuizScoring`) (F14, P2).
 - [ ] **Bước 9 — API:** controller theo domain-entities mục 6; `contracts/openapi/quizzes.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 10 — Frontend:** `QuestionListPage`, `QuestionDetailPage`, `SubjectQuizListPage` (đăng ký `DashboardNavEntry`), `ClassQuizzesSection` (đăng ký `TeacherClassTab`), `QuizDetailPage` và các panel, `McqEditor`; slot `QuizDetailSection`.
+- [ ] **Bước 10 — Frontend:** `QuestionListPage`, `QuestionDetailPage`, `SubjectQuizListPage` (đăng ký `NavEntry` cho Ngân hàng câu hỏi, Quiz), `QuizBankSummary` (`SubjectSummarySection`), `ClassQuizzesSection` (đăng ký `TeacherClassTab`), `QuizDetailPage` và các panel, `McqEditor`; slot `QuizDetailSection`, `QuizRowAction`.
 - [ ] **Bước 11 — Unit test (người code viết):** số lựa chọn và đáp án theo loại; sửa bản `ACTIVE` tạo bản nháp mới, chỉ một bản nháp; xóa bản đã kích hoạt bị từ chối; nhập tệp có dòng lỗi; bốc ngẫu nhiên không trùng, không vượt chỗ trống; duyệt với câu đã ngưng; phát hành version mới ngưng version cũ và gọi listener; chấm `MCQ_MULTI` đúng hết mới có điểm; DTO người học không có đáp án; nhân bản sao câu riêng mới, giữ phiên bản câu ngân hàng; tool MCP từ chối người học; component frontend. Integration test do tester viết.
 - [ ] **Bước 12 — Review:** đối chiếu UC 46–48, story, BR-U10 với code; người dùng duyệt trước khi chuyển unit.
 

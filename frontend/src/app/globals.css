@@ -1,9 +1,51 @@
 @import "tailwindcss";
 
+/* Màu và chữ theo design "Nền tảng học tập" (G21). Dùng qua class Tailwind, ví dụ text-ink, bg-primary-soft. */
+@theme {
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #0f172a;
+  --color-body: #475069;
+  --color-muted: #64708a;
+  --color-faint: #a3aab8;
+
+  --color-line: #e8ebf2;
+  --color-line-strong: #d9deea;
+  --color-line-soft: #f1f3f8;
+
+  --color-shell: #f4f6fb;
+  --color-canvas: #f7f9fe;
+  --color-table-head: #f7f8fc;
+  --color-neutral-soft: #eef1f6;
+
+  --color-primary: #2f45b5;
+  --color-primary-strong: #24369a;
+  --color-primary-soft: #eaedfb;
+
+  --color-success: #1c7a4a;
+  --color-success-soft: #e7f6ee;
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fff4de;
+  --color-danger: #b42b2b;
+  --color-danger-soft: #fdecec;
+  --color-danger-line: #f1c9c9;
+  --color-alert-dot: #c93535;
+  --color-info: #1a7fa6;
+  --color-info-soft: #e6f3f8;
+  --color-accent: #7a3e8f;
+  --color-accent-soft: #f3eaf7;
+  --color-orange: #c2410c;
+  --color-orange-soft: #ffedd5;
+}
+
 :root {
   color-scheme: light;
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply bg-shell font-sans text-ink antialiased;
+}
+
+h1 {
+  letter-spacing: -0.01em;
 }

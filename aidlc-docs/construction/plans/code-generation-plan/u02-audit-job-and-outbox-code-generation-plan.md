@@ -26,7 +26,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 2 — Ghi audit (A1):** `AuditStore` kiểm `details` bằng `ForbiddenKeyGuard` (BR-U02-05), `INSERT ... ON CONFLICT (id) DO NOTHING` (BR-U02-03); `record` chạy trong transaction hiện tại khi `result = SUCCESS`, chạy `REQUIRES_NEW` qua `TransactionTemplate` khi `DENIED` hoặc `FAILURE` (BR-U02-02).
 - [ ] **Bước 3 — Tra cứu (A2):** `AuditQueryService` gọi `IAuthorization.authorize(actor, AUDIT_READ)` và từ chối khi lỗi (BR-U02-07, 50); kiểm bộ lọc (`from` ≤ `to`, `result` hợp lệ, trang ≤ 100); sắp `occurred_at` giảm dần; lấy email qua `IAccountLookup.getContact` (BR-U02-09); ghi audit `AUDIT_QUERIED`.
 - [ ] **Bước 4 — API:** `AuditController` cho `GET /api/v1/admin/audit-logs`, lỗi trả dạng an toàn (BR-U02-51).
-- [ ] **Bước 5 — Frontend:** `AuditLogPage` với `AuditFilters` (mặc định 7 ngày, đổi email sang `actorId` qua API tài khoản của U01), `AuditTable` (50 dòng/trang), `AuditDetailDrawer` chỉ đọc.
+- [ ] **Bước 5 — Frontend:** `AuditLogPage` với `AuditFilters` (mặc định 7 ngày, đổi email sang `actorId` qua API tài khoản của U01), `AuditTable` (50 dòng/trang), `AuditDetailDialog` chỉ đọc; đăng ký `NavEntry` mục Nhật ký audit.
 - [ ] **Bước 6 — Unit test (người code viết):** khóa cấm bị từ chối, ghi lại cùng `id` không tạo dòng mới, kiểm bộ lọc sai, người không phải Admin bị từ chối, `actor_id` rỗng hiện "Hệ thống"; test component frontend. Integration test do tester viết.
 - [ ] **Bước 7 — Review:** đối chiếu UC 13, US-AUD-001, BR-U02 với code; người dùng duyệt trước khi chuyển unit.
 

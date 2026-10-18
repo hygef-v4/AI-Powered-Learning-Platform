@@ -70,7 +70,7 @@ stateDiagram-v2
 | Slot `AssignmentFormSection` (của U07, U12 cài) | - | U07 | Phần Nhóm trên Assignment Form |
 | `IGroupWorkStatus` (contract của U08, U12 cài), slot `GroupWorkEntry` | `statusFor(accountId, assignmentIds)` | U08 | Trạng thái bài nhóm trên Student Assignments; nút mở bài nhóm trên Assignment Detail |
 | `IGroupSubmissionSource` (contract của U09, U12 cài) | `getGroupSubmission`, `listGroupSubmissions` | U09 | Hiện, chấm bài nhóm và tiến độ theo nhóm |
-| `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection` (contract của U05, U12 cài) | - | U05 | My Group; phần Nhóm trong tab Students; nhóm của sinh viên trong popup Student Detail |
+| `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection` (contract của U05, U12 cài) | - | U05 | Thẻ Nhóm của tôi trên Student Class Detail; phần Nhóm trong tab Sinh viên và số nhóm trên tab Thông tin lớp; nhóm của sinh viên trong popup Student Detail |
 | `IMcpToolProvider` (contract của U06, U12 cài) | tool `read_authorized_group_submission` | U06 | Agent của giảng viên đọc bản nộp nhóm để đề xuất chấm |
 | `IJobHandler` cho `GROUP_DOC_CREATE`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U12 cài) | - | U03 | Tạo tài liệu nhóm khi bài mở; tự nộp khi hết hạn |
 

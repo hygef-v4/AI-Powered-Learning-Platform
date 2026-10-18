@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Alert } from "@/shared/ui/Alert";
+import { PageHeader } from "@/shared/ui/PageHeader";
 import { getSettings } from "./api";
 import { DelegatedSectionCard } from "./DelegatedSectionCard";
 import { SettingGroupTable } from "./SettingGroupTable";
@@ -14,21 +16,26 @@ export function SettingListPage() {
   useEffect(() => {
     getSettings()
       .then(setOverview)
-      .catch(() => setError("Không tải được cài đặt"));
+      .catch(() => setError("Không tải được cài đặt, thử lại sau."));
   }, []);
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-2xl font-semibold">Cài đặt hệ thống</h1>
-      {error && <p className="mt-4 text-red-700">{error}</p>}
-      {overview?.groups.map((group) => <SettingGroupTable key={group.group} group={group} />)}
+    <>
+      <PageHeader title="Cài đặt" subtitle="Bấm một dòng để xem và sửa · mỗi lần lưu được ghi vào Nhật ký audit" />
+      {error && (
+        <Alert tone="danger" role="alert">
+          {error}
+        </Alert>
+      )}
+      {!overview && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
       {overview && overview.sections.length > 0 && (
-        <section className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="grid items-start gap-3 md:grid-cols-2">
           {overview.sections.map((section) => (
             <DelegatedSectionCard key={section.sectionKey} section={section} />
           ))}
-        </section>
+        </div>
       )}
-    </main>
+      {overview?.groups.map((group) => <SettingGroupTable key={group.group} group={group} />)}
+    </>
   );
 }

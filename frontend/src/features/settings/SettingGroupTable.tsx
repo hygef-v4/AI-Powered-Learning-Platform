@@ -1,36 +1,62 @@
-import Link from "next/link";
-import type { SettingGroupView } from "./types";
-import { GROUP_LABELS } from "./types";
-import { formatSettingValue } from "./validation";
+"use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Icon } from "@/shared/ui/Icon";
+import { Pill } from "@/shared/ui/Pill";
+import { Section } from "@/shared/ui/Section";
+import { ClickableRow, TableFrame, Td, Th } from "@/shared/ui/Table";
+import type { SettingGroupView, SettingItem } from "./types";
+import { groupMeta } from "./types";
+import { formatSettingValue, formatShortDateTime, isEmptyValue } from "./validation";
+
+function ValueCell({ item }: { item: SettingItem }) {
+  if (isEmptyValue(item.value)) return <span className="text-muted">Chưa cấu hình</span>;
+  if (item.type === "BOOLEAN") return <Pill tone={item.value ? "success" : "neutral"}>{item.value ? "Bật" : "Tắt"}</Pill>;
+  return <>{formatSettingValue(item)}</>;
+}
+
+/** Một nhóm cài đặt khóa–giá trị trên Setting List; bấm dòng để mở Setting Detail. */
 export function SettingGroupTable({ group }: { group: SettingGroupView }) {
+  const router = useRouter();
+  const meta = groupMeta(group.group);
   return (
-    <section className="mt-6">
-      <h2 className="text-lg font-semibold">{GROUP_LABELS[group.group] ?? group.group}</h2>
-      <table className="mt-2 w-full text-left text-sm">
-        <thead className="text-slate-500">
+    <Section title={meta.label} description={meta.description} icon={meta.icon} tone={meta.tone}>
+      <TableFrame>
+        <thead>
           <tr>
-            <th className="py-1 pr-4 font-medium">Mục</th>
-            <th className="py-1 pr-4 font-medium">Giá trị hiện hành</th>
-            <th className="py-1 pr-4 font-medium">Người sửa</th>
-            <th className="py-1 font-medium">Sửa lúc</th>
+            <Th className="w-[34%]">Mục</Th>
+            <Th className="w-[28%]">Giá trị hiện hành</Th>
+            <Th className="w-[16%]">Người sửa</Th>
+            <Th className="w-[18%]">Thời điểm sửa</Th>
+            <Th className="w-[4%]">
+              <span className="sr-only">Mở</span>
+            </Th>
           </tr>
         </thead>
         <tbody>
-          {group.items.map((item) => (
-            <tr key={item.key} className="border-t border-slate-200">
-              <td className="py-2 pr-4">
-                <Link className="text-blue-700 hover:underline" href={`/admin/settings/${encodeURIComponent(item.key)}`}>
-                  {item.name}
-                </Link>
-              </td>
-              <td className="py-2 pr-4">{formatSettingValue(item)}</td>
-              <td className="py-2 pr-4">{item.updatedBy ?? "Giá trị khởi tạo"}</td>
-              <td className="py-2">{item.updatedAt ? new Date(item.updatedAt).toLocaleString("vi-VN") : ""}</td>
-            </tr>
-          ))}
+          {group.items.map((item) => {
+            const href = `/admin/settings/${encodeURIComponent(item.key)}`;
+            return (
+              <ClickableRow key={item.key} onClick={() => router.push(href)}>
+                <Td className="font-bold">
+                  <Link href={href} className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                    {item.name}
+                  </Link>
+                </Td>
+                <Td>
+                  <ValueCell item={item} />
+                </Td>
+                <Td>{item.updatedBy ?? "—"}</Td>
+                <Td className="whitespace-nowrap">{item.updatedAt ? formatShortDateTime(item.updatedAt) : "—"}</Td>
+                <Td className="text-muted">
+                  <Icon name="chevron_right" size={18} />
+                </Td>
+              </ClickableRow>
+            );
+          })}
         </tbody>
-      </table>
-    </section>
+      </TableFrame>
+    </Section>
   );
 }

@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
+import { Alert } from "@/shared/ui/Alert";
+import { Button } from "@/shared/ui/Button";
+import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/inputs";
 import { updateSetting } from "./api";
 import type { SettingItem, SettingValue } from "./types";
-import { canBeEmpty, options, validateSettingValue } from "./validation";
+import { canBeEmpty, options, unitOf, validateSettingValue } from "./validation";
 
 type Props = {
   item: SettingItem;
@@ -12,21 +15,33 @@ type Props = {
   onReload: () => void;
 };
 
-/** Ô nhập theo kiểu (UC 15); 400 hiện lý do, 409 báo dữ liệu đã đổi, lỗi không xóa nội dung đang nhập. */
+const LABEL = "Giá trị mới";
+
+/**
+ * Ô nhập theo kiểu (UC 15). Kiểm ngay khi sửa và khóa nút Lưu khi giá trị sai; 400 hiện lý do,
+ * 409 báo người khác vừa sửa; lỗi không xóa nội dung đang nhập.
+ */
 export function SettingValueForm({ item, onSaved, onReload }: Props) {
   const [draft, setDraft] = useState<SettingValue>(item.value);
-  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const invalid = validateSettingValue(item, draft);
+  const changed = JSON.stringify(draft) !== JSON.stringify(item.value);
+  const error = (touched ? invalid : null) ?? serverError;
+
+  function change(value: SettingValue) {
+    setDraft(value);
+    setTouched(true);
+    setServerError(null);
+  }
+
   async function save(value: SettingValue) {
-    const invalid = validateSettingValue(item, value);
-    if (invalid) {
-      setError(invalid);
-      return;
-    }
+    if (validateSettingValue(item, value)) return;
     setSaving(true);
-    setError(null);
+    setServerError(null);
     setConflict(false);
     try {
       onSaved(await updateSetting(item.key, value, item.version));
@@ -34,9 +49,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       if (e instanceof ApiError && e.problem.status === 409) {
         setConflict(true);
       } else if (e instanceof ApiError && e.problem.status === 400) {
-        setError(e.problem.detail ?? "Giá trị không hợp lệ");
+        setServerError(e.problem.detail ?? "Giá trị không hợp lệ");
       } else {
-        setError("Không lưu được, thử lại sau");
+        setServerError("Không lưu được, thử lại sau");
       }
     } finally {
       setSaving(false);
@@ -46,113 +61,139 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
   return (
     <form
       noValidate
-      className="mt-4 space-y-3"
+      className="flex flex-col gap-3.5"
       onSubmit={(event) => {
         event.preventDefault();
         void save(draft);
       }}
     >
-      <ValueInput item={item} value={draft} onChange={setDraft} />
-      {error && (
-        <p role="alert" className="text-sm text-red-700">
-          {error}
-        </p>
-      )}
       {conflict && (
-        <p role="alert" className="text-sm text-amber-700">
-          Cài đặt đã được người khác sửa.{" "}
-          <button type="button" className="underline" onClick={onReload}>
-            Tải lại để xem giá trị mới
-          </button>
-        </p>
+        <Alert
+          tone="warning"
+          role="alert"
+          title="Người khác vừa sửa"
+          action={
+            <Button size="sm" icon="refresh" onClick={onReload}>
+              Tải lại
+            </Button>
+          }
+        >
+          Cài đặt đã được người khác sửa. Tải lại để xem giá trị mới trước khi lưu.
+        </Alert>
       )}
-      <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="rounded bg-blue-700 px-3 py-1 text-white disabled:opacity-50">
-          {saving ? "Đang lưu..." : "Lưu"}
-        </button>
-        {canBeEmpty(item) && (
-          <button type="button" disabled={saving} className="rounded border px-3 py-1" onClick={() => void save(null)}>
+      <ValueField item={item} value={draft} error={error} onChange={change} disabled={saving} />
+      <div className="flex items-center justify-end gap-2">
+        {canBeEmpty(item) && item.value !== null && (
+          <Button disabled={saving} onClick={() => void save(null)} className="mr-auto">
             Bỏ trống
-          </button>
+          </Button>
         )}
+        <Button
+          disabled={saving || !changed}
+          onClick={() => {
+            setDraft(item.value);
+            setTouched(false);
+            setServerError(null);
+          }}
+        >
+          Hủy
+        </Button>
+        <Button type="submit" variant="primary" icon="save" disabled={saving || !changed || invalid !== null}>
+          {saving ? "Đang lưu…" : "Lưu"}
+        </Button>
       </div>
     </form>
   );
 }
 
-function ValueInput({
-  item,
-  value,
-  onChange,
-}: {
+type FieldProps = {
   item: SettingItem;
   value: SettingValue;
+  error: string | null;
   onChange: (value: SettingValue) => void;
-}) {
-  const label = `Giá trị của ${item.name}`;
+  disabled: boolean;
+};
+
+function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
+  const id = useId();
+  const required = !canBeEmpty(item);
   switch (item.type) {
     case "INTEGER":
       return (
-        <input
-          aria-label={label}
-          type="number"
-          className="rounded border px-2 py-1"
-          value={typeof value === "number" ? value : ""}
-          min={Number(item.constraints?.min)}
-          max={Number(item.constraints?.max)}
-          onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        />
+        <Field label={LABEL} htmlFor={id} required={required} error={error}>
+          <TextInput
+            id={id}
+            type="number"
+            inputMode="numeric"
+            invalid={error !== null}
+            suffix={unitOf(item)}
+            wrapperClassName="w-[220px]"
+            value={typeof value === "number" ? value : ""}
+            min={Number(item.constraints?.min)}
+            max={Number(item.constraints?.max)}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+          />
+        </Field>
       );
     case "BOOLEAN":
       return (
-        <label className="flex items-center gap-2">
-          <input aria-label={label} type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} />
-          Bật
-        </label>
+        <Field label={LABEL} required={required} error={error}>
+          <Switch
+            ariaLabel={LABEL}
+            checked={value === true}
+            disabled={disabled}
+            label={value === true ? "Bật" : "Tắt"}
+            onChange={onChange}
+          />
+        </Field>
       );
     case "TIME_OF_DAY":
       return (
-        <input
-          aria-label={label}
-          type="time"
-          className="rounded border px-2 py-1"
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
-        />
+        <Field label={LABEL} htmlFor={id} required={required} error={error} hint="Giờ Việt Nam (Asia/Ho_Chi_Minh)">
+          <TextInput
+            id={id}
+            type="time"
+            icon="schedule"
+            invalid={error !== null}
+            wrapperClassName="w-[220px]"
+            value={typeof value === "string" ? value : ""}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
+          />
+        </Field>
       );
     case "ENUM":
       return (
-        <select
-          aria-label={label}
-          className="rounded border px-2 py-1"
-          value={typeof value === "string" ? value : ""}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          {options(item).map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        <Field label={LABEL} htmlFor={id} required={required} error={error}>
+          <Select
+            id={id}
+            invalid={error !== null}
+            wrapperClassName="w-[280px]"
+            value={typeof value === "string" ? value : ""}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
+          >
+            {value === null && <option value="">Chưa chọn</option>}
+            {options(item).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </Field>
       );
-    case "ENUM_SET": {
-      const chosen = Array.isArray(value) ? value : [];
+    case "ENUM_SET":
       return (
-        <fieldset aria-label={label} className="flex flex-wrap gap-3">
-          {options(item).map((option) => (
-            <label key={option} className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={chosen.includes(option)}
-                onChange={(e) =>
-                  onChange(e.target.checked ? [...chosen, option] : chosen.filter((c) => c !== option))
-                }
-              />
-              {option}
-            </label>
-          ))}
-        </fieldset>
+        <Field label={LABEL} required={required} error={error}>
+          <ChipToggleGroup
+            ariaLabel={LABEL}
+            options={options(item)}
+            value={Array.isArray(value) ? value : []}
+            disabled={disabled}
+            onChange={onChange}
+          />
+        </Field>
       );
-    }
   }
 }

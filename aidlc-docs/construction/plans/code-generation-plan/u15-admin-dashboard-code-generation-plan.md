@@ -22,7 +22,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 
 - [ ] **Bước 1 — Service:** `AdminDashboardService` gọi song song các port có timeout, ghép kết quả theo P1, P2 (F1, F2).
 - [ ] **Bước 2 — API:** `AdminDashboardController` (`GET /api/v1/admin/dashboard`, `GET .../backups`); vai trò khác trả `403`; `contracts/openapi/admin-dashboard.yaml`.
-- [ ] **Bước 3 — Frontend:** `AdminDashboardPage`, `CountCard`, `BackupStatusCard`, `BackupHistoryDialog`, `AdminShortcuts`; đổi `homePath` tạm của Admin (Account List) về `/admin`.
+- [ ] **Bước 3 — Frontend:** `AdminDashboardPage`, `CountCard`, `BackupSection`, `BackupHistoryDialog`, `StatusBreakdown`; đăng ký `NavEntry` mục Tổng quan; đổi `homePath` tạm của Admin (Account List) về `/admin`.
 - [ ] **Bước 4 — Unit test (người code viết):** chỉ `ADMIN`; ghép số liệu; một nguồn lỗi hoặc hết giờ thì phần đó `UNAVAILABLE`; U03 lỗi không hiện thành công; response không có tên, email, ID; component frontend. Integration test do tester viết.
 - [ ] **Bước 5 — Review:** đối chiếu UC 66, US-RPT-002, BR-U15 với code; người dùng duyệt.
 

@@ -191,7 +191,7 @@ public class SettingsService implements ISettings {
 
     private SettingItemView view(SettingDefinition definition, SettingRow row) {
         String updatedBy = row == null || row.updatedBy() == null ? null
-                : accounts.getContact(row.updatedBy()).map(AccountContact::email).orElse(null);
+                : accounts.getContact(row.updatedBy()).map(AccountContact::displayName).orElse(null);
         return new SettingItemView(definition.key(), definition.group(), definition.name(), definition.description(),
                 definition.type(), row == null ? null : parse(row.valueJson()), definition.defaultValue(),
                 definition.constraints(), row == null ? 0 : row.version(), updatedBy,
