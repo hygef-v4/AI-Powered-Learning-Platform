@@ -46,12 +46,12 @@ class SubjectQueryServiceTest {
     }
 
     @Test
-    void managedQueryIncludesArchivedAndNullableManagerIsRepresented() {
+    void managedQueryMapsSubjectsAndNullableManagerIsRepresented() {
         UUID manager = UUID.randomUUID();
-        Subject archived = Subject.create(UUID.randomUUID(), "SWR302", "Requirements", null, manager, NOW).archive(NOW);
-        when(repository.findManagedBy(manager)).thenReturn(List.of(archived));
-        assertThat(service.listManagedSubjects(manager)).containsExactly(new SubjectRef(archived.id(), "SWR302",
-                "Requirements", SubjectStatus.ARCHIVED, manager));
+        Subject managed = Subject.create(UUID.randomUUID(), "SWR302", "Requirements", null, manager, NOW);
+        when(repository.findManagedBy(manager)).thenReturn(List.of(managed));
+        assertThat(service.listManagedSubjects(manager)).containsExactly(new SubjectRef(managed.id(), "SWR302",
+                "Requirements", SubjectStatus.ACTIVE, manager));
         Subject unassigned = Subject.create(UUID.randomUUID(), "SWR303", "Other", null, null, NOW);
         when(repository.findById(unassigned.id())).thenReturn(Optional.of(unassigned));
         assertThat(service.getSubject(unassigned.id()).orElseThrow().managerId()).isNull();

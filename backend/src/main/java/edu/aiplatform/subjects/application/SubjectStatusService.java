@@ -84,6 +84,9 @@ public class SubjectStatusService {
             throw ApiException.conflict("SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
         audit.statusChanged(actor, before, after);
+        if (before.managerId() != null && after.managerId() == null) {
+            audit.managerChanged(actor, before, after);
+        }
         return after;
     }
 

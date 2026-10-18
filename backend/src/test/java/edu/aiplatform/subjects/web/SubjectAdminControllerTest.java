@@ -54,11 +54,8 @@ class SubjectAdminControllerTest {
     private final ISubjectClasses legacyClasses = mock(ISubjectClasses.class);
     private final IAudit audit = mock(IAudit.class);
     private final ISubjectArchiveCheck archiveCheck = mock(ISubjectArchiveCheck.class);
-    private final ISubjectManagerAssignmentGate gate = mock(ISubjectManagerAssignmentGate.class);
     @SuppressWarnings("unchecked")
     private final ObjectProvider<ISubjectArchiveCheck> checks = mock(ObjectProvider.class);
-    @SuppressWarnings("unchecked")
-    private final ObjectProvider<ISubjectManagerAssignmentGate> gates = mock(ObjectProvider.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
             .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
@@ -76,14 +73,13 @@ class SubjectAdminControllerTest {
         when(repository.count(null, null)).thenReturn(1L);
         when(repository.update(any(), anyLong())).thenReturn(true);
         when(legacyClasses.countClasses(any())).thenReturn(Map.of(id, 0));
-        when(gates.getIfAvailable()).thenReturn(gate);
         when(checks.getIfAvailable()).thenReturn(archiveCheck);
         when(archiveCheck.checkArchive(eq(id), any())).thenReturn(new ISubjectArchiveCheck.Result(0, List.of()));
         when(accounts.getContact(manager)).thenReturn(Optional.of(new AccountContact(manager, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
         var recorder = new SubjectAuditRecorder(audit);
         reader = new SubjectClassesReader(legacyClasses);
         var reads = new SubjectAdminService(repository, authorization, accounts, reader, recorder, clock);
-        var commands = new SubjectCommandService(repository, authorization, accounts, gates, recorder, clock);
+        var commands = new SubjectCommandService(repository, authorization, accounts, recorder, clock);
         var statuses = new SubjectStatusService(repository, authorization, checks, recorder, clock);
         mvc = MockMvcBuilders.standaloneSetup(new SubjectAdminController(reads, commands, statuses))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
@@ -169,7 +165,7 @@ class SubjectAdminControllerTest {
                         .content("{\"managerId\":\"" + manager + "\",\"version\":1}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.managerId").value(manager.toString()))
                 .andExpect(jsonPath("$.version").value(2));
-        verify(gate).lockAccounts(List.of(manager));
+        verify(accounts).getContact(manager);
     }
 
     @Test
@@ -181,7 +177,6 @@ class SubjectAdminControllerTest {
                         .content("{\"managerId\":null,\"version\":2}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(3)).andReturn().getResponse();
         assertThat(mapper.readTree(response.getContentAsString()).get("managerId").isNull()).isTrue();
-        verify(gate).lockAccounts(List.of(manager));
         verifyNoInteractions(accounts);
     }
 
@@ -213,11 +208,7 @@ class SubjectAdminControllerTest {
     }
 
     @Test
-    void missingGuardOrArchiveProviderIs503NotFabricatedSuccess() throws Exception {
-        when(gates.getIfAvailable()).thenReturn(null);
-        mvc.perform(put(BASE + "/" + id + "/manager").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"managerId\":\"" + manager + "\",\"version\":1}"))
-                .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("SUBJECT_ASSIGNMENT_GUARD_UNAVAILABLE"));
+    void missingArchiveProviderIs503NotFabricatedSuccess() throws Exception {
         when(checks.getIfAvailable()).thenReturn(null);
         mvc.perform(put(BASE + "/" + id + "/status").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ARCHIVED\",\"version\":1}"))
@@ -249,7 +240,7 @@ class SubjectAdminControllerTest {
         var request = method.equals("PATCH") ? patch(BASE + "/" + id + suffix) : put(BASE + "/" + id + suffix);
         mvc.perform(request.contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("SUBJECT_REQUEST_INVALID"));
-        verifyNoInteractions(repository, gates, archiveCheck, accounts);
+        verifyNoInteractions(repository, archiveCheck, accounts);
     }
 
     @Test
@@ -371,7 +362,7 @@ class SubjectAdminControllerTest {
             mvc.perform(request).andExpect(status().is(httpStatus)).andExpect(jsonPath("$.code").value(code))
                     .andExpect(jsonPath("$.blockingClasses").doesNotExist());
         }
-        verifyNoInteractions(repository, accounts, gate, gates, archiveCheck, checks, legacyClasses);
+        verifyNoInteractions(repository, accounts, archiveCheck, checks, legacyClasses);
         verify(audit, times(7)).record(argThat(event -> event.result() == edu.aiplatform.audit.contract.AuditResult.DENIED));
     }
 

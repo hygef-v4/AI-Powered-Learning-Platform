@@ -11,7 +11,6 @@ import edu.aiplatform.subjects.application.SubjectQueryService;
 import edu.aiplatform.subjects.application.SubjectScopeService;
 import edu.aiplatform.subjects.application.SubjectCommandService;
 import edu.aiplatform.subjects.application.SubjectAuditRecorder;
-import edu.aiplatform.subjects.application.ISubjectManagerAssignmentGate;
 import edu.aiplatform.subjects.application.SubjectStatusService;
 import edu.aiplatform.subjects.application.SubjectMutationGuard;
 import edu.aiplatform.subjects.application.SubjectArchiveRejectedException;
@@ -147,18 +146,6 @@ class SubjectRepositoryIntegrationTest {
         @Bean
         Clock clock() {
             return Clock.fixed(LATER, ZoneOffset.UTC);
-        }
-
-        /** Chỉ khóa accounts UUID fixture test; không phải implementation guard/role/status của U01. */
-        @Bean
-        ISubjectManagerAssignmentGate fixtureAccountLocks(DataSource source) {
-            return ids -> {
-                assertThat(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
-                JdbcTemplate jdbc = new JdbcTemplate(source);
-                for (UUID id : ids) {
-                    jdbc.queryForList("select id from accounts where id = ? for update", UUID.class, id);
-                }
-            };
         }
 
         @Bean

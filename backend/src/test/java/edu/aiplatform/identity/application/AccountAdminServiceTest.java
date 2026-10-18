@@ -179,6 +179,21 @@ class AccountAdminServiceTest {
     }
 
     @Test
+    void disableReleasesSubjectManagerAssignmentsAndConflictSkipsIt() {
+        Account manager = stored(Role.SUBJECT_MANAGER, AccountStatus.ACTIVE, "h");
+        when(accounts.updateStatus(manager.id(), AccountStatus.DISABLED, 3L, NOW)).thenReturn(1);
+
+        service.changeStatus(admin, manager.id(), AccountStatus.DISABLED, 3L);
+
+        verify(subjectScope).releaseManagerAssignments(manager.id(), admin);
+
+        Account stale = stored(Role.SUBJECT_MANAGER, AccountStatus.ACTIVE, "h");
+        when(accounts.updateStatus(stale.id(), AccountStatus.DISABLED, 2L, NOW)).thenReturn(0);
+        assertThatThrownBy(() -> service.changeStatus(admin, stale.id(), AccountStatus.DISABLED, 2L));
+        verify(subjectScope, never()).releaseManagerAssignments(stale.id(), admin);
+    }
+
+    @Test
     void reopenGoesBackToPendingWhenNeverActivated() {
         Account neverActivated = stored(Role.STUDENT, AccountStatus.DISABLED, null);
         Account wasActive = stored(Role.STUDENT, AccountStatus.DISABLED, "h");
@@ -190,5 +205,6 @@ class AccountAdminServiceTest {
         verify(accounts).updateStatus(neverActivated.id(), AccountStatus.PENDING, 3L, NOW);
         verify(accounts).updateStatus(wasActive.id(), AccountStatus.ACTIVE, 3L, NOW);
         verify(sessions, never()).deleteAll(any());
+        verify(subjectScope, never()).releaseManagerAssignments(any(), any());
     }
 }

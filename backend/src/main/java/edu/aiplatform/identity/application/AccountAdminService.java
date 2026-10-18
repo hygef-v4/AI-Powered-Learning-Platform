@@ -174,7 +174,8 @@ public class AccountAdminService {
     }
 
     /**
-     * F12 (UC 12): {@code DISABLED} vô hiệu hóa (xóa mọi phiên và OTP, BR-U01-71); {@code ACTIVE} là mở lại — về
+     * F12 (UC 12): {@code DISABLED} vô hiệu hóa (gỡ khỏi Chủ nhiệm môn trong cùng transaction, xóa mọi phiên và OTP,
+     * BR-U01-71); {@code ACTIVE} là mở lại — về
      * {@code ACTIVE} nếu đã có mật khẩu, về {@code PENDING} nếu chưa (BR-U01-72). Không có xóa tài khoản (BR-U01-73).
      */
     public AccountViews.Detail changeStatus(Actor actor, UUID id, AccountStatus requested, long version) {
@@ -198,6 +199,9 @@ public class AccountAdminService {
             }
             if (accounts.updateStatus(id, next, version, now) == 0) {
                 throw versionConflict();
+            }
+            if (disable) {
+                subjectScope.releaseManagerAssignments(id, actor);
             }
             record(actor, disable ? "ACCOUNT_DISABLED" : "ACCOUNT_ENABLED", id, Map.of("status", next.name()), now);
             if (disable) {

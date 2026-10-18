@@ -24,25 +24,27 @@ class SubjectContractsWiringTest {
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(IdentityContractStubs.class, SubjectsContractStubs.class))
             .withUserConfiguration(RealSubjects.class)
-            .withBean(ISubjectRepository.class, () -> mock(ISubjectRepository.class));
+            .withBean(ISubjectRepository.class, () -> mock(ISubjectRepository.class))
+            .withBean(edu.aiplatform.audit.contract.IAudit.class, () -> mock(edu.aiplatform.audit.contract.IAudit.class))
+            .withBean(java.time.Clock.class, java.time.Clock::systemUTC);
 
     @TestConfiguration
-    @Import({SubjectQueryService.class, SubjectScopeService.class})
+    @Import({SubjectQueryService.class, SubjectScopeService.class, SubjectAuditRecorder.class})
     static class RealSubjects {
     }
 
     @TestConfiguration
-    @Import({SubjectAdminService.class, SubjectClassesReader.class, SubjectAuditRecorder.class})
+    @Import({SubjectAdminService.class, SubjectClassesReader.class})
     static class AdminReads {
     }
 
     @TestConfiguration
-    @Import({SubjectCommandService.class, SubjectAuditRecorder.class})
+    @Import({SubjectCommandService.class})
     static class Commands {
     }
 
     @TestConfiguration
-    @Import({SubjectStatusService.class, SubjectMutationGuard.class, SubjectAuditRecorder.class})
+    @Import({SubjectStatusService.class, SubjectMutationGuard.class})
     static class Lifecycle {
     }
 
@@ -51,8 +53,7 @@ class SubjectContractsWiringTest {
         ISubjectClasses legacy = mock(ISubjectClasses.class);
         runner.withUserConfiguration(Lifecycle.class)
                 .withBean(ISubjectClasses.class, () -> legacy)
-                .withBean(edu.aiplatform.audit.contract.IAudit.class, () -> mock(edu.aiplatform.audit.contract.IAudit.class))
-                .withBean(java.time.Clock.class, java.time.Clock::systemUTC).run(context -> {
+                .run(context -> {
                     assertThat(context).hasSingleBean(edu.aiplatform.subjects.contract.ISubjectMutationGuard.class)
                             .doesNotHaveBean(edu.aiplatform.subjects.contract.ISubjectArchiveCheck.class);
                     UUID id = UUID.randomUUID();
@@ -68,23 +69,15 @@ class SubjectContractsWiringTest {
     }
 
     @Test
-    void commandBeanWithoutAccountGuardFailsClosedForAssignedCreate() {
+    void commandBeanWiresWithContractProviders() {
         runner.withUserConfiguration(Commands.class)
-                .withBean(edu.aiplatform.audit.contract.IAudit.class, () -> mock(edu.aiplatform.audit.contract.IAudit.class))
-                .withBean(java.time.Clock.class, java.time.Clock::systemUTC).run(context -> {
-                    assertThat(context).hasSingleBean(SubjectCommandService.class).doesNotHaveBean(ISubjectManagerAssignmentGate.class);
-                    var admin = new edu.aiplatform.identity.contract.Actor(UUID.randomUUID(), edu.aiplatform.identity.contract.Role.ADMIN);
-                    assertThatThrownBy(() -> context.getBean(SubjectCommandService.class).create(admin,
-                            new SubjectCommandService.Create("ABC", "Name", null, UUID.randomUUID())))
-                            .isInstanceOf(ApiException.class).extracting("code").isEqualTo("SUBJECT_ASSIGNMENT_GUARD_UNAVAILABLE");
-                });
+                .run(context -> assertThat(context).hasSingleBean(SubjectCommandService.class));
     }
 
     @Test
     void adminReadsWireWithContractProvidersAndCloseTheirReader() {
         runner.withUserConfiguration(AdminReads.class)
-                .withBean(edu.aiplatform.audit.contract.IAudit.class, () -> mock(edu.aiplatform.audit.contract.IAudit.class))
-                .withBean(java.time.Clock.class, java.time.Clock::systemUTC).run(context -> {
+                .run(context -> {
             assertThat(context).hasSingleBean(SubjectAdminService.class).hasSingleBean(SubjectClassesReader.class);
             assertThat(context.getBean(SubjectClassesReader.class).classes(UUID.randomUUID()).availability())
                     .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);

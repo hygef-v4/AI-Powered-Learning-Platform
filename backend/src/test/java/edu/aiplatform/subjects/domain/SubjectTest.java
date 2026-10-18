@@ -67,23 +67,24 @@ class SubjectTest {
     }
 
     @Test
-    void changesAndClearsManagerIncludingArchivedSubjects() {
-        Subject archived = subject().changeManager(MANAGER, LATER).archive(LATER);
-        Subject cleared = archived.changeManager(null, LATER);
+    void changesAndClearsManager() {
+        Subject assigned = subject().changeManager(MANAGER, LATER);
+        Subject cleared = assigned.changeManager(null, LATER);
         assertThat(cleared.managerId()).isNull();
-        assertThat(cleared.status()).isEqualTo(SubjectStatus.ARCHIVED);
-        assertThat(cleared.version()).isEqualTo(archived.version() + 1);
-        assertThat(archived.managerId()).isEqualTo(MANAGER);
+        assertThat(cleared.version()).isEqualTo(assigned.version() + 1);
+        assertThat(assigned.managerId()).isEqualTo(MANAGER);
     }
 
     @Test
-    void archivesAndReopensWithoutLosingInformationOrManager() {
+    void archiveUnassignsManagerInOneVersionAndReopenDoesNotReassign() {
         Subject assigned = subject().changeManager(MANAGER, LATER);
         Subject archived = assigned.archive(LATER);
         Subject reopened = archived.reopen(LATER);
         assertThat(archived.status()).isEqualTo(SubjectStatus.ARCHIVED);
+        assertThat(archived.managerId()).isNull();
+        assertThat(archived.version()).isEqualTo(assigned.version() + 1);
         assertThat(reopened.status()).isEqualTo(SubjectStatus.ACTIVE);
-        assertThat(reopened.managerId()).isEqualTo(MANAGER);
+        assertThat(reopened.managerId()).isNull();
         assertThat(reopened.name()).isEqualTo(assigned.name());
         assertThat(reopened.version()).isEqualTo(assigned.version() + 2);
     }

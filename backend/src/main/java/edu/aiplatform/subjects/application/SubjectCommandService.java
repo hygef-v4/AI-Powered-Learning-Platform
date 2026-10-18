@@ -8,14 +8,12 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.subjects.contract.SubjectStatus;
 import edu.aiplatform.subjects.domain.ISubjectRepository;
 import edu.aiplatform.subjects.domain.Subject;
 import java.time.Clock;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Stream;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,16 +24,14 @@ public class SubjectCommandService {
     private final ISubjectRepository repository;
     private final SubjectAdminAccess access;
     private final IAccountLookup accounts;
-    private final ObjectProvider<ISubjectManagerAssignmentGate> gates;
     private final SubjectAuditRecorder audit;
     private final Clock clock;
 
     public SubjectCommandService(ISubjectRepository repository, IAuthorization authorization, IAccountLookup accounts,
-                                 ObjectProvider<ISubjectManagerAssignmentGate> gates, SubjectAuditRecorder audit, Clock clock) {
+                                 SubjectAuditRecorder audit, Clock clock) {
         this.repository = repository;
         this.access = new SubjectAdminAccess(authorization, audit, clock);
         this.accounts = accounts;
-        this.gates = gates;
         this.audit = audit;
         this.clock = clock;
     }
@@ -54,7 +50,6 @@ public class SubjectCommandService {
             throw ApiException.conflict("SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
         }
         if (subject.managerId() != null) {
-            lockAccounts(null, subject.managerId());
             requireEligibleManager(subject.managerId());
         }
         try {
@@ -98,26 +93,19 @@ public class SubjectCommandService {
         if (Objects.equals(preliminary.managerId(), command.managerId())) {
             return preliminary;
         }
-        lockAccounts(preliminary.managerId(), command.managerId());
         Subject before = repository.findByIdForUpdate(subjectId)
                 .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         before.requireVersion(version);
         if (command.managerId() != null) {
+            if (before.status() == SubjectStatus.ARCHIVED) {
+                throw ApiException.conflict("SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
+            }
             requireEligibleManager(command.managerId());
         }
         Subject after = before.changeManager(command.managerId(), clock.instant());
         save(after, version);
         audit.managerChanged(actor, before, after);
         return after;
-    }
-
-    private void lockAccounts(UUID previous, UUID next) {
-        ISubjectManagerAssignmentGate gate = gates.getIfAvailable();
-        if (gate == null) {
-            throw ApiException.unavailable("SUBJECT_ASSIGNMENT_GUARD_UNAVAILABLE", "Chưa kiểm tra được phân công, vui lòng thử lại");
-        }
-        List<UUID> ids = Stream.of(previous, next).filter(Objects::nonNull).distinct().sorted().toList();
-        gate.lockAccounts(ids);
     }
 
     private void requireEligibleManager(UUID id) {

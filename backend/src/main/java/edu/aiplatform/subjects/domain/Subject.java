@@ -53,9 +53,12 @@ public record Subject(UUID id, SubjectCode code, String name, String description
         return Objects.equals(this.managerId, managerId) ? this : changed(name, description, status, managerId, now);
     }
 
-    /** Chỉ gọi sau khi service đã khóa môn và xác minh không còn lớp chưa lưu trữ (BR-U04-04). */
+    /**
+     * Chỉ gọi sau khi service đã khóa môn và xác minh không còn lớp chưa lưu trữ (BR-U04-04).
+     * Lưu trữ gỡ luôn Chủ nhiệm môn (BR-U04-11); mở lại không tự gán lại.
+     */
     public Subject archive(Instant now) {
-        return status == SubjectStatus.ARCHIVED ? this : changed(name, description, SubjectStatus.ARCHIVED, managerId, now);
+        return status == SubjectStatus.ARCHIVED ? this : changed(name, description, SubjectStatus.ARCHIVED, null, now);
     }
 
     public Subject reopen(Instant now) {
