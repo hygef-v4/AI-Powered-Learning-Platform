@@ -1,2 +1,2 @@
-// U04 Subject Administration: màn và component theo frontend-components của unit.
-export {};
+export { SubjectListPage } from "./SubjectListPage";
+export { SubjectDetailPage } from "./SubjectDetailPage";
