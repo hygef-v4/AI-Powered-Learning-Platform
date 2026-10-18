@@ -2,9 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { Alert } from "@/shared/ui/Alert";
 import { getProfile } from "./api";
 import { AuthLayout } from "./components/AuthLayout";
-import { RecentWorkPreview } from "./components/RecentWorkPreview";
+import { InfoCard } from "./components/InfoCard";
 import { LoginForm } from "./LoginForm";
 
 /** Màn User Login (UC 02). Đã đăng nhập rồi thì chuyển thẳng tới dashboard theo role (F15). */
@@ -19,11 +20,20 @@ export function LoginPage() {
   }, [router]);
 
   return (
-    <AuthLayout aside={<RecentWorkPreview />}>
+    <AuthLayout
+      variant="login"
+      aside={
+        <InfoCard
+          title="Lần đầu sử dụng?"
+          subtitle="Tài khoản do Phòng Đào tạo cấp"
+          text="Kích hoạt bằng email trường và mã OTP. Quên mật khẩu thì khôi phục bằng mã gửi về email."
+        />
+      }
+    >
       {justReset && (
-        <p role="status" className="mb-6 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Đã đặt lại mật khẩu. Hãy đăng nhập lại bằng mật khẩu mới.
-        </p>
+        <Alert tone="success" role="status" className="mb-6">
+          Đã đặt lại mật khẩu. Các thiết bị khác đã bị đăng xuất; hãy đăng nhập bằng mật khẩu mới.
+        </Alert>
       )}
       <LoginForm onSuccess={(session) => router.replace(session.homePath)} />
     </AuthLayout>

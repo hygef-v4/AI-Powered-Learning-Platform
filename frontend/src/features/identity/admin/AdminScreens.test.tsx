@@ -17,6 +17,9 @@ vi.mock("./api", () => ({
   commitImport: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ id: "acc-1" }) }));
+
+const EMAIL = /^Email trường/;
+const NAME = /^Họ và tên/;
 vi.mock("../session", () => ({ useSession: vi.fn() }));
 
 const ACCOUNT: AccountDetail = {
@@ -48,22 +51,22 @@ describe("NewAccountDialog", () => {
     const onCreated = vi.fn();
     render(<NewAccountDialog onClose={vi.fn()} onCreated={onCreated} />);
 
-    fireEvent.change(screen.getByLabelText("Email trường"), { target: { value: "gv01@fpt.edu.vn" } });
-    fireEvent.change(screen.getByLabelText("Họ và tên"), { target: { value: "Giảng viên 01" } });
-    fireEvent.change(screen.getByLabelText("Vai trò"), { target: { value: "TEACHER" } });
+    fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "gv01@fpt.edu.vn" } });
+    fireEvent.change(screen.getByLabelText(NAME), { target: { value: "Giảng viên 01" } });
+    fireEvent.change(screen.getByLabelText(/^Vai trò/), { target: { value: "TEACHER" } });
     fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
 
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(createAccount).toHaveBeenCalledWith("gv01@fpt.edu.vn", "Giảng viên 01", "TEACHER");
-    expect(screen.getByText(/Không có email nào được gửi/)).toBeInTheDocument();
+    expect(screen.getByText(/Người dùng tự kích hoạt bằng email trường và mã OTP/)).toBeInTheDocument();
   });
 
   it("email đã tồn tại thì báo lỗi rõ", async () => {
     vi.mocked(createAccount).mockRejectedValue(new ApiError({ status: 409, code: "EMAIL_EXISTS" }));
     render(<NewAccountDialog onClose={vi.fn()} onCreated={vi.fn()} />);
 
-    fireEvent.change(screen.getByLabelText("Email trường"), { target: { value: "sv01@fpt.edu.vn" } });
-    fireEvent.change(screen.getByLabelText("Họ và tên"), { target: { value: "SV" } });
+    fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "sv01@fpt.edu.vn" } });
+    fireEvent.change(screen.getByLabelText(NAME), { target: { value: "SV" } });
     fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Email đã có tài khoản.");
@@ -91,12 +94,12 @@ describe("ImportAccountsPanel", () => {
     const file = new File(["email,display_name,role\n"], "tk.csv", { type: "text/csv" });
 
     fireEvent.change(screen.getByLabelText("Chọn tệp CSV"), { target: { files: [file] } });
-    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra tệp" }));
 
-    expect(await screen.findByText("Email không thuộc tên miền trường")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận tạo 1 tài khoản" }));
+    expect(await screen.findByText("Lỗi: email không thuộc tên miền trường")).toBeInTheDocument();
+    expect(validateImport).toHaveBeenCalledWith(file);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận nhập 1 tài khoản" }));
 
-    await waitFor(() => expect(onImported).toHaveBeenCalled());
+    await waitFor(() => expect(onImported).toHaveBeenCalledWith(1));
     expect(commitImport).toHaveBeenCalledWith(file);
     expect(screen.getByRole("status")).toHaveTextContent("Đã tạo 1 tài khoản");
   });
@@ -111,7 +114,7 @@ describe("AccountDetailPage", () => {
     vi.mocked(updateAccount).mockRejectedValue(new ApiError({ status: 409, code: "VERSION_CONFLICT" }));
     render(<AccountDetailPage />);
 
-    fireEvent.change(await screen.findByLabelText("Họ và tên"), { target: { value: "Tên mới" } });
+    fireEvent.change(await screen.findByLabelText(NAME), { target: { value: "Tên mới" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Dữ liệu đã được thay đổi ở phiên khác");
@@ -126,20 +129,21 @@ describe("AccountDetailPage", () => {
     );
     render(<AccountDetailPage />);
 
-    fireEvent.change(await screen.findByLabelText("Vai trò cao nhất"), { target: { value: "TEACHER" } });
-    fireEvent.click(screen.getByRole("button", { name: "Đổi vai trò" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
     expect(screen.getByRole("dialog")).toHaveTextContent("sẽ bị đăng xuất");
+    fireEvent.change(screen.getByLabelText(/^Vai trò mới/), { target: { value: "TEACHER" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
 
-    expect(await screen.findByText(/Giảng viên lớp: lop-1/)).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Không đổi được vai trò" })).toHaveTextContent("lop-1");
+    expect(changeRole).toHaveBeenCalledWith("acc-1", "TEACHER", 3);
   });
 
   it("không cho tự đổi vai trò hay tự vô hiệu hóa", async () => {
     signedInAs("acc-1");
     render(<AccountDetailPage />);
 
-    expect(await screen.findByLabelText("Vai trò cao nhất")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Vô hiệu hóa" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Đổi vai trò" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Vô hiệu hóa tài khoản" })).toBeDisabled();
     expect(changeStatus).not.toHaveBeenCalled();
   });
 });

@@ -1,26 +1,28 @@
+import type { Tone } from "@/shared/ui/tones";
 import type { AccountStatus } from "../types";
 
+// Nhãn và màu trạng thái theo README của design: Hoạt động xanh lá, Chờ kích hoạt vàng, Vô hiệu hóa đỏ.
 export const STATUS_LABELS: Record<AccountStatus, string> = {
   PENDING: "Chờ kích hoạt",
-  ACTIVE: "Đang hoạt động",
-  DISABLED: "Đã vô hiệu hóa",
+  ACTIVE: "Hoạt động",
+  DISABLED: "Vô hiệu hóa",
 };
 
-export const STATUS_TONES: Record<AccountStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700",
-  ACTIVE: "bg-emerald-50 text-emerald-700",
-  DISABLED: "bg-slate-100 text-slate-500",
+export const STATUS_TONES: Record<AccountStatus, Tone> = {
+  PENDING: "warning",
+  ACTIVE: "success",
+  DISABLED: "danger",
 };
 
-/** Lý do từ chối dòng CSV (AccountImportService) bằng tiếng Việt. */
+/** Lý do từ chối dòng CSV (AccountImportService), hiện sau "Lỗi: " ở cột Kết quả kiểm tra (design `a02b`). */
 export const IMPORT_REASON_LABELS: Record<string, string> = {
-  MISSING_FIELD: "Thiếu email, họ tên hoặc vai trò",
-  INVALID_EMAIL: "Email không hợp lệ",
-  EMAIL_DOMAIN_NOT_ALLOWED: "Email không thuộc tên miền trường",
-  DUPLICATE_IN_FILE: "Email trùng với dòng khác trong tệp",
-  EMAIL_EXISTS: "Email đã có tài khoản",
-  INVALID_DISPLAY_NAME: "Họ tên quá dài",
-  INVALID_ROLE: "Vai trò không hợp lệ (không nhập được Quản trị viên)",
+  MISSING_FIELD: "thiếu email, họ tên hoặc vai trò",
+  INVALID_EMAIL: "email không hợp lệ",
+  EMAIL_DOMAIN_NOT_ALLOWED: "email không thuộc tên miền trường",
+  DUPLICATE_IN_FILE: "email trùng dòng khác trong tệp",
+  EMAIL_EXISTS: "email đã tồn tại",
+  INVALID_DISPLAY_NAME: "họ tên quá dài",
+  INVALID_ROLE: "vai trò không hợp lệ",
 };
 
 /** Lỗi nghiệp vụ khi Admin thao tác tài khoản. */
@@ -34,6 +36,6 @@ export const ADMIN_ERROR_LABELS: Record<string, string> = {
   ROLE_CHANGE_BLOCKED: "Tài khoản còn phụ trách môn hoặc lớp; hãy đổi phân công trước khi đổi vai trò.",
 };
 
-export function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+export function formatDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
 }

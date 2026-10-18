@@ -10,6 +10,7 @@ export type AccountSummary = {
   displayName: string;
   role: Role;
   status: AccountStatus;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -17,7 +18,6 @@ export type AccountPage = { items: AccountSummary[]; total: number; page: number
 
 export type AccountDetail = AccountSummary & {
   phoneNumber: string | null;
-  createdAt: string;
   version: number;
 };
 

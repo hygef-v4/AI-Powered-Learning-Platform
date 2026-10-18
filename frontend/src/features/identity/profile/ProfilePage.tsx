@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Alert } from "@/shared/ui/Alert";
+import { PageHeader } from "@/shared/ui/PageHeader";
 import { useSession } from "../session";
 import { PASSWORD_CHANGED_MESSAGE, PasswordChangeDialog } from "./PasswordChangeDialog";
 import { ProfileForm } from "./ProfileForm";
 
-/** Màn User Profile (UC 06, 07), mở popup Password Change (UC 05). */
+/** Màn User Profile (UC 06, 07; design `c05`), mở popup Password Change (UC 05, `c06`). */
 export function ProfilePage() {
   const session = useSession();
   const [changing, setChanging] = useState(false);
@@ -13,24 +15,22 @@ export function ProfilePage() {
   if (session.status !== "authenticated") return null;
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Hồ sơ cá nhân</h1>
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
+      <PageHeader title="Hồ sơ" subtitle="Thông tin cá nhân của bạn" />
       {notice && (
-        <p role="status" className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <Alert tone="success" role="status">
           {notice}
-        </p>
+        </Alert>
       )}
-      <div className="mt-6">
-        <ProfileForm
-          key={session.profile.accountId}
-          profile={session.profile}
-          onSaved={() => void session.reload()}
-          onChangePassword={() => {
-            setNotice(null);
-            setChanging(true);
-          }}
-        />
-      </div>
+      <ProfileForm
+        key={session.profile.accountId}
+        profile={session.profile}
+        onSaved={() => void session.reload()}
+        onChangePassword={() => {
+          setNotice(null);
+          setChanging(true);
+        }}
+      />
       {changing && (
         <PasswordChangeDialog
           onClose={() => setChanging(false)}
@@ -40,6 +40,6 @@ export function ProfilePage() {
           }}
         />
       )}
-    </main>
+    </div>
   );
 }

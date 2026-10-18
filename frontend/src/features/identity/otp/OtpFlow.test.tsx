@@ -11,19 +11,22 @@ const verifyOtpMock = vi.mocked(verifyOtp);
 
 const COPY: OtpFlowCopy = {
   purpose: "ACTIVATION",
-  title: "Kích hoạt tài khoản",
-  subtitle: "Xác minh email",
-  passwordTitle: "Kích hoạt tài khoản",
-  passwordSubtitle: () => "Đặt mật khẩu",
+  title: () => "Kích hoạt tài khoản",
+  subtitle: () => "Xác minh email",
   steps: ["Email", "Mã OTP", "Đặt mật khẩu"],
+  sendLabel: "Gửi mã kích hoạt",
+  sendNote: "Ghi chú gửi mã",
+  codeLabel: "Mã kích hoạt (6 chữ số)",
+  verifyNote: "Ghi chú mã",
   submitLabel: "Kích hoạt và đăng nhập",
   submitNote: "Ghi chú",
+  aside: () => null,
 };
 
 async function reachOtpStep() {
   requestOtpMock.mockResolvedValue({ message: "ok" });
-  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "taivm@fpt.edu.vn" } });
-  fireEvent.click(screen.getByRole("button", { name: "Gửi mã" }));
+  fireEvent.change(screen.getByLabelText("Email trường"), { target: { value: "taivm@fpt.edu.vn" } });
+  fireEvent.click(screen.getByRole("button", { name: "Gửi mã kích hoạt" }));
   await screen.findByRole("button", { name: "Xác nhận mã" });
 }
 
@@ -46,7 +49,7 @@ describe("OtpFlow", () => {
     typeCode("048213");
     fireEvent.change(await screen.findByLabelText("Mật khẩu mới"), { target: { value: "hocbai2026" } });
     fireEvent.change(screen.getByLabelText("Nhập lại mật khẩu"), { target: { value: "hocbai2026" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập" }));
 
     await waitFor(() => expect(onComplete).toHaveBeenCalledWith("ticket-1", "hocbai2026"));
     expect(verifyOtpMock).toHaveBeenCalledWith("ACTIVATION", "taivm@fpt.edu.vn", "048213");
@@ -66,8 +69,9 @@ describe("OtpFlow", () => {
   it("nút gửi lại bị khóa trong 60 giây", async () => {
     render(<OtpFlow copy={COPY} onComplete={vi.fn()} />);
     await reachOtpStep();
-    expect(screen.getByRole("button", { name: /Gửi lại mã \(\d+s\)/ })).toBeDisabled();
-    expect(screen.getByText(/Mã hết hạn sau 10:00|Mã hết hạn sau 09:5\d/)).toBeInTheDocument();
+    expect(screen.getByText(/Gửi lại mã sau 0[01]:\d\d/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Gửi lại mã" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Mã hết hạn sau/)).toHaveTextContent(/Mã hết hạn sau (10:00|09:5\d)/);
   });
 
   it("ticket hết hạn thì quay về bước email", async () => {
@@ -78,10 +82,10 @@ describe("OtpFlow", () => {
     typeCode("048213");
     fireEvent.change(await screen.findByLabelText("Mật khẩu mới"), { target: { value: "hocbai2026" } });
     fireEvent.change(screen.getByLabelText("Nhập lại mật khẩu"), { target: { value: "hocbai2026" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent(TICKET_EXPIRED_MESSAGE);
-    expect(screen.getByRole("button", { name: "Gửi mã" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gửi mã kích hoạt" })).toBeInTheDocument();
   });
 
   it("mật khẩu bị backend từ chối thì hiện lý do và ở lại bước 3", async () => {
@@ -94,7 +98,7 @@ describe("OtpFlow", () => {
     typeCode("048213");
     fireEvent.change(await screen.findByLabelText("Mật khẩu mới"), { target: { value: "taivm2026" } });
     fireEvent.change(screen.getByLabelText("Nhập lại mật khẩu"), { target: { value: "taivm2026" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("không được chứa tên trong email");
     expect(screen.getByLabelText("Mật khẩu mới")).toBeInTheDocument();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
+import { AUTH_LABEL } from "./authStyles";
 
 const LENGTH = 6;
 
@@ -64,8 +65,8 @@ export function OtpInput({
 
   return (
     <fieldset>
-      <legend className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">{label}</legend>
-      <div className="mt-1 flex gap-2">
+      <legend className={AUTH_LABEL}>{label}</legend>
+      <div className="mt-1.5 flex gap-2.5">
         {digits.map((digit, index) => (
           <input
             key={index}
@@ -80,8 +81,8 @@ export function OtpInput({
             autoComplete={index === 0 ? "one-time-code" : "off"}
             aria-label={`Chữ số ${index + 1}`}
             aria-invalid={invalid || undefined}
-            className={`h-11 w-11 rounded-lg border text-center text-lg font-semibold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
-              invalid ? "border-red-400" : digit ? "border-[#1f2a6b]" : "border-slate-300"
+            className={`h-[52px] w-[46px] rounded-xl bg-white text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-primary/20 ${
+              invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-[#e2e8f0] focus:border-primary"
             }`}
           />
         ))}

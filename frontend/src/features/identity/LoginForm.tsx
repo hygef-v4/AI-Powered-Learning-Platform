@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
+import { cx } from "@/shared/ui/cx";
+import { Icon } from "@/shared/ui/Icon";
 import { login } from "./api";
+import { AUTH_INPUT, AUTH_LABEL, LOGIN_BUTTON } from "./components/authStyles";
 import { PasswordField } from "./components/PasswordField";
 import type { SessionInfo } from "./types";
 
@@ -46,11 +49,11 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
 
   return (
     <form onSubmit={submit} noValidate>
-      <h1 className="text-2xl font-bold text-slate-900">Đăng nhập</h1>
-      <p className="mt-1 text-sm text-slate-500">Đăng nhập bằng email trường.</p>
+      <h1 className="text-[28px] leading-tight font-bold tracking-[-0.7px] text-[#181c20]">Đăng nhập</h1>
+      <p className="mt-1 text-[13px] text-[#64748b]">Đăng nhập bằng email trường.</p>
 
-      <div className="mt-6">
-        <label htmlFor={emailId} className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">
+      <div className="mt-7">
+        <label htmlFor={emailId} className={AUTH_LABEL}>
           Email
         </label>
         <input
@@ -60,7 +63,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
           placeholder="masv@fpt.edu.vn"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className={cx(AUTH_INPUT, "mt-1.5")}
         />
       </div>
       <PasswordField
@@ -72,7 +75,8 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
       />
 
       {error && (
-        <p role="alert" className="mt-3 text-sm text-red-600">
+        <p role="alert" className="mt-3 flex items-start gap-1.5 text-[13px] text-danger">
+          <Icon name="error" size={16} className="mt-px" />
           {error}
         </p>
       )}
@@ -80,19 +84,19 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-5 w-full rounded-lg bg-[#1f2a6b] py-2.5 text-sm font-semibold text-white hover:bg-[#18215a] disabled:opacity-60"
+        className={cx(LOGIN_BUTTON, "mt-6")}
       >
         {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
       </button>
 
       <div className="mt-4 text-right">
-        <Link href="/reset-password" className="text-xs font-medium text-[#1f2a6b] hover:underline">
+        <Link href="/reset-password" className="text-xs font-medium text-[#0e2a9e] hover:underline">
           Quên mật khẩu?
         </Link>
       </div>
-      <p className="mt-3 text-center text-xs text-slate-500">
+      <p className="mt-3 text-center text-xs text-[#64748b]">
         Lần đầu sử dụng?{" "}
-        <Link href="/activate" className="font-semibold text-[#1f2a6b] hover:underline">
+        <Link href="/activate" className="font-semibold text-[#0e2a9e] hover:underline">
           Kích hoạt tài khoản
         </Link>
       </p>

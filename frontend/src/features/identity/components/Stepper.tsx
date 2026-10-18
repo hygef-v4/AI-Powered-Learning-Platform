@@ -1,26 +1,35 @@
-/** Thanh 3 bước: bước xong có ✓ xanh lá, bước hiện tại số trong tròn xanh đậm, bước sau màu xám. */
+import { Icon } from "@/shared/ui/Icon";
+
+/**
+ * Thanh 3 bước của Kích hoạt và Khôi phục (design `c02a`–`c04`): bước xong là vòng xanh lá có dấu ✓,
+ * bước hiện tại là vòng xanh đậm có số, bước sau màu xám; nối bằng vạch ngắn.
+ */
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <ol className="flex items-center gap-2 text-xs" aria-label="Các bước">
+    <ol className="flex flex-wrap items-center gap-2 text-xs font-semibold" aria-label="Các bước">
       {steps.map((label, index) => {
         const state = index < current ? "done" : index === current ? "current" : "todo";
         return (
           <li key={label} className="flex items-center gap-2" aria-current={state === "current" ? "step" : undefined}>
-            {index > 0 && <span className={`h-px w-6 ${index <= current ? "bg-emerald-400" : "bg-slate-200"}`} />}
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
-                state === "done"
-                  ? "bg-emerald-50 text-emerald-600"
-                  : state === "current"
-                    ? "bg-[#1f2a6b] text-white"
-                    : "bg-slate-100 text-slate-400"
-              }`}
-            >
-              {state === "done" ? "✓" : index + 1}
-            </span>
+            {index > 0 && (
+              <span aria-hidden="true" className={`h-0.5 w-6 ${index <= current ? "bg-[#6ee7b7]" : "bg-[#e2e8f0]"}`} />
+            )}
+            {state === "done" ? (
+              <span className="flex size-5 items-center justify-center rounded-full border border-[#a7f3d0] bg-[#ecfdf5] text-[#059669]">
+                <Icon name="check" size={13} />
+              </span>
+            ) : (
+              <span
+                className={`flex size-5 items-center justify-center rounded-full text-[11px] ${
+                  state === "current" ? "bg-primary-strong font-bold text-white" : "bg-[#f1f5f9] text-[#94a3b8]"
+                }`}
+              >
+                {index + 1}
+              </span>
+            )}
             <span
               className={
-                state === "done" ? "text-emerald-600" : state === "current" ? "font-semibold text-[#1f2a6b]" : "text-slate-400"
+                state === "done" ? "text-[#059669]" : state === "current" ? "text-primary-strong" : "text-[#94a3b8]"
               }
             >
               {index + 1}. {label}

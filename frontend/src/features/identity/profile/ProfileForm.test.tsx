@@ -23,9 +23,12 @@ describe("ProfileForm", () => {
 
   it("email, vai trò, trạng thái chỉ đọc; chỉ sửa được tên và số điện thoại", () => {
     render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} onChangePassword={vi.fn()} />);
-    expect(screen.getAllByRole("textbox")).toHaveLength(2);
-    expect(screen.getByText("taivm@fpt.edu.vn")).toBeInTheDocument();
-    expect(screen.getByText("Đang hoạt động")).toBeInTheDocument();
+    expect(screen.getByLabelText("Họ và tên")).not.toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Số điện thoại")).not.toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Email trường")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Email trường")).toHaveValue("taivm@fpt.edu.vn");
+    expect(screen.getByLabelText("Vai trò")).toHaveAttribute("readonly");
+    expect(screen.getByText("Hoạt động")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
   });
 

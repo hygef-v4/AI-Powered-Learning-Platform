@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError } from "@/shared/api/client";
+import { cx } from "@/shared/ui/cx";
+import { Icon } from "@/shared/ui/Icon";
 import { requestOtp, verifyOtp } from "../api";
+import { AuthLayout } from "../components/AuthLayout";
+import { AUTH_BUTTON, AUTH_INPUT, AUTH_LABEL, AUTH_NOTE } from "../components/authStyles";
+import { OtpInput } from "../components/OtpInput";
 import { PasswordChecklist } from "../components/PasswordChecklist";
 import { PasswordField } from "../components/PasswordField";
-import { OtpInput } from "../components/OtpInput";
 import { Stepper } from "../components/Stepper";
 import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../passwordRules";
 import type { OtpPurpose } from "../types";
@@ -20,48 +24,52 @@ export const OTP_INVALID_MESSAGE = "Mã không hợp lệ hoặc đã hết hạ
 export const TICKET_EXPIRED_MESSAGE = "Phiên xác minh đã hết hạn, hãy yêu cầu mã mới.";
 const BUSY_MESSAGE = "Hệ thống tạm bận, vui lòng thử lại sau.";
 
-/** Nội dung khác nhau giữa Kích hoạt (UC 01) và Đặt lại mật khẩu (UC 04). */
+type Step = 0 | 1 | 2;
+
+/** Chữ và thẻ thông tin khác nhau giữa Kích hoạt (`c02a`, `c02b`, `c02`) và Khôi phục (`c03a`, `c03`, `c04`). */
 export type OtpFlowCopy = {
   purpose: OtpPurpose;
-  title: string;
-  subtitle: string;
-  passwordTitle: string;
-  passwordSubtitle: (email: string) => string;
+  /** Tiêu đề và dòng phụ của từng bước; `email` là email đã nhập ở bước 1. */
+  title: (step: Step) => string;
+  subtitle: (step: Step, email: string) => string;
   steps: [string, string, string];
+  sendLabel: string;
+  sendNote: string;
+  codeLabel: string;
+  verifyNote: string;
   submitLabel: string;
   submitNote: string;
+  /** Thẻ trắng ở khối bên phải theo bước. */
+  aside: (step: Step) => ReactNode;
+  /** Dòng phụ dưới khẩu hiệu (chỉ màn Khôi phục có). */
+  tagline?: (step: Step) => boolean;
 };
 
 /**
  * Ba bước email → OTP → mật khẩu mới (BR-U01-28): ô mật khẩu chỉ mở sau khi OTP đúng; otpTicket chỉ giữ trong state
- * của trang, không lưu ở storage hay URL. `onComplete` gửi mật khẩu kèm ticket; lỗi ticket hết hạn thì quay về bước 1.
+ * của trang, không lưu ở storage hay URL. `onComplete` gửi mật khẩu kèm ticket; ticket hết hạn thì quay về bước 1.
  */
 export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (ticket: string, password: string) => Promise<void> }) {
-  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [step, setStep] = useState<Step>(0);
   const [email, setEmail] = useState("");
   const [ticket, setTicket] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  function restart(message: string) {
-    setTicket(null);
-    setStep(0);
-    setNotice(message);
-  }
-
   return (
-    <div>
-      <Link href="/login" className="text-xs text-slate-500 hover:text-slate-700">
-        ← Quay lại đăng nhập
+    <AuthLayout aside={copy.aside(step)} tagline={copy.tagline?.(step)}>
+      <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64748b] hover:text-ink">
+        <Icon name="arrow_back" size={15} />
+        Quay lại đăng nhập
       </Link>
-      <h1 className="mt-4 text-2xl font-bold text-slate-900">{step === 2 ? copy.passwordTitle : copy.title}</h1>
-      <p className="mt-1 text-sm text-slate-500">{step === 2 ? copy.passwordSubtitle(email) : copy.subtitle}</p>
-      <div className="mt-4">
+      <h1 className="mt-5 text-[28px] leading-tight font-bold tracking-[-0.7px] text-ink">{copy.title(step)}</h1>
+      <p className="mt-1.5 text-sm text-[#64748b]">{copy.subtitle(step, email)}</p>
+      <div className="mt-5">
         <Stepper steps={copy.steps} current={step} />
       </div>
 
       {step === 0 && (
         <EmailStep
-          purpose={copy.purpose}
+          copy={copy}
           initialEmail={email}
           notice={notice}
           onSent={(sentEmail) => {
@@ -73,7 +81,7 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
       )}
       {step === 1 && (
         <VerifyStep
-          purpose={copy.purpose}
+          copy={copy}
           email={email}
           onVerified={(otpTicket) => {
             setTicket(otpTicket);
@@ -84,39 +92,57 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
       )}
       {step === 2 && ticket && (
         <PasswordStep
-          submitLabel={copy.submitLabel}
-          submitNote={copy.submitNote}
+          copy={copy}
           onSubmit={(password) => onComplete(ticket, password)}
-          onTicketExpired={() => restart(TICKET_EXPIRED_MESSAGE)}
+          onTicketExpired={() => {
+            setTicket(null);
+            setStep(0);
+            setNotice(TICKET_EXPIRED_MESSAGE);
+          }}
         />
       )}
-    </div>
+    </AuthLayout>
   );
 }
 
-function errorStatus(error: unknown) {
-  return error instanceof ApiError ? error.problem : { status: 0 };
+/** "taivm@fpt.edu.vn" → "t***m@fpt.edu.vn" như design `c02b`. */
+export function maskEmail(email: string) {
+  const at = email.indexOf("@");
+  if (at < 1) return email;
+  const name = email.slice(0, at);
+  const masked = name.length <= 2 ? `${name[0]}***` : `${name[0]}***${name[name.length - 1]}`;
+  return masked + email.slice(at);
 }
 
-function PrimaryButton({ busy, children }: { busy: boolean; children: string }) {
+function errorProblem(error: unknown) {
+  return (error instanceof ApiError ? error.problem : { status: 0 }) as { status: number; code?: string; violations?: string[] };
+}
+
+function ErrorText({ children }: { children: ReactNode }) {
   return (
-    <button
-      type="submit"
-      disabled={busy}
-      className="mt-5 w-full rounded-lg bg-[#1f2a6b] py-2.5 text-sm font-semibold text-white hover:bg-[#18215a] disabled:opacity-60"
-    >
+    <p role="alert" className="mt-2 flex items-start gap-1.5 text-[13px] text-danger">
+      <Icon name="error" size={16} className="mt-px" />
       {children}
+    </p>
+  );
+}
+
+function SubmitButton({ busy, disabled, children }: { busy: boolean; disabled?: boolean; children: string }) {
+  return (
+    <button type="submit" disabled={busy || disabled} className={cx(AUTH_BUTTON, "mt-6")}>
+      {children}
+      <Icon name="arrow_forward" size={18} />
     </button>
   );
 }
 
 function EmailStep({
-  purpose,
+  copy,
   initialEmail,
   notice,
   onSent,
 }: {
-  purpose: OtpPurpose;
+  copy: OtpFlowCopy;
   initialEmail: string;
   notice: string | null;
   onSent: (email: string) => void;
@@ -136,7 +162,7 @@ function EmailStep({
     setBusy(true);
     setError(null);
     try {
-      await requestOtp(purpose, value);
+      await requestOtp(copy.purpose, value);
       onSent(value);
     } catch {
       setError(BUSY_MESSAGE);
@@ -148,39 +174,40 @@ function EmailStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       {notice && (
-        <p role="status" className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p role="status" className="mb-4 flex items-start gap-2 rounded-[10px] bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+          <Icon name="warning" size={18} />
           {notice}
         </p>
       )}
-      <label htmlFor={id} className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">
-        Email
+      <label htmlFor={id} className={AUTH_LABEL}>
+        Email trường
       </label>
-      <input
-        id={id}
-        type="email"
-        autoComplete="email"
-        placeholder="masv@fpt.edu.vn"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-      />
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      <PrimaryButton busy={busy}>Gửi mã</PrimaryButton>
+      <div className="relative mt-1.5">
+        <input
+          id={id}
+          type="email"
+          autoComplete="email"
+          placeholder={copy.purpose === "ACTIVATION" ? "masv@fpt.edu.vn" : "ten@fpt.edu.vn"}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={cx(AUTH_INPUT, "pr-10")}
+        />
+        <Icon name="mail" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#94a3b8]" />
+      </div>
+      {error && <ErrorText>{error}</ErrorText>}
+      <SubmitButton busy={busy}>{copy.sendLabel}</SubmitButton>
+      <p className={cx(AUTH_NOTE, "mt-4")}>{copy.sendNote}</p>
     </form>
   );
 }
 
 function VerifyStep({
-  purpose,
+  copy,
   email,
   onVerified,
   onChangeEmail,
 }: {
-  purpose: OtpPurpose;
+  copy: OtpFlowCopy;
   email: string;
   onVerified: (ticket: string) => void;
   onChangeEmail: () => void;
@@ -201,10 +228,9 @@ function VerifyStep({
     setBusy(true);
     setError(null);
     try {
-      onVerified((await verifyOtp(purpose, email, code)).otpTicket);
+      onVerified((await verifyOtp(copy.purpose, email, code)).otpTicket);
     } catch (e) {
-      const status = errorStatus(e).status;
-      setError(status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
+      setError(errorProblem(e).status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
       setCode("");
     } finally {
       setBusy(false);
@@ -214,7 +240,7 @@ function VerifyStep({
   async function resend() {
     setError(null);
     try {
-      await requestOtp(purpose, email);
+      await requestOtp(copy.purpose, email);
       setSentAt(Date.now());
       setCode("");
     } catch {
@@ -224,54 +250,50 @@ function VerifyStep({
 
   return (
     <form onSubmit={submit} noValidate className="mt-6">
-      <p className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">Email</p>
-      <div className="mt-1 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
-        <span className="text-slate-700">{email}</span>
-        <span className="flex items-center gap-2">
-          <span className="text-emerald-600" aria-hidden="true">
-            ✓
-          </span>
-          <button type="button" onClick={onChangeEmail} className="text-xs text-[#1f2a6b] hover:underline">
-            Đổi email
-          </button>
-        </span>
-      </div>
-
-      <div className="mt-4">
-        <OtpInput value={code} onChange={setCode} invalid={error === OTP_INVALID_MESSAGE} />
-      </div>
-      <div className="mt-2 flex items-center justify-between text-xs">
-        <span className="text-slate-500">
-          {expiresIn > 0 ? `Mã hết hạn sau ${formatMmSs(expiresIn)}` : "Mã đã hết hạn, hãy gửi lại mã."}
-        </span>
-        <button
-          type="button"
-          onClick={resend}
-          disabled={resendIn > 0}
-          className="font-medium text-[#1f2a6b] hover:underline disabled:text-slate-400 disabled:no-underline"
-        >
-          {resendIn > 0 ? `Gửi lại mã (${resendIn}s)` : "Gửi lại mã"}
+      <p className="rounded-[10px] bg-[#f1f5f9] px-3.5 py-2.5 text-[13px] text-[#475569]">
+        Đã gửi mã tới <b>{maskEmail(email)}</b>.{" "}
+        <button type="button" onClick={onChangeEmail} className="font-semibold text-primary-strong hover:underline">
+          Đổi email
         </button>
+      </p>
+
+      <div className="mt-5">
+        <OtpInput value={code} onChange={setCode} invalid={error === OTP_INVALID_MESSAGE} label={copy.codeLabel} />
       </div>
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      <PrimaryButton busy={busy}>Xác nhận mã</PrimaryButton>
-      <p className="mt-3 text-center text-xs text-slate-500">Nếu email tồn tại, bạn sẽ nhận được mã trong vài phút.</p>
+      <div className="mt-3 flex items-center justify-between text-xs">
+        <span className="flex items-center gap-1.5 text-[#64748b]">
+          <Icon name="schedule" size={14} />
+          {expiresIn > 0 ? (
+            <>
+              Mã hết hạn sau <b className="text-ink">{formatMmSs(expiresIn)}</b>
+            </>
+          ) : (
+            "Mã đã hết hạn, hãy gửi lại mã."
+          )}
+        </span>
+        {resendIn > 0 ? (
+          <span className="text-[#94a3b8]">Gửi lại mã sau {formatMmSs(resendIn)}</span>
+        ) : (
+          <button type="button" onClick={resend} className="font-semibold text-primary-strong hover:underline">
+            Gửi lại mã
+          </button>
+        )}
+      </div>
+      {error && <ErrorText>{error}</ErrorText>}
+      <SubmitButton busy={busy} disabled={code.length < 6}>
+        Xác nhận mã
+      </SubmitButton>
+      <p className={cx(AUTH_NOTE, "mt-4")}>{copy.verifyNote}</p>
     </form>
   );
 }
 
 function PasswordStep({
-  submitLabel,
-  submitNote,
+  copy,
   onSubmit,
   onTicketExpired,
 }: {
-  submitLabel: string;
-  submitNote: string;
+  copy: OtpFlowCopy;
   onSubmit: (password: string) => Promise<void>;
   onTicketExpired: () => void;
 }) {
@@ -296,19 +318,16 @@ function PasswordStep({
     try {
       await onSubmit(password);
     } catch (e) {
-      const problem = errorStatus(e) as { status: number; code?: string; violations?: string[] };
+      const problem = errorProblem(e);
       if (problem.code === "TICKET_EXPIRED") {
         onTicketExpired();
         return;
       }
-      if (problem.code === "PASSWORD_POLICY") {
-        setError(
-          (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") ||
-            "Mật khẩu chưa đạt yêu cầu.",
-        );
-      } else {
-        setError(BUSY_MESSAGE);
-      }
+      setError(
+        problem.code === "PASSWORD_POLICY"
+          ? (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") || "Mật khẩu chưa đạt yêu cầu."
+          : BUSY_MESSAGE,
+      );
     } finally {
       setBusy(false);
     }
@@ -332,13 +351,9 @@ function PasswordStep({
         onChange={(e) => setConfirm(e.target.value)}
       />
       <PasswordChecklist password={password} />
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      <PrimaryButton busy={busy}>{`${submitLabel} →`}</PrimaryButton>
-      <p className="mt-3 text-center text-xs text-slate-500">{submitNote}</p>
+      {error && <ErrorText>{error}</ErrorText>}
+      <SubmitButton busy={busy}>{copy.submitLabel}</SubmitButton>
+      <p className={cx(AUTH_NOTE, "mt-4")}>{copy.submitNote}</p>
     </form>
   );
 }

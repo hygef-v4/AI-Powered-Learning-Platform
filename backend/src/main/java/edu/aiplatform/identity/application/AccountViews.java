@@ -13,12 +13,13 @@ public final class AccountViews {
     private AccountViews() {
     }
 
-    /** Một dòng Account List: tên, email, role, trạng thái, cập nhật lần cuối. */
+    /** Một dòng Account List (design a02): tên, email, role, trạng thái, ngày tạo. */
     public record Summary(UUID id, String email, String displayName, Role role, AccountStatus status,
-                          Instant updatedAt) {
+                          Instant createdAt, Instant updatedAt) {
 
         static Summary of(Account a) {
-            return new Summary(a.id(), a.schoolEmail(), a.displayName(), a.role(), a.status(), a.updatedAt());
+            return new Summary(a.id(), a.schoolEmail(), a.displayName(), a.role(), a.status(), a.createdAt(),
+                    a.updatedAt());
         }
     }
 
