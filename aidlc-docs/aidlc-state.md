@@ -183,3 +183,11 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Tách truy vết: UC23 là điểm truy cập; UC54 xem nhóm; UC55 gửi/hủy yêu cầu; UC57 giảng viên thao tác nhóm và xử lý yêu cầu.
 - [x] Kiểm 66 UC hiện hành, tên UC57 nhất quán, ánh xạ giao diện và diff Markdown. Kết quả: `inception/plans/uc57-document-sync-2026-10-14.md`.
 - Không chuyển stage, duyệt hoặc triển khai code; folder unit legacy và tài liệu lịch sử giữ nguyên.
+
+
+## U05 navigation merge repair - 2026-10-18
+- [x] Reproduce the removed dashboardNavEntries import after merging main (3edc6f1).
+- [x] Use the shared navEntries registry for external links; preserve local preview navigation and filter duplicate U05 entries.
+- [x] Add four real-registry regression tests; observe failure before repair and success after repair.
+- [x] Verify 59 frontend tests, lint, typecheck and production build all pass.
+- Scope and evidence: `construction/plans/u05-merge-nav-repair-2026-10-18.md`. Existing unit progress, backend integration limitations and extension configuration retained; no commit/push.
