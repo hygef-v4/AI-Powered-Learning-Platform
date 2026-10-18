@@ -76,7 +76,7 @@ public class JdbcCourseClassRepository implements ICourseClassRepository {
         return args;
     }
 
-    private static CourseClass map(ResultSet rs, int row) throws SQLException {
+    static CourseClass map(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class), rs.getObject("subject_id", UUID.class),
                 rs.getString("code"), rs.getString("name"), rs.getString("description"), rs.getString("term"),
                 ClassStatus.valueOf(rs.getString("status")), rs.getObject("teacher_id", UUID.class),

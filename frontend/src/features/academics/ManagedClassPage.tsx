@@ -1,5 +1,6 @@
 "use client";
 
+import type {CandidateLoader} from "./useCandidates";
 import { useState } from "react";
 import { ClassInfoForm } from "./ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "./ClassDialogs";
@@ -17,8 +18,8 @@ export type ManagedClassActions = {
   onEnroll: (accountId: string) => Promise<void>;
   onBatch: (input: string) => Promise<EnrollmentRowResult[]>;
 };
-export function ManagedClassPage({ value, students, teachers, candidates, onBack, actions }: {
-  value: CourseClassView; students: EnrollmentView[]; teachers: PersonView[]; candidates: PersonView[]; onBack: () => void; actions: ManagedClassActions;
+export function ManagedClassPage({ value, students, teachers, candidates, onBack, actions, loadTeachers, loadCandidates }: {
+  loadTeachers?:CandidateLoader; loadCandidates?:CandidateLoader; value: CourseClassView; students: EnrollmentView[]; teachers: PersonView[]; candidates: PersonView[]; onBack: () => void; actions: ManagedClassActions;
 }) {
   const [tab, setTab] = useState<"info" | "students">("info");
   const [assigning, setAssigning] = useState(false);
@@ -41,8 +42,8 @@ export function ManagedClassPage({ value, students, teachers, candidates, onBack
     {tab === "info" ? <div className={styles.detailGrid}><ClassInfoForm value={value} onSave={actions.onSaveInfo}/><div className={styles.stack}>
       <section className={styles.panel}><h2>Giảng viên</h2>{value.teacher ? <div className={styles.person}><Avatar name={value.teacher.name}/><div><strong>{value.teacher.name}</strong><small>{value.teacher.email}</small></div></div> : <p className={styles.muted}>Chưa phân công giảng viên.</p>}{!archived && <button className={styles.textButton} style={{ marginTop: 18 }} onClick={() => setAssigning(true)}><Icon name="person"/>{value.teacher ? "Đổi giảng viên" : "Phân công giảng viên"}</button>}</section>
       <section className={styles.panel}><h2>Quyền xem</h2><div className={styles.switchRow}><span>Cho sinh viên xem phân bố điểm</span><button type="button" className={styles.switch} role="switch" aria-label="Cho sinh viên xem phân bố điểm" aria-checked={value.showGradeDistribution} disabled={archived || busy} onClick={() => { setError(""); if (value.showGradeDistribution) void setDistribution(false); else setConfirmDistribution(true); }} data-testid="class-grade-distribution"/></div><p className={styles.hint} style={{ marginTop: 10 }}>Sinh viên thấy biểu đồ phân bố điểm của bài đã công bố khi đủ dữ liệu, không thấy điểm người khác.</p>{error && !confirmDistribution && <p role="alert" className={styles.error}>{error}</p>}</section>
-    </div></div> : <EnrollmentPanel students={students} editable={!archived} includeRemoved candidates={candidates} onStatusChange={actions.onEnrollmentStatus} onEnroll={actions.onEnroll} onBatch={actions.onBatch}/>}
-    {assigning && !archived && <AssignTeacherDialog value={value} teachers={teachers} onAssign={actions.onAssign} onClose={() => setAssigning(false)}/>}
+    </div></div> : <EnrollmentPanel loadCandidates={loadCandidates} students={students} editable={!archived} includeRemoved candidates={candidates} onStatusChange={actions.onEnrollmentStatus} onEnroll={actions.onEnroll} onBatch={actions.onBatch}/>}
+    {assigning && !archived && <AssignTeacherDialog loadTeachers={loadTeachers} value={value} teachers={teachers} onAssign={actions.onAssign} onClose={() => setAssigning(false)}/>}
     {confirmDistribution && <Modal title="Bật phân bố điểm?" onClose={() => setConfirmDistribution(false)} busy={busy} footer={<><button disabled={busy} className={styles.button} onClick={() => setConfirmDistribution(false)}>Hủy</button><button disabled={busy} className={styles.primaryButton} onClick={() => void setDistribution(true)}>Xác nhận bật</button></>}><p>Sinh viên trong lớp sẽ xem được phân bố điểm ẩn danh của các bài đã công bố khi đủ mẫu. Điểm cá nhân của người khác không được hiển thị.</p>{error && <p role="alert" className={styles.error}>{error}</p>}</Modal>}
   </>;
 }

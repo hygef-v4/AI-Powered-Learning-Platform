@@ -3877,3 +3877,34 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **AI Response**: Preparing one local commit for the current independent U05 backend, reference UI, tests and documentation on Class&Enrollment. User explicitly defers merging U01/U04 until their owners finish. No push, remote merge, stash removal or scope expansion.
 **Validation**: Fresh full backend run exit 0: 123 tests/29 suites, zero failures/errors/skips; frontend 37 tests/8 files, typecheck and lint pass. Existing SQL pending and persistence opt-in preserved.
 ---
+
+
+## U05 - hoàn thiện code và bàn giao tích hợp
+**Timestamp**: 2026-10-18T14:55:54.216956+00:00
+**User Input**: "Giúp tôi hoàn thiện phần code U05 — Class & Enrollment theo thiết kế hiện có, gồm service nghiệp vụ, API, implementation các contract U05 cung cấp, kết nối frontend với API và unit test."
+**Yêu cầu theo ngữ cảnh (diễn giải, không phải prompt nguyên văn)**: Hoàn thiện phần code U05 còn thiếu sau khi rà soát, theo cách làm từng unit độc lập rồi nhóm merge tích hợp sau. Chỉ đạo này thay thế giới hạn domain/UI độc lập trước đó; không triển khai thay các unit khác.
+**Phạm vi đã làm**: Service nghiệp vụ lớp/ghi danh, API kiểm quyền và version, provider IClassAccess/IClassScope/ISubjectClasses, JDBC truy vấn theo phạm vi và frontend gọi API; bổ sung test và đủ năm slot mở rộng. Kế hoạch: construction/plans/u05-completion-2026-10-18.md.
+**Review**: Đã sửa kiểm quyền ghi riêng với quyền xem và kết quả phục hồi ghi danh không hợp lệ. Rà độc lập phát hiện mất thông báo khi PATCH409 tải version mới làm form remount; test tái hiện thất bại trước sửa, thông báo ở route giữ được sau tải lại, retry dùng version2. Review lại xác nhận đạt.
+**Kiểm chứng**: Backend clean test: 164 test/33 suite, không failure/error/skip; frontend: 70 test/18 file, lint/typecheck và production build qua. Test dùng contract/mock; không có Docker daemon để chạy PostgreSQL thật, không khẳng định migration/concurrency/session/audit liên unit đã tích hợp. SQL giữ FK thật ở pending; chỉ bật U05_PERSISTENCE_ENABLED sau khi merge schema/contract phụ thuộc. Không commit/push hoặc ghi dữ liệu nghiệp vụ thật.
+**Tài liệu bàn giao**: construction/u05-class-enrollment/code/completion-2026-10-18.md.
+**Audit integrity**: Đã kiểm chứng toàn bộ lịch sử trước tác vụ khớp nguyên vẹn nội dung audit tại HEAD; hai mục mới trong phiên được tổng hợp tại đây sau khi sửa lỗi định dạng xuống dòng ở cuối file. Không thay nội dung lịch sử.
+
+
+## U05 - bổ sung unit test
+**Timestamp**: 2026-10-18T15:03:14.765023+00:00
+**User Input**: "giúp tôi bổ sung unit test còn thiếu cho u05"
+**Yêu cầu theo ngữ cảnh (diễn giải)**: Bổ sung các test còn thiếu đã được rà: quyền theo vai trò/phạm vi, luồng đọc thành công, batch lỗi sau một số dòng đã xử lý và hợp đồng request/response/validation API. Dùng mock contract unit khác, chưa cần merge hoặc database thật. Giữ nguyên phần triển khai U05 chưa commit; không khẳng định coverage100% hoặc integration hoàn tất.
+
+
+## U05 - kết quả bổ sung unit test
+**Timestamp**: 2026-10-18T15:10:44.434470+00:00
+**AI Response**: Đã thêm 140 ca backend: 99 quyền/phạm vi/đọc dữ liệu, 35 hợp đồng API/validation và 6 batch transaction/retry. Test batch quan sát commit/rollback từng dòng, dòng trước thành công khi dòng sau lỗi, retry không ghi danh/phát event trùng và caller rollback không cuốn theo dòng REQUIRES_NEW.
+**Kiểm chứng**: Maven clean test qua 304 test/36 suite; riêng U05 210 test, không failure/error/skip. Review độc lập xác nhận assertion đúng nhánh, không có ghi/event ngoài ý muốn; SHA256 của 449 file source ứng dụng khớp trước tác vụ. Frontend không thay đổi, không chạy lại trong đợt này. Không khẳng định coverage100%, xác thực thật hoặc độ bền/concurrency PostgreSQL từ mock. Chi tiết: construction/plans/u05-unit-test-expansion-2026-10-18.md. Không commit/push.
+
+
+## U05 - yêu cầu commit phần hoàn thiện và unit test
+**Timestamp**: 2026-10-18T15:14:29.057942+00:00
+**User Input**: "giúp tôi commit"
+**Yêu cầu theo ngữ cảnh (diễn giải)**: Tạo commit trên nhánh hiện tại cho toàn bộ phần hoàn thiện U05, bộ unit test bổ sung và tài liệu bàn giao đã thực hiện trong phiên; không yêu cầu push hoặc deploy.
+**Kiểm chứng trước commit**: Backend 304 test qua (210 riêng U05), không failure/error/skip; 449 file source khớp SHA256 bản đã kiểm thử. Frontend trước đó qua 70 test, lint/typecheck/build và không đổi source sau kiểm chứng. Rà các file pending không phát hiện private-key/token thông dụng, credential hoặc build artifact. Giữ giới hạn migration/session/audit/concurrency thật là bước tích hợp sau merge.
+**Action**: Tạo local commit: feat(u05): complete class and enrollment workflows.

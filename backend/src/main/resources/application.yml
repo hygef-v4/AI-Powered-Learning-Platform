@@ -74,6 +74,9 @@ management:
 
 # U03 Job and Settings
 platform:
+  academics:
+    # Enable only after U01/U04 migrations and real identity/subject contracts are merged.
+    persistence-enabled: ${U05_PERSISTENCE_ENABLED:false}
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
     require-drive: ${U03_REQUIRE_DRIVE:false}

@@ -103,7 +103,7 @@
 
 ## Unit Progress
 
-Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16, mọi bước code của 15 unit còn [ ].
+Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16. Các dòng chưa cập nhật dưới đây giữ baseline lịch sử; riêng U05 được cập nhật theo Class & Enrollment hiện hành ngày 2026-10-18.
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
@@ -111,7 +111,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U05 Content, Material & RAG | Design revision 73 UC ngày 2026-10-09; Tóm tắt/embedding và RAG cho AI; quiz/attempt do U08/U09/U11 giữ. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U05 Class & Enrollment | Current UC20-30 design and existing contracts; other rows retain historical baseline where noted. | Full completion authorized 2026-10-18; completion execution plan checked. | Code implemented: service/API/contracts and frontend wiring; backend 304 (U05: 210) / frontend 70 tests, lint/typecheck/build pass. Awaiting real cross-unit/schema/session integration; see construction/u05-class-enrollment/code/completion-2026-10-18.md. |
 | U06 Rubric & Subject Question Bank | Design revision 73 UC ngày 2026-10-09; Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U07 Payment & AI Credit | Design revision 73 UC ngày 2026-10-09; Ví của ba role; snapshot payment, verified webhook và grant định kỳ qua Settings. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
@@ -191,3 +191,19 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Add four real-registry regression tests; observe failure before repair and success after repair.
 - [x] Verify 59 frontend tests, lint, typecheck and production build all pass.
 - Scope and evidence: `construction/plans/u05-merge-nav-repair-2026-10-18.md`. Existing unit progress, backend integration limitations and extension configuration retained; no commit/push.
+
+## U05 Class & Enrollment code completion - 2026-10-18
+- [x] User authorizes full U05 against existing contracts, superseding the older dependency-free-only scope.
+- [x] Implement application lifecycle/enrollment services, scoped REST APIs and real IClassAccess/IClassScope/ISubjectClasses providers.
+- [x] Wire frontend production routes to APIs; preserve development-only fixtures and all five extension slots.
+- [x] Verify backend 164 tests, frontend 70 tests, lint/typecheck and production build; independent review's409 message defect repaired and re-reviewed.
+- Code-ready for merging with other units; SQL remains pending and U05_PERSISTENCE_ENABLED defaults false until real U01/U04 schemas/contracts are ready. U02 audit persistence, real session authorization and PostgreSQL concurrency remain tester/integration gates; they are not marked complete.
+- Results: `construction/u05-class-enrollment/code/completion-2026-10-18.md`; execution: `construction/plans/u05-completion-2026-10-18.md`. No commit/push.
+
+## U05 unit test expansion - 2026-10-18
+- [x] Add read/scope/role matrix and successful DTO/candidate/summary cases, including denied write access on all nine mutation entrypoints.
+- [x] Add API request/response validation and server-principal mapping cases.
+- [x] Observe independent batch transactions, later-row failures/retry and an ambient caller rollback without requiring live PostgreSQL.
+- [x] Clean full backend run: 304 tests/36 suites pass; 210 U05 cases, including 140 newly added. Independent quality review and source SHA256 check passed.
+- Production source unchanged from before this test-only task. Coverage percentage and live integration are not claimed; no commit/push.
+- Evidence: `construction/plans/u05-unit-test-expansion-2026-10-18.md`.

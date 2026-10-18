@@ -1,5 +1,8 @@
 # U05 — UI theo ui-reference.zip
 
+> Latest implementation: [U05 code completion and integration handoff](completion-2026-10-18.md). The earlier dependency-free-only scope and test counts below are historical; they do not describe the current completed application/API/frontend code.
+
+
 > Cập nhật sau đợt UI: đã khôi phục backend độc lập từ stash và giữ nguyên giao diện này. Hiện có 37 test frontend (21 U05) và 123 test backend (29 U05) qua. Xem [kết quả ghép stash](stash-recovery-2026-10-18.md); các mô tả thời điểm bắt đầu/bằng chứng dưới đây thuộc đợt làm UI.
 
 ## Phạm vi hiện tại

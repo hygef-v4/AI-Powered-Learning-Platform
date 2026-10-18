@@ -1,5 +1,8 @@
 # U05 — phần độc lập đã triển khai ngày 2026-10-17
 
+> Latest implementation: [U05 code completion and integration handoff](completion-2026-10-18.md). The earlier dependency-free-only scope and test counts below are historical; they do not describe the current completed application/API/frontend code.
+
+
 > Bản ghi lịch sử trước khi đổi UI. Đã khôi phục backend ngày 2026-10-18 và giữ UI mới; tên component/test count bên dưới mô tả phiên cũ. Xem [kết quả ghép mới nhất](stash-recovery-2026-10-18.md) và [UI hiện tại](ui-summary-2026-10-18.md).
 
 ## Phạm vi được người dùng cho phép

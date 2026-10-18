@@ -1,5 +1,6 @@
 "use client";
 
+import {useCandidates, type CandidateLoader} from "./useCandidates";
 import { useId, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { studentDetailSections } from "./slots";
@@ -35,12 +36,13 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
     </Modal>}
   </>;
 }
-export function AssignTeacherDialog({ value, teachers, onAssign, onClose }: { value: CourseClassView; teachers: PersonView[]; onAssign: (teacherId: string | null, version: number) => Promise<void>; onClose: () => void }) {
+export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTeachers }: { value: CourseClassView; teachers: PersonView[]; loadTeachers?: CandidateLoader; onAssign: (teacherId: string | null, version: number) => Promise<void>; onClose: () => void }) {
   const id = useId();
   const [selected, setSelected] = useState(value.teacher?.id ?? "");
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const options = useCandidates(teachers,query,loadTeachers);
   async function assign() {
     if (busy || (value.status === "OPEN" && !selected)) return;
     setBusy(true); setError("");
@@ -48,9 +50,10 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose }: { va
   }
   return <Modal title="Phân công giảng viên" description={`${value.subject.code} · ${value.code}`} onClose={onClose} busy={busy} footer={<><button disabled={busy} className={styles.button} onClick={onClose}>Hủy</button><button disabled={busy || (value.status === "OPEN" && !selected)} className={styles.primaryButton} onClick={() => void assign()} data-testid="class-teacher-save">{busy ? "Đang lưu…" : "Lưu phân công"}</button></>}>
     <label className={styles.search}><Icon name="search"/><input aria-label="Tìm giảng viên" placeholder="Tìm theo tên hoặc email" value={query} disabled={busy} onChange={(event) => setQuery(event.target.value)}/></label>
+    {options.error && <p role="alert">{options.error}</p>}{options.loading && <p role="status">Đang tìm…</p>}
     <div className={styles.choiceList} role="radiogroup" aria-label="Chọn giảng viên">
       <label className={styles.choice}><span className={styles.muted}>Chưa phân công</span><input type="radio" name={id} aria-label="Chưa phân công" value="" disabled={busy || value.status === "OPEN"} checked={!selected} onChange={() => setSelected("")}/></label>
-      {teachers.filter((teacher) => `${teacher.name} ${teacher.email}`.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi"))).map((teacher) => <label className={styles.choice} key={teacher.id}><span className={styles.person}><Avatar name={teacher.name}/><span><strong>{teacher.name}</strong><small>{teacher.email}</small></span></span><input type="radio" name={id} checked={selected === teacher.id} value={teacher.id} aria-label={teacher.name} disabled={busy} onChange={() => setSelected(teacher.id)}/></label>)}
+      {options.rows.filter((teacher) => `${teacher.name} ${teacher.email}`.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi"))).map((teacher) => <label className={styles.choice} key={teacher.id}><span className={styles.person}><Avatar name={teacher.name}/><span><strong>{teacher.name}</strong><small>{teacher.email}</small></span></span><input type="radio" name={id} checked={selected === teacher.id} value={teacher.id} aria-label={teacher.name} disabled={busy} onChange={() => setSelected(teacher.id)}/></label>)}
     </div><p className={styles.hint}>Lớp đang mở phải có giảng viên chính. Phân công mới thay thế quyền dạy của giảng viên hiện tại.</p>
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </Modal>;

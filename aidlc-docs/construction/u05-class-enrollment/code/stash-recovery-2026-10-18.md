@@ -1,5 +1,8 @@
 # U05 — kết quả ghép stash và UI mới
 
+> Latest implementation: [U05 code completion and integration handoff](completion-2026-10-18.md). The earlier dependency-free-only scope and test counts below are historical; they do not describe the current completed application/API/frontend code.
+
+
 Nguồn: stash `86fc91e092915f1b292019f782b99bbcfa55ee63` của nhánh Class&Enrollment. Người dùng cho phép xử lý sau khi xem nội dung stash; giữ phạm vi code độc lập khi U01/U04 chưa xong.
 
 ## Đã ghép

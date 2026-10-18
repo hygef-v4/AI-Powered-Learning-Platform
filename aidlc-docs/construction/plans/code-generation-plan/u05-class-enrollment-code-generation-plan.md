@@ -1,5 +1,8 @@
 # U05 Class & Enrollment — Code Generation Plan
 
+> **Latest user instruction, 2026-10-18:** "giúp tôi haonf thiện u05" authorizes completing U05 against the existing unit contracts before cross-unit merge. It supersedes the former domain-only scope described below. Current implementation and remaining integration gates: [completion handoff](../../u05-class-enrollment/code/completion-2026-10-18.md); [execution plan](../u05-completion-2026-10-18.md). The original integration checklists below remain historical and are not a statement that current services/controllers are absent.
+
+
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Ngày 2026-10-17 bắt đầu code lát cắt độc lập theo chỉ đạo người dùng; các phần nối U01/U04 chờ sau.
 
 **Primary UC:** 20–30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
