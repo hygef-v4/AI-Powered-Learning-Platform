@@ -1,6 +1,7 @@
 package edu.aiplatform.subjects.contract.stub;
 
 import edu.aiplatform.shared.stub.Stubs;
+import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
@@ -11,14 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-/** Bản tạm của interface U04 (và {@code ISubjectClasses} do U05 cài): môn mẫu đang mở, môn chưa có lớp nào. */
+/** Bản tạm tự tắt theo từng interface khi có bean thật; classes chưa được U05 cài phải fail closed (Q05). */
 @AutoConfiguration
 @ConditionalOnProperty(name = "platform.contract-stubs.enabled", havingValue = "true", matchIfMissing = true)
 public class SubjectsContractStubs {
@@ -55,18 +54,22 @@ public class SubjectsContractStubs {
         return Stubs.announce(ISubjectClasses.class, new ISubjectClasses() {
             @Override
             public List<SubjectClassSummary> listClassesOfSubject(UUID subjectId) {
-                return List.of();
+                throw classesUnavailable();
             }
 
             @Override
             public Map<UUID, Integer> countClasses(Collection<UUID> subjectIds) {
-                return subjectIds.stream().distinct().collect(Collectors.toMap(Function.identity(), id -> 0));
+                throw classesUnavailable();
             }
 
             @Override
             public int countUnarchivedClasses(UUID subjectId) {
-                return 0;
+                throw classesUnavailable();
             }
         });
+    }
+
+    private static ApiException classesUnavailable() {
+        return ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp của môn. Hãy thử lại sau");
     }
 }

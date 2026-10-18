@@ -7,7 +7,7 @@ import java.util.UUID;
 
 /**
  * U04 khai báo, U05 cài: lớp của môn trên Subject Detail, số lớp trên Subject List, chặn lưu trữ môn
- * còn lớp chưa lưu trữ. Chưa có U05 thì danh sách rỗng.
+ * còn lớp chưa lưu trữ. Chưa có U05 hoặc query lỗi thì báo không khả dụng (Q05), không giả danh sách rỗng/0.
  */
 public interface ISubjectClasses {
 
