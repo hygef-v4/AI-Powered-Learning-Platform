@@ -1,5 +1,24 @@
 # AI-DLC State Tracking
 
+## U05 stash recovery — 2026-10-18
+
+- Người dùng yêu cầu commit local trên nhánh `Class&Enrollment`; sẽ tự merge U01/U04 khi các thành viên hoàn thành. Không push hoặc mở rộng scope tích hợp trong đợt này.
+- [x] Theo yêu cầu "giúp tôi xử lý", khôi phục 20 file backend/SQL/test từ stash `86fc91e092915f1b292019f782b99bbcfa55ee63`; ghép tài liệu/audit, giữ UI mới.
+- [x] Chuyển các test UI cũ còn thiếu, sửa khác biệt regex email backend/frontend; U05 có 29 test backend và 21 test frontend.
+- [x] Chạy mới: backend 123 test/29 suite qua, frontend 37 test/8 file qua; typecheck/lint và diff check qua. Component/CSS/preview giữ nguyên hash; không chạy lại build/browser vì không đổi frontend thực thi.
+- [x] Sao lưu vào `.tmp/u05-stash-recovery-2026-10-18/`; cả ba stash giữ nguyên, Git index không thay đổi, chưa commit/push.
+- U05 vẫn chờ U01/U04/U02 cho auth, API/service, DB và audit thật. SQL pending và persistence opt-in giữ nguyên. Chi tiết mới nhất: `construction/u05-class-enrollment/code/stash-recovery-2026-10-18.md`.
+
+## U05 UI reference implementation — 2026-10-18
+
+- Người dùng yêu cầu: "check ui này và sửa lại ui cho phần u05 hiện tại", kèm `ui-reference.zip`. Nhánh `Class&Enrollment` chỉ có U05 slots lúc bắt đầu; implementation phiên cũ không có trong checkout này.
+- [x] Áp dụng phong cách HTML/CSS tham chiếu cho các view U05 và dialog, CSS module riêng, props/callback độc lập; giữ slot liên unit.
+- [x] Development preview `/preview/u05` có dữ liệu minh họa và ba vai trò; không dựng auth/API/backend giả. Server page chặn production bằng notFound.
+- [x] 32 test frontend (16 test U05) qua; typecheck/lint qua; browser desktop/mobile kiểm tạo lớp, detail, hủy gỡ và role. Mobile 390px không tràn toàn trang. Ảnh ở `.tmp/u05-ui-evidence/`.
+- [x] Build Webpack bản cuối qua; kiểm HTTP production: preview 404, không có nội dung minh họa; health 200. Trang development vẫn hoạt động tại `/preview/u05`.
+- Tài liệu: `construction/plans/u05-ui-reference-2026-10-18.md`, `construction/u05-class-enrollment/code/ui-summary-2026-10-18.md`.
+- Toàn bộ U05 và kiểm quyền/integration vẫn chưa complete. Chờ U01/U04 và các service/controller thật để nối dữ liệu; trạng thái lịch sử bên dưới không phải implementation scope hiện tại.
+
 ## Latest authorized UC-table synchronization
 
 - 65 active UC, 50 MVP stories + 1 extension, 15 units. Inception and Construction docs now follow docs/usecase_table.md. The untracked pre-sync snapshot in aidlc-docs/historical was removed at the user's request on 2026-10-14.
