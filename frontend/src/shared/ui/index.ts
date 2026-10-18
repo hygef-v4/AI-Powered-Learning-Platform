@@ -7,6 +7,7 @@ export { Icon, type IconName } from "./Icon";
 export { IconTile } from "./IconTile";
 export { ChipToggleGroup, Field, Select, Switch, TextInput } from "./inputs";
 export { PageHeader, type Crumb } from "./PageHeader";
+export { Pagination } from "./Pagination";
 export { Pill } from "./Pill";
 export { Section } from "./Section";
 export { ClickableRow, TableFrame, Td, Th } from "./Table";
