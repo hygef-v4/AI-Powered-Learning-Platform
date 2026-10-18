@@ -41,7 +41,13 @@ final class AccessPolicy {
             // BR-U03-04: Admin không upload; unit sở hữu purpose kiểm thêm phạm vi.
             Map.entry(Actions.FILE_UPLOAD, new Rule(EnumSet.of(STUDENT, TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
             Map.entry(Actions.SETTINGS_VIEW, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
-            Map.entry(Actions.SETTINGS_EDIT, new Rule(ADMIN_ONLY, ScopeKind.NONE)));
+            Map.entry(Actions.SETTINGS_EDIT, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_LIST, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_VIEW, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_CREATE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_UPDATE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_MANAGER_CHANGE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.SUBJECT_STATUS_CHANGE, new Rule(ADMIN_ONLY, ScopeKind.NONE)));
 
     private AccessPolicy() {
     }

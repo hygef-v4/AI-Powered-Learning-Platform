@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.application;
 
+import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -32,7 +33,7 @@ public class SubjectAdminService {
     }
 
     public SubjectAdminViews.Page list(Actor actor, String query, SubjectStatus status, Integer page, Integer size) {
-        access.require(actor, "SUBJECT_LIST", ResourceRef.none());
+        access.require(actor, Actions.SUBJECT_LIST, ResourceRef.none());
         int pageNumber = page == null ? 0 : page;
         int pageSize = size == null ? 20 : size;
         if (pageNumber < 0 || pageSize < 1 || pageSize > 100) {
@@ -51,7 +52,7 @@ public class SubjectAdminService {
     }
 
     public SubjectAdminViews.Detail detail(Actor actor, UUID subjectId) {
-        access.require(actor, "SUBJECT_VIEW", ResourceRef.subject(subjectId));
+        access.require(actor, Actions.SUBJECT_VIEW, ResourceRef.subject(subjectId));
         Subject subject = subject(subjectId);
         var manager = managers(List.of(subject)).get(subject.managerId());
         Integer classCount = classes.counts(List.of(subject.id())).get(subject.id());
@@ -61,7 +62,7 @@ public class SubjectAdminService {
     }
 
     public SubjectAdminViews.Classes classes(Actor actor, UUID subjectId) {
-        access.require(actor, "SUBJECT_VIEW", ResourceRef.subject(subjectId));
+        access.require(actor, Actions.SUBJECT_VIEW, ResourceRef.subject(subjectId));
         Subject subject = subject(subjectId);
         return classes.classes(subject.id());
     }

@@ -21,7 +21,7 @@ export function SubjectStatusActions({ subject, onClose, onSaved, onReload, onAc
       <Button variant={archived ? "primary" : "danger"} disabled={mutation.busy || needsSubjectReload(mutation.error)} data-testid="subject-status-confirm"
         onClick={() => { if (!needsSubjectReload(mutation.error)) void mutation.run(() => changeSubjectStatus(subject.id, { status: archived ? "ACTIVE" : "ARCHIVED", version: subject.version }), onSaved); }}>{mutation.busy ? "Đang lưu…" : archived ? "Xác nhận mở lại" : "Xác nhận lưu trữ"}</Button></>}>
     <p className="text-sm font-semibold break-words">{subject.code} — {subject.name}</p>
-    <p>{archived ? "Môn sẽ hoạt động trở lại. Các lớp giữ nguyên trạng thái hiện tại." : "Chỉ lưu trữ khi tất cả lớp đã lưu trữ. Lịch sử môn được giữ lại và không thể tạo lớp mới khi môn đang lưu trữ."}</p>
+    <p>{archived ? "Môn sẽ hoạt động trở lại, chưa có chủ nhiệm môn. Các lớp giữ nguyên trạng thái hiện tại." : "Chỉ lưu trữ khi tất cả lớp đã lưu trữ. Chủ nhiệm môn sẽ bị gỡ khỏi môn. Lịch sử môn được giữ lại và không thể tạo lớp mới khi môn đang lưu trữ."}</p>
     <SubjectMutationFeedback error={mutation.error} onReload={onReload} />
   </Dialog>;
 }

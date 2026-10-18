@@ -76,7 +76,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     </div>
     {tab === "information" ? <div role="tabpanel" id="subject-information-panel" aria-labelledby="subject-information-tab" className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
       <SubjectInfoTab {...mutationProps} editing={mode === "edit"} disabled={mode !== null} onEdit={() => open("edit")} onCancel={close} />
-      <div className="flex flex-col gap-4"><ManagerCard subject={data} disabled={mode !== null} onChange={() => open("manager")} /><SubjectMetaCard subject={data} /></div>
+      <div className="flex flex-col gap-4"><ManagerCard subject={data} disabled={mode !== null} onChange={data.status === "ARCHIVED" ? undefined : () => open("manager")} /><SubjectMetaCard subject={data} /></div>
     </div> : <div role="tabpanel" id="subject-classes-panel" aria-labelledby="subject-classes-tab" className="flex flex-col gap-3">
       {classes.loading && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải lớp học…</p>}
       {classes.error !== null && <SubjectReadError error={classes.error} onRetry={classes.reload} />}

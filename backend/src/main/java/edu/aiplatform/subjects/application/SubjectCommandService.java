@@ -2,6 +2,7 @@ package edu.aiplatform.subjects.application;
 
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
+import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -42,7 +43,7 @@ public class SubjectCommandService {
 
     @Transactional
     public Subject create(Actor actor, Create command) {
-        access.require(actor, "SUBJECT_CREATE", ResourceRef.none());
+        access.require(actor, Actions.SUBJECT_CREATE, ResourceRef.none());
         requireCommand(command);
         Subject subject = Subject.create(UUID.randomUUID(), command.code(), command.name(), command.description(),
                 command.managerId(), clock.instant());
@@ -69,7 +70,7 @@ public class SubjectCommandService {
 
     @Transactional
     public Subject updateInformation(Actor actor, UUID subjectId, UpdateInformation command) {
-        access.require(actor, "SUBJECT_UPDATE", ResourceRef.subject(subjectId));
+        access.require(actor, Actions.SUBJECT_UPDATE, ResourceRef.subject(subjectId));
         requireCommand(command);
         long version = requireVersion(command.version());
         Subject before = subject(subjectId);
@@ -85,7 +86,7 @@ public class SubjectCommandService {
 
     @Transactional
     public Subject changeManager(Actor actor, UUID subjectId, ChangeManager command) {
-        access.require(actor, "SUBJECT_MANAGER_CHANGE", ResourceRef.subject(subjectId));
+        access.require(actor, Actions.SUBJECT_MANAGER_CHANGE, ResourceRef.subject(subjectId));
         requireCommand(command);
         long version = requireVersion(command.version());
         Subject preliminary = subject(subjectId);

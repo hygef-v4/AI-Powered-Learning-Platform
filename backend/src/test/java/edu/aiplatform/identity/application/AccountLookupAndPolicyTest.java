@@ -72,6 +72,7 @@ class AccountLookupAndPolicyTest {
     void adminActionsAreAdminOnlyAndUploadExcludesAdmin() {
         Arrays.stream(Actions.class.getDeclaredFields())
                 .filter(f -> f.getName().startsWith("ACCOUNT_") || f.getName().startsWith("SETTINGS_")
+                        || f.getName().startsWith("SUBJECT_")
                         || f.getName().equals("AUDIT_READ"))
                 .forEach(f -> assertThat(AccessPolicy.ruleFor(readName(f)).orElseThrow().roles())
                         .containsExactly(Role.ADMIN));

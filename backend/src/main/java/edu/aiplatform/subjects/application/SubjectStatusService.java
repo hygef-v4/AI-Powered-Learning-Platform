@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.application;
 
+import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
@@ -39,7 +40,7 @@ public class SubjectStatusService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Subject changeStatus(Actor actor, UUID subjectId, ChangeStatus command) {
-        access.require(actor, "SUBJECT_STATUS_CHANGE", ResourceRef.subject(subjectId));
+        access.require(actor, Actions.SUBJECT_STATUS_CHANGE, ResourceRef.subject(subjectId));
         if (subjectId == null || command == null || command.status() == null) {
             throw ApiException.badRequest("SUBJECT_STATUS_INVALID", "Cần môn và trạng thái hợp lệ");
         }

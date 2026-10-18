@@ -28,6 +28,14 @@ public final class Actions {
     public static final String SETTINGS_VIEW = "SETTINGS_VIEW";
     public static final String SETTINGS_EDIT = "SETTINGS_EDIT";
 
+    // U04 — quản trị môn học (chỉ ADMIN, BR-U04-01)
+    public static final String SUBJECT_LIST = "SUBJECT_LIST";
+    public static final String SUBJECT_VIEW = "SUBJECT_VIEW";
+    public static final String SUBJECT_CREATE = "SUBJECT_CREATE";
+    public static final String SUBJECT_UPDATE = "SUBJECT_UPDATE";
+    public static final String SUBJECT_MANAGER_CHANGE = "SUBJECT_MANAGER_CHANGE";
+    public static final String SUBJECT_STATUS_CHANGE = "SUBJECT_STATUS_CHANGE";
+
     private Actions() {
     }
 }

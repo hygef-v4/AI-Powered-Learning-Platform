@@ -13,9 +13,21 @@ function Picker({ search }: { search?: SearchSubjectManagers }) {
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 describe("ManagerPicker boundary", () => {
-  it("thiếu adapter báo unavailable, không giả danh sách rỗng hoặc gọi endpoint đoán", async () => {
-    await expect(searchSubjectManagers({ q: "", limit: 20 })).rejects.toMatchObject({ problem: { status: 503 } });
-    render(<Picker />);
+  it("gọi danh sách tài khoản U01 lọc SUBJECT_MANAGER đang ACTIVE và đổi sang ứng viên", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => new Response(JSON.stringify({
+      items: [{ id: "m1", email: "a@example.test", displayName: "Chủ nhiệm A", role: "SUBJECT_MANAGER", status: "ACTIVE" }],
+    }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(searchSubjectManagers({ q: " nguyen ", limit: 20 })).resolves.toEqual([manager]);
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]), "http://localhost");
+    expect(url.pathname).toBe("/api/v1/admin/accounts");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ role: "SUBJECT_MANAGER", status: "ACTIVE", page: "0", size: "20", q: "nguyen" });
+    vi.unstubAllGlobals();
+  });
+
+  it("tìm lỗi thì báo không tải được, không giả danh sách rỗng", async () => {
+    const search = vi.fn<SearchSubjectManagers>().mockRejectedValue(new ApiError({ status: 503 }));
+    render(<Picker search={search} />);
     expect(await screen.findByText(/Không tải được danh sách chủ nhiệm/)).toBeInTheDocument();
     expect(screen.getByLabelText("Chọn chủ nhiệm")).toBeDisabled();
     expect(screen.getByText("Chưa phân công")).toBeInTheDocument();
