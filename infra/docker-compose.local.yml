@@ -26,6 +26,10 @@ services:
       SMTP_AUTH_ENABLED: "false"
       SMTP_STARTTLS_ENABLED: "false"
       SMTP_FROM: no-reply@platform.local
+      # U01: Nginx local chạy HTTP nên cookie không đặt cờ Secure (chỉ ở local).
+      U01_COOKIE_SECURE: "false"
+      # Rút ngắn khóa tạm khi thử tay (mặc định 15m).
+      U01_LOGIN_LOCK_DURATION: ${U01_LOGIN_LOCK_DURATION:-15m}
       U03_REQUIRE_DRIVE: "false"
       U03_LOCAL_STORAGE_DIR: /app/data/files
       U03_LOCAL_BACKUP_DIR: /app/data/backups

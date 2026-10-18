@@ -1,0 +1,33 @@
+package edu.aiplatform.identity.contract;
+
+/**
+ * Tên action dùng với {@link IAuthorization#authorize} (Q14). Action không có trong bảng quyền của U01 bị từ chối;
+ * unit thêm action mới bằng cách thêm hằng ở đây và một dòng trong {@code AccessPolicy} của U01.
+ */
+public final class Actions {
+
+    // U01 — hồ sơ của chính mình (R1)
+    public static final String PROFILE_VIEW = "PROFILE_VIEW";
+    public static final String PROFILE_UPDATE = "PROFILE_UPDATE";
+    public static final String PASSWORD_CHANGE = "PASSWORD_CHANGE";
+
+    // U01 — quản trị tài khoản (chỉ ADMIN, BR-U01-67)
+    public static final String ACCOUNT_LIST = "ACCOUNT_LIST";
+    public static final String ACCOUNT_VIEW = "ACCOUNT_VIEW";
+    public static final String ACCOUNT_CREATE = "ACCOUNT_CREATE";
+    public static final String ACCOUNT_IMPORT = "ACCOUNT_IMPORT";
+    public static final String ACCOUNT_UPDATE = "ACCOUNT_UPDATE";
+    public static final String ACCOUNT_ROLE_CHANGE = "ACCOUNT_ROLE_CHANGE";
+    public static final String ACCOUNT_STATUS_CHANGE = "ACCOUNT_STATUS_CHANGE";
+
+    // U02 — tra cứu audit (BR-U02-07)
+    public static final String AUDIT_READ = "AUDIT_READ";
+
+    // U03 — tệp và cài đặt (BR-U03-04, 80)
+    public static final String FILE_UPLOAD = "FILE_UPLOAD";
+    public static final String SETTINGS_VIEW = "SETTINGS_VIEW";
+    public static final String SETTINGS_EDIT = "SETTINGS_EDIT";
+
+    private Actions() {
+    }
+}

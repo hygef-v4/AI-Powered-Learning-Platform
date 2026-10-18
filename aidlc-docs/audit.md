@@ -587,6 +587,37 @@ giải thích"
 **Approved Design**: Create one Section 5 Markdown document containing Screen Flow, detailed Screen List, External API Inventory and Background Job Inventory based on the supplied SRS template.
 
 **AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
+---
+
+## Main Business Flows - Draw.io Generation Complete
+**Timestamp**: 2026-09-14T03:13:10Z
+**User Input**: "Vẽ đủ 9 sơ đồ draw\.io  "
+**AI Response**: "Generated one nine-page draw.io file, nine individual editable draw.io files, a text alternative/index and nine PNG exports. Validated XML structure, page count, node/edge references and node geometry, then visually reviewed every flow preview. The User Stories approval gate remains unchanged."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation complete
+
+---
+
+## Main Business Flows - Horizontal Pool 1 Correction Complete
+**Timestamp**: 2026-09-14T16:28:56Z
+**User Input**: "sửa lại sơ đồ swimlane file drawio, phải vẽ bằng horizontal pool 1 thay vì hình vuông như hiện tại"
+**AI Response**: "Converted all nine standalone Draw.io business flows and all nine pages in the consolidated Draw.io file to the exact Horizontal Pool 1 container structure. Replaced independent rectangular backgrounds and labels with a horizontal pool and nested vertical-label swimlanes, reparented every activity into its lane, preserved all content/styles/absolute geometry and cross-lane connectors, rendered BF-01 in diagrams.net for visual QA, and completed XML/reference/regression validation with zero errors."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
+
+---
+
+## Main Business Flows - Pool Titles and PNG Cleanup Complete
+**Timestamp**: 2026-09-15T02:55:26Z
+**User Input**: "sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
+**AI Response**: "Renamed the Horizontal Pool 1 container on all nine standalone diagrams and all nine consolidated pages to the matching business-flow name without the BF prefix. Removed the separate BF title, Trigger, and End condition cells, cropped every page to the pool, regenerated all nine PNG exports locally with only the swimlane visible, and visually inspected every PNG against the supplied sample."
+**Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
+
+---
+
+## Main Business Flows - Review Findings Correction Complete
+**Timestamp**: 2026-09-15T07:20:25Z
+**User Input**: "sửa luôn"
+**AI Response**: "Rebuilt all nine standalone Draw.io flows and the consolidated nine-page file from a reproducible specification with fixed connector exit/entry points, separated decision branches, loop-backs along lane edges and outcome-labelled End shapes; automated checks found no connector crossing a shape, no unintended overlap or crossing, no broken references, and every standalone file matches its consolidated page. Fixed business logic: BF-01 password verification, attempt recording, login-failed/logged-out/session-expired outcomes; BF-02 correction loop and staff-assignment wording; BF-03 AI processing failure branch and PostgreSQL persistence; BF-04 single authoring step, draft persistence and target-class publication; BF-05 backend-mediated reads with optional Google Drive file; BF-06 invalid-setup branch, rejection reason and audit history; BF-07 confirm-before-store, submission-rights check and rejection outcome; BF-08 grading always ends in instructor-entered or confirmed grade, AI failure fallback and shared-work comparison; BF-09 correct gateway order, invalid-webhook rejection without status change, separate FAILED and PAID updates. Aligned terminology to Subject Manager, staff assignment and Student, merged RabbitMQ and AI Worker lanes and added PostgreSQL lanes where business results persist. Regenerated nine PNG exports with the diagrams.net viewer and visually inspected each. Rewrote business-flows.md Mermaid diagrams, end conditions, text alternatives and coverage to match (all nine Mermaid blocks parse and render), and updated the README."
+**Context**: INCEPTION - Supplementary Main Business Flow correction complete; U01 Functional Design approval checkpoint unchanged.
 
 ---
 
@@ -2736,6 +2767,30 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 
 ---
 
+## Merge main into cuong
+**Timestamp**: 2026-09-27T07:24:06Z
+**User Input**: "merge main sang nhánh cuong và solve conflict"
+**AI Response**: "Merged main into cuong. Resolved audit.md by keeping both sides; per user choice, accepted main's deletion of business-flows.md and business-flow-design-plan.md. Draw.io set in main-business-flows/ kept."
+**Context**: Git maintenance; no design change.
+
+---
+
+## Main Business Flows - Realignment Complete
+**Timestamp**: 2026-09-27T07:42:26Z
+**User Input**: (continuation of "dựa trên tài liệu dự án mới nhất, cập nhật chỉnh sửa lại business flow khớp")
+**AI Response**: "Rebuilt main-business-flows/ as eleven swimlane flows aligned with the 16-unit Construction design, 77-UC catalog and unit business rules: BF-01 Account Activation and Sign-In, BF-02 Subject/Class Setup and Enrollment, BF-03 Learning Material Upload and RAG Indexing, BF-04 Assignment Authoring, Review and Publication, BF-05 Lesson Publication and Class Content Access, BF-06 Group Set Setup and Leader Change, BF-07 Individual Attempt and Submission, BF-08 Group Document Collaboration and Submission, BF-09 Grading and Grade Publication, BF-10 AI Credit Purchase, BF-11 Notification and Deadline Reminder. Removed obsolete flows (AI summarization/lesson splitting, lesson progress, work allocation, shared DOCX submission, payment-based access grant). Regenerated the eleven-page consolidated file, eleven standalone files and PNG exports with the diagrams.net viewer; automated checks found no connector crossing a shape, no overlapping or crossing connectors, every decision has two labelled exits and every End states an outcome. Rewrote README with flow table, UC/unit traceability, text alternatives and conventions. docs/business-flow.* unchanged."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Concise Trigger and End Condition
+**Timestamp**: 2026-09-27T10:13:09Z
+**User Input**: "viết trigger và end condition thật ngắn gọn (ví dụ như trong ảnh)" (attached screenshot of SRS section 2 Main Business Flow)
+**AI Response**: "Shortened Trigger and End condition for BF-01 to BF-11 in the README to one sentence each, matching the SRS format in the screenshot."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
 ## AI-DLC state synchronization
 **Timestamp**: 2026-09-28T13:53:28Z
 **User Input**: "giúp tôi cập nmhaajt aidlc state đc k"
@@ -3362,6 +3417,66 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 
 ---
 
+## Main Business Flows - Rebuild
+**Timestamp**: 2026-10-06T05:00:00Z
+**User Input**: "1. nhóm tôi đã quyết định bỏ docs/
+2. sửa theo bạn đề xuất
+3. sửa theo bạn đề xuất
+4. ghi đè
+5. vẽ lại bộ business flow mới theo phong cách của  bộ cũ 11 BF (như trong ảnh)" (attached screenshot of the old BF-01 swimlane)
+**AI Response**: "Kept docs/ removed and left the GitHub Desktop stash untouched. Rebuilt aidlc-docs/inception/main-business-flows/ as fourteen swimlane flows in the original BF style (pool, horizontal lanes, Start/End ellipses, labelled decisions, orthogonal connectors): BF-01 Account Activation and Sign-In, BF-02 Subject and Class Setup and Enrollment, BF-03 Learning Material Upload and Scanning, BF-04 Class Material Access, BF-05 Assignment Authoring, Review and Publication, BF-06 Class Groups and Leader Change, BF-07 Individual Attempt and Submission, BF-08 Group Document Collaboration and Submission, BF-09 Grading and Grade Publication, BF-10 Practice Result and Grade with AI, BF-11 AI Credit Purchase, BF-12 AI Credit Usage, BF-13 Notification and Deadline Reminder, BF-14 Submission Progress, Gradebook Export and Statistics. Applied all reported fixes. Regenerated the combined file, individual files and PNG exports (diagrams.net viewer); automated checks found no connector through a shape, no overlapping or crossing connectors, two labelled exits per decision and an outcome on every End. Rewrote README (flow table with UC 1-40 and units, text alternatives, conventions). Decision 4: a group resubmission overwrites the previous snapshot; aligned FR-026, US-GRP-005 Scenario 6, BR-U15-44 and U15 NFR design pattern with BR-U14-32."
+**Context**: Supplementary business flow documentation update and one requirement clarification; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Main Actors Only
+**Timestamp**: 2026-10-06T06:00:00Z
+**User Input**: "tôi muốn businessflow chỉ có các actor chính (chẳng hạn BF1 là user, system chứ không có redis, worker,...)"
+**AI Response**: "Redrew all fourteen flows with only the main actors: the people involved plus one System lane covering backend, worker, PostgreSQL, Redis, RabbitMQ, Google Drive, Gemini, YouTube, Judge0 and SMTP; PayOS keeps its own lane in BF-11 because the user pays on its checkout. Merged purely technical steps (for example OTP generation, storage and email in BF-01). Business rules and outcomes unchanged. Regenerated the combined file, individual files and PNG exports; automated checks passed (no connector through a shape, no overlap or crossing, labelled decision exits, outcome on every End). Updated the README swimlane column and conventions."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Main Flows Only
+**Timestamp**: 2026-10-06T06:30:00Z
+**User Input**: "chỉ chọn các luồng chính để làm BF"
+**AI Response**: "Kept eight main flows matching USCN-001 to USCN-006 and renumbered them: BF-01 Subject and Class Setup and Enrollment, BF-02 Learning Material Upload and Scanning, BF-03 Assignment Authoring, Review and Publication, BF-04 Individual Attempt and Submission, BF-05 Group Document Collaboration and Submission, BF-06 Grading and Grade Publication, BF-07 Practice Result and Grade with AI, BF-08 AI Credit Purchase. Removed the supporting flows (account activation and sign-in, material access, class groups and leader change, AI credit usage, notifications, reports and statistics) from the BF set; their rules stay in the unit designs. Regenerated the eight-page file, individual files and PNG exports (automated layout checks passed) and updated the README table, details and cross-references."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - Concise Trigger and End Condition
+**Timestamp**: 2026-10-06T07:00:00Z
+**User Input**: "viết trigger và end condition cho các BF trên (ngắn gọn súc tích như trong ảnh)" (attached screenshot of SRS section 2.1 with Trigger and End condition for BF-01)
+**AI Response**: "Wrote one-sentence Trigger and End condition for BF-01 to BF-08 and updated them in main-business-flows/README.md."
+**Context**: Supplementary business flow documentation update; no workflow stage change.
+
+---
+
+## Main Business Flows - One Lane per Actor and Page-Readable Layout
+**Timestamp**: 2026-10-06T13:30:00Z
+**User Input**: "sửa lại trong BF actor class manager phải thành teacher, tại sao actor administrator lại có ở tận 2 lane, sửa lại để mỗi actor chỉ 1 lane. Ngoài ra chỉnh lại kích thước và font chữ để không cần zoom to tài liệu vẫn có thể đọc được" (attached screenshots of the SRS with BF-01 inserted)
+**AI Response**: "BF-01 lanes are now Administrator, Subject Manager, Teacher, Student, System (one lane per actor; Class Manager renamed Teacher, the Subject Manager creates the class and assigns the teacher, other permitted roles stay in the text alternative). Redrew all eight flows with vertical lanes and a top-to-bottom flow so they fit a portrait page: width 600 to 1060 px instead of up to 2615 px, steps 16 px, decisions and ends 15 px bold, lane headers 18 px, title 20 px, edge labels 14 px. Generator checks (no connector through a shape, no overlap or crossing, labelled decision exits, text fit, edge labels clear of shapes) passed for all eight; PNG exports re-rendered at 2x and reviewed. README updated (BF-01 swimlanes, text alternative, conventions)."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Back to Horizontal Lanes
+**Timestamp**: 2026-10-06T14:30:00Z
+**User Input**: "tôi vẫn muốn vẽ theo chiều ngang"
+**AI Response**: "Redrew all eight flows with horizontal lanes and a left-to-right flow, keeping one lane per actor (BF-01: Administrator, Subject Manager, Teacher, Student, System). To keep them readable, each check step was merged into its decision diamond and purely technical steps were folded into neighbours, cutting the flows to six to nine columns (1250 to 1770 px wide instead of up to 2615 px); shapes are compact with 15 px text, 16 px lane headers, 20 px title, 14 px connector labels, and column gaps widen only where a branch label needs room. Generator checks passed for all eight; PNG exports re-rendered at 2x and reviewed. README updated (layout note: insert at full width on a landscape page; conventions). Business rules unchanged; details stay in the text alternatives."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - Fix Four Review Points
+**Timestamp**: 2026-10-06T15:30:00Z
+**User Input**: "sửa 4 điểm BF trong repo luôn"
+**AI Response**: "BF-05: 'Submit now? No' now loops back to editing parts, and the deadline auto-submit starts from a separate System Start 'Deadline reached'. BF-07: the student's choice is a decision 'Request AI grading?' with a new End 'Saved, not AI-graded'. BF-08: reconciliation leads to a 'Paid?' decision with a new End 'Expired, no credit'. Regenerated the combined file, individual files and the BF-05/07/08 PNG exports with the existing generator (all eight flows passed its layout checks) and reviewed the renders. README: Trigger and End condition aligned with the SRS version (3) wording and the new ends, end-outcome table, text alternatives of BF-05/07/08 and the width note updated. Figure captions belong to the SRS document and were not changed here."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
 ## Documentation update - Use cases and screens aligned with new SRS
 **Timestamp**: 2026-10-08T05:58:38Z
 **User Input**: "giúp tôi sửa lại cái bảng này trước"
@@ -3538,6 +3653,22 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **AI Response**: Prepare a local documentation commit with a detailed description of upload without AI/credit, View Material summary action for scoped Student/Teacher/Subject Manager, requester-owned one-HOLD billing and shared result reuse, two-stage extraction/AI lifecycle, queue/API/migration design and synchronized Inception/U03/U05/U07/U13 pending plans.
 **Validation**: Fresh working-tree scope and diff checks confirm documentation-only changes; git diff --check passes. Prior revision validation records 10 contract checks, local links/fences and preserved completed code-plan lines. Application tests N/A for documentation-only commit.
 **Context**: User authorizes commit; no push. Existing implementation status and historical approvals remain unchanged.
+
+---
+
+## Main Business Flows - Circle Start and End
+**Timestamp**: 2026-10-09T06:45:00Z
+**User Input**: "vẽ lại business flow (tôi muốn bắt đầu và kết thúc phải là hình tròn như trong ảnh) chứ không phải như ảnh 2"
+**AI Response**: "Replaced every Start (green oval) and End (red double oval) in the eight individual draw.io files and the combined file with 44 px BPMN-style circles at the same centre: Start is green, End is solid red. The 'Start'/'End' prefix was removed from the labels and the trigger/outcome text was moved outside the circle, on a side that no connector uses. Connectors and other shapes are unchanged. Re-rendered the eight PNG exports at 2x with the diagrams.net viewer and checked them visually; added a note about the shapes to the README."
+**Context**: Supplementary business flow documentation update; no workflow stage change, no application code changed.
+
+---
+
+## Main Business Flows - BF-01 and BF-06 Correction
+**Timestamp**: 2026-10-09T07:40:00Z
+**User Input**: "BF-01: xử lý việc thêm sinh viên và mã mời thế nào?"="Bỏ mã mời (Recommended)", "Có sửa luôn các điểm nhỏ ở BF-06/BF-03 không?"="Sửa BF-06 (Recommended)"
+**AI Response**: "BF-01 redrawn per SRS v6 UC 49-51, the permission matrix and R3: Teacher lane removed; the Subject Manager (or Administrator) creates the class, assigns the teacher and selects students; System decision 'Students eligible?' leads to End 'Refused with reasons' or to saving the enrollment and End 'Student enrolled'. Invitation code and self-enrollment removed. BF-06: the AI path now reserves credit, then 'Proposal ready?'; No (refused, failed, invalid or over 5 minutes, credit released) loops back to 'Use AI proposal?' so the teacher retries or grades manually (UC 38 3.E1/4.E1). BF-03 unchanged. Updated both pages in the individual and combined draw.io files, re-rendered BF-01/BF-06 PNGs and checked them visually (no crossing connectors). README: BF-01 swimlanes, end outcomes, end condition and text alternative; BF-06 text alternative; use-case column renumbered to the 73-UC SRS. Not changed: the SRS/Report 1/Report 2 .docx files, which still mention invitation-code enrollment and the old BF-01 end condition and embed the old BF images."
+**Context**: Supplementary business flow update; no workflow stage change, no application code changed.
 
 ---
 
@@ -3853,5 +3984,156 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **User Input**: "ok push lên và mở PR đi"
 **AI Response**: "Code approved (Continue to Next Stage). Plan step 9 ticked; aidlc-state updated. Pushing branch `audit` and preparing a PR into `main`."
 **Context**: CONSTRUCTION - Code Generation U02, Part 2 Step 16 (approval recorded: APPROVED)
+## 2026-10-15T00:00:00Z — Council feedback compliance review
+
+**User Input**: "[Pasted council feedback: giới hạn scope 1–2 môn; bổ sung AS-IS qua khảo sát vào Report 1; Swimlane phân biệt System/Actor, ghi chú quy ước, đánh số và mô tả hoạt động; backup Google Drive; phát hiện chuyển màn hình (cheating); gửi email hoạt động quan trọng; cơ chế minh bạch credit AI] đây là nhận xét của hội đồng mà chúng tôi phải sửa theo, chúng tôi đã sửa lại dự án, kiểm tra xem đã đáp ứng được theo nhận xét trên chưa, nếu chưa cần sửa đổi/bổ sung điều gì"
+
+**AI Response**: Read-only review of requirements, council-features, decisions, UC table, main-business-flows and uml/act_asis.drawio. Text requirements cover scope SWR/SWD, backup, activity monitoring, email, AI transparency. Gaps reported: AS-IS not surveyed and diagram unnumbered/undescribed/includes Code; BF-01..08 swimlanes and README dated 2026-10-09 still on 73 UC/Code Lab/PayOS credit purchase, no numbering or System-lane convention note; G21 use case diagram still shows credit packages/PayOS/Judge0/Code Lab; no TO-BE flow for new features; features not implemented in code. No files changed besides this log.
+
+---
+
+## 2026-10-15T00:30:00Z — Business flow swimlanes redrawn per council feedback
+
+**User Input**: "tập trung vào phần swimlane (BF) cho tôi, sửa lại cho đúng với yêu cầu của hội đồng"
+
+**AI Response**: Redrew main business flows as 10 TO-BE swimlanes aligned with the 66-UC scope (no credit purchase/PayOS/Code Lab/Judge0): BF-01 subject/class/enrollment, BF-02 reference materials, BF-03 Assignment authoring/publication, BF-04 individual work with activity recording, BF-05 group work with per-member activity, BF-06 Quiz, BF-07 grading with human activity review, BF-08 AI source selection and usage transparency (replaces AI Credit Purchase), BF-09 Google Drive backup and restore verification, BF-10 important-event notification/email. Every activity/decision numbered; System lane limited to automated processing; modeling-convention note printed on each diagram; README rewritten with convention, council coverage map and per-flow activity tables. Old BF files with obsolete names removed; PNG exports regenerated.
+
+**Validation**: Generator checks passed for all 10 flows (no connector through a shape, no connector crossings, no port used for both in and out); draw.io XML parses (10 pages combined); README tables/links checked. Documentation-only; no code, AS-IS survey, use case diagram or Report edits; no commit.
+
+---
+
+## 2026-10-16T17:00:00Z — Project review focused on business flows
+
+**User Input**: "kiểm tra dự án và gửi tôi các điểm cần bổ sung/cải thiện hoặc sửa đổi. Đặc biệt tập trung vào phần businessflow"
+
+**AI Response**: Reviewed the 10 business flows (README tables, PNG exports) against docs/usecase_table.md and the backend code. Reported A) cross-cutting issues (missing account and class-group flows, cropped BF-07/BF-09 exports, missing time-trigger starts, missing failure branches/end events), B) per-flow issues for BF-01..BF-10 (including BF-09 claiming file copies while code and BR-U03-91 back up the database only), C) suggestions (UC x BF traceability, state diagrams). No files changed.
+
+---
+
+## 2026-10-17T00:00:00Z — Business flows revised (review items A and B)
+
+**User Input**: "Sửa lại mục A và B, mục C tạm thời để lại"
+
+**AI Response**: Rebuilt the business flows from the unit business rules: 12 swimlanes (new BF-11 Account Provisioning and Activation, BF-12 Class Group Setup and Leader Change); added time-trigger starts (BF-03 opening, BF-06 time limit, BF-09 daily backup), failure branches and labelled end events (BF-01 cannot open, BF-07 access refused, BF-08 quota/result/MCP refusals, BF-09 retry limit and restore failure, BF-10 retry limit); BF-01 per-row enrollment check (no capacity rule), BF-03/BF-06 REVIEWED step and Subject Manager authoring, BF-04 late window, auto-submit without submit checks and Practice AI feedback, BF-05 parallel assign/claim, lock release and submit check, BF-07 finalize vs publish and group member scores, BF-08 daily quota only and MCP agent lane, BF-09 database-only backup with fixed 7-day retention, BF-10 preference/daily cap/event table. Regenerated draw.io files (12 + combined 12-page file), PNG exports (rendered taller and cropped so the legend is no longer cut) and README with per-flow notes. Item C (traceability matrix, state diagrams) deferred by the user. Validation: layout checker (no shape overlap, crossing, unrelated touching or mixed in/out port), text-fit check, left-to-right numbering, loop-back references match edges, draw.io XML parses. No commit.
+
+---
+
+## 2026-10-17T10:00:00Z — U01 detailed implementation working plan (temporary)
+
+**User Input** (relayed from the parent session): "Tôi cần triển khai unit U01 — Account & Access (Jira epic KAN-18: https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20ORDER%20BY%20cf%5B10019%5D%20ASC&selectedIssue=KAN-18). Hãy lập một kế hoạch thực hiện từng bước, cụ thể, chi tiết và rõ ràng để tôi tự kiểm soát và làm chủ code (tôi sẽ code theo kế hoạch, không phải bạn code hết ngay). Viết kế hoạch bằng tiếng Việt. Phạm vi U01 gồm 12 use case: UC01 Activate Account, UC02 Login, UC03 Logout, UC04 Reset Password, UC05 Change Password, UC06 View Profile Information, UC07 Update Profile Information, UC08 View Account List, UC09 Add Account, UC10 View Account Detail, UC11 Update Account Information, UC12 Change Account Status. U01 cần provider contract từ U02 Audit và U03 File, Job, Settings & Backup (xem unit-of-work.md: liên kết đó thể hiện contract đã sẵn sàng để tích hợp, không bắt buộc epic provider phải Done trước). Nguồn cần đọc trước khi lập kế hoạch: aidlc-docs/ (aidlc-state.md, inception/requirements, unit-of-work.md, construction/u01*/functional-design/business-rules.md, các design/NFR/code plan đã có của U01 nếu có), docs/usecase_table.md, và code hiện có ở backend/frontend để biết cái gì đã làm và quy ước của repo. SRS: D:\Downloads\Report-3_Software Requirement Specification.docx (1).md (file 3.8MB: đọc theo đoạn hoặc grep các phần UC01–UC12, screen list/screen flow, business rules, data model của Account/User). Thiết kế UI 4 màn hình người dùng gửi (ảnh 1.png–4.png; 5.png là ảnh chụp Jira). Các màn hình gồm: Đăng nhập (email trường + mật khẩu, "Quên mật khẩu?", "Lần đầu sử dụng? Kích hoạt tài khoản"); Khôi phục mật khẩu với stepper 3 bước (1. Email → 2. Mã OTP 6 chữ số, mã hết hạn sau 10 phút, có "Gửi lại mã" → 3. Mật khẩu mới); Kích hoạt tài khoản với stepper 3 bước (Email → OTP → Đặt mật khẩu, quy tắc mật khẩu: ít nhất 8 ký tự, có cả chữ và số, nút "Kích hoạt và đăng nhập"); Đặt lại mật khẩu (sau khi đặt lại thì các thiết bị khác bị đăng xuất). Mọi màn hình có layout 2 cột: form bên trái, panel gradient xanh-tím bên phải với khẩu hiệu "Học, nộp bài và nhận điểm — một nơi." Kế hoạch cần có: hiện trạng (cái gì đã có và cái gì còn thiếu cho U01), thứ tự thực hiện chia theo backend (data/migration, domain, service, API, bảo mật/JWT/session, OTP/email, tích hợp audit), frontend (route, các màn hình trên cùng các màn hình quản lý tài khoản và hồ sơ), test. Mỗi bước phải ghi rõ file cần tạo/sửa, business rule/UC liên quan, tiêu chí hoàn thành và cách tự kiểm tra. Chỉ ra các điểm chưa rõ hoặc mâu thuẫn giữa SRS, aidlc-docs, UI và code để tôi quyết định. Bạn tự quyết định đặt kế hoạch ở đâu: có thể đặt tạm trong tài liệu dự án (ví dụ aidlc-docs/construction/plans/) hoặc ngoài repo. Nếu đặt trong repo, phải ghi chú rõ đây là file tạm, phải xoá/dọn trước khi mở PR vào main. Không commit, không push, không cập nhật Jira khi chưa được tôi đồng ý."
+
+**AI Response**: Read U01 design (business rules, logic model, domain entities, frontend components, NFR, NFR design, infrastructure), unit-of-work, the official U01 code-generation plan, U02/U03 contracts and U03 code, frontend scaffold, the SRS sections for UC01–12/screens/business rules/messages, and the four UI images. Wrote a temporary working plan `aidlc-docs/construction/plans/TEMP-u01-implementation-working-plan.md` (marked to delete before any PR to main): current state, 22 open decisions Q01–Q22 (blocking: ArchitectureTest forbids identity → audit/jobs; audit_logs FK before U02 exists; JWT/CSV/rate-limit libraries; Redis-down vs per-request session check; missing authorization action catalog), roadmap M0–M7, backend steps B0–B15, frontend F0–F9, tests T1–T5, UC traceability and clean-up checklist. No application code, official plan, state or Jira changed; no commit.
+
+**Context**: Construction — U01 Code Generation preparation (working plan for the developer; official plan approval still pending).
+
+---
+
+## 2026-10-17T11:00:00Z — U01 working plan: decisions Q01–Q22
+
+**User Input**: "đề xuất cho tôi quyết định của bạn. Đối với các mẫu thuẫn thì làm theo các thiết kế đang có trong dự án, SRS sẽ sửa lại sau"
+
+**AI Response**: Filled section 3 of the temporary plan `aidlc-docs/construction/plans/TEMP-u01-implementation-working-plan.md` with decisions: conflicts follow the U01 aidlc-docs design (single login error message, immediate revocation, no school code, New Account without phone, no Account Detail history, separate role/status actions, design lifecycle, no password-reuse check, design routes with Admin temporarily at /admin/accounts, no version on own profile, imports:validate/commit, Bucket4j on Redis); internal design conflict Q04 resolved by the newest rule BR-U01-44 (fail closed, 503 when Redis is down). Proposals where the design is silent: narrow ArchitectureTest exception identity → audit.contract/jobs.contract (Q01), separate audit FK migration after U02 (Q02), jjwt + commons-csv (Q03), Actions/AccessPolicy catalog registering U02/U03 actions (Q14), cookie CSRF token (Q16). Marked items needing team agreement; synchronized backend/frontend/test steps. SRS and aidlc-docs fixes listed for later. No code, commit or Jira change.
+
+**Context**: Construction — U01 Code Generation preparation.
+
+---
+
+## 2026-10-17T11:30:00Z — U01 working plan: Q01 option A chosen
+
+**User Input**: "chọn A"
+
+**AI Response**: Recorded in the temporary plan that Q01 uses option A: a narrow ArchitectureTest exception letting `identity` depend only on `audit.contract` and `jobs.contract` (test-only change, no runtime change for U02/U03), with the team notice text and the steps that can proceed while waiting (B1, B2, B4, B5, B7 without audit, F0–F2). No code, commit or Jira change.
+
+**Context**: Construction — U01 Code Generation preparation.
+
+---
+
+## 2026-10-17T17:00:00Z — U01 code: milestones M0–M1
+
+**User Input**: "bắt tay vào làm luôn"
+
+**AI Response**: Implemented M0–M1 of the temporary U01 plan on branch `cuong` (uncommitted): pom dependencies (jjwt 0.12.6, commons-csv 1.12.0, bucket4j_jdk17 core/lettuce 8.14.0); ArchitectureTest exception letting `identity` use only `audit.contract`/`jobs.contract` (Q01 option A); `platform.identity` configuration (`IdentityProperties`, `IdentityConfig`, application.yml/application-local.yml, compose and .env.example variables incl. bootstrap Admin and local `U01_COOKIE_SECURE=false`); migration `identity/V20260925_0930__create_accounts.sql` (accounts + FK system_settings.updated_by, audit FK deferred per Q02); domain `Account`, `AccountSearch`, `EmailPolicy`, `PasswordPolicy`, `ProfilePolicy`, `AccountRepository` (JdbcClient). Unit tests: 18 new; `mvn test` 112 tests, 0 failures. Migration and repository SQL not yet run against PostgreSQL (Docker not running). No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestones M0–M1.
+
+---
+
+## 2026-10-17T17:20:00Z — U01 code: milestone M2
+
+**User Input**: "Review done, continue with M2: Redis session, JWT, filter, CSRF, IAuthorization, login/logout, Admin bootstrap and login screen."
+
+**AI Response**: Implemented M2 (uncommitted, branch `cuong`). Backend: `Hashing`, `SessionStore` (Redis sessions, hashed rotating refresh tokens, reuse revokes session, 2 h idle / 7 d ceiling), `RequestThrottle` (Bucket4j on Lettuce), `JwtService` (HS256, 15 min, secret ≥ 32 bytes), `AuthCookies`, `SessionAuthority` + `JwtAuthFilter` (Actor principal with current DB role, Redis/DB failure → 503), `IdentityHttpSecurity` (cookie CSRF, 401/403 Problem Detail, public `/api/v1/auth/**`) wired by one call in shared `SecurityConfig`; `Actions` contract + `AccessPolicy` + `AuthorizationService` (default deny, registers U02/U03 actions); `AuthService` login/refresh/logout with single neutral error, lockout, dummy bcrypt; `AuthController`, `MeController` (GET profile), `BootstrapAdminInitializer`; `GlobalExceptionHandler` maps Redis/DB unavailability to 503; `server.forward-headers-strategy: native`. Frontend: `shared/api/client.ts` CSRF header and one-shot refresh with `setUnauthenticatedHandler`; identity api/types/session; AuthLayout, BrandLogo, InfoCard, RecentWorkPreview, PasswordField; Login page; AppShell, AccountMenu, SignOutDialog, RoleGuard, AuthenticatedLayout; `/`, `/post-login`, `/admin` layout and temporary `/admin/accounts`. Added `.claude/launch.json` for the frontend dev preview. Results: `mvn test` 154 tests 0 failures (ArchitectureTest passes with identity → audit.contract); frontend typecheck, lint, 28 tests and `next build` pass; login page visually checked against the mock-up. Not yet run end-to-end with PostgreSQL/Redis (Docker not running). No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M2.
+
+---
+
+## 2026-10-17T17:45:00Z — U01 code: milestone M3
+
+**User Input**: "Continue with M3: OTP challenge/ticket stores, OtpService, OtpMailHandler, SmtpMailAdapter, activation and reset-password APIs, and the Activate/Reset screens with stepper and OTP input."
+
+**AI Response**: Implemented M3 (uncommitted, branch `cuong`). Backend: `OtpPurpose`; `OtpChallengeStore` (hashed 6-digit code per account+purpose, 10 min, 5 attempts, single use, purpose-bound hash, deleteAll for disable); `VerificationTicketStore` (hashed one-time ticket, purpose-bound, kept on policy failure); `OtpService` (neutral 202, throttle, eligibility, enqueue `OTP_DELIVERY` with IDs only; verify → ticket, single error); `OtpMailHandler` (`IJobHandler` on `jobs.email`, code generated in worker, Retryable on Redis/SMTP failure, `OTP_DELIVERY_FAILED` log); `SmtpMailAdapter` (real `IMail`); `ActivationService` (activate PENDING, audit, auto sign-in), `PasswordResetService` (update password, audit, revoke all sessions before and after commit, no sign-in); `OtpFlowController` (`/api/v1/auth/activation/*`, `/password-reset/*`); `PasswordPolicyException` + `IdentityExceptionHandler` (400 PASSWORD_POLICY with violations). Frontend: OTP API functions, `passwordRules`, Stepper, OtpInput, PasswordChecklist, `useCountdown`, `OtpFlow` (email → OTP with 10:00 expiry and 60 s resend → password), Activation and Password Reset pages, login notice after reset. Fixed a bug found in browser check: OtpInput now accepts a whole code autofilled into one cell. Results: `mvn test` 175 tests 0 failures; frontend typecheck, lint, 38 tests and build pass; reset flow checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis/RabbitMQ/Mailpit. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M3.
+
+---
+
+## 2026-10-17T18:05:00Z — U01 code: milestone M4
+
+**User Input**: "Continue with M4: PATCH /me/profile, POST /me/password, ProfilePage and PasswordChangeDialog."
+
+**AI Response**: Implemented M4 (uncommitted, branch `cuong`). Backend: `ProfileService.update` (own account only, trims, validates name/phone, no-op when unchanged, audit `PROFILE_UPDATED` with field names only, no version per Q18); `PasswordChangeService` (current password check, policy, audit `PASSWORD_CHANGED`, revoke other sessions before and after commit, keep current `sid`); `MeController` PATCH `/me/profile`, POST `/me/password`; `StrictRequest` rejects unknown body fields with 400 `INVALID_REQUEST` (a test showed `@JsonIgnoreProperties(ignoreUnknown = false)` from the plan has no effect under Spring Boot's global setting; plan text corrected). Frontend: `updateProfile`/`changePassword` API, `ProfileForm` (editable name/phone, read-only email/role/status, initials), `PasswordChangeDialog`, `ProfilePage`, `/profile` route with `AuthenticatedLayout`; `PostLoginRedirect` now shows a busy message instead of hanging when the backend errors (found during browser check). Results: `mvn test` 185 tests 0 failures; frontend typecheck, lint, 44 tests and build pass; profile edit checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M4.
+
+---
+
+## 2026-10-17T18:40:00Z — U01 code: milestone M5
+
+**User Input**: "Continue with M5: AccountAdminService (list, create, detail, update, role change, status change), CSV import, AdminAccountController, plus the Account List, New Account, Import CSV and Account Detail screens."
+
+**AI Response**: Implemented M5 (uncommitted, branch `cuong`). Backend: `AccountAdminService` (list/search/paging, create PENDING without password or mail, detail, update name/phone with version → 409, role change with BR-U01-64 assignment check via ISubjectScope/IClassScope, self-change block, last-active-Admin lock, session revocation before and after commit, status disable/reopen with OTP removal and reopen to ACTIVE/PENDING, ACCESS_DENIED audit on refusal); `AccountViews`; `RoleChangeBlockedException` → 409 with managedSubjects/taughtClasses; `AccountImportService` (UTF-8/BOM, header check, ≤1000 rows/1 MB, per-row reasons, duplicate-in-file, existing email, ADMIN not importable, validate without writes, commit re-validates in one transaction, audit checksum/created/rejected); `AdminAccountController` (`/api/v1/admin/accounts`, `/{id}`, `/{id}/role`, `/{id}/status`, `/imports:validate`, `/imports:commit`, strict bodies). Frontend: admin API, labels, `AccountListPage` (role tabs, status filter, search, paging in URL), `NewAccountDialog`, `ImportAccountsPanel` (template download, preview, confirm), `AccountDetailPage` (edit with version, role and status via confirm dialogs, self-guard, blocked-assignment list), routes `/admin/accounts` and `/admin/accounts/[id]`. Results: `mvn test` 201 tests 0 failures (incl. colon import path); frontend typecheck, lint, 50 tests and build pass; list and detail checked in the browser with mocked API. Not yet run against real PostgreSQL/Redis. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestone M5.
+
+---
+
+## 2026-10-17T19:00:00Z — U01 code: M6 and M7 cleanup
+
+**User Input**: "Continue with M6: implement the real IAccountLookup, check every action in AccessPolicy, then do the M7 cleanup (GlobalExceptionHandler, log check, code-summary)."
+
+**AI Response**: Added `AccountLookupService` (real `IAccountLookup`: active students, role-filtered accounts of any status, normalized email lookup, contact by id, counts by role/status; max 20 results; no phone or password) with repository `findForLookup`. Checked authorization actions used in code and designs (U03 `FILE_UPLOAD`, `SETTINGS_VIEW`, `SETTINGS_EDIT`; U02 `AUDIT_READ`) — all present in `AccessPolicy`; added a test that every `Actions` constant has a rule and Admin-only/upload role sets. Reviewed identity logs and audit details: no password, OTP, token or phone values. Kept `GlobalExceptionHandler` at the 503 mapping only (default Spring Problem Detail for validation and other errors, no catch-all to avoid changing U03 behaviour). Removed last `.gitkeep`. Wrote `construction/u01-account-and-access/code/code-summary.md`; updated the U01 row in `aidlc-state.md`; ticked the temporary plan. Results: `mvn test` 206 tests 0 failures; frontend typecheck, lint and 50 tests pass. End-to-end run with Docker datastores still pending. No commit, push or Jira change.
+
+**Context**: Construction — U01 Code Generation Part 2, milestones M6–M7 (partial: manual T3 run and integration tests pending).
+
+---
+
+## 2026-10-17T19:15:00Z — U01 local end-to-end run preparation
+
+**User Input**: "Guide me to start Docker local and run the T3 scenarios (activate admin via Mailpit, login, reset, CSV import, role/status) end to end."
+
+**AI Response**: Docker daemon was not running, so nothing was started. Created gitignored `infra/.env.local` with random local-only secrets, `fpt.edu.vn` domain, bootstrap Admin `admin@fpt.edu.vn` and 1-minute login lock; passed `U01_LOGIN_LOCK_DURATION` through `docker-compose.local.yml`; created sample CSV `.tmp/u01-t3/tai-khoan-t3.csv` (gitignored). Validated the merged compose config (`docker compose config --quiet`). Gave the user step-by-step commands for starting the stack and running T3 scenarios. No commit.
+
+**Context**: Construction — U01 Build and Test preparation (manual T3).
+
+---
+
+## 2026-10-17T20:45:00Z — U01 end-to-end check on local Docker stack
+
+**User Input**: "tôi đã bật docker desktop, hãy kiểm tra cho tôi"
+
+**AI Response**: Started the local stack (backend, worker, frontend, Nginx, PostgreSQL, Redis, RabbitMQ, Mailpit). Host ports 5432 and 8080 were already taken (local PostgreSQL, AgentService) and the repo RabbitMQ healthcheck (5 s timeout) failed on this machine although RabbitMQ was up, so a temporary override `.tmp/u01-t3/docker-compose.ports.yml` remapped ports and relaxed the healthcheck (not committed; infra issue to report). Verified migrations, bootstrap Admin and real U01 beans. Activated the Admin through the UI with the OTP from Mailpit. Ran the T3 scenarios with a script through Nginx (`.tmp/u01-t3/t3.sh`): first run exposed a real bug — Spring `SessionManagementFilter` rotated the CSRF token after every JWT-authenticated request, so the next write got 403 CSRF_INVALID; fixed with `NullAuthenticatedSessionStrategy` on the CSRF config plus a regression test (confirmed failing without the fix). Also made the U01 exception handler take precedence (`@Order`) so malformed JSON returns `INVALID_REQUEST`, plus a test. Script issues (Windows curl encoding, temp paths) fixed. Final fresh run: 52/52 checks pass; Redis-down gives 503 and recovers; logs contain no secrets; profile save works in the real browser. Backend 208 tests pass. Updated code-summary. Stack left running. No commit, push or Jira change.
+
+**Context**: Construction — U01 Build and Test (manual T3 on local stack).
+
+---
+
+## 2026-10-17T21:00:00Z — U01 commits (not pushed)
+
+**User Input**: "viết commit rõ ràng, chưa push lên main để tôi kiểm tra lại"
+
+**AI Response**: Committed U01 on branch `cuong` in four commits without pushing and without Claude co-author lines: `5b05625` dependencies/config/ArchitectureTest exception, `00c57a4` backend UC 01–12 with tests, `f58d704` frontend screens with tests, and a docs commit (code summary, aidlc-state U01 row, this audit log). Left uncommitted on purpose: the temporary working plan `construction/plans/TEMP-u01-implementation-working-plan.md` (must be removed before any PR to main) and `.claude/launch.json` (local preview config).
+
+**Context**: Construction — U01 Code Generation Part 2, commit for user review.
 
 ---

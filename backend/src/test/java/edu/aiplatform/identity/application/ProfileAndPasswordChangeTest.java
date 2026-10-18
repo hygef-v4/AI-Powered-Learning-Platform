@@ -1,0 +1,133 @@
+package edu.aiplatform.identity.application;
+
+import static edu.aiplatform.identity.IdentityTestData.NOW;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import edu.aiplatform.audit.contract.AuditEvent;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.identity.IdentityTestData;
+import edu.aiplatform.identity.contract.AccountStatus;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
+import edu.aiplatform.identity.contract.IAuthorization;
+import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.identity.domain.Account;
+import edu.aiplatform.identity.domain.AccountRepository;
+import edu.aiplatform.identity.infrastructure.SessionStore;
+import edu.aiplatform.shared.error.ApiException;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.support.TransactionOperations;
+
+/** UC 05 đổi mật khẩu, UC 06/07 hồ sơ của chính mình. */
+class ProfileAndPasswordChangeTest {
+
+    private static final String PASSWORD = "hocbai2026";
+
+    private final AccountRepository accounts = mock(AccountRepository.class);
+    private final IAuthorization authorization = mock(IAuthorization.class);
+    private final SessionStore sessions = mock(SessionStore.class);
+    private final List<AuditEvent> audits = new ArrayList<>();
+    private final IAudit audit = audits::add;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
+    private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+    private final ProfileService profiles = new ProfileService(accounts, authorization, audit,
+            TransactionOperations.withoutTransaction(), clock);
+    private final PasswordChangeService passwords = new PasswordChangeService(accounts, authorization, sessions,
+            encoder, audit, TransactionOperations.withoutTransaction(), clock);
+    private Account account;
+    private Actor actor;
+
+    @BeforeEach
+    void setUp() {
+        account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, encoder.encode(PASSWORD));
+        actor = new Actor(account.id(), Role.STUDENT);
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+    }
+
+    @Test
+    void profileShowsOwnDataWithoutSecrets() {
+        ProfileService.ProfileView view = profiles.get(actor);
+        assertThat(view.email()).isEqualTo("taivm@fpt.edu.vn");
+        assertThat(view.homePath()).isEqualTo("/classes");
+    }
+
+    @Test
+    void updateTrimsNameAndAuditsFieldNamesOnly() {
+        profiles.update(actor, "  Vũ Minh Tài Mới ", " 0912345678 ");
+
+        verify(accounts).updateProfile(account.id(), "Vũ Minh Tài Mới", "0912345678", null, NOW);
+        assertThat(audits).singleElement().satisfies(e -> {
+            assertThat(e.action()).isEqualTo("PROFILE_UPDATED");
+            assertThat(e.details()).isEqualTo(Map.of("fields", List.of("displayName", "phoneNumber")));
+            assertThat(e.details().toString()).doesNotContain("0912345678");
+        });
+    }
+
+    @Test
+    void unchangedProfileWritesNothing() {
+        profiles.update(actor, "Vũ Minh Tài", "");
+        verify(accounts, never()).updateProfile(any(), anyString(), any(), any(), any());
+        assertThat(audits).isEmpty();
+    }
+
+    @Test
+    void invalidFieldsAreRejected() {
+        assertThatThrownBy(() -> profiles.update(actor, "   ", null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_DISPLAY_NAME"));
+        assertThatThrownBy(() -> profiles.update(actor, "Tài", "abc"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_PHONE_NUMBER"));
+    }
+
+    @Test
+    void deniedActorIsForbidden() {
+        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("X"));
+        assertThatThrownBy(() -> profiles.get(actor))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    void changePasswordKeepsCurrentSessionAndRevokesOthers() {
+        passwords.change(actor, "sid-now", PASSWORD, "matkhaumoi9");
+
+        verify(accounts).updatePassword(eq(account.id()), org.mockito.ArgumentMatchers.argThat(
+                hash -> encoder.matches("matkhaumoi9", hash)), eq(NOW));
+        verify(sessions, times(2)).deleteAllExcept(account.id(), "sid-now");
+        verify(sessions, never()).deleteAll(any());
+        assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_CHANGED");
+    }
+
+    @Test
+    void wrongCurrentPasswordChangesNothing() {
+        assertThatThrownBy(() -> passwords.change(actor, "sid", "sai-mat-khau1", "matkhaumoi9"))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo(PasswordChangeService.CURRENT_PASSWORD_INVALID));
+        verify(accounts, never()).updatePassword(any(), anyString(), any());
+        verify(sessions, never()).deleteAllExcept(any(), any());
+    }
+
+    @Test
+    void weakNewPasswordIsRejected() {
+        assertThatThrownBy(() -> passwords.change(actor, "sid", PASSWORD, "taivm123"))
+                .isInstanceOf(PasswordPolicyException.class);
+        verify(accounts, never()).updatePassword(any(), anyString(), any());
+    }
+}

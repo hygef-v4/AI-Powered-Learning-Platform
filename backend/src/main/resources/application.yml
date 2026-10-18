@@ -56,6 +56,8 @@ spring:
 server:
   port: 8080
   shutdown: graceful
+  # Nginx đứng trước: lấy IP client từ X-Forwarded-For của proxy nội bộ (rate limit theo IP, U01).
+  forward-headers-strategy: native
 
 management:
   endpoints:
@@ -72,8 +74,30 @@ management:
     mail:
       enabled: false
 
-# U03 Job and Settings
 platform:
+  # U01 Account & Access (logical-components mục 4)
+  identity:
+    allowed-email-domains: ${U01_ALLOWED_EMAIL_DOMAINS:}
+    jwt-secret: ${U01_JWT_SECRET:}
+    access-ttl: ${U01_ACCESS_TTL:15m}
+    refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
+    refresh-max-ttl: ${U01_REFRESH_MAX_TTL:7d}
+    bcrypt-cost: ${U01_BCRYPT_COST:12}
+    otp-ttl: ${U01_OTP_TTL:10m}
+    otp-max-attempts: ${U01_OTP_MAX_ATTEMPTS:5}
+    login-lock-threshold: ${U01_LOGIN_LOCK_THRESHOLD:5}
+    login-lock-duration: ${U01_LOGIN_LOCK_DURATION:15m}
+    cookie-secure: ${U01_COOKIE_SECURE:true}
+    mail-from: ${SMTP_FROM:}
+    bootstrap-admin-email: ${U01_BOOTSTRAP_ADMIN_EMAIL:}
+    bootstrap-admin-name: ${U01_BOOTSTRAP_ADMIN_NAME:Quản trị viên}
+    rate-limit:
+      otp-per-email-per-hour: ${U01_RL_OTP_PER_EMAIL_PER_HOUR:5}
+      otp-cooldown: ${U01_RL_OTP_COOLDOWN:60s}
+      otp-per-ip-per-hour: ${U01_RL_OTP_PER_IP_PER_HOUR:20}
+      login-per-ip: ${U01_RL_LOGIN_PER_IP:30}
+      login-ip-window: ${U01_RL_LOGIN_IP_WINDOW:5m}
+  # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
     require-drive: ${U03_REQUIRE_DRIVE:false}
