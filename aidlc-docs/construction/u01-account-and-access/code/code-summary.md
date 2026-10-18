@@ -11,7 +11,7 @@ Code viết ngày 2026-10-17 theo [plan](../../plans/code-generation-plan/u01-ac
 | F5 Đặt lại mật khẩu | `OtpService`, `PasswordResetService` (xóa mọi phiên trước và sau commit, không tự đăng nhập) |
 | F6 Đổi mật khẩu | `PasswordChangeService` (đúng mật khẩu hiện tại, giữ phiên hiện tại, xóa phiên khác) |
 | F7 Hồ sơ | `ProfileService` (xem, sửa tên/SĐT của chính mình, audit tên trường) |
-| F8–F12, F14 Quản trị | `AccountAdminService` (danh sách, tạo `PENDING`, chi tiết, sửa có `version`, đổi role có kiểm phân công, chặn tự thao tác, khóa Admin cuối, vô hiệu hóa/mở lại), `AccountImportService` (CSV kiểm rồi xác nhận) |
+| F8–F12, F14 Quản trị | `AccountAdminService` (danh sách, tạo `PENDING`, chi tiết, sửa có `version`, đổi role có kiểm phân công, chặn tự thao tác, khóa Admin cuối, vô hiệu hóa/mở lại; vô hiệu hóa gọi `ISubjectScope.releaseManagerAssignments` trong cùng transaction), `AccountImportService` (CSV kiểm rồi xác nhận) |
 | F13 Phân quyền | `AuthorizationService` (cài `IAuthorization`, mặc định từ chối, role đọc từ DB, phạm vi qua `ISubjectScope`/`IClassScope`), `AccessPolicy` + `contract/Actions` |
 | Phiên mỗi request | `SessionAuthority` + `web/JwtAuthFilter` (JWT, `sid` còn trên Redis, tài khoản `ACTIVE`, principal là `Actor`) |
 | Contract cho unit khác | `AccountLookupService` (cài `IAccountLookup`, tối đa 20 kết quả), `SmtpMailAdapter` (cài `IMail`) |
@@ -34,7 +34,7 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 
 ## Migration
 
-`db/migration/identity/V20260925_0930__create_accounts.sql`: bảng `accounts` (email chuẩn hóa, unique; role/status check; `ACTIVE` phải có mật khẩu; `email_preferences` cho U14; `version`), index `(role, status)`, FK `system_settings.updated_by`. FK `audit_logs.actor_id` để migration `0931` khi U02 có bảng.
+`db/migration/identity/V20260925_0930__create_accounts.sql`: bảng `accounts` (email chuẩn hóa, unique; role/status check; `ACTIVE` phải có mật khẩu; `email_preferences` cho U14; `version`), index `(role, status)`, FK `system_settings.updated_by`. `V20260925_0931__add_audit_actor_fk.sql`: FK `audit_logs.actor_id` → `accounts`.
 
 ## Frontend
 
@@ -59,7 +59,6 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 
 ## Khác với thiết kế
 
-- `ArchitectureTest` có ngoại lệ hẹp `identity → audit.contract, jobs.contract` (Q01).
 - Redis lỗi → 503 cho mọi request có cookie (theo BR-U01-44; BR-U01-95, NFR-U01-40, P1 cần sửa cho khớp, Q04).
 - `AuthorizationService` không tự ghi `ACCESS_DENIED`; unit gọi tự ghi (như U03) để tránh ghi hai lần.
 - Field lạ trong body bị chặn bằng `StrictRequest` (`@JsonAnySetter`); `@JsonIgnoreProperties(ignoreUnknown = false)` không có tác dụng dưới cấu hình mặc định của Spring Boot.

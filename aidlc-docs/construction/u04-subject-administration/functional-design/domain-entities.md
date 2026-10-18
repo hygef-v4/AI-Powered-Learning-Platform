@@ -45,7 +45,7 @@ stateDiagram-v2
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
+| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn; gỡ Chủ nhiệm khỏi mọi môn khi tài khoản bị vô hiệu hóa (BR-U04-12) |
 | `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
 | `NavEntry` (contract frontend của U01, U04 cài) | - | U01 | Mục Môn học trên menu bên của Admin |
 

@@ -30,7 +30,7 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 
 | Interface | Phương thức | Cài bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
+| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64); gỡ Chủ nhiệm khỏi mọi môn khi vô hiệu hóa tài khoản (BR-U01-71) |
 | `IClassScope` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
 
 ##### Contract frontend U01 khai báo
@@ -413,7 +413,7 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
+| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn; gỡ Chủ nhiệm khỏi mọi môn khi tài khoản bị vô hiệu hóa (BR-U04-12) |
 | `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
 | `NavEntry` (contract frontend của U01, U04 cài) | - | U01 | Mục Môn học trên menu bên của Admin |
 
