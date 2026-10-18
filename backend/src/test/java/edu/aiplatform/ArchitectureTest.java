@@ -12,7 +12,6 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.Map;
-import java.util.Set;
 
 /** Quy tắc khung: tên interface, ranh giới unit. */
 @AnalyzeClasses(packages = "edu.aiplatform",
@@ -28,13 +27,6 @@ class ArchitectureTest {
             Map.entry("quizzes", 10), Map.entry("quizpractice", 11),
             Map.entry("groups", 12), Map.entry("groupdocs", 12), Map.entry("materials", 13),
             Map.entry("announcements", 14), Map.entry("notifications", 14), Map.entry("admindashboard", 15));
-
-    /**
-     * Ngoại lệ theo unit-of-work: U01 phụ thuộc U02 (ghi audit qua {@code IAudit}) và U03 (gửi OTP qua
-     * {@code IJob}, cài {@code IJobHandler}). Chỉ được dùng đúng package {@code contract}, không vào stub hay tầng trong.
-     */
-    static final Map<String, Set<String>> ALLOWED_LATER_CONTRACTS = Map.of(
-            "identity", Set.of("edu.aiplatform.audit.contract", "edu.aiplatform.jobs.contract"));
 
     @ArchTest
     static final ArchRule interfaces_are_named_with_I_prefix = classes()
@@ -58,18 +50,6 @@ class ArchitectureTest {
         String rest = name.substring(prefix.length());
         int dot = rest.indexOf('.');
         return UNIT_OF_PACKAGE.get(dot < 0 ? rest : rest.substring(0, dot));
-    }
-
-    static boolean isAllowedLaterContract(JavaClass origin, JavaClass target) {
-        String prefix = "edu.aiplatform.";
-        String name = origin.getPackageName();
-        if (!name.startsWith(prefix)) {
-            return false;
-        }
-        String rest = name.substring(prefix.length());
-        int dot = rest.indexOf('.');
-        String originPackage = dot < 0 ? rest : rest.substring(0, dot);
-        return ALLOWED_LATER_CONTRACTS.getOrDefault(originPackage, Set.of()).contains(target.getPackageName());
     }
 
     static ArchCondition<JavaClass> onlyBeAccessedFromTheSameUnit() {
