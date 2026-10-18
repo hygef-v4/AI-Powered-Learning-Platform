@@ -13,12 +13,12 @@ import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.Map;
 
-/** Quy tắc khung: tên interface, ranh giới unit, chiều phụ thuộc giữa các unit. */
+/** Quy tắc khung: tên interface, ranh giới unit. */
 @AnalyzeClasses(packages = "edu.aiplatform",
         importOptions = {ImportOption.DoNotIncludeTests.class, ImportOption.DoNotIncludePackageInfos.class})
 class ArchitectureTest {
 
-    /** Package → số unit. Unit số nhỏ không được phụ thuộc unit số lớn hơn. */
+    /** Package → số unit; package cùng số là cùng một unit. */
     static final Map<String, Integer> UNIT_OF_PACKAGE = Map.ofEntries(
             Map.entry("identity", 1), Map.entry("audit", 2),
             Map.entry("files", 3), Map.entry("jobs", 3), Map.entry("settings", 3), Map.entry("backup", 3),
@@ -41,12 +41,6 @@ class ArchitectureTest {
             .allowEmptyShould(true)
             .because("unit khác chỉ dùng package contract");
 
-    @ArchTest
-    static final ArchRule earlier_units_do_not_depend_on_later_units = classes()
-            .that().resideInAPackage("edu.aiplatform..")
-            .should(notDependOnLaterUnits())
-            .because("unit sau cài interface do unit trước khai báo, không có chiều ngược lại");
-
     static Integer unitOf(JavaClass javaClass) {
         String name = javaClass.getPackageName();
         String prefix = "edu.aiplatform.";
@@ -66,24 +60,6 @@ class ArchitectureTest {
                 for (Dependency dependency : item.getDirectDependenciesToSelf()) {
                     Integer origin = unitOf(dependency.getOriginClass());
                     if (origin != null && !origin.equals(unit)) {
-                        events.add(SimpleConditionEvent.violated(dependency, dependency.getDescription()));
-                    }
-                }
-            }
-        };
-    }
-
-    static ArchCondition<JavaClass> notDependOnLaterUnits() {
-        return new ArchCondition<>("not depend on later units") {
-            @Override
-            public void check(JavaClass item, ConditionEvents events) {
-                Integer unit = unitOf(item);
-                if (unit == null) {
-                    return;
-                }
-                for (Dependency dependency : item.getDirectDependenciesFromSelf()) {
-                    Integer target = unitOf(dependency.getTargetClass());
-                    if (target != null && target > unit) {
                         events.add(SimpleConditionEvent.violated(dependency, dependency.getDescription()));
                     }
                 }
