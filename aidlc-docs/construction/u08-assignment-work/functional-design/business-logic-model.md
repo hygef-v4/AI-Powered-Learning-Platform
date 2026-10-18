@@ -27,7 +27,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Xem bài
 
 ### F1 - Danh sách bài của tôi (UC 37)
-1. Student mở Student Assignments từ thanh bên Class Dashboard (U08 đăng ký `DashboardNavEntry`) hoặc từ phần Bài tập trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/assignments` kèm lớp, trạng thái.
+1. Student mở Student Assignments từ mục Bài tập trên menu bên (U08 đăng ký `NavEntry`) hoặc từ phần Bài tập trên Student Class Detail (`StudentClassSection`, lọc sẵn lớp); frontend gọi `GET /api/v1/me/assignments` kèm lớp, trạng thái.
 2. Lấy các lớp `OPEN` đang ghi danh (`IClassAccess.listOpenClassesOf`), rồi bài của từng lớp (`IAssignmentQuery.listForClass`, gồm bài của môn); bỏ bài người học không được thấy (BR-U08-01).
 3. Ghép trạng thái của mình: bài cá nhân từ lượt làm; bài nhóm từ `IGroupWorkStatus` (khi U12 có, chưa có thì chỉ hiện nhãn "Bài nhóm").
 4. Trả danh sách lọc theo lớp, trạng thái, sắp theo hạn gần nhất; cột điểm và phân bố ẩn danh do U09 gắn qua slot `StudentAssignmentResult`.

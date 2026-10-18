@@ -27,7 +27,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 5 — Trích chữ:** `MaterialTextExtractJobHandler`, `MaterialTextExtractor`, thêm `MATERIAL_TEXT_EXTRACT` vào loại việc của U03 (F6, P2).
 - [ ] **Bước 6 — Nguồn cho AI:** `ReferenceMaterialService` (cài `IReferenceMaterial` của U06, thay adapter rỗng), `MaterialMcpTools` (tool `read_authorized_material`) (F7).
 - [ ] **Bước 7 — API:** controller theo domain-entities mục 4; `contracts/openapi/materials.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 8 — Frontend:** `SubjectMaterialListPage` (đăng ký `DashboardNavEntry`), `MaterialDetailPage`, `ClassMaterialsTab` (`TeacherClassTab`), `ClassMaterialsCard` (`StudentClassSection`), `LearningMaterialPage` với slot `LearningMaterialSection`; `MaterialLinkList` cài slot `AssignmentMaterialSection` (U08), `QuizMaterialSection` (U11).
+- [ ] **Bước 8 — Frontend:** `SubjectMaterialListPage` (đăng ký `NavEntry`), `MaterialSummary` (`SubjectSummarySection`), `MaterialDetailPage`, `ClassMaterialsTab` (`TeacherClassTab`), `ClassMaterialsCard` (`StudentClassSection`), `LearningMaterialPage` với slot `LearningMaterialSection`; `MaterialLinkList` cài slot `AssignmentMaterialSection` (U08), `QuizMaterialSection` (U11).
 - [ ] **Bước 9 — Unit test (người code viết):** quyền theo phạm vi (Chủ nhiệm môn, giảng viên, người học, Admin); link YouTube hợp lệ và không hợp lệ (playlist, domain khác); thay phiên bản giữ phiên bản cũ; lưu trữ ẩn với người học; trích chữ `EXTRACTED`, `NO_TEXT`; `extractText` kiểm lại quyền và cắt theo trần; tool MCP từ chối ngoài quyền; component frontend. Integration test do tester viết.
 - [ ] **Bước 10 — Review:** đối chiếu UC 58–62, story, BR-U13 với code; người dùng duyệt trước khi chuyển unit.
 

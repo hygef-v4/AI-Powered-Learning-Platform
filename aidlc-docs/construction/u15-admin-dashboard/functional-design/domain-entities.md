@@ -19,7 +19,7 @@ Thiết kế độc lập công nghệ. U15 không có bảng; mọi số liệu
 
 ### Interface U15 cung cấp
 
-Không có; U15 chỉ có màn và API cho Admin.
+Không có; U15 chỉ có màn và API cho Admin. Phía frontend U15 cài `NavEntry` của U01 (mục Tổng quan trên menu bên của Admin).
 
 ### Contract U15 khai báo
 
@@ -32,6 +32,7 @@ Không có.
 | `IAuthorization`, `IAccountLookup.countByRoleAndStatus` | U01 | Kiểm `ADMIN`; số tài khoản |
 | `IAudit` | U02 | Ghi truy cập bị từ chối |
 | `IBackupStatus` (`latest`, `list`) | U03 | Trạng thái, lịch sử backup |
+| `ISettings` (`backup.enabled`, `backup.dailyAt`) | U03 | Lịch backup và lần chạy tiếp theo trên Admin Dashboard |
 | `ISubjectQuery.countSubjectsByStatus` | U04 | Số môn |
 | `IClassAccess.countClassesByStatus`, `countActiveEnrollments` | U05 | Số lớp, số ghi danh |
 

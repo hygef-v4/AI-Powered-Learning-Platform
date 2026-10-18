@@ -1,30 +1,42 @@
 # U02 Audit — frontend-components
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U02 Audit thuộc Iter 1, người code: Người 2; phạm vi UC 13 giữ như U02 cũ (chỉ audit; việc nền đã thuộc U03). 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Baseline cũ: snapshot. Folder `u02-audit-job-and-outbox` giữ tên cũ để không phá liên kết, là thiết kế của U02 Audit hiện hành.
 
-## 1. Cây component
+Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
+
+## 1. Màn hình theo design
+
+| # | Màn (artboard) | Component | UC |
+|---|---|---|---|
+| 14 | Audit Log (`a13`), popup Chi tiết bản ghi (`a13b`), trạng thái email người thực hiện không khớp (`a13c`) | `AuditLogPage`, `AuditDetailDialog` | 13 |
+
+Mở từ mục "Nhật ký audit" trên menu bên của Admin (U02 đăng ký `NavEntry`) hoặc từ link "Mở Nhật ký audit đã lọc theo tài khoản" trên Account Detail (U01).
+
+## 2. Cây component
 
 ```
 app/admin/audit/
-  AuditLogPage             màn Audit Log, mở từ Admin Dashboard (UC 13)
+  AuditLogPage             #14 Audit Log (UC 13)
     AuditFilters
     AuditTable
-    AuditDetailDrawer
+    AuditDetailDialog      popup Chi tiết bản ghi
 ```
 
 Component trạng thái việc nền (`usePollStatus`, `StatusBadge`) thuộc U03.
 
-## 2. AuditLogPage
+## 3. AuditLogPage
 
-| Component | State | API | Hành vi |
-|---|---|---|---|
-| `AuditFilters` | `actorEmail`, `action`, `objectType`, `objectId`, `result`, `from`, `to` | `GET /api/v1/admin/accounts?email=` (U01) để đổi email thành `actorId` | Mặc định 7 ngày gần nhất; nút Áp dụng, Xóa lọc; email không khớp tài khoản nào thì báo "không tìm thấy người thực hiện" |
-| `AuditTable` | `items`, `page`, `loading` | `GET /api/v1/admin/audit-logs` | Cột: thời gian, người thực hiện (email, hoặc "Hệ thống"), hành động, đối tượng, kết quả, lý do; 50 dòng/trang, tối đa 100 |
-| `AuditDetailDrawer` | `log` | - | Hiện `details` dạng JSON chỉ đọc; không có nút sửa/xóa |
+| Component | Nội dung | API |
+|---|---|---|
+| Đầu trang | "Nhật ký audit"; "Chỉ đọc · mặc định 7 ngày gần nhất · không bản ghi nào sửa hoặc xóa được" | - |
+| `AuditFilters` | Người thực hiện (nhập email), Hành động, Loại đối tượng, Mã đối tượng, Kết quả (Thành công, Từ chối, Thất bại), Thời gian (mặc định 7 ngày gần nhất); nút Xóa lọc, Lọc. Mở từ Account Detail thì điền sẵn loại và mã đối tượng từ tham số trên URL | `GET /api/v1/admin/accounts?email=` (U01) để đổi email thành `actorId`; email không khớp tài khoản nào thì hiện lỗi dưới ô "Không tìm thấy người thực hiện với email này." và không tra cứu |
+| `AuditTable` | Cột Thời gian, Người thực hiện (email, hoặc "Hệ thống" khi actor rỗng), Hành động, Đối tượng (loại · mã rút gọn), Kết quả (nhãn màu), Lý do; 50 dòng mỗi trang, tối đa 100; "Hiển thị a–b trong N bản ghi"; không có dòng: "Không có bản ghi nào khớp bộ lọc."; bấm dòng mở chi tiết | `GET /api/v1/admin/audit-logs` |
+| `AuditDetailDialog` | Mã, thời điểm, người thực hiện, hành động, đối tượng (loại · mã đầy đủ), kết quả, lý do; "Chi tiết (JSON, chỉ đọc)" gồm dữ liệu trước/sau đã che, loại actor (`USER`, `WORKER`, `SYSTEM`), `correlationId`; ghi chú "Bản ghi không sửa hoặc xóa được"; nút Đóng. Không có nút sửa/xóa | - |
 
 Route nằm dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN` vào; API vẫn tự kiểm quyền.
 

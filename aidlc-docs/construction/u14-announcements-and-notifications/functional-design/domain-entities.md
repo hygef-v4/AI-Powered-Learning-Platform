@@ -50,7 +50,7 @@ stateDiagram-v2
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
 | Sự kiện `class.announcement-posted` | - | U14 | Tạo thông báo lớp sau commit |
-| `StudentClassSection`, `DashboardNavEntry` (contract của U05, U14 cài) | - | U05 | Phần Thông báo trên Student Class Detail; lối vào Class Announcements trên Class Dashboard |
+| `StudentClassSection` (contract của U05, U14 cài); `NavEntry` (contract của U01, U14 cài) | - | U05, U01 | Phần Thông báo lớp trên Student Class Detail; mục Thông báo lớp trên menu bên của Student, Teacher |
 | Slot `HeaderWidget` (của U01, U14 cài) | - | U01 | Chuông và popup thông báo cho mọi vai trò |
 | `IJobHandler` cho `EMAIL_SEND`, `IPendingSweeper`, `IScheduledScanner` (contract của U03, U14 cài) | - | U03 | Gửi email; gửi lại message bị mất; nhắc hạn, gửi email đã hoãn, dọn thông báo cũ |
 

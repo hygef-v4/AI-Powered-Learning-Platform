@@ -34,7 +34,7 @@ Plan đầy đủ theo unit 2026-10-15 chưa được duyệt toàn bộ. Lát c
 | `backend/src/main/java/edu/aiplatform/academics/` | Đã thêm domain và JDBC infrastructure độc lập; application/web chờ tích hợp |
 | `backend/.../academics/contract/` | interface `IClassAccess`; kiểu dữ liệu `ClassRef`, `ClassStatus` |
 | `backend/.../academics/contract/stub/AcademicsContractStubs` | Bản tạm trả dữ liệu mẫu cho `IClassAccess` (danh sách rỗng, quyền `true`); tự tắt khi unit cài thật |
-| `frontend/src/features/academics/slots.ts` | Slot đã khai báo: `studentClassSections`, `teacherClassTabs`, `studentDetailSections`, `dashboardNavEntries` |
+| `frontend/src/features/academics/slots.ts` | Slot đã khai báo: `studentClassSections`, `teacherClassTabs`, `studentDetailSections`, `subjectSummarySections`, `classCardSections` |
 
 ## Checklist
 
@@ -43,7 +43,7 @@ Plan đầy đủ theo unit 2026-10-15 chưa được duyệt toàn bộ. Lát c
 - [ ] **Bước 3 — Interface:** `ClassScopeService` cài `IClassScope` (U01), `ISubjectClasses` (U04), `IClassAccess`; đọc không cache.
 - [ ] **Bước 4 — Service:** `ClassViewService` (F1–F6, F8), `ClassAdminService` (F7, F9, F13, F14), `EnrollmentService` (F10–F12, khóa hàng); kiểm quyền qua `IAuthorization`, môn qua `ISubjectQuery`, tài khoản qua `IAccountLookup`; audit theo BR-U05-52; phát `enrollment.activated`.
 - [ ] **Bước 5 — API:** 3 controller theo domain-entities mục 5; ngoài phạm vi trả `404`.
-- [ ] **Bước 6 — Frontend:** các màn ở frontend-components; vẽ các slot `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection`, `DashboardNavEntry` đã khai báo trong `src/features/academics/slots.ts`.
+- [ ] **Bước 6 — Frontend:** các màn ở frontend-components; vẽ các slot `StudentClassSection`, `TeacherClassTab`, `StudentDetailSection`, `SubjectSummarySection`, `ClassCardSection` đã khai báo trong `src/features/academics/slots.ts`; đăng ký `NavEntry` cho các mục menu bên của U05.
 - [ ] **Bước 7 — Unit test (người code viết):** chuyển trạng thái hợp lệ và không hợp lệ, mở lớp thiếu giảng viên, mở lại bị vướng, ghi danh lần đầu, khôi phục, đã ghi danh, ở lớp khác cùng môn, danh sách có dòng lỗi, gỡ rồi mất quyền, đổi giảng viên làm người cũ mất quyền, Admin bị từ chối, phát sự kiện khi lớp `OPEN`; test component frontend. Integration test do tester viết.
 - [ ] **Bước 8 — Review:** đối chiếu UC 20–30, story, BR-U05 với code; người dùng duyệt trước khi chuyển unit.
 

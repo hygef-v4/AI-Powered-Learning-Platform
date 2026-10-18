@@ -31,7 +31,7 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 - [ ] **Bước 6 — Nhắc hạn:** `DeadlineReminderScanner` (F7, P3).
 - [ ] **Bước 7 — Tùy chọn, dọn dữ liệu:** `NotificationPreferenceService` (F8), `NotificationMaintenanceScanner` (F9, P4).
 - [ ] **Bước 8 — API:** controller theo domain-entities mục 4; `contracts/openapi/notifications.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 9 — Frontend:** `ClassAnnouncementsPage` (đăng ký `DashboardNavEntry`), `ClassAnnouncementsCard` (`StudentClassSection`), `NotificationBell` và `NotificationPopup` (slot `HeaderWidget` của U01), `EmailPreferencePanel`.
+- [ ] **Bước 9 — Frontend:** `ClassAnnouncementsPage` (đăng ký `NavEntry`), `ClassAnnouncementsCard` (`StudentClassSection`), `NotificationBell` và `NotificationPopup` (slot `HeaderWidget` của U01), `EmailPreferencePanel`.
 - [ ] **Bước 10 — Unit test (người code viết):** quyền tạo, sửa, xóa thông báo; sửa không phát lại sự kiện; người nhận theo từng loại sự kiện; bài của môn gửi cho mọi lớp mở; sự kiện lặp không tạo trùng; tắt email thì `SKIPPED`; chạm trần thì `DEFERRED` và thứ tự ưu tiên khi đưa lại; nhắc hạn một lần, đổi hạn nhắc lại, bài mở muộn không nhắc; nội dung email không có điểm; dọn 180 ngày; component frontend. Integration test do tester viết.
 - [ ] **Bước 11 — Review:** đối chiếu UC 63–65, story, BR-U14 với code; người dùng duyệt trước khi chuyển unit.
 

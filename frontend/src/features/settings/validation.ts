@@ -2,9 +2,15 @@ import type { SettingItem, SettingValue } from "./types";
 
 // Kiểm sơ bộ phía client theo khai báo; backend vẫn kiểm lại (BR-U03-82).
 
-export function options(item: SettingItem): string[] {
+export function options(item: Pick<SettingItem, "constraints">): string[] {
   const value = item.constraints?.options;
   return Array.isArray(value) ? value.map(String) : [];
+}
+
+/** Đơn vị hiển thị khai báo trong constraints.unit, ví dụ "MB". */
+export function unitOf(item: Pick<SettingItem, "constraints">): string | null {
+  const unit = item.constraints?.unit;
+  return typeof unit === "string" && unit !== "" ? unit : null;
 }
 
 export function canBeEmpty(item: SettingItem): boolean {
@@ -44,10 +50,63 @@ export function validateSettingValue(item: SettingItem, value: SettingValue): st
   }
 }
 
-export function formatSettingValue(item: Pick<SettingItem, "type" | "value">): string {
+export function isEmptyValue(value: SettingValue): boolean {
+  return value === null || (Array.isArray(value) && value.length === 0);
+}
+
+export function formatSettingValue(item: Pick<SettingItem, "type" | "value"> & Partial<Pick<SettingItem, "constraints">>): string {
   const { value } = item;
-  if (value === null || (Array.isArray(value) && value.length === 0)) return "Chưa cấu hình";
+  if (isEmptyValue(value)) return "Chưa cấu hình";
   if (item.type === "BOOLEAN") return value ? "Bật" : "Tắt";
   if (Array.isArray(value)) return value.join(", ");
-  return String(value);
+  const unit = unitOf({ constraints: item.constraints ?? null });
+  return unit && item.type === "INTEGER" ? `${value} ${unit}` : String(value);
+}
+
+/** Mô tả giới hạn hợp lệ cho màn Setting Detail. */
+export function describeConstraints(item: SettingItem): string {
+  const unit = unitOf(item);
+  switch (item.type) {
+    case "INTEGER": {
+      const min = item.constraints?.min;
+      const max = item.constraints?.max;
+      const range = min !== undefined && max !== undefined ? `Số nguyên từ ${min} đến ${max}` : "Số nguyên";
+      return unit ? `${range} (${unit})` : range;
+    }
+    case "BOOLEAN":
+      return "Bật hoặc tắt";
+    case "TIME_OF_DAY":
+      return "Giờ:phút theo giờ Việt Nam, ví dụ 02:30";
+    case "ENUM":
+      return `Một trong: ${options(item).join(", ")}`;
+    case "ENUM_SET": {
+      const base = `Chọn trong: ${options(item).join(", ")}`;
+      return item.constraints?.nonEmpty === true ? `${base} (ít nhất một)` : base;
+    }
+  }
+}
+
+function dateParts(iso: string): Record<string, string> {
+  const parts = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
+/** "02/10 14:15" theo giờ Việt Nam. */
+export function formatShortDateTime(iso: string): string {
+  const p = dateParts(iso);
+  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
+}
+
+/** "02/10/2026 14:15" theo giờ Việt Nam. */
+export function formatDateTime(iso: string): string {
+  const p = dateParts(iso);
+  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
 }
