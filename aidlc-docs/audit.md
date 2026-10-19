@@ -4502,3 +4502,13 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U01 integration (roadmap phase 0).
 
 ---
+
+## 2026-10-19T17:44:34Z — Jira update deferred
+
+**User Input**: "Chưa cập nhật Jira, đợi PR #5 được merge vào staging đã."
+
+**AI Response**: Jira left unchanged. The 12 U01 UCs move to Done only after PR #5 (`cuong` → `staging`) is merged; KAN-18 waits for the tester.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
