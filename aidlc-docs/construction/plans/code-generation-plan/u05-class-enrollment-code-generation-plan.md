@@ -1,6 +1,6 @@
 # U05 Class & Enrollment — Code Generation Plan
 
-> **Latest user instruction, 2026-10-18:** "giúp tôi haonf thiện u05" authorizes completing U05 against the existing unit contracts before cross-unit merge. It supersedes the former domain-only scope described below. Current implementation and remaining integration gates: [completion handoff](../../u05-class-enrollment/code/completion-2026-10-18.md); [execution plan](../u05-completion-2026-10-18.md). The original integration checklists below remain historical and are not a statement that current services/controllers are absent.
+> **Latest user instruction, 2026-10-18:** "giúp tôi haonf thiện u05" authorizes completing U05 against the existing unit contracts before cross-unit merge. It supersedes the former domain-only scope described below. Current implementation and remaining integration gates: [completion handoff](../../u05-class-enrollment/code/code-summary.md); [execution plan](../u05-completion-2026-10-18.md). The original integration checklists below remain historical and are not a statement that current services/controllers are absent.
 
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Ngày 2026-10-17 bắt đầu code lát cắt độc lập theo chỉ đạo người dùng; các phần nối U01/U04 chờ sau.
@@ -11,7 +11,7 @@ Thiết kế: [business-logic-model](../../u05-class-enrollment/functional-desig
 
 ## Trạng thái
 
-**Cập nhật 2026-10-18:** Backend độc lập đã được khôi phục từ stash, giữ UI mới theo ZIP; không dùng lại các component UI cũ. Chạy mới backend 123 test (U05 29), frontend 37 test (U05 21), typecheck/lint qua. Checklist S1–S6 và số liệu ngày 17/10 bên dưới là mốc lịch sử; [recovery plan](../u05-stash-recovery-2026-10-18.md) và [recovery summary](../../u05-class-enrollment/code/stash-recovery-2026-10-18.md) ghi bằng chứng hiện tại. Các bước tích hợp vẫn chờ U01/U04/U02.
+**Cập nhật 2026-10-18:** Backend độc lập đã được khôi phục từ stash, giữ UI mới theo ZIP; không dùng lại các component UI cũ. Chạy mới backend 123 test (U05 29), frontend 37 test (U05 21), typecheck/lint qua. Checklist S1–S6 và số liệu ngày 17/10 bên dưới là mốc lịch sử; [recovery plan](../u05-stash-recovery-2026-10-18.md) và [recovery summary](../../u05-class-enrollment/code/code-summary.md) ghi bằng chứng hiện tại. Các bước tích hợp vẫn chờ U01/U04/U02.
 
 **Chỉ đạo mới 2026-10-17 (ưu tiên):** Người dùng cho phép code ngay phần U05 không cần U01/U04; chờ người khác hoàn tất rồi mới nối phần phụ thuộc. Đây là approval cho lát cắt độc lập bên dưới, không phải duyệt triển khai toàn bộ tám bước.
 

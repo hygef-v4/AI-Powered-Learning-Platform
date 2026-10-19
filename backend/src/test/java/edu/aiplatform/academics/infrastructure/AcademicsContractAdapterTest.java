@@ -26,7 +26,7 @@ class AcademicsContractAdapterTest {
         return new CourseClass(classId, subjectId, "SE01", "Lop", null, "2026", status, teacherId, false, now, now, 0);
     }
 
-    @Test void realCrossUnitContractsAreOptInAndReplaceTheirStubsWhenEnabled() {
+    @Test void realCrossUnitContractsReplaceTheirStubs() {
         var runner=new org.springframework.boot.test.context.runner.ApplicationContextRunner()
                 .withBean(ICourseClassRepository.class,()->classes)
                 .withBean(IEnrollmentRepository.class,()->enrollments)
@@ -38,8 +38,7 @@ class AcademicsContractAdapterTest {
                         edu.aiplatform.academics.contract.stub.AcademicsContractStubs.class,
                         edu.aiplatform.identity.contract.stub.IdentityContractStubs.class,
                         edu.aiplatform.subjects.contract.stub.SubjectsContractStubs.class));
-        runner.run(context->assertThat(context).doesNotHaveBean(AcademicsContractAdapter.class));
-        runner.withPropertyValues("platform.academics.persistence-enabled=true").run(context->{
+        runner.run(context->{
             assertThat(context).hasSingleBean(IClassAccess.class).hasSingleBean(IClassScope.class).hasSingleBean(ISubjectClasses.class);
             assertThat(context.getBean(IClassAccess.class)).isSameAs(context.getBean(AcademicsContractAdapter.class));
             assertThat(context.getBean(IClassScope.class)).isSameAs(context.getBean(AcademicsContractAdapter.class));

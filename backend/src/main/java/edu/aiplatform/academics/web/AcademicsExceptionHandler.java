@@ -2,7 +2,6 @@ package edu.aiplatform.academics.web;
 
 import edu.aiplatform.academics.application.AcademicsProblem;
 import edu.aiplatform.shared.error.ApiException;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.*;
@@ -13,7 +12,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice(assignableTypes=AcademicsController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty(name="platform.academics.persistence-enabled",havingValue="true")
 public class AcademicsExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ProblemDetail problem(ApiException exception) {

@@ -10,14 +10,12 @@ import edu.aiplatform.shared.error.ApiException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.util.*;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
-@ConditionalOnProperty(name="platform.academics.persistence-enabled",havingValue="true")
 public class AcademicsController {
     private final AcademicsService service;
     public AcademicsController(AcademicsService service) {this.service=service;}

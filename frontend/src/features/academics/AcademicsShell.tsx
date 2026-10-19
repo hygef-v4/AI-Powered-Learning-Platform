@@ -13,19 +13,18 @@ const navigation: Record<Audience, { key: AcademicsView; label: string; icon: Ic
   teacher: [{ key: "teaching", label: "Lớp được phân công", icon: "school" }],
   student: [{ key: "my-classes", label: "Lớp của tôi", icon: "school" }],
 };
-// U05 routes use local preview callbacks instead of leaving the preview page.
+// Mục menu của U05 đã vẽ ở nhóm trên, không lặp lại trong "Truy cập nhanh".
 const localNavKeys = new Set([
   "manager-dashboard", "manager-subject", "manager-classes", "manager-teaching-classes",
   "teaching-classes", "my-classes",
 ]);
 /** Chỉ trình bày actor đã được phía tích hợp xác thực; audience không cấp quyền cho API. */
-export function AcademicsShell({ audience, userName, active, onNavigate, children, previewControls }: {
-  audience: Audience; userName: string; active: AcademicsView; onNavigate: (view: AcademicsView) => void; children: ReactNode; previewControls?: ReactNode;
+export function AcademicsShell({ audience, userName, active, onNavigate, children }: {
+  audience: Audience; userName: string; active: AcademicsView; onNavigate: (view: AcademicsView) => void; children: ReactNode;
 }) {
   const role = audience === "manager" ? "SUBJECT_MANAGER" : audience === "teacher" ? "TEACHER" : "STUDENT";
   const entries = navEntries.entries().filter((entry) => entry.roles.includes(role) && !localNavKeys.has(entry.key));
   return <div className={styles.root}>
-    {previewControls}
     <header className={styles.header}><div className={styles.brand}><span className={styles.brandMark}><Icon name="school"/></span>Nền tảng học tập</div><div className={styles.user}><Avatar name={userName}/><div><strong>{userName}</strong><small>{labels[audience]}</small></div></div></header>
     <div className={styles.layout}><aside className={styles.sidebar}><nav className={styles.nav} aria-label={`Menu ${labels[audience]}`}>
       {navigation[audience].map((item) => <button key={item.key} onClick={() => onNavigate(item.key)} className={active === item.key ? styles.activeNav : ""} aria-current={active === item.key ? "page" : undefined} data-testid={`academics-nav-${item.key}`}><Icon name={item.icon}/>{item.label}</button>)}

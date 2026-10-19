@@ -4,12 +4,10 @@ import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.domain.CourseClass;
 import edu.aiplatform.academics.domain.IAcademicsReadRepository;
 import java.util.*;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@ConditionalOnProperty(name = "platform.academics.persistence-enabled", havingValue = "true")
 public class JdbcAcademicsReadRepository implements IAcademicsReadRepository {
     private final NamedParameterJdbcTemplate jdbc;
     public JdbcAcademicsReadRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }

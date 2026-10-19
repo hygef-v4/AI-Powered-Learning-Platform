@@ -21,7 +21,7 @@ Tham chiếu: m03/m04/m05/m05b/m05c/m05d/m06/m11; s01/s02; t01/t18/t19. Phần h
 - [x] 3. Tạo types, CSS module, icon/primitives, shell, các view U05 và dialog từ props/callback; giữ slot contract.
 - [x] 4. Tạo development preview `/preview/u05` với fixtures tách riêng, thao tác chỉ trong bộ nhớ. Guard production notFound trong server page; HTTP production check ở bước 5. Không tạo API/actor/session giả hoặc public route quản lý thật.
 - [x] 5. Chạy frontend test/typecheck/lint/build Webpack, kiểm browser desktop/mobile; 32 test qua, production preview HTTP 404, không có nội dung fixture, health 200.
-- [x] 6. Cập nhật summary/state/audit, ảnh preview và điểm nối backend. Không đánh complete toàn U05. Summary: `construction/u05-class-enrollment/code/ui-summary-2026-10-18.md`.
+- [x] 6. Cập nhật summary/state/audit, ảnh preview và điểm nối backend. Không đánh complete toàn U05. Summary: `construction/u05-class-enrollment/code/code-summary.md`.
 
 ## Kiểm chứng và extension
 

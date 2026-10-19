@@ -1,5 +1,4 @@
--- STAGED: chỉ chuyển vào db/migration/classes khi U01 accounts và U04 subjects đã có.
--- Không được chạy độc lập bằng cách bỏ các FK.
+-- U05: lớp và ghi danh (domain-entities U05). Chạy sau accounts (0930) và subjects (1000) vì có FK sang hai bảng đó.
 CREATE TABLE course_classes (
     id UUID PRIMARY KEY,
     subject_id UUID NOT NULL REFERENCES subjects(id),

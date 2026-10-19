@@ -9,14 +9,12 @@ import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
 import java.util.*;
 import java.util.function.IntFunction;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Supplies real, uncached U05 relationships to earlier units without depending on their internals. */
 @Service
 @Transactional(readOnly = true)
-@ConditionalOnProperty(name = "platform.academics.persistence-enabled", havingValue = "true")
 public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubjectClasses {
     private final ICourseClassRepository classes;
     private final IEnrollmentRepository enrollments;

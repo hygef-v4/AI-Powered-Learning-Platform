@@ -1,59 +1,64 @@
-# U05 — phần độc lập đã triển khai ngày 2026-10-17
+# U05 Class & Enrollment — code summary
 
-> Latest implementation: [U05 code completion and integration handoff](completion-2026-10-18.md). The earlier dependency-free-only scope and test counts below are historical; they do not describe the current completed application/API/frontend code.
+Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-class-enrollment-code-generation-plan.md), nhánh `Class&Enrollment`, merge vào `iter1` cùng U01–U04. Integration test (PostgreSQL thật, chạy đồng thời) do tester viết.
 
+## Business logic
 
-> Bản ghi lịch sử trước khi đổi UI. Đã khôi phục backend ngày 2026-10-18 và giữ UI mới; tên component/test count bên dưới mô tả phiên cũ. Xem [kết quả ghép mới nhất](stash-recovery-2026-10-18.md) và [UI hiện tại](ui-summary-2026-10-18.md).
-
-## Phạm vi được người dùng cho phép
-
-"thôi cứ code những phần u05 mà chưa cần đến u04 hay u01 trc đã , đợi người khác làm xong thì code tiếp"
-
-U05 hiện hành là Class & Enrollment, UC 20–30. Chỉ triển khai phần độc lập; không tuyên bố hoàn tất một UC end-to-end hoặc toàn bộ U05. [Kế hoạch](../../plans/code-generation-plan/u05-class-enrollment-code-generation-plan.md) có checklist S1–S6 và kế hoạch tích hợp còn lại.
-
-## Code đã có
-
-| Vị trí | Nội dung |
+| Luồng | Class chính |
 |---|---|
-| `backend/src/main/java/edu/aiplatform/academics/domain/CourseClass.java` | Snapshot bất biến; tạo DRAFT, chuyển trạng thái theo BR-U05-14, yêu cầu giảng viên khi OPEN, chặn sửa ARCHIVED, tăng version và kiểm độ dài dữ liệu |
-| `academics/domain/Enrollment.java`, `EnrollmentPolicy.java` | Ghi danh/gỡ/khôi phục cùng định danh, phân biệt ENROLLED/RESTORED/ALREADY_ENROLLED/IN_OTHER_CLASS, chặn lớp ARCHIVED |
-| `academics/domain/EnrollmentListParser.java` | CSV một cột hoặc text; BOM/header email tùy chọn; chuẩn hóa email, dòng lỗi/trùng, giữ số dòng; tối đa 200 dòng dữ liệu không rỗng và 102400 byte UTF-8 |
-| `academics/domain/ICourseClassRepository.java`, `IEnrollmentRepository.java`, `ISubjectMutationLock.java` | Interface nội bộ, không sửa contract liên unit |
-| `academics/infrastructure/` | Adapter Spring JDBC có query tham số hóa, phân trang 1–100, optimistic update, query xung đột enrollment trong môn, khóa transaction theo môn với timeout 3 giây |
-| `backend/src/main/resources/db/pending/academics/V20260925_1100__create_classes_enrollments.sql` | SQL chờ: course_classes/enrollments, FK thật, unique/index/check, quyền app SELECT/INSERT/UPDATE |
-| `frontend/src/features/academics/` | `ClassInfoForm`, `ClassStateActions`, `AddStudentsListDialog`, `EnrollmentResultTable`, types và parser. Nhận props/callback; không giả danh người dùng hoặc gọi API chưa có |
+| UC 20–21 Sinh viên xem lớp | `AcademicsService.list`/`detail` vai trò `student`: chỉ lớp `OPEN`/`ARCHIVED` có ghi danh `ACTIVE` |
+| UC 22–23 Giảng viên xem lớp, sinh viên | `AcademicsService.list`/`detail`/`students`/`student` vai trò `teacher` (gồm Chủ nhiệm môn được giao dạy) |
+| UC 24–25 Chủ nhiệm xem lớp của môn | `AcademicsService.list`/`detail` vai trò `manager`, kiểm Chủ nhiệm môn hiện thời qua `ISubjectScope` và `ISubjectQuery` |
+| UC 26 Tạo lớp | `create`: lớp `DRAFT`, mã và môn không đổi sau khi tạo, giảng viên tùy chọn phải `TEACHER`/`SUBJECT_MANAGER` đang `ACTIVE` |
+| UC 27 Gán giảng viên | `assignTeacher`: không bỏ giảng viên của lớp `OPEN` |
+| UC 28 Ghi danh | Ghi danh từng người, nhập danh sách (`EnrollmentListParser`: tối đa 200 dòng, 100 KB, tra U01 một lần, mỗi dòng một transaction), gỡ và khôi phục; một sinh viên chỉ `ACTIVE` ở một lớp chưa lưu trữ của mỗi môn (BR-U05-22) |
+| UC 29 Sửa lớp, trạng thái | Sửa thông tin có `version`, bật/tắt phân bố điểm, `DRAFT → OPEN → ARCHIVED` và mở lại; mở lại bị chặn nếu sinh viên đang học lớp khác cùng môn (BR-U05-15) |
+| UC 30 Môn học của Chủ nhiệm | `managedSubjects`/`managedSubject`: thẻ môn và số lớp theo trạng thái |
+| Khóa theo môn | `SubjectMutationLock` (`pg_advisory_xact_lock` theo môn, chờ tối đa 3 giây): mọi thao tác ghi lớp và ghi danh trong cùng môn chạy lần lượt |
+| Contract cho unit khác | `AcademicsContractAdapter` cài `IClassAccess`, `IClassScope` (U01), `ISubjectClasses` (U04); đọc quan hệ hiện thời, không cache |
 
-Các đường dẫn backend viết tắt `academics/` ở bảng trên nằm dưới `backend/src/main/java/edu/aiplatform/`.
+Domain: `CourseClass`, `Enrollment`, `EnrollmentPolicy`, `EnrollmentListParser`, `EnrollmentResult`. Hạ tầng: `JdbcCourseClassRepository`, `JdbcEnrollmentRepository`, `JdbcAcademicsReadRepository` (`NamedParameterJdbcTemplate`, tham số gắn tên, trang 1–100).
 
-Parser chỉ kiểm định dạng và trùng trong danh sách. Dòng hợp lệ chưa có nghĩa tài khoản tồn tại hay đã ghi danh. Đối số `subjectActive` và `conflictingEnrollments` của domain là dữ kiện do application kiểm trong transaction sau này, không phải authorization. EnrollmentPolicy không kiểm role/trạng thái tài khoản của U01.
+Kiểm quyền: vai trò và trạng thái tài khoản qua `IAccountLookup`, rồi `IAuthorization` với action `CLASS_STUDENT`, `CLASS_TEACHER`, `CLASS_MANAGER`, `CLASS_VIEW` (phạm vi lớp), `CLASS_MANAGE` (phạm vi môn). Sai phạm vi trả 404; U01/U04 lỗi thì từ chối. Audit thành công ghi cùng transaction; từ chối và lỗi ghi sau rollback. Ghi danh phát `enrollment.activated` qua `IEventPublisher` của U03.
 
-## Cách giữ khung hiện tại chạy được
+## API
 
-- Không thêm JPA entity scan, dependency, API route hoặc security configuration.
-- Repository và khóa mặc định không tạo bean. Chỉ bật sau khi sẵn sàng bằng `platform.academics.persistence-enabled=true`.
-- SQL nằm ngoài `classpath:db/migration`, chưa được Flyway chạy. Không copy vào đường migration khi accounts/subjects chưa có.
-- Giữ các stub liên unit hiện có; không dùng kết quả luôn-cho-phép làm bằng chứng phân quyền.
-- Mọi repository write yêu cầu writable transaction. Service tương lai còn phải lấy `ISubjectMutationLock.acquire(subjectId)` trước kiểm xung đột và mọi cập nhật enrollment/trạng thái lớp. Repository không tự cấp quyền, tự audit hoặc phát event.
+Gốc `/api/v1`.
 
-## Kiểm chứng
+| Endpoint | UC |
+|---|---|
+| `GET /me/classes`, `/me/classes/{id}` | 20–21 |
+| `GET /teaching/classes`, `/teaching/classes/{id}`, `/teaching/classes/{id}/students`, `/teaching/classes/{id}/students/{accountId}` | 22–23 |
+| `GET /manager/classes`, `/manager/classes/{id}`, `/manager/classes/{id}/students` | 24–25 |
+| `POST /manager/classes`; `GET /manager/teacher-candidates` | 26 |
+| `PUT /manager/classes/{id}/teacher` | 27 |
+| `POST /manager/classes/{id}/enrollments`, `enrollments:batch`; `PUT /manager/classes/{id}/enrollments/{accountId}/status`; `GET /manager/classes/{id}/student-candidates` | 28 |
+| `PATCH /manager/classes/{id}`; `PUT /manager/classes/{id}/grade-distribution`, `/status` | 29 |
+| `GET /manager/subjects`, `/manager/subjects/{id}` | 30 |
 
-- Backend: tổng cộng 122 test từ 29 suite, không failure/error; U05 có 28 test, kiến trúc có 3 test. Đã chạy toàn bộ backend trước hai test repository bổ sung, sau đó chạy lại suite repository (7 test) thành công. JDK máy là 21, compiler target theo pom là Java 17.
-- Frontend: 27 test/9 file thành công, gồm 11 test U05 (2 parser, 9 component); typecheck và lint thành công.
-- Build frontend bằng `next build --webpack` thành công, Node 24.19.0. Lệnh build mặc định dùng Turbopack vẫn lỗi tạo tiến trình xử lý `globals.css` trên môi trường máy; đã tái hiện cả trong/ngoài sandbox, không sửa script build của cả dự án để che lỗi này.
-- Test red ban đầu xác nhận module/class mới chưa tồn tại; implementation được viết sau. Maven cần tải dependency/plugin còn thiếu; Vitest chạy bằng Node 24 ngoài sandbox vì worker không đọc được file transform tạm trong sandbox. Không thay package-lock/pom.
-- Chưa chạy PostgreSQL/migration, test transaction thật, concurrency, p95 hay UI với đăng nhập thật. Unit test repository kiểm điều kiện transaction, conflict, query đọc lại và bean opt-in, không chứng minh SQL/locking đúng trên PostgreSQL.
+`version` lệch trả 409; mở lại vướng sinh viên trả 409 kèm danh sách; field lạ trong body trả 400.
 
-## Checklist tiếp tục sau U01/U04
+## Migration
 
-- [ ] Đối chiếu schema accounts/subjects và thứ tự Flyway với người phụ trách; chuyển SQL pending sang `db/migration/classes/` sau review, chạy bằng migrator và kiểm quyền app.
-- [ ] Xác nhận principal `Actor`, tên action của `IAuthorization`, account lookup và subject query hoạt động; không thêm actor header hoặc role từ localStorage để thay thế U01.
-- [ ] Cài `ClassScopeService` cho IClassScope/ISubjectClasses/IClassAccess, query quan hệ hiện thời, không cache; thay stub bằng bean thật.
-- [ ] Cài view/admin/enrollment services; quyền R2/R3/R5, kiểm trạng thái account và subject, điều phối subject lock → đọc/khóa dữ liệu → kiểm BR → ghi → audit/event trong transaction.
-- [ ] Batch lookup U01 một lần, transaction riêng mỗi dòng; giữ thứ tự và đủ chín mã kết quả. Domain/parser hiện tại chưa chạy lookup hoặc tạo enrollment.
-- [ ] U02 audit thật: success cùng transaction, denied/failure còn tồn tại sau rollback. Publish enrollment.activated qua U03 để gửi sau commit.
-- [ ] Cài controller theo API design và route/dashboard/slot host; nối component đã có qua callback, session/RoleGuard của U01, API 404/409 và reload version.
-- [ ] Tester riêng viết/chạy integration: enrollment đầu tiên đồng thời vào hai lớp, mở lại cùng lúc ghi danh, gỡ/đổi giảng viên mất quyền request sau, 200 dòng, bốn role/IDOR, FK/app quyền và after-commit.
+`db/migration/classes/V20260925_1100__create_classes_enrollments.sql`: bảng `course_classes` (FK `subject_id → subjects`, `teacher_id → accounts`, unique `(subject_id, code)`, lớp `OPEN` phải có giảng viên) và `enrollments` (khóa `(class_id, account_id)`, FK `account_id → accounts`, `REMOVED` phải có `removed_at`); `app` chỉ `SELECT`, `INSERT`, `UPDATE`.
 
-## Extension compliance trong lát cắt này
+## Frontend
 
-SECURITY-05: validation domain/parser, giới hạn kích thước và query tham số hóa đã có. SECURITY-03/09: code mới không log PII/SQL/credential; domain conflict không chứa SQL. SECURITY-08/12/15: authentication, authorization và fail-closed của API đang chờ U01 và service/controller; chưa xác nhận runtime compliance. SECURITY-04: không thêm route HTML, giữ nền tảng hiện có. RESILIENCY-10: có transaction lock timeout; chưa có external call mới. RESILIENCY-04/06: không đổi deployment/health. Rule ngoài subset N/A theo phạm vi đồ án; PBT disabled. Không triển khai/claim chứng nhận security hoặc resiliency toàn hệ thống.
+- Route: `/classes`, `/classes/[id]` (sinh viên); `/teaching/classes`, `/teaching/classes/[id]` (giảng viên); `/manager`, `/manager/subjects`, `/manager/subjects/[id]`, `/manager/classes`, `/manager/classes/[id]` (Chủ nhiệm môn).
+- `features/academics`: `routes.tsx` (nạp dữ liệu, xử lý 409), `ClassListPage`, `ClassFormDialog`, `ManagedClassPage`, `ClassInfoForm`, `EnrollmentPanel`, `ClassDashboardPage`, `ReadOnlyClassPage`, `ManagerDashboardPage`, `useCandidates` (debounce, hủy request cũ), `api.ts`, `types.ts`.
+- Host đủ 5 slot cho unit sau: `StudentClassSection`, `TeacherClassTab` (`info`, `students`, `materials`, `evals`, `gradebook`), `StudentDetailSection`, `SubjectSummarySection`, `ClassCardSection`. Menu đăng ký qua `NavEntry` trong `register.ts`.
+
+## Unit test
+
+Backend: domain, parser, repository (điều kiện transaction, conflict), kiểm quyền và đọc theo vai trò, batch mỗi dòng một transaction, API (ánh xạ, validate, lỗi), contract adapter. Frontend: API client, route, form, ghi danh, CSV, `useCandidates`, slot.
+
+## Khác với thiết kế
+
+- Khóa ghi danh theo cả môn bằng advisory lock thay cho "khóa hàng theo (sinh viên, môn)" ở F10; chưa khớp với khóa dòng `subjects` khi U04 lưu trữ môn.
+- Frontend dùng khung riêng `AcademicsShell` và CSS module thay cho `AppShell`, `shared/ui`; route lớp chưa bọc `AuthenticatedLayout`/`RoleGuard`.
+
+## Còn lại
+
+- Đăng ký 5 action `CLASS_*` vào bảng quyền của U01 (`Actions`, `AccessPolicy`).
+- Thống nhất khóa với U04 khi lưu trữ môn (`ISubjectArchiveCheck`/`ISubjectMutationGuard` của U04 hoặc `ISubjectClasses.countUnarchivedClasses`).
+- Dùng `AppShell`, `shared/ui` và bọc layout có `RoleGuard` cho `/classes`, `/teaching`, `/manager`.

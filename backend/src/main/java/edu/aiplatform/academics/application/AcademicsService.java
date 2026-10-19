@@ -11,7 +11,6 @@ import java.time.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.*;
@@ -19,7 +18,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import static edu.aiplatform.academics.application.AcademicsDtos.*;
 
 @Service
-@ConditionalOnProperty(name="platform.academics.persistence-enabled",havingValue="true")
 public class AcademicsService {
     private final ICourseClassRepository classes;
     private final IEnrollmentRepository enrollments;

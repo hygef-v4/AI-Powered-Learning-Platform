@@ -9,13 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@ConditionalOnProperty(name = "platform.academics.persistence-enabled", havingValue = "true")
 public class JdbcEnrollmentRepository implements IEnrollmentRepository {
     private final NamedParameterJdbcTemplate jdbc;
     public JdbcEnrollmentRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }

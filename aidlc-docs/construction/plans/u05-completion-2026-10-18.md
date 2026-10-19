@@ -25,4 +25,4 @@ Use bounded subagent implementation per subagent-driven-development skill: backe
 - Application/API tests cover current actor/role/scope, distinct write authorization, version/reopen conflicts, row outcomes and eligibility, separate batch transactions, audit timing, activation events, validation/principal handling and immutable-field rejection.
 - Independent review found one P2: PATCH409 reload remounted the version-keyed InfoEditor and lost its visible error. Exact new regression failed before repair; a route-level conflict notice now survives reload, and a retry sends the server's refreshed version2. Scoped independent re-review confirmed the finding resolved; no other actionable findings remained.
 - Docker CLI cannot reach a running daemon; live PostgreSQL migration/lock/concurrency and real upstream authenticated browser flows were not run. These are integration gates, not missing U05 service/controller code. No commit/push/deployment or real business data writes.
-- Handoff and activation checklist: `../u05-class-enrollment/code/completion-2026-10-18.md`.
+- Handoff and activation checklist: `../u05-class-enrollment/code/code-summary.md`.

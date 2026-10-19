@@ -55,15 +55,10 @@ class AcademicsPersistenceTest {
         verifyNoInteractions(jdbc);
     }
 
-    @Test void persistenceBeansAreDisabledUntilExplicitlyEnabled() {
+    @Test void persistenceBeansAreRegistered() {
         var runner = new ApplicationContextRunner().withBean(NamedParameterJdbcTemplate.class, () -> jdbc)
                 .withUserConfiguration(JdbcCourseClassRepository.class, JdbcEnrollmentRepository.class, SubjectMutationLock.class);
         runner.run(context -> {
-            assertThat(context).doesNotHaveBean(JdbcCourseClassRepository.class);
-            assertThat(context).doesNotHaveBean(JdbcEnrollmentRepository.class);
-            assertThat(context).doesNotHaveBean(SubjectMutationLock.class);
-        });
-        runner.withPropertyValues("platform.academics.persistence-enabled=true").run(context -> {
             assertThat(context).hasSingleBean(JdbcCourseClassRepository.class);
             assertThat(context).hasSingleBean(JdbcEnrollmentRepository.class);
             assertThat(context).hasSingleBean(SubjectMutationLock.class);

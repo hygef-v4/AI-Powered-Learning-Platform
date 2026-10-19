@@ -39,13 +39,12 @@ describe("AcademicsShell navigation after merging main", () => {
     expect(screen.getByText("Nội dung lớp")).toBeInTheDocument();
   });
 
-  it("keeps local preview navigation callbacks and active state", () => {
+  it("keeps navigation callbacks and active state", () => {
     const onNavigate = vi.fn();
-    render(<AcademicsShell audience="manager" userName="Nguyễn An" active="overview" onNavigate={onNavigate} previewControls={<p>Chọn vai trò preview</p>}><p>Nội dung lớp</p></AcademicsShell>);
+    render(<AcademicsShell audience="manager" userName="Nguyễn An" active="overview" onNavigate={onNavigate}><p>Nội dung lớp</p></AcademicsShell>);
     const menu = within(screen.getByRole("navigation", { name: "Menu Chủ nhiệm môn" }));
     expect(menu.getByRole("button", { name: "Tổng quan" })).toHaveAttribute("aria-current", "page");
     fireEvent.click(menu.getByRole("button", { name: "Lớp học" }));
     expect(onNavigate).toHaveBeenCalledExactlyOnceWith("classes");
-    expect(screen.getByText("Chọn vai trò preview")).toBeInTheDocument();
   });
 });
