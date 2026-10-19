@@ -22,7 +22,8 @@ public final class IdentityTestData {
         return new IdentityProperties(List.of("fpt.edu.vn"), SECRET, Duration.ofMinutes(15), Duration.ofHours(2),
                 Duration.ofDays(7), 4, Duration.ofMinutes(10), 5, 5, Duration.ofMinutes(15), true,
                 "no-reply@fpt.edu.vn", "", "Quản trị viên",
-                new IdentityProperties.RateLimit(5, Duration.ofSeconds(60), 20, 30, Duration.ofMinutes(5)));
+                new IdentityProperties.RateLimit(5, Duration.ofSeconds(60), 20, 30, Duration.ofMinutes(5), 5,
+                        Duration.ofMinutes(15)));
     }
 
     public static Account account(Role role, AccountStatus status, String passwordHash) {

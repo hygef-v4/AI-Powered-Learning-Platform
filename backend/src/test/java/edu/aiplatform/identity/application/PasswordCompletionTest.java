@@ -21,6 +21,7 @@ import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
 import edu.aiplatform.identity.domain.OtpPurpose;
 import edu.aiplatform.identity.domain.PasswordPolicy;
+import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
 import edu.aiplatform.identity.infrastructure.SessionStore;
 import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
@@ -39,6 +40,7 @@ class PasswordCompletionTest {
     private final VerificationTicketStore tickets = mock(VerificationTicketStore.class);
     private final AccountRepository accounts = mock(AccountRepository.class);
     private final SessionStore sessions = mock(SessionStore.class);
+    private final OtpChallengeStore otpChallenges = mock(OtpChallengeStore.class);
     private final AuthService auth = mock(AuthService.class);
     private final List<AuditEvent> audits = new ArrayList<>();
     private final IAudit audit = audits::add;
@@ -47,7 +49,8 @@ class PasswordCompletionTest {
 
     private final ActivationService activation = new ActivationService(tickets, accounts, encoder, auth, audit,
             TransactionOperations.withoutTransaction(), clock);
-    private final PasswordResetService reset = new PasswordResetService(tickets, accounts, sessions, encoder, audit,
+    private final PasswordResetService reset = new PasswordResetService(tickets, accounts, sessions, otpChallenges,
+            encoder, audit,
             TransactionOperations.withoutTransaction(), clock);
 
     @Test
@@ -57,6 +60,7 @@ class PasswordCompletionTest {
         when(tickets.peek("t", OtpPurpose.ACTIVATION)).thenReturn(Optional.of(pending.id()));
         when(accounts.findById(pending.id())).thenReturn(Optional.of(pending), Optional.of(active));
         when(accounts.activate(eq(pending.id()), anyString(), eq(NOW))).thenReturn(1);
+        when(tickets.take("t", OtpPurpose.ACTIVATION, pending.id())).thenReturn(true);
         AuthService.LoginResult session = new AuthService.LoginResult(
                 new SessionInfo(pending.id(), "Tài", Role.TEACHER, "/classes"), "a", "r");
         when(auth.startSession(active)).thenReturn(session);
@@ -65,7 +69,7 @@ class PasswordCompletionTest {
 
         verify(accounts).activate(eq(pending.id()), org.mockito.ArgumentMatchers.argThat(
                 hash -> encoder.matches("hocbai2026", hash)), eq(NOW));
-        verify(tickets).consume("t");
+        verify(tickets).take("t", OtpPurpose.ACTIVATION, pending.id());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCOUNT_ACTIVATED");
     }
 
@@ -78,8 +82,22 @@ class PasswordCompletionTest {
         assertThatThrownBy(() -> activation.complete("t", "abc"))
                 .isInstanceOfSatisfying(PasswordPolicyException.class,
                         e -> assertThat(e.violations()).contains(PasswordPolicy.Violation.TOO_SHORT));
-        verify(tickets, never()).consume(anyString());
+        verify(tickets, never()).take(anyString(), any(), any());
         verify(accounts, never()).activate(any(), anyString(), any());
+    }
+
+    @Test
+    void ticketAlreadyTakenByConcurrentRequestIsRejected() {
+        Account active = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        when(tickets.peek("t", OtpPurpose.PASSWORD_RESET)).thenReturn(Optional.of(active.id()));
+        when(accounts.findById(active.id())).thenReturn(Optional.of(active));
+        when(tickets.take("t", OtpPurpose.PASSWORD_RESET, active.id())).thenReturn(false);
+
+        assertThatThrownBy(() -> reset.complete("t", "matkhaumoi9"))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo(ActivationService.TICKET_EXPIRED));
+        verify(accounts, never()).updatePassword(any(), anyString(), any());
+        assertThat(audits).isEmpty();
     }
 
     @Test
@@ -106,12 +124,13 @@ class PasswordCompletionTest {
         Account active = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
         when(tickets.peek("t", OtpPurpose.PASSWORD_RESET)).thenReturn(Optional.of(active.id()));
         when(accounts.findById(active.id())).thenReturn(Optional.of(active));
+        when(tickets.take("t", OtpPurpose.PASSWORD_RESET, active.id())).thenReturn(true);
 
         reset.complete("t", "matkhaumoi9");
 
         verify(accounts).updatePassword(eq(active.id()), anyString(), eq(NOW));
         verify(sessions, times(2)).deleteAll(active.id());
-        verify(tickets).consume("t");
+        verify(otpChallenges).delete(active.id(), OtpPurpose.PASSWORD_RESET);
         verify(auth, never()).startSession(any());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_RESET");
     }

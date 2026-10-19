@@ -84,7 +84,30 @@ class OtpStoresTest {
         assertThat(tickets.peek(ticket, OtpPurpose.ACTIVATION)).isEmpty();
         assertThat(tickets.peek(ticket, OtpPurpose.PASSWORD_RESET)).contains(accountId);
 
-        tickets.consume(ticket);
+        assertThat(tickets.take(ticket, OtpPurpose.ACTIVATION, accountId)).isFalse();
+        assertThat(tickets.take(ticket, OtpPurpose.PASSWORD_RESET, accountId)).isFalse();
+    }
+
+    @Test
+    void ticketCanBeTakenOnlyOnce() {
+        String ticket = tickets.issue(accountId, OtpPurpose.PASSWORD_RESET);
+
+        assertThat(tickets.take(ticket, OtpPurpose.PASSWORD_RESET, accountId)).isTrue();
+        assertThat(tickets.take(ticket, OtpPurpose.PASSWORD_RESET, accountId)).isFalse();
         assertThat(tickets.peek(ticket, OtpPurpose.PASSWORD_RESET)).isEmpty();
+        assertThat(redis.values).isEmpty();
+    }
+
+    @Test
+    void newTicketReplacesOldAndRevokeRemovesPending() {
+        String first = tickets.issue(accountId, OtpPurpose.PASSWORD_RESET);
+        String second = tickets.issue(accountId, OtpPurpose.PASSWORD_RESET);
+
+        assertThat(tickets.peek(first, OtpPurpose.PASSWORD_RESET)).isEmpty();
+        assertThat(tickets.peek(second, OtpPurpose.PASSWORD_RESET)).contains(accountId);
+
+        tickets.revoke(accountId, OtpPurpose.PASSWORD_RESET);
+        assertThat(tickets.peek(second, OtpPurpose.PASSWORD_RESET)).isEmpty();
+        assertThat(redis.values).isEmpty();
     }
 }

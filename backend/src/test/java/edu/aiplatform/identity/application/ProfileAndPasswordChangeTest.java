@@ -22,7 +22,11 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
+import edu.aiplatform.identity.domain.OtpPurpose;
+import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
+import edu.aiplatform.identity.infrastructure.RequestThrottle;
 import edu.aiplatform.identity.infrastructure.SessionStore;
+import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.ZoneOffset;
@@ -47,6 +51,9 @@ class ProfileAndPasswordChangeTest {
     private final AccountRepository accounts = mock(AccountRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final SessionStore sessions = mock(SessionStore.class);
+    private final OtpChallengeStore otpChallenges = mock(OtpChallengeStore.class);
+    private final VerificationTicketStore tickets = mock(VerificationTicketStore.class);
+    private final RequestThrottle throttle = mock(RequestThrottle.class);
     private final List<AuditEvent> audits = new ArrayList<>();
     private final IAudit audit = audits::add;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
@@ -54,7 +61,7 @@ class ProfileAndPasswordChangeTest {
     private final ProfileService profiles = new ProfileService(accounts, authorization, audit,
             TransactionOperations.withoutTransaction(), clock);
     private final PasswordChangeService passwords = new PasswordChangeService(accounts, authorization, sessions,
-            encoder, audit, TransactionOperations.withoutTransaction(), clock);
+            otpChallenges, tickets, throttle, encoder, audit, TransactionOperations.withoutTransaction(), clock);
     private Account account;
     private Actor actor;
 
@@ -64,13 +71,14 @@ class ProfileAndPasswordChangeTest {
         actor = new Actor(account.id(), Role.STUDENT);
         when(accounts.findById(account.id())).thenReturn(Optional.of(account));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(throttle.passwordChangeAllowed(account.id())).thenReturn(true);
     }
 
     @Test
     void profileShowsOwnDataWithoutSecrets() {
         ProfileService.ProfileView view = profiles.get(actor);
         assertThat(view.email()).isEqualTo("taivm@fpt.edu.vn");
-        assertThat(view.homePath()).isEqualTo("/classes");
+        assertThat(view.homePath()).isEqualTo(HomePaths.PROFILE);
     }
 
     @Test
@@ -115,7 +123,33 @@ class ProfileAndPasswordChangeTest {
                 hash -> encoder.matches(NEW_PASSWORD, hash)), eq(NOW));
         verify(sessions, times(2)).deleteAllExcept(account.id(), "sid-now");
         verify(sessions, never()).deleteAll(any());
+        verify(otpChallenges).delete(account.id(), OtpPurpose.PASSWORD_RESET);
+        verify(tickets).revoke(account.id(), OtpPurpose.PASSWORD_RESET);
+        verify(throttle, never()).recordPasswordChangeFailure(any());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_CHANGED");
+    }
+
+    @Test
+    void tooManyWrongCurrentPasswordsAreThrottledBeforeBcrypt() {
+        when(throttle.passwordChangeAllowed(account.id())).thenReturn(false);
+
+        assertThatThrownBy(() -> passwords.change(actor, "sid", PASSWORD, NEW_PASSWORD))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+                    assertThat(e.code()).isEqualTo(PasswordChangeService.TOO_MANY_ATTEMPTS);
+                });
+        verify(accounts, never()).updatePassword(any(), anyString(), any());
+    }
+
+    @Test
+    void dependencyFailureIsSystemBusy() {
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.deny(AuthorizationService.DEPENDENCY_UNAVAILABLE));
+        assertThatThrownBy(() -> profiles.get(actor)).isInstanceOfSatisfying(ApiException.class,
+                e -> assertThat(e.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+        assertThatThrownBy(() -> passwords.change(actor, "sid", PASSWORD, NEW_PASSWORD))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
     @Test
@@ -125,6 +159,7 @@ class ProfileAndPasswordChangeTest {
                         e -> assertThat(e.code()).isEqualTo(PasswordChangeService.CURRENT_PASSWORD_INVALID));
         verify(accounts, never()).updatePassword(any(), anyString(), any());
         verify(sessions, never()).deleteAllExcept(any(), any());
+        verify(throttle).recordPasswordChangeFailure(account.id());
     }
 
     @Test

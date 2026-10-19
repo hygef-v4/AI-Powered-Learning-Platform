@@ -11,9 +11,11 @@ import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.contract.ScopeKind;
 import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
+import edu.aiplatform.shared.error.ApiException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,6 +25,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AuthorizationService implements IAuthorization {
+
+    /** Lý do từ chối khi database hoặc U04/U05 lỗi (BR-U01-93). */
+    public static final String DEPENDENCY_UNAVAILABLE = "DEPENDENCY_UNAVAILABLE";
 
     private static final Logger log = LoggerFactory.getLogger(AuthorizationService.class);
 
@@ -42,7 +47,18 @@ public class AuthorizationService implements IAuthorization {
             return decide(actor, action, resourceRef == null ? ResourceRef.none() : resourceRef);
         } catch (RuntimeException e) {
             log.warn("Không kiểm được quyền {}: {}", action, e.getClass().getSimpleName());
-            return AuthorizationDecision.deny("DEPENDENCY_UNAVAILABLE");
+            return AuthorizationDecision.deny(DEPENDENCY_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * Thao tác của U01 bị từ chối vì phụ thuộc lỗi: vẫn không cho làm (BR-U01-93) nhưng trả 503 "hệ thống tạm bận" thay vì
+     * 403 "không có quyền", và không ghi {@code ACCESS_DENIED} oan cho người dùng (BR-U01-95).
+     */
+    static void throwIfUnavailable(AuthorizationDecision decision) {
+        if (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason())) {
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY",
+                    "Hệ thống tạm bận, vui lòng thử lại sau");
         }
     }
 

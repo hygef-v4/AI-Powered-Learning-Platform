@@ -57,7 +57,7 @@ class AuthServiceTest {
         service = new AuthService(accounts, sessions, jwt, throttle, encoder, audit, IdentityTestData.properties(),
                 Clock.fixed(NOW, ZoneOffset.UTC));
         active = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, encoder.encode(PASSWORD));
-        when(throttle.tryLogin(anyString())).thenReturn(true);
+        when(throttle.loginAllowed(anyString())).thenReturn(true);
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(active));
         when(sessions.create(any())).thenReturn(new SessionStore.IssuedSession("sid-1", "refresh-1"));
     }
@@ -66,7 +66,7 @@ class AuthServiceTest {
     void correctPasswordStartsSessionWithHomePathAndClearsThrottle() {
         AuthService.LoginResult result = service.login("  TaiVM@FPT.edu.vn ", PASSWORD, IP);
 
-        assertThat(result.info().homePath()).isEqualTo(HomePaths.CLASS_DASHBOARD);
+        assertThat(result.info().homePath()).isEqualTo(HomePaths.PROFILE);
         assertThat(result.refreshToken()).isEqualTo("refresh-1");
         assertThat(jwt.parse(result.accessToken())).hasValueSatisfying(c -> assertThat(c.sid()).isEqualTo("sid-1"));
         verify(accounts).resetLoginThrottle(active.id());
@@ -127,10 +127,22 @@ class AuthServiceTest {
 
     @Test
     void clientRateLimitGivesNeutralErrorWithoutLookup() {
-        when(throttle.tryLogin(IP)).thenReturn(false);
+        when(throttle.loginAllowed(IP)).thenReturn(false);
 
         assertThatThrownBy(() -> service.login("taivm@fpt.edu.vn", PASSWORD, IP)).isInstanceOf(ApiException.class);
         verify(accounts, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void onlyFailedLoginsSpendClientAttempts() {
+        service.login("taivm@fpt.edu.vn", PASSWORD, IP);
+        verify(throttle, never()).recordLoginFailure(anyString());
+
+        assertThatThrownBy(() -> service.login("taivm@fpt.edu.vn", "sai-mat-khau1", IP))
+                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.login("khong-co@fpt.edu.vn", PASSWORD, IP))
+                .isInstanceOf(ApiException.class);
+        verify(throttle, org.mockito.Mockito.times(2)).recordLoginFailure(IP);
     }
 
     @Test
@@ -211,9 +223,10 @@ class AuthServiceTest {
 
     @Test
     void homePathFollowsRole() {
-        assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/classes");
-        assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/classes");
-        assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/manager");
+        // Tạm về User Profile tới khi màn của U04/U05 được merge (xem HomePaths).
+        assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/profile");
+        assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/profile");
+        assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/profile");
         assertThat(HomePaths.of(Role.ADMIN)).isEqualTo("/admin/accounts");
     }
 }

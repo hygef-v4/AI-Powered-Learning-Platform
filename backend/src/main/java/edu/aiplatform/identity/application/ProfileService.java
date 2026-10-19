@@ -6,6 +6,7 @@ import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
@@ -88,8 +89,10 @@ public class ProfileService {
     }
 
     private void requireOwn(Actor actor, String action) {
-        if (actor == null
-                || !authorization.authorize(actor, action, ResourceRef.account(actor.accountId())).allowed()) {
+        AuthorizationDecision decision = actor == null ? AuthorizationDecision.deny("NO_ACTOR")
+                : authorization.authorize(actor, action, ResourceRef.account(actor.accountId()));
+        AuthorizationService.throwIfUnavailable(decision);
+        if (!decision.allowed()) {
             throw ApiException.forbidden("PROFILE_FORBIDDEN");
         }
     }

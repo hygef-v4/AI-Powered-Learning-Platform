@@ -5,6 +5,7 @@ import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
@@ -231,7 +232,10 @@ public class AccountImportService {
     }
 
     private void require(Actor actor) {
-        if (actor == null || !authorization.authorize(actor, Actions.ACCOUNT_IMPORT, ResourceRef.none()).allowed()) {
+        AuthorizationDecision decision = actor == null ? AuthorizationDecision.deny("NO_ACTOR")
+                : authorization.authorize(actor, Actions.ACCOUNT_IMPORT, ResourceRef.none());
+        AuthorizationService.throwIfUnavailable(decision);
+        if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "ACCOUNT", null, AuditResult.DENIED, Actions.ACCOUNT_IMPORT, Map.of(), clock.instant()));
             throw ApiException.forbidden("ACCOUNT_ADMIN_FORBIDDEN");

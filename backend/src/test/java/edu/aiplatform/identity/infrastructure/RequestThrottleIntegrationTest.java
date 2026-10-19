@@ -6,6 +6,7 @@ import edu.aiplatform.identity.IdentityTestData;
 import edu.aiplatform.identity.application.IdentityProperties;
 import java.time.Duration;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +26,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class RequestThrottleIntegrationTest {
 
     private static final int LOGIN_PER_IP = 3;
+    private static final int PASSWORD_CHANGE_FAILURES = 2;
     private static final int OTP_PER_EMAIL = 3;
     private static final int OTP_PER_IP = 4;
     private static final Duration OTP_COOLDOWN = Duration.ofSeconds(1);
@@ -58,18 +60,37 @@ class RequestThrottleIntegrationTest {
     }
 
     @Test
-    void loginIsBlockedPerIpAfterThreshold() {
+    void loginIsBlockedPerIpAfterThresholdOfFailures() {
         for (int i = 0; i < LOGIN_PER_IP; i++) {
-            assertThat(throttle.tryLogin("10.0.0.1")).as("lần %d", i + 1).isTrue();
+            assertThat(throttle.loginAllowed("10.0.0.1")).as("lần %d", i + 1).isTrue();
+            throttle.recordLoginFailure("10.0.0.1");
         }
-        assertThat(throttle.tryLogin("10.0.0.1")).isFalse();
-        assertThat(throttle.tryLogin("10.0.0.1")).isFalse();
-        assertThat(throttle.tryLogin("10.0.0.2")).isTrue();
+        assertThat(throttle.loginAllowed("10.0.0.1")).isFalse();
+        assertThat(throttle.loginAllowed("10.0.0.2")).isTrue();
 
         // Bucket có hạn sống trên Redis, không nằm mãi.
         String key = RequestThrottle.PREFIX + "login-ip:10.0.0.1";
         assertThat(redis.hasKey(key)).isTrue();
         assertThat(redis.getExpire(key, TimeUnit.MILLISECONDS)).isPositive();
+    }
+
+    @Test
+    void checkingLoginDoesNotSpendAttempts() {
+        // Nhiều sinh viên đăng nhập đúng qua chung một IP (NAT của trường) không bị chặn.
+        for (int i = 0; i < LOGIN_PER_IP * 5; i++) {
+            assertThat(throttle.loginAllowed("10.0.0.7")).as("lần %d", i + 1).isTrue();
+        }
+    }
+
+    @Test
+    void passwordChangeIsBlockedPerAccountAfterFailures() {
+        UUID account = UUID.randomUUID();
+        for (int i = 0; i < PASSWORD_CHANGE_FAILURES; i++) {
+            assertThat(throttle.passwordChangeAllowed(account)).isTrue();
+            throttle.recordPasswordChangeFailure(account);
+        }
+        assertThat(throttle.passwordChangeAllowed(account)).isFalse();
+        assertThat(throttle.passwordChangeAllowed(UUID.randomUUID())).isTrue();
     }
 
     @Test
@@ -115,6 +136,6 @@ class RequestThrottleIntegrationTest {
                 base.loginLockThreshold(), base.loginLockDuration(), base.cookieSecure(), base.mailFrom(),
                 base.bootstrapAdminEmail(), base.bootstrapAdminName(),
                 new IdentityProperties.RateLimit(OTP_PER_EMAIL, OTP_COOLDOWN, OTP_PER_IP, LOGIN_PER_IP,
-                        Duration.ofMinutes(5)));
+                        Duration.ofMinutes(5), PASSWORD_CHANGE_FAILURES, Duration.ofMinutes(15)));
     }
 }

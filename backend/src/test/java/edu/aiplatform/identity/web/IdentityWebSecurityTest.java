@@ -252,6 +252,24 @@ class IdentityWebSecurityTest {
     }
 
     @Test
+    void beanValidationErrorGetsIdentityErrorCode() throws Exception {
+        signedIn();
+
+        // Thiếu field bắt buộc và vượt độ dài: cùng mã INVALID_REQUEST như JSON sai.
+        mvc.perform(post("/api/v1/me/password")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"" + NEW_PASSWORD + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + "a".repeat(400) + "\",\"password\":\"x\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
     void changePasswordPassesCurrentSessionId() throws Exception {
         signedIn();
 
