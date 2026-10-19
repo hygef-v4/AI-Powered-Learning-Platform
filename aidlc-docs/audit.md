@@ -4512,3 +4512,13 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U01 integration (roadmap phase 0).
 
 ---
+
+## 2026-10-19T23:28:01Z — PR #5 GitGuardian check failure
+
+**User Input**: "Ci đỏ, kiểm tra và fix"
+
+**AI Response**: Build jobs (backend, frontend) pass; only GitGuardian Security Checks fails with 2 "Generic Password" findings, both test fixtures: Testcontainers role passwords in `AccountRepositoryIntegrationTest` (commit 1e71a76) and MockMvc request passwords in `IdentityWebSecurityTest` (commit 3be0d7a). Not real credentials. Replaced the literals with per-run `UUID.randomUUID()` values (18 + 14 tests pass, Testcontainers ran). GitGuardian scans every commit in the PR, so the check stays red until the two incidents are marked as false positive / test credential in GitGuardian (or history is rewritten, not done).
+
+**Context**: Construction — U01 integration (roadmap phase 0), CI fix.
+
+---
