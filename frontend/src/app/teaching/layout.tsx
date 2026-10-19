@@ -1,13 +1,8 @@
 import type { ReactNode } from "react";
-import { SessionProvider } from "@/features/identity/session";
-import { RoleGuard } from "@/features/identity/shell/RoleGuard";
+import { AuthenticatedLayout } from "@/features/identity/shell/AuthenticatedLayout";
 
 // U05: lớp được giao dạy, cho Teacher và Subject Manager.
-// Chỉ chặn phiên và role; khung trang do AcademicsShell của U05 vẽ, đổi sang AuthenticatedLayout khi U05 dùng AppShell.
+// U01 chặn phiên và role rồi vẽ khung chung AppShell (menu bên theo role của phiên, hồ sơ, đăng xuất).
 export default function TeachingLayout({ children }: { children: ReactNode }) {
-  return (
-    <SessionProvider>
-      <RoleGuard roles={["TEACHER", "SUBJECT_MANAGER"]}>{children}</RoleGuard>
-    </SessionProvider>
-  );
+  return <AuthenticatedLayout roles={["TEACHER", "SUBJECT_MANAGER"]}>{children}</AuthenticatedLayout>;
 }

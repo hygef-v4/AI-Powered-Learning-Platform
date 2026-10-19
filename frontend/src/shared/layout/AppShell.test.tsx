@@ -37,6 +37,21 @@ describe("AppShell", () => {
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
   });
 
+  it("vẽ tiêu đề nhóm một lần phía trên mục đầu tiên của nhóm", () => {
+    render(
+      <AppShell
+        role="SUBJECT_MANAGER"
+        nav={[
+          { href: "/manager/classes", label: "Lớp học", icon: "groups" },
+          { href: "/classes", label: "Lớp được phân công", icon: "class", section: "Giảng dạy" },
+        ]}
+      >
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+    expect(screen.getAllByText("Giảng dạy")).toHaveLength(1);
+  });
+
   it("bấm Đăng xuất mở popup xác nhận, Hủy thì đóng", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 401 })));
     render(

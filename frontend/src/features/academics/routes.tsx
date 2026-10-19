@@ -2,8 +2,7 @@
 import {useCallback,useEffect,useRef,useState,type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {ApiError} from "@/shared/api/client";
-import {useCurrentUser} from "@/shared/auth/useCurrentUser";
-import {AcademicsShell,type AcademicsView} from "./AcademicsShell";
+type AcademicsView="overview"|"subject"|"classes"|"teaching"|"my-classes";
 import {academicsApi,classCapability,type Scope} from "./api";
 import {ClassDashboardPage} from "./ClassDashboardPage";
 import {ClassListPage} from "./ClassListPage";
@@ -24,7 +23,8 @@ function useResource<T>(load:(signal:AbortSignal)=>Promise<T>){
 }
 async function allClasses(scope:Scope,signal:AbortSignal){const rows:CourseClassView[]=[];for(let page=1;;page++){const next=await academicsApi.classes(scope,{page,size:100},signal);rows.push(...next);if(next.length<100)return rows;}}
 async function allStudents(scope:"manager"|"teaching",id:string,signal:AbortSignal){const rows=[];for(let page=1;;page++){const next=await academicsApi.students(scope,id,{page,size:100},signal);rows.push(...next);if(next.length<100)return rows;}}
-function Frame({audience,active,children}:{audience:Audience;active:AcademicsView;children:ReactNode}){const router=useRouter();const user=useCurrentUser();return <AcademicsShell audience={audience} active={active} userName={user?.displayName??""} onNavigate={view=>router.push(({overview:"/manager",subject:"/manager/subjects",classes:"/manager/classes",teaching:"/teaching/classes","my-classes":"/classes"})[view])}>{children}</AcademicsShell>;}
+// Khung trang (thanh trên, menu bên theo role của phiên, hồ sơ, đăng xuất) do AuthenticatedLayout của U01 vẽ ở layout route.
+function Frame({children}:{audience:Audience;active:AcademicsView;children:ReactNode}){return <>{children}</>;}
 function Pending({error,retry}:{error?:unknown;retry:()=>void}){return error?<section role="alert" className={styles.panel}><p>{operationError(error)}</p><button onClick={()=>void Promise.resolve(retry()).catch(()=>{})}>Thử lại</button></section>:<p role="status">Đang tải…</p>;}
 export function ClassesRoute({teaching=false}:{teaching?:boolean}){
  const router=useRouter();const load=useCallback(async(signal:AbortSignal)=>{const mode=teaching?{audience:"teacher" as const,classes:await academicsApi.classes("teaching",{},signal)}:await classCapability(signal);return {...mode,classes:mode.classes.length===100?await allClasses(mode.audience==="student"?"me":"teaching",signal):mode.classes};},[teaching]);const state=useResource(load);

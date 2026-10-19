@@ -1,4 +1,3 @@
-export { AcademicsShell } from "./AcademicsShell";
 export { ClassDashboardPage } from "./ClassDashboardPage";
 export { ClassListPage } from "./ClassListPage";
 export { ManagedClassPage } from "./ManagedClassPage";

@@ -24,6 +24,8 @@ export type NavEntry = {
   href: string;
   icon: IconName;
   roles: Role[];
+  /** Tiêu đề nhóm trên menu bên; các mục cùng nhóm đứng liền nhau theo `order`. */
+  section?: string;
 };
 
 export const navEntries = createRegistry<NavEntry>("NavEntry");

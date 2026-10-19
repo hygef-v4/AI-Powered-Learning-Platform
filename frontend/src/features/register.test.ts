@@ -22,6 +22,7 @@ describe("menu bên do các unit đăng ký", () => {
       "Bài tập",
       "Lớp học",
       "Lớp được phân công",
+      "Thông báo lớp",
     ]);
     expect(menu("TEACHER")).toEqual(["Lớp được phân công", "Thông báo lớp"]);
     expect(menu("STUDENT")).toEqual(["Lớp của tôi", "Bài tập", "Luyện tập Quiz", "Thông báo lớp"]);

@@ -4,7 +4,8 @@ import type { Role } from "@/shared/auth/roles";
 import type { IconName } from "@/shared/ui/Icon";
 import type { Tone } from "@/shared/ui/tones";
 
-export type NavItem = { href: string; label: string; icon: IconName };
+/** `section`: tiêu đề nhóm vẽ phía trên mục đầu tiên của nhóm (ví dụ "Giảng dạy" của Chủ nhiệm môn). */
+export type NavItem = { href: string; label: string; icon: IconName; section?: string };
 
 export const ROLE_LABELS: Record<Role, string> = {
   STUDENT: "Sinh viên",

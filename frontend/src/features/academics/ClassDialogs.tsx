@@ -54,7 +54,7 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTe
     <div className={styles.choiceList} role="radiogroup" aria-label="Chọn giảng viên">
       <label className={styles.choice}><span className={styles.muted}>Chưa phân công</span><input type="radio" name={id} aria-label="Chưa phân công" value="" disabled={busy || value.status === "OPEN"} checked={!selected} onChange={() => setSelected("")}/></label>
       {options.rows.filter((teacher) => `${teacher.name} ${teacher.email}`.toLocaleLowerCase("vi").includes(query.toLocaleLowerCase("vi"))).map((teacher) => <label className={styles.choice} key={teacher.id}><span className={styles.person}><Avatar name={teacher.name}/><span><strong>{teacher.name}</strong><small>{teacher.email}</small></span></span><input type="radio" name={id} checked={selected === teacher.id} value={teacher.id} aria-label={teacher.name} disabled={busy} onChange={() => setSelected(teacher.id)}/></label>)}
-    </div><p className={styles.hint}>Lớp đang mở phải có giảng viên chính. Phân công mới thay thế quyền dạy của giảng viên hiện tại.</p>
+    </div>{!options.loading && !options.error && options.rows.length === 0 && <p className={styles.hint}>Không có giảng viên phù hợp.</p>}<p className={styles.hint}>Chỉ hiện Giảng viên và Chủ nhiệm môn đã kích hoạt tài khoản. Lớp đang mở phải có giảng viên chính. Phân công mới thay thế quyền dạy của giảng viên hiện tại.</p>
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </Modal>;
 }
