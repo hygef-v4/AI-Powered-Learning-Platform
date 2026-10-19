@@ -9,7 +9,7 @@ Code viết ngày 2026-10-17 theo [plan](../../plans/code-generation-plan/u01-ac
 | F1, F2 Kích hoạt | `OtpService` (yêu cầu trung tính, rate limit, gửi việc `OTP_DELIVERY` chỉ chứa ID; xác minh → `otpTicket`), `OtpMailHandler` (worker sinh mã, lưu băm, gửi mail, thử lại qua U03), `ActivationService` (đặt mật khẩu, `ACTIVE`, audit, tự đăng nhập) |
 | F3, F4 Đăng nhập, đăng xuất, refresh | `AuthService` (một lỗi trung tính, bcrypt giả khi email lạ, khóa 15 phút sau 5 lần sai, xoay refresh, phát hiện dùng lại), `HomePaths` (F15) |
 | F5 Đặt lại mật khẩu | `OtpService`, `PasswordResetService` (xóa mọi phiên trước và sau commit, không tự đăng nhập) |
-| F6 Đổi mật khẩu | `PasswordChangeService` (đúng mật khẩu hiện tại, giữ phiên hiện tại, xóa phiên khác) |
+| F6 Đổi mật khẩu | `PasswordChangeService` (đúng mật khẩu hiện tại, sai quá 5 lần/15 phút → 429 `TOO_MANY_ATTEMPTS`, giữ phiên hiện tại, xóa phiên khác, hủy OTP/ticket đặt lại còn chờ) |
 | F7 Hồ sơ | `ProfileService` (xem, sửa tên/SĐT của chính mình, audit tên trường) |
 | F8–F12, F14 Quản trị | `AccountAdminService` (danh sách, tạo `PENDING`, chi tiết, sửa có `version`, đổi role có kiểm phân công, chặn tự thao tác, khóa Admin cuối, vô hiệu hóa/mở lại), `AccountImportService` (CSV kiểm rồi xác nhận) |
 | F13 Phân quyền | `AuthorizationService` (cài `IAuthorization`, mặc định từ chối, role đọc từ DB, phạm vi qua `ISubjectScope`/`IClassScope`), `AccessPolicy` + `contract/Actions` |
@@ -23,7 +23,7 @@ Domain: `Account`, `AccountSearch`, `EmailPolicy`, `PasswordPolicy`, `ProfilePol
 
 | Endpoint | UC | Ghi chú |
 |---|---|---|
-| `POST /api/v1/auth/login`, `/refresh`, `/logout` | 02, 03 | Public, không CSRF; cookie `access_token` (`Path=/api`, Lax), `refresh_token` (`Path=/api/v1/auth/refresh`, Strict) |
+| `POST /api/v1/auth/login`, `/refresh`, `/logout` | 02, 03 | Public, không CSRF; cookie `access_token` (`Path=/api`, Lax), `refresh_token` (`Path=/api/v1/auth`, Strict) |
 | `POST /api/v1/auth/activation/{request,verify,complete}` | 01 | `request` luôn `202`; `complete` đặt cookie |
 | `POST /api/v1/auth/password-reset/{request,verify,complete}` | 04 | `complete` xóa cookie, không đăng nhập |
 | `GET`, `PATCH /api/v1/me/profile`; `POST /api/v1/me/password` | 05–07 | Field lạ → 400 `INVALID_REQUEST` |
@@ -40,7 +40,8 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 
 - Route: `(auth)/login`, `(auth)/activate`, `(auth)/reset-password`, `/`, `/post-login`, `/profile`, `/admin/accounts`, `/admin/accounts/[id]`; `app/admin/layout.tsx` bọc cả Settings của U03 bằng `AuthenticatedLayout` (chỉ ADMIN).
 - `features/identity`: `LoginPage`/`LoginForm`, `otp/OtpFlow` (email → OTP 10 phút, gửi lại sau 60 giây → mật khẩu), `ActivationPage`, `PasswordResetPage`, `profile/*`, `admin/*`, `shell/*` (`AppShell`, `AccountMenu` vẽ `accountMenuEntries`/`headerWidgets`, `SignOutDialog`, `RoleGuard`), `session.tsx`, `components/*` (AuthLayout, Stepper, OtpInput, PasswordField, PasswordChecklist).
-- `shared/api/client.ts`: header `X-XSRF-TOKEN` cho request đổi trạng thái, 401 thì refresh một lần, `setUnauthenticatedHandler`.
+- `shared/api/client.ts`: header `X-XSRF-TOKEN` cho request đổi trạng thái; 401 thì refresh rồi gửi lại (409 chờ cookie của tab kia 500 ms, vẫn 401 thì refresh lại một lần; refresh 503/mất mạng → `SYSTEM_BUSY`, không về đăng nhập); `setUnauthenticatedHandler` đưa về `/login?next=...`.
+- `app/not-found.tsx`: trang 404 chung có link về `/`.
 
 ## Cấu hình
 
@@ -48,8 +49,8 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 
 ## Unit test
 
-- Backend 208 test toàn repo (U01: domain, JWT, session store, OTP store/ticket, đăng nhập/khóa tạm, phân quyền, kích hoạt/đặt lại, hồ sơ/đổi mật khẩu, quản trị, nhập CSV, lookup và bảng quyền, chuỗi bảo mật web với MockMvc: 401/503/CSRF/cookie/field lạ/đường dẫn `imports:validate`). `ArchitectureTest` xanh.
-- Frontend 50 test toàn repo (U01: client CSRF/refresh, LoginForm, RoleGuard, OtpInput, OtpFlow, passwordRules, ProfileForm, PasswordChangeDialog, màn quản trị). `next build` xanh. Màn đăng nhập, khôi phục mật khẩu, hồ sơ, danh sách và chi tiết tài khoản đã xem trên trình duyệt với API giả.
+- Backend 255 test toàn repo (2026-10-19) (U01: domain, JWT, session store, OTP store/ticket, đăng nhập/khóa tạm, phân quyền, kích hoạt/đặt lại, hồ sơ/đổi mật khẩu, quản trị, nhập CSV, lookup và bảng quyền, chuỗi bảo mật web với MockMvc: 401/503/CSRF/cookie/field lạ/đường dẫn `imports:validate`). `ArchitectureTest` xanh.
+- Frontend 77 test toàn repo (2026-10-19) (U01: client CSRF/refresh, LoginForm, RoleGuard, OtpInput, OtpFlow, passwordRules, ProfileForm, PasswordChangeDialog, màn quản trị). `next build` xanh. Màn đăng nhập, khôi phục mật khẩu, hồ sơ, danh sách và chi tiết tài khoản đã xem trên trình duyệt với API giả.
 
 ## Chạy thử end-to-end (2026-10-17, stack Docker local)
 
@@ -66,8 +67,24 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 - Hồ sơ cá nhân không có `version` (Q18); New Account không có SĐT (Q08); không có panel lịch sử ở Account Detail (Q09).
 - CSV thêm lý do `INVALID_DISPLAY_NAME`; bước kiểm trả `VALID`, bước xác nhận trả `CREATED`.
 - Mọi tự đổi role của Admin đều bị chặn (`SELF_CHANGE_BLOCKED`), vì người gọi luôn là ADMIN.
-- `GlobalExceptionHandler` chỉ thêm 503 cho Redis/DB; lỗi validate và lỗi khác dùng Problem Detail mặc định của Spring Boot (không lộ stack trace), không thêm handler bắt mọi lỗi để tránh đổi hành vi của unit khác.
-- Admin tạm vào `/admin/accounts` tới khi U15 có Admin Dashboard; `/classes`, `/manager` thuộc U05/U04, hiện 404.
+- `GlobalExceptionHandler` chỉ thêm 503 cho Redis/DB; lỗi validate của controller U01 trả `INVALID_REQUEST` qua `IdentityExceptionHandler` (chỉ áp dụng cho U01), không thêm handler bắt mọi lỗi để tránh đổi hành vi của unit khác.
+- Đích sau đăng nhập tạm thời (`HomePaths`): Admin vào `/admin/accounts` tới khi U15 có Admin Dashboard; Student, Teacher, Chủ nhiệm môn vào `/profile` tới khi màn `/classes` (U05), `/manager` (U04) được merge (đang ở nhánh `ClassEnrollment`, `unit1`). **Khi merge các nhánh đó phải đổi `HomePaths.of` về `CLASS_DASHBOARD`, `MANAGER_DASHBOARD`.**
+- Giới hạn đăng nhập theo IP (BR-U01-43, 30 lần/5 phút) chỉ đếm lần thất bại, để nhiều sinh viên chung NAT của trường đăng nhập đúng không bị chặn.
+- Account Detail chưa có link mở Nhật ký audit đã lọc; thêm lại khi U02 có màn Audit Log.
+
+## Sửa sau review (2026-10-19)
+
+- Đích sau đăng nhập của Student/Teacher/Chủ nhiệm môn trỏ tới route chưa có (404 không có khung và nút đăng xuất) → tạm về `/profile`; thêm `app/not-found.tsx`.
+- Hai tab refresh cùng lúc: request gửi lại ngay sau 409 còn cookie cũ, bị 401 và đá về `/login` → chờ rồi gửi lại, refresh lại một lần nếu cần.
+- Tên trên thanh trên cùng lấy từ cache riêng của `useCurrentUser`, không đổi sau khi sửa hồ sơ hay đăng nhập tài khoản khác → `AuthenticatedLayout` truyền `user` từ phiên vào `AppShell`; cache được xóa khi hết phiên và khi đăng nhập.
+- Rate limit đăng nhập theo IP đếm cả lần đúng → chỉ đếm lần sai (`RequestThrottle.loginAllowed` / `recordLoginFailure`).
+- Ticket đặt lại mật khẩu dùng được hai lần nếu gửi đồng thời → `VerificationTicketStore.take` (GETDEL) sau khi kiểm chính sách mật khẩu; kích hoạt dùng cùng cách. Mỗi tài khoản và mục đích chỉ giữ một ticket; đổi/đặt lại mật khẩu thu hồi ticket và OTP đặt lại còn chờ, vô hiệu hóa thu hồi mọi ticket.
+- Đổi mật khẩu không giới hạn lần nhập sai mật khẩu hiện tại → 5 lần sai/15 phút theo tài khoản (`U01_RL_PASSWORD_CHANGE_FAILURES`, `U01_RL_PASSWORD_CHANGE_WINDOW`), quá thì 429.
+- Database hoặc U04/U05 lỗi khi kiểm quyền: vẫn từ chối (BR-U01-93) nhưng thao tác U01 trả 503 `SYSTEM_BUSY`, không 403 và không ghi `ACCESS_DENIED` oan.
+- Lỗi Bean Validation, tham số sai kiểu, thiếu tham số/tệp ở controller U01 trả 400 `INVALID_REQUEST`.
+- Account Detail: tải lại sau xung đột version không còn ném lỗi chưa xử lý; ẩn link Nhật ký audit (U02 chưa có).
+- Hết phiên → `/login?next=<trang đang mở>`; đăng nhập lại thì quay về đó (chỉ nhận đường dẫn nội bộ).
+- Test: backend 255, frontend 77 (đều xanh).
 
 ## Còn lại
 

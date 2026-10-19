@@ -4100,3 +4100,33 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **Context**: Construction — U01 Code Generation Part 2, commit for user review.
 
 ---
+
+## 2026-10-19T09:20:00Z — U01 code review on branch cuong
+
+**User Input**: "kiểm tra code nhánh cuong xem đã đúng chưa, bắt các bug và kiểm tra xem còn điểm nào cần bổ sung/cải thiện/sửa đổi không"
+
+**AI Response**: Reviewed the U01 diff against main and ran backend `mvn test` (245 pass, including Testcontainers integration tests) and frontend tsc/vitest (70 pass)/eslint. Reported 7 bugs (non-admin homePath routes missing → 404; cross-tab refresh 409 retried too early; header name cached separately from session; login IP throttle counts successful logins; password-reset ticket not consumed atomically; no throttle on wrong current password; infrastructure errors shown as unauthenticated/forbidden) and 6 improvements. No code changed.
+
+**Context**: Construction — U01 review.
+
+---
+
+## 2026-10-19T09:52:03Z — U01 fixes from code review
+
+**User Input**: "Sửa tất cả bug và các điểm cải thiện trong review."
+
+**AI Response**: Started fixing all review findings on branch `cuong` (bug fix within U01 boundaries; no new stage, no new unit). /classes and /manager routes are owned by other branches (ClassEnrollment, unit1), so non-admin homePath is temporarily pointed to /profile instead of adding conflicting pages.
+
+**Context**: Construction — U01 bug fixes after review.
+
+---
+
+## 2026-10-19T10:03:03Z — U01 review fixes completed
+
+**User Input**: (continuation of "Sửa tất cả bug và các điểm cải thiện trong review.")
+
+**AI Response**: Fixed all 7 bugs and 6 improvements: non-admin homePath temporarily /profile + app/not-found.tsx; refresh 409 waits 500 ms and retries refresh once, refresh 503 surfaces SYSTEM_BUSY; AppShell receives user from session, profile cache cleared on expiry/login; login IP throttle counts failures only; atomic ticket take (GETDEL) with one ticket per account/purpose and revoke on password change/reset/disable; password change throttled (5 wrong current passwords/15 min → 429); authorization dependency failure → 503 without ACCESS_DENIED audit; validation errors → 400 INVALID_REQUEST; AccountDetail reload safe and audit link hidden; /login?next= return path; aidlc-state workspace root. Tests: backend 255 pass, frontend 77 pass, tsc/eslint clean, next build ok. Updated code-summary. No commit.
+
+**Context**: Construction — U01 bug fixes after review.
+
+---
