@@ -47,7 +47,12 @@ final class AccessPolicy {
             Map.entry(Actions.SUBJECT_CREATE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
             Map.entry(Actions.SUBJECT_UPDATE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
             Map.entry(Actions.SUBJECT_MANAGER_CHANGE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
-            Map.entry(Actions.SUBJECT_STATUS_CHANGE, new Rule(ADMIN_ONLY, ScopeKind.NONE)));
+            Map.entry(Actions.SUBJECT_STATUS_CHANGE, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
+            Map.entry(Actions.CLASS_STUDENT, new Rule(EnumSet.of(STUDENT), ScopeKind.NONE)),
+            Map.entry(Actions.CLASS_TEACHER, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
+            Map.entry(Actions.CLASS_MANAGER, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.NONE)),
+            Map.entry(Actions.CLASS_VIEW, new Rule(EnumSet.of(STUDENT, TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.CLASS_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)));
 
     private AccessPolicy() {
     }

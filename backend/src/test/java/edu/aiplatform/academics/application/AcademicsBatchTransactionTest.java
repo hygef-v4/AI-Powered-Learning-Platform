@@ -13,7 +13,6 @@ import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.*;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.transaction.TransactionDefinition;
@@ -117,9 +116,9 @@ class AcademicsBatchTransactionTest {
     }
 
     @Test void authorityRevokedBetweenRowsKeepsPriorCommitButRejectsTheRemainingBatch() {
-        var checks=new AtomicInteger();
+        // Quyền bị thu hồi ngay sau khi dòng đầu commit.
         when(authorization.authorize(any(),anyString(),any())).thenAnswer(call->
-                call.<String>getArgument(1).equals("CLASS_MANAGE")&&checks.incrementAndGet()>1?AuthorizationDecision.deny("revoked"):AuthorizationDecision.allow());
+                call.<String>getArgument(1).equals("CLASS_MANAGE")&&!tx.committed.isEmpty()?AuthorizationDecision.deny("revoked"):AuthorizationDecision.allow());
         assertThatThrownBy(()->service.enrollBatch(manager,classId,input)).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.status().value()).isEqualTo(404));
         assertThat(tx.committed).containsExactly(first);assertThat(tx.commits).isEqualTo(1);assertThat(tx.rollbacks).isEqualTo(1);
         verify(enrollments,never()).insert(argThat(value->!value.accountId().equals(first)));

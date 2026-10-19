@@ -244,12 +244,14 @@ public class AcademicsService {
             default -> false;
         };
         if(!allowed) throw ApiException.notFound("CLASS_OUT_OF_SCOPE");
-        authorize(actor,"CLASS_VIEW",ResourceRef.courseClass(id),true);
+        // Chủ nhiệm xem lớp của môn mình theo phạm vi môn (R2), không cần được giao dạy lớp đó.
+        if(audience.equals("manager")) authorize(actor,Actions.CLASS_MANAGE,ResourceRef.subject(value.subjectId()),true);
+        else authorize(actor,Actions.CLASS_VIEW,ResourceRef.courseClass(id),true);
         return value;
     }
     private void requireManager(Actor actor,UUID subjectId) {
         if(subjectId==null || !scope.isSubjectManager(actor.accountId(),subjectId) || !actor.accountId().equals(subject(subjectId).managerId())) throw ApiException.notFound("SUBJECT_OUT_OF_SCOPE");
-        authorize(actor,"CLASS_MANAGE",ResourceRef.subject(subjectId),true);
+        authorize(actor,Actions.CLASS_MANAGE,ResourceRef.subject(subjectId),true);
     }
     private void requireAudience(Actor actor,String audience) {
         if(actor==null || actor.accountId()==null || actor.role()==null) throw new ApiException(org.springframework.http.HttpStatus.UNAUTHORIZED,"AUTHENTICATION_REQUIRED","Cần đăng nhập");
@@ -257,7 +259,8 @@ public class AcademicsService {
         if(!role) throw ApiException.forbidden("ROLE_DENIED");
         AccountContact contact=accounts.getContact(actor.accountId()).orElseThrow(() -> ApiException.forbidden("ACCOUNT_INACTIVE"));
         if(contact.status()!=AccountStatus.ACTIVE || contact.role()!=actor.role()) throw ApiException.forbidden("ACCOUNT_INACTIVE");
-        authorize(actor,"CLASS_"+audience.toUpperCase(Locale.ROOT),ResourceRef.none(),false);
+        String action=switch(audience) {case "manager" -> Actions.CLASS_MANAGER;case "teacher" -> Actions.CLASS_TEACHER;default -> Actions.CLASS_STUDENT;};
+        authorize(actor,action,ResourceRef.none(),false);
     }
     private void authorize(Actor actor,String action,ResourceRef ref,boolean hide) {
         var decision=authorization.authorize(actor,action,ref);

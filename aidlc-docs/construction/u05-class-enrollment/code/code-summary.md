@@ -19,7 +19,7 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-cl
 
 Domain: `CourseClass`, `Enrollment`, `EnrollmentPolicy`, `EnrollmentListParser`, `EnrollmentResult`. Hạ tầng: `JdbcCourseClassRepository`, `JdbcEnrollmentRepository`, `JdbcAcademicsReadRepository` (`NamedParameterJdbcTemplate`, tham số gắn tên, trang 1–100).
 
-Kiểm quyền: vai trò và trạng thái tài khoản qua `IAccountLookup`, rồi `IAuthorization` với action `CLASS_STUDENT`, `CLASS_TEACHER`, `CLASS_MANAGER`, `CLASS_VIEW` (phạm vi lớp), `CLASS_MANAGE` (phạm vi môn). Sai phạm vi trả 404; U01/U04 lỗi thì từ chối. Audit thành công ghi cùng transaction; từ chối và lỗi ghi sau rollback. Ghi danh phát `enrollment.activated` qua `IEventPublisher` của U03.
+Kiểm quyền: vai trò và trạng thái tài khoản qua `IAccountLookup`, rồi `IAuthorization` với action đăng ký trong `Actions`/`AccessPolicy` của U01: `CLASS_STUDENT`, `CLASS_TEACHER`, `CLASS_MANAGER` (vào màn theo vai trò), `CLASS_VIEW` (sinh viên, giảng viên xem một lớp, phạm vi lớp), `CLASS_MANAGE` (Chủ nhiệm xem và sửa lớp của môn mình, phạm vi môn). Sai phạm vi trả 404; U01/U04 lỗi thì từ chối. Audit thành công ghi cùng transaction; từ chối và lỗi ghi sau rollback. Ghi danh phát `enrollment.activated` qua `IEventPublisher` của U03.
 
 ## API
 
@@ -44,7 +44,7 @@ Gốc `/api/v1`.
 
 ## Frontend
 
-- Route: `/classes`, `/classes/[id]` (sinh viên); `/teaching/classes`, `/teaching/classes/[id]` (giảng viên); `/manager`, `/manager/subjects`, `/manager/subjects/[id]`, `/manager/classes`, `/manager/classes/[id]` (Chủ nhiệm môn).
+- Route: `/classes`, `/classes/[id]` (sinh viên; giảng viên và Chủ nhiệm cũng vào được vì trang chủ của U01 trỏ tới đây); `/teaching/classes`, `/teaching/classes/[id]` (giảng viên, Chủ nhiệm); `/manager`, `/manager/subjects`, `/manager/subjects/[id]`, `/manager/classes`, `/manager/classes/[id]` (Chủ nhiệm môn). Mỗi nhóm có `layout.tsx` bọc `SessionProvider` + `RoleGuard` của U01: chưa đăng nhập về `/login`, sai role về trang chủ của mình.
 - `features/academics`: `routes.tsx` (nạp dữ liệu, xử lý 409), `ClassListPage`, `ClassFormDialog`, `ManagedClassPage`, `ClassInfoForm`, `EnrollmentPanel`, `ClassDashboardPage`, `ReadOnlyClassPage`, `ManagerDashboardPage`, `useCandidates` (debounce, hủy request cũ), `api.ts`, `types.ts`.
 - Host đủ 5 slot cho unit sau: `StudentClassSection`, `TeacherClassTab` (`info`, `students`, `materials`, `evals`, `gradebook`), `StudentDetailSection`, `SubjectSummarySection`, `ClassCardSection`. Menu đăng ký qua `NavEntry` trong `register.ts`.
 
@@ -55,10 +55,9 @@ Backend: domain, parser, repository (điều kiện transaction, conflict), ki�
 ## Khác với thiết kế
 
 - Khóa ghi danh theo cả môn bằng advisory lock thay cho "khóa hàng theo (sinh viên, môn)" ở F10; chưa khớp với khóa dòng `subjects` khi U04 lưu trữ môn.
-- Frontend dùng khung riêng `AcademicsShell` và CSS module thay cho `AppShell`, `shared/ui`; route lớp chưa bọc `AuthenticatedLayout`/`RoleGuard`.
+- Frontend dùng khung riêng `AcademicsShell` và CSS module thay cho `AppShell`, `shared/ui`; vì vậy layout chỉ dùng `RoleGuard`, chưa dùng `AuthenticatedLayout`.
 
 ## Còn lại
 
-- Đăng ký 5 action `CLASS_*` vào bảng quyền của U01 (`Actions`, `AccessPolicy`).
 - Thống nhất khóa với U04 khi lưu trữ môn (`ISubjectArchiveCheck`/`ISubjectMutationGuard` của U04 hoặc `ISubjectClasses.countUnarchivedClasses`).
-- Dùng `AppShell`, `shared/ui` và bọc layout có `RoleGuard` cho `/classes`, `/teaching`, `/manager`.
+- Dùng `AppShell`, `shared/ui`; khi đó đổi 3 layout sang `AuthenticatedLayout`.

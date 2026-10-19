@@ -15,6 +15,7 @@ import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.identity.contract.ScopeKind;
 import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
 import java.lang.reflect.Field;
@@ -77,6 +78,18 @@ class AccountLookupAndPolicyTest {
                 .forEach(f -> assertThat(AccessPolicy.ruleFor(readName(f)).orElseThrow().roles())
                         .containsExactly(Role.ADMIN));
         assertThat(AccessPolicy.ruleFor(Actions.FILE_UPLOAD).orElseThrow().roles()).doesNotContain(Role.ADMIN);
+    }
+
+    /** U05: Admin không có màn lớp; xem lớp theo phạm vi lớp (R3/R5), quản lý lớp theo phạm vi môn (R2). */
+    @Test
+    void classActionsExcludeAdminAndUseClassOrSubjectScope() {
+        Arrays.stream(Actions.class.getDeclaredFields())
+                .filter(f -> f.getName().startsWith("CLASS_"))
+                .forEach(f -> assertThat(AccessPolicy.ruleFor(readName(f)).orElseThrow().roles()).doesNotContain(Role.ADMIN));
+        assertThat(AccessPolicy.ruleFor(Actions.CLASS_VIEW).orElseThrow().scope()).isEqualTo(ScopeKind.CLASS);
+        var manage = AccessPolicy.ruleFor(Actions.CLASS_MANAGE).orElseThrow();
+        assertThat(manage.scope()).isEqualTo(ScopeKind.SUBJECT);
+        assertThat(manage.roles()).containsExactly(Role.SUBJECT_MANAGER);
     }
 
     private static String readName(Field field) {

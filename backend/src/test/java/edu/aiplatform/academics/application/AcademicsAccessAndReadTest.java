@@ -172,7 +172,7 @@ class AcademicsAccessAndReadTest {
         when(subjects.getSubject(subjectId)).thenReturn(Optional.of(subject(subjectId,UUID.randomUUID())));
         assertProblem(() -> service.updateInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,null,7),404,"SUBJECT_OUT_OF_SCOPE");
         verify(lock).acquire(subjectId);
-        verify(authorization,never()).authorize(actor(Role.SUBJECT_MANAGER),"CLASS_MANAGE",ResourceRef.subject(subjectId));
+        verify(classes,never()).update(any(),anyLong());
         verifyNoInteractions(reads);
         assertDenialAudit();
     }
@@ -234,7 +234,8 @@ class AcademicsAccessAndReadTest {
     void successfulDetailReturnsSubjectTeacherAndCountsWithoutWriting(Role role,String audience) {
         when(reads.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(12,3)));
         assertClassDto(service.detail(actor(role),audience,classId),12,3);
-        verify(authorization).authorize(actor(role),"CLASS_VIEW",ResourceRef.courseClass(classId));
+        if (role==Role.SUBJECT_MANAGER) verify(authorization).authorize(actor(role),"CLASS_MANAGE",ResourceRef.subject(subjectId));
+        else verify(authorization).authorize(actor(role),"CLASS_VIEW",ResourceRef.courseClass(classId));
         if (role==Role.STUDENT) verify(enrollments).find(classId,studentId);
         verifyNoInteractions(audit);
     }
