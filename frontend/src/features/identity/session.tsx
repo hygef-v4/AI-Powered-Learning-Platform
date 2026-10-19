@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ApiError, setUnauthenticatedHandler } from "@/shared/api/client";
+import { clearCurrentUser } from "@/shared/auth/useCurrentUser";
 import { getProfile } from "./api";
 import type { Profile } from "./types";
 
@@ -11,6 +12,22 @@ export const PUBLIC_PATHS = ["/login", "/activate", "/reset-password"];
 
 export function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
+/** `/login?next=...` để đăng nhập lại xong quay về đúng trang đang mở. */
+export function loginPathFor(location: { pathname: string; search: string }) {
+  const current = location.pathname + location.search;
+  return current === "/" || isPublicPath(location.pathname) ? "/login" : `/login?next=${encodeURIComponent(current)}`;
+}
+
+/**
+ * Chỉ nhận đường dẫn nội bộ (bắt đầu bằng một `/`, không phải `//` hay `/\`) để `next` không bị dùng chuyển hướng ra
+ * trang ngoài; trang công khai cũng bỏ qua. Không hợp lệ thì `null` (về homePath).
+ */
+export function safeNextPath(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
+  const pathname = next.split(/[?#]/)[0] ?? "";
+  return isPublicPath(pathname) ? null : next;
 }
 
 type SessionState =
@@ -47,7 +64,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthenticatedHandler(() => {
-      if (!isPublicPath(window.location.pathname)) router.replace("/login");
+      clearCurrentUser();
+      if (!isPublicPath(window.location.pathname)) router.replace(loginPathFor(window.location));
     });
     let active = true;
     loadSession().then((next) => {

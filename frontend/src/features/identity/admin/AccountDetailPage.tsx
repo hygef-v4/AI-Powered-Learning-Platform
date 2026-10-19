@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
@@ -47,8 +46,14 @@ export function AccountDetailPage() {
     };
   }, [id]);
 
+  /** Tải lại sau xung đột version; không ném lỗi để popup/form gọi nó vẫn kết thúc bình thường. */
   async function reload() {
-    setAccount(await getAccount(id));
+    try {
+      setAccount(await getAccount(id));
+    } catch {
+      setNotice(null);
+      setLoadError("Không tải lại được tài khoản. Hãy tải lại trang.");
+    }
   }
 
   if (loadError) {
@@ -129,15 +134,9 @@ export function AccountDetailPage() {
               {reopening ? "Mở lại tài khoản" : "Vô hiệu hóa tài khoản"}
             </Button>
           </Section>
+          {/* Link "Mở Nhật ký audit đã lọc theo tài khoản" (/admin/audit?targetId=...) thêm lại khi màn Audit Log của U02 có. */}
           <Section title="Lịch sử">
             <p className="text-[13px] text-body">Lịch sử thay đổi của tài khoản xem ở Nhật ký audit.</p>
-            <Link
-              href={`/admin/audit?targetId=${account.id}`}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-            >
-              Mở Nhật ký audit đã lọc theo tài khoản
-              <Icon name="arrow_forward" size={16} />
-            </Link>
           </Section>
         </div>
       </div>

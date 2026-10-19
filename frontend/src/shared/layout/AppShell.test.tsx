@@ -37,6 +37,19 @@ describe("AppShell", () => {
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
   });
 
+  it("có hồ sơ từ phiên thì dùng luôn, không tải lại", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <AppShell role="STUDENT" nav={[]} user={{ displayName: "Vũ Minh Tài" }}>
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+
+    expect(screen.getByText("Vũ Minh Tài")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("bấm Đăng xuất mở popup xác nhận, Hủy thì đóng", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 401 })));
     render(

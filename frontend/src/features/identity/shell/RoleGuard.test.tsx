@@ -27,7 +27,10 @@ function renderGuarded() {
 }
 
 describe("RoleGuard", () => {
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+    window.history.replaceState({}, "", "/");
+  });
 
   it("đúng role thì hiện nội dung", async () => {
     getProfileMock.mockResolvedValue(profile("ADMIN", "/admin/accounts"));
@@ -36,9 +39,9 @@ describe("RoleGuard", () => {
   });
 
   it("sai role thì chuyển về trang của mình, không hiện nội dung", async () => {
-    getProfileMock.mockResolvedValue(profile("STUDENT", "/classes"));
+    getProfileMock.mockResolvedValue(profile("STUDENT", "/profile"));
     renderGuarded();
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/classes"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/profile"));
     expect(screen.queryByText("Nội dung quản trị")).not.toBeInTheDocument();
   });
 
@@ -46,5 +49,12 @@ describe("RoleGuard", () => {
     getProfileMock.mockRejectedValue(new ApiError({ status: 401 }));
     renderGuarded();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
+  });
+
+  it("hết phiên giữa chừng thì về /login kèm trang đang mở để quay lại", async () => {
+    window.history.replaceState({}, "", "/admin/accounts?page=2");
+    getProfileMock.mockRejectedValue(new ApiError({ status: 401 }));
+    renderGuarded();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?next=%2Fadmin%2Faccounts%3Fpage%3D2"));
   });
 });

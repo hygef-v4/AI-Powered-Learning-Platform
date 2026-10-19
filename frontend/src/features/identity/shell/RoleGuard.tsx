@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
-import { useSession } from "../session";
+import { loginPathFor, useSession } from "../session";
 
 /**
  * Chặn route theo role để trải nghiệm tốt (BR-U01-48): chưa đăng nhập → /login, sai role → homePath của mình.
@@ -15,7 +15,7 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
   const allowed = session.status === "authenticated" && (!roles || roles.includes(session.profile.role));
 
   useEffect(() => {
-    if (session.status === "anonymous") router.replace("/login");
+    if (session.status === "anonymous") router.replace(loginPathFor(window.location));
     else if (session.status === "authenticated" && !allowed) router.replace(session.profile.homePath);
   }, [session, allowed, router]);
 

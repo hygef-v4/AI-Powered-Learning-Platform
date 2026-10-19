@@ -12,10 +12,14 @@ export function clearCurrentUser(): void {
   cached = null;
 }
 
-/** Hồ sơ của người đang đăng nhập (GET /api/v1/me/profile của U01); lỗi thì null, không chặn trang. */
-export function useCurrentUser(): CurrentUser | null {
+/**
+ * Hồ sơ của người đang đăng nhập (GET /api/v1/me/profile của U01); lỗi thì null, không chặn trang.
+ * `enabled = false` khi nơi gọi đã có hồ sơ từ phiên U01 (không tải lần hai).
+ */
+export function useCurrentUser(enabled = true): CurrentUser | null {
   const [user, setUser] = useState<CurrentUser | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     cached ??= apiFetch<CurrentUser>("/api/v1/me/profile").catch(() => {
       cached = null;
@@ -27,6 +31,6 @@ export function useCurrentUser(): CurrentUser | null {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
   return user;
 }

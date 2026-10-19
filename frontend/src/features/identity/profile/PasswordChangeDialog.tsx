@@ -53,6 +53,9 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
       if (problem.code === "CURRENT_PASSWORD_INVALID") {
         setError("Mật khẩu hiện tại không đúng.");
         setCurrent("");
+      } else if (problem.code === "TOO_MANY_ATTEMPTS") {
+        setError("Nhập sai mật khẩu hiện tại quá nhiều lần, hãy thử lại sau ít phút.");
+        setCurrent("");
       } else if (problem.code === "PASSWORD_POLICY") {
         setError((problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" "));
       } else {
