@@ -4833,3 +4833,10 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Conflict resolution and compatibility check only; final merge commit remains pending in GitHub Desktop. Existing independent browser/provider/DB/NFR acceptance gates and skipped tests unchanged.
 
 ---
+
+## Code Generation - U12 planning
+**Timestamp**: 2026-10-19T19:45:00Z
+**AI Response**: Theo yêu cầu "code hết" của người dùng, tạo nhánh `group-assignment` từ `grading` và chi tiết hóa plan U12 (Part 1): phạm vi bỏ tool MCP `read_authorized_group_submission` (giao người làm AI chấm bài theo đề xuất người dùng đã đồng ý), 9 khác biệt (U07/U08 chưa có code, bảng `class_group_sets`, migration không FK tới `assignments`, action `GROUP_MANAGE`/`GROUP_WORK`, JdbcClient và khóa dòng mục, `RabbitSseHub` với heartbeat, API danh sách bài nhóm, route `[id]`, DOCX qua `IDocx`), 14 bước. Tiếp tục Part 2 theo chỉ đạo "hãy code hết đi đã"; plan trình bày lại khi review.
+**Context**: Construction, U12 Code Generation Part 1
+
+---
