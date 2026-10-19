@@ -2,6 +2,7 @@ package edu.aiplatform.identity.contract.stub;
 
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -83,6 +84,11 @@ public class IdentityContractStubs {
 
             @Override
             public List<UUID> listManagedSubjects(UUID accountId) {
+                return List.of();
+            }
+
+            @Override
+            public List<UUID> releaseManagerAssignments(UUID accountId, Actor actor) {
                 return List.of();
             }
         });

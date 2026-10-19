@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useState, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
 import { useCurrentUser, type CurrentUser } from "@/shared/auth/useCurrentUser";
 import { cx } from "@/shared/ui/cx";
@@ -91,11 +91,15 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
       <div className="flex min-h-[calc(100vh-64px)] flex-1">
         <aside className="w-[236px] shrink-0 border-r border-line bg-white px-3 py-5">
           <nav aria-label={`Menu ${roleLabel}`} className="flex flex-col gap-1">
-            {nav.map((item) => {
+            {nav.map((item, index) => {
               const active = item.href === current;
+              const heading = item.section && item.section !== nav[index - 1]?.section ? item.section : null;
               return (
+                <Fragment key={item.href}>
+                  {heading && (
+                    <span className="mx-3.5 mt-3 mb-1 text-[10.5px] font-bold tracking-[.06em] text-faint uppercase">{heading}</span>
+                  )}
                 <Link
-                  key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cx(
@@ -108,6 +112,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
                   <Icon name={item.icon} filled={active} className={active ? undefined : "text-muted"} />
                   <span>{item.label}</span>
                 </Link>
+                </Fragment>
               );
             })}
           </nav>

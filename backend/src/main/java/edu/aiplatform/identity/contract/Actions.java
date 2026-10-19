@@ -28,6 +28,21 @@ public final class Actions {
     public static final String SETTINGS_VIEW = "SETTINGS_VIEW";
     public static final String SETTINGS_EDIT = "SETTINGS_EDIT";
 
+    // U04 — quản trị môn học (chỉ ADMIN, BR-U04-01)
+    public static final String SUBJECT_LIST = "SUBJECT_LIST";
+    public static final String SUBJECT_VIEW = "SUBJECT_VIEW";
+    public static final String SUBJECT_CREATE = "SUBJECT_CREATE";
+    public static final String SUBJECT_UPDATE = "SUBJECT_UPDATE";
+    public static final String SUBJECT_MANAGER_CHANGE = "SUBJECT_MANAGER_CHANGE";
+    public static final String SUBJECT_STATUS_CHANGE = "SUBJECT_STATUS_CHANGE";
+
+    // U05 — lớp và ghi danh: vào màn theo vai trò, xem một lớp (R3/R5), quản lý lớp của môn (R2)
+    public static final String CLASS_STUDENT = "CLASS_STUDENT";
+    public static final String CLASS_TEACHER = "CLASS_TEACHER";
+    public static final String CLASS_MANAGER = "CLASS_MANAGER";
+    public static final String CLASS_VIEW = "CLASS_VIEW";
+    public static final String CLASS_MANAGE = "CLASS_MANAGE";
+
     private Actions() {
     }
 }

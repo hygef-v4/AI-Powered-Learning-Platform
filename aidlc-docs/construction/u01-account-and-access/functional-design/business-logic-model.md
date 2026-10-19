@@ -172,7 +172,7 @@ Nút "Nhập CSV" trên Account List; giữ theo quyết định của người 
 
 **Vô hiệu hóa**:
 1. Kiểm quyền; áp BR-U01-65, 66 như F11.
-2. Chuyển `DISABLED`, xóa mọi phiên, xóa OTP còn hiệu lực (BR-U01-71).
+2. Chuyển `DISABLED`; trong cùng transaction gọi `ISubjectScope.releaseManagerAssignments` để U04 gỡ người đó khỏi Chủ nhiệm của mọi môn (BR-U04-12); xóa mọi phiên, xóa OTP còn hiệu lực (BR-U01-71).
 3. Ghi audit `ACCOUNT_DISABLED`.
 
 **Mở lại**:

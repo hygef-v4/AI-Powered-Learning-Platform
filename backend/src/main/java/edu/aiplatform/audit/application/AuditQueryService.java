@@ -1,0 +1,187 @@
+package edu.aiplatform.audit.application;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.audit.contract.AuditEvent;
+import edu.aiplatform.audit.contract.AuditFilter;
+import edu.aiplatform.audit.contract.AuditLogView;
+import edu.aiplatform.audit.contract.AuditResult;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.audit.contract.IAuditQuery;
+import edu.aiplatform.audit.domain.AuditLogRepository;
+import edu.aiplatform.audit.domain.AuditRow;
+import edu.aiplatform.identity.contract.AccountContact;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.IAccountLookup;
+import edu.aiplatform.identity.contract.IAuthorization;
+import edu.aiplatform.identity.contract.ResourceRef;
+import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.shared.error.ApiException;
+import java.time.Clock;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Cài {@link IAuditQuery} (A2, UC 13): chỉ {@code ADMIN}, kiểm quyền lỗi thì từ chối (BR-U02-07, 50); lọc, mới nhất
+ * trước, tối đa 100 dòng mỗi trang (BR-U02-08); email người thực hiện lấy lúc đọc (BR-U02-09); mọi lần tra cứu được
+ * audit {@code AUDIT_QUERIED}.
+ */
+@Service
+public class AuditQueryService implements IAuditQuery {
+
+    public static final String READ_ACTION = "AUDIT_READ";
+    public static final String OBJECT_TYPE = "AUDIT_LOG";
+    public static final int MAX_PAGE_SIZE = 100;
+    static final int MAX_ACTION = 100;
+    static final int MAX_OBJECT_TYPE = 50;
+    static final int MAX_OBJECT_ID = 200;
+    private static final TypeReference<Map<String, Object>> MAP = new TypeReference<>() {
+    };
+
+    private final AuditLogRepository repository;
+    private final IAuthorization authorization;
+    private final IAccountLookup accounts;
+    private final IAudit audit;
+    private final ObjectMapper objectMapper;
+    private final Clock clock;
+
+    public AuditQueryService(AuditLogRepository repository, IAuthorization authorization, IAccountLookup accounts,
+                             IAudit audit, ObjectMapper objectMapper, Clock clock) {
+        this.repository = repository;
+        this.authorization = authorization;
+        this.accounts = accounts;
+        this.audit = audit;
+        this.objectMapper = objectMapper;
+        this.clock = clock;
+    }
+
+    @Override
+    @Transactional
+    public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page) {
+        requireAdmin(actor);
+        AuditFilter normalized = normalize(filter);
+        validatePage(page);
+        long total = repository.count(normalized);
+        List<AuditRow> rows = total == 0 ? List.of()
+                : repository.find(normalized, page.getOffset(), page.getPageSize());
+        Map<UUID, String> emails = emailsOf(rows);
+        List<AuditLogView> items = rows.stream()
+                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId())))
+                .toList();
+        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AUDIT_QUERIED", OBJECT_TYPE, null,
+                AuditResult.SUCCESS, null, describe(normalized, page), clock.instant()));
+        return new PageImpl<>(items, page, total);
+    }
+
+    /** Fail closed: không có actor, không phải Admin, U01 từ chối hoặc lỗi đều bị từ chối và được audit. */
+    private void requireAdmin(Actor actor) {
+        boolean allowed;
+        try {
+            allowed = actor != null && actor.role() == Role.ADMIN
+                    && authorization.authorize(actor, READ_ACTION, ResourceRef.none()).allowed();
+        } catch (RuntimeException e) {
+            allowed = false;
+        }
+        if (!allowed) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
+                    OBJECT_TYPE, null, AuditResult.DENIED, READ_ACTION, Map.of(), clock.instant()));
+            throw ApiException.forbidden("AUDIT_FORBIDDEN");
+        }
+    }
+
+    /** Chuỗi rỗng coi như không lọc; quá độ dài cột hoặc {@code from} sau {@code to} là bộ lọc sai. */
+    static AuditFilter normalize(AuditFilter filter) {
+        if (filter == null) {
+            return new AuditFilter(null, null, null, null, null, null, null);
+        }
+        AuditFilter result = new AuditFilter(filter.actorId(), text(filter.action(), MAX_ACTION, "action"),
+                text(filter.objectType(), MAX_OBJECT_TYPE, "objectType"),
+                text(filter.objectId(), MAX_OBJECT_ID, "objectId"), filter.result(), filter.from(), filter.to());
+        if (result.from() != null && result.to() != null && result.from().isAfter(result.to())) {
+            throw invalid("Thời điểm bắt đầu phải trước thời điểm kết thúc");
+        }
+        return result;
+    }
+
+    private static String text(String value, int max, String field) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() > max) {
+            throw invalid("Giá trị lọc " + field + " dài quá " + max + " ký tự");
+        }
+        return trimmed;
+    }
+
+    private static void validatePage(Pageable page) {
+        if (page == null || page.isUnpaged() || page.getPageSize() < 1 || page.getPageSize() > MAX_PAGE_SIZE) {
+            throw invalid("Mỗi trang từ 1 đến " + MAX_PAGE_SIZE + " bản ghi");
+        }
+    }
+
+    private static ApiException invalid(String message) {
+        return ApiException.badRequest("AUDIT_FILTER_INVALID", message);
+    }
+
+    /** Mỗi người thực hiện tra một lần; U01 lỗi hoặc không có thì để trống, không làm hỏng trang. */
+    private Map<UUID, String> emailsOf(List<AuditRow> rows) {
+        Map<UUID, String> emails = new HashMap<>();
+        rows.stream().map(AuditRow::actorId).filter(Objects::nonNull).distinct().forEach(id -> {
+            try {
+                accounts.getContact(id).map(AccountContact::email).ifPresent(email -> emails.put(id, email));
+            } catch (RuntimeException e) {
+                // Bỏ qua: dòng audit vẫn hiện, chỉ thiếu email.
+            }
+        });
+        return emails;
+    }
+
+    private AuditEvent toEvent(AuditRow row) {
+        return new AuditEvent(row.id(), row.actorId(), row.action(), row.objectType(), row.objectId(),
+                AuditResult.valueOf(row.result()), row.reason(), parse(row.detailsJson()), row.occurredAt());
+    }
+
+    private Map<String, Object> parse(String json) {
+        if (json == null || json.isBlank()) {
+            return Map.of();
+        }
+        try {
+            return objectMapper.readValue(json, MAP);
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    /** Bộ lọc đã dùng, ghi vào {@code AUDIT_QUERIED}; chỉ id, không có email. */
+    private static Map<String, Object> describe(AuditFilter filter, Pageable page) {
+        Map<String, Object> details = new LinkedHashMap<>();
+        if (filter.actorId() != null) {
+            details.put("actorId", filter.actorId().toString());
+        }
+        putIfPresent(details, "action", filter.action());
+        putIfPresent(details, "objectType", filter.objectType());
+        putIfPresent(details, "objectId", filter.objectId());
+        putIfPresent(details, "result", filter.result() == null ? null : filter.result().name());
+        putIfPresent(details, "from", filter.from() == null ? null : filter.from().toString());
+        putIfPresent(details, "to", filter.to() == null ? null : filter.to().toString());
+        details.put("page", page.getPageNumber());
+        details.put("size", page.getPageSize());
+        return details;
+    }
+
+    private static void putIfPresent(Map<String, Object> details, String key, String value) {
+        if (value != null) {
+            details.put(key, value);
+        }
+    }
+}

@@ -1,5 +1,116 @@
 # AI-DLC State Tracking
 
+## U04 Conventional Commits publication — 2026-10-18
+
+- Người dùng yêu cầu phân loại/tạo commit Conventional Commits và push GitHub, thay hạn chế chưa commit trước đó. Branch hiện có subject-administration; fetch origin xác nhận không diverge, không đổi main/rewrite history.
+- Commit chia theo backend feature+tests, shared Dialog fix+tests, frontend feature+tests và docs handoff. Mỗi message có What/Why/Validation, Refs KAN-24; không dùng message chung chung hoặc gộp file khác unit.
+- Trước commit: Maven verify278 PASS gồm31 PostgreSQL fixture cases,0 lỗi/skip, jar build PASS; container loopback tạm có random process-env password được xác minh tên/label và dọn. Frontend evidence cuối124 PASS, typecheck/lint/build, source không đổi khi chuẩn bị commit. Real provider/JWT/CSRF/NFR/tester gates vẫn pending.
+- Người dùng đã chuyển manual TEMP ra ngoài repo; đã đối chiếu bản đó và không sửa/đưa lại repo. Hai TEMP staged được loại khỏi index sau sao lưu ignored, quyết định cần giữ ở implementation-decisions.md; links tài liệu đổi sang relative và được kiểm. Không publish fixture/log/build output/local screenshot hoặc secret, không cập nhật Jira/nhắn owner. Kết quả push/ref cuối được xác minh qua Git khi xuất bản.
+
+## Bàn giao frontend U04 ngày18/10/2026
+
+- Người dùng yêu cầu “hoàn thành nốt frontend để bàn giao unit 4”; đã hoàn thiện toàn màn/luồng consumer còn lại F05/F06/F08: SubjectInfoTab/EditForm, ManagerChangeDialog dùng picker, SubjectStatusActions và ArchiveRejectedDialog; detail khóa editor/action cạnh tranh và dùng chung version từ GET. Code readonly, archived metadata/manager theo Q10, null unassign rõ ràng, version conflict giữ draft chờ user reload, không optimistic/auto retry mutation.
+- Success đóng editor/refetch enrichment/classes, GET lỗi sau commit vẫn báo đã lưu và retry chỉ đọc; mutation401/403 che privileged detail, đổi subjectId remount bỏ callback/draft cũ. Focus về action sau cancel/save/reload hoặc notice khi GET fail. Blocker OPEN+DRAFT chỉ đọc, count/partial/malformed khác0, không link lớp hoặc student count theo Q07.
+- Thêm32 test (9 edit/6 manager/11 status/6 detail integration); toàn frontend124/24 file PASS cuối với --maxWorkers=4, không nới timeout/assertion. Typecheck/lint/build PASS; một lượt test song song Next dev2 timeout, dừng server và giới hạn tài nguyên rồi pass. Typecheck đầu lỗi count có thể undefined đã sửa narrow number. Backend không sửa/chạy lại, không cộng bằng chứng backend cũ thành run mới.
+- Desktop browser fixture loopback kiểm hai phiên conflict giữ draft→user reload, edit, unassign, archive/reopen đổi version/nút, archive reject OPEN+DRAFT và classes readonly. Ảnh ngoài repo u04-version-conflict.png/u04-archived-detail.png/u04-archive-rejected.png. Tab/server riêng đã đóng/dừng theo PID+command line xác minh, dọn fixture/script/metadata và Next agent files tự sinh. Chưa chứng nhận provider thật/mobile/cross-browser/NFR.
+- Frontend code consumer sẵn sàng review/tích hợp; F02 RoleGuard và F04 account-search adapter/schema, shared auth/CSRF thật U01 vẫn pending. B03 schema, B08 account guard/Q14, B09 U05 checker/writers, B10 durable/dedup audit, independent tester/NFR không được đánh complete. Tài liệu `construction/u04-subject-administration/code/frontend-handoff.md` có contract/files/checklist và gate bàn giao. Giữ index, không commit/push/Jira/nhắn owner; TEMP phải dọn trước PR main.
+
+## Lát cắt F04 form thêm môn U04 ngày2026-10-18
+
+- Có SubjectFormDialog, ManagerPicker và managerSearch boundary; list mở dialog, chỉ success POST mới đóng/refetch/counts, giữ filter hiện tại. Validate/normalize và gửi managerId/null, không contact/role; duplicate và manager invalid hiện lỗi sửa được,401/403 riêng, lỗi chưa rõ giữ draft/không auto retry. Pending ref chặn hai submit cùng lúc; khóa input/cancel/close/Escape/backdrop.
+- Shared Dialog thêm size lg/viewport scroll/focus trap/return focus/dismissible, mặc định consumer cũ giữ nguyên. Frontend92 test/20 file PASS (thêm22), typecheck/lint/build PASS. Browser QA phát hiện focus khi nút mở disabled do refetch; sửa và kiểm lại cả success/GET failure, xác nhận thực tế return focus. Fixture chỉ loopback, đã đóng tab/dừng server/dọn script; không phải provider thật. Test/build sandbox lần đầu lỗi ENOENT cache/Access denied SWC, chạy lại quyền đọc hợp lệ pass, không nới test/config/dependency.
+- Chưa có implementation/schema/acceptance U01 account search trong checkout; boundary default503, không gọi HTTP đoán/schema giả hoặc cung cấp fixture production. F04 form/picker consumer complete, F04 tổng chờ adapter thật. B12/RoleGuard/CSRF, B03 schema, B08 Q14/account guard, B09 U05 writers, B10 durable/dedup và NFR/tester giữ pending. Backend không sửa, không chạy lại Maven/DB.
+- Đọc `construction/u04-subject-administration/code/create-form-review.md`; tiếp theo F05 sửa metadata/version conflict. Không commit/push/Jira/nhắn owner hoặc thay index; TEMP phải dọn trước PR main.
+
+## Lát cắt frontend đọc và security consumer U04 ngày 2026-10-18
+
+- Có hai route subjects; F03 list/search/debounce/status counts/page và F07 classes chỉ đọc đã có code/test. Detail có info/manager/meta và lazy classes,401/403/404/retry, bỏ response cũ. F05/F06 mới phần hiển thị, forms/mutations F04–F06/F08 còn pending. F02 tổng vẫn pending RoleGuard U01; current-user chưa có role/auth state, admin layout hard-code không phải bằng chứng quyền.
+- Frontend70 test/17 file PASS, typecheck/lint/production build PASS. Browser desktop kiểm list/detail/classes/filter với API fixture loopback chỉ cho QA, không tích hợp vào production; đã đóng tab/dừng server. Không chứng nhận mobile/provider/auth thật.
+- Backend chỉ thêm test matrix cả7 endpoint với anonymous/ba role khác Admin/U01 deny/unavailable/null; target42 PASS (39 HTTP consumer +3 architecture),0 lỗi/skip. Không đổi backend production, không chạy lại toàn DB; full271/31 PostgreSQL là bằng chứng B11 trước. B12 JWT/session/CSRF/filter-chain và các gate U01/U02/U05/Q14/NFR/tester vẫn pending.
+- Hướng dẫn: `construction/u04-subject-administration/code/frontend-read-review.md`. Tiếp theo F04 dialog thêm và ManagerPicker theo boundary đề xuất, không đưa account fixture vào runtime production. Giữ nguyên Git index; không commit/push/Jira/nhắn owner. Tài liệu TEMP phải dọn trước PR main.
+
+## Lát cắt REST API U04 ngày 2026-10-18
+
+- Sau lệnh “tiếp tục đi”, B11 có bảy endpoint SubjectAdminController, SubjectRequests JSON whitelist/type/presence, SubjectResponses snapshot và SubjectExceptionHandler scoped. Actor chỉ từ AuthenticationPrincipal; parser không lấy role/actorId request, không đổi Jackson/security/shared handler hoặc dependency. PATCH chỉ metadata, manager PUT bắt buộc có field kể cả null, version JSON integer; GET list whitelist q/status/page/size, q max200 và không repeated params.
+- POST201 + relative Location; command response không đọc lại sau commit, manager/classCount unknown=null; GET enrich như B07. ProblemDetail có fieldErrors khi parser lỗi, archive count/blockers sau authorize, phân biệt duplicate/version/integrity/storage/unexpected và không lộ SQL/stack trace.
+- Toàn Maven271 test PASS,0 failures/errors/skipped,31 PostgreSQL16.15 regression cases và32 HTTP consumer cases mới,3 rule ArchUnit. Lần đầu30 HTTP pass rồi bổ sung2 case filter/paging và explicit-null manager. Test standalone MockMvc + service thật/repo/provider mocks, principal fixture phía server; không filter chain/JWT/HTTP+DB end-to-end. Container test đã dọn, giữ index; không commit/push/Jira/nhắn owner.
+- Mark B11/bước5 API complete ở cấp code/developer checks; B12 JWT/session/CSRF thật và các gate U01/U02/U05, Q14, NFR/tester độc lập vẫn pending. Đọc `construction/u04-subject-administration/code/api-review.md`. Tiếp tục consumer security checks/route/screens theo plan, không chặn toàn bộ việc code vì chưa bàn giao.
+
+## Tiếp tục code-generation-plan và audit consumer U04 ngày 2026-10-18
+
+- Người dùng muốn tiếp tục hoàn thiện code-generation-plan dù nhóm chưa chốt bàn giao. Tiếp tục phần U04 theo checkpoint review; không yêu cầu chờ toàn Epic/provider hoặc tự nhận integration xong. Phần tiếp theo sau B10 là B11 API, rồi security/route/screens/tests theo kế hoạch hiện có.
+- B10 consumer thêm ACCESS_DENIED trong SubjectAdminAccess dùng chung, không copy provider reason/secret; audit denied lỗi trả SUBJECT_AUDIT_UNAVAILABLE503 và vẫn chặn quyền. SubjectAuditRecorder.accessDenied NOT_SUPPORTED tạm dừng caller, U02 vẫn phải mở tx riêng; năm success hooks vẫn MANDATORY. Service đọc thêm injection audit/Clock, command/status dùng cùng helper.
+- Toàn Maven239 pass,0 failures/errors/skipped,31 PostgreSQL16.15 case;9 unit audit mới,2 DB fixture mới. Có DENIED fixture sống sau outer command rollback và SUCCESS fixture audit row/subject commit hoặc rollback cùng nhau; không phải implementation/schema thật U02. Kiểm unit/regression trước đó73 pass. Container riêng đã dọn, Git index giữ nguyên, không commit/push/Jira/nhắn owner.
+- B10 tổng vẫn pending durable provider U02, dedup U01 và Q14; B08/B09 provider integration, U01 migration/JWT/session và NFR/tester thật chưa xong. Đọc `construction/u04-subject-administration/code/audit-review.md`. Không coi mục tiêu hoàn thiện code là cho phép bỏ các gate hoặc mở production mock/allow.
+
+## Lát cắt lifecycle U04 ngày 2026-10-18
+
+- Sau người dùng hỏi khóa account và cho “tiếp tục đi”, thực hiện B09 core: SubjectStatusService archive/reopen, ISubjectMutationGuard/SubjectMutationGuard, SubjectLifecycleBudget, typed archive rejection và status success audit hooks. Khóa subject giữ trong caller transaction READ_COMMITTED, timeout lock/query PostgreSQL có restore khi thành công, không dùng reader async B07.
+- Thêm contract ISubjectArchiveCheck U04-owned nhận remainingBudget, count+blockers cùng transaction; chưa có provider production/default stub. Giữ nguyên ISubjectClasses legacy; archive fail closed503 khi thiếu checker mới dù legacy count0, reopen không đọc/sửa lớp. Hai contract mới cần U05 xác nhận và nối mọi writer create/open/reopen; không tự nhận đã bàn giao/triển khai U05.
+- Maven228 test PASS,0 failures/errors/skipped,29 PostgreSQL16.15 case; thêm22 unit lifecycle/guard,1 wiring và8 DB case. Có SQL/lock timeout thật, restore setting/isolation guard, status audit rollback và hai thứ tự lock với lớp fixture. Account/auth/audit vẫn test doubles; fixture không thay U05 implementation hoặc independent tester. Chưa đo NFR p95/hard latency của provider thật.
+- Đánh subtask core/developer checks B09 và hai success audit hooks; B09/B10 tổng vẫn pending cùng B08 account guard/Q14. Hướng dẫn `construction/u04-subject-administration/code/lifecycle-review.md`; chưa có HTTP/JWT thực tế/frontend screen. Dọn container test riêng, giữ Git index; không commit/push/Jira/nhắn owner.
+
+## Lát cắt command core U04 ngày 2026-10-18
+
+- Sau review B07 và lệnh “tiếp tục đi”, triển khai B08 core ở SubjectCommandService, helper quyền dùng chung SubjectAdminAccess và ba success audit hook qua SubjectAuditRecorder. Create/update metadata/change manager có transaction, Clock, version/no-op/CAS; repo thêm đọc khóa môn MANDATORY, sau khóa account khi đổi phân công.
+- Production gate account U01 chưa có; boundary ISubjectManagerAssignmentGate chỉ nội bộ U04 chờ adapter. Thiếu provider thì create có manager và mọi thay đổi phân công thật (kể cả bỏ) trả503, không giả kiểm contact là khóa. Tạo không manager/metadata vẫn hoạt động; same-manager valid no-op không cần gate. Q14 tự gỡ khi disable chưa triển khai; không viết SQL account production hoặc sửa implementation U01.
+- Clean Maven test PASS197,0 failures/errors/skipped,21 PostgreSQL16.15 cases. Thêm25 test command,1 wiring và5 DB cases: proxy transaction, audit exception rollback insert/update/manager, lock giữ sau detach, concurrent create trả1 success/1 duplicate. DB gate chỉ khóa accounts UUID fixture, contacts/audit dùng mock; chưa chứng minh guard U01 hoặc atomic audit U02 thật. Sửa tên interface thiếu I theo ArchUnit, không thay rule/test để bỏ kiểm.
+- B08/B10 tổng vẫn pending; chỉ đánh subtask có bằng chứng. Hướng dẫn `construction/u04-subject-administration/code/command-review.md`. Chưa có B09 lifecycle/status, HTTP/JWT thật, frontend screen; chưa đo p95 hoặc gán/disable thật. Dọn container test riêng sau chạy, giữ Git index, không commit/push/Jira.
+
+## Lát cắt service đọc Admin U04 ngày 2026-10-18
+
+- Sau review B06 và lệnh “tiếp tục đi”, triển khai B07: SubjectAdminService/SubjectAdminViews/SubjectClassesReader. Kiểm ADMIN + IAuthorization trước đọc; list/detail/classes, paging/counts Q08, contact dedup mỗi request, classes count batch theo trang và deadline1s với tài nguyên giới hạn. Lỗi auth chặn đọc, lỗi DB không bị giả thành empty, lỗi contact/classes chỉ hạ phần hiển thị.
+- Toàn backend166 test pass,0 failures/errors/skipped, gồm16 PostgreSQL16.15 case cũ và22 test mới (15 admin read,6 deadline/reader,1 wiring),3 rule ArchUnit. Container test riêng được dọn; không thay frontend, Git index, U01/U05 implementation, dependency hoặc config chung.
+- Đánh hoàn thành riêng B07 trong kế hoạch tạm; service F1–F6 chính thức vẫn pending command/guard/audit. Đọc `construction/u04-subject-administration/code/admin-read-review.md`; sau review sẽ sang B08. Tên action consumer cần đối chiếu U01; chưa có bằng chứng JWT/session/provider thật hoặc NFR p95. B03 migration U01 thật, B10 audit denied, Q14 và HTTP API vẫn pending. Không commit/push/Jira.
+
+## Lát cắt query và scope U04 ngày 2026-10-18
+
+- Người dùng đã đọc persistence-review và cho tiếp tục B06. Đã cài SubjectQueryService/ISubjectQuery và SubjectScopeService/ISubjectScope bằng repository U04; scope chỉ kiểm phân công hiện thời, không gọi ngược authorization U01, không cache hoặc loại môn archived. U01 vẫn kiểm current session/role/account ACTIVE.
+- Đã thêm existsByIdAndManagerId cho kiểm scope một truy vấn và14 unit/wiring test; thêm1 PostgreSQL case A→B→null/archived/global counts. Toàn backend144 test pass,0 failures/errors/skipped, gồm16 case PostgreSQL16.15 và3 rule ArchUnit. Context tối thiểu xác nhận bean query/scope thật tự thay đúng stub; provider classes vẫn là placeholder đến khi U05 giao bean thật.
+- Theo Q05 đã chốt, ISubjectClasses placeholder U04 ném SUBJECT_CLASSES_UNAVAILABLE, không trả rỗng/0 giả. Không sửa contract signature, IdentityContractStubs hoặc implementation U01/U05. Chưa có HTTP auth/admin controller, guard lifecycle hoặc disable tự gỡ môn.
+- Đánh [x] B06/bước interface tương ứng trong plan chính thức; B03 với migration U01 thật và tester độc lập vẫn pending. Đọc `construction/u04-subject-administration/code/query-scope-review.md`; bước sau review là B07 service đọc quản trị môn, guard/lifecycle vẫn cần phối hợp theo kế hoạch. Không commit, push, Jira write hoặc thay Git index.
+
+## Lát cắt persistence U04 ngày 2026-10-18
+
+- Người dùng đã đọc B04/F01 và yêu cầu “đã đọc xong, tiếp tục đi”; triển khai riêng B03/B05 để review tiếp. Đã thêm migration subjects, SubjectJpaEntity, ISubjectJpaRepository và SubjectRepositoryAdapter; mở rộng boundary nội bộ với search/page/count/managed-subject. Không có service/controller/scope/guard mới hoặc thay code U01/U05.
+- B05 developer checks đã pass: toàn backend129 test,0 failures/errors/skipped, gồm15 persistence test trên PostgreSQL16.15 thật và3 rule ArchUnit. Kiểm schema/Flyway, public1↔DB0, stale/concurrent update, duplicate concurrent insert, FK/check/grants, query literal, rollback và persistence context không clear cả unit khác.
+- B03 đã có SQL cùng kiểm riêng, nhưng còn [ ] chạy toàn chuỗi với migration accounts thật U01. Test dùng accounts UUID fixture chỉ trong src/test/resources, schema riêng có UUID; không giả nhận U01 schema hoặc G1 đã xong. Tester độc lập vẫn cần review/integration evidence liên unit.
+- Đánh [x] B05 và các subtask B03 có bằng chứng; không đánh complete U04 hay migration gate chung. Đọc `construction/u04-subject-administration/code/persistence-review.md`; bước sau sau review là B06 query/scope và guard phối hợp U05. Không commit, push, Jira write hoặc thay Git index.
+
+## Lát cắt code U04 đầu tiên ngày 2026-10-18
+
+- Người dùng yêu cầu “bắt tay vào làm luôn” sau kế hoạch song song. Phạm vi lượt đầu là B04 domain/test và F01 frontend foundation/test để review; không triển khai cả U04 hoặc phần U01/U05.
+- B04 đã có SubjectCode, Subject bất biến và ISubjectRepository nội bộ. Maven toàn backend pass114 test, gồm20 lượt test domain U04 và3 rule ArchUnit. Chưa có migration, persistence adapter, service hoặc controller U04; test trên không là integration evidence.
+- F01 frontend types/API/validation có15 lượt test U04 pass; toàn frontend49 test pass, typecheck/lint pass (typecheck đã chạy lại sau sửa mock). DTO web và API client chưa tích hợp server. Đọc `construction/u04-subject-administration/code/code-summary.md`. Giữ nguyên index/staging hiện có của người dùng, không git add/reset, commit/push hoặc Jira.
+- Đã đánh [x] B04/F01 trong kế hoạch tạm và bước domain tương ứng trong plan chính thức; các bước implementation còn lại chưa hoàn thành. Chờ người dùng review lát cắt này trước khi sang persistence/service theo cách làm chủ code đã yêu cầu.
+
+## Phiên lập kế hoạch U04 ngày 2026-10-18
+
+- Theo yêu cầu người dùng: chỉ lập kế hoạch tiếng Việt để người dùng tự code U04 Subject Administration (UC16–19), không triển khai ứng dụng, commit/push hoặc cập nhật Jira.
+- Đã khảo sát source tại HEAD `3f7e650`, thiết kế U04 hiện hành, phụ thuộc U01/U02/U05, SRS cục bộ ngày 09/10 và sáu UI artboard a05–a07d. Jira KAN-24 chưa đọc được qua công cụ; chưa xác nhận SRS Google mới nhất.
+- Kết quả tạm: `construction/plans/u04-kan24-manual-implementation-TEMP.md` (25 bước) và `construction/plans/u04-kan24-decisions-TEMP.md` (14 quyết định). Phải dọn hai file TEMP trước PR vào main; chuyển quyết định đã chốt sang tài liệu chính thức nếu cần giữ.
+- Đã đọc câu trả lời: Q01–Q11/Q13 chọn A; Q14 chọn X, disable Subject Manager tự gỡ phân công môn. Kế hoạch bổ sung B08-D (contract U01 khai báo/U04 cài, gỡ mọi môn ACTIVE/ARCHIVED, version/audit/transaction/race test); không tự mở rộng sang phân công giảng viên lớp. Q12 chọn X “Tôi không biết”: ghi phương án kỹ thuật đề xuất, không giả nhận người dùng đã chọn A/B.
+- Rà soát tiếp theo theo thông tin nhóm code song song U01–U05: đã đọc Jira KAN-18/KAN-21/KAN-24 qua trình duyệt đăng nhập và các story giao thoa KAN-144/146/50/140/150. Mapping U01 UC01–12, U04 UC16–19 (KAN-147–150), U05 UC20–30 khớp. Epic mô tả Blocks theo contract readiness cho tích hợp, không chờ toàn Epic Done. Kế hoạch tạm bổ sung owner/file ownership, C01–C06, thứ tự P0–P4 và mốc tích hợp G0–G5 riêng của U04; B12/B13 là nhận bàn giao U01. “Chưa có code” chỉ nói checkout local, chưa kiểm nhánh thành viên. Jira chỉ đọc, không thay trạng thái hoặc nội dung.
+- Không thay approval/checklist code chính thức hoặc đánh complete U04. Bước tiếp theo của người dùng: hoàn tất bàn giao/tài liệu B01 rồi code theo kế hoạch; JWT/session/OTP thuộc U01, audit persistence thuộc U02, dữ liệu lớp thuộc U05. Quyết định Q04/Q14 trong kế hoạch tạm cần đồng bộ baseline và owner trước tích hợp; các lịch sử bên dưới giữ nguyên.
+## U05 stash recovery — 2026-10-18
+
+- Người dùng yêu cầu commit local trên nhánh `Class&Enrollment`; sẽ tự merge U01/U04 khi các thành viên hoàn thành. Không push hoặc mở rộng scope tích hợp trong đợt này.
+- [x] Theo yêu cầu "giúp tôi xử lý", khôi phục 20 file backend/SQL/test từ stash `86fc91e092915f1b292019f782b99bbcfa55ee63`; ghép tài liệu/audit, giữ UI mới.
+- [x] Chuyển các test UI cũ còn thiếu, sửa khác biệt regex email backend/frontend; U05 có 29 test backend và 21 test frontend.
+- [x] Chạy mới: backend 123 test/29 suite qua, frontend 37 test/8 file qua; typecheck/lint và diff check qua. Component/CSS/preview giữ nguyên hash; không chạy lại build/browser vì không đổi frontend thực thi.
+- [x] Sao lưu vào `.tmp/u05-stash-recovery-2026-10-18/`; cả ba stash giữ nguyên, Git index không thay đổi, chưa commit/push.
+- U05 vẫn chờ U01/U04/U02 cho auth, API/service, DB và audit thật. SQL pending và persistence opt-in giữ nguyên. Chi tiết mới nhất: `construction/u05-class-enrollment/code/code-summary.md`.
+
+## U05 UI reference implementation — 2026-10-18
+
+- Người dùng yêu cầu: "check ui này và sửa lại ui cho phần u05 hiện tại", kèm `ui-reference.zip`. Nhánh `Class&Enrollment` chỉ có U05 slots lúc bắt đầu; implementation phiên cũ không có trong checkout này.
+- [x] Áp dụng phong cách HTML/CSS tham chiếu cho các view U05 và dialog, CSS module riêng, props/callback độc lập; giữ slot liên unit.
+- [x] Development preview `/preview/u05` có dữ liệu minh họa và ba vai trò; không dựng auth/API/backend giả. Server page chặn production bằng notFound.
+- [x] 32 test frontend (16 test U05) qua; typecheck/lint qua; browser desktop/mobile kiểm tạo lớp, detail, hủy gỡ và role. Mobile 390px không tràn toàn trang. Ảnh ở `.tmp/u05-ui-evidence/`.
+- [x] Build Webpack bản cuối qua; kiểm HTTP production: preview 404, không có nội dung minh họa; health 200. Trang development vẫn hoạt động tại `/preview/u05`.
+- Tài liệu: `construction/plans/u05-ui-reference-2026-10-18.md`, `construction/u05-class-enrollment/code/code-summary.md`.
+- Toàn bộ U05 và kiểm quyền/integration vẫn chưa complete. Chờ U01/U04 và các service/controller thật để nối dữ liệu; trạng thái lịch sử bên dưới không phải implementation scope hiện tại.
+
 ## Latest authorized UC-table synchronization
 
 - 65 active UC, 50 MVP stories + 1 extension, 15 units. Inception and Construction docs now follow docs/usecase_table.md. The untracked pre-sync snapshot in aidlc-docs/historical was removed at the user's request on 2026-10-14.
@@ -84,15 +195,15 @@
 
 ## Unit Progress
 
-Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16, mọi bước code của 15 unit còn [ ].
+Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16. Các dòng chưa cập nhật dưới đây giữ baseline lịch sử; riêng U05 được cập nhật theo Class & Enrollment hiện hành ngày 2026-10-18.
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
 | U01 Account & Access | Design revision 73 UC ngày 2026-10-09; Role/authentication cho mọi unit; counts cho Admin Dashboard. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết 2026-10-17 (UC 01–12, xem `u01-account-and-access/code/code-summary.md`; backend 206 test, frontend 50 test toàn repo), chưa chạy với datastore thật, chưa commit, chờ người dùng review |
-| U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Plan chi tiết hóa và được duyệt 2026-10-18 | Code và unit test viết 2026-10-18 trên nhánh `audit` (backend 26 test, frontend 11 test), người dùng duyệt 2026-10-18, chờ gộp qua PR |
 | U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U05 Content, Material & RAG | Design revision 73 UC ngày 2026-10-09; Tóm tắt/embedding và RAG cho AI; quiz/attempt do U08/U09/U11 giữ. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U05 Class & Enrollment | Current UC20-30 design and existing contracts; other rows retain historical baseline where noted. | Full completion authorized 2026-10-18; completion execution plan checked. | Code implemented: service/API/contracts and frontend wiring; backend 304 (U05: 210) / frontend 70 tests, lint/typecheck/build pass. Awaiting real cross-unit/schema/session integration; see construction/u05-class-enrollment/code/code-summary.md. |
 | U06 Rubric & Subject Question Bank | Design revision 73 UC ngày 2026-10-09; Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U07 Payment & AI Credit | Design revision 73 UC ngày 2026-10-09; Ví của ba role; snapshot payment, verified webhook và grant định kỳ qua Settings. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
@@ -164,3 +275,27 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Tách truy vết: UC23 là điểm truy cập; UC54 xem nhóm; UC55 gửi/hủy yêu cầu; UC57 giảng viên thao tác nhóm và xử lý yêu cầu.
 - [x] Kiểm 66 UC hiện hành, tên UC57 nhất quán, ánh xạ giao diện và diff Markdown. Kết quả: `inception/plans/uc57-document-sync-2026-10-14.md`.
 - Không chuyển stage, duyệt hoặc triển khai code; folder unit legacy và tài liệu lịch sử giữ nguyên.
+
+
+## U05 navigation merge repair - 2026-10-18
+- [x] Reproduce the removed dashboardNavEntries import after merging main (3edc6f1).
+- [x] Use the shared navEntries registry for external links; preserve local preview navigation and filter duplicate U05 entries.
+- [x] Add four real-registry regression tests; observe failure before repair and success after repair.
+- [x] Verify 59 frontend tests, lint, typecheck and production build all pass.
+- Scope and evidence: `construction/plans/u05-merge-nav-repair-2026-10-18.md`. Existing unit progress, backend integration limitations and extension configuration retained; no commit/push.
+
+## U05 Class & Enrollment code completion - 2026-10-18
+- [x] User authorizes full U05 against existing contracts, superseding the older dependency-free-only scope.
+- [x] Implement application lifecycle/enrollment services, scoped REST APIs and real IClassAccess/IClassScope/ISubjectClasses providers.
+- [x] Wire frontend production routes to APIs; preserve development-only fixtures and all five extension slots.
+- [x] Verify backend 164 tests, frontend 70 tests, lint/typecheck and production build; independent review's409 message defect repaired and re-reviewed.
+- Code-ready for merging with other units; SQL remains pending and U05_PERSISTENCE_ENABLED defaults false until real U01/U04 schemas/contracts are ready. U02 audit persistence, real session authorization and PostgreSQL concurrency remain tester/integration gates; they are not marked complete.
+- Results: `construction/u05-class-enrollment/code/code-summary.md`; execution: `construction/plans/u05-completion-2026-10-18.md`. No commit/push.
+
+## U05 unit test expansion - 2026-10-18
+- [x] Add read/scope/role matrix and successful DTO/candidate/summary cases, including denied write access on all nine mutation entrypoints.
+- [x] Add API request/response validation and server-principal mapping cases.
+- [x] Observe independent batch transactions, later-row failures/retry and an ambient caller rollback without requiring live PostgreSQL.
+- [x] Clean full backend run: 304 tests/36 suites pass; 210 U05 cases, including 140 newly added. Independent quality review and source SHA256 check passed.
+- Production source unchanged from before this test-only task. Coverage percentage and live integration are not claimed; no commit/push.
+- Evidence: `construction/plans/u05-unit-test-expansion-2026-10-18.md`.

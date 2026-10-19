@@ -78,7 +78,7 @@ class ProfileAndPasswordChangeTest {
     void profileShowsOwnDataWithoutSecrets() {
         ProfileService.ProfileView view = profiles.get(actor);
         assertThat(view.email()).isEqualTo("taivm@fpt.edu.vn");
-        assertThat(view.homePath()).isEqualTo(HomePaths.PROFILE);
+        assertThat(view.homePath()).isEqualTo(HomePaths.CLASS_DASHBOARD);
     }
 
     @Test

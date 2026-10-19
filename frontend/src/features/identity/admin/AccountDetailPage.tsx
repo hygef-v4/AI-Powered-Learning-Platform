@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
@@ -134,9 +135,14 @@ export function AccountDetailPage() {
               {reopening ? "Mở lại tài khoản" : "Vô hiệu hóa tài khoản"}
             </Button>
           </Section>
-          {/* Link "Mở Nhật ký audit đã lọc theo tài khoản" (/admin/audit?targetId=...) thêm lại khi màn Audit Log của U02 có. */}
           <Section title="Lịch sử">
             <p className="text-[13px] text-body">Lịch sử thay đổi của tài khoản xem ở Nhật ký audit.</p>
+            <Link
+              href={`/admin/audit?objectType=ACCOUNT&objectId=${account.id}`}
+              className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline"
+            >
+              Mở Nhật ký audit của tài khoản
+            </Link>
           </Section>
         </div>
       </div>

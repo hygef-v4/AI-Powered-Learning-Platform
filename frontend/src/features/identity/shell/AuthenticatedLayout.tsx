@@ -29,7 +29,7 @@ function SessionShell({ children }: { children: ReactNode }) {
   const nav = navEntries
     .entries()
     .filter((entry) => entry.roles.includes(role))
-    .map(({ href, title, icon }) => ({ href, label: title, icon }));
+    .map(({ href, title, icon, section }) => ({ href, label: title, icon, section }));
   const links = accountMenuEntries
     .entries()
     .filter((entry) => entry.roles.includes(role))

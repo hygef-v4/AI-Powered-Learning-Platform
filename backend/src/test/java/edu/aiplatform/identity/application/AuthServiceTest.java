@@ -66,7 +66,7 @@ class AuthServiceTest {
     void correctPasswordStartsSessionWithHomePathAndClearsThrottle() {
         AuthService.LoginResult result = service.login("  TaiVM@FPT.edu.vn ", PASSWORD, IP);
 
-        assertThat(result.info().homePath()).isEqualTo(HomePaths.PROFILE);
+        assertThat(result.info().homePath()).isEqualTo(HomePaths.CLASS_DASHBOARD);
         assertThat(result.refreshToken()).isEqualTo("refresh-1");
         assertThat(jwt.parse(result.accessToken())).hasValueSatisfying(c -> assertThat(c.sid()).isEqualTo("sid-1"));
         verify(accounts).resetLoginThrottle(active.id());
@@ -223,10 +223,9 @@ class AuthServiceTest {
 
     @Test
     void homePathFollowsRole() {
-        // Tạm về User Profile tới khi màn của U04/U05 được merge (xem HomePaths).
-        assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/profile");
-        assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/profile");
-        assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/profile");
+        assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/classes");
+        assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/classes");
+        assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/manager");
         assertThat(HomePaths.of(Role.ADMIN)).isEqualTo("/admin/accounts");
     }
 }

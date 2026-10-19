@@ -38,9 +38,9 @@ Dự án đang ở giai đoạn sinh code theo quy trình AI-DLC. Hiện có **k
 
 - Mỗi package của unit chia tầng `contract` (interface và kiểu dữ liệu cho unit khác), `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep`. Unit khác chỉ được import `contract`.
 - Interface đặt tên dạng `Ixxx` (ví dụ `IAuthorization`, `IJobHandler`, `IAccountRepository`), không dùng đuôi `Port`. Class, record, enum đặt tên bình thường.
-- Unit trước không phụ thuộc unit sau. Khi unit trước cần dữ liệu của unit sau, unit trước khai báo interface trong `contract` của mình và unit sau cài (ví dụ `ISubjectClasses` do U04 khai báo, U05 cài). Chưa có unit cài thì unit trước trả rỗng hoặc từ chối.
+- Unit gọi thẳng `contract` của unit khác, không theo thứ tự số unit (ví dụ U01 dùng `IAudit` của U02, `IJob` của U03). Khi unit cần dữ liệu mà unit sở hữu chưa có thì có thể khai báo interface trong `contract` của mình cho unit kia cài (ví dụ `ISubjectClasses` do U04 khai báo, U05 cài).
 - Mỗi interface một class cài có bản tạm trong `contract/stub/` (ví dụ `IdentityContractStubs`): trả dữ liệu mẫu, danh sách rỗng, kiểm quyền trả `true`, ghi/gửi chỉ ghi log. Bản tạm chỉ bật khi chưa unit nào cài thật, lúc khởi động ghi cảnh báo; tắt hẳn bằng `platform.contract-stubs.enabled=false`. Interface nhiều unit cùng cài (`IJobHandler`, listener…) không cần bản tạm vì nơi gọi nhận danh sách.
-- `backend/src/test/java/edu/aiplatform/ArchitectureTest.java` kiểm ba quy ước trên.
+- `backend/src/test/java/edu/aiplatform/ArchitectureTest.java` kiểm tên interface và việc unit khác chỉ dùng tầng `contract`.
 - Frontend làm tương tự bằng slot: unit trước khai báo slot trong `src/features/<package>/slots.ts`, unit sau đăng ký component vào slot và thêm import file đăng ký của mình vào `src/features/register.ts`.
 - Migration Flyway đặt trong `backend/src/main/resources/db/migration/<thư mục của unit>/` (danh sách trong `README.md` ở thư mục đó).
 - Người code viết unit test; integration test do tester viết.
