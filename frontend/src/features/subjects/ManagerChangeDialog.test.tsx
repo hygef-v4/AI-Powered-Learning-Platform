@@ -22,8 +22,9 @@ describe("ManagerChangeDialog", () => {
     const { onSaved } = setup();
     expect(screen.getByText(/Người cũ/)).toBeInTheDocument();
     expect(screen.getByTestId("subject-manager-save")).toBeDisabled();
+    fireEvent.focus(screen.getByRole("combobox"));
     await screen.findByRole("option", { name: /Người mới/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "b" } });
+    fireEvent.click(screen.getByRole("option", { name: /Người mới/ }));
     fireEvent.click(screen.getByTestId("subject-manager-save"));
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     expect(changeSubjectManager).toHaveBeenCalledWith("s", { managerId: "b", version: 7 });
@@ -39,11 +40,12 @@ describe("ManagerChangeDialog", () => {
 
   it("đổi assign → unassign → assign xóa lựa chọn cũ, cancel không ghi", async () => {
     const { onClose } = setup();
+    fireEvent.focus(screen.getByRole("combobox"));
     await screen.findByRole("option", { name: /Người mới/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "b" } });
+    fireEvent.click(screen.getByRole("option", { name: /Người mới/ }));
     fireEvent.click(screen.getByTestId("subject-manager-unassign")); fireEvent.click(screen.getByTestId("subject-manager-assign"));
     expect(screen.getByTestId("subject-manager-save")).toBeDisabled();
-    expect(screen.queryByText(/Đã chọn:/)).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toHaveValue("");
     fireEvent.click(screen.getByTestId("subject-manager-cancel"));
     expect(onClose).toHaveBeenCalledTimes(1); expect(changeSubjectManager).not.toHaveBeenCalled();
   });
@@ -60,11 +62,11 @@ describe("ManagerChangeDialog", () => {
 
   it("manager invalid giữ lựa chọn, cho user bỏ phân công rồi gửi null", async () => {
     vi.mocked(changeSubjectManager).mockRejectedValueOnce(new ApiError({ status: 400, code: "SUBJECT_MANAGER_INVALID" }));
-    setup(); await screen.findByRole("option", { name: /Người mới/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "b" } });
+    setup(); fireEvent.focus(screen.getByRole("combobox")); await screen.findByRole("option", { name: /Người mới/ });
+    fireEvent.click(screen.getByRole("option", { name: /Người mới/ }));
     fireEvent.click(screen.getByTestId("subject-manager-save"));
     await screen.findByText(/Chủ nhiệm đã chọn không còn hợp lệ/);
-    expect(screen.getByText(/Đã chọn: Người mới/)).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toHaveValue("Người mới · new@example.test");
     fireEvent.click(screen.getByTestId("subject-manager-unassign")); fireEvent.click(screen.getByTestId("subject-manager-save"));
     await waitFor(() => expect(changeSubjectManager).toHaveBeenLastCalledWith("s", { managerId: null, version: 7 }));
   });

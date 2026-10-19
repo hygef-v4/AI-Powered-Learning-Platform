@@ -33,8 +33,9 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     await waitFor(() => expect(screen.getByTestId("subject-edit-open")).toHaveFocus());
     expect(updateSubject).toHaveBeenCalledWith("a", { name: "Tên mới", description: "Mô tả môn", version: 7 });
     fireEvent.click(screen.getByTestId("subject-manager-open"));
+    fireEvent.focus(screen.getByRole("combobox"));
     await screen.findByRole("option", { name: /Người B/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "b" } });
+    fireEvent.click(screen.getByRole("option", { name: /Người B/ }));
     fireEvent.click(screen.getByTestId("subject-manager-save"));
     await screen.findByText("Người B");
     expect(changeSubjectManager).toHaveBeenLastCalledWith("a", { managerId: "b", version: 8 });

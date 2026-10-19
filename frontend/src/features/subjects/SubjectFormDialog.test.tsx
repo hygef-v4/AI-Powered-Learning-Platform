@@ -47,8 +47,9 @@ describe("SubjectFormDialog UC17", () => {
 
   it("gửi ID chủ nhiệm được chọn, không gửi contact hoặc role từ browser", async () => {
     setup(vi.fn<SearchSubjectManagers>().mockResolvedValue([manager]));
+    fireEvent.focus(screen.getByRole("combobox"));
     await screen.findByRole("option", { name: /Chủ nhiệm A/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "m1" } });
+    fireEvent.click(screen.getByRole("option", { name: /Chủ nhiệm A/ }));
     fill();
     fireEvent.submit(screen.getByTestId("subject-create-form"));
     await waitFor(() => expect(createSubject).toHaveBeenCalledWith({ code: "SWR302", name: "Software Requirements", description: null, managerId: "m1" }));
@@ -89,8 +90,9 @@ describe("SubjectFormDialog UC17", () => {
   it("manager bị disable lúc submit: giữ draft, cho bỏ chủ nhiệm và retry", async () => {
     vi.mocked(createSubject).mockRejectedValueOnce(new ApiError({ status: 400, code: "SUBJECT_MANAGER_INVALID" }));
     setup(vi.fn<SearchSubjectManagers>().mockResolvedValue([manager]));
+    fireEvent.focus(screen.getByRole("combobox"));
     await screen.findByRole("option", { name: /Chủ nhiệm A/ });
-    fireEvent.change(screen.getByLabelText("Chọn chủ nhiệm"), { target: { value: "m1" } });
+    fireEvent.click(screen.getByRole("option", { name: /Chủ nhiệm A/ }));
     fill(); fireEvent.submit(screen.getByTestId("subject-create-form"));
     await screen.findByText(/Chủ nhiệm đã chọn không còn hợp lệ/);
     fireEvent.click(screen.getByTestId("subject-manager-clear"));
