@@ -4130,3 +4130,24 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **Context**: Construction — U01 bug fixes after review.
 
 ---
+
+## 2026-10-19T17:21:37Z — Jira access and UC roadmap for Đào Chí Cường
+
+**User Input**: "https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20AND%20assignee%20%3D%20712020%3A72680e65-5cea-4ee5-b16d-c34402f2f25b%20ORDER%20BY%20cf%5B10019%5D%20ASC
+bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên plan để làm toàn bộ các UC của tôi"
+
+**AI Response**: Read the Jira list after the user signed in (25 issues: U01 UC 01–12 under KAN-18, U10 UC 46–48 under KAN-23, U11 UC 49–52 under KAN-25, KAN-7/13 done, KAN-152 report task). Compared with aidlc-docs and code: U01 coded on branch `cuong` but not merged into `staging`/`main`; U10/U11 only have the skeleton; every contract they use exists with stubs. Wrote `construction/plans/cuong-uc-roadmap-2026-10-20.md` (phase 0 close U01, phase 1 UC 46–47, phase 2 UC 48, phase 3 U11, phase 4 AI/MCP, phase 5 test and Jira). Asked the user to approve the roadmap and the U10 code generation plan before writing code. No code changed, no Jira change.
+
+**Context**: Construction — Code Generation Part 1 (U10, U11 plans pending approval).
+
+---
+
+## 2026-10-19T17:25:48Z — Roadmap approved, phase 0 started
+
+**User Input**: "Duyệt lộ trình. Bắt đầu giai đoạn 0: mở PR cuong → staging và chốt U01."
+
+**AI Response**: Roadmap approved. Starting phase 0: merge origin/staging into `cuong` (staging already contains the earlier U01 merge at 1871236 plus U02, U03, U04, U05), resolve conflicts, point HomePaths to the U04/U05 routes, rerun tests, push and open PR `cuong` → `staging`. Jira changes will be confirmed with the user first.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
