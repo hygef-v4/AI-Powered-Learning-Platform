@@ -92,6 +92,24 @@
 - Đã đọc câu trả lời: Q01–Q11/Q13 chọn A; Q14 chọn X, disable Subject Manager tự gỡ phân công môn. Kế hoạch bổ sung B08-D (contract U01 khai báo/U04 cài, gỡ mọi môn ACTIVE/ARCHIVED, version/audit/transaction/race test); không tự mở rộng sang phân công giảng viên lớp. Q12 chọn X “Tôi không biết”: ghi phương án kỹ thuật đề xuất, không giả nhận người dùng đã chọn A/B.
 - Rà soát tiếp theo theo thông tin nhóm code song song U01–U05: đã đọc Jira KAN-18/KAN-21/KAN-24 qua trình duyệt đăng nhập và các story giao thoa KAN-144/146/50/140/150. Mapping U01 UC01–12, U04 UC16–19 (KAN-147–150), U05 UC20–30 khớp. Epic mô tả Blocks theo contract readiness cho tích hợp, không chờ toàn Epic Done. Kế hoạch tạm bổ sung owner/file ownership, C01–C06, thứ tự P0–P4 và mốc tích hợp G0–G5 riêng của U04; B12/B13 là nhận bàn giao U01. “Chưa có code” chỉ nói checkout local, chưa kiểm nhánh thành viên. Jira chỉ đọc, không thay trạng thái hoặc nội dung.
 - Không thay approval/checklist code chính thức hoặc đánh complete U04. Bước tiếp theo của người dùng: hoàn tất bàn giao/tài liệu B01 rồi code theo kế hoạch; JWT/session/OTP thuộc U01, audit persistence thuộc U02, dữ liệu lớp thuộc U05. Quyết định Q04/Q14 trong kế hoạch tạm cần đồng bộ baseline và owner trước tích hợp; các lịch sử bên dưới giữ nguyên.
+## U05 stash recovery — 2026-10-18
+
+- Người dùng yêu cầu commit local trên nhánh `Class&Enrollment`; sẽ tự merge U01/U04 khi các thành viên hoàn thành. Không push hoặc mở rộng scope tích hợp trong đợt này.
+- [x] Theo yêu cầu "giúp tôi xử lý", khôi phục 20 file backend/SQL/test từ stash `86fc91e092915f1b292019f782b99bbcfa55ee63`; ghép tài liệu/audit, giữ UI mới.
+- [x] Chuyển các test UI cũ còn thiếu, sửa khác biệt regex email backend/frontend; U05 có 29 test backend và 21 test frontend.
+- [x] Chạy mới: backend 123 test/29 suite qua, frontend 37 test/8 file qua; typecheck/lint và diff check qua. Component/CSS/preview giữ nguyên hash; không chạy lại build/browser vì không đổi frontend thực thi.
+- [x] Sao lưu vào `.tmp/u05-stash-recovery-2026-10-18/`; cả ba stash giữ nguyên, Git index không thay đổi, chưa commit/push.
+- U05 vẫn chờ U01/U04/U02 cho auth, API/service, DB và audit thật. SQL pending và persistence opt-in giữ nguyên. Chi tiết mới nhất: `construction/u05-class-enrollment/code/stash-recovery-2026-10-18.md`.
+
+## U05 UI reference implementation — 2026-10-18
+
+- Người dùng yêu cầu: "check ui này và sửa lại ui cho phần u05 hiện tại", kèm `ui-reference.zip`. Nhánh `Class&Enrollment` chỉ có U05 slots lúc bắt đầu; implementation phiên cũ không có trong checkout này.
+- [x] Áp dụng phong cách HTML/CSS tham chiếu cho các view U05 và dialog, CSS module riêng, props/callback độc lập; giữ slot liên unit.
+- [x] Development preview `/preview/u05` có dữ liệu minh họa và ba vai trò; không dựng auth/API/backend giả. Server page chặn production bằng notFound.
+- [x] 32 test frontend (16 test U05) qua; typecheck/lint qua; browser desktop/mobile kiểm tạo lớp, detail, hủy gỡ và role. Mobile 390px không tràn toàn trang. Ảnh ở `.tmp/u05-ui-evidence/`.
+- [x] Build Webpack bản cuối qua; kiểm HTTP production: preview 404, không có nội dung minh họa; health 200. Trang development vẫn hoạt động tại `/preview/u05`.
+- Tài liệu: `construction/plans/u05-ui-reference-2026-10-18.md`, `construction/u05-class-enrollment/code/ui-summary-2026-10-18.md`.
+- Toàn bộ U05 và kiểm quyền/integration vẫn chưa complete. Chờ U01/U04 và các service/controller thật để nối dữ liệu; trạng thái lịch sử bên dưới không phải implementation scope hiện tại.
 
 ## Latest authorized UC-table synchronization
 
@@ -177,7 +195,7 @@
 
 ## Unit Progress
 
-Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16, mọi bước code của 15 unit còn [ ].
+Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals 05/10 giữ baseline cũ, không phê duyệt code đã sinh theo scope mới. Code cũ (gồm phần U03 đã code ngày 2026-10-05) đã xóa; khung code tạo lại ngày 2026-10-16. Các dòng chưa cập nhật dưới đây giữ baseline lịch sử; riêng U05 được cập nhật theo Class & Enrollment hiện hành ngày 2026-10-18.
 
 | Unit | Design stages | Code plan | Code |
 |---|---|---|---|
@@ -185,7 +203,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U02 Audit | Design revision 73 UC ngày 2026-10-09; Audit append-only trong transaction mọi command nhạy cảm. | Plan chi tiết hóa và được duyệt 2026-10-18 | Code và unit test viết 2026-10-18 trên nhánh `audit` (backend 26 test, frontend 11 test), người dùng duyệt 2026-10-18, chờ gộp qua PR |
 | U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U05 Content, Material & RAG | Design revision 73 UC ngày 2026-10-09; Tóm tắt/embedding và RAG cho AI; quiz/attempt do U08/U09/U11 giữ. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U05 Class & Enrollment | Current UC20-30 design and existing contracts; other rows retain historical baseline where noted. | Full completion authorized 2026-10-18; completion execution plan checked. | Code implemented: service/API/contracts and frontend wiring; backend 304 (U05: 210) / frontend 70 tests, lint/typecheck/build pass. Awaiting real cross-unit/schema/session integration; see construction/u05-class-enrollment/code/completion-2026-10-18.md. |
 | U06 Rubric & Subject Question Bank | Design revision 73 UC ngày 2026-10-09; Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U07 Payment & AI Credit | Design revision 73 UC ngày 2026-10-09; Ví của ba role; snapshot payment, verified webhook và grant định kỳ qua Settings. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
@@ -257,3 +275,27 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Tách truy vết: UC23 là điểm truy cập; UC54 xem nhóm; UC55 gửi/hủy yêu cầu; UC57 giảng viên thao tác nhóm và xử lý yêu cầu.
 - [x] Kiểm 66 UC hiện hành, tên UC57 nhất quán, ánh xạ giao diện và diff Markdown. Kết quả: `inception/plans/uc57-document-sync-2026-10-14.md`.
 - Không chuyển stage, duyệt hoặc triển khai code; folder unit legacy và tài liệu lịch sử giữ nguyên.
+
+
+## U05 navigation merge repair - 2026-10-18
+- [x] Reproduce the removed dashboardNavEntries import after merging main (3edc6f1).
+- [x] Use the shared navEntries registry for external links; preserve local preview navigation and filter duplicate U05 entries.
+- [x] Add four real-registry regression tests; observe failure before repair and success after repair.
+- [x] Verify 59 frontend tests, lint, typecheck and production build all pass.
+- Scope and evidence: `construction/plans/u05-merge-nav-repair-2026-10-18.md`. Existing unit progress, backend integration limitations and extension configuration retained; no commit/push.
+
+## U05 Class & Enrollment code completion - 2026-10-18
+- [x] User authorizes full U05 against existing contracts, superseding the older dependency-free-only scope.
+- [x] Implement application lifecycle/enrollment services, scoped REST APIs and real IClassAccess/IClassScope/ISubjectClasses providers.
+- [x] Wire frontend production routes to APIs; preserve development-only fixtures and all five extension slots.
+- [x] Verify backend 164 tests, frontend 70 tests, lint/typecheck and production build; independent review's409 message defect repaired and re-reviewed.
+- Code-ready for merging with other units; SQL remains pending and U05_PERSISTENCE_ENABLED defaults false until real U01/U04 schemas/contracts are ready. U02 audit persistence, real session authorization and PostgreSQL concurrency remain tester/integration gates; they are not marked complete.
+- Results: `construction/u05-class-enrollment/code/completion-2026-10-18.md`; execution: `construction/plans/u05-completion-2026-10-18.md`. No commit/push.
+
+## U05 unit test expansion - 2026-10-18
+- [x] Add read/scope/role matrix and successful DTO/candidate/summary cases, including denied write access on all nine mutation entrypoints.
+- [x] Add API request/response validation and server-principal mapping cases.
+- [x] Observe independent batch transactions, later-row failures/retry and an ambient caller rollback without requiring live PostgreSQL.
+- [x] Clean full backend run: 304 tests/36 suites pass; 210 U05 cases, including 140 newly added. Independent quality review and source SHA256 check passed.
+- Production source unchanged from before this test-only task. Coverage percentage and live integration are not claimed; no commit/push.
+- Evidence: `construction/plans/u05-unit-test-expansion-2026-10-18.md`.

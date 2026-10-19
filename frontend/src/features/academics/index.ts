@@ -1,0 +1,11 @@
+export { AcademicsShell } from "./AcademicsShell";
+export { ClassDashboardPage } from "./ClassDashboardPage";
+export { ClassListPage } from "./ClassListPage";
+export { ManagedClassPage } from "./ManagedClassPage";
+export { ReadOnlyClassPage } from "./ReadOnlyClassPage";
+export { ManagerDashboardPage, MySubjectPage } from "./ManagerDashboardPage";
+export { ClassFormDialog } from "./ClassFormDialog";
+export { ClassInfoForm } from "./ClassInfoForm";
+export { AssignTeacherDialog, StudentDetailDialog, ClassStateActions } from "./ClassDialogs";
+export { EnrollmentPanel, EnrollmentResultTable } from "./EnrollmentPanel";
+export type * from "./types";

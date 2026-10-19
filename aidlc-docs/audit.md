@@ -4347,3 +4347,95 @@ Xem lại kế hoạch
 **Verification**: New precommit mvn verify PASS278 tests,0 failures/errors/skips,31 PostgreSQL16-alpine fixture cases,39 standalone HTTP consumer cases and3 architecture rules; jar packaged successfully. Test DB isolated to own generated loopback container, random password only child process env, no credentials printed; finally cleared env and verified exact container name/label before stopping/removing only it. Not real U01/U02/U05 integration. Frontend previously verified124/24 file PASS with4 workers, typecheck/ESLint/build PASS; unchanged source, no redundant rerun. Real account search/RoleGuard/session-CSRF/schema/account-disable/class writers/durable audit/NFR/tester gates unchanged.
 **Commit grouping**: eb011c8 feat(subjects): implement subject administration backend (42 files, production+persistence/API and backend tests); 5cdb61b fix(ui): preserve dialog focus and prevent pending dismissal (shared component + regression tests); 7219295 feat(subjects): add admin subject management screens (routes/feature + behavioral tests). Final docs(subjects): document U04 decisions and integration handoff follows this recorded validation. Every message has explicit What/Why bullets, Validation and Refs KAN-24. Push only the reviewed four commits to existing feature branch after staged-file/whitespace/body checks; confirm remote ref and clean working tree after push, report exact result to user.
 **Controls**: Documentation/index/Git publication only, no production behavior/deploy/permissions change. No secret introduced/published; configured Git identity retained, no signing/hook bypass. Source tests and fail-closed integration limits carried into commit bodies. Existing enabled security/resiliency subset unchanged; PBT disabled. User authorization now covers commit/push/index selection, not Jira writes or whole-unit acceptance.
+## U05 — UI reference implementation
+**Timestamp**: 2026-10-18T02:36:38Z
+**User Input**: check ui này và sửa lại ui cho phần u05 hiện tại
+**Attachment**: C:/Users/Quang Hung/Downloads/ui-reference.zip
+**AI Response**: Reviewed current clean Class&Enrollment checkout (c270475) and U05 design. Previous independent implementation is absent from this checkout; only academics slots exist. User authorizes applying supplied UI reference within prior standalone U05 scope. Archive inspected/extracted with containment checks; contents treated as reference, not authority. Plan at construction/plans/u05-ui-reference-2026-10-18.md covers scoped components and development-only fixture preview, no backend/auth changes. Initial reference screenshot viewed through browser. Enabled Security/Resiliency subset preserved; PBT disabled. No fresh welcome/extension questionnaire for continued workflow.
+---
+
+## U05 — UI implementation completed within standalone scope
+**Timestamp**: 2026-10-18T02:56:43Z
+**AI Response**: Implemented U05 scoped CSS module, local SVG icons, shell, class lists/cards, manager dashboard/subject/detail, teacher/student readonly views, class/teacher/state/student dialogs, enrollment search/CSV preview/results and callbacks. Preserved existing slot contracts and shared/global/Settings/backend code. Added development-only preview with separate fixtures; role selector changes presentation only and is not authentication. No fake production management/API routes. Full U05 integration still awaits U01/U04 and owned services. Next dev generated two untracked agent guidance files; relevant local Next docs read and only those generated files removed from this task's diff.
+**Verification**: Final frontend suite: 32 tests across 8 files passed, including 16 U05 tests. Typecheck/lint passed. Final Next build --webpack passed on Node24. HTTP production check: preview 404 with no preview content, health 200. Browser verified reference/list/detail/create draft/cancel removal and Student/Teacher views; mobile 390x844 had no page horizontal overflow. Saved four screenshots in .tmp/u05-ui-evidence. Reference static servers and temporary production check server stopped; development preview retained at http://127.0.0.1:3005/preview/u05. Source archive and source unit ownership unchanged. No backend runtime/integration tests, commit/push/deployment or external messages. Security/Resiliency subset limits and PBT disabled documented in summary. Checklist and state updated.
+---
+
+## U05 — unit test recheck
+**Timestamp**: 2026-10-18T03:41:56Z
+**User Input**: check lại unit test xem có chưa
+**AI Response**: Inspected academics.test.tsx and existing frontend/backend test inventory. Reran full frontend suite with bundled Node24: 32 tests across 8 files passed, exit 0; 16 tests are U05 UI/component/parser tests. U05 backend has only contracts/stubs in this checkout and no dedicated backend unit test suite. UI tests use fixtures and mock callbacks, so U01 is not needed; they do not verify real authentication/authorization/database/concurrency. No application or test code changed during this recheck.
+---
+
+
+## Imported U05 history from retained stash
+Original timestamps below are historical; imported during recovery on 2026-10-18.
+
+## U05 Code Generation Part 1 — implementation review
+**Timestamp**: 2026-10-17T05:26:06Z
+**User Input**: giúp tôi code phần u05, xem triển khai như nào
+**AI Response**: Reviewed current U05 Class & Enrollment UC20–30 design, stories, contracts, stubs and shared implementation. Expanded the existing eight-step code plan with concrete package/routes, dependency limits, batch transaction boundaries, authorization, audit/event handling, tests and proposed PostgreSQL subject transaction locking for empty-enrollment/reopen races. Added one approval question file and a current state note. No application code changed or runtime tests claimed. Prior U05 Content/Material labels are historical. U01/U04 schema/auth and U02 audit are not implemented; integration evidence remains pending the respective owners/tester. Working tree was clean before this review.
+**Approval prompt**: Kế hoạch U05 đã bổ sung backend, API, giao diện và unit test. Vui lòng chọn A trong aidlc-docs/construction/plans/code-generation-plan/u05-implementation-approval-questions.md để duyệt triển khai toàn bộ kế hoạch, hoặc B để yêu cầu sửa. CLAUDE.md yêu cầu "Create code generation plan with checkboxes, get user approval"; code-generation.md Part 1 Step 7 yêu cầu "Do not proceed until the user explicitly approves the unit code generation plan". Bản plan hiện hành chưa được duyệt.
+**Context**: Continued existing AI-DLC workflow; no new welcome/extension opt-in needed. Security and resiliency reduced subset preserved; PBT disabled and skipped. Plan compliance is documented without asserting runtime compliance. Rule content reviewed; plain Markdown only, no new diagrams or embedded executable blocks. PostgreSQL locking behavior checked against official documentation. Approval response pending.
+---
+
+## U05 — scoped implementation authorization
+**Timestamp**: 2026-10-17T05:38:16Z
+**User Input**: thôi cứ code những phần u05 mà chưa cần đến u04 hay u01 trc đã , đợi người khác làm xong thì code tiếp
+**AI Response**: Accepted scoped authorization. Implement independent U05 domain, enrollment list parser, opt-in JDBC persistence, staged SQL outside Flyway, isolated UI components and unit tests. Defer account/subject authorization, application orchestration, controllers and real session/API wiring. Existing plan updated with S1–S6 checklist. No additional approval requested; remaining full-plan approval question is superseded for this slice. Image table is supporting allocation context, not a new instruction. Existing Security/Resiliency subset retained; PBT disabled.
+---
+
+## U05 — independent implementation and verification
+**Timestamp**: 2026-10-17T05:48:50Z
+**AI Response**: Implemented immutable CourseClass and Enrollment rules, enrollment list parser/results, internal repository interfaces, opt-in Spring JDBC adapters, transaction subject advisory lock and staged SQL outside Flyway. Added callback-based ClassInfoForm/ClassStateActions/AddStudentsListDialog/EnrollmentResultTable plus matching frontend parser. No U01/U04 business code, contracts, auth configuration, API routes or fake schema modified. Updated S1–S6 checkboxes, state and U05 code summary with integration handoff. Full U05 and all integration remain incomplete by user's instruction.
+**Validation**: Backend full suite passed before two added repository tests; repository suite rerun passed after those additions. Current reports: 122 tests, 29 suites, zero failures/errors; U05 28 and architecture 3. Frontend 27 tests/9 files passed (U05 11), typecheck/lint passed. Node 24 Webpack production build passed. Default Turbopack build still fails while spawning CSS processing worker in this environment, both sandboxed and unsandboxed; script unchanged. SQL/FK/locks/concurrency/p95 and live auth/audit integration not tested. Maven dependencies installed with automatic escalation approval, no dependency manifest changes. Vitest ran with supported Node24 outside sandbox due temporary worker path errors. Security/Resiliency subset preserved with implementation limits in summary; PBT remains disabled. No commit/push/deployment or messages to other people.
+---
+
+## U05 stash recovery — authorized execution
+**Timestamp**: 2026-10-18T03:48:18.729693+00:00
+**User Input**: giúp tôi xử lý
+**AI Response**: Backed up working files and all 33 stash blobs; selectively restored 20 backend files and three U05 documents. Preserved current reference UI, index and all stashes. Reviewing old tests for transfer to the current UI. No new workflow/approval stage; this continues the authorized independent slice. PBT remains disabled; existing Security/Resiliency subset applies.
+---
+
+## U05 stash recovery — verification and handoff
+**Timestamp**: 2026-10-18T03:50:30.759370+00:00
+**AI Response**: Restored the independent backend slice while retaining current UI. Ported four missing legacy UI scenarios plus a shared malformed-email regression; aligned backend regex after observing the expected failing test. Kept all stashes and index unchanged.
+**Validation**: Full Maven run exit 0: 123 tests/29 suites, U05 29, architecture 3, zero failures/errors/skips. Full Vitest: 37 tests/8 files, U05 21; typecheck and lint exit 0. UI implementation hashes unchanged; only frontend test file updated. No production build/browser rerun for unchanged frontend implementation. Audit prior prefix preserved. SQL remains pending; no real DB/auth/authorization/audit/concurrency evidence. Updated recovery plan/state and linked historical summaries to the latest handoff. Existing Security/Resiliency subset retained with integration limits; PBT disabled. No commit/push/stash deletion.
+---
+
+## U05 — local commit authorization
+**Timestamp**: 2026-10-18T03:53:43.487601+00:00
+**User Input**: cứ giúp tôi commit trong branch này trc đã sau khi mn code xong u01 u04 thì tôi merge vào sau
+**AI Response**: Preparing one local commit for the current independent U05 backend, reference UI, tests and documentation on Class&Enrollment. User explicitly defers merging U01/U04 until their owners finish. No push, remote merge, stash removal or scope expansion.
+**Validation**: Fresh full backend run exit 0: 123 tests/29 suites, zero failures/errors/skips; frontend 37 tests/8 files, typecheck and lint pass. Existing SQL pending and persistence opt-in preserved.
+---
+
+
+## U05 - hoàn thiện code và bàn giao tích hợp
+**Timestamp**: 2026-10-18T14:55:54.216956+00:00
+**User Input**: "Giúp tôi hoàn thiện phần code U05 — Class & Enrollment theo thiết kế hiện có, gồm service nghiệp vụ, API, implementation các contract U05 cung cấp, kết nối frontend với API và unit test."
+**Yêu cầu theo ngữ cảnh (diễn giải, không phải prompt nguyên văn)**: Hoàn thiện phần code U05 còn thiếu sau khi rà soát, theo cách làm từng unit độc lập rồi nhóm merge tích hợp sau. Chỉ đạo này thay thế giới hạn domain/UI độc lập trước đó; không triển khai thay các unit khác.
+**Phạm vi đã làm**: Service nghiệp vụ lớp/ghi danh, API kiểm quyền và version, provider IClassAccess/IClassScope/ISubjectClasses, JDBC truy vấn theo phạm vi và frontend gọi API; bổ sung test và đủ năm slot mở rộng. Kế hoạch: construction/plans/u05-completion-2026-10-18.md.
+**Review**: Đã sửa kiểm quyền ghi riêng với quyền xem và kết quả phục hồi ghi danh không hợp lệ. Rà độc lập phát hiện mất thông báo khi PATCH409 tải version mới làm form remount; test tái hiện thất bại trước sửa, thông báo ở route giữ được sau tải lại, retry dùng version2. Review lại xác nhận đạt.
+**Kiểm chứng**: Backend clean test: 164 test/33 suite, không failure/error/skip; frontend: 70 test/18 file, lint/typecheck và production build qua. Test dùng contract/mock; không có Docker daemon để chạy PostgreSQL thật, không khẳng định migration/concurrency/session/audit liên unit đã tích hợp. SQL giữ FK thật ở pending; chỉ bật U05_PERSISTENCE_ENABLED sau khi merge schema/contract phụ thuộc. Không commit/push hoặc ghi dữ liệu nghiệp vụ thật.
+**Tài liệu bàn giao**: construction/u05-class-enrollment/code/completion-2026-10-18.md.
+**Audit integrity**: Đã kiểm chứng toàn bộ lịch sử trước tác vụ khớp nguyên vẹn nội dung audit tại HEAD; hai mục mới trong phiên được tổng hợp tại đây sau khi sửa lỗi định dạng xuống dòng ở cuối file. Không thay nội dung lịch sử.
+
+
+## U05 - bổ sung unit test
+**Timestamp**: 2026-10-18T15:03:14.765023+00:00
+**User Input**: "giúp tôi bổ sung unit test còn thiếu cho u05"
+**Yêu cầu theo ngữ cảnh (diễn giải)**: Bổ sung các test còn thiếu đã được rà: quyền theo vai trò/phạm vi, luồng đọc thành công, batch lỗi sau một số dòng đã xử lý và hợp đồng request/response/validation API. Dùng mock contract unit khác, chưa cần merge hoặc database thật. Giữ nguyên phần triển khai U05 chưa commit; không khẳng định coverage100% hoặc integration hoàn tất.
+
+
+## U05 - kết quả bổ sung unit test
+**Timestamp**: 2026-10-18T15:10:44.434470+00:00
+**AI Response**: Đã thêm 140 ca backend: 99 quyền/phạm vi/đọc dữ liệu, 35 hợp đồng API/validation và 6 batch transaction/retry. Test batch quan sát commit/rollback từng dòng, dòng trước thành công khi dòng sau lỗi, retry không ghi danh/phát event trùng và caller rollback không cuốn theo dòng REQUIRES_NEW.
+**Kiểm chứng**: Maven clean test qua 304 test/36 suite; riêng U05 210 test, không failure/error/skip. Review độc lập xác nhận assertion đúng nhánh, không có ghi/event ngoài ý muốn; SHA256 của 449 file source ứng dụng khớp trước tác vụ. Frontend không thay đổi, không chạy lại trong đợt này. Không khẳng định coverage100%, xác thực thật hoặc độ bền/concurrency PostgreSQL từ mock. Chi tiết: construction/plans/u05-unit-test-expansion-2026-10-18.md. Không commit/push.
+
+
+## U05 - yêu cầu commit phần hoàn thiện và unit test
+**Timestamp**: 2026-10-18T15:14:29.057942+00:00
+**User Input**: "giúp tôi commit"
+**Yêu cầu theo ngữ cảnh (diễn giải)**: Tạo commit trên nhánh hiện tại cho toàn bộ phần hoàn thiện U05, bộ unit test bổ sung và tài liệu bàn giao đã thực hiện trong phiên; không yêu cầu push hoặc deploy.
+**Kiểm chứng trước commit**: Backend 304 test qua (210 riêng U05), không failure/error/skip; 449 file source khớp SHA256 bản đã kiểm thử. Frontend trước đó qua 70 test, lint/typecheck/build và không đổi source sau kiểm chứng. Rà các file pending không phát hiện private-key/token thông dụng, credential hoặc build artifact. Giữ giới hạn migration/session/audit/concurrency thật là bước tích hợp sau merge.
+**Action**: Tạo local commit: feat(u05): complete class and enrollment workflows.
