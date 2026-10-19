@@ -39,10 +39,13 @@ function readCookie(name: string): string | undefined {
   return found ? decodeURIComponent(found.slice(prefix.length)) : undefined;
 }
 
-/** Xoay refresh token; nhiều request cùng gặp 401 dùng chung một lần refresh. */
+/**
+ * Xoay refresh token; nhiều request cùng gặp 401 dùng chung một lần refresh. 409 là tab khác vừa xoay cùng token:
+ * cookie mới đã được đặt, coi như refresh thành công để gửi lại request.
+ */
 export function refreshSession(): Promise<boolean> {
   refreshing ??= fetch(`${AUTH_PREFIX}refresh`, { method: "POST", credentials: "include" })
-    .then((response) => response.ok)
+    .then((response) => response.ok || response.status === 409)
     .catch(() => false)
     .finally(() => {
       refreshing = null;

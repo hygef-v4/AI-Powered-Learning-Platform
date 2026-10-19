@@ -76,6 +76,7 @@ public class OtpFlowController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookies.access(result.accessToken()).toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.refresh(result.refreshToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                 .body(result.info());
     }
 
@@ -98,6 +99,7 @@ public class OtpFlowController {
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookies.clearAccess().toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.clearRefresh().toString())
+                .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                 .build();
     }
 

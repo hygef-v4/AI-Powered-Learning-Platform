@@ -34,6 +34,7 @@ import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -90,6 +91,15 @@ public class AccountImportService {
     public ImportResult commit(Actor actor, byte[] file) {
         require(actor);
         Instant now = clock.instant();
+        try {
+            return commitChecked(actor, file, now);
+        } catch (DuplicateKeyException e) {
+            // Email vừa được tạo ở request khác giữa lúc kiểm và lúc ghi (hai lần xác nhận cùng tệp): cả tệp rollback.
+            throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp CSV");
+        }
+    }
+
+    private ImportResult commitChecked(Actor actor, byte[] file, Instant now) {
         return transactions.execute(status -> {
             ImportResult checked = check(file, true);
             for (RowResult row : checked.rows()) {

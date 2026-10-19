@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,8 @@ import org.springframework.transaction.support.TransactionOperations;
 class ProfileAndPasswordChangeTest {
 
     private static final String PASSWORD = "hocbai2026";
+    // Sinh mỗi lần chạy để không có chuỗi mật khẩu mới cố định trong mã.
+    private static final String NEW_PASSWORD = UUID.randomUUID().toString();
 
     private final AccountRepository accounts = mock(AccountRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
@@ -106,10 +109,10 @@ class ProfileAndPasswordChangeTest {
 
     @Test
     void changePasswordKeepsCurrentSessionAndRevokesOthers() {
-        passwords.change(actor, "sid-now", PASSWORD, "matkhaumoi9");
+        passwords.change(actor, "sid-now", PASSWORD, NEW_PASSWORD);
 
         verify(accounts).updatePassword(eq(account.id()), org.mockito.ArgumentMatchers.argThat(
-                hash -> encoder.matches("matkhaumoi9", hash)), eq(NOW));
+                hash -> encoder.matches(NEW_PASSWORD, hash)), eq(NOW));
         verify(sessions, times(2)).deleteAllExcept(account.id(), "sid-now");
         verify(sessions, never()).deleteAll(any());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_CHANGED");
@@ -117,7 +120,7 @@ class ProfileAndPasswordChangeTest {
 
     @Test
     void wrongCurrentPasswordChangesNothing() {
-        assertThatThrownBy(() -> passwords.change(actor, "sid", "sai-mat-khau1", "matkhaumoi9"))
+        assertThatThrownBy(() -> passwords.change(actor, "sid", "sai-mat-khau1", NEW_PASSWORD))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.code()).isEqualTo(PasswordChangeService.CURRENT_PASSWORD_INVALID));
         verify(accounts, never()).updatePassword(any(), anyString(), any());

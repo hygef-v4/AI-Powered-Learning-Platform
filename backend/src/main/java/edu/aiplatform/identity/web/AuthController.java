@@ -39,6 +39,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookies.access(result.accessToken()).toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.refresh(result.refreshToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                 .body(result.info());
     }
 
@@ -50,22 +51,30 @@ public class AuthController {
             return ResponseEntity.noContent()
                     .header(HttpHeaders.SET_COOKIE, cookies.access(result.accessToken()).toString())
                     .header(HttpHeaders.SET_COOKIE, cookies.refresh(result.refreshToken()).toString())
+                    .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                     .build();
         } catch (ApiException e) {
+            if (AuthService.REFRESH_CONCURRENT.equals(e.code())) {
+                // Không xóa cookie: request thắng vừa đặt cookie mới, xóa ở đây sẽ ghi đè và đăng xuất người dùng.
+                return ResponseEntity.status(e.status()).build();
+            }
             return ResponseEntity.status(e.status())
                     .header(HttpHeaders.SET_COOKIE, cookies.clearAccess().toString())
                     .header(HttpHeaders.SET_COOKIE, cookies.clearRefresh().toString())
+                    .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                     .build();
         }
     }
 
-    /** Luôn xóa cookie; có phiên hợp lệ thì thu hồi phiên đó (F4). */
+    /** Luôn xóa cookie; thu hồi phiên theo access token, hoặc theo refresh token khi access đã hết hạn (F4). */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest http) {
-        auth.logout((String) http.getAttribute(JwtAuthFilter.SID_ATTRIBUTE));
+        auth.logout((String) http.getAttribute(JwtAuthFilter.SID_ATTRIBUTE),
+                AuthCookies.read(http, AuthCookies.REFRESH).orElse(null));
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookies.clearAccess().toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.clearRefresh().toString())
+                .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                 .build();
     }
 }

@@ -53,6 +53,21 @@ describe("apiFetch", () => {
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/v1/auth/refresh");
   });
 
+  it("refresh trả 409 (tab khác vừa refresh) thì vẫn gửi lại, không về đăng nhập", async () => {
+    const handler = vi.fn();
+    setUnauthenticatedHandler(handler);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 409 }))
+      .mockResolvedValueOnce(json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it("refresh lỗi thì gọi handler hết phiên và ném 401", async () => {
     const handler = vi.fn();
     setUnauthenticatedHandler(handler);

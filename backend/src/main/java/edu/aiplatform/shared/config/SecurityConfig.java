@@ -2,6 +2,7 @@ package edu.aiplatform.shared.config;
 
 import edu.aiplatform.identity.web.IdentityHttpSecurity;
 import edu.aiplatform.identity.web.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +28,9 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/health/**").permitAll()
+                        // Exception chưa xử lý được forward tới /error; JWT filter không chạy lại ở lượt đó nên nếu
+                        // không mở, lỗi 500 bị đổi thành 401 và frontend tưởng hết phiên (đá về đăng nhập).
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .anyRequest().authenticated())
                 .build();
     }
