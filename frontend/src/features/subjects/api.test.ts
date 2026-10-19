@@ -50,13 +50,11 @@ describe("API client U04", () => {
   });
 
   it.each([
-    [409, "SUBJECT_HAS_UNARCHIVED_CLASSES"],
     [503, "SUBJECT_CLASSES_UNAVAILABLE"],
-  ])("giữ ProblemDetail và dữ liệu lỗi HTTP%s cho UI", async (status, code) => {
-    const blockingClasses = [{ classId: "c1", code: "SE1801", status: "DRAFT" }];
-    mockResponse({ code, detail: "Chưa thể lưu trữ", unarchivedCount: 1, blockingClasses }, status);
+  ])("giữ ProblemDetail HTTP%s cho UI", async (status, code) => {
+    mockResponse({ code, detail: "Chưa thể lưu trữ" }, status);
     const error = await changeSubjectStatus("s1", { status: "ARCHIVED", version: 1 }).catch((error: unknown) => error);
     expect(error).toBeInstanceOf(ApiError);
-    expect((error as ApiError).problem as SubjectApiProblem).toMatchObject({ status, code, blockingClasses, unarchivedCount: 1 });
+    expect((error as ApiError).problem as SubjectApiProblem).toMatchObject({ status, code });
   });
 });

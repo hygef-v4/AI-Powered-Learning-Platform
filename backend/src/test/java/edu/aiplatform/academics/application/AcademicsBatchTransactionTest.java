@@ -23,7 +23,7 @@ class AcademicsBatchTransactionTest {
     final ICourseClassRepository classes=mock(ICourseClassRepository.class);
     final IEnrollmentRepository enrollments=mock(IEnrollmentRepository.class);
     final IAcademicsReadRepository reads=mock(IAcademicsReadRepository.class);
-    final ISubjectMutationLock lock=mock(ISubjectMutationLock.class);
+    final ISubjectMutationGuard lock=mock(ISubjectMutationGuard.class);
     final IAccountLookup accounts=mock(IAccountLookup.class);
     final ISubjectQuery subjects=mock(ISubjectQuery.class);
     final ISubjectScope scope=mock(ISubjectScope.class);

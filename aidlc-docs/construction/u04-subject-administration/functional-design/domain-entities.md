@@ -47,6 +47,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn; gỡ Chủ nhiệm khỏi mọi môn khi tài khoản bị vô hiệu hóa (BR-U04-12) |
 | `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
+| `ISubjectMutationGuard` | `lockActive(subjectId, timeout)` → `SubjectRef` | U05 | Khóa dòng môn tới cuối transaction của U05 (chờ tối đa 1 giây), môn không `ACTIVE` thì từ chối `SUBJECT_ARCHIVED`. U05 gọi trước mọi thao tác ghi lớp và ghi danh; lưu trữ môn khóa cùng dòng nên hai bên chạy lần lượt (BR-U04-04, BR-U05-22) |
 | `NavEntry` (contract frontend của U01, U04 cài) | - | U01 | Mục Môn học trên menu bên của Admin |
 
 `SubjectRef`: `subjectId`, `code`, `name`, `status`, `managerId`.
@@ -55,7 +56,7 @@ stateDiagram-v2
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
+| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
 
 `SubjectClassSummary`: `classId`, `code`, `name`, `term`, `status`, `teacherName`, `activeStudentCount`.
 

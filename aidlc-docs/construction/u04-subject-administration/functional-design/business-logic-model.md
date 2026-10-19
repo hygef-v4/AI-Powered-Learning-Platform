@@ -64,7 +64,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 **Lưu trữ**:
 1. Admin bấm Lưu trữ, xác nhận; frontend gọi `PUT /api/v1/admin/subjects/{id}/status` với `ARCHIVED` và `version`.
 2. Kiểm quyền `ADMIN`.
-3. Hỏi `ISubjectClasses.countUnarchivedClasses`. Còn lớp chưa lưu trữ thì từ chối và trả danh sách lớp đó; U05 không trả lời thì từ chối (BR-U04-04).
+3. Gọi `ISubjectClasses.archiveClassesOfSubject` trong cùng transaction: U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn, giữ nguyên ghi danh, ghi audit `CLASS_STATUS_CHANGED` từng lớp; U05 không trả lời thì từ chối và không lưu trữ gì (BR-U04-04).
 4. Chuyển `ARCHIVED` và gỡ Chủ nhiệm môn có điều kiện `version` (một lần tăng `version`); ghi audit `SUBJECT_ARCHIVED`, có Chủ nhiệm thì thêm `SUBJECT_MANAGER_CHANGED` (BR-U04-11).
 
 **Mở lại**:

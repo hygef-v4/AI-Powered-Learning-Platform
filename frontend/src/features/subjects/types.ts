@@ -76,6 +76,4 @@ export type ChangeSubjectStatusRequest = { status: SubjectStatus; version: numbe
 // apiFetch đã giữ các extension JSON trong ApiError.problem; không sửa shared auth/client của U01.
 export type SubjectApiProblem = ApiProblem & {
   fieldErrors?: Partial<Record<"code" | "name" | "description" | "managerId" | "version", string>>;
-  unarchivedCount?: number;
-  blockingClasses?: SubjectClassSummary[];
 };

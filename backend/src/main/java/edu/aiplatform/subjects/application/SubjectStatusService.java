@@ -5,7 +5,7 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
-import edu.aiplatform.subjects.contract.ISubjectArchiveCheck;
+import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.SubjectStatus;
 import edu.aiplatform.subjects.domain.ISubjectRepository;
 import edu.aiplatform.subjects.domain.Subject;
@@ -18,20 +18,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** UC19: khóa môn → kiểm lớp cùng transaction → CAS → audit. Không gọi reader async B07. */
+/**
+ * UC19: khóa dòng môn → U05 lưu trữ mọi lớp chưa lưu trữ qua {@link ISubjectClasses} cùng transaction → CAS → audit.
+ * U05 khóa cùng dòng môn qua {@code ISubjectMutationGuard} trước mọi thao tác ghi lớp nên hai bên chạy lần lượt.
+ */
 @Service
 public class SubjectStatusService {
     private final ISubjectRepository repository;
     private final SubjectAdminAccess access;
-    private final ObjectProvider<ISubjectArchiveCheck> checks;
+    private final ObjectProvider<ISubjectClasses> classes;
     private final SubjectAuditRecorder audit;
     private final Clock clock;
 
     public SubjectStatusService(ISubjectRepository repository, IAuthorization authorization,
-                                ObjectProvider<ISubjectArchiveCheck> checks, SubjectAuditRecorder audit, Clock clock) {
+                                ObjectProvider<ISubjectClasses> classes, SubjectAuditRecorder audit, Clock clock) {
         this.repository = repository;
         this.access = new SubjectAdminAccess(authorization, audit, clock);
-        this.checks = checks;
+        this.classes = classes;
         this.audit = audit;
         this.clock = clock;
     }
@@ -61,23 +64,17 @@ public class SubjectStatusService {
         }
         budget.remaining();
         if (command.status() == SubjectStatus.ARCHIVED) {
-            ISubjectArchiveCheck checker = checks.getIfAvailable();
-            if (checker == null) {
+            ISubjectClasses provider = classes.getIfAvailable();
+            if (provider == null) {
                 throw classesUnavailable();
             }
-            ISubjectArchiveCheck.Result result;
+            // BR-U04-04: lưu trữ môn thì lưu trữ luôn mọi lớp của môn; U05 lỗi thì cả thao tác rollback.
             try {
-                result = checker.checkArchive(subjectId, budget.remaining());
+                provider.archiveClassesOfSubject(subjectId, actor);
             } catch (RuntimeException failure) {
                 throw classesUnavailable();
             }
             budget.remaining();
-            if (result == null) {
-                throw classesUnavailable();
-            }
-            if (result.unarchivedCount() > 0) {
-                throw new SubjectArchiveRejectedException(result);
-            }
         }
         Subject after = command.status() == SubjectStatus.ARCHIVED
                 ? before.archive(clock.instant()) : before.reopen(clock.instant());

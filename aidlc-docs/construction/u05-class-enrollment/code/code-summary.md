@@ -14,8 +14,8 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-cl
 | UC 28 Ghi danh | Ghi danh từng người, nhập danh sách (`EnrollmentListParser`: tối đa 200 dòng, 100 KB, tra U01 một lần, mỗi dòng một transaction), gỡ và khôi phục; một sinh viên chỉ `ACTIVE` ở một lớp chưa lưu trữ của mỗi môn (BR-U05-22) |
 | UC 29 Sửa lớp, trạng thái | Sửa thông tin có `version`, bật/tắt phân bố điểm, `DRAFT → OPEN → ARCHIVED` và mở lại; mở lại bị chặn nếu sinh viên đang học lớp khác cùng môn (BR-U05-15) |
 | UC 30 Môn học của Chủ nhiệm | `managedSubjects`/`managedSubject`: thẻ môn và số lớp theo trạng thái |
-| Khóa theo môn | `SubjectMutationLock` (`pg_advisory_xact_lock` theo môn, chờ tối đa 3 giây): mọi thao tác ghi lớp và ghi danh trong cùng môn chạy lần lượt |
-| Contract cho unit khác | `AcademicsContractAdapter` cài `IClassAccess`, `IClassScope` (U01), `ISubjectClasses` (U04); đọc quan hệ hiện thời, không cache |
+| Khóa theo môn | `ISubjectMutationGuard.lockActive` của U04 (khóa dòng `subjects`, chờ tối đa 1 giây, môn không `ACTIVE` thì từ chối): mọi thao tác ghi lớp và ghi danh trong cùng môn chạy lần lượt, và không chạy chồng với việc U04 lưu trữ môn |
+| Contract cho unit khác | `AcademicsContractAdapter` cài `IClassAccess`, `IClassScope` (U01), `ISubjectClasses` (U04); đọc quan hệ hiện thời, không cache. `archiveClassesOfSubject`: U04 lưu trữ môn thì U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn trong cùng transaction, ghi audit từng lớp |
 
 Domain: `CourseClass`, `Enrollment`, `EnrollmentPolicy`, `EnrollmentListParser`, `EnrollmentResult`. Hạ tầng: `JdbcCourseClassRepository`, `JdbcEnrollmentRepository`, `JdbcAcademicsReadRepository` (`NamedParameterJdbcTemplate`, tham số gắn tên, trang 1–100).
 
@@ -54,10 +54,9 @@ Backend: domain, parser, repository (điều kiện transaction, conflict), ki�
 
 ## Khác với thiết kế
 
-- Khóa ghi danh theo cả môn bằng advisory lock thay cho "khóa hàng theo (sinh viên, môn)" ở F10; chưa khớp với khóa dòng `subjects` khi U04 lưu trữ môn.
+- Khóa ghi danh theo cả môn (khóa dòng môn của U04) thay cho "khóa hàng theo (sinh viên, môn)" ở F10.
 - Frontend dùng khung riêng `AcademicsShell` và CSS module thay cho `AppShell`, `shared/ui`; vì vậy layout chỉ dùng `RoleGuard`, chưa dùng `AuthenticatedLayout`.
 
 ## Còn lại
 
-- Thống nhất khóa với U04 khi lưu trữ môn (`ISubjectArchiveCheck`/`ISubjectMutationGuard` của U04 hoặc `ISubjectClasses.countUnarchivedClasses`).
 - Dùng `AppShell`, `shared/ui`; khi đó đổi 3 layout sang `AuthenticatedLayout`.

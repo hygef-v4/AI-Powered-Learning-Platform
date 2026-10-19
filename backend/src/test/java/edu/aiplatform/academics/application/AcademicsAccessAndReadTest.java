@@ -25,7 +25,7 @@ class AcademicsAccessAndReadTest {
     private final ICourseClassRepository classes = mock(ICourseClassRepository.class);
     private final IEnrollmentRepository enrollments = mock(IEnrollmentRepository.class);
     private final IAcademicsReadRepository reads = mock(IAcademicsReadRepository.class);
-    private final ISubjectMutationLock lock = mock(ISubjectMutationLock.class);
+    private final ISubjectMutationGuard lock = mock(ISubjectMutationGuard.class);
     private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final ISubjectQuery subjects = mock(ISubjectQuery.class);
     private final ISubjectScope scope = mock(ISubjectScope.class);
@@ -171,7 +171,7 @@ class AcademicsAccessAndReadTest {
     @Test void currentSubjectOwnerMustMatchBeforeMutationEvenWhenScopeAllows() {
         when(subjects.getSubject(subjectId)).thenReturn(Optional.of(subject(subjectId,UUID.randomUUID())));
         assertProblem(() -> service.updateInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,null,7),404,"SUBJECT_OUT_OF_SCOPE");
-        verify(lock).acquire(subjectId);
+        verify(lock).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any());
         verify(classes,never()).update(any(),anyLong());
         verifyNoInteractions(reads);
         assertDenialAudit();

@@ -32,9 +32,9 @@ class SubjectStatusTest {
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
     private final ISubjectRepository repository = mock(ISubjectRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
-    private final ISubjectArchiveCheck checker = mock(ISubjectArchiveCheck.class);
+    private final ISubjectClasses checker = mock(ISubjectClasses.class);
     @SuppressWarnings("unchecked")
-    private final ObjectProvider<ISubjectArchiveCheck> checks = mock(ObjectProvider.class);
+    private final ObjectProvider<ISubjectClasses> checks = mock(ObjectProvider.class);
     private final IAudit audit = mock(IAudit.class);
     private final SubjectStatusService service = new SubjectStatusService(repository, authorization, checks,
             new SubjectAuditRecorder(audit), Clock.fixed(NOW, ZoneOffset.UTC));
@@ -113,44 +113,25 @@ class SubjectStatusTest {
         when(checks.getIfAvailable()).thenReturn(null);
         code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
         when(checks.getIfAvailable()).thenReturn(checker);
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
-        when(checker.checkArchive(eq(id), any())).thenThrow(new IllegalStateException("SQL internal"));
+        when(checker.archiveClassesOfSubject(id, admin)).thenThrow(new IllegalStateException("SQL internal"));
         code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
         verify(repository, never()).update(any(), anyLong());
         verifyNoInteractions(audit);
     }
-
-    @ParameterizedTest
-    @EnumSource(value = BlockingStatus.class)
-    void draftAndOpenBlockArchiveWithCountAndReadOnlySummaries(BlockingStatus status) {
-        var blocker = new SubjectClassSummary(UUID.randomUUID(), "C1", "Class", "Fall26", status.name(), "Teacher", 2);
-        when(checker.checkArchive(eq(id), any())).thenReturn(new ISubjectArchiveCheck.Result(2, List.of(blocker)));
-        assertThatThrownBy(() -> service.changeStatus(admin, id, archive()))
-                .isInstanceOfSatisfying(SubjectArchiveRejectedException.class, error -> {
-                    assertThat(error.unarchivedCount()).isEqualTo(2);
-                    assertThat(error.blockingClasses()).containsExactly(blocker);
-                });
-        verify(repository, never()).update(any(), anyLong());
-        verifyNoInteractions(audit);
-    }
-
-    enum BlockingStatus { DRAFT, OPEN }
 
     @Test
-    void verifiedZeroArchivesWithRemainingBudgetOnCallerThreadThenAudit() {
+    void archiveAsksU05ToArchiveEveryClassOnCallerThreadBeforeSavingSubject() {
         Thread caller = Thread.currentThread();
-        when(checker.checkArchive(eq(id), any())).thenAnswer(call -> {
+        when(checker.archiveClassesOfSubject(id, admin)).thenAnswer(call -> {
             assertThat(Thread.currentThread()).isSameAs(caller);
-            Duration budget = call.getArgument(1);
-            assertThat(budget).isPositive().isLessThanOrEqualTo(Duration.ofSeconds(1));
-            return new ISubjectArchiveCheck.Result(0, List.of());
+            return List.of(UUID.randomUUID(), UUID.randomUUID());
         });
         Subject after = service.changeStatus(admin, id, archive());
         assertThat(after.status()).isEqualTo(SubjectStatus.ARCHIVED);
         assertThat(after.version()).isEqualTo(2);
         var order = inOrder(repository, checker, audit);
         order.verify(repository).findByIdForUpdate(eq(id), any(Duration.class));
-        order.verify(checker).checkArchive(eq(id), any());
+        order.verify(checker).archiveClassesOfSubject(id, admin);
         order.verify(repository).update(after, 1L);
         order.verify(audit).record(any());
         var event = ArgumentCaptor.forClass(AuditEvent.class);
@@ -174,9 +155,9 @@ class SubjectStatusTest {
 
     @Test
     void lateZeroFromProviderCannotAuthorizeArchive() throws InterruptedException {
-        when(checker.checkArchive(eq(id), any())).thenAnswer(call -> {
+        when(checker.archiveClassesOfSubject(id, admin)).thenAnswer(call -> {
             Thread.sleep(1100);
-            return new ISubjectArchiveCheck.Result(0, List.of());
+            return List.of();
         });
         code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_LIFECYCLE_TIMEOUT");
         verify(repository, never()).update(any(), anyLong());
@@ -185,7 +166,7 @@ class SubjectStatusTest {
 
     @Test
     void staleCasDoesNotAuditSuccessAndAuditErrorIsNotSwallowed() {
-        when(checker.checkArchive(eq(id), any())).thenReturn(new ISubjectArchiveCheck.Result(0, List.of()));
+        when(checker.archiveClassesOfSubject(id, admin)).thenReturn(List.of());
         when(repository.update(any(), anyLong())).thenReturn(false);
         code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_VERSION_CONFLICT");
         verifyNoInteractions(audit);
@@ -193,13 +174,6 @@ class SubjectStatusTest {
         var failure = new IllegalStateException("audit down");
         doThrow(failure).when(audit).record(any());
         assertThatThrownBy(() -> service.changeStatus(admin, id, archive())).isSameAs(failure);
-    }
-
-    @Test
-    void invalidArchiveResultsAreRejected() {
-        assertThatThrownBy(() -> new ISubjectArchiveCheck.Result(-1, List.of())).isInstanceOf(IllegalArgumentException.class);
-        var archived = new SubjectClassSummary(UUID.randomUUID(), "C", "Class", "Term", "ARCHIVED", null, 0);
-        assertThatThrownBy(() -> new ISubjectArchiveCheck.Result(1, List.of(archived))).isInstanceOf(IllegalArgumentException.class);
     }
 
     private Subject active() { return Subject.create(id, "ABC", "Name", null, null, NOW.minusSeconds(60)); }

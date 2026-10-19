@@ -1,7 +1,6 @@
 package edu.aiplatform.subjects.web;
 
 import edu.aiplatform.shared.error.ApiException;
-import edu.aiplatform.subjects.application.SubjectArchiveRejectedException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataAccessException;
@@ -22,10 +21,6 @@ public class SubjectExceptionHandler {
     public ProblemDetail api(ApiException failure) {
         ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
         if (failure instanceof SubjectRequests.InvalidRequest invalid) result.setProperty("fieldErrors", invalid.fieldErrors());
-        if (failure instanceof SubjectArchiveRejectedException blocked) {
-            result.setProperty("unarchivedCount", blocked.unarchivedCount());
-            result.setProperty("blockingClasses", blocked.blockingClasses());
-        }
         return result;
     }
 

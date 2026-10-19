@@ -57,17 +57,11 @@ class AcademicsPersistenceTest {
 
     @Test void persistenceBeansAreRegistered() {
         var runner = new ApplicationContextRunner().withBean(NamedParameterJdbcTemplate.class, () -> jdbc)
-                .withUserConfiguration(JdbcCourseClassRepository.class, JdbcEnrollmentRepository.class, SubjectMutationLock.class);
+                .withUserConfiguration(JdbcCourseClassRepository.class, JdbcEnrollmentRepository.class);
         runner.run(context -> {
             assertThat(context).hasSingleBean(JdbcCourseClassRepository.class);
             assertThat(context).hasSingleBean(JdbcEnrollmentRepository.class);
-            assertThat(context).hasSingleBean(SubjectMutationLock.class);
         });
-    }
-
-    @Test void subjectLockCannotEscapeTransaction() {
-        assertThatThrownBy(() -> new SubjectMutationLock(jdbc).acquire(UUID.randomUUID())).isInstanceOf(IllegalStateException.class);
-        verifyNoInteractions(jdbc);
     }
 
     @Test void duplicateEnrollmentAndConcurrentStatusChangeAreReported() {

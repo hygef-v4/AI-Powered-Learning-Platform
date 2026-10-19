@@ -53,9 +53,10 @@ class SubjectAdminControllerTest {
     private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final ISubjectClasses legacyClasses = mock(ISubjectClasses.class);
     private final IAudit audit = mock(IAudit.class);
-    private final ISubjectArchiveCheck archiveCheck = mock(ISubjectArchiveCheck.class);
+    /** Bản U05 cài ISubjectClasses dùng khi lưu trữ môn (đếm lớp chưa lưu trữ). */
+    private final ISubjectClasses archiveCheck = mock(ISubjectClasses.class);
     @SuppressWarnings("unchecked")
-    private final ObjectProvider<ISubjectArchiveCheck> checks = mock(ObjectProvider.class);
+    private final ObjectProvider<ISubjectClasses> checks = mock(ObjectProvider.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
             .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
@@ -74,7 +75,7 @@ class SubjectAdminControllerTest {
         when(repository.update(any(), anyLong())).thenReturn(true);
         when(legacyClasses.countClasses(any())).thenReturn(Map.of(id, 0));
         when(checks.getIfAvailable()).thenReturn(archiveCheck);
-        when(archiveCheck.checkArchive(eq(id), any())).thenReturn(new ISubjectArchiveCheck.Result(0, List.of()));
+        when(archiveCheck.countUnarchivedClasses(id)).thenReturn(0);
         when(accounts.getContact(manager)).thenReturn(Optional.of(new AccountContact(manager, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
         var recorder = new SubjectAuditRecorder(audit);
         reader = new SubjectClassesReader(legacyClasses);
@@ -196,15 +197,11 @@ class SubjectAdminControllerTest {
     }
 
     @Test
-    void archiveRejectionHasAuthorizedCountAndBlockersExtensions() throws Exception {
-        var blocker = new SubjectClassSummary(UUID.randomUUID(), "C1", "Class", "Fall26", "OPEN", "Teacher", 2);
-        when(archiveCheck.checkArchive(eq(id), any())).thenReturn(new ISubjectArchiveCheck.Result(1, List.of(blocker)));
+    void archivingSubjectAlsoArchivesItsClassesThroughU05() throws Exception {
         mvc.perform(put(BASE + "/" + id + "/status").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ARCHIVED\",\"version\":1}"))
-                .andExpect(status().isConflict()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.code").value("SUBJECT_HAS_UNARCHIVED_CLASSES"))
-                .andExpect(jsonPath("$.unarchivedCount").value(1))
-                .andExpect(jsonPath("$.blockingClasses[0].classId").value(blocker.classId().toString()));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ARCHIVED"));
+        verify(archiveCheck).archiveClassesOfSubject(eq(id), any());
     }
 
     @Test

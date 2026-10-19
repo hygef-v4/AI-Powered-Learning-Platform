@@ -19,7 +19,7 @@ class AcademicsServiceTest {
     ICourseClassRepository classes = mock(ICourseClassRepository.class);
     IEnrollmentRepository enrollments = mock(IEnrollmentRepository.class);
     IAcademicsReadRepository reads = mock(IAcademicsReadRepository.class);
-    ISubjectMutationLock lock = mock(ISubjectMutationLock.class);
+    ISubjectMutationGuard lock = mock(ISubjectMutationGuard.class);
     IAccountLookup accounts = mock(IAccountLookup.class);
     ISubjectQuery subjects = mock(ISubjectQuery.class);
     ISubjectScope scope = mock(ISubjectScope.class);
@@ -55,6 +55,13 @@ class AcademicsServiceTest {
         assertThatThrownBy(() -> service.detail(actor,"student",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
         verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED));
     }
+    @Test void createLocksTheSubjectRowThroughU04AndArchivedSubjectBlocksTheClass() {
+        doThrow(ApiException.conflict("SUBJECT_ARCHIVED","Môn đã lưu trữ")).when(lock).lockActive(eq(subjectId),any());
+        assertThatThrownBy(() -> service.create(manager,subjectId,"NEW","New class",null,null,null))
+                .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("SUBJECT_ARCHIVED"));
+        verify(lock).lockActive(eq(subjectId),eq(java.time.Duration.ofSeconds(1)));
+        verify(classes,never()).insert(any());
+    }
     @Test void adminCannotListClasses() {
         Actor admin = new Actor(UUID.randomUUID(),Role.ADMIN);
         assertThatThrownBy(() -> service.list(admin,"manager",null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
@@ -70,7 +77,7 @@ class AcademicsServiceTest {
         assertThat(result.description()).isEmpty();
         assertThat(result.code()).isEqualTo("C");
         var order = inOrder(classes,lock);
-        order.verify(classes).find(classId); order.verify(lock).acquire(subjectId); order.verify(classes).find(classId);
+        order.verify(classes).find(classId); order.verify(lock).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any()); order.verify(classes).find(classId);
         verify(audit).record(argThat(e -> e.action().equals("CLASS_UPDATED") && e.result()==AuditResult.SUCCESS));
     }
     @Test void dependencyFailureIsUnavailableAndWritesNothing() {

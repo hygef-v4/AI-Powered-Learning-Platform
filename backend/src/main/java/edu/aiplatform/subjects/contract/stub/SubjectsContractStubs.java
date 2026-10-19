@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.contract.stub;
 
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.stub.Stubs;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectClasses;
@@ -64,6 +65,11 @@ public class SubjectsContractStubs {
 
             @Override
             public int countUnarchivedClasses(UUID subjectId) {
+                throw classesUnavailable();
+            }
+
+            @Override
+            public List<UUID> archiveClassesOfSubject(UUID subjectId, Actor actor) {
                 throw classesUnavailable();
             }
         });

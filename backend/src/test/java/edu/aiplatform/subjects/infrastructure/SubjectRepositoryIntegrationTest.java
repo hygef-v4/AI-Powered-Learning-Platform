@@ -13,9 +13,8 @@ import edu.aiplatform.subjects.application.SubjectCommandService;
 import edu.aiplatform.subjects.application.SubjectAuditRecorder;
 import edu.aiplatform.subjects.application.SubjectStatusService;
 import edu.aiplatform.subjects.application.SubjectMutationGuard;
-import edu.aiplatform.subjects.application.SubjectArchiveRejectedException;
 import edu.aiplatform.subjects.contract.ISubjectMutationGuard;
-import edu.aiplatform.subjects.contract.ISubjectArchiveCheck;
+import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
@@ -114,7 +113,7 @@ class SubjectRepositoryIntegrationTest {
     @Autowired
     private ISubjectMutationGuard mutationGuard;
     @Autowired
-    private ISubjectArchiveCheck archiveChecker;
+    private ISubjectClasses archiveChecker;
 
     @TestConfiguration
     @EnableTransactionManagement
@@ -139,8 +138,8 @@ class SubjectRepositoryIntegrationTest {
         }
 
         @Bean
-        ISubjectArchiveCheck archiveChecker() {
-            return mock(ISubjectArchiveCheck.class);
+        ISubjectClasses archiveChecker() {
+            return mock(ISubjectClasses.class);
         }
 
         @Bean
@@ -206,7 +205,7 @@ class SubjectRepositoryIntegrationTest {
     @BeforeEach
     void resetFixture() {
         reset(audit, accounts, archiveChecker);
-        when(archiveChecker.checkArchive(any(), any())).thenAnswer(call -> fixtureArchiveCheck(call.getArgument(0), call.getArgument(1)));
+        when(archiveChecker.archiveClassesOfSubject(any(), any())).thenAnswer(call -> fixtureArchiveAll(call.getArgument(0)));
         for (UUID id : List.of(MANAGER, OTHER_MANAGER)) {
             when(accounts.getContact(id)).thenReturn(Optional.of(new AccountContact(id, "fixture@example.test", "Fixture",
                     Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
@@ -604,26 +603,25 @@ class SubjectRepositoryIntegrationTest {
         Subject archived = statuses.changeStatus(admin, original.id(), new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
         assertThat(archived.version()).isEqualTo(2);
         assertThat(subjectQuery.isActive(original.id())).isFalse();
-        assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isTrue();
+        assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
         Subject reopened = statuses.changeStatus(admin, original.id(), new SubjectStatusService.ChangeStatus(SubjectStatus.ACTIVE, 2L));
         assertThat(reopened.version()).isEqualTo(3);
-        assertThat(reopened.managerId()).isEqualTo(MANAGER);
+        assertThat(reopened.managerId()).isNull();
         assertThat(new JdbcTemplate(dataSource).queryForObject("select status from u04_lifecycle_classes where subject_id = ?", String.class, original.id())).isEqualTo("ARCHIVED");
-        verify(archiveChecker, times(1)).checkArchive(eq(original.id()), any());
-        verify(audit, times(2)).record(any());
+        verify(archiveChecker, times(1)).archiveClassesOfSubject(eq(original.id()), any());
+        verify(audit, times(3)).record(any());
     }
 
     @Test
-    void openAndDraftFixturesBlockArchiveWithoutChangingSubject() {
+    void archiveAlsoArchivesOpenAndDraftFixtures() {
         Subject original = subject("BLOCKED", "Name", null);
         repository.insert(original);
         insertFixtureClass(original.id(), "OPEN");
         insertFixtureClass(original.id(), "DRAFT");
-        assertThatThrownBy(() -> statuses.changeStatus(new Actor(UUID.randomUUID(), Role.ADMIN), original.id(),
-                new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L)))
-                .isInstanceOfSatisfying(SubjectArchiveRejectedException.class, error -> assertThat(error.unarchivedCount()).isEqualTo(2));
-        assertThat(repository.findById(original.id())).contains(original);
-        verifyNoInteractions(audit);
+        Subject archived = statuses.changeStatus(new Actor(UUID.randomUUID(), Role.ADMIN), original.id(),
+                new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
+        assertThat(archived.status()).isEqualTo(SubjectStatus.ARCHIVED);
+        assertThat(fixtureBlockers(original.id())).isEmpty();
     }
 
     @Test
@@ -698,8 +696,8 @@ class SubjectRepositoryIntegrationTest {
             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
             jdbc.execute("set local statement_timeout = '50ms'");
             jdbc.execute("select pg_sleep(0.2)");
-            return new ISubjectArchiveCheck.Result(0, List.of());
-        }).when(archiveChecker).checkArchive(eq(original.id()), any());
+            return List.of();
+        }).when(archiveChecker).archiveClassesOfSubject(eq(original.id()), any());
         assertThatThrownBy(() -> statuses.changeStatus(new Actor(UUID.randomUUID(), Role.ADMIN), original.id(),
                 new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L)))
                 .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.code()).isEqualTo("SUBJECT_CLASSES_UNAVAILABLE"));
@@ -740,8 +738,8 @@ class SubjectRepositoryIntegrationTest {
         doAnswer(call -> {
             archiveLocked.countDown();
             awaitFixture(allowArchive);
-            return fixtureArchiveCheck(original.id(), call.getArgument(1));
-        }).when(archiveChecker).checkArchive(eq(original.id()), any());
+            return fixtureArchiveAll(original.id());
+        }).when(archiveChecker).archiveClassesOfSubject(eq(original.id()), any());
         ExecutorService workers = Executors.newFixedThreadPool(2);
         try {
             Future<String> archive = workers.submit(() -> archiveOutcome(original.id()));
@@ -771,16 +769,17 @@ class SubjectRepositoryIntegrationTest {
         new JdbcTemplate(dataSource).update("insert into u04_lifecycle_classes (id, subject_id, status) values (?, ?, ?)", UUID.randomUUID(), subjectId, status);
     }
 
-    /** Provider test cùng transaction/thread, SQL timeout theo remainingBudget; không phải code U05. */
-    private ISubjectArchiveCheck.Result fixtureArchiveCheck(UUID subjectId, Duration budget) {
+    /** Thay cho ISubjectClasses của U05: đọc lớp chưa lưu trữ cùng transaction; không phải code U05. */
+    /** Thay cho U05: lưu trữ mọi lớp chưa lưu trữ của môn trong cùng transaction. */
+    private List<UUID> fixtureArchiveAll(UUID subjectId) {
         assertThat(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
-        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-        String previous = jdbc.queryForObject("select current_setting('statement_timeout')", String.class);
-        jdbc.queryForObject("select set_config('statement_timeout', ?, true)", String.class, Math.max(1, budget.toMillis()) + "ms");
-        List<SubjectClassSummary> blockers = jdbc.query("select id, status from u04_lifecycle_classes where subject_id = ? and status <> 'ARCHIVED'", (row, index) ->
+        return new JdbcTemplate(dataSource).queryForList("update u04_lifecycle_classes set status = 'ARCHIVED' where subject_id = ? and status <> 'ARCHIVED' returning id", UUID.class, subjectId);
+    }
+
+    private List<SubjectClassSummary> fixtureBlockers(UUID subjectId) {
+        assertThat(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+        return new JdbcTemplate(dataSource).query("select id, status from u04_lifecycle_classes where subject_id = ? and status <> 'ARCHIVED'", (row, index) ->
                 new SubjectClassSummary(row.getObject("id", UUID.class), "FIXTURE", "Fixture class", "Fall26", row.getString("status"), null, 0), subjectId);
-        jdbc.queryForObject("select set_config('statement_timeout', ?, true)", String.class, previous);
-        return new ISubjectArchiveCheck.Result(blockers.size(), blockers);
     }
 
     private void awaitFixture(CountDownLatch latch) {

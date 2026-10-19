@@ -19,7 +19,9 @@ class AcademicsContractAdapterTest {
     final IAcademicsReadRepository queries = mock(IAcademicsReadRepository.class);
     final ISubjectQuery subjects = mock(ISubjectQuery.class);
     final IAccountLookup accounts = mock(IAccountLookup.class);
-    final AcademicsContractAdapter adapter = new AcademicsContractAdapter(classes, enrollments, queries, subjects, accounts);
+    final edu.aiplatform.audit.contract.IAudit audit = mock(edu.aiplatform.audit.contract.IAudit.class);
+    final AcademicsContractAdapter adapter = new AcademicsContractAdapter(classes, enrollments, queries, subjects, accounts, audit,
+            java.time.Clock.fixed(Instant.parse("2026-10-19T00:00:00Z"), java.time.ZoneOffset.UTC));
     final UUID classId=UUID.randomUUID(), subjectId=UUID.randomUUID(), teacher=UUID.randomUUID(), student=UUID.randomUUID();
     final Instant now=Instant.parse("2026-10-18T00:00:00Z");
     CourseClass course(UUID teacherId, ClassStatus status) {
@@ -33,6 +35,8 @@ class AcademicsContractAdapterTest {
                 .withBean(IAcademicsReadRepository.class,()->queries)
                 .withBean(ISubjectQuery.class,()->subjects)
                 .withBean(IAccountLookup.class,()->accounts)
+                .withBean(edu.aiplatform.audit.contract.IAudit.class,()->audit)
+                .withBean(java.time.Clock.class,java.time.Clock::systemUTC)
                 .withUserConfiguration(AcademicsContractAdapter.class)
                 .withConfiguration(org.springframework.boot.autoconfigure.AutoConfigurations.of(
                         edu.aiplatform.academics.contract.stub.AcademicsContractStubs.class,
@@ -96,5 +100,18 @@ class AcademicsContractAdapterTest {
         when(queries.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(3,1)));
         when(accounts.getContact(teacher)).thenReturn(Optional.of(new AccountContact(teacher,"hidden@example.test","Teacher",Role.TEACHER,AccountStatus.ACTIVE)));
         assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","Lop","2026","OPEN","Teacher",3));
+    }
+
+    @Test void archivingSubjectArchivesDraftAndOpenClassesKeepsArchivedAndAuditsEach() {
+        var draft=new CourseClass(UUID.randomUUID(), subjectId, "D1", "Draft", null, "2026", ClassStatus.DRAFT, null, false, now, now, 0);
+        var open=new CourseClass(UUID.randomUUID(), subjectId, "O1", "Open", null, "2026", ClassStatus.OPEN, teacher, false, now, now, 3);
+        var archived=new CourseClass(UUID.randomUUID(), subjectId, "A1", "Old", null, "2025", ClassStatus.ARCHIVED, teacher, false, now, now, 5);
+        when(queries.listOfSubject(subjectId)).thenReturn(List.of(draft, open, archived));
+        var admin=new edu.aiplatform.identity.contract.Actor(UUID.randomUUID(), edu.aiplatform.identity.contract.Role.ADMIN);
+        assertThat(adapter.archiveClassesOfSubject(subjectId, admin)).containsExactly(draft.id(), open.id());
+        verify(classes).update(argThat(c -> c.id().equals(draft.id()) && c.status()==ClassStatus.ARCHIVED), eq(0L));
+        verify(classes).update(argThat(c -> c.id().equals(open.id()) && c.status()==ClassStatus.ARCHIVED), eq(3L));
+        verify(classes, never()).update(argThat(c -> c.id().equals(archived.id())), anyLong());
+        verify(audit, times(2)).record(argThat(e -> e.action().equals("CLASS_STATUS_CHANGED") && e.actorId().equals(admin.accountId())));
     }
 }

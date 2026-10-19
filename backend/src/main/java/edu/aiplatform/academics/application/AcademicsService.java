@@ -22,7 +22,9 @@ public class AcademicsService {
     private final ICourseClassRepository classes;
     private final IEnrollmentRepository enrollments;
     private final IAcademicsReadRepository reads;
-    private final ISubjectMutationLock lock;
+    /** Khóa dòng môn của U04 tới cuối transaction: U04 lưu trữ môn và U05 ghi lớp, ghi danh trong cùng môn chạy lần lượt. */
+    private final ISubjectMutationGuard subjectGuard;
+    private static final Duration SUBJECT_LOCK_WAIT=Duration.ofSeconds(1);
     private final IAccountLookup accounts;
     private final ISubjectQuery subjects;
     private final ISubjectScope scope;
@@ -34,10 +36,10 @@ public class AcademicsService {
     private final Clock clock;
 
     public AcademicsService(ICourseClassRepository classes, IEnrollmentRepository enrollments,
-                            IAcademicsReadRepository reads, ISubjectMutationLock lock, IAccountLookup accounts,
+                            IAcademicsReadRepository reads, ISubjectMutationGuard subjectGuard, IAccountLookup accounts,
                             ISubjectQuery subjects, ISubjectScope scope, IAuthorization authorization,
                             IAudit audit, IEventPublisher events, PlatformTransactionManager transactions, Clock clock) {
-        this.classes=classes; this.enrollments=enrollments; this.reads=reads; this.lock=lock;
+        this.classes=classes; this.enrollments=enrollments; this.reads=reads; this.subjectGuard=subjectGuard;
         this.accounts=accounts; this.subjects=subjects; this.scope=scope; this.authorization=authorization;
         this.audit=audit; this.events=events; this.clock=clock;
         this.transaction=new TransactionTemplate(transactions);
@@ -111,8 +113,7 @@ public class AcademicsService {
     public ClassView create(Actor actor,UUID subjectId,String code,String name,String description,String term,UUID teacherId) {
         return command(actor,"CLASS_CREATED",subjectId,() -> {
             requireAudience(actor,"manager"); requireManager(actor,subjectId);
-            lock.acquire(subjectId); requireManager(actor,subjectId);
-            if(!subjects.isActive(subjectId)) throw ApiException.conflict("SUBJECT_INACTIVE","Môn chưa hoạt động");
+            requireManager(actor,subjectId); subjectGuard.lockActive(subjectId,SUBJECT_LOCK_WAIT); requireManager(actor,subjectId);
             requireTeacher(teacherId);
             CourseClass value=CourseClass.create(UUID.randomUUID(),subjectId,code,name,description,term,teacherId,clock.instant());
             classes.insert(value); success(actor,"CLASS_CREATED",value.id(),Map.of());
@@ -229,7 +230,7 @@ public class AcademicsService {
     private CourseClass locked(Actor actor,UUID id,Long version) {
         requireAudience(actor,"manager");
         CourseClass before=requireClassAccess(actor,"manager",id);
-        lock.acquire(before.subjectId());
+        subjectGuard.lockActive(before.subjectId(),SUBJECT_LOCK_WAIT);
         CourseClass current=requireClassAccess(actor,"manager",id);
         requireManager(actor,current.subjectId());
         if(version!=null && (version<0 || current.version()!=version)) throw ApiException.conflict("CLASS_VERSION_CONFLICT","Dữ liệu lớp đã thay đổi. Hãy tải lại");

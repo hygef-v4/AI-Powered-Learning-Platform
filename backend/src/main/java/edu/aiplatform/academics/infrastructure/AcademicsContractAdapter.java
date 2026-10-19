@@ -2,11 +2,16 @@ package edu.aiplatform.academics.infrastructure;
 
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.academics.domain.*;
+import edu.aiplatform.audit.contract.AuditEvent;
+import edu.aiplatform.audit.contract.AuditResult;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IClassScope;
 import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
+import java.time.Clock;
 import java.util.*;
 import java.util.function.IntFunction;
 import org.springframework.stereotype.Service;
@@ -21,8 +26,10 @@ public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubje
     private final IAcademicsReadRepository queries;
     private final ISubjectQuery subjects;
     private final IAccountLookup accounts;
-    public AcademicsContractAdapter(ICourseClassRepository classes,IEnrollmentRepository enrollments,IAcademicsReadRepository queries,ISubjectQuery subjects,IAccountLookup accounts) {
-        this.classes=classes;this.enrollments=enrollments;this.queries=queries;this.subjects=subjects;this.accounts=accounts;
+    private final IAudit audit;
+    private final Clock clock;
+    public AcademicsContractAdapter(ICourseClassRepository classes,IEnrollmentRepository enrollments,IAcademicsReadRepository queries,ISubjectQuery subjects,IAccountLookup accounts,IAudit audit,Clock clock) {
+        this.classes=classes;this.enrollments=enrollments;this.queries=queries;this.subjects=subjects;this.accounts=accounts;this.audit=audit;this.clock=clock;
     }
     @Override public Optional<ClassRef> getClassRef(UUID classId) { return classes.find(classId).map(AcademicsContractAdapter::reference); }
     @Override public boolean isTeacherOf(UUID accountId,UUID classId) {
@@ -64,6 +71,22 @@ public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubje
     }
     @Override public Map<UUID,Integer> countClasses(Collection<UUID> subjectIds) { return queries.countClassesOfSubjects(subjectIds); }
     @Override public int countUnarchivedClasses(UUID subjectId) { return queries.countUnarchivedClasses(subjectId); }
+    /** U04 đã khóa dòng môn trong cùng transaction, nên không thao tác ghi lớp nào của U05 chạy chồng (BR-U04-04). */
+    @Override @Transactional
+    public List<UUID> archiveClassesOfSubject(UUID subjectId,Actor actor) {
+        Objects.requireNonNull(subjectId); Objects.requireNonNull(actor);
+        var now=clock.instant();
+        var archived=new ArrayList<UUID>();
+        for (CourseClass current:queries.listOfSubject(subjectId)) {
+            if (current.status()==ClassStatus.ARCHIVED) continue;
+            CourseClass changed=current.changeStatus(ClassStatus.ARCHIVED,true,false,now);
+            classes.update(changed,current.version());
+            audit.record(new AuditEvent(UUID.randomUUID(),actor.accountId(),"CLASS_STATUS_CHANGED","COURSE_CLASS",current.id().toString(),
+                    AuditResult.SUCCESS,null,Map.of("before",current.status().name(),"after",ClassStatus.ARCHIVED.name(),"cause","SUBJECT_ARCHIVED"),now));
+            archived.add(current.id());
+        }
+        return List.copyOf(archived);
+    }
     private static ClassRef reference(CourseClass c) { return new ClassRef(c.id(),c.subjectId(),c.code(),c.name(),c.status(),c.teacherId(),c.showGradeDistribution()); }
     private static <T> List<T> allPages(IntFunction<List<T>> fetch) {
         var all=new ArrayList<T>();

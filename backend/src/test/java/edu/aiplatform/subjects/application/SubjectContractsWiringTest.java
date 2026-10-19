@@ -49,14 +49,14 @@ class SubjectContractsWiringTest {
     }
 
     @Test
-    void lifecycleDoesNotTrustZeroFromLegacyClassesWithoutTransactionalArchiveProvider() {
+    void archiveFailsClosedWhenU05CannotArchiveClassesAndKeepsTheSubjectGuardForU05() {
         ISubjectClasses legacy = mock(ISubjectClasses.class);
         runner.withUserConfiguration(Lifecycle.class)
                 .withBean(ISubjectClasses.class, () -> legacy)
                 .run(context -> {
-                    assertThat(context).hasSingleBean(edu.aiplatform.subjects.contract.ISubjectMutationGuard.class)
-                            .doesNotHaveBean(edu.aiplatform.subjects.contract.ISubjectArchiveCheck.class);
+                    assertThat(context).hasSingleBean(edu.aiplatform.subjects.contract.ISubjectMutationGuard.class);
                     UUID id = UUID.randomUUID();
+                    org.mockito.Mockito.when(legacy.archiveClassesOfSubject(org.mockito.ArgumentMatchers.eq(id), org.mockito.ArgumentMatchers.any())).thenThrow(new IllegalStateException("down"));
                     org.mockito.Mockito.when(context.getBean(ISubjectRepository.class).findByIdForUpdate(
                             org.mockito.ArgumentMatchers.eq(id), org.mockito.ArgumentMatchers.any(java.time.Duration.class)))
                             .thenReturn(java.util.Optional.of(edu.aiplatform.subjects.domain.Subject.create(id, "ABC", "Name", null, null, java.time.Instant.now())));
@@ -64,7 +64,6 @@ class SubjectContractsWiringTest {
                     assertThatThrownBy(() -> context.getBean(SubjectStatusService.class).changeStatus(admin, id,
                             new SubjectStatusService.ChangeStatus(edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, 1L)))
                             .isInstanceOf(ApiException.class).extracting("code").isEqualTo("SUBJECT_CLASSES_UNAVAILABLE");
-                    org.mockito.Mockito.verifyNoInteractions(legacy);
                 });
     }
 
