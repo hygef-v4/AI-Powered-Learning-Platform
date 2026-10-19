@@ -121,6 +121,17 @@ class AccountLookupAndPolicyTest {
         assertThat(practice.scope()).isEqualTo(ScopeKind.CLASS);
     }
 
+    /** U12: nhóm do giảng viên được giao dạy quản lý; sinh viên đang học làm bài nhóm. */
+    @Test
+    void groupActionsUseClassScope() {
+        var manage = AccessPolicy.ruleFor(Actions.GROUP_MANAGE).orElseThrow();
+        assertThat(manage.scope()).isEqualTo(ScopeKind.CLASS);
+        assertThat(manage.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
+        var work = AccessPolicy.ruleFor(Actions.GROUP_WORK).orElseThrow();
+        assertThat(work.scope()).isEqualTo(ScopeKind.CLASS);
+        assertThat(work.roles()).containsExactly(Role.STUDENT);
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);

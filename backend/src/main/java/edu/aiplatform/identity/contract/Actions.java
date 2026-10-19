@@ -63,6 +63,10 @@ public final class Actions {
     // U11 — làm Quiz Practice: chỉ sinh viên đang học lớp (R5, BR-U11-01)
     public static final String QUIZ_PRACTICE = "QUIZ_PRACTICE";
 
+    // U12 — nhóm: giảng viên được giao dạy lớp quản lý nhóm (R3/R4, BR-U12-01); sinh viên đang học làm bài nhóm (R5)
+    public static final String GROUP_MANAGE = "GROUP_MANAGE";
+    public static final String GROUP_WORK = "GROUP_WORK";
+
     private Actions() {
     }
 }
