@@ -1,17 +1,9 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro } from "next/font/google";
 import type { ReactNode } from "react";
 import "@/features/register";
 import { ClientRegistrations } from "./ClientRegistrations";
 import "./globals.css";
-
-// Font tự host khi build (next/font), không tải từ Google lúc chạy.
-const beVietnam = Be_Vietnam_Pro({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-be-vietnam",
-  display: "swap",
-});
+import "./fonts.css";
 
 export const metadata: Metadata = {
   title: "Nền tảng học tập",
@@ -20,7 +12,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi" className={beVietnam.variable}>
+    <html lang="vi" className="font-be-vietnam">
+      <head>
+        {[400, 500, 600, 700, 800].flatMap((weight) =>
+          ["latin", "vietnamese"].map((subset) => (
+            <link
+              key={`${weight}-${subset}`}
+              rel="preload"
+              href={`/fonts/be-vietnam-pro/be-vietnam-pro-${weight}-${subset}.woff2`}
+              as="font"
+              type="font/woff2"
+              crossOrigin="anonymous"
+            />
+          )),
+        )}
+      </head>
       <body>
         <ClientRegistrations />
         {children}
