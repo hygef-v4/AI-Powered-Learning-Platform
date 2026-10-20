@@ -92,6 +92,35 @@ class AccountLookupAndPolicyTest {
         assertThat(manage.roles()).containsExactly(Role.SUBJECT_MANAGER);
     }
 
+    /** U10: ngân hàng câu hỏi chỉ cho Chủ nhiệm môn của môn (R2, BR-U10-01). */
+    @Test
+    void questionBankActionsAreSubjectManagerOnlyWithSubjectScope() {
+        for (String action : new String[] {Actions.QUESTION_BANK_VIEW, Actions.QUESTION_BANK_MANAGE}) {
+            var rule = AccessPolicy.ruleFor(action).orElseThrow();
+            assertThat(rule.roles()).containsExactly(Role.SUBJECT_MANAGER);
+            assertThat(rule.scope()).isEqualTo(ScopeKind.SUBJECT);
+        }
+    }
+
+    /** U10: Quiz của môn theo phạm vi môn (R2), Quiz của lớp theo giảng viên lớp (R3/R4); Admin, Student không soạn. */
+    @Test
+    void quizActionsUseSubjectOrClassScope() {
+        var subjectQuiz = AccessPolicy.ruleFor(Actions.QUIZ_SUBJECT_MANAGE).orElseThrow();
+        assertThat(subjectQuiz.roles()).containsExactly(Role.SUBJECT_MANAGER);
+        assertThat(subjectQuiz.scope()).isEqualTo(ScopeKind.SUBJECT);
+        var classQuiz = AccessPolicy.ruleFor(Actions.QUIZ_CLASS_MANAGE).orElseThrow();
+        assertThat(classQuiz.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
+        assertThat(classQuiz.scope()).isEqualTo(ScopeKind.CLASS);
+    }
+
+    /** U11: chỉ sinh viên đang học lớp làm Quiz Practice (R5, BR-U11-01). */
+    @Test
+    void quizPracticeIsStudentOnlyWithClassScope() {
+        var practice = AccessPolicy.ruleFor(Actions.QUIZ_PRACTICE).orElseThrow();
+        assertThat(practice.roles()).containsExactly(Role.STUDENT);
+        assertThat(practice.scope()).isEqualTo(ScopeKind.CLASS);
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);
