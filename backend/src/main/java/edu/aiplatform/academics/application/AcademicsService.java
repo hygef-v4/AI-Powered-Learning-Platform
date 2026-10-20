@@ -140,14 +140,16 @@ public class AcademicsService {
         return command(actor,"CLASS_STATUS_CHANGED",id,() -> {
             if(status==null) throw ApiException.badRequest("INVALID_STATUS","Chọn trạng thái lớp");
             CourseClass current=locked(actor,id,version);
-            boolean active=false;
+            boolean subjectActive=false;
             if(status==ClassStatus.OPEN) {
-                requireTeacher(current.teacherId()); active=subjects.isActive(current.subjectId());
+                requireTeacher(current.teacherId());
+                subjectActive=subjects.isActive(current.subjectId());
                 var conflicting=enrollments.conflictingStudents(id,current.subjectId());
                 if(!conflicting.isEmpty()) throw new AcademicsProblem("ENROLLMENT_CONFLICT","Có sinh viên đang ở lớp khác cùng môn",Map.of("conflictingStudents",conflicting));
             }
-            CourseClass changed=current.changeStatus(status,active,false,clock.instant());
-            classes.update(changed,version); success(actor,"CLASS_STATUS_CHANGED",id,Map.of("before",current.status().name(),"after",status.name()));
+            CourseClass changed=current.changeStatus(status,subjectActive,false,clock.instant());
+            classes.update(changed,version);
+            success(actor,"CLASS_STATUS_CHANGED",id,Map.of("before",current.status().name(),"after",status.name()));
             if(current.status()==ClassStatus.DRAFT && status==ClassStatus.OPEN) {
                 for(int offset=0;;offset+=100) {
                     var page=enrollments.listByClass(id,true,100,offset);
@@ -225,7 +227,13 @@ public class AcademicsService {
     }
 
     private ClassView mutate(Actor actor,String action,UUID id,long version,UnaryOperator<CourseClass> change,Map<String,Object> details) {
-        return command(actor,action,id,() -> { CourseClass current=locked(actor,id,version); CourseClass value=change.apply(current);classes.update(value,version);success(actor,action,id,details);return view(value); });
+        return command(actor,action,id,() -> {
+            CourseClass current=locked(actor,id,version);
+            CourseClass changed=change.apply(current);
+            classes.update(changed,version);
+            success(actor,action,id,details);
+            return view(changed);
+        });
     }
     private CourseClass locked(Actor actor,UUID id,Long version) {
         requireAudience(actor,"manager");
@@ -256,17 +264,26 @@ public class AcademicsService {
     }
     private void requireAudience(Actor actor,String audience) {
         if(actor==null || actor.accountId()==null || actor.role()==null) throw new ApiException(org.springframework.http.HttpStatus.UNAUTHORIZED,"AUTHENTICATION_REQUIRED","Cần đăng nhập");
-        boolean role=switch(audience) {case "manager" -> actor.role()==Role.SUBJECT_MANAGER;case "teacher" -> actor.role()==Role.TEACHER || actor.role()==Role.SUBJECT_MANAGER;case "student" -> actor.role()==Role.STUDENT;default -> false;};
-        if(!role) throw ApiException.forbidden("ROLE_DENIED");
+        boolean roleAllowed=switch(audience) {
+            case "manager" -> actor.role()==Role.SUBJECT_MANAGER;
+            case "teacher" -> actor.role()==Role.TEACHER || actor.role()==Role.SUBJECT_MANAGER;
+            case "student" -> actor.role()==Role.STUDENT;
+            default -> false;
+        };
+        if(!roleAllowed) throw ApiException.forbidden("ROLE_DENIED");
         AccountContact contact=accounts.getContact(actor.accountId()).orElseThrow(() -> ApiException.forbidden("ACCOUNT_INACTIVE"));
         if(contact.status()!=AccountStatus.ACTIVE || contact.role()!=actor.role()) throw ApiException.forbidden("ACCOUNT_INACTIVE");
-        String action=switch(audience) {case "manager" -> Actions.CLASS_MANAGER;case "teacher" -> Actions.CLASS_TEACHER;default -> Actions.CLASS_STUDENT;};
+        String action=switch(audience) {
+            case "manager" -> Actions.CLASS_MANAGER;
+            case "teacher" -> Actions.CLASS_TEACHER;
+            default -> Actions.CLASS_STUDENT;
+        };
         authorize(actor,action,ResourceRef.none(),false);
     }
-    private void authorize(Actor actor,String action,ResourceRef ref,boolean hide) {
+    private void authorize(Actor actor,String action,ResourceRef ref,boolean hideDeniedResource) {
         var decision=authorization.authorize(actor,action,ref);
         if(decision==null || !decision.allowed()) {
-            if(hide) throw ApiException.notFound("CLASS_OUT_OF_SCOPE");
+            if(hideDeniedResource) throw ApiException.notFound("CLASS_OUT_OF_SCOPE");
             throw ApiException.forbidden("ACCESS_DENIED");
         }
     }
@@ -280,43 +297,61 @@ public class AcademicsService {
     private SubjectRef subject(UUID id) { return subjects.getSubject(id).orElseThrow(() -> ApiException.unavailable("SUBJECT_UNAVAILABLE","Không đọc được môn học")); }
     private List<ClassView> views(List<CourseClass> values) {
         var counts=reads.enrollmentCounts(values.stream().map(CourseClass::id).toList());
-        return values.stream().map(c -> view(c,counts.getOrDefault(c.id(),new IAcademicsReadRepository.EnrollmentCounts(0,0)))).toList();
+        return values.stream().map(courseClass -> view(courseClass,counts.getOrDefault(courseClass.id(),new IAcademicsReadRepository.EnrollmentCounts(0,0)))).toList();
     }
-    private ClassView view(CourseClass value) {return views(List.of(value)).get(0);}
-    private ClassView view(CourseClass c,IAcademicsReadRepository.EnrollmentCounts counts) {
-        var s=subject(c.subjectId());
-        Person teacher=c.teacherId()==null?null:person(accounts.getContact(c.teacherId()).orElseThrow(() -> ApiException.unavailable("ACCOUNT_UNAVAILABLE","Không đọc được giảng viên")));
-        return new ClassView(c.id(),new Subject(s.subjectId(),s.code(),s.name()),c.code(),c.name(),Objects.requireNonNullElse(c.description(),""),Objects.requireNonNullElse(c.term(),""),c.status(),teacher,counts.active(),counts.removed(),c.createdAt(),c.showGradeDistribution(),c.version());
+    private ClassView view(CourseClass value) {
+        return views(List.of(value)).get(0);
     }
-    private SubjectSummary subjectSummary(SubjectRef s) {
+    private ClassView view(CourseClass courseClass,IAcademicsReadRepository.EnrollmentCounts counts) {
+        var subject=subject(courseClass.subjectId());
+        Person teacher=courseClass.teacherId()==null?null:person(accounts.getContact(courseClass.teacherId())
+                .orElseThrow(() -> ApiException.unavailable("ACCOUNT_UNAVAILABLE","Không đọc được giảng viên")));
+        return new ClassView(courseClass.id(),new Subject(subject.subjectId(),subject.code(),subject.name()),
+                courseClass.code(),courseClass.name(),Objects.requireNonNullElse(courseClass.description(),""),
+                Objects.requireNonNullElse(courseClass.term(),""),courseClass.status(),teacher,counts.active(),counts.removed(),
+                courseClass.createdAt(),courseClass.showGradeDistribution(),courseClass.version());
+    }
+    private SubjectSummary subjectSummary(SubjectRef subject) {
         var counts=new EnumMap<ClassStatus,Long>(ClassStatus.class);
         for(var status:ClassStatus.values()) counts.put(status,0L);
-        reads.listOfSubject(s.subjectId()).forEach(c -> counts.merge(c.status(),1L,Long::sum));
-        return new SubjectSummary(s.subjectId(),s.code(),s.name(),s.status(),Map.copyOf(counts));
+        reads.listOfSubject(subject.subjectId()).forEach(courseClass -> counts.merge(courseClass.status(),1L,Long::sum));
+        return new SubjectSummary(subject.subjectId(),subject.code(),subject.name(),subject.status(),Map.copyOf(counts));
     }
-    private Student studentView(Enrollment e) {
-        var a=accounts.getContact(e.accountId()).orElseThrow(() -> ApiException.unavailable("ACCOUNT_UNAVAILABLE","Không đọc được sinh viên"));
-        return new Student(e.accountId(),a.displayName(),a.email(),e.enrolledAt(),e.status());
+    private Student studentView(Enrollment enrollment) {
+        var account=accounts.getContact(enrollment.accountId())
+                .orElseThrow(() -> ApiException.unavailable("ACCOUNT_UNAVAILABLE","Không đọc được sinh viên"));
+        return new Student(enrollment.accountId(),account.displayName(),account.email(),enrollment.enrolledAt(),enrollment.status());
     }
-    private Person person(AccountContact a) {return new Person(a.accountId(),a.displayName(),a.email());}
+    private Person person(AccountContact account) {
+        return new Person(account.accountId(),account.displayName(),account.email());
+    }
     private Map<String,Object> teacherDetails(UUID before,UUID after) {
-        var values=new HashMap<String,Object>(); values.put("before",before==null?"":before.toString());values.put("after",after==null?"":after.toString());return values;
+        var details=new HashMap<String,Object>();
+        details.put("before",before==null?"":before.toString());
+        details.put("after",after==null?"":after.toString());
+        return details;
     }
-    private void activated(CourseClass c,UUID accountId) {
-        events.publish(new DomainEvent(1,UUID.randomUUID(),EventTypes.ENROLLMENT_ACTIVATED,"U05",clock.instant(),UUID.randomUUID().toString(),Map.of("classId",c.id().toString(),"subjectId",c.subjectId().toString(),"accountId",accountId.toString())));
+    private void activated(CourseClass courseClass,UUID accountId) {
+        events.publish(new DomainEvent(1,UUID.randomUUID(),EventTypes.ENROLLMENT_ACTIVATED,"U05",clock.instant(),UUID.randomUUID().toString(),
+                Map.of("classId",courseClass.id().toString(),"subjectId",courseClass.subjectId().toString(),"accountId",accountId.toString())));
     }
     private void success(Actor actor,String action,UUID id,Map<String,Object> details) { record(actor,action,id,AuditResult.SUCCESS,null,details); }
     private void record(Actor actor,String action,UUID id,AuditResult result,String reason,Map<String,Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(),actor==null?null:actor.accountId(),action,"COURSE_CLASS",id==null?null:id.toString(),result,reason,details,clock.instant()));
     }
-    private <T>T command(Actor actor,String action,UUID id,Supplier<T> work) { return guarded(actor,action,id,() -> transaction.execute(tx -> work.get())); }
+    private <T>T command(Actor actor,String action,UUID id,Supplier<T> work) {
+        return guarded(actor,action,id,() -> transaction.execute(tx -> work.get()));
+    }
     private <T>T guarded(Actor actor,String action,UUID id,Supplier<T> work) {
         try { return work.get(); }
         catch(RuntimeException failure) {
             ApiException problem=mapFailure(failure);
             boolean denied=problem.status().value()==401 || problem.status().value()==403 || problem.status().value()==404;
-            try {record(actor,denied?"ACCESS_DENIED":action,id,denied?AuditResult.DENIED:AuditResult.FAILURE,problem.code(),Map.of());}
-            catch(RuntimeException auditFailure) {throw ApiException.unavailable("AUDIT_UNAVAILABLE","Không thể ghi nhật ký an toàn");}
+            try {
+                record(actor,denied?"ACCESS_DENIED":action,id,denied?AuditResult.DENIED:AuditResult.FAILURE,problem.code(),Map.of());
+            } catch(RuntimeException auditFailure) {
+                throw ApiException.unavailable("AUDIT_UNAVAILABLE","Không thể ghi nhật ký an toàn");
+            }
             throw problem;
         }
     }
