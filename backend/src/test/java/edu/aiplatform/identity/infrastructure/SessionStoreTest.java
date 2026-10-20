@@ -48,11 +48,48 @@ class SessionStoreTest {
         String newToken = ((SessionStore.Rotated) first).refreshToken();
         assertThat(newToken).isNotEqualTo(session.refreshToken());
 
-        // BR-U01-46: token cũ bị dùng lại thì thu hồi cả phiên, token mới cũng mất hiệu lực.
+        // BR-U01-46: token cũ bị dùng lại (quá khoảng refresh đồng thời) thì thu hồi cả phiên, token mới cũng mất hiệu lực.
+        clock.set(NOW.plus(SessionStore.REUSE_GRACE).plusSeconds(1));
         assertThat(store.rotate(session.refreshToken()))
                 .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.REUSED));
         assertThat(store.find(session.sid())).isEmpty();
         assertThat(store.rotate(newToken)).isInstanceOf(SessionStore.Rejected.class);
+    }
+
+    /** Hai tab refresh cùng lúc: bên thua bị từ chối nhưng phiên và token mới của bên thắng vẫn dùng được. */
+    @Test
+    void concurrentRefreshWithinGraceKeepsSession() {
+        SessionStore.IssuedSession session = store.create(accountId);
+        String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
+
+        clock.set(NOW.plus(SessionStore.REUSE_GRACE));
+        assertThat(store.rotate(session.refreshToken()))
+                .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.CONCURRENT));
+
+        assertThat(store.find(session.sid())).isPresent();
+        assertThat(store.rotate(newToken)).isInstanceOf(SessionStore.Rotated.class);
+    }
+
+    @Test
+    void legacyUsedMarkWithoutTimestampCountsAsReuse() {
+        SessionStore.IssuedSession session = store.create(accountId);
+        String key = SessionStore.REFRESH_PREFIX + Hashing.sha256Hex(session.refreshToken());
+        redis.values.put(key, SessionStore.USED_MARK + session.sid());
+
+        assertThat(store.rotate(session.refreshToken()))
+                .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.REUSED));
+        assertThat(store.find(session.sid())).isEmpty();
+    }
+
+    @Test
+    void sidOfReturnsSessionOnlyForLiveRefreshToken() {
+        SessionStore.IssuedSession session = store.create(accountId);
+        assertThat(store.sidOf(session.refreshToken())).contains(session.sid());
+
+        String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
+        assertThat(store.sidOf(session.refreshToken())).isEmpty();
+        assertThat(store.sidOf(newToken)).contains(session.sid());
+        assertThat(store.sidOf(null)).isEmpty();
     }
 
     @Test

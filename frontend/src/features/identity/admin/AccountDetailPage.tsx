@@ -47,8 +47,14 @@ export function AccountDetailPage() {
     };
   }, [id]);
 
+  /** Tải lại sau xung đột version; không ném lỗi để popup/form gọi nó vẫn kết thúc bình thường. */
   async function reload() {
-    setAccount(await getAccount(id));
+    try {
+      setAccount(await getAccount(id));
+    } catch {
+      setNotice(null);
+      setLoadError("Không tải lại được tài khoản. Hãy tải lại trang.");
+    }
   }
 
   if (loadError) {
@@ -132,11 +138,10 @@ export function AccountDetailPage() {
           <Section title="Lịch sử">
             <p className="text-[13px] text-body">Lịch sử thay đổi của tài khoản xem ở Nhật ký audit.</p>
             <Link
-              href={`/admin/audit?targetId=${account.id}`}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+              href={`/admin/audit?objectType=ACCOUNT&objectId=${account.id}`}
+              className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline"
             >
-              Mở Nhật ký audit đã lọc theo tài khoản
-              <Icon name="arrow_forward" size={16} />
+              Mở Nhật ký audit của tài khoản
             </Link>
           </Section>
         </div>

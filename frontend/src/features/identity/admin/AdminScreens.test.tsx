@@ -146,4 +146,14 @@ describe("AccountDetailPage", () => {
     expect(screen.getByRole("button", { name: "Vô hiệu hóa tài khoản" })).toBeDisabled();
     expect(changeStatus).not.toHaveBeenCalled();
   });
+
+  it("mở Nhật ký audit đã lọc theo tài khoản", async () => {
+    signedInAs("admin-1");
+    render(<AccountDetailPage />);
+
+    expect(await screen.findByRole("link", { name: "Mở Nhật ký audit của tài khoản" })).toHaveAttribute(
+      "href",
+      "/admin/audit?objectType=ACCOUNT&objectId=acc-1",
+    );
+  });
 });

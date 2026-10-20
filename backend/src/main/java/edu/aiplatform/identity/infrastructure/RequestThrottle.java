@@ -2,6 +2,7 @@ package edu.aiplatform.identity.infrastructure;
 
 import edu.aiplatform.identity.application.IdentityProperties;
 import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
@@ -10,6 +11,8 @@ import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -34,10 +37,33 @@ public class RequestThrottle {
         this.limits = properties.rateLimit();
     }
 
-    /** Đăng nhập: 30 lần mỗi 5 phút cho mỗi IP (BR-U01-43). */
-    public boolean tryLogin(String clientIp) {
-        return tryConsume("login-ip:" + clientIp,
-                bandwidth(limits.loginPerIp(), limits.loginIpWindow()));
+    /**
+     * Đăng nhập: IP còn lượt sai không (BR-U01-43, 30 lần sai mỗi 5 phút). Chỉ lần sai mới trừ lượt
+     * ({@link #recordLoginFailure}) để nhiều sinh viên đăng nhập đúng qua chung một NAT của trường không bị chặn.
+     */
+    public boolean loginAllowed(String clientIp) {
+        return available("login-ip:" + clientIp, loginBandwidth());
+    }
+
+    public void recordLoginFailure(String clientIp) {
+        consume("login-ip:" + clientIp, loginBandwidth());
+    }
+
+    /** Đổi mật khẩu: tài khoản còn lượt nhập sai mật khẩu hiện tại không (mặc định 5 lần mỗi 15 phút). */
+    public boolean passwordChangeAllowed(UUID accountId) {
+        return available("password-change:" + accountId, passwordChangeBandwidth());
+    }
+
+    public void recordPasswordChangeFailure(UUID accountId) {
+        consume("password-change:" + accountId, passwordChangeBandwidth());
+    }
+
+    private Bandwidth loginBandwidth() {
+        return bandwidth(limits.loginPerIp(), limits.loginIpWindow());
+    }
+
+    private Bandwidth passwordChangeBandwidth() {
+        return bandwidth(limits.passwordChangeFailures(), limits.passwordChangeWindow());
     }
 
     /** Yêu cầu OTP: 5 lần/giờ và cách nhau tối thiểu 60 giây mỗi email; 20 lần/giờ mỗi IP (BR-U01-25). */
@@ -57,15 +83,30 @@ public class RequestThrottle {
     }
 
     private boolean tryConsume(String key, Bandwidth... bandwidths) {
+        return redisCall(() -> bucket(key, bandwidths).tryConsume(1));
+    }
+
+    /** Ghi một lượt; hết lượt thì thôi (không chờ). */
+    private void consume(String key, Bandwidth... bandwidths) {
+        redisCall(() -> bucket(key, bandwidths).tryConsume(1));
+    }
+
+    private boolean available(String key, Bandwidth... bandwidths) {
+        return redisCall(() -> bucket(key, bandwidths).getAvailableTokens() > 0);
+    }
+
+    private Bucket bucket(String key, Bandwidth... bandwidths) {
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (Bandwidth bandwidth : bandwidths) {
             builder.addLimit(bandwidth);
         }
         BucketConfiguration configuration = builder.build();
+        return proxyManager().builder().build((PREFIX + key).getBytes(StandardCharsets.UTF_8), () -> configuration);
+    }
+
+    private static boolean redisCall(BooleanSupplier call) {
         try {
-            return proxyManager().builder()
-                    .build((PREFIX + key).getBytes(StandardCharsets.UTF_8), () -> configuration)
-                    .tryConsume(1);
+            return call.getAsBoolean();
         } catch (RuntimeException e) {
             // Lỗi của Lettuce đổi sang lỗi Redis của Spring để xử lý chung một chỗ (503, BR-U01-95).
             throw new RedisConnectionFailureException("Không kiểm được giới hạn tần suất", e);

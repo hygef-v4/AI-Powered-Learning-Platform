@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, setUnauthenticatedHandler } from "./client";
+import { ApiError, apiFetch, CONCURRENT_REFRESH_WAIT_MS, setUnauthenticatedHandler } from "./client";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status });
@@ -51,6 +51,56 @@ describe("apiFetch", () => {
 
     await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/v1/auth/refresh");
+  });
+
+  it("refresh trả 409 (tab khác vừa refresh) thì chờ cookie mới rồi gửi lại, không về đăng nhập", async () => {
+    const handler = vi.fn();
+    setUnauthenticatedHandler(handler);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 409 }))
+      .mockResolvedValueOnce(json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const started = Date.now();
+    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    expect(Date.now() - started).toBeGreaterThanOrEqual(CONCURRENT_REFRESH_WAIT_MS - 50);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("sau 409 mà cookie mới về muộn (vẫn 401) thì refresh lại bằng cookie hiện có", async () => {
+    const handler = vi.fn();
+    setUnauthenticatedHandler(handler);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 409 }))
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    expect(fetchMock.mock.calls[3]?.[0]).toBe("/api/v1/auth/refresh");
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("backend bận khi refresh thì báo 503, không coi là hết phiên", async () => {
+    const handler = vi.fn();
+    setUnauthenticatedHandler(handler);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 401 }))
+        .mockResolvedValueOnce(new Response(null, { status: 503 })),
+    );
+
+    const error = await apiFetch("/api/v1/me/profile").catch((e: unknown) => e);
+    expect((error as ApiError).problem).toMatchObject({ status: 503, code: "SYSTEM_BUSY" });
+    expect(handler).not.toHaveBeenCalled();
   });
 
   it("refresh lỗi thì gọi handler hết phiên và ném 401", async () => {

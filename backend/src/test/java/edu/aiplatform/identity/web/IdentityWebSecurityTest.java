@@ -1,7 +1,9 @@
 package edu.aiplatform.identity.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +33,7 @@ import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.config.SecurityConfig;
+import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
 import jakarta.servlet.http.Cookie;
 import java.util.Optional;
@@ -42,6 +45,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,6 +63,9 @@ import org.springframework.web.bind.annotation.RestController;
 class IdentityWebSecurityTest {
 
     private static final Actor STUDENT = new Actor(UUID.randomUUID(), Role.STUDENT);
+    // Sinh mỗi lần chạy để không có chuỗi mật khẩu cố định trong mã.
+    private static final String CURRENT_PASSWORD = UUID.randomUUID().toString();
+    private static final String NEW_PASSWORD = UUID.randomUUID().toString();
 
     @Autowired
     MockMvc mvc;
@@ -151,6 +158,17 @@ class IdentityWebSecurityTest {
                 .andExpect(header().doesNotExist("Set-Cookie"));
     }
 
+    /** Hồi quy (E2E): exception chưa xử lý forward tới /error không được biến thành 401 "hết phiên". */
+    @Test
+    void errorDispatchIsNotTreatedAsUnauthenticated() throws Exception {
+        mvc.perform(get("/error").with(request -> {
+                    request.setDispatcherType(jakarta.servlet.DispatcherType.ERROR);
+                    request.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 500);
+                    return request;
+                }))
+                .andExpect(status().isInternalServerError());
+    }
+
     @Test
     void stateChangingRequestNeedsCsrfHeader() throws Exception {
         signedIn();
@@ -167,18 +185,43 @@ class IdentityWebSecurityTest {
 
     @Test
     void loginIsPublicWithoutCsrfAndSetsHttpOnlyCookies() throws Exception {
-        when(authService.login(eq("taivm@fpt.edu.vn"), eq("hocbai2026"), any())).thenReturn(
+        when(authService.login(eq("taivm@fpt.edu.vn"), eq(CURRENT_PASSWORD), any())).thenReturn(
                 new AuthService.LoginResult(new SessionInfo(STUDENT.accountId(), "Tài", Role.STUDENT, "/classes"),
                         "access", "refresh"));
 
         mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"taivm@fpt.edu.vn\",\"password\":\"hocbai2026\"}"))
+                        .content("{\"email\":\"taivm@fpt.edu.vn\",\"password\":\"" + CURRENT_PASSWORD + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.homePath").value("/classes"))
                 .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("access_token=access"))))
                 .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("HttpOnly"))))
                 .andExpect(header().stringValues("Set-Cookie",
-                        hasItem(containsString("Path=/api/v1/auth/refresh"))));
+                        hasItem(allOf(containsString("refresh_token=refresh"), containsString("Path=/api/v1/auth;")))))
+                // Cookie refresh ở path cũ bị xóa để không che cookie mới.
+                .andExpect(header().stringValues("Set-Cookie",
+                        hasItem(allOf(containsString("refresh_token=;"), containsString("Path=/api/v1/auth/refresh;")))));
+    }
+
+    /** Hai tab refresh cùng lúc: bên thua nhận 409 và không bị xóa cookie mà bên thắng vừa đặt. */
+    @Test
+    void concurrentRefreshKeepsCookies() throws Exception {
+        when(authService.refresh("r1")).thenThrow(new ApiException(HttpStatus.CONFLICT,
+                AuthService.REFRESH_CONCURRENT, "Phiên vừa được làm mới"));
+
+        mvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isConflict())
+                .andExpect(header().stringValues("Set-Cookie", not(hasItem(containsString("access_token")))))
+                .andExpect(header().stringValues("Set-Cookie", not(hasItem(containsString("refresh_token")))));
+    }
+
+    @Test
+    void failedRefreshClearsCookies() throws Exception {
+        when(authService.refresh("r1")).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED,
+                AuthService.SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn"));
+
+        mvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("refresh_token=;"))));
     }
 
     @Test
@@ -209,6 +252,24 @@ class IdentityWebSecurityTest {
     }
 
     @Test
+    void beanValidationErrorGetsIdentityErrorCode() throws Exception {
+        signedIn();
+
+        // Thiếu field bắt buộc và vượt độ dài: cùng mã INVALID_REQUEST như JSON sai.
+        mvc.perform(post("/api/v1/me/password")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"" + NEW_PASSWORD + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + "a".repeat(400) + "\",\"password\":\"x\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
     void changePasswordPassesCurrentSessionId() throws Exception {
         signedIn();
 
@@ -216,9 +277,9 @@ class IdentityWebSecurityTest {
                         .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
                         .header("X-XSRF-TOKEN", "abc")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"currentPassword\":\"hocbai2026\",\"newPassword\":\"matkhaumoi9\"}"))
+                        .content("{\"currentPassword\":\"" + CURRENT_PASSWORD + "\",\"newPassword\":\"" + NEW_PASSWORD + "\"}"))
                 .andExpect(status().isNoContent());
-        verify(passwordChangeService).change(STUDENT, "sid-1", "hocbai2026", "matkhaumoi9");
+        verify(passwordChangeService).change(STUDENT, "sid-1", CURRENT_PASSWORD, NEW_PASSWORD);
     }
 
     @Test
@@ -266,6 +327,15 @@ class IdentityWebSecurityTest {
         mvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(AuthCookies.ACCESS, "good")))
                 .andExpect(status().isNoContent())
                 .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("access_token=;"))));
-        verify(authService).logout("sid-1");
+        verify(authService).logout("sid-1", null);
+    }
+
+    /** Access token đã hết hạn: vẫn thu hồi phiên trên server nhờ refresh token (cookie path /api/v1/auth). */
+    @Test
+    void logoutWithExpiredAccessTokenRevokesByRefreshToken() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isNoContent())
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("refresh_token=;"))));
+        verify(authService).logout(null, "r1");
     }
 }

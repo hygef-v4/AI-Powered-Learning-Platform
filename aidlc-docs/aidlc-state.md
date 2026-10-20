@@ -156,7 +156,7 @@
 - **Programming Languages**: Java 17 / Spring Boot 3.5, TypeScript / Next.js 16
 - **Build System**: Maven, npm
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: `F:/code/git/AI-Powered-Learning-Platform`
+- **Workspace Root**: thư mục gốc của repo (đường dẫn tùy máy, ví dụ `D:/Github/AI-Powered-Learning-Platform`)
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in `aidlc-docs/`)

@@ -34,6 +34,8 @@ public class AuthService {
     public static final String AUTH_FAILED_MESSAGE =
             "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng.";
     public static final String SESSION_EXPIRED = "SESSION_EXPIRED";
+    /** Request khác (tab khác) vừa xoay cùng refresh token; cookie mới đã được đặt, client chỉ cần gửi lại. */
+    public static final String REFRESH_CONCURRENT = "REFRESH_CONCURRENT";
 
     private final AccountRepository accounts;
     private final SessionStore sessions;
@@ -67,7 +69,7 @@ public class AuthService {
     }
 
     public LoginResult login(String rawEmail, String rawPassword, String clientIp) {
-        if (!throttle.tryLogin(clientIp)) {
+        if (!throttle.loginAllowed(clientIp)) {
             throw authFailed();
         }
         String email = EmailPolicy.normalize(rawEmail);
@@ -76,18 +78,18 @@ public class AuthService {
         if (found.isEmpty()) {
             passwordEncoder.matches(password, dummyHash);
             record(null, "LOGIN_FAILED", null, AuditResult.FAILURE, "UNKNOWN_EMAIL");
-            throw authFailed();
+            throw failed(clientIp);
         }
         Account account = found.get();
         Instant now = clock.instant();
         boolean passwordMatches = passwordMatches(password, account);
         if (account.isLocked(now)) {
             record(account.id(), "LOGIN_BLOCKED_LOCKED", account.id(), AuditResult.DENIED, "LOCKED");
-            throw authFailed();
+            throw failed(clientIp);
         }
         if (account.status() != AccountStatus.ACTIVE) {
             record(account.id(), "LOGIN_FAILED", account.id(), AuditResult.FAILURE, "STATUS_" + account.status());
-            throw authFailed();
+            throw failed(clientIp);
         }
         if (!passwordMatches) {
             boolean locked = accounts.recordFailedLogin(account.id(), properties.loginLockThreshold(),
@@ -96,7 +98,7 @@ public class AuthService {
             if (locked) {
                 record(account.id(), "ACCOUNT_TEMP_LOCKED", account.id(), AuditResult.DENIED, "TOO_MANY_FAILURES");
             }
-            throw authFailed();
+            throw failed(clientIp);
         }
         accounts.resetLoginThrottle(account.id());
         return startSession(account);
@@ -114,6 +116,9 @@ public class AuthService {
     /** Xoay refresh token; tài khoản không còn {@code ACTIVE} thì thu hồi phiên (BR-U01-44, 46). */
     public RefreshResult refresh(String refreshToken) {
         SessionStore.IRotateResult result = sessions.rotate(refreshToken);
+        if (result instanceof SessionStore.Rejected rejected && rejected.reason() == SessionStore.Reason.CONCURRENT) {
+            throw new ApiException(HttpStatus.CONFLICT, REFRESH_CONCURRENT, "Phiên vừa được làm mới, hãy thử lại");
+        }
         if (!(result instanceof SessionStore.Rotated rotated)) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn");
         }
@@ -127,11 +132,15 @@ public class AuthService {
         return new RefreshResult(accessToken, rotated.refreshToken());
     }
 
-    /** Chỉ thu hồi phiên hiện tại; phiên khác giữ nguyên (BR-U01-45). */
-    public void logout(String sid) {
+    /**
+     * Chỉ thu hồi phiên hiện tại; phiên khác giữ nguyên (BR-U01-45). Access token đã hết hạn thì không có {@code sid},
+     * phiên được tìm qua refresh token để vẫn thu hồi trên server, không chỉ xóa cookie.
+     */
+    public void logout(String sid, String refreshToken) {
         if (sid != null) {
             sessions.delete(sid);
         }
+        sessions.sidOf(refreshToken).filter(other -> !other.equals(sid)).ifPresent(sessions::delete);
     }
 
     /** Mật khẩu quá 72 byte không bao giờ đúng (NFR-U01-14); vẫn chạy bcrypt để thời gian đồng đều. */
@@ -142,6 +151,12 @@ public class AuthService {
             return false;
         }
         return passwordEncoder.matches(password, account.passwordHash());
+    }
+
+    /** Lần thất bại trừ một lượt của IP (BR-U01-43); đăng nhập đúng không trừ. */
+    private ApiException failed(String clientIp) {
+        throttle.recordLoginFailure(clientIp);
+        return authFailed();
     }
 
     private static ApiException authFailed() {

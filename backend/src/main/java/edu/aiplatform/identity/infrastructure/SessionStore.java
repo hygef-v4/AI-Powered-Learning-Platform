@@ -6,10 +6,13 @@ import edu.aiplatform.identity.application.IdentityProperties;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Component;
  * {@code session:{sid}} là thu hồi. Refresh token chỉ lưu băm; mỗi lần refresh xoay token mới, token cũ được đánh dấu
  * "đã dùng" tới hết hạn để phát hiện dùng lại thì thu hồi cả phiên (BR-U01-46). Idle 2 giờ bằng TTL làm mới mỗi lần
  * refresh, tối đa 7 ngày tính từ {@code issuedAt} (BR-U01-44). Lỗi Redis để nổi lên ({@code RedisConnectionFailureException}).
+ * Token cũ dùng lại trong {@link #REUSE_GRACE} sau khi xoay là hai tab/request refresh cùng lúc, không phải bị lộ:
+ * từ chối nhưng không thu hồi phiên, để bên thua dùng cookie mới bên thắng vừa đặt.
  */
 @Component
 public class SessionStore {
@@ -25,6 +30,20 @@ public class SessionStore {
     static final String REFRESH_PREFIX = "session:refresh:";
     static final String ACCOUNT_SESSIONS_PREFIX = "account:sessions:";
     static final String USED_MARK = "used:";
+    /** Khoảng coi token cũ dùng lại là refresh đồng thời (nhiều tab), không phải bị lộ. */
+    static final Duration REUSE_GRACE = Duration.ofSeconds(20);
+
+    /**
+     * Đọc và đánh dấu "đã dùng" refresh token trong một bước nguyên tử: hai request cùng token chỉ một cái nhận
+     * {@code sid}, cái kia thấy dấu {@code used:{sid}:{millis}} (không có khoảng trống "không tìm thấy" ở giữa).
+     */
+    static final RedisScript<String> CLAIM_REFRESH = new DefaultRedisScript<>("""
+            local v = redis.call('GET', KEYS[1])
+            if not v then return false end
+            if string.sub(v, 1, 5) == 'used:' then return v end
+            redis.call('SET', KEYS[1], 'used:' .. v .. ':' .. ARGV[1], 'PX', ARGV[2])
+            return v
+            """, String.class);
 
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
@@ -58,8 +77,9 @@ public class SessionStore {
     public record Rejected(Reason reason) implements IRotateResult {
     }
 
+    /** {@code CONCURRENT}: token vừa được xoay bởi request khác trong {@link #REUSE_GRACE}; phiên vẫn còn. */
     public enum Reason {
-        UNKNOWN, EXPIRED, REUSED
+        UNKNOWN, EXPIRED, REUSED, CONCURRENT
     }
 
     public IssuedSession create(UUID accountId) {
@@ -85,19 +105,20 @@ public class SessionStore {
         return session;
     }
 
-    /** Xoay refresh token (NFR-U01-11). {@code getAndDelete} nguyên tử: hai request cùng token chỉ một cái thắng. */
+    /** Xoay refresh token (NFR-U01-11). {@link #CLAIM_REFRESH} nguyên tử: hai request cùng token chỉ một cái thắng. */
     public IRotateResult rotate(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return new Rejected(Reason.UNKNOWN);
         }
+        Instant now = clock.instant();
         String hash = Hashing.sha256Hex(refreshToken);
-        String value = redis.opsForValue().getAndDelete(REFRESH_PREFIX + hash);
+        String value = redis.execute(CLAIM_REFRESH, List.of(REFRESH_PREFIX + hash),
+                String.valueOf(now.toEpochMilli()), String.valueOf(idleTtl.toMillis()));
         if (value == null) {
             return new Rejected(Reason.UNKNOWN);
         }
         if (value.startsWith(USED_MARK)) {
-            delete(value.substring(USED_MARK.length()));
-            return new Rejected(Reason.REUSED);
+            return rejectUsed(value.substring(USED_MARK.length()), now);
         }
         String sid = value;
         Optional<SessionRecord> current = read(sid);
@@ -109,7 +130,6 @@ public class SessionStore {
             delete(sid);
             return new Rejected(Reason.REUSED);
         }
-        Instant now = clock.instant();
         Duration ttl = min(idleTtl, remaining(session.issuedAt(), now));
         if (ttl.isZero()) {
             delete(sid);
@@ -119,8 +139,33 @@ public class SessionStore {
         String newHash = Hashing.sha256Hex(newToken);
         write(sid, new SessionRecord(session.accountId(), session.issuedAt(), now, newHash), ttl);
         redis.opsForValue().set(REFRESH_PREFIX + newHash, sid, ttl);
-        redis.opsForValue().set(REFRESH_PREFIX + hash, USED_MARK + sid, ttl);
         return new Rotated(sid, session.accountId(), newToken);
+    }
+
+    /** Dấu {@code {sid}:{millis}}: trong {@link #REUSE_GRACE} là refresh đồng thời, quá thì là dùng lại (BR-U01-46). */
+    private Rejected rejectUsed(String mark, Instant now) {
+        int colon = mark.lastIndexOf(':');
+        if (colon > 0) {
+            try {
+                Instant rotatedAt = Instant.ofEpochMilli(Long.parseLong(mark.substring(colon + 1)));
+                if (!rotatedAt.plus(REUSE_GRACE).isBefore(now)) {
+                    return new Rejected(Reason.CONCURRENT);
+                }
+            } catch (NumberFormatException e) {
+                // Dấu không có thời điểm: coi là dùng lại.
+            }
+        }
+        delete(colon > 0 ? mark.substring(0, colon) : mark);
+        return new Rejected(Reason.REUSED);
+    }
+
+    /** {@code sid} mà refresh token còn hiệu lực trỏ tới; dùng khi đăng xuất lúc access token đã hết hạn. */
+    public Optional<String> sidOf(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return Optional.empty();
+        }
+        String value = redis.opsForValue().get(REFRESH_PREFIX + Hashing.sha256Hex(refreshToken));
+        return value == null || value.startsWith(USED_MARK) ? Optional.empty() : Optional.of(value);
     }
 
     /** Đăng xuất: chỉ phiên này (BR-U01-45). */

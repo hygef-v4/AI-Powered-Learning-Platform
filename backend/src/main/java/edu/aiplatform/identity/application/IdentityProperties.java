@@ -23,8 +23,10 @@ public record IdentityProperties(List<String> allowedEmailDomains, String jwtSec
         allowedEmailDomains = allowedEmailDomains == null ? List.of() : List.copyOf(allowedEmailDomains);
     }
 
-    /** Ngưỡng giới hạn tần suất (NFR-U01-20, 21). */
+    /**
+     * Ngưỡng giới hạn tần suất (NFR-U01-20, 21). {@code loginPerIp} và {@code passwordChangeFailures} chỉ đếm lần sai.
+     */
     public record RateLimit(int otpPerEmailPerHour, Duration otpCooldown, int otpPerIpPerHour, int loginPerIp,
-                            Duration loginIpWindow) {
+                            Duration loginIpWindow, int passwordChangeFailures, Duration passwordChangeWindow) {
     }
 }

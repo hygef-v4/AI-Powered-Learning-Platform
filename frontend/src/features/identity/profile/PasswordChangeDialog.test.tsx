@@ -40,6 +40,16 @@ describe("PasswordChangeDialog", () => {
     expect(onChanged).not.toHaveBeenCalled();
   });
 
+  it("nhập sai quá nhiều lần thì báo chờ thử lại", async () => {
+    changeMock.mockRejectedValue(new ApiError({ status: 429, code: "TOO_MANY_ATTEMPTS" }));
+    render(<PasswordChangeDialog onClose={vi.fn()} onChanged={vi.fn()} />);
+
+    fill("sai", "matkhaumoi9");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("quá nhiều lần");
+    expect(screen.getByLabelText("Mật khẩu hiện tại")).toHaveValue("");
+  });
+
   it("mật khẩu mới yếu hoặc nhập lại không khớp thì không gọi API", () => {
     render(<PasswordChangeDialog onClose={vi.fn()} onChanged={vi.fn()} />);
 

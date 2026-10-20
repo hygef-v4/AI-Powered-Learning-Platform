@@ -20,7 +20,8 @@ import org.springframework.transaction.support.TransactionOperations;
 
 /**
  * Hoàn tất kích hoạt (F2 bước 2b): ticket còn hạn và đúng mục đích, mật khẩu đạt chính sách, tài khoản vẫn
- * {@code PENDING} → lưu mật khẩu, chuyển {@code ACTIVE}, ghi audit, xóa ticket, rồi tự đăng nhập (BR-U01-13).
+ * {@code PENDING} → lấy và xóa ticket (dùng một lần), lưu mật khẩu, chuyển {@code ACTIVE}, ghi audit, rồi tự đăng nhập
+ * (BR-U01-13).
  */
 @Service
 public class ActivationService {
@@ -58,6 +59,9 @@ public class ActivationService {
             // Ticket giữ nguyên để nhập lại (BR-U01-28).
             throw new PasswordPolicyException(violations);
         }
+        if (!tickets.take(ticket, OtpPurpose.ACTIVATION, accountId)) {
+            throw ticketExpired();
+        }
         String hash = passwordEncoder.encode(newPassword);
         Instant now = clock.instant();
         boolean activated = Boolean.TRUE.equals(transactions.execute(status -> {
@@ -68,7 +72,6 @@ public class ActivationService {
                     accountId.toString(), AuditResult.SUCCESS, null, Map.of(), now));
             return true;
         }));
-        tickets.consume(ticket);
         if (!activated) {
             throw ticketExpired();
         }

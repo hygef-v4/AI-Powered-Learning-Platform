@@ -62,10 +62,15 @@ public class OtpChallengeStore {
         return Verification.INVALID;
     }
 
+    /** Đổi hoặc đặt lại mật khẩu xong thì hủy OTP đặt lại mật khẩu còn chờ. */
+    public void delete(UUID accountId, OtpPurpose purpose) {
+        redis.delete(key(accountId, purpose));
+    }
+
     /** Vô hiệu hóa tài khoản thì hủy mọi OTP còn hiệu lực (BR-U01-71). */
     public void deleteAll(UUID accountId) {
         for (OtpPurpose purpose : OtpPurpose.values()) {
-            redis.delete(key(accountId, purpose));
+            delete(accountId, purpose);
         }
     }
 

@@ -6,6 +6,7 @@ import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.IClassScope;
 import edu.aiplatform.identity.contract.ISubjectScope;
@@ -18,6 +19,7 @@ import edu.aiplatform.identity.domain.EmailPolicy;
 import edu.aiplatform.identity.domain.ProfilePolicy;
 import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
 import edu.aiplatform.identity.infrastructure.SessionStore;
+import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,6 +47,7 @@ public class AccountAdminService {
     private final IClassScope classScope;
     private final SessionStore sessions;
     private final OtpChallengeStore otpChallenges;
+    private final VerificationTicketStore tickets;
     private final IAudit audit;
     private final TransactionOperations transactions;
     private final EmailPolicy emailPolicy;
@@ -52,7 +55,7 @@ public class AccountAdminService {
 
     public AccountAdminService(AccountRepository accounts, IAuthorization authorization, ISubjectScope subjectScope,
                                IClassScope classScope, SessionStore sessions, OtpChallengeStore otpChallenges,
-                               IAudit audit, TransactionOperations transactions, IdentityProperties properties,
+                               VerificationTicketStore tickets, IAudit audit, TransactionOperations transactions, IdentityProperties properties,
                                Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
@@ -60,6 +63,7 @@ public class AccountAdminService {
         this.classScope = classScope;
         this.sessions = sessions;
         this.otpChallenges = otpChallenges;
+        this.tickets = tickets;
         this.audit = audit;
         this.transactions = transactions;
         this.emailPolicy = new EmailPolicy(properties.allowedEmailDomains());
@@ -211,6 +215,7 @@ public class AccountAdminService {
         if (disable) {
             sessions.deleteAll(id);
             otpChallenges.deleteAll(id);
+            tickets.revokeAll(id);
         }
         return AccountViews.Detail.of(load(id));
     }
@@ -237,9 +242,11 @@ public class AccountAdminService {
     }
 
     private void require(Actor actor, String action, UUID target) {
-        boolean allowed = actor != null && authorization.authorize(actor, action,
-                target == null ? ResourceRef.none() : ResourceRef.account(target)).allowed();
-        if (!allowed) {
+        AuthorizationDecision decision = actor == null ? AuthorizationDecision.deny("NO_ACTOR")
+                : authorization.authorize(actor, action,
+                        target == null ? ResourceRef.none() : ResourceRef.account(target));
+        AuthorizationService.throwIfUnavailable(decision);
+        if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "ACCOUNT", target == null ? null : target.toString(), AuditResult.DENIED, action, Map.of(),
                     clock.instant()));

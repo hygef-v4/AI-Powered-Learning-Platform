@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +57,7 @@ class AuthServiceTest {
         service = new AuthService(accounts, sessions, jwt, throttle, encoder, audit, IdentityTestData.properties(),
                 Clock.fixed(NOW, ZoneOffset.UTC));
         active = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, encoder.encode(PASSWORD));
-        when(throttle.tryLogin(anyString())).thenReturn(true);
+        when(throttle.loginAllowed(anyString())).thenReturn(true);
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(active));
         when(sessions.create(any())).thenReturn(new SessionStore.IssuedSession("sid-1", "refresh-1"));
     }
@@ -126,10 +127,22 @@ class AuthServiceTest {
 
     @Test
     void clientRateLimitGivesNeutralErrorWithoutLookup() {
-        when(throttle.tryLogin(IP)).thenReturn(false);
+        when(throttle.loginAllowed(IP)).thenReturn(false);
 
         assertThatThrownBy(() -> service.login("taivm@fpt.edu.vn", PASSWORD, IP)).isInstanceOf(ApiException.class);
         verify(accounts, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void onlyFailedLoginsSpendClientAttempts() {
+        service.login("taivm@fpt.edu.vn", PASSWORD, IP);
+        verify(throttle, never()).recordLoginFailure(anyString());
+
+        assertThatThrownBy(() -> service.login("taivm@fpt.edu.vn", "sai-mat-khau1", IP))
+                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.login("khong-co@fpt.edu.vn", PASSWORD, IP))
+                .isInstanceOf(ApiException.class);
+        verify(throttle, org.mockito.Mockito.times(2)).recordLoginFailure(IP);
     }
 
     @Test
@@ -171,11 +184,41 @@ class AuthServiceTest {
     }
 
     @Test
+    void concurrentRefreshIsConflictWithoutRevokingSession() {
+        when(sessions.rotate("r")).thenReturn(new SessionStore.Rejected(SessionStore.Reason.CONCURRENT));
+
+        assertThatThrownBy(() -> service.refresh("r"))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(e.code()).isEqualTo(AuthService.REFRESH_CONCURRENT);
+                });
+        verify(sessions, never()).delete(any());
+    }
+
+    @Test
     void logoutDeletesOnlyCurrentSession() {
-        service.logout("sid-1");
+        service.logout("sid-1", null);
         verify(sessions).delete("sid-1");
-        service.logout(null);
+        service.logout(null, null);
         verify(sessions, never()).deleteAll(any(UUID.class));
+    }
+
+    @Test
+    void logoutWithExpiredAccessTokenRevokesSessionOfRefreshToken() {
+        when(sessions.sidOf("r")).thenReturn(Optional.of("sid-2"));
+
+        service.logout(null, "r");
+
+        verify(sessions).delete("sid-2");
+    }
+
+    @Test
+    void logoutDoesNotDeleteSameSessionTwice() {
+        when(sessions.sidOf("r")).thenReturn(Optional.of("sid-1"));
+
+        service.logout("sid-1", "r");
+
+        verify(sessions, times(1)).delete("sid-1");
     }
 
     @Test

@@ -1,6 +1,7 @@
 package edu.aiplatform.identity.infrastructure;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -8,12 +9,14 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 
 /** {@link StringRedisTemplate} giả trong bộ nhớ cho các lệnh U01 dùng; ghi lại TTL để test kiểm. */
 final class FakeRedis {
@@ -38,6 +41,18 @@ final class FakeRedis {
             ttls.put(i.getArgument(0), i.getArgument(2));
             return null;
         }).when(valueOps).set(anyString(), anyString(), any(Duration.class));
+
+        // SessionStore.CLAIM_REFRESH: đọc refresh token và đánh dấu "used:{sid}:{millis}" trong một bước.
+        when(template.execute(any(RedisScript.class), anyList(), any(Object[].class))).thenAnswer(i -> {
+            String key = i.<List<String>>getArgument(1).get(0);
+            String value = values.get(key);
+            if (value == null || value.startsWith(SessionStore.USED_MARK)) {
+                return value;
+            }
+            values.put(key, SessionStore.USED_MARK + value + ":" + i.getArgument(2));
+            ttls.put(key, Duration.ofMillis(Long.parseLong(i.getArgument(3))));
+            return value;
+        });
 
         when(template.delete(anyString())).thenAnswer(i -> values.remove(i.<String>getArgument(0)) != null
                 | sets.remove(i.<String>getArgument(0)) != null

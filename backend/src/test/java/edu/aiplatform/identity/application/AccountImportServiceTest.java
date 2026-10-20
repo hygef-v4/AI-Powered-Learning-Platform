@@ -85,6 +85,19 @@ class AccountImportServiceTest {
         assertThat(audits).isEmpty();
     }
 
+    /** Hai lần xác nhận cùng tệp chạy song song: bên ghi sau đụng unique key, trả 409 thay vì 500. */
+    @Test
+    void concurrentCommitOfSameEmailIsConflict() {
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DuplicateKeyException("accounts_school_email_key"))
+                .when(accounts).insert(any());
+
+        assertThatThrownBy(() -> service.commit(admin, bytes(CSV)))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT);
+                    assertThat(e.code()).isEqualTo("IMPORT_CONFLICT");
+                });
+    }
+
     @Test
     void commitCreatesOnlyValidRowsAsPendingAndAuditsChecksum() {
         AccountImportService.ImportResult result = service.commit(admin, bytes(CSV));

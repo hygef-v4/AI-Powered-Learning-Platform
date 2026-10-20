@@ -7,8 +7,14 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /**
  * Lỗi riêng của U01 cần thêm dữ liệu ngoài {@code code}; các lỗi khác đi qua {@code GlobalExceptionHandler}.
@@ -36,9 +42,15 @@ public class IdentityExceptionHandler {
         return detail;
     }
 
-    /** JSON sai hoặc có field không được phép (BR-U01-52); không nêu chi tiết nội bộ. */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    ProblemDetail handleUnreadable(HttpMessageNotReadableException e) {
+    /**
+     * JSON sai, có field không được phép (BR-U01-52), thiếu field hoặc vượt độ dài (Bean Validation), tham số sai kiểu:
+     * cùng mã {@code INVALID_REQUEST} để frontend xử lý theo {@code code}; không nêu chi tiết nội bộ.
+     */
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentNotValidException.class,
+            HandlerMethodValidationException.class, ConstraintViolationException.class,
+            MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class,
+            MissingServletRequestPartException.class})
+    ProblemDetail handleInvalidRequest(Exception e) {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "Dữ liệu gửi lên không hợp lệ hoặc có trường không được phép sửa");
         detail.setProperty("code", "INVALID_REQUEST");

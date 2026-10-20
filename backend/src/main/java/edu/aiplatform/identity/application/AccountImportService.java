@@ -5,6 +5,7 @@ import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
@@ -34,6 +35,7 @@ import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -90,6 +92,15 @@ public class AccountImportService {
     public ImportResult commit(Actor actor, byte[] file) {
         require(actor);
         Instant now = clock.instant();
+        try {
+            return commitChecked(actor, file, now);
+        } catch (DuplicateKeyException e) {
+            // Email vừa được tạo ở request khác giữa lúc kiểm và lúc ghi (hai lần xác nhận cùng tệp): cả tệp rollback.
+            throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp CSV");
+        }
+    }
+
+    private ImportResult commitChecked(Actor actor, byte[] file, Instant now) {
         return transactions.execute(status -> {
             ImportResult checked = check(file, true);
             for (RowResult row : checked.rows()) {
@@ -221,7 +232,10 @@ public class AccountImportService {
     }
 
     private void require(Actor actor) {
-        if (actor == null || !authorization.authorize(actor, Actions.ACCOUNT_IMPORT, ResourceRef.none()).allowed()) {
+        AuthorizationDecision decision = actor == null ? AuthorizationDecision.deny("NO_ACTOR")
+                : authorization.authorize(actor, Actions.ACCOUNT_IMPORT, ResourceRef.none());
+        AuthorizationService.throwIfUnavailable(decision);
+        if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "ACCOUNT", null, AuditResult.DENIED, Actions.ACCOUNT_IMPORT, Map.of(), clock.instant()));
             throw ApiException.forbidden("ACCOUNT_ADMIN_FORBIDDEN");

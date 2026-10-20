@@ -97,6 +97,8 @@ platform:
       otp-per-ip-per-hour: ${U01_RL_OTP_PER_IP_PER_HOUR:20}
       login-per-ip: ${U01_RL_LOGIN_PER_IP:30}
       login-ip-window: ${U01_RL_LOGIN_IP_WINDOW:5m}
+      password-change-failures: ${U01_RL_PASSWORD_CHANGE_FAILURES:5}
+      password-change-window: ${U01_RL_PASSWORD_CHANGE_WINDOW:15m}
   # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}

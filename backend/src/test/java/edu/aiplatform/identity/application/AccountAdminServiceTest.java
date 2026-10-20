@@ -28,6 +28,7 @@ import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
 import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
 import edu.aiplatform.identity.infrastructure.SessionStore;
+import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.ZoneOffset;
@@ -47,10 +48,11 @@ class AccountAdminServiceTest {
     private final IClassScope classScope = mock(IClassScope.class);
     private final SessionStore sessions = mock(SessionStore.class);
     private final OtpChallengeStore otp = mock(OtpChallengeStore.class);
+    private final VerificationTicketStore tickets = mock(VerificationTicketStore.class);
     private final List<AuditEvent> audits = new ArrayList<>();
     private final IAudit audit = audits::add;
     private final AccountAdminService service = new AccountAdminService(accounts, authorization, subjectScope,
-            classScope, sessions, otp, audit, TransactionOperations.withoutTransaction(),
+            classScope, sessions, otp, tickets, audit, TransactionOperations.withoutTransaction(),
             IdentityTestData.properties(), Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
@@ -74,6 +76,19 @@ class AccountAdminServiceTest {
             assertThat(e.action()).isEqualTo("ACCESS_DENIED");
             assertThat(e.result()).isEqualTo(AuditResult.DENIED);
         });
+    }
+
+    @Test
+    void dependencyFailureIsSystemBusyNotForbiddenAndNotAudited() {
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.deny(AuthorizationService.DEPENDENCY_UNAVAILABLE));
+
+        assertThatThrownBy(() -> service.detail(admin, UUID.randomUUID()))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status()).isEqualTo(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE);
+                    assertThat(e.code()).isEqualTo("SYSTEM_BUSY");
+                });
+        assertThat(audits).isEmpty();
     }
 
     @Test
@@ -175,6 +190,7 @@ class AccountAdminServiceTest {
 
         verify(sessions, times(2)).deleteAll(target.id());
         verify(otp).deleteAll(target.id());
+        verify(tickets).revokeAll(target.id());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCOUNT_DISABLED");
     }
 

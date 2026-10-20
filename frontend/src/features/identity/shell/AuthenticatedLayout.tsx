@@ -25,7 +25,7 @@ export function AuthenticatedLayout({ roles, children }: { roles?: Role[]; child
 function SessionShell({ children }: { children: ReactNode }) {
   const session = useSession();
   if (session.status !== "authenticated") return null;
-  const role = session.profile.role;
+  const { role, displayName, email } = session.profile;
   const nav = navEntries
     .entries()
     .filter((entry) => entry.roles.includes(role))
@@ -35,7 +35,13 @@ function SessionShell({ children }: { children: ReactNode }) {
     .filter((entry) => entry.roles.includes(role))
     .map(({ href, title, icon }) => ({ href, label: title, icon }));
   return (
-    <AppShell role={role} nav={nav} headerLinks={links} headerWidgets={<SlotOutlet slot={headerWidgets} props={{}} />}>
+    <AppShell
+      role={role}
+      nav={nav}
+      headerLinks={links}
+      headerWidgets={<SlotOutlet slot={headerWidgets} props={{}} />}
+      user={{ displayName, email }}
+    >
       {children}
     </AppShell>
   );

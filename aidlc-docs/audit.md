@@ -4439,3 +4439,86 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **Yêu cầu theo ngữ cảnh (diễn giải)**: Tạo commit trên nhánh hiện tại cho toàn bộ phần hoàn thiện U05, bộ unit test bổ sung và tài liệu bàn giao đã thực hiện trong phiên; không yêu cầu push hoặc deploy.
 **Kiểm chứng trước commit**: Backend 304 test qua (210 riêng U05), không failure/error/skip; 449 file source khớp SHA256 bản đã kiểm thử. Frontend trước đó qua 70 test, lint/typecheck/build và không đổi source sau kiểm chứng. Rà các file pending không phát hiện private-key/token thông dụng, credential hoặc build artifact. Giữ giới hạn migration/session/audit/concurrency thật là bước tích hợp sau merge.
 **Action**: Tạo local commit: feat(u05): complete class and enrollment workflows.
+
+---
+
+## 2026-10-19T09:20:00Z — U01 code review on branch cuong
+
+**User Input**: "kiểm tra code nhánh cuong xem đã đúng chưa, bắt các bug và kiểm tra xem còn điểm nào cần bổ sung/cải thiện/sửa đổi không"
+
+**AI Response**: Reviewed the U01 diff against main and ran backend `mvn test` (245 pass, including Testcontainers integration tests) and frontend tsc/vitest (70 pass)/eslint. Reported 7 bugs (non-admin homePath routes missing → 404; cross-tab refresh 409 retried too early; header name cached separately from session; login IP throttle counts successful logins; password-reset ticket not consumed atomically; no throttle on wrong current password; infrastructure errors shown as unauthenticated/forbidden) and 6 improvements. No code changed.
+
+**Context**: Construction — U01 review.
+
+---
+
+## 2026-10-19T09:52:03Z — U01 fixes from code review
+
+**User Input**: "Sửa tất cả bug và các điểm cải thiện trong review."
+
+**AI Response**: Started fixing all review findings on branch `cuong` (bug fix within U01 boundaries; no new stage, no new unit). /classes and /manager routes are owned by other branches (ClassEnrollment, unit1), so non-admin homePath is temporarily pointed to /profile instead of adding conflicting pages.
+
+**Context**: Construction — U01 bug fixes after review.
+
+---
+
+## 2026-10-19T10:03:03Z — U01 review fixes completed
+
+**User Input**: (continuation of "Sửa tất cả bug và các điểm cải thiện trong review.")
+
+**AI Response**: Fixed all 7 bugs and 6 improvements: non-admin homePath temporarily /profile + app/not-found.tsx; refresh 409 waits 500 ms and retries refresh once, refresh 503 surfaces SYSTEM_BUSY; AppShell receives user from session, profile cache cleared on expiry/login; login IP throttle counts failures only; atomic ticket take (GETDEL) with one ticket per account/purpose and revoke on password change/reset/disable; password change throttled (5 wrong current passwords/15 min → 429); authorization dependency failure → 503 without ACCESS_DENIED audit; validation errors → 400 INVALID_REQUEST; AccountDetail reload safe and audit link hidden; /login?next= return path; aidlc-state workspace root. Tests: backend 255 pass, frontend 77 pass, tsc/eslint clean, next build ok. Updated code-summary. No commit.
+
+**Context**: Construction — U01 bug fixes after review.
+
+---
+
+## 2026-10-19T17:21:37Z — Jira access and UC roadmap for Đào Chí Cường
+
+**User Input**: "https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20AND%20assignee%20%3D%20712020%3A72680e65-5cea-4ee5-b16d-c34402f2f25b%20ORDER%20BY%20cf%5B10019%5D%20ASC
+bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên plan để làm toàn bộ các UC của tôi"
+
+**AI Response**: Read the Jira list after the user signed in (25 issues: U01 UC 01–12 under KAN-18, U10 UC 46–48 under KAN-23, U11 UC 49–52 under KAN-25, KAN-7/13 done, KAN-152 report task). Compared with aidlc-docs and code: U01 coded on branch `cuong` but not merged into `staging`/`main`; U10/U11 only have the skeleton; every contract they use exists with stubs. Wrote `construction/plans/cuong-uc-roadmap-2026-10-20.md` (phase 0 close U01, phase 1 UC 46–47, phase 2 UC 48, phase 3 U11, phase 4 AI/MCP, phase 5 test and Jira). Asked the user to approve the roadmap and the U10 code generation plan before writing code. No code changed, no Jira change.
+
+**Context**: Construction — Code Generation Part 1 (U10, U11 plans pending approval).
+
+---
+
+## 2026-10-19T17:25:48Z — Roadmap approved, phase 0 started
+
+**User Input**: "Duyệt lộ trình. Bắt đầu giai đoạn 0: mở PR cuong → staging và chốt U01."
+
+**AI Response**: Roadmap approved. Starting phase 0: merge origin/staging into `cuong` (staging already contains the earlier U01 merge at 1871236 plus U02, U03, U04, U05), resolve conflicts, point HomePaths to the U04/U05 routes, rerun tests, push and open PR `cuong` → `staging`. Jira changes will be confirmed with the user first.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
+
+## 2026-10-19T17:34:38Z — U01 merged with staging, PR prepared
+
+**User Input**: (continuation of "Duyệt lộ trình. Bắt đầu giai đoạn 0: mở PR cuong → staging và chốt U01.")
+
+**AI Response**: Merged origin/staging into `cuong`. Conflicts resolved: `not-found.tsx` uses staging's `ErrorPage`; `AppShell.test.tsx` keeps both tests; `audit.md` keeps both sections. `HomePaths` now follows BR-U01-48 (Student/Teacher → `/classes`, Subject Manager → `/manager`, Admin still `/admin/accounts` until U15). Account Detail links again to the U02 Audit Log filtered by `objectType=ACCOUNT&objectId`. Results: backend `mvn -B verify` 676 tests, 0 failures, 31 skipped (U04 `SubjectRepositoryIntegrationTest` needs `U04_TEST_JDBC_URL`); frontend tsc, eslint and vitest (214 tests) pass. Not rerun end-to-end with Docker. Pushing `cuong` and opening PR `cuong` → `staging`.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
+
+## 2026-10-19T17:44:34Z — Jira update deferred
+
+**User Input**: "Chưa cập nhật Jira, đợi PR #5 được merge vào staging đã."
+
+**AI Response**: Jira left unchanged. The 12 U01 UCs move to Done only after PR #5 (`cuong` → `staging`) is merged; KAN-18 waits for the tester.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
+
+## 2026-10-19T23:28:01Z — PR #5 GitGuardian check failure
+
+**User Input**: "Ci đỏ, kiểm tra và fix"
+
+**AI Response**: Build jobs (backend, frontend) pass; only GitGuardian Security Checks fails with 2 "Generic Password" findings, both test fixtures: Testcontainers role passwords in `AccountRepositoryIntegrationTest` (commit 1e71a76) and MockMvc request passwords in `IdentityWebSecurityTest` (commit 3be0d7a). Not real credentials. Replaced the literals with per-run `UUID.randomUUID()` values (18 + 14 tests pass, Testcontainers ran). GitGuardian scans every commit in the PR, so the check stays red until the two incidents are marked as false positive / test credential in GitGuardian (or history is rewritten, not done).
+
+**Context**: Construction — U01 integration (roadmap phase 0), CI fix.
+
+---

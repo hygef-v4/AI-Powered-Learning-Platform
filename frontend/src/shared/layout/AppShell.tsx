@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useState, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
-import { useCurrentUser } from "@/shared/auth/useCurrentUser";
+import { useCurrentUser, type CurrentUser } from "@/shared/auth/useCurrentUser";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { SOFT_TONES } from "@/shared/ui/tones";
@@ -21,13 +21,19 @@ type Props = {
   headerLinks?: HeaderLink[];
   /** Thành phần gắn qua slot HeaderWidget, ví dụ chuông thông báo. */
   headerWidgets?: ReactNode;
+  /**
+   * Người đang đăng nhập do U01 truyền từ phiên (luôn mới sau khi sửa hồ sơ hay đổi tài khoản). Không truyền thì
+   * AppShell tự tải `/api/v1/me/profile`.
+   */
+  user?: CurrentUser | null;
   children: ReactNode;
 };
 
 /** Khung sau đăng nhập: thanh trên cùng, menu bên theo vai trò, vùng nội dung. */
-export function AppShell({ role, nav, headerLinks = [], headerWidgets, children }: Props) {
+export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: sessionUser, children }: Props) {
   const pathname = usePathname() ?? "";
-  const user = useCurrentUser();
+  const fetchedUser = useCurrentUser(sessionUser === undefined);
+  const user = sessionUser === undefined ? fetchedUser : sessionUser;
   const [logoutOpen, setLogoutOpen] = useState(false);
   const closeLogout = useCallback(() => setLogoutOpen(false), []);
   const current = activeHref(nav, pathname);
