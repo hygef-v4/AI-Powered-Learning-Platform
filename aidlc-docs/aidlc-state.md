@@ -312,3 +312,9 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Code Generation Part 1: plan giai đoạn 2 được duyệt (E1–E8); giai đoạn 1 commit `5d70173`.
 - [x] Code Generation Part 2: bước 2.1–2.12 xong trên `quiz-authoring` (chưa commit).
 - [x] Bước 2.13: người dùng duyệt code giai đoạn 2 ngày 2026-10-20.
+
+## U11 giai đoạn 3 (UC 49–52) — 2026-10-20
+
+- [x] Code Generation Part 1: plan giai đoạn 3 được duyệt (G1–G7).
+- [x] Code Generation Part 2: bước 3.0–3.13 xong trên nhánh `quiz-practice` (tách từ `quiz-authoring` `f3b54bc`, chưa commit); xem `construction/u11-quiz-practice/code/code-summary.md`.
+- [x] Bước 3.14: người dùng duyệt code giai đoạn 3 ngày 2026-10-20.

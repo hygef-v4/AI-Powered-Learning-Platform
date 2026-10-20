@@ -113,6 +113,14 @@ class AccountLookupAndPolicyTest {
         assertThat(classQuiz.scope()).isEqualTo(ScopeKind.CLASS);
     }
 
+    /** U11: chỉ sinh viên đang học lớp làm Quiz Practice (R5, BR-U11-01). */
+    @Test
+    void quizPracticeIsStudentOnlyWithClassScope() {
+        var practice = AccessPolicy.ruleFor(Actions.QUIZ_PRACTICE).orElseThrow();
+        assertThat(practice.roles()).containsExactly(Role.STUDENT);
+        assertThat(practice.scope()).isEqualTo(ScopeKind.CLASS);
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);

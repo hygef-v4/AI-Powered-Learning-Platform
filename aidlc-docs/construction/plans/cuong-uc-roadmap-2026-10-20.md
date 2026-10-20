@@ -44,36 +44,36 @@ U11 cần `IQuizQuery`, `IQuizScoring` thật của U10, nên làm U10 trước.
 
 Theo plan U10 bước 1–3 và phần tương ứng của bước 9–11.
 
-- [ ] Migration `quizzes` (mọi bảng của U10 trong một migration, gồm bảng Quiz, để không phải sửa migration sau).
-- [ ] Domain `Question` (lineage, `DRAFT`/`ACTIVE`/`RETIRED`, kiểm số lựa chọn và đáp án theo loại), repository.
-- [ ] `QuestionBankService`: xem (F1), tạo, sửa, tạo bản nháp từ bản `ACTIVE`, kích hoạt, ngưng, xóa (F2).
-- [ ] `QuestionImporter`: nhập tệp ≤ 5 MB, ≤ 500 dòng, kết quả từng dòng (F3).
-- [ ] API `/subjects/{id}/questions`, `/questions/{id}`, `questions:import`; `contracts/openapi/quizzes.yaml` phần ngân hàng.
-- [ ] Frontend: `QuestionListPage`, `QuestionDetailPage`, `McqEditor`, `NavEntry` Ngân hàng câu hỏi.
-- [ ] Unit test phần ngân hàng; Jira KAN-143, KAN-78 → In Progress rồi review.
+- [x] Migration `quizzes` (mọi bảng của U10 trong một migration, gồm bảng Quiz, để không phải sửa migration sau).
+- [x] Domain `Question` (lineage, `DRAFT`/`ACTIVE`/`RETIRED`, kiểm số lựa chọn và đáp án theo loại), repository.
+- [x] `QuestionBankService`: xem (F1), tạo, sửa, tạo bản nháp từ bản `ACTIVE`, kích hoạt, ngưng, xóa (F2).
+- [x] `QuestionImporter`: nhập tệp ≤ 5 MB, ≤ 500 dòng, kết quả từng dòng (F3).
+- [x] API `/subjects/{id}/questions`, `/questions/{id}`, `questions:import`; `contracts/openapi/quizzes.yaml` phần ngân hàng. (Theo D6: không tạo OpenAPI, API ghi trong code-summary.) Commit `5d70173`.
+- [x] Frontend: `QuestionListPage`, `QuestionDetailPage`, `McqEditor`, `NavEntry` Ngân hàng câu hỏi.
+- [x] Unit test phần ngân hàng; Jira KAN-143, KAN-78 → In Progress rồi review. Code đã xong; Jira chưa cập nhật.
 
 ### Giai đoạn 2 — U10 phần Quiz: UC 48 (KAN-44)
 
 Theo plan U10 bước 4–6, 8 và phần còn lại của bước 9–11.
 
-- [ ] Domain `Quiz`, `QuizItem`; `QuizAuthoringService` (F5–F7, F12): danh sách, tạo, cài đặt, chọn tay và bốc ngẫu nhiên câu ngân hàng, câu riêng, xóa Quiz nháp.
-- [ ] `QuizPublicationService` (F9, F10): xem trước, duyệt, phát hành, ngưng; `IQuizLifecycleListener` adapter rỗng; phát `quiz.published` sau commit.
-- [ ] `QuizCopyService` (F11): nhân bản, version mới, copy giữa lớp.
-- [ ] `QuizQueryService` (cài `IQuizQuery`), `QuizScorer` (cài `IQuizScoring`) (F14) — thay stub.
-- [ ] API Quiz; frontend `SubjectQuizListPage`, `ClassQuizzesSection` (`TeacherClassTab`), `QuizBankSummary`, `QuizDetailPage` và panel; slot `QuizDetailSection`, `QuizRowAction`.
-- [ ] Unit test phần Quiz; review U10 không gồm AI/MCP.
+- [x] Domain `Quiz`, `QuizItem`; `QuizAuthoringService` (F5–F7, F12): danh sách, tạo, cài đặt, chọn tay và bốc ngẫu nhiên câu ngân hàng, câu riêng, xóa Quiz nháp.
+- [x] `QuizPublicationService` (F9, F10): xem trước, duyệt, phát hành, ngưng; `IQuizLifecycleListener` adapter rỗng; phát `quiz.published` sau commit.
+- [x] `QuizCopyService` (F11): nhân bản, version mới, copy giữa lớp.
+- [x] `QuizQueryService` (cài `IQuizQuery`), `QuizScorer` (cài `IQuizScoring`) (F14) — thay stub.
+- [x] API Quiz; frontend `SubjectQuizListPage`, `ClassQuizzesSection` (`TeacherClassTab`), `QuizBankSummary`, `QuizDetailPage` và panel; slot `QuizDetailSection`, `QuizRowAction`.
+- [x] Unit test phần Quiz; review U10 không gồm AI/MCP. Commit `f3b54bc`; Jira KAN-44 chưa cập nhật.
 
 ### Giai đoạn 3 — U11: UC 51, 52, 49, 50 (KAN-130, KAN-57, KAN-128, KAN-129)
 
 Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt làm.
 
-- [ ] Migration `quizpractice`, domain `QuizAttempt` (trộn có seed).
-- [ ] UC 51: `QuizAttemptService` bắt đầu/tiếp tục, tự lưu có `answerVersion`, nộp và chấm (F3–F5); `QuizAutoSubmitScanner`, `QuizRetiredHandler` cài `IQuizLifecycleListener` (F6); frontend `QuizTakingPage`.
-- [ ] UC 52: kết quả theo cài đặt hiện điểm/đáp án (F7); `QuizResultPage`.
-- [ ] UC 49: lịch sử luyện tập (F1); `QuizPracticeHistoryPage`, `NavEntry` Luyện tập Quiz.
-- [ ] UC 50: chi tiết Quiz (F2); `QuizPracticeDetailPage`, slot `QuizMaterialSection`.
-- [ ] Dữ liệu hoạt động (F8) và giảng viên xem lượt (F9): `QuizAttemptsSection`, `QuizAttemptCount` gắn vào slot của U10.
-- [ ] Unit test theo plan U11 bước 9; review U11.
+- [x] Migration `quizpractice`, domain `QuizAttempt` (trộn có seed).
+- [x] UC 51: `QuizAttemptService` bắt đầu/tiếp tục, tự lưu có `answerVersion`, nộp và chấm (F3–F5); `QuizAutoSubmitScanner`, `QuizRetiredHandler` cài `IQuizLifecycleListener` (F6); frontend `QuizTakingPage`.
+- [x] UC 52: kết quả theo cài đặt hiện điểm/đáp án (F7); `QuizResultPage`.
+- [x] UC 49: lịch sử luyện tập (F1); `QuizPracticeHistoryPage`, `NavEntry` Luyện tập Quiz.
+- [x] UC 50: chi tiết Quiz (F2); `QuizPracticeDetailPage`, slot `QuizMaterialSection`.
+- [x] Dữ liệu hoạt động (F8) và giảng viên xem lượt (F9): `QuizAttemptsSection`, `QuizAttemptCount` gắn vào slot của U10. F8: chỉ có API, chưa có tracker phía trình duyệt (G3).
+- [x] Unit test theo plan U11 bước 9; review U11. Nhánh `quiz-practice`; Jira chưa cập nhật.
 
 ### Giai đoạn 4 — AI và MCP của U10 (phần còn lại của UC 47, 48)
 

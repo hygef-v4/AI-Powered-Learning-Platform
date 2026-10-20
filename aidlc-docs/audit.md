@@ -4632,3 +4632,43 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U10 phase 2 approval, U11 planning.
 
 ---
+
+## 2026-10-20T08:54:29Z — U11 phase 3 code generation plan (approval requested)
+
+**User Input**: (continuation of "Duyệt code giai đoạn 2 (UC 48). Commit local rồi lập plan giai đoạn 3 (U11).")
+
+**AI Response**: Committed U10 phase 2 locally as f3b54bc (origin/quiz-authoring already had 5d70173; nothing pushed by the AI). Read U11 design (business rules, domain entities, frontend components, infrastructure, NFR) and the contracts it uses (IScheduledScanner, IActivityWrite/IActivityQuery stubs, U10 slots). Added "Giai đoạn 3 — Quiz Practice (UC 49–52) — chi tiết" to the U11 code plan: 15 steps (3.0 branch … 3.14 review) and decisions G1–G7 (QUIZ_PRACTICE action, branch quiz-practice from quiz-authoring, activity API without browser tracker until U08, no MaterialQuizList until U13, shuffle order stored in snapshot, attempts counted per quiz version, teacher view per class). Asked the user to approve before writing code.
+
+**Context**: Construction — U11 Code Generation Part 1, approval prompt.
+
+---
+
+## 2026-10-20T09:07:10Z — U11 phase 3 plan approved
+
+**User Input**: "Duyệt plan giai đoạn 3 với đề xuất G1–G7. Bắt đầu từ bước 3.0 rồi viết code theo checklist."
+
+**AI Response**: Plan approved (G1–G7). Creating branch `quiz-practice` from `quiz-authoring` (f3b54bc) and starting U11 Code Generation Part 2.
+
+**Context**: Construction — U11 phase 3 approval.
+
+---
+
+## 2026-10-20T09:27:23Z — U11 phase 3 code generation complete (review requested)
+
+**User Input**: (continuation of "Duyệt plan giai đoạn 3 với đề xuất G1–G7. Bắt đầu từ bước 3.0 rồi viết code theo checklist.")
+
+**AI Response**: Created branch `quiz-practice` from `quiz-authoring` (f3b54bc). Implemented U11: migration quiz_attempts; action QUIZ_PRACTICE; domain QuizAttempt, AttemptSnapshot (seeded shuffle), QuestionResult; JdbcQuizAttemptRepository (advisory lock on start, skip-locked overdue scan); QuizPracticeQueryService, QuizAttemptService, QuizAutoSubmitScanner, QuizRetiredHandler (IQuizLifecycleListener), TeacherQuizAttemptService, QuizActivityService; QuizPracticeController, TeacherQuizAttemptController; frontend history, detail, taking (timer, autosave 2 s with answerVersion, submit dialog, time-up auto submit), result, teacher attempts section and attempt count in U10 slots, Student-only routes. Fixed a frontend issue found by tests (callbacks depended on router identity and re-ran effects). One file pair was briefly written to the repo root because the domain folder no longer existed after removing .gitkeep; moved into place. Tests: backend 22 new, frontend 10 new. Full CI locally: backend 773 tests 0 failures (31 skipped, U04); frontend 253 tests, lint, typecheck, build pass. Not committed. Asked the user to review (step 3.14).
+
+**Context**: Construction — U11 Code Generation Part 2, completion and review prompt.
+
+---
+
+## 2026-10-20T09:29:44Z — U11 phase 3 code approved
+
+**User Input**: "Duyệt code giai đoạn 3 (U11, UC 49–52). Commit local trên nhánh quiz-practice."
+
+**AI Response**: Phase 3 approved; step 3.14 ticked. Committing locally on `quiz-practice` (no push).
+
+**Context**: Construction — U11 approval and commit.
+
+---

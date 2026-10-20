@@ -51,6 +51,9 @@ public final class Actions {
     public static final String QUIZ_SUBJECT_MANAGE = "QUIZ_SUBJECT_MANAGE";
     public static final String QUIZ_CLASS_MANAGE = "QUIZ_CLASS_MANAGE";
 
+    // U11 — làm Quiz Practice: chỉ sinh viên đang học lớp (R5, BR-U11-01)
+    public static final String QUIZ_PRACTICE = "QUIZ_PRACTICE";
+
     private Actions() {
     }
 }
