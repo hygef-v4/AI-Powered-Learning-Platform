@@ -313,3 +313,26 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Bundle existing Be Vietnam Pro fonts locally, retain preload/fallback/weights, include public assets in the Docker runtime stage and use a Windows-safe Webpack build launcher. Full frontend build including standalone packaging, 223 tests, lint and typecheck passed.
 - [x] Verify standalone startup Ready and packaged font references/assets. HTTP smoke blocked by sandbox socket permission; Docker image/browser and real integration/NFR remain unverified. No U09 contract/behavior/dependency changes, commit or push.
 - Evidence: `construction/plans/2026-10-20-u09-build-repair.md`.
+
+## U05 Clean Code assessment - 2026-10-20
+
+- [x] Review U05 with Clean Code skill, existing unit design and U09 review as reference; initial working tree clean.
+- [x] Identify focused readability work: route orchestration, backend naming/operation outlines, pagination arithmetic and obsolete Frame wrapper. No rewrite or extra service layers justified.
+- [x] Verify unchanged-source baseline: backend 213 passed/zero failures/errors/skips; frontend 33 passed/5 files. Initial frontend sandbox temp ENOENT recorded; process-local temp and one worker rerun passed.
+- [x] Record findings and behavior-preservation/test constraints in `construction/plans/2026-10-20-u05-clean-code-review.md`.
+- Assessment only: production/tests/config unchanged, no commit/push; existing integration/NFR gates retained. Student archived dashboard/detail distinction is intentional, not a defect. No Construction implementation stage advanced.
+
+## U05 behavior-preserving Clean Code refactor - 2026-10-20
+
+- [x] User approves the previously reviewed scope; preserve prior documentation changes and execute inline.
+- [x] Retain nine characterization cases passed on unchanged source; verify stale-response sensitivity and restore original before refactoring.
+- [x] Clarify frontend route orchestration, typed mutation results and pagination calculations; remove obsolete Frame wrapper. Improve backend local names and operation outlines without changing call order.
+- [x] Verify full backend Maven verify: 724 total / 662 passed / 62 skipped / zero failures/errors; executable JAR packaged. Frontend 232 passed/47 files, lint/typecheck and production standalone build passed; restore build-generated tsconfig changes and typecheck again.
+- [x] Independent review found no regression; backend public declarations/string literals and lock/access/error blocks unchanged, frontend visible JSX text unchanged, final whitespace check passed.
+- Scope/evidence: `construction/plans/2026-10-20-u05-clean-code-refactor.md`; handoff updated. Existing 62 skipped integration cases and DB/provider/browser/NFR gates retained. No API/DTO/schema/dependency/configuration changes, commit or push.
+
+## U05 local commit grouping - 2026-10-20
+
+- User requests local commit only, without push; use current grading-gradebook branch and preserve all existing U09 history.
+- Separate Conventional Commit groups: retained characterization tests (26971c2e), backend refactor (c5cd5511), frontend refactor (1bdff199), and documentation containing the review, execution evidence, handoff, state and audit.
+- Source/tests unchanged since successful verification; no additional application edits or integration claims during commit preparation. Commit results and final working-tree state verified through Git.

@@ -4560,3 +4560,34 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: AI-DLC Construction handoff/publication preparation; preserve source state and existing verification evidence. No permission escalation or workaround around read-only Git metadata attempted.
 
 ---
+
+## U05 Clean Code assessment
+**Timestamp**: 2026-10-20T10:39:42Z
+**User Input**: "Dùng skill clean code và giúp tôi check lại u05 xem có cẩn phải refactor gì k như u09"
+**AI Response**: Applied Clean Code skill and resumed existing Construction review. Initial working tree clean. Reviewed U05 design, backend/frontend consumers and tests against U09's local refactor approach. Recommend readable route orchestration, clearer backend names/operation outlines, named pagination calculations and removal of the obsolete Frame wrapper. Archived student dashboard versus detail behavior is intentional under BR-U05-40/41/42, not a bug. Focused backend 213 passed, zero failures/errors/skips; frontend 33 passed/5 files after an initial sandbox temp ENOENT was avoided using process-local workspace temp and one worker. No production/test/config changes, commit or push. Existing integration/NFR gates retained; disabled PBT skipped. Report: construction/plans/2026-10-20-u05-clean-code-review.md.
+**Context**: Review-only request completed; no implementation stage advanced or refactor performed. Documentation-only extension checks N/A; no deployed compliance claim.
+
+---
+
+## U05 behavior-preserving refactor authorization
+**Timestamp**: 2026-10-20T10:42:50Z
+**User Input**: "Giúp tôi refactor mà k làm thay đổi hành vi, contract, clean code"
+**AI Response**: Continue existing Construction and implement the four previously reviewed clean-code changes inline. Preserve all public contracts, strings, validation/authorization/lock order, transaction/audit/event behavior and existing pagination quirks. Retain characterization tests on unchanged source before editing; reuse existing adequate backend coverage. Prior review documentation remains baseline. No commit/push requested. Execution plan: construction/plans/2026-10-20-u05-clean-code-refactor.md. Reduced Security/Resiliency scope retained; PBT disabled.
+**Context**: Explicit approval of prior reviewed refactor scope; no new feature/design stage needed.
+
+---
+
+## U05 Clean Code refactor verification
+**Timestamp**: 2026-10-20T10:51:39Z
+**AI Response**: Completed the four approved U05 clean-code changes in place. Retained nine new public-UI characterization cases, all passed on original production; sensitivity probe caught stale-response regression and original route SHA256 was restored before the real refactor. Fixed an intermediate missing pagination declaration detected by tests. Final backend verify: 724 total / 662 passed / 62 skipped / zero failures/errors; executable JAR packaged. Final frontend: 232 passed/47 files, lint/typecheck and production standalone build passed. Restored Next-generated tsconfig changes and fresh typecheck passed. Independent review no findings; backend public declarations/literals and lock/access/error mapping unchanged, visible JSX text unchanged. No API/DTO/schema/dependency/configuration changes or weakened existing tests. Plan/state/U05 handoff updated; prior documentation edits preserved. No commit/push.
+**Context**: Existing Construction refactor complete within approved scope. Baseline skipped DB/Redis integration cases and real U05 PostgreSQL/provider/browser/NFR gates remain open. Enabled local error/validation/authorization behavior preserved; unchanged operational configuration checks N/A, disabled PBT skipped. Evidence: construction/plans/2026-10-20-u05-clean-code-refactor.md.
+
+---
+
+## U05 local commit preparation
+**Timestamp**: 2026-10-20T10:54:42Z
+**User Input**: "Giúp tôi commit chưa push"
+**AI Response**: Reviewed the complete U05 change set on grading-gradebook, baseline HEAD 985fae119ebf9a55d28a9a6a25969555b86ff8e7, with an initially empty index. Split local Conventional Commits into characterization tests (26971c2e), backend refactor (c5cd5511), frontend refactor (1bdff199), and a documentation commit containing this audit entry and the review/refactor evidence. Git metadata writes required approved sandbox escalation after index.lock access was denied; the approved writes succeeded. Reuse prior verified test/build evidence because source and tests are unchanged since verification. No push or remote mutation requested or performed. Final commit identities and working-tree state are checked through Git after documentation is committed.
+**Context**: Local publication of the approved U05 refactor only; existing integration/NFR limitations retained.
+
+---

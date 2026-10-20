@@ -60,3 +60,10 @@ Backend: domain, parser, repository (điều kiện transaction, conflict), ki�
 ## Còn lại
 
 - Dùng `AppShell`, `shared/ui`; khi đó đổi 3 layout sang `AuthenticatedLayout`.
+
+## Clean Code follow-up — 2026-10-20
+
+- Theo yêu cầu giữ nguyên hành vi/contract: làm rõ resource/mutation/view flow trong `routes.tsx`, bỏ Frame không còn chức năng; đặt tên biến phân trang trong hai danh sách; làm rõ tên biến và trình tự xử lý trong `AcademicsService`. Không đổi API/DTO, kiểm quyền/khóa, transaction, audit/event, schema hoặc dependency.
+- Giữ thêm chín characterization case đã pass trên code cũ: request/refresh cancellation, GET lỗi sau ghi thành công, reopen conflict, tải nhiều trang và các hành vi phân trang hiện có. Không sửa/xóa/nới test cũ.
+- Kiểm cuối: Maven verify 724 total / 662 passed / 62 skipped / zero failures/errors, executable JAR pass; frontend 232 passed / 47 files, lint/typecheck và production standalone build pass. Review độc lập không có finding; cấu hình TypeScript tự sinh bởi build đã khôi phục và typecheck lại pass.
+- Các gate tích hợp DB/provider/browser/NFR chưa được chứng nhận thêm. Không commit/push. Chi tiết phạm vi, lệnh chạy và bằng chứng: [refactor plan](../../plans/2026-10-20-u05-clean-code-refactor.md).
