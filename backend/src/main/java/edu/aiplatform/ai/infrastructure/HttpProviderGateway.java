@@ -19,6 +19,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,6 +39,7 @@ public class HttpProviderGateway implements IProviderGateway {
     private final Map<AiProvider, String> baseUrls;
     private final HttpClient http;
 
+    @Autowired
     public HttpProviderGateway(ObjectMapper json) {
         this(json, BASE_URLS);
     }
