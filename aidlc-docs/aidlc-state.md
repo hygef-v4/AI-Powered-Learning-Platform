@@ -368,3 +368,29 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - User requests commit; retain current grading-gradebook branch. Fresh precommit checks: backend49/frontend21 pass, whitespace clean.
 - Local commits d3d8c7b5 (backend/API/contracts/tests), a71d7fd1 (frontend/tests), plus documentation commit containing approved plan, implementation handoff, verification and audit/state. No source changes during commit preparation.
 - No push/merge/Jira mutation. U03 metadata, independent integration/browser/NFR acceptance gates remain pending; commit does not imply full UC66 Done.
+
+## U10 giai đoạn 1 (UC 46, 47) — 2026-10-20
+
+- [x] Code Generation Part 1: plan giai đoạn 1 được người dùng duyệt (D1–D7).
+- [x] Code Generation Part 2: bước 1.1–1.11 xong trên nhánh `quiz-authoring` (chưa commit); xem `construction/u10-quiz-authoring/code/code-summary.md`.
+- [x] Bước 1.12: người dùng duyệt code giai đoạn 1 ngày 2026-10-20.
+- Giai đoạn 2 (UC 48), 3 (U11), 4 (AI/MCP) chưa bắt đầu.
+
+## U10 giai đoạn 2 (UC 48) — 2026-10-20
+
+- [x] Code Generation Part 1: plan giai đoạn 2 được duyệt (E1–E8); giai đoạn 1 commit `5d70173`.
+- [x] Code Generation Part 2: bước 2.1–2.12 xong trên `quiz-authoring` (chưa commit).
+- [x] Bước 2.13: người dùng duyệt code giai đoạn 2 ngày 2026-10-20.
+
+## U11 giai đoạn 3 (UC 49–52) — 2026-10-20
+
+- [x] Code Generation Part 1: plan giai đoạn 3 được duyệt (G1–G7).
+- [x] Code Generation Part 2: bước 3.0–3.13 xong trên nhánh `quiz-practice` (tách từ `quiz-authoring` `f3b54bc`, chưa commit); xem `construction/u11-quiz-practice/code/code-summary.md`.
+- [x] Bước 3.14: người dùng duyệt code giai đoạn 3 ngày 2026-10-20.
+
+## staging merge conflict resolution — 2026-10-20
+
+- Resolved four additive conflicts in aidlc-state/audit and Actions/AccessPolicy by preserving both branches. Kept current U15 Admin Dashboard row rather than historical U15 Grading row; retained U10/U11 progress and all audit entries.
+- Verified exact union of 36 declared actions and 36 policy entries, with role/scope unchanged on both sides. No unrelated incoming source edits.
+- Fresh merged-tree backend verify:852 total/775 passed/77 skipped/0 failures/errors, executable JAR packaged. Frontend292 passed/57 files; lint/typecheck pass. Logs .tmp/u15/merge-*.log. Full browser/integration/NFR gates unchanged.
+- Marked only four conflict paths resolved in index. Merge remains pending its final commit; no merge commit/push performed for this check.

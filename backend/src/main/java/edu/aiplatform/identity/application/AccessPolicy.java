@@ -58,7 +58,13 @@ final class AccessPolicy {
             Map.entry(Actions.GRADING_WRITE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
             Map.entry(Actions.GRADEBOOK_READ, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
             Map.entry(Actions.GRADEBOOK_EXPORT, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
-            Map.entry(Actions.MY_GRADE_READ, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)));
+            Map.entry(Actions.MY_GRADE_READ, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)),
+
+            Map.entry(Actions.QUESTION_BANK_VIEW, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
+            Map.entry(Actions.QUESTION_BANK_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
+            Map.entry(Actions.QUIZ_SUBJECT_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
+            Map.entry(Actions.QUIZ_CLASS_MANAGE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.QUIZ_PRACTICE, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)));
 
     private AccessPolicy() {
     }

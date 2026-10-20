@@ -1,0 +1,42 @@
+import { apiFetch } from "@/shared/api/client";
+import type { ClassAttempts, PracticeQuizDetail, PracticeQuizRow, ResultView, SaveResult, TakingView, TeacherAttemptDetail } from "./types";
+
+const enc = encodeURIComponent;
+const attemptPath = (id: string) => `/api/v1/quiz-attempts/${enc(id)}`;
+
+export function getPracticeHistory(classId?: string | null, signal?: AbortSignal): Promise<PracticeQuizRow[]> {
+  return apiFetch<PracticeQuizRow[]>(`/api/v1/me/quizzes${classId ? `?classId=${enc(classId)}` : ""}`, { signal });
+}
+
+export function getPracticeQuiz(quizId: string, classId: string, signal?: AbortSignal): Promise<PracticeQuizDetail> {
+  return apiFetch<PracticeQuizDetail>(`/api/v1/me/quizzes/${enc(quizId)}?classId=${enc(classId)}`, { signal });
+}
+
+/** Bắt đầu lượt mới hoặc mở lại lượt đang làm (BR-U11-10). */
+export function startAttempt(quizId: string, classId: string): Promise<TakingView> {
+  return apiFetch<TakingView>(`/api/v1/quizzes/${enc(quizId)}/attempts`, { method: "POST", body: JSON.stringify({ classId }) });
+}
+
+export function getAttempt(attemptId: string, signal?: AbortSignal): Promise<TakingView> {
+  return apiFetch<TakingView>(attemptPath(attemptId), { signal });
+}
+
+export function saveAnswers(attemptId: string, answers: Record<string, string[]>, answerVersion: number): Promise<SaveResult> {
+  return apiFetch<SaveResult>(`${attemptPath(attemptId)}/answers`, { method: "PUT", body: JSON.stringify({ answers, answerVersion }) });
+}
+
+export function submitAttempt(attemptId: string): Promise<ResultView> {
+  return apiFetch<ResultView>(`${attemptPath(attemptId)}/submit`, { method: "POST" });
+}
+
+export function getResult(attemptId: string, signal?: AbortSignal): Promise<ResultView> {
+  return apiFetch<ResultView>(`${attemptPath(attemptId)}/result`, { signal });
+}
+
+export function getClassAttempts(classId: string, quizId: string, signal?: AbortSignal): Promise<ClassAttempts> {
+  return apiFetch<ClassAttempts>(`/api/v1/classes/${enc(classId)}/quizzes/${enc(quizId)}/attempts`, { signal });
+}
+
+export function getTeacherAttempt(classId: string, attemptId: string): Promise<TeacherAttemptDetail> {
+  return apiFetch<TeacherAttemptDetail>(`/api/v1/classes/${enc(classId)}/quiz-attempts/${enc(attemptId)}`);
+}
