@@ -81,7 +81,28 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 | BR-U11-41 `404` + `ACCESS_DENIED`, fail closed | `PracticeAccess` | `onlyEnrolledStudents…` |
 | NFR-U11-30 không lộ đáp án trước khi nộp | `TakingView` không có đáp án | `startingCreatesOneAttempt…` |
 
+## Chạy thử end-to-end (2026-10-20, stack Docker local)
+
+Cùng lần chạy với U10 (xem code-summary U10: code `staging` `c7a4791`, compose local qua Nginx `:8088`, override tạm cổng PostgreSQL và healthcheck RabbitMQ). Quiz của lớp có 6 câu, tổng 7 điểm; v1: 10 phút, 3 lượt, hiện điểm, đáp án sau khi nộp, đảo câu và lựa chọn; v2: 1 phút, ẩn điểm, không hiện đáp án. Sinh viên 1 làm trên trình duyệt; sinh viên 2, 3 làm qua API (để frontend không tự nộp khi hết giờ); trạng thái lượt kiểm thêm trong PostgreSQL.
+
+| Bước | Kết quả |
+|---|---|
+| s1 vào `/quiz-practice`: thấy Quiz, 0/3 lượt, bấm Bắt đầu | Đạt; đề đã đảo câu và lựa chọn, đồng hồ 10 phút |
+| Tự lưu ~2 giây sau khi chọn (`answerVersion` 0 → 1 → 2); tải lại trang giữ đủ 6 câu | Đạt |
+| Popup nộp, nộp tay; kết quả 5/7 đúng như dự tính (câu `MCQ_MULTI` chọn thiếu tính sai), đáp án và giải thích hiện theo `AFTER_SUBMIT` | Đạt |
+| Nộp lặp → `200` trả kết quả cũ; lưu sau khi nộp → `409 ATTEMPT_SUBMITTED`; lịch sử 1/3 lượt, điểm cao nhất 5/7 | Đạt |
+| s2 bắt đầu, lưu 5 câu, bắt đầu lại trả đúng lượt đang làm; giảng viên phát hành version mới | Đạt; lượt s2 `SUBMITTED`, `AUTO_RETIRED`, 4/7 đúng dự tính; kết quả của s2 vẫn theo snapshot v1 (hiện điểm, đáp án) |
+| s1 sau khi v1 ngưng: lịch sử có v2 (Đang mở, 0/3) và v1 (Đã ngưng, 1/3, điểm 5); bắt đầu v1 → `409` | Đạt (số lượt tính theo version, G6) |
+| s3 bắt đầu v2 (1 phút), lưu 5 câu; lưu ở hạn + 10 giây → `200`; ở hạn + 32 giây → `409` "Đã hết thời gian làm bài" | Đạt (ân hạn 30 giây) |
+| Scanner ở worker tự nộp lượt quá hạn | Đạt; hạn 14:06:08Z, nộp 14:07:21Z, `AUTO_TIME_LIMIT`, điểm 4; gọi nộp sau đó trả kết quả cũ; sau vài chu kỳ quét vẫn một dòng `SUBMITTED` và đúng một audit `QUIZ_ATTEMPT_SUBMITTED`, log worker không có lỗi scanner |
+
+Lỗi và điểm cần quyết định (chưa sửa):
+
+1. **Kết quả khi Quiz ẩn điểm và đặt `NEVER` không khớp giữa BR, API và UI.** BR-U11-20 yêu cầu luôn hiện câu trả lời của mình từng câu và số câu đúng. API `GET /quiz-attempts/{id}/result` trả `correctCount`, `wrongCount`, `blankCount` và cờ `correct` từng câu (với câu một đáp án, cờ này lộ đáp án khi sinh viên chọn đúng). Còn `QuizResultPage` chỉ hiện "Đã nộp bài" và hai dòng "không hiện điểm/đáp án", không có câu trả lời của mình hay số câu đúng. Tái hiện: v2 ở trên, s3 mở `/quiz-attempts/{id}/result`. Cần chốt có hiện cờ đúng/sai từng câu khi `NEVER` hay không, rồi sửa một trong hai phía.
+2. Nhỏ: ô chọn đáp án ở `QuizTakingPage` có tên truy cập "on" (nhãn không gắn với input); kết quả không cho biết lượt được tự nộp (`AUTO_TIME_LIMIT`, `AUTO_RETIRED`), chỉ hiện "Đã nộp bài".
+3. Quan sát: "Lần gần nhất" ở lịch sử sinh viên lấy `startedAt` mới nhất, phía giảng viên lấy `submittedAt` (17:11 và 17:12 cho cùng một lượt); hai dòng của hai version trong lịch sử cùng tên, chỉ phân biệt bằng trạng thái.
+
 ## Còn lại
 
-- Chưa chạy end-to-end trên trình duyệt với backend thật; integration test (hết giờ khi đang làm, Quiz bị ngưng khi có lượt, hai tab lưu cùng lượt, phân quyền 4 role) do tester viết.
+- Integration test (hết giờ khi đang làm, Quiz bị ngưng khi có lượt, hai tab lưu cùng lượt, phân quyền 4 role) do tester viết; chốt điểm 1 ở mục trên.
 - Gắn tracker hoạt động khi U08 xong; `MaterialQuizList` khi U13 xong.

@@ -4672,3 +4672,53 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U11 approval and commit.
 
 ---
+
+## 2026-10-20T09:33:53Z — Pushed quiz-practice, opened PR #6
+
+**User Input**: "Push nhánh quiz-practice (gồm cả U10 và U11) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: origin/staging unchanged (6341aed); no secret-like literals in the three commits (5d70173, f3b54bc, cfc4cbf). Pushed `quiz-practice` and opened PR #6 into `staging` (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/6), bound to the session. CI started; PR not merged. Audit entry left uncommitted.
+
+**Context**: Construction — U10/U11 integration.
+
+---
+
+## 2026-10-20T09:51:17Z — PR #6 merged into staging
+
+**User Input**: "Bật Auto-fix cho PR #6. Khi CI xanh thì báo tôi để quyết định merge." / "CI đã xanh" / "Merge PR #6 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Enabled Auto-fix for PR #6. Verified all checks green (GitGuardian, backend, frontend; deploy and images skipped by design) and merge state CLEAN. Merged with a merge commit: staging is now c7a4791 (parents 6341aed, cfc4cbf). Checks: staging tree equals the CI-verified PR head tree (dd4b388); no conflict markers; no other open PR into staging; remote branches already included or merge cleanly, except `ui-reference` which still conflicts only in `aidlc-docs/audit.md` (pre-existing). Jira UC 46–52 not updated yet.
+
+**Context**: Construction — U10/U11 integration.
+
+---
+
+## 2026-10-20T09:52:52Z — Jira: U10/U11 UCs moved to Done
+
+**User Input**: "Chuyển KAN-143, KAN-78, KAN-44, KAN-128, KAN-129, KAN-130, KAN-57 sang Done trên Jira; KAN-23, KAN-25 giữ nguyên chờ tester và giai đoạn 4."
+
+**AI Response**: Applied Jira transition 41 (Done) to KAN-143 (UC46), KAN-78 (UC47), KAN-44 (UC48), KAN-128 (UC49), KAN-129 (UC50), KAN-130 (UC51), KAN-57 (UC52); all returned 204 and now read Done / Done. KAN-23 and KAN-25 left as To Do. Roadmap notes updated. Docs left uncommitted.
+
+**Context**: Construction — U10/U11 integration.
+
+---
+
+## 2026-10-20T14:08:57Z — U10/U11 end-to-end run on local Docker
+
+**User Input**: "Chạy thử end-to-end luồng Quiz (U10 Quiz Authoring + U11 Quiz Practice) trên stack Docker local của repo, từ nhánh `staging` (đã merge PR #6, commit c7a4791). Kịch bản: (1) Chủ nhiệm môn vào /manager/questions tạo, nhập tệp mẫu frontend/public/templates/question-import.csv, kích hoạt câu hỏi; (2) giảng viên lớp vào tab Đánh giá của lớp, tạo Quiz, lấy câu từ ngân hàng (chọn tay và bốc ngẫu nhiên), đặt giới hạn giờ, duyệt, phát hành; (3) sinh viên đang học lớp vào /quiz-practice, làm bài, kiểm tự lưu, nộp, xem kết quả theo cài đặt; (4) giảng viên tạo version mới và phát hành, kiểm lượt đang làm của sinh viên được tự nộp AUTO_RETIRED; (5) để một lượt quá hạn và kiểm scanner ở worker tự nộp AUTO_TIME_LIMIT. Ghi lỗi tìm được kèm cách tái hiện; sửa lỗi nhỏ trong phạm vi U10/U11 nếu rõ ràng, lỗi lớn thì báo lại. Không commit hay push khi chưa hỏi người dùng. Kết quả: một mục "Chạy thử end-to-end" trong aidlc-docs/construction/u10-quiz-authoring/code/code-summary.md và u11-quiz-practice/code/code-summary.md, kèm mục audit." (task from the coordinating session) / "tiếp tục"
+
+**AI Response**: Ran on code identical to staging c7a4791 (checkout `quiz-practice` cfc4cbf, no code diff) with the local compose stack plus a temporary override (PostgreSQL on 15432, RabbitMQ healthcheck timeout 30s). All five scenarios passed: question bank create/import/activate, teacher quiz with manual and random picks, student autosave/submit/result (5/7 as expected), new version publish → `AUTO_RETIRED` (4/7), overdue attempt → worker scanner `AUTO_TIME_LIMIT` after the 30s grace. Fixed `frontend/Dockerfile` not copying `public/` (template URL returned 404, import of the sample failed in the UI); shared file, uncommitted. Reported, not fixed: result screen vs BR-U11-20 vs API mismatch when a quiz hides score and answers; minor accessibility names on switches and answer checkboxes. Wrote "Chạy thử end-to-end" sections in U10 and U11 code-summary. Nothing committed or pushed.
+
+**Context**: Construction — U10/U11 end-to-end verification.
+
+---
+
+## 2026-10-20T14:17:22Z — E2E results and Dockerfile fix proposed to staging
+
+**User Input**: "Thử lại" / "tiếp tục" / "Tạo nhánh mới từ origin/staging, commit bản sửa frontend/Dockerfile cùng tài liệu chạy thử (code-summary, roadmap, audit), push và mở PR vào staging."
+
+**AI Response**: The E2E session (local_921c26b0) was resumed and finished: all 5 scenarios passed on the local Docker stack (scenario 5: the worker auto-submitted the overdue attempt once as AUTO_TIME_LIMIT); the stack was stopped. Created branch `quiz-e2e-docker-fix` from origin/staging (c7a4791) carrying the uncommitted changes: `frontend/Dockerfile` copies `public/` into the runtime image (the CSV template was missing), E2E sections in the U10/U11 code summaries, roadmap and audit updates. Committing, pushing and opening a PR into staging.
+
+**Context**: Construction — U10/U11 end-to-end verification.
+
+---
