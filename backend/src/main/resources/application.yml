@@ -14,6 +14,8 @@ spring:
     user: ${POSTGRES_MIGRATOR_USER:migrator}
     password: ${POSTGRES_MIGRATOR_PASSWORD:}
     locations: classpath:db/migration
+    # Unit làm sau có thể có version nhỏ hơn migration đã chạy của unit khác (ví dụ U06 1200 sau U11 1700).
+    out-of-order: true
   jpa:
     open-in-view: false
     hibernate:
@@ -99,6 +101,22 @@ platform:
       login-ip-window: ${U01_RL_LOGIN_IP_WINDOW:5m}
       password-change-failures: ${U01_RL_PASSWORD_CHANGE_FAILURES:5}
       password-change-window: ${U01_RL_PASSWORD_CHANGE_WINDOW:15m}
+  # U06 AI Connections: khóa mã hóa key bắt buộc ở môi trường thật (base64 32 byte), không có giá trị mặc định.
+  ai:
+    key-encryption-key: ${U06_AI_KEY_ENCRYPTION_KEY:}
+    key-encryption-key-v2: ${U06_AI_KEY_ENCRYPTION_KEY_V2:}
+    request-timeout: ${U06_AI_REQUEST_TIMEOUT:120s}
+    test-timeout: ${U06_AI_TEST_TIMEOUT:20s}
+    providers:
+      gemini:
+        models: ${U06_GEMINI_MODELS:gemini-2.5-flash,gemini-2.5-pro}
+        max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:8192}
+      openai:
+        models: ${U06_OPENAI_MODELS:gpt-4.1-mini,gpt-4.1}
+        max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:8192}
+      claude:
+        models: ${U06_CLAUDE_MODELS:claude-sonnet-5-5,claude-haiku-5-5}
+        max-output-tokens: ${U06_CLAUDE_MAX_OUTPUT:8192}
   # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
