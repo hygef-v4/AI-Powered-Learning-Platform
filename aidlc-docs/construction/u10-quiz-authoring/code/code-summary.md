@@ -153,7 +153,25 @@ Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_REVIEW_FAILED` (kèm `v
 | BR-U10-50 ngoài phạm vi `404` + audit, `409` khi lệch version | `QuizAccess`, `QuizSupport` | `QuizServicesTest`, `QuizControllersTest` |
 | NFR-U10-31 đề cho người học không có đáp án | `QuizQueryService.getStudentView` | `scoringNeeds…StudentViewHidesAnswers` |
 
+## Chạy thử end-to-end (2026-10-20, stack Docker local)
+
+Chạy trên code `staging` `c7a4791` (cây code giống `quiz-practice` `cfc4cbf`), stack `docker-compose.yml` + `docker-compose.local.yml` qua Nginx `:8088`, Mailpit thật, thêm file override tạm (PostgreSQL ra cổng 15432 vì máy đã có PostgreSQL ở 5432; healthcheck RabbitMQ timeout 30 giây). Dữ liệu nền tạo bằng API: Admin kích hoạt qua OTP, Chủ nhiệm môn, giảng viên, 3 sinh viên, môn `E2E101`, lớp `OPEN` có 3 sinh viên. Thao tác U10 làm trên trình duyệt (khung trình duyệt của app), kiểm thêm bằng API và PostgreSQL.
+
+| Bước | Kết quả |
+|---|---|
+| Chủ nhiệm môn vào `/manager/questions`, thêm câu một đáp án, lưu nháp, kích hoạt | Đạt |
+| Nhập `question-import.csv` qua hộp thoại: xem trước 2/2 hợp lệ, nhập 2 câu ở trạng thái Nháp, kích hoạt từng câu | Đạt sau khi sửa lỗi 1; API `questions:import` với `dryRun=true` và thật cũng đạt |
+| Giảng viên vào tab Đánh giá của lớp, tạo Quiz, chọn tay 3 câu, bốc ngẫu nhiên 3 câu ("Có 8 câu phù hợp", không trùng câu đã chọn) | Đạt; tổng điểm 7 |
+| Cài đặt 10 phút, 3 lượt, hiện điểm, đáp án sau khi nộp, đảo câu và lựa chọn; Lưu, Duyệt, Phát hành | Đạt; settings lưu đúng |
+| Phần Lượt làm trên Quiz Detail (mở từ lớp) | Đạt; hiện 3 sinh viên, lượt, điểm cao nhất |
+| Tạo version mới từ Quiz đang mở, đổi cài đặt (1 phút, ẩn điểm, không hiện đáp án), Duyệt, Phát hành | Đạt; v1 `RETIRED`, v2 `OPEN`, lượt đang làm của v1 được U11 tự nộp `AUTO_RETIRED` (xem code-summary U11) |
+
+Lỗi tìm thấy:
+
+1. **Đã sửa (chưa commit)** — tệp mẫu không có trong image frontend. `frontend/Dockerfile` (Next standalone) chỉ copy `.next/standalone` và `.next/static`, không copy `public/`; U10 là unit đầu tiên có tệp trong `public/`. Tái hiện: build image frontend, `curl -i http://localhost:8088/templates/question-import.csv` → `404` trang HTML 8.713 byte; "Tải tệp mẫu" tải về HTML; nhập tệp mẫu qua UI báo "Không đọc được tệp CSV". Sửa: thêm `COPY --from=build --chown=app:app /app/public ./public`; build lại thì `200 text/csv`, nhập qua UI đạt. Đây là file dùng chung, cần báo người giữ frontend/infra.
+2. Nhỏ, chưa sửa: các công tắc ở `QuizSettingsPanel` (Hiện điểm, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) không có tên truy cập vì `Switch` đặt nhãn ngoài nút và không truyền `ariaLabel`.
+
 ## Còn lại
 
-- Chưa chạy end-to-end trên trình duyệt với backend thật; integration test phân quyền 4 role trên endpoint do tester viết.
+- Integration test phân quyền 4 role trên endpoint do tester viết.
 - Giai đoạn 3 (U11) cài `IQuizLifecycleListener`, slot `quizDetailSections`, `quizRowActions`; giai đoạn 4 thêm AI soạn câu (F4, F8) và tool MCP.
