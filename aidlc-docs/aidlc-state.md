@@ -212,7 +212,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U12 Group & Allocation | Design revision 73 UC ngày 2026-10-09; Chia nhóm/leader hỗ trợ Teacher Class Detail và UC 45/27. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U13 AI & Code Execution | Design revision 73 UC ngày 2026-10-09; AI draft, Practice grading UC 29, proposals UC 38, Judge0 UC 25/43, số liệu AI UC 58. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U14 Group Document & Submission | Design revision 73 UC ngày 2026-10-09; Tài liệu nhóm chỉ ở lớp, GRADED; chỉ leader nộp. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U15 Grading | Design revision 73 UC ngày 2026-10-09; Bài của môn chấm/công bố theo từng lớp; Practice/quiz không vào gradebook. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U15 Admin Dashboard | UC66/KAN-80 hiện hành; counts và backup metadata, current-contract slice A duyệt 2026-10-20. | Plan bảy task duyệt 2026-10-20; C01/C02 metadata U03 deferred | Code-ready slice A: backend verify 755 total/693 pass/62 skip; frontend253 pass, lint/typecheck/build pass; independent review P2 đã sửa. Full UC66 còn U03/integration/NFR acceptance. Xem construction/u15-admin-dashboard/code/implementation-summary.md |
 | U16 Reporting & Notification | Design revision 73 UC ngày 2026-10-09; Progress/distribution và export của UC 40; thông báo bài của môn tới mọi lớp OPEN. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 
 ## Open Items
@@ -336,3 +336,35 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - User requests local commit only, without push; use current grading-gradebook branch and preserve all existing U09 history.
 - Separate Conventional Commit groups: retained characterization tests (26971c2e), backend refactor (c5cd5511), frontend refactor (1bdff199), and documentation containing the review, execution evidence, handoff, state and audit.
 - Source/tests unchanged since successful verification; no additional application edits or integration claims during commit preparation. Commit results and final working-tree state verified through Git.
+
+## Jira status reconciliation - 2026-10-20
+
+- Live Jira: U05 KAN-21 already Done; eleven UC20-30 stories remain In Review. Kept existing statuses pending independent acceptance evidence.
+- Updated U09 KAN-31 and all four UC42-45 stories (KAN-84/58/59/81) from To Do to In Review; five successful transition responses confirmed final statuses. Code/build complete does not claim real integration acceptance.
+- Remaining newly assigned work: U15 KAN-32 / UC66 KAN-80, both To Do. Existing U05/U09 integration, independent tester and NFR gates retained.
+- No source changes, Jira comments/messages, commit or push; this reconciliation audit/state update remains local.
+
+## U15 implementation plan draft - 2026-10-20
+
+- [x] Resume existing U15 design and current UC66/KAN-32/KAN-80 scope; inspect scaffold, real public ports/providers, Admin session/layout/nav and temporary homePath.
+- [x] Apply Clean Code and Superpowers planning; update `construction/plans/code-generation-plan/u15-admin-dashboard-code-generation-plan.md` to seven testable tasks with interfaces, permission guards, bounded fan-out, DTO/API, UI, navigation, verification and acceptance gates.
+- [x] Record C01-C07 evidence/proposals in `construction/u15-admin-dashboard/code/implementation-contract-review-2026-10-20.md`; important U03 metadata gaps remain explicit, no cross-unit contract change assumed.
+- [x] Validate links, text/code fences, seven-task structure and diff whitespace; product/runtime tests not run for documentation-only planning.
+- [x] User approved slice A and inline execution: “Cứ giúp tôi code trc theo plan còn khi nào u3 xong thì xử lý sau”; see approval questions and execution below.
+- Recommend current-contract consumer implementation with metadata unavailable rather than fabricated; full UC66 completion still needs U03 contract handoff and independent integration/NFR acceptance. Jira unchanged, no owner messages, no source changes/commit/push. Preserve prior local audit/state updates.
+
+## U15 current-contract implementation — 2026-10-20
+
+- [x] User authorizes slice A and inline execution following the approved plan; missing U03 metadata remains deferred.
+- [x] Implement ADMIN-only aggregate/history APIs with current-account authorization, deny audit, safe DTOs, bounded fan-out/deadline and partial availability. Keep provider contracts/implementations unchanged.
+- [x] Implement `/admin` dashboard/history using existing layout/nav/session/shared UI; ADMIN_HOME=/admin. Missing startedAt stays null, latest-success/7-day summary stays UNAVAILABLE; no fabricated zeros or backup actions.
+- [x] Retain RED/GREEN evidence and independent review. Repair pagination range before guard using three real-service HTTP regressions, then rerun backend focused/full checks; no other concrete review findings.
+- [x] Final backend verify:755 total/693 passed/62 skipped/zero failures/errors, executable JAR. Frontend253 passed/52 files, focused21, lint/typecheck/build pass; restore generated tsconfig and typecheck again. OpenAPI YAML/local refs and whitespace checks pass.
+- [ ] Full UC66 acceptance: U03 C01/C02 handoff, independent real provider/session/audit/browser integration, healthy p95 and fault/stress/JDBC resource-release evidence. Existing U07/U08 migration prerequisites of U09 remain a separate startup gate; skipped tests are not counted as pass.
+- Handoff: `construction/u15-admin-dashboard/code/implementation-summary.md`; repeat commands/tester matrix: `construction/build-and-test/u15-verification.md`. Global Construction/Build&Test status not advanced; no commit/push/Jira transition or owner messages. Reduced enabled extensions locally covered with deployment/integration limits documented; PBT disabled.
+
+## U15 local commits — 2026-10-20
+
+- User requests commit; retain current grading-gradebook branch. Fresh precommit checks: backend49/frontend21 pass, whitespace clean.
+- Local commits d3d8c7b5 (backend/API/contracts/tests), a71d7fd1 (frontend/tests), plus documentation commit containing approved plan, implementation handoff, verification and audit/state. No source changes during commit preparation.
+- No push/merge/Jira mutation. U03 metadata, independent integration/browser/NFR acceptance gates remain pending; commit does not imply full UC66 Done.

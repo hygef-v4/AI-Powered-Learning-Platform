@@ -4591,3 +4591,41 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Local publication of the approved U05 refactor only; existing integration/NFR limitations retained.
 
 ---
+
+## Jira status reconciliation - U05 and U09
+**Timestamp**: 2026-10-20T11:05:42Z
+**User Input**: "Check jira xem còn đầu việc gì nữa với cập nhật status unit đã xong"
+**AI Response**: Read live Jira through Atlassian and compared against committed U05/U09 implementation and verification handoffs. U05 KAN-21 was already Done; its eleven UC20-30 stories remain In Review, pending independent acceptance evidence. Kept those existing statuses. Transitioned U09 Epic KAN-31 and stories KAN-84 (UC42), KAN-58 (UC43), KAN-59 (UC44), KAN-81 (UC45) from To Do to In Review; all five transition responses confirmed the resulting status. Did not mark Done without integration/acceptance evidence. Remaining new assigned work: U15 Epic KAN-32 and UC66 KAN-80, both To Do. U05 live DB/access/concurrency and U09 real U06/U07/U08/migration/group/event/browser/NFR acceptance gates remain open. No comments/messages, assignee/date/sprint changes, new Jira tickets, source changes, commit or push.
+**Context**: User authorized Jira status updates. Repository code/build evidence was reused without rerunning tests because source was unchanged. Epic U05 Done versus children In Review is an existing tracking inconsistency, not silently corrected or treated as proof of acceptance.
+
+---
+
+## U15 implementation planning
+**Timestamp**: 2026-10-20T11:19:52Z
+**User Input**: "Giúp tôi lập plan triển khai u15 luôn theo doc aidlc, contract ,sử dụng skill clean code, superpower"
+**AI Response**: Applied Clean Code and Superpowers using-superpowers/brainstorming/writing-plans. Resumed brownfield Construction from existing U15 FD/NFR/infra and current unit mapping; preserved prior Jira reconciliation edits in audit/state. Inspected actual public contracts, provider implementations, permissions, backup/settings semantics, Admin layout/nav and HomePaths. Replaced the old five-step scaffold plan with a seven-task implementation draft including exact file boundaries, proposed HTTP/DTO schema, TDD cases, bounded fan-out deadlines, safe partial availability, frontend/history, homePath cutover, verification/review/acceptance and rollback. Created contract review C01-C07 and two approval questions. Important gaps: BackupRunView has no startedAt; IBackupStatus lacks direct latest-success/7-day summary; UI/source differ on shortcuts, retention exception and enrollment subtitle. Recommend current-contract consumer slice with missing metadata visibly unavailable and full acceptance gated on separate U03 contract handoff; alternative waits for full metadata. No provider contract changes, product code, tests, Jira writes, messages to owners, commit or push. Verified local Markdown links, seven tasks, UTF-8/fences and git diff whitespace; no runtime checks claimed.
+**Context**: Code Generation Part1 draft complete for review, Part2 not authorized. Existing requirements/design reused, no new unit decomposition or infrastructure. Reduced Security/Resiliency scope covered in tasks; PBT remains disabled. User choice/approval recorded as pending in u15-implementation-approval-questions.md; approval rule from CLAUDE.md/code-generation.md applies before generation.
+
+---
+
+## U15 implementation authorized
+**Timestamp**: 2026-10-20T11:28:04Z
+**User Input**: "Cứ giúp tôi code trc theo plan còn khi nào u3 xong thì xử lý sau"
+**AI Response**: Execute approved U15 plan inline under clean-code and Superpowers executing-plans/TDD. Select slice A; retain missing U03 metadata as unavailable. Preserve planning/audit changes, use current feature checkout and ignored execution ledger. No provider contract change, commit or push authorized.
+
+---
+
+## U15 slice A implementation and local verification
+**Timestamp**: 2026-10-20T11:50:34Z
+**AI Response**: Implemented approved seven-task U15 consumer plan using Clean Code and Superpowers executing-plans/TDD/independent review/verification. Added aggregate/history read APIs, current ACTIVE ADMIN authorization and deny audit, safe partial DTO projection, seven-source bounded fan-out (8 workers/32 queue/deadline2s), dashboard/history UI with stale-response cleanup, existing navigation/layout and ADMIN_HOME=/admin. Provider U03/U04/U05 contracts/implementations remain unchanged; startedAt null and latestSuccessfulAt/failuresLast7Days UNAVAILABLE pending U03. Fresh unchanged-source baseline backend724total/662pass/62skip and frontend232pass; observed RED missing production modules/classes and ADMIN homePath before implementation. Final independent review found P2 controller range-before-guard; three HTTP real-service regressions failed 400 vs403, then moved numeric range checks exclusively to service after guard. Focused49 and full backend verify passed after fix:755total/693pass/62skip/zero failures/errors and executable JAR. Frontend253pass/52files, focused21, lint/typecheck/production build pass; restored Next-generated tsconfig and ran typecheck again. OpenAPI YAML/local refs valid, provider scope and whitespace checked. Handoff/plan/state and U15 build-test supplement updated. No commit/push/merge/Jira changes or owner messages.
+**Context**: Slice A code-ready, not full UC66 acceptance or global Build & Test completion. Real JWT/current-account/audit persistence/provider/browser integration, U03 C01/C02 metadata, healthy p95<=1s, fault2s+overhead/stress/JDBC release and independent tester/owner acceptance remain open. Existing U09 prerequisite U07/U08 migration startup gate and62skips retained. Security03/04/05/08/09/12/15 and Resiliency04/06/10 local coverage/limits documented in implementation-summary; other rules N/A per reduced scope; PBT disabled. Bookkeeping adapted to PowerShell and existing feature checkout; no reset or Git index writes.
+
+---
+
+## U15 local commit grouping
+**Timestamp**: 2026-10-20T14:21:07Z
+**User Input**: "giúp tôi commit"
+**AI Response**: Inspected working tree and empty index on grading-gradebook, checked whitespace and reran focused backend49/frontend21 tests successfully. Created local Conventional Commits d3d8c7b5 (backend/API/OpenAPI/authorization/homePath/tests) and a71d7fd1 (dashboard/history UI/navigation/tests), followed by the documentation commit containing approved plan, contract decisions, verification/handoff and accumulated Jira reconciliation audit/state. No product changes during commit preparation; no push, merge or Jira mutation. Git metadata writes used sandbox escalation for the authorized local commit operation. Final commit identities and clean working tree checked after documentation commit.
+**Context**: User authorizes local commits of the implemented U15 slice A. Existing U03 metadata and real integration/NFR acceptance gates remain open; historical no-commit statements describe earlier execution only.
+
+---
