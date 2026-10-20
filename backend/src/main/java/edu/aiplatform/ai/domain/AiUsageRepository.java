@@ -1,6 +1,7 @@
 package edu.aiplatform.ai.domain;
 
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiUsageSummary;
 import edu.aiplatform.ai.contract.UsageMeasurement;
 import edu.aiplatform.ai.domain.AiUsageRecord.Source;
 import java.sql.ResultSet;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -80,6 +82,16 @@ public class AiUsageRepository {
                         new long[] {rs.getLong("n"), rs.getLong("tokens")}))
                 .list();
         return totals;
+    }
+
+    /** Token của một task (lấy dòng usage mới nhất của task) cho {@code AiTaskView}. */
+    public Optional<AiUsageSummary> summaryOfTask(UUID taskId) {
+        return jdbc.sql("select input_tokens, output_tokens, provenance from ai_usage_records where task_id = :taskId "
+                        + "order by created_at desc limit 1")
+                .param("taskId", taskId)
+                .query((rs, n) -> new AiUsageSummary(rs.getObject("input_tokens", Long.class),
+                        rs.getObject("output_tokens", Long.class), UsageMeasurement.valueOf(rs.getString("provenance"))))
+                .optional();
     }
 
     /** Tổng hợp API chung cho Admin (BR-U06-41): theo giảng viên, ngày, provider và model; không có nội dung. */

@@ -26,6 +26,7 @@
         <google-auth.version>1.48.0</google-auth.version>
         <jjwt.version>0.12.6</jjwt.version>
         <commons-csv.version>1.12.0</commons-csv.version>
+        <json-schema-validator.version>1.5.6</json-schema-validator.version>
         <poi.version>5.4.1</poi.version>
         <bucket4j.version>8.14.0</bucket4j.version>
         <!-- 1.21.4 bắt tay được với Docker Engine 29 (API tối thiểu cao hơn); Boot 3.5.6 quản lý 1.21.3. -->
@@ -119,6 +120,12 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
+        </dependency>
+        <!-- U06: kiểm kết quả AI và tham số tool MCP theo JSON Schema (NFR-U06-33). -->
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${json-schema-validator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
