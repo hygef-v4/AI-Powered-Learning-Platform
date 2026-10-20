@@ -1,4 +1,4 @@
-# U10 Quiz Authoring — code summary (giai đoạn 1: ngân hàng câu hỏi)
+# U10 Quiz Authoring — code summary (giai đoạn 1: ngân hàng câu hỏi; giai đoạn 2: Quiz)
 
 Code viết ngày 2026-10-20 trên nhánh `quiz-authoring` (tách từ `staging` `6341aed`) theo [plan giai đoạn 1](../../plans/code-generation-plan/u10-quiz-authoring-code-generation-plan.md). Phạm vi: UC 46 View Subject Question Bank (KAN-143), UC 47 Create/Update/Delete Subject Question (KAN-78); luồng F1, F2, F3. Chưa gồm F4 (AI soạn câu, giai đoạn 4) và phần Quiz (UC 48, giai đoạn 2). Chưa commit.
 
@@ -75,7 +75,85 @@ Mã lỗi khác: `QUESTION_NOT_FOUND`, `SUBJECT_NOT_FOUND`, `SUBJECT_NOT_ACTIVE`
 | NFR-U10-30 tệp nhập: loại theo nội dung, công thức là văn bản | `QuestionImporter` | `formulaLikeCellsStayPlainText`, `readsFirstSheetOfXlsxWithoutEvaluatingFormulas` |
 | NFR-U10-32 không log nội dung câu | `QuizAudit` chỉ id/số đếm | `createStoresDraftAndAuditsWithoutContent` |
 
+# Giai đoạn 2 — Quiz (UC 48)
+
+Code viết ngày 2026-10-20 trên `quiz-authoring` sau commit giai đoạn 1 `5d70173`, theo [plan giai đoạn 2](../../plans/code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (E1–E8). Phạm vi: UC 48 (KAN-44); F5, F6, F7, F9, F10, F11, F12, F14. Chưa gồm F8 (AI soạn câu cho Quiz, giai đoạn 4). Chưa commit.
+
+## Business logic (giai đoạn 2)
+
+| Luồng | Class chính |
+|---|---|
+| F5 Danh sách | `QuizAuthoringService.listSubject` (Quiz List của môn), `.listClass` (Quiz của lớp + Quiz của môn đã phát hành, chỉ xem) |
+| F6 Tạo | `createForSubject`, `createForClass` (cài đặt mặc định, lớp/môn chưa lưu trữ, audit `QUIZ_CREATED`) |
+| F7 Soạn | `updateDetails` (BR-U10-15; bật ghi nhận hoạt động bị chặn khi chưa có thời hạn lưu, E3), `saveItems` (câu ngân hàng `ACTIVE` cùng môn, câu đã ghim được giữ, câu riêng bị bỏ thì xóa), `randomPreview`, `bankQuestions` (E2), `addInline`, `updateInline`, `deleteInline`; mọi thay đổi kèm `version`, Quiz đã duyệt về nháp |
+| F9 Duyệt, phát hành | `QuizPublicationService.review` (lỗi theo câu `items[n]`), `.publish` (lớp `OPEN` hoặc môn `ACTIVE`, kiểm lại câu, version cũ đang mở → `RETIRED` + `IQuizLifecycleListener` trong cùng transaction, phát `quiz.published` sau commit) |
+| F10 Ngưng | `QuizPublicationService.retire` (lý do bắt buộc, gọi listener) |
+| F11 Nhân bản, version, copy | `QuizCopyService.cloneQuiz`, `.newVersion` (chỉ từ Quiz đã phát hành; một version đang soạn mỗi chuỗi), `.copySources`, `.copyToClass` (dạy cả hai lớp, cùng môn); câu ngân hàng giữ phiên bản ghim, câu riêng sao mới |
+| F12 Xóa | `QuizAuthoringService.delete` (chưa từng phát hành; xóa kèm câu, câu riêng, đề xuất AI) |
+| F14 Interface | `QuizQueryService` (cài `IQuizQuery`, đề cho người học không có đáp án), `QuizScorer` (cài `IQuizScoring`, đúng đủ tập đáp án mới có điểm) |
+| Dùng chung | `QuizSupport` (tải, quyền sửa/xem, lớp/môn còn hoạt động, dựng Quiz Detail, lưu có version), `QuizAccess.requireClass`, `.allows`, `RuleViolationException` |
+
+Domain: `Quiz`, `QuizItem`, `QuizOrigin`, `QuizRules`, `IQuizRepository`; `Question.newInline`, `.copyInline`; `IQuestionRepository` thêm câu riêng và chọn/bốc câu `ACTIVE`. Hạ tầng: `JdbcQuizRepository` (cài đặt, học liệu dạng `jsonb`; chuỗi version bằng truy vấn đệ quy).
+
+## API (giai đoạn 2)
+
+| Endpoint | Ghi chú |
+|---|---|
+| `GET`, `POST /api/v1/subjects/{subjectId}/quizzes` | Quiz của môn; lọc `status`, `q`, `page`, `size` |
+| `GET`, `POST /api/v1/classes/{classId}/quizzes`; `GET .../quiz-copy-sources`; `POST .../quizzes:copy` | Quiz của lớp, copy từ lớp khác |
+| `GET /api/v1/quizzes/{id}?classId=` | `canManage` sai khi giảng viên xem Quiz của môn từ lớp |
+| `PATCH`, `DELETE /api/v1/quizzes/{id}` | Thông tin, cài đặt kèm `version`; xóa `?version=` |
+| `PUT .../items`, `POST .../items:random-preview`, `GET .../bank-questions` | Danh sách câu, bốc thử, chọn tay (E2) |
+| `POST .../inline-questions`, `PATCH`, `DELETE .../inline-questions/{questionId}` | Câu riêng |
+| `POST .../review`, `/publish`, `/retire`, `/clone`, `/versions` | Vòng đời, nhân bản, version mới |
+
+Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_REVIEW_FAILED` (kèm `violations`), `QUIZ_VERSION_CONFLICT`, `QUIZ_NOT_EDITABLE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_REVIEWED`, `QUIZ_NOT_OPEN`, `QUIZ_DELETE_BLOCKED`, `QUIZ_NOT_PUBLISHED`, `QUIZ_VERSION_EXISTS`, `QUIZ_FULL`, `QUIZ_RANDOM_COUNT_INVALID`, `QUIZ_COPY_SUBJECT_MISMATCH`, `CLASS_NOT_OPEN`, `CLASS_ARCHIVED`, `ACTIVITY_RETENTION_NOT_SET`, `QUIZ_REQUEST_INVALID`.
+
+## Frontend (giai đoạn 2)
+
+- Route: `app/manager/quizzes` (Quiz List), `app/quizzes/[id]` + `app/quizzes/layout.tsx` (Teacher, Subject Manager).
+- `features/quizzes`: `SubjectQuizListPage`, `CreateQuizDialog`, `QuizDetailPage`, `QuizDetailParts` (`QuizItemList`, `InlineQuestionDialog`, `QuizSettingsPanel`, `QuizPreviewDialog`), `BankQuestionPicker`, `ClassQuizzesSection` (đăng ký `teacherClassTabs` tab `evals`), `QuizBankSummary` (đăng ký `subjectSummarySections`), slot mới `quizRowActions` cho U11.
+- Ghi nhận hoạt động hiện công tắc tắt kèm ghi chú (E3); không có `MaterialRefPicker` (E4).
+
+## Unit test (giai đoạn 2)
+
+- Backend: `QuizTest` 3, `QuizServicesTest` 17 (repository giả trong bộ nhớ), `QuizControllersTest` 5, `JdbcQuizRepositoryIntegrationTest` 5 (PostgreSQL 16 qua Testcontainers), thêm 1 test bảng quyền.
+- Frontend: `QuizScreens.test.tsx` 9.
+- Chạy đủ bước CI ngày 2026-10-20: backend `mvn -B verify` trên JDK 17 751 test, 0 lỗi, 31 bỏ qua (U04); frontend `npm ci`, lint, typecheck, 243 test, build đều đạt.
+
+## Thay đổi file dùng chung (giai đoạn 2)
+
+- `identity/contract/Actions.java`, `identity/application/AccessPolicy.java`: `QUIZ_SUBJECT_MANAGE` (Subject Manager, phạm vi môn), `QUIZ_CLASS_MANAGE` (Teacher, Subject Manager, phạm vi lớp) (E1).
+
+## Khác với thiết kế (giai đoạn 2)
+
+- Chọn câu ngân hàng cho giảng viên qua `GET /api/v1/quizzes/{id}/bank-questions` thay vì API ngân hàng của Chủ nhiệm môn (E2).
+- Tab Đánh giá hiện Quiz của môn ở trạng thái `OPEN` và `RETIRED` (chỉ xem); bản nháp của môn không hiện ở lớp.
+- `QuizItemView` có cờ `inline` để frontend phân biệt câu riêng và câu ngân hàng.
+- `QuizBankSummary` đếm bằng tổng của các API danh sách (5 lời gọi), không có API đếm riêng.
+- Version mới lấy `version_no` lớn nhất của cả chuỗi + 1; phát hành ngưng version khác đang mở trong chuỗi.
+
+## Đối chiếu UC 48 (bước 2.13)
+
+| Rule | Code | Test |
+|---|---|---|
+| BR-U10-10 Quiz của lớp do giảng viên lớp, của môn do Chủ nhiệm môn; giảng viên chỉ xem Quiz của môn | `QuizSupport.requireManage`, `.requireView`, `AccessPolicy` | `teacherViewsPublishedSubjectQuizFromTheirClassButCannotEditIt`, `teacherOfAnotherClassGetsNotFoundAndIsAudited` |
+| BR-U10-12 chỉ Practice | Không có lịch, sổ điểm; nhãn "Quiz · Practice" | — |
+| BR-U10-13 1–200 câu, câu ngân hàng ghim phiên bản hoặc câu riêng, điểm > 0 | `saveItems`, `addInline`, `QuizRules` | `savingItemsPinsActiveBankVersions…`, `itemsRejectDuplicatesAndBadPoints`, `inlineQuestionsAre…` |
+| BR-U10-14 chọn tay, bốc ngẫu nhiên không trùng, không vượt chỗ trống | `randomPreview`, `bankQuestions`, `searchActive`, `randomActive` | `randomPreviewSkips…`, `activePicksSkipExistingLineages…` |
+| BR-U10-15 cài đặt; theo dõi hoạt động cần thời hạn lưu | `QuizRules.validateSettings`, `updateDetails` | `settingsAreValidatedAndActivityMonitoring…`, `settingsInput` |
+| BR-U10-16 chấm theo đáp án ghim, `MCQ_MULTI` đúng đủ | `QuizScorer` | `scoringNeedsExactAnswerSetAndStudentViewHidesAnswers` |
+| BR-U10-20 vòng đời, sửa Quiz đã duyệt về nháp | `Quiz` | `QuizTest`, `savingItems…ReturnsReviewedQuizToDraft` |
+| BR-U10-21 điều kiện duyệt theo câu | `QuizRules.validateForReview` | `reviewListsProblemsPerQuestion…` |
+| BR-U10-22 phát hành, version cũ ngưng, `quiz.published` | `QuizPublicationService.publish` | `publishNeedsOpenClassThenOpensAndAnnounces`, `publishingNewVersionRetires…` |
+| BR-U10-23 ngưng có lý do, listener trong transaction | `retire` | `retireNeedsReasonAndNotifiesListeners` |
+| BR-U10-24 xóa Quiz chưa phát hành kèm câu riêng | `delete`, `JdbcQuizRepository.delete` | `deletingDraftRemovesItsInlineQuestions`, `deleteRemovesUnpublishedQuiz…` |
+| BR-U10-25 người học thấy Quiz `OPEN` của lớp và của môn | `QuizQueryService.listForClass` | `studentsSeeOpenClassAndSubjectQuizzesOnly` |
+| BR-U10-30, 31 nhân bản, version mới, copy | `QuizCopyService` | `cloneKeepsPinnedBankVersions…`, `copyBetweenClasses…`, `versionChainFindsOpenSibling…` |
+| BR-U10-50 ngoài phạm vi `404` + audit, `409` khi lệch version | `QuizAccess`, `QuizSupport` | `QuizServicesTest`, `QuizControllersTest` |
+| NFR-U10-31 đề cho người học không có đáp án | `QuizQueryService.getStudentView` | `scoringNeeds…StudentViewHidesAnswers` |
+
 ## Còn lại
 
 - Chưa chạy end-to-end trên trình duyệt với backend thật; integration test phân quyền 4 role trên endpoint do tester viết.
-- Giai đoạn 2 (UC 48) dùng lại `McqEditor`, bảng `quizzes`, `quiz_items` đã có.
+- Giai đoạn 3 (U11) cài `IQuizLifecycleListener`, slot `quizDetailSections`, `quizRowActions`; giai đoạn 4 thêm AI soạn câu (F4, F8) và tool MCP.

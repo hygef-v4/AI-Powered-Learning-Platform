@@ -4612,3 +4612,23 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U10 Code Generation Part 1 (phase 2), approval prompt.
 
 ---
+
+## 2026-10-20T08:50:19Z — U10 phase 2 code generation complete (review requested)
+
+**User Input**: "Duyệt plan giai đoạn 2 với đề xuất E1–E8. Bắt đầu từ bước 2.0 (commit giai đoạn 1) rồi viết code theo checklist." / "Thử lại" (after an interrupted turn)
+
+**AI Response**: Committed phase 1 locally (5d70173, no push). Implemented phase 2 (UC 48) on `quiz-authoring`: actions QUIZ_SUBJECT_MANAGE and QUIZ_CLASS_MANAGE; domain Quiz, QuizItem, QuizOrigin, QuizRules; JdbcQuizRepository (recursive version chain) and picker queries; QuizAuthoringService, QuizPublicationService, QuizCopyService, QuizQueryService (IQuizQuery), QuizScorer (IQuizScoring); SubjectQuizController, ClassQuizController, QuizController; frontend Quiz List, Quiz Detail (items, bank picker, inline questions, settings, preview, review, publish, retire, clone, new version, delete), class Evals section and subject summary via U05 slots, routes /manager/quizzes and /quizzes/[id]. Kept phase 1 error codes unchanged. Tests: backend 31 new (QuizTest 3, QuizServicesTest 17, QuizControllersTest 5, JdbcQuizRepositoryIntegrationTest 5, policy 1); frontend 9 new. Full CI locally: backend mvn -B verify JDK 17 751 tests 0 failures (31 skipped, U04); frontend npm ci, lint, typecheck, 243 tests, build pass. Not committed. Asked the user to review (step 2.13).
+
+**Context**: Construction — U10 Code Generation Part 2 (phase 2), completion and review prompt.
+
+---
+
+## 2026-10-20T08:53:07Z — U10 phase 2 code approved
+
+**User Input**: "Duyệt code giai đoạn 2 (UC 48). Commit local rồi lập plan giai đoạn 3 (U11)."
+
+**AI Response**: Phase 2 approved; step 2.13 ticked. Committing phase 2 locally on `quiz-authoring` (no push), then planning phase 3 (U11 Quiz Practice).
+
+**Context**: Construction — U10 phase 2 approval, U11 planning.
+
+---

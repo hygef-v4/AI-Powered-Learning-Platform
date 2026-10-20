@@ -102,6 +102,17 @@ class AccountLookupAndPolicyTest {
         }
     }
 
+    /** U10: Quiz của môn theo phạm vi môn (R2), Quiz của lớp theo giảng viên lớp (R3/R4); Admin, Student không soạn. */
+    @Test
+    void quizActionsUseSubjectOrClassScope() {
+        var subjectQuiz = AccessPolicy.ruleFor(Actions.QUIZ_SUBJECT_MANAGE).orElseThrow();
+        assertThat(subjectQuiz.roles()).containsExactly(Role.SUBJECT_MANAGER);
+        assertThat(subjectQuiz.scope()).isEqualTo(ScopeKind.SUBJECT);
+        var classQuiz = AccessPolicy.ruleFor(Actions.QUIZ_CLASS_MANAGE).orElseThrow();
+        assertThat(classQuiz.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
+        assertThat(classQuiz.scope()).isEqualTo(ScopeKind.CLASS);
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);

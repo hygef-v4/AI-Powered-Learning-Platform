@@ -47,6 +47,10 @@ public final class Actions {
     public static final String QUESTION_BANK_VIEW = "QUESTION_BANK_VIEW";
     public static final String QUESTION_BANK_MANAGE = "QUESTION_BANK_MANAGE";
 
+    // U10 — Quiz: của môn do Chủ nhiệm môn soạn (R2); của lớp do giảng viên lớp soạn (R3/R4) (BR-U10-10)
+    public static final String QUIZ_SUBJECT_MANAGE = "QUIZ_SUBJECT_MANAGE";
+    public static final String QUIZ_CLASS_MANAGE = "QUIZ_CLASS_MANAGE";
+
     private Actions() {
     }
 }

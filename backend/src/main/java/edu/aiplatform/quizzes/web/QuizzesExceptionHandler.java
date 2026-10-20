@@ -1,6 +1,6 @@
 package edu.aiplatform.quizzes.web;
 
-import edu.aiplatform.quizzes.application.QuestionInvalidException;
+import edu.aiplatform.quizzes.application.RuleViolationException;
 import edu.aiplatform.shared.error.ApiException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,13 +17,14 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 
 /** Chỉ áp dụng cho controller của U10; không đổi handler của unit khác. */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice(assignableTypes = QuestionController.class)
+@RestControllerAdvice(assignableTypes = {QuestionController.class, SubjectQuizController.class,
+        ClassQuizController.class, QuizController.class})
 public class QuizzesExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ProblemDetail api(ApiException failure) {
         ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
-        if (failure instanceof QuestionInvalidException invalid) {
+        if (failure instanceof RuleViolationException invalid) {
             result.setProperty("violations", invalid.violations());
         }
         return result;

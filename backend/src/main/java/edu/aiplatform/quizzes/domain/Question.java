@@ -18,6 +18,21 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
                 createdBy, now, now, 0);
     }
 
+    /** Câu riêng của Quiz (BR-U10-13): lineage riêng, luôn {@code DRAFT}, sửa được khi Quiz còn nháp. */
+    public static Question newInline(UUID quizId, UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
+        UUID id = UUID.randomUUID();
+        return new Question(id, id, 1, QuestionScope.QUIZ, subjectId, quizId, content, QuestionStatus.DRAFT, null,
+                createdBy, now, now, 0);
+    }
+
+    /** Bản sao câu riêng cho Quiz khác khi nhân bản, tạo version mới hoặc copy (BR-U10-31). */
+    public Question copyInline(UUID targetQuizId, UUID actorId, Instant now) {
+        if (scope != QuestionScope.QUIZ) {
+            throw new IllegalStateException("Chỉ sao câu riêng của Quiz");
+        }
+        return newInline(targetQuizId, subjectId, content, actorId, now);
+    }
+
     public boolean isDraft() {
         return status == QuestionStatus.DRAFT;
     }

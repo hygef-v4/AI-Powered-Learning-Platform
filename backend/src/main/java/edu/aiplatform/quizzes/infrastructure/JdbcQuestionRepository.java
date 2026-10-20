@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -183,6 +184,108 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     public int countQuizzesUsing(UUID questionId) {
         return jdbc.sql("select count(distinct quiz_id) from quiz_items where question_id = :id")
                 .param("id", questionId).query(Integer.class).single();
+    }
+
+    @Override
+    public List<Question> findAll(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("select " + COLUMNS + " from questions where id in (:ids)")
+                .param("ids", List.copyOf(ids)).query(this::map).list();
+    }
+
+    @Override
+    public List<Question> inlineOf(UUID quizId) {
+        return jdbc.sql("select " + COLUMNS + " from questions where scope = 'QUIZ' and quiz_id = :quizId")
+                .param("quizId", quizId).query(this::map).list();
+    }
+
+    @Override
+    public boolean deleteInline(UUID questionId, UUID quizId) {
+        return jdbc.sql("delete from questions where id = :id and scope = 'QUIZ' and quiz_id = :quizId")
+                .param("id", questionId).param("quizId", quizId).update() == 1;
+    }
+
+    @Override
+    public BankPage searchActive(UUID subjectId, PickQuery query) {
+        Filter filter = pickFilter(subjectId, query);
+        String sql = activeSql(filter.where) + " order by updated_at desc, id limit :limit offset :offset";
+        long[] total = {0};
+        List<BankRow> rows = bind(jdbc.sql(sql), filter.params)
+                .param("limit", query.size()).param("offset", (long) query.page() * query.size())
+                .query((rs, n) -> {
+                    total[0] = rs.getLong("total");
+                    return new BankRow(map(rs, n), false);
+                })
+                .list();
+        if (rows.isEmpty() && query.page() > 0) {
+            total[0] = countActive(subjectId, query);
+        }
+        return new BankPage(rows, total[0], query.page(), query.size());
+    }
+
+    @Override
+    public List<Question> randomActive(UUID subjectId, PickQuery query, int count) {
+        Filter filter = pickFilter(subjectId, query);
+        return bind(jdbc.sql(activeSql(filter.where) + " order by random() limit :count"), filter.params)
+                .param("count", count).query(this::map).list();
+    }
+
+    @Override
+    public long countActive(UUID subjectId, PickQuery query) {
+        Filter filter = pickFilter(subjectId, query);
+        return bind(jdbc.sql("select count(*) from (" + activeSql(filter.where) + ") counted"), filter.params)
+                .query(Long.class).single();
+    }
+
+    private record Filter(String where, List<Object[]> params) {
+    }
+
+    /** Bản đã kích hoạt mới nhất mỗi lineage còn {@code ACTIVE}; lọc độ khó, thẻ, từ khóa, bỏ lineage đã có. */
+    private static Filter pickFilter(UUID subjectId, PickQuery query) {
+        StringBuilder where = new StringBuilder("rn = 1 and status = 'ACTIVE'");
+        List<Object[]> params = new ArrayList<>();
+        params.add(new Object[] {"subjectId", subjectId});
+        if (query.difficulty() != null) {
+            where.append(" and difficulty = :difficulty");
+            params.add(new Object[] {"difficulty", query.difficulty().name()});
+        }
+        if (query.tag() != null && !query.tag().isBlank()) {
+            where.append(" and exists (select 1 from jsonb_array_elements_text(tags) t where lower(t) = lower(:tag))");
+            params.add(new Object[] {"tag", query.tag().strip()});
+        }
+        if (query.text() != null && !query.text().isBlank()) {
+            where.append(" and (stem ilike :text escape '\\' or exists (select 1 from jsonb_array_elements_text(tags) t"
+                    + " where t ilike :text escape '\\'))");
+            params.add(new Object[] {"text", "%" + escapeLike(query.text().strip()) + "%"});
+        }
+        if (query.excludeLineages() != null && !query.excludeLineages().isEmpty()) {
+            where.append(" and lineage_id not in (:excluded)");
+            params.add(new Object[] {"excluded", List.copyOf(query.excludeLineages())});
+        }
+        return new Filter(where.toString(), params);
+    }
+
+    private static String activeSql(String where) {
+        return """
+                with ranked as (
+                    select %s,
+                        row_number() over (partition by lineage_id
+                            order by (status <> 'DRAFT') desc, version_no desc) as rn
+                    from questions
+                    where scope = 'BANK' and subject_id = :subjectId
+                )
+                select %s, count(*) over () as total
+                from ranked
+                where %s""".formatted(COLUMNS, COLUMNS, where);
+    }
+
+    private static JdbcClient.StatementSpec bind(JdbcClient.StatementSpec sql, List<Object[]> params) {
+        for (Object[] p : params) {
+            sql = sql.param((String) p[0], p[1]);
+        }
+        return sql;
     }
 
     private Question map(ResultSet rs, int row) throws SQLException {
