@@ -4522,3 +4522,41 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U01 integration (roadmap phase 0), CI fix.
 
 ---
+
+## U09 clean-code review and refactor
+**Timestamp**: 2026-10-20T09:40:29Z
+**User Input**: "[$clean-code:clean-code](<C:\Users\Quang Hung\\.codex\plugins\cache\clean-code\clean-code\0.1.0\skills\clean-code\SKILL.md>)  Rà soát và refactor U09, giữ nguyên hành vi và contract."
+**AI Response**: Resume existing U09 Construction; preserve dirty worktree and prior implementation. Review current code, baseline existing tests, retain characterization tests before refactoring. Internal readability changes only; no contract, authorization, transaction, migration or dependency changes. Existing security/resiliency configuration retained; PBT disabled and skipped.
+**Context**: Existing request authorizes behavior-preserving U09 refactoring; reuse existing requirements/design. Conditional new-feature/design stages not needed.
+
+---
+
+## U09 Clean Code verification
+**Timestamp**: 2026-10-20T09:47:00Z
+**AI Response**: Completed private MCP validation/lookup extraction and naming cleanup in four production files. Retained five new public-seam characterization cases, passed before production changes. Full backend 724 total, 662 passed, 62 skipped, zero failures/errors; frontend 223 passed, lint/typecheck passed. Production string literals unchanged versus pre-edit snapshots. Offline JAR packaging blocked by missing plugin dependencies; frontend build failed with Turbopack PostCSS child-process connection error in unchanged academics CSS. No runtime contract, authorization, transaction, schema, migration or dependency changes. Reviewed session diff and updated plan/state/handoff; no commit/push.
+**Context**: Construction verification complete for the refactor; real DB/provider/NFR and production packaging gates remain open. Applicable existing security/error/validation boundaries preserved; deployment-only checks N/A, disabled PBT skipped.
+
+---
+
+## U09 build failure repair
+**Timestamp**: 2026-10-20T10:06:21Z
+**User Input**: "giúp tôi sửa lỗi trc"
+**AI Response**: Investigate and repair the backend offline dependency packaging failure and frontend Turbopack child-process build failure reported in the previous turn. Preserve existing uncommitted work and U09 behavior/contracts. Apply systematic-debugging skill; reproduce before changing configuration.
+**Context**: Continue existing Construction build/test work. Existing project security/resiliency scope retained; PBT disabled.
+
+---
+
+## U09 build repair verification
+**Timestamp**: 2026-10-20T10:18:00Z
+**AI Response**: Fixed the reported build blockers. Optional Maven settings profile matches the existing cached Central origin, with dependency versions/checksum policies unchanged; full verify packages executable JAR, 724 total / 662 passed / 62 skipped / no failures/errors. Frontend local fonts preserve 15 original WOFF2 subset hashes, 5 weights, fallback metrics and 10 preloads; Docker includes public assets. Webpack build launcher sets default UV_THREADPOOL_SIZE=1 only on Windows. Full normal npm build succeeded including standalone, plus 223 frontend tests, lint and typecheck. Restored build-generated tsconfig edits. Standalone logged Ready; HTTP requests were blocked by sandbox socket permission. Verification processes stopped. Build repair plan and handoff/state updated; no commit/push.
+**Context**: Existing U09 grading behavior/contracts and integration/NFR gates retained. Security/resiliency configuration unchanged; disabled PBT skipped.
+
+---
+
+## U09 local commit split
+**Timestamp**: 2026-10-20T10:23:58Z
+**User Input**: "giúp tôi chia nhỏ commit chưa push"
+**AI Response**: Reviewed branch grading-gradebook, baseline HEAD 6341aed2f66271dd7d112bf3e3565349071402d2 and all changes. Prepared seven Conventional Commit groups with explicit file lists. git add failed creating .git/index.lock (Permission denied); no files staged and no commits created. Prepare a local PowerShell fallback with branch/HEAD/index/file-hash checks for execution outside the sandbox. No push command or remote mutation.
+**Context**: AI-DLC Construction handoff/publication preparation; preserve source state and existing verification evidence. No permission escalation or workaround around read-only Git metadata attempted.
+
+---

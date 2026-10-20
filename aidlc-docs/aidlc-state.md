@@ -299,3 +299,17 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Clean full backend run: 304 tests/36 suites pass; 210 U05 cases, including 140 newly added. Independent quality review and source SHA256 check passed.
 - Production source unchanged from before this test-only task. Coverage percentage and live integration are not claimed; no commit/push.
 - Evidence: `construction/plans/u05-unit-test-expansion-2026-10-18.md`.
+
+## U09 Clean Code review follow-up - 2026-10-20
+
+- [x] Resume existing U09 Construction and review the existing uncommitted refactor under the explicitly requested Clean Code skill.
+- [x] Retain 5 new MCP characterization cases verified against unchanged production code, then extract private MCP validation/lookup and clarify local names in batch/proposal services and gradebook UI.
+- [x] Verify full backend 724 total / 662 passed / 62 skipped / zero failures or errors; frontend 223 passed, lint/typecheck passed. Existing offline executable packaging and real integration/NFR gates remain open.
+- Scope and evidence: `construction/plans/2026-10-20-u09-clean-code-review.md`. No public contract/schema, migration, authorization or transaction changes; no commit/push.
+
+## U09 build repair - 2026-10-20
+
+- [x] Resolve local Maven cache origin mismatch using an optional settings profile; full backend verify and executable JAR packaging passed (724 total / 662 passed / 62 skipped / zero failures or errors).
+- [x] Bundle existing Be Vietnam Pro fonts locally, retain preload/fallback/weights, include public assets in the Docker runtime stage and use a Windows-safe Webpack build launcher. Full frontend build including standalone packaging, 223 tests, lint and typecheck passed.
+- [x] Verify standalone startup Ready and packaged font references/assets. HTTP smoke blocked by sandbox socket permission; Docker image/browser and real integration/NFR remain unverified. No U09 contract/behavior/dependency changes, commit or push.
+- Evidence: `construction/plans/2026-10-20-u09-build-repair.md`.
