@@ -50,7 +50,7 @@ Theo plan U10 bước 1–3 và phần tương ứng của bước 9–11.
 - [x] `QuestionImporter`: nhập tệp ≤ 5 MB, ≤ 500 dòng, kết quả từng dòng (F3).
 - [x] API `/subjects/{id}/questions`, `/questions/{id}`, `questions:import`; `contracts/openapi/quizzes.yaml` phần ngân hàng. (Theo D6: không tạo OpenAPI, API ghi trong code-summary.) Commit `5d70173`.
 - [x] Frontend: `QuestionListPage`, `QuestionDetailPage`, `McqEditor`, `NavEntry` Ngân hàng câu hỏi.
-- [x] Unit test phần ngân hàng; Jira KAN-143, KAN-78 → In Progress rồi review. Code đã xong; Jira chưa cập nhật.
+- [x] Unit test phần ngân hàng; Jira KAN-143, KAN-78 → In Progress rồi review. Jira KAN-143, KAN-78 Done (2026-10-20).
 
 ### Giai đoạn 2 — U10 phần Quiz: UC 48 (KAN-44)
 
@@ -61,7 +61,7 @@ Theo plan U10 bước 4–6, 8 và phần còn lại của bước 9–11.
 - [x] `QuizCopyService` (F11): nhân bản, version mới, copy giữa lớp.
 - [x] `QuizQueryService` (cài `IQuizQuery`), `QuizScorer` (cài `IQuizScoring`) (F14) — thay stub.
 - [x] API Quiz; frontend `SubjectQuizListPage`, `ClassQuizzesSection` (`TeacherClassTab`), `QuizBankSummary`, `QuizDetailPage` và panel; slot `QuizDetailSection`, `QuizRowAction`.
-- [x] Unit test phần Quiz; review U10 không gồm AI/MCP. Commit `f3b54bc`; Jira KAN-44 chưa cập nhật.
+- [x] Unit test phần Quiz; review U10 không gồm AI/MCP. Commit `f3b54bc`; Jira KAN-44 Done (2026-10-20).
 
 ### Giai đoạn 3 — U11: UC 51, 52, 49, 50 (KAN-130, KAN-57, KAN-128, KAN-129)
 
@@ -73,7 +73,7 @@ Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt
 - [x] UC 49: lịch sử luyện tập (F1); `QuizPracticeHistoryPage`, `NavEntry` Luyện tập Quiz.
 - [x] UC 50: chi tiết Quiz (F2); `QuizPracticeDetailPage`, slot `QuizMaterialSection`.
 - [x] Dữ liệu hoạt động (F8) và giảng viên xem lượt (F9): `QuizAttemptsSection`, `QuizAttemptCount` gắn vào slot của U10. F8: chỉ có API, chưa có tracker phía trình duyệt (G3).
-- [x] Unit test theo plan U11 bước 9; review U11. Nhánh `quiz-practice`; Jira chưa cập nhật.
+- [x] Unit test theo plan U11 bước 9; review U11. PR #6 merge vào `staging` (`c7a4791`); Jira KAN-128, KAN-129, KAN-130, KAN-57 Done (2026-10-20).
 
 ### Giai đoạn 4 — AI và MCP của U10 (phần còn lại của UC 47, 48)
 
