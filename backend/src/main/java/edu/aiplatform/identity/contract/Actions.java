@@ -49,6 +49,9 @@ public final class Actions {
     public static final String GRADEBOOK_EXPORT = "GRADEBOOK_EXPORT";
     public static final String MY_GRADE_READ = "MY_GRADE_READ";
 
+    // U15 — read-only platform counts and backup metadata (ADMIN only).
+    public static final String ADMIN_DASHBOARD_VIEW = "ADMIN_DASHBOARD_VIEW";
+
     private Actions() {
     }
 }

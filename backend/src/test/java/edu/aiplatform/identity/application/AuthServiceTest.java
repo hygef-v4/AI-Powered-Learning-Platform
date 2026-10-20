@@ -226,6 +226,6 @@ class AuthServiceTest {
         assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/classes");
         assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/classes");
         assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/manager");
-        assertThat(HomePaths.of(Role.ADMIN)).isEqualTo("/admin/accounts");
+        assertThat(HomePaths.of(Role.ADMIN)).isEqualTo("/admin");
     }
 }

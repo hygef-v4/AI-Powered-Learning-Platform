@@ -27,6 +27,7 @@ final class AccessPolicy {
     private static final Set<Role> ADMIN_ONLY = EnumSet.of(ADMIN);
 
     private static final Map<String, Rule> RULES = Map.ofEntries(
+            Map.entry(Actions.ADMIN_DASHBOARD_VIEW, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
             Map.entry(Actions.PROFILE_VIEW, new Rule(ALL, ScopeKind.ACCOUNT)),
             Map.entry(Actions.PROFILE_UPDATE, new Rule(ALL, ScopeKind.ACCOUNT)),
             Map.entry(Actions.PASSWORD_CHANGE, new Rule(ALL, ScopeKind.ACCOUNT)),
