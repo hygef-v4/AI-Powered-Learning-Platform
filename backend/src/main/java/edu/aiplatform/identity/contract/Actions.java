@@ -43,6 +43,10 @@ public final class Actions {
     public static final String CLASS_VIEW = "CLASS_VIEW";
     public static final String CLASS_MANAGE = "CLASS_MANAGE";
 
+    // U10 — ngân hàng câu hỏi của môn: chỉ Chủ nhiệm môn của môn (R2, BR-U10-01)
+    public static final String QUESTION_BANK_VIEW = "QUESTION_BANK_VIEW";
+    public static final String QUESTION_BANK_MANAGE = "QUESTION_BANK_MANAGE";
+
     private Actions() {
     }
 }

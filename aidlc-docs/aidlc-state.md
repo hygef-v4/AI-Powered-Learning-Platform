@@ -299,3 +299,10 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Clean full backend run: 304 tests/36 suites pass; 210 U05 cases, including 140 newly added. Independent quality review and source SHA256 check passed.
 - Production source unchanged from before this test-only task. Coverage percentage and live integration are not claimed; no commit/push.
 - Evidence: `construction/plans/u05-unit-test-expansion-2026-10-18.md`.
+
+## U10 giai đoạn 1 (UC 46, 47) — 2026-10-20
+
+- [x] Code Generation Part 1: plan giai đoạn 1 được người dùng duyệt (D1–D7).
+- [x] Code Generation Part 2: bước 1.1–1.11 xong trên nhánh `quiz-authoring` (chưa commit); xem `construction/u10-quiz-authoring/code/code-summary.md`.
+- [x] Bước 1.12: người dùng duyệt code giai đoạn 1 ngày 2026-10-20.
+- Giai đoạn 2 (UC 48), 3 (U11), 4 (AI/MCP) chưa bắt đầu.

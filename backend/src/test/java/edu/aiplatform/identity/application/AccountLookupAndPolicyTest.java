@@ -92,6 +92,16 @@ class AccountLookupAndPolicyTest {
         assertThat(manage.roles()).containsExactly(Role.SUBJECT_MANAGER);
     }
 
+    /** U10: ngân hàng câu hỏi chỉ cho Chủ nhiệm môn của môn (R2, BR-U10-01). */
+    @Test
+    void questionBankActionsAreSubjectManagerOnlyWithSubjectScope() {
+        for (String action : new String[] {Actions.QUESTION_BANK_VIEW, Actions.QUESTION_BANK_MANAGE}) {
+            var rule = AccessPolicy.ruleFor(action).orElseThrow();
+            assertThat(rule.roles()).containsExactly(Role.SUBJECT_MANAGER);
+            assertThat(rule.scope()).isEqualTo(ScopeKind.SUBJECT);
+        }
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);

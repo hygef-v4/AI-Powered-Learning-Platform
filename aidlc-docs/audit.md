@@ -4522,3 +4522,93 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U01 integration (roadmap phase 0), CI fix.
 
 ---
+
+## 2026-10-20T01:58:03Z — CI recheck before merging to staging
+
+**User Input**: "kiểm tra lại code để đảm bảo toàn bộ CI xanh trước merge lên staging"
+
+**AI Response**: Reproduced every CI job locally on `cuong` (abe7ba6; origin/staging e74058f has no new commits). Backend `mvn -B verify` in `maven:3.9-eclipse-temurin-17` with Testcontainers: 676 tests, 0 failures, 31 skipped (U04 `SubjectRepositoryIntegrationTest`, needs `U04_TEST_JDBC_URL`, also skipped in CI). Frontend `npm ci`, lint, typecheck, test (214), build: all pass. Secret-like literal scan over staging..cuong found only the two GitGuardian findings already removed in abe7ba6 (later rewritten out of history); GitGuardian will still fail until incidents 38382408 and 38327442 are resolved, because it scans every PR commit. No code changed. PR #5 was closed at that time.
+
+**Context**: Construction — U01 integration (roadmap phase 0), CI verification.
+
+---
+
+## 2026-10-20T02:04:57Z — History rewrite to remove test passwords, PR #5 reopened
+
+**User Input**: "Viết lại các commit sau 1871236 để bỏ 2 mật khẩu test, force-push cuong, rồi mở lại PR #5."
+
+**AI Response**: Rewrote only the 9 commits in `origin/staging..cuong` (staging commits untouched; the merge still has e74058f as parent) with `git filter-branch --index-filter` (byte-exact blob edits). Test passwords in `AccountRepositoryIntegrationTest`, `IdentityWebSecurityTest` and, after a second GitGuardian finding on the same incident, `ProfileAndPasswordChangeTest` now use per-run `UUID.randomUUID()` values from the commit that first touches them. Old abe7ba6 was reworded to "docs: log GitGuardian test-password findings" since its code change moved into earlier commits. GitHub refused to reopen PR #5 after the force-push, so the branch was briefly pushed back to the PR's recorded head f28917d, the PR reopened, then the rewritten history force-pushed (final head 8d4c22b). Local backups: `backup/cuong-before-rewrite` (abe7ba6), `backup/cuong-rewrite-1` (1cac343). Affected tests pass locally (ProfileAndPasswordChangeTest 10, IdentityWebSecurityTest 18, AccountRepositoryIntegrationTest 14, ArchitectureTest 2); CI on 1cac343 had backend and frontend green.
+
+**Context**: Construction — U01 integration (roadmap phase 0), CI fix.
+
+---
+
+## 2026-10-20T02:15:19Z — PR #5 merged into staging
+
+**User Input**: "làm sao để duyệt PR" / "merge luôn cho tôi, sau đó kiểm tra trên nhánh staging để tránh conflict"
+
+**AI Response**: Explained that the author cannot approve their own PR and `staging` has no required review (merge state CLEAN). Merged PR #5 with a merge commit (`gh pr merge 5 --merge --match-head-commit 8d4c22b`): staging is now 6341aed, parents e74058f and 8d4c22b; branch `cuong` kept. Checks: staging tree equals 8d4c22b's tree (3748f59, CI green on that head); no conflict markers in code or Markdown; no other open PR targets staging. Test merges into the new staging: Class&Enrollment, audit, subject-administration already included; `main` (+1 diagram commit) merges cleanly; `ui-reference` (+2 docs commits, 2026-10-18) conflicts only in `aidlc-docs/audit.md`, and already conflicted with the old staging, so not caused by PR #5. Jira not changed yet.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
+
+## 2026-10-20T02:17:25Z — Jira: U01 UCs moved to Done
+
+**User Input**: "Chuyển 12 UC của U01 (KAN-68, 69, 124, 70, 73, 71, 125, 144, 74, 145, 72, 146) sang Done trên Jira, KAN-18 giữ In Progress chờ tester."
+
+**AI Response**: In the signed-in built-in browser, applied Jira transition 41 (Done) to KAN-68, 69, 124, 70, 73, 71, 125, 144, 74, 145, 72, 146 (all children of KAN-18, previously To Do); every call returned 204. Re-read: all 12 are Done with resolution Done; KAN-18 remains In Progress / Unresolved. Roadmap phase 0 updated (PR #5 merged at 6341aed, Jira step done, KAN-18 waits for tester). Docs left uncommitted per the user's choice.
+
+**Context**: Construction — U01 integration (roadmap phase 0).
+
+---
+
+## 2026-10-20T02:20:08Z — U10 phase 1 code generation plan (approval requested)
+
+**User Input**: "Bắt đầu giai đoạn 1: tạo nhánh mới từ staging và làm UC 46, 47 của U10 theo plan."
+
+**AI Response**: Created branch `quiz-authoring` from origin/staging 6341aed (upstream unset to avoid pushing to staging). Read code-generation rules and U10 design. Added "Giai đoạn 1 — Ngân hàng câu hỏi (UC 46, 47) — chi tiết" to `construction/plans/code-generation-plan/u10-quiz-authoring-code-generation-plan.md`: 12 steps (migration, permissions, domain, repository, QuestionBankService, QuestionImporter, API, backend tests, frontend, frontend tests, CI + docs, review) and decisions D1–D7 (JdbcClient, add poi-ooxml 5.4.1, dryRun import, two new actions, plain-text display, no OpenAPI file, one migration for all 4 tables). Asked the user to approve the plan before writing code.
+
+**Context**: Construction — U10 Code Generation Part 1 (phase 1), approval prompt.
+
+---
+
+## 2026-10-20T02:21:23Z — U10 phase 1 plan approved
+
+**User Input**: "Duyệt plan giai đoạn 1 với đề xuất D1–D7. Bắt đầu viết code theo checklist 1.1–1.12."
+
+**AI Response**: Plan approved (D1–D7 as proposed). Starting Code Generation Part 2 for U10 phase 1 on branch `quiz-authoring`.
+
+**Context**: Construction — U10 Code Generation, phase 1 approval recorded.
+
+---
+
+## 2026-10-20T03:47:42Z — U10 phase 1 code generation complete (review requested)
+
+**User Input**: "Thử lại" (after the session was interrupted while writing tests)
+
+**AI Response**: GitHub Desktop had switched the checkout to `staging` and saved the `quiz-authoring` changes in stash@{0}; switched back and applied the stash (stash kept). Finished steps 1.8–1.11: backend tests (QuestionRulesTest 7, QuestionTest 3, QuestionBankServiceTest 13, QuestionImporterTest 7, QuestionControllerTest 7, JdbcQuestionRepositoryIntegrationTest 6 on PostgreSQL via Testcontainers, 1 policy test), frontend (api, types, labels, questionForm, McqEditor, side panels, Question List, Import Dialog, Question Detail, routes /manager/questions and /manager/questions/[id], CSV template) with 20 tests. Full CI locally: backend mvn -B verify on JDK 17 720 tests, 0 failures, 31 skipped (U04); frontend npm ci, lint, typecheck, 234 tests, build pass. Wrote code-summary with the UC 46/47 and BR-U10-01…07 traceability. Not committed. Asked the user to review (step 1.12).
+
+**Context**: Construction — U10 Code Generation Part 2 (phase 1), completion and review prompt.
+
+---
+
+## 2026-10-20T03:51:28Z — U10 phase 1 code approved
+
+**User Input**: "Duyệt code giai đoạn 1 (UC 46, 47). Tiếp tục giai đoạn 2: UC 48 của U10."
+
+**AI Response**: Phase 1 code approved; step 1.12 ticked. Starting Code Generation Part 1 for phase 2 (UC 48).
+
+**Context**: Construction — U10 phase 1 approval, phase 2 planning.
+
+---
+
+## 2026-10-20T03:52:55Z — U10 phase 2 code generation plan (approval requested)
+
+**User Input**: (continuation of "Duyệt code giai đoạn 1 (UC 46, 47). Tiếp tục giai đoạn 2: UC 48 của U10.")
+
+**AI Response**: Read U10 contracts (IQuizQuery, IQuizScoring, IQuizLifecycleListener and views), IClassAccess, IClassScope, IEventPublisher (sends after commit), ISettings (no activity.retentionDays key yet) and the U05 frontend slots (teacherClassTabs evals, subjectSummarySections). Added "Giai đoạn 2 — Quiz (UC 48) — chi tiết" to the U10 code plan: 14 steps (2.0 commit phase 1 … 2.13 review) and decisions E1–E8 (two new actions, teacher bank picker endpoint, activity monitoring blocked until retention setting exists, material refs hidden, lifecycle listeners optional, routes /manager/quizzes and /quizzes/[id], DB version, local commit of phase 1). Asked the user to approve before writing code.
+
+**Context**: Construction — U10 Code Generation Part 1 (phase 2), approval prompt.
+
+---

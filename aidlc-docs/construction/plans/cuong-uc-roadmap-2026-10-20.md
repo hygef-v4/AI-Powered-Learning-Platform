@@ -35,10 +35,10 @@ U11 cần `IQuizQuery`, `IQuizScoring` thật của U10, nên làm U10 trước.
 
 ### Giai đoạn 0 — Chốt U01 (KAN-18)
 
-- [x] Mở PR `cuong` → `staging` ([#5](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/5)), giải xung đột với U04/U05 (file dùng chung: `SecurityConfig`, `ArchitectureTest`, `client.ts`, `app/admin/layout.tsx`, `pom.xml`, compose).
+- [x] Mở PR `cuong` → `staging` ([#5](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/5), merge vào `staging` ngày 2026-10-20 tại `6341aed`), giải xung đột với U04/U05 (file dùng chung: `SecurityConfig`, `ArchitectureTest`, `client.ts`, `app/admin/layout.tsx`, `pom.xml`, compose).
 - [x] Sau khi có route `/classes`, `/manager` của U05/U04 trên `staging`: đổi `HomePaths.of` về `CLASS_DASHBOARD`, `MANAGER_DASHBOARD` (ghi chú trong code-summary).
 - [x] Chạy lại toàn bộ test backend/frontend sau merge (backend 676, frontend 214 đạt). Còn: giao tester viết integration test U01.
-- [ ] Cập nhật Jira: 12 UC của U01 sang Done (hoặc trạng thái review của nhóm), đóng KAN-18 khi tester xác nhận.
+- [x] Cập nhật Jira: 12 UC của U01 sang Done (2026-10-20). Còn: đóng KAN-18 khi tester xác nhận.
 
 ### Giai đoạn 1 — U10 phần ngân hàng câu hỏi: UC 46, 47 (KAN-143, KAN-78)
 
