@@ -95,7 +95,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  headers.set("Accept", "application/json");
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
   const method = (init.method ?? "GET").toUpperCase();
   const csrf = readCookie(CSRF_COOKIE);
   if (!SAFE_METHODS.has(method) && csrf && !headers.has(CSRF_HEADER)) {
@@ -104,7 +104,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   return fetch(path, { ...init, headers, credentials: "include" });
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function apiResponse(path: string, init: RequestInit = {}): Promise<Response> {
   let response = await send(path, init);
   if (response.status === 401 && !path.startsWith(AUTH_PREFIX)) {
     response = await resendAfterRefresh(path, init, response);
@@ -119,6 +119,18 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     }
     throw new ApiError(problem);
   }
+  return response;
+}
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await apiResponse(path, init);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+/** Binary downloads share the same authentication, refresh, CSRF and error handling as JSON requests. */
+export async function apiDownload(path: string, init: RequestInit = {}): Promise<Blob> {
+  const headers = new Headers(init.headers);
+  if (!headers.has("Accept")) headers.set("Accept", "application/octet-stream");
+  return (await apiResponse(path, { ...init, headers })).blob();
 }
