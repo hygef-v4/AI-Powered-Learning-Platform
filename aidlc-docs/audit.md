@@ -4833,3 +4833,26 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Conflict resolution and compatibility check only; final merge commit remains pending in GitHub Desktop. Existing independent browser/provider/DB/NFR acceptance gates and skipped tests unchanged.
 
 ---
+
+## Construction - Jira reassignment
+**Timestamp**: 2026-10-20T18:00:00Z
+**User Input**: "xem lại jira cho tôi, đã có thay đổi về công việc"
+**AI Response**: Jira (cập nhật 2026-10-20): U09 (KAN-31, KAN-84, KAN-59, KAN-81, KAN-58) chuyển sang Khuất Quang Hưng, đã code trên nhánh `grading-gradebook` và gộp vào `staging`; U06 (KAN-29, KAN-34 UC31, KAN-35 UC32, KAN-37 UC33) giao cho Người 2; U12 giữ nguyên; KAN-49 Done. Hỏi người dùng thứ tự làm và cách xử lý nhánh `grading` (U09 trùng).
+**Context**: Construction, đổi phân công
+
+---
+
+## Construction - Reassignment decisions
+**Timestamp**: 2026-10-20T18:10:00Z
+**User Input**: "Làm U06 hay U12 trước?"="U06 trước, U12 sau (Recommended)", "Xử lý nhánh `grading` (U09 mình làm, trùng với Hưng) thế nào?"="Giữ trên máy, không push (Recommended)"
+**AI Response**: Giữ nhánh `grading` local, không gộp. Dựng lại nhánh `group-assignment` từ `staging` với 3 commit U12 (plan, migration và action `GROUP_MANAGE`/`GROUP_WORK`, domain); tạm dừng U12. Tạo nhánh `ai-connections` từ `staging`, chi tiết hóa plan U06 (Part 1): 12 khác biệt (người code, `UsageMeasurement.ESTIMATED`, Flyway out-of-order, action `AI_PERSONAL`/`AI_SHARED_USE`/`AI_ADMIN`, JdbcClient, MCP JSON-RPC tự cài thay SDK, json-schema-validator, Bucket4j Redis, adapter `RestClient`, `AiSourcePicker` ở `shared/ai`, hướng dẫn agent chưa kiểm chứng, biến khóa mã hóa), 15 bước.
+**Context**: Construction, U06 Code Generation Part 1
+
+---
+
+## Code Generation - U06 plan approval prompt
+**Timestamp**: 2026-10-20T18:20:00Z
+**AI Response**: Trình bày plan U06 và hỏi người dùng duyệt trước khi code.
+**Context**: Construction, U06 Code Generation Part 1
+
+---
