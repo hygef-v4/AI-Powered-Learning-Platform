@@ -43,6 +43,12 @@ public final class Actions {
     public static final String CLASS_VIEW = "CLASS_VIEW";
     public static final String CLASS_MANAGE = "CLASS_MANAGE";
 
+    public static final String GRADING_REVIEW = "GRADING_REVIEW";
+    public static final String GRADING_WRITE = "GRADING_WRITE";
+    public static final String GRADEBOOK_READ = "GRADEBOOK_READ";
+    public static final String GRADEBOOK_EXPORT = "GRADEBOOK_EXPORT";
+    public static final String MY_GRADE_READ = "MY_GRADE_READ";
+
     private Actions() {
     }
 }

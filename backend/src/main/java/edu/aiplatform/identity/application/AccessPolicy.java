@@ -52,7 +52,12 @@ final class AccessPolicy {
             Map.entry(Actions.CLASS_TEACHER, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
             Map.entry(Actions.CLASS_MANAGER, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.NONE)),
             Map.entry(Actions.CLASS_VIEW, new Rule(EnumSet.of(STUDENT, TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
-            Map.entry(Actions.CLASS_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)));
+            Map.entry(Actions.CLASS_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
+            Map.entry(Actions.GRADING_REVIEW, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.GRADING_WRITE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.GRADEBOOK_READ, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.GRADEBOOK_EXPORT, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.MY_GRADE_READ, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)));
 
     private AccessPolicy() {
     }
