@@ -394,3 +394,36 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - Verified exact union of 36 declared actions and 36 policy entries, with role/scope unchanged on both sides. No unrelated incoming source edits.
 - Fresh merged-tree backend verify:852 total/775 passed/77 skipped/0 failures/errors, executable JAR packaged. Frontend292 passed/57 files; lint/typecheck pass. Logs .tmp/u15/merge-*.log. Full browser/integration/NFR gates unchanged.
 - Marked only four conflict paths resolved in index. Merge remains pending its final commit; no merge commit/push performed for this check.
+
+## U14 Code Generation Part 1 — 2026-10-21
+
+- Current branch already `announcements-and-notifications`; initial working tree/index clean. No whole U13 merge, reset or source changes.
+- [x] Read current UC63–65/U14 stories, functional/NFR/infrastructure design, actual contracts/payloads, frontend registration and local UI-reference screens.
+- [x] Expand existing eleven-step `construction/plans/code-generation-plan/u14-announcements-and-notifications-code-generation-plan.md` with C01–C08 and concrete code/test/acceptance paths.
+- [x] Explicit user approval of concrete plan: `construction/plans/code-generation-plan/u14-implementation-approval-questions.md`, Answer a, confirmed2026-10-21. Part2 implementation begins; update steps as implemented and checked.
+- Proposed owner-scoped changes are limited and visible in plan: U01 action rules plus paginated ACTIVE Admin lookup/provider/stub/tests; U14 event retry topology without U03 dispatcher changes; sanitized markdown dependencies and SEC-004 nonce files in frontend. No U06 changes.
+- U07/U08/U12 providers are currently stubs; independent real DB/event/Rabbit/SMTP/group/reminder/SSE/session/browser/NFR gates retained. IMail SMTP accept/crash exactly-once limitation documented. No commit/push/email/deploy/global-stage advance.
+
+## U14 code ready for review — 2026-10-21
+
+- [x] Approved Answer a/C01–C08, implemented steps1–10 for UC63–65 on `announcements-and-notifications`; application code stays in backend/frontend, OpenAPI in docs/contracts/openapi.
+- [x] Announcement role/scope/CAS/audit/after-commit event; recipient resolution and dedup/SSE; email cap/preference/priority/retry/sweeper; reminder/retention; REST and UI slots/composer/dialog/feed/bell/popup/preferences implemented.
+- [x] Limited approved U01 changes:3actions/rules and ACTIVE Admin cursor lookup/provider/stub/test; no U03/U05/U06/U07/U08/U12 implementation/contract changes. Applied isolated SEC-004 nonce solution without U13 merge. react-markdown10.1.0 + rehype-sanitize6.0.0; production audit0vulnerabilities.
+- [x] Full backend clean verify919total/842pass/77skip/0failure/error; after review final focused71pass/0failure/error/skip (66U14+3U01+2Arch), executable JAR packaged. Full frontend314pass/61files; final typecheck/lint/production build pass.
+- [x] OpenAPI local refs/syntax and production nonce/header/404/repeat HTTP smoke pass. Desktop browser fixture: Teacher create/edit/delete, Student read-only/preferences/read-all, console no CSP/hydration errors. Temporary fixtures ignored; no real mail/provider credentials used.
+- [x] Handoff `construction/u14-announcements-and-notifications/code/code-summary.md` and independent tester matrix `construction/build-and-test/u14-verification.md` recorded, including unsuccessful environment/timeout attempts rather than counting them as pass.
+- [x] Step11 user review/approval: “tiếp tục”,2026-10-21. Real PostgreSQL/migrations/CAS/cap/rollback, Rabbit/SMTP, U07/U08/U12 providers/group/reminder/SSE2instance, session/CSRF, mobile and measured NFR acceptance remain open; IMail accept-before-SENT crash ambiguity explicit. No global stage/UC acceptance advanced; no commit/push/deploy.
+
+## U14 Build & Test preparation and available execution — 2026-10-21
+
+- [x] User approved code and continuation; generated scoped build/unit/integration/performance/security/E2E instructions and `construction/build-and-test/build-and-test-summary.md`.
+- [x] Final-source full backend verify921total/844pass/77skip/0failure/error; executable JAR,85s. Existing final frontend314pass/61files, lint/typecheck/build and production audit0vulnerabilities retained without redundant reruns.
+- [x] Read actual CI/scripts/local compose and checked Docker availability. CLI present; Engine named pipe unavailable. U09 requires missing real U07/U08 migrations; U07/U08/U12 providers remain stubs. No fake schema, stack startup or real SMTP used.
+- [ ] Independent real integration/security/E2E/mobile and measured performance acceptance after owner prerequisites. Scope tracked in `construction/build-and-test/u14-build-and-test-plan.md`; global Build & Test/Operations not marked complete.
+
+## U14 local commits — 2026-10-21
+
+- User requests small commits on `announcements-and-notifications`, explicitly no push.
+- [x] Seven source commits:6cef92a identity permissions/Admin lookup; cdb8b9d schema/persistence;3f4a201 announcement backend;2920fc6 notification/email/reminder backend and OpenAPI;14c17cf CSP nonce;28fdc92 announcement UI;adfc51f notification UI. Documentation follows in a separate eighth commit.
+- [x] No source changes during commit preparation; retained full backend921total/844pass/77skip and frontend314pass/build/lint/typecheck evidence. Staged whitespace checked for each commit.
+- Independent integration/NFR/provider gates unchanged. No push/deploy/global acceptance transition.

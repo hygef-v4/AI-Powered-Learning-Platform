@@ -4833,3 +4833,45 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Conflict resolution and compatibility check only; final merge commit remains pending in GitHub Desktop. Existing independent browser/provider/DB/NFR acceptance gates and skipped tests unchanged.
 
 ---
+
+## U14 Code Generation Part 1 — branch and implementation planning
+**Timestamp**: 2026-10-21T08:20:18Z
+**User Input**: "chuyển sang branch announcements-and-notifications, bắt đầu thực hiện code u14 gồm các uc 63-65 "
+**AI Response**: Current checkout was already announcements-and-notifications with clean working tree and empty index; no checkout/reset/merge was needed. Read root CLAUDE.md, workflow/common rules, enabled reduced Security/Resiliency baseline (PBT disabled), U14 functional/NFR/infrastructure docs, UC63–65 and stories, actual U01/U03/U05/U07/U08/U12 contracts and published event payloads, frontend slots and local UI reference. Expanded the existing unapproved eleven-step canonical plan with concrete paths/tests and C01–C08, rather than creating a competing plan. Application code/dependencies not changed.
+**Findings**: U01 findAccounts limits20 and cannot enumerate every active Admin, so plan proposes explicit additive paginated Admin lookup plus provider/stub/tests. U07/U08/U12 currently expose stubs on this branch: reminders/group recipients and multi-instance SSE need real owner integration, not empty-data success. EMAIL_SEND already routes through U03 jobs.email; DomainEvent consumer requires separate bounded retry topology. SMTP accept-before-SENT crash window cannot be claimed exactly-once through current IMail. Frontend branch lacks SEC-004 nonce correction from U13: plan explicitly includes only those security files, not a whole-unit merge.
+**Approval**: Existing U14 plan explicitly says not approved. Per CLAUDE.md and .aidlc-rule-details/construction/code-generation.md, obtain explicit approval of concrete plan before generation. Prepared u14-implementation-approval-questions.md with one question, A approve C01–C08, B request changes, E other; Answer blank. All implementation checkboxes remain unchecked. No commit/push/deployment/teammate messaging/real email or global stage transition.
+---
+
+## U14 Part 1 approval and Part 2 start
+**Timestamp**: 2026-10-21T08:31:23Z
+**User Input**: "đã trả lời"
+**Evidence**: u14-implementation-approval-questions.md Answer a. User approves full11-step plan and C01-C08; execute inline without commit/push or real email. Record provider/SMTP limitations and preserve U06.
+---
+
+## U14 Code Generation Part 2 — implementation and verification handoff
+**Timestamp**: 2026-10-21T09:24:47Z
+**User Input**: "đã trả lời"
+**Approval Evidence**: u14-implementation-approval-questions.md Answer a, confirmed before source generation.
+**AI Response**: Implemented UC63-65/F1-F9 inline on announcements-and-notifications: five-table migration, JPA domain/repositories, scoped announcement CRUD/CAS/metadata audit/create-only after-commit event, notification event/recipient/dedup/SSE, EMAIL_SEND cap/preference/priority/retry/sweeper/SMTP source checks, deadline and maintenance scanners, REST/OpenAPI, local-reference UI feed/composer/edit-delete dialogs/card/slots/bell/popup/preferences. Approved U01 action rules and cursor ACTIVE Admin lookup/provider/stub/tests added; no U06 or owner provider changes. Added approved react-markdown10.1.0/rehype-sanitize6.0.0. Reused only SEC-004 nonce source, no U13 merge or history mutation. Email link uses existing APP_PUBLIC_URL.
+**Review fixes**: Immutable Map null validation, no-buffer SSE response header, preserved announcement author/flags, safe validation errors, deferred priority, current reminder source/deadline check, SMTP timeout envelope, public URL, read/read-all cross-tab invalidation, query route changes and stale load-more/filter results. No content/email/provider message logging introduced.
+**Verification**: Full clean backend verify919total/842pass/77skip/0failure/error before final review changes; final focused package71pass/0failure/error/skip (66U14+3U01+2architecture), executable JAR. Final full frontend314pass/61files (22new), lint0warning/error, typecheck and production standalone build pass. OpenAPI JSON/YAML1.2/local references and HTTP announcement/login/404/repeat nonce tests pass, all script nonce values match CSP and no public cache. Production dependency npm audit omit-dev0vulnerabilities; full dev-tree install report not silently autofixed.
+**Browser**: Disposable loopback fixture only; Teacher create/edit/delete and important/email behavior, Student read-only feed,5email preferences and read-all count2-to0; desktop visual inspection and browser console without CSP/hydration warnings/errors. No actual SMTP/provider use. Fixture does not certify backend auth/DB or actual U12 hub. Mobile viewport/provider acceptance not claimed.
+**Environment and limits**: Maven/SWC/temp/loopback sandbox issues retried with approved commands. Removed only verified generated Next type directories from previous branch and regenerated. First full frontend run concurrent with build had5existing-test timeout failures; final maxWorkers2 run passed without editing old tests/timeouts. U07/U08/U12 still stubs; real migration/provider/Rabbit/SMTP/cap/session/CSRF/audit/SSE2instance/mobile/NFR and scanner cardinality gates retained. IMail cannot prove exactly-once across SMTP-accept/DB-commit crash window; explicitly approved limitation remains.
+**Artifacts**: Canonical plan steps1-10 checked, step11 user review pending; code-summary and u14-verification tester matrix updated; no commit/push/deploy/teammate messages/global-stage transition.
+---
+
+## U14 code approval and scoped Build & Test continuation
+**Timestamp**: 2026-10-21T09:37:09Z
+**User Input**: "tiếp tục "
+**Approval**: User approves code-generation review step11 and requests continuation. Marked plan/state/code-summary accordingly; no commit/push/deployment approval inferred.
+**AI Response**: Read Build & Test workflow, actual CI/Maven/npm/local compose and existing tester handoff. Prepared build-instructions, unit-test-instructions, integration-test-instructions, performance-test-instructions, security-test-instructions, e2e-test-instructions, build-and-test-summary and scoped u14-build-and-test-plan. Global all-units-complete prerequisite is not satisfied, so global stage/Operations remain pending.
+**Execution**: Fresh final-source mvn -B verify BUILD SUCCESS:921total/844passed/77skipped/0failures/errors,85s, finished2026-10-21T16:35:07+07:00; executable JAR. Retained final frontend314pass/61files and lint/typecheck/build/production audit0vulnerabilities without redundant reruns. Skips and fixture checks are not independent integration acceptance.
+**Runtime findings**: Docker CLI installed but Engine named pipe dockerDesktopLinuxEngine unavailable. U09 migration references missing real U07/U08 schemas; U07/U08/U12 providers remain stubs. No substitute schema, local stack startup, real SMTP or source changes. Independent PostgreSQL/Rabbit/SMTP/provider/session/SSE/mobile/NFR tests and SMTP accept-before-SENT crash ambiguity remain explicit.
+---
+
+## U14 local commit request
+**Timestamp**: 2026-10-21T09:44:17Z
+**User Input**: "chia nhỏ thành các commit, commit lên branch announcements-and-notifications, không push"
+**AI Response**: Verified correct branch and initially empty index; split source into seven functional commits, with eighth documentation commit. Source commits:6cef92a identity, cdb8b9d persistence,3f4a201 announcement APIs,2920fc6 notification fanout/email/reminder/APIs/OpenAPI,14c17cf CSP nonce,28fdc92 announcement UI,adfc51f notification UI. No source modifications or unrelated files; retained existing final-source verification and checked staged whitespace each time.
+**Environment**: Initial sandbox denied .git/index.lock write; retried local git add/commit through approved escalated execution. No automatic approval rejection. No push, deployment, real email or acceptance gate advancement.
+---
