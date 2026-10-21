@@ -401,3 +401,5 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Code Generation Part 2: bước 1–12 trên nhánh `group-assignment` (`60f0cc8`…`a2c8c69`, chưa push).
 - [x] Bước 13: code-summary `construction/u12-group-assignment/code/code-summary.md`.
 - [x] Bước 14: người dùng duyệt code ngày 2026-10-22; nhánh đã push lên `origin`, chờ Max2Min gộp vào `staging`.
+- [x] Build & Test (phần của unit): `construction/build-and-test/u12-verification.md`; integration test và đo hiệu năng còn mở (tester, cần U07, U08).
+- Jira 2026-10-22: KAN-28, KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 chuyển In Review; KAN-19 Done.

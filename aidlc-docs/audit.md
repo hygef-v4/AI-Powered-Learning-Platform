@@ -4878,3 +4878,26 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, trạng thái công việc
 
 ---
+
+## Status question - what to do first
+**Timestamp**: 2026-10-21T21:05:00Z
+**User Input**: "gio nen lam gi truoc"
+**AI Response**: Đề xuất thứ tự: (1) báo Max2Min gộp hai nhánh và báo Hưng lỗi migration 1500; (2) chuyển Jira các story U06, U12 sang trạng thái đang review, đóng KAN-19; (3) viết Build & Test trong lúc chờ gộp; (4) thử khóa API thật và agent MCP thật; (5) KAN-14 và dọn nhánh, container.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Jira update and Build & Test request
+**Timestamp**: 2026-10-21T21:10:00Z
+**User Input**: "lamf 2 3 ddi"
+**AI Response**: Làm bước 2 (chuyển trạng thái Jira các story U06, U12; đóng epic KAN-19) và bước 3 (Build & Test cho U06, U12).
+**Context**: Construction, Jira và Build & Test
+
+---
+
+## Jira update done, Build & Test U12
+**Timestamp**: 2026-10-21T21:30:00Z
+**AI Response**: Jira: KAN-34, 35, 37, 29 (U06) và KAN-151, 62, 63, 64, 66, 28 (U12) chuyển In Review theo cách nhóm đang dùng; KAN-19 chuyển Done. Build & Test: viết `build-and-test/u12-verification.md` (build, unit, integration, hiệu năng, bảo mật, kết quả đã chạy, gate còn mở) theo mẫu `u15-verification.md`.
+**Context**: Construction, Build & Test U12
+
+---
