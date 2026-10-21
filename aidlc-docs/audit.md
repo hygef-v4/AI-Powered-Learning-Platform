@@ -4862,3 +4862,11 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U12 Code Generation Part 2, bước 14
 
 ---
+
+## Code Generation - U12 approval and push
+**Timestamp**: 2026-10-21T20:50:00Z
+**User Input**: "neu cai nao oke roi thi hay push len cho toi"
+**AI Response**: Người dùng duyệt và yêu cầu push. Đánh dấu bước 14 của U12 (duyệt code). Push nhánh `ai-connections` (U06) và `group-assignment` (U12) lên `origin`; không mở PR, không gộp `staging` (Max2Min gộp).
+**Context**: Construction, U12 Code Generation bước 14
+
+---
