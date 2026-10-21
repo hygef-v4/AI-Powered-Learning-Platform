@@ -121,3 +121,10 @@ platform:
     db-password: ${BACKUP_DB_PASSWORD:}
     tmp-dir: ${U03_BACKUP_TMP_DIR:}
     local-dir: ${U03_LOCAL_BACKUP_DIR:}
+  # U07 Assignment Authoring: link trang xem sơ đồ ghi vào DOCX xuất ra (BR-U07-60).
+  assignments:
+    public-url: ${APP_PUBLIC_URL:http://localhost:8088}
+  # U08 Assignment Work: giới hạn tần suất (BR-U08-44, 52).
+  assignment-work:
+    feedback-per-day: ${U08_FEEDBACK_PER_DAY:20}
+    activity-events-per-minute: ${U08_ACTIVITY_EVENTS_PER_MINUTE:60}

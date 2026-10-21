@@ -27,6 +27,8 @@
         <jjwt.version>0.12.6</jjwt.version>
         <commons-csv.version>1.12.0</commons-csv.version>
         <bucket4j.version>8.14.0</bucket4j.version>
+        <!-- U07: đọc, ghi DOCX của đề và bài làm (BR-U07-60, 61). -->
+        <poi.version>5.4.1</poi.version>
         <!-- 1.21.4 bắt tay được với Docker Engine 29 (API tối thiểu cao hơn); Boot 3.5.6 quản lý 1.21.3. -->
         <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
@@ -133,6 +135,23 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-lettuce</artifactId>
             <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.poi</groupId>
+                    <artifactId>poi-ooxml-lite</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Bản lite chỉ có class schema POI tự dùng; tạo style Heading, numbering khi xuất DOCX cần bản full. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>${poi.version}</version>
         </dependency>
 
         <dependency>
