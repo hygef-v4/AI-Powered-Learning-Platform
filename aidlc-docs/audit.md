@@ -4833,3 +4833,78 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Conflict resolution and compatibility check only; final merge commit remains pending in GitHub Desktop. Existing independent browser/provider/DB/NFR acceptance gates and skipped tests unchanged.
 
 ---
+
+## U13 Code Generation Part 1 — readiness and approval
+**Timestamp**: 2026-10-21T05:54:32Z
+**User Input**: "giúp tôi code unit 13 gồm uc 58-62, dựa trên code-generation-plan của u13 và aidlc-docs. UI ở folder E:\FPTUni\sem9_fa26\ui-reference"
+**AI Response**: "Tôi sẽ đọc hướng dẫn AI-DLC, kế hoạch code của Unit 13 và tài liệu UC 58–62, rồi đối chiếu UI tham chiếu để triển khai và kiểm tra."
+**Context**: Resumed existing Construction; clean working tree on reference-materials. Read CLAUDE/common/Code Generation rules, state and U13 functional/NFR/infrastructure artifacts, current contracts and local UI artboard sources. Updated existing ten-step plan with concrete paths, role/scope/transaction/job race/resource-limit/UI/test decisions C01–C05. JobTypes/routing and manager nav already exist and must be reused. U06 MaterialText lacks version metadata; proposed compatible consumer implementation with an explicit provenance handoff gate. Security/Resiliency reduced scope retained; PBT disabled and skipped. No subagents, runtime source edits, tests, commit/push or external mutations.
+
+**AI Response**: "U13 hiện chỉ có khung; kế hoạch ghi rõ ‘chưa được duyệt và chưa code’. Tôi đang kiểm tra các contract tệp, job, phân quyền và slot UI để bổ sung kế hoạch thành các bước có thể triển khai. Theo CLAUDE.md, cần duyệt kế hoạch trước khi sinh code, nên tôi sẽ chuẩn bị bản cụ thể để bạn duyệt một lần."
+
+**AI Response**: "Tôi đã bổ sung đủ 10 bước triển khai, bám các màn UI U13 và contract hiện có. Có một điểm cần ghi rõ khi duyệt: DTO tài liệu của U06 chưa có số phiên bản như thiết kế yêu cầu. Kế hoạch đề xuất cài tương thích contract hiện tại và giữ phần provenance phiên bản làm điều kiện tích hợp riêng."
+
+**Approval prompt**: Review construction/plans/code-generation-plan/u13-reference-materials-code-generation-plan.md and answer Question 1 in u13-implementation-approval-questions.md: A approves all ten steps and C01–C05 for inline implementation without commit/push; B requests changes; X specifies another scope. Approval required by CLAUDE.md Code Generation and construction/code-generation.md Step 7; prior plan explicitly says unapproved and no U13 approval is recorded. Part 2 and all implementation checkboxes remain pending. Only documentation validation may be claimed in this turn.
+
+---
+
+## U13 scope discussion — implementation paused by user
+**Timestamp**: 2026-10-21T06:09:34Z
+**User Input**: "tôi chọn rồi"
+**Context**: Read u13-implementation-approval-questions.md; Answer is lowercase a (option A). Read current contracts and tooling; no application source changes made before user interruption.
+**User Input**: "à từ từ đã"
+**AI Response**: "Tôi dừng tại đây. Tôi đã đọc lựa chọn A, nhưng chưa sửa code ứng dụng. Bạn cứ bổ sung yêu cầu nhé."
+**User Input**: "việc sửa đổi code ở các unit khác có chấp nhận được không?"
+**AI Response**: Explained minimal cross-unit integration edits: U01 action registry, reuse existing U03 services/routing, U06 DTO metadata gap, existing frontend slots; no automatic contract/schema/business changes. Implementation remains paused.
+**User Input**: "ở u06 thay đổi những gì, chi tiết"
+**AI Response**: Inspected IReferenceMaterial, SelectableMaterial, MaterialText, conditional stub, all backend/src and frontend/src references, and U13 F7 design. Explain current approved C04 needs no U06 source change; a separate proposed contract enhancement adds version and extraction-state metadata, potentially kind/URL, while preserving method signatures and unit boundaries. In this checkout no concrete U07/U10 calls or DTO constructions were found; cross-branch consumers are unverified. No application source changes or approval to resume inferred from discussion.
+
+---
+
+## U13 implementation resumed
+**Timestamp**: 2026-10-21T06:14:27Z
+**User Input**: "ok cứ bỏ qua đi"
+**Context**: Keep U06 DTO unchanged; no authorization to change shared U06 records inferred.
+**User Input**: "thực hiện code cho tôi u13 đi"
+**AI Response**: Resuming all ten approved U13 steps inline, without U06 DTO changes or commit/push. Approval file Answer a confirmed.
+
+
+## U13 Code Generation Part2 — implementation and developer verification
+**Timestamp**: 2026-10-21T07:17:14Z
+**User Input**: "thực hiện code cho tôi u13 đi"
+**AI Response**: Implemented UC58–62 inline using approved plan and local UI reference. Added materials migration/domain/JPA, scoped access/commands/queries, CAS/version history, parser child JVM/job/sweeper, unchanged-U06-contract provider and MCP, REST/OpenAPI, pages/dialogs/viewers and U05/U08/U11 slot registrations. Added four U01 actions/rules and scoped frontend security headers; U03/U06 implementation/contracts unchanged. No subagents, commit/push/Jira or owner messages.
+**Verification**: Full backend verify928 total/851pass/77skip/0fail/0error and JAR. Own review repaired read-transaction rollback-only behavior for expected MCP errors and allowed staff archived MCP references while rejecting them for new AI sources; final focused80pass (78U13+2architecture), package pass. PDF/DOCX/PPTX parser tests and packaged-JAR PDF smoke pass. Full frontend321pass/61files including29U13; final typecheck/lint/build pass, lint zero warnings. Three standalone U13 routes returned200 with CSP/blob/YouTube/nosniff. Browser loopback fixture: create/playlist rejection/edit/replace/archive and mobile; U13-only CSS repaired whole-page overflow. Native PDF blob iframe loaded but in-app native renderer remained blank; real-browser PDF acceptance is explicitly pending.
+**Environment**: Initial Maven cache/SWC sandbox AccessDenied and Vitest temp/IPC failures were retried with authorized escalated commands/process-local temp; interrupted/failed attempts not counted pass. Next dev auto-generated two untracked frontend instruction files; only those were backed up in ignored .tmp/u13 and removed after dev stopped; root AGENTS/CLAUDE preserved. Full PostgreSQL/provider/session/audit/Drive/Rabbit/tester/NFR acceptance and U06 provenance metadata remain gates. User review pending, global stage not advanced.
+**Artifacts**: construction/u13-reference-materials/code/code-summary.md; construction/build-and-test/u13-verification.md; approved plan step1–9 checked, step10 user review pending.
+
+---
+
+## U13 technology explanation
+**Timestamp**: 2026-10-21T07:28:36Z
+**User Input**: "ngoài nhũng gate chưa hoàn tất ra thì u13 đã ready rồi đúng không?"
+**AI Response**: Confirmed code ready for review/integration, with documented acceptance gates still open; no production readiness claim.
+**User Input**: "giải thích những công nghệ sử dụng cho u13"
+**AI Response**: Explain Java17/Spring Boot, REST/validation/security, JPA/PostgreSQL/Flyway/CAS, U03 artifact/Drive/Redis download tokens, RabbitMQ jobs and isolated Tika/PDFBox/POI extraction, Next.js/React/TypeScript/CSS/slots/viewers, U06 contract/MCP consumers and JUnit/Mockito/ArchUnit/Vitest/build verification. Read actual source; no implementation changes.
+---
+## U13 technology and documentation compliance review
+**Date**: 2026-10-21
+**User Input**: "đồng thời cho biết các công nghệ đó có được cho phép sử dụng theo aidlc-docs hay không"
+**AI Response**: Compared actual U13 technology choices with inception architecture, U13 technology decisions and U03/U06 boundaries. Stack choices are documented or implementation mechanisms within those choices; no blanket runtime compliance claim. Found SEC-004 mismatch in frontend/next.config.ts: unsafe-inline script CSP instead of nonce and SAMEORIGIN instead of DENY. Corrected the inaccurate SECURITY-04 handoff row and current state checkpoint. No application source changes or new test execution; security configuration correction and browser verification remain required.
+---
+## U13 SEC-004 security configuration correction
+**Date**: 2026-10-21
+**User Input**: "việc thay đổi như vậy có ổn không? Và cho tôi biết đã cài `IReferenceMaterial` của U06, thay adapter rỗng trong bước 6 chưa ?"
+**AI Response**: Verified real ReferenceMaterialService implements IReferenceMaterial; conditional fallback remains in source but is suppressed by the U13 provider, with passing single-bean context test. U06 DTO unchanged. Explained nonce correction and required rendering/browser checks.
+**User Input**: "sửa lại cấu hình bảo mật để khớp với ai-dlc đi"
+**AI Response**: Authorized SEC-004 correction: removed scoped static headers, added frontend/src/proxy.ts and security regression tests, changed root layout to request rendering. Fresh 256-bit nonce overwrites inbound CSP/x-nonce and matches Next-generated scripts; production no unsafe script directives, DENY/frame-ancestors none, HSTS/nosniff/referrer, approved PDF/YouTube/Draw.io child frames. Style attributes retain documented unsafe-inline exception for existing dynamic React styles; eval/WebSocket development only. Applied all HTML page routes per enabled SECURITY-04; no U06/backend changes.
+**Verification**: Focused6pass; full frontend323pass/62files, typecheck/lint/standalone build pass. HTTP login/list/detail/view/404/repeat requests verify all script nonce/header/cache consistency and asset200. Browser login hydration and U13 fixture client navigation/PDF iframe/YouTube player pass without CSP console errors; native PDF renderer still blank in in-app browser and Chrome/Edge acceptance remains pending. Sandbox SWC/temp/IPC failures retried with authorized elevated build/full tests; extra thread attempt stopped after successful full-suite evidence. Updated canonical plan, handoff, verification and state. No commit/push/deployment or stage advancement.
+---
+## U13 local commit authorization
+**Date**: 2026-10-21
+**User Input**: "chia thành các commit nhỏ rồi commit lên branch reference-materials, không push"
+**AI Response**: Confirmed current branch reference-materials and empty Git index. Split the verified U13 changes into eight cohesive local commits: domain/persistence, scoped management, background extraction, AI/MCP, REST/OpenAPI, frontend, SEC-004 correction and AI-DLC handoff. Preserve approved U06 contract and outstanding acceptance gates. No source changes or test reruns needed for commit organization. Do not push.
+---
+## U13 local commit results
+**Date**: 2026-10-21
+**AI Response**: Created seven local code commits on reference-materials: 14dec5b domain/persistence; 7c6a339 scoped management; d5c5d92 document extraction; 0629906 AI references/MCP; 94b3f5b REST/OpenAPI; 9ae5458 frontend; 28b9f46 SEC-004 correction. The eighth commit records AI-DLC approved plan, implementation summary, verification evidence, audit and state. Application code unchanged from verified tree; git diff --check passed. No push, merge, deployment or acceptance-gate closure.
+---
