@@ -6,6 +6,7 @@ import { createElement } from "react";
 import { studentClassSections, studentDetailSections, teacherClassTabs } from "@/features/academics/slots";
 import { assignmentFormSections } from "@/features/assignments/slots";
 import { ClassGroupsPanel } from "./ClassGroupsPanel";
+import { MyGroupCard } from "./MyGroup";
 import { GroupAssignmentPanel, GroupCountCard, StudentGroupInfo } from "./TeacherGroupWidgets";
 
 function TeacherGroupTab({ classId, tab }: { classId: string; tab: "info" | "students" | "materials" | "evals" | "gradebook" }) {
@@ -17,6 +18,4 @@ function TeacherGroupTab({ classId, tab }: { classId: string; tab: "info" | "stu
 teacherClassTabs.register({ key: "u12-groups", order: 30, component: TeacherGroupTab });
 studentDetailSections.register({ key: "u12-student-group", order: 10, component: StudentGroupInfo });
 assignmentFormSections.register({ key: "u12-group-readiness", order: 10, component: GroupAssignmentPanel });
-
-// studentClassSections được đăng ký ở bước giao diện sinh viên (MyGroupCard).
-void studentClassSections;
+studentClassSections.register({ key: "u12-my-group", order: 30, component: MyGroupCard });

@@ -80,7 +80,7 @@ public class GroupWorkspaceService {
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
                 window.name(), d.sharedBlocks(), sections, new Role(ctx.member(), ctx.leader(), ctx.teacher()),
-                submission, d.activityMonitoring(), d.version());
+                submission, d.activityMonitoring(), d.version(), ctx.actorId());
     }
 
     private Member member(UUID id, ClassGroup group) {
@@ -97,7 +97,7 @@ public class GroupWorkspaceService {
                                 Instant lateUntil, UUID classId, UUID groupId, String groupName, UUID leaderId,
                                 List<Member> members, String status, String window, DocumentModel sharedBlocks,
                                 List<SectionView> sections, Role role, Submission lastSubmission,
-                                boolean activityMonitoring, long version) {
+                                boolean activityMonitoring, long version, UUID viewerId) {
     }
 
     public record Member(UUID accountId, String name, boolean leader) {

@@ -22,3 +22,9 @@ export function formatDate(iso: string): string {
   const p = parts(iso, true);
   return `${p.day}/${p.month}/${p.year}`;
 }
+
+/** "30/10/2026 23:59" theo giờ Việt Nam. */
+export function formatDateTime(iso: string): string {
+  const p = parts(iso, true);
+  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
+}
