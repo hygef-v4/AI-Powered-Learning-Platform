@@ -209,7 +209,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U09 Question Type Authoring | Design revision 73 UC ngày 2026-10-09; Cấu hình quiz và bốn dạng assignment, document model; U08 vòng đời, U06 rubric. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U11 Attempt & Submission | Design revision 73 UC ngày 2026-10-09; Quiz Practice tách Student Assignments; lần làm bài của môn ghi classId. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U12 Group & Allocation | Design revision 73 UC ngày 2026-10-09; Chia nhóm/leader hỗ trợ Teacher Class Detail và UC 45/27. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U12 Group Assignment (unit-of-work 2026-10-15; dòng cũ "Group & Allocation" là baseline lịch sử) | Functional, NFR, infrastructure design revision 2026-10-15/17 (UC 53–57). | Plan chi tiết hóa 2026-10-20; bước 1–13 checked, bước 14 chờ người dùng duyệt | Code và unit test viết 2026-10-21/22 trên nhánh `group-assignment` (13 commit, chưa push): backend 60 test U12 + ArchitectureTest pass; frontend 305 test (U12: 13), lint/typecheck/build pass. Full verify 888/33 skip/4 lỗi do migration 1500 của U09. Xem `construction/u12-group-assignment/code/code-summary.md` |
 | U13 AI & Code Execution | Design revision 73 UC ngày 2026-10-09; AI draft, Practice grading UC 29, proposals UC 38, Judge0 UC 25/43, số liệu AI UC 58. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U14 Group Document & Submission | Design revision 73 UC ngày 2026-10-09; Tài liệu nhóm chỉ ở lớp, GRADED; chỉ leader nộp. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U15 Admin Dashboard | UC66/KAN-80 hiện hành; counts và backup metadata, current-contract slice A duyệt 2026-10-20. | Plan bảy task duyệt 2026-10-20; C01/C02 metadata U03 deferred | Code-ready slice A: backend verify 755 total/693 pass/62 skip; frontend253 pass, lint/typecheck/build pass; independent review P2 đã sửa. Full UC66 còn U03/integration/NFR acceptance. Xem construction/u15-admin-dashboard/code/implementation-summary.md |
@@ -394,3 +394,10 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - Verified exact union of 36 declared actions and 36 policy entries, with role/scope unchanged on both sides. No unrelated incoming source edits.
 - Fresh merged-tree backend verify:852 total/775 passed/77 skipped/0 failures/errors, executable JAR packaged. Frontend292 passed/57 files; lint/typecheck pass. Logs .tmp/u15/merge-*.log. Full browser/integration/NFR gates unchanged.
 - Marked only four conflict paths resolved in index. Merge remains pending its final commit; no merge commit/push performed for this check.
+
+## U12 Group Assignment — 2026-10-22
+
+- [x] Code Generation Part 1: plan chi tiết hóa 2026-10-20; nhánh tạo lại từ `staging` 2026-10-21.
+- [x] Code Generation Part 2: bước 1–12 trên nhánh `group-assignment` (`60f0cc8`…`a2c8c69`, chưa push).
+- [x] Bước 13: code-summary `construction/u12-group-assignment/code/code-summary.md`.
+- [ ] Bước 14: người dùng duyệt code; Max2Min gộp `group-assignment` vào `staging`.

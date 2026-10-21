@@ -4848,3 +4848,17 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U12 Code Generation Part 2
 
 ---
+
+## Code Generation - U12 steps 3–13
+**Timestamp**: 2026-10-21T20:30:00Z
+**AI Response**: Bước 3–12 (ccf357f…a2c8c69): nhóm, yêu cầu đổi trưởng nhóm, sẵn sàng và tạo tài liệu, mục, nộp và tự nộp, SSE qua RabbitMQ, interface cho U08/U09, REST API, màn giảng viên, màn sinh viên và workspace. Khởi động thử backend phát hiện và sửa chọn constructor `ClassGroupService`. Bước 13: code-summary, aidlc-state, plan. Kiểm tra: 60 test U12 và ArchitectureTest pass; `mvn -B verify` 888 test, 33 bỏ qua, 4 lỗi do migration 1500 của U09; frontend 305 test, lint, typecheck, build pass.
+**Context**: Construction, U12 Code Generation Part 2
+
+---
+
+## Code Generation - U12 approval prompt
+**Timestamp**: 2026-10-21T20:35:00Z
+**AI Response**: Trình bày kết quả U12 và hỏi người dùng duyệt code (Request Changes hoặc Continue to Next Stage).
+**Context**: Construction, U12 Code Generation Part 2, bước 14
+
+---
