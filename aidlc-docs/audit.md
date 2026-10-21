@@ -4840,3 +4840,11 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U12 Code Generation Part 1
 
 ---
+
+## Code Generation - U06 approved, U12 resumed
+**Timestamp**: 2026-10-21T19:50:00Z
+**User Input**: "Continue, làm tiếp U12 từ bước 3 đi"
+**AI Response**: U06 được duyệt (ghi trên nhánh `ai-connections`, b94645d). Chuyển sang nhánh `group-assignment` (khớp `origin/staging`). Sửa plan U12: nhánh tạo lại từ `staging`, tick bước 1–2 đã commit. Làm bước 3: `GroupAccess`, `ClassGroupService` (đọc, lưu cả bộ kèm version, nhả mục khi rời nhóm, hủy yêu cầu chờ khi đổi trưởng nhóm), `RandomGroupSplitter`.
+**Context**: Construction, U12 Code Generation Part 2
+
+---
