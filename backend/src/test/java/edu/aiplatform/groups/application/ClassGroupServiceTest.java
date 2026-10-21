@@ -15,6 +15,7 @@ import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.groupdocs.application.GroupDocumentService;
 import edu.aiplatform.groupdocs.domain.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.domain.GroupSection;
 import edu.aiplatform.groups.application.ClassGroupService.SaveCommand;
@@ -49,12 +50,13 @@ class ClassGroupServiceTest {
     private final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
     private final GroupRepository groups = mock(GroupRepository.class);
     private final GroupDocumentRepository documents = mock(GroupDocumentRepository.class);
+    private final GroupDocumentService groupDocuments = mock(GroupDocumentService.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final ClassGroupService service = new ClassGroupService(groups, documents,
+    private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments,
             new GroupAccess(authorization, classes, audit, clock), classes, mock(IAccountLookup.class), audit, events, clock,
             new Random(7));
     private final List<UUID> students = IntStream.range(0, 7).mapToObj(i -> UUID.randomUUID()).toList();

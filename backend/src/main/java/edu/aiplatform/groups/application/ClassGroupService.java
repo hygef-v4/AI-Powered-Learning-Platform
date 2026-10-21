@@ -5,6 +5,7 @@ import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.groupdocs.application.GroupDocumentService;
 import edu.aiplatform.groupdocs.domain.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.domain.GroupSection;
 import edu.aiplatform.groups.domain.ClassGroup;
@@ -47,6 +48,7 @@ public class ClassGroupService {
 
     private final GroupRepository groups;
     private final GroupDocumentRepository documents;
+    private final GroupDocumentService groupDocuments;
     private final GroupAccess access;
     private final IClassAccess classes;
     private final IAccountLookup accounts;
@@ -55,16 +57,18 @@ public class ClassGroupService {
     private final Clock clock;
     private final RandomGenerator random;
 
-    public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupAccess access,
-                             IClassAccess classes, IAccountLookup accounts, IAudit audit, IEventPublisher events,
-                             Clock clock) {
-        this(groups, documents, access, classes, accounts, audit, events, clock, new SecureRandom());
+    public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
+                             GroupAccess access, IClassAccess classes, IAccountLookup accounts, IAudit audit,
+                             IEventPublisher events, Clock clock) {
+        this(groups, documents, groupDocuments, access, classes, accounts, audit, events, clock, new SecureRandom());
     }
 
-    ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupAccess access, IClassAccess classes,
-                      IAccountLookup accounts, IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random) {
+    ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
+                      GroupAccess access, IClassAccess classes, IAccountLookup accounts, IAudit audit, IEventPublisher events,
+                      Clock clock, RandomGenerator random) {
         this.groups = groups;
         this.documents = documents;
+        this.groupDocuments = groupDocuments;
         this.access = access;
         this.classes = classes;
         this.accounts = accounts;
@@ -224,9 +228,11 @@ public class ClassGroupService {
                 .forEach(d -> groups.renameTemporarily(d.id()));
 
         List<UUID> leaderChangedGroups = new ArrayList<>();
+        List<UUID> createdGroups = new ArrayList<>();
         for (Draft d : drafts) {
             UUID id = ids.get(d.key());
             if (d.id() == null) {
+                createdGroups.add(id);
                 groups.insertGroup(new ClassGroup(id, classId, d.name(), d.leaderId(), actor.accountId(), now, now, List.of()));
                 record(actor, "GROUP_CREATED", id, details(classId, d));
             } else {
@@ -262,6 +268,8 @@ public class ClassGroupService {
                 }
             }
         }
+        // Nhóm mới khi lớp có bài nhóm đang mở: tạo tài liệu ngay (F7 bước 4, F14 bước 2).
+        groupDocuments.ensureForGroups(classId, createdGroups);
         if (!moved.isEmpty()) {
             publish(EventTypes.GROUP_MEMBERSHIP_CHANGED, classId, null, List.copyOf(moved));
         }
