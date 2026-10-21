@@ -6,6 +6,10 @@ package edu.aiplatform.identity.contract;
  */
 public final class Actions {
 
+    public static final String ANNOUNCEMENT_READ = "ANNOUNCEMENT_READ";
+    public static final String ANNOUNCEMENT_MANAGE = "ANNOUNCEMENT_MANAGE";
+    public static final String NOTIFICATION_SELF = "NOTIFICATION_SELF";
+
     // U01 — hồ sơ của chính mình (R1)
     public static final String PROFILE_VIEW = "PROFILE_VIEW";
     public static final String PROFILE_UPDATE = "PROFILE_UPDATE";

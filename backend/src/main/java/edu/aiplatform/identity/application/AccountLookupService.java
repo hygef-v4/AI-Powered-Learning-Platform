@@ -24,6 +24,12 @@ public class AccountLookupService implements IAccountLookup {
 
     public static final int MAX_RESULTS = 20;
 
+    @Override
+    public List<AccountContact> listActiveAdmins(UUID afterId,int limit) {
+        return accounts.listActiveAdmins(afterId,Math.max(1,Math.min(100,limit))).stream()
+                .map(AccountLookupService::contact).toList();
+    }
+
     private final AccountRepository accounts;
 
     public AccountLookupService(AccountRepository accounts) {

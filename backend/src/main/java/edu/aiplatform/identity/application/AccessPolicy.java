@@ -64,7 +64,10 @@ final class AccessPolicy {
             Map.entry(Actions.QUESTION_BANK_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
             Map.entry(Actions.QUIZ_SUBJECT_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
             Map.entry(Actions.QUIZ_CLASS_MANAGE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
-            Map.entry(Actions.QUIZ_PRACTICE, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)));
+            Map.entry(Actions.QUIZ_PRACTICE, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)),
+            Map.entry(Actions.ANNOUNCEMENT_READ, new Rule(EnumSet.of(STUDENT,TEACHER,SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.ANNOUNCEMENT_MANAGE, new Rule(EnumSet.of(TEACHER,SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.NOTIFICATION_SELF, new Rule(EnumSet.allOf(Role.class), ScopeKind.ACCOUNT)));
 
     private AccessPolicy() {
     }
