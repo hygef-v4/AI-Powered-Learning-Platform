@@ -7,7 +7,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 
-/** Thẻ "Quota AI của giảng viên" trên Setting List (F14): mức mặc định, trần ngày, số giảng viên có mức riêng. */
+/** Thẻ "Hạn mức AI giảng viên" trên Setting List (F14): mức mặc định, trần ngày, số giảng viên có mức riêng. */
 @Component
 public class TeacherQuotaSection implements ISettingsSectionProvider {
 
@@ -26,7 +26,7 @@ public class TeacherQuotaSection implements ISettingsSectionProvider {
 
     @Override
     public String title() {
-        return "Quota AI của giảng viên";
+        return "Hạn mức AI giảng viên";
     }
 
     @Override
