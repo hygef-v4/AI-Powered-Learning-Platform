@@ -80,6 +80,12 @@ public class GroupRepository {
                 .flatMap(this::findGroup);
     }
 
+    /** Nhóm của một người ở mọi lớp (mỗi lớp tối đa một nhóm). */
+    public List<UUID> listGroupIdsOf(UUID accountId) {
+        return jdbc.sql("select group_id from class_group_members where account_id = :accountId")
+                .param("accountId", accountId).query(UUID.class).list();
+    }
+
     public void insertGroup(ClassGroup group) {
         jdbc.sql("insert into class_groups (id, class_id, name, leader_id, created_by, created_at, updated_at) "
                         + "values (:id, :classId, :name, :leaderId, :createdBy, :createdAt, :updatedAt)")
