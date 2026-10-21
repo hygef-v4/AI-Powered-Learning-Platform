@@ -16,6 +16,7 @@ import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.application.GroupDocumentService;
+import edu.aiplatform.groupdocs.application.IGroupDocStreams;
 import edu.aiplatform.groupdocs.domain.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.domain.GroupSection;
 import edu.aiplatform.groups.application.ClassGroupService.SaveCommand;
@@ -51,12 +52,13 @@ class ClassGroupServiceTest {
     private final GroupRepository groups = mock(GroupRepository.class);
     private final GroupDocumentRepository documents = mock(GroupDocumentRepository.class);
     private final GroupDocumentService groupDocuments = mock(GroupDocumentService.class);
+    private final IGroupDocStreams streams = mock(IGroupDocStreams.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments,
+    private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments, streams,
             new GroupAccess(authorization, classes, audit, clock), classes, mock(IAccountLookup.class), audit, events, clock,
             new Random(7));
     private final List<UUID> students = IntStream.range(0, 7).mapToObj(i -> UUID.randomUUID()).toList();
@@ -127,6 +129,7 @@ class ClassGroupServiceTest {
         verify(groups).removeMembers(classId, java.util.Set.of(students.get(1)));
         verify(groups).addMember(b.id(), classId, students.get(1), NOW);
         verify(groups).cancelPendingOf(eq(b.id()), eq(teacher.accountId()), any(), eq(NOW));
+        verify(streams).closeFor(eq(students.get(1)), any());
         ArgumentCaptor<DomainEvent> published = ArgumentCaptor.forClass(DomainEvent.class);
         verify(events, org.mockito.Mockito.times(2)).publish(published.capture());
         assertThat(published.getAllValues()).extracting(DomainEvent::eventType)

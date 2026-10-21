@@ -6,6 +6,8 @@ import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.application.GroupDocumentService;
+import edu.aiplatform.groupdocs.application.IGroupDocStreams;
+import edu.aiplatform.groupdocs.domain.GroupDocument;
 import edu.aiplatform.groupdocs.domain.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.domain.GroupSection;
 import edu.aiplatform.groups.domain.ClassGroup;
@@ -49,6 +51,7 @@ public class ClassGroupService {
     private final GroupRepository groups;
     private final GroupDocumentRepository documents;
     private final GroupDocumentService groupDocuments;
+    private final IGroupDocStreams streams;
     private final GroupAccess access;
     private final IClassAccess classes;
     private final IAccountLookup accounts;
@@ -58,17 +61,18 @@ public class ClassGroupService {
     private final RandomGenerator random;
 
     public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
-                             GroupAccess access, IClassAccess classes, IAccountLookup accounts, IAudit audit,
-                             IEventPublisher events, Clock clock) {
-        this(groups, documents, groupDocuments, access, classes, accounts, audit, events, clock, new SecureRandom());
+                             IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
+                             IAudit audit, IEventPublisher events, Clock clock) {
+        this(groups, documents, groupDocuments, streams, access, classes, accounts, audit, events, clock, new SecureRandom());
     }
 
     ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
-                      GroupAccess access, IClassAccess classes, IAccountLookup accounts, IAudit audit, IEventPublisher events,
-                      Clock clock, RandomGenerator random) {
+                      IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
+                      IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random) {
         this.groups = groups;
         this.documents = documents;
         this.groupDocuments = groupDocuments;
+        this.streams = streams;
         this.access = access;
         this.classes = classes;
         this.accounts = accounts;
@@ -209,6 +213,8 @@ public class ClassGroupService {
             if (!group.equals(after.get(member))) {
                 moved.add(member);
                 releaseHeldSections(group, member, actor, now);
+                // Đóng kênh SSE của người rời nhóm với tài liệu cũ (sau commit, F14 bước 1).
+                streams.closeFor(member, documents.listByGroup(group).stream().map(GroupDocument::id).toList());
             }
         });
         after.forEach((member, group) -> {
