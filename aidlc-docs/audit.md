@@ -4909,3 +4909,27 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U06 Code Generation Part 2, bước 15
 
 ---
+
+## Status question - remaining Jira work
+**Timestamp**: 2026-10-21T19:30:00Z
+**User Input**: "h con gi can lam de hoan thanh cac task cua toi trong jira"
+**AI Response**: Không đọc được Jira (connector Atlassian chưa cấp quyền site, phiên trình duyệt hết hạn - 401). Trả lời theo lần đọc Jira 2026-10-21 và trạng thái nhánh: U06 code xong chờ duyệt và gộp; U12 còn bước 3–14 (bước 1–2 đã có commit nhưng chưa tick plan); việc phối hợp (migration 1500 của U09, `AiSourcePicker` cho U09, KAN-14).
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Status question - Jira re-read
+**Timestamp**: 2026-10-21T19:40:00Z
+**User Input**: "toi dang nhap jira roi"
+**AI Response**: Đọc lại Jira (Vo Minh Tai): KAN-5 Done; KAN-14 In Progress (Revise User Interface Designs); KAN-19 epic U02 In Progress dù KAN-49 Done; KAN-29 U06 (KAN-34, 35, 37 To Do, Iteration 2); KAN-28 U12 (KAN-62, 63, 64, 66, 151 To Do, Iteration 3). Không có việc mới so với 2026-10-21.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Code Generation - U06 approval
+**Timestamp**: 2026-10-21T19:50:00Z
+**User Input**: "Continue, làm tiếp U12 từ bước 3 đi"
+**AI Response**: Người dùng duyệt code U06 (Continue to Next Stage). Đánh dấu Code Generation U06 xong (chờ Max2Min gộp `ai-connections` vào `staging`). Chuyển sang U12 trên nhánh `group-assignment`, tiếp từ bước 3.
+**Context**: Construction, U06 Code Generation bước 15 → U12 Code Generation Part 2
+
+---

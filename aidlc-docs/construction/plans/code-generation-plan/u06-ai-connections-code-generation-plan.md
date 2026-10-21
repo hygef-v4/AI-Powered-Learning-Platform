@@ -8,7 +8,7 @@ Thiết kế: [business-logic-model](../../u06-ai-connections/functional-design/
 
 ## Trạng thái
 
-Plan theo unit 2026-10-15, chi tiết hóa ngày 2026-10-21 (Part 1); người dùng duyệt ngày 2026-10-21 ("duyet"). Bước 1–14 xong ngày 2026-10-22 (xem [code-summary](../../u06-ai-connections/code/code-summary.md)); bước 15 chờ người dùng duyệt. Nhánh git: `ai-connections` tạo từ `staging`; mỗi bước một commit scope `u06`. Code xong, test trên nhánh, Max2Min gộp vào `staging`.
+Plan theo unit 2026-10-15, chi tiết hóa ngày 2026-10-21 (Part 1); người dùng duyệt ngày 2026-10-21 ("duyet"). Bước 1–14 xong ngày 2026-10-22 (xem [code-summary](../../u06-ai-connections/code/code-summary.md)); bước 15: người dùng duyệt code ngày 2026-10-22; chờ Max2Min gộp vào `staging`. Nhánh git: `ai-connections` tạo từ `staging`; mỗi bước một commit scope `u06`. Code xong, test trên nhánh, Max2Min gộp vào `staging`.
 
 ## Ngữ cảnh unit
 
@@ -65,7 +65,7 @@ Unit test viết cùng bước tạo code; mỗi bước xong chạy lệnh như
 - [x] **Bước 12 — Frontend Admin (#10):** `AiConnectionsPanel`, `TeacherQuotaPanel` (`InstitutionalKeysSection`, `QuotaPolicySection`, `TeacherQuotaTable`, `SharedUsageTab`) đăng ký vào `settingsSectionRegistry`. Test component. Commit `feat(u06): add AI settings panels for administrators`.
 - [x] **Bước 13 — Hạ tầng và hướng dẫn:** biến `U06_AI_KEY_ENCRYPTION_KEY` trong compose, `.env.example`, runbook local; `docs/guides/ai-api-keys.md` (Gemini, OpenAI, Claude), `docs/guides/mcp-clients.md`. Commit `docs(u06): add AI key and MCP client guides`.
 - [x] **Bước 14 — Tài liệu:** `aidlc-docs/construction/u06-ai-connections/code/code-summary.md`; đánh dấu plan; cập nhật `aidlc-state.md`. Commit `docs(u06): add code summary and record U06 progress`.
-- [ ] **Bước 15 — Review:** đối chiếu UC 31–33, phần UC 14–15, story, BR-U06 với code; tóm tắt tuân thủ extension; người dùng duyệt; Max2Min gộp `ai-connections` vào `staging`.
+- [x] **Bước 15 — Review:** đối chiếu UC 31–33, phần UC 14–15, story, BR-U06 với code; tóm tắt tuân thủ extension; người dùng duyệt; Max2Min gộp `ai-connections` vào `staging`.
 
 ## Integration test cases (tester viết)
 
