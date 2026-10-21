@@ -80,6 +80,17 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- U13: PDF/OOXML text extraction; no OCR parsers. -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-pdf-module</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-microsoft-module</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
         <!-- U03: nhận dạng loại tệp, Google Drive -->
         <dependency>
             <groupId>org.apache.tika</groupId>
