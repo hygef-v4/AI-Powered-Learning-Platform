@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import "@/features/register";
 import { ClientRegistrations } from "./ClientRegistrations";
 import "./globals.css";
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
   description: "Nền tảng học tập có hỗ trợ AI",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // CSP nonces must be attached during request rendering, never static generation.
+  await connection();
   return (
     <html lang="vi" className="font-be-vietnam">
       <head>
