@@ -8,6 +8,7 @@ import edu.aiplatform.ai.application.IProviderGateway.ProviderException;
 import edu.aiplatform.ai.application.IProviderGateway.Request;
 import edu.aiplatform.ai.application.IProviderGateway.Response;
 import edu.aiplatform.ai.application.IProviderGateway.Usage;
+import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.domain.AiConnection;
@@ -27,10 +28,12 @@ import edu.aiplatform.jobs.contract.RetryableJobException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,6 +51,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     static final Duration QUEUE_TIMEOUT = Duration.ofMinutes(30);
     static final Duration STALE_PENDING = Duration.ofMinutes(5);
     static final int MAX_RESULT_CHARS = 1_000_000;
+    static final int SHARED_CONCURRENCY = 2;
 
     private final AiTaskRepository tasks;
     private final AiConnectionRepository connections;
@@ -61,6 +65,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private final ObjectMapper json;
     private final TransactionTemplate transactions;
     private final Clock clock;
+    /** API chung: tối đa 2 lời gọi đồng thời mỗi provider trong một worker (NFR-U06-03). */
+    private final Map<AiProvider, Semaphore> sharedSlots = new EnumMap<>(AiProvider.class);
 
     public AiTaskJobHandler(AiTaskRepository tasks, AiConnectionRepository connections, IProviderGateway gateway,
                             KeyCipher cipher, JsonSchemaChecker schemas, QuotaReservationService quota,
@@ -78,6 +84,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         this.json = json;
         this.transactions = new TransactionTemplate(transactionManager);
         this.clock = clock;
+        for (AiProvider provider : AiProvider.values()) {
+            sharedSlots.put(provider, new Semaphore(SHARED_CONCURRENCY));
+        }
     }
 
     // ---- IJobHandler ----------------------------------------------------------------------------------------
@@ -100,18 +109,42 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     @Override
     public void handle(JobMessage message) {
         UUID taskId = UUID.fromString(String.valueOf(message.payload().get("taskId")));
-        Dispatch dispatch;
-        try {
-            dispatch = transactions.execute(status -> start(taskId));
-        } catch (DataAccessException e) {
-            // Lỗi trước mốc gửi (database tạm lỗi): cho U03 thử lại (P2).
-            throw new RetryableJobException("Không bắt đầu được task AI", e);
+        // Lấy chỗ trước mốc gửi: hết chỗ thì U03 thử lại sau, task vẫn QUEUED nên không bị coi là đã gọi (P2).
+        Semaphore slot = sharedSlot(taskId);
+        if (slot != null && !slot.tryAcquire()) {
+            throw new RetryableJobException("API chung của nhà cung cấp đang đủ lời gọi đồng thời");
         }
-        if (dispatch != null) {
-            Outcome outcome = callProvider(dispatch);
-            transactions.executeWithoutResult(status -> finish(taskId, outcome));
+        try {
+            Dispatch dispatch;
+            try {
+                dispatch = transactions.execute(status -> start(taskId));
+            } catch (DataAccessException e) {
+                // Lỗi trước mốc gửi (database tạm lỗi): cho U03 thử lại (P2).
+                throw new RetryableJobException("Không bắt đầu được task AI", e);
+            }
+            if (dispatch != null) {
+                Outcome outcome = callProvider(dispatch);
+                transactions.executeWithoutResult(status -> finish(taskId, outcome));
+            }
+        } finally {
+            if (slot != null) {
+                slot.release();
+            }
         }
         deliverOrRetry(taskId);
+    }
+
+    /** Semaphore của provider khi task dùng API chung và còn chờ gọi; task cá nhân hay đã xong thì không giới hạn. */
+    private Semaphore sharedSlot(UUID taskId) {
+        try {
+            return tasks.findById(taskId)
+                    .filter(t -> t.source() == AiSource.SHARED && t.state() == AiTaskState.QUEUED)
+                    .flatMap(t -> t.provider() != null ? Optional.of(t.provider())
+                            : Optional.ofNullable(t.connectionId()).flatMap(connections::findById).map(AiConnection::provider))
+                    .map(sharedSlots::get).orElse(null);
+        } catch (DataAccessException e) {
+            throw new RetryableJobException("Không đọc được task AI", e);
+        }
     }
 
     @Override

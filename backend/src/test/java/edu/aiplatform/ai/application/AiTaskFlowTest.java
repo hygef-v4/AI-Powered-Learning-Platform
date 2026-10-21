@@ -231,6 +231,45 @@ class AiTaskFlowTest {
     }
 
     @Test
+    void sharedApiAllowsTwoConcurrentCallsPerProviderAndThirdWaitsStillQueued() throws Exception {
+        AiTaskView first = service.submit(request(teacher, AiSource.SHARED, null, "c1"));
+        AiTaskView second = service.submit(request(teacher, AiSource.SHARED, null, "c2"));
+        AiTaskView third = service.submit(request(teacher, AiSource.SHARED, null, "c3"));
+        java.util.concurrent.CountDownLatch inside = new java.util.concurrent.CountDownLatch(2);
+        java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+        doAnswer(c -> {
+            inside.countDown();
+            release.await(5, java.util.concurrent.TimeUnit.SECONDS);
+            return new Response("{\"score\":8}", "req", new Usage(10L, 5L, null, null));
+        }).when(gateway).call(eq(AiProvider.GEMINI), any());
+        java.util.List<Throwable> errors = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Thread a = new Thread(() -> run(first.taskId(), errors));
+        Thread b = new Thread(() -> run(second.taskId(), errors));
+        a.start();
+        b.start();
+        boolean both = inside.await(5, java.util.concurrent.TimeUnit.SECONDS);
+        assertThat(errors).as("lỗi của luồng").isEmpty();
+        assertThat(both).as("hai lời gọi đang chạy").isTrue();
+
+        assertThatThrownBy(() -> worker.handle(message(third.taskId()))).isInstanceOf(RetryableJobException.class);
+        assertThat(tasks.rows.get(third.taskId()).state()).as("chưa ghi mốc gửi").isEqualTo(AiTaskState.QUEUED);
+
+        release.countDown();
+        a.join(5000);
+        b.join(5000);
+        worker.handle(message(third.taskId()));
+        assertThat(tasks.rows.get(third.taskId()).state()).isEqualTo(AiTaskState.READY);
+    }
+
+    private void run(UUID taskId, List<Throwable> errors) {
+        try {
+            worker.handle(message(taskId));
+        } catch (Throwable t) {
+            errors.add(t);
+        }
+    }
+
+    @Test
     void redeliveredMessageAfterDispatchBecomesUnknownWithoutSecondCall() {
         AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
         AiTask queued = tasks.rows.get(view.taskId());
