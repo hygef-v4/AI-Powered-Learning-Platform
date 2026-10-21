@@ -56,7 +56,8 @@ class GroupWorkQueryServiceTest {
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupAccess access = new GroupAccess(authorization, classes, mock(IAudit.class), clock);
     private final GroupWorkQueryService service = new GroupWorkQueryService(documents, groups,
-            new GroupDocAccess(documents, groups, access, mock(IAssignmentQuery.class), clock), access, activity);
+            new GroupDocAccess(documents, groups, access, mock(IAssignmentQuery.class), clock), access, activity,
+            mock(IAssignmentQuery.class));
     private final ClassGroup g1 = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", member.accountId(), null, NOW, NOW,
             List.of(member.accountId()));
     private final ClassGroup g2 = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 2", null, null, NOW, NOW, List.of());

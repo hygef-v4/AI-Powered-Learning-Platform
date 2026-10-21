@@ -1,5 +1,7 @@
 package edu.aiplatform.groupdocs.application;
 
+import edu.aiplatform.assignments.contract.IAssignmentQuery;
+import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
 import edu.aiplatform.assignmentwork.contract.GroupWorkStatus;
 import edu.aiplatform.assignmentwork.contract.IActivityWrite;
@@ -45,9 +47,11 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
     private final GroupDocAccess docAccess;
     private final GroupAccess access;
     private final IActivityWrite activity;
+    private final IAssignmentQuery assignments;
 
     public GroupWorkQueryService(GroupDocumentRepository documents, GroupRepository groups, GroupDocAccess docAccess,
-                                 GroupAccess access, IActivityWrite activity) {
+                                 GroupAccess access, IActivityWrite activity, IAssignmentQuery assignments) {
+        this.assignments = assignments;
         this.documents = documents;
         this.groups = groups;
         this.docAccess = docAccess;
@@ -87,6 +91,15 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
         }).toList();
     }
 
+    /** Bài nhóm của lớp cho tab Students (khác biệt 7 của plan: lọc bài {@code GROUP} từ U07). */
+    @Transactional(readOnly = true)
+    public List<GroupAssignment> groupAssignments(Actor actor, UUID classId) {
+        access.requireTeacher(actor, classId);
+        return assignments.listForClass(classId).stream().filter(a -> a.submissionMode() == SubmissionMode.GROUP)
+                .map(a -> new GroupAssignment(a.assignmentId(), a.title(), a.status().name(), a.opensAt(), a.closesAt()))
+                .toList();
+    }
+
     /** Tiến độ từng nhóm của một bài nhóm cho giảng viên chính của lớp (BR-U12-52). */
     @Transactional(readOnly = true)
     public List<GroupProgress> progress(Actor actor, UUID classId, UUID assignmentId) {
@@ -123,6 +136,9 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
             throw ApiException.payloadTooLarge("GROUP_DOC_ACTIVITY_TOO_MANY", "Quá nhiều sự kiện trong một lần gửi");
         }
         activity.record(actor, new WorkRef(WorkKind.GROUP_DOCUMENT, documentId, ctx.document().classId()), events);
+    }
+
+    public record GroupAssignment(UUID assignmentId, String title, String status, Instant opensAt, Instant closesAt) {
     }
 
     public record SectionProgress(UUID id, String title, GroupSection.Status status, UUID holderId) {
