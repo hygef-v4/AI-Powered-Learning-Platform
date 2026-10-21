@@ -21,6 +21,7 @@ Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-gene
 | 12 | `df97b06` | Panel Admin trong Settings |
 | 13 | `7706f9c` | Biến môi trường, rewrite `/mcp` cho Next dev, runbook, hướng dẫn |
 | 15 | `7a624b6` | Sửa sau review: giới hạn độ dài tên tool MCP và ô tìm giảng viên, log lỗi tool chỉ ghi loại lỗi |
+| Build & Test | `eff4083` | API chung tối đa 2 lời gọi đồng thời mỗi provider trong một worker (NFR-U06-03) |
 
 ## Business logic
 

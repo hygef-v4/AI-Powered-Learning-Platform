@@ -400,5 +400,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - [x] Code Generation Part 1: plan chi tiết hóa, người dùng duyệt 2026-10-21.
 - [x] Code Generation Part 2: bước 1–13 và sửa sau review trên nhánh `ai-connections` (`43e983a`…`7a624b6`, chưa push).
 - [x] Bước 14: code-summary `construction/u06-ai-connections/code/code-summary.md`.
-- [x] Bước 15: người dùng duyệt code ngày 2026-10-22 ("Continue"); chờ Max2Min gộp `ai-connections` vào `staging`.
+- [x] Bước 15: người dùng duyệt code ngày 2026-10-22 ("Continue"); nhánh đã push lên `origin`, chờ Max2Min gộp vào `staging`.
+- [x] Build & Test (phần của unit): `construction/build-and-test/u06-verification.md`; thêm giới hạn 2 lời gọi đồng thời mỗi provider (NFR-U06-03, `eff4083`); integration test, đo hiệu năng, provider và agent thật còn mở.
+- Jira 2026-10-22: KAN-29, KAN-34, KAN-35, KAN-37 chuyển In Review; KAN-19 Done.
 - Ghi chú: `mvn -B verify` toàn backend có 4 lỗi integration test của unit khác do migration `V20260925_1500__create_grading_tables.sql` (U09, đã có trên `staging`) cần bảng `assignments` chưa tồn tại.

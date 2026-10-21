@@ -4933,3 +4933,11 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U06 Code Generation bước 15 → U12 Code Generation Part 2
 
 ---
+
+## Jira update and Build & Test U06
+**Timestamp**: 2026-10-21T21:45:00Z
+**User Input**: "lamf 2 3 ddi"
+**AI Response**: Jira: KAN-34, 35, 37, 29 (U06) và KAN-151, 62, 63, 64, 66, 28 (U12) chuyển In Review theo cách nhóm đang dùng; KAN-19 chuyển Done. Build & Test U06: rà NFR thấy thiếu giới hạn 2 lời gọi đồng thời mỗi provider của API chung (NFR-U06-03), thêm vào `AiTaskJobHandler` kèm test (eff4083); viết `build-and-test/u06-verification.md`. Phần U12 ghi trên nhánh `group-assignment`.
+**Context**: Construction, Build & Test U06
+
+---
