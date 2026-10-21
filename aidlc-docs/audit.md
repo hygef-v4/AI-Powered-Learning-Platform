@@ -4856,3 +4856,56 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction, U06 Code Generation Part 1
 
 ---
+
+## Code Generation - U06 plan approval
+**Timestamp**: 2026-10-21T01:00:00Z
+**User Input**: "duyet"
+**AI Response**: Plan U06 được duyệt, gồm 4 điểm khác thiết kế (MCP tự cài JSON-RPC, Flyway out-of-order, `UsageMeasurement.ESTIMATED`, hướng dẫn agent "chưa kiểm chứng"). Bắt đầu Part 2 trên nhánh `ai-connections`.
+**Context**: Construction, U06 Code Generation Part 1 → Part 2
+
+---
+
+## Code Generation - U06 steps 8–11 done, browser check retry
+**Timestamp**: 2026-10-21T18:10:00Z
+**User Input**: "Try again"
+**AI Response**: Khởi động lại preview (API giả + frontend dev), kiểm tra màn Kết nối AI, tạo agent và popup token, màn Lịch sử sử dụng AI; sửa chữ xuống dòng trong bảng API cá nhân. Đã commit bước 8 (41fd952), 9 (76ee288), 10 (3ed1b80, kèm sửa constructor `HttpProviderGateway` phát hiện khi chạy thử backend), 11 (a1fcfd7); tick bước 1–11 trong plan.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 continue step 12
+**Timestamp**: 2026-10-21T18:18:00Z
+**User Input**: "tiếp tục bước 12 đi"
+**AI Response**: Làm Bước 12: panel Admin `AiConnectionsPanel`, `TeacherQuotaPanel` (`InstitutionalKeysSection`, `QuotaPolicySection`, `TeacherQuotaTable`, `SharedUsageTab`) đăng ký vào `settingsSectionRegistry`.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 step 12 done
+**Timestamp**: 2026-10-21T18:40:00Z
+**AI Response**: Bước 12 xong (df97b06): `AiConnectionsPanel`, `TeacherQuotaPanel` đăng ký vào `settingsSectionRegistry`; khóa của trường, hạn mức chung, mức riêng giảng viên, tab Usage. Đổi tiêu đề thẻ backend thành "Hạn mức AI giảng viên". Frontend 305/305 test pass.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 remaining steps
+**Timestamp**: 2026-10-21T18:45:00Z
+**User Input**: "lam toan bo buoc con lai cho toi di"
+**AI Response**: Làm Bước 13 (hạ tầng, hướng dẫn), 14 (tài liệu), 15 (review và kiểm tra toàn bộ).
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 steps 13–15
+**Timestamp**: 2026-10-21T19:10:00Z
+**AI Response**: Bước 13 (7706f9c): biến `U06_AI_KEY_ENCRYPTION_KEY_V2`, rewrite `/mcp` cho Next dev, runbook `ai-key-encryption.md`, hướng dẫn `ai-api-keys.md`, `mcp-clients.md`. Review bước 15 sửa giới hạn độ dài tên tool MCP và ô tìm giảng viên, log lỗi tool chỉ ghi loại lỗi (7a624b6). Bước 14: code-summary, aidlc-state, plan. Kiểm tra: backend U06 90 test và ArchitectureTest pass; `mvn -B verify` 915 test, 33 bỏ qua, 4 lỗi do migration 1500 của U09 (cần bảng `assignments`); frontend 305 test, lint, typecheck, build pass.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 approval prompt
+**Timestamp**: 2026-10-21T19:15:00Z
+**AI Response**: Trình bày kết quả U06 và hỏi người dùng duyệt code (Request Changes hoặc Continue to Next Stage).
+**Context**: Construction, U06 Code Generation Part 2, bước 15
+
+---
