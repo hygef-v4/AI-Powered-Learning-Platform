@@ -36,6 +36,7 @@ public class McpServer {
     static final Set<String> PROTOCOLS = Set.of("2025-06-18", "2025-03-26");
     static final int MAX_ARGS_BYTES = 64 * 1024;
     static final int MAX_RESULT_BYTES = 256 * 1024;
+    static final int MAX_TOOL_NAME = 100;
     static final String TRUNCATED = "\n…[đã cắt vì vượt 256 KB]";
 
     static final int PARSE_ERROR = -32700;
@@ -138,10 +139,11 @@ public class McpServer {
     private ObjectNode toolsCall(McpPrincipal principal, JsonNode id, JsonNode params) {
         UUID accountId = principal.actor().accountId();
         UUID credentialId = principal.credential().id();
-        String name = params.path("name").asText(null);
-        if (name == null) {
-            return error(id, INVALID_PARAMS, "Thiếu tên tool");
+        JsonNode nameNode = params.path("name");
+        if (!nameNode.isTextual() || nameNode.asText().isBlank() || nameNode.asText().length() > MAX_TOOL_NAME) {
+            return error(id, INVALID_PARAMS, "Thiếu hoặc sai tên tool");
         }
+        String name = nameNode.asText();
         boolean allowed;
         try {
             allowed = rateLimiter.tryAcquire(credentialId);
@@ -189,7 +191,8 @@ public class McpServer {
             record(accountId, name, AuditResult.FAILURE, e.code());
             return result(id, toolResult(e.getMessage(), true));
         } catch (RuntimeException e) {
-            log.warn("Tool MCP {} lỗi: {}", name, e.toString());
+            // chỉ ghi loại lỗi: thông điệp có thể chứa dữ liệu học vụ (SECURITY-03)
+            log.warn("Tool MCP {} lỗi: {}", name, e.getClass().getName());
             usage.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
             record(accountId, name, AuditResult.FAILURE, "TOOL_ERROR");
             return result(id, toolResult("Tool gặp lỗi; hãy thử lại sau", true));

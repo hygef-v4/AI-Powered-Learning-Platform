@@ -354,6 +354,7 @@ function TeacherQuotaDialog({
           <TextInput
             id={ids.search}
             icon="search"
+            maxLength={100}
             value={teacher ? `${teacher.name} · ${teacher.email}` : query}
             onChange={(e) => {
               setTeacher(null);

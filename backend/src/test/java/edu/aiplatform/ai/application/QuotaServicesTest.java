@@ -156,6 +156,8 @@ class QuotaServicesTest {
         UUID student = UUID.randomUUID();
         when(accounts.getContact(student)).thenReturn(Optional.of(new AccountContact(student, "sv@fpt.edu.vn", "SV",
                 Role.STUDENT, AccountStatus.ACTIVE)));
+        assertThatThrownBy(() -> service.teacherCandidates(admin, "a".repeat(101)))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUERY_TOO_LONG"));
         assertThatThrownBy(() -> service.setTeacherQuota(admin, student, 1000L))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_NOT_TEACHER"));
         assertThatThrownBy(() -> service.savePolicy(admin, -1L, 10L, 1L))

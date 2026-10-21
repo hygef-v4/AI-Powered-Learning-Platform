@@ -136,6 +136,14 @@ class McpServerTest {
     }
 
     @Test
+    void toolNameMustBeShortText() {
+        assertThat(handle(Access.READ_ONLY, call("x".repeat(101), "{\"q\":\"x\"}")).at("/error/code").asInt()).isEqualTo(-32602);
+        assertThat(handle(Access.READ_ONLY, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":5}}")
+                .at("/error/code").asInt()).isEqualTo(-32602);
+        verify(limiter, never()).tryAcquire(any());
+    }
+
+    @Test
     void rateLimitAndLimiterFailureRefuseTheCall() {
         when(limiter.tryAcquire(any())).thenReturn(false);
         assertThat(handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}")).at("/error/code").asInt())

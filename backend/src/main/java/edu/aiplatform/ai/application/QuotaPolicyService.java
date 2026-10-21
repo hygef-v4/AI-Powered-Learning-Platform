@@ -42,6 +42,7 @@ public class QuotaPolicyService {
 
     static final Set<Role> TEACHING = EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER);
     static final long MAX_TOKENS = 1_000_000_000L;
+    static final int MAX_QUERY = 100;
 
     private final QuotaRepository quota;
     private final QuotaReservationService reservations;
@@ -131,7 +132,11 @@ public class QuotaPolicyService {
     @Transactional(readOnly = true)
     public List<AccountContact> teacherCandidates(Actor actor, String query) {
         access.require(actor, Actions.AI_ADMIN);
-        return accounts.findAccounts(query == null ? "" : query.trim(), TEACHING, 20);
+        String q = query == null ? "" : query.trim();
+        if (q.length() > MAX_QUERY) {
+            throw ApiException.badRequest("AI_QUERY_TOO_LONG", "Từ khóa tìm tối đa 100 ký tự");
+        }
+        return accounts.findAccounts(q, TEACHING, 20);
     }
 
     /** Tổng hợp API chung (BR-U06-41): hôm nay trên trần, tổng kỳ, số giảng viên đã dùng, theo ngày, người, model. */
