@@ -1,4 +1,4 @@
-// U06: nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager. Màn chưa làm thì link tạm chưa mở được.
+// U06: nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager.
 
 import { accountMenuEntries } from "@/features/identity/slots";
 
