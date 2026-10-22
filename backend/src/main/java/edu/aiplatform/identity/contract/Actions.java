@@ -67,6 +67,11 @@ public final class Actions {
     // U11 — làm Quiz Practice: chỉ sinh viên đang học lớp (R5, BR-U11-01)
     public static final String QUIZ_PRACTICE = "QUIZ_PRACTICE";
 
+    public static final String MATERIAL_SUBJECT_MANAGE = "MATERIAL_SUBJECT_MANAGE";
+    public static final String MATERIAL_CLASS_MANAGE = "MATERIAL_CLASS_MANAGE";
+    public static final String MATERIAL_STAFF_READ = "MATERIAL_STAFF_READ";
+    public static final String MATERIAL_STUDENT_READ = "MATERIAL_STUDENT_READ";
+
     private Actions() {
     }
 }
