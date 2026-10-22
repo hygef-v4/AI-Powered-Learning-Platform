@@ -89,16 +89,19 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     }
   };
 
+  // Kiểm cả cấu hình lẫn điểm trước khi gọi API; lỗi phía trình duyệt báo thẳng, không ném cho `run` (chỉ dịch lỗi API).
   const save = () => detail && settings && void run(async () => {
-    let current = detail;
-    if (settingsDirty) {
-      const { errors, input } = settingsInput(settings);
-      setSettingsErrors(errors);
-      if (!input) throw new Error("Cấu hình chưa hợp lệ.");
-      current = await updateQuizDetails(current.quiz.id, input, current.quiz.version);
+    const { errors, input } = settingsDirty ? settingsInput(settings) : { errors: {}, input: undefined };
+    setSettingsErrors(errors);
+    const invalid = settingsDirty && !input ? "Cấu hình chưa hợp lệ."
+      : itemsDirty && items.some((d) => !validPoints(d.points)) ? "Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân." : null;
+    if (invalid) {
+      setNotice({ tone: "danger", text: invalid });
+      return;
     }
+    let current = detail;
+    if (input) current = await updateQuizDetails(current.quiz.id, input, current.quiz.version);
     if (itemsDirty) {
-      if (items.some((d) => !validPoints(d.points))) throw new Error("Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân.");
       current = await saveQuizItems(current.quiz.id, items.map((d) => ({ questionId: d.item.question.id,
         points: Number(d.points.replace(",", ".")) })), current.quiz.version);
     }

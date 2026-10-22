@@ -261,3 +261,10 @@ Làm cùng G3 của U11 (plan U11 giai đoạn 6, K1–K3).
   - `QuizServicesTest`: chưa đặt thời hạn; thiếu lời báo; bật được; duyệt khi thời hạn bị xóa; tắt khi U03 lỗi; bật khi U03 lỗi.
   - `QuizScreens.test.tsx`: công tắc khóa hoặc mở theo cờ; thiếu lời báo thì không gửi.
 - **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.
+
+## Lỗi phát hiện
+
+1. **Đã sửa (2026-10-22, nhánh `fix/quiz-detail-client-validation-banner`)** — `QuizDetailPage` báo "Hệ thống tạm bận, vui lòng thử lại sau." khi form không hợp lệ phía trình duyệt.
+   - Nguyên nhân: `save` ném `Error` thường ("Cấu hình chưa hợp lệ.", "Điểm mỗi câu phải lớn hơn 0…"), còn `errorMessage` chỉ đọc `ApiError` nên biến mọi lỗi khác thành câu "hệ thống tạm bận". Có từ giai đoạn 2; lỗi theo trường vẫn hiện đúng, chỉ banner sai.
+   - Sửa: `save` kiểm cấu hình và điểm trước khi gọi API, sai thì đặt thẳng banner với đúng thông điệp. Trước đây cấu hình hợp lệ mà điểm sai thì cấu hình đã lưu nhưng màn hình giữ `version` cũ, lần lưu sau dính `409`; nay không gọi API nào. `run`, `errorMessage` và cách xử lý `ApiError` (`409 QUIZ_VERSION_CONFLICT` tải lại, `violations`) giữ nguyên.
+   - Test: `QuizScreens.test.tsx` thêm "điểm sai thì báo đúng lỗi…"; test E3 kiểm thêm banner "Cấu hình chưa hợp lệ." và không có "Hệ thống tạm bận". Hai test thất bại trên code cũ. Frontend lint, typecheck, 438 test, build đạt.
