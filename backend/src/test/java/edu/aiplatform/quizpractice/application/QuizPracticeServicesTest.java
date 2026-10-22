@@ -296,6 +296,21 @@ class QuizPracticeServicesTest {
     }
 
     @Test
+    void materialListShowsLinkedOpenQuizzesWithOwnAttemptsForEnrolledClassOnly() {
+        UUID material = UUID.randomUUID();
+        when(quizzes.listByMaterial(material, classA)).thenAnswer(call -> List.of(quiz()));
+        submitFresh(student);
+
+        assertThat(queries.byMaterial(student, classA, material)).singleElement().satisfies(row -> {
+            assertThat(row.quizId()).isEqualTo(quizId);
+            assertThat(row.attemptsUsed()).isEqualTo(1);
+        });
+        assertThat(queries.byMaterial(student, classA, UUID.randomUUID())).isEmpty();
+        assertThat(api(() -> queries.byMaterial(student, classB, material)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> queries.byMaterial(teacher, classA, material)).status()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void teacherSeesClassStudentsAttemptsReadOnly() {
         UUID attemptId = submitFresh(student);
         var list = teacherService.list(teacher, classA, quizId);

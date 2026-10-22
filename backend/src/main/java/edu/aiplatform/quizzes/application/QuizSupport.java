@@ -62,6 +62,13 @@ class QuizSupport {
         }
     }
 
+    /** Hỏi quyền sửa Quiz mà không ghi từ chối (dùng khi nhận kết quả AI, H6). */
+    boolean canManage(Actor actor, Quiz quiz) {
+        return quiz.scope() == QuizScope.SUBJECT
+                ? access.allows(actor, Actions.QUIZ_SUBJECT_MANAGE, ResourceRef.subject(quiz.subjectId()))
+                : access.allows(actor, Actions.QUIZ_CLASS_MANAGE, ResourceRef.courseClass(quiz.classId()));
+    }
+
     Quiz loadManaged(Actor actor, UUID id) {
         Quiz quiz = load(id);
         requireManage(actor, quiz);

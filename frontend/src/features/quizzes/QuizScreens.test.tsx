@@ -33,6 +33,8 @@ vi.mock("./api", () => ({
   cloneQuiz: vi.fn(),
   createQuizVersion: vi.fn(),
   deleteQuiz: vi.fn(),
+  getQuizMaterials: vi.fn(() => Promise.resolve([])),
+  getQuizDrafts: vi.fn(() => Promise.resolve([])),
 }));
 
 const push = vi.fn();
@@ -176,8 +178,8 @@ describe("ClassQuizzesSection", () => {
 describe("settingsInput (BR-U10-15)", () => {
   it("kiểm thời gian, số lượt và chuyển sang dữ liệu gửi API", () => {
     const form = settingsFormOf(INFO);
-    expect(settingsInput({ ...form, timeLimit: "301", maxAttempts: "0" }, []).errors).toMatchObject({ timeLimit: expect.any(String), maxAttempts: expect.any(String) });
-    const { input } = settingsInput({ ...form, timeLimit: "45", maxAttempts: "", instructions: "  " }, []);
+    expect(settingsInput({ ...form, timeLimit: "301", maxAttempts: "0" }).errors).toMatchObject({ timeLimit: expect.any(String), maxAttempts: expect.any(String) });
+    const { input } = settingsInput({ ...form, timeLimit: "45", maxAttempts: "", instructions: "  " });
     expect(input?.settings).toMatchObject({ timeLimitMinutes: 45, maxAttempts: null });
     expect(input?.instructions).toBeNull();
   });

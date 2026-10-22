@@ -102,7 +102,9 @@ class QuizServicesTest {
         QuizAccess access = new QuizAccess(authorization, audit);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access,
                 new ActiveSubjects(subjects));
-        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit, clock);
+        QuizReferenceMaterials materials = new QuizReferenceMaterials(new FakeReferenceMaterial(), support, access);
+        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
+                materials, clock);
         publication = new QuizPublicationService(store.quizRepository, support, listeners, events::add, audit, clock);
         copies = new QuizCopyService(store.quizRepository, store.questionRepository, classScope, support, access, audit, clock);
         scorer = new QuizScorer(store.quizRepository, store.questionRepository);

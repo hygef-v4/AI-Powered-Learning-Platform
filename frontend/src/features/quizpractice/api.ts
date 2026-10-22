@@ -8,6 +8,11 @@ export function getPracticeHistory(classId?: string | null, signal?: AbortSignal
   return apiFetch<PracticeQuizRow[]>(`/api/v1/me/quizzes${classId ? `?classId=${enc(classId)}` : ""}`, { signal });
 }
 
+/** Quiz đang mở gắn một học liệu cho lớp đang học (G4). */
+export function getMaterialQuizzes(classId: string, materialId: string, signal?: AbortSignal): Promise<PracticeQuizRow[]> {
+  return apiFetch<PracticeQuizRow[]>(`/api/v1/me/quizzes?classId=${enc(classId)}&materialId=${enc(materialId)}`, { signal });
+}
+
 export function getPracticeQuiz(quizId: string, classId: string, signal?: AbortSignal): Promise<PracticeQuizDetail> {
   return apiFetch<PracticeQuizDetail>(`/api/v1/me/quizzes/${enc(quizId)}?classId=${enc(classId)}`, { signal });
 }

@@ -112,6 +112,12 @@ class QuizPracticeControllerTest {
     void readEndpointsAndActivityValidateInput() throws Exception {
         mvc.perform(get("/api/v1/me/quizzes/{q}", quizId)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/me/quizzes").param("other", "1")).andExpect(status().isBadRequest());
+        UUID material = UUID.randomUUID();
+        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString())
+                .param("classId", quizId.toString())).andExpect(status().isOk());
+        verify(queries).byMaterial(student, quizId, material);
         mvc.perform(post("/api/v1/quiz-attempts/{a}/activity", attemptId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"events\":[{\"sessionId\":\"" + UUID.randomUUID() + "\",\"clientEventId\":\"e1\","
                                 + "\"sequence\":1,\"kind\":\"HIDDEN\",\"clientTime\":\"2026-10-20T08:00:00Z\"}]}"))

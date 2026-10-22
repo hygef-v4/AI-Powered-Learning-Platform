@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Icon, Pill, Section, Select, Switch, TextInput } from "@/shared/ui";
+import { MaterialRefPicker } from "./AiDraftTargets";
 import { formatPoints, TYPE_LABELS } from "./labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
@@ -122,6 +123,7 @@ export type SettingsForm = {
   showCorrectAnswers: boolean;
   activityMonitoringEnabled: boolean;
   activityNotice: string;
+  materialIds: string[];
 };
 
 export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
@@ -137,11 +139,12 @@ export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
     showCorrectAnswers: s.showCorrectAnswers,
     activityMonitoringEnabled: quiz.activityMonitoringEnabled,
     activityNotice: quiz.activityNotice ?? "",
+    materialIds: [...quiz.referenceMaterialIds],
   };
 }
 
 /** Kiểm cấu hình theo BR-U10-15; trả lỗi theo trường hoặc dữ liệu gửi API. */
-export function settingsInput(form: SettingsForm, materials: string[]): { errors: Record<string, string>; input?: QuizDetailsInput } {
+export function settingsInput(form: SettingsForm): { errors: Record<string, string>; input?: QuizDetailsInput } {
   const errors: Record<string, string> = {};
   if (!form.title.trim() || form.title.trim().length > 200) errors.title = "Tên quiz từ 1 đến 200 ký tự";
   const time = form.timeLimit.trim() === "" ? null : Number(form.timeLimit);
@@ -165,13 +168,14 @@ export function settingsInput(form: SettingsForm, materials: string[]): { errors
       settings,
       activityMonitoringEnabled: form.activityMonitoringEnabled,
       activityNotice: form.activityNotice.trim() || null,
-      referenceMaterialIds: materials,
+      referenceMaterialIds: form.materialIds,
     },
   };
 }
 
 /** "Cấu hình" (BR-U10-15); theo dõi hoạt động chưa bật được khi chưa có thời hạn lưu (E3). */
-export function QuizSettingsPanel({ value, onChange, errors, readOnly, maxScore }: {
+export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, maxScore }: {
+  quizId: string;
   value: SettingsForm;
   onChange: (value: SettingsForm) => void;
   errors: Record<string, string>;
@@ -212,6 +216,7 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly, maxScore 
         <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động"
           disabled={readOnly || !value.activityMonitoringEnabled} />
         <p className="text-[11px] text-muted">Ghi nhận hoạt động chỉ bật được khi quản trị viên đã đặt thời hạn lưu dữ liệu hoạt động.</p>
+        <MaterialRefPicker quizId={quizId} value={value.materialIds} onChange={(ids) => set("materialIds", ids)} readOnly={readOnly} />
         <p className="text-[13px] font-semibold text-ink">Tổng điểm: {formatPoints(maxScore)}</p>
       </fieldset>
     </Section>

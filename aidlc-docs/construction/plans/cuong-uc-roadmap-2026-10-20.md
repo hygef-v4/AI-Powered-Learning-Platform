@@ -77,8 +77,8 @@ Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt
 
 ### Giai đoạn 4 — AI và MCP của U10 (phần còn lại của UC 47, 48)
 
-- [ ] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06. Plan chi tiết: [U10 giai đoạn 4](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (H1–H10), nhánh `quiz-ai-mcp`.
-- [ ] Bộ chọn tài liệu tham khảo (U10) và `MaterialQuizList` (U11, G4) trên U13 đã có ở `staging`.
+- [x] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06. Plan chi tiết: [U10 giai đoạn 4](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (H1–H10), nhánh `quiz-ai-mcp`.
+- [x] Bộ chọn tài liệu tham khảo (U10) và `MaterialQuizList` (U11, G4) trên U13 đã có ở `staging`. Code xong và được duyệt ngày 2026-10-22, commit local trên `quiz-ai-mcp`.
 - [ ] Chạy thật khi U06 có code; trước đó chỉ test với stub.
 
 Tình trạng 2026-10-22: contract U06 trên `staging` đã đủ cho bước này (U09 đã cài `IAiTaskResultHandler`, `IMcpToolProvider` theo cùng cách); U13 đã cài `IReferenceMaterial` trên `staging`. Code U06 (`AiTaskService`, `AiSourcePicker`) mới ở nhánh `ai-connections`, chưa merge.

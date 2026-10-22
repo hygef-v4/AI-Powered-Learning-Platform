@@ -55,7 +55,7 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 ## Khác với thiết kế
 
 - Chưa gắn `useActivityTracker` phía trình duyệt (U08 chưa có); API ghi hoạt động đã có (G3). Quiz hiện chưa bật được theo dõi (E3 của U10).
-- Chưa có `MaterialQuizList` và lọc `materialId` (U13 chưa có) (G4).
+- `MaterialQuizList` và lọc `materialId` (G4) làm ở giai đoạn 4, xem mục cuối.
 - Số lượt tính theo từng version Quiz (G6).
 - Phần Lượt làm trên Quiz Detail chỉ hiện khi mở từ lớp (G7).
 - Lượt bị từ chối khi bắt đầu (hết lượt, Quiz đã ngưng) ghi `QUIZ_SUBMIT_REJECTED` với lý do.
@@ -105,4 +105,12 @@ Lỗi và điểm cần quyết định (chưa sửa):
 ## Còn lại
 
 - Integration test (hết giờ khi đang làm, Quiz bị ngưng khi có lượt, hai tab lưu cùng lượt, phân quyền 4 role) do tester viết; chốt điểm 1 ở mục trên.
-- Gắn tracker hoạt động khi U08 xong; `MaterialQuizList` khi U13 xong.
+- Gắn tracker hoạt động khi U08 xong.
+
+## G4 — Quiz gắn học liệu (giai đoạn 4, 2026-10-22)
+
+Làm trên nhánh `quiz-ai-mcp` cùng giai đoạn 4 của U10, sau khi U13 có slot `LearningMaterialSection` trên `staging`.
+
+- API: `GET /api/v1/me/quizzes?classId=&materialId=` (`materialId` cần kèm `classId`, không có thì `400`) → `QuizPracticeQueryService.byMaterial`: sinh viên của lớp đang mở; Quiz `OPEN` gắn học liệu qua `IQuizQuery.listByMaterial`; số lượt đã dùng, điểm cao nhất của mình.
+- Frontend: `MaterialQuizList` đăng ký `learningMaterialSections`. Hiện "Practice · n phút · Đã dùng x / y lượt · Điểm cao nhất", nút Làm quiz/Làm tiếp; hết lượt thì báo; không phải sinh viên hoặc không có Quiz thì không hiện. Chưa có số câu trên dòng vì `QuizView` không có số câu.
+- Test: `QuizPracticeServicesTest` (1 test), `QuizPracticeControllerTest` (thêm kiểm `materialId`), `MaterialQuizList.test.tsx` (3 test).

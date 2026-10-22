@@ -160,46 +160,46 @@ Không cần action mới: AI cho Quiz dùng `QUIZ_SUBJECT_MANAGE` hoặc `QUIZ_
 ### Checklist giai đoạn 4
 
 - [x] **4.0 Commit tài liệu đang chờ** (H10).
-- [ ] **4.1 Domain và repository:**
+- [x] **4.1 Domain và repository:**
   - `QuizAiDraft`: đích, nguồn, trạng thái `PENDING → READY | FAILED`, `READY → ACCEPTED | DISCARDED`.
   - `DraftQuestion`, `IQuizAiDraftRepository`.
   - `JdbcQuizAiDraftRepository`: `proposal`, `provenance` dạng `jsonb`; đổi trạng thái có điều kiện.
-- [ ] **4.2 Prompt:** `QuizDraftPrompt` dựng `AiPrompt` và schema, đọc kết quả thành `DraftQuestion` kèm lỗi từng câu (H5).
-- [ ] **4.3 Dịch vụ đề xuất:** `QuizAiDraftService` (F4, F8) gồm:
+- [x] **4.2 Prompt:** `QuizDraftPrompt` dựng `AiPrompt` và schema, đọc kết quả thành `DraftQuestion` kèm lỗi từng câu (H5).
+- [x] **4.3 Dịch vụ đề xuất:** `QuizAiDraftService` (F4, F8) gồm:
   - gửi yêu cầu cho ngân hàng và cho Quiz (H2);
   - xem, liệt kê, đồng bộ `PENDING`;
   - chấp nhận (H4), bỏ.
-- [ ] **4.4 Nhận kết quả:** `QuizDraftResultHandler` cài `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT` (H6).
-- [ ] **4.5 MCP:** `QuizMcpTools` cài `IMcpToolProvider` (F13, H7).
-- [ ] **4.6 Tài liệu tham khảo:** `QuizReferenceMaterials` (H8) gồm:
+- [x] **4.4 Nhận kết quả:** `QuizDraftResultHandler` cài `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT` (H6).
+- [x] **4.5 MCP:** `QuizMcpTools` cài `IMcpToolProvider` (F13, H7).
+- [x] **4.6 Tài liệu tham khảo:** `QuizReferenceMaterials` (H8) gồm:
   - danh sách chọn được;
   - kiểm id trong `updateDetails`;
   - lấy chữ cho prompt.
-- [ ] **4.7 API U10:** thêm vào `QuizController`, `QuestionController`:
+- [x] **4.7 API U10:** thêm vào `QuizController`, `QuestionController`:
   - `/ai-drafts`, `/question-ai-drafts`, `/reference-materials`;
   - mã lỗi `AI_DRAFT_NOT_FOUND` (404), `AI_DRAFT_CLOSED` (409), `AI_DRAFT_INVALID` (422, lỗi theo câu), `MATERIAL_NOT_SELECTABLE`, `MATERIAL_SERVICE_UNAVAILABLE`;
   - lỗi của U06 trả nguyên mã.
-- [ ] **4.8 API U11:** `QuizPracticeQueryService`, `QuizPracticeController` nhận `materialId` (H9).
-- [ ] **4.9 Unit test backend:**
+- [x] **4.8 API U11:** `QuizPracticeQueryService`, `QuizPracticeController` nhận `materialId` (H9).
+- [x] **4.9 Unit test backend:**
   - Đề xuất: stub `FAILED` thì đề xuất `FAILED`; gửi trùng `requestRef` không tạo hai đề xuất; `GET` đồng bộ task đã lỗi.
   - `onReady`: Quiz đã phát hành thì `REJECTED`; người yêu cầu mất quyền thì `REJECTED`; đề xuất đã bỏ thì `STALE`.
   - Chấp nhận: câu sai bị từ chối; `version` cũ trả `409`; vượt 200 câu bị từ chối; ngân hàng tạo câu `DRAFT`; audit.
   - MCP: từ chối người học và lớp khác; tham số lạ; `expectedVersion` lệch.
   - Tài liệu: id không chọn được; U13 lỗi chỉ chặn id mới.
   - `listByMaterial` theo lớp; MockMvc cho API mới; repository trên PostgreSQL (Testcontainers).
-- [ ] **4.10 Frontend U10:**
+- [x] **4.10 Frontend U10:**
   - `AiSourceSelect` (H1);
   - `QuestionAiDraftDialog` (nút "Tạo nháp bằng AI" trên Question List);
   - `QuizAiDraftPanel` (Quiz Detail, Quiz `DRAFT`), cả hai dùng chung `DraftProposalList` (sửa, bỏ, chấp nhận từng câu; hỏi lại mỗi 3 giây khi `PENDING`);
   - `MaterialRefPicker` trong `QuizSettingsPanel`;
   - `data-testid`.
-- [ ] **4.11 Frontend U11:** `MaterialQuizList` đăng ký `learningMaterialSections` (Đã dùng x/y lượt, điểm cao nhất, Làm quiz, hết lượt).
-- [ ] **4.12 Unit test frontend:** popup AI gửi đúng nguồn và tài liệu; danh sách đề xuất chấp nhận câu đã sửa, `409` tải lại; picker giới hạn 10; `MaterialQuizList` hết lượt.
-- [ ] **4.13 Kiểm và tài liệu:**
+- [x] **4.11 Frontend U11:** `MaterialQuizList` đăng ký `learningMaterialSections` (Đã dùng x/y lượt, điểm cao nhất, Làm quiz, hết lượt).
+- [x] **4.12 Unit test frontend:** popup AI gửi đúng nguồn và tài liệu; danh sách đề xuất chấp nhận câu đã sửa, `409` tải lại; picker giới hạn 10; `MaterialQuizList` hết lượt.
+- [x] **4.13 Kiểm và tài liệu:** (backend còn 4 lỗi Flyway do migration `grading` của U09 trên `staging`, xem code-summary)
   - đủ bước CI (backend `mvn -B verify`; frontend lint, typecheck, test, build);
   - code-summary U10, U11;
   - tick checklist, lộ trình, `aidlc-state.md`.
-- [ ] **4.14 Review:** đối chiếu UC 47, 48 (phần AI), BR-U10-40…42 và G4 với code; người dùng duyệt.
+- [x] **4.14 Review:** người dùng duyệt code giai đoạn 4 ngày 2026-10-22. đối chiếu UC 47, 48 (phần AI), BR-U10-40…42 và G4 với code; người dùng duyệt.
 
 ## Integration test cases (tester viết)
 

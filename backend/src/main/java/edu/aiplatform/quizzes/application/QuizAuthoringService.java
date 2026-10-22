@@ -55,15 +55,17 @@ public class QuizAuthoringService {
     private final QuizSupport support;
     private final QuizAccess access;
     private final QuizAudit audit;
+    private final QuizReferenceMaterials materials;
     private final Clock clock;
 
     public QuizAuthoringService(IQuizRepository quizzes, IQuestionRepository questions, QuizSupport support,
-                                QuizAccess access, QuizAudit audit, Clock clock) {
+                                QuizAccess access, QuizAudit audit, QuizReferenceMaterials materials, Clock clock) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.support = support;
         this.access = access;
         this.audit = audit;
+        this.materials = materials;
         this.clock = clock;
     }
 
@@ -140,6 +142,10 @@ public class QuizAuthoringService {
             throw ApiException.conflict("ACTIVITY_RETENTION_NOT_SET",
                     "Chưa đặt thời hạn lưu dữ liệu hoạt động nên chưa bật được ghi nhận hoạt động");
         }
+        // H8: chỉ kiểm tài liệu mới gắn, để U13 lỗi không chặn lưu các thay đổi khác (BR-U10-52).
+        List<UUID> added = details.referenceMaterialIds() == null ? List.of() : details.referenceMaterialIds().stream()
+                .filter(m -> !quiz.referenceMaterialIds().contains(m)).distinct().toList();
+        materials.requireSelectable(actor, QuizReferenceMaterials.scopeOf(quiz), added, false);
         Quiz changed = quiz.withDetails(title, blankToNull(details.instructions()), details.settings(),
                 details.activityMonitoringEnabled(), blankToNull(details.activityNotice()),
                 details.referenceMaterialIds(), clock.instant());

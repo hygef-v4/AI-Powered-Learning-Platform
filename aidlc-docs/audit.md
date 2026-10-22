@@ -4968,3 +4968,23 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U10 Code Generation Part 1 approved; Part 2 started.
 
 ---
+
+## 2026-10-22T05:10:00Z — U10 phase 4 code generated, awaiting review
+
+**User Input**: (none since approval)
+
+**AI Response**: Implemented steps 4.1–4.13 on `quiz-ai-mcp` (uncommitted): QuizAiDraft domain/repository, QuizDraftPrompt, QuizAiDraftService, QuizDraftResultHandler, QuizMcpTools, QuizReferenceMaterials, U10 AI draft and reference-material APIs, U11 `materialId` filter; frontend AiDraftDialog, QuestionAiDraftDialog, QuizAiDraftPanel, MaterialRefPicker, MaterialQuizList. Checks: frontend lint, typecheck, 331 tests, build pass. Backend `mvn -B verify` (JDK 17): 930 tests, 4 errors, all Flyway failures from `grading/V20260925_1500` (U09 on staging) referencing `assignments` (U07, unmerged) — pre-existing on staging; quiz integration tests pass (17) when that migration is excluded from target. Presented completion message for step 4.14 review.
+
+**Context**: Construction — U10 Code Generation Part 2 (phase 4) complete, awaiting approval.
+
+---
+
+## 2026-10-22T05:30:00Z — U10 phase 4 code approved
+
+**User Input**: "Duyệt code giai đoạn 4. Commit local trên nhánh quiz-ai-mcp."
+
+**AI Response**: Recorded approval (step 4.14) in the plan, aidlc-state and roadmap. GitHub Desktop had stashed all phase 4 work into stash@{0} at 10:57 while switching branches, so a first commit (13abdd8) only held documentation; reset that unpushed commit, re-applied stash@{0} (stash kept), and committed phase 4 code and documentation locally on `quiz-ai-mcp`. Not pushed.
+
+**Context**: Construction — U10 Code Generation (phase 4) approved.
+
+---
