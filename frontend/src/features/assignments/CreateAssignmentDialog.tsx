@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Dialog, Field, Pill } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Icon, Pill } from "@/shared/ui";
 import { assignmentsApi, type CreateInput } from "./api";
+import { Choice } from "./Choice";
 import { errorMessage } from "./format";
 import { statusLabels, type AssignmentDetail, type CopySource, type GradingMode, type SubmissionMode } from "./types";
 
@@ -10,74 +11,84 @@ type Props = {
   /** Lớp đích (bài của lớp) hoặc môn (bài của môn). */
   target: { kind: "class"; classId: string; groupSupported: boolean } | { kind: "subject"; subjectId: string };
   onClose: () => void;
-  /** {@code importDocx}: người soạn chọn tạo từ tệp DOCX, trang soạn mở sẵn hộp nhập DOCX. */
-  onCreated: (assignment: AssignmentDetail, options: { importDocx: boolean }) => void;
+  /** Bài đã tạo (đã nhập sẵn tệp DOCX nếu người soạn chọn tệp). */
+  onCreated: (assignment: AssignmentDetail) => void;
 };
 
-type Method = "new" | "docx" | "copy";
-
-function Choice<T extends string>({ name, value, options, onChange, disabled }: {
-  name: string;
-  value: T;
-  options: { value: T; label: string; hint?: string; disabled?: boolean }[];
-  onChange: (value: T) => void;
-  disabled?: boolean;
-}) {
+/** Ô chọn tệp DOCX (tùy chọn): chọn xong chỉ hiện tên tệp, bấm ✕ để bỏ. */
+function DocxField({ file, onChange, disabled }: { file: File | null; onChange: (file: File | null) => void; disabled?: boolean }) {
+  if (file) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-line-strong px-3 py-2 text-[13px]" data-testid="docx-file">
+        <Icon name="description" size={18} className="text-primary" />
+        <span className="min-w-0 flex-1 truncate text-ink" title={file.name}>{file.name}</span>
+        <button type="button" aria-label="Bỏ tệp" disabled={disabled} onClick={() => onChange(null)}
+          className="inline-flex size-6 items-center justify-center rounded-md text-muted hover:bg-shell hover:text-ink">
+          <Icon name="close" size={16} />
+        </button>
+      </div>
+    );
+  }
   return (
-    <div role="radiogroup" aria-label={name} className="grid grid-cols-2 gap-2">
-      {options.map((option) => (
-        <label key={option.value} className={`flex cursor-pointer flex-col gap-0.5 rounded-xl border px-3 py-2 text-[13px] ${value === option.value ? "border-primary bg-primary-soft" : "border-line-strong"} ${option.disabled || disabled ? "cursor-not-allowed opacity-50" : ""}`}>
-          <span className="flex items-center gap-2 font-semibold text-ink">
-            <input type="radio" name={name} checked={value === option.value} disabled={option.disabled || disabled}
-              onChange={() => onChange(option.value)} />
-            {option.label}
-          </span>
-          {option.hint && <span className="text-[11px] text-muted">{option.hint}</span>}
-        </label>
-      ))}
-    </div>
+    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line-strong px-3 py-2 text-[13px] text-muted hover:border-primary hover:text-primary">
+      <Icon name="upload_file" size={18} />Tệp DOCX
+      <input type="file" accept=".docx" className="sr-only" aria-label="Tệp DOCX" data-testid="create-docx" disabled={disabled}
+        onChange={(event) => { onChange(event.target.files?.[0] ?? null); event.target.value = ""; }} />
+    </label>
   );
 }
 
 /**
- * t21b Tạo bài tập (F3, F13): tạo mới, tạo từ tệp DOCX hoặc copy bài lớp khác; hình thức và chế độ (BR-U07-01…03).
- * Không còn chọn có sơ đồ hay không: sơ đồ Draw.io luôn dùng được (yêu cầu 2026-10-21).
+ * t21b Tạo bài tập (F3, F13): hình thức, chế độ (BR-U07-01…03) và một ô tệp DOCX tùy chọn; có tệp thì tạo xong nhập
+ * luôn tệp vào khung rồi mới mở trang soạn (yêu cầu 2026-10-22, không còn bước xem trước nội dung tệp). Bài của lớp
+ * còn copy được từ lớp khác. Không còn chọn có sơ đồ hay không: sơ đồ Draw.io luôn dùng được (yêu cầu 2026-10-21).
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
-  const [method, setMethod] = useState<Method>("new");
+  const [copying, setCopying] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [submissionMode, setSubmissionMode] = useState<SubmissionMode>("INDIVIDUAL");
   const [gradingMode, setGradingMode] = useState<GradingMode>("GRADED");
   const [sources, setSources] = useState<CopySource[] | null>(null);
   const [sourceId, setSourceId] = useState("");
+  // Bài đã tạo mà nhập tệp chưa được: thử lại chỉ nhập lại tệp, không tạo thêm bài.
+  const [created, setCreated] = useState<AssignmentDetail | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const groupAllowed = target.kind === "class" && target.groupSupported;
   const classId = target.kind === "class" ? target.classId : null;
 
   useEffect(() => {
-    if (method !== "copy" || !classId) return;
+    if (!copying || !classId) return;
     const controller = new AbortController();
     assignmentsApi.copySources(classId, controller.signal).then(setSources, (e) => {
       if (!controller.signal.aborted) setError(errorMessage(e));
     });
     return () => controller.abort();
-  }, [method, classId]);
+  }, [copying, classId]);
 
   async function submit() {
     setBusy(true);
     setError(null);
+    let assignment = created;
     try {
-      let created: AssignmentDetail;
-      if (method === "copy" && target.kind === "class") {
-        created = await assignmentsApi.copy(target.classId, sourceId);
-      } else {
-        const input: CreateInput = { submissionMode, gradingMode: submissionMode === "GROUP" ? "GRADED" : gradingMode, diagramEnabled: true };
-        created = target.kind === "class" ? await assignmentsApi.createForClass(target.classId, input)
-          : await assignmentsApi.createForSubject(target.subjectId, input);
+      if (!assignment) {
+        if (copying && target.kind === "class") {
+          assignment = await assignmentsApi.copy(target.classId, sourceId);
+        } else {
+          const input: CreateInput = { submissionMode, gradingMode: submissionMode === "GROUP" ? "GRADED" : gradingMode, diagramEnabled: true };
+          assignment = target.kind === "class" ? await assignmentsApi.createForClass(target.classId, input)
+            : await assignmentsApi.createForSubject(target.subjectId, input);
+        }
       }
-      onCreated(created, { importDocx: method === "docx" });
+      if (file && !copying) {
+        const made = assignment;
+        setCreated(made);
+        const imported = await assignmentsApi.importDocx(made.id, file);
+        assignment = await assignmentsApi.saveSkeleton(made.id, made.version, imported.document, { fromDocx: true });
+      }
+      onCreated(assignment);
     } catch (e) {
-      setError(errorMessage(e));
+      setError(assignment ? `Đã tạo bài, chưa nhập tệp: ${errorMessage(e)}` : errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -86,23 +97,26 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   return (
     <Dialog open title="Tạo bài tập" icon="assignment" size="lg" onClose={onClose} dismissible={!busy}
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
-        <Button variant="primary" onClick={() => void submit()} disabled={busy || (method === "copy" && !sourceId)} data-testid="create-assignment-submit">
-          Tiếp tục
+        {classId && !created && (
+          <button type="button" className="mr-auto text-xs font-semibold text-primary hover:underline disabled:opacity-50" disabled={busy}
+            data-testid="create-copy-toggle" onClick={() => { setCopying((value) => !value); setError(null); }}>
+            {copying ? "Tạo bài mới" : "Copy từ lớp khác"}
+          </button>
+        )}
+        {created ? (
+          <Button onClick={() => onCreated(created)} disabled={busy}>Mở bài</Button>
+        ) : (
+          <Button onClick={onClose} disabled={busy}>Hủy</Button>
+        )}
+        <Button variant="primary" onClick={() => void submit()} disabled={busy || (copying && !sourceId)} data-testid="create-assignment-submit">
+          {created ? "Thử lại" : "Tạo"}
         </Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <Field label="Cách tạo">
-        <Choice name="Cách tạo" value={method} onChange={setMethod} options={[
-          { value: "new", label: "Tạo mới", hint: "Soạn trên trang tài liệu" },
-          { value: "docx", label: "Từ tệp DOCX", hint: "Quét tệp Word thành các phần, sửa tiếp trên trang" },
-          ...(target.kind === "class" ? [{ value: "copy" as const, label: "Copy từ lớp khác", hint: "Chọn bài ở lớp bạn dạy" }] : []),
-        ]} />
-      </Field>
-      {method === "copy" && target.kind === "class" ? (
-        <Field label="Bài để copy" hint="Bản copy là bản nháp mới; không sao lịch, nhóm, bài nộp.">
+      {copying && target.kind === "class" ? (
+        <Field label="Bài để copy">
           {!sources ? <p role="status" className="text-xs text-muted">Đang tải…</p> : sources.length === 0 ? (
-            <p className="text-xs text-muted">Không có lớp nào khác bạn dạy có bài tập.</p>
+            <p className="text-xs text-muted">Không có bài ở lớp khác.</p>
           ) : (
             <div className="flex max-h-64 flex-col gap-2 overflow-y-auto" data-testid="copy-sources">
               {sources.map((source) => (
@@ -122,19 +136,20 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         </Field>
       ) : (
         <>
+          <DocxField file={file} onChange={setFile} disabled={busy} />
           <Field label="Hình thức">
-            <Choice name="Hình thức" value={submissionMode} onChange={(value) => { setSubmissionMode(value); if (value === "GROUP") setGradingMode("GRADED"); }} options={[
-              { value: "INDIVIDUAL", label: "Cá nhân" },
-              { value: "GROUP", label: "Nhóm", hint: groupAllowed ? "Theo nhóm cố định của lớp, trưởng nhóm nộp" : target.kind === "subject" ? "Bài của môn chỉ có cá nhân" : "Chưa dùng được bài nhóm", disabled: !groupAllowed },
-            ]} />
+            <Choice name="Hình thức" value={submissionMode} disabled={!!created}
+              onChange={(value) => { setSubmissionMode(value); if (value === "GROUP") setGradingMode("GRADED"); }} options={[
+                { value: "INDIVIDUAL", label: "Cá nhân" },
+                { value: "GROUP", label: "Nhóm", disabled: !groupAllowed, title: groupAllowed ? undefined : target.kind === "subject" ? "Bài của môn chỉ có cá nhân" : "Lớp chưa dùng được bài nhóm" },
+              ]} />
           </Field>
           <Field label="Chế độ">
-            <Choice name="Chế độ" value={gradingMode} onChange={setGradingMode} disabled={submissionMode === "GROUP"} options={[
-              { value: "GRADED", label: "Graded", hint: "Vào sổ điểm" },
-              { value: "PRACTICE", label: "Practice", hint: "Sinh viên nhận góp ý AI" },
+            <Choice name="Chế độ" value={gradingMode} onChange={setGradingMode} disabled={submissionMode === "GROUP" || !!created} options={[
+              { value: "GRADED", label: "Graded" },
+              { value: "PRACTICE", label: "Practice" },
             ]} />
           </Field>
-          <p className="text-[11px] text-muted">Sơ đồ Draw.io luôn dùng được: chèn sơ đồ vào phần nào của đề cũng được, sinh viên vẽ thẳng vào đó.</p>
         </>
       )}
     </Dialog>

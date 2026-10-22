@@ -58,16 +58,17 @@ export function StudentAssignmentsPage() {
       {rows && visible.length > 0 && (
         <TableFrame>
           <thead>
-            <tr><Th>Bài tập</Th><Th>Hình thức · Chế độ</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th><Th>Điểm</Th><Th /></tr>
+            <tr><Th>Bài tập</Th><Th>Hình thức</Th><Th>Chế độ</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th><Th>Điểm</Th><Th /></tr>
           </thead>
           <tbody>
             {visible.map((row) => (
               <ClickableRow key={`${row.classId}-${row.assignmentId}`} onClick={() => router.push(detailHref(row))} data-testid={`student-row-${row.assignmentId}`}>
                 <Td>
                   <p className="font-semibold">{row.title}</p>
-                  <p className="text-[11px] text-muted">{row.classCode}{row.scope === "SUBJECT" ? " · Của môn" : ""}{row.diagramEnabled ? " · Có sơ đồ" : ""}</p>
+                  <p className="text-[11px] text-muted">{row.classCode}{row.scope === "SUBJECT" ? " · Của môn" : ""}</p>
                 </Td>
-                <Td>{row.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"} · {row.gradingMode === "GRADED" ? "Graded" : "Practice"}</Td>
+                <Td>{row.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</Td>
+                <Td><Pill tone={row.gradingMode === "GRADED" ? "info" : "accent"}>{row.gradingMode === "GRADED" ? "Graded" : "Practice"}</Pill></Td>
                 <Td className="text-xs whitespace-nowrap">{formatDateTime(row.closesAt)}</Td>
                 <Td>
                   <Pill tone={myStatusTones[row.myStatus]}>

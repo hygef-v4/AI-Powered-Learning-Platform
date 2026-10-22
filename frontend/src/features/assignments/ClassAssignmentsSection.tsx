@@ -48,7 +48,7 @@ function ClassAssignments({ classId }: { classId: string }) {
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created, { importDocx }) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}${importDocx ? "&import=docx" : ""}`)} />
+          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`)} />
       )}
     </Section>
   );

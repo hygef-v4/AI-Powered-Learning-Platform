@@ -131,23 +131,35 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
         </figure>
       );
     }
-    case "DIAGRAM":
+    case "DIAGRAM": {
+      // Khung vẽ như bản demo (yêu cầu 2026-10-22): rộng hết trang, viền đứt, bấm vào là mở Draw.io; đã vẽ thì hiện hình.
+      const svg = block.content.svgPreview;
+      const drawn = !!svg;
       return (
-        <figure className="flex flex-col items-center gap-1">
+        <figure className="flex flex-col gap-1">
           <button type="button" onClick={() => onOpenDiagram?.(block.id)} disabled={!onOpenDiagram}
-            title={onOpenDiagram ? "Bấm để vẽ" : undefined}
-            className={cx("flex min-h-28 w-full items-center justify-center rounded-lg bg-white p-2",
-              onOpenDiagram ? "cursor-pointer border border-dashed border-primary/50 hover:border-primary hover:ring-2 hover:ring-primary/20" : "border border-transparent")}>
-            {block.content.svgPreview ? (
+            aria-label={onOpenDiagram ? (drawn ? "Sửa sơ đồ" : "Vẽ sơ đồ") : undefined}
+            className={cx("flex min-h-60 w-full items-center justify-center overflow-hidden rounded-lg p-0 transition-colors",
+              drawn ? "bg-white" : "bg-canvas",
+              onOpenDiagram ? "cursor-pointer border-2 border-dashed border-line-strong hover:border-primary"
+                : drawn ? "cursor-default border border-line" : "cursor-default border-2 border-dashed border-line-strong")}>
+            {svg ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={svgDataUri(block.content.svgPreview)} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]} className="max-h-[420px] max-w-full" />
+              <img src={svgDataUri(svg)} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]}
+                className="mx-auto block h-auto max-h-[560px] max-w-full p-3" />
             ) : (
-              <span className="flex items-center gap-1.5 text-xs text-muted"><Icon name="extension" size={20} />{diagramTypeLabels[block.content.diagramType]}</span>
+              <span className="flex flex-col items-center gap-2 text-[13px] text-muted">
+                <svg aria-hidden width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><path d="M10 6.5h4a2 2 0 0 1 2 2V14" />
+                </svg>
+                {onOpenDiagram ? "Vẽ sơ đồ" : "Chưa có sơ đồ"}
+              </span>
             )}
           </button>
           {block.content.alt && <Caption>{block.content.alt}</Caption>}
         </figure>
       );
+    }
   }
 }
 

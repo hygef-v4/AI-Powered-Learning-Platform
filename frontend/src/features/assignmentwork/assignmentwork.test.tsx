@@ -23,6 +23,17 @@ describe("precheck", () => {
     expect(precheck({ requiredDiagrams: { CLASS: 1 } }, { blocks: [teacher, slot()] }).map((i) => i.code)).toEqual(["REQUIRED_DIAGRAMS_MISSING", "SUBMISSION_EMPTY"]);
     expect(precheck({ requiredDiagrams: { CLASS: 1 } }, { blocks: [teacher, slot("<svg/>")] })).toEqual([]);
   });
+  it("loại sơ đồ do server suy từ hình vẽ: máy khách chỉ kiểm tổng số sơ đồ, không chặn sơ đồ chưa có loại mới", () => {
+    const drawn = (id: string): DocumentModel["blocks"][number] => ({ id, origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>" } });
+    expect(precheck({ requiredDiagrams: { USE_CASE: 1, CLASS: 1 } }, { blocks: [teacher, drawn("d1"), drawn("d2")] })).toEqual([]);
+    const issues = precheck({ requiredDiagrams: { USE_CASE: 1, CLASS: 1 } }, { blocks: [teacher, drawn("d1")] });
+    expect(issues.map((i) => i.code)).toEqual(["REQUIRED_DIAGRAMS_MISSING"]);
+    expect(issues[0]!.message).toContain("Cần ít nhất 2 sơ đồ");
+  });
+  it("bảng của giảng viên có chữ tính như đã điền (server kiểm chính xác)", () => {
+    const table: DocumentModel["blocks"][number] = { id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Đăng nhập" }] }]] } };
+    expect(precheck({ requiredDiagrams: {} }, { blocks: [teacher, table] })).toEqual([]);
+  });
 });
 
 describe("insertIntoPart", () => {

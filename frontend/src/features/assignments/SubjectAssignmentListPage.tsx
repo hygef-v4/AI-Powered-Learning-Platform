@@ -70,7 +70,7 @@ export function SubjectAssignmentListPage() {
       )}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}
-          onCreated={(created, { importDocx }) => router.push(`/assignments/${encodeURIComponent(created.id)}${importDocx ? "?import=docx" : ""}`)} />
+          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}`)} />
       )}
     </div>
   );

@@ -5,6 +5,8 @@ import { CommentRail } from "./CommentRail";
 import { decodeSvgDataUri } from "./DiagramEditor";
 import { DocumentEditor, convertBlock } from "./DocumentEditor";
 import { DocumentViewer } from "./DocumentViewer";
+import { readRuns, runsHtml, setCaret } from "./RichText";
+import { colorRange, joinLines, runLines, splitRuns, toggleFlagRange } from "./runs";
 import { RubricNote, RubricViewer } from "./RubricViewer";
 import {
   atomicItems,
@@ -41,12 +43,19 @@ describe("DocumentEditor", () => {
     expect(next.blocks[2]!).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
   });
 
-  it("người soạn đổi đoạn thành tiêu đề và chèn sơ đồ theo loại từ thanh công cụ", () => {
+  it("người soạn đổi đoạn thành tiêu đề; một nút chèn sơ đồ, mở luôn Draw.io ở cột phải đẩy trang sang trái", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled />);
-    fireEvent.click(screen.getByLabelText("Chèn sơ đồ Draw.io"));
-    fireEvent.click(screen.getByTestId("add-DIAGRAM-USE_CASE"));
-    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]!).toMatchObject({ origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "USE_CASE" } });
+    fireEvent.click(screen.getByTestId("add-DIAGRAM"));
+    const inserted = onChange.mock.calls[0]![0] as DocumentModel;
+    expect(inserted.blocks[0]!).toMatchObject({ origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER" } });
+    rerender(<DocumentEditor document={inserted} onChange={onChange} mode="author" diagramEnabled />);
+    expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
+    expect(document.documentElement).toHaveClass("drawio-panel-open");
+    expect(screen.queryByRole("dialog", { name: /Draw.io/ })).toHaveAttribute("data-testid", "drawio-panel");
+    fireEvent.click(screen.getByRole("button", { name: /Đóng/ }));
+    expect(screen.queryByTestId("drawio-panel")).toBeNull();
+    expect(document.documentElement).not.toHaveClass("drawio-panel-open");
     rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled />);
     fireEvent.mouseDown(screen.getByTestId("block-t2"));
     fireEvent.change(screen.getByLabelText("Kiểu đoạn"), { target: { value: "H2" } });
@@ -71,9 +80,32 @@ describe("DocumentEditor", () => {
   it("sửa đoạn văn giữ định dạng của đoạn", () => {
     const onChange = vi.fn();
     render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
-    fireEvent.change(screen.getByLabelText("Đoạn văn"), { target: { value: "Đề mới" } });
+    const field = screen.getByLabelText("Đoạn văn");
+    field.querySelector("span")!.textContent = "Đề mới";
+    fireEvent.input(field);
     const next = onChange.mock.calls[0]![0] as DocumentModel;
     expect(next.blocks[1]!.content).toEqual({ runs: [{ text: "Đề mới", bold: true }] });
+  });
+
+  it("bôi đen rồi chỉnh thì chỉ đổi phần bôi đen; không còn nút mã, kiểu đoạn chỉ 4 tiêu đề", () => {
+    const onChange = vi.fn();
+    render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
+    fireEvent.mouseDown(screen.getByTestId("block-t2"));
+    const field = screen.getByLabelText("Đoạn văn");
+    field.focus();
+    setCaret(field, 0, 2);
+    fireEvent.click(screen.getByLabelText("Nghiêng (Ctrl+I)"));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[1]!.content).toEqual({
+      runs: [{ text: "Đề", bold: true, italic: true }, { text: " bài", bold: true }],
+    });
+    fireEvent.click(screen.getByLabelText("Màu chữ"));
+    fireEvent.click(screen.getByLabelText("#C5221F"));
+    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks[1]!.content).toEqual({
+      runs: [{ text: "Đề", bold: true, color: "#C5221F" }, { text: " bài", bold: true }],
+    });
+    expect(screen.queryByLabelText("Mã")).toBeNull();
+    expect(within(screen.getByLabelText("Kiểu đoạn")).getAllByRole("option").map((o) => o.textContent))
+      .toEqual(["Văn bản thường", "Tiêu đề 1", "Tiêu đề 2", "Tiêu đề 3", "Tiêu đề 4"]);
   });
 
   it("chỉ đọc thì không có thanh thêm khối", () => {
@@ -84,8 +116,8 @@ describe("DocumentEditor", () => {
   it("Enter tách đoạn tại con trỏ, đoạn mới giữ định dạng", () => {
     const onChange = vi.fn();
     render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
-    const field = screen.getByLabelText("Đoạn văn") as HTMLTextAreaElement;
-    field.setSelectionRange(2, 2);
+    const field = screen.getByLabelText("Đoạn văn");
+    setCaret(field, 2);
     fireEvent.keyDown(field, { key: "Enter" });
     const next = onChange.mock.calls[0]![0] as DocumentModel;
     expect(next.blocks).toHaveLength(3);
@@ -101,7 +133,7 @@ describe("DocumentEditor", () => {
     expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["t1", "t2"]);
   });
 
-  it("người học chỉ viết trong phần lá; nhánh tô nền theo độ sâu, lá nền trắng", () => {
+  it("người học chỉ viết trong phần lá; cùng tầng cùng màu, lá khung màu ruột trắng", () => {
     const onChange = vi.fn();
     const tree: DocumentModel = {
       blocks: [
@@ -109,15 +141,21 @@ describe("DocumentEditor", () => {
         { id: "a", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Phân tích" } },
         { id: "a1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Use case" } },
         { id: "p1", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Vẽ use case" }] } },
+        { id: "b", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Thiết kế" } },
       ],
     };
     const { container } = render(<DocumentEditor document={tree} onChange={onChange} mode="student" diagramEnabled />);
     const branch = container.querySelector<HTMLElement>('[data-section="a"]')!;
     const leaf = container.querySelector<HTMLElement>('[data-section="a1"]')!;
+    const sibling = container.querySelector<HTMLElement>('[data-section="b"]')!;
     expect(branch.style.backgroundColor).not.toBe("");
     expect(branch.contains(leaf)).toBe(true);
     expect(leaf).toHaveAttribute("data-leaf");
-    expect(leaf).toHaveClass("bg-white");
+    expect(leaf.style.backgroundColor).not.toBe(branch.style.backgroundColor);
+    expect(sibling.style.backgroundColor).toBe(branch.style.backgroundColor);
+    expect(leaf.querySelector("[data-leaf-body]")).toHaveClass("bg-white");
+    expect(within(leaf.querySelector<HTMLElement>("[data-leaf-body]")!).getByTestId("block-p1")).toBeInTheDocument();
+    expect(screen.getByTestId("write-part-a1").textContent).toBe("");
     fireEvent.mouseDown(screen.getByTestId("block-intro"));
     expect(screen.getByLabelText("Chèn bảng")).toBeDisabled();
     fireEvent.click(screen.getByTestId("write-part-a1"));
@@ -132,19 +170,112 @@ describe("DocumentEditor", () => {
       blocks: [diagram("common"), { id: "h", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Thiết kế" } }, diagram("slot")],
     };
     render(<DocumentEditor document={tree} onChange={vi.fn()} mode="student" diagramEnabled />);
-    expect(within(screen.getByTestId("block-slot")).getByTitle("Bấm để vẽ")).toBeEnabled();
+    expect(within(screen.getByTestId("block-slot")).getByRole("button", { name: "Vẽ sơ đồ" })).toBeEnabled();
     expect(within(screen.getByTestId("block-common")).getByRole("button")).toBeDisabled();
+    // Sơ đồ của đề trong phần: nút ✕ vẫn có nhưng mờ; ở phần chung thì không có.
+    expect(within(screen.getByTestId("block-slot")).getByLabelText("Sơ đồ của đề")).toBeDisabled();
+    expect(within(screen.getByTestId("block-common")).queryByLabelText("Sơ đồ của đề")).toBeNull();
   });
 
-  it("bảng: rê chuột vào ô có ô vuông chèn hàng dưới, cột phải", () => {
+  it("bảng: ô vuông + − nằm ngoài bảng, của cột ở trên đầu, của hàng bên trái; ✕ ở góc cùng hàng với nút của cột", () => {
     const onChange = vi.fn();
-    const table: DocumentModel = { blocks: [{ id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "a" }] }]] } }] };
+    const table: DocumentModel = { blocks: [{ id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "a" }] }], [{ runs: [{ text: "b" }] }]] } }] };
     render(<DocumentEditor document={table} onChange={onChange} mode="author" diagramEnabled />);
-    fireEvent.click(screen.getByLabelText("Chèn hàng bên dưới"));
-    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]!.content).toMatchObject({ rows: [[{ runs: [{ text: "a" }] }], [{ runs: [{ text: "" }] }]] });
+    // Nút nổi đè lên chỗ xung quanh, không chiếm hàng, cột riêng của bảng.
+    expect(screen.getByTestId("column-tools-0")).toHaveClass("absolute", "bottom-full");
+    expect(screen.getByTestId("row-tools-0")).toHaveClass("absolute", "right-full");
+    const corner = within(screen.getByTestId("block-tb")).getAllByLabelText("Xóa bảng").find((button) => button.textContent === "✕")!;
+    expect(corner.parentElement).toHaveClass("absolute", "right-full", "bottom-full");
+    expect(screen.getByLabelText("Ô 1-1").closest("tr")!.children).toHaveLength(1);
+    expect(screen.queryByText("Hàng tiêu đề")).toBeNull();
+    fireEvent.click(screen.getAllByLabelText("Chèn hàng bên dưới")[0]!);
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]!.content).toMatchObject({ rows: [[{ runs: [{ text: "a" }] }], [{ runs: [{ text: "" }] }], [{ runs: [{ text: "b" }] }]] });
     fireEvent.click(screen.getByLabelText("Chèn cột bên phải"));
-    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks[0]!.content).toMatchObject({ rows: [[{ runs: [{ text: "a" }] }, { runs: [{ text: "" }] }]] });
-    expect(screen.queryByText("Hàng đầu là tiêu đề")).toBeNull();
+    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks[0]!.content).toMatchObject({ rows: [[{ runs: [{ text: "a" }] }, { runs: [{ text: "" }] }], [{ runs: [{ text: "b" }] }, { runs: [{ text: "" }] }]] });
+    fireEvent.click(screen.getAllByLabelText("Xóa hàng")[1]!);
+    expect((onChange.mock.calls[2]![0] as DocumentModel).blocks[0]!.content).toMatchObject({ rows: [[{ runs: [{ text: "a" }] }]] });
+    // Bảng còn một cột: "−" của cột là xóa cả bảng; nút ✕ ở góc trên trái cũng xóa bảng.
+    fireEvent.click(within(screen.getByTestId("column-tools-0")).getByLabelText("Xóa bảng"));
+    expect((onChange.mock.calls[3]![0] as DocumentModel).blocks).toEqual([]);
+    fireEvent.click(corner);
+    expect((onChange.mock.calls[4]![0] as DocumentModel).blocks).toEqual([]);
+  });
+
+  it("người học điền bảng của đề trong phần: sửa ô, thêm hàng, không xóa; bảng ở phần chung vẫn khóa", () => {
+    const onChange = vi.fn();
+    const table = (id: string): DocumentBlock => ({ id, origin: "TEACHER", type: "TABLE", content: { headerRow: true, rows: [[{ runs: [{ text: "Ca" }] }], [{ runs: [{ text: "" }] }]] } });
+    const tree: DocumentModel = {
+      blocks: [table("common"), { id: "h", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Kiểm thử" } }, table("slot")],
+    };
+    render(<DocumentEditor document={tree} onChange={onChange} mode="student" diagramEnabled />);
+    expect(within(screen.getByTestId("block-common")).queryByRole("textbox")).toBeNull();
+    const slot = screen.getByTestId("block-slot");
+    expect(within(slot).queryByLabelText("Thao tác khối")).toBeNull();
+    expect(within(slot).queryByLabelText("Xóa hàng")).toBeNull();
+    fireEvent.change(within(slot).getByLabelText("Ô 2-1"), { target: { value: "Đăng nhập" } });
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[2]!).toMatchObject({
+      id: "slot", origin: "TEACHER", content: { headerRow: true, rows: [[{ runs: [{ text: "Ca" }] }], [{ runs: [{ text: "Đăng nhập" }] }]] },
+    });
+    expect(within(slot).queryByLabelText("Xóa bảng")).toBeNull();
+    expect(within(slot).getByLabelText("Bảng của đề")).toBeDisabled();
+    // Hàng, cột nào cũng có đủ nút; "−" của hàng, cột của đề bị khóa.
+    expect(within(slot).getAllByLabelText("Chèn hàng bên dưới")).toHaveLength(2);
+    expect(within(slot).getAllByLabelText("Hàng của đề")).toHaveLength(2);
+    within(slot).getAllByLabelText("Hàng của đề").forEach((button) => expect(button).toBeDisabled());
+    expect(within(slot).getByLabelText("Cột của đề")).toBeDisabled();
+    fireEvent.click(within(slot).getAllByLabelText("Chèn hàng bên dưới")[0]!);
+    const inserted = (onChange.mock.calls[1]![0] as DocumentModel).blocks[2]!.content as { rows: { added?: boolean }[][] };
+    expect(inserted.rows).toHaveLength(3);
+    expect(inserted.rows[1]!.every((cell) => cell.added)).toBe(true);
+  });
+
+  it("người học xóa được hàng, cột mình thêm (ô có cờ added), cả khi chèn giữa bảng của đề", () => {
+    const onChange = vi.fn();
+    const added = (text: string) => ({ runs: [{ text }], added: true });
+    const filled: DocumentModel = { blocks: [{ id: "h", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Kiểm thử" } },
+      { id: "slot", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Ca" }] }, added("ghi chú")], [added("thêm"), added("")], [{ runs: [{ text: "" }] }, added("")]] } }] };
+    render(<DocumentEditor document={filled} onChange={onChange} mode="student" diagramEnabled />);
+    expect(screen.getByLabelText("Xóa hàng")).toBeEnabled();
+    expect(screen.getByLabelText("Xóa cột")).toBeEnabled();
+    fireEvent.click(screen.getByLabelText("Xóa hàng"));
+    expect(((onChange.mock.calls[0]![0] as DocumentModel).blocks[1]!.content as { rows: unknown[][] }).rows).toHaveLength(2);
+    fireEvent.click(screen.getByLabelText("Xóa cột"));
+    expect(((onChange.mock.calls[1]![0] as DocumentModel).blocks[1]!.content as { rows: unknown[][] }).rows.every((row) => row.length === 1)).toBe(true);
+  });
+
+  it("không còn menu ba chấm; sơ đồ trải hết bề ngang, có nút ✕ ở góc để xóa", () => {
+    const onChange = vi.fn();
+    const withDiagram: DocumentModel = { blocks: [...doc.blocks, { id: "d", origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>" } }] };
+    render(<DocumentEditor document={withDiagram} onChange={onChange} mode="author" diagramEnabled />);
+    expect(screen.queryByLabelText("Thao tác khối")).toBeNull();
+    const canvas = within(screen.getByTestId("block-d")).getByRole("button", { name: "Vẽ sơ đồ" });
+    expect(canvas).toHaveClass("w-full");
+    expect(canvas.parentElement!.parentElement).not.toHaveClass("items-center");
+    fireEvent.click(within(screen.getByTestId("block-d")).getByLabelText("Xóa sơ đồ"));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["t1", "t2"]);
+  });
+
+  it("ô chọn cỡ bảng: lưới cột cố định, mỗi ô một ô vuông riêng", () => {
+    const onChange = vi.fn();
+    render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled />);
+    fireEvent.click(screen.getByLabelText("Chèn bảng"));
+    const grid = screen.getByTestId("table-picker").firstElementChild!;
+    expect(grid).toHaveClass("grid-cols-[repeat(10,18px)]");
+    expect(screen.getByLabelText("3 × 4")).toHaveClass("size-[18px]");
+    fireEvent.click(screen.getByLabelText("3 × 4"));
+    const rows = ((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]!.content as { rows: unknown[][] }).rows;
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveLength(4);
+  });
+
+  it("dòng trống không có chữ gợi ý", () => {
+    const blank: DocumentModel = { blocks: [
+      { id: "h", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "" } },
+      { id: "p", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "" }] } },
+      { id: "l", origin: "TEACHER", type: "LIST", content: { ordered: false, items: [{ level: 0, runs: [{ text: "" }] }] } },
+    ] };
+    const { container } = render(<DocumentEditor document={blank} onChange={vi.fn()} mode="author" diagramEnabled />);
+    expect(container.querySelectorAll("textarea[placeholder]")).toHaveLength(0);
   });
 
   it("chỉ đọc ở chế độ người học: phần chưa có bài làm hiện chữ báo", () => {
@@ -157,6 +288,32 @@ describe("DocumentEditor", () => {
       comments={[{ key: "t1", anchorBlockId: "t1", content: <p>Rubric phân tích</p> }, { key: "x", anchorBlockId: "missing", content: <p>Mất neo</p> }]} />);
     expect(within(screen.getByTestId("block-t1")).getByText("Rubric phân tích")).toBeInTheDocument();
     expect(screen.queryByText("Mất neo")).toBeNull();
+  });
+});
+
+describe("định dạng từng phần", () => {
+  const runs = [{ text: "Xin chào", bold: true }, { text: " bạn" }];
+
+  it("bôi đen thì chỉ bật, tắt hoặc tô màu phần đó; phần còn lại giữ định dạng", () => {
+    expect(toggleFlagRange(runs, 4, 8, "italic")).toEqual([{ text: "Xin ", bold: true }, { text: "chào", bold: true, italic: true }, { text: " bạn" }]);
+    expect(toggleFlagRange(runs, 0, 8, "bold")).toEqual([{ text: "Xin chào bạn" }]);
+    expect(colorRange(runs, 8, 12, "color", "#C5221F")).toEqual([{ text: "Xin chào", bold: true }, { text: " bạn", color: "#C5221F" }]);
+  });
+
+  it("Enter tách đoạn giữ định dạng hai nửa; dòng ↔ danh sách giữ định dạng", () => {
+    expect(splitRuns(runs, 4)).toEqual([[{ text: "Xin ", bold: true }], [{ text: "chào", bold: true }, { text: " bạn" }]]);
+    expect(splitRuns(runs, 12)).toEqual([runs, [{ text: "" }]]);
+    const lines = runLines([{ text: "Dòng 1\nDòng 2", italic: true }]);
+    expect(lines).toEqual([[{ text: "Dòng 1", italic: true }], [{ text: "Dòng 2", italic: true }]]);
+    expect(joinLines(lines)).toEqual([{ text: "Dòng 1\nDòng 2", italic: true }]);
+  });
+
+  it("ô chữ đọc lại đúng run vẽ ra, cả thẻ trình duyệt tự chèn khi xóa, gộp", () => {
+    const root = document.createElement("div");
+    root.innerHTML = runsHtml([{ text: "a<b>", bold: true }, { text: "c", color: "#C5221F", highlight: "#FFF475" }]);
+    expect(readRuns(root)).toEqual([{ text: "a<b>", bold: true }, { text: "c", color: "#C5221F", highlight: "#FFF475" }]);
+    root.innerHTML = '<b>đậm</b><span style="font-style: italic; color: rgb(197, 34, 31)">nghiêng</span>thường<br>';
+    expect(readRuns(root)).toEqual([{ text: "đậm", bold: true }, { text: "nghiêng", italic: true, color: "#C5221F" }, { text: "thường" }]);
   });
 });
 

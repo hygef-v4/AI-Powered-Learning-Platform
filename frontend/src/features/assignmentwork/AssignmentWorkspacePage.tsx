@@ -10,7 +10,6 @@ import {
   DocxImportDialog,
   ToolbarButton,
   diagramTypeLabels,
-  formatPoints,
   sectionsOf,
   type DiagramType,
   type DocumentBlock,
@@ -49,18 +48,26 @@ export function insertIntoPart(content: DocumentModel, parts: DocumentPart[], pa
 }
 
 /**
- * Kiểm sơ bộ trước khi nộp (server kiểm lại bằng validateForSubmit): sơ đồ bắt buộc, có nội dung của người học. Sơ đồ
- * của giảng viên có ảnh xem trước tính như đã vẽ; server phân biệt chính xác ô đã vẽ và sơ đồ minh họa của đề.
+ * Kiểm sơ bộ trước khi nộp (server kiểm lại bằng validateForSubmit), không chặn bài server sẽ nhận: đủ tổng số sơ đồ bắt
+ * buộc, có nội dung của người học. Sơ đồ của giảng viên có ảnh xem trước tính như đã vẽ, bảng của giảng viên có chữ
+ * tính như đã điền; server phân biệt chính xác phần đã làm và phần có sẵn của đề.
  */
 export function precheck(attempt: Pick<Attempt, "requiredDiagrams">, content: DocumentModel): ValidationIssue[] {
   const mine = content.blocks.filter((b) => b.origin === "STUDENT");
   const drawn = content.blocks.filter((b) => b.origin === "TEACHER" && b.type === "DIAGRAM" && !!b.content.svgPreview);
+  const filled = content.blocks.some((b) => b.origin === "TEACHER" && b.type === "TABLE"
+    && b.content.rows.some((row) => row.some((cell) => cell.runs.some((r) => r.text.trim()))));
   const issues: ValidationIssue[] = [];
-  for (const [type, count] of Object.entries(attempt.requiredDiagrams) as [DiagramType, number][]) {
-    const have = [...mine, ...drawn].filter((b) => b.type === "DIAGRAM" && b.content.diagramType === type).length;
-    if (have < count) issues.push({ code: "REQUIRED_DIAGRAMS_MISSING", blockId: null, message: `Cần ít nhất ${count} ${diagramTypeLabels[type]}, bài mới có ${have}` });
+  // Loại sơ đồ do server suy từ hình vẽ khi lưu (yêu cầu 2026-10-22), bản trên máy có thể chưa có loại mới: chỉ kiểm
+  // tổng số sơ đồ (điều kiện cần), loại từng sơ đồ để server kiểm.
+  const required = Object.entries(attempt.requiredDiagrams).filter(([, count]) => count > 0) as [DiagramType, number][];
+  const total = required.reduce((sum, [, count]) => sum + count, 0);
+  const have = [...mine, ...drawn].filter((b) => b.type === "DIAGRAM").length;
+  if (have < total) {
+    issues.push({ code: "REQUIRED_DIAGRAMS_MISSING", blockId: null,
+      message: `Cần ít nhất ${total} sơ đồ (${required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}), bài mới có ${have}` });
   }
-  const hasContent = drawn.length > 0 || mine.some((b) => b.type === "IMAGE" || b.type === "DIAGRAM"
+  const hasContent = drawn.length > 0 || filled || mine.some((b) => b.type === "IMAGE" || b.type === "DIAGRAM"
     || (b.type === "PARAGRAPH" && b.content.runs.some((r) => r.text.trim()))
     || (b.type === "LIST" && b.content.items.some((i) => i.runs.some((r) => r.text.trim())))
     || (b.type === "TABLE" && b.content.rows.some((row) => row.some((cell) => cell.runs.some((r) => r.text.trim())))));
@@ -73,7 +80,7 @@ type Halt = "conflict" | "closed" | "invalid" | null;
 
 /**
  * #40 Assignment Workspace (F4–F6, UC 39): trang giấy kiểu Google Docs. Đề (hướng dẫn, các phần do giảng viên soạn)
- * hiện ở đây lần đầu; người học chỉ viết trong các phần (khung nét đứt), không thấy rubric (yêu cầu 2026-10-21). Tự lưu
+ * hiện ở đây lần đầu; người học chỉ viết trong các phần (ruột trắng của phần lá), không thấy rubric (yêu cầu 2026-10-21). Tự lưu
  * 10 giây sau lần sửa cuối và khi rời trang; lỗi mạng giữ trạng thái chưa lưu và thử lại, nên Nộp không nộp bản cũ.
  */
 export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
@@ -149,17 +156,17 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         const transient = !(error instanceof ApiError) || error.problem.status >= 500;
         if (code === "CONTENT_VERSION_CONFLICT") {
           halt.current = "conflict";
-          setBanner({ tone: "warning", reload: true, text: "Bài đang mở ở nơi khác. Tải lại trang để lấy bản mới nhất; bản bạn đang sửa vẫn còn trên màn hình nhưng chưa được lưu." });
+          setBanner({ tone: "warning", reload: true, text: "Bài đang mở ở nơi khác, bản đang sửa chưa lưu" });
         } else if (code === "DEADLINE_PASSED" || code === "ATTEMPT_SUBMITTED") {
           halt.current = "closed";
           setBanner({ tone: "danger", text: errorMessage(error) });
         } else if (transient) {
-          setBanner({ tone: "warning", text: "Chưa lưu được do mất kết nối. Hệ thống sẽ thử lại; đừng đóng trang." });
+          setBanner({ tone: "warning", text: "Mất kết nối, chưa lưu" });
           setRetry((value) => value + 1);
         } else {
           halt.current = "invalid";
           setIssues(problemIssues(error));
-          setBanner({ tone: "danger", text: `Chưa lưu được: ${errorMessage(error)}` });
+          setBanner({ tone: "danger", text: `Chưa lưu: ${errorMessage(error)}` });
         }
         return false;
       } finally {
@@ -220,8 +227,8 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         {banner.text}
         {issues.length > 0 && <ul className="mt-1 list-disc pl-4">{issues.slice(0, 8).map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}
       </Alert>}
-      {attempt.status === "SUBMITTED" && <Alert tone="info">Lượt đã nộp lúc {formatTime(attempt.submittedAt)}; nội dung chỉ đọc.</Alert>}
-      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn; hệ thống sẽ tự nộp bản đã lưu gần nhất.</Alert>}
+      {attempt.status === "SUBMITTED" && <Alert tone="info">Đã nộp lúc {formatTime(attempt.submittedAt)} · chỉ xem</Alert>}
+      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn</Alert>}
       {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title="Bài có ghi nhận hoạt động">{attempt.activityNotice}</Alert>}
       <DocumentEditor document={content} mode="student" diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
@@ -236,7 +243,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
             <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
               <Pill>{attempt.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</Pill>
               <Pill tone={attempt.gradingMode === "GRADED" ? "info" : "accent"}>{attempt.gradingMode === "GRADED" ? "Graded" : "Practice"}</Pill>
-              {attempt.gradingMode === "GRADED" && <span>Tổng {formatPoints(attempt.maxPoints)} điểm</span>}
               {required.length > 0 && <span>· Sơ đồ cần có: {required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}</span>}
             </p>
           </div>
@@ -251,7 +257,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {dialog === "submit" && (
         <SubmitDialog attempt={attempt} content={content} onClose={() => setDialog(null)}
           onSubmit={async () => {
-            if (!(await save())) throw new Error("Chưa lưu được bài, hãy thử lại");
+            if (!(await save())) throw new Error("Bài chưa lưu");
             const receipt = await workApi.submit(attempt.attemptId, version.current);
             router.push(`/attempts/${encodeURIComponent(receipt.attemptId)}/receipt`);
           }} />

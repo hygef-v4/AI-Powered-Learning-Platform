@@ -21,7 +21,8 @@ export type HeadingContent = { style: HeadingStyle; text: string; align?: Align 
 export type ParagraphContent = { runs: Run[]; align?: Align };
 export type ListItem = { level?: number; runs: Run[] };
 export type ListContent = { ordered?: boolean; items: ListItem[]; align?: Align };
-export type TableCell = { runs: Run[] };
+/** {@code added}: ô người học thêm vào bảng của đề (yêu cầu 2026-10-22), người học chỉ xóa được hàng, cột gồm toàn ô này. */
+export type TableCell = { runs: Run[]; added?: boolean };
 export type TableContent = { headerRow?: boolean; rows: TableCell[][] };
 /** {@code fileRef}: ảnh vừa tải lên, chưa lưu; {@code hasFile}: ảnh đã lưu, mở theo id block. */
 export type ImageContent = { fileRef?: string; hasFile?: boolean; alt?: string; width?: number };

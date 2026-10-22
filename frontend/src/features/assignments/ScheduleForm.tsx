@@ -39,8 +39,8 @@ function DateTime({ id, label, value, disabled, onChange }: { id: string; label:
 }
 
 /**
- * Lịch phát hành (F9, F11; BR-U07-33, 35) gộp một trang: hạn nộp, số lượt; tích "Hẹn giờ mở" thì mới chọn ngày mở
- * (không tích là mở ngay), tích "Cho nộp muộn" thì mới chọn hạn nộp muộn (≤ 30 ngày sau hạn). Giờ Việt Nam.
+ * Xếp lịch (F9, F11; BR-U07-33, 35) gộp một trang: hạn nộp, số lượt; ngày mở tùy chọn: tích "Hẹn giờ mở" thì mới chọn
+ * ngày mở (không tích là mở ngay), tích "Cho nộp muộn" thì mới chọn hạn nộp muộn (≤ 30 ngày sau hạn). Giờ Việt Nam.
  */
 export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
   const open = assignment.status === "OPEN";
@@ -57,18 +57,19 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
 
   function check(): string | null {
     const close = join(closes);
-    if (!close) return "Chọn hạn nộp";
+    if (!close) return "Thiếu hạn nộp";
     const start = scheduled ? join(opens) : new Date().toISOString();
-    if (!start) return "Chọn ngày mở";
-    if (new Date(close) <= new Date(start)) return "Hạn nộp phải sau lúc mở";
+    if (!start) return "Thiếu ngày mở";
+    if (new Date(close) <= new Date(start)) return "Hạn nộp không sau lúc mở";
     if (allowLate) {
       const until = join(late);
-      if (!until) return "Chọn hạn nộp muộn";
+      if (!until) return "Thiếu hạn nộp muộn";
       const gap = new Date(until).getTime() - new Date(close).getTime();
-      if (gap <= 0 || gap > 30 * 24 * 3600 * 1000) return "Hạn nộp muộn phải sau hạn nộp, không quá 30 ngày";
+      if (gap <= 0) return "Hạn nộp muộn không sau hạn nộp";
+      if (gap > 30 * 24 * 3600 * 1000) return "Hạn nộp muộn quá 30 ngày sau hạn nộp";
     }
     const attempts = Number(maxAttempts);
-    if (!Number.isInteger(attempts) || attempts < 1 || attempts > 10) return "Số lượt từ 1 đến 10";
+    if (!Number.isInteger(attempts) || attempts < 1 || attempts > 10) return "Số lượt ngoài 1–10";
     return null;
   }
 
@@ -80,7 +81,9 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
     try {
       await onSubmit({
         openNow: mode === "publish" ? !scheduled : undefined,
-        opensAt: scheduled || mode === "change" ? join(opens) : null,
+        // Bài đang mở giữ nguyên ngày mở (ô chỉ có tới phút, server so từng giây); bài đã lên lịch mà bỏ tích "Hẹn giờ
+        // mở" thì mở ngay (bộ hẹn giờ mở trong vòng 1 phút, BR-U07-34).
+        opensAt: open ? null : scheduled ? join(opens) : mode === "change" ? new Date().toISOString() : null,
         closesAt: join(closes)!,
         lateUntil: allowLate ? join(late) : null,
         maxAttempts: Number(maxAttempts),
@@ -103,7 +106,8 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
           <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} data-testid="schedule-later" />Hẹn giờ mở
         </label>
       )}
-      {scheduled && <DateTime id="schedule-opens" label="Mở lúc" value={opens} disabled={open} onChange={setOpens} />}
+      {/* Ngày mở tùy chọn: chỉ hiện khi tích "Hẹn giờ mở"; bài đang mở thì không còn gì để chọn nên ẩn hẳn. */}
+      {scheduled && !open && <DateTime id="schedule-opens" label="Mở lúc" value={opens} onChange={setOpens} />}
       <DateTime id="schedule-closes" label="Hạn nộp" value={closes} onChange={setCloses} />
       <label className="flex items-center gap-2 text-[13px]">
         <input type="checkbox" checked={allowLate} onChange={(e) => setAllowLate(e.target.checked)} data-testid="schedule-late" />Cho nộp muộn
@@ -121,7 +125,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
       )}
       <div>
         <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="schedule-submit">
-          {mode === "publish" ? (scheduled ? "Lên lịch" : "Phát hành ngay") : "Lưu lịch"}
+          {mode === "publish" ? (scheduled ? "Xếp lịch" : "Phát hành ngay") : "Lưu lịch"}
         </Button>
       </div>
     </div>

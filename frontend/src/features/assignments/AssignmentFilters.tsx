@@ -23,7 +23,8 @@ export function AssignmentFilters({ value, onChange }: { value: FilterState; onC
       <Select aria-label="Trạng thái" value={value.status} wrapperClassName="w-40"
         onChange={(event) => onChange({ ...value, status: event.target.value as AssignmentStatus | "" })}>
         <option value="">Mọi trạng thái</option>
-        {(Object.keys(statusLabels) as AssignmentStatus[]).map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+        {(Object.keys(statusLabels) as AssignmentStatus[]).filter((status) => status !== "REVIEWED")
+          .map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
       </Select>
       <TextInput aria-label="Tìm bài tập" icon="search" placeholder="Tìm theo tên" value={value.q} wrapperClassName="w-56"
         onChange={(event) => onChange({ ...value, q: event.target.value })} />
@@ -38,7 +39,8 @@ export function AssignmentFilters({ value, onChange }: { value: FilterState; onC
 export function toListFilter(value: FilterState) {
   return {
     q: value.q.trim() || undefined,
-    status: value.status ? [value.status] : undefined,
+    // "Nháp" gồm cả bài đã duyệt từ trước (không còn trạng thái Đã duyệt).
+    status: value.status === "DRAFT" ? ["DRAFT", "REVIEWED"] as AssignmentStatus[] : value.status ? [value.status] : undefined,
     gradingMode: value.gradingMode || undefined,
     includeClosed: value.includeClosed,
   };

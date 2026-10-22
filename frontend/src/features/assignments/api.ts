@@ -91,6 +91,7 @@ export function imageUrlFor(assignmentId: string) {
   return (blockId: string) => `${base}/assignments/${enc(assignmentId)}/blocks/${enc(blockId)}/image`;
 }
 
-export function docxUrl(assignmentId: string, includeRubric: boolean) {
-  return `${base}/assignments/${enc(assignmentId)}/docx?includeRubric=${includeRubric}`;
+/** Tệp DOCX của đề hoặc của rubric: hai tệp riêng (yêu cầu 2026-10-22). */
+export function docxUrl(assignmentId: string, what: "skeleton" | "rubric") {
+  return `${base}/assignments/${enc(assignmentId)}/${what === "rubric" ? "rubric/docx" : "docx"}`;
 }

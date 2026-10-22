@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/shared/ui";
+import { Button, cx } from "@/shared/ui";
 
 export const DRAWIO_ORIGIN = "https://embed.diagrams.net";
 const DRAWIO_URL = `${DRAWIO_ORIGIN}/?embed=1&ui=min&spin=1&proto=json&saveAndExit=1&noExitBtn=0&lang=vi`;
+const MIN_WIDTH = 360;
 
 type Props = {
   xml: string;
@@ -35,17 +36,46 @@ export function decodeSvgDataUri(data: string | undefined): string | null {
 }
 
 /**
- * Draw.io nhúng từ embed.diagrams.net (NFR-U07-32): chỉ nhận message đúng origin và đúng iframe; Lưu thì xuất
- * {@code xmlsvg} để có XML đầy đủ và SVG xem trước (backend làm sạch SVG khi lưu).
+ * Draw.io nhúng từ embed.diagrams.net (NFR-U07-32) trong cột bên phải kéo giãn được, đẩy trang sang trái thay vì che
+ * trang (yêu cầu 2026-10-22, theo bản demo): {@code html.drawio-panel-open} và biến {@code --drawio-panel-width} cho
+ * lề phải của body (globals.css). Chỉ nhận message đúng origin và đúng iframe; Lưu thì xuất {@code xmlsvg} để có XML
+ * đầy đủ và SVG xem trước (backend làm sạch SVG khi lưu).
  */
 export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
   const pending = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [width, setWidth] = useState(() => (typeof window === "undefined" ? 800 : Math.round(window.innerWidth * 0.6)));
+  const [dragging, setDragging] = useState(false);
   const handlers = useRef({ onSave, onClose, xml });
   useEffect(() => {
     handlers.current = { onSave, onClose, xml };
   }, [onSave, onClose, xml]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("drawio-panel-open");
+    return () => {
+      root.classList.remove("drawio-panel-open");
+      root.style.removeProperty("--drawio-panel-width");
+    };
+  }, []);
+  useEffect(() => {
+    document.documentElement.style.setProperty("--drawio-panel-width", `${width}px`);
+  }, [width]);
+
+  // Kéo mép trái để đổi độ rộng; lớp phủ trong lúc kéo để iframe không nuốt sự kiện chuột.
+  useEffect(() => {
+    if (!dragging) return;
+    const move = (event: MouseEvent) => setWidth(Math.round(Math.max(MIN_WIDTH, Math.min(window.innerWidth - event.clientX, window.innerWidth * 0.9))));
+    const up = () => setDragging(false);
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+  }, [dragging]);
 
   useEffect(() => {
     function post(message: Record<string, unknown>) {
@@ -79,16 +109,30 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   }, [title]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-ink/60 p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="flex items-center justify-between rounded-t-xl bg-white px-4 py-2">
-        <p className="text-sm font-semibold text-ink">{title}</p>
-        <div className="flex items-center gap-2">
-          {!ready && <span role="status" className="text-xs text-muted">Đang mở Draw.io…</span>}
-          <Button size="sm" onClick={onClose}>Đóng</Button>
+    <>
+      {dragging && <div aria-hidden className="fixed inset-0 z-[59] cursor-col-resize" />}
+      <aside role="dialog" aria-label={title} data-testid="drawio-panel" style={{ width }}
+        className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
+        <div role="separator" aria-orientation="vertical" aria-label="Kéo để đổi độ rộng" title="Kéo để đổi độ rộng"
+          onMouseDown={(event) => { event.preventDefault(); setDragging(true); }}
+          className={cx("group absolute inset-y-0 left-0 z-[61] flex w-3.5 cursor-col-resize items-center justify-center hover:bg-primary/10",
+            dragging && "bg-primary/20")}>
+          <span className="flex flex-col gap-[3px] opacity-35 group-hover:opacity-80">
+            {Array.from({ length: 6 }, (_, i) => <span key={i} className="size-1 rounded-full bg-muted" />)}
+          </span>
         </div>
-      </div>
-      {/* embed.diagrams.net trả 403 khi Referer là localhost; không gửi Referer (cũng không lộ URL trang). */}
-      <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="min-h-0 flex-1 rounded-b-xl border-0 bg-white" />
-    </div>
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line py-2 pr-3.5 pl-[22px]">
+          <span className="truncate text-sm font-semibold text-ink">{title}</span>
+          <div className="flex shrink-0 items-center gap-2">
+            {!ready && <span role="status" className="text-xs text-muted">Đang mở Draw.io…</span>}
+            <Button size="sm" onClick={onClose}>✕ Đóng</Button>
+          </div>
+        </div>
+        <div className="relative min-h-0 flex-1">
+          {/* embed.diagrams.net trả 403 khi Referer là localhost; không gửi Referer (cũng không lộ URL trang). */}
+          <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="absolute inset-0 size-full border-0 bg-white" />
+        </div>
+      </aside>
+    </>
   );
 }

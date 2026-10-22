@@ -7,7 +7,6 @@ import { ApiError } from "@/shared/api/client";
 import {
   AutoTextarea,
   DocumentEditor,
-  DocxImportDialog,
   RubricNote,
   ToolbarButton,
   computeParts,
@@ -24,7 +23,7 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Menu, MenuItem, PageHeader, Pill } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, PageHeader, Pill, cx } from "@/shared/ui";
 import { AiDraftDialog } from "./AiDraftDialog";
 import { assignmentsApi, docxUrl, imageUrlFor } from "./api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "./AssignmentSettingsPanel";
@@ -35,6 +34,7 @@ import { gradingLabels, statusLabels, statusTones, submissionLabels, type Assign
 
 const AUTOSAVE_MS = 1500;
 const VERSION_CONFLICT = "ASSIGNMENT_VERSION_CONFLICT";
+const NOT_READY = "ASSIGNMENT_NOT_READY";
 
 type Local = {
   title: string;
@@ -54,6 +54,15 @@ export function mergeSaved(local: DocumentModel, saved: DocumentModel): Document
   };
 }
 
+/**
+ * Báo chung chung khi xếp lịch mà bài còn thiếu (yêu cầu 2026-10-22): chỉ ghi trạng thái; chỗ thiếu tô đỏ ngay trong bài
+ * (block, thẻ rubric, tên bài), chỉ lỗi không gắn được vào đâu (cài đặt, nhóm…) mới ghi kèm.
+ */
+export function missingText(issues: ValidationIssue[]): string {
+  const loose = issues.filter((issue) => !issue.blockId && issue.code !== "TITLE_REQUIRED" && !issue.code.startsWith("RUBRIC"));
+  return ["Bài còn chỗ chưa đủ", ...loose.map((issue) => issue.message)].join("; ");
+}
+
 /** Chạy {@code task} sau mọi lệnh ghi đang chờ (lưu, duyệt…) để lệnh nào cũng gửi đúng version của bài. */
 function chain<T>(queue: { current: Promise<unknown> }, task: () => Promise<T>): Promise<T> {
   const run = queue.current.then(task, task);
@@ -64,8 +73,8 @@ function chain<T>(queue: { current: Promise<unknown> }, task: () => Promise<T>):
 /**
  * #26 Assignment Form (UC 35, 36): một trang kiểu Google Docs, sửa khung tài liệu và rubric cùng lúc. Rubric atomic của
  * mỗi mục (tiêu đề lá của cây tiêu đề) nằm ở lề phải, bắt đầu ngang tiêu đề và dính trên màn hình suốt mục đó; tự lưu
- * sau 1,5 giây. Thứ tự (yêu cầu 2026-10-21): soạn đề và rubric → xem trước như sinh viên → đặt lịch phát hành; bước
- * "Tiếp tục" ở trang xem trước là lệnh duyệt (DRAFT → REVIEWED) của BR-U07-32.
+ * sau 1,5 giây. Thứ tự (yêu cầu 2026-10-21, 2026-10-22): soạn đề và rubric → (tùy chọn) xem trước như sinh viên → xếp
+ * lịch; nút "Xếp lịch" có ngay trên trang soạn, phát hành thẳng từ bản nháp (không còn trạng thái Đã duyệt).
  */
 export function AssignmentFormPage({ id }: { id: string }) {
   const router = useRouter();
@@ -87,7 +96,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [message, setMessage] = useState<{ tone: "danger" | "success"; text: string } | null>(null);
   const [activePart, setActivePart] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<"ai" | "docx" | "retire" | "delete" | "settings" | "schedule" | null>(null);
+  const [dialog, setDialog] = useState<"ai" | "retire" | "delete" | "settings" | "schedule" | null>(null);
   const [preview, setPreview] = useState(false);
   const version = useRef(0);
   const detailRef = useRef<AssignmentDetail | null>(null);
@@ -112,27 +121,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current = { ...dirty.current, details: false, skeleton: false };
   }, []);
 
-  // Tạo bài "Từ tệp DOCX": khi bài tải xong thì mở sẵn hộp nhập DOCX một lần rồi bỏ tham số khỏi địa chỉ.
-  const importOnLoad = useRef(params.get("import") === "docx");
   useEffect(() => {
     const controller = new AbortController();
     assignmentsApi.detail(id, controller.signal).then(
-      (next) => {
-        if (controller.signal.aborted) return;
-        apply(next, true);
-        if (importOnLoad.current && next.permissions.canEditContent) {
-          importOnLoad.current = false;
-          setDialog("docx");
-          const query = new URLSearchParams(window.location.search);
-          query.delete("import");
-          const rest = query.toString();
-          router.replace(`/assignments/${encodeURIComponent(id)}${rest ? `?${rest}` : ""}`);
-        }
-      },
+      (next) => { if (!controller.signal.aborted) apply(next, true); },
       (error) => { if (!controller.signal.aborted) setLoadError(error); },
     );
     return () => controller.abort();
-  }, [apply, id, router]);
+  }, [apply, id]);
 
   // Rubric của các mục đã có trên server; mục mới chỉ tải phần chưa có, rubric đang sửa dở giữ bản đang sửa.
   const partsKey = detail?.parts.map((part) => part.partId).join("|") ?? "";
@@ -225,7 +221,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         setConflict(true);
       } else {
         setIssues(problemIssues(error));
-        setMessage({ tone: "danger", text: `Chưa lưu được: ${errorMessage(error)}` });
+        setMessage({ tone: "danger", text: `Chưa lưu: ${errorMessage(error)}` });
       }
       return false;
     } finally {
@@ -284,6 +280,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }
   function editTitle(value: string) {
     setTitle(value);
+    setIssues((current) => current.filter((issue) => issue.code !== "TITLE_REQUIRED"));
     latest.current = { ...latest.current, title: value };
     dirty.current.details = true;
     changed();
@@ -335,11 +332,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }
   }
 
-  async function exportDocx(includeRubric: boolean) {
-    if (await save()) window.location.assign(docxUrl(id, includeRubric));
+  async function exportDocx(what: "skeleton" | "rubric") {
+    if (await save()) window.location.assign(docxUrl(id, what));
   }
 
-  /** Bước 2: lưu bản đang sửa rồi xem đề như sinh viên thấy khi làm bài (không có rubric). */
+  /** Xem trước (tùy chọn): lưu bản đang sửa rồi xem đề như sinh viên thấy khi làm bài (không có rubric). */
   async function openPreview() {
     setMessage(null);
     if (await save()) {
@@ -348,29 +345,39 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }
   }
 
-  /** Từ trang xem trước sang bước 3: duyệt (kiểm rubric đủ, khung hợp lệ…) rồi mở lịch phát hành. */
-  async function continueToSchedule() {
+  /** Bài còn thiếu mà trang tự thấy được (tên bài, rubric các phần); luật đầy đủ server kiểm khi phát hành. */
+  function localMissing(): ValidationIssue[] {
+    const found: ValidationIssue[] = [];
+    if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: "Bài cần tiêu đề" });
+    for (const part of parts) {
+      if (!rubricComplete(criteria[part.partId] ?? [])) found.push({ code: "RUBRIC_INCOMPLETE", blockId: part.headingBlockId, message: "Rubric chưa đủ" });
+    }
+    return found;
+  }
+
+  /** Bài còn thiếu: về trang soạn, chỗ thiếu tô đỏ, báo chung chung. */
+  function showMissing(found: ValidationIssue[]) {
+    setPreview(false);
+    setIssues(found);
+    setMessage({ tone: "danger", text: missingText(found) });
+  }
+
+  /**
+   * "Xếp lịch" ngay trên trang soạn hoặc trang xem trước (yêu cầu 2026-10-22, bỏ trạng thái Đã duyệt): lưu, kiểm sơ bộ
+   * tên bài và rubric rồi mở lịch; phát hành thẳng từ bản nháp, server kiểm đủ luật duyệt (BR-U07-32) khi phát hành.
+   */
+  async function openSchedule() {
     setMessage(null);
     if (!(await save())) {
       setPreview(false);
       return;
     }
-    try {
-      const next = await chain(queue, () => assignmentsApi.review(id, version.current));
-      apply(next, false);
-      setIssues([]);
-      setPreview(false);
-      setDialog("schedule");
-    } catch (error) {
-      setPreview(false);
-      if (problemCode(error) === VERSION_CONFLICT) {
-        conflictRef.current = true;
-        setConflict(true);
-        return;
-      }
-      setIssues(problemIssues(error));
-      setMessage({ tone: "danger", text: `Chưa sang được bước đặt lịch: ${errorMessage(error)}` });
+    const found = localMissing();
+    if (found.length > 0) {
+      showMissing(found);
+      return;
     }
+    setDialog("schedule");
   }
 
   if (loadError) {
@@ -386,6 +393,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const missing = parts.filter((part) => !rubricComplete(criteria[part.partId] ?? [])).length;
   const totalPoints = parts.reduce((sum, part) => sum + rubricTotal(criteria[part.partId] ?? []), 0);
   const active = parts.find((part) => part.partId === activePart);
+  const titleMissing = issues.some((issue) => issue.code === "TITLE_REQUIRED");
   const required = Object.entries(settings.requiredDiagrams) as [DiagramType, number][];
   const saveText = !permissions.canEditContent ? "Chỉ xem" : saving ? "Đang lưu…" : conflict ? "Chưa lưu"
     : unsaved ? "Chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Đã lưu";
@@ -411,12 +419,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       {editable ? (
         <AutoTextarea id="assignment-title" aria-label="Tên bài" value={title} maxLength={200} placeholder="Tên bài tập"
-          className="text-[26px] leading-tight font-bold text-ink"
+          aria-invalid={titleMissing || undefined}
+          className={cx("text-[26px] leading-tight font-bold text-ink", titleMissing && "rounded-md bg-danger-soft")}
           onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
           onChange={(event) => editTitle(event.target.value.replace(/\n/g, " "))} />
       ) : <h2 className="text-[26px] leading-tight font-bold text-ink">{title || "Bài chưa đặt tên"}</h2>}
       {editable ? (
-        <AutoTextarea aria-label="Hướng dẫn chung" value={instructions} maxLength={20000} placeholder="Hướng dẫn chung cho sinh viên (tùy chọn)…"
+        <AutoTextarea aria-label="Hướng dẫn chung" value={instructions} maxLength={20000}
           className="text-sm leading-[1.65] text-body" onChange={(event) => editInstructions(event.target.value)} />
       ) : instructions && <p className="text-sm leading-[1.65] whitespace-pre-wrap text-body">{instructions}</p>}
       <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
@@ -427,7 +436,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
       </p>
     </div>
   );
-  const publishLabel = "Phát hành";
 
   return (
     <div className="flex flex-col gap-3">
@@ -436,24 +444,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
         breadcrumb={[{ label: detail.ownerName || (detail.scope === "SUBJECT" ? "Bài của môn" : "Bài của lớp") }, { label: `Version ${detail.versionNo}` }]}
         subtitle={<span data-testid="save-state">{saveText}</span>}
         actions={<>
-          {preview ? (
-            <Button icon="arrow_back" data-testid="preview-back" onClick={() => setPreview(false)}>Quay lại</Button>
-          ) : (
-            <Button variant={permissions.canReview ? "primary" : "secondary"} icon="visibility" data-testid="assignment-preview"
-              onClick={() => void openPreview()}>Bản sinh viên</Button>
-          )}
-          {permissions.canReview && preview && (
-            <Button variant="primary" icon="calendar_month" data-testid="assignment-review" onClick={() => void continueToSchedule()}>{publishLabel}</Button>
-          )}
-          {permissions.canPublish && (
-            <Button variant="primary" icon="calendar_month" data-testid="assignment-publish" onClick={() => setDialog("schedule")}>{publishLabel}</Button>
-          )}
-          {!permissions.canPublish && permissions.canChangeSchedule && (
-            <Button icon="calendar_month" onClick={() => setDialog("schedule")}>Đổi lịch</Button>
-          )}
           <Menu label="Khác" align="right">
-            <MenuItem icon="download" onClick={() => void exportDocx(false)}>Xuất DOCX</MenuItem>
-            <MenuItem icon="download" onClick={() => void exportDocx(true)}>Xuất DOCX kèm rubric</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
             {permissions.canClone && (
               <MenuItem icon="add" onClick={() => void act(async () => {
                 const copy = await assignmentsApi.clone(id);
@@ -469,22 +462,28 @@ export function AssignmentFormPage({ id }: { id: string }) {
             {permissions.canRetire && <MenuItem icon="block" tone="danger" onClick={() => setDialog("retire")}>Ngưng giao</MenuItem>}
             {permissions.canDelete && <MenuItem icon="close" tone="danger" onClick={() => setDialog("delete")}>Xóa bản nháp</MenuItem>}
           </Menu>
+          {preview ? (
+            <Button icon="arrow_back" data-testid="preview-back" onClick={() => setPreview(false)}>Quay lại</Button>
+          ) : (
+            <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>Xem trước</Button>
+          )}
+          {permissions.canPublish ? (
+            <Button variant="primary" icon="calendar_month" data-testid="assignment-schedule" onClick={() => void openSchedule()}>Xếp lịch</Button>
+          ) : permissions.canChangeSchedule && (
+            <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>Đổi lịch</Button>
+          )}
         </>} />
 
       {conflict && (
-        <Alert tone="warning" role="alert" title="Bài đã thay đổi ở nơi khác"
-          action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
-          Bản bạn đang sửa vẫn còn trên màn hình nhưng chưa được lưu. Tải lại để lấy bản mới nhất.
+        <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
+          Bài đã thay đổi ở nơi khác, bản đang sửa chưa lưu
         </Alert>
       )}
       {message && (
-        <Alert tone={message.tone} role={message.tone === "danger" ? "alert" : "status"}>
-          {message.text}
-          {issues.length > 0 && <ul className="mt-1 list-disc pl-4">{issues.slice(0, 10).map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}
-        </Alert>
+        <Alert tone={message.tone} role={message.tone === "danger" ? "alert" : "status"}>{message.text}</Alert>
       )}
-      {permissions.ownerArchived && <Alert tone="info">{detail.scope === "CLASS" ? "Lớp" : "Môn"} đã lưu trữ, bài chỉ xem được.</Alert>}
-      {!permissions.canManage && <Alert tone="info">Bài của môn do Chủ nhiệm môn soạn; bạn chỉ xem.</Alert>}
+      {permissions.ownerArchived && <Alert tone="info">{detail.scope === "CLASS" ? "Lớp" : "Môn"} đã lưu trữ · chỉ xem</Alert>}
+      {!permissions.canManage && <Alert tone="info">Bài của môn · chỉ xem</Alert>}
       {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title="Đã ngưng giao">{detail.retiredReason}</Alert>}
 
       <DocumentEditor document={skeleton} mode={preview ? "student" : "author"} diagramEnabled readOnly={!editable}
@@ -508,22 +507,27 @@ export function AssignmentFormPage({ id }: { id: string }) {
         </Dialog>
       )}
       {dialog === "schedule" && (
-        <Dialog open size="lg" icon="calendar_month" title={permissions.canPublish ? "Lịch phát hành" : "Đổi lịch"} onClose={() => setDialog(null)}>
+        <Dialog open size="lg" icon="calendar_month" title={permissions.canPublish ? "Xếp lịch" : "Đổi lịch"} onClose={() => setDialog(null)}>
           {permissions.canPublish ? (
             <ScheduleForm assignment={detail} mode="publish" onSubmit={async (input) => {
-              const next = await chain(queue, () => assignmentsApi.publish(id, version.current, input));
-              apply(next, false);
-              setDialog(null);
-              setMessage({ tone: "success", text: next.status === "OPEN" ? "Đã phát hành, sinh viên thấy bài ngay." : "Đã lên lịch phát hành." });
+              try {
+                const next = await chain(queue, () => assignmentsApi.publish(id, version.current, input));
+                apply(next, false);
+                setDialog(null);
+                setIssues([]);
+                setMessage({ tone: "success", text: next.status === "OPEN" ? "Đã phát hành" : "Đã lên lịch" });
+              } catch (error) {
+                if (problemCode(error) !== NOT_READY) throw error;
+                setDialog(null);
+                showMissing(problemIssues(error));
+              }
             }} />
-          ) : permissions.canChangeSchedule ? (
+          ) : permissions.canChangeSchedule && (
             <ScheduleForm assignment={detail} mode="change" onSubmit={async (input) => {
               apply(await chain(queue, () => assignmentsApi.changeSchedule(id, version.current, input)), false);
               setDialog(null);
-              setMessage({ tone: "success", text: "Đã lưu lịch." });
+              setMessage({ tone: "success", text: "Đã lưu lịch" });
             }} />
-          ) : (
-            <Alert tone="info">Duyệt bài trước khi đặt lịch phát hành.</Alert>
           )}
         </Dialog>
       )}
@@ -531,22 +535,12 @@ export function AssignmentFormPage({ id }: { id: string }) {
         <AiDraftDialog assignmentId={id} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
           onClose={() => setDialog(null)} onApplied={() => { setDialog(null); void reload(); }} />
       )}
-      {dialog === "docx" && (
-        <DocxImportDialog allowReplace preview={(file) => assignmentsApi.importDocx(id, file)}
-          onClose={() => setDialog(null)}
-          onImport={async (document, mode) => {
-            if (!(await save())) throw new Error("Chưa lưu được bản đang sửa, hãy thử lại");
-            const blocks = mode === "replace" ? document.blocks : [...latest.current.skeleton.blocks, ...document.blocks];
-            apply(await chain(queue, () => assignmentsApi.saveSkeleton(id, version.current, { blocks }, { fromDocx: true })), true);
-            setMessage({ tone: "success", text: "Đã nhập DOCX vào khung." });
-          }} />
-      )}
       {dialog === "retire" && (
         <RetireDialog onClose={() => setDialog(null)}
           onConfirm={async (reason) => {
             apply(await chain(queue, () => assignmentsApi.retire(id, version.current, reason)), false);
             setDialog(null);
-            setMessage({ tone: "success", text: "Đã ngưng giao bài." });
+            setMessage({ tone: "success", text: "Đã ngưng giao" });
           }} />
       )}
       {dialog === "delete" && (

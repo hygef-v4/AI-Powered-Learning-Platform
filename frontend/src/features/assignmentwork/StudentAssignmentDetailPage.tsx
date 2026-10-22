@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { diagramTypeLabels, formatPoints, type DiagramType } from "@/shared/document";
+import { diagramTypeLabels, type DiagramType } from "@/shared/document";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
 import { workApi } from "./api";
@@ -63,7 +63,7 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]" data-testid="assignment-info">
               <dt className="text-muted">Lớp</dt><dd>{detail.classCode} · {detail.className}{detail.scope === "SUBJECT" ? " (bài của môn)" : ""}</dd>
               <dt className="text-muted">Hình thức</dt><dd>{detail.submissionMode === "GROUP" ? "Bài nhóm" : "Bài cá nhân"}</dd>
-              <dt className="text-muted">Chế độ</dt><dd>{detail.gradingMode === "GRADED" ? `Graded · tổng ${formatPoints(detail.maxPoints)} điểm` : "Practice · không tính điểm, có góp ý AI sau khi nộp"}</dd>
+              <dt className="text-muted">Chế độ</dt><dd>{detail.gradingMode === "GRADED" ? "Graded" : "Practice · không tính điểm, có góp ý AI sau khi nộp"}</dd>
               <dt className="text-muted">Số phần cần làm</dt><dd>{detail.partCount}</dd>
               {required.length > 0 && (<><dt className="text-muted">Sơ đồ cần có</dt><dd>{required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}</dd></>)}
               <dt className="text-muted">Mở lúc</dt><dd>{formatDateTime(detail.opensAt)}</dd>

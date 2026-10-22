@@ -49,3 +49,31 @@ body {
 h1 {
   letter-spacing: -0.01em;
 }
+
+/* Trình vẽ Draw.io mở ở cột phải (DiagramEditor): đẩy cả trang sang trái bằng lề phải của body, không che trang. */
+html.drawio-panel-open body {
+  margin-right: var(--drawio-panel-width, 50vw);
+  transition: margin-right 0.25s ease;
+}
+
+/* Đang vẽ thì thu thanh menu bên trái của ứng dụng (AppShell) để trang tài liệu còn đủ rộng. */
+[data-app-sidebar] {
+  transition: width 0.25s ease, padding 0.25s ease;
+}
+
+html.drawio-panel-open [data-app-sidebar] {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+  border-right-width: 0;
+}
+
+@keyframes drawio-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
