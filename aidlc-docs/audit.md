@@ -5099,3 +5099,24 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U11/U10 fixes approved.
 
 ---
+
+## U14 topology startup bean collision — reported issue and refreshed staging
+**Date**: 2026-10-22 (Asia/Saigon)
+**User Input**:
+1. Backend không khởi động được (cả worker). Nhờ U14 xem.
+- Chạy jar báo "APPLICATION FAILED TO START": bean notificationTopology bị khai báo hai lần.
+- Nguyên nhân: lớp @Configuration NotificationTopology tự có tên bean là "notificationTopology", trùng với method @Bean Declarables notificationTopology() bên trong. Lỗi từ commit 2920fc6.
+- Bật allow-bean-definition-overriding cũng không chạy, vì Spring báo "factory-bean reference points back to the same bean definition".
+- Cách sửa gợi ý: đổi tên method @Bean, ví dụ notificationDeclarables().
+- CI không bắt được lỗi này vì chưa có test nào dựng Spring context.
+check lại lỗi
+**User Input**: "kiểm tra lại branch staging tại tôi vừa pull lại"
+**AI Response**: Confirmed current staging HEAD0d1cf27 equals origin/staging after fast-forward pull; production source still contains the collision. Added NotificationTopologyContextTest and reproduced2failures before modifying production code: overriding disabled raises BeanDefinitionOverrideException; enabled raises BeanDefinitionStoreException for configuration/factory bean name clash. Renamed exactly one factory method to notificationDeclarables; no topology resources or overriding settings changed. Configuration is shared by API and worker. Other unit context tests already exist; U14 topology lacked this coverage. Existing CI mvn verify automatically includes the new regression.
+**Verification**: Full backend mvn -B verify BUILD SUCCESS:1112total/1033pass/79skip/0failure/error, executable JAR,3m27s, finished2026-10-22T12:54:20+07:00. Both new context cases pass. Red and green logs .tmp/u14-topology-fix/red.log and verify.log are ignored local evidence. Existing Maven duplicate poi-ooxml declaration warning was not changed as part of this scoped fix. No full application/worker startup against real PostgreSQL/Rabbit/SMTP claimed; independent acceptance gates retained.
+**Changes**: NotificationTopology.java single-line rename, new context regression test, approved U14 plan progress and appended audit/state. No frontend changes, commit/push, branch switch, deployment or real mail.
+---
+
+## U14 topology fix local commit authorization — 2026-10-22
+**User Input**: "commit, không push"
+**AI Response**: Verified staging branch, empty index and exactly the topology method rename, new two-case Spring context regression and three AI-DLC tracking files. Commit these five files together; retain full backend verify1112total/1033pass/79skip/0failures/errors evidence without source changes or redundant reruns. No push/deployment authorized or performed.
+---
