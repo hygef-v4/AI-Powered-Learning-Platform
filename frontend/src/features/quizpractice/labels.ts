@@ -1,4 +1,5 @@
 import { ApiError } from "@/shared/api/client";
+import type { SubmitMode } from "./types";
 
 const SYSTEM_BUSY = "Hệ thống tạm bận, vui lòng thử lại sau.";
 
@@ -44,4 +45,9 @@ export function formatDuration(fromIso: string, toIso: string | null): string {
 
 export function attemptsText(used: number, max: number | null): string {
   return max === null ? `${used} lượt · không giới hạn` : `${used} / ${max} lượt`;
+}
+
+/** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */
+export function submitModeText(mode: SubmitMode): string | null {
+  return mode === "AUTO_TIME_LIMIT" ? "Tự nộp khi hết giờ" : mode === "AUTO_RETIRED" ? "Tự nộp khi quiz bị ngưng" : null;
 }

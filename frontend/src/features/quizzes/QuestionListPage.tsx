@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, ButtonLink, ClickableRow, cx, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getManagedSubjects, getQuestions } from "./api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "./labels";
+import { QuestionAiDraftDialog } from "./AiDraftTargets";
 import { QuestionImportDialog } from "./QuestionImportDialog";
 import type { Difficulty, ManagedSubject, QuestionPage, QuestionStatus, QuestionType } from "./types";
 
@@ -30,6 +31,7 @@ export function QuestionListPage() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [importing, setImporting] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export function QuestionListPage() {
             {subjects.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
           </Select>
           {!archived && <Button icon="upload_file" onClick={() => { setNotice(null); setImporting(true); }} data-testid="question-list-import">Nhập từ tệp</Button>}
+          {!archived && <Button icon="smart_toy" onClick={() => { setNotice(null); setDrafting(true); }} data-testid="question-list-ai">Tạo nháp bằng AI</Button>}
           {!archived && (
             <ButtonLink variant="primary" icon="add" href={`/manager/questions/new?subjectId=${encodeURIComponent(subject.id)}`}>Thêm câu hỏi</ButtonLink>
           )}
@@ -162,6 +165,14 @@ export function QuestionListPage() {
         </div>
       )}
 
+      {drafting && (
+        <QuestionAiDraftDialog subjectId={subject.id} onClose={() => setDrafting(false)}
+          onAccepted={(count) => {
+            setDrafting(false);
+            setNotice(`Đã lưu ${count} câu ở trạng thái Nháp.`);
+            setReloadKey((k) => k + 1);
+          }} />
+      )}
       {importing && (
         <QuestionImportDialog subjectId={subject.id} onClose={() => setImporting(false)}
           onImported={(created) => {

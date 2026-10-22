@@ -38,6 +38,10 @@ public class IdentityContractStubs {
     IAccountLookup accountLookupStub() {
         return Stubs.announce(IAccountLookup.class, new IAccountLookup() {
             @Override
+            public List<AccountContact> listActiveAdmins(UUID afterId,int limit) {
+                throw new UnsupportedOperationException("Active Admin provider is not installed");
+            }
+            @Override
             public List<AccountContact> findStudents(String query, int limit) {
                 return List.of();
             }

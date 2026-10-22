@@ -23,6 +23,8 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.quizzes.application.QuestionBankService;
 import edu.aiplatform.quizzes.application.QuestionImporter;
+import edu.aiplatform.quizzes.application.QuizAiDraftService;
+import edu.aiplatform.quizzes.application.QuizReferenceMaterials;
 import edu.aiplatform.quizzes.application.QuestionInvalidException;
 import edu.aiplatform.quizzes.application.QuestionViews.QuestionDetail;
 import edu.aiplatform.quizzes.application.QuestionViews.QuestionPage;
@@ -65,13 +67,15 @@ class QuestionControllerTest {
     private final Actor manager = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
     private final QuestionBankService bank = mock(QuestionBankService.class);
     private final QuestionImporter importer = mock(QuestionImporter.class);
+    private final QuizAiDraftService drafts = mock(QuizAiDraftService.class);
+    private final QuizReferenceMaterials materials = mock(QuizReferenceMaterials.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setup() {
         ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
                 .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
-        mvc = MockMvcBuilders.standaloneSetup(new QuestionController(bank, importer))
+        mvc = MockMvcBuilders.standaloneSetup(new QuestionController(bank, importer, drafts, materials))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .setControllerAdvice(new QuizzesExceptionHandler(), new GlobalExceptionHandler()).build();
@@ -180,5 +184,22 @@ class QuestionControllerTest {
         mvc.perform(delete("/api/v1/questions/{id}", questionId)).andExpect(status().isBadRequest());
         when(bank.openDraft(manager, questionId)).thenReturn(detail());
         mvc.perform(post("/api/v1/questions/{id}/versions", questionId)).andExpect(status().isOk());
+    }
+
+    @Test
+    void bankAiDraftRoutesAcceptWithoutVersion() throws Exception {
+        UUID draft = UUID.randomUUID();
+        mvc.perform(post("/api/v1/subjects/{s}/question-ai-drafts", subject).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instructions\":\"Ôn tập\",\"count\":3,\"source\":\"SHARED\",\"requestRef\":\"r\"}"))
+                .andExpect(status().isCreated());
+        verify(drafts).requestForBank(eq(manager), eq(subject), any());
+
+        mvc.perform(post("/api/v1/subjects/{s}/question-ai-drafts/{d}:accept", subject, draft)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"questions\":[" + BODY + "]}"))
+                .andExpect(status().isOk());
+        verify(drafts).acceptForBank(eq(manager), eq(subject), eq(draft), any());
+        mvc.perform(post("/api/v1/subjects/{s}/question-ai-drafts/{d}:accept", subject, draft)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"questions\":[" + BODY + "],\"version\":1}"))
+                .andExpect(status().isBadRequest());
     }
 }

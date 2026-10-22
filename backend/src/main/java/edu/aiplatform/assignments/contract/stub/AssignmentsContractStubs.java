@@ -23,6 +23,7 @@ import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.assignments.contract.ValidationResult;
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.stub.Stubs;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -39,7 +40,7 @@ import org.springframework.context.annotation.Bean;
 
 /**
  * Bản tạm của interface U07 (và {@code IGroupAssignmentSupport} do U12 cài): bài mẫu đang mở, khung rỗng một phần,
- * chưa có rubric, mọi kiểm tra tài liệu đều hợp lệ, lớp luôn sẵn sàng cho bài nhóm.
+ * chưa có rubric, mọi kiểm tra tài liệu đều hợp lệ; chưa có U12 thì bài nhóm báo {@code GROUP_SUPPORT_UNAVAILABLE}.
  */
 @AutoConfiguration
 @ConditionalOnProperty(name = "platform.contract-stubs.enabled", havingValue = "true", matchIfMissing = true)
@@ -144,6 +145,11 @@ public class AssignmentsContractStubs {
             public String compactDiagramXml(String xml) {
                 return xml;
             }
+
+            @Override
+            public DocumentModel sanitize(DocumentModel document) {
+                return document;
+            }
         });
     }
 
@@ -157,8 +163,8 @@ public class AssignmentsContractStubs {
             }
 
             @Override
-            public DocxImportPreview importPreview(byte[] docx, BlockOrigin origin, boolean diagramEnabled,
-                                                   IDiagramResolver diagramResolver) {
+            public DocxImportPreview importPreview(Actor actor, byte[] docx, BlockOrigin origin,
+                                                   boolean diagramEnabled, IDiagramResolver diagramResolver) {
                 return new DocxImportPreview(EMPTY_DOCUMENT, List.of());
             }
         });
@@ -168,6 +174,6 @@ public class AssignmentsContractStubs {
     @ConditionalOnMissingBean
     IGroupAssignmentSupport groupAssignmentSupportStub() {
         return Stubs.announce(IGroupAssignmentSupport.class,
-                classId -> new ReadinessResult(List.of(), List.of()));
+                classId -> new ReadinessResult(List.of(IGroupAssignmentSupport.UNAVAILABLE), List.of()));
     }
 }

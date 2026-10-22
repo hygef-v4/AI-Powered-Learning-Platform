@@ -2,12 +2,16 @@ package edu.aiplatform.quizzes.application;
 
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
+import edu.aiplatform.quizzes.domain.DraftStatus;
+import edu.aiplatform.quizzes.domain.DraftTarget;
 import edu.aiplatform.quizzes.domain.IQuestionRepository;
+import edu.aiplatform.quizzes.domain.IQuizAiDraftRepository;
 import edu.aiplatform.quizzes.domain.IQuizRepository;
 import edu.aiplatform.quizzes.domain.Question;
 import edu.aiplatform.quizzes.domain.QuestionScope;
 import edu.aiplatform.quizzes.domain.QuestionStatus;
 import edu.aiplatform.quizzes.domain.Quiz;
+import edu.aiplatform.quizzes.domain.QuizAiDraft;
 import edu.aiplatform.quizzes.domain.QuizItem;
 import edu.aiplatform.quizzes.domain.QuizOrigin;
 import java.math.BigDecimal;
@@ -22,7 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
 
-/** Bản giả trong bộ nhớ của hai repository U10, đủ để kiểm luồng soạn, phát hành, copy Quiz (không kiểm SQL). */
+/** Bản giả trong bộ nhớ của các repository U10, đủ để kiểm luồng soạn, phát hành, copy Quiz (không kiểm SQL). */
 class InMemoryQuizStore {
 
     final Map<UUID, Quiz> quizzes = new LinkedHashMap<>();
@@ -30,6 +34,8 @@ class InMemoryQuizStore {
     final Map<UUID, Question> questions = new LinkedHashMap<>();
     final Quizzes quizRepository = new Quizzes();
     final Questions questionRepository = new Questions();
+    final Map<UUID, QuizAiDraft> drafts = new LinkedHashMap<>();
+    final Drafts draftRepository = new Drafts();
 
     void put(Question q) {
         questions.put(q.id(), q);
@@ -247,6 +253,59 @@ class InMemoryQuizStore {
         @Override
         public long countActive(UUID subjectId, PickQuery query) {
             return active(subjectId, query).size();
+        }
+    }
+
+    class Drafts implements IQuizAiDraftRepository {
+
+        @Override
+        public void insert(QuizAiDraft draft) {
+            drafts.put(draft.id(), draft);
+        }
+
+        @Override
+        public Optional<QuizAiDraft> find(UUID id) {
+            return Optional.ofNullable(drafts.get(id));
+        }
+
+        @Override
+        public Optional<QuizAiDraft> findByRequest(UUID createdBy, String requestRef) {
+            return drafts.values().stream()
+                    .filter(d -> d.createdBy().equals(createdBy) && requestRef.equals(d.requestRef())).findFirst();
+        }
+
+        @Override
+        public List<QuizAiDraft> listOpenForQuiz(UUID quizId) {
+            return drafts.values().stream().filter(d -> quizId.equals(d.quizId()) && d.status().isOpen()).toList();
+        }
+
+        @Override
+        public List<QuizAiDraft> listOpenForBank(UUID subjectId) {
+            return drafts.values().stream().filter(d -> d.target() == DraftTarget.BANK
+                    && d.subjectId().equals(subjectId) && d.status().isOpen()).toList();
+        }
+
+        @Override
+        public boolean transition(QuizAiDraft next, DraftStatus expected) {
+            QuizAiDraft current = drafts.get(next.id());
+            if (current == null || current.status() != expected) {
+                return false;
+            }
+            UUID task = next.taskId() != null ? next.taskId() : current.taskId();
+            drafts.put(next.id(), new QuizAiDraft(next.id(), next.target(), next.quizId(), next.subjectId(),
+                    next.origin(), task, next.status(), next.proposal(), next.provenance(), next.baseVersion(),
+                    next.createdBy(), next.createdAt(), next.decidedAt()));
+            return true;
+        }
+
+        @Override
+        public void attachTask(UUID id, UUID taskId) {
+            QuizAiDraft d = drafts.get(id);
+            if (d != null && d.taskId() == null) {
+                drafts.put(id, new QuizAiDraft(d.id(), d.target(), d.quizId(), d.subjectId(), d.origin(), taskId,
+                        d.status(), d.proposal(), d.provenance(), d.baseVersion(), d.createdBy(), d.createdAt(),
+                        d.decidedAt()));
+            }
         }
     }
 }

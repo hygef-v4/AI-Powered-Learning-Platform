@@ -89,7 +89,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         </nav>
       </header>
       <div className="flex min-h-[calc(100vh-64px)] flex-1">
-        <aside className="w-[236px] shrink-0 border-r border-line bg-white px-3 py-5">
+        <aside data-app-sidebar className="w-[236px] shrink-0 border-r border-line bg-white px-3 py-5">
           <nav aria-label={`Menu ${roleLabel}`} className="flex flex-col gap-1">
             {nav.map((item, index) => {
               const active = item.href === current;

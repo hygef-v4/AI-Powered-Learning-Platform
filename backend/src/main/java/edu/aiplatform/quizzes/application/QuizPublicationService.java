@@ -17,6 +17,7 @@ import edu.aiplatform.quizzes.domain.Violation;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,9 @@ public class QuizPublicationService {
 
     private void requireReviewable(Quiz quiz) {
         List<QuizItem> items = quizzes.items(quiz.id());
-        List<Violation> violations = QuizRules.validateForReview(quiz, items, support.questionsOf(items));
+        List<Violation> violations = new ArrayList<>(QuizRules.validateForReview(quiz, items, support.questionsOf(items)));
+        violations.addAll(QuizRules.validateActivity(quiz.activityMonitoringEnabled(), quiz.activityNotice(),
+                support.activityRetentionConfigured()));
         if (!violations.isEmpty()) {
             throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_REVIEW_FAILED",
                     "Quiz chưa đủ điều kiện; hãy sửa các mục được nêu", violations);

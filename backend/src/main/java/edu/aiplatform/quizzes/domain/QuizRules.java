@@ -45,6 +45,23 @@ public final class QuizRules {
         return List.copyOf(violations);
     }
 
+    /** Bật ghi nhận hoạt động cần lời báo cho sinh viên và thời hạn lưu đã đặt (BR-U10-15, K2). */
+    public static List<Violation> validateActivity(boolean enabled, String notice, boolean retentionConfigured) {
+        List<Violation> violations = new ArrayList<>();
+        if (!enabled) {
+            return violations;
+        }
+        if (notice == null || notice.isBlank()) {
+            violations.add(new Violation("activityNotice", "ACTIVITY_NOTICE_REQUIRED",
+                    "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động"));
+        }
+        if (!retentionConfigured) {
+            violations.add(new Violation("activityMonitoringEnabled", "ACTIVITY_RETENTION_NOT_SET",
+                    "Admin chưa đặt thời hạn lưu dữ liệu hoạt động"));
+        }
+        return violations;
+    }
+
     public static List<Violation> validateSettings(QuizSettings settings) {
         List<Violation> violations = new ArrayList<>();
         if (settings == null) {

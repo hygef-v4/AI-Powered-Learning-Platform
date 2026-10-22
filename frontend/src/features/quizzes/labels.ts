@@ -29,8 +29,22 @@ const ERROR_LABELS: Record<string, string> = {
   CLASS_ARCHIVED: "Lớp đã lưu trữ, quiz của lớp chỉ xem.",
   ACTIVITY_RETENTION_NOT_SET: "Chưa đặt thời hạn lưu dữ liệu hoạt động nên chưa bật được ghi nhận hoạt động.",
   QUIZ_COPY_SUBJECT_MISMATCH: "Chỉ copy quiz giữa các lớp cùng môn.",
+  QUIZ_FULL: "Quiz tối đa 200 câu.",
+  AI_DRAFT_NOT_FOUND: "Không tìm thấy đề xuất AI.",
+  AI_DRAFT_CLOSED: "Đề xuất đã được chấp nhận hoặc bỏ ở phiên khác.",
+  AI_DRAFT_NOT_READY: "AI chưa soạn xong đề xuất.",
+  AI_DRAFT_INVALID: "Có câu chưa hợp lệ, hãy sửa trước khi chấp nhận.",
+  MATERIAL_NOT_SELECTABLE: "Có tài liệu không chọn được hoặc chưa trích được chữ.",
+  MATERIAL_SERVICE_UNAVAILABLE: "Chưa lấy được tài liệu tham khảo, vui lòng thử lại.",
+  AI_SERVICE_UNAVAILABLE: "Chưa gửi được yêu cầu AI, vui lòng thử lại.",
+  AI_OUTPUT_INVALID: "Kết quả AI không đúng định dạng câu hỏi; hãy gửi lại yêu cầu.",
   SYSTEM_BUSY,
 };
+
+/** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
+export function failureLabel(code: string | null, message: string | null): string {
+  return (code && ERROR_LABELS[code]) || message || "AI chưa soạn được đề xuất.";
+}
 
 export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", REVIEWED: "Đã duyệt", OPEN: "Đang mở", RETIRED: "Ngưng" };
 export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", REVIEWED: "info", OPEN: "success", RETIRED: "neutral" };

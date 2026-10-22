@@ -54,7 +54,7 @@ final class QuestionRequests {
         }
     }
 
-    private static QuestionContent content(JsonNode body) {
+    static QuestionContent content(JsonNode body) {
         QuestionType type = enumValue(body, "type", QuestionType.class, true);
         List<QuestionOption> options = new ArrayList<>();
         JsonNode optionNodes = array(body, "options");
@@ -85,7 +85,7 @@ final class QuestionRequests {
                 points(body), enumValue(body, "difficulty", Difficulty.class, false), tags);
     }
 
-    private static void fields(JsonNode body, Set<String> allowed) {
+    static void fields(JsonNode body, Set<String> allowed) {
         if (body == null || !body.isObject()) {
             throw invalid("Cần một JSON object");
         }
@@ -97,7 +97,7 @@ final class QuestionRequests {
         }
     }
 
-    private static JsonNode array(JsonNode body, String field) {
+    static JsonNode array(JsonNode body, String field) {
         JsonNode value = body.get(field);
         if (value == null || !value.isArray()) {
             throw invalid(field + " cần là danh sách");
@@ -105,7 +105,7 @@ final class QuestionRequests {
         return value;
     }
 
-    private static String text(JsonNode body, String field, boolean required) {
+    static String text(JsonNode body, String field, boolean required) {
         JsonNode value = body.get(field);
         if (value == null || value.isNull()) {
             if (required) {
@@ -130,7 +130,7 @@ final class QuestionRequests {
         return value.decimalValue();
     }
 
-    private static <E extends Enum<E>> E enumValue(JsonNode body, String field, Class<E> type, boolean required) {
+    static <E extends Enum<E>> E enumValue(JsonNode body, String field, Class<E> type, boolean required) {
         String value = text(body, field, required);
         if (value == null) {
             return null;
@@ -142,7 +142,7 @@ final class QuestionRequests {
         }
     }
 
-    private static long version(JsonNode body) {
+    static long version(JsonNode body) {
         JsonNode value = body.get("version");
         if (value == null || !value.canConvertToExactIntegral() || value.asLong() < 0) {
             throw invalid("Thiếu version hoặc version không hợp lệ");
@@ -150,7 +150,7 @@ final class QuestionRequests {
         return value.asLong();
     }
 
-    private static ApiException invalid(String message) {
+    static ApiException invalid(String message) {
         return ApiException.badRequest("QUESTION_REQUEST_INVALID", message);
     }
 }

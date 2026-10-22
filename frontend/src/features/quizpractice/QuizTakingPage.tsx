@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { Alert, Button, cx, Dialog, Pill } from "@/shared/ui";
-import { getAttempt, saveAnswers, submitAttempt } from "./api";
+import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "./api";
 import { errorCode, errorMessage, formatPoints } from "./labels";
 import type { TakingView } from "./types";
 
@@ -144,6 +145,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     };
   }, [flush]);
 
+  // G3 (K5): gửi sự kiện rời trang khi lượt bật ghi nhận hoạt động; lỗi gửi không chặn làm bài.
+  const sendActivity = useCallback((events: ActivityEventInput[], { keepalive }: { keepalive: boolean }) =>
+    recordQuizActivity(attemptId, events, keepalive), [attemptId]);
+  useActivityTracker({ enabled: !!view?.activityMonitoringEnabled && finishing === null, send: sendActivity });
+
   const choose = (questionId: string, optionId: string, multi: boolean) => {
     const current = answersRef.current[questionId] ?? [];
     const next = multi
@@ -182,6 +188,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
           onClick={() => setConfirming(true)} data-testid="quiz-taking-submit">Nộp bài</Button>
       </div>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
+      {view.activityMonitoringEnabled && (
+        <div data-testid="quiz-taking-activity-notice">
+          <Alert tone="info">Quiz này ghi nhận hoạt động khi làm bài{view.activityNotice ? `: ${view.activityNotice}` : "."}</Alert>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
         {question && (
           <section className="rounded-xl border border-line bg-white p-4" aria-label={`Câu ${index + 1}`}>

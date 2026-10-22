@@ -6,6 +6,7 @@ export { Dialog } from "./Dialog";
 export { Icon, type IconName } from "./Icon";
 export { IconTile } from "./IconTile";
 export { ChipToggleGroup, Field, Select, Switch, TextInput } from "./inputs";
+export { Menu, MenuItem } from "./Menu";
 export { PageHeader, type Crumb } from "./PageHeader";
 export { Pagination } from "./Pagination";
 export { Pill } from "./Pill";

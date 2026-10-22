@@ -53,6 +53,13 @@ public class AccountRepository {
                 .param("id", id).query(AccountRepository::map).optional();
     }
 
+    public List<Account> listActiveAdmins(UUID afterId,int limit) {
+        var query=jdbc.sql("select "+COLUMNS+" from accounts where role='ADMIN' and status='ACTIVE'"
+                +(afterId==null?"":" and id>:after")+" order by id limit :limit").param("limit",limit);
+        if(afterId!=null)query.param("after",afterId);
+        return query.query(AccountRepository::map).list();
+    }
+
     /** {@code schoolEmail} đã chuẩn hóa (BR-U01-02). */
     public Optional<Account> findByEmail(String schoolEmail) {
         return jdbc.sql("select " + COLUMNS + " from accounts where school_email = :email")

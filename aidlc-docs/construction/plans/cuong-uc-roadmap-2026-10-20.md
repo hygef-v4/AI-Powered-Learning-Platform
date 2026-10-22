@@ -77,18 +77,90 @@ Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt
 
 ### Giai đoạn 4 — AI và MCP của U10 (phần còn lại của UC 47, 48)
 
-- [ ] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06.
+- [x] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06. Plan chi tiết: [U10 giai đoạn 4](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (H1–H10), nhánh `quiz-ai-mcp`.
+- [x] Bộ chọn tài liệu tham khảo (U10) và `MaterialQuizList` (U11, G4) trên U13 đã có ở `staging`. Code xong và được duyệt ngày 2026-10-22, commit local trên `quiz-ai-mcp`.
 - [ ] Chạy thật khi U06 có code; trước đó chỉ test với stub.
+
+Tình trạng 2026-10-22: contract U06 trên `staging` đã đủ cho bước này (U09 đã cài `IAiTaskResultHandler`, `IMcpToolProvider` theo cùng cách); U13 đã cài `IReferenceMaterial` trên `staging`. Code U06 (`AiTaskService`, `AiSourcePicker`) mới ở nhánh `ai-connections`, chưa merge.
 
 ### Giai đoạn 5 — Kiểm tra và đóng Jira
 
 - [ ] Tester viết integration test theo mục "Integration test cases" của plan U10, U11.
-- [ ] Chạy thử end-to-end với Docker local: Chủ nhiệm môn soạn câu → giảng viên tạo và phát hành Quiz → sinh viên làm, nộp, xem kết quả → phát hành version mới tự nộp lượt đang làm.
+- [x] Chạy thử end-to-end với Docker local: Chủ nhiệm môn soạn câu → giảng viên tạo và phát hành Quiz → sinh viên làm, nộp, xem kết quả → phát hành version mới tự nộp lượt đang làm. 5 kịch bản đạt (gồm tự nộp khi hết giờ); sửa `frontend/Dockerfile` qua PR #7 (`392b7d0`).
 - [ ] Đóng KAN-23, KAN-25 và các UC con.
 
 ### Song song — KAN-152
 
 - [ ] Rà phần V. Requirement Appendix của Report 3 theo 65 UC hiện hành; không ảnh hưởng code.
+
+### Tình trạng 2026-10-22 (chiều)
+
+`staging` mới nhất là `2fa57f9`, đã thêm U14 (thông báo, bảng tin lớp). Các nhánh chưa merge: `ai-connections` (U06, 19 commit), `assignment` (U07/U08, 5 commit), `group-assignment` (U12, 17 commit). Jira không đổi: KAN-18 In Progress, KAN-23 và KAN-25 To Do, KAN-152 In Progress.
+
+**Đang chờ người khác:**
+
+| Việc | Chờ ai | Ghi chú |
+|---|---|---|
+| ~~Sửa migration `grading` để `staging` dựng được DB mới~~ Đã xong: U07/U08 merge (`0d1cf27`), backend xanh | Nhóm | |
+| Backend không khởi động được (cả `worker`): bean `notificationTopology` bị khai báo hai lần | U14 (`NotificationTopology`, commit `2920fc6`) | Lớp `@Configuration NotificationTopology` trùng tên với method `@Bean notificationTopology()`. Phát hiện ngày 2026-10-22 khi chạy jar `staging` `e21df97`. CI không bắt được vì không có test dựng Spring context |
+| Chạy AI thật; thay `AiSourceSelect` bằng `AiSourcePicker` | U06 merge `ai-connections` | |
+| ~~Tracker hoạt động (G3), bật ghi nhận hoạt động (E3)~~ U08 đã merge (`0d1cf27`); giờ làm được | U08 | |
+| Integration test U01, U10, U11; đóng KAN-18, KAN-23, KAN-25 | Tester | |
+| Chốt kết quả khi Quiz ẩn điểm, ẩn đáp án (BR-U11-20 khác API và UI) | Người viết requirement | Ghi ở code-summary U11, mục chạy thử end-to-end |
+
+**Làm được ngay, không cần chờ:**
+
+Plan chi tiết: [U11, mục "Sửa sau chạy thử và link thông báo Quiz"](code-generation-plan/u11-quiz-practice-code-generation-plan.md) (J1–J6).
+
+- [x] Thông báo "Có Quiz mới" của U14 dẫn tới `/quiz-practice/{quizId}` không có `classId`, nên trang chi tiết U11 gọi API với `classId` rỗng và báo lỗi. Sửa phía U11: thiếu `classId` thì tự tìm lớp đang học có Quiz đó (một lớp thì mở luôn, nhiều lớp thì cho chọn).
+- [x] Lỗi nhỏ từ lần chạy thử end-to-end:
+  - Công tắc trong `QuizSettingsPanel` (U10) chưa có tên truy cập.
+  - Ô chọn đáp án ở `QuizTakingPage` (U11) có tên truy cập "on".
+  - Kết quả không cho biết lượt được tự nộp (`AUTO_TIME_LIMIT`, `AUTO_RETIRED`).
+- [x] Cập nhật `quiz-ai-mcp` theo `staging` mới (merge `972d594`). Chỉ xung đột ở `aidlc-state.md`, để PR giai đoạn 4 sẵn sàng khi `staging` được sửa.
+- [ ] KAN-152: chỉ là việc tài liệu nhưng Report 3 không có trong repo, và Jira không có mô tả hay tệp đính kèm. Cần người dùng gửi bản Report 3 (link Google Docs hoặc tệp).
+
+### Cập nhật 2026-10-22 (cuối ngày)
+
+- 11:31: `quiz-ai-mcp` được push thẳng vào `origin/staging` (`e21df97`), không qua PR và không chạy CI.
+  - Nguyên nhân: nhánh được tạo bằng `git switch -c quiz-ai-mcp origin/staging` nên có upstream là `origin/staging`, và "Push origin" đẩy vào đó.
+  - Đã bỏ upstream của `quiz-ai-mcp`. Nhánh mới sau này tạo với `--no-track`.
+- Kết quả: giai đoạn 4 (`a27fdd2`) và bản sửa L1–L4 (`e21df97`) đã ở `staging`. Code đã được duyệt và kiểm local: frontend đạt; backend chỉ còn 4 lỗi Flyway có sẵn của `grading`.
+- Không có thay đổi mới nào khác trên `staging`. Vẫn chưa merge: `ai-connections` (U06), `assignment` (U07/U08), `group-assignment` (U12). Jira không đổi.
+
+**Còn làm được mà không phải chờ:** không còn việc code nào. Còn lại:
+
+- [ ] KAN-152: cần người dùng gửi Report 3.
+- [ ] Báo nhóm về migration `grading` (nội dung ở dòng đầu bảng "Đang chờ người khác") để gỡ chặn CI và chạy thử Docker.
+
+Các việc còn lại đều chờ người khác: U06 (AI thật, `AiSourcePicker`), U08 (tracker hoạt động, thời hạn lưu), tester (integration test, đóng KAN-18, KAN-23, KAN-25), người viết requirement (BR-U11-20), nhóm (migration `grading`).
+
+### Cập nhật 2026-10-22 (sau khi U07/U08 merge)
+
+`staging` mới nhất là `0d1cf27` ("Merge branch 'assignment' into staging"), có U07 và U08. Nhánh `quiz-ai-mcp` đã có trên GitHub, trùng `e21df97`, đã nằm trong `staging`. Jira không đổi.
+
+Kiểm `staging` `0d1cf27`:
+
+- **Backend** `mvn -B verify` (JDK 17): 1110 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest` cần `U04_TEST_JDBC_URL`). Lỗi migration `grading` đã hết nhờ migration `assignments` (1300) và `assignmentwork` (1400).
+- **Frontend**: lint, typecheck, build đạt; 407/408 test. Test lỗi là `SubjectListPage` (U04, kiểm focus), chạy riêng 3 lần đều qua, nên là test chập chờn khi máy tải nặng.
+- **Còn chặn khởi động app:** bean `notificationTopology` của U14 vẫn khai báo hai lần, chưa sửa. Chưa chạy thử Docker được cho tới khi U14 sửa.
+
+U08 đã đưa vào `staging` đủ phần G3/E3 cần: `ActivityService` (cài `IActivityWrite`, `IActivityQuery`), `useActivityTracker`, khóa `activity.retentionDays`. Kiểu sự kiện của hook khớp API ghi hoạt động của U11, và U08 để U11 tự kiểm quyền và chính sách.
+
+**Làm được ngay, không cần chờ:**
+
+Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-practice-code-generation-plan.md) (K1–K7), nhánh `quiz-activity`.
+
+- [x] **G3 (U11):** gắn `useActivityTracker` vào `QuizTakingPage` khi Quiz bật ghi nhận hoạt động, gửi qua `POST /quiz-attempts/{id}/activity` đã có.
+- [x] **E3 (U10):** bỏ chặn `409 ACTIVITY_RETENTION_NOT_SET` khi đã đặt `activity.retentionDays` (đọc bằng `ISettings` như U07); trả cờ "đã đặt thời hạn" để `QuizSettingsPanel` mở công tắc. Hiện thông báo cho sinh viên trước khi làm (đã có `activityNotice`). Code xong và được duyệt 2026-10-22, commit local trên `quiz-activity` (chưa push).
+- [ ] KAN-152: vẫn cần người dùng gửi Report 3.
+
+**Còn chờ người khác:**
+
+- U14: sửa bean `notificationTopology`, sau đó mới chạy thử Docker giai đoạn 4 và G3/E3.
+- U06: AI thật, `AiSourcePicker`.
+- Tester: integration test, đóng KAN-18, KAN-23, KAN-25.
+- Người viết requirement: BR-U11-20.
 
 ## 3. Nhánh
 

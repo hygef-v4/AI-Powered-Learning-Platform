@@ -10,6 +10,7 @@ import edu.aiplatform.quizpractice.application.PracticeViews.TakingView;
 import edu.aiplatform.quizpractice.application.QuizActivityService;
 import edu.aiplatform.quizpractice.application.QuizAttemptService;
 import edu.aiplatform.quizpractice.application.QuizPracticeQueryService;
+import edu.aiplatform.shared.error.ApiException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -41,11 +42,19 @@ public class QuizPracticeController {
         this.activity = activity;
     }
 
+    /** {@code materialId} (cần kèm {@code classId}): Quiz gắn tài liệu cho Learning Material (G4). */
     @GetMapping("/me/quizzes")
     public List<PracticeQuizRow> history(@AuthenticationPrincipal Actor actor,
                                          @RequestParam(required = false) UUID classId,
+                                         @RequestParam(required = false) UUID materialId,
                                          @RequestParam MultiValueMap<String, String> params) {
-        PracticeRequests.query(params, Set.of("classId"));
+        PracticeRequests.query(params, Set.of("classId", "materialId"));
+        if (materialId != null) {
+            if (classId == null) {
+                throw ApiException.badRequest("QUIZ_PRACTICE_REQUEST_INVALID", "Lọc theo tài liệu cần kèm classId");
+            }
+            return queries.byMaterial(actor, classId, materialId);
+        }
         return queries.history(actor, classId);
     }
 

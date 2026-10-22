@@ -4834,6 +4834,390 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
+## U13 Code Generation Part 1 — readiness and approval
+**Timestamp**: 2026-10-21T05:54:32Z
+**User Input**: "giúp tôi code unit 13 gồm uc 58-62, dựa trên code-generation-plan của u13 và aidlc-docs. UI ở folder E:\FPTUni\sem9_fa26\ui-reference"
+**AI Response**: "Tôi sẽ đọc hướng dẫn AI-DLC, kế hoạch code của Unit 13 và tài liệu UC 58–62, rồi đối chiếu UI tham chiếu để triển khai và kiểm tra."
+**Context**: Resumed existing Construction; clean working tree on reference-materials. Read CLAUDE/common/Code Generation rules, state and U13 functional/NFR/infrastructure artifacts, current contracts and local UI artboard sources. Updated existing ten-step plan with concrete paths, role/scope/transaction/job race/resource-limit/UI/test decisions C01–C05. JobTypes/routing and manager nav already exist and must be reused. U06 MaterialText lacks version metadata; proposed compatible consumer implementation with an explicit provenance handoff gate. Security/Resiliency reduced scope retained; PBT disabled and skipped. No subagents, runtime source edits, tests, commit/push or external mutations.
+
+**AI Response**: "U13 hiện chỉ có khung; kế hoạch ghi rõ ‘chưa được duyệt và chưa code’. Tôi đang kiểm tra các contract tệp, job, phân quyền và slot UI để bổ sung kế hoạch thành các bước có thể triển khai. Theo CLAUDE.md, cần duyệt kế hoạch trước khi sinh code, nên tôi sẽ chuẩn bị bản cụ thể để bạn duyệt một lần."
+
+**AI Response**: "Tôi đã bổ sung đủ 10 bước triển khai, bám các màn UI U13 và contract hiện có. Có một điểm cần ghi rõ khi duyệt: DTO tài liệu của U06 chưa có số phiên bản như thiết kế yêu cầu. Kế hoạch đề xuất cài tương thích contract hiện tại và giữ phần provenance phiên bản làm điều kiện tích hợp riêng."
+
+**Approval prompt**: Review construction/plans/code-generation-plan/u13-reference-materials-code-generation-plan.md and answer Question 1 in u13-implementation-approval-questions.md: A approves all ten steps and C01–C05 for inline implementation without commit/push; B requests changes; X specifies another scope. Approval required by CLAUDE.md Code Generation and construction/code-generation.md Step 7; prior plan explicitly says unapproved and no U13 approval is recorded. Part 2 and all implementation checkboxes remain pending. Only documentation validation may be claimed in this turn.
+
+---
+
+## U13 scope discussion — implementation paused by user
+**Timestamp**: 2026-10-21T06:09:34Z
+**User Input**: "tôi chọn rồi"
+**Context**: Read u13-implementation-approval-questions.md; Answer is lowercase a (option A). Read current contracts and tooling; no application source changes made before user interruption.
+**User Input**: "à từ từ đã"
+**AI Response**: "Tôi dừng tại đây. Tôi đã đọc lựa chọn A, nhưng chưa sửa code ứng dụng. Bạn cứ bổ sung yêu cầu nhé."
+**User Input**: "việc sửa đổi code ở các unit khác có chấp nhận được không?"
+**AI Response**: Explained minimal cross-unit integration edits: U01 action registry, reuse existing U03 services/routing, U06 DTO metadata gap, existing frontend slots; no automatic contract/schema/business changes. Implementation remains paused.
+**User Input**: "ở u06 thay đổi những gì, chi tiết"
+**AI Response**: Inspected IReferenceMaterial, SelectableMaterial, MaterialText, conditional stub, all backend/src and frontend/src references, and U13 F7 design. Explain current approved C04 needs no U06 source change; a separate proposed contract enhancement adds version and extraction-state metadata, potentially kind/URL, while preserving method signatures and unit boundaries. In this checkout no concrete U07/U10 calls or DTO constructions were found; cross-branch consumers are unverified. No application source changes or approval to resume inferred from discussion.
+
+---
+
+## U13 implementation resumed
+**Timestamp**: 2026-10-21T06:14:27Z
+**User Input**: "ok cứ bỏ qua đi"
+**Context**: Keep U06 DTO unchanged; no authorization to change shared U06 records inferred.
+**User Input**: "thực hiện code cho tôi u13 đi"
+**AI Response**: Resuming all ten approved U13 steps inline, without U06 DTO changes or commit/push. Approval file Answer a confirmed.
+
+
+## U13 Code Generation Part2 — implementation and developer verification
+**Timestamp**: 2026-10-21T07:17:14Z
+**User Input**: "thực hiện code cho tôi u13 đi"
+**AI Response**: Implemented UC58–62 inline using approved plan and local UI reference. Added materials migration/domain/JPA, scoped access/commands/queries, CAS/version history, parser child JVM/job/sweeper, unchanged-U06-contract provider and MCP, REST/OpenAPI, pages/dialogs/viewers and U05/U08/U11 slot registrations. Added four U01 actions/rules and scoped frontend security headers; U03/U06 implementation/contracts unchanged. No subagents, commit/push/Jira or owner messages.
+**Verification**: Full backend verify928 total/851pass/77skip/0fail/0error and JAR. Own review repaired read-transaction rollback-only behavior for expected MCP errors and allowed staff archived MCP references while rejecting them for new AI sources; final focused80pass (78U13+2architecture), package pass. PDF/DOCX/PPTX parser tests and packaged-JAR PDF smoke pass. Full frontend321pass/61files including29U13; final typecheck/lint/build pass, lint zero warnings. Three standalone U13 routes returned200 with CSP/blob/YouTube/nosniff. Browser loopback fixture: create/playlist rejection/edit/replace/archive and mobile; U13-only CSS repaired whole-page overflow. Native PDF blob iframe loaded but in-app native renderer remained blank; real-browser PDF acceptance is explicitly pending.
+**Environment**: Initial Maven cache/SWC sandbox AccessDenied and Vitest temp/IPC failures were retried with authorized escalated commands/process-local temp; interrupted/failed attempts not counted pass. Next dev auto-generated two untracked frontend instruction files; only those were backed up in ignored .tmp/u13 and removed after dev stopped; root AGENTS/CLAUDE preserved. Full PostgreSQL/provider/session/audit/Drive/Rabbit/tester/NFR acceptance and U06 provenance metadata remain gates. User review pending, global stage not advanced.
+**Artifacts**: construction/u13-reference-materials/code/code-summary.md; construction/build-and-test/u13-verification.md; approved plan step1–9 checked, step10 user review pending.
+
+---
+
+## U13 technology explanation
+**Timestamp**: 2026-10-21T07:28:36Z
+**User Input**: "ngoài nhũng gate chưa hoàn tất ra thì u13 đã ready rồi đúng không?"
+**AI Response**: Confirmed code ready for review/integration, with documented acceptance gates still open; no production readiness claim.
+**User Input**: "giải thích những công nghệ sử dụng cho u13"
+**AI Response**: Explain Java17/Spring Boot, REST/validation/security, JPA/PostgreSQL/Flyway/CAS, U03 artifact/Drive/Redis download tokens, RabbitMQ jobs and isolated Tika/PDFBox/POI extraction, Next.js/React/TypeScript/CSS/slots/viewers, U06 contract/MCP consumers and JUnit/Mockito/ArchUnit/Vitest/build verification. Read actual source; no implementation changes.
+---
+## U13 technology and documentation compliance review
+**Date**: 2026-10-21
+**User Input**: "đồng thời cho biết các công nghệ đó có được cho phép sử dụng theo aidlc-docs hay không"
+**AI Response**: Compared actual U13 technology choices with inception architecture, U13 technology decisions and U03/U06 boundaries. Stack choices are documented or implementation mechanisms within those choices; no blanket runtime compliance claim. Found SEC-004 mismatch in frontend/next.config.ts: unsafe-inline script CSP instead of nonce and SAMEORIGIN instead of DENY. Corrected the inaccurate SECURITY-04 handoff row and current state checkpoint. No application source changes or new test execution; security configuration correction and browser verification remain required.
+---
+## U13 SEC-004 security configuration correction
+**Date**: 2026-10-21
+**User Input**: "việc thay đổi như vậy có ổn không? Và cho tôi biết đã cài `IReferenceMaterial` của U06, thay adapter rỗng trong bước 6 chưa ?"
+**AI Response**: Verified real ReferenceMaterialService implements IReferenceMaterial; conditional fallback remains in source but is suppressed by the U13 provider, with passing single-bean context test. U06 DTO unchanged. Explained nonce correction and required rendering/browser checks.
+**User Input**: "sửa lại cấu hình bảo mật để khớp với ai-dlc đi"
+**AI Response**: Authorized SEC-004 correction: removed scoped static headers, added frontend/src/proxy.ts and security regression tests, changed root layout to request rendering. Fresh 256-bit nonce overwrites inbound CSP/x-nonce and matches Next-generated scripts; production no unsafe script directives, DENY/frame-ancestors none, HSTS/nosniff/referrer, approved PDF/YouTube/Draw.io child frames. Style attributes retain documented unsafe-inline exception for existing dynamic React styles; eval/WebSocket development only. Applied all HTML page routes per enabled SECURITY-04; no U06/backend changes.
+**Verification**: Focused6pass; full frontend323pass/62files, typecheck/lint/standalone build pass. HTTP login/list/detail/view/404/repeat requests verify all script nonce/header/cache consistency and asset200. Browser login hydration and U13 fixture client navigation/PDF iframe/YouTube player pass without CSP console errors; native PDF renderer still blank in in-app browser and Chrome/Edge acceptance remains pending. Sandbox SWC/temp/IPC failures retried with authorized elevated build/full tests; extra thread attempt stopped after successful full-suite evidence. Updated canonical plan, handoff, verification and state. No commit/push/deployment or stage advancement.
+---
+## U13 local commit authorization
+**Date**: 2026-10-21
+**User Input**: "chia thành các commit nhỏ rồi commit lên branch reference-materials, không push"
+**AI Response**: Confirmed current branch reference-materials and empty Git index. Split the verified U13 changes into eight cohesive local commits: domain/persistence, scoped management, background extraction, AI/MCP, REST/OpenAPI, frontend, SEC-004 correction and AI-DLC handoff. Preserve approved U06 contract and outstanding acceptance gates. No source changes or test reruns needed for commit organization. Do not push.
+---
+## U13 local commit results
+**Date**: 2026-10-21
+**AI Response**: Created seven local code commits on reference-materials: 14dec5b domain/persistence; 7c6a339 scoped management; d5c5d92 document extraction; 0629906 AI references/MCP; 94b3f5b REST/OpenAPI; 9ae5458 frontend; 28b9f46 SEC-004 correction. The eighth commit records AI-DLC approved plan, implementation summary, verification evidence, audit and state. Application code unchanged from verified tree; git diff --check passed. No push, merge, deployment or acceptance-gate closure.
+
+## U14 Code Generation Part 1 — branch and implementation planning
+**Timestamp**: 2026-10-21T08:20:18Z
+**User Input**: "chuyển sang branch announcements-and-notifications, bắt đầu thực hiện code u14 gồm các uc 63-65 "
+**AI Response**: Current checkout was already announcements-and-notifications with clean working tree and empty index; no checkout/reset/merge was needed. Read root CLAUDE.md, workflow/common rules, enabled reduced Security/Resiliency baseline (PBT disabled), U14 functional/NFR/infrastructure docs, UC63–65 and stories, actual U01/U03/U05/U07/U08/U12 contracts and published event payloads, frontend slots and local UI reference. Expanded the existing unapproved eleven-step canonical plan with concrete paths/tests and C01–C08, rather than creating a competing plan. Application code/dependencies not changed.
+**Findings**: U01 findAccounts limits20 and cannot enumerate every active Admin, so plan proposes explicit additive paginated Admin lookup plus provider/stub/tests. U07/U08/U12 currently expose stubs on this branch: reminders/group recipients and multi-instance SSE need real owner integration, not empty-data success. EMAIL_SEND already routes through U03 jobs.email; DomainEvent consumer requires separate bounded retry topology. SMTP accept-before-SENT crash window cannot be claimed exactly-once through current IMail. Frontend branch lacks SEC-004 nonce correction from U13: plan explicitly includes only those security files, not a whole-unit merge.
+**Approval**: Existing U14 plan explicitly says not approved. Per CLAUDE.md and .aidlc-rule-details/construction/code-generation.md, obtain explicit approval of concrete plan before generation. Prepared u14-implementation-approval-questions.md with one question, A approve C01–C08, B request changes, E other; Answer blank. All implementation checkboxes remain unchecked. No commit/push/deployment/teammate messaging/real email or global stage transition.
+---
+
+## U14 Part 1 approval and Part 2 start
+**Timestamp**: 2026-10-21T08:31:23Z
+**User Input**: "đã trả lời"
+**Evidence**: u14-implementation-approval-questions.md Answer a. User approves full11-step plan and C01-C08; execute inline without commit/push or real email. Record provider/SMTP limitations and preserve U06.
+---
+
+## U14 Code Generation Part 2 — implementation and verification handoff
+**Timestamp**: 2026-10-21T09:24:47Z
+**User Input**: "đã trả lời"
+**Approval Evidence**: u14-implementation-approval-questions.md Answer a, confirmed before source generation.
+**AI Response**: Implemented UC63-65/F1-F9 inline on announcements-and-notifications: five-table migration, JPA domain/repositories, scoped announcement CRUD/CAS/metadata audit/create-only after-commit event, notification event/recipient/dedup/SSE, EMAIL_SEND cap/preference/priority/retry/sweeper/SMTP source checks, deadline and maintenance scanners, REST/OpenAPI, local-reference UI feed/composer/edit-delete dialogs/card/slots/bell/popup/preferences. Approved U01 action rules and cursor ACTIVE Admin lookup/provider/stub/tests added; no U06 or owner provider changes. Added approved react-markdown10.1.0/rehype-sanitize6.0.0. Reused only SEC-004 nonce source, no U13 merge or history mutation. Email link uses existing APP_PUBLIC_URL.
+**Review fixes**: Immutable Map null validation, no-buffer SSE response header, preserved announcement author/flags, safe validation errors, deferred priority, current reminder source/deadline check, SMTP timeout envelope, public URL, read/read-all cross-tab invalidation, query route changes and stale load-more/filter results. No content/email/provider message logging introduced.
+**Verification**: Full clean backend verify919total/842pass/77skip/0failure/error before final review changes; final focused package71pass/0failure/error/skip (66U14+3U01+2architecture), executable JAR. Final full frontend314pass/61files (22new), lint0warning/error, typecheck and production standalone build pass. OpenAPI JSON/YAML1.2/local references and HTTP announcement/login/404/repeat nonce tests pass, all script nonce values match CSP and no public cache. Production dependency npm audit omit-dev0vulnerabilities; full dev-tree install report not silently autofixed.
+**Browser**: Disposable loopback fixture only; Teacher create/edit/delete and important/email behavior, Student read-only feed,5email preferences and read-all count2-to0; desktop visual inspection and browser console without CSP/hydration warnings/errors. No actual SMTP/provider use. Fixture does not certify backend auth/DB or actual U12 hub. Mobile viewport/provider acceptance not claimed.
+**Environment and limits**: Maven/SWC/temp/loopback sandbox issues retried with approved commands. Removed only verified generated Next type directories from previous branch and regenerated. First full frontend run concurrent with build had5existing-test timeout failures; final maxWorkers2 run passed without editing old tests/timeouts. U07/U08/U12 still stubs; real migration/provider/Rabbit/SMTP/cap/session/CSRF/audit/SSE2instance/mobile/NFR and scanner cardinality gates retained. IMail cannot prove exactly-once across SMTP-accept/DB-commit crash window; explicitly approved limitation remains.
+**Artifacts**: Canonical plan steps1-10 checked, step11 user review pending; code-summary and u14-verification tester matrix updated; no commit/push/deploy/teammate messages/global-stage transition.
+---
+
+## U14 code approval and scoped Build & Test continuation
+**Timestamp**: 2026-10-21T09:37:09Z
+**User Input**: "tiếp tục "
+**Approval**: User approves code-generation review step11 and requests continuation. Marked plan/state/code-summary accordingly; no commit/push/deployment approval inferred.
+**AI Response**: Read Build & Test workflow, actual CI/Maven/npm/local compose and existing tester handoff. Prepared build-instructions, unit-test-instructions, integration-test-instructions, performance-test-instructions, security-test-instructions, e2e-test-instructions, build-and-test-summary and scoped u14-build-and-test-plan. Global all-units-complete prerequisite is not satisfied, so global stage/Operations remain pending.
+**Execution**: Fresh final-source mvn -B verify BUILD SUCCESS:921total/844passed/77skipped/0failures/errors,85s, finished2026-10-21T16:35:07+07:00; executable JAR. Retained final frontend314pass/61files and lint/typecheck/build/production audit0vulnerabilities without redundant reruns. Skips and fixture checks are not independent integration acceptance.
+**Runtime findings**: Docker CLI installed but Engine named pipe dockerDesktopLinuxEngine unavailable. U09 migration references missing real U07/U08 schemas; U07/U08/U12 providers remain stubs. No substitute schema, local stack startup, real SMTP or source changes. Independent PostgreSQL/Rabbit/SMTP/provider/session/SSE/mobile/NFR tests and SMTP accept-before-SENT crash ambiguity remain explicit.
+---
+
+## U14 local commit request
+**Timestamp**: 2026-10-21T09:44:17Z
+**User Input**: "chia nhỏ thành các commit, commit lên branch announcements-and-notifications, không push"
+**AI Response**: Verified correct branch and initially empty index; split source into seven functional commits, with eighth documentation commit. Source commits:6cef92a identity, cdb8b9d persistence,3f4a201 announcement APIs,2920fc6 notification fanout/email/reminder/APIs/OpenAPI,14c17cf CSP nonce,28fdc92 announcement UI,adfc51f notification UI. No source modifications or unrelated files; retained existing final-source verification and checked staged whitespace each time.
+**Environment**: Initial sandbox denied .git/index.lock write; retried local git add/commit through approved escalated execution. No automatic approval rejection. No push, deployment, real email or acceptance gate advancement.
+---
+
+## staging into announcements-and-notifications — approved conflict resolution
+**Date**: 2026-10-22 (Asia/Saigon)
+**User Input**: "check lại dự án và xem xét các conflict khi merge từ staging vào announcements-and-notifications đang conflict chỗ nào và đưa ra phương án sửa, sau khi tôi đồng ý với cách solve thì mới sửa"
+**Review**: Read-only review confirmed four conflicted paths; HEAD7b35937 and incoming staging08a6134. Proposed preserving both appended histories, union of U13/U14 permissions with original roles/scopes, and HEAD comment in layout with unchanged async/await connection rendering. No edits before approval.
+**User Input**: "tôi đồng ý"
+**AI Response**: Applied exactly four approved conflict resolutions. Common state/audit history and both additions retained (U13 before U14); final shared audit separator retained. Verified43unique action rules match declarations and each source role/scope expression survives unchanged. Root layout exactly matches HEAD; proxy, tests and next.config unchanged. No unrelated source modifications.
+**Verification**: Merged-tree backend verify999total/922pass/77skip/0failure/error, executable JAR,5m24s. Frontend final full343pass/65files, lint/typecheck pass, production standalone build pass. Local ignored logs under .tmp/merge-u13-u14/. Initial Node26 fork/thread and Node24 concurrent-worker attempts stalled without final results; stopped only owned processes and counted no pass. Final Node24.19.0 serial-thread run with process-local UV_THREADPOOL_SIZE=1 and RAYON_NUM_THREADS=1 passed without modifying tests/timeouts; existing React act warnings retained. CI Node22 run not claimed.
+**Handoff**: Mark only four approved files resolved; retain all incoming staged changes. No merge commit, push, deployment, real email or global acceptance advancement. Existing independent integration/NFR/provider gates and77skips remain open.
+---
+
+## 2026-10-20T14:36:54Z — PR #7 merged, branches cleaned up
+
+**User Input**: "Bật Auto-fix cho PR #7. Khi CI xanh tôi sẽ báo để quyết định merge." / "CI đã xanh, merge và dọn các nhánh thừa cho tôi"
+
+**AI Response**: Enabled Auto-fix for PR #7. Verified checks green (GitGuardian, backend, frontend) and merge state CLEAN, merged with a merge commit: staging is now 392b7d0. Switched the checkout to `staging` (fast-forwarded). Deleted branches created in this work and already contained in staging: remote and local `quiz-authoring`, `quiz-practice`, `quiz-e2e-docker-fix`; local-only `backup/cuong-before-rewrite`, `backup/cuong-rewrite-1` (pre-rewrite history) and `unit1` (merged local copy). Kept `cuong`, `main`, `staging` and teammates' branches (Class&Enrollment, audit, subject-administration, grading-gradebook, ui-reference). GitHub Desktop stashes stash@{0}, stash@{1} left untouched. This entry is uncommitted on `staging`.
+
+**Context**: Construction — repository housekeeping.
+
+---
+
+## 2026-10-20T14:39:59Z — Branch cuong deleted
+
+**User Input**: "xoá nhánh cuong"
+
+**AI Response**: Verified local and remote `cuong` (8d4c22b) are contained in origin/staging, then deleted it locally and on GitHub. Remaining local branches: `main`, `staging`.
+
+**Context**: Repository housekeeping.
+
+---
+
+## 2026-10-20T14:45:00Z — Roadmap status check
+
+**User Input**: "roadmap đã hoàn thành chưa"
+
+**AI Response**: Not complete. Phases 0–3 and the E2E run are done; remaining: phase 4 (AI/MCP of U10), tester integration tests, closing KAN-18/KAN-23/KAN-25, KAN-152. Ticked the missed E2E checkbox. (These edits were later lost from the working tree and re-applied on 2026-10-22.)
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T03:30:00Z — Roadmap feasibility check
+
+**User Input**: "kiểm tra lại roadmap và dự án xem có thể hoàn thành roadmap được chưa"
+
+**AI Response**: Fetched origin. `staging` (08a6134) now has U09, U13, U15. Findings: U06 contract on `staging` is sufficient for phase 4 (same pattern as U09 `GradingProposalResultHandler`, `GradingMcpTools`); U13 implements `IReferenceMaterial` and the `LearningMaterialSection` slot on `staging`, unblocking G4 `MaterialQuizList` and a reference-material picker. U06 implementation and `AiSourcePicker` exist only on `ai-connections`; U08 tracker and `activity.retentionDays` only on `assignment` — neither merged, no open PRs. No tester integration tests for U01/U10/U11 on any branch. Jira: KAN-18 In Progress, KAN-23/KAN-25 To Do, KAN-152 In Progress (no description or attachment; Report 3 not in repo). Re-applied the audit entries from GitHub Desktop stash@{0} and the roadmap E2E tick, which had been lost from the working tree. Conclusion: roadmap cannot be fully closed yet; phase 4 code and G4 can be done now on stubs/staging.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T04:10:00Z — Code Generation Part 1: U10 phase 4 plan
+
+**User Input**: "Lập plan giai đoạn 4 (AI soạn câu, tool MCP của U10) kèm MaterialQuizList và bộ chọn tài liệu tham khảo, trên nhánh mới tách từ staging."
+
+**AI Response**: Created branch `quiz-ai-mcp` from origin/staging (08a6134), carrying the uncommitted roadmap/audit edits. Studied U06 contract (staging stub returns FAILED; real AiTaskService, AiTaskDelivery, JSON Schema 2020-12 checker, AiSourcePicker on `ai-connections`), U09 pattern (GradingProposalService two-step submit, GradingProposalResultHandler, GradingMcpTools), U13 ReferenceMaterialService and `learningMaterialSections` slot. Wrote "Giai đoạn 4" section in the U10 code generation plan: decisions H1–H10, checklist 4.0–4.14, two extra tester integration cases; linked it from the roadmap. Approval prompt: "Duyệt plan giai đoạn 4 với đề xuất H1–H10?"
+
+**Context**: Construction — U10 Code Generation Part 1 (phase 4), awaiting approval.
+
+---
+
+## 2026-10-22T04:20:00Z — U10 phase 4 plan approved
+
+**User Input**: "Duyệt plan giai đoạn 4 với đề xuất H1–H10. Bắt đầu từ bước 4.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval in aidlc-state. Step 4.0: committing pending documentation (roadmap, restored audit entries, phase 4 plan, state) locally on `quiz-ai-mcp`, then starting code per checklist 4.1–4.13.
+
+**Context**: Construction — U10 Code Generation Part 1 approved; Part 2 started.
+
+---
+
+## 2026-10-22T05:10:00Z — U10 phase 4 code generated, awaiting review
+
+**User Input**: (none since approval)
+
+**AI Response**: Implemented steps 4.1–4.13 on `quiz-ai-mcp` (uncommitted): QuizAiDraft domain/repository, QuizDraftPrompt, QuizAiDraftService, QuizDraftResultHandler, QuizMcpTools, QuizReferenceMaterials, U10 AI draft and reference-material APIs, U11 `materialId` filter; frontend AiDraftDialog, QuestionAiDraftDialog, QuizAiDraftPanel, MaterialRefPicker, MaterialQuizList. Checks: frontend lint, typecheck, 331 tests, build pass. Backend `mvn -B verify` (JDK 17): 930 tests, 4 errors, all Flyway failures from `grading/V20260925_1500` (U09 on staging) referencing `assignments` (U07, unmerged) — pre-existing on staging; quiz integration tests pass (17) when that migration is excluded from target. Presented completion message for step 4.14 review.
+
+**Context**: Construction — U10 Code Generation Part 2 (phase 4) complete, awaiting approval.
+
+---
+
+## 2026-10-22T05:30:00Z — U10 phase 4 code approved
+
+**User Input**: "Duyệt code giai đoạn 4. Commit local trên nhánh quiz-ai-mcp."
+
+**AI Response**: Recorded approval (step 4.14) in the plan, aidlc-state and roadmap. GitHub Desktop had stashed all phase 4 work into stash@{0} at 10:57 while switching branches, so a first commit (13abdd8) only held documentation; reset that unpushed commit, re-applied stash@{0} (stash kept), and committed phase 4 code and documentation locally on `quiz-ai-mcp`. Not pushed.
+
+**Context**: Construction — U10 Code Generation (phase 4) approved.
+
+---
+
+## 2026-10-22T05:45:00Z — Push postponed
+
+**User Input**: "Chưa push. Đợi nhóm sửa migration grading trên staging (merge U07 hoặc sửa U09) rồi mới mở PR."
+
+**AI Response**: Left `quiz-ai-mcp` (a27fdd2) local and unpushed. PR into staging waits until the team fixes `grading/V20260925_1500` (needs U07 `assignments`) on staging.
+
+**Context**: Construction — U10 phase 4 delivery on hold.
+
+---
+
+## 2026-10-22T06:10:00Z — Roadmap refresh
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin. staging is now 2fa57f9 with U14 (notifications, announcements); the grading migration still references the missing `assignments` table. Unmerged: ai-connections (U06), assignment (U07/U08), group-assignment (U12). Jira unchanged (KAN-18 In Progress, KAN-23/25 To Do, KAN-152 In Progress). quiz-ai-mcp merges with staging with one doc conflict (aidlc-state.md). Found that U14's quiz.published notification links to /quiz-practice/{quizId} without classId, which the U11 detail page cannot load. Added a "Tình trạng 2026-10-22 (chiều)" section to the roadmap listing blocked items and items doable now: the notification-link fix, small accessibility/result fixes from the E2E run, updating quiz-ai-mcp with staging, and KAN-152 (needs Report 3 from the user).
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T06:30:00Z — Code Generation Part 1: post-E2E fixes plan
+
+**User Input**: "Làm các việc không cần chờ trên nhánh quiz-ai-mcp: sửa link thông báo Quiz (trang chi tiết thiếu classId), các lỗi nhỏ từ lần chạy thử end-to-end, cập nhật nhánh theo staging. Lập plan trước rồi mới viết code."
+
+**AI Response**: Added section "Sửa sau chạy thử và link thông báo Quiz" to the U11 code generation plan: issues L1 (U14 quiz notification link without classId), L2 (QuizSettingsPanel switches without accessible names), L3 (taking-page option name "on"), L4 (auto-submit mode not shown); decisions J1–J6; checklist 5.0–5.7. Linked from the roadmap. BR-U11-20 result mismatch excluded (needs requirement decision). Approval prompt: "Duyệt plan sửa lỗi với đề xuất J1–J6?"
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T06:40:00Z — Post-E2E fixes plan approved
+
+**User Input**: "Duyệt plan sửa lỗi với đề xuất J1–J6. Bắt đầu từ bước 5.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 5.0: commit pending roadmap/plan/audit, merge origin/staging into quiz-ai-mcp, resolve aidlc-state.md conflict keeping both sides, rerun quiz tests.
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 1 approved.
+
+---
+
+## 2026-10-22T07:30:00Z — Post-E2E fixes ready for review
+
+**User Input**: (none since approval)
+
+**AI Response**: 5.0: committed docs (d0eebc1), merged origin/staging (972d594), resolved aidlc-state.md keeping both sides; ran npm ci for U14's new dependencies. 5.1: QuizPracticeDetailPage resolves a missing classId via practice history (one class → redirect, several → choose, none → message). 5.2: aria labels on four QuizSettingsPanel switches. 5.3: test shows taking-page options already named by option text; no code change. 5.4: result page and teacher attempt view show auto-submit reason. Checks: frontend lint, typecheck, 356 tests, build pass; backend after merge 999 tests with only the 4 pre-existing grading Flyway errors. Presented for step 5.7 review.
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 2 complete, awaiting approval.
+
+---
+
+## 2026-10-22T07:45:00Z — Post-E2E fixes approved
+
+**User Input**: "Duyệt bản sửa L1–L4. Commit local trên nhánh quiz-ai-mcp."
+
+**AI Response**: Recorded approval (step 5.7) and committed the L1–L4 fixes with documentation locally on `quiz-ai-mcp`. Not pushed (still waiting for the grading migration fix on staging).
+
+**Context**: Construction — U11/U10 fixes approved.
+
+---
+
+## U14 topology startup bean collision — reported issue and refreshed staging
+**Date**: 2026-10-22 (Asia/Saigon)
+**User Input**:
+1. Backend không khởi động được (cả worker). Nhờ U14 xem.
+- Chạy jar báo "APPLICATION FAILED TO START": bean notificationTopology bị khai báo hai lần.
+- Nguyên nhân: lớp @Configuration NotificationTopology tự có tên bean là "notificationTopology", trùng với method @Bean Declarables notificationTopology() bên trong. Lỗi từ commit 2920fc6.
+- Bật allow-bean-definition-overriding cũng không chạy, vì Spring báo "factory-bean reference points back to the same bean definition".
+- Cách sửa gợi ý: đổi tên method @Bean, ví dụ notificationDeclarables().
+- CI không bắt được lỗi này vì chưa có test nào dựng Spring context.
+check lại lỗi
+**User Input**: "kiểm tra lại branch staging tại tôi vừa pull lại"
+**AI Response**: Confirmed current staging HEAD0d1cf27 equals origin/staging after fast-forward pull; production source still contains the collision. Added NotificationTopologyContextTest and reproduced2failures before modifying production code: overriding disabled raises BeanDefinitionOverrideException; enabled raises BeanDefinitionStoreException for configuration/factory bean name clash. Renamed exactly one factory method to notificationDeclarables; no topology resources or overriding settings changed. Configuration is shared by API and worker. Other unit context tests already exist; U14 topology lacked this coverage. Existing CI mvn verify automatically includes the new regression.
+**Verification**: Full backend mvn -B verify BUILD SUCCESS:1112total/1033pass/79skip/0failure/error, executable JAR,3m27s, finished2026-10-22T12:54:20+07:00. Both new context cases pass. Red and green logs .tmp/u14-topology-fix/red.log and verify.log are ignored local evidence. Existing Maven duplicate poi-ooxml declaration warning was not changed as part of this scoped fix. No full application/worker startup against real PostgreSQL/Rabbit/SMTP claimed; independent acceptance gates retained.
+**Changes**: NotificationTopology.java single-line rename, new context regression test, approved U14 plan progress and appended audit/state. No frontend changes, commit/push, branch switch, deployment or real mail.
+---
+
+## U14 topology fix local commit authorization — 2026-10-22
+**User Input**: "commit, không push"
+**AI Response**: Verified staging branch, empty index and exactly the topology method rename, new two-case Spring context regression and three AI-DLC tracking files. Commit these five files together; retain full backend verify1112total/1033pass/79skip/0failures/errors evidence without source changes or redundant reruns. No push/deployment authorized or performed.
+
+## 2026-10-22T08:00:00Z — Roadmap refresh (end of day)
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin. origin/staging is now e21df97: quiz-ai-mcp (cf80f2e…e21df97) was pushed directly to staging at 11:31 without PR/CI, because the branch had been created by the AI with upstream origin/staging (`git switch -c quiz-ai-mcp origin/staging`). Removed the upstream of quiz-ai-mcp. No other new commits; U06/U07-U08/U12 branches still unmerged; grading migration still references the missing assignments table; Jira unchanged. Updated the roadmap: no code work left that can proceed without others; remaining items are KAN-152 (needs Report 3) and notifying the team about the grading migration.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T08:50:00Z — staging health check
+
+**User Input**: "kiểm tra nhánh staging xem có lỗi gì không"
+
+**AI Response**: Checked origin/staging e21df97 (same as local quiz-ai-mcp). Frontend: npm ci, lint, typecheck, 356 tests, build pass. Backend `mvn -B verify` (JDK 17): 999 tests, 0 failures, 4 errors — all Flyway failures at grading/V20260925_1500 (references `assignments`, `assignment_attempts` from unmerged U07/U08); with that folder excluded from target, all other migrations (incl. materials, notifications) apply and 31 repository integration tests pass. SubjectRepositoryIntegrationTest (31) is skipped by design (needs U04_TEST_JDBC_URL). Started the packaged jar against a temporary Postgres 16 (removed afterwards): APPLICATION FAILED TO START — bean 'notificationTopology' defined twice (U14 `@Configuration NotificationTopology` with `@Bean notificationTopology()`, commit 2920fc6); still invalid with bean overriding enabled. No test builds the Spring context, so CI cannot catch it. Added this blocker to the roadmap. No code changed.
+
+**Context**: Staging verification.
+
+---
+
+## 2026-10-22T09:00:00Z — Team message drafted
+
+**User Input**: "Để nhóm U14 sửa. Soạn giúp tôi một tin nhắn ngắn báo hai lỗi trên staging (bean notificationTopology và migration grading) để gửi nhóm."
+
+**AI Response**: Drafted a short Vietnamese message for the user to send: (1) U14 `NotificationTopology` bean name clash (commit 2920fc6) prevents backend and worker startup, suggested renaming the `@Bean` method; (2) `grading/V20260925_1500` references `assignments`/`assignment_attempts` from unmerged U07/U08, so Flyway fails on a fresh DB and backend CI is red, suggested merging `assignment` or deferring the foreign keys. Nothing sent by the AI; no code changed.
+
+**Context**: Staging verification follow-up.
+
+---
+
+## 2026-10-22T10:00:00Z — Roadmap refresh after U07/U08 merge
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin: staging is 0d1cf27 (U07/U08 `assignment` merged); origin/quiz-ai-mcp now exists at e21df97. GitHub Desktop had temporarily stashed the uncommitted roadmap/audit edits while switching branches and restored them. Verified staging in a temporary detached worktree (removed afterwards): backend `mvn -B verify` JDK 17 — 1110 tests, 0 errors, BUILD SUCCESS (grading migration fixed); frontend lint, typecheck, build pass, 407/408 tests (SubjectListPage focus test flaky under load, passes 3/3 alone). U14 `notificationTopology` bean clash still present, so the app cannot start. U08 now provides ActivityService, useActivityTracker and activity.retentionDays, unblocking G3 (U11 tracker) and E3 (U10 enable activity monitoring). Updated the roadmap: doable now — G3, E3, KAN-152 (needs Report 3); waiting — U14 bean fix, U06, tester, BR-U11-20. Jira unchanged.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T10:30:00Z — Code Generation Part 1: G3/E3 activity plan
+
+**User Input**: "Lập plan làm G3 (tracker hoạt động khi làm Quiz) và E3 (bật ghi nhận hoạt động khi đã đặt thời hạn lưu) trên nhánh mới tách từ origin/staging, không đặt upstream."
+
+**AI Response**: Created branch `quiz-activity` from origin/staging 0d1cf27 with `--no-track` (verified no upstream), carrying the uncommitted roadmap/audit edits. Read BR-U10-15, BR-U11-30/31, F8/F9, the existing QuizActivityService and AttemptSnapshot, U07's retention check (AssignmentSupport.retentionConfigured, readiness issues) and U08's ActivityService, useActivityTracker and ActivityTimeline. Added "Giai đoạn 6" to the U11 code generation plan (decisions K1–K7, checklist 6.0–6.8), a pointer in the U10 plan, and a link in the roadmap. Approval prompt: "Duyệt plan G3/E3 với đề xuất K1–K7?"
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T10:40:00Z — G3/E3 plan approved
+
+**User Input**: "Duyệt plan G3/E3 với đề xuất K1–K7. Bắt đầu từ bước 6.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 6.0: committing pending documentation locally on `quiz-activity`, then implementing 6.1–6.7.
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 1 approved.
+
+---
+
+## 2026-10-22T11:40:00Z — G3/E3 code generated, awaiting review
+
+**User Input**: (none since approval)
+
+**AI Response**: Implemented 6.1–6.7 on `quiz-activity` (uncommitted): QuizActivityPolicy (ISettings `activity.retentionDays`), updateDetails enable rules and notice requirement, review re-check via QuizRules.validateActivity, QuizDetail.activityRetentionConfigured; TakingView activity fields from the snapshot; frontend settings switch/notice, QuizTakingPage useActivityTracker + notice, teacher ActivityTimeline. Checks: backend `mvn -B verify` JDK 17 — 1112 tests, 0 failures/errors; frontend lint, typecheck, 411 tests, build pass. Presented for step 6.8 review.
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 2 complete, awaiting approval.
+
+---
+
+## 2026-10-22T11:55:00Z — G3/E3 code approved
+
+**User Input**: "Duyệt code G3/E3. Commit local trên nhánh quiz-activity."
+
+**AI Response**: Recorded approval (step 6.8) in the plan, aidlc-state and roadmap; committed G3/E3 code and documentation locally on `quiz-activity` (no upstream). Not pushed.
+
+**Context**: Construction — U11/U10 activity monitoring approved.
+
+---
+
+## 2026-10-22T12:20:00Z — PR #8 opened; staging merged into quiz-activity
+
+**User Input**: "Push nhánh quiz-activity lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: Pushed `quiz-activity` to `origin/quiz-activity` (upstream now its own remote branch) and opened PR #8 into staging. GitHub reported conflicts because staging gained 4bcca43 (U14 fix for the `notificationTopology` bean collision) during the push; conflicts were only in append-only docs (aidlc-state.md, audit.md). Merged origin/staging into `quiz-activity`, kept both sides (staging entries first), and pushed so CI can run.
+
+**Context**: Delivery — PR #8.
+
+---
+
+## 2026-10-22T12:40:00Z — PR #8 CI fix: duplicate POI dependency
+
+**User Input**: "Bật Auto-fix cho PR #8. Khi CI xanh thì báo tôi để quyết định merge."
+
+**AI Response**: Enabled Auto-fix for PR #8. CI frontend passed; backend failed at POM validation: `poi-ooxml` declared twice (U10's plain declaration and U07's declaration with poi-ooxml-lite excluded plus poi-ooxml-full, both kept by the U07 merge into staging), and `poi.version` duplicated. Kept a single declaration in U07's form (full schemas also cover U10's .xlsx import) and one property. Verified with `mvn -B verify` (JDK 17): 1114 tests, 0 failures/errors, QuestionImporterTest passes. Committed and pushed to `quiz-activity`.
+
+**Context**: Delivery — PR #8 CI fix.
+
 ## Code Generation - U12 planning
 **Timestamp**: 2026-10-19T19:45:00Z
 **AI Response**: Theo yêu cầu "code hết" của người dùng, tạo nhánh `group-assignment` từ `grading` và chi tiết hóa plan U12 (Part 1): phạm vi bỏ tool MCP `read_authorized_group_submission` (giao người làm AI chấm bài theo đề xuất người dùng đã đồng ý), 9 khác biệt (U07/U08 chưa có code, bảng `class_group_sets`, migration không FK tới `assignments`, action `GROUP_MANAGE`/`GROUP_WORK`, JdbcClient và khóa dòng mục, `RabbitSseHub` với heartbeat, API danh sách bài nhóm, route `[id]`, DOCX qua `IDocx`), 14 bước. Tiếp tục Part 2 theo chỉ đạo "hãy code hết đi đã"; plan trình bày lại khi review.

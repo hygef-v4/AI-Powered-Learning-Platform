@@ -1,5 +1,7 @@
 // Kiểu dữ liệu Quiz Practice (U11, UC 49–52), khớp DTO của QuizPracticeController, TeacherQuizAttemptController.
 
+import type { ActivitySummary } from "@/shared/activity/ActivityTimeline";
+
 export type QuizStatus = "DRAFT" | "REVIEWED" | "OPEN" | "RETIRED";
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED";
@@ -74,6 +76,9 @@ export type TakingView = {
   answerVersion: number;
   questions: TakingQuestion[];
   answers: Record<string, string[]>;
+  /** Theo ảnh chụp của lượt (K4). */
+  activityMonitoringEnabled: boolean;
+  activityNotice: string | null;
 };
 
 export type SaveResult = { answerVersion: number; savedAt: string };
@@ -131,4 +136,4 @@ export type ClassAttempts = {
   students: StudentAttempts[];
 };
 
-export type TeacherAttemptDetail = { result: ResultView; displayName: string | null; activity: unknown | null };
+export type TeacherAttemptDetail = { result: ResultView; displayName: string | null; activity: ActivitySummary | null };

@@ -13,11 +13,11 @@ type Props = {
   actions?: ReactNode;
 };
 
-/** Đầu trang: nút quay lại, tiêu đề, đường dẫn hoặc mô tả ngắn, thao tác. */
+/** Đầu trang: nút quay lại, tiêu đề, đường dẫn hoặc mô tả ngắn, thao tác; màn hẹp thì hàng nút xuống dưới tiêu đề. */
 export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: Props) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-3">
+      <div className="flex min-w-0 flex-[1_1_20rem] items-center gap-3">
         {backHref && (
           <Link
             href={backHref}
@@ -51,7 +51,7 @@ export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: P
           {subtitle && <p className="mt-1 text-[13px] text-muted">{subtitle}</p>}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

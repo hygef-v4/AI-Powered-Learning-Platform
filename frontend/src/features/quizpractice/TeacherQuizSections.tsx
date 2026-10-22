@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
 import { Alert, Button, ClickableRow, Dialog, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getClassAttempts, getTeacherAttempt } from "./api";
-import { errorMessage, formatDateTime, formatPoints } from "./labels";
+import { errorMessage, formatDateTime, formatPoints, submitModeText } from "./labels";
 import { ResultQuestions } from "./ResultQuestions";
 import type { ClassAttempts, StudentAttempts, TeacherAttemptDetail } from "./types";
 
@@ -74,10 +75,15 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
       {detail && (
         <Dialog open size="lg" onClose={() => setDetail(null)} title={`${detail.displayName ?? ""} · Lần ${detail.result.attemptNo}`}
           footer={<Button onClick={() => setDetail(null)}>Đóng</Button>}>
-          <p className="mb-2 text-[13px]">Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}</p>
-          <p className="mb-3 text-xs text-muted">
-            {detail.activity ? "Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận." : "Không có dữ liệu hoạt động cho lượt này."}
+          <p className="mb-2 text-[13px]" data-testid="teacher-attempt-summary">
+            Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}
+            {submitModeText(detail.result.submitMode) && <> · {submitModeText(detail.result.submitMode)}</>}
           </p>
+          <div className="mb-3 flex flex-col gap-1.5" data-testid="teacher-attempt-activity">
+            <p className="text-[13px] font-semibold text-ink">Dòng thời gian hoạt động</p>
+            {detail.activity ? <ActivityTimeline summary={detail.activity} /> : <p className="text-xs text-muted">Không có dữ liệu hoạt động cho lượt này.</p>}
+            <p className="text-xs text-muted">Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận.</p>
+          </div>
           <ResultQuestions questions={detail.result.questions} showScore />
         </Dialog>
       )}

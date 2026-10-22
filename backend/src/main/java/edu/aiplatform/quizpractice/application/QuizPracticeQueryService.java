@@ -85,6 +85,26 @@ public class QuizPracticeQueryService {
         return rows;
     }
 
+    /**
+     * Quiz {@code OPEN} gắn tài liệu {@code materialId} cho lớp đang học (F1 bước 5, G4): Learning Material của U13
+     * hiện kèm số lượt đã dùng, điểm cao nhất và nút Làm quiz.
+     */
+    @Transactional(readOnly = true)
+    public List<PracticeQuizRow> byMaterial(Actor actor, UUID classId, UUID materialId) {
+        if (actor == null || actor.role() != Role.STUDENT) {
+            throw ApiException.forbidden("QUIZ_PRACTICE_STUDENT_ONLY");
+        }
+        ClassRef ref = PracticeSupport.call(() -> classes.listOpenClassesOf(actor.accountId())).stream()
+                .filter(c -> c.status() == ClassStatus.OPEN && c.classId().equals(classId))
+                .findFirst().orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        List<QuizView> linked = PracticeSupport.call(() -> quizzes.listByMaterial(materialId, classId));
+        Map<UUID, List<QuizAttempt>> mine = attempts.listByAccount(actor.accountId(),
+                        linked.stream().map(QuizView::quizId).toList()).stream()
+                .collect(Collectors.groupingBy(QuizAttempt::quizId));
+        return linked.stream().map(quiz -> row(quiz, ref, mine.getOrDefault(quiz.quizId(), List.of()).stream()
+                .filter(a -> a.classId().equals(classId)).toList())).toList();
+    }
+
     /** Quiz Practice Detail (BR-U11-03): chỉ sinh viên đang học lớp; Quiz đã ngưng chỉ xem khi mình đã có lượt. */
     @Transactional(readOnly = true)
     public PracticeQuizDetail detail(Actor actor, UUID quizId, UUID classId) {

@@ -26,6 +26,7 @@
         <google-auth.version>1.48.0</google-auth.version>
         <jjwt.version>0.12.6</jjwt.version>
         <commons-csv.version>1.12.0</commons-csv.version>
+        <!-- U10: đọc .xlsx khi nhập câu hỏi (BR-U10-07); U07: đọc, ghi DOCX của đề và bài làm (BR-U07-60, 61). -->
         <poi.version>5.4.1</poi.version>
         <bucket4j.version>8.14.0</bucket4j.version>
         <!-- 1.21.4 bắt tay được với Docker Engine 29 (API tối thiểu cao hơn); Boot 3.5.6 quản lý 1.21.3. -->
@@ -80,6 +81,17 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- U13: PDF/OOXML text extraction; no OCR parsers. -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-pdf-module</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-microsoft-module</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
         <!-- U03: nhận dạng loại tệp, Google Drive -->
         <dependency>
             <groupId>org.apache.tika</groupId>
@@ -125,12 +137,6 @@
             <artifactId>commons-csv</artifactId>
             <version>${commons-csv.version}</version>
         </dependency>
-        <!-- U10: đọc tệp .xlsx khi nhập câu hỏi (BR-U10-07). -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <version>${poi.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-core</artifactId>
@@ -140,6 +146,24 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-lettuce</artifactId>
             <version>${bucket4j.version}</version>
+        </dependency>
+        <!-- U10 nhập .xlsx (BR-U10-07), U07 đọc, ghi DOCX (BR-U07-60, 61); dùng chung một khai báo. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.poi</groupId>
+                    <artifactId>poi-ooxml-lite</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Bản lite chỉ có class schema POI tự dùng; tạo style Heading, numbering khi xuất DOCX cần bản full. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>${poi.version}</version>
         </dependency>
 
         <dependency>
