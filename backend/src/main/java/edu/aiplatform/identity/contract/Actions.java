@@ -85,6 +85,10 @@ public final class Actions {
     public static final String AI_SHARED_USE = "AI_SHARED_USE";
     public static final String AI_ADMIN = "AI_ADMIN";
 
+    // U12 — nhóm: giảng viên được giao dạy lớp quản lý nhóm (R3/R4, BR-U12-01); sinh viên đang học làm bài nhóm (R5)
+    public static final String GROUP_MANAGE = "GROUP_MANAGE";
+    public static final String GROUP_WORK = "GROUP_WORK";
+
     private Actions() {
     }
 }

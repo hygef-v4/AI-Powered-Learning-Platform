@@ -9,6 +9,8 @@ import "./ai/register";
 import "./assignments/register";
 import "./assignmentwork/register";
 import "./grading/register";
+import "./groups/register";
+import "./groupdocs/register";
 import "./quizzes/register";
 import "./quizpractice/register";
 import "./materials/register";

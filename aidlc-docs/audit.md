@@ -5340,4 +5340,102 @@ check lại lỗi
 **AI Response**: Được, theo quy trình nhóm (PR vào `staging`). Chuẩn bị: gộp `origin/staging` vào `ai-connections` rồi `group-assignment`, giải xung đột (giữ cả hai bên), chạy test, push; sau đó hỏi người dùng cách gộp (PR hay gộp thẳng).
 **Context**: Construction, gộp nhánh
 
+## Code Generation - U12 planning
+**Timestamp**: 2026-10-19T19:45:00Z
+**AI Response**: Theo yêu cầu "code hết" của người dùng, tạo nhánh `group-assignment` từ `grading` và chi tiết hóa plan U12 (Part 1): phạm vi bỏ tool MCP `read_authorized_group_submission` (giao người làm AI chấm bài theo đề xuất người dùng đã đồng ý), 9 khác biệt (U07/U08 chưa có code, bảng `class_group_sets`, migration không FK tới `assignments`, action `GROUP_MANAGE`/`GROUP_WORK`, JdbcClient và khóa dòng mục, `RabbitSseHub` với heartbeat, API danh sách bài nhóm, route `[id]`, DOCX qua `IDocx`), 14 bước. Tiếp tục Part 2 theo chỉ đạo "hãy code hết đi đã"; plan trình bày lại khi review.
+**Context**: Construction, U12 Code Generation Part 1
+
+---
+
+## Code Generation - U06 approved, U12 resumed
+**Timestamp**: 2026-10-21T19:50:00Z
+**User Input**: "Continue, làm tiếp U12 từ bước 3 đi"
+**AI Response**: U06 được duyệt (ghi trên nhánh `ai-connections`, b94645d). Chuyển sang nhánh `group-assignment` (khớp `origin/staging`). Sửa plan U12: nhánh tạo lại từ `staging`, tick bước 1–2 đã commit. Làm bước 3: `GroupAccess`, `ClassGroupService` (đọc, lưu cả bộ kèm version, nhả mục khi rời nhóm, hủy yêu cầu chờ khi đổi trưởng nhóm), `RandomGroupSplitter`.
+**Context**: Construction, U12 Code Generation Part 2
+
+---
+
+## Code Generation - U12 steps 3–13
+**Timestamp**: 2026-10-21T20:30:00Z
+**AI Response**: Bước 3–12 (ccf357f…a2c8c69): nhóm, yêu cầu đổi trưởng nhóm, sẵn sàng và tạo tài liệu, mục, nộp và tự nộp, SSE qua RabbitMQ, interface cho U08/U09, REST API, màn giảng viên, màn sinh viên và workspace. Khởi động thử backend phát hiện và sửa chọn constructor `ClassGroupService`. Bước 13: code-summary, aidlc-state, plan. Kiểm tra: 60 test U12 và ArchitectureTest pass; `mvn -B verify` 888 test, 33 bỏ qua, 4 lỗi do migration 1500 của U09; frontend 305 test, lint, typecheck, build pass.
+**Context**: Construction, U12 Code Generation Part 2
+
+---
+
+## Code Generation - U12 approval prompt
+**Timestamp**: 2026-10-21T20:35:00Z
+**AI Response**: Trình bày kết quả U12 và hỏi người dùng duyệt code (Request Changes hoặc Continue to Next Stage).
+**Context**: Construction, U12 Code Generation Part 2, bước 14
+
+---
+
+## Code Generation - U12 approval and push
+**Timestamp**: 2026-10-21T20:50:00Z
+**User Input**: "neu cai nao oke roi thi hay push len cho toi"
+**AI Response**: Người dùng duyệt và yêu cầu push. Đánh dấu bước 14 của U12 (duyệt code). Push nhánh `ai-connections` (U06) và `group-assignment` (U12) lên `origin`; không mở PR, không gộp `staging` (Max2Min gộp).
+**Context**: Construction, U12 Code Generation bước 14
+
+---
+
+## Status question - remaining work after push
+**Timestamp**: 2026-10-21T21:00:00Z
+**User Input**: "the phan cua toi gio con gi"
+**AI Response**: Liệt kê việc còn lại: gộp hai nhánh vào `staging` (Max2Min, giải xung đột cộng thêm), cập nhật Jira (KAN-34/35/37, KAN-151/62/63/64/66, đóng KAN-19, KAN-14), giai đoạn Build & Test của AI-DLC, phần chờ U07/U08, kiểm thử với khóa API và agent thật, báo Hưng migration 1500, dọn nhánh cũ.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Status question - what to do first
+**Timestamp**: 2026-10-21T21:05:00Z
+**User Input**: "gio nen lam gi truoc"
+**AI Response**: Đề xuất thứ tự: (1) báo Max2Min gộp hai nhánh và báo Hưng lỗi migration 1500; (2) chuyển Jira các story U06, U12 sang trạng thái đang review, đóng KAN-19; (3) viết Build & Test trong lúc chờ gộp; (4) thử khóa API thật và agent MCP thật; (5) KAN-14 và dọn nhánh, container.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Jira update and Build & Test request
+**Timestamp**: 2026-10-21T21:10:00Z
+**User Input**: "lamf 2 3 ddi"
+**AI Response**: Làm bước 2 (chuyển trạng thái Jira các story U06, U12; đóng epic KAN-19) và bước 3 (Build & Test cho U06, U12).
+**Context**: Construction, Jira và Build & Test
+
+---
+
+## Jira update done, Build & Test U12
+**Timestamp**: 2026-10-21T21:30:00Z
+**AI Response**: Jira: KAN-34, 35, 37, 29 (U06) và KAN-151, 62, 63, 64, 66, 28 (U12) chuyển In Review theo cách nhóm đang dùng; KAN-19 chuyển Done. Build & Test: viết `build-and-test/u12-verification.md` (build, unit, integration, hiệu năng, bảo mật, kết quả đã chạy, gate còn mở) theo mẫu `u15-verification.md`.
+**Context**: Construction, Build & Test U12
+
+---
+
+## Open pull requests request
+**Timestamp**: 2026-10-21T22:40:00Z
+**User Input**: "mở PR vào staging cho tôi"
+**AI Response**: Gộp `origin/staging` vào `ai-connections` (59a2f42; backend 1204 test 0 lỗi, frontend 424 test, lint, typecheck, build đạt) và `group-assignment` (d7adad9; backend 1175 test 0 lỗi, frontend 424 test, lint, typecheck, build đạt), push. Viết tiêu đề và mô tả hai PR (không ghi Claude). Trình duyệt chưa đăng nhập GitHub, máy không có `gh`: chờ người dùng đăng nhập để tạo PR.
+**Context**: Construction, mở PR
+
+---
+
+## Pull requests opened
+**Timestamp**: 2026-10-21T22:55:00Z
+**User Input**: "tôi đăng nhập github rồi đó"
+**AI Response**: Mở PR #9 (`ai-connections` → `staging`, U06) và PR #10 (`group-assignment` → `staging`, U12) qua trình duyệt, mô tả theo mẫu PR #8, không ghi Claude. CI PR #9: backend, frontend, GitGuardian đạt; PR #10 đang chạy lúc ghi.
+**Context**: Construction, mở PR
+
+---
+
+## Direct merge question
+**Timestamp**: 2026-10-21T23:00:00Z
+**User Input**: "merch thang truc tiep vao stagging luon dc k"
+**AI Response**: Trả lời: được về kỹ thuật (người dùng là Collaborator, chưa thấy chặn bởi review), nhưng khác quy trình nhóm (Max2Min gộp). Đề xuất thứ tự: gộp #9 qua nút Merge trên GitHub; cập nhật `group-assignment` theo `staging`, giải xung đột, chạy test, push; chờ CI #10 đạt rồi gộp #10. Chờ người dùng xác nhận trước khi gộp.
+**Context**: Construction, gộp PR
+
+---
+
+## Direct merge approval
+**Timestamp**: 2026-10-21T23:05:00Z
+**User Input**: "moi nguoi bao tu gop luon r"
+**AI Response**: Nhóm đồng ý người dùng tự gộp. Gộp PR #9 vào `staging`, cập nhật `group-assignment`, chờ CI rồi gộp PR #10.
+**Context**: Construction, gộp PR
+
 ---

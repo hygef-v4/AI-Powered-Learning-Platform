@@ -209,7 +209,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U09 Question Type Authoring | Design revision 73 UC ngày 2026-10-09; Cấu hình quiz và bốn dạng assignment, document model; U08 vòng đời, U06 rubric. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U11 Attempt & Submission | Design revision 73 UC ngày 2026-10-09; Quiz Practice tách Student Assignments; lần làm bài của môn ghi classId. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
-| U12 Group & Allocation | Design revision 73 UC ngày 2026-10-09; Chia nhóm/leader hỗ trợ Teacher Class Detail và UC 45/27. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U12 Group Assignment (unit-of-work 2026-10-15; dòng cũ "Group & Allocation" là baseline lịch sử) | Functional, NFR, infrastructure design revision 2026-10-15/17 (UC 53–57). | Plan chi tiết hóa 2026-10-20; bước 1–14 checked, người dùng duyệt code 2026-10-22; chờ gộp vào `staging` | Code và unit test viết 2026-10-21/22 trên nhánh `group-assignment` (13 commit, chưa push): backend 60 test U12 + ArchitectureTest pass; frontend 305 test (U12: 13), lint/typecheck/build pass. Full verify 888/33 skip/4 lỗi do migration 1500 của U09. Xem `construction/u12-group-assignment/code/code-summary.md` |
 | U13 AI & Code Execution | Design revision 73 UC ngày 2026-10-09; AI draft, Practice grading UC 29, proposals UC 38, Judge0 UC 25/43, số liệu AI UC 58. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U14 Group Document & Submission | Design revision 73 UC ngày 2026-10-09; Tài liệu nhóm chỉ ở lớp, GRADED; chỉ leader nộp. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U15 Admin Dashboard | UC66/KAN-80 hiện hành; counts và backup metadata, current-contract slice A duyệt 2026-10-20. | Plan bảy task duyệt 2026-10-20; C01/C02 metadata U03 deferred | Code-ready slice A: backend verify 755 total/693 pass/62 skip; frontend253 pass, lint/typecheck/build pass; independent review P2 đã sửa. Full UC66 còn U03/integration/NFR acceptance. Xem construction/u15-admin-dashboard/code/implementation-summary.md |
@@ -501,3 +501,12 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Build & Test (phần của unit): `construction/build-and-test/u06-verification.md`; thêm giới hạn 2 lời gọi đồng thời mỗi provider (NFR-U06-03, `eff4083`); integration test, đo hiệu năng, provider và agent thật còn mở.
 - Jira 2026-10-22: KAN-29, KAN-34, KAN-35, KAN-37 chuyển In Review; KAN-19 Done.
 - Ghi chú: `mvn -B verify` toàn backend có 4 lỗi integration test của unit khác do migration `V20260925_1500__create_grading_tables.sql` (U09, đã có trên `staging`) cần bảng `assignments` chưa tồn tại.
+
+## U12 Group Assignment — 2026-10-22
+
+- [x] Code Generation Part 1: plan chi tiết hóa 2026-10-20; nhánh tạo lại từ `staging` 2026-10-21.
+- [x] Code Generation Part 2: bước 1–12 trên nhánh `group-assignment` (`60f0cc8`…`a2c8c69`, chưa push).
+- [x] Bước 13: code-summary `construction/u12-group-assignment/code/code-summary.md`.
+- [x] Bước 14: người dùng duyệt code ngày 2026-10-22; nhánh đã push lên `origin`, chờ Max2Min gộp vào `staging`.
+- [x] Build & Test (phần của unit): `construction/build-and-test/u12-verification.md`; integration test và đo hiệu năng còn mở (tester, cần U07, U08).
+- Jira 2026-10-22: KAN-28, KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 chuyển In Review; KAN-19 Done.
