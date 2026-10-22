@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  // CSP nonces must be attached during request rendering, never static generation.
+  // Per-request rendering keeps framework scripts aligned with the CSP nonce.
   await connection();
   return (
     <html lang="vi" className="font-be-vietnam">

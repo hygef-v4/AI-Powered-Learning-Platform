@@ -13,4 +13,5 @@ import "./quizzes/register";
 import "./quizpractice/register";
 import "./materials/register";
 import "./announcements/register";
+import "./notifications/register";
 import "./admindashboard/register";

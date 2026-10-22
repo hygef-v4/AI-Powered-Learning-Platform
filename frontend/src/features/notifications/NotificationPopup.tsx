@@ -1,0 +1,25 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Icon } from "@/shared/ui/Icon";
+import { notificationsApi, safeNotificationLink } from "./api";
+import { EmailPreferencePanel } from "./EmailPreferencePanel";
+import type { NotificationItem } from "./types";
+import styles from "./notifications.module.css";
+export function NotificationPopup({ count, student, revision, onChanged, onClose }: { count: number; student: boolean; revision: number; onChanged: () => void; onClose: () => void }) {
+  const router = useRouter(); const [unread, setUnread] = useState(false); const [busy, setBusy] = useState(false); const [mutationError, setMutationError] = useState(""); const more = useRef<HTMLButtonElement>(null); const panel = useRef<HTMLElement>(null);
+  const base = `${unread}:${revision}`; const [pagination, setPagination] = useState({ base: "", page: 1 }); const page = pagination.base === base ? pagination.page : 1;
+  function setPage(value: number | ((page: number) => number)) { setPagination(previous => ({ base, page: typeof value === "number" ? value : value(previous.base === base ? previous.page : 1) })); }
+  const key = `${base}:${page}`; const [result, setResult] = useState<{ base: string; key: string; items: NotificationItem[]; hasMore: boolean; error?: string }>({ base: "", key: "", items: [], hasMore: false });
+  useEffect(() => { const controller = new AbortController(); void notificationsApi.list(unread, page, controller.signal).then(data => { if (!controller.signal.aborted) setResult(previous => ({ base, key, items: page > 1 && previous.base === base ? [...previous.items, ...data.items.filter(i => !previous.items.some(p => p.id === i.id))] : data.items, hasMore: data.hasMore })); }).catch(() => { if (!controller.signal.aborted) setResult(previous => ({ base, key, items: previous.base === base ? previous.items : [], hasMore: false, error: "Không thể tải thông báo." })); }); return () => controller.abort(); }, [unread, page, base, key]);
+  useEffect(() => { panel.current?.focus(); }, []);
+  const loading = result.key !== key; const items = result.base === base ? result.items : [];
+  useEffect(() => { const node = more.current; if (!node || !result.hasMore || loading || typeof IntersectionObserver === "undefined") return; const observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) setPagination(previous => ({ base, page: (previous.base === base ? previous.page : 1) + 1 })); }); observer.observe(node); return () => observer.disconnect(); }, [result.hasMore, result.key, loading, base]);
+  async function open(item: NotificationItem) { const link = safeNotificationLink(item.link); if (!link) { setMutationError("Liên kết không hợp lệ."); return; } setBusy(true); try { await notificationsApi.read(item.id); onChanged(); onClose(); router.push(link); } catch { setMutationError("Chưa đánh dấu đã đọc được. Hãy thử lại."); } finally { setBusy(false); } }
+  async function allRead() { setBusy(true); try { await notificationsApi.readAll(); setPage(1); onChanged(); } catch { setMutationError("Không thể đánh dấu tất cả đã đọc."); } finally { setBusy(false); } }
+  return <section id="notification-popup" ref={panel} tabIndex={-1} role="dialog" aria-label="Thông báo" className={styles.popup} onKeyDown={e => { if (e.key === "Escape") onClose(); }}>
+    <header className={styles.heading}><h2>Thông báo</h2><button data-testid="notifications-read-all" className={styles.linkButton} disabled={busy || !count} onClick={() => void allRead()}>Đánh dấu tất cả đã đọc</button></header>
+    <div role="tablist" aria-label="Lọc thông báo" className={styles.tabs}><button role="tab" aria-selected={!unread} onClick={() => { setUnread(false); setPage(1); }}>Tất cả</button><button role="tab" aria-selected={unread} onClick={() => { setUnread(true); setPage(1); }}>Chưa đọc ({count})</button></div>
+    <div className={styles.scroll}>{mutationError && <p role="alert" className={styles.error}>{mutationError}</p>}{result.base === base && result.error && <p role="alert" className={styles.error}>{result.error} <button onClick={() => { setPage(1); onChanged(); }}>Thử lại</button></p>}{items.map(item => <button data-testid="notification-item" key={item.id} className={`${styles.item} ${item.readAt ? "" : styles.unread}`} disabled={busy} onClick={() => void open(item)}><span className={styles.tile}><Icon name="notifications" size={19} /></span><span className={styles.text}><strong>{item.title}</strong><p>{item.summary}</p><p>{new Date(item.createdAt).toLocaleString("vi-VN")}</p></span>{!item.readAt && <span className={styles.dot} />}</button>)}{loading ? <p role="status" className={styles.empty}>Đang tải…</p> : !items.length && !result.error && <p className={styles.empty}>{unread ? "Bạn đã đọc tất cả thông báo." : "Chưa có thông báo."}</p>}{result.base === base && result.hasMore && <button ref={more} disabled={loading} className={styles.loadMore} onClick={() => setPage(p => p + 1)}>Tải thêm</button>}{student && <EmailPreferencePanel />}</div>
+  </section>;
+}
