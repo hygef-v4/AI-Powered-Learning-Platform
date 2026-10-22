@@ -5119,4 +5119,103 @@ check lại lỗi
 ## U14 topology fix local commit authorization — 2026-10-22
 **User Input**: "commit, không push"
 **AI Response**: Verified staging branch, empty index and exactly the topology method rename, new two-case Spring context regression and three AI-DLC tracking files. Commit these five files together; retain full backend verify1112total/1033pass/79skip/0failures/errors evidence without source changes or redundant reruns. No push/deployment authorized or performed.
+
+## 2026-10-22T08:00:00Z — Roadmap refresh (end of day)
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin. origin/staging is now e21df97: quiz-ai-mcp (cf80f2e…e21df97) was pushed directly to staging at 11:31 without PR/CI, because the branch had been created by the AI with upstream origin/staging (`git switch -c quiz-ai-mcp origin/staging`). Removed the upstream of quiz-ai-mcp. No other new commits; U06/U07-U08/U12 branches still unmerged; grading migration still references the missing assignments table; Jira unchanged. Updated the roadmap: no code work left that can proceed without others; remaining items are KAN-152 (needs Report 3) and notifying the team about the grading migration.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T08:50:00Z — staging health check
+
+**User Input**: "kiểm tra nhánh staging xem có lỗi gì không"
+
+**AI Response**: Checked origin/staging e21df97 (same as local quiz-ai-mcp). Frontend: npm ci, lint, typecheck, 356 tests, build pass. Backend `mvn -B verify` (JDK 17): 999 tests, 0 failures, 4 errors — all Flyway failures at grading/V20260925_1500 (references `assignments`, `assignment_attempts` from unmerged U07/U08); with that folder excluded from target, all other migrations (incl. materials, notifications) apply and 31 repository integration tests pass. SubjectRepositoryIntegrationTest (31) is skipped by design (needs U04_TEST_JDBC_URL). Started the packaged jar against a temporary Postgres 16 (removed afterwards): APPLICATION FAILED TO START — bean 'notificationTopology' defined twice (U14 `@Configuration NotificationTopology` with `@Bean notificationTopology()`, commit 2920fc6); still invalid with bean overriding enabled. No test builds the Spring context, so CI cannot catch it. Added this blocker to the roadmap. No code changed.
+
+**Context**: Staging verification.
+
+---
+
+## 2026-10-22T09:00:00Z — Team message drafted
+
+**User Input**: "Để nhóm U14 sửa. Soạn giúp tôi một tin nhắn ngắn báo hai lỗi trên staging (bean notificationTopology và migration grading) để gửi nhóm."
+
+**AI Response**: Drafted a short Vietnamese message for the user to send: (1) U14 `NotificationTopology` bean name clash (commit 2920fc6) prevents backend and worker startup, suggested renaming the `@Bean` method; (2) `grading/V20260925_1500` references `assignments`/`assignment_attempts` from unmerged U07/U08, so Flyway fails on a fresh DB and backend CI is red, suggested merging `assignment` or deferring the foreign keys. Nothing sent by the AI; no code changed.
+
+**Context**: Staging verification follow-up.
+
+---
+
+## 2026-10-22T10:00:00Z — Roadmap refresh after U07/U08 merge
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin: staging is 0d1cf27 (U07/U08 `assignment` merged); origin/quiz-ai-mcp now exists at e21df97. GitHub Desktop had temporarily stashed the uncommitted roadmap/audit edits while switching branches and restored them. Verified staging in a temporary detached worktree (removed afterwards): backend `mvn -B verify` JDK 17 — 1110 tests, 0 errors, BUILD SUCCESS (grading migration fixed); frontend lint, typecheck, build pass, 407/408 tests (SubjectListPage focus test flaky under load, passes 3/3 alone). U14 `notificationTopology` bean clash still present, so the app cannot start. U08 now provides ActivityService, useActivityTracker and activity.retentionDays, unblocking G3 (U11 tracker) and E3 (U10 enable activity monitoring). Updated the roadmap: doable now — G3, E3, KAN-152 (needs Report 3); waiting — U14 bean fix, U06, tester, BR-U11-20. Jira unchanged.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T10:30:00Z — Code Generation Part 1: G3/E3 activity plan
+
+**User Input**: "Lập plan làm G3 (tracker hoạt động khi làm Quiz) và E3 (bật ghi nhận hoạt động khi đã đặt thời hạn lưu) trên nhánh mới tách từ origin/staging, không đặt upstream."
+
+**AI Response**: Created branch `quiz-activity` from origin/staging 0d1cf27 with `--no-track` (verified no upstream), carrying the uncommitted roadmap/audit edits. Read BR-U10-15, BR-U11-30/31, F8/F9, the existing QuizActivityService and AttemptSnapshot, U07's retention check (AssignmentSupport.retentionConfigured, readiness issues) and U08's ActivityService, useActivityTracker and ActivityTimeline. Added "Giai đoạn 6" to the U11 code generation plan (decisions K1–K7, checklist 6.0–6.8), a pointer in the U10 plan, and a link in the roadmap. Approval prompt: "Duyệt plan G3/E3 với đề xuất K1–K7?"
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T10:40:00Z — G3/E3 plan approved
+
+**User Input**: "Duyệt plan G3/E3 với đề xuất K1–K7. Bắt đầu từ bước 6.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 6.0: committing pending documentation locally on `quiz-activity`, then implementing 6.1–6.7.
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 1 approved.
+
+---
+
+## 2026-10-22T11:40:00Z — G3/E3 code generated, awaiting review
+
+**User Input**: (none since approval)
+
+**AI Response**: Implemented 6.1–6.7 on `quiz-activity` (uncommitted): QuizActivityPolicy (ISettings `activity.retentionDays`), updateDetails enable rules and notice requirement, review re-check via QuizRules.validateActivity, QuizDetail.activityRetentionConfigured; TakingView activity fields from the snapshot; frontend settings switch/notice, QuizTakingPage useActivityTracker + notice, teacher ActivityTimeline. Checks: backend `mvn -B verify` JDK 17 — 1112 tests, 0 failures/errors; frontend lint, typecheck, 411 tests, build pass. Presented for step 6.8 review.
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 2 complete, awaiting approval.
+
+---
+
+## 2026-10-22T11:55:00Z — G3/E3 code approved
+
+**User Input**: "Duyệt code G3/E3. Commit local trên nhánh quiz-activity."
+
+**AI Response**: Recorded approval (step 6.8) in the plan, aidlc-state and roadmap; committed G3/E3 code and documentation locally on `quiz-activity` (no upstream). Not pushed.
+
+**Context**: Construction — U11/U10 activity monitoring approved.
+
+---
+
+## 2026-10-22T12:20:00Z — PR #8 opened; staging merged into quiz-activity
+
+**User Input**: "Push nhánh quiz-activity lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: Pushed `quiz-activity` to `origin/quiz-activity` (upstream now its own remote branch) and opened PR #8 into staging. GitHub reported conflicts because staging gained 4bcca43 (U14 fix for the `notificationTopology` bean collision) during the push; conflicts were only in append-only docs (aidlc-state.md, audit.md). Merged origin/staging into `quiz-activity`, kept both sides (staging entries first), and pushed so CI can run.
+
+**Context**: Delivery — PR #8.
+
+---
+
+## 2026-10-22T12:40:00Z — PR #8 CI fix: duplicate POI dependency
+
+**User Input**: "Bật Auto-fix cho PR #8. Khi CI xanh thì báo tôi để quyết định merge."
+
+**AI Response**: Enabled Auto-fix for PR #8. CI frontend passed; backend failed at POM validation: `poi-ooxml` declared twice (U10's plain declaration and U07's declaration with poi-ooxml-lite excluded plus poi-ooxml-full, both kept by the U07 merge into staging), and `poi.version` duplicated. Kept a single declaration in U07's form (full schemas also cover U10's .xlsx import) and one property. Verified with `mvn -B verify` (JDK 17): 1114 tests, 0 failures/errors, QuestionImporterTest passes. Committed and pushed to `quiz-activity`.
+
+**Context**: Delivery — PR #8 CI fix.
+
 ---

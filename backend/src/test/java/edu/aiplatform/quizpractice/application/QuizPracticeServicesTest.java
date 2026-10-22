@@ -83,6 +83,7 @@ class QuizPracticeServicesTest {
     private final IActivityWrite activityWrite = mock(IActivityWrite.class);
     private QuizSettings settings = new QuizSettings(false, false, 10, 2, true, true);
     private QuizStatus quizStatus = QuizStatus.OPEN;
+    private boolean monitoring;
     private QuizAttemptService attemptsService;
     private QuizPracticeQueryService queries;
     private TeacherQuizAttemptService teacherService;
@@ -128,8 +129,8 @@ class QuizPracticeServicesTest {
     }
 
     private QuizView quiz() {
-        return new QuizView(quizId, QuizScope.CLASS, classA, subject, 1, "Luyện tập", quizStatus, settings, false, null,
-                List.of(), new BigDecimal("3"));
+        return new QuizView(quizId, QuizScope.CLASS, classA, subject, 1, "Luyện tập", quizStatus, settings, monitoring,
+                monitoring ? "Ghi lại khi rời trang" : null, List.of(), new BigDecimal("3"));
     }
 
     private static QuizQuestionView question(UUID id, QuestionType type) {
@@ -330,6 +331,18 @@ class QuizPracticeServicesTest {
         assertThat(api(() -> activity.record(student, taking.attemptId(), List.of())).code())
                 .isEqualTo("ACTIVITY_NOT_ENABLED");
         verify(activityWrite, never()).record(any(), any(), anyList());
+        assertThat(taking.activityMonitoringEnabled()).isFalse();
+    }
+
+    @Test
+    void takingViewCarriesSnapshotActivityPolicy() {
+        monitoring = true;
+        var taking = attemptsService.start(student, quizId, classA);
+        monitoring = false;
+
+        var resumed = attemptsService.get(student, taking.attemptId());
+        assertThat(resumed.activityMonitoringEnabled()).as("theo ảnh chụp, không theo Quiz hiện tại").isTrue();
+        assertThat(resumed.activityNotice()).isEqualTo("Ghi lại khi rời trang");
     }
 
     private UUID submitFresh(Actor actor) {

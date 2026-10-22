@@ -77,7 +77,7 @@ class QuizPracticeControllerTest {
     @Test
     void startReadsClassIdFromBody() throws Exception {
         when(attempts.start(student, quizId, classId)).thenReturn(new TakingView(attemptId, quizId, classId, "Quiz", 1,
-                NOW, null, NOW, 0, List.of(), Map.of()));
+                NOW, null, NOW, 0, List.of(), Map.of(), false, null));
         mvc.perform(post("/api/v1/quizzes/{q}/attempts", quizId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"classId\":\"" + classId + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.attemptId").value(attemptId.toString()));

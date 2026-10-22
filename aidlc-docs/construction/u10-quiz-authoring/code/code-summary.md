@@ -247,3 +247,17 @@ Mã lỗi mới: `AI_DRAFT_NOT_FOUND`, `AI_DRAFT_CLOSED`, `AI_DRAFT_NOT_READY`, 
 - **L2 (J2):** bốn công tắc của `QuizSettingsPanel` (Hiện điểm sau khi nộp, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) truyền `ariaLabel`. Không sửa `Switch` dùng chung.
 - **Ghi chú cho người giữ UI kit:** `Switch` không có tên truy cập khi chỗ gọi không truyền `ariaLabel`, vì nhãn nằm ngoài nút. Còn 2 chỗ dùng ở unit khác.
 - **Test:** `QuizScreens.test.tsx` thêm kiểm tên bốn công tắc.
+
+## E3 — Bật ghi nhận hoạt động (2026-10-22)
+
+Làm cùng G3 của U11 (plan U11 giai đoạn 6, K1–K3).
+
+- **Kiểm thời hạn lưu (K1):** `QuizActivityPolicy` đọc `ISettings` khóa `activity.retentionDays` (U08 khai báo). U03 lỗi thì coi như chưa đặt.
+- **Bật và tắt (K1, K2):**
+  - `updateDetails`: bật mới khi chưa đặt thời hạn thì `409 ACTIVITY_RETENTION_NOT_SET`; bật mà thiếu lời báo thì `ACTIVITY_NOTICE_REQUIRED` theo trường. Tắt luôn được.
+  - Duyệt (`QuizRules.validateActivity` trong `QuizPublicationService`) kiểm lại lời báo và thời hạn.
+- **Cờ cho frontend (K3):** `QuizDetail.activityRetentionConfigured`, chỉ `true` với người có quyền sửa. `QuizSettingsPanel` mở công tắc khi đã đặt thời hạn (hoặc đang bật) và hiện ô "Lời báo cho sinh viên" bắt buộc; chưa đặt thì giữ ghi chú.
+- **Test:**
+  - `QuizServicesTest`: chưa đặt thời hạn; thiếu lời báo; bật được; duyệt khi thời hạn bị xóa; tắt khi U03 lỗi; bật khi U03 lỗi.
+  - `QuizScreens.test.tsx`: công tắc khóa hoặc mở theo cờ; thiếu lời báo thì không gửi.
+- **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.

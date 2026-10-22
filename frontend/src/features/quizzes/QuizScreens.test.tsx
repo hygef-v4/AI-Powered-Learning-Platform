@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
   createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
-  publishQuiz, reviewQuiz, saveQuizItems,
+  publishQuiz, reviewQuiz, saveQuizItems, updateQuizDetails,
 } from "./api";
 import { BankQuestionPicker } from "./BankQuestionPicker";
 import { ClassQuizzesSection } from "./ClassQuizzesSection";
@@ -56,6 +56,7 @@ const INFO: QuizInfo = {
 };
 const detail = (quiz: Partial<QuizInfo> = {}, canManage = true): QuizDetail => ({
   quiz: { ...INFO, ...quiz }, items: [{ position: 1, points: 2, inline: false, question: QUESTION }], maxScore: 2, canManage,
+  activityRetentionConfigured: false,
 });
 const row = (overrides: Partial<QuizRow> = {}): QuizRow => ({
   id: "z1", scope: "CLASS", classId: "c1", subjectId: "s1", versionNo: 1, title: "Luyện tập", status: "DRAFT", itemCount: 3,
@@ -176,6 +177,30 @@ describe("ClassQuizzesSection", () => {
 });
 
 describe("QuizSettingsPanel", () => {
+  it("ghi nhận hoạt động chỉ bật được khi đã đặt thời hạn lưu và cần lời báo (E3)", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    const { unmount } = render(<QuizDetailPage id="z1" />);
+    expect(await screen.findByRole("switch", { name: "Ghi nhận hoạt động" })).toBeDisabled();
+    expect(screen.getByTestId("quiz-settings-activity-locked")).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(getQuiz).mockResolvedValue({ ...detail(), activityRetentionConfigured: true });
+    vi.mocked(updateQuizDetails).mockResolvedValue({ ...detail({ activityMonitoringEnabled: true, activityNotice: "Ghi lại" }),
+      activityRetentionConfigured: true });
+    render(<QuizDetailPage id="z1" />);
+    const toggle = await screen.findByRole("switch", { name: "Ghi nhận hoạt động" });
+    expect(toggle).toBeEnabled();
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+    expect(await screen.findByText("Cần lời báo cho sinh viên khi bật ghi nhận hoạt động")).toBeInTheDocument();
+    expect(updateQuizDetails).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByTestId("quiz-settings-activity-notice"), { target: { value: "Ghi lại" } });
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+    await waitFor(() => expect(updateQuizDetails).toHaveBeenCalledWith("z1",
+      expect.objectContaining({ activityMonitoringEnabled: true, activityNotice: "Ghi lại" }), 3));
+  });
+
   it("các công tắc có tên truy cập", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(saveQuizItems).mockResolvedValue(detail());

@@ -201,6 +201,10 @@ Không cần action mới: AI cho Quiz dùng `QUIZ_SUBJECT_MANAGE` hoặc `QUIZ_
   - tick checklist, lộ trình, `aidlc-state.md`.
 - [x] **4.14 Review:** người dùng duyệt code giai đoạn 4 ngày 2026-10-22. đối chiếu UC 47, 48 (phần AI), BR-U10-40…42 và G4 với code; người dùng duyệt.
 
+## E3 — Bật ghi nhận hoạt động
+
+Làm cùng G3 của U11 ở [plan U11, giai đoạn 6](u11-quiz-practice-code-generation-plan.md) (K1–K7), sau khi U08 có khóa `activity.retentionDays` trên `staging`.
+
 ## Integration test cases (tester viết)
 
 - Phát hành version mới khi có lượt đang làm của version cũ: U11 nhận `onRetired`.

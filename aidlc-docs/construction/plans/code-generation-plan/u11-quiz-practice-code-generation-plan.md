@@ -120,6 +120,75 @@ Không gồm điểm "kết quả khi Quiz ẩn điểm, ẩn đáp án" (BR-U11
   - Cập nhật code-summary U10, U11; tick checklist; cập nhật lộ trình và `aidlc-state.md`.
 - [x] **5.7 Review:** người dùng duyệt ngày 2026-10-22, commit local trên `quiz-ai-mcp`.
 
+## Giai đoạn 6 — Ghi nhận hoạt động khi làm Quiz (G3 của U11, E3 của U10) — chi tiết
+
+Lập ngày 2026-10-22 theo [lộ trình](../cuong-uc-roadmap-2026-10-20.md), sau khi U07/U08 merge vào `staging` (`0d1cf27`). Nhánh `quiz-activity` tách từ `origin/staging`, không đặt upstream.
+
+- **Jira:** phần ghi nhận hoạt động của KAN-130 (UC 51) và KAN-44 (UC 48); dữ liệu hoạt động lượt Quiz của UC 42.
+- **Story:** US-INT-001 (phần Quiz), US-ASM-006.
+- **Luồng:** U11 F8, phần hoạt động của F9; U10 F7 bước 5.
+- **Quy tắc:** BR-U10-15, BR-U10-21; BR-U11-03, 30, 31; FR-039.
+- **Ngoài phạm vi:**
+  - Chạy thử trên Docker: chờ U14 sửa bean `notificationTopology`.
+  - Cột "Hoạt động" trên danh sách sinh viên (K6).
+
+### Dùng của unit khác (đã có trên `staging`)
+
+| Contract | Unit | Dùng để |
+|---|---|---|
+| `ISettings`, `SettingKey` | U03 | Đọc `activity.retentionDays` (U08 khai báo khóa, 1–365 ngày, không có mặc định) |
+| `IActivityWrite.record`, `IActivityQuery.summary` | U08 (`ActivityService`) | Ghi sự kiện lượt Quiz (`WorkKind.QUIZ_ATTEMPT`); tóm tắt cho giảng viên. U08 để U11 tự kiểm quyền và chính sách |
+| `useActivityTracker`, `ActivityTimeline` | U08 (`frontend/src/shared/activity`) | Gửi sự kiện rời trang; hiện dòng thời gian cho giảng viên |
+
+### Hiện trạng
+
+- U11 đã có `POST /api/v1/quiz-attempts/{id}/activity` (`QuizActivityService`: chủ lượt, `IN_PROGRESS`, chính sách đã chụp). Lượt đã chụp `activityMonitoringEnabled`, `activityNotice` vào `AttemptSnapshot`.
+- `TakingView` chưa trả hai trường này, và `QuizTakingPage` chưa gắn tracker.
+- U10 luôn chặn bật ghi nhận hoạt động (`409 ACTIVITY_RETENTION_NOT_SET`, E3); công tắc trong `QuizSettingsPanel` chỉ tắt được.
+- Phần giảng viên xem lượt đã nhận `ActivitySummary` nhưng chỉ hiện một dòng chữ.
+
+### Quyết định cần duyệt
+
+| # | Nội dung | Đề xuất |
+|---|---|---|
+| K1 | Kiểm thời hạn lưu (E3) | Lớp `QuizActivityPolicy` của U10 đọc `ISettings` với khóa `activity.retentionDays`, giống `AssignmentSupport.retentionConfigured` của U07. U03 lỗi thì coi như chưa đặt. Bật mới khi chưa đặt vẫn `409 ACTIVITY_RETENTION_NOT_SET`; tắt thì luôn được |
+| K2 | Lời báo cho sinh viên (BR-U10-15 "kèm thông báo") | Bật thì phải có `activityNotice`: `updateDetails` trả lỗi `ACTIVITY_NOTICE_REQUIRED` theo trường. Duyệt (BR-U10-21) kiểm lại cả lời báo và thời hạn lưu, như readiness của U07 |
+| K3 | Cho frontend biết đã đặt thời hạn chưa | `QuizDetail` thêm `activityRetentionConfigured`. `QuizSettingsPanel` mở công tắc khi đã đặt (hoặc đang bật), kèm ô "Lời báo cho sinh viên"; chưa đặt thì giữ ghi chú hiện tại |
+| K4 | Dữ liệu cho trang làm bài | `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` lấy từ ảnh chụp của lượt (đổi Quiz sau khi bắt đầu không ảnh hưởng lượt đang làm) |
+| K5 | Gắn tracker (G3) | `QuizTakingPage` gọi `useActivityTracker({ enabled, send })`: `enabled` khi lượt bật ghi nhận và chưa nộp; `send` gọi API hoạt động, dùng `keepalive` khi rời trang (như U08). Trang hiện "Quiz này ghi nhận hoạt động khi làm bài" kèm lời báo. Lỗi gửi không chặn làm bài |
+| K6 | Phần giảng viên (BR-U11-31) | Chi tiết một lượt dùng `ActivityTimeline` của U08. Cột "Hoạt động" trên danh sách sinh viên để sau: cần tóm tắt cho từng sinh viên (mỗi người một truy vấn), sẽ tính khi có số liệu thực tế |
+| K7 | Nhánh, commit | `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream. Bước 6.0 commit local tài liệu đang chờ (roadmap, audit). Code commit local sau khi người dùng duyệt; push và mở PR khi người dùng yêu cầu |
+
+### Checklist giai đoạn 6
+
+- [x] **6.0 Commit tài liệu đang chờ** (K7).
+- [x] **6.1 E3 backend** (K1, K2):
+  - `QuizActivityPolicy`.
+  - `QuizAuthoringService.updateDetails`: bật khi đã đặt thời hạn và có lời báo.
+  - `QuizRules` khi duyệt: kiểm lời báo và thời hạn.
+  - `QuizDetail.activityRetentionConfigured` (K3).
+- [x] **6.2 G3 backend** (K4): `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` từ `AttemptSnapshot`.
+- [x] **6.3 Unit test backend:**
+  - Chưa đặt thời hạn thì bật bị `409`.
+  - Đã đặt mà thiếu lời báo thì lỗi theo trường; đủ thì bật được.
+  - U03 lỗi thì không bật được; tắt luôn được.
+  - Duyệt Quiz bật ghi nhận khi thời hạn bị xóa thì báo lỗi.
+  - `TakingView` mang cờ của ảnh chụp.
+  - Ghi hoạt động khi lượt không bật thì `409` (đã có, kiểm lại).
+- [x] **6.4 E3 frontend** (K3): `QuizSettingsPanel` mở công tắc theo `activityRetentionConfigured`; ô lời báo; lỗi theo trường.
+- [x] **6.5 G3 frontend** (K5, K6):
+  - `recordQuizActivity` trong `api.ts` của U11.
+  - `QuizTakingPage` gắn `useActivityTracker` và hiện thông báo.
+  - Chi tiết lượt của giảng viên dùng `ActivityTimeline`.
+- [x] **6.6 Unit test frontend:**
+  - Công tắc mở hoặc khóa theo cờ; bật mà thiếu lời báo thì báo lỗi.
+  - Trang làm bài chỉ gửi sự kiện khi lượt bật ghi nhận.
+  - Giảng viên thấy dòng thời gian.
+- [x] **6.7 Kiểm và tài liệu:** backend 1112 test, frontend 411 test và build đều đạt.
+  - Đủ bước CI: backend `mvn -B verify`; frontend lint, typecheck, test, build.
+  - code-summary U10, U11; tick checklist; lộ trình, `aidlc-state.md`.
+- [x] **6.8 Review:** người dùng duyệt ngày 2026-10-22, commit local trên `quiz-activity`.
+
 ## Integration test cases (tester viết)
 
 - Hết giờ khi đang làm: scanner nộp và chấm đúng một lần.

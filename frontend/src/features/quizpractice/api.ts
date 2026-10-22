@@ -1,3 +1,4 @@
+import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { apiFetch } from "@/shared/api/client";
 import type { ClassAttempts, PracticeQuizDetail, PracticeQuizRow, ResultView, SaveResult, TakingView, TeacherAttemptDetail } from "./types";
 
@@ -32,6 +33,11 @@ export function saveAnswers(attemptId: string, answers: Record<string, string[]>
 
 export function submitAttempt(attemptId: string): Promise<ResultView> {
   return apiFetch<ResultView>(`${attemptPath(attemptId)}/submit`, { method: "POST" });
+}
+
+/** Lô sự kiện rời trang của lượt (F8); `keepalive` khi trang sắp đóng. */
+export function recordQuizActivity(attemptId: string, events: ActivityEventInput[], keepalive: boolean): Promise<void> {
+  return apiFetch<void>(`${attemptPath(attemptId)}/activity`, { method: "POST", body: JSON.stringify({ events }), keepalive });
 }
 
 export function getResult(attemptId: string, signal?: AbortSignal): Promise<ResultView> {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
 import { Alert, Button, ClickableRow, Dialog, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getClassAttempts, getTeacherAttempt } from "./api";
 import { errorMessage, formatDateTime, formatPoints, submitModeText } from "./labels";
@@ -78,9 +79,11 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
             Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}
             {submitModeText(detail.result.submitMode) && <> · {submitModeText(detail.result.submitMode)}</>}
           </p>
-          <p className="mb-3 text-xs text-muted">
-            {detail.activity ? "Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận." : "Không có dữ liệu hoạt động cho lượt này."}
-          </p>
+          <div className="mb-3 flex flex-col gap-1.5" data-testid="teacher-attempt-activity">
+            <p className="text-[13px] font-semibold text-ink">Dòng thời gian hoạt động</p>
+            {detail.activity ? <ActivityTimeline summary={detail.activity} /> : <p className="text-xs text-muted">Không có dữ liệu hoạt động cho lượt này.</p>}
+            <p className="text-xs text-muted">Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận.</p>
+          </div>
           <ResultQuestions questions={detail.result.questions} showScore />
         </Dialog>
       )}

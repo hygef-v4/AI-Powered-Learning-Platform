@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
-import { getAttempt, getClassAttempts, getPracticeHistory, getPracticeQuiz, getResult, saveAnswers, startAttempt, submitAttempt } from "./api";
+import {
+  getAttempt, getClassAttempts, getPracticeHistory, getPracticeQuiz, getResult, getTeacherAttempt, recordQuizActivity, saveAnswers, startAttempt,
+  submitAttempt,
+} from "./api";
 import { QuizPracticeDetailPage } from "./QuizPracticeDetailPage";
 import { QuizPracticeHistoryPage } from "./QuizPracticeHistoryPage";
 import { QuizResultPage } from "./QuizResultPage";
@@ -19,6 +22,7 @@ vi.mock("./api", () => ({
   getResult: vi.fn(),
   getClassAttempts: vi.fn(),
   getTeacherAttempt: vi.fn(),
+  recordQuizActivity: vi.fn(() => Promise.resolve()),
 }));
 
 const push = vi.fn();
@@ -27,7 +31,8 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
 
 const TAKING: TakingView = {
   attemptId: "a1", quizId: "z1", classId: "c1", title: "Luyện tập", attemptNo: 1, startedAt: "2026-10-20T08:00:00Z",
-  deadlineAt: null, serverTime: new Date().toISOString(), answerVersion: 0, answers: {},
+  deadlineAt: null, serverTime: new Date().toISOString(), answerVersion: 0, answers: {}, activityMonitoringEnabled: false,
+  activityNotice: null,
   questions: [
     { questionId: "q1", type: "MCQ_SINGLE", stem: "Thủ đô?", points: 1, options: [{ optionId: "1", text: "Hà Nội" }, { optionId: "2", text: "Huế" }] },
     { questionId: "q2", type: "MCQ_MULTI", stem: "Số chẵn?", points: 2, options: [{ optionId: "1", text: "2" }, { optionId: "2", text: "3" }] },
@@ -105,6 +110,20 @@ describe("QuizPracticeDetailPage (UC 50)", () => {
 describe("QuizTakingPage (UC 51)", () => {
   beforeEach(() => {
     vi.mocked(getAttempt).mockResolvedValue(TAKING);
+  });
+
+  it("chỉ gửi sự kiện hoạt động khi lượt bật ghi nhận, kèm lời báo", async () => {
+    const { unmount } = render(<QuizTakingPage attemptId="a1" />);
+    await screen.findByTestId("quiz-taking-option-1");
+    expect(screen.queryByTestId("quiz-taking-activity-notice")).not.toBeInTheDocument();
+    expect(recordQuizActivity).not.toHaveBeenCalled();
+    unmount();
+
+    vi.mocked(getAttempt).mockResolvedValue({ ...TAKING, activityMonitoringEnabled: true, activityNotice: "Ghi lại khi rời trang" });
+    render(<QuizTakingPage attemptId="a1" />);
+    expect(await screen.findByTestId("quiz-taking-activity-notice")).toHaveTextContent("Ghi lại khi rời trang");
+    await waitFor(() => expect(recordQuizActivity).toHaveBeenCalledWith("a1",
+      [expect.objectContaining({ kind: "SESSION_START", sequence: 0 })], false));
   });
 
   it("ô chọn đáp án có tên là nội dung lựa chọn", async () => {
@@ -217,5 +236,24 @@ describe("QuizAttemptsSection (UC 42)", () => {
     render(<QuizAttemptsSection quizId="z1" classId="c1" />);
     expect(await screen.findByTestId("quiz-attempts-summary")).toHaveTextContent("1 / 30 sinh viên đã làm");
     expect(getClassAttempts).toHaveBeenCalledWith("c1", "z1");
+  });
+});
+
+describe("Chi tiết lượt của giảng viên (BR-U11-31)", () => {
+  it("hiện dòng thời gian hoạt động của U08", async () => {
+    vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
+      students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 2, lastScore: 2,
+        lastSubmittedAt: "2026-10-20T08:05:00Z",
+        rows: [{ attemptId: "a1", attemptNo: 1, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z",
+          submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3 }] }] });
+    vi.mocked(getTeacherAttempt).mockResolvedValue({ result: { ...RESULT, showScore: true, score: 2, maxScore: 3 }, displayName: "Sinh viên A",
+      activity: { policyState: "AVAILABLE", awayCount: 2, knownAwayDuration: "PT1M5S", intervals: [], unknownGaps: 0,
+        reliabilityNote: "Chỉ để tham khảo" } });
+    render(<QuizAttemptsSection quizId="z1" classId="c1" />);
+    fireEvent.click(await screen.findByTestId("quiz-attempts-row"));
+    fireEvent.click(await screen.findByTestId("quiz-attempts-open"));
+
+    expect(await screen.findByTestId("teacher-attempt-activity")).toHaveTextContent("Rời trang 2 lần");
+    expect(getTeacherAttempt).toHaveBeenCalledWith("c1", "a1");
   });
 });

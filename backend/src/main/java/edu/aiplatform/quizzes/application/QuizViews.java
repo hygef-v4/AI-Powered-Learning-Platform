@@ -37,7 +37,9 @@ public final class QuizViews {
     }
 
     /** Quiz Detail; {@code canManage} sai khi giảng viên lớp xem Quiz của môn (chỉ xem, BR-U10-10). */
-    public record QuizDetail(QuizInfo quiz, List<QuizItemView> items, BigDecimal maxScore, boolean canManage) {
+    /** {@code activityRetentionConfigured}: đã đặt thời hạn lưu nên bật được ghi nhận hoạt động (K3). */
+    public record QuizDetail(QuizInfo quiz, List<QuizItemView> items, BigDecimal maxScore, boolean canManage,
+                             boolean activityRetentionConfigured) {
     }
 
     /** Một dòng Quiz trên Quiz List hoặc tab Đánh giá; {@code readOnly} với Quiz của môn hiện ở lớp. */
