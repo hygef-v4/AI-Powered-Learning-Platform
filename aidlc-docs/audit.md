@@ -5447,3 +5447,19 @@ check lại lỗi
 **Context**: Construction, U10 sửa lỗi sau chạy thử
 
 ---
+
+## U09 — sửa renderer và nối AiSourcePicker U06
+**Timestamp**: 2026-10-22T13:23:17Z
+**User Input**: "Giúp tôi sửa lỗi hiển thị U09 và nối AiSourcePicker của U06 trước, dùng skill clean code, giữ nguyên contract. Phần U15 thiếu contract U03 thì để sau."
+**AI Response**: Continued inline on clean grading-gradebook at fa1c0f06. Applied Clean Code, systematic root-cause evidence and test-first implementation: five new regressions failed on unchanged production, four existing cases passed. Replaced recursive metadata-to-text rendering with content-only runs and shared text formatting; preserved image download and SVG sanitization. Integrated the real U06 picker into single and batch requests, keeping SHARED/PERSONAL DTOs, versions and requestRef semantics; cancel/disabled/pending/error/retry and finalize/publish covered. Full frontend446 tests/78 files, lint/typecheck and production build passed. Installed existing lockfile dependencies missing locally; no package version/lockfile changes. Restored Next-generated tsconfig from pre-build snapshot. Updated execution/handoff/state; no backend/API/schema/shared provider or U15 edits, no commit/push/Jira mutation. Real AI/MCP/browser/DB/NFR acceptance is not claimed.
+**Context**: Authorized U09 bugfix and provider consumer integration only; U15 deferred and no global stage advancement.
+
+---
+
+## U09 — local commit preparation
+**Timestamp**: 2026-10-22T13:25:21Z
+**User Input**: "Giúp tôi commit phần sửa U09 này, chưa push"
+**AI Response**: User authorizes a local commit on grading-gradebook for the U09 renderer/source-picker changes, regression tests and associated plan/handoff/state/audit only. Fresh precommit checks:15 focused tests pass, whitespace clean; unchanged-source full frontend446 tests, lint/typecheck/build evidence retained from the implementation turn. Stage the nine explicit U09-related files and create a Conventional Commit; no push, merge or Jira mutation.
+**Context**: Local commit only; U15 remains deferred.
+
+---

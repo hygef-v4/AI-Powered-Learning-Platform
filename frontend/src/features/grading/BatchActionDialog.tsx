@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Dialog } from "@/shared/ui/Dialog";
-import { AiSourceFields, aiRequest } from "./AiProposalPanel";
+import { aiRequest } from "./AiProposalPanel";
+import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { gradingApi } from "./api";
 import { message } from "./useResource";
 import type { BatchResult, ItemVersion } from "./types";
@@ -16,24 +17,27 @@ export function BatchActionDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
-  const [source, setSource] = useState("");
+  const [choosingSource, setChoosingSource] = useState(action === "ai");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
   const [error, setError] = useState("");
-  async function run() {
+  async function run(choice?: SourceChoice) {
+    if (busy || items.length === 0 || (action === "ai" && !choice)) return;
     setBusy(true);
     setError("");
     try {
-      setResult(
-        action === "ai"
-          ? await gradingApi.requestBatch(items, aiRequest(source))
-          : await gradingApi[action](items),
-      );
+      if (action === "ai") {
+        if (!choice) return;
+        setResult(await gradingApi.requestBatch(items, aiRequest(choice)));
+      } else {
+        setResult(await gradingApi[action](items));
+      }
       onDone();
     } catch (e) {
       setError(message(e));
     } finally {
       setBusy(false);
+      setChoosingSource(false);
     }
   }
   const title =
@@ -42,6 +46,10 @@ export function BatchActionDialog({
       : action === "finalize"
         ? "Chốt điểm"
         : "Đề xuất AI hàng loạt";
+  if (action === "ai" && choosingSource && items.length > 0) {
+    return <AiSourcePicker open task={`Đề xuất chấm ${items.length} bài đã chọn`}
+      busy={busy} onCancel={onClose} onSubmit={(choice) => void run(choice)} />;
+  }
   return (
     <Dialog
       open
@@ -54,8 +62,8 @@ export function BatchActionDialog({
             Đóng
           </button>
           <button
-            disabled={busy || !!result || items.length === 0 || (action === "ai" && !source)}
-            onClick={() => void run()}
+            disabled={busy || !!result || items.length === 0}
+            onClick={() => action === "ai" ? setChoosingSource(true) : void run()}
             className="ml-3 rounded bg-primary px-4 py-2 text-white disabled:opacity-40"
           >
             {busy ? "Đang xử lý…" : "Xác nhận"}
@@ -71,7 +79,6 @@ export function BatchActionDialog({
             ? "Chỉ bản nháp hợp lệ được chốt; sinh viên chưa thấy cho tới khi công bố."
             : "Mỗi bài nhận một đề xuất riêng; bạn kiểm tra và lưu từng bài."}
       </p>
-      {action === "ai" && <AiSourceFields value={source} onChange={setSource} />}
       {error && <p role="alert">{error}</p>}
       {result && (
         <ul className="my-4 space-y-2">
