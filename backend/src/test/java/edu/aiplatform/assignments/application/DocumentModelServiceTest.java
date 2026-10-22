@@ -131,9 +131,121 @@ class DocumentModelServiceTest {
         assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(redrawn(outside, EMPTY), leaf, slot)))
                 .errors())).as("sơ đồ ở phần chung vẫn khóa").contains("TEACHER_BLOCK_CHANGED");
         DocumentBlock retyped = new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
-                ((ObjectNode) slot.content()).deepCopy().put("diagramType", "ER").put("xml", DIAGRAM));
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(outside, leaf, retyped))).errors()))
+                ((ObjectNode) slot.content()).deepCopy().put("diagramType", "USE_CASE").put("xml", DIAGRAM));
+        assertThat(service.validateForSave(skeleton, new DocumentModel(List.of(outside, leaf, retyped))).ok())
+                .as("loại sơ đồ đi theo hình vẽ").isTrue();
+        DocumentBlock recaptioned = new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
+                ((ObjectNode) slot.content()).deepCopy().put("alt", "mô tả khác").put("xml", DIAGRAM));
+        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(outside, leaf, recaptioned)))
+                .errors())).as("mô tả của đề giữ nguyên").contains("TEACHER_BLOCK_CHANGED");
+    }
+
+    private static String drawing(String... styles) {
+        StringBuilder cells = new StringBuilder();
+        for (int i = 0; i < styles.length; i++) {
+            boolean edge = styles[i].startsWith("edge:");
+            String style = edge ? styles[i].substring(5) : styles[i];
+            cells.append("<mxCell id=\"c").append(i).append("\" style=\"").append(style).append(edge ? "\" edge=\"1\"" : "\" vertex=\"1\"")
+                    .append(" parent=\"1\"/>");
+        }
+        return "<mxfile><diagram id=\"p\"><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>" + cells
+                + "</root></mxGraphModel></diagram></mxfile>";
+    }
+
+    @Test
+    void diagramTypeIsDetectedFromTheDrawing() {
+        assertThat(DiagramXml.detectType(drawing("shape=umlActor;html=1;", "ellipse;whiteSpace=wrap;")))
+                .isEqualTo(DiagramType.USE_CASE);
+        assertThat(DiagramXml.detectType(drawing("shape=umlLifeline;participant=umlActor;", "shape=umlLifeline;")))
+                .isEqualTo(DiagramType.SEQUENCE);
+        assertThat(DiagramXml.detectType(drawing("swimlane;fontStyle=1;childLayout=stackLayout;", "text;html=1;")))
+                .isEqualTo(DiagramType.CLASS);
+        assertThat(DiagramXml.detectType(drawing("shape=table;childLayout=tableLayout;",
+                "edge:edgeStyle=entityRelationEdgeStyle;endArrow=ERmany;"))).isEqualTo(DiagramType.ER);
+        assertThat(DiagramXml.detectType(drawing("rounded=0;", "rhombus;", "ellipse;", "edge:endArrow=none;")))
+                .as("ER ký pháp Chen").isEqualTo(DiagramType.ER);
+        assertThat(DiagramXml.detectType(drawing("ellipse;shape=startState;", "rhombus;", "ellipse;shape=endState;",
+                "edge:html=1;"))).isEqualTo(DiagramType.ACTIVITY);
+        assertThat(DiagramXml.detectType(drawing("ellipse;shape=startState;", "rounded=1;arcSize=40;")))
+                .isEqualTo(DiagramType.STATE);
+        assertThat(DiagramXml.detectType(drawing("shape=component;align=left;"))).isEqualTo(DiagramType.COMPONENT);
+        assertThat(DiagramXml.detectType(drawing("rounded=0;whiteSpace=wrap;"))).isEqualTo(DiagramType.OTHER);
+        assertThat(DiagramXml.detectType("không phải xml")).isEqualTo(DiagramType.OTHER);
+        DocumentBlock sent = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.DIAGRAM,
+                JsonNodeFactory.instance.objectNode().put("diagramType", "OTHER").put("xml", DIAGRAM));
+        assertThat(service.sanitize(new DocumentModel(List.of(sent))).blocks().get(0).content().path("diagramType").asText())
+                .as("lưu là lấy loại theo hình vẽ").isEqualTo("USE_CASE");
+        DocumentBlock empty = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
+                JsonNodeFactory.instance.objectNode().put("diagramType", "CLASS").put("xml", EMPTY));
+        assertThat(service.sanitize(new DocumentModel(List.of(empty))).blocks().get(0).content().path("diagramType").asText())
+                .as("chưa vẽ thì giữ loại gửi lên").isEqualTo("CLASS");
+    }
+
+    @Test
+    void unknownDiagramsFillMissingRequiredTypes() {
+        DocumentBlock teacher = paragraph(BlockOrigin.TEACHER, "Đề");
+        DocumentModel skeleton = new DocumentModel(List.of(teacher));
+        DocumentBlock other = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.DIAGRAM,
+                JsonNodeFactory.instance.objectNode().put("diagramType", "OTHER").put("xml", DIAGRAM));
+        DocumentModel work = new DocumentModel(List.of(teacher, other));
+        assertThat(service.validateForSubmit(skeleton, work, Map.of(DiagramType.USE_CASE, 1)).ok()).isTrue();
+        assertThat(codes(service.validateForSubmit(skeleton, work, Map.of(DiagramType.USE_CASE, 1, DiagramType.OTHER, 1))
+                .errors())).as("sơ đồ OTHER đủ yêu cầu của chính OTHER trước").contains("REQUIRED_DIAGRAMS_MISSING");
+        DocumentModel classOnly = new DocumentModel(List.of(teacher, diagram(BlockOrigin.STUDENT, DIAGRAM, null)));
+        assertThat(codes(service.validateForSubmit(skeleton, classOnly, Map.of(DiagramType.USE_CASE, 1)).errors()))
+                .as("sơ đồ đã nhận ra loại không tính cho loại khác").contains("REQUIRED_DIAGRAMS_MISSING");
+    }
+
+    /** Bảng thử: ô bắt đầu bằng "+" là ô người học thêm (cờ {@code added}). */
+    private static DocumentBlock table(UUID id, boolean headerRow, String[]... rows) {
+        ObjectNode content = JsonNodeFactory.instance.objectNode().put("headerRow", headerRow);
+        var array = content.putArray("rows");
+        for (String[] row : rows) {
+            var cells = array.addArray();
+            for (String cell : row) {
+                ObjectNode next = cells.addObject();
+                next.putArray("runs").addObject().put("text", cell.startsWith("+") ? cell.substring(1) : cell);
+                if (cell.startsWith("+")) {
+                    next.put("added", true);
+                }
+            }
+        }
+        return new DocumentBlock(id, BlockOrigin.TEACHER, BlockType.TABLE, content);
+    }
+
+    @Test
+    void studentFillsTeacherTablesInsideParts() {
+        UUID commonId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        DocumentBlock common = table(commonId, true, new String[]{"A"}, new String[]{""});
+        DocumentBlock leaf = heading(BlockOrigin.TEACHER, "H1", "Kiểm thử");
+        DocumentBlock slot = table(slotId, true, new String[]{"Ca", "Kết quả"}, new String[]{"", ""});
+        DocumentModel skeleton = new DocumentModel(List.of(common, leaf, slot));
+        DocumentBlock filled = table(slotId, true, new String[]{"Ca", "Kết quả"}, new String[]{"Đăng nhập", "Đạt"},
+                new String[]{"Thêm", "", ""});
+        DocumentModel work = new DocumentModel(List.of(common, leaf, filled));
+        assertThat(service.validateForSave(skeleton, work).ok()).as("sửa ô, thêm hàng, thêm cột").isTrue();
+        assertThat(service.validateForSubmit(skeleton, work, Map.of()).ok()).as("bảng đã điền là bài làm").isTrue();
+        assertThat(codes(service.validateForSubmit(skeleton, skeleton, Map.of()).errors())).contains("SUBMISSION_EMPTY");
+        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(common, leaf,
+                table(slotId, true, new String[]{"Ca", "Kết quả"})))).errors())).as("không bớt hàng của đề")
                 .contains("TEACHER_BLOCK_CHANGED");
+        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(common, leaf,
+                table(slotId, false, new String[]{"Ca", "Kết quả"}, new String[]{"", ""})))).errors()))
+                .as("không đổi hàng tiêu đề").contains("TEACHER_BLOCK_CHANGED");
+        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(
+                table(commonId, true, new String[]{"A"}, new String[]{"x"}), leaf, slot))).errors()))
+                .as("bảng ở phần chung vẫn khóa").contains("TEACHER_BLOCK_CHANGED");
+        DocumentModel inserted = new DocumentModel(List.of(common, leaf, table(slotId, true,
+                new String[]{"Ca", "+Ghi chú", "Kết quả"}, new String[]{"+Mới", "+", "+"}, new String[]{"", "+", ""})));
+        assertThat(service.validateForSave(skeleton, inserted).ok()).as("chèn hàng, cột ở giữa bảng").isTrue();
+        DocumentModel relabelled = new DocumentModel(List.of(common, leaf, table(slotId, true,
+                new String[]{"Ca", "Kết quả"}, new String[]{"+", "+"})));
+        assertThat(codes(service.validateForSave(skeleton, relabelled).errors()))
+                .as("đánh dấu ô của đề là ô thêm để xóa thì không được").contains("TEACHER_BLOCK_CHANGED");
+        DocumentBlock sanitized = service.sanitize(inserted).blocks().get(2);
+        assertThat(sanitized.content().path("rows").get(1).get(0).path("added").asBoolean()).as("lưu giữ cờ ô thêm").isTrue();
+        assertThat(sanitized.content().path("rows").get(0).get(0).has("added")).isFalse();
     }
 
     @Test

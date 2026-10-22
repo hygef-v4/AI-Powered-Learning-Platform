@@ -51,12 +51,16 @@ public class AssignmentPublicationService {
         this.clock = clock;
     }
 
-    /** F9: một transaction ghi lịch, khóa rubric, chuyển SCHEDULED; mở ngay nếu {@code opensAt} đã tới. */
+    /**
+     * F9: một transaction ghi lịch, khóa rubric, chuyển SCHEDULED; mở ngay nếu {@code opensAt} đã tới. Phát hành thẳng
+     * từ bài nháp (yêu cầu 2026-10-22 bỏ trạng thái Đã duyệt): luật duyệt của BR-U07-32 kiểm ngay tại đây; bài đã duyệt
+     * từ trước vẫn phát hành được.
+     */
     @Transactional
     public AssignmentViews.Detail publish(Actor actor, UUID id, AssignmentCommands.Publish command) {
         Assignment current = support.lock(actor, id, command.version(), "ASSIGNMENT_PUBLISHED");
-        if (current.status() != AssignmentStatus.REVIEWED) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài đã duyệt");
+        if (!current.editable()) {
+            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài nháp");
         }
         List<ValidationIssue> issues = authoring.readinessIssues(current);
         if (!issues.isEmpty()) {

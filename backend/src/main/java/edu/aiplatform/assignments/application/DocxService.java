@@ -54,7 +54,7 @@ public class DocxService implements IDocx {
 
     @Override
     public byte[] export(DocumentModel document, String title, IDiagramLinker diagramLinker) {
-        return exporter.export(title, null, document, diagramLinker, List.of());
+        return exporter.export(title, null, document, diagramLinker);
     }
 
     @Override
@@ -64,24 +64,30 @@ public class DocxService implements IDocx {
         return new DocxImportPreview(documents.sanitize(preview.document()), preview.warnings());
     }
 
-    /** F7 xuất: người đọc được bài; tùy chọn kèm rubric; không lưu file. */
+    /** F7 xuất đề: người đọc được bài; không lưu file. Rubric xuất riêng ({@link #exportRubric}, yêu cầu 2026-10-22). */
     @Transactional(readOnly = true)
-    public Export exportAssignment(Actor actor, UUID id, boolean includeRubric) {
+    public Export exportAssignment(Actor actor, UUID id) {
         Assignment assignment = support.readable(actor, id, "ASSIGNMENT_DOCX_EXPORTED");
+        byte[] bytes = exporter.export(assignment.title(), assignment.instructions(), assignment.skeleton(),
+                linker(assignment.id()));
+        return new Export(fileName(assignment.title()), bytes);
+    }
+
+    /** Rubric các phần thành một tệp DOCX riêng, theo thứ tự phần; người đọc được bài (sinh viên không đọc được). */
+    @Transactional(readOnly = true)
+    public Export exportRubric(Actor actor, UUID id) {
+        Assignment assignment = support.readable(actor, id, "ASSIGNMENT_RUBRIC_EXPORTED");
+        Map<String, AssignmentRubric> byPart = rubrics.all(assignment.id()).stream()
+                .collect(Collectors.toMap(AssignmentRubric::partId, r -> r, (a, b) -> a));
         List<DocxExporter.RubricSection> sections = new ArrayList<>();
-        if (includeRubric) {
-            Map<String, AssignmentRubric> byPart = rubrics.all(assignment.id()).stream()
-                    .collect(Collectors.toMap(AssignmentRubric::partId, r -> r, (a, b) -> a));
-            for (DocumentPart part : assignment.parts()) {
-                AssignmentRubric rubric = byPart.get(part.partId());
-                if (rubric != null && !rubric.criteria().isEmpty()) {
-                    sections.add(new DocxExporter.RubricSection(part.title(), rubric.criteria(), rubric.totalPoints()));
-                }
+        for (DocumentPart part : assignment.parts()) {
+            AssignmentRubric rubric = byPart.get(part.partId());
+            if (rubric != null && !rubric.criteria().isEmpty()) {
+                sections.add(new DocxExporter.RubricSection(part.title(), rubric.criteria(), rubric.totalPoints()));
             }
         }
-        byte[] bytes = exporter.export(assignment.title(), assignment.instructions(), assignment.skeleton(),
-                linker(assignment.id()), sections);
-        return new Export(fileName(assignment.title()), bytes);
+        String title = assignment.title() == null ? "" : assignment.title();
+        return new Export(fileName("Rubric - " + title), exporter.exportRubric(title, sections));
     }
 
     /** F7 nhập: bài nháp, đọc trong bộ nhớ; sơ đồ theo mã chỉ lấy khi người nhập đọc được bài nguồn. */

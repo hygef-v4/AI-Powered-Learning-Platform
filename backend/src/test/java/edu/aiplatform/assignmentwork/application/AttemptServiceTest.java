@@ -123,13 +123,34 @@ class AttemptServiceTest {
                 List.of())));
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
         ObjectNode drawn = slotContent.deepCopy().put("xml", "<mxfile><diagram id=\"p\"/></mxfile>")
-                .put("svgPreview", "<svg/>").put("alt", "mô tả bị sửa");
+                .put("svgPreview", "<svg/>").put("alt", "mô tả bị sửa").put("diagramType", "USE_CASE");
         f.attemptService.save(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
                 new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM, drawn))));
         DocumentBlock stored = f.store.get(a.id()).content().blocks().get(1);
         assertThat(stored.content().path("xml").asText()).isEqualTo("<mxfile><diagram id=\"p\"/></mxfile>");
         assertThat(stored.content().path("svgPreview").asText()).isEqualTo("<svg/>");
         assertThat(stored.content().path("alt").asText()).as("mô tả giữ theo đề").isEqualTo("Vẽ sơ đồ lớp");
+        assertThat(stored.content().path("diagramType").asText()).as("loại theo hình vẽ").isEqualTo("USE_CASE");
+    }
+
+    @Test
+    void fillingTeacherTableKeepsStudentCellsOtherFieldsComeFromSkeleton() {
+        ObjectNode tableContent = JsonNodeFactory.instance.objectNode().put("headerRow", true);
+        tableContent.putArray("rows").addArray().addObject().putArray("runs").addObject().put("text", "Ca");
+        DocumentBlock slot = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, tableContent);
+        DocumentModel skeleton = new DocumentModel(List.of(f.teacherBlock, slot));
+        when(f.assignments.getContent(any())).thenAnswer(i -> Optional.of(new AssignmentContent(f.view.assignmentId(), 1,
+                "Hướng dẫn", skeleton, List.of(new DocumentPart("DOCUMENT", null, List.of(), "Toàn bài")), Map.of(),
+                List.of())));
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        ObjectNode filled = tableContent.deepCopy().put("headerRow", false);
+        filled.withArray("rows").addArray().addObject().putArray("runs").addObject().put("text", "Đăng nhập");
+        f.attemptService.save(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
+                new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.TABLE, filled))));
+        DocumentBlock stored = f.store.get(a.id()).content().blocks().get(1);
+        assertThat(stored.content().path("rows")).hasSize(2);
+        assertThat(stored.content().path("rows").get(1).get(0).path("runs").get(0).path("text").asText()).isEqualTo("Đăng nhập");
+        assertThat(stored.content().path("headerRow").asBoolean()).as("hàng tiêu đề giữ theo đề").isTrue();
     }
 
     @Test

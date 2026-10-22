@@ -11,10 +11,13 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.assignments.contract.BlockOrigin;
 import edu.aiplatform.assignments.contract.BlockType;
+import edu.aiplatform.assignments.contract.CriterionKind;
 import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.DocxImportPreview;
 import edu.aiplatform.assignments.contract.IDiagramLinker;
+import edu.aiplatform.assignments.contract.RubricCriterion;
+import edu.aiplatform.assignments.contract.RubricItem;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.FileRef;
@@ -22,9 +25,14 @@ import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
+import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.junit.jupiter.api.Test;
 
 /** F7; BR-U07-60…62; P4: xuất có alt text, hyperlink, chunk mxfile; nhập khôi phục sơ đồ theo thứ tự ưu tiên. */
@@ -64,7 +72,7 @@ class DocxRoundTripTest {
     @Test
     void exportedDiagramComesBackByCodeWithStylesPreserved() {
         DocumentBlock diagram = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
-        byte[] docx = exporter.export("Đề 1", "Làm theo nhóm mục", skeleton(diagram), linker, List.of());
+        byte[] docx = exporter.export("Đề 1", "Làm theo nhóm mục", skeleton(diagram), linker);
         DocxImportPreview preview = importer.preview(teacher, docx, BlockOrigin.TEACHER, true,
                 ref -> ref.equals(assignmentId + "/" + diagram.id()) ? Optional.of(DocumentModelServiceTest.DIAGRAM) : Optional.empty());
         List<DocumentBlock> blocks = preview.document().blocks();
@@ -83,7 +91,7 @@ class DocxRoundTripTest {
     @Test
     void withoutAccessToSourceTheDiagramComesFromThePngChunk() {
         DocumentBlock diagram = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
-        byte[] docx = exporter.export("Đề", null, skeleton(diagram), linker, List.of());
+        byte[] docx = exporter.export("Đề", null, skeleton(diagram), linker);
         DocxImportPreview preview = importer.preview(teacher, docx, BlockOrigin.TEACHER, true, ref -> Optional.empty());
         assertThat(preview.warnings()).extracting(ValidationIssue::code).contains("DIAGRAM_RESTORED_BY_PNG");
         assertThat(preview.document().blocks()).filteredOn(b -> b.type() == BlockType.DIAGRAM).singleElement()
@@ -94,12 +102,32 @@ class DocxRoundTripTest {
     void diagramBecomesImageWhenAssignmentHasDiagramsOff() {
         when(artifacts.store(eq(teacher), eq(ArtifactPurpose.DOCUMENT_IMAGE), any())).thenReturn(new FileRef("ref-1"));
         DocumentBlock diagram = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
-        byte[] docx = exporter.export("Đề", null, skeleton(diagram), linker, List.of());
+        byte[] docx = exporter.export("Đề", null, skeleton(diagram), linker);
         DocxImportPreview preview = importer.preview(teacher, docx, BlockOrigin.STUDENT, false, ref -> Optional.empty());
         assertThat(preview.document().blocks()).noneMatch(b -> b.type() == BlockType.DIAGRAM);
         assertThat(preview.document().blocks()).filteredOn(b -> b.type() == BlockType.IMAGE).singleElement()
                 .satisfies(b -> assertThat(b.content().path("fileRef").asText()).isEqualTo("ref-1"));
         assertThat(preview.warnings()).extracting(ValidationIssue::code).contains("DIAGRAM_KEPT_AS_IMAGE");
+    }
+
+    @Test
+    void rubricIsExportedAsItsOwnDocumentWithoutTheSkeleton() throws Exception {
+        RubricCriterion criterion = new RubricCriterion(UUID.randomUUID(), "Đủ actor", "", CriterionKind.TEXT,
+                List.of(new RubricItem(UUID.randomUUID(), "Đủ actor", new BigDecimal("1.5"))));
+        byte[] docx = exporter.exportRubric("Đề 1", List.of(new DocxExporter.RubricSection("Use case", List.of(criterion),
+                new BigDecimal("1.5"))));
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx))) {
+            assertThat(doc.getParagraphs()).extracting(XWPFParagraph::getText)
+                    .contains("Đề 1", "Rubric", "Use case (1.5 điểm)").doesNotContain("Mô tả hệ thống");
+            XWPFTable table = doc.getTables().get(0);
+            assertThat(table.getRow(0).getCell(0).getText()).isEqualTo("Mục chấm");
+            assertThat(table.getRow(1).getCell(0).getText()).isEqualTo("Đủ actor");
+            assertThat(table.getRow(1).getCell(1).getText()).isEqualTo("1.5");
+        }
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(exporter.exportRubric("Đề 1", List.of())))) {
+            assertThat(doc.getTables()).isEmpty();
+            assertThat(doc.getParagraphs()).extracting(XWPFParagraph::getText).contains("Chưa có mục chấm.");
+        }
     }
 
     @Test

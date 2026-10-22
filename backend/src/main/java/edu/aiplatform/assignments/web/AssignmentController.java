@@ -89,9 +89,17 @@ public class AssignmentController {
     }
 
     @GetMapping("/docx")
-    public ResponseEntity<byte[]> exportDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
-                                             @RequestParam(defaultValue = "false") boolean includeRubric) {
-        DocxService.Export export = docx.exportAssignment(actor, id, includeRubric);
+    public ResponseEntity<byte[]> exportDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return download(docx.exportAssignment(actor, id));
+    }
+
+    /** Rubric các phần thành tệp DOCX riêng, tách khỏi tệp đề (yêu cầu 2026-10-22). */
+    @GetMapping("/rubric/docx")
+    public ResponseEntity<byte[]> exportRubric(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return download(docx.exportRubric(actor, id));
+    }
+
+    private static ResponseEntity<byte[]> download(DocxService.Export export) {
         return ResponseEntity.ok().contentType(DOCX).cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(export.fileName(), StandardCharsets.UTF_8).build().toString())

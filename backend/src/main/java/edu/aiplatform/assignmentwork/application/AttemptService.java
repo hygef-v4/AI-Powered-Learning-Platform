@@ -239,14 +239,18 @@ public class AttemptService {
         List<DocumentBlock> canonical = new ArrayList<>(attached.blocks().size());
         for (DocumentBlock block : attached.blocks()) {
             DocumentBlock original = block.origin() == BlockOrigin.TEACHER ? teacher.get(block.id()) : null;
-            canonical.add(original == null ? block : original.type() == BlockType.DIAGRAM ? drawn(original, block) : original);
+            canonical.add(original == null ? block : switch (original.type()) {
+                case DIAGRAM -> drawn(original, block);
+                case TABLE -> filled(original, block);
+                default -> original;
+            });
         }
         return new DocumentModel(List.copyOf(canonical));
     }
 
     /**
-     * Sơ đồ của người soạn với XML và ảnh xem trước người học vừa vẽ; loại sơ đồ, mô tả giữ theo đề. XML chỉ khác
-     * đề khi sơ đồ nằm trong phần (validateForSave đã kiểm), không thì giữ nguyên bản của đề.
+     * Sơ đồ của người soạn với XML, loại (suy từ hình vẽ) và ảnh xem trước người học vừa vẽ; mô tả giữ theo đề. XML chỉ
+     * khác đề khi sơ đồ nằm trong phần (validateForSave đã kiểm), không thì giữ nguyên bản của đề.
      */
     private static DocumentBlock drawn(DocumentBlock original, DocumentBlock block) {
         if (original.content().path("xml").equals(block.content().path("xml"))) {
@@ -254,11 +258,22 @@ public class AttemptService {
         }
         ObjectNode content = original.content().deepCopy();
         content.set("xml", block.content().path("xml").deepCopy());
+        content.set("diagramType", block.content().path("diagramType").deepCopy());
         if (block.content().hasNonNull("svgPreview")) {
             content.set("svgPreview", block.content().get("svgPreview").deepCopy());
         } else {
             content.remove("svgPreview");
         }
+        return new DocumentBlock(original.id(), original.origin(), original.type(), content);
+    }
+
+    /** Bảng của người soạn với các ô người học điền (chỉ khác đề khi bảng nằm trong phần, validateForSave đã kiểm). */
+    private static DocumentBlock filled(DocumentBlock original, DocumentBlock block) {
+        if (original.content().path("rows").equals(block.content().path("rows"))) {
+            return original;
+        }
+        ObjectNode content = original.content().deepCopy();
+        content.set("rows", block.content().path("rows").deepCopy());
         return new DocumentBlock(original.id(), original.origin(), original.type(), content);
     }
 
