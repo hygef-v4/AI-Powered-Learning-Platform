@@ -25,12 +25,29 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AdminDashboardApiContractTest {
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
+    @Test void neverSucceededSerializesAvailableNullInsteadOfUnavailable() throws Exception {
+        try (var f = new DashboardFixture()) {
+            when(f.backups.summarize(any(), any())).thenReturn(new BackupDashboardSummary(
+                    f.now.minus(java.time.Duration.ofDays(7)), f.now, null, 0, null));
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            String json = mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            JsonNode backup = Jackson2ObjectMapperBuilder.json().build().readTree(json).path("backup");
+            assertThat(backup.path("latestSuccessfulAt").path("availability").asText()).isEqualTo("AVAILABLE");
+            assertThat(backup.path("latestSuccessfulAt").has("data")).isTrue();
+            assertThat(backup.path("latestSuccessfulAt").path("data").isNull()).isTrue();
+            assertThat(backup.path("failuresLast7Days").path("data").path("count").asInt(-1)).isZero();
+        }
+    }
+
     @Test void actualServiceProjectsBackupWithoutLeakingProviderIdOrAccountContact() throws Exception {
         try (var f = new DashboardFixture()) {
             UUID privateId = UUID.randomUUID();
-            var run = new BackupRunView(privateId, LocalDate.of(2026, 10, 20), BackupState.SUCCESS, f.now, f.now, 12L, null, null);
-            when(f.backups.latest()).thenReturn(Optional.of(run));
-            doAnswer(call -> new PageImpl<>(List.of(run), call.getArgument(0), 1)).when(f.backups).list(any());
+            var run = new BackupDashboardRunView(LocalDate.of(2026, 10, 20), BackupState.SUCCESS, f.now, f.now.minusSeconds(1), f.now, 12L, null, null);
+            when(f.backups.latestRun()).thenReturn(Optional.of(run));
+            doAnswer(call -> new PageImpl<>(List.of(run), call.getArgument(0), 1)).when(f.backups).history(any());
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
             var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())

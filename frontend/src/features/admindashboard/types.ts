@@ -20,7 +20,7 @@ export type BackupSectionView = {
   latest: Section<BackupRunItem | null>;
   schedule: Section<BackupSchedule>;
   recentRuns: Section<BackupRunItem[]>;
-  latestSuccessfulAt: Section<string>;
+  latestSuccessfulAt: Section<string | null>;
   failuresLast7Days: Section<{count: number; latestSafeError: string | null}>;
 };
 export type AdminDashboardView = {

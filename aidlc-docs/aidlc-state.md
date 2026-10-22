@@ -518,3 +518,19 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Implement content-field rendering with shared RunsView and integrate real source picker for single/batch requests; retain image/SVG security, request DTO/version and manual grading decisions.
 - [x] Frontend446 tests/78 files, lint/typecheck and production build pass; generated tsconfig restored. No backend/provider/API/schema/dependency changes.
 - Handoff: construction/u09-assignment-grading/code/implementation-summary.md; execution: construction/plans/2026-10-22-u09-renderer-ai-picker.md. Real AI/MCP/browser/DB/NFR acceptance and deferred U15 backup contract remain open. No commit/push/Jira change.
+
+## U15 backup completion planning — 2026-10-22
+
+- [x] User requests contract review and plan before code; inspect staging8519bea4, U03 schema/domain/provider/stubs/job semantics and U15 backend/OpenAPI/frontend.
+- [x] Confirm C01/C02 still missing from public port despite started_at existing in DB. Draft additive IBackupDashboardStatus plus two records, preserving old IBackupStatus/BackupRunView; define window168h, latest-success completion time, safe public errors and empty-vs-outage semantics.
+- [x] Add Phase B Tasks B1–B5 to existing U15 code-generation plan; contract spec: construction/u15-admin-dashboard/code/backup-contract-review-2026-10-22.md.
+- [ ] User approval of D1–D7, including U03 read-provider scope and nullable latestSuccessfulAt, before any implementation. Review file: construction/plans/code-generation-plan/u15-backup-completion-approval-questions.md.
+- Planning only, no production/test/schema/dependency changes, runtime verification or commit/push/Jira transition. Slice A and remaining independent integration/NFR acceptance retain their status.
+
+## U03/U15 backup completion implementation — 2026-10-22
+
+- [x] User explicitly approved D1–D7/B1–B5, including U03 provider scope; approval A recorded.
+- [x] B1–B4 implemented: additive read capability, safe metadata/one-statement summary, U15 bounded consumer and nullable success UI/schema. Legacy IBackupStatus/BackupRunView, lifecycle, authorization/no-store, schema and dependencies retained.
+- [x] Local verification: backend verify1285 total/1250 passed/35 environment-gated skipped; backup/U15 tests68 passed without skips, including PostgreSQL16 integration8 passed and all new-read JDBC timeout/resource release. Frontend448 tests passed; lint/typecheck/build and OpenAPI references checked. Independent review found no concrete issues.
+- [ ] B5 independent full-app stubs-disabled/session/audit/browser and representative healthy p95/fault-load acceptance remain open; no full UC66 Done/Jira transition.
+- Evidence: construction/u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md. Implementation stays uncommitted on u15-backup-completion-plan (renamed in desktop app); local planning commit32abe4bc is unpublished. Prior planning-only status above is historical.
