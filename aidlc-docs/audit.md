@@ -4908,3 +4908,63 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Date**: 2026-10-21
 **AI Response**: Created seven local code commits on reference-materials: 14dec5b domain/persistence; 7c6a339 scoped management; d5c5d92 document extraction; 0629906 AI references/MCP; 94b3f5b REST/OpenAPI; 9ae5458 frontend; 28b9f46 SEC-004 correction. The eighth commit records AI-DLC approved plan, implementation summary, verification evidence, audit and state. Application code unchanged from verified tree; git diff --check passed. No push, merge, deployment or acceptance-gate closure.
 ---
+
+## 2026-10-20T14:36:54Z — PR #7 merged, branches cleaned up
+
+**User Input**: "Bật Auto-fix cho PR #7. Khi CI xanh tôi sẽ báo để quyết định merge." / "CI đã xanh, merge và dọn các nhánh thừa cho tôi"
+
+**AI Response**: Enabled Auto-fix for PR #7. Verified checks green (GitGuardian, backend, frontend) and merge state CLEAN, merged with a merge commit: staging is now 392b7d0. Switched the checkout to `staging` (fast-forwarded). Deleted branches created in this work and already contained in staging: remote and local `quiz-authoring`, `quiz-practice`, `quiz-e2e-docker-fix`; local-only `backup/cuong-before-rewrite`, `backup/cuong-rewrite-1` (pre-rewrite history) and `unit1` (merged local copy). Kept `cuong`, `main`, `staging` and teammates' branches (Class&Enrollment, audit, subject-administration, grading-gradebook, ui-reference). GitHub Desktop stashes stash@{0}, stash@{1} left untouched. This entry is uncommitted on `staging`.
+
+**Context**: Construction — repository housekeeping.
+
+---
+
+## 2026-10-20T14:39:59Z — Branch cuong deleted
+
+**User Input**: "xoá nhánh cuong"
+
+**AI Response**: Verified local and remote `cuong` (8d4c22b) are contained in origin/staging, then deleted it locally and on GitHub. Remaining local branches: `main`, `staging`.
+
+**Context**: Repository housekeeping.
+
+---
+
+## 2026-10-20T14:45:00Z — Roadmap status check
+
+**User Input**: "roadmap đã hoàn thành chưa"
+
+**AI Response**: Not complete. Phases 0–3 and the E2E run are done; remaining: phase 4 (AI/MCP of U10), tester integration tests, closing KAN-18/KAN-23/KAN-25, KAN-152. Ticked the missed E2E checkbox. (These edits were later lost from the working tree and re-applied on 2026-10-22.)
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T03:30:00Z — Roadmap feasibility check
+
+**User Input**: "kiểm tra lại roadmap và dự án xem có thể hoàn thành roadmap được chưa"
+
+**AI Response**: Fetched origin. `staging` (08a6134) now has U09, U13, U15. Findings: U06 contract on `staging` is sufficient for phase 4 (same pattern as U09 `GradingProposalResultHandler`, `GradingMcpTools`); U13 implements `IReferenceMaterial` and the `LearningMaterialSection` slot on `staging`, unblocking G4 `MaterialQuizList` and a reference-material picker. U06 implementation and `AiSourcePicker` exist only on `ai-connections`; U08 tracker and `activity.retentionDays` only on `assignment` — neither merged, no open PRs. No tester integration tests for U01/U10/U11 on any branch. Jira: KAN-18 In Progress, KAN-23/KAN-25 To Do, KAN-152 In Progress (no description or attachment; Report 3 not in repo). Re-applied the audit entries from GitHub Desktop stash@{0} and the roadmap E2E tick, which had been lost from the working tree. Conclusion: roadmap cannot be fully closed yet; phase 4 code and G4 can be done now on stubs/staging.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T04:10:00Z — Code Generation Part 1: U10 phase 4 plan
+
+**User Input**: "Lập plan giai đoạn 4 (AI soạn câu, tool MCP của U10) kèm MaterialQuizList và bộ chọn tài liệu tham khảo, trên nhánh mới tách từ staging."
+
+**AI Response**: Created branch `quiz-ai-mcp` from origin/staging (08a6134), carrying the uncommitted roadmap/audit edits. Studied U06 contract (staging stub returns FAILED; real AiTaskService, AiTaskDelivery, JSON Schema 2020-12 checker, AiSourcePicker on `ai-connections`), U09 pattern (GradingProposalService two-step submit, GradingProposalResultHandler, GradingMcpTools), U13 ReferenceMaterialService and `learningMaterialSections` slot. Wrote "Giai đoạn 4" section in the U10 code generation plan: decisions H1–H10, checklist 4.0–4.14, two extra tester integration cases; linked it from the roadmap. Approval prompt: "Duyệt plan giai đoạn 4 với đề xuất H1–H10?"
+
+**Context**: Construction — U10 Code Generation Part 1 (phase 4), awaiting approval.
+
+---
+
+## 2026-10-22T04:20:00Z — U10 phase 4 plan approved
+
+**User Input**: "Duyệt plan giai đoạn 4 với đề xuất H1–H10. Bắt đầu từ bước 4.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval in aidlc-state. Step 4.0: committing pending documentation (roadmap, restored audit entries, phase 4 plan, state) locally on `quiz-ai-mcp`, then starting code per checklist 4.1–4.13.
+
+**Context**: Construction — U10 Code Generation Part 1 approved; Part 2 started.
+
+---

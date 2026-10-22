@@ -424,3 +424,9 @@ Final checkpoint: code available for review; independent acceptance gates retain
 
 - User requested small commits on reference-materials and explicitly prohibited push. Seven code commits: 14dec5b domain/persistence; 7c6a339 scoped management; d5c5d92 extraction; 0629906 AI/MCP; 94b3f5b REST/OpenAPI; 9ae5458 frontend; 28b9f46 SEC-004 headers/nonces. Final documentation commit includes approved plan, handoff, verification and audit/state.
 - No application source edits during commit organization; existing verification evidence retained. Commit authorization does not automatically close step10, UC/story acceptance or the documented integration/NFR gates. No push/merge/deployment performed.
+
+## U10 giai đoạn 4 (AI, MCP, tài liệu tham khảo) và U11 G4 — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 4 được người dùng duyệt (H1–H10), nhánh `quiz-ai-mcp` tách từ `staging` `08a6134`.
+- [ ] Code Generation Part 2: bước 4.0–4.13.
+- [ ] Bước 4.14: người dùng duyệt code giai đoạn 4.

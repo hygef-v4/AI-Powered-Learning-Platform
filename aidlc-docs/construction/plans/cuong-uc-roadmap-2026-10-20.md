@@ -77,13 +77,16 @@ Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt
 
 ### Giai đoạn 4 — AI và MCP của U10 (phần còn lại của UC 47, 48)
 
-- [ ] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06.
+- [ ] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06. Plan chi tiết: [U10 giai đoạn 4](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (H1–H10), nhánh `quiz-ai-mcp`.
+- [ ] Bộ chọn tài liệu tham khảo (U10) và `MaterialQuizList` (U11, G4) trên U13 đã có ở `staging`.
 - [ ] Chạy thật khi U06 có code; trước đó chỉ test với stub.
+
+Tình trạng 2026-10-22: contract U06 trên `staging` đã đủ cho bước này (U09 đã cài `IAiTaskResultHandler`, `IMcpToolProvider` theo cùng cách); U13 đã cài `IReferenceMaterial` trên `staging`. Code U06 (`AiTaskService`, `AiSourcePicker`) mới ở nhánh `ai-connections`, chưa merge.
 
 ### Giai đoạn 5 — Kiểm tra và đóng Jira
 
 - [ ] Tester viết integration test theo mục "Integration test cases" của plan U10, U11.
-- [ ] Chạy thử end-to-end với Docker local: Chủ nhiệm môn soạn câu → giảng viên tạo và phát hành Quiz → sinh viên làm, nộp, xem kết quả → phát hành version mới tự nộp lượt đang làm.
+- [x] Chạy thử end-to-end với Docker local: Chủ nhiệm môn soạn câu → giảng viên tạo và phát hành Quiz → sinh viên làm, nộp, xem kết quả → phát hành version mới tự nộp lượt đang làm. 5 kịch bản đạt (gồm tự nộp khi hết giờ); sửa `frontend/Dockerfile` qua PR #7 (`392b7d0`).
 - [ ] Đóng KAN-23, KAN-25 và các UC con.
 
 ### Song song — KAN-152
