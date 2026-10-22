@@ -66,6 +66,8 @@ Student thấy bài, mở chi tiết, bắt đầu lượt (bấm lại trả c�
 
 ## Thay đổi theo yêu cầu 2026-10-21 (trang kiểu Google Docs)
 
+Các thay đổi dưới đây (cả vòng 2026-10-21 và các vòng 2026-10-22) đã đưa vào functional-design ngày 2026-10-22 (business-rules, business-logic-model, domain-entities, frontend-components); các bảng dưới giữ lại để truy vết.
+
 Người dùng yêu cầu làm theo cách này dù khác thiết kế; các BR liên quan trong functional-design chưa sửa.
 
 | Thay đổi | Khác thiết kế | Code |
@@ -81,6 +83,33 @@ Sửa lỗi tìm thấy ở bước Review:
 - Lưu khi rời trang: bài lớn hơn khoảng 60 KB dùng yêu cầu thường thay cho `keepalive` (trình duyệt giới hạn khoảng 64 KB).
 
 Unit test thêm: nét vẽ trên sơ đồ của đề được giữ, prompt và tool của người học không có rubric, góp ý bỏ phần rubric; frontend: chèn DOCX vào phần, kiểm sơ bộ tính sơ đồ của đề đã vẽ. Chưa chạy thử trên Docker sau thay đổi này.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa giao diện)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Người học điền thẳng vào bảng của đề nằm trong phần (sửa ô, thêm hàng, cột; không xóa); lưu giữ các ô người học điền, hàng tiêu đề theo đề | Theo BR-U07-15 mới (U07 ngày 2026-10-22) | `AttemptService.prepare` (`filled`) |
+| Sơ đồ của đề người học vẽ: lưu cả loại sơ đồ suy từ hình vẽ (không lấy loại theo đề nữa), mô tả vẫn theo đề | Theo U07: loại sơ đồ suy từ hình vẽ | `AttemptService.drawn` |
+| Workspace theo trang soạn mới: chèn sơ đồ một nút mở Draw.io ở cột phải; phần lá khung màu ruột trắng; không có chữ gợi ý ở dòng trống (thay "Viết câu trả lời cho phần này…") | Giao diện | `DocumentEditor` (dùng chung U07) |
+| Danh sách bài của người học: Hình thức và Chế độ là hai cột riêng; bỏ chữ "Có sơ đồ" | Giao diện | `StudentAssignmentsPage` |
+
+Unit test thêm: bảng của đề người học điền được lưu, hàng tiêu đề giữ theo đề; loại sơ đồ theo hình vẽ.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa thứ hai)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Lượt làm trả thêm `teacherTables` (số hàng, cột của mỗi bảng của đề theo id block): người học chỉ thêm hàng, cột sau phần của đề và xóa được hàng, cột mình thêm; bảng người học tự tạo thì xóa được cả bảng | Thêm trường vào API lượt làm | `WorkViews.Attempt`, `WorkViews.TableShape`, `AttemptService.teacherTables`, `AssignmentWorkspacePage` |
+| Trang thông tin bài và trang làm bài không hiện tổng điểm | Bỏ "tổng X điểm" ở #39, #40 | `StudentAssignmentDetailPage`, `AssignmentWorkspacePage` |
+
+Unit test thêm: cỡ bảng của đề trong lượt làm; frontend: người học xóa hàng mình thêm, không xóa hàng của đề.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa thứ ba)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Bỏ trường `teacherTables` của lượt làm (vòng trước): ô người học thêm vào bảng của đề nay mang cờ `added` trong chính nội dung bài làm, nên biết hàng, cột nào người học xóa được mà không cần cỡ bảng của đề; `AttemptService.prepare` chép cả cờ khi lưu | Thay dòng `teacherTables` ở vòng trước | `WorkViews.Attempt`, `AttemptService`, `DocumentEditor` |
+| Thông báo của trang làm bài chỉ ghi trạng thái: "Bài đang mở ở nơi khác, bản đang sửa chưa lưu", "Mất kết nối, chưa lưu", "Chưa lưu: …", "Đã nộp lúc … · chỉ xem", "Đã quá hạn", "Bài chưa lưu" | Giao diện | `AssignmentWorkspacePage` |
 
 ## Còn lại
 

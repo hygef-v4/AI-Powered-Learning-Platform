@@ -78,6 +78,8 @@ Tạo bài, soạn khung có sơ đồ (SVG xem trước được làm sạch), 
 
 ## Thay đổi theo yêu cầu 2026-10-21 (trang kiểu Google Docs)
 
+Các thay đổi dưới đây (cả vòng 2026-10-21 và các vòng 2026-10-22) đã đưa vào functional-design ngày 2026-10-22 (business-rules, business-logic-model, domain-entities, frontend-components); các bảng dưới giữ lại để truy vết.
+
 Người dùng yêu cầu làm theo cách này dù khác thiết kế; các BR liên quan trong functional-design chưa sửa.
 
 | Thay đổi | Khác thiết kế | Code |
@@ -96,6 +98,69 @@ Sửa lỗi tìm thấy ở bước Review: bài đang mở đã qua hạn nộp
 Không thêm migration: cột `diagram_enabled` giữ nguyên, đọc lên luôn là `true` và được ghi `true` ở lần lưu kế tiếp. Migration số `V20261021_…` sẽ làm các migration `V20260925_1500…2000` chưa có của unit sau thành "cũ hơn bản đã chạy", Flyway mặc định từ chối.
 
 Unit test thêm: người học viết ngoài phần, vẽ vào sơ đồ của đề trong và ngoài phần, sơ đồ không tắt được, gia hạn trong hạn nộp trễ, tool MCP với người học không có đề; frontend: rubric atomic, thẻ dính, chỉ viết trong phần lá, nút Vẽ, tạo bài từ DOCX. Chưa chạy thử trên Docker sau thay đổi này (Docker Desktop trên máy báo cần cập nhật WSL).
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa giao diện)
+
+Thay các dòng luồng soạn, tạo bài "Từ tệp DOCX" và sơ đồ trong phần của bảng trên; các BR trong functional-design chưa sửa.
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Trang soạn có nút "Xem trước" (tùy chọn) và nút "Xếp lịch": lưu, bài còn nháp thì duyệt (`DRAFT → REVIEWED`, BR-U07-32) rồi mở lịch; duyệt không qua thì về trang soạn kèm lỗi. Trang xem trước có "Quay lại" và "Xếp lịch" | Bỏ bước bắt buộc Xem trước → Tiếp tục; luật duyệt giữ nguyên | `AssignmentFormPage.openSchedule` |
+| Lịch một trang: ngày mở tùy chọn (tích "Hẹn giờ mở"), không tích là mở ngay; bài đã lên lịch mà bỏ tích thì mở ngay (gửi `opensAt` lúc bấm, bộ hẹn giờ mở trong 1 phút theo BR-U07-34) | Thêm mở ngay khi sửa lịch bài đã lên lịch | `ScheduleForm` |
+| Xuất đề và xuất rubric là hai tệp DOCX riêng: `GET /api/v1/assignments/{id}/docx` (bỏ tham số `includeRubric`), `GET /api/v1/assignments/{id}/rubric/docx` (tên bài, mỗi phần một bảng Mục chấm, Điểm; quyền như xuất đề, sinh viên không đọc được). Menu "Khác": Xuất DOCX, Xuất rubric | BR-U07-60 tách rubric ra tệp riêng | `DocxService.exportRubric`, `DocxExporter.exportRubric`, `AssignmentController.exportRubric` |
+| Popup tạo bài: một ô tệp DOCX tùy chọn, chọn xong chỉ hiện tên tệp; tạo xong nhập luôn tệp vào khung (`importDocx` rồi `saveSkeleton` với `fromDocx`) rồi mới mở trang soạn, không còn hộp xem trước nội dung tệp; nhập lỗi thì "Thử lại" chỉ nhập lại tệp (không tạo thêm bài) hoặc "Mở bài" đã tạo; copy từ lớp khác là nút nhỏ ở chân popup; bỏ mọi dòng hướng dẫn, gợi ý | Thay cách tạo "Từ tệp DOCX" (`?import=docx` và hộp nhập trên trang soạn) | `CreateAssignmentDialog`, `AssignmentFormPage`, `ClassAssignmentsSection`, `SubjectAssignmentListPage` |
+| Chèn sơ đồ: một nút, chèn khung trống và mở Draw.io ngay, không chọn loại hay mẫu. Loại sơ đồ do server suy từ hình vẽ mỗi lần lưu: lifeline là tuần tự; component, module, giao diện là thành phần; bảng, mũi tên ER, hoặc thoi và elip nối không mũi tên (Chen) là ER; actor là use case; nút đầu, cuối kèm thoi, thanh fork hoặc làn là hoạt động, chỉ có nút đầu, cuối là trạng thái; lớp UML (swimlane xếp ô) là lớp; còn thoi là hoạt động; không nhận ra là `OTHER`; chưa vẽ thì giữ loại gửi lên. Khi nộp, sơ đồ `OTHER` (sau khi đủ yêu cầu của chính `OTHER`) được tính bù cho loại còn thiếu | BR-U07-12, 13: loại sơ đồ không còn do người soạn chọn; luật đủ số sơ đồ theo loại nới cho sơ đồ không nhận ra loại | `DiagramXml.detectType`, `DocumentModelService.clean`, `validateForSubmit`; `DocumentEditor.insertDiagram` |
+| Draw.io mở ở cột phải kéo giãn được, đẩy trang sang trái, không che trang (như bản demo); đang vẽ thì ẩn thẻ rubric bên lề. Khung sơ đồ rộng hết trang, cao tối thiểu 240px, viền đứt, bấm vào là vẽ | Giao diện | `DiagramEditor`, `globals.css` (`html.drawio-panel-open`), `BlockView` |
+| Người học điền bảng của đề nằm trong phần: sửa ô, thêm hàng, cột; không bớt hàng, cột của đề, không đổi hàng tiêu đề, không xóa, không dời bảng; bảng ở phần chung vẫn khóa; bảng đã điền khác đề tính là bài làm khi nộp | Nới BR-U07-15 cho bảng (như sơ đồ) | `DocumentModelService.sameContent`, `filledTable`, `validateForSubmit`; `DocumentEditor` (`fillable`), `TableEditor` (`canShrink`) |
+| Cây phần: phần cùng tầng cùng màu, tầng sâu đậm hơn; lá thì khung mang màu tầng, ruột trắng là chỗ viết. Bỏ chữ gợi ý ở mỗi dòng (đoạn, mục danh sách, tiêu đề, chú thích ảnh, sơ đồ, phần trống, dòng rubric, ô điểm); giữ chữ gợi ý ở ô tên bài | Giao diện | `DocumentEditor` (`SECTION_BG`, `emptyLeaf`), `RubricEditor` |
+| Bảng: ô vuông + − nằm ngoài bảng (của cột ở trên đầu, của hàng bên phải), hiện ở cột, hàng đang trỏ tới; bỏ nút Xóa hàng, Xóa cột trên thanh công cụ (còn nút Hàng tiêu đề); ô chọn cỡ bảng là lưới cột cố định 18px | Giao diện | `TableEditor`, `Square`, `TablePicker` |
+| Danh sách bài: Hình thức và Chế độ là hai cột riêng; bỏ nhãn "Có sơ đồ Draw.io" (sơ đồ luôn bật) | Giao diện | `AssignmentTable`, `StudentAssignmentsPage` (U08) |
+
+Sửa lỗi:
+- Đổi lịch bài đang mở bị từ chối `SCHEDULE_OPEN_LOCKED` khi bài mở ngay lúc phát hành: form gửi lại ngày mở đã cắt giây (ô chỉ tới phút) nên khác ngày mở trên server; nay bài đang mở không gửi ngày mở (`ScheduleForm`).
+- Ô chọn cỡ bảng hiện thành dải chữ nhật: lưới dùng cột co giãn trong ô bật ra hẹp bằng nút, các ô 16px chồng lên nhau; nay cột cố định 18px.
+- Thứ tự khóa định dạng của chữ khi làm sạch (`RUN_FLAGS`, `RUN_COLORS`) dùng `List` thay `Set.of`: thứ tự lặp của `Set.of` đổi theo mỗi lần chạy JVM, JSON lưu ra đổi thứ tự khóa và test so chuỗi lúc qua lúc trượt.
+
+Unit test thêm: xuất rubric thành tệp riêng, suy loại sơ đồ từ hình vẽ, sơ đồ `OTHER` bù loại còn thiếu, người học điền bảng của đề trong và ngoài phần; frontend: một nút chèn sơ đồ mở cột vẽ, màu theo tầng, ô + − ngoài bảng, người học điền bảng, ô chọn cỡ bảng, không có chữ gợi ý, tạo bài kèm tệp DOCX (cả khi nhập lỗi), đổi lịch bài đang mở và bài đã lên lịch.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa thứ hai)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Nút trên trang soạn theo thứ tự Khác, Xem trước hoặc Quay lại, Xếp lịch hoặc Đổi lịch; Đổi lịch cũng là nút chính (xanh) | Giao diện | `AssignmentFormPage` |
+| Xếp lịch mà bài còn thiếu: báo một câu chung chung, chỗ thiếu đánh dấu đỏ ngay trong bài (block, thẻ rubric, ô tên bài); chỉ lỗi không gắn được vào đâu (cài đặt, nhóm) mới ghi kèm | Giao diện | `AssignmentFormPage.missingText` |
+| Đổi lịch bài đang mở không hiện ô "Mở lúc"; ngày mở chỉ hiện khi tích "Hẹn giờ mở" | Giao diện | `ScheduleForm` |
+| Nhân bản giữ nguyên tên bài (bỏ hậu tố " (bản sao)"), danh sách bài không ghi "Nhân bản"; dữ liệu vẫn `origin = CLONE` | BR-U07-40 giữ nguyên, bỏ hậu tố tên | `AssignmentCopyService`, `AssignmentTable` |
+| Định dạng chữ theo vùng bôi đen (đậm, nghiêng, gạch chân, gạch ngang, màu chữ, màu nền); không bôi đen thì áp cho cả đoạn. Đoạn văn và mục danh sách sửa trong ô contentEditable, mỗi run một span; Enter tách đoạn giữ định dạng hai nửa; dán chỉ lấy chữ thuần. Mô hình run và backend không đổi (đã hỗ trợ nhiều run mỗi đoạn) | Thay "định dạng áp cho cả đoạn" của vòng trước | `RichText`, `runs.ts`, `DocumentEditor` |
+| Bỏ nút mã trên thanh công cụ; kiểu đoạn chỉ còn Văn bản thường và Tiêu đề 1–4 (đề nhập từ DOCX có Title, Tiêu đề 5–6 vẫn hiện đúng kiểu của nó) | Giao diện | `DocumentEditor` |
+| Bỏ menu "⋮" (lên, xuống, xóa) ở từng block; sơ đồ, ảnh, bảng có nút ✕ nổi ở góc trên trái để xóa; đoạn chữ xóa bằng Backspace khi trống | Không còn đổi chỗ block bằng menu | `DocumentEditor` (`CornerDelete`) |
+| Khung sơ đồ mới chèn trải hết bề ngang trang như bản demo (trước đó bị co thành khối hẹp vì khung ngoài căn giữa); mở Draw.io thì thu thanh menu bên trái của ứng dụng | Sửa lỗi giao diện; AppShell thêm `data-app-sidebar` | `DocumentEditor.BlockEditor`, `globals.css`, `AppShell` |
+| Bảng: ô "+ −" nổi đè lên chỗ xung quanh, không chiếm hàng, cột riêng; "−" khi bảng còn một hàng hoặc một cột là xóa cả bảng; bỏ nút Hàng tiêu đề trên thanh công cụ | Giao diện | `TableEditor` |
+| Rubric: dòng cuối là dấu "+" để thêm mục, Enter ở một mục thêm mục ngay dưới; bỏ cách "gõ vào dòng trống là thêm mục"; dòng thêm mà chưa gõ gì không gửi lên server | Giao diện | `RubricEditor`, `cleanCriteria` |
+
+Unit test thêm: nhân bản giữ tên; frontend: định dạng phần bôi đen, ô chữ đọc lại run (cả thẻ trình duyệt tự chèn), tách đoạn giữ định dạng, nút xóa ở góc, không còn menu ba chấm, bảng nút nổi và xóa bảng, rubric dấu "+", báo thiếu chung chung, đổi lịch bài đang mở.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa thứ ba)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Bảng: nút "+ −" của hàng chuyển sang bên trái hàng; nút ✕ xóa bảng ở góc trên trái, cùng hàng với nút của cột | Giao diện | `TableEditor` |
+| Người học điền bảng của đề: hàng, cột nào cũng có "+" (chèn được cả giữa bảng) và "−"; ô người học thêm mang cờ `added`, "−" chỉ dùng được với hàng, cột gồm toàn ô có cờ, hàng, cột của đề thì "−" bị khóa. Server giữ cờ khi lưu và kiểm: các hàng còn ô của đề không ít hơn đề, mỗi hàng đó còn đủ số ô của đề (đánh dấu ô của đề là ô thêm để xóa thì bị từ chối) | Thay cách "chỉ thêm sau phần của đề" của vòng trước; thêm cờ `added` vào ô bảng (`TableCell`) | `DocumentModelService` (`clean`, `filledTable`, kiểm cờ), `TableEditor` (`guard`) |
+| Popup Cài đặt bài giống popup tạo bài: thẻ chọn Hình thức (chọn khi tạo, chỉ xem), Chế độ, Ghi nhận hoạt động (Tắt, Bật) kèm lời báo; bỏ mục sơ đồ bắt buộc theo loại và học liệu gắn kèm khỏi popup (giá trị đã có giữ nguyên khi lưu) | Không còn chỗ đặt BR-U07-13 (số sơ đồ bắt buộc) và học liệu gắn kèm trên giao diện | `AssignmentSettingsPanel`, `Choice` (dùng chung với popup tạo bài) |
+| Thông báo trên màn hình chỉ ghi trạng thái, không ghi hành động: "Bài còn chỗ chưa đủ", "Chưa lưu: …", "Đã phát hành", "Đã lên lịch", "Đã lưu lịch", "Đã ngưng giao", "Bài chưa duyệt", "Bài đã thay đổi ở nơi khác, bản đang sửa chưa lưu"; lỗi form lịch: "Thiếu hạn nộp", "Hạn nộp không sau lúc mở", "Hạn nộp muộn quá 30 ngày sau hạn nộp", "Số lượt ngoài 1–10"… | Giao diện | `AssignmentFormPage`, `ScheduleForm`, `CreateAssignmentDialog` |
+| Đầu trang: màn hẹp thì hàng nút (Khác, Xem trước, Xếp lịch) xuống dưới tên bài thay vì ép tên bài thành cột hẹp; dấu "+" của rubric ra giữa thẻ | Giao diện; `PageHeader` dùng chung đổi cho mọi trang | `PageHeader`, `RubricEditor` |
+
+Unit test thêm: cờ ô thêm được giữ khi lưu, chèn hàng, cột giữa bảng của đề, đánh dấu ô của đề để xóa bị từ chối; frontend: nút bảng bên trái, ✕ cùng hàng, người học có đủ nút và chỉ xóa hàng, cột mình thêm, thông báo chỉ ghi trạng thái.
+
+## Thay đổi theo yêu cầu 2026-10-22 (vòng sửa thứ tư)
+
+| Thay đổi | Khác thiết kế | Code |
+|---|---|---|
+| Bỏ trạng thái Đã duyệt: "Xếp lịch" mở lịch ngay từ bản nháp (trang tự kiểm trước tên bài, rubric các phần); phát hành nhận bài `DRAFT` (bài `REVIEWED` cũ vẫn được), luật duyệt của BR-U07-32 kiểm ngay khi phát hành, thiếu thì trả `ASSIGNMENT_NOT_READY` kèm chỗ thiếu; quyền `canPublish` có cho mọi bài còn sửa được. Bài `REVIEWED` cũ hiện là "Nháp", lọc "Nháp" lấy cả bài đó. API duyệt (`POST /assignments/{id}/review`) còn nhưng giao diện không gọi | Bỏ bước DRAFT → REVIEWED của BR-U07-32 khỏi luồng (luật kiểm giữ nguyên, chuyển sang lúc phát hành) | `AssignmentPublicationService.publish`, `AssignmentSupport` (quyền), `AssignmentFormPage` (`openSchedule`, `localMissing`), `types.ts`, `AssignmentFilters` |
+| Ghi nhận hoạt động trong popup Cài đặt lại là nút gạt như bản cũ | Giao diện | `AssignmentSettingsPanel` |
+| Nút ✕ không được phép vẫn hiện nhưng mờ, như "−" của hàng, cột của đề: bảng người học điền ("Bảng của đề"), sơ đồ, ảnh của đề trong phần ("Sơ đồ của đề", "Ảnh của đề") | Giao diện | `DocumentEditor` (`CornerDelete`, `TableEditor`) |
+
+Unit test thêm: phát hành thẳng từ bản nháp (đủ thì lên lịch, thiếu thì `ASSIGNMENT_NOT_READY`, bài đang mở thì từ chối); frontend: ✕ mờ ở bảng, sơ đồ của đề, nhãn và bộ lọc Nháp.
 
 ## Còn lại
 
