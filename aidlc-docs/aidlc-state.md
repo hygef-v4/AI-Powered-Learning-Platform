@@ -479,6 +479,13 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Code Generation Part 2: bước 5.0–5.6 xong trên `quiz-ai-mcp` (merge `972d594`; code sửa chưa commit).
 - [x] Bước 5.7: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-ai-mcp`, chưa push.
 
+## U14 topology bean startup correction — 2026-10-22
+
+- [x] Rechecked after user's pull: staging HEAD0d1cf27 matches origin/staging; collision still present. No branch switch or history changes.
+- [x] Real Spring context regression reproduces2failures with bean overriding disabled/enabled; no broker/database needed. Renamed only Declarables factory method from notificationTopology to notificationDeclarables; queues/exchanges/TTLs/bindings unchanged, overriding not enabled.
+- [x] Full backend verify1112total/1033passed/79skipped/0failures/errors, executable JAR; new2context cases pass. JDK21 runtime/target17, logs .tmp/u14-topology-fix/red.log and verify.log; finished2026-10-22T12:54:20+07:00.
+- CI's existing mvn verify discovers the new test; other units already have context tests, the missing coverage was U14 topology. Full real API/worker startup and external provider integration not claimed. No commit/push/deploy.
+
 ## Ghi nhận hoạt động khi làm Quiz (G3 U11, E3 U10) — 2026-10-22
 
 - [x] Code Generation Part 1: plan giai đoạn 6 được duyệt (K1–K7), nhánh `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream.

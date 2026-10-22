@@ -136,3 +136,13 @@ Mọi gate còn mở phải xuất hiện trong code-summary và tester matrix: 
 ## DoD
 
 Người viết requirement, người viết test case và người code là ba người khác nhau. Không đánh dấu bước hoàn thành khi chưa có code và test chạy được; code nằm ở thư mục gốc repo, không nằm trong `aidlc-docs`.
+
+## U14 startup regression correction — 2026-10-22
+
+Scope: check and repair reported configuration bean collision on the refreshed `staging` checkout `0d1cf27`. User reports duplicate `notificationTopology` bean and requests recheck after pulling. No branch switch, commit/push or topology behavior changes.
+
+- [x] Confirm current HEAD matches origin/staging and collision remains in production source.
+- [x] Add NotificationTopologyContextTest using a real Spring ApplicationContextRunner, covering bean overriding both disabled and enabled without Rabbit/DB dependencies.
+- [x] Reproduce both startup failures before changing production source:2cases fail with overriding false/true; `.tmp/u14-topology-fix/red.log` on staging0d1cf27.
+- [x] Rename only the Declarables factory method to notificationDeclarables; preserve queues, exchanges, TTLs and bindings.
+- [x] Full backend verify1112total/1033passed/79skipped/0failures/errors and executable JAR,2026-10-22; both context regression cases pass after rename. Logs `.tmp/u14-topology-fix/red.log` and `verify.log`. Audit/state record evidence; no full API/worker startup against real infrastructure claimed. This targeted developer regression does not replace independent full application acceptance.

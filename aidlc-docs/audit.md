@@ -5100,6 +5100,26 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
+## U14 topology startup bean collision — reported issue and refreshed staging
+**Date**: 2026-10-22 (Asia/Saigon)
+**User Input**:
+1. Backend không khởi động được (cả worker). Nhờ U14 xem.
+- Chạy jar báo "APPLICATION FAILED TO START": bean notificationTopology bị khai báo hai lần.
+- Nguyên nhân: lớp @Configuration NotificationTopology tự có tên bean là "notificationTopology", trùng với method @Bean Declarables notificationTopology() bên trong. Lỗi từ commit 2920fc6.
+- Bật allow-bean-definition-overriding cũng không chạy, vì Spring báo "factory-bean reference points back to the same bean definition".
+- Cách sửa gợi ý: đổi tên method @Bean, ví dụ notificationDeclarables().
+- CI không bắt được lỗi này vì chưa có test nào dựng Spring context.
+check lại lỗi
+**User Input**: "kiểm tra lại branch staging tại tôi vừa pull lại"
+**AI Response**: Confirmed current staging HEAD0d1cf27 equals origin/staging after fast-forward pull; production source still contains the collision. Added NotificationTopologyContextTest and reproduced2failures before modifying production code: overriding disabled raises BeanDefinitionOverrideException; enabled raises BeanDefinitionStoreException for configuration/factory bean name clash. Renamed exactly one factory method to notificationDeclarables; no topology resources or overriding settings changed. Configuration is shared by API and worker. Other unit context tests already exist; U14 topology lacked this coverage. Existing CI mvn verify automatically includes the new regression.
+**Verification**: Full backend mvn -B verify BUILD SUCCESS:1112total/1033pass/79skip/0failure/error, executable JAR,3m27s, finished2026-10-22T12:54:20+07:00. Both new context cases pass. Red and green logs .tmp/u14-topology-fix/red.log and verify.log are ignored local evidence. Existing Maven duplicate poi-ooxml declaration warning was not changed as part of this scoped fix. No full application/worker startup against real PostgreSQL/Rabbit/SMTP claimed; independent acceptance gates retained.
+**Changes**: NotificationTopology.java single-line rename, new context regression test, approved U14 plan progress and appended audit/state. No frontend changes, commit/push, branch switch, deployment or real mail.
+---
+
+## U14 topology fix local commit authorization — 2026-10-22
+**User Input**: "commit, không push"
+**AI Response**: Verified staging branch, empty index and exactly the topology method rename, new two-case Spring context regression and three AI-DLC tracking files. Commit these five files together; retain full backend verify1112total/1033pass/79skip/0failures/errors evidence without source changes or redundant reruns. No push/deployment authorized or performed.
+
 ## 2026-10-22T08:00:00Z — Roadmap refresh (end of day)
 
 **User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
@@ -5177,5 +5197,15 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **AI Response**: Recorded approval (step 6.8) in the plan, aidlc-state and roadmap; committed G3/E3 code and documentation locally on `quiz-activity` (no upstream). Not pushed.
 
 **Context**: Construction — U11/U10 activity monitoring approved.
+
+---
+
+## 2026-10-22T12:20:00Z — PR #8 opened; staging merged into quiz-activity
+
+**User Input**: "Push nhánh quiz-activity lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: Pushed `quiz-activity` to `origin/quiz-activity` (upstream now its own remote branch) and opened PR #8 into staging. GitHub reported conflicts because staging gained 4bcca43 (U14 fix for the `notificationTopology` bean collision) during the push; conflicts were only in append-only docs (aidlc-state.md, audit.md). Merged origin/staging into `quiz-activity`, kept both sides (staging entries first), and pushed so CI can run.
+
+**Context**: Delivery — PR #8.
 
 ---
