@@ -5439,3 +5439,54 @@ check lại lỗi
 **Context**: Construction, gộp PR
 
 ---
+
+
+## 2026-10-22T13:40:00Z — PR #8 merged; staging verified
+
+**User Input**: "Merge PR #8 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Rechecked PR #8 (head 57b801c, CI backend/frontend/GitGuardian pass, CLEAN) and merged with a merge commit: staging 20c1458, whose tree equals the CI-verified 57b801c. Fast-forwarded local staging. Started the full local stack from source on fresh volumes under compose project `staging-smoke` (temporary env with random secrets and a port override in the scratchpad): all 8 containers healthy, 14 Flyway migrations applied up to 20260925.2000, /health, /, /login, /quiz-practice 200, protected APIs 401, no ERROR/exception in backend, worker, frontend, nginx logs, RabbitMQ job and notification queues declared with consumers. Tore down the project with its volumes and deleted the temporary files. Updated roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Delivery — PR #8 merged; staging verification.
+
+---
+
+## 2026-10-22T14:30:00Z — E2E run: phase 4, G3/E3, notification link
+
+**User Input**: "Chạy thử end-to-end trên trình duyệt với Docker local cho giai đoạn 4 (đề xuất MCP, tài liệu tham khảo, Quiz gắn học liệu) và G3/E3 (ghi nhận hoạt động), ghi kết quả vào code-summary."
+
+**AI Response**: Ran staging 20c1458 on a fresh local stack (compose project `quiz-e2e`, temporary env with random secrets and test passwords in the scratchpad). Seeded via API: admin activated by OTP through Mailpit, manager, teacher, two students, subject QZE2E, OPEN class, two YouTube materials, three active bank questions, a class quiz. In the browser pane: AI draft popup (material locked: U13 hasText=false for YouTube; stub → FAILED "AI chưa sẵn sàng"); material attach (and API 400 MATERIAL_NOT_SELECTABLE for a foreign id); an MCP-origin READY draft inserted directly into quiz_ai_drafts (U06 MCP server not on staging) shown and partially accepted (inline item added, version bump, audit with count/origin only); activity switch locked until admin set activity.retentionDays=30, notice required, review and publish; student notification link resolved the class; Quiz Practice Detail notice and attached material; MaterialQuizList on the learning material page, exhausted after one attempt; taking page tracker recorded SESSION_START, HIDDEN, VISIBLE (simulated visibilitychange), SESSION_END; teacher saw the activity timeline (1 away, 4 s). No backend/worker errors. Found a pre-existing bug: QuizDetailPage shows "Hệ thống tạm bận" on client-side validation errors. Tore down the stack with volumes and deleted temporary files. Wrote results to U10/U11 code-summary, roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Verification — end-to-end run.
+
+---
+
+## 2026-10-22T15:00:00Z — Roadmap refresh after U06 and U12 merged
+
+**User Input**: "kiểm tra các thay đổi mới nhất xem roadmap của tôi đã hoàn thành chưa, còn cần chờ UC nào nữa không"
+
+**AI Response**: Fetched origin: staging is d2a06cd with PR #9 (U06 AI connections and MCP) and PR #10 (U12 group assignment) merged; all units U10/U11 depend on are now on staging. AI contract unchanged for U10 (only UsageMeasurement.ESTIMATED added); no quiz files touched. Jira unchanged; no tester integration tests yet. Banner fix 61171a9 on fix/quiz-detail-client-validation-banner (from d2a06cd) is local, unpushed. Roadmap updated: no UC left to wait for; doable now — swap AiSourceSelect for U06 AiSourcePicker, run MCP tools through the real U06 MCP server, real AI drafting (needs a real provider key entered by the user), push/PR the banner fix; waiting on people — tester, BR-U11-20 decision, Report 3.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T15:30:00Z — Code Generation Part 1: U06 integration plan
+
+**User Input**: "Lập plan: thay AiSourceSelect bằng AiSourcePicker của U06 và chạy thử tool MCP qua MCP server thật, trên nhánh mới tách từ origin/staging, không đặt upstream."
+
+**AI Response**: Created branch `quiz-u06-integration` from origin/staging d2a06cd with `--no-track` (verified no upstream); moved the uncommitted documentation onto it (aidlc-state.md and audit.md additions re-appended to the staging versions, other files carried over). Read U06 AiSourcePicker, AiTaskStatus, McpController, McpServer, McpToolRegistry and McpCredentialController. Added "Giai đoạn 7" to the U10 code generation plan (decisions M1–M7, checklist 7.0–7.6) and linked it from the roadmap. Approval prompt: "Duyệt plan giai đoạn 7 với đề xuất M1–M7?"
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T15:40:00Z — U06 integration plan approved
+
+**User Input**: "Duyệt plan giai đoạn 7 với đề xuất M1–M7. Bắt đầu từ bước 7.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 7.0: committing pending documentation (E2E results, roadmap, state, phase 7 plan) locally on `quiz-u06-integration`, then implementing 7.1–7.5.
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1 approved.
+
+---

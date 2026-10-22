@@ -152,7 +152,7 @@ U08 đã đưa vào `staging` đủ phần G3/E3 cần: `ActivityService` (cài 
 Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-practice-code-generation-plan.md) (K1–K7), nhánh `quiz-activity`.
 
 - [x] **G3 (U11):** gắn `useActivityTracker` vào `QuizTakingPage` khi Quiz bật ghi nhận hoạt động, gửi qua `POST /quiz-attempts/{id}/activity` đã có.
-- [x] **E3 (U10):** bỏ chặn `409 ACTIVITY_RETENTION_NOT_SET` khi đã đặt `activity.retentionDays` (đọc bằng `ISettings` như U07); trả cờ "đã đặt thời hạn" để `QuizSettingsPanel` mở công tắc. Hiện thông báo cho sinh viên trước khi làm (đã có `activityNotice`). Code xong và được duyệt 2026-10-22, commit local trên `quiz-activity` (chưa push).
+- [x] **E3 (U10):** bỏ chặn `409 ACTIVITY_RETENTION_NOT_SET` khi đã đặt `activity.retentionDays` (đọc bằng `ISettings` như U07); trả cờ "đã đặt thời hạn" để `QuizSettingsPanel` mở công tắc. Hiện thông báo cho sinh viên trước khi làm (đã có `activityNotice`). Code xong và được duyệt 2026-10-22; PR #8 merge vào `staging` (`20c1458`).
 - [ ] KAN-152: vẫn cần người dùng gửi Report 3.
 
 **Còn chờ người khác:**
@@ -161,6 +161,51 @@ Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-pract
 - U06: AI thật, `AiSourcePicker`.
 - Tester: integration test, đóng KAN-18, KAN-23, KAN-25.
 - Người viết requirement: BR-U11-20.
+
+### Cập nhật 2026-10-22 (sau PR #8)
+
+- **PR #8** (`quiz-activity`, G3/E3) merge vào `staging` bằng merge commit `20c1458`.
+  - CI xanh tại `57b801c`: backend 1114 test, frontend, GitGuardian.
+  - Trong PR có sửa `pom.xml`: khai báo `poi-ooxml` bị trùng sau khi U07 merge, làm CI backend đỏ.
+- **U14** đã sửa bean `notificationTopology` (`4bcca43`).
+- **Chạy thử `staging` `20c1458` trên Docker local**, stack dựng từ mã nguồn trên volume mới:
+  - 8 container đều healthy; 14 migration áp dụng đủ (tới `20260925.2000`).
+  - `/health`, `/`, `/login`, `/quiz-practice` trả `200`; API cần đăng nhập trả `401`.
+  - Không có log lỗi ở backend, worker, frontend, nginx.
+  - Queue RabbitMQ của job và thông báo đã khai báo và có consumer.
+  - Stack tạm đã gỡ, kể cả volume.
+- **Các lỗi chặn trước đây đã hết:** migration `grading` và bean U14.
+- **Còn chờ:**
+  - U06: AI thật, `AiSourcePicker`.
+  - Tester: integration test, đóng KAN-18, KAN-23, KAN-25.
+  - Người viết requirement: BR-U11-20.
+  - KAN-152: cần Report 3.
+- **Đã chạy thử end-to-end trên trình duyệt (2026-10-22):** giai đoạn 4 (popup AI, gắn học liệu, đề xuất nguồn MCP, Quiz gắn học liệu), G3/E3 và link thông báo đều đạt; xem code-summary U10, U11.
+  - Phát hiện 1 lỗi nhỏ có từ giai đoạn 2: `QuizDetailPage` báo "Hệ thống tạm bận" khi form không hợp lệ.
+  - MCP server thật và AI thật vẫn chờ U06.
+
+### Cập nhật 2026-10-22 (sau PR #9 U06, PR #10 U12)
+
+`staging` mới nhất là `d2a06cd`, đã có PR #9 (U06 kết nối AI và MCP) và PR #10 (U12 bài nhóm). Mọi unit mà U10/U11 phụ thuộc (U01, U03, U04, U05, U06, U07, U08, U13, U14) đều đã ở `staging`. Không còn chờ UC của unit nào.
+
+- Contract AI không đổi gì ảnh hưởng U10 (chỉ thêm `UsageMeasurement.ESTIMATED`). PR #9, #10 không sửa file quiz nào.
+- Jira không đổi: KAN-18 In Progress, KAN-23 và KAN-25 To Do, KAN-152 In Progress. Tester chưa thêm integration test nào cho U01, U10, U11.
+- Bản sửa banner "Hệ thống tạm bận" ở Quiz Detail: commit local `61171a9` trên `fix/quiz-detail-client-validation-banner` (từ `staging` `d2a06cd`), chưa push.
+
+**Làm được ngay (U06 đã có):**
+
+Plan chi tiết: [U10, giai đoạn 7](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (M1–M7), nhánh `quiz-u06-integration`.
+
+- [ ] Thay `AiSourceSelect` bằng `AiSourcePicker` của U06 trong `AiDrafts.tsx` (việc còn lại của H1).
+- [ ] Chạy thử tool MCP qua MCP server thật của U06 (`read_quiz_context`, `save_quiz_draft`): tạo credential MCP trên giao diện U06 rồi gọi từ agent hoặc bằng request JSON-RPC.
+- [ ] Chạy AI soạn câu thật: cần khóa API thật của một nhà cung cấp (Gemini, OpenAI, Claude). Người dùng tự nhập khóa trên trang Kết nối AI.
+- [ ] Push và mở PR cho bản sửa banner.
+
+**Còn chờ người, không chờ UC:**
+
+- Tester: integration test, rồi đóng KAN-18, KAN-23, KAN-25.
+- Người viết requirement: BR-U11-20.
+- Người dùng: Report 3 cho KAN-152.
 
 ## 3. Nhánh
 
