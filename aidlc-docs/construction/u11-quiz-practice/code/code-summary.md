@@ -131,3 +131,19 @@ Theo plan mục "Sửa sau chạy thử và link thông báo Quiz" (J1–J6), nh
   - Frontend: lint, typecheck, 356 test, build đều đạt.
   - Backend không đổi; sau khi merge `staging`: 999 test, chỉ còn 4 lỗi Flyway của migration `grading`, lỗi có sẵn trên `staging`.
 - **Còn mở:** BR-U11-20 (kết quả khi Quiz ẩn điểm, ẩn đáp án) chờ người viết requirement chốt.
+
+## Giai đoạn 6 — Ghi nhận hoạt động khi làm Quiz (G3, 2026-10-22)
+
+Theo plan giai đoạn 6 (K1–K7), nhánh `quiz-activity` từ `staging` `0d1cf27` (đã có U08).
+
+- **Backend (K4):** `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` lấy từ `AttemptSnapshot`. Quiz đổi sau khi lượt bắt đầu thì lượt đang làm không bị ảnh hưởng. API ghi hoạt động (`QuizActivityService`) không đổi; U08 (`ActivityService.record`) để U11 tự kiểm quyền và chính sách.
+- **Frontend (K5):**
+  - `QuizTakingPage` gọi `useActivityTracker` của U08 khi lượt bật ghi nhận và chưa nộp, gửi qua `recordQuizActivity`; khi rời trang thì dùng `keepalive`. Lỗi gửi không chặn làm bài.
+  - Trang hiện "Quiz này ghi nhận hoạt động khi làm bài" kèm lời báo.
+- **Giảng viên (K6):** chi tiết một lượt hiện `ActivityTimeline` của U08 (số lần rời trang, thời lượng, các khoảng). Cột "Hoạt động" trên danh sách sinh viên chưa làm.
+- **Test:**
+  - `QuizPracticeServicesTest`: `TakingView` theo ảnh chụp.
+  - `QuizPracticeScreens.test.tsx`:
+    - chỉ gửi sự kiện khi lượt bật ghi nhận, kèm lời báo;
+    - giảng viên thấy dòng thời gian.
+- **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.

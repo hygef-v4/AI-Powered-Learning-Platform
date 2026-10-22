@@ -482,5 +482,5 @@ Final checkpoint: code available for review; independent acceptance gates retain
 ## Ghi nhận hoạt động khi làm Quiz (G3 U11, E3 U10) — 2026-10-22
 
 - [x] Code Generation Part 1: plan giai đoạn 6 được duyệt (K1–K7), nhánh `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream.
-- [ ] Code Generation Part 2: bước 6.0–6.7.
-- [ ] Bước 6.8: người dùng duyệt.
+- [x] Code Generation Part 2: bước 6.0–6.7 xong trên `quiz-activity` (6.0 commit `e8145b4`, code chưa commit); backend 1112 test, frontend 411 test đạt.
+- [x] Bước 6.8: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-activity`, chưa push.

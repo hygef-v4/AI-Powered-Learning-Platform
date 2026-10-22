@@ -151,8 +151,8 @@ U08 đã đưa vào `staging` đủ phần G3/E3 cần: `ActivityService` (cài 
 
 Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-practice-code-generation-plan.md) (K1–K7), nhánh `quiz-activity`.
 
-- [ ] **G3 (U11):** gắn `useActivityTracker` vào `QuizTakingPage` khi Quiz bật ghi nhận hoạt động, gửi qua `POST /quiz-attempts/{id}/activity` đã có.
-- [ ] **E3 (U10):** bỏ chặn `409 ACTIVITY_RETENTION_NOT_SET` khi đã đặt `activity.retentionDays` (đọc bằng `ISettings` như U07); trả cờ "đã đặt thời hạn" để `QuizSettingsPanel` mở công tắc. Hiện thông báo cho sinh viên trước khi làm (đã có `activityNotice`).
+- [x] **G3 (U11):** gắn `useActivityTracker` vào `QuizTakingPage` khi Quiz bật ghi nhận hoạt động, gửi qua `POST /quiz-attempts/{id}/activity` đã có.
+- [x] **E3 (U10):** bỏ chặn `409 ACTIVITY_RETENTION_NOT_SET` khi đã đặt `activity.retentionDays` (đọc bằng `ISettings` như U07); trả cờ "đã đặt thời hạn" để `QuizSettingsPanel` mở công tắc. Hiện thông báo cho sinh viên trước khi làm (đã có `activityNotice`). Code xong và được duyệt 2026-10-22, commit local trên `quiz-activity` (chưa push).
 - [ ] KAN-152: vẫn cần người dùng gửi Report 3.
 
 **Còn chờ người khác:**

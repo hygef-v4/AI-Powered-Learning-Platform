@@ -162,32 +162,32 @@ Lập ngày 2026-10-22 theo [lộ trình](../cuong-uc-roadmap-2026-10-20.md), sa
 ### Checklist giai đoạn 6
 
 - [x] **6.0 Commit tài liệu đang chờ** (K7).
-- [ ] **6.1 E3 backend** (K1, K2):
+- [x] **6.1 E3 backend** (K1, K2):
   - `QuizActivityPolicy`.
   - `QuizAuthoringService.updateDetails`: bật khi đã đặt thời hạn và có lời báo.
   - `QuizRules` khi duyệt: kiểm lời báo và thời hạn.
   - `QuizDetail.activityRetentionConfigured` (K3).
-- [ ] **6.2 G3 backend** (K4): `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` từ `AttemptSnapshot`.
-- [ ] **6.3 Unit test backend:**
+- [x] **6.2 G3 backend** (K4): `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` từ `AttemptSnapshot`.
+- [x] **6.3 Unit test backend:**
   - Chưa đặt thời hạn thì bật bị `409`.
   - Đã đặt mà thiếu lời báo thì lỗi theo trường; đủ thì bật được.
   - U03 lỗi thì không bật được; tắt luôn được.
   - Duyệt Quiz bật ghi nhận khi thời hạn bị xóa thì báo lỗi.
   - `TakingView` mang cờ của ảnh chụp.
   - Ghi hoạt động khi lượt không bật thì `409` (đã có, kiểm lại).
-- [ ] **6.4 E3 frontend** (K3): `QuizSettingsPanel` mở công tắc theo `activityRetentionConfigured`; ô lời báo; lỗi theo trường.
-- [ ] **6.5 G3 frontend** (K5, K6):
+- [x] **6.4 E3 frontend** (K3): `QuizSettingsPanel` mở công tắc theo `activityRetentionConfigured`; ô lời báo; lỗi theo trường.
+- [x] **6.5 G3 frontend** (K5, K6):
   - `recordQuizActivity` trong `api.ts` của U11.
   - `QuizTakingPage` gắn `useActivityTracker` và hiện thông báo.
   - Chi tiết lượt của giảng viên dùng `ActivityTimeline`.
-- [ ] **6.6 Unit test frontend:**
+- [x] **6.6 Unit test frontend:**
   - Công tắc mở hoặc khóa theo cờ; bật mà thiếu lời báo thì báo lỗi.
   - Trang làm bài chỉ gửi sự kiện khi lượt bật ghi nhận.
   - Giảng viên thấy dòng thời gian.
-- [ ] **6.7 Kiểm và tài liệu:**
+- [x] **6.7 Kiểm và tài liệu:** backend 1112 test, frontend 411 test và build đều đạt.
   - Đủ bước CI: backend `mvn -B verify`; frontend lint, typecheck, test, build.
   - code-summary U10, U11; tick checklist; lộ trình, `aidlc-state.md`.
-- [ ] **6.8 Review:** người dùng duyệt rồi commit local.
+- [x] **6.8 Review:** người dùng duyệt ngày 2026-10-22, commit local trên `quiz-activity`.
 
 ## Integration test cases (tester viết)
 

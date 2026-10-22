@@ -5159,3 +5159,23 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U11/U10 activity monitoring, Code Generation Part 1 approved.
 
 ---
+
+## 2026-10-22T11:40:00Z — G3/E3 code generated, awaiting review
+
+**User Input**: (none since approval)
+
+**AI Response**: Implemented 6.1–6.7 on `quiz-activity` (uncommitted): QuizActivityPolicy (ISettings `activity.retentionDays`), updateDetails enable rules and notice requirement, review re-check via QuizRules.validateActivity, QuizDetail.activityRetentionConfigured; TakingView activity fields from the snapshot; frontend settings switch/notice, QuizTakingPage useActivityTracker + notice, teacher ActivityTimeline. Checks: backend `mvn -B verify` JDK 17 — 1112 tests, 0 failures/errors; frontend lint, typecheck, 411 tests, build pass. Presented for step 6.8 review.
+
+**Context**: Construction — U11/U10 activity monitoring, Code Generation Part 2 complete, awaiting approval.
+
+---
+
+## 2026-10-22T11:55:00Z — G3/E3 code approved
+
+**User Input**: "Duyệt code G3/E3. Commit local trên nhánh quiz-activity."
+
+**AI Response**: Recorded approval (step 6.8) in the plan, aidlc-state and roadmap; committed G3/E3 code and documentation locally on `quiz-activity` (no upstream). Not pushed.
+
+**Context**: Construction — U11/U10 activity monitoring approved.
+
+---

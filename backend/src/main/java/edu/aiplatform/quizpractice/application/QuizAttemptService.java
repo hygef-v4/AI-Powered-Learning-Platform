@@ -168,7 +168,8 @@ public class QuizAttemptService {
                 .toList();
         return new TakingView(attempt.id(), attempt.quizId(), attempt.classId(), attempt.snapshot().title(),
                 attempt.attemptNo(), attempt.startedAt(), attempt.deadlineAt(), clock.instant(),
-                attempt.answerVersion(), questions, attempt.answers());
+                attempt.answerVersion(), questions, attempt.answers(), attempt.snapshot().activityMonitoringEnabled(),
+                attempt.snapshot().activityNotice());
     }
 
     private static ApiException versionConflict() {

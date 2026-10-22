@@ -66,6 +66,7 @@ class QuizServicesTest {
     private final List<AuditEvent> audits = new ArrayList<>();
     private final List<DomainEvent> events = new ArrayList<>();
     private final List<UUID> retiredNotices = new ArrayList<>();
+    private final FakeSettings settings = new FakeSettings();
     private InMemoryQuizStore store;
     private QuizAuthoringService authoring;
     private QuizPublicationService publication;
@@ -101,7 +102,7 @@ class QuizServicesTest {
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access,
-                new ActiveSubjects(subjects));
+                new ActiveSubjects(subjects), new QuizActivityPolicy(settings));
         QuizReferenceMaterials materials = new QuizReferenceMaterials(new FakeReferenceMaterial(), support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
                 materials, clock);
@@ -163,6 +164,38 @@ class QuizServicesTest {
 
         classStatus.put(classA, ClassStatus.ARCHIVED);
         assertThat(api(() -> authoring.createForClass(teacher, classA, "Khác")).code()).isEqualTo("CLASS_ARCHIVED");
+    }
+
+    @Test
+    void activityMonitoringNeedsRetentionAndNoticeAndIsRecheckedOnReview() {
+        Question q = bank(true);
+        QuizDetail quiz = classQuizWith(q);
+        UUID id = quiz.quiz().id();
+        assertThat(quiz.activityRetentionConfigured()).isFalse();
+        assertThat(api(() -> authoring.updateDetails(teacher, id, new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS, true,
+                "Có ghi nhận", List.of()), quiz.quiz().version())).code()).isEqualTo("ACTIVITY_RETENTION_NOT_SET");
+
+        settings.values.put("activity.retentionDays", 30);
+        ApiException noNotice = api(() -> authoring.updateDetails(teacher, id, new Details("Luyện tập", null,
+                Quiz.DEFAULT_SETTINGS, true, "  ", List.of()), quiz.quiz().version()));
+        assertThat(((RuleViolationException) noNotice).violations()).extracting(Violation::code)
+                .containsExactly("ACTIVITY_NOTICE_REQUIRED");
+        QuizDetail enabled = authoring.updateDetails(teacher, id, new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS,
+                true, "Hệ thống ghi lại khi bạn rời trang", List.of()), quiz.quiz().version());
+        assertThat(enabled.quiz().activityMonitoringEnabled()).isTrue();
+        assertThat(enabled.activityRetentionConfigured()).isTrue();
+
+        settings.values.clear();
+        ApiException review = api(() -> publication.review(teacher, id, enabled.quiz().version()));
+        assertThat(((RuleViolationException) review).violations()).extracting(Violation::code)
+                .contains("ACTIVITY_RETENTION_NOT_SET");
+        settings.down = true;
+        QuizDetail disabled = authoring.updateDetails(teacher, id, new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS,
+                false, null, List.of()), enabled.quiz().version());
+        assertThat(disabled.quiz().activityMonitoringEnabled()).as("tắt luôn được").isFalse();
+        assertThat(api(() -> authoring.updateDetails(teacher, id, new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS,
+                true, "Báo", List.of()), disabled.quiz().version())).code()).as("U03 lỗi coi như chưa đặt")
+                .isEqualTo("ACTIVITY_RETENTION_NOT_SET");
     }
 
     @Test

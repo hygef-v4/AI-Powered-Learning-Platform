@@ -139,7 +139,8 @@ class QuizAiDraftServiceTest {
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
         ActiveSubjects active = new ActiveSubjects(subjects);
-        QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
+        QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active,
+                new QuizActivityPolicy(new FakeSettings()));
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
                 materials, clock);
