@@ -29,8 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AssignmentCopyService {
 
-    static final String COPY_SUFFIX = " (bản sao)";
-
     private final AssignmentRepository assignments;
     private final RubricService rubrics;
     private final AssignmentAccess access;
@@ -53,14 +51,14 @@ public class AssignmentCopyService {
         this.clock = clock;
     }
 
-    /** BR-U07-40: bản nháp mới cùng lớp hoặc cùng môn. */
+    /** BR-U07-40: bản nháp mới cùng lớp hoặc cùng môn; giữ nguyên tên như bài thường (yêu cầu 2026-10-22, bỏ "(bản sao)"). */
     @Transactional
     public AssignmentViews.Detail cloneAssignment(Actor actor, UUID id) {
         Assignment source = support.manageable(actor, id, "ASSIGNMENT_CLONED");
         access.requireOwnerWritable(source);
         requireGroupSupport(source, source.classId());
         Assignment copy = insertCopy(actor, source, source.classId(), source.subjectId(), AssignmentOrigin.CLONE, 1,
-                withSuffix(source.title()), source.referenceMaterialIds());
+                source.title(), source.referenceMaterialIds());
         audit.success(actor, "ASSIGNMENT_CLONED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id()));
         return support.detail(actor, copy, List.of());
     }
@@ -161,11 +159,5 @@ public class AssignmentCopyService {
         } catch (RuntimeException e) {
             return Set.of();
         }
-    }
-
-    static String withSuffix(String title) {
-        String base = title.length() + COPY_SUFFIX.length() > Assignment.TITLE_MAX
-                ? title.substring(0, Assignment.TITLE_MAX - COPY_SUFFIX.length()) : title;
-        return base + COPY_SUFFIX;
     }
 }

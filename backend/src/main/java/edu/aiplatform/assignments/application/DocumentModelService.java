@@ -48,9 +48,10 @@ public class DocumentModelService implements IDocumentModel {
     static final int MAX_ISSUES = 100;
     static final int COMPACT_MAX_CHARS = 60_000;
     static final Set<String> HEADING_STYLES = Set.of("TITLE", "SUBTITLE", "H1", "H2", "H3", "H4", "H5", "H6");
-    private static final Set<String> RUN_FLAGS = Set.of("bold", "italic", "underline", "strike", "code");
+    /** Danh sách (không phải Set.of, thứ tự lặp của Set.of đổi theo mỗi lần chạy JVM): khóa của run luôn ra cùng thứ tự. */
+    private static final List<String> RUN_FLAGS = List.of("bold", "italic", "underline", "strike", "code");
     /** Màu chữ, màu tô nền của đoạn chữ: mã hex 6 chữ số. */
-    private static final Set<String> RUN_COLORS = Set.of("color", "highlight");
+    private static final List<String> RUN_COLORS = List.of("color", "highlight");
     private static final java.util.regex.Pattern HEX = java.util.regex.Pattern.compile("^#[0-9a-fA-F]{6}$");
     /** Căn lề của tiêu đề, đoạn, danh sách. */
     static final Set<String> ALIGNS = Set.of("LEFT", "CENTER", "RIGHT", "JUSTIFY");
@@ -80,8 +81,9 @@ public class DocumentModelService implements IDocumentModel {
     }
 
     /**
-     * Bài làm (BR-U07-15, yêu cầu 2026-10-21): block của người soạn giữ nguyên, trừ sơ đồ nằm trong phần (người làm
-     * vẽ thẳng vào đó); người làm không thêm tiêu đề và chỉ viết trong các phần (tiêu đề lá của cây).
+     * Bài làm (BR-U07-15, yêu cầu 2026-10-21, 2026-10-22): block của người soạn giữ nguyên, trừ sơ đồ và bảng nằm
+     * trong phần (người làm vẽ, điền thẳng vào đó); người làm không thêm tiêu đề và chỉ viết trong các phần (tiêu đề
+     * lá của cây).
      */
     @Override
     public ValidationResult validateForSave(DocumentModel skeleton, DocumentModel document) {
@@ -138,9 +140,12 @@ public class DocumentModelService implements IDocumentModel {
         List<ValidationIssue> errors = new ArrayList<>();
         Map<DiagramType, Integer> counts = new EnumMap<>(DiagramType.class);
         Map<UUID, String> skeletonXml = new HashMap<>();
+        Map<UUID, JsonNode> skeletonRows = new HashMap<>();
         if (skeleton != null && skeleton.blocks() != null) {
             skeleton.blocks().stream().filter(b -> b.type() == BlockType.DIAGRAM)
                     .forEach(b -> skeletonXml.put(b.id(), b.content().path("xml").asText("")));
+            skeleton.blocks().stream().filter(b -> b.type() == BlockType.TABLE)
+                    .forEach(b -> skeletonRows.put(b.id(), b.content().path("rows")));
         }
         Set<UUID> inParts = blocksInParts(document);
         boolean hasContent = false;
@@ -159,6 +164,11 @@ public class DocumentModelService implements IDocumentModel {
                 }
                 continue;
             }
+            if (block.origin() == BlockOrigin.TEACHER && block.type() == BlockType.TABLE && inParts.contains(block.id())) {
+                // Bảng của đề trong phần: điền khác đề thì tính là bài làm.
+                hasContent |= !block.content().path("rows").equals(skeletonRows.get(block.id()));
+                continue;
+            }
             if (block.origin() != BlockOrigin.STUDENT) {
                 continue;
             }
@@ -174,13 +184,26 @@ public class DocumentModelService implements IDocumentModel {
             }
         }
         if (requiredDiagrams != null) {
-            requiredDiagrams.forEach((type, minimum) -> {
+            // Loại sơ đồ suy từ hình vẽ (yêu cầu 2026-10-22): sơ đồ không nhận ra loại (OTHER), sau khi đủ yêu cầu của
+            // chính OTHER, được tính bù cho loại còn thiếu.
+            Integer otherMinimum = requiredDiagrams.get(DiagramType.OTHER);
+            int spare = Math.max(0, counts.getOrDefault(DiagramType.OTHER, 0) - (otherMinimum == null ? 0 : otherMinimum));
+            for (DiagramType type : DiagramType.values()) {
+                Integer minimum = requiredDiagrams.get(type);
+                if (minimum == null) {
+                    continue;
+                }
                 int actual = counts.getOrDefault(type, 0);
-                if (minimum != null && actual < minimum) {
+                if (type != DiagramType.OTHER && actual < minimum) {
+                    int fill = Math.min(spare, minimum - actual);
+                    spare -= fill;
+                    actual += fill;
+                }
+                if (actual < minimum) {
                     add(errors, "REQUIRED_DIAGRAMS_MISSING", null,
                             "Cần ít nhất " + minimum + " sơ đồ " + type.name() + ", bài mới có " + actual);
                 }
-            });
+            }
         }
         if (!hasContent) {
             add(errors, "SUBMISSION_EMPTY", null, "Bài làm chưa có nội dung của bạn");
@@ -389,6 +412,7 @@ public class DocumentModelService implements IDocumentModel {
                             return;
                         }
                         runs(cell.get("runs"), id, errors);
+                        flag(cell.get("added"), id, errors);
                     }
                 }
             }
@@ -456,23 +480,60 @@ public class DocumentModelService implements IDocumentModel {
     }
 
     /**
-     * So nội dung; ảnh xem trước của sơ đồ được làm sạch lại mỗi lần lưu nên không đưa vào so sánh. Sơ đồ nằm trong
-     * phần ({@code drawable}) thì người làm được vẽ lại XML, chỉ loại sơ đồ và mô tả phải giữ nguyên.
+     * So nội dung; ảnh xem trước của sơ đồ được làm sạch lại mỗi lần lưu nên không đưa vào so sánh. Block nằm trong
+     * phần ({@code inPart}) thì người làm được vẽ lại sơ đồ (XML, loại suy từ hình vẽ; mô tả giữ nguyên) và điền bảng
+     * ({@link #filledTable}) — yêu cầu 2026-10-21, 2026-10-22.
      */
-    private static boolean sameContent(DocumentBlock original, DocumentBlock block, boolean drawable) {
+    private static boolean sameContent(DocumentBlock original, DocumentBlock block, boolean inPart) {
         if (original.type() == BlockType.DIAGRAM && original.content() instanceof ObjectNode a
                 && block.content() instanceof ObjectNode b) {
             ObjectNode left = a.deepCopy();
             ObjectNode right = b.deepCopy();
             left.remove("svgPreview");
             right.remove("svgPreview");
-            if (drawable) {
-                left.remove("xml");
-                right.remove("xml");
+            if (inPart) {
+                left.remove(List.of("xml", "diagramType"));
+                right.remove(List.of("xml", "diagramType"));
             }
             return left.equals(right);
         }
+        if (original.type() == BlockType.TABLE && inPart) {
+            return filledTable(original.content(), block.content());
+        }
         return original.content().equals(block.content());
+    }
+
+    /**
+     * Bảng của đề được điền: sửa ô, thêm hàng, cột ở bất kỳ đâu; ô người học thêm mang cờ {@code added} (yêu cầu
+     * 2026-10-22) và chỉ ô đó được xóa. Giữ hàng tiêu đề; các hàng còn ô của đề (ô không cờ) không ít hơn đề, mỗi hàng
+     * đó còn đủ số ô của đề.
+     */
+    private static boolean filledTable(JsonNode original, JsonNode table) {
+        if (original.path("headerRow").asBoolean(false) != table.path("headerRow").asBoolean(false)) {
+            return false;
+        }
+        List<Integer> teacherCells = new ArrayList<>();
+        for (JsonNode row : table.path("rows")) {
+            int count = 0;
+            for (JsonNode cell : row) {
+                if (!cell.path("added").asBoolean(false)) {
+                    count++;
+                }
+            }
+            if (count > 0) {
+                teacherCells.add(count);
+            }
+        }
+        JsonNode before = original.path("rows");
+        if (teacherCells.size() < before.size()) {
+            return false;
+        }
+        for (int i = 0; i < before.size(); i++) {
+            if (teacherCells.get(i) < before.get(i).size()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private ObjectNode clean(BlockType type, ObjectNode c) {
@@ -509,7 +570,11 @@ public class DocumentModelService implements IDocumentModel {
                         if (row instanceof ArrayNode cells) {
                             ArrayNode next = cleaned.addArray();
                             for (JsonNode cell : cells) {
-                                next.addObject().set("runs", cleanRuns(cell.get("runs")));
+                                ObjectNode cleanCell = next.addObject();
+                                cleanCell.set("runs", cleanRuns(cell.get("runs")));
+                                if (cell.path("added").asBoolean(false)) {
+                                    cleanCell.put("added", true);
+                                }
                             }
                         } else {
                             cleaned.add(row);
@@ -527,7 +592,15 @@ public class DocumentModelService implements IDocumentModel {
                 copy(c, out, "width");
             }
             case DIAGRAM -> {
-                copy(c, out, "diagramType");
+                // Loại sơ đồ suy từ hình vẽ (yêu cầu 2026-10-22, chèn sơ đồ không chọn loại); chưa vẽ hoặc không nhận ra
+                // thì giữ loại gửi lên.
+                DiagramType detected = c.path("xml").isTextual() ? DiagramXml.detectType(c.path("xml").asText())
+                        : DiagramType.OTHER;
+                if (detected == DiagramType.OTHER) {
+                    copy(c, out, "diagramType");
+                } else {
+                    out.put("diagramType", detected.name());
+                }
                 copy(c, out, "xml");
                 copy(c, out, "alt");
                 JsonNode svg = c.get("svgPreview");

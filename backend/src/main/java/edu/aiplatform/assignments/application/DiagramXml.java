@@ -1,12 +1,15 @@
 package edu.aiplatform.assignments.application;
 
+import edu.aiplatform.assignments.contract.DiagramType;
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import org.w3c.dom.Document;
@@ -54,6 +57,71 @@ final class DiagramXml {
         } catch (IllegalArgumentException e) {
             return 0;
         }
+    }
+
+    /**
+     * Loại sơ đồ đoán từ kiểu hình Draw.io (yêu cầu 2026-10-22: chèn sơ đồ không chọn loại): lifeline là tuần tự;
+     * component, module, giao diện là thành phần; bảng, mũi tên ER hoặc thoi nối hình elip không mũi tên (Chen) là ER;
+     * actor là use case; nút đầu, cuối kèm thoi, thanh fork hoặc làn là hoạt động, chỉ nút đầu, cuối là trạng thái; lớp
+     * UML (swimlane xếp ô) là lớp; còn thoi là hoạt động. Không nhận ra hoặc XML lỗi: {@code OTHER}.
+     */
+    static DiagramType detectType(String xml) {
+        Set<String> shapes = new HashSet<>();
+        Set<String> tokens = new HashSet<>();
+        boolean arrows = false;
+        try {
+            for (Element model : graphModels(xml)) {
+                NodeList all = model.getElementsByTagNameNS("*", "*");
+                for (int i = 0; i < all.getLength(); i++) {
+                    Element element = (Element) all.item(i);
+                    boolean edge = "1".equals(element.getAttribute("edge"));
+                    if (!"mxCell".equals(name(element)) || (!edge && !"1".equals(element.getAttribute("vertex")))) {
+                        continue;
+                    }
+                    String style = element.getAttribute("style");
+                    arrows |= edge && !style.contains("endArrow=none");
+                    for (String raw : style.split(";")) {
+                        String token = raw.strip();
+                        if (token.startsWith("shape=")) {
+                            shapes.add(token.substring(6));
+                        } else if (!token.isEmpty() && !token.contains("=")) {
+                            shapes.add(token);
+                        } else if (!token.isEmpty()) {
+                            tokens.add(token);
+                        }
+                    }
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            return DiagramType.OTHER;
+        }
+        boolean stacked = shapes.contains("swimlane") && tokens.contains("childLayout=stackLayout");
+        if (shapes.contains("umlLifeline") || shapes.contains("umlDestroy")) {
+            return DiagramType.SEQUENCE;
+        }
+        if (shapes.contains("component") || shapes.contains("module") || shapes.contains("providedRequiredInterface")
+                || shapes.contains("requiredInterface") || shapes.contains("lollipop")) {
+            return DiagramType.COMPONENT;
+        }
+        if (shapes.contains("table") || shapes.contains("associativeEntity") || tokens.contains("childLayout=tableLayout")
+                || tokens.contains("edgeStyle=entityRelationEdgeStyle")
+                || tokens.stream().anyMatch(t -> t.startsWith("endArrow=ER") || t.startsWith("startArrow=ER"))) {
+            return DiagramType.ER;
+        }
+        if (shapes.contains("umlActor")) {
+            return DiagramType.USE_CASE;
+        }
+        if (shapes.contains("startState") || shapes.contains("endState")) {
+            return shapes.contains("rhombus") || shapes.contains("line") || (shapes.contains("swimlane") && !stacked)
+                    ? DiagramType.ACTIVITY : DiagramType.STATE;
+        }
+        if (stacked) {
+            return DiagramType.CLASS;
+        }
+        if (shapes.contains("rhombus")) {
+            return shapes.contains("ellipse") && !arrows ? DiagramType.ER : DiagramType.ACTIVITY;
+        }
+        return DiagramType.OTHER;
     }
 
     /** Dạng chữ ngắn gọn: mỗi trang liệt kê hình (nhãn, kiểu) và đường nối (nguồn → đích, nhãn). */

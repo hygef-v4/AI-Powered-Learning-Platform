@@ -41,7 +41,7 @@ class AssignmentCopyServiceTest {
         AssignmentViews.Detail copy = f.copies.cloneAssignment(f.teacher, open.id());
         assertThat(copy.status()).isEqualTo(AssignmentStatus.DRAFT);
         assertThat(copy.origin()).isEqualTo(AssignmentOrigin.CLONE);
-        assertThat(copy.title()).endsWith("(bản sao)");
+        assertThat(copy.title()).as("nhân bản giữ nguyên tên như bài thường").isEqualTo(open.title());
         assertThat(copy.opensAt()).isNull();
         assertThat(copy.maxAttempts()).isNull();
         assertThat(copy.skeleton().blocks()).hasSize(1);

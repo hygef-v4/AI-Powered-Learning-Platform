@@ -47,11 +47,17 @@ class AssignmentPublicationServiceTest {
     }
 
     @Test
-    void publishNeedsReviewedAndValidSchedule() {
-        Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+    void publishGoesStraightFromDraftCheckingReadinessAndSchedule() {
         Instant later = NOW.plus(Duration.ofDays(1));
         Instant end = NOW.plus(Duration.ofDays(7));
-        assertThat(code(() -> f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1))))
+        Assignment empty = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
+        assertThat(code(() -> f.publication.publish(f.teacher, empty.id(), publish(empty.version(), later, end, null, 1))))
+                .as("bài nháp chưa đủ: luật duyệt kiểm ngay khi phát hành").isEqualTo("ASSIGNMENT_NOT_READY");
+        Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
+        assertThat(f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1)).status())
+                .as("không cần qua Đã duyệt").isEqualTo(AssignmentStatus.SCHEDULED);
+        Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of(heading("H1", "Mục"))), true);
+        assertThat(code(() -> f.publication.publish(f.teacher, open.id(), publish(open.version(), later, end, null, 1))))
                 .isEqualTo("ASSIGNMENT_STATUS_INVALID");
         Assignment a = reviewed();
         assertThat(code(() -> f.publication.publish(f.teacher, a.id(), publish(a.version(), end, later, null, 1))))

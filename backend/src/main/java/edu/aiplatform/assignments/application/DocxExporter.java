@@ -54,8 +54,7 @@ final class DocxExporter {
         this.artifacts = artifacts;
     }
 
-    byte[] export(String title, String instructions, DocumentModel document, IDiagramLinker linker,
-                  List<RubricSection> rubrics) {
+    byte[] export(String title, String instructions, DocumentModel document, IDiagramLinker linker) {
         List<DocumentBlock> blocks = document == null || document.blocks() == null ? List.of() : document.blocks();
         try (XWPFDocument doc = new XWPFDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             doc.createStyles().setStyles(StylesDocument.Factory.parse(STYLES).getStyles());
@@ -81,7 +80,23 @@ final class DocxExporter {
                 }
                 write(doc, block, linker, listNumber);
             }
-            if (rubrics != null && !rubrics.isEmpty()) {
+            doc.write(out);
+            return out.toByteArray();
+        } catch (IOException | XmlException e) {
+            throw new IllegalStateException("Không dựng được DOCX", e);
+        }
+    }
+
+    /** Rubric xuất thành tệp riêng (yêu cầu 2026-10-22): tên bài, rồi mỗi phần một bảng "Mục chấm | Điểm". */
+    byte[] exportRubric(String title, List<RubricSection> rubrics) {
+        try (XWPFDocument doc = new XWPFDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            doc.createStyles().setStyles(StylesDocument.Factory.parse(STYLES).getStyles());
+            if (title != null && !title.isBlank()) {
+                styled(doc, "Title", title);
+            }
+            if (rubrics.isEmpty()) {
+                doc.createParagraph().createRun().setText("Chưa có mục chấm.");
+            } else {
                 rubric(doc, rubrics);
             }
             doc.write(out);
