@@ -71,6 +71,13 @@ public final class Actions {
     public static final String MATERIAL_CLASS_MANAGE = "MATERIAL_CLASS_MANAGE";
     public static final String MATERIAL_STAFF_READ = "MATERIAL_STAFF_READ";
     public static final String MATERIAL_STUDENT_READ = "MATERIAL_STUDENT_READ";
+    // U07 — soạn bài tập: bài của lớp (giảng viên chính, R3/R4), bài của môn (Chủ nhiệm môn, R2)
+    public static final String ASSIGNMENT_CLASS_MANAGE = "ASSIGNMENT_CLASS_MANAGE";
+    public static final String ASSIGNMENT_SUBJECT_MANAGE = "ASSIGNMENT_SUBJECT_MANAGE";
+
+    // U08 — làm bài (sinh viên đang học lớp, R5); giảng viên lớp xem bài nộp (R3/R4)
+    public static final String ASSIGNMENT_WORK = "ASSIGNMENT_WORK";
+    public static final String ASSIGNMENT_ATTEMPT_REVIEW = "ASSIGNMENT_ATTEMPT_REVIEW";
 
     private Actions() {
     }

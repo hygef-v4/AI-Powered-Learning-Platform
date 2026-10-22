@@ -71,7 +71,11 @@ final class AccessPolicy {
             Map.entry(Actions.MATERIAL_SUBJECT_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
             Map.entry(Actions.MATERIAL_CLASS_MANAGE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
             Map.entry(Actions.MATERIAL_STAFF_READ, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
-            Map.entry(Actions.MATERIAL_STUDENT_READ, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)));
+            Map.entry(Actions.MATERIAL_STUDENT_READ, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)),
+            Map.entry(Actions.ASSIGNMENT_CLASS_MANAGE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
+            Map.entry(Actions.ASSIGNMENT_SUBJECT_MANAGE, new Rule(EnumSet.of(SUBJECT_MANAGER), ScopeKind.SUBJECT)),
+            Map.entry(Actions.ASSIGNMENT_WORK, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)),
+            Map.entry(Actions.ASSIGNMENT_ATTEMPT_REVIEW, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)));
 
     private AccessPolicy() {
     }
