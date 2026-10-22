@@ -204,7 +204,7 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 | U03 Job and Settings | Design revision 73 UC ngày 2026-10-09; Tệp/worker/events dùng chung; lưu Settings và kiểm version/audit; U07/U13 khai báo các mục của mình. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | Code và unit test viết lại 2026-10-16 theo plan mới (backend 84 test, frontend 12 test), chờ người dùng review |
 | U04 Subject, Class, Enrollment & Learning Access | Design revision 73 UC ngày 2026-10-09; R2–R5 scope cho tài nguyên môn/lớp; Admin chỉ quản lý môn, danh sách lớp của môn chỉ đọc. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U05 Class & Enrollment | Current UC20-30 design and existing contracts; other rows retain historical baseline where noted. | Full completion authorized 2026-10-18; completion execution plan checked. | Code implemented: service/API/contracts and frontend wiring; backend 304 (U05: 210) / frontend 70 tests, lint/typecheck/build pass. Awaiting real cross-unit/schema/session integration; see construction/u05-class-enrollment/code/code-summary.md. |
-| U06 Rubric & Subject Question Bank | Design revision 73 UC ngày 2026-10-09; Rubric thuộc bài, tự tạo và khóa khi phát hành; câu ngân hàng SUBJECT và câu riêng ASSIGNMENT. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
+| U06 AI Connections & MCP (unit-of-work 2026-10-15; dòng cũ "Rubric & Subject Question Bank" là baseline lịch sử) | Functional, NFR, infrastructure design revision 2026-10-15/17 (UC 31–33, phần UC 14–15). | Plan chi tiết hóa và được duyệt 2026-10-21 ("duyet"); bước 1–15 checked, người dùng duyệt code 2026-10-22; chờ gộp vào `staging` | Code và unit test viết 2026-10-21/22 trên nhánh `ai-connections` (15 commit, chưa push): backend 90 test U06 + ArchitectureTest pass; frontend 305 test (U06: 13), lint/typecheck/build pass. Full verify 915/33 skip/4 lỗi do migration 1500 của U09. Xem `construction/u06-ai-connections/code/code-summary.md` |
 | U07 Payment & AI Credit | Design revision 73 UC ngày 2026-10-09; Ví của ba role; snapshot payment, verified webhook và grant định kỳ qua Settings. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U08 Assessment Core, Publication & Copy | Design revision 73 UC ngày 2026-10-09; Vòng đời chung UC 35/42–45, bài của môn, copy/version; U09 cấu hình theo dạng. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
 | U09 Question Type Authoring | Design revision 73 UC ngày 2026-10-09; Cấu hình quiz và bốn dạng assignment, document model; U08 vòng đời, U06 rubric. | Approved 2026-10-05 (historical baseline); revision tasks unchecked | - |
@@ -491,3 +491,13 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Code Generation Part 1: plan giai đoạn 6 được duyệt (K1–K7), nhánh `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream.
 - [x] Code Generation Part 2: bước 6.0–6.7 xong trên `quiz-activity` (6.0 commit `e8145b4`, code chưa commit); backend 1112 test, frontend 411 test đạt.
 - [x] Bước 6.8: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-activity`, chưa push.
+
+## U06 AI Connections & MCP — 2026-10-22
+
+- [x] Code Generation Part 1: plan chi tiết hóa, người dùng duyệt 2026-10-21.
+- [x] Code Generation Part 2: bước 1–13 và sửa sau review trên nhánh `ai-connections` (`43e983a`…`7a624b6`, chưa push).
+- [x] Bước 14: code-summary `construction/u06-ai-connections/code/code-summary.md`.
+- [x] Bước 15: người dùng duyệt code ngày 2026-10-22 ("Continue"); nhánh đã push lên `origin`, chờ Max2Min gộp vào `staging`.
+- [x] Build & Test (phần của unit): `construction/build-and-test/u06-verification.md`; thêm giới hạn 2 lời gọi đồng thời mỗi provider (NFR-U06-03, `eff4083`); integration test, đo hiệu năng, provider và agent thật còn mở.
+- Jira 2026-10-22: KAN-29, KAN-34, KAN-35, KAN-37 chuyển In Review; KAN-19 Done.
+- Ghi chú: `mvn -B verify` toàn backend có 4 lỗi integration test của unit khác do migration `V20260925_1500__create_grading_tables.sql` (U09, đã có trên `staging`) cần bảng `assignments` chưa tồn tại.

@@ -5218,4 +5218,126 @@ check lại lỗi
 
 **Context**: Delivery — PR #8 CI fix.
 
+## Construction - Jira reassignment
+**Timestamp**: 2026-10-20T18:00:00Z
+**User Input**: "xem lại jira cho tôi, đã có thay đổi về công việc"
+**AI Response**: Jira (cập nhật 2026-10-20): U09 (KAN-31, KAN-84, KAN-59, KAN-81, KAN-58) chuyển sang Khuất Quang Hưng, đã code trên nhánh `grading-gradebook` và gộp vào `staging`; U06 (KAN-29, KAN-34 UC31, KAN-35 UC32, KAN-37 UC33) giao cho Người 2; U12 giữ nguyên; KAN-49 Done. Hỏi người dùng thứ tự làm và cách xử lý nhánh `grading` (U09 trùng).
+**Context**: Construction, đổi phân công
+
+---
+
+## Construction - Reassignment decisions
+**Timestamp**: 2026-10-20T18:10:00Z
+**User Input**: "Làm U06 hay U12 trước?"="U06 trước, U12 sau (Recommended)", "Xử lý nhánh `grading` (U09 mình làm, trùng với Hưng) thế nào?"="Giữ trên máy, không push (Recommended)"
+**AI Response**: Giữ nhánh `grading` local, không gộp. Dựng lại nhánh `group-assignment` từ `staging` với 3 commit U12 (plan, migration và action `GROUP_MANAGE`/`GROUP_WORK`, domain); tạm dừng U12. Tạo nhánh `ai-connections` từ `staging`, chi tiết hóa plan U06 (Part 1): 12 khác biệt (người code, `UsageMeasurement.ESTIMATED`, Flyway out-of-order, action `AI_PERSONAL`/`AI_SHARED_USE`/`AI_ADMIN`, JdbcClient, MCP JSON-RPC tự cài thay SDK, json-schema-validator, Bucket4j Redis, adapter `RestClient`, `AiSourcePicker` ở `shared/ai`, hướng dẫn agent chưa kiểm chứng, biến khóa mã hóa), 15 bước.
+**Context**: Construction, U06 Code Generation Part 1
+
+---
+
+## Code Generation - U06 plan approval prompt
+**Timestamp**: 2026-10-20T18:20:00Z
+**AI Response**: Trình bày plan U06 và hỏi người dùng duyệt trước khi code.
+**Context**: Construction, U06 Code Generation Part 1
+
+---
+
+## Code Generation - U06 plan approval
+**Timestamp**: 2026-10-21T01:00:00Z
+**User Input**: "duyet"
+**AI Response**: Plan U06 được duyệt, gồm 4 điểm khác thiết kế (MCP tự cài JSON-RPC, Flyway out-of-order, `UsageMeasurement.ESTIMATED`, hướng dẫn agent "chưa kiểm chứng"). Bắt đầu Part 2 trên nhánh `ai-connections`.
+**Context**: Construction, U06 Code Generation Part 1 → Part 2
+
+---
+
+## Code Generation - U06 steps 8–11 done, browser check retry
+**Timestamp**: 2026-10-21T18:10:00Z
+**User Input**: "Try again"
+**AI Response**: Khởi động lại preview (API giả + frontend dev), kiểm tra màn Kết nối AI, tạo agent và popup token, màn Lịch sử sử dụng AI; sửa chữ xuống dòng trong bảng API cá nhân. Đã commit bước 8 (41fd952), 9 (76ee288), 10 (3ed1b80, kèm sửa constructor `HttpProviderGateway` phát hiện khi chạy thử backend), 11 (a1fcfd7); tick bước 1–11 trong plan.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 continue step 12
+**Timestamp**: 2026-10-21T18:18:00Z
+**User Input**: "tiếp tục bước 12 đi"
+**AI Response**: Làm Bước 12: panel Admin `AiConnectionsPanel`, `TeacherQuotaPanel` (`InstitutionalKeysSection`, `QuotaPolicySection`, `TeacherQuotaTable`, `SharedUsageTab`) đăng ký vào `settingsSectionRegistry`.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 step 12 done
+**Timestamp**: 2026-10-21T18:40:00Z
+**AI Response**: Bước 12 xong (df97b06): `AiConnectionsPanel`, `TeacherQuotaPanel` đăng ký vào `settingsSectionRegistry`; khóa của trường, hạn mức chung, mức riêng giảng viên, tab Usage. Đổi tiêu đề thẻ backend thành "Hạn mức AI giảng viên". Frontend 305/305 test pass.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 remaining steps
+**Timestamp**: 2026-10-21T18:45:00Z
+**User Input**: "lam toan bo buoc con lai cho toi di"
+**AI Response**: Làm Bước 13 (hạ tầng, hướng dẫn), 14 (tài liệu), 15 (review và kiểm tra toàn bộ).
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 steps 13–15
+**Timestamp**: 2026-10-21T19:10:00Z
+**AI Response**: Bước 13 (7706f9c): biến `U06_AI_KEY_ENCRYPTION_KEY_V2`, rewrite `/mcp` cho Next dev, runbook `ai-key-encryption.md`, hướng dẫn `ai-api-keys.md`, `mcp-clients.md`. Review bước 15 sửa giới hạn độ dài tên tool MCP và ô tìm giảng viên, log lỗi tool chỉ ghi loại lỗi (7a624b6). Bước 14: code-summary, aidlc-state, plan. Kiểm tra: backend U06 90 test và ArchitectureTest pass; `mvn -B verify` 915 test, 33 bỏ qua, 4 lỗi do migration 1500 của U09 (cần bảng `assignments`); frontend 305 test, lint, typecheck, build pass.
+**Context**: Construction, U06 Code Generation Part 2
+
+---
+
+## Code Generation - U06 approval prompt
+**Timestamp**: 2026-10-21T19:15:00Z
+**AI Response**: Trình bày kết quả U06 và hỏi người dùng duyệt code (Request Changes hoặc Continue to Next Stage).
+**Context**: Construction, U06 Code Generation Part 2, bước 15
+
+---
+
+## Status question - remaining Jira work
+**Timestamp**: 2026-10-21T19:30:00Z
+**User Input**: "h con gi can lam de hoan thanh cac task cua toi trong jira"
+**AI Response**: Không đọc được Jira (connector Atlassian chưa cấp quyền site, phiên trình duyệt hết hạn - 401). Trả lời theo lần đọc Jira 2026-10-21 và trạng thái nhánh: U06 code xong chờ duyệt và gộp; U12 còn bước 3–14 (bước 1–2 đã có commit nhưng chưa tick plan); việc phối hợp (migration 1500 của U09, `AiSourcePicker` cho U09, KAN-14).
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Status question - Jira re-read
+**Timestamp**: 2026-10-21T19:40:00Z
+**User Input**: "toi dang nhap jira roi"
+**AI Response**: Đọc lại Jira (Vo Minh Tai): KAN-5 Done; KAN-14 In Progress (Revise User Interface Designs); KAN-19 epic U02 In Progress dù KAN-49 Done; KAN-29 U06 (KAN-34, 35, 37 To Do, Iteration 2); KAN-28 U12 (KAN-62, 63, 64, 66, 151 To Do, Iteration 3). Không có việc mới so với 2026-10-21.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Code Generation - U06 approval
+**Timestamp**: 2026-10-21T19:50:00Z
+**User Input**: "Continue, làm tiếp U12 từ bước 3 đi"
+**AI Response**: Người dùng duyệt code U06 (Continue to Next Stage). Đánh dấu Code Generation U06 xong (chờ Max2Min gộp `ai-connections` vào `staging`). Chuyển sang U12 trên nhánh `group-assignment`, tiếp từ bước 3.
+**Context**: Construction, U06 Code Generation bước 15 → U12 Code Generation Part 2
+
+---
+
+## Jira update and Build & Test U06
+**Timestamp**: 2026-10-21T21:45:00Z
+**User Input**: "lamf 2 3 ddi"
+**AI Response**: Jira: KAN-34, 35, 37, 29 (U06) và KAN-151, 62, 63, 64, 66, 28 (U12) chuyển In Review theo cách nhóm đang dùng; KAN-19 chuyển Done. Build & Test U06: rà NFR thấy thiếu giới hạn 2 lời gọi đồng thời mỗi provider của API chung (NFR-U06-03), thêm vào `AiTaskJobHandler` kèm test (eff4083); viết `build-and-test/u06-verification.md`. Phần U12 ghi trên nhánh `group-assignment`.
+**Context**: Construction, Build & Test U06
+
+---
+
+## Status question - remaining work
+**Timestamp**: 2026-10-21T22:00:00Z
+**User Input**: "gio con gi nua"
+**AI Response**: Kiểm tra `staging`: đã tiến 39 commit (nhóm gộp qua PR, ví dụ #8), hai nhánh `ai-connections`, `group-assignment` chưa được gộp và nay xung đột với `staging` (audit, aidlc-state, Actions, AccessPolicy; U06 thêm `backend/pom.xml`). Đề xuất gộp `staging` vào từng nhánh, giải xung đột, chạy test, push, mở PR.
+**Context**: Construction, trạng thái công việc
+
+---
+
+## Merge to staging request
+**Timestamp**: 2026-10-21T22:10:00Z
+**User Input**: "gio toi muon gop nhanh cua minh vao stagging co duoc khong"
+**AI Response**: Được, theo quy trình nhóm (PR vào `staging`). Chuẩn bị: gộp `origin/staging` vào `ai-connections` rồi `group-assignment`, giải xung đột (giữ cả hai bên), chạy test, push; sau đó hỏi người dùng cách gộp (PR hay gộp thẳng).
+**Context**: Construction, gộp nhánh
+
 ---

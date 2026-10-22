@@ -121,6 +121,16 @@ class AccountLookupAndPolicyTest {
         assertThat(practice.scope()).isEqualTo(ScopeKind.CLASS);
     }
 
+    /** U06: Admin không có AI cá nhân và không dùng API chung; chỉ Admin cấu hình API chung và quota. */
+    @Test
+    void aiActionsSeparateAdminFromAcademicRoles() {
+        assertThat(AccessPolicy.ruleFor(Actions.AI_PERSONAL).orElseThrow().roles())
+                .containsExactlyInAnyOrder(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
+        assertThat(AccessPolicy.ruleFor(Actions.AI_SHARED_USE).orElseThrow().roles())
+                .containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
+        assertThat(AccessPolicy.ruleFor(Actions.AI_ADMIN).orElseThrow().roles()).containsExactly(Role.ADMIN);
+    }
+
     private static String readName(Field field) {
         try {
             return (String) field.get(null);
