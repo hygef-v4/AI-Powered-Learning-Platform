@@ -6,6 +6,10 @@ package edu.aiplatform.identity.contract;
  */
 public final class Actions {
 
+    public static final String ANNOUNCEMENT_READ = "ANNOUNCEMENT_READ";
+    public static final String ANNOUNCEMENT_MANAGE = "ANNOUNCEMENT_MANAGE";
+    public static final String NOTIFICATION_SELF = "NOTIFICATION_SELF";
+
     // U01 — hồ sơ của chính mình (R1)
     public static final String PROFILE_VIEW = "PROFILE_VIEW";
     public static final String PROFILE_UPDATE = "PROFILE_UPDATE";
@@ -62,6 +66,18 @@ public final class Actions {
 
     // U11 — làm Quiz Practice: chỉ sinh viên đang học lớp (R5, BR-U11-01)
     public static final String QUIZ_PRACTICE = "QUIZ_PRACTICE";
+
+    public static final String MATERIAL_SUBJECT_MANAGE = "MATERIAL_SUBJECT_MANAGE";
+    public static final String MATERIAL_CLASS_MANAGE = "MATERIAL_CLASS_MANAGE";
+    public static final String MATERIAL_STAFF_READ = "MATERIAL_STAFF_READ";
+    public static final String MATERIAL_STUDENT_READ = "MATERIAL_STUDENT_READ";
+    // U07 — soạn bài tập: bài của lớp (giảng viên chính, R3/R4), bài của môn (Chủ nhiệm môn, R2)
+    public static final String ASSIGNMENT_CLASS_MANAGE = "ASSIGNMENT_CLASS_MANAGE";
+    public static final String ASSIGNMENT_SUBJECT_MANAGE = "ASSIGNMENT_SUBJECT_MANAGE";
+
+    // U08 — làm bài (sinh viên đang học lớp, R5); giảng viên lớp xem bài nộp (R3/R4)
+    public static final String ASSIGNMENT_WORK = "ASSIGNMENT_WORK";
+    public static final String ASSIGNMENT_ATTEMPT_REVIEW = "ASSIGNMENT_ATTEMPT_REVIEW";
 
     // U06 — AI: kết nối cá nhân, agent MCP, usage của chính mình (BR-U06-01, 30, 40); dùng API chung chỉ giảng viên
     // (BR-U06-11); API chung, quota, tổng hợp usage chỉ Admin (BR-U06-51)

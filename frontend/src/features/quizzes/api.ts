@@ -1,7 +1,8 @@
 import { apiFetch } from "@/shared/api/client";
 import type {
-  Difficulty, ImportResult, ManagedSubject, QuestionContent, QuestionDetail, QuestionPage, QuestionQuery, QuizDetail,
-  QuizDetailsInput, QuizItemInput, QuizPage, QuizRow, QuizStatus, RandomPreview,
+  AiDraft, AiDraftInput, BankAcceptResult, Difficulty, ImportResult, ManagedSubject, QuestionContent, QuestionDetail,
+  QuestionPage, QuestionQuery, QuizDetail, QuizDetailsInput, QuizItemInput, QuizPage, QuizRow, QuizStatus, RandomPreview,
+  SelectableMaterial,
 } from "./types";
 
 const enc = encodeURIComponent;
@@ -181,4 +182,66 @@ export function createQuizVersion(id: string): Promise<QuizDetail> {
 
 export function deleteQuiz(id: string, version: number): Promise<void> {
   return apiFetch<void>(`${quizPath(id)}?version=${version}`, { method: "DELETE" });
+}
+
+// --- Đề xuất AI, tài liệu tham khảo (F4, F8, H8)
+
+const bankDraftPath = (subjectId: string) => `/api/v1/subjects/${enc(subjectId)}/question-ai-drafts`;
+const quizDraftPath = (quizId: string) => `${quizPath(quizId)}/ai-drafts`;
+
+/** `requestRef` mới mỗi lần bấm gửi để server bỏ yêu cầu gửi trùng. */
+function draftBody(input: AiDraftInput) {
+  const { instructions, count, type, difficulty, materialIds, choice } = input;
+  return {
+    instructions, count, type, difficulty, materialIds, source: choice.source,
+    provider: choice.source === "PERSONAL" ? choice.provider : null, requestRef: crypto.randomUUID(),
+  };
+}
+
+export function getQuizMaterials(quizId: string, signal?: AbortSignal): Promise<SelectableMaterial[]> {
+  return apiFetch<SelectableMaterial[]>(`${quizPath(quizId)}/reference-materials`, { signal });
+}
+
+export function getSubjectMaterials(subjectId: string, signal?: AbortSignal): Promise<SelectableMaterial[]> {
+  return apiFetch<SelectableMaterial[]>(`/api/v1/subjects/${enc(subjectId)}/reference-materials`, { signal });
+}
+
+export function getBankDrafts(subjectId: string, signal?: AbortSignal): Promise<AiDraft[]> {
+  return apiFetch<AiDraft[]>(bankDraftPath(subjectId), { signal });
+}
+
+export function requestBankDraft(subjectId: string, input: AiDraftInput): Promise<AiDraft> {
+  return post<AiDraft>(bankDraftPath(subjectId), draftBody(input));
+}
+
+export function getBankDraft(subjectId: string, draftId: string, signal?: AbortSignal): Promise<AiDraft> {
+  return apiFetch<AiDraft>(`${bankDraftPath(subjectId)}/${enc(draftId)}`, { signal });
+}
+
+export function acceptBankDraft(subjectId: string, draftId: string, questions: QuestionContent[]): Promise<BankAcceptResult> {
+  return post<BankAcceptResult>(`${bankDraftPath(subjectId)}/${enc(draftId)}:accept`, { questions: questions.map(contentBody) });
+}
+
+export function discardBankDraft(subjectId: string, draftId: string): Promise<AiDraft> {
+  return post<AiDraft>(`${bankDraftPath(subjectId)}/${enc(draftId)}:discard`);
+}
+
+export function getQuizDrafts(quizId: string, signal?: AbortSignal): Promise<AiDraft[]> {
+  return apiFetch<AiDraft[]>(quizDraftPath(quizId), { signal });
+}
+
+export function requestQuizDraft(quizId: string, input: AiDraftInput, version: number): Promise<AiDraft> {
+  return post<AiDraft>(quizDraftPath(quizId), { ...draftBody(input), version });
+}
+
+export function getQuizDraft(quizId: string, draftId: string, signal?: AbortSignal): Promise<AiDraft> {
+  return apiFetch<AiDraft>(`${quizDraftPath(quizId)}/${enc(draftId)}`, { signal });
+}
+
+export function acceptQuizDraft(quizId: string, draftId: string, questions: QuestionContent[], version: number): Promise<QuizDetail> {
+  return post<QuizDetail>(`${quizDraftPath(quizId)}/${enc(draftId)}:accept`, { questions: questions.map(contentBody), version });
+}
+
+export function discardQuizDraft(quizId: string, draftId: string): Promise<AiDraft> {
+  return post<AiDraft>(`${quizDraftPath(quizId)}/${enc(draftId)}:discard`);
 }

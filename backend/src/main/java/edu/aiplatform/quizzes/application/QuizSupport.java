@@ -39,14 +39,20 @@ class QuizSupport {
     private final IClassAccess classes;
     private final QuizAccess access;
     private final ActiveSubjects activeSubjects;
+    private final QuizActivityPolicy activity;
 
     QuizSupport(IQuizRepository quizzes, IQuestionRepository questions, IClassAccess classes, QuizAccess access,
-                ActiveSubjects activeSubjects) {
+                ActiveSubjects activeSubjects, QuizActivityPolicy activity) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.classes = classes;
         this.access = access;
         this.activeSubjects = activeSubjects;
+        this.activity = activity;
+    }
+
+    boolean activityRetentionConfigured() {
+        return activity.retentionConfigured();
     }
 
     Quiz load(UUID id) {
@@ -60,6 +66,13 @@ class QuizSupport {
         } else {
             access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, quiz.classId(), OBJECT, quiz.id(), NOT_FOUND);
         }
+    }
+
+    /** Hỏi quyền sửa Quiz mà không ghi từ chối (dùng khi nhận kết quả AI, H6). */
+    boolean canManage(Actor actor, Quiz quiz) {
+        return quiz.scope() == QuizScope.SUBJECT
+                ? access.allows(actor, Actions.QUIZ_SUBJECT_MANAGE, ResourceRef.subject(quiz.subjectId()))
+                : access.allows(actor, Actions.QUIZ_CLASS_MANAGE, ResourceRef.courseClass(quiz.classId()));
     }
 
     Quiz loadManaged(Actor actor, UUID id) {
@@ -151,6 +164,6 @@ class QuizSupport {
                 })
                 .toList();
         BigDecimal max = items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new QuizDetail(QuizInfo.of(quiz), views, max, canManage);
+        return new QuizDetail(QuizInfo.of(quiz), views, max, canManage, canManage && activity.retentionConfigured());
     }
 }

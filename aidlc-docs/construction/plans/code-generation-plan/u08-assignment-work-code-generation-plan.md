@@ -8,7 +8,7 @@ Thiết kế: [business-logic-model](../../u08-assignment-work/functional-design
 
 ## Trạng thái
 
-Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
+Đã code ngày 2026-10-20 trên nhánh `assignment` (U07 và U08 cùng lúc), xem [code summary](../../u08-assignment-work/code/code-summary.md). Unit test chạy được, đã chạy thử trên Docker local; bước Review chờ người dùng duyệt.
 
 ## Code hiện có
 
@@ -21,18 +21,18 @@ Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code t�
 
 ## Checklist
 
-- [ ] **Bước 1 — Migration:** `db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql` theo infrastructure-design.
-- [ ] **Bước 2 — Domain:** `AssignmentAttempt`, `PracticeFeedback`, `ActivityEvent`, `ActivitySummary` và enum; repository chỉ dùng trong package.
-- [ ] **Bước 3 — Xem bài:** `StudentAssignmentQueryService` (F1, F2); contract `IGroupWorkStatus` với adapter rỗng.
-- [ ] **Bước 4 — Làm và nộp:** `AttemptService` (F3, F4, F6, P1, P2), `ISubmissionListener` với adapter rỗng, `AutoSubmitScanner`, `AssignmentRetiredHandler` (F7).
-- [ ] **Bước 5 — DOCX:** nhập, xuất qua `IDocx` của U07 (F5).
-- [ ] **Bước 6 — Lịch sử nộp:** `SubmissionHistoryService` (F8).
-- [ ] **Bước 7 — Phản hồi Practice:** `PracticeFeedbackService`, `PracticeFeedbackResultHandler` (cài `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`), `AssignmentWorkMcpTools` (cài `IMcpToolProvider`), giới hạn tần suất (F9, F10, P3).
-- [ ] **Bước 8 — Dữ liệu hoạt động:** `ActivityService` (cài `IActivityWrite`, `IActivityQuery`), `ActivitySummaryCalculator`, `ActivityRetentionScanner`, `ActivitySettingDefinitions` (F11, F12, P4, P5).
-- [ ] **Bước 9 — Interface cho unit khác:** `SubmissionQueryService` (cài `ISubmissionQuery`) gồm `listStudentsWithoutSubmission` (F13).
-- [ ] **Bước 10 — API:** controller theo domain-entities mục 5; `contracts/openapi/assignment-work.yaml`; ngoài phạm vi trả `404`.
-- [ ] **Bước 11 — Frontend:** `StudentAssignmentsPage`, `ClassAssignmentsCard` (đăng ký `StudentClassSection`), mục Bài tập (đăng ký `NavEntry`), `ClassCardAssignments` (`ClassCardSection`), `StudentAssignmentDetailPage`, `AssignmentWorkspacePage`, `SubmissionHistoryPage`, `PracticeFeedbackPanel`; slot `StudentAssignmentResult`, `SubmissionResultSection`, `GroupWorkEntry`, `AssignmentMaterialSection`; `useActivityTracker`, `ActivityTimeline`.
-- [ ] **Bước 12 — Unit test (người code viết):** điều kiện bắt đầu (ghi danh, lớp, hạn, hết lượt, bài nhóm); một lượt đang làm; lưu lệch `contentVersion`; lưu sau hạn và trong 30 giây ân hạn; nộp thiếu sơ đồ bắt buộc; nộp hai lần trả cùng biên nhận; nộp trễ; tự nộp khi hết hạn và khi ngưng giao; lượt được chấm của bài `GRADED`; phản hồi bị từ chối với bài `GRADED`, lượt đang làm, quá giới hạn; phản hồi hash lệch không lưu; sự kiện trùng, lệch thứ tự, thiếu heartbeat thành khoảng "không rõ"; chính sách tắt không thu; dọn theo thời hạn; component frontend. Integration test do tester viết.
+- [x] **Bước 1 — Migration:** `db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql` theo infrastructure-design.
+- [x] **Bước 2 — Domain:** `AssignmentAttempt`, `PracticeFeedback`, `ActivityEvent`, `ActivitySummary` và enum; repository chỉ dùng trong package.
+- [x] **Bước 3 — Xem bài:** `StudentAssignmentQueryService` (F1, F2); contract `IGroupWorkStatus` với adapter rỗng.
+- [x] **Bước 4 — Làm và nộp:** `AttemptService` (F3, F4, F6, P1, P2), `ISubmissionListener` với adapter rỗng, `AutoSubmitScanner`, `AssignmentRetiredHandler` (F7).
+- [x] **Bước 5 — DOCX:** nhập, xuất qua `IDocx` của U07 (F5).
+- [x] **Bước 6 — Lịch sử nộp:** `SubmissionHistoryService` (F8).
+- [x] **Bước 7 — Phản hồi Practice:** `PracticeFeedbackService`, `PracticeFeedbackResultHandler` (cài `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`), `AssignmentWorkMcpTools` (cài `IMcpToolProvider`), giới hạn tần suất (F9, F10, P3).
+- [x] **Bước 8 — Dữ liệu hoạt động:** `ActivityService` (cài `IActivityWrite`, `IActivityQuery`), `ActivitySummaryCalculator`, `ActivityRetentionScanner`, `ActivitySettingDefinitions` (F11, F12, P4, P5).
+- [x] **Bước 9 — Interface cho unit khác:** `SubmissionQueryService` (cài `ISubmissionQuery`) gồm `listStudentsWithoutSubmission` (F13).
+- [x] **Bước 10 — API:** controller theo domain-entities mục 5; `contracts/openapi/assignment-work.yaml` chưa làm (giống U01–U05); ngoài phạm vi trả `404`.
+- [x] **Bước 11 — Frontend:** `StudentAssignmentsPage`, `ClassAssignmentsCard` (đăng ký `StudentClassSection`), mục Bài tập (đăng ký `NavEntry`), `ClassCardAssignments` (`ClassCardSection`), `StudentAssignmentDetailPage`, `AssignmentWorkspacePage`, `SubmissionHistoryPage`, `PracticeFeedbackPanel`; slot `StudentAssignmentResult`, `SubmissionResultSection`, `GroupWorkEntry`, `AssignmentMaterialSection`; `useActivityTracker`, `ActivityTimeline`.
+- [x] **Bước 12 — Unit test (người code viết):** điều kiện bắt đầu (ghi danh, lớp, hạn, hết lượt, bài nhóm); một lượt đang làm; lưu lệch `contentVersion`; lưu sau hạn và trong 30 giây ân hạn; nộp thiếu sơ đồ bắt buộc; nộp hai lần trả cùng biên nhận; nộp trễ; tự nộp khi hết hạn và khi ngưng giao; lượt được chấm của bài `GRADED`; phản hồi bị từ chối với bài `GRADED`, lượt đang làm, quá giới hạn; phản hồi hash lệch không lưu; sự kiện trùng, lệch thứ tự, thiếu heartbeat thành khoảng "không rõ"; chính sách tắt không thu; dọn theo thời hạn; component frontend. Integration test do tester viết.
 - [ ] **Bước 13 — Review:** đối chiếu UC 37–41, story, BR-U08 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)

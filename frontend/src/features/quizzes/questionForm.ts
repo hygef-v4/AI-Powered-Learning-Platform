@@ -1,7 +1,7 @@
 // Trạng thái form soạn câu trắc nghiệm và kiểm tra ngay trên form theo BR-U10-02, 03.
 // Server vẫn kiểm lại; form chỉ giúp người soạn thấy lỗi sớm.
 
-import type { Difficulty, QuestionContent, QuestionOption, QuestionType, QuestionView } from "./types";
+import type { Difficulty, QuestionContent, QuestionOption, QuestionType } from "./types";
 
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 6;
@@ -34,7 +34,7 @@ export function emptyForm(): QuestionForm {
   };
 }
 
-export function formOf(question: QuestionView): QuestionForm {
+export function formOf(question: QuestionContent): QuestionForm {
   return {
     type: question.type,
     stem: question.stem,

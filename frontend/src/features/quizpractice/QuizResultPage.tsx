@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, Button, PageHeader, Section } from "@/shared/ui";
 import { getResult, startAttempt } from "./api";
-import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints } from "./labels";
+import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints, submitModeText } from "./labels";
 import { ResultQuestions } from "./ResultQuestions";
 import type { ResultView } from "./types";
 
@@ -47,7 +47,8 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
     <>
       <PageHeader backHref={detailHref} breadcrumb={[{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: result.title, href: detailHref }]}
         title={`Kết quả · ${result.title}`}
-        subtitle={`Lần ${result.attemptNo} · nộp lúc ${formatDateTime(result.submittedAt)} · làm trong ${formatDuration(result.startedAt, result.submittedAt)}`}
+        subtitle={[`Lần ${result.attemptNo}`, `nộp lúc ${formatDateTime(result.submittedAt)}`,
+          `làm trong ${formatDuration(result.startedAt, result.submittedAt)}`, submitModeText(result.submitMode)].filter(Boolean).join(" · ")}
         actions={<div className="flex gap-2">
           <Button onClick={() => router.push("/quiz-practice")}>Về danh sách</Button>
           {result.canRetry && <Button variant="primary" disabled={busy} onClick={() => void retry()} data-testid="result-retry">Làm lại</Button>}

@@ -1,17 +1,23 @@
 package edu.aiplatform.quizzes.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.quizzes.application.AiDraftViews.AiDraftView;
 import edu.aiplatform.quizzes.application.QuestionViews.QuestionPage;
+import edu.aiplatform.quizzes.application.QuizAiDraftService;
 import edu.aiplatform.quizzes.application.QuizAuthoringService;
 import edu.aiplatform.quizzes.application.QuizCopyService;
 import edu.aiplatform.quizzes.application.QuizPublicationService;
+import edu.aiplatform.quizzes.application.QuizReferenceMaterials;
 import edu.aiplatform.quizzes.application.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.application.QuizViews.RandomPreview;
 import edu.aiplatform.quizzes.domain.Difficulty;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
@@ -34,11 +40,55 @@ public class QuizController {
     private final QuizAuthoringService authoring;
     private final QuizPublicationService publication;
     private final QuizCopyService copies;
+    private final QuizAiDraftService drafts;
+    private final QuizReferenceMaterials materials;
 
-    public QuizController(QuizAuthoringService authoring, QuizPublicationService publication, QuizCopyService copies) {
+    public QuizController(QuizAuthoringService authoring, QuizPublicationService publication, QuizCopyService copies,
+                          QuizAiDraftService drafts, QuizReferenceMaterials materials) {
         this.authoring = authoring;
         this.publication = publication;
         this.copies = copies;
+        this.drafts = drafts;
+        this.materials = materials;
+    }
+
+    /** Tài liệu gắn được vào Quiz hoặc đưa vào popup AI (H8). */
+    @GetMapping("/reference-materials")
+    public List<SelectableMaterial> referenceMaterials(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return materials.forQuiz(actor, id);
+    }
+
+    @GetMapping("/ai-drafts")
+    public List<AiDraftView> aiDrafts(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return drafts.listForQuiz(actor, id);
+    }
+
+    /** AI soạn câu cho Quiz (F8); trả đề xuất {@code PENDING} hoặc {@code FAILED} ngay khi U06 từ chối. */
+    @PostMapping(value = "/ai-drafts", consumes = "application/json")
+    public ResponseEntity<AiDraftView> requestAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                                      @RequestBody JsonNode body) {
+        AiDraftRequests.QuizDraft request = AiDraftRequests.quiz(body);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(drafts.requestForQuiz(actor, id, request.request(), request.version()));
+    }
+
+    @GetMapping("/ai-drafts/{draftId}")
+    public AiDraftView aiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                               @PathVariable UUID draftId) {
+        return drafts.getForQuiz(actor, id, draftId);
+    }
+
+    @PostMapping(value = "/ai-drafts/{draftId}:accept", consumes = "application/json")
+    public QuizDetail acceptAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                    @PathVariable UUID draftId, @RequestBody JsonNode body) {
+        AiDraftRequests.Accept accept = AiDraftRequests.accept(body, true);
+        return drafts.acceptForQuiz(actor, id, draftId, accept.questions(), accept.version());
+    }
+
+    @PostMapping("/ai-drafts/{draftId}:discard")
+    public AiDraftView discardAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                      @PathVariable UUID draftId) {
+        return drafts.discardForQuiz(actor, id, draftId);
     }
 
     /** {@code classId}: giảng viên mở Quiz của môn từ tab Đánh giá của lớp mình dạy (chỉ xem). */

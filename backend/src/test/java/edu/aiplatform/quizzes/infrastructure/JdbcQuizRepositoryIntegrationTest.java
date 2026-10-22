@@ -10,11 +10,15 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.domain.Difficulty;
+import edu.aiplatform.quizzes.domain.DraftQuestion;
+import edu.aiplatform.quizzes.domain.DraftStatus;
+import edu.aiplatform.quizzes.domain.DraftTarget;
 import edu.aiplatform.quizzes.domain.IQuestionRepository.PickQuery;
 import edu.aiplatform.quizzes.domain.Question;
 import edu.aiplatform.quizzes.domain.QuestionContent;
 import edu.aiplatform.quizzes.domain.QuestionOption;
 import edu.aiplatform.quizzes.domain.Quiz;
+import edu.aiplatform.quizzes.domain.QuizAiDraft;
 import edu.aiplatform.quizzes.domain.QuizItem;
 import edu.aiplatform.quizzes.domain.QuizOrigin;
 import java.io.IOException;
@@ -25,6 +29,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
@@ -59,6 +64,7 @@ class JdbcQuizRepositoryIntegrationTest {
     private static JdbcClient admin;
     private static JdbcQuizRepository quizzes;
     private static JdbcQuestionRepository questions;
+    private static JdbcQuizAiDraftRepository drafts;
 
     private UUID subject;
     private UUID author;
@@ -73,6 +79,7 @@ class JdbcQuizRepositoryIntegrationTest {
         JdbcClient app = JdbcClient.create(appDataSource);
         quizzes = new JdbcQuizRepository(app, new ObjectMapper());
         questions = new JdbcQuestionRepository(app, new ObjectMapper());
+        drafts = new JdbcQuizAiDraftRepository(app, new ObjectMapper());
     }
 
     @AfterAll
@@ -220,5 +227,48 @@ class JdbcQuizRepositoryIntegrationTest {
         assertThat(quizzes.listOpenByMaterial(material, UUID.randomUUID(), subject)).extracting(s -> s.quiz().id())
                 .containsExactly(quiz.id());
         assertThat(quizzes.listOpenByMaterial(UUID.randomUUID(), UUID.randomUUID(), subject)).isEmpty();
+    }
+
+    @Test
+    void aiDraftRoundTripsAndTransitionsOnlyFromExpectedStatus() {
+        Quiz quiz = subjectQuiz();
+        QuizAiDraft pending = QuizAiDraft.pending(DraftTarget.QUIZ, quiz.id(), subject, 3L,
+                Map.of(QuizAiDraft.REQUEST_REF, "req-1", "source", "SHARED"), author, NOW);
+        drafts.insert(pending);
+        UUID task = UUID.randomUUID();
+        drafts.attachTask(pending.id(), task);
+        drafts.attachTask(pending.id(), UUID.randomUUID());
+
+        assertThat(drafts.findByRequest(author, "req-1")).map(QuizAiDraft::id).contains(pending.id());
+        assertThat(drafts.findByRequest(UUID.randomUUID(), "req-1")).isEmpty();
+        QuizAiDraft stored = drafts.find(pending.id()).orElseThrow();
+        assertThat(stored.taskId()).isEqualTo(task);
+        assertThat(stored.baseVersion()).isEqualTo(3L);
+
+        DraftQuestion question = DraftQuestion.of(QuestionContent.of(QuestionType.MCQ_MULTI, "Chọn số chẵn",
+                List.of(new QuestionOption("1", "2"), new QuestionOption("2", "3")), List.of("1"), "Vì 2 chẵn",
+                BigDecimal.ONE, Difficulty.EASY, List.of()));
+        assertThat(drafts.transition(stored.ready(List.of(question), Map.of()), DraftStatus.PENDING)).isTrue();
+        assertThat(drafts.transition(stored.failed("X", null, NOW), DraftStatus.PENDING)).isFalse();
+
+        QuizAiDraft ready = drafts.find(pending.id()).orElseThrow();
+        assertThat(ready.status()).isEqualTo(DraftStatus.READY);
+        assertThat(ready.taskId()).isEqualTo(task);
+        assertThat(ready.proposal()).containsExactly(question);
+        assertThat(drafts.listOpenForQuiz(quiz.id())).extracting(QuizAiDraft::id).containsExactly(pending.id());
+
+        assertThat(drafts.transition(ready.decided(DraftStatus.ACCEPTED, NOW), DraftStatus.READY)).isTrue();
+        assertThat(drafts.listOpenForQuiz(quiz.id())).isEmpty();
+        assertThat(drafts.find(pending.id()).orElseThrow().decidedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void bankDraftsListedBySubjectOnly() {
+        QuizAiDraft bank = QuizAiDraft.pending(DraftTarget.BANK, null, subject, null, Map.of(), author, NOW);
+        drafts.insert(bank);
+        drafts.insert(QuizAiDraft.pending(DraftTarget.QUIZ, subjectQuiz().id(), subject, 0L, Map.of(), author, NOW));
+
+        assertThat(drafts.listOpenForBank(subject)).extracting(QuizAiDraft::id).containsExactly(bank.id());
+        assertThat(drafts.find(bank.id()).orElseThrow().baseVersion()).isNull();
     }
 }

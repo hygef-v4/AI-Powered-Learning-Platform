@@ -31,6 +31,9 @@ public class SecurityConfig {
                         // Exception chưa xử lý được forward tới /error; JWT filter không chạy lại ở lượt đó nên nếu
                         // không mở, lỗi 500 bị đổi thành 401 và frontend tưởng hết phiên (đá về đăng nhập).
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        // Tải tệp (U03) trả StreamingResponseBody: lượt dispatch ASYNC ghi tiếp body của request đã
+                        // được kiểm quyền; JWT filter không chạy lại nên nếu không mở, response bị cắt giữa chừng.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .anyRequest().authenticated())
                 .build();
     }

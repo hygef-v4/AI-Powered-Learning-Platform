@@ -46,9 +46,11 @@ public final class PracticeViews {
     }
 
     /** Quiz Taking (BR-U11-12): {@code serverTime} để đồng hồ phía trình duyệt bù lệch giờ. */
+    /** {@code activityMonitoringEnabled}, {@code activityNotice} lấy từ ảnh chụp của lượt (K4). */
     public record TakingView(UUID attemptId, UUID quizId, UUID classId, String title, int attemptNo,
                              Instant startedAt, Instant deadlineAt, Instant serverTime, long answerVersion,
-                             List<TakingQuestion> questions, Map<UUID, List<String>> answers) {
+                             List<TakingQuestion> questions, Map<UUID, List<String>> answers,
+                             boolean activityMonitoringEnabled, String activityNotice) {
     }
 
     public record SaveResult(long answerVersion, Instant savedAt) {

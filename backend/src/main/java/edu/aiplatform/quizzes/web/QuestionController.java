@@ -1,18 +1,25 @@
 package edu.aiplatform.quizzes.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.quizzes.application.AiDraftViews.AiDraftView;
+import edu.aiplatform.quizzes.application.AiDraftViews.BankAcceptResult;
 import edu.aiplatform.quizzes.application.QuestionBankService;
 import edu.aiplatform.quizzes.application.QuestionImporter;
 import edu.aiplatform.quizzes.application.QuestionViews.QuestionDetail;
 import edu.aiplatform.quizzes.application.QuestionViews.QuestionPage;
+import edu.aiplatform.quizzes.application.QuizAiDraftService;
+import edu.aiplatform.quizzes.application.QuizReferenceMaterials;
 import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.domain.Difficulty;
 import edu.aiplatform.quizzes.domain.QuestionStatus;
 import edu.aiplatform.shared.error.ApiException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.MultiValueMap;
@@ -35,10 +42,53 @@ public class QuestionController {
 
     private final QuestionBankService bank;
     private final QuestionImporter importer;
+    private final QuizAiDraftService drafts;
+    private final QuizReferenceMaterials materials;
 
-    public QuestionController(QuestionBankService bank, QuestionImporter importer) {
+    public QuestionController(QuestionBankService bank, QuestionImporter importer, QuizAiDraftService drafts,
+                              QuizReferenceMaterials materials) {
         this.bank = bank;
         this.importer = importer;
+        this.drafts = drafts;
+        this.materials = materials;
+    }
+
+    /** Tài liệu của môn cho popup AI của ngân hàng (H8). */
+    @GetMapping("/subjects/{subjectId}/reference-materials")
+    public List<SelectableMaterial> referenceMaterials(@AuthenticationPrincipal Actor actor,
+                                                       @PathVariable UUID subjectId) {
+        return materials.forSubject(actor, subjectId);
+    }
+
+    @GetMapping("/subjects/{subjectId}/question-ai-drafts")
+    public List<AiDraftView> aiDrafts(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return drafts.listForBank(actor, subjectId);
+    }
+
+    /** AI soạn câu cho ngân hàng (F4). */
+    @PostMapping(value = "/subjects/{subjectId}/question-ai-drafts", consumes = "application/json")
+    public ResponseEntity<AiDraftView> requestAiDraft(@AuthenticationPrincipal Actor actor,
+                                                      @PathVariable UUID subjectId, @RequestBody JsonNode body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(drafts.requestForBank(actor, subjectId, AiDraftRequests.bank(body)));
+    }
+
+    @GetMapping("/subjects/{subjectId}/question-ai-drafts/{draftId}")
+    public AiDraftView aiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                               @PathVariable UUID draftId) {
+        return drafts.getForBank(actor, subjectId, draftId);
+    }
+
+    @PostMapping(value = "/subjects/{subjectId}/question-ai-drafts/{draftId}:accept", consumes = "application/json")
+    public BankAcceptResult acceptAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                          @PathVariable UUID draftId, @RequestBody JsonNode body) {
+        return drafts.acceptForBank(actor, subjectId, draftId, AiDraftRequests.accept(body, false).questions());
+    }
+
+    @PostMapping("/subjects/{subjectId}/question-ai-drafts/{draftId}:discard")
+    public AiDraftView discardAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                      @PathVariable UUID draftId) {
+        return drafts.discardForBank(actor, subjectId, draftId);
     }
 
     @GetMapping("/subjects/{subjectId}/questions")

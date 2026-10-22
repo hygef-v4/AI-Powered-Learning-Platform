@@ -10,6 +10,11 @@ import java.util.UUID;
 /** Tra tài khoản cho U02, U04, U05, U14, U15; mỗi lần tìm tối đa 20 kết quả. */
 public interface IAccountLookup {
 
+    /** U14: keyset page of ACTIVE Admins, ordered by UUID; maximum page size100. */
+    default List<AccountContact> listActiveAdmins(UUID afterId, int limit) {
+        throw new UnsupportedOperationException("Active Admin pagination is unavailable");
+    }
+
     List<AccountContact> findStudents(String query, int limit);
 
     List<AccountContact> findAccounts(String query, Set<Role> roles, int limit);

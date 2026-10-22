@@ -1,0 +1,11 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
+import { ClassAnnouncementsPage } from "./ClassAnnouncementsPage";
+import { announcementsApi } from "./api";
+const state = vi.hoisted(() => ({ query: "c1" }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams({ classId: state.query }) }));
+vi.mock("@/features/identity/session", () => ({ useSession: () => ({ status: "authenticated", profile: { role: "STUDENT" } }) }));
+vi.mock("./api", async original => ({ ...await original<typeof import("./api")>(), announcementsApi: { list: vi.fn() } }));
+beforeEach(() => { state.query = "c1"; vi.clearAllMocks(); vi.mocked(announcementsApi.list).mockResolvedValue({ items: [], classes: [], page: 1, size: 20, hasMore: false }); });
+it("navigation to another class query refilters and aborts previous request", async () => { const { rerender } = render(<ClassAnnouncementsPage />); await screen.findByText("Chưa có thông báo trong các lớp này."); const previous = vi.mocked(announcementsApi.list).mock.calls[0]![3]!; state.query = "c2"; rerender(<ClassAnnouncementsPage />); await waitFor(() => expect(announcementsApi.list).toHaveBeenLastCalledWith("c2", 1, 20, expect.any(AbortSignal))); expect(previous.aborted).toBe(true); });
+it("student cannot see composer even if feed is empty", async () => { render(<ClassAnnouncementsPage />); await screen.findByText("Chưa có thông báo trong các lớp này."); expect(screen.queryByTestId("announcement-create-title")).not.toBeInTheDocument(); });

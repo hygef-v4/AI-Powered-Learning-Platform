@@ -395,6 +395,103 @@ Tài liệu hiện hành theo 73 UC/51 story/15 unit ngày 2026-10-09. Approvals
 - Fresh merged-tree backend verify:852 total/775 passed/77 skipped/0 failures/errors, executable JAR packaged. Frontend292 passed/57 files; lint/typecheck pass. Logs .tmp/u15/merge-*.log. Full browser/integration/NFR gates unchanged.
 - Marked only four conflict paths resolved in index. Merge remains pending its final commit; no merge commit/push performed for this check.
 
+## U13 Code Generation Part 1 — 2026-10-21
+
+- [x] Resume existing design for UC58–62, US-CNT-001/002; inspect real contracts, registration scaffolds and local UI-reference sources on branch reference-materials.
+- [x] Expand existing ten-step code-generation plan with concrete implementation paths, C01–C05, role/scope matrix, job race/resource limits, UI/slot mapping and verification gates.
+- [x] User approval of Part 1: Answer a in `construction/plans/code-generation-plan/u13-implementation-approval-questions.md`.
+- [x] Part 2 implementation and unit tests executed after approval; see final handoff below.
+- Current U13 checkpoint: code ready for user review; do not change global stage or mark UC acceptance complete. Proposed U06-compatible consumer keeps version/provenance metadata handoff explicit. Independent provider/DB/browser/NFR acceptance remains pending; no commit/push/external mutation.
+
+## U13 implementation in progress — 2026-10-21
+- [x] Approval A confirmed; user resumes implementation and explicitly keeps U06 DTO unchanged.
+- [x] Steps1–8 code/developer checks: migration resource, immutable domain/JPA persistence, commands/read policy, isolated parser/job/sweeper, U06 consumer/MCP, REST/OpenAPI and frontend routes/slots.
+- [x] Step9 verification completed; final frontend321pass and backend focused80pass. Step10 user review remains pending. Full backend first run928 total/851pass/77skip; packaged parser smoke passed.
+- Full PostgreSQL migrations/concurrency, real session/audit/Drive/Rabbit integration, independent tester and NFR measurements remain open; these are not claimed by the code checkboxes.
+
+
+## U13 code ready for review — 2026-10-21
+- [x] Execute approved steps1–9 for UC58–62 with local UI reference; U06 DTO retained as requested.
+- [x] Backend full928 total/851pass/77skip/0fail/0error; after final review fixes, focused80pass (78U13+2architecture), JAR packaged; parser tested from executable JAR.
+- [x] Frontend321pass/61files, typecheck/lint/build pass; standalone route/header smoke and browser manager fixture/mobile QA. Generated Next instruction files removed after backup; no unrelated source or index changes.
+- [x] Developer review/handoff and tester matrix recorded in construction/u13-reference-materials/code/code-summary.md and construction/build-and-test/u13-verification.md.
+- [ ] User code review/approval (step10). Do not advance global stage or UC/story acceptance automatically. Real PostgreSQL/migration/provider/session/audit/Drive/Rabbit/NFR tests, native PDF browser rendering and U06 version metadata remain pending.
+- Local commits created on reference-materials at the user's subsequent request; no push/Jira/owner messaging. UI QA fixture is ignored and never part of production source/build.
+
+Final checkpoint: code available for review; independent acceptance gates retained. SEC-004 configuration mismatch corrected on user request: Next Proxy applies per-request script nonce/strict-dynamic, DENY/frame-ancestors none and required headers on HTML page routes; root request rendering prevents cached/static nonce mismatch. Full frontend323pass/62files, typecheck/lint/production build, HTTP nonce/script/header and browser hydration/U13 navigation/YouTube checks pass. Style attribute exception documented; native PDF renderer and deployed Nginx/HTTPS/provider checks remain open. No global stage/UC acceptance advanced.
+
+## U13 local commit handoff — 2026-10-21
+
+- User requested small commits on reference-materials and explicitly prohibited push. Seven code commits: 14dec5b domain/persistence; 7c6a339 scoped management; d5c5d92 extraction; 0629906 AI/MCP; 94b3f5b REST/OpenAPI; 9ae5458 frontend; 28b9f46 SEC-004 headers/nonces. Final documentation commit includes approved plan, handoff, verification and audit/state.
+- No application source edits during commit organization; existing verification evidence retained. Commit authorization does not automatically close step10, UC/story acceptance or the documented integration/NFR gates. No push/merge/deployment performed.
+
+## U14 Code Generation Part 1 — 2026-10-21
+
+- Current branch already `announcements-and-notifications`; initial working tree/index clean. No whole U13 merge, reset or source changes.
+- [x] Read current UC63–65/U14 stories, functional/NFR/infrastructure design, actual contracts/payloads, frontend registration and local UI-reference screens.
+- [x] Expand existing eleven-step `construction/plans/code-generation-plan/u14-announcements-and-notifications-code-generation-plan.md` with C01–C08 and concrete code/test/acceptance paths.
+- [x] Explicit user approval of concrete plan: `construction/plans/code-generation-plan/u14-implementation-approval-questions.md`, Answer a, confirmed2026-10-21. Part2 implementation begins; update steps as implemented and checked.
+- Proposed owner-scoped changes are limited and visible in plan: U01 action rules plus paginated ACTIVE Admin lookup/provider/stub/tests; U14 event retry topology without U03 dispatcher changes; sanitized markdown dependencies and SEC-004 nonce files in frontend. No U06 changes.
+- U07/U08/U12 providers are currently stubs; independent real DB/event/Rabbit/SMTP/group/reminder/SSE/session/browser/NFR gates retained. IMail SMTP accept/crash exactly-once limitation documented. No commit/push/email/deploy/global-stage advance.
+
+## U14 code ready for review — 2026-10-21
+
+- [x] Approved Answer a/C01–C08, implemented steps1–10 for UC63–65 on `announcements-and-notifications`; application code stays in backend/frontend, OpenAPI in docs/contracts/openapi.
+- [x] Announcement role/scope/CAS/audit/after-commit event; recipient resolution and dedup/SSE; email cap/preference/priority/retry/sweeper; reminder/retention; REST and UI slots/composer/dialog/feed/bell/popup/preferences implemented.
+- [x] Limited approved U01 changes:3actions/rules and ACTIVE Admin cursor lookup/provider/stub/test; no U03/U05/U06/U07/U08/U12 implementation/contract changes. Applied isolated SEC-004 nonce solution without U13 merge. react-markdown10.1.0 + rehype-sanitize6.0.0; production audit0vulnerabilities.
+- [x] Full backend clean verify919total/842pass/77skip/0failure/error; after review final focused71pass/0failure/error/skip (66U14+3U01+2Arch), executable JAR packaged. Full frontend314pass/61files; final typecheck/lint/production build pass.
+- [x] OpenAPI local refs/syntax and production nonce/header/404/repeat HTTP smoke pass. Desktop browser fixture: Teacher create/edit/delete, Student read-only/preferences/read-all, console no CSP/hydration errors. Temporary fixtures ignored; no real mail/provider credentials used.
+- [x] Handoff `construction/u14-announcements-and-notifications/code/code-summary.md` and independent tester matrix `construction/build-and-test/u14-verification.md` recorded, including unsuccessful environment/timeout attempts rather than counting them as pass.
+- [x] Step11 user review/approval: “tiếp tục”,2026-10-21. Real PostgreSQL/migrations/CAS/cap/rollback, Rabbit/SMTP, U07/U08/U12 providers/group/reminder/SSE2instance, session/CSRF, mobile and measured NFR acceptance remain open; IMail accept-before-SENT crash ambiguity explicit. No global stage/UC acceptance advanced; no commit/push/deploy.
+
+## U14 Build & Test preparation and available execution — 2026-10-21
+
+- [x] User approved code and continuation; generated scoped build/unit/integration/performance/security/E2E instructions and `construction/build-and-test/build-and-test-summary.md`.
+- [x] Final-source full backend verify921total/844pass/77skip/0failure/error; executable JAR,85s. Existing final frontend314pass/61files, lint/typecheck/build and production audit0vulnerabilities retained without redundant reruns.
+- [x] Read actual CI/scripts/local compose and checked Docker availability. CLI present; Engine named pipe unavailable. U09 requires missing real U07/U08 migrations; U07/U08/U12 providers remain stubs. No fake schema, stack startup or real SMTP used.
+- [ ] Independent real integration/security/E2E/mobile and measured performance acceptance after owner prerequisites. Scope tracked in `construction/build-and-test/u14-build-and-test-plan.md`; global Build & Test/Operations not marked complete.
+
+## U14 local commits — 2026-10-21
+
+- User requests small commits on `announcements-and-notifications`, explicitly no push.
+- [x] Seven source commits:6cef92a identity permissions/Admin lookup; cdb8b9d schema/persistence;3f4a201 announcement backend;2920fc6 notification/email/reminder backend and OpenAPI;14c17cf CSP nonce;28fdc92 announcement UI;adfc51f notification UI. Documentation follows in a separate eighth commit.
+- [x] No source changes during commit preparation; retained full backend921total/844pass/77skip and frontend314pass/build/lint/typecheck evidence. Staged whitespace checked for each commit.
+- Independent integration/NFR/provider gates unchanged. No push/deploy/global acceptance transition.
+
+## staging into announcements-and-notifications conflict resolution — 2026-10-22
+
+- [x] User approved proposed resolution with “tôi đồng ý”; keep U13 and U14 histories, all seven added authorization rules and U14 layout comment/request-rendering behavior.
+- [x] Preserve common historical content and both appended U13/U14 blocks; U13 precedes U14. Verify43unique policy entries match43actions, with exact roles/scopes preserved from both sides. Proxy/config unchanged.
+- [x] Merged-tree backend mvn -B verify:999total/922passed/77skipped/0failures/errors; executable JAR, JDK21/target17. Full frontend343passed/65files; lint/typecheck and production standalone build pass. Logs in .tmp/merge-u13-u14/.
+- [x] Initial concurrent frontend worker attempts stalled and were stopped by exact owned PID; not counted as pass. Final full tests use bundled Node24.19.0, one thread worker and process-local UV/Rayon limits, without modifying source, tests or timeouts. Existing React act warnings retained. Build uses same Node24/process limits; CI Node22 execution not claimed.
+- [x] Resolve only four approved paths in index after marker/whitespace checks. Other incoming staged U13 changes retained. Merge commit remains for user; no commit/push/deploy performed.
+- Independent database/provider/session/browser/NFR acceptance and existing skip gates remain open; successful merge verification does not close them.
+
+## U10 giai đoạn 4 (AI, MCP, tài liệu tham khảo) và U11 G4 — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 4 được người dùng duyệt (H1–H10), nhánh `quiz-ai-mcp` tách từ `staging` `08a6134`.
+- [x] Code Generation Part 2: bước 4.0–4.13 xong trên `quiz-ai-mcp` (4.0 commit `cf80f2e`, code chưa commit); xem `construction/u10-quiz-authoring/code/code-summary.md`. `staging` không dựng được DB mới do migration `grading` (U09) cần bảng `assignments` (U07 chưa merge).
+- [x] Bước 4.14: người dùng duyệt code giai đoạn 4 ngày 2026-10-22; commit local trên `quiz-ai-mcp`.
+
+## Sửa sau chạy thử và link thông báo Quiz (U10, U11) — 2026-10-22
+
+- [x] Code Generation Part 1: plan được duyệt (J1–J6), mục trong plan U11.
+- [x] Code Generation Part 2: bước 5.0–5.6 xong trên `quiz-ai-mcp` (merge `972d594`; code sửa chưa commit).
+- [x] Bước 5.7: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-ai-mcp`, chưa push.
+
+## U14 topology bean startup correction — 2026-10-22
+
+- [x] Rechecked after user's pull: staging HEAD0d1cf27 matches origin/staging; collision still present. No branch switch or history changes.
+- [x] Real Spring context regression reproduces2failures with bean overriding disabled/enabled; no broker/database needed. Renamed only Declarables factory method from notificationTopology to notificationDeclarables; queues/exchanges/TTLs/bindings unchanged, overriding not enabled.
+- [x] Full backend verify1112total/1033passed/79skipped/0failures/errors, executable JAR; new2context cases pass. JDK21 runtime/target17, logs .tmp/u14-topology-fix/red.log and verify.log; finished2026-10-22T12:54:20+07:00.
+- CI's existing mvn verify discovers the new test; other units already have context tests, the missing coverage was U14 topology. Full real API/worker startup and external provider integration not claimed. No commit/push/deploy.
+
+## Ghi nhận hoạt động khi làm Quiz (G3 U11, E3 U10) — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 6 được duyệt (K1–K7), nhánh `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream.
+- [x] Code Generation Part 2: bước 6.0–6.7 xong trên `quiz-activity` (6.0 commit `e8145b4`, code chưa commit); backend 1112 test, frontend 411 test đạt.
+- [x] Bước 6.8: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-activity`, chưa push.
+
 ## U06 AI Connections & MCP — 2026-10-22
 
 - [x] Code Generation Part 1: plan chi tiết hóa, người dùng duyệt 2026-10-21.

@@ -9,6 +9,7 @@ import {
   addInlineQuestion, cloneQuiz, createQuizVersion, deleteQuiz, getQuiz, publishQuiz, retireQuiz, reviewQuiz, saveQuizItems,
   updateInlineQuestion, updateQuizDetails,
 } from "./api";
+import { QuizAiDraftPanel } from "./AiDraftTargets";
 import { BankQuestionPicker } from "./BankQuestionPicker";
 import { errorCode, errorMessage, formatDateTime, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "./labels";
 import {
@@ -91,7 +92,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const save = () => detail && settings && void run(async () => {
     let current = detail;
     if (settingsDirty) {
-      const { errors, input } = settingsInput(settings, current.quiz.referenceMaterialIds);
+      const { errors, input } = settingsInput(settings);
       setSettingsErrors(errors);
       if (!input) throw new Error("Cấu hình chưa hợp lệ.");
       current = await updateQuizDetails(current.quiz.id, input, current.quiz.version);
@@ -104,6 +105,12 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     show(current);
     setNotice({ tone: "success", text: "Đã lưu quiz." });
   });
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+  const acceptedFromAi = useCallback((next: QuizDetail) => {
+    show(next);
+    setNotice({ tone: "success", text: "Đã thêm câu từ đề xuất AI vào cuối quiz." });
+  }, [show]);
 
   const addFromBank = async (questionIds: string[]) => {
     if (!detail) return;
@@ -201,8 +208,15 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
           <QuizItemList items={items} onChange={setItems} editable={editable}
             onEditInline={(item) => { setEditing(item); setDialog("inline"); }} />
         </Section>
-        <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable} maxScore={detail.maxScore} />
+        <QuizSettingsPanel quizId={quiz.id} value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable}
+          maxScore={detail.maxScore} retentionConfigured={detail.activityRetentionConfigured} />
       </div>
+      {editable && (
+        <div className="mt-4">
+          <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
+            onQuizChange={acceptedFromAi} />
+        </div>
+      )}
       {detail.canManage && <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />}
 
       {dialog === "picker" && <BankQuestionPicker quizId={quiz.id} freeSlots={free} onClose={() => setDialog(null)} onAdd={addFromBank} />}

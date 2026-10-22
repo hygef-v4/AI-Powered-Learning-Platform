@@ -108,7 +108,14 @@ export type QuizInfo = {
 
 export type QuizItemView = { position: number; points: number; inline: boolean; question: QuestionView };
 
-export type QuizDetail = { quiz: QuizInfo; items: QuizItemView[]; maxScore: number; canManage: boolean };
+/** `activityRetentionConfigured`: Admin đã đặt thời hạn lưu nên bật được ghi nhận hoạt động (K3). */
+export type QuizDetail = {
+  quiz: QuizInfo;
+  items: QuizItemView[];
+  maxScore: number;
+  canManage: boolean;
+  activityRetentionConfigured: boolean;
+};
 
 export type QuizRow = {
   id: string;
@@ -139,3 +146,48 @@ export type QuizDetailsInput = {
 export type QuizItemInput = { questionId: string; points: number | null };
 
 export type RandomPreview = { questions: QuestionView[]; matching: number; freeSlots: number };
+
+// --- Đề xuất AI, MCP và tài liệu tham khảo (giai đoạn 4)
+
+/** Nguồn AI chọn mỗi lần (cùng dạng `SourceChoice` của U06; H1). */
+export type AiProvider = "GEMINI" | "OPENAI" | "CLAUDE";
+export type AiSourceChoice = { source: "SHARED" } | { source: "PERSONAL"; provider: AiProvider };
+
+export type SelectableMaterial = { materialId: string; title: string; hasText: boolean };
+
+export type AiDraftStatus = "PENDING" | "READY" | "ACCEPTED" | "DISCARDED" | "FAILED";
+
+export type DraftQuestion = { content: QuestionContent; violations: Violation[] };
+
+export type AiDraft = {
+  id: string;
+  target: "QUIZ" | "BANK";
+  quizId: string | null;
+  subjectId: string;
+  origin: "AI_TASK" | "MCP";
+  status: AiDraftStatus;
+  questions: DraftQuestion[];
+  requestedCount: number | null;
+  source: string | null;
+  provider: string | null;
+  materials: { id: string; title: string | null }[];
+  agentLabel: string | null;
+  baseVersion: number | null;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdBy: string;
+  createdAt: string;
+  decidedAt: string | null;
+};
+
+/** Yêu cầu AI soạn câu (BR-U10-40): 1–50 câu, loại và độ khó tùy chọn, tối đa 10 tài liệu đã có chữ. */
+export type AiDraftInput = {
+  instructions: string;
+  count: number;
+  type: QuestionType | null;
+  difficulty: Difficulty | null;
+  materialIds: string[];
+  choice: AiSourceChoice;
+};
+
+export type BankAcceptResult = { draft: AiDraft; questionIds: string[] };

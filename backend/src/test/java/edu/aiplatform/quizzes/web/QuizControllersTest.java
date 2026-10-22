@@ -20,11 +20,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.quizzes.application.QuizAiDraftService;
+import edu.aiplatform.quizzes.application.QuizAiDraftService.DraftRequest;
 import edu.aiplatform.quizzes.application.QuizAuthoringService;
 import edu.aiplatform.quizzes.application.QuizCopyService;
 import edu.aiplatform.quizzes.application.QuizPublicationService;
+import edu.aiplatform.quizzes.application.QuizReferenceMaterials;
 import edu.aiplatform.quizzes.application.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.application.QuizViews.QuizInfo;
 import edu.aiplatform.quizzes.application.RuleViolationException;
@@ -32,6 +38,7 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.domain.Difficulty;
+import edu.aiplatform.quizzes.domain.QuestionContent;
 import edu.aiplatform.quizzes.domain.QuizOrigin;
 import edu.aiplatform.quizzes.domain.Violation;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
@@ -67,13 +74,15 @@ class QuizControllersTest {
     private final QuizAuthoringService authoring = mock(QuizAuthoringService.class);
     private final QuizPublicationService publication = mock(QuizPublicationService.class);
     private final QuizCopyService copies = mock(QuizCopyService.class);
+    private final QuizAiDraftService drafts = mock(QuizAiDraftService.class);
+    private final QuizReferenceMaterials materials = mock(QuizReferenceMaterials.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setup() {
         ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
                 .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
-        mvc = MockMvcBuilders.standaloneSetup(new QuizController(authoring, publication, copies),
+        mvc = MockMvcBuilders.standaloneSetup(new QuizController(authoring, publication, copies, drafts, materials),
                         new ClassQuizController(authoring, copies), new SubjectQuizController(authoring))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
@@ -90,7 +99,7 @@ class QuizControllersTest {
         QuizInfo info = new QuizInfo(quizId, QuizScope.CLASS, classId, subjectId, null, QuizOrigin.MANUAL, 1, "Luyện tập",
                 null, new QuizSettings(false, false, null, 1, true, false), false, null, List.of(), QuizStatus.DRAFT,
                 null, null, null, NOW, NOW, 0);
-        return new QuizDetail(info, List.of(), BigDecimal.ZERO, true);
+        return new QuizDetail(info, List.of(), BigDecimal.ZERO, true, false);
     }
 
     @Test
@@ -177,5 +186,56 @@ class QuizControllersTest {
                 isNull());
         verify(authoring, never()).bankQuestions(any(), any(), any(), any(), any(), any(), any());
         verify(authoring, never()).delete(any(), any(), anyLong());
+    }
+
+    @Test
+    void aiDraftRequestParsesSourceMaterialsAndVersion() throws Exception {
+        UUID material = UUID.randomUUID();
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instructions\":\"Chương 1\",\"count\":5,\"type\":\"MCQ_MULTI\",\"difficulty\":null,"
+                                + "\"materialIds\":[\"" + material + "\"],\"source\":\"PERSONAL\",\"provider\":\"CLAUDE\","
+                                + "\"requestRef\":\"r-1\",\"version\":3}"))
+                .andExpect(status().isCreated());
+        ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
+        verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
+        assertThat(request.getValue().count()).isEqualTo(5);
+        assertThat(request.getValue().source()).isEqualTo(AiSource.PERSONAL);
+        assertThat(request.getValue().provider()).isEqualTo(AiProvider.CLAUDE);
+        assertThat(request.getValue().materialIds()).containsExactly(material);
+
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instructions\":\"x\",\"count\":5,\"source\":\"SHARED\",\"requestRef\":\"r\","
+                                + "\"version\":3,\"studentId\":\"y\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
+    }
+
+    @Test
+    void colonActionsRouteToAcceptAndDiscard() throws Exception {
+        UUID draft = UUID.randomUUID();
+        when(drafts.acceptForQuiz(eq(teacher), eq(quizId), eq(draft), any(), eq(7L))).thenReturn(detail());
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts/{d}:accept", quizId, draft)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"questions\":[{\"type\":\"MCQ_SINGLE\",\"stem\":\"Câu\",\"options\":[{\"id\":\"1\","
+                                + "\"text\":\"A\"},{\"id\":\"2\",\"text\":\"B\"}],\"correctOptionIds\":[\"1\"],"
+                                + "\"explanation\":null,\"defaultPoints\":1,\"difficulty\":\"EASY\",\"tags\":[]}],\"version\":7}"))
+                .andExpect(status().isOk());
+        ArgumentCaptor<List<QuestionContent>> picked = ArgumentCaptor.forClass(List.class);
+        verify(drafts).acceptForQuiz(eq(teacher), eq(quizId), eq(draft), picked.capture(), eq(7L));
+        assertThat(picked.getValue()).singleElement().satisfies(c -> assertThat(c.stem()).isEqualTo("Câu"));
+
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts/{d}:discard", quizId, draft)).andExpect(status().isOk());
+        verify(drafts).discardForQuiz(teacher, quizId, draft);
+        mvc.perform(get("/api/v1/quizzes/{id}/ai-drafts/{d}", quizId, draft)).andExpect(status().isOk());
+        verify(drafts).getForQuiz(teacher, quizId, draft);
+    }
+
+    @Test
+    void referenceMaterialsListedForQuiz() throws Exception {
+        UUID material = UUID.randomUUID();
+        when(materials.forQuiz(teacher, quizId)).thenReturn(List.of(new SelectableMaterial(material, "Chương 1", true)));
+        mvc.perform(get("/api/v1/quizzes/{id}/reference-materials", quizId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].materialId").value(material.toString()))
+                .andExpect(jsonPath("$[0].hasText").value(true));
     }
 }

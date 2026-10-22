@@ -171,7 +171,93 @@ Lỗi tìm thấy:
 1. **Đã sửa (chưa commit)** — tệp mẫu không có trong image frontend. `frontend/Dockerfile` (Next standalone) chỉ copy `.next/standalone` và `.next/static`, không copy `public/`; U10 là unit đầu tiên có tệp trong `public/`. Tái hiện: build image frontend, `curl -i http://localhost:8088/templates/question-import.csv` → `404` trang HTML 8.713 byte; "Tải tệp mẫu" tải về HTML; nhập tệp mẫu qua UI báo "Không đọc được tệp CSV". Sửa: thêm `COPY --from=build --chown=app:app /app/public ./public`; build lại thì `200 text/csv`, nhập qua UI đạt. Đây là file dùng chung, cần báo người giữ frontend/infra.
 2. Nhỏ, chưa sửa: các công tắc ở `QuizSettingsPanel` (Hiện điểm, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) không có tên truy cập vì `Switch` đặt nhãn ngoài nút và không truyền `ariaLabel`.
 
+## Giai đoạn 4 — AI soạn câu, tool MCP, tài liệu tham khảo (2026-10-22)
+
+Nhánh `quiz-ai-mcp` tách từ `staging` `08a6134`, theo plan giai đoạn 4 (H1–H10). Chạy trên contract và stub U06 của `staging`; U13 dùng code thật (`ReferenceMaterialService`).
+
+### Business logic
+
+| Luồng | Class chính |
+|---|---|
+| F4, F8 Gửi yêu cầu | `QuizAiDraftService.requestForBank`, `.requestForQuiz`. Hai bước (H2): ghi đề xuất `PENDING` trong transaction, gọi `IAiTask.submit` ngoài transaction với `targetRef = quiz-ai-draft:{draftId}`, rồi ghi `taskId`. U06 từ chối hoặc lỗi thì đề xuất `FAILED` kèm mã. Trùng `requestRef` thì trả đề xuất cũ; dùng cho đích khác thì `409 AI_REQUEST_REF_REUSED` |
+| Prompt | `QuizDraftPrompt`: schema JSON 2020-12 (`maxItems` = số câu), `maxOutputTokens = min(16000, 600 × số câu)`, chữ tài liệu ≤ 60.000 ký tự trong `<material>` ghi rõ là dữ liệu không tin cậy; đọc kết quả, đáp án là số thứ tự từ 1 đổi thành mã lựa chọn |
+| Nhận kết quả (H6) | `QuizDraftResultHandler` (cài `IAiTaskResultHandler`, `QUIZ_QUESTION_DRAFT`): kiểm lại quyền bằng `QuizSupport.canManage` / `QuizAccess.allows` (không ghi `ACCESS_DENIED`), Quiz còn sửa được, môn còn `ACTIVE`; câu sai quy tắc vẫn lưu kèm `violations` |
+| Xem | `listForQuiz`, `listForBank`, `getForQuiz`, `getForBank`; đề xuất `PENDING` có `taskId` thì hỏi lại `IAiTask.get` (lỗi về trước khi ghi `taskId`) |
+| Chấp nhận (H4) | `acceptForQuiz`: câu chọn thành câu riêng ở cuối Quiz, ≤ 200 câu, `version` +1 một lần; `acceptForBank`: câu `DRAFT` của ngân hàng. Lỗi theo câu `422 AI_DRAFT_INVALID` (`questions[i].field`); audit `QUIZ_AI_DRAFT_ACCEPTED` (số câu, không có nội dung) |
+| Bỏ | `discardForQuiz`, `discardForBank`; đề xuất đang chờ thì thử `IAiTask.cancel` |
+| F13 MCP (H7) | `QuizMcpTools` (cài `IMcpToolProvider`): `read_quiz_context` (`READ`) trả Quiz Detail kèm đáp án; `save_quiz_draft` (`WRITE`) cần Quiz `DRAFT` và `expectedVersion` khớp, lưu đề xuất `READY` nguồn `MCP`. Role `TEACHER`, `SUBJECT_MANAGER`; người học `403 MCP_TOOL_FORBIDDEN`; ngoài phạm vi `404` |
+| Tài liệu (H8) | `QuizReferenceMaterials`: danh sách chọn được theo lớp hoặc môn của Quiz; `updateDetails` chỉ kiểm id mới gắn (U13 lỗi mà không gắn thêm thì vẫn lưu được) |
+
+Domain: `QuizAiDraft`, `DraftQuestion`, `DraftTarget`, `DraftOrigin`, `DraftStatus`, `IQuizAiDraftRepository`. Hạ tầng: `JdbcQuizAiDraftRepository` (đổi trạng thái có điều kiện; tìm `requestRef` trong `provenance`). Không thêm migration: bảng `quiz_ai_drafts` đã có từ giai đoạn 1; mã lỗi của đề xuất lưu trong `provenance` (`failureCode`, `failureMessage`) vì bảng không có cột riêng.
+
+### API
+
+| Endpoint | Ghi chú |
+|---|---|
+| `GET /api/v1/quizzes/{id}/reference-materials`, `GET /api/v1/subjects/{subjectId}/reference-materials` | Tài liệu chọn được (`materialId`, `title`, `hasText`) |
+| `GET`, `POST /api/v1/quizzes/{id}/ai-drafts` | Danh sách đề xuất chưa chốt; gửi yêu cầu (`instructions`, `count`, `type`, `difficulty`, `materialIds`, `source`, `provider`, `requestRef`, `version`) → `201` |
+| `GET .../ai-drafts/{draftId}`, `POST .../{draftId}:accept` (`questions`, `version`), `POST .../{draftId}:discard` | Chấp nhận trả Quiz Detail |
+| `GET`, `POST /api/v1/subjects/{subjectId}/question-ai-drafts`, `GET .../{draftId}`, `POST .../{draftId}:accept` (`questions`), `:discard` | H3; chấp nhận trả đề xuất và id các câu nháp mới |
+
+Mã lỗi mới: `AI_DRAFT_NOT_FOUND`, `AI_DRAFT_CLOSED`, `AI_DRAFT_NOT_READY`, `AI_DRAFT_SELECTION_INVALID`, `AI_DRAFT_INVALID` (422), `AI_DRAFT_REQUEST_INVALID`, `AI_REQUEST_REF_REUSED`, `MATERIAL_NOT_SELECTABLE`, `MATERIAL_SERVICE_UNAVAILABLE`, `INVALID_MCP_ARGUMENTS`, `MCP_TOOL_FORBIDDEN`.
+
+### Frontend
+
+- `AiDrafts.tsx`:
+  - `AiSourceSelect`: nguồn AI theo H1, cùng dạng `SourceChoice` của U06.
+  - `AiDraftDialog`: form yêu cầu; chờ AI, hỏi lại mỗi 3 giây; danh sách câu sửa / bỏ / chấp nhận từng câu; "Lưu n câu đã chấp nhận".
+- `AiDraftTargets.tsx`:
+  - `QuestionAiDraftDialog`: nút "Tạo nháp bằng AI" trên Question List.
+  - `QuizAiDraftPanel`: phần "Đề xuất AI" trên Quiz Detail, gồm cả đề xuất từ agent MCP.
+  - `MaterialRefPicker`: trong `QuizSettingsPanel`, tối đa 10, giữ cả tài liệu không còn truy cập được.
+- `SettingsForm` thêm `materialIds`; `settingsInput(form)` bỏ tham số thứ hai.
+
+### Unit test
+
+- Backend:
+  - `QuizAiDraftServiceTest`: 17 test cho H2–H8 và MCP.
+  - `QuizDraftPromptTest`: 3 test.
+  - `JdbcQuizRepositoryIntegrationTest`: thêm 2 test repository đề xuất.
+  - MockMvc: định tuyến `:accept`, `:discard`, đọc yêu cầu AI, tài liệu.
+- Frontend:
+  - `AiDrafts.test.tsx`: 5 test (gửi yêu cầu, chấp nhận từng câu đã sửa, lỗi, `409` từ Quiz Detail, giới hạn tài liệu).
+
+### Kiểm (2026-10-22)
+
+- Backend `mvn -B verify` (JDK 17, Testcontainers):
+  - 930 test, 31 bỏ qua (`SubjectRepositoryIntegrationTest`).
+  - 4 lỗi, đều ở bước Flyway: `AccountRepositoryIntegrationTest`, `JdbcQuizAttemptRepositoryIntegrationTest`, `JdbcQuestionRepositoryIntegrationTest`, `JdbcQuizRepositoryIntegrationTest`.
+- Nguyên nhân 4 lỗi: `grading/V20260925_1500__create_grading_tables.sql` (U09, đã có trên `staging`) tham chiếu bảng `assignments` của U07. U07 vẫn ở nhánh `assignment`, chưa merge, nên `staging` không dựng được DB mới. Lỗi có sẵn, không do nhánh này.
+- Bỏ riêng migration `grading` trong `target/` thì 17 test tích hợp quiz (gồm 2 test mới) đều qua.
+- Frontend: lint, typecheck, 331 test, `next build` đều đạt.
+
+### Khác với thiết kế
+
+- `AiSourcePicker` của U06 chưa có trên `staging`, nên dùng `AiSourceSelect` riêng (H1). Khi U06 merge thì thay trong `AiDrafts.tsx`.
+- Chưa chạy với AI thật: stub U06 trả `FAILED` ngay, nên trên `staging` mọi yêu cầu AI kết thúc ở "AI chưa sẵn sàng". Luồng chấp nhận chạy thật được qua đề xuất từ MCP khi U06 có MCP server.
+- Nút "Tạo nháp bằng AI" của Quiz nằm ở phần "Đề xuất AI" thay vì cạnh "Thêm câu", để danh sách đề xuất và popup ở cùng một chỗ.
+
 ## Còn lại
 
-- Integration test phân quyền 4 role trên endpoint do tester viết.
-- Giai đoạn 3 (U11) cài `IQuizLifecycleListener`, slot `quizDetailSections`, `quizRowActions`; giai đoạn 4 thêm AI soạn câu (F4, F8) và tool MCP.
+- Integration test phân quyền 4 role trên endpoint do tester viết, gồm hai trường hợp AI/MCP mới trong plan.
+- Chạy AI thật khi U06 (`ai-connections`) merge; thay `AiSourceSelect` bằng `AiSourcePicker`.
+
+## Sửa sau chạy thử (2026-10-22)
+
+- **L2 (J2):** bốn công tắc của `QuizSettingsPanel` (Hiện điểm sau khi nộp, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) truyền `ariaLabel`. Không sửa `Switch` dùng chung.
+- **Ghi chú cho người giữ UI kit:** `Switch` không có tên truy cập khi chỗ gọi không truyền `ariaLabel`, vì nhãn nằm ngoài nút. Còn 2 chỗ dùng ở unit khác.
+- **Test:** `QuizScreens.test.tsx` thêm kiểm tên bốn công tắc.
+
+## E3 — Bật ghi nhận hoạt động (2026-10-22)
+
+Làm cùng G3 của U11 (plan U11 giai đoạn 6, K1–K3).
+
+- **Kiểm thời hạn lưu (K1):** `QuizActivityPolicy` đọc `ISettings` khóa `activity.retentionDays` (U08 khai báo). U03 lỗi thì coi như chưa đặt.
+- **Bật và tắt (K1, K2):**
+  - `updateDetails`: bật mới khi chưa đặt thời hạn thì `409 ACTIVITY_RETENTION_NOT_SET`; bật mà thiếu lời báo thì `ACTIVITY_NOTICE_REQUIRED` theo trường. Tắt luôn được.
+  - Duyệt (`QuizRules.validateActivity` trong `QuizPublicationService`) kiểm lại lời báo và thời hạn.
+- **Cờ cho frontend (K3):** `QuizDetail.activityRetentionConfigured`, chỉ `true` với người có quyền sửa. `QuizSettingsPanel` mở công tắc khi đã đặt thời hạn (hoặc đang bật) và hiện ô "Lời báo cho sinh viên" bắt buộc; chưa đặt thì giữ ghi chú.
+- **Test:**
+  - `QuizServicesTest`: chưa đặt thời hạn; thiếu lời báo; bật được; duyệt khi thời hạn bị xóa; tắt khi U03 lỗi; bật khi U03 lỗi.
+  - `QuizScreens.test.tsx`: công tắc khóa hoặc mở theo cờ; thiếu lời báo thì không gửi.
+- **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.

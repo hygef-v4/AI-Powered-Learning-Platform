@@ -77,7 +77,7 @@ class QuizPracticeControllerTest {
     @Test
     void startReadsClassIdFromBody() throws Exception {
         when(attempts.start(student, quizId, classId)).thenReturn(new TakingView(attemptId, quizId, classId, "Quiz", 1,
-                NOW, null, NOW, 0, List.of(), Map.of()));
+                NOW, null, NOW, 0, List.of(), Map.of(), false, null));
         mvc.perform(post("/api/v1/quizzes/{q}/attempts", quizId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"classId\":\"" + classId + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.attemptId").value(attemptId.toString()));
@@ -112,6 +112,12 @@ class QuizPracticeControllerTest {
     void readEndpointsAndActivityValidateInput() throws Exception {
         mvc.perform(get("/api/v1/me/quizzes/{q}", quizId)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/me/quizzes").param("other", "1")).andExpect(status().isBadRequest());
+        UUID material = UUID.randomUUID();
+        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString())
+                .param("classId", quizId.toString())).andExpect(status().isOk());
+        verify(queries).byMaterial(student, quizId, material);
         mvc.perform(post("/api/v1/quiz-attempts/{a}/activity", attemptId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"events\":[{\"sessionId\":\"" + UUID.randomUUID() + "\",\"clientEventId\":\"e1\","
                                 + "\"sequence\":1,\"kind\":\"HIDDEN\",\"clientTime\":\"2026-10-20T08:00:00Z\"}]}"))

@@ -55,7 +55,7 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 ## Khác với thiết kế
 
 - Chưa gắn `useActivityTracker` phía trình duyệt (U08 chưa có); API ghi hoạt động đã có (G3). Quiz hiện chưa bật được theo dõi (E3 của U10).
-- Chưa có `MaterialQuizList` và lọc `materialId` (U13 chưa có) (G4).
+- `MaterialQuizList` và lọc `materialId` (G4) làm ở giai đoạn 4, xem mục cuối.
 - Số lượt tính theo từng version Quiz (G6).
 - Phần Lượt làm trên Quiz Detail chỉ hiện khi mở từ lớp (G7).
 - Lượt bị từ chối khi bắt đầu (hết lượt, Quiz đã ngưng) ghi `QUIZ_SUBMIT_REJECTED` với lý do.
@@ -105,4 +105,45 @@ Lỗi và điểm cần quyết định (chưa sửa):
 ## Còn lại
 
 - Integration test (hết giờ khi đang làm, Quiz bị ngưng khi có lượt, hai tab lưu cùng lượt, phân quyền 4 role) do tester viết; chốt điểm 1 ở mục trên.
-- Gắn tracker hoạt động khi U08 xong; `MaterialQuizList` khi U13 xong.
+- Gắn tracker hoạt động khi U08 xong.
+
+## G4 — Quiz gắn học liệu (giai đoạn 4, 2026-10-22)
+
+Làm trên nhánh `quiz-ai-mcp` cùng giai đoạn 4 của U10, sau khi U13 có slot `LearningMaterialSection` trên `staging`.
+
+- API: `GET /api/v1/me/quizzes?classId=&materialId=` (`materialId` cần kèm `classId`, không có thì `400`) → `QuizPracticeQueryService.byMaterial`: sinh viên của lớp đang mở; Quiz `OPEN` gắn học liệu qua `IQuizQuery.listByMaterial`; số lượt đã dùng, điểm cao nhất của mình.
+- Frontend: `MaterialQuizList` đăng ký `learningMaterialSections`. Hiện "Practice · n phút · Đã dùng x / y lượt · Điểm cao nhất", nút Làm quiz/Làm tiếp; hết lượt thì báo; không phải sinh viên hoặc không có Quiz thì không hiện. Chưa có số câu trên dòng vì `QuizView` không có số câu.
+- Test: `QuizPracticeServicesTest` (1 test), `QuizPracticeControllerTest` (thêm kiểm `materialId`), `MaterialQuizList.test.tsx` (3 test).
+
+## Sửa sau chạy thử và link thông báo Quiz (2026-10-22)
+
+Theo plan mục "Sửa sau chạy thử và link thông báo Quiz" (J1–J6), nhánh `quiz-ai-mcp` sau khi merge `staging` `2fa57f9` (U14).
+
+- **L1 (J1):** thông báo "Có Quiz mới" của U14 dẫn tới `/quiz-practice/{quizId}` không kèm `classId`.
+  - `QuizPracticeDetailPage` nhận `classId: string | null`; thiếu thì `ClassResolver` lấy lịch sử luyện tập và lọc theo `quizId`.
+  - Một lớp thì `router.replace` sang link có `classId`; Quiz của môn ở nhiều lớp thì cho chọn lớp; không có lớp thì báo.
+  - Trang `app/quiz-practice/[quizId]` truyền `classId || null`.
+  - Không đổi API hay U14.
+- **L3 (J3):** test cho thấy ô chọn đáp án có tên đúng là nội dung lựa chọn. "on" ở lần chạy thử là do công cụ đọc cây truy cập; không sửa code, giữ test.
+- **L4 (J4):** `QuizResultPage` thêm "Tự nộp khi hết giờ" hoặc "Tự nộp khi quiz bị ngưng" vào dòng phụ; phần giảng viên xem lượt cũng có nhãn này (`submitModeText`). Danh sách lượt ở Quiz Practice Detail chưa có `submitMode` trong API nên chưa hiện.
+- **Test:** `QuizPracticeScreens.test.tsx` thêm 4 test (thiếu `classId` một lớp, nhiều lớp và không có lớp, tên ô chọn, nhãn tự nộp).
+- **Kiểm:**
+  - Frontend: lint, typecheck, 356 test, build đều đạt.
+  - Backend không đổi; sau khi merge `staging`: 999 test, chỉ còn 4 lỗi Flyway của migration `grading`, lỗi có sẵn trên `staging`.
+- **Còn mở:** BR-U11-20 (kết quả khi Quiz ẩn điểm, ẩn đáp án) chờ người viết requirement chốt.
+
+## Giai đoạn 6 — Ghi nhận hoạt động khi làm Quiz (G3, 2026-10-22)
+
+Theo plan giai đoạn 6 (K1–K7), nhánh `quiz-activity` từ `staging` `0d1cf27` (đã có U08).
+
+- **Backend (K4):** `TakingView` thêm `activityMonitoringEnabled`, `activityNotice` lấy từ `AttemptSnapshot`. Quiz đổi sau khi lượt bắt đầu thì lượt đang làm không bị ảnh hưởng. API ghi hoạt động (`QuizActivityService`) không đổi; U08 (`ActivityService.record`) để U11 tự kiểm quyền và chính sách.
+- **Frontend (K5):**
+  - `QuizTakingPage` gọi `useActivityTracker` của U08 khi lượt bật ghi nhận và chưa nộp, gửi qua `recordQuizActivity`; khi rời trang thì dùng `keepalive`. Lỗi gửi không chặn làm bài.
+  - Trang hiện "Quiz này ghi nhận hoạt động khi làm bài" kèm lời báo.
+- **Giảng viên (K6):** chi tiết một lượt hiện `ActivityTimeline` của U08 (số lần rời trang, thời lượng, các khoảng). Cột "Hoạt động" trên danh sách sinh viên chưa làm.
+- **Test:**
+  - `QuizPracticeServicesTest`: `TakingView` theo ảnh chụp.
+  - `QuizPracticeScreens.test.tsx`:
+    - chỉ gửi sự kiện khi lượt bật ghi nhận, kèm lời báo;
+    - giảng viên thấy dòng thời gian.
+- **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.

@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Icon, Pill, Section, Select, Switch, TextInput } from "@/shared/ui";
+import { MaterialRefPicker } from "./AiDraftTargets";
 import { formatPoints, TYPE_LABELS } from "./labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
@@ -122,6 +123,7 @@ export type SettingsForm = {
   showCorrectAnswers: boolean;
   activityMonitoringEnabled: boolean;
   activityNotice: string;
+  materialIds: string[];
 };
 
 export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
@@ -137,17 +139,20 @@ export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
     showCorrectAnswers: s.showCorrectAnswers,
     activityMonitoringEnabled: quiz.activityMonitoringEnabled,
     activityNotice: quiz.activityNotice ?? "",
+    materialIds: [...quiz.referenceMaterialIds],
   };
 }
 
 /** Kiểm cấu hình theo BR-U10-15; trả lỗi theo trường hoặc dữ liệu gửi API. */
-export function settingsInput(form: SettingsForm, materials: string[]): { errors: Record<string, string>; input?: QuizDetailsInput } {
+export function settingsInput(form: SettingsForm): { errors: Record<string, string>; input?: QuizDetailsInput } {
   const errors: Record<string, string> = {};
   if (!form.title.trim() || form.title.trim().length > 200) errors.title = "Tên quiz từ 1 đến 200 ký tự";
   const time = form.timeLimit.trim() === "" ? null : Number(form.timeLimit);
   if (time !== null && (!Number.isInteger(time) || time < 1 || time > 300)) errors.timeLimit = "Từ 1 đến 300 phút hoặc để trống";
   const attempts = form.maxAttempts.trim() === "" ? null : Number(form.maxAttempts);
   if (attempts !== null && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) errors.maxAttempts = "Từ 1 đến 10 hoặc để trống";
+  if (form.activityMonitoringEnabled && !form.activityNotice.trim()) errors.activityNotice = "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động";
+  if (form.activityNotice.trim().length > 1000) errors.activityNotice = "Lời báo tối đa 1.000 ký tự";
   if (Object.keys(errors).length > 0) return { errors };
   const settings: QuizSettings = {
     shuffleQuestions: form.shuffleQuestions,
@@ -165,13 +170,15 @@ export function settingsInput(form: SettingsForm, materials: string[]): { errors
       settings,
       activityMonitoringEnabled: form.activityMonitoringEnabled,
       activityNotice: form.activityNotice.trim() || null,
-      referenceMaterialIds: materials,
+      referenceMaterialIds: form.materialIds,
     },
   };
 }
 
-/** "Cấu hình" (BR-U10-15); theo dõi hoạt động chưa bật được khi chưa có thời hạn lưu (E3). */
-export function QuizSettingsPanel({ value, onChange, errors, readOnly, maxScore }: {
+/** "Cấu hình" (BR-U10-15); ghi nhận hoạt động chỉ bật được khi Admin đã đặt thời hạn lưu (E3, K3). */
+export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, maxScore, retentionConfigured }: {
+  quizId: string;
+  retentionConfigured: boolean;
   value: SettingsForm;
   onChange: (value: SettingsForm) => void;
   errors: Record<string, string>;
@@ -199,7 +206,7 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly, maxScore 
           <TextInput id={`${id}-attempts`} inputMode="numeric" value={value.maxAttempts} invalid={!!errors.maxAttempts}
             onChange={(e) => set("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
         </Field>
-        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" disabled={readOnly} />
+        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" ariaLabel="Hiện điểm sau khi nộp" disabled={readOnly} />
         <Field label="Hiện đáp án" htmlFor={`${id}-answers`}>
           <Select id={`${id}-answers`} value={value.showCorrectAnswers ? "AFTER_SUBMIT" : "NEVER"}
             onChange={(e) => set("showCorrectAnswers", e.target.value === "AFTER_SUBMIT")}>
@@ -207,11 +214,24 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly, maxScore 
             <option value="AFTER_SUBMIT">Sau khi nộp</option>
           </Select>
         </Field>
-        <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" disabled={readOnly} />
-        <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" disabled={readOnly} />
-        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động"
-          disabled={readOnly || !value.activityMonitoringEnabled} />
-        <p className="text-[11px] text-muted">Ghi nhận hoạt động chỉ bật được khi quản trị viên đã đặt thời hạn lưu dữ liệu hoạt động.</p>
+        <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" ariaLabel="Đảo thứ tự câu" disabled={readOnly} />
+        <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" ariaLabel="Đảo thứ tự lựa chọn" disabled={readOnly} />
+        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động" ariaLabel="Ghi nhận hoạt động"
+          disabled={readOnly || (!retentionConfigured && !value.activityMonitoringEnabled)} />
+        {!retentionConfigured && !value.activityMonitoringEnabled && (
+          <p className="text-[11px] text-muted" data-testid="quiz-settings-activity-locked">
+            Ghi nhận hoạt động chỉ bật được khi quản trị viên đã đặt thời hạn lưu dữ liệu hoạt động.
+          </p>
+        )}
+        {value.activityMonitoringEnabled && (
+          <Field label="Lời báo cho sinh viên" htmlFor={`${id}-notice`} required error={errors.activityNotice}
+            hint="Sinh viên thấy lời báo này trước và trong khi làm bài.">
+            <textarea id={`${id}-notice`} rows={2} maxLength={1000} value={value.activityNotice} className={TEXTAREA}
+              aria-invalid={!!errors.activityNotice} onChange={(e) => set("activityNotice", e.target.value)}
+              data-testid="quiz-settings-activity-notice" />
+          </Field>
+        )}
+        <MaterialRefPicker quizId={quizId} value={value.materialIds} onChange={(ids) => set("materialIds", ids)} readOnly={readOnly} />
         <p className="text-[13px] font-semibold text-ink">Tổng điểm: {formatPoints(maxScore)}</p>
       </fieldset>
     </Section>
