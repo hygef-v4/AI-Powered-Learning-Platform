@@ -5513,3 +5513,32 @@ Final verification: rerun frontend job119854495999 succeeded on the same ae7a1b6
 **User Input**: "Giúp tôi commit phần sửa U03 và U15 này, chưa push."
 **AI Response**: User authorizes a local commit of the approved U03/U15 provider, consumer, OpenAPI, frontend, tests and associated plan/state/evidence documents on u15-backup-completion-plan. Recheck focused backend including PostgreSQL integration and frontend dashboard tests, review staged paths and whitespace, then create a Conventional Commit. Existing full verification evidence remains applicable to unchanged production sources. No push, remote merge, Jira transition or additional feature work.
 **Context**: Local commit only; full application/browser/NFR acceptance remains pending.
+## PR #9 merged, U12 branch updated
+**Timestamp**: 2026-10-21T23:30:00Z
+**AI Response**: Gộp PR #9 vào `staging` (e9925e2). Gộp `staging` mới vào `group-assignment`, giải xung đột (Actions, AccessPolicy, test chính sách, audit, aidlc-state; giữ cả U06 và U12); backend 1265 test 0 lỗi, frontend 437 test, lint, typecheck, build đạt; push c9452cd. CI PR #10 đang chạy, chưa gộp.
+**Context**: Construction, gộp PR
+
+---
+
+## Merge PR #10
+**Timestamp**: 2026-10-21T23:45:00Z
+**User Input**: "gộp #10 đi"
+**AI Response**: CI c9452cd: backend, frontend, GitGuardian đạt. Gộp PR #10 vào `staging`.
+**Context**: Construction, gộp PR
+
+---
+
+## PR #10 merged
+**Timestamp**: 2026-10-21T23:50:00Z
+**AI Response**: PR #10 gộp vào `staging` (d2a06cd). U06 (#9) và U12 (#10) đều đã vào `staging`.
+**Context**: Construction, gộp PR
+
+---
+
+## Fix staging startup cycle (U06 handler registry)
+**Timestamp**: 2026-10-22T09:05:00Z
+**User Input**: (dán báo cáo lỗi) "[staging] Backend không khởi động được: vòng phụ thuộc bean AI (nhờ U06, U07, U08 xem) ... AiTaskResultHandlerRegistry (U06) → AssignmentDraftResultHandler → AssignmentAiDraftService (U07) → IAiTask = AiTaskService (U06) → AiTaskResultHandlerRegistry ... Cách sửa gợi ý: 1. Sửa một chỗ ở U06: AiTaskResultHandlerRegistry nhận ObjectProvider<IAiTaskResultHandler> và chỉ dựng map handler ở lần gọi find() đầu tiên ..." kèm ảnh khuyên cách 1.
+**AI Response**: Nhánh `fix/u06-ai-handler-cycle` từ `origin/staging` (fa1c0f0). Tái hiện lỗi khi khởi động backend. Sửa theo cách 1: `AiTaskResultHandlerRegistry` nhận `ObjectProvider`, chỉ lấy danh sách handler ở lần `find()` đầu tiên; giữ kiểm hai handler trùng loại task. Thêm `AiTaskResultHandlerRegistryTest`. Khởi động lại được cả profile web và worker. Handler của U07, U08 không đổi.
+**Context**: Construction, U06 sửa lỗi sau khi gộp
+
+---
