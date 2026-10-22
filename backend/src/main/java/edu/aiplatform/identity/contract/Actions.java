@@ -79,6 +79,12 @@ public final class Actions {
     public static final String ASSIGNMENT_WORK = "ASSIGNMENT_WORK";
     public static final String ASSIGNMENT_ATTEMPT_REVIEW = "ASSIGNMENT_ATTEMPT_REVIEW";
 
+    // U06 — AI: kết nối cá nhân, agent MCP, usage của chính mình (BR-U06-01, 30, 40); dùng API chung chỉ giảng viên
+    // (BR-U06-11); API chung, quota, tổng hợp usage chỉ Admin (BR-U06-51)
+    public static final String AI_PERSONAL = "AI_PERSONAL";
+    public static final String AI_SHARED_USE = "AI_SHARED_USE";
+    public static final String AI_ADMIN = "AI_ADMIN";
+
     // U12 — nhóm: giảng viên được giao dạy lớp quản lý nhóm (R3/R4, BR-U12-01); sinh viên đang học làm bài nhóm (R5)
     public static final String GROUP_MANAGE = "GROUP_MANAGE";
     public static final String GROUP_WORK = "GROUP_WORK";
