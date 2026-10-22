@@ -478,3 +478,9 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Code Generation Part 1: plan được duyệt (J1–J6), mục trong plan U11.
 - [x] Code Generation Part 2: bước 5.0–5.6 xong trên `quiz-ai-mcp` (merge `972d594`; code sửa chưa commit).
 - [x] Bước 5.7: người dùng duyệt ngày 2026-10-22; commit local trên `quiz-ai-mcp`, chưa push.
+
+## Ghi nhận hoạt động khi làm Quiz (G3 U11, E3 U10) — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 6 được duyệt (K1–K7), nhánh `quiz-activity` từ `origin/staging` `0d1cf27`, không upstream.
+- [ ] Code Generation Part 2: bước 6.0–6.7.
+- [ ] Bước 6.8: người dùng duyệt.
