@@ -75,11 +75,42 @@ describe("QuizPracticeDetailPage (UC 50)", () => {
     expect(screen.queryByTestId("practice-detail-start")).not.toBeInTheDocument();
     expect(screen.getByTestId("practice-detail-attempts")).toHaveTextContent("2 / 2 lượt");
   });
+
+  const historyRow = (classId: string, classCode: string) => ({ quizId: "z1", classId, classCode, className: "Lớp",
+    title: "Luyện tập", status: "OPEN" as const, timeLimitMinutes: null, attemptsUsed: 0, maxAttempts: 2, bestScore: null,
+    lastScore: null, maxScore: 3, lastAttemptAt: null, inProgressAttemptId: null, canStart: true });
+
+  it("link thông báo thiếu classId: một lớp thì chuyển sang link có lớp", async () => {
+    vi.mocked(getPracticeHistory).mockResolvedValue([historyRow("c1", "SE1801"), { ...historyRow("c2", "SE1802"), quizId: "z9" }]);
+    render(<QuizPracticeDetailPage quizId="z1" classId={null} />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/quiz-practice/z1?classId=c1"));
+    expect(getPracticeQuiz).not.toHaveBeenCalled();
+  });
+
+  it("quiz của môn ở nhiều lớp thì cho chọn lớp; không có lớp thì báo", async () => {
+    vi.mocked(getPracticeHistory).mockResolvedValue([historyRow("c1", "SE1801"), historyRow("c2", "SE1802")]);
+    const { unmount } = render(<QuizPracticeDetailPage quizId="z1" classId={null} />);
+    const classes = await screen.findAllByTestId("practice-detail-class");
+    expect(classes).toHaveLength(2);
+    fireEvent.click(classes[1]!);
+    expect(push).toHaveBeenCalledWith("/quiz-practice/z1?classId=c2");
+    unmount();
+
+    vi.mocked(getPracticeHistory).mockResolvedValue([]);
+    render(<QuizPracticeDetailPage quizId="z1" classId={null} />);
+    expect(await screen.findByText("Quiz không có trong lớp bạn đang học hoặc đã ngưng.")).toBeInTheDocument();
+  });
 });
 
 describe("QuizTakingPage (UC 51)", () => {
   beforeEach(() => {
     vi.mocked(getAttempt).mockResolvedValue(TAKING);
+  });
+
+  it("ô chọn đáp án có tên là nội dung lựa chọn", async () => {
+    render(<QuizTakingPage attemptId="a1" />);
+    expect(await screen.findByRole("radio", { name: "Hà Nội" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Huế" })).toBeInTheDocument();
   });
 
   it("tự lưu 2 giây sau lần chọn cuối kèm answerVersion", async () => {
@@ -156,6 +187,23 @@ describe("QuizResultPage (UC 52)", () => {
     expect(screen.getByText("Đáp án đúng")).toBeInTheDocument();
     expect(screen.getByText("Bạn chọn")).toBeInTheDocument();
     expect(screen.queryByTestId("result-retry")).not.toBeInTheDocument();
+  });
+
+  it("lượt tự nộp ghi rõ lý do, lượt nộp tay thì không", async () => {
+    vi.mocked(getResult).mockResolvedValue({ ...RESULT, submitMode: "AUTO_RETIRED" });
+    const { unmount } = render(<QuizResultPage attemptId="a1" />);
+    expect(await screen.findByText(/Tự nộp khi quiz bị ngưng/)).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(getResult).mockResolvedValue({ ...RESULT, submitMode: "AUTO_TIME_LIMIT" });
+    const timed = render(<QuizResultPage attemptId="a1" />);
+    expect(await screen.findByText(/Tự nộp khi hết giờ/)).toBeInTheDocument();
+    timed.unmount();
+
+    vi.mocked(getResult).mockResolvedValue(RESULT);
+    render(<QuizResultPage attemptId="a1" />);
+    await screen.findByTestId("result-hidden");
+    expect(screen.queryByText(/Tự nộp/)).not.toBeInTheDocument();
   });
 });
 

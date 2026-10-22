@@ -175,6 +175,17 @@ describe("ClassQuizzesSection", () => {
   });
 });
 
+describe("QuizSettingsPanel", () => {
+  it("các công tắc có tên truy cập", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(saveQuizItems).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+    for (const name of ["Hiện điểm sau khi nộp", "Đảo thứ tự câu", "Đảo thứ tự lựa chọn", "Ghi nhận hoạt động"]) {
+      expect(await screen.findByRole("switch", { name })).toBeInTheDocument();
+    }
+  });
+});
+
 describe("settingsInput (BR-U10-15)", () => {
   it("kiểm thời gian, số lượt và chuyển sang dữ liệu gửi API", () => {
     const form = settingsFormOf(INFO);

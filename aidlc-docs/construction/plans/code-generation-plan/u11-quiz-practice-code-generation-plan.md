@@ -106,19 +106,19 @@ Không gồm điểm "kết quả khi Quiz ẩn điểm, ẩn đáp án" (BR-U11
 
 ### Checklist
 
-- [ ] **5.0 Cập nhật nhánh** (J5): commit roadmap và audit đang chờ, merge `origin/staging`, giải xung đột `aidlc-state.md`, chạy test quiz backend và frontend.
-- [ ] **5.1 L1** (J1): `QuizPracticeDetailPage` xử lý thiếu `classId`; trang `app/quiz-practice/[quizId]` truyền `classId` rỗng thành `null`.
-- [ ] **5.2 L2** (J2): `ariaLabel` cho bốn công tắc của `QuizSettingsPanel`.
-- [ ] **5.3 L3** (J3): test tên truy cập ô chọn ở `QuizTakingPage`; sửa nếu sai.
-- [ ] **5.4 L4** (J4): nhãn tự nộp ở `QuizResultPage` và phần giảng viên xem lượt.
-- [ ] **5.5 Unit test frontend:**
+- [x] **5.0 Cập nhật nhánh** (J5): merge `972d594` (sau commit tài liệu `d0eebc1`); backend 999 test, 4 lỗi Flyway `grading` có sẵn; frontend 351 test đạt sau `npm ci` (U14 thêm `react-markdown`, `rehype-sanitize`). commit roadmap và audit đang chờ, merge `origin/staging`, giải xung đột `aidlc-state.md`, chạy test quiz backend và frontend.
+- [x] **5.1 L1** (J1): `QuizPracticeDetailPage` xử lý thiếu `classId`; trang `app/quiz-practice/[quizId]` truyền `classId` rỗng thành `null`.
+- [x] **5.2 L2** (J2): `ariaLabel` cho bốn công tắc của `QuizSettingsPanel`.
+- [x] **5.3 L3** (J3): test tên truy cập ô chọn ở `QuizTakingPage`; sửa nếu sai. Kết quả: tên đúng là nội dung lựa chọn nên không sửa code; chỉ giữ test.
+- [x] **5.4 L4** (J4): nhãn tự nộp ở `QuizResultPage` và phần giảng viên xem lượt.
+- [x] **5.5 Unit test frontend:**
   - L1: một lớp chuyển link, nhiều lớp hiện chọn lớp, không có lớp báo lỗi.
   - L2: công tắc có tên.
   - L4: nhãn tự nộp hiện đúng theo `submitMode`.
-- [ ] **5.6 Kiểm và tài liệu:**
+- [x] **5.6 Kiểm và tài liệu:**
   - Đủ bước CI: frontend lint, typecheck, test, build. Backend `mvn -B verify` vẫn có 4 lỗi Flyway của `grading` cho tới khi `staging` được sửa.
   - Cập nhật code-summary U10, U11; tick checklist; cập nhật lộ trình và `aidlc-state.md`.
-- [ ] **5.7 Review:** người dùng duyệt rồi commit local.
+- [x] **5.7 Review:** người dùng duyệt ngày 2026-10-22, commit local trên `quiz-ai-mcp`.
 
 ## Integration test cases (tester viết)
 

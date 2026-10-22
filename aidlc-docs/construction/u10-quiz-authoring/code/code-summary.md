@@ -241,3 +241,9 @@ Mã lỗi mới: `AI_DRAFT_NOT_FOUND`, `AI_DRAFT_CLOSED`, `AI_DRAFT_NOT_READY`, 
 
 - Integration test phân quyền 4 role trên endpoint do tester viết, gồm hai trường hợp AI/MCP mới trong plan.
 - Chạy AI thật khi U06 (`ai-connections`) merge; thay `AiSourceSelect` bằng `AiSourcePicker`.
+
+## Sửa sau chạy thử (2026-10-22)
+
+- **L2 (J2):** bốn công tắc của `QuizSettingsPanel` (Hiện điểm sau khi nộp, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) truyền `ariaLabel`. Không sửa `Switch` dùng chung.
+- **Ghi chú cho người giữ UI kit:** `Switch` không có tên truy cập khi chỗ gọi không truyền `ariaLabel`, vì nhãn nằm ngoài nút. Còn 2 chỗ dùng ở unit khác.
+- **Test:** `QuizScreens.test.tsx` thêm kiểm tên bốn công tắc.

@@ -5079,3 +5079,23 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U11/U10 fixes, Code Generation Part 1 approved.
 
 ---
+
+## 2026-10-22T07:30:00Z — Post-E2E fixes ready for review
+
+**User Input**: (none since approval)
+
+**AI Response**: 5.0: committed docs (d0eebc1), merged origin/staging (972d594), resolved aidlc-state.md keeping both sides; ran npm ci for U14's new dependencies. 5.1: QuizPracticeDetailPage resolves a missing classId via practice history (one class → redirect, several → choose, none → message). 5.2: aria labels on four QuizSettingsPanel switches. 5.3: test shows taking-page options already named by option text; no code change. 5.4: result page and teacher attempt view show auto-submit reason. Checks: frontend lint, typecheck, 356 tests, build pass; backend after merge 999 tests with only the 4 pre-existing grading Flyway errors. Presented for step 5.7 review.
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 2 complete, awaiting approval.
+
+---
+
+## 2026-10-22T07:45:00Z — Post-E2E fixes approved
+
+**User Input**: "Duyệt bản sửa L1–L4. Commit local trên nhánh quiz-ai-mcp."
+
+**AI Response**: Recorded approval (step 5.7) and committed the L1–L4 fixes with documentation locally on `quiz-ai-mcp`. Not pushed (still waiting for the grading migration fix on staging).
+
+**Context**: Construction — U11/U10 fixes approved.
+
+---

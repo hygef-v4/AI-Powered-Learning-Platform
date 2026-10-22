@@ -114,3 +114,20 @@ Làm trên nhánh `quiz-ai-mcp` cùng giai đoạn 4 của U10, sau khi U13 có 
 - API: `GET /api/v1/me/quizzes?classId=&materialId=` (`materialId` cần kèm `classId`, không có thì `400`) → `QuizPracticeQueryService.byMaterial`: sinh viên của lớp đang mở; Quiz `OPEN` gắn học liệu qua `IQuizQuery.listByMaterial`; số lượt đã dùng, điểm cao nhất của mình.
 - Frontend: `MaterialQuizList` đăng ký `learningMaterialSections`. Hiện "Practice · n phút · Đã dùng x / y lượt · Điểm cao nhất", nút Làm quiz/Làm tiếp; hết lượt thì báo; không phải sinh viên hoặc không có Quiz thì không hiện. Chưa có số câu trên dòng vì `QuizView` không có số câu.
 - Test: `QuizPracticeServicesTest` (1 test), `QuizPracticeControllerTest` (thêm kiểm `materialId`), `MaterialQuizList.test.tsx` (3 test).
+
+## Sửa sau chạy thử và link thông báo Quiz (2026-10-22)
+
+Theo plan mục "Sửa sau chạy thử và link thông báo Quiz" (J1–J6), nhánh `quiz-ai-mcp` sau khi merge `staging` `2fa57f9` (U14).
+
+- **L1 (J1):** thông báo "Có Quiz mới" của U14 dẫn tới `/quiz-practice/{quizId}` không kèm `classId`.
+  - `QuizPracticeDetailPage` nhận `classId: string | null`; thiếu thì `ClassResolver` lấy lịch sử luyện tập và lọc theo `quizId`.
+  - Một lớp thì `router.replace` sang link có `classId`; Quiz của môn ở nhiều lớp thì cho chọn lớp; không có lớp thì báo.
+  - Trang `app/quiz-practice/[quizId]` truyền `classId || null`.
+  - Không đổi API hay U14.
+- **L3 (J3):** test cho thấy ô chọn đáp án có tên đúng là nội dung lựa chọn. "on" ở lần chạy thử là do công cụ đọc cây truy cập; không sửa code, giữ test.
+- **L4 (J4):** `QuizResultPage` thêm "Tự nộp khi hết giờ" hoặc "Tự nộp khi quiz bị ngưng" vào dòng phụ; phần giảng viên xem lượt cũng có nhãn này (`submitModeText`). Danh sách lượt ở Quiz Practice Detail chưa có `submitMode` trong API nên chưa hiện.
+- **Test:** `QuizPracticeScreens.test.tsx` thêm 4 test (thiếu `classId` một lớp, nhiều lớp và không có lớp, tên ô chọn, nhãn tự nộp).
+- **Kiểm:**
+  - Frontend: lint, typecheck, 356 test, build đều đạt.
+  - Backend không đổi; sau khi merge `staging`: 999 test, chỉ còn 4 lỗi Flyway của migration `grading`, lỗi có sẵn trên `staging`.
+- **Còn mở:** BR-U11-20 (kết quả khi Quiz ẩn điểm, ẩn đáp án) chờ người viết requirement chốt.

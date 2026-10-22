@@ -203,7 +203,7 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
           <TextInput id={`${id}-attempts`} inputMode="numeric" value={value.maxAttempts} invalid={!!errors.maxAttempts}
             onChange={(e) => set("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
         </Field>
-        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" disabled={readOnly} />
+        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" ariaLabel="Hiện điểm sau khi nộp" disabled={readOnly} />
         <Field label="Hiện đáp án" htmlFor={`${id}-answers`}>
           <Select id={`${id}-answers`} value={value.showCorrectAnswers ? "AFTER_SUBMIT" : "NEVER"}
             onChange={(e) => set("showCorrectAnswers", e.target.value === "AFTER_SUBMIT")}>
@@ -211,9 +211,9 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
             <option value="AFTER_SUBMIT">Sau khi nộp</option>
           </Select>
         </Field>
-        <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" disabled={readOnly} />
-        <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" disabled={readOnly} />
-        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động"
+        <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" ariaLabel="Đảo thứ tự câu" disabled={readOnly} />
+        <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" ariaLabel="Đảo thứ tự lựa chọn" disabled={readOnly} />
+        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động" ariaLabel="Ghi nhận hoạt động"
           disabled={readOnly || !value.activityMonitoringEnabled} />
         <p className="text-[11px] text-muted">Ghi nhận hoạt động chỉ bật được khi quản trị viên đã đặt thời hạn lưu dữ liệu hoạt động.</p>
         <MaterialRefPicker quizId={quizId} value={value.materialIds} onChange={(ids) => set("materialIds", ids)} readOnly={readOnly} />

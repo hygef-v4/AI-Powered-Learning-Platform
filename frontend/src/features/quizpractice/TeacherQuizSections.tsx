@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, Dialog, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getClassAttempts, getTeacherAttempt } from "./api";
-import { errorMessage, formatDateTime, formatPoints } from "./labels";
+import { errorMessage, formatDateTime, formatPoints, submitModeText } from "./labels";
 import { ResultQuestions } from "./ResultQuestions";
 import type { ClassAttempts, StudentAttempts, TeacherAttemptDetail } from "./types";
 
@@ -74,7 +74,10 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
       {detail && (
         <Dialog open size="lg" onClose={() => setDetail(null)} title={`${detail.displayName ?? ""} · Lần ${detail.result.attemptNo}`}
           footer={<Button onClick={() => setDetail(null)}>Đóng</Button>}>
-          <p className="mb-2 text-[13px]">Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}</p>
+          <p className="mb-2 text-[13px]" data-testid="teacher-attempt-summary">
+            Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}
+            {submitModeText(detail.result.submitMode) && <> · {submitModeText(detail.result.submitMode)}</>}
+          </p>
           <p className="mb-3 text-xs text-muted">
             {detail.activity ? "Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận." : "Không có dữ liệu hoạt động cho lượt này."}
           </p>
