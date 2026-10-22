@@ -518,3 +518,11 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Implement content-field rendering with shared RunsView and integrate real source picker for single/batch requests; retain image/SVG security, request DTO/version and manual grading decisions.
 - [x] Frontend446 tests/78 files, lint/typecheck and production build pass; generated tsconfig restored. No backend/provider/API/schema/dependency changes.
 - Handoff: construction/u09-assignment-grading/code/implementation-summary.md; execution: construction/plans/2026-10-22-u09-renderer-ai-picker.md. Real AI/MCP/browser/DB/NFR acceptance and deferred U15 backup contract remain open. No commit/push/Jira change.
+
+## U15 backup completion planning — 2026-10-22
+
+- [x] User requests contract review and plan before code; inspect staging8519bea4, U03 schema/domain/provider/stubs/job semantics and U15 backend/OpenAPI/frontend.
+- [x] Confirm C01/C02 still missing from public port despite started_at existing in DB. Draft additive IBackupDashboardStatus plus two records, preserving old IBackupStatus/BackupRunView; define window168h, latest-success completion time, safe public errors and empty-vs-outage semantics.
+- [x] Add Phase B Tasks B1–B5 to existing U15 code-generation plan; contract spec: construction/u15-admin-dashboard/code/backup-contract-review-2026-10-22.md.
+- [ ] User approval of D1–D7, including U03 read-provider scope and nullable latestSuccessfulAt, before any implementation. Review file: construction/plans/code-generation-plan/u15-backup-completion-approval-questions.md.
+- Planning only, no production/test/schema/dependency changes, runtime verification or commit/push/Jira transition. Slice A and remaining independent integration/NFR acceptance retain their status.

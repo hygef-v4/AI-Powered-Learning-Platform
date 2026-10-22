@@ -5463,3 +5463,37 @@ check lại lỗi
 **Context**: Local commit only; U15 remains deferred.
 
 ---
+
+## U09 — pull request vào staging, chưa merge
+**Timestamp**: 2026-10-22T13:28:38Z
+**User Input**: "tạo pull request vào staging, kiểm tra CI trước, chưa merge."
+**AI Response**: Verified remote grading-gradebook already contains ae7a1b69 and staging is fa1c0f06; no additional push required. No existing open PR for this head/base. GitHub connector could read but returned403 creating PR, so used the configured GitHub CLI to create https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/12 and attached it to this chat. PR targets staging, contains the one U09 commit, is mergeable, remains OPEN with auto-merge disabled. GitGuardian passed; backend/frontend CI monitoring in progress.
+**Context**: Authorized PR publication and CI inspection; no merge, Jira mutation or new source edits. This audit entry remains local.
+
+First CI attempt39787018235: backend and GitGuardian succeeded; frontend lint/typecheck succeeded, but tests ended445 passed/1 failed at unchanged U04 SubjectDetailMutations.test.tsx:74 (focus after409/reload remained on body). All U09 test files passed. Read job logs and focus code; timing sensitivity is a hypothesis, not a confirmed product root cause. Re-ran only the failed frontend job once through GitHub CLI after the connector lacked Actions write permission; no test/source/assertion edits or PR commits were made.
+
+Final verification: rerun frontend job119854495999 succeeded on the same ae7a1b69 head. Latest PR rollup: backend SUCCESS, frontend SUCCESS, GitGuardian SUCCESS; images/deploy SKIPPED by workflow policy. Re-read PR12: base staging, OPEN, mergedAt null, mergeable, autoMergeRequest null. PR remains unmerged; the initial U04 focus failure and successful rerun are disclosed to the user. Only this local audit changed after the published commit.
+
+## U09 — merge PR12 vào staging và kiểm tra sau merge
+**Timestamp**: 2026-10-22T13:39:49Z
+**User Input**: "Giúp tôi merge PR #12 vào staging rồi kiểm tra lại sau merge."
+**AI Response**: Re-read PR12 immediately before merge: CLEAN/MERGEABLE, head ae7a1b697804713677d49c02204a75f2b5243243, base fa1c0f06, backend/frontend/GitGuardian SUCCESS. Merged via GitHub CLI using merge-commit method and expected-head guard. GitHub confirms MERGED at2026-10-22T13:38:21Z with merge commit8519bea466ecb996a97ed75b53d1a38c9adafc61; fetched origin/staging and verified both parents. Current checkout tree, origin/staging tree and the CI-tested PR merge tree d6be646 all equal593001ae7fd9d1b469c3638c4594ccfa9c48ab38. No conflict markers in backend/src, frontend/src or aidlc-docs. Fresh postmerge focused U09/U06 picker tests15/15 passed on the identical code tree. No new workflow run for the staging merge SHA (workflow push targets main only); prior green PR CI applies to exactly the same tree. Kept grading-gradebook checkout and preserved the local audit; no additional source edits, branch deletion or deployment.
+**Context**: Authorized merge and postmerge verification; this audit update remains local, not committed.
+
+---
+
+## U15 — backup contract review và plan hoàn thiện
+**Timestamp**: 2026-10-22T13:50:34Z
+**User Input**: "Giúp tôi xử lý tiếp phần U15 còn thiếu, kiểm tra contract backup U03 hiện tại và lập plan hoàn thiện trước khi code."
+**AI Response**: Applied AI-DLC resumption, Clean Code boundaries and Superpowers writing-plans to planning only. Verified GitHub staging8519bea4; existing grading-gradebook tree matches staging, preserving previous local audit. IBackupStatus still exposes only latest/list and eight-field BackupRunView omits stored started_at; no summary query exists. Reviewed retry/final-failure timestamps, public error truncation and existing U15 nullability schema. Proposed additive U03-owned IBackupDashboardStatus/metadata/summary records while retaining old contracts, one SQL summary for168h boundaries, completedAt latest success, empty-vs-unavailable semantics, safe public projection and explicit nullable success timestamp. Wrote contract review D1–D7, appended B1–B5 to authoritative U15 plan and added approval questions. Tasks cover provider/stub compatibility, query/mapping, U15 consumer/OpenAPI, UI and independent PostgreSQL/session/browser/NFR gates. No source/test/migration/dependency implementation, runtime tests, owner messages, Jira changes, commit or push; waiting for plan approval before code as requested.
+**Context**: Construction Code Generation Part1 addendum only; slice A/acceptance status not advanced.
+
+---
+
+## U15 — publish planning documents to staging
+**Timestamp**: 2026-10-22T13:58:57Z
+**User Input**: "giúp tôi commit plan và merge vào staging"
+**AI Response**: User authorizes committing and publishing the five planning/audit/state documents and merging into staging through a documentation-only PR. Implementation approval remains pending; no U03/U15 source, schema or tests changed. Validate Markdown local links/fences, conflict markers and whitespace before commit; verify PR diff and available CI before merging.
+**Context**: Documentation publication only; no approval inferred to implement D1–D7.
+
+---
