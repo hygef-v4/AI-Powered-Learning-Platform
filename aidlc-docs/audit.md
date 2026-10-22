@@ -5439,3 +5439,11 @@ check lại lỗi
 **Context**: Construction, gộp PR
 
 ---
+
+## U10 — Sửa banner lỗi kiểm tra phía trình duyệt ở Quiz Detail
+**Timestamp**: 2026-10-22T07:25:00Z
+**User Input**: "(Phiên chạy thử end-to-end giao việc) Sửa lỗi QuizDetailPage báo \"Hệ thống tạm bận\" khi form không hợp lệ phía trình duyệt; không đổi hành vi với ApiError; thêm test; nhánh mới từ origin/staging, commit local, chưa push."
+**AI Response**: Nhánh `fix/quiz-detail-client-validation-banner` từ `origin/staging` `d2a06cd`. `save` kiểm cấu hình và điểm trước khi gọi API, lỗi thì đặt thẳng banner thay vì ném `Error` cho `run`; nhờ vậy cũng không còn trường hợp lưu cấu hình xong mới báo điểm sai. `run` và `errorMessage` giữ nguyên. Thêm 1 test, mở rộng 1 test trong `QuizScreens.test.tsx`; hai test này thất bại trên code cũ. Lint, typecheck, 438 test, build đạt.
+**Context**: Construction, U10 sửa lỗi sau chạy thử
+
+---
