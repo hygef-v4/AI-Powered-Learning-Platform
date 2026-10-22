@@ -5209,3 +5209,13 @@ check lại lỗi
 **Context**: Delivery — PR #8.
 
 ---
+
+## 2026-10-22T12:40:00Z — PR #8 CI fix: duplicate POI dependency
+
+**User Input**: "Bật Auto-fix cho PR #8. Khi CI xanh thì báo tôi để quyết định merge."
+
+**AI Response**: Enabled Auto-fix for PR #8. CI frontend passed; backend failed at POM validation: `poi-ooxml` declared twice (U10's plain declaration and U07's declaration with poi-ooxml-lite excluded plus poi-ooxml-full, both kept by the U07 merge into staging), and `poi.version` duplicated. Kept a single declaration in U07's form (full schemas also cover U10's .xlsx import) and one property. Verified with `mvn -B verify` (JDK 17): 1114 tests, 0 failures/errors, QuestionImporterTest passes. Committed and pushed to `quiz-activity`.
+
+**Context**: Delivery — PR #8 CI fix.
+
+---
