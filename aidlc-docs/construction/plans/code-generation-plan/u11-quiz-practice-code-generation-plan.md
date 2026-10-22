@@ -78,6 +78,48 @@ Lập ngày 2026-10-20 sau khi U10 giai đoạn 2 được duyệt (`f3b54bc`) t
 - [x] **3.13 Kiểm và tài liệu** — đủ bước CI; `aidlc-docs/construction/u11-quiz-practice/code/code-summary.md`; tick checklist; `aidlc-state.md`.
 - [x] **3.14 Review** — đối chiếu UC 49–52, US-ASM-003, BR-U11 với code; người dùng duyệt.
 
+## Sửa sau chạy thử và link thông báo Quiz (2026-10-22) — chi tiết
+
+Lập ngày 2026-10-22 theo mục "Làm được ngay" của [lộ trình](../cuong-uc-roadmap-2026-10-20.md), trên nhánh `quiz-ai-mcp` (`a27fdd2`, chưa push). Không thêm UC; sửa lỗi phát hiện khi chạy thử end-to-end (code-summary U10, U11) và khi U14 merge vào `staging` (`2fa57f9`).
+
+### Lỗi cần sửa
+
+| # | Lỗi | Unit |
+|---|---|---|
+| L1 | Thông báo "Có Quiz mới" của U14 dẫn tới `/quiz-practice/{quizId}` không có `classId`. Trang chi tiết gọi API với `classId` rỗng nên nhận `400` và báo lỗi | U11 |
+| L2 | Bốn công tắc trong `QuizSettingsPanel` (Hiện điểm, Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động) không có tên truy cập. `Switch` dùng chung đặt nhãn ngoài nút và các chỗ gọi không truyền `ariaLabel` | U10 |
+| L3 | Ô chọn đáp án ở `QuizTakingPage` có tên truy cập "on" (theo cây truy cập lúc chạy thử) | U11 |
+| L4 | Kết quả không cho biết lượt được tự nộp (`AUTO_TIME_LIMIT`, `AUTO_RETIRED`); API đã trả `submitMode` nhưng UI không hiện | U11 |
+
+Không gồm điểm "kết quả khi Quiz ẩn điểm, ẩn đáp án" (BR-U11-20 khác API và UI): việc này cần người viết requirement chốt trước.
+
+### Quyết định cần duyệt
+
+| # | Nội dung | Đề xuất |
+|---|---|---|
+| J1 | Cách xử lý L1 | Chỉ sửa frontend U11, không đổi U14 hay API. Thiếu `classId` thì `QuizPracticeDetailPage` lấy `GET /api/v1/me/quizzes` và lọc theo `quizId`. Có đúng một lớp thì `router.replace` sang link có `classId`; nhiều lớp (Quiz của môn) thì hiện danh sách lớp để chọn; không có thì báo "Quiz không có trong lớp bạn đang học hoặc đã ngưng" |
+| J2 | Cách xử lý L2 | Truyền `ariaLabel` ở bốn chỗ gọi trong U10, không sửa `Switch` trong `shared/ui` (file dùng chung). Ghi chú cho người giữ UI kit: `Switch` không có tên khi thiếu `ariaLabel` (còn 2 chỗ dùng ở unit khác) |
+| J3 | Cách xử lý L3 | Viết test kiểm tên truy cập của ô chọn bằng nội dung lựa chọn. Nếu test cho thấy tên sai thì gắn `id` cho ô và `htmlFor` cho nhãn; nếu tên đúng thì chỉ giữ test và ghi lại rằng "on" là do công cụ đọc cây truy cập lúc chạy thử |
+| J4 | Cách hiện L4 | `QuizResultPage`: dòng phụ dưới tiêu đề "Tự nộp khi hết giờ" hoặc "Tự nộp khi quiz bị ngưng". Phần giảng viên xem lượt (`TeacherQuizSections`) thêm cùng nhãn. Danh sách lượt ở Quiz Practice Detail chưa có `submitMode` trong API nên không đổi |
+| J5 | Cập nhật nhánh | `git merge origin/staging` vào `quiz-ai-mcp`, không rebase, để giữ nguyên `cf80f2e`, `a27fdd2`. Xung đột duy nhất ở `aidlc-docs/aidlc-state.md`: giữ cả hai phía. Chạy lại test sau khi merge |
+| J6 | Commit | Merge commit riêng (bước 5.0). Code sửa L1–L4 thành một commit local sau khi người dùng duyệt; chưa push (vẫn chờ sửa migration `grading`) |
+
+### Checklist
+
+- [ ] **5.0 Cập nhật nhánh** (J5): commit roadmap và audit đang chờ, merge `origin/staging`, giải xung đột `aidlc-state.md`, chạy test quiz backend và frontend.
+- [ ] **5.1 L1** (J1): `QuizPracticeDetailPage` xử lý thiếu `classId`; trang `app/quiz-practice/[quizId]` truyền `classId` rỗng thành `null`.
+- [ ] **5.2 L2** (J2): `ariaLabel` cho bốn công tắc của `QuizSettingsPanel`.
+- [ ] **5.3 L3** (J3): test tên truy cập ô chọn ở `QuizTakingPage`; sửa nếu sai.
+- [ ] **5.4 L4** (J4): nhãn tự nộp ở `QuizResultPage` và phần giảng viên xem lượt.
+- [ ] **5.5 Unit test frontend:**
+  - L1: một lớp chuyển link, nhiều lớp hiện chọn lớp, không có lớp báo lỗi.
+  - L2: công tắc có tên.
+  - L4: nhãn tự nộp hiện đúng theo `submitMode`.
+- [ ] **5.6 Kiểm và tài liệu:**
+  - Đủ bước CI: frontend lint, typecheck, test, build. Backend `mvn -B verify` vẫn có 4 lỗi Flyway của `grading` cho tới khi `staging` được sửa.
+  - Cập nhật code-summary U10, U11; tick checklist; cập nhật lộ trình và `aidlc-state.md`.
+- [ ] **5.7 Review:** người dùng duyệt rồi commit local.
+
 ## Integration test cases (tester viết)
 
 - Hết giờ khi đang làm: scanner nộp và chấm đúng một lần.

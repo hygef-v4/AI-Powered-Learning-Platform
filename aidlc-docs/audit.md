@@ -4988,3 +4988,43 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Construction — U10 Code Generation (phase 4) approved.
 
 ---
+
+## 2026-10-22T05:45:00Z — Push postponed
+
+**User Input**: "Chưa push. Đợi nhóm sửa migration grading trên staging (merge U07 hoặc sửa U09) rồi mới mở PR."
+
+**AI Response**: Left `quiz-ai-mcp` (a27fdd2) local and unpushed. PR into staging waits until the team fixes `grading/V20260925_1500` (needs U07 `assignments`) on staging.
+
+**Context**: Construction — U10 phase 4 delivery on hold.
+
+---
+
+## 2026-10-22T06:10:00Z — Roadmap refresh
+
+**User Input**: "kiểm tra các thay đổi mới nhất và cập nhật roadmap của tôi, còn phần nào có thể hoàn thành mà không cần đợi các phần khác không"
+
+**AI Response**: Fetched origin. staging is now 2fa57f9 with U14 (notifications, announcements); the grading migration still references the missing `assignments` table. Unmerged: ai-connections (U06), assignment (U07/U08), group-assignment (U12). Jira unchanged (KAN-18 In Progress, KAN-23/25 To Do, KAN-152 In Progress). quiz-ai-mcp merges with staging with one doc conflict (aidlc-state.md). Found that U14's quiz.published notification links to /quiz-practice/{quizId} without classId, which the U11 detail page cannot load. Added a "Tình trạng 2026-10-22 (chiều)" section to the roadmap listing blocked items and items doable now: the notification-link fix, small accessibility/result fixes from the E2E run, updating quiz-ai-mcp with staging, and KAN-152 (needs Report 3 from the user).
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T06:30:00Z — Code Generation Part 1: post-E2E fixes plan
+
+**User Input**: "Làm các việc không cần chờ trên nhánh quiz-ai-mcp: sửa link thông báo Quiz (trang chi tiết thiếu classId), các lỗi nhỏ từ lần chạy thử end-to-end, cập nhật nhánh theo staging. Lập plan trước rồi mới viết code."
+
+**AI Response**: Added section "Sửa sau chạy thử và link thông báo Quiz" to the U11 code generation plan: issues L1 (U14 quiz notification link without classId), L2 (QuizSettingsPanel switches without accessible names), L3 (taking-page option name "on"), L4 (auto-submit mode not shown); decisions J1–J6; checklist 5.0–5.7. Linked from the roadmap. BR-U11-20 result mismatch excluded (needs requirement decision). Approval prompt: "Duyệt plan sửa lỗi với đề xuất J1–J6?"
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T06:40:00Z — Post-E2E fixes plan approved
+
+**User Input**: "Duyệt plan sửa lỗi với đề xuất J1–J6. Bắt đầu từ bước 5.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 5.0: commit pending roadmap/plan/audit, merge origin/staging into quiz-ai-mcp, resolve aidlc-state.md conflict keeping both sides, rerun quiz tests.
+
+**Context**: Construction — U11/U10 fixes, Code Generation Part 1 approved.
+
+---

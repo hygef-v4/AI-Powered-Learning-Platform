@@ -430,3 +430,9 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Code Generation Part 1: plan giai đoạn 4 được người dùng duyệt (H1–H10), nhánh `quiz-ai-mcp` tách từ `staging` `08a6134`.
 - [x] Code Generation Part 2: bước 4.0–4.13 xong trên `quiz-ai-mcp` (4.0 commit `cf80f2e`, code chưa commit); xem `construction/u10-quiz-authoring/code/code-summary.md`. `staging` không dựng được DB mới do migration `grading` (U09) cần bảng `assignments` (U07 chưa merge).
 - [x] Bước 4.14: người dùng duyệt code giai đoạn 4 ngày 2026-10-22; commit local trên `quiz-ai-mcp`.
+
+## Sửa sau chạy thử và link thông báo Quiz (U10, U11) — 2026-10-22
+
+- [x] Code Generation Part 1: plan được duyệt (J1–J6), mục trong plan U11.
+- [ ] Code Generation Part 2: bước 5.0–5.6.
+- [ ] Bước 5.7: người dùng duyệt.

@@ -93,6 +93,32 @@ Tình trạng 2026-10-22: contract U06 trên `staging` đã đủ cho bước n�
 
 - [ ] Rà phần V. Requirement Appendix của Report 3 theo 65 UC hiện hành; không ảnh hưởng code.
 
+### Tình trạng 2026-10-22 (chiều)
+
+`staging` mới nhất là `2fa57f9`, đã thêm U14 (thông báo, bảng tin lớp). Các nhánh chưa merge: `ai-connections` (U06, 19 commit), `assignment` (U07/U08, 5 commit), `group-assignment` (U12, 17 commit). Jira không đổi: KAN-18 In Progress, KAN-23 và KAN-25 To Do, KAN-152 In Progress.
+
+**Đang chờ người khác:**
+
+| Việc | Chờ ai | Ghi chú |
+|---|---|---|
+| Push `quiz-ai-mcp` và mở PR giai đoạn 4 | Nhóm sửa migration `grading` trên `staging` | `grading/V20260925_1500` của U09 tham chiếu bảng `assignments` của U07 chưa merge, nên `staging` không dựng được DB mới và CI backend đỏ |
+| Chạy AI thật; thay `AiSourceSelect` bằng `AiSourcePicker` | U06 merge `ai-connections` | |
+| Tracker hoạt động (G3), bật ghi nhận hoạt động (E3) | U08 merge `assignment` (có `useActivityTracker`, khóa `activity.retentionDays`) | |
+| Integration test U01, U10, U11; đóng KAN-18, KAN-23, KAN-25 | Tester | |
+| Chốt kết quả khi Quiz ẩn điểm, ẩn đáp án (BR-U11-20 khác API và UI) | Người viết requirement | Ghi ở code-summary U11, mục chạy thử end-to-end |
+
+**Làm được ngay, không cần chờ:**
+
+Plan chi tiết: [U11, mục "Sửa sau chạy thử và link thông báo Quiz"](code-generation-plan/u11-quiz-practice-code-generation-plan.md) (J1–J6).
+
+- [ ] Thông báo "Có Quiz mới" của U14 dẫn tới `/quiz-practice/{quizId}` không có `classId`, nên trang chi tiết U11 gọi API với `classId` rỗng và báo lỗi. Sửa phía U11: thiếu `classId` thì tự tìm lớp đang học có Quiz đó (một lớp thì mở luôn, nhiều lớp thì cho chọn).
+- [ ] Lỗi nhỏ từ lần chạy thử end-to-end:
+  - Công tắc trong `QuizSettingsPanel` (U10) chưa có tên truy cập.
+  - Ô chọn đáp án ở `QuizTakingPage` (U11) có tên truy cập "on".
+  - Kết quả không cho biết lượt được tự nộp (`AUTO_TIME_LIMIT`, `AUTO_RETIRED`).
+- [ ] Cập nhật `quiz-ai-mcp` theo `staging` mới. Chỉ xung đột ở `aidlc-state.md`, để PR giai đoạn 4 sẵn sàng khi `staging` được sửa.
+- [ ] KAN-152: chỉ là việc tài liệu nhưng Report 3 không có trong repo, và Jira không có mô tả hay tệp đính kèm. Cần người dùng gửi bản Report 3 (link Google Docs hoặc tệp).
+
 ## 3. Nhánh
 
 - U01 giữ nhánh `cuong` tới khi merge vào `staging`.
