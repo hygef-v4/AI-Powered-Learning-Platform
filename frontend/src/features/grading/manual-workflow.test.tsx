@@ -6,6 +6,21 @@ import { AiProposalPanel } from "./AiProposalPanel";
 import type { Rubric } from "./types";
 
 describe("grading review", () => {
+  it("renders current document runs, alignment, list levels and table cells without printing metadata", () => {
+    const { container } = render(<SubmissionViewer document={{ blocks: [
+      { id: "p", type: "PARAGRAPH", content: { align: "CENTER", runs: [{ text: "Bài làm", color: "#ff0000", bold: true }] } },
+      { id: "l", type: "LIST", content: { ordered: true, items: [{ level: 2, runs: [{ text: "Mục con", italic: true }] }] } },
+      { id: "t", type: "TABLE", content: { headerRow: true, rows: [[{ runs: [{ text: "Ô bảng", highlight: "#00ff00" }] }]] } },
+    ] }} />);
+    expect(screen.getByText("Bài làm")).toHaveStyle({ color: "#ff0000" });
+    expect(screen.getByText("Bài làm")).toHaveClass("font-bold");
+    expect(screen.getByText("Bài làm").closest("p")).toHaveClass("text-center");
+    expect(screen.getByRole("listitem")).toHaveTextContent(/^Mục con$/);
+    expect(screen.getByRole("listitem")).toHaveStyle({ marginLeft: "48px" });
+    expect(screen.getByRole("columnheader")).toHaveTextContent(/^Ô bảng$/);
+    expect(screen.getByText("Ô bảng")).toHaveStyle({ backgroundColor: "#00ff00" });
+    expect(container).not.toHaveTextContent(/CENTER|#ff0000|#00ff00/);
+  });
   it("edits only checklist IDs and never a free score", () => {
     const onChange = vi.fn();
     const rubrics: Rubric[] = [

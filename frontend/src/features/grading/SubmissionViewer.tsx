@@ -4,16 +4,36 @@ import { useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { message } from "./useResource";
 import type { DocumentModel } from "./types";
+import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
+import type { Align, Run } from "@/shared/document/types";
 
-function text(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value.map(text).join("");
-  if (value && typeof value === "object")
-    return Object.entries(value)
-      .filter(([key]) => !["xml", "url", "src", "fileId"].includes(key))
-      .map(([, v]) => text(v))
-      .join(" ");
-  return typeof value === "number" ? String(value) : "";
+/** Only document text fields become visible content; formatting metadata stays in RunsView. */
+function contentRuns(value: unknown): Run[] {
+  if (typeof value === "string") return [{ text: value }];
+  if (typeof value === "number") return [{ text: String(value) }];
+  if (Array.isArray(value)) return value.flatMap(contentRuns);
+  if (!value || typeof value !== "object") return [];
+  const content = value as Record<string, unknown>;
+  if (Array.isArray(content.runs)) return contentRuns(content.runs);
+  if (typeof content.text !== "string") return [];
+  const run: Run = { text: content.text };
+  for (const flag of ["bold", "italic", "underline", "strike", "code"] as const)
+    if (content[flag] === true) run[flag] = true;
+  for (const field of ["color", "highlight"] as const) {
+    const color = content[field];
+    if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) run[field] = color;
+  }
+  return [run];
+}
+
+function contentAlignment(value: unknown): string {
+  return alignClass(typeof value === "string" && ["LEFT", "CENTER", "RIGHT", "JUSTIFY"].includes(value)
+    ? value as Align : undefined);
+}
+
+function listIndent(item: unknown): number {
+  const level = item && typeof item === "object" ? (item as Record<string, unknown>).level : undefined;
+  return typeof level === "number" && Number.isInteger(level) && level >= 0 && level <= 4 ? level * 24 : 0;
 }
 function SubmittedImage({
   fileId,
@@ -193,11 +213,11 @@ export function SubmissionViewer({
                       {(Array.isArray(row) ? row : [row]).map((cell, i) =>
                         c.headerRow && index === 0 ? (
                           <th key={i} className="border p-2">
-                            {text(cell)}
+                            <RunsView runs={contentRuns(cell)} />
                           </th>
                         ) : (
                           <td key={i} className="border p-2">
-                            {text(cell)}
+                            <RunsView runs={contentRuns(cell)} />
                           </td>
                         ),
                       )}
@@ -210,25 +230,27 @@ export function SubmissionViewer({
         if (block.type === "HEADING")
           return (
             <h3 key={block.id} className="my-4 text-lg font-bold">
-              {text(c.text)}
+              <RunsView runs={contentRuns(c.text)} />
             </h3>
           );
         if (block.type === "LIST" && Array.isArray(c.items)) {
-          const items = c.items.map((item, i) => <li key={i}>{text(item)}</li>);
+          const items = c.items.map((item, i) => (
+            <li key={i} style={{ marginLeft: `${listIndent(item)}px` }}><RunsView runs={contentRuns(item)} /></li>
+          ));
           return c.ordered ? (
-            <ol key={block.id} className="ml-5 list-decimal">
+            <ol key={block.id} className={`ml-5 list-decimal ${contentAlignment(c.align)}`}>
               {items}
             </ol>
           ) : (
-            <ul key={block.id} className="ml-5 list-disc">
+            <ul key={block.id} className={`ml-5 list-disc ${contentAlignment(c.align)}`}>
               {items}
             </ul>
           );
         }
         return (
-          <div key={block.id} className="mb-4">
-            {text(c)}
-          </div>
+          <p key={block.id} className={`mb-4 ${contentAlignment(c.align)}`}>
+            <RunsView runs={contentRuns(c)} />
+          </p>
         );
       })}
       {document.blocks.length === 0 && <p>Chưa có nội dung bài làm khả dụng.</p>}

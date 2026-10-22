@@ -510,3 +510,11 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Bước 14: người dùng duyệt code ngày 2026-10-22; nhánh đã push lên `origin`, chờ Max2Min gộp vào `staging`.
 - [x] Build & Test (phần của unit): `construction/build-and-test/u12-verification.md`; integration test và đo hiệu năng còn mở (tester, cần U07, U08).
 - Jira 2026-10-22: KAN-28, KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 chuyển In Review; KAN-19 Done.
+
+## U09 renderer và nguồn AI U06 — 2026-10-22
+
+- [x] User authorizes fixing U09 display and consuming U06 AiSourcePicker with existing API/contracts; U15 deferred.
+- [x] Reproduce rich text/list/table metadata rendering and missing real picker through five RED regressions before production edits.
+- [x] Implement content-field rendering with shared RunsView and integrate real source picker for single/batch requests; retain image/SVG security, request DTO/version and manual grading decisions.
+- [x] Frontend446 tests/78 files, lint/typecheck and production build pass; generated tsconfig restored. No backend/provider/API/schema/dependency changes.
+- Handoff: construction/u09-assignment-grading/code/implementation-summary.md; execution: construction/plans/2026-10-22-u09-renderer-ai-picker.md. Real AI/MCP/browser/DB/NFR acceptance and deferred U15 backup contract remain open. No commit/push/Jira change.

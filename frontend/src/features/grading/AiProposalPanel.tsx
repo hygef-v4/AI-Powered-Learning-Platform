@@ -1,43 +1,15 @@
 "use client";
 import { useState } from "react";
 import type { AiRequest, Proposal, Checks } from "./types";
+import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 
-export function AiSourceFields({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="block">
-      Nguồn AI
-      <select
-        className="ml-2 rounded border p-2"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">Chọn nguồn AI</option>
-        <option value="SHARED">API của trường · trường chịu chi phí</option>
-        <option value="GEMINI">Gemini cá nhân · bạn chịu chi phí</option>
-        <option value="OPENAI">OpenAI cá nhân · bạn chịu chi phí</option>
-        <option value="CLAUDE">Claude cá nhân · bạn chịu chi phí</option>
-      </select>
-      <small className="mt-2 block text-slate-600">
-        Chưa đọc được hạn mức/token hiện tại. Nguồn cá nhân cần API key đã cấu hình. Hết quota sẽ
-        không tự đổi nguồn.
-      </small>
-    </label>
-  );
-}
-export function aiRequest(source: string): AiRequest {
-  return source === "SHARED"
-    ? { source: "SHARED", requestRef: crypto.randomUUID() }
-    : {
-        source: "PERSONAL",
-        provider: source as AiRequest["provider"],
-        requestRef: crypto.randomUUID(),
-      };
+/** Preserve the U09 request DTO; shared provider choice remains implicit as before. */
+export function aiRequest(choice: SourceChoice): AiRequest {
+  return {
+    source: choice.source,
+    ...(choice.source === "PERSONAL" && choice.provider ? { provider: choice.provider } : {}),
+    requestRef: crypto.randomUUID(),
+  };
 }
 export function AiProposalPanel({
   evaluationId,
@@ -52,19 +24,29 @@ export function AiProposalPanel({
   onRequest: (input: AiRequest) => void;
   disabled?: boolean;
 }) {
-  const [source, setSource] = useState("");
+  const [choosingSource, setChoosingSource] = useState(false);
   return (
     <section aria-label="Đề xuất AI" className="my-5 rounded-xl border border-line p-4">
       <h2 className="font-bold">Đề xuất AI</h2>
       <p>AI chỉ đề xuất. Bạn kiểm tra rubric và lưu nháp trước khi chốt.</p>
-      <AiSourceFields value={source} onChange={setSource} />
       <button
         className="mt-3 rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-40"
-        disabled={disabled || !source}
-        onClick={() => onRequest(aiRequest(source))}
+        disabled={disabled}
+        onClick={() => setChoosingSource(true)}
       >
         Yêu cầu đề xuất mới
       </button>
+      <AiSourcePicker
+        open={choosingSource}
+        task="Đề xuất chấm bài đang xem"
+        busy={disabled}
+        onCancel={() => setChoosingSource(false)}
+        onSubmit={(choice) => {
+          if (disabled) return;
+          setChoosingSource(false);
+          onRequest(aiRequest(choice));
+        }}
+      />
       <span className="sr-only">{evaluationId}</span>
       {proposals.map((p) => (
         <article key={p.id} className="mt-3 rounded border p-3">
