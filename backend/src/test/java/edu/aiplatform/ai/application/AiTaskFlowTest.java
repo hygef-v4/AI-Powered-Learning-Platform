@@ -93,7 +93,7 @@ class AiTaskFlowTest {
     void setUp() {
         when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         when(handler.taskType()).thenReturn("GRADING_PROPOSAL");
-        AiTaskResultHandlerRegistry registry = new AiTaskResultHandlerRegistry(List.of(handler));
+        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.of(List.of(handler));
         AiAccess access = new AiAccess(authorization, mock(IAudit.class), clock);
         AiTaskDelivery delivery = new AiTaskDelivery(tasks, registry, accounts, tx);
         JsonSchemaChecker schemas = new JsonSchemaChecker(json);

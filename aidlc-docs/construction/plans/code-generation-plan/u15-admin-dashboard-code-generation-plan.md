@@ -4,6 +4,8 @@
 
 **Goal:** UC66 Admin Dashboard chỉ cho ADMIN, số liệu tổng hợp và metadata backup, nguồn lỗi không giả số0/SUCCESS.
 
+**Addendum 2026-10-22:** kế hoạch hoàn thiện metadata backup ở **Phase B, Task B1–B5** cuối file. [Contract review mới](../../u15-admin-dashboard/code/backup-contract-review-2026-10-22.md) là spec cho phase này. Slice A đã triển khai giữ lịch sử; phase B được người dùng duyệt riêng ngày2026-10-22, gồm phạm vi U03/U15; xem execution evidence ở cuối phase B.
+
 **Architecture:** U15 đọc public port U01/U02/U03/U04/U05; một service orchestration/mapping và một reader nội bộ có bounded executor/deadline. Frontend dùng Admin layout/session/shared UI/apiFetch sẵn có. Không bảng, migration, cache counts, queue hay dịch vụ ngoài.
 
 **Tech stack:** Java17 target, Spring Boot3.5.6/Security, JUnit/Mockito/ArchUnit; Next.js/React/TypeScript, Vitest/Testing Library; không thêm dependency.
@@ -180,3 +182,104 @@ Commit checkpoints đề xuất khi user cho phép: backend+OpenAPI+tests; front
 | RESILIENCY10 isolation | Pool/queue bounded, deadline2s, rejection/cancellation/partial degradation, query-resource gate; Task2/7 |
 
 Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây là design/test coverage, không đánh dấu deployed compliance hay acceptance.
+
+## Phase B — Hoàn thiện backup metadata U03 → U15, 2026-10-22
+
+**Goal:** hoàn tất startedAt, latestSuccessfulAt và failuresLast7Days bằng provider thật, phân biệt absence với lỗi nguồn; giữ privacy và API hiện hành ngoài nullable timestamp đã đề xuất.
+
+**Architecture:** chọn phương án B trong [contract review mới](../../u15-admin-dashboard/code/backup-contract-review-2026-10-22.md): U03 bổ sung capability đọc riêng, một BackupStatusService cài port cũ/mới; U15 dùng port mới trong bounded fan-out hiện có. Không thêm endpoint, bảng, migration, job, dependency, cache hoặc renderer/framework UI. Java17/Spring Boot/JdbcClient/JUnit/Mockito, PostgreSQL16, Next/TypeScript/Vitest hiện hữu.
+
+### Điều kiện trước execution và constraints
+
+- [x] Người dùng duyệt D1–D7 trong contract review, gồm phạm vi sửa U03 read-provider và nullable latestSuccessfulAt. Chưa có approval thì chỉ planning.
+- [x] Khi bắt đầu execution: fetch staging, ghi SHA/source/test baseline mới; hiện remote staging8519bea4 và checkout tree giống staging. Giữ audit local từ PR/merge; không reset hoặc tự đưa thay đổi khác vào commit.
+- IBackupStatus/BackupRunView cũ giữ nguyên signatures, canonical constructor, latest/list semantics. Hai HTTP GET U15, field names, page0/size1..100, authorization/no-store không đổi.
+- Window đúng168h `[asOf−7d,asOf)` với Clock cố định trong request; counts/latest/history/schedule và các fallback khác không đổi. Không suy từ recent3 hoặc lịch Settings.
+- Pool8/queue32/deadline2s giữ nguyên; query timeout1s thuộc các method provider mới. Future.cancel không đồng nghĩa JDBC đã hủy.
+- Security subset/resiliency subset theo state giữ nguyên; PBT disabled. Chỉ metadata đã whitelist, không raw exception/archive/id/credentials. Không thêm thao tác backup/restore/download.
+- Không sửa job scheduling/retry/retention, đếm lại lịch sử retry, global JobDispatcher hoặc contract unit khác. Không tự commit/push/Jira/messaging trong execution nếu chưa được yêu cầu.
+
+### Review focus → task chịu trách nhiệm
+
+1. Backup SUCCESS cũ hơn7ngày nhưng gần nhất, kể cả có row mới FAILED: B2/B3/B5 phải giữ mốc SUCCESS thật.
+2. Row FAILED đúng from/to và terminal thiếu completed_at: B2/B5 kiểm inclusive/exclusive và fail unavailable khi dữ liệu không đủ kết luận.
+3. Không có dữ liệu khác DB lỗi/summary timeout: B2/B3/B4 phân biệt AVAILABLE null/zero với UNAVAILABLE và giữ section khỏe.
+4. Stored safe_error có credentials/đường dẫn/markup: B2 whitelist exact category/generic, B3 DTO privacy, B4 render text, B5 kiểm end-to-end.
+5. Nguồn chậm/queue đầy/role bị thu hồi/history response cũ: B3/B4 giữ guards/freshness; B5 đo deadline/query release/real sessions.
+
+### Task B1 — U03 capability contract và compatibility
+
+**Files create:** backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java, BackupDashboardRunView.java, BackupDashboardSummary.java; backend/src/test/java/edu/aiplatform/backup/application/BackupDashboardContractTest.java; backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java.
+
+**Files modify:** backend/src/main/java/edu/aiplatform/backup/contract/stub/BackupContractStubs.java; backend/src/test/java/edu/aiplatform/shared/stub/ContractStubsTest.java.
+
+**Consumes:** IBackupStatus/BackupRunView hiện hữu và các type Instant/LocalDate/BackupState/Page/Pageable. **Produces:** ba chữ ký `latestRun()`, `history(Pageable)`, `summarize(Instant,Instant)` và hai record **đúng** contract review mục3, không thêm default success/zero.
+
+- [x] Viết compatibility và fallback tests: eight-argument BackupRunView constructor vẫn dùng được; IBackupStatus vẫn chỉ latest/list; JSON record mới không có id/archiveRef/hash. Ví dụ assertion contract cũ: `assertThat(IBackupStatus.class.getDeclaredMethods()).extracting(java.lang.reflect.Method::getName).containsExactlyInAnyOrder("latest", "list");`.
+- [x] Chạy `mvn -f backend/pom.xml -Dtest=BackupDashboardContractTest,BackupDashboardUnavailableTest,ContractStubsTest test`; quan sát RED do capability chưa tồn tại.
+- [x] Tạo ba file contract theo spec. Thêm bean fallback mới vào auto-configuration hiện có, ConditionalOnMissingBean; cả ba method ném `ApiException.unavailable("BACKUP_STATUS_UNAVAILABLE", "Không đọc được trạng thái backup")`. Không đổi fallback cũ.
+- [x] Chạy lại target trên GREEN; test bean provider được đăng ký thay fallback, stubs-disabled không đăng ký fallback. Real BackupStatusService wiring chỉ xác minh ở B2; chưa đánh metadata provider complete.
+
+### Task B2 — U03 read-provider, summary SQL và public error
+
+**Files modify:** backend/src/main/java/edu/aiplatform/backup/application/BackupStatusService.java; backend/src/main/java/edu/aiplatform/backup/domain/BackupRunRepository.java. **Files create test:** backend/src/test/java/edu/aiplatform/backup/application/BackupStatusServiceTest.java.
+
+**Consumes:** contract B1; domain BackupRun/backup_runs hiện có. **Produces:** BackupStatusService implements IBackupStatus,IBackupDashboardStatus; repository thêm `SummaryRow summarize(Instant fromInclusive, Instant toExclusive)` và nested `public record SummaryRow(Instant latestSuccessfulAt, long failedRuns, String latestFailureMessage, boolean invalidTerminal)`. Service kiểm integrity, che latestFailureMessage và dựng public BackupDashboardSummary với window echo. Dùng find/latest/page hiện có cho metadata. New methods read-only Spring transaction timeout1s. Mapping safeError nằm private trong service, không tạo service layer/framework.
+
+- [x] Viết RED test tên `dashboardMetadataPreservesStoredStartAndDoesNotChangeLegacyView`, `summaryRejectsInvalidWindow`, `failedProjectionDoesNotExposeStoredException`. Giữ ba state timestamp khác nhau để bắt việc lấy nhầm started/snapshot/completed; null startedAt CREATED; legacy view vẫn8 fields.
+- [x] Chạy `mvn -f backend/pom.xml -Dtest=BackupStatusServiceTest,BackupDashboardContractTest test` và ghi RED.
+- [x] Implement mới: latestRun/history map domain sang richer view, không thay query/order/public methods cũ. startedAt lấy đúng domain. State FAILED dùng exact allowlist public errors D6, mọi thông điệp khác generic; các state khác error=null.
+- [x] Implement repository summarize bằng **một parameterized SQL statement**: scalar query SUCCESS trước to, count FAILED trong [from,to), row FAILED mới nhất cùng window với tie-break như D3, và invalidTerminal khi terminal thiếu completed_at. Service chuyển SummaryRow sang contract, che error trước khi trả và echo window; never SUCCESS => latestSuccessfulAt=null; none FAILED => failedRuns=0/latestSafeError=null. invalidTerminal báo unavailable, không bỏ row sai để tạo zero. DB errors propagate an toàn cho U15 section mapping; không bắt lỗi thành empty. Bean wiring thật phải thay fallback B1.
+- [x] GREEN service/contract và toàn bộ `-Dtest=edu.aiplatform.backup.**,ContractStubsTest,ArchitectureTest test`; ghi rõ skip nếu có. SQL window/snapshot/timeout acceptance phải qua B5 PostgreSQL, không thay bằng test mock chuỗi SQL.
+
+### Task B3 — U15 consumer và HTTP absence semantics
+
+**Files modify:** backend/src/main/java/edu/aiplatform/admindashboard/application/AdminDashboardService.java; docs/contracts/openapi/admin-dashboard.yaml; backend/src/test/java/edu/aiplatform/admindashboard/application/DashboardFixture.java, AdminDashboardBackupTest.java, AdminDashboardAccessTest.java; backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardApiContractTest.java.
+
+**Consumes:** IBackupDashboardStatus B1/B2. **Produces:** existing BackupSection/BackupRunItem/BackupFailureSummary và hai endpoint hiện hữu; AVAILABLE latestSuccessfulAt.data có thể null, không đổi JSON keys.
+
+- [x] Viết RED tests: startedAt thật ở latest/history; asOf fixed `2026-10-22T10:00:00Z` truyền from=`2026-10-15T10:00:00Z` và to=`2026-10-22T10:00:00Z`; verify summarize đúng một lần. Never-success JSON phải có `availability:"AVAILABLE",data:null`, no failures count0. Summary throws/mismatched echoed window/negative count => cả hai summary sections UNAVAILABLE, counts/latest/history còn tốt.
+- [x] Chạy `mvn -f backend/pom.xml -Dtest=edu.aiplatform.admindashboard.**,AdminDashboardPolicyTest test` để xác nhận RED trên consumer slice A.
+- [x] Chuyển injection sang port mới; latestRun/history thay latest/list chỉ trong U15. Thêm một pending summary source vào fan-out trước await, tổng8; map một kết quả sang hai section. Kiểm echoed window/count/timestamp hợp lệ trước mapping; lỗi source giữ partial availability. Mapping run giữ toàn bộ fields hiện có, lấy startedAt thật.
+- [x] OpenAPI giữ routes/params/DTO fields; nới riêng AVAILABLE latestSuccessfulAt.data thành type `[string, 'null']`/format date-time và cập nhật description C01/C02 không còn cố định UNAVAILABLE. Ghi mô tả latestSuccess=completedAt, window168h, count final failed runs; không claim atomic snapshot cho toàn dashboard vì các source độc lập.
+- [x] GREEN target trên và ArchitectureTest. Regress anonymous/nonADMIN/role revoked: authorize trước tất cả source kể cả summarize; malformed paging/privacy/no-store/denied audit như trước. Không thay DashboardSourceReader implementation nếu tests không chỉ ra lỗi mới.
+
+### Task B4 — UI dữ liệu thật, absence và lỗi
+
+**Files modify:** frontend/src/features/admindashboard/types.ts, BackupSection.tsx, testFixtures.ts, BackupSection.test.tsx, BackupHistoryDialog.test.tsx, AdminDashboardPage.test.tsx. BackupRunTable.tsx chỉ sửa nếu test phát hiện cần thiết, không thay shared UI.
+
+**Consumes:** JSON B3; **Produces:** existing `/admin` dashboard/history, same apiFetch/endpoints. Đổi type `latestSuccessfulAt: Section<string | null>`; những type khác giữ nguyên.
+
+- [x] Thêm RED test `successfulNullIsNotProviderOutage`: AVAILABLE/null => `Chưa có backup thành công.`, UNAVAILABLE => `Không khả dụng`. AVAILABLE timestamp và startedAt xuất hiện theo giờ Việt Nam; summary count0 hiện0, không hiện placeholder. FAILED message có markup được render thành text, không HTML.
+- [x] Chạy `npm --prefix frontend test -- src/features/admindashboard --maxWorkers=1`, ghi RED.
+- [x] Implement nullable state/copy tối thiểu; đổi nhãn `Lỗi 7 ngày qua` thành `Lần backup thất bại trong 7 ngày` để đúng final-run count. Không có thời gian thì latest/history vẫn hiển thị metadata-null như trước; không nội suy startedAt từ timestamp khác.
+- [x] GREEN tests trên; giữ history paging/request cancellation/401403/focus, refresh không giữ số liệu cũ, success/history lỗi độc lập. Không polling/cache hay thay navigation/HomePaths.
+
+### Task B5 — Integration/verification và bàn giao acceptance
+
+**Files planned cho tester độc lập:** backend/src/test/java/edu/aiplatform/backup/infrastructure/BackupDashboardStatusIntegrationTest.java; có thể bổ sung existing AdminDashboardApiContractTest cho DTO guard coverage ở B3. **Files documentation modify:** construction/u15-admin-dashboard/code/implementation-summary.md, construction/build-and-test/u15-verification.md, construction/u03-job-and-settings/code/code-summary.md và plan/state/audit.
+
+**Consumes:** provider+consumer+UI B1–B4. **Produces:** report phân biệt code-ready với full UC66 acceptance, SQL/provider/session/browser/NFR evidence thật; không tự chuyển Jira Done.
+
+- [ ] Tester viết/chạy PostgreSQL16 isolated context với production backup migration và JdbcClient/transaction manager thật, không cần fake business tables. Case window gồm FAILED tại from (tính), trước from (không), tại to (không), SUCCESS/RUNNING (không); SUCCESS trước7ngày vẫn latest; multiple completed times/scheduled dates khác nhau; purged metadata giữ đúng; terminal thiếu completed_at => unavailable. Test count/error cùng window và một-statement consistency khi concurrent update.
+- [x] Tester xác minh transaction query timeout1s với bảng bị ACCESS EXCLUSIVE lock từ connection khác; query kết thúc/connection trả pool trước reader2s+overhead, request sau lock release hoạt động. Không coi Future.cancel/unit timeout là chứng nhận JDBC release; không sửa global timeout để né test.
+- [x] Developer chạy backend focused U03/U15/ContractStubs/Policy/Architecture rồi `mvn -f backend/pom.xml verify`; JDK17, local cache settings tùy môi trường đã có. Frontend full test/lint/typecheck/build; build output riêng, giữ/restore Next-generated tsconfig rồi typecheck lại. Parse OpenAPI YAML/local refs và git diff --check. Mọi skip/failure phải báo riêng.
+- [ ] Tester chạy full app stubs-disabled qua ADMIN login `/admin`: counts thật, latest/history với CREATED/RUNNING/SUCCESS/FAILED, empty DB, purged, startedAt, never-success, error summary; account/role revoked và audit persisted; source lỗi/queue rejection vẫn partial, không ID/archive/key/raw exception. Không fake backup encryption/upload hay tuyên bố restore-tested từ seeded metadata.
+- [ ] Đo healthy p95≤1s, fault deadline2s+overhead/JDBC release trên dataset đại diện, giữ cấu hình pool8/queue32; ghi môi trường/load/percentiles. Thiếu DB/browser/NFR thì ghi gate pending, không tính test skipped là pass/full Done.
+- [x] Cập nhật handoff/provider spec/verification/state/audit dựa trên kết quả mới. Review diff ownership và compatibility: IBackupStatus/BackupRunView cũ unchanged, U15 HTTP chỉ nullable relaxation đã duyệt; source untouched ngoài whitelist tasks. Tự review một vòng, không tự commit/push hoặc nhắn owner.
+
+### Trình tự, checkpoints và rollback phase B
+
+B1 → B2 → B3 → B4 → B5. Thực thi inline bằng superpowers:executing-plans theo phương thức đã dùng; không tự mở subagents. Commit boundaries khi được yêu cầu: U03 contract/provider/tests; U15 backend/OpenAPI/tests; frontend/tests; docs/evidence.
+
+Rollback đưa U15 về consumer IBackupStatus slice A và UNAVAILABLE cho C01/C02, khôi phục TS/schema cũ; capability U03 bổ sung có thể giữ không dùng. Không đổi ADMIN_HOME, không data migration/restore/delete, không rollback lịch sử backup hoặc job.
+
+### Planning self-review và trạng thái duyệt
+
+- [x] Đọc actual U03 contract/schema/mapping/job semantics và U15 API/UI/test; xác minh staging SHA8519bea4.
+- [x] So sánh A/B/C; đề xuất B để giữ nguyên contract cũ; ghi D1–D7 và file/method signatures thống nhất.
+- [x] Review focus đều có test owner/task; nhấn mạnh nullable success timestamp và safeError không chỉ cắt message.
+- [x] Chỉ thay tài liệu trong lượt planning; không chạy test/build runtime hay đánh code/integration complete.
+- [x] User duyệt phase B và phạm vi provider U03 trước khi thực hiện (approval A,2026-10-22).
+
+Execution evidence: [backup completion verification](../../u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md). B1–B4 implemented; B5 runtime/independent acceptance tracked individually, not inferred from unit tests.

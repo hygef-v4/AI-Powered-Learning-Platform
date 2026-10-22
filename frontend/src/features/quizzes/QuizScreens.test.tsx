@@ -100,6 +100,20 @@ describe("QuizDetailPage", () => {
     expect(await screen.findByText("Đã lưu quiz.")).toBeInTheDocument();
   });
 
+  it("điểm sai thì báo đúng lỗi, không gọi API kể cả khi cấu hình cũng đổi", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("quiz-item-points-0"), { target: { value: "0" } });
+    fireEvent.change(screen.getByLabelText(/Tên quiz/), { target: { value: "Luyện tập 2" } });
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân.");
+    expect(screen.queryByText(/Hệ thống tạm bận/)).not.toBeInTheDocument();
+    expect(updateQuizDetails).not.toHaveBeenCalled();
+    expect(saveQuizItems).not.toHaveBeenCalled();
+  });
+
   it("duyệt lỗi thì hiện danh sách cần sửa; xung đột thì tải lại", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(reviewQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_REVIEW_FAILED",
@@ -193,6 +207,8 @@ describe("QuizSettingsPanel", () => {
     fireEvent.click(toggle);
     fireEvent.click(screen.getByTestId("quiz-detail-save"));
     expect(await screen.findByText("Cần lời báo cho sinh viên khi bật ghi nhận hoạt động")).toBeInTheDocument();
+    expect(screen.getByText("Cấu hình chưa hợp lệ.")).toBeInTheDocument();
+    expect(screen.queryByText(/Hệ thống tạm bận/)).not.toBeInTheDocument();
     expect(updateQuizDetails).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByTestId("quiz-settings-activity-notice"), { target: { value: "Ghi lại" } });

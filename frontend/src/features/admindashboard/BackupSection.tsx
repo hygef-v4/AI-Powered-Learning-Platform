@@ -27,10 +27,10 @@ export function BackupSection({value, onHistory}: {value: BackupSectionView; onH
         </>}
       </div>
       <div data-testid="backup-latest-success"><h3 className="font-semibold">Lần thành công gần nhất</h3>
-        <p>{value.latestSuccessfulAt.availability === "AVAILABLE" ? formatInstant(value.latestSuccessfulAt.data) : "Chưa khả dụng"}</p>
+        <p>{value.latestSuccessfulAt.availability === "UNAVAILABLE" ? "Không khả dụng" : value.latestSuccessfulAt.data === null ? "Chưa có backup thành công." : formatInstant(value.latestSuccessfulAt.data)}</p>
       </div>
-      <div data-testid="backup-failures"><h3 className="font-semibold">Lỗi 7 ngày qua</h3>
-        <p>{value.failuresLast7Days.availability === "AVAILABLE" ? value.failuresLast7Days.data.count : "Chưa khả dụng"}</p>
+      <div data-testid="backup-failures"><h3 className="font-semibold">Lần backup thất bại trong 7 ngày</h3>
+        <p>{value.failuresLast7Days.availability === "AVAILABLE" ? value.failuresLast7Days.data.count : "Không khả dụng"}</p>
         {value.failuresLast7Days.data?.latestSafeError && <p>{value.failuresLast7Days.data.latestSafeError}</p>}
       </div>
     </div>

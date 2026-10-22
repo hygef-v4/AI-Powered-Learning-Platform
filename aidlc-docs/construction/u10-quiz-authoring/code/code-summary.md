@@ -287,11 +287,12 @@ Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của
 | Bật mà không có lời báo, bấm Lưu | Lỗi theo trường "Cần lời báo cho sinh viên…", không gửi request. Banner phía trên lại báo "Hệ thống tạm bận" (lỗi 1 bên dưới) |
 | Nhập lời báo, Lưu; Duyệt; Phát hành | Đạt; Quiz `OPEN`, bật ghi nhận hoạt động, 4 câu, 1 học liệu |
 
-Lỗi phát hiện (chưa sửa):
+Lỗi phát hiện:
 
-1. **`QuizDetailPage` báo "Hệ thống tạm bận, vui lòng thử lại sau." khi form không hợp lệ phía trình duyệt.**
-   - Nguyên nhân: `save` ném `Error` thường (ví dụ "Cấu hình chưa hợp lệ.", "Điểm mỗi câu phải lớn hơn 0…"), còn `errorMessage` chỉ đọc `ApiError` và biến mọi lỗi khác thành câu "hệ thống tạm bận".
-   - Có từ giai đoạn 2. Lỗi theo trường vẫn hiện đúng, chỉ banner sai.
+1. **Đã sửa (2026-10-22, nhánh `fix/quiz-detail-client-validation-banner`)** — `QuizDetailPage` báo "Hệ thống tạm bận, vui lòng thử lại sau." khi form không hợp lệ phía trình duyệt.
+   - Nguyên nhân: `save` ném `Error` thường ("Cấu hình chưa hợp lệ.", "Điểm mỗi câu phải lớn hơn 0…"), còn `errorMessage` chỉ đọc `ApiError` nên biến mọi lỗi khác thành câu "hệ thống tạm bận". Có từ giai đoạn 2; lỗi theo trường vẫn hiện đúng, chỉ banner sai.
+   - Sửa: `save` kiểm cấu hình và điểm trước khi gọi API, sai thì đặt thẳng banner với đúng thông điệp. Trước đây cấu hình hợp lệ mà điểm sai thì cấu hình đã lưu nhưng màn hình giữ `version` cũ, lần lưu sau dính `409`; nay không gọi API nào. `run`, `errorMessage` và cách xử lý `ApiError` (`409 QUIZ_VERSION_CONFLICT` tải lại, `violations`) giữ nguyên.
+   - Test: `QuizScreens.test.tsx` thêm "điểm sai thì báo đúng lỗi…"; test E3 kiểm thêm banner "Cấu hình chưa hợp lệ." và không có "Hệ thống tạm bận". Hai test thất bại trên code cũ. Frontend lint, typecheck, 438 test, build đạt.
 2. Quan sát: U13 trả `hasText: false` cho link YouTube dù `extractText` có trả tiêu đề, mô tả, URL. Vì vậy popup AI chỉ chọn được học liệu dạng tệp đã trích chữ. Chưa thử với tệp tải lên.
 
 Chưa kiểm:
