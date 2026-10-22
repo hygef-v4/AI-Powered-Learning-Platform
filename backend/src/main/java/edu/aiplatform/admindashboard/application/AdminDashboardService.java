@@ -8,8 +8,8 @@ import edu.aiplatform.admindashboard.infrastructure.DashboardSourceReader.Pendin
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
-import edu.aiplatform.backup.contract.BackupRunView;
-import edu.aiplatform.backup.contract.IBackupStatus;
+import edu.aiplatform.backup.contract.BackupDashboardRunView;
+import edu.aiplatform.backup.contract.IBackupDashboardStatus;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
@@ -25,6 +25,8 @@ import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectStatus;
 import edu.aiplatform.academics.contract.ClassStatus;
 import java.time.Clock;
+import java.time.Duration;
+import edu.aiplatform.backup.contract.BackupDashboardSummary;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -47,7 +49,7 @@ public class AdminDashboardService {
     private final IAccountLookup accounts;
     private final ISubjectQuery subjects;
     private final IClassAccess classes;
-    private final IBackupStatus backups;
+    private final IBackupDashboardStatus backups;
     private final ISettings settings;
     private final IAuthorization authorization;
     private final IAudit audit;
@@ -55,7 +57,7 @@ public class AdminDashboardService {
     private final Clock clock;
 
     public AdminDashboardService(IAccountLookup accounts, ISubjectQuery subjects, IClassAccess classes,
-            IBackupStatus backups, ISettings settings, IAuthorization authorization, IAudit audit,
+            IBackupDashboardStatus backups, ISettings settings, IAuthorization authorization, IAudit audit,
             DashboardSourceReader reader, Clock clock) {
         this.accounts = accounts;
         this.subjects = subjects;
@@ -75,9 +77,11 @@ public class AdminDashboardService {
         var subjectSource = reader.submit(subjects::countSubjectsByStatus);
         var classSource = reader.submit(classes::countClassesByStatus);
         var enrollmentSource = reader.submit(classes::countActiveEnrollments);
-        var latestSource = reader.submit(backups::latest);
-        var recentSource = reader.submit(() -> backups.list(PageRequest.of(0, 3)));
+        var latestSource = reader.submit(backups::latestRun);
+        var recentSource = reader.submit(() -> backups.history(PageRequest.of(0, 3)));
         var scheduleSource = reader.submit(() -> schedule(calculatedAt));
+        Instant fromInclusive = calculatedAt.minus(Duration.ofDays(7));
+        var summarySource = reader.submit(() -> backups.summarize(fromInclusive, calculatedAt));
 
         var accountCounts = section(accountSource, this::accountCounts);
         var subjectCounts = section(subjectSource, counts -> completeCounts(SubjectStatus.class, counts));
@@ -85,8 +89,13 @@ public class AdminDashboardService {
         var enrollmentCount = section(enrollmentSource, this::nonNegative);
         var latest = section(latestSource, run -> run.map(this::backupItem).orElse(null));
         var recent = section(recentSource, page -> page.getContent().stream().limit(3).map(this::backupItem).toList());
-        var backup = new BackupSection(latest, section(scheduleSource, Function.identity()), recent,
-                Section.unavailable(), Section.unavailable());
+        var summary = section(summarySource, value -> validSummary(value, fromInclusive, calculatedAt));
+        Section<Instant> lastSuccess = summary.availability() == Availability.AVAILABLE
+                ? Section.available(summary.data().latestSuccessfulAt()) : Section.unavailable();
+        Section<BackupFailureSummary> failures = summary.availability() == Availability.AVAILABLE
+                ? Section.available(new BackupFailureSummary(summary.data().failedRuns(), summary.data().latestSafeError()))
+                : Section.unavailable();
+        var backup = new BackupSection(latest, section(scheduleSource, Function.identity()), recent, lastSuccess, failures);
         return new AdminDashboardView(calculatedAt, accountCounts, subjectCounts, classCounts, enrollmentCount, backup);
     }
 
@@ -95,7 +104,7 @@ public class AdminDashboardService {
         if (page < 0 || size < 1 || size > 100) {
             throw ApiException.badRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc kích thước trang không hợp lệ");
         }
-        Section<BackupHistoryPage> result = section(reader.submit(() -> backups.list(PageRequest.of(page, size))),
+        Section<BackupHistoryPage> result = section(reader.submit(() -> backups.history(PageRequest.of(page, size))),
                 found -> history(found, page, size));
         if (result.availability() == Availability.UNAVAILABLE) {
             throw ApiException.unavailable("DASHBOARD_BACKUP_UNAVAILABLE", "Không đọc được lịch sử backup");
@@ -103,7 +112,7 @@ public class AdminDashboardService {
         return result.data();
     }
 
-    private BackupHistoryPage history(Page<BackupRunView> found, int page, int size) {
+    private BackupHistoryPage history(Page<BackupDashboardRunView> found, int page, int size) {
         return new BackupHistoryPage(found.getContent().stream().map(this::backupItem).toList(), page, size,
                 found.getTotalElements(), found.getTotalPages());
     }
@@ -184,13 +193,22 @@ public class AdminDashboardService {
         return count;
     }
 
-    private BackupRunItem backupItem(BackupRunView run) {
+    private BackupRunItem backupItem(BackupDashboardRunView run) {
         Objects.requireNonNull(run.state());
         Objects.requireNonNull(run.scheduledFor());
         if (run.byteSize() != null) nonNegative(run.byteSize());
-        // The public U03 view does not expose startedAt. Snapshot time is not a substitute.
-        return new BackupRunItem(run.scheduledFor(), run.state(), run.snapshotAt(), null, run.completedAt(),
+        return new BackupRunItem(run.scheduledFor(), run.state(), run.snapshotAt(), run.startedAt(), run.completedAt(),
                 run.byteSize(), run.safeError(), run.purgedAt());
+    }
+
+    private BackupDashboardSummary validSummary(BackupDashboardSummary value, Instant from, Instant to) {
+        if (!from.equals(value.fromInclusive()) || !to.equals(value.toExclusive()) || value.failedRuns() < 0
+                || (value.latestSuccessfulAt() != null && !value.latestSuccessfulAt().isBefore(to))
+                || (value.failedRuns() == 0 && value.latestSafeError() != null)
+                || (value.failedRuns() > 0 && (value.latestSafeError() == null || value.latestSafeError().isBlank()))) {
+            throw new IllegalArgumentException("Invalid backup summary");
+        }
+        return value;
     }
 
     private BackupSchedule schedule(Instant now) {

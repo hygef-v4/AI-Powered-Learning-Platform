@@ -14,4 +14,4 @@ C) Chỉ triển khai U15 consumer sau khi owner U03 bàn giao capability đã t
 
 D) Other (mô tả sau Answer).
 
-[Answer]:
+[Answer]: A — User approved D1–D7 and U03/U15 implementation on 2026-10-22.

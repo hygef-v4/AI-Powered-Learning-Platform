@@ -13,8 +13,8 @@ it("shows real counts, independent unavailable cards and explicit backup gaps", 
   expect(await screen.findByRole("heading", {name: "Tổng quan hệ thống"})).toBeInTheDocument();
   await waitFor(() => expect(within(screen.getByTestId("dashboard-accounts")).getByText("5")).toBeInTheDocument());
   expect(within(screen.getByTestId("dashboard-subjects")).getByText("Không khả dụng")).toBeInTheDocument();
-  expect(screen.getByTestId("backup-latest-success")).toHaveTextContent("Chưa khả dụng");
-  expect(screen.getByTestId("backup-failures")).toHaveTextContent("Chưa khả dụng");
+  expect(screen.getByTestId("backup-latest-success")).toHaveTextContent("Không khả dụng");
+  expect(screen.getByTestId("backup-failures")).toHaveTextContent("Không khả dụng");
   expect(screen.getByTestId("backup-schedule")).toHaveTextContent("Chưa bật");
   expect(screen.getByRole("link", {name: "Cài đặt backup"})).toHaveAttribute("href", "/admin/settings");
   expect(screen.queryByRole("button", {name: /Khôi phục|Tải backup|Chạy backup/})).not.toBeInTheDocument();

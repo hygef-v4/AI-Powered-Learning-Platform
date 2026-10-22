@@ -4,7 +4,7 @@ import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.admindashboard.infrastructure.DashboardSourceReader;
 import edu.aiplatform.audit.contract.IAudit;
-import edu.aiplatform.backup.contract.IBackupStatus;
+import edu.aiplatform.backup.contract.IBackupDashboardStatus;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.settings.contract.ISettings;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
@@ -16,7 +16,7 @@ public class DashboardFixture implements AutoCloseable {
     public final IAccountLookup accounts = mock(IAccountLookup.class);
     public final ISubjectQuery subjects = mock(ISubjectQuery.class);
     public final IClassAccess classes = mock(IClassAccess.class);
-    public final IBackupStatus backups = mock(IBackupStatus.class);
+    public final IBackupDashboardStatus backups = mock(IBackupDashboardStatus.class);
     public final ISettings settings = mock(ISettings.class);
     public final IAuthorization authorization = mock(IAuthorization.class);
     public final IAudit audit = mock(IAudit.class);
@@ -31,8 +31,8 @@ public class DashboardFixture implements AutoCloseable {
         when(accounts.countByRoleAndStatus()).thenReturn(Map.of());
         when(subjects.countSubjectsByStatus()).thenReturn(Map.of());
         when(classes.countClassesByStatus()).thenReturn(Map.of());
-        when(backups.latest()).thenReturn(Optional.empty());
-        when(backups.list(any())).thenAnswer(call -> Page.empty(call.getArgument(0)));
+        when(backups.latestRun()).thenReturn(Optional.empty());
+        when(backups.history(any())).thenAnswer(call -> Page.empty(call.getArgument(0)));
     }
     @Override public void close() { reader.close(); }
 }

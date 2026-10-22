@@ -1,6 +1,6 @@
 # U15/U03 — rà soát contract backup, 2026-10-22
 
-Trạng thái: **đề xuất để duyệt, chưa triển khai**. Phạm vi UC66, BR-U15-20/21, FR-024/038 và C01/C02 của slice A. Nguồn: [handoff hiện tại](implementation-summary.md), [BR U15](../functional-design/business-rules.md), [BR U03](../../u03-job-and-settings/functional-design/business-rules.md), [plan chính thức](../../plans/code-generation-plan/u15-admin-dashboard-code-generation-plan.md).
+Trạng thái: **D1–D7 được người dùng duyệt riêng ngày2026-10-22; triển khai và evidence theo Phase B**. Phạm vi UC66, BR-U15-20/21, FR-024/038 và C01/C02 của slice A. Nguồn: [handoff hiện tại](implementation-summary.md), [BR U15](../functional-design/business-rules.md), [BR U03](../../u03-job-and-settings/functional-design/business-rules.md), [plan chính thức](../../plans/code-generation-plan/u15-admin-dashboard-code-generation-plan.md).
 
 ## 1. Bằng chứng hiện tại
 
@@ -78,4 +78,4 @@ Code-ready sau khi D1–D7 được duyệt, provider+consumer+UI/tests/build đ
 - [x] Chốt chữ ký/record và semantics thời gian, absence, retry, purged, lỗi public; không còn quyết định ngầm giữa provider/consumer.
 - [x] Ghi rõ hai thay đổi cần duyệt: capability U03 mới và nullable success timestamp trong HTTP schema.
 - [x] Map tất cả quyết định sang tasks B1–B5 của plan chính thức; xác minh file paths và links.
-- [ ] Người dùng duyệt addendum và tasks B1–B5 trước khi code.
+- [x] Người dùng duyệt addendum và tasks B1–B5 trước khi code (approval A,2026-10-22).

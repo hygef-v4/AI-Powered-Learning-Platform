@@ -49,3 +49,7 @@ Môi trường dùng thật U01/U02/U03/U04/U05, contract stubs disabled; khởi
 | Full application startup/browser | JWT/filter chain/headers/real providers; prerequisite U07/U08 migrations của U09 được xử lý bởi owner |
 
 U03 metadata C01/C02 vẫn pending: startedAt null, latestSuccessfulAt/failuresLast7Days UNAVAILABLE. Bổ sung qua contract handoff riêng rồi kiểm lại đúng cửa sổ thời gian và retention. Chưa full UC66 acceptance, chưa NFR certification, chưa triển khai Operations/Jira Done.
+
+## Phase B — 2026-10-22
+
+See [backup completion evidence](../u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md) for commands and environment diagnostics. Final backend verify:1285 total,1250 passed,35 skipped (U04/U06/U12 JDBC environment gates). Backup/U15 tests68 passed; PostgreSQL16 integration8 passed. Frontend448 tests, lint/typecheck/build passed; OpenAPI YAML/local refs valid. Independent full-app session/audit/browser and dashboard NFR acceptance remain pending. Initial Windows encoding/socket errors were resolved by local JVM options without changing existing source/tests.

@@ -443,7 +443,7 @@ components:
               availability:
                 const: AVAILABLE
               data:
-                type: string
+                type: [string, 'null']
                 format: date-time
           - type: object
             additionalProperties: false
@@ -477,9 +477,10 @@ components:
                 const: UNAVAILABLE
               data:
                 type: 'null'
-      description: 'Current-contract slice: latestSuccessfulAt and failuresLast7Days
-        are UNAVAILABLE. AVAILABLE latest with null data means no run yet; UNAVAILABLE
-        means unknown.'
+      description: 'Latest success uses completedAt across all history, including purged runs.
+        Failures count terminal FAILED runs in the previous 168 hours [from,to).
+        AVAILABLE latest/latestSuccessfulAt with null data means no matching run;
+        UNAVAILABLE means the source could not be read. Sources are independent snapshots.'
     AdminDashboardView:
       type: object
       additionalProperties: false

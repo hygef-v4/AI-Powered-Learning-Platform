@@ -56,3 +56,9 @@ Thêm public-UI characterization cho history 401/403 xóa dashboard và Escape/T
 Tái sử dụng checkout `grading-gradebook` tại HEAD 6148e430, giữ audit/state/planning dirty từ lượt trước; không reset hay ghi Git index. Bookkeeping shell của skill được chuyển sang PowerShell ledger `.tmp/u15/progress.md`; plan/audit/handoff là bản lưu lâu dài. Không commit/push/merge.
 
 Security03/05/08/12/15: local coverage cho safe errors, query parsing, server actor/current authorization, deny audit và DTO privacy. Security04/09: dùng platform security/headers/session, không nới config; no-store được kiểm tại HTTP controller, full-chain headers còn integration gate. Resiliency04: rollback ADMIN_HOME về `/admin/accounts` trước rồi gỡ route/API, không data migration. Resiliency06: kế thừa health, full startup gate còn mở. Resiliency10: isolation/deadline/rejection/interrupt có unit coverage, JDBC release/NFR còn mở. Các rule ngoài reduced scope N/A theo state; Property-Based Testing disabled, không tự bật. Không tuyên bố deployed/runtime compliance.
+
+## Phase B addendum — 2026-10-22
+
+User approved U03/U15 work. C01/C02 provider/consumer are implemented: actual startedAt, latest historical SUCCESS completedAt and final FAILED count for168h, with safe errors and empty-vs-outage states. Legacy backup contracts unchanged; U15 latestSuccessfulAt allows AVAILABLE/null. See [execution evidence](backup-completion-verification-2026-10-22.md).
+
+Backend verify1250 passed/35 environment-gated skipped; backup/U15 tests68 passed incl PostgreSQL8. Frontend448 passed; lint/typecheck/build pass. C01/C02 missing-provider implementation gate is superseded; independent full-chain/session/audit/browser, stubs-disabled startup and dashboard load/latency acceptance remain open. No implementation commit/push/merge/Jira transition.

@@ -22,6 +22,7 @@ import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.audit.contract.IAuditQuery;
 import edu.aiplatform.audit.contract.stub.AuditContractStubs;
 import edu.aiplatform.backup.contract.IBackupStatus;
+import edu.aiplatform.backup.contract.IBackupDashboardStatus;
 import edu.aiplatform.backup.contract.stub.BackupContractStubs;
 import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.files.contract.stub.FilesContractStubs;
@@ -62,7 +63,7 @@ class ContractStubsTest {
     static final List<Class<?>> STUBBED = List.of(
             IAuthorization.class, IAccountLookup.class, IMail.class, ISubjectScope.class, IClassScope.class,
             IAudit.class, IAuditQuery.class, IArtifact.class, IJob.class, IEventPublisher.class, ISettings.class,
-            IBackupStatus.class, ISubjectQuery.class, ISubjectClasses.class, IClassAccess.class, IAiTask.class,
+            IBackupStatus.class, IBackupDashboardStatus.class, ISubjectQuery.class, ISubjectClasses.class, IClassAccess.class, IAiTask.class,
             IReferenceMaterial.class, IAssignmentQuery.class, IRubric.class, IDocumentModel.class, IDocx.class,
             IGroupAssignmentSupport.class, ISubmissionQuery.class, IActivityWrite.class, IActivityQuery.class,
             IGroupWorkStatus.class, IGroupEvaluation.class, IGroupSubmissionSource.class, IQuizQuery.class,
