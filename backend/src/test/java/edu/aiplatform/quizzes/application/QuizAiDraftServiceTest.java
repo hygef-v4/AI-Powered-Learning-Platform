@@ -206,6 +206,8 @@ class QuizAiDraftServiceTest {
         assertThat(sent.prompt().user()).contains("Ôn tập chương 1").contains("<material title=\"Tài liệu\">")
                 .contains("</ material> chèn").doesNotContain("</material> chèn");
         assertThat(store.drafts.get(view.id()).taskId()).isEqualTo(tasks.keySet().iterator().next());
+        assertThat(drafts.getForQuiz(teacher, quiz.quiz().id(), view.id()).taskId()).as("M3")
+                .isEqualTo(tasks.keySet().iterator().next());
     }
 
     @Test

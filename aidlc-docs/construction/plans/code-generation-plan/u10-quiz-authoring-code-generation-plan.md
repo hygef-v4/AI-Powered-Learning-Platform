@@ -235,16 +235,20 @@ Lập ngày 2026-10-22 sau khi PR #9 (U06) merge vào `staging` (`d2a06cd`). Nh�
 ### Checklist giai đoạn 7
 
 - [x] **7.0 Commit tài liệu đang chờ** (M7).
-- [ ] **7.1 Backend:** `AiDraftView.taskId` (M3); test schema tool MCP (M4).
-- [ ] **7.2 Frontend:**
+- [x] **7.1 Backend:** `AiDraftView.taskId` (M3); test schema tool MCP (M4).
+- [x] **7.2 Frontend:**
   - `AiDraftDialog` dùng `AiSourcePicker` (M1, M2), bỏ `AiSourceSelect`.
   - `AiTaskStatus` cho đề xuất `PENDING` (M3).
   - Cập nhật kiểu (`SourceChoice`) và `draftBody`.
-- [ ] **7.3 Unit test frontend:**
+- [x] **7.3 Unit test frontend:**
   - "Gửi yêu cầu" mở popup chọn nguồn, chọn nguồn thì gửi đúng `source`/`provider`.
   - Hủy popup thì giữ form.
   - Đề xuất `PENDING` có `taskId` thì hiện trạng thái task.
 - [ ] **7.4 Chạy thử MCP thật và `AiSourcePicker`** (M5, M6); ghi vào code-summary U10.
+  - **Bị chặn (2026-10-22):** backend `staging` `d2a06cd` không khởi động được vì vòng phụ thuộc bean `AiTaskResultHandlerRegistry` (U06) → `AssignmentDraftResultHandler` → `AssignmentAiDraftService` (U07) → `IAiTask` (`AiTaskService`, U06) → `AiTaskResultHandlerRegistry`.
+  - Có thể còn vòng tương tự qua `PracticeFeedbackResultHandler` (U08).
+  - U10 không nằm trong vòng: `QuizDraftResultHandler` không phụ thuộc `IAiTask`.
+  - Credential MCP thực tế có quyền `READ_ONLY` / `READ_WRITE` (plan ghi `READ`).
 - [ ] **7.5 Kiểm và tài liệu:**
   - Đủ bước CI: backend `mvn -B verify`; frontend lint, typecheck, test, build.
   - code-summary, lộ trình, `aidlc-state.md`.

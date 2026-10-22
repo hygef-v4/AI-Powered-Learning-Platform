@@ -131,7 +131,7 @@ Plan chi tiết: [U11, mục "Sửa sau chạy thử và link thông báo Quiz"]
 **Còn làm được mà không phải chờ:** không còn việc code nào. Còn lại:
 
 - [ ] KAN-152: cần người dùng gửi Report 3.
-- [ ] Báo nhóm về migration `grading` (nội dung ở dòng đầu bảng "Đang chờ người khác") để gỡ chặn CI và chạy thử Docker.
+- [x] Báo nhóm về migration `grading` (nội dung ở dòng đầu bảng "Đang chờ người khác") để gỡ chặn CI và chạy thử Docker. Đã xong: U07/U08 merge (`0d1cf27`).
 
 Các việc còn lại đều chờ người khác: U06 (AI thật, `AiSourcePicker`), U08 (tracker hoạt động, thời hạn lưu), tester (integration test, đóng KAN-18, KAN-23, KAN-25), người viết requirement (BR-U11-20), nhóm (migration `grading`).
 
@@ -196,16 +196,49 @@ Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-pract
 
 Plan chi tiết: [U10, giai đoạn 7](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (M1–M7), nhánh `quiz-u06-integration`.
 
-- [ ] Thay `AiSourceSelect` bằng `AiSourcePicker` của U06 trong `AiDrafts.tsx` (việc còn lại của H1).
+- [ ] Thay `AiSourceSelect` bằng `AiSourcePicker` của U06 trong `AiDrafts.tsx` (việc còn lại của H1). Code xong (bước 7.2–7.3), chưa commit trên `quiz-u06-integration`.
 - [ ] Chạy thử tool MCP qua MCP server thật của U06 (`read_quiz_context`, `save_quiz_draft`): tạo credential MCP trên giao diện U06 rồi gọi từ agent hoặc bằng request JSON-RPC.
 - [ ] Chạy AI soạn câu thật: cần khóa API thật của một nhà cung cấp (Gemini, OpenAI, Claude). Người dùng tự nhập khóa trên trang Kết nối AI.
-- [ ] Push và mở PR cho bản sửa banner.
+- [x] Push và mở PR cho bản sửa banner: PR #11 merge vào `staging` (`fa1c0f0`).
+
+**Chặn mới (2026-10-22):** backend `staging` `d2a06cd` không khởi động được.
+- Vòng phụ thuộc bean giữa U06 (`AiTaskResultHandlerRegistry`, `AiTaskService`) và U07 (`AssignmentDraftResultHandler` → `AssignmentAiDraftService`); có thể cả U08 (`PracticeFeedbackResultHandler`).
+- CI không bắt được vì không có test dựng toàn bộ Spring context.
+- Chạy thử MCP thật (7.4) phải chờ lỗi này được sửa.
 
 **Còn chờ người, không chờ UC:**
 
 - Tester: integration test, rồi đóng KAN-18, KAN-23, KAN-25.
 - Người viết requirement: BR-U11-20.
 - Người dùng: Report 3 cho KAN-152.
+
+### Tình trạng 2026-10-22 (tối)
+
+`staging` vẫn là `d2a06cd`, không có commit mới, cũng không nhánh nào có bản sửa mới.
+
+| Lỗi trên `staging` | Tình trạng |
+|---|---|
+| Migration `grading` thiếu bảng `assignments` | Đã sửa (U07/U08 merge) |
+| Bean `notificationTopology` khai báo hai lần (U14) | Đã sửa (`4bcca43`) |
+| `poi-ooxml` khai báo trùng trong `pom.xml` | Đã sửa (PR #8) |
+| Vòng bean `AiTaskResultHandlerRegistry` ↔ handler U07/U08 ↔ `AiTaskService`: backend không khởi động | **Chưa sửa**; đã soạn tin nhắn báo nhóm. Kiểm lại trên `fa1c0f0`: backend và worker vẫn "APPLICATION FAILED TO START" |
+| Banner "Hệ thống tạm bận" khi form Quiz Detail không hợp lệ | Đã sửa: PR #11 merge vào `staging` (`fa1c0f0`), CI xanh |
+
+**Việc đang dở theo nhánh:**
+
+| Nhánh | Trạng thái | Còn lại |
+|---|---|---|
+| `quiz-u06-integration` (không upstream) | `a2c97ef` (tài liệu) + 11 file chưa commit: giai đoạn 7 bước 7.1–7.3 xong | 7.4 chạy thử MCP thật (chờ vòng bean được sửa), 7.5 kiểm và tài liệu, 7.6 duyệt và commit |
+| `fix/quiz-detail-client-validation-banner` (worktree `.claude/worktrees/admiring-wilson-84dd90`) | PR #11 đã merge (`fa1c0f0`) | Có thể xóa nhánh và worktree |
+| `quiz-activity`, `quiz-ai-mcp` | Đã merge (PR #8, nhánh `quiz-ai-mcp` được đẩy thẳng) | Có thể xóa nhánh local và remote |
+| `claude/admiring-wilson-84dd90` | Trùng `main`, không có việc | Có thể xóa |
+
+**Chưa hoàn thành trong lộ trình:**
+
+- Giai đoạn 4: chạy thật với U06. Còn MCP thật (chờ vòng bean) và AI thật (cần khóa API của người dùng).
+- Giai đoạn 5: tester viết integration test; đóng KAN-18, KAN-23, KAN-25.
+- KAN-152: chờ Report 3.
+- BR-U11-20: chờ người viết requirement.
 
 ## 3. Nhánh
 
