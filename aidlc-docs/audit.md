@@ -5678,3 +5678,23 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Context**: Construction — U10 giai đoạn 7, cập nhật nhánh theo staging.
 
 ---
+
+## 2026-10-23T15:20:00Z — PR #14 merged
+
+**User Input**: "Merge PR #14 vào staging bằng merge commit."
+
+**AI Response**: Kiểm lại PR #14 (head `d642708`, CI backend/frontend/GitGuardian đạt, `MERGEABLE`/`CLEAN`), merge bằng merge commit: `staging` `eb0cf1a`.
+
+**Context**: Construction — U10 giai đoạn 7, merge PR.
+
+---
+
+## 2026-10-23T15:50:00Z — Xóa nhánh, chạy thử MCP thật (bước 7.4), cập nhật tài liệu
+
+**User Input**: "xoá nhánh, cập nhật roadmap và jira và chạy thử mcp thật"
+
+**AI Response**: Xóa nhánh `quiz-u06-integration` (local và remote). Dựng stack Docker local từ `staging` `eb0cf1a` (project `mcp-e2e`, cổng tạm 18088/18025 vì stack `platform` giữ 8088; secret ngẫu nhiên trong scratchpad). Tạo dữ liệu bằng API; gọi `/mcp` bằng script: 16/16 kiểm đạt (credential `READ_WRITE`/`READ_ONLY`, `initialize`, `tools/list`, `read_quiz_context`, `save_quiz_draft`, version sai, quyền ghi, schema, lớp khác, sinh viên, `Origin`, token sai). Trên trình duyệt: chấp nhận đề xuất MCP 2 câu vào Quiz; popup `AiSourcePicker` hiện 4 nguồn mờ kèm lý do, hủy giữ form. Không có lỗi trong log. Gỡ stack cùng volume, xóa file có secret. Cập nhật code-summary U10, plan U10 (7.4–7.6), lộ trình, `aidlc-state.md` trên nhánh `u10-mcp-e2e-docs`. Jira: chờ người dùng duyệt nội dung trước khi cập nhật.
+
+**Context**: Construction — U10 giai đoạn 7, bước 7.4.
+
+---

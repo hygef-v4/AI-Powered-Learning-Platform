@@ -524,8 +524,9 @@ Final checkpoint: code available for review; independent acceptance gates retain
 ## U10 giai đoạn 7 (nối U06 thật: AiSourcePicker, MCP) — 2026-10-22
 
 - [x] Code Generation Part 1: plan giai đoạn 7 được duyệt (M1–M7), nhánh `quiz-u06-integration` từ `origin/staging` `d2a06cd`, không upstream.
-- [ ] Code Generation Part 2: bước 7.0–7.5.
-- [ ] Bước 7.6: người dùng duyệt.
+- [x] Code Generation Part 2: bước 7.0–7.5. Bước 7.4 chạy thử MCP thật và `AiSourcePicker` đạt ngày 2026-10-23.
+- [x] Bước 7.6: người dùng duyệt; PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
+- Còn mở: AI soạn câu bằng khóa thật của nhà cung cấp; integration test của tester.
 
 ## U09 renderer và nguồn AI U06 — 2026-10-22
 

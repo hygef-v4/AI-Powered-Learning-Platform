@@ -244,15 +244,15 @@ Lập ngày 2026-10-22 sau khi PR #9 (U06) merge vào `staging` (`d2a06cd`). Nh�
   - "Gửi yêu cầu" mở popup chọn nguồn, chọn nguồn thì gửi đúng `source`/`provider`.
   - Hủy popup thì giữ form.
   - Đề xuất `PENDING` có `taskId` thì hiện trạng thái task.
-- [ ] **7.4 Chạy thử MCP thật và `AiSourcePicker`** (M5, M6); ghi vào code-summary U10.
-  - **Bị chặn (2026-10-22):** backend `staging` `d2a06cd` không khởi động được vì vòng phụ thuộc bean `AiTaskResultHandlerRegistry` (U06) → `AssignmentDraftResultHandler` → `AssignmentAiDraftService` (U07) → `IAiTask` (`AiTaskService`, U06) → `AiTaskResultHandlerRegistry`.
+- [x] **7.4 Chạy thử MCP thật và `AiSourcePicker`** (M5, M6); ghi vào code-summary U10. Đạt ngày 2026-10-23 trên `staging` `eb0cf1a`.
+  - **Đã gỡ chặn** (vòng bean sửa ở `fcbb71a`, `57abe44`). Ghi chú lúc bị chặn (2026-10-22): backend `staging` `d2a06cd` không khởi động được vì vòng phụ thuộc bean `AiTaskResultHandlerRegistry` (U06) → `AssignmentDraftResultHandler` → `AssignmentAiDraftService` (U07) → `IAiTask` (`AiTaskService`, U06) → `AiTaskResultHandlerRegistry`.
   - Có thể còn vòng tương tự qua `PracticeFeedbackResultHandler` (U08).
   - U10 không nằm trong vòng: `QuizDraftResultHandler` không phụ thuộc `IAiTask`.
   - Credential MCP thực tế có quyền `READ_ONLY` / `READ_WRITE` (plan ghi `READ`).
-- [ ] **7.5 Kiểm và tài liệu:**
+- [x] **7.5 Kiểm và tài liệu:** CI PR #14 xanh; backend 1290 test, frontend 449 test.
   - Đủ bước CI: backend `mvn -B verify`; frontend lint, typecheck, test, build.
   - code-summary, lộ trình, `aidlc-state.md`.
-- [ ] **7.6 Review:** người dùng duyệt rồi commit local.
+- [x] **7.6 Review:** người dùng duyệt; PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
 
 ## E3 — Bật ghi nhận hoạt động
 
