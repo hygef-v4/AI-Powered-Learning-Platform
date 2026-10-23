@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { apiFetch } from "@/shared/api/client";
 import { MaterialList } from "./MaterialList";
 import { ClassMaterialsCard, MaterialLinkList } from "./MaterialSections";
@@ -7,6 +7,7 @@ import type { Material } from "./types";
 vi.mock("@/shared/api/client", async importOriginal => ({ ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: vi.fn() }));
 const row = (id: string, changes: Partial<Material> = {}): Material => ({ id, scope: "SUBJECT", subjectId: "subject", classId: null, kind: "FILE", title: `Document ${id}`, description: "", orderNo: 0, status: "ACTIVE", currentVersionNo: 1, version: 2, updatedAt: "2026-10-21T00:00:00Z", canManage: true, versions: [], current: { versionNo: 1, fileName: "doc.pdf", mimeType: "application/pdf", byteSize: 1000, videoUrl: null, videoId: null, textStatus: "EXTRACTED", createdBy: "actor", createdAt: "2026-10-21T00:00:00Z" }, ...changes });
 beforeEach(() => { vi.mocked(apiFetch).mockReset(); });
+afterEach(() => { vi.useRealTimers(); });
 it("filters active and archived rows", async () => {
   vi.mocked(apiFetch).mockResolvedValue([row("a"), row("b", { status: "ARCHIVED", canManage: false })]);
   render(<MaterialList scope="subjects" scopeId="subject" />);
@@ -30,6 +31,21 @@ it("discards an old response when switching subjects", async () => {
   const view = render(<MaterialList scope="subjects" scopeId="old" />); view.rerender(<MaterialList scope="subjects" scopeId="new" />);
   await screen.findByText("Document new"); await act(async () => finish([row("old")]));
   expect(screen.queryByText("Document old")).not.toBeInTheDocument();
+});
+it("refreshes pending text extraction until the status changes without reloading the page", async () => {
+  const pending = row("pending"); pending.current = { ...pending.current, textStatus: "PENDING" };
+  const extracted = row("pending"); extracted.current = { ...extracted.current, textStatus: "EXTRACTED" };
+  vi.mocked(apiFetch).mockResolvedValueOnce([pending]).mockResolvedValueOnce([extracted]);
+  vi.useFakeTimers();
+
+  render(<MaterialList scope="subjects" scopeId="subject" />);
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByText("Đang xử lý")).toBeInTheDocument();
+
+  await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+
+  expect(screen.getByText("Đã trích")).toBeInTheDocument();
+  expect(apiFetch).toHaveBeenCalledTimes(2);
 });
 it("learner links retain class context and lead to viewing route", async () => {
   vi.mocked(apiFetch).mockResolvedValue([row("a", { canManage: false })]); render(<ClassMaterialsCard classId="class1" />);

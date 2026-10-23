@@ -8,9 +8,13 @@ import { useMaterialResource } from "./useMaterialResource";
 import { fileDescription, materialHref, textLabels, type Material, type MaterialKind } from "./types";
 import styles from "./materials.module.css";
 
+function hasPendingExtraction(materials: Material[]): boolean {
+  return materials.some((material) => material.current.textStatus === "PENDING");
+}
+
 export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: string; scope: "subjects" | "classes"; readOnly?: boolean }) {
   const path = scopePath(scopeId, scope);
-  const resource = useMaterialResource<Material[]>(path);
+  const resource = useMaterialResource<Material[]>(path, { pollWhile: hasPendingExtraction });
   const [filter, setFilter] = useState("ACTIVE"); const [menu, setMenu] = useState(false);
   const [adding, setAdding] = useState<MaterialKind>(); const [error, setError] = useState("");
   const [busy, setBusy] = useState(false); const drag = useRef<string | null>(null); const lock = useRef(false);

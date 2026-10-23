@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 
 const CSRF_COOKIE = "XSRF-TOKEN";
-const CSRF_HEADER = "X-XSRF-TOKEN";
+export const CSRF_HEADER = "X-XSRF-TOKEN";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_PREFIX = "/api/v1/auth/";
 /** Chờ response refresh của tab kia đặt cookie mới trước khi gửi lại (refresh trả 409). */
@@ -44,6 +44,10 @@ function readCookie(name: string): string | undefined {
   const prefix = `${name}=`;
   const found = document.cookie.split("; ").find((part) => part.startsWith(prefix));
   return found ? decodeURIComponent(found.slice(prefix.length)) : undefined;
+}
+
+export function getCsrfToken(): string | undefined {
+  return readCookie(CSRF_COOKIE);
 }
 
 function delay(ms: number) {
@@ -97,7 +101,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   }
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
   const method = (init.method ?? "GET").toUpperCase();
-  const csrf = readCookie(CSRF_COOKIE);
+  const csrf = getCsrfToken();
   if (!SAFE_METHODS.has(method) && csrf && !headers.has(CSRF_HEADER)) {
     headers.set(CSRF_HEADER, csrf);
   }
