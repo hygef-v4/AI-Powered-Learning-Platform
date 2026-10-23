@@ -9,6 +9,8 @@ export const studentClassSections = createSlot<{ classId: string }>("StudentClas
 export const teacherClassTabs = createSlot<{
   classId: string;
   tab: "info" | "students" | "materials" | "evals" | "gradebook";
+  /** U12 reports active memberships from its existing class-group request. */
+  onGroupNamesLoaded?: (groupNames: Record<string, string>) => void;
 }>("TeacherClassTab");
 
 /** Phần trong popup Student Detail (U12: nhóm; U09: bài nộp và điểm). */

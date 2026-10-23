@@ -10,7 +10,7 @@ import { ClassMaterialsCard, MaterialLinkList, MaterialSummary } from "./Materia
 
 navEntries.register({ key: "manager-materials", order: 50, title: "Học liệu", href: "/manager/materials", icon: "folder_open", roles: ["SUBJECT_MANAGER"] });
 teacherClassTabs.register({ key: "u13-materials", order: 50, component: ({ classId, tab }) => tab === "materials" ? createElement(ClassMaterialsTab, { classId }) : null });
-studentClassSections.register({ key: "u13-materials", order: 30, component: ClassMaterialsCard });
+studentClassSections.register({ key: "u13-materials", order: 10, component: ClassMaterialsCard });
 subjectSummarySections.register({ key: "u13-materials", order: 30, component: MaterialSummary });
 assignmentMaterialSections.register({ key: "u13-materials", order: 30, component: MaterialLinkList });
 quizMaterialSections.register({ key: "u13-materials", order: 30, component: MaterialLinkList });
