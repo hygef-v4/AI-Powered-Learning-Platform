@@ -2,8 +2,10 @@ package edu.aiplatform.grading.web;
 
 import edu.aiplatform.grading.application.GradingCommands.AiBatch;
 import edu.aiplatform.grading.application.GradingCommands.AiRequest;
+import edu.aiplatform.grading.application.GradingCommands.Batch;
 import edu.aiplatform.grading.application.GradingProposalService;
 import edu.aiplatform.grading.application.GradingViews.BatchResult;
+import edu.aiplatform.grading.application.GradingViews.AiEstimate;
 import edu.aiplatform.grading.domain.GradingProposal;
 import edu.aiplatform.identity.contract.Actor;
 import jakarta.validation.Valid;
@@ -40,5 +42,10 @@ public class GradingProposalController {
     @PostMapping("/evaluations:ai-proposals")
     public BatchResult batch(@AuthenticationPrincipal Actor actor, @Valid @RequestBody AiBatch input) {
         return service.requestBatch(actor, input);
+    }
+
+    @PostMapping("/evaluations:ai-proposal-estimate")
+    public AiEstimate estimateBatch(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
+        return service.estimateBatch(actor, input);
     }
 }

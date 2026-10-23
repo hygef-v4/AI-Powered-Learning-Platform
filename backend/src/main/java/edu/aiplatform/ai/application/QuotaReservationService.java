@@ -3,6 +3,7 @@ package edu.aiplatform.ai.application;
 import edu.aiplatform.ai.domain.QuotaPolicy;
 import edu.aiplatform.ai.domain.QuotaPolicy.Window;
 import edu.aiplatform.ai.domain.QuotaRepository;
+import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -37,7 +38,7 @@ public class QuotaReservationService {
 
     /** Ước tính: số ký tự prompt chia 2 làm tròn lên, cộng {@code maxOutputTokens} (BR-U06-13). */
     public static long estimate(int promptChars, int maxOutputTokens) {
-        return (promptChars + 1L) / 2 + maxOutputTokens;
+        return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
     }
 
     /** Mức ngày của một giảng viên: mức riêng nếu có (0 là chặn), không thì mức mặc định; chưa cấu hình là rỗng. */

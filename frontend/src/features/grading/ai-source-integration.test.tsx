@@ -4,11 +4,14 @@ import { AiProposalPanel } from "./AiProposalPanel";
 import { BatchActionDialog } from "./BatchActionDialog";
 import type { SourceOption } from "@/shared/ai";
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), requestBatch: vi.fn() }));
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), requestBatch: vi.fn(), estimateBatch: vi.fn() }));
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: mocks.fetch,
 }));
-vi.mock("./api", () => ({ gradingApi: { requestBatch: mocks.requestBatch } }));
+vi.mock("./api", () => ({ gradingApi: {
+  requestBatch: mocks.requestBatch,
+  estimateBatch: mocks.estimateBatch,
+} }));
 
 const sources: SourceOption[] = [
   { source: "SHARED", provider: "GEMINI", model: "school-model", keyHint: null,
@@ -22,6 +25,7 @@ const items = [{ evaluationId: "e", version: 7 }];
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.fetch.mockResolvedValue(sources);
+  mocks.estimateBatch.mockResolvedValue({ estimatedTokens: 5123 });
 });
 afterEach(cleanup);
 
@@ -87,6 +91,26 @@ describe("U09 consumes the U06 source picker", () => {
     expect(screen.getByRole("button", { name: "Gửi yêu cầu" })).toBeDisabled();
   });
 
+  it("does not expose the previous source while options are refreshing after reopen", async () => {
+    let refresh!: (value: SourceOption[]) => void;
+    const request = vi.fn();
+    render(<AiProposalPanel evaluationId="e" proposals={[]} onRequest={request} onApply={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Yêu cầu đề xuất mới" }));
+    await selectPersonal();
+    mocks.fetch.mockImplementationOnce(() => new Promise(resolve => { refresh = resolve; }));
+    fireEvent.click(screen.getByRole("button", { name: "Yêu cầu đề xuất mới" }));
+
+    expect(await screen.findByText("Đang tải...")).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /API cá nhân · Claude/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gửi yêu cầu" })).toBeDisabled();
+
+    refresh(sources);
+    expect(await screen.findByRole("radio", { name: /API cá nhân · Claude/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gửi yêu cầu" })).toBeDisabled();
+    expect(request).toHaveBeenCalledOnce();
+  });
+
   it("keeps batch versions and the chosen source, blocks duplicate dispatch while pending and shows outcomes", async () => {
     let finish!: (value: { items: { evaluationId: string; outcome: string }[] }) => void;
     mocks.requestBatch.mockReturnValue(new Promise(resolve => { finish = resolve; }));
@@ -98,6 +122,14 @@ describe("U09 consumes the U06 source picker", () => {
     finish({ items: [{ evaluationId: "e", outcome: "PENDING" }] });
     expect(await screen.findByText("Bài 1: PENDING")).toBeInTheDocument();
     expect(done).toHaveBeenCalledOnce();
+  });
+
+  it("shows a server-derived token estimate before submitting a batch AI request", async () => {
+    render(<BatchActionDialog action="ai" items={items} onClose={vi.fn()} onDone={vi.fn()} />);
+
+    await waitFor(() => expect(mocks.estimateBatch).toHaveBeenCalledExactlyOnceWith(items));
+    expect(await screen.findByRole("radio", { name: /ước tính 5\.123 token/ })).toBeInTheDocument();
+    expect(mocks.requestBatch).not.toHaveBeenCalled();
   });
 
   it("a failed batch stays failed until explicit retry and never falls back to another source", async () => {

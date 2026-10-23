@@ -508,6 +508,35 @@ paths:
         '404': *id005
         '409': *id006
         '503': *id007
+  /api/v1/evaluations:ai-proposal-estimate:
+    post:
+      operationId: estimateGradingProposalBatch
+      tags:
+      - U09
+      description: Read-only estimate for the distinct grading evaluations in a batch; does not call an AI provider or reserve quota.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiEstimate'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
   /api/v1/evaluations:ai-proposals:
     post:
       operationId: requestGradingProposalBatch
@@ -816,6 +845,21 @@ components:
             required: &id014 []
       required:
       - items
+    AiEstimate:
+      type: object
+      properties:
+        estimatedTokens:
+          type: integer
+          format: int64
+          minimum: 0
+        items:
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+      - estimatedTokens
+      - items
+      additionalProperties: false
     RubricChecks: *id012
     Evaluation:
       type: object
@@ -1102,6 +1146,9 @@ components:
               id: *id001
               title: *id010
               maxScore: *id013
+              submissionMode:
+                type: string
+                enum: [INDIVIDUAL, GROUP]
             required: *id014
         total:
           type: integer
