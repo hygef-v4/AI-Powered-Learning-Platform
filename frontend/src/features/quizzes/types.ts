@@ -1,5 +1,7 @@
 // Kiểu dữ liệu ngân hàng câu hỏi (U10, UC 46, 47), khớp DTO của QuestionController.
 
+import type { SourceChoice } from "@/shared/ai";
+
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
 export type QuestionStatus = "DRAFT" | "ACTIVE" | "RETIRED";
@@ -149,10 +151,6 @@ export type RandomPreview = { questions: QuestionView[]; matching: number; freeS
 
 // --- Đề xuất AI, MCP và tài liệu tham khảo (giai đoạn 4)
 
-/** Nguồn AI chọn mỗi lần (cùng dạng `SourceChoice` của U06; H1). */
-export type AiProvider = "GEMINI" | "OPENAI" | "CLAUDE";
-export type AiSourceChoice = { source: "SHARED" } | { source: "PERSONAL"; provider: AiProvider };
-
 export type SelectableMaterial = { materialId: string; title: string; hasText: boolean };
 
 export type AiDraftStatus = "PENDING" | "READY" | "ACCEPTED" | "DISCARDED" | "FAILED";
@@ -165,6 +163,8 @@ export type AiDraft = {
   quizId: string | null;
   subjectId: string;
   origin: "AI_TASK" | "MCP";
+  /** Task AI của U06; trống với đề xuất từ MCP. */
+  taskId: string | null;
   status: AiDraftStatus;
   questions: DraftQuestion[];
   requestedCount: number | null;
@@ -181,13 +181,15 @@ export type AiDraft = {
 };
 
 /** Yêu cầu AI soạn câu (BR-U10-40): 1–50 câu, loại và độ khó tùy chọn, tối đa 10 tài liệu đã có chữ. */
-export type AiDraftInput = {
+export type AiDraftRequest = {
   instructions: string;
   count: number;
   type: QuestionType | null;
   difficulty: Difficulty | null;
   materialIds: string[];
-  choice: AiSourceChoice;
 };
+
+/** Yêu cầu kèm nguồn đã chọn ở `AiSourcePicker` của U06 (M2). */
+export type AiDraftInput = AiDraftRequest & { choice: SourceChoice };
 
 export type BankAcceptResult = { draft: AiDraft; questionIds: string[] };

@@ -5552,3 +5552,129 @@ Diagnosis: same saved key/model and tiny synthetic prompt: full assignment schem
 Approved bugfix scope: adjust only Gemini wire schema, preserve original task schema and application-side validation, retain other provider payloads/contracts. Added regression verifying omitted nested wire maxItems and unchanged original schema/required/numeric bounds; test failed before fix, then13 tests passed and packaging succeeded. Rebuilt runtime image and restarted backend/worker.
 
 End-to-end: submitted one short SWR diagram assignment request using personal Gemini through existing UI. AI task READY, handler_done=true, assignment draft READY; preview and Apply button visible. Left unapplied, existing assignment content unchanged. Screenshot .tmp/u06-models/swr-ready.png. No commit/push. Generated wording quality is not guaranteed; initial failed task remains historical, not retried by DB mutation.
+
+---
+
+## 2026-10-22T13:40:00Z — PR #8 merged; staging verified
+
+**User Input**: "Merge PR #8 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Rechecked PR #8 (head 57b801c, CI backend/frontend/GitGuardian pass, CLEAN) and merged with a merge commit: staging 20c1458, whose tree equals the CI-verified 57b801c. Fast-forwarded local staging. Started the full local stack from source on fresh volumes under compose project `staging-smoke` (temporary env with random secrets and a port override in the scratchpad): all 8 containers healthy, 14 Flyway migrations applied up to 20260925.2000, /health, /, /login, /quiz-practice 200, protected APIs 401, no ERROR/exception in backend, worker, frontend, nginx logs, RabbitMQ job and notification queues declared with consumers. Tore down the project with its volumes and deleted the temporary files. Updated roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Delivery — PR #8 merged; staging verification.
+
+---
+
+## 2026-10-22T14:30:00Z — E2E run: phase 4, G3/E3, notification link
+
+**User Input**: "Chạy thử end-to-end trên trình duyệt với Docker local cho giai đoạn 4 (đề xuất MCP, tài liệu tham khảo, Quiz gắn học liệu) và G3/E3 (ghi nhận hoạt động), ghi kết quả vào code-summary."
+
+**AI Response**: Ran staging 20c1458 on a fresh local stack (compose project `quiz-e2e`, temporary env with random secrets and test passwords in the scratchpad). Seeded via API: admin activated by OTP through Mailpit, manager, teacher, two students, subject QZE2E, OPEN class, two YouTube materials, three active bank questions, a class quiz. In the browser pane: AI draft popup (material locked: U13 hasText=false for YouTube; stub → FAILED "AI chưa sẵn sàng"); material attach (and API 400 MATERIAL_NOT_SELECTABLE for a foreign id); an MCP-origin READY draft inserted directly into quiz_ai_drafts (U06 MCP server not on staging) shown and partially accepted (inline item added, version bump, audit with count/origin only); activity switch locked until admin set activity.retentionDays=30, notice required, review and publish; student notification link resolved the class; Quiz Practice Detail notice and attached material; MaterialQuizList on the learning material page, exhausted after one attempt; taking page tracker recorded SESSION_START, HIDDEN, VISIBLE (simulated visibilitychange), SESSION_END; teacher saw the activity timeline (1 away, 4 s). No backend/worker errors. Found a pre-existing bug: QuizDetailPage shows "Hệ thống tạm bận" on client-side validation errors. Tore down the stack with volumes and deleted temporary files. Wrote results to U10/U11 code-summary, roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Verification — end-to-end run.
+
+---
+
+## 2026-10-22T15:00:00Z — Roadmap refresh after U06 and U12 merged
+
+**User Input**: "kiểm tra các thay đổi mới nhất xem roadmap của tôi đã hoàn thành chưa, còn cần chờ UC nào nữa không"
+
+**AI Response**: Fetched origin: staging is d2a06cd with PR #9 (U06 AI connections and MCP) and PR #10 (U12 group assignment) merged; all units U10/U11 depend on are now on staging. AI contract unchanged for U10 (only UsageMeasurement.ESTIMATED added); no quiz files touched. Jira unchanged; no tester integration tests yet. Banner fix 61171a9 on fix/quiz-detail-client-validation-banner (from d2a06cd) is local, unpushed. Roadmap updated: no UC left to wait for; doable now — swap AiSourceSelect for U06 AiSourcePicker, run MCP tools through the real U06 MCP server, real AI drafting (needs a real provider key entered by the user), push/PR the banner fix; waiting on people — tester, BR-U11-20 decision, Report 3.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T15:30:00Z — Code Generation Part 1: U06 integration plan
+
+**User Input**: "Lập plan: thay AiSourceSelect bằng AiSourcePicker của U06 và chạy thử tool MCP qua MCP server thật, trên nhánh mới tách từ origin/staging, không đặt upstream."
+
+**AI Response**: Created branch `quiz-u06-integration` from origin/staging d2a06cd with `--no-track` (verified no upstream); moved the uncommitted documentation onto it (aidlc-state.md and audit.md additions re-appended to the staging versions, other files carried over). Read U06 AiSourcePicker, AiTaskStatus, McpController, McpServer, McpToolRegistry and McpCredentialController. Added "Giai đoạn 7" to the U10 code generation plan (decisions M1–M7, checklist 7.0–7.6) and linked it from the roadmap. Approval prompt: "Duyệt plan giai đoạn 7 với đề xuất M1–M7?"
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T15:40:00Z — U06 integration plan approved
+
+**User Input**: "Duyệt plan giai đoạn 7 với đề xuất M1–M7. Bắt đầu từ bước 7.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 7.0: committing pending documentation (E2E results, roadmap, state, phase 7 plan) locally on `quiz-u06-integration`, then implementing 7.1–7.5.
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1 approved.
+
+---
+
+## 2026-10-22T16:30:00Z — Phase 7 progress; staging backend startup blocked
+
+**User Input**: (none since approval)
+
+**AI Response**: 7.0 committed a2c97ef. 7.1: AiDraftView.taskId; QuizMcpToolsSchemaTest validates sample arguments against both tool schemas with networknt JSON Schema 2020-12. 7.2–7.3: AiDraftDialog now opens U06 AiSourcePicker after the form validates (U10 dialog temporarily replaced to avoid two focus-trapping dialogs; cancel restores the form), AiSourceSelect removed, AiTaskStatus shown for PENDING drafts with a taskId; tests updated (picker and task status stubbed). Frontend lint, typecheck, 56 quiz tests pass; backend affected tests pass (37 incl. ArchitectureTest). 7.4 blocked: a fresh local stack of this branch (staging d2a06cd + phase 7) fails to start — circular bean dependency AiTaskResultHandlerRegistry (U06) → AssignmentDraftResultHandler → AssignmentAiDraftService (U07) → IAiTask/AiTaskService (U06); PracticeFeedbackResultHandler (U08) may form a similar cycle. U10's QuizDraftResultHandler has no IAiTask dependency. Stack torn down, temporary env deleted. Code uncommitted.
+
+**Context**: Construction — U10 phase 7, Code Generation Part 2 in progress (7.4 blocked).
+
+---
+
+## 2026-10-22T16:40:00Z — Team message drafted: bean cycle on staging
+
+**User Input**: "Soạn tin nhắn ngắn báo nhóm U06/U07 (và U08) về vòng phụ thuộc bean làm backend staging không khởi động, kèm cách sửa gợi ý. Giữ code giai đoạn 7 chưa commit."
+
+**AI Response**: Confirmed U08's PracticeFeedbackService also injects IAiTask, so PracticeFeedbackResultHandler forms the same cycle. Drafted a short Vietnamese message for the user to send (cycle path, cause after PR #9 replaced the IAiTask stub, suggested fix: AiTaskResultHandlerRegistry resolves handlers lazily via ObjectProvider, or handlers stop depending on IAiTask-using services; add a Spring context test). Nothing sent by the AI; phase 7 code left uncommitted.
+
+**Context**: Staging verification follow-up.
+
+---
+
+## 2026-10-22T17:30:00Z — Staging bug and branch status check
+
+**User Input**: "kiểm tra code mới nhất xem các lỗi trên đã được sửa chưa, đồng thời kiểm tra roadmap xem còn phần nào chưa hoàn thành không, có phần nào đang làm dở ở nhánh nào không"
+
+**AI Response**: Fetched origin: staging still d2a06cd, no new commits and no fix on any remote branch. Fixed on staging: grading migration, notificationTopology, duplicate poi-ooxml. Not fixed: U06/U07/U08 bean cycle (AiTaskResultHandlerRegistry still takes List<IAiTaskResultHandler>; same code as the failed startup run), Quiz Detail banner (fix 61171a9 only on local fix/quiz-detail-client-validation-banner). Unfinished branches: quiz-u06-integration (a2c97ef + 11 uncommitted files, phase 7 steps 7.4–7.6 left), fix/quiz-detail-client-validation-banner (unpushed, in worktree admiring-wilson-84dd90); merged leftovers quiz-activity, quiz-ai-mcp, claude/admiring-wilson-84dd90. Roadmap remaining: real U06 run (MCP blocked, real AI needs the user's key), tester integration tests and closing KAN-18/23/25, KAN-152, BR-U11-20. Added a status section to the roadmap.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T17:45:00Z — PR #11 opened (Quiz Detail banner fix)
+
+**User Input**: "Push nhánh fix/quiz-detail-client-validation-banner lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: Verified 61171a9 sits directly on staging d2a06cd and merges cleanly; pushed `fix/quiz-detail-client-validation-banner` to its own remote branch (upstream origin/fix/quiz-detail-client-validation-banner) and opened PR #11 into staging. CI backend and frontend pending at the time of writing; not merged.
+
+**Context**: Delivery — PR #11.
+
+---
+
+## 2026-10-22T18:00:00Z — PR #11 merged; staging rechecked
+
+**User Input**: "Merge PR #11 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Rechecked PR #11 (head 61171a9, CI backend 1265 tests, frontend 438 tests, GitGuardian pass, CLEAN) and merged with a merge commit: staging fa1c0f0, tree identical to 61171a9. Built and started the local stack from a temporary detached worktree of origin/staging (project `stg-check`, temporary env): frontend healthy, backend and worker still fail with "APPLICATION FAILED TO START" (U06/U07/U08 bean cycle), so the banner fix could not be exercised in the browser. Tore down the stack with volumes, removed the worktree and the temporary env. Updated the roadmap (uncommitted on quiz-u06-integration).
+
+**Context**: Delivery — PR #11 merged; staging verification.
+
+---
+
+## 2026-10-22T18:10:00Z — Phase 7 committed (7.1–7.3); branch cleanup
+
+**User Input**: "commit code giai đoạn 7 và xoá các nhánh, worktree thừa cho tôi"
+
+**AI Response**: Rechecked frontend lint, typecheck and 56 quiz tests; committed steps 7.1–7.3 (AiDraftView.taskId, MCP schema test, AiSourcePicker/AiTaskStatus in the AI draft dialog, tests) with the pending documentation locally on `quiz-u06-integration`. Steps 7.4 (real MCP run, blocked by the staging bean cycle), 7.5 and 7.6 remain; no push. Then removed the finished worktree `.claude/worktrees/admiring-wilson-84dd90` and deleted branches already contained in origin/staging: `fix/quiz-detail-client-validation-banner` (local and remote, PR #11), `quiz-activity` (local and remote, PR #8), `quiz-ai-mcp` (local and remote), `claude/admiring-wilson-84dd90` (local, same as main, no work). Teammates' branches untouched.
+
+**Context**: Construction — U10 phase 7 local commit; repository housekeeping.
+
+---
+
+## 2026-10-22T15:50:00Z — Merge staging vào quiz-u06-integration
+
+**User Input**: "kiểm tra code mới nhất từ staging để tránh bị conflict"
+
+**AI Response**: `origin/staging` không có commit mới (`57abe44`). Nhánh `origin/quiz-u06-integration` đã đổi sang `AiSourcePicker` và đầy đủ hơn bản trên `quiz-ai-source-picker`; hai bản xung đột ở cả 4 file. Thử merge `quiz-u06-integration` vào `staging`: chỉ xung đột 3 file tài liệu.
+
+**User Input**: "Bỏ thay đổi trên quiz-ai-source-picker. Chuyển sang quiz-u06-integration, merge origin/staging, giải 3 xung đột tài liệu (aidlc-state, audit, code-summary U10), chạy test, chưa push."
+
+**AI Response**: Bỏ thay đổi chưa commit, xóa nhánh `quiz-ai-source-picker`. Merge `origin/staging` (`57abe44`) vào `quiz-u06-integration`. Giải xung đột: `aidlc-state.md` và `audit.md` giữ mục của cả hai bên, không bỏ dòng nào; code-summary U10 giữ phần chạy thử end-to-end của nhánh, lỗi banner Quiz Detail ghi là đã sửa theo `staging` (PR #11). Frontend: lint, typecheck, build đạt; 449/449 test. Chưa push.
+
+**Context**: Construction — U10 giai đoạn 7, cập nhật nhánh theo staging.
+
+---
