@@ -109,13 +109,13 @@ platform:
     test-timeout: ${U06_AI_TEST_TIMEOUT:20s}
     providers:
       gemini:
-        models: ${U06_GEMINI_MODELS:gemini-2.5-flash,gemini-2.5-pro}
+        models: ${U06_GEMINI_MODELS:gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-4-argon}
         max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:8192}
       openai:
-        models: ${U06_OPENAI_MODELS:gpt-4.1-mini,gpt-4.1}
+        models: ${U06_OPENAI_MODELS:gpt-6-luna,gpt-6.1-sol,gpt-5.4-mini,gpt-5-mini,gpt-4.1-mini}
         max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:8192}
       claude:
-        models: ${U06_CLAUDE_MODELS:claude-sonnet-5-5,claude-haiku-5-5}
+        models: ${U06_CLAUDE_MODELS:claude-sonnet-5-5,claude-haiku-5-5,claude-opus-5-5,claude-sonnet-4-6,claude-opus-4-6}
         max-output-tokens: ${U06_CLAUDE_MAX_OUTPUT:8192}
   # U03 Job and Settings
   files:

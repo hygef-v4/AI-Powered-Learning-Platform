@@ -87,6 +87,25 @@ class HttpProviderGatewayTest {
     }
 
     @Test
+    void geminiOmitsArrayMaximaFromWireSchemaOnly() throws Exception {
+        String schema = """
+                {"type":"object","required":["sections"],"properties":{"sections":{
+                "type":"array","maxItems":100,"items":{"type":"object","properties":{"rubric":{
+                "type":"array","maxItems":20,"items":{"type":"integer","minimum":1,"maximum":6}}}}}}}
+                """;
+        reply = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{}\"}]}}]}";
+        Request input = request(schema);
+        gateway.call(AiProvider.GEMINI, input);
+        JsonNode wire = json.readTree(lastBody.get()).at("/generationConfig/responseJsonSchema");
+        assertThat(wire.at("/properties/sections").has("maxItems")).isFalse();
+        assertThat(wire.at("/properties/sections/items/properties/rubric").has("maxItems")).isFalse();
+        assertThat(wire.at("/properties/sections/items/properties/rubric/items/minimum").asInt()).isEqualTo(1);
+        assertThat(wire.path("required")).isEqualTo(json.readTree(schema).path("required"));
+        assertThat(input.outputSchema()).isEqualTo(schema);
+        assertThat(json.readTree(input.outputSchema()).at("/properties/sections/maxItems").asInt()).isEqualTo(100);
+    }
+
+    @Test
     void openAiUsesJsonSchemaFormatAndBearerKey() throws Exception {
         reply = "{\"id\":\"c1\",\"choices\":[{\"message\":{\"content\":\"{\\\"score\\\":7}\"}}],"
                 + "\"usage\":{\"prompt_tokens\":50,\"completion_tokens\":10,\"prompt_tokens_details\":{\"cached_tokens\":20}}}";

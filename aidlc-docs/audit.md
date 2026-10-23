@@ -5543,6 +5543,18 @@ Final verification: rerun frontend job119854495999 succeeded on the same ae7a1b6
 
 ---
 
+## Gemini assignment draft HTTP400 fix — 2026-10-23
+
+User requested investigation of a stuck AI draft, restart of worker/backend, then fixing the provider rejection. Initial worker image lacked AI_TASK handler; rebuilt current code and restarted matching backend/worker. Existing task reached FAILED with Gemini400.
+
+Diagnosis: same saved key/model and tiny synthetic prompt: full assignment schema (maxItems100/20/20) returned400, simple schema200, smaller maxima200, and original schema with array maxima omitted200. Official guidance: https://ai.google.dev/gemini-api/docs/structured-output — nested large array maxima can exceed decoding complexity.
+
+Approved bugfix scope: adjust only Gemini wire schema, preserve original task schema and application-side validation, retain other provider payloads/contracts. Added regression verifying omitted nested wire maxItems and unchanged original schema/required/numeric bounds; test failed before fix, then13 tests passed and packaging succeeded. Rebuilt runtime image and restarted backend/worker.
+
+End-to-end: submitted one short SWR diagram assignment request using personal Gemini through existing UI. AI task READY, handler_done=true, assignment draft READY; preview and Apply button visible. Left unapplied, existing assignment content unchanged. Screenshot .tmp/u06-models/swr-ready.png. No commit/push. Generated wording quality is not guaranteed; initial failed task remains historical, not retried by DB mutation.
+
+---
+
 ## 2026-10-22T13:40:00Z — PR #8 merged; staging verified
 
 **User Input**: "Merge PR #8 vào staging bằng merge commit, rồi kiểm tra staging sau merge."

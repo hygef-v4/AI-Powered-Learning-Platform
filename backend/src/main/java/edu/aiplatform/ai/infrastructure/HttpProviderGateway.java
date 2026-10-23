@@ -70,7 +70,9 @@ public class HttpProviderGateway implements IProviderGateway {
         config.put("maxOutputTokens", r.maxOutputTokens());
         if (r.outputSchema() != null) {
             config.put("responseMimeType", "application/json");
-            config.set("responseJsonSchema", readSchema(r.outputSchema()));
+            JsonNode schema = readSchema(r.outputSchema());
+            omitGeminiArrayMaxima(schema);
+            config.set("responseJsonSchema", schema);
         }
         String url = baseUrls.get(AiProvider.GEMINI) + "/v1beta/models/"
                 + URLEncoder.encode(r.model(), StandardCharsets.UTF_8) + ":generateContent";
@@ -198,6 +200,16 @@ public class HttpProviderGateway implements IProviderGateway {
             throw new ProviderException(FailureKind.CHARGED, 200, "Nhà cung cấp AI không trả nội dung", usage);
         }
         return new Response(output, requestId, usage);
+    }
+
+    /** Large nested array maxima exceed Gemini's decoding complexity limit.
+     * Only the wire copy is relaxed; AiTaskJobHandler validates the original schema after generation.
+     */
+    private static void omitGeminiArrayMaxima(JsonNode schema) {
+        if (schema instanceof ObjectNode object && "array".equals(object.path("type").asText())) {
+            object.remove("maxItems");
+        }
+        schema.forEach(HttpProviderGateway::omitGeminiArrayMaxima);
     }
 
     private JsonNode readSchema(String schema) {
