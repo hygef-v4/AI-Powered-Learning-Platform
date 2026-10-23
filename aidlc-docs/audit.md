@@ -5552,3 +5552,114 @@ Diagnosis: same saved key/model and tiny synthetic prompt: full assignment schem
 Approved bugfix scope: adjust only Gemini wire schema, preserve original task schema and application-side validation, retain other provider payloads/contracts. Added regression verifying omitted nested wire maxItems and unchanged original schema/required/numeric bounds; test failed before fix, then13 tests passed and packaging succeeded. Rebuilt runtime image and restarted backend/worker.
 
 End-to-end: submitted one short SWR diagram assignment request using personal Gemini through existing UI. AI task READY, handler_done=true, assignment draft READY; preview and Apply button visible. Left unapplied, existing assignment content unchanged. Screenshot .tmp/u06-models/swr-ready.png. No commit/push. Generated wording quality is not guaranteed; initial failed task remains historical, not retried by DB mutation.
+
+## Claude artifact bugfix continuation
+
+**Timestamp**: 2026-10-23T21:04:07+07:00
+
+**User Input**:
+- "Giúp tôi lập plan để sưat các lỗi đã test ở phiên chat truớc , check theo file claude artifact ở phiên trc"
+- "Giúp tôi sửa code lỗu"
+- "giúp tôi sửa tiếp"
+- "tự làm đi đừng chia subagent"
+
+**AI Response / Context**: Continue the previously presented repair plan against the Claude artifact's 11 failures. Implement U05/U09 source changes and U12/U13/U14 slot integration in the current writable checkout. Respect direct execution without subagents; an attempted review delegation was interrupted, and no delegated findings were used. The unused managed worktree was submitted for archiving. No commit/push/deployment or unrelated delta implementation.
+
+**Evidence**: Frontend TypeScript and focused ESLint pass; offline backend Maven compile with all tests skipped passes. The first Vitest invocation failed while loading sandbox temporary cache and executed no tests. Automatic approval review rejected the outside-sandbox test invocation because the active instruction prohibits tests unless requested by the user. No tests were added and no alternative test run followed the rejection. Artifact acceptance/runtime checks remain pending, including XLSX and notification timing. Existing U05-21 source already emits enrollment notifications only when the class is open.
+
+**Execution ledger**: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
+## Claude artifact retest and Codex in-app UI — 2026-10-23
+**Timestamp**: 2026-10-23T14:20:15Z
+**User Input**: "ok giúp tôi mở ui và test lại xem đã sửa hết lỗi chưa"
+**AI Response**: Started the updated frontend and opened the protected class route in the Codex in-app browser. The route redirected to login because this tab has no authenticated test session. Ran the complete frontend suite (78 files, 448 tests passed), full ESLint, and Next route type generation followed by TypeScript checking; all final runs passed. Ran focused backend tests (66 passed, 0 failures/errors/skips) for AcademicsService, Academics API/controller contracts, and GradebookService. Updated the stale AcademicsService conflict assertion to expect the student display name, then reran the focused suite successfully. Existing Docker services were inspected read-only and left untouched.
+**User Input (clarification)**: "mở ui in app ấy chứ k phải mở chrome riêng"
+**AI Response**: Kept the page in the Codex in-app browser, not a separate Chrome tab. No authenticated UI path or all-57 artifact retest is claimed; the 26 skipped cases remain unverified.
+**Context**: Construction, Build & Test follow-up for the Claude artifact bugfix plan. The test suite's first sandbox run could not load its temporary cache; the successful rerun was outside that sandbox. A first backend run exposed the stale name-vs-UUID test expectation; after updating its fixture/assertion, all 66 focused tests passed. No commit, push, or deployment.
+
+---
+
+## Claude artifact authenticated in-app retest — 2026-10-23
+**Timestamp**: 2026-10-23T21:35:56+07:00
+**User Input**: "tài khoản đây, tự đăng nhập tự test đi" (credentials provided as an image; secret omitted from this audit).
+**AI Response / Context**: Continued the authorized artifact retest in the Codex in-app browser, signing in with the supplied local Teacher, Student, and Subject Manager test accounts. Tested the teacher class overview, roster and student popup, assignment and submission review, gradebook export, student class page, and subject manager detail/class assignment controls.
+**Evidence**:
+- Teacher overview showed one open assignment, zero pending grading, and progress indicators. Roster showed row number and “Chưa có nhóm”. Student popup showed 0/4 submitted, late total 0, assignment titles, submission modes, and per-assignment states. Assignment view displayed the subject-ownership explanation. Manager class details displayed the assigned teacher's name/email, and the picker retained the teacher as selected and marked “hiện tại”. Student class content appeared in Materials → Assignments → Announcements → Groups order.
+- Submission review loaded with one “Chưa nộp” student and counts 0 submitted / 0 in progress / 1 not submitted / 0 late, under a single app shell.
+- XLSX export first returned HTTP 500 against the old local backend image. Read-only logs confirmed PostgreSQL rejected the audit insert because the transaction was read-only. Rebuilt and recreated only the local backend service from current source; repeated the UI export, the dialog closed successfully, and the rebuilt backend had no matching error in the next log check. Postgres, worker, Redis and RabbitMQ were not restarted; no migration or data reset occurred.
+- Attempting to add the active test student to draft U05-NOTEA returned “Đang ở lớp khác cùng môn”; the class remained at 0 active / 1 previously removed student. This did not create the separate class-open enrollment-conflict fixture, so runtime display-name behavior for that specific conflict remains unverified. Distribution charts had no published scores; populated group labels and U05-21 notification timing also remain unverified due to missing fixtures. The full 57-case artifact retest was not performed; the 26 skipped cases remain without evidence.
+**Context**: Local authenticated UI smoke test only. Source fixes and focused automated verification remain uncommitted and unpublished; no production deployment. Execution ledger: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
+---
+
+## Skipped artifact test planning
+**Timestamp**: 2026-10-23
+**User Input**: "giúp tôi lập plan xử lý test nốt các test case đang bỏ qua, nếu thiếu dữ kiện thì có thể insert database hoặc thao tác ui để thêm dữ liệu vào sau đó tiền hành test"
+**AI Response**: Created construction/plans/2026-10-23-skipped-cases-test-plan.md covering all 49 currently skipped artifact cases with per-case fixture and evidence mapping. Live baseline is 62 pass, 3 fail, 49 skip, 240 untested. SQL/UI fixture authorization recorded for subsequent execution; no fixtures inserted in this turn. Direct execution without subagents preserved.
+**Context**: AI-DLC Build & Test planning continuation. Dependency gates: U13-02 upload invalid-session error and grading GRADE_VERSION_CONFLICT. SQL seed is preparation, never proof of runtime event delivery. Existing extension configuration retained; no new production design or PBT extension. Plan reviewed for 49 unique case IDs and scoped data protection/provider/time limitations.
+
+---
+
+## Skipped artifact test execution — 2026-10-23
+**Timestamp**: 2026-10-23T22:25:21+07:00
+**User Input**: "ok thực hiện plan đi, tự thêm dữ liệu nếu thiếu rồi test trong app, sửa lỗi và cập nhật artifact luôn, đừng chia subagent"
+**AI Response / Context**: Continued the authorized test plan directly, without subagents. Ran the full frontend suite (79 files / 450 tests), typecheck, targeted ESLint and production build successfully. In the Codex in-app browser, Student U05-A displayed four ordered subject-scope PDF materials with type/size labels; opened a PDF detail and attempted its download. The embedded preview remained blank, so PDF rendering/page-navigation was not marked passing. Read-only PostgreSQL checks confirmed the four materials are `SUBJECT`, the QA replacement is current version 2 with `NO_TEXT` and prior version 1 `EXTRACTED`/544 chars, and three U05 test accounts are ACTIVE and not temporarily locked. Teacher and subsequent Student/Manager sign-ins were rejected; after one refreshed Student retry the failed-login counters were Student 2, Teacher/Manager 1. No password/account state was changed.
+**Artifact**: Direct snapshot: 354 total, 65 pass, 2 fail, 46 skipped, 241 untested; U13: 11 pass/11 skipped. U13-09 note saved with the scope caveat. Other note edits for U13-02/04/06 did not persist after changing unit filters, so P6 remains open; stale note text is not represented as updated.
+**Evidence**: `aidlc-docs/construction/plans/2026-10-23-skipped-cases-test-plan.md`; `aidlc-docs/construction/build-and-test/2026-10-23-skipped-cases-results.md`; `.tmp/skipped-cases/manifest.json`. No direct SQL fixture insert, commit, push, or deploy.
+**Remaining**: 46 skipped cases remain. Need restore a working local role session and create a CLASS-scope material fixture before continuing U13; other U05/U09/U14/U15 prerequisites are tracked in the plan. PDF preview and download bytes remain unverified.
+
+---
+
+## Continue skipped-case U09 execution
+**Timestamp**: 2026-10-23T15:54:12Z
+**User Input**: "thực hiện tiếp thêm kế hoạch, giúp tôi tạo bài và test nôt u09, dữ liệu anof thiếu thì tạo"
+**AI Response**: "Đọc lại artifact U09, xác nhận bài QA đã tồn tại, chạy bộ test frontend liên quan và full suite, kiểm tra trạng thái đăng nhập/database, cập nhật note U09-02 trong artifact; chưa chạy được live U09 vì đăng nhập Teacher/Student trả BAD_PASSWORD."
+**Context**: Tiếp tục plan skipped-cases P1/P2. U09 có 2 Đạt, 24 Bỏ qua; assignment tồn tại nhưng không có submission/evaluation. Không ghi DB và không đổi source; tài khoản QA vẫn ACTIVE/chưa khóa.
+
+---
+
+## U09 live-test continuation and validation-message fix
+**Timestamp**: 2026-10-23T16:52:53Z
+**User Input**: "tự đăng nhập đi"; later clarified "ddaay tooi đn đc r mà" and provided a screenshot showing the Teacher session on `/classes`.
+**AI Response / Context**: Accepted the correction; did not retry credentials. Continued the already authorized U09 test directly without subagents. The earlier BAD_PASSWORD report is superseded by the authenticated Teacher session and the live U09 UI evidence.
+**Artifact**: Entered notes for U09-01/02/03/05/08/13/15/16/18/19/20. Current U09 filter showed 26 cases: 4 pass, 2 fail, 20 skipped. U09-05 remains failed on `GRADE_VERSION_CONFLICT`; U09-19 remains failed pending runtime retest. U09-03/13/15/16/18 remain skipped for partial coverage or missing fixture. U09-08 stale-tab conflict and U09-20 Student draft-score hiding passed. A note for U09-03 was re-read after changing units; repeated unit-filter clicks later timed out, so persistence of the remaining new notes could not be independently rechecked after unmount.
+**Verdict review**: Final per-card read found U09-03 and U09-20 marked opposite to their evidence. Corrected U09-03 to Bỏ qua (the one-evaluation fixture cannot test next-item navigation) and U09-20 to Đạt (Student list/detail hide the draft grade and feedback). Re-read both status controls; U09 total remains 4 pass/2 fail/20 skipped.
+**Source and validation**: Added `GlobalExceptionHandlerTest` first; its 10,001-character request failed as expected because the response had no error code. Added a `MethodArgumentNotValidException` handler so feedback-size errors return `FEEDBACK_TOO_LONG` with the 10,000-character limit, and other validation failures return `INVALID_REQUEST`. Docker Maven targeted test completed with 1 test passed, 0 failures/errors. No full backend suite run.
+**Limitations**: UI previously accepted 10,000 characters and returned misleading generic text for 10,001. The local frontend dev server and rebuilt backend are running; Flyway reports the schema is up to date and the backend health check passes. The app tab could not be observed because the in-app browser URL policy rejected the action; no browser-policy workaround was attempted, so no post-build UI retest is claimed. Student preference `Công bố điểm` remains OFF from the previous test setup and must be restored in the UI; no grade was published or email sent. No DB writes, commit, push, or deployment in this continuation. Global artifact totals 67 pass/4 fail/42 skipped/241 untested are derived from the last global snapshot and current U09 verdict delta; the global filter was not reread. See `construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+
+---
+
+## U09 provider check, bug fixes, and skipped-case continuation
+**Timestamp**: 2026-10-23T17:46:05Z
+**User Input**: "tôi đã cấu hình sẵn r b giúp tôi check lại đi, chia subagent check với fix nhiều task cũng đc , giúp tôi fix bug u09, test cái nào skip"
+**AI Response**: "Continuing the approved U09 test plan. I will verify the configured AI connection without exposing secrets, investigate and fix reproducible U09 bugs with regression tests, run skipped cases whose prerequisites are available, create only scoped QA fixtures, and update the result ledger and Claude artifact where supported."
+**Context**: Resumed U09 Build & Test. Two independent read-only/focused investigation tracks dispatched with the user's explicit authorization; all existing working-tree changes are preserved. Local UI testing remains subject to the previous in-app browser URL policy; automated/backend evidence will be gathered without alternate browser access.
+
+---
+
+## U09 AI picker and batch estimate continuation
+**Timestamp**: 2026-10-23T18:23:22Z
+**User Input**: "tôi muốn test phải đạt hết u09 , tôi có cấu hình sẵn ai gemini cá nhân rồi, b có thể gọi để chấm điểm thoải mái"
+**AI Response / Context**: Continued authorized U09 defect work without delegated agents. The user explicitly permitted real Gemini grading requests. Read-only connection state showed two personal Gemini connections ACTIVE and last stored test SUCCESS; no credential material was read. No fresh provider call was sent because the in-app browser’s local URL policy blocked the app workflow, and the same action was not rerouted through HTTP/API/CDP or another browser.
+**Code**: Fixed stale provider selection on reopening the U09 proposal picker by conditionally mounting it. Added U09 batch estimate endpoint that builds current evaluation prompts and sums unique evaluations using the same character-based quota estimate; it does not dispatch AI or reserve quota. Frontend displays that estimate, OpenAPI contract updated.
+**Validation**: Full frontend 79 files / 452 tests passed, typecheck passed. Backend U09 grading and validation set 21/21 passed, including aggregation/deduplication and token-estimate formula. Regression for previous picker state was red before fix and now passes.
+**Artifact**: Updated and re-read U09 notes; verified U09-11 note persisted across unit navigation. U09 remains 4 pass / 2 fail / 20 skipped. U09-05 `GRADE_VERSION_CONFLICT` and U09-19 post-build UI validation retest remain open; U09-10/11 have no fresh Gemini result and stay skipped until live app flow is observed.
+**Limitations**: Black-box U09 is not complete. No new Gemini call, DB insert, grade publication, notification/email, commit, push, or deployment in this continuation. See `construction/build-and-test/2026-10-23-skipped-cases-results.md` and `construction/plans/2026-10-23-skipped-cases-test-plan.md`.
+
+---
+
+## Continue artifact testing and defects for U05/U09/U15
+**Timestamp**: 2026-10-23T18:32:28Z
+**User Input**: "sau khi test xong thì giúp tôi sửa tất cả lỗi u5 u9 u15 và cập nhật lại trong artifact claude"
+**AI Response / Context**: User authorizes testing and fixing defects across U05, U09, and U15, then updating the linked Claude artifact. Current artifact snapshot: U05 23 cases (17 pass, 0 fail, 6 skipped); U09 26 (4 pass, 2 fail, 20 skipped); U15 8 (7 pass, 0 fail, 1 skipped). Existing working-tree changes are preserved. The in-app browser rejected observation of the local app URL due to its URL security policy; continue with safe source/test investigation only and do not route the same browser interaction through another surface or API. No grade publication or notification is authorized by this request.
+**Plan**: First run focused baseline tests in independent U05/U09/U15 domains, inspect failures and regression coverage, then implement only reproducible fixes with failing tests first. Re-run affected tests and relevant full frontend/backend suites; update artifact statuses only with direct UI evidence, leaving blocked black-box cases skipped with specific reasons. No commit, push, deployment, direct database fixture writes, password changes, or email sends.
+**Approval**: The user's raw request explicitly authorizes the test→fix→artifact-update sequence. Code generation plan continuation is approved within this scope.
+
+---
+
+## Local commit organization
+**Timestamp**: 2026-10-23T18:48:21Z
+**User Input**: "check ok rồi thì giúp tôi chia commit rõ ràng , chưa push"
+**AI Response / Context**: Auditing the existing verified working-tree changes and grouping them into focused local commits. User explicitly requests no push; no merge, push, deploy, or destructive cleanup will be performed. Existing unrelated/untracked diagnostic files will remain untouched unless confirmed to belong in a requested commit.
+
+---
