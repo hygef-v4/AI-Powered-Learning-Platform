@@ -79,7 +79,7 @@ Theo plan U11. Làm UC 51 trước vì các màn khác đều dựa vào lượt
 
 - [x] `QuizAiDraftService`, `QuizDraftResultHandler` (`QUIZ_QUESTION_DRAFT`), `QuizMcpTools` (F4, F8, F13) trên contract U06. Plan chi tiết: [U10 giai đoạn 4](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (H1–H10), nhánh `quiz-ai-mcp`.
 - [x] Bộ chọn tài liệu tham khảo (U10) và `MaterialQuizList` (U11, G4) trên U13 đã có ở `staging`. Code xong và được duyệt ngày 2026-10-22, commit local trên `quiz-ai-mcp`.
-- [ ] Chạy thật khi U06 có code; trước đó chỉ test với stub.
+- [x] Chạy thật khi U06 có code: tool MCP qua MCP server thật và `AiSourcePicker` chạy thử đạt ngày 2026-10-23 (mục "Cập nhật 2026-10-23" bên dưới). AI soạn câu bằng khóa thật của nhà cung cấp vẫn chưa chạy.
 
 Tình trạng 2026-10-22: contract U06 trên `staging` đã đủ cho bước này (U09 đã cài `IAiTaskResultHandler`, `IMcpToolProvider` theo cùng cách); U13 đã cài `IReferenceMaterial` trên `staging`. Code U06 (`AiTaskService`, `AiSourcePicker`) mới ở nhánh `ai-connections`, chưa merge.
 
@@ -196,8 +196,8 @@ Plan chi tiết G3/E3: [U11, giai đoạn 6](code-generation-plan/u11-quiz-pract
 
 Plan chi tiết: [U10, giai đoạn 7](code-generation-plan/u10-quiz-authoring-code-generation-plan.md) (M1–M7), nhánh `quiz-u06-integration`.
 
-- [ ] Thay `AiSourceSelect` bằng `AiSourcePicker` của U06 trong `AiDrafts.tsx` (việc còn lại của H1). Code xong (bước 7.2–7.3), chưa commit trên `quiz-u06-integration`.
-- [ ] Chạy thử tool MCP qua MCP server thật của U06 (`read_quiz_context`, `save_quiz_draft`): tạo credential MCP trên giao diện U06 rồi gọi từ agent hoặc bằng request JSON-RPC.
+- [x] Thay `AiSourceSelect` bằng `AiSourcePicker` của U06 trong `AiDrafts.tsx` (việc còn lại của H1): PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
+- [x] Chạy thử tool MCP qua MCP server thật của U06 (`read_quiz_context`, `save_quiz_draft`): đạt ngày 2026-10-23.
 - [ ] Chạy AI soạn câu thật: cần khóa API thật của một nhà cung cấp (Gemini, OpenAI, Claude). Người dùng tự nhập khóa trên trang Kết nối AI.
 - [x] Push và mở PR cho bản sửa banner: PR #11 merge vào `staging` (`fa1c0f0`).
 
@@ -236,6 +236,21 @@ Plan chi tiết: [U10, giai đoạn 7](code-generation-plan/u10-quiz-authoring-c
 **Chưa hoàn thành trong lộ trình:**
 
 - Giai đoạn 4: chạy thật với U06. Còn MCP thật (chờ vòng bean) và AI thật (cần khóa API của người dùng).
+- Giai đoạn 5: tester viết integration test; đóng KAN-18, KAN-23, KAN-25.
+- KAN-152: chờ Report 3.
+- BR-U11-20: chờ người viết requirement.
+
+### Cập nhật 2026-10-23
+
+`staging` mới nhất là `eb0cf1a`.
+
+- Vòng bean U06 ↔ U07/U08 đã sửa (`fcbb71a`, `57abe44`); backend và worker khởi động được.
+- Giai đoạn 7 (U10 nối U06 thật) vào `staging` qua PR #14 (`eb0cf1a`). CI xanh; backend 1290 test, frontend 449 test. Đã xóa nhánh `quiz-u06-integration` (local và remote).
+- Bước 7.4 chạy thử MCP thật và `AiSourcePicker` trên stack Docker local: đạt. Chi tiết ở code-summary U10, mục "Chạy thử MCP thật và AiSourcePicker (giai đoạn 7)".
+
+**Chưa hoàn thành trong lộ trình:**
+
+- AI soạn câu bằng khóa thật của nhà cung cấp: cần người dùng nhập khóa trên trang Kết nối AI (hoặc Admin bật API của trường).
 - Giai đoạn 5: tester viết integration test; đóng KAN-18, KAN-23, KAN-25.
 - KAN-152: chờ Report 3.
 - BR-U11-20: chờ người viết requirement.

@@ -295,6 +295,41 @@ Lỗi phát hiện:
    - Test: `QuizScreens.test.tsx` thêm "điểm sai thì báo đúng lỗi…"; test E3 kiểm thêm banner "Cấu hình chưa hợp lệ." và không có "Hệ thống tạm bận". Hai test thất bại trên code cũ. Frontend lint, typecheck, 438 test, build đạt.
 2. Quan sát: U13 trả `hasText: false` cho link YouTube dù `extractText` có trả tiêu đề, mô tả, URL. Vì vậy popup AI chỉ chọn được học liệu dạng tệp đã trích chữ. Chưa thử với tệp tải lên.
 
-Chưa kiểm:
-- Tool MCP qua MCP server thật: chờ U06.
+Chưa kiểm (lúc đó):
+- Tool MCP qua MCP server thật: đã chạy ngày 2026-10-23, xem mục bên dưới.
 - AI soạn câu thật: U06 vẫn là stub.
+
+## Chạy thử MCP thật và AiSourcePicker (giai đoạn 7, bước 7.4, 2026-10-23)
+
+Chạy trên `staging` `eb0cf1a` (sau PR #14). Stack `docker-compose.yml` + `docker-compose.local.yml` dựng từ mã nguồn trên volume mới (project `mcp-e2e`, override tạm đổi cổng: Nginx `:18088`, Mailpit `:18025`, vì stack `platform` khác đang giữ `:8088`). Env tạm có secret ngẫu nhiên; stack, volume và file tạm đã gỡ sau khi chạy.
+
+Dữ liệu tạo bằng API: Admin kích hoạt bằng OTP qua Mailpit; Chủ nhiệm môn, 2 giảng viên, 1 sinh viên; môn `MCPE2E`; 2 lớp `OPEN` (mỗi lớp một giảng viên, cùng sinh viên); 1 Quiz nháp của lớp 1.
+
+**M5 — tool MCP qua `POST /mcp` (JSON-RPC, script, 16/16 đạt):**
+
+| Kiểm | Kết quả |
+|---|---|
+| Giảng viên tạo credential `READ_WRITE` và `READ_ONLY` (`POST /api/v1/me/mcp-credentials`) | `201`, có `token`, `endpoint` `/mcp` |
+| `initialize` | `protocolVersion` `2025-06-18` |
+| `tools/list` với `READ_WRITE` | Có `read_quiz_context`, `save_quiz_draft` |
+| `tools/list` với `READ_ONLY` | Có `read_quiz_context`, không có `save_quiz_draft` |
+| `read_quiz_context` | Trả Quiz và `version` |
+| `save_quiz_draft` (2 câu: một đáp án, nhiều đáp án; `agentLabel` "Claude Desktop") | Đề xuất `READY`, 2 câu, 0 câu lỗi |
+| `save_quiz_draft` với `expectedVersion` sai | `isError`, audit `FAILURE` `QUIZ_VERSION_CONFLICT` |
+| Credential `READ_ONLY` gọi `save_quiz_draft` | Bị từ chối, audit `ACCESS_DENIED` |
+| Tham số thừa (`extra`) | U06 trả `INVALID_PARAMS` theo schema |
+| Giảng viên lớp khác gọi `read_quiz_context` | "Không tìm thấy hoặc không có quyền", audit `ACCESS_DENIED` |
+| Sinh viên: `tools/list`; gọi `read_quiz_context` | Không thấy tool U10; gọi bị từ chối, audit `ACCESS_DENIED` |
+| Request có header `Origin` | `403` |
+| Token sai | `401` |
+| `GET /api/v1/quizzes/{id}/ai-drafts` | Có đề xuất `origin` MCP, agent "Claude Desktop", `taskId` trống |
+
+**Trên trình duyệt (giảng viên):**
+
+- Quiz Detail hiện "Chờ chấp nhận · Agent: Claude Desktop · 2 câu". Mở, chấp nhận cả 2 câu, "Lưu 2 câu đã chấp nhận": 2 câu thành câu riêng ở cuối Quiz, tổng điểm 2; audit `QUIZ_AI_DRAFT_ACCEPTED` (`count` 2, `origin` MCP, không có nội dung câu).
+- **M6:** "Tạo nháp bằng AI" → điền yêu cầu, 3 câu → "Gửi yêu cầu": popup U10 thay bằng popup "Chọn nguồn AI" của U06, dòng tác vụ "Sinh câu hỏi · Quiz chạy thử MCP". Cả 4 nguồn hiện mờ kèm lý do ("API của trường chưa được bật"; "Chưa lưu khóa API cho nhà cung cấp này"), nút "Gửi yêu cầu" khóa. Bấm "Hủy" thì quay lại form, giữ yêu cầu và số câu đã nhập.
+- Log backend, worker không có `ERROR` hay exception.
+
+Quan sát (U06, không phải lỗi U10): lời gọi tool sai schema bị trả `INVALID_PARAMS` mà không ghi audit; lời gọi bị từ chối quyền ghi `ACCESS_DENIED` chứ không phải `MCP_TOOL_CALLED`.
+
+Chưa kiểm: AI soạn câu bằng khóa thật (cần người dùng nhập khóa ở trang Kết nối AI hoặc Admin bật API của trường); ước tính token trên popup (chỉ hiện khi có nguồn dùng được); `AiTaskStatus` với task thật.
