@@ -53,6 +53,12 @@ public class AiDraftRepository {
                 .param("id", id).param("taskId", taskId).param("provenance", write(provenance)).update();
     }
 
+    public int updatePendingProvenance(UUID id, JsonNode provenance) {
+        return jdbc.sql("update assignment_ai_drafts set provenance = cast(:provenance as jsonb) "
+                        + "where id = :id and status = 'PENDING' and task_id is null")
+                .param("id", id).param("provenance", write(provenance)).update();
+    }
+
     public int markReady(UUID id, JsonNode proposal, JsonNode provenance) {
         return jdbc.sql("update assignment_ai_drafts set status = 'READY', proposal = cast(:proposal as jsonb), "
                         + "provenance = cast(:provenance as jsonb) where id = :id and status = 'PENDING'")

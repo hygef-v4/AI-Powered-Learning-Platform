@@ -8,6 +8,7 @@ import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.RubricCriterion;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,10 +45,20 @@ public final class AssignmentCommands {
     public record RubricUpdate(long version, List<RubricCriterion> criteria) {
     }
 
-    public record AiDraftRequest(String request, List<UUID> materialIds, AiSource source, AiProvider provider,
-                                 String requestRef) {
+    public record DraftOptions(String profile, String language, Integer questionCount, BigDecimal targetPoints) {
     }
 
-    public record ApplyDraft(long version, boolean replaceInstructions) {
+    public record AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs,
+                                 AiSource source, AiProvider provider, String requestRef, DraftOptions options) {
+        public AiDraftRequest(String request, List<UUID> materialIds, AiSource source, AiProvider provider,
+                              String requestRef) {
+            this(request, materialIds, List.of(), source, provider, requestRef, null);
+        }
+    }
+
+    public record ApplyDraft(long version, boolean replaceInstructions, boolean replaceTitle) {
+        public ApplyDraft(long version, boolean replaceInstructions) {
+            this(version, replaceInstructions, false);
+        }
     }
 }
