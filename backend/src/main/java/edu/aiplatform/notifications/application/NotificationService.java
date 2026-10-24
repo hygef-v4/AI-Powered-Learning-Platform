@@ -29,7 +29,7 @@ public class NotificationService {
     public Feed list(Actor actor,boolean unread,int page,int size) {
         UUID owner=access.self(actor);if(page<1||page>100000||size<1||size>50)throw ApiException.badRequest("PAGE_INVALID","Trang phải từ1, tối đa50 mục");
         var rows=repository.list(owner,unread,page,size);boolean more=rows.size()==size&&!repository.list(owner,unread,page+1,size).isEmpty();
-        return new Feed(rows.stream().map(n->new Item(n.id,n.type.name(),n.title,n.summary,n.link,n.readAt,n.createdAt)).toList(),page,size,more);
+        return new Feed(rows.stream().map(n->new Item(n.id,n.type.name(),n.title,NotificationSummaries.forDisplay(n.type,n.summary),n.link,n.readAt,n.createdAt)).toList(),page,size,more);
     }
     @Transactional(readOnly=true,timeout=5)
     public long unread(Actor actor) {return repository.unread(access.self(actor));}
