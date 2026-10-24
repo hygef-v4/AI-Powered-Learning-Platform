@@ -114,3 +114,16 @@ Lỗi là Problem Detail kèm `code`; bộ nhóm mâu thuẫn trả `issues` the
 | RESILIENCY-04 Triển khai | N/A | Không đổi pipeline hay hạ tầng |
 | RESILIENCY-06 Health check | N/A | Không thêm phụ thuộc mới (RabbitMQ, PostgreSQL đã có health) |
 | RESILIENCY-10 Cô lập phụ thuộc | Tuân thủ | Realtime gửi lỗi chỉ ghi log; job tạo tài liệu thử lại theo backoff của U03; tạo tài liệu ngay khi mở nếu job chưa chạy |
+
+## Sửa sau kiểm thử hộp đen của nhóm (2026-10-24)
+
+Plan: `construction/plans/2026-10-24-u12-test-plan-gaps.md`, nhánh `fix/u12-test-plan-gaps`. Chỉ frontend; API, quy tắc và dữ liệu không đổi.
+
+| Ca | Thay đổi | File |
+|---|---|---|
+| U12-03 | Kéo thả thành viên sang nhóm khác hoặc khu Chưa có nhóm (ô ⇄ Chuyển giữ cho bàn phím); nhóm mới ghi "(mới)" | `features/groups/GroupEditor.tsx` |
+| U12-05 | Nút "Mở tab Sinh viên" trong hộp Kiểm tra sẵn sàng, mở tab mới `/teaching/classes/{id}?tab=students`; hộp tự kiểm lại khi quay về cửa sổ; trang lớp nhận `?tab=` | `features/groups/TeacherGroupWidgets.tsx`, `features/academics/ReadOnlyClassPage.tsx` |
+| U12-08, 09 | Bấm vào mục Mở/Xong để nhận và mở luôn trình soạn; mục mình giữ thì soạn tiếp; mục người khác giữ chỉ cuộn tới nội dung; dòng người giữ ghi "Đang giữ: …"; nút Nhận mục cũng mở trình soạn | `features/groupdocs/GroupWorkspacePage.tsx` |
+| U12-13 | Popup tự nộp ghi "Đã hết hạn nộp lúc …" | `features/groupdocs/GroupWorkspacePage.tsx` |
+
+Test thêm: kéo thả và nhãn "(mới)" (`ClassGroupsPanel.test.tsx`), nút mở tab và tự kiểm lại (`TeacherGroupWidgets.test.tsx`, mới), `?tab=` (`academics.test.tsx`), bấm vào mục, giảng viên không nhận được, popup tự nộp (`GroupWorkspacePage.test.tsx`). Frontend 82 file / 473 test đạt; `tsc`, eslint phần đổi, `next build` đạt. Chưa chạy thử bằng tay trên localhost:8088.

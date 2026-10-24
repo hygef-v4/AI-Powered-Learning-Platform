@@ -1,22 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, IconTile, Pill } from "@/shared/ui";
+import { Alert, Button, IconTile, Pill } from "@/shared/ui";
 import { getGroups, getStudentGroup } from "./api";
 import type { GroupSetView, StudentGroup } from "./types";
 
+/** Bộ nhóm của lớp; tải lại khi quay về cửa sổ (vd. sau khi sửa nhóm ở tab khác). */
 function useGroupSet(classId: string) {
   const [set, setSet] = useState<GroupSetView | null>(null);
   useEffect(() => {
     let active = true;
-    getGroups(classId).then(
-      (loaded) => {
-        if (active) setSet(loaded);
-      },
-      () => undefined,
-    );
+    const load = () =>
+      getGroups(classId).then(
+        (loaded) => {
+          if (active) setSet(loaded);
+        },
+        () => undefined,
+      );
+    void load();
+    window.addEventListener("focus", load);
     return () => {
       active = false;
+      window.removeEventListener("focus", load);
     };
   }, [classId]);
   return set;
@@ -94,7 +99,12 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
         <Alert tone="warning">{set.ungrouped.length} sinh viên chưa có nhóm; xác nhận khi phát hành nếu vẫn muốn giao bài.</Alert>
       )}
       {errors.length === 0 && set.ungrouped.length === 0 && <Alert tone="success">Lớp đã sẵn sàng cho bài nhóm.</Alert>}
-      <p className="text-xs text-muted">Sửa nhóm ở tab Sinh viên của lớp.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" icon="groups" onClick={() => window.open(`/teaching/classes/${classId}?tab=students`, "_blank", "noopener")}>
+          Mở tab Sinh viên
+        </Button>
+        <span className="text-xs text-muted">Sửa nhóm ở tab mới; quay lại đây hộp này tự cập nhật.</span>
+      </div>
     </div>
   );
 }

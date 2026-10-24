@@ -704,3 +704,14 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Both branches' audit/state additions retained. Historical staging snapshots refer to their own fixtures and dates; the qualified U04/U13/U14 50/50 result and external evidence location remain as documented in the remediation dossier. Outstanding U07/U09 acceptance stays open.
 - [x] Focused frontend verification: 6 files,33 tests passed. Typecheck and targeted lint passed.
 - [x] Full frontend81 files/474 tests passed, no failures/skips; typecheck, targeted ESLint and production build passed. Resolutions staged, no unmerged paths or conflict markers. Merge remains awaiting commit; no push, backend rerun, live provider call or deployment. Initial unstable Node26 sandbox run was interrupted and is not counted as a successful full run; final full-suite/build used Node24.22.1.
+
+## U12 sửa sau kiểm thử hộp đen — 2026-10-24
+- [x] Người dùng duyệt sửa 4 chỗ lệch kế hoạch kiểm thử (U12-03, 05, 08, 13); plan `construction/plans/2026-10-24-u12-test-plan-gaps.md`.
+- [x] Code + test frontend trên nhánh `fix/u12-test-plan-gaps` (từ `staging` 301c573); 473 test frontend, tsc, lint, build đạt; code-summary U12 đã cập nhật.
+- [ ] Người test chạy lại U12-03, 05, 08, 09, 13 trên localhost:8088 sau khi gộp.
+
+### U12 staging merge resolution — 2026-10-24
+
+- [x] User approved resolving the two documentation conflicts; both histories retained, including the four incoming audit entries. Previous merge notes and branch verification totals remain historical evidence.
+- [x] Keep U12-03/05/08/09/13 manual retest pending. No application source changes required to resolve this merge.
+- [x] Verified affected frontend4 files/40 tests passed, TypeScript noEmit passed and production build passed. Both resolved documents staged; no unmerged entries or conflict markers. Keep merge awaiting commit; no push or .tmp/reports staging. No new full-suite, backend or manual U12 acceptance claim.

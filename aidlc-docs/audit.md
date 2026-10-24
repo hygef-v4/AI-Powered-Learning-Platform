@@ -6124,3 +6124,52 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Evidence / Git**: Logs in ignored .tmp/merge-staging-focused-tests.log, merge-staging-full-tests.log, merge-staging-typecheck.log, merge-staging-lint.log and merge-staging-build.log. Explicit staging only, all unmerged index entries resolved; no conflict markers or staged whitespace errors. Existing incoming staging changes retained. No .tmp/reports staged. HEAD remains e1ec7ed; MERGE_HEAD remains301c5733477e1614eef60c5f4646446818d03d03. Merge is ready for review/commit; no merge commit, push, deployment or DB/clock modification performed. Existing scoped security/resiliency behavior preserved; PBT remains disabled.
 
 ---
+
+
+## Merge startup fix request
+**Timestamp**: 2026-10-22T09:15:00Z
+**User Input**: "goopj luoon cho toi"
+**AI Response**: Mở PR `fix/u06-ai-handler-cycle` → `staging`, chạy `mvn verify` ở máy song song với CI, gộp khi CI đạt.
+**Context**: Construction, U06 sửa lỗi sau khi gộp
+
+---
+
+## Team black-box test plan review
+**Timestamp**: 2026-10-24T08:00:00Z
+**User Input**: "https://claude.ai/artifact/Wbj4CKoyBcDE6dPyCHbour ban toi da test va gui cho toi arrtifact nay, cap nhat github xem da mearch cac nhanh cua toi vao chua. va xem o artifact nay can gi phai sua o phan cua toi hay hay phai test nhu the nao khong"
+**AI Response**: Kiểm `origin/staging` (301c573): `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle` đều đã gộp. Đối chiếu U06-01..21 và U12-01..29 với code: U06 khớp; U12 lệch U12-03 (chưa kéo thả, nhãn "mới" chưa có ngoặc), U12-05 (chưa có nút Mở tab Sinh viên), U12-08 (nhận mục bằng nút, chưa bấm vào mục), U12-13 (popup tự nộp chưa ghi giờ hết hạn). Chưa sửa, chờ người dùng quyết.
+**Context**: Construction, rà kế hoạch kiểm thử hộp đen của nhóm
+
+---
+
+## U12 test plan gaps – approval
+**Timestamp**: 2026-10-24T08:20:00Z
+**User Input**: "sửa cả 4 chỗ U12 đi"
+**AI Response**: Coi là duyệt phạm vi 4 chỗ đã liệt kê. Tạo nhánh `fix/u12-test-plan-gaps` từ `origin/staging`, plan `construction/plans/2026-10-24-u12-test-plan-gaps.md` (5 bước), làm lần lượt: kéo thả + "(mới)" (U12-03), nút Mở tab Sinh viên (U12-05), bấm vào mục để nhận (U12-08), giờ hết hạn trong popup tự nộp (U12-13).
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
+## U12 test plan gaps – code complete
+**Timestamp**: 2026-10-24T09:10:00Z
+**User Input**: (không có input mới; tiếp tục "sửa cả 4 chỗ U12 đi")
+**AI Response**: Xong 5 bước plan: kéo thả + "(mới)" (U12-03); nút Mở tab Sinh viên mở tab mới, hộp tự kiểm lại khi quay về, trang lớp nhận `?tab=` (U12-05); bấm vào mục để nhận và mở trình soạn, mục người khác giữ chỉ xem (U12-08, 09); popup tự nộp ghi giờ hết hạn (U12-13). Frontend 473 test, tsc, eslint, build đạt. Cập nhật code-summary U12 và aidlc-state.
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
+## U12 staging merge — documentation conflict resolution
+**Timestamp**: 2026-10-24T13:19:11Z
+**User Input**: "check và đưa ra phương án solve conflict"; after the two-document review: "sửa giúp tôi đi".
+**Approval / Plan**: User approved retaining both branches' appended state and audit content. Resolve only aidlc-state.md and audit.md; preserve prior merge/polling/CSRF verification, append the incoming U12 test-gap history and its four distinct audit entries, keep manual U12-03/05/08/09/13 retest open. Existing473 and474 test totals are separate historical branch runs, not new merged verification.
+**Progress**: [x] Merge both document histories and remove conflict markers; verify the complete HEAD audit remains an unchanged prefix. [ ] Run affected U12/academics frontend tests, typecheck and production build. [ ] Stage exactly the two resolved documents and verify merge/index state, excluding .tmp/reports; leave merge awaiting commit and do not push.
+**Scope**: No application-source changes, provider calls, runtime restart, DB changes or manual checklist acceptance. Security/resiliency runtime changes N/A for this documentation resolution; PBT remains disabled per state. HEAD068e5fef8b5906c7502ec464649c93a58d621d41, incoming6d540474e9d0a7a635efe7f38bc7c7f6b19f54c5.
+
+---
+## U12 staging merge — resolution verified
+**Timestamp**: 2026-10-24T13:24:44Z
+**Progress**: [x] Preserve complete HEAD audit as unchanged prefix and retain all four incoming audit entries once; keep both state histories and pending U12-03/05/08/09/13 manual retest. [x] Verify U12/academics frontend4 test files/40 tests passed, TypeScript noEmit passed, Next.js production build completed successfully including28 static pages and standalone traces. [x] Stage the two resolved documents and verify no remaining unmerged entries/markers; no commit or push.
+**Evidence**: Ignored .tmp/merge-u12-focused-tests.log (37.72seconds,40 passed), .tmp/merge-u12-typecheck.log and .tmp/merge-u12-build.log. Verification used bundled Node24.22.1. No application-source edits, new full-frontend-suite/backend runs, live provider/runtime/DB changes or manual acceptance. Existing473/474 totals remain historical branch evidence, distinct from this40-test run.
+**Git Handoff**: Resolution changes only aidlc-docs/aidlc-state.md and aidlc-docs/audit.md. Incoming U12 source/test/plan/code-summary changes retained as staged by the merge. HEAD remains068e5fef8b5906c7502ec464649c93a58d621d41 and MERGE_HEAD remains6d540474e9d0a7a635efe7f38bc7c7f6b19f54c5. Merge remains awaiting commit; .tmp/reports excluded. Scoped security/resiliency runtime modifications N/A; PBT remains disabled.
+
+---
