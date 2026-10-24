@@ -145,7 +145,16 @@ public class AcademicsService {
                 requireTeacher(current.teacherId());
                 subjectActive=subjects.isActive(current.subjectId());
                 var conflicting=enrollments.conflictingStudents(id,current.subjectId());
-                if(!conflicting.isEmpty()) throw new AcademicsProblem("ENROLLMENT_CONFLICT","Có sinh viên đang ở lớp khác cùng môn",Map.of("conflictingStudents",conflicting));
+                if(!conflicting.isEmpty()) {
+                    var conflictingNames=conflicting.stream()
+                            .map(studentId -> accounts.getContact(studentId)
+                                    .map(AccountContact::displayName)
+                                    .filter(name -> !name.isBlank())
+                                    .orElse("Sinh viên không còn thông tin tài khoản"))
+                            .toList();
+                    throw new AcademicsProblem("ENROLLMENT_CONFLICT","Có sinh viên đang ở lớp khác cùng môn",
+                            Map.of("conflictingStudents",conflictingNames));
+                }
             }
             CourseClass changed=current.changeStatus(status,subjectActive,false,clock.instant());
             classes.update(changed,version);

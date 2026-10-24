@@ -2,6 +2,7 @@ package edu.aiplatform.grading.application;
 
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.RubricView;
+import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.ActivitySummary;
 import edu.aiplatform.grading.contract.GroupSectionAuthor;
 import edu.aiplatform.grading.domain.Evaluation;
@@ -19,6 +20,9 @@ public final class GradingViews {
     }
 
     public record BatchResult(List<ItemResult> items) {
+    }
+
+    public record AiEstimate(long estimatedTokens, int items) {
     }
 
     public record Person(UUID accountId, String name, String email) {
@@ -47,7 +51,7 @@ public final class GradingViews {
     public record GradebookRow(Person student, List<GradeCell> grades) {
     }
 
-    public record AssignmentColumn(UUID id, String title, BigDecimal maxScore) {
+    public record AssignmentColumn(UUID id, String title, BigDecimal maxScore, SubmissionMode submissionMode) {
     }
 
     public record GradebookPage(List<GradebookRow> rows, List<AssignmentColumn> assignments, int total, int page,

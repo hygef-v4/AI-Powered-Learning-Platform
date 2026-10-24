@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.contract.AiTaskFailure;
 import edu.aiplatform.ai.contract.AiTaskResult;
 import edu.aiplatform.ai.contract.AiTaskState;
@@ -79,15 +80,32 @@ public class GradingProposalTransactions {
             requireSameRequest(actor, evaluation, request, proposal);
             return new Prepared(proposal, null, false);
         }
+        var prompt = buildPrompt(actor, evaluation);
+        var proposal = newProposal(actor, evaluation, request);
+        proposals.save(proposal);
+        grading.record(actor, evaluation, "AI_GRADING_REQUESTED", null);
+        return new Prepared(proposal, prompt, true);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public long estimateTokens(Actor actor, UUID evaluationId, long version) {
+        var evaluation = grading.requireCurrent(actor, evaluationId, version);
+        if (evaluation.kind == EvaluationKind.MEMBER)
+            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
+        if (evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT)
+            throw ApiException.conflict("INVALID_GRADE_STATE", "AI proposals require a pending or draft grade");
+        var prompt = buildPrompt(actor, evaluation);
+        int promptChars = (prompt.system() == null ? 0 : prompt.system().length()) + prompt.user().length();
+        return AiTokenEstimate.estimate(promptChars, 4096);
+    }
+
+    private edu.aiplatform.ai.contract.AiPrompt buildPrompt(Actor actor, Evaluation evaluation) {
         var content = assignments.getContent(evaluation.assignmentId).orElseThrow(
                 () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment content unavailable"));
         if (!GradingJson.write(json, content.rubrics()).equals(evaluation.rubricSnapshot))
             throw ApiException.conflict("RUBRIC_CHANGED", "Locked rubric no longer matches submitted snapshot");
         var detail = review.detail(actor, evaluation.id);
-        var proposal = newProposal(actor, evaluation, request);
-        proposals.save(proposal);
-        grading.record(actor, evaluation, "AI_GRADING_REQUESTED", null);
-        return new Prepared(proposal, prompts.build(evaluation, detail.document(), content), true);
+        return prompts.build(evaluation, detail.document(), content);
     }
 
     private void requireAiSource(AiRequest request) {

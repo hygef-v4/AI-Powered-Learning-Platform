@@ -88,7 +88,10 @@ class AcademicsServiceTest {
     @Test void reopenReturnsConflictingStudents() {
         when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
         when(enrollments.conflictingStudents(classId,subjectId)).thenReturn(List.of(studentId));
-        assertThatThrownBy(() -> service.changeStatus(manager,classId,ClassStatus.OPEN,0)).isInstanceOfSatisfying(AcademicsProblem.class,e -> assertThat(e.properties().get("conflictingStudents")).isEqualTo(List.of(studentId)));
+        var studentName = "Nguyen Van A";
+        when(accounts.getContact(studentId)).thenReturn(Optional.of(
+                new AccountContact(studentId,"student@example.com",studentName,Role.STUDENT,AccountStatus.ACTIVE)));
+        assertThatThrownBy(() -> service.changeStatus(manager,classId,ClassStatus.OPEN,0)).isInstanceOfSatisfying(AcademicsProblem.class,e -> assertThat(e.properties().get("conflictingStudents")).isEqualTo(List.of(studentName)));
         verify(classes,never()).update(any(),anyLong());
     }
     @Test void openDraftPublishesActivationForAllActiveStudents() {

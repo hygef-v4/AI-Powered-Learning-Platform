@@ -127,7 +127,7 @@ public class SubmissionReviewService {
                                         && Objects.equals(candidate.attemptId, submission.gradedAttemptId()))
                                 .findFirst().orElse(null);
                 String status = evaluation != null ? evaluation.state.name()
-                        : submission == null ? "NOT_SUBMITTED"
+                        : submission == null || submission.latestStatus() == null ? "NOT_SUBMITTED"
                                 : submission.latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS" : "PENDING";
                 rows.add(new SubmissionRow(person(sid), evaluation == null ? null : evaluation.id,
                         submission == null ? null : submission.gradedAttemptId(), status,

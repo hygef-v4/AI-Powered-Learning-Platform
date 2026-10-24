@@ -5,6 +5,7 @@ import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -16,6 +17,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     ProblemDetail handleApi(ApiException e) {
         return problem(e.status(), e.code(), e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ProblemDetail handleValidation(MethodArgumentNotValidException e) {
+        boolean feedbackTooLong = e.getBindingResult().getFieldErrors().stream()
+                .anyMatch(error -> "feedback".equals(error.getField()) && "Size".equals(error.getCode()));
+        if (feedbackTooLong) {
+            return problem(HttpStatus.BAD_REQUEST, "FEEDBACK_TOO_LONG", "Nhận xét tối đa 10.000 ký tự.");
+        }
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Dữ liệu yêu cầu không hợp lệ");
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

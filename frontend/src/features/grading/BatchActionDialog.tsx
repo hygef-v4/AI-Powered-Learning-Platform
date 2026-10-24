@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@/shared/ui/Dialog";
 import { aiRequest } from "./AiProposalPanel";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
@@ -21,6 +21,26 @@ export function BatchActionDialog({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
   const [error, setError] = useState("");
+  const [estimate, setEstimate] = useState<{ key: string; state: "ready" | "failed"; tokens?: number }>({
+    key: "",
+    state: "failed",
+  });
+  useEffect(() => {
+    if (action !== "ai" || items.length === 0) return;
+    let active = true;
+    const key = JSON.stringify(items);
+    void gradingApi.estimateBatch(items).then(
+      (value) => {
+        if (active) setEstimate({ key, state: "ready", tokens: value.estimatedTokens });
+      },
+      () => {
+        if (active) setEstimate({ key, state: "failed" });
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [action, items]);
   async function run(choice?: SourceChoice) {
     if (busy || items.length === 0 || (action === "ai" && !choice)) return;
     setBusy(true);
@@ -46,9 +66,13 @@ export function BatchActionDialog({
       : action === "finalize"
         ? "Chốt điểm"
         : "Đề xuất AI hàng loạt";
+  const estimateIsCurrent = estimate.key === JSON.stringify(items);
+  const estimateState = estimateIsCurrent ? estimate.state : "loading";
   if (action === "ai" && choosingSource && items.length > 0) {
-    return <AiSourcePicker open task={`Đề xuất chấm ${items.length} bài đã chọn`}
-      busy={busy} onCancel={onClose} onSubmit={(choice) => void run(choice)} />;
+    return <AiSourcePicker open
+      task={`Đề xuất chấm ${items.length} bài đã chọn${estimateState === "loading" ? " · đang ước tính token" : estimateState === "failed" ? " · chưa ước tính được token" : ""}`}
+      estimatedTokens={estimateState === "ready" ? estimate.tokens : undefined}
+      busy={busy || estimateState === "loading"} onCancel={onClose} onSubmit={(choice) => void run(choice)} />;
   }
   return (
     <Dialog

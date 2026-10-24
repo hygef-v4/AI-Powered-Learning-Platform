@@ -62,4 +62,26 @@ class GradingProposalServiceTest {
         verify(evaluations, never()).findById(other);
         verifyNoInteractions(ai);
     }
+
+    @Test
+    void batchEstimateSumsEachDistinctCurrentEvaluationWithoutDispatchingAi() {
+        var tx = mock(GradingProposalTransactions.class);
+        var ai = mock(IAiTask.class);
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+        when(tx.estimateTokens(actor, first, 2)).thenReturn(5_100L);
+        when(tx.estimateTokens(actor, second, 4)).thenReturn(6_200L);
+        var service = new GradingProposalService(tx, ai, mock(IEvaluationRepository.class),
+                mock(IGradingProposalRepository.class), mock(GradingAccess.class));
+
+        var estimate = service.estimateBatch(actor,
+                new Batch(List.of(new ItemVersion(first, 2), new ItemVersion(second, 4), new ItemVersion(first, 2))));
+
+        assertThat(estimate.estimatedTokens()).isEqualTo(11_300L);
+        assertThat(estimate.items()).isEqualTo(2);
+        verify(tx).estimateTokens(actor, first, 2);
+        verify(tx).estimateTokens(actor, second, 4);
+        verifyNoInteractions(ai);
+    }
 }

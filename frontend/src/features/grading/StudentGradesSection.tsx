@@ -10,17 +10,35 @@ export function StudentGradesSection({
   classId: string;
   studentId: string;
 }) {
-  const load = useCallback(() => gradingApi.student(classId, studentId), [classId, studentId]);
+  const load = useCallback(async () => {
+    const [row, gradebook] = await Promise.all([
+      gradingApi.student(classId, studentId),
+      gradingApi.gradebook(classId),
+    ]);
+    return { grades: row.grades, assignments: gradebook.assignments };
+  }, [classId, studentId]);
   const { value, error } = useResource(load);
   return (
     <section className="my-4">
       <h3 className="font-bold">Bài nộp và điểm</h3>
       {error && <p role="alert">{error}</p>}
-      {value?.grades.map((g, i) => (
-        <p key={g.assignmentId}>
-          Bài {i + 1}: {points(g.score, g.maxScore)} · {statusLabels[g.status] ?? g.status}
-        </p>
-      ))}
+      {!value && !error && <p role="status">Đang tải bài nộp và điểm…</p>}
+      {value && <>
+        <p className="my-3">Đã nộp {value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} bài Graded · Nộp trễ {value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+          <thead><tr><th scope="col" className="p-2">Bài</th><th scope="col" className="p-2">Hình thức</th><th scope="col" className="p-2">Nộp</th><th scope="col" className="p-2">Điểm</th></tr></thead>
+          <tbody>{value.assignments.map(assignment => {
+            const grade = value.grades.find(item => item.assignmentId === assignment.id);
+            return <tr key={assignment.id} className="border-t">
+              <th scope="row" className="p-2 font-medium">{assignment.title}</th>
+              <td className="p-2">{assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</td>
+              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{new Date(grade.submittedAt).toLocaleString("vi-VN")}</> : grade?.status === "IN_PROGRESS" ? "Đang làm" : "Chưa nộp"}</td>
+              <td className="p-2">{points(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{statusLabels[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
+            </tr>;
+          })}</tbody>
+        </table></div>
+        {!value.assignments.length && <p>Chưa có bài Graded trong lớp.</p>}
+      </>}
     </section>
   );
 }

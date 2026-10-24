@@ -13,5 +13,14 @@ export function ManagerDashboardPage({ subjects, classes, teachingCount = 0, onS
 }
 export function MySubjectPage({ subject, classes, onBack, onClasses }: { subject: SubjectView; classes: CourseClassView[]; onBack: () => void; onClasses: () => void }) {
   const rows = classes.filter((course) => course.subject.id === subject.id);
-  return <><PageHeading title={subject.name} subtitle={`Môn học của tôi › ${subject.code}`} onBack={onBack}><button className={styles.primaryButton} onClick={onClasses}><Icon name="users"/>Lớp của môn</button></PageHeading><section className={styles.panel}><h2>Thông tin môn</h2><dl className={styles.readList}><dt>Mã môn</dt><dd className={styles.code}>{subject.code}</dd><dt>Tên môn</dt><dd>{subject.name}</dd><dt>Mô tả</dt><dd>{subject.description || "Chưa có mô tả."}</dd></dl><div className={styles.statRow}>{([ ["DRAFT", "Lớp nháp"], ["OPEN", "Lớp đang mở"], ["ARCHIVED", "Lớp lưu trữ"] ] as const).map(([status, label]) => <div key={status}><strong>{rows.filter((row) => row.status === status).length}</strong><small>{label}</small></div>)}</div></section><SlotOutlet slot={subjectSummarySections} props={{subjectId:subject.id,variant:"card" as const}}/></>;
+  return <>
+    <PageHeading title={subject.name} subtitle={`Môn học của tôi › ${subject.code}`} onBack={onBack}><button className={styles.primaryButton} onClick={onClasses}><Icon name="users"/>Lớp của môn</button></PageHeading>
+    <section className={styles.panel}>
+      <h2>Thông tin môn</h2>
+      <dl className={styles.readList}><dt>Mã môn</dt><dd className={styles.code}>{subject.code}</dd><dt>Tên môn</dt><dd>{subject.name}</dd><dt>Mô tả</dt><dd>{subject.description || "Chưa có mô tả."}</dd></dl>
+      <p className={styles.hint}>Tên và mô tả môn do Quản trị viên quản lý.</p>
+      <div className={styles.statRow}>{([ ["DRAFT", "Lớp nháp"], ["OPEN", "Lớp đang mở"], ["ARCHIVED", "Lớp lưu trữ"] ] as const).map(([status, label]) => <div key={status}><strong>{rows.filter((row) => row.status === status).length}</strong><small>{label}</small></div>)}</div>
+    </section>
+    <SlotOutlet slot={subjectSummarySections} props={{subjectId:subject.id,variant:"card" as const}}/>
+  </>;
 }

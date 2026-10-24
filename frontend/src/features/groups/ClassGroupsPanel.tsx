@@ -15,29 +15,33 @@ type Mode = { kind: "view" } | { kind: "edit"; initial?: Draft[] } | { kind: "pr
  * Phần Nhóm trên tab Sinh viên của Teacher Class Detail (#32, UC 57): lớp chưa có nhóm thì có Chia ngẫu nhiên và Tạo
  * nhóm; lớp có nhóm thì thẻ từng nhóm, Sửa nhóm, Tiến độ bài nhóm, yêu cầu đổi trưởng nhóm đang chờ.
  */
-export function ClassGroupsPanel({ classId }: { classId: string }) {
+export function ClassGroupsPanel({ classId, onGroupNamesLoaded }: { classId: string; onGroupNamesLoaded?: (names: Record<string, string>) => void }) {
   const [set, setSet] = useState<GroupSetView | null>(null);
   const [mode, setMode] = useState<Mode>({ kind: "view" });
   const [splitting, setSplitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const receive = useCallback((loaded: GroupSetView) => {
+    setSet(loaded);
+    setError(null);
+    onGroupNamesLoaded?.(Object.fromEntries(loaded.groups.flatMap(group =>
+      group.members.filter(member => member.active).map(member => [member.accountId, group.name]),
+    )));
+  }, [onGroupNamesLoaded]);
 
   const load = useCallback(
     () =>
       getGroups(classId).then(
-        (loaded) => {
-          setSet(loaded);
-          setError(null);
-        },
+        receive,
         () => setError("Không tải được nhóm của lớp, thử lại sau."),
       ),
-    [classId],
+    [classId, receive],
   );
 
   useEffect(() => {
     let active = true;
     getGroups(classId).then(
       (loaded) => {
-        if (active) setSet(loaded);
+        if (active) receive(loaded);
       },
       () => {
         if (active) setError("Không tải được nhóm của lớp, thử lại sau.");
@@ -46,7 +50,7 @@ export function ClassGroupsPanel({ classId }: { classId: string }) {
     return () => {
       active = false;
     };
-  }, [classId]);
+  }, [classId, receive]);
 
   if (error && !set) {
     return (
@@ -68,7 +72,7 @@ export function ClassGroupsPanel({ classId }: { classId: string }) {
         initial={mode.initial}
         onCancel={() => setMode({ kind: "view" })}
         onSaved={(next) => {
-          setSet(next);
+          receive(next);
           setMode({ kind: "view" });
         }}
       />

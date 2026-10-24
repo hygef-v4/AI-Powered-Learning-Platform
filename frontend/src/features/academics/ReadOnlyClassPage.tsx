@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { studentClassSections, teacherClassTabs } from "./slots";
 import { StudentDetailDialog } from "./ClassDialogs";
@@ -14,6 +14,8 @@ export function ReadOnlyClassPage({ audience, value, students = [], onBack, load
   const [selected, setSelected] = useState<EnrollmentView | null>(null);
   const [detailError,setDetailError]=useState("");
   const [detailBusy,setDetailBusy]=useState(false);
+  const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string> } | null>(null);
+  const onGroupNamesLoaded = useCallback((names: Record<string, string>) => setGroupNames({ classId: value.id, names }), [value.id]);
   const detailRequest=useRef<AbortController|null>(null);
   useEffect(()=>()=>detailRequest.current?.abort(),[]);
   async function selectStudent(student:EnrollmentView){detailRequest.current?.abort();const request=new AbortController();detailRequest.current=request;setDetailError("");setDetailBusy(true);try{const detail=loadStudent?await loadStudent(value.id,student.accountId,request.signal):student;if(!request.signal.aborted)setSelected(detail);}catch{if(!request.signal.aborted)setDetailError("Không tải được thông tin sinh viên.");}finally{if(!request.signal.aborted)setDetailBusy(false);}}
@@ -29,7 +31,7 @@ export function ReadOnlyClassPage({ audience, value, students = [], onBack, load
     </dl></section>}
     {audience === "teacher" && tab === "info" && <SlotOutlet slot={teacherClassTabs} props={{classId:value.id,tab:"info" as const}}/>}
     {audience === "student" && <SlotOutlet slot={studentClassSections} props={{ classId: value.id }}/>}
-    {audience === "teacher" && tab === "students" && <><EnrollmentPanel students={activeStudents} onView={student=>void selectStudent(student)}/><SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "students" as const }}/></>}
+    {audience === "teacher" && tab === "students" && <><EnrollmentPanel students={activeStudents} groupNames={groupNames?.classId === value.id ? groupNames.names : undefined} onView={student=>void selectStudent(student)}/><SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "students" as const, onGroupNamesLoaded }}/></>}
     {audience === "teacher" && (tab === "materials" || tab === "evals" || tab === "gradebook") && <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab }}/>}
     {detailError && <p role="alert">{detailError}</p>}{detailBusy && <p role="status">Đang tải sinh viên…</p>}
     {selected && <StudentDetailDialog classId={value.id} student={selected} onClose={() => setSelected(null)}/>}
