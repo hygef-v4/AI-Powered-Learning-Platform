@@ -30,6 +30,7 @@ import edu.aiplatform.groupdocs.domain.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.domain.GroupSection;
 import edu.aiplatform.groupdocs.domain.GroupSection.Status;
 import edu.aiplatform.groupdocs.domain.SectionRevision;
+import edu.aiplatform.groupdocs.domain.SectionRules;
 import edu.aiplatform.groups.application.GroupAccess;
 import edu.aiplatform.groups.domain.ClassGroup;
 import edu.aiplatform.groups.domain.GroupRepository;
@@ -177,6 +178,57 @@ class GroupSectionServiceTest {
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.CLOSED);
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
+    }
+
+    @Test
+    void draftIsCheckedInsideTheSharedSkeletonByTheRealValidator() {
+        DocumentBlock first = heading("1. Phân tích");
+        DocumentBlock second = heading("2. Thiết kế");
+        GroupDocument withSkeleton = GroupDocument.create(document.id(), group.id(), assignmentId, classId,
+                new DocumentModel(List.of(first, second)), false, NOW);
+        when(documents.findById(document.id())).thenReturn(Optional.of(withSkeleton));
+        GroupSection held = new GroupSection(sectionId, document.id(), "p1", first.id(), List.of(), 1, "1. Phân tích",
+                Status.CLAIMED, member.accountId(), NOW, null, null, null, null, null, 2);
+        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
+        GroupSectionService real = new GroupSectionService(documents,
+                new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
+                new edu.aiplatform.assignments.application.DocumentModelService(new ObjectMapper()), sse, audit,
+                new ObjectMapper(), clock);
+
+        var saved = real.saveDraft(member, document.id(), sectionId, 2L, List.of(paragraph("Bài làm của nhóm")));
+
+        assertThat(saved.draftBlocks()).hasSize(1);
+        assertThatThrownBy(() -> real.saveDraft(member, document.id(), sectionId, 2L, List.of(first)))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CONTENT_INVALID"));
+    }
+
+    @Test
+    void graceOnlyExtendsTheDeadlineNotTheOpening() {
+        section(Status.CLAIMED, member.accountId(), null, 1);
+        // Vừa mở bài: lùi 30 giây thì trước giờ mở (CLOSED), nhưng hiện tại vẫn đang nhận bài.
+        when(assignments.submissionWindow(eq(assignmentId), eq(NOW))).thenReturn(SubmissionWindow.ON_TIME);
+        when(assignments.submissionWindow(eq(assignmentId), eq(NOW.minus(SectionRules.GRACE)))).thenReturn(SubmissionWindow.CLOSED);
+        assertThat(service.saveDraft(member, document.id(), sectionId, 1L, List.of(block())).draftBlocks()).hasSize(1);
+
+        // Vừa quá hạn: lần lưu nháp cuối trong ân hạn vẫn nhận, nhận mục mới thì không.
+        section(Status.CLAIMED, member.accountId(), null, 1);
+        when(assignments.submissionWindow(eq(assignmentId), eq(NOW))).thenReturn(SubmissionWindow.CLOSED);
+        when(assignments.submissionWindow(eq(assignmentId), eq(NOW.minus(SectionRules.GRACE)))).thenReturn(SubmissionWindow.ON_TIME);
+        assertThat(service.saveDraft(member, document.id(), sectionId, 1L, List.of(block())).draftBlocks()).hasSize(1);
+        section(Status.OPEN, null, null, 0);
+        assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
+    }
+
+    private static DocumentBlock heading(String text) {
+        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING,
+                JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", text));
+    }
+
+    private static DocumentBlock paragraph(String text) {
+        var content = JsonNodeFactory.instance.objectNode();
+        content.putArray("runs").addObject().put("text", text);
+        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH, content);
     }
 
     private void section(Status status, UUID holder, List<DocumentBlock> published, long version) {

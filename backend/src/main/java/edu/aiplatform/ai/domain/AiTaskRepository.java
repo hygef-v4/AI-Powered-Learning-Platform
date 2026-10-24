@@ -70,6 +70,12 @@ public class AiTaskRepository {
                 .query(AiTaskRepository::map).optional();
     }
 
+    /** Khóa theo người gửi tới cuối transaction: hai yêu cầu đến cùng lúc không cùng lọt qua giới hạn 3 tác vụ. */
+    public void lockActor(UUID actorId) {
+        jdbc.sql("select 1 from (select pg_advisory_xact_lock(hashtextextended(:key, 0))) locked")
+                .param("key", "ai-task-submit:" + actorId).query(Integer.class).single();
+    }
+
     public int countActive(UUID actorId) {
         return jdbc.sql("select count(*) from ai_tasks where actor_id = :actorId and state in ('QUEUED', 'RUNNING')")
                 .param("actorId", actorId).query(Integer.class).single();

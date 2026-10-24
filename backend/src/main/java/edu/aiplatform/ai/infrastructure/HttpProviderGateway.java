@@ -173,7 +173,7 @@ public class HttpProviderGateway implements IProviderGateway {
                         null);
             }
         }
-        throw new ProviderException(kindOf(status), status, safeMessage(status), null);
+        throw new ProviderException(kindOf(status), status, safeMessage(status, response.body()), null);
     }
 
     /** 4xx và quá tải là từ chối, không tính token; lỗi 5xx khác không rõ đã xử lý chưa (BR-U06-14). */
@@ -182,6 +182,17 @@ public class HttpProviderGateway implements IProviderGateway {
             return FailureKind.REJECTED;
         }
         return FailureKind.UNKNOWN;
+    }
+
+    /**
+     * Gemini trả HTTP 400 (không phải 401) khi key sai; nhận ra qua mã lỗi trong body để báo đúng "key không hợp lệ".
+     * Body chỉ dùng để phân loại, không đưa vào thông báo.
+     */
+    static String safeMessage(int status, String body) {
+        if (status == 400 && body != null && (body.contains("API_KEY_INVALID") || body.contains("API key not valid"))) {
+            return "Key API không hợp lệ (HTTP 400)";
+        }
+        return safeMessage(status);
     }
 
     static String safeMessage(int status) {

@@ -133,7 +133,8 @@ export function AiConnectionPage() {
 /** Thẻ tóm tắt: hạn mức của trường hôm nay (chỉ khi được dùng), số khóa cá nhân, số agent còn hiệu lực. */
 export function AiSummaryCards({ data }: { data: Data }) {
   const shared = data.sources.find((s) => s.source === "SHARED");
-  const showShared = shared !== undefined && shared.reason !== "Chỉ giảng viên dùng API của trường";
+  // Backend chỉ trả nguồn SHARED cho người được dùng (Teacher, Subject Manager).
+  const showShared = shared !== undefined;
   const keys = data.connections.filter((c) => c.configured).length;
   const agents = data.credentials.filter((c) => c.status === "ACTIVE").length;
   return (

@@ -123,3 +123,13 @@ Lỗi trả Problem Detail kèm `code` qua `GlobalExceptionHandler`; ngoài quy�
 | RESILIENCY-04 Triển khai | N/A | Không đổi pipeline; chỉ thêm biến môi trường vào compose |
 | RESILIENCY-06 Health check | N/A | Không thêm phụ thuộc cần health riêng (Redis, PostgreSQL đã có health) |
 | RESILIENCY-10 Cô lập phụ thuộc | Tuân thủ | Timeout provider 120 giây (kiểm tra 20 giây), không tự gọi lại; task chạy ở worker, không chặn request web |
+
+## Sửa sau kiểm thử end-to-end (2026-10-24)
+
+Bằng chứng: `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`. Nhánh `fix/e2e-u06-u12-findings`.
+
+- `AiSourceService`: Student và Admin không nhận nguồn `SHARED` (BR-U06-11); `AiConnectionPage` ẩn thẻ hạn mức trường khi không có nguồn này.
+- `AiTaskRepository.lockActor` và `AiTaskService.submit`: khóa advisory theo người gửi trước khi đếm, nên giới hạn 3 tác vụ đúng cả khi gửi đồng thời.
+- `HttpProviderGateway.safeMessage(status, body)`: Gemini trả 400 `API_KEY_INVALID` thì báo "Key API không hợp lệ".
+- `features/ai/labels.ts` `TASK_LABEL`: tên tiếng Việt cho loại tác vụ trong Lịch sử AI.
+- U02 `features/audit/labels.ts`: nhãn cho hành động và loại đối tượng của U06, U12.

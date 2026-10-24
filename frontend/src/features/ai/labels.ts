@@ -48,6 +48,15 @@ export const OUTCOME_LABEL: Record<string, { text: string; tone: Tone }> = {
   CANCELLED: { text: "Đã hủy", tone: "neutral" },
 };
 
+/** Tên tác vụ AI theo mã loại task của unit gọi; mã chưa biết thì hiện nguyên mã. */
+export const TASK_LABEL: Record<string, string> = {
+  ASSIGNMENT_DRAFT: "Tạo nháp bài tập",
+  QUIZ_QUESTION_DRAFT: "Tạo nháp câu hỏi",
+  GRADING_PROPOSAL: "Đề xuất chấm bài",
+  PRACTICE_FEEDBACK: "Góp ý bài luyện tập",
+  CONNECTION_TEST: "Kiểm tra kết nối",
+};
+
 export const MAX_AGENTS = 5;
 
 /** Thông báo an toàn cho lỗi API của màn AI Connection theo mã lỗi backend. */

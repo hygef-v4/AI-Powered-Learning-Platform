@@ -33,7 +33,7 @@ const TASK: UsageItem = {
   source: "PERSONAL",
   provider: "OPENAI",
   model: "gpt-4.1-mini",
-  taskType: "QUIZ_GENERATION",
+  taskType: "QUIZ_QUESTION_DRAFT",
   toolName: null,
   outcome: "READY",
   inputTokens: 1200,
@@ -67,6 +67,7 @@ describe("AiUsageHistoryPage", () => {
     expect(await screen.findByText("Tool: read_own_work")).toBeInTheDocument();
     expect(screen.getAllByText("Không có số liệu").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("1.200 / 300")).toBeInTheDocument();
+    expect(screen.getByText("Tạo nháp câu hỏi")).toBeInTheDocument();
     expect(screen.getByText("Nhà cung cấp đo")).toBeInTheDocument();
     expect(screen.queryByText("0 / 0")).not.toBeInTheDocument();
   });

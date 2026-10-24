@@ -69,6 +69,7 @@ class AiRepositoriesIntegrationTest {
                 "{\"system\":\"s\",\"user\":\"u\"}", "{\"type\":\"object\"}", null, 500, 700L, LocalDate.now(), null, null,
                 null, false, null, NOW, null, 0);
         tasks.insert(task);
+        tasks.lockActor(account);
         assertThat(tasks.countActive(account)).isEqualTo(1);
         AiTask locked = tasks.lock(task.id()).orElseThrow();
         assertThat(tasks.update(locked.moveTo(AiTaskState.RUNNING, NOW))).isTrue();
