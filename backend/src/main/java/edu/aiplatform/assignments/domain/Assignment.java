@@ -67,6 +67,12 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
     }
 
     public Assignment withSkeleton(String instructions, DocumentModel skeleton, List<DocumentPart> parts, Instant now) {
+        return withAuthoring(title, instructions, skeleton, parts, now);
+    }
+
+    /** Thay tiêu đề có chọn, hướng dẫn và khung trong một lần lưu/version duy nhất. */
+    public Assignment withAuthoring(String title, String instructions, DocumentModel skeleton,
+                                    List<DocumentPart> parts, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
                 referenceMaterialIds, activityMonitoringEnabled, activityNotice, backToDraft(), opensAt, closesAt,

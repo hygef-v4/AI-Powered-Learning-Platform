@@ -48,7 +48,7 @@ function ClassAssignments({ classId }: { classId: string }) {
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`)} />
+          onCreated={(created, startWithAi) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}${startWithAi ? "&startAI=1" : ""}`)} />
       )}
     </Section>
   );

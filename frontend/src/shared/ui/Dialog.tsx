@@ -12,7 +12,7 @@ type Props = {
   tone?: Tone;
   onClose: () => void;
   dismissible?: boolean;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
   footer?: ReactNode;
   children: ReactNode;
 };
@@ -67,7 +67,7 @@ export function Dialog({ open, title, icon, tone = "primary", onClose, dismissib
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`${size === "lg" ? "w-[540px]" : "w-[420px]"} flex max-h-[calc(100dvh-48px)] max-w-[calc(100%-48px)] flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_24px_60px_rgba(15,23,42,.28)] outline-none`}
+        className={`${size === "xl" ? "w-[960px]" : size === "lg" ? "w-[540px]" : "w-[420px]"} flex max-h-[calc(100dvh-48px)] max-w-[calc(100%-48px)] flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_24px_60px_rgba(15,23,42,.28)] outline-none`}
       >
         <div className="flex shrink-0 items-start gap-3 border-b border-line px-[22px] pt-[18px] pb-3.5">
           {icon && <IconTile icon={icon} tone={tone} />}
@@ -79,7 +79,7 @@ export function Dialog({ open, title, icon, tone = "primary", onClose, dismissib
           </button>
         </div>
         <div className="flex min-h-0 flex-col gap-3.5 overflow-y-auto px-[22px] py-[18px] text-[13px] leading-normal text-body">{children}</div>
-        {footer && <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-[22px] py-3.5">{footer}</div>}
+        {footer && <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-line px-[22px] py-3.5">{footer}</div>}
       </div>
     </div>
   );

@@ -616,3 +616,21 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - 2026-10-23T18:29:48Z: xác nhận không có local listener trên 3000/8080/5432; các ca UI/Gemini còn mở cần runtime app hoạt động.
 - 2026-10-23T18:32:28Z: tiếp tục phạm vi kiểm thử/sửa lỗi U05, U09, U15 theo yêu cầu mới; artifact baseline lần lượt 17/0/6, 4/2/20, 7/0/1 (Đạt/Lỗi/Bỏ qua). Browser security policy chặn đọc local app; chưa chạy UI/Gemini.
 - 2026-10-24: hoàn tất lượt regression/fix U05-05, U05-12 và lint/state refactor U09; full frontend 79 file/454 test, typecheck, lint, production build đạt; backend mục tiêu 233 test, 9 Docker skip. Artifact ghi chú U05-05/U05-12/U09-05/U09-19/U15-05 đã cập nhật và xác minh sau khi đổi unit. Verdict giữ nguyên U05 17/0/6, U09 4/2/20, U15 7/0/1; local UI/Gemini và DB-backed cases vẫn chờ vì chính sách chặn URL localhost và Docker engine không truy cập được. Không commit/push/deploy.
+
+## U07 AI assignment authoring improvements — 2026-10-24
+- [x] User approved implementation of the SWR/SWD authoring plan with “giúp tôi triển khai kế hoạch”; execution is sequential in this chat without subagents.
+- [ ] Add bilingual free-text prompt with automatic assessment-style inference (no SWR/SWD picker), question-count/score options, output title/context, strict decimal rubric validation and safe preview/apply.
+- [ ] Add private, bounded TXT/DOCX/PDF source upload and extraction for assignment AI drafts; preserve U03 purpose policy, U13 parser boundary and student privacy.
+- [ ] Improve create/edit/rubric UI, real upload/task progress, elapsed wait display, score summary and apply wording.
+- [ ] Run focused and broad verification; document live app/provider blockers without marking unverified cases passed.
+- Plan: `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`; code-generation checklist: `construction/plans/code-generation-plan/u07-ai-authoring-code-generation-plan.md`.
+- No change to U09 grading algorithm or publishing. User authorized local commits on 2026-10-24; no push.
+- 2026-10-24 implementation snapshot: core free-text AI/UI/upload-preview/rubric validation implemented; 20 focused backend tests + 17 frontend tests, typecheck, changed-file lint, frontend build and backend package passed. Extended assignment-level targets, manual question-score allocation and persistent source management remain open; see U07 code-summary. User will run the app, so runtime startup/Gemini testing stopped before replacing containers. Local images tagged `ai-authoring-20261024` are available.
+- 2026-10-24: theo yêu cầu mới của người dùng, đã build lại backend image local và recreate riêng worker; worker mới healthy, kết nối PostgreSQL/RabbitMQ. Live generation sau đồng bộ chưa kiểm; proposal lỗi cũ cần bỏ/tạo lại.
+- 2026-10-24: fixed remaining empty-generation schema bug (nonempty graded rubrics/exact count, sections before bounded prose) and preview readability/revision. Backend 31 + UI 7 focused tests, typecheck/lint/build pass; worker image updated. Host backend restart and live Gemini generation remain to verify.
+- 2026-10-24: user authorized split local commits (file sources, assignment backend, UI, documentation), no push. Restored legacy parser regression coverage and verified all 6 extractor tests. Live Gemini/expanded authoring features remain open.
+
+## U12 sửa sau kiểm thử hộp đen — 2026-10-24
+- [x] Người dùng duyệt sửa 4 chỗ lệch kế hoạch kiểm thử (U12-03, 05, 08, 13); plan `construction/plans/2026-10-24-u12-test-plan-gaps.md`.
+- [x] Code + test frontend trên nhánh `fix/u12-test-plan-gaps` (từ `staging` 301c573); 473 test frontend, tsc, lint, build đạt; code-summary U12 đã cập nhật.
+- [ ] Người test chạy lại U12-03, 05, 08, 09, 13 trên localhost:8088 sau khi gộp.

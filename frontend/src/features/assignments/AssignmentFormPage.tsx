@@ -87,6 +87,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [skeleton, setSkeleton] = useState<DocumentModel>({ blocks: [] });
   const [criteria, setCriteria] = useState<Record<string, RubricCriterion[]>>({});
   const [rubrics, setRubrics] = useState<Record<string, RubricDetail>>({});
+  const [rubricLoadError, setRubricLoadError] = useState<string | null>(null);
   const [rubricEpoch, setRubricEpoch] = useState(0);
   const [tick, setTick] = useState(0);
   const [unsaved, setUnsaved] = useState(false);
@@ -106,6 +107,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const conflictRef = useRef(false);
   const fetched = useRef({ epoch: -1, parts: new Set<string>() });
+  const startedAiFromCreate = useRef(false);
 
   const apply = useCallback((next: AssignmentDetail, replaceLocal: boolean) => {
     setDetail(next);
@@ -130,6 +132,16 @@ export function AssignmentFormPage({ id }: { id: string }) {
     return () => controller.abort();
   }, [apply, id]);
 
+  useEffect(() => {
+    if (params.get("startAI") !== "1" || !detail?.permissions.canEditContent || startedAiFromCreate.current) return;
+    startedAiFromCreate.current = true;
+    setDialog("ai");
+    const query = new URLSearchParams(params.toString());
+    query.delete("startAI");
+    const suffix = query.toString();
+    router.replace(`/assignments/${encodeURIComponent(id)}${suffix ? `?${suffix}` : ""}`, { scroll: false });
+  }, [detail, id, params, router]);
+
   // Rubric của các mục đã có trên server; mục mới chỉ tải phần chưa có, rubric đang sửa dở giữ bản đang sửa.
   const partsKey = detail?.parts.map((part) => part.partId).join("|") ?? "";
   useEffect(() => {
@@ -142,13 +154,15 @@ export function AssignmentFormPage({ id }: { id: string }) {
     Promise.all(missing.map((partId) => assignmentsApi.rubric(id, partId, controller.signal))).then((list) => {
       done = true;
       if (controller.signal.aborted) return;
+      setRubricLoadError(null);
       setRubrics((current) => ({ ...current, ...Object.fromEntries(list.map((rubric) => [rubric.partId, rubric])) }));
       const fresh = Object.fromEntries(list.filter((rubric) => !dirty.current.rubrics.has(rubric.partId)).map((rubric) => [rubric.partId, rubric.criteria]));
       latest.current = { ...latest.current, criteria: { ...latest.current.criteria, ...fresh } };
       setCriteria((current) => ({ ...current, ...fresh }));
-    }, () => {
+    }, (error) => {
       done = true;
       missing.forEach((partId) => fetched.current.parts.delete(partId));
+      if (!controller.signal.aborted) setRubricLoadError(errorMessage(error));
     });
     return () => {
       controller.abort();
@@ -392,6 +406,10 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const editable = permissions.canEditContent && !preview;
   const missing = parts.filter((part) => !rubricComplete(criteria[part.partId] ?? [])).length;
   const totalPoints = parts.reduce((sum, part) => sum + rubricTotal(criteria[part.partId] ?? []), 0);
+  const waitingForRubrics = detail.parts.some((part) => !Object.hasOwn(criteria, part.partId));
+  const topLevelQuestionCount = skeleton.blocks.filter((block) => block.type === "HEADING" && block.content.style === "H1").length;
+  const rubricCriterionCount = Object.values(criteria).reduce((sum, list) => sum + list.length, 0);
+  const rubricItemCount = Object.values(criteria).reduce((sum, list) => sum + list.reduce((partSum, criterion) => partSum + criterion.items.length, 0), 0);
   const active = parts.find((part) => part.partId === activePart);
   const titleMissing = issues.some((issue) => issue.code === "TITLE_REQUIRED");
   const required = Object.entries(settings.requiredDiagrams) as [DiagramType, number][];
@@ -401,10 +419,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const comments: DocumentComment[] = parts.map((part) => {
     const list = criteria[part.partId] ?? [];
     const locked = !!rubrics[part.partId]?.locked;
+    const awaitingRubric = detail.parts.some((saved) => saved.partId === part.partId) && !Object.hasOwn(criteria, part.partId);
     return {
       key: part.partId,
       anchorBlockId: part.headingBlockId,
-      content: (
+      content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-white p-3 text-xs text-muted">
+        {rubricLoadError ? "Chưa tải được tiêu chí chấm." : "Đang tải tiêu chí chấm…"}
+      </p> : (
         <RubricNote title={part.title} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
           issues={issues.filter((issue) => issue.code.startsWith("RUBRIC") && issue.blockId === part.headingBlockId).map((issue) => issue.message)}
           badge={locked ? <Pill>Đã khóa</Pill> : undefined}
@@ -425,13 +446,19 @@ export function AssignmentFormPage({ id }: { id: string }) {
           onChange={(event) => editTitle(event.target.value.replace(/\n/g, " "))} />
       ) : <h2 className="text-[26px] leading-tight font-bold text-ink">{title || "Bài chưa đặt tên"}</h2>}
       {editable ? (
-        <AutoTextarea aria-label="Hướng dẫn chung" value={instructions} maxLength={20000}
-          className="text-sm leading-[1.65] text-body" onChange={(event) => editInstructions(event.target.value)} />
+        <Field label="Hướng dẫn làm và nộp bài" htmlFor="assignment-instructions" hint="Quy định áp dụng cho toàn bài: thời lượng, cách trình bày và tệp cần nộp.">
+          <AutoTextarea id="assignment-instructions" aria-label="Hướng dẫn làm và nộp bài" value={instructions} maxLength={20000}
+            placeholder="Ví dụ: Làm cá nhân trong 90 phút; nộp báo cáo PDF và tệp sơ đồ."
+            className="text-sm leading-[1.65] text-body" onChange={(event) => editInstructions(event.target.value)} />
+        </Field>
       ) : instructions && <p className="text-sm leading-[1.65] whitespace-pre-wrap text-body">{instructions}</p>}
       <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
         <Pill>{submissionLabels[detail.submissionMode]}</Pill>
         <Pill tone={settings.gradingMode === "GRADED" ? "info" : "accent"}>{gradingLabels[settings.gradingMode]}</Pill>
-        {!preview && <Pill tone={missing > 0 ? "warning" : "neutral"}>{formatPoints(totalPoints)} điểm</Pill>}
+        <Pill>{topLevelQuestionCount} câu · {parts.length} mục chấm</Pill>
+        {!preview && (waitingForRubrics ? <Pill>{rubricLoadError ? "Chưa tải được điểm" : "Đang tải tiêu chí chấm…"}</Pill>
+          : <><Pill>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</Pill><Pill tone={missing > 0 ? "warning" : "neutral"}>{formatPoints(totalPoints)} điểm</Pill></>)}
+        {!preview && !waitingForRubrics && missing > 0 && <Pill tone="warning">{missing} mục cần bổ sung rubric</Pill>}
         {required.map(([type, count]) => <Pill key={type}>{count} {diagramTypeLabels[type]}</Pill>)}
       </p>
     </div>
@@ -482,6 +509,10 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {message && (
         <Alert tone={message.tone} role={message.tone === "danger" ? "alert" : "status"}>{message.text}</Alert>
       )}
+      {rubricLoadError && !preview && <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => {
+        setRubricLoadError(null);
+        setRubricEpoch((value) => value + 1);
+      }}>Tải lại tiêu chí</Button>}>Không tải được tiêu chí chấm: {rubricLoadError}</Alert>}
       {permissions.ownerArchived && <Alert tone="info">{detail.scope === "CLASS" ? "Lớp" : "Môn"} đã lưu trữ · chỉ xem</Alert>}
       {!permissions.canManage && <Alert tone="info">Bài của môn · chỉ xem</Alert>}
       {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title="Đã ngưng giao">{detail.retiredReason}</Alert>}
@@ -533,6 +564,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
       )}
       {dialog === "ai" && (
         <AiDraftDialog assignmentId={id} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
+          currentTitle={title} currentInstructions={instructions} gradingMode={detail.gradingMode}
+          prepareApply={async () => {
+            if (!await save()) throw new Error("Không áp dụng được vì còn nội dung chưa lưu. Kiểm tra trạng thái lưu rồi thử lại.");
+            return version.current;
+          }}
           onClose={() => setDialog(null)} onApplied={() => { setDialog(null); void reload(); }} />
       )}
       {dialog === "retire" && (

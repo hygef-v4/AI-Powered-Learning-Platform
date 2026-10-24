@@ -103,6 +103,33 @@ describe("ClassGroupsPanel", () => {
     });
   });
 
+  it("kéo thả chuyển thành viên giữa nhóm và khu Chưa có nhóm; nhóm mới ghi (mới)", async () => {
+    const calls = backend(WITH_GROUPS);
+    render(<ClassGroupsPanel classId={CLASS} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Sửa nhóm/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Thêm nhóm/ }));
+
+    const fresh = screen.getByRole("region", { name: "Nhóm Nhóm 2" });
+    expect(within(fresh).getByText("(mới)")).toBeInTheDocument();
+    expect(within(fresh).getByText(/Chưa có trưởng nhóm/)).toBeInTheDocument();
+
+    fireEvent.dragStart(screen.getByText("Chi").closest("li")!);
+    fireEvent.dragOver(fresh);
+    fireEvent.drop(fresh);
+    fireEvent.dragStart(screen.getByText("Bình").closest("li")!);
+    fireEvent.drop(screen.getByRole("region", { name: "Chưa có nhóm" }));
+    fireEvent.click(screen.getByRole("button", { name: /Lưu cho cả lớp/ }));
+
+    await waitFor(() => expect(calls.some((c) => c.method === "PUT")).toBe(true));
+    expect(calls.find((c) => c.method === "PUT")!.body).toEqual({
+      version: 3,
+      groups: [
+        { key: "g1", id: "g1", name: "Nhóm 1", leaderId: "a", memberIds: ["a"] },
+        { key: "new-1", id: null, name: "Nhóm 2", leaderId: null, memberIds: ["c"] },
+      ],
+    });
+  });
+
   it("lỗi bộ nhóm hiện theo từng nhóm, không rời trình sửa", async () => {
     backend(WITH_GROUPS, () =>
       new Response(

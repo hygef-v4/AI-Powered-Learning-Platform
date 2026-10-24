@@ -5855,6 +5855,108 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
+## Kế hoạch tạo đề AI SWR/SWD — 2026-10-24
+
+**User Input**:
+> cái này đã đầy đủ chưa, hình như vẫn chưa rõ ràng lắm, nên thêm prompt trong code để validate các thứđể tạo đề, thg thì sẽ tạo đề swr swd
+> b thử đọc xem các đề mẫu swr swd và lập kế hoạch
+
+**Evidence / Context**: Đọc 11 ảnh đính kèm: editor hiện tại và năm bộ đề SWR/SWD (Pharmacy, Mental Health, SmartLearn, MediCare, Event). Các luật thi trong ảnh chỉ là nội dung mẫu. Đối chiếu AssignmentAiDraftService, AiDraftProposal, AiDraftDialog, PartCalculator, RubricService và shared AI task UI. Schema hiện chưa có title/businessContext, rubric optional, prompt bắt buộc tiếng Việt; chưa có validator tổng điểm/độ đầy đủ profile. Chưa có payload lượt sinh trong ảnh nên chưa kết luận nguyên nhân cụ thể của toàn bài 0 điểm. Cài đặt diagramEnabled được gửi vào prompt dưới dạng Draw.io, đính chính suy đoán trước rằng yêu cầu Draw.io chắc chắn do AI tự thêm.
+
+**AI Response**: Lập `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`, gồm phân tích mẫu, phương án prompt/profile + schema + validator backend, tiêu chí chấm/điểm, preview và spinner/status/elapsed, hợp đồng tương thích v1/v2, kế hoạch kiểm thử và giới hạn MVP. Ghi rõ mẫu MediCare cộng thành 11 điểm và SmartLearn có diễn đạt kiến trúc/mức Class chưa nhất quán; không sao chép các lỗi này làm mặc định.
+
+**Status**: Kế hoạch đề xuất để review, chưa triển khai hoặc duyệt phương án thay người dùng. Không sửa source, chạy app/provider, tạo fixture, commit hay push trong lượt này. Giữ extension configuration hiện tại; property-based testing vẫn tắt.
+
+## Mở rộng kế hoạch UI soạn bài, file nguồn và điểm — 2026-10-24
+
+**User Input**: "lên kế hoạch sửa cả ui, cái phần ui soạn bài nữa, hỗ trợ sinh đề tiếng anh hoặc tiếng việt, có thể upload file làm dữ liệu đầu vào, bao nhiêu yêu cầu, tổng điểm, điểm từng tiêu chí".
+
+**Context / Evidence**: Đọc ảnh form ba tab do người dùng gửi, đối chiếu AssignmentFormPage (autosave/version queue), RubricEditor, DOCX import API, U03 PurposePolicy/ArtifactPurpose và U13 MaterialTextExtractor. UI hiện có rubric từng mục nhưng thiếu tóm tắt mục tiêu; U03 chưa có TXT/purpose file nguồn riêng tư nên upload là thay đổi hợp đồng và vòng đời file, không chỉ UI.
+
+**AI Response**: Mở rộng kế hoạch `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md` tại mục 10–14: bố cục editor và ba cách bắt đầu, ngôn ngữ đề tách khỏi UI, định nghĩa số câu/leaf, tổng điểm mục tiêu và điểm từng item, upload nguồn riêng tư có trích chữ/preview/trạng thái, phân biệt với import DOCX và học liệu sinh viên, persistence/compatibility, sáu gói triển khai và acceptance. Giới hạn 3 file/2 MiB mỗi file, 1–10 câu AI và bố cục panel là đề xuất để review, không mô tả tính năng hiện có.
+
+**Status**: Chỉ cập nhật kế hoạch/audit, chưa sửa code, chạy tests/runtime/provider, upload dữ liệu, commit hoặc push.
+
+## Triển khai kế hoạch AI authoring SWR/SWD — 2026-10-24
+
+**Timestamp**: 2026-10-24T13:44:10+07:00
+
+**User Input**: "giúp tôi triển khai kế hoạch"
+
+**Approval / Scope**: Đây là chấp thuận thực hiện kế hoạch được khuyến nghị tại `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`, bao gồm toàn UI soạn bài, AI suy luận dạng bài từ yêu cầu tự do và file, ngôn ngữ, tổng điểm/câu/rubric, nguồn file riêng tư và kiểm thử. Thực hiện nối tiếp trong chat, không chia subagent; không push. Không sửa thuật toán chấm U09, không phát hành bài.
+
+**Code Generation Plan**: `construction/plans/code-generation-plan/u07-ai-authoring-code-generation-plan.md`. Ghi trạng thái [ ] theo bằng chứng mới; chưa đánh dấu hoàn tất khi chưa chạy xác minh tương ứng.
+
+**Implementation status at start**: chỉ có kế hoạch và audit thay đổi chưa commit từ lượt trước. Branch `mcp-test` đang khớp `origin/mcp-test`; không có source thay đổi ban đầu.
+
+**User clarification during implementation**: "thật ra ko cần chọn loại swr hay swd đâu chỉ cần nhập yêu cầu là được". Đã điều chỉnh thiết kế và mã: UI không có bộ chọn SWR/SWD; request dùng `AUTO`, prompt chỉ suy ra dạng requirements-analysis/SWR-like hoặc software-design/SWD-like khi yêu cầu/tài liệu ủng hộ, dạng khác bám mô tả tự do. Ngôn ngữ, số yêu cầu chính và tổng điểm vẫn là cấu hình tách biệt. API profile cũ tiếp tục được đọc để tương thích.
+
+**Implementation / verification snapshot**: Core API/UI đã triển khai, gồm input tự do hoặc chỉ file, VI/EN/count/target points, schema v2 title/context, validator rubric BigDecimal, safe apply/version, purpose nguồn riêng và preview trích chữ, spinner/task/elapsed, nhãn hướng dẫn rõ và tải rubric có retry. 20 test backend/6 suite và 17 test frontend/2 file đạt; typecheck, lint các file sửa, frontend production build và backend package đạt. Test Mockito ban đầu vướng Windows self-attach; chạy lại với agent nạp sẵn và forkCount=0 đạt. Full lint từng hết bộ nhớ; chưa xác minh full regression/live Gemini.
+
+**User steering**: "bạn code xong chưa, tôi tự chạy". Dừng bước khởi động runtime/provider. Docker đọc được qua quyền nâng cao: datastore và worker cũ đang chạy. Đã tạo hai image local `platform-backend:ai-authoring-20261024`, `platform-frontend:ai-authoring-20261024` từ build mới; chưa thay container backend/frontend/worker hoặc dữ liệu. Còn các mục mở rộng: cấu hình mục tiêu ở cấp assignment sau reload, tự nhập/chia đều điểm từng câu, quản lý/tái dùng/gỡ nguồn sau reload và acceptance rộng. Ghi rõ trong code-summary/checklist; không tuyên bố toàn bộ kế hoạch hoàn tất. Chưa commit/push.
+
+## Đồng bộ worker local — 2026-10-24
+
+**User Input**: "giúp tôi chạy luon" (build lại image backend và recreate worker theo lệnh đã cung cấp).
+
+**Action / Evidence**: Docker Compose local build `backend` thành công từ source hiện tại, image `platform-backend:local`; chỉ recreate service `worker` với `--no-deps --force-recreate`. Worker mới khởi động profile `worker`, kết nối PostgreSQL/RabbitMQ và health check `healthy`. Không restart backend/frontend hoặc datastore, không chạy thêm lượt Gemini. Người dùng cần bỏ proposal cũ (0 sections, thiếu title/validation) và tạo yêu cầu mới để kiểm tra luồng đồng bộ. Chưa commit/push.
+
+## Sửa đề AI rỗng/rubric thiếu và preview khó đọc — 2026-10-24
+
+**User Input**: "sao k có rubric, với ui đề text đang nối tiếp nhau hơi khó nhìn, giúp tôi sửa"; ba ảnh cho thấy bối cảnh dài/lặp, 0 câu, 0 rubric, total 0/10, validation INVALID.
+
+**Root cause / regression**: Sau đồng bộ worker, schema gốc vẫn chấp nhận sections=[] và không buộc rubric. Test Instructions-only/empty-sections trước sửa thất bại (schema chấp nhận). Model có thể tiêu token vào businessContext đứng trước sections. Đây là lỗi hợp đồng generation còn lại, không kết luận mọi triệu chứng trước đó chỉ do worker cũ.
+
+**Fix**: Schema AI generation riêng (không ép hierarchy MCP cũ): sections đứng trước prose, level=1, số câu min/max theo cấu hình, rubric bắt buộc/nonempty khi Graded, item có điểm dương. Title/context/instructions required, bounded strings và description/prompt ngắn, không filler/lặp. Backend JSON Schema và validator tiếp tục kiểm thực tế: Gemini có thể bỏ qua keyword string-length (tài liệu chính thức https://ai.google.dev/gemini-api/docs/structured-output); không dựa chỉ vào provider. Context/guidance tách đoạn khi apply, không tạo thêm phần chấm.
+
+**UI**: Dialog rộng 960px, mobile footer wrap. Kết quả kiểm tra và coverage rubric đặt đầu; context/instructions thu gọn, text dài có vùng cuộn riêng. Mỗi câu có khối yêu cầu và rubric/item-score riêng; báo rõ thiếu câu/rubric. Không cho apply nếu thiếu validation/empty sections. Nút sửa yêu cầu bỏ proposal cũ, giữ đầu vào, tạo requestRef mới; không tự gọi provider lại.
+
+**Verification**: 31 test backend trong 6 suite và 7 test UI preview/dialog đạt; typecheck, lint các file sửa và production build đạt. Một lượt chạy 2 test file cùng lúc lỗi temp sandbox; chạy riêng đạt. Build nhiều worker từng hết RAM/pagefile; build với CIRCLE_NODE_TOTAL=3, TOKIO_WORKER_THREADS=2, RAYON_NUM_THREADS=2 đạt, không thay config build của repo. Docker backend image build và recreate worker thành công; backend chạy bằng Maven trong terminal người dùng cần restart để nạp schema mới. Chưa chạy lượt Gemini thật cho bản sửa này. Chưa commit/push.
+
+## Chia commit cục bộ — 2026-10-24
+
+**User Input**: "giúp tôi chia commit rõ ràng chưa push".
+
+**Action**: Rà thay đổi chưa stage trên nhánh mcp-test, chia theo phụ thuộc thành bốn commit: (1) purpose/private source upload + text extraction, (2) backend generation schema/validator/source preview/safe apply, (3) UI authoring/progress/question-rubric preview, (4) kế hoạch và bằng chứng triển khai. Không amend/rebase hoặc push.
+
+**Review correction**: Phát hiện MaterialTextExtractorTest đã bị thay thế trong quá trình triển khai trước; khôi phục đầy đủ test timeout/PDF/DOCX/PPTX từ HEAD và giữ thêm hai test UTF-8. Chạy lại cả 6 test bằng Mockito agent nạp sẵn/forkCount=0: đạt. Không thêm thay đổi production mới khi chia commit. Các kiểm tra source/UI trước đó vẫn được ghi ở trên; live Gemini và các phần mở rộng chưa hoàn tất vẫn để mở.
+
+**Code commits**: 35bd38b4 (private assignment sources), 5a00fb7e (AI draft backend/validation), e3f7cdad (authoring/rubric UI). Tài liệu được gom thành commit tiếp theo; mọi nhóm được kiểm git diff --cached --check trước commit. Chỉ tạo commit local.
+
+---
+
+## Merge startup fix request
+**Timestamp**: 2026-10-22T09:15:00Z
+**User Input**: "goopj luoon cho toi"
+**AI Response**: Mở PR `fix/u06-ai-handler-cycle` → `staging`, chạy `mvn verify` ở máy song song với CI, gộp khi CI đạt.
+**Context**: Construction, U06 sửa lỗi sau khi gộp
+
+---
+
+## Team black-box test plan review
+**Timestamp**: 2026-10-24T08:00:00Z
+**User Input**: "https://claude.ai/artifact/Wbj4CKoyBcDE6dPyCHbour ban toi da test va gui cho toi arrtifact nay, cap nhat github xem da mearch cac nhanh cua toi vao chua. va xem o artifact nay can gi phai sua o phan cua toi hay hay phai test nhu the nao khong"
+**AI Response**: Kiểm `origin/staging` (301c573): `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle` đều đã gộp. Đối chiếu U06-01..21 và U12-01..29 với code: U06 khớp; U12 lệch U12-03 (chưa kéo thả, nhãn "mới" chưa có ngoặc), U12-05 (chưa có nút Mở tab Sinh viên), U12-08 (nhận mục bằng nút, chưa bấm vào mục), U12-13 (popup tự nộp chưa ghi giờ hết hạn). Chưa sửa, chờ người dùng quyết.
+**Context**: Construction, rà kế hoạch kiểm thử hộp đen của nhóm
+
+---
+
+## U12 test plan gaps – approval
+**Timestamp**: 2026-10-24T08:20:00Z
+**User Input**: "sửa cả 4 chỗ U12 đi"
+**AI Response**: Coi là duyệt phạm vi 4 chỗ đã liệt kê. Tạo nhánh `fix/u12-test-plan-gaps` từ `origin/staging`, plan `construction/plans/2026-10-24-u12-test-plan-gaps.md` (5 bước), làm lần lượt: kéo thả + "(mới)" (U12-03), nút Mở tab Sinh viên (U12-05), bấm vào mục để nhận (U12-08), giờ hết hạn trong popup tự nộp (U12-13).
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
+## U12 test plan gaps – code complete
+**Timestamp**: 2026-10-24T09:10:00Z
+**User Input**: (không có input mới; tiếp tục "sửa cả 4 chỗ U12 đi")
+**AI Response**: Xong 5 bước plan: kéo thả + "(mới)" (U12-03); nút Mở tab Sinh viên mở tab mới, hộp tự kiểm lại khi quay về, trang lớp nhận `?tab=` (U12-05); bấm vào mục để nhận và mở trình soạn, mục người khác giữ chỉ xem (U12-08, 09); popup tự nộp ghi giờ hết hạn (U12-13). Frontend 473 test, tsc, eslint, build đạt. Cập nhật code-summary U12 và aidlc-state.
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
 ## 2026-10-24T11:00:00Z — Sửa các điểm còn lại của bản rà soát (mục 3–6)
 
 **User Input**: "tạo nhánh mới và sửa toàn bộ các điểm còn lại cho tôi"

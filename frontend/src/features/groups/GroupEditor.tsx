@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Pill, Select, TextInput, cx } from "@/shared/ui";
 import { saveGroups } from "./api";
@@ -32,8 +32,9 @@ type Props = {
 const UNGROUPED = "__none";
 
 /**
- * Sửa cả bộ nhóm (t02f, BR-U12-02–04): tạo nhóm, đổi tên, chuyển hoặc gỡ thành viên, chọn trưởng nhóm. Thay đổi
- * chỉ áp dụng khi bấm Lưu cho cả lớp; lỗi hiện theo từng nhóm.
+ * Sửa cả bộ nhóm (t02f, BR-U12-02–04): tạo nhóm, đổi tên, chuyển hoặc gỡ thành viên, chọn trưởng nhóm. Thành viên
+ * kéo thả được sang nhóm khác hoặc khu Chưa có nhóm; ô ⇄ Chuyển làm cùng việc bằng bàn phím. Thay đổi chỉ áp dụng
+ * khi bấm Lưu cho cả lớp; lỗi hiện theo từng nhóm.
  */
 export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props) {
   const [drafts, setDrafts] = useState<Draft[]>(() => initial ?? draftsFrom(set));
@@ -41,6 +42,8 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [counter, setCounter] = useState(1);
+  const [dropKey, setDropKey] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
 
   // Người chọn được: sinh viên đang học (thành viên còn hiệu lực và người chưa có nhóm).
   const people = new Map<string, Person>();
@@ -60,6 +63,35 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
       }),
     );
   };
+
+  const dragFrom = (accountId: string) => ({
+    draggable: true,
+    onDragStart: (e: DragEvent) => {
+      setDragging(accountId);
+      e.dataTransfer?.setData("text/plain", accountId);
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    },
+    onDragEnd: () => {
+      setDragging(null);
+      setDropKey(null);
+    },
+  });
+
+  const dropOn = (key: string) => ({
+    onDragOver: (e: DragEvent) => {
+      if (!dragging) return;
+      e.preventDefault();
+      setDropKey(key);
+    },
+    onDragLeave: () => setDropKey((k) => (k === key ? null : k)),
+    onDrop: (e: DragEvent) => {
+      e.preventDefault();
+      const accountId = dragging;
+      setDragging(null);
+      setDropKey(null);
+      if (accountId) move(accountId, key);
+    },
+  });
 
   const addGroup = () => {
     const names = new Set(drafts.map((d) => d.name.toLowerCase()));
@@ -117,7 +149,11 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
             <section
               key={d.key}
               aria-label={`Nhóm ${d.name}`}
-              className={cx("flex flex-col gap-2 rounded-2xl border bg-white p-3.5", mine.length ? "border-danger" : "border-line")}
+              {...dropOn(d.key)}
+              className={cx(
+                "flex flex-col gap-2 rounded-2xl border bg-white p-3.5",
+                mine.length ? "border-danger" : dropKey === d.key ? "border-primary bg-primary-soft" : "border-line",
+              )}
             >
               <div className="flex items-center gap-2">
                 <TextInput
@@ -127,7 +163,7 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
                   onChange={(e) => update(d.key, (x) => ({ ...x, name: e.target.value }))}
                   wrapperClassName="flex-1"
                 />
-                {d.id === null && <Pill tone="primary">mới</Pill>}
+                {d.id === null && <Pill tone="primary">(mới)</Pill>}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -143,7 +179,7 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
               </p>
               <ul className="flex flex-col gap-1.5">
                 {d.memberIds.map((id) => (
-                  <li key={id} className="flex items-center gap-2 text-[13px]">
+                  <li key={id} {...dragFrom(id)} className="flex cursor-grab items-center gap-2 text-[13px]">
                     <label className="flex min-w-0 flex-1 items-center gap-2">
                       <input
                         type="radio"
@@ -178,11 +214,19 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
             </section>
           );
         })}
-        <section aria-label="Chưa có nhóm" className="flex flex-col gap-2 rounded-2xl border border-dashed border-line-strong bg-shell p-3.5">
+        <section
+          aria-label="Chưa có nhóm"
+          {...dropOn(UNGROUPED)}
+          className={cx(
+            "flex flex-col gap-2 rounded-2xl border border-dashed p-3.5",
+            dropKey === UNGROUPED ? "border-primary bg-primary-soft" : "border-line-strong bg-shell",
+          )}
+        >
           <p className="text-[13px] font-semibold text-ink">Chưa có nhóm ({ungrouped.length})</p>
+          <p className="text-[11px] text-muted">Kéo tên sinh viên thả vào nhóm, hoặc dùng ô ⇄ Chuyển.</p>
           <ul className="flex flex-col gap-1.5">
             {ungrouped.map((p) => (
-              <li key={p.accountId} className="flex items-center gap-2 text-[13px]">
+              <li key={p.accountId} {...dragFrom(p.accountId)} className="flex cursor-grab items-center gap-2 text-[13px]">
                 <span className="min-w-0 flex-1 truncate">{personLabel(p)}</span>
                 <Select
                   aria-label={`Chuyển ${personLabel(p)}`}

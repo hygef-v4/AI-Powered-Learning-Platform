@@ -2,16 +2,21 @@ package edu.aiplatform.assignments.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.aiplatform.ai.contract.AiTaskResult;
 import edu.aiplatform.ai.contract.ApplyOutcome;
+import edu.aiplatform.ai.contract.AssignmentSourceText;
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.StoredFileInfo;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.BlockType;
@@ -31,11 +36,12 @@ class AssignmentAiDraftServiceTest {
     private final AssignmentFixtures f = new AssignmentFixtures();
 
     private static final String OUTPUT = """
-            {"instructions":"Làm đủ các mục","sections":[
+            {"schemaVersion":2,"title":"Đề thiết kế hệ thống","businessContext":"FPT runs events and tracks registration capacity.","instructions":"Làm đủ các mục","sections":[
              {"level":1,"title":"Phân tích","guidance":"","rubric":[]},
              {"level":2,"title":"Use case","guidance":"Vẽ use case","rubric":[{"title":"Đúng","description":"",
-               "kind":"DIAGRAM","items":[{"text":"Đủ actor","points":2},{"text":"Sai điểm","points":-1}]}]},
-             {"level":1,"title":"Thiết kế","guidance":"Mô tả lớp","rubric":[]}]}
+               "kind":"DIAGRAM","items":[{"text":"Đủ actor","points":2}]}]},
+             {"level":1,"title":"Thiết kế","guidance":"Mô tả lớp","rubric":[{"title":"Coverage","description":"",
+               "kind":"TEXT","items":[{"text":"Covers the stated constraints","points":3}]}]}]}
             """;
 
     private AssignmentAiDraft pending(Assignment a) {
@@ -60,13 +66,32 @@ class AssignmentAiDraftServiceTest {
     }
 
     @Test
+    void sourcePreviewIsBoundedAndDoesNotCallAiOrChangeAssignment() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        when(f.artifacts.attach(any(), eq(f.teacher), eq(ArtifactPurpose.ASSIGNMENT_SOURCE)))
+                .thenReturn(new StoredFileInfo("private-file", f.teacher.accountId(), ArtifactPurpose.ASSIGNMENT_SOURCE,
+                        "brief.txt", "text/plain", 1500, "hash"));
+        when(f.sourceTexts.extract(anyList(), eq(30_000)))
+                .thenReturn(List.of(new AssignmentSourceText("brief.txt", "x".repeat(1500), false)));
+
+        var preview = f.aiDrafts.previewSources(f.teacher, a.id(), List.of("signed-ref"));
+
+        assertThat(preview).hasSize(1);
+        assertThat(preview.get(0).previewText()).hasSize(1000);
+        assertThat(preview.get(0).extractedChars()).isEqualTo(1500);
+        assertThat(f.store.get(a.id()).version()).isEqualTo(a.version());
+        verify(f.aiTasks, never()).submit(any());
+    }
+
+    @Test
     void validResultIsStoredAsProposalWithoutTouchingAssignment() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         AssignmentAiDraft draft = pending(a);
         when(f.drafts.markReady(eq(draft.id()), any(), any())).thenReturn(1);
         assertThat(f.aiDrafts.onReady(result(draft, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
         verify(f.drafts).markReady(eq(draft.id()), argThat((JsonNode p) -> p.path("sections").size() == 3
-                && p.path("sections").get(1).path("rubric").get(0).path("kind").asText().equals("DIAGRAM")), any());
+                && p.path("sections").get(1).path("rubric").get(0).path("kind").asText().equals("DIAGRAM")
+                && p.path("validation").path("status").asText().equals("VALID")), any());
         assertThat(f.store.get(a.id()).version()).isEqualTo(a.version());
         assertThat(f.aiDrafts.onReady(result(draft, "không phải json"))).isEqualTo(ApplyOutcome.REJECTED);
     }
@@ -87,15 +112,59 @@ class AssignmentAiDraftServiceTest {
             assertThat(e.code()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
         }
         AssignmentViews.Detail applied = f.aiDrafts.apply(f.teacher, a.id(), ready.id(),
-                new AssignmentCommands.ApplyDraft(a.version(), true));
+                new AssignmentCommands.ApplyDraft(a.version(), true, true));
         assertThat(applied.instructions()).isEqualTo("Làm đủ các mục");
+        assertThat(applied.title()).isEqualTo("Đề thiết kế hệ thống");
         assertThat(applied.parts()).extracting(AssignmentViews.Part::title).containsExactly("Phân tích › Use case", "Thiết kế");
         assertThat(applied.skeleton().blocks()).filteredOn(b -> b.type() == BlockType.HEADING).hasSize(3);
+        assertThat(applied.skeleton().blocks().get(0).type()).isEqualTo(BlockType.PARAGRAPH);
         List<AssignmentRubric> rubrics = f.rubricsOf(a.id());
         assertThat(rubrics).hasSize(2);
-        assertThat(rubrics).filteredOn(r -> !r.criteria().isEmpty()).singleElement()
-                .satisfies(r -> assertThat(r.totalPoints()).isEqualByComparingTo("2.00"));
+        assertThat(rubrics).filteredOn(r -> !r.criteria().isEmpty()).hasSize(2)
+                .extracting(AssignmentRubric::totalPoints).containsExactlyInAnyOrder(
+                        new java.math.BigDecimal("2.00"), new java.math.BigDecimal("3.00"));
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_AI_DRAFT_APPLIED")));
+    }
+
+    @Test
+    void invalidGradedProposalCannotBeAppliedAndDoesNotChangeAssignment() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        JsonNode proposal = AiDraftProposal.normalize(read(OUTPUT), true);
+        ((com.fasterxml.jackson.databind.node.ArrayNode) proposal.path("sections").get(2).path("rubric")).removeAll();
+        AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
+                AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
+                a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
+        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+
+        try {
+            f.aiDrafts.apply(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
+            throw new AssertionError("Đề Graded thiếu rubric phải bị chặn");
+        } catch (ApiException e) {
+            assertThat(e.code()).isEqualTo("AI_DRAFT_INVALID");
+        }
+        assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
+        assertThat(f.rubricsOf(a.id())).allSatisfy(r -> assertThat(r.criteria()).isEmpty());
+    }
+
+    @Test
+    void proposalPreviouslyMarkedInvalidCannotBeAppliedEvenIfCurrentChecksPass() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        com.fasterxml.jackson.databind.node.ObjectNode proposal = (com.fasterxml.jackson.databind.node.ObjectNode)
+                AiDraftProposal.normalize(read(OUTPUT), true);
+        proposal.with("validation").put("status", "INVALID");
+        AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
+                AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
+                a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
+        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+
+        try {
+            f.aiDrafts.apply(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
+            throw new AssertionError("Không được áp dụng đề đã bị đánh dấu INVALID");
+        } catch (ApiException e) {
+            assertThat(e.code()).isEqualTo("AI_DRAFT_INVALID");
+        }
+        assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
+        assertThat(f.rubricsOf(a.id())).allSatisfy(r -> assertThat(r.criteria()).isEmpty());
     }
 
     @Test

@@ -12,7 +12,7 @@ type Props = {
   target: { kind: "class"; classId: string; groupSupported: boolean } | { kind: "subject"; subjectId: string };
   onClose: () => void;
   /** Bài đã tạo (đã nhập sẵn tệp DOCX nếu người soạn chọn tệp). */
-  onCreated: (assignment: AssignmentDetail) => void;
+  onCreated: (assignment: AssignmentDetail, startWithAi?: boolean) => void;
 };
 
 /** Ô chọn tệp DOCX (tùy chọn): chọn xong chỉ hiện tên tệp, bấm ✕ để bỏ. */
@@ -45,6 +45,7 @@ function DocxField({ file, onChange, disabled }: { file: File | null; onChange: 
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [copying, setCopying] = useState(false);
+  const [mode, setMode] = useState<"manual" | "import" | "ai">("import");
   const [file, setFile] = useState<File | null>(null);
   const [submissionMode, setSubmissionMode] = useState<SubmissionMode>("INDIVIDUAL");
   const [gradingMode, setGradingMode] = useState<GradingMode>("GRADED");
@@ -80,13 +81,14 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
             : await assignmentsApi.createForSubject(target.subjectId, input);
         }
       }
-      if (file && !copying) {
+      if (file && !copying && mode === "import") {
         const made = assignment;
         setCreated(made);
         const imported = await assignmentsApi.importDocx(made.id, file);
         assignment = await assignmentsApi.saveSkeleton(made.id, made.version, imported.document, { fromDocx: true });
       }
-      onCreated(assignment);
+      if (mode === "ai") onCreated(assignment, true);
+      else onCreated(assignment);
     } catch (e) {
       setError(assignment ? `Đã tạo bài, chưa nhập tệp: ${errorMessage(e)}` : errorMessage(e));
     } finally {
@@ -109,7 +111,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
           <Button onClick={onClose} disabled={busy}>Hủy</Button>
         )}
         <Button variant="primary" onClick={() => void submit()} disabled={busy || (copying && !sourceId)} data-testid="create-assignment-submit">
-          {created ? "Thử lại" : "Tạo"}
+          {created ? "Thử lại" : mode === "ai" ? "Tạo bài và mở AI" : mode === "import" && file ? "Tạo & nhập DOCX" : "Tạo bài nháp"}
         </Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
@@ -136,7 +138,22 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         </Field>
       ) : (
         <>
-          <DocxField file={file} onChange={setFile} disabled={busy} />
+          <div role="tablist" aria-label="Cách soạn bài" className="flex border-b border-line">
+            {([
+              ["manual", "Soạn thủ công"], ["import", "Import từ file"], ["ai", "Soạn bằng AI"],
+            ] as const).map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={mode === value}
+              onClick={() => setMode(value)} className={`border-b-2 px-3 py-2 text-[13px] ${mode === value ? "border-primary font-semibold text-primary" : "border-transparent text-muted"}`}>
+              {label}
+            </button>)}
+          </div>
+          {mode === "import" && <>
+            <p className="text-xs text-muted">Tải DOCX để nhập nội dung vào trình soạn thảo sau khi tạo bài.</p>
+            <DocxField file={file} onChange={setFile} disabled={busy} />
+          </>}
+          {mode === "manual" && <p className="text-xs text-muted">Tạo bài nháp trống để tự nhập câu hỏi, hướng dẫn và rubric.</p>}
+          {mode === "ai" && <div className="rounded-lg bg-canvas p-3 text-xs text-body">
+            Mở trình soạn bài để nhập yêu cầu; AI tự suy ra dạng SWR/SWD từ yêu cầu và tài liệu nguồn. Bạn vẫn chọn ngôn ngữ, số câu, tổng điểm và có thể tải tệp nguồn riêng.
+          </div>}
           <Field label="Hình thức">
             <Choice name="Hình thức" value={submissionMode} disabled={!!created}
               onChange={(value) => { setSubmissionMode(value); if (value === "GROUP") setGradingMode("GRADED"); }} options={[

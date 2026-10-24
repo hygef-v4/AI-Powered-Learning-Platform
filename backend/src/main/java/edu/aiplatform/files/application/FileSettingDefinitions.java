@@ -44,4 +44,20 @@ public class FileSettingDefinitions {
                 Map.of(SettingValidator.OPTIONS, List.of("PNG", "JPEG", "GIF", "SVG"), SettingValidator.NON_EMPTY,
                         true));
     }
+
+    @Bean
+    SettingDefinition assignmentSourceMaxSize() {
+        return new SettingDefinition("files.assignmentSource.maxSizeMb", SettingGroup.FILES,
+                "Tệp nguồn soạn bài tối đa", "Dung lượng tối đa mỗi tệp nguồn riêng chỉ dùng khi soạn bài bằng AI.",
+                SettingType.INTEGER, 2,
+                Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 2, SettingValidator.UNIT, "MB"));
+    }
+
+    @Bean
+    SettingDefinition assignmentSourceTypes() {
+        return new SettingDefinition("files.assignmentSource.allowedTypes", SettingGroup.FILES,
+                "Loại tệp nguồn soạn bài", "Loại tệp văn bản được dùng làm nguồn khi soạn bài bằng AI.",
+                SettingType.ENUM_SET, List.of("TXT", "DOCX", "PDF"),
+                Map.of(SettingValidator.OPTIONS, List.of("TXT", "DOCX", "PDF"), SettingValidator.NON_EMPTY, true));
+    }
 }
