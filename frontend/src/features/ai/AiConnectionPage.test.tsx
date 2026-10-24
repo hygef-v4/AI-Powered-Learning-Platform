@@ -106,9 +106,7 @@ describe("AiConnectionPage", () => {
   });
 
   it("học sinh không thấy thẻ hạn mức của trường", async () => {
-    backend({
-      sources: [{ ...SHARED, available: false, quota: null, reason: "Chỉ giảng viên dùng API của trường" }],
-    });
+    backend({ sources: [] });
     render(<AiConnectionPage />);
     await screen.findByText("••••3kQf");
     expect(screen.queryByText("Hạn mức của trường hôm nay")).not.toBeInTheDocument();

@@ -127,3 +127,10 @@ Plan: `construction/plans/2026-10-24-u12-test-plan-gaps.md`, nhánh `fix/u12-tes
 | U12-13 | Popup tự nộp ghi "Đã hết hạn nộp lúc …" | `features/groupdocs/GroupWorkspacePage.tsx` |
 
 Test thêm: kéo thả và nhãn "(mới)" (`ClassGroupsPanel.test.tsx`), nút mở tab và tự kiểm lại (`TeacherGroupWidgets.test.tsx`, mới), `?tab=` (`academics.test.tsx`), bấm vào mục, giảng viên không nhận được, popup tự nộp (`GroupWorkspacePage.test.tsx`). Frontend 82 file / 473 test đạt; `tsc`, eslint phần đổi, `next build` đạt. Chưa chạy thử bằng tay trên localhost:8088.
+
+## Sửa sau kiểm thử end-to-end (2026-10-24)
+
+Bằng chứng: `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`. Nhánh `fix/e2e-u06-u12-findings`.
+
+- `GroupSnapshot.withSection` và `GroupSectionService.validate`: nháp và Xong được kiểm trong khung chung. Trước đây bộ kiểm của U07 thấy thiếu block của người soạn nên mọi lần lưu đều bị từ chối; unit test không phát hiện vì `IDocumentModel` là mock. Thêm test dùng `DocumentModelService` thật.
+- `GroupDocAccess.window`, `GroupAutoSubmitScanner`: ân hạn 30 giây chỉ nới hạn đóng. Trước đây 30 giây đầu sau khi mở bài bị coi là quá hạn, bộ quét tự nộp và đóng tài liệu của mọi nhóm. Thêm `GroupAutoSubmitScannerTest`.

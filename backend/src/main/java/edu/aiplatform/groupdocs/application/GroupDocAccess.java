@@ -83,9 +83,14 @@ public class GroupDocAccess {
     }
 
     public SubmissionWindow window(UUID assignmentId, boolean withGrace) {
-        Instant at = withGrace ? clock.instant().minus(SectionRules.GRACE) : clock.instant();
+        Instant now = clock.instant();
         try {
-            return assignments.submissionWindow(assignmentId, at);
+            SubmissionWindow window = assignments.submissionWindow(assignmentId, now);
+            // Ân hạn chỉ nới hạn đóng; lùi giờ ngay từ đầu thì 30 giây đầu sau khi mở bài bị coi là chưa mở.
+            if (window == SubmissionWindow.CLOSED && withGrace) {
+                window = assignments.submissionWindow(assignmentId, now.minus(SectionRules.GRACE));
+            }
+            return window;
         } catch (RuntimeException e) {
             throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PROVIDER_LABEL, formatMaybeTokens, formatShort, formatTokens, type SourceOption } from "@/shared/ai";
 import { Alert, Field, IconTile, PageHeader, Pagination, Pill, Section, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { getSources, getUsage } from "./api";
-import { OUTCOME_LABEL, PROVENANCE_LABEL, SOURCE_LABEL } from "./labels";
+import { OUTCOME_LABEL, PROVENANCE_LABEL, SOURCE_LABEL, TASK_LABEL } from "./labels";
 import type { UsagePage, UsageQuery, UsageSource } from "./types";
 
 export const PAGE_SIZE = 50;
@@ -152,7 +152,7 @@ export function AiUsageHistoryPage() {
                 return (
                   <tr key={item.id}>
                     <Td className="whitespace-nowrap">{formatShort(item.createdAt)}</Td>
-                    <Td>{item.toolName ? `Tool: ${item.toolName}` : item.taskType ?? "—"}</Td>
+                    <Td>{item.toolName ? `Tool: ${item.toolName}` : item.taskType ? (TASK_LABEL[item.taskType] ?? item.taskType) : "—"}</Td>
                     <Td>
                       {SOURCE_LABEL[item.source]}
                       {item.provider && ` · ${PROVIDER_LABEL[item.provider]}`}

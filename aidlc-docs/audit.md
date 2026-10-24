@@ -5957,6 +5957,30 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
+## U12 test plan gaps – merge and UI check
+**Timestamp**: 2026-10-24T10:00:00Z
+**User Input**: "gop cho toi di hoac mo lick github de toi dang nhap" / "mở lại đi, tôi vừa restart máh" / "rồi đó, gộp hết cho tôi rồi test luôn đi"
+**AI Response**: Mở trang đăng nhập GitHub trong trình duyệt của app; người dùng tự đăng nhập. Mở PR #17 `fix/u12-test-plan-gaps` → `staging`; CI đạt (3 đạt, 2 bỏ qua); gộp, merge commit 6d54047. Chạy thử giao diện bằng `next dev` với backend giả (Docker chưa chạy sau khi khởi động lại máy): `?tab=students` mở tab Sinh viên; kéo thả chuyển người sang nhóm khác, nhóm mới ghi "(mới)" (U12-03); bấm mục người khác giữ không mở trình soạn, bấm mục Mở thì nhận và mở trình soạn "Bạn đang giữ" (U12-08/09); sự kiện tự nộp hiện "Đã hết hạn nộp lúc 30/10/2026 23:59" rồi chuyển sang Bản nộp (U12-13). Nút Mở tab Sinh viên trên Assignment Form chỉ kiểm bằng unit test. Chưa chạy với backend thật.
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
+## Full re-test request
+**Timestamp**: 2026-10-24T10:20:00Z
+**User Input**: "tôi đã bật docker rồi đaays, xem lại cho tôi đi, và test giúp tôi toàn bộ các task trong jira xem tôi còn gì chưa làm nữa không"
+**AI Response**: Docker chưa có container dự án và chưa có `infra/.env.local`; tạo `infra/.env.local` (gitignored, toàn giá trị thử sinh ngẫu nhiên) rồi build và chạy stack local `platform-local` ở cổng 8088 từ `staging` (6d54047). Kết nối Atlassian của phiên không còn quyền (cloud id chưa được cấp lại) và trình duyệt chưa đăng nhập Jira; mở trang đăng nhập Atlassian để người dùng tự đăng nhập.
+**Context**: Construction, kiểm thử lại U06/U12 và rà Jira
+
+---
+
+## End-to-end test and fixes
+**Timestamp**: 2026-10-24T13:10:00Z
+**User Input**: "tôi đăng nhập jira rồi" / "test lai toan bo cac phan cua toi di xem da oke chua" / "toi tong co 3 u ma, check ky cho toi nhe"
+**AI Response**: Đọc Jira qua trình duyệt: KAN-14 In Progress, 8 story U06/U12 In Review, U02 Done; điều kiện Done cần bằng chứng kiểm thử tích hợp độc lập. Dựng stack local, tạo dữ liệu thử, chạy test end-to-end bằng API cho U02, U06, U12 theo kế hoạch kiểm thử của nhóm, kiểm giao diện ở trình duyệt. Tìm và sửa 7 lỗi trên nhánh `fix/e2e-u06-u12-findings`: U12 không lưu được nháp (bộ kiểm U07 thấy thiếu block người soạn); ân hạn làm bài vừa mở bị coi là quá hạn và bộ quét tự nộp đóng tài liệu; sinh viên thấy nguồn SHARED; gửi đồng thời vượt giới hạn 3 tác vụ; Gemini khóa sai báo sai thông điệp; nhãn tác vụ trong Lịch sử AI; nhãn audit của U06, U12. Sau sửa: U02 16/16, U06 39/40, U12 55/55; mvn verify 1353, frontend 473, build đạt. Bằng chứng `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`.
+**Context**: Construction, kiểm thử end-to-end U02, U06, U12
+
+---
+
 ## 2026-10-24T11:00:00Z — Sửa các điểm còn lại của bản rà soát (mục 3–6)
 
 **User Input**: "tạo nhánh mới và sửa toàn bộ các điểm còn lại cho tôi"

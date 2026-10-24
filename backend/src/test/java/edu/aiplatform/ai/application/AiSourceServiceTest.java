@@ -67,16 +67,16 @@ class AiSourceServiceTest {
     }
 
     @Test
-    void studentSeesSharedDisabledWithReason() {
+    void studentOnlyGetsPersonalSources() {
         Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
         when(authorization.authorize(eq(student), eq(Actions.AI_PERSONAL), any())).thenReturn(AuthorizationDecision.allow());
         when(authorization.authorize(eq(student), eq(Actions.AI_SHARED_USE), any()))
                 .thenReturn(AuthorizationDecision.deny("ROLE"));
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
 
-        SourceOption shared = service.sources(student).get(0);
+        List<SourceOption> options = service.sources(student);
 
-        assertThat(shared.available()).isFalse();
-        assertThat(shared.reason()).contains("giảng viên");
+        assertThat(options).extracting(SourceOption::source).containsOnly(AiSource.PERSONAL);
+        assertThat(options).hasSize(AiProvider.values().length);
     }
 }
