@@ -201,6 +201,59 @@ Không cần action mới: AI cho Quiz dùng `QUIZ_SUBJECT_MANAGE` hoặc `QUIZ_
   - tick checklist, lộ trình, `aidlc-state.md`.
 - [x] **4.14 Review:** người dùng duyệt code giai đoạn 4 ngày 2026-10-22. đối chiếu UC 47, 48 (phần AI), BR-U10-40…42 và G4 với code; người dùng duyệt.
 
+## Giai đoạn 7 — Nối với U06 thật: `AiSourcePicker` và tool MCP qua MCP server — chi tiết
+
+Lập ngày 2026-10-22 sau khi PR #9 (U06) merge vào `staging` (`d2a06cd`). Nhánh `quiz-u06-integration` tách từ `origin/staging`, không đặt upstream. Đây là phần còn lại của H1 (giai đoạn 4) và mục "chạy thật khi U06 có code" trong lộ trình.
+
+- **Luồng:** F4, F8 (chọn nguồn AI), F13 (tool MCP).
+- **Quy tắc:** BR-U10-40, 42; BR-U06-10, 11 (mỗi yêu cầu chọn một nguồn, không tự đổi nguồn), BR-U06-32–35 (MCP).
+- **Ngoài phạm vi:** gọi AI soạn câu bằng khóa thật của nhà cung cấp. Việc này cần người dùng tự nhập khóa trên trang Kết nối AI.
+
+### U06 trên `staging` (đã đọc code)
+
+| Phần | Hành vi |
+|---|---|
+| `AiSourcePicker` (`frontend/src/shared/ai`) | Popup riêng (Dialog). Lấy `GET /api/v1/ai/sources`, không chọn sẵn, nguồn không dùng được hiện mờ kèm lý do. Trả `SourceChoice { source, provider \| null }` |
+| `AiTaskStatus` | Hỏi `GET /api/v1/ai/tasks/{id}` mỗi 2 giây, cho hủy khi còn chờ, gọi `onFinished` một lần |
+| MCP server | `POST /mcp` (JSON-RPC 2.0: `initialize`, `tools/list`, `tools/call`), xác thực `Authorization: Bearer` |
+| Credential MCP | Tạo ở `POST /api/v1/me/mcp-credentials` (`label`, `access` `READ` hoặc `READ_WRITE`, `days`), trả `token` và `endpoint` |
+| `McpToolRegistry` | Gom mọi `IMcpToolProvider`; lọc theo role và quyền credential (tool `WRITE` cần `READ_WRITE`) |
+| `McpServer.tools/call` | Kiểm tham số theo `parameterSchema` (JSON Schema 2020-12), tối đa 64 KB, 60 lời gọi mỗi phút. Lỗi 403/404 của tool trả "Không tìm thấy hoặc không có quyền"; lỗi khác trả thông điệp của tool; audit, ghi usage |
+
+### Quyết định cần duyệt
+
+| # | Nội dung | Đề xuất |
+|---|---|---|
+| M1 | Hai Dialog chồng nhau tranh focus (`Dialog` giữ focus trong panel của nó) | Không mở `AiSourcePicker` bên trong popup của U10. Người soạn điền form rồi bấm "Gửi yêu cầu": form được kiểm và giữ lại, popup U10 tạm thay bằng `AiSourcePicker`. Chọn nguồn thì gửi yêu cầu và quay lại popup U10 (đang chờ AI). Hủy thì quay lại form với các giá trị đã nhập |
+| M2 | Kiểu dữ liệu nguồn | Dùng `SourceChoice` của U06; bỏ `AiSourceSelect` và `AiSourceChoice` riêng. `estimatedTokens` = `600 × số câu` (trần đầu ra) để popup hiện ước tính |
+| M3 | Theo dõi task | `AiDraftView` thêm `taskId`. Đề xuất `PENDING` có `taskId` thì hiện `AiTaskStatus` (trạng thái, nút hủy); `onFinished` tải lại đề xuất ngay. Vẫn hỏi lại đề xuất mỗi 3 giây như cũ để bắt kết quả do handler ghi |
+| M4 | Kiểm schema tool MCP | Thêm test U10 kiểm tham số mẫu theo `parameterSchema` của `read_quiz_context` và `save_quiz_draft` bằng cùng thư viện JSON Schema (networknt) mà U06 dùng. Không gọi class `ai.application` để giữ quy tắc ArchUnit |
+| M5 | Chạy thử MCP thật | Stack Docker local trên volume mới. Giảng viên tạo credential `READ_WRITE` qua API rồi gọi `/mcp`: `initialize`, `tools/list` (có hai tool U10), `read_quiz_context`, `save_quiz_draft`. Sau đó chấp nhận đề xuất trên Quiz Detail. Kiểm thêm: credential `READ` không thấy và không gọi được `save_quiz_draft`; sinh viên không thấy tool U10; giảng viên lớp khác nhận "không có quyền"; `expectedVersion` cũ thì lỗi |
+| M6 | Chạy thử `AiSourcePicker` | Trên cùng stack: popup U06 mở từ "Gửi yêu cầu", hiện các nguồn kèm lý do không dùng được (chưa có khóa); hủy thì giữ form. Không nhập khóa API thật |
+| M7 | Nhánh, commit | Bước 7.0 commit local tài liệu đang chờ (kết quả chạy thử trước, lộ trình). Code commit local sau khi người dùng duyệt; push và mở PR khi người dùng yêu cầu |
+
+### Checklist giai đoạn 7
+
+- [x] **7.0 Commit tài liệu đang chờ** (M7).
+- [x] **7.1 Backend:** `AiDraftView.taskId` (M3); test schema tool MCP (M4).
+- [x] **7.2 Frontend:**
+  - `AiDraftDialog` dùng `AiSourcePicker` (M1, M2), bỏ `AiSourceSelect`.
+  - `AiTaskStatus` cho đề xuất `PENDING` (M3).
+  - Cập nhật kiểu (`SourceChoice`) và `draftBody`.
+- [x] **7.3 Unit test frontend:**
+  - "Gửi yêu cầu" mở popup chọn nguồn, chọn nguồn thì gửi đúng `source`/`provider`.
+  - Hủy popup thì giữ form.
+  - Đề xuất `PENDING` có `taskId` thì hiện trạng thái task.
+- [x] **7.4 Chạy thử MCP thật và `AiSourcePicker`** (M5, M6); ghi vào code-summary U10. Đạt ngày 2026-10-23 trên `staging` `eb0cf1a`.
+  - **Đã gỡ chặn** (vòng bean sửa ở `fcbb71a`, `57abe44`). Ghi chú lúc bị chặn (2026-10-22): backend `staging` `d2a06cd` không khởi động được vì vòng phụ thuộc bean `AiTaskResultHandlerRegistry` (U06) → `AssignmentDraftResultHandler` → `AssignmentAiDraftService` (U07) → `IAiTask` (`AiTaskService`, U06) → `AiTaskResultHandlerRegistry`.
+  - Có thể còn vòng tương tự qua `PracticeFeedbackResultHandler` (U08).
+  - U10 không nằm trong vòng: `QuizDraftResultHandler` không phụ thuộc `IAiTask`.
+  - Credential MCP thực tế có quyền `READ_ONLY` / `READ_WRITE` (plan ghi `READ`).
+- [x] **7.5 Kiểm và tài liệu:** CI PR #14 xanh; backend 1290 test, frontend 449 test.
+  - Đủ bước CI: backend `mvn -B verify`; frontend lint, typecheck, test, build.
+  - code-summary, lộ trình, `aidlc-state.md`.
+- [x] **7.6 Review:** người dùng duyệt; PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
+
 ## E3 — Bật ghi nhận hoạt động
 
 Làm cùng G3 của U11 ở [plan U11, giai đoạn 6](u11-quiz-practice-code-generation-plan.md) (K1–K7), sau khi U08 có khóa `activity.retentionDays` trên `staging`.

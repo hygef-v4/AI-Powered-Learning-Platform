@@ -26,7 +26,8 @@ public final class AiDraftViews {
     public record MaterialRef(UUID id, String title) {
     }
 
-    public record AiDraftView(UUID id, DraftTarget target, UUID quizId, UUID subjectId, DraftOrigin origin,
+    /** {@code taskId}: task AI của U06 để frontend hiện {@code AiTaskStatus} khi đang chờ (M3); trống với MCP. */
+    public record AiDraftView(UUID id, DraftTarget target, UUID quizId, UUID subjectId, DraftOrigin origin, UUID taskId,
                               DraftStatus status, List<DraftQuestion> questions, Integer requestedCount, String source,
                               String provider, List<MaterialRef> materials, String agentLabel, Long baseVersion,
                               String failureCode, String failureMessage, UUID createdBy, Instant createdAt,
@@ -35,8 +36,8 @@ public final class AiDraftViews {
         static AiDraftView of(QuizAiDraft d) {
             Map<String, Object> p = d.provenance();
             Object count = p.get(REQUESTED_COUNT);
-            return new AiDraftView(d.id(), d.target(), d.quizId(), d.subjectId(), d.origin(), d.status(), d.proposal(),
-                    count instanceof Number n ? n.intValue() : null, string(p, SOURCE), string(p, PROVIDER),
+            return new AiDraftView(d.id(), d.target(), d.quizId(), d.subjectId(), d.origin(), d.taskId(), d.status(),
+                    d.proposal(), count instanceof Number n ? n.intValue() : null, string(p, SOURCE), string(p, PROVIDER),
                     materials(p.get(MATERIALS)), string(p, AGENT_LABEL), d.baseVersion(),
                     string(p, QuizAiDraft.FAILURE_CODE), string(p, QuizAiDraft.FAILURE_MESSAGE), d.createdBy(),
                     d.createdAt(), d.decidedAt());

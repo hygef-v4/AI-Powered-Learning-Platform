@@ -262,9 +262,74 @@ Làm cùng G3 của U11 (plan U11 giai đoạn 6, K1–K3).
   - `QuizScreens.test.tsx`: công tắc khóa hoặc mở theo cờ; thiếu lời báo thì không gửi.
 - **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.
 
-## Lỗi phát hiện
+## Chạy thử end-to-end giai đoạn 4 và E3 (2026-10-22, stack Docker local)
+
+Chạy trên `staging` `20c1458` (sau PR #8). Stack `docker-compose.yml` + `docker-compose.local.yml` dựng từ mã nguồn trên volume mới (project `quiz-e2e`, override tạm đẩy PostgreSQL sang cổng 15432), Nginx `:8088`, Mailpit thật.
+
+Dữ liệu nền tạo bằng API:
+- Admin kích hoạt bằng OTP qua Mailpit; Chủ nhiệm môn, giảng viên, 2 sinh viên.
+- Môn `QZE2E`, lớp `QZE2E-01` ở trạng thái `OPEN`, có 2 sinh viên.
+- 2 học liệu link YouTube: một của môn, một của lớp.
+- 3 câu ngân hàng đã kích hoạt; Quiz của lớp có 3 câu đó.
+
+Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của app), kiểm thêm bằng API và PostgreSQL. Stack đã gỡ cùng volume sau khi chạy.
+
+| Bước | Kết quả |
+|---|---|
+| Chủ nhiệm môn mở "Tạo nháp bằng AI" trên Question List | Đạt. Học liệu môn hiện nhưng bị khóa ("chưa trích được chữ"), vì U13 trả `hasText: false` cho link YouTube |
+| Gửi yêu cầu AI, nguồn "API của trường" | Đạt theo thiết kế: U06 trên `staging` là stub nên đề xuất `FAILED` "AI chưa sẵn sàng", có nút "Yêu cầu mới" |
+| Giảng viên mở Quiz Detail: "Gắn với học liệu" liệt kê học liệu môn và lớp; chọn học liệu lớp, Lưu | Đạt; `referenceMaterialIds` có học liệu lớp, version 1 → 2 |
+| Gắn id học liệu không thuộc lớp qua API | Đạt; `400 MATERIAL_NOT_SELECTABLE` |
+| Đề xuất nguồn MCP (`READY`, agent "Claude Desktop", 2 câu) ghi thẳng vào `quiz_ai_drafts`, vì MCP server của U06 chưa có trên `staging` | Phần "Đề xuất AI" hiện "Chờ chấp nhận · Agent: Claude Desktop · 2 câu" |
+| Mở đề xuất, chấp nhận câu 1, bỏ câu 2, "Lưu 1 câu đã chấp nhận" | Đạt; câu thành câu riêng ở vị trí 4, version 2 → 3, đề xuất `ACCEPTED`, audit `QUIZ_AI_DRAFT_ACCEPTED` (`count` 1, `origin` MCP, không có nội dung câu) |
+| Chưa đặt `activity.retentionDays`: công tắc "Ghi nhận hoạt động" khóa, có ghi chú | Đạt |
+| Admin đặt `activity.retentionDays` = 30 (API cài đặt); tải lại: công tắc mở được | Đạt |
+| Bật mà không có lời báo, bấm Lưu | Lỗi theo trường "Cần lời báo cho sinh viên…", không gửi request. Banner phía trên lại báo "Hệ thống tạm bận" (lỗi 1 bên dưới) |
+| Nhập lời báo, Lưu; Duyệt; Phát hành | Đạt; Quiz `OPEN`, bật ghi nhận hoạt động, 4 câu, 1 học liệu |
+
+Lỗi phát hiện:
 
 1. **Đã sửa (2026-10-22, nhánh `fix/quiz-detail-client-validation-banner`)** — `QuizDetailPage` báo "Hệ thống tạm bận, vui lòng thử lại sau." khi form không hợp lệ phía trình duyệt.
    - Nguyên nhân: `save` ném `Error` thường ("Cấu hình chưa hợp lệ.", "Điểm mỗi câu phải lớn hơn 0…"), còn `errorMessage` chỉ đọc `ApiError` nên biến mọi lỗi khác thành câu "hệ thống tạm bận". Có từ giai đoạn 2; lỗi theo trường vẫn hiện đúng, chỉ banner sai.
    - Sửa: `save` kiểm cấu hình và điểm trước khi gọi API, sai thì đặt thẳng banner với đúng thông điệp. Trước đây cấu hình hợp lệ mà điểm sai thì cấu hình đã lưu nhưng màn hình giữ `version` cũ, lần lưu sau dính `409`; nay không gọi API nào. `run`, `errorMessage` và cách xử lý `ApiError` (`409 QUIZ_VERSION_CONFLICT` tải lại, `violations`) giữ nguyên.
    - Test: `QuizScreens.test.tsx` thêm "điểm sai thì báo đúng lỗi…"; test E3 kiểm thêm banner "Cấu hình chưa hợp lệ." và không có "Hệ thống tạm bận". Hai test thất bại trên code cũ. Frontend lint, typecheck, 438 test, build đạt.
+2. Quan sát: U13 trả `hasText: false` cho link YouTube dù `extractText` có trả tiêu đề, mô tả, URL. Vì vậy popup AI chỉ chọn được học liệu dạng tệp đã trích chữ. Chưa thử với tệp tải lên.
+
+Chưa kiểm (lúc đó):
+- Tool MCP qua MCP server thật: đã chạy ngày 2026-10-23, xem mục bên dưới.
+- AI soạn câu thật: U06 vẫn là stub.
+
+## Chạy thử MCP thật và AiSourcePicker (giai đoạn 7, bước 7.4, 2026-10-23)
+
+Chạy trên `staging` `eb0cf1a` (sau PR #14). Stack `docker-compose.yml` + `docker-compose.local.yml` dựng từ mã nguồn trên volume mới (project `mcp-e2e`, override tạm đổi cổng: Nginx `:18088`, Mailpit `:18025`, vì stack `platform` khác đang giữ `:8088`). Env tạm có secret ngẫu nhiên; stack, volume và file tạm đã gỡ sau khi chạy.
+
+Dữ liệu tạo bằng API: Admin kích hoạt bằng OTP qua Mailpit; Chủ nhiệm môn, 2 giảng viên, 1 sinh viên; môn `MCPE2E`; 2 lớp `OPEN` (mỗi lớp một giảng viên, cùng sinh viên); 1 Quiz nháp của lớp 1.
+
+**M5 — tool MCP qua `POST /mcp` (JSON-RPC, script, 16/16 đạt):**
+
+| Kiểm | Kết quả |
+|---|---|
+| Giảng viên tạo credential `READ_WRITE` và `READ_ONLY` (`POST /api/v1/me/mcp-credentials`) | `201`, có `token`, `endpoint` `/mcp` |
+| `initialize` | `protocolVersion` `2025-06-18` |
+| `tools/list` với `READ_WRITE` | Có `read_quiz_context`, `save_quiz_draft` |
+| `tools/list` với `READ_ONLY` | Có `read_quiz_context`, không có `save_quiz_draft` |
+| `read_quiz_context` | Trả Quiz và `version` |
+| `save_quiz_draft` (2 câu: một đáp án, nhiều đáp án; `agentLabel` "Claude Desktop") | Đề xuất `READY`, 2 câu, 0 câu lỗi |
+| `save_quiz_draft` với `expectedVersion` sai | `isError`, audit `FAILURE` `QUIZ_VERSION_CONFLICT` |
+| Credential `READ_ONLY` gọi `save_quiz_draft` | Bị từ chối, audit `ACCESS_DENIED` |
+| Tham số thừa (`extra`) | U06 trả `INVALID_PARAMS` theo schema |
+| Giảng viên lớp khác gọi `read_quiz_context` | "Không tìm thấy hoặc không có quyền", audit `ACCESS_DENIED` |
+| Sinh viên: `tools/list`; gọi `read_quiz_context` | Không thấy tool U10; gọi bị từ chối, audit `ACCESS_DENIED` |
+| Request có header `Origin` | `403` |
+| Token sai | `401` |
+| `GET /api/v1/quizzes/{id}/ai-drafts` | Có đề xuất `origin` MCP, agent "Claude Desktop", `taskId` trống |
+
+**Trên trình duyệt (giảng viên):**
+
+- Quiz Detail hiện "Chờ chấp nhận · Agent: Claude Desktop · 2 câu". Mở, chấp nhận cả 2 câu, "Lưu 2 câu đã chấp nhận": 2 câu thành câu riêng ở cuối Quiz, tổng điểm 2; audit `QUIZ_AI_DRAFT_ACCEPTED` (`count` 2, `origin` MCP, không có nội dung câu).
+- **M6:** "Tạo nháp bằng AI" → điền yêu cầu, 3 câu → "Gửi yêu cầu": popup U10 thay bằng popup "Chọn nguồn AI" của U06, dòng tác vụ "Sinh câu hỏi · Quiz chạy thử MCP". Cả 4 nguồn hiện mờ kèm lý do ("API của trường chưa được bật"; "Chưa lưu khóa API cho nhà cung cấp này"), nút "Gửi yêu cầu" khóa. Bấm "Hủy" thì quay lại form, giữ yêu cầu và số câu đã nhập.
+- Log backend, worker không có `ERROR` hay exception.
+
+Quan sát (U06, không phải lỗi U10): lời gọi tool sai schema bị trả `INVALID_PARAMS` mà không ghi audit; lời gọi bị từ chối quyền ghi `ACCESS_DENIED` chứ không phải `MCP_TOOL_CALLED`.
+
+Chưa kiểm: AI soạn câu bằng khóa thật (cần người dùng nhập khóa ở trang Kết nối AI hoặc Admin bật API của trường); ước tính token trên popup (chỉ hiện khi có nguồn dùng được); `AiTaskStatus` với task thật.

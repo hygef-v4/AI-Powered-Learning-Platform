@@ -544,6 +544,23 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Build & Test (phần của unit): `construction/build-and-test/u12-verification.md`; integration test và đo hiệu năng còn mở (tester, cần U07, U08).
 - Jira 2026-10-22: KAN-28, KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 chuyển In Review; KAN-19 Done.
 
+
+## PR #8 (G3/E3) merge và chạy thử staging — 2026-10-22
+
+- [x] PR #8 merge vào `staging` (`20c1458`); CI xanh tại `57b801c` (backend 1114 test). Sửa trùng `poi-ooxml` trong `pom.xml` sau merge U07.
+- [x] Chạy thử `staging` `20c1458` trên Docker local (project `staging-smoke`, volume mới, đã gỡ):
+  - 8 container healthy, 14 migration đạt.
+  - Route chính `200`; API `401` khi chưa đăng nhập.
+  - Không có log lỗi; queue RabbitMQ đã khai báo.
+- [x] Chạy thử end-to-end trên trình duyệt cho giai đoạn 4 và G3/E3 (project `quiz-e2e`, đã gỡ): đều đạt; 1 lỗi nhỏ `QuizDetailPage` báo "Hệ thống tạm bận" khi form không hợp lệ (có từ giai đoạn 2), chưa sửa.
+
+## U10 giai đoạn 7 (nối U06 thật: AiSourcePicker, MCP) — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 7 được duyệt (M1–M7), nhánh `quiz-u06-integration` từ `origin/staging` `d2a06cd`, không upstream.
+- [x] Code Generation Part 2: bước 7.0–7.5. Bước 7.4 chạy thử MCP thật và `AiSourcePicker` đạt ngày 2026-10-23.
+- [x] Bước 7.6: người dùng duyệt; PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
+- Còn mở: AI soạn câu bằng khóa thật của nhà cung cấp; integration test của tester.
+
 ## U09 renderer và nguồn AI U06 — 2026-10-22
 
 - [x] User authorizes fixing U09 display and consuming U06 AiSourcePicker with existing API/contracts; U15 deferred.
