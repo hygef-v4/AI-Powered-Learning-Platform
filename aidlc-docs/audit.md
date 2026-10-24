@@ -5698,3 +5698,23 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Context**: Construction — U10 giai đoạn 7, bước 7.4.
 
 ---
+
+## 2026-10-24T09:00:00Z — Rà staging, sửa lỗi lưu/nộp lượt Quiz (U11)
+
+**User Input**: "kiểm tra nhánh staging của tôi xem còn bug nào không, gửi tôi các điểm cần cải thiện/bổ sung/sửa đổi (đặc biệt là các tính năng tôi phụ trách)"
+
+**AI Response**: Rà `staging` `9530a35` cho U01, U10, U11. Frontend lint/typecheck đạt, 449/449 test; backend 1288 test đạt, 89 test DB bỏ qua vì máy không chạy Testcontainers. Lỗi: (1) `QuizTakingPage` tự lưu không tuần tự, lần lưu thứ hai gửi `answerVersion` cũ, xung đột làm mất lựa chọn mới; (2) nộp bài không chờ lần lưu đang chạy và lệnh nộp không kiểm `answer_version`, điểm có thể tính trên câu trả lời cũ. Điểm nên cải thiện: scanner tự nộp một transaction cả lô, kiểm phân công khi đổi role nằm ngoài transaction, lưu khi rời trang không `keepalive`, đề/kết quả đọc đề hiện tại của Quiz.
+
+**Context**: Rà soát staging, ngoài luồng stage.
+
+---
+
+## 2026-10-24T09:10:00Z — Sửa mục 1–2
+
+**User Input**: "Tạo nhánh mới từ staging và sửa mục 1–2 (lưu tự động chạy song song và nộp bài lệch phiên bản câu trả lời), kèm test."
+
+**AI Response**: Tạo nhánh `fix/quiz-autosave-submit-race` (`--no-track`) từ `origin/staging`. Backend: lệnh nộp có điều kiện `answer_version`; lệch thì đọc lại và chấm lại trên câu trả lời mới. Frontend: tuần tự hóa lần lưu, nộp chờ lần lưu đang chạy xong; lưu lỗi thì không nộp tay. Thêm 2 test service, 1 kiểm SQL (PostgreSQL thật), 3 test màn hình (đỏ trên code cũ, xanh trên code mới). Kết quả: frontend lint/typecheck đạt, 452/452 test; backend `mvn verify` 1292 test, 0 lỗi, 35 bỏ qua (cần biến môi trường DB riêng, như CI). Chưa commit.
+
+**Context**: Sửa lỗi U11 (UC 51), bug fix có phạm vi rõ, không qua lại các stage thiết kế.
+
+---
