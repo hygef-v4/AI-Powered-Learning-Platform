@@ -16,12 +16,12 @@ class EvaluationMappingTest {
         row.apply(aggregate);
         row.version = 3L;
         aggregate.feedback = "mutated after save";
-        assertThat(row.document.feedback).isNull();
+        assertThat(row.view().feedback).isNull();
         var loaded = row.view();
         loaded.score = BigDecimal.ONE;
         loaded.state = EvaluationStatus.DRAFT;
         assertThat(loaded.version).isEqualTo(3);
-        assertThat(row.document.score).isNull();
+        assertThat(row.view().score).isNull();
         assertThat(row.status).isEqualTo("PENDING");
         row.apply(loaded);
         assertThat(row.score).isEqualByComparingTo("1");
