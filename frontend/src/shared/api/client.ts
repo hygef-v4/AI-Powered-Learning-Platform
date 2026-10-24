@@ -3,6 +3,8 @@
 // Gặp 401 thì thử refresh phiên rồi gửi lại; phiên hết hẳn thì gọi handler do U01 đặt (chuyển về đăng nhập).
 // Backend bận (503, mất mạng) khi refresh thì báo "hệ thống tạm bận", không coi là hết phiên.
 
+import { CSRF_HEADER, csrfToken } from "./csrf";
+
 export type ApiProblem = {
   status: number;
   title?: string;
@@ -20,8 +22,6 @@ export class ApiError extends Error {
   }
 }
 
-const CSRF_COOKIE = "XSRF-TOKEN";
-const CSRF_HEADER = "X-XSRF-TOKEN";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_PREFIX = "/api/v1/auth/";
 /** Chờ response refresh của tab kia đặt cookie mới trước khi gửi lại (refresh trả 409). */
@@ -37,13 +37,6 @@ let onUnauthenticated: (() => void) | null = null;
 /** U01 đặt hành động khi phiên hết hạn hẳn (refresh cũng lỗi), ví dụ chuyển về /login. */
 export function setUnauthenticatedHandler(handler: (() => void) | null) {
   onUnauthenticated = handler;
-}
-
-function readCookie(name: string): string | undefined {
-  if (typeof document === "undefined") return undefined;
-  const prefix = `${name}=`;
-  const found = document.cookie.split("; ").find((part) => part.startsWith(prefix));
-  return found ? decodeURIComponent(found.slice(prefix.length)) : undefined;
 }
 
 function delay(ms: number) {
@@ -97,7 +90,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   }
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
   const method = (init.method ?? "GET").toUpperCase();
-  const csrf = readCookie(CSRF_COOKIE);
+  const csrf = csrfToken();
   if (!SAFE_METHODS.has(method) && csrf && !headers.has(CSRF_HEADER)) {
     headers.set(CSRF_HEADER, csrf);
   }
