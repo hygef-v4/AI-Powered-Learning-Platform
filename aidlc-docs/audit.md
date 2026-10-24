@@ -5980,3 +5980,19 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Context**: Construction, kiểm thử end-to-end U02, U06, U12
 
 ---
+
+## Merge e2e fixes
+**Timestamp**: 2026-10-24T13:30:00Z
+**User Input**: "merch toan bo vao stagging chua"
+**AI Response**: PR #19 `fix/e2e-u06-u12-findings` → `staging`: CI đạt (3 đạt, 2 bỏ qua), gộp, merge commit 6337b42. Kiểm lại: `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle`, `fix/u12-test-plan-gaps`, `fix/e2e-u06-u12-findings` đều đã vào `origin/staging`.
+**Context**: Construction, gộp bản sửa sau kiểm thử end-to-end
+
+---
+
+## Remaining work and handoff
+**Timestamp**: 2026-10-24T13:40:00Z
+**User Input**: "gio con gi chua lam khong" / "sap het token roi, h co viec gi co the lam luon duoc k de co gi toi nay reset token roi lam tiep"
+**AI Response**: Liệt kê việc còn lại (Draw.io cho tài liệu nhóm KAN-64/66, khóa ngoại assignment_id, test khóa AI thật, Jira, dọn dẹp). Tạo nhánh `feat/u12-document-editor` từ `staging` 6337b42 và plan `construction/plans/2026-10-24-u12-document-editor.md` (chờ duyệt) để làm tiếp khi có token.
+**Context**: Construction, chuẩn bị U12 tích hợp trình soạn chung
+
+---
