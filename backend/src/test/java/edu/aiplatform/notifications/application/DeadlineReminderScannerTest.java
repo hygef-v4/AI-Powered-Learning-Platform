@@ -28,5 +28,21 @@ class DeadlineReminderScannerTest {
     @Test void subjectAssignmentExpandsOpenClasses(){var a=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),null);source(a);when(classes.listOpenClassesOfSubject(subject)).thenReturn(List.of(course(classId)));scanner.scan(now);verify(submissions).listStudentsWithoutSubmission(id,classId);}
     @Test void removedEnrollmentIsNotNotified(){source(assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId));when(classes.listActiveStudents(classId)).thenReturn(List.of());scanner.scan(now);verify(notices).create(any(),any(),eq(List.of()),anyString(),anyString(),anyString(),anyString(),any());}
     @Test void changedDeadlineGetsNewMarker(){var a=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId);source(a);scanner.scan(now);var changed=assignment(a.opensAt(),a.closesAt().plusSeconds(60),classId);source(changed);scanner.scan(now.plusSeconds(60));verify(repo).reminder(id,classId,a.closesAt(),"SENT",now);verify(repo).reminder(id,classId,changed.closesAt(),"SENT",now.plusSeconds(60));}
+    @Test void twoDayRescheduleIgnoresOldDeadlineAndSendsOnlyOnceAtTheNewDeadline(){
+        var old=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId);
+        var changed=assignment(old.opensAt(),old.closesAt().plus(Duration.ofDays(2)),classId);
+        source(old);when(assignments.get(id)).thenReturn(Optional.of(changed));
+        scanner.scan(now);verifyNoInteractions(notices);verifyNoInteractions(repo);
+        source(changed);var later=now.plus(Duration.ofDays(2));
+        when(repo.reminder(id,classId,changed.closesAt(),"SENT",later)).thenReturn(true,false);
+        scanner.scan(later);scanner.scan(later);
+        verify(notices,times(1)).create(any(),eq(NotificationType.DEADLINE_REMINDER),eq(List.of(student)),anyString(),anyString(),anyString(),anyString(),eq(changed.closesAt()));
+    }
+    @Test void assignmentRetiredAfterSelectionDoesNotSendAReminder(){
+        var a=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId);source(a);
+        var stopped=new AssignmentView(a.assignmentId(),a.scope(),a.classId(),a.subjectId(),a.versionNo(),a.title(),a.submissionMode(),a.gradingMode(),a.diagramEnabled(),AssignmentStatus.RETIRED,a.opensAt(),a.closesAt(),null,null,false,null,List.of());
+        when(assignments.get(id)).thenReturn(Optional.of(a),Optional.of(stopped));
+        scanner.scan(now);verifyNoInteractions(notices);verifyNoInteractions(repo);
+    }
     @Test void maintenanceRetains180DaysAndDelegatesDeferredPriority(){var email=mock(EmailDeliveryService.class);new NotificationMaintenanceScanner(email,repo).scan(now);verify(email).releaseDeferred(now);verify(repo).deleteOld(now.minus(Duration.ofDays(180)));}
 }

@@ -585,6 +585,72 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [ ] B5 independent full-app stubs-disabled/session/audit/browser and representative healthy p95/fault-load acceptance remain open; no full UC66 Done/Jira transition.
 - Evidence: construction/u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md. Implementation stays uncommitted on u15-backup-completion-plan (renamed in desktop app); local planning commit32abe4bc is unpublished. Prior planning-only status above is historical.
 
+## U04 U13 U14 manual checklist execution — 2026-10-23
+
+- [x] User authorized UI testing, Admin-created QA accounts and Mailpit activation; all 50 requested cases classified in the Claude artifact with persisted failure/skip notes.
+- [x] U04: 12 passed/1 failed; U13: 8 passed/1 failed/13 skipped; U14: 10 passed/1 failed/4 skipped. All three pre-existing U04 passes rerun. Real reminder recipient/email check passed at18:42:28 for unsubmitted B only.
+- [x] Reloaded artifact and verified 50 dispositions; every failure and skip has a non-empty saved note. Snapshot and screenshot under E:/FPTUni/sem9_fa26/test_report/reports/blackbox-2026-10-23/.
+- [ ] Resolve PDF-upload invalid-session blocker and rerun affected U13 file scenarios; complete U14 offline/group/grade/two-day reminder gates. Not global acceptance or Operations readiness.
+- Report: construction/remediation/u04-u13-u14/verification/u04-u13-u14-blackbox-2026-10-23.md. No application source/config/index/commit/deployment changes; pre-existing infra/docker-compose.local.yml edit preserved.
+
+## U04 U13 U14 remediation planning — 2026-10-23
+
+- [x] Confirm branch fix-u04-u13-u14 and preserve all existing uncommitted changes.
+- [x] Diagnose missing XHR CSRF and U04 guidance; identify Markdown policy mismatch and trace U09 grade-version blocker without asserting an unproven final cause.
+- [x] Prepare six-step executable plan and explicit A/B Markdown-policy approval choice in construction/remediation/u04-u13-u14/plans/u04-u13-u14-blackbox-remediation-plan.md and u04-u13-u14-remediation-approval-questions.md.
+- [x] User approved plan A ([Answer]: a and “tôi chọn rồi”). Implementation and scoped regression/retest executed on fix-u04-u13-u14; see remediation implementation entry below. The 30pass/3fail/17skip result above is the preserved pre-fix baseline.
+
+## U04 U13 U14 remediation implementation — 2026-10-23
+
+- [x] Shared CSRF helper applied to multipart XHR without bypass/replay; visible U04 read-only guidance; jsoup 1.23.2 sanitizes announcement HTML before storage while Markdown renderer protections remain.
+- [x] Real Hibernate/PostgreSQL regression reproduced extra JSON dirty-check writes and stale versions. Immutable JSON text mapping retains JSONB object storage, exactly one version increment per command and stale-writer rejection. No schema or UI grading lifecycle changes.
+- [x] Retest found missing extraction polling. Added bounded-frequency reads while ACTIVE/PENDING, cleanup on unmount and stop on terminal/error; RED/GREEN regression and real UI transition without other actions confirmed.
+- [x] Backend Maven verify: 1297 tests, 1262 passed, 35 environment-gated skipped, zero failures/errors. Missing U04/U06/U12 JDBC variables explain skips; new PostgreSQL Testcontainers version tests ran and passed. Frontend affected tests45/45, typecheck, lint and production Docker builds pass.
+- [x] Rebuilt/restarted local frontend/backend/worker only; preserved volumes, all existing changes and user's docker-compose.local.yml edits. Actual upload, grade finalize/publish, announcement sanitization, notification recipient matrix and class-material lifecycle pass.
+- [x] Finish artifact readback/snapshot and scoped verification report: construction/remediation/u04-u13-u14/verification/u04-u13-u14-remediation-2026-10-24.md and u04-u13-u14-remediation-code-summary.md. Reload readback on 24 October confirms U04 13/0/0, U13 18/0/4, U14 13/0/2 (pass/fail/skip): total 44/0/6, all 50 classified and all six skips explained. Before/after snapshots remain separate under E:/FPTUni/sem9_fa26/test_report/reports/blackbox-2026-10-23. Focused extra GradingServiceTest7/7 passed after the full verify; no claim of a second full verify.
+- [ ] Remaining E2E conditions: U13-05/10/15 native PDF view, U13-22 same signed URL across accounts/after six minutes, U14-08 whole-browser offline30s, U14-15 real rescheduled reminder after two days. Automatic regressions do not replace these observations. No global unit acceptance, Operations claim, commit or push.
+
+### Follow-up — user Chrome PDF verification, 2026-10-24
+
+- [x] User confirmed ordinary/scanned PDF viewing and download in both manager/student roles, plus page 2 in both roles. U13-05/10/15 now Pass; latest artifact total47 passed, zero failed, three skipped. Report and separate user-retest snapshot preserve evidence provenance and earlier counts.
+- [x] Investigated native PDF “untitled”: both original fixture PDFs contain `/Title (untitled)`; Chromium prefers document Title metadata. Application material titles remain correct; no production/fixture/upload mutation made for this metadata observation.
+- [ ] Remaining E2E: U13-22, U14-08, U14-15. This supersedes the six-case pending list above without erasing historical results.
+
+### Follow-up — user download URL verification, 2026-10-24
+
+- [x] U13-22: user confirmed initial A success, immediate B404 and same-URL A404 after six minutes, code DOWNLOAD_TOKEN_NOT_FOUND. Artifact status/note reloaded and verified; U13 now22/22 passed. Latest total48 passed, zero failed, two skipped. Separate user-url-retest snapshot and artifact screenshot saved; token not logged/copied.
+- [ ] U14-08 (student Offline30s/recovery) and U14-15 (real reminder at rescheduled deadline minus24h; stopped assignment excluded). Manual instructions provided; no completion claimed from instructions alone.
+
+### Follow-up — user offline recovery verification, 2026-10-24
+
+- [x] User explicitly confirmed U14-08 passed after manual test guidance. Recorded provenance in artifact; latest total49 passed, zero failed, one skipped (U04 13, U13 22, U14 14 passed). Separate offline-retest snapshot/proof retained alongside earlier evidence.
+- [ ] Only U14-15 remains pending: actual reminder at new deadline minus24h after two-day extension, with stopped-assignment exclusion. No global acceptance/Operations claim.
+
+## U14 notification summary refinement — 2026-10-24
+
+- [x] User approved the proposed per-type action summaries and role clarification with “ok sửa cho tôi đi”. Scope/sequence recorded in construction/remediation/u04-u13-u14/plans/u14-notification-summary-plan.md; preserve prior changes on fix-u04-u13-u14.
+- [x] Added exhaustive fixed summaries for all12 types; new event/reminder text uses shared copy, old generic summaries adapt only in feed DTOs, specific summaries and stored history/read state remain unchanged. Email keeps its separate minimal sign-in template.
+- [x] RED regression39 tests with15 expected failures; GREEN notification suite75/75 passed with zero failures/errors/skips. Covers creation/feed compatibility, privacy, recipient resolver, email, scanner and web/transport context.
+- [x] Finish local backend/worker production build and authenticated UI readback; both services healthy. Historical teacher request and student grade/assignment/Quiz/announcement summaries changed correctly; unread counts1/5 and event timestamps preserved. Screenshots/readback under E:/FPTUni/sem9_fa26/test_report/reports/u14-notification-summary-2026-10-24; code summary in remediation/u04-u13-u14/implementation/notification-summary-refinement.md and verification report in remediation/u04-u13-u14/verification/u14-notification-summary-2026-10-24.md.
+- [x] Supplement artifact U14-13 note for the new grade summary and verify after reload; snapshot retains49 passed,zero failed,one skipped. No claim of rerunning all50 actions. U14-15 real-time reminder observation remains pending. Prior changes preserved; no commit/push/global acceptance.
+
+### U14-15 manual progress — 2026-10-24
+
+- [x] User confirmed original24h-before-deadline reminder and one new reminder after moving the deadline approximately5minutes; successful +5-minute rescheduling variant recorded in report/artifact notes.
+- [x] User subsequently confirmed stopped assignment produces no reminder. Both U14-15 expected outcomes accepted using the manual +5-minute rescheduling variant; exact +2-day E2E step was not executed and is explicitly distinguished from automated +2-day coverage. Case now Pass with qualification in artifact/report, superseding the preceding partial disposition.
+
+### Scoped U04/U13/U14 checklist closed — 2026-10-24
+
+- [x] Latest disposition50 passed,zero failed,zero skipped: U04 13/13,U13 22/22,U14 15/15. U14-15 passes expected behavior with documented +5-minute E2E data substitution and stopped-assignment confirmation; no claim of a literal +2-day manual wait.
+- [x] Preserved final readback/proof and updated audit/plan. Reload confirmed all50 Pass and U14-15 qualified note; E:/FPTUni/sem9_fa26/test_report/reports/blackbox-2026-10-23/checklist-results-final.json and artifact-u14-final.png saved separately. Global project stages/Operations remain outside this scoped checklist completion; no commit/push.
+
+### U04/U13/U14 local commit handoff — 2026-10-24
+
+- [x] User requested logical local commits on fix-u04-u13-u14, no push and no .tmp files.
+- [x] Moved all23 report/evidence files to E:/FPTUni/sem9_fa26/test_report/reports; relative paths and SHA-256 hashes verified unchanged. No existing destination files overwritten.
+- [x] Organized seven new fix documents under [remediation dossier](construction/remediation/u04-u13-u14/README.md): plans, implementation, verification. Original unit plans/design and append-only audit history preserved.
+- [x] Eight source/test/local-config commits created separately; this state and the consolidated dossier are delivered in the ninth documentation commit. Explicit staged paths, Markdown references, audit history prefix and whitespace checks verified; .tmp/reports excluded. Final clean-tree readback follows the documentation commit; no push. Source verification evidence remains the previously recorded runs; documentation organization introduces no new application behavior or global acceptance.
+
 ## Skipped Claude artifact cases — execution 2026-10-23
 - User authorized executing the 49-case skip plan, adding QA data through UI/DB as needed, fixing reproduced defects, updating the Claude artifact, and explicitly said not to use subagents; work was performed directly.
 - Direct artifact snapshot: 354 total, 65 pass, 2 fail, 46 skipped, 241 untested; U13 has 11 pass and 11 skipped. Snapshot is authoritative over older planning estimates. The two existing failures are outside the skip set.
@@ -630,6 +696,15 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - 2026-10-24: fixed remaining empty-generation schema bug (nonempty graded rubrics/exact count, sections before bounded prose) and preview readability/revision. Backend 31 + UI 7 focused tests, typecheck/lint/build pass; worker image updated. Host backend restart and live Gemini generation remain to verify.
 - 2026-10-24: user authorized split local commits (file sources, assignment backend, UI, documentation), no push. Restored legacy parser regression coverage and verified all 6 extractor tests. Live Gemini/expanded authoring features remain open.
 
+### Staging merge resolution — 2026-10-24
+
+- [x] User approved the reviewed resolution with “sửa cho tôi”. Seven conflict paths resolved in the working tree, including the MaterialList automatic-merge polling overlap.
+- [x] Shared CSRF helper retained; upload tests combine the API route/response contract with progress, cancellation and failure coverage.
+- [x] Polling consolidated in useMaterialResource at five seconds after a settled response; preserve current rows on refresh/error, pause during editing/reorder, stop on terminal/error/unmount. Added regression for slow responses, refresh errors/manual retry, archived-only pending rows and pause/resume with stable reload.
+- [x] Both branches' audit/state additions retained. Historical staging snapshots refer to their own fixtures and dates; the qualified U04/U13/U14 50/50 result and external evidence location remain as documented in the remediation dossier. Outstanding U07/U09 acceptance stays open.
+- [x] Focused frontend verification: 6 files,33 tests passed. Typecheck and targeted lint passed.
+- [x] Full frontend81 files/474 tests passed, no failures/skips; typecheck, targeted ESLint and production build passed. Resolutions staged, no unmerged paths or conflict markers. Merge remains awaiting commit; no push, backend rerun, live provider call or deployment. Initial unstable Node26 sandbox run was interrupted and is not counted as a successful full run; final full-suite/build used Node24.22.1.
+
 ## U12 sửa sau kiểm thử hộp đen — 2026-10-24
 - [x] Người dùng duyệt sửa 4 chỗ lệch kế hoạch kiểm thử (U12-03, 05, 08, 13); plan `construction/plans/2026-10-24-u12-test-plan-gaps.md`.
 - [x] Code + test frontend trên nhánh `fix/u12-test-plan-gaps` (từ `staging` 301c573); 473 test frontend, tsc, lint, build đạt; code-summary U12 đã cập nhật.
@@ -641,3 +716,15 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Tìm và sửa 7 lỗi (2 lỗi nặng ở U12: không lưu được nháp; tự nộp đóng tài liệu ngay sau khi mở bài). Plan `construction/plans/2026-10-24-e2e-u06-u12-fixes.md`.
 - [x] Sau sửa: U02 16/16, U06 39/40 (ca còn lại do thứ tự chạy, lần đầu đạt), U12 55/55; `mvn verify` 1353 test, frontend 473 test, build đạt.
 - [ ] Ca cần khóa AI thật do người dùng tự test; tích hợp `DocumentEditor` (Draw.io) cho tài liệu nhóm (KAN-64, 66) để PR riêng.
+
+### U12 staging merge resolution — 2026-10-24
+
+- [x] User approved resolving the two documentation conflicts; both histories retained, including the four incoming audit entries. Previous merge notes and branch verification totals remain historical evidence.
+- [x] Keep U12-03/05/08/09/13 manual retest pending. No application source changes required to resolve this merge.
+- [x] Verified affected frontend4 files/40 tests passed, TypeScript noEmit passed and production build passed. Both resolved documents staged; no unmerged entries or conflict markers. Keep merge awaiting commit; no push or .tmp/reports staging. No new full-suite, backend or manual U12 acceptance claim.
+
+### Merge fix-u04-u13-u14 into staging — 2026-10-24
+
+- [x] User requested resolving the current merge on staging; both histories retained. Staging E2E U02/U06/U12 evidence and incoming remediation evidence keep their original provenance and limits;25 unique incoming audit entries appended without rewriting staging history.
+- [x] Conflict resolution changes only state/audit. Real AI-key and DocumentEditor acceptance limits, manual U12 retest and the qualified U14-15 +5minute variant remain explicit.
+- [x] Verified composed-tree frontend10 files/81 tests passed and TypeScript noEmit passed. Backend compiled654 production/200 test sources; sanitization/mapping6 tests passed, PostgreSQL version integration2 tests environment-skipped because Docker Desktop daemon is not running (confirmed independently with docker info). Both resolved documents staged, no unmerged entries/markers. Keep merge awaiting commit; no push, application edits, provider call or deployment. No new full-suite/production-build acceptance claim.

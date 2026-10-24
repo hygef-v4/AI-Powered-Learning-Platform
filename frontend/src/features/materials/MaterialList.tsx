@@ -9,15 +9,15 @@ import { fileDescription, materialHref, textLabels, type Material, type Material
 import styles from "./materials.module.css";
 
 function hasPendingExtraction(materials: Material[]): boolean {
-  return materials.some((material) => material.current.textStatus === "PENDING");
+  return materials.some((material) => material.status === "ACTIVE" && material.current.textStatus === "PENDING");
 }
 
 export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: string; scope: "subjects" | "classes"; readOnly?: boolean }) {
   const path = scopePath(scopeId, scope);
-  const resource = useMaterialResource<Material[]>(path, { pollWhile: hasPendingExtraction });
   const [filter, setFilter] = useState("ACTIVE"); const [menu, setMenu] = useState(false);
   const [adding, setAdding] = useState<MaterialKind>(); const [error, setError] = useState("");
   const [busy, setBusy] = useState(false); const drag = useRef<string | null>(null); const lock = useRef(false);
+  const resource = useMaterialResource<Material[]>(path, { pollWhile: hasPendingExtraction, pollPaused: busy || !!adding });
   const rows = resource.data ?? [];
   const visible = rows.filter(m => filter === "ARCHIVED" ? m.status === "ARCHIVED" : m.status === "ACTIVE" && (filter === "CLASS" || filter === "SUBJECT" ? m.scope === filter : true));
   const own = rows.filter(m => m.status === "ACTIVE" && m.scope === (scope === "subjects" ? "SUBJECT" : "CLASS"));
