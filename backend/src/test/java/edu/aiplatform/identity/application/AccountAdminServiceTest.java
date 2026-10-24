@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -38,6 +39,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.transaction.support.TransactionOperations;
 
 class AccountAdminServiceTest {
@@ -138,6 +140,38 @@ class AccountAdminServiceTest {
             assertThat(e.action()).isEqualTo("ROLE_CHANGED");
             assertThat(e.details()).containsEntry("from", "STUDENT").containsEntry("to", "TEACHER");
         });
+    }
+
+    @Test
+    void roleChangeLocksTheAccountThenChecksAssignmentsInsideTheTransaction() {
+        Account target = stored(Role.SUBJECT_MANAGER, AccountStatus.ACTIVE, "h");
+        boolean[] inTransaction = {false};
+        TransactionOperations tracking = new TransactionOperations() {
+            @Override
+            public <T> T execute(org.springframework.transaction.support.TransactionCallback<T> action) {
+                inTransaction[0] = true;
+                try {
+                    return action.doInTransaction(null);
+                } finally {
+                    inTransaction[0] = false;
+                }
+            }
+        };
+        AccountAdminService transactional = new AccountAdminService(accounts, authorization, subjectScope,
+                classScope, sessions, otp, tickets, audit, tracking, IdentityTestData.properties(),
+                Clock.fixed(NOW, ZoneOffset.UTC));
+        when(subjectScope.listManagedSubjects(target.id())).thenAnswer(call -> {
+            assertThat(inTransaction[0]).as("kiểm phân công trong transaction đổi role").isTrue();
+            return List.of();
+        });
+        when(accounts.updateRole(target.id(), Role.TEACHER, 3L, NOW)).thenReturn(1);
+
+        transactional.changeRole(admin, target.id(), Role.TEACHER, 3L);
+
+        InOrder order = inOrder(accounts, subjectScope);
+        order.verify(accounts).lockById(target.id());
+        order.verify(subjectScope).listManagedSubjects(target.id());
+        order.verify(accounts).updateRole(target.id(), Role.TEACHER, 3L, NOW);
     }
 
     @Test

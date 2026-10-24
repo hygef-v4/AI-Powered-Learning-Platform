@@ -63,6 +63,11 @@ public class IdentityContractStubs {
             }
 
             @Override
+            public Optional<AccountContact> lockContact(UUID accountId) {
+                return getContact(accountId);
+            }
+
+            @Override
             public Map<Role, Map<AccountStatus, Long>> countByRoleAndStatus() {
                 return Map.of();
             }

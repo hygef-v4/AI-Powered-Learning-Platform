@@ -40,6 +40,7 @@ class AcademicsServiceTest {
         service = new AcademicsService(classes,enrollments,reads,lock,accounts,subjects,scope,authorization,audit,events,tx,Clock.fixed(now,ZoneOffset.UTC));
         when(accounts.getContact(managerId)).thenReturn(Optional.of(contact(managerId,Role.SUBJECT_MANAGER,AccountStatus.ACTIVE)));
         when(accounts.getContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
+        when(accounts.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(authorization.authorize(any(),anyString(),any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
@@ -155,7 +156,7 @@ class AcademicsServiceTest {
         verify(audit).record(argThat(e -> e.action().equals("CLASS_TEACHER_CHANGED")));
     }
     @Test void inactiveTeacherCannotBeAssigned() {
-        when(accounts.getContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.DISABLED)));
+        when(accounts.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.DISABLED)));
         assertThatThrownBy(() -> service.assignTeacher(manager,classId,teacherId,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("INVALID_TEACHER"));
         verify(classes,never()).update(any(),anyLong());
     }

@@ -113,8 +113,10 @@ public class AcademicsService {
     public ClassView create(Actor actor,UUID subjectId,String code,String name,String description,String term,UUID teacherId) {
         return command(actor,"CLASS_CREATED",subjectId,() -> {
             requireAudience(actor,"manager"); requireManager(actor,subjectId);
-            requireManager(actor,subjectId); subjectGuard.lockActive(subjectId,SUBJECT_LOCK_WAIT); requireManager(actor,subjectId);
+            requireManager(actor,subjectId);
+            // Khóa tài khoản giảng viên trước dòng môn: U01 vô hiệu hóa tài khoản khóa tài khoản rồi mới tới môn.
             requireTeacher(teacherId);
+            subjectGuard.lockActive(subjectId,SUBJECT_LOCK_WAIT); requireManager(actor,subjectId);
             CourseClass value=CourseClass.create(UUID.randomUUID(),subjectId,code,name,description,term,teacherId,clock.instant());
             classes.insert(value); success(actor,"CLASS_CREATED",value.id(),Map.of());
             if(teacherId!=null) success(actor,"CLASS_TEACHER_CHANGED",value.id(),teacherDetails(null,teacherId));
@@ -127,7 +129,11 @@ public class AcademicsService {
     }
     public ClassView assignTeacher(Actor actor,UUID id,UUID teacherId,long version) {
         return command(actor,"CLASS_TEACHER_CHANGED",id,() -> {
-            CourseClass current=locked(actor,id,version); requireTeacher(teacherId);
+            // Kiểm quyền trên lớp trước (giữ 403/404), rồi khóa tài khoản giảng viên trước dòng môn trong locked():
+            // U01 vô hiệu hóa tài khoản khóa tài khoản rồi mới tới môn.
+            requireAudience(actor,"manager"); requireManager(actor,requireClassAccess(actor,"manager",id).subjectId());
+            requireTeacher(teacherId);
+            CourseClass current=locked(actor,id,version);
             CourseClass changed=current.assignTeacher(teacherId,clock.instant());
             classes.update(changed,version); success(actor,"CLASS_TEACHER_CHANGED",id,teacherDetails(current.teacherId(),teacherId));
             return view(changed);
@@ -142,7 +148,7 @@ public class AcademicsService {
             CourseClass current=locked(actor,id,version);
             boolean subjectActive=false;
             if(status==ClassStatus.OPEN) {
-                requireTeacher(current.teacherId());
+                requireTeacherStillEligible(current.teacherId());
                 subjectActive=subjects.isActive(current.subjectId());
                 var conflicting=enrollments.conflictingStudents(id,current.subjectId());
                 if(!conflicting.isEmpty()) {
@@ -296,7 +302,14 @@ public class AcademicsService {
             throw ApiException.forbidden("ACCESS_DENIED");
         }
     }
+    /** Gán giảng viên: khóa tài khoản tới hết transaction để U01 không đổi role xen vào (BR-U01-64). */
     private void requireTeacher(UUID id) {
+        if(id==null) return;
+        var contact=accounts.lockContact(id).orElseThrow(() -> ApiException.badRequest("INVALID_TEACHER","Không tìm thấy giảng viên"));
+        if(!teacherEligible(contact)) throw ApiException.badRequest("INVALID_TEACHER","Chọn giảng viên đang hoạt động");
+    }
+    /** Mở lại lớp với giảng viên đã gán: không tạo phân công mới nên không cần khóa tài khoản. */
+    private void requireTeacherStillEligible(UUID id) {
         if(id==null) return;
         var contact=accounts.getContact(id).orElseThrow(() -> ApiException.badRequest("INVALID_TEACHER","Không tìm thấy giảng viên"));
         if(!teacherEligible(contact)) throw ApiException.badRequest("INVALID_TEACHER","Chọn giảng viên đang hoạt động");

@@ -209,6 +209,8 @@ class SubjectRepositoryIntegrationTest {
         for (UUID id : List.of(MANAGER, OTHER_MANAGER)) {
             when(accounts.getContact(id)).thenReturn(Optional.of(new AccountContact(id, "fixture@example.test", "Fixture",
                     Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+            when(accounts.lockContact(id)).thenReturn(Optional.of(new AccountContact(id, "fixture@example.test", "Fixture",
+                    Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
         }
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         jdbc.update("delete from u04_audit_events");
