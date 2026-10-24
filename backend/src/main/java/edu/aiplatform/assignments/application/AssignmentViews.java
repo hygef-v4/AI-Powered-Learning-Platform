@@ -70,6 +70,9 @@ public final class AssignmentViews {
                           Instant createdAt, Instant decidedAt) {
     }
 
+    public record AiSourcePreview(String fileName, String previewText, int extractedChars, boolean truncated) {
+    }
+
     public record ImportPreview(DocumentModel document, List<ValidationIssue> warnings, int headingCount,
                                 int imageCount, int diagramCount) {
     }

@@ -138,6 +138,9 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         QuizAttempt saved = attempt.withAnswers(Map.of(q, List.of("2")), NOW.plusSeconds(5));
         assertThat(repository.saveAnswers(saved, 0)).isTrue();
         assertThat(repository.saveAnswers(saved, 0)).as("answerVersion cũ").isFalse();
+        QuizAttempt stale = attempt.submitted(SubmitMode.MANUAL, BigDecimal.ZERO, new BigDecimal("2"),
+                List.of(new QuestionResult(q, false, BigDecimal.ZERO, new BigDecimal("2"))), NOW.plusSeconds(7));
+        assertThat(repository.submit(stale)).as("chấm trên answerVersion cũ").isFalse();
 
         QuizAttempt submitted = saved.submitted(SubmitMode.MANUAL, new BigDecimal("2"), new BigDecimal("2"),
                 List.of(new QuestionResult(q, true, new BigDecimal("2"), new BigDecimal("2"))), NOW.plusSeconds(9));

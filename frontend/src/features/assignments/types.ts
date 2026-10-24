@@ -135,13 +135,23 @@ export type AiProposalSection = {
   rubric: { title: string; description: string; kind: "TEXT" | "DIAGRAM"; items: { text: string; points?: number }[] }[];
 };
 
+export type AiDraftValidation = {
+  status: "VALID" | "NEEDS_REVIEW" | "INVALID";
+  questionCount: number;
+  rubricLeafCount: number;
+  totalPoints: number;
+  issues: { severity: "ERROR" | "WARNING"; code: string; path: string; message: string }[];
+};
+
+export type AiSourcePreview = { fileName: string; previewText: string; extractedChars: number; truncated: boolean };
+
 export type AiDraft = {
   draftId: string;
   assignmentId: string;
   origin: "AI_TASK" | "MCP";
   status: "PENDING" | "READY" | "APPLIED" | "DISCARDED" | "FAILED";
   taskId: string | null;
-  proposal: { instructions: string; sections: AiProposalSection[] } | null;
+  proposal: { title: string; businessContext: string; instructions: string; sections: AiProposalSection[]; validation?: AiDraftValidation } | null;
   provenance: Record<string, unknown>;
   safeError: string | null;
   baseVersion: number;

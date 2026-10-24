@@ -21,15 +21,19 @@ public class PurposePolicy {
     public static final SettingKey<String[]> MATERIAL_TYPES = new SettingKey<>("files.material.allowedTypes", String[].class);
     public static final SettingKey<Integer> IMAGE_MAX_MB = new SettingKey<>("files.documentImage.maxSizeMb", Integer.class);
     public static final SettingKey<String[]> IMAGE_TYPES = new SettingKey<>("files.documentImage.allowedTypes", String[].class);
+    public static final SettingKey<Integer> ASSIGNMENT_SOURCE_MAX_MB = new SettingKey<>("files.assignmentSource.maxSizeMb", Integer.class);
+    public static final SettingKey<String[]> ASSIGNMENT_SOURCE_TYPES = new SettingKey<>("files.assignmentSource.allowedTypes", String[].class);
 
     static final Map<ArtifactPurpose, Integer> HARD_CAP_MB = Map.of(ArtifactPurpose.MATERIAL, 50,
-            ArtifactPurpose.DOCUMENT_IMAGE, 5);
+            ArtifactPurpose.DOCUMENT_IMAGE, 5, ArtifactPurpose.ASSIGNMENT_SOURCE, 2);
     static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX),
-            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.GIF, FileType.SVG));
+            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.GIF, FileType.SVG),
+            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF));
     static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),
-            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER));
+            ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER),
+            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER));
 
     private final ISettings settings;
 
@@ -43,8 +47,16 @@ public class PurposePolicy {
 
     public PurposeLimits limits(ArtifactPurpose purpose) {
         int cap = HARD_CAP_MB.get(purpose);
-        SettingKey<Integer> sizeKey = purpose == ArtifactPurpose.MATERIAL ? MATERIAL_MAX_MB : IMAGE_MAX_MB;
-        SettingKey<String[]> typesKey = purpose == ArtifactPurpose.MATERIAL ? MATERIAL_TYPES : IMAGE_TYPES;
+        SettingKey<Integer> sizeKey = switch (purpose) {
+            case MATERIAL -> MATERIAL_MAX_MB;
+            case DOCUMENT_IMAGE -> IMAGE_MAX_MB;
+            case ASSIGNMENT_SOURCE -> ASSIGNMENT_SOURCE_MAX_MB;
+        };
+        SettingKey<String[]> typesKey = switch (purpose) {
+            case MATERIAL -> MATERIAL_TYPES;
+            case DOCUMENT_IMAGE -> IMAGE_TYPES;
+            case ASSIGNMENT_SOURCE -> ASSIGNMENT_SOURCE_TYPES;
+        };
         int size = settings.get(sizeKey).map(value -> Math.max(1, Math.min(cap, value))).orElse(cap);
         Set<FileType> supported = SUPPORTED.get(purpose);
         Set<FileType> allowed = settings.get(typesKey)

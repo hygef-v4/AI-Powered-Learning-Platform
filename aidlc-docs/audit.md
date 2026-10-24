@@ -5738,3 +5738,389 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Validation**: All Markdown links and explicit relative document paths in the new dossier resolve; fenced blocks balanced. Tracked historical audit text is an unchanged prefix. External final snapshot parses as50 rows, all Đạt; U14-15 note explicitly retains the +5minute manual-data variant and absence of a real +2day wait. All23 evidence files were hash-verified on move. No test rerun was needed for organization/committing; prior verification results remain accurately qualified. Final staged diff check and post-commit clean-tree readback are required before reporting completion.
 
 ---
+
+## Claude artifact bugfix continuation
+
+**Timestamp**: 2026-10-23T21:04:07+07:00
+
+**User Input**:
+- "Giúp tôi lập plan để sưat các lỗi đã test ở phiên chat truớc , check theo file claude artifact ở phiên trc"
+- "Giúp tôi sửa code lỗu"
+- "giúp tôi sửa tiếp"
+- "tự làm đi đừng chia subagent"
+
+**AI Response / Context**: Continue the previously presented repair plan against the Claude artifact's 11 failures. Implement U05/U09 source changes and U12/U13/U14 slot integration in the current writable checkout. Respect direct execution without subagents; an attempted review delegation was interrupted, and no delegated findings were used. The unused managed worktree was submitted for archiving. No commit/push/deployment or unrelated delta implementation.
+
+**Evidence**: Frontend TypeScript and focused ESLint pass; offline backend Maven compile with all tests skipped passes. The first Vitest invocation failed while loading sandbox temporary cache and executed no tests. Automatic approval review rejected the outside-sandbox test invocation because the active instruction prohibits tests unless requested by the user. No tests were added and no alternative test run followed the rejection. Artifact acceptance/runtime checks remain pending, including XLSX and notification timing. Existing U05-21 source already emits enrollment notifications only when the class is open.
+
+**Execution ledger**: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
+## Claude artifact retest and Codex in-app UI — 2026-10-23
+**Timestamp**: 2026-10-23T14:20:15Z
+**User Input**: "ok giúp tôi mở ui và test lại xem đã sửa hết lỗi chưa"
+**AI Response**: Started the updated frontend and opened the protected class route in the Codex in-app browser. The route redirected to login because this tab has no authenticated test session. Ran the complete frontend suite (78 files, 448 tests passed), full ESLint, and Next route type generation followed by TypeScript checking; all final runs passed. Ran focused backend tests (66 passed, 0 failures/errors/skips) for AcademicsService, Academics API/controller contracts, and GradebookService. Updated the stale AcademicsService conflict assertion to expect the student display name, then reran the focused suite successfully. Existing Docker services were inspected read-only and left untouched.
+**User Input (clarification)**: "mở ui in app ấy chứ k phải mở chrome riêng"
+**AI Response**: Kept the page in the Codex in-app browser, not a separate Chrome tab. No authenticated UI path or all-57 artifact retest is claimed; the 26 skipped cases remain unverified.
+**Context**: Construction, Build & Test follow-up for the Claude artifact bugfix plan. The test suite's first sandbox run could not load its temporary cache; the successful rerun was outside that sandbox. A first backend run exposed the stale name-vs-UUID test expectation; after updating its fixture/assertion, all 66 focused tests passed. No commit, push, or deployment.
+
+---
+
+## Claude artifact authenticated in-app retest — 2026-10-23
+**Timestamp**: 2026-10-23T21:35:56+07:00
+**User Input**: "tài khoản đây, tự đăng nhập tự test đi" (credentials provided as an image; secret omitted from this audit).
+**AI Response / Context**: Continued the authorized artifact retest in the Codex in-app browser, signing in with the supplied local Teacher, Student, and Subject Manager test accounts. Tested the teacher class overview, roster and student popup, assignment and submission review, gradebook export, student class page, and subject manager detail/class assignment controls.
+**Evidence**:
+- Teacher overview showed one open assignment, zero pending grading, and progress indicators. Roster showed row number and “Chưa có nhóm”. Student popup showed 0/4 submitted, late total 0, assignment titles, submission modes, and per-assignment states. Assignment view displayed the subject-ownership explanation. Manager class details displayed the assigned teacher's name/email, and the picker retained the teacher as selected and marked “hiện tại”. Student class content appeared in Materials → Assignments → Announcements → Groups order.
+- Submission review loaded with one “Chưa nộp” student and counts 0 submitted / 0 in progress / 1 not submitted / 0 late, under a single app shell.
+- XLSX export first returned HTTP 500 against the old local backend image. Read-only logs confirmed PostgreSQL rejected the audit insert because the transaction was read-only. Rebuilt and recreated only the local backend service from current source; repeated the UI export, the dialog closed successfully, and the rebuilt backend had no matching error in the next log check. Postgres, worker, Redis and RabbitMQ were not restarted; no migration or data reset occurred.
+- Attempting to add the active test student to draft U05-NOTEA returned “Đang ở lớp khác cùng môn”; the class remained at 0 active / 1 previously removed student. This did not create the separate class-open enrollment-conflict fixture, so runtime display-name behavior for that specific conflict remains unverified. Distribution charts had no published scores; populated group labels and U05-21 notification timing also remain unverified due to missing fixtures. The full 57-case artifact retest was not performed; the 26 skipped cases remain without evidence.
+**Context**: Local authenticated UI smoke test only. Source fixes and focused automated verification remain uncommitted and unpublished; no production deployment. Execution ledger: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
+---
+
+## Skipped artifact test planning
+**Timestamp**: 2026-10-23
+**User Input**: "giúp tôi lập plan xử lý test nốt các test case đang bỏ qua, nếu thiếu dữ kiện thì có thể insert database hoặc thao tác ui để thêm dữ liệu vào sau đó tiền hành test"
+**AI Response**: Created construction/plans/2026-10-23-skipped-cases-test-plan.md covering all 49 currently skipped artifact cases with per-case fixture and evidence mapping. Live baseline is 62 pass, 3 fail, 49 skip, 240 untested. SQL/UI fixture authorization recorded for subsequent execution; no fixtures inserted in this turn. Direct execution without subagents preserved.
+**Context**: AI-DLC Build & Test planning continuation. Dependency gates: U13-02 upload invalid-session error and grading GRADE_VERSION_CONFLICT. SQL seed is preparation, never proof of runtime event delivery. Existing extension configuration retained; no new production design or PBT extension. Plan reviewed for 49 unique case IDs and scoped data protection/provider/time limitations.
+
+---
+
+## Skipped artifact test execution — 2026-10-23
+**Timestamp**: 2026-10-23T22:25:21+07:00
+**User Input**: "ok thực hiện plan đi, tự thêm dữ liệu nếu thiếu rồi test trong app, sửa lỗi và cập nhật artifact luôn, đừng chia subagent"
+**AI Response / Context**: Continued the authorized test plan directly, without subagents. Ran the full frontend suite (79 files / 450 tests), typecheck, targeted ESLint and production build successfully. In the Codex in-app browser, Student U05-A displayed four ordered subject-scope PDF materials with type/size labels; opened a PDF detail and attempted its download. The embedded preview remained blank, so PDF rendering/page-navigation was not marked passing. Read-only PostgreSQL checks confirmed the four materials are `SUBJECT`, the QA replacement is current version 2 with `NO_TEXT` and prior version 1 `EXTRACTED`/544 chars, and three U05 test accounts are ACTIVE and not temporarily locked. Teacher and subsequent Student/Manager sign-ins were rejected; after one refreshed Student retry the failed-login counters were Student 2, Teacher/Manager 1. No password/account state was changed.
+**Artifact**: Direct snapshot: 354 total, 65 pass, 2 fail, 46 skipped, 241 untested; U13: 11 pass/11 skipped. U13-09 note saved with the scope caveat. Other note edits for U13-02/04/06 did not persist after changing unit filters, so P6 remains open; stale note text is not represented as updated.
+**Evidence**: `aidlc-docs/construction/plans/2026-10-23-skipped-cases-test-plan.md`; `aidlc-docs/construction/build-and-test/2026-10-23-skipped-cases-results.md`; `.tmp/skipped-cases/manifest.json`. No direct SQL fixture insert, commit, push, or deploy.
+**Remaining**: 46 skipped cases remain. Need restore a working local role session and create a CLASS-scope material fixture before continuing U13; other U05/U09/U14/U15 prerequisites are tracked in the plan. PDF preview and download bytes remain unverified.
+
+---
+
+## Continue skipped-case U09 execution
+**Timestamp**: 2026-10-23T15:54:12Z
+**User Input**: "thực hiện tiếp thêm kế hoạch, giúp tôi tạo bài và test nôt u09, dữ liệu anof thiếu thì tạo"
+**AI Response**: "Đọc lại artifact U09, xác nhận bài QA đã tồn tại, chạy bộ test frontend liên quan và full suite, kiểm tra trạng thái đăng nhập/database, cập nhật note U09-02 trong artifact; chưa chạy được live U09 vì đăng nhập Teacher/Student trả BAD_PASSWORD."
+**Context**: Tiếp tục plan skipped-cases P1/P2. U09 có 2 Đạt, 24 Bỏ qua; assignment tồn tại nhưng không có submission/evaluation. Không ghi DB và không đổi source; tài khoản QA vẫn ACTIVE/chưa khóa.
+
+---
+
+## U09 live-test continuation and validation-message fix
+**Timestamp**: 2026-10-23T16:52:53Z
+**User Input**: "tự đăng nhập đi"; later clarified "ddaay tooi đn đc r mà" and provided a screenshot showing the Teacher session on `/classes`.
+**AI Response / Context**: Accepted the correction; did not retry credentials. Continued the already authorized U09 test directly without subagents. The earlier BAD_PASSWORD report is superseded by the authenticated Teacher session and the live U09 UI evidence.
+**Artifact**: Entered notes for U09-01/02/03/05/08/13/15/16/18/19/20. Current U09 filter showed 26 cases: 4 pass, 2 fail, 20 skipped. U09-05 remains failed on `GRADE_VERSION_CONFLICT`; U09-19 remains failed pending runtime retest. U09-03/13/15/16/18 remain skipped for partial coverage or missing fixture. U09-08 stale-tab conflict and U09-20 Student draft-score hiding passed. A note for U09-03 was re-read after changing units; repeated unit-filter clicks later timed out, so persistence of the remaining new notes could not be independently rechecked after unmount.
+**Verdict review**: Final per-card read found U09-03 and U09-20 marked opposite to their evidence. Corrected U09-03 to Bỏ qua (the one-evaluation fixture cannot test next-item navigation) and U09-20 to Đạt (Student list/detail hide the draft grade and feedback). Re-read both status controls; U09 total remains 4 pass/2 fail/20 skipped.
+**Source and validation**: Added `GlobalExceptionHandlerTest` first; its 10,001-character request failed as expected because the response had no error code. Added a `MethodArgumentNotValidException` handler so feedback-size errors return `FEEDBACK_TOO_LONG` with the 10,000-character limit, and other validation failures return `INVALID_REQUEST`. Docker Maven targeted test completed with 1 test passed, 0 failures/errors. No full backend suite run.
+**Limitations**: UI previously accepted 10,000 characters and returned misleading generic text for 10,001. The local frontend dev server and rebuilt backend are running; Flyway reports the schema is up to date and the backend health check passes. The app tab could not be observed because the in-app browser URL policy rejected the action; no browser-policy workaround was attempted, so no post-build UI retest is claimed. Student preference `Công bố điểm` remains OFF from the previous test setup and must be restored in the UI; no grade was published or email sent. No DB writes, commit, push, or deployment in this continuation. Global artifact totals 67 pass/4 fail/42 skipped/241 untested are derived from the last global snapshot and current U09 verdict delta; the global filter was not reread. See `construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+
+---
+
+## U09 provider check, bug fixes, and skipped-case continuation
+**Timestamp**: 2026-10-23T17:46:05Z
+**User Input**: "tôi đã cấu hình sẵn r b giúp tôi check lại đi, chia subagent check với fix nhiều task cũng đc , giúp tôi fix bug u09, test cái nào skip"
+**AI Response**: "Continuing the approved U09 test plan. I will verify the configured AI connection without exposing secrets, investigate and fix reproducible U09 bugs with regression tests, run skipped cases whose prerequisites are available, create only scoped QA fixtures, and update the result ledger and Claude artifact where supported."
+**Context**: Resumed U09 Build & Test. Two independent read-only/focused investigation tracks dispatched with the user's explicit authorization; all existing working-tree changes are preserved. Local UI testing remains subject to the previous in-app browser URL policy; automated/backend evidence will be gathered without alternate browser access.
+
+---
+
+## U09 AI picker and batch estimate continuation
+**Timestamp**: 2026-10-23T18:23:22Z
+**User Input**: "tôi muốn test phải đạt hết u09 , tôi có cấu hình sẵn ai gemini cá nhân rồi, b có thể gọi để chấm điểm thoải mái"
+**AI Response / Context**: Continued authorized U09 defect work without delegated agents. The user explicitly permitted real Gemini grading requests. Read-only connection state showed two personal Gemini connections ACTIVE and last stored test SUCCESS; no credential material was read. No fresh provider call was sent because the in-app browser’s local URL policy blocked the app workflow, and the same action was not rerouted through HTTP/API/CDP or another browser.
+**Code**: Fixed stale provider selection on reopening the U09 proposal picker by conditionally mounting it. Added U09 batch estimate endpoint that builds current evaluation prompts and sums unique evaluations using the same character-based quota estimate; it does not dispatch AI or reserve quota. Frontend displays that estimate, OpenAPI contract updated.
+**Validation**: Full frontend 79 files / 452 tests passed, typecheck passed. Backend U09 grading and validation set 21/21 passed, including aggregation/deduplication and token-estimate formula. Regression for previous picker state was red before fix and now passes.
+**Artifact**: Updated and re-read U09 notes; verified U09-11 note persisted across unit navigation. U09 remains 4 pass / 2 fail / 20 skipped. U09-05 `GRADE_VERSION_CONFLICT` and U09-19 post-build UI validation retest remain open; U09-10/11 have no fresh Gemini result and stay skipped until live app flow is observed.
+**Limitations**: Black-box U09 is not complete. No new Gemini call, DB insert, grade publication, notification/email, commit, push, or deployment in this continuation. See `construction/build-and-test/2026-10-23-skipped-cases-results.md` and `construction/plans/2026-10-23-skipped-cases-test-plan.md`.
+
+---
+
+## Continue artifact testing and defects for U05/U09/U15
+**Timestamp**: 2026-10-23T18:32:28Z
+**User Input**: "sau khi test xong thì giúp tôi sửa tất cả lỗi u5 u9 u15 và cập nhật lại trong artifact claude"
+**AI Response / Context**: User authorizes testing and fixing defects across U05, U09, and U15, then updating the linked Claude artifact. Current artifact snapshot: U05 23 cases (17 pass, 0 fail, 6 skipped); U09 26 (4 pass, 2 fail, 20 skipped); U15 8 (7 pass, 0 fail, 1 skipped). Existing working-tree changes are preserved. The in-app browser rejected observation of the local app URL due to its URL security policy; continue with safe source/test investigation only and do not route the same browser interaction through another surface or API. No grade publication or notification is authorized by this request.
+**Plan**: First run focused baseline tests in independent U05/U09/U15 domains, inspect failures and regression coverage, then implement only reproducible fixes with failing tests first. Re-run affected tests and relevant full frontend/backend suites; update artifact statuses only with direct UI evidence, leaving blocked black-box cases skipped with specific reasons. No commit, push, deployment, direct database fixture writes, password changes, or email sends.
+**Approval**: The user's raw request explicitly authorizes the test→fix→artifact-update sequence. Code generation plan continuation is approved within this scope.
+
+---
+
+## Local commit organization
+**Timestamp**: 2026-10-23T18:48:21Z
+**User Input**: "check ok rồi thì giúp tôi chia commit rõ ràng , chưa push"
+**AI Response / Context**: Auditing the existing verified working-tree changes and grouping them into focused local commits. User explicitly requests no push; no merge, push, deploy, or destructive cleanup will be performed. Existing unrelated/untracked diagnostic files will remain untouched unless confirmed to belong in a requested commit.
+---
+
+## 2026-10-22T13:40:00Z — PR #8 merged; staging verified
+
+**User Input**: "Merge PR #8 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Rechecked PR #8 (head 57b801c, CI backend/frontend/GitGuardian pass, CLEAN) and merged with a merge commit: staging 20c1458, whose tree equals the CI-verified 57b801c. Fast-forwarded local staging. Started the full local stack from source on fresh volumes under compose project `staging-smoke` (temporary env with random secrets and a port override in the scratchpad): all 8 containers healthy, 14 Flyway migrations applied up to 20260925.2000, /health, /, /login, /quiz-practice 200, protected APIs 401, no ERROR/exception in backend, worker, frontend, nginx logs, RabbitMQ job and notification queues declared with consumers. Tore down the project with its volumes and deleted the temporary files. Updated roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Delivery — PR #8 merged; staging verification.
+
+---
+
+## 2026-10-22T14:30:00Z — E2E run: phase 4, G3/E3, notification link
+
+**User Input**: "Chạy thử end-to-end trên trình duyệt với Docker local cho giai đoạn 4 (đề xuất MCP, tài liệu tham khảo, Quiz gắn học liệu) và G3/E3 (ghi nhận hoạt động), ghi kết quả vào code-summary."
+
+**AI Response**: Ran staging 20c1458 on a fresh local stack (compose project `quiz-e2e`, temporary env with random secrets and test passwords in the scratchpad). Seeded via API: admin activated by OTP through Mailpit, manager, teacher, two students, subject QZE2E, OPEN class, two YouTube materials, three active bank questions, a class quiz. In the browser pane: AI draft popup (material locked: U13 hasText=false for YouTube; stub → FAILED "AI chưa sẵn sàng"); material attach (and API 400 MATERIAL_NOT_SELECTABLE for a foreign id); an MCP-origin READY draft inserted directly into quiz_ai_drafts (U06 MCP server not on staging) shown and partially accepted (inline item added, version bump, audit with count/origin only); activity switch locked until admin set activity.retentionDays=30, notice required, review and publish; student notification link resolved the class; Quiz Practice Detail notice and attached material; MaterialQuizList on the learning material page, exhausted after one attempt; taking page tracker recorded SESSION_START, HIDDEN, VISIBLE (simulated visibilitychange), SESSION_END; teacher saw the activity timeline (1 away, 4 s). No backend/worker errors. Found a pre-existing bug: QuizDetailPage shows "Hệ thống tạm bận" on client-side validation errors. Tore down the stack with volumes and deleted temporary files. Wrote results to U10/U11 code-summary, roadmap and aidlc-state (uncommitted on local staging).
+
+**Context**: Verification — end-to-end run.
+
+---
+
+## 2026-10-22T15:00:00Z — Roadmap refresh after U06 and U12 merged
+
+**User Input**: "kiểm tra các thay đổi mới nhất xem roadmap của tôi đã hoàn thành chưa, còn cần chờ UC nào nữa không"
+
+**AI Response**: Fetched origin: staging is d2a06cd with PR #9 (U06 AI connections and MCP) and PR #10 (U12 group assignment) merged; all units U10/U11 depend on are now on staging. AI contract unchanged for U10 (only UsageMeasurement.ESTIMATED added); no quiz files touched. Jira unchanged; no tester integration tests yet. Banner fix 61171a9 on fix/quiz-detail-client-validation-banner (from d2a06cd) is local, unpushed. Roadmap updated: no UC left to wait for; doable now — swap AiSourceSelect for U06 AiSourcePicker, run MCP tools through the real U06 MCP server, real AI drafting (needs a real provider key entered by the user), push/PR the banner fix; waiting on people — tester, BR-U11-20 decision, Report 3.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T15:30:00Z — Code Generation Part 1: U06 integration plan
+
+**User Input**: "Lập plan: thay AiSourceSelect bằng AiSourcePicker của U06 và chạy thử tool MCP qua MCP server thật, trên nhánh mới tách từ origin/staging, không đặt upstream."
+
+**AI Response**: Created branch `quiz-u06-integration` from origin/staging d2a06cd with `--no-track` (verified no upstream); moved the uncommitted documentation onto it (aidlc-state.md and audit.md additions re-appended to the staging versions, other files carried over). Read U06 AiSourcePicker, AiTaskStatus, McpController, McpServer, McpToolRegistry and McpCredentialController. Added "Giai đoạn 7" to the U10 code generation plan (decisions M1–M7, checklist 7.0–7.6) and linked it from the roadmap. Approval prompt: "Duyệt plan giai đoạn 7 với đề xuất M1–M7?"
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1, awaiting approval.
+
+---
+
+## 2026-10-22T15:40:00Z — U06 integration plan approved
+
+**User Input**: "Duyệt plan giai đoạn 7 với đề xuất M1–M7. Bắt đầu từ bước 7.0 rồi viết code theo checklist."
+
+**AI Response**: Recorded approval. Step 7.0: committing pending documentation (E2E results, roadmap, state, phase 7 plan) locally on `quiz-u06-integration`, then implementing 7.1–7.5.
+
+**Context**: Construction — U10 U06 integration, Code Generation Part 1 approved.
+
+---
+
+## 2026-10-22T16:30:00Z — Phase 7 progress; staging backend startup blocked
+
+**User Input**: (none since approval)
+
+**AI Response**: 7.0 committed a2c97ef. 7.1: AiDraftView.taskId; QuizMcpToolsSchemaTest validates sample arguments against both tool schemas with networknt JSON Schema 2020-12. 7.2–7.3: AiDraftDialog now opens U06 AiSourcePicker after the form validates (U10 dialog temporarily replaced to avoid two focus-trapping dialogs; cancel restores the form), AiSourceSelect removed, AiTaskStatus shown for PENDING drafts with a taskId; tests updated (picker and task status stubbed). Frontend lint, typecheck, 56 quiz tests pass; backend affected tests pass (37 incl. ArchitectureTest). 7.4 blocked: a fresh local stack of this branch (staging d2a06cd + phase 7) fails to start — circular bean dependency AiTaskResultHandlerRegistry (U06) → AssignmentDraftResultHandler → AssignmentAiDraftService (U07) → IAiTask/AiTaskService (U06); PracticeFeedbackResultHandler (U08) may form a similar cycle. U10's QuizDraftResultHandler has no IAiTask dependency. Stack torn down, temporary env deleted. Code uncommitted.
+
+**Context**: Construction — U10 phase 7, Code Generation Part 2 in progress (7.4 blocked).
+
+---
+
+## 2026-10-22T16:40:00Z — Team message drafted: bean cycle on staging
+
+**User Input**: "Soạn tin nhắn ngắn báo nhóm U06/U07 (và U08) về vòng phụ thuộc bean làm backend staging không khởi động, kèm cách sửa gợi ý. Giữ code giai đoạn 7 chưa commit."
+
+**AI Response**: Confirmed U08's PracticeFeedbackService also injects IAiTask, so PracticeFeedbackResultHandler forms the same cycle. Drafted a short Vietnamese message for the user to send (cycle path, cause after PR #9 replaced the IAiTask stub, suggested fix: AiTaskResultHandlerRegistry resolves handlers lazily via ObjectProvider, or handlers stop depending on IAiTask-using services; add a Spring context test). Nothing sent by the AI; phase 7 code left uncommitted.
+
+**Context**: Staging verification follow-up.
+
+---
+
+## 2026-10-22T17:30:00Z — Staging bug and branch status check
+
+**User Input**: "kiểm tra code mới nhất xem các lỗi trên đã được sửa chưa, đồng thời kiểm tra roadmap xem còn phần nào chưa hoàn thành không, có phần nào đang làm dở ở nhánh nào không"
+
+**AI Response**: Fetched origin: staging still d2a06cd, no new commits and no fix on any remote branch. Fixed on staging: grading migration, notificationTopology, duplicate poi-ooxml. Not fixed: U06/U07/U08 bean cycle (AiTaskResultHandlerRegistry still takes List<IAiTaskResultHandler>; same code as the failed startup run), Quiz Detail banner (fix 61171a9 only on local fix/quiz-detail-client-validation-banner). Unfinished branches: quiz-u06-integration (a2c97ef + 11 uncommitted files, phase 7 steps 7.4–7.6 left), fix/quiz-detail-client-validation-banner (unpushed, in worktree admiring-wilson-84dd90); merged leftovers quiz-activity, quiz-ai-mcp, claude/admiring-wilson-84dd90. Roadmap remaining: real U06 run (MCP blocked, real AI needs the user's key), tester integration tests and closing KAN-18/23/25, KAN-152, BR-U11-20. Added a status section to the roadmap.
+
+**Context**: Roadmap status review.
+
+---
+
+## 2026-10-22T17:45:00Z — PR #11 opened (Quiz Detail banner fix)
+
+**User Input**: "Push nhánh fix/quiz-detail-client-validation-banner lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
+
+**AI Response**: Verified 61171a9 sits directly on staging d2a06cd and merges cleanly; pushed `fix/quiz-detail-client-validation-banner` to its own remote branch (upstream origin/fix/quiz-detail-client-validation-banner) and opened PR #11 into staging. CI backend and frontend pending at the time of writing; not merged.
+
+**Context**: Delivery — PR #11.
+
+---
+
+## 2026-10-22T18:00:00Z — PR #11 merged; staging rechecked
+
+**User Input**: "Merge PR #11 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
+
+**AI Response**: Rechecked PR #11 (head 61171a9, CI backend 1265 tests, frontend 438 tests, GitGuardian pass, CLEAN) and merged with a merge commit: staging fa1c0f0, tree identical to 61171a9. Built and started the local stack from a temporary detached worktree of origin/staging (project `stg-check`, temporary env): frontend healthy, backend and worker still fail with "APPLICATION FAILED TO START" (U06/U07/U08 bean cycle), so the banner fix could not be exercised in the browser. Tore down the stack with volumes, removed the worktree and the temporary env. Updated the roadmap (uncommitted on quiz-u06-integration).
+
+**Context**: Delivery — PR #11 merged; staging verification.
+
+---
+
+## 2026-10-22T18:10:00Z — Phase 7 committed (7.1–7.3); branch cleanup
+
+**User Input**: "commit code giai đoạn 7 và xoá các nhánh, worktree thừa cho tôi"
+
+**AI Response**: Rechecked frontend lint, typecheck and 56 quiz tests; committed steps 7.1–7.3 (AiDraftView.taskId, MCP schema test, AiSourcePicker/AiTaskStatus in the AI draft dialog, tests) with the pending documentation locally on `quiz-u06-integration`. Steps 7.4 (real MCP run, blocked by the staging bean cycle), 7.5 and 7.6 remain; no push. Then removed the finished worktree `.claude/worktrees/admiring-wilson-84dd90` and deleted branches already contained in origin/staging: `fix/quiz-detail-client-validation-banner` (local and remote, PR #11), `quiz-activity` (local and remote, PR #8), `quiz-ai-mcp` (local and remote), `claude/admiring-wilson-84dd90` (local, same as main, no work). Teammates' branches untouched.
+
+**Context**: Construction — U10 phase 7 local commit; repository housekeeping.
+
+---
+
+## 2026-10-22T15:50:00Z — Merge staging vào quiz-u06-integration
+
+**User Input**: "kiểm tra code mới nhất từ staging để tránh bị conflict"
+
+**AI Response**: `origin/staging` không có commit mới (`57abe44`). Nhánh `origin/quiz-u06-integration` đã đổi sang `AiSourcePicker` và đầy đủ hơn bản trên `quiz-ai-source-picker`; hai bản xung đột ở cả 4 file. Thử merge `quiz-u06-integration` vào `staging`: chỉ xung đột 3 file tài liệu.
+
+**User Input**: "Bỏ thay đổi trên quiz-ai-source-picker. Chuyển sang quiz-u06-integration, merge origin/staging, giải 3 xung đột tài liệu (aidlc-state, audit, code-summary U10), chạy test, chưa push."
+
+**AI Response**: Bỏ thay đổi chưa commit, xóa nhánh `quiz-ai-source-picker`. Merge `origin/staging` (`57abe44`) vào `quiz-u06-integration`. Giải xung đột: `aidlc-state.md` và `audit.md` giữ mục của cả hai bên, không bỏ dòng nào; code-summary U10 giữ phần chạy thử end-to-end của nhánh, lỗi banner Quiz Detail ghi là đã sửa theo `staging` (PR #11). Frontend: lint, typecheck, build đạt; 449/449 test. Chưa push.
+
+**Context**: Construction — U10 giai đoạn 7, cập nhật nhánh theo staging.
+
+---
+
+## 2026-10-23T15:20:00Z — PR #14 merged
+
+**User Input**: "Merge PR #14 vào staging bằng merge commit."
+
+**AI Response**: Kiểm lại PR #14 (head `d642708`, CI backend/frontend/GitGuardian đạt, `MERGEABLE`/`CLEAN`), merge bằng merge commit: `staging` `eb0cf1a`.
+
+**Context**: Construction — U10 giai đoạn 7, merge PR.
+
+---
+
+## 2026-10-23T15:50:00Z — Xóa nhánh, chạy thử MCP thật (bước 7.4), cập nhật tài liệu
+
+**User Input**: "xoá nhánh, cập nhật roadmap và jira và chạy thử mcp thật"
+
+**AI Response**: Xóa nhánh `quiz-u06-integration` (local và remote). Dựng stack Docker local từ `staging` `eb0cf1a` (project `mcp-e2e`, cổng tạm 18088/18025 vì stack `platform` giữ 8088; secret ngẫu nhiên trong scratchpad). Tạo dữ liệu bằng API; gọi `/mcp` bằng script: 16/16 kiểm đạt (credential `READ_WRITE`/`READ_ONLY`, `initialize`, `tools/list`, `read_quiz_context`, `save_quiz_draft`, version sai, quyền ghi, schema, lớp khác, sinh viên, `Origin`, token sai). Trên trình duyệt: chấp nhận đề xuất MCP 2 câu vào Quiz; popup `AiSourcePicker` hiện 4 nguồn mờ kèm lý do, hủy giữ form. Không có lỗi trong log. Gỡ stack cùng volume, xóa file có secret. Cập nhật code-summary U10, plan U10 (7.4–7.6), lộ trình, `aidlc-state.md` trên nhánh `u10-mcp-e2e-docs`. Jira: chờ người dùng duyệt nội dung trước khi cập nhật.
+
+**Context**: Construction — U10 giai đoạn 7, bước 7.4.
+
+---
+
+## Merge conflict resolution and post-merge verification — 2026-10-24
+
+**Timestamp**: 2026-10-24T10:42:02+07:00
+
+**User Input**: "giúp tôi resolve conflict"; "merge xong r thì chạy thử backend frontend xem có được k".
+
+**AI Response / Context**: Giải xung đột duy nhất trong `aidlc-docs/audit.md`, giữ nguyên các mục được thêm từ cả `mcp-test` và `staging`. Hoàn tất merge cục bộ bằng commit `b5bf4b61` (`Merge branch 'staging' into mcp-test`); không push.
+
+**Verification**:
+- Frontend: 79 test files / 455 tests pass; lint, typecheck và production build pass. Lần chạy test đầu lỗi ENOENT ở thư mục temp sandbox; rerun với temp trong workspace pass. Standalone server báo Ready trên cổng 3001, nhưng HTTP route không xác minh được: probe loopback timeout và tab in-app localhost hiện “This site can't be reached”. Không ghi UI runtime pass.
+- Backend: Maven compile 646 production sources và 193 test sources thành công. `QuizAiDraftServiceTest` + `QuizMcpToolsSchemaTest`: 19 pass. Full `mvn verify`: 1293 tests, 0 assertion failures, 23 errors, 35 skipped; lỗi nằm ở `HttpProviderGatewayTest` (9 loopback errors), `RequestThrottleIntegrationTest` (6 Redis connection errors), `SessionStoreIntegrationTest` (8 Redis connection errors). Đóng gói với `-DskipTests` pass.
+- Backend jar từ source đã merge khởi động trong container smoke riêng, kết nối PostgreSQL/RabbitMQ, validate 16 Flyway migrations, schema up to date; `/health` trả `UP` bên trong container. Container smoke đã được gỡ.
+- Compose full-stack rebuild không thực hiện được vì DNS không phân giải `registry-1.docker.io`; lệnh dừng trước khi recreate service. Dịch vụ và dữ liệu local hiện hữu không bị thay đổi.
+
+**Limitations**: Chưa xác minh route frontend/UI qua trình duyệt in-app; backend full suite vẫn có 23 lỗi kết nối môi trường như liệt kê. Không push, deploy hoặc thay đổi fixture dữ liệu.
+
+---
+
+## 2026-10-24T09:00:00Z — Rà staging, sửa lỗi lưu/nộp lượt Quiz (U11)
+
+**User Input**: "kiểm tra nhánh staging của tôi xem còn bug nào không, gửi tôi các điểm cần cải thiện/bổ sung/sửa đổi (đặc biệt là các tính năng tôi phụ trách)"
+
+**AI Response**: Rà `staging` `9530a35` cho U01, U10, U11. Frontend lint/typecheck đạt, 449/449 test; backend 1288 test đạt, 89 test DB bỏ qua vì máy không chạy Testcontainers. Lỗi: (1) `QuizTakingPage` tự lưu không tuần tự, lần lưu thứ hai gửi `answerVersion` cũ, xung đột làm mất lựa chọn mới; (2) nộp bài không chờ lần lưu đang chạy và lệnh nộp không kiểm `answer_version`, điểm có thể tính trên câu trả lời cũ. Điểm nên cải thiện: scanner tự nộp một transaction cả lô, kiểm phân công khi đổi role nằm ngoài transaction, lưu khi rời trang không `keepalive`, đề/kết quả đọc đề hiện tại của Quiz.
+
+**Context**: Rà soát staging, ngoài luồng stage.
+
+---
+
+## 2026-10-24T09:10:00Z — Sửa mục 1–2
+
+**User Input**: "Tạo nhánh mới từ staging và sửa mục 1–2 (lưu tự động chạy song song và nộp bài lệch phiên bản câu trả lời), kèm test."
+
+**AI Response**: Tạo nhánh `fix/quiz-autosave-submit-race` (`--no-track`) từ `origin/staging`. Backend: lệnh nộp có điều kiện `answer_version`; lệch thì đọc lại và chấm lại trên câu trả lời mới. Frontend: tuần tự hóa lần lưu, nộp chờ lần lưu đang chạy xong; lưu lỗi thì không nộp tay. Thêm 2 test service, 1 kiểm SQL (PostgreSQL thật), 3 test màn hình (đỏ trên code cũ, xanh trên code mới). Kết quả: frontend lint/typecheck đạt, 452/452 test; backend `mvn verify` 1292 test, 0 lỗi, 35 bỏ qua (cần biến môi trường DB riêng, như CI).
+
+**Context**: Sửa lỗi U11 (UC 51), bug fix có phạm vi rõ, không qua lại các stage thiết kế.
+
+---
+
+## 2026-10-24T09:40:00Z — Commit, push, mở PR #16
+
+**User Input**: "Commit theo Conventional Commits, push nhánh fix/quiz-autosave-submit-race và mở PR vào staging."
+
+**AI Response**: Ba commit: `fix(quizpractice)` backend (`bada21b`), `fix(quizpractice)` frontend (`dfa8f9e`), `docs` audit (`b65252d`); không có dòng attribution. Frontend build đạt. Push nhánh, mở PR #16 vào `staging`. PR báo xung đột vì `staging` có 6 commit mới (`843e2e2`): merge `origin/staging` vào nhánh, chỉ xung đột `audit.md`, giữ mục của cả hai bên.
+
+**Context**: Sửa lỗi U11 (UC 51), xuất bản PR.
+
+---
+
+## Kế hoạch tạo đề AI SWR/SWD — 2026-10-24
+
+**User Input**:
+> cái này đã đầy đủ chưa, hình như vẫn chưa rõ ràng lắm, nên thêm prompt trong code để validate các thứđể tạo đề, thg thì sẽ tạo đề swr swd
+> b thử đọc xem các đề mẫu swr swd và lập kế hoạch
+
+**Evidence / Context**: Đọc 11 ảnh đính kèm: editor hiện tại và năm bộ đề SWR/SWD (Pharmacy, Mental Health, SmartLearn, MediCare, Event). Các luật thi trong ảnh chỉ là nội dung mẫu. Đối chiếu AssignmentAiDraftService, AiDraftProposal, AiDraftDialog, PartCalculator, RubricService và shared AI task UI. Schema hiện chưa có title/businessContext, rubric optional, prompt bắt buộc tiếng Việt; chưa có validator tổng điểm/độ đầy đủ profile. Chưa có payload lượt sinh trong ảnh nên chưa kết luận nguyên nhân cụ thể của toàn bài 0 điểm. Cài đặt diagramEnabled được gửi vào prompt dưới dạng Draw.io, đính chính suy đoán trước rằng yêu cầu Draw.io chắc chắn do AI tự thêm.
+
+**AI Response**: Lập `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`, gồm phân tích mẫu, phương án prompt/profile + schema + validator backend, tiêu chí chấm/điểm, preview và spinner/status/elapsed, hợp đồng tương thích v1/v2, kế hoạch kiểm thử và giới hạn MVP. Ghi rõ mẫu MediCare cộng thành 11 điểm và SmartLearn có diễn đạt kiến trúc/mức Class chưa nhất quán; không sao chép các lỗi này làm mặc định.
+
+**Status**: Kế hoạch đề xuất để review, chưa triển khai hoặc duyệt phương án thay người dùng. Không sửa source, chạy app/provider, tạo fixture, commit hay push trong lượt này. Giữ extension configuration hiện tại; property-based testing vẫn tắt.
+
+## Mở rộng kế hoạch UI soạn bài, file nguồn và điểm — 2026-10-24
+
+**User Input**: "lên kế hoạch sửa cả ui, cái phần ui soạn bài nữa, hỗ trợ sinh đề tiếng anh hoặc tiếng việt, có thể upload file làm dữ liệu đầu vào, bao nhiêu yêu cầu, tổng điểm, điểm từng tiêu chí".
+
+**Context / Evidence**: Đọc ảnh form ba tab do người dùng gửi, đối chiếu AssignmentFormPage (autosave/version queue), RubricEditor, DOCX import API, U03 PurposePolicy/ArtifactPurpose và U13 MaterialTextExtractor. UI hiện có rubric từng mục nhưng thiếu tóm tắt mục tiêu; U03 chưa có TXT/purpose file nguồn riêng tư nên upload là thay đổi hợp đồng và vòng đời file, không chỉ UI.
+
+**AI Response**: Mở rộng kế hoạch `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md` tại mục 10–14: bố cục editor và ba cách bắt đầu, ngôn ngữ đề tách khỏi UI, định nghĩa số câu/leaf, tổng điểm mục tiêu và điểm từng item, upload nguồn riêng tư có trích chữ/preview/trạng thái, phân biệt với import DOCX và học liệu sinh viên, persistence/compatibility, sáu gói triển khai và acceptance. Giới hạn 3 file/2 MiB mỗi file, 1–10 câu AI và bố cục panel là đề xuất để review, không mô tả tính năng hiện có.
+
+**Status**: Chỉ cập nhật kế hoạch/audit, chưa sửa code, chạy tests/runtime/provider, upload dữ liệu, commit hoặc push.
+
+## Triển khai kế hoạch AI authoring SWR/SWD — 2026-10-24
+
+**Timestamp**: 2026-10-24T13:44:10+07:00
+
+**User Input**: "giúp tôi triển khai kế hoạch"
+
+**Approval / Scope**: Đây là chấp thuận thực hiện kế hoạch được khuyến nghị tại `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`, bao gồm toàn UI soạn bài, AI suy luận dạng bài từ yêu cầu tự do và file, ngôn ngữ, tổng điểm/câu/rubric, nguồn file riêng tư và kiểm thử. Thực hiện nối tiếp trong chat, không chia subagent; không push. Không sửa thuật toán chấm U09, không phát hành bài.
+
+**Code Generation Plan**: `construction/plans/code-generation-plan/u07-ai-authoring-code-generation-plan.md`. Ghi trạng thái [ ] theo bằng chứng mới; chưa đánh dấu hoàn tất khi chưa chạy xác minh tương ứng.
+
+**Implementation status at start**: chỉ có kế hoạch và audit thay đổi chưa commit từ lượt trước. Branch `mcp-test` đang khớp `origin/mcp-test`; không có source thay đổi ban đầu.
+
+**User clarification during implementation**: "thật ra ko cần chọn loại swr hay swd đâu chỉ cần nhập yêu cầu là được". Đã điều chỉnh thiết kế và mã: UI không có bộ chọn SWR/SWD; request dùng `AUTO`, prompt chỉ suy ra dạng requirements-analysis/SWR-like hoặc software-design/SWD-like khi yêu cầu/tài liệu ủng hộ, dạng khác bám mô tả tự do. Ngôn ngữ, số yêu cầu chính và tổng điểm vẫn là cấu hình tách biệt. API profile cũ tiếp tục được đọc để tương thích.
+
+**Implementation / verification snapshot**: Core API/UI đã triển khai, gồm input tự do hoặc chỉ file, VI/EN/count/target points, schema v2 title/context, validator rubric BigDecimal, safe apply/version, purpose nguồn riêng và preview trích chữ, spinner/task/elapsed, nhãn hướng dẫn rõ và tải rubric có retry. 20 test backend/6 suite và 17 test frontend/2 file đạt; typecheck, lint các file sửa, frontend production build và backend package đạt. Test Mockito ban đầu vướng Windows self-attach; chạy lại với agent nạp sẵn và forkCount=0 đạt. Full lint từng hết bộ nhớ; chưa xác minh full regression/live Gemini.
+
+**User steering**: "bạn code xong chưa, tôi tự chạy". Dừng bước khởi động runtime/provider. Docker đọc được qua quyền nâng cao: datastore và worker cũ đang chạy. Đã tạo hai image local `platform-backend:ai-authoring-20261024`, `platform-frontend:ai-authoring-20261024` từ build mới; chưa thay container backend/frontend/worker hoặc dữ liệu. Còn các mục mở rộng: cấu hình mục tiêu ở cấp assignment sau reload, tự nhập/chia đều điểm từng câu, quản lý/tái dùng/gỡ nguồn sau reload và acceptance rộng. Ghi rõ trong code-summary/checklist; không tuyên bố toàn bộ kế hoạch hoàn tất. Chưa commit/push.
+
+## Đồng bộ worker local — 2026-10-24
+
+**User Input**: "giúp tôi chạy luon" (build lại image backend và recreate worker theo lệnh đã cung cấp).
+
+**Action / Evidence**: Docker Compose local build `backend` thành công từ source hiện tại, image `platform-backend:local`; chỉ recreate service `worker` với `--no-deps --force-recreate`. Worker mới khởi động profile `worker`, kết nối PostgreSQL/RabbitMQ và health check `healthy`. Không restart backend/frontend hoặc datastore, không chạy thêm lượt Gemini. Người dùng cần bỏ proposal cũ (0 sections, thiếu title/validation) và tạo yêu cầu mới để kiểm tra luồng đồng bộ. Chưa commit/push.
+
+## Sửa đề AI rỗng/rubric thiếu và preview khó đọc — 2026-10-24
+
+**User Input**: "sao k có rubric, với ui đề text đang nối tiếp nhau hơi khó nhìn, giúp tôi sửa"; ba ảnh cho thấy bối cảnh dài/lặp, 0 câu, 0 rubric, total 0/10, validation INVALID.
+
+**Root cause / regression**: Sau đồng bộ worker, schema gốc vẫn chấp nhận sections=[] và không buộc rubric. Test Instructions-only/empty-sections trước sửa thất bại (schema chấp nhận). Model có thể tiêu token vào businessContext đứng trước sections. Đây là lỗi hợp đồng generation còn lại, không kết luận mọi triệu chứng trước đó chỉ do worker cũ.
+
+**Fix**: Schema AI generation riêng (không ép hierarchy MCP cũ): sections đứng trước prose, level=1, số câu min/max theo cấu hình, rubric bắt buộc/nonempty khi Graded, item có điểm dương. Title/context/instructions required, bounded strings và description/prompt ngắn, không filler/lặp. Backend JSON Schema và validator tiếp tục kiểm thực tế: Gemini có thể bỏ qua keyword string-length (tài liệu chính thức https://ai.google.dev/gemini-api/docs/structured-output); không dựa chỉ vào provider. Context/guidance tách đoạn khi apply, không tạo thêm phần chấm.
+
+**UI**: Dialog rộng 960px, mobile footer wrap. Kết quả kiểm tra và coverage rubric đặt đầu; context/instructions thu gọn, text dài có vùng cuộn riêng. Mỗi câu có khối yêu cầu và rubric/item-score riêng; báo rõ thiếu câu/rubric. Không cho apply nếu thiếu validation/empty sections. Nút sửa yêu cầu bỏ proposal cũ, giữ đầu vào, tạo requestRef mới; không tự gọi provider lại.
+
+**Verification**: 31 test backend trong 6 suite và 7 test UI preview/dialog đạt; typecheck, lint các file sửa và production build đạt. Một lượt chạy 2 test file cùng lúc lỗi temp sandbox; chạy riêng đạt. Build nhiều worker từng hết RAM/pagefile; build với CIRCLE_NODE_TOTAL=3, TOKIO_WORKER_THREADS=2, RAYON_NUM_THREADS=2 đạt, không thay config build của repo. Docker backend image build và recreate worker thành công; backend chạy bằng Maven trong terminal người dùng cần restart để nạp schema mới. Chưa chạy lượt Gemini thật cho bản sửa này. Chưa commit/push.
+
+## Chia commit cục bộ — 2026-10-24
+
+**User Input**: "giúp tôi chia commit rõ ràng chưa push".
+
+**Action**: Rà thay đổi chưa stage trên nhánh mcp-test, chia theo phụ thuộc thành bốn commit: (1) purpose/private source upload + text extraction, (2) backend generation schema/validator/source preview/safe apply, (3) UI authoring/progress/question-rubric preview, (4) kế hoạch và bằng chứng triển khai. Không amend/rebase hoặc push.
+
+**Review correction**: Phát hiện MaterialTextExtractorTest đã bị thay thế trong quá trình triển khai trước; khôi phục đầy đủ test timeout/PDF/DOCX/PPTX từ HEAD và giữ thêm hai test UTF-8. Chạy lại cả 6 test bằng Mockito agent nạp sẵn/forkCount=0: đạt. Không thêm thay đổi production mới khi chia commit. Các kiểm tra source/UI trước đó vẫn được ghi ở trên; live Gemini và các phần mở rộng chưa hoàn tất vẫn để mở.
+
+**Code commits**: 35bd38b4 (private assignment sources), 5a00fb7e (AI draft backend/validation), e3f7cdad (authoring/rubric UI). Tài liệu được gom thành commit tiếp theo; mọi nhóm được kiểm git diff --cached --check trước commit. Chỉ tạo commit local.
+
+## Resolve staging merge conflicts on fix-u04-u13-u14
+**Timestamp**: 2026-10-24T10:54:14Z
+**User Input**: "tôi vừa merge staging vào branch fix, hãy xem đang có các conflict nào và cho hướng giải quyết"; after the seven-file review: "sửa cho tôi".
+**Approval / Plan**: User approved the proposed resolution: retain one shared CSRF helper and combine upload coverage; consolidate polling into the hook with stable reload, previous-data preservation and five-second scheduling; retain active/pending, error/inflight/pause guards; preserve both branches' state/audit additions. Resolve seven conflicted files and the automatically merged MaterialList.tsx semantic overlap. Run affected/full frontend tests, typecheck, lint and build; leave the merge ready for review without creating a merge commit or pushing.
+**Documentation Merge**: Kept common content once and both branches' distinct appended blocks. Historical staging snapshots/unfinished cases retain their original dates, fixtures and scope; they do not supersede the later qualified50/50 U04/U13/U14 result. U07/U09 outstanding acceptance is not marked complete by this merge. External evidence stays at E:/FPTUni/sem9_fa26/test_report/reports; .tmp is excluded.
+**Status**: Implementation and verification in progress. Runtime security/authorization contracts remain unchanged; PBT disabled per existing state. No subagents, deployment or live provider calls.
+
+---
+## Staging merge conflict verification complete
+**Timestamp**: 2026-10-24T11:06:08Z
+**AI Response**: Resolved all seven unmerged paths and the semantic duplicate-polling overlap in MaterialList.tsx. Kept shared csrf.ts for both transports and combined upload route/contract/progress/cancel/error coverage. Polling now belongs only to useMaterialResource, defaults to5seconds after a settled response, retains same-resource rows while refreshing or on failure, uses stable reload, and stops/pauses for errors, in-flight requests, inactive/terminal materials, dialogs/reordering and unmount. Tests cover slow requests/no overlap, error/manual retry, archived pending data, pause/resume and stale-response scope. Both branch documentation additions preserved; state explains historical snapshots and pending U07/U09 acceptance.
+**Verification**: Focused6 files/33 tests passed; final full frontend81 files/474 tests passed, no failures/skips (354.80s). TypeScript noEmit and targeted ESLint passed. Production Next.js webpack build completed successfully, including TypeScript,28 static pages, optimization/traces and route output. Final full-suite/build used bundled Node24.22.1. Initial sandbox Node26 full run showed incomplete/failed collection and was interrupted; it is not treated as acceptance evidence. No backend suite or live UI/provider execution in this conflict-resolution step.
+**Evidence / Git**: Logs in ignored .tmp/merge-staging-focused-tests.log, merge-staging-full-tests.log, merge-staging-typecheck.log, merge-staging-lint.log and merge-staging-build.log. Explicit staging only, all unmerged index entries resolved; no conflict markers or staged whitespace errors. Existing incoming staging changes retained. No .tmp/reports staged. HEAD remains e1ec7ed; MERGE_HEAD remains301c5733477e1614eef60c5f4646446818d03d03. Merge is ready for review/commit; no merge commit, push, deployment or DB/clock modification performed. Existing scoped security/resiliency behavior preserved; PBT remains disabled.
+
+---

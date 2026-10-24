@@ -115,6 +115,14 @@ describe("U05 reference UI", () => {
     expect(screen.getByRole("radio", { name: "Chưa phân công" })).toBeDisabled();
   });
 
+  it("does not allow saving an unchanged teacher assignment absent from active candidates", () => {
+    const onAssign = vi.fn();
+    render(<AssignTeacherDialog value={course} teachers={[]} onAssign={onAssign} onClose={vi.fn()} />);
+    expect(screen.getByRole("radio", { name: teacher.name })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Lưu phân công" })).toBeDisabled();
+    expect(onAssign).not.toHaveBeenCalled();
+  });
+
   it("requires confirmation before removing an enrollment", async () => {
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
     render(<EnrollmentPanel students={[student]} editable onStatusChange={onStatusChange} />);
@@ -137,6 +145,12 @@ describe("U05 reference UI", () => {
     render(<ReadOnlyClassPage audience="teacher" value={course} students={[student, { ...student, accountId: "removed", name: "Đã gỡ", status: "REMOVED" }]} onBack={vi.fn()} />);
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
     expect(screen.queryByText("Đã gỡ")).not.toBeInTheDocument();
+  });
+
+  it("does not present group membership as empty before group data has loaded", () => {
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
+    expect(screen.queryByRole("columnheader", { name: "Nhóm" })).not.toBeInTheDocument();
   });
 
   it("keeps a selected subject when returning to its classes", () => {

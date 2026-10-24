@@ -1,6 +1,7 @@
 import { apiFetch, apiDownload } from "@/shared/api/client";
 import type {
   AiRequest,
+  AiEstimate,
   BatchResult,
   Detail,
   Evaluation,
@@ -36,6 +37,8 @@ export const gradingApi = {
     write<Proposal>(`/evaluations/${id}/ai-proposals`, input),
   requestBatch: (items: ItemVersion[], request: AiRequest) =>
     write<BatchResult>("/evaluations:ai-proposals", { items, request }),
+  estimateBatch: (items: ItemVersion[]) =>
+    write<AiEstimate>("/evaluations:ai-proposal-estimate", { items }),
   gradebook: (classId: string, q = "", page = 1) =>
     apiFetch<GradebookPage>(`${root}/classes/${classId}/gradebook?${query({ q, page, size: 20 })}`),
   export: (classId: string, format: string, assignmentId?: string) =>
@@ -49,6 +52,10 @@ export const gradingApi = {
   distribution: (classId: string, assignmentId: string) =>
     apiFetch<{ label: string; count: number }[]>(
       `${root}/me/grade-distributions?${query({ classId, assignmentId })}`,
+    ),
+  classDistribution: (classId: string, assignmentId: string) =>
+    apiFetch<{ label: string; count: number }[]>(
+      `${root}/classes/${classId}/grade-distribution?${query({ assignmentId })}`,
     ),
   member: (id: string, accountId: string, version: number, score: string, reason: string | null) =>
     write<Evaluation>(`/evaluations/${id}/members/${accountId}`, { version, score, reason }, "PUT"),

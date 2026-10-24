@@ -81,6 +81,7 @@ export type BatchResult = {
     newVersion: number | null;
   }[];
 };
+export type AiEstimate = { estimatedTokens: number; items: number };
 export type Save = {
   version: number;
   checkedItemsByRubric: Checks;
@@ -126,7 +127,7 @@ export type GradeCell = {
 export type GradebookRow = { student: Person; grades: GradeCell[] };
 export type GradebookPage = {
   rows: GradebookRow[];
-  assignments: { id: string; title: string; maxScore: Decimal }[];
+  assignments: { id: string; title: string; maxScore: Decimal; submissionMode: "INDIVIDUAL" | "GROUP" }[];
   total: number;
   page: number;
   size: number;

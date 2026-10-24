@@ -6,6 +6,8 @@ import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.grading.application.GradingCommands.AiBatch;
 import edu.aiplatform.grading.application.GradingCommands.AiRequest;
+import edu.aiplatform.grading.application.GradingCommands.Batch;
+import edu.aiplatform.grading.application.GradingViews.AiEstimate;
 import edu.aiplatform.grading.application.GradingViews.BatchResult;
 import edu.aiplatform.grading.application.GradingViews.ItemResult;
 import edu.aiplatform.grading.domain.GradingProposal;
@@ -111,5 +113,22 @@ public class GradingProposalService {
             }
         }
         return new BatchResult(outcomes);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public AiEstimate estimateBatch(Actor actor, Batch batch) {
+        if (batch.items() == null || batch.items().isEmpty() || batch.items().size() > 200)
+            throw ApiException.badRequest("INVALID_BATCH", "Batch must contain 1–200 items");
+        Set<UUID> seen = new HashSet<>();
+        long estimatedTokens = 0;
+        int items = 0;
+        for (var item : batch.items()) {
+            if (!seen.add(item.evaluationId()))
+                continue;
+            long itemEstimate = tx.estimateTokens(actor, item.evaluationId(), item.version());
+            estimatedTokens = Math.addExact(estimatedTokens, itemEstimate);
+            items++;
+        }
+        return new AiEstimate(estimatedTokens, items);
     }
 }

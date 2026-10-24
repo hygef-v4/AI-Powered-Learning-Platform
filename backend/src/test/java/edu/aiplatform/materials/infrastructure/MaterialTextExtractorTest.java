@@ -51,4 +51,13 @@ class MaterialTextExtractorTest {
         when(files.open("file")).thenReturn(new ByteArrayInputStream(bytes));var result=extractor.extract("file");
         assertThat(result.text()).contains("Reference content");assertThat(result.pages()).isEqualTo(1);
     }
+    @Test void decodesUtf8AndRemovesBom() {
+        byte[] bytes = "\uFEFFĐề SWR".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(MaterialTextExtractor.decodeText(bytes)).isEqualTo("Đề SWR");
+    }
+    @Test void rejectsMalformedUtf8InsteadOfSilentlyCorruptingSource() {
+        assertThatThrownBy(() -> MaterialTextExtractor.decodeText(new byte[]{(byte) 0xC3, 0x28}))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
 }

@@ -1,5 +1,38 @@
 # AI-DLC State Tracking
 
+## Skipped artifact cases — test planning 2026-10-23
+
+- [x] User requests a plan to complete skipped cases and authorizes local database inserts or UI fixture creation for subsequent testing; direct execution without subagents remains the preference.
+- [x] Live artifact baseline: 354 cases, 62 pass, 3 fail, 49 skipped, 240 untested. Skipped scope: U05 7, U09 24, U13 13, U14 4, U15 1; this supersedes the older 26-skipped scope for this new plan.
+- [x] Plan maps all 49 cases to fixtures, execution and evidence: `construction/plans/2026-10-23-skipped-cases-test-plan.md`. Upload U13-02 and grading version conflict are dependency gates; reminder +2-day timing and external provider/tool availability are explicit limits.
+- [ ] Execution, fixture seeding, root-cause fixes and full retests have not started in this planning turn. No application/source/database changes, commit, push or deploy in this turn. Existing working-tree changes preserved.
+
+## U09 execution continuation — 2026-10-23
+
+- User confirmed the Teacher session is already authenticated with an in-app screenshot; the prior BAD_PASSWORD observation is historical. Do not record the supplied password.
+- U09 QA submission/evaluation is available through the UI: assignment `6f2b4350-c727-4864-a39c-09da8496bf13`, submission `c60d54a1-5c0c-4178-a3ee-187c66295776`, evaluation `b3e8472d-079f-4e65-86cf-e239e0f20664`.
+- Latest artifact U09 verdict: 4 pass, 2 fail, 20 skipped. U09-05 still fails finalization with `GRADE_VERSION_CONFLICT`; U09-19 recorded misleading generic validation feedback. A shared validation handler and `GlobalExceptionHandlerTest` were added; test-first red and green evidence: Docker Maven targeted test passed 1/1 after implementation. UI retest against rebuilt backend remains pending.
+- Fresh app-tab observation was blocked by the in-app browser URL policy; the local Next dev server was restarted on port 3000 and backend rebuilt from the fix, then reached healthy with no migration. No workaround was used to inspect the app. No DB changes, email send, point publication, commit, push or deployment in this continuation.
+- Student email preference `Công bố điểm` remains OFF from the previous test setup; it could not be restored while app-tab actions were blocked. No grade was published and no email was sent; restore the preference through the UI after access returns.
+- Current counts inferred from the last global snapshot plus U09 verdict changes: 67 pass, 4 fail, 42 skipped, 241 untested. The global filter was not reread; see `construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+
+## Claude artifact authenticated UI retest — 2026-10-23
+
+- User supplied local test-account credentials and explicitly authorized authenticated testing. Used the Codex in-app browser for Teacher, Student, and Subject Manager flows; do not record the password in project docs.
+- UI checks passed for the student class section order (Materials, Assignments, Announcements, Groups); teacher roster row number and no-group label; student popup submission/late totals and titled assignment table; subject ownership note; and current assigned teacher name/email plus selected “hiện tại” label.
+- Teacher class overview showed 1 open assignment, 0 pending grading, and progress bars. Submission review showed one student as “Chưa nộp”, zero submitted/in progress/late, and a single shared app shell. Gradebook XLSX export first returned HTTP 500 against the stale local backend image; read-only container logs confirmed the audit insert failed in a read-only transaction. Rebuilt/recreated only `platform-backend-1` from current source; the same UI export then completed and the export dialog closed, with no matching backend error in the last 10 minutes. Database, worker, Redis, RabbitMQ, and Postgres containers were not restarted; no schema/data migration was run.
+- A test attempt to add the already-active student to draft class U05-NOTEA returned “Đang ở lớp khác cùng môn”; the class remained at 0 active / 1 previously removed student. This does not construct the separate class-open conflict case used to verify conflict display names. Score-distribution charts, actual populated group names, and notification timing remain unverified because this fixture has no published scores, no active groups, and no second student. The 26 skipped artifact scenarios and the other 20 passing cases were not rerun.
+- Current scoped stage: authenticated smoke testing is complete for the listed paths, but full artifact acceptance remains pending. No commit, push, or production deployment. Execution ledger: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
+## Claude artifact bugfix implementation — 2026-10-23
+
+- User requests executing the previous bugfix plan and continuing directly without subagents. Scope is existing U05/U09 failures and U12/U13/U14 frontend integration; U15 has no failed case in the artifact. This approval does not cover unrelated historical design deltas.
+- Source changes: no-attempt status and redundant submissions shell, export audit transaction, subject/teacher/conflict labels, roster row numbers/group membership, student section order, class statistics/distributions, and student submission/grade table. Gradebook `submissionMode` is synchronized in Java, TypeScript and OpenAPI.
+- Existing U05 enrollment notification code already gates enrollment events on `OPEN` and emits on `DRAFT` to `OPEN`; no extra behavior change or runtime claim for U05-21.
+- Focused validation completed after the user requested a UI retest: frontend 78 suites/448 tests pass, full ESLint pass, and `next typegen` plus TypeScript check pass. Backend focused Maven tests pass 66/66 across AcademicsService, controller/API contracts, and GradebookService. The stale conflict assertion now expects the student display name.
+- Runtime at the time of this earlier state entry: the in-app browser had no authenticated test session and the protected class route redirected to login. This was superseded by the authenticated UI retest above; only the listed smoke-test paths are now verified, while full 57-case artifact acceptance remains pending.
+- Current scoped stage: source changes and focused automated validation are ready for review; full artifact acceptance is not claimed. No commit/push/deployment. Execution ledger: `construction/plans/code-generation-plan/2026-10-23-artifact-bugfix-code-generation-plan.md`.
+
 ## U04 Conventional Commits publication — 2026-10-18
 
 - Người dùng yêu cầu phân loại/tạo commit Conventional Commits và push GitHub, thay hạn chế chưa commit trước đó. Branch hiện có subject-administration; fetch origin xác nhận không diverge, không đổi main/rewrite history.
@@ -511,6 +544,23 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Build & Test (phần của unit): `construction/build-and-test/u12-verification.md`; integration test và đo hiệu năng còn mở (tester, cần U07, U08).
 - Jira 2026-10-22: KAN-28, KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 chuyển In Review; KAN-19 Done.
 
+
+## PR #8 (G3/E3) merge và chạy thử staging — 2026-10-22
+
+- [x] PR #8 merge vào `staging` (`20c1458`); CI xanh tại `57b801c` (backend 1114 test). Sửa trùng `poi-ooxml` trong `pom.xml` sau merge U07.
+- [x] Chạy thử `staging` `20c1458` trên Docker local (project `staging-smoke`, volume mới, đã gỡ):
+  - 8 container healthy, 14 migration đạt.
+  - Route chính `200`; API `401` khi chưa đăng nhập.
+  - Không có log lỗi; queue RabbitMQ đã khai báo.
+- [x] Chạy thử end-to-end trên trình duyệt cho giai đoạn 4 và G3/E3 (project `quiz-e2e`, đã gỡ): đều đạt; 1 lỗi nhỏ `QuizDetailPage` báo "Hệ thống tạm bận" khi form không hợp lệ (có từ giai đoạn 2), chưa sửa.
+
+## U10 giai đoạn 7 (nối U06 thật: AiSourcePicker, MCP) — 2026-10-22
+
+- [x] Code Generation Part 1: plan giai đoạn 7 được duyệt (M1–M7), nhánh `quiz-u06-integration` từ `origin/staging` `d2a06cd`, không upstream.
+- [x] Code Generation Part 2: bước 7.0–7.5. Bước 7.4 chạy thử MCP thật và `AiSourcePicker` đạt ngày 2026-10-23.
+- [x] Bước 7.6: người dùng duyệt; PR #14 merge vào `staging` (`eb0cf1a`) ngày 2026-10-23.
+- Còn mở: AI soạn câu bằng khóa thật của nhà cung cấp; integration test của tester.
+
 ## U09 renderer và nguồn AI U06 — 2026-10-22
 
 - [x] User authorizes fixing U09 display and consuming U06 AiSourcePicker with existing API/contracts; U15 deferred.
@@ -600,3 +650,57 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Moved all23 report/evidence files to E:/FPTUni/sem9_fa26/test_report/reports; relative paths and SHA-256 hashes verified unchanged. No existing destination files overwritten.
 - [x] Organized seven new fix documents under [remediation dossier](construction/remediation/u04-u13-u14/README.md): plans, implementation, verification. Original unit plans/design and append-only audit history preserved.
 - [x] Eight source/test/local-config commits created separately; this state and the consolidated dossier are delivered in the ninth documentation commit. Explicit staged paths, Markdown references, audit history prefix and whitespace checks verified; .tmp/reports excluded. Final clean-tree readback follows the documentation commit; no push. Source verification evidence remains the previously recorded runs; documentation organization introduces no new application behavior or global acceptance.
+
+## Skipped Claude artifact cases — execution 2026-10-23
+- User authorized executing the 49-case skip plan, adding QA data through UI/DB as needed, fixing reproduced defects, updating the Claude artifact, and explicitly said not to use subagents; work was performed directly.
+- Direct artifact snapshot: 354 total, 65 pass, 2 fail, 46 skipped, 241 untested; U13 has 11 pass and 11 skipped. Snapshot is authoritative over older planning estimates. The two existing failures are outside the skip set.
+- U13-02 upload passed after the XHR CSRF fix; U13-04 live extraction status passed after conditional polling; U13-06 file replacement passed with current version 2 and preserved EXTRACTED version 1. Frontend verification: 79 files / 450 tests, TypeScript, targeted ESLint, and production build pass.
+- Student U05-A showed four ordered subject-scope PDF materials and opened a PDF detail. Embedded preview appeared blank; page navigation and downloaded bytes remain unverified. QA manifest updated to distinguish SUBJECT materials and current v2 status.
+- Teacher/Student/Manager test sign-in was rejected when attempting to continue; read-only DB confirms accounts ACTIVE and not temporarily locked. No credential/account change or direct SQL fixture insert. U13-09 lacks CLASS-scope fixture; other remaining skips stay in the test plan.
+- Claude artifact verdict/count snapshot is current. U13-09 note saved; text-field edits for U13-02/04/06 reverted after filter navigation, so artifact note synchronization is unresolved and P6 is open. Do not claim those notes updated.
+- Plan and result ledger: `construction/plans/2026-10-23-skipped-cases-test-plan.md`, `construction/build-and-test/2026-10-23-skipped-cases-results.md`. No commit, push, deploy, global stage advancement, or user approval implied.
+
+## U09 continuation — 2026-10-23
+- [x] Đọc lại artifact và xác nhận U09 26 ca: 2 Đạt, 24 Bỏ qua; không đổi verdict khi chưa có bằng chứng UI mới.
+- [x] PostgreSQL local được kiểm tra ở chế độ chỉ đọc: bài `Kiểm thử U09 - bài nộp mẫu` đã tồn tại tại U05-A; 0 lượt nộp, 0 bản chấm. Ghi ID, trạng thái và số lượt vào `.tmp/skipped-cases/manifest.json`; không tạo bài trùng, không ghi dữ liệu DB.
+- [x] Frontend U09/assignment tests: 4 file, 26/26; full suite: 79 file, 450/450.
+- [ ] U09 live UI chưa thể tiếp tục: Teacher/Student đăng nhập bị `BAD_PASSWORD`; tài khoản ACTIVE, không bị khóa. Không thử thêm và không sửa thông tin xác thực.
+- Claude artifact: note U09-02 cập nhật/đã xác minh; note U09-03 chưa lưu được; 24 ca vẫn Bỏ qua. Submission/evaluation và kiểm thử UI còn mở.
+- Không đổi source code; backend Maven tests chưa chạy do Maven không được cài đặt. Xem `construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+
+## U09 continuation — AI picker, token estimate and backend/frontend verification — 2026-10-23
+
+- User wants all U09 cases achieved and explicitly allows personal Gemini grading calls. Read-only audit sees two personal Gemini connections ACTIVE, with stored last-test result SUCCESS; no credential material was read.
+- Fixed stale selected provider when reopening U09 AI proposal picker. Added regression test for the stale selection and refresh race.
+- Added a read-only batch token estimate route using each current evaluation prompt and the same estimate formula used for shared quota reservation; aggregate excludes duplicate evaluation IDs. UI shows aggregate estimate; no provider request or quota reservation is made by the estimate.
+- Validation: frontend 79 files / 452 tests passed, typecheck passed; backend U09 grading/validation suite 21/21 passed. These are code-level tests, not black-box artifact passes.
+- Claude U09 artifact notes updated and U09-11 persistence verified after unit navigation. Artifact verdict unchanged: 4 pass, 2 fail, 20 skipped. U09-05 version conflict and U09-19 UI retest remain open.
+- In-app browser URL policy blocks the local app workflow, so no fresh Gemini grading request or remaining black-box U09 checks were performed. No workaround via direct API/CDP/alternate browser. No DB insert, publication/email, commit, push, or deploy.
+- Details: `construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+- Production build Next.js sau thay đổi U09 thành công. Lệnh ESLint mục tiêu bị dừng vì không trả kết quả; không ghi nhận lint pass.
+- 2026-10-23T18:28:56Z: đọc lại artifact sau autosave; note U09-05 nêu chính xác conflict chưa tái hiện trong backend regression, note U09-13 sửa mô tả dữ liệu; verdict U09 giữ 4/2/20. Không có live app/Gemini request mới.
+- 2026-10-23T18:29:48Z: xác nhận không có local listener trên 3000/8080/5432; các ca UI/Gemini còn mở cần runtime app hoạt động.
+- 2026-10-23T18:32:28Z: tiếp tục phạm vi kiểm thử/sửa lỗi U05, U09, U15 theo yêu cầu mới; artifact baseline lần lượt 17/0/6, 4/2/20, 7/0/1 (Đạt/Lỗi/Bỏ qua). Browser security policy chặn đọc local app; chưa chạy UI/Gemini.
+- 2026-10-24: hoàn tất lượt regression/fix U05-05, U05-12 và lint/state refactor U09; full frontend 79 file/454 test, typecheck, lint, production build đạt; backend mục tiêu 233 test, 9 Docker skip. Artifact ghi chú U05-05/U05-12/U09-05/U09-19/U15-05 đã cập nhật và xác minh sau khi đổi unit. Verdict giữ nguyên U05 17/0/6, U09 4/2/20, U15 7/0/1; local UI/Gemini và DB-backed cases vẫn chờ vì chính sách chặn URL localhost và Docker engine không truy cập được. Không commit/push/deploy.
+
+## U07 AI assignment authoring improvements — 2026-10-24
+- [x] User approved implementation of the SWR/SWD authoring plan with “giúp tôi triển khai kế hoạch”; execution is sequential in this chat without subagents.
+- [ ] Add bilingual free-text prompt with automatic assessment-style inference (no SWR/SWD picker), question-count/score options, output title/context, strict decimal rubric validation and safe preview/apply.
+- [ ] Add private, bounded TXT/DOCX/PDF source upload and extraction for assignment AI drafts; preserve U03 purpose policy, U13 parser boundary and student privacy.
+- [ ] Improve create/edit/rubric UI, real upload/task progress, elapsed wait display, score summary and apply wording.
+- [ ] Run focused and broad verification; document live app/provider blockers without marking unverified cases passed.
+- Plan: `construction/plans/2026-10-24-ai-assignment-swr-swd-plan.md`; code-generation checklist: `construction/plans/code-generation-plan/u07-ai-authoring-code-generation-plan.md`.
+- No change to U09 grading algorithm or publishing. User authorized local commits on 2026-10-24; no push.
+- 2026-10-24 implementation snapshot: core free-text AI/UI/upload-preview/rubric validation implemented; 20 focused backend tests + 17 frontend tests, typecheck, changed-file lint, frontend build and backend package passed. Extended assignment-level targets, manual question-score allocation and persistent source management remain open; see U07 code-summary. User will run the app, so runtime startup/Gemini testing stopped before replacing containers. Local images tagged `ai-authoring-20261024` are available.
+- 2026-10-24: theo yêu cầu mới của người dùng, đã build lại backend image local và recreate riêng worker; worker mới healthy, kết nối PostgreSQL/RabbitMQ. Live generation sau đồng bộ chưa kiểm; proposal lỗi cũ cần bỏ/tạo lại.
+- 2026-10-24: fixed remaining empty-generation schema bug (nonempty graded rubrics/exact count, sections before bounded prose) and preview readability/revision. Backend 31 + UI 7 focused tests, typecheck/lint/build pass; worker image updated. Host backend restart and live Gemini generation remain to verify.
+- 2026-10-24: user authorized split local commits (file sources, assignment backend, UI, documentation), no push. Restored legacy parser regression coverage and verified all 6 extractor tests. Live Gemini/expanded authoring features remain open.
+
+### Staging merge resolution — 2026-10-24
+
+- [x] User approved the reviewed resolution with “sửa cho tôi”. Seven conflict paths resolved in the working tree, including the MaterialList automatic-merge polling overlap.
+- [x] Shared CSRF helper retained; upload tests combine the API route/response contract with progress, cancellation and failure coverage.
+- [x] Polling consolidated in useMaterialResource at five seconds after a settled response; preserve current rows on refresh/error, pause during editing/reorder, stop on terminal/error/unmount. Added regression for slow responses, refresh errors/manual retry, archived-only pending rows and pause/resume with stable reload.
+- [x] Both branches' audit/state additions retained. Historical staging snapshots refer to their own fixtures and dates; the qualified U04/U13/U14 50/50 result and external evidence location remain as documented in the remediation dossier. Outstanding U07/U09 acceptance stays open.
+- [x] Focused frontend verification: 6 files,33 tests passed. Typecheck and targeted lint passed.
+- [x] Full frontend81 files/474 tests passed, no failures/skips; typecheck, targeted ESLint and production build passed. Resolutions staged, no unmerged paths or conflict markers. Merge remains awaiting commit; no push, backend rerun, live provider call or deployment. Initial unstable Node26 sandbox run was interrupted and is not counted as a successful full run; final full-suite/build used Node24.22.1.

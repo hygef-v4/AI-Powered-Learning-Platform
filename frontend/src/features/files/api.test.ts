@@ -4,7 +4,10 @@ import { uploadFile } from "./api";
 class UploadRequest {
   static latest: UploadRequest;
   status = 201;
-  response: unknown = { artifactId: "artifact" };
+  response: unknown = {
+    fileRef: { value: "qa-file" }, mediaType: "application/pdf", byteSize: 3,
+    originalFileName: "qa.pdf", expiresAt: "2026-10-24T00:00:00Z",
+  };
   withCredentials = false;
   responseType = "";
   upload = { onprogress: null as ((event: { lengthComputable: boolean; loaded: number; total: number }) => void) | null };
@@ -31,6 +34,7 @@ describe("multipart upload", () => {
     const progress = vi.fn();
     const upload = uploadFile(file, "MATERIAL", progress);
     const xhr = UploadRequest.latest;
+    expect(xhr.open).toHaveBeenCalledWith("POST", "/api/v1/files");
     expect(xhr.setRequestHeader).toHaveBeenCalledWith("X-XSRF-TOKEN", "encoded+token");
     expect(xhr.withCredentials).toBe(true);
     expect(xhr.setRequestHeader.mock.calls.some(([name]) => name.toLowerCase() === "content-type")).toBe(false);
@@ -40,7 +44,7 @@ describe("multipart upload", () => {
     xhr.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 2 });
     expect(progress).toHaveBeenCalledWith(50);
     xhr.onload?.();
-    await expect(upload.promise).resolves.toEqual({ artifactId: "artifact" });
+    await expect(upload.promise).resolves.toEqual(xhr.response);
   });
 
   it("does not invent a CSRF token when no cookie exists", async () => {

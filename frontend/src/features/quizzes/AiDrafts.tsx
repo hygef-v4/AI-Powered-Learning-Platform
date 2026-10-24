@@ -1,54 +1,32 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { AiSourcePicker, AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput } from "@/shared/ui";
 import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "./labels";
 import { McqEditor } from "./McqEditor";
 import { formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "./questionForm";
 import type {
-  AiDraft, AiDraftInput, AiProvider, AiSourceChoice, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
+  AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "./types";
 
 const TEXTAREA = "w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary";
 const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
-const PROVIDER_LABELS: Record<AiProvider, string> = { GEMINI: "Gemini", OPENAI: "OpenAI", CLAUDE: "Claude" };
-
-/**
- * Chọn nguồn AI cho mỗi yêu cầu, không chọn sẵn (H1). Thay bằng `AiSourcePicker` của U06 khi U06 có trên staging;
- * kiểu dữ liệu giữ giống `SourceChoice` để chỉ phải sửa file này.
- */
-export function AiSourceSelect({ value, onChange, disabled }: {
-  value: AiSourceChoice | null;
-  onChange: (value: AiSourceChoice | null) => void;
-  disabled?: boolean;
-}) {
-  const id = useId();
-  const key = value === null ? "" : value.source === "SHARED" ? "SHARED" : value.provider;
-  return (
-    <Field label="Nguồn AI" htmlFor={id} required hint="Hết hạn mức hay lỗi nguồn sẽ không tự đổi sang nguồn khác.">
-      <Select id={id} value={key} disabled={disabled} data-testid="ai-source-select"
-        onChange={(event) => {
-          const next = event.target.value;
-          onChange(next === "" ? null : next === "SHARED" ? { source: "SHARED" } : { source: "PERSONAL", provider: next as AiProvider });
-        }}>
-        <option value="">Chọn nguồn AI</option>
-        <option value="SHARED">API của trường</option>
-        {(Object.keys(PROVIDER_LABELS) as AiProvider[]).map((p) => <option key={p} value={p}>{PROVIDER_LABELS[p]} cá nhân</option>)}
-      </Select>
-    </Field>
-  );
-}
+/** Trần token đầu ra của một câu (giống backend `QuizDraftPrompt.maxOutputTokens`), để popup U06 hiện ước tính. */
+const TOKENS_PER_QUESTION = 600;
 
 /** Cách gọi API của một đích (ngân hàng môn hoặc một Quiz); dialog không cần biết đích là gì. */
 export type DraftTargetApi = {
   title: string;
+  /** Dòng "tác vụ · đích" trên popup Chọn nguồn AI của U06. */
+  taskLabel: string;
   acceptNote: string;
   loadMaterials: (signal: AbortSignal) => Promise<SelectableMaterial[]>;
   list: (signal: AbortSignal) => Promise<AiDraft[]>;
-  request: (input: AiDraftInput) => Promise<AiDraft>;
+  request: (input: AiDraftRequest & { choice: SourceChoice }) => Promise<AiDraft>;
   get: (draftId: string) => Promise<AiDraft>;
   /** Ném lỗi khi không chấp nhận được (409, 422…); thành công thì dialog đóng. */
   accept: (draftId: string, questions: QuestionContent[]) => Promise<void>;
@@ -78,6 +56,9 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
   const [error, setError] = useState<string | null>(null);
   const [problems, setProblems] = useState<Violation[]>([]);
   const [busy, setBusy] = useState(false);
+  // M1: form đã kiểm chờ chọn nguồn; `picking` thì thay popup U10 bằng AiSourcePicker để hai Dialog không tranh focus.
+  const [request, setRequest] = useState<AiDraftRequest | null>(null);
+  const [picking, setPicking] = useState(false);
   const shown = useRef<AiDraft | null>(null);
 
   /** Chỉ dựng lại danh sách câu khi đổi đề xuất hoặc trạng thái, để không mất phần người soạn đang sửa. */
@@ -141,6 +122,18 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     }
   };
 
+  const send = (choice: SourceChoice) => request && void run(async () => {
+    try {
+      showDraft(await api.request({ ...request, choice }));
+      setRequest(null);
+    } finally {
+      setPicking(false);
+    }
+  });
+  const refresh = (draftId: string) => {
+    api.get(draftId).then(showDraft).catch((failure: unknown) => setError(errorMessage(failure)));
+  };
+
   const accepted = entries.filter((e) => e.state === "accepted");
   const acceptAll = () => draft && void run(async () => {
     await api.accept(draft.id, accepted.map((e) => toContent(e.form)));
@@ -170,6 +163,13 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     </>
   );
 
+  if (picking && request) {
+    return (
+      <AiSourcePicker open task={api.taskLabel} estimatedTokens={TOKENS_PER_QUESTION * request.count} busy={busy}
+        onCancel={() => setPicking(false)} onSubmit={send} />
+    );
+  }
+
   return (
     <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>
       <div className="flex flex-col gap-4" data-testid="ai-draft-dialog">
@@ -181,26 +181,37 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
         )}
         {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">Đang tải…</p>}
         {mode === "form" && (
-          <DraftRequestForm api={api} busy={busy}
-            onSubmit={(input) => void run(async () => showDraft(await api.request(input)))} />
+          <DraftRequestForm api={api} busy={busy} initial={request}
+            onSubmit={(values) => {
+              setRequest(values);
+              setPicking(true);
+            }} />
         )}
         {mode === "draft" && draft && (
-          <DraftView draft={draft} entries={entries} onEntries={setEntries} note={api.acceptNote} />
+          <DraftView draft={draft} entries={entries} onEntries={setEntries} note={api.acceptNote}
+            onTaskFinished={() => refresh(draft.id)} />
         )}
       </div>
     </Dialog>
   );
 }
 
-/** Yêu cầu, số câu, loại, độ khó, tài liệu đã có chữ, nguồn AI (BR-U10-40). */
-function DraftRequestForm({ api, busy, onSubmit }: { api: DraftTargetApi; busy: boolean; onSubmit: (input: AiDraftInput) => void }) {
+/**
+ * Yêu cầu, số câu, loại, độ khó, tài liệu đã có chữ (BR-U10-40). Nguồn AI chọn ở popup U06 sau khi bấm "Gửi yêu cầu";
+ * hủy popup thì form mở lại với `initial`.
+ */
+function DraftRequestForm({ api, busy, initial, onSubmit }: {
+  api: DraftTargetApi;
+  busy: boolean;
+  initial: AiDraftRequest | null;
+  onSubmit: (values: AiDraftRequest) => void;
+}) {
   const id = useId();
-  const [instructions, setInstructions] = useState("");
-  const [count, setCount] = useState("5");
-  const [type, setType] = useState<QuestionType | "">("");
-  const [difficulty, setDifficulty] = useState<Difficulty | "">("");
-  const [materialIds, setMaterialIds] = useState<string[]>([]);
-  const [choice, setChoice] = useState<AiSourceChoice | null>(null);
+  const [instructions, setInstructions] = useState(initial?.instructions ?? "");
+  const [count, setCount] = useState(initial ? String(initial.count) : "5");
+  const [type, setType] = useState<QuestionType | "">(initial?.type ?? "");
+  const [difficulty, setDifficulty] = useState<Difficulty | "">(initial?.difficulty ?? "");
+  const [materialIds, setMaterialIds] = useState<string[]>(initial?.materialIds ?? []);
   const [materials, setMaterials] = useState<SelectableMaterial[] | null>(null);
   const [materialsError, setMaterialsError] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -219,10 +230,9 @@ function DraftRequestForm({ api, busy, onSubmit }: { api: DraftTargetApi; busy: 
     const n = Number(count);
     if (!instructions.trim() || instructions.trim().length > 2000) found.instructions = "Nhập yêu cầu, tối đa 2.000 ký tự";
     if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = "Từ 1 đến 50 câu";
-    if (!choice) found.choice = "Hãy chọn nguồn AI";
     setErrors(found);
-    if (Object.keys(found).length > 0 || !choice) return;
-    onSubmit({ instructions: instructions.trim(), count: n, type: type || null, difficulty: difficulty || null, materialIds, choice });
+    if (Object.keys(found).length > 0) return;
+    onSubmit({ instructions: instructions.trim(), count: n, type: type || null, difficulty: difficulty || null, materialIds });
   };
 
   const toggle = (materialId: string) => setMaterialIds((current) => current.includes(materialId)
@@ -273,8 +283,7 @@ function DraftRequestForm({ api, busy, onSubmit }: { api: DraftTargetApi; busy: 
           })}
         </ul>
       </div>
-      <AiSourceSelect value={choice} onChange={setChoice} />
-      {errors.choice && <p role="alert" className="text-[11px] text-danger">{errors.choice}</p>}
+      <p className="text-[11px] text-muted">Bấm “Gửi yêu cầu” để chọn nguồn AI; hết hạn mức hay lỗi nguồn sẽ không tự đổi sang nguồn khác.</p>
       <div className="flex justify-end">
         <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">Gửi yêu cầu</Button>
       </div>
@@ -283,14 +292,15 @@ function DraftRequestForm({ api, busy, onSubmit }: { api: DraftTargetApi; busy: 
 }
 
 /** Đề xuất đang chờ, lỗi hoặc đã xong; với đề xuất xong thì sửa, bỏ, chấp nhận từng câu. */
-function DraftView({ draft, entries, onEntries, note }: {
+function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   draft: AiDraft;
   entries: ProposalEntry[];
   onEntries: (entries: ProposalEntry[]) => void;
   note: string;
+  onTaskFinished: () => void;
 }) {
   const origin = draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}`
-    : draft.source === "SHARED" ? "API của trường" : `${PROVIDER_LABELS[draft.provider as AiProvider] ?? draft.provider} cá nhân`;
+    : draft.source === "SHARED" ? "API của trường" : `${PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider} cá nhân`;
   const update = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
@@ -308,7 +318,11 @@ function DraftView({ draft, entries, onEntries, note }: {
         {draft.materials.length > 0 && <> · tài liệu: {draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (
-        <Alert tone="info" role="status">AI đang soạn đề xuất… Bạn có thể đóng popup, đề xuất vẫn được giữ.</Alert>
+        <>
+          <Alert tone="info" role="status">AI đang soạn đề xuất… Bạn có thể đóng popup, đề xuất vẫn được giữ.</Alert>
+          {/* M3: trạng thái task của U06 (cho hủy khi còn chờ); xong thì tải lại đề xuất ngay. */}
+          {draft.taskId && <AiTaskStatus taskId={draft.taskId} onFinished={onTaskFinished} />}
+        </>
       )}
       {draft.status === "FAILED" && (
         <div data-testid="ai-draft-failed">

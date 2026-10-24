@@ -77,15 +77,21 @@ final class AssignmentRequests {
         }
     }
 
-    record AiDraft(String request, List<UUID> materialIds, AiSource source, AiProvider provider, String requestRef) {
+    record AiDraft(String request, List<UUID> materialIds, List<String> sourceFileRefs,
+                   AssignmentCommands.DraftOptions options, AiSource source, AiProvider provider, String requestRef) {
         AssignmentCommands.AiDraftRequest command() {
-            return new AssignmentCommands.AiDraftRequest(request, materialIds, source, provider, requestRef);
+            return new AssignmentCommands.AiDraftRequest(request, materialIds, sourceFileRefs, source, provider,
+                    requestRef, options);
         }
     }
 
-    record Apply(Long version, Boolean replaceInstructions) {
+    record AiSources(List<String> sourceFileRefs) {
+    }
+
+    record Apply(Long version, Boolean replaceInstructions, Boolean replaceTitle) {
         AssignmentCommands.ApplyDraft command() {
-            return new AssignmentCommands.ApplyDraft(requireVersion(version), Boolean.TRUE.equals(replaceInstructions));
+            return new AssignmentCommands.ApplyDraft(requireVersion(version), Boolean.TRUE.equals(replaceInstructions),
+                    Boolean.TRUE.equals(replaceTitle));
         }
     }
 

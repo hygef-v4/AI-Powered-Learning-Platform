@@ -2,6 +2,7 @@ import { apiFetch } from "@/shared/api/client";
 import type { DocumentModel, RubricCriterion } from "@/shared/document";
 import type {
   AiDraft,
+  AiSourcePreview,
   AssignmentDetail,
   AssignmentPage,
   AssignmentStatus,
@@ -78,12 +79,18 @@ export const assignmentsApi = {
     form.append("file", file);
     return apiFetch<ImportPreview>(`${base}/assignments/${enc(id)}/skeleton:import-docx`, { method: "POST", body: form });
   },
-  requestAiDraft: (id: string, input: { request: string; materialIds: string[]; source: "SHARED" | "PERSONAL"; provider?: string; requestRef: string }) =>
+  requestAiDraft: (id: string, input: { request: string; materialIds: string[]; sourceFileRefs: string[];
+    options: { profile: "AUTO" | "GENERAL" | "SWR" | "SWD"; language: "VI" | "EN"; questionCount: number; targetPoints: number };
+    source: "SHARED" | "PERSONAL"; provider?: string; requestRef: string }) =>
     write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", input),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     apiFetch<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
-  applyAiDraft: (id: string, draftId: string, version: number, replaceInstructions: boolean) =>
-    write<AssignmentDetail>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:apply`, "POST", { version, replaceInstructions }),
+  previewAiSources: (id: string, sourceFileRefs: string[], signal?: AbortSignal) =>
+    apiFetch<AiSourcePreview[]>(`${base}/assignments/${enc(id)}/ai-drafts/sources:preview`, {
+      method: "POST", body: JSON.stringify({ sourceFileRefs }), signal,
+    }),
+  applyAiDraft: (id: string, draftId: string, version: number, replaceInstructions: boolean, replaceTitle: boolean) =>
+    write<AssignmentDetail>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:apply`, "POST", { version, replaceInstructions, replaceTitle }),
   discardAiDraft: (id: string, draftId: string) => write<AiDraft>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:discard`, "POST"),
 };
 

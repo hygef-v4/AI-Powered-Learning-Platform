@@ -77,7 +77,7 @@ export function RubricEditor({ criteria, onChange }: {
                 add(i + 1);
               }
             }} />
-          <input data-atomic-points aria-label={`Điểm mục ${i + 1}`} type="number" step="0.25" min="0" max="1000"
+          <input data-atomic-points aria-label={`Điểm mục ${i + 1}`} type="number" step="0.01" min="0" max="1000"
             value={item.points ?? ""}
             className={cx(POINTS, "w-12 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })} />

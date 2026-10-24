@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/shared/ui/Button";
 import { MaterialSourceDialog } from "./MaterialDialogs";
 import { materialApi, materialError, scopePath } from "./api";
@@ -8,22 +8,17 @@ import { useMaterialResource } from "./useMaterialResource";
 import { fileDescription, materialHref, textLabels, type Material, type MaterialKind } from "./types";
 import styles from "./materials.module.css";
 
+function hasPendingExtraction(materials: Material[]): boolean {
+  return materials.some((material) => material.status === "ACTIVE" && material.current.textStatus === "PENDING");
+}
+
 export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: string; scope: "subjects" | "classes"; readOnly?: boolean }) {
   const path = scopePath(scopeId, scope);
-  const resource = useMaterialResource<Material[]>(path);
   const [filter, setFilter] = useState("ACTIVE"); const [menu, setMenu] = useState(false);
   const [adding, setAdding] = useState<MaterialKind>(); const [error, setError] = useState("");
   const [busy, setBusy] = useState(false); const drag = useRef<string | null>(null); const lock = useRef(false);
+  const resource = useMaterialResource<Material[]>(path, { pollWhile: hasPendingExtraction, pollPaused: busy || !!adding });
   const rows = resource.data ?? [];
-  const pending = rows.some(m => m.status === "ACTIVE" && m.current.textStatus === "PENDING");
-  const { data, error: loadError, reload } = resource;
-  // Extraction runs in the worker; refresh only while there is unfinished work.
-  // Waiting until each response avoids overlapping requests, and errors stop polling.
-  useEffect(() => {
-    if (!pending || loadError || busy || adding) return;
-    const timer = setTimeout(reload, 5000);
-    return () => clearTimeout(timer);
-  }, [pending, data, loadError, reload, busy, adding]);
   const visible = rows.filter(m => filter === "ARCHIVED" ? m.status === "ARCHIVED" : m.status === "ACTIVE" && (filter === "CLASS" || filter === "SUBJECT" ? m.scope === filter : true));
   const own = rows.filter(m => m.status === "ACTIVE" && m.scope === (scope === "subjects" ? "SUBJECT" : "CLASS"));
   async function move(id: string, offset: number, targetId?: string) {

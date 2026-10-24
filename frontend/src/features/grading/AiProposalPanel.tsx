@@ -36,17 +36,19 @@ export function AiProposalPanel({
       >
         Yêu cầu đề xuất mới
       </button>
-      <AiSourcePicker
-        open={choosingSource}
-        task="Đề xuất chấm bài đang xem"
-        busy={disabled}
-        onCancel={() => setChoosingSource(false)}
-        onSubmit={(choice) => {
-          if (disabled) return;
-          setChoosingSource(false);
-          onRequest(aiRequest(choice));
-        }}
-      />
+      {choosingSource && (
+        <AiSourcePicker
+          open
+          task="Đề xuất chấm bài đang xem"
+          busy={disabled}
+          onCancel={() => setChoosingSource(false)}
+          onSubmit={(choice) => {
+            if (disabled) return;
+            setChoosingSource(false);
+            onRequest(aiRequest(choice));
+          }}
+        />
+      )}
       <span className="sr-only">{evaluationId}</span>
       {proposals.map((p) => (
         <article key={p.id} className="mt-3 rounded border p-3">

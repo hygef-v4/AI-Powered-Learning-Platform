@@ -15,6 +15,7 @@ import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.ai.contract.IAiTask;
+import edu.aiplatform.ai.contract.IAssignmentSourceTextExtractor;
 import edu.aiplatform.ai.contract.IReferenceMaterial;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
@@ -92,6 +93,7 @@ final class AssignmentFixtures {
     final ISettings settings = mock(ISettings.class);
     final IArtifact artifacts = mock(IArtifact.class);
     final IReferenceMaterial materials = mock(IReferenceMaterial.class);
+    final IAssignmentSourceTextExtractor sourceTexts = mock(IAssignmentSourceTextExtractor.class);
     final IEventPublisher events = mock(IEventPublisher.class);
     final IAiTask aiTasks = mock(IAiTask.class);
     final IAssignmentLifecycleListener listener = mock(IAssignmentLifecycleListener.class);
@@ -113,7 +115,7 @@ final class AssignmentFixtures {
     final AssignmentCopyService copies = new AssignmentCopyService(assignments, rubrics, access, support,
             assignmentAudit, classScope, materials, clock);
     final AssignmentAiDraftService aiDrafts = new AssignmentAiDraftService(assignments, drafts, rubrics, support, access,
-            assignmentAudit, aiTasks, materials, json, transactions, clock);
+            assignmentAudit, aiTasks, materials, json, artifacts, sourceTexts, transactions, clock);
 
     AssignmentFixtures() {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());

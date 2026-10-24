@@ -24,7 +24,10 @@ public interface IQuizAttemptRepository {
     /** Lưu câu trả lời khi lượt còn {@code IN_PROGRESS} và {@code answer_version} còn bằng {@code expectedVersion}. */
     boolean saveAnswers(QuizAttempt attempt, long expectedVersion);
 
-    /** Nộp khi lượt còn {@code IN_PROGRESS}; chạy lại không nộp hai lần. */
+    /**
+     * Nộp khi lượt còn {@code IN_PROGRESS} và {@code answer_version} còn bằng bản đã chấm; chạy lại không nộp hai lần.
+     * Lần lưu xen vào giữa lúc đọc và lúc nộp làm câu lệnh trả {@code false} để không ghi điểm của câu trả lời cũ.
+     */
     boolean submit(QuizAttempt attempt);
 
     /** Các lượt của một người học, mới trước (lịch sử, chi tiết Quiz). */

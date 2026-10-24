@@ -23,6 +23,7 @@ export function QuestionAiDraftDialog({ subjectId, onClose, onAccepted }: {
 }) {
   const api = useMemo<DraftTargetApi>(() => ({
     title: "Tạo nháp bằng AI",
+    taskLabel: "Sinh câu hỏi · Ngân hàng câu hỏi của môn",
     acceptNote: "Câu được chấp nhận vào ngân hàng ở trạng thái Nháp; bạn kiểm tra lại trước khi kích hoạt.",
     loadMaterials: (signal) => getSubjectMaterials(subjectId, signal),
     list: (signal) => getBankDrafts(subjectId, signal),
@@ -47,6 +48,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled }:
   disabled: boolean;
 }) {
   const quizId = detail.quiz.id;
+  const quizTitle = detail.quiz.title;
   const version = useRef(detail.quiz.version);
   useEffect(() => {
     version.current = detail.quiz.version;
@@ -70,6 +72,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled }:
 
   const api = useMemo<DraftTargetApi>(() => ({
     title: "Tạo nháp bằng AI",
+    taskLabel: `Sinh câu hỏi · ${quizTitle}`,
     acceptNote: "Câu được chấp nhận thành câu riêng ở cuối quiz; AI không tự duyệt hay phát hành quiz.",
     loadMaterials: (signal) => getQuizMaterials(quizId, signal),
     list: (signal) => getQuizDrafts(quizId, signal),
@@ -84,7 +87,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled }:
       }
     },
     discard: (draftId) => discardQuizDraft(quizId, draftId),
-  }), [quizId, onQuizChange, onConflict]);
+  }), [quizId, quizTitle, onQuizChange, onConflict]);
 
   const close = () => {
     setOpen(null);

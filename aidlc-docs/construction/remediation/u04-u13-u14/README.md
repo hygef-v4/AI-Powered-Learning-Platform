@@ -59,3 +59,15 @@ Chỉ gom 7 tài liệu mới của đợt fix này; không di chuyển kế ho�
 Các kết quả kiểm thử đã có: backend verify 1.297 test (1.262 đạt, 35 bỏ qua do cấu hình môi trường); GradingService 7/7; frontend bị tác động 45/45, typecheck/lint/build đạt; notification refinement 75/75 và build/UI local đạt. Việc sắp xếp/commit không sửa thêm mã ứng dụng và không được ghi thành một lần chạy lại toàn bộ test.
 
 Các rule security/resiliency không có thay đổi hành vi trong đợt sắp xếp này (N/A cho thay đổi runtime); các kiểm chứng bảo mật của bản sửa nằm trong báo cáo tương ứng. Property-Based Testing giữ trạng thái disabled theo state.
+
+## Đồng bộ staging — 2026-10-24
+
+Người dùng đã duyệt hướng giải quyết bảy tệp conflict và phần polling được Git gộp tự động bằng yêu cầu “sửa cho tôi”. Bước này giữ các tính năng staging mới, không tạo merge commit hoặc push.
+
+1. [x] Gộp phần bổ sung của cả hai nhánh trong state/audit, giữ snapshot cũ theo ngày/phạm vi; không chuyển nghiệm thu U07/U09 còn mở thành hoàn tất.
+2. [x] Dùng helper CSRF chung ở `shared/api/csrf.ts`; gộp test upload đúng hợp đồng, progress, hủy và lỗi.
+3. [x] Chỉ giữ polling trong `useMaterialResource`, mỗi 5 giây sau response; giữ dữ liệu khi refresh, dừng ở lỗi/terminal/unmount và tạm ngưng lúc thêm/sắp xếp.
+4. [x] Chạy regression polling và bộ frontend, typecheck, lint/build; ghi rõ mọi giới hạn xác minh.
+5. [x] Stage các tệp đã xử lý, xác nhận không còn unmerged path/marker; giữ merge chờ commit, không stage `.tmp` hoặc push.
+
+Xác minh bản merge: nhóm liên quan 6 tệp/33 test đạt; toàn bộ frontend **81 tệp/474 test đạt**, không fail/skip. Typecheck, ESLint bảy tệp CSRF/upload/material và production build Next.js đều đạt. Test đầy đủ và build dùng Node v24.22.1; lượt sandbox ban đầu với Node v26 bị dừng vì kết quả collection không ổn định, không được tính là một lần full-suite thành công. Log riêng trong `.tmp/merge-staging-{focused-tests,full-tests,typecheck,lint,build}.log`, không đưa vào commit. Không chạy lại backend hoặc live UI/provider ở bước giải quyết conflict này; các kết quả cũ giữ nguyên phạm vi.

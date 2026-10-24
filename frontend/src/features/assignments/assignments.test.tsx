@@ -49,6 +49,20 @@ describe("RubricEditor", () => {
 });
 
 describe("CreateAssignmentDialog", () => {
+  it("có ba lối bắt đầu bài và mở hộp AI sau khi tạo bản nháp", async () => {
+    const created = { id: "a1", version: 0 } as AssignmentDetail;
+    vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
+    const onCreated = vi.fn();
+    render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
+    expect(screen.getByRole("tab", { name: "Soạn thủ công" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Import từ file" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(screen.getByRole("tab", { name: "Soạn bằng AI" }));
+    expect(screen.getByText(/AI tự suy ra dạng SWR\/SWD/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created, true));
+    vi.restoreAllMocks();
+  });
+
   it("một ô tệp DOCX: chọn xong chỉ hiện tên tệp; tạo bài rồi nhập luôn tệp vào khung, không có dòng hướng dẫn", async () => {
     const created = { id: "a1", version: 0 } as AssignmentDetail;
     const saved = { id: "a1", version: 1 } as AssignmentDetail;

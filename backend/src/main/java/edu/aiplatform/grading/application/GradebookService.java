@@ -104,7 +104,7 @@ public class GradebookService {
                 .filter(assignment -> assignment.gradingMode() == GradingMode.GRADED)
                 .peek(assignment -> SubmissionReviewService.requireAssignment(assignment, courseClass))
                 .map(assignment -> new AssignmentColumn(assignment.assignmentId(), assignment.title(),
-                        rubric.maxPoints(assignment.assignmentId())))
+                        rubric.maxPoints(assignment.assignmentId()), assignment.submissionMode()))
                 .toList();
     }
 
@@ -180,8 +180,9 @@ public class GradebookService {
     }
 
     private String ungradedStatus(Optional<StudentSubmissionStatus> submission) {
-        return submission.isPresent() && submission.get().latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS"
-                : "NOT_SUBMITTED";
+        if (submission.isEmpty() || submission.get().latestStatus() == null)
+            return "NOT_SUBMITTED";
+        return submission.get().latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS" : "PENDING";
     }
 
     public List<StudentGradeView> myGrades(Actor actor, UUID classId) {
@@ -240,6 +241,8 @@ public class GradebookService {
                 latest.values().stream().map(evaluation -> evaluation.maxScore).toList());
     }
 
+    // A successful export also writes its audit event in this transaction.
+    @Transactional
     public List<List<String>> exportRows(Actor actor, UUID classId, UUID assignmentId, String format) {
         access.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))

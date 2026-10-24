@@ -28,11 +28,16 @@ import java.util.UUID;
 final class AiDraftProposal {
 
     static final int MAX_SECTIONS = 100;
+    static final int MAX_GENERATED_CONTEXT = 4000;
+    static final int MAX_GENERATED_INSTRUCTIONS = 1200;
     static final String OUTPUT_SCHEMA = """
             {"type":"object","required":["instructions","sections"],"additionalProperties":false,
              "properties":{
+              "schemaVersion":{"type":"integer","minimum":1,"maximum":2},
+              "title":{"type":"string"},
+              "businessContext":{"type":"string"},
               "instructions":{"type":"string"},
-              "sections":{"type":"array","maxItems":100,"items":{"type":"object","required":["level","title"],
+              "sections":{"type":"array","minItems":1,"maxItems":100,"items":{"type":"object","required":["level","title"],
                "additionalProperties":false,"properties":{
                 "level":{"type":"integer","minimum":1,"maximum":6},
                 "title":{"type":"string"},
@@ -50,13 +55,21 @@ final class AiDraftProposal {
 
     /** Chuẩn hóa đề xuất; {@code null} nếu sai định dạng hoàn toàn. */
     static ObjectNode normalize(JsonNode raw, boolean diagramEnabled) {
-        if (raw == null || !raw.isObject() || !raw.path("sections").isArray()) {
+        if (raw == null || !raw.isObject()) {
             return null;
         }
         ObjectNode out = JsonNodeFactory.instance.objectNode();
+        out.put("schemaVersion", raw.path("schemaVersion").asInt(
+                raw.has("title") && raw.has("businessContext") ? 2 : 1));
+        out.put("title", cut(raw.path("title").asText("").strip(), Assignment.TITLE_MAX));
+        out.put("businessContext", cut(raw.path("businessContext").asText(""), DocumentModelService.MAX_TEXT));
         out.put("instructions", cut(raw.path("instructions").asText(""), Assignment.INSTRUCTIONS_MAX));
         ArrayNode sections = out.putArray("sections");
-        for (JsonNode section : raw.path("sections")) {
+        JsonNode rawSections = raw.path("sections");
+        if (!rawSections.isArray()) {
+            return out;
+        }
+        for (JsonNode section : rawSections) {
             if (sections.size() >= MAX_SECTIONS) {
                 break;
             }
@@ -91,13 +104,17 @@ final class AiDraftProposal {
                 }
             }
         }
-        return sections.isEmpty() && out.path("instructions").asText().isEmpty() ? null : out;
+        return out;
     }
 
     /** Khung mới từ đề xuất và gợi ý rubric theo id block heading. */
     static Built build(JsonNode proposal) {
         List<DocumentBlock> blocks = new ArrayList<>();
         Map<UUID, List<RubricCriterion>> suggestions = new HashMap<>();
+        String businessContext = proposal.path("businessContext").asText("").strip();
+        if (!businessContext.isEmpty()) {
+            addParagraphs(blocks, businessContext);
+        }
         for (JsonNode section : proposal.path("sections")) {
             UUID headingId = UUID.randomUUID();
             ObjectNode heading = JsonNodeFactory.instance.objectNode();
@@ -106,9 +123,7 @@ final class AiDraftProposal {
             blocks.add(new DocumentBlock(headingId, BlockOrigin.TEACHER, BlockType.HEADING, heading));
             String guidance = section.path("guidance").asText("");
             if (!guidance.isBlank()) {
-                ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
-                paragraph.putArray("runs").addObject().put("text", guidance);
-                blocks.add(new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.PARAGRAPH, paragraph));
+                addParagraphs(blocks, guidance);
             }
             List<RubricCriterion> criteria = new ArrayList<>();
             for (JsonNode criterion : section.path("rubric")) {
@@ -126,6 +141,15 @@ final class AiDraftProposal {
             }
         }
         return new Built(new DocumentModel(List.copyOf(blocks)), suggestions);
+    }
+
+    private static void addParagraphs(List<DocumentBlock> blocks, String text) {
+        // Preserve all content while bounding the number of new document blocks per field.
+        for (String value : text.strip().split("\\n\\s*\\n", 8)) {
+            ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
+            paragraph.putArray("runs").addObject().put("text", value.strip());
+            blocks.add(new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.PARAGRAPH, paragraph));
+        }
     }
 
     record Built(DocumentModel skeleton, Map<UUID, List<RubricCriterion>> rubricByHeading) {

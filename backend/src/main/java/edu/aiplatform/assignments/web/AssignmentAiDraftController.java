@@ -4,6 +4,7 @@ import edu.aiplatform.assignments.application.AssignmentAiDraftService;
 import edu.aiplatform.assignments.application.AssignmentViews;
 import edu.aiplatform.identity.contract.Actor;
 import java.util.UUID;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +34,13 @@ public class AssignmentAiDraftController {
     public AssignmentViews.AiDraft get(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                        @PathVariable UUID draftId) {
         return drafts.get(actor, id, draftId);
+    }
+
+    @PostMapping(value = "/sources:preview", consumes = "application/json")
+    public List<AssignmentViews.AiSourcePreview> previewSources(@AuthenticationPrincipal Actor actor,
+                                                               @PathVariable UUID id,
+                                                               @RequestBody AssignmentRequests.AiSources body) {
+        return drafts.previewSources(actor, id, body.sourceFileRefs());
     }
 
     @PostMapping(value = "/{draftId}:apply", consumes = "application/json")
