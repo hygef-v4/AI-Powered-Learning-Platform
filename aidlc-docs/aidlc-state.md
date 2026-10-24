@@ -629,3 +629,8 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - 2026-10-24: theo yêu cầu mới của người dùng, đã build lại backend image local và recreate riêng worker; worker mới healthy, kết nối PostgreSQL/RabbitMQ. Live generation sau đồng bộ chưa kiểm; proposal lỗi cũ cần bỏ/tạo lại.
 - 2026-10-24: fixed remaining empty-generation schema bug (nonempty graded rubrics/exact count, sections before bounded prose) and preview readability/revision. Backend 31 + UI 7 focused tests, typecheck/lint/build pass; worker image updated. Host backend restart and live Gemini generation remain to verify.
 - 2026-10-24: user authorized split local commits (file sources, assignment backend, UI, documentation), no push. Restored legacy parser regression coverage and verified all 6 extractor tests. Live Gemini/expanded authoring features remain open.
+
+## U12 sửa sau kiểm thử hộp đen — 2026-10-24
+- [x] Người dùng duyệt sửa 4 chỗ lệch kế hoạch kiểm thử (U12-03, 05, 08, 13); plan `construction/plans/2026-10-24-u12-test-plan-gaps.md`.
+- [x] Code + test frontend trên nhánh `fix/u12-test-plan-gaps` (từ `staging` 301c573); 473 test frontend, tsc, lint, build đạt; code-summary U12 đã cập nhật.
+- [ ] Người test chạy lại U12-03, 05, 08, 09, 13 trên localhost:8088 sau khi gộp.

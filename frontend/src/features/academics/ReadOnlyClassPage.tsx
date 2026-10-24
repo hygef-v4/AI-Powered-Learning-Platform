@@ -9,8 +9,17 @@ import { EmptyState, PageHeading, StatusBadge, Tabs } from "./ui";
 import type { CourseClassView, EnrollmentView } from "./types";
 import styles from "./academics.module.css";
 
+type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
+const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
+
+/** Tab mở sẵn theo `?tab=` (vd. nút Mở tab Sinh viên ở Kiểm tra sẵn sàng bài nhóm); trang chỉ dựng ở client sau khi tải lớp. */
+function initialTab(): ClassTab {
+  const wanted = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("tab");
+  return CLASS_TABS.find((t) => t === wanted) ?? "info";
+}
+
 export function ReadOnlyClassPage({ audience, value, students = [], onBack, loadStudent }: { audience: "student" | "teacher"; value: CourseClassView; students?: EnrollmentView[]; loadStudent?:(classId:string,accountId:string,signal?:AbortSignal)=>Promise<EnrollmentView>; onBack: () => void }) {
-  const [tab, setTab] = useState<"info" | "students" | "materials" | "evals" | "gradebook">("info");
+  const [tab, setTab] = useState<ClassTab>(initialTab);
   const [selected, setSelected] = useState<EnrollmentView | null>(null);
   const [detailError,setDetailError]=useState("");
   const [detailBusy,setDetailBusy]=useState(false);

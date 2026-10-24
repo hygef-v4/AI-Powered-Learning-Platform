@@ -105,11 +105,75 @@ describe("GroupWorkspacePage", () => {
     expect(screen.queryByRole("button", { name: /Nộp tài liệu/ })).not.toBeInTheDocument();
     const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
     const mine = item("Mục s2");
-    expect(within(mine).getByText("Bạn")).toBeInTheDocument();
+    expect(within(mine).getByText("Đang giữ: Bạn")).toBeInTheDocument();
     expect(within(mine).getByRole("button", { name: "Làm" })).toBeInTheDocument();
 
     fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Nhận mục" }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
+    expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
+  });
+
+  it("bấm vào mục Mở thì nhận và mở trình soạn; mục người khác giữ chỉ xem", async () => {
+    const calls = backend(workspace(LEADER));
+    render(<GroupWorkspacePage documentId="doc1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Mục s2 · Đang làm · Chỉ xem/ }));
+    expect(screen.getByText("Đang giữ: Bình")).toBeInTheDocument();
+    expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
+    expect(screen.queryByText("Bạn đang giữ")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Mục s3 · Mở · Bấm để nhận và soạn/ }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
+    expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
+  });
+
+  it("giảng viên bấm mục không nhận được", async () => {
+    const calls = backend(workspace("teacher", { role: { member: false, leader: false, teacher: true } }));
+    render(<GroupWorkspacePage documentId="doc1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Mục s3 · Mở · Xem nội dung/ }));
+    expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
+    expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
+  });
+
+  it("tự nộp khi hết hạn khóa trang và ghi giờ hết hạn", async () => {
+    let source: { onmessage: ((m: { data: string }) => void) | null } | null = null;
+    vi.stubGlobal(
+      "EventSource",
+      class {
+        onmessage: ((m: { data: string }) => void) | null = null;
+        onerror = null;
+        onopen = null;
+        constructor() {
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
+          source = this;
+        }
+        close() {}
+      },
+    );
+    let resolveReload: (() => void) | null = null;
+    let first = true;
+    const view = workspace(MEMBER);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => {
+        if (first) {
+          first = false;
+          return json(view);
+        }
+        return new Promise<Response>((resolve) => {
+          resolveReload = () => resolve(new Response(JSON.stringify(view), { status: 200, headers: { "Content-Type": "application/json" } }));
+        });
+      }),
+    );
+    render(<GroupWorkspacePage documentId="doc1" />);
+    await screen.findByText("Nội dung đã xong");
+
+    act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
+    const lock = await screen.findByRole("alertdialog", { name: "Đang nộp" });
+    expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 30\/10\/2026 17:00/);
+    await act(async () => resolveReload!());
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
   });
 
   it("trưởng nhóm nộp được, popup cảnh báo mục chưa Xong và gửi version", async () => {
