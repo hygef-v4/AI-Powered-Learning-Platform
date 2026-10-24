@@ -10,6 +10,8 @@ import type { TakingView } from "./types";
 
 export const AUTOSAVE_DELAY_MS = 2000;
 type SaveState = "saved" | "dirty" | "saving" | "error";
+/** `time-up`: máy chủ không nhận lưu vì đã quá hạn cộng ân hạn; `failed`: còn câu trả lời chưa lưu được. */
+type SaveOutcome = "saved" | "time-up" | "failed";
 
 function remainingSeconds(view: TakingView, skewMs: number): number | null {
   if (!view.deadlineAt) return null;
@@ -41,6 +43,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const versionRef = useRef(0);
   const dirtyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingRef = useRef<Promise<SaveOutcome> | null>(null);
   const skewRef = useRef(0);
   const finishingRef = useRef(false);
 
@@ -75,42 +78,67 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     };
   }, [attemptId, reloadKey, toResult]);
 
-  /** Gửi câu trả lời đang chờ; trả false khi không lưu được (đã nộp, hết giờ, xung đột). */
-  const flush = useCallback(async (): Promise<boolean> => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (!dirtyRef.current) return true;
+  /** Một lần lưu câu trả lời đang chờ kèm `answerVersion` hiện có. */
+  const saveOnce = useCallback(async (): Promise<SaveOutcome> => {
     dirtyRef.current = false;
     setSaveState("saving");
     try {
       const saved = await saveAnswers(attemptId, answersRef.current, versionRef.current);
       versionRef.current = saved.answerVersion;
       setSaveState(dirtyRef.current ? "dirty" : "saved");
-      return true;
+      return "saved";
     } catch (failure) {
       const code = errorCode(failure);
+      if (code === "ATTEMPT_TIME_UP") return "time-up";
       if (code === "ANSWER_VERSION_CONFLICT") {
         setError(errorMessage(failure));
         setReloadKey((k) => k + 1);
       } else if (code === "ATTEMPT_SUBMITTED") {
         toResult();
-      } else if (code !== "ATTEMPT_TIME_UP") {
+      } else {
         dirtyRef.current = true;
         setSaveState("error");
         setError(errorMessage(failure));
       }
-      return false;
+      return "failed";
     }
   }, [attemptId, toResult]);
+
+  /**
+   * Gửi câu trả lời đang chờ, từng lần một: lần lưu đang chạy xong (có `answerVersion` mới) rồi mới gửi lần sau, để
+   * hai lần lưu không cùng gửi một version (409 làm mất lựa chọn mới) và nộp bài không chạy song song với lần lưu.
+   */
+  const flush = useCallback(async (): Promise<SaveOutcome> => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    for (;;) {
+      const pending = savingRef.current;
+      if (pending) {
+        const outcome = await pending;
+        if (outcome !== "saved") return outcome;
+        continue;
+      }
+      if (!dirtyRef.current) return "saved";
+      const run = saveOnce().finally(() => {
+        savingRef.current = null;
+      });
+      savingRef.current = run;
+    }
+  }, [saveOnce]);
 
   const finish = useCallback(async (mode: "manual" | "timeup") => {
     if (finishingRef.current) return;
     finishingRef.current = true;
     setFinishing(mode);
     setConfirming(false);
-    await flush();
+    // Còn câu trả lời chưa lưu được thì không nộp bằng bản cũ trên máy chủ; hết giờ thì máy chủ đã khóa lưu, vẫn nộp.
+    if ((await flush()) === "failed" && mode === "manual") {
+      finishingRef.current = false;
+      setFinishing(null);
+      return;
+    }
     try {
       await submitAttempt(attemptId);
       toResult();
