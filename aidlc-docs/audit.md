@@ -5552,3 +5552,189 @@ Diagnosis: same saved key/model and tiny synthetic prompt: full assignment schem
 Approved bugfix scope: adjust only Gemini wire schema, preserve original task schema and application-side validation, retain other provider payloads/contracts. Added regression verifying omitted nested wire maxItems and unchanged original schema/required/numeric bounds; test failed before fix, then13 tests passed and packaging succeeded. Rebuilt runtime image and restarted backend/worker.
 
 End-to-end: submitted one short SWR diagram assignment request using personal Gemini through existing UI. AI task READY, handler_done=true, assignment draft READY; preview and Apply button visible. Left unapplied, existing assignment content unchanged. Screenshot .tmp/u06-models/swr-ready.png. No commit/push. Generated wording quality is not guaranteed; initial failed task remains historical, not retried by DB mutation.
+
+## Branch preparation for U04 U13 U14 black-box fixes
+**Timestamp**: 2026-10-23T14:08:22Z
+**User Input**: "tạo 1 branch mới từ branch staging để sửa các lỗi và những phần khiến cho phải bỏ qua các test của u04, 13, 14 mà bạn đã check vào artifact, mang hết các thay đổi chưa commit vào staging sang branch đó luôn"
+**AI Response**: Created and switched from staging to codex/fix-u04-u13-u14-blackbox. Both HEAD and staging resolve to 41c5ff7f989237ed62cde15169ccb20a8c327189. All pre-existing tracked modifications and untracked files remain present: aidlc-state.md, infra/docker-compose.local.yml, the black-box report, and both reports/blackbox-2026-10-23 evidence files. Git index remains empty. No stash, reset, commit, push or source modification performed. Branch is prepared for the U04/U13/U14 remediation work.
+**Context**: Branch setup only; baseline acceptance results remain 30 passed, 3 failed, 17 skipped until fixes and retesting.
+
+---
+
+## U04 U13 U14 remediation — Code Generation Part 1
+**Timestamp**: 2026-10-23T14:17:17Z
+**User Input**: "sửa các lỗi của u04, u13, u14 trên branch fix-u04-u13-u14 cho tôi"
+**AI Response**: Confirmed current branch fix-u04-u13-u14; preserved dirty files/index. Read workflow, scoped business rules, failed/skipped-case evidence and relevant source. Confirmed XHR upload omits CSRF header while fetch client sends it; U04 table lacks visible guidance. U14 backend deliberately rejects raw HTML while frontend sanitizes Markdown, requiring explicit policy choice rather than silently weakening validation. Traced grade version flow; final cause still requires a real JPA regression. Created executable six-step remediation plan including narrowly scoped U09 blocker, tests and artifact retest.
+**Approval Prompt**: Review construction/plans/code-generation-plan/u04-u13-u14-blackbox-remediation-plan.md and answer A/B/C/X in u04-u13-u14-remediation-approval-questions.md. CLAUDE.md Code Generation Part1 and .aidlc-rule-details/construction/code-generation.md Step7 require explicit plan approval before generation. No application/test/config changes made in this turn.
+**Context**: Construction resume; plan ready, implementation pending explicit approval. Browser/time restrictions distinguished from application defects; no commit/push/restart or artifact result changes.
+
+---
+
+## U04 U13 U14 remediation approval
+**Timestamp**: 2026-10-23T14:29:10Z
+**User Input**: "tôi chọn rồi"
+**Approval Evidence**: u04-u13-u14-remediation-approval-questions.md contains [Answer]: a.
+**AI Response**: Accept explicit plan approval A; begin scoped implementation, tests and local retest on fix-u04-u13-u14. Preserve all existing dirty files. No commit/push.
+
+---
+
+## Construction — remediation regression evidence
+**Timestamp**: 2026-10-23T14:57:00Z
+**AI Response**: "Upload RED: XHR emitted no CSRF header; after shared-helper fix, API/FileUploader/client 13/13 pass. Announcement sanitizer RED: 3 mixed-HTML cases rejected; after jsoup 1.23.2, sanitizer 5/5 and service 14/14 pass. PostgreSQL grading RED: read changed version 1→2 and next command conflicted. Immutable JSON text mapping GREEN: JPA integration 2/2 and mapping 1/1, including JSONB object compatibility, exactly one version increment per command and stale writer rejection. JsonNode intermediate attempt also failed the regression and was replaced. Scanner 9/9, identity security 18/18, notices UI 19/19, tsc and lint pass. No UI version lifecycle changes needed. Full Maven verify and local image rebuild running; E2E and artifact update pending."
+**Context**: Approved plan A; disposable PostgreSQL containers; production CSRF/version checks preserved; no commit/push.
+
+---
+
+## Construction resume — U04 U13 U14 remediation
+**Timestamp**: 2026-10-24T02:00:00Z
+**User Input**: "tiếp tục"
+**AI Response**: Continue scoped remediation from the approved plan A on fix-u04-u13-u14. Preserve all dirty files, including the user's infra/docker-compose.local.yml changes. Full backend verify evidence remains 1297 tests, 1262 passed and 35 environment-gated skips. The additional stale-version/no-side-effects regression completed in the focused GradingServiceTest rerun: 7 passed, no failures/errors/skips. Docker Desktop was stopped overnight; started it and resumed the existing local Compose stack without deleting volumes or changing credentials. All eight services subsequently healthy.
+**Context**: Artifact readback revealed some old notes alongside new statuses. Repair notes through UI input events and verify after reload. U13-20 AI-source exclusion after archival remains pending until the app tab can be accessed again; browser security policy blocked control of its internal error page, so the user was asked to reopen localhost:8088. No workaround, commit or push.
+
+---
+
+## Construction — final selector retest and artifact readback
+**Timestamp**: 2026-10-24T02:18:27Z
+**User Input**: "được rồi"
+**Context**: User answered the request to reopen http://localhost:8088 after the browser security policy blocked its internal error page.
+**AI Response**: Reacquired the visibly restored login tab, signed in as the existing QA subject manager and opened the existing draft Quiz. After archival, the formerly extracted PDF is absent from both attachment choices and AI reference choices; the other three NO_TEXT files loaded and appear disabled in the AI picker. No AI request submitted. U13-20 set to Pass via keyboard activation, independently from note changes. Reloaded artifact and read all 50 dispositions: U04 13 passed, U13 18 passed/4 skipped, U14 13 passed/2 skipped, zero failures or unclassified cases. All six skips carry explicit limitations. Corrected old notes for U04-09 and U13-01/12/16/18/20 and verified persistence after reload.
+**Evidence**: Preserved baseline checklist-results.json; created checklist-results-after.json, artifact-u13-after.png and u13-ai-picker-after-archive.png under reports/blackbox-2026-10-23. Added scoped remediation verification report and code summary; updated the approved plan and scoped state. Local stack healthy; user-owned Compose overlay retained. No commit, push, merge, schema/live-clock change, production deployment or global acceptance claimed.
+
+---
+
+## Follow-up questions and user PDF verification
+**Timestamp**: 2026-10-24T02:43:04Z
+**Earlier User Inputs (recorded on this follow-up)**: "giờ tôi phải check lại những gì"; "xem pdf thường và pdf scan ở đâu trong U13-05, U13-10, U13-15"
+**AI Responses**: Explained six pending cases and role-specific navigation, including that the former ordinary PDF was archived for U13-20 and a new active PDF was needed for student verification.
+**User Input**: "của quản lý môn đã xem và tải được. của sinh viên cũng đã ok. Nhưng ở cả 2 thì phần tiêu đề pdf hiện trên vùng xem trước lại là untitled"
+**Attachments**: Three user-provided Chrome screenshots; ordinary and scan preview images preserved as user-chrome-pdf-text.png and user-chrome-pdf-scan.png in reports/blackbox-2026-10-23.
+**Clarification Asked**: "Với PDF thường có 2 trang, bạn đã chuyển sang trang 2 và thấy nội dung ở cả Chủ nhiệm/Sinh viên chưa? Đây là bước còn thiếu để chốt U13-05."
+**User Input**: "Đã chuyển trang và xem được"
+**AI Response**: Verified both original fixture byte streams contain /Title (untitled). Chromium's primary PDF viewer source prefers metadata Title to filename. Diagnosed fixture metadata rather than failed viewing or incorrect application material title. No production/PDF-byte changes. Updated U13-05/10/15 to Pass with notes explicitly crediting user manual Chrome checks; preserve previous snapshots and document latest47/0/3 totals. No commit/push or global acceptance.
+
+---
+
+## Manual download URL evidence and U14 test instructions
+**Timestamp**: 2026-10-24T02:57:24Z
+**User Input**: "**U13-22**Lấy **cùng một URL tải**: mở bằng tài khoản khác phải bị từ chối; mở lại sau **6 phút** cũng phải bị từ chối.  test như nào"
+**AI Response**: Explained Network download-token response URL, initial same-account success, different signed-in account before expiry and original account after six minutes; no blob URL or fresh-token substitution.
+**User Input**: "sinh viên a lúc đầu vẫn ok, sau đó tôi copy url sang sinh viên b ngay thì được như ảnh. Sau 6 phút copy lại vào sinh viên a thì cũng được như vậy"
+**Evidence**: User screenshot shows HTTP404 and DOWNLOAD_TOKEN_NOT_FOUND. Raw URL/token intentionally not copied into repository evidence.
+**AI Response**: Marked U13-22 Pass with manual-evidence provenance, reloaded status/note and read all50 cases:48 passed,0 failed,2 skipped. Saved separate user-url-retest snapshot and token-free artifact screenshot. No application changes, commit or push.
+**User Input**: "**U14-08**Ngắt mạng 30 giây rồi bật lại: chuông tự kết nối, cập nhật đúng số chưa đọc, không cần tải lại trang.**U14-15**Quan sát thực tế sau khi dời hạn thêm 2 ngày: không nhắc lặp hạn cũ, nhắc đúng hạn mới; bài đã ngưng không gửi nhắc. &#x20;
+test 2 cái này như nào"
+**AI Response**: Checked scanner implementation and business rules before explaining manual steps. Reminder is24h before closesAt (five-minute scan window), not at the submission deadline. Chrome Offline is needed for localhost interruption; Wi-Fi disconnect alone does not remove loopback access. Keep these two cases pending until actual observations are supplied.
+
+---
+
+## User confirmation — U14-08 offline recovery
+**Timestamp**: 2026-10-24T03:10:31Z
+**User Input**: "u14-08 đã ok"
+**AI Response**: Mark U14-08 Pass following the user's explicit confirmation after manual instructions. Artifact note credits the user's manual test rather than an agent-operated Chrome session or the prior automated regression. Latest scoped totals49 passed, zero failed, one pending U14-15; preserve earlier snapshots and save a separate offline-retest readback/proof. No source change, commit, push or global acceptance.
+
+---
+
+## Notification wording recommendation
+**Timestamp**: 2026-10-24T03:14:37Z
+**User Input**: "hiện tại tất cả thông báo đều có dòng đăng nhập để xem thông tin liên quan, tôi thấy chưa hợp lý lắm, nên sửa như thế nào"
+**AI Response**: Inspected NotificationEventService, NotificationService, EmailDeliveryService, popup renderer and U14 privacy/business rules. Event notifications hardcode the same sign-in summary; email already has its own sign-in template. Recommend action-specific in-app summaries by NotificationType, retain private grade details on authorized destination only, and normalize legacy generic summaries on API read so existing notifications improve without rewriting stored records. Provide concrete Vietnamese copy examples. Recommendation only; no application change or new approval flow introduced. U14-15 remains pending.
+
+---
+
+## Notification recipients by role — clarification
+**Timestamp**: 2026-10-24T03:18:21Z
+**User Input**: "nhưng các thông báo đối với các role khác ngoài student thì sao, có trường hợp nào cùng 1 thông báo nhưng 2 role khác nhau nhận không?"
+**AI Response**: Inspected RecipientResolver, ClassRef and resolver tests. Most notification types target active students; backup failures target active Admins. Leader-change requests target the single assigned teacherId and allow either TEACHER or SUBJECT_MANAGER when that manager teaches the class. Thus the same notification type can serve both teaching roles across classes, but current routing does not fan one event out to both roles simultaneously. Multiple recipients of one event receive separate notification records/read state. Recommend type-based copy with action appropriate to the receiving audience; add role/context-specific wording only when future routing actually gives different actions to distinct audiences. Recommendation only; no source/acceptance changes.
+
+---
+
+## Approved notification summary implementation
+**Timestamp**: 2026-10-24T03:20:22Z
+**User Input**: "ok sửa cho tôi đi"
+**AI Response**: Implement the previously proposed per-type in-app summaries for students, assigned teaching roles and Admins, including legacy generic summaries on feed read. Email already has a separate minimal sign-in template and remains separate. Recorded executable scope in construction/plans/code-generation-plan/u14-notification-summary-plan.md; approval is the user's explicit instruction following the concrete recommendation. Proceed with focused regression/build and local UI verification on fix-u04-u13-u14; preserve all prior dirty files. No new approval flow, commit or push.
+
+---
+
+## U14 notification summary regression and implementation
+**Timestamp**: 2026-10-24T03:29:45Z
+**AI Response**: RED run39 tests with15 expected failures (all12 legacy types plus teaching/Admin/grade event summaries). Added package-local exhaustive NotificationSummaries and wired event creation, feed DTO compatibility and reminder wording. GREEN run75 tests, zero failures/errors/skips, BUILD SUCCESS. Existing specific summaries remain unchanged; all stored IDs/links/read/timestamps are preserved; grade and email privacy regressions pass. No recipient routing, schema, authentication or scheduling changes. Production Docker build and local UI verification in progress.
+**Evidence**: .tmp/u14-summary-red.log and .tmp/u14-summary-green.log. Existing teacher request at23October22:41:31 and student grade event at22:37:42 both still displayed the old sign-in text in before-UI checks; these same records will verify legacy compatibility after restart. No live DB edits or extra QA notifications created for this check.
+
+---
+
+## U14 notification summary local verification complete
+**Timestamp**: 2026-10-24T03:39:41Z
+**AI Response**: Production backend image built and local backend/worker recreated with existing volumes/configuration. Both healthy after startup. Authenticated UI confirmed the same teacher request now reads “Xem yêu cầu để phê duyệt hoặc từ chối.” and the same student grade event reads “Xem kết quả chấm bài của bạn.” without score/comments; assignment/Quiz/announcement copy also correct. Teacher/student unread counts remain1/5 and original timestamps unchanged. New-event/Admin behavior covered by focused tests, not a real backup failure. Saved screenshots and DOM readback; completed scoped code/test report and plan. Supplemented artifact U14-13 privacy note and verified persistence after reload; checklist readback49/0/1 with U14-15 still pending. No new QA event, live DB rewrite, frontend/schema/config change, commit/push or global acceptance.
+**Artifacts**: construction/u14-announcements-and-notifications/code/notification-summary-refinement.md; construction/build-and-test/u14-notification-summary-2026-10-24.md; reports/u14-notification-summary-2026-10-24 (workspace-relative).
+
+---
+
+## Evidence retention advice and partial reminder retest
+**Timestamp**: 2026-10-24T09:37:06Z
+**Earlier User Input**: "Có nên bỏ các file ở reports, các file mới tạo trong code generation plan hay không?"
+**AI Response**: Inspected current report files/size and Git ignore/status; recommended preserving approved AI-DLC plans and reports, retaining evidence until U14-15 closes, with selective duplicate cleanup later. No files deleted or ignore rules changed.
+**User Input**: "khi test u14-15 tôi đã thấy thông báo gửi cho student vào đúng 24h trước hạn nộp, sau đó tôi đổi lại cho hạn mới cách khoảng 5p so với hạn cũ thì đúng đến 5p sau tôi đã thấy thông báo mới. "
+**AI Response**: Record original24h reminder and successful approximately+5minute rescheduling as user manual evidence. Read original artifact steps: stopped assignment and reschedule by2days. Distinguish the5minute variant from exact2day E2E, retain prior automated9/9 scanner coverage separately. Add partial evidence to existing artifact/report/state/plan without changing the overall49/0/1 disposition.
+**Clarification Asked**: "Bạn đã kiểm một bài tập được “Ngưng giao” trước mốc nhắc và xác nhận qua mốc đó không có thông báo mới cho Sinh viên chưa?"
+**Context**: Awaiting user confirmation of the stopped-assignment branch. No application change, live clock/DB mutation, commit/push or global acceptance.
+
+---
+
+## User confirmation — U14-15 stopped-assignment branch
+**Timestamp**: 2026-10-24T09:39:58Z
+**Question Answered**: "Bạn đã kiểm một bài tập được “Ngưng giao” trước mốc nhắc và xác nhận qua mốc đó không có thông báo mới cho Sinh viên chưa?"
+**User Input**: "Đã kiểm, không có thông báo"
+**AI Response**: Accept the two expected behavioral outcomes of U14-15 using the user-observed +5minute rescheduling variant and the confirmed stopped-assignment branch. Mark Pass and explicitly document that the original +2day manual data step was not performed; automated +2day scanner coverage remains separate. Do not alter original case steps or claim a real two-day wait. Final scoped disposition50/0/0; readback/proof being saved, previous evidence retained. No new source changes, tests, live clock/DB changes, commit/push or global-project acceptance.
+
+---
+
+## Final checklist readback
+**Timestamp**: 2026-10-24T09:42:19Z
+**AI Response**: Reloaded artifact, verified U14-15 Pass with explicit +5minute/manual evidence qualification, and read all50 current dispositions:50 passed,zero failed,zero skipped. Saved separate checklist-results-final.json and artifact-u14-final.png under reports/blackbox-2026-10-23; prior snapshots retained. Updated scoped report/state/plan. Completion covers the three-unit checklist with the documented data variant; no assertion of exact2day E2E, global project acceptance, commit or push.
+
+---
+
+## Unexpected top-of-page English sentence investigation
+**Timestamp**: 2026-10-24T09:51:00Z
+**User Input**: "Kiểm tra xem dòng chữ này có phải lỗi do tôi sửa u04, 13, 14 không? Nó thường xuất hiện ở phía trên cùng "
+**Reported Sentence**: "She rewrote the article to make it clearer. She rewrote."
+**AI Response**: Inspected current source/diff, root layout/AppShell, proxy and Nginx configuration. No sentence found in application source or the325 files searched in the actual frontend container's .next/server, .next/static and public directories. Root layout/AppShell/proxy have no changes from this remediation and no top-level text injection. Actual Nginx configuration has no matching sentence or content-injection directives. Reloaded/re-authenticated the existing QA student session in the in-app browser: same student and7 unread notifications, no sentence in DOM/top-of-page UI. User's earlier screenshot also showed the sentence below a raw JSON404 response, which is outside the React layout. Current evidence points toward a Chrome-profile extension/userscript injection rather than U04/U13/U14 changes; the exact browser-side source is not proven.
+**Clarification Asked**: "Bạn thử mở cùng trang bằng Chrome chế độ Khách (Guest), đăng nhập cùng tài khoản, rồi cho biết dòng “She rewrote…” còn xuất hiện không?"
+**Context**: Awaiting clean-profile comparison. No application/config/extension change, rollback, new test run, commit or push performed for this investigation. Audit entry only.
+
+---
+
+## Clean Chrome profile comparison — user confirmation
+**Timestamp**: 2026-10-24T10:01:48Z
+**Question Answered**: "Bạn thử mở cùng trang bằng Chrome chế độ Khách (Guest), đăng nhập cùng tài khoản, rồi cho biết dòng “She rewrote…” còn xuất hiện không?"
+**User Input**: "Không còn dòng chữ"
+**AI Response**: Clean Guest profile does not reproduce the sentence, confirming a profile-dependent symptom. Combined with source/build/DOM/proxy checks, there is no evidence attributing it to U04/U13/U14 changes. Extension/userscript injection remains the leading explanation; the exact extension or other profile-local mechanism is not identified. Recommend manually disabling extensions and re-enabling one by one to isolate it. No app rollback or source/config change is warranted by current evidence.
+
+---
+
+## Local commit preparation and documentation organization
+**Timestamp**: 2026-10-24T10:15:56Z
+**User Input**: "chia nhỏ thành các commit rồi commit lên branch fix-u04-u13-u14, không push. không commit các file ở .tmp, chuyển thư mục reports vào trong E:\FPTUni\sem9_fa26\test_report, các docs md mới tạo để fix ở construction đang hơi bị loạn, có cách nào tổ chức chúng rõ ràng hơn không"
+**AI Response**: Confirmed fix-u04-u13-u14 and initially empty Git index. Plan nine local commits: U13 upload CSRF; U13 extraction refresh; U04 read-only guidance; U14 announcement sanitization; U09 grading version dependency; U14 reconnect/reminder regressions; U14 notification action summaries; pre-existing local Docker healthchecks; consolidated documentation. User's current request authorizes these commits and the reversible documentation reorganization. No push.
+**Evidence Move**: Resolved exact source E:/GitHub/AI-Powered-Learning-Platform/reports and destination E:/FPTUni/sem9_fa26/test_report/reports before moving. Destination parent existed, destination reports did not. Moved all23 files and compared relative paths and SHA-256 hashes before/after: identical; source directory absent; existing destination-parent files preserved. External filesystem action authorized by the user and approved through the sandbox escalation tool.
+**Documentation Mapping**: Seven newly created fix documents now live under construction/remediation/u04-u13-u14: two plans in plans/, two implementation summaries in implementation/, three verification reports in verification/. README.md indexes all seven, distinguishes baseline/intermediate/final results, identifies external evidence and preserves the U14-15 +5minute manual-data qualification. Existing unit design/plans retained. Current references updated; this append-only audit deliberately preserves historical paths in prior entries. The separate remediation approval-questions file referred to historically was absent at inspection, so it was not reconstructed; original approval remains recorded in audit/plan.
+**Validation Scope**: Source unchanged from the already tested fixes. Reuse documented backend/frontend/notification verification; do not claim a new full test run. PBT remains disabled; runtime security/resiliency changes are N/A for organization/commits. Explicit staging only; .tmp remains ignored and excluded. Final commit/readback verification pending.
+
+---
+## Scoped local commits and final documentation staging
+**Timestamp**: 2026-10-24T10:18:17Z
+**AI Response**: Created eight independent source/test/local-config commits on fix-u04-u13-u14, preserving the tested source exactly. Confirmed no uncommitted backend/frontend/infra changes and no .tmp/reports paths in those commits. The consolidated dossier, U14 business-rule clarifications, audit and state form the ninth documentation commit. No push, merge or new application changes.
+**Commits**:
+
+5a67892 fix(u13): send CSRF token with multipart uploads
+370398c fix(u13): refresh pending material extraction
+6d0e9e4 fix(u04): clarify subject class table ownership
+b81ad4d fix(u14): sanitize announcement HTML before storage
+b161b6d fix(u09): prevent JSON reads from changing grading versions
+498e654 test(u14): cover reconnect and deadline rescheduling
+88dadeb fix(u14): show action summaries for notification recipients
+d630655 chore(local): allow backend and RabbitMQ startup health checks
+
+**Validation**: All Markdown links and explicit relative document paths in the new dossier resolve; fenced blocks balanced. Tracked historical audit text is an unchanged prefix. External final snapshot parses as50 rows, all Đạt; U14-15 note explicitly retains the +5minute manual-data variant and absence of a real +2day wait. All23 evidence files were hash-verified on move. No test rerun was needed for organization/committing; prior verification results remain accurately qualified. Final staged diff check and post-commit clean-tree readback are required before reporting completion.
+
+---
