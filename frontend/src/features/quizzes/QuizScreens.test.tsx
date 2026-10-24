@@ -128,6 +128,27 @@ describe("QuizDetailPage", () => {
     await waitFor(() => expect(getQuiz).toHaveBeenCalledTimes(2));
   });
 
+  it("thêm câu từ ngân hàng sau khi duyệt lỗi thì xóa danh sách lỗi cũ", async () => {
+    vi.mocked(getQuiz).mockResolvedValue({ ...detail(), items: [], maxScore: 0 });
+    vi.mocked(reviewQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_REVIEW_FAILED",
+      violations: [{ field: "items", code: "ITEMS_EMPTY", message: "Quiz cần ít nhất 1 câu" }] } as never));
+    vi.mocked(getBankQuestionsForQuiz).mockResolvedValue({ items: [{ id: "q1", lineageId: "q1", versionNo: 2, type: "MCQ_SINGLE",
+      stem: "Thủ đô của Việt Nam?", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z" }],
+      total: 1, page: 0, size: 50 });
+    vi.mocked(saveQuizItems).mockResolvedValue(detail({ version: 4 }));
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.click(await screen.findByTestId("quiz-detail-review"));
+    expect(await screen.findByTestId("quiz-detail-violations")).toHaveTextContent("Quiz cần ít nhất 1 câu");
+
+    fireEvent.click(screen.getByTestId("quiz-detail-add-bank"));
+    fireEvent.click(await screen.findByLabelText("Chọn câu Thủ đô của Việt Nam?"));
+    fireEvent.click(screen.getByTestId("bank-picker-add"));
+
+    expect(await screen.findByText("Đã thêm 1 câu từ ngân hàng.")).toBeInTheDocument();
+    expect(screen.queryByTestId("quiz-detail-violations")).not.toBeInTheDocument();
+  });
+
   it("quiz đã duyệt có nút phát hành", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail({ status: "REVIEWED" }));
     vi.mocked(publishQuiz).mockResolvedValue(detail({ status: "OPEN", publishedAt: "2026-10-20T09:00:00Z", version: 4 }));

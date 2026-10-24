@@ -6230,3 +6230,33 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Context**: Sửa lỗi U01/U10/U11, có chạm U04/U05 (thứ tự khóa khi gán phân công).
 
 ---
+
+## 2026-10-25T02:00:00Z — Rà toàn bộ dự án trên staging
+
+**User Input**: "kiểm tra trên staging toàn bộ dự án cho tôi xem còn lỗi gì không sau đó gửi tôi báo cáo"
+
+**AI Response**: Bắt đầu rà `staging` `d9a0300` (sau PR #16, #18): build/test đầy đủ, test DB bị bỏ qua, dựng stack Docker và smoke test, rà tĩnh bảo mật/cấu hình/phụ thuộc, rà logic các module rủi ro cao. Kết quả: backend `mvn verify` 1346 test đạt (35 bỏ qua); chạy riêng 35 test DB bị bỏ qua trên PostgreSQL của stack tạm: U06 2/2, U12 2/2 đạt, U04 26/31 (5 case lỗi có sẵn từ trước PR #18, test cũ so với `c58e8c3`/`79effa0`, hành vi thật đúng khi kiểm qua API). Stack Docker riêng (`auditstack`, cổng khác, không đụng stack `platform`) lên đủ 8 container healthy, không stub, không lỗi log; e2e API 50/50 (kích hoạt OTP, đặt lại mật khẩu, tạo môn/lớp/ghi danh, ngân hàng câu, phát hành Quiz, làm và nộp, xung đột answerVersion, chặn đổi role, phân quyền chéo, lỗi đăng nhập trung tính, đăng xuất, lưu trữ/mở lại môn). Phát hiện: `next` 16.3.8 có 2 lỗ hổng critical và 1 high (sửa ở 16.4.3); `U03_FILEREF_SECRET` thiếu thì mỗi tiến trình tự sinh khóa riêng; `DeadlineReminderScanner` không bắt lỗi từng lớp; Flyway `out-of-order` bật. Đã gỡ stack tạm, volume, image và file secret. Không sửa code.
+
+**Context**: Rà soát toàn dự án, ngoài luồng stage.
+
+---
+
+## 2026-10-25T03:00:00Z — Test UI thật và báo cáo lỗi cho nhóm
+
+**User Input**: "kiểm tra bằng cách test thật trên giao diện UI, sau đó tổng hợp lại tất cả các lỗi cùng với người chịu trách nghiệm rồi gửi tôi 1 bản báo cáo để tôi có thể gửi cho nhóm của mình"
+
+**AI Response**: Dựng lại stack tạm `auditstack` từ `staging` `d9a0300`, test giao diện bằng trình duyệt theo từng vai trò, gán lỗi theo unit và người phụ trách, xuất bản báo cáo. Đã test UI đủ 4 vai (Admin, Chủ nhiệm môn, giảng viên, sinh viên): tài khoản, môn, audit, cài đặt, ngân hàng câu hỏi, soạn/duyệt/phát hành Quiz, soạn/phát hành bài tập, làm và nộp bài, chấm/chốt/công bố điểm, sổ điểm, làm Quiz, thông báo, thông báo lớp (kiểm lọc HTML), chia nhóm. Lỗi mới: link thông báo bài tập của sinh viên sai route (U14), trang chấm bài lồng hai khung (U09), audit hiện mã thô (U02), hộp chặn đổi role hiện UUID (U01), banner cũ sau khi thêm câu (U10). Đã gỡ stack tạm và file chứa mật khẩu test. Không sửa code.
+
+**Context**: Rà soát toàn dự án qua UI, ngoài luồng stage.
+
+---
+
+## 2026-10-25T05:00:00Z — Sửa B5, B9 của báo cáo staging
+
+**User Input**: "Tạo nhánh mới từ staging và sửa B5 (hộp chặn đổi role hiện UUID) và B9 (banner Quiz cũ), kèm test."
+
+**AI Response**: Tạo nhánh `fix/u01-u10-review-ui` (`--no-track`) từ `origin/staging`. B5: `RoleChangeBlockedException` mang thêm mã, tên môn/lớp (đọc qua `ISubjectQuery`, `IClassAccess`; lỗi hoặc không thấy thì chỉ có id, vẫn chặn); response 409 thêm `subjects`, `classes`, giữ `managedSubjects`, `taughtClasses`; hộp thoại hiện mã (môn có link), tên. B9: `QuizDetailPage.show` xóa danh sách lỗi duyệt khi nhận Quiz mới. Test: 2 unit U01 (có mã/tên; tra cứu lỗi vẫn chặn), 1 MockMvc, 2 test màn hình (đỏ trên code cũ). Kết quả: backend `mvn verify` 1347 test, 0 lỗi, 35 bỏ qua; frontend lint/typecheck/build đạt, 484/484 test. Chưa commit.
+
+**Context**: Sửa lỗi U01, U10 từ báo cáo rà soát staging.
+
+---

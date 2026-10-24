@@ -45,8 +45,10 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const [reason, setReason] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
+  // Mọi lần nhận Quiz mới từ máy chủ (thêm câu, lưu, tải lại…) thì lỗi duyệt cũ không còn đúng nữa.
   const show = useCallback((next: QuizDetail) => {
     setDetail(next);
+    setViolations([]);
     setItems(draftItems(next));
     setSettings(settingsFormOf(next.quiz));
     setSettingsErrors({});

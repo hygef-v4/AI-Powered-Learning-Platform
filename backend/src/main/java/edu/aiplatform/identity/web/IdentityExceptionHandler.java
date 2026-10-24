@@ -39,6 +39,8 @@ public class IdentityExceptionHandler {
         detail.setProperty("code", "ROLE_CHANGE_BLOCKED");
         detail.setProperty("managedSubjects", e.managedSubjects());
         detail.setProperty("taughtClasses", e.taughtClasses());
+        detail.setProperty("subjects", e.subjects());
+        detail.setProperty("classes", e.classes());
         return detail;
     }
 
