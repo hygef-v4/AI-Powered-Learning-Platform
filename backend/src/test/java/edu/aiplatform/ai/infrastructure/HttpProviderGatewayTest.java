@@ -140,6 +140,22 @@ class HttpProviderGatewayTest {
     }
 
     @Test
+    void geminiInvalidKeyIsReportedAsInvalidKeyNotBadModel() {
+        status = 400;
+        reply = "{\"error\":{\"code\":400,\"message\":\"API key not valid. Please pass a valid API key.\",\"status\":\"INVALID_ARGUMENT\",\"details\":[{\"reason\":\"API_KEY_INVALID\"}]}}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(null)))
+                .isInstanceOfSatisfying(ProviderException.class, e -> {
+                    assertThat(e.kind()).isEqualTo(FailureKind.REJECTED);
+                    assertThat(e.getMessage()).isEqualTo("Key API không hợp lệ (HTTP 400)");
+                });
+        status = 400;
+        reply = "{\"error\":{\"message\":\"Invalid model\"}}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(null)))
+                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.getMessage()).contains("model"));
+        status = 200;
+    }
+
+    @Test
     void clientErrorsAreRejectedWithoutChargeAndHideProviderBody() {
         status = 401;
         reply = "{\"error\":\"invalid key secret-key\"}";

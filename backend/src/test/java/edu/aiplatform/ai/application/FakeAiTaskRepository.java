@@ -58,6 +58,11 @@ class FakeAiTaskRepository extends AiTaskRepository {
     }
 
     @Override
+    public void lockActor(UUID actorId) {
+        // một luồng trong test: không cần khóa
+    }
+
+    @Override
     public int countActive(UUID actorId) {
         return (int) rows.values().stream().filter(r -> r.actorId().equals(actorId) && r.active()).count();
     }

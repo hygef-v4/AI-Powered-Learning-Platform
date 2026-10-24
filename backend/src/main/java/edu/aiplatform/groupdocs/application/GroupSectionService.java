@@ -133,8 +133,7 @@ public class GroupSectionService {
             throw ApiException.conflict("SECTION_VERSION_CONFLICT", "Mục vừa được thay đổi ở nơi khác, hãy tải lại");
         }
         List<DocumentBlock> content = checkBlocks(blocks);
-        ValidationResult result = documentModel.validateForSave(ctx.document().sharedBlocks(), new DocumentModel(content));
-        rejectInvalid(result);
+        rejectInvalid(validate(ctx, section, content));
         Instant now = clock.instant();
         GroupSection saved = save(section.withDraft(content, now));
         documents.touch(documentId, now);
@@ -151,7 +150,7 @@ public class GroupSectionService {
         refuse(SectionRules.canEdit(section, actor.accountId()));
         List<DocumentBlock> content = section.draftBlocks() != null ? section.draftBlocks()
                 : section.publishedBlocks() == null ? List.of() : section.publishedBlocks();
-        rejectInvalid(documentModel.validateForSave(ctx.document().sharedBlocks(), new DocumentModel(content)));
+        rejectInvalid(validate(ctx, section, content));
         Instant now = clock.instant();
         GroupSection finished = save(section.withDraft(content, section.draftSavedAt()).done(now));
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), actor.accountId(), content, now));
@@ -191,6 +190,12 @@ public class GroupSectionService {
             throw ApiException.badRequest("SECTION_CONTENT_INVALID", "Nội dung mục không hợp lệ");
         }
         return content;
+    }
+
+    /** Kiểm nội dung mục trong khung chung (block của người soạn còn đủ, đúng thứ tự). */
+    private ValidationResult validate(GroupDocContext ctx, GroupSection section, List<DocumentBlock> content) {
+        DocumentModel shared = ctx.document().sharedBlocks();
+        return documentModel.validateForSave(shared, GroupSnapshot.withSection(shared, section.headingBlockId(), content));
     }
 
     private static void rejectInvalid(ValidationResult result) {

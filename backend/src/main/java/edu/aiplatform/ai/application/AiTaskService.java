@@ -96,6 +96,7 @@ public class AiTaskService implements IAiTask {
         }
         AiConnection connection = connectionFor(actor, request);
         int max = Math.min(request.maxOutputTokens(), catalog.maxOutputTokens(connection.provider()));
+        tasks.lockActor(actor.accountId());
         if (tasks.countActive(actor.accountId()) >= MAX_ACTIVE) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "AI_TOO_MANY_TASKS",
                     "Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại");

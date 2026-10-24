@@ -59,6 +59,18 @@ public final class GroupSnapshot {
         return new Result(new DocumentModel(out), authors, undone);
     }
 
+    /**
+     * Khung kèm nội dung của một mục đặt đúng chỗ của phần đó, để kiểm nháp như một bài hoàn chỉnh: bộ kiểm của U07
+     * so block của người soạn trên cả tài liệu, nên không kiểm riêng nội dung mục được.
+     */
+    public static DocumentModel withSection(DocumentModel shared, UUID headingBlockId, List<DocumentBlock> content) {
+        List<DocumentBlock> skeleton = shared == null || shared.blocks() == null ? List.of() : shared.blocks();
+        List<DocumentBlock> out = new ArrayList<>(skeleton);
+        int at = insertionPoint(skeleton, headingBlockId);
+        out.addAll(at < 0 ? out.size() : at, content);
+        return new DocumentModel(out);
+    }
+
     /** Vị trí ngay trước heading kế tiếp sau heading của phần; không có heading của phần thì −1 (cuối tài liệu). */
     static int insertionPoint(List<DocumentBlock> skeleton, UUID headingId) {
         if (headingId == null) {

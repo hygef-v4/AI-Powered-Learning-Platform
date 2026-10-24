@@ -43,7 +43,9 @@ public class GroupAutoSubmitScanner implements IScheduledScanner {
         List<UUID> overdue = new ArrayList<>();
         for (UUID assignmentId : documents.listInProgressAssignments()) {
             try {
-                if (assignments.submissionWindow(assignmentId, now.minus(SectionRules.GRACE)) == SubmissionWindow.CLOSED) {
+                // Cả lúc này lẫn 30 giây trước đều đóng: chỉ lùi giờ thì bài vừa mở cũng bị coi là quá hạn.
+                if (assignments.submissionWindow(assignmentId, now) == SubmissionWindow.CLOSED
+                        && assignments.submissionWindow(assignmentId, now.minus(SectionRules.GRACE)) == SubmissionWindow.CLOSED) {
                     overdue.add(assignmentId);
                 }
             } catch (RuntimeException e) {

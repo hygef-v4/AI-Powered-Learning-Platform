@@ -36,7 +36,10 @@ public class AiSourceService {
     public List<SourceOption> sources(Actor actor) {
         access.require(actor, Actions.AI_PERSONAL);
         List<SourceOption> options = new ArrayList<>();
-        options.add(shared(actor));
+        // Student, Admin không dùng API của trường (BR-U06-11): popup chỉ có API cá nhân.
+        if (access.allowed(actor, Actions.AI_SHARED_USE)) {
+            options.add(shared(actor));
+        }
         for (AiProvider provider : AiProvider.values()) {
             Optional<AiConnection> personal = connections.findPersonal(actor.accountId(), provider)
                     .filter(c -> c.status() == Status.ACTIVE);
@@ -49,10 +52,6 @@ public class AiSourceService {
     }
 
     private SourceOption shared(Actor actor) {
-        if (!access.allowed(actor, Actions.AI_SHARED_USE)) {
-            return new SourceOption(AiSource.SHARED, null, null, null, false,
-                    "Chỉ giảng viên dùng API của trường", null, "SCHOOL");
-        }
         Optional<AiConnection> connection = Arrays.stream(AiProvider.values()).map(connections::findInstitutional)
                 .flatMap(Optional::stream).filter(c -> c.status() == Status.ACTIVE).findFirst();
         if (connection.isEmpty()) {

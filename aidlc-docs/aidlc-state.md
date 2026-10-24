@@ -633,4 +633,11 @@ Final checkpoint: code available for review; independent acceptance gates retain
 ## U12 sửa sau kiểm thử hộp đen — 2026-10-24
 - [x] Người dùng duyệt sửa 4 chỗ lệch kế hoạch kiểm thử (U12-03, 05, 08, 13); plan `construction/plans/2026-10-24-u12-test-plan-gaps.md`.
 - [x] Code + test frontend trên nhánh `fix/u12-test-plan-gaps` (từ `staging` 301c573); 473 test frontend, tsc, lint, build đạt; code-summary U12 đã cập nhật.
+- [x] PR #17 gộp vào `staging` (6d54047) sau khi CI đạt; chạy thử giao diện với backend giả: U12-03, 08, 09, 13 và `?tab=students` đúng.
 - [ ] Người test chạy lại U12-03, 05, 08, 09, 13 trên localhost:8088 sau khi gộp.
+
+## Kiểm thử end-to-end U02, U06, U12 và sửa lỗi — 2026-10-24
+- [x] Stack local `platform-local` (cổng 8088) từ `staging` 6d54047; dữ liệu thử tạo qua API, OTP đọc từ Mailpit.
+- [x] Tìm và sửa 7 lỗi (2 lỗi nặng ở U12: không lưu được nháp; tự nộp đóng tài liệu ngay sau khi mở bài). Plan `construction/plans/2026-10-24-e2e-u06-u12-fixes.md`.
+- [x] Sau sửa: U02 16/16, U06 39/40 (ca còn lại do thứ tự chạy, lần đầu đạt), U12 55/55; `mvn verify` 1353 test, frontend 473 test, build đạt.
+- [ ] Ca cần khóa AI thật do người dùng tự test; tích hợp `DocumentEditor` (Draw.io) cho tài liệu nhóm (KAN-64, 66) để PR riêng.
