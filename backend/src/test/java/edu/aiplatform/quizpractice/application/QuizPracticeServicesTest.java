@@ -235,6 +235,41 @@ class QuizPracticeServicesTest {
     }
 
     @Test
+    void submitRescoresWhenAnAutosaveLandsBetweenScoringAndSubmit() {
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("2")), 0);
+        store.beforeSubmit = () -> {
+            store.beforeSubmit = null;
+            attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1"), q2, List.of("1", "2")), 1);
+        };
+
+        var result = attemptsService.submit(student, taking.attemptId());
+
+        QuizAttempt stored = store.byId.get(taking.attemptId());
+        assertThat(stored.answerVersion()).isEqualTo(2);
+        assertThat(stored.answers()).containsEntry(q1, List.of("1"));
+        assertThat(stored.score()).as("điểm chấm trên câu trả lời đã lưu sau cùng").isEqualByComparingTo("3");
+        assertThat(result.score()).isEqualByComparingTo("3");
+        assertThat(result.correctCount()).isEqualTo(2);
+        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_ATTEMPT_SUBMITTED");
+    }
+
+    @Test
+    void submitGivesUpWithConflictWhenSavesKeepLanding() {
+        var taking = attemptsService.start(student, quizId, classA);
+        long[] version = {0};
+        store.beforeSubmit = () -> {
+            attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), version[0]);
+            version[0]++;
+        };
+
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).code())
+                .isEqualTo("ANSWER_VERSION_CONFLICT");
+        assertThat(store.byId.get(taking.attemptId()).inProgress()).isTrue();
+        assertThat(version[0]).isEqualTo(PracticeSupport.SUBMIT_TRIES);
+    }
+
+    @Test
     void resultFollowsSnapshotSettingsAndIsOwnOnly() {
         settings = new QuizSettings(false, false, null, 3, false, false);
         UUID attemptId = submitFresh(student);
@@ -383,6 +418,8 @@ class QuizPracticeServicesTest {
     /** Repository giả: đủ cho luồng làm bài (không kiểm SQL). */
     static final class InMemoryAttempts implements IQuizAttemptRepository {
         final Map<UUID, QuizAttempt> byId = new LinkedHashMap<>();
+        /** Chạy ngay trước câu lệnh nộp: giả một lần lưu từ request khác xen vào giữa lúc chấm và lúc nộp. */
+        Runnable beforeSubmit;
 
         @Override
         public Optional<QuizAttempt> find(UUID id) {
@@ -421,8 +458,11 @@ class QuizPracticeServicesTest {
 
         @Override
         public boolean submit(QuizAttempt attempt) {
+            if (beforeSubmit != null) {
+                beforeSubmit.run();
+            }
             QuizAttempt current = byId.get(attempt.id());
-            if (current == null || !current.inProgress()) {
+            if (current == null || !current.inProgress() || current.answerVersion() != attempt.answerVersion()) {
                 return false;
             }
             byId.put(attempt.id(), attempt);

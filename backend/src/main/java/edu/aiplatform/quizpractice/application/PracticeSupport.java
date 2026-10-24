@@ -39,6 +39,8 @@ class PracticeSupport {
 
     static final String QUIZ_NOT_FOUND = "QUIZ_NOT_FOUND";
     static final String ATTEMPT_NOT_FOUND = "QUIZ_ATTEMPT_NOT_FOUND";
+    /** Số lần chấm lại khi có lần lưu xen vào lúc nộp; quá thì {@code 409}. */
+    static final int SUBMIT_TRIES = 3;
 
     private final IQuizAttemptRepository attempts;
     private final IQuizQuery quizzes;
@@ -93,23 +95,34 @@ class PracticeSupport {
     }
 
     /**
-     * Chấm bằng đáp án ghim của U10 rồi nộp có điều kiện {@code IN_PROGRESS} (BR-U11-15). Lượt đã được nộp ở nơi
-     * khác thì trả bản đã nộp, không nộp hai lần (NFR-U11-10).
+     * Chấm bằng đáp án ghim của U10 rồi nộp có điều kiện {@code IN_PROGRESS} và {@code answerVersion} (BR-U11-15).
+     * Lượt đã được nộp ở nơi khác thì trả bản đã nộp, không nộp hai lần (NFR-U11-10). Có lần lưu xen vào thì đọc lại
+     * và chấm lại trên câu trả lời mới, để điểm luôn khớp câu trả lời được lưu.
      */
     QuizAttempt submit(Actor actor, QuizAttempt attempt, SubmitMode mode) {
-        Instant now = clock.instant();
+        QuizAttempt current = attempt;
+        for (int tries = 0; tries < SUBMIT_TRIES; tries++) {
+            QuizAttempt submitted = scored(current, mode);
+            if (attempts.submit(submitted)) {
+                access.success(actor, "QUIZ_ATTEMPT_SUBMITTED", current.id(), Map.of("mode", mode.name(),
+                        "quizId", current.quizId().toString()));
+                return submitted;
+            }
+            current = attempts.find(attempt.id()).orElseThrow(() -> ApiException.notFound(ATTEMPT_NOT_FOUND));
+            if (!current.inProgress()) {
+                return current;
+            }
+        }
+        throw ApiException.conflict("ANSWER_VERSION_CONFLICT", "Câu trả lời đang được lưu từ nơi khác; hãy thử nộp lại");
+    }
+
+    private QuizAttempt scored(QuizAttempt attempt, SubmitMode mode) {
         List<QuizAnswer> answers = attempt.answers().entrySet().stream()
                 .map(e -> new QuizAnswer(e.getKey(), new HashSet<>(e.getValue()))).toList();
         QuizScore score = call(() -> scoring.score(attempt.quizId(), answers));
         List<QuestionResult> results = score.questions().stream()
                 .map(q -> new QuestionResult(q.questionId(), q.correct(), q.points(), q.maxPoints())).toList();
-        QuizAttempt submitted = attempt.submitted(mode, score.total(), score.maxTotal(), results, now);
-        if (!attempts.submit(submitted)) {
-            return attempts.find(attempt.id()).orElseThrow(() -> ApiException.notFound(ATTEMPT_NOT_FOUND));
-        }
-        access.success(actor, "QUIZ_ATTEMPT_SUBMITTED", attempt.id(), Map.of("mode", mode.name(),
-                "quizId", attempt.quizId().toString()));
-        return submitted;
+        return attempt.submitted(mode, score.total(), score.maxTotal(), results, clock.instant());
     }
 
     /**
