@@ -5806,3 +5806,21 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Context**: Construction — U10 giai đoạn 7, bước 7.4.
 
 ---
+
+## Merge conflict resolution and post-merge verification — 2026-10-24
+
+**Timestamp**: 2026-10-24T10:42:02+07:00
+
+**User Input**: "giúp tôi resolve conflict"; "merge xong r thì chạy thử backend frontend xem có được k".
+
+**AI Response / Context**: Giải xung đột duy nhất trong `aidlc-docs/audit.md`, giữ nguyên các mục được thêm từ cả `mcp-test` và `staging`. Hoàn tất merge cục bộ bằng commit `b5bf4b61` (`Merge branch 'staging' into mcp-test`); không push.
+
+**Verification**:
+- Frontend: 79 test files / 455 tests pass; lint, typecheck và production build pass. Lần chạy test đầu lỗi ENOENT ở thư mục temp sandbox; rerun với temp trong workspace pass. Standalone server báo Ready trên cổng 3001, nhưng HTTP route không xác minh được: probe loopback timeout và tab in-app localhost hiện “This site can't be reached”. Không ghi UI runtime pass.
+- Backend: Maven compile 646 production sources và 193 test sources thành công. `QuizAiDraftServiceTest` + `QuizMcpToolsSchemaTest`: 19 pass. Full `mvn verify`: 1293 tests, 0 assertion failures, 23 errors, 35 skipped; lỗi nằm ở `HttpProviderGatewayTest` (9 loopback errors), `RequestThrottleIntegrationTest` (6 Redis connection errors), `SessionStoreIntegrationTest` (8 Redis connection errors). Đóng gói với `-DskipTests` pass.
+- Backend jar từ source đã merge khởi động trong container smoke riêng, kết nối PostgreSQL/RabbitMQ, validate 16 Flyway migrations, schema up to date; `/health` trả `UP` bên trong container. Container smoke đã được gỡ.
+- Compose full-stack rebuild không thực hiện được vì DNS không phân giải `registry-1.docker.io`; lệnh dừng trước khi recreate service. Dịch vụ và dữ liệu local hiện hữu không bị thay đổi.
+
+**Limitations**: Chưa xác minh route frontend/UI qua trình duyệt in-app; backend full suite vẫn có 23 lỗi kết nối môi trường như liệt kê. Không push, deploy hoặc thay đổi fixture dữ liệu.
+
+---
