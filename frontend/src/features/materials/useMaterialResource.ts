@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { materialError } from "./api";
 
 export function useMaterialResource<T>(url: string | null) {
   const [revision, setRevision] = useState(0);
+  const reload = useCallback(() => setRevision((value) => value + 1), []);
   const [state, setState] = useState<{ key: string; data?: T; error?: string }>({ key: "" });
   const key = `${url}:${revision}`;
   useEffect(() => {
@@ -18,5 +19,5 @@ export function useMaterialResource<T>(url: string | null) {
   }, [url, key]);
   const current = state.key === key ? state : undefined;
   return { data: current?.data, error: current?.error, loading: !!url && !current,
-    reload: () => setRevision((value) => value + 1) };
+    reload };
 }

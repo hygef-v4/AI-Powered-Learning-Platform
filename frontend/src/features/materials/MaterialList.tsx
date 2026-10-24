@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/ui/Button";
 import { MaterialSourceDialog } from "./MaterialDialogs";
 import { materialApi, materialError, scopePath } from "./api";
@@ -15,6 +15,15 @@ export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: st
   const [adding, setAdding] = useState<MaterialKind>(); const [error, setError] = useState("");
   const [busy, setBusy] = useState(false); const drag = useRef<string | null>(null); const lock = useRef(false);
   const rows = resource.data ?? [];
+  const pending = rows.some(m => m.status === "ACTIVE" && m.current.textStatus === "PENDING");
+  const { data, error: loadError, reload } = resource;
+  // Extraction runs in the worker; refresh only while there is unfinished work.
+  // Waiting until each response avoids overlapping requests, and errors stop polling.
+  useEffect(() => {
+    if (!pending || loadError || busy || adding) return;
+    const timer = setTimeout(reload, 5000);
+    return () => clearTimeout(timer);
+  }, [pending, data, loadError, reload, busy, adding]);
   const visible = rows.filter(m => filter === "ARCHIVED" ? m.status === "ARCHIVED" : m.status === "ACTIVE" && (filter === "CLASS" || filter === "SUBJECT" ? m.scope === filter : true));
   const own = rows.filter(m => m.status === "ACTIVE" && m.scope === (scope === "subjects" ? "SUBJECT" : "CLASS"));
   async function move(id: string, offset: number, targetId?: string) {

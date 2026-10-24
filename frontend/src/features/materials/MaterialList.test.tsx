@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { apiFetch } from "@/shared/api/client";
 import { MaterialList } from "./MaterialList";
 import { ClassMaterialsCard, MaterialLinkList } from "./MaterialSections";
@@ -7,6 +7,26 @@ import type { Material } from "./types";
 vi.mock("@/shared/api/client", async importOriginal => ({ ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: vi.fn() }));
 const row = (id: string, changes: Partial<Material> = {}): Material => ({ id, scope: "SUBJECT", subjectId: "subject", classId: null, kind: "FILE", title: `Document ${id}`, description: "", orderNo: 0, status: "ACTIVE", currentVersionNo: 1, version: 2, updatedAt: "2026-10-21T00:00:00Z", canManage: true, versions: [], current: { versionNo: 1, fileName: "doc.pdf", mimeType: "application/pdf", byteSize: 1000, videoUrl: null, videoId: null, textStatus: "EXTRACTED", createdBy: "actor", createdAt: "2026-10-21T00:00:00Z" }, ...changes });
 beforeEach(() => { vi.mocked(apiFetch).mockReset(); });
+afterEach(() => vi.useRealTimers());
+it("refreshes pending extraction without user actions and stops after completion", async () => {
+  vi.useFakeTimers();
+  const pending=row("a");pending.current={...pending.current,textStatus:"PENDING"};
+  vi.mocked(apiFetch).mockResolvedValueOnce([pending]).mockResolvedValue([row("a")]);
+  const view=render(<MaterialList scope="subjects" scopeId="subject" />);
+  await act(async()=>{});
+  expect(screen.getByText("Đang xử lý")).toBeInTheDocument();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
+  expect(screen.getByText("Đã trích")).toBeInTheDocument();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(15000);});
+  expect(apiFetch).toHaveBeenCalledTimes(2);
+  view.unmount();
+});
+it("cancels pending extraction refresh when leaving the list", async () => {
+  vi.useFakeTimers();const pending=row("a");pending.current={...pending.current,textStatus:"PENDING"};
+  vi.mocked(apiFetch).mockResolvedValue([pending]);
+  const view=render(<MaterialList scope="subjects" scopeId="subject" />);await act(async()=>{});view.unmount();
+  await vi.advanceTimersByTimeAsync(10000);expect(apiFetch).toHaveBeenCalledOnce();
+});
 it("filters active and archived rows", async () => {
   vi.mocked(apiFetch).mockResolvedValue([row("a"), row("b", { status: "ARCHIVED", canManage: false })]);
   render(<MaterialList scope="subjects" scopeId="subject" />);
