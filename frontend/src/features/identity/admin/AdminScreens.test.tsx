@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { useSession } from "../session";
@@ -120,6 +120,29 @@ describe("AccountDetailPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Dữ liệu đã được thay đổi ở phiên khác");
     expect(updateAccount).toHaveBeenCalledWith("acc-1", "Tên mới", "", 3);
     await waitFor(() => expect(getAccount).toHaveBeenCalledTimes(2));
+  });
+
+  it("bị chặn đổi vai trò thì hiện mã, tên môn và lớp thay cho ID", async () => {
+    signedInAs("admin-1");
+    vi.mocked(changeRole).mockRejectedValue(
+      new ApiError({
+        status: 409, code: "ROLE_CHANGE_BLOCKED", managedSubjects: ["sub-uuid"], taughtClasses: ["class-uuid"],
+        subjects: [{ id: "sub-uuid", code: "SWR302", name: "Software Requirements" }],
+        classes: [{ id: "class-uuid", code: "SE1801", name: "Lớp SE1801" }],
+      } as never),
+    );
+    render(<AccountDetailPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
+    fireEvent.change(screen.getByLabelText(/^Vai trò mới/), { target: { value: "TEACHER" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
+
+    const dialog = await screen.findByRole("dialog", { name: "Không đổi được vai trò" });
+    expect(within(dialog).getByRole("link", { name: "SWR302" })).toHaveAttribute("href", "/admin/subjects/sub-uuid");
+    expect(dialog).toHaveTextContent("Software Requirements");
+    expect(dialog).toHaveTextContent("SE1801");
+    expect(dialog).toHaveTextContent("Lớp SE1801");
+    expect(dialog).not.toHaveTextContent("class-uuid");
   });
 
   it("đổi vai trò cần xác nhận; bị chặn thì hiện môn/lớp còn phụ trách", async () => {

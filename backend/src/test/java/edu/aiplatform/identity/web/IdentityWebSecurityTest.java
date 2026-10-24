@@ -308,7 +308,9 @@ class IdentityWebSecurityTest {
         signedIn();
         UUID subject = UUID.randomUUID();
         when(accountAdminService.changeRole(eq(STUDENT), any(), eq(Role.TEACHER), eq(2L)))
-                .thenThrow(new RoleChangeBlockedException(java.util.List.of(subject), java.util.List.of()));
+                .thenThrow(new RoleChangeBlockedException(
+                        java.util.List.of(new RoleChangeBlockedException.Held(subject, "SWR302", "Software Requirements")),
+                        java.util.List.of()));
 
         mvc.perform(put("/api/v1/admin/accounts/" + UUID.randomUUID() + "/role")
                         .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
@@ -317,7 +319,10 @@ class IdentityWebSecurityTest {
                         .content("{\"role\":\"TEACHER\",\"version\":2}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ROLE_CHANGE_BLOCKED"))
-                .andExpect(jsonPath("$.managedSubjects[0]").value(subject.toString()));
+                .andExpect(jsonPath("$.managedSubjects[0]").value(subject.toString()))
+                .andExpect(jsonPath("$.subjects[0].code").value("SWR302"))
+                .andExpect(jsonPath("$.subjects[0].name").value("Software Requirements"))
+                .andExpect(jsonPath("$.classes").isEmpty());
     }
 
     @Test
