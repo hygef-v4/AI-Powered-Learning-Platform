@@ -6218,3 +6218,15 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Handoff**: staging HEAD6337b42b2c58200811fa640e9bba97b030df8144, incoming5bb51a5ea08edb084a99e4ef949cdc2c0f0bb6be. Source was auto-merged by Git and not edited during resolution. State/audit preserve E2E U02/U06/U12 and U04/U13/U14 evidence/acceptance limits. No commit, push, deployment, DB/clock mutation or acceptance upgrade. Runtime security/resiliency changes N/A for documentation; PBT disabled.
 
 ---
+
+---
+
+## 2026-10-24T11:00:00Z — Sửa các điểm còn lại của bản rà soát (mục 3–6)
+
+**User Input**: "tạo nhánh mới và sửa toàn bộ các điểm còn lại cho tôi"
+
+**AI Response**: Tạo nhánh `fix/review-followups` (`--no-track`) từ `origin/staging` `5a1f605`. (3) `QuizAutoSubmitScanner` nộp mỗi lượt trong transaction riêng, lượt lỗi được ghi log và để lần chạy sau; `findOverdue` bỏ `for update skip locked` vì không còn chạy trong transaction. (4) `IAccountLookup.lockContact` (`FOR SHARE`, phải trong transaction); U01 đổi role khóa tài khoản (`lockById`) rồi mới kiểm phân công trong transaction; U04 `SubjectCommandService` và U05 `AcademicsService` gán Chủ nhiệm môn/giảng viên qua `lockContact`, khóa tài khoản trước dòng môn để cùng thứ tự với U01 (tránh deadlock), giữ thứ tự lỗi cũ; mở lại lớp vẫn đọc không khóa. (5) `QuizTakingPage` lưu bằng `keepalive` khi `pagehide` và khi trang bị ẩn. (6) Ghi bất biến "đề và đáp án của Quiz đã phát hành cố định" vào `IQuizQuery`, `IQuizScoring`; thêm test U10 khóa bất biến này. Test mới: scanner bỏ qua lượt lỗi, đổi role khóa rồi kiểm trong transaction, khóa chia sẻ chặn khóa đổi role trên PostgreSQL thật, bất biến Quiz đã phát hành, keepalive khi rời/ẩn trang; cập nhật stub test U04/U05 sang `lockContact`. Kết quả: frontend lint/typecheck/build đạt, 459/459 test; backend `mvn verify` 1299 test, 0 lỗi, 35 bỏ qua (cần biến môi trường DB riêng, như CI). Chưa commit.
+
+**Context**: Sửa lỗi U01/U10/U11, có chạm U04/U05 (thứ tự khóa khi gán phân công).
+
+---

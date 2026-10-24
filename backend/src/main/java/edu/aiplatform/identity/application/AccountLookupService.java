@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cài {@link IAccountLookup} (domain-entities U01 mục 13): thông tin liên hệ tối thiểu (email, tên, role, trạng thái),
@@ -63,6 +65,13 @@ public class AccountLookupService implements IAccountLookup {
     @Override
     public Optional<AccountContact> getContact(UUID accountId) {
         return accountId == null ? Optional.empty() : accounts.findById(accountId).map(AccountLookupService::contact);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<AccountContact> lockContact(UUID accountId) {
+        return accountId == null ? Optional.empty()
+                : accounts.findByIdForShare(accountId).map(AccountLookupService::contact);
     }
 
     /** Số đếm cho Admin Dashboard (U15); không có dữ liệu cá nhân. */

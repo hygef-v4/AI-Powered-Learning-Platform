@@ -23,5 +23,13 @@ public interface IAccountLookup {
 
     Optional<AccountContact> getContact(UUID accountId);
 
+    /**
+     * Như {@link #getContact} nhưng khóa dòng tài khoản ({@code FOR SHARE}) tới hết transaction của bên gọi; phải gọi
+     * trong transaction. U04, U05 dùng khi gán Chủ nhiệm môn, giảng viên để U01 không đổi role hay vô hiệu hóa tài khoản
+     * xen giữa lúc kiểm và lúc ghi phân công (BR-U01-64, 71). Gọi trước khi khóa dòng môn hoặc lớp để thứ tự khóa luôn là
+     * tài khoản rồi mới tới phân công, như U01.
+     */
+    Optional<AccountContact> lockContact(UUID accountId);
+
     Map<Role, Map<AccountStatus, Long>> countByRoleAndStatus();
 }

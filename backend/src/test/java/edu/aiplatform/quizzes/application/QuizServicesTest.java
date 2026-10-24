@@ -356,6 +356,31 @@ class QuizServicesTest {
                 .isEqualTo("QUIZ_DELETE_BLOCKED");
     }
 
+    /** Bất biến U11 dựa vào (IQuizQuery, IQuizScoring): đề và đáp án của Quiz đã phát hành không bao giờ đổi. */
+    @Test
+    void publishedQuizContentNeverChangesForAttemptsToRelyOn() {
+        QuizDetail draft = classQuizWith(bank(true));
+        draft = authoring.addInline(teacher, draft.quiz().id(),
+                content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"), draft.quiz().version());
+        UUID inline = draft.items().get(1).question().id();
+        QuizDetail open = published(draft);
+        UUID id = open.quiz().id();
+        var studentView = query.getStudentView(id).orElseThrow();
+        var answers = scorer.answerReview(id);
+
+        for (QuizDetail state : List.of(open, publication.retire(teacher, id, "Hết đợt", open.quiz().version()))) {
+            long v = state.quiz().version();
+            assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+            assertThat(api(() -> authoring.addInline(teacher, id,
+                    content(QuestionType.MCQ_SINGLE, List.of("1"), "C", "D"), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+            assertThat(api(() -> authoring.updateInline(teacher, id, inline,
+                    content(QuestionType.MCQ_SINGLE, List.of("2"), "C", "D"), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+            assertThat(api(() -> authoring.deleteInline(teacher, id, inline, v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+            assertThat(query.getStudentView(id).orElseThrow().questions()).isEqualTo(studentView.questions());
+            assertThat(scorer.answerReview(id)).isEqualTo(answers);
+        }
+    }
+
     @Test
     void publishingNewVersionRetiresTheOldOneAndNotifiesListeners() {
         QuizDetail v1 = published(classQuizWith(bank(true)));

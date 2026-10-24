@@ -77,6 +77,7 @@ class SubjectAdminControllerTest {
         when(checks.getIfAvailable()).thenReturn(archiveCheck);
         when(archiveCheck.countUnarchivedClasses(id)).thenReturn(0);
         when(accounts.getContact(manager)).thenReturn(Optional.of(new AccountContact(manager, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+        when(accounts.lockContact(manager)).thenReturn(Optional.of(new AccountContact(manager, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
         var recorder = new SubjectAuditRecorder(audit);
         reader = new SubjectClassesReader(legacyClasses);
         var reads = new SubjectAdminService(repository, authorization, accounts, reader, recorder, clock);
@@ -166,7 +167,7 @@ class SubjectAdminControllerTest {
                         .content("{\"managerId\":\"" + manager + "\",\"version\":1}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.managerId").value(manager.toString()))
                 .andExpect(jsonPath("$.version").value(2));
-        verify(accounts).getContact(manager);
+        verify(accounts).lockContact(manager);
     }
 
     @Test

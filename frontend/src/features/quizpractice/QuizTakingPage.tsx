@@ -79,11 +79,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   }, [attemptId, reloadKey, toResult]);
 
   /** Một lần lưu câu trả lời đang chờ kèm `answerVersion` hiện có. */
-  const saveOnce = useCallback(async (): Promise<SaveOutcome> => {
+  const saveOnce = useCallback(async (keepalive: boolean): Promise<SaveOutcome> => {
     dirtyRef.current = false;
     setSaveState("saving");
     try {
-      const saved = await saveAnswers(attemptId, answersRef.current, versionRef.current);
+      const saved = await saveAnswers(attemptId, answersRef.current, versionRef.current, keepalive);
       versionRef.current = saved.answerVersion;
       setSaveState(dirtyRef.current ? "dirty" : "saved");
       return "saved";
@@ -107,8 +107,9 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   /**
    * Gửi câu trả lời đang chờ, từng lần một: lần lưu đang chạy xong (có `answerVersion` mới) rồi mới gửi lần sau, để
    * hai lần lưu không cùng gửi một version (409 làm mất lựa chọn mới) và nộp bài không chạy song song với lần lưu.
+   * `keepalive` khi rời hoặc ẩn trang: request vẫn được gửi xong dù trang đóng.
    */
-  const flush = useCallback(async (): Promise<SaveOutcome> => {
+  const flush = useCallback(async (keepalive = false): Promise<SaveOutcome> => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -121,7 +122,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         continue;
       }
       if (!dirtyRef.current) return "saved";
-      const run = saveOnce().finally(() => {
+      const run = saveOnce(keepalive).finally(() => {
         savingRef.current = null;
       });
       savingRef.current = run;
@@ -164,11 +165,17 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     return () => clearInterval(tick);
   }, [view, finish]);
 
+  // Rời trang, đóng tab hoặc chuyển ứng dụng trên điện thoại (trang bị ẩn, có thể bị hủy mà không có pagehide).
   useEffect(() => {
-    const leave = () => void flush();
+    const leave = () => void flush(true);
+    const hidden = () => {
+      if (document.visibilityState === "hidden") void flush(true);
+    };
     window.addEventListener("pagehide", leave);
+    document.addEventListener("visibilitychange", hidden);
     return () => {
       window.removeEventListener("pagehide", leave);
+      document.removeEventListener("visibilitychange", hidden);
       void flush();
     };
   }, [flush]);

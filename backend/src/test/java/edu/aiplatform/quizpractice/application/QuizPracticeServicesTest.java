@@ -61,6 +61,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.support.TransactionOperations;
 
 /** UC 49–52 và phần giảng viên trên repository giả trong bộ nhớ (BR-U11-01…31, 40, 41). */
 class QuizPracticeServicesTest {
@@ -119,7 +120,7 @@ class QuizPracticeServicesTest {
         attemptsService = new QuizAttemptService(store, support, access, clock);
         queries = new QuizPracticeQueryService(store, quizzes, classes, support, access);
         teacherService = new TeacherQuizAttemptService(store, classes, accounts, mock(IActivityQuery.class), support, access);
-        scanner = new QuizAutoSubmitScanner(store, support);
+        scanner = new QuizAutoSubmitScanner(store, support, TransactionOperations.withoutTransaction());
         retired = new QuizRetiredHandler(store, support);
         activity = new QuizActivityService(activityWrite, support);
     }
@@ -302,6 +303,28 @@ class QuizPracticeServicesTest {
         assertThat(done.submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
         assertThat(done.score()).isEqualByComparingTo("1");
         assertThat(audits).filteredOn(e -> e.action().equals("QUIZ_ATTEMPT_SUBMITTED")).hasSize(1);
+    }
+
+    @Test
+    void scannerKeepsGoingWhenOneAttemptCannotBeScored() {
+        var broken = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, broken.attemptId(), Map.of(q1, List.of("3")), 0);
+        var fine = attemptsService.start(other, quizId, classA);
+        attemptsService.saveAnswers(other, fine.attemptId(), Map.of(q1, List.of("1")), 0);
+        when(scoring.score(eq(quizId), anyList())).thenAnswer(call -> {
+            List<QuizAnswer> answers = call.getArgument(1);
+            if (answers.stream().anyMatch(a -> a.selectedOptionIds().contains("3"))) {
+                throw new IllegalStateException("U10 lỗi");
+            }
+            return score(answers);
+        });
+        clock.advance(Duration.ofMinutes(11));
+
+        scanner.scan(clock.instant());
+
+        assertThat(store.byId.get(broken.attemptId()).inProgress()).as("lượt lỗi chờ lần chạy sau").isTrue();
+        assertThat(store.byId.get(fine.attemptId()).status()).isEqualTo(AttemptStatus.SUBMITTED);
+        assertThat(store.byId.get(fine.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
     }
 
     @Test
