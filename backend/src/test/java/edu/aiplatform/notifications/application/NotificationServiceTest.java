@@ -9,6 +9,8 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 class NotificationServiceTest {
@@ -25,4 +27,43 @@ class NotificationServiceTest {
     @Test void preferencesDefaultOnAndWhitelist(){var prefs=new NotificationPreferenceService(repo,access);when(repo.preferences(account)).thenReturn(Map.of());assertThat(prefs.get(actor)).hasSize(5).containsEntry("ANNOUNCEMENT_IMPORTANT",true);assertThatThrownBy(()->prefs.put(actor,Map.of("BACKUP_FAILED",false))).isInstanceOf(ApiException.class);prefs.put(actor,Map.of("ENROLLED",false));verify(repo).preference(account,"ENROLLED",false);}
     @Test void staffCannotSetLearningPreferences(){var prefs=new NotificationPreferenceService(repo,access);assertThatThrownBy(()->prefs.get(new Actor(account,Role.ADMIN))).isInstanceOf(ApiException.class);}
     @Test void unsafeLinksAndOversizePagesRejected(){assertThatThrownBy(()->service.create(UUID.randomUUID(),NotificationType.ENROLLED,List.of(account),"t","s","//external.test",null,null)).isInstanceOf(IllegalArgumentException.class);assertThatThrownBy(()->service.list(actor,false,1,51)).isInstanceOf(ApiException.class);}
+
+    @ParameterizedTest @EnumSource(NotificationType.class)
+    void legacyFeedCopyChangesWithoutRewritingHistoryOrReadState(NotificationType type) {
+        var n = row(type, "Đăng nhập để xem thông tin liên quan.");
+        n.readAt = clock.instant().minusSeconds(60);
+        when(repo.list(account, false, 1, 20)).thenReturn(List.of(n));
+
+        var item = service.list(actor, false, 1, 20).items().get(0);
+
+        assertThat(item.summary()).isNotBlank().hasSizeLessThanOrEqualTo(500).doesNotContain("Đăng nhập");
+        assertThat(item.id()).isEqualTo(n.id);
+        assertThat(item.type()).isEqualTo(type.name());
+        assertThat(item.link()).isEqualTo(n.link);
+        assertThat(item.readAt()).isEqualTo(n.readAt);
+        assertThat(item.createdAt()).isEqualTo(n.createdAt);
+        assertThat(n.summary).isEqualTo("Đăng nhập để xem thông tin liên quan.");
+        verify(repo, never()).insert(any());
+        verifyNoInteractions(emails, sse);
+    }
+
+    @Test void specificReminderAndNewCopyArePreservedInFeed() {
+        var reminder = row(NotificationType.DEADLINE_REMINDER, "Hạn nộp bài còn khoảng24giờ.");
+        var request = row(NotificationType.LEADER_CHANGE_REQUESTED, "Xem yêu cầu để phê duyệt hoặc từ chối.");
+        when(repo.list(account, true, 1, 20)).thenReturn(List.of(reminder, request));
+
+        assertThat(service.list(actor, true, 1, 20).items()).extracting(NotificationService.Item::summary)
+                .containsExactly(reminder.summary, request.summary);
+        assertThat(reminder.readAt).isNull();
+        assertThat(request.readAt).isNull();
+        verifyNoInteractions(emails, sse);
+    }
+
+    private Notification row(NotificationType type, String summary) {
+        var n = new Notification();
+        n.id = UUID.randomUUID(); n.recipientId = account; n.sourceEventId = UUID.randomUUID();
+        n.type = type; n.title = "Existing title"; n.summary = summary;
+        n.link = "/classes/" + UUID.randomUUID(); n.createdAt = clock.instant().minusSeconds(120);
+        return n;
+    }
 }

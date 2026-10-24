@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import { NotificationPopup } from "./NotificationPopup";
@@ -9,7 +9,7 @@ const push = vi.fn(); vi.mock("next/navigation", () => ({ useRouter: () => ({ pu
 vi.mock("@/features/identity/session", () => ({ useSession: () => ({ status: "authenticated", profile: { accountId: "a", role: "STUDENT" } }) }));
 const n = { id: "n", type: "GRADE_PUBLISHED", title: "Bạn có điểm mới", summary: "Đăng nhập để xem", link: "/classes/1", readAt: null, createdAt: "2026-10-21T08:00:00Z" };
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(notificationsApi.list).mockResolvedValue({ items: [n], page: 1, size: 20, hasMore: false }); vi.mocked(notificationsApi.preferences).mockResolvedValue({ ENROLLED: true, ASSIGNMENT_OPENED: true, DEADLINE_REMINDER: true, GRADE_PUBLISHED: true, ANNOUNCEMENT_IMPORTANT: true }); });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 it("rejects external, protocol-relative and escaped notification links", () => { expect(safeNotificationLink("/classes/1")).toBe("/classes/1"); for (const link of ["https://evil.test", "//evil.test", "/\\evil.test", "/\n/evil.test"]) expect(safeNotificationLink(link)).toBeNull(); });
 it("preference update only appears after API success", async () => { vi.mocked(notificationsApi.savePreferences).mockRejectedValue(new Error("down")); render(<EmailPreferencePanel />); const toggle = await screen.findByRole("switch", { name: "Ghi danh vào lớp" }); expect(toggle).toHaveAttribute("aria-checked", "true"); fireEvent.click(toggle); expect(await screen.findByRole("alert")).toHaveTextContent("Chưa lưu được"); expect(toggle).toHaveAttribute("aria-checked", "true"); });
 it("shows all five learning preference types including important announcement", async () => { render(<EmailPreferencePanel />); expect(await screen.findByRole("switch", { name: "Thông báo quan trọng của lớp" })).toBeInTheDocument(); expect(screen.getAllByRole("switch")).toHaveLength(5); });
@@ -20,3 +20,34 @@ it("escape closes popup", () => { const close = vi.fn(); render(<NotificationPop
 it("refresh after loading more restarts at newest page", async () => { vi.mocked(notificationsApi.list).mockResolvedValue({ items: [n], page: 1, size: 20, hasMore: true }); const props = { count: 1, student: false, revision: 0, onChanged: vi.fn(), onClose: vi.fn() }; const { rerender } = render(<NotificationPopup {...props} />); fireEvent.click(await screen.findByText("Tải thêm")); await waitFor(() => expect(notificationsApi.list).toHaveBeenLastCalledWith(false, 2, expect.any(AbortSignal))); rerender(<NotificationPopup {...props} revision={1} />); await waitFor(() => expect(notificationsApi.list).toHaveBeenLastCalledWith(false, 1, expect.any(AbortSignal))); });
 it("unread filter failure never exposes stale read-list rows", async () => { render(<NotificationPopup count={1} student={false} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />); await screen.findByTestId("notification-item"); vi.mocked(notificationsApi.list).mockRejectedValueOnce(new Error("unavailable")); fireEvent.click(screen.getByRole("tab", { name: "Chưa đọc (1)" })); expect(await screen.findByRole("alert")).toHaveTextContent("Không thể tải"); expect(screen.queryByTestId("notification-item")).not.toBeInTheDocument(); });
 it("bell connects one account stream and closes it on unmount", async () => { class FakeEventSource { static instances: FakeEventSource[] = []; onmessage: (() => void) | null = null; onerror: (() => void) | null = null; addEventListener = vi.fn(); close = vi.fn(); constructor() { FakeEventSource.instances.push(this); } } vi.stubGlobal("EventSource", FakeEventSource); vi.mocked(notificationsApi.count).mockResolvedValue({ count: 2 }); const { unmount } = render(<NotificationBell />); expect(await screen.findByRole("button", { name: "Thông báo, 2 chưa đọc" })).toBeInTheDocument(); expect(FakeEventSource.instances).toHaveLength(1); const stream = FakeEventSource.instances[0]!; fireEvent.click(screen.getByTestId("notification-bell")); await screen.findByRole("dialog"); unmount(); expect(stream.close).toHaveBeenCalled(); });
+it("reconnects with bounded backoff and refreshes unread count after an outage", async () => {
+  vi.useFakeTimers();
+  class ReconnectingStream {
+    static instances: ReconnectingStream[] = [];
+    onmessage: (() => void) | null = null; onerror: (() => void) | null = null;
+    addEventListener = vi.fn(); close = vi.fn();
+    constructor() { ReconnectingStream.instances.push(this); }
+  }
+  vi.stubGlobal("EventSource", ReconnectingStream);
+  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 2 });
+  const { unmount } = render(<NotificationBell />);
+  await act(async () => {});
+  for (const delay of [1000, 2000, 4000, 8000, 16000, 30000]) {
+    const previous = ReconnectingStream.instances.at(-1)!;
+    const size = ReconnectingStream.instances.length;
+    await act(async () => { previous.onerror?.(); });
+    expect(previous.close).toHaveBeenCalledOnce();
+    await act(async () => { await vi.advanceTimersByTimeAsync(delay - 1); });
+    expect(ReconnectingStream.instances).toHaveLength(size);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(ReconnectingStream.instances).toHaveLength(size + 1);
+  }
+  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 7 });
+  await act(async () => { ReconnectingStream.instances.at(-1)!.onmessage?.(); });
+  expect(screen.getByRole("button", { name: "Thông báo, 7 chưa đọc" })).toBeInTheDocument();
+  await act(async () => { ReconnectingStream.instances.at(-1)!.onerror?.(); });
+  const size = ReconnectingStream.instances.length;
+  unmount();
+  await vi.advanceTimersByTimeAsync(60000);
+  expect(ReconnectingStream.instances).toHaveLength(size);
+});

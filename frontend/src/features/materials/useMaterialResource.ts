@@ -1,12 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { materialError } from "./api";
 
-type ResourceOptions<T> = { pollWhile?: (data: T) => boolean; pollIntervalMs?: number };
+type ResourceOptions<T> = { pollWhile?: (data: T) => boolean; pollIntervalMs?: number; pollPaused?: boolean };
 
-export function useMaterialResource<T>(url: string | null, { pollWhile, pollIntervalMs = 3000 }: ResourceOptions<T> = {}) {
+export function useMaterialResource<T>(url: string | null, { pollWhile, pollIntervalMs = 5000, pollPaused = false }: ResourceOptions<T> = {}) {
   const [revision, setRevision] = useState(0);
+  const reload = useCallback(() => setRevision((value) => value + 1), []);
   const [state, setState] = useState<{ key: string; data?: T; error?: string }>({ key: "" });
   const key = `${url}:${revision}`;
   useEffect(() => {
@@ -27,11 +28,13 @@ export function useMaterialResource<T>(url: string | null, { pollWhile, pollInte
   const sameResource = !!url && state.key.startsWith(`${url}:`);
   const data = sameResource ? state.data : undefined;
   const error = sameResource ? state.error : undefined;
+  const settled = state.key === key;
+  // Retain visible data during refresh, but schedule only after that request settles.
   useEffect(() => {
-    if (!url || !pollWhile || data === undefined || !pollWhile(data)) return;
-    const timer = setTimeout(() => setRevision((value) => value + 1), pollIntervalMs);
+    if (!url || !settled || error || pollPaused || !pollWhile || data === undefined || !pollWhile(data)) return;
+    const timer = setTimeout(reload, pollIntervalMs);
     return () => clearTimeout(timer);
-  }, [url, data, pollWhile, pollIntervalMs]);
+  }, [url, settled, data, error, pollWhile, pollIntervalMs, pollPaused, reload]);
   return { data, error, loading: !!url && (!sameResource || (data === undefined && error === undefined)),
-    reload: () => setRevision((value) => value + 1) };
+    reload };
 }

@@ -22,6 +22,7 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
         {[...new Set(items.map((item) => item.term))].sort().map((value) => <option key={value} value={value}>{value}</option>)}
       </Select>
     </div>
+    <p className="text-sm text-muted">Chỉ xem. Lớp do Chủ nhiệm môn quản lý.</p>
     <SubjectClassesTable items={filtered} />
     <p className="text-xs text-muted">{filtered.length} / {items.length} lớp</p>
   </div>;
