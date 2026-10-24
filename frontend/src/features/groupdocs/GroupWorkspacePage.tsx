@@ -88,6 +88,17 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   };
 
+  // Nhận mục rồi mở luôn trình soạn bằng bản mục server trả về (U12-08).
+  const claimAndEdit = async (s: SectionView) => {
+    setNotice(null);
+    try {
+      setEditing(await claimSection(documentId, s.id));
+      void reload();
+    } catch (e) {
+      setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không nhận được mục.") : "Không nhận được mục.");
+    }
+  };
+
   if (error && !view) {
     return (
       <Alert tone="danger" role="alert">
@@ -104,6 +115,16 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const myId = view.viewerId;
   const name = (id: string | null) =>
     id === null ? "Chưa ai nhận" : id === myId ? "Bạn" : (view.members.find((m) => m.accountId === id)?.name ?? "Thành viên");
+  const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
+  const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
+  // Bấm vào mục: mục mình giữ thì soạn tiếp, mục trống thì nhận và soạn, mục người khác giữ thì chỉ cuộn tới nội dung.
+  const openSection = (s: SectionView) => {
+    if (editable && isMine(s)) setEditing(s);
+    else if (claimable(s)) void claimAndEdit(s);
+    else document.getElementById(`section-${s.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  };
+  const sectionHint = (s: SectionView) =>
+    editable && isMine(s) ? "Bấm để soạn tiếp" : claimable(s) ? "Bấm để nhận và soạn" : s.status === "CLAIMED" ? "Chỉ xem" : "Xem nội dung";
 
   return (
     <div className="flex flex-col gap-4">
@@ -158,23 +179,37 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           <Section title={`Các mục (${done} / ${view.sections.length} Xong)`} icon="assignment">
             {me.member && editable && (
               <p className="text-xs text-muted">
-                Bạn chỉ sửa được mục mình đang giữ. Bấm Làm để mở trình soạn toàn trang; nội dung tự lưu mỗi 10 giây.
+                Bấm vào mục Mở hoặc Xong để nhận và soạn toàn trang; bạn chỉ sửa được mục mình đang giữ. Nội dung tự lưu mỗi
+                10 giây.
               </p>
             )}
             <ul className="flex flex-col gap-2">
               {view.sections.map((s) => {
-                const mine = s.status === "CLAIMED" && s.holderId === view.viewerId;
+                const mine = isMine(s);
                 return (
                   <li key={s.id} className="flex flex-col gap-1.5 rounded-xl border border-line p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="min-w-0 flex-1 text-[13px] font-semibold text-ink">{s.title}</span>
-                      <Pill tone={STATUS[s.status].tone}>{STATUS[s.status].text}</Pill>
-                    </div>
-                    <span className="text-xs text-muted">{s.status === "CLAIMED" ? name(s.holderId) : s.lastAuthorId ? `Xong bởi ${name(s.lastAuthorId)}` : "Chưa ai nhận"}</span>
+                    <button
+                      type="button"
+                      onClick={() => openSection(s)}
+                      title={sectionHint(s)}
+                      aria-label={`${s.title} · ${STATUS[s.status].text} · ${sectionHint(s)}`}
+                      className={cx(
+                        "-m-1 flex flex-col gap-1.5 rounded-lg p-1 text-left",
+                        (mine && editable) || claimable(s) ? "cursor-pointer hover:bg-primary-soft" : "hover:bg-shell",
+                      )}
+                    >
+                      <span className="flex w-full items-center gap-2">
+                        <span className="min-w-0 flex-1 text-[13px] font-semibold text-ink">{s.title}</span>
+                        <Pill tone={STATUS[s.status].tone}>{STATUS[s.status].text}</Pill>
+                      </span>
+                      <span className="text-xs text-muted">
+                        {s.status === "CLAIMED" ? `Đang giữ: ${name(s.holderId)}` : s.lastAuthorId ? `Xong bởi ${name(s.lastAuthorId)}` : "Chưa ai nhận"}
+                      </span>
+                    </button>
                     {editable && (
                       <div className="flex flex-wrap gap-1.5">
-                        {me.member && s.status !== "CLAIMED" && (
-                          <Button size="sm" onClick={() => void act(() => claimSection(view.documentId, s.id), "Không nhận được mục.")}>
+                        {claimable(s) && (
+                          <Button size="sm" onClick={() => void claimAndEdit(s)}>
                             Nhận mục
                           </Button>
                         )}
@@ -210,7 +245,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               </div>
             )}
             {view.sections.map((s) => (
-              <article key={s.id} aria-label={s.title}>
+              <article key={s.id} id={`section-${s.id}`} aria-label={s.title} className="scroll-mt-4">
                 <h3 className="mt-2 text-[14px] font-bold text-ink">{s.title}</h3>
                 {s.publishedBlocks?.length ? (
                   s.publishedBlocks.map((b) => <BlockView key={b.id} block={b} />)
@@ -270,7 +305,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           <div className="max-w-[420px] rounded-2xl bg-white p-6 text-center">
             <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
             <p className="mt-2 text-[13px] text-body">
-              Đã hết hạn nộp. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong lúc nộp.
+              Đã hết hạn nộp{view.closesAt && ` lúc ${dateTime(view.closesAt)}`}. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong
+              lúc nộp.
             </p>
           </div>
         </div>

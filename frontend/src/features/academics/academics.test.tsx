@@ -141,6 +141,17 @@ describe("U05 reference UI", () => {
     expect(screen.getByRole("dialog")).toHaveTextContent("an@example.test");
   });
 
+  it("opens the tab named in ?tab= and ignores unknown names", () => {
+    window.history.pushState({}, "", "/teaching/classes/class-1?tab=students");
+    const { unmount } = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
+    unmount();
+    window.history.pushState({}, "", "/teaching/classes/class-1?tab=nope");
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Thông tin lớp/ })).toHaveAttribute("aria-selected", "true");
+    window.history.pushState({}, "", "/");
+  });
+
   it("does not show removed enrollments to a teacher", () => {
     render(<ReadOnlyClassPage audience="teacher" value={course} students={[student, { ...student, accountId: "removed", name: "Đã gỡ", status: "REMOVED" }]} onBack={vi.fn()} />);
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));

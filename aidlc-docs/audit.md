@@ -5922,3 +5922,37 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Review correction**: Phát hiện MaterialTextExtractorTest đã bị thay thế trong quá trình triển khai trước; khôi phục đầy đủ test timeout/PDF/DOCX/PPTX từ HEAD và giữ thêm hai test UTF-8. Chạy lại cả 6 test bằng Mockito agent nạp sẵn/forkCount=0: đạt. Không thêm thay đổi production mới khi chia commit. Các kiểm tra source/UI trước đó vẫn được ghi ở trên; live Gemini và các phần mở rộng chưa hoàn tất vẫn để mở.
 
 **Code commits**: 35bd38b4 (private assignment sources), 5a00fb7e (AI draft backend/validation), e3f7cdad (authoring/rubric UI). Tài liệu được gom thành commit tiếp theo; mọi nhóm được kiểm git diff --cached --check trước commit. Chỉ tạo commit local.
+
+---
+
+## Merge startup fix request
+**Timestamp**: 2026-10-22T09:15:00Z
+**User Input**: "goopj luoon cho toi"
+**AI Response**: Mở PR `fix/u06-ai-handler-cycle` → `staging`, chạy `mvn verify` ở máy song song với CI, gộp khi CI đạt.
+**Context**: Construction, U06 sửa lỗi sau khi gộp
+
+---
+
+## Team black-box test plan review
+**Timestamp**: 2026-10-24T08:00:00Z
+**User Input**: "https://claude.ai/artifact/Wbj4CKoyBcDE6dPyCHbour ban toi da test va gui cho toi arrtifact nay, cap nhat github xem da mearch cac nhanh cua toi vao chua. va xem o artifact nay can gi phai sua o phan cua toi hay hay phai test nhu the nao khong"
+**AI Response**: Kiểm `origin/staging` (301c573): `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle` đều đã gộp. Đối chiếu U06-01..21 và U12-01..29 với code: U06 khớp; U12 lệch U12-03 (chưa kéo thả, nhãn "mới" chưa có ngoặc), U12-05 (chưa có nút Mở tab Sinh viên), U12-08 (nhận mục bằng nút, chưa bấm vào mục), U12-13 (popup tự nộp chưa ghi giờ hết hạn). Chưa sửa, chờ người dùng quyết.
+**Context**: Construction, rà kế hoạch kiểm thử hộp đen của nhóm
+
+---
+
+## U12 test plan gaps – approval
+**Timestamp**: 2026-10-24T08:20:00Z
+**User Input**: "sửa cả 4 chỗ U12 đi"
+**AI Response**: Coi là duyệt phạm vi 4 chỗ đã liệt kê. Tạo nhánh `fix/u12-test-plan-gaps` từ `origin/staging`, plan `construction/plans/2026-10-24-u12-test-plan-gaps.md` (5 bước), làm lần lượt: kéo thả + "(mới)" (U12-03), nút Mở tab Sinh viên (U12-05), bấm vào mục để nhận (U12-08), giờ hết hạn trong popup tự nộp (U12-13).
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
+
+## U12 test plan gaps – code complete
+**Timestamp**: 2026-10-24T09:10:00Z
+**User Input**: (không có input mới; tiếp tục "sửa cả 4 chỗ U12 đi")
+**AI Response**: Xong 5 bước plan: kéo thả + "(mới)" (U12-03); nút Mở tab Sinh viên mở tab mới, hộp tự kiểm lại khi quay về, trang lớp nhận `?tab=` (U12-05); bấm vào mục để nhận và mở trình soạn, mục người khác giữ chỉ xem (U12-08, 09); popup tự nộp ghi giờ hết hạn (U12-13). Frontend 473 test, tsc, eslint, build đạt. Cập nhật code-summary U12 và aidlc-state.
+**Context**: Construction, U12 sửa sau kiểm thử hộp đen
+
+---
