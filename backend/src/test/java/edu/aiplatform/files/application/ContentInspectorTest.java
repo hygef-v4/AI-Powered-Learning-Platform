@@ -24,8 +24,14 @@ class ContentInspectorTest {
     }
 
     @Test
-    void textRenamedAsPdfIsNotAnAllowedType() throws Exception {
-        assertThat(inspector.detect(write("gia.pdf", TestFiles.TEXT), "gia.pdf")).isEmpty();
+    void textRenamedAsPdfIsRecognizedByItsActualContent() throws Exception {
+        assertThat(inspector.detect(write("gia.pdf", TestFiles.TEXT), "gia.pdf")).contains(FileType.TXT);
+    }
+
+    @Test
+    void detectsPlainTextForAssignmentSources() throws Exception {
+        assertThat(inspector.detect(write("exam.txt", "Exam context and requirements".getBytes()), "exam.txt"))
+                .contains(FileType.TXT);
     }
 
     private Path write(String name, byte[] content) throws Exception {

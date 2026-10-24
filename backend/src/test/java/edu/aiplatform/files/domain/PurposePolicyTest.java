@@ -23,7 +23,11 @@ class PurposePolicyTest {
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxSizeMb()).isEqualTo(50);
         assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
+        assertThat(material.allowedTypes()).doesNotContain(FileType.TXT);
         assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
+        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
+        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).allowedTypes())
+                .containsExactlyInAnyOrder(FileType.TXT, FileType.DOCX, FileType.PDF);
     }
 
     @Test
@@ -48,5 +52,8 @@ class PurposePolicyTest {
         assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.DOCUMENT_IMAGE)).isTrue();
         assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.DOCUMENT_IMAGE)).isFalse();
         assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.MATERIAL)).isFalse();
+        assertThat(policy.canUpload(Role.TEACHER, ArtifactPurpose.ASSIGNMENT_SOURCE)).isTrue();
+        assertThat(policy.canUpload(Role.SUBJECT_MANAGER, ArtifactPurpose.ASSIGNMENT_SOURCE)).isTrue();
+        assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.ASSIGNMENT_SOURCE)).isFalse();
     }
 }

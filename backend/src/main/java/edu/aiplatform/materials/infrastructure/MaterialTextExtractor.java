@@ -4,6 +4,9 @@ import edu.aiplatform.files.contract.IArtifact;
 import jakarta.annotation.PreDestroy;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.*;
 import java.time.Duration;
 import java.util.*;
@@ -32,6 +35,25 @@ public class MaterialTextExtractor {
             task.cancel(true);
             Process process=activeProcess.get();if(process!=null&&process.isAlive())process.destroyForcibly();
             InputStream stream=activeStream.get();if(stream!=null)try{stream.close();}catch(IOException ignored){ }
+        }
+    }
+    public Result extract(String fileId, String mediaType) {
+        if (!"text/plain".equals(mediaType)) return extract(fileId);
+        try (InputStream input = artifacts.open(fileId)) {
+            byte[] bytes = input.readNBytes(2 * 1024 * 1024 + 1);
+            if (bytes.length > 2 * 1024 * 1024) throw new IllegalArgumentException("Source is too large");
+            return new Result(decodeText(bytes), 1);
+        } catch (IOException e) {
+            throw new IllegalStateException("Text source could not be read", e);
+        }
+    }
+    static String decodeText(byte[] bytes) {
+        try {
+            String value = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString();
+            return value.startsWith("\uFEFF") ? value.substring(1) : value;
+        } catch (CharacterCodingException e) {
+            throw new IllegalArgumentException("Text source must be UTF-8", e);
         }
     }
     private Result parse(String fileId,AtomicReference<InputStream> activeStream,AtomicReference<Process> activeProcess) throws Exception {
