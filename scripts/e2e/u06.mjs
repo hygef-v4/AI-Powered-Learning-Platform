@@ -21,7 +21,7 @@ const sSrc = await student.get("/api/v1/ai/sources");
 check(R, "U06-11 sinh viên chỉ có API cá nhân", sSrc.status === 200 && (sSrc.data || []).every((s) => s.source === "PERSONAL"), JSON.stringify((sSrc.data || []).map((s) => s.source + ":" + s.provider)));
 
 // --- Khóa cá nhân sai (U06-02), mỗi nhà cung cấp một khóa (U06-13 – kiểm qua API: PUT thay, không thêm)
-const bad = await teacher.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "AIza-khoa-thu-sai-0000000000000000000", model: null, version: null });
+const bad = await teacher.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-ca-nhan-sai", model: null, version: null });
 check(R, "U06-02 khóa sai bị báo lỗi, không lưu", bad.status >= 400, `${bad.status} ${bad.data?.code ?? ""} ${bad.data?.detail ?? ""}`);
 const conns = await teacher.get("/api/v1/me/ai-connections");
 const gem = (conns.data || []).find?.((c) => c.provider === "GEMINI");
@@ -46,7 +46,7 @@ const deny = await teacher.get("/api/v1/admin/ai/quota-policy");
 check(R, "Phân quyền: giảng viên không vào API admin", deny.status === 403 || deny.status === 404, deny.status);
 const summary = await admin.get("/api/v1/admin/ai/usage-summary?days=7");
 check(R, "U06-10 tab Usage của admin", summary.status === 200, `${summary.status} ${JSON.stringify(summary.data).slice(0, 160)}`);
-const adminBad = await admin.put("/api/v1/admin/ai/connections/GEMINI", { apiKey: "AIza-khoa-truong-sai-000000000000000000", model: null, version: null });
+const adminBad = await admin.put("/api/v1/admin/ai/connections/GEMINI", { apiKey: "test-khoa-truong-sai", model: null, version: null });
 check(R, "U06-07 khóa trường sai bị báo lỗi", adminBad.status >= 400, `${adminBad.status} ${adminBad.data?.code ?? ""}`);
 
 // --- Lịch sử dùng AI rỗng (U06-21)
