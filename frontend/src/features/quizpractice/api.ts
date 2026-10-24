@@ -27,8 +27,11 @@ export function getAttempt(attemptId: string, signal?: AbortSignal): Promise<Tak
   return apiFetch<TakingView>(attemptPath(attemptId), { signal });
 }
 
-export function saveAnswers(attemptId: string, answers: Record<string, string[]>, answerVersion: number): Promise<SaveResult> {
-  return apiFetch<SaveResult>(`${attemptPath(attemptId)}/answers`, { method: "PUT", body: JSON.stringify({ answers, answerVersion }) });
+/** Tự lưu câu trả lời; `keepalive` khi trang sắp đóng hoặc bị ẩn để trình duyệt vẫn gửi xong request. */
+export function saveAnswers(attemptId: string, answers: Record<string, string[]>, answerVersion: number,
+  keepalive = false): Promise<SaveResult> {
+  return apiFetch<SaveResult>(`${attemptPath(attemptId)}/answers`,
+    { method: "PUT", body: JSON.stringify({ answers, answerVersion }), keepalive });
 }
 
 export function submitAttempt(attemptId: string): Promise<ResultView> {
