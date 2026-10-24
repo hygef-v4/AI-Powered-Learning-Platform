@@ -131,7 +131,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     @Override
     public List<QuizAttempt> findOverdue(Instant cutoff, int limit) {
         return jdbc.sql("select " + COLUMNS + " from quiz_attempts where status = 'IN_PROGRESS' and deadline_at < :cutoff"
-                        + " order by deadline_at limit :limit for update skip locked")
+                        + " order by deadline_at limit :limit")
                 .param("cutoff", timestamp(cutoff)).param("limit", limit).query(this::map).list();
     }
 
