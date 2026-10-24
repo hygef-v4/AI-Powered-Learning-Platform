@@ -172,6 +172,72 @@ describe("QuizTakingPage (UC 51)", () => {
     expect(submitAttempt).toHaveBeenCalledWith("a1");
   });
 
+  it("lần lưu sau chờ lần lưu đang chạy xong rồi gửi answerVersion mới", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let finishFirst: (value: { answerVersion: number; savedAt: string }) => void = () => {};
+    vi.mocked(saveAnswers)
+      .mockImplementationOnce(() => new Promise((resolve) => { finishFirst = resolve; }))
+      .mockResolvedValueOnce({ answerVersion: 2, savedAt: "2026-10-20T08:01:05Z" });
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-option-1"));
+    await act(async () => {
+      vi.advanceTimersByTime(AUTOSAVE_DELAY_MS + 10);
+    });
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByTestId("quiz-taking-option-2"));
+    await act(async () => {
+      vi.advanceTimersByTime(AUTOSAVE_DELAY_MS + 10);
+    });
+    expect(saveAnswers).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      finishFirst({ answerVersion: 1, savedAt: "2026-10-20T08:01:00Z" });
+    });
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(2));
+    expect(saveAnswers).toHaveBeenLastCalledWith("a1", { q1: ["2"] }, 1);
+    expect(await screen.findByText("Đã tự động lưu")).toBeInTheDocument();
+  });
+
+  it("nộp bài chờ lần lưu đang chạy xong", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let finishSave: (value: { answerVersion: number; savedAt: string }) => void = () => {};
+    vi.mocked(saveAnswers).mockImplementationOnce(() => new Promise((resolve) => { finishSave = resolve; }));
+    vi.mocked(submitAttempt).mockResolvedValue(RESULT);
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-option-1"));
+    await act(async () => {
+      vi.advanceTimersByTime(AUTOSAVE_DELAY_MS + 10);
+    });
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByTestId("quiz-taking-submit"));
+    fireEvent.click(screen.getByTestId("quiz-taking-confirm-submit"));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(submitAttempt).not.toHaveBeenCalled();
+
+    await act(async () => {
+      finishSave({ answerVersion: 1, savedAt: "2026-10-20T08:01:00Z" });
+    });
+    await waitFor(() => expect(submitAttempt).toHaveBeenCalledWith("a1"));
+    expect(saveAnswers).toHaveBeenCalledTimes(1);
+  });
+
+  it("không lưu được câu trả lời thì không nộp tay", async () => {
+    vi.mocked(saveAnswers).mockRejectedValue(new ApiError({ status: 503, code: "SYSTEM_BUSY", detail: "Hệ thống tạm bận" }));
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-option-1"));
+    fireEvent.click(screen.getByTestId("quiz-taking-submit"));
+    fireEvent.click(screen.getByTestId("quiz-taking-confirm-submit"));
+
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(1));
+    expect(await screen.findByTestId("quiz-taking-save-state")).toHaveTextContent("Lưu chưa được");
+    expect(submitAttempt).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it("hết giờ thì tự nộp", async () => {
     vi.mocked(getAttempt).mockResolvedValue({ ...TAKING, deadlineAt: new Date(Date.now() + 1500).toISOString(), serverTime: new Date().toISOString() });
     vi.mocked(submitAttempt).mockResolvedValue(RESULT);

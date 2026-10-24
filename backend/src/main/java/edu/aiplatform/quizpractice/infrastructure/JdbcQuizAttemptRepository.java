@@ -99,11 +99,11 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                         update quiz_attempts set status = 'SUBMITTED', submit_mode = :mode, submitted_at = :submittedAt,
                             score = :score, max_score = :maxScore, correct_count = :correct,
                             result = cast(:result as jsonb)
-                        where id = :id and status = 'IN_PROGRESS'
+                        where id = :id and status = 'IN_PROGRESS' and answer_version = :answerVersion
                         """)
                 .param("mode", a.submitMode().name()).param("submittedAt", timestamp(a.submittedAt()))
                 .param("score", a.score()).param("maxScore", a.maxScore()).param("correct", a.correctCount())
-                .param("result", write(a.result())).param("id", a.id())
+                .param("result", write(a.result())).param("id", a.id()).param("answerVersion", a.answerVersion())
                 .update() == 1;
     }
 
