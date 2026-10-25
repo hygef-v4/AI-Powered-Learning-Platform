@@ -12,7 +12,6 @@ export function aiRequest(choice: SourceChoice): AiRequest {
   };
 }
 export function AiProposalPanel({
-  evaluationId,
   proposals,
   onApply,
   onRequest,
@@ -49,7 +48,6 @@ export function AiProposalPanel({
           }}
         />
       )}
-      <span className="sr-only">{evaluationId}</span>
       {proposals.map((p) => (
         <article key={p.id} className="mt-3 rounded border p-3">
           <strong>

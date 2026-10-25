@@ -106,3 +106,11 @@ describe("grading review", () => {
     expect(source).not.toMatch(/script|onclick|foreignObject|bad.invalid/);
   });
 });
+
+it("does not expose the evaluation UUID as visible or assistive proposal text", () => {
+  const evaluationId = "b3e8472d-4144-4895-a453-1dd896a890ef";
+  const { container } = render(
+    <AiProposalPanel evaluationId={evaluationId} proposals={[]} onApply={vi.fn()} onRequest={vi.fn()} />,
+  );
+  expect(container.textContent).not.toContain(evaluationId);
+});
