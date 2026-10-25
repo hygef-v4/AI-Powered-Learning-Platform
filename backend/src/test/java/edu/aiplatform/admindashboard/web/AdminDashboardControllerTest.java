@@ -59,7 +59,9 @@ class AdminDashboardControllerTest {
         mvc.perform(get("/api/v1/admin/dashboard/backups?" + query)).andExpect(status().isBadRequest())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.code").value("DASHBOARD_PAGE_INVALID"));
-        verifyNoInteractions(service);
+        verify(service).requireAdmin(admin);
+        verify(service, never()).backups(any(), anyInt(), anyInt());
+        verifyNoMoreInteractions(service);
     }
     @Test void deniedAndUnexpectedErrorsNeverExposeProviderExceptions() throws Exception {
         when(service.dashboard(admin)).thenThrow(ApiException.forbidden("DASHBOARD_FORBIDDEN"));

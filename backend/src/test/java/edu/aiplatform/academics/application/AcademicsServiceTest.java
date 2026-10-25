@@ -68,6 +68,16 @@ class AcademicsServiceTest {
         assertThatThrownBy(() -> service.list(admin,"manager",null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
         verifyNoInteractions(reads);
     }
+    @Test void unauthorizedCallerWithInvalidPagingIsRejectedWithForbiddenAndDeniedAudit() {
+        Actor student = new Actor(studentId, Role.STUDENT);
+        assertThatThrownBy(() -> service.list(student, "manager", null, null, null, 0, 20))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(403));
+        verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
+
+        assertThatThrownBy(() -> service.students(student, "manager", classId, 0, 20))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(403));
+        verify(audit, times(2)).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
+    }
     @Test void staleVersionDoesNotWrite() {
         assertThatThrownBy(() -> service.updateInfo(manager,classId,"New",null,null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
         verify(classes,never()).update(any(),anyLong());

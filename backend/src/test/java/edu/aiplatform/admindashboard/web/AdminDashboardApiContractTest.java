@@ -103,6 +103,33 @@ class AdminDashboardApiContractTest {
         }
     }
 
+    @ParameterizedTest @ValueSource(strings = {"unknown=1", "page=x", "page=1&page=2", "page=2147483648"})
+    void malformedQueriesRejectNonAdminWithForbiddenAndDeniedAudit(String query) throws Exception {
+        try (var f = new DashboardFixture()) {
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(teacher, null));
+            mvc.perform(get("/api/v1/admin/dashboard/backups?" + query)).andExpect(status().isForbidden());
+            verify(f.audit).record(argThat(event -> teacher.accountId().equals(event.actorId())
+                    && event.action().equals("ACCESS_DENIED") && event.result() == AuditResult.DENIED));
+        }
+    }
+
+    @Test void unknownQueryOnDashboardRejectsNonAdminWithForbidden() throws Exception {
+        try (var f = new DashboardFixture()) {
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(teacher, null));
+            mvc.perform(get("/api/v1/admin/dashboard?unknown=1")).andExpect(status().isForbidden());
+            verify(f.audit).record(argThat(event -> teacher.accountId().equals(event.actorId())
+                    && event.action().equals("ACCESS_DENIED") && event.result() == AuditResult.DENIED));
+        }
+    }
+
     private void noPrivateFields(JsonNode node) {
         if (node.isObject()) {
             for (String field : List.of("id", "name", "email", "archiveRef", "archiveSha256", "key", "stackTrace")) {

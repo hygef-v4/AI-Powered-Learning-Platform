@@ -117,7 +117,7 @@ public class AdminDashboardService {
                 found.getTotalElements(), found.getTotalPages());
     }
 
-    private void requireAdmin(Actor actor) {
+    public void requireAdmin(Actor actor) {
         ApiException failure = null;
         if (actor == null || actor.accountId() == null) {
             failure = new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "Cần đăng nhập");
