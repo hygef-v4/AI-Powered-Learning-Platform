@@ -14,6 +14,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import edu.aiplatform.academics.contract.ClassRef;
+import edu.aiplatform.academics.contract.ClassStatus;
+import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -31,6 +34,9 @@ import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
 import edu.aiplatform.identity.infrastructure.SessionStore;
 import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
+import edu.aiplatform.subjects.contract.SubjectRef;
+import edu.aiplatform.subjects.contract.SubjectStatus;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -40,6 +46,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.transaction.support.TransactionOperations;
 
 class AccountAdminServiceTest {
@@ -53,8 +60,11 @@ class AccountAdminServiceTest {
     private final VerificationTicketStore tickets = mock(VerificationTicketStore.class);
     private final List<AuditEvent> audits = new ArrayList<>();
     private final IAudit audit = audits::add;
+    private final ISubjectQuery subjectQuery = mock(ISubjectQuery.class);
+    private final IClassAccess classAccess = mock(IClassAccess.class);
     private final AccountAdminService service = new AccountAdminService(accounts, authorization, subjectScope,
-            classScope, sessions, otp, tickets, audit, TransactionOperations.withoutTransaction(),
+            classScope, provider(subjectQuery), provider(classAccess), sessions, otp, tickets, audit,
+            TransactionOperations.withoutTransaction(),
             IdentityTestData.properties(), Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
@@ -158,7 +168,8 @@ class AccountAdminServiceTest {
             }
         };
         AccountAdminService transactional = new AccountAdminService(accounts, authorization, subjectScope,
-                classScope, sessions, otp, tickets, audit, tracking, IdentityTestData.properties(),
+                classScope, provider(subjectQuery), provider(classAccess), sessions, otp, tickets, audit, tracking,
+                IdentityTestData.properties(),
                 Clock.fixed(NOW, ZoneOffset.UTC));
         when(subjectScope.listManagedSubjects(target.id())).thenAnswer(call -> {
             assertThat(inTransaction[0]).as("kiểm phân công trong transaction đổi role").isTrue();
@@ -181,15 +192,41 @@ class AccountAdminServiceTest {
         UUID clazz = UUID.randomUUID();
         when(subjectScope.listManagedSubjects(teacher.id())).thenReturn(List.of(subject));
         when(classScope.listTaughtClasses(teacher.id())).thenReturn(List.of(clazz));
+        when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(
+                new SubjectRef(subject, "SWR302", "Software Requirements", SubjectStatus.ACTIVE, teacher.id())));
+        when(classAccess.getClassRef(clazz)).thenReturn(Optional.of(
+                new ClassRef(clazz, subject, "SE1801", "Lớp SE1801", ClassStatus.OPEN, teacher.id(), false)));
 
         assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.TEACHER, 3L))
                 .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
                     assertThat(e.managedSubjects()).containsExactly(subject);
+                    assertThat(e.subjects()).containsExactly(
+                            new RoleChangeBlockedException.Held(subject, "SWR302", "Software Requirements"));
                     assertThat(e.taughtClasses()).isEmpty();
                 });
         assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.ADMIN, 3L))
-                .isInstanceOfSatisfying(RoleChangeBlockedException.class,
-                        e -> assertThat(e.taughtClasses()).containsExactly(clazz));
+                .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
+                    assertThat(e.taughtClasses()).containsExactly(clazz);
+                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, "SE1801", "Lớp SE1801"));
+                });
+        verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    void roleChangeStaysBlockedWithIdsWhenSubjectOrClassLookupFails() {
+        Account teacher = stored(Role.SUBJECT_MANAGER, AccountStatus.ACTIVE, "h");
+        UUID subject = UUID.randomUUID();
+        UUID clazz = UUID.randomUUID();
+        when(subjectScope.listManagedSubjects(teacher.id())).thenReturn(List.of(subject));
+        when(classScope.listTaughtClasses(teacher.id())).thenReturn(List.of(clazz));
+        when(subjectQuery.getSubject(subject)).thenThrow(new IllegalStateException("U04 lỗi"));
+        when(classAccess.getClassRef(clazz)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.STUDENT, 3L))
+                .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
+                    assertThat(e.subjects()).containsExactly(new RoleChangeBlockedException.Held(subject, null, null));
+                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, null, null));
+                });
         verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
     }
 
@@ -256,5 +293,12 @@ class AccountAdminServiceTest {
         verify(accounts).updateStatus(wasActive.id(), AccountStatus.ACTIVE, 3L, NOW);
         verify(sessions, never()).deleteAll(any());
         verify(subjectScope, never()).releaseManagerAssignments(any(), any());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> ObjectProvider<T> provider(T bean) {
+        ObjectProvider<T> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(bean);
+        return provider;
     }
 }

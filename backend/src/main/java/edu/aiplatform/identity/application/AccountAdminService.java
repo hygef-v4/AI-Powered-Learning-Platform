@@ -1,5 +1,6 @@
 package edu.aiplatform.identity.application;
 
+import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -21,13 +22,17 @@ import edu.aiplatform.identity.infrastructure.OtpChallengeStore;
 import edu.aiplatform.identity.infrastructure.SessionStore;
 import edu.aiplatform.identity.infrastructure.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
@@ -45,6 +50,8 @@ public class AccountAdminService {
     private final IAuthorization authorization;
     private final ISubjectScope subjectScope;
     private final IClassScope classScope;
+    private final ObjectProvider<ISubjectQuery> subjectQuery;
+    private final ObjectProvider<IClassAccess> classAccess;
     private final SessionStore sessions;
     private final OtpChallengeStore otpChallenges;
     private final VerificationTicketStore tickets;
@@ -54,13 +61,16 @@ public class AccountAdminService {
     private final Clock clock;
 
     public AccountAdminService(AccountRepository accounts, IAuthorization authorization, ISubjectScope subjectScope,
-                               IClassScope classScope, SessionStore sessions, OtpChallengeStore otpChallenges,
+                               IClassScope classScope, ObjectProvider<ISubjectQuery> subjectQuery,
+                               ObjectProvider<IClassAccess> classAccess, SessionStore sessions, OtpChallengeStore otpChallenges,
                                VerificationTicketStore tickets, IAudit audit, TransactionOperations transactions, IdentityProperties properties,
                                Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
         this.subjectScope = subjectScope;
         this.classScope = classScope;
+        this.subjectQuery = subjectQuery;
+        this.classAccess = classAccess;
         this.sessions = sessions;
         this.otpChallenges = otpChallenges;
         this.tickets = tickets;
@@ -229,7 +239,20 @@ public class AccountAdminService {
         List<UUID> classes = newRole == Role.TEACHER || newRole == Role.SUBJECT_MANAGER
                 ? List.of() : classScope.listTaughtClasses(id);
         if (!subjects.isEmpty() || !classes.isEmpty()) {
-            throw new RoleChangeBlockedException(subjects, classes);
+            throw new RoleChangeBlockedException(
+                    subjects.stream().map(subjectId -> held(subjectId, () -> subjectQuery.getObject().getSubject(subjectId)
+                            .map(s -> new RoleChangeBlockedException.Held(subjectId, s.code(), s.name())))).toList(),
+                    classes.stream().map(classId -> held(classId, () -> classAccess.getObject().getClassRef(classId)
+                            .map(c -> new RoleChangeBlockedException.Held(classId, c.code(), c.name())))).toList());
+        }
+    }
+
+    /** Mã, tên của môn/lớp để Admin nhận ra; unit sở hữu lỗi hay không thấy thì chỉ trả id, vẫn chặn đổi role. */
+    private static RoleChangeBlockedException.Held held(UUID id, Supplier<Optional<RoleChangeBlockedException.Held>> lookup) {
+        try {
+            return lookup.get().orElseGet(() -> new RoleChangeBlockedException.Held(id, null, null));
+        } catch (RuntimeException unavailable) {
+            return new RoleChangeBlockedException.Held(id, null, null);
         }
     }
 

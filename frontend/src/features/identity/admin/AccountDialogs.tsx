@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import type { Role } from "@/shared/auth/roles";
@@ -13,8 +14,24 @@ import { changeRole, changeStatus, type AccountDetail } from "./api";
 import { ADMIN_ERROR_LABELS } from "./labels";
 import { ROLES } from "./NewAccountDialog";
 
-/** Phụ trách còn giữ khi backend chặn đổi vai trò (ROLE_CHANGE_BLOCKED, MSG29). Backend chỉ trả ID môn và lớp. */
-export type RoleChangeBlock = { from: Role; to: Role; managedSubjects: string[]; taughtClasses: string[] };
+/** Môn hoặc lớp còn giữ; `code`, `name` là null khi unit sở hữu chưa trả được (khi đó chỉ có ID). */
+export type HeldAssignment = { id: string; code: string | null; name: string | null };
+
+/** Phụ trách còn giữ khi backend chặn đổi vai trò (ROLE_CHANGE_BLOCKED, MSG29). */
+export type RoleChangeBlock = { from: Role; to: Role; subjects: HeldAssignment[]; classes: HeldAssignment[] };
+
+type BlockedProblem = {
+  code?: string;
+  managedSubjects?: string[];
+  taughtClasses?: string[];
+  subjects?: HeldAssignment[];
+  classes?: HeldAssignment[];
+};
+
+/** Bản backend cũ chỉ trả ID: vẫn hiện được, không có mã và tên. */
+function held(details: HeldAssignment[] | undefined, ids: string[] | undefined): HeldAssignment[] {
+  return details ?? (ids ?? []).map((id) => ({ id, code: null, name: null }));
+}
 
 type DialogProps = {
   account: AccountDetail;
@@ -52,9 +69,14 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
     try {
       onChanged(await changeRole(account.id, role, account.version));
     } catch (e) {
-      const problem = (e instanceof ApiError ? e.problem : {}) as { code?: string; managedSubjects?: string[]; taughtClasses?: string[] };
+      const problem = (e instanceof ApiError ? e.problem : {}) as BlockedProblem;
       if (problem.code === "ROLE_CHANGE_BLOCKED") {
-        onBlocked({ from: account.role, to: role, managedSubjects: problem.managedSubjects ?? [], taughtClasses: problem.taughtClasses ?? [] });
+        onBlocked({
+          from: account.role,
+          to: role,
+          subjects: held(problem.subjects, problem.managedSubjects),
+          classes: held(problem.classes, problem.taughtClasses),
+        });
         return;
       }
       setError(errorMessage(e));
@@ -105,11 +127,11 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
   );
 }
 
-/** Popup Không đổi được vai trò (design `a04c`): liệt kê môn, lớp còn giữ. Chưa có mã, tên môn/lớp vì backend chỉ trả ID. */
+/** Popup Không đổi được vai trò (design `a04c`): liệt kê môn, lớp còn giữ theo mã và tên; môn có link tới trang môn. */
 export function RoleChangeRejectedDialog({ account, block, onClose }: { account: AccountDetail; block: RoleChangeBlock; onClose: () => void }) {
   const items = [
-    ...block.managedSubjects.map((id) => ({ kind: "Môn", id, held: ROLE_LABELS.SUBJECT_MANAGER })),
-    ...block.taughtClasses.map((id) => ({ kind: "Lớp", id, held: ROLE_LABELS.TEACHER })),
+    ...block.subjects.map((item) => ({ kind: "Môn", item, href: `/admin/subjects/${item.id}`, held: ROLE_LABELS.SUBJECT_MANAGER })),
+    ...block.classes.map((item) => ({ kind: "Lớp", item, href: null, held: ROLE_LABELS.TEACHER })),
   ];
   return (
     <Dialog open title="Không đổi được vai trò" icon="block" tone="danger" onClose={onClose} footer={<Button onClick={onClose}>Đóng</Button>}>
@@ -123,15 +145,23 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
           <tr>
             <Th>Loại</Th>
             <Th>Mã</Th>
+            <Th>Tên</Th>
             <Th>Vai trò đang giữ</Th>
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={`${item.kind}-${item.id}`}>
-              <Td>{item.kind}</Td>
-              <Td className="font-mono text-xs break-all">{item.id}</Td>
-              <Td>{item.held}</Td>
+          {items.map(({ kind, item, href, held: role }) => (
+            <tr key={`${kind}-${item.id}`}>
+              <Td>{kind}</Td>
+              <Td>
+                {item.code ? (
+                  href ? <Link href={href} className="font-medium text-primary hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
+                ) : (
+                  <span className="font-mono text-xs break-all text-muted" title="Chưa tải được mã">{item.id}</span>
+                )}
+              </Td>
+              <Td>{item.name ?? "—"}</Td>
+              <Td>{role}</Td>
             </tr>
           ))}
         </tbody>
