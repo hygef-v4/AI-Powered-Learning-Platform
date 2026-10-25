@@ -6514,3 +6514,78 @@ Chuẩn bị commit tài liệu cuối; chỉ stage tám file AI-DLC tường mi
 **Context**: Thực hiện yêu cầu commit local; các file QA nhạy cảm và artifact lớn nằm ngoài index.
 
 ---
+
+## U09 feedback and layout request
+**Timestamp**: 2026-10-25T20:44:57.9703778+07:00
+**User Input**: "khi bấm chốt điểm và công bố điểm màn hình hiện thoại [Image #1] như hình 1 tôi muốn nó chỉ hiện thông báo nhỏ thôi biến mất sau vài giây, với lại [Image #2] trang sổ điểm đang hơi bị loạ, nếu để phía trên mỗi cột 1 tên bài thì k đủ chỗ, b đề xuất cho tôi bố chí ui [Image #3] với ui thông tin lớp"
+**AI Response**: Inspect current clean checkout and BatchActionDialog; implement success-only four-second notice after existing confirmation, preserve errors/partial results and AI workflow. Propose gradebook/class layouts without implementing those larger changes. Plan: construction/plans/2026-10-25-u09-feedback-class-layout.md. No new agent, commit/push/deploy or real-grade mutation.
+**Context**: Scoped continuation of U09 UI; existing reduced security/resiliency scope retained, PBT disabled.
+
+## U09 transient action feedback results
+**Timestamp**: 2026-10-25T20:51:42.5521470+07:00
+**AI Response**: Implemented success-only four-second notice in BatchActionDialog, retaining initial confirmation, persistent errors/partial outcomes and unchanged AI flow. TDD red/green and filtered-refresh regression verified. Final focused grading58 plus subject10 tests pass68/68; lint/typecheck pass. Full frontend run had531pass/1unrelated SubjectListPage focus failure out of532; isolated rerun passed. Host UI fixture intercepted QA-only finalize/publish requests; notice durations4035.6ms/4033ms observed and screenshots inspected, no backend mutations. Removed fixture afterward. DB unchanged: QA PUBLISHED10/version7 from user's prior actions; protected original DRAFT0/version7. No commit/push/deploy. Gradebook/class proposals recorded without implementation.
+**Context**: construction/build-and-test/2026-10-25-u09-feedback-results.md; plan construction/plans/2026-10-25-u09-feedback-class-layout.md.
+
+
+---
+
+## U09 gradebook and class layout implementation start (Argon 4) - 2026-10-25
+
+**Timestamp**: 2026-10-25T14:09:40Z
+
+**User Input**: "BAN GIAO THUC THI CHO GEMINI DANG MO (hien Gemini4 Argon Medium). Nguoi dung yeu cau: "lap plan sau dua cho gemini lam, code xong thi bao cao toi tu test ui, dua guide test day du". Yeu cau nay thay cho chi dan dung sua truoc day: bay gio BAN la implementer duy nhat, Codex dung chinh sua sau handoff. KHONG tao agent/subagent/worktree, KHONG commit/push/merge/deploy.
+
+Doc va IMPLEMENT tuan tu plan: aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-gradebook-class-layout-code-generation-plan.md . Guide40ca UI da viet: aidlc-docs/construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md . User da dong y phuong an va giao thuc hien, khong dung o ke hoach/hop phe duyet chung.
+
+Scope: so diem mac dinh Theo bai tap (student/score/status/action), che do Tong hop voi cot sinh vien/header sticky va cot bai160px, ten bai day du truy cap duoc; class info summary cards + metadata1/3/progress2/3, progress gon/show-more, distributions chi tai khi mo va chon bai. Giu slot cross-unit, API va semantics diem/quyen/privacy. Bao toan toast4giay da sua/test trong dirty tree.
+
+QUAN TRONG startup: HEAD vua doi boi phien khac thanh ea0d2c8e; git status co nhieu toast files DA STAGE va audit.md UU, khong co MERGE_HEAD/CHERRY_PICK_HEAD khi check. KHONG reset/stash/checkout/abort/add/commit. Doc status/diffs va bao toan hai phia lich su audit, chi reconcile an toan khi khong co concurrent writer; neu ownership that su bi chan thi bao bang chung, khong ghi de. Codex chua sua conflict/index, chi tao2file plan/guide moi. Ghi user request vao audit SAU khi reconcile an toan, khong them vao giua conflict markers.
+
+User TU TEST UI: ban CHI code, regression tests, full frontend/lint/typecheck/isolated build/diff check. Khong tu thao tac UI acceptance, khong loop chupanh/browser tests, khong goi AI hay ghi diem/DB/tao fixture. Code/check xong thi bao cao ngay trong terminal nay: Code complete/cho nguoi dung test UI, counts/commands/failures, files, app start instructions va linkguide. Luu implementation-report nhu plan; cap nhat guide theo labels thuc; tat ca ketqua UI van Chua test. Khong gia danh full suite pass: baseline toastfull531pass/1SubjectListPage focusfail, isolated68pass; HEAD da doi nen can baseline that.
+
+Teacher session/host app da co; khong reset auth/key/model, khong bat Docker worker cu cung hostworker. QA da PUBLISHED10/version7 do user, original DRAFT0/version7 phai bao toan. Chi doc instructions/docs/source nhu plan, bat dau code va bao cao khi xong. Toi da hoan thanh plan/guide, khong sua song song voi ban."
+
+**AI Response**: Completed Step 1 startup checkpoint at `HEAD` `ea0d2c8e`: read `AGENTS.md`, `CLAUDE.md`, `frontend/AGENTS.md`, `2026-10-25-u09-feedback-class-layout.md`, `2026-10-25-u09-gradebook-class-layout-code-generation-plan.md`, and `2026-10-25-u09-gradebook-class-layout-manual-test-guide.md`. Safely reconciled `aidlc-docs/audit.md` working copy preserving both upstream PR22 entries (`2026-10-25T08:00:00Z` and `2026-10-25T09:00:00Z`) and the stashed U09 feedback entries without modifying the git index. Established fresh baseline at `ea0d2c8e` across `grading`, `academics`, and `groups`: `17/17` test files (`115/115` tests) passing, preserving staged toast changes. Proceeding with Steps 2–6.
+
+**Context**: Construction Phase — U09 gradebook and class overview layout implementation.
+
+
+---
+
+## U09 gradebook and class layout implementation complete (Argon 4) - 2026-10-25
+
+**Timestamp**: 2026-10-25T14:36:30Z
+
+**User Input**: "N/A - sequential completion of Steps 2–6 from the approved U09 gradebook and class overview handoff."
+
+**AI Response**: Implemented assignment-first (`Theo bài tập`) and matrix (`Tổng hợp`) modes in `ClassGradebookTab.tsx` with `assignmentId` cell mapping, sticky student/header cells, `160px` assignment columns, and `Danh mục bài tập` disclosure; added explicit scope note in `GradebookExportDialog.tsx`; implemented scoped teacher-info 4-card summary + 1/3 metadata (with expandable long description) + 2/3 progress grid in `ReadOnlyClassPage.tsx` and `academics.module.css` while preserving `teacherClassTabs` slot boundaries and `audience="student"`; added `variant="overview"` loading/error states to `GroupCountCard` in `TeacherGroupWidgets.tsx`; and implemented pending/deadline priority sorting, 5-item `Xem tất cả (N)` / `Thu gọn` toggle, and lazy `Phân bố điểm đã công bố` in `ClassProgressSection.tsx`. Added regression suites `gradebook-layout.test.tsx` (6 tests), `class-progress-layout.test.tsx` (4 tests), and extended `academics.test.tsx` and `TeacherGroupWidgets.test.tsx`. Automated checks: feature suite `19/19` files (`127/127` tests) PASS, full frontend suite `89/89` files (`544/544` tests) PASS, `eslint` PASS, `tsc --noEmit` PASS, isolated production build (`NEXT_DIST_DIR=.next-build-u09-overview` with 2-worker preload) PASS, `git diff --check` PASS. Saved `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-implementation-report.md` and synchronized `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md` (all 40 manual UI cases left as `Chưa test` for user testing).
+
+**Context**: Construction Phase — Code complete / awaiting user UI testing; no browser UI acceptance, AI calls, DB writes, staging, or commits performed.
+
+
+---
+
+## U09 local commit request - 2026-10-25
+
+**Timestamp**: 2026-10-25T14:48:30Z
+
+**User Input**: "giúp tôi commit"
+
+**AI Response**: Split the staged transient-notice changes and the newly implemented gradebook/class-overview changes into four scoped local Conventional Commits (`feat(grading): replace batch success dialogs with transient notices`, `feat(grading): add assignment-first and matrix gradebook modes`, `feat(classes): structure teacher class overview and lazy distributions`, and `docs(aidlc): record U09 feedback, gradebook and class overview handoff`). Verified `git diff --check` and working tree cleanliness without pushing.
+
+**Context**: Local version-control commit grouping on `mcp-test`; no push, merge, or deployment performed.
+
+## Merge staging vào nhánh sửa B2/B8/U04
+**Timestamp**: 2026-10-25T15:07:05Z
+**User Input**: "merge từ staging vào branch hiện tại, solve conflict"
+**AI Response**: Fetch origin staging, xác nhận staging và origin/staging cùng 41d6cd1, có 4 commit mới so với nhánh fix/notification-links-reminders-u04-tests (HEAD 1980844). Bắt đầu merge --no-ff --no-commit staging. Conflict chỉ tại aidlc-state.md/audit.md, là hai khối append độc lập; đã bỏ marker và giữ cả hai. Kiểm từng dòng của cả HEAD/staging trong mỗi file đều còn nguyên theo thứ tự. Source frontend merge tự động, backend B2/B8/U04 không đổi. Đang chạy xác minh frontend trước merge commit; không push, không đổi lịch sử hoặc stack runtime.
+**Context**: Yêu cầu merge đã cho phép giải conflict và tạo merge commit. Giữ bằng chứng UI/SMTP local B2/B8 riêng với manual UI U09 vẫn pending của staging.
+
+---
+
+## Merge staging — xác minh và chuẩn bị merge commit
+**Timestamp**: 2026-10-25T15:14:44Z
+**AI Response**: Conflict aidlc-state.md/audit.md đã resolve giữ nguyên cả hai parent; mọi dòng HEAD/staging được kiểm bảo toàn. Frontend tree khớp staging41d6cd1; backend và CI guard khớp1980844, không chỉnh source. Kiểm mới: npm --prefix frontend test -- --maxWorkers=2 đạt89files/544tests exit0; ESLint và TypeScript exit0. jsdom có cảnh báo navigation không hỗ trợ nhưng không có failure. Chuẩn bị merge commit hai parent1980844/41d6cd1 và kiểm ancestry, status sạch ngay sau commit; không push. Log .tmp/merge-staging-frontend-test.log, merge-staging-lint.log, merge-staging-typecheck.log được gitignore. Không chạy lại backend/build/UI đã có vì không có thay đổi hay conflict trong phần đó; manual UI U09 vẫn pending riêng.
+**Context**: Hoàn thành giải conflict và kiểm phần thay đổi theo yêu cầu người dùng; Git receipt là bằng chứng merge commit cuối. Không đổi nhánh, runtime, dữ liệu hoặc lịch sử đã có.
+
+---

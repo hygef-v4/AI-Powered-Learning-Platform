@@ -845,3 +845,27 @@ Người dùng yêu cầu chia commit nhỏ, commit trên nhánh hiện tại v�
 - fd74c41 ci: require subject and notification database tests without skips
 
 Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghiệm thu, cập nhật thiết kế và state/audit. Kết quả commit tài liệu và trạng thái clean được xác minh bằng Git log/status khi bàn giao. Không đưa .tmp, credential, OTP/cookie, log/screenshot, JAR hoặc dữ liệu QA vào commit. Không đổi source sau full verify/UI-SMTP, không push hoặc rewrite history.
+
+## U09 transient completion notices - 2026-10-25
+
+- User requests small disappearing feedback after finalize/publish and layout proposals for gradebook/class information. Implemented only completion feedback; layout choices documented as proposals pending implementation request.
+- Complete all-success responses replace the dialog with a four-second success notice; confirmation before mutation and persistent partial/error results remain. Success survives parent list filtering/refresh. No API/backend or grade-data changes.
+- Focused68/68 tests pass (grading58 + subject10), lint/typecheck/diff check pass. Full frontend run531/532 passed with one SubjectListPage focus assertion failure; isolated file plus grading rerun passed. Full-suite clean result is not claimed.
+- Actual host UI with temporary intercepted QA-only responses verified finalize/publish notices vanish after about4seconds; interception removed and test tab reloaded. No real finalize/publish calls or notification sent. DB QA remains user-published10.00/version7, original remains DRAFT0.00/version7. Changes uncommitted, no push/deploy. See construction/build-and-test/2026-10-25-u09-feedback-results.md.
+
+
+## U09 gradebook and class overview layout implementation (Argon 4) - 2026-10-25
+
+- [x] Executed Steps 1–6 of `construction/plans/code-generation-plan/2026-10-25-u09-gradebook-class-layout-code-generation-plan.md` sequentially at `HEAD` `ea0d2c8e` on `mcp-test`. Preserved all staged 4-second toast changes in the Git index and safely reconciled `aidlc-docs/audit.md` working copy (retaining both PR22 upstream and stashed U09 feedback entries).
+- [x] Implemented `ClassGradebookTab` (`Theo bài tập` default mode + `Tổng hợp` matrix mode with sticky student column, `160px` assignment columns, `Bài 1`/`Bài 2` ordinals, keyboard/touch-accessible `Danh mục bài tập` disclosure, `assignmentId`-based cell lookup, real `0.00` vs missing `—`), `GradebookExportDialog` explicit scope note, `ReadOnlyClassPage` + `academics.module.css` teacher-info 4-card summary row and 1/3 metadata + 2/3 progress grid (preserving cross-unit slot boundaries and student view), `GroupCountCard` overview loading/error states, and `ClassProgressSection` priority ordering, 5-item show-more toggle, and lazy `Phân bố điểm đã công bố`.
+- [x] Automated checks passed: scoped feature tests (`grading`, `academics`, `groups`) `19/19` files (`127/127` tests), full frontend test suite `89/89` files (`544/544` tests), ESLint (`exit 0`), TypeScript `tsc --noEmit` (`exit 0`), isolated production build via `NEXT_DIST_DIR=".next-build-u09-overview"` (`exit 0`, cleaned up afterward), and `git diff --check` (`exit 0`).
+- [ ] Manual UI acceptance is pending user testing per `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md` (all 40 cases remain `Chưa test`). Implementation report saved at `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-implementation-report.md`.
+- [x] Committed locally on `mcp-test` in 4 scoped Conventional Commits (transient notices, gradebook focused/matrix modes, teacher class overview + lazy distributions, and AI-DLC plans/guides/reports/state/audit). Not pushed.
+
+## Merge staging 41d6cd1 vào nhánh B2/B8/U04 — 2026-10-25
+
+- Nguồn staging/origin/staging cùng 41d6cd1; nhánh nhận fix/notification-links-reminders-u04-tests trước merge tại 1980844. Giữ toàn bộ 5 commit B2/B8/U04/CI/docs đã có.
+- [x] Giải conflict aidlc-state.md và audit.md bằng cách giữ hai khối append của cả HEAD và staging; kiểm mọi dòng của mỗi parent đều còn nguyên theo thứ tự. Không chọn bỏ toàn bộ bên nào.
+- [x] Frontend tự merge và khớp staging; backend, CI guard và sửa notification của nhánh hiện tại giữ nguyên. Không sửa application source thủ công khi giải conflict.
+- [x] Kiểm mới sau merge: frontend 89/89 file, 544/544 test đạt (exit 0); ESLint và tsc --noEmit đạt (exit 0); diff/conflict check đạt.
+- Chuẩn bị local merge commit với hai parent; kết quả commit và working-tree clean xác minh bằng Git ngay sau commit. Không push/deploy, không chạy lại backend suite hoặc UI/SMTP runtime vì phần đó không đổi. UI U09 manual acceptance từ staging vẫn pending, không lấy acceptance B2/B8 thay thế.

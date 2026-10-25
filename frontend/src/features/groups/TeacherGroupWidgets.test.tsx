@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GroupAssignmentPanel } from "./TeacherGroupWidgets";
+import { GroupAssignmentPanel, GroupCountCard } from "./TeacherGroupWidgets";
 import type { GroupSetView } from "./types";
 
 const A = { accountId: "a", name: "An", email: null };
@@ -48,5 +48,25 @@ describe("GroupAssignmentPanel", () => {
     fireEvent.focus(window);
     expect(await screen.findByText("Lớp đã sẵn sàng cho bài nhóm.")).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("GroupCountCard ở chế độ overview hiển thị trạng thái đang tải và lỗi thay vì bịa 0 nhóm", async () => {
+    let resolveLoad!: (res: Response) => void;
+    const pending = new Promise<Response>((res) => {
+      resolveLoad = res;
+    });
+    const fetch = vi.fn(() => pending);
+    vi.stubGlobal("fetch", fetch);
+
+    render(<GroupCountCard classId="c1" variant="overview" />);
+    const card = screen.getByTestId("overview-groups-card");
+    expect(card).toHaveAttribute("data-class-overview-region", "groups");
+    expect(card).toHaveTextContent("Đang tải…");
+
+    await act(async () => {
+      resolveLoad(new Response(JSON.stringify(SET), { status: 200, headers: { "Content-Type": "application/json" } }));
+    });
+    expect(card).toHaveTextContent("1");
+    expect(card).toHaveTextContent("1 sinh viên chưa có nhóm");
   });
 });

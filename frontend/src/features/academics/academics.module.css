@@ -117,6 +117,24 @@
 .readList { display:grid; grid-template-columns:130px 1fr; gap:16px 20px; margin:0; }
 .readList dt { color:#64708a; font-size:12px; }
 .readList dd { margin:0; overflow-wrap:anywhere; }
+.teacherOverviewGrid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:16px; align-items:start; min-width:0; }
+.teacherOverviewGrid > * { grid-column:1 / -1; min-width:0; }
+.teacherOverviewGrid > [data-class-overview-region="students"] { grid-column:1 / span 3; grid-row:1; }
+.teacherOverviewGrid > [data-class-overview-region="groups"] { grid-column:4 / span 3; grid-row:1; }
+.teacherOverviewGrid > [data-class-overview-region="open"] { grid-column:7 / span 3; grid-row:1; }
+.teacherOverviewGrid > [data-class-overview-region="pending"] { grid-column:10 / span 3; grid-row:1; }
+.teacherOverviewGrid > [data-class-overview-region="metadata"] { grid-column:1 / span 4; grid-row:2; }
+.teacherOverviewGrid > [data-class-overview-region="progress"] { grid-column:5 / span 8; grid-row:2; }
+.overviewSummaryCard { background:#fff; border:1px solid var(--line,#e8ebf2); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:4px; min-width:0; }
+.overviewSummaryLabel { margin:0; font-size:12px; font-weight:600; color:var(--muted,#64708a); }
+.overviewSummaryValue { margin:0; font-size:20px; font-weight:700; color:var(--ink,#0f172a); line-height:1.25; }
+.overviewSummaryMeta { margin:0; font-size:12px; color:var(--muted,#64708a); }
+.overviewMetadataPanel { min-width:0; }
+.compactReadList { display:grid; grid-template-columns:96px minmax(0,1fr); gap:12px 14px; margin:0; }
+.compactReadList dt { color:#64708a; font-size:12px; font-weight:500; }
+.compactReadList dd { margin:0; overflow-wrap:anywhere; min-width:0; }
+.descriptionBlock { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.descriptionText { white-space:pre-wrap; overflow-wrap:anywhere; }
 .modal { --primary:#2f45b5; --line:#e8ebf2; --ink:#0f172a; --muted:#64708a; --field:#d9deea; width:min(560px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); border:0; border-radius:18px; padding:0; color:#0f172a; font:13px/1.55 "Be Vietnam Pro","Segoe UI",sans-serif; box-shadow:0 24px 80px #17203d35; margin:auto; }
 .modal::backdrop { background:#111c3959; backdrop-filter:blur(2px); }
 .modalHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:22px 24px 18px; border-bottom:1px solid #e8ebf2; }
@@ -134,5 +152,5 @@
 .previewBar { display:flex; gap:18px; flex-wrap:wrap; align-items:center; padding:9px 26px; background:#ecf0ff; border-bottom:1px solid #dce3ff; color:#45558e; font-size:12px; }
 .previewBar select { padding:3px 8px; background:white; border:1px solid #cbd3f0; border-radius:6px; margin-left:8px; }
 @media (min-width:1450px) { .cardGrid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
-@media (max-width:1100px) { .sidebar { width:205px; } .main { padding:24px; } .detailGrid { grid-template-columns:1fr; } .cardGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media (max-width:720px) { .header { padding:0 16px; } .brand { font-size:14px; } .user small { display:none; } .layout { flex-direction:column; } .sidebar { width:100%; padding:9px 12px; border-right:0; border-bottom:1px solid #e8ebf2; } .nav { flex-direction:row; gap:5px; overflow-x:auto; } .nav button,.nav a { width:auto; padding:9px 12px; white-space:nowrap; font-size:12px; } .navLabel { display:none; } .main { padding:22px 16px; } .pageHeading { align-items:flex-start; flex-wrap:wrap; } .pageHeading h1 { font-size:21px; } .panel { padding:16px; } .formGrid { grid-template-columns:1fr; } .cardGrid { grid-template-columns:1fr; } .formGrid .wide { grid-column:auto; } .cardCover { height:96px; } .readList { grid-template-columns:100px 1fr; gap:14px; } .toolbar,.filters { align-items:stretch; width:100%; } .filters .search { flex:1; } .modalHeader,.modalBody { padding:18px; } .modalFooter { padding:14px 18px; } .previewBar { padding:8px 16px; gap:8px; } .footer { padding:13px 16px; } }
+@media (max-width:1100px) { .sidebar { width:205px; } .main { padding:24px; } .detailGrid { grid-template-columns:1fr; } .cardGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .teacherOverviewGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } .teacherOverviewGrid > * { grid-column:1 / -1; grid-row:auto; order:4; } .teacherOverviewGrid > [data-class-overview-region="students"], .teacherOverviewGrid > [data-class-overview-region="groups"], .teacherOverviewGrid > [data-class-overview-region="open"], .teacherOverviewGrid > [data-class-overview-region="pending"] { grid-column:span 1; grid-row:auto; order:1; } .teacherOverviewGrid > [data-class-overview-region="progress"] { grid-column:1 / -1; grid-row:auto; order:2; } .teacherOverviewGrid > [data-class-overview-region="metadata"] { grid-column:1 / -1; grid-row:auto; order:3; } }
+@media (max-width:720px) { .header { padding:0 16px; } .brand { font-size:14px; } .user small { display:none; } .layout { flex-direction:column; } .sidebar { width:100%; padding:9px 12px; border-right:0; border-bottom:1px solid #e8ebf2; } .nav { flex-direction:row; gap:5px; overflow-x:auto; } .nav button,.nav a { width:auto; padding:9px 12px; white-space:nowrap; font-size:12px; } .navLabel { display:none; } .main { padding:22px 16px; } .pageHeading { align-items:flex-start; flex-wrap:wrap; } .pageHeading h1 { font-size:21px; } .panel { padding:16px; } .formGrid { grid-template-columns:1fr; } .cardGrid { grid-template-columns:1fr; } .formGrid .wide { grid-column:auto; } .cardCover { height:96px; } .readList { grid-template-columns:100px 1fr; gap:14px; } .compactReadList { grid-template-columns:88px minmax(0,1fr); gap:10px 12px; } .teacherOverviewGrid { grid-template-columns:minmax(0,1fr); } .teacherOverviewGrid > [data-class-overview-region="students"], .teacherOverviewGrid > [data-class-overview-region="groups"], .teacherOverviewGrid > [data-class-overview-region="open"], .teacherOverviewGrid > [data-class-overview-region="pending"] { grid-column:1 / -1; } .toolbar,.filters { align-items:stretch; width:100%; } .filters .search { flex:1; } .modalHeader,.modalBody { padding:18px; } .modalFooter { padding:14px 18px; } .previewBar { padding:8px 16px; gap:8px; } .footer { padding:13px 16px; } }

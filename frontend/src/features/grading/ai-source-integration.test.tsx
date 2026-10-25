@@ -59,7 +59,8 @@ describe("U09 consumes the U06 source picker", () => {
     Object.assign(api.gradingApi, { [action]: perform });
     render(<BatchActionDialog action={action} items={items} onClose={vi.fn()} onDone={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
-    expect(await screen.findByText("Bài 1: SUCCESS")).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent(action === "publish" ? "Đã công bố điểm cho 1 bài." : "Đã chốt điểm cho 1 bài.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(perform).toHaveBeenCalledExactlyOnceWith(items);
     expect(mocks.fetch).not.toHaveBeenCalled();
     expect(mocks.requestBatch).not.toHaveBeenCalled();

@@ -203,6 +203,41 @@ describe("U05 reference UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận bật" }));
     await waitFor(() => expect(onDistribution).toHaveBeenCalledWith(true, 3));
   });
+
+  it("renders teacher class overview summary, compact metadata with expandable safe description, and keeps student view unchanged", () => {
+    const longDescription = `<script>alert(1)</script> Mô tả học phần chi tiết ${"Rất dài và đầy đủ thông tin hướng dẫn đồ án môn học. ".repeat(5)}`;
+    const removedStudent: EnrollmentView = { ...student, accountId: "removed-1", name: "Sinh viên Đã gỡ", status: "REMOVED" };
+    const { container, rerender } = render(
+      <ReadOnlyClassPage
+        audience="teacher"
+        value={{ ...course, description: longDescription }}
+        students={[student, removedStudent]}
+        onBack={vi.fn()}
+      />,
+    );
+
+    const studentSummary = screen.getByTestId("overview-students-card");
+    expect(studentSummary).toHaveAttribute("data-class-overview-region", "students");
+    expect(within(studentSummary).getByText("Sinh viên")).toBeInTheDocument();
+    expect(within(studentSummary).getByText("1")).toBeInTheDocument();
+
+    const metadataPanel = screen.getByTestId("overview-metadata-panel");
+    expect(metadataPanel).toHaveAttribute("data-class-overview-region", "metadata");
+    expect(within(metadataPanel).getByText("SE1801")).toBeInTheDocument();
+    expect(within(metadataPanel).getByText("2026-1")).toBeInTheDocument();
+    expect(within(metadataPanel).getByText(/Nguyễn Minh Kiên/)).toBeInTheDocument();
+    expect(container.querySelector("script")).toBeNull();
+
+    const toggleDescBtn = within(metadataPanel).getByRole("button", { name: "Xem đầy đủ" });
+    expect(toggleDescBtn).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggleDescBtn);
+    expect(within(metadataPanel).getByRole("button", { name: "Thu gọn" })).toHaveAttribute("aria-expanded", "true");
+    expect(within(metadataPanel).getByText(longDescription.trim())).toBeInTheDocument();
+
+    rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} onBack={vi.fn()} />);
+    expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Thông tin lớp" })).toBeInTheDocument();
+  });
 });
 
 describe("enrollment CSV preview", () => {
