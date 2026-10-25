@@ -38,6 +38,6 @@ public class DeadlineReminderScanner implements IScheduledScanner {
         Set<UUID> active=new HashSet<>(classes.listActiveStudents(c.classId()));
         var recipients=submissions.listStudentsWithoutSubmission(a.assignmentId(),c.classId()).stream().filter(active::contains).distinct().toList();
         UUID event=UUID.nameUUIDFromBytes((a.assignmentId()+":"+c.classId()+":"+a.closesAt()).getBytes(StandardCharsets.UTF_8));
-        notifications.create(event,NotificationType.DEADLINE_REMINDER,recipients,NotificationEventService.title(NotificationType.DEADLINE_REMINDER),NotificationSummaries.forType(NotificationType.DEADLINE_REMINDER),"/assignments/"+a.assignmentId()+"?classId="+c.classId(),"DEADLINE_REMINDER",a.closesAt());
+        notifications.create(event,NotificationType.DEADLINE_REMINDER,recipients,NotificationEventService.title(NotificationType.DEADLINE_REMINDER),NotificationSummaries.forType(NotificationType.DEADLINE_REMINDER),AssignmentNotificationLink.student(a.assignmentId(),c.classId()),"DEADLINE_REMINDER",a.closesAt());
     }
 }

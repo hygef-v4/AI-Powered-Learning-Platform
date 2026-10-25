@@ -22,6 +22,12 @@ class DeadlineReminderScannerTest {
     ClassRef course(UUID id){return new ClassRef(id,subject,"C","Class",ClassStatus.OPEN,UUID.randomUUID(),false);}
     AssignmentView assignment(Instant opens,Instant closes,UUID assignedClass){return new AssignmentView(id,assignedClass==null?AssignmentScope.SUBJECT:AssignmentScope.CLASS,assignedClass,subject,1,"Bài",SubmissionMode.INDIVIDUAL,GradingMode.GRADED,false,AssignmentStatus.OPEN,opens,closes,null,null,false,null,List.of());}
     void source(AssignmentView a){when(assignments.listClosingBetween(any(),any())).thenReturn(List.of(a));when(assignments.get(id)).thenReturn(Optional.of(a));}
+    @Test void reminderUsesStudentRouteWithClassContext() {
+        source(assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId));
+        scanner.scan(now);
+        verify(notices).create(any(),eq(NotificationType.DEADLINE_REMINDER),eq(List.of(student)),anyString(),anyString(),
+                eq("/my-assignments/"+id+"?classId="+classId),eq("DEADLINE_REMINDER"),any());
+    }
     @Test void reminderOncePerDeadlineAndOnlyNonSubmitters(){source(assignment(now.minusSeconds(5),now.plus(Duration.ofHours(24)),classId));when(repo.reminder(eq(id),eq(classId),any(),eq("SENT"),eq(now))).thenReturn(true,false);scanner.scan(now);scanner.scan(now);verify(notices,times(1)).create(any(),eq(NotificationType.DEADLINE_REMINDER),eq(List.of(student)),anyString(),anyString(),anyString(),eq("DEADLINE_REMINDER"),any());}
     @Test void lateOpenedAssignmentMarkedSkipped(){source(assignment(now.plusSeconds(1),now.plus(Duration.ofHours(24)),classId));scanner.scan(now);verify(repo).reminder(id,classId,now.plus(Duration.ofHours(24)),"SKIPPED",now);verifyNoInteractions(notices);}
     @Test void outsideFiveMinuteWindowNotSent(){source(assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)).minusSeconds(301),classId));scanner.scan(now);verifyNoInteractions(notices);verify(repo,never()).reminder(any(),any(),any(),anyString(),any());}
