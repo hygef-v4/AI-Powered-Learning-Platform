@@ -24,7 +24,7 @@ class ArtifactServiceTest {
     final Instant now = Instant.parse("2026-10-16T08:00:00Z");
     final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
     final FileRefSigner signer = new FileRefSigner(
-            new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null, null, null, null, null, null, null), new ObjectMapper());
+            new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null, null, null, null), new ObjectMapper());
     final DownloadTokenService tokens = mock(DownloadTokenService.class);
     final ArtifactService service = new ArtifactService(mock(UploadService.class), signer, tokens, mock(IStorage.class),
             clock);

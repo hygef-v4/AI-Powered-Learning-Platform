@@ -96,7 +96,7 @@ const ALIGNS: { value: Align; title: string; glyph: GlyphName }[] = [
 const REMOVE_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: "Xóa sơ đồ", IMAGE: "Xóa ảnh" };
 /** Người học: sơ đồ, ảnh của đề trong phần vẫn có nút ✕ nhưng mờ, như "−" của hàng, cột của đề. */
 const LOCKED_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: "Sơ đồ của đề", IMAGE: "Ảnh của đề" };
-const IMAGE_TYPES = ".png,.jpg,.jpeg";
+const IMAGE_TYPES = ".png,.jpg,.jpeg,.gif,.svg";
 const HISTORY_GAP_MS = 700;
 
 function runsOf(block: DocumentBlock | undefined): Run[] {

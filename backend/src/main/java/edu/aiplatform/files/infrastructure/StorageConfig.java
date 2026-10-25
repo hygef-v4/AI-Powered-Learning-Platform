@@ -17,11 +17,9 @@ public class StorageConfig {
     private static final Logger log = LoggerFactory.getLogger(StorageConfig.class);
 
     @Bean
-    IStorage storage(FilesProperties properties, DriveClientFactory driveClients, DriveFolders folders) {
+    IStorage storage(FilesProperties properties, DriveClientFactory driveClients) {
         if (properties.driveConfigured()) {
-            log.info("Lưu tệp trên Google Drive ({})",
-                    properties.sharedDriveConfigured() ? "Shared Drive" : "Drive cá nhân");
-            return new GoogleDriveStorageAdapter(driveClients, folders);
+            return new GoogleDriveStorageAdapter(driveClients, properties.sharedDriveId());
         }
         if (properties.requireDrive()) {
             log.warn("Chưa cấu hình Google Drive: upload và tải tệp báo tạm thời không khả dụng");

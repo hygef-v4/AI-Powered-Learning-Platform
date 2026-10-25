@@ -81,6 +81,7 @@ export type AssignmentDetail = {
   referenceMaterialIds: string[];
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
+  activityRetentionConfigured: boolean;
   status: AssignmentStatus;
   opensAt: string | null;
   closesAt: string | null;

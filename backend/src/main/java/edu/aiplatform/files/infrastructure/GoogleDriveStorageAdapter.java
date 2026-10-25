@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import edu.aiplatform.files.application.FileAbusiveException;
 import edu.aiplatform.files.application.IStorage;
 import edu.aiplatform.files.application.StorageUnavailableException;
@@ -16,16 +17,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/** Lưu tệp trên Google Drive (Shared Drive hoặc Drive cá nhân), mỗi {@code purpose} một thư mục tạo khi cần (NFR-U03-11). */
+/** Lưu tệp trên Google Shared Drive, mỗi {@code purpose} một thư mục tạo khi cần (NFR-U03-11). */
 public class GoogleDriveStorageAdapter implements IStorage {
 
-    private final DriveClientFactory clients;
-    private final DriveFolders folders;
+    static final String FOLDER_MIME = "application/vnd.google-apps.folder";
 
-    public GoogleDriveStorageAdapter(DriveClientFactory clients, DriveFolders folders) {
+    private final DriveClientFactory clients;
+    private final String sharedDriveId;
+    private final Map<ArtifactPurpose, String> folders = new ConcurrentHashMap<>();
+
+    public GoogleDriveStorageAdapter(DriveClientFactory clients, String sharedDriveId) {
         this.clients = clients;
-        this.folders = folders;
+        this.sharedDriveId = sharedDriveId;
     }
 
     @Override
@@ -88,7 +93,21 @@ public class GoogleDriveStorageAdapter implements IStorage {
     }
 
     private String folder(ArtifactPurpose purpose) {
-        return folders.child(folders.root(), purpose.name());
+        return folders.computeIfAbsent(purpose, this::findOrCreateFolder);
+    }
+
+    private String findOrCreateFolder(ArtifactPurpose purpose) {
+        String query = "'" + sharedDriveId + "' in parents and name = '" + purpose.name()
+                + "' and mimeType = '" + FOLDER_MIME + "' and trashed = false";
+        FileList found = DriveClientFactory.withRetry(() -> clients.drive().files().list().setQ(query)
+                .setCorpora("drive").setDriveId(sharedDriveId).setIncludeItemsFromAllDrives(true)
+                .setSupportsAllDrives(true).setFields("files(id)").execute());
+        if (found.getFiles() != null && !found.getFiles().isEmpty()) {
+            return found.getFiles().get(0).getId();
+        }
+        File folder = new File().setName(purpose.name()).setMimeType(FOLDER_MIME).setParents(List.of(sharedDriveId));
+        return DriveClientFactory.withRetry(() -> clients.drive().files().create(folder).setSupportsAllDrives(true)
+                .setFields("id").execute()).getId();
     }
 
     static boolean isAbuse(GoogleJsonResponseException e) {

@@ -12,6 +12,8 @@ import edu.aiplatform.assignmentwork.domain.ActivityEventRepository;
 import edu.aiplatform.assignmentwork.domain.AssignmentAttempt;
 import edu.aiplatform.assignmentwork.domain.AttemptRepository;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.settings.contract.ISettings;
+import edu.aiplatform.settings.contract.SettingKey;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Duration;
@@ -33,23 +35,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ActivityService implements IActivityWrite, IActivityQuery {
 
-    /** Thời hạn giữ sự kiện hoạt động (BR-U08-54), cố định 1 ngày; quá hạn thì tự xóa. */
-    public static final Duration RETENTION = Duration.ofDays(1);
+    static final SettingKey<Integer> RETENTION_DAYS = new SettingKey<>("activity.retentionDays", Integer.class);
     static final int MAX_BATCH = 50;
 
     private final ActivityEventRepository events;
     private final AttemptRepository attempts;
     private final WorkAccess access;
+    private final ISettings settings;
     private final StringRedisTemplate redis;
     private final Clock clock;
     private final int perMinute;
 
     public ActivityService(ActivityEventRepository events, AttemptRepository attempts, WorkAccess access,
-                           StringRedisTemplate redis, Clock clock,
+                           ISettings settings, StringRedisTemplate redis, Clock clock,
                            @Value("${platform.assignment-work.activity-events-per-minute:60}") int perMinute) {
         this.events = events;
         this.attempts = attempts;
         this.access = access;
+        this.settings = settings;
         this.redis = redis;
         this.clock = clock;
         this.perMinute = perMinute;
@@ -138,6 +141,11 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
     }
 
     private boolean expired(Instant startedAt) {
-        return startedAt.isBefore(clock.instant().minus(RETENTION));
+        try {
+            return settings.get(RETENTION_DAYS)
+                    .map(days -> startedAt.isBefore(clock.instant().minus(Duration.ofDays(days)))).orElse(false);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 }

@@ -61,7 +61,7 @@ class UploadServiceTest {
         when(settings.get(any())).thenReturn(Optional.empty());
         storage = spy(new LocalFolderStorageAdapter(dir.resolve("store")));
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
-                dir.resolve("tmp").toString(), null, null, null, null, null);
+                dir.resolve("tmp").toString(), null, null);
         signer = new FileRefSigner(props, new ObjectMapper());
         service = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(), storage, signer,
                 fileAudit, jobs, clock, props);
@@ -123,7 +123,9 @@ class UploadServiceTest {
     }
 
     @Test
-    void rejectsImageTypeOutsidePngAndJpeg() {
+    void rejectsTypeTurnedOffInSettings() {
+        when(settings.get(PurposePolicy.IMAGE_TYPES)).thenReturn(Optional.of(new String[]{"PNG"}));
+
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.DOCUMENT_IMAGE, upload("a.svg", TestFiles.SVG)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
@@ -133,7 +135,7 @@ class UploadServiceTest {
         IStorage down = mock(IStorage.class);
         when(down.available()).thenReturn(false);
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
-                dir.resolve("tmp").toString(), null, null, null, null, null);
+                dir.resolve("tmp").toString(), null, null);
         UploadService offline = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(),
                 down, signer, fileAudit, jobs, clock, props);
 

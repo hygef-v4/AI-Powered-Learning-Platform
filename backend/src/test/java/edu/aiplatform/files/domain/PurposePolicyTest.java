@@ -27,16 +27,18 @@ class PurposePolicyTest {
     }
 
     @Test
-    void readsSizeFromSettingsAndClampsToHardCapWithFixedTypes() {
+    void readsLimitsFromSettingsAndClampsToHardCap() {
         when(settings.get(PurposePolicy.MATERIAL_MAX_MB)).thenReturn(Optional.of(10));
+        when(settings.get(PurposePolicy.MATERIAL_TYPES)).thenReturn(Optional.of(new String[]{"PDF"}));
         when(settings.get(PurposePolicy.IMAGE_MAX_MB)).thenReturn(Optional.of(99));
+        when(settings.get(PurposePolicy.IMAGE_TYPES)).thenReturn(Optional.of(new String[]{"PNG", "PDF"}));
 
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxBytes()).isEqualTo(10L * 1024 * 1024);
-        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
+        assertThat(material.allowedTypes()).containsExactly(FileType.PDF);
         PurposeLimits image = policy.limits(ArtifactPurpose.DOCUMENT_IMAGE);
         assertThat(image.maxSizeMb()).isEqualTo(5);
-        assertThat(image.allowedTypes()).containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG);
+        assertThat(image.allowedTypes()).containsExactly(FileType.PNG);
     }
 
     @Test

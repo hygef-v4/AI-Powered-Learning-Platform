@@ -102,7 +102,7 @@ final class AssignmentFixtures {
 
     final AssignmentAudit assignmentAudit = new AssignmentAudit(audit, clock);
     final AssignmentAccess access = new AssignmentAccess(authorization, classScope, classes, subjects, assignmentAudit);
-    final AssignmentSupport support = new AssignmentSupport(assignments, rubricRepository, access, groups, subjects);
+    final AssignmentSupport support = new AssignmentSupport(assignments, rubricRepository, access, groups, settings, subjects);
     final DocumentModelService documents = new DocumentModelService(json);
     final RubricService rubrics = new RubricService(rubricRepository, assignments);
     final AssignmentLifecycle lifecycle = new AssignmentLifecycle(assignments, listeners, events);

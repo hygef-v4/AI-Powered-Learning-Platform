@@ -8,7 +8,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-/** Health Drive (P7): đọc thư mục gốc (Shared Drive hoặc thư mục app), cache 60 giây; lỗi chỉ báo DEGRADED. */
+/** Health Drive (P7): gọi {@code drives.get} có cache 60 giây; lỗi chỉ báo DEGRADED, backend vẫn UP. */
 @Component("drive")
 public class DriveHealthIndicator implements HealthIndicator {
 
@@ -16,16 +16,13 @@ public class DriveHealthIndicator implements HealthIndicator {
 
     private final FilesProperties properties;
     private final DriveClientFactory clients;
-    private final DriveFolders folders;
     private final Clock clock;
     private volatile Instant checkedAt = Instant.EPOCH;
     private volatile String state = "UNKNOWN";
 
-    public DriveHealthIndicator(FilesProperties properties, DriveClientFactory clients, DriveFolders folders,
-                                Clock clock) {
+    public DriveHealthIndicator(FilesProperties properties, DriveClientFactory clients, Clock clock) {
         this.properties = properties;
         this.clients = clients;
-        this.folders = folders;
         this.clock = clock;
     }
 
@@ -37,13 +34,8 @@ public class DriveHealthIndicator implements HealthIndicator {
         Instant now = clock.instant();
         if (now.isAfter(checkedAt.plus(CACHE))) {
             try {
-                if (properties.sharedDriveConfigured()) {
-                    DriveClientFactory.withRetry(() -> clients.drive().drives().get(properties.sharedDriveId())
-                            .setFields("id").execute());
-                } else {
-                    String root = folders.root();
-                    DriveClientFactory.withRetry(() -> clients.drive().files().get(root).setFields("id").execute());
-                }
+                DriveClientFactory.withRetry(() -> clients.drive().drives().get(properties.sharedDriveId())
+                        .setFields("id").execute());
                 state = "UP";
             } catch (RuntimeException e) {
                 state = "DEGRADED";

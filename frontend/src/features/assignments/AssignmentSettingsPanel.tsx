@@ -39,6 +39,7 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly }: {
   readOnly: boolean;
 }) {
   const group = detail.submissionMode === "GROUP";
+  const retention = detail.activityRetentionConfigured;
   return (
     <div className="flex flex-col gap-4" data-testid="assignment-settings">
       <Field label="Hình thức">
@@ -57,9 +58,9 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly }: {
       </Field>
       <div className="flex flex-col gap-1">
         <Switch checked={value.activityMonitoringEnabled} label="Ghi nhận hoạt động"
-          disabled={readOnly}
+          disabled={readOnly || (!retention && !value.activityMonitoringEnabled)}
           onChange={(checked) => onChange({ ...value, activityMonitoringEnabled: checked })} />
-        <p className="text-[11px] text-muted">Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.</p>
+        {!retention && !value.activityMonitoringEnabled && <p className="text-[11px] text-muted">Chưa có thời hạn giữ dữ liệu hoạt động</p>}
       </div>
       {value.activityMonitoringEnabled && (
         <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>

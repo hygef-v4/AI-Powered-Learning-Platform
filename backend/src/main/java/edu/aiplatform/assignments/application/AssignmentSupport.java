@@ -13,6 +13,8 @@ import edu.aiplatform.assignments.domain.AssignmentRepository;
 import edu.aiplatform.assignments.domain.AssignmentRubric;
 import edu.aiplatform.assignments.domain.RubricRepository;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.settings.contract.ISettings;
+import edu.aiplatform.settings.contract.SettingKey;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectStatus;
@@ -28,18 +30,23 @@ import org.springframework.stereotype.Component;
 @Component
 class AssignmentSupport {
 
+    /** U08 khai báo trong Settings nhóm {@code ACTIVITY}; chưa đặt thì không bật theo dõi (BR-U07-16). */
+    static final SettingKey<Integer> RETENTION_DAYS = new SettingKey<>("activity.retentionDays", Integer.class);
+
     private final AssignmentRepository assignments;
     private final RubricRepository rubrics;
     private final AssignmentAccess access;
     private final IGroupAssignmentSupport groups;
+    private final ISettings settings;
     private final ISubjectQuery subjects;
 
     AssignmentSupport(AssignmentRepository assignments, RubricRepository rubrics, AssignmentAccess access,
-                      IGroupAssignmentSupport groups, ISubjectQuery subjects) {
+                      IGroupAssignmentSupport groups, ISettings settings, ISubjectQuery subjects) {
         this.assignments = assignments;
         this.rubrics = rubrics;
         this.access = access;
         this.groups = groups;
+        this.settings = settings;
         this.subjects = subjects;
     }
 
@@ -110,6 +117,14 @@ class AssignmentSupport {
         }
     }
 
+    boolean retentionConfigured() {
+        try {
+            return settings.get(RETENTION_DAYS).isPresent();
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     AssignmentViews.Row row(Assignment a, boolean readOnly) {
         return new AssignmentViews.Row(a.id(), a.scope(), a.classId(), a.subjectId(), a.title(), a.submissionMode(),
                 a.gradingMode(), a.diagramEnabled(), a.status(), a.versionNo(), a.origin(), a.opensAt(), a.closesAt(),
@@ -148,7 +163,7 @@ class AssignmentSupport {
                 a.sourceAssignmentId(), a.origin(), a.versionNo(), a.submissionMode(), a.diagramEnabled(),
                 a.gradingMode(), a.title(), a.instructions(), DocumentFiles.hideFiles(a.skeleton()), parts, total,
                 a.requiredDiagrams(), a.referenceMaterialIds(), a.activityMonitoringEnabled(), a.activityNotice(),
-                status, a.opensAt(), a.closesAt(), a.lateUntil(), a.maxAttempts(),
+                retentionConfigured(), status, a.opensAt(), a.closesAt(), a.lateUntil(), a.maxAttempts(),
                 a.retiredReason(), a.createdAt(), a.updatedAt(), a.version(), permissions,
                 a.scope() == AssignmentScope.CLASS && groupSupported(a.classId()), List.copyOf(warnings));
     }

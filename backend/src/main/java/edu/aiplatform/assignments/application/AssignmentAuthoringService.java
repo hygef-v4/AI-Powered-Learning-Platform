@@ -148,6 +148,10 @@ public class AssignmentAuthoringService {
                 : materials(actor, current, command.referenceMaterialIds());
         boolean activity = command.activityMonitoringEnabled() == null ? current.activityMonitoringEnabled()
                 : command.activityMonitoringEnabled();
+        if (activity && !current.activityMonitoringEnabled() && !support.retentionConfigured()) {
+            throw ApiException.conflict("ACTIVITY_RETENTION_NOT_SET",
+                    "Admin chưa đặt thời hạn giữ dữ liệu hoạt động, chưa bật được ghi nhận hoạt động");
+        }
         String notice = command.activityNotice() == null ? current.activityNotice() : notice(command.activityNotice());
         Assignment saved = assignments.save(current.withDetails(title, instructions, true, grading, required,
                 chosen, activity, notice, clock.instant()));
@@ -291,6 +295,10 @@ public class AssignmentAuthoringService {
             if (assignment.activityNotice() == null || assignment.activityNotice().isBlank()) {
                 issues.add(new ValidationIssue("ACTIVITY_NOTICE_REQUIRED", null,
                         "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động"));
+            }
+            if (!support.retentionConfigured()) {
+                issues.add(new ValidationIssue("ACTIVITY_RETENTION_NOT_SET", null,
+                        "Admin chưa đặt thời hạn giữ dữ liệu hoạt động"));
             }
         }
         return issues;
