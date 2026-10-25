@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GroupWorkspacePage } from "./GroupWorkspacePage";
-import { SectionEditorDialog } from "./SectionDialogs";
+import { SectionEditorDialog, partOf } from "./SectionDialogs";
 import type { SectionView, WorkspaceView } from "./types";
 
 vi.mock("next/link", () => ({
@@ -50,7 +50,7 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     ],
     status: "IN_PROGRESS",
     window: "ON_TIME",
-    sharedBlocks: { blocks: [{ id: "h1", origin: "TEACHER", type: "HEADING", content: { text: "1. Sơ đồ" } }] },
+    sharedBlocks: { blocks: [{ id: "h1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "1. Sơ đồ" } }] },
     sections: [
       section("s1", "DONE", null, {
         lastAuthorId: LEADER,
@@ -62,6 +62,7 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     role: { member: true, leader: viewerId === LEADER, teacher: false },
     lastSubmission: null,
     activityMonitoring: false,
+    diagramEnabled: false,
     version: 5,
     viewerId,
     ...overrides,
@@ -203,7 +204,7 @@ describe("GroupWorkspacePage", () => {
     expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
   });
 
-  it("trình soạn tự lưu sau 10 giây kèm version của mục", async () => {
+  it("trình soạn dùng DocumentEditor: chỉ lưu block của người học, tự lưu sau 10 giây kèm version", async () => {
     vi.useFakeTimers();
     const calls: { url: string; body: unknown }[] = [];
     vi.stubGlobal(
@@ -213,9 +214,32 @@ describe("GroupWorkspacePage", () => {
         return json(section("s2", "CLAIMED", MEMBER, { version: 3, draftBlocks: [], draftSavedAt: "2026-10-22T03:00:10Z" }));
       }),
     );
-    render(<SectionEditorDialog documentId="doc1" section={section("s2", "CLAIMED", MEMBER)} onClose={() => undefined} onChanged={() => undefined} />);
+    const shared = {
+      blocks: [
+        { id: "s1", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s1" } },
+        { id: "s2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s2" } },
+        { id: "g1", origin: "TEACHER" as const, type: "PARAGRAPH" as const, content: { runs: [{ text: "Vẽ sơ đồ lớp" }] } },
+        { id: "s3", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s3" } },
+      ],
+    };
+    render(
+      <SectionEditorDialog
+        documentId="doc1"
+        section={section("s2", "CLAIMED", MEMBER)}
+        shared={shared}
+        diagramEnabled
+        onClose={() => undefined}
+        onChanged={() => undefined}
+      />,
+    );
 
-    fireEvent.change(screen.getByLabelText(/Nội dung/), { target: { value: "Đoạn một\n\nĐoạn hai" } });
+    expect(screen.getByText("Hướng dẫn của giảng viên cho mục này")).toBeInTheDocument();
+    expect(screen.getByText("Vẽ sơ đồ lớp")).toBeInTheDocument();
+    expect(screen.queryByText("Mục s3")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("write-part-s2"));
+    const field = screen.getByLabelText("Đoạn văn");
+    field.textContent = "Đoạn một";
+    fireEvent.input(field);
     expect(calls).toHaveLength(0);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_000);
@@ -223,8 +247,15 @@ describe("GroupWorkspacePage", () => {
 
     expect(calls).toHaveLength(1);
     expect(calls[0]!.url).toBe("/api/v1/group-docs/doc1/sections/s2/draft");
-    const body = calls[0]!.body as { version: number; blocks: { type: string; content: unknown }[] };
+    const body = calls[0]!.body as { version: number; blocks: { origin: string; type: string; content: unknown }[] };
     expect(body.version).toBe(2);
-    expect(body.blocks.map((b) => b.content)).toEqual([{ runs: [{ text: "Đoạn một" }] }, { runs: [{ text: "Đoạn hai" }] }]);
+    expect(body.blocks).toHaveLength(1);
+    expect(body.blocks[0]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Đoạn một" }] } });
+  });
+
+  it("partOf lấy heading và hướng dẫn của phần; không có heading thì dựng theo tên mục", () => {
+    const shared = { blocks: [{ id: "h", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "A" } }] };
+    expect(partOf(shared, { partId: "h", title: "A" })).toMatchObject({ heading: { id: "h" }, guide: [] });
+    expect(partOf(shared, { partId: "x", title: "Toàn bài" }).heading).toMatchObject({ id: "x", content: { text: "Toàn bài" } });
   });
 });

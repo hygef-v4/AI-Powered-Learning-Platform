@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { formatDateTime } from "@/features/groups/format";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, ButtonLink, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
-import { claimSection, downloadDocx, getWorkspace, releaseSection } from "./api";
-import { BlockView } from "./BlockView";
+import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
+import { DocumentViewer } from "@/shared/document";
+import { claimSection, downloadDocx, getWorkspace, releaseSection, sendActivity } from "./api";
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "./SectionDialogs";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "./types";
 import { useGroupDocStream } from "./useGroupDocStream";
@@ -77,6 +78,15 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     [reload],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
+
+  const send = useCallback(
+    (events: ActivityEventInput[], options: { keepalive: boolean }) => sendActivity(documentId, events, options.keepalive),
+    [documentId],
+  );
+  useActivityTracker({
+    enabled: !!view && view.activityMonitoring && view.role.member && view.status === "IN_PROGRESS" && view.window !== "CLOSED",
+    send,
+  });
 
   const act = async (action: () => Promise<unknown>, fallback: string) => {
     setNotice(null);
@@ -239,19 +249,13 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             {view.sharedBlocks.blocks.length > 0 && (
               <div className="rounded-xl bg-shell p-3">
                 <p className="mb-1 text-xs font-semibold text-muted">Hướng dẫn của giảng viên</p>
-                {view.sharedBlocks.blocks.map((b) => (
-                  <BlockView key={b.id} block={b} />
-                ))}
+                <DocumentViewer document={view.sharedBlocks} />
               </div>
             )}
             {view.sections.map((s) => (
               <article key={s.id} id={`section-${s.id}`} aria-label={s.title} className="scroll-mt-4">
                 <h3 className="mt-2 text-[14px] font-bold text-ink">{s.title}</h3>
-                {s.publishedBlocks?.length ? (
-                  s.publishedBlocks.map((b) => <BlockView key={b.id} block={b} />)
-                ) : (
-                  <p className="text-xs text-muted">Chưa có nội dung đã Xong.</p>
-                )}
+                <DocumentViewer document={{ blocks: s.publishedBlocks ?? [] }} empty="Chưa có nội dung đã Xong." />
               </article>
             ))}
           </Section>
@@ -261,7 +265,14 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       )}
 
       {editing && (
-        <SectionEditorDialog documentId={view.documentId} section={editing} onClose={() => setEditing(null)} onChanged={() => void reload()} />
+        <SectionEditorDialog
+          documentId={view.documentId}
+          section={editing}
+          shared={view.sharedBlocks}
+          diagramEnabled={view.diagramEnabled}
+          onClose={() => setEditing(null)}
+          onChanged={() => void reload()}
+        />
       )}
       {assigning && <AssignSectionDialog view={view} section={assigning} onClose={() => setAssigning(null)} onChanged={() => void reload()} />}
       {submitting && (

@@ -134,3 +134,20 @@ Bằng chứng: `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`. Nh�
 
 - `GroupSnapshot.withSection` và `GroupSectionService.validate`: nháp và Xong được kiểm trong khung chung. Trước đây bộ kiểm của U07 thấy thiếu block của người soạn nên mọi lần lưu đều bị từ chối; unit test không phát hiện vì `IDocumentModel` là mock. Thêm test dùng `DocumentModelService` thật.
 - `GroupDocAccess.window`, `GroupAutoSubmitScanner`: ân hạn 30 giây chỉ nới hạn đóng. Trước đây 30 giây đầu sau khi mở bài bị coi là quá hạn, bộ quét tự nộp và đóng tài liệu của mọi nhóm. Thêm `GroupAutoSubmitScannerTest`.
+
+## Trình soạn chung và Draw.io cho tài liệu nhóm (2026-10-25, KAN-64, KAN-66)
+
+Plan: `construction/plans/2026-10-24-u12-document-editor.md`, nhánh `feat/u12-document-editor`.
+
+- **`SectionEditorDialog`:** dùng `DocumentEditor` (`@/shared/document`) ở `mode="student"` thay cho ô gõ chữ tạm.
+  - `partOf` lấy heading của phần (`partId` là id heading) làm block khóa; hướng dẫn của giảng viên trong phần hiện chỉ xem bằng `DocumentViewer`.
+  - Chỉ block `STUDENT` được gửi lên khi lưu nháp; Draw.io theo `diagramEnabled` của bài.
+  - Giữ nguyên tự lưu 10 giây, "Bạn đang giữ", nút Xong.
+- **`GroupWorkspacePage`:**
+  - Hướng dẫn chung và nội dung đã Xong hiện bằng `DocumentViewer` (có sơ đồ, bảng, danh sách). Bỏ `features/groupdocs/BlockView.tsx`.
+  - `useActivityTracker` gửi vào `POST /api/v1/group-docs/{id}/activity` khi bài bật giám sát.
+- **`types.ts`:** dùng kiểu `DocumentBlock`, `DocumentModel` chung; `WorkspaceView.diagramEnabled`.
+- **Backend:**
+  - `GroupWorkspaceService.WorkspaceView.diagramEnabled` lấy từ `AssignmentView`, kèm `GroupWorkspaceServiceTest`.
+  - Migration `groups/V20261025_1800__add_group_documents_assignment_fk.sql` thêm khóa ngoại `group_documents.assignment_id → assignments(id)` (`NOT VALID`).
+- **Giới hạn:** chưa tải ảnh trong tài liệu nhóm (không có `uploadImage`/`imageUrl`); ảnh trong khung của giảng viên chưa hiện ảnh thật vì endpoint ảnh của U07 dành cho người soạn.

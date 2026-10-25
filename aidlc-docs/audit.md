@@ -6246,3 +6246,19 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Context**: Sửa lỗi U01/U10/U11, có chạm U04/U05 (thứ tự khóa khi gán phân công).
 
 ---
+
+## U12 shared document editor – approval
+**Timestamp**: 2026-10-25T01:00:00Z
+**User Input**: "ok có đủ token rồi, làm tiếp đi"
+**AI Response**: Coi là duyệt plan `construction/plans/2026-10-24-u12-document-editor.md`. Gộp `origin/staging` (d9a0300) vào `feat/u12-document-editor` (audit.md giữ cả hai phía). Làm lần lượt: DocumentEditor cho mục, DocumentViewer cho nội dung, cờ `diagramEnabled`, useActivityTracker, khóa ngoại assignment_id, test, tài liệu.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
+
+---
+
+## U12 shared document editor – code complete (pending live check)
+**Timestamp**: 2026-10-25T02:30:00Z
+**User Input**: (không có input mới; tiếp tục "ok có đủ token rồi, làm tiếp đi")
+**AI Response**: Xong bước 1–5: SectionEditorDialog dùng DocumentEditor (mode student, Draw.io theo bài, chỉ lưu block STUDENT); DocumentViewer cho nội dung; bỏ BlockView tạm; WorkspaceView.diagramEnabled; useActivityTracker; migration khóa ngoại group_documents.assignment_id (NOT VALID). Frontend 483 test, lint, build đạt; backend 1382 test (92 test Testcontainers bỏ qua vì Docker Desktop đã tắt). Chưa chạy thử trên stack local; chờ người dùng bật Docker.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
+
+---
