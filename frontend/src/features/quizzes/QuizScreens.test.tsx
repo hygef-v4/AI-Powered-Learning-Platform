@@ -56,7 +56,6 @@ const INFO: QuizInfo = {
 };
 const detail = (quiz: Partial<QuizInfo> = {}, canManage = true): QuizDetail => ({
   quiz: { ...INFO, ...quiz }, items: [{ position: 1, points: 2, inline: false, question: QUESTION }], maxScore: 2, canManage,
-  activityRetentionConfigured: false,
 });
 const row = (overrides: Partial<QuizRow> = {}): QuizRow => ({
   id: "z1", scope: "CLASS", classId: "c1", subjectId: "s1", versionNo: 1, title: "Luyện tập", status: "DRAFT", itemCount: 3,
@@ -191,17 +190,11 @@ describe("ClassQuizzesSection", () => {
 });
 
 describe("QuizSettingsPanel", () => {
-  it("ghi nhận hoạt động chỉ bật được khi đã đặt thời hạn lưu và cần lời báo (E3)", async () => {
+  it("ghi nhận hoạt động luôn bật được (dữ liệu giữ cố định 1 ngày) và cần lời báo", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
-    const { unmount } = render(<QuizDetailPage id="z1" />);
-    expect(await screen.findByRole("switch", { name: "Ghi nhận hoạt động" })).toBeDisabled();
-    expect(screen.getByTestId("quiz-settings-activity-locked")).toBeInTheDocument();
-    unmount();
-
-    vi.mocked(getQuiz).mockResolvedValue({ ...detail(), activityRetentionConfigured: true });
-    vi.mocked(updateQuizDetails).mockResolvedValue({ ...detail({ activityMonitoringEnabled: true, activityNotice: "Ghi lại" }),
-      activityRetentionConfigured: true });
+    vi.mocked(updateQuizDetails).mockResolvedValue(detail({ activityMonitoringEnabled: true, activityNotice: "Ghi lại" }));
     render(<QuizDetailPage id="z1" />);
+    expect(await screen.findByText("Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.")).toBeInTheDocument();
     const toggle = await screen.findByRole("switch", { name: "Ghi nhận hoạt động" });
     expect(toggle).toBeEnabled();
     fireEvent.click(toggle);

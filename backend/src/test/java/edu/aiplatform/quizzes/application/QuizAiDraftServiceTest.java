@@ -132,6 +132,10 @@ class QuizAiDraftServiceTest {
             }
 
             @Override
+            public void requireSource(Actor actor, AiSource source, AiProvider provider) {
+            }
+
+            @Override
             public void cancel(Actor actor, UUID taskId) {
             }
         };
@@ -139,8 +143,7 @@ class QuizAiDraftServiceTest {
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
         ActiveSubjects active = new ActiveSubjects(subjects);
-        QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active,
-                new QuizActivityPolicy());
+        QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
                 materials, clock);

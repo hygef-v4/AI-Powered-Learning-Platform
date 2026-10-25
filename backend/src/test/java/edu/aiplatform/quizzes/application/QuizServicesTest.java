@@ -101,7 +101,7 @@ class QuizServicesTest {
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access,
-                new ActiveSubjects(subjects), new QuizActivityPolicy());
+                new ActiveSubjects(subjects));
         QuizReferenceMaterials materials = new QuizReferenceMaterials(new FakeReferenceMaterial(), support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
                 materials, clock);
@@ -170,7 +170,6 @@ class QuizServicesTest {
         Question q = bank(true);
         QuizDetail quiz = classQuizWith(q);
         UUID id = quiz.quiz().id();
-        assertThat(quiz.activityRetentionConfigured()).as("thời hạn giữ dữ liệu cố định 1 ngày").isTrue();
         ApiException noNotice = api(() -> authoring.updateDetails(teacher, id, new Details("Luyện tập", null,
                 Quiz.DEFAULT_SETTINGS, true, "  ", List.of()), quiz.quiz().version()));
         assertThat(((RuleViolationException) noNotice).violations()).extracting(Violation::code)

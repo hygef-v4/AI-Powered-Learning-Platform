@@ -99,7 +99,7 @@ class QuizControllersTest {
         QuizInfo info = new QuizInfo(quizId, QuizScope.CLASS, classId, subjectId, null, QuizOrigin.MANUAL, 1, "Luyện tập",
                 null, new QuizSettings(false, false, null, 1, true, false), false, null, List.of(), QuizStatus.DRAFT,
                 null, null, null, NOW, NOW, 0);
-        return new QuizDetail(info, List.of(), BigDecimal.ZERO, true, false);
+        return new QuizDetail(info, List.of(), BigDecimal.ZERO, true);
     }
 
     @Test
