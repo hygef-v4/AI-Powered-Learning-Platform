@@ -756,3 +756,10 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - Source validation remains 501 tests/typecheck/lint/build pass from the implementation turn; targeted tests repeated for this handoff. UI authenticated acceptance remains pending.
 - Temporary test caches/logs and build output are excluded; no branch switch or history rewrite.
 - Local commit execution blocked before staging: .git/index.lock permission denied. No commit created; ignored .tmp/commit-u09-local.ps1 prepared and syntax checked for manual execution. Do not report this handoff as committed.
+
+## Student menu 404 - 2026-10-25
+
+- [x] Reproduced /my-assignments, /quiz-practice, /announcements and /ai/connection Next 404 via authenticated IAB; /classes works. Source/layout/build route availability and hrefs verified.
+- [x] Prepared and validated scripts/repair-student-routes.ps1 (three mock cases, not runtime acceptance). Reuses existing 8088 Compose project and only updates frontend/nginx.
+- [ ] Actual Docker inspection/repair and UI retest pending: Docker socket access denied in this session. Stale runtime/upstream is not confirmed without container evidence. No application source patch or claim of fixed live routes.
+- Evidence/plan: construction/plans/2026-10-25-student-menu-404-repair.md. No commit/push or data/credential changes.

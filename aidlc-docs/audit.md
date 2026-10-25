@@ -6342,3 +6342,10 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 ---
 
 **Commit execution blocked**: git add failed before staging: Unable to create .git/index.lock, Permission denied. No commit was created, no push attempted. Prepared ignored .tmp/commit-u09-local.ps1 for the user to run in their local terminal; script stages only the three documented groups and contains no push command. This supersedes any implication that the commit handoff already completed.
+
+## Student navigation 404 investigation and runtime repair - 2026-10-25
+**User Input**: "sao tôi bấm vào các tab bài tập, luyện tập quiz, thông báo lớp của student vẫn bị  404 not found, giúp tôi check lại và fix bug"
+**Additional User Input**: "cả khi bấm vào kết nối ai nữa"
+**AI Response**: Read the two attached images and reproduced all four bare Next 404s on the authenticated U05 Mock Student IAB session. Classes works. All four source routes/layouts and generated/standalone manifests exist; navigation hrefs and repository proxy config are correct. Runtime stale/incomplete image or stale upstream remains a hypothesis pending direct container inspection. Prepared scripts/repair-student-routes.ps1 to identify the existing 8088 Compose stack, probe direct frontend routes, rebuild/replace frontend only and restart nginx, then probe gateway paths. Script syntax and three mock scenarios validated; actual -CheckOnly invocation stopped on Docker socket permission denied. No application source edits or runtime success claim; no credential/DB changes, commit/push/merge. Scoped plan/evidence: construction/plans/2026-10-25-student-menu-404-repair.md.
+
+---
