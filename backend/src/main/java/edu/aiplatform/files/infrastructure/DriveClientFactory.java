@@ -8,6 +8,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.UserCredentials;
 import edu.aiplatform.files.application.FilesProperties;
 import edu.aiplatform.files.application.StorageUnavailableException;
 import java.io.ByteArrayInputStream;
@@ -20,8 +21,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Component;
 
 /**
- * Tạo client Drive từ JSON key service account (base64) và gọi Drive có thử lại (P6): 429, 5xx và lỗi mạng
- * thử lại 3 lần, backoff 1, 2, 4 giây có jitter; lỗi quyền hoặc abuse không thử lại.
+ * Tạo client Drive và gọi Drive có thử lại (P6): 429, 5xx và lỗi mạng thử lại 3 lần, backoff 1, 2, 4 giây có jitter;
+ * lỗi quyền hoặc abuse không thử lại. Shared Drive dùng JSON key service account (base64); Drive cá nhân dùng OAuth
+ * client và refresh token của chủ tài khoản.
  */
 @Component
 public class DriveClientFactory {
@@ -41,7 +43,7 @@ public class DriveClientFactory {
         if (current == null) {
             synchronized (this) {
                 if (drive == null) {
-                    drive = create(properties.driveServiceAccountKey());
+                    drive = create(properties);
                 }
                 current = drive;
             }
@@ -49,11 +51,16 @@ public class DriveClientFactory {
         return current;
     }
 
-    static Drive create(String base64Key) {
+    static Drive create(FilesProperties properties) {
         try {
-            GoogleCredentials credentials = GoogleCredentials
-                    .fromStream(new ByteArrayInputStream(Base64.getDecoder().decode(base64Key.strip())))
-                    .createScoped(List.of(DriveScopes.DRIVE));
+            GoogleCredentials credentials = properties.sharedDriveConfigured()
+                    ? GoogleCredentials.fromStream(new ByteArrayInputStream(
+                            Base64.getDecoder().decode(properties.driveServiceAccountKey().strip())))
+                            .createScoped(List.of(DriveScopes.DRIVE))
+                    // Scope nằm trong refresh token (drive.file), không đặt lại ở đây.
+                    : UserCredentials.newBuilder().setClientId(properties.driveOauthClientId().strip())
+                            .setClientSecret(properties.driveOauthClientSecret().strip())
+                            .setRefreshToken(properties.driveOauthRefreshToken().strip()).build();
             HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
             HttpRequestInitializer initializer = request -> {
                 adapter.initialize(request);

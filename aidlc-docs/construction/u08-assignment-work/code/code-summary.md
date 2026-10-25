@@ -114,3 +114,7 @@ Unit test thêm: cỡ bảng của đề trong lượt làm; frontend: người 
 ## Còn lại
 
 - Bước 13 Review: đối chiếu UC 37–41, story, BR-U08 với code, người dùng duyệt.
+
+## Thay đổi 2026-10-24
+
+- Bỏ `ActivitySettingDefinitions` (cài đặt `activity.retentionDays`): thời hạn giữ sự kiện hoạt động cố định 1 ngày (`ActivityService.RETENTION`); `ActivityRetentionScanner` xóa sự kiện cũ hơn 1 ngày, tóm tắt báo `EXPIRED` sau 1 ngày.

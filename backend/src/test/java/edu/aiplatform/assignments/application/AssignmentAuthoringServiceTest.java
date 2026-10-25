@@ -144,11 +144,10 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void activityMonitoringNeedsRetentionSetting() {
+    void activityMonitoringTurnsOnWithoutRetentionSetting() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        assertThat(code(() -> f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(a.version(),
-                null, null, null, null, null, null, true, "Có ghi nhận"))))
-                .isEqualTo("ACTIVITY_RETENTION_NOT_SET");
+        assertThat(f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(a.version(),
+                null, null, null, null, null, null, true, "Có ghi nhận")).activityMonitoringEnabled()).isTrue();
     }
 
     @Test
