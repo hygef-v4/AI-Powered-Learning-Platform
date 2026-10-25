@@ -125,7 +125,7 @@ class SubjectAdminCommandTest {
         var after = service.create(admin, create(newManager));
         var order = inOrder(accounts, repository, audit);
         order.verify(repository).existsByCode(after.code());
-        order.verify(accounts).getContact(newManager);
+        order.verify(accounts).lockContact(newManager);
         order.verify(repository).insert(after);
         order.verify(audit).record(any());
         assertThat(after.managerId()).isEqualTo(newManager);
@@ -140,7 +140,7 @@ class SubjectAdminCommandTest {
     @ParameterizedTest
     @MethodSource("invalidManagers")
     void invalidManagerIsRejectedAtSubmit(Role role, AccountStatus status) {
-        when(accounts.getContact(newManager)).thenReturn(Optional.of(new AccountContact(newManager, "x@example.test", "X", role, status)));
+        when(accounts.lockContact(newManager)).thenReturn(Optional.of(new AccountContact(newManager, "x@example.test", "X", role, status)));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
         verify(repository, never()).insert(any());
         verifyNoInteractions(audit);
@@ -148,11 +148,11 @@ class SubjectAdminCommandTest {
 
     @Test
     void missingOrMismatchedContactIsInvalidButLookupErrorIsUnavailable() {
-        when(accounts.getContact(newManager)).thenReturn(Optional.empty());
+        when(accounts.lockContact(newManager)).thenReturn(Optional.empty());
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
-        when(accounts.getContact(newManager)).thenReturn(Optional.of(new AccountContact(oldManager, "x@example.test", "X", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+        when(accounts.lockContact(newManager)).thenReturn(Optional.of(new AccountContact(oldManager, "x@example.test", "X", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
-        when(accounts.getContact(newManager)).thenThrow(new IllegalStateException("down"));
+        when(accounts.lockContact(newManager)).thenThrow(new IllegalStateException("down"));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE");
         verify(repository, never()).insert(any());
         verifyNoInteractions(audit);
@@ -211,8 +211,8 @@ class SubjectAdminCommandTest {
         Subject after = service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L));
         var order = inOrder(repository, accounts, audit);
         order.verify(repository).findById(subjectId);
+        order.verify(accounts).lockContact(newManager);
         order.verify(repository).findByIdForUpdate(subjectId);
-        order.verify(accounts).getContact(newManager);
         order.verify(repository).update(after, 1L);
         order.verify(audit).record(any());
         assertThat(after.managerId()).isEqualTo(newManager);
@@ -247,7 +247,9 @@ class SubjectAdminCommandTest {
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
         when(repository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(before.changeManager(null, NOW)));
         code(() -> service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L)), "SUBJECT_VERSION_CONFLICT");
-        verifyNoInteractions(accounts, audit);
+        // Tài khoản được khóa trước dòng môn (cùng thứ tự với U01); version lệch vẫn báo trước Chủ nhiệm môn.
+        verify(accounts).lockContact(newManager);
+        verifyNoInteractions(audit);
         verify(repository, never()).update(any(), anyLong());
     }
 
@@ -275,7 +277,7 @@ class SubjectAdminCommandTest {
     }
 
     private void eligible(UUID id) {
-        when(accounts.getContact(id)).thenReturn(Optional.of(new AccountContact(id, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+        when(accounts.lockContact(id)).thenReturn(Optional.of(new AccountContact(id, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
     }
 
     private AuditEvent event() {

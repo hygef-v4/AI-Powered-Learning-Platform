@@ -51,7 +51,7 @@ public class SubjectCommandService {
             throw ApiException.conflict("SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
         }
         if (subject.managerId() != null) {
-            requireEligibleManager(subject.managerId());
+            requireEligibleManager(subject.managerId(), lockManager(subject.managerId()));
         }
         try {
             repository.insert(subject);
@@ -94,14 +94,20 @@ public class SubjectCommandService {
         if (Objects.equals(preliminary.managerId(), command.managerId())) {
             return preliminary;
         }
+        if (command.managerId() != null && preliminary.status() == SubjectStatus.ARCHIVED) {
+            throw archivedSubject();
+        }
+        // Khóa tài khoản trước dòng môn, cùng thứ tự với U01 khi vô hiệu hóa tài khoản rồi gỡ phân công; điều kiện của
+        // tài khoản kiểm sau môn để giữ thứ tự lỗi (version, lưu trữ, rồi mới tới Chủ nhiệm môn).
+        AccountContact manager = command.managerId() == null ? null : lockManager(command.managerId());
         Subject before = repository.findByIdForUpdate(subjectId)
                 .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         before.requireVersion(version);
         if (command.managerId() != null) {
             if (before.status() == SubjectStatus.ARCHIVED) {
-                throw ApiException.conflict("SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
+                throw archivedSubject();
             }
-            requireEligibleManager(command.managerId());
+            requireEligibleManager(command.managerId(), manager);
         }
         Subject after = before.changeManager(command.managerId(), clock.instant());
         save(after, version);
@@ -109,13 +115,20 @@ public class SubjectCommandService {
         return after;
     }
 
-    private void requireEligibleManager(UUID id) {
-        AccountContact contact;
+    private static ApiException archivedSubject() {
+        return ApiException.conflict("SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
+    }
+
+    /** Đọc và khóa tài khoản tới hết transaction (U01 {@code lockContact}) để role không đổi trước khi gán xong. */
+    private AccountContact lockManager(UUID id) {
         try {
-            contact = accounts.getContact(id).orElse(null);
+            return accounts.lockContact(id).orElse(null);
         } catch (RuntimeException unavailable) {
             throw ApiException.unavailable("SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE", "Chưa kiểm tra được tài khoản, vui lòng thử lại");
         }
+    }
+
+    private static void requireEligibleManager(UUID id, AccountContact contact) {
         if (contact == null || !id.equals(contact.accountId())
                 || contact.role() != Role.SUBJECT_MANAGER || contact.status() != AccountStatus.ACTIVE) {
             throw ApiException.badRequest("SUBJECT_MANAGER_INVALID", "Chủ nhiệm môn phải là tài khoản Chủ nhiệm môn đang hoạt động");

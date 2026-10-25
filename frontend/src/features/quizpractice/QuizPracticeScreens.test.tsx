@@ -143,7 +143,7 @@ describe("QuizTakingPage (UC 51)", () => {
     await act(async () => {
       vi.advanceTimersByTime(AUTOSAVE_DELAY_MS + 10);
     });
-    await waitFor(() => expect(saveAnswers).toHaveBeenCalledWith("a1", { q1: ["1"] }, 0));
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledWith("a1", { q1: ["1"] }, 0, false));
     expect(await screen.findByText("Đã tự động lưu")).toBeInTheDocument();
   });
 
@@ -168,7 +168,7 @@ describe("QuizTakingPage (UC 51)", () => {
 
     fireEvent.click(screen.getByTestId("quiz-taking-confirm-submit"));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/quiz-attempts/a1/result"));
-    expect(saveAnswers).toHaveBeenCalledWith("a1", { q1: ["1"] }, 0);
+    expect(saveAnswers).toHaveBeenCalledWith("a1", { q1: ["1"] }, 0, false);
     expect(submitAttempt).toHaveBeenCalledWith("a1");
   });
 
@@ -195,7 +195,7 @@ describe("QuizTakingPage (UC 51)", () => {
       finishFirst({ answerVersion: 1, savedAt: "2026-10-20T08:01:00Z" });
     });
     await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(2));
-    expect(saveAnswers).toHaveBeenLastCalledWith("a1", { q1: ["2"] }, 1);
+    expect(saveAnswers).toHaveBeenLastCalledWith("a1", { q1: ["2"] }, 1, false);
     expect(await screen.findByText("Đã tự động lưu")).toBeInTheDocument();
   });
 
@@ -223,6 +223,30 @@ describe("QuizTakingPage (UC 51)", () => {
     });
     await waitFor(() => expect(submitAttempt).toHaveBeenCalledWith("a1"));
     expect(saveAnswers).toHaveBeenCalledTimes(1);
+  });
+
+  it("rời trang hoặc trang bị ẩn thì lưu ngay bằng keepalive", async () => {
+    vi.mocked(saveAnswers)
+      .mockResolvedValueOnce({ answerVersion: 1, savedAt: "2026-10-20T08:01:00Z" })
+      .mockResolvedValueOnce({ answerVersion: 2, savedAt: "2026-10-20T08:01:05Z" });
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-option-1"));
+    await act(async () => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+    await waitFor(() => expect(saveAnswers).toHaveBeenCalledWith("a1", { q1: ["1"] }, 0, true));
+
+    fireEvent.click(screen.getByTestId("quiz-taking-option-2"));
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    try {
+      await act(async () => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await waitFor(() => expect(saveAnswers).toHaveBeenLastCalledWith("a1", { q1: ["2"] }, 1, true));
+    } finally {
+      visibility.mockRestore();
+    }
+    expect(saveAnswers).toHaveBeenCalledTimes(2);
   });
 
   it("không lưu được câu trả lời thì không nộp tay", async () => {

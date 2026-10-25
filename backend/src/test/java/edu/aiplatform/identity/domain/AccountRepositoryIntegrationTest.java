@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -120,6 +121,35 @@ class AccountRepositoryIntegrationTest {
         assertThat(repository.findByEmails(List.of("taivm@fpt.edu.vn", "khac@fpt.edu.vn")))
                 .extracting(Account::id).containsExactly(account.id());
         assertThat(repository.findByEmails(List.of())).isEmpty();
+    }
+
+    @Test
+    void shareLockForAssignmentHoldsOffTheRoleChangeLockUntilCommit() throws Exception {
+        Account account = pending("gv@fpt.edu.vn", Role.TEACHER, "Giảng viên");
+        repository.insert(account);
+        CountDownLatch held = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<Optional<Account>> assigner = pool.submit(() -> tx.execute(s -> {
+                Optional<Account> read = repository.findByIdForShare(account.id());
+                held.countDown();
+                await(release);
+                return read;
+            }));
+            assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<?> roleChange = pool.submit(() -> tx.executeWithoutResult(s -> repository.lockById(account.id())));
+
+            awaitBlockedOnRowLock();
+            assertThat(roleChange.isDone()).as("khóa đổi role chờ bên gán phân công commit").isFalse();
+            release.countDown();
+
+            assertThat(assigner.get(5, TimeUnit.SECONDS)).hasValueSatisfying(a -> assertThat(a.id()).isEqualTo(account.id()));
+            roleChange.get(5, TimeUnit.SECONDS);
+        } finally {
+            release.countDown();
+            pool.shutdownNow();
+        }
     }
 
     @Test

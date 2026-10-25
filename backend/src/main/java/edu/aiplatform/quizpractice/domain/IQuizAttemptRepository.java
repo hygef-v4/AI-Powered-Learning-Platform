@@ -36,7 +36,7 @@ public interface IQuizAttemptRepository {
     /** Mọi Quiz người học đã có lượt, kèm lớp đã làm. */
     Map<UUID, UUID> quizzesAttemptedBy(UUID accountId);
 
-    /** Lượt đang làm đã quá hạn cộng ân hạn (scanner). */
+    /** Lượt đang làm đã quá hạn cộng ân hạn, hạn sớm trước (scanner); không khóa, mỗi lượt nộp trong transaction riêng. */
     List<QuizAttempt> findOverdue(Instant cutoff, int limit);
 
     /** Lượt đang làm của một Quiz (Quiz bị ngưng hoặc có version mới). */

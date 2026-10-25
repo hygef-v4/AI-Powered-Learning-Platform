@@ -53,6 +53,17 @@ public class AccountRepository {
                 .param("id", id).query(AccountRepository::map).optional();
     }
 
+    /** Đọc và khóa chia sẻ tới hết transaction: bên gán phân công giữ để role, trạng thái không đổi giữa chừng. */
+    public Optional<Account> findByIdForShare(UUID id) {
+        return jdbc.sql("select " + COLUMNS + " from accounts where id = :id for share")
+                .param("id", id).query(AccountRepository::map).optional();
+    }
+
+    /** Khóa dòng tới hết transaction trước khi kiểm phân công rồi đổi role (BR-U01-64). */
+    public void lockById(UUID id) {
+        jdbc.sql("select id from accounts where id = :id for update").param("id", id).query(UUID.class).optional();
+    }
+
     public List<Account> listActiveAdmins(UUID afterId,int limit) {
         var query=jdbc.sql("select "+COLUMNS+" from accounts where role='ADMIN' and status='ACTIVE'"
                 +(afterId==null?"":" and id>:after")+" order by id limit :limit").param("limit",limit);

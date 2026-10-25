@@ -84,6 +84,15 @@ class GradingServiceTest {
     }
 
     @Test
+    void staleVersionDoesNotWriteAuditOrPublish() {
+        assertThatThrownBy(() -> service.save(teacher, evaluation.id, command(9)))
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.status().value()).isEqualTo(409));
+        verify(repo, never()).save(any());
+        verifyNoInteractions(audit, events);
+    }
+
+    @Test
     void oldPublishedAttemptCannotBeEditedAfterResubmission() {
         when(submissions.listSubmissions(assignmentId, classId))
                 .thenReturn(List.of(new StudentSubmissionStatus(studentId, UUID.randomUUID(), 2,

@@ -15,7 +15,7 @@ public class NotificationEventService {
     public void accept(DomainEvent event) {
         if(event==null||event.schemaVersion()!=1||event.eventType()==null||!SOURCES.containsKey(event.eventType()))return;
         if(event.eventId()==null||event.payload()==null||event.payload().size()>30||!SOURCES.get(event.eventType()).equals(event.sourceUnit()))throw new IllegalArgumentException("Invalid notification event");
-        var r=resolver.resolve(event);notifications.create(event.eventId(),r.type(),r.recipients(),title(r.type()),"Đăng nhập để xem thông tin liên quan.",r.link(),r.emailType(),null);
+        var r=resolver.resolve(event);notifications.create(event.eventId(),r.type(),r.recipients(),title(r.type()),NotificationSummaries.forType(r.type()),r.link(),r.emailType(),null);
     }
     public static String title(NotificationType type) {return switch(type){
         case ENROLLED->"Bạn đã được ghi danh vào lớp";case ASSIGNMENT_OPENED->"Có bài tập mới mở";case QUIZ_PUBLISHED->"Có Quiz mới";case GRADE_PUBLISHED->"Bạn có điểm mới";

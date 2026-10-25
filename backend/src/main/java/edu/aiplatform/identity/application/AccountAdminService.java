@@ -163,10 +163,13 @@ public class AccountAdminService {
             // Người đổi role luôn là ADMIN nên mọi thay đổi role của chính mình đều là tự hạ quyền (BR-U01-65).
             throw ApiException.conflict("SELF_CHANGE_BLOCKED", "Không thể tự đổi vai trò của chính mình");
         }
-        checkAssignmentsKept(id, newRole);
         Instant now = clock.instant();
         transactions.executeWithoutResult(status -> {
             protectLastAdmin(target, newRole != Role.ADMIN);
+            // Khóa tài khoản rồi mới kiểm: U04, U05 gán phân công qua IAccountLookup.lockContact nên không gán xen vào
+            // giữa lúc kiểm và lúc đổi role.
+            accounts.lockById(id);
+            checkAssignmentsKept(id, newRole);
             if (accounts.updateRole(id, newRole, version, now) == 0) {
                 throw versionConflict();
             }
