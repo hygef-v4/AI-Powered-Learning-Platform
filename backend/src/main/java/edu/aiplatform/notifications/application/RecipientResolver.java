@@ -11,11 +11,11 @@ public class RecipientResolver {
     public record Resolved(NotificationType type,List<UUID> recipients,String link,String emailType) { }
     private final IClassAccess classes;private final IAccountLookup accounts;
     public RecipientResolver(IClassAccess classes,IAccountLookup accounts) {this.classes=classes;this.accounts=accounts;}
-    public Resolved resolve(DomainEvent event) {
+    public List<Resolved> resolve(DomainEvent event) {
+        if (EventTypes.ASSIGNMENT_OPENED.equals(event.eventType())) return assignmentGroups(event.payload());
         var p=event.payload();UUID classId=optionalId(p,"classId");List<UUID> ids;NotificationType type;String link;String email=null;
         switch(event.eventType()) {
             case EventTypes.ENROLLMENT_ACTIVATED -> {type=NotificationType.ENROLLED;ids=List.of(id(p,"accountId"));link="/classes/"+id(p,"classId");email="ENROLLED";}
-            case EventTypes.ASSIGNMENT_OPENED -> {type=NotificationType.ASSIGNMENT_OPENED;ids=students(p);link="/assignments/"+id(p,"assignmentId");email="ASSIGNMENT_OPENED";}
             case EventTypes.QUIZ_PUBLISHED -> {type=NotificationType.QUIZ_PUBLISHED;ids=students(p);link="/quiz-practice/"+id(p,"quizId");}
             case EventTypes.GRADE_PUBLISHED -> {type=NotificationType.GRADE_PUBLISHED;ids=ids(p,"studentIds");link="/classes/"+id(p,"classId")+"?tab=grades";email="GRADE_PUBLISHED";}
             case EventTypes.CLASS_ANNOUNCEMENT_POSTED -> {
@@ -39,7 +39,34 @@ public class RecipientResolver {
             if(teacher)return c.role()==Role.TEACHER||c.role()==Role.SUBJECT_MANAGER;
             return c.role()==Role.STUDENT&&(classId==null||openClass(classId)!=null&&classes.isActiveStudent(account,classId));
         }).toList();
-        return new Resolved(type,recipients,link,email);
+        return List.of(new Resolved(type,recipients,link,email));
+    }
+    private List<Resolved> assignmentGroups(Map<String,Object> payload) {
+        UUID assignmentId = id(payload,"assignmentId");
+        List<ClassRef> targets;
+        if ("SUBJECT".equals(payload.get("scope"))) {
+            UUID subjectId = id(payload,"subjectId");
+            targets = classes.listOpenClassesOfSubject(subjectId).stream()
+                    .filter(c -> subjectId.equals(c.subjectId())).toList();
+        } else if ("CLASS".equals(payload.get("scope"))) {
+            targets = classes.getClassRef(id(payload,"classId")).map(List::of).orElse(List.of());
+        } else throw new IllegalArgumentException("Invalid assignment scope");
+        Set<UUID> seen = new HashSet<>();
+        List<Resolved> groups = new ArrayList<>();
+        // Stable choice if inconsistent data lists one student in multiple classes of the subject.
+        for (var target : targets.stream().filter(c -> c.status()==ClassStatus.OPEN)
+                .sorted(Comparator.comparing(ClassRef::classId)).toList()) {
+            if (openClass(target.classId()) == null) continue;
+            List<UUID> recipients = classes.listActiveStudents(target.classId()).stream().distinct()
+                    .filter(student -> {
+                        var account = accounts.getContact(student).orElse(null);
+                        return account != null && account.status()==AccountStatus.ACTIVE && account.role()==Role.STUDENT
+                                && classes.isActiveStudent(student,target.classId());
+                    }).filter(seen::add).toList();
+            if (!recipients.isEmpty()) groups.add(new Resolved(NotificationType.ASSIGNMENT_OPENED, recipients,
+                    AssignmentNotificationLink.student(assignmentId,target.classId()),"ASSIGNMENT_OPENED"));
+        }
+        return List.copyOf(groups);
     }
     private List<UUID> admins() {
         List<UUID> all=new ArrayList<>();UUID cursor=null;Set<UUID> seen=new HashSet<>();

@@ -22,6 +22,44 @@ class DeadlineReminderScannerTest {
     ClassRef course(UUID id){return new ClassRef(id,subject,"C","Class",ClassStatus.OPEN,UUID.randomUUID(),false);}
     AssignmentView assignment(Instant opens,Instant closes,UUID assignedClass){return new AssignmentView(id,assignedClass==null?AssignmentScope.SUBJECT:AssignmentScope.CLASS,assignedClass,subject,1,"Bài",SubmissionMode.INDIVIDUAL,GradingMode.GRADED,false,AssignmentStatus.OPEN,opens,closes,null,null,false,null,List.of());}
     void source(AssignmentView a){when(assignments.listClosingBetween(any(),any())).thenReturn(List.of(a));when(assignments.get(id)).thenReturn(Optional.of(a));}
+    @Test void reminderUsesStudentRouteWithClassContext() {
+        source(assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId));
+        scanner.scan(now);
+        verify(notices).create(any(),eq(NotificationType.DEADLINE_REMINDER),eq(List.of(student)),anyString(),anyString(),
+                eq("/my-assignments/"+id+"?classId="+classId),eq("DEADLINE_REMINDER"),any());
+    }
+    @Test void failingClassDoesNotStopOtherClassesOrFollowingAssignments() {
+        var a=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),null);
+        var secondClass=UUID.randomUUID();
+        var next=new AssignmentView(UUID.randomUUID(),AssignmentScope.CLASS,classId,subject,1,"Next",SubmissionMode.INDIVIDUAL,
+                GradingMode.GRADED,false,AssignmentStatus.OPEN,a.opensAt(),a.closesAt(),null,null,false,null,List.of());
+        source(a);
+        when(assignments.listClosingBetween(any(),any())).thenReturn(List.of(a,next));
+        when(assignments.get(next.assignmentId())).thenReturn(Optional.of(next));
+        when(classes.listOpenClassesOfSubject(subject)).thenReturn(List.of(course(classId),course(secondClass)));
+        when(classes.getClassRef(secondClass)).thenReturn(Optional.of(course(secondClass)));
+        when(classes.listActiveStudents(secondClass)).thenReturn(List.of(student));
+        when(submissions.listStudentsWithoutSubmission(id,classId)).thenThrow(new IllegalStateException("unavailable"));
+        scanner.scan(now);
+        verify(submissions).listStudentsWithoutSubmission(id,secondClass);
+        verify(submissions).listStudentsWithoutSubmission(next.assignmentId(),classId);
+        verify(notices,times(2)).create(any(),any(),anyList(),anyString(),anyString(),anyString(),anyString(),any());
+    }
+    @Test void failingAssignmentLookupOrClassExpansionDoesNotStopNextAssignment() {
+        var a=assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)),classId);
+        var broken=new AssignmentView(UUID.randomUUID(),AssignmentScope.SUBJECT,null,subject,1,"Broken",SubmissionMode.INDIVIDUAL,
+                GradingMode.GRADED,false,AssignmentStatus.OPEN,a.opensAt(),a.closesAt(),null,null,false,null,List.of());
+        source(a);
+        when(assignments.listClosingBetween(any(),any())).thenReturn(List.of(broken,a));
+        when(assignments.get(broken.assignmentId())).thenThrow(new IllegalStateException("lookup unavailable"));
+        scanner.scan(now);
+        verify(notices).create(any(),any(),anyList(),anyString(),anyString(),anyString(),anyString(),any());
+        clearInvocations(notices);
+        doReturn(Optional.of(broken)).when(assignments).get(broken.assignmentId());
+        when(classes.listOpenClassesOfSubject(subject)).thenThrow(new IllegalStateException("classes unavailable"));
+        scanner.scan(now);
+        verify(notices).create(any(),any(),anyList(),anyString(),anyString(),anyString(),anyString(),any());
+    }
     @Test void reminderOncePerDeadlineAndOnlyNonSubmitters(){source(assignment(now.minusSeconds(5),now.plus(Duration.ofHours(24)),classId));when(repo.reminder(eq(id),eq(classId),any(),eq("SENT"),eq(now))).thenReturn(true,false);scanner.scan(now);scanner.scan(now);verify(notices,times(1)).create(any(),eq(NotificationType.DEADLINE_REMINDER),eq(List.of(student)),anyString(),anyString(),anyString(),eq("DEADLINE_REMINDER"),any());}
     @Test void lateOpenedAssignmentMarkedSkipped(){source(assignment(now.plusSeconds(1),now.plus(Duration.ofHours(24)),classId));scanner.scan(now);verify(repo).reminder(id,classId,now.plus(Duration.ofHours(24)),"SKIPPED",now);verifyNoInteractions(notices);}
     @Test void outsideFiveMinuteWindowNotSent(){source(assignment(now.minusSeconds(1000),now.plus(Duration.ofHours(24)).minusSeconds(301),classId));scanner.scan(now);verifyNoInteractions(notices);verify(repo,never()).reminder(any(),any(),any(),anyString(),any());}

@@ -41,8 +41,11 @@ public class EmailDeliveryService {
         if(contact==null||contact.status()!=AccountStatus.ACTIVE||(e.type.equals("BACKUP_FAILED")?contact.role()!=Role.ADMIN:contact.role()!=Role.STUDENT)) {e.status=EmailDelivery.Status.SKIPPED;return;}
         var n=repository.find(e.notificationId).orElse(null);if(n==null){e.status=EmailDelivery.Status.SKIPPED;return;}
         if(e.type.equals("DEADLINE_REMINDER")) {
+            UUID assignmentId;
+            try {assignmentId=AssignmentNotificationLink.assignmentId(n.link);}
+            catch(IllegalArgumentException invalidLink){e.status=EmailDelivery.Status.SKIPPED;e.lastError="INVALID_ASSIGNMENT_LINK";return;}
             AssignmentView a;
-            try {UUID assignmentId=UUID.fromString(URI.create(n.link).getPath().substring("/assignments/".length()));a=assignments.get(assignmentId).orElse(null);}
+            try {a=assignments.get(assignmentId).orElse(null);}
             catch(RuntimeException unavailable){throw new RetryableJobException("NOTIFICATION_ASSIGNMENT_UNAVAILABLE");}
             if(a==null||a.status()!=AssignmentStatus.OPEN||!Objects.equals(a.closesAt(),e.expiresAt)){e.status=EmailDelivery.Status.SKIPPED;return;}
         }
