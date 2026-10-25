@@ -50,7 +50,9 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -75,13 +77,18 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Developer persistence checks trên PostgreSQL thật, không dùng H2 hoặc môi trường ứng dụng.
- * Chỉ nhận DB test trên loopback với tên u04_subjects_test; mỗi lần tạo schema riêng.
+ * Container PostgreSQL cô lập tự tạo khi chạy test; mỗi lần tạo schema riêng.
  * Không thay bằng chứng integration độc lập với schema/accounts thật từ U01.
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = SubjectRepositoryIntegrationTest.PersistenceConfig.class)
-@EnabledIfEnvironmentVariable(named = "U04_TEST_JDBC_URL", matches = "jdbc:postgresql:.*")
+@Testcontainers(disabledWithoutDocker = true)
 class SubjectRepositoryIntegrationTest {
+
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("u04_subjects_test")
+            .withPassword(UUID.randomUUID().toString());
 
     private static final String SCHEMA = "u04_subjects_" + UUID.randomUUID().toString().replace("-", "");
     private static final UUID MANAGER = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -149,12 +156,8 @@ class SubjectRepositoryIntegrationTest {
 
         @Bean
         DataSource dataSource() throws Exception {
-            String url = System.getenv("U04_TEST_JDBC_URL");
-            if (url == null || !url.matches("jdbc:postgresql://(127\\.0\\.0\\.1|localhost):[0-9]+/u04_subjects_test")) {
-                throw new IllegalArgumentException("Chỉ chạy trên PostgreSQL test localhost/u04_subjects_test");
-            }
-            DriverManagerDataSource source = new DriverManagerDataSource(url,
-                    System.getenv("U04_TEST_DB_USER"), System.getenv("U04_TEST_DB_PASSWORD"));
+            DriverManagerDataSource source = new DriverManagerDataSource(POSTGRES.getJdbcUrl(),
+                    POSTGRES.getUsername(), POSTGRES.getPassword());
             try (Connection connection = source.getConnection(); Statement sql = connection.createStatement()) {
                 sql.execute("do $$ begin if not exists (select from pg_roles where rolname = 'app') "
                         + "then create role app nologin; end if; end $$");
@@ -268,12 +271,14 @@ class SubjectRepositoryIntegrationTest {
         repository.insert(original);
         Subject archived = original.archive(LATER);
         assertThat(repository.update(archived, 1)).isTrue();
-        Subject cleared = repository.findById(original.id()).orElseThrow().changeManager(null, LATER);
-        assertThat(repository.update(cleared, 2)).isTrue();
-        Subject reopened = cleared.reopen(LATER);
-        assertThat(repository.update(reopened, 3)).isTrue();
+        assertThat(archived.managerId()).isNull();
+        assertThat(archived.version()).isEqualTo(2);
+        assertThat(archived.changeManager(null, LATER)).isSameAs(archived);
+        Subject reopened = archived.reopen(LATER);
+        assertThat(repository.update(reopened, 2)).isTrue();
         assertThat(repository.findById(original.id())).contains(reopened);
-        assertThat(reopened.version()).isEqualTo(4);
+        assertThat(reopened.version()).isEqualTo(3);
+        assertThat(reopened.managerId()).isNull();
     }
 
     @Test
@@ -334,18 +339,22 @@ class SubjectRepositoryIntegrationTest {
     }
 
     @Test
-    void managedSubjectsIncludeArchivedAndReflectReassignmentWithoutCaching() {
+    void managedSubjectsReflectActiveReassignmentAndArchiveClearsManagerWithoutCaching() {
         assertThatThrownBy(() -> repository.findManagedBy(null)).isInstanceOf(NullPointerException.class);
         Subject a = subject("AAA", "A", MANAGER);
         Subject b = subject("BBB", "B", MANAGER);
         repository.insert(a);
         repository.insert(b);
-        Subject archived = b.archive(LATER);
-        assertThat(repository.update(archived, 1)).isTrue();
-        assertThat(repository.findManagedBy(MANAGER)).containsExactly(a, archived);
-        assertThat(repository.update(archived.changeManager(OTHER_MANAGER, LATER), 2)).isTrue();
+        assertThat(repository.findManagedBy(MANAGER)).containsExactly(a, b);
+        Subject reassigned = b.changeManager(OTHER_MANAGER, LATER);
+        assertThat(repository.update(reassigned, 1)).isTrue();
         assertThat(repository.findManagedBy(MANAGER)).containsExactly(a);
-        assertThat(repository.findManagedBy(OTHER_MANAGER)).hasSize(1);
+        assertThat(repository.findManagedBy(OTHER_MANAGER)).containsExactly(reassigned);
+        Subject archived = reassigned.archive(LATER);
+        assertThat(repository.update(archived, 2)).isTrue();
+        assertThat(repository.findById(b.id())).contains(archived);
+        assertThat(archived.managerId()).isNull();
+        assertThat(repository.findManagedBy(OTHER_MANAGER)).isEmpty();
     }
 
     @Test
@@ -362,15 +371,8 @@ class SubjectRepositoryIntegrationTest {
         assertThat(subjectQuery.countSubjectsByStatus()).containsExactlyInAnyOrderEntriesOf(
                 Map.of(SubjectStatus.ACTIVE, 2L, SubjectStatus.ARCHIVED, 0L));
 
-        Subject archived = original.archive(LATER);
-        assertThat(repository.update(archived, 1)).isTrue();
-        assertThat(subjectQuery.isActive(original.id())).isFalse();
-        assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isTrue();
-        assertThat(subjectQuery.countSubjectsByStatus()).containsExactlyInAnyOrderEntriesOf(
-                Map.of(SubjectStatus.ACTIVE, 1L, SubjectStatus.ARCHIVED, 1L));
-
-        Subject reassigned = archived.changeManager(OTHER_MANAGER, LATER);
-        assertThat(repository.update(reassigned, 2)).isTrue();
+        Subject reassigned = original.changeManager(OTHER_MANAGER, LATER);
+        assertThat(repository.update(reassigned, 1)).isTrue();
         assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, original.id())).isTrue();
         assertThat(subjectQuery.listManagedSubjects(MANAGER)).isEmpty();
@@ -379,10 +381,22 @@ class SubjectRepositoryIntegrationTest {
                 .extracting(ref -> ref.managerId()).isEqualTo(OTHER_MANAGER);
         assertThat(subjectScope.listManagedSubjects(OTHER_MANAGER)).containsExactly(original.id());
 
-        assertThat(repository.update(reassigned.changeManager(null, LATER), 3)).isTrue();
+        Subject unassigned = reassigned.changeManager(null, LATER);
+        assertThat(repository.update(unassigned, 2)).isTrue();
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, original.id())).isFalse();
         assertThat(subjectQuery.getSubject(original.id()).orElseThrow().managerId()).isNull();
         assertThat(subjectScope.listManagedSubjects(OTHER_MANAGER)).isEmpty();
+        Subject assignedAgain = unassigned.changeManager(MANAGER, LATER);
+        assertThat(repository.update(assignedAgain, 3)).isTrue();
+        assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isTrue();
+        assertThat(repository.update(assignedAgain.archive(LATER), 4)).isTrue();
+        assertThat(subjectQuery.isActive(original.id())).isFalse();
+        assertThat(subjectQuery.getSubject(original.id()).orElseThrow().managerId()).isNull();
+        assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
+        assertThat(subjectQuery.listManagedSubjects(MANAGER)).isEmpty();
+        assertThat(subjectScope.listManagedSubjects(MANAGER)).isEmpty();
+        assertThat(subjectQuery.countSubjectsByStatus()).containsExactlyInAnyOrderEntriesOf(
+                Map.of(SubjectStatus.ACTIVE, 1L, SubjectStatus.ARCHIVED, 1L));
     }
 
     @Test
@@ -597,7 +611,7 @@ class SubjectRepositoryIntegrationTest {
     }
 
     @Test
-    void archiveAllArchivedClassesAndReopenKeepHistoryAndManager() {
+    void archiveAndReopenKeepClassHistoryWithoutRestoringManager() {
         Subject original = subject("LIFE", "Lifecycle", MANAGER);
         repository.insert(original);
         insertFixtureClass(original.id(), "ARCHIVED");
@@ -623,7 +637,11 @@ class SubjectRepositoryIntegrationTest {
         Subject archived = statuses.changeStatus(new Actor(UUID.randomUUID(), Role.ADMIN), original.id(),
                 new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
         assertThat(archived.status()).isEqualTo(SubjectStatus.ARCHIVED);
-        assertThat(fixtureBlockers(original.id())).isEmpty();
+        new TransactionTemplate(transactionManager).executeWithoutResult(tx ->
+                assertThat(fixtureBlockers(original.id())).isEmpty());
+        assertThat(new JdbcTemplate(dataSource).queryForList(
+                "select status from u04_lifecycle_classes where subject_id = ?", String.class, original.id()))
+                .containsExactlyInAnyOrder("ARCHIVED", "ARCHIVED");
     }
 
     @Test
@@ -724,8 +742,14 @@ class SubjectRepositoryIntegrationTest {
             Future<String> archive = workers.submit(() -> archiveOutcome(original.id()));
             allowWriterCommit.countDown();
             writer.get(5, TimeUnit.SECONDS);
-            assertThat(archive.get(5, TimeUnit.SECONDS)).isEqualTo("SUBJECT_HAS_UNARCHIVED_CLASSES");
-            assertThat(repository.findById(original.id()).orElseThrow().status()).isEqualTo(SubjectStatus.ACTIVE);
+            assertThat(archive.get(5, TimeUnit.SECONDS)).isEqualTo("SUCCESS");
+            Subject archived = repository.findById(original.id()).orElseThrow();
+            assertThat(archived.status()).isEqualTo(SubjectStatus.ARCHIVED);
+            assertThat(archived.version()).isEqualTo(2);
+            assertThat(new JdbcTemplate(dataSource).queryForList(
+                    "select status from u04_lifecycle_classes where subject_id = ?", String.class, original.id()))
+                    .containsExactly("ARCHIVED");
+            verify(audit).record(argThat(event -> event.action().equals("SUBJECT_ARCHIVED")));
         } finally {
             allowWriterCommit.countDown();
             workers.shutdownNow();
