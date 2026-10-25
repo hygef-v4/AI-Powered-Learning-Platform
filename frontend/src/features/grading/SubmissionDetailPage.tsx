@@ -6,8 +6,25 @@ import { useResource } from "./useResource";
 import { points, statusLabels } from "./types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "./BatchActionDialog";
-import { Field, Select } from "@/shared/ui";
+import { Field, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "./useSubmissionContext";
+
+const STATUS_TONES: Record<string, Tone> = {
+  PENDING: "warning",
+  DRAFT: "info",
+  FINALIZED: "primary",
+  PUBLISHED: "success",
+  SUPERSEDED: "neutral",
+  NOT_SUBMITTED: "neutral",
+  IN_PROGRESS: "neutral",
+};
+
+function rowActionLabel(status: string): string {
+  if (status === "PENDING") return "Chấm bài";
+  if (status === "DRAFT") return "Tiếp tục chấm";
+  if (status === "FINALIZED" || status === "PUBLISHED" || status === "SUPERSEDED") return "Xem điểm";
+  return "Chấm / xem";
+}
 
 export function SubmissionDetailPage({
   classId,
@@ -75,16 +92,16 @@ export function SubmissionDetailPage({
       {!data && !resource.error && <p role="status">Đang tải bài nộp…</p>}
       {data && (
         <>
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {[
               ["submitted", "Đã nộp"],
               ["inProgress", "Đang làm"],
               ["notSubmitted", "Chưa nộp"],
               ["late", "Nộp trễ"],
             ].map(([key, label]) => (
-              <section key={key} className="rounded-xl border border-line bg-white p-4">
-                <p className="text-sm text-slate-600">{label}</p>
-                <strong className="text-2xl">{data.summary[key!] ?? 0}</strong>
+              <section key={key} className="flex items-center justify-between gap-2 rounded-xl border border-line bg-white px-3.5 py-2.5">
+                <p className="text-xs font-medium text-muted">{label}</p>
+                <strong className="text-lg font-bold tabular-nums text-ink">{data.summary[key!] ?? 0}</strong>
               </section>
             ))}
           </div>
@@ -126,20 +143,33 @@ export function SubmissionDetailPage({
                 <option value="true">Nộp trễ</option>
               </Select>
             </Field>
-            <span>Đã chọn {items.length} bài</span>
-            {(["ai", "finalize", "publish"] as const).map((a) => (
-              <button
-                key={a}
-                disabled={!items.length}
-                onClick={() => setAction(a)}
-                className="rounded-lg border px-3 py-2 disabled:opacity-40"
-              >
-                {a === "ai" ? "AI đề xuất" : a === "finalize" ? "Chốt điểm" : "Công bố điểm"}
-              </button>
-            ))}
+            {items.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-ink">Đã chọn {items.length} bài</span>
+                {(["ai", "finalize", "publish"] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAction(a)}
+                    className="rounded-lg border border-line-strong bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:bg-shell"
+                  >
+                    {a === "ai" ? "AI đề xuất" : a === "finalize" ? "Chốt điểm" : "Công bố điểm"}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setSelected([])}
+                  className="text-xs font-medium text-muted underline underline-offset-2 hover:text-ink"
+                >
+                  Bỏ chọn
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-muted">Đã chọn 0 bài · Tích chọn bài nộp để thao tác hàng loạt</span>
+            )}
           </div>
-          <div className="overflow-auto rounded-xl border border-line bg-white">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto rounded-xl border border-line bg-white">
+            <table className="w-full text-left text-sm">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="p-3">
@@ -187,23 +217,25 @@ export function SubmissionDetailPage({
                       />
                     </td>
                     <td className="p-3">
-                      <strong>{r.student.name}</strong>
-                      <p className="text-sm text-slate-500">{r.student.email}</p>
+                      <strong className="break-words">{r.student.name}</strong>
+                      <p className="break-all text-xs text-slate-500">{r.student.email}</p>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
                       {r.late && <span className="ml-2 text-red-600">Trễ</span>}
                     </td>
-                    <td className="p-3">{r.attemptCount}</td>
-                    <td className="p-3">{statusLabels[r.status] ?? r.status}</td>
-                    <td className="p-3">{points(r.score, r.maxScore)}</td>
+                    <td className="p-3 tabular-nums">{r.attemptCount}</td>
                     <td className="p-3">
+                      <Pill tone={STATUS_TONES[r.status] ?? "neutral"}>{statusLabels[r.status] ?? r.status}</Pill>
+                    </td>
+                    <td className="p-3 whitespace-nowrap font-semibold tabular-nums">{points(r.score, r.maxScore)}</td>
+                    <td className="p-3 whitespace-nowrap">
                       {r.evaluationId ? (
                         <Link
-                          className="text-primary"
+                          className="font-medium text-primary hover:underline"
                           href={`/teaching/evaluations/${r.evaluationId}`}
                         >
-                          Chấm / xem
+                          {rowActionLabel(r.status)}
                         </Link>
                       ) : r.submittedAt ? (
                         "Đánh giá chưa sẵn sàng"
