@@ -127,11 +127,14 @@ class PracticeSupport {
 
     /**
      * Kết quả một lượt đã nộp; {@code full} (giảng viên) luôn có điểm và đáp án, người học thì theo cài đặt đã chụp
-     * (BR-U11-20).
+     * (BR-U11-20). Quiz không hiện điểm lẫn đáp án thì không trả gì cho biết câu nào đúng: với câu một đáp án, cờ đúng
+     * kèm lựa chọn của mình là lộ đáp án, và làm nhiều lượt là dò được cả đề. Khi hiện điểm, điểm từng câu đã cho biết
+     * đúng sai nên vẫn trả. Chờ BR-U11-20 chốt cách hiện cho trường hợp này.
      */
     ResultView result(QuizAttempt attempt, boolean full, boolean canRetry) {
         boolean showScore = full || attempt.snapshot().settings().showScoreAfterSubmit();
         boolean showAnswers = full || attempt.snapshot().settings().showCorrectAnswers();
+        boolean revealCorrectness = showScore || showAnswers;
         Map<UUID, QuizQuestionView> byId = studentView(attempt.quizId()).questions().stream()
                 .collect(Collectors.toMap(QuizQuestionView::questionId, Function.identity()));
         Map<UUID, QuestionResult> results = attempt.result().stream()
@@ -156,15 +159,16 @@ class PracticeSupport {
                 correct++;
             }
             AnswerKey key = keys.get(questionId);
-            questions.add(new ResultQuestion(questionId, q.type(), q.stem(), ordered(q, attempt), selected, r.correct(),
+            questions.add(new ResultQuestion(questionId, q.type(), q.stem(), ordered(q, attempt), selected,
+                    revealCorrectness ? r.correct() : null,
                     showScore ? r.points() : null, showScore ? r.maxPoints() : null,
                     key == null ? null : List.copyOf(key.correctOptionIds()), key == null ? null : key.explanation()));
         }
         int wrong = questions.size() - correct - blank;
         return new ResultView(attempt.id(), attempt.quizId(), attempt.classId(), attempt.snapshot().title(),
                 attempt.attemptNo(), attempt.startedAt(), attempt.submittedAt(), attempt.submitMode(), showScore,
-                showAnswers, showScore ? attempt.score() : null, showScore ? attempt.maxScore() : null, correct, wrong,
-                blank, questions, canRetry);
+                showAnswers, showScore ? attempt.score() : null, showScore ? attempt.maxScore() : null,
+                revealCorrectness ? correct : null, revealCorrectness ? wrong : null, blank, questions, canRetry);
     }
 
     /** Lựa chọn theo thứ tự đã trộn của lượt. */

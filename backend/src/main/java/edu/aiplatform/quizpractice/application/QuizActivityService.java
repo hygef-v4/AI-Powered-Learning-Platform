@@ -8,6 +8,7 @@ import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.quizpractice.domain.QuizAttempt;
 import edu.aiplatform.shared.error.ApiException;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,12 @@ public class QuizActivityService {
 
     private final IActivityWrite activity;
     private final PracticeSupport support;
+    private final Clock clock;
 
-    public QuizActivityService(IActivityWrite activity, PracticeSupport support) {
+    public QuizActivityService(IActivityWrite activity, PracticeSupport support, Clock clock) {
         this.activity = activity;
         this.support = support;
+        this.clock = clock;
     }
 
     @Transactional
@@ -35,6 +38,10 @@ public class QuizActivityService {
         QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         if (!attempt.inProgress()) {
             throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
+        }
+        // Quá hạn cộng ân hạn là hết giờ làm bài, dù scanner chưa kịp tự nộp: không nhận thêm hoạt động như lưu câu trả lời.
+        if (!attempt.acceptsAnswersAt(clock.instant())) {
+            throw ApiException.conflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài");
         }
         if (!attempt.snapshot().activityMonitoringEnabled()) {
             throw ApiException.conflict("ACTIVITY_NOT_ENABLED", "Quiz này không ghi nhận hoạt động");

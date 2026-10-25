@@ -89,7 +89,8 @@ export type ResultQuestion = {
   stem: string;
   options: OptionView[];
   selectedOptionIds: string[];
-  correct: boolean;
+  /** null khi Quiz không hiện cả điểm lẫn đáp án (BR-U11-20). */
+  correct: boolean | null;
   points: number | null;
   maxPoints: number | null;
   correctOptionIds: string[] | null;
@@ -109,8 +110,9 @@ export type ResultView = {
   showAnswers: boolean;
   score: number | null;
   maxScore: number | null;
-  correctCount: number;
-  wrongCount: number;
+  /** null khi Quiz không hiện cả điểm lẫn đáp án (BR-U11-20). */
+  correctCount: number | null;
+  wrongCount: number | null;
   blankCount: number;
   questions: ResultQuestion[];
   canRetry: boolean;
