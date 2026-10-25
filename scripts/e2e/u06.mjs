@@ -16,7 +16,9 @@ await student.login(seed.accounts.sv5.email, PW);
 await admin.put("/api/v1/admin/ai/quota-policy", { defaultDayTokens: null, globalDayTokens: null, version: (await admin.get("/api/v1/admin/ai/quota-policy")).data?.version ?? 0 }).catch(() => {});
 let src = await teacher.get("/api/v1/ai/sources");
 const shared = (src.data || []).find((s) => s.source === "SHARED");
-check(R, "U06-16 chưa đặt hạn mức chung", src.status === 200 && shared && shared.available === false && shared.reason, `available=${shared?.available} reason=${shared?.reason}`);
+// Hạn mức chung không gỡ được về "chưa đặt" qua API: chỉ kiểm được ở lần chạy đầu trên database mới.
+if ((await admin.get("/api/v1/admin/ai/quota-policy")).data?.configured) console.log("SKIP U06-16 hạn mức chung đã được đặt từ lần chạy trước");
+else check(R, "U06-16 chưa đặt hạn mức chung", src.status === 200 && shared && shared.available === false && shared.reason, `available=${shared?.available} reason=${shared?.reason}`);
 const sSrc = await student.get("/api/v1/ai/sources");
 check(R, "U06-11 sinh viên chỉ có API cá nhân", sSrc.status === 200 && (sSrc.data || []).every((s) => s.source === "PERSONAL"), JSON.stringify((sSrc.data || []).map((s) => s.source + ":" + s.provider)));
 

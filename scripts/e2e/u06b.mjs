@@ -1,5 +1,7 @@
 // U06 bổ sung: thay/thu hồi khóa, tắt khóa trường, hết hạn mức, 3 tác vụ, trạng thái tác vụ, lỗi AI không mất việc.
 // Khóa dùng ở đây là khóa thử (sai) nên tác vụ gọi nhà cung cấp sẽ lỗi — đúng cái cần kiểm cho U06-19.
+// Không bao giờ đụng khóa Gemini của giảng viên thử: người dùng có thể đã dán khóa thật ở đó (u06-real-key.mjs dùng).
+// Thêm/thay/thu hồi khóa làm trên tài khoản chủ nhiệm môn; tác vụ lỗi chạy bằng khóa OpenAI giả của giảng viên.
 import fs from "node:fs";
 import { Session, check, env } from "./lib.mjs";
 
@@ -13,22 +15,24 @@ await T.login(seed.accounts.teacher.email, PW);
 const sv = new Session("sv1");
 await sv.login(seed.accounts.sv1.email, PW);
 const brief = (r) => `${r.status} ${r.data?.code ?? ""} ${(r.data?.detail ?? "").slice(0, 100)}`;
-const conn = async (p) => ((await T.get("/api/v1/me/ai-connections")).data || []).find((c) => c.provider === p);
+const M = new Session("manager");
+await M.login(seed.accounts.manager.email, PW);
+const conn = async (p, s = M) => ((await s.get("/api/v1/me/ai-connections")).data || []).find((c) => c.provider === p);
 
 // U06-02 / U06-13 / U06-03
 let gem = await conn("GEMINI");
-let r = await T.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-sai-AAAA1111", model: "gemini-3.6-flash", version: gem?.configured ? gem.version : null });
-const tested = await T.post("/api/v1/me/ai-connections/GEMINI:test");
+let r = await M.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-sai-AAAA1111", model: "gemini-3.6-flash", version: gem?.configured ? gem.version : null });
+const tested = await M.post("/api/v1/me/ai-connections/GEMINI:test");
 check(R, "U06-02 khóa sai: Kiểm tra báo khóa không hợp lệ", tested.status === 200 && /Key API không hợp lệ/.test(tested.data?.lastTestResult ?? ""), `${tested.status} ${tested.data?.lastTestResult}`);
 gem = await conn("GEMINI");
-r = await T.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-thay-BBBB2222", model: "gemini-3.6-flash", version: gem.version });
-const rows = ((await T.get("/api/v1/me/ai-connections")).data || []).filter((c) => c.provider === "GEMINI");
+r = await M.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-thay-BBBB2222", model: "gemini-3.6-flash", version: gem.version });
+const rows = ((await M.get("/api/v1/me/ai-connections")).data || []).filter((c) => c.provider === "GEMINI");
 check(R, "U06-13 mỗi nhà cung cấp một khóa (thay, không thêm)", r.status === 200 && rows.length === 1 && rows[0].keyHint === "2222", `${brief(r)} rows=${rows.length} hint=${rows[0]?.keyHint}`);
-const stale = await T.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-cu-CCCC", model: "gemini-3.6-flash", version: gem.version });
+const stale = await M.put("/api/v1/me/ai-connections/GEMINI", { apiKey: "test-khoa-cu-CCCC", model: "gemini-3.6-flash", version: gem.version });
 check(R, "Thay khóa với version cũ bị 409", stale.status === 409, brief(stale));
 const oa = await conn("OPENAI");
-if (!oa?.configured) await T.put("/api/v1/me/ai-connections/OPENAI", { apiKey: "test-openai-DDDD3333", model: "gpt-5-mini", version: null });
-const del = await T.del("/api/v1/me/ai-connections/OPENAI");
+if (!oa?.configured) await M.put("/api/v1/me/ai-connections/OPENAI", { apiKey: "test-openai-DDDD3333", model: "gpt-5-mini", version: null });
+const del = await M.del("/api/v1/me/ai-connections/OPENAI");
 const oa2 = await conn("OPENAI");
 check(R, "U06-03 thu hồi: nhà cung cấp về Chưa cấu hình", (del.status === 204 || del.status === 200) && oa2 && !oa2.configured, `${del.status} configured=${oa2?.configured}`);
 
@@ -57,7 +61,9 @@ await admin.del(`/api/v1/admin/ai/teacher-quotas/${seed.accounts.teacher.id}`);
 
 // U06-20 API cá nhân không trừ hạn mức trường; U06-12 trạng thái; U06-19 lỗi không mất việc
 const quotaBefore = ((await T.get("/api/v1/ai/sources")).data || []).find((s) => s.source === "SHARED")?.quota;
-const p = await draft("PERSONAL", "GEMINI");
+const tOa = await conn("OPENAI", T);
+if (!tOa?.configured) await T.put("/api/v1/me/ai-connections/OPENAI", { apiKey: "test-openai-gv-EEEE4444", model: "gpt-5-mini", version: null });
+const p = await draft("PERSONAL", "OPENAI");
 const taskId = p.data?.taskId ?? p.data?.task?.taskId ?? p.data?.aiTaskId;
 check(R, "U06-12 gửi tác vụ bằng API cá nhân", p.status === 200 || p.status === 201 || p.status === 202, `${brief(p)} ${JSON.stringify(p.data).slice(0, 160)}`);
 const states = [];
@@ -77,7 +83,7 @@ const hist = await T.get("/api/v1/me/ai-usage?source=PERSONAL");
 check(R, "U06-20 lịch sử ghi nguồn API cá nhân", hist.status === 200 && (hist.data?.items ?? []).some((i) => i.source === "PERSONAL"), JSON.stringify((hist.data?.items ?? [])[0] ?? {}).slice(0, 200));
 
 // U06-18 tối đa 3 tác vụ cùng lúc; hủy khi còn chờ
-const many = await Promise.all([1, 2, 3, 4].map((i) => draft("PERSONAL", "GEMINI", i)));
+const many = await Promise.all([1, 2, 3, 4].map((i) => draft("PERSONAL", "OPENAI", i)));
 const codes = many.map((m) => m.status);
 check(R, "U06-18 tác vụ thứ 4 bị từ chối kèm lý do", codes.filter((c) => c < 300).length <= 3 && many.some((m) => m.data?.code === "AI_TOO_MANY_TASKS" || /3/.test(m.data?.detail ?? "")), `${codes} ${many.map((m) => m.data?.code ?? "").join(",")}`);
 const queued = many.find((m) => m.status < 300);
