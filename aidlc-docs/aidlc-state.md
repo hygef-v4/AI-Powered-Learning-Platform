@@ -728,3 +728,8 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] User requested resolving the current merge on staging; both histories retained. Staging E2E U02/U06/U12 evidence and incoming remediation evidence keep their original provenance and limits;25 unique incoming audit entries appended without rewriting staging history.
 - [x] Conflict resolution changes only state/audit. Real AI-key and DocumentEditor acceptance limits, manual U12 retest and the qualified U14-15 +5minute variant remain explicit.
 - [x] Verified composed-tree frontend10 files/81 tests passed and TypeScript noEmit passed. Backend compiled654 production/200 test sources; sanitization/mapping6 tests passed, PostgreSQL version integration2 tests environment-skipped because Docker Desktop daemon is not running (confirmed independently with docker info). Both resolved documents staged, no unmerged entries/markers. Keep merge awaiting commit; no push, application edits, provider call or deployment. No new full-suite/production-build acceptance claim.
+
+## U12 trình soạn chung và Draw.io (KAN-64, KAN-66) — 2026-10-25
+- [x] Plan `construction/plans/2026-10-24-u12-document-editor.md` được duyệt ("ok có đủ token rồi, làm tiếp đi"); bước 1–7 xong trên nhánh `feat/u12-document-editor`.
+- [x] Kiểm trên stack local: trình soạn mới, chèn Draw.io, Xong; migration khóa ngoại; U12 end-to-end 30/30; `mvn verify` 1384 test; frontend 483 test.
+- [ ] Còn mở: tải ảnh trong tài liệu nhóm và ảnh trong khung đề của giảng viên (cần endpoint ảnh riêng).

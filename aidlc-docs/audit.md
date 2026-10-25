@@ -5981,6 +5981,22 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
+## Merge e2e fixes
+**Timestamp**: 2026-10-24T13:30:00Z
+**User Input**: "merch toan bo vao stagging chua"
+**AI Response**: PR #19 `fix/e2e-u06-u12-findings` → `staging`: CI đạt (3 đạt, 2 bỏ qua), gộp, merge commit 6337b42. Kiểm lại: `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle`, `fix/u12-test-plan-gaps`, `fix/e2e-u06-u12-findings` đều đã vào `origin/staging`.
+**Context**: Construction, gộp bản sửa sau kiểm thử end-to-end
+
+---
+
+## Remaining work and handoff
+**Timestamp**: 2026-10-24T13:40:00Z
+**User Input**: "gio con gi chua lam khong" / "sap het token roi, h co viec gi co the lam luon duoc k de co gi toi nay reset token roi lam tiep"
+**AI Response**: Liệt kê việc còn lại (Draw.io cho tài liệu nhóm KAN-64/66, khóa ngoại assignment_id, test khóa AI thật, Jira, dọn dẹp). Tạo nhánh `feat/u12-document-editor` từ `staging` 6337b42 và plan `construction/plans/2026-10-24-u12-document-editor.md` (chờ duyệt) để làm tiếp khi có token.
+**Context**: Construction, chuẩn bị U12 tích hợp trình soạn chung
+
+---
+
 ## Branch preparation for U04 U13 U14 black-box fixes
 **Timestamp**: 2026-10-23T14:08:22Z
 **User Input**: "tạo 1 branch mới từ branch staging để sửa các lỗi và những phần khiến cho phải bỏ qua các test của u04, 13, 14 mà bạn đã check vào artifact, mang hết các thay đổi chưa commit vào staging sang branch đó luôn"
@@ -6228,5 +6244,29 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **AI Response**: Tạo nhánh `fix/review-followups` (`--no-track`) từ `origin/staging` `5a1f605`. (3) `QuizAutoSubmitScanner` nộp mỗi lượt trong transaction riêng, lượt lỗi được ghi log và để lần chạy sau; `findOverdue` bỏ `for update skip locked` vì không còn chạy trong transaction. (4) `IAccountLookup.lockContact` (`FOR SHARE`, phải trong transaction); U01 đổi role khóa tài khoản (`lockById`) rồi mới kiểm phân công trong transaction; U04 `SubjectCommandService` và U05 `AcademicsService` gán Chủ nhiệm môn/giảng viên qua `lockContact`, khóa tài khoản trước dòng môn để cùng thứ tự với U01 (tránh deadlock), giữ thứ tự lỗi cũ; mở lại lớp vẫn đọc không khóa. (5) `QuizTakingPage` lưu bằng `keepalive` khi `pagehide` và khi trang bị ẩn. (6) Ghi bất biến "đề và đáp án của Quiz đã phát hành cố định" vào `IQuizQuery`, `IQuizScoring`; thêm test U10 khóa bất biến này. Test mới: scanner bỏ qua lượt lỗi, đổi role khóa rồi kiểm trong transaction, khóa chia sẻ chặn khóa đổi role trên PostgreSQL thật, bất biến Quiz đã phát hành, keepalive khi rời/ẩn trang; cập nhật stub test U04/U05 sang `lockContact`. Kết quả: frontend lint/typecheck/build đạt, 459/459 test; backend `mvn verify` 1299 test, 0 lỗi, 35 bỏ qua (cần biến môi trường DB riêng, như CI). Chưa commit.
 
 **Context**: Sửa lỗi U01/U10/U11, có chạm U04/U05 (thứ tự khóa khi gán phân công).
+
+---
+
+## U12 shared document editor – approval
+**Timestamp**: 2026-10-25T01:00:00Z
+**User Input**: "ok có đủ token rồi, làm tiếp đi"
+**AI Response**: Coi là duyệt plan `construction/plans/2026-10-24-u12-document-editor.md`. Gộp `origin/staging` (d9a0300) vào `feat/u12-document-editor` (audit.md giữ cả hai phía). Làm lần lượt: DocumentEditor cho mục, DocumentViewer cho nội dung, cờ `diagramEnabled`, useActivityTracker, khóa ngoại assignment_id, test, tài liệu.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
+
+---
+
+## U12 shared document editor – code complete (pending live check)
+**Timestamp**: 2026-10-25T02:30:00Z
+**User Input**: (không có input mới; tiếp tục "ok có đủ token rồi, làm tiếp đi")
+**AI Response**: Xong bước 1–5: SectionEditorDialog dùng DocumentEditor (mode student, Draw.io theo bài, chỉ lưu block STUDENT); DocumentViewer cho nội dung; bỏ BlockView tạm; WorkspaceView.diagramEnabled; useActivityTracker; migration khóa ngoại group_documents.assignment_id (NOT VALID). Frontend 483 test, lint, build đạt; backend 1382 test (92 test Testcontainers bỏ qua vì Docker Desktop đã tắt). Chưa chạy thử trên stack local; chờ người dùng bật Docker.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
+
+---
+
+## U12 shared document editor – verified and PR
+**Timestamp**: 2026-10-25T07:10:00Z
+**User Input**: "lam het cho toi di"
+**AI Response**: Bật lại Docker Desktop, build lại stack local; migration V20261025_1800 chạy được. Kiểm giao diện: DocumentEditor trong mục, chèn Draw.io, tự lưu, Xong → nội dung có PARAGRAPH và DIAGRAM. U12 end-to-end 30/30 (sửa script U12-26 dùng mã block riêng); `mvn verify` 1384 test 0 lỗi; frontend 483 test. Mở PR `feat/u12-document-editor` → `staging`, gộp khi CI đạt.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
 
 ---
