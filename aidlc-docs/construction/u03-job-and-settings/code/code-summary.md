@@ -59,3 +59,8 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 User approved additive IBackupDashboardStatus plus metadata/summary records. BackupStatusService implements old and new ports; old IBackupStatus/BackupRunView remain unchanged. New reads map real startedAt, sanitize public error and use read-only transaction timeout1s. Summary uses one parameterized SQL statement with168h [from,to), historical SUCCESS completedAt including purged runs, final FAILED count/latest safe error and terminal timestamp integrity. No migration/job/backup action changes.
 
 [Execution evidence](../../u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md): PostgreSQL16 integration8 passed, including all three read timeouts and connection release; full backend verify passed with35 unrelated configured-environment skips. Full app/browser/load acceptance remains open.
+
+## Thay đổi 2026-10-24
+
+- Bỏ cài đặt `files.material.allowedTypes` và `files.documentImage.allowedTypes`: loại tệp cố định trong `PurposePolicy`, học liệu PDF, DOCX, PPTX; ảnh trong tài liệu PNG, JPEG (bỏ GIF, SVG). Vẫn giữ cài đặt dung lượng tối đa.
+- Thêm Drive cá nhân (Gmail) bên cạnh Shared Drive: `GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN` (scope `drive.file`). `DriveFolders` tạo thư mục `AI Learning Platform` trong My Drive, mỗi purpose một thư mục con, backup trong `backups`; có cả hai cấu hình thì dùng Shared Drive. Khác thiết kế: thiết kế chỉ có Shared Drive với service account.

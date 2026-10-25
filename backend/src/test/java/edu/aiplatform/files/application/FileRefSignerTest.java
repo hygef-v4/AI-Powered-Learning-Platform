@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class FileRefSignerTest {
 
     static FilesProperties props(String secret) {
-        return new FilesProperties(secret, false, null, null, null, null);
+        return new FilesProperties(secret, false, null, null, null, null, null, null, null);
     }
 
     final FileRefSigner signer = new FileRefSigner(props("secret-of-at-least-32-bytes-long!!"), new ObjectMapper());
