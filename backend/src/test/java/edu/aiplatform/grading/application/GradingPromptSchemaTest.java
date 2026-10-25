@@ -26,6 +26,7 @@ class GradingPromptSchemaTest {
         assertThat(schema.at("/properties/checks/additionalProperties").asBoolean(true)).isFalse();
         assertThat(schema.at("/properties/sections/items/properties/partId/enum/0").asText()).isEqualTo("q1");
         assertThat(schema.at("/properties/sections/items/properties/feedback/type").asText()).isEqualTo("string");
-        assertThat(schema.path("required")).hasSize(4);
+        assertThat(schema.at("/properties/itemScoresByRubric/properties/" + rubricId + "/properties/" + itemId + "/maximum").decimalValue()).isEqualByComparingTo("2.5");
+        assertThat(schema.path("required")).hasSize(5);
     }
 }

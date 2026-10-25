@@ -25,6 +25,7 @@ const query = (values: Record<string, string | number | undefined>) => {
 const write = <T>(path: string, body: unknown, method = "POST") =>
   apiFetch<T>(root + path, { method, body: JSON.stringify(body) });
 export const gradingApi = {
+  task: (id: string) => apiFetch<{ state: string; safeError: string | null }>(`${root}/ai/tasks/${encodeURIComponent(id)}`),
   assignmentContext: (assignmentId: string) =>
     apiFetch<AssignmentContext>(`${root}/assignments/${encodeURIComponent(assignmentId)}`),
   submissions: (classId: string, assignmentId: string, status = "ALL", page = 1, late?: string) =>

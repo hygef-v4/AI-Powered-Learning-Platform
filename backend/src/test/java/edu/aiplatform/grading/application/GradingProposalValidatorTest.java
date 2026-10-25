@@ -45,4 +45,14 @@ class GradingProposalValidatorTest {
         assertThatThrownBy(() -> validator.validate(json.valueToTree("not a proposal"), rubric()))
                 .isInstanceOf(RuntimeException.class);
     }
+    @Test
+    void validatesFractionalProposalsUsingItemScoresAndRejectsForgedTotals() {
+        var validator = new GradingProposalValidator(json);
+        var payload = json.valueToTree(Map.of("checks", Map.of(), "score", "0.50", "itemScoresByRubric",
+                Map.of(rid.toString(), Map.of(iid.toString(), new BigDecimal("0.50")))));
+        assertThat(validator.validate(payload, rubric()).score()).isEqualByComparingTo("0.50");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) payload).put("score", "1.00");
+        assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(RuntimeException.class);
+    }
+
 }

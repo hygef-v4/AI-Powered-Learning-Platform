@@ -19,9 +19,21 @@ if errorlevel 1 (
   exit /b 1
 )
 
-where mvn >nul 2>nul
+set "MAVEN_BIN="
+for /f "delims=" %%M in ('where mvn.cmd 2^>nul') do if not defined MAVEN_BIN set "MAVEN_BIN=%%M"
+if not defined MAVEN_BIN (
+  for /f "delims=" %%M in ('where /r "%USERPROFILE%\.m2\wrapper\dists" mvn.cmd 2^>nul') do if not defined MAVEN_BIN set "MAVEN_BIN=%%M"
+)
+if not defined MAVEN_BIN (
+  echo Maven was not found. Install Apache Maven or populate its wrapper cache.
+  pause
+  exit /b 1
+)
+
+powershell.exe -NoProfile -Command "$probe = New-Object Net.Sockets.TcpClient; try { $probe.Connect('127.0.0.1',8080); exit 1 } catch { exit 0 } finally { $probe.Dispose() }"
 if errorlevel 1 (
-  echo Maven was not found. Install Apache Maven and add mvn to PATH.
+  echo Port 8080 is in use. Stop the previous backend before starting this one.
+  echo Also stop the previous Docker worker so AI jobs use this checkout's code.
   pause
   exit /b 1
 )
@@ -30,7 +42,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%ENV_FILE%") do (
   if not "%%A"=="" set "%%A=%%B"
 )
 
-set "SPRING_PROFILES_ACTIVE=local"
+set "SPRING_PROFILES_ACTIVE=local,worker"
 set "POSTGRES_HOST=localhost"
 set "POSTGRES_PORT=5432"
 set "POSTGRES_DB=platform"
@@ -55,8 +67,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Starting backend with the local Spring profile on port 8080...
-call mvn spring-boot:run
+echo Starting API and background worker together with profiles local,worker on port 8080...
+echo Stop the old backend AND old worker containers before using this local dev process.
+echo Rebuilding backend classes to load the latest grading and AI contracts.
+call "%MAVEN_BIN%" clean spring-boot:run
 set "EXIT_CODE=%ERRORLEVEL%"
 if not "%EXIT_CODE%"=="0" (
   echo Backend exited with code %EXIT_CODE%.

@@ -121,25 +121,49 @@ describe("submission assignment context", () => {
 });
 
 describe("submission filters and batch behavior", () => {
-  it("preserves filter queries, resets page and selection, and does not reload metadata", async () => {
+  it("hides bulk actions until selection, resets page and selection on filter/page change, and does not reload metadata", async () => {
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await ready();
+    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
     expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("pagination-page-2-button"));
     await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "ALL", 2, ""));
     await ready();
-    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
+    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
     fireEvent.change(screen.getByRole("combobox", { name: "Trạng thái" }), { target: { value: "DRAFT" } });
     await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, ""));
     await ready();
-    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole("combobox", { name: "Nộp bài" }), { target: { value: "true" } });
     await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, "true"));
     await ready();
     expect(mocks.assignmentContext).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
+  });
+
+  it("renders state-specific action links, single-line tabular scores, and clear-selection control", async () => {
+    mocks.submissions.mockResolvedValue({
+      ...page,
+      rows: [
+        { student: { accountId: "s1", name: "SV Pending", email: "p@example.test" }, evaluationId: "e-pending", attemptId: "a1", status: "PENDING", score: null, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 1 },
+        { student: { accountId: "s2", name: "SV Draft", email: "d@example.test" }, evaluationId: "e-draft", attemptId: "a2", status: "DRAFT", score: 7.5, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 2 },
+        { student: { accountId: "s3", name: "SV Final", email: "f@example.test" }, evaluationId: "e-final", attemptId: "a3", status: "FINALIZED", score: 9, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 3 },
+      ],
+    });
+    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    await screen.findByRole("checkbox", { name: "Chọn SV Pending" });
+    expect(screen.getByRole("link", { name: "Chấm bài" })).toHaveAttribute("href", "/teaching/evaluations/e-pending");
+    expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e-draft");
+    expect(screen.getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/e-final");
+    expect(screen.getByText("7.50 / 10.00")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Chọn SV Pending" }));
+    expect(screen.getByText("Đã chọn 1 bài")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ chọn" }));
+    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
   });
 
   it("keeps unsubmitted rows unselectable and passes the current evaluation version to batch", async () => {

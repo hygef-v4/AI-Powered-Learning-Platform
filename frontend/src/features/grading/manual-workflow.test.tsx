@@ -21,7 +21,7 @@ describe("grading review", () => {
     expect(screen.getByText("Ô bảng")).toHaveStyle({ backgroundColor: "#00ff00" });
     expect(container).not.toHaveTextContent(/CENTER|#ff0000|#00ff00/);
   });
-  it("edits only checklist IDs and never a free score", () => {
+  it("keeps a full-credit checklist shortcut and bounds the item score", () => {
     const onChange = vi.fn();
     const rubrics: Rubric[] = [
       {
@@ -38,9 +38,9 @@ describe("grading review", () => {
       },
     ];
     render(<RubricChecklistPanel rubrics={rubrics} checks={{}} onChange={onChange} />);
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Đủ điểm: Đạt yêu cầu" }));
     expect(onChange).toHaveBeenCalledWith({ r: ["i"] });
-    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "Điểm: Đạt yêu cầu" })).toHaveAttribute("max", "4");
   });
   it("renders untrusted document text as text, never executable markup", () => {
     const { container } = render(
@@ -73,7 +73,7 @@ describe("grading review", () => {
         onRequest={vi.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: "Dùng đề xuất" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Áp dụng vào bản nháp" })).toBeDisabled();
     expect(apply).not.toHaveBeenCalled();
   });
   it("preserves table cells and strips executable SVG preview content", () => {

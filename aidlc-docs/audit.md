@@ -6350,6 +6350,83 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 
 ---
 
+## U09 host continuation - 2026-10-25
+
+User requests continuing the existing U09 partial-score plan on current code, verifying actual runtime before changes, preserving uncommitted work, starting host API/frontend, avoiding duplicate workers, reproducing real Gemini proposals and checking fractional item scores in UI with test-only data. No commits/push/merge/deploy, no credential/model changes, no subagents. User also authorizes discussion with the already-open Argon 4 in Orca.
+
+Resumed Construction / Build and Test under the existing approved plan. Loaded root AGENTS/CLAUDE, AI-DLC common/construction rules and current extension configuration (security and resiliency enabled within the recorded reduced scope; PBT disabled). Inspected dirty diff and launcher. Verified stale repo Java/Next processes and Docker worker identity, stopped those processes/worker, launched host terminals through Orca CLI. RabbitMQ confirms one application connection after launch. Host localhost loads the real UI, which redirects to login. Asked user to log in to the teacher account in that tab, with no request to expose a password. Consulted existing Argon 4 for read-only code diagnosis; no agent spawned.
+
+Fresh verification: 43 frontend grading tests and 27 backend grading/provider tests passed. git diff --check passed. Read-only DB checks show original evaluation DRAFT/0.00/version 7 and original Gemini connection ACTIVE with passing prior basic connection test. Task input/schema have been purged, so no provider/schema root cause claimed. Corrected prior unsupported environment-isolation conclusion in the plan. Live AI and fractional-score persistence acceptance remain pending teacher login. No grade written/finalized/published, no secrets printed, no commit/push/deploy.
+
+## U09 authenticated live testing - 2026-10-25
+
+User supplied the path to a screenshot containing existing local test credentials and asked to log in and test. Read the screenshot and used the existing teacher credentials only at localhost login; no credentials added to project docs or application logs. No password reset or guessing.
+
+Original evaluation new UI proposal task ef9dfca2-cf13-4b0d-8b84-6c777ab1ac95 reached READY/APPLIED and rendered score10.00 plus Vietnamese feedback. Created an isolated local QA assignment/locked-rubric/submitted-attempt/evaluation clone transaction with new IDs (see U09 plan). On that clone UI verified 0.5 for an item worth1, subtotal/total0.50, rejecting1.5 and0.555 without database writes, valid draft save and browser reload. Second actual Gemini proposal task f4607f6d-71e6-426a-af6d-9dcfc9618642 reached READY/APPLIED; applied item scores/feedback through UI, edited first item to0.5, saved and reloaded9.50 total. Database confirms QA DRAFT/version2, original DRAFT/0.00/version7. No finalization/publication.
+
+Runtime cleanup and host current-code launch resolved the reproducing AI failure. Historical HTTP400 exact request/provider-body cause remains unknown; no speculative schema patch. Existing Argon4 consultation read code and proposed hypotheses, superseded by real successful runtime evidence; no subagent was spawned and no new production edits made. git diff --check passes; 43frontend/27backend targeted tests from this host continuation remain valid because production code is unchanged. Prior full-suite/build results remain historical. Screenshots inspected and saved only in ignored .tmp. Security: no auth bypass/credential changes; authorization/input bounds preserved. Resiliency: existing provider timeout/worker handling retained; no deployment change. Acceptance scope is these desktop U09 flows only. Host app and QA fixture retained for review; no commit/push/deploy.
+
+## U09 UI polish execution handoff - 2026-10-25
+
+User raw request: "Giúp rôi sửa theo kế hoạch tạo plan sau đưa cho argon làm".
+
+Interpreted as authorization to prepare the discussed U09 UI improvement plan and transfer execution to the already-open Gemini4 Argon in Orca, not create a new agent. Read root instructions, current git status/diff, relevant frontend components/tokens, AI-DLC code generation rules and installed skill guidance. Confirmed real viewport1077x909 CSSpx, DPR1.5, grid content762px; xl layout exists but is inactive. Prepared construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md with explicit scope, files/interfaces, seven sequential tasks, regression checks, responsive/keyboard/UI acceptance, existing host terminals and QA fixture. No extra generic approval is needed because the user explicitly requested implementation/handoff of these recommendations. Existing dirty changes preserved; only plan/state/audit edited here.
+
+Handoff target verified as existing antigravity/Argon session term_95be006a-9105-415a-a82c-f9ff67f7d188 in current mcp-test checkout. Prompt will transfer ownership to implement the plan sequentially, preserve partial-score/AI success, avoid real-grade writes, avoid backend/key/model changes, run checks and inspect new screenshots. No task orchestration record, new session, subagent or parallel editor. Parent stops after accepted delivery; implementation evidence belongs to the recipient. git diff --check verifies planning artifacts before dispatch. Reduced security/resiliency constraints preserved; PBT disabled, deployment N/A.
+
+---
+
+## U09 UI polish implementation start (Argon 4) - 2026-10-25
+**Timestamp**: 2026-10-25T11:46:50Z
+**User Input**: "BAN GIAO TOAN BO QUYEN THUC THI U09 UI POLISH CHO ARGON 4. Nguoi dung vua yeu cau: "Giup toi sua theo ke hoach tao plan sau dua cho argon lam". Day la yeu cau IMPLEMENT that, thay cho yeu cau chi doc code truoc do. Toi da tao plan, se dung sua code sau khi ban nhan. Ban lam truc tiep checkout F:/code/git/AI-Powered-Learning-Platform, mcp-test, khong tao agent/subagent/worktree, khong commit/push/deploy.
+
+DOC VA THUC HIEN: aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md. Doc AGENTS.md, CLAUDE.md, frontend/AGENTS.md, git status/diff va plan partial-scores lien quan. Nguoi dung da chon cac cai tien UI vua duoc audit va yeu cau trien khai; khong dung o lap lai ke hoach hay hoi phe duyet chung. Tuan tu 7 buoc trong plan, cap nhat checklist va ket qua.
+
+Trong tam: hai cot theo chieu rong content, toolbar gon; rubric gon voi nut Du diem va diem0.5/1; so sanh diem form voi AI truoc ap dung vao nhap; list gon, status badges, bulk actions khi chon; empty history/activity gon. Giua nguyen API/backend/schema AI/key/model, scoring va disabled/official protections. Bao toan TOAN BO dirty changes. Code da co xl grid; viewport thuc1077 CSSpx/content762px/DPR1.5, khong suy dien viewport theo PNG.
+
+Host frontend/backend+worker dang chay trong terminal rieng; Docker worker cu da dung, khong khoi dong trung worker. Teacher da dang nhap Orca. QA evaluation826f5c29-b5d1-4a32-9999-9313c242d8d3 co READY proposal va diem9.50 nhap; URL/fixture/terminal handles/screenshots trong plan. CHI save tren QA, khong ghi diem evaluation goc7ca08c41-e9d4-4738-946d-24c049e3d1e5, khong chot/cong bo. Khong doc/in secrets. Hai request Gemini thuc da READY; khong sua schema dua tren gia thuyet HTTP400 cu.
+
+Viet regression tests phu hop, chay full frontend tests/lint/typecheck/build, tranh build dung output Next dev dang chay. Tu thao tac UI Orca desktop/mobile/keyboard nhu plan, chup/kiem screenshot sau sua, fix loi den khi dat va luu results. Neu bi chan can bang chung va buoc ho tro cu the. Ban la implementer duy nhat tu bay gio. Hay bat dau ngay."
+**AI Response**: Verified baseline (Step 1): read root AGENTS/CLAUDE, frontend/AGENTS, installed Next.js docs, partial-scores plan, UI polish plan, git status/diff, design tokens, and reference screenshots (01-list.png: 1616x1364, 02-rubric.png: 1615x1363, 03-ai.png: 1615x1363, 01-grading-overview.png: 1615x1363). Confirmed host API+worker on port 8080 (PID 12432), Next dev on port 3000 (PID 47876), Docker worker stopped, and authenticated teacher session in Orca browser tabs. Proceeding sequentially with Steps 2–7.
+**Context**: Construction Phase — U09 UI polish code generation and verification.
+
+---
+
+## U09 UI polish completion and live acceptance (Argon 4) - 2026-10-25
+
+**Timestamp**: 2026-10-25T12:38:00Z
+
+**User Input**: Continuation and completion of the authorized U09 UI polish implementation handoff (`aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md`).
+
+**AI Response**: Completed Steps 2–7 sequentially:
+1. Updated `frontend/src/app/globals.css`, `GradingWorkspacePage.tsx`, `RubricChecklistPanel.tsx`, `GradingForm.tsx`, `AiProposalPanel.tsx`, `SubmissionDetailPage.tsx`, `GradingReviewPanels.tsx`, and grading test suites (`partial-scores.test.tsx`, `manual-workflow.test.tsx`, `workspace.test.tsx`, `submissions.test.tsx`).
+2. Verified automated checks (Step 5): `6/6` grading test files (`49/49` tests) PASS, `86/86` full frontend test files (`523/523` tests) PASS, `npm --prefix frontend run lint` PASS, `npm --prefix frontend run typecheck` PASS, isolated production build (`NEXT_DIST_DIR=".next-build"`) PASS, and `git diff --check` PASS.
+3. Verified live UI acceptance in Orca browser (Step 6) and inspected 9 new screenshots in `.tmp/u09-ui-polish/`: measured two-column workspace at current desktop (`974px` grid: `575px` + `383px`), Focus Mode (`1210px` grid: `716px` + `478px`), `762px` container width (`404px` + `342px`), and `358px` mobile container width (`1` column, `0` overflow); sticky toolbar height `46px`; keyboard Tab/Enter on score input, `Đủ điểm`, and `Mở mục có điểm chưa hợp lệ`; QA evaluation `826f5c29-b5d1-4a32-9999-9313c242d8d3` fractional score `0.5`, AI comparison (`Điểm đang nhập: 9.50` vs `AI đề xuất: 10.00`), `Áp dụng vào bản nháp`, edit back to `0.5`, save and reload (`9.50 / 10.00`); submissions list conditional bulk actions and `Tiếp tục chấm` link; and protected evaluation `7ca08c41-e9d4-4738-946d-24c049e3d1e5` untouched at `DRAFT / 0.00 / version 7` with older `FAILED` proposals expanded.
+4. Recorded handoff results in `aidlc-docs/construction/build-and-test/2026-10-25-u09-ui-polish-results.md` and updated checklists in `aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md` and `aidlc-docs/aidlc-state.md`. No backend/schema/AI/credential changes, no finalization/publication, no commit/push/deploy.
+
+**Context**: Construction Phase — U09 UI polish complete; host runtime and QA fixture left running for user review.
+
+---
+
+## U09 pre-commit review - 2026-10-25
+
+**Timestamp**: 2026-10-25T19:49:57.4049280+07:00
+**User Input**: "Đọc lại changes giúp tôi chia commit rõ ràng, chưa cần push"
+**AI Response**: Argon confirmed it stopped file edits and Git operations; Codex reviewed the complete U09 diff and will create six local Conventional Commits on mcp-test: backend/contract fractional scores, frontend workspace/AI review, submission list/batch actions, local API-worker launcher, generated Next.js agent guidance, and AI-DLC evidence. No push, merge or deployment. Source tests and docs/temporary artifacts are assigned explicitly; ignored screenshots/logs/fixtures are excluded.
+**Validation**: Fresh full frontend523/86files PASS, targeted backend27 PASS with0failures/errors/skips, ESLint PASS, TypeScript PASS, git diff --check PASS. Added missing partial-score fields to OpenAPI and parsed YAML successfully. No production source changes were needed during this review. Existing isolated production-build/live-UI evidence remains attributed to Argon; it is not a new build run.
+**Evidence corrections**: Report and plan now distinguish workspace container-width checks from actual mobile viewport and200percent browser zoom acceptance, which remain unverified. Read-only DB check confirms QA DRAFT9.50/version3 after UI retest; original DRAFT0.00/version7 remains unchanged. Earlier version2 records describe the earlier baseline.
+**Context**: Local commit preparation explicitly authorized; keep branch and all existing changes, exclude secrets/build output, no push.
+
+## U09 local commit grouping
+
+**Timestamp**: 2026-10-25T19:51:38.4739986+07:00
+**User Input**: "Đọc lại changes giúp tôi chia commit rõ ràng, chưa cần push"
+**AI Response**: Created local commits on mcp-test: a0f53dc2 feat(grading): persist fractional rubric item scores (backend, tests, OpenAPI); 507d8b20 feat(grading): streamline rubric and AI draft review (workspace, fractional input, comparisons, diagnostics and tests); af0b1bf0 feat(grading): simplify submission summaries and batch actions; c22756f7 fix(dev): run local API and worker from the current checkout; e7c174b2 chore(frontend): add Next.js agent guidance. The final docs(aidlc) group includes this audit/state, partial-score plan, UI polish plan and UI results with corrected acceptance limits. No source/fixture/screenshot/log/secret changes are added by the documentation group. No push, merge, deploy or grade mutation.
+**Validation**: All groups staged by explicit path manifests and checked before commit. Fresh frontend523/86files, backend27, lint, TypeScript and YAML validation passed. Final working-tree/commit checks follow documentation commit. Existing source behavior remains as reviewed; actual mobile viewport/200percent zoom remain unverified.
+**Context**: Authorized local Conventional Commits only; preserve existing branch and history.
+
+---
+
 ## 2026-10-25T08:00:00Z — Rà lại U01, U10, U11
 
 **User Input**: "Làm việc khác, kiểm tra lại các phần của tôi (cuong) xem code còn bug gì không, còn gì cần sửa đổi bổ sung cải thiện không"

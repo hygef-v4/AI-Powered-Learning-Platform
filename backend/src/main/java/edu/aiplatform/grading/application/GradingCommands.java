@@ -34,7 +34,13 @@ public final class GradingCommands {
     public record Save(@JsonProperty(required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version,
             @NotNull Map<UUID, Set<UUID>> checkedItemsByRubric, BigDecimal adjustment,
             @Size(max = 2000) String adjustmentReason, @Size(max = 10000) String feedback,
-            @Size(max = 2000) String changeReason, UUID usedProposalId) implements IStrictInput {
+            @Size(max = 2000) String changeReason, UUID usedProposalId,
+            Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) implements IStrictInput {
+        /** Existing callers retain all-or-nothing checklist scoring. */
+        public Save(long version, Map<UUID, Set<UUID>> checkedItemsByRubric, BigDecimal adjustment,
+                String adjustmentReason, String feedback, String changeReason, UUID usedProposalId) {
+            this(version, checkedItemsByRubric, adjustment, adjustmentReason, feedback, changeReason, usedProposalId, null);
+        }
     }
 
     public record ItemVersion(@NotNull UUID evaluationId,

@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "./api";
+import { hasPartialPoints, invalidItemScores } from "./RubricChecklistPanel";
 import { message } from "./useResource";
 import { useGradingProposals } from "./useGradingProposals";
-import type { AiRequest, Checks, Detail, Evaluation, GradingFormValues } from "./types";
+import type { AiRequest, Checks, Detail, Evaluation, GradingFormValues, ItemScores } from "./types";
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
@@ -17,6 +18,7 @@ function initialForm(evaluation: Evaluation): GradingFormValues {
   }
   return {
     checks,
+    itemScores: evaluation.rubricItemScores ?? {},
     adjustment: String(evaluation.adjustment ?? 0),
     adjustmentReason: evaluation.adjustmentReason ?? "",
     feedback: evaluation.feedback ?? "",
@@ -76,7 +78,15 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setBusy(true);
     setError("");
     try {
+      if (invalidItemScores(detail.rubrics, form.itemScores)) {
+        throw new Error("Kiểm tra điểm từng mục: từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");
+      }
+      const supportsItemScores = evaluation.rubricItemScores !== undefined;
+      if (!supportsItemScores && hasPartialPoints(detail.rubrics, form.checks, form.itemScores)) {
+        throw new Error("Máy chủ chưa hỗ trợ lưu điểm lẻ. Cần cập nhật máy chủ rồi tải lại phiên bản; điểm bạn đang nhập vẫn được giữ.");
+      }
       const saved = await gradingApi.save(evaluation.id, {
+        ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
         adjustment: form.adjustment,
@@ -110,8 +120,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  function applyProposal(checks: Checks, feedback: string, proposalId: string) {
-    updateForm({ checks, feedback, usedProposalId: proposalId });
+  function applyProposal(checks: Checks, feedback: string, proposalId: string, itemScores: ItemScores = {}) {
+    updateForm({ checks, itemScores, feedback, usedProposalId: proposalId });
   }
 
   return {
