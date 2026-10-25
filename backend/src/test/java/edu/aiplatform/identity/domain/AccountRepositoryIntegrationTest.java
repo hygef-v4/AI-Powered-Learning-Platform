@@ -124,6 +124,18 @@ class AccountRepositoryIntegrationTest {
     }
 
     @Test
+    void findByIdsReturnsOnlyExistingAccounts() {
+        Account a = pending("a@fpt.edu.vn", Role.STUDENT, "Sinh viên A");
+        Account b = pending("b@fpt.edu.vn", Role.TEACHER, "Giảng viên B");
+        repository.insert(a);
+        repository.insert(b);
+
+        assertThat(repository.findByIds(List.of(a.id(), b.id(), UUID.randomUUID())))
+                .extracting(Account::id).containsExactlyInAnyOrder(a.id(), b.id());
+        assertThat(repository.findByIds(List.of())).isEmpty();
+    }
+
+    @Test
     void shareLockForAssignmentHoldsOffTheRoleChangeLockUntilCommit() throws Exception {
         Account account = pending("gv@fpt.edu.vn", Role.TEACHER, "Giảng viên");
         repository.insert(account);

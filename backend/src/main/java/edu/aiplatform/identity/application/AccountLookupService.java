@@ -8,8 +8,10 @@ import edu.aiplatform.identity.domain.Account;
 import edu.aiplatform.identity.domain.AccountRepository;
 import edu.aiplatform.identity.domain.EmailPolicy;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -65,6 +67,14 @@ public class AccountLookupService implements IAccountLookup {
     @Override
     public Optional<AccountContact> getContact(UUID accountId) {
         return accountId == null ? Optional.empty() : accounts.findById(accountId).map(AccountLookupService::contact);
+    }
+
+    @Override
+    public Map<UUID, AccountContact> getContacts(Collection<UUID> accountIds) {
+        List<UUID> ids = accountIds.stream().filter(Objects::nonNull).distinct().toList();
+        Map<UUID, AccountContact> contacts = new LinkedHashMap<>();
+        accounts.findByIds(ids).forEach(account -> contacts.put(account.id(), contact(account)));
+        return contacts;
     }
 
     @Override
