@@ -41,6 +41,14 @@ final class FakeRedis {
             ttls.put(i.getArgument(0), i.getArgument(2));
             return null;
         }).when(valueOps).set(anyString(), anyString(), any(Duration.class));
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenAnswer(i -> {
+            if (values.containsKey(i.<String>getArgument(0))) {
+                return false;
+            }
+            values.put(i.getArgument(0), i.getArgument(1));
+            ttls.put(i.getArgument(0), i.getArgument(2));
+            return true;
+        });
 
         // SessionStore.CLAIM_REFRESH: đọc refresh token và đánh dấu "used:{sid}:{millis}" trong một bước.
         when(template.execute(any(RedisScript.class), anyList(), any(Object[].class))).thenAnswer(i -> {

@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
+import edu.aiplatform.assignmentwork.contract.ActivityKind;
 import edu.aiplatform.assignmentwork.contract.IActivityQuery;
 import edu.aiplatform.assignmentwork.contract.IActivityWrite;
 import edu.aiplatform.audit.contract.AuditEvent;
@@ -91,6 +93,7 @@ class QuizPracticeServicesTest {
     private QuizAutoSubmitScanner scanner;
     private QuizRetiredHandler retired;
     private QuizActivityService activity;
+    private IAccountLookup lookups;
 
     @BeforeEach
     void setup() {
@@ -114,6 +117,14 @@ class QuizPracticeServicesTest {
         IAccountLookup accounts = mock(IAccountLookup.class);
         when(accounts.getContact(any())).thenAnswer(call -> Optional.of(new AccountContact(call.getArgument(0),
                 "sv@fpt.edu.vn", "Sinh viên", Role.STUDENT, AccountStatus.ACTIVE)));
+        when(accounts.getContacts(any())).thenAnswer(call -> {
+            Map<UUID, AccountContact> contacts = new LinkedHashMap<>();
+            for (UUID id : call.<Collection<UUID>>getArgument(0)) {
+                contacts.put(id, new AccountContact(id, "sv@fpt.edu.vn", "Sinh viên", Role.STUDENT, AccountStatus.ACTIVE));
+            }
+            return contacts;
+        });
+        lookups = accounts;
 
         PracticeAccess access = new PracticeAccess(authorization, audits::add, clock);
         PracticeSupport support = new PracticeSupport(store, quizzes, scoring, classes, access, clock);
@@ -122,7 +133,7 @@ class QuizPracticeServicesTest {
         teacherService = new TeacherQuizAttemptService(store, classes, accounts, mock(IActivityQuery.class), support, access);
         scanner = new QuizAutoSubmitScanner(store, support, TransactionOperations.withoutTransaction());
         retired = new QuizRetiredHandler(store, support);
-        activity = new QuizActivityService(activityWrite, support);
+        activity = new QuizActivityService(activityWrite, support, clock);
     }
 
     private ClassRef classRef(UUID id, ClassStatus status) {
@@ -281,9 +292,31 @@ class QuizPracticeServicesTest {
             assertThat(q.correctOptionIds()).isNull();
             assertThat(q.explanation()).isNull();
             assertThat(q.points()).isNull();
+            assertThat(q.correct()).as("không lộ đúng/sai khi ẩn cả điểm lẫn đáp án").isNull();
         });
+        assertThat(result.correctCount()).isNull();
+        assertThat(result.wrongCount()).isNull();
+        assertThat(result.blankCount()).as("câu 2 bỏ trống").isEqualTo(1);
         assertThat(result.canRetry()).isTrue();
         assertThat(api(() -> attemptsService.result(other, attemptId)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        var forTeacher = teacherService.detail(teacher, classA, attemptId).result();
+        assertThat(forTeacher.questions()).allSatisfy(q -> assertThat(q.correct()).isNotNull());
+        assertThat(forTeacher.correctCount()).isNotNull();
+    }
+
+    @Test
+    void resultShowingScoreOnlyKeepsPerQuestionCorrectness() {
+        settings = new QuizSettings(false, false, null, 3, true, false);
+        UUID attemptId = submitFresh(student);
+
+        var result = attemptsService.result(student, attemptId);
+
+        assertThat(result.questions()).allSatisfy(q -> {
+            assertThat(q.correct()).as("điểm từng câu đã cho biết đúng sai").isNotNull();
+            assertThat(q.correctOptionIds()).isNull();
+        });
+        assertThat(result.correctCount()).isNotNull();
     }
 
     @Test
@@ -376,6 +409,9 @@ class QuizPracticeServicesTest {
         assertThat(list.totalStudents()).isEqualTo(2);
         assertThat(list.studentsAttempted()).isEqualTo(1);
         assertThat(list.students().get(0).attempts()).isEqualTo(1);
+        assertThat(list.students()).allSatisfy(s -> assertThat(s.displayName()).isEqualTo("Sinh viên"));
+        verify(lookups).getContacts(any());
+        verify(lookups, never()).getContact(any());
 
         settings = new QuizSettings(false, false, null, 2, false, false);
         var detail = teacherService.detail(teacher, classA, attemptId);
@@ -390,6 +426,21 @@ class QuizPracticeServicesTest {
                 .isEqualTo("ACTIVITY_NOT_ENABLED");
         verify(activityWrite, never()).record(any(), any(), anyList());
         assertThat(taking.activityMonitoringEnabled()).isFalse();
+    }
+
+    @Test
+    void activityIsRejectedOnceTheTimeLimitAndGraceHavePassed() {
+        monitoring = true;
+        var taking = attemptsService.start(student, quizId, classA);
+        var event = new ActivityEventInput(UUID.randomUUID(), "e1", 0, ActivityKind.SESSION_START, clock.instant());
+
+        activity.record(student, taking.attemptId(), List.of(event));
+        verify(activityWrite).record(any(), any(), anyList());
+
+        clock.advance(Duration.ofMinutes(10).plusSeconds(31));
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).code())
+                .isEqualTo("ATTEMPT_TIME_UP");
+        verify(activityWrite).record(any(), any(), anyList());
     }
 
     @Test

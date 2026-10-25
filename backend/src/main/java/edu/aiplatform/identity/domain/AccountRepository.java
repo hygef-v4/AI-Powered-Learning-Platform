@@ -53,6 +53,14 @@ public class AccountRepository {
                 .param("id", id).query(AccountRepository::map).optional();
     }
 
+    public List<Account> findByIds(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("select " + COLUMNS + " from accounts where id in (:ids)")
+                .param("ids", List.copyOf(ids)).query(AccountRepository::map).list();
+    }
+
     /** Đọc và khóa chia sẻ tới hết transaction: bên gán phân công giữ để role, trạng thái không đổi giữa chừng. */
     public Optional<Account> findByIdForShare(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from accounts where id = :id for share")

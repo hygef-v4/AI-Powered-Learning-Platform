@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import edu.aiplatform.identity.IdentityTestData;
 import edu.aiplatform.identity.domain.OtpPurpose;
+import edu.aiplatform.identity.infrastructure.OtpChallengeStore.Issue;
 import edu.aiplatform.identity.infrastructure.OtpChallengeStore.Verification;
 import java.time.Duration;
 import java.util.UUID;
@@ -63,6 +64,20 @@ class OtpStoresTest {
     void codeOfOnePurposeDoesNotWorkForTheOther() {
         challenges.replace(accountId, OtpPurpose.ACTIVATION, "048213");
         assertThat(challenges.verify(accountId, OtpPurpose.PASSWORD_RESET, "048213")).isEqualTo(Verification.INVALID);
+    }
+
+    @Test
+    void jobRerunResendsItsOwnCodeButNeverRevivesAUsedOrReplacedOne() {
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "048213", "job-1")).isEqualTo(Issue.NEW);
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "048213", "job-1")).as("job chạy lại").isEqualTo(Issue.RESEND);
+
+        assertThat(challenges.verify(accountId, OtpPurpose.ACTIVATION, "048213")).isEqualTo(Verification.VALID);
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "048213", "job-1")).as("mã đã dùng").isEqualTo(Issue.STALE);
+        assertThat(challenges.verify(accountId, OtpPurpose.ACTIVATION, "048213")).as("không hồi sinh mã").isEqualTo(Verification.INVALID);
+
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "111111", "job-2")).isEqualTo(Issue.NEW);
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "111111", "job-3")).isEqualTo(Issue.NEW);
+        assertThat(challenges.issue(accountId, OtpPurpose.ACTIVATION, "111111", "job-2")).as("đã có mã mới hơn").isEqualTo(Issue.STALE);
     }
 
     @Test

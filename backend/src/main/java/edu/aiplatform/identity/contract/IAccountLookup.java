@@ -1,6 +1,7 @@
 package edu.aiplatform.identity.contract;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,18 @@ public interface IAccountLookup {
     List<AccountContact> findByEmails(Collection<String> emails);
 
     Optional<AccountContact> getContact(UUID accountId);
+
+    /**
+     * Thông tin liên hệ theo lô, bỏ qua id không có; dùng khi hiện danh sách nhiều người để không tra từng người một.
+     * Bản mặc định gọi {@link #getContact} từng id; U01 cài bằng một truy vấn.
+     */
+    default Map<UUID, AccountContact> getContacts(Collection<UUID> accountIds) {
+        Map<UUID, AccountContact> contacts = new LinkedHashMap<>();
+        for (UUID id : accountIds) {
+            getContact(id).ifPresent(contact -> contacts.put(id, contact));
+        }
+        return contacts;
+    }
 
     /**
      * Như {@link #getContact} nhưng khóa dòng tài khoản ({@code FOR SHARE}) tới hết transaction của bên gọi; phải gọi

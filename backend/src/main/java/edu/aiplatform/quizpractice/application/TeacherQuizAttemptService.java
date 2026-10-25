@@ -62,10 +62,11 @@ public class TeacherQuizAttemptService {
                 .collect(Collectors.groupingBy(QuizAttempt::accountId));
         Set<UUID> students = new LinkedHashSet<>(PracticeSupport.call(() -> classes.listActiveStudents(classId)));
         students.addAll(byStudent.keySet());
+        Map<UUID, AccountContact> contacts = contacts(students);
         List<StudentAttempts> rows = new ArrayList<>();
         for (UUID student : students) {
             List<QuizAttempt> own = byStudent.getOrDefault(student, List.of());
-            AccountContact contact = contact(student);
+            AccountContact contact = contacts.get(student);
             List<QuizAttempt> submitted = own.stream().filter(a -> !a.inProgress()).toList();
             QuizAttempt last = submitted.stream().max(Comparator.comparing(QuizAttempt::submittedAt)).orElse(null);
             rows.add(new StudentAttempts(student, contact == null ? null : contact.displayName(),
@@ -102,6 +103,15 @@ public class TeacherQuizAttemptService {
         }
         return new TeacherAttemptDetail(support.result(attempt, true, false),
                 contact == null ? null : contact.displayName(), summary);
+    }
+
+    /** Tên, email cả lớp trong một lần tra; U01 lỗi thì danh sách vẫn hiện, chỉ thiếu tên. */
+    private Map<UUID, AccountContact> contacts(Set<UUID> accountIds) {
+        try {
+            return accounts.getContacts(accountIds);
+        } catch (RuntimeException unavailable) {
+            return Map.of();
+        }
     }
 
     private AccountContact contact(UUID accountId) {

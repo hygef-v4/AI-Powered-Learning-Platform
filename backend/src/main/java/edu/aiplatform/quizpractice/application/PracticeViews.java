@@ -58,15 +58,18 @@ public final class PracticeViews {
 
     /** Một câu trong kết quả: lựa chọn của mình, đúng sai; đáp án, giải thích chỉ khi được hiện. */
     public record ResultQuestion(UUID questionId, QuestionType type, String stem, List<QuizOptionView> options,
-                                 List<String> selectedOptionIds, boolean correct, BigDecimal points,
+                                 List<String> selectedOptionIds, Boolean correct, BigDecimal points,
                                  BigDecimal maxPoints, List<String> correctOptionIds, String explanation) {
     }
 
-    /** Quiz Result (BR-U11-20): điểm trống khi Quiz không hiện điểm. */
+    /**
+     * Quiz Result (BR-U11-20): điểm trống khi Quiz không hiện điểm; đúng/sai từng câu và số câu đúng, sai trống khi Quiz
+     * không hiện cả điểm lẫn đáp án.
+     */
     public record ResultView(UUID attemptId, UUID quizId, UUID classId, String title, int attemptNo,
                              Instant startedAt, Instant submittedAt, SubmitMode submitMode, boolean showScore,
-                             boolean showAnswers, BigDecimal score, BigDecimal maxScore, int correctCount,
-                             int wrongCount, int blankCount, List<ResultQuestion> questions, boolean canRetry) {
+                             boolean showAnswers, BigDecimal score, BigDecimal maxScore, Integer correctCount,
+                             Integer wrongCount, int blankCount, List<ResultQuestion> questions, boolean canRetry) {
     }
 
     /** Tóm tắt lượt của một sinh viên cho giảng viên (BR-U11-31). */

@@ -58,6 +58,20 @@ class AccountLookupAndPolicyTest {
         verify(accounts, never()).findForLookup(anyString(), any(), any(), anyInt());
     }
 
+    @Test
+    void contactsAreLookedUpInOneQueryWithoutDuplicates() {
+        Account one = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        java.util.UUID missing = java.util.UUID.randomUUID();
+        when(accounts.findByIds(List.of(one.id(), missing))).thenReturn(List.of(one));
+
+        var contacts = lookup.getContacts(List.of(one.id(), missing, one.id()));
+
+        assertThat(contacts).containsOnlyKeys(one.id());
+        assertThat(contacts.get(one.id()).displayName()).isEqualTo(one.displayName());
+        verify(accounts).findByIds(List.of(one.id(), missing));
+        verify(accounts, never()).findById(any());
+    }
+
     /** Mọi action khai báo cho unit khác phải có dòng trong bảng quyền, nếu không sẽ bị từ chối mặc định (Q14). */
     @Test
     void everyDeclaredActionHasAPolicyRule() throws IllegalAccessException {
