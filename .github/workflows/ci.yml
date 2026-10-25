@@ -23,6 +23,9 @@ jobs:
           cache: maven
       # Testcontainers dùng Docker có sẵn trên runner.
       - run: mvn -B verify
+      - name: Require U04 and notification PostgreSQL tests without skips
+        shell: pwsh
+        run: ../scripts/assert-required-backend-tests.ps1
 
   frontend:
     runs-on: ubuntu-latest
