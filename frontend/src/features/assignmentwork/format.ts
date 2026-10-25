@@ -27,6 +27,12 @@ export function remaining(deadline: string | null, now: number): string {
   return `${Math.ceil(ms / 1000)} giây`;
 }
 
+/** Dòng đếm ngược trên trang làm bài: "Còn 2 ngày 3 giờ"; quá hạn chỉ ghi "Đã quá hạn" (không "Còn Đã quá hạn"). */
+export function countdown(deadline: string | null, now: number): string {
+  const left = remaining(deadline, now);
+  return left === "" || left === "Đã quá hạn" ? left : `Còn ${left}`;
+}
+
 export function problemIssues(error: unknown): ValidationIssue[] {
   if (!(error instanceof ApiError)) return [];
   const issues = (error.problem as { issues?: ValidationIssue[] }).issues;

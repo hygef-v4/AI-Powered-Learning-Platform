@@ -170,6 +170,24 @@ class AttemptServiceTest {
     }
 
     @Test
+    void attemptAndSaveCarrySameSubmitCheckAsSubmit() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        ValidationIssue empty = new ValidationIssue("SUBMISSION_EMPTY", null, "Bài làm chưa có nội dung của bạn");
+        f.submitResult = new ValidationResult(List.of(empty), List.of());
+        assertThat(f.attemptService.get(f.student, a.id()).submitIssues()).containsExactly(empty);
+        assertThat(f.attemptService.save(f.student, a.id(), 0, withStudentWork()).submitIssues()).containsExactly(empty);
+        f.submitResult = new ValidationResult(List.of(), List.of());
+        assertThat(f.attemptService.save(f.student, a.id(), 1, withStudentWork()).submitIssues()).isEmpty();
+    }
+
+    @Test
+    void submittedAttemptHasNoSubmitIssues() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        f.submitResult = new ValidationResult(List.of(new ValidationIssue("SUBMISSION_EMPTY", null, "Trống")), List.of());
+        assertThat(f.attemptService.get(f.student, a.id()).submitIssues()).isEmpty();
+    }
+
+    @Test
     void submittingAfterClosesAtButBeforeLateUntilIsLate() {
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.minus(Duration.ofHours(1)),
                 NOW.plus(Duration.ofDays(1)), 2);

@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { DocumentModel, RubricCriterion } from "@/shared/document";
+import { rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "./api";
 import { emptyFilter, toListFilter } from "./AssignmentFilters";
 import { mergeSaved, missingText } from "./AssignmentFormPage";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
 import { fromLocalInput, toLocalInput } from "./format";
-import { RubricEditor, cleanCriteria } from "./RubricEditor";
+import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "./RubricEditor";
 import { ScheduleForm } from "./ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "./types";
 
@@ -40,11 +40,34 @@ describe("RubricEditor", () => {
     expect(cleanCriteria(blank).map((criterion) => criterion.criterionId)).toEqual(["c"]);
   });
 
-  it("điểm gửi lên: số dương, làm tròn 2 chữ số; 0 và số âm là chưa có điểm", () => {
+  it("điểm gửi lên: số dương giữ nguyên, không làm tròn; 0 và số âm là chưa có điểm", () => {
     const dirty: RubricCriterion[] = [{ ...criteria[0]!, items: [
-      { itemId: "a", text: "x", points: 1.256 }, { itemId: "b", text: "y", points: 0 }, { itemId: "c", text: "z", points: -1 },
+      { itemId: "a", text: "x", points: 1.25 }, { itemId: "b", text: "y", points: 0 }, { itemId: "c", text: "z", points: -1 },
     ] }];
-    expect(cleanCriteria(dirty)[0]!.items.map((item) => item.points)).toEqual([1.26, null, null]);
+    expect(cleanCriteria(dirty)[0]!.items.map((item) => item.points)).toEqual([1.25, null, null]);
+  });
+
+  it("điểm quá 2 chữ số thập phân là sai: ô điểm báo lỗi, rubric không lưu, không tính vào tổng", () => {
+    const wrong: RubricCriterion[] = [{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 1.255 }] }];
+    render(<RubricEditor criteria={wrong} onChange={vi.fn()} />);
+    expect(screen.getByLabelText("Điểm mục 1")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Điểm mục 1")).toHaveClass("border-danger", "bg-danger-soft", "text-danger");
+    expect(screen.getByLabelText("Điểm mục 1")).not.toHaveClass("border-line", "bg-transparent", "text-ink");
+    expect(rubricPointsMalformed(wrong)).toBe(true);
+    expect(rubricPointsMalformed(criteria)).toBe(false);
+    expect(rubricPointsMalformed([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 0 }] }])).toBe(false);
+    expect(rubricTotal(wrong)).toBe(0);
+    expect(rubricComplete(wrong)).toBe(false);
+    expect(rubricComplete([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 1.25 }] }])).toBe(true);
+  });
+
+  it("Enter ở ô điểm cũng thêm mục ngay dưới", () => {
+    const onChange = vi.fn();
+    render(<RubricEditor criteria={criteria} onChange={onChange} />);
+    fireEvent.keyDown(screen.getByLabelText("Điểm mục 1"), { key: "Enter" });
+    const added = onChange.mock.calls[0]![0] as RubricCriterion[];
+    expect(added).toHaveLength(2);
+    expect(added[1]!).toMatchObject({ items: [{ text: "", points: null }] });
   });
 });
 

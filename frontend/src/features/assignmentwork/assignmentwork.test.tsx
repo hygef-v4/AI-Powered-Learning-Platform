@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatDuration } from "@/shared/activity/ActivityTimeline";
 import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
 import { computeParts, type DocumentModel } from "@/shared/document";
-import { insertIntoPart, precheck } from "./AssignmentWorkspacePage";
-import { remaining } from "./format";
+import { insertIntoPart, precheck, submitCheck } from "./AssignmentWorkspacePage";
+import { countdown, remaining } from "./format";
 import type { StudentRow } from "./types";
 import { upcoming } from "./useStudentAssignments";
 
@@ -33,6 +33,22 @@ describe("precheck", () => {
   it("bảng của giảng viên có chữ tính như đã điền (server kiểm chính xác)", () => {
     const table: DocumentModel["blocks"][number] = { id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Đăng nhập" }] }]] } };
     expect(precheck({ requiredDiagrams: {} }, { blocks: [teacher, table] })).toEqual([]);
+  });
+});
+
+describe("submitCheck", () => {
+  const teacher: DocumentModel["blocks"][number] = { id: "t", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đề" }] } };
+  const drawnByTeacher: DocumentModel["blocks"][number] = { id: "s", origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", svgPreview: "<svg/>" } };
+  const empty = { code: "SUBMISSION_EMPTY", blockId: null, message: "Bài làm chưa có nội dung của bạn" };
+
+  it("có kết quả của server thì dùng, kể cả khi tự kiểm thấy sơ đồ của đề đã có hình", () => {
+    const content: DocumentModel = { blocks: [teacher, drawnByTeacher] };
+    expect(precheck({ requiredDiagrams: {} }, content)).toEqual([]);
+    expect(submitCheck({ requiredDiagrams: {} }, content, [empty])).toEqual([empty]);
+    expect(submitCheck({ requiredDiagrams: {} }, content, [])).toEqual([]);
+  });
+  it("chưa có kết quả của server thì tự kiểm sơ bộ", () => {
+    expect(submitCheck({ requiredDiagrams: {} }, { blocks: [teacher] }, null).map((i) => i.code)).toEqual(["SUBMISSION_EMPTY"]);
   });
 });
 
@@ -65,6 +81,11 @@ describe("danh sách bài", () => {
     expect(remaining("2026-10-21T02:30:00Z", now)).toBe("1 ngày 2 giờ");
     expect(remaining("2026-10-20T00:10:00Z", now)).toBe("10 phút");
     expect(remaining("2026-10-19T00:00:00Z", now)).toBe("Đã quá hạn");
+  });
+  it("dòng đếm ngược trên trang làm bài không ghi 'Còn Đã quá hạn'", () => {
+    const now = Date.parse("2026-10-20T00:00:00Z");
+    expect(countdown("2026-10-20T00:10:00Z", now)).toBe("Còn 10 phút");
+    expect(countdown("2026-10-19T00:00:00Z", now)).toBe("Đã quá hạn");
   });
   it("định dạng thời lượng ISO", () => {
     expect(formatDuration("PT1M5S")).toBe("1 phút 5 giây");

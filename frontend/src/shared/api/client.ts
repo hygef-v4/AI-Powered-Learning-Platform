@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 
 const CSRF_COOKIE = "XSRF-TOKEN";
-const CSRF_HEADER = "X-XSRF-TOKEN";
+export const CSRF_HEADER = "X-XSRF-TOKEN";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_PREFIX = "/api/v1/auth/";
 /** Chờ response refresh của tab kia đặt cookie mới trước khi gửi lại (refresh trả 409). */
@@ -44,6 +44,11 @@ function readCookie(name: string): string | undefined {
   const prefix = `${name}=`;
   const found = document.cookie.split("; ").find((part) => part.startsWith(prefix));
   return found ? decodeURIComponent(found.slice(prefix.length)) : undefined;
+}
+
+/** Token CSRF cho request không đi qua apiFetch (XMLHttpRequest có tiến trình upload). */
+export function csrfToken(): string | undefined {
+  return readCookie(CSRF_COOKIE);
 }
 
 function delay(ms: number) {

@@ -159,6 +159,19 @@ class AiTaskFlowTest {
     }
 
     @Test
+    void requireSourceChecksLikeSubmitWithoutCreatingTask() {
+        service.requireSource(teacher, AiSource.PERSONAL, AiProvider.OPENAI);
+        assertThatThrownBy(() -> service.requireSource(teacher, AiSource.PERSONAL, AiProvider.CLAUDE))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_PERSONAL_NOT_CONFIGURED"));
+        assertThatThrownBy(() -> service.requireSource(teacher, AiSource.PERSONAL, null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_PROVIDER_REQUIRED"));
+        assertThatThrownBy(() -> service.requireSource(student, AiSource.SHARED, null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_SHARED_NOT_ALLOWED"));
+        assertThat(tasks.rows).isEmpty();
+        verify(quota, never()).reserve(any(), anyLong());
+    }
+
+    @Test
     void sameRequestRefReturnsTheTaskAndDifferentFingerprintConflicts() {
         AiTaskView first = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "dup"));
         AiTaskView again = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "dup"));

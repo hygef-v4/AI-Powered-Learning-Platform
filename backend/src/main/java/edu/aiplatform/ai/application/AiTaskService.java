@@ -94,7 +94,7 @@ public class AiTaskService implements IAiTask {
         if (existing.isPresent()) {
             return sameOrConflict(existing.get(), fingerprint);
         }
-        AiConnection connection = connectionFor(actor, request);
+        AiConnection connection = connectionFor(actor, request.source(), request.provider());
         int max = Math.min(request.maxOutputTokens(), catalog.maxOutputTokens(connection.provider()));
         if (tasks.countActive(actor.accountId()) >= MAX_ACTIVE) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "AI_TOO_MANY_TASKS",
@@ -163,9 +163,17 @@ public class AiTaskService implements IAiTask {
         return view(task);
     }
 
+    @Override
+    public void requireSource(Actor actor, AiSource source, AiProvider provider) {
+        if (actor == null || source == null) {
+            throw ApiException.badRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
+        }
+        connectionFor(actor, source, provider);
+    }
+
     /** Nguồn đúng như người dùng chọn; không có hoặc không dùng được thì báo lỗi, không đổi nguồn (BR-U06-10). */
-    private AiConnection connectionFor(Actor actor, AiTaskRequest request) {
-        if (request.source() == AiSource.SHARED) {
+    private AiConnection connectionFor(Actor actor, AiSource source, AiProvider provider) {
+        if (source == AiSource.SHARED) {
             if (!access.allowed(actor, Actions.AI_SHARED_USE)) {
                 throw ApiException.forbidden("AI_SHARED_NOT_ALLOWED");
             }
@@ -177,10 +185,10 @@ public class AiTaskService implements IAiTask {
         if (!access.allowed(actor, Actions.AI_PERSONAL)) {
             throw ApiException.forbidden("AI_PERSONAL_NOT_ALLOWED");
         }
-        if (request.provider() == null) {
+        if (provider == null) {
             throw ApiException.badRequest("AI_PROVIDER_REQUIRED", "Cần chọn nhà cung cấp cho API cá nhân");
         }
-        return connections.findPersonal(actor.accountId(), request.provider())
+        return connections.findPersonal(actor.accountId(), provider)
                 .filter(c -> c.status() == Status.ACTIVE)
                 .orElseThrow(() -> ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED",
                         "Bạn chưa lưu khóa API cho nhà cung cấp này"));

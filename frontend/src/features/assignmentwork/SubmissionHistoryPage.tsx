@@ -79,6 +79,11 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
                     {a.status === "IN_PROGRESS" ? <Pill tone="info">Đang làm</Pill> : a.late ? <Pill tone="warning">Trễ</Pill> : <Pill tone="success">Đã nộp</Pill>}
                   </span>
                   <span className="text-[11px] text-muted">{a.submittedAt ? formatDateTime(a.submittedAt) : "Chưa nộp"}</span>
+                  {a.status === "SUBMITTED" && (
+                    <span className="text-[11px] text-muted">
+                      {a.late ? "Trễ" : "Đúng hạn"}{a.submitMode ? ` · ${submitModeLabels[a.submitMode]}` : ""}
+                    </span>
+                  )}
                   {detail.gradingMode === "GRADED" && a.status === "SUBMITTED" && <span className="text-[11px] text-muted">{a.graded ? "Được chấm" : "Không chấm"}</span>}
                   {detail.gradingMode === "PRACTICE" && a.status === "SUBMITTED" && <span className="text-[11px] text-muted">{a.feedbackCount > 0 ? "Đã có góp ý AI" : "Chưa có góp ý AI"}</span>}
                 </button>
