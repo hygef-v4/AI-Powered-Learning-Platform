@@ -14,6 +14,8 @@ type Props = {
   providers: ProviderInfo[];
   onClose: () => void;
   onSave: (provider: AiProvider, body: SaveConnection) => Promise<void>;
+  /** Nhà cung cấp đã có khóa: thêm mới không chọn được (mỗi nhà cung cấp một khóa, dùng Thay khóa). */
+  taken?: AiProvider[];
   /** Kiểm tra kết nối đã lưu (chỉ có khi đang thay khóa đã lưu). */
   onTest?: (provider: AiProvider) => Promise<ConnectionView>;
 };
@@ -22,7 +24,7 @@ type Props = {
  * Popup Thêm khóa API (c12a): khóa chỉ nhập, không hiện lại; sau khi lưu chỉ còn 4 ký tự cuối. Đổi mô hình của khóa
  * đã lưu không cần nhập lại khóa.
  */
-export function ApiKeyDialog({ current, initialProvider, providers, onClose, onSave, onTest }: Props) {
+export function ApiKeyDialog({ current, initialProvider, providers, taken = [], onClose, onSave, onTest }: Props) {
   const ids = { provider: useId(), key: useId(), model: useId() };
   const [provider, setProvider] = useState<AiProvider>(initialProvider);
   const models = providers.find((p) => p.provider === provider)?.models ?? [];
@@ -103,7 +105,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, onClose, onS
           disabled={replacing || busy}
           onChange={(event) => changeProvider(event.target.value as AiProvider)}
         >
-          {PROVIDERS.map((p) => (
+          {PROVIDERS.filter((p) => replacing || p === initialProvider || !taken.includes(p)).map((p) => (
             <option key={p} value={p}>
               {PROVIDER_LABEL[p]} — {PROVIDER_CONSOLE[p]}
             </option>

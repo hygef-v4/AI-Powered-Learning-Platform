@@ -130,6 +130,20 @@ describe("AiConnectionPage", () => {
     expect(screen.queryByDisplayValue("AIzaSy-test-key-0000")).not.toBeInTheDocument();
   });
 
+  it("nút Thêm khóa đầu bảng không cho chọn nhà cung cấp đã có khóa (tránh 409, dùng Thay khóa)", async () => {
+    backend();
+    render(<AiConnectionPage />);
+    await screen.findByText("••••3kQf");
+
+    const section = screen.getByRole("heading", { name: "API cá nhân" }).closest("section")!;
+    const headerAdd = within(section).getAllByRole("button", { name: /Thêm khóa/ })[0]!;
+    fireEvent.click(headerAdd);
+    const dialog = await screen.findByRole("dialog");
+    const options = within(within(dialog).getByLabelText(/Nhà cung cấp/)).getAllByRole("option").map((o) => o.textContent);
+    expect(options.some((t) => t?.startsWith("Claude"))).toBe(false);
+    expect(options.some((t) => t?.startsWith("Gemini"))).toBe(true);
+  });
+
   it("thay khóa đã lưu chỉ để đổi mô hình thì không bắt nhập lại khóa", async () => {
     const calls = backend();
     render(<AiConnectionPage />);
