@@ -6349,3 +6349,23 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **AI Response**: Read the two attached images and reproduced all four bare Next 404s on the authenticated U05 Mock Student IAB session. Classes works. All four source routes/layouts and generated/standalone manifests exist; navigation hrefs and repository proxy config are correct. Runtime stale/incomplete image or stale upstream remains a hypothesis pending direct container inspection. Prepared scripts/repair-student-routes.ps1 to identify the existing 8088 Compose stack, probe direct frontend routes, rebuild/replace frontend only and restart nginx, then probe gateway paths. Script syntax and three mock scenarios validated; actual -CheckOnly invocation stopped on Docker socket permission denied. No application source edits or runtime success claim; no credential/DB changes, commit/push/merge. Scoped plan/evidence: construction/plans/2026-10-25-student-menu-404-repair.md.
 
 ---
+
+## 2026-10-25T08:00:00Z — Rà lại U01, U10, U11
+
+**User Input**: "Làm việc khác, kiểm tra lại các phần của tôi (cuong) xem code còn bug gì không, còn gì cần sửa đổi bổ sung cải thiện không"
+
+**AI Response**: Rà `staging` `b306884` cho U01, U10, U11, tập trung các phần chưa rà ở đợt trước (OTP, kích hoạt, đặt lại mật khẩu, hồ sơ, nhập CSV; nhập câu hỏi, nhân bản, AI/MCP; truy vấn luyện tập, giảng viên xem lượt, hoạt động; frontend). Kết quả: không thấy lỗi chặn luồng. Điểm cần xử lý: (1) U11 API kết quả vẫn trả cờ đúng/sai từng câu và số câu đúng khi Quiz đặt không hiện đáp án (BR-U11-20 chưa chốt), lộ đáp án câu một lựa chọn; (2) U01 job OTP thử lại sinh mã mới, có thể gửi hai email hai mã; (3) U11 danh sách lượt cho giảng viên tra tên từng sinh viên một (N+1), U01 chưa có tra cứu theo lô; (4) U11 vẫn nhận sự kiện hoạt động sau hạn cộng ân hạn tới khi scanner nộp; (5) `AiDrafts.tsx` có 3 chỗ tắt `exhaustive-deps`. Các phần đã rà và ổn: OTP/ticket một lần, đặt lại mật khẩu thu hồi mọi phiên, chặn open redirect `next`, nhập CSV kiểm lại khi xác nhận, nhân bản/copy Quiz, danh sách câu, nhận kết quả AI. Không sửa code.
+
+**Context**: Rà soát code, ngoài luồng stage. Dừng việc kiểm các nhánh khác theo yêu cầu người dùng.
+
+---
+
+## 2026-10-25T09:00:00Z — Sửa điểm 1–4 của đợt rà U01, U10, U11
+
+**User Input**: "Tạo nhánh mới từ staging và sửa điểm 1–4 (ẩn đúng/sai khi không hiện đáp án, OTP thử lại, tra tên theo lô, chặn hoạt động sau hạn), kèm test."
+
+**AI Response**: Tạo nhánh `fix/u01-u11-review-followups` (`--no-track`) từ `origin/staging` `f4a19cf`. (1) `PracticeSupport.result` không trả cờ đúng/sai từng câu và số câu đúng/sai khi Quiz không hiện cả điểm lẫn đáp án (`correct`, `correctCount`, `wrongCount` nullable); giảng viên vẫn thấy đủ. (2) Mã OTP suy ra cố định từ khóa job bằng HMAC; `OtpChallengeStore.issue` ghi mã một lần cho mỗi job, job chạy lại gửi lại đúng mã, mã đã dùng hoặc đã bị thay thì bỏ qua. (3) `IAccountLookup.getContacts` tra theo lô (U01 một truy vấn `findByIds`), danh sách lượt cho giảng viên dùng nó. (4) `QuizActivityService` từ chối `ATTEMPT_TIME_UP` sau hạn cộng ân hạn. Test mới cho cả bốn điểm. Kết quả: backend `mvn verify` 1358 test, 0 lỗi, 35 bỏ qua; frontend lint/typecheck đạt, 512/512 test. Chưa commit.
+
+**Context**: Sửa lỗi U01, U11; điểm 1 là mặc định an toàn trong lúc BR-U11-20 chờ chốt.
+
+---
