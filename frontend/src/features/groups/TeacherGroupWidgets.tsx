@@ -6,16 +6,29 @@ import { getGroups, getStudentGroup } from "./api";
 import type { GroupSetView, StudentGroup } from "./types";
 
 /** Bộ nhóm của lớp; tải lại khi quay về cửa sổ (vd. sau khi sửa nhóm ở tab khác). */
-function useGroupSet(classId: string) {
-  const [set, setSet] = useState<GroupSetView | null>(null);
+function useGroupSetState(classId: string) {
+  const [state, setState] = useState<{
+    classId: string;
+    set: GroupSetView | null;
+    error: boolean;
+  }>({ classId, set: null, error: false });
+
   useEffect(() => {
     let active = true;
     const load = () =>
       getGroups(classId).then(
         (loaded) => {
-          if (active) setSet(loaded);
+          if (active) setState({ classId, set: loaded, error: false });
         },
-        () => undefined,
+        () => {
+          if (active) {
+            setState((prev) =>
+              prev.classId === classId && prev.set
+                ? prev
+                : { classId, set: null, error: true },
+            );
+          }
+        },
       );
     void load();
     window.addEventListener("focus", load);
@@ -24,20 +37,46 @@ function useGroupSet(classId: string) {
       window.removeEventListener("focus", load);
     };
   }, [classId]);
-  return set;
+
+  if (state.classId !== classId) {
+    return { set: null, error: false, loading: true };
+  }
+  return { set: state.set, error: state.error, loading: !state.set && !state.error };
+}
+
+function useGroupSet(classId: string) {
+  return useGroupSetState(classId).set;
 }
 
 /** Số nhóm và số sinh viên chưa có nhóm trên tab Thông tin lớp (t18). */
-export function GroupCountCard({ classId }: { classId: string }) {
-  const set = useGroupSet(classId);
-  if (!set) return null;
+export function GroupCountCard({
+  classId,
+  variant = "default",
+}: {
+  classId: string;
+  variant?: "default" | "overview";
+}) {
+  const { set, error } = useGroupSetState(classId);
+  if (variant === "default" && !set) return null;
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4">
+    <div
+      data-testid={variant === "overview" ? "overview-groups-card" : undefined}
+      data-class-overview-region={variant === "overview" ? "groups" : undefined}
+      className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4"
+    >
       <IconTile icon="groups" tone="accent" />
-      <div>
+      <div className="min-w-0">
         <p className="text-xs font-semibold text-muted">Nhóm</p>
-        <p className="text-xl font-bold text-ink">{set.groups.length}</p>
-        <p className="text-xs text-muted">{set.ungrouped.length} sinh viên chưa có nhóm</p>
+        {set ? (
+          <>
+            <p className="text-xl font-bold text-ink">{set.groups.length}</p>
+            <p className="text-xs text-muted">{set.ungrouped.length} sinh viên chưa có nhóm</p>
+          </>
+        ) : error ? (
+          <p className="mt-1 text-sm font-semibold text-danger">Không khả dụng</p>
+        ) : (
+          <p className="mt-1 text-sm font-medium text-muted">Đang tải…</p>
+        )}
       </div>
     </div>
   );

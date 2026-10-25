@@ -23,7 +23,7 @@ function TeacherGradingSection({
   return tab === "gradebook"
     ? createElement(ClassGradebookTab, { classId })
     : tab === "info"
-      ? createElement(ClassProgressSection, { classId })
+      ? createElement(ClassProgressSection, { classId, layout: "overview" })
       : null;
 }
 teacherClassTabs.register({ key: "u09-grading", order: 90, component: TeacherGradingSection });

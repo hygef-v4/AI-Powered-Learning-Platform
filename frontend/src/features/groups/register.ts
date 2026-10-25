@@ -11,7 +11,7 @@ import { GroupAssignmentPanel, GroupCountCard, StudentGroupInfo } from "./Teache
 
 function TeacherGroupTab({ classId, tab, onGroupNamesLoaded }: { classId: string; tab: "info" | "students" | "materials" | "evals" | "gradebook"; onGroupNamesLoaded?: (names: Record<string, string>) => void }) {
   if (tab === "students") return createElement(ClassGroupsPanel, { classId, onGroupNamesLoaded });
-  if (tab === "info") return createElement(GroupCountCard, { classId });
+  if (tab === "info") return createElement(GroupCountCard, { classId, variant: "overview" });
   return null;
 }
 
