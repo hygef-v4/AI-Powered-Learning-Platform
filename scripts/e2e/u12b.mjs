@@ -137,7 +137,8 @@ const docx = await S.sv2.call("GET", `/api/v1/group-docs/${D1}/export.docx?submi
 const buf = Buffer.from(await docx.arrayBuffer());
 check(R, "U12-12 tải DOCX bản nộp", docx.status === 200 && buf.slice(0, 2).toString() === "PK", `${docx.status} ${docx.headers.get("content-type")} ${buf.length}B`);
 c = await S.sv1.post(`/api/v1/group-docs/${D1}/sections/${s2.id}:claim`);
-const d2 = await S.sv1.put(`/api/v1/group-docs/${D1}/sections/${s2.id}/draft`, { version: c.data.version, blocks: blk });
+// Mỗi block cần mã riêng: dùng lại mã của mục khác thì bản ghép có hai block trùng mã và bị từ chối.
+const d2 = await S.sv1.put(`/api/v1/group-docs/${D1}/sections/${s2.id}/draft`, { version: c.data.version, blocks: [{ ...blk[0], id: crypto.randomUUID(), content: { runs: [{ text: "Thiết kế của Sinh viên 1" }] } }] });
 await S.sv1.post(`/api/v1/group-docs/${D1}/sections/${s2.id}:done`, { version: d2.data.version });
 w = await S.sv1.get(`/api/v1/group-docs/${D1}`);
 const sub2 = await S.sv2.post(`/api/v1/group-docs/${D1}/submit`, { version: w.data.version });

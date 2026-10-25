@@ -18,11 +18,11 @@ Trình soạn chung `@/shared/document` đã có trên staging (`DocumentEditor`
 - [x] 3. Backend: thêm vào `WorkspaceView` cờ `diagramEnabled` (lấy từ `AssignmentView`). Chưa làm: số sơ đồ bắt buộc (khi nộp vẫn được `validateForSubmit` kiểm) và tải ảnh qua U03.
 - [x] 4. Gắn `useActivityTracker` (`shared/activity`) khi bài bật giám sát hoạt động. Ghi vào `POST /api/v1/group-docs/{id}/activity` (endpoint đã có).
 - [x] 5. Flyway: thêm khóa ngoại `group_documents.assignment_id` → `assignments(id)`, vì bảng U07 đã có trên staging. Kiểm `out-of-order`.
-- [ ] 6. Test:
+- [x] 6. Test:
   - frontend: SectionEditorDialog dùng DocumentEditor; tự lưu; Xong;
   - backend: `WorkspaceView.diagramEnabled`; migration;
   - chạy lại `scratchpad/e2e/u12b.mjs` trên stack local.
-- [ ] 7. Cập nhật code-summary U12, aidlc-state, audit; mở PR vào `staging`.
+- [x] 7. Cập nhật code-summary U12, aidlc-state, audit; mở PR vào `staging`.
 
 ## Ghi chú để làm tiếp
 - Stack local: `docker compose -p platform-local -f infra/docker-compose.yml -f infra/docker-compose.local.yml --env-file infra/.env.local up -d --build`.

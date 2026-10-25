@@ -6262,3 +6262,11 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
 
 ---
+
+## U12 shared document editor – verified and PR
+**Timestamp**: 2026-10-25T07:10:00Z
+**User Input**: "lam het cho toi di"
+**AI Response**: Bật lại Docker Desktop, build lại stack local; migration V20261025_1800 chạy được. Kiểm giao diện: DocumentEditor trong mục, chèn Draw.io, tự lưu, Xong → nội dung có PARAGRAPH và DIAGRAM. U12 end-to-end 30/30 (sửa script U12-26 dùng mã block riêng); `mvn verify` 1384 test 0 lỗi; frontend 483 test. Mở PR `feat/u12-document-editor` → `staging`, gộp khi CI đạt.
+**Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
+
+---
