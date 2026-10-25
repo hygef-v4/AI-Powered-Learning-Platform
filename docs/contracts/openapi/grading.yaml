@@ -736,6 +736,11 @@ components:
           additionalProperties:
             type: array
             items: *id001
+        itemScoresByRubric:
+          description: Optional per-item overrides; omitted or null retains legacy checklist scoring.
+          anyOf:
+          - $ref: '#/components/schemas/RubricItemScores'
+          - type: 'null'
         adjustment:
           anyOf:
           - type: number
@@ -861,6 +866,26 @@ components:
       - items
       additionalProperties: false
     RubricChecks: *id012
+    RubricItemScores:
+      type: object
+      description: >-
+        Maps locked rubric UUIDs to item UUIDs and awarded points. Values must be
+        nonnegative, at most the locked item's maximum, and have at most two decimal
+        places. An explicit item value overrides the legacy checklist value;
+        the server computes the authoritative total. Unknown rubric/item IDs are rejected.
+      propertyNames:
+        format: uuid
+      additionalProperties:
+        type: object
+        propertyNames:
+          format: uuid
+        additionalProperties:
+          anyOf:
+          - type: number
+            minimum: 0
+            multipleOf: 0.01
+          - type: string
+            pattern: '^\d+(\.\d{1,2})?$'
     Evaluation:
       type: object
       properties:
@@ -902,6 +927,8 @@ components:
           - type: 'null'
         maxScore: *id013
         rubricChecks: *id010
+        rubricItemScores:
+          $ref: '#/components/schemas/RubricItemScores'
         rubricSnapshot: *id010
         submissionHash: *id010
         adjustment: *id013
@@ -940,6 +967,9 @@ components:
                 - type: 'null'
               reason: *id010
               previousChecks: *id010
+              previousItemScores:
+                description: Item-score snapshot before an official change or group resubmission; absent in legacy history.
+                $ref: '#/components/schemas/RubricItemScores'
               previousFeedback:
                 anyOf:
                 - *id010
@@ -1239,6 +1269,18 @@ components:
         proposal:
           anyOf:
           - type: object
+            properties:
+              checks:
+                $ref: '#/components/schemas/RubricChecks'
+              itemScoresByRubric:
+                $ref: '#/components/schemas/RubricItemScores'
+              score:
+                description: Must equal the sum of rubric item points before teacher adjustments.
+                anyOf:
+                - type: number
+                  multipleOf: 0.01
+                - type: string
+                  pattern: '^\d+(\.\d{1,2})?$'
           - type: 'null'
         usage:
           anyOf:

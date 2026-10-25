@@ -87,10 +87,12 @@ public class GradingService {
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED", "Use member grading endpoint");
         var points = GradingJson.score(GradingJson.rubrics(json, evaluation.rubricSnapshot),
-                input.checkedItemsByRubric());
+                input.checkedItemsByRubric(), input.itemScoresByRubric());
+        var itemScores = GradingJson.copyItemScores(input.itemScoresByRubric());
         boolean changingOfficialGrade = evaluation.official();
         evaluation.save(GradingJson.write(json, input.checkedItemsByRubric()), points, input.adjustment(),
                 input.adjustmentReason(), input.feedback(), input.changeReason(), actor.accountId(), clock.instant());
+        evaluation.rubricItemScores = itemScores;
         propagateGroup(evaluation, actor, GroupOperation.SAVE, input.changeReason());
         evaluations.save(evaluation);
         record(actor, evaluation, changingOfficialGrade ? "GRADE_CHANGED" : "GRADE_SAVED", input.changeReason());

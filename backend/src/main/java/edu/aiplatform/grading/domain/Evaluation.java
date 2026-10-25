@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ public class Evaluation {
     public String submissionHash;
     public String rubricSnapshot;
     public String rubricChecks = "{}";
+    public Map<UUID, Map<UUID, BigDecimal>> rubricItemScores = Map.of();
     public String feedback;
     public String adjustmentReason;
     public BigDecimal maxScore;
@@ -76,7 +78,7 @@ public class Evaluation {
             throw ApiException.badRequest("CHANGE_REASON_REQUIRED", "Changing an official grade requires a reason");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2, RoundingMode.HALF_UP);
         if (official)
-            changes.add(new EvaluationHistory(actor, now, score, next, changeReason, rubricChecks, this.feedback));
+            changes.add(new EvaluationHistory(actor, now, score, next, changeReason, rubricChecks, this.feedback, rubricItemScores));
         rubricChecks = checks;
         score = next;
         adjustment = delta;
@@ -115,6 +117,7 @@ public class Evaluation {
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
         if (!memberOverride) {
             save(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason, actorId, now);
+            rubricItemScores = root.rubricItemScores;
         }
     }
 
@@ -129,7 +132,7 @@ public class Evaluation {
 
     public void resetForGroupSubmission(String hash, BigDecimal maximum, String rubrics, Instant now) {
         if (score != null) {
-            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED", rubricChecks, feedback));
+            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED", rubricChecks, feedback, rubricItemScores));
         }
         memberOverride = false;
         state = EvaluationStatus.PENDING;
@@ -138,6 +141,7 @@ public class Evaluation {
         maxScore = maximum;
         score = null;
         rubricChecks = "{}";
+        rubricItemScores = Map.of();
         feedback = null;
         adjustment = BigDecimal.ZERO;
         adjustmentReason = null;

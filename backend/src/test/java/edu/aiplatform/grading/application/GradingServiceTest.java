@@ -131,4 +131,59 @@ class GradingServiceTest {
         service.save(teacher, evaluation.id, command(0));
         assertThat(member.score).isEqualByComparingTo("1");
     }
+    @Test
+    void savesPartialItemPointsAndKeepsChecklistBackwardsCompatible() throws Exception {
+        var command = json.readValue("""
+            {"version":0,"checkedItemsByRubric":{"%s":["%s"]},
+             "itemScoresByRubric":{"%s":{"%s":"0.50"}}}
+            """.formatted(rubricId, itemId, rubricId, itemId), Save.class);
+        service.save(teacher, evaluation.id, command);
+        assertThat(evaluation.score).isEqualByComparingTo("0.50");
+        assertThat(json.valueToTree(evaluation).path("rubricItemScores").path(rubricId.toString())
+                .path(itemId.toString()).decimalValue()).isEqualByComparingTo("0.50");
+    }
+
+    @Test
+    void rejectsPartialScoresOutsideItemBoundsOrPrecisionWithoutChangingGrade() throws Exception {
+        for (String value : List.of("-0.01", "4.01", "0.001")) {
+            var command = json.readValue("""
+                {"version":0,"checkedItemsByRubric":{},"itemScoresByRubric":{"%s":{"%s":"%s"}}}
+                """.formatted(rubricId, itemId, value), Save.class);
+            assertThatThrownBy(() -> service.save(teacher, evaluation.id, command))
+                    .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
+            assertThat(evaluation.score).isNull();
+        }
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void rejectsUnknownItemInPartialScores() throws Exception {
+        var command = json.readValue("""
+            {"version":0,"checkedItemsByRubric":{},"itemScoresByRubric":{"%s":{"%s":"0.5"}}}
+            """.formatted(rubricId, UUID.randomUUID()), Save.class);
+        assertThatThrownBy(() -> service.save(teacher, evaluation.id, command))
+                .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
+        assertThat(evaluation.score).isNull();
+    }
+
+    @Test
+    void groupMembersInheritFractionalBreakdownAndResubmissionClearsIt() throws Exception {
+        evaluation.kind = EvaluationKind.GROUP_DOCUMENT; evaluation.groupDocumentId = UUID.randomUUID();
+        var member = Evaluation.pending(null, assignmentId, classId, studentId, "hash", new BigDecimal("4"),
+                evaluation.rubricSnapshot, Instant.now());
+        member.kind = EvaluationKind.MEMBER; member.groupDocumentId = evaluation.groupDocumentId;
+        when(repo.findForAssignmentAndClass(assignmentId, classId)).thenReturn(List.of(evaluation, member));
+        when(repo.lockById(member.id)).thenReturn(Optional.of(member));
+        service.save(teacher, evaluation.id, new Save(0, Map.of(), null, null, "partial", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.50")))));
+        assertThat(member.score).isEqualByComparingTo("0.50");
+        assertThat(member.rubricItemScores).isEqualTo(evaluation.rubricItemScores);
+        service.finalizeOne(teacher, new ItemVersion(evaluation.id, 0));
+        service.save(teacher, evaluation.id, new Save(0, Map.of(), null, null, "reviewed", "correction", null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75")))));
+        assertThat(evaluation.changes.get(0).previousItemScores().get(rubricId).get(itemId)).isEqualByComparingTo("0.50");
+        evaluation.resetForGroupSubmission("new", new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
+        assertThat(evaluation.rubricItemScores).isEmpty();
+    }
+
 }

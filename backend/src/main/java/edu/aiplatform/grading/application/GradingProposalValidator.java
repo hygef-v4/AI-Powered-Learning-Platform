@@ -17,26 +17,30 @@ import org.springframework.stereotype.Component;
 public class GradingProposalValidator {
     private static final int MAX_FEEDBACK_LENGTH = 10000;
     private static final int MAX_PAYLOAD_LENGTH = 262144;
-    private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback", "sections");
+    private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback", "sections", "itemScoresByRubric");
     private final ObjectMapper json;
 
     public GradingProposalValidator(ObjectMapper json) {
         this.json = json;
     }
 
-    public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback, JsonNode sections) {
+    public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback, JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
     }
 
     public Validated validate(JsonNode payload, List<RubricView> rubrics) {
         try {
             requireProposalObject(payload);
             var checks = readChecks(payload);
-            var score = GradingJson.score(rubrics, checks);
+            Map<UUID, Map<UUID, BigDecimal>> itemScores = payload.has("itemScoresByRubric")
+                    ? json.convertValue(payload.get("itemScoresByRubric"), new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {})
+                    : Map.of();
+            if (itemScores == null) throw new IllegalArgumentException();
+            var score = GradingJson.score(rubrics, checks, itemScores);
             requireMatchingScore(payload.get("score"), score);
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
-            return new Validated(checks, score, feedback, sections);
+            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores));
         } catch (RuntimeException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal does not match the rubric schema");
         }
