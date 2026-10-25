@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/shared/ui/Dialog";
+import { Icon } from "@/shared/ui/Icon";
 import { aiRequest } from "./AiProposalPanel";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { gradingApi } from "./api";
@@ -20,6 +21,7 @@ export function BatchActionDialog({
   const [choosingSource, setChoosingSource] = useState(action === "ai");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
   const [estimate, setEstimate] = useState<{ key: string; state: "ready" | "failed"; tokens?: number }>({
     key: "",
@@ -46,11 +48,18 @@ export function BatchActionDialog({
     setBusy(true);
     setError("");
     try {
+      let completed: BatchResult;
       if (action === "ai") {
         if (!choice) return;
-        setResult(await gradingApi.requestBatch(items, aiRequest(choice)));
+        completed = await gradingApi.requestBatch(items, aiRequest(choice));
       } else {
-        setResult(await gradingApi[action](items));
+        completed = await gradingApi[action](items);
+      }
+      setResult(completed);
+      // Snapshot success before refreshing: a filtered list can remove the completed rows.
+      if (action !== "ai" && completed.items.length === items.length
+        && items.every((item) => completed.items.some((row) => row.evaluationId === item.evaluationId && row.outcome === "SUCCESS"))) {
+        setSuccessMessage(action === "publish" ? `Đã công bố điểm cho ${items.length} bài.` : `Đã chốt điểm cho ${items.length} bài.`);
       }
       onDone();
     } catch (e) {
@@ -68,6 +77,9 @@ export function BatchActionDialog({
         : "Đề xuất AI hàng loạt";
   const estimateIsCurrent = estimate.key === JSON.stringify(items);
   const estimateState = estimateIsCurrent ? estimate.state : "loading";
+  if (successMessage) {
+    return <SuccessNotice onDismiss={onClose} message={successMessage} />;
+  }
   if (action === "ai" && choosingSource && items.length > 0) {
     return <AiSourcePicker open
       task={`Đề xuất chấm ${items.length} bài đã chọn${estimateState === "loading" ? " · đang ước tính token" : estimateState === "failed" ? " · chưa ước tính được token" : ""}`}
@@ -116,4 +128,23 @@ export function BatchActionDialog({
       )}
     </Dialog>
   );
+}
+
+/** Replaces the completed dialog without blocking the grading page or repeating the action. */
+function SuccessNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  const dismiss = useRef(onDismiss);
+  useEffect(() => { dismiss.current = onDismiss; }, [onDismiss]);
+  useEffect(() => {
+    const timer = setTimeout(() => dismiss.current(), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+  return <div role="status" aria-live="polite" aria-atomic="true"
+    className="fixed top-20 right-4 z-60 flex max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm font-medium text-success shadow-lg">
+    <Icon name="check_circle" size={20} />
+    <span>{message}</span>
+    <button type="button" aria-label="Đóng thông báo" onClick={onDismiss}
+      className="ml-1 rounded-md p-1 hover:bg-success/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
+      <Icon name="close" size={18} />
+    </button>
+  </div>;
 }
