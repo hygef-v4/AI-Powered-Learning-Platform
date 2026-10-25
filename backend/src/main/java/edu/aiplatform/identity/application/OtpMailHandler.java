@@ -10,10 +10,15 @@ import edu.aiplatform.jobs.contract.JobMessage;
 import edu.aiplatform.jobs.contract.JobQueue;
 import edu.aiplatform.jobs.contract.JobTypes;
 import edu.aiplatform.jobs.contract.RetryableJobException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -67,9 +72,12 @@ public class OtpMailHandler implements IJobHandler {
             log.info("Bỏ qua OTP_DELIVERY {}: tài khoản không còn phù hợp", purpose);
             return;
         }
-        String code = newCode();
+        String code = codeFor(message.idempotencyKey());
         try {
-            challenges.replace(accountId, purpose, code);
+            if (challenges.issue(accountId, purpose, code, message.idempotencyKey()) == OtpChallengeStore.Issue.STALE) {
+                log.info("Bỏ qua OTP_DELIVERY {}: mã của lần gửi này đã dùng hoặc đã có mã mới hơn", purpose);
+                return;
+            }
             mail.send(OtpMailTemplate.build(account.get().schoolEmail(), purpose, code, properties.otpTtl()));
         } catch (RuntimeException e) {
             throw new RetryableJobException("Gửi OTP lỗi: " + e.getClass().getSimpleName(), e);
@@ -79,6 +87,26 @@ public class OtpMailHandler implements IJobHandler {
     @Override
     public void onFailed(JobMessage message, String error) {
         log.error("OTP_DELIVERY_FAILED key={} lỗi={}", message.idempotencyKey(), error);
+    }
+
+    /**
+     * Mã 6 chữ số của một lần gửi, suy ra cố định từ khóa job bằng HMAC với khóa ký của U01 (nhãn riêng, không dùng chung
+     * với chữ ký JWT): job chạy lại sau lỗi gửi mail gửi đúng mã đã ghi, không ra email thứ hai với mã khác. Khóa job là
+     * UUID ngẫu nhiên do server tạo và không lộ ra ngoài; thiếu khóa thì dùng mã ngẫu nhiên.
+     */
+    String codeFor(String jobKey) {
+        if (jobKey == null || jobKey.isBlank()) {
+            return newCode();
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(properties.jwtSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] digest = mac.doFinal(("otp-code:" + jobKey).getBytes(StandardCharsets.UTF_8));
+            long value = ByteBuffer.wrap(digest, 0, 8).getLong() & Long.MAX_VALUE;
+            return String.format("%06d", value % 1_000_000);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("HmacSHA256 không khả dụng", e);
+        }
     }
 
     /** 6 chữ số, giữ số 0 ở đầu (BR-U01-20). */
