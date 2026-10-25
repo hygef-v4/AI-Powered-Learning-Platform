@@ -733,3 +733,26 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Plan `construction/plans/2026-10-24-u12-document-editor.md` được duyệt ("ok có đủ token rồi, làm tiếp đi"); bước 1–7 xong trên nhánh `feat/u12-document-editor`.
 - [x] Kiểm trên stack local: trình soạn mới, chèn Draw.io, Xong; migration khóa ngoại; U12 end-to-end 30/30; `mvn verify` 1384 test; frontend 483 test.
 - [ ] Còn mở: tải ảnh trong tài liệu nhóm và ảnh trong khung đề của giảng viên (cần endpoint ảnh riêng).
+
+## U09 screenshot UI bugfix planning - 2026-10-25
+
+- [x] Investigated two attached screenshot reports on mcp-test b3068845: nested evaluation-page shell, sr-only evaluation UUID, missing assignment/class context and local select styles.
+- [x] Saved scoped plan: construction/plans/2026-10-25-u09-ui-bugfix-plan.md. Existing assignment detail GET supplies title and class ownerName; no backend/contract change planned.
+- [x] Existing targeted baseline: 4 suites / 27 tests pass after isolating Vitest TEMP/TMP and limiting workers; initial ENOENT run is not a test pass.
+- [ ] Implementation/new regressions and browser acceptance pending review; no application changes, commit, push, deploy or global stage advancement.
+
+## U09 UI bugfix implementation - 2026-10-25
+
+- [x] User approved the scoped plan with "giúp tôi fix bug"; implemented sequentially in mcp-test without switching branches or automatic commits.
+- [x] Removed nested evaluation shell and evaluation UUID assistive text; added independent validated assignment/class context and shared submission filters.
+- [x] Regression RED/GREEN observed. Targeted 43/43 tests, full frontend 84 suites/501 tests, TypeScript and ESLint pass; production build completion tracked in the verification report.
+- [ ] Live authenticated UI/SSE and desktop/390px acceptance remain pending. IAB reaches localhost:8088/login, but has no authenticated session; Docker control is permission-denied and running frontend revision is unverified.
+- Results: construction/build-and-test/2026-10-25-u09-ui-bugfix-results.md. No backend/contract/DB/AI/publication changes, commit, push, deploy or global stage advancement.
+- [x] U09 production build finished successfully (exit 0); see verification report. UI acceptance limitations above remain unchanged.
+
+## U09 local commit handoff - 2026-10-25
+
+- User requests committing the current changes locally, without push. Three logical groups: shell/UUID, submission context/filters, AI-DLC documentation.
+- Source validation remains 501 tests/typecheck/lint/build pass from the implementation turn; targeted tests repeated for this handoff. UI authenticated acceptance remains pending.
+- Temporary test caches/logs and build output are excluded; no branch switch or history rewrite.
+- Local commit execution blocked before staging: .git/index.lock permission denied. No commit created; ignored .tmp/commit-u09-local.ps1 prepared and syntax checked for manual execution. Do not report this handoff as committed.

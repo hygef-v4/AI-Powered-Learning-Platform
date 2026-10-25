@@ -6300,3 +6300,45 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Context**: Sửa lỗi U01, U10 từ báo cáo rà soát staging.
 
 ---
+
+## 2026-10-25 - U09 screenshot bug investigation and plan
+
+**User Input**: "giúp tôi kiêm tra các bug này , và lập plan fix bug"
+
+**Inputs**: image(3).png (file_0000000065cc8211b2df420fa5efdc07), image(4).png (file_0000000081488211b53121665920f2b5). Correct attached images resolved and extracted text read.
+
+**Findings**: Branch mcp-test at b3068845, initially clean. Evaluation page still nests AuthenticatedLayout inside teaching layout. Submission list still lacks assignment/class context and uses local select styles. evaluationId is currently sr-only, not visibly rendered; remains accessibility text. Existing assignment GET provides title and CLASS ownerName (class code/name), avoiding backend/contract changes. Runtime/browser reproduction was not performed.
+
+**Deliverable**: construction/plans/2026-10-25-u09-ui-bugfix-plan.md. Four sequential tasks, regression specs, scoped authorization/error-isolation requirements and automated/browser acceptance. No source or DB changes; no commit/push/deploy. Continue existing Construction remediation, no global stage reset or new extension opt-in. PBT disabled per existing configuration.
+
+**Validation**: First baseline run: notification suite 11 tests pass; three grading suites failed before tests due to temporary Vitest ENOENT. Rerun using a dedicated writable TEMP/TMP and maxWorkers=1: 4 suites, 27 tests passed, exit 0. Not new regression coverage or UI acceptance. Self-reviewed plan covers both reports and distinguishes current sr-only behavior.
+
+---
+
+## U09 UI bugfix implementation approval
+**Timestamp**: 2026-10-25T08:23:00Z
+**User Input**: "giúp tôi fix bug"
+**AI Response**: Execute the scoped 2026-10-25 U09 UI plan sequentially, preserving grading behavior and contracts; add regressions, verify and record runtime limits. No commit/push/deploy authorized.
+**Context**: Existing Construction remediation, plan approved by this implementation request.
+
+---
+
+## U09 UI bugfix - source implementation and regression verification
+**Timestamp**: 2026-10-25T08:31:00Z
+**User Input**: "giúp tôi fix bug" (approval recorded above)
+**AI Response**: Implemented the approved four-task scoped U09 plan: one parent shell; remove evaluation UUID assistive text; separate assignment/class metadata from existing authorized assignment detail; shared accessible filters with existing query/reset/batch behavior preserved. RED/GREEN observed for shell/UUID and submission context. Targeted 43 tests and full frontend 84 suites/501 tests pass; TypeScript and full ESLint pass. Build result recorded separately when complete.
+**Context**: IAB opens localhost:8088/login, no authenticated session. Docker control denied, running frontend revision unverified; live acceptance pending. Self-review performed; no subagents, no backend/contract/dependency/DB/AI/publication changes, commit/push/deploy or global acceptance. Verification: construction/build-and-test/2026-10-25-u09-ui-bugfix-results.md. Existing planning audit/state entries preserved.
+
+---
+
+**U09 build completion**: npm run build passed, exit 0, including the teaching evaluation and assignment submissions routes. Full source verification now complete; authenticated Docker runtime acceptance remains pending. No application source changed after the successful full test/typecheck/lint runs.
+
+## U09 local commit handoff - 2026-10-25
+**Timestamp**: 2026-10-25T08:35:00Z
+**User Input**: "giúp tôi commit những gì đã thay đổi chưa push"
+**AI Response**: Prepare three local Conventional Commits on mcp-test: evaluation shell/UUID and regressions; submission context/filters and regressions; AI-DLC planning/verification records. Stage explicit paths only, exclude temporary test/build outputs, preserve existing audit history. Repeat targeted grading/notifications verification before committing. No push, merge, deploy, AI call or database change.
+**Context**: User now authorizes local commits, superseding earlier no-commit scope for this handoff only. Full frontend 501 tests, typecheck/lint/build evidence remains the prior successful run; no application changes since that run.
+
+---
+
+**Commit execution blocked**: git add failed before staging: Unable to create .git/index.lock, Permission denied. No commit was created, no push attempted. Prepared ignored .tmp/commit-u09-local.ps1 for the user to run in their local terminal; script stages only the three documented groups and contains no push command. This supersedes any implication that the commit handoff already completed.
