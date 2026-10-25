@@ -114,3 +114,48 @@ it("does not expose the evaluation UUID as visible or assistive proposal text", 
   );
   expect(container.textContent).not.toContain(evaluationId);
 });
+
+
+describe("U09 usability", () => {
+  const rubric: Rubric = { rubricId: "rubric", partId: "08a88889-de7c-4eef-a90c-7ee32c19e312", maxPoints: 3,
+    criteria: [{ criterionId: "criterion", title: "Kiến trúc", items: [{ itemId: "item", text: "Tách service", points: 1.5 }] }] };
+  it("uses section titles and shows the selected checklist subtotal without exposing the part UUID", () => {
+    const { container } = render(<RubricChecklistPanel rubrics={[rubric]} checks={{ rubric: ["item"] }} onChange={vi.fn()}
+      partTitles={{ [rubric.partId]: "Câu 1: Class Diagram" }} />);
+    expect(screen.getByText("Câu 1: Class Diagram")).toBeInTheDocument();
+    expect(screen.getByText("1.50 / 3.00 điểm")).toBeInTheDocument();
+    expect(container.textContent).not.toContain(rubric.partId);
+  });
+  it("explains AI failure and keeps a manual grading path visible", () => {
+    render(<AiProposalPanel evaluationId="e" proposals={[{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED",
+      safeError: "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ" }]} onApply={vi.fn()} onRequest={vi.fn()} />);
+    expect(screen.getByText("Không tạo được đề xuất")).toBeInTheDocument();
+    expect(screen.getByText(/vẫn có thể chấm thủ công/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Kiểm tra kết nối AI" })).toHaveAttribute("href", "/ai/connection");
+  });
+  it("shows a safe diagram preview immediately and opens a larger read-only view", () => {
+    render(<SubmissionViewer document={{ blocks: [{ id: "d", type: "DIAGRAM", content: { alt: "Sơ đồ Event",
+      svgPreview: '<svg xmlns="http://www.w3.org/2000/svg"><text x="5" y="20">Event</text></svg>' } }] }} />);
+    expect(screen.getByRole("img", { name: "Sơ đồ Event" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Xem sơ đồ" }));
+    expect(screen.getByRole("dialog", { name: "Sơ đồ Event" })).toBeInTheDocument();
+  });
+});
+
+
+it("preserves Draw.io fallback labels while removing embedded HTML and scripts", () => {
+  render(<SubmissionViewer document={{ blocks: [{ id: "d", type: "DIAGRAM", content: {
+    svgPreview: '<svg xmlns="http://www.w3.org/2000/svg"><g><switch><foreignObject><div>HTML label</div></foreignObject><text x="0" y="20">- id: UUID</text></switch></g></svg>'
+  } }] }} />);
+  const svg = decodeURIComponent(screen.getByRole("img").getAttribute("src")!);
+  expect(svg).toContain("- id: UUID");
+  expect(svg).not.toContain("foreignObject");
+});
+
+
+it("refreshes the read-only diagram when a new snapshot supplies a changed SVG", () => {
+  const doc = (text: string) => ({ blocks: [{ id: "d", type: "DIAGRAM", content: { svgPreview: `<svg xmlns="http://www.w3.org/2000/svg"><text>${text}</text></svg>` } }] });
+  const { rerender } = render(<SubmissionViewer document={doc("Old diagram")} />);
+  rerender(<SubmissionViewer document={doc("New diagram")} />);
+  expect(decodeURIComponent(screen.getByRole("img").getAttribute("src")!)).toContain("New diagram");
+});

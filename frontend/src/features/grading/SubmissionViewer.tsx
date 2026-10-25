@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Button, Dialog } from "@/shared/ui";
 import { apiFetch } from "@/shared/api/client";
 import { message } from "./useResource";
 import type { DocumentModel } from "./types";
@@ -84,18 +85,16 @@ function SubmittedImage({
     </figure>
   );
 }
-function Diagram({ content }: { content: Record<string, unknown> }) {
-  const [preview, setPreview] = useState("");
-  const [error, setError] = useState("");
-  function show() {
-    const parsed = new DOMParser().parseFromString(String(content.svgPreview), "image/svg+xml");
+function safeDiagramPreview(value: unknown): string {
+    if (typeof value !== "string" || !value.trim() || typeof DOMParser === "undefined") return "";
+    const parsed = new DOMParser().parseFromString(value, "image/svg+xml");
     if (parsed.querySelector("parsererror") || parsed.documentElement.localName !== "svg") {
-      setError("Không thể đọc ảnh xem trước sơ đồ.");
-      return;
+      return "";
     }
     const allowed = new Set([
       "svg",
       "g",
+      "switch",
       "path",
       "rect",
       "circle",
@@ -151,32 +150,29 @@ function Diagram({ content }: { content: Record<string, unknown> }) {
         if (!attributes.has(attr.name) || /url\s*\(|javascript:|data:/i.test(attr.value))
           node.removeAttribute(attr.name);
     }
-    setPreview(
-      `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(parsed))}`,
-    );
-  }
-  return (
-    <div className="my-4">
-      {typeof content.svgPreview === "string" && <button onClick={show}>Xem sơ đồ</button>}
-      {preview && (
-        <Image
-          src={preview}
-          alt={typeof content.alt === "string" ? content.alt : "Sơ đồ bài nộp"}
-          width={1000}
-          height={700}
-          unoptimized
-          className="h-auto max-w-full"
-        />
-      )}
-      {error && <p role="alert">{error}</p>}
-      <details>
-        <summary>Sơ đồ Draw.io — XML gốc</summary>
-        <pre className="overflow-auto">
-          {typeof content.xml === "string" ? content.xml : "Không có XML"}
-        </pre>
-      </details>
-    </div>
-  );
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(parsed))}`;
+}
+function Diagram({ content }: { content: Record<string, unknown> }) {
+  const [expanded, setExpanded] = useState(false);
+  const preview = useMemo(() => safeDiagramPreview(content.svgPreview), [content.svgPreview]);
+  const title = typeof content.alt === "string" && content.alt ? content.alt : "Sơ đồ bài nộp";
+  return <figure className="my-4 min-w-0 rounded-lg border border-line bg-shell/30 p-3">
+    <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
+    {preview ? <>
+      <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-white" />
+      <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>Xem sơ đồ</Button>
+      <Dialog open={expanded} title={title} size="xl" onClose={() => setExpanded(false)}>
+        <div className="max-h-[70vh] overflow-auto rounded border border-line bg-white p-3">
+          <Image src={preview} alt={title} width={1600} height={1200} unoptimized className="h-auto max-w-none" />
+        </div>
+        <p className="mt-2 text-sm text-muted">Cuộn ngang và dọc để xem chi tiết. Đây là bản đã nộp, chỉ đọc.</p>
+      </Dialog>
+    </> : <p className="text-sm text-muted">Chưa có ảnh xem trước sơ đồ khả dụng.</p>}
+    <details className="mt-3 text-xs text-muted">
+      <summary className="cursor-pointer">Dữ liệu sơ đồ Draw.io</summary>
+      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-white p-2">{typeof content.xml === "string" ? content.xml : "Không có XML"}</pre>
+    </details>
+  </figure>;
 }
 export function SubmissionViewer({
   document,
@@ -188,9 +184,9 @@ export function SubmissionViewer({
   return (
     <section
       aria-label="Bài làm đã nộp"
-      className="min-w-0 whitespace-pre-wrap break-words rounded-xl border border-line bg-white p-6"
+      className="min-w-0 break-words rounded-xl border border-line bg-white p-4 text-sm leading-relaxed sm:p-5"
     >
-      <h2 className="mb-4 font-bold">Bài làm đã nộp — chỉ đọc</h2>
+      <h2 className="mb-4 text-base font-bold">Bài làm đã nộp — chỉ đọc</h2>
       {document.blocks.map((block) => {
         const c = block.content;
         if (block.type === "DIAGRAM") return <Diagram key={block.id} content={c} />;

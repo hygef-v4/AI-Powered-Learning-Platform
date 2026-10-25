@@ -77,3 +77,17 @@ describe("workspace save", () => {
     expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeDisabled();
   });
 });
+
+
+it("shows a live score and named sections while AI is unavailable, without saving any grade", async () => {
+  mocks.detail.mockResolvedValue({ ...detail, document: { blocks: [{ id: "part", type: "HEADING", content: { text: "Câu 1: Class Diagram" } }] },
+    rubrics: [{ rubricId: "r", partId: "part", maxPoints: 10, criteria: [{ criterionId: "c", title: "Kiến trúc", items: [{ itemId: "i", text: "Đúng quan hệ", points: 2.5 }] }] }] });
+  mocks.proposals.mockResolvedValue([{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED", safeError: "AI task failed" }]);
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.click(await screen.findByRole("checkbox", { name: /Đúng quan hệ/ }));
+  expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("2.50 / 10.00");
+  expect(screen.getByRole("region", { name: "Thao tác chấm bài" })).toHaveClass("sticky");
+  expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
+  expect(mocks.save).not.toHaveBeenCalled();
+});
