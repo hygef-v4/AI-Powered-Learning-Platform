@@ -6589,3 +6589,19 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Context**: Hoàn thành giải conflict và kiểm phần thay đổi theo yêu cầu người dùng; Git receipt là bằng chứng merge commit cuối. Không đổi nhánh, runtime, dữ liệu hoặc lịch sử đã có.
 
 ---
+
+## Jira status update
+**Timestamp**: 2026-10-26T03:00:00Z
+**User Input**: "toi dang nhap git hub r, jira chi can cap nhat task thoi, khong can comment" / "dang nhap jira roi, chuyen done di"
+**AI Response**: Chuyển sang Done (không bình luận): KAN-34, KAN-35, KAN-37 (U06), KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 (U12), epic KAN-29, KAN-28. KAN-14 giữ In Progress.
+**Context**: Sau khi gộp PR #19, #21 vào staging
+
+---
+
+## U06 add-key dialog conflict
+**Timestamp**: 2026-10-26T03:20:00Z
+**User Input**: (ảnh chụp popup "Thêm khóa API" báo "Dữ liệu vừa được thay đổi ở nơi khác, hãy tải lại." khi chọn Gemini đã có khóa)
+**AI Response**: Nguyên nhân: nút Thêm khóa ở đầu bảng mở popup thêm mới và cho chọn cả nhà cung cấp đã có khóa; gửi không kèm version nên backend trả 409. Sửa `ApiKeyDialog` nhận `taken` và ẩn nhà cung cấp đã có khóa ở chế độ thêm; nút đầu bảng tắt khi mọi nhà cung cấp đã có khóa (cả API cá nhân và khóa của trường). Thêm test. Hướng dẫn người dùng dùng Thay khóa ở dòng Gemini trong lúc chờ.
+**Context**: Construction, U06 sửa sau khi người dùng test tay
+
+---

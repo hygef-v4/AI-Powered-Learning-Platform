@@ -23,7 +23,8 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
   const [testing, setTesting] = useState<AiProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const byProvider = new Map(connections.map((c) => [c.provider, c]));
-  const firstMissing = PROVIDERS.find((p) => !byProvider.get(p)?.configured) ?? "GEMINI";
+  const taken = PROVIDERS.filter((p) => byProvider.get(p)?.configured);
+  const firstMissing = PROVIDERS.find((p) => !taken.includes(p));
 
   const test = async (provider: AiProvider) => {
     setTesting(provider);
@@ -54,7 +55,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
       icon="key"
       description="Khóa của riêng bạn; chi phí tính vào tài khoản nhà cung cấp của bạn và không giới hạn bởi trường."
       actions={
-        <Button variant="primary" size="sm" icon="add" onClick={() => setEditing({ provider: firstMissing, current: null })}>
+        <Button variant="primary" size="sm" icon="add" onClick={() => firstMissing && setEditing({ provider: firstMissing, current: null })} disabled={!firstMissing}>
           Thêm khóa
         </Button>
       }
@@ -130,6 +131,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
           current={editing.current}
           initialProvider={editing.provider}
           providers={providers}
+          taken={taken}
           onClose={() => setEditing(null)}
           onSave={async (provider, body) => {
             await onSave(provider, body);

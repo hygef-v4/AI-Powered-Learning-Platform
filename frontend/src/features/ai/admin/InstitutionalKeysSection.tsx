@@ -65,7 +65,8 @@ export function InstitutionalKeysSection() {
   };
 
   const byProvider = new Map((connections ?? []).map((c) => [c.provider, c]));
-  const firstMissing = PROVIDERS.find((p) => !byProvider.get(p)?.configured) ?? "GEMINI";
+  const taken = PROVIDERS.filter((p) => byProvider.get(p)?.configured);
+  const firstMissing = PROVIDERS.find((p) => !taken.includes(p));
 
   return (
     <Section
@@ -73,7 +74,7 @@ export function InstitutionalKeysSection() {
       icon="key"
       description="Giảng viên dùng khóa đang bật khi chọn nguồn API của trường. Tắt vẫn giữ khóa nhưng không dùng cho yêu cầu mới."
       actions={
-        <Button variant="primary" size="sm" icon="add" onClick={() => setEditing({ provider: firstMissing, current: null })}>
+        <Button variant="primary" size="sm" icon="add" onClick={() => firstMissing && setEditing({ provider: firstMissing, current: null })} disabled={!firstMissing}>
           Thêm khóa
         </Button>
       }
@@ -172,6 +173,7 @@ export function InstitutionalKeysSection() {
           current={editing.current}
           initialProvider={editing.provider}
           providers={providers}
+          taken={taken}
           onClose={() => setEditing(null)}
           onSave={async (provider, body) => {
             await saveInstitutional(provider, body);
