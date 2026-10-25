@@ -166,3 +166,8 @@ Unit test thêm: phát hành thẳng từ bản nháp (đủ thì lên lịch, t
 
 - Trang lớp của U05 chưa đọc `?tab=evals`; nút quay lại từ Assignment Form về trang lớp, chưa mở thẳng tab Đánh giá.
 - Bước 14 Review: đối chiếu UC 34–36, story, BR-U07 với code, người dùng duyệt.
+
+## Thay đổi 2026-10-24
+
+- Bỏ cài đặt `activity.retentionDays`: thời hạn giữ dữ liệu hoạt động cố định 1 ngày (U08), nên bật ghi nhận hoạt động không còn bị chặn bởi `ACTIVITY_RETENTION_NOT_SET` và `Detail` bỏ trường `activityRetentionConfigured`.
+- Ảnh chèn vào khung chỉ nhận PNG, JPEG (U03).

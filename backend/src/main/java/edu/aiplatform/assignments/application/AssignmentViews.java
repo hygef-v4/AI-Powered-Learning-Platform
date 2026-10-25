@@ -47,7 +47,7 @@ public final class AssignmentViews {
                          SubmissionMode submissionMode, boolean diagramEnabled, GradingMode gradingMode, String title,
                          String instructions, DocumentModel skeleton, List<Part> parts, BigDecimal totalPoints,
                          Map<DiagramType, Integer> requiredDiagrams, List<UUID> referenceMaterialIds,
-                         boolean activityMonitoringEnabled, String activityNotice, boolean activityRetentionConfigured,
+                         boolean activityMonitoringEnabled, String activityNotice,
                          AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
                          Integer maxAttempts, String retiredReason, Instant createdAt, Instant updatedAt, long version,
                          Permissions permissions, boolean groupSupported, List<ValidationIssue> warnings) {

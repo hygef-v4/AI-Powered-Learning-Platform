@@ -125,6 +125,10 @@ platform:
     upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:}
     drive-service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
     shared-drive-id: ${GOOGLE_SHARED_DRIVE_ID:}
+    # Drive cá nhân (Gmail): OAuth client và refresh token scope drive.file; dùng khi không có Shared Drive.
+    drive-oauth-client-id: ${GOOGLE_DRIVE_OAUTH_CLIENT_ID:}
+    drive-oauth-client-secret: ${GOOGLE_DRIVE_OAUTH_CLIENT_SECRET:}
+    drive-oauth-refresh-token: ${GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN:}
   jobs:
     handler-timeout: ${U03_JOB_HANDLER_TIMEOUT:60s}
   settings:
