@@ -763,3 +763,49 @@ Final checkpoint: code available for review; independent acceptance gates retain
 - [x] Prepared and validated scripts/repair-student-routes.ps1 (three mock cases, not runtime acceptance). Reuses existing 8088 Compose project and only updates frontend/nginx.
 - [ ] Actual Docker inspection/repair and UI retest pending: Docker socket access denied in this session. Stale runtime/upstream is not confirmed without container evidence. No application source patch or claim of fixed live routes.
 - Evidence/plan: construction/plans/2026-10-25-student-menu-404-repair.md. No commit/push or data/credential changes.
+
+## U09 host runtime continuation - 2026-10-25
+
+- Resumed approved partial-score/AI-recovery plan directly in the existing dirty checkout; no new subagents, branch changes, commits, push or deploy. User allowed consulting the already-open Argon 4 terminal for read-only diagnosis.
+- Confirmed old Docker worker and old Java worker both consumed RabbitMQ. Verified project/process identity before stopping them; launched API+worker and Next in dedicated Orca host terminals. Ports 8080/3000 listen and Orca browser loads the app. One application RabbitMQ connection remains.
+- Scoped fresh checks: frontend grading 43 tests and backend grading/provider 27 tests pass; git diff --check passes. Earlier full-suite counts remain historical.
+- Authenticated live acceptance is pending: new Orca browser tab redirects to login; requested user to sign in as the existing test teacher without sharing credentials. No password guessing, credential reset or new AI connection.
+- Read-only database check: target evaluation DRAFT, score 0.00, version 7; Gemini ACTIVE and last connection test passed. Failed task schema/payload no longer retained; generic 400 does not prove a schema cause.
+- Handoff and runtime evidence: construction/plans/2026-10-25-u09-partial-scores.md. No real grade saved/finalized/published; U09 is not marked complete.
+
+## U09 authenticated host acceptance - 2026-10-25
+
+- Supersedes the pending-teacher-login status above: user supplied a test-account screenshot and requested login/testing; teacher login succeeded in Orca without changing credentials.
+- Two real UI requests using the unchanged personal Gemini connection/model reached READY with handler delivery APPLIED. Original task ef9dfca2-cf13-4b0d-8b84-6c777ab1ac95; separate QA task f4607f6d-71e6-426a-af6d-9dcfc9618642. UI displays ready proposals, 10.00 and Vietnamese feedback.
+- Separate QA clone evaluation 826f5c29-b5d1-4a32-9999-9313c242d8d3 verifies 0.5/1 input, total/subtotal, rejection of 1.5/1 and overprecision, draft save/reload, applying AI item scores/feedback, then editing and persisting 9.50. QA final state DRAFT/version 2. Original target stays DRAFT/0.00/version 7.
+- Scoped acceptance complete for real AI request/result/apply and partial-score draft persistence on desktop Orca. No extra production-code patch was needed: runtime cleanup and host launch removed the reproducing failure. Exact historical provider HTTP400 cause cannot be proven from purged payloads. No finalization/publication, credentials/model changes, commit/push/deploy or blanket U09 certification.
+- Full evidence and fixture IDs: construction/plans/2026-10-25-u09-partial-scores.md. Local screenshots .tmp/u09-host-partial-score.png and .tmp/u09-host-ai-ready.png. Host app left running for user inspection.
+
+## U09 UI polish plan and Argon handoff - 2026-10-25
+
+- User: "Giúp rôi sửa theo kế hoạch tạo plan sau đưa cho argon làm". Authorizes scoped UI implementation of the reviewed recommendations and transfer to the already-open Argon4 session; no new subagents, commits/push/deploy or official-grade writes.
+- Prepared executable seven-step plan: construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md. Covers responsive workspace/compact toolbar, compact fractional rubric controls, AI comparison/application, compact list/secondary panels, regressions and real UI acceptance.
+- Verified source already contains an xl two-column layout; actual Orca viewport1077 CSSpx/DPR1.5 and workspace762px explains current stacking. Plan requires content-width-aware behavior and measured acceptance, not duplicate grids or pixel assumptions.
+- Preserves all existing dirty partial-score changes, active host runtime and QA evaluation826f5c29-b5d1-4a32-9999-9313c242d8d3. Exact historical Gemini400 cause remains unproven; schema/gateway/credentials remain outside visual scope.
+- Current phase: Construction/code-generation plan prepared; implementation checklist pending. Execution ownership requested for existing Argon terminal term_95be006a-9105-415a-a82c-f9ff67f7d188 in the same worktree. Dispatch receipt is the evidence for prompt acceptance; no implementation completion claimed by this planning session.
+
+
+## U09 UI polish implementation and live Orca acceptance (Argon 4) - 2026-10-25
+
+- [x] Executed all 7 steps of `construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md` sequentially in `F:/code/git/AI-Powered-Learning-Platform` on `mcp-test` without spawning agents or modifying backend/schema/AI/credential files. Preserved all existing dirty working-tree changes.
+- [x] Implemented container-aware two-column grading layout (`@container (min-width: 736px)` and `@container (min-width: 960px)`), compact `46px` sticky toolbar with optional workflow disclosure (`Quy trình chấm`), compact rubric rows with accessible `Đủ điểm` / `✓ Đủ điểm` (`aria-pressed`) button, collapsible rubric sections with collapsed invalid-score indicator + `Mở mục có điểm chưa hợp lệ` focus button, live `Điểm đang nhập` vs `AI đề xuất` comparison with teacher adjustment separation, `Áp dụng vào bản nháp` draft-only application, compact submissions counters/pills/conditional bulk actions/state-specific links, and collapsible empty `ActivityReview` / `GradeHistory` disclosures.
+- [x] Automated checks passed: scoped grading tests `49/49` (`6/6` files), full frontend test suite `523/523` (`86/86` files), `eslint` (exit 0), `tsc --noEmit` (exit 0), isolated production build via `NEXT_DIST_DIR=".next-build"` (exit 0, cleaned up afterward), and `git diff --check` (exit 0).
+- [x] Live Orca browser acceptance completed across QA evaluation `826f5c29-b5d1-4a32-9999-9313c242d8d3` (persisted `9.50` / `version 2` after partial-score, keyboard, invalid-bound, and AI apply-to-draft -> edit -> save/reload verification), QA submissions list `aaf2897a-1deb-4987-8349-f1783b6610bc`, and read-only check on protected evaluation `7ca08c41-e9d4-4738-946d-24c049e3d1e5` (`DRAFT`, `0.00`, `version 7` untouched, older `FAILED` proposals kept expanded). Inspected 9 screenshots in `.tmp/u09-ui-polish/`. Full report: `construction/build-and-test/2026-10-25-u09-ui-polish-results.md`.
+
+## U09 local commit review - 2026-10-25
+
+- User authorizes splitting current changes into clear local commits, without push. Argon confirmed it stopped edits/Git operations and returned ownership to Codex.
+- Fresh validation: frontend523 tests/86files PASS; targeted grading/provider backend27 PASS with0failures/errors/skips; ESLint and TypeScript PASS; OpenAPI YAML parses; git diff --check PASS. Existing build/live evidence retained with its original provenance.
+- Review added missing OpenAPI partial-score fields (save/evaluation/history/proposal) to match implementation. Corrected report/plan: container-only checks do not certify390px viewport,1440px viewport or200percent browser zoom; those acceptance gaps remain open.
+- Read-only final DB check: QA evaluation826f5c29-b5d1-4a32-9999-9313c242d8d3 is DRAFT9.50/version3 after UI polish save/reload; original7ca08c41-e9d4-4738-946d-24c049e3d1e5 remains DRAFT0.00/version7. Earlier version2 notes are historical baseline.
+- Six local commit groups planned: backend+contract, workspace/AI frontend, submission list, launcher, Next agent guidance, AI-DLC documents. No push/merge/deploy, no grade/credential mutation in this review.
+
+### U09 local commit groups
+
+- Local code commits: a0f53dc2 backend/contract fractional points; 507d8b20 workspace/rubric/AI review; af0b1bf0 submissions list; c22756f7 host API+worker launcher; e7c174b2 generated Next.js agent guidance.
+- Final documentation group records both plans, UI evidence/report and this state/audit, including the explicit unverified mobile viewport/zoom gap. Ignored screenshots, build output, test logs and QA data are excluded. No push/merge/deploy or grade mutation.
