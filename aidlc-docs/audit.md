@@ -6446,3 +6446,71 @@ Viet regression tests phu hop, chay full frontend tests/lint/typecheck/build, tr
 **Context**: Sửa lỗi U01, U11; điểm 1 là mặc định an toàn trong lúc BR-U11-20 chờ chốt.
 
 ---
+
+## Rà soát đề xuất B2, B8 và B7/U04
+**Timestamp**: 2026-10-25T13:53:03Z
+**User Input**: "[https://claude.ai/artifact/7FmtjisoS6aeoiCXRaFY8c](https://claude.ai/artifact/7FmtjisoS6aeoiCXRaFY8c) hãy xem các lỗi B2, B8 và phần lỗi u04 của B7, đề xuất chỉnh sửa"
+**AI Response**: Đọc artifact bằng trình duyệt sau khi web reader không truy cập được; đối chiếu staging ea0d2c8. B2 cần link sinh viên kèm classId theo từng lớp và sửa email parser hỗ trợ route mới/cũ, giữ idempotency. B8 cần cô lập lỗi theo bài/lớp, catch ngoài transaction và giữ marker/notification/email rollback cùng nhau; giới hạn 5 phút vẫn tồn tại. U04 có bốn test bất nhất hành vi archive hiện hành, một test cần đổi tên; đề nghị Testcontainers và CI kiểm không skip. Không tái hiện số 5 failure lịch sử; report cục bộ có sẵn ghi 31 skipped. Lưu đầy đủ bằng chứng, hướng sửa và tiêu chí nghiệm thu tại inception/requirements/2026-10-25-b2-b8-b7-u04-review.md.
+**Context**: Review/đề xuất theo yêu cầu, không sửa application code hoặc triển khai các stage; không chạy test mới, thay DB, gửi email, commit, push/deploy. Dùng cấu hình extension hiện có; PBT disabled. Không yêu cầu phê duyệt để hoàn thành việc đọc và đề xuất.
+
+---
+
+## Triển khai B2, B8 và B7/U04 — yêu cầu được duyệt
+**Timestamp**: 2026-10-25T14:07:10Z
+**User Input**: "tạo 1 branch mới từ staging đặt là fix/... (phần 3 chấm để trống bạn hãy tự quyết định là gì) để sửa theo kế hoạch trên"
+**AI Response**: Đã tạo fix/notification-links-reminders-u04-tests từ staging ea0d2c8, giữ tài liệu chưa commit của lượt review. Tiếp tục triển khai theo đề xuất người dùng đã duyệt; kế hoạch construction/plans/code-generation-plan/2026-10-25-b2-b8-u04-code-generation-plan.md ghi chi tiết thực thi. Không cần xin duyệt lại cùng phạm vi. Test Maven trong sandbox bị treo ở attach Mockito; đã xác minh command line và dừng đúng ba tiến trình của lượt test rồi chạy lại ngoài sandbox. Docker read-only kiểm được 29.7.2 khi có quyền truy cập pipe.
+**Context**: Scope B2/B8 và U04; không U06/U12, lịch sử redirect hoặc mở rộng cửa sổ nhắc; chưa commit/push/deploy. Extensions giữ cấu hình đã chốt, PBT disabled.
+
+---
+
+## B2, B8 và B7/U04 — hoàn tất triển khai và kiểm thử
+**Timestamp**: 2026-10-25T14:20:13Z
+**AI Response**: Đã sửa trên fix/notification-links-reminders-u04-tests từ staging ea0d2c8. B2 phân nhóm lớp, link my-assignments và parser email mới/cũ; B8 cô lập lỗi bài/lớp với rollback/log mã lỗi; U04 Testcontainers và cập nhật 5 ca test (4 kỳ vọng cũ, 1 helper gọi ngoài transaction), đổi tên mô tả cũ; CI guard chặn missing/skip/error/failure/zero cho U04 và SQL U14. Regression bản cũ: 32 ca, 5 failures/3 errors. Sau sửa scoped 78/78 đạt, U04 31/31 và SQL U14 2/2 không skip. Toàn mvn verify BUILD SUCCESS exit 0: 1375 ca, 1371 đạt, 0 failure/error, 4 skipped U06/U12 ngoài phạm vi. ArchUnit, JAR, CI guard và diff check đạt. Plan hoàn tất 6/6; báo cáo construction/build-and-test/2026-10-25-b2-b8-u04-results.md ghi lệnh và giới hạn. Chưa authenticated UI/SMTP thật; giữ link lịch sử và cửa sổ 5 phút. Thay đổi chưa commit/push/deploy.
+**Context**: Hoàn tất yêu cầu đã duyệt; chỉ cập nhật tài liệu sau full verify, không thay mã. Giữ tài liệu dirty từ lượt review, không chạm DB/runtime/credentials ứng dụng. Extension compliance trong report; PBT disabled theo cấu hình hiện hữu.
+
+---
+
+## Kiểm tra khả năng nghiệm thu UI/SMTP thật
+**Timestamp**: 2026-10-25T14:27:59Z
+**User Input**: "bạn có kiểm được UI/SMTP thật không?"
+**AI Response**: Đọc trạng thái stack local: nginx/app đang có container tại 8088; backend và worker cấu hình SMTP mailpit:1025, nhưng không có container Mailpit đang chạy. infra/.env.local không có TEST_ACCOUNT_PASSWORD hoặc credential SMTP provider được cấu hình. Có thể kiểm UI qua trình duyệt sau khi chạy bản sửa và có phiên tài khoản test; SMTP thực qua Mailpit cần bật service, còn email tới hộp thư ngoài cần provider và địa chỉ nhận thử. Chưa gửi thư hoặc thay runtime/config/credential trong lượt kiểm tra khả năng này.
+**Context**: Read-only runtime/config discovery, không chứng nhận UI/SMTP acceptance hoặc đọc ra secret.
+
+---
+
+## Nghiệm thu UI/SMTP local theo yêu cầu
+**Timestamp**: 2026-10-25T14:38:43Z
+**User Input**: "kiểm giúp tôi"
+**AI Response**: Đã dựng stack QA b2-ui-smtp-qa cô lập trên 8188 và Mailpit 8125, không đổi stack platform. Backend/worker dùng JAR đã verify có SHA256 92eac13dae73e6e071e8f137c63b4a4ae5c1f856904a3ab4ef3a3f236828293b, runtime hash khớp. Tạo 5 tài khoản QA mới, nhận OTP qua worker/SMTP Mailpit và đăng nhập bằng API. Tạo môn B2QA, hai lớp B2QA-A/B cùng một sinh viên mỗi lớp, bài CLASS và SUBJECT. Một lần setup dùng chủ nhiệm cho bài CLASS bị từ chối đúng quyền; đã dùng giảng viên, không đổi policy/source. Feed và Mailpit xác nhận ba thông báo/thư mở bài đúng route my-assignments và classId. Đang kiểm UI và scanner nhắc hạn. Không ghi mật khẩu, OTP, cookie vào audit; các fixture/session chỉ ở .tmp gitignored.
+**Context**: Người dùng cho phép kiểm UI + SMTP Mailpit local; không SMTP Internet, không thay tài khoản hiện có/production, không commit/push. Plan construction/plans/2026-10-25-b2-ui-smtp-acceptance.md.
+
+---
+
+## UI/SMTP local — hoàn tất nghiệm thu
+**Timestamp**: 2026-10-25T14:48:07Z
+**AI Response**: UI mở đúng bài CLASS/SUBJECT theo lớp A/B; email mở bài và nhắc hạn được bấm từ Mailpit mở đúng trang B. UI truy cập chéo lớp bị chặn, API hai chiều 404. SMTP thật qua worker/RabbitMQ/SmtpMailAdapter tới Mailpit: 5 OTP kích hoạt, 3 thư mở bài và 3 thư nhắc hạn; đúng link/người nhận, SENT và không trùng qua hơn 1 phút/lượt scan. B8 failure injection trong DB QA: lỗi lớp A lúc21:41:31.493, notification B tạo21:41:31.518 trong cùng scan; A không có marker cho tới gỡ lỗi và phục hồi21:43:31. Gỡ trigger/function QA, cuối cùng3markers/3reminders. Dừng8container QA exit0, giữ volume/bằng chứng; stack platform vẫn7healthy. Không thêm source fix hoặc commit/push/deploy. Report construction/build-and-test/2026-10-25-b2-ui-smtp-acceptance-results.md, plan6/6, screenshots tại .tmp/b2-ui-smtp; không ghi credential/OTP/cookie vào báo cáo. Chưa SMTP provider Internet/TLS/auth hoặc deliverability ngoài local.
+**Context**: Hoàn tất yêu cầu “kiểm giúp tôi”; supersedes giới hạn UI/SMTP local của lượt verify trước. Chỉ cập nhật tài liệu sau nghiệm thu, không lặp full suite vì không đổi source.
+
+---
+
+## Chia commit local theo yêu cầu
+**Timestamp**: 2026-10-25T14:53:04Z
+**User Input**: "chia thành các commit nhỏ, commit lên branch, không push"
+**AI Response**: Rà trạng thái/diff trên fix/notification-links-reminders-u04-tests; index ban đầu chưa có staging. Chia 5 nhóm: B2 link+email (tách hunk route của scanner và regression), B8 isolation+SQL transaction regression, U04 Testcontainers/lifecycle assertions, CI guard, tài liệu review/plan/verification/UI-SMTP. Chỉ stage danh sách file tường minh; .tmp, credential, OTP/cookie, image/volume, JAR/log/screenshot QA bị loại. Tái dùng bằng chứng verify 1375 ca (1371 đạt,4skip U06/U12), scoped78/78 và UI/SMTP thật vì không đổi source sau kiểm thử; không chạy lại toàn suite chỉ để commit.
+**Context**: Được phép commit local trên nhánh hiện tại; không push, không đổi nhánh hoặc sửa lịch sử.
+
+---
+
+## Hoàn tất các nhóm source/test/CI và đóng gói tài liệu
+**Timestamp**: 2026-10-25T14:53:52Z
+**AI Response**: Bốn commit local trên fix/notification-links-reminders-u04-tests đã tạo thành công:
+
+- 7901161 fix(notifications): route assignment alerts to the student class
+- 66e7fa3 fix(notifications): isolate deadline reminder failures per class
+- 7fcd0a9 test(subjects): run lifecycle persistence checks with PostgreSQL containers
+- fd74c41 ci: require subject and notification database tests without skips
+
+Chuẩn bị commit tài liệu cuối; chỉ stage tám file AI-DLC tường minh và kiểm staged diff. CLI sẽ xác minh commit cuối/Git status trước bàn giao. Bằng chứng test và UI/SMTP đã ghi trong báo cáo; không thay source nên không lặp lại suite. Không push hoặc sửa lịch sử.
+**Context**: Thực hiện yêu cầu commit local; các file QA nhạy cảm và artifact lớn nằm ngoài index.
+
+---

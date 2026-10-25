@@ -809,3 +809,39 @@ Final checkpoint: code available for review; independent acceptance gates retain
 
 - Local code commits: a0f53dc2 backend/contract fractional points; 507d8b20 workspace/rubric/AI review; af0b1bf0 submissions list; c22756f7 host API+worker launcher; e7c174b2 generated Next.js agent guidance.
 - Final documentation group records both plans, UI evidence/report and this state/audit, including the explicit unverified mobile viewport/zoom gap. Ignored screenshots, build output, test logs and QA data are excluded. No push/merge/deploy or grade mutation.
+
+## B2, B8 và B7/U04 — rà soát đề xuất 2026-10-25
+
+- [x] Đã đọc Claude artifact staging d9a0300 và đối chiếu checkout staging ea0d2c8; báo cáo: inception/requirements/2026-10-25-b2-b8-b7-u04-review.md.
+- [x] B2: cần link my-assignments kèm classId theo lớp, giữ chống trùng và sửa email parser đồng bộ; B8: catch theo bài/lớp ngoài transaction, giữ rollback, cửa sổ 5 phút là giới hạn riêng.
+- [x] U04: bốn ca source còn kỳ vọng cũ, một tên test sai; gate U04_TEST_JDBC_URL vẫn làm suite bị skip. Report cục bộ cũ: 31/31 skipped, không phải lần chạy mới hoặc xác nhận 5 failure lịch sử.
+- [ ] Implementation/Testcontainers/CI và kiểm thử mới chưa thực hiện; lượt này chỉ đề xuất. U06/U12 ngoài phạm vi. Không thay application/DB/runtime, commit/push/deploy hoặc chuyển global stage.
+
+## B2, B8 và B7/U04 — triển khai được duyệt 2026-10-25
+
+- [x] Người dùng yêu cầu tạo nhánh fix/... từ staging và sửa theo đề xuất. Nhánh fix/notification-links-reminders-u04-tests từ ea0d2c8; giữ tài liệu chưa commit từ lượt review.
+- [x] B2: link sinh viên kèm classId theo nhóm lớp, dedup ổn định, giữ source event id; email parser nhận đường dẫn mới/cũ, link sai SKIPPED, lỗi dependency retry.
+- [x] B8: cô lập lỗi bài/lớp, catch ngoài transaction, log mã lỗi có ngữ cảnh không PII. Test SQL thật xác minh rollback marker/notification/email và retry không trùng.
+- [x] U04: PostgreSQL Testcontainers thay gate env; cập nhật manager/version/scope/concurrency, tên test và ca helper thiếu transaction. Scoped 78/78 đạt, không skip; U04 31/31 và SQL U14 2/2.
+- [x] CI guard bắt buộc U04/U14 SQL test chạy; đã kiểm report thật và fixture pass/missing/skip/failure/zero.
+- [x] Toàn backend mvn verify BUILD SUCCESS, exit 0: 1.375 ca, 1.371 đạt, 0 failure/error, 4 skipped của U06/U12 ngoài phạm vi. U04 31/31 và SQL U14 2/2 chạy đủ. ArchUnit, Spring Boot JAR, CI guard và git diff --check đạt. Báo cáo construction/build-and-test/2026-10-25-b2-b8-u04-results.md.
+- Không đổi U06/U12, frontend, migration ứng dụng, credentials, cửa sổ nhắc 5 phút hoặc link lịch sử. Chưa chạy authenticated UI/SMTP thật, commit/push/deploy.
+
+## UI/SMTP Mailpit local — nghiệm thu B2/B8 2026-10-25
+
+- [x] Theo yêu cầu “kiểm giúp tôi”, dựng stack b2-ui-smtp-qa cô lập cổng 8188/Mailpit 8125. Backend/worker JAR hash khớp bản đã verify; 5 tài khoản QA mới nhận OTP qua SMTP thật, API kích hoạt và đăng nhập thành công.
+- [x] UI thật: A mở bài CLASS và SUBJECT từ chuông đúng lớp A; B mở SUBJECT đúng lớp B. Bấm link email mở bài và nhắc hạn mở đúng UI B. Đổi classId sang lớp ngoài quyền bị chặn trên UI, API hai chiều trả 404.
+- [x] Mailpit nhận đúng 3 thư mở bài và 3 thư nhắc hạn, delivery SENT; cùng 3 reminder message ID qua hơn 1 phút/lượt scan, không trùng. Gây lỗi DB chỉ cho bài chung/lớp A: log catch 21:41:31, lớp B vẫn tạo notification sau catch trong cùng scan; gỡ trigger, A nhận ở lượt 21:43:31, cuối cùng đúng 3 marker. Trigger/function QA đã gỡ.
+- [x] Lưu report construction/build-and-test/2026-10-25-b2-ui-smtp-acceptance-results.md và screenshot/JSON/log/SQL ở .tmp/b2-ui-smtp. Hoàn tất plan 6/6. Đã dừng 8 container QA, giữ volume; stack platform hiện có vẫn 7/7 healthy.
+- Không thêm application source change, không thay tài khoản/dữ liệu stack platform, không SMTP Internet/provider TLS/auth, không commit/push/deploy. Các giới hạn UI/SMTP ban đầu được thay thế riêng bởi acceptance local này.
+
+## Commit local B2/B8/U04 — 2026-10-25
+
+Người dùng yêu cầu chia commit nhỏ, commit trên nhánh hiện tại và không push. Đã tạo bốn commit source/test/CI:
+
+- 7901161 fix(notifications): route assignment alerts to the student class
+- 66e7fa3 fix(notifications): isolate deadline reminder failures per class
+- 7fcd0a9 test(subjects): run lifecycle persistence checks with PostgreSQL containers
+- fd74c41 ci: require subject and notification database tests without skips
+
+Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghiệm thu, cập nhật thiết kế và state/audit. Kết quả commit tài liệu và trạng thái clean được xác minh bằng Git log/status khi bàn giao. Không đưa .tmp, credential, OTP/cookie, log/screenshot, JAR hoặc dữ liệu QA vào commit. Không đổi source sau full verify/UI-SMTP, không push hoặc rewrite history.
