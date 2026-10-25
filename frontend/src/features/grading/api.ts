@@ -1,6 +1,7 @@
 import { apiFetch, apiDownload } from "@/shared/api/client";
 import type {
   AiRequest,
+  AssignmentContext,
   AiEstimate,
   BatchResult,
   Detail,
@@ -24,6 +25,8 @@ const query = (values: Record<string, string | number | undefined>) => {
 const write = <T>(path: string, body: unknown, method = "POST") =>
   apiFetch<T>(root + path, { method, body: JSON.stringify(body) });
 export const gradingApi = {
+  assignmentContext: (assignmentId: string) =>
+    apiFetch<AssignmentContext>(`${root}/assignments/${encodeURIComponent(assignmentId)}`),
   submissions: (classId: string, assignmentId: string, status = "ALL", page = 1, late?: string) =>
     apiFetch<SubmissionPage>(
       `${root}/classes/${classId}/assignments/${assignmentId}/submissions?${query({ status, page, size: 20, late: late || undefined })}`,

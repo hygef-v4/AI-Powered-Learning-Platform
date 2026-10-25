@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { gradingApi } from "./api";
 import { useResource } from "./useResource";
 import { points, statusLabels } from "./types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "./BatchActionDialog";
+import { Field, Select } from "@/shared/ui";
+import { useSubmissionContext } from "./useSubmissionContext";
 
 export function SubmissionDetailPage({
   classId,
@@ -14,6 +16,8 @@ export function SubmissionDetailPage({
   classId: string;
   assignmentId: string;
 }) {
+  const context = useSubmissionContext(classId, assignmentId);
+  const filterId = useId();
   const [filter, setFilter] = useState("ALL");
   const [late, setLate] = useState("");
   const [page, setPage] = useState(1);
@@ -30,12 +34,34 @@ export function SubmissionDetailPage({
       .filter((r) => r.evaluationId && selected.includes(r.evaluationId))
       .map((r) => ({ evaluationId: r.evaluationId!, version: r.version })) ?? [];
   return (
-    <main className="space-y-5">
+    <main className="min-w-0 space-y-5">
       <Link className="text-primary" href={`/teaching/classes/${classId}`}>
         ← Về lớp học
       </Link>
       <header>
-        <h1 className="text-2xl font-bold">Bài nộp</h1>
+        <h1 className="break-words text-2xl font-bold [overflow-wrap:anywhere]">
+          {context.value ? `Bài nộp — ${context.value.title.trim() || "Bài tập chưa có tiêu đề"}` : "Bài nộp"}
+        </h1>
+        {context.value ? (
+          <p className="mt-2 break-words text-slate-600 [overflow-wrap:anywhere]">
+            {context.value.ownerName.trim() ? `Lớp: ${context.value.ownerName}` : "Chưa có thông tin lớp"}
+          </p>
+        ) : context.error ? (
+          <div role="alert" className="mt-2 text-slate-600">
+            <p>{context.error}</p>
+            <button
+              type="button"
+              className="text-primary"
+              data-testid="submissions-context-retry"
+              aria-label="Thử tải lại thông tin bài tập/lớp"
+              onClick={() => void context.refresh()}
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <p role="status" className="mt-2 text-slate-600">Đang tải thông tin bài tập/lớp.</p>
+        )}
         <p className="mt-2 text-slate-600">
           Bài Practice và Quiz không có trong danh sách chấm điểm này.
         </p>
@@ -63,10 +89,10 @@ export function SubmissionDetailPage({
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <label>
-              Trạng thái{" "}
-              <select
-                className="rounded border p-2"
+            <Field label="Trạng thái" htmlFor={`${filterId}-status`}>
+              <Select
+                id={`${filterId}-status`}
+                data-testid="submissions-status-filter"
                 value={filter}
                 onChange={(e) => {
                   setFilter(e.target.value);
@@ -82,13 +108,13 @@ export function SubmissionDetailPage({
                     </option>
                   ),
                 )}
-              </select>
-            </label>
-            <label>
-              Nộp bài{" "}
-              <select
+              </Select>
+            </Field>
+            <Field label="Nộp bài" htmlFor={`${filterId}-late`}>
+              <Select
+                id={`${filterId}-late`}
+                data-testid="submissions-late-filter"
                 value={late}
-                className="rounded border p-2"
                 onChange={(e) => {
                   setLate(e.target.value);
                   setPage(1);
@@ -98,8 +124,8 @@ export function SubmissionDetailPage({
                 <option value="">Tất cả</option>
                 <option value="false">Đúng hạn</option>
                 <option value="true">Nộp trễ</option>
-              </select>
-            </label>
+              </Select>
+            </Field>
             <span>Đã chọn {items.length} bài</span>
             {(["ai", "finalize", "publish"] as const).map((a) => (
               <button

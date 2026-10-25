@@ -64,6 +64,13 @@ export type SubmissionRow = {
   attemptCount: number;
   version: number;
 };
+export type AssignmentContext = {
+  id: string;
+  scope: "CLASS" | "SUBJECT";
+  classId: string | null;
+  title: string;
+  ownerName: string;
+};
 export type SubmissionPage = {
   rows: SubmissionRow[];
   total: number;
