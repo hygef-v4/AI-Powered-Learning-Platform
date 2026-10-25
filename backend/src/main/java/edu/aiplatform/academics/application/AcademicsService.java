@@ -49,7 +49,7 @@ public class AcademicsService {
 
     public List<ClassView> list(Actor actor, String audience, UUID subjectId, String query, ClassStatus status, int page, int size) {
         return guarded(actor,"CLASS_LIST",null,() -> {
-            page(page,size); validateQuery(query); requireAudience(actor,audience);
+            requireAudience(actor,audience); page(page,size); validateQuery(query);
             List<CourseClass> values;
             int offset=(page-1)*size;
             if (audience.equals("manager")) {
@@ -68,8 +68,10 @@ public class AcademicsService {
 
     public List<Student> students(Actor actor,String audience,UUID id,int page,int size) {
         return guarded(actor,"CLASS_STUDENTS_VIEW",id,() -> {
-            page(page,size); requireAudience(actor,audience); requireClassAccess(actor,audience,id);
+            requireAudience(actor,audience);
             if(audience.equals("student")) throw ApiException.forbidden("ROLE_DENIED");
+            requireClassAccess(actor,audience,id);
+            page(page,size);
             return enrollments.listByClass(id,!audience.equals("manager"),size,(page-1)*size).stream().map(this::studentView).toList();
         });
     }

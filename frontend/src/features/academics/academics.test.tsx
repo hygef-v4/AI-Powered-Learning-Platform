@@ -9,6 +9,8 @@ import { EnrollmentPanel, EnrollmentResultTable } from "./EnrollmentPanel";
 import { ReadOnlyClassPage } from "./ReadOnlyClassPage";
 import { ManagedClassPage } from "./ManagedClassPage";
 import { parseEnrollmentList } from "./enrollmentList";
+import { navEntries } from "@/features/identity/slots";
+import "./register";
 import type { CourseClassView, EnrollmentView } from "./types";
 
 const subject = { id: "subject-1", code: "SWP391", name: "Software Development Project", description: "Môn học dự án" };
@@ -254,5 +256,15 @@ describe("enrollment CSV preview", () => {
     expect(() => parseEnrollmentList("đ".repeat(51_201))).toThrow("100 KB");
     expect(() => parseEnrollmentList(Array.from({ length: 201 }, (_, i) => `s${i}@example.test`).join("\n"))).toThrow("200");
     expect(() => parseEnrollmentList("\n ")).toThrow();
+  });
+
+  it("registers teacher and manager teaching classes with /teaching/classes href", () => {
+    const teacherNav = navEntries.entries().find((e) => e.key === "teaching-classes");
+    const managerTeachingNav = navEntries.entries().find((e) => e.key === "manager-teaching-classes");
+    const studentNav = navEntries.entries().find((e) => e.key === "my-classes");
+
+    expect(teacherNav?.href).toBe("/teaching/classes");
+    expect(managerTeachingNav?.href).toBe("/teaching/classes");
+    expect(studentNav?.href).toBe("/classes");
   });
 });

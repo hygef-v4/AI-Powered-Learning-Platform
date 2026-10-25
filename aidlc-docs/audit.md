@@ -6575,6 +6575,37 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 
 **Context**: Local version-control commit grouping on `mcp-test`; no push, merge, or deployment performed.
 
+## U05 / U15 Jira-based audit handoff - 2026-10-25
+
+**User Input**: "check u05 với u15 xem có lỗi j ko, ui ổn chưa, lập plan check theo jira và đưa cho gemini check"
+
+**AI Response**: Read current workflow and clean HEAD 41d6cd19, current Gemini terminal, live Jira and unit business rules. Saved a live-source snapshot and sequential functional/UI audit plan covering UC20–30 and UC66. Delegate execution to the existing Gemini terminal through Orca CLI; no production code or Jira changed. Results remain pending, not an acceptance claim.
+
+**Context**: Construction verification planning, current U05 Class & Enrollment / U15 Admin Dashboard mapping. Preserve current U09 work, credentials and real academic data. Audit only; no commit/push or broad implementation authorized by this request.
+
+**Timestamp**: 2026-10-25T15:01:09Z
+
+
+## U05 / U15 functional and UI audit completion - 2026-10-25
+
+**User Input**: "giúp tôi làm nốt"
+
+**AI Response**: Executed sequential Jira-based functional and UI audit across U05 Class & Enrollment (`UC20`–`UC30`, Jira Epic `KAN-21`) and U15 Admin Dashboard (`UC66`, Jira Epic `KAN-32` / `KAN-80`) on branch `mcp-test` at `HEAD` `41d6cd19`. Ran frontend focused suite (15 files / 82 tests passed, 18.44s), backend owned unit suite (18 classes / 249 tests passed, 51.95s), and Testcontainers PostgreSQL 16 integration suite (3 classes / 12 tests passed, 14.71s). Captured 12 live browser screenshots in `.tmp/u05-u15-audit/` via Orca Chromium profile `default` (`u05.teacher@school.test`). Discovered two P1 guard-ordering defects (`AdminDashboardController` and `AcademicsService` validating query params before role check, causing HTTP 400 instead of 403 and dropping `ACCESS_DENIED` audit events), two P2 UI usability defects (sidebar `Lớp được phân công` href mismatch and undefined CSS variables in `academics.module.css`), and four P3 polish/contract gaps. Delivered comprehensive audit report at `construction/build-and-test/2026-10-25-u05-u15-audit-report.md` and complete Vietnamese manual testing guide at `construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md` with 40 cases initialized to `Chưa test`. Updated plan checklist and preserved reference data without modifying production code, committing, or pushing.
+
+**Context**: Construction audit, verification, and manual acceptance test guide delivery. All reference classes (`U05-A`) and evaluations preserved read-only.
+
+**Timestamp**: 2026-10-25T15:38:00Z
+
+## U05 / U15 follow-up transferred from Gemini to Codex - 2026-10-26
+
+**Timestamp**: 2026-10-25T17:03:28Z
+
+**User Input**: "chuyển job hiện tại cho codex đi"; "cứ chekc đi"
+
+**AI Response**: Took over the active U05/U15 follow-up after interrupting the Gemini terminal to avoid concurrent edits. Preserved the existing dirty checkout and made bounded fixes for four corroborated findings: authorization guard ordering in AdminDashboard and Academics, teaching/manager class navigation hrefs, and theme fallbacks for academic cards. Fresh backend targeted tests passed 43/43; frontend focused tests passed 83/83; lint, typecheck, isolated production build (28 routes), and `git diff --check` passed. Host API and frontend are available on ports 8080/3000; Docker worker was stopped before launching the host `local,worker` backend. Authenticated live UI checks remain blocked because Orca redirects to `/login` after restart; no credentials were guessed or changed. Follow-up evidence: `construction/build-and-test/2026-10-26-u05-u15-followup-report.md`. No Jira or grade mutations, commit, push, merge, or deployment.
+
+**Context**: Follow-up implementation and verification; UI results in the manual guide remain `Chưa test` until the existing role sessions are authenticated.
+
 ## Merge staging vào nhánh sửa B2/B8/U04
 **Timestamp**: 2026-10-25T15:07:05Z
 **User Input**: "merge từ staging vào branch hiện tại, solve conflict"

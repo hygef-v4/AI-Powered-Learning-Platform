@@ -862,6 +862,25 @@ Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghi�
 - [ ] Manual UI acceptance is pending user testing per `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md` (all 40 cases remain `Chưa test`). Implementation report saved at `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-implementation-report.md`.
 - [x] Committed locally on `mcp-test` in 4 scoped Conventional Commits (transient notices, gradebook focused/matrix modes, teacher class overview + lazy distributions, and AI-DLC plans/guides/reports/state/audit). Not pushed.
 
+## U05 / U15 audit handoff - 2026-10-25
+- Live Jira scope/status captured; sequential functional/UI audit planned in construction/plans/2026-10-25-u05-u15-jira-ui-audit-plan.md.
+- Existing Gemini owns execution after Orca handoff; actual audit results pending. No product code, Jira, commit or push changes in planning turn.
+
+## U05 / U15 functional & UI audit completion - 2026-10-25
+- [x] Executed sequential functional and UI audit across U05 Class & Enrollment (`UC20`–`UC30`, Jira Epic `KAN-21`, 11 Done stories) and U15 Admin Dashboard (`UC66`, Jira Epic `KAN-32` / `KAN-80`) on `mcp-test` at `HEAD` `41d6cd19`.
+- [x] Automated test suites 100% passed: Frontend focused suite `15/15` files (`82/82` tests, 18.44s), Backend owned units `18/18` classes (`249/249` tests, 51.95s), Backend Testcontainers PostgreSQL 16 integration suite `3/3` classes (`12/12` tests, 14.71s).
+- [x] Live UI inspection in Orca Chromium (`default` profile, session `u05.teacher@school.test`) captured 12 screenshots into `.tmp/u05-u15-audit/` covering teacher class list (Open, Draft, Archived), class overview (4 metrics cards, metadata, progress, lazy distribution), student roster, student detail dialog (`SlotOutlet`), materials, evaluations, and gradebook (assignment & matrix modes).
+- [x] Security & RBAC probing confirmed strict role enforcement on clean requests (`TEACHER` blocked from `/admin`, `/manager/classes`, and student routes). Uncovered two P1 Guard-Ordering defects: `AdminDashboardController` validates query keys/paging before `requireAdmin` (responding with `400 Bad Request` instead of `403 Forbidden` and skipping `ACCESS_DENIED` audit logging); `AcademicsService.list()` and `students()` validate page before `requireAudience` (responding with `400 Bad Request` and logging `FAILURE` instead of `DENIED`).
+- [x] Deliverables completed: Detailed audit report at `construction/build-and-test/2026-10-25-u05-u15-audit-report.md` (12-UC matrix, Findings 1–8 with minimal fix recommendations, automated test counts, UI verdicts) and Vietnamese manual testing guide at `construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md` (all 40 user test cases initialized to `Chưa test`).
+- [x] Preserved read-only reference class `U05-A` (`4d18e255-1789-45d6-8fbb-351e2188f672`) and evaluations `7ca08c41-e9d4-4738-946d-24c049e3d1e5` / `826f5c29-b5d1-4a32-9999-9313c242d8d3`. No source mutations, commits, push, or Jira mutations performed.
+
+## U05 / U15 follow-up fixes and verification - 2026-10-26
+
+- User transferred the active Gemini job to Codex. Four corroborated findings were addressed: admin dashboard and academics authorization ordering, teacher/manager class navigation hrefs, and scoped academic card theme fallbacks. The earlier audit report remains a historical baseline; its follow-up correction status is in `construction/build-and-test/2026-10-26-u05-u15-followup-report.md`.
+- Fresh checks: backend targeted tests 43/43 pass; frontend focused tests 83/83 pass; lint, typecheck, isolated production build (28 routes), and `git diff --check` pass. Authorized-invalid Academics audit classification was not separately asserted.
+- Host API and frontend are running on ports 8080 and 3000. Old Docker worker was stopped before host `local,worker` backend launch; PostgreSQL, Redis, RabbitMQ were healthy at startup.
+- Authenticated UI retest is blocked: Orca redirects the teacher route to `/login` after restart. Screenshot `.tmp/u05-u15-audit/followup-login-required.png`. All manual guide result fields remain `Chưa test`; user must sign in to resume the UI cases. No secret changes, Jira mutations, grade writes, commit, push, merge, or deploy.
+
 ## Merge staging 41d6cd1 vào nhánh B2/B8/U04 — 2026-10-25
 
 - Nguồn staging/origin/staging cùng 41d6cd1; nhánh nhận fix/notification-links-reminders-u04-tests trước merge tại 1980844. Giữ toàn bộ 5 commit B2/B8/U04/CI/docs đã có.

@@ -22,6 +22,7 @@ public class AdminDashboardController {
     @GetMapping
     public ResponseEntity<AdminDashboardView> dashboard(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
+        service.requireAdmin(actor);
         validateKeys(query, Set.of());
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.dashboard(actor));
     }
@@ -29,6 +30,7 @@ public class AdminDashboardController {
     @GetMapping("/backups")
     public ResponseEntity<BackupHistoryPage> backups(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
+        service.requireAdmin(actor);
         validateKeys(query, Set.of("page", "size"));
         int page = integer(query, "page", 0);
         int size = integer(query, "size", 20);
