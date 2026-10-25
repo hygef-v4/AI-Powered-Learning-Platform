@@ -83,6 +83,23 @@ html.drawio-panel-open [data-app-sidebar] {
   display: none;
 }
 
+/* Container-aware two-column layout for grading workspace when >= 736px content width is available. */
+[data-workspace-main="true"] {
+  container-type: inline-size;
+}
+
+@container (min-width: 736px) {
+  [data-grading-grid="true"] {
+    grid-template-columns: minmax(400px, 1.18fr) minmax(320px, 1fr);
+  }
+}
+
+@container (min-width: 960px) {
+  [data-grading-grid="true"] {
+    grid-template-columns: minmax(440px, 3fr) minmax(340px, 2fr);
+  }
+}
+
 [data-rich][data-empty="true"][data-placeholder]::before {
   content: attr(data-placeholder);
   color: var(--color-muted);

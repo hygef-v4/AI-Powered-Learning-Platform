@@ -25,46 +25,57 @@ export function GroupSectionAuthors({ detail }: { detail: Detail }) {
 }
 
 export function ActivityReview({ detail }: { detail: Detail }) {
+  const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (
-    <section className="rounded-xl border bg-white p-5">
-      <h2 className="font-bold">Hoạt động khi làm bài</h2>
-      <p>{activityLabels[detail.activityState] ?? detail.activityState}</p>
-      {detail.activity && (
-        <p>
-          {detail.activity.awayCount} lần rời trang · {detail.activity.unknownGaps} khoảng thiếu dữ
-          liệu. {detail.activity.reliabilityNote}
-        </p>
-      )}
-      <div>
-        {detail.memberActivities?.map((m) => (
-          <p key={m.student.accountId}>
-            {m.student.name}: {activityLabels[m.state] ?? m.state}
-            {m.activity
-              ? ` — ${m.activity.awayCount} lần rời trang, ${m.activity.unknownGaps} khoảng thiếu dữ liệu`
-              : ""}
+    <details open={hasData} className="rounded-xl border border-line bg-white px-4 py-3 text-sm">
+      <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
+        <h2 className="inline text-sm font-bold text-ink">Hoạt động khi làm bài</h2>
+        <span className="text-xs text-muted">{activityLabels[detail.activityState] ?? detail.activityState}</span>
+      </summary>
+      <div className="mt-2 space-y-1.5 border-t border-line-soft pt-2">
+        {detail.activity && (
+          <p>
+            {detail.activity.awayCount} lần rời trang · {detail.activity.unknownGaps} khoảng thiếu dữ
+            liệu. {detail.activity.reliabilityNote}
           </p>
-        ))}
+        )}
+        <div>
+          {detail.memberActivities?.map((m) => (
+            <p key={m.student.accountId}>
+              {m.student.name}: {activityLabels[m.state] ?? m.state}
+              {m.activity
+                ? ` — ${m.activity.awayCount} lần rời trang, ${m.activity.unknownGaps} khoảng thiếu dữ liệu`
+                : ""}
+            </p>
+          ))}
+        </div>
+        <p className="text-xs text-slate-600">
+          Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
+        </p>
       </div>
-      <p className="text-sm text-slate-600">
-        Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
-      </p>
-    </section>
+    </details>
   );
 }
 
 export function GradeHistory({ evaluation }: { evaluation: Evaluation }) {
+  const hasChanges = evaluation.changes.length > 0;
   return (
-    <section className="rounded-xl border bg-white p-5">
-      <h2 className="font-bold">Lịch sử sửa điểm</h2>
-      {evaluation.changes.length ? (
-        evaluation.changes.map((h, i) => (
-          <p key={i}>
-            {new Date(h.at).toLocaleString("vi-VN")} · {h.before} → {h.after} · {h.reason}
-          </p>
-        ))
-      ) : (
-        <p>Chưa có thay đổi điểm chính thức.</p>
+    <details open={hasChanges} className="rounded-xl border border-line bg-white px-4 py-3 text-sm">
+      <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
+        <h2 className="inline text-sm font-bold text-ink">Lịch sử sửa điểm</h2>
+        <span className="text-xs text-muted">
+          {hasChanges ? `${evaluation.changes.length} lần thay đổi` : "Chưa có thay đổi điểm chính thức."}
+        </span>
+      </summary>
+      {hasChanges && (
+        <div className="mt-2 space-y-1 border-t border-line-soft pt-2">
+          {evaluation.changes.map((h, i) => (
+            <p key={i}>
+              {new Date(h.at).toLocaleString("vi-VN")} · {h.before} → {h.after} · {h.reason}
+            </p>
+          ))}
+        </div>
       )}
-    </section>
+    </details>
   );
 }

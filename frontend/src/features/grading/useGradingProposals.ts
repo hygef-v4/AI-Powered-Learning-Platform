@@ -17,9 +17,22 @@ export function useGradingProposals(
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
+    const diagnostics = new Map<string, string>();
     async function poll() {
       try {
-        const next = await gradingApi.proposals(evaluationId);
+        const listed = await gradingApi.proposals(evaluationId);
+        const next = await Promise.all(listed.map(async (proposal) => {
+          if (proposal.status !== "FAILED" || !proposal.taskId || !/^AI task (failed|unavailable or failed)$/.test(proposal.safeError ?? "")) return proposal;
+          try {
+            let reason = diagnostics.get(proposal.taskId);
+            if (!reason) {
+              const task = await gradingApi.task(proposal.taskId);
+              reason = task.safeError ?? undefined;
+              if (reason) diagnostics.set(proposal.taskId, reason);
+            }
+            return reason ? { ...proposal, safeError: reason } : proposal;
+          } catch { return proposal; }
+        }));
         if (stopped) return;
         setProposals(next);
         if (

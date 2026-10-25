@@ -1,6 +1,7 @@
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
 export type Checks = Record<string, string[]>;
+export type ItemScores = Record<string, Record<string, Decimal>>;
 export type Rubric = {
   rubricId: string;
   partId: string;
@@ -28,6 +29,7 @@ export type Evaluation = {
   maxScore: Decimal;
   version: number;
   rubricChecks: string;
+  rubricItemScores?: ItemScores;
   adjustment: Decimal;
   adjustmentReason: string | null;
   feedback: string | null;
@@ -97,10 +99,12 @@ export type Save = {
   feedback: string;
   changeReason: string | null;
   usedProposalId: string | null;
+  itemScoresByRubric?: ItemScores;
 };
 export type Proposal = {
   id: string;
   versionNo: number;
+  taskId?: string | null;
   status: string;
   origin: string;
   agentLabel?: string | null;
@@ -112,6 +116,7 @@ export type Proposal = {
   proposal?: {
     checks: Checks;
     score: Decimal;
+    itemScoresByRubric?: ItemScores;
     feedback?: string;
     sections?: { partId: string; feedback: string }[];
   };
@@ -173,6 +178,7 @@ export const activityLabels: Record<string, string> = {
 
 export type GradingFormValues = {
   checks: Checks;
+  itemScores?: ItemScores;
   adjustment: string;
   adjustmentReason: string;
   feedback: string;
