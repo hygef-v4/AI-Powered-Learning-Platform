@@ -62,7 +62,7 @@ public class GradingProposalTransactions {
         this.clock = clock;
     }
 
-    public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch) {
+    public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch, String outputSchema) {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -78,13 +78,13 @@ public class GradingProposalTransactions {
         if (existing.isPresent()) {
             var proposal = existing.get();
             requireSameRequest(actor, evaluation, request, proposal);
-            return new Prepared(proposal, null, false);
+            return new Prepared(proposal, null, false, null);
         }
         var prompt = buildPrompt(actor, evaluation);
         var proposal = newProposal(actor, evaluation, request);
         proposals.save(proposal);
         grading.record(actor, evaluation, "AI_GRADING_REQUESTED", null);
-        return new Prepared(proposal, prompt, true);
+        return new Prepared(proposal, prompt, true, prompts.outputSchema(evaluation));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -152,11 +152,11 @@ public class GradingProposalTransactions {
                 proposal.taskId = task.taskId();
                 proposal.model = task.model();
                 proposal.usage = json.valueToTree(task.usage());
-                if (proposal.status.equals("PENDING")
-                        && Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED).contains(task.state())) {
+                if ((proposal.status.equals("PENDING") || legacyFailure(proposal))
+                        && Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN).contains(task.state())) {
                     proposal.status = "FAILED";
-                    proposal.safeError = "AI task unavailable or failed";
-                    proposal.completedAt = clock.instant();
+                    proposal.safeError = safeTaskError(task.safeError());
+                    if (proposal.completedAt == null) proposal.completedAt = clock.instant();
                 }
             }
         } else if (proposal.status.equals("PENDING")) {
@@ -251,10 +251,20 @@ public class GradingProposalTransactions {
             if (proposal.status.equals("PENDING") && Objects.equals(proposal.taskId, failure.taskId())
                     && failure.actor() != null && proposal.requesterId.equals(failure.actor().accountId())) {
                 proposal.status = "FAILED";
-                proposal.safeError = "AI task failed";
+                proposal.safeError = safeTaskError(failure.safeError());
                 proposal.completedAt = clock.instant();
                 proposals.save(proposal);
             }
+    }
+
+    static boolean legacyFailure(GradingProposal proposal) {
+        return "FAILED".equals(proposal.status) && (proposal.safeError == null
+                || Set.of("AI task failed", "AI task unavailable or failed").contains(proposal.safeError));
+    }
+
+    private static String safeTaskError(String diagnostic) {
+        return diagnostic == null || diagnostic.isBlank()
+                ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công." : diagnostic;
     }
 
     @Transactional

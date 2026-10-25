@@ -25,7 +25,7 @@ class GradingProposalServiceTest {
         when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
         var p = new GradingProposal();
         p.status = "READY";
-        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false));
+        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         var input = new AiBatch(List.of(new ItemVersion(e.id, 0)),
                 new AiRequest(AiSource.SHARED, null, "r".repeat(200)));
@@ -47,7 +47,7 @@ class GradingProposalServiceTest {
         var p = new GradingProposal();
         p.status = "FAILED";
         p.safeError = "QUOTA_EXHAUSTED";
-        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false));
+        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var e = new Evaluation();
         e.id = UUID.randomUUID();
         e.classId = UUID.randomUUID();

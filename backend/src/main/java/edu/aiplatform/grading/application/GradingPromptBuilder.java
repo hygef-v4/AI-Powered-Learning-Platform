@@ -26,6 +26,34 @@ public class GradingPromptBuilder {
         this.json = json;
     }
 
+    /** Declare the locked rubric keys explicitly; providers cannot infer dynamic object fields. */
+    public String outputSchema(Evaluation evaluation) {
+        var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
+        var root = json.createObjectNode().put("type", "object").put("additionalProperties", false);
+        root.putArray("required").add("checks").add("score").add("feedback").add("sections");
+        var properties = root.putObject("properties");
+        var checks = properties.putObject("checks").put("type", "object").put("additionalProperties", false);
+        var checkProperties = checks.putObject("properties");
+        var requiredChecks = checks.putArray("required");
+        for (var rubric : rubrics) {
+            String id = rubric.rubricId().toString();
+            requiredChecks.add(id);
+            var item = checkProperties.putObject(id).put("type", "array").putObject("items").put("type", "string");
+            var allowed = item.putArray("enum");
+            rubric.criteria().forEach(criterion -> criterion.items().forEach(value -> allowed.add(value.itemId().toString())));
+        }
+        properties.putObject("score").put("type", "string");
+        properties.putObject("feedback").put("maxLength", 10000).putArray("type").add("string").add("null");
+        var section = properties.putObject("sections").put("type", "array").putObject("items")
+                .put("type", "object").put("additionalProperties", false);
+        section.putArray("required").add("partId").add("feedback");
+        var sectionProperties = section.putObject("properties");
+        var partIds = sectionProperties.putObject("partId").put("type", "string").putArray("enum");
+        rubrics.stream().map(rubric -> rubric.partId()).distinct().forEach(partIds::add);
+        sectionProperties.putObject("feedback").put("type", "string").put("maxLength", 10000);
+        return GradingJson.write(json, root);
+    }
+
     public AiPrompt build(Evaluation e, DocumentModel document, AssignmentContent assignment) {
         var content = new ArrayList<String>();
         content.add(documents.toPlainText(document));

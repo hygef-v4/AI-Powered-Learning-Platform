@@ -52,7 +52,7 @@ public class GradingProposalService {
         try {
             task = ai.submit(new AiTaskRequest(actor, input.source(), input.provider(), "GRADING_PROPOSAL",
                     "evaluation:" + evaluationId, proposal.versionNo, input.requestRef(), prepared.prompt(),
-                    GradingPromptBuilder.SCHEMA, 4096));
+                    prepared.outputSchema(), 4096));
         } catch (ApiException ex) {
             return tx.dispatched(proposal.id, null, ex.code());
         } catch (RuntimeException ex) {
@@ -67,11 +67,11 @@ public class GradingProposalService {
         access.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
         tx.invalidateChangedSnapshot(evaluationId);
         for (var proposal : proposals.findForEvaluation(evaluationId))
-            if ("PENDING".equals(proposal.status) && proposal.taskId != null) {
+            if (("PENDING".equals(proposal.status) || GradingProposalTransactions.legacyFailure(proposal)) && proposal.taskId != null) {
                 // Failure callback can precede task-id attachment. Reconcile terminal task
                 // state on polling.
                 ai.get(proposal.taskId)
-                        .filter(task -> Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED).contains(task.state()))
+                        .filter(task -> Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN).contains(task.state()))
                         .ifPresent(task -> tx.dispatched(proposal.id, task, null));
             }
         return proposals.findForEvaluation(evaluationId);
