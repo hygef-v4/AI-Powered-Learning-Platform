@@ -6636,3 +6636,11 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Context**: Construction, U06 sửa sau khi người dùng test tay
 
 ---
+
+## U06 real AI key tests
+**Timestamp**: 2026-10-26T04:00:00Z
+**User Input**: "ok toi dan khoa roi"
+**AI Response**: Kiểm trạng thái khóa (chỉ 4 ký tự cuối). Bấm Kiểm tra qua API: Đạt. Chạy tác vụ tạo nháp bằng AI với khóa cá nhân: READY, token thật 438/878; nháp không tự áp; lịch sử ghi PERSONAL; hạn mức trường không đổi; 4 tác vụ liên tiếp thì tác vụ thứ 4 bị AI_TOO_MANY_TASKS. 7/7 đạt; ghi vào `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`.
+**Context**: Construction, U06 kiểm thử với khóa AI thật
+
+---
