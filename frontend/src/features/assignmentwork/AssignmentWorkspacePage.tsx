@@ -19,7 +19,7 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Dialog, Icon, PageHeader, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import { attemptImageUrl, exportUrl, workApi } from "./api";
-import { errorCode, errorMessage, formatTime, problemIssues, remaining } from "./format";
+import { errorCode, errorMessage, formatDateTime, formatTime, problemIssues, remaining } from "./format";
 import type { Attempt } from "./types";
 
 export const AUTOSAVE_MS = 10_000;
@@ -96,6 +96,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const [dialog, setDialog] = useState<"submit" | "docx" | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [offset, setOffset] = useState(0);
+  const [focusMode, setFocusMode] = useState(false);
   const [activePart, setActivePart] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const version = useRef(0);
@@ -216,11 +217,11 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const active = attempt.parts.find((part) => part.partId === activePart);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div data-workspace-focus={focusMode} className="flex flex-col gap-3">
       <PageHeader backHref={detailHref} title={<>{attempt.title}<Pill>Lượt {attempt.attemptNo}/{attempt.maxAttempts}</Pill></>}
-        subtitle={`${editable ? `Còn ${left} · ` : ""}${saving ? "Đang lưu…" : dirty ? "Chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}`}
+        subtitle={`Hạn nộp: ${formatDateTime(attempt.deadlineAt)}${editable ? ` · ${new Date(attempt.deadlineAt).getTime() > now + offset ? `Còn ${left} đến hạn nộp` : "Đã đến hạn nộp"}` : ""}`}
         actions={<>
-          {editable && <Button variant="primary" icon="check_circle" onClick={() => setDialog("submit")} data-testid="open-submit">Nộp bài</Button>}
+          <Button aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>{focusMode ? "Thoát tập trung" : "Chế độ tập trung"}</Button>
           {attempt.status === "SUBMITTED" && <Button variant="primary" onClick={() => router.push(`/attempts/${encodeURIComponent(attempt.attemptId)}/receipt`)}>Xem biên nhận</Button>}
         </>} />
       {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>Tải lại</Button> : undefined}>
@@ -230,7 +231,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {attempt.status === "SUBMITTED" && <Alert tone="info">Đã nộp lúc {formatTime(attempt.submittedAt)} · chỉ xem</Alert>}
       {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn</Alert>}
       {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title="Bài có ghi nhận hoạt động">{attempt.activityNotice}</Alert>}
-      <DocumentEditor document={content} mode="student" diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
+      <DocumentEditor document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={edit}
@@ -247,13 +248,25 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
             </p>
           </div>
         }
-        toolbarExtra={<>
-          {editable && <ToolbarButton icon="save" disabled={saving || !dirty} onClick={() => void save()}>Lưu</ToolbarButton>}
-          {editable && <ToolbarButton icon="upload_file" onClick={() => setDialog("docx")}>Nhập DOCX</ToolbarButton>}
-          <a href={exportUrl(attempt.attemptId)} className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[13px] font-medium text-body hover:bg-black/5">
-            <Icon name="download" size={18} />Tải DOCX
-          </a>
-        </>} />
+        toolbarExtra={
+          <details className="relative ml-auto">
+            <summary className="cursor-pointer rounded-md px-2 py-1 text-sm font-medium text-body hover:bg-black/5">Tệp DOCX</summary>
+            <div className="absolute right-0 z-30 mt-2 flex min-w-40 flex-col gap-1 rounded-lg border border-line bg-white p-2 shadow-lg">
+              {editable && <ToolbarButton icon="upload_file" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setDialog("docx"); }}>Nhập DOCX</ToolbarButton>}
+              <a href={exportUrl(attempt.attemptId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-body hover:bg-black/5">
+                <Icon name="download" size={18} />Tải DOCX
+              </a>
+            </div>
+          </details>
+        } />
+      {editable && <div role="region" aria-label="Lưu và nộp bài" className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 shadow-lg">
+        <p role="status" className="text-sm text-muted">{saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}</p>
+        <div className="flex items-center gap-2">
+          <Button disabled={saving || !dirty} onClick={() => void save()}>Lưu bài</Button>
+          <Button variant="primary" icon="check_circle" onClick={() => setDialog("submit")} data-testid="open-submit">Nộp bài</Button>
+        </div>
+      </div>}
+
       {dialog === "submit" && (
         <SubmitDialog attempt={attempt} content={content} onClose={() => setDialog(null)}
           onSubmit={async () => {

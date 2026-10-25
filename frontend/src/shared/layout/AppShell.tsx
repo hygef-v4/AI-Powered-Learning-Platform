@@ -40,7 +40,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
   const roleLabel = ROLE_LABELS[role];
 
   return (
-    <div className="flex min-h-screen flex-col bg-shell">
+    <div data-app-shell className="flex min-h-screen flex-col bg-shell">
       <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-line bg-white px-6">
         <Link href="/" className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm">

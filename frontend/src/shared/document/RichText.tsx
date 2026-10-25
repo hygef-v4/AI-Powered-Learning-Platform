@@ -145,6 +145,7 @@ type Props = {
   onKey?: (event: KeyboardEvent<HTMLDivElement>, caret: Caret) => void;
   onFocus?: () => void;
   className?: string;
+  placeholder?: string;
   "aria-label": string;
 };
 
@@ -153,7 +154,7 @@ type Props = {
  * mỗi run một span. React không vẽ lại ô khi người dùng gõ (giữ con trỏ, gõ dấu tiếng Việt); chỉ viết lại nội dung khi
  * run từ ngoài khác run đang hiện (định dạng, hoàn tác…) rồi đặt lại vùng chọn như cũ. Dán chỉ lấy chữ thuần.
  */
-export function RichText({ runs, onChange, onKey, onFocus, className, "aria-label": label }: Props) {
+export function RichText({ runs, onChange, onKey, onFocus, className, placeholder, "aria-label": label }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   /** Run đang hiện trong ô; khác run nhận vào thì viết lại ô. */
   const shown = useRef<Run[] | null>(null);
@@ -201,8 +202,9 @@ export function RichText({ runs, onChange, onKey, onFocus, className, "aria-labe
 
   return (
     <div ref={ref} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning tabIndex={0}
-      data-editable data-rich spellCheck
-      className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", className)}
+      data-editable data-rich spellCheck aria-placeholder={placeholder}
+      data-placeholder={placeholder} data-empty={runs.every((run) => !run.text) || undefined}
+      className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", placeholder && "relative", className)}
       onInput={input} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
       onKeyDown={(event) => {
         if (!event.nativeEvent.isComposing && onKey && ref.current) onKey(event, getCaret(ref.current));

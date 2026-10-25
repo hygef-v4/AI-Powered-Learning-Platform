@@ -77,3 +77,15 @@ html.drawio-panel-open [data-app-sidebar] {
     transform: translateX(0);
   }
 }
+
+/* Local workspace focus mode resets automatically when leaving the page. */
+[data-app-shell]:has([data-workspace-focus="true"]) [data-app-sidebar] {
+  display: none;
+}
+
+[data-rich][data-empty="true"][data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: var(--color-muted);
+  pointer-events: none;
+  position: absolute;
+}

@@ -63,6 +63,8 @@ type Props = {
   onFocusBlock?: (blockId: string) => void;
   /** Chế độ người học, chỉ đọc: chữ hiện ở phần chưa có bài làm; không có thì để trống. */
   emptyLeafLabel?: string;
+  /** Opt-in answer affordances for the individual assignment workspace. */
+  answerGuidance?: boolean;
 };
 
 type StyleValue = "P" | "UL" | "OL" | HeadingStyle;
@@ -424,7 +426,7 @@ function CornerDelete({ label, disabled = false, onClick }: { label: string; dis
  */
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, toolbarExtra, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel,
+  header, toolbarExtra, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -471,6 +473,7 @@ export function DocumentEditor({
 
   const blocks = document.blocks;
   const student = mode === "student";
+  const guided = student && answerGuidance;
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
   const sections = student ? sectionsOf(document, computeParts(document)) : null;
   const inPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
@@ -660,6 +663,7 @@ export function DocumentEditor({
             onOpenDiagram={drawable ? (id) => setDiagram(id) : undefined} />
         ) : (
           <BlockEditor block={block} imageUrl={imageUrl} previewUrl={previews[block.id]} uploadError={uploadError[block.id]}
+            placeholder={guided && block.origin === "STUDENT" ? "Nhập bài làm của bạn tại đây…" : undefined}
             onUpload={uploadImage ? (file) => void upload(block.id, file) : undefined} guard={teacherBlock}
             ops={{
               change: (next, focus) => replace(block.id, next, focus),
@@ -683,7 +687,7 @@ export function DocumentEditor({
   function emptyLeaf(section: DocSection, key: string): ReactNode {
     const last = section.blocks.at(-1) ?? section.heading;
     if (!last) return null;
-    if (student && section.blocks.some((b) => b.origin === "STUDENT")) return null;
+    if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
     if (!student && section.blocks.length > 0) return null;
     if (readOnly) {
       return student && emptyLeafLabel
@@ -692,8 +696,35 @@ export function DocumentEditor({
     }
     return (
       <button type="button" aria-label="Viết vào phần này" data-testid={`write-part-${key}`}
-        onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className="block h-7 w-full cursor-text" />
+        onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-primary" : "h-7")}>
+        {guided && "Bấm để bắt đầu viết bài làm…"}
+      </button>
     );
+  }
+
+  function leafContent(section: DocSection, key: string): ReactNode {
+    if (!guided) return <>{section.blocks.map(renderBlock)}{emptyLeaf(section, key)}</>;
+    const firstAnswer = section.blocks.findIndex((block) => block.origin === "STUDENT" || block.type === "DIAGRAM" || block.type === "TABLE");
+    const splitAt = firstAnswer < 0 ? section.blocks.length : firstAnswer;
+    const last = section.blocks.at(-1) ?? section.heading;
+    const writable = !readOnly && inPart(last?.id);
+    return <>
+      {section.blocks.slice(0, splitAt).map(renderBlock)}
+      <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-white p-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
+          <p className="text-sm font-semibold text-ink">Bài làm của bạn</p>
+          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={() => {
+              if (!last) return;
+              const block = newBlock("DIAGRAM", "STUDENT");
+              insertAfter(last.id, block);
+              setDiagram(block.id);
+            }}>Thêm sơ đồ cho câu này</button>}
+        </div>
+        {section.blocks.slice(splitAt).map(renderBlock)}
+        {emptyLeaf(section, key)}
+      </div>
+    </>;
   }
 
   function renderSection(section: DocSection): ReactNode {
@@ -702,8 +733,10 @@ export function DocumentEditor({
     if (!heading) {
       return (
         <Fragment key={key}>
-          {section.blocks.map(renderBlock)}
-          {section.leaf && blocks.length > 0 && emptyLeaf(section, key)}
+          {guided && section.leaf && blocks.length > 0 ? leafContent(section, key) : <>
+            {section.blocks.map(renderBlock)}
+            {section.leaf && blocks.length > 0 && emptyLeaf(section, key)}
+          </>}
           {section.children.map(renderSection)}
         </Fragment>
       );
@@ -719,8 +752,7 @@ export function DocumentEditor({
           // Lá: khung mang màu của tầng, ruột trắng là chỗ viết; bấm vào chỗ trống trong ruột là viết tiếp cuối phần.
           <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-white px-3 py-1.5"
             onClick={(event) => { if (writable && event.target === event.currentTarget) continueAfter((section.blocks.at(-1) ?? heading).id); }}>
-            {section.blocks.map(renderBlock)}
-            {emptyLeaf(section, key)}
+            {leafContent(section, key)}
           </div>
         ) : (
           <>
@@ -747,6 +779,7 @@ export function DocumentEditor({
           toggle(key === "b" ? "bold" : key === "i" ? "italic" : "underline");
         }
       }}>
+      {guided && !readOnly && <p className="text-xs text-muted">Chọn vùng bài làm để định dạng chữ.{diagramEnabled && " Dùng nút trong từng câu để thêm sơ đồ đúng vị trí."}</p>}
       {(!readOnly || toolbarExtra) && (
         <div role="toolbar" aria-label="Định dạng và chèn"
           className="sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-3xl bg-[#edf2fa] px-3 py-1 shadow-[0_1px_2px_rgba(60,64,67,0.15)]">
@@ -863,7 +896,7 @@ type Ops = {
 
 const CAPTION = "text-center text-xs text-muted italic";
 
-function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, guard }: {
+function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, guard, placeholder }: {
   block: DocumentBlock;
   ops: Ops;
   imageUrl?: ImageUrl;
@@ -872,6 +905,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
   uploadError?: string;
   /** Người học điền bảng của đề: ô của đề không xóa được. */
   guard: boolean;
+  placeholder?: string;
 }) {
   switch (block.type) {
     case "HEADING":
@@ -888,7 +922,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
       );
     case "PARAGRAPH":
       return (
-        <RichText aria-label="Đoạn văn" runs={block.content.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
+        <RichText aria-label="Đoạn văn" placeholder={placeholder} runs={block.content.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
           onChange={(runs) => ops.change({ ...block, content: { ...block.content, runs } })}
           onKey={(event, caret) => keys(event, caret, {
             enter: ({ start, end }) => {

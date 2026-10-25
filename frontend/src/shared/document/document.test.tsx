@@ -28,6 +28,42 @@ const doc: DocumentModel = {
 };
 
 describe("DocumentEditor", () => {
+  it("workspace: answer actions insert into their own section regardless of current focus", () => {
+    const second = { id: "q2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Câu 2" } };
+    const content = { blocks: [...doc.blocks, second] };
+    const onChange = vi.fn();
+    const { rerender } = render(<DocumentEditor document={content} onChange={onChange} mode="student" diagramEnabled answerGuidance />);
+    expect(screen.getAllByText("Bài làm của bạn")).toHaveLength(2);
+    fireEvent.mouseDown(screen.getByTestId("block-q2"));
+    fireEvent.click(within(screen.getByTestId("answer-t1")).getByRole("button", { name: "Thêm sơ đồ cho câu này" }));
+    const next = onChange.mock.calls[0]![0] as DocumentModel;
+    expect(next.blocks.map((b) => b.id).at(-1)).toBe("q2");
+    expect(next.blocks[2]).toMatchObject({ origin: "STUDENT", type: "DIAGRAM" });
+    rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled answerGuidance />);
+    expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
+    // A diagram-only answer still offers an explicit way to add explanation text.
+    expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Bấm để bắt đầu viết bài làm");
+  });
+
+  it("workspace: guidance is opt-in and cannot enable editing for read-only or author mode", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<DocumentEditor document={doc} onChange={onChange} mode="student" diagramEnabled answerGuidance readOnly />);
+    expect(screen.queryByRole("button", { name: "Thêm sơ đồ cho câu này" })).toBeNull();
+    expect(screen.queryByTestId("write-part-t1")).toBeNull();
+    rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled answerGuidance />);
+    expect(screen.queryByText("Bài làm của bạn")).toBeNull();
+    rerender(<DocumentEditor document={doc} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
+    expect(screen.queryByRole("button", { name: "Thêm sơ đồ cho câu này" })).toBeNull();
+    fireEvent.click(screen.getByTestId("write-part-t1"));
+    const next = onChange.mock.calls[0]![0] as DocumentModel;
+    expect(next.blocks[2]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
+    rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
+    const field = screen.getByRole("textbox", { name: "Đoạn văn" });
+    expect(field).toHaveAttribute("aria-placeholder", "Nhập bài làm của bạn tại đây…");
+    expect(field).toHaveTextContent("");
+    expect(next.blocks[2]).toMatchObject({ content: { runs: [{ text: "" }] } });
+  });
+
   it("người học: chữ của giảng viên nhạt, không có nút khóa hay thao tác; viết vào phần trống", () => {
     const onChange = vi.fn();
     render(<DocumentEditor document={doc} onChange={onChange} mode="student" diagramEnabled={false} />);
