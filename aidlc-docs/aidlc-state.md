@@ -809,3 +809,19 @@ Final checkpoint: code available for review; independent acceptance gates retain
 
 - Local code commits: a0f53dc2 backend/contract fractional points; 507d8b20 workspace/rubric/AI review; af0b1bf0 submissions list; c22756f7 host API+worker launcher; e7c174b2 generated Next.js agent guidance.
 - Final documentation group records both plans, UI evidence/report and this state/audit, including the explicit unverified mobile viewport/zoom gap. Ignored screenshots, build output, test logs and QA data are excluded. No push/merge/deploy or grade mutation.
+
+## U09 transient completion notices - 2026-10-25
+
+- User requests small disappearing feedback after finalize/publish and layout proposals for gradebook/class information. Implemented only completion feedback; layout choices documented as proposals pending implementation request.
+- Complete all-success responses replace the dialog with a four-second success notice; confirmation before mutation and persistent partial/error results remain. Success survives parent list filtering/refresh. No API/backend or grade-data changes.
+- Focused68/68 tests pass (grading58 + subject10), lint/typecheck/diff check pass. Full frontend run531/532 passed with one SubjectListPage focus assertion failure; isolated file plus grading rerun passed. Full-suite clean result is not claimed.
+- Actual host UI with temporary intercepted QA-only responses verified finalize/publish notices vanish after about4seconds; interception removed and test tab reloaded. No real finalize/publish calls or notification sent. DB QA remains user-published10.00/version7, original remains DRAFT0.00/version7. Changes uncommitted, no push/deploy. See construction/build-and-test/2026-10-25-u09-feedback-results.md.
+
+
+## U09 gradebook and class overview layout implementation (Argon 4) - 2026-10-25
+
+- [x] Executed Steps 1–6 of `construction/plans/code-generation-plan/2026-10-25-u09-gradebook-class-layout-code-generation-plan.md` sequentially at `HEAD` `ea0d2c8e` on `mcp-test`. Preserved all staged 4-second toast changes in the Git index and safely reconciled `aidlc-docs/audit.md` working copy (retaining both PR22 upstream and stashed U09 feedback entries).
+- [x] Implemented `ClassGradebookTab` (`Theo bài tập` default mode + `Tổng hợp` matrix mode with sticky student column, `160px` assignment columns, `Bài 1`/`Bài 2` ordinals, keyboard/touch-accessible `Danh mục bài tập` disclosure, `assignmentId`-based cell lookup, real `0.00` vs missing `—`), `GradebookExportDialog` explicit scope note, `ReadOnlyClassPage` + `academics.module.css` teacher-info 4-card summary row and 1/3 metadata + 2/3 progress grid (preserving cross-unit slot boundaries and student view), `GroupCountCard` overview loading/error states, and `ClassProgressSection` priority ordering, 5-item show-more toggle, and lazy `Phân bố điểm đã công bố`.
+- [x] Automated checks passed: scoped feature tests (`grading`, `academics`, `groups`) `19/19` files (`127/127` tests), full frontend test suite `89/89` files (`544/544` tests), ESLint (`exit 0`), TypeScript `tsc --noEmit` (`exit 0`), isolated production build via `NEXT_DIST_DIR=".next-build-u09-overview"` (`exit 0`, cleaned up afterward), and `git diff --check` (`exit 0`).
+- [ ] Manual UI acceptance is pending user testing per `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md` (all 40 cases remain `Chưa test`). Implementation report saved at `construction/build-and-test/2026-10-25-u09-gradebook-class-layout-implementation-report.md`.
+- [x] Committed locally on `mcp-test` in 4 scoped Conventional Commits (transient notices, gradebook focused/matrix modes, teacher class overview + lazy distributions, and AI-DLC plans/guides/reports/state/audit). Not pushed.
