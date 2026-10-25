@@ -1,9 +1,7 @@
-export type DocumentBlock = {
-  id: string;
-  origin: "TEACHER" | "STUDENT";
-  type: "HEADING" | "PARAGRAPH" | "LIST" | "TABLE" | "IMAGE" | "DIAGRAM";
-  content: Record<string, unknown>;
-};
+import type { DocumentBlock, DocumentModel } from "@/shared/document";
+
+// Block dùng chung kiểu của trình soạn U07/U08 (`@/shared/document`).
+export type { DocumentBlock, DocumentModel };
 
 export type SectionStatus = "OPEN" | "CLAIMED" | "DONE";
 
@@ -36,11 +34,13 @@ export type WorkspaceView = {
   members: { accountId: string; name: string | null; leader: boolean }[];
   status: "IN_PROGRESS" | "CLOSED";
   window: "ON_TIME" | "LATE" | "CLOSED";
-  sharedBlocks: { blocks: DocumentBlock[] };
+  sharedBlocks: DocumentModel;
   sections: SectionView[];
   role: { member: boolean; leader: boolean; teacher: boolean };
   lastSubmission: { submittedBy: string | null; mode: string; submittedAt: string; late: boolean; receiptHash: string } | null;
   activityMonitoring: boolean;
+  /** Bài cho phép Draw.io (U07): trình soạn mục có nút chèn sơ đồ. */
+  diagramEnabled: boolean;
   version: number;
   viewerId: string;
 };

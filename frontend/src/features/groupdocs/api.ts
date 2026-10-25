@@ -1,4 +1,5 @@
 import { apiDownload, apiFetch } from "@/shared/api/client";
+import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import type { DocumentBlock, Receipt, SectionView, WorkspaceView } from "./types";
 
 const doc = (id: string) => `/api/v1/group-docs/${encodeURIComponent(id)}`;
@@ -30,3 +31,7 @@ export const submitDocument = (id: string, version: number) =>
 export const downloadDocx = (id: string, submitted: boolean) => apiDownload(`${doc(id)}/export.docx?submitted=${submitted}`);
 
 export const eventsUrl = (id: string) => `${doc(id)}/events`;
+
+/** Ghi nhận hoạt động khi bài bật giám sát (U12 nhận như U08); `keepalive` cho lần gửi lúc rời trang. */
+export const sendActivity = (id: string, events: ActivityEventInput[], keepalive: boolean) =>
+  apiFetch<void>(`${doc(id)}/activity`, { method: "POST", body: JSON.stringify({ events }), keepalive });

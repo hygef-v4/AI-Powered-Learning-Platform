@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatDateTime } from "@/features/groups/format";
 import { ApiError } from "@/shared/api/client";
+import { DocumentEditor, DocumentViewer } from "@/shared/document";
 import { Alert, Button, Dialog, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
 import { assignSection, finishSection, saveDraft, submitDocument } from "./api";
-import { blocksToText, textToBlocks } from "./BlockView";
-import type { Receipt, SectionView, WorkspaceView } from "./types";
+import type { DocumentBlock, DocumentModel, Receipt, SectionView, WorkspaceView } from "./types";
 
 export const AUTOSAVE_MS = 10_000;
 
@@ -19,32 +19,53 @@ function problemMessage(e: unknown, fallback: string): string {
 }
 
 /**
- * Trình soạn mục che kín trang (s18b, BR-U12-34): chỉ người giữ; tự lưu 10 giây sau lần sửa cuối kèm `version` của
- * mục; `409` báo tải lại; Xong đăng nội dung và đóng. Dùng trình soạn đoạn văn tạm tới khi U07 có `DocumentEditor`.
+ * Phần của mục trong khung chung: heading của phần (`partId` là id của heading) và các block của người soạn tới heading
+ * kế tiếp. Không tìm thấy heading thì dựng heading theo tên mục để trình soạn vẫn có chỗ viết.
+ */
+export function partOf(shared: DocumentModel, section: Pick<SectionView, "partId" | "title">) {
+  const blocks = shared.blocks;
+  const at = blocks.findIndex((b) => b.id === section.partId);
+  if (at < 0) {
+    const heading: DocumentBlock = { id: section.partId, origin: "TEACHER", type: "HEADING", content: { style: "H2", text: section.title } };
+    return { heading, guide: [] as DocumentBlock[] };
+  }
+  const next = blocks.findIndex((b, i) => i > at && b.type === "HEADING");
+  return { heading: blocks[at]!, guide: blocks.slice(at + 1, next < 0 ? undefined : next) };
+}
+
+/**
+ * Trình soạn mục che kín trang (s18b, BR-U12-34) dùng `DocumentEditor` chung ở chế độ người học: chỉ người giữ; heading
+ * của phần là block khóa, hướng dẫn của giảng viên trong phần chỉ xem; chỉ block của người học được lưu. Tự lưu 10 giây
+ * sau lần sửa cuối kèm `version` của mục; `409` báo tải lại; Xong đăng nội dung và đóng. Draw.io theo cài đặt của bài.
  */
 export function SectionEditorDialog({
   documentId,
   section,
+  shared,
+  diagramEnabled,
   onClose,
   onChanged,
 }: {
   documentId: string;
   section: SectionView;
+  shared: DocumentModel;
+  diagramEnabled: boolean;
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const [text, setText] = useState(() => blocksToText(section.draftBlocks ?? section.publishedBlocks));
+  const part = useMemo(() => partOf(shared, section), [shared, section]);
+  const [doc, setDoc] = useState<DocumentModel>(() => ({
+    blocks: [part.heading, ...(section.draftBlocks ?? section.publishedBlocks ?? [])],
+  }));
   const [version, setVersion] = useState(section.version);
   const [savedAt, setSavedAt] = useState<string | null>(section.draftSavedAt);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const previous = useRef(section.draftBlocks ?? section.publishedBlocks ?? []);
 
   const save = useCallback(async () => {
     try {
-      const saved = await saveDraft(documentId, section.id, version, textToBlocks(text, previous.current));
-      previous.current = saved.draftBlocks ?? [];
+      const saved = await saveDraft(documentId, section.id, version, doc.blocks.filter((b) => b.origin === "STUDENT"));
       setVersion(saved.version);
       setSavedAt(saved.draftSavedAt);
       setDirty(false);
@@ -54,7 +75,7 @@ export function SectionEditorDialog({
       setError(problemMessage(e, "Không lưu được bản nháp."));
       return false;
     }
-  }, [documentId, section.id, text, version]);
+  }, [documentId, section.id, doc, version]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -100,18 +121,23 @@ export function SectionEditorDialog({
           {error}
         </Alert>
       )}
-      <div className="flex min-h-0 flex-1 flex-col gap-2 px-6 py-4">
-        <label htmlFor="section-editor" className="text-xs font-semibold text-body">
-          Nội dung (mỗi đoạn cách nhau một dòng trống)
-        </label>
-        <textarea
-          id="section-editor"
-          className="min-h-0 flex-1 resize-none rounded-xl border border-line-strong p-3 text-[13px] text-ink outline-none focus:border-primary"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
+      <div className="min-h-0 flex-1 overflow-y-auto bg-shell px-6 py-4">
+        <DocumentEditor
+          document={doc}
+          mode="student"
+          diagramEnabled={diagramEnabled}
+          onChange={(next) => {
+            setDoc(next);
             setDirty(true);
           }}
+          header={
+            part.guide.length > 0 && (
+              <div className="mb-3 rounded-xl bg-shell p-3">
+                <p className="mb-1 text-xs font-semibold text-muted">Hướng dẫn của giảng viên cho mục này</p>
+                <DocumentViewer document={{ blocks: part.guide }} />
+              </div>
+            )
+          }
         />
       </div>
     </div>
