@@ -87,7 +87,9 @@ export function GradebookExportDialog({
         Practice hay Quiz.
       </p>
       <p className="mt-2 text-sm text-slate-600">
-        Thao tác xuất được ghi audit. Tệp không lưu lại trên hệ thống.
+        Phạm vi xuất áp dụng cho toàn bộ danh sách sinh viên của lớp theo lựa chọn ở trên, không phụ
+        thuộc bộ lọc tìm kiếm hay trang đang xem. Thao tác xuất được ghi audit; tệp không lưu lại
+        trên hệ thống.
       </p>
       {error && <p role="alert">{error}</p>}
     </Dialog>
