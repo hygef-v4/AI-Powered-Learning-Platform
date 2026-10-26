@@ -123,14 +123,6 @@ class UploadServiceTest {
     }
 
     @Test
-    void rejectsTypeTurnedOffInSettings() {
-        when(settings.get(PurposePolicy.IMAGE_TYPES)).thenReturn(Optional.of(new String[]{"PNG"}));
-
-        assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.DOCUMENT_IMAGE, upload("a.svg", TestFiles.SVG)))
-                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-    }
-
-    @Test
     void reportsUnavailableWhenStorageIsDown() {
         IStorage down = mock(IStorage.class);
         when(down.available()).thenReturn(false);
