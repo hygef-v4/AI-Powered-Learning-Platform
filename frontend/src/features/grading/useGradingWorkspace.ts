@@ -135,8 +135,9 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
           : {}),
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
-        adjustment: form.adjustment,
-        adjustmentReason: form.adjustmentReason || null,
+        // Màn chấm không còn điều chỉnh ngoài rubric (BR-U09-20): điểm bài là tổng mục đạt.
+        adjustment: "0",
+        adjustmentReason: null,
         feedback: form.feedback,
         changeReason: form.changeReason || null,
         usedProposalId: form.usedProposalId,

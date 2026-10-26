@@ -388,6 +388,13 @@ export function RubricItemFeedback({
             {canNavigateToBlock ? (
               <a
                 href={`#submission-block-${blockId}`}
+                onClick={(event) => {
+                  // Bài nộp hiện trong trình soạn chỉ đọc: block mang data-block-id, không có id riêng.
+                  const target = document.querySelector(`[data-block-id="${CSS.escape(blockId)}"]`);
+                  if (!target) return;
+                  event.preventDefault();
+                  target.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
                 className="font-semibold text-primary underline underline-offset-2 hover:text-ink"
               >
                 Đi tới đoạn bài làm ({blockId})
