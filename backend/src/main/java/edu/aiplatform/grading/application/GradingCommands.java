@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.grading.domain.GradingFeedback;
 import edu.aiplatform.shared.error.ApiException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -31,15 +32,32 @@ public final class GradingCommands {
         }
     }
 
-    public record Save(@JsonProperty(required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version,
-            @NotNull Map<UUID, Set<UUID>> checkedItemsByRubric, BigDecimal adjustment,
-            @Size(max = 2000) String adjustmentReason, @Size(max = 10000) String feedback,
-            @Size(max = 2000) String changeReason, UUID usedProposalId,
-            Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) implements IStrictInput {
+    public record Save(
+            @JsonProperty(required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version,
+            @NotNull Map<UUID, Set<UUID>> checkedItemsByRubric,
+            BigDecimal adjustment,
+            @Size(max = 2000) String adjustmentReason,
+            @Size(max = 10000) String feedback,
+            @Size(max = 2000) String changeReason,
+            UUID usedProposalId,
+            Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric,
+            GradingFeedback structuredFeedback,
+            Boolean clearStructuredFeedback,
+            Map<UUID, Set<UUID>> acknowledgedReviewItems,
+            Map<UUID, Map<UUID, BigDecimal>> reviewedItemScores) implements IStrictInput {
         /** Existing callers retain all-or-nothing checklist scoring. */
         public Save(long version, Map<UUID, Set<UUID>> checkedItemsByRubric, BigDecimal adjustment,
                 String adjustmentReason, String feedback, String changeReason, UUID usedProposalId) {
-            this(version, checkedItemsByRubric, adjustment, adjustmentReason, feedback, changeReason, usedProposalId, null);
+            this(version, checkedItemsByRubric, adjustment, adjustmentReason, feedback, changeReason, usedProposalId,
+                    null, null, null, null, null);
+        }
+
+        /** Existing fractional-score callers retain compatibility without structured feedback. */
+        public Save(long version, Map<UUID, Set<UUID>> checkedItemsByRubric, BigDecimal adjustment,
+                String adjustmentReason, String feedback, String changeReason, UUID usedProposalId,
+                Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+            this(version, checkedItemsByRubric, adjustment, adjustmentReason, feedback, changeReason, usedProposalId,
+                    itemScoresByRubric, null, null, null, null);
         }
     }
 

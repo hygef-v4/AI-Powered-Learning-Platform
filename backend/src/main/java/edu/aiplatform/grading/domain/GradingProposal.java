@@ -9,6 +9,7 @@ public class GradingProposal {
     public UUID evaluationId;
     public UUID requesterId;
     public UUID taskId;
+    public String taskState;
     public long versionNo;
     public String requestRef;
     public String submissionHash;

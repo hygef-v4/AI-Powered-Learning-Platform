@@ -2,12 +2,36 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "./api";
-import { hasPartialPoints, invalidItemScores } from "./RubricChecklistPanel";
+import { hasPartialPoints, invalidItemScores, itemPoints } from "./RubricChecklistPanel";
 import { message } from "./useResource";
 import { useGradingProposals } from "./useGradingProposals";
-import type { AiRequest, Checks, Detail, Evaluation, GradingFormValues, ItemScores } from "./types";
+import type {
+  AiRequest,
+  Checks,
+  Detail,
+  Evaluation,
+  GradingFormValues,
+  ItemScores,
+  Rubric,
+  StructuredFeedback,
+} from "./types";
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
+
+function buildReviewedScores(rubrics: Rubric[], checks: Checks, itemScores: ItemScores = {}): ItemScores {
+  const result: ItemScores = {};
+  for (const rubric of rubrics) {
+    const perRubric: Record<string, string | number> = {};
+    for (const criterion of rubric.criteria) {
+      for (const item of criterion.items) {
+        const val = itemPoints(rubric.rubricId, item.itemId, Number(item.points), checks, itemScores);
+        perRubric[item.itemId] = Number(val).toFixed(2);
+      }
+    }
+    result[rubric.rubricId] = perRubric;
+  }
+  return result;
+}
 
 function initialForm(evaluation: Evaluation): GradingFormValues {
   let checks: Checks;
@@ -19,6 +43,10 @@ function initialForm(evaluation: Evaluation): GradingFormValues {
   return {
     checks,
     itemScores: evaluation.rubricItemScores ?? {},
+    structuredFeedback: evaluation.structuredFeedback ?? null,
+    clearStructuredFeedback: false,
+    acknowledgedReviewItems: evaluation.acknowledgedReviewItems ?? {},
+    reviewedItemScores: evaluation.reviewedItemScores ?? {},
     adjustment: String(evaluation.adjustment ?? 0),
     adjustmentReason: evaluation.adjustmentReason ?? "",
     feedback: evaluation.feedback ?? "",
@@ -36,7 +64,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [dirty, setDirty] = useState(false);
   const evaluation = detail.evaluation;
   const dirtyRef = useRef(dirty);
-  const { proposals, addProposal } = useGradingProposals(evaluation.id, busy, setError);
+  const { proposals, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
   useEffect(() => {
     dirtyRef.current = dirty;
@@ -85,8 +113,26 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       if (!supportsItemScores && hasPartialPoints(detail.rubrics, form.checks, form.itemScores)) {
         throw new Error("Máy chủ chưa hỗ trợ lưu điểm lẻ. Cần cập nhật máy chủ rồi tải lại phiên bản; điểm bạn đang nhập vẫn được giữ.");
       }
+      const hasStructuredPayload = Boolean(
+        form.structuredFeedback ||
+        form.clearStructuredFeedback ||
+        (form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0) ||
+        (form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0),
+      );
       const saved = await gradingApi.save(evaluation.id, {
         ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
+        ...(hasStructuredPayload
+          ? {
+              ...(form.structuredFeedback ? { structuredFeedback: form.structuredFeedback } : {}),
+              ...(form.clearStructuredFeedback ? { clearStructuredFeedback: true } : {}),
+              ...(form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0
+                ? { acknowledgedReviewItems: form.acknowledgedReviewItems }
+                : {}),
+              ...(form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0
+                ? { reviewedItemScores: form.reviewedItemScores }
+                : {}),
+            }
+          : {}),
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
         adjustment: form.adjustment,
@@ -98,7 +144,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       setDetail({ ...detail, evaluation: saved });
       setDirty(false);
       dirtyRef.current = false;
-      setForm((current) => ({ ...current, usedProposalId: null }));
+      setForm((current) => ({
+        ...current,
+        structuredFeedback: saved.structuredFeedback ?? current.structuredFeedback ?? null,
+        clearStructuredFeedback: false,
+        acknowledgedReviewItems: saved.acknowledgedReviewItems ?? current.acknowledgedReviewItems ?? {},
+        reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
+        usedProposalId: null,
+      }));
       const next = detail.navigationIds[detail.navigationIds.indexOf(evaluation.id) + 1];
       if (next) router.push(`/teaching/evaluations/${next}`);
     } catch (error) {
@@ -120,8 +173,26 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  function applyProposal(checks: Checks, feedback: string, proposalId: string, itemScores: ItemScores = {}) {
-    updateForm({ checks, itemScores, feedback, usedProposalId: proposalId });
+  function applyProposal(
+    checks: Checks,
+    feedback: string,
+    proposalId: string,
+    itemScores: ItemScores = {},
+    structuredFeedback: StructuredFeedback | null = null,
+  ) {
+    const nextReviewed = structuredFeedback
+      ? buildReviewedScores(detail.rubrics, checks, itemScores)
+      : {};
+    updateForm({
+      checks,
+      itemScores,
+      feedback,
+      structuredFeedback,
+      clearStructuredFeedback: false,
+      acknowledgedReviewItems: {},
+      reviewedItemScores: nextReviewed,
+      usedProposalId: proposalId,
+    });
   }
 
   return {
@@ -132,6 +203,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     error,
     dirty,
     proposals,
+    pollExhausted,
     disabled: busy || !detail.current || evaluation.state === "SUPERSEDED",
     official: evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED",
     currentIndex: detail.navigationIds.indexOf(evaluation.id),
@@ -141,6 +213,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     confirmNavigation,
     save,
     requestProposal,
+    resumePolling,
     applyProposal,
   };
 }

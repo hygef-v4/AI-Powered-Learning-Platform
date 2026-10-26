@@ -342,8 +342,61 @@ class AiTaskFlowTest {
         worker.handle(message(view.taskId()));
 
         verify(gateway, times(1)).call(any(), any());
+        verify(usageRepository, times(1)).insert(any());
         assertThat(tasks.rows.get(view.taskId()).applyResult()).isEqualTo(ApplyOutcome.STALE);
         verify(quota, never()).reserve(any(), anyLong());
+    }
+
+    @Test
+    void transientAccountLookupFailureDuringDeliveryRetriesInsteadOfPermanentlyRejecting() {
+        AiTaskView view = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "r-transient-account"));
+        when(gateway.call(any(), any())).thenReturn(new Response("{\"score\":7}", "req", new Usage(2L, 3L, null, null)));
+        when(accounts.getContact(teacher.accountId()))
+                .thenThrow(new IllegalStateException("DB tạm mất kết nối"))
+                .thenReturn(Optional.of(new AccountContact(teacher.accountId(),
+                        "gv@fpt.edu.vn", "GV", Role.TEACHER, AccountStatus.ACTIVE)));
+
+        assertThatThrownBy(() -> worker.handle(message(view.taskId()))).isInstanceOf(RetryableJobException.class);
+        assertThat(tasks.rows.get(view.taskId()).handlerDone()).isFalse();
+        worker.handle(message(view.taskId()));
+
+        verify(gateway, times(1)).call(any(), any());
+        verify(usageRepository, times(1)).insert(any());
+        assertThat(tasks.rows.get(view.taskId()).handlerDone()).isTrue();
+        assertThat(tasks.rows.get(view.taskId()).applyResult()).isEqualTo(ApplyOutcome.APPLIED);
+    }
+
+    @Test
+    void disabledRequesterAccountRejectsDeliveryAndNotifiesHandlerWithInputVersion() {
+        AiTaskView view = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "r-disabled-account"));
+        when(gateway.call(any(), any())).thenReturn(new Response("{\"score\":7}", "req", new Usage(2L, 3L, null, null)));
+        when(accounts.getContact(teacher.accountId())).thenReturn(Optional.of(new AccountContact(teacher.accountId(),
+                "gv@fpt.edu.vn", "GV", Role.TEACHER, AccountStatus.DISABLED)));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(task.handlerDone()).isTrue();
+        assertThat(task.applyResult()).isEqualTo(ApplyOutcome.REJECTED);
+        verify(handler, never()).onReady(any());
+        ArgumentCaptor<AiTaskFailure> failure = ArgumentCaptor.forClass(AiTaskFailure.class);
+        verify(handler).onFailed(failure.capture());
+        assertThat(failure.getValue().inputVersion()).isEqualTo(3L);
+        assertThat(failure.getValue().state()).isEqualTo(AiTaskState.READY);
+    }
+
+    @Test
+    void duplicateDeliveryIsIdempotentAndCallsHandlerOnce() {
+        AiTaskView view = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "r-dup-delivery"));
+        when(gateway.call(any(), any())).thenReturn(new Response("{\"score\":9}", "req", new Usage(4L, 5L, null, null)));
+
+        worker.handle(message(view.taskId()));
+        worker.handle(message(view.taskId()));
+
+        verify(gateway, times(1)).call(any(), any());
+        verify(handler, times(1)).onReady(any());
+        verify(usageRepository, times(1)).insert(any());
+        assertThat(tasks.rows.get(view.taskId()).applyResult()).isEqualTo(ApplyOutcome.APPLIED);
     }
 
     @Test

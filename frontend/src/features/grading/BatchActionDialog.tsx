@@ -7,6 +7,14 @@ import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { gradingApi } from "./api";
 import { message } from "./useResource";
 import type { BatchResult, ItemVersion } from "./types";
+
+const OUTCOME_CODE_MESSAGES: Record<string, string> = {
+  STRUCTURED_FEEDBACK_REVIEW_REQUIRED:
+    "Còn mục nhận xét cấu trúc cần giảng viên kiểm tra và xác nhận trước khi chốt điểm.",
+  STRUCTURED_FEEDBACK_SCORE_MISMATCH:
+    "Có mục đã thay đổi điểm nhưng chưa cập nhật hoặc xác nhận lại giải thích nhận xét.",
+};
+
 export function BatchActionDialog({
   action,
   items,
@@ -118,12 +126,22 @@ export function BatchActionDialog({
       {error && <p role="alert">{error}</p>}
       {result && (
         <ul className="my-4 space-y-2">
-          {result.items.map((r, index) => (
-            <li key={`${r.evaluationId}-${index}`} className="rounded border p-2">
-              Bài {index + 1}: {r.outcome}
-              {r.code && ` · ${r.code}`}
-            </li>
-          ))}
+          {result.items.map((r, index) => {
+            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] : undefined;
+            return (
+              <li key={`${r.evaluationId}-${index}`} className="rounded border p-2">
+                <p>
+                  Bài {index + 1}: {r.outcome}
+                  {r.code && ` · ${r.code}`}
+                </p>
+                {detailMsg && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-danger">
+                    {detailMsg}
+                  </p>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Dialog>

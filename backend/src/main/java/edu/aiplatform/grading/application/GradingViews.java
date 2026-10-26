@@ -6,6 +6,7 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.ActivitySummary;
 import edu.aiplatform.grading.contract.GroupSectionAuthor;
 import edu.aiplatform.grading.domain.Evaluation;
+import edu.aiplatform.grading.domain.GradingFeedback;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -58,7 +59,19 @@ public final class GradingViews {
             int size) {
     }
 
+    public record StudentRubricItemView(UUID rubricId, String partId, String criterionTitle, UUID itemId,
+            String itemText, BigDecimal awardedPoints, BigDecimal maxPoints, String evidence, String reason,
+            String suggestion) {
+    }
+
     public record StudentGradeView(UUID assignmentId, UUID attemptId, BigDecimal score, BigDecimal maxScore,
-            String feedback, Instant publishedAt, boolean updated, String rubricChecks) {
+            String feedback, Instant publishedAt, boolean updated, String rubricChecks,
+            GradingFeedback.Summary structuredSummary, List<StudentRubricItemView> rubricItems,
+            BigDecimal rubricScore, boolean memberOverride) {
+        public StudentGradeView(UUID assignmentId, UUID attemptId, BigDecimal score, BigDecimal maxScore,
+                String feedback, Instant publishedAt, boolean updated, String rubricChecks) {
+            this(assignmentId, attemptId, score, maxScore, feedback, publishedAt, updated, rubricChecks, null,
+                    List.of(), null, false);
+        }
     }
 }

@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,6 +50,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, IScheduledScanner {
 
+    private static final Logger log = LoggerFactory.getLogger(AiTaskJobHandler.class);
     static final Duration QUEUE_TIMEOUT = Duration.ofMinutes(30);
     static final Duration STALE_PENDING = Duration.ofMinutes(5);
     static final int MAX_RESULT_CHARS = 1_000_000;
@@ -123,8 +126,14 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                 throw new RetryableJobException("Không bắt đầu được task AI", e);
             }
             if (dispatch != null) {
+                long callStartNanos = System.nanoTime();
                 Outcome outcome = callProvider(dispatch);
+                long callDurationMs = Duration.ofNanos(System.nanoTime() - callStartNanos).toMillis();
                 transactions.executeWithoutResult(status -> finish(taskId, outcome));
+                String outcomeKind = outcome.error() == null ? "READY" : outcome.error().kind().name();
+                log.info("AI task provider finished taskId={} requestRef={} taskType={} targetRef={} outcome={} durationMs={}",
+                        dispatch.task().id(), dispatch.task().requestRef(), dispatch.task().taskType(),
+                        dispatch.task().targetRef(), outcomeKind, callDurationMs);
             }
         } finally {
             if (slot != null) {
@@ -258,9 +267,14 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     }
 
     private void deliverOrRetry(UUID taskId) {
+        long startNanos = System.nanoTime();
         try {
             delivery.deliver(taskId);
         } catch (RuntimeException e) {
+            long durationMs = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
+            String causeClass = e.getCause() != null ? e.getCause().getClass().getSimpleName() : "none";
+            log.warn("AI task delivery failed taskId={} durationMs={} errorClass={} causeClass={}",
+                    taskId, durationMs, e.getClass().getSimpleName(), causeClass);
             // Handler lỗi: lượt sau chỉ gọi lại handler (P3).
             throw new RetryableJobException("Handler kết quả AI lỗi", e);
         }
@@ -310,10 +324,15 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
 
     /** Handler lỗi thì thử lại ở lượt quét sau, không chặn các task khác. */
     private void quietDeliver(UUID taskId) {
+        long startNanos = System.nanoTime();
         try {
+            log.info("AI task scanner recovery started taskId={}", taskId);
             delivery.deliver(taskId);
-        } catch (RuntimeException ignored) {
-            // Thử lại ở lượt quét sau.
+        } catch (RuntimeException e) {
+            long durationMs = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
+            String causeClass = e.getCause() != null ? e.getCause().getClass().getSimpleName() : "none";
+            log.warn("AI task scanner recovery failed taskId={} durationMs={} errorClass={} causeClass={}",
+                    taskId, durationMs, e.getClass().getSimpleName(), causeClass);
         }
     }
 
