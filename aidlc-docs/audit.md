@@ -6723,3 +6723,11 @@ Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-4
 ---
 
 U09 placement completion: live proposal 5a2b95f9-9525-462a-8937-189affbe8bf9 (version 6) reached READY using the existing Gemini connection. Verified summary.nextSteps count 0, item suggestions count 9, and opened the first item's Cách cải thiện in the teacher UI. Screenshot: .tmp/u09-feedback-screenshots/ai-feedback-item-guidance.png. Backend /health UP. No grade applied/saved/finalized/published; no commit/push.
+
+## Review report U01–U15 (2026-10-22) – user's units
+**Timestamp**: 2026-10-26T08:00:00Z
+**User Input**: "@"C:\Users\PC\Downloads\u01-u15-code-aidlc-review-2026-10-22.md" ban toi hom truoc gui toi cai nay"
+**AI Response**: Đối chiếu các mục thuộc U02/U06/U12 với `staging` hiện tại: R02 đã sửa (PR #19); R09 đã sửa (PR #21) trừ nút Đóng vẫn đóng khi lưu lỗi; R06 đã được Quang Hưng sửa (37a7362); R07 còn (U12 gửi GROUP_MEMBERSHIP_CHANGED không có groupId, U14 từ chối); R10 còn (MaterialText thiếu version, liên quan U06 contract, U13, U07, U10). Sửa trên nhánh `fix/review-r07-r09`: U12 phát một sự kiện mỗi nhóm có groupId (người vào theo nhóm mới, người bị gỡ theo nhóm đã rời), test kiểm cả `RecipientResolver.id`; nút Đóng chỉ đóng khi lưu thành công, kèm test. R10 để người dùng bàn với nhóm vì cần đổi contract và code của U13/U07/U10.
+**Context**: Construction, xử lý review tổng U01–U15 phần của người dùng
+
+---
