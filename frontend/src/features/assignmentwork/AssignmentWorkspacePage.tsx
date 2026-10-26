@@ -276,10 +276,10 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         <p role="status" className="text-sm text-muted">{saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}</p>
         <div className="flex items-center gap-2">
           <Button disabled={saving || !dirty} onClick={() => void save()}>Lưu bài</Button>
-          <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={async () => {
-            // Lưu trước để popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
-            await save();
+          <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
+            // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
             setDialog("submit");
+            void save();
           }}>Nộp bài</Button>
         </div>
       </div>}
