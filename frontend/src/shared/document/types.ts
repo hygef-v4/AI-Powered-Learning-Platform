@@ -89,19 +89,31 @@ export function criteriaOf(items: AtomicItem[]): RubricCriterion[] {
   }));
 }
 
-/** Tổng điểm rubric: cộng điểm dương của các mục chấm. */
+/** BR-U07-21: điểm một mục là số dương, tối đa 2 chữ số thập phân (server từ chối 1.255, không làm tròn). */
+export function pointsValid(points: number | null | undefined): boolean {
+  const value = Number(points);
+  return points !== null && points !== undefined && Number.isFinite(value) && value > 0
+    && Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
+}
+
+/** Điểm đã nhập nhưng sai dạng (quá 2 chữ số thập phân); ô trống, 0, số âm là "chưa có điểm", không tính là sai. */
+export function pointsMalformed(points: number | null | undefined): boolean {
+  return points !== null && points !== undefined && Number(points) > 0 && !pointsValid(points);
+}
+
+/** Tổng điểm rubric: cộng điểm hợp lệ của các mục chấm. */
 export function rubricTotal(criteria: RubricCriterion[]): number {
   return criteria.reduce((sum, criterion) => sum + criterionTotal(criterion), 0);
 }
 
 export function criterionTotal(criterion: RubricCriterion): number {
-  return criterion.items.reduce((sum, item) => sum + (Number(item.points) > 0 ? Number(item.points) : 0), 0);
+  return criterion.items.reduce((sum, item) => sum + (pointsValid(item.points) ? Number(item.points) : 0), 0);
 }
 
-/** Rubric đủ để duyệt (giống AssignmentRubric.complete): có tiêu chí; tiêu chí có tên và mục chấm; mục có nội dung, điểm > 0. */
+/** Rubric đủ để duyệt (giống AssignmentRubric.complete): có tiêu chí; tiêu chí có tên và mục chấm; mục có nội dung, điểm hợp lệ. */
 export function rubricComplete(criteria: RubricCriterion[]): boolean {
   return criteria.length > 0 && criteria.every((criterion) => criterion.title.trim() !== "" && criterion.items.length > 0
-    && criterion.items.every((item) => item.text.trim() !== "" && item.points !== null && item.points > 0));
+    && criterion.items.every((item) => item.text.trim() !== "" && pointsValid(item.points)));
 }
 
 export const headingLabels: Record<HeadingStyle, string> = {

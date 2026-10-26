@@ -110,9 +110,11 @@ export type Attempt = {
   lateUntil: string | null;
   editable: boolean;
   serverTime: string;
+  /** Kết quả kiểm nộp của bản đang lưu, cùng luật lúc nộp (server có bản đề gốc); lượt đã nộp thì rỗng. */
+  submitIssues?: ValidationIssue[];
 };
 
-export type Saved = { attemptId: string; contentVersion: number; lastSavedAt: string; content: DocumentModel };
+export type Saved = { attemptId: string; contentVersion: number; lastSavedAt: string; content: DocumentModel; submitIssues?: ValidationIssue[] };
 
 export type Receipt = {
   attemptId: string;

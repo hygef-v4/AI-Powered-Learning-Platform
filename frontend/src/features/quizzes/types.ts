@@ -110,13 +110,11 @@ export type QuizInfo = {
 
 export type QuizItemView = { position: number; points: number; inline: boolean; question: QuestionView };
 
-/** `activityRetentionConfigured`: Admin đã đặt thời hạn lưu nên bật được ghi nhận hoạt động (K3). */
 export type QuizDetail = {
   quiz: QuizInfo;
   items: QuizItemView[];
   maxScore: number;
   canManage: boolean;
-  activityRetentionConfigured: boolean;
 };
 
 export type QuizRow = {

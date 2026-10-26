@@ -130,7 +130,8 @@ public class AttemptService {
         if (attempts.saveContent(attempt.id(), stored, contentVersion, now) != 1) {
             throw versionConflict();
         }
-        return new WorkViews.Saved(attempt.id(), contentVersion + 1, now, DocumentFiles.hideFiles(stored));
+        return new WorkViews.Saved(attempt.id(), contentVersion + 1, now, DocumentFiles.hideFiles(stored),
+                submitIssues(attempt, assignment.skeleton(), stored));
     }
 
     /** F6: nộp tay (BR-U08-20…22); nộp lặp trả cùng biên nhận. */
@@ -151,10 +152,7 @@ public class AttemptService {
         }
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(current.assignmentId()))
                 .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
-        ValidationResult result = documents.validateForSubmit(content.skeleton(), current.content(),
-                current.snapshot().requiredDiagrams());
-        List<ValidationIssue> errors = new ArrayList<>(result.errors());
-        errors.addAll(disabledDiagrams(current, current.content()));
+        List<ValidationIssue> errors = submitIssues(current, content.skeleton(), current.content());
         if (!errors.isEmpty()) {
             throw WorkProblem.issues(HttpStatus.CONFLICT, "SUBMISSION_INVALID", "Bài chưa đủ điều kiện nộp", errors);
         }
@@ -361,7 +359,21 @@ public class AttemptService {
                 a.snapshot().diagramEnabled(), a.snapshot().requiredDiagrams(), content.parts(),
                 maxPoints, a.snapshot().activityMonitoringEnabled(),
                 a.snapshot().activityMonitoringEnabled() ? a.snapshot().activityNotice() : null, view.closesAt(),
-                view.lateUntil(), editable, now);
+                view.lateUntil(), editable, now, submitIssues(a, content.skeleton(), a.content()));
+    }
+
+    /**
+     * Kiểm nộp (F6): cùng luật với lúc nộp, trả về cùng lượt để trang báo đúng trước khi bấm Nộp. Máy khách không có bản
+     * đề gốc nên không tự biết sơ đồ, bảng của đề đã được vẽ, điền khác đề hay chưa. Lượt đã nộp thì rỗng.
+     */
+    private List<ValidationIssue> submitIssues(AssignmentAttempt attempt, DocumentModel skeleton, DocumentModel content) {
+        if (!attempt.inProgress()) {
+            return List.of();
+        }
+        ValidationResult result = documents.validateForSubmit(skeleton, content, attempt.snapshot().requiredDiagrams());
+        List<ValidationIssue> errors = new ArrayList<>(result.errors());
+        errors.addAll(disabledDiagrams(attempt, content));
+        return List.copyOf(errors);
     }
 
     private static WorkViews.Receipt receipt(AssignmentAttempt a) {

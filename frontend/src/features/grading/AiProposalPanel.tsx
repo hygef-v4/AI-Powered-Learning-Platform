@@ -3,7 +3,16 @@ import { useState } from "react";
 import { Pill, type Tone } from "@/shared/ui";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { checklistPoints, invalidItemScores, itemPoints, validItemScore } from "./RubricChecklistPanel";
-import type { AiRequest, Checks, GradingFormValues, ItemScores, Proposal, Rubric } from "./types";
+import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
+import type {
+  AiRequest,
+  Checks,
+  GradingFormValues,
+  ItemScores,
+  Proposal,
+  Rubric,
+  StructuredFeedback,
+} from "./types";
 
 /** Preserve the U09 request DTO; shared provider choice remains implicit as before. */
 export function aiRequest(choice: SourceChoice): AiRequest {
@@ -15,12 +24,28 @@ export function aiRequest(choice: SourceChoice): AiRequest {
 }
 
 const STATUS_META: Record<string, { label: string; tone: Tone; icon: string }> = {
-  PENDING: { label: "Đang xử lý", tone: "warning", icon: "⏳" },
+  PENDING: { label: "Đang chờ xử lý", tone: "warning", icon: "⏳" },
   READY: { label: "Sẵn sàng để xem", tone: "success", icon: "✓" },
   FAILED: { label: "Không tạo được đề xuất", tone: "danger", icon: "✕" },
   STALE: { label: "Đề xuất đã cũ", tone: "neutral", icon: "•" },
   REJECTED: { label: "Đề xuất không hợp lệ", tone: "danger", icon: "✕" },
 };
+
+function pendingStageLabel(taskState?: string | null): string {
+  if (taskState === "READY") return "Đã nhận kết quả AI, đang xử lý phản hồi";
+  if (taskState === "RUNNING") return "AI đang chấm bài";
+  return "Đang chờ xử lý";
+}
+
+function pendingStageDetail(taskState?: string | null): string {
+  if (taskState === "READY") {
+    return "Đã nhận kết quả từ nhà cung cấp AI và đang đối chiếu với rubric. Bạn vẫn có thể chấm thủ công trong lúc chờ.";
+  }
+  if (taskState === "RUNNING") {
+    return "AI đang đọc bài làm và rubric để tạo đề xuất. Bạn vẫn có thể chấm thủ công trong lúc chờ.";
+  }
+  return "Yêu cầu chấm AI đang xếp hàng xử lý. Bạn vẫn có thể chấm thủ công trong lúc chờ.";
+}
 
 export function AiProposalPanel({
   proposals,
@@ -30,15 +55,27 @@ export function AiProposalPanel({
   rubrics = [],
   currentValues,
   partTitles = {},
+  validBlockIds,
+  pollExhausted = false,
+  onRecheck,
 }: {
   evaluationId: string;
   proposals: Proposal[];
-  onApply: (checks: Checks, feedback: string, id: string, itemScores?: ItemScores) => void;
+  onApply: (
+    checks: Checks,
+    feedback: string,
+    id: string,
+    itemScores?: ItemScores,
+    structuredFeedback?: StructuredFeedback | null,
+  ) => void;
   onRequest: (input: AiRequest) => void;
   disabled?: boolean;
   rubrics?: Rubric[];
   currentValues?: GradingFormValues;
   partTitles?: Record<string, string>;
+  validBlockIds?: Set<string>;
+  pollExhausted?: boolean;
+  onRecheck?: () => void;
 }) {
   const [choosingSource, setChoosingSource] = useState(false);
   const [expandedOlder, setExpandedOlder] = useState<Record<string, boolean>>({});
@@ -46,17 +83,40 @@ export function AiProposalPanel({
   function renderProposalContent(p: Proposal, isLatest: boolean) {
     const aiChecks = p.proposal?.checks ?? {};
     const aiScores = p.proposal?.itemScoresByRubric ?? {};
+    const aiStructured = p.proposal?.structuredFeedback ?? null;
     const hasComparison = Boolean(isLatest && p.proposal && rubrics.length > 0 && currentValues);
     const hasInvalidCurrent = Boolean(currentValues && invalidItemScores(rubrics, currentValues.itemScores));
     const currentSubtotal = currentValues ? checklistPoints(rubrics, currentValues.checks, currentValues.itemScores) : 0;
     const aiTotal = p.proposal ? Number(p.proposal.score) : 0;
     const totalDiff = !hasInvalidCurrent && Number.isFinite(aiTotal) ? Math.round((aiTotal - currentSubtotal) * 100) / 100 : 0;
     const adjustmentNum = currentValues ? Number(currentValues.adjustment) : 0;
+    const reviewFlagCount = aiStructured?.items?.filter((item) => item.requiresReview).length ?? 0;
 
     return (
       <>
         {p.provider && <p className="mt-1 text-xs text-muted">{p.provider}{p.model && ` · ${p.model}`}</p>}
-        {p.status === "PENDING" && <p role="status" className="mt-2 text-muted">AI đang đọc bài và rubric. Bạn vẫn có thể chấm thủ công trong lúc chờ.</p>}
+        {p.status === "PENDING" && !pollExhausted && (
+          <p role="status" className="mt-2 text-muted">
+            {pendingStageDetail(p.taskState)}
+          </p>
+        )}
+        {p.status === "PENDING" && pollExhausted && (
+          <div role="status" className="mt-2 rounded-lg border border-warning bg-warning-soft/60 p-3 text-xs text-ink">
+            <p className="font-semibold">Phản hồi AI đang mất nhiều thời gian hơn dự kiến.</p>
+            <p className="mt-1 text-muted">
+              Yêu cầu hiện tại vẫn đang được xử lý. Bạn có thể kiểm tra lại trạng thái của yêu cầu này mà không gửi yêu cầu AI mới, hoặc tiếp tục chấm thủ công.
+            </p>
+            {onRecheck && (
+              <button
+                type="button"
+                onClick={onRecheck}
+                className="mt-2 rounded-lg border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary-soft"
+              >
+                Kiểm tra lại
+              </button>
+            )}
+          </div>
+        )}
         {(p.status === "FAILED" || p.status === "REJECTED") && <div className="mt-2 rounded-lg bg-danger/5 p-3">
           <p>{p.safeError && !/^AI task (failed|unavailable or failed)$/.test(p.safeError) ? p.safeError : "Tác vụ AI không thành công. Kiểm tra kết nối hoặc thử lại bằng nguồn AI đã cấu hình."}</p>
           <p className="mt-1 text-muted">Bạn vẫn có thể chấm thủ công theo rubric. Điểm chưa bị thay đổi.</p>
@@ -87,10 +147,22 @@ export function AiProposalPanel({
               </div>
             )}
           </div>
+          {reviewFlagCount > 0 && (
+            <div role="note" className="mt-2 rounded-lg border border-warning bg-warning-soft/60 px-3 py-2 text-xs text-ink">
+              <strong className="text-warning">⚠ Có {reviewFlagCount} mục AI đánh dấu cần giảng viên kiểm tra thủ công</strong>{" "}
+              (ví dụ: minh chứng chưa đọc rõ hoặc thiết kế thay thế hợp lệ).
+            </div>
+          )}
           {hasComparison && Number.isFinite(adjustmentNum) && adjustmentNum !== 0 && (
             <p className="mt-1.5 text-xs text-muted">
               Điều chỉnh giảng viên: {adjustmentNum > 0 ? `+${adjustmentNum.toFixed(2)}` : adjustmentNum.toFixed(2)} (tách biệt với điểm rubric AI)
             </p>
+          )}
+          {aiStructured && (
+            <GradingFeedbackSummary
+              summary={aiStructured.summary}
+              title="Tóm tắt nhận xét cấu trúc từ AI"
+            />
           )}
           {hasComparison && currentValues && (
             <div className="mt-2 space-y-1.5 rounded-lg border border-line bg-white p-2.5 text-xs">
@@ -121,6 +193,9 @@ export function AiProposalPanel({
                         const aiVal = hasAiItem ? Number(itemPoints(rubric.rubricId, item.itemId, max, aiChecks, aiScores)) : null;
                         const itemDiff = curValid && aiVal !== null ? Math.round((aiVal - Number(curRaw)) * 100) / 100 : 0;
                         const changed = !curValid || (aiVal !== null && itemDiff !== 0);
+                        const fbItem = aiStructured?.items?.find(
+                          (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
+                        );
                         return (
                           <div
                             key={item.itemId}
@@ -140,6 +215,18 @@ export function AiProposalPanel({
                                 </span>
                               )}
                             </div>
+                            {fbItem && (
+                              <RubricItemFeedback
+                                rubricId={rubric.rubricId}
+                                itemId={item.itemId}
+                                itemText={item.text}
+                                awardedPoints={aiVal ?? 0}
+                                maxPoints={max}
+                                feedbackItem={fbItem}
+                                validBlockIds={validBlockIds}
+                                editable={false}
+                              />
+                            )}
                           </div>
                         );
                       })}
@@ -150,7 +237,7 @@ export function AiProposalPanel({
             </div>
           )}
           {p.proposal.feedback && (
-            <details open={p.proposal.feedback.length <= 280} className="mt-2 rounded-lg border border-line-soft bg-white p-2.5">
+            <details open={!aiStructured && p.proposal.feedback.length <= 280} className="mt-2 rounded-lg border border-line-soft bg-white p-2.5">
               <summary className="cursor-pointer text-xs font-semibold text-body">Nhận xét tổng hợp từ AI</summary>
               <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-ink">{p.proposal.feedback}</p>
             </details>
@@ -171,8 +258,19 @@ export function AiProposalPanel({
             disabled={disabled || p.status !== "READY" || !p.proposal}
             onClick={() => {
               if (!p.proposal) return;
-              if (p.proposal.itemScoresByRubric) onApply(p.proposal.checks, p.proposal.feedback ?? "", p.id, p.proposal.itemScoresByRubric);
-              else onApply(p.proposal.checks, p.proposal.feedback ?? "", p.id);
+              if (p.proposal.structuredFeedback) {
+                onApply(
+                  p.proposal.checks,
+                  p.proposal.feedback ?? "",
+                  p.id,
+                  p.proposal.itemScoresByRubric,
+                  p.proposal.structuredFeedback,
+                );
+              } else if (p.proposal.itemScoresByRubric) {
+                onApply(p.proposal.checks, p.proposal.feedback ?? "", p.id, p.proposal.itemScoresByRubric);
+              } else {
+                onApply(p.proposal.checks, p.proposal.feedback ?? "", p.id);
+              }
             }}
           >
             Áp dụng vào bản nháp
@@ -214,7 +312,8 @@ export function AiProposalPanel({
       )}
       {proposals.length === 0 && <p className="mt-3 text-sm text-muted">Chưa có đề xuất. Bạn có thể tự chấm theo rubric hoặc yêu cầu AI hỗ trợ.</p>}
       {proposals.map((p, index) => {
-        const meta = STATUS_META[p.status] ?? { label: "Chưa khả dụng", tone: "neutral" as Tone, icon: "•" };
+        const baseMeta = STATUS_META[p.status] ?? { label: "Chưa khả dụng", tone: "neutral" as Tone, icon: "•" };
+        const meta = p.status === "PENDING" ? { ...baseMeta, label: pendingStageLabel(p.taskState) } : baseMeta;
         const sourceLabel = `Lần ${p.versionNo} · ${p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? "API cá nhân" : "API trường"}`;
         const keepExpanded = index === 0 || p.status === "PENDING" || p.status === "FAILED" || p.status === "REJECTED";
         if (!keepExpanded) {

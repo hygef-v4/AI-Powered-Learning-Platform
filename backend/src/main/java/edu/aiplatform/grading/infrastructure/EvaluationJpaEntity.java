@@ -1,7 +1,8 @@
 package edu.aiplatform.grading.infrastructure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.grading.domain.Evaluation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +18,8 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "evaluations")
 class EvaluationJpaEntity {
-    private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules();
+    private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     @Id
     UUID id;
     UUID assignmentId;

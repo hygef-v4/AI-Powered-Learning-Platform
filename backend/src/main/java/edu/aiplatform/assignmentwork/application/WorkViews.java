@@ -55,7 +55,10 @@ public final class WorkViews {
                          String startBlockedReason, SubmissionWindow window, Instant serverTime) {
     }
 
-    /** Lượt làm: đề (hướng dẫn, khung trong {@code content}) và các phần; không có rubric (yêu cầu 2026-10-21). */
+    /**
+     * Lượt làm: đề (hướng dẫn, khung trong {@code content}) và các phần; không có rubric (yêu cầu 2026-10-21).
+     * {@code submitIssues}: kết quả kiểm nộp của bản đang lưu, cùng luật với lúc nộp (lượt đã nộp thì rỗng).
+     */
     public record Attempt(UUID attemptId, UUID assignmentId, UUID classId, String title, int attemptNo,
                           int maxAttempts, AttemptStatus status, DocumentModel content, long contentVersion,
                           Instant startedAt, Instant deadlineAt, Instant lastSavedAt, Instant submittedAt, boolean late,
@@ -64,10 +67,12 @@ public final class WorkViews {
                           boolean diagramEnabled, Map<DiagramType, Integer> requiredDiagrams, List<DocumentPart> parts,
                           BigDecimal maxPoints, boolean activityMonitoringEnabled,
                           String activityNotice, Instant closesAt, Instant lateUntil, boolean editable,
-                          Instant serverTime) {
+                          Instant serverTime, List<ValidationIssue> submitIssues) {
     }
 
-    public record Saved(UUID attemptId, long contentVersion, Instant lastSavedAt, DocumentModel content) {
+    /** {@code submitIssues}: kết quả kiểm nộp của bản vừa lưu, để trang báo đúng trước khi bấm Nộp. */
+    public record Saved(UUID attemptId, long contentVersion, Instant lastSavedAt, DocumentModel content,
+                        List<ValidationIssue> submitIssues) {
     }
 
     public record Receipt(UUID attemptId, UUID assignmentId, UUID classId, String title, int attemptNo,

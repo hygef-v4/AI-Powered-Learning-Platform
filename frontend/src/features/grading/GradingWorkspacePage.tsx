@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button, Pill } from "@/shared/ui";
 import { checklistPoints } from "./RubricChecklistPanel";
 import { useSubmissionContext } from "./useSubmissionContext";
@@ -34,6 +34,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
     error,
     dirty,
     proposals,
+    pollExhausted,
     disabled,
     official,
     currentIndex,
@@ -43,6 +44,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
     confirmNavigation,
     save,
     requestProposal,
+    resumePolling,
     applyProposal,
   } = workspace;
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
@@ -50,6 +52,16 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   const context = useSubmissionContext(evaluation.classId, evaluation.assignmentId);
   const partTitles = Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
     .map((block) => [block.id, block.content.text as string]));
+  const validBlockIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const block of detail.document.blocks) {
+      if (block.id) ids.add(block.id);
+    }
+    for (const rubric of detail.rubrics) {
+      if (rubric.partId) ids.add(rubric.partId);
+    }
+    return ids;
+  }, [detail.document.blocks, detail.rubrics]);
   const total = Math.min(Number(evaluation.maxScore), Math.max(0, checklistPoints(detail.rubrics, form.checks, form.itemScores) + (Number(form.adjustment) || 0)));
   return (
     <main data-workspace-focus={focusMode} data-workspace-main="true" className="min-w-0 space-y-3">
@@ -83,7 +95,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
           <Button size="sm" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)}>Bài sau →</Button>
           <Button size="sm" variant="primary" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
           <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>Chốt điểm</Button>
-          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
+          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "PUBLISHED" && evaluation.state !== "FINALIZED" ? true : evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
         </div>
       </div>
       {!detail.current && <p>Đây là lần nộp cũ, chỉ có thể xem lại.</p>}
@@ -100,9 +112,10 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
       <div data-grading-grid="true" className="grid min-w-0 items-start gap-4">
         <SubmissionViewer document={detail.document} evaluationId={evaluation.id} />
         <div className="min-w-0 space-y-3">
-          <GradingForm rubrics={detail.rubrics} partTitles={partTitles} values={form} disabled={disabled} official={official} onChange={updateForm} />
+          <GradingForm rubrics={detail.rubrics} partTitles={partTitles} validBlockIds={validBlockIds} values={form} disabled={disabled} official={official} onChange={updateForm} />
           <AiProposalPanel evaluationId={evaluation.id} proposals={proposals} disabled={disabled || official}
-            rubrics={detail.rubrics} currentValues={form} partTitles={partTitles}
+            rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
+            pollExhausted={pollExhausted} onRecheck={resumePolling}
             onRequest={(input) => void requestProposal(input)} onApply={applyProposal} />
         </div>
       </div>

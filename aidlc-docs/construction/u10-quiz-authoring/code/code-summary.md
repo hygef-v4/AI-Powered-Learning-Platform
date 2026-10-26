@@ -333,3 +333,7 @@ Dữ liệu tạo bằng API: Admin kích hoạt bằng OTP qua Mailpit; Chủ n
 Quan sát (U06, không phải lỗi U10): lời gọi tool sai schema bị trả `INVALID_PARAMS` mà không ghi audit; lời gọi bị từ chối quyền ghi `ACCESS_DENIED` chứ không phải `MCP_TOOL_CALLED`.
 
 Chưa kiểm: AI soạn câu bằng khóa thật (cần người dùng nhập khóa ở trang Kết nối AI hoặc Admin bật API của trường); ước tính token trên popup (chỉ hiện khi có nguồn dùng được); `AiTaskStatus` với task thật.
+
+## Thay đổi 2026-10-24
+
+- Thời hạn giữ dữ liệu hoạt động cố định 1 ngày (U08), không còn cài đặt `activity.retentionDays`: bỏ `QuizActivityPolicy` và trường `activityRetentionConfigured`, nên lỗi `ACTIVITY_RETENTION_NOT_SET` không còn xảy ra; bỏ `FakeSettings` trong test.

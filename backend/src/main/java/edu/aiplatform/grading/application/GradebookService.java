@@ -1,10 +1,13 @@
 package edu.aiplatform.grading.application;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IRubric;
+import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.AttemptStatus;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
@@ -18,18 +21,22 @@ import edu.aiplatform.grading.application.GradingViews.GradebookPage;
 import edu.aiplatform.grading.application.GradingViews.GradebookRow;
 import edu.aiplatform.grading.application.GradingViews.Person;
 import edu.aiplatform.grading.application.GradingViews.StudentGradeView;
+import edu.aiplatform.grading.application.GradingViews.StudentRubricItemView;
 import edu.aiplatform.grading.contract.GroupSubmissionStatus;
 import edu.aiplatform.grading.contract.IGroupSubmissionSource;
 import edu.aiplatform.grading.domain.Evaluation;
 import edu.aiplatform.grading.domain.EvaluationKind;
 import edu.aiplatform.grading.domain.EvaluationStatus;
 import edu.aiplatform.grading.domain.GradeDistributionCalculator;
+import edu.aiplatform.grading.domain.GradingFeedback;
 import edu.aiplatform.grading.domain.IEvaluationRepository;
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -51,6 +58,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GradebookService {
     private static final int EXPORT_PAGE_SIZE = 100;
+    private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private final ObjectProvider<IGroupSubmissionSource> groups;
     private final IEvaluationRepository evaluations;
     private final GradingAccess access;
@@ -211,9 +221,69 @@ public class GradebookService {
     }
 
     private StudentGradeView studentView(Evaluation evaluation) {
-        return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, evaluation.score,
-                evaluation.maxScore, evaluation.feedback, evaluation.publishedAt, !evaluation.changes.isEmpty(),
-                evaluation.rubricChecks);
+        List<RubricView> rubrics = List.of();
+        if (evaluation.rubricSnapshot != null && !evaluation.rubricSnapshot.isBlank()) {
+            try {
+                rubrics = GradingJson.rubrics(JSON, evaluation.rubricSnapshot);
+            } catch (RuntimeException ignored) {
+                rubrics = List.of();
+            }
+        }
+        var checks = GradingJson.readChecks(JSON, evaluation.rubricChecks);
+        var effectiveScores = GradingJson.effectiveItemScores(rubrics, checks, evaluation.rubricItemScores);
+        Map<UUID, GradingFeedback.Item> feedbackByItem = new HashMap<>();
+        if (evaluation.structuredFeedback != null && evaluation.structuredFeedback.items() != null) {
+            for (var item : evaluation.structuredFeedback.items()) {
+                if (item != null && item.itemId() != null) {
+                    feedbackByItem.put(item.itemId(), item);
+                }
+            }
+        }
+        List<StudentRubricItemView> rubricItems = new ArrayList<>();
+        BigDecimal rubricScore = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        for (var rubricView : rubrics) {
+            var awardedForRubric = effectiveScores.getOrDefault(rubricView.rubricId(), Map.of());
+            if (rubricView.criteria() == null)
+                continue;
+            for (var criterion : rubricView.criteria()) {
+                if (criterion.items() == null)
+                    continue;
+                for (var item : criterion.items()) {
+                    BigDecimal awarded = awardedForRubric.getOrDefault(item.itemId(),
+                            BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+                    rubricScore = rubricScore.add(awarded);
+                    var fb = feedbackByItem.get(item.itemId());
+                    rubricItems.add(new StudentRubricItemView(
+                            rubricView.rubricId(),
+                            rubricView.partId(),
+                            criterion.title(),
+                            item.itemId(),
+                            item.text(),
+                            awarded,
+                            item.points().setScale(2, RoundingMode.HALF_UP),
+                            fb == null ? null : fb.evidence(),
+                            fb == null ? null : fb.reason(),
+                            fb == null ? null : fb.suggestion()));
+                }
+            }
+        }
+        GradingFeedback.Summary summary = evaluation.structuredFeedback != null
+                && evaluation.structuredFeedback.summary() != null
+                        ? evaluation.structuredFeedback.summary().copy()
+                        : null;
+        return new StudentGradeView(
+                evaluation.assignmentId,
+                evaluation.attemptId,
+                evaluation.score,
+                evaluation.maxScore,
+                evaluation.feedback,
+                evaluation.publishedAt,
+                !evaluation.changes.isEmpty(),
+                evaluation.rubricChecks,
+                summary,
+                List.copyOf(rubricItems),
+                rubrics.isEmpty() ? evaluation.score : rubricScore,
+                evaluation.memberOverride);
     }
 
     public List<GradeDistributionCalculator.Bucket> distribution(Actor actor, UUID classId, UUID assignmentId,

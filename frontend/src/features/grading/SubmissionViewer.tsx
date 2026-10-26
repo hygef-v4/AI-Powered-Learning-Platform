@@ -37,10 +37,12 @@ function listIndent(item: unknown): number {
   return typeof level === "number" && Number.isInteger(level) && level >= 0 && level <= 4 ? level * 24 : 0;
 }
 function SubmittedImage({
+  blockId,
   fileId,
   alt,
   evaluationId,
 }: {
+  blockId: string;
   fileId: string;
   alt: string;
   evaluationId?: string;
@@ -66,7 +68,7 @@ function SubmittedImage({
     }
   }
   return (
-    <figure className="my-4">
+    <figure id={`submission-block-${blockId}`} className="my-4 scroll-mt-24">
       <figcaption>{alt}</figcaption>
       {url && (
         <Image
@@ -152,11 +154,11 @@ function safeDiagramPreview(value: unknown): string {
     }
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(parsed))}`;
 }
-function Diagram({ content }: { content: Record<string, unknown> }) {
+function Diagram({ blockId, content }: { blockId: string; content: Record<string, unknown> }) {
   const [expanded, setExpanded] = useState(false);
   const preview = useMemo(() => safeDiagramPreview(content.svgPreview), [content.svgPreview]);
   const title = typeof content.alt === "string" && content.alt ? content.alt : "Sơ đồ bài nộp";
-  return <figure className="my-4 min-w-0 rounded-lg border border-line bg-shell/30 p-3">
+  return <figure id={`submission-block-${blockId}`} className="my-4 min-w-0 scroll-mt-24 rounded-lg border border-line bg-shell/30 p-3">
     <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
     {preview ? <>
       <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-white" />
@@ -189,11 +191,13 @@ export function SubmissionViewer({
       <h2 className="mb-4 text-base font-bold">Bài làm đã nộp — chỉ đọc</h2>
       {document.blocks.map((block) => {
         const c = block.content;
-        if (block.type === "DIAGRAM") return <Diagram key={block.id} content={c} />;
+        const anchorId = `submission-block-${block.id}`;
+        if (block.type === "DIAGRAM") return <Diagram key={block.id} blockId={block.id} content={c} />;
         if (block.type === "IMAGE")
           return (
             <SubmittedImage
               key={block.id}
+              blockId={block.id}
               evaluationId={evaluationId}
               fileId={String(c.fileId ?? "")}
               alt={typeof c.alt === "string" ? c.alt : "Ảnh bài nộp"}
@@ -201,7 +205,7 @@ export function SubmissionViewer({
           );
         if (block.type === "TABLE" && Array.isArray(c.rows))
           return (
-            <div key={block.id} className="overflow-auto">
+            <div key={block.id} id={anchorId} className="scroll-mt-24 overflow-auto">
               <table className="my-4 border-collapse">
                 {c.rows.map((row, index) => (
                   <tbody key={index}>
@@ -225,7 +229,7 @@ export function SubmissionViewer({
           );
         if (block.type === "HEADING")
           return (
-            <h3 key={block.id} className="my-4 text-lg font-bold">
+            <h3 key={block.id} id={anchorId} className="my-4 scroll-mt-24 text-lg font-bold">
               <RunsView runs={contentRuns(c.text)} />
             </h3>
           );
@@ -234,17 +238,17 @@ export function SubmissionViewer({
             <li key={i} style={{ marginLeft: `${listIndent(item)}px` }}><RunsView runs={contentRuns(item)} /></li>
           ));
           return c.ordered ? (
-            <ol key={block.id} className={`ml-5 list-decimal ${contentAlignment(c.align)}`}>
+            <ol key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-decimal ${contentAlignment(c.align)}`}>
               {items}
             </ol>
           ) : (
-            <ul key={block.id} className={`ml-5 list-disc ${contentAlignment(c.align)}`}>
+            <ul key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-disc ${contentAlignment(c.align)}`}>
               {items}
             </ul>
           );
         }
         return (
-          <p key={block.id} className={`mb-4 ${contentAlignment(c.align)}`}>
+          <p key={block.id} id={anchorId} className={`mb-4 scroll-mt-24 ${contentAlignment(c.align)}`}>
             <RunsView runs={contentRuns(c)} />
           </p>
         );

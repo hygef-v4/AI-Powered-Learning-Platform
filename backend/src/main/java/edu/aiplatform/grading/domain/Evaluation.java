@@ -5,9 +5,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,6 +29,9 @@ public class Evaluation {
     public String rubricSnapshot;
     public String rubricChecks = "{}";
     public Map<UUID, Map<UUID, BigDecimal>> rubricItemScores = Map.of();
+    public GradingFeedback structuredFeedback;
+    public Map<UUID, Map<UUID, BigDecimal>> reviewedItemScores = Map.of();
+    public Map<UUID, Set<UUID>> acknowledgedReviewItems = Map.of();
     public String feedback;
     public String adjustmentReason;
     public BigDecimal maxScore;
@@ -78,7 +83,9 @@ public class Evaluation {
             throw ApiException.badRequest("CHANGE_REASON_REQUIRED", "Changing an official grade requires a reason");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2, RoundingMode.HALF_UP);
         if (official)
-            changes.add(new EvaluationHistory(actor, now, score, next, changeReason, rubricChecks, this.feedback, rubricItemScores));
+            changes.add(new EvaluationHistory(actor, now, score, next, changeReason, rubricChecks, this.feedback,
+                    copyItemScores(rubricItemScores),
+                    structuredFeedback == null ? null : structuredFeedback.copy()));
         rubricChecks = checks;
         score = next;
         adjustment = delta;
@@ -117,8 +124,13 @@ public class Evaluation {
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
         if (!memberOverride) {
             save(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason, actorId, now);
-            rubricItemScores = root.rubricItemScores;
+        } else {
+            rubricChecks = root.rubricChecks;
         }
+        rubricItemScores = copyItemScores(root.rubricItemScores);
+        structuredFeedback = root.structuredFeedback == null ? null : root.structuredFeedback.copy();
+        reviewedItemScores = copyItemScores(root.reviewedItemScores);
+        acknowledgedReviewItems = copyChecks(root.acknowledgedReviewItems);
     }
 
     public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId, Instant now) {
@@ -132,7 +144,9 @@ public class Evaluation {
 
     public void resetForGroupSubmission(String hash, BigDecimal maximum, String rubrics, Instant now) {
         if (score != null) {
-            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED", rubricChecks, feedback, rubricItemScores));
+            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED", rubricChecks, feedback,
+                    copyItemScores(rubricItemScores),
+                    structuredFeedback == null ? null : structuredFeedback.copy()));
         }
         memberOverride = false;
         state = EvaluationStatus.PENDING;
@@ -142,6 +156,9 @@ public class Evaluation {
         score = null;
         rubricChecks = "{}";
         rubricItemScores = Map.of();
+        structuredFeedback = null;
+        reviewedItemScores = Map.of();
+        acknowledgedReviewItems = Map.of();
         feedback = null;
         adjustment = BigDecimal.ZERO;
         adjustmentReason = null;
@@ -174,5 +191,21 @@ public class Evaluation {
 
     public static boolean blank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(Map<UUID, Map<UUID, BigDecimal>> scores) {
+        if (scores == null || scores.isEmpty())
+            return Map.of();
+        var copy = new LinkedHashMap<UUID, Map<UUID, BigDecimal>>();
+        scores.forEach((id, values) -> copy.put(id, values == null ? Map.of() : Map.copyOf(values)));
+        return Map.copyOf(copy);
+    }
+
+    private static Map<UUID, Set<UUID>> copyChecks(Map<UUID, Set<UUID>> checks) {
+        if (checks == null || checks.isEmpty())
+            return Map.of();
+        var copy = new LinkedHashMap<UUID, Set<UUID>>();
+        checks.forEach((id, values) -> copy.put(id, values == null ? Set.of() : Set.copyOf(values)));
+        return Map.copyOf(copy);
     }
 }

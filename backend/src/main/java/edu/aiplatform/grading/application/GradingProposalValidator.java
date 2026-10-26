@@ -3,6 +3,7 @@ package edu.aiplatform.grading.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.RubricView;
+import edu.aiplatform.grading.domain.GradingFeedback;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -17,17 +18,56 @@ import org.springframework.stereotype.Component;
 public class GradingProposalValidator {
     private static final int MAX_FEEDBACK_LENGTH = 10000;
     private static final int MAX_PAYLOAD_LENGTH = 262144;
-    private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback", "sections", "itemScoresByRubric");
+    private static final Set<String> PROPOSAL_FIELDS = Set.of(
+            "checks", "score", "feedback", "sections", "itemScoresByRubric", "structuredFeedback");
     private final ObjectMapper json;
+    private final GradingFeedbackValidator feedbackValidator;
 
     public GradingProposalValidator(ObjectMapper json) {
         this.json = json;
+        this.feedbackValidator = new GradingFeedbackValidator(json);
     }
 
-    public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback, JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+    /** Classify validation failures without exposing provider-authored field values. */
+    public static String rejectionDiagnostic(ApiException error) {
+        String detail = error.getMessage() == null ? "" : error.getMessage();
+        if (detail.startsWith("Unknown evidenceBlockId:")) return "FEEDBACK_UNKNOWN_EVIDENCE_BLOCK";
+        if (detail.equals("AI structuredFeedback must provide feedback for every rubric item"))
+            return "FEEDBACK_ITEM_COVERAGE";
+        if (detail.equals("Unknown rubricId or itemId in structuredFeedback")) return "FEEDBACK_UNKNOWN_ITEM";
+        if (detail.equals("Duplicate rubric item in structuredFeedback")) return "FEEDBACK_DUPLICATE_ITEM";
+        if (detail.equals("Each item requires observed evidence or an explicit review flag with reason"))
+            return "FEEDBACK_MISSING_EVIDENCE";
+        if (detail.equals("requiresReview requires a non-blank reviewReason")) return "FEEDBACK_MISSING_REVIEW_REASON";
+        if (detail.startsWith("Unknown field in structuredFeedback:")) return "FEEDBACK_UNKNOWN_FIELD";
+        if (detail.equals("AI total does not match rubric item scores")) return "PROPOSAL_TOTAL_MISMATCH";
+        if (detail.equals("Invalid section reference")) return "PROPOSAL_SECTION_MISMATCH";
+        if (detail.equals("Unknown rubric item") || detail.equals("Unknown rubric")) return "PROPOSAL_UNKNOWN_ITEM";
+        return "PROPOSAL_SCHEMA_MISMATCH";
+    }
+
+    public record Validated(
+            Map<UUID, Set<UUID>> checks,
+            BigDecimal score,
+            String feedback,
+            JsonNode sections,
+            Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric,
+            GradingFeedback structuredFeedback) {
+        public Validated(
+                Map<UUID, Set<UUID>> checks,
+                BigDecimal score,
+                String feedback,
+                JsonNode sections,
+                Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+            this(checks, score, feedback, sections, itemScoresByRubric, null);
+        }
     }
 
     public Validated validate(JsonNode payload, List<RubricView> rubrics) {
+        return validate(payload, rubrics, null);
+    }
+
+    public Validated validate(JsonNode payload, List<RubricView> rubrics, Set<String> validBlockIds) {
         try {
             requireProposalObject(payload);
             var checks = readChecks(payload);
@@ -40,7 +80,14 @@ public class GradingProposalValidator {
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
-            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores));
+            GradingFeedback structuredFeedback = null;
+            if (payload.has("structuredFeedback") && !payload.get("structuredFeedback").isNull()) {
+                structuredFeedback = feedbackValidator.validateNode(
+                        payload.get("structuredFeedback"), rubrics, validBlockIds, true);
+            }
+            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores), structuredFeedback);
+        } catch (ApiException ex) {
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal does not match the rubric schema");
         }
@@ -83,7 +130,7 @@ public class GradingProposalValidator {
     private void requireMatchingScore(JsonNode scoreNode, BigDecimal computedScore) {
         var suppliedScore = new BigDecimal(scoreNode.asText());
         if (suppliedScore.scale() > 2 || computedScore.compareTo(suppliedScore) != 0) {
-            throw new IllegalArgumentException();
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI total does not match rubric item scores");
         }
     }
 
@@ -113,7 +160,7 @@ public class GradingProposalValidator {
                     || !knownPartIds.contains(section.path("partId").asText())
                     || !seenPartIds.add(section.path("partId").asText()) || !section.path("feedback").isTextual()
                     || section.path("feedback").asText().length() > MAX_FEEDBACK_LENGTH) {
-                throw new IllegalArgumentException();
+                throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid section reference");
             }
         }
     }

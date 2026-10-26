@@ -104,6 +104,9 @@ public class PracticeFeedbackService {
                 throw ApiException.conflict("FEEDBACK_PENDING", "Lượt này đang chờ góp ý");
             }
             requireDailyQuota(actor);
+            // Chưa có khóa API cá nhân (hoặc chưa được dùng AI) thì yêu cầu chưa gửi đi được: báo lỗi ngay, không tạo
+            // góp ý thất bại, không tính vào giới hạn mỗi ngày (BR-U08-41).
+            aiTasks.requireSource(actor, AiSource.PERSONAL, provider);
             ObjectNode provenance = JsonNodeFactory.instance.objectNode();
             provenance.put("origin", "AI_TASK");
             provenance.put("source", AiSource.PERSONAL.name());

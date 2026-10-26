@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskResult;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.assignments.contract.AssignmentContent;
@@ -93,6 +96,32 @@ class PracticeFeedbackServiceTest {
         when(f.feedback.countSince(eq(f.student.accountId()), any())).thenReturn(20L);
         assertThat(code(() -> f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1"))).isEqualTo("FEEDBACK_LIMIT");
         assertThat(code(() -> f.feedbackService.request(f.student, a.id(), null, "r1"))).isEqualTo("AI_SOURCE_INVALID");
+    }
+
+    @Test
+    void missingPersonalKeyIsNotSentAndLeavesNoFailedFeedback() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        when(f.feedback.findByRequest(anyString())).thenReturn(Optional.empty());
+        doThrow(ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED", "Bạn chưa lưu khóa API cho nhà cung cấp này"))
+                .when(f.aiTasks).requireSource(f.student, AiSource.PERSONAL, AiProvider.GEMINI);
+        assertThat(code(() -> f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1")))
+                .isEqualTo("AI_PERSONAL_NOT_CONFIGURED");
+        verify(f.feedback, never()).insert(any());
+        verify(f.aiTasks, never()).submit(any());
+        verify(f.feedback, never()).markFailed(any(), anyString(), any());
+    }
+
+    @Test
+    void otherAiErrorKeepsFailedFeedback() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        when(f.feedback.findByRequest(anyString())).thenReturn(Optional.empty());
+        when(f.feedback.find(any())).thenAnswer(i -> Optional.of(new PracticeFeedback(i.getArgument(0), a.id(),
+                a.accountId(), PracticeFeedback.Origin.AI_TASK, null, "r1", PracticeFeedback.Status.FAILED, null, null,
+                JsonNodeFactory.instance.objectNode(), "Hết hạn mức", NOW, NOW)));
+        when(f.aiTasks.submit(any())).thenThrow(ApiException.badRequest("AI_QUOTA_EXCEEDED", "Hết hạn mức"));
+        f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1");
+        verify(f.feedback).insert(any());
+        verify(f.feedback).markFailed(any(), eq("Hết hạn mức"), any());
     }
 
     @Test
