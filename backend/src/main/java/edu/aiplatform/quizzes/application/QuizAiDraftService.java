@@ -336,6 +336,23 @@ public class QuizAiDraftService {
         return AiDraftView.of(draft);
     }
 
+    /** Bank proposals share the same READY review/acceptance flow as provider-generated proposals. */
+    @Transactional
+    public AiDraftView saveBankFromMcp(Actor actor, UUID subjectId, JsonNode questionNodes, String agentLabel) {
+        requireBankManager(actor, subjectId);
+        activeSubjects.require(subjectId);
+        List<DraftQuestion> proposal;
+        try { proposal = QuizDraftPrompt.parseQuestions(questionNodes); }
+        catch (IllegalArgumentException invalid) { throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid questions"); }
+        if(agentLabel != null && agentLabel.length()>200)throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
+        var draft = new QuizAiDraft(UUID.randomUUID(), DraftTarget.BANK, null, subjectId,
+                edu.aiplatform.quizzes.domain.DraftOrigin.MCP, null, DraftStatus.READY, proposal,
+                Map.of(AiDraftViews.AGENT_LABEL, agentLabel==null||agentLabel.isBlank()?"Agent":agentLabel,
+                        AiDraftViews.REQUESTED_COUNT, proposal.size()), null, actor.accountId(), clock.instant(), null);
+        drafts.insert(draft);
+        return AiDraftView.of(draft);
+    }
+
     // ---- Phụ ----
 
     private void requireBankManager(Actor actor, UUID subjectId) {

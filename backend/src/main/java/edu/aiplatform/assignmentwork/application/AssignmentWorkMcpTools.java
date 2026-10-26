@@ -48,15 +48,6 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         String attempt = "{\"type\":\"object\",\"required\":[\"attemptId\"],\"properties\":{\"attemptId\":"
                 + "{\"type\":\"string\",\"format\":\"uuid\"}}}";
         return List.of(
-                new McpToolDefinition(READ_OWN, "Đọc bài Practice đã nộp của bạn: đề, các phần, bài nộp và submissionHash.",
-                        attempt, McpToolKind.READ, Set.of(Role.STUDENT)),
-                new McpToolDefinition(RECORD, "Ghi góp ý riêng cho bài Practice đã nộp; cần submissionHash từ "
-                        + READ_OWN + ".",
-                        "{\"type\":\"object\",\"required\":[\"attemptId\",\"submissionHash\",\"feedback\"],"
-                                + "\"properties\":{\"attemptId\":{\"type\":\"string\",\"format\":\"uuid\"},"
-                                + "\"submissionHash\":{\"type\":\"string\"},\"agentLabel\":{\"type\":\"string\"},"
-                                + "\"feedback\":" + FeedbackFormat.OUTPUT_SCHEMA.strip() + "}}",
-                        McpToolKind.WRITE, Set.of(Role.STUDENT)),
                 new McpToolDefinition(READ_SUBMISSION, "Đọc bài đã nộp của sinh viên lớp bạn dạy.",
                         attempt, McpToolKind.READ, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)));
     }
@@ -66,15 +57,6 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         try {
             UUID attemptId = UUID.fromString(String.valueOf(args.get("attemptId")));
             return switch (toolName) {
-                case READ_OWN -> new McpToolResult(false, feedback.readOwnWork(actor, attemptId));
-                case RECORD -> {
-                    JsonNode body = json.valueToTree(args.get("feedback"));
-                    Object label = args.get("agentLabel");
-                    PracticeFeedback saved = feedback.recordFromAgent(actor, attemptId,
-                            args.get("submissionHash") == null ? null : String.valueOf(args.get("submissionHash")),
-                            body, label == null ? null : String.valueOf(label));
-                    yield new McpToolResult(false, Map.of("feedbackId", saved.id().toString(), "status", "READY"));
-                }
                 case READ_SUBMISSION -> new McpToolResult(false, submission(actor, attemptId));
                 default -> error("TOOL_NOT_FOUND", "Không có tool này");
             };

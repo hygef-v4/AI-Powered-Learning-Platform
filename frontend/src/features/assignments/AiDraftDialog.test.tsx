@@ -8,6 +8,23 @@ import * as filesApi from "@/features/files/api";
 describe("AiDraftDialog", () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it("opens an existing MCP proposal for review without submitting a provider request", async () => {
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
+    vi.spyOn(filesApi, "getPolicies").mockResolvedValue([]);
+    const generate = vi.spyOn(assignmentsApi, "requestAiDraft");
+    const load = vi.spyOn(assignmentsApi, "aiDraft").mockResolvedValue({
+      draftId: "mcp-proposal", assignmentId: "a1", origin: "MCP", status: "READY", taskId: null,
+      proposal: { title: "MCP review title", businessContext: "A QA system", instructions: "Review before applying", sections: [
+        { level: 1, title: "MCP section", guidance: "Explain the design", rubric: [] },
+      ] }, provenance: {}, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,
+    });
+    render(<AiDraftDialog assignmentId="a1" initialDraftId="mcp-proposal" version={1} currentPartCount={0}
+      currentTitle="" currentInstructions="" gradingMode="GRADED" onClose={vi.fn()} onApplied={vi.fn()} />);
+    expect(await screen.findByText("MCP review title")).toBeInTheDocument();
+    expect(load).toHaveBeenCalledWith("a1", "mcp-proposal", expect.any(AbortSignal));
+    expect(generate).not.toHaveBeenCalled();
+  });
+
   it("lets the AI infer assessment style and sends language, question count and target points", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
     const requestAiDraft = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue({

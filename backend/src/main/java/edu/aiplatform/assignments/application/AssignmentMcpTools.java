@@ -62,7 +62,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
                         + "Sinh viên: chỉ thông tin bài (hình thức, chế độ, lịch), không có đề và rubric.",
                         "{\"type\":\"object\",\"required\":[\"assignmentId\"],\"properties\":{\"assignmentId\":"
                                 + "{\"type\":\"string\",\"format\":\"uuid\"}}}",
-                        McpToolKind.READ, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER, Role.STUDENT)),
+                        McpToolKind.READ, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)),
                 new McpToolDefinition(SAVE, "Lưu bản nháp đề (hướng dẫn, các mục, gợi ý rubric) thành đề xuất chờ "
                         + "giảng viên áp dụng; cần expectedVersion của bài.",
                         "{\"type\":\"object\",\"required\":[\"assignmentId\",\"expectedVersion\",\"draft\"],"
@@ -74,6 +74,9 @@ public class AssignmentMcpTools implements IMcpToolProvider {
 
     @Override
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {
+        if (actor == null || (actor.role() != Role.TEACHER && actor.role() != Role.SUBJECT_MANAGER)) {
+            return error("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
+        }
         try {
             UUID id = UUID.fromString(String.valueOf(args.get("assignmentId")));
             return switch (toolName) {

@@ -52,15 +52,15 @@ class McpServerTest {
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private McpServer server;
-    private final Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
+    private final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
 
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() {
         when(provider.tools()).thenReturn(List.of(
-                new McpToolDefinition("read_own_work", "Đọc bài", SCHEMA, McpToolKind.READ, Set.of(Role.STUDENT)),
-                new McpToolDefinition("save_draft", "Lưu nháp", SCHEMA, McpToolKind.WRITE, Set.of(Role.STUDENT)),
-                new McpToolDefinition("teacher_only", "GV", SCHEMA, McpToolKind.READ, Set.of(Role.TEACHER))));
+                new McpToolDefinition("read_own_work", "Đọc bài", SCHEMA, McpToolKind.READ, Set.of(Role.TEACHER)),
+                new McpToolDefinition("save_draft", "Lưu nháp", SCHEMA, McpToolKind.WRITE, Set.of(Role.TEACHER)),
+                new McpToolDefinition("teacher_only", "GV", SCHEMA, McpToolKind.READ, Set.of(Role.ADMIN))));
         ObjectProvider<IMcpToolProvider> providers = mock(ObjectProvider.class);
         when(providers.orderedStream()).thenAnswer(i -> Stream.of(provider));
         AiUsageService usage = new AiUsageService(usageRepository,
@@ -109,7 +109,7 @@ class McpServerTest {
 
     @Test
     void callRunsToolWithCredentialActorAndRecordsUsageAndAudit() {
-        when(provider.call(eq(student), eq("read_own_work"), eq(Map.of("q", "bài 1"))))
+        when(provider.call(eq(teacher), eq("read_own_work"), eq(Map.of("q", "bài 1"))))
                 .thenReturn(new McpToolResult(false, Map.of("title", "Bài 1")));
 
         JsonNode reply = handle(Access.READ_ONLY,
@@ -163,10 +163,21 @@ class McpServerTest {
 
         org.mockito.Mockito.doReturn(new McpToolResult(false, "é".repeat(200_000))).when(provider)
                 .call(any(), anyString(), any());
-        String text = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}")).at("/result/content/0/text")
-                .asText();
+        var oversized = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}"));
+        assertThat(oversized.at("/result/isError").asBoolean()).isTrue();
+        String text = oversized.at("/result/content/0/text").asText();
         assertThat(text.getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isLessThanOrEqualTo(256 * 1024);
-        assertThat(text).endsWith("256 KB]");
+        assertThat(text).contains("MCP_RESULT_TOO_LARGE");
+    }
+
+    @Test void staleSnapshotReturnsMachineReadableErrorCodeAndEscapedResultsStayBounded() {
+        when(provider.call(any(),anyString(),any())).thenThrow(ApiException.conflict("SUBMISSION_CHANGED","Restart reading"));
+        var reply=handle(Access.READ_ONLY,call("read_own_work","{\"q\":\"x\"}"));
+        assertThat(reply.at("/result/content/0/text").asText()).contains("SUBMISSION_CHANGED");
+        org.mockito.Mockito.doReturn(new McpToolResult(false,"\"".repeat(160000))).when(provider).call(any(),anyString(),any());
+        reply=handle(Access.READ_ONLY,call("read_own_work","{\"q\":\"x\"}"));
+        assertThat(reply.at("/result/isError").asBoolean()).isTrue();
+        assertThat(reply.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isLessThan(256*1024);
     }
 
     private List<String> actions() {
@@ -195,7 +206,7 @@ class McpServerTest {
     }
 
     private McpPrincipal principal(Access access) {
-        return new McpPrincipal(new McpCredential(UUID.randomUUID(), student.accountId(), "agent", access, "h", "abcd",
-                NOW.plusSeconds(60), null, null, NOW), student);
+        return new McpPrincipal(new McpCredential(UUID.randomUUID(), teacher.accountId(), "agent", access, "h", "abcd",
+                NOW.plusSeconds(60), null, null, NOW), teacher);
     }
 }

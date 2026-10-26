@@ -130,6 +130,26 @@ describe("ClassGroupsPanel", () => {
     });
   });
 
+  it("xóa nhóm đã dùng: lý do của nhóm đã bị xóa khỏi màn vẫn hiện trong thông báo lỗi", async () => {
+    backend(WITH_GROUPS, () =>
+      new Response(
+        JSON.stringify({
+          status: 400,
+          code: "GROUP_SET_INVALID",
+          issues: [{ groupKey: "g1", code: "GROUP_IN_USE", message: "Nhóm Nhóm 1 đã có tài liệu hoặc bản nộp, chỉ chuyển thành viên được" }],
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    render(<ClassGroupsPanel classId={CLASS} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Sửa nhóm/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Xóa Nhóm 1" }));
+    fireEvent.click(screen.getByRole("button", { name: /Lưu cho cả lớp/ }));
+
+    const alert = await screen.findByText(/Bộ nhóm có lỗi/);
+    expect(alert.closest('[role="alert"]')).toHaveTextContent("Nhóm Nhóm 1 đã có tài liệu hoặc bản nộp, chỉ chuyển thành viên được");
+  });
+
   it("lỗi bộ nhóm hiện theo từng nhóm, không rời trình sửa", async () => {
     backend(WITH_GROUPS, () =>
       new Response(

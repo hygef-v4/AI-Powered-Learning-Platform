@@ -42,7 +42,7 @@ public class McpCredentialService {
 
     public static final int MAX_ACTIVE = 5;
     static final Set<Integer> DAYS = Set.of(7, 30, 90);
-    static final Set<Role> AGENT_ROLES = EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
+    static final Set<Role> AGENT_ROLES = EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER, Role.ADMIN);
     static final String PREFIX = "mcp_";
 
     private final McpCredentialRepository repository;
@@ -63,14 +63,14 @@ public class McpCredentialService {
 
     @Transactional(readOnly = true)
     public List<CredentialView> list(Actor actor) {
-        access.require(actor, Actions.AI_PERSONAL);
+        access.require(actor, Actions.MCP_SELF);
         Instant now = clock.instant();
         return repository.listOwn(actor.accountId()).stream().map(c -> view(c, now)).toList();
     }
 
     @Transactional
     public Created create(Actor actor, String label, Access accessLevel, Integer days) {
-        access.require(actor, Actions.AI_PERSONAL);
+        access.require(actor, Actions.MCP_SELF);
         String name = label == null ? "" : label.trim();
         if (name.isEmpty() || name.length() > 60) {
             throw ApiException.badRequest("MCP_LABEL_INVALID", "Nhãn cần 1–60 ký tự");
@@ -103,7 +103,7 @@ public class McpCredentialService {
 
     @Transactional
     public void revoke(Actor actor, UUID id) {
-        access.require(actor, Actions.AI_PERSONAL);
+        access.require(actor, Actions.MCP_SELF);
         McpCredential credential = repository.findOwn(actor.accountId(), id).orElseThrow(AiAccess::notFound);
         if (repository.revoke(id, clock.instant()) == 1) {
             record(actor.accountId(), "MCP_REVOKED", credential.id(), Map.of("tokenHint", credential.tokenHint()));

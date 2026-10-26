@@ -180,7 +180,10 @@ public class McpServer {
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> map = json.convertValue(args, Map.class);
-            result = entry.get().provider().call(principal.actor(), name, map);
+            result = "get_my_capabilities".equals(name)
+                    ? new McpToolResult(false, Map.of("role", principal.actor().role(), "access", principal.credential().access(),
+                            "tools", registry.visible(principal.actor().role(), principal.credential().access()).stream().map(McpToolDefinition::name).toList()))
+                    : entry.get().provider().call(principal.actor(), name, map);
         } catch (ApiException e) {
             if (e.status().value() == 403 || e.status().value() == 404) {
                 denied(accountId, name);
@@ -189,7 +192,7 @@ public class McpServer {
             }
             usage.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
             record(accountId, name, AuditResult.FAILURE, e.code());
-            return result(id, toolResult(e.getMessage(), true));
+            return result(id, toolResult(text(Map.of("code", e.code(), "message", e.getMessage())), true));
         } catch (RuntimeException e) {
             // chỉ ghi loại lỗi: thông điệp có thể chứa dữ liệu học vụ (SECURITY-03)
             log.warn("Tool MCP {} lỗi: {}", name, e.getClass().getName());
@@ -198,7 +201,12 @@ public class McpServer {
             return result(id, toolResult("Tool gặp lỗi; hãy thử lại sau", true));
         }
         boolean isError = result == null || result.error();
-        String text = cut(text(result == null ? null : result.content()));
+        Object content = result == null ? null : result.content();
+        String text = text(content);
+        if (bytes(text) > 192 * 1024 || bytes(text(toolResult(text, isError))) > MAX_RESULT_BYTES - 512) {
+            isError = true;
+            text = "{\"code\":\"MCP_RESULT_TOO_LARGE\",\"complete\":false,\"message\":\"Reduce page size or use continuation\"}";
+        }
         usage.recordMcp(accountId, credentialId, name, isError ? "ERROR" : "OK", inputTokens, outputTokens);
         record(accountId, name, isError ? AuditResult.FAILURE : AuditResult.SUCCESS, null);
         return result(id, toolResult(text, isError));

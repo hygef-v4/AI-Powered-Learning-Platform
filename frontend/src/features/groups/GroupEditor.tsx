@@ -140,6 +140,16 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
       {error && (
         <Alert tone="danger" role="alert">
           {error}
+          {/* Lỗi của nhóm không còn trên màn (vd. đã bấm Xóa nhóm đã dùng): không có thẻ để hiện, nên hiện ở đây. */}
+          {issues.some((i) => !drafts.some((d) => d.key === i.groupKey)) && (
+            <ul className="mt-1 list-disc pl-4">
+              {issues
+                .filter((i) => !drafts.some((d) => d.key === i.groupKey))
+                .map((i) => (
+                  <li key={i.groupKey + i.code}>{i.message}</li>
+                ))}
+            </ul>
+          )}
         </Alert>
       )}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

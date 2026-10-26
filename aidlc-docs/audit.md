@@ -6723,6 +6723,109 @@ Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-4
 ---
 
 U09 placement completion: live proposal 5a2b95f9-9525-462a-8937-189affbe8bf9 (version 6) reached READY using the existing Gemini connection. Verified summary.nextSteps count 0, item suggestions count 9, and opened the first item's Cách cải thiện in the teacher UI. Screenshot: .tmp/u09-feedback-screenshots/ai-feedback-item-guidance.png. Backend /health UP. No grade applied/saved/finalized/published; no commit/push.
+# MCP / AI configuration audit — 2026-10-26
+
+User request (raw): "giúp tôi check cấu hình mcp xem kết nối hệ thống với agent được chưa,các chức năng sử dụng ai đã cấu hình đc chưa sau đó có gì thì chỉnh sửa và báo cáo cho tôi để tôi test két nối mcp và chức năng ai"
+
+User continuation (raw): "Làm tiếp"
+
+Resumed existing AI-DLC construction work under CLAUDE.md. Inspected Git and configuration without exposing secrets; preserved tmp-unit-report-reference/. Configuration audit found no platform MCP token for teacher/student; agent unityMCP entries point to 8080 without bearer auth and remain untouched. Teacher personal Gemini is ACTIVE with historical successful assignment/grading tasks; student has no provider connection, shared/OpenAI/Claude unavailable. Current Chrome session verified as student on AI connection page with zero keys/agents.
+
+Added secure read-only MCP diagnostic plus local fixture; corrected setup guidance and stale model/source documentation. Focused backend suite passed 81 tests across 11 classes; frontend AI connection/history passed 9 tests. Protocol fixture passed success, 401, RPC error, wrong ID, and wrong server cases on PowerShell 7 and 5.1. Live negative security probes passed on 3000/8080. Restarted API/worker after tests; health UP. Old Docker worker remains stopped. Existing nginx restart loop and earlier SSE warnings recorded without attributing them to MCP/provider failure.
+
+Report/manual guide saved under construction/build-and-test/2026-10-26-mcp-ai-*. Real authenticated agent acceptance and new provider/UI generation remain user acceptance tasks, clearly marked pending. No provider key/model changes, token creation, grade mutation, client registration changes, commit, push, or deploy.
+
+## MCP follow-up — Codex CLI — 2026-10-26
+
+User selected (raw): "Codex CLI". Registered the dedicated global Codex server nen-tang-hoc-tap at http://localhost:3000/mcp with bearer_token_env_var LEARNING_PLATFORM_MCP_TOKEN. Verified TOML registration and preservation of Unity entry.
+
+User explicitly approved creating and using a seven-day READ_ONLY token for the currently signed-in U05 Mock Student account. Created `Codex CLI test read-only`, supplied its secret only from browser clipboard to a temporary PowerShell/Codex process environment, and never emitted or saved the token value. Codex CLI loaded its global registration, discovered three read-only tools, and successfully called `read_authorized_material` on authorized active class material. Clipboard cleared after each process. Database confirms the credential remains active and used, expires 2026-11-02. Browser retains the one-time token dialog in a handoff tab and a separate masked status tab. Teacher-scoped MCP and new provider-backed AI UI cases remain pending. No write tool, grade mutation, provider generation, commit, push or deploy.
+
+
+## Teacher UI and Gemini assignment draft acceptance
+**Timestamp**: 2026-10-26T08:42:09Z
+**User Input**: "Tự đăng nhập tài khoản teacher test đi"
+**AI Response**: Signed into the teacher account in a separate in-app browser, verified the existing Gemini connection test as Đạt, then created a separate unpublished U05-A QA draft. The first proposal had an invalid 11.33/10 rubric total and the UI blocked applying it. After retrying with explicit 3+4+3 allocation, the proposal passed with 3 questions, 9 rubric criteria and 10/10. Applied it only to the QA draft, restored its QA title, and reloaded to confirm persistence. No published grade or provider configuration was changed. Updated the MCP/AI readiness report, manual guide, and state.
+**Context**: Teacher UI acceptance follow-up; quiz, test-submission grading, Practice and manual fractional-score boundary checks remain pending. No commit/push/deploy.
+
+## Codex CLI teacher-scope MCP verification
+**Timestamp**: 2026-10-26T08:53:27Z
+**User Input**: "giúp tôi cấu hình cho teacher [bearer token omitted]"
+**AI Response**: Used the existing Codex global MCP registration and passed the teacher token from the UI clipboard only to a temporary process environment. The diagnostic confirmed platform server ai-learning-platform, protocol 2025-06-18 and 7 tools. An ephemeral Codex CLI run successfully called read_assignment_context for the QA assignment and returned its title. No write tool was called; the token was not stored in a config file or persistent user environment, and the clipboard was cleared. Codex also logged transport failures for two unrelated configured local MCP endpoints; these did not prevent the platform read call and were not modified.
+**Context**: Teacher-scoped MCP acceptance. Token has read/write scope and was used only for read-only validation. No grade mutation, commit/push/deploy.
+
+## Persistent teacher MCP environment setup
+**Timestamp**: 2026-10-26T09:05:15Z
+**User Input**: "giúp tôi setup luôn token [bearer token omitted], tôi chỉ đang thử nghiệm nên an toàn"
+**AI Response**: Stored LEARNING_PLATFORM_MCP_TOKEN in the Windows user environment as requested; did not place the token in Codex config or repository files. Cleared the clipboard. A fresh ephemeral Codex CLI process read the user-scoped value and successfully called read_assignment_context on the QA draft; no write tool was called. The existing Codex TUI must be restarted from a shell that reads the updated user environment.
+**Context**: User explicitly requested a persistent setup for testing. The token is READ_WRITE and remains active until 25/11/2026. No grade mutation, commit/push/deploy.
+
+## MCP capability review across all roles
+**Timestamp**: 2026-10-26T09:34:49Z
+**User Input**: "tôi nghĩ nên có thêm mcp tạo assignment, quiz, b check xem còn các tính năng dungfg ai nào dùng đc vs mcp ko, trên tất cả role"
+**AI Response**: Reviewed all four roles, five domain MCP providers and four implemented AI task families. Confirmed nine distinct tools overall, with four for Student, seven for Teacher/Subject Manager and no Admin MCP admission. Identified missing assignment/quiz creation, bank-target question proposals, discovery, complete individual/group grading context and batch proposal writes. Recorded optional student learning, teaching analytics and separate Admin reporting proposals in construction/build-and-test/2026-10-26-mcp-role-capability-review.md. Existing working-tree changes preserved.
+**Context**: Source audit and recommendations only. No application implementation, additional-role runtime acceptance, provider calls, tool writes, user data mutation, commit, push or deployment.
+
+## MCP staff-only scope decision
+**Timestamp**: 2026-10-26T09:52:18Z
+**User Input**: "tôi nghĩ là bỏ việc sử dụng mcp cho student chỉ cho 3 role teacher, subject manager, admin"
+**AI Response**: Accepted the product-scope decision: exclude Student MCP, retain Student personal AI through the UI, admit Teacher/Subject Manager/Admin with separate academic and Admin reporting permissions. Existing Student bearer credentials must fail authentication after implementation.
+**Context**: Product decision carried into the subsequent implementation request; no code changed at this decision.
+
+## MCP staff expansion - implementation planning
+**Timestamp**: 2026-10-26T09:52:18Z
+**User Input**: "giúp tôi sửa theo những gì đề xuất và đã chốt"
+**AI Response**: Inspected CLAUDE.md, existing workspace changes, source contracts and frontend instructions. Recorded the agreed scope and proposed contracts in inception/requirements/2026-10-26-mcp-staff-expansion.md. Created a seven-task technical implementation plan in construction/plans/code-generation-plan/2026-10-26-mcp-staff-expansion-code-generation-plan.md and a dedicated approval question file. The plan covers role/token/UI changes, discovery, idempotent assignment/quiz creation, question bank, complete individual/group grading and batch proposals, teaching/Admin reports and verification. Checked artifact paths and requirement/test coverage. Preserved all prior workspace changes.
+**Context**: Product scope accepted from the conversation. CLAUDE.md Code Generation Part 1 Step 7 explicitly requires approval of the new unit code generation plan before implementation. Approval prompt logged here before final delivery. Application code, live credentials/data, provider calls and deployment remain untouched; no commit/push. Existing security/resiliency extension choices inherited; no repeated opt-in question.
+**Approval prompt**: Review the technical plan and answer A (approve and execute all seven tasks), B (request plan changes), or X (other) in inception/requirements/2026-10-26-mcp-staff-expansion-approval.md or by reply. This gate concerns the new implementation plan, not the already agreed three-role scope.
+
+## MCP staff expansion continuation
+**Timestamp**: 2026-10-26T10:14:47Z
+**User Input**: làm tiếp
+**AI Response**: Resumed AI-DLC construction; continuation approves the pending seven-task plan. Baseline 35 backend tests passed. Student UI regression reproduced (1 failed, 6 passed). Preserving prior changes, sequential execution without subagents, no commit/push/provider calls/live migration. Existing extension configuration inherited; disabled property-based testing skipped.
+**Context**: Code Generation Part 2.
+
+
+## MCP staff expansion auto-approved continuation
+**Timestamp**: 2026-10-26T10:32:31Z
+**User Input**: giúp tôi làm tiếp, auto approve
+**AI Response**: Continued the approved plan without repeated permission prompts. New Student/Admin UI tests pass 9/9; PostgreSQL retry/concurrency/rollback tests pass 2/2. JVM memory failure resolved with SerialGC, reduced heap and CPU count. Auto approve covers continuing scoped implementation and verification; no commit/push, production deploy or live migration performed.
+**Context**: Construction in progress. Task checkboxes reflect verified work only.
+
+
+## MCP staff expansion code generation and review
+**Timestamp**: 2026-10-26T10:57:58Z
+**AI Response**: Implemented Tasks 1–6, reused authorized domain services, added isolated transactional idempotency, protocol/catalog role matrix, structured grading continuation/batches, bounded reports, Student/Admin UI and assignment proposal review link. Source self-review reproduced and fixed missing app SQL grant, invalid quiz creation, mixed bank question/subject IDs, machine-readable stale-context errors, missing assignment review entry and stale-rubric replay. Full frontend 560 tests pass; latest completed full backend verify had 1434 tests with 4 explicit environment skips. Final rerun is in progress after the rubric guard. User auto-approval carries Code Generation through Build and Test; no renewed permission gate or subagents. No live migration/provider calls/grade mutation/commit/push/deploy.
+**Context**: Build and Test. Plan completion refers to source and automated verification, not manual live acceptance.
+
+## MCP staff expansion final validation and handoff
+**Timestamp**: 2026-10-26T10:59:33Z
+**AI Response**: Final backend verify BUILD SUCCESS: 1438 total, 1434 passed, 4 known environment-gated skips, no failures/errors. Frontend 91 files/560 passed; lint and production build including TypeScript passed. Diagnostic fixture 2/2 test methods passed. Recorded source self-review and its fixes, completed plan tracking, results/build instructions and 21-case live acceptance guide. No commit/push/deployment/live migration/provider call/official grade mutation. New tool runtime acceptance remains explicitly pending normal local migration/restart and the manual guide.
+**Context**: Code Generation and Build/Test complete under user auto-approval; operational runtime acceptance is not claimed.
+
+## Teacher MCP local runtime smoke test
+**Timestamp**: 2026-10-26 11:10:55 UTC
+**User Input**: giups tooi restart backend frontend vaf chayj test thuwr mcp cho teacher
+**AI Response**: Restarted only this workspace's local backend and frontend. Flyway applied migration `20261026.1800`. Teacher token passed MCP initialize, ping, tools/list and `get_my_capabilities` over localhost:3000: role TEACHER, access READ_WRITE, 23 visible tools. Read-only class, subject and class-scoped assignment discovery passed (1/1/2 results at test time). No write tool or provider/grade operation was called. Other acceptance cases remain pending.
+**Context**: Approved local runtime smoke test; existing teacher token used without logging or printing it.
+
+## Teacher quiz creation through MCP
+**Timestamp**: 2026-10-26 11:25:46 UTC
+**User Input**: "Thử tạo đề swr bằng mcp xem nào"
+**AI Response**: Used the existing Teacher READ_WRITE credential and read_authoring_requirements to create a QA quiz in test class U05-A / Software Requirement via create_quiz_draft. Quiz 84c5f170-b3ab-43e4-9a73-dcc3c4468c3a is DRAFT version 1; READY proposal 6bf3e5d2-005a-44c4-8dd5-9e7f993837e8 contains two sample questions. list_quizzes found it; read_quiz_context showed zero active questions. Replaying the same requestRef/payload returned the same quiz/proposal IDs. No provider call, publication, student assignment or grade change. UI review/apply remains with the user.
+**Context**: Explicitly requested MCP quiz creation test; test-only class chosen from the Teacher's scoped class list. No secret written to logs/docs.
+
+## Teacher grading MCP smoke test
+**Timestamp**: 2026-10-26 12:30:21 UTC
+**User Input**: "Test tính năng chấm bài bằng mcp xem"
+**AI Response**: Teacher MCP list_assignments/list_submissions succeeded for test class U05-A. The QA assignment is DRAFT with one NOT_SUBMITTED row and no evaluationId. The other assignment has one PUBLISHED evaluation. Did not read student submission content or call the proposal-write tool because there is no safe PENDING/DRAFT QA evaluation; no proposal or grade changed. Full context/proposal test awaits a test-student submission in an eligible state.
+**Context**: Authenticated, scoped, read-only grading discovery; no credentials or student content recorded.
+
+## MCP system connectivity check
+**Timestamp**: 2026-10-26 13:24:46 UTC
+**User Input**: "check kết nối mcp với hệ thống"
+**AI Response**: Authenticated MCP checks passed on both http://localhost:3000/mcp and http://localhost:8080/mcp. Each reported server ai-learning-platform, protocol 2025-06-18, 23 tools, and get_my_capabilities role TEACHER / access READ_WRITE. No write tools or user data were changed; token value was not printed or recorded.
+**Context**: Existing Teacher credential read from Windows user environment for a read-only connectivity check.
 
 ## Review report U01–U15 (2026-10-22) – user's units
 **Timestamp**: 2026-10-26T08:00:00Z
@@ -6737,5 +6840,39 @@ U09 placement completion: live proposal 5a2b95f9-9525-462a-8937-189affbe8bf9 (ve
 **User Input**: "gio hay test lai cho toi tren nhanh stagging tat ca cac phan do toi phu trach di"
 **AI Response**: Build lại stack từ `staging` 7b5edba, lớp mới SE-TEST5/SWT304. U02 16/16 (sửa script lọc AUDIT_QUERIED); U06 24/24 + 15/15 + khóa thật 7/7 (lần đầu Google 503, chạy lại đạt); U12 52/52 + 30/30; thêm `u12-notify.mjs` kiểm R07: 3/3. Ghi vào file bằng chứng e2e.
 **Context**: Construction, kiểm thử lại toàn bộ phần của người dùng trên staging
+
+---
+
+## Report 5 – unit test workbook
+**Timestamp**: 2026-10-26T13:50:00Z
+**User Input**: "xem trong drive cua nhom phan report 5 xem can sua gi k" / "report unit test ay" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.0_Test Documentation.docx"" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.1_Unit Test.xlsx" ban toi bao dien unit tést th"
+**AI Response**: Đọc Report-5.0 (góp ý: ngày bìa, Change Log trống, lỗi chính tả "Minium", mục 1.2/3.2 còn mô tả Iteration 1/Pending, thiếu Testcontainers và script e2e, mục 3 chưa có số liệu). Điền Report-5.1 theo mẫu sheet U15 có sẵn: thêm sheet U02_Audit (4 hàm, 26 ca), U06_AI_Connections (40 hàm, 86 ca), U12_Group_Assignment (38 hàm, 59 ca); mỗi ca ứng với một JUnit test có thật (bỏ test tích hợp Testcontainers), Round 1 Passed ngày 26/10/2026 theo lần mvn verify trên staging 7b5edba; ca hồi quy ghi Defect ID. Thêm dòng ở Test Cases, Test Statistics (công thức theo mẫu, tổng mới ở dòng 146) và Record of change. Không đổi ô nào của U05/U09/U15. Lưu bản mới cạnh file gốc: `Report-5.1_Unit Test (them U02 U06 U12).xlsx`, không ghi đè.
+**Context**: Tài liệu dự án, Report 5 Unit Test
+
+---
+
+## Local commits and staging integration — 2026-10-26
+**Timestamp**: 2026-10-26T13:53:00Z
+**User Input**: giúp tôi commit rõ ràng chưa push sau đó thử check merge nhánh staging vào nhánh này có conflict gì thì resolve
+**AI Response**: Created separate local commits 44a206d5 (backend MCP), 23651893 (staff UI and proposal review), 6a92bcaf (connectivity diagnostics), and 92750b2a (documentation). Fetched origin/staging at 934ba59b and merged into mcp-test. The only textual conflict was this append-only audit log; retained both branches' entries. Reviewed automatic merges in AssignmentFormPage and QuizAiDraftServiceTest. Fresh merged-tree verification: frontend 92 files / 565 tests passed; TypeScript passed; backend focused MCP/AI/architecture suite 101 tests passed with zero failures, errors or skips. Git diff whitespace validation passed. Crash log and temporary report directories remain untracked. No push.
+**Context**: Repository integration of already approved work; no new feature design or deployment. Existing security/resiliency scope retained; property-based testing remains disabled.
+
+Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods using the existing uv-managed Python installation.
+
+---
+
+## Report 5.0 revised copy
+**Timestamp**: 2026-10-26T14:10:00Z
+**User Input**: "lam di"
+**AI Response**: Tạo bản sửa của Report-5.0 (không ghi đè bản gốc): bìa "Oct 2026"; "Minimum" ở mục lục và tiêu đề; mục 1.2 ghi cả 15 unit đã có code, U02/U06/U12 đã chạy trên staging 7b5edba; thêm mô tả U06 và U12 ở 1.2.4/1.2.5; thêm Testcontainers 1.21.4 và script e2e vào 2.3; thêm mốc 24–26/10 vào 3.2; dòng Change Log 26/10/2026; mục II.3 điền số liệu riêng U02/U06/U12 (UT 171, IT 147, đều đạt; 12 lỗi đều đã sửa: Review 5, IT 6, AT 1). Lưu `Report-5.0_Test Documentation (sua U02 U06 U12).docx` cạnh bản gốc.
+**Context**: Tài liệu dự án, Report 5
+
+---
+
+## Review walkthrough and group editor hidden issue
+**Timestamp**: 2026-10-26T14:40:00Z
+**User Input**: "cho tôi luồng review màn hình và các chức năng uc group assignment cho tôi đi" / (ảnh lỗi PowerShell khi chạy seed) / (ảnh Sửa nhóm báo "Bộ nhóm có lỗi" nhưng không nhóm nào bị đánh dấu) "toi k lưu nhóm được"
+**AI Response**: Soạn luồng review U12 40 bước (UC57, UC54, UC55, UC53, UC56). Hướng dẫn cú pháp PowerShell `$env:E2E_CLASS=...` và tạo lớp SE-TEST6. Lỗi lưu nhóm: người dùng xóa Nhóm B đã có tài liệu/bản nộp; backend chặn đúng BR-U12-05 (GROUP_IN_USE) nhưng lý do gắn với nhóm không còn trên màn nên không hiện. Sửa `GroupEditor` hiện các lỗi của nhóm không còn trong danh sách ngay trong thông báo đỏ; thêm test. Nhánh `fix/u12-group-editor-orphan-issues`.
+**Context**: Construction, U12 sửa sau khi người dùng review tay
 
 ---

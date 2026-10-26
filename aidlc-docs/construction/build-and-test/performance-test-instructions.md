@@ -17,3 +17,7 @@ Suggested measurement protocol (test design, not a new requirement): warm up2min
 Exercise DB lock contention, slow provider and SMTP timeout under load. Verify bounded cancellation/resource release, no cap overshoot and no loss after recovery. Scanner batching must eventually cover all eligible rows;500limits alone are insufficient evidence. Retain sanitized raw measurements and compare each target separately. No throughput/error-rate target is invented here; agree unspecified capacity criteria before claiming acceptance.
 
 No k6/JMeter dependency or nonexistent script is introduced. Tester-owned harness and reproducible command/version must accompany the actual report.
+
+## MCP staff expansion — 2026-10-26
+
+See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.

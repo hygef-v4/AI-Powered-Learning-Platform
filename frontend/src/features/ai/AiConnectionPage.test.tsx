@@ -1,8 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiConnectionPage } from "./AiConnectionPage";
 import type { ConnectionView, McpCredential, ProviderInfo } from "./types";
 import type { SourceOption } from "@/shared/ai";
+
+const session = vi.hoisted(() => ({ role: "TEACHER" }));
+vi.mock("@/features/identity/session", () => ({
+  useSession: () => ({ status: "authenticated", profile: { role: session.role } }),
+}));
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -92,6 +97,7 @@ function backend(overrides: { connections?: ConnectionView[]; credentials?: McpC
 }
 
 describe("AiConnectionPage", () => {
+  beforeEach(() => { session.role = "TEACHER"; });
   afterEach(() => vi.unstubAllGlobals());
 
   it("hiện khóa đã che, nhà cung cấp chưa cấu hình, hạn mức trường và số agent", async () => {
@@ -106,10 +112,13 @@ describe("AiConnectionPage", () => {
   });
 
   it("học sinh không thấy thẻ hạn mức của trường", async () => {
-    backend({ sources: [] });
+    session.role = "STUDENT";
+    const calls = backend({ sources: [] });
     render(<AiConnectionPage />);
     await screen.findByText("••••3kQf");
     expect(screen.queryByText("Hạn mức của trường hôm nay")).not.toBeInTheDocument();
+    expect(screen.queryByText("Agent MCP")).not.toBeInTheDocument();
+    expect(calls.some((c) => c.url.includes("mcp-credentials"))).toBe(false);
   });
 
   it("thêm khóa gửi khóa và mô hình, không giữ khóa trên màn sau khi lưu", async () => {

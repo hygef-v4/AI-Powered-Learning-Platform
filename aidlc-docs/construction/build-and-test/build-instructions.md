@@ -29,3 +29,7 @@ For a clean backend build use `mvn -B clean verify`. Review `backend/target/sure
 Do not run full frontend tests concurrently with production compilation on a constrained machine. After a branch switch, stale generated Next route types may need regeneration; verify the exact generated directory before removal and preserve source files. For dependency/cache permission failures, repair access or use approved execution; never suppress compilation/test failures.
 
 Local integration startup prerequisites and the safe Mailpit configuration are in [integration instructions](integration-test-instructions.md). No secret file needs to be changed for these build commands.
+
+## MCP staff expansion — 2026-10-26
+
+See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.

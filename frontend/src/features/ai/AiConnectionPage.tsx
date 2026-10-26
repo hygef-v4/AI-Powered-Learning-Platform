@@ -16,6 +16,7 @@ import {
 } from "./api";
 import { MAX_AGENTS } from "./labels";
 import { McpAgentSection } from "./McpAgentSection";
+import { useSession } from "@/features/identity/session";
 import { PersonalApiSection } from "./PersonalApiSection";
 import { ApiSetupGuide, McpSetupGuide } from "./SetupGuides";
 import type { ConnectionView, McpCredential, ProviderInfo, SaveConnection } from "./types";
@@ -27,11 +28,11 @@ type Data = {
   sources: SourceOption[];
 };
 
-async function loadAll(): Promise<Data> {
+async function loadAll(mcpEnabled: boolean): Promise<Data> {
   const [connections, providers, credentials, sources] = await Promise.all([
     getConnections(),
     getProviders(),
-    getMcpCredentials(),
+    mcpEnabled ? getMcpCredentials() : Promise.resolve([]),
     getSources().catch(() => [] as SourceOption[]),
   ]);
   return { connections, providers, credentials, sources };
@@ -39,24 +40,27 @@ async function loadAll(): Promise<Data> {
 
 /** Màn #6 AI Connection (UC 31, 32): API cá nhân và agent MCP của riêng người dùng. */
 export function AiConnectionPage() {
+  const session = useSession();
+  const mcpEnabled = session.status === "authenticated" &&
+    (session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(
     () =>
-      loadAll().then(
+      loadAll(mcpEnabled).then(
         (loaded) => {
           setData(loaded);
           setError(null);
         },
         () => setError("Không tải được kết nối AI, thử lại sau."),
       ),
-    [],
+    [mcpEnabled],
   );
 
   useEffect(() => {
     let active = true;
-    loadAll().then(
+    loadAll(mcpEnabled).then(
       (loaded) => {
         if (active) setData(loaded);
       },
@@ -67,7 +71,7 @@ export function AiConnectionPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [mcpEnabled]);
 
   const save = async (provider: AiProvider, body: SaveConnection) => {
     await saveConnection(provider, body);
@@ -101,7 +105,7 @@ export function AiConnectionPage() {
       {!data && !error && <p className="text-[13px] text-muted">Đang tải...</p>}
       {data && (
         <>
-          <AiSummaryCards data={data} />
+          <AiSummaryCards data={data} mcpEnabled={mcpEnabled} />
           <PersonalApiSection
             connections={data.connections}
             providers={data.providers}
@@ -110,7 +114,7 @@ export function AiConnectionPage() {
             onRevoke={revoke}
           />
           <ApiSetupGuide />
-          <McpAgentSection
+          {mcpEnabled && <McpAgentSection
             credentials={data.credentials}
             onCreate={async (label, access, days) => {
               const created = await createMcpCredential(label, access, days);
@@ -121,8 +125,8 @@ export function AiConnectionPage() {
               await revokeMcpCredential(id);
               await reload();
             }}
-          />
-          <McpSetupGuide />
+          />}
+          {mcpEnabled && <McpSetupGuide />}
         </>
       )}
     </div>
@@ -130,7 +134,7 @@ export function AiConnectionPage() {
 }
 
 /** Thẻ tóm tắt: hạn mức của trường hôm nay (chỉ khi được dùng), số khóa cá nhân, số agent còn hiệu lực. */
-export function AiSummaryCards({ data }: { data: Data }) {
+export function AiSummaryCards({ data, mcpEnabled = true }: { data: Data; mcpEnabled?: boolean }) {
   const shared = data.sources.find((s) => s.source === "SHARED");
   // Backend chỉ trả nguồn SHARED cho người được dùng (Teacher, Subject Manager).
   const showShared = shared !== undefined;
@@ -156,12 +160,12 @@ export function AiSummaryCards({ data }: { data: Data }) {
         <p className="font-display text-[26px] leading-none text-ink">{keys} khóa</p>
         <p className="text-xs text-muted">Chi phí tính vào tài khoản nhà cung cấp của bạn</p>
       </Card>
-      <Card icon="smart_toy" title="Agent MCP">
+      {mcpEnabled && <Card icon="smart_toy" title="Agent MCP">
         <p className="font-display text-[26px] leading-none text-ink">
           {agents} / {MAX_AGENTS}
         </p>
         <p className="text-xs text-muted">agent còn hiệu lực</p>
-      </Card>
+      </Card>}
     </div>
   );
 }

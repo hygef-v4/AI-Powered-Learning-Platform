@@ -67,9 +67,22 @@ class MaterialQueryAndReferenceTest {
         verify(repo,never()).version(any(),anyInt());
     }
     @Test void mcpReturnsActualVersionAndUntrustedMarker() {
-        var result=new MaterialMcpTools(queries,repo).call(actor,"read_authorized_material",Map.of("materialId",id.toString()));
+        var result=new MaterialMcpTools(queries,repo).call(new Actor(actor.accountId(),Role.TEACHER),"read_authorized_material",Map.of("materialId",id.toString()));
         assertThat(result.error()).isFalse();Map<?,?> content=(Map<?,?>)result.content();
         assertThat(content.get("untrustedContent")).isEqualTo(true);assertThat(content.get("versionNo")).isEqualTo(1);
+    }
+    @Test void mcpPagesWithoutSplittingSurrogatePairsAndRejectsChangedVersions() {
+        Actor teacher=new Actor(actor.accountId(),Role.TEACHER);
+        when(repo.version(id,1)).thenReturn(Optional.of(version(id,"a😀bc")));
+        var tools=new MaterialMcpTools(queries,repo);
+        var first=tools.call(teacher,"read_authorized_material",Map.of("materialId",id.toString(),"limit",2));
+        assertThat(first.error()).isFalse();
+        var content=(Map<?,?>)first.content();
+        assertThat(content.get("text")).isEqualTo("a");
+        assertThat(content.get("nextOffset")).isEqualTo(1);
+        var second=tools.call(teacher,"read_authorized_material",Map.of("materialId",id.toString(),"offset",1,"limit",2,"expectedVersion",1));
+        assertThat(((Map<?,?>)second.content()).get("text")).isEqualTo("😀");
+        assertThat(tools.call(teacher,"read_authorized_material",Map.of("materialId",id.toString(),"expectedVersion",2)).error()).isTrue();
     }
     @Test void staffMcpCanReadArchivedReferenceButNewAiSelectionCannotUseIt() {
         Material archived=material.revise(material.title(),"",0,1,Material.Status.ARCHIVED,now);

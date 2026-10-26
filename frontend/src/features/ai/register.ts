@@ -1,8 +1,10 @@
 // U06: nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager.
 
-import { accountMenuEntries } from "@/features/identity/slots";
+import { accountMenuEntries, navEntries } from "@/features/identity/slots";
 import { settingsSectionRegistry } from "@/features/settings/slots";
 import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/AiSettingsPanels";
+
+navEntries.register({ key: "admin-mcp", order: 47, title: "Agent MCP", href: "/admin/mcp", icon: "smart_toy", roles: ["ADMIN"] });
 
 accountMenuEntries.register({
   key: "ai-connection",

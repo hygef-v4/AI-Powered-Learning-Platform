@@ -22,3 +22,7 @@ Read Maven XML/text reports under `backend/target/surefire-reports` and Vitest o
 U14 focused checks cover scoped announcements/CAS, event schema/recipient resolution, cap/preference/retry/reminders, API authorization and frontend UI/nonce behavior. Mocked provider tests cannot certify real database locks, SMTP delivery or two-instance SSE. See the [independent tester matrix](u14-verification.md).
 
 When a check fails, retain failure output, distinguish application failure from environment failure, fix the relevant cause and rerun affected checks. Do not count a skipped case as passed or increase timeouts solely to hide failures. Record test author and execution environment separately for independent acceptance.
+
+## MCP staff expansion — 2026-10-26
+
+See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.
