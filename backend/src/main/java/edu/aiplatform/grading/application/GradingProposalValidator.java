@@ -3,6 +3,7 @@ package edu.aiplatform.grading.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.RubricView;
+import edu.aiplatform.grading.domain.GradingFeedback;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -17,17 +18,38 @@ import org.springframework.stereotype.Component;
 public class GradingProposalValidator {
     private static final int MAX_FEEDBACK_LENGTH = 10000;
     private static final int MAX_PAYLOAD_LENGTH = 262144;
-    private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback", "sections", "itemScoresByRubric");
+    private static final Set<String> PROPOSAL_FIELDS = Set.of(
+            "checks", "score", "feedback", "sections", "itemScoresByRubric", "structuredFeedback");
     private final ObjectMapper json;
+    private final GradingFeedbackValidator feedbackValidator;
 
     public GradingProposalValidator(ObjectMapper json) {
         this.json = json;
+        this.feedbackValidator = new GradingFeedbackValidator(json);
     }
 
-    public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback, JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+    public record Validated(
+            Map<UUID, Set<UUID>> checks,
+            BigDecimal score,
+            String feedback,
+            JsonNode sections,
+            Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric,
+            GradingFeedback structuredFeedback) {
+        public Validated(
+                Map<UUID, Set<UUID>> checks,
+                BigDecimal score,
+                String feedback,
+                JsonNode sections,
+                Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+            this(checks, score, feedback, sections, itemScoresByRubric, null);
+        }
     }
 
     public Validated validate(JsonNode payload, List<RubricView> rubrics) {
+        return validate(payload, rubrics, null);
+    }
+
+    public Validated validate(JsonNode payload, List<RubricView> rubrics, Set<String> validBlockIds) {
         try {
             requireProposalObject(payload);
             var checks = readChecks(payload);
@@ -40,7 +62,14 @@ public class GradingProposalValidator {
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
-            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores));
+            GradingFeedback structuredFeedback = null;
+            if (payload.has("structuredFeedback") && !payload.get("structuredFeedback").isNull()) {
+                structuredFeedback = feedbackValidator.validateNode(
+                        payload.get("structuredFeedback"), rubrics, validBlockIds, true);
+            }
+            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores), structuredFeedback);
+        } catch (ApiException ex) {
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal does not match the rubric schema");
         }

@@ -3,6 +3,7 @@ package edu.aiplatform.grading.application;
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
+import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.grading.application.GradingCommands.AiBatch;
 import edu.aiplatform.grading.application.GradingCommands.AiRequest;
@@ -19,6 +20,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,7 @@ public class GradingProposalService {
         try {
             task = ai.submit(new AiTaskRequest(actor, input.source(), input.provider(), "GRADING_PROPOSAL",
                     "evaluation:" + evaluationId, proposal.versionNo, input.requestRef(), prepared.prompt(),
-                    prepared.outputSchema(), 4096));
+                    prepared.outputSchema(), prepared.maxOutputTokens()));
         } catch (ApiException ex) {
             return tx.dispatched(proposal.id, null, ex.code());
         } catch (RuntimeException ex) {
@@ -66,15 +68,35 @@ public class GradingProposalService {
         var evaluation = evaluations.findById(evaluationId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         access.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
         tx.invalidateChangedSnapshot(evaluationId);
-        for (var proposal : proposals.findForEvaluation(evaluationId))
+        var current = proposals.findForEvaluation(evaluationId);
+        boolean reconciled = false;
+        for (var proposal : current)
             if (("PENDING".equals(proposal.status) || GradingProposalTransactions.legacyFailure(proposal)) && proposal.taskId != null) {
-                // Failure callback can precede task-id attachment. Reconcile terminal task
-                // state on polling.
-                ai.get(proposal.taskId)
-                        .filter(task -> Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN).contains(task.state()))
-                        .ifPresent(task -> tx.dispatched(proposal.id, task, null));
+                // Failure or rejection callback can precede task-id attachment. Reconcile terminal task
+                // state on polling and expose live task state while pending.
+                Optional<AiTaskView> maybeTask = Optional.ofNullable(ai.get(proposal.taskId)).flatMap(o -> o);
+                if (maybeTask.isPresent()) {
+                    var task = maybeTask.get();
+                    if (Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN).contains(task.state())
+                            || ("PENDING".equals(proposal.status) && task.state() == AiTaskState.READY
+                                    && task.applyResult() != null && task.applyResult() != ApplyOutcome.APPLIED)) {
+                        tx.dispatched(proposal.id, task, null);
+                        reconciled = true;
+                    } else if ("PENDING".equals(proposal.status)) {
+                        proposal.taskState = task.state().name();
+                    }
+                }
             }
-        return proposals.findForEvaluation(evaluationId);
+        var listed = reconciled ? proposals.findForEvaluation(evaluationId) : current;
+        if (reconciled) {
+            for (var proposal : listed) {
+                if ("PENDING".equals(proposal.status) && proposal.taskId != null) {
+                    Optional.ofNullable(ai.get(proposal.taskId)).flatMap(o -> o)
+                            .ifPresent(task -> proposal.taskState = task.state().name());
+                }
+            }
+        }
+        return listed;
     }
 
     public BatchResult requestBatch(Actor actor, AiBatch batch) {

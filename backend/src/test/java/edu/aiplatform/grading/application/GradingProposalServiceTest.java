@@ -1,15 +1,16 @@
 package edu.aiplatform.grading.application;
 
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
-import org.mockito.ArgumentCaptor;
-import java.util.*;
-import edu.aiplatform.grading.domain.*;
-import edu.aiplatform.grading.application.GradingCommands.*;
-import edu.aiplatform.identity.contract.*;
+import static org.mockito.Mockito.*;
+
 import edu.aiplatform.ai.contract.*;
+import edu.aiplatform.grading.application.GradingCommands.*;
+import edu.aiplatform.grading.domain.*;
+import edu.aiplatform.identity.contract.*;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class GradingProposalServiceTest {
     @Test
@@ -83,5 +84,53 @@ class GradingProposalServiceTest {
         verify(tx).estimateTokens(actor, first, 2);
         verify(tx).estimateTokens(actor, second, 4);
         verifyNoInteractions(ai);
+    }
+
+    @Test
+    void listPopulatesLiveTaskStateWithoutWritingWhilePendingAndReconcilesRejectedOrFailedTasks() {
+        var tx = mock(GradingProposalTransactions.class);
+        var ai = mock(IAiTask.class);
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposals = mock(IGradingProposalRepository.class);
+        var access = mock(GradingAccess.class);
+        var e = new Evaluation();
+        e.id = UUID.randomUUID();
+        e.classId = UUID.randomUUID();
+        when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
+
+        var pendingRunning = new GradingProposal();
+        pendingRunning.id = UUID.randomUUID();
+        pendingRunning.evaluationId = e.id;
+        pendingRunning.status = "PENDING";
+        pendingRunning.taskId = UUID.randomUUID();
+
+        var pendingReadyUnapplied = new GradingProposal();
+        pendingReadyUnapplied.id = UUID.randomUUID();
+        pendingReadyUnapplied.evaluationId = e.id;
+        pendingReadyUnapplied.status = "PENDING";
+        pendingReadyUnapplied.taskId = UUID.randomUUID();
+
+        when(proposals.findForEvaluation(e.id)).thenReturn(List.of(pendingRunning, pendingReadyUnapplied));
+        when(ai.get(pendingRunning.taskId)).thenReturn(Optional.of(new AiTaskView(
+                pendingRunning.taskId, AiTaskState.RUNNING, AiSource.PERSONAL, AiProvider.GEMINI,
+                "gemini-2.5-flash", null, null, null)));
+        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(new AiTaskView(
+                pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
+                "gemini-2.5-flash", null, null, null)));
+
+        var service = new GradingProposalService(tx, ai, evaluations, proposals, access);
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+        var listed = service.list(actor, e.id);
+
+        assertThat(listed).extracting(p -> p.taskState).containsExactly("RUNNING", "READY");
+        verify(tx, never()).dispatched(any(), any(), any());
+
+        // When a READY task was rejected at delivery, list() reconciles it via dispatched().
+        var rejectedTask = new AiTaskView(
+                pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
+                "gemini-2.5-flash", ApplyOutcome.REJECTED, "Tài khoản yêu cầu không còn hiệu lực", null);
+        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
+        service.list(actor, e.id);
+        verify(tx).dispatched(pendingReadyUnapplied.id, rejectedTask, null);
     }
 }
