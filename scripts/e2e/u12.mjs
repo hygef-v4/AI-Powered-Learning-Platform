@@ -105,15 +105,15 @@ const sk = await T.put(`/api/v1/assignments/${AID}/skeleton`, { version: detail.
 check(R, "U12-22 soạn 3 phần lá", sk.status === 200, brief(sk));
 detail = await T.get(`/api/v1/assignments/${AID}`);
 for (const part of detail.data.parts || []) {
-  const rub = await T.get(`/api/v1/assignments/${AID}/parts/${part.partId ?? part.id}/rubric`);
-  const put = await T.put(`/api/v1/assignments/${AID}/parts/${part.partId ?? part.id}/rubric`, { version: rub.data?.version ?? 0, criteria: [{ criterionId: crypto.randomUUID(), title: "Nội dung", description: "", kind: "TEXT", items: [{ itemId: crypto.randomUUID(), text: "Đúng yêu cầu", points: 5 }] }] });
+  const cur = await T.get(`/api/v1/assignments/${AID}`);
+  const put = await T.put(`/api/v1/assignments/${AID}/parts/${part.partId ?? part.id}/rubric`, { version: cur.data.version, criteria: [{ criterionId: crypto.randomUUID(), title: "Nội dung", description: "", kind: "TEXT", items: [{ itemId: crypto.randomUUID(), text: "Đúng yêu cầu", points: 5 }] }] });
   if (put.status >= 300) console.log("rubric", part.title, brief(put));
 }
 detail = await T.get(`/api/v1/assignments/${AID}`);
 const closesAt = new Date(Date.now() + 3 * 60 * 1000).toISOString();
-let pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt, maxAttempts: null, confirmUngroupedStudents: false });
+let pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt, maxAttempts: 3, confirmUngroupedStudents: false });
 check(R, "U12-05 sinh viên chưa có nhóm là cảnh báo cần xác nhận", pub.status === 409 && pub.data?.code === "GROUP_CONFIRMATION_REQUIRED", brief(pub));
-pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt, maxAttempts: null, confirmUngroupedStudents: true });
+pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt, maxAttempts: 3, confirmUngroupedStudents: true });
 check(R, "U12-22 phát hành bài nhóm (hạn 3 phút)", pub.status === 200, brief(pub));
 
 // ---------- Tài liệu nhóm (U12-08..12, 24, 25, 26, 27)

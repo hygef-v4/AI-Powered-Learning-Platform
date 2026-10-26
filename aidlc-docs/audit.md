@@ -6645,6 +6645,16 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 
 ---
 
+## Re-test on latest staging
+**Timestamp**: 2026-10-26T05:00:00Z
+**User Input**: "ok toi da gan api key vao roi nhung da reset lai may." / "mearch het vao stagging va test cac phan cua toi o stagging duoc k"
+**AI Response**: Cả 8 nhánh của người dùng đã ở `staging` (41f1ab1); nhóm chưa có server staging (bước deploy trong CI chưa bật), nên build stack local từ đúng `staging` (có commit mới của nhóm) và chạy lại toàn bộ e2e. Kết quả trên lớp mới SE-TEST4/môn SWT303: U02 16/16, U06 24/24 (U06-16 bỏ qua vì hạn mức chung đã đặt từ trước), U06 bổ sung 15/15, U12 52/52, U12 bài nhóm 30/30. Sự cố: script `u06b.mjs` cũ đã ghi đè khóa Gemini thật người dùng dán cho `gv.test` (thay bằng khóa thử) — đã báo người dùng dán lại; sửa script để thao tác khóa trên tài khoản chủ nhiệm môn và chạy tác vụ lỗi bằng khóa OpenAI giả, không đụng khóa Gemini của giảng viên. Seed nhận `E2E_CLASS`, `E2E_SUBJECT`; thêm `u06-real-key.mjs`; `u12.mjs` sửa version rubric và số lượt nộp.
+**Context**: Construction, kiểm thử lại U02/U06/U12 trên staging mới nhất
+
+---
+
+---
+
 ## U09 AI delivery plan and requested Gemini handoff
 **Timestamp**: 2026-10-26T03:12:18Z
 **User Input**: "giúp tôi ktra và lập plan fix bug sau đó đưa cho gemini đang mở làm"

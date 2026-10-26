@@ -3,6 +3,10 @@ import fs from "node:fs";
 import { Session, activate, env } from "./lib.mjs";
 
 const PW = env("TEST_ACCOUNT_PASSWORD");
+// Lớp thử; đặt E2E_CLASS để có lớp mới chưa chia nhóm (u12.mjs cần lớp trống).
+const CLASS_CODE = process.env.E2E_CLASS ?? "SE-TEST1";
+// Mỗi sinh viên chỉ học một lớp trong một môn: lớp mới cho đủ 5 sinh viên thì đặt thêm E2E_SUBJECT.
+const SUBJECT_CODE = process.env.E2E_SUBJECT ?? "SWT301";
 const ADMIN = env("U01_BOOTSTRAP_ADMIN_EMAIL");
 const people = [
   { key: "manager", email: "cn.test@fpt.edu.vn", displayName: "Chủ nhiệm Thử", role: "SUBJECT_MANAGER" },
@@ -32,10 +36,10 @@ for (const p of people) {
   console.log("account", p.key, out.accounts[p.key].id);
 }
 
-let subjects = await admin.get("/api/v1/admin/subjects?q=SWT301");
-let subject = (subjects.data?.items || subjects.data?.content || []).find((s) => s.code === "SWT301");
+let subjects = await admin.get(`/api/v1/admin/subjects?q=${SUBJECT_CODE}`);
+let subject = (subjects.data?.items || subjects.data?.content || []).find((s) => s.code === SUBJECT_CODE);
 if (!subject) {
-  const r = await admin.post("/api/v1/admin/subjects", { code: "SWT301", name: "Kiểm thử phần mềm", description: "Môn chạy thử local", managerId: out.accounts.manager.id });
+  const r = await admin.post("/api/v1/admin/subjects", { code: SUBJECT_CODE, name: "Kiểm thử phần mềm " + SUBJECT_CODE, description: "Môn chạy thử local", managerId: out.accounts.manager.id });
   if (r.status >= 300) throw new Error(`subject: ${r.status} ${JSON.stringify(r.data)}`);
   subject = r.data;
 }
@@ -45,9 +49,9 @@ console.log("subject", subject.id);
 const manager = new Session("manager");
 await manager.login(out.accounts.manager.email, PW);
 const mine = await manager.get("/api/v1/manager/classes");
-let cls = (mine.data?.items || mine.data?.content || mine.data || []).find?.((c) => c.code === "SE-TEST1");
+let cls = (mine.data?.items || mine.data?.content || mine.data || []).find?.((c) => c.code === CLASS_CODE);
 if (!cls) {
-  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: "SE-TEST1", name: "Lớp chạy thử U06 U12", description: "Lớp thử", term: "2026-1", teacherId: out.accounts.teacher.id });
+  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: CLASS_CODE, name: "Lớp chạy thử U06 U12 (" + CLASS_CODE + ")", description: "Lớp thử", term: "2026-1", teacherId: out.accounts.teacher.id });
   if (r.status >= 300) throw new Error(`class: ${r.status} ${JSON.stringify(r.data)}`);
   cls = r.data;
 }
