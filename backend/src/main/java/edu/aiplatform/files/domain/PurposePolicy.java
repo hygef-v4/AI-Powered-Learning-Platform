@@ -4,7 +4,6 @@ import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.settings.contract.ISettings;
 import edu.aiplatform.settings.contract.SettingKey;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -12,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Quy tắc theo {@code purpose}: role được tải lên (BR-U03-04), trần dung lượng lấy từ Settings (BR-U03-02, 87) và luôn
- * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định: học liệu PDF, DOCX, PPTX; ảnh trong tài liệu PNG, JPEG.
- * Riêng tệp nguồn soạn bài bằng AI vẫn chọn loại trong Settings (TXT, DOCX, PDF).
+ * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định, không có trong Settings: học liệu PDF, DOCX, PPTX; ảnh
+ * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF.
  */
 @Component
 public class PurposePolicy {
@@ -21,7 +20,6 @@ public class PurposePolicy {
     public static final SettingKey<Integer> MATERIAL_MAX_MB = new SettingKey<>("files.material.maxSizeMb", Integer.class);
     public static final SettingKey<Integer> IMAGE_MAX_MB = new SettingKey<>("files.documentImage.maxSizeMb", Integer.class);
     public static final SettingKey<Integer> ASSIGNMENT_SOURCE_MAX_MB = new SettingKey<>("files.assignmentSource.maxSizeMb", Integer.class);
-    public static final SettingKey<String[]> ASSIGNMENT_SOURCE_TYPES = new SettingKey<>("files.assignmentSource.allowedTypes", String[].class);
 
     static final Map<ArtifactPurpose, Integer> HARD_CAP_MB = Map.of(ArtifactPurpose.MATERIAL, 50,
             ArtifactPurpose.DOCUMENT_IMAGE, 5, ArtifactPurpose.ASSIGNMENT_SOURCE, 2);
@@ -52,15 +50,6 @@ public class PurposePolicy {
             case ASSIGNMENT_SOURCE -> ASSIGNMENT_SOURCE_MAX_MB;
         };
         int size = settings.get(sizeKey).map(value -> Math.max(1, Math.min(cap, value))).orElse(cap);
-        Set<FileType> supported = SUPPORTED.get(purpose);
-        if (purpose != ArtifactPurpose.ASSIGNMENT_SOURCE) {
-            return new PurposeLimits(purpose, size, EnumSet.copyOf(supported));
-        }
-        Set<FileType> allowed = settings.get(ASSIGNMENT_SOURCE_TYPES)
-                .map(names -> Arrays.stream(names).map(FileType::valueOf).filter(supported::contains)
-                        .collect(() -> EnumSet.noneOf(FileType.class), Set::add, Set::addAll))
-                .filter(set -> !set.isEmpty())
-                .orElseGet(() -> EnumSet.copyOf(supported));
-        return new PurposeLimits(purpose, size, allowed);
+        return new PurposeLimits(purpose, size, EnumSet.copyOf(SUPPORTED.get(purpose)));
     }
 }

@@ -4,15 +4,11 @@ import edu.aiplatform.settings.contract.SettingDefinition;
 import edu.aiplatform.settings.contract.SettingGroup;
 import edu.aiplatform.settings.contract.SettingType;
 import edu.aiplatform.settings.domain.SettingValidator;
-import java.util.List;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Nhóm cài đặt Tệp (BR-U03-87): dung lượng tối đa; loại học liệu và ảnh cố định trong {@code PurposePolicy}, chỉ tệp
- * nguồn soạn bài bằng AI còn chọn loại.
- */
+/** Nhóm cài đặt Tệp (BR-U03-87): chỉ dung lượng tối đa; loại tệp cố định trong {@code PurposePolicy}. */
 @Configuration
 public class FileSettingDefinitions {
 
@@ -38,13 +34,5 @@ public class FileSettingDefinitions {
                 "Tệp nguồn soạn bài tối đa", "Dung lượng tối đa mỗi tệp nguồn riêng chỉ dùng khi soạn bài bằng AI.",
                 SettingType.INTEGER, 2,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 2, SettingValidator.UNIT, "MB"));
-    }
-
-    @Bean
-    SettingDefinition assignmentSourceTypes() {
-        return new SettingDefinition("files.assignmentSource.allowedTypes", SettingGroup.FILES,
-                "Loại tệp nguồn soạn bài", "Loại tệp văn bản được dùng làm nguồn khi soạn bài bằng AI.",
-                SettingType.ENUM_SET, List.of("TXT", "DOCX", "PDF"),
-                Map.of(SettingValidator.OPTIONS, List.of("TXT", "DOCX", "PDF"), SettingValidator.NON_EMPTY, true));
     }
 }
