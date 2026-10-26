@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { atomicItems, criteriaOf, newId, type AtomicItem, type RubricCriterion } from "@/shared/document";
+import { atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
 import { cx } from "@/shared/ui";
 
 const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-primary focus:bg-white";
 const INPUT = `${FIELD} border-transparent`;
 /** Ô điểm luôn có viền nhạt: không có chữ gợi ý (yêu cầu 2026-10-22) nên viền cho biết chỗ nhập điểm. */
 const POINTS = `${FIELD} border-line`;
+/** Ô điểm sai (quá 2 chữ số thập phân): bộ class riêng, vì cx không gộp class trùng nên không chồng lên POINTS được. */
+const POINTS_INVALID = "min-w-0 rounded-md border border-danger bg-danger-soft px-1.5 py-1 text-xs text-danger outline-none";
 /** BR-U07-21: tối đa 20 tiêu chí mỗi phần; mỗi mục atomic là một tiêu chí. */
 const LIMIT = 20;
 
 /**
- * Rubric gửi lên server: bỏ dòng vừa thêm mà chưa gõ gì (chưa có chữ, chưa có điểm); điểm là số dương, tối đa 2 chữ số
- * thập phân; ô trống, 0 hoặc số âm là chưa có điểm.
+ * Rubric gửi lên server: bỏ dòng vừa thêm mà chưa gõ gì (chưa có chữ, chưa có điểm); ô trống, 0 hoặc số âm là chưa có
+ * điểm. Không làm tròn: điểm quá 2 chữ số thập phân thì trang không lưu và báo lỗi (xem {@link rubricPointsMalformed}).
  */
 export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
   return criteria
@@ -23,10 +25,15 @@ export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
         .filter((item) => item.text.trim() !== "" || item.points !== null)
         .map((item) => ({
           ...item,
-          points: item.points !== null && Number.isFinite(item.points) && item.points > 0 ? Math.round(item.points * 100) / 100 : null,
+          points: item.points !== null && Number.isFinite(item.points) && item.points > 0 ? item.points : null,
         })),
     }))
     .filter((criterion) => criterion.items.length > 0);
+}
+
+/** Có mục nhập điểm quá 2 chữ số thập phân (BR-U07-21): chưa lưu rubric này, báo lỗi ở thẻ. */
+export function rubricPointsMalformed(criteria: RubricCriterion[]): boolean {
+  return criteria.some((criterion) => criterion.items.some((item) => pointsMalformed(item.points)));
 }
 
 function parsePoints(value: string): number | null {
@@ -79,8 +86,17 @@ export function RubricEditor({ criteria, onChange }: {
             }} />
           <input data-atomic-points aria-label={`Điểm mục ${i + 1}`} type="number" step="0.01" min="0" max="1000"
             value={item.points ?? ""}
-            className={cx(POINTS, "w-12 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
-            onChange={(e) => edit(i, { points: parsePoints(e.target.value) })} />
+            aria-invalid={pointsMalformed(item.points) || undefined}
+            title={pointsMalformed(item.points) ? "Điểm tối đa 2 chữ số thập phân" : undefined}
+            className={cx(pointsMalformed(item.points) ? POINTS_INVALID : POINTS,
+              "w-12 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
+            onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                add(i + 1);
+              }
+            }} />
           <button type="button" aria-label={`Xóa mục chấm ${i + 1}`} title="Xóa" onClick={() => set(items.filter((_, j) => j !== i))}
             className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
             ✕

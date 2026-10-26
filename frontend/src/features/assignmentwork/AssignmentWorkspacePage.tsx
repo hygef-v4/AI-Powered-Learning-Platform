@@ -75,6 +75,15 @@ export function precheck(attempt: Pick<Attempt, "requiredDiagrams">, content: Do
   return issues;
 }
 
+/**
+ * Kiểm trong popup Nộp: bản đã lưu có kết quả của server (biết sơ đồ, bảng của đề đã sửa khác đề chưa) thì dùng kết quả
+ * đó; chưa có (mất mạng, bản chưa lưu) thì tự kiểm sơ bộ bằng {@link precheck}.
+ */
+export function submitCheck(attempt: Pick<Attempt, "requiredDiagrams">, content: DocumentModel,
+                            serverIssues: ValidationIssue[] | null): ValidationIssue[] {
+  return serverIssues ?? precheck(attempt, content);
+}
+
 /** Lý do dừng tự lưu: lệch phiên bản, lượt đã đóng (chờ tải lại); bài không hợp lệ (chờ người học sửa). */
 type Halt = "conflict" | "closed" | "invalid" | null;
 
@@ -93,6 +102,8 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [banner, setBanner] = useState<{ tone: "danger" | "warning"; text: string; reload?: boolean } | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  /** Kiểm nộp của bản đã lưu do server trả (biết bản đề gốc); null khi chưa có, lúc đó tự kiểm sơ bộ. */
+  const [submitIssues, setSubmitIssues] = useState<ValidationIssue[] | null>(null);
   const [dialog, setDialog] = useState<"submit" | "docx" | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [offset, setOffset] = useState(0);
@@ -115,6 +126,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       setAttempt(value);
       setContent(value.content);
       setSavedAt(value.lastSavedAt);
+      setSubmitIssues(value.submitIssues ?? null);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
     }, (error) => { if (!controller.signal.aborted) setLoadError(error); });
@@ -140,6 +152,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         const saved = await workApi.save(attemptId, version.current, body, small);
         version.current = saved.contentVersion;
         setSavedAt(saved.lastSavedAt);
+        setSubmitIssues(saved.submitIssues ?? null);
         if (edits.current === startEdits) {
           setContent(saved.content);
           setDirty(false);
@@ -263,12 +276,16 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         <p role="status" className="text-sm text-muted">{saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}</p>
         <div className="flex items-center gap-2">
           <Button disabled={saving || !dirty} onClick={() => void save()}>Lưu bài</Button>
-          <Button variant="primary" icon="check_circle" onClick={() => setDialog("submit")} data-testid="open-submit">Nộp bài</Button>
+          <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={async () => {
+            // Lưu trước để popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
+            await save();
+            setDialog("submit");
+          }}>Nộp bài</Button>
         </div>
       </div>}
 
       {dialog === "submit" && (
-        <SubmitDialog attempt={attempt} content={content} onClose={() => setDialog(null)}
+        <SubmitDialog attempt={attempt} content={content} serverIssues={dirty ? null : submitIssues} onClose={() => setDialog(null)}
           onSubmit={async () => {
             if (!(await save())) throw new Error("Bài chưa lưu");
             const receipt = await workApi.submit(attempt.attemptId, version.current);
@@ -286,9 +303,15 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   );
 }
 
-function SubmitDialog({ attempt, content, onClose, onSubmit }: { attempt: Attempt; content: DocumentModel; onClose: () => void; onSubmit: () => Promise<void> }) {
+function SubmitDialog({ attempt, content, serverIssues, onClose, onSubmit }: {
+  attempt: Attempt;
+  content: DocumentModel;
+  serverIssues: ValidationIssue[] | null;
+  onClose: () => void;
+  onSubmit: () => Promise<void>;
+}) {
   const [busy, setBusy] = useState(false);
-  const [errors, setErrors] = useState<ValidationIssue[]>(() => precheck(attempt, content));
+  const [errors, setErrors] = useState<ValidationIssue[]>(() => submitCheck(attempt, content, serverIssues));
   const [message, setMessage] = useState<string | null>(null);
   const left = attempt.maxAttempts - attempt.attemptNo;
   return (

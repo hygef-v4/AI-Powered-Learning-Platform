@@ -9,7 +9,10 @@ import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Nhóm cài đặt Tệp (BR-U03-87). */
+/**
+ * Nhóm cài đặt Tệp (BR-U03-87): dung lượng tối đa; loại học liệu và ảnh cố định trong {@code PurposePolicy}, chỉ tệp
+ * nguồn soạn bài bằng AI còn chọn loại.
+ */
 @Configuration
 public class FileSettingDefinitions {
 
@@ -23,26 +26,10 @@ public class FileSettingDefinitions {
     }
 
     @Bean
-    SettingDefinition materialTypes() {
-        return new SettingDefinition("files.material.allowedTypes", SettingGroup.FILES, "Loại học liệu",
-                "Loại tệp được tải lên làm học liệu", SettingType.ENUM_SET, List.of("PDF", "DOCX", "PPTX"),
-                Map.of(SettingValidator.OPTIONS, List.of("PDF", "DOCX", "PPTX"), SettingValidator.NON_EMPTY, true));
-    }
-
-    @Bean
     SettingDefinition imageMaxSize() {
         return new SettingDefinition("files.documentImage.maxSizeMb", SettingGroup.FILES, "Ảnh trong tài liệu tối đa",
                 "Dung lượng tối đa của một ảnh chèn vào đề và bài làm", SettingType.INTEGER, 5,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 5, SettingValidator.UNIT, "MB"));
-    }
-
-    @Bean
-    SettingDefinition imageTypes() {
-        return new SettingDefinition("files.documentImage.allowedTypes", SettingGroup.FILES,
-                "Loại ảnh", "Loại ảnh được chèn vào đề và bài làm", SettingType.ENUM_SET,
-                List.of("PNG", "JPEG", "GIF", "SVG"),
-                Map.of(SettingValidator.OPTIONS, List.of("PNG", "JPEG", "GIF", "SVG"), SettingValidator.NON_EMPTY,
-                        true));
     }
 
     @Bean

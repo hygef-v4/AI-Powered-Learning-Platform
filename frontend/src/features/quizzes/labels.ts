@@ -27,7 +27,6 @@ const ERROR_LABELS: Record<string, string> = {
   QUIZ_VERSION_EXISTS: "Quiz này đã có một version mới đang soạn.",
   CLASS_NOT_OPEN: "Lớp chưa mở nên chưa phát hành được quiz của lớp.",
   CLASS_ARCHIVED: "Lớp đã lưu trữ, quiz của lớp chỉ xem.",
-  ACTIVITY_RETENTION_NOT_SET: "Chưa đặt thời hạn lưu dữ liệu hoạt động nên chưa bật được ghi nhận hoạt động.",
   QUIZ_COPY_SUBJECT_MISMATCH: "Chỉ copy quiz giữa các lớp cùng môn.",
   QUIZ_FULL: "Quiz tối đa 200 câu.",
   AI_DRAFT_NOT_FOUND: "Không tìm thấy đề xuất AI.",

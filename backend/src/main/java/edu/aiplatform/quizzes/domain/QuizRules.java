@@ -45,19 +45,15 @@ public final class QuizRules {
         return List.copyOf(violations);
     }
 
-    /** Bật ghi nhận hoạt động cần lời báo cho sinh viên và thời hạn lưu đã đặt (BR-U10-15, K2). */
-    public static List<Violation> validateActivity(boolean enabled, String notice, boolean retentionConfigured) {
+    /**
+     * Bật ghi nhận hoạt động cần lời báo cho sinh viên (BR-U10-15, K2). Thời hạn giữ dữ liệu cố định 1 ngày
+     * (U08 {@code ActivityService.RETENTION}), không còn cài đặt Admin nên không phải kiểm.
+     */
+    public static List<Violation> validateActivity(boolean enabled, String notice) {
         List<Violation> violations = new ArrayList<>();
-        if (!enabled) {
-            return violations;
-        }
-        if (notice == null || notice.isBlank()) {
+        if (enabled && (notice == null || notice.isBlank())) {
             violations.add(new Violation("activityNotice", "ACTIVITY_NOTICE_REQUIRED",
                     "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động"));
-        }
-        if (!retentionConfigured) {
-            violations.add(new Violation("activityMonitoringEnabled", "ACTIVITY_RETENTION_NOT_SET",
-                    "Admin chưa đặt thời hạn lưu dữ liệu hoạt động"));
         }
         return violations;
     }

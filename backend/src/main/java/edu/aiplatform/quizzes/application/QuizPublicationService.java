@@ -124,8 +124,7 @@ public class QuizPublicationService {
     private void requireReviewable(Quiz quiz) {
         List<QuizItem> items = quizzes.items(quiz.id());
         List<Violation> violations = new ArrayList<>(QuizRules.validateForReview(quiz, items, support.questionsOf(items)));
-        violations.addAll(QuizRules.validateActivity(quiz.activityMonitoringEnabled(), quiz.activityNotice(),
-                support.activityRetentionConfigured()));
+        violations.addAll(QuizRules.validateActivity(quiz.activityMonitoringEnabled(), quiz.activityNotice()));
         if (!violations.isEmpty()) {
             throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_REVIEW_FAILED",
                     "Quiz chưa đủ điều kiện; hãy sửa các mục được nêu", violations);

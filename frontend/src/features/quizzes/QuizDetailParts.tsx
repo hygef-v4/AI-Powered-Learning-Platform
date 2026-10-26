@@ -175,10 +175,9 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
   };
 }
 
-/** "Cấu hình" (BR-U10-15); ghi nhận hoạt động chỉ bật được khi Admin đã đặt thời hạn lưu (E3, K3). */
-export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, maxScore, retentionConfigured }: {
+/** "Cấu hình" (BR-U10-15); ghi nhận hoạt động luôn bật được, dữ liệu giữ cố định 1 ngày. */
+export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, maxScore }: {
   quizId: string;
-  retentionConfigured: boolean;
   value: SettingsForm;
   onChange: (value: SettingsForm) => void;
   errors: Record<string, string>;
@@ -217,12 +216,8 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
         <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" ariaLabel="Đảo thứ tự câu" disabled={readOnly} />
         <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" ariaLabel="Đảo thứ tự lựa chọn" disabled={readOnly} />
         <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động" ariaLabel="Ghi nhận hoạt động"
-          disabled={readOnly || (!retentionConfigured && !value.activityMonitoringEnabled)} />
-        {!retentionConfigured && !value.activityMonitoringEnabled && (
-          <p className="text-[11px] text-muted" data-testid="quiz-settings-activity-locked">
-            Ghi nhận hoạt động chỉ bật được khi quản trị viên đã đặt thời hạn lưu dữ liệu hoạt động.
-          </p>
-        )}
+          disabled={readOnly} />
+        <p className="text-[11px] text-muted">Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.</p>
         {value.activityMonitoringEnabled && (
           <Field label="Lời báo cho sinh viên" htmlFor={`${id}-notice`} required error={errors.activityNotice}
             hint="Sinh viên thấy lời báo này trước và trong khi làm bài.">
