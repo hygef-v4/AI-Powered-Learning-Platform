@@ -6739,3 +6739,27 @@ U09 placement completion: live proposal 5a2b95f9-9525-462a-8937-189affbe8bf9 (ve
 **Context**: Construction, kiểm thử lại toàn bộ phần của người dùng trên staging
 
 ---
+
+## Report 5 – unit test workbook
+**Timestamp**: 2026-10-26T13:50:00Z
+**User Input**: "xem trong drive cua nhom phan report 5 xem can sua gi k" / "report unit test ay" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.0_Test Documentation.docx"" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.1_Unit Test.xlsx" ban toi bao dien unit tést th"
+**AI Response**: Đọc Report-5.0 (góp ý: ngày bìa, Change Log trống, lỗi chính tả "Minium", mục 1.2/3.2 còn mô tả Iteration 1/Pending, thiếu Testcontainers và script e2e, mục 3 chưa có số liệu). Điền Report-5.1 theo mẫu sheet U15 có sẵn: thêm sheet U02_Audit (4 hàm, 26 ca), U06_AI_Connections (40 hàm, 86 ca), U12_Group_Assignment (38 hàm, 59 ca); mỗi ca ứng với một JUnit test có thật (bỏ test tích hợp Testcontainers), Round 1 Passed ngày 26/10/2026 theo lần mvn verify trên staging 7b5edba; ca hồi quy ghi Defect ID. Thêm dòng ở Test Cases, Test Statistics (công thức theo mẫu, tổng mới ở dòng 146) và Record of change. Không đổi ô nào của U05/U09/U15. Lưu bản mới cạnh file gốc: `Report-5.1_Unit Test (them U02 U06 U12).xlsx`, không ghi đè.
+**Context**: Tài liệu dự án, Report 5 Unit Test
+
+---
+
+## Report 5.0 revised copy
+**Timestamp**: 2026-10-26T14:10:00Z
+**User Input**: "lam di"
+**AI Response**: Tạo bản sửa của Report-5.0 (không ghi đè bản gốc): bìa "Oct 2026"; "Minimum" ở mục lục và tiêu đề; mục 1.2 ghi cả 15 unit đã có code, U02/U06/U12 đã chạy trên staging 7b5edba; thêm mô tả U06 và U12 ở 1.2.4/1.2.5; thêm Testcontainers 1.21.4 và script e2e vào 2.3; thêm mốc 24–26/10 vào 3.2; dòng Change Log 26/10/2026; mục II.3 điền số liệu riêng U02/U06/U12 (UT 171, IT 147, đều đạt; 12 lỗi đều đã sửa: Review 5, IT 6, AT 1). Lưu `Report-5.0_Test Documentation (sua U02 U06 U12).docx` cạnh bản gốc.
+**Context**: Tài liệu dự án, Report 5
+
+---
+
+## Review walkthrough and group editor hidden issue
+**Timestamp**: 2026-10-26T14:40:00Z
+**User Input**: "cho tôi luồng review màn hình và các chức năng uc group assignment cho tôi đi" / (ảnh lỗi PowerShell khi chạy seed) / (ảnh Sửa nhóm báo "Bộ nhóm có lỗi" nhưng không nhóm nào bị đánh dấu) "toi k lưu nhóm được"
+**AI Response**: Soạn luồng review U12 40 bước (UC57, UC54, UC55, UC53, UC56). Hướng dẫn cú pháp PowerShell `$env:E2E_CLASS=...` và tạo lớp SE-TEST6. Lỗi lưu nhóm: người dùng xóa Nhóm B đã có tài liệu/bản nộp; backend chặn đúng BR-U12-05 (GROUP_IN_USE) nhưng lý do gắn với nhóm không còn trên màn nên không hiện. Sửa `GroupEditor` hiện các lỗi của nhóm không còn trong danh sách ngay trong thông báo đỏ; thêm test. Nhánh `fix/u12-group-editor-orphan-issues`.
+**Context**: Construction, U12 sửa sau khi người dùng review tay
+
+---
