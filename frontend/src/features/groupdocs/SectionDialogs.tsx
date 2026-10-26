@@ -108,7 +108,7 @@ export function SectionEditorDialog({
           {dirty ? "Chưa lưu" : savedAt ? `Tự lưu lúc ${formatDateTime(savedAt).slice(-5)}` : "Chưa có bản nháp"} · mỗi 10 giây
         </span>
         <span className="ml-auto flex gap-2">
-          <Button onClick={() => void (dirty ? save().then(onClose) : onClose())} disabled={busy}>
+          <Button onClick={() => void (dirty ? save().then((ok) => ok && onClose()) : onClose())} disabled={busy}>
             Đóng
           </Button>
           <Button variant="primary" icon="check" onClick={() => void done()} disabled={busy}>

@@ -278,9 +278,14 @@ public class ClassGroupService {
         }
         // Nhóm mới khi lớp có bài nhóm đang mở: tạo tài liệu ngay (F7 bước 4, F14 bước 2).
         groupDocuments.ensureForGroups(classId, createdGroups);
-        if (!moved.isEmpty()) {
-            publish(EventTypes.GROUP_MEMBERSHIP_CHANGED, classId, null, List.copyOf(moved));
+        // Mỗi nhóm một sự kiện có groupId (U14 bắt buộc): người vào nhóm theo nhóm mới, người bị gỡ theo nhóm đã rời.
+        Map<UUID, List<UUID>> movedByGroup = new LinkedHashMap<>();
+        for (UUID member : moved) {
+            UUID group = after.getOrDefault(member, before.get(member));
+            movedByGroup.computeIfAbsent(group, k -> new ArrayList<>()).add(member);
         }
+        movedByGroup.forEach((group, members) ->
+                publish(EventTypes.GROUP_MEMBERSHIP_CHANGED, classId, group, List.copyOf(members)));
         for (UUID id : leaderChangedGroups) {
             drafts.stream().filter(d -> id.equals(d.id())).findFirst()
                     .ifPresent(d -> publish(EventTypes.GROUP_LEADER_CHANGED, classId, id, d.memberIds()));

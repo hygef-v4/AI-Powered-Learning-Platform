@@ -253,6 +253,23 @@ describe("GroupWorkspacePage", () => {
     expect(body.blocks[0]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Đoạn một" }] } });
   });
 
+  it("bấm Đóng khi lưu nháp lỗi thì không đóng trình soạn, giữ nội dung và báo lỗi", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => json({ status: 409, detail: "Mục vừa được thay đổi ở nơi khác, hãy tải lại" }, 409)));
+    const onClose = vi.fn();
+    const shared = { blocks: [{ id: "s2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s2" } }] };
+    render(<SectionEditorDialog documentId="doc1" section={section("s2", "CLAIMED", MEMBER)} shared={shared} diagramEnabled={false} onClose={onClose} onChanged={() => undefined} />);
+
+    fireEvent.click(screen.getByTestId("write-part-s2"));
+    const field = screen.getByLabelText("Đoạn văn");
+    field.textContent = "Đoạn chưa lưu";
+    fireEvent.input(field);
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Mục vừa được thay đổi ở nơi khác");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText("Đoạn chưa lưu")).toBeInTheDocument();
+  });
+
   it("partOf lấy heading và hướng dẫn của phần; không có heading thì dựng theo tên mục", () => {
     const shared = { blocks: [{ id: "h", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "A" } }] };
     expect(partOf(shared, { partId: "h", title: "A" })).toMatchObject({ heading: { id: "h" }, guide: [] });
