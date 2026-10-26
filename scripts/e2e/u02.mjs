@@ -40,7 +40,7 @@ const range = await admin.get(`${L}?from=2026-01-01T00:00:00Z&to=2026-01-02T00:0
 check(R, "BR-U02-08 lọc khoảng thời gian (khoảng trống)", range.status === 200 && (range.data?.items ?? []).length === 0, `n=${range.data?.items?.length}`);
 const badRange = await admin.get(`${L}?from=2026-10-10T00:00:00Z&to=2026-10-01T00:00:00Z`);
 check(R, "Khoảng thời gian ngược bị báo lỗi", badRange.status === 400, badRange.status);
-const viewed = await admin.get(`${L}?action=AUDIT_VIEWED&size=5`);
+const viewed = await admin.get(`${L}?action=AUDIT_QUERIED&size=5`);
 const anyView = (viewed.data?.items ?? []).length > 0 || items.some((i) => /AUDIT/.test(i.action));
 check(R, "BR-U02-07 mọi lần tra cứu cũng được audit", anyView, `actions có AUDIT: ${actions.filter((a) => /AUDIT/.test(a))}`);
 const text = JSON.stringify((await admin.get(`${L}?size=100`)).data);

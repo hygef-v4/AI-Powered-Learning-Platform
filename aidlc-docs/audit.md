@@ -6645,6 +6645,16 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 
 ---
 
+## Re-test on latest staging
+**Timestamp**: 2026-10-26T05:00:00Z
+**User Input**: "ok toi da gan api key vao roi nhung da reset lai may." / "mearch het vao stagging va test cac phan cua toi o stagging duoc k"
+**AI Response**: Cả 8 nhánh của người dùng đã ở `staging` (41f1ab1); nhóm chưa có server staging (bước deploy trong CI chưa bật), nên build stack local từ đúng `staging` (có commit mới của nhóm) và chạy lại toàn bộ e2e. Kết quả trên lớp mới SE-TEST4/môn SWT303: U02 16/16, U06 24/24 (U06-16 bỏ qua vì hạn mức chung đã đặt từ trước), U06 bổ sung 15/15, U12 52/52, U12 bài nhóm 30/30. Sự cố: script `u06b.mjs` cũ đã ghi đè khóa Gemini thật người dùng dán cho `gv.test` (thay bằng khóa thử) — đã báo người dùng dán lại; sửa script để thao tác khóa trên tài khoản chủ nhiệm môn và chạy tác vụ lỗi bằng khóa OpenAI giả, không đụng khóa Gemini của giảng viên. Seed nhận `E2E_CLASS`, `E2E_SUBJECT`; thêm `u06-real-key.mjs`; `u12.mjs` sửa version rubric và số lượt nộp.
+**Context**: Construction, kiểm thử lại U02/U06/U12 trên staging mới nhất
+
+---
+
+---
+
 ## U09 AI delivery plan and requested Gemini handoff
 **Timestamp**: 2026-10-26T03:12:18Z
 **User Input**: "giúp tôi ktra và lập plan fix bug sau đó đưa cho gemini đang mở làm"
@@ -6816,3 +6826,27 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **User Input**: "check kết nối mcp với hệ thống"
 **AI Response**: Authenticated MCP checks passed on both http://localhost:3000/mcp and http://localhost:8080/mcp. Each reported server ai-learning-platform, protocol 2025-06-18, 23 tools, and get_my_capabilities role TEACHER / access READ_WRITE. No write tools or user data were changed; token value was not printed or recorded.
 **Context**: Existing Teacher credential read from Windows user environment for a read-only connectivity check.
+
+## Review report U01–U15 (2026-10-22) – user's units
+**Timestamp**: 2026-10-26T08:00:00Z
+**User Input**: "@"C:\Users\PC\Downloads\u01-u15-code-aidlc-review-2026-10-22.md" ban toi hom truoc gui toi cai nay"
+**AI Response**: Đối chiếu các mục thuộc U02/U06/U12 với `staging` hiện tại: R02 đã sửa (PR #19); R09 đã sửa (PR #21) trừ nút Đóng vẫn đóng khi lưu lỗi; R06 đã được Quang Hưng sửa (37a7362); R07 còn (U12 gửi GROUP_MEMBERSHIP_CHANGED không có groupId, U14 từ chối); R10 còn (MaterialText thiếu version, liên quan U06 contract, U13, U07, U10). Sửa trên nhánh `fix/review-r07-r09`: U12 phát một sự kiện mỗi nhóm có groupId (người vào theo nhóm mới, người bị gỡ theo nhóm đã rời), test kiểm cả `RecipientResolver.id`; nút Đóng chỉ đóng khi lưu thành công, kèm test. R10 để người dùng bàn với nhóm vì cần đổi contract và code của U13/U07/U10.
+**Context**: Construction, xử lý review tổng U01–U15 phần của người dùng
+
+---
+
+## Full re-test on staging 7b5edba
+**Timestamp**: 2026-10-26T08:40:00Z
+**User Input**: "gio hay test lai cho toi tren nhanh stagging tat ca cac phan do toi phu trach di"
+**AI Response**: Build lại stack từ `staging` 7b5edba, lớp mới SE-TEST5/SWT304. U02 16/16 (sửa script lọc AUDIT_QUERIED); U06 24/24 + 15/15 + khóa thật 7/7 (lần đầu Google 503, chạy lại đạt); U12 52/52 + 30/30; thêm `u12-notify.mjs` kiểm R07: 3/3. Ghi vào file bằng chứng e2e.
+**Context**: Construction, kiểm thử lại toàn bộ phần của người dùng trên staging
+
+---
+
+## Local commits and staging integration — 2026-10-26
+**Timestamp**: 2026-10-26T13:53:00Z
+**User Input**: giúp tôi commit rõ ràng chưa push sau đó thử check merge nhánh staging vào nhánh này có conflict gì thì resolve
+**AI Response**: Created separate local commits 44a206d5 (backend MCP), 23651893 (staff UI and proposal review), 6a92bcaf (connectivity diagnostics), and 92750b2a (documentation). Fetched origin/staging at 934ba59b and merged into mcp-test. The only textual conflict was this append-only audit log; retained both branches' entries. Reviewed automatic merges in AssignmentFormPage and QuizAiDraftServiceTest. Fresh merged-tree verification: frontend 92 files / 565 tests passed; TypeScript passed; backend focused MCP/AI/architecture suite 101 tests passed with zero failures, errors or skips. Git diff whitespace validation passed. Crash log and temporary report directories remain untracked. No push.
+**Context**: Repository integration of already approved work; no new feature design or deployment. Existing security/resiliency scope retained; property-based testing remains disabled.
+
+Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods using the existing uv-managed Python installation.

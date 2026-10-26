@@ -28,13 +28,14 @@ import { AiDraftDialog } from "./AiDraftDialog";
 import { assignmentsApi, docxUrl, imageUrlFor } from "./api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "./AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "./format";
-import { RubricEditor, cleanCriteria } from "./RubricEditor";
+import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "./RubricEditor";
 import { ScheduleForm } from "./ScheduleForm";
 import { gradingLabels, statusLabels, statusTones, submissionLabels, type AssignmentDetail, type RubricDetail } from "./types";
 
 const AUTOSAVE_MS = 1500;
 const VERSION_CONFLICT = "ASSIGNMENT_VERSION_CONFLICT";
 const NOT_READY = "ASSIGNMENT_NOT_READY";
+const POINTS_INVALID = "Điểm mỗi mục tối đa 2 chữ số thập phân";
 
 type Local = {
   title: string;
@@ -187,6 +188,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current = { details: false, skeleton: false, rubrics: new Set() };
     const values = latest.current;
     let next: AssignmentDetail | null = null;
+    const malformed: ValidationIssue[] = [];
     setSaving(true);
     try {
       if (work.details && values.settings) {
@@ -207,7 +209,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
       }
       if (work.rubrics.size > 0) {
         const onServer = new Set((next ?? detailRef.current)?.parts.map((part) => part.partId));
-        const local = new Set(computeParts(latest.current.skeleton).map((part) => part.partId));
+        const localParts = computeParts(latest.current.skeleton);
+        const local = new Set(localParts.map((part) => part.partId));
         let changed = false;
         for (const partId of work.rubrics) {
           if (!onServer.has(partId)) {
@@ -215,7 +218,15 @@ export function AssignmentFormPage({ id }: { id: string }) {
             if (local.has(partId)) dirty.current.rubrics.add(partId);
             continue;
           }
-          const saved = await assignmentsApi.saveRubric(id, partId, version.current, cleanCriteria(latest.current.criteria[partId] ?? []));
+          const partCriteria = latest.current.criteria[partId] ?? [];
+          if (rubricPointsMalformed(partCriteria)) {
+            // Điểm quá 2 chữ số thập phân: không làm tròn, không gửi; giữ chưa lưu tới khi sửa (BR-U07-21).
+            dirty.current.rubrics.add(partId);
+            const headingBlockId = localParts.find((part) => part.partId === partId)?.headingBlockId ?? null;
+            malformed.push({ code: "RUBRIC_POINTS_INVALID", blockId: headingBlockId, message: POINTS_INVALID });
+            continue;
+          }
+          const saved = await assignmentsApi.saveRubric(id, partId, version.current, cleanCriteria(partCriteria));
           version.current = saved.assignmentVersion;
           setRubrics((current) => ({ ...current, [partId]: saved }));
           changed = true;
@@ -227,6 +238,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
         }
       }
       if (next) apply(next, false);
+      if (malformed.length > 0) {
+        setIssues((current) => [...current.filter((issue) => issue.code !== "RUBRIC_POINTS_INVALID"), ...malformed]);
+        setMessage({ tone: "danger", text: `Chưa lưu: ${POINTS_INVALID}` });
+        return false;
+      }
       setSavedAt(new Date().toISOString());
       setIssues((current) => current.filter((issue) => issue.code.startsWith("RUBRIC")));
       setMessage((current) => (current?.tone === "danger" ? null : current));
@@ -554,6 +570,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
               try {
                 const next = await chain(queue, () => assignmentsApi.publish(id, version.current, input));
                 apply(next, false);
+                // Phát hành khóa rubric trên server: lấy lại để thẻ hiện "Đã khóa" và thôi cho sửa.
+                setRubricEpoch((epoch) => epoch + 1);
                 setDialog(null);
                 setIssues([]);
                 setMessage({ tone: "success", text: next.status === "OPEN" ? "Đã phát hành" : "Đã lên lịch" });

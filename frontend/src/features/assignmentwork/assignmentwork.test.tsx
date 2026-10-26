@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatDuration } from "@/shared/activity/ActivityTimeline";
 import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
 import { computeParts, type DocumentModel } from "@/shared/document";
-import { insertIntoPart, precheck } from "./AssignmentWorkspacePage";
+import { insertIntoPart, precheck, submitCheck } from "./AssignmentWorkspacePage";
 import { remaining } from "./format";
 import type { StudentRow } from "./types";
 import { upcoming } from "./useStudentAssignments";
@@ -33,6 +33,22 @@ describe("precheck", () => {
   it("bảng của giảng viên có chữ tính như đã điền (server kiểm chính xác)", () => {
     const table: DocumentModel["blocks"][number] = { id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Đăng nhập" }] }]] } };
     expect(precheck({ requiredDiagrams: {} }, { blocks: [teacher, table] })).toEqual([]);
+  });
+});
+
+describe("submitCheck", () => {
+  const teacher: DocumentModel["blocks"][number] = { id: "t", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đề" }] } };
+  const drawnByTeacher: DocumentModel["blocks"][number] = { id: "s", origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", svgPreview: "<svg/>" } };
+  const empty = { code: "SUBMISSION_EMPTY", blockId: null, message: "Bài làm chưa có nội dung của bạn" };
+
+  it("có kết quả của server thì dùng, kể cả khi tự kiểm thấy sơ đồ của đề đã có hình", () => {
+    const content: DocumentModel = { blocks: [teacher, drawnByTeacher] };
+    expect(precheck({ requiredDiagrams: {} }, content)).toEqual([]);
+    expect(submitCheck({ requiredDiagrams: {} }, content, [empty])).toEqual([empty]);
+    expect(submitCheck({ requiredDiagrams: {} }, content, [])).toEqual([]);
+  });
+  it("chưa có kết quả của server thì tự kiểm sơ bộ", () => {
+    expect(submitCheck({ requiredDiagrams: {} }, { blocks: [teacher] }, null).map((i) => i.code)).toEqual(["SUBMISSION_EMPTY"]);
   });
 });
 

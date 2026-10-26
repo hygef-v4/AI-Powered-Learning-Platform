@@ -89,7 +89,6 @@ export function AiProposalPanel({
     const currentSubtotal = currentValues ? checklistPoints(rubrics, currentValues.checks, currentValues.itemScores) : 0;
     const aiTotal = p.proposal ? Number(p.proposal.score) : 0;
     const totalDiff = !hasInvalidCurrent && Number.isFinite(aiTotal) ? Math.round((aiTotal - currentSubtotal) * 100) / 100 : 0;
-    const adjustmentNum = currentValues ? Number(currentValues.adjustment) : 0;
     const reviewFlagCount = aiStructured?.items?.filter((item) => item.requiresReview).length ?? 0;
 
     return (
@@ -135,7 +134,7 @@ export function AiProposalPanel({
                   <span className="font-semibold text-danger">Điểm đang nhập chưa hợp lệ (kiểm tra mục báo lỗi)</span>
                 ) : (
                   <>
-                    <span className="font-medium tabular-nums text-body">Điểm đang nhập: {currentSubtotal.toFixed(2)}</span>
+                    <span className="font-medium tabular-nums text-body">Điểm đang chấm: {currentSubtotal.toFixed(2)}</span>
                     <span className="font-medium tabular-nums text-body">AI đề xuất: {aiTotal.toFixed(2)}</span>
                     {totalDiff !== 0 ? (
                       <Pill tone="warning">Lệch {totalDiff > 0 ? `+${totalDiff.toFixed(2)}` : totalDiff.toFixed(2)}</Pill>
@@ -152,11 +151,6 @@ export function AiProposalPanel({
               <strong className="text-warning">⚠ Có {reviewFlagCount} mục AI đánh dấu cần giảng viên kiểm tra thủ công</strong>{" "}
               (ví dụ: minh chứng chưa đọc rõ hoặc thiết kế thay thế hợp lệ).
             </div>
-          )}
-          {hasComparison && Number.isFinite(adjustmentNum) && adjustmentNum !== 0 && (
-            <p className="mt-1.5 text-xs text-muted">
-              Điều chỉnh giảng viên: {adjustmentNum > 0 ? `+${adjustmentNum.toFixed(2)}` : adjustmentNum.toFixed(2)} (tách biệt với điểm rubric AI)
-            </p>
           )}
           {aiStructured && (
             <GradingFeedbackSummary
@@ -178,7 +172,7 @@ export function AiProposalPanel({
                     <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-ink">
                       <span>{secTitle}</span>
                       <span className="tabular-nums text-body">
-                        Đang nhập: {secCur} · AI: {secAi} / {Number(rubric.maxPoints).toFixed(2)}
+                        Đang chấm: {secCur} · AI: {secAi} / {Number(rubric.maxPoints).toFixed(2)}
                       </span>
                     </div>
                     <div className="mt-1.5 space-y-1">
@@ -206,7 +200,7 @@ export function AiProposalPanel({
                             <p className="break-words leading-snug">{item.text}</p>
                             <div className="flex flex-wrap items-center justify-between gap-2 font-medium tabular-nums">
                               <span>
-                                Đang nhập: {curValid ? Number(curRaw).toFixed(2) : "Chưa hợp lệ"} · AI:{" "}
+                                Đang chấm: {curValid ? Number(curRaw).toFixed(2) : "Chưa hợp lệ"} · AI:{" "}
                                 {aiVal !== null && Number.isFinite(aiVal) ? aiVal.toFixed(2) : "Chưa có dữ liệu"} / {max.toFixed(2)}
                               </span>
                               {curValid && aiVal !== null && itemDiff !== 0 && (
@@ -275,7 +269,7 @@ export function AiProposalPanel({
           >
             Áp dụng vào bản nháp
           </button>
-          <span className="text-xs text-muted">Chỉ điền vào bản nháp trên biểu mẫu; bạn có thể sửa lại trước khi lưu.</span>
+          <span className="text-xs text-muted">Chỉ tích sẵn checklist và điền nhận xét; bạn có thể sửa lại trước khi lưu.</span>
         </div>
       </>
     );

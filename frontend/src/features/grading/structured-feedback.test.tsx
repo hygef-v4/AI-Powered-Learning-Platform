@@ -183,6 +183,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     ]);
 
     render(<GradingWorkspacePage evaluationId="eval-1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
 
     expect(await screen.findByText("Tóm tắt nhận xét cấu trúc từ AI")).toBeInTheDocument();
     expect(screen.getByText("Xác định đầy đủ các thực thể cốt lõi")).toBeInTheDocument();
@@ -198,7 +199,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     // Known block anchor is rendered as a navigable link; unknown block reference is plain text
     const validAnchor = screen.getByRole("link", { name: "Đi tới đoạn bài làm (part-1)" });
     expect(validAnchor).toHaveAttribute("href", "#submission-block-part-1");
-    expect(document.getElementById("submission-block-part-1")).not.toBeNull();
+    expect(document.querySelector('[data-block-id="part-1"]')).not.toBeNull();
     expect(
       screen.getByText(/Tham chiếu đoạn: missing-block-id \(hiển thị dạng văn bản, không có neo trực tiếp\)/),
     ).toBeInTheDocument();
@@ -227,15 +228,14 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     ]);
 
     render(<GradingWorkspacePage evaluationId="eval-1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
     const applyBtn = await screen.findByRole("button", { name: "Áp dụng vào bản nháp" });
     fireEvent.click(applyBtn);
 
-    // Apply populates draft only; does not auto-save and preserves teacher adjustment (-0.25)
+    // Apply populates the draft only; it does not auto-save and there is no adjustment outside the rubric
     expect(mocks.save).not.toHaveBeenCalled();
-    expect(
-      screen.getByText("Tóm tắt nhận xét cấu trúc (Làm tốt · Cần sửa)"),
-    ).toBeInTheDocument();
-    expect(screen.getByDisplayValue("-0.25")).toBeInTheDocument();
+    expect(screen.getByText("Làm tốt · Cần sửa")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("-0.25")).not.toBeInTheDocument();
 
     // Acknowledge the AI review flag on item 2 first
     const ackCheckbox = screen.getByRole("checkbox", {
@@ -244,13 +244,14 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     fireEvent.click(ackCheckbox);
     expect(ackCheckbox).toBeChecked();
 
-    // Now change item 2's score from 0.5 to 0.75 without editing its explanation
-    const scoreInput2 = screen.getByRole("spinbutton", { name: "Điểm: Bội số quan hệ" });
-    fireEvent.change(scoreInput2, { target: { value: "0.75" } });
+    // Now tick item 2 (AI gave 0.5) so it gets full points, without editing its explanation
+    const item2 = screen.getByRole("checkbox", { name: "Bội số quan hệ" });
+    expect(item2).not.toBeChecked();
+    fireEvent.click(item2);
 
     // Score-change review warning appears immediately
     expect(
-      await screen.findByText(/Điểm mục này đã thay đổi sau khi tạo nhận xét \(0\.50 → 0\.75\)/),
+      await screen.findByText(/Điểm mục này đã thay đổi sau khi tạo nhận xét \(0\.50 → 1\.00\)/),
     ).toBeInTheDocument();
 
     // Save the draft with the unresolved score mismatch (allowed for DRAFT)
@@ -289,7 +290,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     // Teacher edits the explanation for item 2 to match the new 0.75 score
     const reasonTextarea2 = screen.getByRole("textbox", { name: "Giải thích điểm: Bội số quan hệ" });
     fireEvent.change(reasonTextarea2, {
-      target: { value: "Đạt 0.75/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ" },
+      target: { value: "Đạt 1.00/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ" },
     });
 
     // Score mismatch warning disappears after teacher edits explanation
@@ -302,9 +303,10 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
     const secondSaveBody = mocks.save.mock.calls[1]![1];
     expect(secondSaveBody.structuredFeedback.items[1].reason).toBe(
-      "Đạt 0.75/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ",
+      "Đạt 1.00/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ",
     );
-    expect(secondSaveBody.reviewedItemScores.r1.i2).toBe("0.75");
+    expect(secondSaveBody.reviewedItemScores.r1.i2).toBe("1.00");
+    expect(secondSaveBody.adjustment).toBe("0");
 
     // Explicit clear removes structuredFeedback with clearStructuredFeedback=true
     fireEvent.click(screen.getByRole("button", { name: "Xóa nhận xét cấu trúc" }));

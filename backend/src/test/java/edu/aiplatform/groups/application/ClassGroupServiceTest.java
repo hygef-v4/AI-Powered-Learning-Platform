@@ -134,6 +134,11 @@ class ClassGroupServiceTest {
         verify(events, org.mockito.Mockito.times(2)).publish(published.capture());
         assertThat(published.getAllValues()).extracting(DomainEvent::eventType)
                 .containsExactly("group.membership-changed", "group.leader-changed");
+        // U14 bắt buộc groupId; người chuyển nhóm nhận thông báo theo nhóm mới.
+        var membership = published.getAllValues().get(0).payload();
+        assertThat(membership).containsEntry("groupId", b.id().toString())
+                .containsEntry("recipientIds", List.of(students.get(1).toString()));
+        assertThat(edu.aiplatform.notifications.application.RecipientResolver.id(membership, "groupId")).isEqualTo(b.id());
         ArgumentCaptor<AuditEvent> audited = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, org.mockito.Mockito.atLeastOnce()).record(audited.capture());
         assertThat(audited.getAllValues()).extracting(AuditEvent::action)

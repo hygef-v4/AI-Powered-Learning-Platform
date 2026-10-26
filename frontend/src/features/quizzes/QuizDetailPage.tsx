@@ -214,7 +214,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             onEditInline={(item) => { setEditing(item); setDialog("inline"); }} />
         </Section>
         <QuizSettingsPanel quizId={quiz.id} value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable}
-          maxScore={detail.maxScore} retentionConfigured={detail.activityRetentionConfigured} />
+          maxScore={detail.maxScore} />
       </div>
       {editable && (
         <div className="mt-4">

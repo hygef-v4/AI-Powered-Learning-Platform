@@ -191,3 +191,8 @@ Unit test thêm: phát hành thẳng từ bản nháp (đủ thì lên lịch, t
 ## Local commit organization — 2026-10-24
 
 User authorized separate local commits, with no push: file/extraction foundation (35bd38b4), assignment generation and safe apply (5a00fb7e), authoring/preview UI (e3f7cdad), followed by documentation. Restored existing timeout/PDF/DOCX/PPTX regression tests while retaining new UTF-8 checks; all 6 MaterialTextExtractorTest cases pass. No production changes were introduced while organizing commits. Remaining live-provider and extended-plan work stays open.
+
+## Thay đổi 2026-10-24
+
+- Bỏ cài đặt `activity.retentionDays`: thời hạn giữ dữ liệu hoạt động cố định 1 ngày (U08), nên bật ghi nhận hoạt động không còn bị chặn bởi `ACTIVITY_RETENTION_NOT_SET` và `Detail` bỏ trường `activityRetentionConfigured`.
+- Ảnh chèn vào khung chỉ nhận PNG, JPEG (U03).

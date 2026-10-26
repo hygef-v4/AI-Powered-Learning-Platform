@@ -25,7 +25,6 @@ import edu.aiplatform.assignmentwork.contract.WorkRef;
 import edu.aiplatform.assignmentwork.domain.ActivityEvent;
 import edu.aiplatform.assignmentwork.domain.ActivityEventRepository;
 import edu.aiplatform.assignmentwork.domain.AssignmentAttempt;
-import edu.aiplatform.settings.contract.ISettings;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,11 +42,10 @@ class ActivityTest {
 
     private final WorkFixtures f = new WorkFixtures();
     private final ActivityEventRepository events = mock(ActivityEventRepository.class);
-    private final ISettings settings = mock(ISettings.class);
     private final StringRedisTemplate redis = mock(StringRedisTemplate.class);
     @SuppressWarnings("unchecked")
     private final ValueOperations<String, String> values = mock(ValueOperations.class);
-    private final ActivityService service = new ActivityService(events, f.attempts, f.access, settings, redis, f.clock, 60);
+    private final ActivityService service = new ActivityService(events, f.attempts, f.access, redis, f.clock, 60);
     private final UUID session = UUID.randomUUID();
     private long sequence;
 
@@ -134,21 +132,16 @@ class ActivityTest {
         assertThat(service.summary(new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, plain.id(), f.classId), f.student.accountId())
                 .policyState()).isEqualTo(ActivityPolicyState.DISABLED);
         AssignmentAttempt monitored = monitored(AttemptStatus.SUBMITTED);
-        when(settings.get(ActivityService.RETENTION_DAYS)).thenReturn(Optional.of(1));
         WorkRef ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, monitored.id(), f.classId);
         assertThat(service.summary(ref, f.student.accountId()).policyState()).isEqualTo(ActivityPolicyState.NO_DATA);
-        ActivityService later = new ActivityService(events, f.attempts, f.access, settings, redis,
+        ActivityService later = new ActivityService(events, f.attempts, f.access, redis,
                 java.time.Clock.fixed(NOW.plus(Duration.ofDays(3)), java.time.ZoneOffset.UTC), 60);
         assertThat(later.summary(ref, f.student.accountId()).policyState()).isEqualTo(ActivityPolicyState.EXPIRED);
     }
 
     @Test
-    void retentionScannerDeletesOldEventsInBatches() {
-        when(settings.get(ActivityService.RETENTION_DAYS)).thenReturn(Optional.of(30));
-        new ActivityRetentionScanner(events, settings, f.transactions).scan(NOW);
-        verify(events).deleteOlderThan(NOW.minus(Duration.ofDays(30)), ActivityRetentionScanner.BATCH);
-        when(settings.get(ActivityService.RETENTION_DAYS)).thenReturn(Optional.empty());
-        new ActivityRetentionScanner(events, settings, f.transactions).scan(NOW);
-        verify(events, times(1)).deleteOlderThan(any(), org.mockito.ArgumentMatchers.anyInt());
+    void retentionScannerDeletesEventsOlderThanOneDayInBatches() {
+        new ActivityRetentionScanner(events, f.transactions).scan(NOW);
+        verify(events).deleteOlderThan(NOW.minus(Duration.ofDays(1)), ActivityRetentionScanner.BATCH);
     }
 }

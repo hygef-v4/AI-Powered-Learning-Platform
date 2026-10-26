@@ -967,3 +967,10 @@ Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghi�
 - [x] Teacher grading discovery smoke test: list_assignments/list_submissions succeeded in U05-A. QA assignment has no submitted evaluation; only submitted evaluation is PUBLISHED. No submission content read and no grading proposal/grade changed.
 - [ ] Broader runtime acceptance remains pending: READ_ONLY, out-of-scope resource denial, UI proposal review/apply, other authoring/grading flows and Subject Manager/Admin. No commit, push or deployment; unrelated dirty files preserved.
 - Results: construction/build-and-test/2026-10-26-mcp-staff-expansion-results.md. Manual guide: construction/build-and-test/2026-10-26-mcp-staff-expansion-manual-test-guide.md.
+
+## Local commits and staging integration — 2026-10-26
+
+- [x] Grouped existing MCP work into four local commits: backend, UI, diagnostic scripts, and documentation.
+- [x] Fetched origin/staging at 934ba59b and integrated it into mcp-test; resolved the audit-log conflict by retaining both branches' history.
+- [x] Verified merged source: 565 frontend tests, TypeScript, 101 focused backend MCP/AI/architecture tests, and whitespace checks passed.
+- [x] Excluded crash log and temporary report directories; no push or deployment.

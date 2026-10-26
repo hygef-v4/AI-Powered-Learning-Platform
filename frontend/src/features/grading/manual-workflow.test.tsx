@@ -21,7 +21,7 @@ describe("grading review", () => {
     expect(screen.getByText("Ô bảng")).toHaveStyle({ backgroundColor: "#00ff00" });
     expect(container).not.toHaveTextContent(/CENTER|#ff0000|#00ff00/);
   });
-  it("keeps a full-credit checklist shortcut and bounds the item score", () => {
+  it("grades an item by ticking it, with no score input", () => {
     const onChange = vi.fn();
     const rubrics: Rubric[] = [
       {
@@ -38,9 +38,9 @@ describe("grading review", () => {
       },
     ];
     render(<RubricChecklistPanel rubrics={rubrics} checks={{}} onChange={onChange} />);
-    fireEvent.click(screen.getByRole("button", { name: "Đủ điểm: Đạt yêu cầu" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Đạt yêu cầu/ }));
     expect(onChange).toHaveBeenCalledWith({ r: ["i"] });
-    expect(screen.getByRole("spinbutton", { name: "Điểm: Đạt yêu cầu" })).toHaveAttribute("max", "4");
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
   });
   it("renders untrusted document text as text, never executable markup", () => {
     const { container } = render(

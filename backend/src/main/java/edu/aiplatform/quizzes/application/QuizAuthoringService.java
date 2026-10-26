@@ -135,16 +135,10 @@ public class QuizAuthoringService {
     public QuizDetail updateDetails(Actor actor, UUID id, Details details, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
         String title = details.title() == null ? null : details.title().strip();
-        // E3 (K1): bật mới cần Admin đã đặt activity.retentionDays; tắt thì luôn được (BR-U10-15).
-        if (details.activityMonitoringEnabled() && !quiz.activityMonitoringEnabled()
-                && !support.activityRetentionConfigured()) {
-            throw ApiException.conflict("ACTIVITY_RETENTION_NOT_SET",
-                    "Admin chưa đặt thời hạn lưu dữ liệu hoạt động nên chưa bật được ghi nhận hoạt động");
-        }
         List<Violation> violations = new ArrayList<>(QuizRules.validateDetails(title, details.instructions(),
                 details.settings(), details.activityNotice(), details.referenceMaterialIds()));
-        // K2: bật thì phải có lời báo cho sinh viên; thời hạn lưu đã kiểm ở trên.
-        violations.addAll(QuizRules.validateActivity(details.activityMonitoringEnabled(), details.activityNotice(), true));
+        // K2: bật thì phải có lời báo cho sinh viên; thời hạn giữ dữ liệu cố định 1 ngày nên luôn bật được (BR-U10-15).
+        violations.addAll(QuizRules.validateActivity(details.activityMonitoringEnabled(), details.activityNotice()));
         reject(violations);
         // H8: chỉ kiểm tài liệu mới gắn, để U13 lỗi không chặn lưu các thay đổi khác (BR-U10-52).
         List<UUID> added = details.referenceMaterialIds() == null ? List.of() : details.referenceMaterialIds().stream()
