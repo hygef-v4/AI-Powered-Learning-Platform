@@ -56,11 +56,11 @@ export function SubmissionDetailPage({
   const selectable = data?.rows.filter((r) => r.evaluationId) ?? [];
   return (
     <main className="flex min-w-0 flex-col gap-6">
-      <header className="flex animate-rise flex-col gap-2.5">
+      <header className="flex flex-col gap-2.5">
         <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink" href={`/teaching/classes/${classId}`}>
           <Icon name="arrow_back" size={14} />Về lớp học
         </Link>
-        <h1 className="font-display text-[34px] leading-[1.1] tracking-[-0.025em] break-words text-ink [overflow-wrap:anywhere] sm:text-[40px]">
+        <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] break-words text-ink [overflow-wrap:anywhere] sm:text-[32px]">
           {context.value ? `Bài nộp — ${context.value.title.trim() || "Bài tập chưa có tiêu đề"}` : "Bài nộp"}
         </h1>
         {context.value ? (
@@ -100,7 +100,7 @@ export function SubmissionDetailPage({
               ["late", "Nộp trễ"],
             ].map(([key, label]) => (
               <section key={key} className="flex flex-col gap-1">
-                <strong className="font-display text-[32px] leading-none font-normal text-ink tabular-nums">{data.summary[key!] ?? 0}</strong>
+                <strong className="font-display text-[28px] leading-none text-ink tabular-nums">{data.summary[key!] ?? 0}</strong>
                 <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">{label}</p>
               </section>
             ))}

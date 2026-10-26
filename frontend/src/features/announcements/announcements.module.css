@@ -1,14 +1,14 @@
 /* Thông báo lớp (U14) theo giao diện tối giản; màu đọc từ biến theme toàn cục (--c-*). */
 .page { width: 100%; min-width: 0; }
-.header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; animation: var(--animate-rise); }
-.page h1 { margin: 0 0 6px; font-family: var(--font-display); font-size: 40px; font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; }
+.header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.page h1 { margin: 0 0 6px; font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; }
 .muted { color: var(--c-muted); font-size: 13.5px; }
-.filter { max-width: 340px; min-height: 40px; padding: 9px 12px; border: 1px solid var(--c-line-strong); border-radius: 8px; background: var(--c-surface); color: var(--c-ink); }
+.filter { max-width: 340px; min-height: 40px; padding: 9px 12px; border: 1px solid var(--c-field); border-radius: 8px; background: var(--c-surface); color: var(--c-ink); }
 .columns { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 32px; }
 .feed { display: flex; flex-direction: column; min-width: 0; }
-.card { min-width: 0; padding: 24px; border: 1px solid var(--c-line); border-radius: 12px; background: var(--c-surface); overflow-wrap: anywhere; animation: var(--animate-rise); }
+.card { min-width: 0; padding: 24px; border: 1px solid var(--c-line); border-radius: 12px; background: var(--c-surface); overflow-wrap: anywhere; }
 /* Bản tin dạng tài liệu: mỗi thông báo cách nhau bằng một đường kẻ mảnh. */
-.post { min-width: 0; padding: 24px 0; border-bottom: 1px solid var(--c-line); overflow-wrap: anywhere; animation: var(--animate-rise); }
+.post { min-width: 0; padding: 24px 0; border-bottom: 1px solid var(--c-line); overflow-wrap: anywhere; }
 .post:first-child { padding-top: 4px; }
 .card h2, .post h2 { margin: 0 0 12px; font-size: 17px; font-weight: 700; }
 .byline { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; color: var(--c-muted); font-size: 13px; }
@@ -18,8 +18,8 @@
 .actions { display: flex; gap: 6px; }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form label { display: flex; flex-direction: column; gap: 6px; color: var(--c-body); font-size: 12px; font-weight: 600; }
-.form input:not([type=checkbox]), .form textarea { width: 100%; min-height: 40px; padding: 9px 12px; border: 1px solid var(--c-line-strong); border-radius: 8px; background: var(--c-surface); color: var(--c-ink); font-size: 13.5px; font-weight: 400; outline: none; transition: border-color .2s, box-shadow .2s; }
-.form input:not([type=checkbox]):focus, .form textarea:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-soft); }
+.form input:not([type=checkbox]), .form textarea { width: 100%; min-height: 40px; padding: 9px 12px; border: 1px solid var(--c-field); border-radius: 8px; background: var(--c-surface); color: var(--c-ink); font-size: 13.5px; font-weight: 400; outline: none; transition: border-color .2s, box-shadow .2s; }
+.form input:not([type=checkbox]):focus, .form textarea:focus { border-color: var(--c-focus); box-shadow: 0 0 0 3px var(--c-primary-soft); }
 .form textarea { min-height: 148px; resize: vertical; }
 .form .check { display: flex; flex-direction: row; align-items: center; gap: 8px; color: var(--c-ink); font-size: 13.5px; font-weight: 400; }
 .form .check input { accent-color: var(--c-primary); }
@@ -28,7 +28,7 @@
 .markdown ul { padding-left: 22px; list-style: disc; }
 .markdown ol { padding-left: 22px; list-style: decimal; }
 .markdown a { color: var(--c-primary-ink); text-decoration: underline; text-underline-offset: 3px; }
-.markdown pre { overflow-x: auto; padding: 12px; border-radius: 8px; background: var(--c-sunken); font-family: var(--font-mono); font-size: 13px; }
+.markdown pre { overflow-x: auto; padding: 12px; border-radius: 8px; background: var(--c-sunken); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
 .markdown blockquote { padding-left: 14px; border-left: 2px solid var(--c-primary); color: var(--c-muted); }
 .error { padding: 10px 14px; border-radius: 8px; background: var(--c-danger-soft); color: var(--c-danger); font-size: 13px; }
 .pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 20px; color: var(--c-muted); font-size: 12.5px; }

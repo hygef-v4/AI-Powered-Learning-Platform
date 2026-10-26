@@ -454,7 +454,7 @@ export function AiDraftDialog({
               value={request}
               disabled={awaiting}
               onChange={(e) => setRequest(e.target.value)}
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary"
+              className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus"
             />
           </Field>
           <Field

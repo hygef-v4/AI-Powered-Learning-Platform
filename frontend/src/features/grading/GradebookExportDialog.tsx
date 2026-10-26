@@ -58,7 +58,7 @@ export function GradebookExportDialog({
           value={assignment}
           onChange={(e) => setAssignment(e.target.value)}
         >
-          <option value="">Toàn bộ bài Graded</option>
+          <option value="">Toàn bộ bài tính điểm</option>
           {assignments.map((a) => (
             <option key={a.id} value={a.id}>
               {a.title}

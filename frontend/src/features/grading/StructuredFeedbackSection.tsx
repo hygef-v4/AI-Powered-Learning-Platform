@@ -130,7 +130,7 @@ export function GradingFeedbackSummary({
               onChange={(e) =>
                 onChange({ ...summary, strengths: parseSummaryLines(e.target.value) })
               }
-              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-focus focus:outline-none"
             />
           </label>
           <label className="block font-medium text-ink">
@@ -143,7 +143,7 @@ export function GradingFeedbackSummary({
               onChange={(e) =>
                 onChange({ ...summary, improvements: parseSummaryLines(e.target.value) })
               }
-              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-focus focus:outline-none"
             />
           </label>
         </div>
@@ -330,7 +330,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, evidence: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
               />
             </label>
             <label className="block font-medium text-ink">
@@ -344,7 +344,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, reason: e.target.value })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
               />
             </label>
             <label className="block font-medium text-ink">
@@ -358,7 +358,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, suggestion: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
               />
             </label>
           </div>
@@ -415,7 +415,7 @@ export function RubricItemFeedback({
               checked={acknowledged}
               aria-label={`Đã kiểm tra và xác nhận giải thích: ${itemText}`}
               onChange={(e) => onToggleAcknowledge(e.target.checked)}
-              className="h-4 w-4 rounded border-line-strong text-primary-ink focus:ring-primary"
+              className="h-4 w-4 rounded border-line-strong text-primary-ink focus:ring-focus"
             />
             <span>Đã kiểm tra và xác nhận giải thích này phù hợp với điểm số</span>
           </label>

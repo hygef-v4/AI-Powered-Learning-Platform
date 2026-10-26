@@ -45,13 +45,13 @@ function GradebookContent({ classId }: { classId: string }) {
   const activeAssignmentId = activeAssignment?.id ?? "";
 
   return (
-    <section className="flex min-w-0 animate-rise flex-col gap-4">
+    <section className="flex min-w-0 flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="font-display text-[26px] leading-tight tracking-[-0.02em] text-ink">Sổ điểm</h2>
           <p className="mt-1 text-[13px] text-muted">
             {data
-              ? `${data.total} sinh viên · ${assignments.length} bài Graded`
+              ? `${data.total} sinh viên · ${assignments.length} bài tính điểm`
               : resource.error
                 ? "Không tải được dữ liệu sổ điểm"
                 : "Đang tải…"}
@@ -148,7 +148,7 @@ function GradebookContent({ classId }: { classId: string }) {
 
       {data && assignments.length === 0 && (
         <div className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">
-          Chưa có bài Graded trong lớp.
+          Chưa có bài tính điểm trong lớp.
         </div>
       )}
 
@@ -366,7 +366,7 @@ function GradebookContent({ classId }: { classId: string }) {
       )}
 
       <p className="text-xs text-muted">
-        Chỉ bài Graded và lượt được chấm. Không cộng tổng điểm hoặc trọng số; không bao gồm Practice
+        Chỉ bài tính điểm và lượt được chấm. Không cộng tổng điểm hoặc trọng số; không bao gồm bài luyện tập
         và Quiz.
       </p>
 

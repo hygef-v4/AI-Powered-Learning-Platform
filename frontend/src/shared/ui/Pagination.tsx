@@ -12,6 +12,8 @@ type Props = {
   itemLabel?: string;
   /** Chữ thêm sau dòng hiển thị, ví dụ "50 dòng mỗi trang". */
   note?: ReactNode;
+  /** false: ẩn dòng "Hiển thị a–b trong N", chỉ còn nút chuyển trang. */
+  summary?: boolean;
   testId?: string;
 };
 
@@ -37,7 +39,7 @@ export function pageItems(current: number, count: number): (number | "gap")[] {
 const BOX = "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors duration-200";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
-export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, testId = "pagination" }: Props) {
+export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, summary: showSummary = true, testId = "pagination" }: Props) {
   const count = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
@@ -45,11 +47,13 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
     total === 0 ? `Không có ${itemLabel}` : `Hiển thị ${NUMBER.format(from)}–${NUMBER.format(to)} trong ${NUMBER.format(total)} ${itemLabel}`;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3" data-testid={testId}>
-      <p className="text-[12.5px] text-muted">
-        {summary}
-        {note && <> · {note}</>}
-      </p>
+    <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-end")} data-testid={testId}>
+      {showSummary && (
+        <p className="text-[12.5px] text-muted">
+          {summary}
+          {note && <> · {note}</>}
+        </p>
+      )}
       {count > 1 && (
         <nav aria-label="Phân trang" className="flex items-center gap-1.5">
           <button

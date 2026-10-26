@@ -128,19 +128,19 @@ export function ClassProgressSection({
     <div
       data-testid="overview-open-card"
       data-class-overview-region={layout === "overview" ? "open" : undefined}
-      className="flex animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
+      className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-5"
     >
       <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Bài đang mở</dt>
       {value ? (
         <>
-          <dd className="font-display text-[36px] leading-none text-ink">{value.openCount}</dd>
+          <dd className="font-display text-[30px] leading-none text-ink">{value.openCount}</dd>
           <dd className="mt-0.5 text-xs text-muted">
             {value.dueToday} bài hết hạn hôm nay
             {value.hiddenOpenCount > 0 ? ` · ${value.hiddenOpenCount} bài ẩn theo quyền` : ""}
           </dd>
         </>
       ) : error ? (
-        <dd className="mt-1 text-sm font-semibold text-danger">Không khả dụng</dd>
+        <dd className="mt-1 text-sm font-semibold text-danger">Không tải được</dd>
       ) : (
         <dd className="mt-1 text-sm font-medium text-muted">Đang tải…</dd>
       )}
@@ -151,16 +151,16 @@ export function ClassProgressSection({
     <div
       data-testid="overview-pending-card"
       data-class-overview-region={layout === "overview" ? "pending" : undefined}
-      className="flex animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
+      className={`flex flex-col gap-2 rounded-xl border p-5 ${value && value.pendingTotal > 0 ? "border-primary bg-primary-soft" : "border-line bg-surface"}`}
     >
       <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Chờ chấm</dt>
       {value ? (
         <>
-          <dd className="font-display text-[36px] leading-none text-ink">{value.pendingTotal}</dd>
+          <dd className={`font-display text-[30px] leading-none ${value.pendingTotal > 0 ? "text-primary-ink" : "text-ink"}`}>{value.pendingTotal}</dd>
           <dd className="mt-0.5 text-xs text-muted">Bài nộp chờ chấm</dd>
         </>
       ) : error ? (
-        <dd className="mt-1 text-sm font-semibold text-danger">Không khả dụng</dd>
+        <dd className="mt-1 text-sm font-semibold text-danger">Không tải được</dd>
       ) : (
         <dd className="mt-1 text-sm font-medium text-muted">Đang tải…</dd>
       )}
@@ -219,7 +219,7 @@ export function ClassProgressSection({
       )}
 
       {value && sortedAssignments.length === 0 && (
-        <p className="mt-3 text-sm text-muted">Chưa có bài Graded trong lớp.</p>
+        <p className="mt-3 text-sm text-muted">Chưa có bài tính điểm trong lớp.</p>
       )}
 
       {value && visibleAssignments.length > 0 && (
@@ -248,7 +248,7 @@ export function ClassProgressSection({
                       {assignment.title}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted">
-                      {assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"} · Graded ·{" "}
+                      {assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"} · Tính điểm ·{" "}
                       {p?.deadline
                         ? `Hạn: ${new Date(p.deadline).toLocaleString("vi-VN")}`
                         : "Không có hạn nộp"}

@@ -112,7 +112,7 @@ export function BatchActionDialog({
         </>
       }
     >
-      <p className="font-display text-[44px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
         <ul className="flex flex-col">

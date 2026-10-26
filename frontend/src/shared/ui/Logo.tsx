@@ -18,7 +18,7 @@ export function LogoMark({ size = 28, className }: { size?: number; className?: 
   );
 }
 
-/** Logo đầy đủ: dấu + tên nền tảng chữ có chân. */
+/** Logo đầy đủ: dấu + tên nền tảng. */
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cx("inline-flex items-center gap-2.5 text-ink", className)}>

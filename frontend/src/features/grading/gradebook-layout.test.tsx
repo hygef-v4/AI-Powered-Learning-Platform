@@ -232,7 +232,7 @@ describe("ClassGradebookTab layout and modes", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Mất kết nối máy chủ");
 
     fireEvent.click(screen.getByRole("button", { name: "Thử tải lại" }));
-    expect(await screen.findByText("Chưa có bài Graded trong lớp.")).toBeInTheDocument();
+    expect(await screen.findByText("Chưa có bài tính điểm trong lớp.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Xuất sổ điểm" })).toBeDisabled();
 
     fireEvent.change(screen.getByRole("searchbox", { name: /Tìm sinh viên/ }), { target: { value: "không có" } });

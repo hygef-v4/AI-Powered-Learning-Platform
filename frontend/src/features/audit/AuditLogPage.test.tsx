@@ -63,6 +63,42 @@ describe("AuditLogPage", () => {
     expect(url.searchParams.get("size")).toBe("50");
     expect(url.searchParams.get("page")).toBe("0");
     expect(url.searchParams.has("actorId")).toBe(false);
+    expect(url.searchParams.get("recordView")).toBe("true");
+  });
+
+  it("bảng có cột STT, thời gian ghi giờ phút ngày tháng năm, không còn dòng Hiển thị", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => json(page([ADMIN_ROW, SYSTEM_ROW]))));
+    render(<AuditLogPage />);
+
+    const row = await screen.findByTestId(`audit-table-row-${ADMIN_ROW.id}`);
+    expect(screen.getByRole("columnheader", { name: "STT" })).toBeInTheDocument();
+    expect(within(row).getByText("1")).toBeInTheDocument();
+    expect(within(screen.getByTestId(`audit-table-row-${SYSTEM_ROW.id}`)).getByText("2")).toBeInTheDocument();
+    expect(within(row).getByText("17:55 14/10/2026")).toBeInTheDocument();
+    expect(within(row).queryByText(/3f9c2a/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Hiển thị|dòng mỗi trang/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Người thực hiện (email)")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("audit-filters-object-id-input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("audit-filters-submit-button")).not.toBeInTheDocument();
+  });
+
+  it("đổi bộ lọc là tra cứu luôn và không ghi thêm lần xem; xóa lọc cũng vậy", async () => {
+    const fetchMock = vi.fn(() => json(page([ADMIN_ROW])));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AuditLogPage />);
+    await screen.findByText("phongdt@fpt.edu.vn");
+
+    fireEvent.change(screen.getByTestId("audit-filters-result-select"), { target: { value: "DENIED" } });
+    await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(2));
+    const filtered = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
+    expect(filtered.get("result")).toBe("DENIED");
+    expect(filtered.get("recordView")).toBe("false");
+
+    fireEvent.click(screen.getByTestId("audit-filters-clear-button"));
+    await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(3));
+    const cleared = new URL(auditCalls(fetchMock)[2]!, "http://x").searchParams;
+    expect(cleared.has("result")).toBe(false);
+    expect(cleared.get("recordView")).toBe("false");
   });
 
   it("việc do hệ thống làm hiện Hệ thống, kết quả hiện nhãn tiếng Việt", async () => {
@@ -85,7 +121,7 @@ describe("AuditLogPage", () => {
     const url = new URL(auditCalls(fetchMock)[0]!, "http://x");
     expect(url.searchParams.get("objectType")).toBe("ACCOUNT");
     expect(url.searchParams.get("objectId")).toBe("abc");
-    expect(screen.getByTestId("audit-filters-object-id-input")).toHaveValue("abc");
+    expect(screen.getByTestId("audit-filters-object-type-select")).toHaveValue("ACCOUNT");
   });
 
   it("email không khớp tài khoản nào thì báo lỗi dưới ô và không tra cứu", async () => {
@@ -97,7 +133,6 @@ describe("AuditLogPage", () => {
     await screen.findByTestId("audit-table-empty");
 
     fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: "nguyenx@fpt.edu.vn" } });
-    fireEvent.click(screen.getByTestId("audit-filters-submit-button"));
 
     expect(await screen.findByText("Không tìm thấy người thực hiện với email này.")).toBeInTheDocument();
     expect(auditCalls(fetchMock)).toHaveLength(1);
@@ -114,7 +149,6 @@ describe("AuditLogPage", () => {
     await screen.findByText("phongdt@fpt.edu.vn");
 
     fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: " phongdt@fpt.edu.vn " } });
-    fireEvent.click(screen.getByTestId("audit-filters-submit-button"));
 
     await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(2));
     expect(new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams.get("actorId")).toBe(ADMIN_ROW.actorId);
@@ -159,5 +193,6 @@ describe("AuditLogPage", () => {
     const second = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
     expect(second.get("page")).toBe("1");
     expect(second.get("from")).toBe(first.get("from"));
+    expect(second.get("recordView")).toBe("false");
   });
 });

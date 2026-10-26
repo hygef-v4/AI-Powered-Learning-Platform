@@ -6,7 +6,7 @@ import { TYPE_LABELS } from "./labels";
 import { MAX_OPTIONS, MIN_OPTIONS, nextOptionId, toggleCorrect, withType, type FormErrors, type QuestionForm } from "./questionForm";
 import type { QuestionType } from "./types";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
 type Props = {
   value: QuestionForm;

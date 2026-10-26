@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { clearCurrentUser } from "@/shared/auth/useCurrentUser";
-import { Alert } from "@/shared/ui/Alert";
 import { getProfile } from "./api";
 import { AuthLayout } from "./components/AuthLayout";
+import { AuthToast, type AuthNotice } from "./components/AuthToast";
 import { InfoCard } from "./components/InfoCard";
 import { LoginForm } from "./LoginForm";
 import { safeNextPath } from "./session";
@@ -17,7 +17,11 @@ import { safeNextPath } from "./session";
 export function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const justReset = params.get("reset") === "1";
+  // Vừa đặt lại mật khẩu (`?reset=1`): báo một câu ngắn rồi tự ẩn.
+  const [notice, setNotice] = useState<AuthNotice | null>(() =>
+    params.get("reset") === "1" ? { id: 1, text: "Đã đặt lại mật khẩu.", tone: "success" } : null,
+  );
+  const clearNotice = useCallback(() => setNotice(null), []);
   const next = safeNextPath(params.get("next"));
 
   useEffect(() => {
@@ -29,6 +33,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       variant="login"
+      toast={<AuthToast notice={notice} onDone={clearNotice} />}
       aside={
         <InfoCard
           title="Lần đầu sử dụng?"
@@ -37,11 +42,6 @@ export function LoginPage() {
         />
       }
     >
-      {justReset && (
-        <Alert tone="success" role="status" className="mb-6">
-          Đã đặt lại mật khẩu. Các thiết bị khác đã bị đăng xuất; hãy đăng nhập bằng mật khẩu mới.
-        </Alert>
-      )}
       <LoginForm
         onSuccess={(session) => {
           // Hồ sơ nhớ trong AppShell có thể là của người dùng trước.

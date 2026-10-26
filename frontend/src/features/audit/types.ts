@@ -35,6 +35,8 @@ export type AuditQuery = {
   to?: string;
   page: number;
   size: number;
+  /** Chỉ lần mở màn gửi true để ghi một lần xem audit; lọc, xóa lọc, chuyển trang gửi false. */
+  recordView?: boolean;
 };
 
 /** Giá trị trong form bộ lọc; ngày dạng yyyy-mm-dd theo giờ Việt Nam. */

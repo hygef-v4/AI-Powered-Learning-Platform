@@ -24,6 +24,7 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
   const [rows, setRows] = useState<QuizRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -33,27 +34,27 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
     return () => {
       active = false;
     };
-  }, [classId]);
+  }, [classId, attempt]);
 
   const open = (row: QuizRow) => router.push(`/quizzes/${row.id}${row.readOnly ? `?classId=${encodeURIComponent(classId)}` : ""}`);
 
   return (
-    <Section title="Quiz" actions={
-      <Button size="sm" variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="class-quizzes-create">Quiz mới</Button>
+    <Section title="Quiz" icon="quiz" actions={
+      <Button size="sm" variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="class-quizzes-create">Tạo quiz</Button>
     }>
-      {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      {!error && !rows && <p role="status" className="text-[13px] text-muted">Đang tải quiz…</p>}
+      {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => { setError(null); setAttempt((n) => n + 1); }}>Thử lại</Button>}>{error}</Alert>}
+      {!error && !rows && <p role="status" className="text-sm text-muted">Đang tải quiz…</p>}
       {rows && (
         <TableFrame>
-          <thead><tr><Th>Quiz</Th><Th>Phạm vi</Th><Th>Trạng thái</Th><Th>Bài nộp</Th></tr></thead>
+          <thead><tr><Th>Quiz</Th><Th className="max-sm:hidden">Phạm vi</Th><Th>Trạng thái</Th><Th className="max-sm:hidden">Bài nộp</Th></tr></thead>
           <tbody>
             {rows.length === 0 && <tr><Td colSpan={4} className="py-6 text-center text-muted">Lớp chưa có quiz.</Td></tr>}
             {rows.map((row) => (
               <ClickableRow key={row.id} onClick={() => open(row)} data-testid="class-quizzes-row">
-                <Td><span className="font-semibold">{row.title}</span><span className="block text-xs text-muted">{row.itemCount} câu · Luyện tập</span></Td>
-                <Td>{row.readOnly ? <Pill tone="info">Của môn</Pill> : <Pill>Của lớp</Pill>}</Td>
+                <Td><span className="font-semibold [overflow-wrap:anywhere]">{row.title}</span><span className="block text-xs text-muted">{row.itemCount} câu · Luyện tập<span className="sm:hidden"> · {row.readOnly ? "Của môn" : "Của lớp"}</span></span></Td>
+                <Td className="max-sm:hidden">{row.readOnly ? <Pill tone="info">Của môn</Pill> : <Pill>Của lớp</Pill>}</Td>
                 <Td><Pill tone={QUIZ_STATUS_TONES[row.status]}>{QUIZ_STATUS_LABELS[row.status]}</Pill></Td>
-                <Td><SlotOutlet slot={quizRowActions} props={{ quizId: row.id, classId }} /></Td>
+                <Td className="max-sm:hidden"><SlotOutlet slot={quizRowActions} props={{ quizId: row.id, classId }} /></Td>
               </ClickableRow>
             ))}
           </tbody>

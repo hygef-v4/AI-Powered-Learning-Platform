@@ -158,7 +158,7 @@ function Stat({ icon, title, children }: { icon: "speed" | "monitoring" | "group
       <IconTile icon={icon} />
       <div className="min-w-0">
         <p className="text-xs font-semibold text-muted">{title}</p>
-        <p className="font-display text-[30px] leading-none text-ink">{children}</p>
+        <p className="font-display text-[26px] leading-none text-ink">{children}</p>
       </div>
     </div>
   );

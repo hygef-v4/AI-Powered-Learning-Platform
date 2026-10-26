@@ -120,7 +120,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
             type="button"
             aria-label="Mở menu"
             onClick={() => setDrawer(pathname)}
-            className="inline-flex size-9 items-center justify-center rounded-lg text-body hover:bg-sunken md:hidden"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-body hover:bg-sunken md:hidden"
           >
             <Icon name="menu" size={18} />
           </button>

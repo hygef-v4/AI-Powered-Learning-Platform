@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClassListPage } from "./ClassListPage";
 import { ClassDashboardPage } from "./ClassDashboardPage";
 import { ClassFormDialog } from "./ClassFormDialog";
@@ -18,6 +18,9 @@ const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@exa
 const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", term: "2026-1", description: "Lớp sáng thứ Hai",
   status: "OPEN", teacher, activeStudentCount: 2, removedStudentCount: 1, createdAt: "2026-09-01", showGradeDistribution: false, version: 3 };
 const student: EnrollmentView = { accountId: "student-1", name: "Nguyễn Văn An", email: "an@example.test", enrolledAt: "2026-09-05", status: "ACTIVE" };
+
+// Trang lớp ghi tab đang mở lên URL; trả URL về gốc để test sau không mở sẵn tab của test trước.
+afterEach(() => window.history.replaceState(null, "", "/"));
 
 describe("U05 reference UI", () => {
   it("filters manager classes by status and text without losing the source rows", () => {
@@ -225,8 +228,6 @@ describe("U05 reference UI", () => {
 
     const metadataPanel = screen.getByTestId("overview-metadata-panel");
     expect(metadataPanel).toHaveAttribute("data-class-overview-region", "metadata");
-    expect(within(metadataPanel).getByText("SE1801")).toBeInTheDocument();
-    expect(within(metadataPanel).getByText("2026-1")).toBeInTheDocument();
     expect(within(metadataPanel).getByText(/Nguyễn Minh Kiên/)).toBeInTheDocument();
     expect(container.querySelector("script")).toBeNull();
 

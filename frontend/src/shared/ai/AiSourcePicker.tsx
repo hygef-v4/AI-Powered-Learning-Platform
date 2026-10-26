@@ -126,7 +126,7 @@ function SourceRow({
       onClick={onSelect}
       className={cx(
         "flex w-full flex-col gap-1 rounded-xl border px-3.5 py-3 text-left transition-colors",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
         checked ? "border-primary bg-primary-soft" : "border-line-strong bg-surface hover:bg-shell",
         !option.available && "cursor-not-allowed opacity-55 hover:bg-surface",
       )}

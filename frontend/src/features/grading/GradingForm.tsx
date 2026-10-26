@@ -160,7 +160,7 @@ export function GradingNotes({
       <label className="block font-medium text-ink">
         Nhận xét gửi sinh viên
         <textarea
-          className="mt-1 block min-h-20 w-full rounded-lg border border-line p-2 text-xs font-normal focus:border-primary focus:outline-none"
+          className="mt-1 block min-h-20 w-full rounded-lg border border-line p-2 text-xs font-normal focus:border-focus focus:outline-none"
           value={values.feedback}
           maxLength={10000}
           disabled={disabled}
@@ -210,7 +210,7 @@ export function GradingNotes({
         <label className="block font-medium text-ink">
           Lý do sửa điểm đã chốt/công bố (bắt buộc)
           <input
-            className="mt-1 block w-full rounded-lg border border-line px-2 py-1.5 text-xs font-normal focus:border-primary focus:outline-none"
+            className="mt-1 block w-full rounded-lg border border-line px-2 py-1.5 text-xs font-normal focus:border-focus focus:outline-none"
             value={values.changeReason}
             maxLength={2000}
             onChange={(v) => onChange({ changeReason: v.target.value })}

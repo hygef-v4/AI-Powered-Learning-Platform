@@ -2,6 +2,7 @@ package edu.aiplatform.audit.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -64,7 +65,7 @@ class AuditControllerTest {
         UUID id = UUID.randomUUID();
         AuditEvent event = new AuditEvent(id, actorId, "ROLE_CHANGED", "ACCOUNT", "abc", AuditResult.SUCCESS, null,
                 Map.of("actorType", "USER"), Instant.parse("2026-10-14T10:55:12Z"));
-        when(auditQuery.query(any(), any(), any())).thenReturn(
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenReturn(
                 new PageImpl<>(List.of(new AuditLogView(event, "phongdt@fpt.edu.vn")), PageRequest.of(1, 20), 21));
 
         mvc.perform(get("/api/v1/admin/audit-logs")
@@ -84,7 +85,7 @@ class AuditControllerTest {
 
         ArgumentCaptor<AuditFilter> filter = ArgumentCaptor.forClass(AuditFilter.class);
         ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
-        verify(auditQuery).query(eq(admin), filter.capture(), page.capture());
+        verify(auditQuery).query(eq(admin), filter.capture(), page.capture(), eq(true));
         assertThat(filter.getValue()).isEqualTo(new AuditFilter(actorId, "ROLE_CHANGED", "ACCOUNT", "abc",
                 AuditResult.SUCCESS, Instant.parse("2026-10-07T00:00:00Z"), Instant.parse("2026-10-14T23:59:59Z")));
         assertThat(page.getValue().getPageNumber()).isEqualTo(1);
@@ -93,15 +94,25 @@ class AuditControllerTest {
 
     @Test
     void defaultsToFirstPageOf50() throws Exception {
-        when(auditQuery.query(any(), any(), any())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
 
         mvc.perform(get("/api/v1/admin/audit-logs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty());
 
         ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
-        verify(auditQuery).query(any(), any(), page.capture());
+        verify(auditQuery).query(any(), any(), page.capture(), eq(true));
         assertThat(page.getValue().getPageNumber()).isZero();
         assertThat(page.getValue().getPageSize()).isEqualTo(50);
+    }
+
+    @Test
+    void recordViewFalseIsPassedThroughForFilterAndPaging() throws Exception {
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(1, 50), 0));
+
+        mvc.perform(get("/api/v1/admin/audit-logs").param("page", "1").param("recordView", "false"))
+                .andExpect(status().isOk());
+
+        verify(auditQuery).query(any(), any(), any(), eq(false));
     }
 
     @Test
@@ -117,7 +128,7 @@ class AuditControllerTest {
 
     @Test
     void forbiddenFromQueryBecomes403ProblemDetail() throws Exception {
-        when(auditQuery.query(any(), any(), any())).thenThrow(ApiException.forbidden("AUDIT_FORBIDDEN"));
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenThrow(ApiException.forbidden("AUDIT_FORBIDDEN"));
 
         mvc.perform(get("/api/v1/admin/audit-logs"))
                 .andExpect(status().isForbidden())

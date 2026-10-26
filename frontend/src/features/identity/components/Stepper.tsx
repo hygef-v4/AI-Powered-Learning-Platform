@@ -6,7 +6,7 @@ import { Icon } from "@/shared/ui/Icon";
  */
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <ol className="flex flex-wrap items-center gap-2 text-xs font-semibold" aria-label="Các bước">
+    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-semibold whitespace-nowrap" aria-label="Các bước">
       {steps.map((label, index) => {
         const state = index < current ? "done" : index === current ? "current" : "todo";
         return (

@@ -9,20 +9,10 @@ import { OtpFlow, type OtpFlowCopy } from "./OtpFlow";
 const COPY: OtpFlowCopy = {
   purpose: "PASSWORD_RESET",
   title: (step) => (step === 2 ? "Đặt lại mật khẩu" : "Khôi phục mật khẩu"),
-  subtitle: (step, email) =>
-    step === 0
-      ? "Nhập email trường để nhận mã khôi phục."
-      : step === 1
-        ? "Nhập email trường, mã OTP và mật khẩu mới."
-        : `Mã OTP đã được xác nhận. Đặt mật khẩu mới cho ${email}.`,
   steps: ["Email", "Mã OTP", "Mật khẩu mới"],
   sendLabel: "Gửi mã khôi phục",
-  sendNote: "Sau khi gửi, hệ thống luôn hiện cùng một thông báo và không cho biết email có tồn tại hay không.",
-  codeLabel: "Mã xác thực OTP (6 chữ số)",
-  verifyNote: "Nếu email thuộc một tài khoản của trường, mã khôi phục đã được gửi tới email đó.",
+  codeLabel: "Mã xác thực OTP",
   submitLabel: "Đặt lại mật khẩu",
-  // Đặt lại qua OTP xóa mọi phiên (BR-U01-34); thiết bị đang đặt lại chưa đăng nhập nên chỉ còn "các thiết bị khác".
-  submitNote: "Sau khi đặt lại, các thiết bị khác sẽ bị đăng xuất.",
   aside: (step) =>
     step === 2 ? (
       <InfoCard

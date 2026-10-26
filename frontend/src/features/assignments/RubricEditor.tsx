@@ -4,12 +4,12 @@ import { useEffect, useRef } from "react";
 import { atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
 import { cx } from "@/shared/ui";
 
-const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-primary focus:bg-surface";
+const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-focus focus:bg-surface";
 const INPUT = `${FIELD} border-transparent`;
 /** Ô điểm luôn có viền nhạt: không có chữ gợi ý (yêu cầu 2026-10-22) nên viền cho biết chỗ nhập điểm. */
 const POINTS = `${FIELD} border-line`;
 /** Ô điểm sai (quá 2 chữ số thập phân): bộ class riêng, vì cx không gộp class trùng nên không chồng lên POINTS được. */
-const POINTS_INVALID = "min-w-0 rounded-md border border-danger bg-danger-soft px-1.5 py-1 text-xs text-danger outline-none";
+const POINTS_INVALID = "min-w-0 rounded-md border border-danger bg-danger-soft px-1.5 py-1 text-xs text-danger outline-none focus:shadow-[0_0_0_3px_var(--c-danger-soft)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-danger";
 /** BR-U07-21: tối đa 20 tiêu chí mỗi phần; mỗi mục atomic là một tiêu chí. */
 const LIMIT = 20;
 

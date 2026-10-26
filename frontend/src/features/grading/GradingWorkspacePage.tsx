@@ -148,14 +148,14 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
 
   return (
     <main data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
-      <header className="flex animate-rise flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
           <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
             onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
             href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>
             <Icon name="arrow_back" size={14} />Bài nộp
           </Link>
-          <h1 className="font-display text-[34px] leading-[1.1] tracking-[-0.025em] text-ink">{context.value?.title || "Chấm bài"}</h1>
+          <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{context.value?.title || "Chấm bài"}</h1>
           <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">
             <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{statusLabels[evaluation.state]}</Pill>
             {context.value && <span className="font-semibold text-ink">{context.value.ownerName}</span>}
@@ -173,7 +173,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
           <IconButton icon="chevron_right" label="Bài sau" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)} />
         </div>
         <div className="flex items-baseline gap-3">
-          <output aria-label="Điểm tạm tính" className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink tabular-nums">
+          <output aria-label="Điểm tạm tính" className="font-display text-[26px] leading-none tracking-[-0.02em] text-ink tabular-nums">
             {total.toFixed(2)}<span className="text-[18px] text-muted"> / {Number(evaluation.maxScore).toFixed(2)}</span>
           </output>
           <p role="status" className={dirty ? "text-xs font-semibold text-warning" : "text-xs text-muted"}>

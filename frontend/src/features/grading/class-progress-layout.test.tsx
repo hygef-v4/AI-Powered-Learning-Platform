@@ -183,8 +183,8 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Mất kết nối máy chủ");
-    expect(openRegion).toHaveTextContent("Không khả dụng");
-    expect(pendingRegion).toHaveTextContent("Không khả dụng");
+    expect(openRegion).toHaveTextContent("Không tải được");
+    expect(pendingRegion).toHaveTextContent("Không tải được");
 
     gradingMocks.progress.mockResolvedValueOnce({
       "a-1": makeSummaryPage({ PENDING: 4 }),

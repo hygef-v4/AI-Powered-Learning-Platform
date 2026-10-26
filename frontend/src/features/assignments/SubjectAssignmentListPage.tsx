@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/shared/api/client";
 import { Alert, Button, PageHeader, Section, Select } from "@/shared/ui";
 import { assignmentsApi, type ListFilter } from "./api";
-import { AssignmentFilters, emptyFilter, toListFilter, type FilterState } from "./AssignmentFilters";
+import { AssignmentFilters, emptyFilter, isFiltered, toListFilter, type FilterState } from "./AssignmentFilters";
 import { AssignmentTable } from "./AssignmentTable";
 import { useDebounced } from "./ClassAssignmentsSection";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
@@ -59,7 +59,7 @@ export function SubjectAssignmentListPage() {
           <AssignmentFilters value={filter} onChange={setFilter} />
           {page.loading && !page.data && <p role="status" className="text-sm text-muted">Đang tải bài tập…</p>}
           {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>Thử lại</Button>}>{errorMessage(page.error)}</Alert>}
-          {page.data && <AssignmentTable items={page.data.items} showScope={false} />}
+          {page.data && <AssignmentTable items={page.data.items} showScope={false} filtered={isFiltered(debounced)} />}
           {page.data && (
             <p className="text-xs text-muted">
               {page.data.hiddenCount > 0 ? `Đang ẩn ${page.data.hiddenCount} bài Đã đóng hoặc Ngưng giao. ` : ""}Quiz của môn xem ở mục Quiz.

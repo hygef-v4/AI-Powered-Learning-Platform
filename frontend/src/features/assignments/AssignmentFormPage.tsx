@@ -458,10 +458,10 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {editable ? (
         <AutoTextarea id="assignment-title" aria-label="Tên bài" value={title} maxLength={200} placeholder="Tên bài tập"
           aria-invalid={titleMissing || undefined}
-          className={cx("font-display text-[34px] leading-tight tracking-[-0.025em] text-ink", titleMissing && "rounded-md bg-danger-soft")}
+          className={cx("font-display text-[28px] leading-tight tracking-[-0.025em] text-ink", titleMissing && "rounded-md bg-danger-soft")}
           onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
           onChange={(event) => editTitle(event.target.value.replace(/\n/g, " "))} />
-      ) : <h2 className="font-display text-[34px] leading-tight tracking-[-0.025em] text-ink">{title || "Bài chưa đặt tên"}</h2>}
+      ) : <h2 className="font-display text-[28px] leading-tight tracking-[-0.025em] text-ink">{title || "Bài chưa đặt tên"}</h2>}
       {editable ? (
         <Field label="Hướng dẫn làm và nộp bài" htmlFor="assignment-instructions" hint="Quy định áp dụng cho toàn bài: thời lượng, cách trình bày và tệp cần nộp.">
           <AutoTextarea id="assignment-instructions" aria-label="Hướng dẫn làm và nộp bài" value={instructions} maxLength={20000}
@@ -474,7 +474,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         <span aria-hidden>·</span><span>{gradingLabels[settings.gradingMode]}</span>
         <span aria-hidden>·</span><span>{topLevelQuestionCount} câu · {parts.length} mục chấm</span>
         {!preview && (waitingForRubrics ? <><span aria-hidden>·</span><span>{rubricLoadError ? "Chưa tải được điểm" : "Đang tải tiêu chí chấm…"}</span></>
-          : <><span aria-hidden>·</span><span>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</span><span aria-hidden>·</span><strong className="font-display text-[18px] font-normal text-ink">{formatPoints(totalPoints)} điểm</strong></>)}
+          : <><span aria-hidden>·</span><span>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</span><span aria-hidden>·</span><strong className="font-display text-[18px] text-ink">{formatPoints(totalPoints)} điểm</strong></>)}
         {required.map(([type, count]) => <span key={type}>· {count} {diagramTypeLabels[type]}</span>)}
         {!preview && !waitingForRubrics && missing > 0 && <Pill tone="warning">{missing} mục cần bổ sung rubric</Pill>}
       </p>
@@ -636,7 +636,7 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
       <p>Sinh viên không bắt đầu, không nộp thêm; bài đang làm được tự nộp; bài đã nộp giữ nguyên.</p>
       <Field label="Lý do" htmlFor="retire-reason" required>
         <textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
-          className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary" />
+          className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />
       </Field>
     </Dialog>
   );

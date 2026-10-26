@@ -72,7 +72,7 @@ export function CommandPalette({ open, items, onClose }: { open: boolean; items:
             }}
             placeholder="Đi tới trang…"
             aria-label="Đi tới trang"
-            className="h-14 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-faint"
+            className="h-14 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-muted"
           />
           <kbd className="rounded border border-line-strong bg-sunken px-1.5 font-mono text-[10.5px] text-muted">Esc</kbd>
         </div>

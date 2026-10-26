@@ -13,7 +13,7 @@ export function OtpInput({
   value,
   onChange,
   invalid,
-  label = "Mã xác thực OTP (6 chữ số)",
+  label = "Mã xác thực OTP",
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -81,8 +81,8 @@ export function OtpInput({
             autoComplete={index === 0 ? "one-time-code" : "off"}
             aria-label={`Chữ số ${index + 1}`}
             aria-invalid={invalid || undefined}
-            className={`h-[52px] w-[46px] rounded-xl bg-surface text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-primary/20 ${
-              invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-line focus:border-primary"
+            className={`h-[52px] w-[46px] rounded-xl bg-surface text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-focus/20 ${
+              invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-line focus:border-focus"
             }`}
           />
         ))}

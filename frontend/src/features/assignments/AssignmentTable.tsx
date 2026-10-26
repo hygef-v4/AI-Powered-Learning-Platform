@@ -8,9 +8,9 @@ import { assignmentRowActions } from "./slots";
 import { gradingLabels, originLabels, statusLabels, statusTones, submissionLabels, type AssignmentRow } from "./types";
 
 /** Bảng bài tập (F1, F2): tên, hình thức, chế độ (hai cột riêng), phạm vi, trạng thái, hạn; lối vào bài nộp do U09 gắn. */
-export function AssignmentTable({ items, classId, showScope }: { items: AssignmentRow[]; classId?: string; showScope: boolean }) {
+export function AssignmentTable({ items, classId, showScope, filtered = false }: { items: AssignmentRow[]; classId?: string; showScope: boolean; filtered?: boolean }) {
   const router = useRouter();
-  if (items.length === 0) return <p className="py-6 text-center text-sm text-muted">Chưa có bài tập nào.</p>;
+  if (items.length === 0) return <p className="py-6 text-center text-sm text-muted">{filtered ? "Không có bài tập khớp bộ lọc." : "Chưa có bài tập nào."}</p>;
   return (
     <TableFrame>
       <thead>

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { requestOtp, verifyOtp } from "../api";
-import { OTP_INVALID_MESSAGE, OtpFlow, TICKET_EXPIRED_MESSAGE, type OtpFlowCopy } from "./OtpFlow";
+import { OTP_INVALID_MESSAGE, OtpFlow, RESENT_MESSAGE, TICKET_EXPIRED_MESSAGE, type OtpFlowCopy } from "./OtpFlow";
 
 vi.mock("../api", () => ({ requestOtp: vi.fn(), verifyOtp: vi.fn() }));
 
@@ -12,14 +12,10 @@ const verifyOtpMock = vi.mocked(verifyOtp);
 const COPY: OtpFlowCopy = {
   purpose: "ACTIVATION",
   title: () => "Kích hoạt tài khoản",
-  subtitle: () => "Xác minh email",
   steps: ["Email", "Mã OTP", "Đặt mật khẩu"],
   sendLabel: "Gửi mã kích hoạt",
-  sendNote: "Ghi chú gửi mã",
-  codeLabel: "Mã kích hoạt (6 chữ số)",
-  verifyNote: "Ghi chú mã",
+  codeLabel: "Mã kích hoạt",
   submitLabel: "Kích hoạt và đăng nhập",
-  submitNote: "Ghi chú",
   aside: () => null,
 };
 
@@ -66,12 +62,30 @@ describe("OtpFlow", () => {
     expect(screen.queryByLabelText("Mật khẩu mới")).not.toBeInTheDocument();
   });
 
-  it("nút gửi lại bị khóa trong 60 giây", async () => {
+  it("nút gửi lại bị khóa trong 60 giây, đồng hồ chỉ hiện thời gian", async () => {
     render(<OtpFlow copy={COPY} onComplete={vi.fn()} />);
     await reachOtpStep();
-    expect(screen.getByText(/Gửi lại mã sau 0[01]:\d\d/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Gửi lại mã" })).not.toBeInTheDocument();
-    expect(screen.getByText(/Mã hết hạn sau/)).toHaveTextContent(/Mã hết hạn sau (10:00|09:5\d)/);
+    expect(screen.getByRole("button", { name: "Gửi lại mã" })).toBeDisabled();
+    expect(screen.getByLabelText(/Thời gian hiệu lực của mã/)).toHaveTextContent(/^(10:00|09:5\d)$/);
+    expect(screen.queryByText(/Mã hết hạn sau|Đã gửi mã|Đổi email|6 chữ số/)).not.toBeInTheDocument();
+  });
+
+  it("gửi lại mã khi hết thời gian khóa thì báo một câu ngắn rồi tự ẩn", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      render(<OtpFlow copy={COPY} onComplete={vi.fn()} />);
+      await reachOtpStep();
+      await vi.advanceTimersByTimeAsync(61_000);
+      const resend = screen.getByRole("button", { name: "Gửi lại mã" });
+      expect(resend).toBeEnabled();
+      fireEvent.click(resend);
+      expect(await screen.findByRole("status")).toHaveTextContent(RESENT_MESSAGE);
+      expect(requestOtpMock).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(4_100);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("ticket hết hạn thì quay về bước email", async () => {

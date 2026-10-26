@@ -24,7 +24,7 @@ export function StudentGradesSection({
       {error && <p role="alert">{error}</p>}
       {!value && !error && <p role="status">Đang tải bài nộp và điểm…</p>}
       {value && <>
-        <p className="my-3">Đã nộp {value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} bài Graded · Nộp trễ {value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
+        <p className="my-3">Đã nộp {value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} bài tính điểm · Nộp trễ {value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
         <div className="overflow-x-auto"><table className="w-full text-left text-sm">
           <thead><tr><th scope="col" className="p-2">Bài</th><th scope="col" className="p-2">Hình thức</th><th scope="col" className="p-2">Nộp</th><th scope="col" className="p-2">Điểm</th></tr></thead>
           <tbody>{value.assignments.map(assignment => {
@@ -37,7 +37,7 @@ export function StudentGradesSection({
             </tr>;
           })}</tbody>
         </table></div>
-        {!value.assignments.length && <p>Chưa có bài Graded trong lớp.</p>}
+        {!value.assignments.length && <p>Chưa có bài tính điểm trong lớp.</p>}
       </>}
     </section>
   );

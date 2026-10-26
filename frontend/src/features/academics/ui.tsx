@@ -1,5 +1,6 @@
 "use client";
 
+import { Tabs as SharedTabs } from "@/shared/ui/Tabs";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Icon as SharedIcon, type IconName as SharedIconName } from "@/shared/ui/Icon";
@@ -36,7 +37,7 @@ export function EmptyState({ title = "Chưa có dữ liệu", description }: { t
   return <SharedEmptyState title={title} description={description} />;
 }
 
-/** Đầu trang: nút quay lại nhỏ phía trên, tiêu đề chữ có chân, mô tả, thao tác căn đáy bên phải. */
+/** Đầu trang: nút quay lại nhỏ phía trên, tiêu đề chữ đậm, mô tả, thao tác căn đáy bên phải. */
 export function PageHeading({ title, subtitle, onBack, children }: { title: ReactNode; subtitle?: string; onBack?: () => void; children?: ReactNode }) {
   return <header className={styles.pageHeading}>
     <div className={styles.headingText}>
@@ -51,7 +52,7 @@ export function PageHeading({ title, subtitle, onBack, children }: { title: Reac
 }
 
 export function Tabs<T extends string>({ items, value, onChange, label }: { items: { key: T; label: string; count?: number }[]; value: T; onChange: (key: T) => void; label: string }) {
-  return <div className={styles.tabs} role="tablist" aria-label={label}>{items.map((item) => <button key={item.key} role="tab" aria-selected={value === item.key} className={value === item.key ? styles.activeTab : ""} onClick={() => onChange(item.key)} data-testid={`class-tab-${item.key}`}>{item.label}{item.count !== undefined && <span className={styles.count}>{item.count}</span>}</button>)}</div>;
+  return <SharedTabs items={items} value={value} onChange={onChange} label={label} testIdPrefix="class-tab-" />;
 }
 
 /** Popup của nhóm màn lớp; đóng bằng X hoặc Esc nên footer chỉ còn nút chính. */

@@ -14,10 +14,8 @@ export const metadata: Metadata = {
 };
 
 const PRELOAD_FONTS = [
-  "/fonts/plus-jakarta-sans/plus-jakarta-sans-normal-latin.woff2",
-  "/fonts/plus-jakarta-sans/plus-jakarta-sans-normal-vietnamese.woff2",
-  "/fonts/newsreader/newsreader-normal-latin.woff2",
-  "/fonts/newsreader/newsreader-normal-vietnamese.woff2",
+  "/fonts/be-vietnam-pro/be-vietnam-pro-latin-400-normal.woff2",
+  "/fonts/be-vietnam-pro/be-vietnam-pro-vietnamese-400-normal.woff2",
 ];
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

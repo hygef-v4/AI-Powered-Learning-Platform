@@ -4,7 +4,7 @@ import { Icon, type IconName } from "./Icon";
 
 const BOX =
   "flex h-10 items-center gap-2 rounded-lg border bg-surface px-3 transition-[border-color,box-shadow] duration-200 " +
-  "focus-within:border-primary focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)]";
+  "focus-within:border-focus focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)]";
 
 type FieldProps = {
   label: ReactNode;
@@ -46,12 +46,12 @@ type TextInputProps = InputHTMLAttributes<HTMLInputElement> & {
 
 export function TextInput({ invalid, suffix, icon, wrapperClassName, className, ...rest }: TextInputProps) {
   return (
-    <div className={cx(BOX, invalid ? "border-danger" : "border-line-strong", wrapperClassName)}>
+    <div className={cx(BOX, invalid ? "border-danger" : "border-field", wrapperClassName)}>
       {icon && <Icon name={icon} size={16} className="text-muted" />}
       <input
         aria-invalid={invalid || undefined}
         className={cx(
-          "min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-faint",
+          "min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-muted",
           "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           className,
         )}
@@ -66,7 +66,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean
 
 export function Select({ invalid, wrapperClassName, className, children, ...rest }: SelectProps) {
   return (
-    <div className={cx(BOX, "relative pr-2", invalid ? "border-danger" : "border-line-strong", wrapperClassName)}>
+    <div className={cx(BOX, "relative pr-2", invalid ? "border-danger" : "border-field", wrapperClassName)}>
       <select
         aria-invalid={invalid || undefined}
         className={cx("min-w-0 flex-1 cursor-pointer appearance-none bg-transparent pr-6 text-[13.5px] text-ink outline-none", className)}

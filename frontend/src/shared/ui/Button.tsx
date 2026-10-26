@@ -21,7 +21,7 @@ const SIZES: Record<Size, { box: string; icon: number }> = {
 const BASE =
   "inline-flex items-center justify-center rounded-lg border font-semibold whitespace-nowrap select-none " +
   "transition-[background-color,border-color,color,transform,opacity] duration-200 active:scale-[.98] " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary " +
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus " +
   "disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100";
 
 type Common = { variant?: Variant; size?: Size; icon?: IconName; children: ReactNode };

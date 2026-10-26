@@ -263,7 +263,7 @@ export function AutoTextarea({ className, value, ...rest }: Omit<TextareaHTMLAtt
   }, []);
   return (
     <textarea ref={ref} rows={1} value={value} data-editable
-      className={cx("block w-full resize-none overflow-hidden border-0 bg-transparent p-0 outline-none placeholder:text-faint", className)}
+      className={cx("block w-full resize-none overflow-hidden border-0 bg-transparent p-0 outline-none placeholder:text-muted", className)}
       {...rest} />
   );
 }
@@ -697,7 +697,7 @@ export function DocumentEditor({
     }
     return (
       <button type="button" aria-label="Viết vào phần này" data-testid={`write-part-${key}`}
-        onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-primary" : "h-7")}>
+        onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
         {guided && "Bấm để bắt đầu viết bài làm…"}
       </button>
     );
@@ -711,10 +711,10 @@ export function DocumentEditor({
     const writable = !readOnly && inPart(last?.id);
     return <>
       {section.blocks.slice(0, splitAt).map(renderBlock)}
-      <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-surface p-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+      <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-surface p-3 focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/15">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
           <p className="text-sm font-semibold text-ink">Bài làm của bạn</p>
-          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary-ink hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary"
+          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary-ink hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-focus"
             onClick={() => {
               if (!last) return;
               const block = newBlock("DIAGRAM", "STUDENT");

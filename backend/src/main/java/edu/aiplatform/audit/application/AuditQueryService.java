@@ -16,6 +16,10 @@ import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.academics.contract.ClassRef;
+import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
+import edu.aiplatform.subjects.contract.SubjectRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.util.HashMap;
@@ -23,7 +27,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -53,9 +60,21 @@ public class AuditQueryService implements IAuditQuery {
     private final IAudit audit;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final ObjectProvider<ISubjectQuery> subjects;
+    private final ObjectProvider<IClassAccess> classes;
 
     public AuditQueryService(AuditLogRepository repository, IAuthorization authorization, IAccountLookup accounts,
                              IAudit audit, ObjectMapper objectMapper, Clock clock) {
+        this(repository, authorization, accounts, audit, objectMapper, clock, null, null);
+    }
+
+    /** Môn và lớp chỉ dùng để hiện tên đối tượng; thiếu bean hay lỗi thì dòng vẫn hiện, chỉ không có tên. */
+    @Autowired
+    public AuditQueryService(AuditLogRepository repository, IAuthorization authorization, IAccountLookup accounts,
+                             IAudit audit, ObjectMapper objectMapper, Clock clock,
+                             ObjectProvider<ISubjectQuery> subjects, ObjectProvider<IClassAccess> classes) {
+        this.subjects = subjects;
+        this.classes = classes;
         this.repository = repository;
         this.authorization = authorization;
         this.accounts = accounts;
@@ -66,7 +85,7 @@ public class AuditQueryService implements IAuditQuery {
 
     @Override
     @Transactional
-    public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page) {
+    public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page, boolean recordView) {
         requireAdmin(actor);
         AuditFilter normalized = normalize(filter);
         validatePage(page);
@@ -74,11 +93,16 @@ public class AuditQueryService implements IAuditQuery {
         List<AuditRow> rows = total == 0 ? List.of()
                 : repository.find(normalized, page.getOffset(), page.getPageSize());
         Map<UUID, String> emails = emailsOf(rows);
+        Map<String, Optional<String>> labels = new HashMap<>();
         List<AuditLogView> items = rows.stream()
-                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId())))
+                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
+                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> objectLabel(row))
+                                .orElse(null)))
                 .toList();
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AUDIT_QUERIED", OBJECT_TYPE, null,
-                AuditResult.SUCCESS, null, describe(normalized, page), clock.instant()));
+        if (recordView) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AUDIT_QUERIED", OBJECT_TYPE, null,
+                    AuditResult.SUCCESS, null, describe(normalized, page), clock.instant()));
+        }
         return new PageImpl<>(items, page, total);
     }
 
@@ -144,6 +168,48 @@ public class AuditQueryService implements IAuditQuery {
             }
         });
         return emails;
+    }
+
+    /** Tên dễ đọc của đối tượng: email tài khoản, "mã · tên" của môn hoặc lớp; loại khác hay lỗi thì rỗng. */
+    private Optional<String> objectLabel(AuditRow row) {
+        if (row.objectType() == null || row.objectId() == null) {
+            return Optional.empty();
+        }
+        UUID id;
+        try {
+            id = UUID.fromString(row.objectId());
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        try {
+            return switch (row.objectType()) {
+                case "ACCOUNT" -> accounts.getContact(id).map(AccountContact::email);
+                case "SUBJECT" -> subjects == null ? Optional.empty()
+                        : Optional.ofNullable(subjects.getIfAvailable()).flatMap(q -> q.getSubject(id))
+                                .map(AuditQueryService::subjectLabel);
+                case "CLASS" -> classes == null ? Optional.empty()
+                        : Optional.ofNullable(classes.getIfAvailable()).flatMap(q -> q.getClassRef(id))
+                                .map(AuditQueryService::classLabel);
+                default -> Optional.empty();
+            };
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    static String subjectLabel(SubjectRef subject) {
+        return join(subject.code(), subject.name());
+    }
+
+    static String classLabel(ClassRef ref) {
+        return join(ref.code(), ref.name());
+    }
+
+    private static String join(String code, String name) {
+        if (code == null || code.isBlank()) {
+            return name;
+        }
+        return name == null || name.isBlank() || name.equals(code) ? code : code + " · " + name;
     }
 
     private AuditEvent toEvent(AuditRow row) {

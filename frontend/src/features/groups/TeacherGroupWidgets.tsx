@@ -62,13 +62,13 @@ export function GroupCountCard({
     <div
       data-testid={variant === "overview" ? "overview-groups-card" : undefined}
       data-class-overview-region={variant === "overview" ? "groups" : undefined}
-      className="flex min-w-0 animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
+      className="flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-5"
     >
       <div className="flex min-w-0 flex-col gap-2">
         <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Nhóm</p>
         {set ? (
           <>
-            <p className="font-display text-[36px] leading-none text-ink">{set.groups.length}</p>
+            <p className="font-display text-[30px] leading-none text-ink">{set.groups.length}</p>
             <p className="text-xs text-muted">{set.ungrouped.length} sinh viên chưa có nhóm</p>
           </>
         ) : error ? (

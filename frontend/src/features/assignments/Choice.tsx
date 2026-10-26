@@ -20,7 +20,7 @@ export function Choice<T extends string>({ name, value, options, onChange, disab
         return (
           <label key={option.value} title={option.title}
             className={cx("relative flex flex-1 cursor-pointer items-center justify-center rounded-[7px] px-3 py-2 text-[13px] font-semibold transition-[background-color,color,box-shadow] duration-200",
-              "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary",
+              "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus",
               on ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink",
               off && "cursor-not-allowed opacity-45 hover:text-muted")}>
             <input type="radio" name={name} className="sr-only" checked={on} disabled={off} onChange={() => onChange(option.value)} />

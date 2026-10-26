@@ -8,9 +8,9 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
 
   --color-ink: var(--c-ink);
   --color-body: var(--c-body);
@@ -19,6 +19,8 @@
 
   --color-line: var(--c-line);
   --color-line-strong: var(--c-line-strong);
+  --color-field: var(--c-field);
+  --color-focus: var(--c-focus);
   --color-line-soft: var(--c-line-soft);
 
   --color-surface: var(--c-surface);
@@ -81,6 +83,8 @@
   --c-sunken: #fcf1e4;
   --c-line: #f1e3d3;
   --c-line-strong: #e6d2bc;
+  --c-field: #a38a73;
+  --c-focus: #9a5508;
   --c-line-soft: #f7ecdf;
   --c-ink: #2a211b;
   --c-body: #54473d;
@@ -122,6 +126,8 @@
   --c-sunken: #0b1620;
   --c-line: #1f3341;
   --c-line-strong: #2a4354;
+  --c-field: #56778b;
+  --c-focus: #8fd6e3;
   --c-line-soft: #182a37;
   --c-ink: #eaf4fa;
   --c-body: #bcd0dc;
@@ -172,13 +178,25 @@ h3 {
   text-wrap: balance;
 }
 
+/* Ô chọn, thanh trượt và con trỏ nhập lấy màu chủ đạo thay vì xanh mặc định của trình duyệt. */
+:root {
+  accent-color: var(--c-primary-strong);
+  caret-color: var(--c-primary-ink);
+}
+
+/* Placeholder đủ tương phản (4,5:1) ở cả hai theme. */
+::placeholder {
+  color: var(--c-muted);
+  opacity: 1;
+}
+
 ::selection {
   background: var(--c-primary-soft);
   color: var(--c-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--c-primary);
+  outline: 2px solid var(--c-focus);
   outline-offset: 2px;
 }
 
@@ -187,37 +205,49 @@ h3 {
   scrollbar-color: var(--c-line-strong) transparent;
 }
 
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
+/* Hàng tab cuộn ngang được nhưng không hiện thanh cuộn. */
+[role="tablist"] {
+  scrollbar-width: none;
 }
 
-/* Thẻ, panel nổi nhẹ khi rê chuột; chỉ animate transform và bóng. */
+/* Reset nằm trong layer base để class utility (màu, cỡ, độ đậm chữ) trên nút và ô nhập vẫn thắng. */
+@layer base {
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+/* Thẻ bấm được: rê chuột chỉ đậm viền và thêm bóng mờ, không nhảy. */
 .lift {
-  transition: transform 0.22s var(--ease-out-soft), box-shadow 0.22s ease, border-color 0.22s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .lift:hover {
-  transform: translateY(-2px);
+  border-color: var(--c-line-strong);
   box-shadow: var(--shadow-lift);
 }
 
-/* Danh sách xuất hiện lần lượt: đặt `--i` trên từng mục. */
+/* Danh sách hiện mờ dần một lần, không trượt. */
 .stagger > * {
-  animation: var(--animate-rise);
-  animation-delay: calc(var(--i, 0) * 45ms);
+  animation: var(--animate-fade);
 }
 
+/* Giảm chuyển động: bỏ trượt, nảy và dịch chỗ; vẫn giữ đổi màu, viền, bóng và mờ dần để thao tác còn phản hồi. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
-    transition-duration: 0.01ms !important;
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1.5s !important;
   }
 }
 
@@ -276,4 +306,22 @@ html.drawio-panel-open [data-app-sidebar] {
   color: var(--c-muted);
   pointer-events: none;
   position: absolute;
+}
+
+/* One typeface: display titles carry weight instead of a second family; codes and times keep aligned figures. */
+@layer utilities {
+  .font-display { font-weight: 700; }
+  .font-mono { font-variant-numeric: tabular-nums; }
+}
+
+/* Giấy ô li của màn đăng nhập: ô lớn 32px kẻ đậm, chia 4 ô nhỏ kẻ nhạt, như vở học sinh. */
+.paper-grid {
+  background-color: var(--c-bg);
+  background-image:
+    linear-gradient(var(--c-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--c-line) 1px, transparent 1px),
+    linear-gradient(var(--c-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
+  background-position: -1px -1px;
 }

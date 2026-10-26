@@ -49,7 +49,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
 
   return (
     <form onSubmit={submit} noValidate>
-      <h1 className="font-display text-[44px] leading-none tracking-[-0.03em] text-ink">Đăng nhập</h1>
+      <h1 className="font-display text-[34px] leading-none tracking-[-0.03em] text-ink">Đăng nhập</h1>
 
       <div className="mt-7">
         <label htmlFor={emailId} className={AUTH_LABEL}>
@@ -59,7 +59,6 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
           id={emailId}
           type="email"
           autoComplete="username"
-          placeholder="masv@fpt.edu.vn"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={cx(AUTH_INPUT, "mt-1.5")}

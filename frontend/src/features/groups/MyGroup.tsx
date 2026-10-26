@@ -247,7 +247,7 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
       <Field label="Lý do" htmlFor={reasonId} required hint={`${length} / 1.000 ký tự (ít nhất 10)`} error={error}>
         <textarea
           id={reasonId}
-          className="min-h-[96px] rounded-lg border border-line-strong p-2.5 text-[13px] outline-none focus:border-primary"
+          className="min-h-[96px] rounded-lg border border-field p-2.5 text-[13px] outline-none focus:border-focus"
           maxLength={1000}
           value={reason}
           onChange={(e) => setReason(e.target.value)}

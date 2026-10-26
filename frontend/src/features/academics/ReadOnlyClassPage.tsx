@@ -33,6 +33,13 @@ export function ReadOnlyClassPage({
   onBack: () => void;
 }) {
   const [tab, setTab] = useState<ClassTab>(initialTab);
+  // Giữ tab trên URL để tải lại hoặc gửi link vẫn mở đúng tab.
+  const openTab = (next: ClassTab) => {
+    setTab(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", next);
+    window.history.replaceState(window.history.state, "", url);
+  };
   const [selected, setSelected] = useState<EnrollmentView | null>(null);
   const [detailError, setDetailError] = useState("");
   const [detailBusy, setDetailBusy] = useState(false);
@@ -101,7 +108,9 @@ export function ReadOnlyClassPage({
         subtitle={`${value.subject.code} · ${value.code} · ${value.term}`}
         onBack={onBack}
       />
-      {audience === "teacher" && <Tabs items={tabs} value={tab} onChange={setTab} label="Nội dung lớp" />}
+      {audience === "teacher" && <Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" />}
+      {detailError && <p role="alert" className="text-sm text-danger">{detailError}</p>}
+      {detailBusy && <p role="status" className="text-sm text-muted">Đang tải sinh viên…</p>}
       {audience === "student" && (
         <div className={styles.studentLayout}>
           <div className={styles.stack}>
@@ -122,85 +131,80 @@ export function ReadOnlyClassPage({
           </aside>
         </div>
       )}
-      {audience === "teacher" && tab === "info" && (
-        <div className={styles.teacherOverviewGrid} data-teacher-overview="true">
-          <div
-            data-testid="overview-students-card"
-            data-class-overview-region="students"
-            className={styles.overviewSummaryCard}
-          >
-            <p className={styles.overviewSummaryLabel}>Sinh viên</p>
-            <p className={styles.overviewSummaryValue}>{studentSummaryCount}</p>
-            <p className={styles.overviewSummaryMeta}>Đang học trong lớp</p>
+      {audience === "teacher" && (
+        // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
+        <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
+        {tab === "info" && (
+          <div className={styles.teacherOverviewGrid} data-teacher-overview="true">
+            <div
+              data-testid="overview-students-card"
+              data-class-overview-region="students"
+              className={styles.overviewSummaryCard}
+            >
+              <p className={styles.overviewSummaryLabel}>Sinh viên</p>
+              <p className={styles.overviewSummaryValue}>{studentSummaryCount}</p>
+              <p className={styles.overviewSummaryMeta}>Đang học trong lớp</p>
+            </div>
+            <section
+              data-testid="overview-metadata-panel"
+              data-class-overview-region="metadata"
+              className={`${styles.panel} ${styles.overviewMetadataPanel}`}
+            >
+              <h2>Thông tin lớp</h2>
+              <dl className={styles.compactReadList}>
+                <dt>Giảng viên</dt>
+                <dd>{value.teacher ? `${value.teacher.name} · ${value.teacher.email}` : "Chưa phân công"}</dd>
+                <dt>Trạng thái</dt>
+                <dd>
+                  <StatusBadge status={value.status} />
+                </dd>
+                <dt>Mô tả</dt>
+                <dd>
+                  {!normalizedDescription ? (
+                    "Chưa có mô tả."
+                  ) : !isLongDescription ? (
+                    <span className={styles.descriptionText}>{normalizedDescription}</span>
+                  ) : (
+                    <div className={styles.descriptionBlock}>
+                      <span className={styles.descriptionText}>
+                        {isDescriptionExpanded
+                          ? normalizedDescription
+                          : `${normalizedDescription.slice(0, DESCRIPTION_PREVIEW_LIMIT).trimEnd()}…`}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.textButton}
+                        aria-expanded={isDescriptionExpanded}
+                        onClick={() => setExpandedDescClassId(isDescriptionExpanded ? null : value.id)}
+                      >
+                        {isDescriptionExpanded ? "Thu gọn" : "Xem đầy đủ"}
+                      </button>
+                    </div>
+                  )}
+                </dd>
+              </dl>
+            </section>
+            <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
           </div>
-          <section
-            data-testid="overview-metadata-panel"
-            data-class-overview-region="metadata"
-            className={`${styles.panel} ${styles.overviewMetadataPanel}`}
-          >
-            <h2>Thông tin lớp</h2>
-            <dl className={styles.compactReadList}>
-              <dt>Môn</dt>
-              <dd>
-                {value.subject.code} · {value.subject.name}
-              </dd>
-              <dt>Mã lớp</dt>
-              <dd className={styles.code}>{value.code}</dd>
-              <dt>Học kỳ</dt>
-              <dd>{value.term}</dd>
-              <dt>Giảng viên</dt>
-              <dd>{value.teacher ? `${value.teacher.name} · ${value.teacher.email}` : "Chưa phân công"}</dd>
-              <dt>Trạng thái</dt>
-              <dd>
-                <StatusBadge status={value.status} />
-              </dd>
-              <dt>Mô tả</dt>
-              <dd>
-                {!normalizedDescription ? (
-                  "Chưa có mô tả."
-                ) : !isLongDescription ? (
-                  <span className={styles.descriptionText}>{normalizedDescription}</span>
-                ) : (
-                  <div className={styles.descriptionBlock}>
-                    <span className={styles.descriptionText}>
-                      {isDescriptionExpanded
-                        ? normalizedDescription
-                        : `${normalizedDescription.slice(0, DESCRIPTION_PREVIEW_LIMIT).trimEnd()}…`}
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.textButton}
-                      aria-expanded={isDescriptionExpanded}
-                      onClick={() => setExpandedDescClassId(isDescriptionExpanded ? null : value.id)}
-                    >
-                      {isDescriptionExpanded ? "Thu gọn" : "Xem đầy đủ"}
-                    </button>
-                  </div>
-                )}
-              </dd>
-            </dl>
-          </section>
-          <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
+        )}
+        {tab === "students" && (
+          <>
+            <EnrollmentPanel
+              students={activeStudents}
+              groupNames={groupNames?.classId === value.id ? groupNames.names : undefined}
+              onView={(student) => void selectStudent(student)}
+            />
+            <SlotOutlet
+              slot={teacherClassTabs}
+              props={{ classId: value.id, tab: "students" as const, onGroupNamesLoaded }}
+            />
+          </>
+        )}
+        {(tab === "materials" || tab === "evals" || tab === "gradebook") && (
+          <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab }} />
+        )}
         </div>
       )}
-      {audience === "teacher" && tab === "students" && (
-        <>
-          <EnrollmentPanel
-            students={activeStudents}
-            groupNames={groupNames?.classId === value.id ? groupNames.names : undefined}
-            onView={(student) => void selectStudent(student)}
-          />
-          <SlotOutlet
-            slot={teacherClassTabs}
-            props={{ classId: value.id, tab: "students" as const, onGroupNamesLoaded }}
-          />
-        </>
-      )}
-      {audience === "teacher" && (tab === "materials" || tab === "evals" || tab === "gradebook") && (
-        <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab }} />
-      )}
-      {detailError && <p role="alert">{detailError}</p>}
-      {detailBusy && <p role="status">Đang tải sinh viên…</p>}
       {selected && (
         <StudentDetailDialog classId={value.id} student={selected} onClose={() => setSelected(null)} />
       )}

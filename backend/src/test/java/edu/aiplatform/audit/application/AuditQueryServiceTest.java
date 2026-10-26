@@ -27,6 +27,9 @@ import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
+import edu.aiplatform.subjects.contract.SubjectRef;
+import edu.aiplatform.subjects.contract.SubjectStatus;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
@@ -37,6 +40,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -166,6 +170,43 @@ class AuditQueryServiceTest {
         assertThat(event.getValue().details()).containsEntry("actorId", target.toString())
                 .containsEntry("action", "ROLE_CHANGED").containsEntry("result", "DENIED")
                 .doesNotContainKey("objectType");
+    }
+
+    @Test
+    void filterOrPagingWithoutRecordViewIsNotAudited() {
+        when(repository.count(any())).thenReturn(0L);
+
+        service.query(admin, new AuditFilter(null, null, null, null, null, null, null), PageRequest.of(1, 50), false);
+
+        verify(audit, never()).record(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void objectLabelShowsAccountEmailAndSubjectCodeAndName() {
+        UUID account = UUID.randomUUID();
+        UUID subject = UUID.randomUUID();
+        ISubjectQuery subjectQuery = mock(ISubjectQuery.class);
+        ObjectProvider<ISubjectQuery> subjects = mock(ObjectProvider.class);
+        when(subjects.getIfAvailable()).thenReturn(subjectQuery);
+        when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(
+                new SubjectRef(subject, "SWD392", "Kiến trúc phần mềm", SubjectStatus.ACTIVE, null)));
+        when(accounts.getContact(account)).thenReturn(Optional.of(contact(account, "sv@fpt.edu.vn")));
+        AuditRow onAccount = new AuditRow(UUID.randomUUID(), null, "ROLE_CHANGED", "ACCOUNT", account.toString(),
+                "SUCCESS", null, "{}", NOW);
+        AuditRow onSubject = new AuditRow(UUID.randomUUID(), null, "SUBJECT_UPDATED", "SUBJECT", subject.toString(),
+                "SUCCESS", null, "{}", NOW);
+        AuditRow onBackup = new AuditRow(UUID.randomUUID(), null, "BACKUP_FAILED", "BACKUP", "bk-1", "FAILURE",
+                null, "{}", NOW);
+        when(repository.count(any())).thenReturn(3L);
+        when(repository.find(any(), anyLong(), anyInt())).thenReturn(List.of(onAccount, onSubject, onBackup));
+        AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
+                JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), subjects, null);
+
+        List<AuditLogView> items = withNames.query(admin, null, PageRequest.of(0, 50), false).getContent();
+
+        assertThat(items).extracting(AuditLogView::objectLabel)
+                .containsExactly("sv@fpt.edu.vn", "SWD392 · Kiến trúc phần mềm", null);
     }
 
     @Test

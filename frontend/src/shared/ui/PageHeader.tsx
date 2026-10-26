@@ -13,11 +13,11 @@ type Props = {
   actions?: ReactNode;
 };
 
-/** Đầu trang: đường dẫn nhỏ phía trên, tiêu đề chữ có chân, một dòng mô tả, thao tác căn đáy bên phải. */
+/** Đầu trang: đường dẫn nhỏ phía trên, tiêu đề chữ đậm, một dòng mô tả, thao tác căn đáy bên phải. */
 export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: Props) {
   const trail = breadcrumb?.slice(0, -1) ?? [];
   return (
-    <header className="flex animate-rise flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-1">
+    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-1">
       <div className="flex min-w-0 flex-[1_1_22rem] flex-col gap-2.5">
         {(backHref || trail.length > 0) && (
           <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
@@ -44,7 +44,7 @@ export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: P
             ))}
           </nav>
         )}
-        <h1 className="flex flex-wrap items-center gap-3 font-display text-[34px] leading-[1.1] tracking-[-0.025em] text-ink sm:text-[40px]">
+        <h1 className="flex flex-wrap items-center gap-3 font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink sm:text-[32px]">
           {title}
         </h1>
         {subtitle && <p className="text-[13.5px] text-muted">{subtitle}</p>}

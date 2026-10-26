@@ -11,7 +11,7 @@ import type { QuestionContent, QuizDetailsInput, QuizItemView, QuizSettings } fr
 
 export type DraftItem = { item: QuizItemView; points: string };
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
 /** "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. */
 export function QuizItemList({ items, onChange, editable, onEditInline }: {

@@ -142,7 +142,7 @@ export function AiSummaryCards({ data }: { data: Data }) {
         <Card icon="speed" title="Hạn mức của trường hôm nay">
           {shared?.quota ? (
             <>
-              <p className="font-display text-[30px] leading-none text-ink">
+              <p className="font-display text-[26px] leading-none text-ink">
                 {formatTokens(shared.quota.used)} / {formatTokens(shared.quota.limit)}
               </p>
               <p className="text-xs text-muted">token đã dùng · đặt lại lúc 00:00</p>
@@ -153,11 +153,11 @@ export function AiSummaryCards({ data }: { data: Data }) {
         </Card>
       )}
       <Card icon="key" title="API cá nhân">
-        <p className="font-display text-[30px] leading-none text-ink">{keys} khóa</p>
+        <p className="font-display text-[26px] leading-none text-ink">{keys} khóa</p>
         <p className="text-xs text-muted">Chi phí tính vào tài khoản nhà cung cấp của bạn</p>
       </Card>
       <Card icon="smart_toy" title="Agent MCP">
-        <p className="font-display text-[30px] leading-none text-ink">
+        <p className="font-display text-[26px] leading-none text-ink">
           {agents} / {MAX_AGENTS}
         </p>
         <p className="text-xs text-muted">agent còn hiệu lực</p>

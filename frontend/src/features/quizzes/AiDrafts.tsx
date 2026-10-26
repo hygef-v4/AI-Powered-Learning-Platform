@@ -11,7 +11,7 @@ import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "./types";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus";
 const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
