@@ -16,6 +16,7 @@ import type { AiDraft, AiSourcePreview, GradingMode, Material } from "./types";
 
 type Props = {
   assignmentId: string;
+  initialDraftId?: string;
   version: number;
   currentPartCount: number;
   currentTitle: string;
@@ -48,6 +49,7 @@ type SourceSummary = {
 /** t13b Tạo nháp bằng AI (F6; BR-U07-50, 51): đề xuất xem trước, Áp dụng thay khung, Bỏ thì bài không đổi. */
 export function AiDraftDialog({
   assignmentId,
+  initialDraftId,
   version,
   currentPartCount,
   currentTitle,
@@ -75,12 +77,22 @@ export function AiDraftDialog({
   const [replaceTitle, setReplaceTitle] = useState(
     !currentTitle.trim() || currentTitle.trim() === "Bài tập chưa đặt tên",
   );
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(Boolean(initialDraftId));
   const [error, setError] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const ref = useRef(requestRef());
   const awaiting = busy || draft?.status === "PENDING";
+
+  useEffect(() => {
+    if (!initialDraftId) return;
+    const controller = new AbortController();
+    assignmentsApi.aiDraft(assignmentId, initialDraftId, controller.signal).then(
+      loaded => { if (!controller.signal.aborted) { setDraft(loaded); setBusy(false); } },
+      error => { if (!controller.signal.aborted) { setError(errorMessage(error)); setBusy(false); } },
+    );
+    return () => controller.abort();
+  }, [assignmentId, initialDraftId]);
 
   useEffect(() => {
     let active = true;

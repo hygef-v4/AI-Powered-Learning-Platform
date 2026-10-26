@@ -97,7 +97,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [message, setMessage] = useState<{ tone: "danger" | "success"; text: string } | null>(null);
   const [activePart, setActivePart] = useState<string | null>(null);
+  const proposalId = params.get("proposalId") ?? undefined;
   const [dialog, setDialog] = useState<"ai" | "retire" | "delete" | "settings" | "schedule" | null>(null);
+  const openedMcpProposal = useRef<string | null>(null);
   const [preview, setPreview] = useState(false);
   const version = useRef(0);
   const detailRef = useRef<AssignmentDetail | null>(null);
@@ -141,6 +143,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
     const suffix = query.toString();
     router.replace(`/assignments/${encodeURIComponent(id)}${suffix ? `?${suffix}` : ""}`, { scroll: false });
   }, [detail, id, params, router]);
+
+  useEffect(() => {
+    if (!proposalId || detail?.id !== id || !detail.permissions.canEditContent || detail.status !== "DRAFT") return;
+    const key = `${id}:${proposalId}`;
+    if (openedMcpProposal.current === key) return;
+    openedMcpProposal.current = key;
+    setDialog("ai");
+  }, [detail, id, proposalId]);
 
   // Rubric của các mục đã có trên server; mục mới chỉ tải phần chưa có, rubric đang sửa dở giữ bản đang sửa.
   const partsKey = detail?.parts.map((part) => part.partId).join("|") ?? "";
@@ -562,8 +572,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
           )}
         </Dialog>
       )}
-      {dialog === "ai" && (
-        <AiDraftDialog assignmentId={id} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
+      {dialog === "ai" && detail.permissions.canEditContent && detail.status === "DRAFT" && (
+        <AiDraftDialog assignmentId={id} initialDraftId={proposalId} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
           currentTitle={title} currentInstructions={instructions} gradingMode={detail.gradingMode}
           prepareApply={async () => {
             if (!await save()) throw new Error("Không áp dụng được vì còn nội dung chưa lưu. Kiểm tra trạng thái lưu rồi thử lại.");
