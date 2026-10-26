@@ -6644,3 +6644,62 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Context**: Construction, U06 kiểm thử với khóa AI thật
 
 ---
+
+## U09 AI delivery plan and requested Gemini handoff
+**Timestamp**: 2026-10-26T03:12:18Z
+**User Input**: "giúp tôi ktra và lập plan fix bug sau đó đưa cho gemini đang mở làm"
+**Additional User Input**: "\"C:\Users\Quang Hung\Downloads\Bao_cao_7A1.pdf\" với lại giúp tôi tham khảo ý tưởng chấm điểm với lấy feedback trong này, đề xuất hệ thống tôi nên thêm feedback như tnao cho rõ ràng"
+**AI Response**: Investigated task READY/handler_done=false versus proposal PENDING; eventual proposal READY approximately 87 seconds after provider completion. Prepared construction/plans/2026-10-26-u09-ai-result-delivery.md; no source edits. Existing Gemini 4 Argon selected for implementation handoff. Root cause not asserted without reproduction.
+**Context**: Construction planning; user authorized plan and delegation. Additional PDF feedback analysis is separate scope.
+
+---
+Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-46a7-b1d4-cd188909f564; subsequent output showed ReadFile tools running. Read all 8 reference PDF pages and visually inspected rendered page 1. Saved construction/plans/2026-10-26-u09-feedback-recommendations.md; no student identities copied into recommendations and no feedback feature implemented.
+
+## U09 AI Result Delivery Implementation Handoff Start (Argon 4)
+**Timestamp**: 2026-10-26T03:13:20Z
+**User Input**: "User-authorized implementation handoff: read AGENTS.md, CLAUDE.md and aidlc-docs/construction/plans/2026-10-26-u09-ai-result-delivery.md, then implement the plan sequentially in this current checkout. Investigate the proven 87-second READY-to-proposal delay, reproduce its actual cause before fixing, add safe diagnostics, regression tests and accurate resilient UI progress. Do not simply shorten the scanner interval. Preserve grades and user changes. No commit/push/merge/deploy/key/model changes, no subagents. Avoid Maven clean while the owned backend is running; isolate or stop/restart that process safely. Complete appropriate automated checks, write the specified implementation report and full user manual test results/guide; distinguish verified UI success from pending tests. The separate Bao_cao_7A1.pdf feedback-design request remains with Codex and must not expand this bugfix. Proceed with the authorized work now and report when finished."
+**AI Response**: "Loaded AGENTS.md, CLAUDE.md, AI-DLC common/construction rules, aidlc-state.md, audit.md, and aidlc-docs/construction/plans/2026-10-26-u09-ai-result-delivery.md. Starting sequential execution of Task 1 (Reproduce and identify the failing boundary)."
+**Context**: Construction Phase — U09 AI result delivery implementation handoff execution.
+
+---
+
+## U09 structured feedback plan and Gemini continuation
+**Timestamp**: 2026-10-26T03:26:53Z
+**User Input**: Giúp tôi lập plan sửa feedback và đưa cho gemini làm luôn
+**AI Response**: Prepared construction/plans/2026-10-26-u09-structured-feedback.md from the approved recommendations. Existing Gemini will execute after the result-delivery bugfix checkpoint. Includes item evidence/reason/improvement, teacher review, draft persistence, legacy/group/history compatibility, published-student DTO privacy, automated verification and a full user UI guide. No code changes by Codex in this planning turn.
+**Context**: User authorized feedback implementation handoff. No commit/push, no PDF transmission, no live grade finalization/publication.
+
+---
+
+---
+
+## U09 AI Result Delivery Checkpoint & Structured Feedback Follow-up Authorization
+**Timestamp**: 2026-10-26T04:03:00Z
+**User Input**: "User-authorized FOLLOW-UP scope: user now explicitly requested feedback implementation, superseding the earlier instruction to defer it. Finish your current AI-result-delivery diagnosis/fix verification and report checkpoint first, then continue directly with aidlc-docs/construction/plans/2026-10-26-u09-structured-feedback.md. Reference 2026-10-26-u09-feedback-recommendations.md..."
+**AI Response**: Completed verification and report checkpoint for `aidlc-docs/construction/plans/2026-10-26-u09-ai-result-delivery.md` (58/58 backend tests including PostgreSQL Testcontainers `EvaluationVersionIntegrationTest`, 38/38 frontend grading tests, `eslint .` and `tsc --noEmit` 0 errors, `git diff --check` 0 errors; report written to `aidlc-docs/construction/build-and-test/2026-10-26-u09-ai-result-delivery-report.md`). Proceeding directly with sequential implementation of `aidlc-docs/construction/plans/2026-10-26-u09-structured-feedback.md`.
+**Context**: Construction Phase - U09 AI Result Delivery Checkpoint Complete; U09 Structured Grading Feedback Implementation Starting.
+
+
+---
+
+## U09 Structured Grading Feedback Implementation & Verification Complete (Argon 4)
+**Timestamp**: 2026-10-26T04:43:00Z
+**User Input**: "N/A - sequential completion of Tasks 1–5 of aidlc-docs/construction/plans/2026-10-26-u09-structured-feedback.md after AI result delivery checkpoint."
+**AI Response**: Implemented structured grading feedback end-to-end across backend (`V1504__structured_grading_feedback.sql`, `GradingFeedback`, `GradingFeedbackValidator`, `Evaluation`, `EvaluationHistory`, `GradingCommands`, `GradingJson`, `GradingViews`, `GradingService`, `GradebookService`, `GradingPromptBuilder`, `GradingProposalValidator`, `GradingProposalTransactions`, `GradingProposalService`, `HttpProviderGateway.omitGeminiArrayMaxima`) and frontend (`types.ts`, `StructuredFeedbackSection.tsx`, `SubmissionViewer.tsx`, `RubricChecklistPanel.tsx`, `GradingForm.tsx`, `AiProposalPanel.tsx`, `useGradingWorkspace.ts`, `GradingWorkspacePage.tsx`, `BatchActionDialog.tsx`, `StudentGradePanel.tsx`, `structured-feedback.test.tsx`). Verified backend suite (57/57 tests across 12 classes including PostgreSQL Testcontainers `EvaluationVersionIntegrationTest` and `ArchitectureTest`), frontend grading suite (41/41 tests across 5 files), ESLint (0 errors/warnings), TypeScript `tsc --noEmit` (0 errors), and `git diff --check` (0 errors). Wrote `aidlc-docs/construction/build-and-test/2026-10-26-u09-structured-feedback-report.md` and `aidlc-docs/construction/build-and-test/2026-10-26-u09-structured-feedback-manual-test-guide.md` (15 manual UI cases marked `Pending` for user verification). Preserved all AI result delivery changes, reports, and live evaluation records without committing, pushing, or mutating live grades.
+**Context**: Construction Phase - U09 AI Result Delivery & Structured Grading Feedback Implementation Complete; awaiting user UI verification.
+
+## U09 feedback missing-evidence live fix
+**Timestamp**: 2026-10-26T05:00:10Z
+**User Input**: cần làm gì để fix lỗi này
+**AI Response**: Reproduced rejection as FEEDBACK_MISSING_EVIDENCE on a UI proposal retry. Schema allowed null evidence with requiresReview=false, while callback rejected it. Added fixed safe diagnostics, evidence-or-explicit-review schema branches and explicit zero-score/uncertainty prompt instructions. Regression demonstrated the old mismatch; 31 focused tests passed. Existing Gemini UI proposal version 4 reached READY with all 9 feedback items in 7.636 seconds; inspected first item's evidence/reason/submission link. No grade apply/save/finalize/publish, no key/model change, no commit/push.
+**Context**: Follow-up to Gemini structured feedback implementation; preserved all existing uncommitted work. Report in construction/build-and-test/2026-10-26-u09-feedback-evidence-fix.md.
+
+---
+
+## U09 scoped local commits
+**Timestamp**: 2026-10-26T05:10:43Z
+**User Input**: Giúp tôi chia commit rõ ràng chưa push
+**AI Response**: Reviewed current changes and partitioned code into four local English commits: 37a73624 AI delivery, bd2b22b6 structured-feedback backend, ea2e97e7 teacher/student UI and resilient polling, f45264cf evidence-or-review schema fix and regressions. Used index-only content partitioning for shared files; working source remained unchanged. Fresh backend suite: 73/73 tests; frontend grading: 76/76 tests in 10 files; lint and typecheck exit 0. Documentation is being grouped as the fifth commit; temporary screenshots excluded.
+**Context**: User explicitly authorized local commits, superseding previous no-commit constraints. No push/merge/deploy. Owned backend stopped before Maven tests and restarted afterward. Live AI success remains recorded in the separate evidence-fix report; full manual acceptance remains pending.
+
+---

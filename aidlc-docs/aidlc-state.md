@@ -888,3 +888,33 @@ Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghi�
 - [x] Frontend tự merge và khớp staging; backend, CI guard và sửa notification của nhánh hiện tại giữ nguyên. Không sửa application source thủ công khi giải conflict.
 - [x] Kiểm mới sau merge: frontend 89/89 file, 544/544 test đạt (exit 0); ESLint và tsc --noEmit đạt (exit 0); diff/conflict check đạt.
 - Chuẩn bị local merge commit với hai parent; kết quả commit và working-tree clean xác minh bằng Git ngay sau commit. Không push/deploy, không chạy lại backend suite hoặc UI/SMTP runtime vì phần đó không đổi. UI U09 manual acceptance từ staging vẫn pending, không lấy acceptance B2/B8 thay thế.
+
+## U09 AI delivery delay investigation and Gemini handoff - 2026-10-26
+- [x] Verified provider completion at 10:02:23 and proposal completion at 10:03:50; initial delivery failure cause remains unproven.
+- [x] Prepared construction/plans/2026-10-26-u09-ai-result-delivery.md with diagnosis, delivery/idempotency regression coverage, accurate UI progress and manual acceptance guide.
+- [ ] Existing Gemini 4 Argon to implement and report; implementation and live UI acceptance remain pending.
+- [ ] Separate PDF-based feedback-design recommendations requested; do not expand the delivery bugfix automatically.
+- [x] Read the 8-page reference PDF and saved construction/plans/2026-10-26-u09-feedback-recommendations.md; feedback implementation not started.
+
+## U09 structured feedback implementation handoff - 2026-10-26
+- [x] User approved implementation of feedback recommendations; scoped plan saved in construction/plans/2026-10-26-u09-structured-feedback.md.
+- [x] Plan covers optional structured persistence, AI schema/validation, teacher review/editing, student publication privacy, legacy/group compatibility and 15 manual UI cases.
+- [ ] Existing Gemini 4 Argon to execute sequentially after delivery-fix verification; implementation and UI acceptance pending. Analytics/export deferred.
+
+
+## U09 AI result delivery & structured feedback implementation complete (Argon 4) - 2026-10-26
+- [x] Phase 1 (`construction/plans/2026-10-26-u09-ai-result-delivery.md`): Diagnosed and fixed the 87-second `READY`-to-proposal delivery lag (`AiTaskService.deliverResultSafely`, `JobDispatcher` `DELIVER_AI_RESULT` immediate enqueue, `GradingProposalResultHandler` idempotency, `HttpProviderGateway.omitGeminiArrayMaxima`, `useGradingWorkspace`/`AiProposalPanel` accurate progress & polling). Verified `58/58` backend tests and `38/38` frontend tests PASS. Report: `construction/build-and-test/2026-10-26-u09-ai-result-delivery-report.md`.
+- [x] Phase 2 (`construction/plans/2026-10-26-u09-structured-feedback.md`): Implemented backward-compatible structured grading feedback (`V1504__structured_grading_feedback.sql`, `GradingFeedback`, `GradingFeedbackValidator`, `GradingPromptBuilder` with dynamic token budget & 30-item cap, `GradingProposalValidator`, `GradingProposalTransactions`, `GradingService` finalize guard + student DTO sanitization, and frontend `StructuredFeedbackSection`, `RubricChecklistPanel`, `GradingForm`, `AiProposalPanel`, `SubmissionViewer`, `useGradingWorkspace`, `BatchActionDialog`, `StudentGradePanel`).
+- [x] Automated checks PASS: Backend `57/57` tests across 12 classes (including `EvaluationVersionIntegrationTest` & `ArchitectureTest`), Frontend `41/41` grading tests across 5 files (including `structured-feedback.test.tsx`), `eslint` `0` errors/warnings, `tsc --noEmit` `0` errors, `git diff --check` `0` errors.
+- [ ] Live UI acceptance pending user execution per `construction/build-and-test/2026-10-26-u09-structured-feedback-manual-test-guide.md` (15 manual cases initialized as `Pending`). Implementation report: `construction/build-and-test/2026-10-26-u09-structured-feedback-report.md`. No commit, push, merge, deploy, or live grade mutation performed.
+
+## U09 feedback evidence rejection fix - 2026-10-26
+- [x] Reproduced FEEDBACK_MISSING_EVIDENCE using the existing teacher UI and connection; added safe fixed-code rejection diagnostics.
+- [x] Aligned AI schema/prompt with evidence-or-explicit-review validation. Regression failed before fix; final focused suite 31/31 passed.
+- [x] Live UI proposal version 4 READY, 9 structured feedback items, task duration 7.636s; first item evidence/reason/link inspected. No grade apply/save/finalize/publish.
+- [x] Report: construction/build-and-test/2026-10-26-u09-feedback-evidence-fix.md. Backend/worker restarted; old Docker worker remains stopped.
+
+## U09 local commit grouping and fresh verification - 2026-10-26
+- [x] Created application commits 37a73624 (AI delivery), bd2b22b6 (structured feedback backend), ea2e97e7 (grading UI), and f45264cf (evidence validation regression fix). All titles/bodies are English.
+- [x] Fresh pre-commit checks: backend focused 12-class suite 73 tests, no failures/errors/skips; frontend grading 10 files / 76 tests passed; ESLint and TypeScript passed.
+- [x] Documentation grouped for a final local commit. Screenshots under .tmp remain excluded. No push requested.
