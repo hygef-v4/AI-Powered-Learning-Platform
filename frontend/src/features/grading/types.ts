@@ -2,6 +2,38 @@ export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
 export type Checks = Record<string, string[]>;
 export type ItemScores = Record<string, Record<string, Decimal>>;
+export type StructuredFeedbackSummary = {
+  strengths: string[];
+  improvements: string[];
+  nextSteps: string[];
+};
+export type StructuredFeedbackItem = {
+  rubricId: string;
+  itemId: string;
+  evidence: string | null;
+  reason: string;
+  suggestion: string | null;
+  evidenceBlockId: string | null;
+  requiresReview: boolean;
+  reviewReason: string | null;
+};
+export type StructuredFeedback = {
+  schemaVersion: number;
+  summary: StructuredFeedbackSummary;
+  items: StructuredFeedbackItem[];
+};
+export type StudentRubricItem = {
+  rubricId: string;
+  partId: string;
+  criterionTitle: string;
+  itemId: string;
+  itemText: string;
+  awardedPoints: Decimal;
+  maxPoints: Decimal;
+  evidence: string | null;
+  reason: string | null;
+  suggestion: string | null;
+};
 export type Rubric = {
   rubricId: string;
   partId: string;
@@ -30,11 +62,23 @@ export type Evaluation = {
   version: number;
   rubricChecks: string;
   rubricItemScores?: ItemScores;
+  structuredFeedback?: StructuredFeedback | null;
+  reviewedItemScores?: ItemScores;
+  acknowledgedReviewItems?: Checks;
+  memberOverride?: boolean;
   adjustment: Decimal;
   adjustmentReason: string | null;
   feedback: string | null;
   publishedAt: string | null;
-  changes: { actorId: string; at: string; before: Decimal; after: Decimal; reason: string }[];
+  changes: {
+    actorId: string;
+    at: string;
+    before: Decimal;
+    after: Decimal;
+    reason: string;
+    previousItemScores?: ItemScores;
+    previousStructuredFeedback?: StructuredFeedback | null;
+  }[];
 };
 export type Detail = {
   evaluation: Evaluation;
@@ -100,11 +144,16 @@ export type Save = {
   changeReason: string | null;
   usedProposalId: string | null;
   itemScoresByRubric?: ItemScores;
+  structuredFeedback?: StructuredFeedback | null;
+  clearStructuredFeedback?: boolean;
+  acknowledgedReviewItems?: Checks;
+  reviewedItemScores?: ItemScores;
 };
 export type Proposal = {
   id: string;
   versionNo: number;
   taskId?: string | null;
+  taskState?: "QUEUED" | "RUNNING" | "READY" | "FAILED" | "UNKNOWN" | "CANCELLED" | string | null;
   status: string;
   origin: string;
   agentLabel?: string | null;
@@ -119,6 +168,7 @@ export type Proposal = {
     itemScoresByRubric?: ItemScores;
     feedback?: string;
     sections?: { partId: string; feedback: string }[];
+    structuredFeedback?: StructuredFeedback | null;
   };
 };
 export type AiRequest = {
@@ -153,6 +203,10 @@ export type StudentGrade = {
   publishedAt: string | null;
   updated: boolean;
   rubricChecks: string | null;
+  structuredSummary?: StructuredFeedbackSummary | null;
+  rubricItems?: StudentRubricItem[];
+  rubricScore?: Decimal | null;
+  memberOverride?: boolean;
 };
 export const statusLabels: Record<string, string> = {
   PENDING: "Chờ chấm",
@@ -179,6 +233,10 @@ export const activityLabels: Record<string, string> = {
 export type GradingFormValues = {
   checks: Checks;
   itemScores?: ItemScores;
+  structuredFeedback?: StructuredFeedback | null;
+  clearStructuredFeedback?: boolean;
+  acknowledgedReviewItems?: Checks;
+  reviewedItemScores?: ItemScores;
   adjustment: string;
   adjustmentReason: string;
   feedback: string;

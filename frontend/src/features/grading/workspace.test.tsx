@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { GradingWorkspacePage } from "./GradingWorkspacePage";
 import { ApiError } from "@/shared/api/client";
@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   detail: vi.fn(),
   save: vi.fn(),
   proposals: vi.fn(),
+  request: vi.fn(),
   push: vi.fn(),
   task: vi.fn(),
 }));
@@ -44,11 +45,15 @@ const detail: Detail = {
   current: true,
 };
 beforeEach(() => {
+  vi.useRealTimers();
   vi.resetAllMocks();
   mocks.detail.mockResolvedValue(detail);
   mocks.proposals.mockResolvedValue([]);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 describe("workspace save", () => {
   it("sends version and checklist, then moves to the next submission only after saving", async () => {
     mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
@@ -254,5 +259,203 @@ describe("AI proposal comparison and draft application", () => {
     const populatedHistoryHeading = await screen.findByRole("heading", { name: "Lịch sử sửa điểm" });
     expect(populatedHistoryHeading.closest("details")).toHaveAttribute("open");
     expect(screen.getByText(/Cộng điểm sơ đồ/)).toBeInTheDocument();
+  });
+});
+
+describe("AI proposal polling resilience and progress states", () => {
+  const rubricFixture = [
+    {
+      rubricId: "r1",
+      partId: "part-1",
+      maxPoints: 1,
+      criteria: [
+        {
+          criterionId: "c1",
+          title: "Kiến trúc",
+          items: [{ itemId: "i1", text: "Thực thể chính", points: 1 }],
+        },
+      ],
+    },
+  ];
+
+  it("transitions QUEUED -> RUNNING -> READY task with PENDING proposal -> READY proposal while preserving manual 0.5 edit", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.detail.mockResolvedValue({
+      ...detail,
+      evaluation: { ...detail.evaluation, maxScore: 1, rubricItemScores: {} },
+      rubrics: rubricFixture,
+    });
+    mocks.proposals
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK", source: "PERSONAL" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK", source: "PERSONAL" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "READY", origin: "AI_TASK", source: "PERSONAL" },
+      ])
+      .mockResolvedValue([
+        {
+          id: "p1",
+          versionNo: 1,
+          status: "READY",
+          origin: "AI_TASK",
+          source: "PERSONAL",
+          proposal: {
+            checks: { r1: ["i1"] },
+            itemScoresByRubric: { r1: { i1: 1 } },
+            score: 1,
+            feedback: "Đề xuất hoàn tất",
+          },
+        },
+      ]);
+
+    render(<GradingWorkspacePage evaluationId="e" />);
+    await act(async () => {});
+    const scoreInput = screen.getByRole("spinbutton", { name: "Điểm: Thực thể chính" });
+    fireEvent.change(scoreInput, { target: { value: "0.5" } });
+    expect(scoreInput).toHaveValue(0.5);
+
+    expect(screen.getByText("Đang chờ xử lý")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Áp dụng vào bản nháp" })).toBeDisabled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByText("AI đang chấm bài")).toBeInTheDocument();
+    expect(scoreInput).toHaveValue(0.5);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByText("Đã nhận kết quả AI, đang xử lý phản hồi")).toBeInTheDocument();
+    expect(scoreInput).toHaveValue(0.5);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Áp dụng vào bản nháp" })).toBeEnabled();
+    expect(scoreInput).toHaveValue(0.5);
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("recovers after a temporary network error without spamming duplicate error alerts", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.proposals
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
+      ])
+      .mockRejectedValueOnce(new Error("Temporary network error"))
+      .mockResolvedValue([
+        {
+          id: "p1",
+          versionNo: 1,
+          status: "READY",
+          origin: "AI_TASK",
+          proposal: { checks: {}, score: 8, feedback: "Đã hồi phục" },
+        },
+      ]);
+
+    render(<GradingWorkspacePage evaluationId="e" />);
+    await act(async () => {});
+    expect(screen.getByText("AI đang chấm bài")).toBeInTheDocument();
+
+    // First poll fails with transient error -> no error alert spam, schedules retry.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // Backoff poll succeeds -> proposal becomes READY.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
+    expect(screen.getByText("Đã hồi phục")).toBeInTheDocument();
+  });
+
+  it("stops polling on 403 error and surfaces the error once", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.proposals
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
+      ])
+      .mockRejectedValueOnce(new ApiError({ status: 403, title: "Forbidden", code: "FORBIDDEN" }));
+
+    render(<GradingWorkspacePage evaluationId="e" />);
+    await act(async () => {});
+    expect(screen.getByText("AI đang chấm bài")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    const callsAfter403 = mocks.proposals.mock.calls.length;
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15000);
+    });
+    expect(mocks.proposals).toHaveBeenCalledTimes(callsAfter403);
+  });
+
+  it("surfaces delayed status and Kiểm tra lại button after repeated poll failures, resuming existing request without a new AI job", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.proposals
+      .mockResolvedValueOnce([
+        { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
+      ])
+      .mockRejectedValueOnce(new Error("Poll timeout 1"))
+      .mockRejectedValueOnce(new Error("Poll timeout 2"))
+      .mockRejectedValueOnce(new Error("Poll timeout 3"))
+      .mockRejectedValueOnce(new Error("Poll timeout 4"))
+      .mockResolvedValue([
+        {
+          id: "p1",
+          versionNo: 1,
+          status: "READY",
+          origin: "AI_TASK",
+          proposal: { checks: {}, score: 9, feedback: "Hoàn tất sau khi kiểm tra lại" },
+        },
+      ]);
+
+    render(<GradingWorkspacePage evaluationId="e" />);
+    await act(async () => {});
+    expect(screen.getByText("AI đang chấm bài")).toBeInTheDocument();
+
+    for (const waitMs of [3000, 3000, 6000, 12000]) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(waitMs);
+      });
+    }
+
+    expect(screen.getByText(/Phản hồi AI đang mất nhiều thời gian hơn dự kiến/)).toBeInTheDocument();
+    const recheckBtn = screen.getByRole("button", { name: "Kiểm tra lại" });
+
+    await act(async () => {
+      fireEvent.click(recheckBtn);
+    });
+    expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
+    expect(screen.getByText("Hoàn tất sau khi kiểm tra lại")).toBeInTheDocument();
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it("cleans up polling timers on unmount", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.proposals.mockResolvedValue([
+      { id: "p1", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK" },
+    ]);
+
+    const { unmount } = render(<GradingWorkspacePage evaluationId="e" />);
+    await act(async () => {});
+    expect(screen.getByText("Đang chờ xử lý")).toBeInTheDocument();
+    expect(mocks.proposals).toHaveBeenCalledTimes(1);
+
+    unmount();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15000);
+    });
+    expect(mocks.proposals).toHaveBeenCalledTimes(1);
   });
 });

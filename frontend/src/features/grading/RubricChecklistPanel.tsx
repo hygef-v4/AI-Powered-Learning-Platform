@@ -1,6 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { Checks, ItemScores, Rubric } from "./types";
+import { RubricItemFeedback, isItemAcknowledged } from "./StructuredFeedbackSection";
+import type {
+  Checks,
+  ItemScores,
+  Rubric,
+  StructuredFeedback,
+  StructuredFeedbackItem,
+} from "./types";
 
 export function itemPoints(rubricId: string, itemId: string, max: number, checks: Checks, scores: ItemScores = {}) {
   return scores[rubricId]?.[itemId] ?? ((checks[rubricId] ?? []).includes(itemId) ? max : 0);
@@ -29,9 +36,34 @@ export function checklistPoints(rubrics: Rubric[], checks: Checks, scores: ItemS
     }, 0), 0), 0) / 100;
 }
 
-export function RubricChecklistPanel({ rubrics, checks, onChange, disabled = false, partTitles = {}, itemScores = {}, onScoresChange }: {
-  rubrics: Rubric[]; checks: Checks; onChange: (value: Checks) => void; disabled?: boolean;
-  partTitles?: Record<string, string>; itemScores?: ItemScores; onScoresChange?: (value: ItemScores) => void;
+export function RubricChecklistPanel({
+  rubrics,
+  checks,
+  onChange,
+  disabled = false,
+  partTitles = {},
+  itemScores = {},
+  onScoresChange,
+  structuredFeedback,
+  reviewedItemScores = {},
+  acknowledgedReviewItems = {},
+  validBlockIds,
+  onItemFeedbackChange,
+  onToggleAcknowledge,
+}: {
+  rubrics: Rubric[];
+  checks: Checks;
+  onChange: (value: Checks) => void;
+  disabled?: boolean;
+  partTitles?: Record<string, string>;
+  itemScores?: ItemScores;
+  onScoresChange?: (value: ItemScores, changedRubricId?: string, changedItemId?: string) => void;
+  structuredFeedback?: StructuredFeedback | null;
+  reviewedItemScores?: ItemScores;
+  acknowledgedReviewItems?: Checks;
+  validBlockIds?: Set<string>;
+  onItemFeedbackChange?: (item: StructuredFeedbackItem, currentAwardedPoints: number) => void;
+  onToggleAcknowledge?: (rubricId: string, itemId: string, acknowledged: boolean, currentAwardedPoints: number) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const pendingFocusRef = useRef<string | null>(null);
@@ -47,7 +79,7 @@ export function RubricChecklistPanel({ rubrics, checks, onChange, disabled = fal
     const selected = new Set(checks[rubricId] ?? []);
     if (Number(value) === max && validItemScore(value, max)) selected.add(itemId); else selected.delete(itemId);
     onChange({ ...checks, [rubricId]: [...selected] });
-    onScoresChange?.({ ...itemScores, [rubricId]: { ...itemScores[rubricId], [itemId]: value } });
+    onScoresChange?.({ ...itemScores, [rubricId]: { ...itemScores[rubricId], [itemId]: value } }, rubricId, itemId);
   }
   return <section aria-label="Chấm theo rubric">
     <h2 className="text-base font-bold text-ink">Chấm theo rubric</h2>
@@ -101,6 +133,11 @@ export function RubricChecklistPanel({ rubrics, checks, onChange, disabled = fal
               const full = Number(value) === max && valid;
               const inputId = `score-input-${rubric.rubricId}-${item.itemId}`;
               const errorId = `score-error-${rubric.rubricId}-${item.itemId}`;
+              const fbItem = structuredFeedback?.items?.find(
+                (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
+              );
+              const revScore = reviewedItemScores?.[rubric.rubricId]?.[item.itemId];
+              const ack = isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId);
               return <div key={item.itemId} className={`rounded-lg border px-2.5 py-2 text-sm leading-snug focus-within:ring-2 focus-within:ring-primary/30 ${!valid ? "border-danger-line bg-danger-soft/40" : Number(value) > 0 ? "border-primary/30 bg-primary/5" : "border-line bg-shell/60"}`}>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <label htmlFor={inputId} className="min-w-0 flex-1 cursor-pointer break-words text-ink">
@@ -130,6 +167,31 @@ export function RubricChecklistPanel({ rubrics, checks, onChange, disabled = fal
                   </div>
                 </div>
                 {!valid && <p id={errorId} role="alert" className="mt-1.5 text-xs text-danger">Nhập từ 0 đến {max} điểm, tối đa 2 chữ số thập phân.</p>}
+                {(fbItem || onItemFeedbackChange) && (
+                  <RubricItemFeedback
+                    rubricId={rubric.rubricId}
+                    itemId={item.itemId}
+                    itemText={item.text}
+                    awardedPoints={valid ? Number(value) : NaN}
+                    maxPoints={max}
+                    feedbackItem={fbItem}
+                    reviewedScore={revScore}
+                    acknowledged={ack}
+                    validBlockIds={validBlockIds}
+                    editable={Boolean(onItemFeedbackChange)}
+                    disabled={disabled}
+                    onChangeItem={
+                      onItemFeedbackChange
+                        ? (updated) => onItemFeedbackChange(updated, valid ? Number(value) : 0)
+                        : undefined
+                    }
+                    onToggleAcknowledge={
+                      onToggleAcknowledge
+                        ? (checked) => onToggleAcknowledge(rubric.rubricId, item.itemId, checked, valid ? Number(value) : 0)
+                        : undefined
+                    }
+                  />
+                )}
               </div>;
             })}
           </div>)}
