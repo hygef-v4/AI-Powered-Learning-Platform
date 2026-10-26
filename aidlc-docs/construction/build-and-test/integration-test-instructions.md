@@ -26,3 +26,7 @@ Run existing Testcontainers tests using `mvn -B verify` from `backend/` once Eng
 | SSE/session | Two actual app instances with real U12 hub; read from another tab, reconnect/logout/account disable and guessed foreign channel. Check account isolation and delivery latency. |
 
 Inspect database state and captured mail, not only HTTP success. Record event correlation IDs and sanitized timings without bodies, tokens or addresses. Stop only the test stack you started using the same compose files with `stop`; preserve volumes/evidence for investigation. Reset only tester-owned data through the agreed fixture lifecycle.
+
+## MCP staff expansion — 2026-10-26
+
+See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.

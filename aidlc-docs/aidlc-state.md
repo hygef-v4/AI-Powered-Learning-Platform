@@ -923,3 +923,47 @@ Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghi�
 - [x] Removed summary next steps from teacher/student UI while preserving historical data; item guidance labelled Cách cải thiện.
 - [x] New prompt requests no summary.nextSteps and concrete guidance per reduced-score item; 79 frontend and 8 backend tests passed, lint/typecheck passed.
 - [x] UI proposal version 6 READY with 9/9 nonblank item suggestions and zero summary next steps. Opened the first item to verify guidance. No grade apply/save/finalize/publish. Changes uncommitted.
+
+## MCP and AI configuration readiness audit - 2026-10-26
+
+- [x] Inspected current configuration and runtime. Platform MCP is reachable on 3000/8080; no teacher credential existed. Existing agent Unity registrations were preserved; they do not authenticate to this platform.
+- [x] Added read-only MCP diagnostic and protocol fixture, corrected setup/model/source guidance. Backend 81/81 tests, frontend connection/history 9/9 tests, diagnostic 5 scenarios on PowerShell 7 and 5.1 passed; syntax/JSON/link/diff checks passed.
+- [x] Restarted host API/worker; health UP, frontend running, old Docker worker stopped. Chrome connection page verified as student with zero keys/agents. No key/model/client credential or grade changes, commit, push, or deploy.
+- [x] Report and full self-test guide: construction/build-and-test/2026-10-26-mcp-ai-readiness-report.md and 2026-10-26-mcp-ai-manual-test-guide.md.
+- [x] After explicit approval, registered a 7-day student READ_ONLY token and used Codex CLI global config with its environment variable. Discovered 3 read-only tools and successfully called `read_authorized_material`; token value was not printed/stored and clipboard was cleared. Browser keeps token dialog in a handoff tab and a separate masked status tab.
+- [ ] Remaining acceptance: fresh quiz, grading, Practice and teacher-scoped UI tests; student Practice needs a personal AI key. Teacher Gemini has historical successful assignment/grading tasks; no new provider generation was made in this audit.
+
+## Teacher UI and Gemini assignment draft acceptance - 2026-10-26
+- [x] Logged into teacher in a separate browser; existing student Chrome/MCP token handoff session preserved.
+- [x] Existing Gemini connection test returned Đạt. New QA assignment proposal passed after correcting an AI-generated rubric total of 11.33/10; final proposal had 3 questions, 9 criteria, and 10.00/10.
+- [x] Applied only to a new unpublished QA draft, restored its QA title, and reloaded to confirm persistence. No published grade changed.
+- [x] Teacher-scoped MCP configured through LEARNING_PLATFORM_MCP_TOKEN in Windows user environment; Codex config references only the variable name. Fresh process tool discovery and read_assignment_context on the QA draft succeeded without writes.
+- [ ] Quiz AI, test-submission grading proposal, Practice feedback, manual fractional score input and limit validation remain pending. Full evidence: construction/build-and-test/2026-10-26-mcp-ai-readiness-report.md and manual-test-guide.md.
+
+## MCP capability review across all roles - 2026-10-26
+
+- [x] Reviewed Student, Teacher, Subject Manager and Admin permissions, all nine registered domain MCP tools and existing assignment/quiz/question-bank/grading/Practice AI flows.
+- [x] Documented missing discovery, create-assignment/create-quiz, question-bank proposals, complete individual/group grading context and batch writes; separated existing AI gaps from optional new learning/analytics/Admin reporting features.
+- [x] Delivered source review: construction/build-and-test/2026-10-26-mcp-role-capability-review.md. Teacher runtime discovery evidence is from the earlier connection check; other-role counts are static policy findings. Recommendations only; implementation was not requested in this turn.
+
+## MCP staff expansion - implementation plan - 2026-10-26
+
+- [x] Product scope accepted from conversation: only Teacher, Subject Manager and Admin use MCP; Student personal AI remains on the UI.
+- [x] Current workspace/source contracts reviewed; requirements and stories recorded in inception/requirements/2026-10-26-mcp-staff-expansion.md.
+- [x] Seven-task technical plan prepared and self-reviewed: construction/plans/code-generation-plan/2026-10-26-mcp-staff-expansion-code-generation-plan.md. Artifact paths confirmed; prior dirty files preserved. Existing extension configuration reused.
+- [ ] Explicit technical plan approval required by CLAUDE.md Code Generation Part 1 Step 7; approval options in inception/requirements/2026-10-26-mcp-staff-expansion-approval.md.
+- [ ] Execute approved plan sequentially, updating its checkboxes and recording actual validation. No application code changes or runtime mutations in the planning turn.
+
+## MCP staff expansion completed source and automated validation — 2026-10-26
+
+- [x] User approved the seven-task plan with làm tiếp and then giúp tôi làm tiếp, auto approve. Code Generation and Build/Test continued automatically within the authorized scope, sequentially without subagents.
+- [x] R01–R13 source implemented: staff-only bearer admission; scoped discovery/material continuation; transactional idempotent assignment/quiz creation; Manager bank proposals; complete structured grading pages/batches/status/summaries; Admin reports and protected MCP UI; Student personal AI remains independent.
+- [x] Final backend Maven verify BUILD SUCCESS: 1438 tests, 1434 passed, 4 explicit older environment skips, zero failures/errors; isolated PostgreSQL concurrency/rollback/app privilege checks and ArchitectureTest passed.
+- [x] Frontend 91 files / 560 tests pass; ESLint and production build including TypeScript pass. Diagnostic fixture 2 test methods pass. Proposal review link and safe retry/snapshot regressions included.
+- [x] Plan checkboxes, setup guides, results and manual acceptance guide updated. Self-review fixed missing SQL grant, invalid quiz draft creation, mixed bank IDs, oversized result handling, review-link entry and stale rubric replay.
+- [x] Restarted local backend/frontend for Teacher runtime smoke test. Flyway applied `20261026.1800 - create mcp write requests`; MCP initialize/ping/tools-list and `get_my_capabilities` succeeded through localhost:3000 with the existing Teacher token (`TEACHER`, `READ_WRITE`, 23 tools).
+- [x] Read-only Teacher discovery succeeded: 1 assigned class, 1 subject and 2 class-scoped assignments returned at test time; no write tool, provider call or grade mutation.
+- [x] Teacher quiz authoring smoke test: created QA DRAFT with a READY two-question proposal; same requestRef/payload replay returned identical IDs; read context confirmed zero active questions. No publication/provider call.
+- [x] Teacher grading discovery smoke test: list_assignments/list_submissions succeeded in U05-A. QA assignment has no submitted evaluation; only submitted evaluation is PUBLISHED. No submission content read and no grading proposal/grade changed.
+- [ ] Broader runtime acceptance remains pending: READ_ONLY, out-of-scope resource denial, UI proposal review/apply, other authoring/grading flows and Subject Manager/Admin. No commit, push or deployment; unrelated dirty files preserved.
+- Results: construction/build-and-test/2026-10-26-mcp-staff-expansion-results.md. Manual guide: construction/build-and-test/2026-10-26-mcp-staff-expansion-manual-test-guide.md.

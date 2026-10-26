@@ -33,3 +33,7 @@ After owner prerequisites and Engine availability, an independent tester must ex
 - [Execution checklist](u14-build-and-test-plan.md)
 
 Enabled Security/Resiliency controls have developer evidence in [code summary](../u14-announcements-and-notifications/code/code-summary.md); runtime effectiveness remains pending where listed. PBT stays disabled. No application source changed during Build & Test or commit preparation, no real email sent, no push/deploy or global stage advance performed. Local commits were explicitly authorized in the subsequent user request.
+
+## MCP staff expansion — 2026-10-26
+
+See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.

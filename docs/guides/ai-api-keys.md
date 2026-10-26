@@ -8,7 +8,10 @@ Hướng dẫn cho Student, Teacher, Subject Manager (API cá nhân, UC 31) và 
 - Nền tảng chỉ lưu bản mã hóa, sau khi lưu chỉ hiện 4 ký tự cuối (ví dụ `••••3kQf`), không ai xem lại được khóa đầy đủ.
 - Nút **Kiểm tra** gửi một yêu cầu rất nhỏ và có thể phát sinh chi phí nhỏ trên khóa.
 - Thu hồi trên nền tảng chỉ xóa khóa khỏi nền tảng. Nếu nghi khóa bị lộ, hãy thu hồi luôn ở trang của nhà cung cấp.
-- Mô hình được dùng do nhà trường cấu hình: Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`), OpenAI (`gpt-4.1-mini`, `gpt-4.1`), Claude (`claude-sonnet-5-5`, `claude-haiku-5-5`).
+- Danh sách mô hình lấy từ cấu hình backend và hiển thị trong ô **Mô hình** (API `/api/v1/ai/providers`). Chọn mô hình trong danh sách đang chạy; danh sách trong tài liệu cũ có thể không còn khớp môi trường. Không cần đổi khóa hoặc mô hình nếu kết nối hiện có vẫn hoạt động.
+- Token **Agent MCP** và khóa API nhà cung cấp là hai loại khác nhau. Token MCP cho phép agent gọi công cụ nền tảng; nó không bật Gemini/OpenAI/Claude trong các nút AI của ứng dụng.
+- MCP chỉ dành cho Teacher, Subject Manager và Admin. Student tiếp tục quản lý khóa cá nhân/Practice ở Kết nối AI; trang này không gọi API token MCP. Admin quản lý token ở **Agent MCP** trong menu quản trị, không cần khóa AI cá nhân.
+- Tạo nháp bài tập, tạo câu hỏi quiz và đề xuất chấm có lựa chọn nguồn API cá nhân/API của trường. Nguồn của trường cần được quản trị viên cấu hình và bật. Phản hồi Practice dùng API cá nhân của student đang yêu cầu; khóa teacher không được dùng thay.
 
 ## Gemini (Google AI Studio)
 
