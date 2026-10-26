@@ -33,6 +33,25 @@ import org.junit.jupiter.api.Test;
 /** F6, F15; BR-U07-50…53; P5: đề xuất không sửa thẳng bài; áp dụng cần version khớp. */
 class AssignmentAiDraftServiceTest {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(AssignmentScope.class)
+    void mcpCreationProducesDraftAndSeparateReviewableProposalWithoutProviderCall(AssignmentScope scope) throws Exception {
+        var writes = new edu.aiplatform.ai.contract.IMcpWriteRequest() {
+            public java.util.Map<String,Object> execute(edu.aiplatform.identity.contract.Actor actor,String operation,
+                    String ref,String fingerprint,java.util.function.Supplier<java.util.Map<String,Object>> mutation) {return mutation.get();}
+        };
+        var service = new AssignmentMcpAuthoringService(f.authoring,f.aiDrafts,f.access,writes,f.json);
+        var content=(java.util.Map<String,Object>)service.call(scope==AssignmentScope.CLASS?f.teacher:f.manager,"create_assignment_draft",java.util.Map.of(
+                scope==AssignmentScope.CLASS?"classId":"subjectId",(scope==AssignmentScope.CLASS?f.classId:f.subjectId).toString(),
+                "title","MCP QA draft","requestRef","create-qa", "draft",f.json.readTree(OUTPUT))).content();
+        var id=UUID.fromString((String)content.get("assignmentId"));
+        assertThat(f.store.get(id).status()).isEqualTo(AssignmentStatus.DRAFT);
+        assertThat(f.store.get(id).skeleton().blocks()).isEmpty();
+        assertThat(content.get("proposalId")).isNotNull();
+        verify(f.drafts).insert(argThat(d -> d.assignmentId().equals(id) && d.status()==AssignmentAiDraft.Status.READY));
+        verify(f.aiTasks,never()).submit(any());
+    }
+
     private final AssignmentFixtures f = new AssignmentFixtures();
 
     private static final String OUTPUT = """

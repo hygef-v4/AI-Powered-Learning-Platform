@@ -387,6 +387,8 @@ public class GradingProposalTransactions {
         var existing = proposals.findByRequestRef(requestRef);
         if (existing.isPresent()) {
             var proposal = existing.get();
+            if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot))
+                throw ApiException.conflict("STALE_PROPOSAL", "Rubric snapshot changed");
             if (!evaluationId.equals(proposal.evaluationId) || !proposal.requesterId.equals(actor.accountId())
                     || !Objects.equals(proposal.submissionHash, hash) || !Objects.equals(proposal.proposal, payload))
                 throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");

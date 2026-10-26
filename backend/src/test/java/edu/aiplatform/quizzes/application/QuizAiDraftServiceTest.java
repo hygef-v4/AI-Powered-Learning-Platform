@@ -69,6 +69,16 @@ import org.springframework.transaction.support.TransactionOperations;
 /** F4, F8, F13 và tài liệu tham khảo (H1–H9) trên repository giả, U06 và U13 giả. */
 class QuizAiDraftServiceTest {
 
+    @Test void mcpBankProposalUsesExistingReviewLifecycleAndNeverCallsProvider() throws Exception {
+        var questions = new ObjectMapper().readTree(OUTPUT).path("questions");
+        var proposal = drafts.saveBankFromMcp(manager, subject, questions, "Codex");
+        assertThat(proposal.target()).isEqualTo(DraftTarget.BANK);
+        assertThat(proposal.origin()).isEqualTo(DraftOrigin.MCP);
+        assertThat(proposal.status()).isEqualTo(DraftStatus.READY);
+        assertThat(submitted).isEmpty();
+        assertThat(drafts.getForBank(manager, subject, proposal.id()).questions()).hasSize(2);
+    }
+
     private static final Instant NOW = Instant.parse("2026-10-22T08:00:00Z");
     private static final String OUTPUT = """
             {"questions":[
@@ -93,6 +103,7 @@ class QuizAiDraftServiceTest {
     private QuizAiDraftService drafts;
     private QuizDraftResultHandler handler;
     private QuizMcpTools mcp;
+    private QuizAccess mcpAccess;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -138,6 +149,7 @@ class QuizAiDraftServiceTest {
 
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
+        mcpAccess = access;
         ActiveSubjects active = new ActiveSubjects(subjects);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active,
                 new QuizActivityPolicy(new FakeSettings()));
@@ -154,6 +166,28 @@ class QuizAiDraftServiceTest {
 
     private static DraftRequest request(String ref, List<UUID> materials) {
         return new DraftRequest("Ôn tập chương 1", 2, null, Difficulty.EASY, materials, AiSource.SHARED, null, ref);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans={false,true})
+    void mcpCreationKeepsQuizEmptyUntilProposalAcceptanceAndCallsNoProvider(boolean subjectScope) throws Exception {
+        var writes = new edu.aiplatform.ai.contract.IMcpWriteRequest() {
+            public Map<String,Object> execute(Actor actor,String op,String ref,String fp,java.util.function.Supplier<Map<String,Object>> mutation) {return mutation.get();}
+        };
+        var json=new ObjectMapper();
+        var tools=new QuizMcpAuthoringService(authoring,drafts,mcpAccess,writes,json);
+        var questions=json.readTree(OUTPUT).path("questions").deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode)questions).remove(1);
+        var actor=subjectScope?manager:teacher;
+        var result=(Map<String,Object>)tools.call(actor,"create_quiz_draft",Map.of(subjectScope?"subjectId":"classId",(subjectScope?subject:classA).toString(),
+                "title","QA MCP quiz","requestRef","qa-quiz","questions",questions)).content();
+        UUID quizId=UUID.fromString((String)result.get("quizId"));
+        assertThat(authoring.get(actor,quizId,null).items()).isEmpty();
+        var proposal=drafts.getForQuiz(actor,quizId,UUID.fromString((String)result.get("proposalId")));
+        assertThat(proposal.origin()).isEqualTo(DraftOrigin.MCP);
+        assertThat(proposal.status()).isEqualTo(DraftStatus.READY);
+        assertThat(proposal.questions()).hasSize(1);
+        assertThat(submitted).isEmpty();
     }
 
     private static ApiException api(Runnable call) {

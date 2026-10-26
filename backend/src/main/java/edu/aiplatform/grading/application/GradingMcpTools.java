@@ -48,6 +48,7 @@ public class GradingMcpTools implements IMcpToolProvider {
     }
 
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
+        edu.aiplatform.ai.contract.McpInput.teaching(actor);
         if (!"record_grading_proposal".equals(name))
             throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
         try {
