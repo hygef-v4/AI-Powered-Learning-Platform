@@ -77,6 +77,24 @@ class GradingPromptSchemaTest {
             """.formatted(rubricId, rubricId, itemId, rubricId, itemId);
         assertThat(checker.check(schemaText, validOutput)).isEmpty();
 
+        // Regression: wire schema must reject the exact missing-evidence combination
+        // rejected by the grading callback, while permitting explicit human review.
+        var missingEvidence = (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(validOutput);
+        var feedbackItem = (com.fasterxml.jackson.databind.node.ObjectNode)
+                missingEvidence.path("structuredFeedback").path("items").get(0);
+        feedbackItem.putNull("evidence");
+        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
+        feedbackItem.put("evidence", "");
+        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
+        feedbackItem.putNull("evidence");
+        feedbackItem.put("requiresReview", true);
+        feedbackItem.put("reviewReason", "Không đọc được nội dung sơ đồ; cần giáo viên kiểm tra.");
+        assertThat(checker.check(schemaText, missingEvidence)).isEmpty();
+        var validatedReview = new GradingProposalValidator(json).validate(missingEvidence, GradingJson.rubrics(json,
+                evaluation.rubricSnapshot), java.util.Set.of("q1"));
+        assertThat(validatedReview.structuredFeedback().items().get(0).requiresReview()).isTrue();
+        feedbackItem.put("reviewReason", "");
+        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
     }
 
     @Test

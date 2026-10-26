@@ -154,6 +154,19 @@ public class GradingPromptBuilder {
         itemProps.putObject("requiresReview").put("type", "boolean");
         itemProps.putObject("reviewReason").put("maxLength", 500).putArray("type").add("string").add("null");
 
+        // Match the callback's evidence-or-explicit-review invariant on the wire.
+        // Keeping only nullable fields lets a schema-valid response be rejected later.
+        var evidenceOrReview = itemObj.putArray("anyOf");
+        var observed = evidenceOrReview.addObject().put("type", "object");
+        observed.putArray("required").add("evidence").add("requiresReview");
+        var observedProperties = observed.putObject("properties");
+        observedProperties.putObject("evidence").put("type", "string").put("minLength", 1);
+        observedProperties.putObject("requiresReview").put("type", "boolean").putArray("enum").add(false);
+        var review = evidenceOrReview.addObject().put("type", "object");
+        review.putArray("required").add("requiresReview").add("reviewReason");
+        var reviewProperties = review.putObject("properties");
+        reviewProperties.putObject("requiresReview").put("type", "boolean").putArray("enum").add(true);
+        reviewProperties.putObject("reviewReason").put("type", "string").put("minLength", 1);
     }
 
     public AiPrompt build(Evaluation e, DocumentModel document, AssignmentContent assignment) {
@@ -191,6 +204,10 @@ public class GradingPromptBuilder {
                         + "scores before any teacher adjustment. Write feedback, sections, and structuredFeedback in Vietnamese. "
                         + "Populate structuredFeedback with schemaVersion=1, concise summary (strengths, improvements, nextSteps), "
                         + "and one items entry per rubric item. Each item must cite concrete evidence from the submission "
+                        + "even when awarded zero points: describe the observable mismatch or absence of the required work. "
+                        + "Never leave evidence null, empty or whitespace while requiresReview=false. If you cannot provide "
+                        + "an evidence observation, set requiresReview=true and provide a non-empty reviewReason; "
+                        + "do not fabricate supporting evidence. "
                         + "(setting evidenceBlockId to a matching id from blockIds or rubric partId when known, or null) and "
                         + "explain why points were awarded or deducted in reason. If an item receives full points and you "
                         + "still offer optional enhancement advice, prefix suggestion with 'Gợi ý thêm (không trừ điểm): '. "

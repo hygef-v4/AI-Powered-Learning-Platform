@@ -274,12 +274,14 @@ public class GradingProposalTransactions {
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.code())
-                    ? "Phản hồi AI không khớp cấu trúc rubric hoặc thiếu minh chứng hợp lệ. Bạn vẫn có thể chấm thủ công."
+                    ? "Phản hồi AI chưa hợp lệ (" + GradingProposalValidator.rejectionDiagnostic(ex)
+                            + "). Bạn vẫn có thể chấm thủ công."
                     : "AI proposal cannot be applied to this submission";
             proposal.completedAt = clock.instant();
             proposals.save(proposal);
-            log.warn("AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={}",
-                    evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status, ex.code());
+            log.warn("AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={}",
+                    evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status, ex.code(),
+                    GradingProposalValidator.rejectionDiagnostic(ex));
             return proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         }
     }

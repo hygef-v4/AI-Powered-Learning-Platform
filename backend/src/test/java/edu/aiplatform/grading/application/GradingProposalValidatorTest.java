@@ -14,6 +14,19 @@ class GradingProposalValidatorTest {
     final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
     final UUID rid = UUID.randomUUID(), iid = UUID.randomUUID();
 
+    @Test
+    void rejectionDiagnosticsIdentifyValidationStageWithoutEchoingProviderContent() {
+        assertThat(GradingProposalValidator.rejectionDiagnostic(
+                ApiException.badRequest("INVALID_AI_PROPOSAL", "Unknown evidenceBlockId: private-provider-content")))
+                .isEqualTo("FEEDBACK_UNKNOWN_EVIDENCE_BLOCK");
+        assertThat(GradingProposalValidator.rejectionDiagnostic(
+                ApiException.badRequest("INVALID_AI_PROPOSAL", "AI structuredFeedback must provide feedback for every rubric item")))
+                .isEqualTo("FEEDBACK_ITEM_COVERAGE");
+        assertThat(GradingProposalValidator.rejectionDiagnostic(
+                ApiException.badRequest("INVALID_AI_PROPOSAL", "private-provider-content")))
+                .isEqualTo("PROPOSAL_SCHEMA_MISMATCH");
+    }
+
     List<RubricView> rubric() {
         return List.of(new RubricView(
                 rid, UUID.randomUUID(), "p", List.of(new RubricCriterion(UUID.randomUUID(), "c", "",

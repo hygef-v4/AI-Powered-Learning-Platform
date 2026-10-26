@@ -28,6 +28,24 @@ public class GradingProposalValidator {
         this.feedbackValidator = new GradingFeedbackValidator(json);
     }
 
+    /** Classify validation failures without exposing provider-authored field values. */
+    public static String rejectionDiagnostic(ApiException error) {
+        String detail = error.getMessage() == null ? "" : error.getMessage();
+        if (detail.startsWith("Unknown evidenceBlockId:")) return "FEEDBACK_UNKNOWN_EVIDENCE_BLOCK";
+        if (detail.equals("AI structuredFeedback must provide feedback for every rubric item"))
+            return "FEEDBACK_ITEM_COVERAGE";
+        if (detail.equals("Unknown rubricId or itemId in structuredFeedback")) return "FEEDBACK_UNKNOWN_ITEM";
+        if (detail.equals("Duplicate rubric item in structuredFeedback")) return "FEEDBACK_DUPLICATE_ITEM";
+        if (detail.equals("Each item requires observed evidence or an explicit review flag with reason"))
+            return "FEEDBACK_MISSING_EVIDENCE";
+        if (detail.equals("requiresReview requires a non-blank reviewReason")) return "FEEDBACK_MISSING_REVIEW_REASON";
+        if (detail.startsWith("Unknown field in structuredFeedback:")) return "FEEDBACK_UNKNOWN_FIELD";
+        if (detail.equals("AI total does not match rubric item scores")) return "PROPOSAL_TOTAL_MISMATCH";
+        if (detail.equals("Invalid section reference")) return "PROPOSAL_SECTION_MISMATCH";
+        if (detail.equals("Unknown rubric item") || detail.equals("Unknown rubric")) return "PROPOSAL_UNKNOWN_ITEM";
+        return "PROPOSAL_SCHEMA_MISMATCH";
+    }
+
     public record Validated(
             Map<UUID, Set<UUID>> checks,
             BigDecimal score,
@@ -112,7 +130,7 @@ public class GradingProposalValidator {
     private void requireMatchingScore(JsonNode scoreNode, BigDecimal computedScore) {
         var suppliedScore = new BigDecimal(scoreNode.asText());
         if (suppliedScore.scale() > 2 || computedScore.compareTo(suppliedScore) != 0) {
-            throw new IllegalArgumentException();
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI total does not match rubric item scores");
         }
     }
 
@@ -142,7 +160,7 @@ public class GradingProposalValidator {
                     || !knownPartIds.contains(section.path("partId").asText())
                     || !seenPartIds.add(section.path("partId").asText()) || !section.path("feedback").isTextual()
                     || section.path("feedback").asText().length() > MAX_FEEDBACK_LENGTH) {
-                throw new IllegalArgumentException();
+                throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid section reference");
             }
         }
     }
