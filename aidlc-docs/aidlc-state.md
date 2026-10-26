@@ -918,3 +918,8 @@ Nhóm tài liệu cuối bao gồm review, hai kế hoạch, hai báo cáo nghi�
 - [x] Created application commits 37a73624 (AI delivery), bd2b22b6 (structured feedback backend), ea2e97e7 (grading UI), and f45264cf (evidence validation regression fix). All titles/bodies are English.
 - [x] Fresh pre-commit checks: backend focused 12-class suite 73 tests, no failures/errors/skips; frontend grading 10 files / 76 tests passed; ESLint and TypeScript passed.
 - [x] Documentation grouped for a final local commit. Screenshots under .tmp remain excluded. No push requested.
+
+## U09 item-level improvement guidance - 2026-10-26
+- [x] Removed summary next steps from teacher/student UI while preserving historical data; item guidance labelled Cách cải thiện.
+- [x] New prompt requests no summary.nextSteps and concrete guidance per reduced-score item; 79 frontend and 8 backend tests passed, lint/typecheck passed.
+- [x] UI proposal version 6 READY with 9/9 nonblank item suggestions and zero summary next steps. Opened the first item to verify guidance. No grade apply/save/finalize/publish. Changes uncommitted.

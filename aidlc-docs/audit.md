@@ -6703,3 +6703,13 @@ Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-4
 **Context**: User explicitly authorized local commits, superseding previous no-commit constraints. No push/merge/deploy. Owned backend stopped before Maven tests and restarted afterward. Live AI success remains recorded in the separate evidence-fix report; full manual acceptance remains pending.
 
 ---
+
+## U09 feedback placement cleanup
+**Timestamp**: 2026-10-26T05:29:30Z
+**User Input**: ok giúp tôi sửa
+**AI Response**: Removed summary-level next-step guidance from teacher preview/editor and published student display; retained historical nextSteps data. Renamed partial-item guidance to Cách cải thiện and instructed new AI responses to leave summary.nextSteps empty and provide actionable suggestions per item. Added regression coverage; 79 frontend and 8 backend tests passed, lint/typecheck passed. Live placement verification pending next step.
+**Context**: Approved follow-up to the user's request to remove duplicated summary suggestions. No grade mutation or commit/push.
+
+---
+
+U09 placement completion: live proposal 5a2b95f9-9525-462a-8937-189affbe8bf9 (version 6) reached READY using the existing Gemini connection. Verified summary.nextSteps count 0, item suggestions count 9, and opened the first item's Cách cải thiện in the teacher UI. Screenshot: .tmp/u09-feedback-screenshots/ai-feedback-item-guidance.png. Backend /health UP. No grade applied/saved/finalized/published; no commit/push.

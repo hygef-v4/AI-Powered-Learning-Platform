@@ -40,7 +40,7 @@ export function StudentGradePanel({ attemptId }: { attemptId: string }) {
           {value.structuredSummary && (
             <GradingFeedbackSummary
               summary={value.structuredSummary}
-              title="Tóm tắt nhận xét (Làm tốt · Cần sửa · Gợi ý tiếp theo)"
+              title="Tóm tắt nhận xét (Làm tốt · Cần sửa)"
             />
           )}
           {hasRubricItems && (
@@ -59,7 +59,7 @@ export function StudentGradePanel({ attemptId }: { attemptId: string }) {
                 const hasDetails = Boolean(item.evidence || item.reason || item.suggestion);
                 const suggestionLabel = isFull
                   ? "Gợi ý thêm (không trừ điểm)"
-                  : "Gợi ý cải thiện";
+                  : "Cách cải thiện";
                 return (
                   <details
                     key={`${item.rubricId}-${item.itemId}`}

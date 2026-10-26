@@ -150,6 +150,9 @@ public class GradingPromptBuilder {
         itemProps.putObject("evidence").put("maxLength", 1000).putArray("type").add("string").add("null");
         itemProps.putObject("reason").put("type", "string").put("maxLength", 1000);
         itemProps.putObject("suggestion").put("maxLength", 1000).putArray("type").add("string").add("null");
+        ((ObjectNode) itemProps.get("suggestion")).put("description",
+                "Give a concrete improvement for this rubric item when points are below its maximum. "
+                        + "For full marks, optional enrichment advice or null. Do not move this advice to the summary.");
         itemProps.putObject("evidenceBlockId").put("maxLength", 200).putArray("type").add("string").add("null");
         itemProps.putObject("requiresReview").put("type", "boolean");
         itemProps.putObject("reviewReason").put("maxLength", 500).putArray("type").add("string").add("null");
@@ -203,7 +206,11 @@ public class GradingPromptBuilder {
                         + "Partial credit is allowed. checks lists full-credit items only. score is the exact sum of item "
                         + "scores before any teacher adjustment. Write feedback, sections, and structuredFeedback in Vietnamese. "
                         + "Populate structuredFeedback with schemaVersion=1, concise summary (strengths, improvements, nextSteps), "
-                        + "and one items entry per rubric item. Each item must cite concrete evidence from the submission "
+                        + "Keep summary.nextSteps empty ([]) for backward compatibility. The summary contains strengths and "
+                        + "issues only. Put the actionable improvement in each item.suggestion: for every item below its maximum "
+                        + "provide a non-empty concrete action explaining how to earn the missing points, including zero-score items. "
+                        + "Do not repeat these instructions in summary.improvements. "
+                        + "Provide one items entry per rubric item. Each item must cite concrete evidence from the submission "
                         + "even when awarded zero points: describe the observable mismatch or absence of the required work. "
                         + "Never leave evidence null, empty or whitespace while requiresReview=false. If you cannot provide "
                         + "an evidence observation, set requiresReview=true and provide a non-empty reviewReason; "

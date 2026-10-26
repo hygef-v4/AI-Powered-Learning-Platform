@@ -189,7 +189,7 @@ export function GradingForm({
       {values.structuredFeedback ? (
         <GradingFeedbackSummary
           summary={values.structuredFeedback.summary}
-          title="Tóm tắt nhận xét cấu trúc (Làm tốt · Cần sửa · Gợi ý tiếp theo)"
+          title="Tóm tắt nhận xét cấu trúc (Làm tốt · Cần sửa)"
           editable
           disabled={disabled}
           onChange={(nextSummary) =>
@@ -223,7 +223,7 @@ export function GradingForm({
             }
             className="rounded-lg border border-line-strong bg-shell/60 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-shell disabled:opacity-50"
           >
-            + Thêm tóm tắt nhận xét cấu trúc (Làm tốt / Cần sửa / Gợi ý tiếp theo)
+            + Thêm tóm tắt nhận xét cấu trúc (Làm tốt / Cần sửa)
           </button>
         </div>
       )}

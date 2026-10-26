@@ -32,6 +32,10 @@ class GradingPromptSchemaTest {
             """.formatted(rubricId, UUID.randomUUID(), UUID.randomUUID(), itemId);
         var builder = new GradingPromptBuilder(mock(IDocumentModel.class), json);
         var schemaText = builder.outputSchema(evaluation);
+        var prompt = builder.build(evaluation,
+                new edu.aiplatform.assignments.contract.DocumentModel(List.of()),
+                mock(edu.aiplatform.assignments.contract.AssignmentContent.class));
+        assertThat(prompt.system()).contains("Keep summary.nextSteps empty", "every item below its maximum");
         var schema = json.readTree(schemaText);
         assertThat(schema.at("/properties/checks/properties/" + rubricId + "/items/enum/0").asText()).isEqualTo(itemId);
         assertThat(schema.at("/properties/checks/additionalProperties").asBoolean(true)).isFalse();

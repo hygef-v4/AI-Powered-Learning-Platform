@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GradingWorkspacePage } from "./GradingWorkspacePage";
 import { StudentGradePanel } from "./StudentGradePanel";
+import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
 import type { Detail, Rubric, StructuredFeedback } from "./types";
 
 const mocks = vi.hoisted(() => ({
@@ -131,6 +132,34 @@ afterEach(() => {
   cleanup();
 });
 
+describe("Feedback summary without duplicated improvement guidance", () => {
+  it("shows strengths and issues but hides historical next steps", () => {
+    render(<GradingFeedbackSummary summary={sampleStructuredFeedback.summary} />);
+    expect(screen.getByText("✓ Làm tốt")).toBeInTheDocument();
+    expect(screen.getByText("! Cần sửa")).toBeInTheDocument();
+    expect(screen.queryByText(/Gợi ý tiếp theo/)).not.toBeInTheDocument();
+    expect(screen.queryByText(sampleStructuredFeedback.summary.nextSteps[0]!)).not.toBeInTheDocument();
+  });
+
+  it("edits the two summary fields while preserving historical next-step data", () => {
+    const onChange = vi.fn();
+    render(<GradingFeedbackSummary summary={sampleStructuredFeedback.summary} editable onChange={onChange} />);
+    expect(screen.queryByLabelText("Gợi ý tiếp theo")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Cần sửa"), { target: { value: "Thiếu multiplicity" } });
+    expect(onChange).toHaveBeenCalledWith({
+      ...sampleStructuredFeedback.summary,
+      improvements: ["Thiếu multiplicity"],
+    });
+  });
+
+  it("does not render an empty summary for historical next-step-only data", () => {
+    const { container } = render(<GradingFeedbackSummary summary={{
+      strengths: [], improvements: [], nextSteps: ["Historical advice"],
+    }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
 describe("Structured Grading Feedback — Teacher Workspace & Student View", () => {
   it("renders AI structured feedback preview with block anchors, plain-text fallback for missing blocks, optional full-mark advice, and review flags", async () => {
     mocks.detail.mockResolvedValue(baseDetail);
@@ -158,7 +187,9 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(await screen.findByText("Tóm tắt nhận xét cấu trúc từ AI")).toBeInTheDocument();
     expect(screen.getByText("Xác định đầy đủ các thực thể cốt lõi")).toBeInTheDocument();
     expect(screen.getByText("Thiếu bội số ở liên kết LopHoc - HocSinh")).toBeInTheDocument();
-    expect(screen.getByText("Bổ sung ký hiệu 1..* trên sơ đồ lớp")).toBeInTheDocument();
+    expect(screen.queryByText("Bổ sung ký hiệu 1..* trên sơ đồ lớp")).not.toBeInTheDocument();
+    expect(screen.getByText("Ghi rõ 1..* ở đầu HocSinh")).toBeInTheDocument();
+    expect(screen.getByText("Cách cải thiện:")).toBeInTheDocument();
 
     // Prominent review flag count banner
     expect(screen.getByText(/Có 1 mục AI đánh dấu cần giảng viên kiểm tra thủ công/)).toBeInTheDocument();
@@ -202,7 +233,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     // Apply populates draft only; does not auto-save and preserves teacher adjustment (-0.25)
     expect(mocks.save).not.toHaveBeenCalled();
     expect(
-      screen.getByText("Tóm tắt nhận xét cấu trúc (Làm tốt · Cần sửa · Gợi ý tiếp theo)"),
+      screen.getByText("Tóm tắt nhận xét cấu trúc (Làm tốt · Cần sửa)"),
     ).toBeInTheDocument();
     expect(screen.getByDisplayValue("-0.25")).toBeInTheDocument();
 
@@ -337,7 +368,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByText("Xác định đúng thực thể")).toBeInTheDocument();
     expect(screen.getByText(/Mô hình hóa: Xác định thực thể/)).toBeInTheDocument();
     expect(screen.getByText(/Gợi ý thêm \(không trừ điểm\):/)).toBeInTheDocument();
-    expect(screen.getByText(/Gợi ý cải thiện:/)).toBeInTheDocument();
+    expect(screen.getByText(/Cách cải thiện:/)).toBeInTheDocument();
 
     // Never expose teacher review controls or internal flags
     expect(container.textContent).not.toContain("Cần giảng viên kiểm tra");

@@ -158,3 +158,10 @@ Manual cases (use dedicated disposable fixtures; never publish/overwrite live gr
 13. Existing historical records remain readable; new history preserves prior feedback without mutation.
 14. Keyboard navigation, long Vietnamese feedback and narrow viewport remain usable.
 15. One live AI proposal uses the existing connection; record delivery timings and feedback completeness. Do not apply/save/finalize/publish it as a test without a disposable fixture authorization.
+
+## Approved feedback placement follow-up - 2026-10-26
+User requested removing summary-level suggestions and keeping improvement guidance at each rubric item.
+- [x] Hide summary next steps in teacher preview/editor and published student view; retain legacy data without destructive migration.
+- [x] Use two-field summary layout and Cách cải thiện for item-level guidance. Update AI prompt to leave summary.nextSteps empty and provide actionable item suggestions.
+- [x] Verify historical-data preservation, no empty summary card, partial-item suggestions and prompt contract; 79 frontend tests and 8 backend tests pass; lint/typecheck pass.
+- [x] Verified live teacher UI: proposal version 6 READY, summary.nextSteps empty, all 9 items include suggestions; opened the first item's Cách cải thiện. No grade applied/saved/published.

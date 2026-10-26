@@ -97,7 +97,7 @@ export function GradingFeedbackSummary({
 }) {
   if (!summary) return null;
   const hasAny =
-    summary.strengths.length > 0 || summary.improvements.length > 0 || summary.nextSteps.length > 0;
+    summary.strengths.length > 0 || summary.improvements.length > 0;
   if (!editable && !hasAny) return null;
 
   return (
@@ -119,7 +119,7 @@ export function GradingFeedbackSummary({
         )}
       </div>
       {editable && onChange ? (
-        <div className="mt-2 grid gap-2.5 sm:grid-cols-3">
+        <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
           <label className="block font-medium text-ink">
             Làm tốt (mỗi dòng 1 ý, tối đa 5)
             <textarea
@@ -146,22 +146,9 @@ export function GradingFeedbackSummary({
               className="mt-1 block w-full rounded-lg border border-line bg-white p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
             />
           </label>
-          <label className="block font-medium text-ink">
-            Gợi ý tiếp theo (mỗi dòng 1 ý, tối đa 5)
-            <textarea
-              aria-label="Gợi ý tiếp theo"
-              disabled={disabled}
-              rows={3}
-              value={summary.nextSteps.join("\n")}
-              onChange={(e) =>
-                onChange({ ...summary, nextSteps: parseSummaryLines(e.target.value) })
-              }
-              className="mt-1 block w-full rounded-lg border border-line bg-white p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
-            />
-          </label>
         </div>
       ) : (
-        <div className="mt-2 grid gap-2.5 sm:grid-cols-3">
+        <div className={`mt-2 grid gap-2.5 ${summary.strengths.length > 0 && summary.improvements.length > 0 ? "sm:grid-cols-2" : ""}`}>
           {summary.strengths.length > 0 && (
             <div className="rounded-lg border border-line-soft bg-white p-2.5">
               <p className="font-semibold text-success">✓ Làm tốt</p>
@@ -177,16 +164,6 @@ export function GradingFeedbackSummary({
               <p className="font-semibold text-warning">! Cần sửa</p>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
                 {summary.improvements.map((entry, idx) => (
-                  <li key={idx} className="break-words">{entry}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {summary.nextSteps.length > 0 && (
-            <div className="rounded-lg border border-line-soft bg-white p-2.5">
-              <p className="font-semibold text-primary">→ Gợi ý tiếp theo</p>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
-                {summary.nextSteps.map((entry, idx) => (
                   <li key={idx} className="break-words">{entry}</li>
                 ))}
               </ul>
@@ -274,7 +251,7 @@ export function RubricItemFeedback({
 
   const blockId = feedbackItem.evidenceBlockId?.trim() || null;
   const canNavigateToBlock = Boolean(blockId && validBlockIds?.has(blockId));
-  const suggestionLabel = isFullMarks ? "Gợi ý thêm (không trừ điểm)" : "Gợi ý cải thiện";
+  const suggestionLabel = isFullMarks ? "Gợi ý thêm (không trừ điểm)" : "Cách cải thiện";
 
   return (
     <details
