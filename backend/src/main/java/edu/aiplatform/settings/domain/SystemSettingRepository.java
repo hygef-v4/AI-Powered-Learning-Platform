@@ -37,6 +37,14 @@ public class SystemSettingRepository {
                 .param("now", Timestamp.from(now)).update();
     }
 
+    /** Ghi mục chưa có dòng (bị xóa sau khi khởi động); trả 0 nếu nơi khác vừa tạo dòng (xung đột). */
+    public int insert(String key, String group, String valueJson, UUID updatedBy, Instant now) {
+        return jdbc.sql("insert into system_settings (key, setting_group, value, version, updated_by, updated_at) "
+                        + "values (:key, :group, cast(:value as jsonb), 1, :by, :now) on conflict (key) do nothing")
+                .param("key", key).param("group", group).param("value", valueJson).param("by", updatedBy)
+                .param("now", Timestamp.from(now)).update();
+    }
+
     /** Cập nhật có điều kiện {@code version} khớp; trả số dòng cập nhật (0 là xung đột). */
     public int update(String key, String valueJson, long expectedVersion, UUID updatedBy, Instant now) {
         return jdbc.sql("update system_settings set value = cast(:value as jsonb), version = version + 1, "
