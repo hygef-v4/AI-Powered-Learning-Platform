@@ -29,8 +29,8 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onSubjectCh
       </div></div>
       <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th scope="col">Mã lớp</th><th scope="col">Tên lớp</th><th scope="col">Học kỳ</th><th scope="col">Giảng viên</th><th scope="col">Sinh viên</th><th scope="col">Trạng thái</th><th scope="col"><span className="sr-only">Chi tiết</span></th></tr></thead><tbody>{pagedClasses.map((course) => <tr key={course.id} onClick={() => onOpen(course.id)} style={{ cursor: "pointer" }}>
         <td className={styles.code}>{course.code}</td><td><button className={styles.rowLink} aria-label={`Xem lớp ${course.code}`} onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} data-testid={`class-open-${course.id}`}>{course.name}</button></td><td>{course.term}</td><td>{course.teacher?.name ?? <em className={styles.muted}>Chưa phân công</em>}</td><td>{course.activeStudentCount}</td><td><StatusBadge status={course.status}/></td><td><Icon name="chevron"/></td>
-      </tr>)}</tbody></table></div>{!filtered.length && <EmptyState title="Không tìm thấy lớp phù hợp" description="Thử đổi bộ lọc hoặc từ khóa tìm kiếm."/>}
-{filtered.length>pageSize && <nav aria-label="Phân trang"><button disabled={page<=1} onClick={()=>setPage(v=>Math.max(1,v-1))}>Trang trước</button><span>Trang {displayedPage} / {totalPages}</span><button disabled={page>=totalPages} onClick={()=>setPage(v=>v+1)}>Trang sau</button></nav>}
+      </tr>)}</tbody></table></div>{!filtered.length && <EmptyState title="Không tìm thấy lớp phù hợp"/>}
+{filtered.length>pageSize && <nav aria-label="Phân trang" className={styles.pager}><button className={styles.button} disabled={page<=1} onClick={()=>setPage(v=>Math.max(1,v-1))}>Trang trước</button><span>Trang {displayedPage} / {totalPages}</span><button className={styles.button} disabled={page>=totalPages} onClick={()=>setPage(v=>v+1)}>Trang sau</button></nav>}
     </section>
   </>;
 }

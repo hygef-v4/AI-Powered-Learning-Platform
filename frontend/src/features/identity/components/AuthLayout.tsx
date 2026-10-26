@@ -1,92 +1,61 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useTheme } from "@/shared/theme";
 import { Icon } from "@/shared/ui/Icon";
+import { Logo, LogoMark } from "@/shared/ui/Logo";
 
 type Variant = "login" | "flow";
 
 /**
- * Khung hai cột của các màn chưa đăng nhập theo design G21: form bên trái, khối giới thiệu gradient bên phải.
- * `login` theo artboard `Main` (cột trái nền trắng, gradient 155°); `flow` theo các bước kích hoạt và khôi phục
- * (`c02a`–`c04`: cả trang nền nhạt, gradient chéo xanh–tím, khẩu hiệu lớn). Màn hẹp hơn `lg` chỉ còn cột form.
+ * Khung các màn chưa đăng nhập: cột form bên trái; bên phải là một tấm tranh tĩnh (dấu 学 lớn, câu khẩu hiệu chữ có
+ * chân, lưới kẻ mảnh như trang vở). Màn hẹp hơn `lg` chỉ còn cột form. `aside` và `tagline` giữ để tương thích, giao
+ * diện tối giản không vẽ thẻ giới thiệu.
  */
 export function AuthLayout({
-  variant = "flow",
-  aside,
-  tagline,
   children,
 }: {
   variant?: Variant;
-  /** Thẻ trắng ở góc trên khối giới thiệu. */
   aside?: ReactNode;
-  /** Dòng phụ dưới khẩu hiệu (màn Đăng nhập và Khôi phục mật khẩu có, màn Kích hoạt không). */
   tagline?: boolean;
   children: ReactNode;
 }) {
-  const login = variant === "login";
+  const [theme, toggleTheme] = useTheme();
   return (
-    <div className={`flex min-h-screen flex-col ${login ? "bg-shell" : "bg-[#f8fafc]"}`}>
-      <div className="flex flex-1">
-        <div className={`flex w-full flex-col px-6 py-8 sm:px-12 lg:w-1/2 ${login ? "bg-white" : ""}`}>
-          <Brand login={login} />
-          <main className={`mx-auto flex w-full flex-1 flex-col justify-center py-10 ${login ? "max-w-[380px]" : "max-w-[440px]"}`}>
-            {children}
-          </main>
-          {login && <Footer />}
-        </div>
-        <div className="hidden flex-1 p-6 lg:flex">
-          <section
-            className="relative flex w-full flex-col justify-between overflow-hidden rounded-[26px] p-10 text-white"
-            style={{
-              backgroundImage: login
-                ? "linear-gradient(155deg, #1a31a8 0%, #2f45b5 55%, #e36d67 125%)"
-                : "linear-gradient(to right bottom, #25399d, #2f45b5, #7b4282)",
-            }}
+    <div className="flex min-h-screen bg-shell">
+      <div className="flex w-full flex-col px-6 py-7 sm:px-12 lg:w-[46%]">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
+            className="inline-flex size-9 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
           >
-            <span aria-hidden="true" className="absolute -top-24 -right-24 size-80 rounded-full bg-white/[.03]" />
-            <span aria-hidden="true" className="absolute bottom-24 -left-28 size-80 rounded-full border border-white/10" />
-            <div className="relative flex justify-end">{aside}</div>
-            <div className="relative max-w-[520px]">
-              <h2
-                className={
-                  login
-                    ? "text-[28px] leading-tight font-bold"
-                    : "text-[40px] leading-[1.05] font-extrabold tracking-[-1px]"
-                }
-              >
-                Học, nộp bài và nhận điểm — một nơi.
-              </h2>
-              {(login || tagline) && (
-                <p className="mt-3 max-w-[440px] text-[13px] leading-relaxed text-white/80">
-                  Hệ thống đào tạo số hiện đại tích hợp theo dõi tiến độ và đánh giá tự động chuẩn đại học.
-                </p>
-              )}
-            </div>
-          </section>
+            <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+          </button>
         </div>
+        <main className="mx-auto flex w-full max-w-[380px] flex-1 animate-rise flex-col justify-center py-12">{children}</main>
+        <p className="text-xs text-muted">© 2026 Nền tảng học tập</p>
       </div>
-      {!login && (
-        <div className="mx-6 border-t border-[#e2e8f0] py-4 sm:mx-12">
-          <Footer />
-        </div>
-      )}
+      <div className="hidden flex-1 p-4 lg:flex">
+        <section
+          aria-hidden="true"
+          className="relative flex w-full flex-col justify-end overflow-hidden rounded-2xl border border-line bg-surface p-14"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--c-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        >
+          <div className="absolute top-14 right-14 animate-[pop_0.8s_cubic-bezier(.16,1,.3,1)_backwards] [animation-delay:150ms]">
+            <LogoMark size={148} className="-rotate-6 drop-shadow-[0_10px_24px_rgb(232_131_58/0.25)]" />
+          </div>
+          <p className="relative max-w-[520px] font-display text-[52px] leading-[1.05] tracking-[-0.03em] text-ink">
+            Học, nộp bài và nhận điểm <i className="text-primary-ink">một nơi.</i>
+          </p>
+        </section>
+      </div>
     </div>
   );
-}
-
-function Brand({ login }: { login: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span
-        className={`flex items-center justify-center text-white ${
-          login ? "size-9 rounded-lg bg-[#0e2a9e]" : "size-10 rounded-xl bg-primary"
-        }`}
-      >
-        <Icon name="school" filled size={login ? 20 : 22} />
-      </span>
-      <span className={`font-bold text-ink ${login ? "text-base" : "text-xl tracking-[-0.5px]"}`}>Nền tảng học tập</span>
-    </div>
-  );
-}
-
-function Footer() {
-  return <p className="text-xs text-[#64748b]">© 2026 Nền tảng học tập</p>;
 }

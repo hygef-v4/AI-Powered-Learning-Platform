@@ -209,7 +209,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
         <Button size="sm" variant="ghost" onClick={() => void flush().then(() => router.push("/quiz-practice"))} data-testid="quiz-taking-exit">Thoát</Button>
         <span className="font-semibold text-ink">{view.title}</span>
         <Pill tone="info">Practice</Pill>
@@ -230,7 +230,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
         {question && (
-          <section className="rounded-xl border border-line bg-white p-4" aria-label={`Câu ${index + 1}`}>
+          <section className="rounded-xl border border-line bg-surface p-4" aria-label={`Câu ${index + 1}`}>
             <p className="mb-2 text-xs text-muted">
               Câu {index + 1} / {view.questions.length} · {question.type === "MCQ_MULTI" ? "Nhiều đáp án" : "Một đáp án"} · {formatPoints(question.points)} điểm
             </p>
@@ -257,14 +257,14 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
             </div>
           </section>
         )}
-        <nav aria-label="Danh sách câu" className="rounded-xl border border-line bg-white p-3">
+        <nav aria-label="Danh sách câu" className="rounded-xl border border-line bg-surface p-3">
           <p className="mb-2 text-xs text-muted">Đã làm {view.questions.length - unanswered.length} / {view.questions.length}</p>
           <div className="flex flex-wrap gap-1.5">
             {view.questions.map((q, i) => (
               <button key={q.questionId} type="button" onClick={() => setIndex(i)} aria-current={i === index ? "true" : undefined}
                 aria-label={`Câu ${i + 1}${answered(q.questionId) ? " đã trả lời" : ""}`}
                 className={cx("h-8 w-8 rounded-lg border text-xs font-semibold",
-                  i === index ? "border-primary text-primary" : answered(q.questionId) ? "border-success bg-success-soft text-success" : "border-line text-body")}>
+                  i === index ? "border-primary text-primary-ink" : answered(q.questionId) ? "border-success bg-success-soft text-success" : "border-line text-body")}>
                 {i + 1}
               </button>
             ))}

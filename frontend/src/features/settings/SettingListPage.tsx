@@ -21,7 +21,7 @@ export function SettingListPage() {
 
   return (
     <>
-      <PageHeader title="Cài đặt" subtitle="Bấm một dòng để xem và sửa · mỗi lần lưu được ghi vào Nhật ký audit" />
+      <PageHeader title="Cài đặt" />
       {error && (
         <Alert tone="danger" role="alert">
           {error}

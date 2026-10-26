@@ -61,7 +61,7 @@ function MemberRow({
     }
   }
   return (
-    <div className="mt-3 rounded border p-3">
+    <div className="mt-3 rounded-xl border border-line p-4">
       <p>Thành viên {name}</p>
       <label>
         Điểm{" "}
@@ -72,7 +72,7 @@ function MemberRow({
           step="0.01"
           value={score}
           onChange={(e) => setScore(e.target.value)}
-          className="rounded border p-2"
+          className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-ink"
         />
       </label>
       <label className="ml-3">
@@ -80,7 +80,7 @@ function MemberRow({
         <input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="rounded border p-2"
+          className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-ink"
         />
       </label>
       <button

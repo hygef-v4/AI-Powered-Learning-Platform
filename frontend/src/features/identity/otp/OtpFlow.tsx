@@ -57,12 +57,12 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
 
   return (
     <AuthLayout aside={copy.aside(step)} tagline={copy.tagline?.(step)}>
-      <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64748b] hover:text-ink">
+      <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-ink">
         <Icon name="arrow_back" size={15} />
         Quay lại đăng nhập
       </Link>
-      <h1 className="mt-5 text-[28px] leading-tight font-bold tracking-[-0.7px] text-ink">{copy.title(step)}</h1>
-      <p className="mt-1.5 text-sm text-[#64748b]">{copy.subtitle(step, email)}</p>
+      <h1 className="mt-5 font-display text-[40px] leading-[1.05] tracking-[-0.03em] text-ink">{copy.title(step)}</h1>
+      <p className="mt-1.5 text-sm text-muted">{copy.subtitle(step, email)}</p>
       <div className="mt-5">
         <Stepper steps={copy.steps} current={step} />
       </div>
@@ -174,7 +174,7 @@ function EmailStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       {notice && (
-        <p role="status" className="mb-4 flex items-start gap-2 rounded-[10px] bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
+        <p role="status" className="mb-4 flex items-start gap-2 rounded-xl bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
           <Icon name="warning" size={18} />
           {notice}
         </p>
@@ -192,7 +192,7 @@ function EmailStep({
           onChange={(e) => setEmail(e.target.value)}
           className={cx(AUTH_INPUT, "pr-10")}
         />
-        <Icon name="mail" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#94a3b8]" />
+        <Icon name="mail" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" />
       </div>
       {error && <ErrorText>{error}</ErrorText>}
       <SubmitButton busy={busy}>{copy.sendLabel}</SubmitButton>
@@ -250,9 +250,9 @@ function VerifyStep({
 
   return (
     <form onSubmit={submit} noValidate className="mt-6">
-      <p className="rounded-[10px] bg-[#f1f5f9] px-3.5 py-2.5 text-[13px] text-[#475569]">
+      <p className="rounded-xl bg-sunken px-3.5 py-2.5 text-[13px] text-body">
         Đã gửi mã tới <b>{maskEmail(email)}</b>.{" "}
-        <button type="button" onClick={onChangeEmail} className="font-semibold text-primary-strong hover:underline">
+        <button type="button" onClick={onChangeEmail} className="font-semibold text-primary-ink hover:underline">
           Đổi email
         </button>
       </p>
@@ -261,7 +261,7 @@ function VerifyStep({
         <OtpInput value={code} onChange={setCode} invalid={error === OTP_INVALID_MESSAGE} label={copy.codeLabel} />
       </div>
       <div className="mt-3 flex items-center justify-between text-xs">
-        <span className="flex items-center gap-1.5 text-[#64748b]">
+        <span className="flex items-center gap-1.5 text-muted">
           <Icon name="schedule" size={14} />
           {expiresIn > 0 ? (
             <>
@@ -272,9 +272,9 @@ function VerifyStep({
           )}
         </span>
         {resendIn > 0 ? (
-          <span className="text-[#94a3b8]">Gửi lại mã sau {formatMmSs(resendIn)}</span>
+          <span className="text-muted">Gửi lại mã sau {formatMmSs(resendIn)}</span>
         ) : (
-          <button type="button" onClick={resend} className="font-semibold text-primary-strong hover:underline">
+          <button type="button" onClick={resend} className="font-semibold text-primary-ink hover:underline">
             Gửi lại mã
           </button>
         )}

@@ -65,7 +65,7 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly }: {
         <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>
           <textarea id="activity-notice" rows={2} maxLength={1000} value={value.activityNotice} disabled={readOnly}
             onChange={(e) => onChange({ ...value, activityNotice: e.target.value })}
-            className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary" />
+            className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary" />
         </Field>
       )}
     </div>

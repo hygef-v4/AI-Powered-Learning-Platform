@@ -33,7 +33,6 @@ function ClassAssignments({ classId }: { classId: string }) {
   const page = useAssignmentPage(load, toListFilter(debounced));
   return (
     <Section title="Bài tập" icon="assignment"
-      description="Bài và quiz “Của môn” do Chủ nhiệm môn soạn, bạn chỉ xem và chấm. Bài nhóm chỉ tạo được ở lớp."
       actions={<Button variant="primary" icon="add" onClick={() => setCreating(true)}
         disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">Tạo bài tập</Button>}>
       <AssignmentFilters value={filter} onChange={setFilter} />

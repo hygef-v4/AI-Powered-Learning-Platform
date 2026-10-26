@@ -36,7 +36,7 @@ export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: st
     <div className={styles.toolbar}>
       {["ACTIVE", ...(scope === "classes" ? ["CLASS", "SUBJECT"] : []), "ARCHIVED"].map(value => <Button key={value} data-testid={`materials-filter-${value.toLowerCase()}`} variant={filter === value ? "primary" : "ghost"} onClick={() => setFilter(value)}>{value === "ACTIVE" ? scope === "classes" ? "Tất cả" : "Đang dùng" : value === "CLASS" ? "Của lớp" : value === "SUBJECT" ? "Của môn" : "Lưu trữ"} ({rows.filter(m => value === "ARCHIVED" ? m.status === value : m.status === "ACTIVE" && (value === "ACTIVE" || m.scope === value)).length})</Button>)}
       {!readOnly && <div className="relative ml-auto"><Button data-testid="materials-add-menu" variant="primary" icon="add" onClick={() => setMenu(!menu)} aria-expanded={menu}>Thêm học liệu</Button>
-        {menu && <div className="absolute right-0 z-10 mt-2 flex w-64 flex-col rounded-xl border border-line bg-white p-2 shadow-lg">
+        {menu && <div className="absolute right-0 z-10 mt-2 flex w-64 flex-col rounded-xl border border-line bg-surface p-2 shadow-[var(--shadow-float)]">
           <Button data-testid="materials-add-file" variant="ghost" icon="upload_file" onClick={() => { setMenu(false); setAdding("FILE"); }}>Tải tệp · PDF, DOCX, PPTX</Button>
           <Button data-testid="materials-add-youtube" variant="ghost" onClick={() => { setMenu(false); setAdding("YOUTUBE_LINK"); }}>Link YouTube · Một video</Button>
         </div>}
@@ -72,5 +72,5 @@ export function SubjectMaterialListPage() {
 
 export function ClassMaterialsTab({ classId }: { classId: string }) {
   const info = useMaterialResource<{ status: string }>(`/api/v1/teaching/classes/${encodeURIComponent(classId)}`);
-  return <div className={styles.stack}><h2 className="text-lg font-bold">Học liệu</h2><MaterialList key={classId} scopeId={classId} scope="classes" readOnly={info.data?.status === "ARCHIVED"} /></div>;
+  return <div className={styles.stack}><h2 className="font-display text-[26px] leading-tight tracking-[-0.02em] text-ink">Học liệu</h2><MaterialList key={classId} scopeId={classId} scope="classes" readOnly={info.data?.status === "ARCHIVED"} /></div>;
 }

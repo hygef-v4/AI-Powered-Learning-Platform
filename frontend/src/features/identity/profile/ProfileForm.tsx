@@ -70,7 +70,7 @@ export function ProfileForm({
       <form onSubmit={submit} noValidate>
         <div className="grid gap-8 sm:grid-cols-[180px_1fr]">
           <div className="flex justify-center pt-2">
-            <span className="flex size-24 items-center justify-center rounded-full bg-primary text-[28px] font-bold text-white">
+            <span className="flex size-24 items-center justify-center rounded-full bg-primary text-[28px] font-bold text-on-primary">
               {initials(profile.displayName)}
             </span>
           </div>
@@ -140,7 +140,7 @@ function LockedInput({ id, value }: { id: string; value: string }) {
 
 function LockedBox({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-[38px] items-center justify-between rounded-[9px] border border-line-strong bg-shell px-3">
+    <div className="flex h-[38px] items-center justify-between rounded-lg border border-line-strong bg-shell px-3">
       {children}
       <Icon name="lock" size={16} className="text-faint" />
     </div>

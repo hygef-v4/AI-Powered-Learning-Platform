@@ -27,7 +27,7 @@ export function QuestionMetaPanel({ value, onChange, errors, readOnly = false }:
           </Select>
         </Field>
         <Field label="Thẻ" htmlFor={`${id}-tags`} hint="Cách nhau bằng dấu phẩy, tối đa 10 thẻ" error={errors.tags}>
-          <TextInput id={`${id}-tags`} value={value.tagsText} invalid={!!errors.tags} data-testid="question-meta-tags"
+          <TextInput id={`${id}-tags`} placeholder="uml, sơ đồ lớp" value={value.tagsText} invalid={!!errors.tags} data-testid="question-meta-tags"
             onChange={(event) => onChange({ ...value, tagsText: event.target.value })} />
         </Field>
       </fieldset>
@@ -50,7 +50,7 @@ export function QuestionVersionPanel({ detail }: { detail: QuestionDetail }) {
       </dl>
       {draftId && (
         <p className="mt-3 text-[13px]">
-          <Link href={`/manager/questions/${draftId}`} className="font-semibold text-primary hover:underline" data-testid="question-version-draft-link">
+          <Link href={`/manager/questions/${draftId}`} className="font-semibold text-primary-ink hover:underline" data-testid="question-version-draft-link">
             Mở bản nháp mới của câu này
           </Link>
         </p>
@@ -61,7 +61,7 @@ export function QuestionVersionPanel({ detail }: { detail: QuestionDetail }) {
             <li key={version.id} className="flex items-center justify-between gap-2">
               {version.id === question.id
                 ? <span className="font-semibold">v{version.versionNo} (đang xem)</span>
-                : <Link href={`/manager/questions/${version.id}`} className="text-primary hover:underline">v{version.versionNo}</Link>}
+                : <Link href={`/manager/questions/${version.id}`} className="text-primary-ink hover:underline">v{version.versionNo}</Link>}
               <Pill tone={STATUS_TONES[version.status]}>{STATUS_LABELS[version.status]}</Pill>
             </li>
           ))}

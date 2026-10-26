@@ -150,7 +150,7 @@ export function GradingNotes({
 
   return (
     <section aria-label="Nhận xét chung" data-testid="grading-notes"
-      className="flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-white p-3 text-xs shadow-sm">
+      className="flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-3 text-xs shadow-sm">
       <p className="text-[13px] font-semibold text-ink">Nhận xét chung</p>
       {unresolved.total > 0 && (
         <p role="status" className="rounded-lg border border-warning bg-warning-soft/60 px-2.5 py-1.5 font-semibold text-warning">
@@ -201,7 +201,7 @@ export function GradingNotes({
               clearStructuredFeedback: false,
             })
           }
-          className="self-start rounded-lg border border-line-strong bg-shell/60 px-2.5 py-1 font-medium text-primary hover:bg-shell disabled:opacity-50"
+          className="self-start rounded-lg border border-line-strong bg-shell/60 px-2.5 py-1 font-medium text-primary-ink hover:bg-shell disabled:opacity-50"
         >
           + Thêm tóm tắt Làm tốt · Cần sửa
         </button>

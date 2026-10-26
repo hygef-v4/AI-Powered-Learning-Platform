@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { StatTile } from "@/shared/ui/StatTile";
 import { assignmentsApi } from "./api";
 import type { AssignmentStatus } from "./types";
 
@@ -24,11 +24,7 @@ export function AssignmentSummary({ subjectId, variant }: { subjectId: string; v
     return <p className="text-xs text-muted" data-testid="assignment-summary">Bài tập: {open} đang mở · {drafts} nháp</p>;
   }
   return (
-    <section className="flex flex-col gap-1 rounded-2xl border border-line bg-white p-5" data-testid="assignment-summary">
-      <h2 className="text-[15px] font-bold text-ink">Bài tập của môn</h2>
-      <p className="text-2xl font-bold text-ink">{total}</p>
-      <p className="text-xs text-muted">{open} đang mở · {drafts} nháp</p>
-      <Link href={`/manager/assignments?subjectId=${encodeURIComponent(subjectId)}`} className="mt-1 text-xs font-semibold text-primary">Xem bài tập của môn</Link>
-    </section>
+    <StatTile testId="assignment-summary" label="Bài tập" value={total} meta={`${open} đang mở · ${drafts} nháp`}
+      href={`/manager/assignments?subjectId=${encodeURIComponent(subjectId)}`} />
   );
 }

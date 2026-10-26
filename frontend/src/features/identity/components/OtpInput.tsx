@@ -81,8 +81,8 @@ export function OtpInput({
             autoComplete={index === 0 ? "one-time-code" : "off"}
             aria-label={`Chữ số ${index + 1}`}
             aria-invalid={invalid || undefined}
-            className={`h-[52px] w-[46px] rounded-xl bg-white text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-primary/20 ${
-              invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-[#e2e8f0] focus:border-primary"
+            className={`h-[52px] w-[46px] rounded-xl bg-surface text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-primary/20 ${
+              invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-line focus:border-primary"
             }`}
           />
         ))}

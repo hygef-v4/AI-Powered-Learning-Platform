@@ -112,7 +112,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
     <>
       {dragging && <div aria-hidden className="fixed inset-0 z-[59] cursor-col-resize" />}
       <aside role="dialog" aria-label={title} data-testid="drawio-panel" style={{ width }}
-        className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
+        className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-surface shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
         <div role="separator" aria-orientation="vertical" aria-label="Kéo để đổi độ rộng" title="Kéo để đổi độ rộng"
           onMouseDown={(event) => { event.preventDefault(); setDragging(true); }}
           className={cx("group absolute inset-y-0 left-0 z-[61] flex w-3.5 cursor-col-resize items-center justify-center hover:bg-primary/10",
@@ -130,7 +130,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
         </div>
         <div className="relative min-h-0 flex-1">
           {/* embed.diagrams.net trả 403 khi Referer là localhost; không gửi Referer (cũng không lộ URL trang). */}
-          <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="absolute inset-0 size-full border-0 bg-white" />
+          <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="absolute inset-0 size-full border-0 bg-surface" />
         </div>
       </aside>
     </>

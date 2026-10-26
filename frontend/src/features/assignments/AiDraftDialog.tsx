@@ -420,7 +420,7 @@ export function AiDraftDialog({
                 value={questionCount}
                 disabled={awaiting}
                 onChange={(e) => setQuestionCount(e.target.value)}
-                className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px]"
+                className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px]"
               />
             </Field>
             <Field
@@ -438,7 +438,7 @@ export function AiDraftDialog({
                 value={targetPoints}
                 disabled={awaiting}
                 onChange={(e) => setTargetPoints(e.target.value)}
-                className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px]"
+                className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px]"
               />
             </Field>
           </div>
@@ -454,7 +454,7 @@ export function AiDraftDialog({
               value={request}
               disabled={awaiting}
               onChange={(e) => setRequest(e.target.value)}
-              className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary"
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary"
             />
           </Field>
           <Field
@@ -479,7 +479,7 @@ export function AiDraftDialog({
                 addSourceFiles(event.target.files);
                 event.target.value = "";
               }}
-              className="w-full text-xs file:mr-3 file:rounded-lg file:border file:border-line-strong file:bg-white file:px-3 file:py-2"
+              className="w-full text-xs file:mr-3 file:rounded-lg file:border file:border-line-strong file:bg-surface file:px-3 file:py-2"
             />
             {sourceFiles.length > 0 && (
               <ul
@@ -539,7 +539,7 @@ export function AiDraftDialog({
                     </div>
                     {item.preview && item.status === "READY" && (
                       <details>
-                        <summary className="cursor-pointer text-primary">
+                        <summary className="cursor-pointer text-primary-ink">
                           Xem chữ đã đọc
                           {item.preview.truncated ? " · đã rút gọn" : ""}
                         </summary>
@@ -638,12 +638,6 @@ export function AiDraftDialog({
               {elapsed > 0 && <span>{elapsed} giây</span>}
             </div>
           )}
-          {awaiting && (
-            <p className="text-xs text-muted">
-              Thời gian phụ thuộc mô hình AI và độ dài tài liệu. Kết quả sẽ tự
-              cập nhật tại đây.
-            </p>
-          )}
           {draft?.taskId && <AiTaskStatus taskId={draft.taskId} />}
           {draft?.status === "FAILED" && (
             <Alert tone="warning">
@@ -656,12 +650,11 @@ export function AiDraftDialog({
       {proposal && (
         <div className="flex flex-col gap-5" data-testid="ai-proposal">
           <AiDraftPreview proposal={proposal} targetPoints={Number(targetPoints)} />
-          <section className="space-y-3 rounded-xl border border-line p-4" aria-label="Nội dung sẽ áp dụng">
-            <h3 className="text-sm font-semibold text-ink">Nội dung sẽ áp dụng</h3>
+          <section className="space-y-3 rounded-xl border border-line p-5" aria-label="Nội dung sẽ áp dụng">
+            <h3 className="text-[15px] font-bold text-ink">Nội dung sẽ áp dụng</h3>
             {currentPartCount > 0 && <Alert tone="warning">Sẽ thay toàn bộ câu hỏi và rubric hiện tại ({currentPartCount} mục).</Alert>}
-            <p className="text-xs text-muted">Tiêu đề và hướng dẫn làm bài chỉ thay khi được chọn. Bối cảnh và câu hỏi được thêm cùng rubric đã kiểm tra.</p>
-            {proposal.title && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={replaceTitle} onChange={(e) => setReplaceTitle(e.target.checked)} />Thay tiêu đề bài bằng tiêu đề đề xuất</label>}
-            {proposal.instructions && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={replaceInstructions} onChange={(e) => setReplaceInstructions(e.target.checked)} />{currentInstructions.trim() ? "Thay hướng dẫn làm bài hiện tại" : "Thêm hướng dẫn làm bài do AI tạo"}</label>}
+            {proposal.title && <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[var(--c-primary)]" checked={replaceTitle} onChange={(e) => setReplaceTitle(e.target.checked)} />Thay tiêu đề bài bằng tiêu đề đề xuất</label>}
+            {proposal.instructions && <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[var(--c-primary)]" checked={replaceInstructions} onChange={(e) => setReplaceInstructions(e.target.checked)} />{currentInstructions.trim() ? "Thay hướng dẫn làm bài hiện tại" : "Thêm hướng dẫn làm bài do AI tạo"}</label>}
             {proposal.instructions && currentInstructions.trim() && <details className="rounded-lg bg-canvas p-3 text-xs">
               <summary className="cursor-pointer font-semibold">Xem hướng dẫn hiện tại để đối chiếu</summary>
               <p className="mt-2 whitespace-pre-wrap">{currentInstructions}</p>

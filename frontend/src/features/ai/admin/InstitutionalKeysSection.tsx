@@ -72,7 +72,6 @@ export function InstitutionalKeysSection() {
     <Section
       title="Khóa API của trường"
       icon="key"
-      description="Giảng viên dùng khóa đang bật khi chọn nguồn API của trường. Tắt vẫn giữ khóa nhưng không dùng cho yêu cầu mới."
       actions={
         <Button variant="primary" size="sm" icon="add" onClick={() => firstMissing && setEditing({ provider: firstMissing, current: null })} disabled={!firstMissing}>
           Thêm khóa
@@ -199,7 +198,6 @@ export function InstitutionalKeysSection() {
         onClose={() => setRevoking(null)}
         footer={
           <>
-            <Button onClick={() => setRevoking(null)}>Hủy</Button>
             <Button
               variant="danger"
               onClick={() => {

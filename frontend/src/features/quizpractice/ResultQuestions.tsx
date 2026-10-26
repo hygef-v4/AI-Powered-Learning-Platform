@@ -11,7 +11,7 @@ export function ResultQuestions({ questions, showScore }: { questions: ResultQue
       {questions.map((q, i) => {
         const blank = q.selectedOptionIds.length === 0;
         return (
-          <li key={q.questionId} className="rounded-xl border border-line bg-white p-3 text-[13px]">
+          <li key={q.questionId} className="rounded-xl border border-line bg-surface p-3 text-[13px]">
             <p className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
               <span className="font-bold text-ink">Câu {i + 1}</span>
               {blank ? <Pill>Bỏ trống</Pill> : q.correct ? <Pill tone="success">Đúng</Pill> : <Pill tone="danger">Sai</Pill>}

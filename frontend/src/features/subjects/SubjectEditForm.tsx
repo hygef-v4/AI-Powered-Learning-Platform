@@ -29,7 +29,7 @@ export function SubjectEditForm({ subject, onCancel, onSaved, onReload, onAccess
       </Field>
       <Field label="Mô tả" htmlFor={`${id}-description`} error={errors.description}>
         <textarea id={`${id}-description`} value={description} maxLength={2000} aria-invalid={!!errors.description} onChange={(event) => { setDescription(event.target.value); setErrors((current) => ({ ...current, description: undefined })); }} data-testid="subject-edit-description"
-          className="min-h-28 w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary" />
+          className="min-h-28 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary" />
       </Field>
     </fieldset>
     <SubjectMutationFeedback error={mutation.error} onReload={onReload} />

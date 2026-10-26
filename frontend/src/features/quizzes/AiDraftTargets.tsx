@@ -41,11 +41,13 @@ export function QuestionAiDraftDialog({ subjectId, onClose, onAccepted }: {
  * "Đề xuất AI" trên Quiz Detail (F8, F13): đề xuất từ AI hoặc agent MCP chờ người soạn; chấp nhận thì câu thành câu riêng ở
  * cuối quiz, gửi kèm `version` mới nhất của quiz.
  */
-export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled }: {
+export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, openRequest = 0 }: {
   detail: QuizDetail;
   onQuizChange: (next: QuizDetail) => void;
   onConflict: () => void;
   disabled: boolean;
+  /** Tăng lên mỗi lần chọn "Soạn bằng AI" trong nút Thêm câu hỏi của trang quiz: mở popup AI mới. */
+  openRequest?: number;
 }) {
   const quizId = detail.quiz.id;
   const quizTitle = detail.quiz.title;
@@ -93,13 +95,19 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled }:
     setOpen(null);
     setReloadKey((k) => k + 1);
   };
+  // Mở popup AI khi trang quiz yêu cầu (chọn "Soạn bằng AI"); giá trị 0 là chưa yêu cầu.
+  const [handled, setHandled] = useState(openRequest);
+  if (openRequest !== handled) {
+    setHandled(openRequest);
+    if (openRequest > 0) setOpen({ draftId: null });
+  }
+
+  // Không có đề xuất nào thì không chiếm chỗ trên trang; lối tạo mới nằm trong nút Thêm câu hỏi.
+  if (!error && !open && (drafts === null || drafts.length === 0)) return null;
 
   return (
-    <Section title="Đề xuất AI" icon="smart_toy"
-      actions={<Button size="sm" icon="smart_toy" disabled={disabled} onClick={() => setOpen({ draftId: null })}
-        data-testid="quiz-ai-draft-open">Tạo nháp bằng AI</Button>}>
+    <Section title="Đề xuất AI">
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      {drafts?.length === 0 && <p className="text-[12px] text-muted">Chưa có đề xuất. AI và agent MCP chỉ đề xuất; bạn chấp nhận từng câu.</p>}
       {drafts && drafts.length > 0 && (
         <ul className="flex flex-col gap-2" data-testid="quiz-ai-draft-list">
           {drafts.map((draft) => (

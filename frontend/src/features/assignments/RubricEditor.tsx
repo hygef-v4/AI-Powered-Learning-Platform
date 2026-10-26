@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
 import { cx } from "@/shared/ui";
 
-const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-primary focus:bg-white";
+const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-primary focus:bg-surface";
 const INPUT = `${FIELD} border-transparent`;
 /** Ô điểm luôn có viền nhạt: không có chữ gợi ý (yêu cầu 2026-10-22) nên viền cho biết chỗ nhập điểm. */
 const POINTS = `${FIELD} border-line`;
@@ -105,7 +105,7 @@ export function RubricEditor({ criteria, onChange }: {
       ))}
       {items.length < LIMIT && (
         <button type="button" aria-label="Thêm mục chấm" title="Thêm mục chấm" onClick={() => add(items.length)}
-          className="flex h-6 w-full items-center justify-center rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary">
+          className="flex h-6 w-full items-center justify-center rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary-ink">
           +
         </button>
       )}

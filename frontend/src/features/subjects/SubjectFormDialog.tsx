@@ -70,7 +70,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
         {errors.managerId && <p role="alert" className="text-xs text-danger">{errors.managerId}</p>}
         <Field label="Mô tả (tùy chọn)" htmlFor={`${formId}-description`} error={errors.description}>
           <textarea id={`${formId}-description`} value={description} maxLength={2000} aria-invalid={!!errors.description} onChange={(event) => { setDescription(event.target.value); setErrors((current) => ({ ...current, description: undefined })); }} data-testid="subject-create-description"
-            className="min-h-20 w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary" />
+            className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary" />
         </Field>
       </fieldset>
       {message && <p role="alert" className="text-sm text-danger">{message}</p>}

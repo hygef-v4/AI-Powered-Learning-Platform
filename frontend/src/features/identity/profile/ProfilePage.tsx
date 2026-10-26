@@ -16,7 +16,7 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
-      <PageHeader title="Hồ sơ" subtitle="Thông tin cá nhân của bạn" />
+      <PageHeader title="Hồ sơ" />
       {notice && (
         <Alert tone="success" role="status">
           {notice}

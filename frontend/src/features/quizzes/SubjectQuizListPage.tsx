@@ -72,7 +72,6 @@ export function SubjectQuizListPage() {
     <>
       <PageHeader
         title="Quiz"
-        subtitle="Quiz của môn chỉ dùng để luyện tập (Practice): không có lịch, không vào sổ điểm."
         breadcrumb={[{ label: "Quiz của môn" }, { label: subject.code }]}
         actions={<div className="flex flex-wrap items-center gap-2">
           <Select aria-label="Chọn môn" value={subject.id} data-testid="quiz-list-subject"
@@ -95,7 +94,7 @@ export function SubjectQuizListPage() {
               onClick={() => setFilters((current) => ({ ...current, status: tab.key, page: 0 }))}
               data-testid={`quiz-list-tab-${tab.key ?? "ALL"}`}
               className={cx("rounded-lg px-3 py-1.5 text-[13px] font-semibold",
-                filters.status === tab.key ? "bg-primary-soft text-primary" : "text-body hover:bg-shell")}>
+                filters.status === tab.key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
               {tab.label}
             </button>
           ))}

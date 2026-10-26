@@ -42,7 +42,6 @@ export function SubjectAssignmentListPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title="Bài tập của môn"
-        subtitle="Bài cá nhân do Chủ nhiệm môn soạn cho cả môn, giao cho mọi lớp đang mở của môn theo một lịch chung; giảng viên lớp chỉ xem và chấm. Bài nhóm chỉ có ở bài của lớp."
         actions={<>
           {subjects && subjects.length > 0 && (
             <Select aria-label="Môn học" value={subjectId ?? ""} wrapperClassName="w-60"

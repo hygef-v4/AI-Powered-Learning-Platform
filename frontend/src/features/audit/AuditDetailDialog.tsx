@@ -56,7 +56,7 @@ export function AuditDetailDialog({ item, onClose }: { item: AuditLogItem | null
           <div className="flex flex-col gap-1.5">
             <p className="text-xs font-semibold text-body">Chi tiết (JSON, chỉ đọc)</p>
             <pre
-              className="m-0 max-h-72 overflow-auto rounded-[10px] bg-ink px-3.5 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-200"
+              className="m-0 max-h-72 overflow-auto rounded-xl bg-ink px-3.5 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-line-strong"
               data-testid="audit-detail-json"
             >
               {JSON.stringify(item.details ?? {}, null, 2)}

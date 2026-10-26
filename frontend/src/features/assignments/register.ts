@@ -5,6 +5,6 @@ import { navEntries } from "@/features/identity/slots";
 import { AssignmentSummary } from "./AssignmentSummary";
 import { ClassAssignmentsSection } from "./ClassAssignmentsSection";
 
-navEntries.register({ key: "manager-assignments", order: 60, title: "Bài tập", href: "/manager/assignments", icon: "assignment", roles: ["SUBJECT_MANAGER"] });
+navEntries.register({ key: "manager-assignments", order: 45, title: "Bài tập", href: "/manager/assignments", icon: "assignment", roles: ["SUBJECT_MANAGER"], section: "Môn học" });
 teacherClassTabs.register({ key: "assignments", order: 10, component: ClassAssignmentsSection });
 subjectSummarySections.register({ key: "assignments", order: 20, component: AssignmentSummary });

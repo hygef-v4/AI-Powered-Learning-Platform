@@ -13,7 +13,7 @@ export function SubjectFilters({ search, status, counts, onSearch, onStatus }: P
     <div role="group" aria-label="Trạng thái môn học" className="flex gap-1 rounded-full bg-neutral-soft p-1">
       {(["ACTIVE", "ARCHIVED"] as const).map((value) => <button key={value} type="button"
         aria-pressed={status === value} data-testid={`subjects-filter-${value}`} onClick={() => onStatus(value)}
-        className={cx("rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-primary", status === value ? "bg-ink text-white" : "text-muted hover:text-ink")}>
+        className={cx("rounded-full px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-primary", status === value ? "bg-ink text-surface" : "text-muted hover:text-ink")}>
         {value === "ACTIVE" ? "Đang hoạt động" : "Lưu trữ"} ({counts?.[value] ?? "—"})
       </button>)}
     </div>

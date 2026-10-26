@@ -1,37 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Alert, Button, Dialog, Field, Icon, Pill } from "@/shared/ui";
+import { useRef, useState } from "react";
+import { Alert, Button, Dialog, Field, Icon, IconButton, Select, Switch } from "@/shared/ui";
 import { assignmentsApi, type CreateInput } from "./api";
 import { Choice } from "./Choice";
 import { errorMessage } from "./format";
-import { statusLabels, type AssignmentDetail, type CopySource, type GradingMode, type SubmissionMode } from "./types";
+import { type AssignmentDetail, type CopySource, type GradingMode, type SubmissionMode } from "./types";
 
 type Props = {
   /** Lớp đích (bài của lớp) hoặc môn (bài của môn). */
   target: { kind: "class"; classId: string; groupSupported: boolean } | { kind: "subject"; subjectId: string };
   onClose: () => void;
-  /** Bài đã tạo (đã nhập sẵn tệp DOCX nếu người soạn chọn tệp). */
+  /** Bài đã tạo (đã nhập sẵn tệp DOCX nếu người soạn chọn tệp); `startWithAi` khi bật Soạn bằng AI. */
   onCreated: (assignment: AssignmentDetail, startWithAi?: boolean) => void;
 };
 
-/** Ô chọn tệp DOCX (tùy chọn): chọn xong chỉ hiện tên tệp, bấm ✕ để bỏ. */
+/** Ô chọn tệp DOCX: kéo thả hoặc bấm để chọn; chọn xong chỉ hiện tên tệp và nút bỏ. */
 function DocxField({ file, onChange, disabled }: { file: File | null; onChange: (file: File | null) => void; disabled?: boolean }) {
+  const [over, setOver] = useState(false);
   if (file) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-line-strong px-3 py-2 text-[13px]" data-testid="docx-file">
-        <Icon name="description" size={18} className="text-primary" />
-        <span className="min-w-0 flex-1 truncate text-ink" title={file.name}>{file.name}</span>
-        <button type="button" aria-label="Bỏ tệp" disabled={disabled} onClick={() => onChange(null)}
-          className="inline-flex size-6 items-center justify-center rounded-md text-muted hover:bg-shell hover:text-ink">
-          <Icon name="close" size={16} />
-        </button>
+      <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]" data-testid="docx-file">
+        <Icon name="description" size={18} className="text-primary-ink" />
+        <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={file.name}>{file.name}</span>
+        <IconButton icon="close" label="Bỏ tệp" size={28} disabled={disabled} onClick={() => onChange(null)} />
       </div>
     );
   }
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line-strong px-3 py-2 text-[13px] text-muted hover:border-primary hover:text-primary">
-      <Icon name="upload_file" size={18} />Tệp DOCX
+    <label
+      onDragOver={(event) => { event.preventDefault(); setOver(true); }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setOver(false);
+        const dropped = event.dataTransfer.files[0];
+        if (dropped && !disabled) onChange(dropped);
+      }}
+      className={`flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] border-dashed px-3.5 py-3.5 text-[13.5px] font-semibold transition-colors duration-200 ${
+        over ? "border-primary bg-primary-soft text-ink" : "border-line-strong text-body hover:border-primary hover:bg-sunken"
+      }`}
+    >
+      <Icon name="upload_file" size={18} className="text-primary-ink" />
+      Tệp DOCX
       <input type="file" accept=".docx" className="sr-only" aria-label="Tệp DOCX" data-testid="create-docx" disabled={disabled}
         onChange={(event) => { onChange(event.target.files?.[0] ?? null); event.target.value = ""; }} />
     </label>
@@ -39,14 +50,13 @@ function DocxField({ file, onChange, disabled }: { file: File | null; onChange: 
 }
 
 /**
- * t21b Tạo bài tập (F3, F13): hình thức, chế độ (BR-U07-01…03) và một ô tệp DOCX tùy chọn; có tệp thì tạo xong nhập
- * luôn tệp vào khung rồi mới mở trang soạn (yêu cầu 2026-10-22, không còn bước xem trước nội dung tệp). Bài của lớp
- * còn copy được từ lớp khác. Không còn chọn có sơ đồ hay không: sơ đồ Draw.io luôn dùng được (yêu cầu 2026-10-21).
+ * t21b Tạo bài tập (F3, F13) gộp một form: tệp DOCX (tùy chọn, nhập luôn vào khung sau khi tạo), copy bài từ lớp khác
+ * (chỉ bài của lớp), hình thức, chế độ và công tắc Soạn bằng AI. Không còn tách tab theo cách soạn; nút tạo đổi nhãn
+ * theo các trường đã điền. Sơ đồ Draw.io luôn dùng được (yêu cầu 2026-10-21).
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
-  const [copying, setCopying] = useState(false);
-  const [mode, setMode] = useState<"manual" | "import" | "ai">("import");
   const [file, setFile] = useState<File | null>(null);
+  const [withAi, setWithAi] = useState(false);
   const [submissionMode, setSubmissionMode] = useState<SubmissionMode>("INDIVIDUAL");
   const [gradingMode, setGradingMode] = useState<GradingMode>("GRADED");
   const [sources, setSources] = useState<CopySource[] | null>(null);
@@ -55,17 +65,17 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [created, setCreated] = useState<AssignmentDetail | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadingSources = useRef(false);
   const groupAllowed = target.kind === "class" && target.groupSupported;
   const classId = target.kind === "class" ? target.classId : null;
+  const copying = !!sourceId;
+  const locked = busy || !!created;
 
-  useEffect(() => {
-    if (!copying || !classId) return;
-    const controller = new AbortController();
-    assignmentsApi.copySources(classId, controller.signal).then(setSources, (e) => {
-      if (!controller.signal.aborted) setError(errorMessage(e));
-    });
-    return () => controller.abort();
-  }, [copying, classId]);
+  function loadSources() {
+    if (!classId || sources || loadingSources.current) return;
+    loadingSources.current = true;
+    assignmentsApi.copySources(classId).then(setSources, (e) => setError(errorMessage(e))).finally(() => { loadingSources.current = false; });
+  }
 
   async function submit() {
     setBusy(true);
@@ -81,13 +91,13 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
             : await assignmentsApi.createForSubject(target.subjectId, input);
         }
       }
-      if (file && !copying && mode === "import") {
+      if (file && !copying) {
         const made = assignment;
         setCreated(made);
         const imported = await assignmentsApi.importDocx(made.id, file);
         assignment = await assignmentsApi.saveSkeleton(made.id, made.version, imported.document, { fromDocx: true });
       }
-      if (mode === "ai") onCreated(assignment, true);
+      if (withAi && !copying) onCreated(assignment, true);
       else onCreated(assignment);
     } catch (e) {
       setError(assignment ? `Đã tạo bài, chưa nhập tệp: ${errorMessage(e)}` : errorMessage(e));
@@ -96,79 +106,53 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     }
   }
 
+  const label = created ? "Thử lại" : copying ? "Copy bài" : withAi ? "Tạo và mở AI" : file ? "Tạo và nhập DOCX" : "Tạo bài nháp";
+
   return (
-    <Dialog open title="Tạo bài tập" icon="assignment" size="lg" onClose={onClose} dismissible={!busy}
+    <Dialog open title="Bài tập mới" size="lg" onClose={onClose} dismissible={!busy}
       footer={<>
-        {classId && !created && (
-          <button type="button" className="mr-auto text-xs font-semibold text-primary hover:underline disabled:opacity-50" disabled={busy}
-            data-testid="create-copy-toggle" onClick={() => { setCopying((value) => !value); setError(null); }}>
-            {copying ? "Tạo bài mới" : "Copy từ lớp khác"}
-          </button>
-        )}
-        {created ? (
-          <Button onClick={() => onCreated(created)} disabled={busy}>Mở bài</Button>
-        ) : (
-          <Button onClick={onClose} disabled={busy}>Hủy</Button>
-        )}
-        <Button variant="primary" onClick={() => void submit()} disabled={busy || (copying && !sourceId)} data-testid="create-assignment-submit">
-          {created ? "Thử lại" : mode === "ai" ? "Tạo bài và mở AI" : mode === "import" && file ? "Tạo & nhập DOCX" : "Tạo bài nháp"}
+        {created && <Button onClick={() => onCreated(created)} disabled={busy}>Mở bài</Button>}
+        <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="create-assignment-submit">
+          {label}
+          {!busy && <Icon name="arrow_forward" size={15} />}
         </Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      {copying && target.kind === "class" ? (
-        <Field label="Bài để copy">
-          {!sources ? <p role="status" className="text-xs text-muted">Đang tải…</p> : sources.length === 0 ? (
-            <p className="text-xs text-muted">Không có bài ở lớp khác.</p>
-          ) : (
-            <div className="flex max-h-64 flex-col gap-2 overflow-y-auto" data-testid="copy-sources">
-              {sources.map((source) => (
-                <fieldset key={source.classId} className="rounded-xl border border-line p-2">
-                  <legend className="px-1 text-xs font-semibold text-body">{source.code} · {source.name}</legend>
-                  {source.assignments.map((assignment) => (
-                    <label key={assignment.id} className="flex items-center gap-2 py-1 text-[13px]">
-                      <input type="radio" name="copy-source" checked={sourceId === assignment.id} onChange={() => setSourceId(assignment.id)} />
-                      <span className="min-w-0 flex-1 truncate">{assignment.title}</span>
-                      <Pill>{statusLabels[assignment.status]}</Pill>
-                    </label>
-                  ))}
-                </fieldset>
-              ))}
-            </div>
-          )}
-        </Field>
-      ) : (
-        <>
-          <div role="tablist" aria-label="Cách soạn bài" className="flex border-b border-line">
-            {([
-              ["manual", "Soạn thủ công"], ["import", "Import từ file"], ["ai", "Soạn bằng AI"],
-            ] as const).map(([value, label]) => <button key={value} type="button" role="tab" aria-selected={mode === value}
-              onClick={() => setMode(value)} className={`border-b-2 px-3 py-2 text-[13px] ${mode === value ? "border-primary font-semibold text-primary" : "border-transparent text-muted"}`}>
-              {label}
-            </button>)}
-          </div>
-          {mode === "import" && <>
-            <p className="text-xs text-muted">Tải DOCX để nhập nội dung vào trình soạn thảo sau khi tạo bài.</p>
-            <DocxField file={file} onChange={setFile} disabled={busy} />
-          </>}
-          {mode === "manual" && <p className="text-xs text-muted">Tạo bài nháp trống để tự nhập câu hỏi, hướng dẫn và rubric.</p>}
-          {mode === "ai" && <div className="rounded-lg bg-canvas p-3 text-xs text-body">
-            Mở trình soạn bài để nhập yêu cầu; AI tự suy ra dạng SWR/SWD từ yêu cầu và tài liệu nguồn. Bạn vẫn chọn ngôn ngữ, số câu, tổng điểm và có thể tải tệp nguồn riêng.
-          </div>}
-          <Field label="Hình thức">
-            <Choice name="Hình thức" value={submissionMode} disabled={!!created}
-              onChange={(value) => { setSubmissionMode(value); if (value === "GROUP") setGradingMode("GRADED"); }} options={[
-                { value: "INDIVIDUAL", label: "Cá nhân" },
-                { value: "GROUP", label: "Nhóm", disabled: !groupAllowed, title: groupAllowed ? undefined : target.kind === "subject" ? "Bài của môn chỉ có cá nhân" : "Lớp chưa dùng được bài nhóm" },
-              ]} />
-          </Field>
-          <Field label="Chế độ">
-            <Choice name="Chế độ" value={gradingMode} onChange={setGradingMode} disabled={submissionMode === "GROUP" || !!created} options={[
-              { value: "GRADED", label: "Graded" },
-              { value: "PRACTICE", label: "Practice" },
+      <Field label="Nội dung ban đầu">
+        <div className={`flex flex-col gap-2.5 transition-opacity ${copying ? "opacity-45" : ""}`}>
+          <DocxField file={file} onChange={setFile} disabled={locked || copying} />
+        </div>
+        {classId && (
+          <Select aria-label="Copy bài từ lớp khác" value={sourceId} disabled={locked} data-testid="copy-sources"
+            onFocus={loadSources} onMouseDown={loadSources} onChange={(event) => setSourceId(event.target.value)}>
+            <option value="">{sources && sources.length === 0 ? "Không có bài ở lớp khác" : "Copy từ lớp khác"}</option>
+            {sources?.map((source) => (
+              <optgroup key={source.classId} label={`${source.code} · ${source.name}`}>
+                {source.assignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
+              </optgroup>
+            ))}
+          </Select>
+        )}
+      </Field>
+      <div className={`grid grid-cols-1 gap-4 transition-opacity sm:grid-cols-2 ${copying ? "pointer-events-none opacity-45" : ""}`}>
+        <Field label="Hình thức">
+          <Choice name="Hình thức" value={submissionMode} disabled={locked || copying}
+            onChange={(value) => { setSubmissionMode(value); if (value === "GROUP") setGradingMode("GRADED"); }} options={[
+              { value: "INDIVIDUAL", label: "Cá nhân" },
+              { value: "GROUP", label: "Nhóm", disabled: !groupAllowed, title: groupAllowed ? undefined : target.kind === "subject" ? "Bài của môn chỉ có cá nhân" : "Lớp chưa dùng được bài nhóm" },
             ]} />
-          </Field>
-        </>
-      )}
+        </Field>
+        <Field label="Chế độ">
+          <Choice name="Chế độ" value={gradingMode} onChange={setGradingMode} disabled={submissionMode === "GROUP" || locked || copying} options={[
+            { value: "GRADED", label: "Tính điểm" },
+            { value: "PRACTICE", label: "Luyện tập" },
+          ]} />
+        </Field>
+      </div>
+      <div className={`flex items-center justify-between border-t border-line pt-4 ${copying ? "opacity-45" : ""}`}>
+        <span className="text-[13.5px] font-semibold text-ink">Soạn bằng AI</span>
+        <Switch checked={withAi} onChange={setWithAi} label="" ariaLabel="Soạn bằng AI" disabled={locked || copying} />
+      </div>
     </Dialog>
   );
 }

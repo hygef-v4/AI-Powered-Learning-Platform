@@ -31,7 +31,7 @@ export function ReceiptPage({ attemptId }: { attemptId: string }) {
           <dt className="text-muted">Nội dung</dt><dd>{receipt.blockCount} khối của bạn · {receipt.diagramCount} sơ đồ</dd>
         </dl>
         <div className="flex flex-wrap gap-2">
-          <a href={exportUrl(receipt.attemptId)} className="inline-flex items-center gap-1.5 rounded-[9px] border border-line-strong bg-white px-3.5 py-2 text-[13px] font-semibold text-ink hover:bg-shell">Tải DOCX</a>
+          <a href={exportUrl(receipt.attemptId)} className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink hover:bg-shell">Tải DOCX</a>
           <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
           <ButtonLink href="/my-assignments" variant="primary">Về danh sách bài tập</ButtonLink>
         </div>

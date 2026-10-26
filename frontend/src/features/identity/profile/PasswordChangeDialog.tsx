@@ -74,9 +74,6 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button type="submit" form={formId} variant="primary" icon="lock_reset" disabled={busy}>
             Đổi mật khẩu
           </Button>

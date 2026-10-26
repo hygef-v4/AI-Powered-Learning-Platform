@@ -127,8 +127,8 @@ function SourceRow({
       className={cx(
         "flex w-full flex-col gap-1 rounded-xl border px-3.5 py-3 text-left transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        checked ? "border-primary bg-primary-soft" : "border-line-strong bg-white hover:bg-shell",
-        !option.available && "cursor-not-allowed opacity-55 hover:bg-white",
+        checked ? "border-primary bg-primary-soft" : "border-line-strong bg-surface hover:bg-shell",
+        !option.available && "cursor-not-allowed opacity-55 hover:bg-surface",
       )}
     >
       <span className="flex items-center gap-2 text-[13px] font-semibold text-ink">

@@ -47,7 +47,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
   if (material.kind === "YOUTUBE_LINK") {
     const id = material.current.videoId;
     return <section className={styles.card}><h2>Xem trước</h2>{id && /^[A-Za-z0-9_-]{11}$/.test(id) && <iframe data-testid="material-youtube-player" className={styles.video} title={`Video ${material.title}`} src={`https://www.youtube-nocookie.com/embed/${id}`} allow="encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
-      <a data-testid="material-youtube-external" className="mt-3 inline-block text-sm text-primary" href={`https://www.youtube.com/watch?v=${encodeURIComponent(id ?? "")}`} target="_blank" rel="noopener noreferrer">Mở trên YouTube ↗</a><p className={styles.muted}>Video riêng tư hoặc bị xóa sẽ không phát được.</p></section>;
+      <a data-testid="material-youtube-external" className="mt-3 inline-block text-sm text-primary-ink" href={`https://www.youtube.com/watch?v=${encodeURIComponent(id ?? "")}`} target="_blank" rel="noopener noreferrer">Mở trên YouTube ↗</a><p className={styles.muted}>Video riêng tư hoặc bị xóa sẽ không phát được.</p></section>;
   }
   return <section className={styles.card}><div className={styles.toolbar}><h2 className="mr-auto">Xem trước</h2><Button data-testid="material-download" onClick={() => void download()} disabled={loading}>Tải xuống</Button><Button data-testid="material-token-retry" onClick={() => setRevision(v => v + 1)}>Lấy link mới</Button></div>
     {error && <p role="alert" className={styles.error}>{error}</p>}

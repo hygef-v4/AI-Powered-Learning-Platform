@@ -27,7 +27,7 @@ export function GroupSectionAuthors({ detail }: { detail: Detail }) {
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (
-    <details open={hasData} className="rounded-xl border border-line bg-white px-4 py-3 text-sm">
+    <details open={hasData} className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
         <h2 className="inline text-sm font-bold text-ink">Hoạt động khi làm bài</h2>
         <span className="text-xs text-muted">{activityLabels[detail.activityState] ?? detail.activityState}</span>
@@ -49,7 +49,7 @@ export function ActivityReview({ detail }: { detail: Detail }) {
             </p>
           ))}
         </div>
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-muted">
           Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
         </p>
       </div>
@@ -60,7 +60,7 @@ export function ActivityReview({ detail }: { detail: Detail }) {
 export function GradeHistory({ evaluation }: { evaluation: Evaluation }) {
   const hasChanges = evaluation.changes.length > 0;
   return (
-    <details open={hasChanges} className="rounded-xl border border-line bg-white px-4 py-3 text-sm">
+    <details open={hasChanges} className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
         <h2 className="inline text-sm font-bold text-ink">Lịch sử sửa điểm</h2>
         <span className="text-xs text-muted">

@@ -189,7 +189,7 @@ describe("DocumentEditor", () => {
     expect(leaf).toHaveAttribute("data-leaf");
     expect(leaf.style.backgroundColor).not.toBe(branch.style.backgroundColor);
     expect(sibling.style.backgroundColor).toBe(branch.style.backgroundColor);
-    expect(leaf.querySelector("[data-leaf-body]")).toHaveClass("bg-white");
+    expect(leaf.querySelector("[data-leaf-body]")).toHaveClass("bg-surface");
     expect(within(leaf.querySelector<HTMLElement>("[data-leaf-body]")!).getByTestId("block-p1")).toBeInTheDocument();
     expect(screen.getByTestId("write-part-a1").textContent).toBe("");
     fireEvent.mouseDown(screen.getByTestId("block-intro"));

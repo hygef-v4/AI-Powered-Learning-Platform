@@ -41,14 +41,14 @@ export function Menu({ label, icon, ariaLabel, align = "left", variant = "button
       }}>
       <summary aria-label={ariaLabel}
         className={cx("flex cursor-pointer list-none items-center gap-1.5 whitespace-nowrap select-none [&::-webkit-details-marker]:hidden",
-          variant === "tool" ? "h-7 rounded-md px-2 text-[13px] font-medium text-body hover:bg-black/5"
-            : "rounded-[9px] border border-line-strong bg-white px-3.5 py-2 text-[13px] font-semibold text-ink hover:bg-shell",
+          variant === "tool" ? "h-8 rounded-lg px-2 text-[13px] font-medium text-body transition-colors hover:bg-sunken hover:text-ink"
+            : "h-9 rounded-lg border border-line-strong bg-surface px-3.5 text-[13px] font-semibold text-ink transition-colors hover:bg-sunken",
           summaryClassName)}>
-        {icon && <Icon name={icon} size={variant === "tool" ? 18 : 17} />}
+        {icon && <Icon name={icon} size={16} />}
         {label}
-        <Icon name="expand_more" size={16} className="text-muted" />
+        <Icon name="expand_more" size={12} className="text-muted" />
       </summary>
-      <div role="menu" className={cx("absolute z-40 mt-1 flex min-w-48 flex-col rounded-xl border border-line bg-white p-1 shadow-lg",
+      <div role="menu" className={cx("absolute z-40 mt-1.5 flex min-w-52 animate-pop flex-col rounded-xl border border-line bg-surface p-1.5 shadow-[var(--shadow-float)]",
         align === "right" ? "right-0" : "left-0")}>
         {children}
       </div>
@@ -63,9 +63,9 @@ export function MenuItem({ icon, tone, className, children, ...rest }: ButtonHTM
 }) {
   return (
     <button type="button" role="menuitem" data-menu-item
-      className={cx("flex items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] whitespace-nowrap hover:bg-shell disabled:opacity-45",
+      className={cx("flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] whitespace-nowrap transition-colors hover:bg-sunken disabled:opacity-45",
         tone === "danger" ? "text-danger" : "text-ink", className)} {...rest}>
-      {icon && <Icon name={icon} size={17} className={tone === "danger" ? undefined : "text-muted"} />}
+      {icon && <Icon name={icon} size={16} className={tone === "danger" ? undefined : "text-muted"} />}
       {children}
     </button>
   );

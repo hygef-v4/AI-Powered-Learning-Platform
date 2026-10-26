@@ -140,8 +140,8 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     <>
       <PageHeader
         backHref={listHref(ownerSubject)}
-        breadcrumb={[{ label: "Ngân hàng câu hỏi", href: listHref(ownerSubject) }, { label: creating ? "Thêm câu hỏi" : "Chi tiết câu hỏi" }]}
-        title={creating ? "Thêm câu hỏi" : "Chi tiết câu hỏi"}
+        breadcrumb={[{ label: "Câu hỏi", href: listHref(ownerSubject) }, { label: creating ? "Câu hỏi mới" : "Câu hỏi" }]}
+        title={creating ? "Câu hỏi mới" : "Câu hỏi"}
         subtitle={question && <span className="inline-flex items-center gap-2">
           <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>Phiên bản {question.versionNo}
         </span>}
@@ -154,20 +154,18 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
           {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={save} data-testid="question-detail-save">Lưu thay đổi</Button>}
         </div>}
       />
-      {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"} className="mb-3">{notice.text}</Alert>}
+      {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"}>{notice.text}</Alert>}
       {violations.length > 0 && (
-        <Alert tone="danger" className="mb-3">
+        <Alert tone="danger">
           <ul className="list-disc pl-4">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
         </Alert>
       )}
       {question?.status === "ACTIVE" && (
-        <Alert tone="info" className="mb-3">
-          Câu này đang dùng trong {detail?.usedInQuizzes ?? 0} quiz. Lưu thay đổi sẽ mở bản nháp mới; quiz đã phát hành vẫn dùng phiên bản đã ghim.
-        </Alert>
+        <Alert tone="info">Đang dùng trong {detail?.usedInQuizzes ?? 0} quiz.</Alert>
       )}
-      {readOnly && <Alert tone="warning" className="mb-3">Câu đã ngưng dùng, không chọn được vào quiz mới.</Alert>}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Section title="Nội dung" icon="quiz">
+      {readOnly && <Alert tone="warning">Câu đã ngưng dùng.</Alert>}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <Section title="Nội dung">
           <McqEditor value={form} onChange={setForm} errors={errors} readOnly={readOnly} />
         </Section>
         <div className="flex flex-col gap-4">
@@ -178,16 +176,10 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       <Dialog open={confirm !== null} onClose={() => setConfirm(null)} tone={confirm === "delete" ? "danger" : "warning"}
         title={confirm === "delete" ? "Xóa câu nháp?" : "Ngưng dùng câu hỏi?"}
         footer={<>
-          <Button onClick={() => setConfirm(null)} disabled={busy}>Hủy</Button>
           <Button variant={confirm === "delete" ? "danger" : "primary"} disabled={busy} onClick={confirmAction} data-testid="question-detail-confirm">
             {confirm === "delete" ? "Xóa" : "Ngưng dùng"}
           </Button>
         </>}>
-        <p className="text-[13px] text-body">
-          {confirm === "delete"
-            ? "Bản nháp này sẽ bị xóa hẳn."
-            : "Câu sẽ không chọn được vào quiz mới; quiz đã phát hành vẫn dùng phiên bản đã ghim."}
-        </p>
       </Dialog>
     </>
   );

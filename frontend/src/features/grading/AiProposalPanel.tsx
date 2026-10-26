@@ -109,7 +109,7 @@ export function AiProposalPanel({
               <button
                 type="button"
                 onClick={onRecheck}
-                className="mt-2 rounded-lg border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary-soft"
+                className="mt-2 rounded-lg border border-primary bg-surface px-3 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary-soft"
               >
                 Kiểm tra lại
               </button>
@@ -119,11 +119,11 @@ export function AiProposalPanel({
         {(p.status === "FAILED" || p.status === "REJECTED") && <div className="mt-2 rounded-lg bg-danger/5 p-3">
           <p>{p.safeError && !/^AI task (failed|unavailable or failed)$/.test(p.safeError) ? p.safeError : "Tác vụ AI không thành công. Kiểm tra kết nối hoặc thử lại bằng nguồn AI đã cấu hình."}</p>
           <p className="mt-1 text-muted">Bạn vẫn có thể chấm thủ công theo rubric. Điểm chưa bị thay đổi.</p>
-          <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary underline underline-offset-2">Kiểm tra kết nối AI</a>
+          <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">Kiểm tra kết nối AI</a>
         </div>}
         {p.status === "STALE" && <p className="mt-2 text-muted">Bài nộp hoặc rubric đã thay đổi. Hãy yêu cầu một đề xuất mới.</p>}
         {p.proposal && <>
-          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2">
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2">
             <div>
               <span className="text-xs font-medium text-muted">Điểm AI đề xuất: </span>
               <strong className="text-base font-bold tabular-nums text-success">{aiTotal.toFixed(2)}</strong>
@@ -159,7 +159,7 @@ export function AiProposalPanel({
             />
           )}
           {hasComparison && currentValues && (
-            <div className="mt-2 space-y-1.5 rounded-lg border border-line bg-white p-2.5 text-xs">
+            <div className="mt-2 space-y-1.5 rounded-lg border border-line bg-surface p-2.5 text-xs">
               <p className="font-semibold text-ink">So sánh theo từng phần & mục rubric</p>
               {rubrics.map((rubric, rIdx) => {
                 const secTitle = partTitles[rubric.partId] || `Phần ${rIdx + 1}`;
@@ -168,7 +168,7 @@ export function AiProposalPanel({
                 const secCurInvalid = invalidItemScores([rubric], currentValues.itemScores);
                 const secCur = secCurInvalid ? "Chưa hợp lệ" : checklistPoints([rubric], currentValues.checks, currentValues.itemScores).toFixed(2);
                 return (
-                  <div key={rubric.rubricId} className="rounded border border-line-soft bg-shell/40 p-2">
+                  <div key={rubric.rubricId} className="rounded-lg border border-line bg-shell p-3">
                     <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-ink">
                       <span>{secTitle}</span>
                       <span className="tabular-nums text-body">
@@ -231,13 +231,13 @@ export function AiProposalPanel({
             </div>
           )}
           {p.proposal.feedback && (
-            <details open={!aiStructured && p.proposal.feedback.length <= 280} className="mt-2 rounded-lg border border-line-soft bg-white p-2.5">
+            <details open={!aiStructured && p.proposal.feedback.length <= 280} className="mt-2 rounded-lg border border-line-soft bg-surface p-2.5">
               <summary className="cursor-pointer text-xs font-semibold text-body">Nhận xét tổng hợp từ AI</summary>
               <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-ink">{p.proposal.feedback}</p>
             </details>
           )}
-          {!!p.proposal.sections?.length && <details className="mt-2 rounded-lg border border-line-soft bg-white p-2.5">
-            <summary className="cursor-pointer text-xs font-semibold text-primary">Nhận xét từng phần ({p.proposal.sections.length})</summary>
+          {!!p.proposal.sections?.length && <details className="mt-2 rounded-lg border border-line-soft bg-surface p-2.5">
+            <summary className="cursor-pointer text-xs font-semibold text-primary-ink">Nhận xét từng phần ({p.proposal.sections.length})</summary>
             {p.proposal.sections.map((section, sectionIndex) => (
               <p key={section.partId} className="mt-2 text-xs leading-relaxed">
                 <strong>{partTitles[section.partId] || `Phần ${sectionIndex + 1}`}:</strong> {section.feedback}
@@ -248,7 +248,7 @@ export function AiProposalPanel({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="rounded-lg border border-primary bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg border border-primary bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary hover:text-on-primary disabled:cursor-not-allowed disabled:opacity-40"
             disabled={disabled || p.status !== "READY" || !p.proposal}
             onClick={() => {
               if (!p.proposal) return;
@@ -276,7 +276,7 @@ export function AiProposalPanel({
   }
 
   return (
-    <section aria-label="Đề xuất AI" className="rounded-xl border border-line bg-white p-3.5 sm:p-4">
+    <section aria-label="Đề xuất AI" className="rounded-xl border border-line bg-surface p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-bold text-ink">Đề xuất AI</h2>
@@ -284,7 +284,7 @@ export function AiProposalPanel({
         </div>
         <button
           type="button"
-          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-on-primary disabled:opacity-40"
           disabled={disabled || proposals.some((proposal) => proposal.status === "PENDING")}
           onClick={() => setChoosingSource(true)}
         >

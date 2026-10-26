@@ -30,7 +30,7 @@ export function DiagramViewPage({ load, backHref }: { load: (signal: AbortSignal
     <div className="flex flex-col gap-4">
       <PageHeader backHref={backHref} title={data.alt || diagramTypeLabels[data.diagramType]} subtitle={data.title} />
       <Section title={<><Pill tone="accent">{diagramTypeLabels[data.diagramType]}</Pill></>}
-        actions={<a href={file} download="so-do.drawio" className="text-xs font-semibold text-primary">Tải tệp .drawio</a>}>
+        actions={<a href={file} download="so-do.drawio" className="text-xs font-semibold text-primary-ink">Tải tệp .drawio</a>}>
         {data.svgPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={svgDataUri(data.svgPreview)} alt={data.alt || "Sơ đồ"} className="max-w-full" />

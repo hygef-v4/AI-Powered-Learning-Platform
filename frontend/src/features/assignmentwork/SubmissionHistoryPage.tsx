@@ -56,7 +56,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
           {current && attempt?.attemptId === current.attemptId ? (
             <Section title={`Bài nộp · lượt ${current.attemptNo}`} icon="description"
               description={current.submittedAt ? `${formatDateTime(current.submittedAt)} · ${current.receiptHash?.slice(0, 12) ?? ""}` : "Đang làm"}
-              actions={<a href={exportUrl(current.attemptId)} className="text-xs font-semibold text-primary">Tải DOCX</a>}>
+              actions={<a href={exportUrl(current.attemptId)} className="text-xs font-semibold text-primary-ink">Tải DOCX</a>}>
               {current.warnings.length > 0 && <Alert tone="warning" title={current.submitMode ? submitModeLabels[current.submitMode] : undefined}>
                 {current.warnings.map((w) => w.message).join("; ")}</Alert>}
               <DocumentViewer document={attempt.content} imageUrl={attemptImageUrl(current.attemptId)} markTeacherBlocks />

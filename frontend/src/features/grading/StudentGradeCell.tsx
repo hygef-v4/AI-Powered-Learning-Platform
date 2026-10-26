@@ -34,7 +34,7 @@ export function StudentGradeCell({
         </span>
       )}
       {grade && (
-        <button className="ml-2 text-primary" onClick={() => void distribution()}>
+        <button className="ml-2 text-primary-ink" onClick={() => void distribution()}>
           Phân bố điểm
         </button>
       )}

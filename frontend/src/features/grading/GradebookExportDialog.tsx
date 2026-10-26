@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Dialog } from "@/shared/ui/Dialog";
+import { Alert, Button, Dialog, Field, Segmented, Select } from "@/shared/ui";
 import { gradingApi } from "./api";
 import { message } from "./useResource";
 export function GradebookExportDialog({
@@ -43,36 +43,20 @@ export function GradebookExportDialog({
       dismissible={!busy}
       footer={
         <>
-          <button disabled={busy} onClick={onClose}>
-            Hủy
-          </button>
-          <button
-            disabled={busy}
-            onClick={() => void download()}
-            className="ml-3 rounded bg-primary px-4 py-2 text-white"
-          >
+          <Button variant="primary" icon="download" disabled={busy} onClick={() => void download()}>
             {busy ? "Đang tạo tệp…" : "Xuất tệp"}
-          </button>
+          </Button>
         </>
       }
     >
-      <label className="my-4 block">
-        Định dạng{" "}
-        <select
-          value={format}
-          onChange={(e) => setFormat(e.target.value)}
-          className="rounded border p-2"
-        >
-          <option value="csv">CSV</option>
-          <option value="xlsx">Excel (.xlsx)</option>
-        </select>
-      </label>
-      <label>
-        Phạm vi{" "}
-        <select
+      <Field label="Định dạng">
+        <Segmented ariaLabel="Định dạng" value={format} onChange={setFormat} options={[{ value: "csv", label: "CSV" }, { value: "xlsx", label: "Excel (.xlsx)" }]} />
+      </Field>
+      <label className="flex flex-col gap-1.5 text-xs font-semibold text-body">
+        Phạm vi
+        <Select
           value={assignment}
           onChange={(e) => setAssignment(e.target.value)}
-          className="rounded border p-2"
         >
           <option value="">Toàn bộ bài Graded</option>
           {assignments.map((a) => (
@@ -80,18 +64,9 @@ export function GradebookExportDialog({
               {a.title}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
-      <p className="mt-4">
-        Chỉ xuất điểm đã chốt/công bố. Mục chưa nộp/chưa chốt được ghi rõ; không có điểm tổng,
-        Practice hay Quiz.
-      </p>
-      <p className="mt-2 text-sm text-slate-600">
-        Phạm vi xuất áp dụng cho toàn bộ danh sách sinh viên của lớp theo lựa chọn ở trên, không phụ
-        thuộc bộ lọc tìm kiếm hay trang đang xem. Thao tác xuất được ghi audit; tệp không lưu lại
-        trên hệ thống.
-      </p>
-      {error && <p role="alert">{error}</p>}
+      {error && <Alert tone="danger" role="alert">{error}</Alert>}
     </Dialog>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, IconTile, Pill } from "@/shared/ui";
+import { Alert, Button, Pill } from "@/shared/ui";
 import { getGroups, getStudentGroup } from "./api";
 import type { GroupSetView, StudentGroup } from "./types";
 
@@ -62,14 +62,13 @@ export function GroupCountCard({
     <div
       data-testid={variant === "overview" ? "overview-groups-card" : undefined}
       data-class-overview-region={variant === "overview" ? "groups" : undefined}
-      className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4"
+      className="flex min-w-0 animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
     >
-      <IconTile icon="groups" tone="accent" />
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-muted">Nhóm</p>
+      <div className="flex min-w-0 flex-col gap-2">
+        <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Nhóm</p>
         {set ? (
           <>
-            <p className="text-xl font-bold text-ink">{set.groups.length}</p>
+            <p className="font-display text-[36px] leading-none text-ink">{set.groups.length}</p>
             <p className="text-xs text-muted">{set.ungrouped.length} sinh viên chưa có nhóm</p>
           </>
         ) : error ? (
@@ -123,7 +122,7 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
   if (set.groups.some((g) => !g.leaderId)) errors.push("Có nhóm chưa có trưởng nhóm.");
   if (set.groups.some((g) => !g.members.some((m) => m.active))) errors.push("Có nhóm không có thành viên đang học.");
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-line bg-white p-4">
+    <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
       <p className="text-[13px] font-bold text-ink">Kiểm tra sẵn sàng · {set.groups.length} nhóm</p>
       {errors.length > 0 && (
         <Alert tone="danger" title="Chưa phát hành được">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { uploadFile } from "@/features/files/api";
 import { ApiError } from "@/shared/api/client";
@@ -23,7 +24,7 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Menu, MenuItem, PageHeader, Pill, cx } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Icon, Menu, MenuItem, Pill, cx } from "@/shared/ui";
 import { AiDraftDialog } from "./AiDraftDialog";
 import { assignmentsApi, docxUrl, imageUrlFor } from "./api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "./AssignmentSettingsPanel";
@@ -439,7 +440,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     return {
       key: part.partId,
       anchorBlockId: part.headingBlockId,
-      content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-white p-3 text-xs text-muted">
+      content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-surface p-3 text-xs text-muted">
         {rubricLoadError ? "Chưa tải được tiêu chí chấm." : "Đang tải tiêu chí chấm…"}
       </p> : (
         <RubricNote title={part.title} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
@@ -457,10 +458,10 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {editable ? (
         <AutoTextarea id="assignment-title" aria-label="Tên bài" value={title} maxLength={200} placeholder="Tên bài tập"
           aria-invalid={titleMissing || undefined}
-          className={cx("text-[26px] leading-tight font-bold text-ink", titleMissing && "rounded-md bg-danger-soft")}
+          className={cx("font-display text-[34px] leading-tight tracking-[-0.025em] text-ink", titleMissing && "rounded-md bg-danger-soft")}
           onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
           onChange={(event) => editTitle(event.target.value.replace(/\n/g, " "))} />
-      ) : <h2 className="text-[26px] leading-tight font-bold text-ink">{title || "Bài chưa đặt tên"}</h2>}
+      ) : <h2 className="font-display text-[34px] leading-tight tracking-[-0.025em] text-ink">{title || "Bài chưa đặt tên"}</h2>}
       {editable ? (
         <Field label="Hướng dẫn làm và nộp bài" htmlFor="assignment-instructions" hint="Quy định áp dụng cho toàn bài: thời lượng, cách trình bày và tệp cần nộp.">
           <AutoTextarea id="assignment-instructions" aria-label="Hướng dẫn làm và nộp bài" value={instructions} maxLength={20000}
@@ -468,26 +469,33 @@ export function AssignmentFormPage({ id }: { id: string }) {
             className="text-sm leading-[1.65] text-body" onChange={(event) => editInstructions(event.target.value)} />
         </Field>
       ) : instructions && <p className="text-sm leading-[1.65] whitespace-pre-wrap text-body">{instructions}</p>}
-      <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-        <Pill>{submissionLabels[detail.submissionMode]}</Pill>
-        <Pill tone={settings.gradingMode === "GRADED" ? "info" : "accent"}>{gradingLabels[settings.gradingMode]}</Pill>
-        <Pill>{topLevelQuestionCount} câu · {parts.length} mục chấm</Pill>
-        {!preview && (waitingForRubrics ? <Pill>{rubricLoadError ? "Chưa tải được điểm" : "Đang tải tiêu chí chấm…"}</Pill>
-          : <><Pill>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</Pill><Pill tone={missing > 0 ? "warning" : "neutral"}>{formatPoints(totalPoints)} điểm</Pill></>)}
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted">
+        <span>{submissionLabels[detail.submissionMode]}</span>
+        <span aria-hidden>·</span><span>{gradingLabels[settings.gradingMode]}</span>
+        <span aria-hidden>·</span><span>{topLevelQuestionCount} câu · {parts.length} mục chấm</span>
+        {!preview && (waitingForRubrics ? <><span aria-hidden>·</span><span>{rubricLoadError ? "Chưa tải được điểm" : "Đang tải tiêu chí chấm…"}</span></>
+          : <><span aria-hidden>·</span><span>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</span><span aria-hidden>·</span><strong className="font-display text-[18px] font-normal text-ink">{formatPoints(totalPoints)} điểm</strong></>)}
+        {required.map(([type, count]) => <span key={type}>· {count} {diagramTypeLabels[type]}</span>)}
         {!preview && !waitingForRubrics && missing > 0 && <Pill tone="warning">{missing} mục cần bổ sung rubric</Pill>}
-        {required.map(([type, count]) => <Pill key={type}>{count} {diagramTypeLabels[type]}</Pill>)}
       </p>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <PageHeader backHref={backHref}
-        title={<>{title || detail.title || "Bài chưa đặt tên"}<Pill tone={statusTones[detail.status]}>{statusLabels[detail.status]}</Pill></>}
-        breadcrumb={[{ label: detail.ownerName || (detail.scope === "SUBJECT" ? "Bài của môn" : "Bài của lớp") }, { label: `Version ${detail.versionNo}` }]}
-        subtitle={<span data-testid="save-state">{saveText}</span>}
-        actions={<>
-          <Menu label="Khác" align="right">
+    <div className="flex flex-col gap-4">
+      <header className="sticky top-14 z-20 -mx-4 -mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+        <Link href={backHref} aria-label="Quay lại" className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
+          <Icon name="arrow_back" size={16} />
+        </Link>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="sr-only">{title || detail.title || "Bài chưa đặt tên"}</h1>
+          <span className="truncate text-[13px] font-semibold text-ink">{detail.ownerName || (detail.scope === "SUBJECT" ? "Bài của môn" : "Bài của lớp")}</span>
+          <span className="font-mono text-xs text-muted">v{detail.versionNo}</span>
+          <Pill tone={statusTones[detail.status]}>{statusLabels[detail.status]}</Pill>
+          <span data-testid="save-state" className="text-xs text-muted">{saveText}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
             <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
             <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
             {permissions.canClone && (
@@ -515,7 +523,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
           ) : permissions.canChangeSchedule && (
             <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>Đổi lịch</Button>
           )}
-        </>} />
+        </div>
+      </header>
 
       {conflict && (
         <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
@@ -548,8 +557,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         </>} />
 
       {dialog === "settings" && (
-        <Dialog open size="lg" icon="tune" title="Cài đặt bài" onClose={() => setDialog(null)}
-          footer={<Button variant="primary" onClick={() => setDialog(null)}>Xong</Button>}>
+        <Dialog open size="lg" title="Cài đặt bài" onClose={() => setDialog(null)}>
           <AssignmentSettingsPanel detail={detail} value={settings} readOnly={!permissions.canEditContent} onChange={editSettings} />
         </Dialog>
       )}
@@ -600,7 +608,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {dialog === "delete" && (
         <Dialog open title="Xóa bản nháp?" icon="warning" tone="danger" onClose={() => setDialog(null)}
           footer={<>
-            <Button onClick={() => setDialog(null)}>Hủy</Button>
             <Button variant="danger" data-testid="assignment-delete-confirm" onClick={() => void act(async () => {
               await assignmentsApi.remove(id, version.current);
               router.push(backHref);
@@ -620,7 +627,6 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
   return (
     <Dialog open title="Ngưng giao bài" icon="block" tone="danger" onClose={onClose} dismissible={!busy}
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="danger" disabled={busy || !reason.trim()} data-testid="retire-confirm" onClick={async () => {
           setBusy(true);
           try { await onConfirm(reason.trim()); } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
@@ -630,7 +636,7 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
       <p>Sinh viên không bắt đầu, không nộp thêm; bài đang làm được tự nộp; bài đã nộp giữ nguyên.</p>
       <Field label="Lý do" htmlFor="retire-reason" required>
         <textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
-          className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary" />
+          className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-primary" />
       </Field>
     </Dialog>
   );

@@ -52,7 +52,7 @@ function ClassResolver({ quizId }: { quizId: string }) {
   return (
     <>
       <PageHeader backHref="/quiz-practice" breadcrumb={[{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: rows[0]?.title ?? "" }]}
-        title={rows[0]?.title ?? "Quiz"} subtitle="Quiz của môn mở ở nhiều lớp bạn đang học. Chọn lớp để làm quiz." />
+        title={rows[0]?.title ?? "Quiz"} />
       <ul className="flex flex-col gap-2" data-testid="practice-detail-classes">
         {rows.map((row) => (
           <li key={row.classId}>

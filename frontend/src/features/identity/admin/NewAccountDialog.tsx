@@ -59,9 +59,6 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button type="submit" form={formId} variant="primary" icon="person_add" disabled={busy}>
             Thêm tài khoản
           </Button>

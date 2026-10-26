@@ -139,7 +139,7 @@ export function AccountDetailPage() {
             <p className="text-[13px] text-body">Lịch sử thay đổi của tài khoản xem ở Nhật ký audit.</p>
             <Link
               href={`/admin/audit?objectType=ACCOUNT&objectId=${account.id}`}
-              className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline"
+              className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
             >
               Mở Nhật ký audit của tài khoản
             </Link>
@@ -222,7 +222,7 @@ function AccountEditForm({
   }
 
   return (
-    <Section title="Thông tin tài khoản" description="Chỉ sửa họ tên và số điện thoại ở đây">
+    <Section title="Thông tin tài khoản">
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Họ và tên" htmlFor={nameId} required error={fieldError.name}>

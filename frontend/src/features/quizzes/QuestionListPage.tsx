@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Alert, Button, ButtonLink, ClickableRow, cx, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, cx, Menu, MenuItem, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getManagedSubjects, getQuestions } from "./api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "./labels";
 import { QuestionAiDraftDialog } from "./AiDraftTargets";
@@ -90,30 +90,35 @@ export function QuestionListPage() {
   return (
     <>
       <PageHeader
-        title="Ngân hàng câu hỏi"
-        breadcrumb={[{ label: "Ngân hàng câu hỏi môn" }, { label: subject.code }]}
+        title="Câu hỏi"
+        subtitle={data ? `${data.total} câu trong ngân hàng của môn` : undefined}
         actions={<div className="flex flex-wrap items-center gap-2">
-          <Select aria-label="Chọn môn" value={subject.id} onChange={(event) => selectSubject(event.target.value)} data-testid="question-list-subject">
-            {subjects.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
-          </Select>
-          {!archived && <Button icon="upload_file" onClick={() => { setNotice(null); setImporting(true); }} data-testid="question-list-import">Nhập từ tệp</Button>}
-          {!archived && <Button icon="smart_toy" onClick={() => { setNotice(null); setDrafting(true); }} data-testid="question-list-ai">Tạo nháp bằng AI</Button>}
+          {subjects.length > 1 && (
+            <Select aria-label="Chọn môn" value={subject.id} wrapperClassName="w-56" onChange={(event) => selectSubject(event.target.value)} data-testid="question-list-subject">
+              {subjects.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
+            </Select>
+          )}
           {!archived && (
-            <ButtonLink variant="primary" icon="add" href={`/manager/questions/new?subjectId=${encodeURIComponent(subject.id)}`}>Thêm câu hỏi</ButtonLink>
+            <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi"
+              summaryClassName="!border-primary !bg-primary !text-on-primary hover:!bg-primary-strong">
+              <MenuItem icon="edit" onClick={() => router.push(`/manager/questions/new?subjectId=${encodeURIComponent(subject.id)}`)}>Soạn câu mới</MenuItem>
+              <MenuItem icon="upload_file" onClick={() => { setNotice(null); setImporting(true); }} data-testid="question-list-import">Nhập từ tệp</MenuItem>
+              <MenuItem icon="sparkle" onClick={() => { setNotice(null); setDrafting(true); }} data-testid="question-list-ai">Soạn bằng AI</MenuItem>
+            </Menu>
           )}
         </div>}
       />
-      {archived && <Alert tone="warning" className="mb-3">Môn đã lưu trữ, ngân hàng câu hỏi chỉ xem.</Alert>}
-      {notice && <Alert tone="success" role="status" className="mb-3">{notice}</Alert>}
+      {archived && <Alert tone="warning">Môn đã lưu trữ, ngân hàng câu hỏi chỉ xem.</Alert>}
+      {notice && <Alert tone="success" role="status">{notice}</Alert>}
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Loại câu" className="flex gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="tablist" aria-label="Loại câu" className="inline-flex gap-0.5 rounded-[10px] bg-sunken p-[3px]">
           {TABS.map((tab) => (
             <button key={tab.label} type="button" role="tab" aria-selected={filters.type === tab.key}
               onClick={() => setFilters((current) => ({ ...current, type: tab.key, page: 0 }))}
               data-testid={`question-list-tab-${tab.key ?? "ALL"}`}
-              className={cx("rounded-lg px-3 py-1.5 text-[13px] font-semibold",
-                filters.type === tab.key ? "bg-primary-soft text-primary" : "text-body hover:bg-shell")}>
+              className={cx("rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold transition-[background-color,color] duration-200",
+                filters.type === tab.key ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink")}>
               {tab.label}
             </button>
           ))}
@@ -154,14 +159,13 @@ export function QuestionListPage() {
                       {row.hasDraft && <Pill tone="warning">Có bản nháp mới</Pill>}
                     </span>
                   </Td>
-                  <Td className="whitespace-nowrap text-muted">{formatDateTime(row.updatedAt)}</Td>
+                  <Td className="font-mono text-xs whitespace-nowrap text-muted">{formatDateTime(row.updatedAt)}</Td>
                 </ClickableRow>
               ))}
             </tbody>
           </TableFrame>
           <Pagination page={data.page} pageSize={data.size} total={data.total} itemLabel="câu hỏi" testId="question-list-pagination"
             onPageChange={(page) => setFilters((current) => ({ ...current, page }))} />
-          <p className="text-xs text-muted">Sửa câu đang dùng sẽ mở bản nháp mới; quiz đã phát hành giữ phiên bản đã ghim.</p>
         </div>
       )}
 

@@ -144,7 +144,6 @@ export function GroupProgressView({ classId, set, onBack }: { classId: string; s
         onClose={() => setReleasing(null)}
         footer={
           <>
-            <Button onClick={() => setReleasing(null)}>Hủy</Button>
             <Button variant="danger" onClick={() => void release()}>
               Nhả mục
             </Button>

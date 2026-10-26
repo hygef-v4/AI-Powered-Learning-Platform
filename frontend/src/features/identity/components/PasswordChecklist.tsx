@@ -26,7 +26,7 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
             <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>
           </li>
         ) : (
-          <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-[#059669]" : "text-[#94a3b8]"}`}>
+          <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-success" : "text-muted"}`}>
             <Icon name="check" size={14} />
             {item.label}
             <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>

@@ -161,10 +161,10 @@ function Diagram({ blockId, content }: { blockId: string; content: Record<string
   return <figure id={`submission-block-${blockId}`} className="my-4 min-w-0 scroll-mt-24 rounded-lg border border-line bg-shell/30 p-3">
     <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
     {preview ? <>
-      <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-white" />
+      <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-surface" />
       <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>Xem sơ đồ</Button>
       <Dialog open={expanded} title={title} size="xl" onClose={() => setExpanded(false)}>
-        <div className="max-h-[70vh] overflow-auto rounded border border-line bg-white p-3">
+        <div className="max-h-[70vh] overflow-auto rounded border border-line bg-surface p-3">
           <Image src={preview} alt={title} width={1600} height={1200} unoptimized className="h-auto max-w-none" />
         </div>
         <p className="mt-2 text-sm text-muted">Cuộn ngang và dọc để xem chi tiết. Đây là bản đã nộp, chỉ đọc.</p>
@@ -172,7 +172,7 @@ function Diagram({ blockId, content }: { blockId: string; content: Record<string
     </> : <p className="text-sm text-muted">Chưa có ảnh xem trước sơ đồ khả dụng.</p>}
     <details className="mt-3 text-xs text-muted">
       <summary className="cursor-pointer">Dữ liệu sơ đồ Draw.io</summary>
-      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-white p-2">{typeof content.xml === "string" ? content.xml : "Không có XML"}</pre>
+      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-surface p-2">{typeof content.xml === "string" ? content.xml : "Không có XML"}</pre>
     </details>
   </figure>;
 }
@@ -186,7 +186,7 @@ export function SubmissionViewer({
   return (
     <section
       aria-label="Bài làm đã nộp"
-      className="min-w-0 break-words rounded-xl border border-line bg-white p-4 text-sm leading-relaxed sm:p-5"
+      className="min-w-0 break-words rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed sm:p-5"
     >
       <h2 className="mb-4 text-base font-bold">Bài làm đã nộp — chỉ đọc</h2>
       {document.blocks.map((block) => {

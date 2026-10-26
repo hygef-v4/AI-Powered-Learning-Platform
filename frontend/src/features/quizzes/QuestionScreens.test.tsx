@@ -111,7 +111,7 @@ describe("QuestionDetailPage (UC 47)", () => {
     vi.mocked(updateQuestion).mockResolvedValue(detail({ id: "q2", versionNo: 2, status: "DRAFT", version: 1 }));
     render(<QuestionDetailPage id="q1" />);
 
-    expect(await screen.findByText(/đang dùng trong 3 quiz/)).toBeInTheDocument();
+    expect(await screen.findByText(/đang dùng trong 3 quiz/i)).toBeInTheDocument();
     fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Thủ đô nước ta?" } });
     fireEvent.click(screen.getByTestId("question-detail-save"));
 

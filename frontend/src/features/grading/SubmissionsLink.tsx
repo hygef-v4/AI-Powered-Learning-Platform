@@ -26,7 +26,7 @@ function ClassSubmissionsLink({
   const { value, error } = useResource(load);
   return (
     <Link
-      className="text-primary"
+      className="text-primary-ink"
       href={`/teaching/classes/${classId}/assignments/${assignmentId}/submissions`}
     >
       {value

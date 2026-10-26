@@ -140,7 +140,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
           <button type="button" onClick={() => onOpenDiagram?.(block.id)} disabled={!onOpenDiagram}
             aria-label={onOpenDiagram ? (drawn ? "Sửa sơ đồ" : "Vẽ sơ đồ") : undefined}
             className={cx("flex min-h-60 w-full items-center justify-center overflow-hidden rounded-lg p-0 transition-colors",
-              drawn ? "bg-white" : "bg-canvas",
+              drawn ? "bg-surface" : "bg-canvas",
               onOpenDiagram ? "cursor-pointer border-2 border-dashed border-line-strong hover:border-primary"
                 : drawn ? "cursor-default border border-line" : "cursor-default border-2 border-dashed border-line-strong")}>
             {svg ? (

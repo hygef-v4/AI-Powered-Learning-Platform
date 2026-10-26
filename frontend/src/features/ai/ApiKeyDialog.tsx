@@ -89,9 +89,6 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
       dismissible={!busy}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant="primary" icon="save" onClick={() => void save()} disabled={busy || !model}>
             Lưu khóa
           </Button>

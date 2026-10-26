@@ -128,12 +128,12 @@ export function ClassProgressSection({
     <div
       data-testid="overview-open-card"
       data-class-overview-region={layout === "overview" ? "open" : undefined}
-      className="flex flex-col justify-between rounded-2xl border border-line bg-white p-4"
+      className="flex animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
     >
-      <dt className="text-xs font-semibold text-muted">Bài đang mở</dt>
+      <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Bài đang mở</dt>
       {value ? (
         <>
-          <dd className="mt-1 text-xl font-bold text-ink">{value.openCount}</dd>
+          <dd className="font-display text-[36px] leading-none text-ink">{value.openCount}</dd>
           <dd className="mt-0.5 text-xs text-muted">
             {value.dueToday} bài hết hạn hôm nay
             {value.hiddenOpenCount > 0 ? ` · ${value.hiddenOpenCount} bài ẩn theo quyền` : ""}
@@ -151,12 +151,12 @@ export function ClassProgressSection({
     <div
       data-testid="overview-pending-card"
       data-class-overview-region={layout === "overview" ? "pending" : undefined}
-      className="flex flex-col justify-between rounded-2xl border border-line bg-white p-4"
+      className="flex animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-5"
     >
-      <dt className="text-xs font-semibold text-muted">Chờ chấm</dt>
+      <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Chờ chấm</dt>
       {value ? (
         <>
-          <dd className="mt-1 text-xl font-bold text-ink">{value.pendingTotal}</dd>
+          <dd className="font-display text-[36px] leading-none text-ink">{value.pendingTotal}</dd>
           <dd className="mt-0.5 text-xs text-muted">Bài nộp chờ chấm</dd>
         </>
       ) : error ? (
@@ -173,8 +173,8 @@ export function ClassProgressSection({
       data-class-overview-region={layout === "overview" ? "progress" : undefined}
       className={
         layout === "overview"
-          ? "rounded-2xl border border-line bg-white p-5 min-w-0"
-          : "mt-5 rounded-xl border border-line bg-white p-5 min-w-0"
+          ? "rounded-xl border border-line bg-surface p-5 min-w-0"
+          : "mt-5 rounded-xl border border-line bg-surface p-5 min-w-0"
       }
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -204,7 +204,7 @@ export function ClassProgressSection({
       )}
 
       {error && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger-line bg-danger-soft p-3 text-sm text-danger">
           <p role="alert">{error}</p>
           <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>
             Thử tải lại
@@ -242,7 +242,7 @@ export function ClassProgressSection({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <Link
-                      className="font-semibold text-primary hover:underline break-words"
+                      className="font-semibold text-primary-ink hover:underline break-words"
                       href={submissionHref}
                     >
                       {assignment.title}
@@ -257,7 +257,7 @@ export function ClassProgressSection({
                   <div className="flex flex-wrap items-center gap-2">
                     {pendingCount > 0 && <Pill tone="warning">{pendingCount} chờ chấm</Pill>}
                     <Link
-                      className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+                      className="text-xs font-semibold text-primary-ink hover:underline whitespace-nowrap"
                       href={submissionHref}
                     >
                       Xem bài nộp
@@ -271,7 +271,7 @@ export function ClassProgressSection({
                 </p>
                 {p && (
                   <progress
-                    className="h-2 w-full overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-100 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+                    className="h-2 w-full overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-sunken [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
                     aria-label={`Tiến độ nộp ${assignment.title}`}
                     max={Math.max(1, total)}
                     value={Math.min(submitted, Math.max(1, total))}
@@ -288,7 +288,7 @@ export function ClassProgressSection({
           <button
             type="button"
             aria-expanded={scopedState.distributionOpen}
-            className="flex w-full items-center justify-between rounded-lg border border-line bg-slate-50 px-3.5 py-2.5 text-left text-sm font-semibold text-ink hover:bg-slate-100"
+            className="flex w-full items-center justify-between rounded-lg border border-line bg-sunken px-3.5 py-2.5 text-left text-sm font-semibold text-ink hover:bg-sunken"
             onClick={() =>
               setViewState({
                 ...scopedState,
@@ -303,7 +303,7 @@ export function ClassProgressSection({
           </button>
 
           {scopedState.distributionOpen && (
-            <div className="mt-3 rounded-xl border border-line bg-slate-50/60 p-3.5">
+            <div className="mt-3 rounded-xl border border-line bg-sunken/60 p-3.5">
               {eligibleDistributionAssignments.length === 0 ? (
                 <p className="text-sm text-muted">
                   Chưa đủ dữ liệu công bố hoặc ẩn theo ngưỡng riêng tư để hiển thị phân bố điểm.
@@ -320,7 +320,7 @@ export function ClassProgressSection({
                     <select
                       id={`dist-assignment-${classId}`}
                       aria-label="Bài tập xem phân bố điểm"
-                      className="max-w-full rounded-lg border border-line bg-white px-3 py-1.5 text-sm text-ink"
+                      className="max-w-full rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-ink"
                       value={activeDistributionAssignmentId ?? ""}
                       onChange={(e) =>
                         setViewState({
@@ -383,7 +383,7 @@ function PublishedDistribution({
         Phân bố điểm đã công bố
       </h3>
       {error && (
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-800">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-danger-line bg-danger-soft p-2.5 text-sm text-danger">
           <p role="alert">{error}</p>
           <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>
             Thử tải lại
@@ -406,7 +406,7 @@ function PublishedDistribution({
             <li key={bucket.label} className="flex items-center gap-3 text-sm">
               <span className="w-20 shrink-0 font-medium text-ink">{bucket.label}</span>
               <progress
-                className="h-2 flex-1 overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+                className="h-2 flex-1 overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-line [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
                 aria-label={`Mức điểm ${bucket.label}`}
                 max={Math.max(1, ...value.map((item) => item.count))}
                 value={bucket.count}

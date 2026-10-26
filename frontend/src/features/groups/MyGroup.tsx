@@ -111,7 +111,7 @@ export function MyGroupPage({ classId }: { classId: string }) {
       )}
       {view.groupId && (
         <>
-          <Section title={`Thành viên (${view.members.length})`} description="Nhóm cố định của lớp" icon="group">
+          <Section title={`Thành viên (${view.members.length})`} icon="group">
             <ul className="flex flex-col gap-1.5 text-[13px]">
               {view.members.map((m) => (
                 <li key={m.accountId} className="flex items-center gap-2">
@@ -234,9 +234,6 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
       dismissible={!busy}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant="primary" onClick={() => void send()} disabled={busy || length < 10 || length > 1000}>
             Gửi yêu cầu
           </Button>
@@ -250,7 +247,7 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
       <Field label="Lý do" htmlFor={reasonId} required hint={`${length} / 1.000 ký tự (ít nhất 10)`} error={error}>
         <textarea
           id={reasonId}
-          className="min-h-[96px] rounded-[9px] border border-line-strong p-2.5 text-[13px] outline-none focus:border-primary"
+          className="min-h-[96px] rounded-lg border border-line-strong p-2.5 text-[13px] outline-none focus:border-primary"
           maxLength={1000}
           value={reason}
           onChange={(e) => setReason(e.target.value)}

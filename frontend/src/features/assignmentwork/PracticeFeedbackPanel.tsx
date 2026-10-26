@@ -36,7 +36,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: { attemptId: st
   const refresh = useCallback(() => setTick((value) => value + 1), []);
 
   return (
-    <Section title="Góp ý AI" icon="smart_toy" description="Góp ý AI dùng API cá nhân của bạn; sinh viên không dùng API trường."
+    <Section title="Góp ý AI" icon="smart_toy"
       actions={<Button size="sm" onClick={() => setAsking(true)} disabled={pending} data-testid="ask-feedback">{items?.length ? "Nhận góp ý lại" : "Nhận góp ý AI"}</Button>}>
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
       {pending && <p role="status" className="text-xs text-muted">AI đang góp ý…</p>}
@@ -81,7 +81,6 @@ function AskDialog({ attemptId, onClose, onDone }: { attemptId: string; onClose:
   return (
     <Dialog open title="Nhận góp ý AI" icon="smart_toy" onClose={onClose} dismissible={!busy}
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="primary" disabled={busy} data-testid="confirm-feedback" onClick={async () => {
           setBusy(true);
           setError(null);
@@ -102,7 +101,7 @@ function AskDialog({ attemptId, onClose, onDone }: { attemptId: string; onClose:
           <option value="CLAUDE">Claude</option>
         </Select>
       </Field>
-      <p className="text-xs text-muted">Chưa có khóa? <Link href="/ai/connection" className="font-semibold text-primary">Kết nối AI</Link></p>
+      <p className="text-xs text-muted">Chưa có khóa? <Link href="/ai/connection" className="font-semibold text-primary-ink">Kết nối AI</Link></p>
     </Dialog>
   );
 }

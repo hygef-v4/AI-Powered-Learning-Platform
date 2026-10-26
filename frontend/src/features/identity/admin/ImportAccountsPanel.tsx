@@ -72,7 +72,6 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   return (
     <Section
       title="Nhập tài khoản từ CSV"
-      description="Tệp .csv, mã UTF-8, dòng đầu là tiêu đề cột"
       icon="upload_file"
       actions={
         <button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink">
@@ -90,8 +89,8 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
       />
       <div className="flex flex-wrap items-center gap-3">
         {file && (
-          <div className="flex min-w-0 items-center gap-2.5 rounded-[11px] border border-line bg-shell px-3 py-2">
-            <Icon name="description" size={20} className="text-primary" />
+          <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-line bg-shell px-3 py-2">
+            <Icon name="description" size={20} className="text-primary-ink" />
             <span className="min-w-0">
               <span className="block truncate text-[13px] font-semibold text-ink">{file.name}</span>
               <span className="block text-[11px] text-muted">{formatSize(file.size)}</span>
@@ -104,7 +103,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
         <button
           type="button"
           onClick={downloadTemplate}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
         >
           <Icon name="download" size={16} />
           Tải tệp mẫu (email, họ tên, vai trò)

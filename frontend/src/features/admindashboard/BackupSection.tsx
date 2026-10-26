@@ -6,7 +6,7 @@ import type {BackupSectionView} from "./types";
 export function BackupSection({value, onHistory}: {value: BackupSectionView; onHistory: () => void}) {
   const latest = value.latest.data;
   const schedule = value.schedule.data;
-  return <Section title="Sao lưu dữ liệu" description="Không tải xuống hay khôi phục từ giao diện; khôi phục làm tay theo runbook."
+  return <Section title="Sao lưu dữ liệu"
     actions={<><Button onClick={onHistory} data-testid="backup-history-open">Lịch sử backup</Button><ButtonLink href="/admin/settings">Cài đặt backup</ButtonLink></>}>
     <div className="grid gap-4 md:grid-cols-2">
       <div><h3 className="mb-2 font-semibold">Lần chạy gần nhất</h3>

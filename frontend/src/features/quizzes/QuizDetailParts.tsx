@@ -11,7 +11,7 @@ import type { QuestionContent, QuizDetailsInput, QuizItemView, QuizSettings } fr
 
 export type DraftItem = { item: QuizItemView; points: string };
 
-const TEXTAREA = "w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
 
 /** "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. */
 export function QuizItemList({ items, onChange, editable, onEditInline }: {
@@ -100,7 +100,6 @@ export function InlineQuestionDialog({ initial, onClose, onSave }: {
   return (
     <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="quiz" title={initial ? "Sửa câu riêng của quiz" : "Thêm câu riêng"}
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="primary" onClick={() => void save()} disabled={busy} data-testid="inline-question-save">Lưu câu</Button>
       </>}>
       <div className="flex flex-col gap-4">
@@ -197,12 +196,12 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
           <textarea id={`${id}-instructions`} rows={3} maxLength={5000} value={value.instructions} className={TEXTAREA}
             onChange={(e) => set("instructions", e.target.value)} />
         </Field>
-        <Field label="Thời gian làm bài (phút)" htmlFor={`${id}-time`} hint="Để trống là không giới hạn" error={errors.timeLimit}>
-          <TextInput id={`${id}-time`} inputMode="numeric" value={value.timeLimit} invalid={!!errors.timeLimit}
+        <Field label="Thời gian làm bài" htmlFor={`${id}-time`} hint="Để trống là không giới hạn" error={errors.timeLimit}>
+          <TextInput id={`${id}-time`} inputMode="numeric" placeholder="Không giới hạn" suffix="phút" value={value.timeLimit} invalid={!!errors.timeLimit}
             onChange={(e) => set("timeLimit", e.target.value)} data-testid="quiz-settings-time" />
         </Field>
         <Field label="Số lượt tối đa" htmlFor={`${id}-attempts`} hint="Để trống là không giới hạn" error={errors.maxAttempts}>
-          <TextInput id={`${id}-attempts`} inputMode="numeric" value={value.maxAttempts} invalid={!!errors.maxAttempts}
+          <TextInput id={`${id}-attempts`} inputMode="numeric" placeholder="Không giới hạn" value={value.maxAttempts} invalid={!!errors.maxAttempts}
             onChange={(e) => set("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
         </Field>
         <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" ariaLabel="Hiện điểm sau khi nộp" disabled={readOnly} />
@@ -217,7 +216,6 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
         <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" ariaLabel="Đảo thứ tự lựa chọn" disabled={readOnly} />
         <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động" ariaLabel="Ghi nhận hoạt động"
           disabled={readOnly} />
-        <p className="text-[11px] text-muted">Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.</p>
         {value.activityMonitoringEnabled && (
           <Field label="Lời báo cho sinh viên" htmlFor={`${id}-notice`} required error={errors.activityNotice}
             hint="Sinh viên thấy lời báo này trước và trong khi làm bài.">

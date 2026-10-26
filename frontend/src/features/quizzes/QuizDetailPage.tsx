@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, Button, Dialog, Field, PageHeader, Pill, Section, Select } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, PageHeader, Pill, Section } from "@/shared/ui";
 import {
   addInlineQuestion, cloneQuiz, createQuizVersion, deleteQuiz, getQuiz, publishQuiz, retireQuiz, reviewQuiz, saveQuizItems,
   updateInlineQuestion, updateQuizDetails,
@@ -38,6 +38,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const [settingsErrors, setSettingsErrors] = useState<Record<string, string>>({});
   const [violations, setViolations] = useState<Violation[]>([]);
   const [notice, setNotice] = useState<{ tone: "success" | "danger" | "warning"; text: string } | null>(null);
+  // Mỗi lần chọn "Soạn bằng AI" trong nút Thêm câu hỏi thì tăng để panel AI mở popup.
+  const [aiRequest, setAiRequest] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<Dialogs>(null);
@@ -183,33 +185,38 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             <Button variant="primary" disabled={busy || dirty} onClick={() => lifecycle("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
           )}
           {detail.canManage && (
-            <Select aria-label="Thao tác khác" value="" disabled={busy} onChange={(event) => more(event.target.value)} data-testid="quiz-detail-more">
-              <option value="">Thao tác khác…</option>
-              {quiz.status === "OPEN" && <option value="retire">Ngưng quiz</option>}
-              <option value="clone">Nhân bản</option>
-              {(quiz.status === "OPEN" || quiz.status === "RETIRED") && <option value="version">Tạo version mới</option>}
-              {quiz.publishedAt === null && editable && <option value="delete">Xóa quiz</option>}
-            </Select>
+            <span data-testid="quiz-detail-more">
+              <Menu align="right" icon="more_horiz" ariaLabel="Thao tác khác" label="">
+                {quiz.status === "OPEN" && <MenuItem icon="block" disabled={busy} onClick={() => more("retire")}>Ngưng quiz</MenuItem>}
+                <MenuItem icon="copy" disabled={busy} onClick={() => more("clone")}>Nhân bản</MenuItem>
+                {(quiz.status === "OPEN" || quiz.status === "RETIRED") && <MenuItem icon="history" disabled={busy} onClick={() => more("version")}>Tạo version mới</MenuItem>}
+                {quiz.publishedAt === null && editable && <MenuItem icon="trash" tone="danger" disabled={busy} onClick={() => more("delete")}>Xóa quiz</MenuItem>}
+              </Menu>
+            </span>
           )}
         </div>}
       />
-      {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"} className="mb-3">{notice.text}</Alert>}
+      {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"}>{notice.text}</Alert>}
       {violations.length > 0 && (
-        <Alert tone="danger" className="mb-3" title="Cần sửa trước khi duyệt hoặc phát hành">
+        <Alert tone="danger" title="Cần sửa trước khi duyệt hoặc phát hành">
           <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
         </Alert>
       )}
-      {!detail.canManage && <Alert tone="info" className="mb-3">Quiz của môn: giảng viên lớp chỉ xem.</Alert>}
-      {quiz.status === "RETIRED" && quiz.retiredReason && <Alert tone="warning" className="mb-3">Đã ngưng: {quiz.retiredReason}</Alert>}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <Section title={`Câu hỏi (${items.length})`} icon="quiz"
-          actions={editable && <div className="flex flex-wrap gap-2">
-            <Button size="sm" icon="add" disabled={busy || itemsDirty || free <= 0} onClick={() => { setEditing(null); setDialog("inline"); }}
-              data-testid="quiz-detail-add-inline">Thêm câu</Button>
-            <Button size="sm" icon="help_center" disabled={busy || itemsDirty || free <= 0} onClick={() => setDialog("picker")}
-              data-testid="quiz-detail-add-bank">Lấy từ ngân hàng</Button>
-          </div>}>
-          {itemsDirty && <p className="mb-2 text-[11px] text-muted">Có thay đổi chưa lưu ở danh sách câu.</p>}
+      {!detail.canManage && <Alert tone="info">Quiz của môn: giảng viên lớp chỉ xem.</Alert>}
+      {quiz.status === "RETIRED" && quiz.retiredReason && <Alert tone="warning">Đã ngưng: {quiz.retiredReason}</Alert>}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <Section title={<>Câu hỏi <span className="font-mono text-xs font-medium text-muted">{items.length}</span></>}
+          actions={editable && (
+            <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi">
+              <MenuItem icon="edit" disabled={busy || itemsDirty || free <= 0} onClick={() => { setEditing(null); setDialog("inline"); }}
+                data-testid="quiz-detail-add-inline">Soạn câu mới</MenuItem>
+              <MenuItem icon="help_center" disabled={busy || itemsDirty || free <= 0} onClick={() => setDialog("picker")}
+                data-testid="quiz-detail-add-bank">Lấy từ ngân hàng</MenuItem>
+              <MenuItem icon="sparkle" disabled={busy || dirty} onClick={() => setAiRequest((n) => n + 1)}
+                data-testid="quiz-ai-draft-open">Soạn bằng AI</MenuItem>
+            </Menu>
+          )}>
+          {itemsDirty && <p className="text-xs font-semibold text-warning">Chưa lưu danh sách câu</p>}
           <QuizItemList items={items} onChange={setItems} editable={editable}
             onEditInline={(item) => { setEditing(item); setDialog("inline"); }} />
         </Section>
@@ -217,10 +224,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
           maxScore={detail.maxScore} />
       </div>
       {editable && (
-        <div className="mt-4">
-          <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
-            onQuizChange={acceptedFromAi} />
-        </div>
+        <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
+          onQuizChange={acceptedFromAi} openRequest={aiRequest} />
       )}
       {detail.canManage && <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />}
 
@@ -230,7 +235,6 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       {dialog === "retire" && (
         <Dialog open onClose={() => setDialog(null)} tone="warning" title="Ngưng quiz?"
           footer={<>
-            <Button onClick={() => setDialog(null)} disabled={busy}>Hủy</Button>
             <Button variant="primary" disabled={busy || !reason.trim()} data-testid="quiz-retire-confirm"
               onClick={() => void run(async () => {
                 show(await retireQuiz(quiz.id, reason.trim(), quiz.version));
@@ -238,23 +242,21 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
                 setNotice({ tone: "success", text: "Đã ngưng quiz." });
               })}>Ngưng quiz</Button>
           </>}>
-          <Field label="Lý do" htmlFor="quiz-retire-reason" required hint="Lượt đang làm sẽ được tự nộp.">
+          <Field label="Lý do" htmlFor="quiz-retire-reason" required>
             <textarea id="quiz-retire-reason" rows={3} maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)}
-              className="w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px]" data-testid="quiz-retire-reason" />
+              className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-primary focus:shadow-[0_0_0_3px_var(--c-primary-soft)]" data-testid="quiz-retire-reason" />
           </Field>
         </Dialog>
       )}
       {dialog === "delete" && (
         <Dialog open onClose={() => setDialog(null)} tone="danger" title="Xóa quiz nháp?"
           footer={<>
-            <Button onClick={() => setDialog(null)} disabled={busy}>Hủy</Button>
             <Button variant="danger" disabled={busy} data-testid="quiz-delete-confirm"
               onClick={() => void run(async () => {
                 await deleteQuiz(quiz.id, quiz.version);
                 router.push(backHref);
               })}>Xóa</Button>
           </>}>
-          <p className="text-[13px] text-body">Quiz, câu riêng và đề xuất AI của quiz sẽ bị xóa hẳn.</p>
         </Dialog>
       )}
     </>

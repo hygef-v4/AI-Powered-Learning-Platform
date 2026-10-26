@@ -1,4 +1,5 @@
 "use client";
+import { StatTile } from "@/shared/ui/StatTile";
 import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
 import { useMaterialResource } from "./useMaterialResource";
@@ -8,7 +9,12 @@ import styles from "./materials.module.css";
 export function MaterialSummary({ subjectId, variant }: { subjectId: string; variant: "inline" | "card" }) {
   const resource = useMaterialResource<Material[]>(`/api/v1/subjects/${encodeURIComponent(subjectId)}/materials`);
   const label = resource.data ? `${resource.data.filter(m => m.status === "ACTIVE").length} đang dùng · ${resource.data.filter(m => m.status === "ARCHIVED").length} lưu trữ` : resource.error ? "Không tải được số liệu" : "Đang tải…";
-  return <div className={variant === "card" ? styles.card : styles.muted}><Link href="/manager/materials">Học liệu</Link> · {label}{resource.error && <Button size="sm" onClick={resource.reload}>Thử lại</Button>}</div>;
+  if (variant === "card") {
+    const active = resource.data?.filter(m => m.status === "ACTIVE").length;
+    return resource.error ? <div className={styles.card}>{label} <Button size="sm" onClick={resource.reload}>Thử lại</Button></div>
+      : <StatTile label="Học liệu" value={active ?? "…"} meta={resource.data ? `${resource.data.filter(m => m.status === "ARCHIVED").length} lưu trữ` : undefined} href="/manager/materials" />;
+  }
+  return <div className={styles.muted}><Link href="/manager/materials">Học liệu</Link> · {label}{resource.error && <Button size="sm" onClick={resource.reload}>Thử lại</Button>}</div>;
 }
 export function MaterialLinkList({ classId, materialIds }: { classId: string; materialIds: string[] }) {
   const ids = [...new Set(materialIds)].sort();

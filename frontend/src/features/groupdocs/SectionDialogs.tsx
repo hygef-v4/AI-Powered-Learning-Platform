@@ -100,7 +100,7 @@ export function SectionEditorDialog({
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-50 flex flex-col bg-surface">
       <div className="flex items-center gap-3 border-b border-line px-6 py-3">
         <h2 className="text-[16px] font-bold text-ink">{section.title}</h2>
         <Pill tone="info">Bạn đang giữ</Pill>
@@ -177,7 +177,6 @@ export function AssignSectionDialog({
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose}>Hủy</Button>
           <Button variant="primary" onClick={() => void assign()} disabled={!assignee}>
             Giao mục
           </Button>

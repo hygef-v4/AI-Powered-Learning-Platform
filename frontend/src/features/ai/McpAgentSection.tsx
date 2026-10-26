@@ -111,7 +111,6 @@ export function McpAgentSection({ credentials, onCreate, onRevoke }: Props) {
         onClose={() => setRevoking(null)}
         footer={
           <>
-            <Button onClick={() => setRevoking(null)}>Hủy</Button>
             <Button variant="danger" onClick={() => revoking && void revoke(revoking)}>
               Thu hồi
             </Button>
@@ -170,9 +169,6 @@ export function McpCredentialDialog({
       dismissible={!busy}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant="primary" icon="key" onClick={() => void submit()} disabled={busy}>
             Tạo token
           </Button>
@@ -215,7 +211,7 @@ export function McpCredentialDialog({
               disabled={busy}
               className={cx(
                 "rounded-full border px-3 py-1 text-xs font-semibold",
-                days === d ? "border-primary/30 bg-primary-soft text-primary" : "border-line-strong bg-white text-body",
+                days === d ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body",
               )}
             >
               {d} ngày

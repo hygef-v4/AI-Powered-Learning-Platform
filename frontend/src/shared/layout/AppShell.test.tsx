@@ -76,7 +76,7 @@ describe("AppShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Đăng xuất" }));
     expect(screen.getByRole("dialog", { name: "Đăng xuất?" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Hủy" }));
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

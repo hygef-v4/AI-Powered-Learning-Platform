@@ -107,7 +107,7 @@ export function AuditLogPage() {
 
   return (
     <>
-      <PageHeader title="Nhật ký audit" subtitle="Chỉ đọc · mặc định 7 ngày gần nhất · không bản ghi nào sửa hoặc xóa được" />
+      <PageHeader title="Nhật ký audit" />
       <AuditFilters
         value={form}
         onChange={setForm}

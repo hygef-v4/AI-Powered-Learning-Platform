@@ -53,7 +53,6 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
     <Section
       title="API cá nhân"
       icon="key"
-      description="Khóa của riêng bạn; chi phí tính vào tài khoản nhà cung cấp của bạn và không giới hạn bởi trường."
       actions={
         <Button variant="primary" size="sm" icon="add" onClick={() => firstMissing && setEditing({ provider: firstMissing, current: null })} disabled={!firstMissing}>
           Thêm khóa
@@ -148,7 +147,6 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
         onClose={() => setRevoking(null)}
         footer={
           <>
-            <Button onClick={() => setRevoking(null)}>Hủy</Button>
             <Button variant="danger" onClick={() => revoking && void revoke(revoking)}>
               Thu hồi
             </Button>

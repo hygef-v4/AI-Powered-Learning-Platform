@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Dialog } from "@/shared/ui/Dialog";
+import { Alert, Button, Dialog } from "@/shared/ui";
 import { Icon } from "@/shared/ui/Icon";
 import { aiRequest } from "./AiProposalPanel";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
@@ -102,34 +102,24 @@ export function BatchActionDialog({
       dismissible={!busy}
       footer={
         <>
-          <button disabled={busy} onClick={onClose}>
-            Đóng
-          </button>
-          <button
+          <Button
+            variant="primary"
             disabled={busy || !!result || items.length === 0}
             onClick={() => action === "ai" ? setChoosingSource(true) : void run()}
-            className="ml-3 rounded bg-primary px-4 py-2 text-white disabled:opacity-40"
           >
             {busy ? "Đang xử lý…" : "Xác nhận"}
-          </button>
+          </Button>
         </>
       }
     >
-      <p>
-        {items.length} bài đã chọn.{" "}
-        {action === "publish"
-          ? "Chỉ bài đã chốt được công bố. Sinh viên sẽ thấy điểm và nhận xét."
-          : action === "finalize"
-            ? "Chỉ bản nháp hợp lệ được chốt; sinh viên chưa thấy cho tới khi công bố."
-            : "Mỗi bài nhận một đề xuất riêng; bạn kiểm tra và lưu từng bài."}
-      </p>
-      {error && <p role="alert">{error}</p>}
+      <p className="font-display text-[44px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
-        <ul className="my-4 space-y-2">
+        <ul className="flex flex-col">
           {result.items.map((r, index) => {
             const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] : undefined;
             return (
-              <li key={`${r.evaluationId}-${index}`} className="rounded border p-2">
+              <li key={`${r.evaluationId}-${index}`} className="border-b border-line py-2 last:border-b-0">
                 <p>
                   Bài {index + 1}: {r.outcome}
                   {r.code && ` · ${r.code}`}
@@ -157,7 +147,7 @@ function SuccessNotice({ message, onDismiss }: { message: string; onDismiss: () 
     return () => clearTimeout(timer);
   }, []);
   return <div role="status" aria-live="polite" aria-atomic="true"
-    className="fixed top-20 right-4 z-60 flex max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm font-medium text-success shadow-lg">
+    className="fixed top-20 right-4 z-60 flex max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm font-medium text-success shadow-[var(--shadow-float)]">
     <Icon name="check_circle" size={20} />
     <span>{message}</span>
     <button type="button" aria-label="Đóng thông báo" onClick={onDismiss}

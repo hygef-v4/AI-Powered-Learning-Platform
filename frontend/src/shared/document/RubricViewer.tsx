@@ -54,9 +54,9 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
   return (
     <section aria-label={`Rubric: ${name}`} data-testid="rubric-note" data-active={active || undefined}
       onClick={onActivate} onFocusCapture={onActivate}
-      className={cx("flex flex-col gap-2 rounded-xl border bg-white p-3 shadow-sm transition-shadow",
-        issues.length > 0 ? "border-danger" : active ? "border-primary shadow-md" : "border-line",
-        !active && onActivate && "cursor-pointer hover:shadow-md")}>
+      className={cx("flex flex-col gap-2 rounded-xl border bg-surface p-3 shadow-sm transition-shadow",
+        issues.length > 0 ? "border-danger" : active ? "border-primary shadow-[var(--shadow-float)]" : "border-line",
+        !active && onActivate && "cursor-pointer hover:shadow-[var(--shadow-float)]")}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           {path.length > 1 && <p className="truncate text-[10.5px] text-faint">{path.slice(0, -1).join(" › ")}</p>}

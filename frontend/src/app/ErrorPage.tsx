@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/shared/ui/Logo";
 import styles from "./error-page.module.css";
 
 export function ErrorPage({
@@ -17,8 +18,7 @@ export function ErrorPage({
   return (
     <main className={styles.page}>
       <Link className={styles.brand} href="/" aria-label="Nền tảng học tập - Trang chủ">
-        <span className={styles.brandIcon} aria-hidden="true">✦</span>
-        <span>Nền tảng học tập</span>
+        <Logo />
       </Link>
       <section className={styles.content} aria-labelledby="error-title">
         <span className={styles.code}>{code}</span>

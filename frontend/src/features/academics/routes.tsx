@@ -11,7 +11,7 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "./ClassFormDialog";
 import {ReopenConflictError} from "./ClassDialogs";
-import {operationError} from "./ui";
+import {EmptyState, operationError} from "./ui";
 import type {SubjectView, CourseClassView, EnrollmentView} from "./types";
 import styles from "./academics.module.css";
 
@@ -75,7 +75,7 @@ async function allStudents(scope: "manager" | "teaching", id: string, signal: Ab
 }
 
 function Pending({error, retry}: {error?: unknown; retry: () => void}) {
-  if (!error) return <p role="status">Đang tải…</p>;
+  if (!error) return <p role="status" className={styles.loading}>Đang tải…</p>;
   return <section role="alert" className={styles.panel}>
     <p>{operationError(error)}</p>
     <button onClick={() => void Promise.resolve(retry()).catch(() => {})}>Thử lại</button>
@@ -191,13 +191,10 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}
       onTeaching={() => router.push("/teaching/classes")}/>;
   } else if (view === "subjects") {
-    content = subject ? <>
-      <label>Môn học <select value={subject.id} onChange={event => router.push(`/manager/subjects/${encodeURIComponent(event.target.value)}`)}>
-        {subjects.map(subject => <option key={subject.id} value={subject.id}>{subject.code} · {subject.name}</option>)}
-      </select></label>
-      <MySubjectPage subject={subject} classes={classes} onBack={() => router.push("/manager")}
-        onClasses={() => router.push(`/manager/classes?subjectId=${encodeURIComponent(subject.id)}`)}/>
-    </> : <p>Bạn chưa được giao quản lý môn.</p>;
+    content = subject ? <MySubjectPage subject={subject} subjects={subjects} classes={classes}
+      onSwitch={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}
+      onClasses={() => router.push(`/manager/classes?subjectId=${encodeURIComponent(subject.id)}`)}/>
+      : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
   } else {
     content = <ClassListPage initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;

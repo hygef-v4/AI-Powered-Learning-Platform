@@ -16,7 +16,7 @@ function CountsTable<T extends string>({title, counts, labels}: {title: string; 
 }
 
 export function StatusBreakdown({value}: {value: AdminDashboardView}) {
-  return <Section title="Chi tiết theo trạng thái" description="Tính theo yêu cầu · không chứa dữ liệu cá nhân">
+  return <Section title="Chi tiết theo trạng thái">
     <div><h3 className="mb-2 font-semibold">Tài khoản theo vai trò</h3>
       {value.accounts.availability === "UNAVAILABLE" ? <p>Không khả dụng</p> : <TableFrame>
         <thead><tr><Th>Vai trò</Th><Th>Hoạt động</Th><Th>Chờ kích hoạt</Th><Th>Vô hiệu hóa</Th></tr></thead>

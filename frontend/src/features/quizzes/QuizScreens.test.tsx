@@ -215,7 +215,6 @@ describe("QuizSettingsPanel", () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(updateQuizDetails).mockResolvedValue(detail({ activityMonitoringEnabled: true, activityNotice: "Ghi lại" }));
     render(<QuizDetailPage id="z1" />);
-    expect(await screen.findByText("Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.")).toBeInTheDocument();
     const toggle = await screen.findByRole("switch", { name: "Ghi nhận hoạt động" });
     expect(toggle).toBeEnabled();
     fireEvent.click(toggle);

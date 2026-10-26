@@ -11,11 +11,11 @@ export const emptyFilter: FilterState = { q: "", status: "", gradingMode: "", in
 export function AssignmentFilters({ value, onChange }: { value: FilterState; onChange: (value: FilterState) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div role="tablist" aria-label="Chế độ" className="flex gap-1 rounded-[10px] bg-shell p-1">
+      <div role="tablist" aria-label="Chế độ" className="flex gap-1 rounded-xl bg-shell p-1">
         {([["", "Tất cả"], ["GRADED", "Graded"], ["PRACTICE", "Practice"]] as const).map(([mode, label]) => (
           <button key={label} type="button" role="tab" aria-selected={value.gradingMode === mode}
             onClick={() => onChange({ ...value, gradingMode: mode })}
-            className={`rounded-lg px-3 py-1 text-xs font-semibold ${value.gradingMode === mode ? "bg-white text-ink shadow-sm" : "text-muted"}`}>
+            className={`rounded-lg px-3 py-1 text-xs font-semibold ${value.gradingMode === mode ? "bg-surface text-ink shadow-sm" : "text-muted"}`}>
             {label}
           </button>
         ))}

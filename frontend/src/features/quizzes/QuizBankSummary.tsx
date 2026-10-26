@@ -1,5 +1,6 @@
 "use client";
 
+import { StatTile } from "@/shared/ui/StatTile";
 import { useEffect, useState } from "react";
 import { getQuestions, getSubjectQuizzes } from "./api";
 
@@ -39,15 +40,9 @@ export function QuizBankSummary({ subjectId, variant }: { subjectId: string; var
     );
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-2" data-testid="quiz-bank-summary">
-      <div className="rounded-xl border border-line bg-white p-3">
-        <p className="text-xs font-semibold text-muted">Câu hỏi trắc nghiệm</p>
-        <p className="text-lg font-bold text-ink">{counts.activeQuestions} đang dùng · {counts.draftQuestions} nháp</p>
-      </div>
-      <div className="rounded-xl border border-line bg-white p-3">
-        <p className="text-xs font-semibold text-muted">Quiz</p>
-        <p className="text-lg font-bold text-ink">{counts.open} đang mở · {counts.reviewed} đã duyệt · {counts.draft} nháp</p>
-      </div>
+    <div className="contents" data-testid="quiz-bank-summary">
+      <StatTile label="Câu hỏi" value={counts.activeQuestions} meta={`${counts.draftQuestions} nháp`} href="/manager/questions" />
+      <StatTile label="Quiz" value={counts.open} meta={`đang mở · ${counts.reviewed} đã duyệt · ${counts.draft} nháp`} href="/manager/quizzes" />
     </div>
   );
 }

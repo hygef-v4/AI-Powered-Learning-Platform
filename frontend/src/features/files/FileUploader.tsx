@@ -52,7 +52,7 @@ export function FileUploader({ purpose, label = "Chọn tệp", onUploaded }: Pr
     <div className="flex flex-col gap-2">
       {file && state.status !== "idle" ? (
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex h-[38px] w-[360px] max-w-full items-center gap-2 rounded-[9px] border border-line-strong bg-white px-3">
+          <div className="flex h-[38px] w-[360px] max-w-full items-center gap-2 rounded-lg border border-line-strong bg-surface px-3">
             <Icon
               name={state.status === "done" ? "check_circle" : "description"}
               size={18}
@@ -75,7 +75,7 @@ export function FileUploader({ purpose, label = "Chọn tệp", onUploaded }: Pr
       ) : (
         <div
           className={cx(
-            "flex flex-col items-center gap-2 rounded-xl border border-dashed bg-white px-4 py-5 text-center",
+            "flex flex-col items-center gap-2 rounded-xl border border-dashed bg-surface px-4 py-5 text-center",
             dragging ? "border-primary bg-primary-soft" : "border-line-strong",
           )}
           onDragOver={(e) => {

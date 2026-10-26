@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
 import { loginPathFor, useSession } from "../session";
@@ -20,14 +21,10 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
   }, [session, allowed, router]);
 
   if (session.status === "unavailable") {
-    return (
-      <p role="alert" className="p-8 text-center text-sm text-red-600">
-        Hệ thống tạm bận, vui lòng tải lại trang sau.
-      </p>
-    );
+    return <FullPageStatus tone="danger">Hệ thống tạm bận, vui lòng tải lại trang sau.</FullPageStatus>;
   }
   if (!allowed) {
-    return <p className="p-8 text-center text-sm text-slate-500">Đang tải...</p>;
+    return <FullPageStatus>Đang tải...</FullPageStatus>;
   }
   return <>{children}</>;
 }

@@ -24,7 +24,7 @@ export function DelegatedSectionCard({ section }: { section: SettingsSection }) 
       {section.available && <Icon name="chevron_right" className="text-muted" />}
     </>
   );
-  const box = "flex items-start gap-3 rounded-2xl border border-line bg-white p-[18px]";
+  const box = "flex items-start gap-3 rounded-xl border border-line bg-surface p-[18px]";
   if (!section.available) return <div className={box}>{body}</div>;
   return (
     <Link

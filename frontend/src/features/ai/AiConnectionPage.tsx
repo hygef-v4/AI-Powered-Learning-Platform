@@ -87,7 +87,6 @@ export function AiConnectionPage() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Kết nối AI"
-        subtitle="API cá nhân và agent MCP của riêng bạn. Khóa đã lưu luôn được che và chỉ dùng cho yêu cầu của bạn."
         actions={
           <ButtonLink href="/ai/usage" icon="history">
             Lịch sử sử dụng AI
@@ -143,7 +142,7 @@ export function AiSummaryCards({ data }: { data: Data }) {
         <Card icon="speed" title="Hạn mức của trường hôm nay">
           {shared?.quota ? (
             <>
-              <p className="text-xl font-bold text-ink">
+              <p className="font-display text-[30px] leading-none text-ink">
                 {formatTokens(shared.quota.used)} / {formatTokens(shared.quota.limit)}
               </p>
               <p className="text-xs text-muted">token đã dùng · đặt lại lúc 00:00</p>
@@ -154,11 +153,11 @@ export function AiSummaryCards({ data }: { data: Data }) {
         </Card>
       )}
       <Card icon="key" title="API cá nhân">
-        <p className="text-xl font-bold text-ink">{keys} khóa</p>
+        <p className="font-display text-[30px] leading-none text-ink">{keys} khóa</p>
         <p className="text-xs text-muted">Chi phí tính vào tài khoản nhà cung cấp của bạn</p>
       </Card>
       <Card icon="smart_toy" title="Agent MCP">
-        <p className="text-xl font-bold text-ink">
+        <p className="font-display text-[30px] leading-none text-ink">
           {agents} / {MAX_AGENTS}
         </p>
         <p className="text-xs text-muted">agent còn hiệu lực</p>
@@ -169,7 +168,7 @@ export function AiSummaryCards({ data }: { data: Data }) {
 
 function Card({ icon, title, children }: { icon: "speed" | "key" | "smart_toy"; title: string; children: ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4">
+    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
       <IconTile icon={icon} tone={icon === "smart_toy" ? "accent" : "primary"} />
       <div className="min-w-0">
         <p className="text-xs font-semibold text-muted">{title}</p>

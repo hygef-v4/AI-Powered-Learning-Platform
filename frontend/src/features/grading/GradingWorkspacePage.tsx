@@ -10,7 +10,7 @@ import {
   type DocumentModel as EditorDocument,
   type RubricCriterion,
 } from "@/shared/document";
-import { Button, Dialog, Pill } from "@/shared/ui";
+import { Alert, Button, Dialog, Icon, IconButton, Pill } from "@/shared/ui";
 import { checklistPoints, RubricChecklist } from "./RubricChecklistPanel";
 import { useSubmissionContext } from "./useSubmissionContext";
 import { gradingApi } from "./api";
@@ -147,58 +147,56 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   const activeHeading = detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
 
   return (
-    <main data-workspace-focus={focusMode} data-workspace-main="true" className="min-w-0 space-y-3">
-      <header className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <Link className="text-sm font-medium text-primary" onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
-            href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>← Bài nộp</Link>
-          <h1 className="mt-1 text-xl font-bold text-ink">{context.value?.title || "Chấm bài"}</h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted">
-            <Pill>{statusLabels[evaluation.state]}</Pill>
-            {context.value && <span>{context.value.ownerName}</span>}
-            <span>Bài {Math.max(1, currentIndex + 1)} / {detail.navigationIds.length || 1}</span>
-            <details className="text-xs text-muted">
-              <summary className="cursor-pointer font-medium text-primary">Quy trình chấm</summary>
-              <p className="mt-1">1. Tích mục đạt trong checklist cạnh từng phần và nhận xét → 2. Lưu nháp → 3. Chốt → 4. Công bố để sinh viên xem điểm.{detail.navigationIds.length > 1 && " Lưu thành công sẽ chuyển sang bài tiếp theo nếu còn bài."}</p>
-            </details>
+    <main data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
+      <header className="flex animate-rise flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+          <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
+            onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
+            href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>
+            <Icon name="arrow_back" size={14} />Bài nộp
+          </Link>
+          <h1 className="font-display text-[34px] leading-[1.1] tracking-[-0.025em] text-ink">{context.value?.title || "Chấm bài"}</h1>
+          <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">
+            <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{statusLabels[evaluation.state]}</Pill>
+            {context.value && <span className="font-semibold text-ink">{context.value.ownerName}</span>}
           </div>
         </div>
-        <Button size="sm" aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>{focusMode ? "Thoát tập trung" : "Chế độ tập trung"}</Button>
+        <Button size="sm" variant="ghost" icon={focusMode ? "close" : "visibility"} aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>
+          {focusMode ? "Thoát tập trung" : "Chế độ tập trung"}
+        </Button>
       </header>
-      <div role="region" aria-label="Thao tác chấm bài" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-white px-3 py-2 shadow-sm">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-xs font-medium text-muted">Điểm tạm tính</span>
-            <output aria-label="Điểm tạm tính" className="text-lg font-bold tabular-nums text-primary">{total.toFixed(2)} / {Number(evaluation.maxScore).toFixed(2)}</output>
-          </div>
-          <p role="status" className="text-xs text-muted">{busy ? "Đang xử lý…" : dirty ? "Có thay đổi chưa lưu" : `Điểm đã lưu: ${points(evaluation.score, evaluation.maxScore)}`}</p>
+      <div role="region" aria-label="Thao tác chấm bài"
+        className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-line bg-[var(--c-topbar)] px-4 py-3 shadow-[var(--shadow-lift)] backdrop-blur-md">
+        <div className="flex items-center gap-1">
+          <IconButton icon="chevron_left" label="Bài trước" disabled={currentIndex <= 0 || busy} onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)} />
+          <span className="min-w-12 text-center font-mono text-xs text-muted">{Math.max(1, currentIndex + 1)} / {detail.navigationIds.length || 1}</span>
+          <IconButton icon="chevron_right" label="Bài sau" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)} />
+        </div>
+        <div className="flex items-baseline gap-3">
+          <output aria-label="Điểm tạm tính" className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink tabular-nums">
+            {total.toFixed(2)}<span className="text-[18px] text-muted"> / {Number(evaluation.maxScore).toFixed(2)}</span>
+          </output>
+          <p role="status" className={dirty ? "text-xs font-semibold text-warning" : "text-xs text-muted"}>
+            {busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${points(evaluation.score, evaluation.maxScore)}`}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Button size="sm" disabled={currentIndex <= 0 || busy} onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)}>← Bài trước</Button>
-          <Button size="sm" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)}>Bài sau →</Button>
-          <Button size="sm" variant="primary" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
+          <Button size="sm" variant="primary" icon="save" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
           <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>Chốt điểm</Button>
           <Button size="sm" disabled={disabled || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
         </div>
       </div>
-      {!detail.current && <p>Đây là lần nộp cũ, chỉ có thể xem lại.</p>}
+      {!detail.current && <Alert tone="info">Đây là lần nộp cũ, chỉ có thể xem lại.</Alert>}
       {error && (
-        <p role="alert" className="rounded border border-red-200 bg-red-50 p-4">
-          {error} <button onClick={() => void reload()}>Tải lại phiên bản</button>
-        </p>
+        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
       )}
-      {dirty && (
-        <p className="text-xs font-medium text-amber-700">
-          Có thay đổi chưa lưu. Chốt/công bố chỉ áp dụng sau khi lưu.
-        </p>
-      )}
-      {!detail.rubrics.length && <p className="rounded-lg bg-shell p-3 text-sm text-muted">Bài chưa có rubric khả dụng. Hãy kiểm tra lại cấu hình bài tập.</p>}
+      {!detail.rubrics.length && <Alert tone="warning">Bài chưa có rubric khả dụng.</Alert>}
       <DocumentEditor document={paper} onChange={() => {}} mode="student" readOnly diagramEnabled={false}
         imageUrl={(blockId) => imageUrls[blockId] ?? null}
         emptyLeafLabel="Sinh viên chưa làm phần này."
         header={<div className="mb-5 border-b border-line pb-4">
-          <h2 className="text-[26px] leading-tight font-bold text-ink">{context.value?.title || "Bài làm đã nộp"}</h2>
-          <p className="mt-1 text-sm text-muted">Bài làm đã nộp · chỉ đọc</p>
+          <h2 className="font-display text-[28px] leading-tight tracking-[-0.02em] text-ink">{context.value?.title || "Bài làm đã nộp"}</h2>
+          <p className="mt-1 text-[13px] text-muted">Bài làm đã nộp · chỉ đọc</p>
         </div>}
         comments={comments}
         activeComment={activePart}

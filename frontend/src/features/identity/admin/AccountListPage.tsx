@@ -113,9 +113,9 @@ export function AccountListPage() {
         />
       )}
 
-      <section className="flex flex-col gap-3.5 rounded-2xl border border-line bg-white p-5">
+      <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">
-          <div role="tablist" aria-label="Vai trò" className="flex flex-wrap gap-1 rounded-[10px] bg-shell p-1">
+          <div role="tablist" aria-label="Vai trò" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
             {ROLE_TABS.map((tab) => (
               <button
                 key={tab.label}
@@ -125,7 +125,7 @@ export function AccountListPage() {
                 onClick={() => navigate({ role: tab.value, page: 0 })}
                 className={cx(
                   "rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                  role === tab.value ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink",
+                  role === tab.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink",
                 )}
               >
                 {tab.label}
@@ -207,7 +207,7 @@ export function AccountListPage() {
                       <Link
                         href={`/admin/accounts/${account.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="font-semibold text-ink hover:text-primary"
+                        className="font-semibold text-ink hover:text-primary-ink"
                       >
                         {account.displayName}
                       </Link>

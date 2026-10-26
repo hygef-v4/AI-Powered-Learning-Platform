@@ -63,7 +63,7 @@ export function ManagerPicker({ value, onChange, disabled = false, searchManager
       suffix={value && !disabled ? <button type="button" aria-label="Bỏ chủ nhiệm" className="flex text-muted hover:text-ink" onMouseDown={(event) => event.preventDefault()} onClick={() => choose(null)} data-testid="subject-manager-clear"><Icon name="close" size={16} /></button> : undefined}
     />
     {open && !disabled && <div ref={listRef} id={`${id}-list`} role="listbox" aria-label="Chủ nhiệm môn"
-      className="absolute top-[62px] z-20 max-h-64 w-full overflow-auto rounded-[9px] border border-line bg-white py-1 shadow-lg">
+      className="absolute top-[62px] z-20 max-h-64 w-full overflow-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]">
       {(resource.loading || waiting) && <p role="status" className="px-3 py-2 text-xs text-muted">Đang tìm chủ nhiệm…</p>}
       {ready && candidates.length === 0 && <p className="px-3 py-2 text-xs text-muted">Không có chủ nhiệm phù hợp</p>}
       {ready && candidates.map((manager) => <button key={manager.accountId} type="button" role="option" aria-selected={value?.accountId === manager.accountId}

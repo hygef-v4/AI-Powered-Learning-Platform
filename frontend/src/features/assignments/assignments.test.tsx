@@ -72,15 +72,15 @@ describe("RubricEditor", () => {
 });
 
 describe("CreateAssignmentDialog", () => {
-  it("có ba lối bắt đầu bài và mở hộp AI sau khi tạo bản nháp", async () => {
+  it("một form duy nhất, không chia tab; bật Soạn bằng AI thì mở hộp AI sau khi tạo bản nháp", async () => {
     const created = { id: "a1", version: 0 } as AssignmentDetail;
     vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
-    expect(screen.getByRole("tab", { name: "Soạn thủ công" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Import từ file" })).toHaveAttribute("aria-selected", "true");
-    fireEvent.click(screen.getByRole("tab", { name: "Soạn bằng AI" }));
-    expect(screen.getByText(/AI tự suy ra dạng SWR\/SWD/)).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent("Tạo bài nháp");
+    fireEvent.click(screen.getByRole("switch", { name: "Soạn bằng AI" }));
+    expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent("Tạo và mở AI");
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created, true));
     vi.restoreAllMocks();

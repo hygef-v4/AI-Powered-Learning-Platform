@@ -11,7 +11,7 @@ import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "./types";
 
-const TEXTAREA = "w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary";
 const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
@@ -353,7 +353,7 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
 }) {
   const { form, state } = entry;
   return (
-    <li className={cx("rounded-[11px] border p-3", state === "accepted" ? "border-success/40 bg-success-soft/40"
+    <li className={cx("rounded-xl border p-3", state === "accepted" ? "border-success/40 bg-success-soft/40"
       : state === "dropped" ? "border-line bg-shell opacity-60" : "border-line")} data-testid="ai-draft-question">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <span className="text-[12px] font-semibold text-body">Câu {index + 1} · {TYPE_LABELS[form.type]}</span>

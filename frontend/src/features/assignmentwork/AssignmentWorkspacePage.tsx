@@ -263,16 +263,16 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         }
         toolbarExtra={
           <details className="relative ml-auto">
-            <summary className="cursor-pointer rounded-md px-2 py-1 text-sm font-medium text-body hover:bg-black/5">Tệp DOCX</summary>
-            <div className="absolute right-0 z-30 mt-2 flex min-w-40 flex-col gap-1 rounded-lg border border-line bg-white p-2 shadow-lg">
+            <summary className="cursor-pointer rounded-md px-2 py-1 text-sm font-medium text-body hover:bg-sunken">Tệp DOCX</summary>
+            <div className="absolute right-0 z-30 mt-2 flex min-w-40 flex-col gap-1 rounded-lg border border-line bg-surface p-2 shadow-[var(--shadow-float)]">
               {editable && <ToolbarButton icon="upload_file" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setDialog("docx"); }}>Nhập DOCX</ToolbarButton>}
-              <a href={exportUrl(attempt.attemptId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-body hover:bg-black/5">
+              <a href={exportUrl(attempt.attemptId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-body hover:bg-sunken">
                 <Icon name="download" size={18} />Tải DOCX
               </a>
             </div>
           </details>
         } />
-      {editable && <div role="region" aria-label="Lưu và nộp bài" className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 shadow-lg">
+      {editable && <div role="region" aria-label="Lưu và nộp bài" className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-float)]">
         <p role="status" className="text-sm text-muted">{saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}</p>
         <div className="flex items-center gap-2">
           <Button disabled={saving || !dirty} onClick={() => void save()}>Lưu bài</Button>
@@ -317,7 +317,6 @@ function SubmitDialog({ attempt, content, serverIssues, onClose, onSubmit }: {
   return (
     <Dialog open size="lg" icon="assignment" title={`Nộp bài lượt ${attempt.attemptNo}?`} onClose={onClose} dismissible={!busy}
       footer={errors.length > 0 ? <Button onClick={onClose}>Quay lại sửa</Button> : <>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="primary" disabled={busy} data-testid="confirm-submit" onClick={async () => {
           setBusy(true);
           setMessage(null);

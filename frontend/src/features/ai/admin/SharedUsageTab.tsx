@@ -52,7 +52,7 @@ export function SharedUsageTab() {
               onClick={() => setDays(d)}
               className={cx(
                 "rounded-full border px-3 py-1 text-xs font-semibold",
-                days === d ? "border-primary/30 bg-primary-soft text-primary" : "border-line-strong bg-white text-body hover:bg-shell",
+                days === d ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell",
               )}
             >
               {d} ngày
@@ -154,11 +154,11 @@ export function SharedUsageTab() {
 
 function Stat({ icon, title, children }: { icon: "speed" | "monitoring" | "groups"; title: string; children: ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4">
+    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
       <IconTile icon={icon} />
       <div className="min-w-0">
         <p className="text-xs font-semibold text-muted">{title}</p>
-        <p className="text-xl font-bold text-ink">{children}</p>
+        <p className="font-display text-[30px] leading-none text-ink">{children}</p>
       </div>
     </div>
   );

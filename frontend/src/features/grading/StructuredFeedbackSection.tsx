@@ -112,7 +112,7 @@ export function GradingFeedbackSummary({
             type="button"
             disabled={disabled}
             onClick={onClear}
-            className="rounded border border-line-strong bg-white px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
+            className="rounded-lg border border-line-strong bg-surface px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
           >
             Xóa nhận xét cấu trúc
           </button>
@@ -130,7 +130,7 @@ export function GradingFeedbackSummary({
               onChange={(e) =>
                 onChange({ ...summary, strengths: parseSummaryLines(e.target.value) })
               }
-              className="mt-1 block w-full rounded-lg border border-line bg-white p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
             />
           </label>
           <label className="block font-medium text-ink">
@@ -143,14 +143,14 @@ export function GradingFeedbackSummary({
               onChange={(e) =>
                 onChange({ ...summary, improvements: parseSummaryLines(e.target.value) })
               }
-              className="mt-1 block w-full rounded-lg border border-line bg-white p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-primary focus:outline-none"
             />
           </label>
         </div>
       ) : (
         <div className={`mt-2 grid gap-2.5 ${summary.strengths.length > 0 && summary.improvements.length > 0 ? "sm:grid-cols-2" : ""}`}>
           {summary.strengths.length > 0 && (
-            <div className="rounded-lg border border-line-soft bg-white p-2.5">
+            <div className="rounded-lg border border-line-soft bg-surface p-2.5">
               <p className="font-semibold text-success">✓ Làm tốt</p>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
                 {summary.strengths.map((entry, idx) => (
@@ -160,7 +160,7 @@ export function GradingFeedbackSummary({
             </div>
           )}
           {summary.improvements.length > 0 && (
-            <div className="rounded-lg border border-line-soft bg-white p-2.5">
+            <div className="rounded-lg border border-line-soft bg-surface p-2.5">
               <p className="font-semibold text-warning">! Cần sửa</p>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
                 {summary.improvements.map((entry, idx) => (
@@ -226,7 +226,7 @@ export function RubricItemFeedback({
               reviewReason: null,
             });
           }}
-          className="font-medium text-primary underline underline-offset-2 hover:text-ink disabled:opacity-50"
+          className="font-medium text-primary-ink underline underline-offset-2 hover:text-ink disabled:opacity-50"
         >
           + Thêm nhận xét chi tiết cho mục này
         </button>
@@ -259,7 +259,7 @@ export function RubricItemFeedback({
       className={`mt-2 rounded-lg border p-2.5 text-xs leading-relaxed ${
         needsAttention
           ? "border-warning bg-warning-soft/50 text-ink"
-          : "border-line-soft bg-white text-ink"
+          : "border-line-soft bg-surface text-ink"
       }`}
     >
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 font-semibold text-ink">
@@ -290,7 +290,7 @@ export function RubricItemFeedback({
         {feedbackItem.requiresReview && (
           <div
             role="note"
-            className="rounded-md border border-warning bg-white px-2.5 py-2 text-xs text-ink"
+            className="rounded-md border border-warning bg-surface px-2.5 py-2 text-xs text-ink"
           >
             <p className="font-semibold text-warning">
               ⚠ Cần giảng viên kiểm tra thủ công:{" "}
@@ -305,7 +305,7 @@ export function RubricItemFeedback({
         {scoreMismatch && (
           <div
             role="alert"
-            className="rounded-md border border-warning bg-white px-2.5 py-2 text-xs text-ink"
+            className="rounded-md border border-warning bg-surface px-2.5 py-2 text-xs text-ink"
           >
             <p className="font-semibold text-warning">
               ⚠ Điểm mục này đã thay đổi sau khi tạo nhận xét ({Number(reviewedScore).toFixed(2)} →{" "}
@@ -330,7 +330,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, evidence: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-white p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
               />
             </label>
             <label className="block font-medium text-ink">
@@ -344,7 +344,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, reason: e.target.value })
                 }
-                className="mt-1 block w-full rounded border border-line bg-white p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
               />
             </label>
             <label className="block font-medium text-ink">
@@ -358,7 +358,7 @@ export function RubricItemFeedback({
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, suggestion: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-white p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
+                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-primary focus:outline-none"
               />
             </label>
           </div>
@@ -395,7 +395,7 @@ export function RubricItemFeedback({
                   event.preventDefault();
                   target.scrollIntoView({ behavior: "smooth", block: "center" });
                 }}
-                className="font-semibold text-primary underline underline-offset-2 hover:text-ink"
+                className="font-semibold text-primary-ink underline underline-offset-2 hover:text-ink"
               >
                 Đi tới đoạn bài làm ({blockId})
               </a>
@@ -415,7 +415,7 @@ export function RubricItemFeedback({
               checked={acknowledged}
               aria-label={`Đã kiểm tra và xác nhận giải thích: ${itemText}`}
               onChange={(e) => onToggleAcknowledge(e.target.checked)}
-              className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-line-strong text-primary-ink focus:ring-primary"
             />
             <span>Đã kiểm tra và xác nhận giải thích này phù hợp với điểm số</span>
           </label>

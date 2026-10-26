@@ -43,7 +43,7 @@ export function MaterialQuizList({ materialId, classId }: { materialId: string; 
   };
 
   return (
-    <section className="rounded-[13px] border border-line bg-white p-4" data-testid="material-quiz-list">
+    <section className="rounded-xl border border-line bg-surface p-4" data-testid="material-quiz-list">
       <h2 className="mb-2 text-[14px] font-bold text-ink">Quiz gắn với học liệu</h2>
       {error && <Alert tone="danger" role="alert" className="mb-2">{error}</Alert>}
       {rows === null && !error && <p role="status" className="text-[12px] text-muted">Đang tải quiz…</p>}

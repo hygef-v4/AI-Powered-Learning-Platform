@@ -69,10 +69,10 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     <div role="tablist" aria-label="Nội dung môn học" className="flex gap-2 border-b border-line pb-2">
       <button type="button" role="tab" disabled={mode !== null} id="subject-information-tab" aria-controls="subject-information-panel" aria-selected={tab === "information"} tabIndex={tab === "information" ? 0 : -1} onClick={() => setTab("information")}
         onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); setTab("classes"); document.getElementById("subject-classes-tab")?.focus(); } }}
-        data-testid="subjects-tab-information" className="rounded px-3 py-2 text-sm font-semibold aria-selected:bg-primary-soft aria-selected:text-primary">Thông tin</button>
+        data-testid="subjects-tab-information" className="rounded px-3 py-2 text-sm font-semibold aria-selected:bg-primary-soft aria-selected:text-primary-ink">Thông tin</button>
       <button type="button" role="tab" disabled={mode !== null} id="subject-classes-tab" aria-controls="subject-classes-panel" aria-selected={tab === "classes"} tabIndex={tab === "classes" ? 0 : -1} onClick={() => setTab("classes")}
         onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); setTab("information"); document.getElementById("subject-information-tab")?.focus(); } }}
-        data-testid="subjects-tab-classes" className="rounded px-3 py-2 text-sm font-semibold aria-selected:bg-primary-soft aria-selected:text-primary">Lớp học ({data.classCount ?? "—"})</button>
+        data-testid="subjects-tab-classes" className="rounded px-3 py-2 text-sm font-semibold aria-selected:bg-primary-soft aria-selected:text-primary-ink">Lớp học ({data.classCount ?? "—"})</button>
     </div>
     {tab === "information" ? <div role="tabpanel" id="subject-information-panel" aria-labelledby="subject-information-tab" className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
       <SubjectInfoTab {...mutationProps} editing={mode === "edit"} disabled={mode !== null} onEdit={() => open("edit")} onCancel={close} />

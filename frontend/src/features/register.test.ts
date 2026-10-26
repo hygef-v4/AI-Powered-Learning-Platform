@@ -12,15 +12,15 @@ function menu(role: Role): string[] {
 
 describe("menu bên do các unit đăng ký", () => {
   it("đúng mục và thứ tự của design cho từng role", () => {
-    expect(menu("ADMIN")).toEqual(["Tổng quan", "Cài đặt", "Tài khoản", "Môn học", "Nhật ký audit"]);
+    expect(menu("ADMIN")).toEqual(["Tổng quan", "Tài khoản", "Môn học", "Cài đặt", "Nhật ký audit"]);
     expect(menu("SUBJECT_MANAGER")).toEqual([
       "Tổng quan",
-      "Môn học của tôi",
-      "Ngân hàng câu hỏi",
+      "Thông tin môn",
+      "Câu hỏi",
       "Quiz",
-      "Học liệu",
       "Bài tập",
-      "Lớp học",
+      "Học liệu",
+      "Lớp của môn",
       "Lớp được phân công",
       "Thông báo lớp",
     ]);

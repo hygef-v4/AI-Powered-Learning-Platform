@@ -75,7 +75,6 @@ export function ReadOnlyClassPage({
         <section className={styles.panel}>
           <EmptyState
             title="Lớp hiện không khả dụng"
-            description="Quay lại danh sách lớp để xem các lớp đang học."
           />
         </section>
       </>
@@ -96,35 +95,32 @@ export function ReadOnlyClassPage({
         title={
           <>
             {value.subject.name}
-            <StatusBadge status={value.status} />
+            {value.status !== "OPEN" && <StatusBadge status={value.status} />}
           </>
         }
-        subtitle={`${audience === "student" ? "Lớp của tôi" : "Lớp được phân công"} › ${value.subject.code} · ${value.code}`}
+        subtitle={`${value.subject.code} · ${value.code} · ${value.term}`}
         onBack={onBack}
       />
       {audience === "teacher" && <Tabs items={tabs} value={tab} onChange={setTab} label="Nội dung lớp" />}
-      {audience === "student" && tab === "info" && (
-        <section className={styles.panel}>
-          <h2>Thông tin lớp</h2>
-          <dl className={styles.readList}>
-            <dt>Môn</dt>
-            <dd>
-              {value.subject.code} · {value.subject.name}
-            </dd>
-            <dt>Mã lớp</dt>
-            <dd className={styles.code}>{value.code}</dd>
-            <dt>Học kỳ</dt>
-            <dd>{value.term}</dd>
-            <dt>Giảng viên</dt>
-            <dd>{value.teacher ? `${value.teacher.name} · ${value.teacher.email}` : "Chưa phân công"}</dd>
-            <dt>Trạng thái</dt>
-            <dd>
-              <StatusBadge status={value.status} />
-            </dd>
-            <dt>Mô tả</dt>
-            <dd>{value.description || "Chưa có mô tả."}</dd>
-          </dl>
-        </section>
+      {audience === "student" && (
+        <div className={styles.studentLayout}>
+          <div className={styles.stack}>
+            <SlotOutlet slot={studentClassSections} props={{ classId: value.id }} />
+          </div>
+          <aside className={styles.panel}>
+            <h2>Thông tin lớp</h2>
+            <dl className={styles.compactReadList}>
+              <dt>Giảng viên</dt>
+              <dd>{value.teacher ? value.teacher.name : "Chưa phân công"}</dd>
+              {value.teacher && <><dt>Email</dt><dd>{value.teacher.email}</dd></>}
+              <dt>Mã lớp</dt>
+              <dd className={styles.code}>{value.code}</dd>
+              <dt>Học kỳ</dt>
+              <dd>{value.term}</dd>
+              {value.description && <><dt>Mô tả</dt><dd className={styles.descriptionText}>{value.description}</dd></>}
+            </dl>
+          </aside>
+        </div>
       )}
       {audience === "teacher" && tab === "info" && (
         <div className={styles.teacherOverviewGrid} data-teacher-overview="true">
@@ -187,7 +183,6 @@ export function ReadOnlyClassPage({
           <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
         </div>
       )}
-      {audience === "student" && <SlotOutlet slot={studentClassSections} props={{ classId: value.id }} />}
       {audience === "teacher" && tab === "students" && (
         <>
           <EnrollmentPanel

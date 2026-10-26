@@ -216,7 +216,6 @@ describe("ClassGradebookTab layout and modes", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Xuất sổ điểm" }));
     const dialog = screen.getByRole("dialog", { name: "Xuất sổ điểm" });
-    expect(within(dialog).getByText(/không phụ thuộc bộ lọc tìm kiếm/i)).toBeInTheDocument();
 
     fireEvent.change(within(dialog).getByRole("combobox", { name: /Phạm vi/ }), { target: { value: "a-2" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));

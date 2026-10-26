@@ -83,7 +83,7 @@ export function QuotaPolicySection() {
   };
 
   return (
-    <Section title="Hạn mức chung" icon="speed" description="Một mức áp cho mọi mô hình. Đặt lại lúc 00:00 (giờ Việt Nam).">
+    <Section title="Hạn mức chung" icon="speed">
       {policy && !policy.configured && (
         <Alert tone="warning">Chưa cấu hình hạn mức: giảng viên chưa dùng được API của trường.</Alert>
       )}
@@ -190,7 +190,6 @@ export function TeacherQuotaTable() {
     <Section
       title="Mức riêng từng giảng viên"
       icon="person"
-      description="Mức riêng thay cho mức chung của giảng viên đó. Đặt 0 để chặn dùng API trường."
       actions={
         <Button size="sm" icon="add" onClick={() => setEditing("new")}>
           Thêm mức riêng
@@ -263,7 +262,6 @@ export function TeacherQuotaTable() {
         onClose={() => setRemoving(null)}
         footer={
           <>
-            <Button onClick={() => setRemoving(null)}>Hủy</Button>
             <Button variant="danger" onClick={() => removing && void remove(removing)}>
               Xóa
             </Button>
@@ -336,9 +334,6 @@ function TeacherQuotaDialog({
       dismissible={!busy}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant="primary" icon="save" onClick={() => void save()} disabled={busy || !teacher || value === null}>
             Lưu
           </Button>

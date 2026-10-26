@@ -60,7 +60,7 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
           const parent = nextSection !== undefined && nextSection.level > section.level;
           return <article key={index} className="overflow-hidden rounded-xl border border-line" aria-label={`Câu ${index + 1}`}>
             <header className="flex items-start gap-3 border-b border-line bg-canvas px-4 py-3">
-              <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary">{index + 1}</span>
+              <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary-ink">{index + 1}</span>
               <h4 className="min-w-0 flex-1 break-words font-semibold leading-6 text-ink">{section.title}</h4>
               {!parent && <Pill>{points(section)} điểm</Pill>}
             </header>
@@ -71,11 +71,11 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
               <div className="min-w-0 space-y-3 border-t border-line bg-canvas/50 p-4 lg:border-t-0 lg:border-l">
                 <h5 className="text-sm font-semibold text-ink">Rubric · tiêu chí và điểm</h5>
                 {section.rubric.length === 0 ? <p className={parent ? "text-sm text-muted" : "text-sm text-danger"}>{parent ? "Rubric được đặt tại các câu con." : "Câu này chưa có rubric. Cần tạo lại đề để bổ sung tiêu chí và điểm."}</p>
-                  : section.rubric.map((criterion, criterionIndex) => <div key={criterionIndex} className="rounded-lg border border-line bg-white p-3">
+                  : section.rubric.map((criterion, criterionIndex) => <div key={criterionIndex} className="rounded-lg border border-line bg-surface p-3">
                     <p className="text-sm font-semibold text-ink">{criterionIndex + 1}. {criterion.title}</p>
                     {criterion.description && <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-muted">{criterion.description}</p>}
                     <ul className="mt-2 divide-y divide-line">{criterion.items.map((item, itemIndex) => <li key={itemIndex} className="flex items-start justify-between gap-4 py-2 text-sm leading-6">
-                      <span className="min-w-0 whitespace-pre-wrap break-words">{item.text}</span><strong className="shrink-0 text-primary">{item.points ?? "—"} điểm</strong>
+                      <span className="min-w-0 whitespace-pre-wrap break-words">{item.text}</span><strong className="shrink-0 text-primary-ink">{item.points ?? "—"} điểm</strong>
                     </li>)}</ul>
                   </div>)}
               </div>

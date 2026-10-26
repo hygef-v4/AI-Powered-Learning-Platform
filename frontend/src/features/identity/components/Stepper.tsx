@@ -12,16 +12,16 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
         return (
           <li key={label} className="flex items-center gap-2" aria-current={state === "current" ? "step" : undefined}>
             {index > 0 && (
-              <span aria-hidden="true" className={`h-0.5 w-6 ${index <= current ? "bg-[#6ee7b7]" : "bg-[#e2e8f0]"}`} />
+              <span aria-hidden="true" className={`h-0.5 w-6 ${index <= current ? "bg-success" : "bg-line"}`} />
             )}
             {state === "done" ? (
-              <span className="flex size-5 items-center justify-center rounded-full border border-[#a7f3d0] bg-[#ecfdf5] text-[#059669]">
+              <span className="flex size-5 items-center justify-center rounded-full border border-success-soft bg-success-soft text-success">
                 <Icon name="check" size={13} />
               </span>
             ) : (
               <span
                 className={`flex size-5 items-center justify-center rounded-full text-[11px] ${
-                  state === "current" ? "bg-primary-strong font-bold text-white" : "bg-[#f1f5f9] text-[#94a3b8]"
+                  state === "current" ? "bg-primary-strong font-bold text-on-primary" : "bg-sunken text-muted"
                 }`}
               >
                 {index + 1}
@@ -29,7 +29,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             )}
             <span
               className={
-                state === "done" ? "text-[#059669]" : state === "current" ? "text-primary-strong" : "text-[#94a3b8]"
+                state === "done" ? "text-success" : state === "current" ? "text-primary-ink" : "text-muted"
               }
             >
               {index + 1}. {label}

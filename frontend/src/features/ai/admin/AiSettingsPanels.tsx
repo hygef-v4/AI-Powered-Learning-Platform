@@ -26,7 +26,6 @@ function AiSettingsPage({ focusQuota }: { focusQuota: boolean }) {
         title="API AI của trường và hạn mức"
         backHref="/admin/settings"
         breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: focusQuota ? "Hạn mức AI giảng viên" : "API AI của trường" }]}
-        subtitle="Mỗi lần lưu được ghi vào Nhật ký audit · chỉ Quản trị viên"
       />
       <div role="tablist" aria-label="Phần cài đặt AI" className="flex gap-1 border-b border-line">
         {(
@@ -43,7 +42,7 @@ function AiSettingsPage({ focusQuota }: { focusQuota: boolean }) {
             onClick={() => setTab(key)}
             className={cx(
               "-mb-px border-b-2 px-3.5 py-2 text-[13px] font-semibold",
-              tab === key ? "border-primary text-primary" : "border-transparent text-muted hover:text-ink",
+              tab === key ? "border-primary text-primary-ink" : "border-transparent text-muted hover:text-ink",
             )}
           >
             {label}

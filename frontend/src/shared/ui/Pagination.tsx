@@ -34,7 +34,7 @@ export function pageItems(current: number, count: number): (number | "gap")[] {
   return items;
 }
 
-const BOX = "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold";
+const BOX = "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors duration-200";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
 export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, testId = "pagination" }: Props) {
@@ -46,7 +46,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3" data-testid={testId}>
-      <p className="text-xs text-muted">
+      <p className="text-[12.5px] text-muted">
         {summary}
         {note && <> · {note}</>}
       </p>
@@ -57,14 +57,14 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
             aria-label="Trang trước"
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
-            className={cx(BOX, "border border-line-strong bg-white text-body disabled:cursor-not-allowed disabled:opacity-45")}
+            className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}
             data-testid={`${testId}-prev-button`}
           >
             <Icon name="chevron_left" size={16} />
           </button>
           {pageItems(page, count).map((item, i) =>
             item === "gap" ? (
-              <span key={`gap-${i}`} className={cx(BOX, "border border-line-strong bg-white text-muted")} aria-hidden>
+              <span key={`gap-${i}`} className={cx(BOX, "text-muted")} aria-hidden>
                 …
               </span>
             ) : (
@@ -73,7 +73,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
                 type="button"
                 aria-current={item === page ? "page" : undefined}
                 onClick={() => onPageChange(item)}
-                className={cx(BOX, item === page ? "bg-primary text-white" : "border border-line-strong bg-white text-body hover:bg-shell")}
+                className={cx(BOX, item === page ? "bg-primary-soft font-mono text-ink" : "font-mono text-muted hover:bg-sunken hover:text-ink")}
                 data-testid={`${testId}-page-${item + 1}-button`}
               >
                 {item + 1}
@@ -85,7 +85,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
             aria-label="Trang sau"
             disabled={page >= count - 1}
             onClick={() => onPageChange(page + 1)}
-            className={cx(BOX, "border border-line-strong bg-white text-body disabled:cursor-not-allowed disabled:opacity-45")}
+            className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}
             data-testid={`${testId}-next-button`}
           >
             <Icon name="chevron_right" size={16} />

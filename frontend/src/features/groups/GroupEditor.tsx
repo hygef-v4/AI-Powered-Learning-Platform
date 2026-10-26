@@ -126,7 +126,7 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-primary-soft px-3.5 py-2.5 text-[13px] text-primary">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-primary-soft px-3.5 py-2.5 text-[13px] text-primary-ink">
         <span>Đang sửa nhóm. Thay đổi chỉ áp dụng khi bạn bấm Lưu cho cả lớp.</span>
         <span className="flex gap-2">
           <Button size="sm" onClick={onCancel} disabled={busy}>
@@ -151,7 +151,7 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
               aria-label={`Nhóm ${d.name}`}
               {...dropOn(d.key)}
               className={cx(
-                "flex flex-col gap-2 rounded-2xl border bg-white p-3.5",
+                "flex flex-col gap-2 rounded-xl border bg-surface p-3.5",
                 mine.length ? "border-danger" : dropKey === d.key ? "border-primary bg-primary-soft" : "border-line",
               )}
             >
@@ -218,7 +218,7 @@ export function GroupEditor({ classId, set, initial, onCancel, onSaved }: Props)
           aria-label="Chưa có nhóm"
           {...dropOn(UNGROUPED)}
           className={cx(
-            "flex flex-col gap-2 rounded-2xl border border-dashed p-3.5",
+            "flex flex-col gap-2 rounded-xl border border-dashed p-3.5",
             dropKey === UNGROUPED ? "border-primary bg-primary-soft" : "border-line-strong bg-shell",
           )}
         >

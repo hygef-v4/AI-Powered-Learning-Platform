@@ -35,17 +35,17 @@ export function AdminDashboardPage() {
   const denied = current?.error instanceof ApiError && [401, 403].includes(current.error.problem.status);
   function reload() { setHistoryOpen(false); setGeneration(value => value + 1); }
 
-  return <div className="flex flex-col gap-5">
-    <PageHeader title="Tổng quan hệ thống" subtitle={data ? `Số liệu tính lúc ${formatInstant(data.calculatedAt)}` : "Số liệu tính theo yêu cầu · chỉ số đếm và metadata backup"}
-      actions={<Button onClick={reload} disabled={!current} data-testid="dashboard-refresh">Tải lại số liệu</Button>}/>
-    {!current && <p role="status">Đang tải…</p>}
+  return <div className="flex flex-col gap-7">
+    <PageHeader title="Tổng quan" subtitle={data ? `Số liệu lúc ${formatInstant(data.calculatedAt)}` : undefined}
+      actions={<Button icon="refresh" onClick={reload} disabled={!current} data-testid="dashboard-refresh">Tải lại</Button>}/>
+    {!current && <p role="status" className="text-sm text-muted">Đang tải…</p>}
     {current?.error !== undefined && <Alert tone="danger" role="alert" action={!denied && <Button onClick={reload}>Thử lại</Button>}>
       {denied ? "Không có quyền xem tổng quan hệ thống." : "Không tải được tổng quan hệ thống."}
     </Alert>}
     {data && <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <CountCard title="Tài khoản" value={data.accounts.data?.total ?? null} detail={data.accounts.data ? `${formatCount(data.accounts.data.activeTotal)} đang hoạt động` : undefined} testId="dashboard-accounts"/>
-        <CountCard title="Môn học" value={data.subjects.data ? data.subjects.data.ACTIVE + data.subjects.data.ARCHIVED : null}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <CountCard title="Tài khoản" href="/admin/accounts" value={data.accounts.data?.total ?? null} detail={data.accounts.data ? `${formatCount(data.accounts.data.activeTotal)} đang hoạt động` : undefined} testId="dashboard-accounts"/>
+        <CountCard title="Môn học" href="/admin/subjects" value={data.subjects.data ? data.subjects.data.ACTIVE + data.subjects.data.ARCHIVED : null}
           detail={data.subjects.data ? `${formatCount(data.subjects.data.ACTIVE)} hoạt động · ${formatCount(data.subjects.data.ARCHIVED)} lưu trữ` : undefined} testId="dashboard-subjects"/>
         <CountCard title="Lớp học" value={data.classes.data ? data.classes.data.DRAFT + data.classes.data.OPEN + data.classes.data.ARCHIVED : null}
           detail={data.classes.data ? `${formatCount(data.classes.data.OPEN)} đang mở · ${formatCount(data.classes.data.DRAFT)} nháp · ${formatCount(data.classes.data.ARCHIVED)} lưu trữ` : undefined} testId="dashboard-classes"/>

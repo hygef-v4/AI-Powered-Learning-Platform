@@ -111,7 +111,7 @@ export function AiUsageHistoryPage() {
                 }}
                 className={cx(
                   "rounded-full border px-3 py-1 text-xs font-semibold",
-                  source === tab.key ? "border-primary/30 bg-primary-soft text-primary" : "border-line-strong bg-white text-body hover:bg-shell",
+                  source === tab.key ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell",
                 )}
               >
                 {tab.label}
@@ -186,11 +186,11 @@ export function AiUsageHistoryPage() {
 
 function SummaryCard({ icon, title, children }: { icon: "speed" | "key" | "smart_toy"; title: string; children: ReactNode }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-4">
+    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
       <IconTile icon={icon} tone={icon === "smart_toy" ? "accent" : "primary"} />
       <div className="min-w-0">
         <p className="text-xs font-semibold text-muted">{title}</p>
-        <p className="text-lg font-bold text-ink">{children}</p>
+        <p className="font-display text-[28px] leading-none text-ink">{children}</p>
       </div>
     </div>
   );

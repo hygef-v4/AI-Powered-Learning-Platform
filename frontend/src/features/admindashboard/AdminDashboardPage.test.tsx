@@ -10,7 +10,7 @@ it("shows real counts, independent unavailable cards and explicit backup gaps", 
   vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(Response.json(data))));
   render(<AdminDashboardPage/>);
   expect(screen.getByRole("status")).toHaveTextContent("Đang tải");
-  expect(await screen.findByRole("heading", {name: "Tổng quan hệ thống"})).toBeInTheDocument();
+  expect(await screen.findByRole("heading", {name: "Tổng quan"})).toBeInTheDocument();
   await waitFor(() => expect(within(screen.getByTestId("dashboard-accounts")).getByText("5")).toBeInTheDocument());
   expect(within(screen.getByTestId("dashboard-subjects")).getByText("Không khả dụng")).toBeInTheDocument();
   expect(screen.getByTestId("backup-latest-success")).toHaveTextContent("Không khả dụng");
@@ -26,7 +26,7 @@ it("clears old metrics when refresh is denied and never displays raw provider de
   render(<AdminDashboardPage/>);
   await waitFor(() => expect(screen.getByTestId("dashboard-accounts")).toHaveTextContent("5"));
   denied = true;
-  fireEvent.click(screen.getByRole("button", {name: "Tải lại số liệu"}));
+  fireEvent.click(screen.getByRole("button", {name: "Tải lại"}));
   expect(await screen.findByRole("alert")).toHaveTextContent("Không có quyền");
   expect(screen.queryByTestId("dashboard-accounts")).not.toBeInTheDocument();
   expect(screen.queryByText("secret SQL")).not.toBeInTheDocument();

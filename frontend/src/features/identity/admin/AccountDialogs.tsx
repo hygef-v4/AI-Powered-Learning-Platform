@@ -94,9 +94,6 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant="primary" onClick={confirm} disabled={busy}>
             Đổi vai trò
           </Button>
@@ -155,7 +152,7 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
               <Td>{kind}</Td>
               <Td>
                 {item.code ? (
-                  href ? <Link href={href} className="font-medium text-primary hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
+                  href ? <Link href={href} className="font-medium text-primary-ink hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
                 ) : (
                   <span className="font-mono text-xs break-all text-muted" title="Chưa tải được mã">{item.id}</span>
                 )}
@@ -198,9 +195,6 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose} disabled={busy}>
-            Hủy
-          </Button>
           <Button variant={reopening ? "primary" : "danger"} onClick={confirm} disabled={busy}>
             {reopening ? "Mở lại" : "Vô hiệu hóa"}
           </Button>

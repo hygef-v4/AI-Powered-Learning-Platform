@@ -47,7 +47,7 @@ export function QuizPracticeHistoryPage() {
 
   return (
     <>
-      <PageHeader title="Luyện tập Quiz" subtitle="Quiz Practice không tính vào sổ điểm."
+      <PageHeader title="Luyện tập Quiz"
         actions={classes.length > 1 && (
           <Select aria-label="Lọc theo lớp" value={classId} onChange={(event) => setClassId(event.target.value)} data-testid="practice-history-class">
             <option value="">Mọi lớp</option>

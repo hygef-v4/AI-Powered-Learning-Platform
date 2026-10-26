@@ -53,7 +53,6 @@ export function RandomSplitDialog({ classId, set, onClose, onPreview }: Props) {
       dismissible={!busy}
       footer={
         <>
-          <Button onClick={onClose}>Hủy</Button>
           {preview ? (
             <Button
               variant="primary"

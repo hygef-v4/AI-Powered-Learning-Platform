@@ -89,7 +89,7 @@ export function RubricChecklist({
         const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
-            className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-white"}`}>
+            className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" aria-label={item.text} checked={achieved} disabled={disabled}
                 onChange={(event) => award(item.itemId, max, event.target.checked)}
@@ -145,10 +145,10 @@ export function RubricChecklistPanel({ rubrics, partTitles = {}, ...props }: Che
     {rubrics.map((rubric, index) => {
       const title = partTitles[rubric.partId] || `Phần ${index + 1}`;
       return <fieldset key={rubric.rubricId} disabled={props.disabled} aria-label={title}
-        className="mt-3 min-w-0 rounded-xl border border-line bg-white p-2.5 sm:p-3">
+        className="mt-3 min-w-0 rounded-xl border border-line bg-surface p-2.5 sm:p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 flex-1 break-words text-sm font-semibold text-ink">{title}</span>
-          <span className="shrink-0 text-sm font-bold tabular-nums text-primary">
+          <span className="shrink-0 text-sm font-bold tabular-nums text-primary-ink">
             {checklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
           </span>
         </div>

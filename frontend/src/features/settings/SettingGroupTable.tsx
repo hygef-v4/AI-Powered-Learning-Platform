@@ -40,7 +40,7 @@ export function SettingGroupTable({ group }: { group: SettingGroupView }) {
             return (
               <ClickableRow key={item.key} onClick={() => router.push(href)}>
                 <Td className="font-bold">
-                  <Link href={href} className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                  <Link href={href} className="hover:text-primary-ink" onClick={(e) => e.stopPropagation()}>
                     {item.name}
                   </Link>
                 </Td>

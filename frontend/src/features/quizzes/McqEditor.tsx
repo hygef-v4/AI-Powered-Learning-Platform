@@ -6,7 +6,7 @@ import { TYPE_LABELS } from "./labels";
 import { MAX_OPTIONS, MIN_OPTIONS, nextOptionId, toggleCorrect, withType, type FormErrors, type QuestionForm } from "./questionForm";
 import type { QuestionType } from "./types";
 
-const TEXTAREA = "w-full rounded-[9px] border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
+const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-primary disabled:bg-shell";
 
 type Props = {
   value: QuestionForm;
@@ -40,7 +40,7 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
           <button key={type} type="button" role="radio" aria-checked={value.type === type}
             onClick={() => onChange(withType(value, type))} data-testid={`mcq-editor-type-${type}`}
             className={cx("rounded-full border px-3 py-1 text-xs font-semibold",
-              value.type === type ? "border-primary/30 bg-primary-soft text-primary" : "border-line-strong bg-white text-body hover:bg-shell")}>
+              value.type === type ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell")}>
             {TYPE_LABELS[type]}
           </button>
         ))}

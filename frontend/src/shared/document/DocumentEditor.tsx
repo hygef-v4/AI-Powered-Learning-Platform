@@ -87,7 +87,8 @@ const FLAGS: { key: RunFlag; label: string; title: string; className: string }[]
 const TEXT_COLORS = ["#202124", "#5F6368", "#C5221F", "#E37400", "#188038", "#1A73E8", "#9334E6", "#B80672"];
 const HIGHLIGHTS = ["#FFF475", "#CCFF90", "#A7FFEB", "#AECBFA", "#D7AEFB", "#FDCFE8", "#E8EAED"];
 /** Màu của phần theo tầng (yêu cầu 2026-10-22): cùng tầng cùng màu, tầng sâu đậm hơn; lá thì khung mang màu tầng, ruột trắng. */
-const SECTION_BG = ["#e8eef8", "#d7e1f2", "#c6d4ec", "#b6c7e5"];
+// Nền các tầng mục: biến theme (globals.css) đậm dần theo tầng, tự đổi theo sáng/tối.
+const SECTION_BG = ["var(--c-tier-1)", "var(--c-tier-2)", "var(--c-tier-3)", "var(--c-tier-4)"];
 const ALIGNS: { value: Align; title: string; glyph: GlyphName }[] = [
   { value: "LEFT", title: "Căn trái", glyph: "alignLeft" },
   { value: "CENTER", title: "Căn giữa", glyph: "alignCenter" },
@@ -282,8 +283,8 @@ export function ToolbarButton({ icon, active, className, children, ...rest }: Bu
 }) {
   return (
     <button type="button" aria-pressed={active} onMouseDown={(event) => event.preventDefault()}
-      className={cx("inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-[13px] font-medium whitespace-nowrap text-body hover:bg-black/5 disabled:opacity-35 disabled:hover:bg-transparent",
-        active && "bg-[#d3e3fd] text-[#041e49] hover:bg-[#d3e3fd]", className)}
+      className={cx("inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-[13px] font-medium whitespace-nowrap text-body hover:bg-sunken disabled:opacity-35 disabled:hover:bg-transparent",
+        active && "bg-primary-soft text-ink hover:bg-primary-soft", className)}
       {...rest}>
       {icon && <Icon name={icon} size={18} />}
       {children}
@@ -292,7 +293,7 @@ export function ToolbarButton({ icon, active, className, children, ...rest }: Bu
 }
 
 function Separator() {
-  return <span aria-hidden className="mx-1 h-5 w-px bg-[#c7c7c7]" />;
+  return <span aria-hidden className="mx-1 h-5 w-px bg-line-strong" />;
 }
 
 type GlyphName = "undo" | "redo" | "alignLeft" | "alignCenter" | "alignRight" | "justify" | "bullets" | "numbers" | "indent" | "outdent"
@@ -344,7 +345,7 @@ function ToolPopover({ title, label, disabled, children }: {
         {label}<Icon name="expand_more" size={14} className="-ml-0.5 text-muted" />
       </ToolbarButton>
       {open && (
-        <div className="absolute top-8 left-0 z-40 rounded-xl border border-line bg-white p-2 shadow-lg" onMouseDown={(event) => event.preventDefault()}>
+        <div className="absolute top-8 left-0 z-40 rounded-xl border border-line bg-surface p-2 shadow-[var(--shadow-float)]" onMouseDown={(event) => event.preventDefault()}>
           {children(() => setOpen(false))}
         </div>
       )}
@@ -382,7 +383,7 @@ function TablePicker({ onPick }: { onPick: (rows: number, cols: number) => void 
           return (
             <button key={i} type="button" aria-label={`${row} × ${col}`} onMouseEnter={() => setHover({ rows: row, cols: col })}
               onClick={() => onPick(row, col)}
-              className={cx("size-[18px] rounded-[2px] border p-0", on ? "border-[#1a73e8] bg-[#d2e3fc]" : "border-[#dadce0] bg-[#f8f9fa]")} />
+              className={cx("size-[18px] rounded-[2px] border p-0", on ? "border-primary bg-primary-soft" : "border-line-strong bg-sunken")} />
           );
         })}
       </div>
@@ -401,8 +402,8 @@ function Square({ label, danger = false, disabled = false, onClick, children }: 
 }) {
   return (
     <button type="button" title={label} aria-label={label} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={onClick}
-      className={cx("inline-flex size-[18px] flex-none items-center justify-center rounded-[2px] border border-[#747775] bg-white p-0 text-xs leading-none text-[#444746] disabled:cursor-not-allowed disabled:opacity-40",
-        danger ? "enabled:hover:border-danger enabled:hover:text-danger" : "enabled:hover:border-[#1a73e8] enabled:hover:text-[#1a73e8]")}>
+      className={cx("inline-flex size-[18px] flex-none items-center justify-center rounded-[2px] border border-line-strong bg-surface p-0 text-xs leading-none text-body disabled:cursor-not-allowed disabled:opacity-40",
+        danger ? "enabled:hover:border-danger enabled:hover:text-danger" : "enabled:hover:border-primary enabled:hover:text-primary-ink")}>
       {children}
     </button>
   );
@@ -710,10 +711,10 @@ export function DocumentEditor({
     const writable = !readOnly && inPart(last?.id);
     return <>
       {section.blocks.slice(0, splitAt).map(renderBlock)}
-      <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-white p-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+      <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-surface p-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
           <p className="text-sm font-semibold text-ink">Bài làm của bạn</p>
-          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary"
+          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary-ink hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary"
             onClick={() => {
               if (!last) return;
               const block = newBlock("DIAGRAM", "STUDENT");
@@ -750,7 +751,7 @@ export function DocumentEditor({
         {renderBlock(heading)}
         {section.leaf ? (
           // Lá: khung mang màu của tầng, ruột trắng là chỗ viết; bấm vào chỗ trống trong ruột là viết tiếp cuối phần.
-          <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-white px-3 py-1.5"
+          <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-surface px-3 py-1.5"
             onClick={(event) => { if (writable && event.target === event.currentTarget) continueAfter((section.blocks.at(-1) ?? heading).id); }}>
             {leafContent(section, key)}
           </div>
@@ -782,7 +783,7 @@ export function DocumentEditor({
       {guided && !readOnly && <p className="text-xs text-muted">Chọn vùng bài làm để định dạng chữ.{diagramEnabled && " Dùng nút trong từng câu để thêm sơ đồ đúng vị trí."}</p>}
       {(!readOnly || toolbarExtra) && (
         <div role="toolbar" aria-label="Định dạng và chèn"
-          className="sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-3xl bg-[#edf2fa] px-3 py-1 shadow-[0_1px_2px_rgba(60,64,67,0.15)]">
+          className="sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line">
           {!readOnly && (
             <>
               <ToolbarButton title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác" disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>
@@ -795,7 +796,7 @@ export function DocumentEditor({
                       if (!target || !event.target.value) return;
                       replace(target.id, convertBlock(target, event.target.value as StyleValue), { id: target.id, at: "end" });
                     }}
-                    className="h-7 w-36 rounded-md bg-transparent px-1.5 text-[13px] text-ink hover:bg-black/5 disabled:opacity-40">
+                    className="h-7 w-36 rounded-md bg-transparent px-1.5 text-[13px] text-ink hover:bg-sunken disabled:opacity-40">
                     {style === "" && <option value="">Kiểu chữ</option>}
                     {currentStyle !== "" && !AUTHOR_STYLES.includes(currentStyle) && <option value={currentStyle}>{STYLE_LABELS[currentStyle]}</option>}
                     {AUTHOR_STYLES.map((value) => <option key={value} value={value}>{STYLE_LABELS[value]}</option>)}
@@ -838,7 +839,7 @@ export function DocumentEditor({
               </ToolPopover>
               {uploadImage && (
                 <label title="Chèn ảnh" aria-label="Chèn ảnh" onMouseDown={(event) => event.preventDefault()}
-                  className={cx("inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-body hover:bg-black/5", insertAllowed ? "cursor-pointer" : "pointer-events-none opacity-35")}>
+                  className={cx("inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-body hover:bg-sunken", insertAllowed ? "cursor-pointer" : "pointer-events-none opacity-35")}>
                   <Glyph name="image" />
                   <input type="file" accept={IMAGE_TYPES} className="sr-only" data-testid="add-IMAGE" disabled={!insertAllowed}
                     onChange={(event) => { const file = event.target.files?.[0]; if (file) insertImage(file); event.target.value = ""; }} />
@@ -856,7 +857,7 @@ export function DocumentEditor({
 
       <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-start justify-center gap-5" : "mx-auto w-full max-w-[816px]"}>
         <div ref={paper} data-testid="document-paper"
-          className="min-h-[60vh] min-w-0 rounded-sm border border-line bg-white px-5 pt-10 pb-4 shadow-[0_1px_3px_rgba(60,64,67,0.2)] sm:px-14 sm:pt-12">
+          className="min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:px-14 sm:pt-12">
           {/* Khung bọc nội dung (không có min-height) để cột ghi chú biết khi nào block đổi chỗ. */}
           <div ref={content}>
             {header}
@@ -946,7 +947,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
               // eslint-disable-next-line @next/next/no-img-element
               <img src={src} alt={block.content.alt ?? ""} style={{ width: block.content.width ? `${block.content.width}px` : undefined }} className="mx-auto max-w-full" />
             ) : (
-              <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-line-strong p-6 text-xs text-muted hover:border-primary hover:text-primary">
+              <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-line-strong p-6 text-xs text-muted hover:border-primary hover:text-primary-ink">
                 <Icon name="upload_file" size={20} />{block.content.fileRef ? "Đang tải ảnh…" : "Chọn ảnh"}
               </span>
             )}

@@ -80,7 +80,6 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
   return (
     <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="help_center" title="Lấy câu hỏi từ ngân hàng"
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="primary" disabled={busy || ids.length === 0 || tooMany} onClick={() => void add()} data-testid="bank-picker-add">
           {tab === "manual" ? `Thêm ${ids.length} câu` : `Lưu ${ids.length} câu vào quiz`}
         </Button>
@@ -90,7 +89,7 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
           {([["manual", "Chọn tay"], ["random", "Bốc ngẫu nhiên"]] as const).map(([key, label]) => (
             <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => { setTab(key); setError(null); }}
               data-testid={`bank-picker-tab-${key}`}
-              className={cx("rounded-lg px-3 py-1.5 font-semibold", tab === key ? "bg-primary-soft text-primary" : "text-body hover:bg-shell")}>
+              className={cx("rounded-lg px-3 py-1.5 font-semibold", tab === key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
               {label}
             </button>
           ))}

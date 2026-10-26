@@ -138,7 +138,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3">
         <ButtonLink href={me.teacher ? `/teaching/classes/${view.classId}` : `/classes/${view.classId}`} icon="arrow_back" size="sm">
           Thoát
         </ButtonLink>
@@ -170,7 +170,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             type="button"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={cx("-mb-px border-b-2 px-3.5 py-2 text-[13px] font-semibold", tab === key ? "border-primary text-primary" : "border-transparent text-muted")}
+            className={cx("-mb-px border-b-2 px-3.5 py-2 text-[13px] font-semibold", tab === key ? "border-primary text-primary-ink" : "border-transparent text-muted")}
           >
             {label}
           </button>
@@ -295,7 +295,6 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         onClose={() => setReleasing(null)}
         footer={
           <>
-            <Button onClick={() => setReleasing(null)}>Hủy</Button>
             <Button
               variant="danger"
               onClick={() => {
@@ -313,7 +312,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       </Dialog>
       {autoSubmitting && (
         <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45">
-          <div className="max-w-[420px] rounded-2xl bg-white p-6 text-center">
+          <div className="max-w-[420px] rounded-xl bg-surface p-6 text-center">
             <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
             <p className="mt-2 text-[13px] text-body">
               Đã hết hạn nộp{view.closesAt && ` lúc ${dateTime(view.closesAt)}`}. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong

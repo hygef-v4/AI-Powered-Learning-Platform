@@ -80,7 +80,7 @@ function PageButton({
       onClick={onClick}
       className={cx(
         "inline-flex h-7 min-w-7 items-center justify-center rounded-md border px-1.5 text-xs font-semibold disabled:opacity-40",
-        current ? "border-primary bg-primary text-white" : "border-line-strong bg-white text-body hover:bg-shell",
+        current ? "border-primary bg-primary text-on-primary" : "border-line-strong bg-surface text-body hover:bg-shell",
       )}
     >
       {children}

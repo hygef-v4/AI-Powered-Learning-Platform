@@ -17,7 +17,7 @@ export function StudentGradePanel({ attemptId }: { attemptId: string }) {
   );
 
   return (
-    <section aria-label="Kết quả chính thức" className="rounded-xl border border-line bg-white p-4 text-sm leading-relaxed">
+    <section aria-label="Kết quả chính thức" className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed">
       <h3 className="text-base font-bold text-ink">Kết quả chính thức</h3>
       {error && <p role="alert" className="mt-2 text-danger">{error}</p>}
       {value?.score != null ? (
@@ -70,7 +70,7 @@ export function StudentGradePanel({ attemptId }: { attemptId: string }) {
                         {item.criterionTitle ? `${item.criterionTitle}: ` : ""}
                         {item.itemText}
                       </span>
-                      <span className="shrink-0 tabular-nums text-primary">
+                      <span className="shrink-0 tabular-nums text-primary-ink">
                         {awarded.toFixed(2)} / {max.toFixed(2)} điểm
                       </span>
                     </summary>

@@ -49,8 +49,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
 
   return (
     <form onSubmit={submit} noValidate>
-      <h1 className="text-[28px] leading-tight font-bold tracking-[-0.7px] text-[#181c20]">Đăng nhập</h1>
-      <p className="mt-1 text-[13px] text-[#64748b]">Đăng nhập bằng email trường.</p>
+      <h1 className="font-display text-[44px] leading-none tracking-[-0.03em] text-ink">Đăng nhập</h1>
 
       <div className="mt-7">
         <label htmlFor={emailId} className={AUTH_LABEL}>
@@ -90,13 +89,13 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
       </button>
 
       <div className="mt-4 text-right">
-        <Link href="/reset-password" className="text-xs font-medium text-[#0e2a9e] hover:underline">
+        <Link href="/reset-password" className="text-xs font-medium text-primary-ink hover:underline">
           Quên mật khẩu?
         </Link>
       </div>
-      <p className="mt-3 text-center text-xs text-[#64748b]">
+      <p className="mt-3 text-center text-xs text-muted">
         Lần đầu sử dụng?{" "}
-        <Link href="/activate" className="font-semibold text-[#0e2a9e] hover:underline">
+        <Link href="/activate" className="font-semibold text-primary-ink hover:underline">
           Kích hoạt tài khoản
         </Link>
       </p>
