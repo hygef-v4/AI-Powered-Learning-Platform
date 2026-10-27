@@ -8,6 +8,7 @@ import { ArchiveMaterialDialog, MaterialSourceDialog } from "./MaterialDialogs";
 import { MaterialPreview } from "./MaterialPreview";
 import { fileDescription, textLabels, type Material } from "./types";
 import styles from "./materials.module.css";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 function MaterialInfoForm({ material, onSaved }: { material: Material; onSaved: () => void }) {
   const [title, setTitle] = useState(material.title); const [description, setDescription] = useState(material.description);
@@ -30,9 +31,9 @@ export function MaterialDetailPage({ id, classId }: { id: string; classId?: stri
   const resource = useMaterialResource<Material>(materialPath(id) + contextQuery(classId));
   const [dialog, setDialog] = useState<"replace" | "archive">(); const m = resource.data;
   return <main className={styles.page}><Link className="mb-4 inline-block text-sm text-primary-ink" href={classId ? `/teaching/classes/${encodeURIComponent(classId)}?tab=materials` : "/manager/materials"}>← Quay lại học liệu</Link>
-    {resource.loading && <p role="status">Đang tải học liệu…</p>}{resource.error && <div role="alert" className={styles.error}>{resource.error} <Button onClick={resource.reload}>Thử lại</Button></div>}
+    {resource.loading && <PageLoading label="Đang tải học liệu…" />}{resource.error && <PageLoadError onRetry={resource.reload}>{resource.error}</PageLoadError>}
     {m && <><div className={styles.heading}><div><p className={styles.muted}>Học liệu › {m.scope === "SUBJECT" ? "Của môn" : "Của lớp"}</p><h1>{m.title}</h1><span className={styles.badge}>{m.status === "ACTIVE" ? "Đang dùng" : "Lưu trữ"}</span></div>
-      <div className={styles.toolbar}>{m.canManage && <><Button data-testid="material-replace-open" onClick={() => setDialog("replace")}>{m.kind === "FILE" ? "Thay tệp" : "Thay link"}</Button><Button data-testid="material-archive-open" variant="danger" onClick={() => setDialog("archive")}>Lưu trữ</Button></>}<Button data-testid="material-detail-reload" onClick={resource.reload}>Tải lại</Button></div></div>
+      <div className={styles.toolbar}>{m.canManage && <><Button data-testid="material-replace-open" onClick={() => setDialog("replace")}>{m.kind === "FILE" ? "Thay tệp" : "Thay link"}</Button><Button className="min-w-28" data-testid="material-archive-open" variant="danger" onClick={() => setDialog("archive")}>Lưu trữ</Button></>}<Button data-testid="material-detail-reload" onClick={resource.reload}>Tải lại</Button></div></div>
       <div className={styles.detail}><MaterialPreview material={m} classId={classId} /><div className={styles.stack}><MaterialInfoForm key={`${m.id}:${m.version}`} material={m} onSaved={resource.reload} />
         <section className={styles.card}><h2>Lịch sử phiên bản</h2><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Phiên bản</th><th>Thời điểm</th><th>Trích chữ</th><th>Thao tác</th></tr></thead><tbody>{m.versions.map(v => <tr key={v.versionNo}><td>{v.versionNo}{v.versionNo === m.currentVersionNo && <span className={styles.badge}>Hiện hành</span>}<div className={styles.muted}>Người tạo: {v.createdBy}</div></td><td>{new Date(v.createdAt).toLocaleString("vi-VN")}</td><td>{v.textStatus ? textLabels[v.textStatus] : "—"}</td><td>{m.kind === "FILE" ? <VersionDownload id={m.id} classId={classId} number={v.versionNo} /> : v.videoUrl && <a href={v.videoUrl} target="_blank" rel="noopener noreferrer">Xem video</a>}</td></tr>)}</tbody></table></div></section>
       </div></div>

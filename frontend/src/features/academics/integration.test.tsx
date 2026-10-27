@@ -11,7 +11,7 @@ const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},cod
 it("hosts student card and manager subject extensions",()=>{
  classCardSections.register({key:"test-card",order:1,component:()=> <p>Card extension</p>});
  subjectSummarySections.register({key:"test-subject",order:1,component:({variant})=><p>{variant} extension</p>});
- render(<><ClassDashboardPage audience="student" classes={[value]} onOpen={()=>{}}/><ManagerDashboardPage subjects={[value.subject]} classes={[value]} onSubject={()=>{}} onTeaching={()=>{}}/><MySubjectPage subject={value.subject} classes={[value]} onBack={()=>{}} onClasses={()=>{}}/></>);
+ render(<><ClassDashboardPage audience="student" classes={[value]} onOpen={()=>{}}/><ManagerDashboardPage subjects={[value.subject]} classes={[value]} onSubject={()=>{}} onTeaching={()=>{}}/><MySubjectPage subject={value.subject} classes={[value]} onBack={()=>{}}/></>);
  expect(screen.getByText("Card extension")).toBeInTheDocument(); expect(screen.getByText("inline extension")).toBeInTheDocument(); expect(screen.getByText("card extension")).toBeInTheDocument();
 });
 it("hosts every teacher tab including info and gradebook",()=>{

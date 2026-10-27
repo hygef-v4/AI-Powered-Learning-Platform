@@ -1,7 +1,7 @@
 import {render,screen,fireEvent,waitFor} from "@testing-library/react";
 import {afterEach,it,expect,vi} from "vitest";
 import {ClassesRoute,ClassDetailRoute} from "./routes";
-vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn()})}));
+vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn()}),useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/shared/auth/useCurrentUser",()=>({useCurrentUser:()=>({displayName:"User"})}));
 afterEach(()=>vi.unstubAllGlobals());
 it("routes an empty authorized teacher list through server capability",async()=>{

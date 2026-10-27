@@ -1,4 +1,4 @@
-/* Trang lỗi (404, 500): một con số chữ có chân, một dòng giải thích, hai nút. */
+/* Trang lỗi cả màn: hình bút và nghiên riêng của lỗi, mã lỗi nhỏ, tiêu đề, một dòng giải thích, nút. */
 .page {
   display: flex;
   min-height: 100dvh;
@@ -29,16 +29,17 @@
 }
 
 .code {
-  color: var(--c-primary-ink, #9a5508);
-  font-family: var(--font-display, serif);
-  font-size: clamp(72px, 14vw, 120px);
-  font-style: italic;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  margin-top: 20px;
+  color: var(--c-muted, #7a6757);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .content h1 {
-  margin: 18px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-display, serif);
   font-size: clamp(26px, 5vw, 34px);
   font-weight: 400;

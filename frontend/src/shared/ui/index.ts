@@ -17,6 +17,7 @@ export { Pagination } from "./Pagination";
 export { Pill } from "./Pill";
 export { Section } from "./Section";
 export { SettingLine, SettingsCard, SettingsGroup } from "./SettingsCard";
+export { InkMark, PageLoadError, PageLoading } from "./PageStatus";
 export { StatTile } from "./StatTile";
 export { ClickableRow, TableFrame, Td, Th } from "./Table";
 export { Tabs, type TabItem } from "./Tabs";

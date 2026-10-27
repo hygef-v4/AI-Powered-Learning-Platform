@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useTheme } from "@/shared/theme";
 import { Icon } from "@/shared/ui/Icon";
-import { Logo, LogoMark } from "@/shared/ui/Logo";
+import { HankoMark, Logo } from "@/shared/ui/Logo";
 
 type Variant = "login" | "flow";
 
@@ -58,7 +58,7 @@ function Decorations() {
       {/* Ba món để bừa như trên bàn học: lệch vị trí, nghiêng mỗi cái một kiểu, có món chui một phần dưới thẻ. */}
       {/* Dấu 学 đóng lệch, chạm mép phải phía trên */}
       <div className="absolute -top-9 -right-10 rotate-[14deg] lg:-right-16">
-        <LogoMark size={76} />
+        <HankoMark size={76} />
       </div>
 
       {/* Giấy nhớ dán chéo bên trái, cao hơn giữa thẻ */}

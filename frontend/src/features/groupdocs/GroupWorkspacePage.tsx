@@ -10,6 +10,7 @@ import { claimSection, downloadDocx, getWorkspace, releaseSection, sendActivity 
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "./SectionDialogs";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "./types";
 import { useGroupDocStream } from "./useGroupDocStream";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
   OPEN: { text: "Mở", tone: "neutral" },
@@ -109,14 +110,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   };
 
-  if (error && !view) {
-    return (
-      <Alert tone="danger" role="alert">
-        {error}
-      </Alert>
-    );
-  }
-  if (!view) return <p className="text-[13px] text-muted">Đang tải tài liệu nhóm...</p>;
+  if (error && !view) return <PageLoadError>{error}</PageLoadError>;
+  if (!view) return <PageLoading label="Đang tải tài liệu nhóm…" />;
 
   const me = view.role;
   const editable = view.status === "IN_PROGRESS" && view.window !== "CLOSED";

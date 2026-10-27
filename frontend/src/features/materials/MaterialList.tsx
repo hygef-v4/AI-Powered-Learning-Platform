@@ -58,12 +58,19 @@ export function MaterialList({ scopeId, scope, readOnly = false }: { scopeId: st
   </section>;
 }
 
-export function SubjectMaterialListPage() {
+/** Học liệu của môn; môn đang chọn nằm trên `?subjectId=` để sidebar của môn theo đúng môn đó. */
+export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubjectId?: string }) {
   const subjects = useMaterialResource<{ id: string; code: string; name: string; status?: string }[]>("/api/v1/manager/subjects");
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(initialSubjectId);
+  const choose = (id: string) => {
+    setSelected(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("subjectId", id);
+    window.history.replaceState(window.history.state, "", url);
+  };
   const subject = subjects.data?.find(s => s.id === selected) ?? subjects.data?.[0];
   return <main className={styles.page}><div className={styles.heading}><div><h1>Học liệu</h1><p className={styles.muted}>Học liệu của môn là một danh sách có thứ tự; sinh viên thấy đúng thứ tự này.</p></div>
-    <select data-testid="materials-subject-select" className={styles.select} aria-label="Chọn môn học" value={subject?.id ?? ""} onChange={e => setSelected(e.target.value)}><option value="" disabled>Chọn môn học</option>{subjects.data?.map(s => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></div>
+    <select data-testid="materials-subject-select" className={styles.select} aria-label="Chọn môn học" value={subject?.id ?? ""} onChange={e => choose(e.target.value)}><option value="" disabled>Chọn môn học</option>{subjects.data?.map(s => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></div>
     {subjects.loading && <p role="status">Đang tải môn học…</p>}
     {subjects.error && <div role="alert" className={styles.error}>{subjects.error}<Button onClick={subjects.reload}>Thử lại</Button></div>}
     {subject ? <MaterialList key={subject.id} scope="subjects" scopeId={subject.id} readOnly={subject.status === "ARCHIVED"} /> : subjects.data && <p className={styles.empty}>Bạn chưa được phân công môn học.</p>}

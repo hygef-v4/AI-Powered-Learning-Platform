@@ -97,7 +97,7 @@ export function EnrollmentPanel({ students, groupNames, editable = false, includ
               <Td className="text-muted">{formatDate(student.enrolledAt)}</Td>
               {actions && <Td className="text-right">{student.status === "ACTIVE"
                 ? <IconButton icon="trash" label={`Gỡ ${student.name}`} disabled={busy} className="text-danger! hover:bg-danger-soft" onClick={() => { setError(""); setRemoving(student); }} />
-                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-success! hover:bg-success-soft" onClick={() => void change(student, "ACTIVE")} />}</Td>}
+                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void change(student, "ACTIVE")} />}</Td>}
             </>;
             return onView ? <ClickableRow key={student.accountId} onClick={() => onView(student)}>{cells}</ClickableRow> : <tr key={student.accountId}>{cells}</tr>;
           })}

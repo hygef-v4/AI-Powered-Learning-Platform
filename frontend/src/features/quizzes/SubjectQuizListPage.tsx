@@ -7,6 +7,7 @@ import { createSubjectQuiz, getManagedSubjects, getSubjectQuizzes } from "./api"
 import { CreateQuizDialog } from "./CreateQuizDialog";
 import { errorMessage, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "./labels";
 import type { ManagedSubject, QuizPage, QuizStatus } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const PAGE_SIZE = 20;
 const TABS: { key: QuizStatus | null; label: string }[] = [
@@ -63,8 +64,8 @@ export function SubjectQuizListPage() {
     };
   }, [subject, filters, reloadKey]);
 
-  if (subjectsError) return <Alert tone="danger" role="alert">{subjectsError}</Alert>;
-  if (subjects === null) return <p role="status" className="py-10 text-center text-sm text-muted">Đang tải môn học…</p>;
+  if (subjectsError) return <PageLoadError>{subjectsError}</PageLoadError>;
+  if (subjects === null) return <PageLoading label="Đang tải môn học…" />;
   if (!subject) return <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>;
   const archived = subject.status !== undefined && subject.status !== "ACTIVE";
 

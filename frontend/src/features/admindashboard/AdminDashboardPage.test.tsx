@@ -39,7 +39,7 @@ it("retries failures and fetches again on remount instead of caching counts", as
   const view = render(<AdminDashboardPage/>);
   expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được");
   failing = false;
-  fireEvent.click(screen.getByRole("button", {name: "Thử lại"}));
+  fireEvent.click(screen.getByRole("button", {name: "Tải lại trang"}));
   await screen.findByTestId("dashboard-accounts");
   view.unmount();
   render(<AdminDashboardPage/>);

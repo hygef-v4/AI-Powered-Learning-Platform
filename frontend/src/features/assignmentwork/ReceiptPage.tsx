@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
+import { ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
 import { exportUrl, workApi } from "./api";
 import { errorMessage, formatDateTime } from "./format";
 import { submitModeLabels, type Receipt } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 /** Biên nhận sau khi nộp (BR-U08-22): mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. */
 export function ReceiptPage({ attemptId }: { attemptId: string }) {
@@ -16,8 +17,8 @@ export function ReceiptPage({ attemptId }: { attemptId: string }) {
       (e) => { if (!controller.signal.aborted) setError(e); });
     return () => controller.abort();
   }, [attemptId]);
-  if (error) return <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>;
-  if (!receipt) return <p role="status" className="text-sm text-muted">Đang tải biên nhận…</p>;
+  if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (!receipt) return <PageLoading label="Đang tải biên nhận…" />;
   const history = `/my-assignments/${encodeURIComponent(receipt.assignmentId)}/history?classId=${encodeURIComponent(receipt.classId)}`;
   return (
     <div className="flex flex-col gap-4">

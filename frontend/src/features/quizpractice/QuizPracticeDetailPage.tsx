@@ -8,6 +8,7 @@ import { getPracticeHistory, getPracticeQuiz, startAttempt } from "./api";
 import { attemptsText, errorMessage, formatDateTime, formatDuration, formatPoints } from "./labels";
 import { quizMaterialSections } from "./slots";
 import type { PracticeQuizDetail, PracticeQuizRow } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const detailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
 
@@ -40,8 +41,8 @@ function ClassResolver({ quizId }: { quizId: string }) {
     };
   }, [quizId, router]);
 
-  if (error) return <Alert tone="danger" role="alert">{error}</Alert>;
-  if (rows === null) return <p role="status" className="py-10 text-center text-sm text-muted">Đang tải quiz…</p>;
+  if (error) return <PageLoadError>{error}</PageLoadError>;
+  if (rows === null) return <PageLoading label="Đang tải quiz…" />;
   if (rows.length === 0) {
     return (
       <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => router.push("/quiz-practice")}>Luyện tập Quiz</Button>}>
@@ -94,7 +95,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
   };
 
   if (!detail) {
-    return error ? <Alert tone="danger" role="alert">{error}</Alert> : <p role="status" className="py-10 text-center text-sm text-muted">Đang tải quiz…</p>;
+    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải quiz…" />;
   }
   const submitted = detail.attempts.filter((a) => a.status === "SUBMITTED");
 

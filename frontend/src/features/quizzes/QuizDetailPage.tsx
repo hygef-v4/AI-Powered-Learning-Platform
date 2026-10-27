@@ -18,6 +18,7 @@ import {
 } from "./QuizDetailParts";
 import { quizDetailSections } from "./slots";
 import type { QuizDetail, QuizItemView, Violation } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const MAX_ITEMS = 200;
 type Dialogs = "picker" | "inline" | "preview" | "retire" | "delete" | null;
@@ -156,9 +157,9 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   });
 
   if (loadError) {
-    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => setReloadKey((k) => k + 1)}>Thử lại</Button>}>{loadError}</Alert>;
+    return <PageLoadError onRetry={() => setReloadKey((k) => k + 1)}>{loadError}</PageLoadError>;
   }
-  if (!detail || !quiz || !settings) return <p role="status" className="py-10 text-center text-sm text-muted">Đang tải quiz…</p>;
+  if (!detail || !quiz || !settings) return <PageLoading label="Đang tải quiz…" />;
 
   const backHref = classId ? `/teaching/classes/${classId}` : quiz.scope === "SUBJECT"
     ? `/manager/quizzes?subjectId=${quiz.subjectId}` : `/teaching/classes/${quiz.classId}`;

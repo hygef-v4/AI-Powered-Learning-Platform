@@ -10,6 +10,7 @@ import { errorMessage, formatDateTime } from "./format";
 import { PracticeFeedbackPanel } from "./PracticeFeedbackPanel";
 import { submissionResultSections } from "./slots";
 import { submitModeLabels, type Attempt, type AttemptSummary, type StudentDetail } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 /** #41 Submission History (F8, UC 40): các lượt của mình, nội dung chỉ đọc, biên nhận, góp ý AI của bài Practice. */
 export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }) {
@@ -42,8 +43,8 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   }, [selected]);
 
   if (!classId) return <Alert tone="danger" role="alert">Thiếu lớp của bài.</Alert>;
-  if (error) return <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>;
-  if (!detail || !attempts) return <p role="status" className="text-sm text-muted">Đang tải lịch sử nộp bài…</p>;
+  if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (!detail || !attempts) return <PageLoading label="Đang tải lịch sử nộp bài…" />;
   const current = attempts.find((a) => a.attemptId === selected) ?? null;
   const detailHref = `/my-assignments/${encodeURIComponent(assignmentId)}?classId=${encodeURIComponent(classId)}`;
 

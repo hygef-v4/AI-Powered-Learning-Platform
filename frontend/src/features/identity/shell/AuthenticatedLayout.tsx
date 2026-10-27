@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
 import { AppShell } from "@/shared/layout/AppShell";
+import type { NavLocation } from "@/shared/layout/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { SessionProvider, useSession } from "../session";
-import { accountMenuEntries, headerWidgets, navEntries } from "../slots";
+import { accountMenuEntries, contextNavEntries, headerWidgets, navEntries } from "../slots";
 import { RoleGuard } from "./RoleGuard";
 
 /**
@@ -34,10 +35,19 @@ function SessionShell({ children }: { children: ReactNode }) {
     .entries()
     .filter((entry) => entry.roles.includes(role))
     .map(({ href, title, icon }) => ({ href, label: title, icon }));
+  const contexts = contextNavEntries.entries().filter((entry) => entry.roles.includes(role));
+  const context = (at: NavLocation) => {
+    for (const entry of contexts) {
+      const found = entry.resolve(at);
+      if (found) return found;
+    }
+    return null;
+  };
   return (
     <AppShell
       role={role}
       nav={nav}
+      context={contexts.length > 0 ? context : undefined}
       headerLinks={links}
       headerWidgets={<SlotOutlet slot={headerWidgets} props={{}} />}
       user={{ displayName, email }}

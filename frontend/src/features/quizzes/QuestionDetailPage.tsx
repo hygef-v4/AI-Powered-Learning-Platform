@@ -10,6 +10,7 @@ import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel, QuestionVersionPanel } from "./QuestionSidePanels";
 import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "./questionForm";
 import type { QuestionDetail, Violation } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 type Props = { id: string; subjectId?: string | null };
 type Confirm = "retire" | "delete" | null;
@@ -132,9 +133,9 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     return <Alert tone="warning" title="Chưa chọn môn">Hãy mở Ngân hàng câu hỏi và chọn môn trước khi thêm câu.</Alert>;
   }
   if (loadError) {
-    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={reload}>Thử lại</Button>}>{loadError}</Alert>;
+    return <PageLoadError onRetry={reload}>{loadError}</PageLoadError>;
   }
-  if (!creating && !question) return <p role="status" className="py-10 text-center text-sm text-muted">Đang tải câu hỏi…</p>;
+  if (!creating && !question) return <PageLoading label="Đang tải câu hỏi…" />;
 
   return (
     <>

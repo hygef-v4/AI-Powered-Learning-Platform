@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { studentClassSections, teacherClassTabs } from "./slots";
@@ -13,9 +14,8 @@ type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
 const DESCRIPTION_PREVIEW_LIMIT = 140;
 
-/** Tab mở sẵn theo `?tab=` (vd. nút Mở tab Sinh viên ở Kiểm tra sẵn sàng bài nhóm); trang chỉ dựng ở client sau khi tải lớp. */
-function initialTab(): ClassTab {
-  const wanted = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("tab");
+/** Tab theo `?tab=` (sidebar của lớp, nút Mở tab Sinh viên ở Kiểm tra sẵn sàng bài nhóm); thiếu hay sai thì là Thông tin lớp. */
+function tabOf(wanted: string | null | undefined): ClassTab {
   return CLASS_TABS.find((t) => t === wanted) ?? "info";
 }
 
@@ -32,7 +32,15 @@ export function ReadOnlyClassPage({
   loadStudent?: (classId: string, accountId: string, signal?: AbortSignal) => Promise<EnrollmentView>;
   onBack: () => void;
 }) {
-  const [tab, setTab] = useState<ClassTab>(initialTab);
+  const params = useSearchParams();
+  const urlTab = tabOf(params?.get("tab"));
+  const [tab, setTab] = useState<ClassTab>(urlTab);
+  // Bấm mục trên sidebar của lớp thì `?tab=` đổi: mở theo.
+  const [seenUrlTab, setSeenUrlTab] = useState(urlTab);
+  if (urlTab !== seenUrlTab) {
+    setSeenUrlTab(urlTab);
+    setTab(urlTab);
+  }
   // Giữ tab trên URL để tải lại hoặc gửi link vẫn mở đúng tab.
   const openTab = (next: ClassTab) => {
     setTab(next);
@@ -108,7 +116,8 @@ export function ReadOnlyClassPage({
         subtitle={`${value.subject.code} · ${value.code} · ${value.term}`}
         onBack={onBack}
       />
-      {audience === "teacher" && <Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" />}
+      {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
+      {audience === "teacher" && <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>}
       {detailError && <p role="alert" className="text-sm text-danger">{detailError}</p>}
       {detailBusy && <p role="status" className="text-sm text-muted">Đang tải sinh viên…</p>}
       {audience === "student" && (

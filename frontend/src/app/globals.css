@@ -26,6 +26,9 @@
   --color-surface: var(--c-surface);
   --color-sunken: var(--c-sunken);
   --color-shell: var(--c-bg);
+  --color-nav: var(--c-nav);
+  --color-sidebar: var(--c-sidebar);
+  --color-watermark: var(--c-watermark);
   --color-canvas: var(--c-bg);
   --color-table-head: var(--c-bg);
   --color-neutral-soft: var(--c-sunken);
@@ -115,6 +118,11 @@
   --c-tier-4: #f4cfa2;
   --c-scrim: rgb(42 33 27 / 0.32);
   --c-topbar: rgb(255 248 241 / 0.86);
+  /* Ba vùng của khung trang mỗi vùng một màu: thanh trên trắng ngà ánh vàng (khác thẻ trắng, nhạt hơn sidebar), sidebar cát, nội dung kem (--c-bg). */
+  --c-nav: #fbf0dc;
+  /* Hình chìm sau vùng nội dung: đậm hơn nền một chút, nhạt hơn thanh trên. */
+  --c-watermark: #fcf2e3;
+  --c-sidebar: #f6e7d4;
   --shadow-float: 0 18px 48px rgb(60 38 14 / 0.12), 0 2px 6px rgb(60 38 14 / 0.04);
   --shadow-lift: 0 6px 18px rgb(80 50 10 / 0.06);
 }
@@ -158,6 +166,9 @@
   --c-tier-4: #234356;
   --c-scrim: rgb(3 10 16 / 0.62);
   --c-topbar: rgb(14 27 37 / 0.86);
+  --c-nav: #1f3849;
+  --c-watermark: #142634;
+  --c-sidebar: #08121a;
   --shadow-float: 0 18px 48px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.2);
   --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
 }
@@ -262,7 +273,7 @@ html.drawio-panel-open body {
 
 /* Đang vẽ thì thu sidebar của ứng dụng (AppShell) để trang tài liệu còn đủ rộng. */
 [data-app-sidebar] {
-  transition: width 0.25s ease, padding 0.25s ease;
+  transition: translate 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease, padding 0.25s ease;
 }
 
 html.drawio-panel-open [data-app-sidebar] {
@@ -280,6 +291,25 @@ html.drawio-panel-open [data-app-sidebar] {
   to {
     transform: translateX(0);
   }
+}
+
+/* Logo động của trang đang tải / tải lỗi (PageStatus): bút mài vòng trong nghiên, mặt mực gợn; lỗi thì gác bút lên mép nghiên. */
+@keyframes ink-grind {
+  0%, 100% { translate: 0 0; }
+  25% { translate: 3.5px -1px; }
+  50% { translate: 0 -2.2px; }
+  75% { translate: -3.5px -1px; }
+}
+
+@keyframes ink-ripple {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.12, 1.3); }
+}
+
+@keyframes ink-rest {
+  0% { transform: translate(27px, 44px) rotate(38deg); }
+  35% { transform: translate(30px, 36px) rotate(10deg); }
+  100% { transform: translate(46px, 37.5px) rotate(-84deg); }
 }
 
 /* Chế độ tập trung của trang chấm/soạn: ẩn sidebar khi rời trang thì tự trở lại. */

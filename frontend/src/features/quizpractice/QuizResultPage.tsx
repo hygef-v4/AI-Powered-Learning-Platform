@@ -7,6 +7,7 @@ import { getResult, startAttempt } from "./api";
 import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints, submitModeText } from "./labels";
 import { ResultQuestions } from "./ResultQuestions";
 import type { ResultView } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 /** Màn #45 Quiz Result (UC 52, BR-U11-20, 21): điểm và đáp án theo cài đặt; kết quả luyện tập không vào sổ điểm. */
 export function QuizResultPage({ attemptId }: { attemptId: string }) {
@@ -30,7 +31,7 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
   }, [attemptId, router]);
 
   if (!result) {
-    return error ? <Alert tone="danger" role="alert">{error}</Alert> : <p role="status" className="py-10 text-center text-sm text-muted">Đang tải kết quả…</p>;
+    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải kết quả…" />;
   }
   const detailHref = `/quiz-practice/${result.quizId}?classId=${encodeURIComponent(result.classId)}`;
   const retry = async () => {

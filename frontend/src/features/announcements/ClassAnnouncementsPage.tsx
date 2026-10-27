@@ -10,7 +10,8 @@ import type { AnnouncementFeed as Feed } from "./types";
 import styles from "./announcements.module.css";
 export function ClassAnnouncementsPage() {
   const params = useSearchParams(); const session = useSession(); const queryClassId = params.get("classId") ?? ""; const [filter, setFilter] = useState({ query: queryClassId, value: queryClassId }); const classId = filter.query === queryClassId ? filter.value : queryClassId; const [pagination, setPagination] = useState({ classId, page: 1 }); const page = pagination.classId === classId ? pagination.page : 1; const [revision, setRevision] = useState(0);
-  function setClassId(value: string) { setFilter({ query: queryClassId, value }); }
+  // Lớp đang chọn ghi lên `?classId=` để sidebar của lớp theo đúng lớp đó.
+  function setClassId(value: string) { setFilter({ query: queryClassId, value }); const url = new URL(window.location.href); if (value) url.searchParams.set("classId", value); else url.searchParams.delete("classId"); window.history.replaceState(window.history.state, "", url); }
   function setPage(value: number | ((page: number) => number)) { setPagination(previous => ({ classId, page: typeof value === "number" ? value : value(previous.classId === classId ? previous.page : 1) })); }
   const key = `${classId}:${page}:${revision}`; const [result, setResult] = useState<{ key: string; data?: Feed; error?: string }>({ key: "" });
   useEffect(() => { const controller = new AbortController(); void announcementsApi.list(classId, page, 20, controller.signal).then(data => { if (!controller.signal.aborted) setResult({ key, data }); }).catch(e => { if (!controller.signal.aborted) setResult({ key, error: announcementError(e) }); }); return () => controller.abort(); }, [classId, page, key]);

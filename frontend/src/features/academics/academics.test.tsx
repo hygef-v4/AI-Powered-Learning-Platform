@@ -13,6 +13,9 @@ import { navEntries } from "@/features/identity/slots";
 import "./register";
 import type { CourseClassView, EnrollmentView } from "./types";
 
+// Tab của trang lớp đọc `?tab=` qua useSearchParams; trong test lấy thẳng từ URL của jsdom.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams(window.location.search) }));
+
 const subject = { id: "subject-1", code: "SWP391", name: "Software Development Project", description: "Môn học dự án" };
 const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@example.test" };
 const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", term: "2026-1", description: "Lớp sáng thứ Hai",

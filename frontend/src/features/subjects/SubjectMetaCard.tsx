@@ -17,7 +17,7 @@ export function SubjectMetaCard({ subject, disabled = false, onStatus }: { subje
         <dd className="text-ink">{createdLabel}</dd>
       </div>
     </dl>
-    <Button id="subject-status-open" icon={archived ? "lock_open" : "archive"} variant={archived ? "secondary" : "danger"}
+    <Button id="subject-status-open" icon={archived ? "lock_open" : "archive"} variant={archived ? "primary" : "danger"}
       disabled={disabled} onClick={onStatus} data-testid="subject-status-open">
       {archived ? "Mở lại môn học" : "Lưu trữ môn học"}
     </Button>

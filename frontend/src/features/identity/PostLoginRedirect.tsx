@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ErrorPage } from "@/app/ErrorPage";
 import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
@@ -22,7 +23,7 @@ export function PostLoginRedirect() {
   }, [router]);
 
   if (unavailable) {
-    return <FullPageStatus tone="danger">Hệ thống tạm bận, vui lòng tải lại trang sau.</FullPageStatus>;
+    return <ErrorPage kind="unavailable" />;
   }
   return <FullPageStatus>Đang chuyển trang...</FullPageStatus>;
 }

@@ -3,7 +3,7 @@ import {afterEach, expect, it, vi} from "vitest";
 import {ClassDetailRoute, ClassesRoute} from "./routes";
 import type {CourseClassView} from "./types";
 
-vi.mock("next/navigation", () => ({useRouter: () => ({push: vi.fn()})}));
+vi.mock("next/navigation", () => ({useRouter: () => ({push: vi.fn()}), useSearchParams: () => new URLSearchParams(window.location.search)}));
 afterEach(() => vi.unstubAllGlobals());
 
 function course(id = "c"): CourseClassView {
@@ -80,7 +80,7 @@ it("preserves the failed-read screen after a successful write and retries only t
   expect(await screen.findByRole("alert")).toHaveTextContent("Không thể hoàn tất thao tác");
   expect(screen.queryByLabelText(/Tên lớp/)).not.toBeInTheDocument();
   readAvailable = true;
-  fireEvent.click(screen.getByRole("button", {name: "Thử lại"}));
+  fireEvent.click(screen.getByRole("button", {name: "Tải lại trang"}));
   expect(await screen.findByLabelText(/Tên lớp/)).toHaveValue("Saved remotely");
   expect(request.mock.calls.filter(([, init]) => init.method === "PATCH")).toHaveLength(1);
 });

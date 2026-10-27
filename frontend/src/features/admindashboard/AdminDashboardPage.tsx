@@ -12,6 +12,7 @@ import {formatInstant} from "./BackupRunTable";
 import {CountCard, formatCount} from "./CountCard";
 import {StatusBreakdown} from "./StatusBreakdown";
 import type {AdminDashboardView} from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 export function AdminDashboardPage() {
   const [generation, setGeneration] = useState(0);
@@ -37,11 +38,11 @@ export function AdminDashboardPage() {
 
   return <div className="flex flex-col gap-7">
     <PageHeader title="Tổng quan" subtitle={data ? `Số liệu lúc ${formatInstant(data.calculatedAt)}` : undefined}
-      actions={<Button icon="refresh" onClick={reload} disabled={!current} data-testid="dashboard-refresh">Tải lại</Button>}/>
-    {!current && <p role="status" className="text-sm text-muted">Đang tải…</p>}
-    {current?.error !== undefined && <Alert tone="danger" role="alert" action={!denied && <Button onClick={reload}>Thử lại</Button>}>
-      {denied ? "Không có quyền xem tổng quan hệ thống." : "Không tải được tổng quan hệ thống."}
-    </Alert>}
+      actions={data && <Button icon="refresh" onClick={reload} data-testid="dashboard-refresh">Tải lại</Button>}/>
+    {!current && <PageLoading/>}
+    {current?.error !== undefined && (denied
+      ? <Alert tone="danger" role="alert">Không có quyền xem tổng quan hệ thống.</Alert>
+      : <PageLoadError onRetry={reload}>Không tải được tổng quan hệ thống.</PageLoadError>)}
     {data && <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <CountCard title="Tài khoản" href="/admin/accounts" value={data.accounts.data?.total ?? null} detail={data.accounts.data ? `${formatCount(data.accounts.data.activeTotal)} đang hoạt động` : undefined} testId="dashboard-accounts"/>

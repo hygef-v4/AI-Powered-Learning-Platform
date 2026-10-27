@@ -65,6 +65,35 @@ describe("AppShell", () => {
     expect(screen.getAllByText("Giảng dạy")).toHaveLength(1);
   });
 
+  it("logo nằm trên thanh trên, không còn ô Tìm nhanh; nút Menu thu gọn sidebar và nhớ lần sau", () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+    localStorage.removeItem("sidebar-collapsed");
+    const { container, unmount } = render(
+      <AppShell role="ADMIN" nav={adminNav} user={null}>
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+    expect(container.querySelector("header")).toContainElement(screen.getByRole("link", { name: /trang chủ/ }));
+    expect(screen.queryByText("Tìm nhanh")).not.toBeInTheDocument();
+
+    const sidebar = container.querySelector("[data-app-sidebar]")!;
+    expect(sidebar).not.toHaveAttribute("data-collapsed");
+    fireEvent.click(screen.getByRole("button", { name: "Thu gọn menu" }));
+    expect(sidebar).toHaveAttribute("data-collapsed", "true");
+    expect(screen.getByRole("button", { name: "Mở menu" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("link", { name: "Cài đặt" })).toHaveAttribute("title", "Cài đặt");
+    expect(localStorage.getItem("sidebar-collapsed")).toBe("1");
+
+    unmount();
+    const again = render(
+      <AppShell role="ADMIN" nav={adminNav} user={null}>
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+    expect(again.container.querySelector("[data-app-sidebar]")).toHaveAttribute("data-collapsed", "true");
+    localStorage.removeItem("sidebar-collapsed");
+  });
+
   it("bấm Đăng xuất mở popup xác nhận, Hủy thì đóng", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 401 })));
     render(
@@ -73,6 +102,8 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
+    // Đăng xuất nằm ở cuối sidebar, không còn trong menu tài khoản.
+    expect(document.querySelector("[data-app-sidebar]")).toContainElement(screen.getByRole("button", { name: "Đăng xuất" }));
     fireEvent.click(screen.getByRole("button", { name: "Đăng xuất" }));
     expect(screen.getByRole("dialog", { name: "Đăng xuất?" })).toBeInTheDocument();
 

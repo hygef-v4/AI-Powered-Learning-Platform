@@ -11,7 +11,7 @@ export function SubjectStatusActions({ subject, onClose, onSaved, onReload, onAc
   const close = useCallback(() => { if (mutation.canClose()) onClose(); }, [mutation, onClose]);
   const archived = subject.status === "ARCHIVED";
   return <Dialog open title={archived ? "Mở lại môn học?" : "Lưu trữ môn học?"} icon={archived ? "lock_open" : "archive"} tone={archived ? "primary" : "danger"} onClose={close} dismissible={!mutation.busy}
-    footer={<Button variant={archived ? "primary" : "danger"} disabled={mutation.busy || needsSubjectReload(mutation.error)} data-testid="subject-status-confirm"
+    footer={<Button variant={archived ? "primary" : "danger"} className="w-full" disabled={mutation.busy || needsSubjectReload(mutation.error)} data-testid="subject-status-confirm"
       onClick={() => { if (!needsSubjectReload(mutation.error)) void mutation.run(() => changeSubjectStatus(subject.id, { status: archived ? "ACTIVE" : "ARCHIVED", version: subject.version }), onSaved); }}>{archived ? "Mở lại" : "Lưu trữ"}</Button>}>
     {mutation.error !== null && <SubjectMutationFeedback error={mutation.error} onReload={onReload} />}
   </Dialog>;

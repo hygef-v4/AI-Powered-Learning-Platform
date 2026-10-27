@@ -1,32 +1,59 @@
 "use client";
 
 import Link from "next/link";
+import { ErrorMark, type ErrorKind } from "@/shared/ui/ErrorMark";
 import { Logo } from "@/shared/ui/Logo";
 import styles from "./error-page.module.css";
 
-export function ErrorPage({
-  code,
-  title,
-  description,
-  retry,
-}: {
-  code: string;
-  title: string;
-  description: string;
-  retry?: () => void;
-}) {
+/** Chữ của từng trang lỗi; `code` chỉ có ở lỗi mang mã HTTP. */
+const COPY: Record<ErrorKind, { code?: string; title: string; description: string }> = {
+  "not-found": {
+    code: "404",
+    title: "Không tìm thấy trang",
+    description: "Đường dẫn này không tồn tại hoặc đã được thay đổi. Hãy kiểm tra lại liên kết hoặc quay về trang chủ.",
+  },
+  unavailable: {
+    code: "503",
+    title: "Hệ thống đang bận",
+    description: "Máy chủ chưa phản hồi. Hãy tải lại trang sau ít phút.",
+  },
+  offline: {
+    title: "Mất kết nối mạng",
+    description: "Thiết bị đang không có mạng. Kết nối lại rồi tải lại trang.",
+  },
+  generic: {
+    title: "Đã xảy ra lỗi",
+    description: "Hệ thống chưa thể hoàn tất yêu cầu. Bạn có thể tải lại trang hoặc quay về trang chủ.",
+  },
+};
+
+/**
+ * Trang lỗi cả màn: logo nền tảng ở góc, giữa trang là hình riêng của lỗi (bút và nghiên), mã lỗi nhỏ, tiêu đề, một dòng
+ * giải thích và nút. Không tìm thấy trang chỉ có Về trang chủ (nút trắng); các lỗi khác có thêm Tải lại trang (`retry`,
+ * mặc định tải lại cả trang) làm nút chính.
+ */
+export function ErrorPage({ kind, retry }: { kind: ErrorKind; retry?: () => void }) {
+  const copy = COPY[kind];
+  const reloadable = kind !== "not-found";
   return (
     <main className={styles.page}>
       <Link className={styles.brand} href="/" aria-label="Nền tảng học tập - Trang chủ">
         <Logo />
       </Link>
       <section className={styles.content} aria-labelledby="error-title">
-        <span className={styles.code}>{code}</span>
-        <h1 id="error-title">{title}</h1>
-        <p>{description}</p>
+        <ErrorMark kind={kind} />
+        {copy.code && <span className={styles.code}>Lỗi {copy.code}</span>}
+        <h1 id="error-title">{copy.title}</h1>
+        <p>{copy.description}</p>
         <div className={styles.actions}>
-          {retry && <button className={styles.primary} type="button" onClick={retry}>Thử lại</button>}
-          <Link className={retry ? styles.secondary : styles.primary} href="/">Về trang chủ</Link>
+          {reloadable && (
+            <button className={styles.primary} type="button" onClick={retry ?? (() => window.location.reload())}>
+              Tải lại trang
+            </button>
+          )}
+          <Link className={styles.secondary} href="/">
+            Về trang chủ
+          </Link>
         </div>
       </section>
       <footer className={styles.footer}>© 2026 Nền tảng học tập</footer>

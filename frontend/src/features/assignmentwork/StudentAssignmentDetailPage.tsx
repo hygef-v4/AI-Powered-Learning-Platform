@@ -9,6 +9,7 @@ import { workApi } from "./api";
 import { errorMessage, formatDateTime } from "./format";
 import { assignmentMaterialSections, groupWorkEntries, submissionResultSections } from "./slots";
 import { blockedLabels, myStatusLabels, type StudentDetail } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 /**
  * #39 Assignment Detail (F2, UC 38): trang thông tin trước khi làm bài (yêu cầu 2026-10-21 thay BR-U08-03). Chỉ hiện
@@ -44,8 +45,8 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   }
 
   if (!classId) return <Alert tone="danger" role="alert">Thiếu lớp của bài.</Alert>;
-  if (error && !detail) return <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>;
-  if (!detail) return <p role="status" className="text-sm text-muted">Đang tải bài tập…</p>;
+  if (error && !detail) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (!detail) return <PageLoading label="Đang tải bài tập…" />;
 
   const history = `/my-assignments/${encodeURIComponent(assignmentId)}/history?classId=${encodeURIComponent(classId)}`;
   const required = Object.entries(detail.requiredDiagrams) as [DiagramType, number][];

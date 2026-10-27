@@ -8,6 +8,7 @@ import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STAT
 import { QuestionAiDraftDialog } from "./AiDraftTargets";
 import { QuestionImportDialog } from "./QuestionImportDialog";
 import type { Difficulty, ManagedSubject, QuestionPage, QuestionStatus, QuestionType } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const PAGE_SIZE = 20;
 const TABS: { key: QuestionType | null; label: string }[] = [
@@ -81,8 +82,8 @@ export function QuestionListPage() {
     router.replace(`/manager/questions?subjectId=${encodeURIComponent(id)}`);
   };
 
-  if (subjectsError) return <Alert tone="danger" role="alert">{subjectsError}</Alert>;
-  if (subjects === null) return <p role="status" className="py-10 text-center text-sm text-muted">Đang tải môn học…</p>;
+  if (subjectsError) return <PageLoadError>{subjectsError}</PageLoadError>;
+  if (subjects === null) return <PageLoading label="Đang tải môn học…" />;
   if (!subject) return <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>;
 
   const archived = subject.status !== undefined && subject.status !== "ACTIVE";

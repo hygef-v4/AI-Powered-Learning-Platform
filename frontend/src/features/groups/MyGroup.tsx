@@ -6,6 +6,7 @@ import { Alert, Button, ButtonLink, Dialog, Field, PageHeader, Pill, Section, Se
 import { cancelLeaderRequest, getMyGroup, submitLeaderRequest } from "./api";
 import { formatDate, formatShort } from "./format";
 import type { MyGroupView, RequestStatus } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const REQUEST_STATUS: Record<RequestStatus, { text: string; tone: Tone }> = {
   PENDING: { text: "Chờ duyệt", tone: "warning" },
@@ -68,14 +69,8 @@ export function MyGroupPage({ classId }: { classId: string }) {
   const [requesting, setRequesting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  if (error && !view) {
-    return (
-      <Alert tone="danger" role="alert">
-        {error}
-      </Alert>
-    );
-  }
-  if (!view) return <p className="text-[13px] text-muted">Đang tải...</p>;
+  if (error && !view) return <PageLoadError>{error}</PageLoadError>;
+  if (!view) return <PageLoading />;
   const latest = view.myRequests[0];
   const before = view.myRequests[1];
   const open = view.classStatus === "OPEN";

@@ -22,14 +22,17 @@ import { AiProposalPanel } from "./AiProposalPanel";
 import { BatchActionDialog } from "./BatchActionDialog";
 import { MemberContributionPanel } from "./MemberContributionPanel";
 import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 export function GradingWorkspacePage({ evaluationId }: { evaluationId: string }) {
   const load = useCallback(() => gradingApi.detail(evaluationId), [evaluationId]);
   const resource = useResource(load);
   return resource.value ? (
     <Workspace key={evaluationId} initial={resource.value} refresh={resource.refresh} />
+  ) : resource.error ? (
+    <PageLoadError onRetry={() => void resource.refresh()}>{resource.error}</PageLoadError>
   ) : (
-    <p role={resource.error ? "alert" : "status"}>{resource.error || "Đang tải bài làm…"}</p>
+    <PageLoading label="Đang tải bài làm…" />
   );
 }
 

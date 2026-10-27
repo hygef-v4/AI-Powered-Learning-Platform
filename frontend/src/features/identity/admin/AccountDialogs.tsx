@@ -179,7 +179,7 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
       onClose={onClose}
       footer={
         <>
-          <Button variant={reopening ? "primary" : "danger"} onClick={confirm} disabled={busy}>
+          <Button variant={reopening ? "primary" : "danger"} className="w-full" onClick={confirm} disabled={busy}>
             {reopening ? "Mở lại" : "Vô hiệu hóa"}
           </Button>
         </>

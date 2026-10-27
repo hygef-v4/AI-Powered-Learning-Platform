@@ -18,6 +18,7 @@ import { ROLE_LABELS } from "../types";
 import { RoleChangeDialog, RoleChangeRejectedDialog, StatusToggleDialog, type RoleChangeBlock } from "./AccountDialogs";
 import { getAccount, updateAccount, type AccountDetail } from "./api";
 import { ADMIN_ERROR_LABELS, formatDate, STATUS_LABELS, STATUS_TONES } from "./labels";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const PHONE_FORMAT = /^\+?[0-9]{8,15}$/;
 
@@ -61,13 +62,11 @@ export function AccountDetailPage() {
     return (
       <>
         <PageHeader title="Tài khoản" backHref="/admin/accounts" />
-        <Alert tone="danger" role="alert">
-          {loadError}
-        </Alert>
+        <PageLoadError onRetry={reload}>{loadError}</PageLoadError>
       </>
     );
   }
-  if (!account) return <p className="py-10 text-center text-[13px] text-muted">Đang tải...</p>;
+  if (!account) return <PageLoading />;
 
   const isSelf = session.status === "authenticated" && session.profile.accountId === account.id;
   const reopening = account.status === "DISABLED";
@@ -115,7 +114,7 @@ export function AccountDetailPage() {
             </dl>
             <Button
               icon={reopening ? "lock_open" : "block"}
-              variant={reopening || isSelf ? "secondary" : "danger"}
+              variant={reopening ? "primary" : isSelf ? "secondary" : "danger"}
               disabled={isSelf && !reopening}
               onClick={() => setPopup({ kind: "status" })}
             >

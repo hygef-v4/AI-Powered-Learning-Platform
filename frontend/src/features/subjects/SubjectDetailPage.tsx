@@ -13,6 +13,7 @@ import { SubjectClassesTab } from "./SubjectClassesTab";
 import { SubjectMetaCard } from "./SubjectMetaCard";
 import { isSubjectAccessError, SubjectReadError } from "./SubjectReadError";
 import { useSubjectRead } from "./useSubjectRead";
+import { PageLoading } from "@/shared/ui/PageStatus";
 
 type Props = { subjectId: string; searchManagers?: SearchSubjectManagers };
 type Tab = "information" | "classes";
@@ -56,7 +57,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     <PageHeader title="Môn học" backHref="/admin/subjects" />
     <SubjectReadError error={subject.error ?? accessError} onRetry={reload} />
   </>;
-  if (!subject.data) return <><PageHeader title="Môn học" backHref="/admin/subjects" /><p role="status" className="py-8 text-center text-sm text-muted">Đang tải môn học…</p></>;
+  if (!subject.data) return <PageLoading label="Đang tải môn học…" />;
   const data = subject.data;
   const archived = data.status === "ARCHIVED";
   const base = { subject: data, onReload: reload, onAccessError: setMutationAccessError };

@@ -11,9 +11,11 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "./ClassFormDialog";
 import {ReopenConflictError} from "./ClassDialogs";
+import {CLASS_CHANGED_EVENT} from "./navContexts";
 import {EmptyState, operationError} from "./ui";
 import type {SubjectView, CourseClassView, EnrollmentView} from "./types";
 import styles from "./academics.module.css";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 type ResourceLoader<T> = (signal: AbortSignal) => Promise<T>;
 type ResourceState<T> = {
@@ -75,11 +77,8 @@ async function allStudents(scope: "manager" | "teaching", id: string, signal: Ab
 }
 
 function Pending({error, retry}: {error?: unknown; retry: () => void}) {
-  if (!error) return <p role="status" className={styles.loading}>Đang tải…</p>;
-  return <section role="alert" className={styles.panel}>
-    <p>{operationError(error)}</p>
-    <button onClick={() => void Promise.resolve(retry()).catch(() => {})}>Thử lại</button>
-  </section>;
+  if (!error) return <PageLoading/>;
+  return <PageLoadError onRetry={() => void Promise.resolve(retry()).catch(() => {})}>{operationError(error)}</PageLoadError>;
 }
 
 // Khung trang (thanh trên, menu bên theo role của phiên, hồ sơ, đăng xuất) do AuthenticatedLayout của U01 vẽ ở layout route.
@@ -121,6 +120,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
     try {
       const result = await action();
       await state.refresh();
+      window.dispatchEvent(new CustomEvent(CLASS_CHANGED_EVENT, {detail: id}));
       return result;
     } catch (error) {
       if (error instanceof ApiError && error.problem.status === 409) {
@@ -164,6 +164,13 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   </>;
 }
 
+/** Ghi môn đang chọn lên `?subjectId=` để sidebar của môn theo đúng môn đó. */
+function keepSubjectInUrl(subjectId: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("subjectId", subjectId);
+  window.history.replaceState(window.history.state, "", url);
+}
+
 export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "subjects" | "classes"; id?: string; initialSubjectId?: string}) {
   const router = useRouter();
   const [creating, setCreating] = useState<SubjectView | null>(null);
@@ -192,11 +199,11 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onTeaching={() => router.push("/teaching/classes")}/>;
   } else if (view === "subjects") {
     content = subject ? <MySubjectPage subject={subject} subjects={subjects} classes={classes}
-      onSwitch={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}
-      onClasses={() => router.push(`/manager/classes?subjectId=${encodeURIComponent(subject.id)}`)}/>
+      onSwitch={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>
       : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
   } else {
-    content = <ClassListPage initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
+    content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
+      onSubjectChange={keepSubjectInUrl}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;
   }
   return <>

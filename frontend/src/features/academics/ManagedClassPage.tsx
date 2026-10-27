@@ -1,6 +1,7 @@
 "use client";
 
 import type {CandidateLoader} from "./useCandidates";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button, PageHeader, Pill, Section, showToast, Switch, Tabs, type TabItem } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
@@ -29,7 +30,21 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
 export function ManagedClassPage({ value, students, teachers, candidates, actions, loadTeachers, loadCandidates }: {
   loadTeachers?:CandidateLoader; loadCandidates?:CandidateLoader; value: CourseClassView; students: EnrollmentView[]; teachers: PersonView[]; candidates: PersonView[]; onBack: () => void; actions: ManagedClassActions;
 }) {
-  const [tab, setTab] = useState<Tab>("info");
+  // Tab theo `?tab=` để sidebar của lớp mở đúng tab; bấm tab trên trang (màn hẹp) thì ghi lại vào URL.
+  const params = useSearchParams();
+  const urlTab: Tab = params?.get("tab") === "students" ? "students" : "info";
+  const [tab, setTab] = useState<Tab>(urlTab);
+  const [seenUrlTab, setSeenUrlTab] = useState(urlTab);
+  if (urlTab !== seenUrlTab) {
+    setSeenUrlTab(urlTab);
+    setTab(urlTab);
+  }
+  const openTab = (next: Tab) => {
+    setTab(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", next);
+    window.history.replaceState(window.history.state, "", url);
+  };
   const [assigning, setAssigning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +62,8 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
   return <>
     <PageHeader backHref="/manager/classes" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></>}
       breadcrumb={[{ label: "Lớp của môn", href: "/manager/classes" }, { label: value.code }]} />
-    <Tabs items={tabs} value={tab} onChange={setTab} label="Chi tiết lớp" testIdPrefix="class-tab-" />
+    {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
+    <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" /></div>
     {tab === "info" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
       <ClassInfoForm value={value} onSave={actions.onSaveInfo}/>
       <div className="flex flex-col gap-4">
@@ -56,7 +72,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
             <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></dd></div>
             <div className="flex items-center justify-between"><dt className="text-muted">Ngày tạo</dt><dd className="text-ink">{formatDate(value.createdAt)}</dd></div>
           </dl>
-          <div className="flex flex-wrap gap-2"><ClassStateActions value={value} onChange={actions.onChangeStatus}/></div>
+          <div className="flex flex-col gap-2"><ClassStateActions value={value} onChange={actions.onChangeStatus}/></div>
         </Section>
         <Section title="Giảng viên" actions={!archived && <Button size="sm" onClick={() => setAssigning(true)} data-testid="class-assign-teacher">{value.teacher ? "Đổi giảng viên" : "Phân công"}</Button>}>
           {value.teacher ? <div className="flex items-center gap-3">

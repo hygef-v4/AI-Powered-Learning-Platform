@@ -32,6 +32,7 @@ import { errorMessage, formatTime, problemCode, problemIssues } from "./format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "./RubricEditor";
 import { ScheduleForm } from "./ScheduleForm";
 import { gradingLabels, statusLabels, statusTones, submissionLabels, type AssignmentDetail, type RubricDetail } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const AUTOSAVE_MS = 1500;
 const VERSION_CONFLICT = "ASSIGNMENT_VERSION_CONFLICT";
@@ -422,9 +423,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }
 
   if (loadError) {
-    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Thử lại</Button>}>{errorMessage(loadError)}</Alert>;
+    return <PageLoadError onRetry={() => void reload()}>{errorMessage(loadError)}</PageLoadError>;
   }
-  if (!detail || !settings) return <p role="status" className="text-sm text-muted">Đang tải bài tập…</p>;
+  if (!detail || !settings) return <PageLoading label="Đang tải bài tập…" />;
 
   const classId = params.get("classId") ?? detail.classId;
   const backHref = detail.scope === "SUBJECT" && !classId ? `/manager/assignments?subjectId=${encodeURIComponent(detail.subjectId)}`

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ErrorPage } from "@/app/ErrorPage";
 import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
@@ -21,7 +22,7 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
   }, [session, allowed, router]);
 
   if (session.status === "unavailable") {
-    return <FullPageStatus tone="danger">Hệ thống tạm bận, vui lòng tải lại trang sau.</FullPageStatus>;
+    return <ErrorPage kind="unavailable" />;
   }
   if (!allowed) {
     return <FullPageStatus>Đang tải...</FullPageStatus>;

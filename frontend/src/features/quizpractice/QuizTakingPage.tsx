@@ -7,6 +7,7 @@ import { Alert, Button, cx, Dialog, Pill } from "@/shared/ui";
 import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "./api";
 import { errorCode, errorMessage, formatPoints } from "./labels";
 import type { TakingView } from "./types";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 export const AUTOSAVE_DELAY_MS = 2000;
 type SaveState = "saved" | "dirty" | "saving" | "error";
@@ -200,7 +201,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   };
 
   if (!view) {
-    return error ? <Alert tone="danger" role="alert">{error}</Alert> : <p role="status" className="py-10 text-center text-sm text-muted">Đang tải đề…</p>;
+    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải đề…" />;
   }
   const question = view.questions[index];
   const answered = (id: string) => (answers[id]?.length ?? 0) > 0;
