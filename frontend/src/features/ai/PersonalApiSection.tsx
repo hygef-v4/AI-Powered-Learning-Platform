@@ -136,7 +136,14 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
             await onSave(provider, body);
             setEditing(null);
           }}
-          onTest={editing.current?.configured ? onTest : undefined}
+          onTest={
+            editing.current?.configured
+              ? async (provider) => {
+                  const result = await onTest(provider);
+                  return { ok: result.lastTestResult === "Đạt", text: result.lastTestResult ?? "Không có kết quả" };
+                }
+              : undefined
+          }
         />
       )}
       <Dialog

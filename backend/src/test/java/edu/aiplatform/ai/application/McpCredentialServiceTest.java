@@ -40,7 +40,8 @@ class McpCredentialServiceTest {
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final McpCredentialService service = new McpCredentialService(repository, accounts,
-            new AiAccess(authorization, audit, clock), audit, clock);
+            new AiAccess(authorization, audit, clock), audit, clock,
+            new KeyCipher(KeyCipherAndCatalogTest.properties(KeyCipherAndCatalogTest.KEY_V1, null)));
     private final Actor staff = new Actor(UUID.randomUUID(), Role.TEACHER);
 
     @Test
@@ -62,6 +63,35 @@ class McpCredentialServiceTest {
         verify(audit).record(event.capture());
         assertThat(event.getValue().action()).isEqualTo("MCP_CREDENTIAL_CREATED");
         assertThat(event.getValue().details().toString()).doesNotContain(token);
+    }
+
+    @Test
+    void ownerRevealsEncryptedTokenAndEditsLabelAndAccess() {
+        when(authorization.authorize(eq(staff), any(), any())).thenReturn(AuthorizationDecision.allow());
+        var created = service.create(staff, "Claude Desktop", Access.READ_ONLY, 7);
+        ArgumentCaptor<McpCredential> saved = ArgumentCaptor.forClass(McpCredential.class);
+        verify(repository).insert(saved.capture());
+        ArgumentCaptor<edu.aiplatform.ai.domain.AiConnection.EncryptedKey> secret =
+                ArgumentCaptor.forClass(edu.aiplatform.ai.domain.AiConnection.EncryptedKey.class);
+        verify(repository).saveSecret(eq(saved.getValue().id()), secret.capture());
+        assertThat(new String(secret.getValue().ciphertext(), java.nio.charset.StandardCharsets.ISO_8859_1))
+                .doesNotContain(created.token());
+        assertThat(created.credential().revealable()).isTrue();
+
+        UUID id = saved.getValue().id();
+        when(repository.findOwn(staff.accountId(), id)).thenReturn(java.util.Optional.of(saved.getValue()));
+        when(repository.findSecret(id)).thenReturn(java.util.Optional.of(secret.getValue()));
+
+        assertThat(service.reveal(staff, id)).isEqualTo(created.token());
+        var edited = service.update(staff, id, " Cursor ", Access.READ_WRITE);
+        verify(repository).update(id, "Cursor", Access.READ_WRITE);
+        assertThat(edited.label()).isEqualTo("Cursor");
+        assertThat(edited.access()).isEqualTo(Access.READ_WRITE);
+        ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, org.mockito.Mockito.atLeast(3)).record(events.capture());
+        assertThat(events.getAllValues()).extracting(AuditEvent::action)
+                .contains("MCP_TOKEN_REVEALED", "MCP_CREDENTIAL_UPDATED");
+        assertThat(events.getAllValues().toString()).doesNotContain(created.token());
     }
 
     @Test

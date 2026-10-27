@@ -21,7 +21,7 @@ export function BackupSection({value, onHistory}: {value: BackupSectionView; onH
         </>}
       </div>
       <div data-testid="backup-schedule"><h3 className="mb-2 font-semibold">Lịch backup</h3>
-        {!schedule ? <p>Không khả dụng</p> : !schedule.enabled ? <p>Chưa bật</p> : <>
+        {!schedule ? <p>Không khả dụng</p> : !schedule.enabled ? <p>Chưa bật</p> : !schedule.dailyAt ? <p>Đã bật, chưa đặt giờ chạy</p> : <>
           <p>Hằng ngày lúc {schedule.dailyAt?.slice(0, 5)} · giờ Việt Nam</p>
           <p className="mt-1 text-xs text-muted">Lần tiếp theo dự kiến theo cấu hình: {formatInstant(schedule.nextPlannedAt)}</p>
         </>}

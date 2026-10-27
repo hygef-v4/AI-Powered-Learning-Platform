@@ -4,8 +4,6 @@ import { accountMenuEntries, navEntries } from "@/features/identity/slots";
 import { settingsSectionRegistry } from "@/features/settings/slots";
 import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/AiSettingsPanels";
 
-navEntries.register({ key: "admin-mcp", order: 47, title: "Agent MCP", href: "/admin/mcp", icon: "smart_toy", roles: ["ADMIN"] });
-
 accountMenuEntries.register({
   key: "ai-connection",
   title: "Kết nối AI",
@@ -14,6 +12,6 @@ accountMenuEntries.register({
   roles: ["STUDENT", "TEACHER", "SUBJECT_MANAGER"],
 });
 
-// U06: hai thẻ "API AI của trường" và "Hạn mức AI giảng viên" trên Setting List (U03) mở cùng trang cài đặt AI.
+// U06: mục "Kết nối AI" trên Setting List (U03) mở trang cài đặt AI; Agent MCP của Admin là một tab trong trang đó.
 settingsSectionRegistry.register({ key: "ai-connections", component: AiConnectionsPanel, icon: "smart_toy", tone: "accent" });
 settingsSectionRegistry.register({ key: "teacher-quota", component: TeacherQuotaPanel, icon: "speed", tone: "primary" });

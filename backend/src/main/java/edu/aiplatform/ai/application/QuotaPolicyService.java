@@ -154,28 +154,34 @@ public class QuotaPolicyService {
         for (int i = span - 1; i >= 0; i--) {
             byDay.put(today.minusDays(i), 0L);
         }
-        Map<UUID, Long> byTeacher = new HashMap<>();
+        Map<UUID, long[]> byTeacher = new HashMap<>();
         Map<String, long[]> byModel = new LinkedHashMap<>();
         for (SharedRow row : rows) {
             byDay.merge(row.day(), row.tokens(), Long::sum);
-            byTeacher.merge(row.accountId(), row.tokens(), Long::sum);
+            long[] teacher = byTeacher.computeIfAbsent(row.accountId(), k -> new long[2]);
+            teacher[0] += row.tokens();
+            teacher[1] += row.requests();
             String key = (row.provider() == null ? "-" : row.provider().name()) + "|" + row.model();
-            long[] totals = byModel.computeIfAbsent(key, k -> new long[2]);
+            long[] totals = byModel.computeIfAbsent(key, k -> new long[3]);
             totals[0] += row.requests();
             totals[1] += row.tokens();
+            if (row.day().equals(today)) {
+                totals[2] += row.tokens();
+            }
         }
         List<TeacherUsage> teachers = new ArrayList<>();
-        for (Map.Entry<UUID, Long> entry : byTeacher.entrySet()) {
+        for (Map.Entry<UUID, long[]> entry : byTeacher.entrySet()) {
             Optional<AccountContact> contact = contact(entry.getKey());
             Long limit = reservations.limitOf(entry.getKey());
             long usedToday = quota.findWindow(entry.getKey().toString(), today).map(Window::consumed).orElse(0L);
             teachers.add(new TeacherUsage(entry.getKey(), contact.map(AccountContact::displayName).orElse(null),
-                    contact.map(AccountContact::email).orElse(null), entry.getValue(), usedToday, limit));
+                    contact.map(AccountContact::email).orElse(null), entry.getValue()[0], usedToday, limit,
+                    entry.getValue()[1]));
         }
         teachers.sort(Comparator.comparingLong(TeacherUsage::periodTokens).reversed());
         List<ModelUsage> models = byModel.entrySet().stream().map(e -> {
             String[] parts = e.getKey().split("\\|", 2);
-            return new ModelUsage(parts[0], parts[1], e.getValue()[0], e.getValue()[1]);
+            return new ModelUsage(parts[0], parts[1], e.getValue()[0], e.getValue()[1], e.getValue()[2]);
         }).collect(Collectors.toList());
         return new UsageSummary(span, todayUsed, policy.globalDayTokens(),
                 byDay.values().stream().mapToLong(Long::longValue).sum(), teachers.size(),
@@ -206,9 +212,9 @@ public class QuotaPolicyService {
     }
 
     public record TeacherUsage(UUID accountId, String name, String email, long periodTokens, long todayTokens,
-                               Long dayLimit) {
+                               Long dayLimit, long requests) {
     }
 
-    public record ModelUsage(String provider, String model, long requests, long tokens) {
+    public record ModelUsage(String provider, String model, long requests, long tokens, long todayTokens) {
     }
 }

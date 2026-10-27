@@ -180,7 +180,7 @@ describe("AiConnectionPage", () => {
 
     expect(await screen.findByText("mcp_SECRETtokenXYZ9")).toBeInTheDocument();
     expect(calls.find((c) => c.method === "POST")!.body).toEqual({ label: "Cursor", access: "READ_ONLY", days: 90 });
-    fireEvent.click(screen.getByRole("button", { name: "Tôi đã sao chép, đóng" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Đóng" }).at(-1)!);
     expect(screen.queryByText("mcp_SECRETtokenXYZ9")).not.toBeInTheDocument();
   });
 

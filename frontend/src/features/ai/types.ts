@@ -14,6 +14,8 @@ export type ConnectionView = {
   lastTestAt: string | null;
   lastTestResult: string | null;
   version: number;
+  /** Khóa của trường: định danh từng khóa (một nhà cung cấp có thể có nhiều khóa). */
+  id?: string | null;
 };
 
 export type SaveConnection = { apiKey?: string; model: string; version?: number };
@@ -30,6 +32,8 @@ export type McpCredential = {
   expiresAt: string;
   lastUsedAt: string | null;
   status: McpStatus;
+  /** Có bản mã token: chủ agent xem lại được trong popup Sửa. */
+  revealable?: boolean;
 };
 
 export type McpCreated = { credential: McpCredential; token: string; endpoint: string };

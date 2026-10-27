@@ -33,6 +33,13 @@ export const getMcpCredentials = () => apiFetch<McpCredential[]>(MCP);
 export const createMcpCredential = (label: string, access: McpAccess, days: number) =>
   apiFetch<McpCreated>(MCP, { method: "POST", body: JSON.stringify({ label, access, days }) });
 
+/** Sửa nhãn và quyền của agent còn hiệu lực; token, hạn dùng giữ nguyên. */
+export const updateMcpCredential = (id: string, label: string, access: McpAccess) =>
+  apiFetch<McpCredential>(`${MCP}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ label, access }) });
+
+/** Token rõ của agent còn hiệu lực, chỉ chủ agent xem được. */
+export const revealMcpToken = (id: string) => apiFetch<{ token: string }>(`${MCP}/${encodeURIComponent(id)}/token`);
+
 export const revokeMcpCredential = (id: string) =>
   apiFetch<void>(`${MCP}/${encodeURIComponent(id)}`, { method: "DELETE" });
 

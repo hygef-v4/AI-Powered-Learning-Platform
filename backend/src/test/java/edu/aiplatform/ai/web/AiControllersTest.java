@@ -89,7 +89,7 @@ class AiControllersTest {
     @Test
     void personalConnectionRoutesUseServerActorAndColonActions() throws Exception {
         ConnectionView view = new ConnectionView(AiProvider.CLAUDE, true, "claude-sonnet-5-5", "3kQf",
-                AiConnection.Status.ACTIVE, null, null, 2);
+                AiConnection.Status.ACTIVE, null, null, 2, UUID.randomUUID());
         when(connections.savePersonal(eq(actor), eq(AiProvider.CLAUDE), any())).thenReturn(view);
         when(connections.testPersonal(actor, AiProvider.CLAUDE)).thenReturn(view);
 
@@ -108,7 +108,7 @@ class AiControllersTest {
     @Test
     void mcpCredentialCreateReturnsTokenOnce() throws Exception {
         CredentialView view = new CredentialView(UUID.randomUUID(), "Claude Desktop", Access.READ_ONLY, "AbCd", NOW,
-                NOW.plusSeconds(86400), null, McpCredential.Status.ACTIVE);
+                NOW.plusSeconds(86400), null, McpCredential.Status.ACTIVE, true);
         when(credentials.create(actor, "Claude Desktop", Access.READ_ONLY, 30)).thenReturn(new Created(view, "mcp_xyzAbCd"));
         when(credentials.list(actor)).thenReturn(List.of(view));
 
@@ -149,15 +149,20 @@ class AiControllersTest {
                         .content("{\"defaultDayTokens\":20000,\"globalDayTokens\":500000,\"version\":3}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(4))
                 .andExpect(jsonPath("$.configured").value(true));
-        mvc.perform(put("/api/v1/admin/ai/connections/gemini/status").contentType(MediaType.APPLICATION_JSON)
+        UUID key = UUID.randomUUID();
+        mvc.perform(put("/api/v1/admin/ai/connections/" + key + "/status").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":false,\"version\":2}")).andExpect(status().isOk());
-        verify(connections).setInstitutionalEnabled(actor, AiProvider.GEMINI, false, 2L);
+        verify(connections).setInstitutionalEnabled(actor, key, false, 2L);
         UUID teacher = UUID.randomUUID();
         mvc.perform(put("/api/v1/admin/ai/teacher-quotas/" + teacher).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"dayTokens\":50000}")).andExpect(status().isNoContent());
         verify(quota).setTeacherQuota(actor, teacher, 50_000L);
-        mvc.perform(post("/api/v1/admin/ai/connections/openai:test")).andExpect(status().isOk());
-        verify(connections).testInstitutional(actor, AiProvider.OPENAI);
+        mvc.perform(post("/api/v1/admin/ai/connections/" + key + ":test")).andExpect(status().isOk());
+        verify(connections).testInstitutional(actor, key);
+        mvc.perform(post("/api/v1/admin/ai/connections").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"provider\":\"openai\",\"apiKey\":\"sk-secret-0000\",\"model\":\"gpt-5\"}"))
+                .andExpect(status().isOk());
+        verify(connections).addInstitutional(eq(actor), eq(AiProvider.OPENAI), any());
     }
 
     @Test

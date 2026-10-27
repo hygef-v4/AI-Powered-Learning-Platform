@@ -13,15 +13,10 @@ export const ACCESS_LABEL: Record<McpAccess, string> = {
   READ_WRITE: "Đọc và ghi",
 };
 
-export const ACCESS_HINT: Record<McpAccess, string> = {
-  READ_ONLY: "Xem lớp, bài, học liệu, kết quả trong quyền của bạn.",
-  READ_WRITE: "Thêm các thao tác được làm như tạo nháp, đề xuất chấm.",
-};
-
 export const MCP_STATUS: Record<McpStatus, { text: string; tone: Tone }> = {
-  ACTIVE: { text: "Còn hiệu lực", tone: "success" },
+  ACTIVE: { text: "Hiệu lực", tone: "success" },
   EXPIRED: { text: "Hết hạn", tone: "neutral" },
-  REVOKED: { text: "Đã thu hồi", tone: "danger" },
+  REVOKED: { text: "Thu hồi", tone: "danger" },
 };
 
 export const SOURCE_LABEL: Record<UsageSource, string> = {

@@ -4,7 +4,9 @@ import { Icon, type IconName } from "./Icon";
 
 const BOX =
   "flex h-10 items-center gap-2 rounded-lg border bg-surface px-3 transition-[border-color,box-shadow] duration-200 " +
-  "focus-within:border-focus focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)]";
+  "focus-within:border-focus focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)] " +
+  // Ô đang khóa: nền chìm, chữ nhạt, con trỏ cấm, để khác hẳn ô sửa được.
+  "has-[:disabled]:bg-sunken has-[:disabled]:opacity-70 [&_:disabled]:cursor-not-allowed [&_:disabled]:text-muted";
 
 type FieldProps = {
   label: ReactNode;

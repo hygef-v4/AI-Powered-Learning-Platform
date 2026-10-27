@@ -85,7 +85,9 @@ class AdminDashboardBackupTest {
         try (var f = new DashboardFixture()) {
             when(f.settings.get(new SettingKey<>("backup.enabled", Boolean.class))).thenReturn(Optional.of(true));
             var missingHour = f.service.dashboard(f.admin).backup().schedule();
-            assertThat(missingHour.availability()).isEqualTo(Availability.UNAVAILABLE);
+            assertThat(missingHour.availability()).isEqualTo(Availability.AVAILABLE);
+            assertThat(missingHour.data().enabled()).isTrue();
+            assertThat(missingHour.data().nextPlannedAt()).as("bật mà chưa đặt giờ thì chưa có lần chạy").isNull();
             when(f.settings.get(new SettingKey<>("backup.dailyAt", LocalTime.class))).thenReturn(Optional.of(LocalTime.of(11, 0)));
             var scheduled = f.service.dashboard(f.admin).backup().schedule().data();
             assertThat(scheduled.timeZone()).isEqualTo("Asia/Ho_Chi_Minh");

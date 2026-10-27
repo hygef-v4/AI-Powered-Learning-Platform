@@ -214,9 +214,8 @@ public class AdminDashboardService {
     private BackupSchedule schedule(Instant now) {
         boolean enabled = settings.get(BACKUP_ENABLED).orElse(false);
         LocalTime dailyAt = settings.get(BACKUP_DAILY_AT).orElse(null);
-        if (enabled && dailyAt == null) throw new IllegalStateException("Missing backup hour");
         Instant next = null;
-        if (enabled) {
+        if (enabled && dailyAt != null) {
             ZonedDateTime local = now.atZone(BACKUP_ZONE);
             ZonedDateTime slot = local.toLocalDate().atTime(dailyAt).atZone(BACKUP_ZONE);
             if (slot.toInstant().isBefore(now)) slot = slot.plusDays(1);

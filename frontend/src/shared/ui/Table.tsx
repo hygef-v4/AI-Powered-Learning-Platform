@@ -1,10 +1,17 @@
 import type { HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cx } from "./cx";
 
-/** Bảng dạng tài liệu: không khung, chỉ đường kẻ mảnh giữa các dòng. */
-export function TableFrame({ children, className }: { children: ReactNode; className?: string }) {
+const FILLED_HEAD =
+  "[&_thead_th]:bg-sunken [&_thead_th]:pt-2.5 [&_thead_th]:text-body [&_thead_th]:border-line-strong " +
+  "[&_th:first-child]:pl-3 [&_td:first-child]:pl-3 [&_th:last-child]:pr-3 [&_td:last-child]:pr-3";
+
+/**
+ * Bảng dạng tài liệu: không khung, chỉ đường kẻ mảnh giữa các dòng. {@code filledHead} tô nền hàng tiêu đề để tách
+ * khỏi các dòng dữ liệu.
+ */
+export function TableFrame({ children, className, filledHead }: { children: ReactNode; className?: string; filledHead?: boolean }) {
   return (
-    <div className={cx("overflow-x-auto", className)}>
+    <div className={cx("overflow-x-auto", filledHead && FILLED_HEAD, className)}>
       <table className="w-full border-collapse [&_tbody_tr:last-child>td]:border-b-0">{children}</table>
     </div>
   );

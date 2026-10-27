@@ -22,26 +22,41 @@ export type UsageSummary = {
   periodTokens: number;
   teachersUsed: number;
   byDay: { day: string; tokens: number }[];
-  byTeacher: { accountId: string; name: string; email: string; periodTokens: number; todayTokens: number; dayLimit: number | null }[];
-  byModel: { provider: string; model: string; requests: number; tokens: number }[];
+  byTeacher: { accountId: string; name: string; email: string; periodTokens: number; todayTokens: number; dayLimit: number | null; requests: number }[];
+  byModel: { provider: string; model: string; requests: number; tokens: number; todayTokens: number }[];
 };
 
 export const getInstitutional = () => apiFetch<ConnectionView[]>(`${BASE}/connections`);
 
-export const saveInstitutional = (provider: AiProvider, body: SaveConnection) =>
-  apiFetch<ConnectionView>(`${BASE}/connections/${provider}`, { method: "PUT", body: JSON.stringify(body) });
+/** Thêm một khóa của trường; một nhà cung cấp có thể có nhiều khóa. */
+export const addInstitutional = (provider: AiProvider, body: SaveConnection) =>
+  apiFetch<ConnectionView>(`${BASE}/connections`, { method: "POST", body: JSON.stringify({ provider, ...body }) });
 
-export const testInstitutional = (provider: AiProvider) =>
-  apiFetch<ConnectionView>(`${BASE}/connections/${provider}:test`, { method: "POST" });
+/** Kiểm tra trong popup trước khi lưu: khóa vừa nhập, hoặc khóa đã lưu của {@code id} khi để trống ô khóa. */
+export const testInstitutionalDraft = (provider: AiProvider, body: SaveConnection, id?: string | null) =>
+  apiFetch<{ ok: boolean; message: string }>(`${BASE}/connections:test`, {
+    method: "POST",
+    body: JSON.stringify({ provider, apiKey: body.apiKey, model: body.model, id: id ?? null }),
+  });
 
-export const setInstitutionalEnabled = (provider: AiProvider, enabled: boolean, version: number) =>
-  apiFetch<ConnectionView>(`${BASE}/connections/${provider}/status`, {
+export const saveInstitutional = (id: string, body: SaveConnection) =>
+  apiFetch<ConnectionView>(`${BASE}/connections/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) });
+
+/** Khóa rõ đã lưu, cho Admin xem lại hoặc sao chép trong popup Sửa (mỗi lần xem ghi audit). */
+export const revealInstitutional = (id: string) =>
+  apiFetch<{ apiKey: string }>(`${BASE}/connections/${encodeURIComponent(id)}/key`);
+
+export const testInstitutional = (id: string) =>
+  apiFetch<ConnectionView>(`${BASE}/connections/${encodeURIComponent(id)}:test`, { method: "POST" });
+
+export const setInstitutionalEnabled = (id: string, enabled: boolean, version: number) =>
+  apiFetch<ConnectionView>(`${BASE}/connections/${encodeURIComponent(id)}/status`, {
     method: "PUT",
     body: JSON.stringify({ enabled, version }),
   });
 
-export const revokeInstitutional = (provider: AiProvider) =>
-  apiFetch<void>(`${BASE}/connections/${provider}`, { method: "DELETE" });
+export const revokeInstitutional = (id: string) =>
+  apiFetch<void>(`${BASE}/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
 
 export const getPolicy = () => apiFetch<QuotaPolicy>(`${BASE}/quota-policy`);
 

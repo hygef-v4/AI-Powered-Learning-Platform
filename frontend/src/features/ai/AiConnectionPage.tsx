@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { formatTokens, type AiProvider, type SourceOption } from "@/shared/ai";
-import { Alert, Button, ButtonLink, IconTile, PageHeader } from "@/shared/ui";
+import { Alert, Button, ButtonLink, IconTile, PageHeader, SettingsCard } from "@/shared/ui";
 import {
   createMcpCredential,
   getConnections,
@@ -11,6 +11,7 @@ import {
   getSources,
   revokeConnection,
   revokeMcpCredential,
+  updateMcpCredential,
   saveConnection,
   testConnection,
 } from "./api";
@@ -114,19 +115,27 @@ export function AiConnectionPage() {
             onRevoke={revoke}
           />
           <ApiSetupGuide />
-          {mcpEnabled && <McpAgentSection
-            credentials={data.credentials}
-            onCreate={async (label, access, days) => {
-              const created = await createMcpCredential(label, access, days);
-              await reload();
-              return created;
-            }}
-            onRevoke={async (id) => {
-              await revokeMcpCredential(id);
-              await reload();
-            }}
-          />}
-          {mcpEnabled && <McpSetupGuide />}
+          {mcpEnabled && (
+            <SettingsCard>
+              <McpAgentSection
+                credentials={data.credentials}
+                onCreate={async (label, access, days) => {
+                  const created = await createMcpCredential(label, access, days);
+                  await reload();
+                  return created;
+                }}
+                onUpdate={async (id, label, access) => {
+                  await updateMcpCredential(id, label, access);
+                  await reload();
+                }}
+                onRevoke={async (id) => {
+                  await revokeMcpCredential(id);
+                  await reload();
+                }}
+              />
+              <McpSetupGuide />
+            </SettingsCard>
+          )}
         </>
       )}
     </div>

@@ -40,6 +40,33 @@ public class AiAdminController {
     public record StatusRequest(Boolean enabled, Long version) {
     }
 
+    /** Khóa rõ cho popup Sửa của Admin; không in ra log. */
+    public record KeyResponse(String apiKey) {
+
+        @Override
+        public String toString() {
+            return "KeyResponse[***]";
+        }
+    }
+
+    /** Khóa không được in ra log: {@code toString} chỉ có provider, model và id. */
+    public record TestRequest(String provider, String apiKey, String model, UUID id) {
+
+        @Override
+        public String toString() {
+            return "TestRequest[provider=" + provider + ", model=" + model + ", id=" + id + "]";
+        }
+    }
+
+    /** Khóa không được in ra log: {@code toString} chỉ có provider và model. */
+    public record AddRequest(String provider, String apiKey, String model) {
+
+        @Override
+        public String toString() {
+            return "AddRequest[provider=" + provider + ", model=" + model + "]";
+        }
+    }
+
     public record PolicyRequest(Long defaultDayTokens, Long globalDayTokens, Long version) {
     }
 
@@ -62,28 +89,46 @@ public class AiAdminController {
         return connections.listInstitutional(actor);
     }
 
-    @PutMapping("/connections/{provider}")
-    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable String provider,
+    /** Thêm một khóa chung; một provider có thể có nhiều khóa. */
+    @PostMapping("/connections")
+    public ConnectionView add(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
+        return connections.addInstitutional(actor, AiWebSupport.provider(request.provider()),
+                new SaveCommand(request.apiKey(), request.model(), null));
+    }
+
+    /** Kiểm tra trong popup trước khi lưu; {@code id} có khi đang sửa khóa đã lưu và để trống ô khóa. */
+    @PostMapping("/connections:test")
+    public AiConnectionService.TestResult testDraft(@AuthenticationPrincipal Actor actor, @RequestBody TestRequest request) {
+        return connections.testInstitutionalDraft(actor, AiWebSupport.provider(request.provider()), request.id(),
+                new SaveCommand(request.apiKey(), request.model(), null));
+    }
+
+    @PutMapping("/connections/{id}")
+    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
-        return connections.saveInstitutional(actor, AiWebSupport.provider(provider), command);
+        return connections.replaceInstitutional(actor, id, command);
     }
 
-    @PostMapping("/connections/{provider}:test")
-    public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable String provider) {
-        return connections.testInstitutional(actor, AiWebSupport.provider(provider));
+    @GetMapping("/connections/{id}/key")
+    public KeyResponse key(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return new KeyResponse(connections.revealInstitutional(actor, id));
     }
 
-    @PutMapping("/connections/{provider}/status")
-    public ConnectionView status(@AuthenticationPrincipal Actor actor, @PathVariable String provider,
+    @PostMapping("/connections/{id}:test")
+    public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return connections.testInstitutional(actor, id);
+    }
+
+    @PutMapping("/connections/{id}/status")
+    public ConnectionView status(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody StatusRequest request) {
-        return connections.setInstitutionalEnabled(actor, AiWebSupport.provider(provider),
-                Boolean.TRUE.equals(request.enabled()), request.version());
+        return connections.setInstitutionalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
     }
 
-    @DeleteMapping("/connections/{provider}")
+    @DeleteMapping("/connections/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable String provider) {
-        connections.revokeInstitutional(actor, AiWebSupport.provider(provider));
+    public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        connections.revokeInstitutional(actor, id);
     }
 
     @GetMapping("/quota-policy")

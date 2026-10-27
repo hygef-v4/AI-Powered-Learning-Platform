@@ -2,8 +2,10 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { PROVIDER_LABEL, formatTokens, type AiProvider } from "@/shared/ai";
-import { Alert, IconTile, Section, TableFrame, Td, Th, cx } from "@/shared/ui";
+import { Alert, SettingsCard, SettingsGroup, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { getUsageSummary, type UsageSummary } from "./api";
+
+const COMPACT = new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 });
 
 function dayLabel(day: string) {
   const [, month, date] = day.split("-");
@@ -11,13 +13,15 @@ function dayLabel(day: string) {
 }
 
 /**
- * Usage API của trường (BR-U06-41): hôm nay trên trần, tổng kỳ, số giảng viên đã dùng, theo ngày, giảng viên, mô hình.
- * Không có nội dung, khóa, usage API cá nhân hay MCP.
+ * Usage API của trường (BR-U06-41): hàng trên là hôm nay, hàng dưới là 7 hoặc 30 ngày; mỗi hàng một thẻ cam số token
+ * và một thẻ số giảng viên đã dùng. Sau đó là bảng theo giảng viên và theo nhà cung cấp. Không có nội dung, khóa,
+ * usage API cá nhân hay MCP.
  */
 export function SharedUsageTab() {
   const [days, setDays] = useState<7 | 30>(7);
   const [data, setData] = useState<UsageSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [values, setValues] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -36,130 +40,168 @@ export function SharedUsageTab() {
     };
   }, [days]);
 
-  const max = Math.max(1, ...(data?.byDay.map((d) => d.tokens) ?? [0]));
+  if (error) {
+    return (
+      <Alert tone="danger" role="alert">
+        {error}
+      </Alert>
+    );
+  }
+  if (!data) return <p className="text-[13px] text-muted">Đang tải…</p>;
+
+  const max = Math.max(1, ...data.byDay.map((d) => d.tokens));
+  const teachersToday = data.byTeacher.filter((t) => t.todayTokens > 0).length;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted">Chỉ tính yêu cầu dùng API của trường.</p>
-        <div role="radiogroup" aria-label="Khoảng thời gian" className="flex gap-1.5">
-          {([7, 30] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              role="radio"
-              aria-checked={days === d}
-              onClick={() => setDays(d)}
-              className={cx(
-                "rounded-full border px-3 py-1 text-xs font-semibold",
-                days === d ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell",
-              )}
-            >
-              {d} ngày
-            </button>
-          ))}
-        </div>
-      </div>
-      {error && (
-        <Alert tone="danger" role="alert">
-          {error}
-        </Alert>
-      )}
-      {data && (
-        <>
-          <div className="grid gap-3 md:grid-cols-3">
-            <Stat icon="speed" title="Hôm nay">
-              {formatTokens(data.todayTokens)}
-              {data.globalDayTokens !== null && <span className="text-sm font-normal text-muted"> / {formatTokens(data.globalDayTokens)}</span>}
-            </Stat>
-            <Stat icon="monitoring" title={`Tổng ${data.days} ngày`}>
-              {formatTokens(data.periodTokens)} <span className="text-sm font-normal text-muted">token</span>
-            </Stat>
-            <Stat icon="groups" title="Giảng viên đã dùng">
-              {data.teachersUsed}
-            </Stat>
-          </div>
-          <Section title="Token theo ngày">
-            <div className="flex h-40 items-end gap-1" role="img" aria-label={`Token theo ngày trong ${data.days} ngày`}>
-              {data.byDay.map((d) => (
-                <div key={d.day} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${dayLabel(d.day)}: ${formatTokens(d.tokens)} token`}>
-                  <div className="w-full rounded-t-[4px] bg-primary" style={{ height: `${Math.max(d.tokens > 0 ? 2 : 0, (d.tokens / max) * 128)}px` }} />
-                  {(data.days === 7 || d.day.endsWith("01") || d === data.byDay.at(-1)) && (
-                    <span className="text-[10px] text-muted">{dayLabel(d.day)}</span>
+    <>
+      <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <TokenCard title="Hôm nay">
+          <Big>{formatTokens(data.todayTokens)}</Big>
+          {data.globalDayTokens !== null && <span className="text-sm opacity-85"> / {formatTokens(data.globalDayTokens)} token</span>}
+        </TokenCard>
+        <CountCard title="Giảng viên đã dùng hôm nay" value={teachersToday} />
+        <TokenCard
+          title={`${data.days} ngày`}
+          action={
+            <div role="radiogroup" aria-label="Khoảng thời gian" className="flex gap-1 rounded-full bg-on-primary/10 p-0.5">
+              {([7, 30] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={days === d}
+                  onClick={() => setDays(d)}
+                  className={cx(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                    days === d ? "bg-surface text-ink" : "text-on-primary hover:bg-on-primary/10",
                   )}
-                </div>
+                >
+                  {d} ngày
+                </button>
               ))}
             </div>
-          </Section>
-          <Section title="Theo giảng viên">
-            {data.byTeacher.length === 0 ? (
-              <p className="text-[13px] text-muted">Chưa giảng viên nào dùng API của trường trong kỳ.</p>
-            ) : (
-              <TableFrame>
-                <thead>
-                  <tr>
-                    <Th>Giảng viên</Th>
-                    <Th className="text-right">Token trong kỳ</Th>
-                    <Th className="text-right">Hôm nay / hạn mức ngày</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.byTeacher.map((t) => (
-                    <tr key={t.accountId}>
-                      <Td>
-                        <p className="font-semibold">{t.name}</p>
-                        <p className="text-[11px] text-muted">{t.email}</p>
-                      </Td>
-                      <Td className="text-right">{formatTokens(t.periodTokens)}</Td>
-                      <Td className="text-right whitespace-nowrap">
-                        {formatTokens(t.todayTokens)} / {t.dayLimit === null ? "—" : t.dayLimit === 0 ? "chặn" : formatTokens(t.dayLimit)}
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </TableFrame>
-            )}
-          </Section>
-          <Section title="Theo nhà cung cấp và mô hình">
-            {data.byModel.length === 0 ? (
-              <p className="text-[13px] text-muted">Chưa có yêu cầu nào trong kỳ.</p>
-            ) : (
-              <TableFrame>
-                <thead>
-                  <tr>
-                    <Th>Nhà cung cấp</Th>
-                    <Th>Mô hình</Th>
-                    <Th className="text-right">Yêu cầu</Th>
-                    <Th className="text-right">Token</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.byModel.map((m) => (
-                    <tr key={`${m.provider}-${m.model}`}>
-                      <Td>{PROVIDER_LABEL[m.provider as AiProvider] ?? m.provider}</Td>
-                      <Td>{m.model}</Td>
-                      <Td className="text-right">{formatTokens(m.requests)}</Td>
-                      <Td className="text-right">{formatTokens(m.tokens)}</Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </TableFrame>
-            )}
-          </Section>
-        </>
-      )}
+          }
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <p>
+              <Big>{formatTokens(data.periodTokens)}</Big>
+              <span className="text-sm opacity-85"> token</span>
+            </p>
+            <button
+              type="button"
+              aria-pressed={values}
+              aria-label={`Token theo ngày trong ${data.days} ngày; bấm để ${values ? "ẩn" : "hiện"} số trên cột`}
+              onClick={() => setValues((v) => !v)}
+              className="flex h-16 w-full max-w-[320px] cursor-pointer items-end gap-[3px] rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-primary"
+            >
+              {data.byDay.map((d) => (
+                <span key={d.day} title={`${dayLabel(d.day)}: ${formatTokens(d.tokens)} token`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-0.5">
+                  {values && d.tokens > 0 && (
+                    <span className="text-[10px] leading-none font-semibold whitespace-nowrap tabular-nums">{COMPACT.format(d.tokens)}</span>
+                  )}
+                  <span
+                    className="w-full rounded-t-[3px] bg-on-primary/60"
+                    style={{ height: `${Math.max(d.tokens > 0 ? 4 : 2, (d.tokens / max) * 40)}px` }}
+                  />
+                </span>
+              ))}
+            </button>
+          </div>
+        </TokenCard>
+        <CountCard title={`Giảng viên đã dùng trong ${data.days} ngày`} value={data.teachersUsed} />
+      </div>
+
+      <SettingsCard>
+        <SettingsGroup title="Theo giảng viên">
+          <TableFrame filledHead className="mt-2">
+            <thead>
+              <tr>
+                <Th>Giảng viên</Th>
+                <Th className="text-right">Yêu cầu</Th>
+                <Th className="text-right">Hôm nay / hạn mức ngày</Th>
+                <Th className="text-right">Token trong kỳ</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.byTeacher.length === 0 && (
+                <tr>
+                  <Td colSpan={4} className="py-6 text-center! text-muted">
+                    Chưa giảng viên nào dùng trong kỳ
+                  </Td>
+                </tr>
+              )}
+              {data.byTeacher.map((t) => (
+                <tr key={t.accountId}>
+                  <Td>
+                    <p className="font-semibold">{t.name}</p>
+                    <p className="text-[11px] text-muted">{t.email}</p>
+                  </Td>
+                  <Td className="text-right tabular-nums">{formatTokens(t.requests)}</Td>
+                  <Td className="text-right whitespace-nowrap tabular-nums">
+                    {formatTokens(t.todayTokens)} / {t.dayLimit === null ? "—" : t.dayLimit === 0 ? "chặn" : formatTokens(t.dayLimit)}
+                  </Td>
+                  <Td className="text-right tabular-nums">{formatTokens(t.periodTokens)}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </TableFrame>
+        </SettingsGroup>
+        <SettingsGroup title="Theo nhà cung cấp">
+          <TableFrame filledHead className="mt-2">
+            <thead>
+              <tr>
+                <Th>Nhà cung cấp</Th>
+                <Th>Mô hình</Th>
+                <Th className="text-right">Hôm nay</Th>
+                <Th className="text-right">Token trong kỳ</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.byModel.length === 0 && (
+                <tr>
+                  <Td colSpan={4} className="py-6 text-center! text-muted">
+                    Chưa có yêu cầu trong kỳ
+                  </Td>
+                </tr>
+              )}
+              {data.byModel.map((m) => (
+                <tr key={`${m.provider}-${m.model}`}>
+                  <Td>{PROVIDER_LABEL[m.provider as AiProvider] ?? m.provider}</Td>
+                  <Td>{m.model}</Td>
+                  <Td className="text-right tabular-nums">{formatTokens(m.todayTokens ?? 0)}</Td>
+                  <Td className="text-right tabular-nums">{formatTokens(m.tokens)}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </TableFrame>
+        </SettingsGroup>
+      </SettingsCard>
+    </>
+  );
+}
+
+function Big({ children }: { children: ReactNode }) {
+  return <span className="text-[40px] leading-none font-bold tracking-[-0.02em] tabular-nums md:text-[48px]">{children}</span>;
+}
+
+/** Thẻ cam lớn: số token là phần nổi nhất. */
+function TokenCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4 rounded-2xl bg-primary p-6 text-on-primary">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold opacity-90">{title}</p>
+        {action}
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
 
-function Stat({ icon, title, children }: { icon: "speed" | "monitoring" | "groups"; title: string; children: ReactNode }) {
+function CountCard({ title, value }: { title: string; value: number }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
-      <IconTile icon={icon} />
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-muted">{title}</p>
-        <p className="font-display text-[26px] leading-none text-ink">{children}</p>
-      </div>
+    <div className="flex min-w-0 flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-6">
+      <p className="text-sm font-medium text-muted">{title}</p>
+      <p className="text-[40px] leading-none font-bold text-ink tabular-nums">{value}</p>
     </div>
   );
 }

@@ -4,13 +4,15 @@ import edu.aiplatform.settings.contract.SettingDefinition;
 import edu.aiplatform.settings.contract.SettingGroup;
 import edu.aiplatform.settings.contract.SettingKey;
 import edu.aiplatform.settings.contract.SettingType;
-import edu.aiplatform.settings.domain.SettingValidator;
 import java.time.LocalTime;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Nhóm cài đặt Backup (BR-U03-88): mặc định tắt, giờ chạy không có mặc định. */
+/**
+ * Nhóm cài đặt Backup (BR-U03-88): mặc định tắt, giờ chạy không có mặc định. Bật được khi chưa đặt giờ; chưa có giờ
+ * thì chưa chạy bản nào ({@code BackupScheduleScanner}).
+ */
 @Configuration
 public class BackupSettingDefinitions {
 
@@ -20,14 +22,14 @@ public class BackupSettingDefinitions {
     @Bean
     SettingDefinition backupEnabled() {
         return new SettingDefinition(ENABLED.key(), SettingGroup.BACKUP, "Bật sao lưu",
-                "Mỗi ngày backup database một lần vào giờ đã đặt; các bản được giữ 7 ngày", SettingType.BOOLEAN, false,
-                Map.of(SettingValidator.REQUIRES_WHEN_TRUE, DAILY_AT.key()));
+                "Sao lưu cơ sở dữ liệu hằng ngày.", SettingType.BOOLEAN, false,
+                Map.of());
     }
 
     @Bean
     SettingDefinition backupDailyAt() {
         return new SettingDefinition(DAILY_AT.key(), SettingGroup.BACKUP, "Giờ chạy hằng ngày",
-                "Giờ:phút theo giờ Việt Nam (Asia/Ho_Chi_Minh); nên chọn ngoài giờ cao điểm", SettingType.TIME_OF_DAY,
+                "Giờ sao lưu, theo giờ Việt Nam.", SettingType.TIME_OF_DAY,
                 null, Map.of());
     }
 }

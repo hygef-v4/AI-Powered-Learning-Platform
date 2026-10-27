@@ -12,7 +12,7 @@ function menu(role: Role): string[] {
 
 describe("menu bên do các unit đăng ký", () => {
   it("đúng mục và thứ tự của design cho từng role", () => {
-    expect(menu("ADMIN")).toEqual(["Tổng quan", "Tài khoản", "Môn học", "Cài đặt", "Agent MCP", "Nhật ký audit"]);
+    expect(menu("ADMIN")).toEqual(["Tổng quan", "Tài khoản", "Môn học", "Cài đặt", "Nhật ký audit"]);
     expect(menu("SUBJECT_MANAGER")).toEqual([
       "Tổng quan",
       "Thông tin môn",

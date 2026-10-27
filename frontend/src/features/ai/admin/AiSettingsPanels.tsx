@@ -1,75 +1,57 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { PageHeader, cx } from "@/shared/ui";
+import { useEffect, useState } from "react";
+import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
+import { AdminMcpTab } from "./AdminMcpPage";
 import { InstitutionalKeysSection } from "./InstitutionalKeysSection";
 import { QuotaPolicySection, TeacherQuotaTable } from "./QuotaSections";
 import { SharedUsageTab } from "./SharedUsageTab";
 
-type Tab = "keys" | "usage";
+type Tab = "usage" | "settings" | "mcp";
+
+const TABS: TabItem<Tab>[] = [
+  { key: "usage", label: "Usage" },
+  { key: "settings", label: "Cài đặt" },
+  { key: "mcp", label: "Agent MCP" },
+];
 
 /**
- * Màn #10 Setting Detail "API AI của trường và hạn mức" (UC 14, 15, 33): tab Khóa và hạn mức, tab Usage. Mở từ thẻ
- * hạn mức thì cuộn tới phần hạn mức.
+ * Trang "Kết nối AI" mở từ Setting List (UC 14, 15, 32, 33): tab Usage mở trước; tab Cài đặt gồm khóa của trường, hạn
+ * mức chung và mức riêng trong một thẻ; tab Agent MCP là agent của chính Admin. Mở từ thẻ hạn mức thì vào tab Cài đặt và cuộn tới phần hạn mức.
  */
-function AiSettingsPage({ focusQuota }: { focusQuota: boolean }) {
-  const [tab, setTab] = useState<Tab>("keys");
-  const quota = useRef<HTMLDivElement>(null);
-
+function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuota?: boolean; initialTab?: Tab }) {
+  const [tab, setTab] = useState<Tab>(focusQuota ? "settings" : initialTab);
   useEffect(() => {
-    if (focusQuota) quota.current?.scrollIntoView?.({ block: "start" });
+    if (focusQuota) document.getElementById("ai-quota")?.scrollIntoView?.({ block: "start" });
   }, [focusQuota]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <>
       <PageHeader
-        title="API AI của trường và hạn mức"
+        title="Kết nối AI"
         backHref="/admin/settings"
-        breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: focusQuota ? "Hạn mức AI giảng viên" : "API AI của trường" }]}
+        breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: "Kết nối AI" }]}
       />
-      <div role="tablist" aria-label="Phần cài đặt AI" className="flex gap-1 border-b border-line">
-        {(
-          [
-            ["keys", "Khóa và hạn mức"],
-            ["usage", "Usage"],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={cx(
-              "-mb-px border-b-2 px-3.5 py-2 text-[13px] font-semibold",
-              tab === key ? "border-primary text-primary-ink" : "border-transparent text-muted hover:text-ink",
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {tab === "keys" ? (
-        <>
+      <Tabs items={TABS} value={tab} onChange={setTab} label="Kết nối AI" />
+      {tab === "usage" && <SharedUsageTab />}
+      {tab === "mcp" && <AdminMcpTab />}
+      {tab === "settings" && (
+        <SettingsCard>
           <InstitutionalKeysSection />
-          <div ref={quota} className="flex scroll-mt-4 flex-col gap-4">
-            <QuotaPolicySection />
-            <TeacherQuotaTable />
-          </div>
-        </>
-      ) : (
-        <SharedUsageTab />
+          <QuotaPolicySection />
+          <TeacherQuotaTable />
+        </SettingsCard>
       )}
-    </div>
+    </>
   );
 }
 
-/** Đăng ký cho thẻ "API AI của trường". */
-export function AiConnectionsPanel() {
-  return <AiSettingsPage focusQuota={false} />;
+/** Đăng ký cho mục "Kết nối AI" trên Setting List; {@code ?tab=mcp} mở thẳng tab Agent MCP (đường dẫn cũ /admin/mcp). */
+export function AiConnectionsPanel({ tab }: { tab?: string }) {
+  return <AiSettingsPage initialTab={TABS.some((t) => t.key === tab) ? (tab as Tab) : "usage"} />;
 }
 
-/** Đăng ký cho thẻ "Hạn mức AI giảng viên": cùng trang, cuộn tới phần hạn mức. */
+/** Đăng ký cho mục hạn mức AI giảng viên: cùng trang, tab Cài đặt, cuộn tới phần hạn mức. */
 export function TeacherQuotaPanel() {
   return <AiSettingsPage focusQuota />;
 }

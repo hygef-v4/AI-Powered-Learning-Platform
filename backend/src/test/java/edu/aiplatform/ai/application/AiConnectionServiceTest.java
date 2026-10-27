@@ -156,15 +156,53 @@ class AiConnectionServiceTest {
     @Test
     void institutionalSwitchKeepsKey() {
         AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
-        when(repository.findInstitutional(AiProvider.GEMINI)).thenReturn(Optional.of(shared));
+        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
         when(gateway.call(any(), any())).thenReturn(new Response("OK", "r", null));
 
-        service.setInstitutionalEnabled(admin, AiProvider.GEMINI, false, 2L);
+        service.setInstitutionalEnabled(admin, shared.id(), false, 2L);
 
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
         verify(repository).update(updated.capture());
         assertThat(updated.getValue().status()).isEqualTo(Status.DISABLED);
         assertThat(updated.getValue().keyCiphertext()).isNotNull();
+    }
+
+    @Test
+    void adminRevealsSavedSchoolKeyAndAuditsIt() {
+        AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
+        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
+
+        assertThat(service.revealInstitutional(admin, shared.id())).isEqualTo("AIzaSy-old-key-0000");
+        ArgumentCaptor<edu.aiplatform.audit.contract.AuditEvent> event =
+                ArgumentCaptor.forClass(edu.aiplatform.audit.contract.AuditEvent.class);
+        verify(audit, org.mockito.Mockito.atLeastOnce()).record(event.capture());
+        assertThat(event.getAllValues()).extracting(edu.aiplatform.audit.contract.AuditEvent::action)
+                .contains("AI_CONNECTION_KEY_REVEALED");
+        assertThat(event.getAllValues().toString()).doesNotContain("AIzaSy-old-key-0000");
+    }
+
+    @Test
+    void draftTestUsesTypedKeyOrSavedKeyWithoutSavingResult() {
+        AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
+        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
+        when(gateway.call(any(), any())).thenReturn(new Response("OK", "r", null));
+
+        var typed = service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
+                new SaveCommand("AIzaSy-new-key-9999", "gemini-2.5-flash", null));
+        var saved = service.testInstitutionalDraft(admin, AiProvider.GEMINI, shared.id(),
+                new SaveCommand(null, "gemini-2.5-flash", null));
+
+        assertThat(typed.ok()).isTrue();
+        assertThat(saved.ok()).isTrue();
+        ArgumentCaptor<IProviderGateway.Request> request = ArgumentCaptor.forClass(IProviderGateway.Request.class);
+        verify(gateway, org.mockito.Mockito.times(2)).call(eq(AiProvider.GEMINI), request.capture());
+        assertThat(request.getAllValues()).extracting(IProviderGateway.Request::apiKey)
+                .containsExactly("AIzaSy-new-key-9999", "AIzaSy-old-key-0000");
+        verify(repository, org.mockito.Mockito.never()).saveTest(any(), any(), any());
+        verify(repository, org.mockito.Mockito.never()).insert(any());
+        assertThatThrownBy(() -> service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
+                new SaveCommand(" ", "gemini-2.5-flash", null)))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_REQUIRED"));
     }
 
     private AiConnection existing(AiConnection.Scope scope) {

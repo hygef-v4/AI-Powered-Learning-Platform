@@ -66,15 +66,16 @@ public class AiConnectionRepository {
                 .param("ownerId", ownerId).query(AiConnectionRepository::map).list();
     }
 
+    /** Khóa chung dùng cho provider: khóa đang bật tạo sớm nhất, không có thì khóa đang tắt tạo sớm nhất. */
     public Optional<AiConnection> findInstitutional(AiProvider provider) {
         return jdbc.sql("select " + COLUMNS + " from ai_connections where scope = 'INSTITUTIONAL' and provider = :provider "
-                        + "and status <> 'REVOKED'")
+                        + "and status <> 'REVOKED' order by (status = 'ACTIVE') desc, created_at, id limit 1")
                 .param("provider", provider.name()).query(AiConnectionRepository::map).optional();
     }
 
     public List<AiConnection> listInstitutional() {
         return jdbc.sql("select " + COLUMNS + " from ai_connections where scope = 'INSTITUTIONAL' and status <> 'REVOKED' "
-                        + "order by provider")
+                        + "order by provider, created_at, id")
                 .query(AiConnectionRepository::map).list();
     }
 

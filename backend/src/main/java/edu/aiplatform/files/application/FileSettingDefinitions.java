@@ -15,8 +15,7 @@ public class FileSettingDefinitions {
     @Bean
     SettingDefinition materialMaxSize() {
         return new SettingDefinition("files.material.maxSizeMb", SettingGroup.FILES, "Học liệu tối đa",
-                "Dung lượng tối đa của một tệp học liệu khi Chủ nhiệm môn hoặc giảng viên tải lên. "
-                        + "Tệp lớn hơn bị từ chối trước khi lưu.",
+                "Dung lượng tối đa mỗi tệp học liệu.",
                 SettingType.INTEGER, 50,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 50, SettingValidator.UNIT, "MB"));
     }
@@ -24,14 +23,14 @@ public class FileSettingDefinitions {
     @Bean
     SettingDefinition imageMaxSize() {
         return new SettingDefinition("files.documentImage.maxSizeMb", SettingGroup.FILES, "Ảnh trong tài liệu tối đa",
-                "Dung lượng tối đa của một ảnh chèn vào đề và bài làm", SettingType.INTEGER, 5,
+                "Dung lượng tối đa mỗi ảnh trong tài liệu.", SettingType.INTEGER, 5,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 5, SettingValidator.UNIT, "MB"));
     }
 
     @Bean
     SettingDefinition assignmentSourceMaxSize() {
         return new SettingDefinition("files.assignmentSource.maxSizeMb", SettingGroup.FILES,
-                "Tệp nguồn soạn bài tối đa", "Dung lượng tối đa mỗi tệp nguồn riêng chỉ dùng khi soạn bài bằng AI.",
+                "Tệp nguồn soạn bài tối đa", "Dung lượng tối đa mỗi tệp nguồn soạn bài AI.",
                 SettingType.INTEGER, 2,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 2, SettingValidator.UNIT, "MB"));
     }
