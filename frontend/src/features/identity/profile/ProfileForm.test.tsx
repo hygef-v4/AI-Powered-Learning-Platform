@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { Toaster } from "@/shared/ui/Toast";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { updateProfile } from "../api";
 import type { Profile } from "../types";
@@ -23,11 +24,11 @@ describe("ProfileForm", () => {
 
   it("email, vai trò, trạng thái chỉ đọc; chỉ sửa được tên và số điện thoại", () => {
     render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} onChangePassword={vi.fn()} />);
-    expect(screen.getByLabelText("Họ và tên")).not.toHaveAttribute("readonly");
-    expect(screen.getByLabelText("Số điện thoại")).not.toHaveAttribute("readonly");
-    expect(screen.getByLabelText("Email trường")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Họ và tên")).toBeEnabled();
+    expect(screen.getByLabelText("Số điện thoại")).toBeEnabled();
+    expect(screen.getByLabelText("Email trường")).toBeDisabled();
     expect(screen.getByLabelText("Email trường")).toHaveValue("taivm@fpt.edu.vn");
-    expect(screen.getByLabelText("Vai trò")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Vai trò")).toBeDisabled();
     expect(screen.getByText("Hoạt động")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
   });
@@ -36,7 +37,12 @@ describe("ProfileForm", () => {
     const saved = { ...PROFILE, displayName: "Tài Mới", phoneNumber: "0912345678" };
     updateMock.mockResolvedValue(saved);
     const onSaved = vi.fn();
-    render(<ProfileForm profile={PROFILE} onSaved={onSaved} onChangePassword={vi.fn()} />);
+    render(
+      <>
+        <ProfileForm profile={PROFILE} onSaved={onSaved} onChangePassword={vi.fn()} />
+        <Toaster />
+      </>,
+    );
 
     fireEvent.change(screen.getByLabelText("Họ và tên"), { target: { value: "  Tài Mới " } });
     fireEvent.change(screen.getByLabelText("Số điện thoại"), { target: { value: "0912345678" } });
@@ -44,7 +50,7 @@ describe("ProfileForm", () => {
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
     expect(updateMock).toHaveBeenCalledWith("Tài Mới", "0912345678");
-    expect(screen.getByRole("status")).toHaveTextContent("Đã lưu thay đổi.");
+    expect(await screen.findByRole("status")).toHaveTextContent("Đã lưu thay đổi");
   });
 
   it("số điện thoại sai định dạng bị chặn trước khi gọi API", () => {

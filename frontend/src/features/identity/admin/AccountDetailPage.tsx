@@ -11,6 +11,7 @@ import { Field, TextInput } from "@/shared/ui/inputs";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
+import { showToast } from "@/shared/ui/Toast";
 import { useSession } from "../session";
 import { ROLE_LABELS } from "../types";
 import { RoleChangeDialog, RoleChangeRejectedDialog, StatusToggleDialog, type RoleChangeBlock } from "./AccountDialogs";
@@ -30,7 +31,6 @@ export function AccountDetailPage() {
   const session = useSession();
   const [account, setAccount] = useState<AccountDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [popup, setPopup] = useState<Popup>(null);
 
   useEffect(() => {
@@ -52,7 +52,6 @@ export function AccountDetailPage() {
     try {
       setAccount(await getAccount(id));
     } catch {
-      setNotice(null);
       setLoadError("Không tải lại được tài khoản. Hãy tải lại trang.");
     }
   }
@@ -75,7 +74,7 @@ export function AccountDetailPage() {
   function changed(saved: AccountDetail, message: string) {
     setAccount(saved);
     setPopup(null);
-    setNotice(message);
+    showToast(message);
   }
 
   return (
@@ -90,23 +89,14 @@ export function AccountDetailPage() {
         }
         breadcrumb={[{ label: "Tài khoản", href: "/admin/accounts" }, { label: account.email }]}
       />
-      {notice && (
-        <Alert tone="success" role="status">
-          {notice}
-        </Alert>
-      )}
-
-      <div className="grid items-start gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
         <AccountEditForm
           key={account.version}
           account={account}
           isSelf={isSelf}
-          onSaved={(saved) => changed(saved, "Đã lưu thay đổi.")}
+          onSaved={(saved) => changed(saved, "Đã lưu thay đổi")}
           onConflict={reload}
-          onChangeRole={() => {
-            setNotice(null);
-            setPopup({ kind: "role" });
-          }}
+          onChangeRole={() => setPopup({ kind: "role" })}
         />
         <div className="flex flex-col gap-4">
           <Section title="Trạng thái">
@@ -122,24 +112,19 @@ export function AccountDetailPage() {
                 <dd className="text-ink">{formatDate(account.createdAt)}</dd>
               </div>
             </dl>
-            {isSelf && !reopening && <p className="text-xs text-muted">Không thể tự vô hiệu hóa chính mình.</p>}
             <Button
               icon={reopening ? "lock_open" : "block"}
+              variant={reopening || isSelf ? "secondary" : "danger"}
               disabled={isSelf && !reopening}
-              onClick={() => {
-                setNotice(null);
-                setPopup({ kind: "status" });
-              }}
-              className={reopening ? undefined : "border-danger text-danger hover:bg-danger-soft"}
+              onClick={() => setPopup({ kind: "status" })}
             >
               {reopening ? "Mở lại tài khoản" : "Vô hiệu hóa tài khoản"}
             </Button>
           </Section>
           <Section title="Lịch sử">
-            <p className="text-[13px] text-body">Lịch sử thay đổi của tài khoản xem ở Nhật ký audit.</p>
             <Link
-              href={`/admin/audit?objectType=ACCOUNT&objectId=${account.id}`}
-              className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
+              href={`/admin/audit?actorEmail=${encodeURIComponent(account.email)}&actorId=${account.id}`}
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
             >
               Mở Nhật ký audit của tài khoản
             </Link>
@@ -151,7 +136,7 @@ export function AccountDetailPage() {
         <RoleChangeDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => changed(saved, "Đã đổi vai trò. Người dùng sẽ phải đăng nhập lại.")}
+          onChanged={(saved) => changed(saved, "Đã đổi vai trò")}
           onConflict={reload}
           onBlocked={(block) => setPopup({ kind: "blocked", block })}
         />
@@ -161,11 +146,25 @@ export function AccountDetailPage() {
         <StatusToggleDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => changed(saved, saved.status === "DISABLED" ? "Đã vô hiệu hóa tài khoản." : "Đã mở lại tài khoản.")}
+          onChanged={(saved) => changed(saved, saved.status === "DISABLED" ? "Đã vô hiệu hóa tài khoản" : "Đã mở lại tài khoản")}
           onConflict={reload}
         />
       )}
     </>
+  );
+}
+
+/** Ô không sửa được: `disabled` (không bấm, không focus), viền nhạt, nền chìm, chữ nhạt, khóa nhỏ như trang Hồ sơ. */
+function LockedInput({ id, value, className, lock = true }: { id: string; value: string; className?: string; lock?: boolean }) {
+  return (
+    <TextInput
+      id={id}
+      value={value}
+      disabled
+      wrapperClassName={`border-line-strong! bg-shell! opacity-100! cursor-not-allowed ${className ?? ""}`}
+      className="cursor-not-allowed text-muted"
+      suffix={lock ? <Icon name="lock" size={16} className="text-faint" /> : undefined}
+    />
   );
 }
 
@@ -237,28 +236,13 @@ function AccountEditForm({
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </Field>
-          <Field label="Email trường" htmlFor={emailId} hint="Email không đổi được">
-            <TextInput
-              id={emailId}
-              value={account.email}
-              readOnly
-              aria-readonly="true"
-              wrapperClassName="bg-shell"
-              className="text-muted"
-              suffix={<Icon name="lock" size={18} className="text-muted" />}
-            />
+          <Field label="Email trường" htmlFor={emailId}>
+            <LockedInput id={emailId} value={account.email} className="min-w-0" />
           </Field>
-          <Field label="Vai trò" htmlFor={roleId} hint={isSelf ? "Không thể tự đổi vai trò của chính mình." : undefined}>
-            <div className="flex gap-2">
-              <TextInput
-                id={roleId}
-                value={ROLE_LABELS[account.role]}
-                readOnly
-                aria-readonly="true"
-                wrapperClassName="flex-1 bg-shell"
-                className="text-muted"
-              />
-              <Button icon="swap_horiz" onClick={onChangeRole} disabled={isSelf}>
+          <Field label="Vai trò" htmlFor={roleId}>
+            <div className="flex min-w-0 gap-2">
+              <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" lock={false} />
+              <Button onClick={onChangeRole} disabled={isSelf} className="h-10 shrink-0 px-3">
                 Đổi vai trò
               </Button>
             </div>

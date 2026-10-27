@@ -22,6 +22,7 @@ function initialFilter(params: URLSearchParams | null): AuditFilterForm {
     ...defaultFilter(),
     objectType: params?.get("objectType") ?? "",
     objectId: params?.get("objectId") ?? "",
+    actorEmail: params?.get("actorEmail") ?? "",
   };
 }
 
@@ -30,7 +31,8 @@ function emptyPage(): Page {
 }
 
 /**
- * Màn #14 Audit Log (UC 13): chỉ đọc, mặc định 7 ngày gần nhất; mở từ Account Detail thì lọc sẵn đối tượng.
+ * Màn #14 Audit Log (UC 13): chỉ đọc, mặc định 7 ngày gần nhất; mở từ Account Detail thì điền sẵn Người thực hiện là
+ * email của tài khoản đó.
  * Đổi bộ lọc là tra cứu luôn (không có nút Lọc). Chỉ lần mở màn ghi một lần xem audit; lọc, xóa lọc, chuyển
  * trang gửi `recordView: false`.
  */
@@ -75,7 +77,8 @@ export function AuditLogPage() {
 
   /** Mở màn: tra cứu bộ lọc mặc định (và đối tượng trên URL) một lần; đây là lần duy nhất được ghi audit. */
   useEffect(() => {
-    const query = { ...toQuery(initialFilter(params), undefined, 0, PAGE_SIZE), recordView: true };
+    // Mở từ Account Detail: ô Người thực hiện điền sẵn email, kèm actorId nên không phải tra lại.
+    const query = { ...toQuery(initialFilter(params), params?.get("actorId") ?? undefined, 0, PAGE_SIZE), recordView: true };
     const id = ++request.current;
     applied.current = query;
     getAuditLogs(query).then(

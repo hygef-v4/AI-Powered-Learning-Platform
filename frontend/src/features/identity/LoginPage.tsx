@@ -19,7 +19,7 @@ export function LoginPage() {
   const params = useSearchParams();
   // Vừa đặt lại mật khẩu (`?reset=1`): báo một câu ngắn rồi tự ẩn.
   const [notice, setNotice] = useState<AuthNotice | null>(() =>
-    params.get("reset") === "1" ? { id: 1, text: "Đã đặt lại mật khẩu.", tone: "success" } : null,
+    params.get("reset") === "1" ? { id: 1, text: "Đã đặt lại mật khẩu", tone: "success" } : null,
   );
   const clearNotice = useCallback(() => setNotice(null), []);
   const next = safeNextPath(params.get("next"));

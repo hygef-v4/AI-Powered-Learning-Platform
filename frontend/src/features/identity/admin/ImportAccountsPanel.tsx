@@ -17,13 +17,15 @@ import { Pagination } from "./Pagination";
 const TEMPLATE = "email,display_name,role\nmasv@fpt.edu.vn,Nguyễn Văn A,STUDENT\n";
 const ROWS_PER_PAGE = 10;
 
-function formatSize(bytes: number) {
-  return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
+/** Lý do lỗi viết hoa chữ cái đầu. */
+function sentence(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
  * Nhập CSV (luồng phụ UC 09, BR-U01-80–85; design `a02b`): chọn tệp → kiểm từng dòng (không ghi) → xác nhận gửi lại cùng
- * tệp, backend kiểm lại và chỉ tạo dòng hợp lệ. Không có email nào được gửi.
+ * tệp, backend kiểm lại và chỉ tạo dòng hợp lệ. Không có email nào được gửi. Nhập xong thì xóa tệp, bảng và đóng thẻ.
+ * Cột Dòng đánh số từ 1 cho dòng dữ liệu đầu tiên (dòng tiêu đề của tệp không tính).
  */
 export function ImportAccountsPanel({ onImported, onClose }: { onImported: (created: number) => void; onClose: () => void }) {
   const input = useRef<HTMLInputElement>(null);
@@ -47,9 +49,16 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
     setError(null);
     try {
       const result = await action(target);
+      if (result.committed) {
+        setFile(null);
+        setPreview(null);
+        if (input.current) input.current.value = "";
+        onImported(result.validCount);
+        onClose();
+        return;
+      }
       setPreview(result);
       setPage(0);
-      if (result.committed) onImported(result.validCount);
     } catch (e) {
       setError(
         e instanceof ApiError && e.problem.status === 400
@@ -91,10 +100,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
         {file && (
           <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-line bg-shell px-3 py-2">
             <Icon name="description" size={20} className="text-primary-ink" />
-            <span className="min-w-0">
-              <span className="block truncate text-[13px] font-semibold text-ink">{file.name}</span>
-              <span className="block text-[11px] text-muted">{formatSize(file.size)}</span>
-            </span>
+            <span className="min-w-0 truncate text-[13px] font-semibold text-ink">{file.name}</span>
           </div>
         )}
         <Button icon="folder_open" onClick={() => input.current?.click()} disabled={busy}>
@@ -106,7 +112,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
         >
           <Icon name="download" size={16} />
-          Tải tệp mẫu (email, họ tên, vai trò)
+          Tải tệp mẫu
         </button>
       </div>
 
@@ -125,13 +131,8 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
               {preview.validCount} {preview.committed ? "đã tạo" : "hợp lệ"}
             </Pill>
             {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} lỗi</Pill>}
-            <span className="text-xs text-muted">
-              {preview.committed
-                ? `Đã tạo ${preview.validCount} tài khoản, bỏ qua ${preview.rejectedCount} dòng lỗi.`
-                : "Chỉ nhập các dòng hợp lệ; dòng lỗi được bỏ qua."}
-            </span>
           </div>
-          <TableFrame>
+          <TableFrame filledHead>
             <thead>
               <tr>
                 <Th className="w-16">Dòng</Th>
@@ -144,13 +145,13 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             <tbody>
               {rows.map((row) => (
                 <tr key={row.rowNumber}>
-                  <Td className="text-muted">{row.rowNumber}</Td>
+                  <Td className="text-muted">{row.rowNumber - 1}</Td>
                   <Td>{row.email}</Td>
                   <Td>{row.displayName}</Td>
                   <Td>{ROLE_LABELS[row.role as Role] ?? row.role}</Td>
                   <Td>
                     {row.reason ? (
-                      <Pill tone="danger">Lỗi: {IMPORT_REASON_LABELS[row.reason] ?? row.reason}</Pill>
+                      <Pill tone="danger">{sentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
                     ) : (
                       <Pill tone="success">{row.outcome === "CREATED" ? "Đã tạo" : "Hợp lệ"}</Pill>
                     )}
@@ -164,10 +165,6 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           )}
           {!preview.committed && (
             <>
-              <p className="text-xs text-muted">
-                Tài khoản mới ở trạng thái Chờ kích hoạt. Hệ thống <b className="text-body">không gửi email</b>; người dùng tự
-                kích hoạt bằng email trường.
-              </p>
               <div className="flex justify-end gap-2 border-t border-line pt-3.5">
                 <Button onClick={onClose} disabled={busy}>
                   Hủy
@@ -178,7 +175,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                   disabled={busy || preview.validCount === 0 || !file}
                   onClick={() => file && run(commitImport, file)}
                 >
-                  {`Xác nhận nhập ${preview.validCount} tài khoản`}
+                  {`Nhập ${preview.validCount} tài khoản`}
                 </Button>
               </div>
             </>

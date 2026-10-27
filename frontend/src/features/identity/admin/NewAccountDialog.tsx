@@ -70,7 +70,6 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
           label="Email trường"
           htmlFor={emailId}
           required
-          hint="Dùng làm định danh đăng nhập, không đổi được sau khi tạo."
           error={fieldError.email}
         >
           <TextInput
@@ -94,10 +93,6 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
             ))}
           </Select>
         </Field>
-        <Alert tone="info">
-          Tài khoản ở trạng thái Chờ kích hoạt. Người dùng tự kích hoạt bằng email trường và mã OTP; số điện thoại sửa sau ở
-          Chi tiết tài khoản.
-        </Alert>
         {error && (
           <Alert tone="danger" role="alert">
             {error}

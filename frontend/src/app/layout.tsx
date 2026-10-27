@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { connection } from "next/server";
 import "@/features/register";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
+import { Toaster } from "@/shared/ui/Toast";
 import { ClientRegistrations } from "./ClientRegistrations";
 import "./globals.css";
 import "./fonts.css";
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <ClientRegistrations />
         {children}
+        <Toaster />
       </body>
     </html>
   );

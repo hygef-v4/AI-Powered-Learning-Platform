@@ -9,6 +9,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
+import { showToast } from "@/shared/ui/Toast";
 import { STATUS_LABELS, STATUS_TONES } from "../admin/labels";
 import { updateProfile } from "../api";
 import { ROLE_LABELS, type Profile } from "../types";
@@ -55,7 +56,7 @@ export function ProfileForm({
       const saved = await updateProfile(name, phone);
       setDisplayName(saved.displayName);
       setPhoneNumber(saved.phoneNumber ?? "");
-      setMessage({ kind: "ok", text: "Đã lưu thay đổi." });
+      showToast("Đã lưu thay đổi");
       onSaved(saved);
     } catch (e) {
       const detail = e instanceof ApiError && e.problem.status === 400 ? e.problem.detail : undefined;
@@ -101,7 +102,6 @@ export function ProfileForm({
                 </LockedBox>
               </div>
             </div>
-            <p className="text-xs text-muted italic">Email, vai trò và trạng thái do nhà trường quản lý.</p>
           </div>
         </div>
 
@@ -124,23 +124,28 @@ export function ProfileForm({
   );
 }
 
+/**
+ * Ô không sửa được: `disabled` nên không bấm, không focus được; cùng dáng ô Trạng thái tài khoản (viền nhạt, nền chìm,
+ * chữ nhạt, khóa nhỏ) thay cho kiểu khóa mặc định của ô nhập.
+ */
+const LOCKED = "border-line-strong! bg-shell! opacity-100! cursor-not-allowed";
+
 function LockedInput({ id, value }: { id: string; value: string }) {
   return (
     <TextInput
       id={id}
       value={value}
-      readOnly
-      aria-readonly="true"
-      wrapperClassName="bg-shell"
-      className="text-muted"
-      suffix={<Icon name="lock" size={18} className="text-muted" />}
+      disabled
+      wrapperClassName={LOCKED}
+      className="cursor-not-allowed text-muted"
+      suffix={<Icon name="lock" size={16} className="text-faint" />}
     />
   );
 }
 
 function LockedBox({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-[38px] items-center justify-between rounded-lg border border-line-strong bg-shell px-3">
+    <div aria-disabled="true" className="flex h-10 cursor-not-allowed items-center justify-between rounded-lg border border-line-strong bg-shell px-3">
       {children}
       <Icon name="lock" size={16} className="text-faint" />
     </div>

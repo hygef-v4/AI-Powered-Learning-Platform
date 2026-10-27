@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import type { Role } from "@/shared/auth/roles";
 import { AVATAR_TONES, initials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
@@ -11,13 +11,14 @@ import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
 import { Select, TextInput } from "@/shared/ui/inputs";
 import { PageHeader } from "@/shared/ui/PageHeader";
+import { showToast } from "@/shared/ui/Toast";
 import { Pill } from "@/shared/ui/Pill";
 import { ClickableRow, TableFrame, Td, Th } from "@/shared/ui/Table";
 import { SOFT_TONES } from "@/shared/ui/tones";
 import { ROLE_LABELS, type AccountStatus } from "../types";
 import { listAccounts, type AccountPage } from "./api";
 import { ImportAccountsPanel } from "./ImportAccountsPanel";
-import { formatDate, STATUS_LABELS, STATUS_TONES } from "./labels";
+import { STATUS_LABELS, STATUS_TONES } from "./labels";
 import { NewAccountDialog } from "./NewAccountDialog";
 import { Pagination } from "./Pagination";
 
@@ -31,7 +32,8 @@ const ROLE_TABS: { value: Role | ""; label: string }[] = [
 const STATUSES: AccountStatus[] = ["ACTIVE", "PENDING", "DISABLED"];
 
 /**
- * Account List (UC 08, design `a02`): tab vai trò, lọc trạng thái, tìm email/tên, phân trang; bộ lọc nằm trên URL để Back
+ * Account List (UC 08, design `a02`): ô tìm email/tên ở hàng trên (gõ tới đâu lọc tới đó), tab vai trò, lọc trạng thái bên
+ * phải, phân trang; bộ lọc nằm trên URL để Back
  * giữ trạng thái. Mở New Account (UC 09, `a03`), Nhập CSV (`a02b`) và Account Detail (UC 10, `a04`).
  */
 export function AccountListPage() {
@@ -49,7 +51,6 @@ export function AccountListPage() {
   const [search, setSearch] = useState(q);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -76,10 +77,14 @@ export function AccountListPage() {
     router.replace(`${pathname}?${query}`);
   }
 
-  function submitSearch(event: FormEvent) {
-    event.preventDefault();
-    navigate({ q: search.trim(), page: 0 });
-  }
+  // Gõ tới đâu lọc tới đó: chờ một nhịp ngắn sau lần gõ cuối rồi mới đổi URL.
+  useEffect(() => {
+    const next = search.trim();
+    if (next === q) return;
+    const timer = setTimeout(() => navigate({ q: next, page: 0 }), 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   return (
     <>
@@ -98,15 +103,10 @@ export function AccountListPage() {
         }
       />
 
-      {notice && (
-        <Alert tone="success" role="status">
-          {notice}
-        </Alert>
-      )}
       {importing && (
         <ImportAccountsPanel
           onImported={(count) => {
-            setNotice(`Đã tạo ${count} tài khoản ở trạng thái Chờ kích hoạt. Không có email nào được gửi.`);
+            showToast(`Đã tạo ${count} tài khoản`);
             setReloadKey((k) => k + 1);
           }}
           onClose={() => setImporting(false)}
@@ -114,6 +114,16 @@ export function AccountListPage() {
       )}
 
       <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+        <div role="search">
+          <TextInput
+            type="search"
+            icon="search"
+            aria-label="Lọc theo email hoặc tên"
+            placeholder="Lọc theo email hoặc tên"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <div role="tablist" aria-label="Vai trò" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
             {ROLE_TABS.map((tab) => (
@@ -136,7 +146,7 @@ export function AccountListPage() {
             aria-label="Trạng thái"
             value={status}
             onChange={(e) => navigate({ status: e.target.value, page: 0 })}
-            wrapperClassName="w-44"
+            wrapperClassName="ml-auto w-48"
           >
             <option value="">Trạng thái: Tất cả</option>
             {STATUSES.map((s) => (
@@ -145,16 +155,6 @@ export function AccountListPage() {
               </option>
             ))}
           </Select>
-          <form onSubmit={submitSearch} role="search" className="ml-auto w-full sm:w-64">
-            <TextInput
-              type="search"
-              icon="search"
-              aria-label="Lọc theo email hoặc tên"
-              placeholder="Lọc theo email hoặc tên"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </form>
         </div>
 
         {error ? (
@@ -173,11 +173,11 @@ export function AccountListPage() {
           <TableFrame>
             <thead>
               <tr>
+                <Th className="w-12">STT</Th>
                 <Th>Họ tên</Th>
                 <Th>Email</Th>
                 <Th>Vai trò</Th>
                 <Th>Trạng thái</Th>
-                <Th>Ngày tạo</Th>
                 <Th className="w-10">
                   <span className="sr-only">Mở</span>
                 </Th>
@@ -191,8 +191,9 @@ export function AccountListPage() {
                   </Td>
                 </tr>
               )}
-              {data?.items.map((account) => (
+              {data?.items.map((account, index) => (
                 <ClickableRow key={account.id} onClick={() => router.push(`/admin/accounts/${account.id}`)}>
+                  <Td className="text-muted tabular-nums">{data.page * data.size + index + 1}</Td>
                   <Td>
                     <span className="flex items-center gap-2.5">
                       <span
@@ -218,7 +219,6 @@ export function AccountListPage() {
                   <Td>
                     <Pill tone={STATUS_TONES[account.status]}>{STATUS_LABELS[account.status]}</Pill>
                   </Td>
-                  <Td className="text-muted">{formatDate(account.createdAt)}</Td>
                   <Td className="text-faint">
                     <Icon name="chevron_right" size={18} />
                   </Td>
@@ -235,9 +235,7 @@ export function AccountListPage() {
           </TableFrame>
         )}
 
-        {data && data.total > 0 && (
-          <Pagination page={page} size={data.size} total={data.total} unit="tài khoản" onPage={(p) => navigate({ page: p })} />
-        )}
+        {data && data.total > 0 && <Pagination page={page} size={data.size} total={data.total} onPage={(p) => navigate({ page: p })} />}
       </section>
 
       {creating && (
@@ -245,7 +243,7 @@ export function AccountListPage() {
           onClose={() => setCreating(false)}
           onCreated={() => {
             setCreating(false);
-            setNotice("Đã thêm tài khoản ở trạng thái Chờ kích hoạt. Người dùng tự kích hoạt bằng email trường.");
+            showToast("Đã thêm tài khoản");
             setReloadKey((k) => k + 1);
           }}
         />

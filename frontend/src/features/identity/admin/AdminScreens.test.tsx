@@ -58,7 +58,7 @@ describe("NewAccountDialog", () => {
 
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(createAccount).toHaveBeenCalledWith("gv01@fpt.edu.vn", "Giảng viên 01", "TEACHER");
-    expect(screen.getByText(/Người dùng tự kích hoạt bằng email trường và mã OTP/)).toBeInTheDocument();
+    expect(screen.queryByText(/Người dùng tự kích hoạt/)).not.toBeInTheDocument();
   });
 
   it("email đã tồn tại thì báo lỗi rõ", async () => {
@@ -90,18 +90,20 @@ describe("ImportAccountsPanel", () => {
       committed: true,
     });
     const onImported = vi.fn();
-    render(<ImportAccountsPanel onImported={onImported} onClose={vi.fn()} />);
+    const onClose = vi.fn();
+    render(<ImportAccountsPanel onImported={onImported} onClose={onClose} />);
     const file = new File(["email,display_name,role\n"], "tk.csv", { type: "text/csv" });
 
     fireEvent.change(screen.getByLabelText("Chọn tệp CSV"), { target: { files: [file] } });
 
-    expect(await screen.findByText("Lỗi: email không thuộc tên miền trường")).toBeInTheDocument();
+    expect(await screen.findByText("Email không thuộc tên miền trường")).toBeInTheDocument();
     expect(validateImport).toHaveBeenCalledWith(file);
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận nhập 1 tài khoản" }));
+    fireEvent.click(screen.getByRole("button", { name: "Nhập 1 tài khoản" }));
 
     await waitFor(() => expect(onImported).toHaveBeenCalledWith(1));
     expect(commitImport).toHaveBeenCalledWith(file);
-    expect(screen.getByRole("status")).toHaveTextContent("Đã tạo 1 tài khoản");
+    expect(onClose).toHaveBeenCalled();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });
 
@@ -134,7 +136,9 @@ describe("AccountDetailPage", () => {
     render(<AccountDetailPage />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
-    fireEvent.change(screen.getByLabelText(/^Vai trò mới/), { target: { value: "TEACHER" } });
+    const role = within(screen.getByRole("dialog")).getByLabelText(/^Vai trò/);
+    expect(role).toHaveValue("STUDENT");
+    fireEvent.change(role, { target: { value: "TEACHER" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
 
     const dialog = await screen.findByRole("dialog", { name: "Không đổi được vai trò" });
@@ -153,8 +157,10 @@ describe("AccountDetailPage", () => {
     render(<AccountDetailPage />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
-    expect(screen.getByRole("dialog")).toHaveTextContent("sẽ bị đăng xuất");
-    fireEvent.change(screen.getByLabelText(/^Vai trò mới/), { target: { value: "TEACHER" } });
+    expect(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]).toBeDisabled();
+    const role = within(screen.getByRole("dialog")).getByLabelText(/^Vai trò/);
+    expect(role).toHaveValue("STUDENT");
+    fireEvent.change(role, { target: { value: "TEACHER" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
 
     expect(await screen.findByRole("dialog", { name: "Không đổi được vai trò" })).toHaveTextContent("lop-1");
@@ -176,7 +182,7 @@ describe("AccountDetailPage", () => {
 
     expect(await screen.findByRole("link", { name: "Mở Nhật ký audit của tài khoản" })).toHaveAttribute(
       "href",
-      "/admin/audit?objectType=ACCOUNT&objectId=acc-1",
+      "/admin/audit?actorEmail=sv01%40fpt.edu.vn&actorId=acc-1",
     );
   });
 });

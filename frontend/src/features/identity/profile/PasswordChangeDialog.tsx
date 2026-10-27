@@ -10,7 +10,7 @@ import { PasswordChecklist } from "../components/PasswordChecklist";
 import { SecretInput } from "../components/SecretInput";
 import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../passwordRules";
 
-export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.";
+export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu";
 
 /** Popup Password Change (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại (BR-U01-33). */
 export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
@@ -74,7 +74,7 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
       onClose={onClose}
       footer={
         <>
-          <Button type="submit" form={formId} variant="primary" icon="lock_reset" disabled={busy}>
+          <Button type="submit" form={formId} variant="primary" disabled={busy}>
             Đổi mật khẩu
           </Button>
         </>
@@ -91,7 +91,6 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
           <SecretInput id={confirmId} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </Field>
         <PasswordChecklist password={password} chips />
-        <p className="text-xs text-muted">Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại.</p>
         {error && (
           <p role="alert" className="text-[13px] text-danger">
             {error}

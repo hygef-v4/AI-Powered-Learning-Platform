@@ -7,7 +7,7 @@ import type { Role } from "@/shared/auth/roles";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
-import { Field, Select, TextInput } from "@/shared/ui/inputs";
+import { Field, Select } from "@/shared/ui/inputs";
 import { TableFrame, Td, Th } from "@/shared/ui/Table";
 import { ROLE_LABELS } from "../types";
 import { changeRole, changeStatus, type AccountDetail } from "./api";
@@ -47,19 +47,13 @@ function errorMessage(error: unknown) {
   return (error instanceof ApiError && error.problem.detail) || "Không thực hiện được, vui lòng thử lại.";
 }
 
-function Subtitle({ account }: { account: AccountDetail }) {
-  return (
-    <p className="-mt-1 text-xs text-muted">
-      {account.displayName} · {account.email}
-    </p>
-  );
-}
-
-/** Popup Đổi vai trò (UC 11, design `a04b`). Bị chặn vì còn phụ trách thì chuyển sang `RoleChangeRejectedDialog`. */
+/**
+ * Popup Đổi vai trò (UC 11, design `a04b`): một ô Vai trò, mặc định là vai trò hiện tại; chọn vai trò khác mới đổi được.
+ * Bị chặn vì còn phụ trách thì chuyển sang `RoleChangeRejectedDialog`.
+ */
 export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBlocked }: DialogProps & { onBlocked: (block: RoleChangeBlock) => void }) {
-  const currentId = useId();
-  const nextId = useId();
-  const [role, setRole] = useState<Role>(ROLES.find((r) => r !== account.role)!);
+  const roleId = useId();
+  const [role, setRole] = useState<Role>(account.role);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,27 +88,21 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
       onClose={onClose}
       footer={
         <>
-          <Button variant="primary" onClick={confirm} disabled={busy}>
+          <Button variant="primary" onClick={confirm} disabled={busy || role === account.role}>
             Đổi vai trò
           </Button>
         </>
       }
     >
-      <Subtitle account={account} />
-      <Field label="Vai trò hiện tại" htmlFor={currentId}>
-        <TextInput id={currentId} value={ROLE_LABELS[account.role]} readOnly wrapperClassName="bg-shell" className="text-muted" />
-      </Field>
-      <Field label="Vai trò mới" htmlFor={nextId} required>
-        <Select id={nextId} value={role} onChange={(e) => setRole(e.target.value as Role)}>
-          {ROLES.filter((r) => r !== account.role).map((r) => (
+      <Field label="Vai trò" htmlFor={roleId}>
+        <Select id={roleId} value={role} onChange={(e) => setRole(e.target.value as Role)}>
+          {ROLES.map((r) => (
             <option key={r} value={r}>
               {ROLE_LABELS[r]}
             </option>
           ))}
         </Select>
       </Field>
-      <Alert tone="warning">Người dùng sẽ bị đăng xuất khỏi mọi thiết bị và phải đăng nhập lại với quyền mới.</Alert>
-      <p className="text-xs text-muted">Không hạ quyền được chính mình.</p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -124,41 +112,37 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
   );
 }
 
-/** Popup Không đổi được vai trò (design `a04c`): liệt kê môn, lớp còn giữ theo mã và tên; môn có link tới trang môn. */
+/** Popup Không đổi được vai trò (design `a04c`): một câu ngắn và bảng Loại, Mã, Tên; môn có link tới trang môn. */
 export function RoleChangeRejectedDialog({ account, block, onClose }: { account: AccountDetail; block: RoleChangeBlock; onClose: () => void }) {
   const items = [
-    ...block.subjects.map((item) => ({ kind: "Môn", item, href: `/admin/subjects/${item.id}`, held: ROLE_LABELS.SUBJECT_MANAGER })),
-    ...block.classes.map((item) => ({ kind: "Lớp", item, href: null, held: ROLE_LABELS.TEACHER })),
+    ...block.subjects.map((item) => ({ kind: "Môn", item, href: `/admin/subjects/${item.id}` })),
+    ...block.classes.map((item) => ({ kind: "Lớp", item, href: null })),
   ];
   return (
     <Dialog open title="Không đổi được vai trò" icon="block" tone="danger" onClose={onClose} footer={<Button onClick={onClose}>Đóng</Button>}>
-      <Subtitle account={account} />
       <Alert tone="danger" role="alert">
-        {account.displayName} đang giữ các môn và lớp dưới đây. Hãy chuyển cho người khác trước khi đổi vai trò{" "}
-        {ROLE_LABELS[block.from]} → {ROLE_LABELS[block.to]}.
+        {account.displayName} đang giữ các môn hoặc lớp.
       </Alert>
-      <TableFrame>
+      <TableFrame filledHead>
         <thead>
           <tr>
             <Th>Loại</Th>
             <Th>Mã</Th>
             <Th>Tên</Th>
-            <Th>Vai trò đang giữ</Th>
           </tr>
         </thead>
         <tbody>
-          {items.map(({ kind, item, href, held: role }) => (
+          {items.map(({ kind, item, href }) => (
             <tr key={`${kind}-${item.id}`}>
               <Td>{kind}</Td>
               <Td>
                 {item.code ? (
-                  href ? <Link href={href} className="font-medium text-primary-ink hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
+                  href ? <Link href={href} className="font-medium text-ink hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
                 ) : (
                   <span className="font-mono text-xs break-all text-muted" title="Chưa tải được mã">{item.id}</span>
                 )}
               </Td>
               <Td>{item.name ?? "—"}</Td>
-              <Td>{role}</Td>
             </tr>
           ))}
         </tbody>
@@ -206,17 +190,7 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
           <b className="text-ink">{account.displayName}</b> đăng nhập lại được. Tài khoản đã từng kích hoạt về Hoạt động; tài
           khoản chưa kích hoạt về Chờ kích hoạt.
         </p>
-      ) : (
-        <>
-          <p>
-            <b className="text-ink">{account.displayName}</b> sẽ bị đăng xuất và không đăng nhập được cho tới khi được mở lại.
-            Dữ liệu bài làm vẫn được giữ.
-          </p>
-          <p className="text-xs text-muted">
-            Không áp dụng cho chính mình. Nếu đây là Quản trị viên cuối cùng đang hoạt động, hệ thống từ chối và hiện lý do.
-          </p>
-        </>
-      )}
+      ) : null}
       {error && (
         <Alert tone="danger" role="alert">
           {error}

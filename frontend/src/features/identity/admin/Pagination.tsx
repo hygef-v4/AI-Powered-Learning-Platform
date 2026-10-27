@@ -13,28 +13,24 @@ export function pageWindow(current: number, total: number): (number | "gap")[] {
   return result;
 }
 
-/** Dòng chân bảng (design `a02`): "Hiển thị a–b trong N <đơn vị>" và nút trang ‹ 1 2 … n ›. Trang đếm từ 0. */
+/** Nút trang ‹ 1 2 … n › ở cuối bảng, căn giữa; một trang thì không hiện. Trang đếm từ 0. */
 export function Pagination({
   page,
   size,
   total,
-  unit,
   onPage,
 }: {
   page: number;
   size: number;
   total: number;
-  unit: string;
+  /** Giữ để tương thích, không còn dòng "Hiển thị a–b trong N". */
+  unit?: string;
   onPage: (page: number) => void;
 }) {
   const totalPages = Math.max(1, Math.ceil(total / size));
-  const from = total === 0 ? 0 : page * size + 1;
-  const to = Math.min(total, (page + 1) * size);
+  if (totalPages <= 1) return null;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted">
-      <span>
-        Hiển thị {from}–{to} trong {total} {unit}
-      </span>
+    <div className="flex justify-center px-1 text-xs text-muted">
       <nav aria-label="Phân trang" className="flex items-center gap-1">
         <PageButton label="Trang trước" disabled={page === 0} onClick={() => onPage(page - 1)}>
           <Icon name="chevron_right" size={16} className="rotate-180" />
