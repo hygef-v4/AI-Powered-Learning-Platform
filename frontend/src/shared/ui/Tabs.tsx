@@ -36,7 +36,7 @@ export function Tabs<T extends string>({
   return (
     <div ref={listRef} role="tablist" aria-label={label}
       className={cx("relative flex gap-6 overflow-x-auto border-b border-line [scrollbar-width:none]", className)}>
-      {items.map((item) => {
+      {items.map((item, index) => {
         const on = item.key === value;
         return (
           <button
@@ -44,7 +44,16 @@ export function Tabs<T extends string>({
             type="button"
             role="tab"
             aria-selected={on}
+            tabIndex={on ? 0 : -1}
             onClick={() => onChange(item.key)}
+            onKeyDown={(event) => {
+              // Mũi tên trái/phải chuyển sang tab bên cạnh và đưa focus theo.
+              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+              event.preventDefault();
+              const next = (index + (event.key === "ArrowRight" ? 1 : -1) + items.length) % items.length;
+              onChange(items[next]!.key);
+              listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus();
+            }}
             data-testid={testIdPrefix ? `${testIdPrefix}${item.key}` : undefined}
             className={cx(
               "flex items-center gap-1.5 py-3 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",

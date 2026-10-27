@@ -1,14 +1,25 @@
-import { Section } from "@/shared/ui";
+import { Button, Pill, Section } from "@/shared/ui";
 import type { SubjectDetail } from "./types";
 
-export function SubjectMetaCard({ subject }: { subject: SubjectDetail }) {
+/** Thẻ Trạng thái của môn, cùng kiểu thẻ Trạng thái ở Chi tiết tài khoản: trạng thái, ngày tạo, nút lưu trữ / mở lại. */
+export function SubjectMetaCard({ subject, disabled = false, onStatus }: { subject: SubjectDetail; disabled?: boolean; onStatus: () => void }) {
   const created = new Date(subject.createdAt);
   const createdLabel = Number.isNaN(created.getTime()) ? "Không khả dụng" : new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric" }).format(created);
-  return <Section title="Thông tin môn">
-    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-xs">
-      <dt className="text-muted">Mã môn</dt><dd className="font-mono font-semibold">{subject.code}</dd>
-      <dt className="text-muted">Ngày tạo</dt><dd>{createdLabel}</dd>
-      <dt className="text-muted">Số lớp</dt><dd>{subject.classCount === null ? "Không khả dụng" : subject.classCount}</dd>
+  const archived = subject.status === "ARCHIVED";
+  return <Section title="Trạng thái">
+    <dl className="flex flex-col gap-2.5 text-[13px]">
+      <div className="flex items-center justify-between">
+        <dt className="text-muted">Trạng thái</dt>
+        <dd><Pill tone={archived ? "neutral" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></dd>
+      </div>
+      <div className="flex items-center justify-between">
+        <dt className="text-muted">Ngày tạo</dt>
+        <dd className="text-ink">{createdLabel}</dd>
+      </div>
     </dl>
+    <Button id="subject-status-open" icon={archived ? "lock_open" : "archive"} variant={archived ? "secondary" : "danger"}
+      disabled={disabled} onClick={onStatus} data-testid="subject-status-open">
+      {archived ? "Mở lại môn học" : "Lưu trữ môn học"}
+    </Button>
   </Section>;
 }

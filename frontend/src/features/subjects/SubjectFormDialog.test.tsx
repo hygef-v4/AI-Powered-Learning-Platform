@@ -111,10 +111,11 @@ describe("SubjectFormDialog UC17", () => {
     expect(onCreated).not.toHaveBeenCalled();
   });
 
-  it("cancel/Escape không gọi mutation", () => {
+  it("đóng bằng X/Escape không gọi mutation; không có nút Hủy", () => {
     const { onClose } = setup();
     fill();
-    fireEvent.click(screen.getByTestId("subject-create-cancel"));
+    expect(screen.queryByTestId("subject-create-cancel")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(2);
     expect(createSubject).not.toHaveBeenCalled();

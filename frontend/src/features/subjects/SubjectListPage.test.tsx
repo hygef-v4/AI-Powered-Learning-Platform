@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
+import { Toaster } from "@/shared/ui/Toast";
 import { createSubject, getSubjects } from "./api";
 import { SubjectListPage } from "./SubjectListPage";
 import type { SubjectDetail, SubjectListItem, SubjectPage } from "./types";
@@ -27,7 +28,7 @@ describe("SubjectListPage", () => {
 
   it("POST thành công mới đóng dialog/refetch; lỗi refetch không biến thành lỗi tạo và mở lại draft rỗng", async () => {
     vi.mocked(createSubject).mockResolvedValue({ ...item(), description: null, version: 1, createdAt: "2026-10-18T00:00:00Z", updatedAt: "2026-10-18T00:00:00Z" } satisfies SubjectDetail);
-    render(<SubjectListPage />);
+    render(<><SubjectListPage /><Toaster /></>);
     await screen.findByRole("link", { name: "Môn A" });
     fireEvent.click(screen.getByTestId("subjects-create-open"));
     fireEvent.change(screen.getByTestId("subject-create-code"), { target: { value: "ABC" } });
@@ -35,9 +36,8 @@ describe("SubjectListPage", () => {
     vi.mocked(getSubjects).mockRejectedValueOnce(new Error("refresh failed"));
     fireEvent.submit(screen.getByTestId("subject-create-form"));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByText(/Đã tạo môn ABC/)).toBeInTheDocument();
+    expect(await screen.findByText("Đã thêm môn học")).toBeInTheDocument();
     await screen.findByText(/Không tải được dữ liệu môn học/);
-    expect(screen.getByText(/Đã tạo môn ABC/)).toHaveFocus();
     expect(createSubject).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByTestId("subjects-read-retry"));
     await screen.findByRole("link", { name: "Môn A" });
@@ -60,7 +60,8 @@ describe("SubjectListPage", () => {
     render(<SubjectListPage />);
     expect(screen.getByRole("status")).toHaveTextContent("Đang tải");
     expect(await screen.findByRole("link", { name: "Môn A" })).toHaveAttribute("href", "/admin/subjects/subject-a");
-    expect(getSubjects).toHaveBeenCalledWith({ q: "", status: "ACTIVE", page: 0, size: 20 });
+    expect(getSubjects).toHaveBeenCalledWith({ q: "", status: undefined, page: 0, size: 20 });
+    expect(screen.getByTestId("subjects-filter-ALL")).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("1 môn học")).toBeInTheDocument();
     fireEvent.click(screen.getByText("ABC"));
     expect(push).toHaveBeenCalledWith("/admin/subjects/subject-a");
@@ -85,11 +86,11 @@ describe("SubjectListPage", () => {
     vi.mocked(getSubjects).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
     render(<SubjectListPage />);
     await act(async () => {});
-    fireEvent.change(screen.getByLabelText("Tìm môn theo mã hoặc tên"), { target: { value: "  mới  " } });
+    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên môn"), { target: { value: "  mới  " } });
     await act(async () => { vi.advanceTimersByTime(299); });
     expect(getSubjects).toHaveBeenCalledTimes(1);
     await act(async () => { vi.advanceTimersByTime(1); });
-    expect(getSubjects).toHaveBeenLastCalledWith({ q: "mới", status: "ACTIVE", page: 0, size: 20 });
+    expect(getSubjects).toHaveBeenLastCalledWith({ q: "mới", status: undefined, page: 0, size: 20 });
     await act(async () => { second.resolve(page([item({ name: "Kết quả mới" })])); });
     expect(screen.getByText("Kết quả mới")).toBeInTheDocument();
     await act(async () => { first.resolve(page([item({ name: "Kết quả cũ" })])); });
@@ -97,27 +98,29 @@ describe("SubjectListPage", () => {
     expect(screen.getByText("Kết quả mới")).toBeInTheDocument();
   });
 
-  it("đổi tab hoặc size reset trang, pagination dùng totalElements API", async () => {
+  it("đổi tab reset trang, thanh trang dùng totalElements API và có cột STT", async () => {
     vi.mocked(getSubjects).mockImplementation(async (query) => page([item()], { page: query?.page ?? 0, size: query?.size ?? 20,
       totalElements: 41, statusCounts: { ACTIVE: 41, ARCHIVED: 2 } }));
     render(<SubjectListPage />);
     await screen.findByText("Môn A");
-    expect(screen.getByTestId("subjects-page-prev")).toBeDisabled();
-    fireEvent.click(screen.getByTestId("subjects-page-next"));
-    await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: "ACTIVE", page: 1, size: 20 }));
-    await screen.findByText("Trang 2 / 3");
+    expect(screen.getByRole("columnheader", { name: "STT" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Trang trước" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
+    await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: undefined, page: 1, size: 20 }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Trang 2" })).toHaveAttribute("aria-current", "page"));
+    expect(within(screen.getByTestId("subjects-row-subject-a")).getByText("21")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subjects-filter-ARCHIVED"));
+    // Đổi tab: bảng cũ vẫn ở đó (mờ đi) trong lúc tải, không thay bằng dòng "Đang tải".
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.queryByText("Đang tải môn học…")).not.toBeInTheDocument();
     await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: "ARCHIVED", page: 0, size: 20 }));
-    await screen.findByText("Môn A");
-    fireEvent.change(screen.getByLabelText("Số môn mỗi trang"), { target: { value: "50" } });
-    await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: "ARCHIVED", page: 0, size: 50 }));
   });
 
   it("empty không bị coi là lỗi và không bật trang sau", async () => {
     vi.mocked(getSubjects).mockResolvedValue(page([]));
     render(<SubjectListPage />);
-    expect(await screen.findByText("Không tìm thấy môn học phù hợp.")).toBeInTheDocument();
-    expect(screen.getByTestId("subjects-page-next")).toBeDisabled();
+    expect(await screen.findByText("Không có môn học phù hợp với bộ lọc.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Trang sau" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -126,9 +129,9 @@ describe("SubjectListPage", () => {
     render(<SubjectListPage />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được dữ liệu");
     expect(screen.queryByText("internal SQL")).not.toBeInTheDocument();
-    expect(screen.queryByText("Không tìm thấy môn học phù hợp.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Không có môn học phù hợp với bộ lọc.")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
-    expect(await screen.findByText("Không tìm thấy môn học phù hợp.")).toBeInTheDocument();
+    expect(await screen.findByText("Không có môn học phù hợp với bộ lọc.")).toBeInTheDocument();
     expect(getSubjects).toHaveBeenCalledTimes(2);
   });
 

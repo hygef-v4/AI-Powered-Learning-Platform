@@ -16,14 +16,17 @@ beforeEach(() => { vi.mocked(updateSubject).mockReset().mockResolvedValue({ ...s
 afterEach(cleanup);
 
 describe("SubjectEditForm — UC19", () => {
-  it("mã readonly, tên trắng chặn API, cancel không PATCH", () => {
-    const { onCancel } = setup();
-    expect(screen.getByLabelText("Mã môn")).toHaveAttribute("readonly");
+  it("mã khóa, tên trắng chặn API, Hủy đưa về giá trị đang lưu và không PATCH", () => {
+    setup();
+    expect(screen.getByLabelText("Mã môn")).toBeDisabled();
+    expect(screen.getByTestId("subject-edit-save")).toBeDisabled();
+    expect(screen.getByTestId("subject-edit-cancel")).toBeDisabled();
     fireEvent.change(screen.getByTestId("subject-edit-name"), { target: { value: "  " } });
     fireEvent.submit(screen.getByTestId("subject-edit-form"));
     expect(screen.getByText(/Tên môn là bắt buộc/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subject-edit-cancel"));
-    expect(onCancel).toHaveBeenCalledTimes(1); expect(updateSubject).not.toHaveBeenCalled();
+    expect(screen.getByTestId("subject-edit-name")).toHaveValue("Môn A");
+    expect(updateSubject).not.toHaveBeenCalled();
   });
 
   it("PATCH chỉ metadata và version hiển thị, trim tên và giữ mô tả", async () => {

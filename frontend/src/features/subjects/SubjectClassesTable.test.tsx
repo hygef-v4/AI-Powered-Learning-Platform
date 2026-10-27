@@ -21,22 +21,24 @@ describe("SubjectClassesTable/Tab", () => {
     expect(within(table).queryByText("200")).not.toBeInTheDocument();
   });
 
-  it("lọc status và học kỳ không làm số đếm tổng môn đổi theo filter", () => {
+  it("lọc theo trạng thái và ô tìm mã hoặc tên lớp", () => {
     render(<SubjectClassesTab items={items} />);
     fireEvent.click(screen.getByTestId("subjects-classes-filter-OPEN"));
     expect(screen.getByText("Lớp mở")).toBeInTheDocument();
     expect(screen.queryByText("Lớp nháp")).not.toBeInTheDocument();
-    expect(screen.getByTestId("subjects-classes-filter-ALL")).toHaveTextContent("Tất cả (3)");
-    fireEvent.change(screen.getByLabelText("Lọc lớp theo học kỳ"), { target: { value: "2026-2" } });
+    expect(screen.getByTestId("subjects-classes-filter-OPEN")).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByLabelText("Lọc lớp theo học kỳ")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên lớp"), { target: { value: "lưu trữ" } });
     expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subjects-classes-filter-ARCHIVED"));
     expect(screen.getByText("Lớp lưu trữ")).toBeInTheDocument();
-    expect(screen.getByText("1 / 3 lớp")).toBeInTheDocument();
+    expect(screen.queryByText(/\/ 3 lớp/)).not.toBeInTheDocument();
   });
 
   it("verified0 hiển thị empty thật và bộ lọc vẫn dùng được", () => {
     render(<SubjectClassesTab items={[]} />);
     expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
-    expect(screen.getByTestId("subjects-classes-filter-ALL")).toHaveTextContent("Tất cả (0)");
+    fireEvent.click(screen.getByTestId("subjects-classes-filter-DRAFT"));
+    expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
   });
 });

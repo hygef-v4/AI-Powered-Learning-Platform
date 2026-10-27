@@ -3,8 +3,8 @@ import { initials } from "@/shared/layout/navigation";
 import type { SubjectDetail } from "./types";
 
 export function ManagerCard({ subject, onChange, disabled = false }: { subject: SubjectDetail; onChange?: () => void; disabled?: boolean }) {
-  return <Section title="Chủ nhiệm môn" actions={onChange && <Button id="subject-manager-open" size="sm" onClick={onChange} disabled={disabled} data-testid="subject-manager-open">{subject.managerId === null ? "Phân công" : "Đổi / bỏ"}</Button>}>
-    {subject.managerId === null ? <p className="text-sm text-muted">{subject.status === "ARCHIVED" ? "Môn đã lưu trữ không có chủ nhiệm. Mở lại môn để phân công." : "Chưa phân công chủ nhiệm môn."}</p>
+  return <Section title="Chủ nhiệm môn" actions={onChange && <Button id="subject-manager-open" size="sm" onClick={onChange} disabled={disabled} data-testid="subject-manager-open">{subject.managerId === null ? "Phân công" : "Đổi chủ nhiệm"}</Button>}>
+    {subject.managerId === null ? <p className="text-sm text-muted">Chưa phân công</p>
       : subject.manager === null ? <p className="text-sm text-muted">Không tra được thông tin chủ nhiệm môn.</p>
         : <div className="flex items-center gap-3">
           <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(subject.manager.displayName)}</span>

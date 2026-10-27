@@ -170,7 +170,7 @@ export function AccountListPage() {
             {error}
           </Alert>
         ) : (
-          <TableFrame>
+          <TableFrame filledHead>
             <thead>
               <tr>
                 <Th className="w-12">STT</Th>

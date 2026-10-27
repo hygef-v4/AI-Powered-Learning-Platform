@@ -16,10 +16,11 @@ beforeEach(() => { vi.mocked(changeSubjectStatus).mockReset().mockResolvedValue(
 afterEach(cleanup);
 
 describe("SubjectStatusActions/archive rejection", () => {
-  it("mở confirmation chưa gọi API; cancel không ghi", () => {
+  it("popup chỉ có tiêu đề và nút xác nhận; đóng bằng X không ghi", () => {
     const { onClose } = setup();
     expect(changeSubjectStatus).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId("subject-status-cancel"));
+    expect(screen.getByRole("dialog", { name: "Lưu trữ môn học?" })).not.toHaveTextContent(/lớp|chủ nhiệm/i);
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     expect(onClose).toHaveBeenCalledTimes(1); expect(changeSubjectStatus).not.toHaveBeenCalled();
   });
 

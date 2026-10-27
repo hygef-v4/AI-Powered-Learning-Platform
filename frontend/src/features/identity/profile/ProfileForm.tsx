@@ -7,6 +7,7 @@ import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
+import { LockedInput } from "@/shared/ui/LockedInput";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
 import { showToast } from "@/shared/ui/Toast";
@@ -121,25 +122,6 @@ export function ProfileForm({
         </div>
       </form>
     </Section>
-  );
-}
-
-/**
- * Ô không sửa được: `disabled` nên không bấm, không focus được; cùng dáng ô Trạng thái tài khoản (viền nhạt, nền chìm,
- * chữ nhạt, khóa nhỏ) thay cho kiểu khóa mặc định của ô nhập.
- */
-const LOCKED = "border-line-strong! bg-shell! opacity-100! cursor-not-allowed";
-
-function LockedInput({ id, value }: { id: string; value: string }) {
-  return (
-    <TextInput
-      id={id}
-      value={value}
-      disabled
-      wrapperClassName={LOCKED}
-      className="cursor-not-allowed text-muted"
-      suffix={<Icon name="lock" size={16} className="text-faint" />}
-    />
   );
 }
 

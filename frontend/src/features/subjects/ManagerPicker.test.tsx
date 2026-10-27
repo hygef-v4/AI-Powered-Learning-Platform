@@ -42,7 +42,7 @@ describe("ManagerPicker boundary", () => {
     expect(search).toHaveBeenCalledWith({ q: "", limit: 20 });
     fireEvent.click(screen.getByRole("option", { name: /Chủ nhiệm A/ }));
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("combobox")).toHaveValue("Chủ nhiệm A · a@example.test");
+    expect(screen.getByRole("combobox")).toHaveValue("a@example.test");
     fireEvent.click(screen.getByTestId("subject-manager-clear"));
     expect(screen.getByRole("combobox")).toHaveValue("");
   });

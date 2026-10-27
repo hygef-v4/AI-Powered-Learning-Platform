@@ -26,10 +26,10 @@ describe("SubjectDetailPage", () => {
 
   it("đọc detail, ngày Việt Nam, unknown count và chỉ tải lớp khi mở tab", async () => {
     render(<SubjectDetailPage subjectId="a" />);
-    expect(await screen.findByText("Mô tả môn")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("Mô tả môn")).toBeInTheDocument();
     expect(screen.getByText("02/10/2026")).toBeInTheDocument();
-    expect(screen.getByText("Chưa phân công chủ nhiệm môn.")).toBeInTheDocument();
-    expect(screen.getByText("Không khả dụng")).toBeInTheDocument();
+    expect(screen.getByText("Chưa phân công")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Lớp học" })).toBeInTheDocument();
     expect(getSubjectClasses).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("tab", { name: /Lớp học/ }));
     expect(await screen.findByText("Không có lớp phù hợp.")).toBeInTheDocument();
@@ -40,8 +40,9 @@ describe("SubjectDetailPage", () => {
     vi.mocked(getSubject).mockResolvedValue(detail({ managerId: "missing", status: "ARCHIVED" }));
     render(<SubjectDetailPage subjectId="a" />);
     expect(await screen.findByText("Không tra được thông tin chủ nhiệm môn.")).toBeInTheDocument();
-    expect(screen.queryByText("Chưa phân công chủ nhiệm môn.")).not.toBeInTheDocument();
-    expect(screen.getByText("Lưu trữ")).toBeInTheDocument();
+    expect(screen.queryByText("Chưa phân công")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Lưu trữ").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Mở lại môn học" })).toBeInTheDocument();
   });
 
   it("contact có tên/email dùng initials, không có upload avatar", async () => {
@@ -55,7 +56,7 @@ describe("SubjectDetailPage", () => {
   it("unavailable của provider có retry và khác verified empty", async () => {
     vi.mocked(getSubjectClasses).mockResolvedValueOnce({ availability: "UNAVAILABLE", items: null }).mockResolvedValueOnce({ availability: "AVAILABLE", items: [] });
     render(<SubjectDetailPage subjectId="a" />);
-    await screen.findByText("Mô tả môn");
+    await screen.findByDisplayValue("Mô tả môn");
     fireEvent.click(screen.getByRole("tab", { name: /Lớp học/ }));
     expect(await screen.findByText("Dữ liệu lớp hiện không khả dụng.")).toBeInTheDocument();
     expect(screen.queryByText("Không có lớp phù hợp.")).not.toBeInTheDocument();
@@ -67,14 +68,14 @@ describe("SubjectDetailPage", () => {
     vi.mocked(getSubject).mockRejectedValue(new ApiError({ status }));
     render(<SubjectDetailPage subjectId="a" />);
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(screen.queryByText("Mô tả môn")).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue("Mô tả môn")).not.toBeInTheDocument();
     expect(getSubjectClasses).not.toHaveBeenCalled();
   });
 
   it("403 khi mở lớp che cả dữ liệu môn; retry xác minh lại detail trước hiển thị", async () => {
     vi.mocked(getSubjectClasses).mockRejectedValueOnce(new ApiError({ status: 403 })).mockResolvedValueOnce({ availability: "AVAILABLE", items: [] });
     render(<SubjectDetailPage subjectId="a" />);
-    await screen.findByText("Mô tả môn");
+    await screen.findByDisplayValue("Mô tả môn");
     fireEvent.click(screen.getByRole("tab", { name: /Lớp học/ }));
     await screen.findByRole("alert");
     expect(screen.queryByText("Môn A")).not.toBeInTheDocument();
@@ -94,15 +95,15 @@ describe("SubjectDetailPage", () => {
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("a"));
     rerender(<SubjectDetailPage subjectId="b" />);
     await act(async () => { current.resolve(detail({ id: "b", name: "Môn B", description: "Mô tả B" })); });
-    expect(await screen.findByText("Mô tả B")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("Mô tả B")).toBeInTheDocument();
     await act(async () => { old.resolve(detail()); });
-    expect(screen.queryByText("Mô tả môn")).not.toBeInTheDocument();
-    expect(screen.getByText("Mô tả B")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("Mô tả môn")).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue("Mô tả B")).toBeInTheDocument();
   });
 
   it("chuyển tab bằng phím mũi tên và giữ focus", async () => {
     render(<SubjectDetailPage subjectId="a" />);
-    await screen.findByText("Mô tả môn");
+    await screen.findByDisplayValue("Mô tả môn");
     const information = screen.getByRole("tab", { name: "Thông tin" });
     information.focus();
     fireEvent.keyDown(information, { key: "ArrowRight" });

@@ -8,6 +8,7 @@ import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
+import { LockedInput } from "@/shared/ui/LockedInput";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
@@ -151,20 +152,6 @@ export function AccountDetailPage() {
         />
       )}
     </>
-  );
-}
-
-/** Ô không sửa được: `disabled` (không bấm, không focus), viền nhạt, nền chìm, chữ nhạt, khóa nhỏ như trang Hồ sơ. */
-function LockedInput({ id, value, className, lock = true }: { id: string; value: string; className?: string; lock?: boolean }) {
-  return (
-    <TextInput
-      id={id}
-      value={value}
-      disabled
-      wrapperClassName={`border-line-strong! bg-shell! opacity-100! cursor-not-allowed ${className ?? ""}`}
-      className="cursor-not-allowed text-muted"
-      suffix={lock ? <Icon name="lock" size={16} className="text-faint" /> : undefined}
-    />
   );
 }
 

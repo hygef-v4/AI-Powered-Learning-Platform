@@ -56,11 +56,10 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
   }
 
   return <Dialog open title="Thêm môn học" icon="menu_book" onClose={close} dismissible={!busy} size="lg"
-    footer={<><Button onClick={close} disabled={busy} data-testid="subject-create-cancel">Hủy</Button>
-      <Button type="submit" form={formId} variant="primary" disabled={busy} data-testid="subject-create-submit">{busy ? "Đang thêm…" : "Thêm môn học"}</Button></>}>
+    footer={<Button type="submit" form={formId} variant="primary" disabled={busy} data-testid="subject-create-submit">{busy ? "Đang thêm…" : "Thêm môn học"}</Button>}>
     <form id={formId} onSubmit={(event) => void submit(event)} noValidate aria-busy={busy} data-testid="subject-create-form" className="flex flex-col gap-3.5">
       <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-        <Field label="Mã môn" htmlFor={`${formId}-code`} required error={errors.code} hint="Tự viết hoa; chữ hoa, số hoặc dấu -; tối đa20 ký tự. Không đổi sau khi tạo.">
+        <Field label="Mã môn" htmlFor={`${formId}-code`} required error={errors.code}>
           <TextInput id={`${formId}-code`} value={code} maxLength={20} invalid={!!errors.code} onChange={(event) => { setCode(event.target.value.toUpperCase()); setErrors((current) => ({ ...current, code: undefined })); }} data-testid="subject-create-code" />
         </Field>
         <Field label="Tên môn" htmlFor={`${formId}-name`} required error={errors.name}>
@@ -68,7 +67,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
         </Field>
         <ManagerPicker value={manager} onChange={(value) => { setManager(value); setErrors((current) => ({ ...current, managerId: undefined })); }} disabled={busy} searchManagers={searchManagers} />
         {errors.managerId && <p role="alert" className="text-xs text-danger">{errors.managerId}</p>}
-        <Field label="Mô tả (tùy chọn)" htmlFor={`${formId}-description`} error={errors.description}>
+        <Field label="Mô tả" htmlFor={`${formId}-description`} error={errors.description}>
           <textarea id={`${formId}-description`} value={description} maxLength={2000} aria-invalid={!!errors.description} onChange={(event) => { setDescription(event.target.value); setErrors((current) => ({ ...current, description: undefined })); }} data-testid="subject-create-description"
             className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" />
         </Field>
