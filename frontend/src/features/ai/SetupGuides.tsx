@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Section, SettingsGroup } from "@/shared/ui";
+import { SettingsGroup } from "@/shared/ui";
 
 const KEY_STEPS: { provider: string; steps: string[] }[] = [
   {
@@ -33,8 +33,8 @@ const KEY_STEPS: { provider: string; steps: string[] }[] = [
 /** Hướng dẫn lấy khóa API từng nhà cung cấp; các bước có thể đổi theo trang của nhà cung cấp. */
 export function ApiSetupGuide() {
   return (
-    <Section title="Hướng dẫn lấy khóa API" icon="help_center" tone="info">
-      <div className="grid gap-3 md:grid-cols-3">
+    <SettingsGroup title="Hướng dẫn lấy khóa API">
+      <div className="mt-2 grid gap-3 md:grid-cols-3">
         {KEY_STEPS.map((guide) => (
           <div
             key={guide.provider}
@@ -51,11 +51,8 @@ export function ApiSetupGuide() {
           </div>
         ))}
       </div>
-      <p className="text-[11px] text-muted">
-        Không chia sẻ khóa cho người khác. Nền tảng chỉ lưu bản mã hóa và không
-        hiện lại khóa.
-      </p>
-    </Section>
+      <p className="mt-3 text-[11px] text-muted">Không chia sẻ khóa cho người khác.</p>
+    </SettingsGroup>
   );
 }
 
@@ -142,7 +139,7 @@ export function McpSetupGuide() {
       <ol className="list-decimal space-y-1 pl-4 text-[13px] text-body">
         <li>Bấm Kết nối agent mới, chọn quyền và hạn dùng, sao chép token.</li>
         <li>
-          Mở cấu hình MCP của ứng dụng agent (Streamable HTTP) và dán đoạn dưới,
+          Mở cấu hình MCP của ứng dụng agent và dán đoạn dưới,
           thay token.
         </li>
         <li>Khởi động lại agent.</li>
@@ -150,6 +147,7 @@ export function McpSetupGuide() {
       <div className="mt-3">
         <JsonCode text={mcpConfigSample(mcpEndpoint())} />
       </div>
+      <p className="mt-3 text-[11px] text-muted">Không chia sẻ token cho người khác.</p>
     </SettingsGroup>
   );
 }

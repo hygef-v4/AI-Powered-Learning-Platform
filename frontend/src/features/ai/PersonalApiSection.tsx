@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { PROVIDER_LABEL, PROVIDERS, formatShort, masked, type AiProvider } from "@/shared/ai";
+import { PROVIDER_LABEL, PROVIDERS, masked, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Pill, Section, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Button, Dialog, IconButton, SettingsGroup, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { errorMessage } from "./labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "./types";
+
+const OK = "Đạt";
 
 type Props = {
   connections: ConnectionView[];
@@ -16,14 +18,17 @@ type Props = {
   onRevoke: (provider: AiProvider) => Promise<void>;
 };
 
-/** Bảng khóa API cá nhân theo nhà cung cấp (UC 31); khóa luôn che, chỉ 4 ký tự cuối. */
+/**
+ * Khóa API cá nhân (UC 31), cùng kiểu bảng Khóa API của trường ở Cài đặt AI: mỗi nhà cung cấp một khóa, chỉ hiện khóa đã
+ * thêm; Kiểm tra, thay, thu hồi trên từng dòng. Khóa luôn che, chỉ 4 ký tự cuối.
+ */
 export function PersonalApiSection({ connections, providers, onSave, onTest, onRevoke }: Props) {
   const [editing, setEditing] = useState<{ provider: AiProvider; current: ConnectionView | null } | null>(null);
-  const [revoking, setRevoking] = useState<AiProvider | null>(null);
+  const [revoking, setRevoking] = useState<ConnectionView | null>(null);
   const [testing, setTesting] = useState<AiProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const byProvider = new Map(connections.map((c) => [c.provider, c]));
-  const taken = PROVIDERS.filter((p) => byProvider.get(p)?.configured);
+  const configured = PROVIDERS.flatMap((p) => connections.filter((c) => c.provider === p && c.configured));
+  const taken = configured.map((c) => c.provider);
   const firstMissing = PROVIDERS.find((p) => !taken.includes(p));
 
   const test = async (provider: AiProvider) => {
@@ -39,21 +44,19 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
   };
 
   const revoke = async (provider: AiProvider) => {
+    setRevoking(null);
     setError(null);
     try {
       await onRevoke(provider);
-      setRevoking(null);
     } catch {
-      setRevoking(null);
       setError("Không thu hồi được khóa, thử lại sau.");
     }
   };
 
   return (
-    <Section
-      title="API cá nhân"
-      icon="key"
-      actions={
+    <SettingsGroup
+      title="Khóa API cá nhân"
+      action={
         <Button variant="primary" size="sm" icon="add" onClick={() => firstMissing && setEditing({ provider: firstMissing, current: null })} disabled={!firstMissing}>
           Thêm khóa
         </Button>
@@ -64,58 +67,63 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
           {error}
         </Alert>
       )}
-      <TableFrame>
+      <TableFrame filledHead className="mt-2">
         <thead>
           <tr>
             <Th>Nhà cung cấp</Th>
             <Th>Khóa</Th>
             <Th>Mô hình</Th>
-            <Th>Kiểm tra gần nhất</Th>
-            <Th className="text-right">Thao tác</Th>
+            <Th className="w-[260px]">Kiểm tra</Th>
+            <Th className="w-[1%]">
+              <span className="sr-only">Thao tác</span>
+            </Th>
           </tr>
         </thead>
         <tbody>
-          {PROVIDERS.map((provider) => {
-            const c = byProvider.get(provider);
-            const configured = c?.configured === true;
+          {configured.length === 0 && (
+            <tr>
+              <Td colSpan={5} className="py-6 text-center! text-muted">
+                Chưa có khóa
+              </Td>
+            </tr>
+          )}
+          {configured.map((c) => {
+            const label = PROVIDER_LABEL[c.provider];
             return (
-              <tr key={provider}>
-                <Td className="font-semibold">{PROVIDER_LABEL[provider]}</Td>
-                <Td className="whitespace-nowrap">
-                  {configured ? <span className="font-mono text-xs">{masked(c?.keyHint)}</span> : <span className="text-muted">Chưa cấu hình</span>}
-                </Td>
-                <Td className="whitespace-nowrap">{configured ? c?.model : "—"}</Td>
+              <tr key={c.provider}>
+                <Td className="font-semibold whitespace-nowrap">{label}</Td>
+                <Td className="font-mono text-xs whitespace-nowrap">{masked(c.keyHint)}</Td>
+                <Td className="whitespace-nowrap">{c.model}</Td>
                 <Td>
-                  {configured && c?.lastTestAt ? (
-                    <Pill tone={c.lastTestResult === "Đạt" ? "success" : "danger"} className="max-w-[260px]">
-                      <span className="truncate" title={c.lastTestResult ?? undefined}>
-                        {c.lastTestResult ?? "—"}
+                  <div className="flex items-center justify-between gap-3">
+                    {c.lastTestResult ? (
+                      <span
+                        title={c.lastTestResult}
+                        className={cx(
+                          "min-w-0 truncate rounded-md px-2 py-0.5 text-[13px] font-medium",
+                          c.lastTestResult === OK ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
+                        )}
+                      >
+                        {c.lastTestResult}
                       </span>
-                      <span className="shrink-0">· {formatShort(c.lastTestAt)}</span>
-                    </Pill>
-                  ) : (
-                    <span className="text-muted">—</span>
-                  )}
+                    ) : (
+                      <span />
+                    )}
+                    <Button size="sm" className="shrink-0" disabled={testing !== null} onClick={() => void test(c.provider)}>
+                      {testing === c.provider ? "Đang kiểm tra…" : "Kiểm tra"}
+                    </Button>
+                  </div>
                 </Td>
                 <Td>
-                  <div className="flex justify-end gap-1.5">
-                    {configured ? (
-                      <>
-                        <Button size="sm" onClick={() => void test(provider)} disabled={testing !== null}>
-                          {testing === provider ? "Đang kiểm tra..." : "Kiểm tra"}
-                        </Button>
-                        <Button size="sm" onClick={() => setEditing({ provider, current: c ?? null })}>
-                          Thay khóa
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setRevoking(provider)}>
-                          Thu hồi
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" icon="add" onClick={() => setEditing({ provider, current: null })}>
-                        Thêm khóa
-                      </Button>
-                    )}
+                  <div className="flex items-center justify-end gap-1">
+                    <IconButton icon="edit" label={`Thay khóa ${label}`} disabled={testing !== null} onClick={() => setEditing({ provider: c.provider, current: c })} />
+                    <IconButton
+                      icon="trash"
+                      label={`Thu hồi khóa ${label}`}
+                      disabled={testing !== null}
+                      className="text-danger! hover:bg-danger-soft"
+                      onClick={() => setRevoking(c)}
+                    />
                   </div>
                 </Td>
               </tr>
@@ -123,7 +131,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
           })}
         </tbody>
       </TableFrame>
-      <p className="text-[11px] text-muted">Nút Kiểm tra gửi một yêu cầu rất nhỏ và có thể phát sinh chi phí nhỏ trên khóa của bạn.</p>
+      <p className="pt-2 text-[11px] text-muted">Kiểm tra có thể tính phí nhỏ.</p>
       {editing && (
         <ApiKeyDialog
           key={`${editing.provider}-${editing.current?.version ?? "new"}`}
@@ -140,7 +148,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
             editing.current?.configured
               ? async (provider) => {
                   const result = await onTest(provider);
-                  return { ok: result.lastTestResult === "Đạt", text: result.lastTestResult ?? "Không có kết quả" };
+                  return { ok: result.lastTestResult === OK, text: result.lastTestResult ?? "Không có kết quả" };
                 }
               : undefined
           }
@@ -153,18 +161,16 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
         tone="danger"
         onClose={() => setRevoking(null)}
         footer={
-          <>
-            <Button variant="danger" onClick={() => revoking && void revoke(revoking)}>
-              Thu hồi
-            </Button>
-          </>
+          <Button variant="danger" onClick={() => revoking && void revoke(revoking.provider)}>
+            Thu hồi
+          </Button>
         }
       >
         <p>
-          Khóa {revoking ? PROVIDER_LABEL[revoking] : ""} bị xóa khỏi hệ thống. Yêu cầu đang chờ dùng khóa này sẽ không chạy
-          được; bạn có thể thêm lại khóa sau.
+          Khóa {revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} sẽ bị xóa khỏi hệ thống. Thao tác
+          không hoàn tác được.
         </p>
       </Dialog>
-    </Section>
+    </SettingsGroup>
   );
 }

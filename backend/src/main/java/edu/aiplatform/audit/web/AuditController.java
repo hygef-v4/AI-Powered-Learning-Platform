@@ -57,6 +57,7 @@ public class AuditController {
     @GetMapping
     public AuditLogPage list(@AuthenticationPrincipal Actor actor,
                              @RequestParam(required = false) UUID actorId,
+                             @RequestParam(name = "actor", required = false) String actorText,
                              @RequestParam(required = false) String action,
                              @RequestParam(required = false) String objectType,
                              @RequestParam(required = false) String objectId,
@@ -70,7 +71,7 @@ public class AuditController {
             throw ApiException.badRequest("AUDIT_FILTER_INVALID", "Số trang hoặc kích thước trang không hợp lệ");
         }
         Page<AuditLogView> found = auditQuery.query(actor,
-                new AuditFilter(actorId, action, objectType, objectId, result, from, to), PageRequest.of(page, size),
+                new AuditFilter(actorId, action, objectType, objectId, result, from, to, actorText, null), PageRequest.of(page, size),
                 recordView);
         return new AuditLogPage(found.getContent().stream().map(AuditLogItem::of).toList(), found.getNumber(),
                 found.getSize(), found.getTotalElements(), found.getTotalPages());

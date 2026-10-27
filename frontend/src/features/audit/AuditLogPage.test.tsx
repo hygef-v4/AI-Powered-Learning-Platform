@@ -101,6 +101,18 @@ describe("AuditLogPage", () => {
     expect(cleared.get("recordView")).toBe("false");
   });
 
+  it("cột đối tượng hiện email hoặc tên thay cho loại đối tượng; không có tên thì hiện loại", async () => {
+    const onAccount = { ...ADMIN_ROW, objectLabel: "sv01@fpt.edu.vn" };
+    const onSubject = { ...ADMIN_ROW, id: "9f21c9e4-0b8d-4a51-a2c3-118e5f0d9b79", objectType: "SUBJECT", objectLabel: "SWD392 · Kiến trúc phần mềm" };
+    vi.stubGlobal("fetch", vi.fn(() => json(page([onAccount, onSubject, SYSTEM_ROW]))));
+    render(<AuditLogPage />);
+
+    expect(within(await screen.findByTestId(`audit-table-row-${onAccount.id}`)).getByText("sv01@fpt.edu.vn")).toBeInTheDocument();
+    expect(within(screen.getByTestId(`audit-table-row-${onSubject.id}`)).getByText("SWD392 · Kiến trúc phần mềm")).toBeInTheDocument();
+    expect(within(screen.getByTestId(`audit-table-row-${SYSTEM_ROW.id}`)).getByText("Bản sao lưu")).toBeInTheDocument();
+    expect(within(screen.getByTestId(`audit-table-row-${onAccount.id}`)).queryByText("Tài khoản")).not.toBeInTheDocument();
+  });
+
   it("việc do hệ thống làm hiện Hệ thống, kết quả hiện nhãn tiếng Việt", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json(page([SYSTEM_ROW]))));
     render(<AuditLogPage />);
@@ -124,34 +136,36 @@ describe("AuditLogPage", () => {
     expect(screen.getByTestId("audit-filters-object-type-select")).toHaveValue("ACCOUNT");
   });
 
-  it("email không khớp tài khoản nào thì báo lỗi dưới ô và không tra cứu", async () => {
-    const fetchMock = vi.fn((url: string) =>
-      url.startsWith("/api/v1/admin/accounts") ? json({ items: [{ id: "x", email: "khac@fpt.edu.vn" }] }) : json(page([])),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-    render(<AuditLogPage />);
-    await screen.findByTestId("audit-table-empty");
-
-    fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: "nguyenx@fpt.edu.vn" } });
-
-    expect(await screen.findByText("Không tìm thấy người thực hiện với email này.")).toBeInTheDocument();
-    expect(auditCalls(fetchMock)).toHaveLength(1);
-  });
-
-  it("email khớp thì gửi actorId của tài khoản đó", async () => {
-    const fetchMock = vi.fn((url: string) =>
-      url.startsWith("/api/v1/admin/accounts")
-        ? json({ items: [{ id: ADMIN_ROW.actorId, email: "PhongDT@fpt.edu.vn" }] })
-        : json(page([ADMIN_ROW])),
-    );
+  it("gõ dở email là lọc ngay theo phần đã gõ, xóa trống thì hiện lại mọi người", async () => {
+    const fetchMock = vi.fn(() => json(page([ADMIN_ROW])));
     vi.stubGlobal("fetch", fetchMock);
     render(<AuditLogPage />);
     await screen.findByText("phongdt@fpt.edu.vn");
 
-    fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: " phongdt@fpt.edu.vn " } });
-
+    fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: " phong" } });
     await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(2));
-    expect(new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams.get("actorId")).toBe(ADMIN_ROW.actorId);
+    const typed = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
+    expect(typed.get("actor")).toBe("phong");
+    expect(typed.has("actorId")).toBe(false);
+    expect((fetchMock.mock.calls as unknown[][]).some(([url]) => String(url).startsWith("/api/v1/admin/accounts"))).toBe(false);
+
+    fireEvent.change(screen.getByTestId("audit-filters-actor-input"), { target: { value: "" } });
+    await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(3));
+    expect(new URL(auditCalls(fetchMock)[2]!, "http://x").searchParams.has("actor")).toBe(false);
+  });
+
+  it("xóa trống cả ngày thì tra cứu mọi thời điểm thay vì không hiện gì", async () => {
+    const fetchMock = vi.fn(() => json(page([ADMIN_ROW])));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AuditLogPage />);
+    await screen.findByText("phongdt@fpt.edu.vn");
+
+    fireEvent.change(screen.getByTestId("audit-filters-from-input"), { target: { value: "" } });
+    fireEvent.change(screen.getByTestId("audit-filters-to-input"), { target: { value: "" } });
+    await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(2));
+    const all = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
+    expect(all.has("from")).toBe(false);
+    expect(all.has("to")).toBe(false);
   });
 
   it("bấm dòng mở chi tiết chỉ đọc kèm JSON, nút Đóng đóng popup", async () => {

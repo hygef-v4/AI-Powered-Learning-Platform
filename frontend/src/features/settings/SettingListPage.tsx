@@ -63,13 +63,13 @@ export function SettingListPage() {
                   className="my-1 flex items-center gap-4 rounded-xl border border-line bg-canvas p-4 transition-colors hover:border-line-strong hover:bg-sunken"
                 >
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">Kết nối AI</span>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">Cài đặt AI</span>
                   <Icon name="chevron_right" size={18} className="text-muted" />
                 </Link>
               ) : (
                 <div className="my-1 flex items-center gap-4 rounded-xl border border-line p-4 text-muted">
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold">Kết nối AI</span>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold">Cài đặt AI</span>
                   <Pill tone="warning">Không khả dụng</Pill>
                 </div>
               )}

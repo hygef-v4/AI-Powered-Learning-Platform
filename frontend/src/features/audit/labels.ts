@@ -125,10 +125,11 @@ export function dayEnd(date: string): string {
   return new Date(`${date}T23:59:59.999+07:00`).toISOString();
 }
 
-/** Form bộ lọc → tham số API (trừ người thực hiện, đổi riêng qua U01). */
+/** Form bộ lọc → tham số API; có actorId (mở từ Account Detail) thì lọc đúng tài khoản đó, không thì gửi chữ đã gõ. */
 export function toQuery(form: AuditFilterForm, actorId: string | undefined, page: number, size: number): AuditQuery {
   return {
     actorId,
+    actor: actorId ? undefined : form.actorEmail.trim() || undefined,
     action: form.action.trim() || undefined,
     objectType: form.objectType.trim() || undefined,
     objectId: form.objectId.trim() || undefined,

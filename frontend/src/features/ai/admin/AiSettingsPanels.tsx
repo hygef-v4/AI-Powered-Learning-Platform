@@ -16,7 +16,7 @@ const TABS: TabItem<Tab>[] = [
 ];
 
 /**
- * Trang "Kết nối AI" mở từ Setting List (UC 14, 15, 32, 33): tab Usage mở trước; tab Cài đặt gồm khóa của trường, hạn
+ * Trang "Cài đặt AI" mở từ Setting List (UC 14, 15, 32, 33): tab Usage mở trước; tab Cài đặt gồm khóa của trường, hạn
  * mức chung và mức riêng trong một thẻ; tab Agent MCP là agent của chính Admin. Mở từ thẻ hạn mức thì vào tab Cài đặt và cuộn tới phần hạn mức.
  */
 function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuota?: boolean; initialTab?: Tab }) {
@@ -28,11 +28,11 @@ function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuo
   return (
     <>
       <PageHeader
-        title="Kết nối AI"
+        title="Cài đặt AI"
         backHref="/admin/settings"
-        breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: "Kết nối AI" }]}
+        breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: "Cài đặt AI" }]}
       />
-      <Tabs items={TABS} value={tab} onChange={setTab} label="Kết nối AI" />
+      <Tabs items={TABS} value={tab} onChange={setTab} label="Cài đặt AI" />
       {tab === "usage" && <SharedUsageTab />}
       {tab === "mcp" && <AdminMcpTab />}
       {tab === "settings" && (
@@ -46,7 +46,7 @@ function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuo
   );
 }
 
-/** Đăng ký cho mục "Kết nối AI" trên Setting List; {@code ?tab=mcp} mở thẳng tab Agent MCP (đường dẫn cũ /admin/mcp). */
+/** Đăng ký cho mục "Cài đặt AI" trên Setting List; {@code ?tab=mcp} mở thẳng tab Agent MCP (đường dẫn cũ /admin/mcp). */
 export function AiConnectionsPanel({ tab }: { tab?: string }) {
   return <AiSettingsPage initialTab={TABS.some((t) => t.key === tab) ? (tab as Tab) : "usage"} />;
 }

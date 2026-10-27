@@ -47,7 +47,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
     total === 0 ? `Không có ${itemLabel}` : `Hiển thị ${NUMBER.format(from)}–${NUMBER.format(to)} trong ${NUMBER.format(total)} ${itemLabel}`;
 
   return (
-    <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-end")} data-testid={testId}>
+    <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-center")} data-testid={testId}>
       {showSummary && (
         <p className="text-[12.5px] text-muted">
           {summary}

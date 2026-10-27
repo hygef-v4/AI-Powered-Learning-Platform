@@ -1,67 +1,71 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { formatTokens, type AiProvider, type SourceOption } from "@/shared/ai";
-import { Alert, Button, ButtonLink, IconTile, PageHeader, SettingsCard } from "@/shared/ui";
-import {
-  createMcpCredential,
-  getConnections,
-  getMcpCredentials,
-  getProviders,
-  getSources,
-  revokeConnection,
-  revokeMcpCredential,
-  updateMcpCredential,
-  saveConnection,
-  testConnection,
-} from "./api";
-import { MAX_AGENTS } from "./labels";
-import { McpAgentSection } from "./McpAgentSection";
+import { useCallback, useEffect, useState } from "react";
+import type { AiProvider } from "@/shared/ai";
+import { Alert, Button, PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { useSession } from "@/features/identity/session";
+import { AdminMcpTab } from "./admin/AdminMcpPage";
+import { getConnections, getProviders, revokeConnection, saveConnection, testConnection } from "./api";
+import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
 import { PersonalApiSection } from "./PersonalApiSection";
-import { ApiSetupGuide, McpSetupGuide } from "./SetupGuides";
-import type { ConnectionView, McpCredential, ProviderInfo, SaveConnection } from "./types";
+import { ApiSetupGuide } from "./SetupGuides";
+import type { ConnectionView, ProviderInfo, SaveConnection } from "./types";
 
-type Data = {
-  connections: ConnectionView[];
-  providers: ProviderInfo[];
-  credentials: McpCredential[];
-  sources: SourceOption[];
+type Tab = "usage" | "settings" | "mcp";
+type Data = { connections: ConnectionView[]; providers: ProviderInfo[] };
+
+const loadAll = async (): Promise<Data> => {
+  const [connections, providers] = await Promise.all([getConnections(), getProviders()]);
+  return { connections, providers };
 };
 
-async function loadAll(mcpEnabled: boolean): Promise<Data> {
-  const [connections, providers, credentials, sources] = await Promise.all([
-    getConnections(),
-    getProviders(),
-    mcpEnabled ? getMcpCredentials() : Promise.resolve([]),
-    getSources().catch(() => [] as SourceOption[]),
-  ]);
-  return { connections, providers, credentials, sources };
-}
-
-/** Màn #6 AI Connection (UC 31, 32): API cá nhân và agent MCP của riêng người dùng. */
-export function AiConnectionPage() {
+/**
+ * Màn #6 AI Connection (UC 31–33), cùng bố cục trang Cài đặt AI của Admin: tab Usage mở trước (lịch sử của chính mình),
+ * tab API cá nhân là khóa API cá nhân và hướng dẫn trong một thẻ, tab Agent MCP (Teacher, Subject Manager) là agent của mình.
+ */
+export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   const session = useSession();
   const mcpEnabled = session.status === "authenticated" &&
     (session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
+  const tabs: TabItem<Tab>[] = [
+    { key: "usage", label: "Usage" },
+    { key: "settings", label: "API cá nhân" },
+    ...(mcpEnabled ? [{ key: "mcp" as const, label: "Agent MCP" }] : []),
+  ];
+  const [chosen, setChosen] = useState<Tab>(initialTab === "settings" || initialTab === "mcp" ? initialTab : "usage");
+  const tab = tabs.some((t) => t.key === chosen) ? chosen : "usage";
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Kết nối AI" />
+      <Tabs items={tabs} value={tab} onChange={setChosen} label="Kết nối AI" />
+      {tab === "usage" && <AiUsageHistoryPage mcpEnabled={mcpEnabled} />}
+      {tab === "settings" && <PersonalKeysTab />}
+      {tab === "mcp" && <AdminMcpTab />}
+    </div>
+  );
+}
+
+/** Tab API cá nhân: bảng khóa API cá nhân và hướng dẫn lấy khóa trong một thẻ. */
+function PersonalKeysTab() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(
     () =>
-      loadAll(mcpEnabled).then(
+      loadAll().then(
         (loaded) => {
           setData(loaded);
           setError(null);
         },
         () => setError("Không tải được kết nối AI, thử lại sau."),
       ),
-    [mcpEnabled],
+    [],
   );
 
   useEffect(() => {
     let active = true;
-    loadAll(mcpEnabled).then(
+    loadAll().then(
       (loaded) => {
         if (active) setData(loaded);
       },
@@ -72,7 +76,7 @@ export function AiConnectionPage() {
     return () => {
       active = false;
     };
-  }, [mcpEnabled]);
+  }, []);
 
   const save = async (provider: AiProvider, body: SaveConnection) => {
     await saveConnection(provider, body);
@@ -89,104 +93,19 @@ export function AiConnectionPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        title="Kết nối AI"
-        actions={
-          <ButtonLink href="/ai/usage" icon="history">
-            Lịch sử sử dụng AI
-          </ButtonLink>
-        }
-      />
+    <>
       {error && (
         <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
           {error}
         </Alert>
       )}
-      {!data && !error && <p className="text-[13px] text-muted">Đang tải...</p>}
+      {!data && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
       {data && (
-        <>
-          <AiSummaryCards data={data} mcpEnabled={mcpEnabled} />
-          <PersonalApiSection
-            connections={data.connections}
-            providers={data.providers}
-            onSave={save}
-            onTest={test}
-            onRevoke={revoke}
-          />
+        <SettingsCard>
+          <PersonalApiSection connections={data.connections} providers={data.providers} onSave={save} onTest={test} onRevoke={revoke} />
           <ApiSetupGuide />
-          {mcpEnabled && (
-            <SettingsCard>
-              <McpAgentSection
-                credentials={data.credentials}
-                onCreate={async (label, access, days) => {
-                  const created = await createMcpCredential(label, access, days);
-                  await reload();
-                  return created;
-                }}
-                onUpdate={async (id, label, access) => {
-                  await updateMcpCredential(id, label, access);
-                  await reload();
-                }}
-                onRevoke={async (id) => {
-                  await revokeMcpCredential(id);
-                  await reload();
-                }}
-              />
-              <McpSetupGuide />
-            </SettingsCard>
-          )}
-        </>
+        </SettingsCard>
       )}
-    </div>
-  );
-}
-
-/** Thẻ tóm tắt: hạn mức của trường hôm nay (chỉ khi được dùng), số khóa cá nhân, số agent còn hiệu lực. */
-export function AiSummaryCards({ data, mcpEnabled = true }: { data: Data; mcpEnabled?: boolean }) {
-  const shared = data.sources.find((s) => s.source === "SHARED");
-  // Backend chỉ trả nguồn SHARED cho người được dùng (Teacher, Subject Manager).
-  const showShared = shared !== undefined;
-  const keys = data.connections.filter((c) => c.configured).length;
-  const agents = data.credentials.filter((c) => c.status === "ACTIVE").length;
-  return (
-    <div className="grid gap-3 md:grid-cols-3">
-      {showShared && (
-        <Card icon="speed" title="Hạn mức của trường hôm nay">
-          {shared?.quota ? (
-            <>
-              <p className="font-display text-[26px] leading-none text-ink">
-                {formatTokens(shared.quota.used)} / {formatTokens(shared.quota.limit)}
-              </p>
-              <p className="text-xs text-muted">token đã dùng · đặt lại lúc 00:00</p>
-            </>
-          ) : (
-            <p className="text-xs text-muted">{shared?.reason ?? "Chưa cấu hình"}</p>
-          )}
-        </Card>
-      )}
-      <Card icon="key" title="API cá nhân">
-        <p className="font-display text-[26px] leading-none text-ink">{keys} khóa</p>
-        <p className="text-xs text-muted">Chi phí tính vào tài khoản nhà cung cấp của bạn</p>
-      </Card>
-      {mcpEnabled && <Card icon="smart_toy" title="Agent MCP">
-        <p className="font-display text-[26px] leading-none text-ink">
-          {agents} / {MAX_AGENTS}
-        </p>
-        <p className="text-xs text-muted">agent còn hiệu lực</p>
-      </Card>}
-    </div>
-  );
-}
-
-function Card({ icon, title, children }: { icon: "speed" | "key" | "smart_toy"; title: string; children: ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
-      <IconTile icon={icon} tone={icon === "smart_toy" ? "accent" : "primary"} />
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-muted">{title}</p>
-        {children}
-      </div>
-    </div>
+    </>
   );
 }

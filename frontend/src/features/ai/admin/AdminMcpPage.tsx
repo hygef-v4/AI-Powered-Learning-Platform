@@ -7,7 +7,7 @@ import { McpAgentSection } from "../McpAgentSection";
 import { McpSetupGuide } from "../SetupGuides";
 import type { McpCredential } from "../types";
 
-/** Tab Agent MCP của trang Kết nối AI (Admin): bảng agent và hướng dẫn trong một thẻ. */
+/** Tab Agent MCP (Cài đặt AI của Admin, Kết nối AI của Teacher/Subject Manager): bảng agent và hướng dẫn trong một thẻ. */
 export function AdminMcpTab() {
   const [credentials, setCredentials] = useState<McpCredential[] | null>(null);
   const [error, setError] = useState(false);

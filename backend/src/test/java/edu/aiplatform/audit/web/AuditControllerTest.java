@@ -116,6 +116,18 @@ class AuditControllerTest {
     }
 
     @Test
+    void partialActorTextIsPassedToTheQuery() throws Exception {
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
+
+        mvc.perform(get("/api/v1/admin/audit-logs").param("actor", "phong").param("recordView", "false"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<AuditFilter> filter = ArgumentCaptor.forClass(AuditFilter.class);
+        verify(auditQuery).query(any(), filter.capture(), any(), eq(false));
+        assertThat(filter.getValue().actor()).isEqualTo("phong");
+    }
+
+    @Test
     void malformedParametersReturnSafe400() throws Exception {
         for (String[] param : new String[][] {{"actorId", "not-a-uuid"}, {"result", "MAYBE"},
                 {"from", "hôm qua"}, {"page", "x"}, {"page", "-1"}, {"size", "0"}}) {

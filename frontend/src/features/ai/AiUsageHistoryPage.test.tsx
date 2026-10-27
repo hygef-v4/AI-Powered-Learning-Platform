@@ -65,10 +65,11 @@ describe("AiUsageHistoryPage", () => {
     render(<AiUsageHistoryPage />);
 
     expect(await screen.findByText("Tool: read_own_work")).toBeInTheDocument();
-    expect(screen.getAllByText("Không có số liệu").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Không có số liệu").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("1.200 / 300")).toBeInTheDocument();
     expect(screen.getByText("Tạo nháp câu hỏi")).toBeInTheDocument();
-    expect(screen.getByText("Nhà cung cấp đo")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Nguồn số liệu" })).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Mô hình" })).toBeInTheDocument();
     expect(screen.queryByText("0 / 0")).not.toBeInTheDocument();
   });
 

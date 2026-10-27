@@ -1,5 +1,6 @@
-import { AiUsageHistoryPage } from "@/features/ai";
+import { redirect } from "next/navigation";
 
+/** Đường dẫn cũ của Lịch sử sử dụng AI: nay là tab Usage trong trang Kết nối AI. */
 export default function Page() {
-  return <AiUsageHistoryPage />;
+  redirect("/ai/connection?tab=usage");
 }

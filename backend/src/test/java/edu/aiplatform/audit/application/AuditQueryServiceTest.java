@@ -34,6 +34,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -207,6 +208,23 @@ class AuditQueryServiceTest {
 
         assertThat(items).extracting(AuditLogView::objectLabel)
                 .containsExactly("sv@fpt.edu.vn", "SWD392 · Kiến trúc phần mềm", null);
+    }
+
+    @Test
+    void partialActorTextIsResolvedToMatchingAccounts() {
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        when(accounts.findAccounts("phong", EnumSet.allOf(Role.class), AuditQueryService.ACTOR_MATCH_LIMIT))
+                .thenReturn(List.of(contact(first, "phongdt@fpt.edu.vn"), contact(second, "phongnv@fpt.edu.vn")));
+        when(repository.count(any())).thenReturn(0L);
+
+        service.query(admin, new AuditFilter(null, null, null, null, null, null, null, " phong ", null),
+                PageRequest.of(0, 50), false);
+
+        ArgumentCaptor<AuditFilter> used = ArgumentCaptor.forClass(AuditFilter.class);
+        verify(repository).count(used.capture());
+        assertThat(used.getValue().actorIds()).containsExactly(first, second);
+        assertThat(used.getValue().actor()).isEqualTo("phong");
     }
 
     @Test

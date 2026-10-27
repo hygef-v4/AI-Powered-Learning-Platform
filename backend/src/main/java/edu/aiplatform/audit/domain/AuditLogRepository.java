@@ -70,6 +70,14 @@ public class AuditLogRepository {
             Map<String, Object> params = new LinkedHashMap<>();
             if (filter != null) {
                 add(conditions, params, "actor_id = :actorId", "actorId", filter.actorId());
+                if (filter.actorIds() != null) {
+                    // Không ai khớp phần email đã gõ thì không dòng nào khớp.
+                    if (filter.actorIds().isEmpty()) {
+                        conditions.add("1 = 0");
+                    } else {
+                        add(conditions, params, "actor_id in (:actorIds)", "actorIds", filter.actorIds());
+                    }
+                }
                 add(conditions, params, "action = :action", "action", filter.action());
                 add(conditions, params, "object_type = :objectType", "objectType", filter.objectType());
                 add(conditions, params, "object_id = :objectId", "objectId", filter.objectId());

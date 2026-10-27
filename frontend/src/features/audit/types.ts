@@ -11,6 +11,8 @@ export type AuditLogItem = {
   action: string;
   objectType: string | null;
   objectId: string | null;
+  /** Tên dễ đọc của đối tượng (email tài khoản, mã và tên môn hoặc lớp); rỗng thì hiện loại đối tượng. */
+  objectLabel?: string | null;
   result: AuditResult;
   reason: string | null;
   details: Record<string, unknown>;
@@ -26,6 +28,8 @@ export type AuditLogPage = {
 
 export type AuditQuery = {
   actorId?: string;
+  /** Một phần email hoặc tên người thực hiện; server tự tìm các tài khoản khớp. */
+  actor?: string;
   action?: string;
   objectType?: string;
   objectId?: string;

@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { PROVIDER_LABEL, PROVIDERS, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Button, Dialog, Field, IconButton, Select } from "@/shared/ui";
+import { Button, Dialog, Field, IconButton, Select, cx } from "@/shared/ui";
 import { PROVIDER_CONSOLE, errorMessage } from "./labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "./types";
 
@@ -160,7 +160,15 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
         </Select>
       </Field>
       <Field label="Khóa API" htmlFor={ids.key} required={!editing} error={error}>
-        <div className="flex h-11 items-center gap-1 rounded-xl border border-primary/40 bg-primary-soft py-1 pr-1 pl-3 focus-within:border-focus">
+        <div
+          className={cx(
+            "flex items-center gap-1 py-1 pr-1 pl-3 focus-within:border-focus",
+            // Thêm khóa: ô trắng như các ô nhập khác; Thay khóa: giữ ô cam của khóa đã lưu.
+            editing
+              ? "h-11 rounded-xl border border-primary/40 bg-primary-soft"
+              : "h-10 rounded-lg border border-field bg-surface transition-[border-color,box-shadow] duration-200 focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)] has-[input:disabled]:bg-sunken has-[input:disabled]:opacity-70",
+          )}
+        >
           <input
             id={ids.key}
             type={shown ? "text" : "password"}

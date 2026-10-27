@@ -22,6 +22,7 @@ import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,6 +52,9 @@ public class AuditQueryService implements IAuditQuery {
     static final int MAX_ACTION = 100;
     static final int MAX_OBJECT_TYPE = 50;
     static final int MAX_OBJECT_ID = 200;
+    static final int MAX_ACTOR_QUERY = 254;
+    /** Số tài khoản tối đa khớp phần email đã gõ; U01 trả tối đa 20. */
+    static final int ACTOR_MATCH_LIMIT = 20;
     private static final TypeReference<Map<String, Object>> MAP = new TypeReference<>() {
     };
 
@@ -87,7 +91,7 @@ public class AuditQueryService implements IAuditQuery {
     @Transactional
     public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page, boolean recordView) {
         requireAdmin(actor);
-        AuditFilter normalized = normalize(filter);
+        AuditFilter normalized = withActorMatches(normalize(filter));
         validatePage(page);
         long total = repository.count(normalized);
         List<AuditRow> rows = total == 0 ? List.of()
@@ -129,11 +133,23 @@ public class AuditQueryService implements IAuditQuery {
         }
         AuditFilter result = new AuditFilter(filter.actorId(), text(filter.action(), MAX_ACTION, "action"),
                 text(filter.objectType(), MAX_OBJECT_TYPE, "objectType"),
-                text(filter.objectId(), MAX_OBJECT_ID, "objectId"), filter.result(), filter.from(), filter.to());
+                text(filter.objectId(), MAX_OBJECT_ID, "objectId"), filter.result(), filter.from(), filter.to(),
+                text(filter.actor(), MAX_ACTOR_QUERY, "actor"), filter.actorIds());
         if (result.from() != null && result.to() != null && result.from().isAfter(result.to())) {
             throw invalid("Thời điểm bắt đầu phải trước thời điểm kết thúc");
         }
         return result;
+    }
+
+    /** Có phần email hoặc tên người thực hiện mà chưa có actorId: tra các tài khoản khớp qua U01 (không phân biệt hoa thường). */
+    private AuditFilter withActorMatches(AuditFilter filter) {
+        if (filter.actor() == null || filter.actorId() != null) {
+            return filter;
+        }
+        List<UUID> ids = accounts.findAccounts(filter.actor(), EnumSet.allOf(Role.class), ACTOR_MATCH_LIMIT).stream()
+                .map(AccountContact::accountId).toList();
+        return new AuditFilter(null, filter.action(), filter.objectType(), filter.objectId(), filter.result(),
+                filter.from(), filter.to(), filter.actor(), ids);
     }
 
     private static String text(String value, int max, String field) {

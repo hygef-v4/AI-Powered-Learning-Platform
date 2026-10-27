@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { PROVIDER_LABEL, formatTokens, type AiProvider } from "@/shared/ai";
 import { Alert, SettingsCard, SettingsGroup, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { getUsageSummary, type UsageSummary } from "./api";
+import { Big, CountCard, TokenCard } from "../UsageCards";
 
 const COMPACT = new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 });
 
@@ -119,7 +120,7 @@ export function SharedUsageTab() {
                 <Th>Giảng viên</Th>
                 <Th className="text-right">Yêu cầu</Th>
                 <Th className="text-right">Hôm nay / hạn mức ngày</Th>
-                <Th className="text-right">Token trong kỳ</Th>
+                <Th className="text-right">{`Token trong ${data.days} ngày`}</Th>
               </tr>
             </thead>
             <tbody>
@@ -153,7 +154,7 @@ export function SharedUsageTab() {
                 <Th>Nhà cung cấp</Th>
                 <Th>Mô hình</Th>
                 <Th className="text-right">Hôm nay</Th>
-                <Th className="text-right">Token trong kỳ</Th>
+                <Th className="text-right">{`Token trong ${data.days} ngày`}</Th>
               </tr>
             </thead>
             <tbody>
@@ -177,31 +178,5 @@ export function SharedUsageTab() {
         </SettingsGroup>
       </SettingsCard>
     </>
-  );
-}
-
-function Big({ children }: { children: ReactNode }) {
-  return <span className="text-[40px] leading-none font-bold tracking-[-0.02em] tabular-nums md:text-[48px]">{children}</span>;
-}
-
-/** Thẻ cam lớn: số token là phần nổi nhất. */
-function TokenCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-4 rounded-2xl bg-primary p-6 text-on-primary">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold opacity-90">{title}</p>
-        {action}
-      </div>
-      <div>{children}</div>
-    </div>
-  );
-}
-
-function CountCard({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="flex min-w-0 flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-6">
-      <p className="text-sm font-medium text-muted">{title}</p>
-      <p className="text-[40px] leading-none font-bold text-ink tabular-nums">{value}</p>
-    </div>
   );
 }

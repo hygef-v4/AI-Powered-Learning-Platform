@@ -77,8 +77,8 @@ describe("SettingListPage", () => {
     expect(screen.queryByText("Phòng Đào tạo")).not.toBeInTheDocument();
     expect(screen.queryByText(/Sao lưu cơ sở dữ liệu lên Google Drive/)).not.toBeInTheDocument();
     expect(screen.getAllByRole("tooltip")[0]).toHaveTextContent("Sao lưu cơ sở dữ liệu mỗi ngày");
-    expect(screen.getAllByText("Kết nối AI")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /Kết nối AI/ })).toHaveAttribute("href", "/admin/settings/sections/ai-connections");
+    expect(screen.getAllByText("Cài đặt AI")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /Cài đặt AI/ })).toHaveAttribute("href", "/admin/settings/sections/ai-connections");
     const titles = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
     expect(titles.slice(0, 2)).toEqual(["AI", "Tệp"]);
   });

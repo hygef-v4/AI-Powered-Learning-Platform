@@ -64,7 +64,15 @@ export function AuditTable({ data, onOpen, onPageChange }: Props) {
                   )}
                 </Td>
                 <Td className="px-3 font-bold">{actionLabel(item.action)}</Td>
-                <Td className="px-3">{item.objectType ? objectTypeLabel(item.objectType) : "—"}</Td>
+                <Td className="px-3" title={item.objectType ? objectTypeLabel(item.objectType) : undefined}>
+                  {item.objectLabel ? (
+                    <span className="[overflow-wrap:anywhere]">{item.objectLabel}</span>
+                  ) : item.objectType ? (
+                    objectTypeLabel(item.objectType)
+                  ) : (
+                    "—"
+                  )}
+                </Td>
                 <Td className="px-3">
                   <Pill tone={RESULT_LABELS[item.result].tone}>{RESULT_LABELS[item.result].label}</Pill>
                 </Td>

@@ -20,7 +20,7 @@ export const MCP_STATUS: Record<McpStatus, { text: string; tone: Tone }> = {
 };
 
 export const SOURCE_LABEL: Record<UsageSource, string> = {
-  SHARED: "Hạn mức trường",
+  SHARED: "API hệ thống",
   PERSONAL: "API cá nhân",
   MCP: "Agent MCP",
 };

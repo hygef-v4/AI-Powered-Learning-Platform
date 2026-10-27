@@ -6,6 +6,7 @@ import edu.aiplatform.audit.contract.AuditFilter;
 import edu.aiplatform.audit.contract.AuditResult;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +19,20 @@ class AuditLogRepositoryWhereTest {
                 new AuditFilter(null, null, null, null, null, null, null));
         assertThat(where.sql()).isEmpty();
         assertThat(where.params()).isEmpty();
+    }
+
+    @Test
+    void partialActorMatchesBecomeAnInListAndNoMatchMatchesNothing() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        AuditLogRepository.Where some = AuditLogRepository.Where.of(
+                new AuditFilter(null, null, null, null, null, null, null, "phong", List.of(a, b)));
+        assertThat(some.sql()).isEqualTo(" where actor_id in (:actorIds)");
+        assertThat(some.params()).containsEntry("actorIds", List.of(a, b));
+
+        AuditLogRepository.Where none = AuditLogRepository.Where.of(
+                new AuditFilter(null, null, null, null, null, null, null, "zzz", List.of()));
+        assertThat(none.sql()).isEqualTo(" where 1 = 0");
     }
 
     @Test
