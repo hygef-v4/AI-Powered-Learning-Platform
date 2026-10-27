@@ -195,9 +195,12 @@ h3 {
   color: var(--c-ink);
 }
 
-:focus-visible {
-  outline: 2px solid var(--c-focus);
-  outline-offset: 2px;
+/* Trong layer base để ô nhập nằm trong khung (outline-none) chỉ hiện viền của khung, không thêm viền thứ hai bên trong. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 2px;
+  }
 }
 
 * {

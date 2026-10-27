@@ -204,7 +204,9 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
     {creating && <ClassFormDialog loadTeachers={loadTeachers} subject={creating} teachers={[]}
       onClose={() => setCreating(null)}
       onSubmit={async input => {
-        await academicsApi.create(input);
+        // Không còn lớp nháp: tạo xong thì mở lớp luôn.
+        const created = await academicsApi.create(input);
+        await academicsApi.status(created.id, "OPEN", created.version);
         await state.refresh();
       }}/>}
   </>;

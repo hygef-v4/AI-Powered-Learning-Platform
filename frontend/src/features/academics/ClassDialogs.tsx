@@ -1,16 +1,23 @@
 "use client";
 
-import {useCandidates, type CandidateLoader} from "./useCandidates";
-import { useId, useState } from "react";
+import { type CandidateLoader } from "./useCandidates";
+import { useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
+import { Button, Dialog, showToast } from "@/shared/ui";
 import { studentDetailSections } from "./slots";
-import { Avatar, formatDate, Icon, Modal, operationError } from "./ui";
+import { PersonPicker } from "./PersonPicker";
+import { Avatar, formatDate, Modal, operationError } from "./ui";
 import type { ClassStatus, CourseClassView, EnrollmentView, PersonView } from "./types";
 import styles from "./academics.module.css";
 
 export class ReopenConflictError extends Error {
   constructor(public readonly students: string[]) { super("Không thể mở lại lớp vì có sinh viên đang ở lớp khác cùng môn."); }
 }
+
+/**
+ * Nút đổi trạng thái lớp trong thẻ Trạng thái (Mở lớp / Mở lại lớp, Lưu trữ lớp) và popup xác nhận chỉ có tiêu đề và nút,
+ * như popup Lưu trữ môn học; lỗi (sinh viên ở lớp khác) hiện trong popup.
+ */
 export function ClassStateActions({ value, onChange }: { value: CourseClassView; onChange: (status: ClassStatus, version: number) => Promise<void> }) {
   const [target, setTarget] = useState<ClassStatus | null>(null);
   const [busy, setBusy] = useState(false);
@@ -21,49 +28,47 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
   async function confirm() {
     if (!target || busy) return;
     setBusy(true); setError(""); setConflicts([]);
-    try { await onChange(target, value.version); setTarget(null); }
+    try {
+      await onChange(target, value.version);
+      if (target === "ARCHIVED") showToast("Đã lưu trữ lớp", "danger"); else showToast("Đã mở lớp");
+      setTarget(null);
+    }
     catch (cause) { setError(operationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
     finally { setBusy(false); }
   }
   function choose(status: ClassStatus) { setTarget(status); setError(""); setConflicts([]); }
   return <>
-    {value.status !== "OPEN" && <button className={styles.primaryButton} onClick={() => choose("OPEN")} data-testid="class-state-open"><Icon name="check"/>{value.status === "ARCHIVED" ? "Mở lại lớp" : "Mở lớp"}</button>}
-    {value.status !== "ARCHIVED" && <button className={styles.dangerButton} onClick={() => choose("ARCHIVED")} data-testid="class-state-archive"><Icon name="archive"/>Lưu trữ lớp</button>}
-    {target && <Modal title={label} onClose={() => setTarget(null)} busy={busy} footer={<><button disabled={busy || (open && !value.teacher)} className={open ? styles.primaryButton : styles.dangerButton} onClick={() => void confirm()} data-testid="class-state-confirm">{busy ? "Đang xử lý…" : label}</button></>}>
-      {open && !value.teacher && <p role="alert" className={styles.error}>Cần phân công giảng viên trước khi mở lớp.</p>}
-      {error && <div role="alert" className={styles.error}>{error}{conflicts.length > 0 && <ul>{conflicts.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}</ul>}</div>}
-    </Modal>}
+    {value.status !== "OPEN" && <Button variant="primary" icon="lock_open" onClick={() => choose("OPEN")} data-testid="class-state-open">{value.status === "ARCHIVED" ? "Mở lại lớp" : "Mở lớp"}</Button>}
+    {value.status !== "ARCHIVED" && <Button variant="danger" icon="archive" onClick={() => choose("ARCHIVED")} data-testid="class-state-archive">Lưu trữ lớp</Button>}
+    <Dialog open={target !== null} title={`${label}?`} icon={open ? "lock_open" : "archive"} tone={open ? "primary" : "danger"} onClose={() => setTarget(null)} dismissible={!busy}
+      footer={<Button variant={open ? "primary" : "danger"} disabled={busy} onClick={() => void confirm()} data-testid="class-state-confirm">{open ? (value.status === "ARCHIVED" ? "Mở lại" : "Mở lớp") : "Lưu trữ"}</Button>}>
+      {error ? <div role="alert" className="text-sm text-danger">{error}{conflicts.length > 0 && <ul className="mt-1 list-disc pl-5">{conflicts.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}</ul>}</div> : null}
+    </Dialog>
   </>;
 }
+
+/**
+ * Popup Đổi giảng viên, cùng kiểu Đổi chủ nhiệm môn: một ô chọn mặc định là giảng viên hiện tại; bỏ chọn (x) là bỏ phân
+ * công. Chỉ Lưu được khi đã đổi.
+ */
 export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTeachers }: { value: CourseClassView; teachers: PersonView[]; loadTeachers?: CandidateLoader; onAssign: (teacherId: string | null, version: number) => Promise<void>; onClose: () => void }) {
-  const id = useId();
-  const [selected, setSelected] = useState(value.teacher?.id ?? "");
-  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<PersonView | null>(value.teacher);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const options = useCandidates(teachers,query,loadTeachers);
-  const teacherOptions = value.teacher
-    ? [value.teacher, ...options.rows.filter(teacher => teacher.id !== value.teacher?.id)]
-    : options.rows;
-  const unchanged = selected === (value.teacher?.id ?? "");
-  const visibleTeachers = teacherOptions.filter(teacher =>
-    `${teacher.name} ${teacher.email}`.toLocaleLowerCase("vi").includes(query.trim().toLocaleLowerCase("vi")),
-  );
+  const unchanged = (selected?.id ?? "") === (value.teacher?.id ?? "");
   async function assign() {
-    if (busy || unchanged || (value.status === "OPEN" && !selected)) return;
+    if (busy || unchanged) return;
     setBusy(true); setError("");
-    try { await onAssign(selected || null, value.version); onClose(); } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    try { await onAssign(selected?.id ?? null, value.version); if (selected) showToast("Đã đổi giảng viên"); else showToast("Đã bỏ phân công giảng viên", "danger"); onClose(); }
+    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
   }
-  return <Modal title="Phân công giảng viên" description={`${value.subject.code} · ${value.code}`} onClose={onClose} busy={busy} footer={<><button disabled={busy || unchanged || (value.status === "OPEN" && !selected)} className={styles.primaryButton} onClick={() => void assign()} data-testid="class-teacher-save">{busy ? "Đang lưu…" : "Lưu phân công"}</button></>}>
-    <label className={styles.search}><Icon name="search"/><input aria-label="Tìm giảng viên" placeholder="Tìm theo tên hoặc email" value={query} disabled={busy} onChange={(event) => setQuery(event.target.value)}/></label>
-    {options.error && <p role="alert">{options.error}</p>}{options.loading && <p role="status">Đang tìm…</p>}
-    <div className={styles.choiceList} role="radiogroup" aria-label="Chọn giảng viên">
-      <label className={styles.choice}><span className={styles.muted}>Chưa phân công</span><input type="radio" name={id} aria-label="Chưa phân công" value="" disabled={busy || value.status === "OPEN"} checked={!selected} onChange={() => setSelected("")}/></label>
-      {visibleTeachers.map((teacher) => <label className={styles.choice} key={teacher.id}><span className={styles.person}><Avatar name={teacher.name}/><span><strong>{teacher.name}</strong><small>{teacher.email}{value.teacher?.id === teacher.id && " · hiện tại"}</small></span></span><input type="radio" name={id} checked={selected === teacher.id} value={teacher.id} aria-label={teacher.name} disabled={busy} onChange={() => setSelected(teacher.id)}/></label>)}
-    </div>{!options.loading && !options.error && visibleTeachers.length === 0 && <p className={styles.muted}>Không có giảng viên phù hợp.</p>}
-    {error && <p role="alert" className={styles.error}>{error}</p>}
-  </Modal>;
+  return <Dialog open title="Đổi giảng viên" size="lg" onClose={onClose} dismissible={!busy}
+    footer={<Button variant="primary" disabled={busy || unchanged} onClick={() => void assign()} data-testid="class-teacher-save">Lưu</Button>}>
+    <PersonPicker label="Giảng viên" value={selected} onChange={setSelected} people={teachers} loader={loadTeachers} clearable disabled={busy} placeholder="Chưa phân công" />
+    {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+  </Dialog>;
 }
+
 export function StudentDetailDialog({ classId, student, onClose }: { classId: string; student: EnrollmentView; onClose: () => void }) {
   return <Modal title="Thông tin sinh viên" onClose={onClose}>
     <div className={styles.person}><Avatar name={student.name}/><div><strong>{student.name}</strong><small>{student.email}</small></div></div>

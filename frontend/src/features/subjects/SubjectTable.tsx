@@ -20,7 +20,7 @@ export function SubjectTable({ items, offset = 0 }: { items: SubjectListItem[]; 
         <Td><Link href={href} className="font-semibold text-ink hover:text-primary-ink">{subject.name}</Link></Td>
         <Td>{subject.managerId === null ? <Pill>Chưa phân công</Pill> : subject.manager?.displayName ?? "Không tra được chủ nhiệm"}</Td>
         <Td className="text-center">{subject.classCount === null ? <span className="text-xs text-muted">Không khả dụng</span> : subject.classCount}</Td>
-        <Td><Pill tone={subject.status === "ACTIVE" ? "success" : "neutral"}>{subject.status === "ACTIVE" ? "Hoạt động" : "Lưu trữ"}</Pill></Td>
+        <Td><Pill tone={subject.status === "ACTIVE" ? "success" : "danger"}>{subject.status === "ACTIVE" ? "Hoạt động" : "Lưu trữ"}</Pill></Td>
         <Td className="text-faint"><Link href={href} aria-label={`Chi tiết môn học ${subject.code}`} className="inline-flex"><Icon name="chevron_right" size={18} /></Link></Td>
       </ClickableRow>;
     })}{items.length === 0 && <tr><Td colSpan={7} className="py-10 text-center! text-muted">Không có môn học phù hợp với bộ lọc.</Td></tr>}</tbody>

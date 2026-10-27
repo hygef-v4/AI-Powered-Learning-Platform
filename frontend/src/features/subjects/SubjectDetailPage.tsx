@@ -47,9 +47,9 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     subject.reload();
     classes.reload();
   }
-  function saved(message: string) {
+  function saved(message: string, tone: "success" | "danger" = "success") {
     if (!alive.current) return;
-    showToast(message);
+    showToast(message, tone);
     reload();
   }
   if (subject.error !== null || accessError !== null) return <>
@@ -65,7 +65,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     { key: "classes", label: "Lớp học", count: data.classCount ?? undefined },
   ];
   return <>
-    <PageHeader backHref="/admin/subjects" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{data.name}</span><Pill tone={archived ? "neutral" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></>}
+    <PageHeader backHref="/admin/subjects" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{data.name}</span><Pill tone={archived ? "danger" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></>}
       breadcrumb={[{ label: "Môn học", href: "/admin/subjects" }, { label: data.code }]} />
     <Tabs items={tabs} value={tab} onChange={setTab} label="Nội dung môn học" testIdPrefix="subjects-tab-" />
     {tab === "information" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
@@ -80,7 +80,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
       {classes.data?.availability === "UNAVAILABLE" && <Section title="Danh sách lớp"><p className="text-sm text-muted">Dữ liệu lớp hiện không khả dụng.</p><Button onClick={classes.reload} data-testid="subjects-classes-retry">Thử lại</Button></Section>}
       {classes.data?.availability === "AVAILABLE" && <SubjectClassesTab items={classes.data.items} />}
     </div>}
-    {mode === "manager" && <ManagerChangeDialog {...base} searchManagers={searchManagers} onSaved={() => saved("Đã đổi chủ nhiệm môn")} onClose={() => setMode(null)} />}
-    {mode === "status" && <SubjectStatusActions {...base} onSaved={(next: SubjectDetail) => saved(next.status === "ARCHIVED" ? "Đã lưu trữ môn học" : "Đã mở lại môn học")} onClose={() => setMode(null)} />}
+    {mode === "manager" && <ManagerChangeDialog {...base} searchManagers={searchManagers} onSaved={(next: SubjectDetail) => next.managerId === null ? saved("Đã bỏ chủ nhiệm môn", "danger") : saved("Đã đổi chủ nhiệm môn")} onClose={() => setMode(null)} />}
+    {mode === "status" && <SubjectStatusActions {...base} onSaved={(next: SubjectDetail) => next.status === "ARCHIVED" ? saved("Đã lưu trữ môn học", "danger") : saved("Đã mở lại môn học")} onClose={() => setMode(null)} />}
   </>;
 }

@@ -5,7 +5,6 @@ import { ApiError } from "@/shared/api/client";
 import { initials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
-import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { Pill } from "@/shared/ui/Pill";
@@ -127,9 +126,8 @@ export function ProfileForm({
 
 function LockedBox({ children }: { children: ReactNode }) {
   return (
-    <div aria-disabled="true" className="flex h-10 cursor-not-allowed items-center justify-between rounded-lg border border-line-strong bg-shell px-3">
+    <div aria-disabled="true" className="flex h-10 cursor-not-allowed items-center rounded-lg border border-line-strong bg-shell px-3">
       {children}
-      <Icon name="lock" size={16} className="text-faint" />
     </div>
   );
 }

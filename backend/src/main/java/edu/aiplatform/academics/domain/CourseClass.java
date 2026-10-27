@@ -22,9 +22,6 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
         if (version < 0 || updatedAt.isBefore(createdAt)) {
             throw new AcademicRuleException("INVALID_CLASS_SNAPSHOT", "Version hoặc thời gian lớp không hợp lệ");
         }
-        if (status == ClassStatus.OPEN && teacherId == null) {
-            throw new AcademicRuleException("TEACHER_REQUIRED", "Lớp mở cần giảng viên chính");
-        }
     }
 
     public static CourseClass create(UUID id, UUID subjectId, String code, String name, String description,
@@ -43,7 +40,6 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
         };
         if (!valid) throw new AcademicRuleException("INVALID_CLASS_TRANSITION", "Không thể chuyển trạng thái lớp này");
         if (next == ClassStatus.OPEN) {
-            if (teacherId == null) throw new AcademicRuleException("TEACHER_REQUIRED", "Cần phân công giảng viên trước khi mở lớp");
             if (!subjectActive) throw new AcademicRuleException("SUBJECT_INACTIVE", "Chỉ mở lớp khi môn đang hoạt động");
             if (conflictingEnrollments) {
                 throw new AcademicRuleException("ENROLLMENT_CONFLICT", "Có sinh viên đang ở lớp khác cùng môn");

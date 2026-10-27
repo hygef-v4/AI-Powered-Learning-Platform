@@ -1,36 +1,60 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { Button, Field, LockedInput, Section, TextInput, showToast } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "./types";
-import { formatDate, Icon, operationError } from "./ui";
-import styles from "./academics.module.css";
+import { operationError } from "./ui";
 
+/**
+ * Thẻ Thông tin lớp, cùng kiểu Thông tin môn học: sửa ngay trên thẻ. Hàng đầu Mã lớp và Mã môn (khóa), hàng hai Tên lớp và
+ * Học kỳ, rồi Mô tả. Hủy về giá trị đang lưu; lớp lưu trữ chỉ xem.
+ */
 export function ClassInfoForm(props: { value: CourseClassView; onSave: (value: ClassInfoInput) => Promise<void> }) {
   return <InfoEditor key={`${props.value.id}-${props.value.version}`} {...props}/>;
 }
+
 function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value: ClassInfoInput) => Promise<void> }) {
   const id = useId();
   const original = { name: value.name, term: value.term, description: value.description };
   const [fields, setFields] = useState(original);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
   const archived = value.status === "ARCHIVED";
+  const dirty = fields.name !== original.name || fields.term !== original.term || fields.description !== original.description;
   async function save(event: FormEvent) {
     event.preventDefault();
     if (busy || archived) return;
     if (!fields.name.trim() || !fields.term.trim()) { setError("Vui lòng điền tên lớp và học kỳ."); return; }
-    setBusy(true); setError(""); setSaved(false);
-    try { await onSave({ name: fields.name.trim(), description: fields.description.trim(), term: fields.term.trim(), version: value.version }); setSaved(true); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    setBusy(true); setError("");
+    try {
+      await onSave({ name: fields.name.trim(), description: fields.description.trim(), term: fields.term.trim(), version: value.version });
+      showToast("Đã lưu thay đổi");
+    } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
   }
-  return <form className={styles.panel} onSubmit={save} aria-label="Thông tin lớp">
-    <div className={styles.formGrid}><div className={styles.formField}><label htmlFor={`${id}-code`}>Mã lớp</label><input id={`${id}-code`} className={`${styles.field} ${styles.code}`} value={value.code} disabled/></div>
-      <div className={styles.formField}><label htmlFor={`${id}-term`}>Học kỳ <span className={styles.required}>*</span></label><input id={`${id}-term`} className={styles.field} required maxLength={20} disabled={archived || busy} value={fields.term} onChange={(event) => setFields({ ...fields, term: event.target.value })}/></div>
-      <div className={`${styles.formField} ${styles.wide}`}><label htmlFor={`${id}-name`}>Tên lớp <span className={styles.required}>*</span></label><input id={`${id}-name`} className={styles.field} required maxLength={200} disabled={archived || busy} value={fields.name} onChange={(event) => setFields({ ...fields, name: event.target.value })}/></div>
-      <div className={`${styles.formField} ${styles.wide}`}><label htmlFor={`${id}-description`}>Mô tả</label><textarea id={`${id}-description`} className={styles.textarea} maxLength={2000} disabled={archived || busy} value={fields.description} onChange={(event) => setFields({ ...fields, description: event.target.value })}/></div>
-    </div><div className={styles.meta}><span>Sinh viên <strong>{value.activeStudentCount} đang học · {value.removedStudentCount} đã gỡ</strong></span><span>Ngày tạo <strong>{formatDate(value.createdAt)}</strong></span></div>
-    {error && <p role="alert" className={styles.error}>{error}</p>}{saved && <p role="status" className={styles.success}>Đã lưu thay đổi.</p>}
-    {archived ? null : <div className={styles.formActions}><button type="button" className={styles.button} disabled={busy || (fields.name === original.name && fields.term === original.term && fields.description === original.description)} onClick={() => { setFields(original); setError(""); setSaved(false); }}>Hoàn tác</button><button type="submit" className={styles.primaryButton} disabled={busy} data-testid="class-info-save"><Icon name="save"/>{busy ? "Đang lưu…" : "Lưu thay đổi"}</button></div>}
-  </form>;
+  return <Section title="Thông tin lớp">
+    <form onSubmit={save} aria-label="Thông tin lớp" noValidate className="flex flex-col gap-4">
+      <fieldset disabled={busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
+        <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
+        <Field label="Tên lớp" htmlFor={`${id}-name`} required>
+          <TextInput id={`${id}-name`} maxLength={200} disabled={archived} value={fields.name} onChange={(event) => setFields({ ...fields, name: event.target.value })} />
+        </Field>
+        <Field label="Học kỳ" htmlFor={`${id}-term`} required>
+          <TextInput id={`${id}-term`} maxLength={20} disabled={archived} value={fields.term} onChange={(event) => setFields({ ...fields, term: event.target.value })} />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Mô tả" htmlFor={`${id}-description`}>
+            <textarea id={`${id}-description`} maxLength={2000} disabled={archived} value={fields.description}
+              onChange={(event) => setFields({ ...fields, description: event.target.value })}
+              className="min-h-28 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted" />
+          </Field>
+        </div>
+      </fieldset>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {!archived && <div className="flex justify-end gap-2 border-t border-line pt-4">
+        <Button disabled={busy || !dirty} onClick={() => { setFields(original); setError(""); }}>Hủy</Button>
+        <Button type="submit" variant="primary" icon="save" disabled={busy || !dirty} data-testid="class-info-save">Lưu thay đổi</Button>
+      </div>}
+    </form>
+  </Section>;
 }

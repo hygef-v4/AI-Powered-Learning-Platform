@@ -18,21 +18,22 @@ const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@exa
 const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", term: "2026-1", description: "Lớp sáng thứ Hai",
   status: "OPEN", teacher, activeStudentCount: 2, removedStudentCount: 1, createdAt: "2026-09-01", showGradeDistribution: false, version: 3 };
 const student: EnrollmentView = { accountId: "student-1", name: "Nguyễn Văn An", email: "an@example.test", enrolledAt: "2026-09-05", status: "ACTIVE" };
-
+
 // Trang lớp ghi tab đang mở lên URL; trả URL về gốc để test sau không mở sẵn tab của test trước.
 afterEach(() => window.history.replaceState(null, "", "/"));
 
 describe("U05 reference UI", () => {
   it("filters manager classes by status and text without losing the source rows", () => {
     const onOpen = vi.fn();
-    render(<ClassListPage classes={[course, { ...course, id: "class-2", code: "SE1901", status: "DRAFT", teacher: null }]} subjects={[subject]} onOpen={onOpen} onCreate={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /Nháp/ }));
+    render(<ClassListPage classes={[course, { ...course, id: "class-2", code: "SE1901", status: "ARCHIVED", teacher: null }]} subjects={[subject]} onOpen={onOpen} onCreate={vi.fn()} />);
+    expect(screen.queryByRole("tab", { name: "Nháp" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Lưu trữ" }));
     expect(screen.queryByRole("button", { name: "Xem lớp SE1801" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xem lớp SE1901" }));
     expect(onOpen).toHaveBeenCalledWith("class-2");
-    fireEvent.click(screen.getByRole("button", { name: /Tất cả/ }));
+    fireEvent.click(screen.getByRole("tab", { name: "Tất cả" }));
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "không có" } });
-    expect(screen.getByText("Không tìm thấy lớp phù hợp")).toBeInTheDocument();
+    expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
   });
 
   it("hides draft classes for students and keeps archived cards read-only", () => {
@@ -45,7 +46,7 @@ describe("U05 reference UI", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("creates a draft with an optional teacher and normalized text", async () => {
+  it("creates a class with an optional teacher and normalized text", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: " SE1902 " } });
@@ -53,6 +54,18 @@ describe("U05 reference UI", () => {
     fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "Lớp mới", term: "2026-2", description: "", teacherId: null }));
+  });
+
+  it("sends the chosen teacher when creating a class", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
+    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Lớp mới" } });
+    fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
+    fireEvent.focus(screen.getByRole("combobox", { name: /Giảng viên/ }));
+    fireEvent.click(await screen.findByRole("option", { name: new RegExp(teacher.name) }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ teacherId: teacher.id })));
   });
 
   it("preserves unsaved info and displays version conflict", async () => {
@@ -88,10 +101,11 @@ describe("U05 reference UI", () => {
   it("rejects oversized CSV files before reading or submitting them", () => {
     const onBatch = vi.fn();
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
+    fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
     const file = new File(["a".repeat(102_401)], "list.csv", { type: "text/csv" });
     const read = vi.fn();
     Object.defineProperty(file, "text", { value: read });
-    fireEvent.change(screen.getByLabelText("Chọn tệp CSV một cột"), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText("Chọn tệp CSV"),{ target: { files: [file] } });
     expect(screen.getByRole("alert")).toHaveTextContent("100 KB");
     expect(read).not.toHaveBeenCalled();
     expect(onBatch).not.toHaveBeenCalled();
@@ -100,9 +114,10 @@ describe("U05 reference UI", () => {
   it("blocks batch submission when every preview email is invalid", () => {
     const onBatch = vi.fn();
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
-    fireEvent.change(screen.getByLabelText(/Dán email/), { target: { value: "invalid" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
+    fireEvent.change(screen.getByLabelText("Danh sách email"), { target: { value: "invalid" } });
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
-    expect(screen.getByRole("button", { name: "Thêm vào lớp" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Thêm 0 sinh viên" })).toBeDisabled();
     expect(onBatch).not.toHaveBeenCalled();
   });
 
@@ -111,20 +126,24 @@ describe("U05 reference UI", () => {
     render(<ClassStateActions value={course} onChange={onChange} />);
     fireEvent.click(screen.getByRole("button", { name: "Lưu trữ lớp" }));
     expect(onChange).not.toHaveBeenCalled();
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Lưu trữ lớp" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Lưu trữ" }));
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("ARCHIVED", 3));
   });
 
-  it("blocks clearing the teacher of an open class", () => {
-    render(<AssignTeacherDialog value={course} teachers={[teacher]} onAssign={vi.fn()} onClose={vi.fn()} />);
-    expect(screen.getByRole("radio", { name: "Chưa phân công" })).toBeDisabled();
+  it("lets an open class drop its teacher", async () => {
+    const onAssign = vi.fn().mockResolvedValue(undefined);
+    render(<AssignTeacherDialog value={course} teachers={[teacher]} onAssign={onAssign} onClose={vi.fn()} />);
+    expect(screen.getByRole("combobox", { name: "Giảng viên" })).toHaveValue(teacher.email);
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ chọn giảng viên" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+    await waitFor(() => expect(onAssign).toHaveBeenCalledWith(null, 3));
   });
 
   it("does not allow saving an unchanged teacher assignment absent from active candidates", () => {
     const onAssign = vi.fn();
     render(<AssignTeacherDialog value={course} teachers={[]} onAssign={onAssign} onClose={vi.fn()} />);
-    expect(screen.getByRole("radio", { name: teacher.name })).toBeChecked();
-    expect(screen.getByRole("button", { name: "Lưu phân công" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Giảng viên" })).toHaveValue(teacher.email);
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled();
     expect(onAssign).not.toHaveBeenCalled();
   });
 
@@ -178,7 +197,7 @@ describe("U05 reference UI", () => {
 
   it("allows managers to read removed enrollments in an archived class without mutation controls", () => {
     render(<EnrollmentPanel students={[{ ...student, status: "REMOVED" }]} includeRemoved />);
-    fireEvent.click(screen.getByRole("button", { name: /Đã gỡ/ }));
+    fireEvent.click(screen.getByRole("tab", { name: "Đã gỡ" }));
     expect(screen.getByText(student.name)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Thêm lại/ })).not.toBeInTheDocument();
   });
@@ -186,26 +205,26 @@ describe("U05 reference UI", () => {
   it("invalidates CSV preview after editing and waits for confirmation before enrollment", async () => {
     const onBatch = vi.fn().mockResolvedValue([{ line: 1, email: "an@example.test", result: "ENROLLED" }]);
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
-    const input = screen.getByLabelText(/Dán email/);
+    fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
+    const input = screen.getByLabelText("Danh sách email");
     fireEvent.change(input, { target: { value: "an@example.test\nbad" } });
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
     expect(screen.getByText("Email không hợp lệ")).toBeInTheDocument();
     expect(onBatch).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: "an@example.test" } });
-    expect(screen.queryByRole("button", { name: "Thêm vào lớp" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Thêm \d+ sinh viên$/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
-    fireEvent.click(screen.getByRole("button", { name: "Thêm vào lớp" }));
+    fireEvent.click(screen.getByRole("button", { name: "Thêm 1 sinh viên" }));
     await waitFor(() => expect(onBatch).toHaveBeenCalledWith("an@example.test"));
-    expect(await screen.findByText("Đã thêm")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByLabelText("Danh sách email")).not.toBeInTheDocument());
   });
 
-  it("requires confirmation before enabling grade distribution", async () => {
+  it("enables grade distribution straight from the switch", async () => {
     const onDistribution = vi.fn().mockResolvedValue(undefined);
     const action = vi.fn().mockResolvedValue(undefined);
     render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onDistribution, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
     fireEvent.click(screen.getByRole("switch"));
-    expect(onDistribution).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận bật" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(onDistribution).toHaveBeenCalledWith(true, 3));
   });
 

@@ -5,14 +5,14 @@ import { useParams } from "next/navigation";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert } from "@/shared/ui/Alert";
-import { Button } from "@/shared/ui/Button";
+import { Button, IconButton } from "@/shared/ui/Button";
 import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
-import { showToast } from "@/shared/ui/Toast";
+import { showToast, type ToastTone } from "@/shared/ui/Toast";
 import { useSession } from "../session";
 import { ROLE_LABELS } from "../types";
 import { RoleChangeDialog, RoleChangeRejectedDialog, StatusToggleDialog, type RoleChangeBlock } from "./AccountDialogs";
@@ -72,10 +72,10 @@ export function AccountDetailPage() {
   const isSelf = session.status === "authenticated" && session.profile.accountId === account.id;
   const reopening = account.status === "DISABLED";
 
-  function changed(saved: AccountDetail, message: string) {
+  function changed(saved: AccountDetail, message: string, tone: ToastTone = "success") {
     setAccount(saved);
     setPopup(null);
-    showToast(message);
+    showToast(message, tone);
   }
 
   return (
@@ -147,7 +147,7 @@ export function AccountDetailPage() {
         <StatusToggleDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => changed(saved, saved.status === "DISABLED" ? "Đã vô hiệu hóa tài khoản" : "Đã mở lại tài khoản")}
+          onChanged={(saved) => saved.status === "DISABLED" ? changed(saved, "Đã vô hiệu hóa tài khoản", "danger") : changed(saved, "Đã mở lại tài khoản")}
           onConflict={reload}
         />
       )}
@@ -228,10 +228,9 @@ function AccountEditForm({
           </Field>
           <Field label="Vai trò" htmlFor={roleId}>
             <div className="flex min-w-0 gap-2">
-              <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" lock={false} />
-              <Button onClick={onChangeRole} disabled={isSelf} className="h-10 shrink-0 px-3">
-                Đổi vai trò
-              </Button>
+              <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" />
+              <IconButton icon="swap_horiz" label="Đổi vai trò" size={40} onClick={onChangeRole} disabled={isSelf}
+                className="border border-line-strong bg-surface text-ink hover:bg-sunken" />
             </div>
           </Field>
         </div>

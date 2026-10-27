@@ -47,10 +47,9 @@ class CourseClassTest {
                 .hasMessageContaining("trạng thái");
     }
 
-    @Test void openingRequiresTeacherAndActiveSubject() {
+    @Test void openingNeedsActiveSubjectButNotTeacher() {
         var noTeacher = CourseClass.create(UUID.randomUUID(), UUID.randomUUID(), "C", "Class", null, null, null, now);
-        assertThatThrownBy(() -> noTeacher.changeStatus(ClassStatus.OPEN, true, false, now))
-                .isInstanceOf(AcademicRuleException.class).hasMessageContaining("giảng viên");
+        assertThat(noTeacher.changeStatus(ClassStatus.OPEN, true, false, now).status()).isEqualTo(ClassStatus.OPEN);
         assertThatThrownBy(() -> draft().changeStatus(ClassStatus.OPEN, false, false, now))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("môn");
     }
@@ -61,13 +60,13 @@ class CourseClassTest {
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("lớp khác");
     }
 
-    @Test void archivedIsReadOnlyAndOpenTeacherCannotBeCleared() {
+    @Test void archivedIsReadOnlyAndOpenTeacherCanBeCleared() {
         var archived = draft().changeStatus(ClassStatus.ARCHIVED, true, false, now);
         assertThatThrownBy(() -> archived.updateInfo("New", null, null, now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> archived.assignTeacher(teacher, now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> archived.setGradeDistribution(true, now)).isInstanceOf(AcademicRuleException.class);
         var open = draft().changeStatus(ClassStatus.OPEN, true, false, now);
-        assertThatThrownBy(() -> open.assignTeacher(null, now)).isInstanceOf(AcademicRuleException.class);
+        assertThat(open.assignTeacher(null, now).teacherId()).isNull();
     }
 
     @Test void updatesPreserveIdentityAndAdvanceVersion() {

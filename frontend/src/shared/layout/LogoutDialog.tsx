@@ -40,7 +40,6 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
         </>
       }
     >
-      <p>Bạn sẽ thoát khỏi phiên trên thiết bị này. Bài đang làm đã được tự lưu.</p>
       {error && (
         <p role="alert" className="text-danger">
           {error}

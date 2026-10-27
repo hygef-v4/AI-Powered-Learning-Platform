@@ -27,7 +27,7 @@ export function Avatar({ name }: { name: string }) {
   return <span className={styles.avatar} aria-hidden="true">{initials}</span>;
 }
 
-const STATUS_TONES: Record<ClassStatus, Tone> = { DRAFT: "neutral", OPEN: "success", ARCHIVED: "info" };
+const STATUS_TONES: Record<ClassStatus, Tone> = { DRAFT: "neutral", OPEN: "success", ARCHIVED: "danger" };
 
 export function StatusBadge({ status }: { status: ClassStatus }) {
   return <Pill tone={STATUS_TONES[status]}>{statusLabels[status]}</Pill>;

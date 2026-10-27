@@ -26,6 +26,7 @@ it("keeps version conflict visible after reloading a newer info editor",async()=
  fireEvent.click(screen.getByTestId("class-info-save"));
  await waitFor(()=>expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Updated on server"));
  expect(screen.getByTestId("class-mutation-conflict")).toHaveTextContent("Dữ liệu đã thay đổi");
+ fireEvent.change(screen.getByLabelText(/Tên lớp/),{target:{value:"Second edit"}});
  fireEvent.click(screen.getByTestId("class-info-save"));
- await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Updated on server",description:"",term:"1",version:2})})));
+ await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Second edit",description:"",term:"1",version:2})})));
 });

@@ -10,7 +10,7 @@ export function SubjectMetaCard({ subject, disabled = false, onStatus }: { subje
     <dl className="flex flex-col gap-2.5 text-[13px]">
       <div className="flex items-center justify-between">
         <dt className="text-muted">Trạng thái</dt>
-        <dd><Pill tone={archived ? "neutral" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></dd>
+        <dd><Pill tone={archived ? "danger" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></dd>
       </div>
       <div className="flex items-center justify-between">
         <dt className="text-muted">Ngày tạo</dt>
