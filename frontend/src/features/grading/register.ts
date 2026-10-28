@@ -2,16 +2,13 @@
 import { createElement } from "react";
 import { teacherClassTabs, studentDetailSections } from "@/features/academics/slots";
 import { assignmentRowActions } from "@/features/assignments/slots";
-import {
-  studentAssignmentResults,
-  submissionResultSections,
-} from "@/features/assignmentwork/slots";
+import { attemptResultSources, studentAssignmentResults } from "@/features/assignmentwork/slots";
 import { ClassGradebookTab } from "./ClassGradebookTab";
 import { ClassProgressSection } from "./ClassProgressSection";
 import { StudentGradesSection } from "./StudentGradesSection";
 import { SubmissionsLink } from "./SubmissionsLink";
 import { StudentGradeCell } from "./StudentGradeCell";
-import { StudentGradePanel } from "./StudentGradePanel";
+import { gradingApi } from "./api";
 
 function TeacherGradingSection({
   classId,
@@ -38,8 +35,24 @@ studentAssignmentResults.register({
   order: 90,
   component: StudentGradeCell,
 });
-submissionResultSections.register({
+attemptResultSources.register({
   key: "u09-attempt-grade",
   order: 90,
-  component: StudentGradePanel,
+  load: async (attemptId) => {
+    const grade = await gradingApi.attempt(attemptId);
+    return {
+      score: grade.score == null ? null : Number(grade.score),
+      maxScore: grade.maxScore == null ? null : Number(grade.maxScore),
+      publishedAt: grade.publishedAt,
+      updated: grade.updated,
+      memberOverride: !!grade.memberOverride,
+      feedback: grade.feedback,
+      summary: grade.structuredSummary ?? null,
+      items: (grade.rubricItems ?? []).map((item) => ({
+        rubricId: item.rubricId, partId: item.partId, criterionTitle: item.criterionTitle, itemText: item.itemText,
+        awarded: Number(item.awardedPoints), max: Number(item.maxPoints),
+        evidence: item.evidence, reason: item.reason, suggestion: item.suggestion,
+      })),
+    };
+  },
 });

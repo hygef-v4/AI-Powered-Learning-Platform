@@ -3,7 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { studentClassSections, teacherClassTabs } from "./slots";
+import { teacherClassTabs } from "./slots";
+import { StudentClassPage } from "./StudentClassPage";
 import { StudentDetailDialog } from "./ClassDialogs";
 import { EnrollmentPanel } from "./EnrollmentPanel";
 import { EmptyState, PageHeading, StatusBadge, Tabs } from "./ui";
@@ -96,6 +97,8 @@ export function ReadOnlyClassPage({
     );
   }
 
+  if (audience === "student") return <StudentClassPage value={value} tab={tab === "materials" ? "materials" : "info"} />;
+
   const tabs = [
     { key: "info" as const, label: "Thông tin lớp" },
     { key: "students" as const, label: "Sinh viên", count: studentSummaryCount },
@@ -117,30 +120,10 @@ export function ReadOnlyClassPage({
         onBack={onBack}
       />
       {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
-      {audience === "teacher" && <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>}
+      <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>
       {detailError && <p role="alert" className="text-sm text-danger">{detailError}</p>}
       {detailBusy && <p role="status" className="text-sm text-muted">Đang tải sinh viên…</p>}
-      {audience === "student" && (
-        <div className={styles.studentLayout}>
-          <div className={styles.stack}>
-            <SlotOutlet slot={studentClassSections} props={{ classId: value.id }} />
-          </div>
-          <aside className={styles.panel}>
-            <h2>Thông tin lớp</h2>
-            <dl className={styles.compactReadList}>
-              <dt>Giảng viên</dt>
-              <dd>{value.teacher ? value.teacher.name : "Chưa phân công"}</dd>
-              {value.teacher && <><dt>Email</dt><dd>{value.teacher.email}</dd></>}
-              <dt>Mã lớp</dt>
-              <dd className={styles.code}>{value.code}</dd>
-              <dt>Học kỳ</dt>
-              <dd>{value.term}</dd>
-              {value.description && <><dt>Mô tả</dt><dd className={styles.descriptionText}>{value.description}</dd></>}
-            </dl>
-          </aside>
-        </div>
-      )}
-      {audience === "teacher" && (
+      {(
         // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
         <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
         {tab === "info" && (

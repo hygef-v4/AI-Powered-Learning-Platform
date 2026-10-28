@@ -15,7 +15,7 @@ import { checklistPoints, RubricChecklist } from "./RubricChecklistPanel";
 import { useSubmissionContext } from "./useSubmissionContext";
 import { gradingApi } from "./api";
 import { useResource } from "./useResource";
-import { checklistBindings, GradingNotes } from "./GradingForm";
+import { checklistBindings, GradingNotes, needsGradingNotes } from "./GradingForm";
 import { useGradingWorkspace } from "./useGradingWorkspace";
 import { ActivityReview, GradeHistory, GroupSectionAuthors } from "./GradingReviewPanels";
 import { AiProposalPanel } from "./AiProposalPanel";
@@ -129,12 +129,13 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   const pending = proposals.some((proposal) => proposal.status === "PENDING");
   const ready = proposals[0]?.status === "READY";
 
+  // Lề chỉ để điểm: mỗi phần một thẻ checklist gắn vào tiêu đề của phần; thẻ ghi chú ở đầu chỉ khi cần.
   const comments: DocumentComment[] = [
-    {
+    ...(needsGradingNotes(detail.rubrics, form, official) ? [{
       key: "grading-notes",
       anchorBlockId: null,
-      content: <GradingNotes rubrics={detail.rubrics} values={form} disabled={disabled} official={official} onChange={updateForm} />,
-    },
+      content: <GradingNotes rubrics={detail.rubrics} values={form} official={official} onChange={updateForm} />,
+    }] : []),
     ...detail.rubrics.map((rubric, index): DocumentComment => ({
       key: rubric.rubricId,
       // Rubric gắn với tiêu đề của phần; rubric cả bài (không có tiêu đề) nằm ở đầu tài liệu.
@@ -142,7 +143,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
       content: (
         <RubricNote title={partTitles[rubric.partId] || `Phần ${index + 1}`} criteria={noteCriteria(rubric)}
           active={activePart === rubric.rubricId} onActivate={() => setActivePart(rubric.rubricId)}
-          badge={<Pill tone="primary">Đạt {checklistPoints([rubric], form.checks, form.itemScores).toFixed(2)}</Pill>}
+          badge={<Pill tone="primary">Đạt {String(Number(checklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</Pill>}
           editor={<RubricChecklist rubric={rubric} {...checklist} />} />
       ),
     })),
@@ -228,8 +229,8 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
             rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
             pollExhausted={pollExhausted} onRecheck={resumePolling}
             onRequest={(input) => void requestProposal(input)}
-            onApply={(...args) => {
-              applyProposal(...args);
+            onApply={(checks, feedback, id, itemScores) => {
+              applyProposal(checks, feedback, id, itemScores);
               setAiOpen(false);
             }} />
         </Dialog>

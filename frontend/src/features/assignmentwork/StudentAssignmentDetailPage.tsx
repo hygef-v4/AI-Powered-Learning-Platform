@@ -2,26 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { diagramTypeLabels, type DiagramType } from "@/shared/document";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { workApi } from "./api";
 import { errorMessage, formatDateTime } from "./format";
-import { assignmentMaterialSections, groupWorkEntries, submissionResultSections } from "./slots";
-import { blockedLabels, myStatusLabels, type StudentDetail } from "./types";
-import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { ResultSummaryCard } from "./ResultSummaryCard";
+import { assignmentMaterialSections, groupWorkEntries } from "./slots";
+import { myStatusLabels, myStatusTones, type StudentDetail } from "./types";
+import { rowStatus, useStudentAssignments } from "./useStudentAssignments";
+
+/** Loại bài như trên bảng Bài tập: luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
+function kindLabel(detail: StudentDetail) {
+  if (detail.gradingMode === "PRACTICE") return "Luyện tập";
+  return detail.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân";
+}
 
 /**
- * #39 Assignment Detail (F2, UC 38): trang thông tin trước khi làm bài (yêu cầu 2026-10-21 thay BR-U08-03). Chỉ hiện
- * thông tin bài (hình thức, chế độ, lịch, số lượt, sơ đồ cần có, lời báo theo dõi), không hiện đề và rubric; đề chỉ mở
- * khi bấm Bắt đầu hoặc Tiếp tục.
+ * #39 Assignment Detail (F2, UC 38): trang thông tin trước khi làm bài, đúng bốn mục: loại bài, trạng thái (lấy từ dòng của bài
+ * trên bảng Bài tập, kể cả tiến độ bài nhóm), hạn nộp (bài đã quá hạn mà còn cho nộp trễ thì là hạn nộp trễ) và số bài (số
+ * nhánh con trực tiếp của gốc tài liệu có rubric ở chính nó hoặc con cháu); thêm lời báo theo dõi nếu có, học liệu tham khảo, kết quả đã chấm. Thẻ Làm bài ghi lượt đã dùng / tối đa cạnh tiêu đề. Không hiện đề và rubric; đề chỉ mở khi bấm Bắt đầu hoặc Tiếp
+ * tục. Quay lại về trang Bài tập chung nếu mở từ đó (`from=all`), không thì về Bài tập của lớp.
  */
 export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: string }) {
   const router = useRouter();
-  const classId = useSearchParams().get("classId") ?? "";
+  const params = useSearchParams();
+  const classId = params.get("classId") ?? "";
+  const general = params.get("from") === "all";
   const [detail, setDetail] = useState<StudentDetail | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [starting, setStarting] = useState(false);
+  // Trạng thái lấy đúng như trên bảng Bài tập (cùng nguồn dữ liệu, có tiến độ bài nhóm).
+  const { rows } = useStudentAssignments(classId || undefined);
+  const row = rows?.find((item) => item.assignmentId === assignmentId);
 
   useEffect(() => {
     if (!classId) return;
@@ -48,68 +61,58 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   if (error && !detail) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
   if (!detail) return <PageLoading label="Đang tải bài tập…" />;
 
-  const history = `/my-assignments/${encodeURIComponent(assignmentId)}/history?classId=${encodeURIComponent(classId)}`;
-  const required = Object.entries(detail.requiredDiagrams) as [DiagramType, number][];
-  const attemptsLeft = Math.max(0, (detail.maxAttempts ?? 1) - detail.attemptsUsed);
+  // Quay lại về danh sách kèm `focus`: danh sách tự mở đúng tab của bài theo trạng thái mới nhất lúc quay về
+  // (đang làm mà đã hết hạn thì bài đã tự nộp, sẽ nằm ở tab Đã nộp).
+  const focus = `focus=${encodeURIComponent(assignmentId)}`;
+  const back = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
+  const history = `/my-assignments/${encodeURIComponent(assignmentId)}/history?classId=${encodeURIComponent(classId)}${general ? "&from=all" : ""}`;
+  const pastDeadline = !!detail.closesAt && new Date(detail.closesAt).getTime() < new Date(detail.serverTime).getTime();
+  const submitted = !!row && (row.submittedCount > 0 || !!row.group?.submitted);
+  // Hạn nộp trễ chỉ có nghĩa với bài chưa nộp mà đã quá hạn nộp.
+  const lateDeadline = pastDeadline && !!detail.lateUntil && !submitted;
+  const status = row ? rowStatus(row) : null;
   const latest = detail.latestAttempt;
+  const latestKey = latest ? (latest.status === "IN_PROGRESS" ? "IN_PROGRESS" : latest.late ? "SUBMITTED_LATE" : "SUBMITTED") : null;
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader backHref={`/my-assignments?classId=${encodeURIComponent(classId)}`}
-        title={<>{detail.title}<Pill tone={detail.gradingMode === "GRADED" ? "primary" : "accent"}>{detail.gradingMode === "GRADED" ? "Graded" : "Practice"}</Pill><Pill>{detail.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</Pill></>}
-        breadcrumb={[{ label: "Bài tập", href: "/my-assignments" }, { label: detail.title }]} />
+      <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: "Bài tập", href: back }, { label: detail.title }]} />
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-4">
-          <Section title="Thông tin bài" icon="info">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]" data-testid="assignment-info">
-              <dt className="text-muted">Lớp</dt><dd>{detail.classCode} · {detail.className}{detail.scope === "SUBJECT" ? " (bài của môn)" : ""}</dd>
-              <dt className="text-muted">Hình thức</dt><dd>{detail.submissionMode === "GROUP" ? "Bài nhóm" : "Bài cá nhân"}</dd>
-              <dt className="text-muted">Chế độ</dt><dd>{detail.gradingMode === "GRADED" ? "Graded" : "Practice · không tính điểm, có góp ý AI sau khi nộp"}</dd>
-              <dt className="text-muted">Số phần cần làm</dt><dd>{detail.partCount}</dd>
-              {required.length > 0 && (<><dt className="text-muted">Sơ đồ cần có</dt><dd>{required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}</dd></>)}
-              <dt className="text-muted">Mở lúc</dt><dd>{formatDateTime(detail.opensAt)}</dd>
-              <dt className="text-muted">Hạn nộp</dt><dd>{formatDateTime(detail.closesAt)}</dd>
-              <dt className="text-muted">Nộp trễ</dt><dd>{detail.lateUntil ? `đến ${formatDateTime(detail.lateUntil)}` : "Không cho phép"}</dd>
-              <dt className="text-muted">Số lượt</dt><dd>Đã dùng {detail.attemptsUsed} / {detail.maxAttempts ?? 1} · còn {attemptsLeft}</dd>
+          <Section title="Thông tin bài">
+            <dl className="grid gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" data-testid="assignment-info">
+              <div><dt className="text-xs text-muted">Loại</dt><dd className="mt-0.5 font-semibold text-ink">{kindLabel(detail)}</dd></div>
+              <div><dt className="text-xs text-muted">Trạng thái</dt><dd className="mt-0.5">{status ? <Pill tone={status.tone}>{status.label}</Pill> : <span className="text-muted">—</span>}</dd></div>
+              <div>
+                <dt className="text-xs text-muted">{lateDeadline ? "Hạn nộp trễ" : "Hạn nộp"}</dt>
+                <dd className="mt-0.5 font-mono font-semibold text-ink">{formatDateTime(lateDeadline ? detail.lateUntil : detail.closesAt)}</dd>
+              </div>
+              <div><dt className="text-xs text-muted">Số bài</dt><dd className="mt-0.5 font-semibold text-ink">{detail.partCount}</dd></div>
             </dl>
             {detail.activityMonitoringEnabled && detail.activityNotice && (
               <Alert tone="info" title="Bài có ghi nhận hoạt động">{detail.activityNotice}</Alert>
             )}
           </Section>
           <SlotOutlet slot={assignmentMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
-          {latest?.graded && <SlotOutlet slot={submissionResultSections} props={{ attemptId: latest.attemptId }} />}
+          {latest?.graded && <ResultSummaryCard attemptId={latest.attemptId} historyHref={`${history}&attempt=${encodeURIComponent(latest.attemptId)}`} />}
         </div>
-        <div className="flex flex-col gap-4">
-          <Section title="Làm bài" icon="assignment">
-            {latest && (
-              <p className="text-xs text-body">
-                Lượt gần nhất: lượt {latest.attemptNo} · {latest.status === "IN_PROGRESS" ? myStatusLabels.IN_PROGRESS
-                  : latest.late ? myStatusLabels.SUBMITTED_LATE : myStatusLabels.SUBMITTED}
-                {latest.submittedAt ? ` lúc ${formatDateTime(latest.submittedAt)}` : ""}
-              </p>
-            )}
-            {detail.submissionMode === "GROUP" ? (
-              <SlotOutlet slot={groupWorkEntries} props={{ assignmentId, classId }} />
-            ) : detail.inProgressAttemptId ? (
-              <div className="flex flex-col gap-1">
-                <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>
-                  Tiếp tục lượt {latest?.attemptNo ?? ""}
-                </ButtonLink>
-                {latest?.lastSavedAt && <p className="text-[11px] text-muted">Bạn có một lượt làm dở, tự lưu lúc {formatDateTime(latest.lastSavedAt)}</p>}
-              </div>
-            ) : detail.canStart ? (
-              <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">Bắt đầu làm bài</Button>
-            ) : (
-              <p className="text-xs text-muted">{blockedLabels[detail.startBlockedReason ?? ""] ?? "Chưa làm được bài này"}</p>
-            )}
-            <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
-          </Section>
-          {detail.gradingMode === "PRACTICE" && (
-            <Section title="Góp ý AI" icon="smart_toy">
-              <p className="text-xs text-body">Sau khi nộp, bạn nhận góp ý bằng API cá nhân (hoặc agent MCP tự gọi công cụ). Góp ý chỉ là ước tính, không phải điểm chính thức.</p>
-            </Section>
+        <Section title="Làm bài" actions={<span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa">{detail.attemptsUsed}/{detail.maxAttempts ?? 1}</span>}>
+          {latest && latestKey && (
+            <div className="flex items-center justify-between gap-3 text-[13px]">
+              <span className="font-mono text-xs text-muted">{formatDateTime(latest.submittedAt ?? latest.lastSavedAt ?? latest.startedAt)}</span>
+              <Pill tone={myStatusTones[latestKey]}>{myStatusLabels[latestKey]}</Pill>
+            </div>
           )}
-        </div>
+          {detail.submissionMode === "GROUP" ? (
+            <SlotOutlet slot={groupWorkEntries} props={{ assignmentId, classId }} />
+          ) : detail.inProgressAttemptId ? (
+            <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>Tiếp tục làm bài</ButtonLink>
+          ) : detail.canStart ? (
+            // Chỉ khi còn hạn nộp (hoặc còn hạn nộp trễ) và còn lượt.
+            <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">Bắt đầu làm bài</Button>
+          ) : null}
+          <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
+        </Section>
       </div>
     </div>
   );

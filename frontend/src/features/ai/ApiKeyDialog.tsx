@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { PROVIDER_LABEL, PROVIDERS, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Select, cx } from "@/shared/ui";
-import { PROVIDER_CONSOLE, errorMessage } from "./labels";
+import { PROVIDER_CONSOLE, errorMessage, shortTestResult } from "./labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "./types";
 
 export type KeyTestResult = { ok: boolean; text: string };
@@ -224,13 +224,14 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
             {test && (
               <span
                 role="status"
+                title={test.ok ? undefined : test.text}
                 className={
                   test.ok
                     ? "rounded-md bg-success-soft px-2 py-0.5 text-[13px] font-medium text-success"
                     : "rounded-md bg-danger-soft px-2 py-0.5 text-[13px] font-medium text-danger"
                 }
               >
-                {test.text}
+                {test.ok ? test.text : shortTestResult(test.text)}
               </span>
             )}
           </div>

@@ -6,7 +6,7 @@ import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Dialog, IconButton, SettingsGroup, Switch, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { ApiKeyDialog } from "../ApiKeyDialog";
 import { getProviders } from "../api";
-import { errorMessage } from "../labels";
+import { errorMessage, shortTestResult } from "../labels";
 import type { ConnectionView, ProviderInfo } from "../types";
 import {
   addInstitutional,
@@ -133,7 +133,7 @@ export function InstitutionalKeysSection() {
                             c.lastTestResult === OK ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
                           )}
                         >
-                          {c.lastTestResult}
+                          {shortTestResult(c.lastTestResult)}
                         </span>
                       ) : (
                         <span />

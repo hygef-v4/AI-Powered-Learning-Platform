@@ -26,6 +26,30 @@ export function hasPartialPoints(rubrics: Rubric[], checks: Checks, scores: Item
     return value > 0 && value < Number(item.points);
   })));
 }
+/**
+ * Chấm chỉ theo checklist (không có điểm lẻ): mục đạt khi đã tích (điểm đã lưu, nếu có, phải đủ điểm tối đa); mục đạt được đủ
+ * điểm, mục khác 0. Dùng khi mở bài và khi áp dụng đề xuất AI, để điểm lẻ cũ hay điểm lẻ của AI không còn.
+ */
+export function checklistOnly(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): { checks: Checks; itemScores: ItemScores } {
+  const nextChecks: Checks = {};
+  const nextScores: ItemScores = {};
+  for (const rubric of rubrics) {
+    const ticked = new Set(checks[rubric.rubricId] ?? []);
+    const achieved: string[] = [];
+    const perItem: Record<string, number> = {};
+    for (const item of rubric.criteria.flatMap((criterion) => criterion.items)) {
+      const max = Number(item.points);
+      const saved = scores[rubric.rubricId]?.[item.itemId];
+      const ok = saved !== undefined ? Number(saved) >= max && max > 0 : ticked.has(item.itemId);
+      if (ok) achieved.push(item.itemId);
+      perItem[item.itemId] = ok ? max : 0;
+    }
+    nextChecks[rubric.rubricId] = achieved;
+    nextScores[rubric.rubricId] = perItem;
+  }
+  return { checks: nextChecks, itemScores: nextScores };
+}
+
 /** Same decimal-cent sum as the backend; item overrides take precedence over legacy checks. */
 export function checklistPoints(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): number {
   return rubrics.reduce((total, rubric) => total + rubric.criteria.reduce((sum, criterion) =>
@@ -50,8 +74,9 @@ export type ChecklistProps = {
 };
 
 /**
- * Checklist của một phần (BR-U09-20): mỗi mục đạt thì được đủ điểm của mục, không đạt là 0; không có ô nhập điểm.
- * Điểm lẻ đã lưu từ trước vẫn hiện để giảng viên tích lại. Nhận xét của mục nằm ngay dưới mục.
+ * Checklist của một phần (BR-U09-20): chỉ tích mục đạt; mục đạt được đủ điểm của mục, không đạt là 0, không có điểm lẻ
+ * hay ô nhập điểm. Tạm thời không có nhận xét từng mục; chỉ còn khung kiểm tra khi AI đánh dấu mục cần giảng viên xác nhận
+ * (bắt buộc trước khi chốt điểm).
  */
 export function RubricChecklist({
   rubric,
@@ -82,11 +107,11 @@ export function RubricChecklist({
         const max = Number(item.points);
         const value = Number(itemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
         const achieved = value === max;
-        const partial = value > 0 && value < max;
         const fbItem = structuredFeedback?.items?.find(
           (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
         );
         const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
+        const review = Boolean(fbItem?.requiresReview);
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
             className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
@@ -100,12 +125,7 @@ export function RubricChecklist({
               </span>
               <span className="shrink-0 tabular-nums text-muted">{max.toFixed(2)}</span>
             </label>
-            {partial && (
-              <p className="mt-1 pl-6 text-[11px] text-warning">
-                Điểm lẻ đã lưu: {value.toFixed(2)} / {max.toFixed(2)}. Tích để cho đủ điểm, bỏ tích để về 0.
-              </p>
-            )}
-            {(fbItem || onItemFeedbackChange) && (
+            {review && (
               <div className="pl-6">
                 <RubricItemFeedback
                   rubricId={rubric.rubricId}

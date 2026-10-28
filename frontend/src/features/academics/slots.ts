@@ -2,8 +2,14 @@
 
 import { createSlot } from "@/shared/slots/registry";
 
-/** Phần nội dung trên Student Class Detail (U13, U08, U14, U12). */
+/** Mục Học liệu của trang lớp sinh viên (U13). */
 export const studentClassSections = createSlot<{ classId: string }>("StudentClassSection");
+
+/** Thẻ ở cột phải trang lớp sinh viên, dưới thẻ Giảng viên (U12: Nhóm của tôi). */
+export const studentClassAside = createSlot<{ classId: string }>("StudentClassAside");
+
+/** Hàng thẻ chia đôi dưới Thông tin lớp của trang lớp sinh viên (U14: thông báo gần đây; U08: bài cần làm). */
+export const studentClassBoard = createSlot<{ classId: string }>("StudentClassBoard");
 
 /** Tab hoặc phần trên Teacher Class Detail: Thông tin lớp, Sinh viên, Học liệu, Đánh giá, Sổ điểm. */
 export const teacherClassTabs = createSlot<{

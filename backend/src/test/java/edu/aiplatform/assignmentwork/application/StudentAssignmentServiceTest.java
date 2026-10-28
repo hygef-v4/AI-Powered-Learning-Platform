@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
+import edu.aiplatform.assignments.contract.DocumentPart;
+import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.AttemptStatus;
@@ -16,6 +18,7 @@ import edu.aiplatform.assignmentwork.domain.AssignmentAttempt;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -45,6 +48,33 @@ class StudentAssignmentServiceTest {
         assertThat(rows).extracting(WorkViews.Row::assignmentId).containsExactly(closed, f.assignmentId);
         assertThat(rows).extracting(WorkViews.Row::myStatus).containsExactly("MISSED", "NOT_STARTED");
         assertThat(rows.get(0).scope()).isEqualTo(AssignmentScope.SUBJECT);
+    }
+
+    @Test
+    void partCountIsTheNumberOfTopLevelBranchesWithARubric() {
+        UUID chapter1 = UUID.randomUUID();
+        UUID chapter2 = UUID.randomUUID();
+        UUID leaf1 = UUID.randomUUID();
+        UUID leaf2 = UUID.randomUUID();
+        UUID leaf3 = UUID.randomUUID();
+        UUID appendix = UUID.randomUUID();
+        // Cây: Chương 1 › (1.1, 1.2), Chương 2 › 2.1 › a, Phụ lục (không có con) → 3 nhánh con trực tiếp của gốc.
+        List<DocumentPart> parts = List.of(
+                new DocumentPart(leaf1.toString(), leaf1, List.of(chapter1), "Chương 1 › 1.1"),
+                new DocumentPart(leaf2.toString(), leaf2, List.of(chapter1), "Chương 1 › 1.2"),
+                new DocumentPart(leaf3.toString(), leaf3, List.of(chapter2, UUID.randomUUID()), "Chương 2 › 2.1 › a"),
+                new DocumentPart(appendix.toString(), appendix, List.of(), "Phụ lục"));
+        // Rubric ở 1.1, 1.2 và 2.1 › a; Phụ lục không có rubric nên không tính.
+        List<RubricView> rubrics = List.of(rubric(leaf1), rubric(leaf2), rubric(leaf3));
+        assertThat(StudentAssignmentService.topLevelParts(parts, rubrics)).isEqualTo(2);
+        assertThat(StudentAssignmentService.topLevelParts(parts, List.of())).isZero();
+        DocumentPart whole = new DocumentPart("DOCUMENT", null, List.of(), "Toàn bài");
+        assertThat(StudentAssignmentService.topLevelParts(List.of(whole),
+                List.of(new RubricView(UUID.randomUUID(), f.assignmentId, "DOCUMENT", List.of(), BigDecimal.TEN)))).isEqualTo(1);
+    }
+
+    private RubricView rubric(UUID partId) {
+        return new RubricView(UUID.randomUUID(), f.assignmentId, partId.toString(), List.of(), BigDecimal.TEN);
     }
 
     @Test

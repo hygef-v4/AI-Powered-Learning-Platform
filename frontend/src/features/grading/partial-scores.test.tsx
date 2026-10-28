@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { RubricChecklistPanel } from "./RubricChecklistPanel";
+import { checklistOnly, RubricChecklistPanel } from "./RubricChecklistPanel";
 import type { Checks, ItemScores } from "./types";
 
 const rubrics = [{ rubricId: "r", partId: "q1", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế",
@@ -29,15 +29,13 @@ describe("rubric checklist (BR-U09-20)", () => {
     expect(screen.getByText("0.00 / 1.00 điểm")).toBeInTheDocument();
     expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0}}');
   });
-  it("shows a saved fractional point as a note until the teacher ticks the item", () => {
-    render(<Editor scores={{ r: { i: 0.5 } }} />);
-    const item = screen.getByRole("checkbox", { name: /Quan hệ đúng/ });
-    expect(item).not.toBeChecked();
-    expect(screen.getByText("0.50 / 1.00 điểm")).toBeInTheDocument();
-    expect(screen.getByText(/Điểm lẻ đã lưu: 0.50 \/ 1.00/)).toBeInTheDocument();
-    fireEvent.click(item);
-    expect(screen.queryByText(/Điểm lẻ đã lưu/)).not.toBeInTheDocument();
-    expect(screen.getByText("1.00 / 1.00 điểm")).toBeInTheDocument();
+  it("chỉ chấm theo checklist: điểm lẻ đã lưu hay của AI thành chưa đạt, mục đủ điểm hay đã tích là đạt", () => {
+    const two = [...rubrics, { rubricId: "r2", partId: "q2", maxPoints: 2, criteria: [{ criterionId: "c2", title: "", items: [
+      { itemId: "a", text: "A", points: 1 }, { itemId: "b", text: "B", points: 1 }] }] }];
+    expect(checklistOnly(two, { r2: ["b"] }, { r: { i: 0.5 }, r2: { a: 1 } })).toEqual({
+      checks: { r: [], r2: ["a", "b"] },
+      itemScores: { r: { i: 0 }, r2: { a: 1, b: 1 } },
+    });
   });
   it("disables the checklist in readonly mode", () => {
     render(<RubricChecklistPanel rubrics={rubrics} checks={{}} onChange={() => {}} disabled />);

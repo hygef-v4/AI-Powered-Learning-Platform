@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "./api";
-import { hasPartialPoints, invalidItemScores, itemPoints } from "./RubricChecklistPanel";
+import { checklistOnly, hasPartialPoints, invalidItemScores } from "./RubricChecklistPanel";
 import { message } from "./useResource";
 import { useGradingProposals } from "./useGradingProposals";
 import type {
@@ -13,36 +13,22 @@ import type {
   GradingFormValues,
   ItemScores,
   Rubric,
-  StructuredFeedback,
 } from "./types";
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
-function buildReviewedScores(rubrics: Rubric[], checks: Checks, itemScores: ItemScores = {}): ItemScores {
-  const result: ItemScores = {};
-  for (const rubric of rubrics) {
-    const perRubric: Record<string, string | number> = {};
-    for (const criterion of rubric.criteria) {
-      for (const item of criterion.items) {
-        const val = itemPoints(rubric.rubricId, item.itemId, Number(item.points), checks, itemScores);
-        perRubric[item.itemId] = Number(val).toFixed(2);
-      }
-    }
-    result[rubric.rubricId] = perRubric;
-  }
-  return result;
-}
-
-function initialForm(evaluation: Evaluation): GradingFormValues {
+/** Biểu mẫu chấm khi mở bài: điểm đưa về checklist (điểm lẻ cũ thành chưa đạt cho tới khi giảng viên tích). */
+function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValues {
   let checks: Checks;
   try {
     checks = JSON.parse(evaluation.rubricChecks);
   } catch {
     checks = {};
   }
+  const normalized = checklistOnly(rubrics, checks, evaluation.rubricItemScores ?? {});
   return {
-    checks,
-    itemScores: evaluation.rubricItemScores ?? {},
+    checks: normalized.checks,
+    itemScores: normalized.itemScores,
     structuredFeedback: evaluation.structuredFeedback ?? null,
     clearStructuredFeedback: false,
     acknowledgedReviewItems: evaluation.acknowledgedReviewItems ?? {},
@@ -58,7 +44,7 @@ function initialForm(evaluation: Evaluation): GradingFormValues {
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>) {
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
-  const [form, setForm] = useState(() => initialForm(initial.evaluation));
+  const [form, setForm] = useState(() => initialForm(initial.evaluation, initial.rubrics));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -174,24 +160,24 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
+  /**
+   * Áp dụng đề xuất AI vào bản nháp: chỉ lấy checklist (mục AI cho đủ điểm là đạt, điểm lẻ thành chưa đạt). Tạm thời không
+   * nhận nhận xét của AI; nhận xét cấu trúc cũ của bài (nếu có) được xoá khi lưu.
+   */
   function applyProposal(
     checks: Checks,
-    feedback: string,
+    _feedback: string,
     proposalId: string,
     itemScores: ItemScores = {},
-    structuredFeedback: StructuredFeedback | null = null,
   ) {
-    const nextReviewed = structuredFeedback
-      ? buildReviewedScores(detail.rubrics, checks, itemScores)
-      : {};
+    const normalized = checklistOnly(detail.rubrics, checks, itemScores);
     updateForm({
-      checks,
-      itemScores,
-      feedback,
-      structuredFeedback,
-      clearStructuredFeedback: false,
+      checks: normalized.checks,
+      itemScores: normalized.itemScores,
+      structuredFeedback: null,
+      clearStructuredFeedback: Boolean(form.structuredFeedback || evaluation.structuredFeedback),
       acknowledgedReviewItems: {},
-      reviewedItemScores: nextReviewed,
+      reviewedItemScores: {},
       usedProposalId: proposalId,
     });
   }

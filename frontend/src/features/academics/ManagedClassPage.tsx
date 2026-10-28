@@ -62,8 +62,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
   return <>
     <PageHeader backHref="/manager/classes" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></>}
       breadcrumb={[{ label: "Lớp của môn", href: "/manager/classes" }, { label: value.code }]} />
-    {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
-    <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" /></div>
+    <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" />
     {tab === "info" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
       <ClassInfoForm value={value} onSave={actions.onSaveInfo}/>
       <div className="flex flex-col gap-4">

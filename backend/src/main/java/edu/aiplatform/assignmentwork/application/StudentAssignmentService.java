@@ -5,6 +5,7 @@ import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.AssignmentContent;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
+import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.RubricView;
@@ -27,6 +28,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -123,7 +125,7 @@ public class StudentAssignmentService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new WorkViews.Detail(view.assignmentId(), ref.classId(), ref.code(), ref.name(), view.scope(),
                 view.title(), view.submissionMode(), view.gradingMode(), view.diagramEnabled(), view.status(),
-                view.opensAt(), view.closesAt(), view.lateUntil(), view.maxAttempts(), content.parts().size(), maxPoints,
+                view.opensAt(), view.closesAt(), view.lateUntil(), view.maxAttempts(), topLevelParts(content.parts(), content.rubrics()), maxPoints,
                 content.requiredDiagrams(), view.activityMonitoringEnabled(),
                 view.activityMonitoringEnabled() ? view.activityNotice() : null, view.referenceMaterialIds(),
                 list.size(), latest, inProgress == null ? null : inProgress.id(),
@@ -142,6 +144,21 @@ public class StudentAssignmentService {
     }
 
     /** Bài GRADED chấm lượt nộp cuối (BR-U08-30); Practice không có lượt được chấm. */
+    /**
+     * Số bài hiện cho người học: số nhánh con trực tiếp của gốc tài liệu (heading cấp cao nhất của mỗi phần, hoặc chính phần
+     * nếu không có heading cha) mà nhánh đó hoặc con cháu của nó có rubric; khung không có heading là một bài nếu có rubric.
+     */
+    static int topLevelParts(List<DocumentPart> parts, List<RubricView> rubrics) {
+        if (parts == null || parts.isEmpty() || rubrics == null || rubrics.isEmpty()) {
+            return 0;
+        }
+        Set<String> graded = rubrics.stream().map(RubricView::partId).collect(Collectors.toSet());
+        return (int) parts.stream()
+                .filter(part -> graded.contains(part.partId()))
+                .map(part -> part.ancestorHeadingIds().isEmpty() ? part.partId() : part.ancestorHeadingIds().get(0).toString())
+                .distinct().count();
+    }
+
     static UUID gradedAttemptId(GradingMode mode, List<AssignmentAttempt> attempts) {
         if (mode != GradingMode.GRADED) {
             return null;

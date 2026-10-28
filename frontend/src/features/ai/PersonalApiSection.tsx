@@ -5,7 +5,7 @@ import { PROVIDER_LABEL, PROVIDERS, masked, type AiProvider } from "@/shared/ai"
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Dialog, IconButton, SettingsGroup, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { ApiKeyDialog } from "./ApiKeyDialog";
-import { errorMessage } from "./labels";
+import { errorMessage, shortTestResult } from "./labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "./types";
 
 const OK = "Đạt";
@@ -104,7 +104,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
                           c.lastTestResult === OK ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
                         )}
                       >
-                        {c.lastTestResult}
+                        {shortTestResult(c.lastTestResult)}
                       </span>
                     ) : (
                       <span />

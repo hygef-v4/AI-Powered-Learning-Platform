@@ -11,7 +11,6 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "./ClassFormDialog";
 import {ReopenConflictError} from "./ClassDialogs";
-import {CLASS_CHANGED_EVENT} from "./navContexts";
 import {EmptyState, operationError} from "./ui";
 import type {SubjectView, CourseClassView, EnrollmentView} from "./types";
 import styles from "./academics.module.css";
@@ -120,7 +119,6 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
     try {
       const result = await action();
       await state.refresh();
-      window.dispatchEvent(new CustomEvent(CLASS_CHANGED_EVENT, {detail: id}));
       return result;
     } catch (error) {
       if (error instanceof ApiError && error.problem.status === 409) {

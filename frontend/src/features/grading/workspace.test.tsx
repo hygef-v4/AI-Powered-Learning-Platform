@@ -62,29 +62,26 @@ describe("workspace save", () => {
   it("sends version and checklist, then moves to the next submission only after saving", async () => {
     mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" />);
-    const feedback = await screen.findByRole("textbox", { name: "Nhận xét gửi sinh viên" });
-    fireEvent.change(feedback, { target: { value: "reviewed" } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    // Tạm thời không có ô nhận xét: nhận xét đã lưu được giữ nguyên khi lưu điểm.
+    expect(screen.queryByRole("textbox", { name: /Nhận xét/ })).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next"));
     expect(mocks.save.mock.calls[0]![1]).toMatchObject({
       version: 2,
       checkedItemsByRubric: {},
       adjustment: "0",
       adjustmentReason: null,
-      feedback: "reviewed",
+      feedback: "original",
     });
     expect(mocks.save.mock.calls[0]![1]).not.toHaveProperty("score");
   });
-  it("keeps unsaved feedback and stays on the submission after conflict", async () => {
+  it("stays on the submission after a version conflict", async () => {
     mocks.save.mockRejectedValue(
       new ApiError({ status: 409, title: "Conflict", code: "GRADE_VERSION_CONFLICT" }),
     );
     render(<GradingWorkspacePage evaluationId="e" />);
-    const feedback = await screen.findByRole("textbox", { name: "Nhận xét gửi sinh viên" });
-    fireEvent.change(feedback, { target: { value: "unsaved" } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
     await screen.findByRole("alert");
-    expect(feedback).toHaveValue("unsaved");
     expect(mocks.push).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeDisabled();
   });
@@ -98,7 +95,7 @@ it("shows a live score and named sections while AI is unavailable, without savin
   render(<GradingWorkspacePage evaluationId="e" />);
   fireEvent.click(await screen.findByRole("checkbox", { name: /Đúng quan hệ/ }));
   expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("2.50 / 10.00");
-  expect(screen.getByRole("region", { name: "Rubric: Câu 1: Class Diagram" })).toHaveTextContent("Đạt 2.50");
+  expect(screen.getByRole("region", { name: "Rubric: Câu 1: Class Diagram" })).toHaveTextContent("Đạt 2.5");
   expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
   expect(screen.queryByText(/Điều chỉnh/)).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
@@ -107,7 +104,7 @@ it("shows a live score and named sections while AI is unavailable, without savin
 });
 
 
-it("shows a saved fractional point as a note and ticking the item saves full points", async () => {
+it("treats a saved fractional point as not achieved (checklist only) and ticking the item saves full points", async () => {
   const partialDetail = { ...detail, evaluation: { ...detail.evaluation, rubricItemScores: { r: { i: 0.5 } } },
     rubrics: [{ rubricId: "r", partId: "q", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế", items: [{ itemId: "i", text: "Đạt một phần", points: 1 }] }] }] };
   mocks.detail.mockResolvedValue(partialDetail);
@@ -115,7 +112,7 @@ it("shows a saved fractional point as a note and ticking the item saves full poi
   render(<GradingWorkspacePage evaluationId="e" />);
   const item = await screen.findByRole("checkbox", { name: /Đạt một phần/ });
   expect(item).not.toBeChecked();
-  expect(screen.getByText(/Điểm lẻ đã lưu: 0.50 \/ 1.00/)).toBeInTheDocument();
+  expect(screen.queryByText(/Điểm lẻ/)).not.toBeInTheDocument();
   fireEvent.click(item);
   expect(item).toBeChecked();
   fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
@@ -218,16 +215,18 @@ describe("AI proposal comparison and draft application", () => {
     expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
     openAi();
     const dialog = screen.getByRole("dialog", { name: "Chấm bằng AI" });
-    expect(dialog).toHaveTextContent(/Điểm đang chấm: 2\.50/);
+    // Điểm lẻ 0.5 đã lưu của mục 1 không còn tính (chỉ checklist).
+    expect(dialog).toHaveTextContent(/Điểm đang chấm: 2\.00/);
     expect(dialog).toHaveTextContent(/AI đề xuất: 3\.00/);
     expect(dialog).not.toHaveTextContent(/Điều chỉnh/);
-    expect(dialog).toHaveTextContent(/Lệch \+0\.50/);
+    expect(dialog).toHaveTextContent(/Lệch \+1\.00/);
 
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
     expect(mocks.save).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
-    expect(screen.getByRole("textbox", { name: "Nhận xét gửi sinh viên" })).toHaveValue("Nhận xét chung tiếng Việt");
+    // Tạm thời không nhận nhận xét của AI.
+    expect(screen.queryByText("Nhận xét chung tiếng Việt")).not.toBeInTheDocument();
   });
 
   it("shows the AI comparison without NaN when a fractional point was saved before", async () => {
@@ -253,7 +252,7 @@ describe("AI proposal comparison and draft application", () => {
     render(<GradingWorkspacePage evaluationId="e" />);
     await screen.findByRole("checkbox", { name: /Thực thể chính/ });
     openAi();
-    expect(screen.getByRole("dialog", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.50/);
+    expect(screen.getByRole("dialog", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.00/);
     expect(document.body.textContent).not.toContain("NaN");
   });
 

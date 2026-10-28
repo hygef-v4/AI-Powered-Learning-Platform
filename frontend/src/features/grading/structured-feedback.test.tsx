@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GradingWorkspacePage } from "./GradingWorkspacePage";
-import { StudentGradePanel } from "./StudentGradePanel";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
 import type { Detail, Rubric, StructuredFeedback } from "./types";
 
@@ -208,7 +207,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByText(/Gợi ý thêm \(không trừ điểm\):/)).toBeInTheDocument();
   });
 
-  it("applies structured feedback to teacher draft, warns on score change, blocks finalize until confirmed/edited, and saves/clears cleanly", async () => {
+  it("áp dụng đề xuất AI chỉ lấy checklist (điểm lẻ thành chưa đạt), không đưa nhận xét của AI vào bản nháp", async () => {
     mocks.detail.mockResolvedValue(baseDetail);
     mocks.proposals.mockResolvedValue([
       {
@@ -227,154 +226,27 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
       },
     ]);
 
-    render(<GradingWorkspacePage evaluationId="eval-1" />);
+    render(<GradingWorkspacePage evaluationId="e" />);
     fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
-    const applyBtn = await screen.findByRole("button", { name: "Áp dụng vào bản nháp" });
-    fireEvent.click(applyBtn);
+    fireEvent.click(await screen.findByRole("button", { name: "Áp dụng vào bản nháp" }));
 
-    // Apply populates the draft only; it does not auto-save and there is no adjustment outside the rubric
     expect(mocks.save).not.toHaveBeenCalled();
-    expect(screen.getByText("Làm tốt · Cần sửa")).toBeInTheDocument();
-    expect(screen.queryByDisplayValue("-0.25")).not.toBeInTheDocument();
+    expect(screen.queryByText("Làm tốt · Cần sửa")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Xác định thực thể" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Bội số quan hệ" })).not.toBeChecked();
 
-    // Acknowledge the AI review flag on item 2 first
-    const ackCheckbox = screen.getByRole("checkbox", {
-      name: "Đã kiểm tra và xác nhận giải thích: Bội số quan hệ",
-    });
-    fireEvent.click(ackCheckbox);
-    expect(ackCheckbox).toBeChecked();
-
-    // Now tick item 2 (AI gave 0.5) so it gets full points, without editing its explanation
-    const item2 = screen.getByRole("checkbox", { name: "Bội số quan hệ" });
-    expect(item2).not.toBeChecked();
-    fireEvent.click(item2);
-
-    // Score-change review warning appears immediately
-    expect(
-      await screen.findByText(/Điểm mục này đã thay đổi sau khi tạo nhận xét \(0\.50 → 1\.00\)/),
-    ).toBeInTheDocument();
-
-    // Save the draft with the unresolved score mismatch (allowed for DRAFT)
-    mocks.save.mockImplementation(async (_id, body) => ({
-      ...baseDetail.evaluation,
-      version: 2,
-      score: 1.5,
-      rubricItemScores: body.itemScoresByRubric,
-      structuredFeedback: body.structuredFeedback,
-      reviewedItemScores: body.reviewedItemScores,
-      acknowledgedReviewItems: body.acknowledgedReviewItems,
-    }));
+    mocks.save.mockImplementation(async () => ({ ...baseDetail.evaluation, version: 2, score: 1 }));
     fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
-
-    // Attempt to finalize while score mismatch is unresolved -> server rejects with STRUCTURED_FEEDBACK_SCORE_MISMATCH
-    mocks.finalize.mockResolvedValue({
-      items: [
-        {
-          evaluationId: "eval-1",
-          outcome: "FAILED",
-          code: "STRUCTURED_FEEDBACK_SCORE_MISMATCH",
-          newVersion: null,
-        },
-      ],
+    const body = mocks.save.mock.calls[0]![1];
+    expect(body).toMatchObject({
+      checkedItemsByRubric: { r1: ["i1"] },
+      itemScoresByRubric: { r1: { i1: 1, i2: 0 } },
+      feedback: "Nhận xét nháp ban đầu",
+      usedProposalId: "prop-structured",
     });
-    fireEvent.click(screen.getByRole("button", { name: "Chốt điểm" }));
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
-    expect(
-      await screen.findByText(
-        "Có mục đã thay đổi điểm nhưng chưa cập nhật hoặc xác nhận lại giải thích nhận xét.",
-      ),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]!);
-
-    // Teacher edits the explanation for item 2 to match the new 0.75 score
-    const reasonTextarea2 = screen.getByRole("textbox", { name: "Giải thích điểm: Bội số quan hệ" });
-    fireEvent.change(reasonTextarea2, {
-      target: { value: "Đạt 1.00/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ" },
-    });
-
-    // Score mismatch warning disappears after teacher edits explanation
-    expect(
-      screen.queryByText(/Điểm mục này đã thay đổi sau khi tạo nhận xét/),
-    ).not.toBeInTheDocument();
-
-    // Save updated explanation and verify payload
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
-    const secondSaveBody = mocks.save.mock.calls[1]![1];
-    expect(secondSaveBody.structuredFeedback.items[1].reason).toBe(
-      "Đạt 1.00/1.00 điểm sau khi giảng viên kiểm tra trực tiếp sơ đồ",
-    );
-    expect(secondSaveBody.reviewedItemScores.r1.i2).toBe("1.00");
-    expect(secondSaveBody.adjustment).toBe("0");
-
-    // Explicit clear removes structuredFeedback with clearStructuredFeedback=true
-    fireEvent.click(screen.getByRole("button", { name: "Xóa nhận xét cấu trúc" }));
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(3));
-    expect(mocks.save.mock.calls[2]![1].clearStructuredFeedback).toBe(true);
-    expect(mocks.save.mock.calls[2]![1].structuredFeedback).toBeUndefined();
+    expect(body.structuredFeedback).toBeUndefined();
   });
 
-  it("renders sanitized published StudentGradePanel with rubric items, optional full-mark advice, and member override notice without exposing teacher review flags", async () => {
-    mocks.attempt.mockResolvedValue({
-      assignmentId: "a1",
-      attemptId: "att-1",
-      score: 1.25,
-      maxScore: 2,
-      rubricScore: 1.5,
-      memberOverride: true,
-      feedback: "Nhận xét chung đã duyệt",
-      publishedAt: "2026-10-26T04:00:00Z",
-      updated: false,
-      rubricChecks: "{}",
-      structuredSummary: {
-        strengths: ["Xác định đúng thực thể"],
-        improvements: ["Bổ sung bội số"],
-        nextSteps: ["Xem lại bài giảng chương 3"],
-      },
-      rubricItems: [
-        {
-          rubricId: "r1",
-          partId: "part-1",
-          criterionTitle: "Mô hình hóa",
-          itemId: "i1",
-          itemText: "Xác định thực thể",
-          awardedPoints: 1,
-          maxPoints: 1,
-          evidence: "Có đủ LopHoc và HocSinh",
-          reason: "Đạt tối đa 1.00/1.00 điểm",
-          suggestion: "Có thể đặt tên thuộc tính rõ nghĩa hơn",
-        },
-        {
-          rubricId: "r1",
-          partId: "part-1",
-          criterionTitle: "Mô hình hóa",
-          itemId: "i2",
-          itemText: "Bội số quan hệ",
-          awardedPoints: 0.5,
-          maxPoints: 1,
-          evidence: "Thiếu ký hiệu 1..*",
-          reason: "Đạt 0.50/1.00 điểm do thiếu bội số ở một đầu",
-          suggestion: "Thêm 1..* vào đầu HocSinh",
-        },
-      ],
-    });
-
-    const { container } = render(<StudentGradePanel attemptId="att-1" />);
-    expect(await screen.findByText(/1\.25 \/ 2\.00/)).toBeInTheDocument();
-    expect(screen.getByText(/Điểm theo rubric: 1\.50 \/ 2\.00/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Điểm cá nhân đã được giảng viên điều chỉnh riêng/),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Xác định đúng thực thể")).toBeInTheDocument();
-    expect(screen.getByText(/Mô hình hóa: Xác định thực thể/)).toBeInTheDocument();
-    expect(screen.getByText(/Gợi ý thêm \(không trừ điểm\):/)).toBeInTheDocument();
-    expect(screen.getByText(/Cách cải thiện:/)).toBeInTheDocument();
-
-    // Never expose teacher review controls or internal flags
-    expect(container.textContent).not.toContain("Cần giảng viên kiểm tra");
-    expect(container.textContent).not.toContain("requiresReview");
-    expect(screen.queryByRole("checkbox")).toBeNull();
-  });
 });

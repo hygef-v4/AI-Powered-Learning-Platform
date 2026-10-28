@@ -15,10 +15,7 @@ import type { CourseClassView, SubjectView } from "./types";
 
 const enc = encodeURIComponent;
 
-/** Phát sau khi sửa lớp để mã lớp trên sidebar cập nhật theo; `detail` là id lớp. */
-export const CLASS_CHANGED_EVENT = "academics:class-changed";
-
-/** Các màn quản lý một môn. Chi tiết lớp (`/manager/classes/{id}`) thuộc sidebar của lớp. */
+/** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp của môn). */
 const SUBJECT_ROOTS = ["/manager/subjects", "/manager/questions", "/manager/quizzes", "/manager/assignments", "/manager/materials", "/manager/classes"];
 
 function under(pathname: string, root: string) {
@@ -35,7 +32,7 @@ function switcher(build: (id: string) => NavItem[], items: NavItem[]) {
 let lastSubjectId: string | null = null;
 
 export function subjectContext({ pathname, search }: NavLocation): NavContext | null {
-  if (!SUBJECT_ROOTS.some((root) => under(pathname, root)) || /^\/manager\/classes\/[^/]+/.test(pathname)) return null;
+  if (!SUBJECT_ROOTS.some((root) => under(pathname, root))) return null;
   const fromPath = /^\/manager\/subjects\/([^/]+)/.exec(pathname)?.[1];
   const subjectId = (fromPath ? decodeURIComponent(fromPath) : search.get("subjectId")) || lastSubjectId;
   lastSubjectId = subjectId;
@@ -60,11 +57,9 @@ export function subjectContext({ pathname, search }: NavLocation): NavContext | 
 }
 
 type ClassItem = { key: string; label: string; icon: IconName; href: (id: string) => string };
-type ClassScope = Extract<Scope, "teaching" | "manager" | "me">;
+type ClassScope = Extract<Scope, "teaching" | "me">;
 
-const classPage = (scope: string) => (tab?: string) => (id: string) => `/${scope}/classes/${enc(id)}${tab ? `?tab=${tab}` : ""}`;
-const teachingPage = classPage("teaching");
-const managerPage = classPage("manager");
+const teachingPage = (tab?: string) => (id: string) => `/teaching/classes/${enc(id)}${tab ? `?tab=${tab}` : ""}`;
 const announcements = (id: string) => `/announcements?classId=${enc(id)}`;
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
@@ -76,26 +71,22 @@ const TEACHING_ITEMS: ClassItem[] = [
   { key: "gradebook", label: "Sổ điểm", icon: "receipt_long", href: teachingPage("gradebook") },
   { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
 ];
-const MANAGER_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: managerPage() },
-  { key: "students", label: "Sinh viên", icon: "groups", href: managerPage("students") },
-];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
   { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${enc(id)}` },
   { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${enc(id)}` },
+  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${enc(id)}?tab=materials` },
   { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
   { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${enc(id)}/group` },
 ];
 
 const BACK: Record<ClassScope, { href: string; label: string }> = {
   teaching: { href: "/teaching/classes", label: "Lớp được phân công" },
-  manager: { href: "/manager/classes", label: "Lớp của môn" },
   me: { href: "/classes", label: "Lớp của tôi" },
 };
 
 function buildClass(scope: ClassScope, id: string, open: string): NavContext {
-  const list = scope === "teaching" ? TEACHING_ITEMS : scope === "manager" ? MANAGER_ITEMS : STUDENT_ITEMS;
+  const list = scope === "teaching" ? TEACHING_ITEMS : STUDENT_ITEMS;
   const build = (classId: string): NavItem[] =>
     list.map((item) => ({ href: item.href(classId), label: item.label, icon: item.icon, active: item.key === open }));
   const items = build(id);
@@ -107,25 +98,26 @@ function buildClass(scope: ClassScope, id: string, open: string): NavContext {
   };
 }
 
-/** Lớp được phân công (`/teaching/classes/{id}`), lớp của môn (`/manager/classes/{id}`) và Thông báo lớp của một lớp. */
+/** Lớp được phân công (`/teaching/classes/{id}`) và Thông báo lớp của một lớp. Lớp của môn (Chủ nhiệm môn) dùng sidebar của môn. */
 export function classContext({ pathname, search }: NavLocation): NavContext | null {
   if (pathname === "/announcements" && search.get("classId")) return buildClass("teaching", search.get("classId")!, "announcements");
-  const match = /^\/(teaching|manager)\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
+  const match = /^\/teaching\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!match) return null;
-  const scope = match[1] as "teaching" | "manager";
-  const tabs = (scope === "teaching" ? TEACHING_ITEMS : MANAGER_ITEMS).filter((item) => item.key !== "announcements");
+  const tabs = TEACHING_ITEMS.filter((item) => item.key !== "announcements");
   // Trang con của lớp (bài nộp của một bài tập) thuộc tab Đánh giá.
-  const open = match[3] ? "evals" : tabs.find((tab) => tab.key === search.get("tab"))?.key ?? "info";
-  return buildClass(scope, decodeURIComponent(match[2]!), open);
+  const open = match[2] ? "evals" : tabs.find((tab) => tab.key === search.get("tab"))?.key ?? "info";
+  return buildClass("teaching", decodeURIComponent(match[1]!), open);
 }
 
-/** Lớp của tôi (`/classes/{id}`, Nhóm của tôi) và Bài tập, Thông báo lọc theo một lớp (`?classId=`). */
+/** Lớp của tôi (`/classes/{id}`, Học liệu, Nhóm của tôi) và Bài tập, Thông báo, một học liệu của một lớp (`?classId=`). */
 export function studentClassContext({ pathname, search }: NavLocation): NavContext | null {
   const own = /^\/classes\/([^/]+)(\/group)?$/.exec(pathname);
-  if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? "group" : "info");
+  if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? "group" : search.get("tab") === "materials" ? "materials" : "info");
   const classId = search.get("classId");
-  if (!classId) return null;
+  // Bài mở từ trang Bài tập chung (`from=all`) giữ menu chung, không đổi sang sidebar của lớp.
+  if (!classId || search.get("from") === "all") return null;
   if (under(pathname, "/my-assignments")) return buildClass("me", classId, "assignments");
+  if (under(pathname, "/materials")) return buildClass("me", classId, "materials");
   if (pathname === "/announcements") return buildClass("me", classId, "announcements");
   return null;
 }
@@ -163,31 +155,19 @@ function SubjectNavHeader({ subjectId, hrefFor }: { subjectId: string | null; hr
 function ClassNavHeader({ scope, id, hrefFor }: { scope: ClassScope; id: string; hrefFor: (id: string) => string }) {
   const [value, setValue] = useState<CourseClassView | null>(null);
   const [classes, setClasses] = useState<CourseClassView[]>([]);
-  const [version, setVersion] = useState(0);
-  useEffect(() => {
-    const onChange = (event: Event) => {
-      if ((event as CustomEvent<string>).detail === id) setVersion((current) => current + 1);
-    };
-    window.addEventListener(CLASS_CHANGED_EVENT, onChange);
-    return () => window.removeEventListener(CLASS_CHANGED_EVENT, onChange);
-  }, [id]);
   useEffect(() => {
     const request = new AbortController();
     academicsApi.detail(scope, id, request.signal).then(setValue, () => {});
     return () => request.abort();
-  }, [scope, id, version]);
+  }, [scope, id]);
   const shown = value?.id === id ? value : null;
-  // Lớp của môn chỉ chuyển giữa các lớp cùng môn.
-  const subjectId = scope === "manager" ? shown?.subject.id : undefined;
   useEffect(() => {
-    if (scope === "manager" && !subjectId) return;
     const request = new AbortController();
-    academicsApi.classes(scope, { size: 100, subjectId }, request.signal).then(setClasses, () => {});
+    academicsApi.classes(scope, { size: 100 }, request.signal).then(setClasses, () => {});
     return () => request.abort();
-  }, [scope, subjectId]);
-  const back = scope === "manager" && shown ? { href: `/manager/classes?subjectId=${enc(shown.subject.id)}`, label: BACK.manager.label } : BACK[scope];
+  }, [scope]);
   return (
-    <NavHeader back={back}>
+    <NavHeader back={BACK[scope]}>
       <Switcher
         label="Chọn lớp"
         loading={!shown}

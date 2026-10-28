@@ -55,6 +55,8 @@ type Props = {
   header?: ReactNode;
   /** Nút thêm ở cuối thanh công cụ; có nút thì thanh công cụ vẫn hiện khi chỉ đọc. */
   toolbarExtra?: ReactNode;
+  /** Chỉ đọc: nút đặt giữa thanh công cụ, thẳng giữa trang giấy (vd. chuyển lượt nộp). */
+  toolbarCenter?: ReactNode;
   /** Ghi chú bên lề gắn với block (rubric của từng mục), kiểu comment Google Docs. */
   comments?: DocumentComment[];
   activeComment?: string | null;
@@ -425,9 +427,12 @@ function CornerDelete({ label, disabled = false, onClick }: { label: string; dis
  * chữ của người soạn (chữ nhạt); sơ đồ của người soạn trong phần thì bấm vào để vẽ, bảng thì điền thẳng. Định dạng chữ
  * áp cho vùng bôi đen, không bôi đen thì cho cả đoạn (yêu cầu 2026-10-22).
  */
+/** Bóng đặc màu nền trang phủ khe giữa thanh trên cùng và thanh công cụ dính, để nội dung cuộn không lộ lên trên thanh công cụ. */
+const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
+
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, toolbarExtra, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false,
+  header, toolbarExtra, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -781,9 +786,20 @@ export function DocumentEditor({
         }
       }}>
       {guided && !readOnly && <p className="text-xs text-muted">Chọn vùng bài làm để định dạng chữ.{diagramEnabled && " Dùng nút trong từng câu để thêm sơ đồ đúng vị trí."}</p>}
-      {(!readOnly || toolbarExtra) && (
+      {readOnly && toolbarCenter && (
+        // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
+        <div role="toolbar" aria-label="Thanh công cụ"
+          className={`sticky top-16 z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
+          <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-[1fr_auto_1fr] items-center"}>
+            {!rail && <span />}
+            <div className="flex items-center justify-center gap-0.5">{toolbarCenter}</div>
+            <div className="flex items-center justify-end gap-0.5">{toolbarExtra}</div>
+          </div>
+        </div>
+      )}
+      {(!readOnly || (toolbarExtra && !toolbarCenter)) && (
         <div role="toolbar" aria-label="Định dạng và chèn"
-          className="sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line">
+          className={`sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
           {!readOnly && (
             <>
               <ToolbarButton title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác" disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>

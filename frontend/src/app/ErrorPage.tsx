@@ -5,25 +5,25 @@ import { ErrorMark, type ErrorKind } from "@/shared/ui/ErrorMark";
 import { Logo } from "@/shared/ui/Logo";
 import styles from "./error-page.module.css";
 
-/** Chữ của từng trang lỗi; `code` chỉ có ở lỗi mang mã HTTP. */
+/** Chữ của từng trang lỗi: chỉ nói lỗi gì, không hướng dẫn thêm; `code` chỉ có ở lỗi mang mã HTTP. */
 const COPY: Record<ErrorKind, { code?: string; title: string; description: string }> = {
   "not-found": {
     code: "404",
     title: "Không tìm thấy trang",
-    description: "Đường dẫn này không tồn tại hoặc đã được thay đổi. Hãy kiểm tra lại liên kết hoặc quay về trang chủ.",
+    description: "Đường dẫn không tồn tại hoặc đã bị đổi.",
   },
   unavailable: {
     code: "503",
     title: "Hệ thống đang bận",
-    description: "Máy chủ chưa phản hồi. Hãy tải lại trang sau ít phút.",
+    description: "Máy chủ chưa phản hồi.",
   },
   offline: {
     title: "Mất kết nối mạng",
-    description: "Thiết bị đang không có mạng. Kết nối lại rồi tải lại trang.",
+    description: "Thiết bị đang không có mạng.",
   },
   generic: {
     title: "Đã xảy ra lỗi",
-    description: "Hệ thống chưa thể hoàn tất yêu cầu. Bạn có thể tải lại trang hoặc quay về trang chủ.",
+    description: "Hệ thống không hoàn tất được yêu cầu.",
   },
 };
 

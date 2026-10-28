@@ -161,8 +161,9 @@ export const myStatusLabels: Record<MyStatus, string> = {
   NOT_STARTED: "Chưa làm", IN_PROGRESS: "Đang làm", SUBMITTED: "Đã nộp", SUBMITTED_LATE: "Nộp trễ", MISSED: "Hết hạn", GROUP: "Bài nhóm",
 };
 
+/** Chưa làm xám, Đang làm vàng, Đã nộp xanh lá, Nộp trễ tím, Hết hạn đỏ. */
 export const myStatusTones: Record<MyStatus, Tone> = {
-  NOT_STARTED: "neutral", IN_PROGRESS: "info", SUBMITTED: "success", SUBMITTED_LATE: "warning", MISSED: "danger", GROUP: "accent",
+  NOT_STARTED: "neutral", IN_PROGRESS: "warning", SUBMITTED: "success", SUBMITTED_LATE: "accent", MISSED: "danger", GROUP: "accent",
 };
 
 export const submitModeLabels: Record<SubmitMode, string> = {

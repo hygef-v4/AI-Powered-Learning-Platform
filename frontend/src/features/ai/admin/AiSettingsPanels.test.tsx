@@ -182,7 +182,8 @@ describe("AiConnectionsPanel", () => {
     expect(screen.getByText("Kiểm tra có thể tính phí nhỏ.", { selector: "[role=dialog] p" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Khóa API/), { target: { value: "AIzaSy-new-key-9999" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Kiểm tra" }));
-    expect(await screen.findByText("Key API không hợp lệ (HTTP 401)")).toBeInTheDocument();
+    // Không đạt thì chỉ 1–2 từ; câu đầy đủ của máy chủ ở tooltip.
+    expect(await screen.findByText("Sai khóa")).toHaveAttribute("title", "Key API không hợp lệ (HTTP 401)");
     expect(calls.find((c) => c.url === "/api/v1/admin/ai/connections:test")!.body).toEqual({
       provider: "GEMINI",
       apiKey: "AIzaSy-new-key-9999",

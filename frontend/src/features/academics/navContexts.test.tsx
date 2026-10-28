@@ -20,7 +20,6 @@ describe("sidebar của môn", () => {
   it("chỉ hiện ở các màn của một môn, mọi link mang môn đang mở", () => {
     expect(subjectContext(at("/manager"))).toBeNull();
     expect(subjectContext(at("/teaching/classes"))).toBeNull();
-    expect(subjectContext(at("/manager/classes/c-1"))).toBeNull();
 
     const subject = subjectContext(at("/manager/subjects/s-1"))!;
     expect(labels(subject.items)).toEqual(["Thông tin môn", "Câu hỏi", "Quiz", "Bài tập", "Học liệu", "Lớp của môn"]);
@@ -64,19 +63,20 @@ describe("sidebar của lớp", () => {
 
   it("lớp của tôi (Sinh viên) có các trang sinh viên vào được của lớp", () => {
     const own = studentClassContext(at("/classes/c-4"))!;
-    expect(labels(own.items)).toEqual(["Thông tin lớp", "Bài tập", "Thông báo lớp", "Nhóm của tôi"]);
-    expect(own.items.map((item) => item.href)).toEqual(["/classes/c-4", "/my-assignments?classId=c-4", "/announcements?classId=c-4", "/classes/c-4/group"]);
+    expect(labels(own.items)).toEqual(["Thông tin lớp", "Bài tập", "Học liệu", "Thông báo lớp", "Nhóm của tôi"]);
+    expect(own.items.map((item) => item.href)).toEqual(["/classes/c-4", "/my-assignments?classId=c-4", "/classes/c-4?tab=materials", "/announcements?classId=c-4", "/classes/c-4/group"]);
     expect(activeLabel(own.items)).toBe("Thông tin lớp");
     expect(activeLabel(studentClassContext(at("/classes/c-4/group"))!.items)).toBe("Nhóm của tôi");
+    expect(activeLabel(studentClassContext(at("/classes/c-4", "tab=materials"))!.items)).toBe("Học liệu");
+    expect(activeLabel(studentClassContext(at("/materials/m-1", "classId=c-4"))!.items)).toBe("Học liệu");
     expect(activeLabel(studentClassContext(at("/my-assignments/a-1", "classId=c-4"))!.items)).toBe("Bài tập");
     expect(studentClassContext(at("/classes"))).toBeNull();
     expect(studentClassContext(at("/my-assignments"))).toBeNull();
   });
 
-  it("lớp của môn (Chủ nhiệm môn) có Thông tin lớp và Sinh viên", () => {
-    const managed = classContext(at("/manager/classes/c-2", "tab=students"))!;
-    expect(labels(managed.items)).toEqual(["Thông tin lớp", "Sinh viên"]);
-    expect(activeLabel(managed.items)).toBe("Sinh viên");
+  it("lớp của môn (Chủ nhiệm môn) không có sidebar lớp, vẫn là sidebar của môn ở mục Lớp của môn", () => {
+    expect(classContext(at("/manager/classes/c-2", "tab=students"))).toBeNull();
+    expect(activeLabel(subjectContext(at("/manager/classes/c-2"))!.items)).toBe("Lớp của môn");
   });
 });
 

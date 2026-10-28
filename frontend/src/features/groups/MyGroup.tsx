@@ -7,6 +7,7 @@ import { cancelLeaderRequest, getMyGroup, submitLeaderRequest } from "./api";
 import { formatDate, formatShort } from "./format";
 import type { MyGroupView, RequestStatus } from "./types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { initials } from "@/shared/layout/navigation";
 
 const REQUEST_STATUS: Record<RequestStatus, { text: string; tone: Tone }> = {
   PENDING: { text: "Chờ duyệt", tone: "warning" },
@@ -39,23 +40,40 @@ function useMyGroup(classId: string) {
   return { view, error, reload };
 }
 
-/** Thẻ Nhóm của tôi trên Student Class Detail (s02). */
+/**
+ * Thẻ Nhóm của tôi trên trang lớp của sinh viên, dưới thẻ Giảng viên: ba dòng Nhóm, Thành viên, Trưởng nhóm; dưới nhãn Trưởng
+ * nhóm là chữ cái đầu, tên đậm, email nhạt như thẻ Giảng viên. Giãn hết phần cao còn lại của cột phải.
+ */
 export function MyGroupCard({ classId }: { classId: string }) {
   const { view } = useMyGroup(classId);
-  if (!view) return null;
-  const leader = view.members.find((m) => m.leader);
+  const leader = view?.members.find((m) => m.leader);
   return (
     <Section
       title="Nhóm của tôi"
-      icon="groups"
-      tone="accent"
-      actions={view.groupId ? <ButtonLink href={`/classes/${classId}/group`} size="sm">Mở Nhóm của tôi</ButtonLink> : undefined}
+      className="flex-1"
+      actions={view?.groupId ? <ButtonLink href={`/classes/${classId}/group`} size="sm">Mở nhóm</ButtonLink> : undefined}
     >
-      {view.groupId ? (
-        <p className="text-[13px] text-body">
-          <span className="font-semibold text-ink">{view.name}</span> · {view.members.length} thành viên · trưởng nhóm{" "}
-          {leader?.name ?? "chưa có"}
-        </p>
+      {!view ? (
+        <p role="status" className="text-[13px] text-muted">Đang tải nhóm…</p>
+      ) : view.groupId ? (
+        <dl className="flex flex-col gap-2.5 text-[13px]">
+          <div className="flex items-center justify-between gap-3"><dt className="text-muted">Nhóm</dt><dd className="truncate font-semibold text-ink">{view.name}</dd></div>
+          <div className="flex items-center justify-between gap-3"><dt className="text-muted">Thành viên</dt><dd className="text-ink">{view.members.length}</dd></div>
+          <div className="flex flex-col gap-2">
+            <dt className="text-muted">Trưởng nhóm</dt>
+            <dd>
+              {leader ? (
+                <div className="flex items-center gap-3">
+                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(leader.name ?? "?")}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink">{leader.name ?? "Chưa rõ tên"}</p>
+                    {leader.email && <p className="break-all text-xs text-muted">{leader.email}</p>}
+                  </div>
+                </div>
+              ) : <span className="text-muted">Chưa có</span>}
+            </dd>
+          </div>
+        </dl>
       ) : (
         <p className="text-[13px] text-muted">Bạn chưa có nhóm trong lớp này.</p>
       )}

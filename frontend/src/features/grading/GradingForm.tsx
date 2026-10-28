@@ -1,8 +1,5 @@
 "use client";
-import {
-  GradingFeedbackSummary,
-  countUnresolvedReviews,
-} from "./StructuredFeedbackSection";
+import { countUnresolvedReviews } from "./StructuredFeedbackSection";
 import type { ChecklistProps } from "./RubricChecklistPanel";
 import type {
   GradingFormValues,
@@ -122,20 +119,24 @@ export function checklistBindings(values: GradingFormValues, disabled: boolean, 
   };
 }
 
+/** Có cần thẻ ghi chú ở đầu lề không: còn mục AI cần kiểm tra, hoặc đang sửa điểm đã chốt (phải ghi lý do). */
+export function needsGradingNotes(rubrics: Rubric[], values: GradingFormValues, official: boolean) {
+  return official || countUnresolvedReviews(rubrics, values.checks, values.itemScores, values.structuredFeedback,
+    values.reviewedItemScores, values.acknowledgedReviewItems).total > 0;
+}
+
 /**
- * Ghi chú "Nhận xét chung" ở đầu bài nộp: nhắc mục AI cần kiểm tra, tóm tắt Làm tốt · Cần sửa, nhận xét gửi sinh viên
- * và lý do khi sửa điểm đã chốt. Điểm bài là tổng mục đạt, không có điều chỉnh ngoài rubric (BR-U09-20).
+ * Thẻ ở đầu lề, chỉ hiện khi cần: nhắc mục AI cần kiểm tra trước khi chốt và lý do khi sửa điểm đã chốt / công bố. Tạm thời
+ * không có ô nhận xét gửi sinh viên (lề chỉ để điểm). Điểm bài là tổng mục đạt, không có điều chỉnh ngoài rubric (BR-U09-20).
  */
 export function GradingNotes({
   rubrics,
   values,
-  disabled,
   official,
   onChange,
 }: {
   rubrics: Rubric[];
   values: GradingFormValues;
-  disabled: boolean;
   official: boolean;
   onChange: OnChange;
 }) {
@@ -149,62 +150,12 @@ export function GradingNotes({
   );
 
   return (
-    <section aria-label="Nhận xét chung" data-testid="grading-notes"
+    <section aria-label="Ghi chú chấm" data-testid="grading-notes"
       className="flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-3 text-xs shadow-sm">
-      <p className="text-[13px] font-semibold text-ink">Nhận xét chung</p>
       {unresolved.total > 0 && (
         <p role="status" className="rounded-lg border border-warning bg-warning-soft/60 px-2.5 py-1.5 font-semibold text-warning">
-          ⚠ Còn {unresolved.total} mục nhận xét cần kiểm tra hoặc xác nhận lại trước khi chốt điểm.
+          ⚠ Còn {unresolved.total} mục AI cần kiểm tra hoặc xác nhận lại trước khi chốt điểm.
         </p>
-      )}
-      <label className="block font-medium text-ink">
-        Nhận xét gửi sinh viên
-        <textarea
-          className="mt-1 block min-h-20 w-full rounded-lg border border-line p-2 text-xs font-normal focus:border-focus focus:outline-none"
-          value={values.feedback}
-          maxLength={10000}
-          disabled={disabled}
-          onChange={(v) => onChange({ feedback: v.target.value })}
-        />
-      </label>
-      {values.structuredFeedback ? (
-        <GradingFeedbackSummary
-          summary={values.structuredFeedback.summary}
-          title="Làm tốt · Cần sửa"
-          editable
-          disabled={disabled}
-          onChange={(nextSummary) =>
-            onChange({
-              structuredFeedback: {
-                ...ensureStructuredFeedback(values.structuredFeedback),
-                summary: nextSummary,
-              },
-              clearStructuredFeedback: false,
-            })
-          }
-          onClear={() =>
-            onChange({
-              structuredFeedback: null,
-              clearStructuredFeedback: true,
-              acknowledgedReviewItems: {},
-              reviewedItemScores: {},
-            })
-          }
-        />
-      ) : (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() =>
-            onChange({
-              structuredFeedback: ensureStructuredFeedback(null),
-              clearStructuredFeedback: false,
-            })
-          }
-          className="self-start rounded-lg border border-line-strong bg-shell/60 px-2.5 py-1 font-medium text-primary-ink hover:bg-shell disabled:opacity-50"
-        >
-          + Thêm tóm tắt Làm tốt · Cần sửa
-        </button>
       )}
       {official && (
         <label className="block font-medium text-ink">
