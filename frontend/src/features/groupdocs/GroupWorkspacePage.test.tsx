@@ -169,6 +169,8 @@ describe("GroupWorkspacePage", () => {
     );
     render(<GroupWorkspacePage documentId="doc1" />);
     await screen.findByText("Nội dung đã xong");
+    // Kênh sự kiện mở trong effect riêng, có thể sau khi nội dung đã hiện: chờ kênh sẵn sàng rồi mới bắn sự kiện.
+    await waitFor(() => expect(source?.onmessage).toBeTypeOf("function"));
 
     act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
     const lock = await screen.findByRole("alertdialog", { name: "Đang nộp" });
