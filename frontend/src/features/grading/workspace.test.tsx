@@ -251,6 +251,8 @@ describe("AI proposal comparison and draft application", () => {
 
     render(<GradingWorkspacePage evaluationId="e" />);
     await screen.findByRole("checkbox", { name: /Thực thể chính/ });
+    // Đề xuất AI tải bằng yêu cầu riêng, có thể về sau phần chấm điểm: chờ có đề xuất rồi mới mở popup.
+    expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
     openAi();
     expect(screen.getByRole("dialog", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.00/);
     expect(document.body.textContent).not.toContain("NaN");
