@@ -112,7 +112,6 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           <Logo />
         </Link>
         <div className="ml-auto flex items-center gap-1">
-          {headerWidgets}
           <button
             type="button"
             onClick={toggleTheme}
@@ -122,6 +121,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
           </button>
+          {headerWidgets}
           <Menu
             align="right"
             variant="tool"

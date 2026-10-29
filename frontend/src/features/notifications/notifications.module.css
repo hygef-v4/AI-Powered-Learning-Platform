@@ -4,14 +4,25 @@
 .bell:hover { background: var(--c-sunken); color: var(--c-ink); }
 .count { position: absolute; top: 3px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--c-primary); color: var(--c-on-primary); font-size: 10px; font-weight: 700; line-height: 16px; box-shadow: 0 0 0 2px var(--c-bg); animation: var(--animate-pop); }
 .popup { position: absolute; z-index: 45; top: 44px; right: 0; display: flex; flex-direction: column; width: 380px; max-width: calc(100vw - 32px); max-height: min(720px, calc(100dvh - 90px)); overflow: hidden; border: 1px solid var(--c-line); border-radius: 14px; background: var(--c-surface); box-shadow: var(--shadow-float); animation: var(--animate-pop); }
-.heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 18px 8px; }
+.heading { display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 14px 12px 6px 18px; }
+.heading h2 { flex: 1; min-width: 0; }
+.heading button + h2 { margin-left: -4px; }
+.iconButton { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border-radius: 8px; color: var(--c-muted); cursor: pointer; transition: background-color .2s, color .2s; }
+.iconButton:hover { background: var(--c-sunken); color: var(--c-ink); }
+.iconButton:first-child { margin-left: -8px; }
 .heading h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
-.linkButton { color: var(--c-primary-ink); font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.tabs { display: flex; gap: 18px; padding: 0 18px; border-bottom: 1px solid var(--c-line); font-size: 13px; font-weight: 600; }
+.linkButton { display: inline-flex; flex-shrink: 0; align-items: center; gap: 5px; padding: 6px 8px; margin-right: -8px; border-radius: 6px; color: var(--c-primary-ink); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background-color .2s, opacity .2s; }
+.linkButton:hover:not(:disabled) { background: var(--c-primary-soft); }
+.linkButton:disabled { color: var(--c-muted); opacity: .6; cursor: default; }
+.listView { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.listView[hidden], .scroll[hidden] { display: none; }
+.tabbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--c-line); }
+.tabs { display: flex; gap: 18px; font-size: 13px; font-weight: 600; }
 .tabs button { margin-bottom: -1px; padding: 8px 0; border-bottom: 2px solid transparent; color: var(--c-muted); cursor: pointer; transition: color .2s, border-color .2s; }
 .tabs button[aria-selected=true] { border-bottom-color: var(--c-primary); color: var(--c-ink); }
-.scroll { min-height: 0; overflow: auto; overscroll-behavior: contain; }
-.item { display: flex; gap: 12px; width: 100%; padding: 14px 18px; border-bottom: 1px solid var(--c-line); text-align: left; cursor: pointer; transition: background-color .2s; }
+/* Chiều cao tối thiểu cố định để popup không co giãn khi danh sách đổi số hàng hay khi chuyển sang Cài đặt. */
+.scroll { flex: 1; min-height: min(320px, 45dvh); overflow: auto; overscroll-behavior: contain; }
+.item { display: flex; gap: 12px; width: 100%; padding: 14px 18px; border-bottom: 1px solid var(--c-line); text-align: left; cursor: pointer; transition: background-color .3s; }
 .item:hover { background: var(--c-bg); }
 .unread { background: color-mix(in srgb, var(--c-primary-soft) 45%, transparent); }
 .tile { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--c-primary-soft); color: var(--c-primary-ink); }
@@ -21,7 +32,7 @@
 .dot { flex-shrink: 0; width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--c-primary); }
 .empty { padding: 28px; color: var(--c-muted); font-size: 13px; text-align: center; }
 .error { padding: 10px 16px; background: var(--c-danger-soft); color: var(--c-danger); font-size: 12.5px; }
-.preferences { padding: 14px 18px; border-top: 1px solid var(--c-line); background: var(--c-bg); }
+.preferences { padding: 12px 18px 16px; border-top: 1px solid var(--c-line); }
 .preferences h3 { margin-bottom: 8px; color: var(--c-muted); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .preference { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; color: var(--c-ink); font-size: 13px; }
 .switch { position: relative; flex-shrink: 0; width: 36px; height: 20px; border-radius: 99px; background: var(--c-line-strong); cursor: pointer; transition: background-color .2s; }

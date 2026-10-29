@@ -17,13 +17,13 @@ public class RecipientResolver {
         switch(event.eventType()) {
             case EventTypes.ENROLLMENT_ACTIVATED -> {type=NotificationType.ENROLLED;ids=List.of(id(p,"accountId"));link="/classes/"+id(p,"classId");email="ENROLLED";}
             case EventTypes.QUIZ_PUBLISHED -> {type=NotificationType.QUIZ_PUBLISHED;ids=students(p);link="/quiz-practice/"+id(p,"quizId");}
-            case EventTypes.GRADE_PUBLISHED -> {type=NotificationType.GRADE_PUBLISHED;ids=ids(p,"studentIds");link="/classes/"+id(p,"classId")+"?tab=grades";email="GRADE_PUBLISHED";}
+            case EventTypes.GRADE_PUBLISHED -> {type=NotificationType.GRADE_PUBLISHED;ids=ids(p,"studentIds");link=gradeLink(p);email="GRADE_PUBLISHED";}
             case EventTypes.CLASS_ANNOUNCEMENT_POSTED -> {
                 type=NotificationType.ANNOUNCEMENT;ids=activeStudents(id(p,"classId"));UUID author=id(p,"actorId");ids=ids.stream().filter(i->!i.equals(author)).toList();
                 id(p,"announcementId");link="/announcements?classId="+classId;
                 if(Boolean.TRUE.equals(p.get("important"))&&Boolean.TRUE.equals(p.get("sendEmail")))email="ANNOUNCEMENT_IMPORTANT";
             }
-            case EventTypes.GROUP_LEADER_CHANGE_REQUESTED -> {type=NotificationType.LEADER_CHANGE_REQUESTED;var c=openClass(id(p,"classId"));ids=c==null||c.teacherId()==null?List.of():List.of(c.teacherId());link=groupLink(p);}
+            case EventTypes.GROUP_LEADER_CHANGE_REQUESTED -> {type=NotificationType.LEADER_CHANGE_REQUESTED;var c=openClass(id(p,"classId"));ids=c==null||c.teacherId()==null?List.of():List.of(c.teacherId());link=teacherGroupLink(p);}
             case EventTypes.GROUP_LEADER_CHANGED -> {type=NotificationType.LEADER_CHANGED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_LEADER_REQUEST_REJECTED -> {type=NotificationType.LEADER_REQUEST_REJECTED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_MEMBERSHIP_CHANGED -> {type=NotificationType.GROUP_MEMBERSHIP_CHANGED;ids=members(p);link=groupLink(p);}
@@ -81,7 +81,12 @@ public class RecipientResolver {
     }
     private List<UUID> activeStudents(UUID classId) {return openClass(classId)==null?List.of():classes.listActiveStudents(classId);}
     private ClassRef openClass(UUID id) {return classes.getClassRef(id).filter(c->c.status()==ClassStatus.OPEN).orElse(null);}
-    private String groupLink(Map<String,Object> p) {id(p,"groupId");return "/classes/"+id(p,"classId")+"?tab=groups";}
+    /** Sinh viên xem điểm ở chi tiết bài; sự kiện cũ thiếu mã bài thì mở lớp. */
+    private String gradeLink(Map<String,Object> p) {UUID assignmentId=optionalId(p,"assignmentId");UUID classId=id(p,"classId");return assignmentId==null?"/classes/"+classId:AssignmentNotificationLink.student(assignmentId,classId);}
+    /** Trang Nhóm của tôi của lớp. */
+    private String groupLink(Map<String,Object> p) {id(p,"groupId");return "/classes/"+id(p,"classId")+"/group";}
+    /** Giảng viên duyệt yêu cầu ở bảng nhóm trong trang Sinh viên của lớp mình dạy. */
+    private String teacherGroupLink(Map<String,Object> p) {id(p,"groupId");return "/teaching/classes/"+id(p,"classId")+"?tab=students";}
     private List<UUID> members(Map<String,Object> p) {return ids(p,p.containsKey("memberIds")?"memberIds":"recipientIds");}
     public static UUID id(Map<String,Object> p,String key) {UUID id=optionalId(p,key);if(id==null)throw new IllegalArgumentException("Missing event identifier");return id;}
     private static UUID optionalId(Map<String,Object> p,String key) {Object value=p.get(key);return value==null?null:UUID.fromString(value.toString());}
