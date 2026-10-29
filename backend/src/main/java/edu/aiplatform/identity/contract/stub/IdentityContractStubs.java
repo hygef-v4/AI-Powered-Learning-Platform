@@ -2,6 +2,7 @@ package edu.aiplatform.identity.contract.stub;
 
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -37,6 +38,10 @@ public class IdentityContractStubs {
     IAccountLookup accountLookupStub() {
         return Stubs.announce(IAccountLookup.class, new IAccountLookup() {
             @Override
+            public List<AccountContact> listActiveAdmins(UUID afterId,int limit) {
+                throw new UnsupportedOperationException("Active Admin provider is not installed");
+            }
+            @Override
             public List<AccountContact> findStudents(String query, int limit) {
                 return List.of();
             }
@@ -55,6 +60,11 @@ public class IdentityContractStubs {
             public Optional<AccountContact> getContact(UUID accountId) {
                 String email = "user-" + accountId.toString().substring(0, 8) + "@example.com";
                 return Optional.of(new AccountContact(accountId, email, "Người dùng mẫu", Role.STUDENT, AccountStatus.ACTIVE));
+            }
+
+            @Override
+            public Optional<AccountContact> lockContact(UUID accountId) {
+                return getContact(accountId);
             }
 
             @Override
@@ -83,6 +93,11 @@ public class IdentityContractStubs {
 
             @Override
             public List<UUID> listManagedSubjects(UUID accountId) {
+                return List.of();
+            }
+
+            @Override
+            public List<UUID> releaseManagerAssignments(UUID accountId, Actor actor) {
                 return List.of();
             }
         });

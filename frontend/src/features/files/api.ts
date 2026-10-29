@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/api/client";
+import { CSRF_HEADER, csrfToken } from "@/shared/api/csrf";
 import type { ArtifactPurpose, PurposePolicy, UploadResult } from "./purposes";
 
 export function getPolicies(): Promise<PurposePolicy[]> {
@@ -17,6 +18,8 @@ export function uploadFile(file: File, purpose: ArtifactPurpose, onProgress: (pe
     xhr.open("POST", "/api/v1/files");
     xhr.withCredentials = true;
     xhr.responseType = "json";
+    const csrf = csrfToken();
+    if (csrf) xhr.setRequestHeader(CSRF_HEADER, csrf);
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
     };

@@ -1,6 +1,7 @@
 # U08 Assignment Work — domain-entities
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
 
@@ -51,7 +52,7 @@ stateDiagram-v2
 
 | Entity | Thuộc tính chính |
 |---|---|
-| `PracticeFeedback` | `id`, `attemptId`, `accountId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `requestRef`, `status` (`PENDING`, `READY`, `FAILED`), `submissionHash`, `feedback` (nhận xét từng phần, gợi ý, đánh giá ước tính từng mục rubric, điểm ước tính), `provenance` (nguồn, provider, model khi biết, nhãn agent), `createdAt`, `completedAt` |
+| `PracticeFeedback` | `id`, `attemptId`, `accountId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `requestRef`, `status` (`PENDING`, `READY`, `FAILED`), `submissionHash`, `feedback` (nhãn "AI ước tính, không phải điểm chính thức", nhận xét chung, điểm mạnh, nhận xét từng phần, gợi ý; không có ước tính theo rubric), `provenance` (nguồn, provider, model khi biết, nhãn agent), `createdAt`, `completedAt` |
 | `ActivityEvent` | `id`, `accountId`, `classId`, `workKind` (`ASSIGNMENT_ATTEMPT`, `QUIZ_ATTEMPT`, `GROUP_DOCUMENT`), `workId`, `sessionId`, `clientEventId`, `sequence`, `kind` (`SESSION_START`, `HIDDEN`, `VISIBLE`, `HEARTBEAT`, `SESSION_END`), `clientTime`, `serverTime`, `policyVersion`; duy nhất (`accountId`, `workKind`, `workId`, `clientEventId`) |
 | `ActivitySummary` | `policyState` (`DISABLED`, `NO_DATA`, `AVAILABLE`, `EXPIRED`), `awayCount`, `knownAwayDuration`, `intervals[]` (bắt đầu, kết thúc, `KNOWN` hoặc `UNKNOWN`), `unknownGaps`, ghi chú độ tin cậy |
 
@@ -92,7 +93,7 @@ Chưa có U09, U12, U13 thì: không tạo dòng chờ chấm, không hiện đi
 | `IArtifact`, `ISettings` | U03 | Ảnh trong bài làm; thời hạn giữ dữ liệu hoạt động |
 | `IClassAccess` | U05 | Ghi danh, lớp đang mở của người học |
 | `IAiTask` | U06 | Gửi task phản hồi Practice |
-| `IAssignmentQuery`, `IRubric`, `IDocumentModel`, `IDocx` | U07 | Bài, lịch, khung, rubric; kiểm và chuyển đổi tài liệu |
+| `IAssignmentQuery`, `IRubric`, `IDocumentModel`, `IDocx` | U07 | Bài, lịch, khung; rubric chỉ cho tổng điểm nội bộ, không trả cho người học; kiểm và chuyển đổi tài liệu |
 
 ## 5. API
 

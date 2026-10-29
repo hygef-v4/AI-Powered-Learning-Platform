@@ -2,8 +2,8 @@
 export type Tone = "neutral" | "primary" | "success" | "warning" | "danger" | "info" | "accent" | "orange";
 
 export const SOFT_TONES: Record<Tone, string> = {
-  neutral: "bg-neutral-soft text-muted",
-  primary: "bg-primary-soft text-primary",
+  neutral: "bg-sunken text-muted",
+  primary: "bg-primary-soft text-primary-ink",
   success: "bg-success-soft text-success",
   warning: "bg-warning-soft text-warning",
   danger: "bg-danger-soft text-danger",

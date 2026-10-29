@@ -1,6 +1,13 @@
 import { SettingsSectionHost } from "@/features/settings/SettingsSectionHost";
 
-export default async function Page({ params }: { params: Promise<{ sectionKey: string }> }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ sectionKey: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
   const { sectionKey } = await params;
-  return <SettingsSectionHost sectionKey={decodeURIComponent(sectionKey)} />;
+  const { tab } = await searchParams;
+  return <SettingsSectionHost sectionKey={decodeURIComponent(sectionKey)} tab={typeof tab === "string" ? tab : undefined} />;
 }

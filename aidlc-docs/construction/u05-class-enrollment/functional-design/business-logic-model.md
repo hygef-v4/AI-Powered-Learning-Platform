@@ -125,5 +125,5 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F15 - Trả phạm vi lớp
 1. U01 gọi `IClassScope.isTeacherOf` (R3/R4) hoặc `isEnrolledStudent` (R5) khi quyết định quyền; U05 đọc `teacher_id` và ghi danh hiện thời, không cache (BR-U05-30).
 2. U01 gọi `listTaughtClasses` khi chặn hạ role người đang dạy lớp.
-3. U04 gọi `ISubjectClasses` để hiện lớp của môn và chặn lưu trữ môn.
+3. U04 gọi `ISubjectClasses` để hiện lớp của môn và lưu trữ mọi lớp của môn khi lưu trữ môn.
 4. U07–U15 gọi `IClassAccess`: thông tin lớp, sinh viên `ACTIVE`, Chủ nhiệm môn của lớp, lớp `OPEN` của một người hoặc của một môn, số đếm cho Admin Dashboard.

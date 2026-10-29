@@ -12,12 +12,12 @@ type Props = {
   title?: string;
 };
 
-/** Icon Material Symbols dạng SVG, màu theo currentColor. */
-export function Icon({ name, size = 20, filled = false, className, title }: Props) {
+/** Icon Phosphor (Bold, Fill khi đang chọn) dạng SVG, màu theo currentColor. */
+export function Icon({ name, size = 18, filled = false, className, title }: Props) {
   const paths = ICON_PATHS[name];
   return (
     <svg
-      viewBox="0 -960 960 960"
+      viewBox="0 0 256 256"
       width={size}
       height={size}
       fill="currentColor"

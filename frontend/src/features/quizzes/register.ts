@@ -1,6 +1,7 @@
-// U10: mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager. Màn chưa làm thì link tạm chưa mở được.
+// U10: mục Ngân hàng câu hỏi trên sidebar của môn (Subject Manager); trang Quiz không còn trên sidebar (yêu cầu 2026-10-29). Tab Bài tập của lớp chỉ có bài tập (yêu cầu 2026-10-29),
+// nên phần Quiz của lớp (ClassQuizzesTab) tạm không gắn vào trang lớp.
 
-import { navEntries } from "@/features/identity/slots";
+import { subjectNavEntries } from "@/features/identity/slots";
 
-navEntries.register({ key: "manager-questions", order: 30, title: "Ngân hàng câu hỏi", href: "/manager/questions", icon: "help_center", roles: ["SUBJECT_MANAGER"] });
-navEntries.register({ key: "manager-quizzes", order: 40, title: "Quiz", href: "/manager/quizzes", icon: "quiz", roles: ["SUBJECT_MANAGER"] });
+subjectNavEntries.register({ key: "manager-questions", order: 50, title: "Ngân hàng câu hỏi", icon: "help_center", path: "/manager/questions" });
+

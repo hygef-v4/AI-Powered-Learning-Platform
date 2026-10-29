@@ -46,7 +46,7 @@ export const GROUP_META: Record<string, GroupMeta> = {
     tone: "primary",
   },
   BACKUP: {
-    label: "Backup",
+    label: "Sao lưu",
     description: "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
     icon: "backup",
     tone: "success",

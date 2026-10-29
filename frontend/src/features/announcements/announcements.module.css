@@ -1,0 +1,8 @@
+/* Nội dung Markdown của thông báo (U14); màu đọc từ biến theme toàn cục (--c-*). Bố cục trang dùng thành phần chung. */
+.markdown { color: var(--c-body); font-size: 14.5px; line-height: 1.75; overflow-wrap: anywhere; }
+.markdown p { margin: 10px 0; }
+.markdown ul { padding-left: 22px; list-style: disc; }
+.markdown ol { padding-left: 22px; list-style: decimal; }
+.markdown a { color: var(--c-primary-ink); text-decoration: underline; text-underline-offset: 3px; }
+.markdown pre { overflow-x: auto; padding: 12px; border-radius: 8px; background: var(--c-sunken); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+.markdown blockquote { padding-left: 14px; border-left: 2px solid var(--c-primary); color: var(--c-muted); }

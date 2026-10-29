@@ -1,13 +1,26 @@
-// Thành phần giao diện dùng chung theo design "Nền tảng học tập" (G21). Mọi unit dùng lại, không tự vẽ lại.
+// Thành phần giao diện dùng chung (tối giản). Mọi unit dùng lại, không tự vẽ lại.
 export { Alert } from "./Alert";
-export { Button, ButtonLink } from "./Button";
+export { Button, ButtonLink, IconButton } from "./Button";
+export { ClassFilter, ClassLabel, type ClassFilterOption } from "./ClassFilter";
 export { cx } from "./cx";
 export { Dialog } from "./Dialog";
+export { EmptyState } from "./EmptyState";
 export { Icon, type IconName } from "./Icon";
 export { IconTile } from "./IconTile";
-export { ChipToggleGroup, Field, Select, Switch, TextInput } from "./inputs";
+export { InfoTip } from "./InfoTip";
+export { ChipToggleGroup, Field, Segmented, Select, Switch, TextInput } from "./inputs";
+export { LockedInput } from "./LockedInput";
+export { Logo, LogoMark } from "./Logo";
+export { Menu, MenuItem } from "./Menu";
 export { PageHeader, type Crumb } from "./PageHeader";
+export { PageNav, pageWindow } from "./PageNav";
+export { Pagination } from "./Pagination";
 export { Pill } from "./Pill";
 export { Section } from "./Section";
+export { SettingLine, SettingsCard, SettingsGroup } from "./SettingsCard";
+export { InkMark, PageLoadError, PageLoading } from "./PageStatus";
+export { StatTile } from "./StatTile";
 export { ClickableRow, TableFrame, Td, Th } from "./Table";
+export { Tabs, type TabItem } from "./Tabs";
+export { showToast, Toaster } from "./Toast";
 export type { Tone } from "./tones";

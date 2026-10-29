@@ -1,0 +1,110 @@
+/* Trang lỗi cả màn: hình bút và nghiên riêng của lỗi, mã lỗi nhỏ, tiêu đề, một dòng giải thích, nút. */
+.page {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px clamp(20px, 6vw, 88px) 20px;
+  background: var(--c-bg, #fff8f1);
+  color: var(--c-ink, #2a211b);
+  font-family: var(--font-sans, sans-serif);
+}
+
+.brand {
+  align-self: flex-start;
+  color: inherit;
+  text-decoration: none;
+}
+
+.content {
+  display: flex;
+  width: min(100%, 520px);
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 0;
+  text-align: center;
+ 
+}
+
+.code {
+  margin-top: 20px;
+  color: var(--c-muted, #7a6757);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.content h1 {
+  margin: 8px 0 0;
+  font-family: var(--font-display, serif);
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.content p {
+  max-width: 430px;
+  margin: 10px 0 0;
+  color: var(--c-muted, #7a6757);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid var(--c-primary, #f6b24e);
+  border-radius: 8px;
+  background: var(--c-primary, #f6b24e);
+  color: var(--c-on-primary, #3a2408);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.12s;
+}
+
+.primary:hover {
+  background: var(--c-primary-strong, #eda137);
+}
+
+.secondary {
+  border-color: var(--c-line-strong, #e6d2bc);
+  background: var(--c-surface, #fff);
+  color: var(--c-ink, #2a211b);
+}
+
+.secondary:hover {
+  background: var(--c-sunken, #fcf1e4);
+}
+
+.primary:active,
+.secondary:active {
+  transform: scale(0.98);
+}
+
+.footer {
+  color: var(--c-muted, #7a6757);
+  font-size: 12px;
+}
+
+.globalBody {
+  margin: 0;
+}

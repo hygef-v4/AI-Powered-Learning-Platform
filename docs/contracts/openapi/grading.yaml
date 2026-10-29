@@ -1,0 +1,1318 @@
+openapi: 3.1.0
+info:
+  title: U09 Assignment Grading and Gradebook
+  version: 1.0.0
+  description: Implementation contract. GRADED assignments only. Server computes decimal
+    score from frozen rubric checklist; no client total. Official changes require
+    reason and preserve state. AI/MCP only record proposals. Production acceptance
+    requires real U07/U08 migrations and provider adapters; see implementation-summary.md.
+paths:
+  /api/v1/classes/{classId}/assignments/{assignmentId}/submissions:
+    get:
+      operationId: listGradingSubmissions
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: &id001
+          type: string
+          format: uuid
+      - name: assignmentId
+        in: path
+        required: true
+        schema: *id001
+      - name: page
+        in: query
+        required: false
+        schema: &id008
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema: &id009
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - PENDING
+          - DRAFT
+          - FINALIZED
+          - PUBLISHED
+          - IN_PROGRESS
+          - NOT_SUBMITTED
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionPage'
+        '400': &id002
+          description: Invalid request, unknown field, rubric item or source
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401': &id003
+          description: Unauthenticated
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403': &id004
+          description: CSRF validation failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404': &id005
+          description: Resource absent or actor outside scope
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409': &id006
+          description: Version/state/snapshot conflict; reload before retry
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503': &id007
+          description: Required provider unavailable; do not substitute empty or success
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /api/v1/classes/{classId}/submission-progress:
+    get:
+      operationId: getSubmissionProgress
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/SubmissionPage'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/classes/{classId}/gradebook:
+    get:
+      operationId: getClassGradebook
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: *id001
+      - name: page
+        in: query
+        required: false
+        schema: *id008
+      - name: size
+        in: query
+        required: false
+        schema: *id009
+      - name: q
+        in: query
+        required: false
+        schema: &id010
+          type: string
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gradebook'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/classes/{classId}/students/{accountId}/grades:
+    get:
+      operationId: getStudentGradebookRow
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: *id001
+      - name: accountId
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradebookRow'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/classes/{classId}/grade-distribution:
+    get:
+      operationId: getTeacherGradeDistribution
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: *id001
+      - name: assignmentId
+        in: query
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bucket'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/classes/{classId}/gradebook/export:
+    get:
+      operationId: exportGradebook
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: classId
+        in: path
+        required: true
+        schema: *id001
+      - name: assignmentId
+        in: query
+        required: false
+        schema: *id001
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          default: csv
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Authorized, no-store streamed export. DRAFT/PENDING score and
+            feedback omitted. Text is formula-safe.
+          headers:
+            Content-Disposition:
+              schema: *id010
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/evaluations/{id}:
+    get:
+      operationId: getGradingDetail
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+    put:
+      operationId: saveGradingChecklist
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Save'
+  /api/v1/evaluations/{id}/members/{accountId}:
+    put:
+      operationId: saveMemberGrade
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      - name: accountId
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberSave'
+  /api/v1/evaluations:finalize:
+    post:
+      operationId: finalizeGrades
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied. At most 200 items; duplicate IDs skipped. Each item
+        commits independently; HTTP 200 includes partial outcomes.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+  /api/v1/evaluations:publish:
+    post:
+      operationId: publishGrades
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied. At most 200 items; duplicate IDs skipped. Each item
+        commits independently; HTTP 200 includes partial outcomes.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+  /api/v1/evaluations/{id}/ai-proposals:
+    post:
+      operationId: requestGradingProposal
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiRequest'
+    get:
+      operationId: listGradingProposals
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Proposal'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/evaluations:ai-proposal-estimate:
+    post:
+      operationId: estimateGradingProposalBatch
+      tags:
+      - U09
+      description: Read-only estimate for the distinct grading evaluations in a batch; does not call an AI provider or reserve quota.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiEstimate'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+  /api/v1/evaluations:ai-proposals:
+    post:
+      operationId: requestGradingProposalBatch
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiBatch'
+  /api/v1/evaluations/{evaluationId}/images/{fileId}:
+    get:
+      operationId: getSubmissionImageToken
+      tags:
+      - U09
+      description: Assigned Teacher/SubjectManager only. Admin and class-management-only
+        authority are denied.
+      parameters:
+      - name: evaluationId
+        in: path
+        required: true
+        schema: *id001
+      - name: fileId
+        in: path
+        required: true
+        schema: *id010
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadToken'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/me/grades:
+    get:
+      operationId: getMyPublishedGrades
+      tags:
+      - U09
+      description: 'Student: active enrollment; own PUBLISHED results only.'
+      parameters:
+      - name: classId
+        in: query
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentGrade'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/me/grades/attempts/{attemptId}:
+    get:
+      operationId: getMyPublishedAttemptGrade
+      tags:
+      - U09
+      description: 'Student: active enrollment; own PUBLISHED results only.'
+      parameters:
+      - name: attemptId
+        in: path
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentGrade'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+  /api/v1/me/grade-distributions:
+    get:
+      operationId: getMyGradeDistribution
+      tags:
+      - U09
+      description: 'Student: active enrollment; own PUBLISHED results only.'
+      parameters:
+      - name: classId
+        in: query
+        required: true
+        schema: *id001
+      - name: assignmentId
+        in: query
+        required: true
+        schema: *id001
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bucket'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: access_token
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+  schemas:
+    Problem:
+      type: object
+      properties:
+        status:
+          type: integer
+        title: *id010
+        detail: *id010
+        code: *id010
+      required:
+      - status
+    Person:
+      type: object
+      properties:
+        accountId: *id001
+        name: *id010
+        email: *id010
+      required:
+      - accountId
+      - name
+      - email
+    ItemVersion:
+      type: object
+      properties:
+        evaluationId: *id001
+        version: &id011
+          type: integer
+          format: int64
+          minimum: 0
+      required:
+      - evaluationId
+      - version
+      additionalProperties: false
+    Save:
+      type: object
+      properties:
+        version: *id011
+        checkedItemsByRubric: &id012
+          type: object
+          additionalProperties:
+            type: array
+            items: *id001
+        itemScoresByRubric:
+          description: Optional per-item overrides; omitted or null retains legacy checklist scoring.
+          anyOf:
+          - $ref: '#/components/schemas/RubricItemScores'
+          - type: 'null'
+        adjustment:
+          anyOf:
+          - type: number
+            multipleOf: 0.01
+          - type: string
+            pattern: ^-?\d+(\.\d{1,2})?$
+          - type: 'null'
+        adjustmentReason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        feedback:
+          anyOf:
+          - type: string
+            maxLength: 10000
+          - type: 'null'
+        changeReason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        usedProposalId:
+          anyOf:
+          - *id001
+          - type: 'null'
+      required:
+      - version
+      - checkedItemsByRubric
+      additionalProperties: false
+    MemberSave:
+      type: object
+      properties:
+        version: *id011
+        score:
+          anyOf:
+          - type: number
+            multipleOf: 0.01
+          - type: string
+            pattern: ^-?\d+(\.\d{1,2})?$
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+      required:
+      - version
+      - score
+      additionalProperties: false
+    AiRequest:
+      type: object
+      properties:
+        source:
+          type: string
+          enum:
+          - SHARED
+          - PERSONAL
+        provider:
+          anyOf:
+          - type: string
+            enum:
+            - GEMINI
+            - OPENAI
+            - CLAUDE
+          - type: 'null'
+        requestRef:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - source
+      - requestRef
+      additionalProperties: false
+      description: PERSONAL requires provider. Caller chooses source explicitly; no
+        fallback. requestRef is idempotent within its evaluation/requester/source/snapshot
+        scope.
+    Batch:
+      type: object
+      properties:
+        items: &id015
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/ItemVersion'
+      required:
+      - items
+      additionalProperties: false
+    BatchResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              evaluationId: *id001
+              outcome: *id010
+              code:
+                anyOf:
+                - *id010
+                - type: 'null'
+              newVersion:
+                anyOf:
+                - *id011
+                - type: 'null'
+            required: &id014 []
+      required:
+      - items
+    AiEstimate:
+      type: object
+      properties:
+        estimatedTokens:
+          type: integer
+          format: int64
+          minimum: 0
+        items:
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+      - estimatedTokens
+      - items
+      additionalProperties: false
+    RubricChecks: *id012
+    RubricItemScores:
+      type: object
+      description: >-
+        Maps locked rubric UUIDs to item UUIDs and awarded points. Values must be
+        nonnegative, at most the locked item's maximum, and have at most two decimal
+        places. An explicit item value overrides the legacy checklist value;
+        the server computes the authoritative total. Unknown rubric/item IDs are rejected.
+      propertyNames:
+        format: uuid
+      additionalProperties:
+        type: object
+        propertyNames:
+          format: uuid
+        additionalProperties:
+          anyOf:
+          - type: number
+            minimum: 0
+            multipleOf: 0.01
+          - type: string
+            pattern: '^\d+(\.\d{1,2})?$'
+    Evaluation:
+      type: object
+      properties:
+        id: *id001
+        assignmentId: *id001
+        classId: *id001
+        attemptId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        groupDocumentId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        accountId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        kind:
+          type: string
+          enum:
+          - ATTEMPT
+          - GROUP_DOCUMENT
+          - MEMBER
+        state:
+          type: string
+          enum:
+          - PENDING
+          - DRAFT
+          - FINALIZED
+          - PUBLISHED
+          - SUPERSEDED
+        version: *id011
+        score:
+          anyOf:
+          - &id013
+            type: number
+            multipleOf: 0.01
+          - type: 'null'
+        maxScore: *id013
+        rubricChecks: *id010
+        rubricItemScores:
+          $ref: '#/components/schemas/RubricItemScores'
+        rubricSnapshot: *id010
+        submissionHash: *id010
+        adjustment: *id013
+        adjustmentReason:
+          anyOf:
+          - *id010
+          - type: 'null'
+        feedback:
+          anyOf:
+          - *id010
+          - type: 'null'
+        publishedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        memberOverride:
+          type: boolean
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              actorId:
+                anyOf:
+                - *id001
+                - type: 'null'
+              at: *id010
+              before:
+                anyOf:
+                - *id013
+                - type: 'null'
+              after:
+                anyOf:
+                - *id013
+                - type: 'null'
+              reason: *id010
+              previousChecks: *id010
+              previousItemScores:
+                description: Item-score snapshot before an official change or group resubmission; absent in legacy history.
+                $ref: '#/components/schemas/RubricItemScores'
+              previousFeedback:
+                anyOf:
+                - *id010
+                - type: 'null'
+            required: *id014
+      required: *id014
+    Document:
+      type: object
+      properties:
+        blocks:
+          type: array
+          items:
+            type: object
+            properties:
+              id: *id001
+              type:
+                type: string
+                enum:
+                - HEADING
+                - PARAGRAPH
+                - LIST
+                - TABLE
+                - IMAGE
+                - DIAGRAM
+              origin: *id010
+              content:
+                type: object
+            required: *id014
+      required:
+      - blocks
+    Activity:
+      type: object
+      properties:
+        policyState:
+          type: string
+          enum:
+          - DISABLED
+          - NO_DATA
+          - AVAILABLE
+          - EXPIRED
+        awayCount:
+          type: integer
+        knownAwayDuration: *id010
+        intervals:
+          type: array
+          items:
+            type: object
+        unknownGaps:
+          type: integer
+        reliabilityNote: *id010
+      required: *id014
+    Detail:
+      type: object
+      properties:
+        evaluation:
+          $ref: '#/components/schemas/Evaluation'
+        document:
+          $ref: '#/components/schemas/Document'
+        rubrics:
+          type: array
+          items:
+            type: object
+            description: U07 RubricView contract; frozen submission snapshot
+        navigationIds:
+          type: array
+          items: *id001
+        activity:
+          anyOf:
+          - $ref: '#/components/schemas/Activity'
+          - type: 'null'
+        activityState: *id010
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evaluation'
+        memberActivities:
+          type: array
+          items:
+            type: object
+            properties:
+              student:
+                $ref: '#/components/schemas/Person'
+              activity:
+                anyOf:
+                - $ref: '#/components/schemas/Activity'
+                - type: 'null'
+              state: *id010
+            required: *id014
+        sectionAuthors:
+          type: array
+          items:
+            type: object
+            properties:
+              partId: *id010
+              accountId: *id001
+            required: *id014
+        current:
+          type: boolean
+      required: *id014
+    SubmissionRow:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/Person'
+        evaluationId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        attemptId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        status: *id010
+        score:
+          anyOf:
+          - *id013
+          - type: 'null'
+        maxScore:
+          anyOf:
+          - *id013
+          - type: 'null'
+        late:
+          type: boolean
+        submittedAt:
+          anyOf:
+          - *id010
+          - type: 'null'
+        attemptCount:
+          type: integer
+        version: *id011
+      required: *id014
+    SubmissionPage:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmissionRow'
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        summary:
+          type: object
+          additionalProperties:
+            type: integer
+        deadline:
+          anyOf:
+          - *id010
+          - type: 'null'
+      required: *id014
+    GradeCell:
+      type: object
+      properties:
+        assignmentId: *id001
+        evaluationId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        status: *id010
+        score:
+          anyOf:
+          - *id013
+          - type: 'null'
+        maxScore:
+          anyOf:
+          - *id013
+          - type: 'null'
+        late:
+          type: boolean
+        submittedAt:
+          anyOf:
+          - *id010
+          - type: 'null'
+        feedback:
+          anyOf:
+          - *id010
+          - type: 'null'
+      required: *id014
+    GradebookRow:
+      type: object
+      properties:
+        student:
+          $ref: '#/components/schemas/Person'
+        grades:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeCell'
+      required: *id014
+    Gradebook:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradebookRow'
+        assignments:
+          type: array
+          items:
+            type: object
+            properties:
+              id: *id001
+              title: *id010
+              maxScore: *id013
+              submissionMode:
+                type: string
+                enum: [INDIVIDUAL, GROUP]
+            required: *id014
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+      required: *id014
+    StudentGrade:
+      type: object
+      properties:
+        assignmentId: *id001
+        attemptId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        score:
+          anyOf:
+          - *id013
+          - type: 'null'
+        maxScore:
+          anyOf:
+          - *id013
+          - type: 'null'
+        feedback:
+          anyOf:
+          - *id010
+          - type: 'null'
+        publishedAt:
+          anyOf:
+          - *id010
+          - type: 'null'
+        updated:
+          type: boolean
+        rubricChecks:
+          anyOf:
+          - *id010
+          - type: 'null'
+      required: *id014
+    Bucket:
+      type: object
+      properties:
+        label: *id010
+        count:
+          type: integer
+          minimum: 5
+      required: *id014
+    Proposal:
+      type: object
+      properties:
+        id: *id001
+        evaluationId: *id001
+        versionNo: *id011
+        requesterId: *id001
+        taskId:
+          anyOf:
+          - *id001
+          - type: 'null'
+        requestRef: *id010
+        submissionHash: *id010
+        rubricFingerprint: *id010
+        status:
+          type: string
+          enum:
+          - PENDING
+          - READY
+          - FAILED
+          - STALE
+          - REJECTED
+        origin: *id010
+        source: *id010
+        provider:
+          anyOf:
+          - *id010
+          - type: 'null'
+        model:
+          anyOf:
+          - *id010
+          - type: 'null'
+        agentLabel:
+          anyOf:
+          - *id010
+          - type: 'null'
+        safeError:
+          anyOf:
+          - *id010
+          - type: 'null'
+        proposal:
+          anyOf:
+          - type: object
+            properties:
+              checks:
+                $ref: '#/components/schemas/RubricChecks'
+              itemScoresByRubric:
+                $ref: '#/components/schemas/RubricItemScores'
+              score:
+                description: Must equal the sum of rubric item points before teacher adjustments.
+                anyOf:
+                - type: number
+                  multipleOf: 0.01
+                - type: string
+                  pattern: '^\d+(\.\d{1,2})?$'
+          - type: 'null'
+        usage:
+          anyOf:
+          - type: object
+          - type: 'null'
+        createdAt: *id010
+        completedAt:
+          anyOf:
+          - *id010
+          - type: 'null'
+        usedAt:
+          anyOf:
+          - *id010
+          - type: 'null'
+      required: *id014
+    DownloadToken:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri-reference
+        expiresAt:
+          type: string
+          format: date-time
+      required: *id014
+    AiBatch:
+      type: object
+      properties:
+        items: *id015
+        request:
+          $ref: '#/components/schemas/AiRequest'
+      required:
+      - items
+      - request
+      additionalProperties: false

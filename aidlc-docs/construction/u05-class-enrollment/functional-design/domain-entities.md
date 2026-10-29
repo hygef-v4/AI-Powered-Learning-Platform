@@ -69,7 +69,7 @@ stateDiagram-v2
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
 | `IClassScope` (contract của U01, U05 cài) | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)`, `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U01 | Kiểm R3/R4, R5 theo phân công và ghi danh hiện thời; chặn hạ role người đang dạy |
-| `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
+| `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
 | `IClassAccess` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
 | `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
@@ -91,7 +91,8 @@ stateDiagram-v2
 | Interface | Unit | Dùng để |
 |---|---|---|
 | `IAuthorization`, `IAccountLookup` | U01 | Kiểm quyền; tìm sinh viên, giảng viên |
-| `ISubjectQuery` | U04 | Môn còn `ACTIVE`, môn được giao quản lý |
+| `ISubjectQuery` | U04 | Môn được giao quản lý, thông tin môn |
+| `ISubjectMutationGuard` | U04 | Khóa dòng môn và kiểm môn còn `ACTIVE` trước khi ghi lớp hoặc ghi danh |
 | `IAudit` | U02 | Audit |
 | `IEventPublisher` | U03 | Sự kiện `enrollment.activated` |
 
