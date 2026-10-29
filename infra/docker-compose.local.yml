@@ -26,6 +26,10 @@ services:
       SMTP_AUTH_ENABLED: "false"
       SMTP_STARTTLS_ENABLED: "false"
       SMTP_FROM: no-reply@platform.local
+      # U01: Nginx local chạy HTTP nên cookie không đặt cờ Secure (chỉ ở local).
+      U01_COOKIE_SECURE: "false"
+      # Rút ngắn khóa tạm khi thử tay (mặc định 15m).
+      U01_LOGIN_LOCK_DURATION: ${U01_LOGIN_LOCK_DURATION:-15m}
       U03_REQUIRE_DRIVE: "false"
       U03_LOCAL_STORAGE_DIR: /app/data/files
       U03_LOCAL_BACKUP_DIR: /app/data/backups
@@ -33,6 +37,12 @@ services:
       - files-local:/app/data/files
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
 
   worker:
     image: platform-backend:local
@@ -53,6 +63,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 30s
+      retries: 10
+      start_period: 90s
 
   mailpit:
     image: axllent/mailpit:v1.27

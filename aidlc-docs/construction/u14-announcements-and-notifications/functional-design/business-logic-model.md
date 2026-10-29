@@ -41,9 +41,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F4 - Tạo thông báo từ sự kiện
 1. Listener của U14 nhận sự kiện trên queue `jobs.notification` (bind `platform.events` của U03); bỏ qua phiên bản sự kiện không hỗ trợ.
 2. Xác định người nhận theo BR-U14-11: người học đang ghi danh qua `IClassAccess.listActiveStudents` (bài, Quiz của môn thì qua `listOpenClassesOfSubject`), giảng viên qua `getClassRef`, Admin qua `IAccountLookup`; người nhận đi kèm sự kiện thì dùng luôn.
+
 3. Với mỗi người nhận: chèn thông báo, trùng (sự kiện, người nhận, loại) thì bỏ qua (BR-U14-10).
 4. Loại có email: tạo bản ghi email (F6) theo tùy chọn (BR-U14-21).
 5. Sau commit đẩy sự kiện qua `ISseHub` tới kênh của từng người nhận.
+
+Refinement B2 được duyệt 2026-10-25: `ASSIGNMENT_OPENED` phân giải thành các nhóm theo lớp `OPEN`, giữ tài khoản sinh viên `ACTIVE` và ghi danh hiện hành. Mỗi nhóm dùng `/my-assignments/{assignmentId}?classId={classId}`; bài của môn giữ ngữ cảnh từng lớp. Xử lý lớp theo classId ổn định và loại người nhận trùng trong cùng sự kiện, giữ sourceEventId gốc và unique key hiện có.
 
 ### F5 - Xem, đánh dấu đã đọc (UC 65)
 1. `NotificationBell` trên thanh điều hướng (U14 gắn qua slot `HeaderWidget` của U01) gọi `GET /api/v1/me/notifications/unread-count` và mở kênh `GET /api/v1/me/notifications/events`.
@@ -58,12 +61,16 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Worker nhận job, đọc bản ghi; đã `SENT` thì bỏ qua; lấy địa chỉ qua `IAccountLookup.getContact`; dựng nội dung tối thiểu kèm link; gửi qua `IMail` của U01.
 3. Thành công thì `SENT`; lỗi tạm thì U03 thử lại; hết lượt thì `onFailed` ghi `FAILED` với lỗi đã làm sạch.
 
+Refinement B2: trước gửi email nhắc hạn, parse UUID từ đường dẫn nội bộ mới `/my-assignments/` hoặc đường dẫn cũ `/assignments/`; link sai cấu trúc thì `SKIPPED` với mã lỗi cố định, không retry như lỗi dependency. Bài vẫn phải `OPEN` và giữ nguyên hạn tương ứng `expiresAt`. Không chuyển đổi các link lịch sử đã lưu/gửi trong bản vá này.
+
 ### F7 - Nhắc hạn nộp
 1. `IScheduledScanner` của U14 chạy mỗi phút: lấy bài có `closesAt` trong 24 giờ tới qua `IAssignmentQuery.listClosingBetween` của U07.
 2. Với mỗi (bài, lớp, `closesAt`) chưa xử lý: bỏ qua nếu bài không còn `OPEN` hoặc mở sau thời điểm nhắc (BR-U14-32).
 3. Lớp của bài cá nhân hoặc nhóm: lớp của bài; bài của môn: mọi lớp `OPEN` thuộc môn (`listOpenClassesOfSubject`).
 4. Lấy người chưa nộp qua `ISubmissionQuery.listStudentsWithoutSubmission(assignmentId, classId)` của U08 (bài nhóm: U08 dựa vào trạng thái nhóm từ U12).
 5. Tạo thông báo `DEADLINE_REMINDER` và email như F4 bước 3–5; đánh dấu (bài, lớp, `closesAt`) đã nhắc.
+
+Refinement B8 được duyệt 2026-10-25: mỗi lớp xử lý trong transaction riêng có timeout 15 giây. Bắt lỗi bên ngoài transaction để marker, notification và email cùng rollback; tiếp tục lớp sau, đồng thời cô lập lỗi đọc bài/liệt kê lớp để tiếp tục bài sau. Log scanner, assignmentId/classId, scanTime và loại lỗi, không log thông tin người nhận hoặc exception message. Giữ nguyên cửa sổ nhắc 5 phút và khóa chống trùng; không bảo đảm phục hồi sau outage vượt cửa sổ.
 
 ### F8 - Tùy chọn email (UC 65)
 1. Người học mở phần Cài đặt email trong popup: `GET /api/v1/me/notification-preferences`.

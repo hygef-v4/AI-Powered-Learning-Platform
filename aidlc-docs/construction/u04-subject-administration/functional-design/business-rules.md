@@ -14,8 +14,8 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 |---|---|---|
 | BR-U04-01 | Chỉ `ADMIN` đang `ACTIVE` xem danh sách môn (UC 16), thêm môn (UC 17), xem chi tiết môn (UC 18) và sửa môn (UC 19). Role khác bị từ chối và ghi audit. | UC 16–19 |
 | BR-U04-02 | `code` môn duy nhất toàn hệ thống, tối đa 20 ký tự, chỉ chữ hoa, số và `-`; không đổi sau khi tạo. | UC 17, 19 |
-| BR-U04-03 | Mỗi môn có tối đa một Chủ nhiệm môn, phải là tài khoản `SUBJECT_MANAGER` đang `ACTIVE`; Admin không được gán. Gán khi thêm môn hoặc khi sửa môn; gán người mới thay người cũ; được để trống. `subjects.manager_id` hiện thời là căn cứ duy nhất của quyền R2. | FR-002, FR-003 |
-| BR-U04-04 | Lưu trữ và mở lại là thao tác trong UC 19. Chỉ lưu trữ khi mọi lớp của môn đã `ARCHIVED`; không kiểm được số lớp (U05 không trả lời) thì từ chối. Mở lại đưa môn về `ACTIVE`. Không xóa môn. | UC 19 |
+| BR-U04-03 | Mỗi môn có tối đa một Chủ nhiệm môn, phải là tài khoản `SUBJECT_MANAGER` đang `ACTIVE`; Admin không được gán. Gán khi thêm môn hoặc khi sửa môn; gán người mới thay người cũ; được để trống. Môn `ARCHIVED` không có Chủ nhiệm môn: không gán được tới khi mở lại. `subjects.manager_id` hiện thời là căn cứ duy nhất của quyền R2. | FR-002, FR-003 |
+| BR-U04-04 | Lưu trữ và mở lại là thao tác trong UC 19. Lưu trữ môn thì lưu trữ luôn mọi lớp `DRAFT`, `OPEN` của môn trong cùng transaction (U05 thực hiện, giữ nguyên ghi danh và dữ liệu học tập); U05 không trả lời thì từ chối, không lưu trữ gì. Mở lại đưa môn về `ACTIVE`, các lớp vẫn `ARCHIVED`. Không xóa môn. | UC 19 |
 | BR-U04-05 | Subject Detail của Admin (UC 18) hiện thông tin môn, Chủ nhiệm môn và danh sách lớp của môn chỉ đọc (mã, tên, học kỳ, trạng thái, giảng viên, số sinh viên). Admin không mở chi tiết lớp và không sửa lớp. | UC 18 |
 | BR-U04-06 | `name` bắt buộc, tối đa 200 ký tự; `description` tùy chọn, tối đa 2.000 ký tự. Sửa phải gửi kèm `version`; lệch thì trả `409`. | UC 17, 19 |
 | BR-U04-07 | Môn `ARCHIVED`: không tạo lớp mới (U05 kiểm), tài nguyên cấp môn chỉ đọc (U07, U10, U13 kiểm qua `ISubjectQuery.isActive`); lịch sử giữ nguyên. | UC 19 |
@@ -25,7 +25,8 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U04-10 | `isSubjectManager(accountId, subjectId)` đọc `manager_id` hiện thời mỗi lần gọi, không cache; đổi hoặc bỏ Chủ nhiệm môn có hiệu lực ở request tiếp theo. | BR-U01-62, 64 |
-| BR-U04-11 | Môn `ARCHIVED` vẫn trả đúng Chủ nhiệm môn để người đó xem lịch sử; unit sở hữu tài nguyên tự chặn thao tác sửa theo trạng thái môn. | BR-U04-07 |
+| BR-U04-11 | Lưu trữ môn thì gỡ Chủ nhiệm môn trong cùng transaction, cùng một lần tăng `version`; ghi audit `SUBJECT_ARCHIVED` và `SUBJECT_MANAGER_CHANGED`. Mở lại môn thì môn chưa có Chủ nhiệm, Admin gán lại. | BR-U04-07, Q14 |
+| BR-U04-12 | Tài khoản bị vô hiệu hóa (BR-U01-71) thì bị gỡ khỏi Chủ nhiệm của mọi môn trong transaction vô hiệu hóa của U01: U01 gọi `ISubjectScope.releaseManagerAssignments`, U04 khóa từng môn, gỡ, tăng `version`, ghi audit `SUBJECT_MANAGER_CHANGED` với người thực hiện là Admin. Lỗi thì vô hiệu hóa rollback. Mở lại tài khoản không tự gán lại. | Q14 |
 
 ## 3. Danh sách, audit và lỗi
 

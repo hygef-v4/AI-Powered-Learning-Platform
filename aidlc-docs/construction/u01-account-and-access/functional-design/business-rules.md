@@ -93,7 +93,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U01-70 | Chỉ có 3 trạng thái: `PENDING`, `ACTIVE`, `DISABLED`. | Câu 10 |
-| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, xóa mọi phiên, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 12 |
+| BR-U01-71 | Vô hiệu hóa: chuyển `DISABLED`, gọi `ISubjectScope.releaseManagerAssignments` trong cùng transaction để gỡ khỏi Chủ nhiệm của mọi môn (BR-U04-12), xóa mọi phiên, hủy OTP còn hiệu lực. Không xóa tài khoản hay lịch sử. | US-IAM-007, UC 12 |
 | BR-U01-72 | Mở lại: về `ACTIVE` nếu đã có mật khẩu, về `PENDING` nếu chưa. | Câu 10 |
 | BR-U01-73 | Không có thao tác xóa tài khoản. | UC 08–12 |
 

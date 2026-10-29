@@ -1,0 +1,346 @@
+package edu.aiplatform.identity.web;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import edu.aiplatform.identity.IdentityTestData;
+import edu.aiplatform.identity.application.AccountAdminService;
+import edu.aiplatform.identity.application.AccountImportService;
+import edu.aiplatform.identity.application.AuthService;
+import edu.aiplatform.identity.application.RoleChangeBlockedException;
+import edu.aiplatform.identity.application.IdentityProperties;
+import edu.aiplatform.identity.application.PasswordChangeService;
+import edu.aiplatform.identity.application.ProfileService;
+import edu.aiplatform.identity.application.SessionAuthority;
+import edu.aiplatform.identity.application.SessionInfo;
+import edu.aiplatform.identity.contract.AccountStatus;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.Role;
+import edu.aiplatform.shared.config.SecurityConfig;
+import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.shared.error.GlobalExceptionHandler;
+import jakarta.servlet.http.Cookie;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/** Chuỗi bảo mật thật (SecurityConfig + IdentityHttpSecurity + JwtAuthFilter) với service giả. */
+@WebMvcTest(controllers = {AuthController.class, MeController.class, AdminAccountController.class,
+        IdentityWebSecurityTest.EchoController.class})
+@Import({SecurityConfig.class, IdentityHttpSecurity.class, AuthCookies.class, GlobalExceptionHandler.class,
+        IdentityWebSecurityTest.EchoController.class,
+        IdentityWebSecurityTest.Config.class})
+class IdentityWebSecurityTest {
+
+    private static final Actor STUDENT = new Actor(UUID.randomUUID(), Role.STUDENT);
+    // Sinh mỗi lần chạy để không có chuỗi mật khẩu cố định trong mã.
+    private static final String CURRENT_PASSWORD = UUID.randomUUID().toString();
+    private static final String NEW_PASSWORD = UUID.randomUUID().toString();
+
+    @Autowired
+    MockMvc mvc;
+
+    @MockitoBean
+    AuthService authService;
+
+    @MockitoBean
+    ProfileService profileService;
+
+    @MockitoBean
+    SessionAuthority sessionAuthority;
+
+    @MockitoBean
+    PasswordChangeService passwordChangeService;
+
+    @MockitoBean
+    AccountAdminService accountAdminService;
+
+    @MockitoBean
+    AccountImportService accountImportService;
+
+    @TestConfiguration
+    static class Config {
+
+        @Bean
+        IdentityProperties identityProperties() {
+            return IdentityTestData.properties();
+        }
+    }
+
+    /** Endpoint đổi trạng thái giả để kiểm CSRF. */
+    @RestController
+    static class EchoController {
+
+        @PostMapping("/api/v1/test/echo")
+        String echo(@AuthenticationPrincipal Actor actor) {
+            return actor.role().name();
+        }
+    }
+
+    private void signedIn() {
+        when(sessionAuthority.authenticate("good"))
+                .thenReturn(Optional.of(new SessionAuthority.AuthenticatedSession(STUDENT, "sid-1")));
+    }
+
+    @Test
+    void protectedEndpointWithoutCookieIs401ProblemDetail() throws Exception {
+        mvc.perform(get("/api/v1/me/profile"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
+    }
+
+    @Test
+    void revokedOrInvalidTokenIs401() throws Exception {
+        when(sessionAuthority.authenticate(anyString())).thenReturn(Optional.empty());
+
+        mvc.perform(get("/api/v1/me/profile").cookie(new Cookie(AuthCookies.ACCESS, "bad")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void validCookieInjectsActor() throws Exception {
+        signedIn();
+        when(profileService.get(STUDENT)).thenReturn(new ProfileService.ProfileView(STUDENT.accountId(),
+                "taivm@fpt.edu.vn", "Tài", null, Role.STUDENT, AccountStatus.ACTIVE, "/classes"));
+
+        mvc.perform(get("/api/v1/me/profile").cookie(new Cookie(AuthCookies.ACCESS, "good")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.homePath").value("/classes"))
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("XSRF-TOKEN="))));
+    }
+
+    @Test
+    void redisDownIs503NotAnonymous() throws Exception {
+        when(sessionAuthority.authenticate("good")).thenThrow(new DataAccessResourceFailureException("redis"));
+
+        mvc.perform(get("/api/v1/me/profile").cookie(new Cookie(AuthCookies.ACCESS, "good")))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("SYSTEM_BUSY"));
+    }
+
+    /** Hồi quy: request đã đăng nhập không được xóa cookie XSRF-TOKEN (lỗi tìm thấy khi chạy T3 với stack thật). */
+    @Test
+    void authenticatedRequestKeepsCsrfCookie() throws Exception {
+        signedIn();
+
+        mvc.perform(get("/api/v1/me/profile")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc")))
+                .andExpect(header().doesNotExist("Set-Cookie"));
+    }
+
+    /** Hồi quy (E2E): exception chưa xử lý forward tới /error không được biến thành 401 "hết phiên". */
+    @Test
+    void errorDispatchIsNotTreatedAsUnauthenticated() throws Exception {
+        mvc.perform(get("/error").with(request -> {
+                    request.setDispatcherType(jakarta.servlet.DispatcherType.ERROR);
+                    request.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 500);
+                    return request;
+                }))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void stateChangingRequestNeedsCsrfHeader() throws Exception {
+        signedIn();
+
+        mvc.perform(post("/api/v1/test/echo").cookie(new Cookie(AuthCookies.ACCESS, "good")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("CSRF_INVALID"));
+
+        mvc.perform(post("/api/v1/test/echo")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginIsPublicWithoutCsrfAndSetsHttpOnlyCookies() throws Exception {
+        when(authService.login(eq("taivm@fpt.edu.vn"), eq(CURRENT_PASSWORD), any())).thenReturn(
+                new AuthService.LoginResult(new SessionInfo(STUDENT.accountId(), "Tài", Role.STUDENT, "/classes"),
+                        "access", "refresh"));
+
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"taivm@fpt.edu.vn\",\"password\":\"" + CURRENT_PASSWORD + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.homePath").value("/classes"))
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("access_token=access"))))
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("HttpOnly"))))
+                .andExpect(header().stringValues("Set-Cookie",
+                        hasItem(allOf(containsString("refresh_token=refresh"), containsString("Path=/api/v1/auth;")))))
+                // Cookie refresh ở path cũ bị xóa để không che cookie mới.
+                .andExpect(header().stringValues("Set-Cookie",
+                        hasItem(allOf(containsString("refresh_token=;"), containsString("Path=/api/v1/auth/refresh;")))));
+    }
+
+    /** Hai tab refresh cùng lúc: bên thua nhận 409 và không bị xóa cookie mà bên thắng vừa đặt. */
+    @Test
+    void concurrentRefreshKeepsCookies() throws Exception {
+        when(authService.refresh("r1")).thenThrow(new ApiException(HttpStatus.CONFLICT,
+                AuthService.REFRESH_CONCURRENT, "Phiên vừa được làm mới"));
+
+        mvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isConflict())
+                .andExpect(header().stringValues("Set-Cookie", not(hasItem(containsString("access_token")))))
+                .andExpect(header().stringValues("Set-Cookie", not(hasItem(containsString("refresh_token")))));
+    }
+
+    @Test
+    void failedRefreshClearsCookies() throws Exception {
+        when(authService.refresh("r1")).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED,
+                AuthService.SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn"));
+
+        mvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("refresh_token=;"))));
+    }
+
+    @Test
+    void profileUpdateRejectsFieldsOtherThanNameAndPhone() throws Exception {
+        signedIn();
+
+        mvc.perform(patch("/api/v1/me/profile")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"Tài\",\"role\":\"ADMIN\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        verify(profileService, never()).update(any(), any(), any());
+    }
+
+    @Test
+    void malformedJsonGetsIdentityErrorCode() throws Exception {
+        signedIn();
+
+        mvc.perform(patch("/api/v1/me/profile")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
+    void beanValidationErrorGetsIdentityErrorCode() throws Exception {
+        signedIn();
+
+        // Thiếu field bắt buộc và vượt độ dài: cùng mã INVALID_REQUEST như JSON sai.
+        mvc.perform(post("/api/v1/me/password")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"" + NEW_PASSWORD + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + "a".repeat(400) + "\",\"password\":\"x\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
+    void changePasswordPassesCurrentSessionId() throws Exception {
+        signedIn();
+
+        mvc.perform(post("/api/v1/me/password")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"" + CURRENT_PASSWORD + "\",\"newPassword\":\"" + NEW_PASSWORD + "\"}"))
+                .andExpect(status().isNoContent());
+        verify(passwordChangeService).change(STUDENT, "sid-1", CURRENT_PASSWORD, NEW_PASSWORD);
+    }
+
+    @Test
+    void importEndpointWithColonAcceptsCsvUpload() throws Exception {
+        signedIn();
+        when(accountImportService.validate(eq(STUDENT), any())).thenReturn(
+                new AccountImportService.ImportResult("abc", java.util.List.of(), 0, 0, false));
+
+        mvc.perform(multipart("/api/v1/admin/accounts/imports:validate")
+                        .file(new MockMultipartFile("file", "tk.csv", "text/csv", "email,display_name,role\n".getBytes()))
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fileChecksum").value("abc"));
+
+        mvc.perform(multipart("/api/v1/admin/accounts/imports:validate")
+                        .file(new MockMultipartFile("file", "tk.xlsx", "application/octet-stream", new byte[] {1}))
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("IMPORT_FILE_INVALID"));
+    }
+
+    @Test
+    void roleChangeBlockedListsAssignments() throws Exception {
+        signedIn();
+        UUID subject = UUID.randomUUID();
+        when(accountAdminService.changeRole(eq(STUDENT), any(), eq(Role.TEACHER), eq(2L)))
+                .thenThrow(new RoleChangeBlockedException(
+                        java.util.List.of(new RoleChangeBlockedException.Held(subject, "SWR302", "Software Requirements")),
+                        java.util.List.of()));
+
+        mvc.perform(put("/api/v1/admin/accounts/" + UUID.randomUUID() + "/role")
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"TEACHER\",\"version\":2}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ROLE_CHANGE_BLOCKED"))
+                .andExpect(jsonPath("$.managedSubjects[0]").value(subject.toString()))
+                .andExpect(jsonPath("$.subjects[0].code").value("SWR302"))
+                .andExpect(jsonPath("$.subjects[0].name").value("Software Requirements"))
+                .andExpect(jsonPath("$.classes").isEmpty());
+    }
+
+    @Test
+    void logoutRevokesCurrentSessionAndClearsCookies() throws Exception {
+        signedIn();
+
+        mvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(AuthCookies.ACCESS, "good")))
+                .andExpect(status().isNoContent())
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("access_token=;"))));
+        verify(authService).logout("sid-1", null);
+    }
+
+    /** Access token đã hết hạn: vẫn thu hồi phiên trên server nhờ refresh token (cookie path /api/v1/auth). */
+    @Test
+    void logoutWithExpiredAccessTokenRevokesByRefreshToken() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(AuthCookies.REFRESH, "r1")))
+                .andExpect(status().isNoContent())
+                .andExpect(header().stringValues("Set-Cookie", hasItem(containsString("refresh_token=;"))));
+        verify(authService).logout(null, "r1");
+    }
+}

@@ -7,6 +7,7 @@ debug.log
 backend/target/
 frontend/node_modules/
 frontend/.next/
+frontend/.next-*/
 frontend/coverage/
 
 # Secrets

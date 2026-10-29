@@ -1,5 +1,8 @@
 package edu.aiplatform.shared.config;
 
+import edu.aiplatform.identity.web.IdentityHttpSecurity;
+import edu.aiplatform.identity.web.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,13 +12,15 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Cấu hình nền: không phiên server, không form login hay basic auth, chỉ {@code /health} mở công khai.
- * U01 thêm filter JWT, cookie và chống CSRF cho route đổi trạng thái.
+ * U01 gắn filter JWT, cookie CSRF, lỗi 401/403 và endpoint public qua {@link IdentityHttpSecurity}.
  */
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, IdentityHttpSecurity identity,
+                                            JwtAuthFilter jwtAuthFilter) throws Exception {
+        identity.configure(http, jwtAuthFilter);
         return http
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -23,6 +28,12 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/health/**").permitAll()
+                        // Exception chưa xử lý được forward tới /error; JWT filter không chạy lại ở lượt đó nên nếu
+                        // không mở, lỗi 500 bị đổi thành 401 và frontend tưởng hết phiên (đá về đăng nhập).
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        // Tải tệp (U03) trả StreamingResponseBody: lượt dispatch ASYNC ghi tiếp body của request đã
+                        // được kiểm quyền; JWT filter không chạy lại nên nếu không mở, response bị cắt giữa chừng.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .anyRequest().authenticated())
                 .build();
     }
