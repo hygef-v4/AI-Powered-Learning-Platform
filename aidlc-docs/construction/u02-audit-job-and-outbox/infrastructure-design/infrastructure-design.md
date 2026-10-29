@@ -21,7 +21,7 @@ Bảng theo [mô hình dữ liệu của unit](../functional-design/domain-entit
 |---|---|
 | User migration | `migrator`, chủ sở hữu schema, chỉ Flyway dùng lúc khởi động backend (tạo trong khung dự án, plan U03) |
 | User ứng dụng | `app`, quyền `SELECT, INSERT, UPDATE, DELETE` trên bảng nghiệp vụ; riêng `audit_logs` chỉ `SELECT, INSERT` |
-| Migration U02 | `db/migration/audit/V20260925_0900__create_audit_logs.sql`: bảng `audit_logs` (chưa có FK; migration `identity/V20260925_0931__add_audit_actor_fk.sql` của U01 thêm FK `actor_id` → `accounts`) + index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app` |
+| Migration U02 | `db/migration/audit/V20260925_0900__create_audit_logs.sql`: bảng `audit_logs` (chưa có FK; migration `V20260925_0930__create_accounts.sql` của U01 thêm FK `actor_id` → `accounts`) + index `occurred_at`, `(actor_id, occurred_at)`, `(object_type, object_id)`, `action`; `REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM app` |
 
 ## 3. Compliance
 

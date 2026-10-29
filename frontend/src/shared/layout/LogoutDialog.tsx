@@ -30,16 +30,21 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
     <Dialog
       open={open}
       title="Đăng xuất?"
+      icon="logout"
+      tone="danger"
       onClose={onClose}
-      dismissible={!busy}
       footer={
         <>
+          <Button onClick={onClose} disabled={busy}>
+            Hủy
+          </Button>
           <Button variant="danger" icon="logout" onClick={() => void logout()} disabled={busy}>
             Đăng xuất
           </Button>
         </>
       }
     >
+      <p>Bạn sẽ thoát khỏi phiên trên thiết bị này. Bài đang làm đã được tự lưu.</p>
       {error && (
         <p role="alert" className="text-danger">
           {error}

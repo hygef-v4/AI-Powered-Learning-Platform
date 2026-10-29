@@ -1,7 +1,3 @@
-platform:
-  identity:
-    # Chạy local bằng HTTP: cookie không đặt cờ Secure. Không dùng cho production (P2).
-    cookie-secure: false
 logging:
   level:
     edu.aiplatform: DEBUG

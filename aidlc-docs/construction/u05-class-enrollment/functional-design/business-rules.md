@@ -16,7 +16,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `term`, mở, lưu trữ, mở lại lớp và bật/tắt phân bố điểm (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên. | FR-003, UC 29 |
 | BR-U05-14 | Chuyển trạng thái hợp lệ: `DRAFT→OPEN`, `DRAFT→ARCHIVED`, `OPEN→ARCHIVED`, `ARCHIVED→OPEN`. Mở hoặc mở lại cần có giảng viên và môn `ACTIVE`. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
-| BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. Khi U04 lưu trữ môn, U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn qua `ISubjectClasses.archiveClassesOfSubject` (BR-U04-04), ghi audit từng lớp. | UC 29, BR-U04-04 |
+| BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. | UC 29 |
 | BR-U05-17 | `showGradeDistribution` mặc định tắt, chỉ Chủ nhiệm môn bật/tắt trong UC 29. U09 đọc cờ qua `IClassAccess.getClassRef` và chỉ trả phân bố ẩn danh trên Student Assignments khi đủ mẫu. | FR-024, UC 29, US-RPT-001 |
 
 ## 2. Ghi danh (Subject Manager, UC 28)

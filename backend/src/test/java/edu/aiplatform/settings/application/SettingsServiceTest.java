@@ -119,37 +119,6 @@ class SettingsServiceTest {
     }
 
     @Test
-    void missingRowIsCreatedWhenSavedWithVersionZero() {
-        when(repository.findAll()).thenReturn(List.of());
-        when(repository.insert(eq("files.material.maxSizeMb"), eq("FILES"), eq("20"), eq(admin.accountId()), any()))
-                .thenReturn(1);
-        when(repository.find("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "20", 1)));
-
-        SettingsService.SettingItemView saved = service.update(admin, "files.material.maxSizeMb",
-                objectMapper.valueToTree(20), 0);
-
-        assertThat(saved.value().asInt()).isEqualTo(20);
-        verify(repository, never()).update(anyString(), any(), anyLong(), any(), any());
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().details()).containsEntry("before", null).containsEntry("after", "20");
-    }
-
-    @Test
-    void missingRowWithNonZeroVersionOrConcurrentCreateIsAConflict() {
-        when(repository.findAll()).thenReturn(List.of());
-
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 2))
-                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.CONFLICT);
-        verify(repository, never()).insert(anyString(), anyString(), any(), any(), any());
-
-        when(repository.insert(anyString(), anyString(), any(), any(), any())).thenReturn(0);
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 0))
-                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.CONFLICT);
-        verify(audit, never()).record(any());
-    }
-
-    @Test
     void invalidValueIsRejectedWithoutWriting() {
         assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(80), 1))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);

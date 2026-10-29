@@ -16,7 +16,7 @@ export function FileLink({ fetchUrl, children }: Props) {
     <span className="inline-flex items-center gap-2">
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
+        className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline"
         onClick={async () => {
           setError(null);
           try {

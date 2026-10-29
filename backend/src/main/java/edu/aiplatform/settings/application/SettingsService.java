@@ -156,15 +156,12 @@ public class SettingsService implements ISettings {
         SettingRow before = rows.get(key);
         Instant now = clock.instant();
         String json = normalized.isNull() ? null : normalized.toString();
-        // Mục chưa có dòng hiện version 0: lưu với version 0 thì tạo dòng thay vì báo xung đột.
-        int written = before != null ? repository.update(key, json, version, actor.accountId(), now)
-                : version == 0 ? repository.insert(key, definition.group().name(), json, actor.accountId(), now) : 0;
-        if (written == 0) {
+        if (before == null || repository.update(key, json, version, actor.accountId(), now) == 0) {
             throw ApiException.conflict("SETTING_VERSION_CONFLICT", "Cài đặt đã được người khác sửa, tải lại để xem");
         }
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("key", key);
-        details.put("before", before == null ? null : before.valueJson());
+        details.put("before", before.valueJson());
         details.put("after", json);
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "SETTING_UPDATED", "SETTING", key,
                 AuditResult.SUCCESS, null, details, now));

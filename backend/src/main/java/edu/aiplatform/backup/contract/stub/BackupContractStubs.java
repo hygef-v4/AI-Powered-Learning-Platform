@@ -1,11 +1,6 @@
 package edu.aiplatform.backup.contract.stub;
 
 import edu.aiplatform.backup.contract.BackupRunView;
-import edu.aiplatform.backup.contract.BackupDashboardRunView;
-import edu.aiplatform.backup.contract.BackupDashboardSummary;
-import edu.aiplatform.backup.contract.IBackupDashboardStatus;
-import edu.aiplatform.shared.error.ApiException;
-import java.time.Instant;
 import edu.aiplatform.backup.contract.IBackupStatus;
 import edu.aiplatform.shared.stub.Stubs;
 import java.util.Optional;
@@ -20,28 +15,6 @@ import org.springframework.data.domain.Pageable;
 @AutoConfiguration
 @ConditionalOnProperty(name = "platform.contract-stubs.enabled", havingValue = "true", matchIfMissing = true)
 public class BackupContractStubs {
-
-    @Bean
-    @ConditionalOnMissingBean
-    IBackupDashboardStatus backupDashboardStatusStub() {
-        return Stubs.announce(IBackupDashboardStatus.class,
-                new IBackupDashboardStatus() {
-            private RuntimeException unavailable() {
-                return ApiException.unavailable(
-                        "BACKUP_STATUS_UNAVAILABLE", "Không đọc được trạng thái backup");
-            }
-            @Override public Optional<BackupDashboardRunView> latestRun() {
-                throw unavailable();
-            }
-            @Override public Page<BackupDashboardRunView> history(Pageable page) {
-                throw unavailable();
-            }
-            @Override public BackupDashboardSummary summarize(
-                    Instant fromInclusive, Instant toExclusive) {
-                throw unavailable();
-            }
-        });
-    }
 
     @Bean
     @ConditionalOnMissingBean

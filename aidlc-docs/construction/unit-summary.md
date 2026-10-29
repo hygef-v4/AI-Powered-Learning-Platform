@@ -30,7 +30,7 @@ Iter 1, Người 1, UC 01–12. Thiết kế: [u01-account-and-access](u01-accou
 
 | Interface | Phương thức | Cài bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64); gỡ Chủ nhiệm khỏi mọi môn khi vô hiệu hóa tài khoản (BR-U01-71) |
+| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
 | `IClassScope` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
 
 ##### Contract frontend U01 khai báo
@@ -413,9 +413,8 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn; gỡ Chủ nhiệm khỏi mọi môn khi tài khoản bị vô hiệu hóa (BR-U04-12) |
+| `ISubjectScope` (contract của U01, U04 cài) | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U01 | Kiểm quyền R2 theo phân công hiện thời; chặn đổi role người đang là Chủ nhiệm môn |
 | `ISubjectQuery` | `getSubject(subjectId)` → `SubjectRef`, `isActive(subjectId)`, `listManagedSubjects(accountId)` → `List<SubjectRef>`, `countSubjectsByStatus()` | U05, U07, U10, U13, U15 | Đọc mã, tên, trạng thái, Chủ nhiệm môn; kiểm môn còn `ACTIVE`; số đếm cho Admin Dashboard |
-| `ISubjectMutationGuard` | `lockActive(subjectId, timeout)` → `SubjectRef` | U05 | Khóa dòng môn tới cuối transaction của U05 (chờ tối đa 1 giây), môn không `ACTIVE` thì từ chối `SUBJECT_ARCHIVED`. U05 gọi trước mọi thao tác ghi lớp và ghi danh; lưu trữ môn khóa cùng dòng nên hai bên chạy lần lượt (BR-U04-04, BR-U05-22) |
 | `NavEntry` (contract frontend của U01, U04 cài) | - | U01 | Mục Môn học trên menu bên của Admin |
 
 `SubjectRef`: `subjectId`, `code`, `name`, `status`, `managerId`.
@@ -424,7 +423,7 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
+| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
 
 `SubjectClassSummary`: `classId`, `code`, `name`, `term`, `status`, `teacherName`, `activeStudentCount`.
 
@@ -473,7 +472,7 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 **Lưu trữ**:
 1. Admin bấm Lưu trữ, xác nhận; frontend gọi `PUT /api/v1/admin/subjects/{id}/status` với `ARCHIVED` và `version`.
 2. Kiểm quyền `ADMIN`.
-3. Gọi `ISubjectClasses.archiveClassesOfSubject` trong cùng transaction: U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn, giữ nguyên ghi danh, ghi audit `CLASS_STATUS_CHANGED` từng lớp; U05 không trả lời thì từ chối và không lưu trữ gì (BR-U04-04).
+3. Hỏi `ISubjectClasses.countUnarchivedClasses`. Còn lớp chưa lưu trữ thì từ chối và trả danh sách lớp đó; U05 không trả lời thì từ chối (BR-U04-04).
 4. Chuyển `ARCHIVED` có điều kiện `version`; ghi audit `SUBJECT_ARCHIVED`.
 
 **Mở lại**:
@@ -486,7 +485,7 @@ Iter 1, Người 4, UC 16–19. Thiết kế: [u04-subject-administration](u04-s
 3. Khi U01 chặn đổi role (BR-U01-64), gọi `listManagedSubjects(accountId)` để biết người đó còn quản lý môn nào.
 
 ##### F8 - Thông tin môn cho unit khác
-1. U05 gọi `ISubjectMutationGuard.lockActive(subjectId, timeout)` trước khi ghi lớp hoặc ghi danh (khóa dòng môn, kiểm môn còn `ACTIVE`), và `ISubjectQuery.listManagedSubjects(accountId)` để dựng Manager Dashboard và Subject Detail của Subject Manager (UC 30).
+1. U05 gọi `ISubjectQuery.isActive(subjectId)` trước khi tạo lớp, và `listManagedSubjects(accountId)` để dựng Manager Dashboard và Subject Detail của Subject Manager (UC 30).
 2. U07, U10, U13 gọi `isActive` trước khi cho sửa tài nguyên cấp môn (BR-U04-07).
 3. U15 gọi `countSubjectsByStatus()` cho Admin Dashboard.
 
@@ -501,7 +500,7 @@ Iter 1, Người 5, UC 20–30. Thiết kế: [u05-class-enrollment](u05-class-e
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
 | `IClassScope` (contract của U01, U05 cài) | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)`, `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U01 | Kiểm R3/R4, R5 theo phân công và ghi danh hiện thời; chặn hạ role người đang dạy |
-| `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
+| `ISubjectClasses` (contract của U04, U05 cài) | `listClassesOfSubject(subjectId)`, `countClasses(subjectIds)`, `countUnarchivedClasses(subjectId)` | U04 | Lớp của môn trên Subject Detail và Subject List; chặn lưu trữ môn |
 | `IClassAccess` | `getClassRef(classId)` → `ClassRef`, `isActiveStudent(accountId, classId)`, `listActiveStudents(classId)`, `isClassManager(accountId, classId)`, `listOpenClassesOf(accountId)`, `listOpenClassesOfSubject(subjectId)`, `countClassesByStatus()`, `countActiveEnrollments()` | U07–U15 | Thông tin lớp, sinh viên đang học, Chủ nhiệm môn của lớp, lớp đang mở của một người hoặc một môn, số đếm |
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
 | `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
@@ -611,7 +610,7 @@ Iter 1, Người 5, UC 20–30. Thiết kế: [u05-class-enrollment](u05-class-e
 ##### F15 - Trả phạm vi lớp
 1. U01 gọi `IClassScope.isTeacherOf` (R3/R4) hoặc `isEnrolledStudent` (R5) khi quyết định quyền; U05 đọc `teacher_id` và ghi danh hiện thời, không cache (BR-U05-30).
 2. U01 gọi `listTaughtClasses` khi chặn hạ role người đang dạy lớp.
-3. U04 gọi `ISubjectClasses` để hiện lớp của môn và lưu trữ mọi lớp của môn khi lưu trữ môn.
+3. U04 gọi `ISubjectClasses` để hiện lớp của môn và chặn lưu trữ môn.
 4. U07–U15 gọi `IClassAccess`: thông tin lớp, sinh viên `ACTIVE`, Chủ nhiệm môn của lớp, lớp `OPEN` của một người hoặc của một môn, số đếm cho Admin Dashboard.
 
 ## Iter 2: nghiệp vụ chính
@@ -775,8 +774,8 @@ Iter 2, Người 4, UC 34–36. Thiết kế: [u07-assignment-authoring](u07-ass
 |---|---|---|---|
 | `IAssignmentQuery` | `get(assignmentId)` → `AssignmentView`; `getContent(assignmentId)` → khung, phần, `requiredDiagrams`, rubric; `listForClass(classId)`; `submissionWindow(assignmentId, now)` → `ON_TIME`, `LATE`, `CLOSED`; `listClosingBetween(from, to)` | U08, U09, U12, U14 | Đọc bài, lịch, nội dung đã khóa; biết còn nhận bài không; nhắc hạn |
 | `IRubric` | `listRubrics(assignmentId)`, `score(rubricId, checkedItemIds)`, `maxPoints(assignmentId)` | U08 (hiện rubric), U09 (chấm), U12 | Đọc rubric đã khóa, tính điểm theo mục đạt |
-| `IDocumentModel` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)`, `sanitize(document)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm; làm sạch SVG xem trước trước khi lưu. Kèm lớp tiện ích `DocumentFiles` (`hideFiles`, `fileId`, `resolveFiles`): frontend không thấy `fileId` của ảnh, ảnh mới mang `fileRef` và được gắn khi lưu |
-| `IDocx` | `export(document, title, diagramLinker)`, `importPreview(actor, docx, origin, diagramEnabled, diagramResolver)`; `IDiagramLinker` có `linkFor(blockId)` và `viewUrlFor(blockId)` (link trang xem sơ đồ, mặc định không có) | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề; ảnh trong DOCX được lưu tạm qua U03 dưới tên `actor` |
+| `IDocumentModel` | `validateSkeleton`, `validateForSave(skeleton, document)`, `validateForSubmit(skeleton, document, requiredDiagrams)`, `computeParts(skeleton)`, `toPlainText(document)`, `compactDiagramXml(xml)` | U08, U09, U12 | Kiểm bài làm không đụng khung, đủ sơ đồ khi nộp; chữ và XML rút gọn cho AI chấm |
+| `IDocx` | `export(document, title, diagramLinker)`, `importPreview(docx, origin, diagramEnabled, diagramResolver)` | U08, U12 | Xuất, nhập DOCX cho bài làm, cùng cách giữ sơ đồ như đề |
 | Sự kiện `assignment.opened` | - | U14 | Báo bài mới mở cho người học của lớp hoặc của mọi lớp `OPEN` thuộc môn |
 | `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U07 cài); `NavEntry` (contract của U01, U07 cài) | - | U05, U01 | Phần Bài tập trong tab Đánh giá; số bài tập của môn trên Manager Dashboard, My Subject; mục Bài tập trên menu bên của Subject Manager |
 | `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`, `IMcpToolProvider` (contract của U06, U07 cài) | - | U06 | Nhận đề xuất AI; tool `read_assignment_context`, `save_assignment_draft` |
@@ -788,7 +787,7 @@ Iter 2, Người 4, UC 34–36. Thiết kế: [u07-assignment-authoring](u07-ass
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
 | `IAssignmentLifecycleListener` | `onOpened(assignmentId)`, `onRetired(assignmentId)` | U08 (tự nộp lượt đang làm khi ngưng giao), U12 (tạo tài liệu nhóm khi mở, tự nộp khi ngưng giao) | Phản ứng bắt buộc trong cùng transaction mở bài, ngưng giao mà U07 không phụ thuộc ngược |
-| `IGroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành. Chưa có U12 thì bản tạm trả lỗi `GROUP_SUPPORT_UNAVAILABLE` (hằng `UNAVAILABLE`) và U07 không cho tạo, duyệt, phát hành bài nhóm |
+| `IGroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành |
 | Slot frontend `AssignmentRowAction` | - | U09 | Lối vào bài nộp (Submission Detail) trên từng dòng bài |
 | Slot frontend `AssignmentFormSection` | - | U12 | Phần nhóm trên Assignment Form của bài `GROUP` |
 

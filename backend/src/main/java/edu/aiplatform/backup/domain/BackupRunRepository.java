@@ -98,28 +98,6 @@ public class BackupRunRepository {
         return jdbc.sql("select pg_database_size(current_database())").query(Long.class).single();
     }
 
-    public record SummaryRow(Instant latestSuccessfulAt, long failedRuns, String latestFailureMessage,
-            boolean invalidTerminal) { }
-
-    /** One statement gives the summary a single PostgreSQL snapshot. */
-    public SummaryRow summarize(Instant fromInclusive, Instant toExclusive) {
-        return jdbc.sql("""
-                select
-                  (select max(completed_at) from backup_runs
-                   where state = 'SUCCESS' and completed_at < :to) as latest_success,
-                  (select count(*) from backup_runs where state = 'FAILED'
-                   and completed_at >= :from and completed_at < :to) as failed_runs,
-                  (select safe_error from backup_runs where state = 'FAILED'
-                   and completed_at >= :from and completed_at < :to
-                   order by completed_at desc, scheduled_for desc, id desc limit 1) as latest_error,
-                  exists(select 1 from backup_runs where state in ('SUCCESS', 'FAILED')
-                   and completed_at is null) as invalid_terminal
-                """)
-                .param("from", ts(fromInclusive)).param("to", ts(toExclusive))
-                .query((rs, row) -> new SummaryRow(instant(rs, "latest_success"), rs.getLong("failed_runs"),
-                        rs.getString("latest_error"), rs.getBoolean("invalid_terminal"))).single();
-    }
-
     /** Phiên bản schema Flyway mới nhất đã chạy thành công. */
     public String schemaVersion() {
         try {

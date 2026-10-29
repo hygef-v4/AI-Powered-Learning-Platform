@@ -1,7 +1,6 @@
 # U07 Assignment Authoring — nfr-design-patterns
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
-> Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 34, 35, 36. **Primary stories:** US-ASM-001 (phần Assignment), US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
@@ -11,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - Mỗi lần lưu khung: dựng cây heading, lấy lá của mỗi nhánh làm phần; so với phần cũ theo `partId`; tạo rubric trống cho phần mới, xóa rubric của phần mất, trong cùng transaction với khung.
 
 ## P2 - Khóa khi phát hành
-- Phát hành: khóa dòng bài (`SELECT ... FOR UPDATE`, `version` khớp, bài còn nháp `DRAFT` hoặc `REVIEWED` cũ), kiểm luật duyệt và lịch, ghi lịch và `SCHEDULED`, đặt `locked_at` cho mọi rubric trong cùng transaction; một bước lỗi thì rollback cả. Không còn bước `REVIEWED` riêng (yêu cầu 2026-10-22).
+- `UPDATE assignments SET status = 'SCHEDULED', ... WHERE id = ? AND status = 'REVIEWED' AND version = ?`; trong cùng transaction kiểm lại và đặt `locked_at` cho mọi rubric; một bước lỗi thì rollback cả.
 
 ## P3 - Scanner theo lịch
 - `UPDATE ... SET status = 'OPEN' WHERE status = 'SCHEDULED' AND opens_at <= now() RETURNING id`; với từng bài gọi listener trong cùng transaction; phát sự kiện sau commit.

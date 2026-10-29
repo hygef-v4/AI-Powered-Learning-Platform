@@ -8,11 +8,9 @@ RUN mvn -B -q -DskipTests package
 
 FROM eclipse-temurin:17-jre-alpine
 # postgresql16-client cho pg_dump của worker (backup U03).
-# Tạo sẵn thư mục mount volume tệp, sao lưu (local) thuộc app: volume mới nhận quyền này, app ghi được.
 RUN addgroup -S app && adduser -S app -G app \
     && apk add --no-cache wget postgresql16-client \
-    && mkdir -p /tmp/uploads /tmp/backup /app/data/files /app/data/backups \
-    && chown -R app:app /tmp/uploads /tmp/backup /app/data
+    && mkdir -p /tmp/uploads /tmp/backup /app/data && chown -R app:app /tmp/uploads /tmp/backup /app/data
 WORKDIR /app
 COPY --from=build /src/target/platform-backend-*.jar app.jar
 USER app

@@ -13,43 +13,45 @@ type Props = {
   actions?: ReactNode;
 };
 
-/** Đầu trang: đường dẫn nhỏ phía trên, tiêu đề chữ đậm, một dòng mô tả, thao tác căn đáy bên phải. */
+/** Đầu trang: nút quay lại, tiêu đề, đường dẫn hoặc mô tả ngắn, thao tác. */
 export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: Props) {
-  const trail = breadcrumb?.slice(0, -1) ?? [];
   return (
-    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-1">
-      <div className="flex min-w-0 flex-[1_1_22rem] flex-col gap-2.5">
-        {(backHref || trail.length > 0) && (
-          <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
-            {backHref && (
-              <Link
-                href={backHref}
-                aria-label="Quay lại"
-                className="-ml-1 inline-flex size-6 items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-ink"
-              >
-                <Icon name="arrow_back" size={14} />
-              </Link>
-            )}
-            {trail.map((crumb, index) => (
-              <Fragment key={`${index}-${crumb.label}`}>
-                {index > 0 && <Icon name="chevron_right" size={11} className="text-faint" />}
-                {crumb.href ? (
-                  <Link href={crumb.href} className="transition-colors hover:text-ink">
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <span>{crumb.label}</span>
-                )}
-              </Fragment>
-            ))}
-          </nav>
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
+        {backHref && (
+          <Link
+            href={backHref}
+            aria-label="Quay lại"
+            className="inline-flex size-[38px] shrink-0 items-center justify-center rounded-[11px] border border-line-strong bg-white text-body hover:bg-shell"
+          >
+            <Icon name="arrow_back" />
+          </Link>
         )}
-        <h1 className="flex flex-wrap items-center gap-3 font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink sm:text-[32px]">
-          {title}
-        </h1>
-        {subtitle && <p className="text-[13.5px] text-muted">{subtitle}</p>}
+        <div className="min-w-0">
+          <h1 className="flex items-center gap-2.5 text-2xl leading-[1.3] font-bold text-ink">{title}</h1>
+          {breadcrumb && breadcrumb.length > 0 && (
+            <nav aria-label="Đường dẫn" className="mt-[3px] text-xs">
+              {breadcrumb.map((crumb, index) => {
+                const last = index === breadcrumb.length - 1;
+                return (
+                  <Fragment key={`${index}-${crumb.label}`}>
+                    {index > 0 && <span className="mx-1 text-faint">›</span>}
+                    {crumb.href && !last ? (
+                      <Link href={crumb.href} className="text-muted hover:text-ink">
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span className={last ? "font-semibold text-body" : "text-muted"}>{crumb.label}</span>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </nav>
+          )}
+          {subtitle && <p className="mt-1 text-[13px] text-muted">{subtitle}</p>}
+        </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-    </header>
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    </div>
   );
 }

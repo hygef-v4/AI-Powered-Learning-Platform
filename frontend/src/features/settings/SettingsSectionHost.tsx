@@ -6,9 +6,9 @@ import { settingsSectionRegistry } from "./slots";
 
 /**
  * Hiện panel do unit sở hữu đăng ký cho {@code sectionKey}; panel tự vẽ đầu trang (PageHeader có nút quay lại).
- * {@code tab} (tham số ?tab=) chọn tab mở trước nếu panel có tab. Không có panel thì báo không khả dụng.
+ * Không có panel thì báo không khả dụng.
  */
-export function SettingsSectionHost({ sectionKey, tab }: { sectionKey: string; tab?: string }) {
+export function SettingsSectionHost({ sectionKey }: { sectionKey: string }) {
   const entry = settingsSectionRegistry.entries().find((e) => e.key === sectionKey);
   if (!entry) {
     return (
@@ -21,5 +21,5 @@ export function SettingsSectionHost({ sectionKey, tab }: { sectionKey: string; t
     );
   }
   const Panel = entry.component;
-  return <Panel sectionKey={sectionKey} tab={tab} />;
+  return <Panel sectionKey={sectionKey} />;
 }

@@ -7,10 +7,8 @@ import java.util.Optional;
 /** Loại tệp được phép, nhận dạng theo nội dung (BR-U03-03). */
 public enum FileType {
     PDF("application/pdf", List.of("pdf")),
-    TXT("text/plain", List.of("txt")),
     DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", List.of("docx")),
     PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", List.of("pptx")),
-    XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", List.of("xlsx")),
     PNG("image/png", List.of("png")),
     JPEG("image/jpeg", List.of("jpg", "jpeg")),
     GIF("image/gif", List.of("gif")),

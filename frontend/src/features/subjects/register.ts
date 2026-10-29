@@ -1,4 +1,4 @@
-// U04: menu Admin dùng hai route đọc môn; quyền thật vẫn do U01/backend kiểm.
+// U04: mục Môn học trên menu bên của Admin. Màn chưa làm thì link tạm chưa mở được.
 
 import { navEntries } from "@/features/identity/slots";
 

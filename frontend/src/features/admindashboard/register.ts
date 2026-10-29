@@ -1,4 +1,4 @@
-// U15: Tổng quan dùng chung khung Admin và registry navigation của U01.
+// U15: mục Tổng quan trên menu bên của Admin. Màn chưa làm thì link tạm chưa mở được.
 
 import { navEntries } from "@/features/identity/slots";
 

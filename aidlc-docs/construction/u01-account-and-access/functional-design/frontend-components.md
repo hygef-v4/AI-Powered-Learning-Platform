@@ -103,7 +103,7 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 | Role | Mục (đường dẫn, unit đăng ký) |
 |---|---|
 | Admin | Tổng quan `/admin` (U15), Cài đặt `/admin/settings` (U03), Tài khoản `/admin/accounts` (U01), Môn học `/admin/subjects` (U04), Nhật ký audit `/admin/audit` (U02) |
-| Subject Manager | Tổng quan `/manager` (U05), Môn học của tôi `/manager/subjects` (U05), Ngân hàng câu hỏi `/manager/questions` (U10), Quiz `/manager/quizzes` (U10), Học liệu `/manager/materials` (U13), Bài tập `/manager/assignments` (U07), Lớp học `/manager/classes` (U05); nhóm "Giảng dạy": Lớp được phân công `/classes` (U05), Thông báo lớp `/announcements` (U14) |
+| Subject Manager | Tổng quan `/manager` (U05), Môn học của tôi `/manager/subjects` (U05), Ngân hàng câu hỏi `/manager/questions` (U10), Quiz `/manager/quizzes` (U10), Học liệu `/manager/materials` (U13), Bài tập `/manager/assignments` (U07), Lớp học `/manager/classes` (U05), Lớp được phân công `/classes` (U05) |
 | Teacher | Lớp được phân công `/classes` (U05), Thông báo lớp `/announcements` (U14) |
 | Student | Lớp của tôi `/classes` (U05), Bài tập `/my-assignments` (U08), Luyện tập Quiz `/quiz-practice` (U11), Thông báo lớp `/announcements` (U14) |
 

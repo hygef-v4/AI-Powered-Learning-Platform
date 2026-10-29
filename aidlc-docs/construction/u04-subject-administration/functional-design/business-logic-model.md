@@ -64,18 +64,17 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 **Lưu trữ**:
 1. Admin bấm Lưu trữ, xác nhận; frontend gọi `PUT /api/v1/admin/subjects/{id}/status` với `ARCHIVED` và `version`.
 2. Kiểm quyền `ADMIN`.
-3. Gọi `ISubjectClasses.archiveClassesOfSubject` trong cùng transaction: U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn, giữ nguyên ghi danh, ghi audit `CLASS_STATUS_CHANGED` từng lớp; U05 không trả lời thì từ chối và không lưu trữ gì (BR-U04-04).
-4. Chuyển `ARCHIVED` và gỡ Chủ nhiệm môn có điều kiện `version` (một lần tăng `version`); ghi audit `SUBJECT_ARCHIVED`, có Chủ nhiệm thì thêm `SUBJECT_MANAGER_CHANGED` (BR-U04-11).
+3. Hỏi `ISubjectClasses.countUnarchivedClasses`. Còn lớp chưa lưu trữ thì từ chối và trả danh sách lớp đó; U05 không trả lời thì từ chối (BR-U04-04).
+4. Chuyển `ARCHIVED` có điều kiện `version`; ghi audit `SUBJECT_ARCHIVED`.
 
 **Mở lại**:
 1. Admin bấm Mở lại; gửi `ACTIVE` và `version`.
-2. Kiểm quyền, chuyển `ACTIVE`, ghi audit `SUBJECT_REOPENED`. Môn mở lại chưa có Chủ nhiệm; Admin gán lại theo F5.
+2. Kiểm quyền, chuyển `ACTIVE`, ghi audit `SUBJECT_REOPENED`.
 
 ### F7 - Phạm vi môn cho phân quyền
 1. U01 gọi `ISubjectScope.isSubjectManager(accountId, subjectId)` khi một hành động cần R2.
 2. U04 đọc `manager_id` hiện thời của môn, không cache; môn không tồn tại thì trả `false` (BR-U04-10).
 3. Khi U01 chặn đổi role (BR-U01-64), gọi `listManagedSubjects(accountId)` để biết người đó còn quản lý môn nào.
-4. Khi U01 vô hiệu hóa tài khoản (BR-U01-71), gọi `releaseManagerAssignments(accountId, actor)` trong cùng transaction; U04 khóa các môn người đó quản lý theo thứ tự id, gỡ Chủ nhiệm, tăng `version`, ghi audit từng môn (BR-U04-12).
 
 ### F8 - Thông tin môn cho unit khác
 1. U05 gọi `ISubjectQuery.isActive(subjectId)` trước khi tạo lớp, và `listManagedSubjects(accountId)` để dựng Manager Dashboard và Subject Detail của Subject Manager (UC 30).

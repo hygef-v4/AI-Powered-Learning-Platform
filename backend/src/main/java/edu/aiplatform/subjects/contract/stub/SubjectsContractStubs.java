@@ -1,8 +1,6 @@
 package edu.aiplatform.subjects.contract.stub;
 
-import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.stub.Stubs;
-import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
@@ -13,12 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-/** Bản tạm tự tắt theo từng interface khi có bean thật; classes chưa được U05 cài phải fail closed (Q05). */
+/** Bản tạm của interface U04 (và {@code ISubjectClasses} do U05 cài): môn mẫu đang mở, môn chưa có lớp nào. */
 @AutoConfiguration
 @ConditionalOnProperty(name = "platform.contract-stubs.enabled", havingValue = "true", matchIfMissing = true)
 public class SubjectsContractStubs {
@@ -55,27 +55,18 @@ public class SubjectsContractStubs {
         return Stubs.announce(ISubjectClasses.class, new ISubjectClasses() {
             @Override
             public List<SubjectClassSummary> listClassesOfSubject(UUID subjectId) {
-                throw classesUnavailable();
+                return List.of();
             }
 
             @Override
             public Map<UUID, Integer> countClasses(Collection<UUID> subjectIds) {
-                throw classesUnavailable();
+                return subjectIds.stream().distinct().collect(Collectors.toMap(Function.identity(), id -> 0));
             }
 
             @Override
             public int countUnarchivedClasses(UUID subjectId) {
-                throw classesUnavailable();
-            }
-
-            @Override
-            public List<UUID> archiveClassesOfSubject(UUID subjectId, Actor actor) {
-                throw classesUnavailable();
+                return 0;
             }
         });
-    }
-
-    private static ApiException classesUnavailable() {
-        return ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp của môn. Hãy thử lại sau");
     }
 }

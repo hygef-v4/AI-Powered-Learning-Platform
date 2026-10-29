@@ -22,25 +22,23 @@ class PurposePolicyTest {
 
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxSizeMb()).isEqualTo(50);
-        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
-        assertThat(material.allowedTypes()).doesNotContain(FileType.TXT);
+        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
         assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
-        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
-        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).allowedTypes())
-                .containsExactlyInAnyOrder(FileType.TXT, FileType.DOCX, FileType.PDF);
     }
 
     @Test
-    void readsSizeFromSettingsAndClampsToHardCapWithFixedTypes() {
+    void readsLimitsFromSettingsAndClampsToHardCap() {
         when(settings.get(PurposePolicy.MATERIAL_MAX_MB)).thenReturn(Optional.of(10));
+        when(settings.get(PurposePolicy.MATERIAL_TYPES)).thenReturn(Optional.of(new String[]{"PDF"}));
         when(settings.get(PurposePolicy.IMAGE_MAX_MB)).thenReturn(Optional.of(99));
+        when(settings.get(PurposePolicy.IMAGE_TYPES)).thenReturn(Optional.of(new String[]{"PNG", "PDF"}));
 
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxBytes()).isEqualTo(10L * 1024 * 1024);
-        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
+        assertThat(material.allowedTypes()).containsExactly(FileType.PDF);
         PurposeLimits image = policy.limits(ArtifactPurpose.DOCUMENT_IMAGE);
         assertThat(image.maxSizeMb()).isEqualTo(5);
-        assertThat(image.allowedTypes()).containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG);
+        assertThat(image.allowedTypes()).containsExactly(FileType.PNG);
     }
 
     @Test
@@ -50,8 +48,5 @@ class PurposePolicyTest {
         assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.DOCUMENT_IMAGE)).isTrue();
         assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.DOCUMENT_IMAGE)).isFalse();
         assertThat(policy.canUpload(Role.ADMIN, ArtifactPurpose.MATERIAL)).isFalse();
-        assertThat(policy.canUpload(Role.TEACHER, ArtifactPurpose.ASSIGNMENT_SOURCE)).isTrue();
-        assertThat(policy.canUpload(Role.SUBJECT_MANAGER, ArtifactPurpose.ASSIGNMENT_SOURCE)).isTrue();
-        assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.ASSIGNMENT_SOURCE)).isFalse();
     }
 }

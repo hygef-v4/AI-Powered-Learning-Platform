@@ -8,7 +8,7 @@ Thiết kế: [business-logic-model](../../u07-assignment-authoring/functional-d
 
 ## Trạng thái
 
-Đã code ngày 2026-10-20 trên nhánh `assignment` (U07 và U08 cùng lúc), xem [code summary](../../u07-assignment-authoring/code/code-summary.md). Unit test chạy được, đã chạy thử trên Docker local; bước Review chờ người dùng duyệt.
+Plan theo unit 2026-10-15, chưa được duyệt và chưa code. Khung code tạo lại ngày 2026-10-16 (code cũ đã xóa, không dùng lại); unit chưa có nghiệp vụ, migration hay test riêng.
 
 ## Code hiện có
 
@@ -21,19 +21,19 @@ Thiết kế: [business-logic-model](../../u07-assignment-authoring/functional-d
 
 ## Checklist
 
-- [x] **Bước 1 — Migration:** `db/migration/assignments/V20260925_1300__create_assignment_tables.sql` theo infrastructure-design.
-- [x] **Bước 2 — Domain:** `Assignment`, `AssignmentRubric`, `AssignmentAiDraft`, `DocumentModel`, `Block`, `Part` và enum; kiểm chuyển trạng thái; repository chỉ dùng trong package.
-- [x] **Bước 3 — Tài liệu:** `DocumentModelService` (cài `IDocumentModel`), `PartCalculator`, `DiagramXmlValidator`, `SvgSanitizer`; `compactDiagramXml`, `toPlainText`.
-- [x] **Bước 4 — Rubric:** `RubricService` (cài `IRubric`): tự tạo, tự xóa theo phần, sửa, kiểm hợp lệ, khóa, nhân bản, tính điểm.
-- [x] **Bước 5 — Soạn bài:** `AssignmentAuthoringService` (F3, F4, F8, F14), `SkeletonService` (P1).
-- [x] **Bước 6 — Phát hành:** `AssignmentPublicationService` (F9, F11, P2), `AssignmentScheduleScanner` (F10, P3), `IAssignmentLifecycleListener`, `IGroupAssignmentSupport`, phát `assignment.opened`.
-- [x] **Bước 7 — Nhân bản, version, copy:** `AssignmentCopyService` (F12, F13).
-- [x] **Bước 8 — DOCX:** `DocxExporter`, `DocxImporter` (cài `IDocx`) theo BR-U07-60…62 và P4; trang xem sơ đồ.
-- [x] **Bước 9 — AI và MCP:** `AssignmentAiDraftService`, `AssignmentDraftResultHandler` (cài `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`), dùng `IReferenceMaterial` của U06, `AssignmentMcpTools` (cài `IMcpToolProvider`).
-- [x] **Bước 10 — Interface cho unit khác:** `AssignmentQueryService` (cài `IAssignmentQuery`) gồm `submissionWindow`, `listClosingBetween`.
-- [x] **Bước 11 — API:** controller theo domain-entities mục 6; `contracts/openapi/assignments.yaml` chưa làm (giống U01–U05); ngoài phạm vi trả `404`.
-- [x] **Bước 12 — Frontend:** `DocumentEditor`, `DiagramBlock`, `DocumentViewer`, `RubricViewer` dùng chung; `ClassAssignmentsSection` (đăng ký `TeacherClassTab`), `SubjectAssignmentListPage` (đăng ký `NavEntry`), `AssignmentSummary` (`SubjectSummarySection`), `AssignmentFormPage` và các panel, `RubricDetailDialog`, `DiagramViewPage`; slot `AssignmentRowAction`, `AssignmentFormSection`.
-- [x] **Bước 13 — Unit test (người code viết):** tính phần với các cây heading; tự tạo, xóa rubric theo phần; rubric hợp lệ và tổng điểm; tắt sơ đồ bị từ chối; chuyển trạng thái hợp lệ và không hợp lệ; phát hành khi rubric trống; lịch sai; sửa lịch khi `OPEN`; ngưng giao gọi listener; nhân bản, version, copy không sao lịch và nhóm; một version đang mở; XML có DOCTYPE bị từ chối; SVG có script bị làm sạch; nhập DOCX tìm sơ đồ theo alt text, hyperlink, `mxfile`, rồi giữ là ảnh; xuất DOCX có alt text và `mxfile`; đề xuất AI không sửa thẳng bài, áp dụng lệch `version` trả `409`; tool MCP với người học và giảng viên; component frontend. Integration test do tester viết.
+- [ ] **Bước 1 — Migration:** `db/migration/assignments/V20260925_1300__create_assignment_tables.sql` theo infrastructure-design.
+- [ ] **Bước 2 — Domain:** `Assignment`, `AssignmentRubric`, `AssignmentAiDraft`, `DocumentModel`, `Block`, `Part` và enum; kiểm chuyển trạng thái; repository chỉ dùng trong package.
+- [ ] **Bước 3 — Tài liệu:** `DocumentModelService` (cài `IDocumentModel`), `PartCalculator`, `DiagramXmlValidator`, `SvgSanitizer`; `compactDiagramXml`, `toPlainText`.
+- [ ] **Bước 4 — Rubric:** `RubricService` (cài `IRubric`): tự tạo, tự xóa theo phần, sửa, kiểm hợp lệ, khóa, nhân bản, tính điểm.
+- [ ] **Bước 5 — Soạn bài:** `AssignmentAuthoringService` (F3, F4, F8, F14), `SkeletonService` (P1).
+- [ ] **Bước 6 — Phát hành:** `AssignmentPublicationService` (F9, F11, P2), `AssignmentScheduleScanner` (F10, P3), `IAssignmentLifecycleListener`, `IGroupAssignmentSupport`, phát `assignment.opened`.
+- [ ] **Bước 7 — Nhân bản, version, copy:** `AssignmentCopyService` (F12, F13).
+- [ ] **Bước 8 — DOCX:** `DocxExporter`, `DocxImporter` (cài `IDocx`) theo BR-U07-60…62 và P4; trang xem sơ đồ.
+- [ ] **Bước 9 — AI và MCP:** `AssignmentAiDraftService`, `AssignmentDraftResultHandler` (cài `IAiTaskResultHandler` cho `ASSIGNMENT_DRAFT`), dùng `IReferenceMaterial` của U06, `AssignmentMcpTools` (cài `IMcpToolProvider`).
+- [ ] **Bước 10 — Interface cho unit khác:** `AssignmentQueryService` (cài `IAssignmentQuery`) gồm `submissionWindow`, `listClosingBetween`.
+- [ ] **Bước 11 — API:** controller theo domain-entities mục 6; `contracts/openapi/assignments.yaml`; ngoài phạm vi trả `404`.
+- [ ] **Bước 12 — Frontend:** `DocumentEditor`, `DiagramBlock`, `DocumentViewer`, `RubricViewer` dùng chung; `ClassAssignmentsSection` (đăng ký `TeacherClassTab`), `SubjectAssignmentListPage` (đăng ký `NavEntry`), `AssignmentSummary` (`SubjectSummarySection`), `AssignmentFormPage` và các panel, `RubricDetailDialog`, `DiagramViewPage`; slot `AssignmentRowAction`, `AssignmentFormSection`.
+- [ ] **Bước 13 — Unit test (người code viết):** tính phần với các cây heading; tự tạo, xóa rubric theo phần; rubric hợp lệ và tổng điểm; tắt sơ đồ bị từ chối; chuyển trạng thái hợp lệ và không hợp lệ; phát hành khi rubric trống; lịch sai; sửa lịch khi `OPEN`; ngưng giao gọi listener; nhân bản, version, copy không sao lịch và nhóm; một version đang mở; XML có DOCTYPE bị từ chối; SVG có script bị làm sạch; nhập DOCX tìm sơ đồ theo alt text, hyperlink, `mxfile`, rồi giữ là ảnh; xuất DOCX có alt text và `mxfile`; đề xuất AI không sửa thẳng bài, áp dụng lệch `version` trả `409`; tool MCP với người học và giảng viên; component frontend. Integration test do tester viết.
 - [ ] **Bước 14 — Review:** đối chiếu UC 34–36, story, BR-U07 với code; người dùng duyệt trước khi chuyển unit.
 
 ## Integration test cases (tester viết)

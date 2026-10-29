@@ -1,7 +1,6 @@
 # U08 Assignment Work — business-logic-model
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
-> Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
 
@@ -37,7 +36,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F2 - Chi tiết bài (UC 38)
 1. Frontend gọi `GET /api/v1/me/assignments/{assignmentId}` kèm `classId`.
 2. Kiểm R5 với lớp và bài (BR-U08-01); không đạt thì "không tìm thấy".
-3. Trả thông tin bài: lớp, hình thức, chế độ, số phần, `requiredDiagrams`, lịch, số lượt đã dùng và còn lại, lượt gần nhất, thông báo theo dõi, `referenceMaterialIds` để U13 hiện tài liệu gắn kèm; không có hướng dẫn, khung, rubric, tổng điểm (BR-U08-03).
+3. Trả hướng dẫn, khung chỉ đọc (`IAssignmentQuery.getContent`), rubric từng phần (`IRubric.listRubrics`), cá nhân hay nhóm, `requiredDiagrams`, lịch, số lượt đã dùng và còn lại, lượt gần nhất, chính sách AI, thông báo theo dõi, `referenceMaterialIds` để U13 hiện tài liệu gắn kèm (BR-U08-03).
 4. Hiện nút Bắt đầu hoặc Tiếp tục khi đủ điều kiện; bài nhóm hiện nút của U12 (slot `GroupWorkEntry`); nút Lịch sử nộp.
 
 ## 3. Làm và nộp
@@ -50,7 +49,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. Mở Assignment Workspace; nếu theo dõi bật thì `useActivityTracker` bắt đầu gửi sự kiện (F11).
 
 ### F4 - Làm bài và tự lưu (UC 39)
-1. Workspace dùng `DocumentEditor` của U07 ở chế độ người học (lần đầu đề hiện ra): chữ của người soạn nhạt, không sửa được; người học viết trong ruột trắng của các phần lá (đoạn, danh sách, bảng, ảnh, sơ đồ), bấm vào sơ đồ của đề trong phần để vẽ bằng Draw.io ở cột phải, điền thẳng vào bảng của đề trong phần; không thấy rubric. Định dạng chữ theo vùng bôi đen như trang soạn.
+1. Workspace dùng `DocumentEditor` của U07 ở chế độ người học: block của người soạn bị khóa; người học thêm đoạn, danh sách, bảng, ảnh, sơ đồ (nếu bật) ở bất kỳ đâu.
 2. 10 giây sau lần sửa cuối hoặc khi rời trang, frontend gọi `PUT /api/v1/attempts/{attemptId}/content` kèm `contentVersion` (nén gzip).
 3. Kiểm chủ lượt, `IN_PROGRESS`, chưa quá `deadlineAt` cộng 30 giây, còn ghi danh; `validateForSave` (BR-U08-14).
 4. Lệch `contentVersion` thì `409`; đạt thì lưu, tăng `contentVersion`, trả "Đã lưu lúc …".
@@ -60,14 +59,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 Nhập:
 1. Trong Workspace bấm Nhập DOCX, chọn file ≤ 20 MB; frontend gọi `POST /api/v1/attempts/{attemptId}/docx:preview`.
 2. Kiểm chủ lượt, `IN_PROGRESS`, chưa hết hạn; gọi `IDocx.importPreview` với block của người học và cờ sơ đồ; mã sơ đồ chỉ nhận khi trỏ tới đề của bài hoặc lượt của chính mình.
-3. Trả bản xem trước; người học xác nhận thì chèn vào cuối phần đang chọn (không chọn thì cuối bài) và lưu như F4 bước 2–4.
+3. Trả bản xem trước; người học xác nhận thì thêm vào cuối bản nháp và lưu như F4 bước 2–4.
 
 Xuất:
 1. Trên Workspace hoặc Submission History bấm Tải DOCX; frontend gọi `GET /api/v1/attempts/{attemptId}/export.docx`.
 2. Kiểm chủ lượt, hoặc giảng viên chính của lớp ghi trên lượt; gọi `IDocx.export` (sơ đồ kèm mã `[drawio:attemptId/blockId]`).
 
 ### F6 - Nộp bài (UC 39)
-1. Bấm Nộp: popup kiểm sơ bộ (tổng số sơ đồ bắt buộc, có nội dung; bảng của đề có chữ tính như đã điền), còn lỗi thì chỉ có Quay lại sửa; xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
+1. Bấm Nộp, xác nhận; frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
 2. Lượt đã `SUBMITTED` thì trả lại biên nhận cũ (BR-U08-22).
 3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây, còn ghi danh; `validateForSubmit`. Có lỗi thì trả danh sách cần sửa; quá hạn thì ghi audit `SUBMIT_REJECTED`.
 4. Một transaction: `SUBMITTED`, `submittedAt`, `late`, `receiptHash`, `submitMode = MANUAL`; gọi `ISubmissionListener.onSubmitted` (U09); audit `ASSIGNMENT_SUBMITTED`.
@@ -90,13 +89,13 @@ Xuất:
 1. Trên lượt đã nộp của bài `PRACTICE` bấm "Xin phản hồi AI"; `AiSourcePicker` của U06 chỉ hiện kết nối cá nhân của người học; người học chọn nguồn.
 2. Frontend gọi `POST /api/v1/attempts/{attemptId}/feedback` kèm nguồn và `requestRef`.
 3. Kiểm BR-U08-40, 44: chủ lượt, `SUBMITTED`, `PRACTICE`, còn ghi danh; lượt chưa có yêu cầu đang chờ; chưa quá 20 yêu cầu trong ngày.
-4. Dựng prompt theo BR-U08-45 (`IAssignmentQuery.getContent`, `IDocumentModel.toPlainText`, `compactDiagramXml`; không có rubric) kèm JSON schema của phản hồi (nhận xét chung, điểm mạnh, nhận xét từng phần, gợi ý).
+4. Dựng prompt theo BR-U08-45 (`IAssignmentQuery.getContent`, `IRubric.listRubrics`, `IDocumentModel.toPlainText`, `compactDiagramXml`) kèm JSON schema của phản hồi.
 5. Gọi `IAiTask.submit` (loại `PRACTICE_FEEDBACK`, đích là lượt, `inputVersion` là `receiptHash`); tạo phản hồi `PENDING`; audit `PRACTICE_FEEDBACK_REQUESTED`; trả `taskId` cho `AiTaskStatus`.
 6. U06 gọi `onReady`: kiểm lại chủ lượt, ghi danh, hash, schema; đạt thì lưu phản hồi `READY` kèm provenance và trả `APPLIED`, không thì trả `STALE` hoặc `REJECTED`. `onFailed` chuyển phản hồi sang `FAILED`.
 7. Người học xem phản hồi; muốn thêm thì xin lại, mỗi lần là một bản trong lịch sử.
 
 ### F10 - Phản hồi qua agent MCP (UC 41)
-1. Agent của người học gọi `read_own_work(attemptId)`: U08 kiểm actor là chủ lượt, lượt `SUBMITTED`, bài `PRACTICE`; trả hướng dẫn, khung, bài nộp dạng chữ và `submissionHash` (không có rubric).
+1. Agent của người học gọi `read_own_work(attemptId)`: U08 kiểm actor là chủ lượt, lượt `SUBMITTED`, bài `PRACTICE`; trả hướng dẫn, khung, rubric, bài nộp dạng chữ và `submissionHash`.
 2. Agent tự gọi mô hình của nó rồi gọi `record_private_feedback(attemptId, submissionHash, feedback)` (credential `READ_WRITE`).
 3. U08 kiểm như F9 bước 3 (trừ yêu cầu đang chờ), hash khớp, schema đúng; lưu phản hồi `READY` nguồn MCP (nhãn agent, model nếu agent báo).
 4. Giảng viên dùng `read_authorized_submission(attemptId)`: U08 kiểm actor là giảng viên chính của lớp ghi trên lượt, lượt đã nộp; trả bài nộp dạng chữ, không có dữ liệu người khác.

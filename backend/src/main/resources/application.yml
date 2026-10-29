@@ -14,8 +14,6 @@ spring:
     user: ${POSTGRES_MIGRATOR_USER:migrator}
     password: ${POSTGRES_MIGRATOR_PASSWORD:}
     locations: classpath:db/migration
-    # Unit làm sau có thể có version nhỏ hơn migration đã chạy của unit khác (ví dụ U06 1200 sau U11 1700).
-    out-of-order: true
   jpa:
     open-in-view: false
     hibernate:
@@ -58,8 +56,6 @@ spring:
 server:
   port: 8080
   shutdown: graceful
-  # Nginx đứng trước: lấy IP client từ X-Forwarded-For của proxy nội bộ (rate limit theo IP, U01).
-  forward-headers-strategy: native
 
 management:
   endpoints:
@@ -76,48 +72,8 @@ management:
     mail:
       enabled: false
 
+# U03 Job and Settings
 platform:
-  # U01 Account & Access (logical-components mục 4)
-  identity:
-    allowed-email-domains: ${U01_ALLOWED_EMAIL_DOMAINS:}
-    jwt-secret: ${U01_JWT_SECRET:}
-    access-ttl: ${U01_ACCESS_TTL:15m}
-    refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
-    refresh-max-ttl: ${U01_REFRESH_MAX_TTL:7d}
-    bcrypt-cost: ${U01_BCRYPT_COST:12}
-    otp-ttl: ${U01_OTP_TTL:10m}
-    otp-max-attempts: ${U01_OTP_MAX_ATTEMPTS:5}
-    login-lock-threshold: ${U01_LOGIN_LOCK_THRESHOLD:5}
-    login-lock-duration: ${U01_LOGIN_LOCK_DURATION:15m}
-    cookie-secure: ${U01_COOKIE_SECURE:true}
-    mail-from: ${SMTP_FROM:}
-    bootstrap-admin-email: ${U01_BOOTSTRAP_ADMIN_EMAIL:}
-    bootstrap-admin-name: ${U01_BOOTSTRAP_ADMIN_NAME:Quản trị viên}
-    rate-limit:
-      otp-per-email-per-hour: ${U01_RL_OTP_PER_EMAIL_PER_HOUR:5}
-      otp-cooldown: ${U01_RL_OTP_COOLDOWN:60s}
-      otp-per-ip-per-hour: ${U01_RL_OTP_PER_IP_PER_HOUR:20}
-      login-per-ip: ${U01_RL_LOGIN_PER_IP:30}
-      login-ip-window: ${U01_RL_LOGIN_IP_WINDOW:5m}
-      password-change-failures: ${U01_RL_PASSWORD_CHANGE_FAILURES:5}
-      password-change-window: ${U01_RL_PASSWORD_CHANGE_WINDOW:15m}
-  # U06 AI Connections: khóa mã hóa key bắt buộc ở môi trường thật (base64 32 byte), không có giá trị mặc định.
-  ai:
-    key-encryption-key: ${U06_AI_KEY_ENCRYPTION_KEY:}
-    key-encryption-key-v2: ${U06_AI_KEY_ENCRYPTION_KEY_V2:}
-    request-timeout: ${U06_AI_REQUEST_TIMEOUT:120s}
-    test-timeout: ${U06_AI_TEST_TIMEOUT:20s}
-    providers:
-      gemini:
-        models: ${U06_GEMINI_MODELS:gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-4-argon}
-        max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:8192}
-      openai:
-        models: ${U06_OPENAI_MODELS:gpt-6-luna,gpt-6.1-sol,gpt-5.4-mini,gpt-5-mini,gpt-4.1-mini}
-        max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:8192}
-      claude:
-        models: ${U06_CLAUDE_MODELS:claude-sonnet-5-5,claude-haiku-5-5,claude-opus-5-5,claude-sonnet-4-6,claude-opus-4-6}
-        max-output-tokens: ${U06_CLAUDE_MAX_OUTPUT:8192}
-  # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
     require-drive: ${U03_REQUIRE_DRIVE:false}
@@ -139,10 +95,3 @@ platform:
     db-password: ${BACKUP_DB_PASSWORD:}
     tmp-dir: ${U03_BACKUP_TMP_DIR:}
     local-dir: ${U03_LOCAL_BACKUP_DIR:}
-  # U07 Assignment Authoring: link trang xem sơ đồ ghi vào DOCX xuất ra (BR-U07-60).
-  assignments:
-    public-url: ${APP_PUBLIC_URL:http://localhost:8088}
-  # U08 Assignment Work: giới hạn tần suất (BR-U08-44, 52).
-  assignment-work:
-    feedback-per-day: ${U08_FEEDBACK_PER_DAY:20}
-    activity-events-per-minute: ${U08_ACTIVITY_EVENTS_PER_MINUTE:60}

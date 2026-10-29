@@ -1,7 +1,5 @@
 package edu.aiplatform.ai.contract.stub;
 
-import edu.aiplatform.ai.contract.AiProvider;
-import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
@@ -36,10 +34,6 @@ public class AiContractStubs {
             public AiTaskView submit(AiTaskRequest request) {
                 return new AiTaskView(UUID.randomUUID(), AiTaskState.FAILED, request.source(), request.provider(), null,
                         null, "AI chưa sẵn sàng", null);
-            }
-
-            @Override
-            public void requireSource(Actor actor, AiSource source, AiProvider provider) {
             }
 
             @Override

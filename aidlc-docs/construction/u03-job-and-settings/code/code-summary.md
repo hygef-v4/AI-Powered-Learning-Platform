@@ -53,9 +53,3 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 - Mỗi mức chờ thử lại có exchange fanout riêng `jobs.retry.<mức>` thay cho một exchange `jobs.retry`, để giữ routing key loại việc khi dead-letter về `jobs` (đã sửa infrastructure-design).
 - `FileRef` mang thêm thuộc tính tệp nên `attach` không gọi Drive (đã sửa domain-entities).
 - Drive lỗi thì health chi tiết `drive: DEGRADED` nhưng backend vẫn `UP`.
-
-## U15 read capability addendum — 2026-10-22
-
-User approved additive IBackupDashboardStatus plus metadata/summary records. BackupStatusService implements old and new ports; old IBackupStatus/BackupRunView remain unchanged. New reads map real startedAt, sanitize public error and use read-only transaction timeout1s. Summary uses one parameterized SQL statement with168h [from,to), historical SUCCESS completedAt including purged runs, final FAILED count/latest safe error and terminal timestamp integrity. No migration/job/backup action changes.
-
-[Execution evidence](../../u15-admin-dashboard/code/backup-completion-verification-2026-10-22.md): PostgreSQL16 integration8 passed, including all three read timeouts and connection release; full backend verify passed with35 unrelated configured-environment skips. Full app/browser/load acceptance remains open.

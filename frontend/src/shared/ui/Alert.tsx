@@ -22,13 +22,16 @@ type Props = {
   children?: ReactNode;
 };
 
-/** Dải thông báo nền màu nhạt: cảnh báo, lỗi, thông tin. */
+/** Hộp thông báo nền màu: cảnh báo, lỗi, thông tin. */
 export function Alert({ tone = "info", title, action, role, className, children }: Props) {
   return (
-    <div role={role} className={cx("flex animate-fade items-start gap-2.5 rounded-lg px-3.5 py-2.5 text-[13px] leading-normal", TONES[tone].box, className)}>
-      <Icon name={TONES[tone].icon} size={16} className="mt-0.5" />
+    <div
+      role={role}
+      className={cx("flex items-start gap-2.5 rounded-[11px] px-3.5 py-[11px] text-[12.5px] leading-normal", TONES[tone].box, className)}
+    >
+      <Icon name={TONES[tone].icon} size={18} className="mt-px" />
       <div className="min-w-0 flex-1">
-        {title && <p className="font-semibold">{title}</p>}
+        {title && <p className="mb-0.5 font-bold">{title}</p>}
         {children}
       </div>
       {action && <div className="shrink-0">{action}</div>}

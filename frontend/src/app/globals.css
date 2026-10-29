@@ -1,416 +1,51 @@
 @import "tailwindcss";
 
-/*
- * Giao diện tối giản: nền sáng ngả cam với điểm nhấn cam mơ, chế độ tối nền xanh biển sâu với điểm nhấn xanh lơ.
- * Màu là biến CSS đổi theo theme; class Tailwind (text-ink, bg-surface, bg-primary-soft…) đọc qua biến nên tự đổi theo.
- * `primary` là màu nền nhấn (nút, chỉ báo); chữ nhấn trên nền sáng dùng `primary-ink`, chữ trên nền nhấn dùng `on-primary`.
- */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
+/* Màu và chữ theo design "Nền tảng học tập" (G21). Dùng qua class Tailwind, ví dụ text-ink, bg-primary-soft. */
 @theme {
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 
-  --color-ink: var(--c-ink);
-  --color-body: var(--c-body);
-  --color-muted: var(--c-muted);
-  --color-faint: var(--c-faint);
+  --color-ink: #0f172a;
+  --color-body: #475069;
+  --color-muted: #64708a;
+  --color-faint: #a3aab8;
 
-  --color-line: var(--c-line);
-  --color-line-strong: var(--c-line-strong);
-  --color-field: var(--c-field);
-  --color-focus: var(--c-focus);
-  --color-line-soft: var(--c-line-soft);
+  --color-line: #e8ebf2;
+  --color-line-strong: #d9deea;
+  --color-line-soft: #f1f3f8;
 
-  --color-surface: var(--c-surface);
-  --color-sunken: var(--c-sunken);
-  --color-shell: var(--c-bg);
-  --color-nav: var(--c-nav);
-  --color-sidebar: var(--c-sidebar);
-  --color-watermark: var(--c-watermark);
-  --color-canvas: var(--c-bg);
-  --color-table-head: var(--c-bg);
-  --color-neutral-soft: var(--c-sunken);
+  --color-shell: #f4f6fb;
+  --color-canvas: #f7f9fe;
+  --color-table-head: #f7f8fc;
+  --color-neutral-soft: #eef1f6;
 
-  --color-primary: var(--c-primary);
-  --color-primary-strong: var(--c-primary-strong);
-  --color-primary-soft: var(--c-primary-soft);
-  --color-primary-ink: var(--c-primary-ink);
-  --color-on-primary: var(--c-on-primary);
+  --color-primary: #2f45b5;
+  --color-primary-strong: #24369a;
+  --color-primary-soft: #eaedfb;
 
-  --color-success: var(--c-success);
-  --color-success-soft: var(--c-success-soft);
-  --color-warning: var(--c-warning);
-  --color-warning-soft: var(--c-warning-soft);
-  --color-danger: var(--c-danger);
-  --color-danger-soft: var(--c-danger-soft);
-  --color-danger-line: var(--c-danger-line);
-  --color-on-danger: var(--c-on-danger);
-  --color-alert-dot: var(--c-primary);
-  --color-info: var(--c-info);
-  --color-info-soft: var(--c-info-soft);
-  --color-accent: var(--c-accent);
-  --color-accent-soft: var(--c-accent-soft);
-  --color-orange: var(--c-orange);
-  --color-orange-soft: var(--c-orange-soft);
-
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-rise: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  --animate-pop: pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  --animate-fade: fade 0.2s ease backwards;
-  --animate-slide-in: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  /* Biểu đồ lúc mới hiện: cột mọc từ trục, thanh dài ra từ trái, đường và vòng tròn được vẽ ra (cần pathLength = 1). */
-  --animate-grow-y: grow-y 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  --animate-grow-x: grow-x 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  --animate-draw: draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) backwards;
-
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes pop {
-    from { opacity: 0; transform: translateY(6px) scale(0.985); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes slide-in {
-    from { opacity: 0; transform: translateX(14px); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes grow-y {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-  }
-  @keyframes grow-x {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-  }
-  @keyframes draw {
-    from { stroke-dashoffset: 1; }
-    to { stroke-dashoffset: 0; }
-  }
+  --color-success: #1c7a4a;
+  --color-success-soft: #e7f6ee;
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fff4de;
+  --color-danger: #b42b2b;
+  --color-danger-soft: #fdecec;
+  --color-danger-line: #f1c9c9;
+  --color-alert-dot: #c93535;
+  --color-info: #1a7fa6;
+  --color-info-soft: #e6f3f8;
+  --color-accent: #7a3e8f;
+  --color-accent-soft: #f3eaf7;
+  --color-orange: #c2410c;
+  --color-orange-soft: #ffedd5;
 }
 
 :root {
   color-scheme: light;
-  --c-bg: #fff8f1;
-  --c-surface: #ffffff;
-  --c-sunken: #fcf1e4;
-  --c-line: #f1e3d3;
-  --c-line-strong: #e6d2bc;
-  --c-field: #a38a73;
-  --c-focus: #9a5508;
-  --c-line-soft: #f7ecdf;
-  --c-ink: #2a211b;
-  --c-body: #54473d;
-  --c-muted: #7a6757;
-  --c-faint: #a8978a;
-  --c-primary: #f6b24e;
-  --c-primary-strong: #eda137;
-  --c-primary-soft: #ffedd2;
-  --c-primary-ink: #9a5508;
-  --c-on-primary: #3a2408;
-  --c-success: #2f6b3c;
-  --c-success-soft: #e6f4ea;
-  --c-warning: #8a5a00;
-  --c-warning-soft: #fff3d6;
-  --c-danger: #a33a2e;
-  --c-danger-soft: #fdecea;
-  --c-danger-line: #f3cfcb;
-  --c-on-danger: #ffffff;
-  --c-info: #22648f;
-  --c-info-soft: #e3f1fa;
-  --c-accent: #6e4a8e;
-  --c-accent-soft: #f1eaf6;
-  --c-orange: #a4511a;
-  --c-orange-soft: #fdebdd;
-  --c-tier-1: #fdf3e6;
-  --c-tier-2: #fbe8d0;
-  --c-tier-3: #f8dcb9;
-  --c-tier-4: #f4cfa2;
-  --c-scrim: rgb(42 33 27 / 0.32);
-  --c-topbar: rgb(255 248 241 / 0.86);
-  /* Ba vùng của khung trang mỗi vùng một màu: thanh trên trắng ngà ánh vàng (khác thẻ trắng, nhạt hơn sidebar), sidebar cát, nội dung kem (--c-bg). */
-  --c-nav: #fbf0dc;
-  /* Hình chìm sau vùng nội dung: đậm hơn nền một chút, nhạt hơn thanh trên. */
-  --c-watermark: #fcf2e3;
-  --c-sidebar: #f6e7d4;
-  --shadow-float: 0 18px 48px rgb(60 38 14 / 0.12), 0 2px 6px rgb(60 38 14 / 0.04);
-  --shadow-lift: 0 6px 18px rgb(80 50 10 / 0.06);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-  --c-bg: #0e1b25;
-  --c-surface: #13232f;
-  --c-sunken: #0b1620;
-  --c-line: #1f3341;
-  --c-line-strong: #2a4354;
-  --c-field: #56778b;
-  --c-focus: #8fd6e3;
-  --c-line-soft: #182a37;
-  --c-ink: #eaf4fa;
-  --c-body: #bcd0dc;
-  --c-muted: #8ba3b3;
-  --c-faint: #5f7a8c;
-  --c-primary: #8fd6e3;
-  --c-primary-strong: #a8e2ec;
-  --c-primary-soft: #163a4a;
-  --c-primary-ink: #9be0ec;
-  --c-on-primary: #08222b;
-  --c-success: #8fd9a8;
-  --c-success-soft: #15352a;
-  --c-warning: #f0cf86;
-  --c-warning-soft: #3a2f14;
-  --c-danger: #f2a7a0;
-  --c-danger-soft: #3a1e22;
-  --c-danger-line: #5a2e33;
-  --c-on-danger: #2a0f12;
-  --c-info: #9cccf0;
-  --c-info-soft: #15324a;
-  --c-accent: #cdb3ea;
-  --c-accent-soft: #2e2440;
-  --c-orange: #f3b98c;
-  --c-orange-soft: #3b2a1c;
-  --c-tier-1: #162a38;
-  --c-tier-2: #1a3242;
-  --c-tier-3: #1e3a4c;
-  --c-tier-4: #234356;
-  --c-scrim: rgb(3 10 16 / 0.62);
-  --c-topbar: rgb(14 27 37 / 0.86);
-  --c-nav: #1f3849;
-  --c-watermark: #142634;
-  --c-sidebar: #08121a;
-  --shadow-float: 0 18px 48px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.2);
-  --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
-}
-
-html {
-  background: var(--c-bg);
-  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-shell font-sans text-[14px] leading-[1.6] text-ink antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  @apply bg-shell font-sans text-ink antialiased;
 }
 
-/* Trong layer base để class tiện ích (truncate, whitespace-nowrap) của từng chỗ vẫn thắng; ngoài layer thì tiêu đề cắt
-   một dòng vẫn bị xuống dòng. */
-@layer base {
-  h1,
-  h2,
-  h3 {
-    text-wrap: balance;
-  }
-}
-
-/* Ô chọn, thanh trượt và con trỏ nhập lấy màu chủ đạo thay vì xanh mặc định của trình duyệt. */
-:root {
-  accent-color: var(--c-primary-strong);
-  caret-color: var(--c-primary-ink);
-}
-
-/* Placeholder đủ tương phản (4,5:1) ở cả hai theme. */
-::placeholder {
-  color: var(--c-muted);
-  opacity: 1;
-}
-
-::selection {
-  background: var(--c-primary-soft);
-  color: var(--c-ink);
-}
-
-/* Trong layer base để ô nhập nằm trong khung (outline-none) chỉ hiện viền của khung, không thêm viền thứ hai bên trong. */
-@layer base {
-  :focus-visible {
-    outline: 2px solid var(--c-focus);
-    outline-offset: 2px;
-  }
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--c-line-strong) transparent;
-}
-
-/* Hàng tab cuộn ngang được nhưng không hiện thanh cuộn. */
-[role="tablist"] {
-  scrollbar-width: none;
-}
-
-/* Reset nằm trong layer base để class utility (màu, cỡ, độ đậm chữ) trên nút và ô nhập vẫn thắng. */
-@layer base {
-  input,
-  select,
-  textarea,
-  button {
-    font: inherit;
-    color: inherit;
-  }
-}
-
-/* Thẻ bấm được: rê chuột chỉ đậm viền và thêm bóng mờ, không nhảy. */
-.lift {
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.lift:hover {
-  border-color: var(--c-line-strong);
-  box-shadow: var(--shadow-lift);
-}
-
-/* Danh sách hiện mờ dần một lần, không trượt. */
-.stagger > * {
-  animation: var(--animate-fade);
-}
-
-/* Giảm chuyển động: bỏ trượt, nảy và dịch chỗ; vẫn giữ đổi màu, viền, bóng và mờ dần để thao tác còn phản hồi. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    transition-property: color, background-color, border-color, box-shadow, opacity !important;
-  }
-
-  .animate-spin {
-    animation-duration: 1.5s !important;
-  }
-}
-
-/* Trình vẽ Draw.io mở ở cột phải (DiagramEditor): đẩy cả trang sang trái bằng lề phải của body, không che trang. */
-html.drawio-panel-open body {
-  margin-right: var(--drawio-panel-width, 50vw);
-  transition: margin-right 0.25s ease;
-}
-
-/* Đang vẽ thì thu sidebar của ứng dụng (AppShell) để trang tài liệu còn đủ rộng. */
-[data-app-sidebar] {
-  transition: translate 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease, padding 0.25s ease;
-}
-
-html.drawio-panel-open [data-app-sidebar] {
-  width: 0;
-  padding-left: 0;
-  padding-right: 0;
-  overflow: hidden;
-  border-right-width: 0;
-}
-
-@keyframes drawio-slide-in {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-/* Logo động của trang đang tải / tải lỗi (PageStatus): bút mài vòng trong nghiên, mặt mực gợn; lỗi thì gác bút lên mép nghiên. */
-@keyframes ink-grind {
-  0%, 100% { translate: 0 0; }
-  25% { translate: 3.5px -1px; }
-  50% { translate: 0 -2.2px; }
-  75% { translate: -3.5px -1px; }
-}
-
-@keyframes ink-ripple {
-  0%, 100% { transform: scale(1, 1); }
-  50% { transform: scale(1.12, 1.3); }
-}
-
-@keyframes ink-rest {
-  0% { transform: translate(27px, 44px) rotate(38deg); }
-  35% { transform: translate(30px, 36px) rotate(10deg); }
-  100% { transform: translate(46px, 37.5px) rotate(-84deg); }
-}
-
-/* Chế độ tập trung của trang chấm/soạn: ẩn sidebar khi rời trang thì tự trở lại. */
-[data-app-shell]:has([data-workspace-focus="true"]) [data-app-sidebar] {
-  display: none;
-}
-
-/* Trang chấm bài chia hai cột khi vùng nội dung rộng từ 736px. */
-[data-workspace-main="true"] {
-  container-type: inline-size;
-}
-
-@container (min-width: 736px) {
-  [data-grading-grid="true"] {
-    grid-template-columns: minmax(400px, 1.18fr) minmax(320px, 1fr);
-  }
-}
-
-@container (min-width: 960px) {
-  [data-grading-grid="true"] {
-    grid-template-columns: minmax(440px, 3fr) minmax(340px, 2fr);
-  }
-}
-
-[data-rich][data-empty="true"][data-placeholder]::before {
-  content: attr(data-placeholder);
-  color: var(--c-muted);
-  pointer-events: none;
-  position: absolute;
-}
-
-/* One typeface: display titles carry weight instead of a second family; codes and times keep aligned figures. */
-@layer utilities {
-  .font-display { font-weight: 700; }
-  .font-mono { font-variant-numeric: tabular-nums; }
-}
-
-/* Giấy ô li của màn đăng nhập: ô lớn 32px kẻ đậm, chia 4 ô nhỏ kẻ nhạt, như vở học sinh. */
-.paper-grid {
-  background-color: var(--c-bg);
-  background-image:
-    linear-gradient(var(--c-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--c-line) 1px, transparent 1px),
-    linear-gradient(var(--c-line-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px);
-  background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
-  background-position: -1px -1px;
-}
-
-/* Dòng bấm được (bảng và danh sách): rê chuột thì nền ấm lên, một vạch màu chính trượt vào ở mép trái, mũi tên cuối dòng
-   nhích sang phải. Dòng bảng vẽ vạch trên ô đầu (tr không nhận box-shadow ổn định). */
-@layer components {
-  .row-interactive {
-    transition: background-color 0.2s ease, box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .row-interactive:not(tr):hover {
-    box-shadow: inset 3px 0 0 var(--c-primary);
-  }
-  tr.row-interactive:hover {
-    background-color: color-mix(in oklab, var(--c-primary-soft) 45%, transparent);
-  }
-  tr.row-interactive > td:first-child {
-    transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  tr.row-interactive:hover > td:first-child {
-    box-shadow: inset 3px 0 0 var(--c-primary);
-  }
-  tr.row-interactive > td:last-child svg {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  tr.row-interactive:hover > td:last-child svg {
-    transform: translateX(3px);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .row-interactive,
-    tr.row-interactive > td:first-child,
-    tr.row-interactive > td:last-child svg {
-      transition: none;
-    }
-    tr.row-interactive:hover > td:last-child svg {
-      transform: none;
-    }
-  }
+h1 {
+  letter-spacing: -0.01em;
 }

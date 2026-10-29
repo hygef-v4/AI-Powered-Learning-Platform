@@ -11,7 +11,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U14-01 | Giảng viên chính của lớp (R3/R4) tạo, sửa, xóa thông báo của lớp `OPEN`; người học đang ghi danh và giảng viên của lớp đọc. Người học không đăng; Admin không vào lớp. | FR-023, UC 63, 64 |
-| BR-U14-02 | Thông báo có tiêu đề văn bản thuần (≤ 200) và nội dung Markdown (≤ 5.000 ký tự đầu vào). Tạo/sửa loại thẻ HTML, thuộc tính sự kiện và nội dung script/style bằng parser trước lưu, giữ Markdown hợp lệ; từ chối nếu rỗng sau làm sạch. Hiển thị tiếp tục chặn HTML thô, ảnh và URL nguy hiểm. Không tệp đính kèm, không bình luận. Phương án A được duyệt ngày 2026-10-23. | FR-023, SEC-003 |
+| BR-U14-02 | Thông báo có tiêu đề (≤ 200) và nội dung markdown (≤ 5.000 ký tự, hiển thị đã làm sạch); không HTML thô, không tệp đính kèm, không bình luận. | FR-023, SEC-003 |
 | BR-U14-03 | Khi tạo, giảng viên có thể đánh dấu quan trọng và chọn gửi email. Tạo mới thì phát `class.announcement-posted` sau commit: người học đang ghi danh nhận thông báo trong app; thông báo quan trọng có chọn email thì gửi email theo tùy chọn của người nhận. | UC 64, FR-011 |
 | BR-U14-04 | Sửa kiểm `version`, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
 | BR-U14-05 | Xóa là xóa mềm: loại khỏi danh sách, giữ người xóa, thời điểm, tham chiếu và audit. | US-CNT-004 S5 |
@@ -26,8 +26,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-12 | Nội dung chỉ về chính người nhận; không ghi điểm, bài nộp, secret; chỉ báo "có điểm mới" và đường dẫn. Mở đường dẫn không cấp quyền: màn đích kiểm quyền hiện hành. | US-NTF-001 S3 |
 | BR-U14-13 | Chuông và popup trên thanh điều hướng của mọi vai trò: số chưa đọc, danh sách phân trang, đánh dấu đã đọc từng cái hoặc tất cả; cập nhật realtime qua `ISseHub` của U12 (kênh theo tài khoản). Người dùng chỉ xem, sửa thông báo của mình. | UC 65 |
 | BR-U14-14 | Giữ thông báo 180 ngày rồi xóa. | Thiết kế |
-
-Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành động theo loại thông báo và đối tượng nhận hiện hành; không yêu cầu người đã đăng nhập đăng nhập lại. Thông báo cũ còn câu mặc định được chuyển mô tả khi trả feed, giữ nguyên lịch sử, đường dẫn và trạng thái đã đọc. Email dùng mẫu tối thiểu yêu cầu đăng nhập riêng theo BR-U14-23. BR-U14-12 tiếp tục áp dụng; không đưa điểm/nhận xét hoặc payload riêng tư vào mô tả.
 
 ## 3. Email
 

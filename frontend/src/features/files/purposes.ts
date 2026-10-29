@@ -1,4 +1,4 @@
-export type ArtifactPurpose = "MATERIAL" | "DOCUMENT_IMAGE" | "ASSIGNMENT_SOURCE";
+export type ArtifactPurpose = "MATERIAL" | "DOCUMENT_IMAGE";
 
 export type PurposePolicy = {
   purpose: ArtifactPurpose;

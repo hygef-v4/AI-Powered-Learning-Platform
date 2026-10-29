@@ -14,7 +14,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | # | Màn (artboard) | Component | UC | Role |
 |---|---|---|---|---|
 | 15 | Subject List (`a05`), popup Thêm môn học (`a06`) | `SubjectListPage`, `SubjectFormDialog` | 16, 17 | Admin |
-| 16 | Subject Detail: tab Thông tin (`a07`), tab Lớp học (`a07b`), popup Đổi / bỏ chủ nhiệm (`a07c`) | `SubjectDetailPage`, `ManagerChangeDialog` | 18, 19 | Admin |
+| 16 | Subject Detail: tab Thông tin (`a07`), tab Lớp học (`a07b`), popup Đổi / bỏ chủ nhiệm (`a07c`), popup Lưu trữ bị từ chối (`a07d`) | `SubjectDetailPage`, `ManagerChangeDialog`, `ArchiveRejectedDialog` | 18, 19 | Admin |
 
 Subject List mở từ mục "Môn học" trên menu bên của Admin (U04 đăng ký `NavEntry`). Subject Detail của Subject Manager (My Subject) và Manager Dashboard (UC 30) thuộc U05.
 
@@ -35,6 +35,7 @@ app/admin/subjects/[id]/           SubjectDetailPage   #16 Subject Detail của 
   SubjectClassesTab
     SubjectClassesTable                                lớp của môn, chỉ đọc (UC 18)
   ManagerChangeDialog                                  popup Đổi / bỏ chủ nhiệm (a07c)
+  ArchiveRejectedDialog                                popup Lưu trữ bị từ chối (a07d)
 ```
 
 ## 3. Component và API
@@ -48,7 +49,7 @@ app/admin/subjects/[id]/           SubjectDetailPage   #16 Subject Detail của 
 | `SubjectEditForm` | `PATCH /api/v1/admin/subjects/{id}` | Mã môn chỉ đọc ("Không đổi được"), Tên môn học*, Mô tả (tùy chọn); Hủy, Lưu thay đổi; `409` báo dữ liệu đã đổi và tải lại |
 | `ManagerCard`, `ManagerChangeDialog` | `PUT /api/v1/admin/subjects/{id}/manager` | Thẻ "Chủ nhiệm môn": avatar, họ tên, email, nút Đổi chủ nhiệm. Popup: Chủ nhiệm hiện tại; chọn "Phân công người khác" (dùng `ManagerPicker`) hoặc "Bỏ chủ nhiệm" (môn chưa có chủ nhiệm thì chỉ Admin quản lý cho tới khi phân công lại); Hủy, Xác nhận |
 | `SubjectMetaCard` | - | Mã môn, Tạo ngày, Lớp: tổng và số theo trạng thái (đang mở, nháp, lưu trữ), đếm từ danh sách lớp của môn |
-| `SubjectStatusActions` | `PUT /api/v1/admin/subjects/{id}/status` | Lưu trữ, Mở lại có xác nhận. Popup lưu trữ báo mọi lớp chưa lưu trữ của môn sẽ được lưu trữ theo và Chủ nhiệm môn bị gỡ (BR-U04-04, BR-U04-11). Design `a07d` (lưu trữ bị từ chối) không còn dùng |
+| `SubjectStatusActions`, `ArchiveRejectedDialog` | `PUT /api/v1/admin/subjects/{id}/status` | Lưu trữ, Mở lại có xác nhận. Lưu trữ bị từ chối thì popup "Không lưu trữ được môn": số lớp chưa lưu trữ, "Chủ nhiệm môn cần lưu trữ các lớp này trước."; Đóng |
 | `SubjectClassesTable` | `GET /api/v1/admin/subjects/{id}/classes` | Lọc trạng thái (Tất cả, Nháp, Đang mở, Lưu trữ) và học kỳ; cột Mã lớp, Tên lớp, Học kỳ, Giảng viên ("Chưa phân công"), Trạng thái; ghi chú "Chỉ xem. Lớp do Chủ nhiệm môn quản lý."; không có link mở lớp |
 
 Route dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN`; API vẫn tự kiểm quyền.

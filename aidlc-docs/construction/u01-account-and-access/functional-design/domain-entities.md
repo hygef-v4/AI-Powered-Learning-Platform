@@ -160,7 +160,7 @@ Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi d
 
 | Interface | Phương thức | Cài bởi | Dùng để |
 |---|---|---|---|
-| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)`, `releaseManagerAssignments(accountId, actor)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64); gỡ Chủ nhiệm khỏi mọi môn khi vô hiệu hóa tài khoản (BR-U01-71) |
+| `ISubjectScope` | `isSubjectManager(accountId, subjectId)`, `listManagedSubjects(accountId)` | U04 | Kiểm phạm vi R2 khi phân quyền; chặn đổi role của người đang là Chủ nhiệm môn (BR-U01-64) |
 | `IClassScope` | `isTeacherOf(accountId, classId)`, `isEnrolledStudent(accountId, classId)` (thêm mới), `subjectOfClass(classId)`, `listTaughtClasses(accountId)` | U05 | Kiểm phạm vi R3/R4 và R5 khi phân quyền; chặn đổi role của người đang dạy lớp (BR-U01-64) |
 
 ### Contract frontend U01 khai báo

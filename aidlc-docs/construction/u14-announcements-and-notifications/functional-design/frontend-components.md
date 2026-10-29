@@ -17,7 +17,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 36 | Student Class Detail, phần Thông báo lớp (`s02`) | `ClassAnnouncementsCard` | 63 | Student |
 | – | Popup Thông báo trên thanh trên cùng (`c14`) | `NotificationBell`, `NotificationPopup`, `EmailPreferencePanel` | 65 | Mọi vai trò |
 
-U14 đăng ký `NavEntry` "Thông báo lớp" (Student, Teacher; Subject Manager trong nhóm "Giảng dạy" cho lớp được giao dạy) và `HeaderWidget` (chuông thông báo).
+U14 đăng ký `NavEntry` "Thông báo lớp" (Student, Teacher) và `HeaderWidget` (chuông thông báo).
 
 ## 2. Cây component
 

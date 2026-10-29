@@ -9,12 +9,6 @@ public interface IAiTask {
 
     AiTaskView submit(AiTaskRequest request);
 
-    /**
-     * Kiểm nguồn người dùng chọn dùng được chưa (quyền, khóa API cá nhân, API trường) trước khi unit gọi tạo bản ghi
-     * của mình; chưa dùng được thì ném cùng lỗi như {@link #submit}.
-     */
-    void requireSource(Actor actor, AiSource source, AiProvider provider);
-
     Optional<AiTaskView> get(UUID taskId);
 
     void cancel(Actor actor, UUID taskId);
