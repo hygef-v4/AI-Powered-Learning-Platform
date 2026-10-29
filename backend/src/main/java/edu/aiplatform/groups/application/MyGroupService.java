@@ -51,7 +51,7 @@ public class MyGroupService {
         var ref = access.requireStudent(actor, classId);
         Optional<ClassGroup> found = groups.findGroupOf(classId, actor.accountId());
         if (found.isEmpty()) {
-            return new MyGroupView(classId, ref.status().name(), null, null, null, List.of(), List.of(), false, List.of());
+            return new MyGroupView(classId, ref.status().name(), null, null, null, List.of(), List.of(), false, List.of(), false);
         }
         ClassGroup group = found.get();
         List<Member> members = group.memberIds().stream().map(id -> member(id, group)).toList();
@@ -64,7 +64,7 @@ public class MyGroupService {
         List<RequestSummary> mine = groups.latestOf(group.id(), actor.accountId(), 2).stream()
                 .map(RequestSummary::of).toList();
         return new MyGroupView(classId, ref.status().name(), group.id(), group.name(), group.leaderId(), members, works,
-                groups.findPending(group.id()).isPresent(), mine);
+                groups.findPending(group.id()).isPresent(), mine, actor.accountId().equals(group.leaderId()));
     }
 
     /** Nhóm của một sinh viên cho popup Student Detail của giảng viên. */
@@ -99,7 +99,7 @@ public class MyGroupService {
 
     public record MyGroupView(UUID classId, String classStatus, UUID groupId, String name, UUID leaderId,
                               List<Member> members, List<GroupWork> works, boolean pendingRequest,
-                              List<RequestSummary> myRequests) {
+                              List<RequestSummary> myRequests, boolean amLeader) {
     }
 
     public record Member(UUID accountId, String name, String email, boolean leader) {

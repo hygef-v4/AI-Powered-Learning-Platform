@@ -81,6 +81,8 @@ export type MyGroupView = {
     createdAt: string;
     decidedAt: string | null;
   }[];
+  /** Người đang xem là trưởng nhóm: chỉ trưởng nhóm đổi được tên nhóm. */
+  amLeader: boolean;
 };
 
 export type StudentGroup = { groupId: string | null; name: string | null; leader: boolean; memberCount: number };

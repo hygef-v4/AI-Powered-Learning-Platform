@@ -60,7 +60,8 @@ type ClassItem = { key: string; label: string; icon: IconName; href: (id: string
 type ClassScope = Extract<Scope, "teaching" | "me">;
 
 const teachingPage = (tab?: string) => (id: string) => `/teaching/classes/${enc(id)}${tab ? `?tab=${tab}` : ""}`;
-const announcements = (id: string) => `/announcements?classId=${enc(id)}`;
+const teachingAnnouncements = (id: string) => `/teaching/classes/${enc(id)}/announcements`;
+const studentAnnouncements = (id: string) => `/classes/${enc(id)}/announcements`;
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
 const TEACHING_ITEMS: ClassItem[] = [
@@ -69,7 +70,7 @@ const TEACHING_ITEMS: ClassItem[] = [
   { key: "materials", label: "Học liệu", icon: "folder_open", href: teachingPage("materials") },
   { key: "evals", label: "Bài tập", icon: "assignment", href: teachingPage("evals") },
   { key: "gradebook", label: "Chấm điểm", icon: "receipt_long", href: teachingPage("gradebook") },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
+  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: teachingAnnouncements },
 ];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
@@ -77,7 +78,7 @@ const STUDENT_ITEMS: ClassItem[] = [
   { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${enc(id)}/group` },
   { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${enc(id)}?tab=materials` },
   { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${enc(id)}` },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
+  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: studentAnnouncements },
 ];
 
 const BACK: Record<ClassScope, { href: string; label: string }> = {
@@ -98,27 +99,25 @@ function buildClass(scope: ClassScope, id: string, open: string): NavContext {
   };
 }
 
-/** Lớp được phân công (`/teaching/classes/{id}`) và Thông báo lớp của một lớp. Lớp học của môn (Chủ nhiệm môn) dùng sidebar của môn. */
+/** Lớp được phân công (`/teaching/classes/{id}`, kể cả Thông báo lớp `/teaching/classes/{id}/announcements`). Lớp học của môn (Chủ nhiệm môn) dùng sidebar của môn. */
 export function classContext({ pathname, search }: NavLocation): NavContext | null {
-  if (pathname === "/announcements" && search.get("classId")) return buildClass("teaching", search.get("classId")!, "announcements");
   const match = /^\/teaching\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!match) return null;
   const tabs = TEACHING_ITEMS.filter((item) => item.key !== "announcements");
-  // Trang con của lớp (bài nộp của một bài tập) thuộc tab Bài tập.
-  const open = match[2] ? "evals" : tabs.find((tab) => tab.key === search.get("tab"))?.key ?? "info";
+  // Trang con của lớp: Thông báo lớp; còn lại (bài nộp của một bài tập) thuộc tab Bài tập.
+  const open = match[2] === "/announcements" ? "announcements" : match[2] ? "evals" : tabs.find((tab) => tab.key === search.get("tab"))?.key ?? "info";
   return buildClass("teaching", decodeURIComponent(match[1]!), open);
 }
 
-/** Lớp của tôi (`/classes/{id}`, Học liệu, Nhóm của tôi) và Bài tập, Thông báo, một học liệu của một lớp (`?classId=`). */
+/** Lớp của tôi (`/classes/{id}`, Học liệu, Nhóm của tôi, Thông báo lớp) và Bài tập, một học liệu của một lớp (`?classId=`). */
 export function studentClassContext({ pathname, search }: NavLocation): NavContext | null {
-  const own = /^\/classes\/([^/]+)(\/group)?$/.exec(pathname);
-  if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? "group" : search.get("tab") === "materials" ? "materials" : "info");
+  const own = /^\/classes\/([^/]+)(\/group|\/announcements)?$/.exec(pathname);
+  if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? own[2].slice(1) : search.get("tab") === "materials" ? "materials" : "info");
   const classId = search.get("classId");
   // Bài mở từ trang Bài tập chung (`from=all`) giữ menu chung, không đổi sang sidebar của lớp.
   if (!classId || search.get("from") === "all") return null;
   if (under(pathname, "/my-assignments")) return buildClass("me", classId, "assignments");
   if (under(pathname, "/materials")) return buildClass("me", classId, "materials");
-  if (pathname === "/announcements") return buildClass("me", classId, "announcements");
   return null;
 }
 

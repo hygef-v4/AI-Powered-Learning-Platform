@@ -1,20 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, ButtonLink, Dialog, Field, PageHeader, Pill, Section, Select, TableFrame, Td, Th, type Tone } from "@/shared/ui";
-import { cancelLeaderRequest, getMyGroup, submitLeaderRequest } from "./api";
-import { formatDate, formatShort } from "./format";
-import type { MyGroupView, RequestStatus } from "./types";
+import { Alert, Button, ButtonLink, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, TextInput, cx, showToast } from "@/shared/ui";
+import { getMyGroup, renameGroup, submitLeaderRequest } from "./api";
+import type { MyGroupView } from "./types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { initials } from "@/shared/layout/navigation";
-
-const REQUEST_STATUS: Record<RequestStatus, { text: string; tone: Tone }> = {
-  PENDING: { text: "Chờ duyệt", tone: "warning" },
-  APPROVED: { text: "Đã duyệt", tone: "success" },
-  REJECTED: { text: "Từ chối", tone: "danger" },
-  CANCELLED: { text: "Đã hủy", tone: "neutral" },
-};
 
 function useMyGroup(classId: string) {
   const [view, setView] = useState<MyGroupView | null>(null);
@@ -81,127 +74,50 @@ export function MyGroupCard({ classId }: { classId: string }) {
   );
 }
 
-/** Trang Nhóm của tôi (s03, UC 54): thành viên, yêu cầu đổi trưởng nhóm gần nhất của mình, bài nhóm. */
+/**
+ * Trang Nhóm của tôi (s03, UC 54). Thẻ nhóm: tên nhóm (trưởng nhóm sửa ngay tại chỗ, không cần giảng viên duyệt), số thành
+ * viên và link sang bài nhóm trên trang Bài tập; bên dưới mỗi thành viên một thẻ đứng, trưởng nhóm có nhãn trên avatar.
+ * Thành viên nào cũng gửi được yêu cầu đổi trưởng nhóm; đang có yêu cầu chờ thì nút khóa và ghi Đang chờ duyệt.
+ */
 export function MyGroupPage({ classId }: { classId: string }) {
   const { view, error, reload } = useMyGroup(classId);
   const [requesting, setRequesting] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
 
   if (error && !view) return <PageLoadError>{error}</PageLoadError>;
   if (!view) return <PageLoading />;
-  const latest = view.myRequests[0];
-  const before = view.myRequests[1];
   const open = view.classStatus === "OPEN";
-
-  const cancel = async (id: string) => {
-    try {
-      await cancelLeaderRequest(id);
-      await reload();
-    } catch (e) {
-      setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không hủy được yêu cầu") : "Không hủy được yêu cầu");
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Nhóm của tôi"
-        subtitle={view.name}
         actions={
           view.groupId && open ? (
-            <Button icon="swap_horiz" onClick={() => setRequesting(true)} disabled={view.pendingRequest}>
-              Yêu cầu đổi trưởng nhóm
+            <Button icon={view.pendingRequest ? "schedule" : "swap_horiz"} onClick={() => setRequesting(true)} disabled={view.pendingRequest}
+              data-testid="leader-request-open">
+              {view.pendingRequest ? "Đang chờ duyệt" : "Yêu cầu đổi trưởng nhóm"}
             </Button>
           ) : undefined
         }
       />
-      {!view.groupId && <Alert tone="info">Bạn chưa có nhóm trong lớp này. Giảng viên sẽ xếp nhóm.</Alert>}
-      {notice && (
-        <Alert tone="danger" role="alert">
-          {notice}
-        </Alert>
-      )}
-      {view.groupId && (
-        <>
-          <Section title={`Thành viên (${view.members.length})`} icon="group">
-            <ul className="flex flex-col gap-1.5 text-[13px]">
-              {view.members.map((m) => (
-                <li key={m.accountId} className="flex items-center gap-2">
-                  <span className="font-semibold text-ink">{m.name ?? m.email}</span>
-                  {m.email && <span className="text-[11px] text-muted">{m.email}</span>}
-                  {m.leader && <Pill tone="warning">Trưởng nhóm</Pill>}
-                </li>
-              ))}
-            </ul>
-            {view.pendingRequest && !latest?.status.includes("PENDING") && (
-              <p className="text-xs text-muted">Nhóm đang có một yêu cầu đổi trưởng nhóm chờ duyệt.</p>
-            )}
-          </Section>
-          {latest && (
-            <Section title="Yêu cầu đổi trưởng nhóm gần nhất" icon="history">
-              <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                <Pill tone={REQUEST_STATUS[latest.status].tone}>{REQUEST_STATUS[latest.status].text}</Pill>
-                <span className="text-muted">gửi lúc {formatShort(latest.createdAt)}</span>
-                {latest.status === "PENDING" && (
-                  <Button size="sm" onClick={() => void cancel(latest.id)}>
-                    Hủy yêu cầu
-                  </Button>
-                )}
-              </div>
-              <p className="text-[13px] text-body">Lý do: {latest.reason}</p>
-              {latest.status === "REJECTED" && latest.decisionReason && (
-                <p className="text-[13px] text-danger">Lý do từ chối: {latest.decisionReason}</p>
-              )}
-              {before && (
-                <p className="text-xs text-muted">
-                  Lần trước: {REQUEST_STATUS[before.status].text} · {formatShort(before.createdAt)}
-                </p>
-              )}
-            </Section>
-          )}
-          <Section title="Bài nhóm" icon="assignment">
-            {view.works.length === 0 ? (
-              <p className="text-[13px] text-muted">Chưa có bài nhóm nào được mở.</p>
-            ) : (
-              <TableFrame className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-                <colgroup><col /><col className="w-[150px]" /><col className="w-[140px]" /><col className="w-[150px]" /></colgroup><thead>
-                  <tr>
-                    <Th>Bài nhóm</Th>
-                    <Th>Hạn nộp</Th>
-                    <Th>Trạng thái</Th>
-                    <Th className="text-right">Thao tác</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {view.works.map((w) => (
-                    <tr key={w.assignmentId}>
-                      <Td className="font-semibold">{w.title}</Td>
-                      <Td>{w.closesAt ? formatDate(w.closesAt) : "—"}</Td>
-                      <Td>
-                        {w.submitted ? (
-                          <Pill tone="success">Đã nộp{w.late ? " · trễ" : ""}</Pill>
-                        ) : (
-                          <span className="text-xs text-muted">
-                            Đang làm · {w.doneSections} / {w.totalSections} mục xong
-                          </span>
-                        )}
-                      </Td>
-                      <Td className="text-right">
-                        {w.documentId ? (
-                          <ButtonLink href={`/group-docs/${w.documentId}`} size="sm">
-                            {w.submitted ? "Xem" : "Mở tài liệu"}
-                          </ButtonLink>
-                        ) : (
-                          <span className="text-xs text-muted">Đang chuẩn bị</span>
-                        )}
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </TableFrame>
-            )}
-          </Section>
-        </>
+      {!view.groupId ? (
+        <Alert tone="info">Bạn chưa có nhóm trong lớp này. Giảng viên sẽ xếp nhóm.</Alert>
+      ) : (
+        <section aria-label="Thành viên nhóm" className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-6">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <div className="min-w-0 flex-1">
+              <GroupName view={view} editable={view.amLeader && open} onRenamed={() => void reload()} />
+              <p className="mt-0.5 text-[13px] text-muted">{view.members.length} thành viên</p>
+            </div>
+            <Link href={`/my-assignments?classId=${encodeURIComponent(classId)}&mode=GROUP`} data-testid="group-works-link"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-semibold text-primary-ink transition-colors hover:bg-primary-soft">
+              Bài nhóm<Icon name="arrow_forward" size={15} />
+            </Link>
+          </div>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(156px,1fr))] gap-3">
+            {view.members.map((m) => <MemberCard key={m.accountId} member={m} />)}
+          </ul>
+        </section>
       )}
       {requesting && view.groupId && (
         <LeaderChangeRequestDialog
@@ -217,20 +133,86 @@ export function MyGroupPage({ classId }: { classId: string }) {
   );
 }
 
-/** Popup Yêu cầu đổi trưởng nhóm (s04, BR-U12-10): lý do 10–1.000 ký tự, đề cử tùy chọn. */
+/** Tên nhóm; trưởng nhóm bấm bút để sửa ngay trên dòng: Enter lưu, Esc thôi. */
+function GroupName({ view, editable, onRenamed }: { view: MyGroupView; editable: boolean; onRenamed: () => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cancel = () => { setDraft(null); setError(null); };
+  const save = async () => {
+    const name = (draft ?? "").trim();
+    if (!name || name.length > 100) { setError("Tên nhóm cần 1–100 ký tự."); return; }
+    if (name === view.name) { cancel(); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      await renameGroup(view.groupId!, name);
+      setDraft(null);
+      showToast("Đã đổi tên nhóm");
+      onRenamed();
+    } catch (e) {
+      setError(e instanceof ApiError ? (e.problem.detail ?? "Không đổi được tên nhóm.") : "Không đổi được tên nhóm.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (draft === null) {
+    return (
+      <div className="flex min-w-0 items-center gap-1">
+        <h2 className="min-w-0 text-xl font-bold tracking-[-0.01em] text-ink [overflow-wrap:anywhere]">{view.name}</h2>
+        {editable && <IconButton icon="edit" label="Sửa tên nhóm" onClick={() => setDraft(view.name ?? "")} data-testid="group-rename" />}
+      </div>
+    );
+  }
+  return (
+    <form className="flex max-w-md flex-col gap-1.5" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+      <div className="flex items-center gap-2">
+        <TextInput aria-label="Tên nhóm" value={draft} maxLength={100} disabled={busy} invalid={!!error} autoFocus
+          onChange={(event) => { setDraft(event.target.value); setError(null); }}
+          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancel(); } }} data-testid="group-rename-input" />
+        <Button type="submit" variant="primary" size="sm" disabled={busy}>Lưu</Button>
+        <Button type="button" size="sm" disabled={busy} onClick={cancel}>Hủy</Button>
+      </div>
+      {error && <p role="alert" className="text-xs text-danger">{error}</p>}
+    </form>
+  );
+}
+
+/** Thẻ đứng của một thành viên: nhãn Trưởng nhóm (ô trống ở người khác cho avatar thẳng hàng), avatar, tên, email. */
+function MemberCard({ member }: { member: MyGroupView["members"][number] }) {
+  return (
+    <li data-testid="group-member"
+      className={cx("flex aspect-[3/4] min-w-0 flex-col items-center justify-center gap-2.5 rounded-xl border px-3 py-5 text-center",
+        member.leader ? "border-warning/50 bg-warning-soft/35" : "border-line bg-surface")}>
+      <span className={cx("inline-flex h-5 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold", member.leader ? "bg-warning-soft text-warning" : "invisible")}>
+        {member.leader && <><Icon name="crown" size={13} filled />Trưởng nhóm</>}
+      </span>
+      <span aria-hidden="true"
+        className={cx("flex size-16 shrink-0 items-center justify-center rounded-full text-lg font-bold",
+          member.leader ? "bg-warning-soft text-warning" : "bg-primary-soft text-primary-ink")}>
+        {initials(member.name ?? member.email ?? "?")}
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <p className="text-sm font-semibold text-ink [overflow-wrap:anywhere]">{member.name ?? "Chưa rõ tên"}</p>
+        {member.email && <p className="text-xs break-all text-muted">{member.email}</p>}
+      </div>
+    </li>
+  );
+}
+
+/** Popup Yêu cầu đổi trưởng nhóm (s04, BR-U12-10): Trưởng nhóm hiện tại và Trưởng nhóm mới (tùy chọn); không gửi lý do. */
 export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyGroupView; onClose: () => void; onSent: () => void }) {
-  const reasonId = useId();
-  const [reason, setReason] = useState("");
+  const fieldId = useId();
   const [proposed, setProposed] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const length = reason.trim().length;
   const leader = view.members.find((m) => m.leader);
   const send = async () => {
     setBusy(true);
     setError(null);
     try {
-      await submitLeaderRequest(view.groupId!, reason.trim(), proposed || null);
+      await submitLeaderRequest(view.groupId!, proposed || null);
       onSent();
     } catch (e) {
       setError(e instanceof ApiError ? (e.problem.detail ?? "Không gửi được yêu cầu") : "Không gửi được yêu cầu");
@@ -246,27 +228,17 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
       dismissible={!busy}
       footer={
         <>
-          <Button variant="primary" onClick={() => void send()} disabled={busy || length < 10 || length > 1000}>
+          <Button variant="primary" onClick={() => void send()} disabled={busy}>
             Gửi yêu cầu
           </Button>
         </>
       }
     >
-      <p className="text-muted">
-        {view.name} · Giảng viên sẽ duyệt hoặc từ chối. Mỗi nhóm chỉ có một yêu cầu chờ duyệt.
-      </p>
-      <p className="text-[13px]">Trưởng nhóm hiện tại: {leader?.name ?? "chưa có"}</p>
-      <Field label="Lý do" htmlFor={reasonId} required hint={`${length} / 1.000 ký tự (ít nhất 10)`} error={error}>
-        <textarea
-          id={reasonId}
-          className="min-h-[96px] rounded-lg border border-field p-2.5 text-[13px] outline-none focus:border-focus"
-          maxLength={1000}
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
+      <Field label="Trưởng nhóm hiện tại" htmlFor={`${fieldId}-current`}>
+        <LockedInput id={`${fieldId}-current`} value={leader ? (leader.name ?? leader.email ?? "") : "Chưa có"} />
       </Field>
-      <Field label="Đề xuất trưởng nhóm mới (tùy chọn)" htmlFor={`${reasonId}-p`}>
-        <Select id={`${reasonId}-p`} value={proposed} onChange={(e) => setProposed(e.target.value)}>
+      <Field label="Trưởng nhóm mới" htmlFor={`${fieldId}-p`} error={error}>
+        <Select id={`${fieldId}-p`} value={proposed} onChange={(e) => setProposed(e.target.value)}>
           <option value="">Không đề xuất</option>
           {view.members.filter((m) => !m.leader).map((m) => (
             <option key={m.accountId} value={m.accountId}>

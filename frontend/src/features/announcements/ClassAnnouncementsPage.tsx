@@ -1,23 +1,62 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useSession } from "@/features/identity/session";
-import { Button } from "@/shared/ui/Button";
+import { Button, ClassFilter, PageHeader } from "@/shared/ui";
+import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { announcementsApi, announcementError } from "./api";
 import { AnnouncementFeed } from "./AnnouncementFeed";
-import { AnnouncementComposer } from "./AnnouncementComposer";
+import { CreateAnnouncementDialog } from "./AnnouncementDialogs";
 import type { AnnouncementFeed as Feed } from "./types";
-import styles from "./announcements.module.css";
-export function ClassAnnouncementsPage() {
-  const params = useSearchParams(); const session = useSession(); const queryClassId = params.get("classId") ?? ""; const [filter, setFilter] = useState({ query: queryClassId, value: queryClassId }); const classId = filter.query === queryClassId ? filter.value : queryClassId; const [pagination, setPagination] = useState({ classId, page: 1 }); const page = pagination.classId === classId ? pagination.page : 1; const [revision, setRevision] = useState(0);
-  // Lớp đang chọn ghi lên `?classId=` để sidebar của lớp theo đúng lớp đó.
-  function setClassId(value: string) { setFilter({ query: queryClassId, value }); const url = new URL(window.location.href); if (value) url.searchParams.set("classId", value); else url.searchParams.delete("classId"); window.history.replaceState(window.history.state, "", url); }
-  function setPage(value: number | ((page: number) => number)) { setPagination(previous => ({ classId, page: typeof value === "number" ? value : value(previous.classId === classId ? previous.page : 1) })); }
-  const key = `${classId}:${page}:${revision}`; const [result, setResult] = useState<{ key: string; data?: Feed; error?: string }>({ key: "" });
-  useEffect(() => { const controller = new AbortController(); void announcementsApi.list(classId, page, 20, controller.signal).then(data => { if (!controller.signal.aborted) setResult({ key, data }); }).catch(e => { if (!controller.signal.aborted) setResult({ key, error: announcementError(e) }); }); return () => controller.abort(); }, [classId, page, key]);
-  const data = result.key === key ? result.data : undefined; const error = result.key === key ? result.error : undefined; const student = session.status === "authenticated" && session.profile.role === "STUDENT"; const selected = data?.classes.find(c => c.classId === classId && c.canManage);
-  function reload() { setRevision(value => value + 1); }
-  return <main className={styles.page}><header className={styles.header}><div><h1>Thông báo lớp</h1><p className={styles.muted}>{student ? "Thông báo của giảng viên ở các lớp bạn đang học" : "Đăng, sửa và xóa thông báo cho từng lớp bạn dạy"}</p></div><label className={styles.muted}>{student ? "Lọc lớp" : "Chọn lớp"}<select data-testid="announcement-class-filter" aria-label={student ? "Lọc lớp" : "Chọn lớp"} className={styles.filter} value={classId} onChange={e => { setClassId(e.target.value); setPage(1); }}><option value="">Tất cả lớp</option>{data?.classes.map(c => <option key={c.classId} value={c.classId}>{c.code} · {c.name}</option>)}</select></label></header>
-    {error ? <div role="alert" className={styles.error}>{error} <Button size="sm" onClick={reload}>Thử lại</Button></div> : !data ? <p role="status">Đang tải thông báo…</p> : <><div className={selected ? styles.columns : undefined}><AnnouncementFeed items={data.items} onChanged={reload} />{selected && <AnnouncementComposer key={selected.classId} selected={selected} onCreated={reload} />}</div>{!student && !selected && <p className={`${styles.muted} mt-4`}>Chọn một lớp bạn dạy để đăng thông báo mới.</p>}<nav className={styles.pager} aria-label="Phân trang thông báo"><Button size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Trước</Button><span className={styles.muted}>Trang {page}</span><Button size="sm" disabled={!data.hasMore} onClick={() => setPage(p => p + 1)}>Sau</Button></nav></>}
-  </main>;
+
+/**
+ * Thông báo lớp (U14). Trong một lớp (`classId`, đường dẫn dưới trang lớp) chỉ có thông báo của lớp đó, không có ô chọn lớp.
+ * Ở menu chính hiện mọi lớp, có ô lọc theo lớp (`initialClassId` mở sẵn một lớp, cho link cũ `?classId=`), mỗi thông báo ghi
+ * mã lớp. Người dạy có nút Tạo thông báo mở popup; ở menu chính popup cho chọn các lớp để đăng.
+ */
+export function ClassAnnouncementsPage({ classId: fixedClassId, initialClassId = "" }: { classId?: string; initialClassId?: string }) {
+  const [filter, setFilter] = useState(initialClassId);
+  const classId = fixedClassId ?? filter;
+  const [pagination, setPagination] = useState({ classId, page: 1 });
+  const page = pagination.classId === classId ? pagination.page : 1;
+  const setPage = (next: number) => setPagination({ classId, page: next });
+  const [revision, setRevision] = useState(0);
+  const [creating, setCreating] = useState(false);
+  const key = `${classId}:${page}:${revision}`;
+  const [result, setResult] = useState<{ key: string; data?: Feed; error?: string }>({ key: "" });
+  useEffect(() => {
+    const controller = new AbortController();
+    void announcementsApi.list(classId, page, 20, controller.signal)
+      .then((data) => { if (!controller.signal.aborted) setResult({ key, data }); })
+      .catch((e) => { if (!controller.signal.aborted) setResult((previous) => ({ key, data: previous.data, error: announcementError(e) })); });
+    return () => controller.abort();
+  }, [classId, page, key]);
+  // Đang tải lại thì giữ danh sách cũ để trang không nháy trống.
+  const data = result.data;
+  const error = result.key === key ? result.error : undefined;
+  const reload = () => setRevision((value) => value + 1);
+
+  if (!data) return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải thông báo…" />;
+  const manageable = data.classes.filter((c) => c.canManage && (!fixedClassId || c.classId === fixedClassId));
+  const codes = fixedClassId ? undefined : Object.fromEntries(data.classes.map((c) => [c.classId, c.code]));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Thông báo lớp" actions={<>
+        {!fixedClassId && (
+          <ClassFilter classes={data.classes} value={filter} onChange={setFilter} testId="announcement-class-filter" />
+        )}
+        {manageable.length > 0 && <Button variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="announcement-create">Tạo thông báo</Button>}
+      </>} />
+      {error && <div role="alert" className="flex items-center gap-3 text-[13px] text-danger">{error}<Button size="sm" onClick={reload}>Thử lại</Button></div>}
+      <AnnouncementFeed items={data.items} classCodes={codes} onChanged={reload} />
+      {(page > 1 || data.hasMore) && (
+        <nav className="flex items-center justify-end gap-2" aria-label="Phân trang thông báo">
+          <Button size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>Trước</Button>
+          <span className="text-[13px] text-muted tabular-nums">Trang {page}</span>
+          <Button size="sm" disabled={!data.hasMore} onClick={() => setPage(page + 1)}>Sau</Button>
+        </nav>
+      )}
+      {creating && <CreateAnnouncementDialog classes={manageable} fixedClassId={fixedClassId}
+        onClose={() => setCreating(false)} onCreated={reload} />}
+    </div>
+  );
 }

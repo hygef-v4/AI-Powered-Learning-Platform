@@ -1,6 +1,7 @@
 // Thành phần giao diện dùng chung (tối giản). Mọi unit dùng lại, không tự vẽ lại.
 export { Alert } from "./Alert";
 export { Button, ButtonLink, IconButton } from "./Button";
+export { ClassFilter, ClassLabel, type ClassFilterOption } from "./ClassFilter";
 export { cx } from "./cx";
 export { Dialog } from "./Dialog";
 export { EmptyState } from "./EmptyState";

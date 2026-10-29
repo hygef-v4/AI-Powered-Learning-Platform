@@ -2,18 +2,20 @@
 
 // U13: khi đang xem một học liệu hay một Quiz (trang soạn của người quản lý, trang làm của sinh viên), sidebar đổi thành
 // danh sách module của môn (học liệu và Quiz từng module), đầu sidebar chỉ có lối về trang Học liệu, không có ô chọn.
-// Người quản lý thêm học liệu vào module, sửa, xóa (Quiz: lưu trữ) ngay trên sidebar.
+// Người quản lý thêm học liệu vào module, sửa, xóa (Quiz: lưu trữ) ngay trên sidebar. Các module nằm chung một thẻ trắng,
+// ngăn nhau bằng một đường kẻ; bấm đầu module (mũi tên cuối hàng) để thu gọn / mở.
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
 import { showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { contextQuery, materialPath } from "./api";
 import { ArchiveItemDialog, ModuleItemDialog } from "./MaterialDialogs";
-import { canEditItem, reopen } from "./ModuleBoard";
+import { CollapseBody, canEditItem, reopen } from "./ModuleBoard";
+import { useModuleCollapse } from "./moduleCollapse";
 import { useModuleScope } from "./ModulePlace";
 import { boardHref, itemHref, itemIcon, itemKey, itemTitle, notifyOutlineChanged, useModuleOutline, type OutlineItem } from "./outline";
 import { useMaterialResource } from "./useMaterialResource";
@@ -23,7 +25,7 @@ type Source = { kind: "material" | "quiz" | "practice"; id: string };
 type Dialogs = { type: "item"; module: MaterialModule; item?: OutlineItem } | { type: "archive"; item: OutlineItem; active: boolean };
 
 /** Nút nhỏ trên sidebar; ẩn khi sidebar thu gọn. */
-const TOOL = "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-ink md:group-data-[collapsed]/sidebar:hidden";
+const TOOL = "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:hidden";
 
 function sourceOf(pathname: string, classId?: string): Source | null {
   const material = /^\/materials\/([^/]+)(\/view)?$/.exec(pathname);
@@ -57,6 +59,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
   const scope = useModuleScope(subjectId, classId);
   const { outline } = useModuleOutline(scope);
   const [dialog, setDialog] = useState<Dialogs | null>(null);
+  const { collapsed, toggle } = useModuleCollapse("nav");
   const back = scope ? boardHref(scope) : "/manager/materials";
   const staff = scope && scope.kind !== "student" ? scope : null;
   const isActive = (item: OutlineItem) => item.kind === "material" ? pathname.startsWith(`/materials/${encodeURIComponent(item.material.id)}`)
@@ -71,17 +74,26 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           <span className={FADE_LABEL}>Học liệu</span>
         </Link>
       </div>
-      <nav aria-label="Danh sách module" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto">
+      <nav aria-label="Danh sách module" className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>}
-        {scope && outline?.map(({ module, items }, index) => (
-          <Fragment key={module.id}>
-            <div className={cx("mx-2.5 mb-1 flex items-center gap-1", index === 0 ? "mt-1" : "mt-5")}>
-              <span className={cx("line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted", FADE_LABEL)}>{module.title}</span>
+        {scope && outline && outline.length > 0 && <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgb(60_38_14/0.06)]">
+        {outline.map(({ module, items }, index) => {
+          const open = !collapsed.has(module.id);
+          return <div key={module.id} className={cx(index > 0 && "mt-1 border-t border-line pt-1")}>
+            {/* Cả hàng đầu module bấm được; nút Tạo học liệu không làm đổi trạng thái. */}
+            <div className="flex cursor-pointer items-center gap-0.5 rounded-lg py-1.5 pr-1 pl-2 select-none hover:bg-sunken/60" onClick={() => toggle(module.id)}>
+              <span title={module.title} className={cx("line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted", FADE_LABEL)}>{module.title}</span>
               {staff && (staff.kind === "class" || module.canManage) && <button type="button" className={TOOL}
-                aria-label={`Tạo học liệu trong ${module.title}`} title="Tạo học liệu" onClick={() => setDialog({ type: "item", module })}>
+                aria-label={`Tạo học liệu trong ${module.title}`} title="Tạo học liệu" onClick={(event) => { event.stopPropagation(); setDialog({ type: "item", module }); }}>
                 <Icon name="add" size={15} />
               </button>}
+              <button type="button" className={TOOL} aria-expanded={open} aria-controls={`nav-module-${module.id}`}
+                aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`} title={open ? "Thu gọn" : "Mở"}>
+                <Icon name="expand_more" size={15} className={cx("transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)]", open && "rotate-180")} />
+              </button>
             </div>
+            <CollapseBody id={`nav-module-${module.id}`} open={open}>
+            <div className="flex flex-col gap-0.5 pb-0.5">
             {items.length === 0 && <span className={cx("px-2.5 py-1 text-[12.5px] text-faint", FADE_LABEL)}>Chưa có học liệu</span>}
             {items.map((item) => {
               const active = isActive(item);
@@ -93,9 +105,8 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     className={cx(
                       "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200",
                       editable && "group-hover/item:pr-16", reopenable && "group-hover/item:pr-10",
-                      active ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]" : "text-body hover:bg-surface/60 hover:text-ink",
+                      active ? "bg-primary-soft text-ink" : "text-body hover:bg-sunken hover:text-ink",
                     )}>
-                    {active && <span aria-hidden className="absolute top-2 bottom-2 -left-3 w-[3px] animate-fade rounded-r bg-primary" />}
                     <Icon name={itemIcon(item)} size={17} filled={active}
                       className={cx("shrink-0 transition-colors", active ? "text-primary-ink" : "text-muted group-hover:text-ink")} />
                     <span className={cx("truncate", FADE_LABEL)}>{itemTitle(item)}</span>
@@ -112,8 +123,11 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                 </div>
               );
             })}
-          </Fragment>
-        ))}
+            </div>
+            </CollapseBody>
+          </div>;
+        })}
+        </div>}
       </nav>
       {dialog?.type === "item" && staff && <ModuleItemDialog scope={staff} moduleId={dialog.module.id} item={dialog.item}
         onClose={() => setDialog(null)} onSaved={(message) => { setDialog(null); showToast(message); notifyOutlineChanged(); }} />}
@@ -131,7 +145,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
 
 function ItemTool({ icon, label, danger = false, success = false, onClick }: { icon: IconName; label: string; danger?: boolean; success?: boolean; onClick: () => void }) {
   return <button type="button" aria-label={label} title={label} onClick={onClick}
-    className={cx(TOOL, "bg-shell", danger && "text-danger hover:bg-danger-soft hover:text-danger", success && "text-success hover:bg-success-soft hover:text-success")}>
+    className={cx(TOOL, danger && "text-danger hover:bg-danger-soft hover:text-danger", success && "text-success hover:bg-success-soft hover:text-success")}>
     <Icon name={icon} size={14} />
   </button>;
 }

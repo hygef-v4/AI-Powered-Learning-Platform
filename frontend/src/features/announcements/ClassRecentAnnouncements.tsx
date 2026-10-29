@@ -12,7 +12,7 @@ const RECENT = 5;
  * "Thông báo gần đây" trên trang lớp của sinh viên: 5 thông báo mới nhất của lớp, vùng danh sách luôn đủ chỗ cho 5 dòng (cùng
  * chiều cao với Bài cần làm bên cạnh); gắn qua StudentClassBoard của U05.
  */
-export function ClassRecentAnnouncements({ classId }: { classId: string }) {
+export function ClassRecentAnnouncements({ classId, teaching = false }: { classId: string; teaching?: boolean }) {
   const [result, setResult] = useState<{ classId: string; items?: Announcement[]; failed?: boolean }>({ classId: "" });
   useEffect(() => {
     const controller = new AbortController();
@@ -23,7 +23,8 @@ export function ClassRecentAnnouncements({ classId }: { classId: string }) {
     return () => controller.abort();
   }, [classId]);
   const current = result.classId === classId ? result : undefined;
-  const all = `/announcements?classId=${encodeURIComponent(classId)}`;
+  // Trang Thông báo lớp nằm dưới trang lớp (giảng viên hay sinh viên) để chuyển sang không dựng lại khung trang.
+  const all = `${teaching ? "/teaching/classes" : "/classes"}/${encodeURIComponent(classId)}/announcements`;
   return (
     <Section title="Thông báo gần đây" actions={<Link href={all} className="text-[13px] font-semibold text-primary-ink hover:underline">Tất cả thông báo</Link>}>
       {/* Vùng nội dung luôn đủ chỗ 5 dòng, kể cả khi đang tải, lỗi hay chưa có thông báo. */}

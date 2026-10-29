@@ -1,4 +1,7 @@
-import { Suspense } from "react";
 import { ClassAnnouncementsPage } from "@/features/announcements/ClassAnnouncementsPage";
-import { PageLoading } from "@/shared/ui/PageStatus";
-export default function Page() { return <Suspense fallback={<PageLoading label="Đang tải thông báo…" />}><ClassAnnouncementsPage /></Suspense>; }
+
+// U14: Thông báo lớp ở menu chính, mọi lớp; link cũ `?classId=` mở sẵn ô lọc ở lớp đó.
+export default async function Page({ searchParams }: { searchParams: Promise<{ classId?: string }> }) {
+  const { classId } = await searchParams;
+  return <ClassAnnouncementsPage initialClassId={classId ?? ""} />;
+}

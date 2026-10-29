@@ -268,15 +268,46 @@ describe("ClassGroupsPanel", () => {
     expect(screen.queryByRole("button", { name: "Xóa Nhóm 1" })).not.toBeInTheDocument();
   });
 
-  it("duyệt yêu cầu dùng người được đề xuất, từ chối cần lý do", async () => {
+  it("mỗi yêu cầu một dòng chỉ có tên nhóm; duyệt dùng người được đề xuất", async () => {
     const calls = backend(WITH_GROUPS);
     render(<ClassGroupsPanel classId={CLASS} />);
 
-    expect(await screen.findByText("An bận thực tập, không theo được bài")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Từ chối" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Duyệt" }));
+    const row = await screen.findByTestId("leader-request-g1");
+    expect(screen.getByRole("heading", { name: "Yêu cầu đổi trưởng nhóm" })).toBeInTheDocument();
+    expect(within(row).getByText("Nhóm 1")).toBeInTheDocument();
+    expect(within(row).queryByText("An bận thực tập, không theo được bài")).not.toBeInTheDocument();
+    expect(within(row).queryByText(/Chờ duyệt/)).not.toBeInTheDocument();
+    expect(within(row).queryByRole("textbox")).not.toBeInTheDocument();
+    fireEvent.click(within(row).getByRole("button", { name: "Duyệt" }));
 
     await waitFor(() => expect(calls.some((c) => c.url.includes(":approve"))).toBe(true));
     expect(calls.find((c) => c.url.includes(":approve"))!.body).toEqual({ newLeaderId: "b" });
+  });
+
+  it("từ chối hỏi lại rồi gửi không kèm lý do", async () => {
+    const calls = backend(WITH_GROUPS);
+    render(<ClassGroupsPanel classId={CLASS} />);
+    fireEvent.click(within(await screen.findByTestId("leader-request-g1")).getByRole("button", { name: "Từ chối" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Bạn có chắc muốn từ chối yêu cầu đổi trưởng nhóm của Nhóm 1 không?");
+    fireEvent.click(within(dialog).getByTestId("leader-request-reject-confirm"));
+    await waitFor(() => expect(calls.some((c) => c.url.includes(":reject"))).toBe(true));
+    expect(calls.find((c) => c.url.includes(":reject"))!.body).toEqual({});
+  });
+
+  it("link thông báo mang ?group= thì mở sẵn nhóm đó; mở nhóm khác thì thẻ yêu cầu ẩn", async () => {
+    window.history.replaceState(null, "", "/teaching/classes/c1?tab=students&group=g1");
+    const two = { ...WITH_GROUPS, groups: [...WITH_GROUPS.groups, { id: "g2", name: "Nhóm 2", leaderId: null, used: false, members: [] }] };
+    backend(two);
+    render(<ClassGroupsPanel classId={CLASS} />);
+    expect(await screen.findByTestId("leader-request-g1")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Nhóm 1/, level: 2 })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Nhóm 2/ }));
+    expect(screen.queryByTestId("leader-request-g1")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Tất cả/ }));
+    expect(screen.getByTestId("leader-request-g1")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Chưa có nhóm/ }));
+    expect(screen.queryByRole("heading", { name: "Yêu cầu đổi trưởng nhóm" })).not.toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
   });
 });

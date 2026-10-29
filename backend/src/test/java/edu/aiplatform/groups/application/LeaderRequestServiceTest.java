@@ -79,8 +79,16 @@ class LeaderRequestServiceTest {
     }
 
     @Test
-    void submitRejectsShortReasonBadProposalSecondPendingOutsiderAndClosedClass() {
-        assertThatThrownBy(() -> service.submit(member, group.id(), "ngắn", null))
+    void reasonIsOptional() {
+        service.submit(member, group.id(), null, null);
+        ArgumentCaptor<LeaderChangeRequest> saved = ArgumentCaptor.forClass(LeaderChangeRequest.class);
+        verify(groups).insertRequest(saved.capture());
+        assertThat(saved.getValue().reason()).isEmpty();
+    }
+
+    @Test
+    void submitRejectsLongReasonBadProposalSecondPendingOutsiderAndClosedClass() {
+        assertThatThrownBy(() -> service.submit(member, group.id(), "x".repeat(1001), null))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_REASON_INVALID"));
         assertThatThrownBy(() -> service.submit(member, group.id(), REASON, leader.accountId()))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_PROPOSAL_INVALID"));
@@ -125,13 +133,11 @@ class LeaderRequestServiceTest {
     }
 
     @Test
-    void rejectNeedsReasonAndClosedRequestCannotBeDecidedAgain() {
+    void rejectNeedsNoReasonAndClosedRequestCannotBeDecidedAgain() {
         LeaderChangeRequest request = pending(null);
         when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
 
-        assertThatThrownBy(() -> service.reject(teacher, request.id(), " "))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("REJECT_REASON_REQUIRED"));
-        assertThat(service.reject(teacher, request.id(), "Nhóm đã ổn định").status()).isEqualTo(Status.REJECTED);
+        assertThat(service.reject(teacher, request.id(), null).status()).isEqualTo(Status.REJECTED);
 
         LeaderChangeRequest done = request.decide(Status.REJECTED, null, teacher.accountId(), "x", NOW);
         when(groups.lockRequest(request.id())).thenReturn(Optional.of(done));

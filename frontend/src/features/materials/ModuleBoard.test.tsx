@@ -32,6 +32,19 @@ it("groups active materials and quizzes under their modules", async () => {
   expect(screen.queryByText("Document old")).not.toBeInTheDocument();
 });
 
+it("the chevron at the end of a module header collapses and reopens it", async () => {
+  backend([mod("m1", "Module 1")], [row("a")]);
+  render(<ModuleBoard scope={{ kind: "subject", subjectId: "subject" }} header />);
+  const toggle = await screen.findByTestId("module-toggle-m1");
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(document.getElementById("module-body-m1")).toHaveAttribute("inert");
+  fireEvent.click(screen.getByRole("heading", { name: "Module 1" }));
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(document.getElementById("module-body-m1")).not.toHaveAttribute("inert");
+});
+
 it("students open materials and quizzes in the class context without management controls", async () => {
   backend([mod("m1", "Module 1", { canManage: false, quizzes: [{ quizId: "q1", title: "Quiz", status: "OPEN", scope: "SUBJECT", classId: null, canManage: false }] })], [row("a", { canManage: false })]);
   render(<ClassMaterialsCard classId="class1" />);

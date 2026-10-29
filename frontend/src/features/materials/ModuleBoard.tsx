@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { getQuiz, reopenQuiz } from "@/features/quizzes/api";
 import { QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "@/features/quizzes/labels";
 import { Button, Dialog, Field, Icon, IconButton, Menu, MenuItem, PageHeader, Pill, TextInput, cx, showToast } from "@/shared/ui";
 import { ArchiveItemDialog, ModuleItemDialog } from "./MaterialDialogs";
 import { materialError, moduleApi } from "./api";
+import { useModuleCollapse } from "./moduleCollapse";
 import { itemHref, itemIcon, itemKey, itemTitle, useModuleOutline, type OutlineItem } from "./outline";
 import type { MaterialModule, ModuleScope } from "./types";
 
@@ -23,7 +24,7 @@ export function canEditItem(item: OutlineItem) {
 
 /**
  * Học liệu chia theo module (U13). Mỗi module một thẻ: học liệu (tệp, link YouTube) và Quiz theo thứ tự, mỗi dòng chỉ có
- * tên, bấm cả dòng mở trang chi tiết. Chủ nhiệm môn thêm, đổi tên, xóa, sắp xếp module; Chủ nhiệm môn và giảng viên tạo,
+ * tên, bấm cả dòng mở trang chi tiết. Bấm đầu thẻ (mũi tên cuối hàng) để thu gọn / mở module. Chủ nhiệm môn thêm, đổi tên, xóa, sắp xếp module; Chủ nhiệm môn và giảng viên tạo,
  * sửa, lưu trữ học liệu của mình trong module (giảng viên chỉ xem học liệu và Quiz của môn).
  */
 export function ModuleBoard({ scope, readOnly = false, header = false }: { scope: ModuleScope; readOnly?: boolean; header?: boolean }) {
@@ -31,6 +32,7 @@ export function ModuleBoard({ scope, readOnly = false, header = false }: { scope
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const data = useModuleOutline(scope, { poll: true, pollPaused: busy || dialog !== null });
+  const { collapsed, toggle } = useModuleCollapse("board");
   const outline = data.outline ?? [];
   const staff = scope.kind !== "student";
   const writable = staff && !readOnly;
@@ -63,9 +65,12 @@ export function ModuleBoard({ scope, readOnly = false, header = false }: { scope
     {data.outline && outline.length === 0 && <section className="rounded-xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-muted">Chưa có module</section>}
     {outline.map(({ module, items }, index) => {
       const addable = writable && (scope.kind === "class" || module.canManage);
+      const open = !collapsed.has(module.id);
       return <section key={module.id} aria-label={module.title} data-testid={`module-${module.id}`} className="flex flex-col rounded-xl border border-line bg-surface">
-        <div className="flex flex-wrap items-center gap-2 px-5 pt-4 pb-3">
+        {/* Cả hàng đầu bấm được để thu gọn / mở; các nút thao tác không làm đổi trạng thái. */}
+        <div className="flex cursor-pointer flex-wrap items-center gap-2 py-3.5 pr-3 pl-5 select-none" onClick={() => toggle(module.id)}>
           <h2 className="min-w-0 flex-1 text-[15px] font-semibold text-ink [overflow-wrap:anywhere]">{module.title}</h2>
+          <span className="contents" onClick={(event) => event.stopPropagation()}>
           {addable && <Button size="sm" variant="primary" icon="add" onClick={() => setDialog({ type: "item", module })} data-testid={`module-add-${module.id}`}>Tạo học liệu</Button>}
           {scope.kind === "subject" && module.canManage && !readOnly && <Menu label={null} icon="more_horiz" ariaLabel={`Thao tác module ${module.title}`} variant="tool" align="right" summaryClassName="[&>svg:last-child]:hidden">
             <MenuItem icon="edit" onClick={() => setDialog({ type: "rename", module })}>Đổi tên</MenuItem>
@@ -73,14 +78,22 @@ export function ModuleBoard({ scope, readOnly = false, header = false }: { scope
             <MenuItem icon="chevron_right" className="[&>svg]:rotate-90" disabled={busy || index === outline.length - 1} onClick={() => move(index, 1)}>Xuống dưới</MenuItem>
             <MenuItem icon="trash" tone="danger" onClick={() => setDialog({ type: "delete", module })}>Xóa module</MenuItem>
           </Menu>}
+          </span>
+          <button type="button" aria-expanded={open} aria-controls={`module-body-${module.id}`} data-testid={`module-toggle-${module.id}`}
+            aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`} title={open ? "Thu gọn" : "Mở"}
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
+            <Icon name="expand_more" size={18} className={cx("transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)]", open && "rotate-180")} />
+          </button>
         </div>
-        <ul className="flex flex-col">
-          {items.length === 0 && <li className="border-t border-line px-5 py-4 text-[13px] text-muted">Chưa có học liệu</li>}
-          {items.map((item) => <ModuleRow key={itemKey(item)} item={item} scope={scope} staff={staff} editable={writable && canEditItem(item)}
-            reopenable={writable && item.kind === "quiz" && item.quiz.canManage && item.quiz.status === "RETIRED"} busy={busy}
-            onReopen={() => item.kind === "quiz" && void run(() => reopen(item.quiz.quizId, scope), "Đã mở lại quiz")}
-            onEdit={() => setDialog({ type: "item", module, item })} onArchive={() => setDialog({ type: "archive", item })} />)}
-        </ul>
+        <CollapseBody id={`module-body-${module.id}`} open={open}>
+          <ul className="flex flex-col">
+            {items.length === 0 && <li className="border-t border-line px-5 py-4 text-[13px] text-muted">Chưa có học liệu</li>}
+            {items.map((item) => <ModuleRow key={itemKey(item)} item={item} scope={scope} staff={staff} editable={writable && canEditItem(item)}
+              reopenable={writable && item.kind === "quiz" && item.quiz.canManage && item.quiz.status === "RETIRED"} busy={busy}
+              onReopen={() => item.kind === "quiz" && void run(() => reopen(item.quiz.quizId, scope), "Đã mở lại quiz")}
+              onEdit={() => setDialog({ type: "item", module, item })} onArchive={() => setDialog({ type: "archive", item })} />)}
+          </ul>
+        </CollapseBody>
       </section>;
     })}
     {dialog?.type === "create" && scope.kind === "subject" && <ModuleNameDialog title="Thêm module" initial="" busy={busy} error={error}
@@ -97,6 +110,14 @@ export function ModuleBoard({ scope, readOnly = false, header = false }: { scope
         onClose={closed} onSaved={(message) => saved(message)} />}
     {dialog?.type === "archive" && <ArchiveItemDialog item={dialog.item.kind === "material" ? { material: dialog.item.material } : { quiz: dialog.item.quiz }}
       classId={scope.kind === "subject" ? undefined : scope.classId} onClose={closed} onSaved={() => saved(dialog.item.kind === "quiz" ? "Đã lưu trữ quiz" : "Đã xóa học liệu", "danger")} />}
+  </div>;
+}
+
+/** Phần thân co giãn theo chiều cao thật (grid 0fr / 1fr); thu gọn thì không tab vào được các dòng bên trong. */
+export function CollapseBody({ id, open, children }: { id: string; open: boolean; children: ReactNode }) {
+  return <div id={id} inert={!open} className={cx("grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(.16,1,.3,1)] motion-reduce:transition-none",
+    open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+    <div className="min-h-0 overflow-hidden">{children}</div>
   </div>;
 }
 

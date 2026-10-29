@@ -8,6 +8,8 @@ import edu.aiplatform.groups.application.ClassGroupService.DraftView;
 import edu.aiplatform.groups.application.ClassGroupService.GroupSetView;
 import edu.aiplatform.groups.application.ClassGroupService.RequestView;
 import edu.aiplatform.groups.application.ClassGroupService.SaveCommand;
+import edu.aiplatform.groups.application.GroupRenameService;
+import edu.aiplatform.groups.application.GroupRenameService.Renamed;
 import edu.aiplatform.groups.application.LeaderRequestService;
 import edu.aiplatform.groups.application.LeaderRequestService.RequestResult;
 import edu.aiplatform.groups.application.MyGroupService;
@@ -34,13 +36,15 @@ public class GroupController {
     private final LeaderRequestService requests;
     private final MyGroupService myGroups;
     private final GroupWorkQueryService work;
+    private final GroupRenameService renames;
 
     public GroupController(ClassGroupService classGroups, LeaderRequestService requests, MyGroupService myGroups,
-                           GroupWorkQueryService work) {
+                           GroupWorkQueryService work, GroupRenameService renames) {
         this.classGroups = classGroups;
         this.requests = requests;
         this.myGroups = myGroups;
         this.work = work;
+        this.renames = renames;
     }
 
     public record RandomRequest(Integer maxSize) {
@@ -50,6 +54,9 @@ public class GroupController {
     }
 
     public record RejectRequest(String reason) {
+    }
+
+    public record RenameRequest(String name) {
     }
 
     public record SubmitLeaderRequest(String reason, UUID proposedLeaderId) {
@@ -92,6 +99,12 @@ public class GroupController {
     @GetMapping("/api/v1/me/classes/{classId}/group")
     public MyGroupView myGroup(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
         return myGroups.myGroup(actor, classId);
+    }
+
+    /** Trưởng nhóm đổi tên nhóm của mình, không cần duyệt. */
+    @PutMapping("/api/v1/groups/{groupId}/name")
+    public Renamed rename(@AuthenticationPrincipal Actor actor, @PathVariable UUID groupId, @RequestBody RenameRequest request) {
+        return renames.rename(actor, groupId, request.name());
     }
 
     @PostMapping("/api/v1/groups/{groupId}/leader-requests")

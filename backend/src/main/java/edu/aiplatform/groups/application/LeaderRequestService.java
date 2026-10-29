@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LeaderRequestService {
 
-    public static final int MIN_REASON = 10;
     public static final int MAX_REASON = 1000;
 
     private final GroupRepository groups;
@@ -59,7 +58,11 @@ public class LeaderRequestService {
             throw GroupAccess.notFound();
         }
         GroupAccess.requireOpen(ref);
-        String why = reason(reason, "LEADER_REQUEST_REASON_INVALID", "Lý do cần 10–1.000 ký tự");
+        // Lý do không bắt buộc (yêu cầu 2026-10-29): bỏ trống thì lưu chuỗi rỗng, tối đa 1.000 ký tự.
+        String why = reason == null ? "" : reason.trim();
+        if (why.length() > MAX_REASON) {
+            throw ApiException.badRequest("LEADER_REQUEST_REASON_INVALID", "Lý do tối đa 1.000 ký tự");
+        }
         if (proposedLeaderId != null && (!group.isMember(proposedLeaderId) || proposedLeaderId.equals(group.leaderId()))) {
             throw ApiException.badRequest("LEADER_REQUEST_PROPOSAL_INVALID",
                     "Người được đề cử phải là thành viên khác trưởng nhóm hiện tại");
@@ -135,9 +138,10 @@ public class LeaderRequestService {
         ClassRef ref = access.requireTeacher(actor, group.classId());
         GroupAccess.requireEditable(ref);
         requirePending(request);
-        String why = reason == null ? "" : reason.trim();
-        if (why.isEmpty() || why.length() > MAX_REASON) {
-            throw ApiException.badRequest("REJECT_REASON_REQUIRED", "Cần nhập lý do từ chối (tối đa 1.000 ký tự)");
+        // Từ chối không cần lý do (yêu cầu 2026-10-29); có gửi thì vẫn lưu, tối đa 1.000 ký tự.
+        String why = reason == null || reason.isBlank() ? null : reason.trim();
+        if (why != null && why.length() > MAX_REASON) {
+            throw ApiException.badRequest("REJECT_REASON_INVALID", "Lý do từ chối tối đa 1.000 ký tự");
         }
         LeaderChangeRequest rejected = request.decide(Status.REJECTED, null, actor.accountId(), why, clock.instant());
         groups.updateRequest(rejected);
@@ -154,14 +158,6 @@ public class LeaderRequestService {
         } catch (RuntimeException e) {
             throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
-    }
-
-    private static String reason(String value, String code, String message) {
-        String trimmed = value == null ? "" : value.trim();
-        if (trimmed.length() < MIN_REASON || trimmed.length() > MAX_REASON) {
-            throw ApiException.badRequest(code, message);
-        }
-        return trimmed;
     }
 
     private static void requirePending(LeaderChangeRequest request) {

@@ -24,6 +24,7 @@ import edu.aiplatform.groupdocs.web.GroupDocController;
 import edu.aiplatform.groups.application.ClassGroupService;
 import edu.aiplatform.groups.application.ClassGroupService.GroupSetView;
 import edu.aiplatform.groups.application.GroupSetInvalidException;
+import edu.aiplatform.groups.application.GroupRenameService;
 import edu.aiplatform.groups.application.LeaderRequestService;
 import edu.aiplatform.groups.application.MyGroupService;
 import edu.aiplatform.groups.domain.GroupSetRules.Issue;
@@ -52,6 +53,7 @@ class GroupControllersTest {
     private final LeaderRequestService requests = mock(LeaderRequestService.class);
     private final MyGroupService myGroups = mock(MyGroupService.class);
     private final GroupWorkQueryService work = mock(GroupWorkQueryService.class);
+    private final GroupRenameService renames = mock(GroupRenameService.class);
     private final GroupWorkspaceService workspace = mock(GroupWorkspaceService.class);
     private final GroupSectionService sections = mock(GroupSectionService.class);
     private final GroupSubmissionService submissions = mock(GroupSubmissionService.class);
@@ -62,7 +64,7 @@ class GroupControllersTest {
     @BeforeEach
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor, null));
-        mvc = MockMvcBuilders.standaloneSetup(new GroupController(classGroups, requests, myGroups, work),
+        mvc = MockMvcBuilders.standaloneSetup(new GroupController(classGroups, requests, myGroups, work, renames),
                         new GroupDocController(workspace, sections, submissions, work, docAccess, streams))
                 .setControllerAdvice(new GroupExceptionHandler(), new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();

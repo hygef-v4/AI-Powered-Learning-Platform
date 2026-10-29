@@ -19,8 +19,9 @@ export const approveRequest = (id: string, newLeaderId: string | null) =>
     body: JSON.stringify({ newLeaderId }),
   });
 
-export const rejectRequest = (id: string, reason: string) =>
-  apiFetch(`/api/v1/leader-requests/${encodeURIComponent(id)}:reject`, { method: "POST", body: JSON.stringify({ reason }) });
+/** Từ chối không kèm lý do. */
+export const rejectRequest = (id: string) =>
+  apiFetch(`/api/v1/leader-requests/${encodeURIComponent(id)}:reject`, { method: "POST", body: JSON.stringify({}) });
 
 export const getGroupAssignments = (classId: string) => apiFetch<GroupAssignment[]>(`${classBase(classId)}/group-assignments`);
 
@@ -37,10 +38,18 @@ export const getStudentGroup = (classId: string, studentId: string) =>
 
 export const getMyGroup = (classId: string) => apiFetch<MyGroupView>(`/api/v1/me/classes/${encodeURIComponent(classId)}/group`);
 
-export const submitLeaderRequest = (groupId: string, reason: string, proposedLeaderId: string | null) =>
+/** Gửi yêu cầu đổi trưởng nhóm, không kèm lý do. */
+export const submitLeaderRequest = (groupId: string, proposedLeaderId: string | null) =>
   apiFetch(`/api/v1/groups/${encodeURIComponent(groupId)}/leader-requests`, {
     method: "POST",
-    body: JSON.stringify({ reason, proposedLeaderId }),
+    body: JSON.stringify({ proposedLeaderId }),
+  });
+
+/** Trưởng nhóm đổi tên nhóm, không cần giảng viên duyệt. */
+export const renameGroup = (groupId: string, name: string) =>
+  apiFetch<{ groupId: string; name: string }>(`/api/v1/groups/${encodeURIComponent(groupId)}/name`, {
+    method: "PUT",
+    body: JSON.stringify({ name }),
   });
 
 export const cancelLeaderRequest = (id: string) =>

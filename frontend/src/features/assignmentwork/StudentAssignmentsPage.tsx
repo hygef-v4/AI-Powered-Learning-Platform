@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Alert, ClassFilter, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { errorMessage, formatDateTime } from "./format";
 import { studentAssignmentResults } from "./slots";
 import type { StudentRow } from "./types";
@@ -51,10 +51,16 @@ export function StudentAssignmentsPage() {
   // Quay về từ một bài (`focus`): mở tab đang chứa bài đó theo dữ liệu mới tải; bấm tab thì theo lựa chọn.
   const focus = params.get("focus");
   const [chosenTab, setTab] = useState<Tab | null>(null);
-  const [mode, setMode] = useState("");
+  // `?mode=GROUP` (link Bài nhóm trên trang Nhóm của tôi) mở sẵn ô lọc loại bài.
+  const [mode, setMode] = useState(() => { const initial = params.get("mode"); return initial && initial in KIND_LABELS ? initial : ""; });
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
-  const { rows, error, loading } = useStudentAssignments(classId);
+  // Trang chung (không có `?classId=`) lọc theo lớp ngay trên trang, không đổi sang sidebar của lớp.
+  const [classFilter, setClassFilter] = useState("");
+  const { rows: allRows, error, loading } = useStudentAssignments(classId);
+  const classes = [...new Map((allRows ?? []).map((row) => [row.classId, { classId: row.classId, code: row.classCode, name: row.className }])).values()]
+    .sort((a, b) => a.code.localeCompare(b.code, "vi"));
+  const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 
   const inTab = (row: StudentRow, key: Tab) =>
     key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : row.submittedCount > 0 || !!row.group?.submitted;
@@ -70,7 +76,9 @@ export function StudentAssignmentsPage() {
 
   return (
     <>
-      <PageHeader title="Bài tập" />
+      <PageHeader title="Bài tập" actions={!classId && (
+        <ClassFilter classes={classes} value={classFilter} onChange={(value) => { setClassFilter(value); setPage(0); }} testId="assignment-class-filter" />
+      )} />
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
       <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">

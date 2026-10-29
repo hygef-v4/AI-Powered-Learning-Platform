@@ -82,6 +82,11 @@ describe("QuizPracticeDetailPage (UC 50)", () => {
     expect(screen.queryByText("Bạn đã dùng hết 2/2 lượt làm quiz này.")).not.toBeInTheDocument();
     expect(screen.queryByTestId("practice-detail-start")).not.toBeInTheDocument();
     expect(screen.queryByText("Practice")).not.toBeInTheDocument();
+    // Thẻ Làm bài vẫn còn, ghi lượt đã dùng cạnh tiêu đề; bảng Kết quả không còn cột Thời gian.
+    expect(screen.getByRole("heading", { name: "Làm bài" })).toBeInTheDocument();
+    expect(screen.getByTestId("practice-detail-attempts")).toHaveTextContent("2/2");
+    expect(screen.queryByRole("columnheader", { name: "Thời gian" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("practice-detail-attempt")).toHaveTextContent("2 / 3");
   });
 
   const historyRow = (classId: string, classCode: string) => ({ quizId: "z1", classId, classCode, className: "Lớp",

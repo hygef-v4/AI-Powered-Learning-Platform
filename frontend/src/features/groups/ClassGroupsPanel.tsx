@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert, Button, ClickableRow, Dialog, IconButton, PageNav, Pill, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { getGroups, saveGroups } from "./api";
 import { GroupFormDialog } from "./GroupFormDialog";
@@ -45,6 +45,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   const [open, setOpen] = useState<Open>(null);
   const [busy, setBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const opened = useRef(false);
   // Bảng của U12 thay bảng chỉ xem của trang ngay từ lúc tải; tải lỗi thì trả lại bảng của trang.
   const shown = set !== null || error === null;
   useEffect(() => {
@@ -55,6 +56,12 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   const receive = useCallback((loaded: GroupSetView) => {
     setSet(loaded);
     setError(null);
+    // Link thông báo yêu cầu đổi trưởng nhóm mang `?group=`: lần tải đầu mở sẵn nhóm đó (bảng và thẻ yêu cầu lọc theo nhóm).
+    if (!opened.current) {
+      opened.current = true;
+      const wanted = new URLSearchParams(window.location.search).get("group");
+      if (wanted && loaded.groups.some((group) => group.id === wanted)) setFilter(wanted);
+    }
     onGroupNamesLoaded?.(
       Object.fromEntries(loaded.groups.flatMap(group =>
         group.members.filter(member => member.active).map(member => [member.accountId, group.name]),
@@ -144,7 +151,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
 
   return (
     <div className="flex flex-col gap-4">
-      <LeaderRequestList set={set} onChanged={() => void load()} />
+      <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Thẻ Nhóm: mọi việc với nhóm ở đây, mỗi nhóm có sẵn nút sửa, xóa; bấm nhóm để lọc bảng bên cạnh. */}
         <section aria-label="Nhóm" className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4">

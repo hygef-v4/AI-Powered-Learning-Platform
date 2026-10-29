@@ -28,6 +28,7 @@ const VIEW: MyGroupView = {
   myRequests: [
     { id: "r0", status: "REJECTED", proposedLeaderId: null, reason: "Lý do cũ đủ mười ký tự", decisionReason: "Nhóm đang ổn", createdAt: "2026-10-10T03:00:00Z", decidedAt: "2026-10-11T03:00:00Z" },
   ],
+  amLeader: false,
 };
 
 function json(body: unknown, status = 200) {
@@ -37,17 +38,49 @@ function json(body: unknown, status = 200) {
 describe("MyGroupPage", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("hiện thành viên, bài nhóm và lý do từ chối của yêu cầu gần nhất", async () => {
+  it("mỗi thành viên một thẻ, nhãn Trưởng nhóm trên thẻ trưởng nhóm; bài nhóm chỉ là link sang trang Bài tập", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json(VIEW)));
     render(<MyGroupPage classId="c1" />);
 
-    expect(await screen.findByText("Thành viên (2)")).toBeInTheDocument();
-    expect(screen.getByText("Lý do từ chối: Nhóm đang ổn")).toBeInTheDocument();
-    expect(screen.getByText("Đang làm · 1 / 3 mục xong")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Mở tài liệu" })).toHaveAttribute("href", "/group-docs/doc1");
+    const cards = await screen.findAllByTestId("group-member");
+    expect(cards).toHaveLength(2);
+    expect(cards[0]).toHaveTextContent("Trưởng nhóm");
+    expect(cards[0]!.querySelector("svg")).not.toBeNull();
+    expect(cards[1]).not.toHaveTextContent("Trưởng nhóm");
+    expect(screen.queryByText("Bạn")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Nhóm 1" })).toBeInTheDocument();
+    expect(screen.getByText("2 thành viên")).toBeInTheDocument();
+    expect(screen.getByTestId("group-works-link")).toHaveAttribute("href", "/my-assignments?classId=c1&mode=GROUP");
+    expect(screen.queryByText("Sơ đồ lớp")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Lý do từ chối/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sửa tên nhóm" })).not.toBeInTheDocument();
   });
 
-  it("gửi yêu cầu cần lý do ít nhất 10 ký tự và gửi người được đề xuất", async () => {
+  it("trưởng nhóm sửa tên ngay tại chỗ, không cần duyệt", async () => {
+    const calls: { url: string; method?: string; body?: unknown }[] = [];
+    let name = "Nhóm 1";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInit | URL | string, init?: RequestInit) => {
+        calls.push({ url: String(input), method: init?.method, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+        if (String(input).endsWith("/name")) { name = "Sao Băng"; return json({ groupId: "g1", name }); }
+        return json({ ...VIEW, name, amLeader: true });
+      }),
+    );
+    render(<MyGroupPage classId="c1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa tên nhóm" }));
+    const input = screen.getByRole("textbox", { name: "Tên nhóm" });
+    fireEvent.change(input, { target: { value: "  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Tên nhóm cần 1–100 ký tự.");
+    fireEvent.change(input, { target: { value: " Sao Băng " } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    expect(await screen.findByRole("heading", { name: "Sao Băng" })).toBeInTheDocument();
+    expect(calls.find((c) => c.url === "/api/v1/groups/g1/name")).toMatchObject({ method: "PUT", body: { name: "Sao Băng" } });
+  });
+
+  it("popup chỉ có trưởng nhóm hiện tại và trưởng nhóm mới, không gửi lý do", async () => {
     const calls: { url: string; body?: unknown }[] = [];
     vi.stubGlobal(
       "fetch",
@@ -61,22 +94,24 @@ describe("MyGroupPage", () => {
 
     const dialog = await screen.findByRole("dialog");
     const send = within(dialog).getByRole("button", { name: "Gửi yêu cầu" });
-    fireEvent.change(within(dialog).getByLabelText(/Lý do/), { target: { value: "ngắn" } });
-    expect(send).toBeDisabled();
-    fireEvent.change(within(dialog).getByLabelText(/Lý do/), { target: { value: "An bận thực tập cả tháng" } });
-    fireEvent.change(within(dialog).getByLabelText(/Đề xuất/), { target: { value: "b" } });
+    // Chỉ còn Trưởng nhóm hiện tại và Trưởng nhóm mới; không gửi lý do.
+    expect(send).toBeEnabled();
+    expect(within(dialog).queryByText(/Giảng viên sẽ duyệt/)).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Trưởng nhóm hiện tại")).toHaveValue("An");
+    expect(within(dialog).queryByLabelText(/Lý do/)).not.toBeInTheDocument();
+    fireEvent.change(within(dialog).getByLabelText("Trưởng nhóm mới"), { target: { value: "b" } });
     fireEvent.click(send);
 
     await waitFor(() => expect(calls.some((c) => c.url === "/api/v1/groups/g1/leader-requests")).toBe(true));
-    expect(calls.find((c) => c.url === "/api/v1/groups/g1/leader-requests")!.body).toEqual({
-      reason: "An bận thực tập cả tháng",
-      proposedLeaderId: "b",
-    });
+    expect(calls.find((c) => c.url === "/api/v1/groups/g1/leader-requests")!.body).toEqual({ proposedLeaderId: "b" });
   });
 
-  it("nhóm đang có yêu cầu chờ thì khóa nút gửi", async () => {
+  it("nhóm đang có yêu cầu chờ thì nút khóa và ghi Đang chờ duyệt", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json({ ...VIEW, pendingRequest: true })));
     render(<MyGroupPage classId="c1" />);
-    expect(await screen.findByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ })).toBeDisabled();
+    const button = await screen.findByTestId("leader-request-open");
+    expect(button).toBeDisabled();
+    expect(button).toHaveTextContent("Đang chờ duyệt");
+    expect(screen.queryByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ })).not.toBeInTheDocument();
   });
 });

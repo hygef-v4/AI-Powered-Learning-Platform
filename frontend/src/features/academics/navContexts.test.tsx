@@ -46,7 +46,7 @@ describe("sidebar của lớp", () => {
   it("lớp được phân công có các tab của trang lớp, mở đúng tab theo ?tab=", () => {
     const teaching = classContext(at("/teaching/classes/c-1", "tab=materials"))!;
     expect(labels(teaching.items)).toEqual(["Thông tin lớp", "Sinh viên", "Học liệu", "Bài tập", "Chấm điểm", "Thông báo lớp"]);
-    expect(teaching.items[5]!.href).toBe("/announcements?classId=c-1");
+    expect(teaching.items[5]!.href).toBe("/teaching/classes/c-1/announcements");
     expect(teaching.items[0]!.href).toBe("/teaching/classes/c-1");
     expect(teaching.items[2]!.href).toBe("/teaching/classes/c-1?tab=materials");
     expect(activeLabel(teaching.items)).toBe("Học liệu");
@@ -56,16 +56,19 @@ describe("sidebar của lớp", () => {
   });
 
   it("Thông báo lớp của một lớp vẫn ở sidebar của lớp đó", () => {
-    expect(activeLabel(classContext(at("/announcements", "classId=c-3"))!.items)).toBe("Thông báo lớp");
+    expect(activeLabel(classContext(at("/teaching/classes/c-3/announcements"))!.items)).toBe("Thông báo lớp");
+    // Thông báo lớp ở menu chính (mọi lớp) giữ menu chung, kể cả link cũ `?classId=`.
     expect(classContext(at("/announcements"))).toBeNull();
+    expect(classContext(at("/announcements", "classId=c-3"))).toBeNull();
   });
 
   it("lớp của tôi (Sinh viên) có các trang sinh viên vào được của lớp", () => {
     const own = studentClassContext(at("/classes/c-4"))!;
     expect(labels(own.items)).toEqual(["Thông tin lớp", "Nhóm của tôi", "Học liệu", "Bài tập", "Thông báo lớp"]);
-    expect(own.items.map((item) => item.href)).toEqual(["/classes/c-4", "/classes/c-4/group", "/classes/c-4?tab=materials", "/my-assignments?classId=c-4", "/announcements?classId=c-4"]);
+    expect(own.items.map((item) => item.href)).toEqual(["/classes/c-4", "/classes/c-4/group", "/classes/c-4?tab=materials", "/my-assignments?classId=c-4", "/classes/c-4/announcements"]);
     expect(activeLabel(own.items)).toBe("Thông tin lớp");
     expect(activeLabel(studentClassContext(at("/classes/c-4/group"))!.items)).toBe("Nhóm của tôi");
+    expect(activeLabel(studentClassContext(at("/classes/c-4/announcements"))!.items)).toBe("Thông báo lớp");
     expect(activeLabel(studentClassContext(at("/classes/c-4", "tab=materials"))!.items)).toBe("Học liệu");
     expect(activeLabel(studentClassContext(at("/materials/m-1", "classId=c-4"))!.items)).toBe("Học liệu");
     expect(activeLabel(studentClassContext(at("/my-assignments/a-1", "classId=c-4"))!.items)).toBe("Bài tập");
