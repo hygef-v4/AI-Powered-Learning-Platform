@@ -3,6 +3,7 @@ package edu.aiplatform.assignments.application;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.AssignmentContent;
+import edu.aiplatform.assignments.contract.AssignmentDayCount;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
@@ -10,6 +11,7 @@ import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.assignments.domain.Assignment;
 import edu.aiplatform.assignments.domain.AssignmentRepository;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,6 +43,12 @@ public class AssignmentQueryService implements IAssignmentQuery {
     public Optional<AssignmentContent> getContent(UUID assignmentId) {
         return assignments.find(assignmentId).map(a -> new AssignmentContent(a.id(), a.versionNo(), a.instructions(),
                 a.skeleton(), a.parts(), a.requiredDiagrams(), rubrics.listRubrics(a.id())));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDayCount> countGivenByDay(Instant from, Instant to, ZoneId zone) {
+        return assignments.countGivenByDay(from, to, zone);
     }
 
     /** Bài của lớp (mọi trạng thái) và bài của môn chứa lớp đã phát hành; unit gọi tự lọc theo trạng thái. */

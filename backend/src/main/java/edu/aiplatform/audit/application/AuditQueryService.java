@@ -8,6 +8,7 @@ import edu.aiplatform.audit.contract.AuditLogView;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.audit.contract.IAuditQuery;
+import edu.aiplatform.audit.contract.IAuditStats;
 import edu.aiplatform.audit.domain.AuditLogRepository;
 import edu.aiplatform.audit.domain.AuditRow;
 import edu.aiplatform.identity.contract.AccountContact;
@@ -22,6 +23,7 @@ import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,7 +46,11 @@ import org.springframework.transaction.annotation.Transactional;
  * audit {@code AUDIT_QUERIED}.
  */
 @Service
-public class AuditQueryService implements IAuditQuery {
+public class AuditQueryService implements IAuditQuery, IAuditStats {
+
+    /** Ngoài mọi lần bị từ chối: các việc liên quan đăng nhập, khóa, vô hiệu hóa tài khoản, mật khẩu và token MCP. */
+    static final List<String> SECURITY_ACTIONS = List.of("LOGIN_FAILED", "LOGIN_BLOCKED_LOCKED", "ACCOUNT_TEMP_LOCKED",
+            "AUTH_FAILED", "ACCOUNT_DISABLED", "PASSWORD_RESET", "MCP_TOKEN_REVEALED");
 
     public static final String READ_ACTION = "AUDIT_READ";
     public static final String OBJECT_TYPE = "AUDIT_LOG";
@@ -108,6 +114,25 @@ public class AuditQueryService implements IAuditQuery {
                     AuditResult.SUCCESS, null, describe(normalized, page), clock.instant()));
         }
         return new PageImpl<>(items, page, total);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countSucceeded(String action, Instant from, Instant to, String detailKey, String detailValue) {
+        return repository.countSucceeded(action, from, to, detailKey, detailValue);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuditLogView> recentSecurityEvents(Instant from, int limit) {
+        List<AuditRow> rows = repository.findSecurity(from, SECURITY_ACTIONS, Math.max(1, Math.min(limit, MAX_PAGE_SIZE)));
+        Map<UUID, String> emails = emailsOf(rows);
+        Map<String, Optional<String>> labels = new HashMap<>();
+        return rows.stream()
+                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
+                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> objectLabel(row))
+                                .orElse(null)))
+                .toList();
     }
 
     /** Fail closed: không có actor, không phải Admin, U01 từ chối hoặc lỗi đều bị từ chối và được audit. */

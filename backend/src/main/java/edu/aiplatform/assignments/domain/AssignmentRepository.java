@@ -3,6 +3,7 @@ package edu.aiplatform.assignments.domain;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.assignments.contract.AssignmentDayCount;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.DiagramType;
@@ -14,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,20 @@ public class AssignmentRepository {
                         + "or (scope = 'SUBJECT' and subject_id = :subjectId "
                         + "and status in ('SCHEDULED', 'OPEN', 'CLOSED', 'RETIRED')) order by created_at desc")
                 .param("classId", classId).param("subjectId", subjectId).query(this::map).list();
+    }
+
+    /** Số bài đã phát hành theo ngày giao và loại (luyện tập, cá nhân, nhóm); ngày tính theo {@code zone}. */
+    public List<AssignmentDayCount> countGivenByDay(Instant from, Instant to, ZoneId zone) {
+        return jdbc.sql("select cast(coalesce(opens_at, created_at) at time zone :zone as date) as day, "
+                        + "case when grading_mode = 'PRACTICE' then 'PRACTICE' else submission_mode end as kind, "
+                        + "count(*) as total from assignments "
+                        + "where status in ('SCHEDULED', 'OPEN', 'CLOSED', 'RETIRED') "
+                        + "and coalesce(opens_at, created_at) >= :from and coalesce(opens_at, created_at) < :to "
+                        + "group by 1, 2 order by 1, 2")
+                .param("zone", zone.getId()).param("from", Timestamp.from(from)).param("to", Timestamp.from(to))
+                .query((rs, row) -> new AssignmentDayCount(rs.getDate("day").toLocalDate(), rs.getString("kind"),
+                        rs.getLong("total")))
+                .list();
     }
 
     public List<Assignment> listOfClass(UUID classId) {

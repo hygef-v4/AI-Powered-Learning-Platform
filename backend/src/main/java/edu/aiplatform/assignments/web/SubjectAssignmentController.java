@@ -1,11 +1,13 @@
 package edu.aiplatform.assignments.web;
 
 import edu.aiplatform.assignments.application.AssignmentAuthoringService;
+import edu.aiplatform.assignments.application.AssignmentCopyService;
 import edu.aiplatform.assignments.application.AssignmentViews;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.identity.contract.Actor;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +26,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubjectAssignmentController {
 
     private final AssignmentAuthoringService authoring;
+    private final AssignmentCopyService copies;
 
-    public SubjectAssignmentController(AssignmentAuthoringService authoring) {
+    public SubjectAssignmentController(AssignmentAuthoringService authoring, AssignmentCopyService copies) {
         this.authoring = authoring;
+        this.copies = copies;
+    }
+
+    /** Bài để copy vào bài của môn: bài khác của cùng môn và bài của các lớp mình dạy. */
+    @GetMapping("/copy-sources")
+    public List<AssignmentViews.CopySource> copySources(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return copies.subjectCopySources(actor, subjectId);
+    }
+
+    @PostMapping(value = "/copies", consumes = "application/json")
+    public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                                       @RequestBody AssignmentRequests.Copy body) {
+        AssignmentViews.Detail created = copies.copyToSubject(actor, subjectId, body.sourceAssignmentId());
+        return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 
     @GetMapping

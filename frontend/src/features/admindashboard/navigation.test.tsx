@@ -5,7 +5,7 @@ import {navEntries} from "@/features/identity/slots";
 import {getProfile} from "@/features/identity/api";
 import {SessionProvider} from "@/features/identity/session";
 import {RoleGuard} from "@/features/identity/shell/RoleGuard";
-import {dashboardFixture} from "./testFixtures";
+import {routes} from "./testFixtures";
 import "./register";
 
 const replace = vi.fn();
@@ -17,9 +17,9 @@ function renderRoute() {
 }
 it("uses the existing unique ADMIN navigation entry and mounts the dashboard", async () => {
   vi.mocked(getProfile).mockResolvedValue({accountId: "a", email: "a@example.test", displayName: "Admin", phoneNumber: null, role: "ADMIN", status: "ACTIVE", homePath: "/admin"});
-  vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(Response.json(dashboardFixture()))));
+  vi.stubGlobal("fetch", routes());
   renderRoute();
-  expect(await screen.findByTestId("dashboard-accounts")).toHaveTextContent("5");
+  expect(await screen.findByTestId("dashboard-accounts")).toHaveTextContent("3");
   expect(navEntries.entries().filter(entry => entry.key === "admin-dashboard")).toEqual([
     expect.objectContaining({href: "/admin", roles: ["ADMIN"]}),
   ]);

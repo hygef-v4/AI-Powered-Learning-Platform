@@ -8,7 +8,7 @@ import { quizMaterialSections } from "@/features/quizpractice/slots";
 import { ClassMaterialsTab } from "./MaterialList";
 import { ClassMaterialCountField, ClassMaterialsCard, MaterialLinkList } from "./MaterialSections";
 
-subjectNavEntries.register({ key: "manager-materials", order: 50, title: "Học liệu", icon: "folder_open", path: "/manager/materials" });
+subjectNavEntries.register({ key: "manager-materials", order: 30, title: "Học liệu", icon: "folder_open", path: "/manager/materials" });
 teacherClassInfoFields.register({ key: "u13-material-count", order: 10, component: ClassMaterialCountField });
 teacherClassTabs.register({ key: "u13-materials", order: 50, component: ({ classId, tab }) => tab === "materials" ? createElement(ClassMaterialsTab, { classId }) : null });
 studentClassSections.register({ key: "u13-materials", order: 10, component: ClassMaterialsCard });

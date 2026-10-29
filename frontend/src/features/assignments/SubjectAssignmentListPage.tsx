@@ -40,7 +40,7 @@ export function SubjectAssignmentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Bài tập của môn"
+      <PageHeader title="Bài tập"
         actions={<Button variant="primary" icon="add" disabled={!subjectId || !page.data || page.data.ownerArchived}
           onClick={() => setCreating(true)} data-testid="subject-assignment-create">Tạo bài tập</Button>} />
       {subjectsError !== null && <Alert tone="danger" role="alert">{errorMessage(subjectsError)}</Alert>}

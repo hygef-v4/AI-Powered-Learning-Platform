@@ -14,6 +14,7 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IClassScope;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.subjects.contract.SubjectStatus;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -87,17 +88,83 @@ public class AssignmentCopyService {
         return support.detail(actor, copy, List.of());
     }
 
-    /** F13 bước 1: lớp mình dạy (trừ lớp đích) và bài của lớp đó. */
+    /**
+     * F13 bước 1, copy vào lớp: bài của cùng môn đã phát hành (nhóm đầu), rồi các lớp khác mình dạy (trừ lớp đích) và bài của
+     * lớp đó.
+     */
     @Transactional(readOnly = true)
     public List<AssignmentViews.CopySource> copySources(Actor actor, UUID targetClassId) {
-        access.requireClassManager(actor, targetClassId, "ASSIGNMENT_COPY_SOURCES");
+        ClassRef target = access.requireClassManager(actor, targetClassId, "ASSIGNMENT_COPY_SOURCES");
+        List<AssignmentViews.CopySource> sources = new ArrayList<>();
+        subjectSource(target.subjectId(), Assignment::published, false).ifPresent(sources::add);
+        sources.addAll(taughtClassSources(actor, targetClassId, false));
+        return sources;
+    }
+
+    /**
+     * Copy vào bài của môn (Chủ nhiệm môn): bài khác của cùng môn (mọi trạng thái), rồi các lớp mình dạy. Bài của môn chỉ có
+     * cá nhân và luyện tập nên không liệt kê bài nhóm.
+     */
+    @Transactional(readOnly = true)
+    public List<AssignmentViews.CopySource> subjectCopySources(Actor actor, UUID subjectId) {
+        access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_COPY_SOURCES");
+        List<AssignmentViews.CopySource> sources = new ArrayList<>();
+        subjectSource(subjectId, a -> true, true).ifPresent(sources::add);
+        sources.addAll(taughtClassSources(actor, null, true));
+        return sources;
+    }
+
+    /** Copy một bài vào bài của môn (nháp mới, phạm vi môn); nguồn là bài cùng môn hoặc bài của lớp mình dạy. */
+    @Transactional
+    public AssignmentViews.Detail copyToSubject(Actor actor, UUID subjectId, UUID sourceAssignmentId) {
+        access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_COPIED");
+        if (access.subjectStatus(subjectId) == SubjectStatus.ARCHIVED) {
+            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
+        }
+        if (sourceAssignmentId == null) {
+            throw ApiException.badRequest("SOURCE_REQUIRED", "Chọn bài để copy");
+        }
+        Assignment source = assignments.find(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
+                "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
+        if (source.scope() == AssignmentScope.SUBJECT) {
+            if (!source.subjectId().equals(subjectId)) {
+                throw access.deny(actor, "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, source.id(), "OTHER_SUBJECT");
+            }
+        } else {
+            access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
+        }
+        if (source.submissionMode() == SubmissionMode.GROUP) {
+            throw ApiException.badRequest("GROUP_NOT_SUPPORTED", "Bài của môn chỉ có cá nhân hoặc luyện tập");
+        }
+        Set<UUID> allowed = selectable(actor, ResourceRef.subject(subjectId));
+        List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
+        Assignment copy = insertCopy(actor, source, null, subjectId, AssignmentOrigin.CLASS_COPY, 1, source.title(), kept);
+        audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id(),
+                "targetSubjectId", subjectId));
+        return support.detail(actor, copy, List.of());
+    }
+
+    /** Bài của môn lọc theo {@code keep}; không có bài nào thì không có nhóm. */
+    private java.util.Optional<AssignmentViews.CopySource> subjectSource(UUID subjectId,
+            java.util.function.Predicate<Assignment> keep, boolean individualOnly) {
+        var subject = access.subjectRef(subjectId);
+        List<AssignmentViews.Row> rows = assignments.listOfSubject(subjectId).stream()
+                .filter(keep).filter(a -> !individualOnly || a.submissionMode() != SubmissionMode.GROUP)
+                .map(a -> support.row(a, true)).toList();
+        return rows.isEmpty() ? java.util.Optional.empty()
+                : java.util.Optional.of(new AssignmentViews.CopySource(subjectId, subject.code(), subject.name(), null, rows, "SUBJECT"));
+    }
+
+    /** Các lớp mình dạy (trừ {@code exceptClassId}) có ít nhất một bài, mỗi lớp một nhóm. */
+    private List<AssignmentViews.CopySource> taughtClassSources(Actor actor, UUID exceptClassId, boolean individualOnly) {
         List<AssignmentViews.CopySource> sources = new ArrayList<>();
         for (UUID classId : classScope.listTaughtClasses(actor.accountId())) {
-            if (classId.equals(targetClassId)) {
+            if (classId.equals(exceptClassId)) {
                 continue;
             }
             ClassRef ref = access.classRef(classId);
             List<AssignmentViews.Row> rows = assignments.listOfClass(classId).stream()
+                    .filter(a -> !individualOnly || a.submissionMode() != SubmissionMode.GROUP)
                     .map(a -> support.row(a, true)).toList();
             if (!rows.isEmpty()) {
                 sources.add(new AssignmentViews.CopySource(classId, ref.code(), ref.name(), ref.status(), rows));
@@ -118,21 +185,27 @@ public class AssignmentCopyService {
         }
         Assignment source = assignments.find(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
                 "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
-        if (source.scope() != AssignmentScope.CLASS) {
-            throw access.deny(actor, "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, source.id(),
-                    "NOT_CLASS_ASSIGNMENT");
-        }
-        access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
-        if (source.classId().equals(targetClassId)) {
-            throw ApiException.badRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
+        if (source.scope() == AssignmentScope.SUBJECT) {
+            // Bài của cùng môn, đã phát hành cho các lớp của môn.
+            if (!source.subjectId().equals(target.subjectId()) || !source.published()) {
+                throw access.deny(actor, "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, source.id(),
+                        "OUT_OF_ASSIGNMENT_SCOPE");
+            }
+        } else {
+            access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
+            if (source.classId().equals(targetClassId)) {
+                throw ApiException.badRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
+            }
         }
         requireGroupSupport(source, targetClassId);
         Set<UUID> allowed = selectable(actor, ResourceRef.courseClass(targetClassId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
         Assignment copy = insertCopy(actor, source, targetClassId, target.subjectId(), AssignmentOrigin.CLASS_COPY, 1,
                 source.title(), kept);
-        audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id(),
-                "sourceClassId", source.classId(), "targetClassId", targetClassId));
+        audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), source.classId() == null
+                ? AssignmentAudit.details("sourceAssignmentId", source.id(), "targetClassId", targetClassId)
+                : AssignmentAudit.details("sourceAssignmentId", source.id(), "sourceClassId", source.classId(),
+                        "targetClassId", targetClassId));
         return support.detail(actor, copy, List.of());
     }
 

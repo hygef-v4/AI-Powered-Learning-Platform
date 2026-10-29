@@ -12,7 +12,7 @@ navEntries.register({ key: "teaching-classes", order: 10, title: "Lớp được
 navEntries.register({ key: "my-classes", order: 10, title: "Lớp của tôi", href: "/classes", icon: "school", roles: ["STUDENT"] });
 
 subjectNavEntries.register({ key: "subject-info", order: 10, title: "Thông tin môn", icon: "info", path: "/manager/subjects", href: (id) => `/manager/subjects/${encodeURIComponent(id)}` });
-subjectNavEntries.register({ key: "subject-classes", order: 60, title: "Lớp học", icon: "groups", path: "/manager/classes" });
+subjectNavEntries.register({ key: "subject-classes", order: 20, title: "Lớp học", icon: "groups", path: "/manager/classes" });
 
 contextNavEntries.register({ key: "class", order: 10, roles: ["TEACHER", "SUBJECT_MANAGER"], resolve: classContext });
 contextNavEntries.register({ key: "subject", order: 20, roles: ["SUBJECT_MANAGER"], resolve: subjectContext });

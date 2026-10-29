@@ -80,4 +80,41 @@ class AssignmentCopyServiceTest {
         assertThat(copy.origin()).isEqualTo(AssignmentOrigin.CLASS_COPY);
         assertThat(code(() -> f.copies.copyToClass(f.teacher, source.classId(), source.id()))).isEqualTo("COPY_SAME_CLASS");
     }
+
+    @Test
+    void classCopySourcesListPublishedSubjectAssignmentsFirst() {
+        f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
+        f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+        UUID other = UUID.randomUUID();
+        when(f.classScope.listTaughtClasses(f.teacher.accountId())).thenReturn(List.of(f.classId, other));
+        f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
+        List<AssignmentViews.CopySource> sources = f.copies.copySources(f.teacher, other);
+        assertThat(sources).extracting(AssignmentViews.CopySource::kind).containsExactly("SUBJECT", "CLASS");
+        assertThat(sources.get(0).assignments()).as("chỉ bài môn đã phát hành").hasSize(1);
+        assertThat(sources.get(1).classId()).isEqualTo(f.classId);
+    }
+
+    @Test
+    void copyPublishedSubjectAssignmentIntoClassButNotDraft() {
+        Assignment open = f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
+        AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, f.classId, open.id());
+        assertThat(copy.scope()).isEqualTo(AssignmentScope.CLASS);
+        assertThat(copy.classId()).isEqualTo(f.classId);
+        assertThat(copy.status()).isEqualTo(AssignmentStatus.DRAFT);
+        Assignment draft = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, draft.id()))).isEqualTo("ASSIGNMENT_NOT_FOUND");
+    }
+
+    @Test
+    void copyIntoSubjectFromSameSubjectOrTaughtClass() {
+        Assignment sibling = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+        AssignmentViews.Detail fromSubject = f.copies.copyToSubject(f.manager, f.subjectId, sibling.id());
+        assertThat(fromSubject.scope()).isEqualTo(AssignmentScope.SUBJECT);
+        assertThat(fromSubject.classId()).isNull();
+        assertThat(fromSubject.subjectId()).isEqualTo(f.subjectId);
+        Assignment ofClass = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
+        assertThat(f.copies.copyToSubject(f.manager, f.subjectId, ofClass.id()).scope()).isEqualTo(AssignmentScope.SUBJECT);
+        assertThat(code(() -> f.copies.copyToSubject(f.manager, UUID.randomUUID(), sibling.id())))
+                .isEqualTo("ASSIGNMENT_NOT_FOUND");
+    }
 }

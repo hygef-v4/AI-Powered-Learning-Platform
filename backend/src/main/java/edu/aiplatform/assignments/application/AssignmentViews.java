@@ -58,7 +58,15 @@ public final class AssignmentViews {
                          boolean diagramEnabled, boolean editable, long assignmentVersion) {
     }
 
-    public record CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments) {
+    /**
+     * Một nhóm bài để copy: {@code kind = CLASS} là một lớp mình dạy ({@code classId} là lớp), {@code SUBJECT} là bài của
+     * cùng môn ({@code classId} là mã môn dùng làm khóa nhóm, {@code status} rỗng).
+     */
+    public record CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments,
+                             String kind) {
+        public CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments) {
+            this(classId, code, name, status, assignments, "CLASS");
+        }
     }
 
     public record Diagram(UUID assignmentId, UUID blockId, String assignmentTitle, String diagramType, String alt,

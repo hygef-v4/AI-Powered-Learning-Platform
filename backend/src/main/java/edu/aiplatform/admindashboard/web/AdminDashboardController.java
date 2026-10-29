@@ -1,6 +1,8 @@
 package edu.aiplatform.admindashboard.web;
 
+import edu.aiplatform.admindashboard.application.AdminDashboardActivityService;
 import edu.aiplatform.admindashboard.application.AdminDashboardService;
+import edu.aiplatform.admindashboard.application.AdminDashboardViews.ActivityView;
 import edu.aiplatform.admindashboard.application.AdminDashboardViews.AdminDashboardView;
 import edu.aiplatform.admindashboard.application.AdminDashboardViews.BackupHistoryPage;
 import edu.aiplatform.identity.contract.Actor;
@@ -16,8 +18,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/admin/dashboard")
 public class AdminDashboardController {
     private final AdminDashboardService service;
+    private final AdminDashboardActivityService activity;
 
-    public AdminDashboardController(AdminDashboardService service) { this.service = service; }
+    public AdminDashboardController(AdminDashboardService service, AdminDashboardActivityService activity) {
+        this.service = service;
+        this.activity = activity;
+    }
 
     @GetMapping
     public ResponseEntity<AdminDashboardView> dashboard(@AuthenticationPrincipal Actor actor,
@@ -25,6 +31,14 @@ public class AdminDashboardController {
         service.requireAdmin(actor);
         validateKeys(query, Set.of());
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.dashboard(actor));
+    }
+
+    @GetMapping("/activity")
+    public ResponseEntity<ActivityView> activity(@AuthenticationPrincipal Actor actor,
+            @RequestParam MultiValueMap<String, String> query) {
+        service.requireAdmin(actor);
+        validateKeys(query, Set.of());
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(activity.activity(actor));
     }
 
     @GetMapping("/backups")

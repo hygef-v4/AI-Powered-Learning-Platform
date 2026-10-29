@@ -50,8 +50,8 @@ function DocxField({ file, onChange, disabled }: { file: File | null; onChange: 
 }
 
 /**
- * t21b Tạo bài tập (F3, F13) gộp một form: Upload đề mẫu DOCX (tùy chọn, nhập luôn vào khung sau khi tạo) hoặc copy bài từ
- * lớp khác (chỉ bài của lớp; đã tải tệp thì ẩn ô copy và tạo theo tệp) và Loại bài (Cá nhân, Nhóm, Luyện tập: hình thức và chế độ gộp làm một như trên bảng Bài tập). Nút xác
+ * t21b Tạo bài tập (F3, F13) gộp một form: Upload đề mẫu DOCX (tùy chọn, nhập luôn vào khung sau khi tạo) hoặc copy bài có
+ * sẵn: bài khác của cùng môn hoặc bài ở lớp khác mình dạy (đã tải tệp thì ẩn ô copy và tạo theo tệp) và Loại bài (Cá nhân, Nhóm, Luyện tập: hình thức và chế độ gộp làm một như trên bảng Bài tập). Nút xác
  * nhận chỉ ghi Tạo. Sơ đồ Draw.io luôn dùng được (yêu cầu 2026-10-21).
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
@@ -65,14 +65,13 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [error, setError] = useState<string | null>(null);
   const loadingSources = useRef(false);
   const groupAllowed = target.kind === "class" && target.groupSupported;
-  const classId = target.kind === "class" ? target.classId : null;
   const copying = !!sourceId;
   const locked = busy || !!created;
 
   function loadSources() {
-    if (!classId || sources || loadingSources.current) return;
+    if (sources || loadingSources.current) return;
     loadingSources.current = true;
-    assignmentsApi.copySources(classId).then(setSources, (e) => setError(errorMessage(e))).finally(() => { loadingSources.current = false; });
+    (target.kind === "class" ? assignmentsApi.copySources(target.classId) : assignmentsApi.subjectCopySources(target.subjectId)).then(setSources, (e) => setError(errorMessage(e))).finally(() => { loadingSources.current = false; });
   }
 
   async function submit() {
@@ -81,8 +80,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     let assignment = created;
     try {
       if (!assignment) {
-        if (copying && target.kind === "class") {
-          assignment = await assignmentsApi.copy(target.classId, sourceId);
+        if (copying) {
+          assignment = target.kind === "class" ? await assignmentsApi.copy(target.classId, sourceId)
+            : await assignmentsApi.copyToSubject(target.subjectId, sourceId);
         } else {
           const input: CreateInput = {
             submissionMode: kind === "GROUP" ? "GROUP" : "INDIVIDUAL",
@@ -130,17 +130,18 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       <Field label="Mẫu đề">
         {/* Tải tệp lên thì bỏ bài đã chọn copy và ẩn ô copy: bài tạo theo tệp vừa tải. */}
         <DocxField file={file} disabled={locked} onChange={(next) => { setFile(next); if (next) setSourceId(""); }} />
-        {classId && !file && (
+        {!file && (
           <div aria-hidden className="flex items-center gap-3 text-xs font-semibold text-muted">
             <span className="h-px flex-1 bg-line" />hoặc<span className="h-px flex-1 bg-line" />
           </div>
         )}
-        {classId && !file && (
-          <Select aria-label="Copy bài từ lớp khác" value={sourceId} disabled={locked} data-testid="copy-sources"
+        {!file && (
+          <Select aria-label="Copy bài có sẵn" value={sourceId} disabled={locked} data-testid="copy-sources"
             onFocus={loadSources} onMouseDown={loadSources} onChange={(event) => setSourceId(event.target.value)}>
-            <option value="">Copy từ lớp khác</option>
+            <option value="">Copy từ bài có sẵn</option>
             {sources?.map((source) => (
-              <optgroup key={source.classId} label={`${source.code} · ${source.name}`}>
+              <optgroup key={source.classId} label={source.kind === "SUBJECT" ? `Cùng môn · ${source.code} · ${source.name}`
+                : `Lớp ${source.code} · ${source.name}`}>
                 {source.assignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
               </optgroup>
             ))}

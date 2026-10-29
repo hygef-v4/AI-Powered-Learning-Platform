@@ -132,6 +132,16 @@ class AssignmentAccess {
         }
     }
 
+    edu.aiplatform.subjects.contract.SubjectRef subjectRef(UUID subjectId) {
+        try {
+            return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+        } catch (ApiException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw unavailable();
+        }
+    }
+
     SubjectStatus subjectStatus(UUID subjectId) {
         try {
             return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"))

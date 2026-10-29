@@ -113,8 +113,10 @@ export type CopySource = {
   classId: string;
   code: string;
   name: string;
-  status: string;
+  status: string | null;
   assignments: AssignmentRow[];
+  /** SUBJECT: bài khác của cùng môn (classId là mã môn); CLASS: một lớp mình dạy. */
+  kind?: "CLASS" | "SUBJECT";
 };
 
 export type DiagramView = {
@@ -200,5 +202,5 @@ export const statusTones: Record<AssignmentStatus, Tone> = {
 export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice" };
 export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nhóm" };
 export const originLabels: Record<AssignmentOrigin, string> = {
-  MANUAL: "Tạo mới", CLONE: "Nhân bản", NEW_VERSION: "Version mới", CLASS_COPY: "Copy từ lớp khác",
+  MANUAL: "Tạo mới", CLONE: "Nhân bản", NEW_VERSION: "Version mới", CLASS_COPY: "Copy từ bài khác",
 };

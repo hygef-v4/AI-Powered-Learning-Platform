@@ -105,7 +105,8 @@ export function MyGroupPage({ classId }: { classId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title={view.name ?? "Nhóm của tôi"}
+        title="Nhóm của tôi"
+        subtitle={view.name}
         actions={
           view.groupId && open ? (
             <Button icon="swap_horiz" onClick={() => setRequesting(true)} disabled={view.pendingRequest}>

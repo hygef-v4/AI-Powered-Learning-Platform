@@ -180,7 +180,7 @@ describe("AuditLogPage", () => {
   it("không có quyền thì báo 403, lỗi khác báo tải lại", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json({ status: 403, code: "AUDIT_FORBIDDEN" }, 403)));
     const { unmount } = render(<AuditLogPage />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("Bạn không có quyền xem Nhật ký audit.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Bạn không có quyền xem Nhật ký.");
     unmount();
 
     vi.stubGlobal("fetch", vi.fn(() => json({ status: 500 }, 500)));

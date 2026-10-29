@@ -4,7 +4,9 @@ import edu.aiplatform.audit.contract.AuditFilter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,27 @@ public class AuditLogRepository {
         Where where = Where.of(filter);
         return jdbc.sql("select count(*) from audit_logs" + where.sql()).params(where.params())
                 .query(Long.class).single();
+    }
+
+    /** Số bản ghi SUCCESS của {@code action} trong {@code [from, to)}, lọc thêm một khóa của {@code details} nếu có. */
+    public long countSucceeded(String action, Instant from, Instant to, String detailKey, String detailValue) {
+        String sql = "select count(*) from audit_logs where action = :action and result = 'SUCCESS' "
+                + "and occurred_at >= :from and occurred_at < :to"
+                + (detailKey == null ? "" : " and details ->> :detailKey = :detailValue");
+        var spec = jdbc.sql(sql).param("action", action).param("from", Timestamp.from(from))
+                .param("to", Timestamp.from(to));
+        if (detailKey != null) {
+            spec = spec.param("detailKey", detailKey).param("detailValue", detailValue);
+        }
+        return spec.query(Long.class).single();
+    }
+
+    /** Bản ghi bị từ chối hoặc thuộc {@code actions} từ {@code from}, mới nhất trước. */
+    public List<AuditRow> findSecurity(Instant from, Collection<String> actions, int limit) {
+        return jdbc.sql("select " + COLUMNS + " from audit_logs where occurred_at >= :from "
+                        + "and (result = 'DENIED' or action in (:actions)) order by occurred_at desc, id desc limit :limit")
+                .param("from", Timestamp.from(from)).param("actions", actions).param("limit", limit)
+                .query(AuditLogRepository::map).list();
     }
 
     /** Mới nhất trước; cùng thời điểm thì theo {@code id} để thứ tự trang ổn định. */

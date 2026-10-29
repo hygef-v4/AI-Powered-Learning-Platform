@@ -74,10 +74,10 @@ const TEACHING_ITEMS: ClassItem[] = [
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
   { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${enc(id)}` },
-  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${enc(id)}` },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${enc(id)}?tab=materials` },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
   { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${enc(id)}/group` },
+  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${enc(id)}?tab=materials` },
+  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${enc(id)}` },
+  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
 ];
 
 const BACK: Record<ClassScope, { href: string; label: string }> = {

@@ -91,7 +91,7 @@ export function QuestionListPage() {
   return (
     <>
       <PageHeader
-        title="Câu hỏi"
+        title="Ngân hàng câu hỏi"
         subtitle={data ? `${data.total} câu trong ngân hàng của môn` : undefined}
         actions={<div className="flex flex-wrap items-center gap-2">
           {subjects.length > 1 && (

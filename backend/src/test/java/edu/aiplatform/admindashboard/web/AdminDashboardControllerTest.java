@@ -24,7 +24,7 @@ class AdminDashboardControllerTest {
     MockMvc mvc;
     @BeforeEach void setup() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(admin, null));
-        mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(service))
+        mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(service, null))
                 .setControllerAdvice(new AdminDashboardExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
     }

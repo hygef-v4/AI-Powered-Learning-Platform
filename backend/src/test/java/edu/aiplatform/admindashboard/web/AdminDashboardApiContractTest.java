@@ -30,7 +30,7 @@ class AdminDashboardApiContractTest {
             when(f.backups.summarize(any(), any())).thenReturn(new BackupDashboardSummary(
                     f.now.minus(java.time.Duration.ofDays(7)), f.now, null, 0, null));
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             String json = mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
@@ -49,7 +49,7 @@ class AdminDashboardApiContractTest {
             when(f.backups.latestRun()).thenReturn(Optional.of(run));
             doAnswer(call -> new PageImpl<>(List.of(run), call.getArgument(0), 1)).when(f.backups).history(any());
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             ObjectMapper mapper = Jackson2ObjectMapperBuilder.json().build();
@@ -64,7 +64,7 @@ class AdminDashboardApiContractTest {
 
     @Test void actualRoleGuardRejectsEveryNonAdminWithoutReadingSources() throws Exception {
         try (var f = new DashboardFixture()) {
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             for (Role role : Role.values()) {
@@ -82,7 +82,7 @@ class AdminDashboardApiContractTest {
     @ParameterizedTest @ValueSource(strings = {"page=-1", "size=0", "size=101"})
     void paginationRangesAreValidatedAfterAccessAndDeniedAudit(String query) throws Exception {
         try (var f = new DashboardFixture()) {
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             for (Role role : Role.values()) {
@@ -106,7 +106,7 @@ class AdminDashboardApiContractTest {
     @ParameterizedTest @ValueSource(strings = {"unknown=1", "page=x", "page=1&page=2", "page=2147483648"})
     void malformedQueriesRejectNonAdminWithForbiddenAndDeniedAudit(String query) throws Exception {
         try (var f = new DashboardFixture()) {
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
@@ -119,7 +119,7 @@ class AdminDashboardApiContractTest {
 
     @Test void unknownQueryOnDashboardRejectsNonAdminWithForbidden() throws Exception {
         try (var f = new DashboardFixture()) {
-            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service))
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, null))
                     .setControllerAdvice(new AdminDashboardExceptionHandler())
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
             Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);

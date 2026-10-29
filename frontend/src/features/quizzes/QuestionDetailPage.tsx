@@ -141,7 +141,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     <>
       <PageHeader
         backHref={listHref(ownerSubject)}
-        breadcrumb={[{ label: "Câu hỏi", href: listHref(ownerSubject) }, { label: creating ? "Câu hỏi mới" : "Câu hỏi" }]}
+        breadcrumb={[{ label: "Ngân hàng câu hỏi", href: listHref(ownerSubject) }, { label: creating ? "Câu hỏi mới" : "Câu hỏi" }]}
         title={creating ? "Câu hỏi mới" : "Câu hỏi"}
         subtitle={question && <span className="inline-flex items-center gap-2">
           <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>Phiên bản {question.versionNo}

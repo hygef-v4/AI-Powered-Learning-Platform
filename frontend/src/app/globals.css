@@ -60,6 +60,10 @@
   --animate-pop: pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-fade: fade 0.2s ease backwards;
   --animate-slide-in: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* Biểu đồ lúc mới hiện: cột mọc từ trục, thanh dài ra từ trái, đường và vòng tròn được vẽ ra (cần pathLength = 1). */
+  --animate-grow-y: grow-y 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-grow-x: grow-x 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-draw: draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) backwards;
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(8px); }
@@ -76,6 +80,18 @@
   @keyframes slide-in {
     from { opacity: 0; transform: translateX(14px); }
     to { opacity: 1; transform: none; }
+  }
+  @keyframes grow-y {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  @keyframes grow-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes draw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
   }
 }
 

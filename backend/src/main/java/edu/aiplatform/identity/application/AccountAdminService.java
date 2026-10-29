@@ -220,7 +220,8 @@ public class AccountAdminService {
             if (disable) {
                 subjectScope.releaseManagerAssignments(id, actor);
             }
-            record(actor, disable ? "ACCOUNT_DISABLED" : "ACCOUNT_ENABLED", id, Map.of("status", next.name()), now);
+            record(actor, disable ? "ACCOUNT_DISABLED" : "ACCOUNT_ENABLED", id,
+                    Map.of("status", next.name(), "before", target.status().name()), now);
             if (disable) {
                 sessions.deleteAll(id);
             }

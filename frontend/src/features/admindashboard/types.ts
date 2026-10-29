@@ -32,3 +32,12 @@ export type AdminDashboardView = {
   backup: BackupSectionView;
 };
 export type BackupHistoryPage = {items: BackupRunItem[]; page: number; size: number; totalElements: number; totalPages: number};
+export type DayAssignments = {day: string; individual: number; group: number; practice: number};
+export type SecurityEventItem = {occurredAt: string; action: string; result: "SUCCESS" | "DENIED" | "FAILURE"; account: string | null; reason: string | null};
+/** Phần hoạt động của Tổng quan: tài khoản hoạt động tăng/giảm hôm nay, bài giao 7 ngày, sự việc đáng ngờ 30 ngày. */
+export type ActivityView = {
+  calculatedAt: string;
+  activeAccountChangeToday: Section<number>;
+  assignmentsByDay: Section<DayAssignments[]>;
+  securityEvents: Section<SecurityEventItem[]>;
+};

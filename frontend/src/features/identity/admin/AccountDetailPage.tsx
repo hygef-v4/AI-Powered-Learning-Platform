@@ -121,7 +121,7 @@ export function AccountDetailPage() {
               href={`/admin/audit?actorEmail=${encodeURIComponent(account.email)}&actorId=${account.id}`}
               className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
             >
-              Mở Nhật ký audit của tài khoản
+              Mở Nhật ký của tài khoản
             </Link>
           </Section>
         </div>

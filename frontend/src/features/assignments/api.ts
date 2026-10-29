@@ -51,6 +51,10 @@ export const assignmentsApi = {
     apiFetch<CopySource[]>(`${base}/classes/${enc(classId)}/assignment-copy-sources`, { signal }),
   copy: (classId: string, sourceAssignmentId: string) =>
     write<AssignmentDetail>(`/classes/${enc(classId)}/assignments:copy`, "POST", { sourceAssignmentId }),
+  subjectCopySources: (subjectId: string, signal?: AbortSignal) =>
+    apiFetch<CopySource[]>(`${base}/subjects/${enc(subjectId)}/assignments/copy-sources`, { signal }),
+  copyToSubject: (subjectId: string, sourceAssignmentId: string) =>
+    write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments/copies`, "POST", { sourceAssignmentId }),
   detail: (id: string, signal?: AbortSignal) => apiFetch<AssignmentDetail>(`${base}/assignments/${enc(id)}`, { signal }),
   updateDetails: (id: string, version: number, input: DetailsInput) =>
     write<AssignmentDetail>(`/assignments/${enc(id)}`, "PATCH", { ...input, version }),

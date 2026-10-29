@@ -128,6 +128,27 @@ describe("CreateAssignmentDialog", () => {
     expect(onCreated).toHaveBeenCalledWith(created);
     vi.restoreAllMocks();
   });
+
+  it("bài của môn cũng copy được: bài cùng môn đứng đầu, rồi các lớp mình dạy", async () => {
+    const created = { id: "a9", version: 0 } as AssignmentDetail;
+    const row = (id: string) => ({ id, title: `Bài ${id}` }) as never;
+    vi.spyOn(assignmentsApi, "subjectCopySources").mockResolvedValue([
+      { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [row("m1")] },
+      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", assignments: [row("k1")] },
+    ]);
+    const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
+    const onCreated = vi.fn();
+    render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
+    const select = screen.getByRole("combobox", { name: "Copy bài có sẵn" });
+    fireEvent.focus(select);
+    await screen.findByRole("option", { name: "Bài m1" });
+    expect(screen.getAllByRole("group").map((group) => group.getAttribute("label"))).toEqual(["Cùng môn · SWD392 · Thiết kế", "Lớp SE01 · Lớp 1"]);
+    fireEvent.change(select, { target: { value: "m1" } });
+    fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+    expect(copy).toHaveBeenCalledWith("s1", "m1");
+    vi.restoreAllMocks();
+  });
 });
 
 describe("không còn trạng thái Đã duyệt", () => {

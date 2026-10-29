@@ -64,7 +64,7 @@ export function AuditLogPage() {
     setData(null);
     setError(
       e instanceof ApiError && e.problem.status === 403
-        ? "Bạn không có quyền xem Nhật ký audit."
+        ? "Bạn không có quyền xem Nhật ký."
         : "Không tải được nhật ký audit, thử lại sau.",
     );
     setLoading(false);
@@ -119,7 +119,7 @@ export function AuditLogPage() {
 
   return (
     <>
-      <PageHeader title="Nhật ký audit" />
+      <PageHeader title="Nhật ký" />
       {/* Bộ lọc dính dưới thanh trên cùng khi cuộn; khi dính thì phủ nền cả khoảng trên card để dòng bảng không lộ ra. */}
       <div ref={sentinel} aria-hidden="true" className="-mb-7 h-px" />
       <div

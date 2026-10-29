@@ -107,9 +107,11 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
     }
 
     /** Bản sao nháp cho nhân bản, version mới, copy giữa lớp (BR-U07-43): không sao lịch, lý do ngưng giao. */
+    /** Bản nháp mới; có lớp đích là bài của lớp, không có là bài của môn (copy giữa môn và lớp đổi phạm vi theo đích). */
     public Assignment copyAsDraft(UUID newId, UUID newClassId, UUID newSubjectId, AssignmentOrigin newOrigin,
                                   int newVersionNo, String newTitle, List<UUID> materials, UUID actorId, Instant now) {
-        return new Assignment(newId, scope, newClassId, newSubjectId, id, newOrigin, newVersionNo, submissionMode,
+        AssignmentScope newScope = newClassId == null ? AssignmentScope.SUBJECT : AssignmentScope.CLASS;
+        return new Assignment(newId, newScope, newClassId, newSubjectId, id, newOrigin, newVersionNo, submissionMode,
                 diagramEnabled, gradingMode, newTitle, instructions, skeleton, parts, requiredDiagrams, materials,
                 activityMonitoringEnabled, activityNotice, AssignmentStatus.DRAFT, null, null, null, null, null,
                 actorId, now, now, 0);

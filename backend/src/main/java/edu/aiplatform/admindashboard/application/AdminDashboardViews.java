@@ -31,4 +31,9 @@ public final class AdminDashboardViews {
     public record BackupSchedule(boolean enabled, LocalTime dailyAt, String timeZone, Instant nextPlannedAt) { }
     public record BackupFailureSummary(long count, String latestSafeError) { }
     public record BackupHistoryPage(List<BackupRunItem> items, int page, int size, long totalElements, int totalPages) { }
+    /** Hoạt động trên Tổng quan: tài khoản hoạt động tăng/giảm hôm nay, bài giao 7 ngày, sự việc đáng ngờ 30 ngày. */
+    public record ActivityView(Instant calculatedAt, Section<Long> activeAccountChangeToday,
+            Section<List<DayAssignments>> assignmentsByDay, Section<List<SecurityEventItem>> securityEvents) { }
+    public record DayAssignments(LocalDate day, long individual, long group, long practice) { }
+    public record SecurityEventItem(Instant occurredAt, String action, String result, String account, String reason) { }
 }
