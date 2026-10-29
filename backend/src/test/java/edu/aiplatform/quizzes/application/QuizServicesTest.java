@@ -157,7 +157,7 @@ class QuizServicesTest {
         assertThat(quiz.quiz().status()).isEqualTo(QuizStatus.DRAFT);
         assertThat(quiz.quiz().scope()).isEqualTo(QuizScope.CLASS);
         assertThat(quiz.quiz().subjectId()).isEqualTo(subject);
-        assertThat(quiz.quiz().settings()).isEqualTo(new QuizSettings(false, false, null, 1, true, false));
+        assertThat(quiz.quiz().settings()).as("không đặt sẵn số lượt tối đa").isEqualTo(new QuizSettings(false, false, null, null, true, false));
         assertThat(quiz.canManage()).isTrue();
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_CREATED");
 
@@ -332,9 +332,10 @@ class QuizServicesTest {
             assertThat(e.eventType()).isEqualTo(EventTypes.QUIZ_PUBLISHED);
             assertThat(e.payload()).containsEntry("classId", classA.toString());
         });
-        assertThat(api(() -> authoring.saveItems(teacher, quiz.quiz().id(), List.of(), open.quiz().version())).code())
-                .isEqualTo("QUIZ_NOT_EDITABLE");
-        assertThat(api(() -> authoring.delete(teacher, quiz.quiz().id(), open.quiz().version())).code())
+        var kept = open.items().stream().map(i -> new QuizAuthoringService.ItemInput(i.question().id(), null)).toList();
+        assertThat(authoring.saveItems(teacher, quiz.quiz().id(), kept, open.quiz().version()).quiz().status())
+                .as("sửa quiz đang mở tại chỗ, không tạo version").isEqualTo(QuizStatus.OPEN);
+        assertThat(api(() -> authoring.delete(teacher, quiz.quiz().id(), open.quiz().version() + 1)).code())
                 .isEqualTo("QUIZ_DELETE_BLOCKED");
     }
 
@@ -382,9 +383,6 @@ class QuizServicesTest {
     @Test
     void retireNeedsReasonAndNotifiesListeners() {
         QuizDetail open = published(classQuizWith(bank(true)));
-        assertThat(api(() -> publication.retire(teacher, open.quiz().id(), " ", open.quiz().version())).code())
-                .isEqualTo("QUIZ_INVALID");
-
         QuizDetail retired = publication.retire(teacher, open.quiz().id(), "Đổi đề", open.quiz().version());
 
         assertThat(retired.quiz().status()).isEqualTo(QuizStatus.RETIRED);

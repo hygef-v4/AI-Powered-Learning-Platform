@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useId } from "react";
 import { Field, LockedInput } from "@/shared/ui";
 import { Button } from "@/shared/ui/Button";
+import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "./useMaterialResource";
 import { fileDescription, materialHref, type Material } from "./types";
 import styles from "./materials.module.css";
@@ -18,8 +19,9 @@ export function MaterialLinkList({ classId, materialIds }: { classId: string; ma
   const ids = [...new Set(materialIds)].sort();
   return <MaterialLinks classId={classId} ids={ids} title="Học liệu gắn kèm" />;
 }
+/** Học liệu của lớp (sinh viên): module của môn với học liệu và Quiz đang mở của lớp. */
 export function ClassMaterialsCard({ classId }: { classId: string }) {
-  return <MaterialLinks classId={classId} title="Học liệu" />;
+  return <ModuleBoard scope={{ kind: "student", classId }} />;
 }
 function MaterialLinks({ classId, ids, title }: { classId: string; ids?: string[]; title: string }) {
   const params = ids ? `?ids=${ids.map(encodeURIComponent).join(",")}` : "";

@@ -45,8 +45,8 @@ export function failureLabel(code: string | null, message: string | null): strin
   return (code && ERROR_LABELS[code]) || message || "AI chưa soạn được đề xuất.";
 }
 
-export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", REVIEWED: "Đã duyệt", OPEN: "Đang mở", RETIRED: "Ngưng" };
-export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", REVIEWED: "info", OPEN: "success", RETIRED: "neutral" };
+export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", REVIEWED: "Đã duyệt", OPEN: "Đang mở", RETIRED: "Lưu trữ" };
+export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", REVIEWED: "info", OPEN: "success", RETIRED: "danger" };
 
 export function formatPoints(value: number): string {
   return Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });

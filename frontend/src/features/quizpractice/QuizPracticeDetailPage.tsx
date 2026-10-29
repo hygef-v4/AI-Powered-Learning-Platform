@@ -2,18 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, Button, PageHeader, Pill, Section, TableFrame, Td, Th } from "@/shared/ui";
+import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/ModulePlace";
+import { Alert, Button, ClickableRow, Icon, PageHeader, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, getPracticeQuiz, startAttempt } from "./api";
-import { attemptsText, errorMessage, formatDateTime, formatDuration, formatPoints } from "./labels";
-import { quizMaterialSections } from "./slots";
+import { errorMessage, formatDateTime, formatDuration, formatPoints } from "./labels";
 import type { PracticeQuizDetail, PracticeQuizRow } from "./types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const detailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
 
 /**
- * Màn #43 Quiz Practice Detail (UC 50, BR-U11-03): thông tin, các lần làm của mình, nút Làm quiz hoặc lý do không làm được.
+ * Màn #43 Quiz Practice Detail (UC 50, BR-U11-03), cùng bố cục trang bài tập của sinh viên: Thông tin (số câu, thời gian),
+ * Kết quả (các lần làm), thẻ Làm bài rồi Mô tả bên phải; hết lượt thì chỉ ẩn nút.
  * Link thiếu `classId` (thông báo "Có Quiz mới" của U14) thì tìm lớp đang học có quiz này trước (J1).
  */
 export function QuizPracticeDetailPage({ quizId, classId }: { quizId: string; classId: string | null }) {
@@ -69,6 +69,9 @@ function ClassResolver({ quizId }: { quizId: string }) {
 
 function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }) {
   const router = useRouter();
+  // Quiz nằm trong module học liệu: tên module ở đầu trang, mục trước / sau ở đầu và cuối (sidebar là danh sách module).
+  const scope = useModuleScope(undefined, classId);
+  const place = useModulePlace(scope, (item) => item.kind === "quiz" && item.quiz.quizId === quizId);
   const [detail, setDetail] = useState<PracticeQuizDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -97,65 +100,55 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
   if (!detail) {
     return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải quiz…" />;
   }
-  const submitted = detail.attempts.filter((a) => a.status === "SUBMITTED");
+  const open = (attempt: PracticeQuizDetail["attempts"][number]) =>
+    router.push(attempt.status === "SUBMITTED" ? `/quiz-attempts/${attempt.attemptId}/result` : `/quiz-attempts/${attempt.attemptId}`);
+  // Hết lượt hay không làm được thì chỉ ẩn nút, không báo gì thêm.
+  const action = detail.inProgressAttemptId || detail.canStart;
 
   return (
-    <>
-      <PageHeader backHref="/quiz-practice" breadcrumb={[{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: detail.classCode }]}
-        title={<span className="inline-flex items-center gap-2">{detail.title} <Pill tone="info">Practice</Pill></span>}
-        actions={detail.canStart && (
-          <Button variant="primary" disabled={busy} onClick={() => void start()} data-testid="practice-detail-start">
-            {detail.inProgressAttemptId ? "Tiếp tục" : detail.attemptsUsed > 0 ? "Làm lại" : "Làm quiz"}
-          </Button>
-        )} />
-      {error && <Alert tone="danger" role="alert" className="mb-3">{error}</Alert>}
-      {detail.blockedReason && <Alert tone="warning" className="mb-3" role="status">{detail.blockedReason}</Alert>}
-      {detail.canStart && !detail.inProgressAttemptId && (
-        <p className="mb-3 text-[13px] text-muted">
-          {detail.attemptsLeft === null ? "Không giới hạn lượt" : `Còn ${detail.attemptsLeft} / ${detail.maxAttempts} lượt`} · không tính vào sổ điểm
-        </p>
-      )}
-      {detail.activityNotice && <Alert tone="info" className="mb-3">Quiz này ghi nhận hoạt động khi làm bài: {detail.activityNotice}</Alert>}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <Section title={`Các lần làm (${submitted.length})`} icon="history">
-          {detail.attempts.length === 0
-            ? <p className="text-[13px] text-muted">Bạn chưa làm quiz này.</p>
-            : <TableFrame className="[&_table]:table-fixed">
-              <colgroup><col className="w-[80px]" /><col /><col className="w-[130px]" />{detail.showScoreAfterSubmit && <col className="w-[110px]" />}<col className="w-[120px]" /></colgroup><thead><tr><Th>Lần</Th><Th>Bắt đầu</Th><Th>Thời gian</Th>{detail.showScoreAfterSubmit && <Th>Điểm</Th>}<Th></Th></tr></thead>
+    <div className="flex flex-col gap-4">
+      <PageHeader title={detail.title}
+        breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: detail.title }]
+          : [{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: detail.title }]} />
+      <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
+      {error && <Alert tone="danger" role="alert">{error}</Alert>}
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <Section title="Thông tin">
+            <dl className="grid gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" data-testid="practice-detail-info">
+              <div><dt className="text-xs text-muted">Số câu</dt><dd className="mt-0.5 font-semibold text-ink">{detail.questionCount} câu</dd></div>
+              <div><dt className="text-xs text-muted">Thời gian</dt><dd className="mt-0.5 font-semibold text-ink">{detail.timeLimitMinutes ? `${detail.timeLimitMinutes} phút` : "Không giới hạn"}</dd></div>
+            </dl>
+          </Section>
+          <Section title="Kết quả">
+            <TableFrame filledHead>
+              <thead><tr><Th className="w-20">Lần</Th><Th>Bắt đầu</Th><Th>Thời gian</Th><Th>Điểm</Th><Th className="w-10"><span className="sr-only">Mở</span></Th></tr></thead>
               <tbody>
+                {detail.attempts.length === 0 && <tr><Td colSpan={5} className="py-6 text-center! text-muted">Chưa có lần làm</Td></tr>}
                 {detail.attempts.map((a) => (
-                  <tr key={a.attemptId} data-testid="practice-detail-attempt">
-                    <Td>Lần {a.attemptNo}</Td>
-                    <Td className="whitespace-nowrap">{formatDateTime(a.startedAt)}</Td>
+                  <ClickableRow key={a.attemptId} data-testid="practice-detail-attempt" onClick={() => open(a)}>
+                    <Td className="font-semibold">Lần {a.attemptNo}</Td>
+                    <Td className="whitespace-nowrap text-muted">{formatDateTime(a.startedAt)}</Td>
                     <Td>{a.status === "SUBMITTED" ? formatDuration(a.startedAt, a.submittedAt) : "Đang làm"}</Td>
-                    {detail.showScoreAfterSubmit && <Td>{a.score === null ? "—" : `${formatPoints(a.score)} / ${formatPoints(a.maxScore)}`}</Td>}
-                    <Td>
-                      {a.status === "SUBMITTED"
-                        ? <Button size="sm" onClick={() => router.push(`/quiz-attempts/${a.attemptId}/result`)}>Xem kết quả</Button>
-                        : <Button size="sm" onClick={() => router.push(`/quiz-attempts/${a.attemptId}`)}>Tiếp tục</Button>}
-                    </Td>
-                  </tr>
+                    <Td>{detail.showScoreAfterSubmit && a.score !== null ? `${formatPoints(a.score)} / ${formatPoints(a.maxScore)}` : "-"}</Td>
+                    <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
+                  </ClickableRow>
                 ))}
               </tbody>
-            </TableFrame>}
-          {detail.referenceMaterialIds.length > 0 && (
-            <div className="mt-4">
-              <SlotOutlet slot={quizMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
-            </div>
-          )}
-        </Section>
-        <Section title="Thông tin" icon="info">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
-            <dt className="text-muted">Lớp</dt><dd>{detail.classCode}</dd>
-            <dt className="text-muted">Số câu</dt><dd>{detail.questionCount} câu · {formatPoints(detail.maxScore)} điểm</dd>
-            <dt className="text-muted">Thời gian</dt><dd>{detail.timeLimitMinutes ? `${detail.timeLimitMinutes} phút` : "Không giới hạn"}</dd>
-            <dt className="text-muted">Số lượt</dt><dd data-testid="practice-detail-attempts">{attemptsText(detail.attemptsUsed, detail.maxAttempts)}</dd>
-            {detail.showScoreAfterSubmit && <><dt className="text-muted">Điểm cao nhất</dt><dd>{formatPoints(detail.bestScore)}</dd></>}
-            <dt className="text-muted">Đáp án</dt><dd>{detail.showCorrectAnswers ? "Hiện sau khi nộp" : "Không hiện"}</dd>
-          </dl>
-          {detail.instructions && <p className="mt-3 whitespace-pre-wrap text-[13px] text-body">{detail.instructions}</p>}
-        </Section>
+            </TableFrame>
+          </Section>
+        </div>
+        <div className="flex min-w-0 flex-col gap-4">
+          {(action || detail.activityNotice) && <Section title="Làm bài">
+            {detail.activityNotice && <Alert tone="info">{detail.activityNotice}</Alert>}
+            {action && <Button variant="primary" disabled={busy} onClick={() => void start()} data-testid="practice-detail-start">
+              {detail.inProgressAttemptId ? "Tiếp tục làm bài" : detail.attemptsUsed > 0 ? "Làm lại" : "Bắt đầu làm bài"}
+            </Button>}
+          </Section>}
+          {detail.instructions && <Section title="Mô tả"><p className="text-[13.5px] leading-relaxed whitespace-pre-wrap text-body">{detail.instructions}</p></Section>}
+        </div>
       </div>
-    </>
+      <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
+    </div>
   );
 }

@@ -15,19 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(timeout=10)
 public class MaterialService {
     private final IMaterialRepository repository;
+    private final IMaterialModuleRepository modules;
     private final MaterialAccessPolicy access;
     private final IArtifact artifacts;
     private final IJob jobs;
     private final IAudit audit;
     private final Clock clock;
-    public MaterialService(IMaterialRepository repository,MaterialAccessPolicy access,IArtifact artifacts,IJob jobs,IAudit audit,Clock clock) {
-        this.repository=repository;this.access=access;this.artifacts=artifacts;this.jobs=jobs;this.audit=audit;this.clock=clock;
+    public MaterialService(IMaterialRepository repository,IMaterialModuleRepository modules,MaterialAccessPolicy access,IArtifact artifacts,IJob jobs,IAudit audit,Clock clock) {
+        this.repository=repository;this.modules=modules;this.access=access;this.artifacts=artifacts;this.jobs=jobs;this.audit=audit;this.clock=clock;
     }
     public Material create(Actor actor,UUID scopeId,boolean classScope,MaterialCommands.Create input) {
         UUID subjectId=classScope?access.classList(actor,scopeId,false).subjectId():scopeId;
         if(!classScope)access.subjectList(actor,subjectId);
         Material material=new Material(UUID.randomUUID(),classScope?Material.Scope.CLASS:Material.Scope.SUBJECT,
-                subjectId,classScope?scopeId:null,input.kind(),input.title(),input.description(),input.orderNo(),
+                subjectId,classScope?scopeId:null,module(input.moduleId(),subjectId),input.kind(),input.title(),input.description(),input.orderNo(),
                 Material.Status.ACTIVE,1,actor.accountId(),clock.instant(),clock.instant(),0);
         access.write(actor,material);
         MaterialVersion version=source(actor,material,1,input.source());
@@ -35,7 +36,8 @@ public class MaterialService {
     }
     public Material update(Actor actor,UUID id,MaterialCommands.Update input) {
         Material m=writable(actor,id,input.version());
-        Material next=m.revise(input.title(),input.description(),input.orderNo(),m.currentVersionNo(),m.status(),clock.instant());
+        Material target=input.moduleId()==null||input.moduleId().equals(m.moduleId())?m:m.inModule(module(input.moduleId(),m.subjectId()));
+        Material next=target.revise(input.title(),input.description(),input.orderNo(),m.currentVersionNo(),m.status(),clock.instant());
         save(next,m.version());record(actor,"MATERIAL_UPDATED",next);return next;
     }
     public Material replace(Actor actor,UUID id,MaterialCommands.Replace input) {
@@ -70,6 +72,12 @@ public class MaterialService {
     private Material writable(Actor actor,UUID id,long expected) {
         Material m=repository.find(id).orElseThrow(()->ApiException.notFound("MATERIAL_NOT_FOUND"));
         access.write(actor,m);if(expected!=m.version())throw conflict();return m;
+    }
+    /** Module phải là module của đúng môn chứa học liệu. */
+    private UUID module(UUID moduleId,UUID subjectId) {
+        if(moduleId==null||modules.find(moduleId).filter(m->m.subjectId().equals(subjectId)).isEmpty())
+            throw ApiException.badRequest("MATERIAL_MODULE_INVALID","Chọn module của môn");
+        return moduleId;
     }
     private void save(Material m,long expected) { if(!repository.update(m,expected))throw conflict(); }
     private ApiException conflict() { return ApiException.conflict("MATERIAL_VERSION_CONFLICT","Học liệu đã thay đổi, vui lòng tải lại"); }

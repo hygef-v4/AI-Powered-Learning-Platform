@@ -24,7 +24,7 @@ public class PurposePolicy {
     static final Map<ArtifactPurpose, Integer> HARD_CAP_MB = Map.of(ArtifactPurpose.MATERIAL, 50,
             ArtifactPurpose.DOCUMENT_IMAGE, 5, ArtifactPurpose.ASSIGNMENT_SOURCE, 2);
     static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
-            ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX),
+            ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX),
             ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG),
             ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF));
     static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(

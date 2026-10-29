@@ -29,7 +29,7 @@ class MaterialAccessPolicyTest {
         when(classes.listOpenClassesOf(account)).thenReturn(List.of(courseClass(ClassStatus.OPEN,account)));
     }
     Material material(boolean classScope,Material.Status status) {
-        return new Material(UUID.randomUUID(),classScope?Material.Scope.CLASS:Material.Scope.SUBJECT,subject,classScope?classId:null,
+        return new Material(UUID.randomUUID(),classScope?Material.Scope.CLASS:Material.Scope.SUBJECT,subject,classScope?classId:null,new UUID(0,1),
                 Material.Kind.FILE,"Title","",0,status,1,account,now,now,0);
     }
     ClassRef courseClass(ClassStatus status,UUID teacher) {return new ClassRef(classId,subject,"C","Class",status,teacher,false);}

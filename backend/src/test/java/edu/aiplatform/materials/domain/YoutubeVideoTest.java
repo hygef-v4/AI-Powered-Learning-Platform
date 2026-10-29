@@ -19,16 +19,16 @@ class YoutubeVideoTest {
     void rejectsUnsafeOrPlaylistUrls(String url) {assertThatIllegalArgumentException().isThrownBy(()->YoutubeVideo.parse(url));}
     @Test void revisionPreservesIdentityAndOldSnapshot() {
         UUID id=UUID.randomUUID(),subject=UUID.randomUUID(),actor=UUID.randomUUID();Instant now=Instant.now();
-        var m=new Material(id,Material.Scope.SUBJECT,subject,null,Material.Kind.FILE," title ",null,0,Material.Status.ACTIVE,1,actor,now,now,0);
+        var m=new Material(id,Material.Scope.SUBJECT,subject,null,new UUID(0,1),Material.Kind.FILE," title ",null,0,Material.Status.ACTIVE,1,actor,now,now,0);
         var next=m.revise("updated","description",1,2,Material.Status.ARCHIVED,now.plusSeconds(1));
         assertThat(m.title()).isEqualTo("title");assertThat(m.currentVersionNo()).isEqualTo(1);
         assertThat(next.id()).isEqualTo(id);assertThat(next.version()).isEqualTo(1);assertThat(next.currentVersionNo()).isEqualTo(2);
     }
     @Test void rejectsMissingScopeAndOversizedMetadata() {
         UUID id=UUID.randomUUID();Instant now=Instant.now();
-        assertThatIllegalArgumentException().isThrownBy(()->new Material(id,Material.Scope.CLASS,id,null,Material.Kind.FILE,
+        assertThatIllegalArgumentException().isThrownBy(()->new Material(id,Material.Scope.CLASS,id,null,new UUID(0,1),Material.Kind.FILE,
                 "title","",0,Material.Status.ACTIVE,1,id,now,now,0));
-        assertThatIllegalArgumentException().isThrownBy(()->new Material(id,Material.Scope.SUBJECT,id,null,Material.Kind.FILE,
+        assertThatIllegalArgumentException().isThrownBy(()->new Material(id,Material.Scope.SUBJECT,id,null,new UUID(0,1),Material.Kind.FILE,
                 "x".repeat(201),"",0,Material.Status.ACTIVE,1,id,now,now,0));
     }
 }

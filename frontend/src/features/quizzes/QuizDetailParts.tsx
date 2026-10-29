@@ -1,8 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Alert, Button, Dialog, Field, Icon, Pill, Section, Select, Switch, TextInput } from "@/shared/ui";
-import { MaterialRefPicker } from "./AiDraftTargets";
+import { Alert, Button, Dialog, Field, Icon, Pill, Section, Switch, TextInput } from "@/shared/ui";
 import { formatPoints, TYPE_LABELS } from "./labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
@@ -174,28 +173,18 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
   };
 }
 
-/** "Cấu hình" (BR-U10-15); ghi nhận hoạt động luôn bật được, dữ liệu giữ cố định 1 ngày. */
-export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, maxScore }: {
-  quizId: string;
+/** "Cấu hình" (BR-U10-15); tên và mô tả sửa ở popup Sửa. Ghi nhận hoạt động luôn bật được, dữ liệu giữ cố định 1 ngày. */
+export function QuizSettingsPanel({ value, onChange, errors, readOnly }: {
   value: SettingsForm;
   onChange: (value: SettingsForm) => void;
   errors: Record<string, string>;
   readOnly: boolean;
-  maxScore: number;
 }) {
   const id = useId();
   const set = <K extends keyof SettingsForm>(key: K, v: SettingsForm[K]) => onChange({ ...value, [key]: v });
   return (
     <Section title="Cấu hình" icon="tune">
       <fieldset disabled={readOnly} className="flex flex-col gap-3">
-        <Field label="Tên quiz" htmlFor={`${id}-title`} required error={errors.title}>
-          <TextInput id={`${id}-title`} value={value.title} maxLength={200} invalid={!!errors.title} onChange={(e) => set("title", e.target.value)}
-            data-testid="quiz-settings-title" />
-        </Field>
-        <Field label="Hướng dẫn (tùy chọn)" htmlFor={`${id}-instructions`}>
-          <textarea id={`${id}-instructions`} rows={3} maxLength={5000} value={value.instructions} className={TEXTAREA}
-            onChange={(e) => set("instructions", e.target.value)} />
-        </Field>
         <Field label="Thời gian làm bài" htmlFor={`${id}-time`} hint="Để trống là không giới hạn" error={errors.timeLimit}>
           <TextInput id={`${id}-time`} inputMode="numeric" placeholder="Không giới hạn" suffix="phút" value={value.timeLimit} invalid={!!errors.timeLimit}
             onChange={(e) => set("timeLimit", e.target.value)} data-testid="quiz-settings-time" />
@@ -205,13 +194,7 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
             onChange={(e) => set("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
         </Field>
         <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label="Hiện điểm sau khi nộp" ariaLabel="Hiện điểm sau khi nộp" disabled={readOnly} />
-        <Field label="Hiện đáp án" htmlFor={`${id}-answers`}>
-          <Select id={`${id}-answers`} value={value.showCorrectAnswers ? "AFTER_SUBMIT" : "NEVER"}
-            onChange={(e) => set("showCorrectAnswers", e.target.value === "AFTER_SUBMIT")}>
-            <option value="NEVER">Không bao giờ</option>
-            <option value="AFTER_SUBMIT">Sau khi nộp</option>
-          </Select>
-        </Field>
+        <Switch checked={value.showCorrectAnswers} onChange={(v) => set("showCorrectAnswers", v)} label="Hiện đáp án sau khi nộp" ariaLabel="Hiện đáp án sau khi nộp" disabled={readOnly} />
         <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label="Đảo thứ tự câu" ariaLabel="Đảo thứ tự câu" disabled={readOnly} />
         <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label="Đảo thứ tự lựa chọn" ariaLabel="Đảo thứ tự lựa chọn" disabled={readOnly} />
         <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label="Ghi nhận hoạt động" ariaLabel="Ghi nhận hoạt động"
@@ -224,8 +207,6 @@ export function QuizSettingsPanel({ quizId, value, onChange, errors, readOnly, m
               data-testid="quiz-settings-activity-notice" />
           </Field>
         )}
-        <MaterialRefPicker quizId={quizId} value={value.materialIds} onChange={(ids) => set("materialIds", ids)} readOnly={readOnly} />
-        <p className="text-[13px] font-semibold text-ink">Tổng điểm: {formatPoints(maxScore)}</p>
       </fieldset>
     </Section>
   );

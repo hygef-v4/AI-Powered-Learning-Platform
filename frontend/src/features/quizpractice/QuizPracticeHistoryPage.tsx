@@ -67,7 +67,6 @@ export function QuizPracticeHistoryPage() {
                   <span className="font-semibold">{row.title}</span>
                   <span className="ml-2 inline-flex gap-1">
                     <Pill tone="info">Practice</Pill>
-                    {row.status !== "OPEN" && <Pill>Đã ngưng</Pill>}
                     {row.attemptsUsed === 0 && <Pill tone="warning">Chưa làm</Pill>}
                   </span>
                 </Td>

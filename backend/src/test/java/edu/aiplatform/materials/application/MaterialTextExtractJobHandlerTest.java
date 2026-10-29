@@ -14,7 +14,7 @@ class MaterialTextExtractJobHandlerTest {
     IMaterialRepository repo;MaterialTextExtractor extractor;MaterialTextExtractJobHandler handler;Material material;MaterialVersion version;
     @BeforeEach void setup() {
         repo=mock(IMaterialRepository.class);extractor=mock(MaterialTextExtractor.class);handler=new MaterialTextExtractJobHandler(repo,extractor);
-        material=new Material(id,Material.Scope.SUBJECT,subject,null,Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor,now,now,0);
+        material=new Material(id,Material.Scope.SUBJECT,subject,null,new UUID(0,1),Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor,now,now,0);
         version=new MaterialVersion(id,1,"file","d.pdf","application/pdf",100L,null,null,MaterialVersion.TextStatus.PENDING,null,actor,now);
         when(repo.find(id)).thenReturn(Optional.of(material));when(repo.version(id,1)).thenReturn(Optional.of(version));
     }

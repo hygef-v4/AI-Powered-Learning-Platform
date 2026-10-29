@@ -38,14 +38,8 @@ export function splitUngrouped(drafts: Draft[], ungroupedIds: string[], max: num
     .map((d) => (d.leaderId ? d : { ...d, leaderId: d.memberIds[0] ?? null }));
 }
 
-/** Sĩ số mặc định: 5 khi lớp có ít hơn 2 nhóm, còn lại bằng nhóm đông nhất (trong khoảng 2–20). */
-function defaultSize(drafts: Draft[]) {
-  if (drafts.length < 2) return 5;
-  return Math.min(20, Math.max(2, ...drafts.map((d) => d.memberIds.length)));
-}
-
 /**
- * Popup Chia ngẫu nhiên (t02d, BR-U12-03): chỉ một ô Số thành viên tối đa (2–20, mặc định theo `defaultSize`). Luôn chia
+ * Popup Chia ngẫu nhiên (t02d, BR-U12-03): chỉ một ô Số thành viên tối đa (2–20, để trống cho người dùng nhập). Luôn chia
  * người chưa có nhóm vào các nhóm đang có, không đủ chỗ thì thêm nhóm mới, các nhóm hơn kém nhau nhiều nhất một người. Xem
  * trước các nhóm thay đổi, Chia lại nếu chưa ưng, rồi mới lưu.
  */
@@ -60,7 +54,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
   const drafts = draftsFrom(set);
   const grouped = new Set(drafts.flatMap((d) => d.memberIds));
   const ungrouped = people.filter((p) => !grouped.has(p.accountId));
-  const [size, setSize] = useState(() => String(defaultSize(drafts)));
+  const [size, setSize] = useState("");
   const [preview, setPreview] = useState<Draft[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +93,8 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
         <Button variant="primary" onClick={split} disabled={!valid || ungrouped.length === 0}>Xem trước</Button>
       )}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <Field label="Số thành viên tối đa mỗi nhóm" htmlFor={sizeId} required error={valid ? null : "Từ 2 đến 20"}>
+      {/* Ô còn trống thì chưa báo lỗi; chỉ báo khi đã nhập mà sai. */}
+      <Field label="Số thành viên tối đa mỗi nhóm" htmlFor={sizeId} required error={valid || size.trim() === "" ? null : "Từ 2 đến 20"}>
         <TextInput id={sizeId} inputMode="numeric" value={size} wrapperClassName="w-32"
           onChange={(e) => { setSize(e.target.value); setPreview(null); setError(null); }} />
       </Field>

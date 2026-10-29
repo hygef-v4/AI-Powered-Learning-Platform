@@ -31,14 +31,20 @@ class QuizTest {
 
         Quiz open = reviewed.published(NOW);
         assertThat(open.status()).isEqualTo(QuizStatus.OPEN);
-        assertThat(open.isEditable()).isFalse();
+        assertThat(open.isEditable()).as("quiz đang mở sửa tại chỗ").isTrue();
         assertThat(open.isDeletable()).isFalse();
-        assertThatThrownBy(() -> open.edited(NOW)).isInstanceOf(IllegalStateException.class);
+        assertThat(open.edited(NOW).status()).as("sửa quiz đang mở vẫn mở").isEqualTo(QuizStatus.OPEN);
 
         Quiz retired = open.retired("Hết dùng", NOW);
         assertThat(retired.status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(retired.retiredReason()).isEqualTo("Hết dùng");
         assertThatThrownBy(() -> draft().published(NOW)).isInstanceOf(IllegalStateException.class);
+
+        Quiz later = open.retired("Hết dùng", NOW.plusSeconds(60));
+        assertThat(later.reopened(NOW.plusSeconds(120)).status()).as("quiz đã phát hành mở lại").isEqualTo(QuizStatus.OPEN);
+        assertThat(later.reopened(NOW.plusSeconds(120)).retiredAt()).isNull();
+        Quiz archivedDraft = draft().retired("Lưu trữ", NOW);
+        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).status()).as("lưu trữ khi còn nháp thì về nháp").isEqualTo(QuizStatus.DRAFT);
     }
 
     @Test

@@ -28,6 +28,8 @@ vi.mock("./api", () => ({
 const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
+vi.mock("@/features/identity/session", () => ({ useSession: () => ({ status: "authenticated", profile: { role: "STUDENT" } }) }));
+vi.mock("@/features/materials/ModulePlace", () => ({ useModuleScope: () => null, useModulePlace: () => ({ reload: () => {} }), ModuleNeighbours: () => null }));
 
 const TAKING: TakingView = {
   attemptId: "a1", quizId: "z1", classId: "c1", title: "Luyện tập", attemptNo: 1, startedAt: "2026-10-20T08:00:00Z",
@@ -73,12 +75,13 @@ describe("QuizPracticeHistoryPage (UC 49)", () => {
 });
 
 describe("QuizPracticeDetailPage (UC 50)", () => {
-  it("hết lượt thì ẩn nút và nêu lý do", async () => {
+  it("hết lượt thì chỉ ẩn nút làm bài, không hiện cảnh báo", async () => {
     vi.mocked(getPracticeQuiz).mockResolvedValue(DETAIL);
     render(<QuizPracticeDetailPage quizId="z1" classId="c1" />);
-    expect(await screen.findByText("Bạn đã dùng hết 2/2 lượt làm quiz này.")).toBeInTheDocument();
+    expect(await screen.findByTestId("practice-detail-info")).toBeInTheDocument();
+    expect(screen.queryByText("Bạn đã dùng hết 2/2 lượt làm quiz này.")).not.toBeInTheDocument();
     expect(screen.queryByTestId("practice-detail-start")).not.toBeInTheDocument();
-    expect(screen.getByTestId("practice-detail-attempts")).toHaveTextContent("2 / 2 lượt");
+    expect(screen.queryByText("Practice")).not.toBeInTheDocument();
   });
 
   const historyRow = (classId: string, classCode: string) => ({ quizId: "z1", classId, classCode, className: "Lớp",

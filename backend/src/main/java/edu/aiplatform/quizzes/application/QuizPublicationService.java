@@ -102,16 +102,30 @@ public class QuizPublicationService {
     @Transactional
     public QuizDetail retire(Actor actor, UUID id, String reason, long version) {
         Quiz quiz = support.loadManaged(actor, id);
-        if (quiz.status() != QuizStatus.OPEN) {
-            throw ApiException.conflict("QUIZ_NOT_OPEN", "Chỉ ngưng được quiz đang mở");
+        if (quiz.status() == QuizStatus.RETIRED) {
+            throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã lưu trữ");
         }
-        String cleanReason = reason == null ? "" : reason.strip();
-        if (cleanReason.isEmpty() || cleanReason.codePointCount(0, cleanReason.length()) > QuizRules.MAX_REASON) {
+        String cleanReason = reason == null || reason.isBlank() ? "Lưu trữ" : reason.strip();
+        if (cleanReason.codePointCount(0, cleanReason.length()) > QuizRules.MAX_REASON) {
             throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_INVALID", "Cần lý do ngưng quiz",
                     List.of(new Violation("reason", "REQUIRED", "Lý do ngưng bắt buộc, tối đa 1.000 ký tự")));
         }
         QuizSupport.requireVersion(quiz, version);
         return support.detail(retire(actor, quiz, cleanReason, clock.instant()), true);
+    }
+
+    /** Mở lại Quiz đã lưu trữ (Quiz đã phát hành mở lại, Quiz lưu trữ khi còn nháp về nháp). */
+    @Transactional
+    public QuizDetail reopen(Actor actor, UUID id, long version) {
+        Quiz quiz = support.loadManaged(actor, id);
+        if (quiz.status() != QuizStatus.RETIRED) {
+            throw ApiException.conflict("QUIZ_NOT_RETIRED", "Quiz chưa lưu trữ");
+        }
+        QuizSupport.requireVersion(quiz, version);
+        support.requireContainerActive(quiz);
+        Quiz reopened = support.save(quiz.reopened(clock.instant()));
+        audit.success(actor, "QUIZ_REOPENED", QuizSupport.OBJECT, quiz.id(), Map.of("status", reopened.status().name()));
+        return support.detail(reopened, true);
     }
 
     private Quiz retire(Actor actor, Quiz quiz, String reason, Instant now) {

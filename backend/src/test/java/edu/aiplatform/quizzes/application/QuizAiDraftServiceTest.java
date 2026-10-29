@@ -377,7 +377,8 @@ class QuizAiDraftServiceTest {
         QuizDetail withItem = authoring.saveItems(teacher, quiz.quiz().id(),
                 List.of(new QuizAuthoringService.ItemInput(q.id(), null)), quiz.quiz().version());
         QuizDetail reviewed = publication.review(teacher, quiz.quiz().id(), withItem.quiz().version());
-        publication.publish(teacher, quiz.quiz().id(), reviewed.quiz().version());
+        QuizDetail open = publication.publish(teacher, quiz.quiz().id(), reviewed.quiz().version());
+        publication.retire(teacher, quiz.quiz().id(), null, open.quiz().version());
 
         ApplyOutcome outcome = handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher,
                 sent.targetRef(), sent.inputVersion(), OUTPUT));

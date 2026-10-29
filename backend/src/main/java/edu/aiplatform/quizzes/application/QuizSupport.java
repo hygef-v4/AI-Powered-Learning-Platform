@@ -79,7 +79,7 @@ class QuizSupport {
     Quiz loadEditable(Actor actor, UUID id, long version) {
         Quiz quiz = loadManaged(actor, id);
         if (!quiz.isEditable()) {
-            throw ApiException.conflict("QUIZ_NOT_EDITABLE", "Quiz đã phát hành không sửa được; hãy tạo version mới");
+            throw ApiException.conflict("QUIZ_NOT_EDITABLE", "Quiz đã lưu trữ không sửa được");
         }
         requireVersion(quiz, version);
         requireContainerActive(quiz);

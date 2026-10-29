@@ -22,7 +22,7 @@ class PurposePolicyTest {
 
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxSizeMb()).isEqualTo(50);
-        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
+        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
         assertThat(material.allowedTypes()).doesNotContain(FileType.TXT);
         assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
         assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
@@ -37,7 +37,7 @@ class PurposePolicyTest {
 
         PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxBytes()).isEqualTo(10L * 1024 * 1024);
-        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX);
+        assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
         PurposeLimits image = policy.limits(ArtifactPurpose.DOCUMENT_IMAGE);
         assertThat(image.maxSizeMb()).isEqualTo(5);
         assertThat(image.allowedTypes()).containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG);

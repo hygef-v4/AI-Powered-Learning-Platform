@@ -210,7 +210,8 @@ function NavList({ label, items, pathname, header, collapsed }: { label: string;
   return (
     <div className="flex min-h-0 flex-1 animate-fade flex-col">
       {header}
-      <nav aria-label={label} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto">
+      {/* Ngữ cảnh tự vẽ danh sách trong phần đầu (ví dụ danh sách module) thì không có mục riêng. */}
+      {items.length > 0 && <nav aria-label={label} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto">
       {items.map((item, index) => {
         const active = item.active ?? item.href === current;
         const heading = item.section && item.section !== items[index - 1]?.section ? item.section : null;
@@ -244,7 +245,7 @@ function NavList({ label, items, pathname, header, collapsed }: { label: string;
           </Fragment>
         );
       })}
-      </nav>
+      </nav>}
     </div>
   );
 }

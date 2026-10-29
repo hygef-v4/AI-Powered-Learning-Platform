@@ -221,6 +221,8 @@ describe("ClassGroupsPanel", () => {
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).queryByRole("radio")).not.toBeInTheDocument();
     expect(within(dialog).getAllByRole("textbox")).toHaveLength(1);
+    expect(within(dialog).getByRole("textbox")).toHaveValue("");
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "5" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Xem trước" }));
 
     expect(within(dialog).getByRole("cell", { name: "Nhóm 1" })).toBeInTheDocument();

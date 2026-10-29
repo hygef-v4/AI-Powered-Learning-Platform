@@ -30,10 +30,10 @@ public class MaterialRepositoryAdapter implements IMaterialRepository {
         var row=MaterialRow.of(material);em.persist(row);em.flush();em.detach(row);insertVersion(version);
     }
     @Override @Transactional(timeout=10) public boolean update(Material m,long expectedVersion) {
-        return em.createQuery("update ReferenceMaterialRow m set m.title=:title,m.description=:description,"
+        return em.createQuery("update ReferenceMaterialRow m set m.moduleId=:module,m.title=:title,m.description=:description,"
                 + "m.orderNo=:orderNo,m.status=:status,m.currentVersionNo=:contentVersion,m.updatedAt=:now,"
                 + "m.version=:nextVersion where m.id=:id and m.version=:expected")
-                .setParameter("title",m.title()).setParameter("description",m.description())
+                .setParameter("module",m.moduleId()).setParameter("title",m.title()).setParameter("description",m.description())
                 .setParameter("orderNo",m.orderNo()).setParameter("status",m.status())
                 .setParameter("contentVersion",m.currentVersionNo()).setParameter("now",m.updatedAt())
                 .setParameter("nextVersion",m.version()).setParameter("id",m.id())

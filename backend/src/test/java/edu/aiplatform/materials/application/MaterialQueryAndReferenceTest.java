@@ -11,13 +11,13 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 
 class MaterialQueryAndReferenceTest {
-    IMaterialRepository repo;MaterialAccessPolicy access;IArtifact files;MaterialQueryService queries;ReferenceMaterialService references;
+    IMaterialRepository repo;IMaterialModuleRepository modules;MaterialAccessPolicy access;IArtifact files;MaterialQueryService queries;ReferenceMaterialService references;
     final UUID id=UUID.randomUUID(),subject=UUID.randomUUID(),classId=UUID.randomUUID();
     final Actor actor=new Actor(UUID.randomUUID(),Role.STUDENT);final Instant now=Instant.now();Material material;
     @BeforeEach void setup() {
         repo=mock(IMaterialRepository.class);access=mock(MaterialAccessPolicy.class);files=mock(IArtifact.class);
         queries=new MaterialQueryService(repo,access,files);references=new ReferenceMaterialService(queries,repo);
-        material=new Material(id,Material.Scope.SUBJECT,subject,null,Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor.accountId(),now,now,0);
+        material=new Material(id,Material.Scope.SUBJECT,subject,null,new UUID(0,1),Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor.accountId(),now,now,0);
         when(repo.find(id)).thenReturn(Optional.of(material));when(repo.version(id,1)).thenReturn(Optional.of(version(id,"abcdef")));
         when(repo.versions(id)).thenReturn(List.of(version(id,"abcdef")));
     }
@@ -38,7 +38,7 @@ class MaterialQueryAndReferenceTest {
         assertThat(detail.toString()).doesNotContain("private-storage","abcdef");assertThat(detail.canManage()).isFalse();
     }
     @Test void extractionUsesTotalBudgetAcrossMaterials() {
-        UUID second=UUID.randomUUID();Material next=new Material(second,material.scope(),subject,null,material.kind(),"Second","",1,material.status(),1,actor.accountId(),now,now,0);
+        UUID second=UUID.randomUUID();Material next=new Material(second,material.scope(),subject,null,material.moduleId(),material.kind(),"Second","",1,material.status(),1,actor.accountId(),now,now,0);
         when(repo.find(second)).thenReturn(Optional.of(next));when(repo.version(second,1)).thenReturn(Optional.of(version(second,"123456")));
         var texts=references.extractText(actor,List.of(id,second),8);
         assertThat(texts.get(0).text()).isEqualTo("abcdef");assertThat(texts.get(0).truncated()).isFalse();

@@ -53,7 +53,7 @@ public class MaterialQueryService {
                 && (m.classId()==null||access.courseClass(m.classId()).status()!=ClassStatus.ARCHIVED);
         List<MaterialViews.Version> versions=!history?List.of():actor.role()==Role.STUDENT?List.of(MaterialViews.Version.of(current))
                 :repository.versions(m.id()).stream().map(MaterialViews.Version::of).toList();
-        return new MaterialViews.Detail(m.id(),m.scope(),m.subjectId(),m.classId(),m.kind(),m.title(),m.description(),m.orderNo(),
+        return new MaterialViews.Detail(m.id(),m.scope(),m.subjectId(),m.classId(),m.moduleId(),m.kind(),m.title(),m.description(),m.orderNo(),
                 m.status(),m.currentVersionNo(),m.version(),m.updatedAt(),editable,MaterialViews.Version.of(current),versions);
     }
 }

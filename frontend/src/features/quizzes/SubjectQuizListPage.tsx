@@ -113,7 +113,7 @@ export function SubjectQuizListPage() {
               {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">Chưa có quiz phù hợp.</Td></tr>}
               {data.items.map((row) => (
                 <ClickableRow key={row.id} onClick={() => router.push(`/quizzes/${row.id}`)} data-testid="quiz-list-row">
-                  <Td><span className="font-semibold">{row.title}</span> <span className="text-xs text-muted">v{row.versionNo}</span></Td>
+                  <Td><span className="font-semibold">{row.title}</span></Td>
                   <Td>{row.itemCount} câu · {formatPoints(row.maxScore)} điểm</Td>
                   <Td>{row.timeLimitMinutes ? `${row.timeLimitMinutes} phút` : "Không giới hạn"}</Td>
                   <Td><Pill tone={QUIZ_STATUS_TONES[row.status]}>{QUIZ_STATUS_LABELS[row.status]}</Pill></Td>

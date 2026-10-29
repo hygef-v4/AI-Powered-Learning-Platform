@@ -16,24 +16,26 @@ import org.mockito.ArgumentCaptor;
 class MaterialServiceTest {
     final UUID id=UUID.randomUUID(),subject=UUID.randomUUID();final Actor actor=new Actor(UUID.randomUUID(),Role.SUBJECT_MANAGER);
     final Instant now=Instant.parse("2026-10-21T00:00:00Z");
-    IMaterialRepository repo;MaterialAccessPolicy access;IArtifact files;IJob jobs;IAudit audit;MaterialService service;
+    IMaterialRepository repo;IMaterialModuleRepository modules;MaterialAccessPolicy access;IArtifact files;IJob jobs;IAudit audit;MaterialService service;
     Material material;
     @BeforeEach void setup() {
         repo=mock(IMaterialRepository.class);access=mock(MaterialAccessPolicy.class);files=mock(IArtifact.class);jobs=mock(IJob.class);audit=mock(IAudit.class);
-        service=new MaterialService(repo,access,files,jobs,audit,Clock.fixed(now,ZoneOffset.UTC));
-        material=new Material(id,Material.Scope.SUBJECT,subject,null,Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor.accountId(),now,now,0);
+        modules=mock(IMaterialModuleRepository.class);
+        when(modules.find(new UUID(0,1))).thenReturn(Optional.of(new MaterialModule(new UUID(0,1),subject,"Module 1",0,actor.accountId(),now,now,0)));
+        service=new MaterialService(repo,modules,access,files,jobs,audit,Clock.fixed(now,ZoneOffset.UTC));
+        material=new Material(id,Material.Scope.SUBJECT,subject,null,new UUID(0,1),Material.Kind.FILE,"Title","",0,Material.Status.ACTIVE,1,actor.accountId(),now,now,0);
         when(repo.find(id)).thenReturn(Optional.of(material));when(repo.update(any(),anyLong())).thenReturn(true);
         when(files.attach(any(),eq(actor),eq(ArtifactPurpose.MATERIAL))).thenReturn(new StoredFileInfo("private-file",actor.accountId(),ArtifactPurpose.MATERIAL,"doc.pdf","application/pdf",100L,"sha"));
     }
     @Test void createAttachesTrustedFileAndEnqueuesVersionedJob() {
-        var m=service.create(actor,subject,false,new MaterialCommands.Create(Material.Kind.FILE,"Title","",0,new MaterialCommands.Source("signed",null)));
+        var m=service.create(actor,subject,false,new MaterialCommands.Create(Material.Kind.FILE,"Title","",0,new MaterialCommands.Source("signed",null),new UUID(0,1)));
         verify(files).attach(new FileRef("signed"),actor,ArtifactPurpose.MATERIAL);
         verify(repo).insert(eq(m),argThat(v->v.fileId().equals("private-file")&&v.textStatus()==MaterialVersion.TextStatus.PENDING));
         verify(jobs).enqueue(eq(JobTypes.MATERIAL_TEXT_EXTRACT),eq(Map.of("materialId",m.id().toString(),"versionNo",1)),eq("material:"+m.id()+":1"));
         verify(audit).record(argThat(e->e.action().equals("MATERIAL_CREATED")));
     }
     @Test void youtubeCreateDoesNotCallFilesOrJobs() {
-        service.create(actor,subject,false,new MaterialCommands.Create(Material.Kind.YOUTUBE_LINK,"Video","",0,new MaterialCommands.Source(null,"https://youtu.be/abcdefghijk")));
+        service.create(actor,subject,false,new MaterialCommands.Create(Material.Kind.YOUTUBE_LINK,"Video","",0,new MaterialCommands.Source(null,"https://youtu.be/abcdefghijk"),new UUID(0,1)));
         verifyNoInteractions(files,jobs);verify(repo).insert(any(),argThat(v->v.videoId().equals("abcdefghijk")&&v.textStatus()==null));
     }
     @Test void replaceAppendsWithoutChangingOldVersion() {
@@ -42,7 +44,7 @@ class MaterialServiceTest {
         verify(repo).insertVersion(argThat(v->v.versionNo()==2));verify(repo,never()).completeText(any(),anyInt(),any(),any());
     }
     @Test void metadataUpdateDoesNotCreateContentVersionOrJob() {
-        var next=service.update(actor,id,new MaterialCommands.Update("New","Description",3,0L));
+        var next=service.update(actor,id,new MaterialCommands.Update("New","Description",3,0L,null));
         assertThat(next.currentVersionNo()).isEqualTo(1);assertThat(next.version()).isEqualTo(1);
         verify(repo,never()).insertVersion(any());verifyNoInteractions(files,jobs);
     }

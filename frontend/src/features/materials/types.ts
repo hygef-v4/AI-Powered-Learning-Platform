@@ -6,13 +6,20 @@ export type MaterialVersion = {
   createdBy: string; createdAt: string;
 };
 export type Material = {
-  id: string; scope: "SUBJECT" | "CLASS"; subjectId: string; classId: string | null;
+  id: string; scope: "SUBJECT" | "CLASS"; subjectId: string; classId: string | null; moduleId: string;
   kind: MaterialKind; title: string; description: string; orderNo: number;
   status: "ACTIVE" | "ARCHIVED"; currentVersionNo: number; version: number;
   updatedAt: string; canManage: boolean; current: MaterialVersion; versions: MaterialVersion[];
 };
 export type MaterialSource = { fileRef?: string; videoUrl?: string };
-export type CreateMaterial = { kind: MaterialKind; title: string; description: string; orderNo: number; source: MaterialSource };
+export type CreateMaterial = { kind: MaterialKind; title: string; description: string; orderNo: number; source: MaterialSource; moduleId: string };
+export type QuizStatus = "DRAFT" | "REVIEWED" | "OPEN" | "RETIRED";
+/** Quiz gắn trong module; `canManage`: người xem gỡ được khỏi module. */
+export type ModuleQuiz = { quizId: string; title: string; status: QuizStatus; scope: "SUBJECT" | "CLASS"; classId: string | null; canManage: boolean };
+/** Module của môn (U13); học liệu thuộc module qua `Material.moduleId`. */
+export type MaterialModule = { id: string; title: string; orderNo: number; version: number; canManage: boolean; quizzes: ModuleQuiz[] };
+/** Nơi xem học liệu: trang môn (Chủ nhiệm môn), lớp dạy (giảng viên) hay lớp học (sinh viên). */
+export type ModuleScope = { kind: "subject"; subjectId: string } | { kind: "class"; classId: string } | { kind: "student"; classId: string };
 export type DownloadToken = { url: string; expiresAt: string };
 export const textLabels: Record<TextStatus, string> = {
   PENDING: "Đang xử lý", EXTRACTED: "Đã trích", NO_TEXT: "Không có chữ", FAILED: "Lỗi",

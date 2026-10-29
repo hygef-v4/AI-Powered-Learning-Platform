@@ -46,6 +46,21 @@ public class MaterialAccessPolicy {
         return actor!=null && actor.role()==Role.SUBJECT_MANAGER
                 && allowed(actor,Actions.MATERIAL_SUBJECT_MANAGE,ResourceRef.subject(id));
     }
+    /** Chủ nhiệm môn sửa được module của môn đang hoạt động. */
+    public void manageModules(Actor actor,UUID subjectId) {
+        if(!managesSubject(actor,subjectId))deny(actor,subjectId);
+        if(subject(subjectId).status()!=SubjectStatus.ACTIVE)
+            throw ApiException.conflict("MATERIAL_SCOPE_READ_ONLY","Môn đã lưu trữ, học liệu chỉ đọc");
+    }
+    public boolean canManageModules(Actor actor,UUID subjectId) {
+        return managesSubject(actor,subjectId) && subject(subjectId).status()==SubjectStatus.ACTIVE;
+    }
+    /** Gắn, gỡ Quiz khỏi module: Quiz của môn do Chủ nhiệm môn, Quiz của lớp do giảng viên của lớp (lớp chưa lưu trữ). */
+    public boolean canManageQuiz(Actor actor,UUID subjectId,UUID classId) {
+        if(classId==null)return canManageModules(actor,subjectId);
+        ClassRef c=courseClass(classId);
+        return subjectId.equals(c.subjectId()) && c.status()!=ClassStatus.ARCHIVED && staffCanRead(actor,c);
+    }
     public void subjectList(Actor actor,UUID subjectId) {
         if(!managesSubject(actor,subjectId))deny(actor,subjectId);
         subject(subjectId);

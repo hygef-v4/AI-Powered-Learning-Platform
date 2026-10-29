@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
   createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
-  publishQuiz, reviewQuiz, saveQuizItems, updateQuizDetails,
+  publishQuiz, reopenQuiz, reviewQuiz, saveQuizItems, updateQuizDetails,
 } from "./api";
 import { BankQuestionPicker } from "./BankQuestionPicker";
 import { ClassQuizzesSection } from "./ClassQuizzesSection";
@@ -30,6 +30,7 @@ vi.mock("./api", () => ({
   reviewQuiz: vi.fn(),
   publishQuiz: vi.fn(),
   retireQuiz: vi.fn(),
+  reopenQuiz: vi.fn(),
   cloneQuiz: vi.fn(),
   createQuizVersion: vi.fn(),
   deleteQuiz: vi.fn(),
@@ -40,6 +41,7 @@ vi.mock("./api", () => ({
 const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams("subjectId=s1") }));
+vi.mock("@/features/materials/ModulePlace", () => ({ useModuleScope: () => null, useModulePlace: () => ({ reload: () => {} }), ModuleNeighbours: () => null }));
 
 const QUESTION: QuestionView = {
   id: "q1", lineageId: "q1", versionNo: 2, subjectId: "s1", type: "MCQ_SINGLE", stem: "Thủ đô của Việt Nam?",
@@ -96,7 +98,7 @@ describe("QuizDetailPage", () => {
     fireEvent.click(screen.getByTestId("quiz-detail-save"));
 
     await waitFor(() => expect(saveQuizItems).toHaveBeenCalledWith("z1", [{ questionId: "q1", points: 2.5 }], 3));
-    expect(await screen.findByText("Đã lưu quiz.")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument());
   });
 
   it("điểm sai thì báo đúng lỗi, không gọi API kể cả khi cấu hình cũng đổi", async () => {
@@ -104,7 +106,7 @@ describe("QuizDetailPage", () => {
     render(<QuizDetailPage id="z1" />);
 
     fireEvent.change(await screen.findByTestId("quiz-item-points-0"), { target: { value: "0" } });
-    fireEvent.change(screen.getByLabelText(/Tên quiz/), { target: { value: "Luyện tập 2" } });
+    fireEvent.click(screen.getByRole("switch", { name: "Đảo thứ tự câu" }));
     fireEvent.click(screen.getByTestId("quiz-detail-save"));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân.");
@@ -144,8 +146,8 @@ describe("QuizDetailPage", () => {
     fireEvent.click(await screen.findByLabelText("Chọn câu Thủ đô của Việt Nam?"));
     fireEvent.click(screen.getByTestId("bank-picker-add"));
 
-    expect(await screen.findByText("Đã thêm 1 câu từ ngân hàng.")).toBeInTheDocument();
-    expect(screen.queryByTestId("quiz-detail-violations")).not.toBeInTheDocument();
+    await waitFor(() => expect(saveQuizItems).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByTestId("quiz-detail-violations")).not.toBeInTheDocument());
   });
 
   it("quiz đã duyệt có nút phát hành", async () => {
@@ -153,16 +155,32 @@ describe("QuizDetailPage", () => {
     vi.mocked(publishQuiz).mockResolvedValue(detail({ status: "OPEN", publishedAt: "2026-10-20T09:00:00Z", version: 4 }));
     render(<QuizDetailPage id="z1" />);
     fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
-    expect(await screen.findByText("Đã phát hành quiz.")).toBeInTheDocument();
+    expect(await screen.findByText("Đang mở")).toBeInTheDocument();
     expect(publishQuiz).toHaveBeenCalledWith("z1", 3);
+    expect(screen.getByTestId("quiz-detail-edit")).toBeInTheDocument();
     expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument();
+  });
+
+  it("quiz đã lưu trữ mở lại được, không sửa hay lưu trữ lần nữa", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail({ status: "RETIRED", publishedAt: "2026-10-20T09:00:00Z", retiredAt: "2026-10-21T09:00:00Z" }));
+    vi.mocked(reopenQuiz).mockResolvedValue(detail({ status: "OPEN", publishedAt: "2026-10-20T09:00:00Z", version: 4 }));
+    render(<QuizDetailPage id="z1" />);
+    const reopen = await screen.findByTestId("quiz-detail-reopen");
+    expect(screen.queryByTestId("quiz-detail-edit")).not.toBeInTheDocument();
+    // Sau khi mở lại, trang tải lại quiz từ máy chủ.
+    vi.mocked(getQuiz).mockResolvedValue(detail({ status: "OPEN", publishedAt: "2026-10-20T09:00:00Z", version: 4 }));
+    fireEvent.click(reopen);
+    await waitFor(() => expect(reopenQuiz).toHaveBeenCalledWith("z1", 3));
+    expect(await screen.findByTestId("quiz-detail-edit")).toBeInTheDocument();
   });
 
   it("giảng viên xem quiz của môn từ lớp thì chỉ xem", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail({ scope: "SUBJECT", classId: null, status: "OPEN" }, false));
     render(<QuizDetailPage id="z1" classId="c1" />);
-    expect(await screen.findByText("Quiz của môn: giảng viên lớp chỉ xem.")).toBeInTheDocument();
+    expect(await screen.findByTestId("quiz-item-points-0")).toBeDisabled();
     expect(getQuiz).toHaveBeenCalledWith("z1", "c1");
+    expect(screen.queryByTestId("quiz-detail-edit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("quiz-detail-archive")).not.toBeInTheDocument();
     expect(screen.queryByTestId("quiz-detail-more")).not.toBeInTheDocument();
     expect(screen.getByTestId("quiz-item-points-0")).toBeDisabled();
   });

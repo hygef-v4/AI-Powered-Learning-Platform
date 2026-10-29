@@ -172,6 +172,11 @@ export function retireQuiz(id: string, reason: string, version: number): Promise
   return post<QuizDetail>(`${quizPath(id)}/retire`, { reason, version });
 }
 
+/** Mở lại Quiz đã lưu trữ. */
+export function reopenQuiz(id: string, version: number): Promise<QuizDetail> {
+  return post<QuizDetail>(`${quizPath(id)}/reopen`, { version });
+}
+
 export function cloneQuiz(id: string): Promise<QuizDetail> {
   return post<QuizDetail>(`${quizPath(id)}/clone`);
 }

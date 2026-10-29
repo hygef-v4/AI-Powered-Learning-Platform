@@ -176,6 +176,11 @@ public class QuizController {
         return publication.retire(actor, id, request.reason(), request.version());
     }
 
+    @PostMapping(value = "/reopen", consumes = "application/json")
+    public QuizDetail reopen(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody JsonNode body) {
+        return publication.reopen(actor, id, QuestionRequests.versionOnly(body));
+    }
+
     @PostMapping("/clone")
     public ResponseEntity<QuizDetail> cloneQuiz(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
         return created(copies.cloneQuiz(actor, id));

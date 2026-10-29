@@ -1,57 +1,80 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Button } from "@/shared/ui/Button";
 import { apiDownload } from "@/shared/api/client";
+import { Button, Icon } from "@/shared/ui";
 import { materialApi, materialError } from "./api";
-import type { Material, DownloadToken } from "./types";
-import styles from "./materials.module.css";
+import { DocumentViewer, documentKind } from "./DocumentViewer";
+import { fileDescription, type Material } from "./types";
 
+/** Tải tệp hiện hành bằng link tải mới. */
+async function download(material: Material, classId?: string) {
+  const fresh = await materialApi.token(material.id, classId);
+  window.location.assign(fresh.url);
+}
+
+/** Nút Tải xuống (tệp không xem được trong trang). */
+export function DownloadButton({ material, classId }: { material: Material; classId?: string }) {
+  const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  async function run() {
+    if (busy) return; setBusy(true); setError("");
+    try { await download(material, classId); } catch (e) { setError(materialError(e)); } finally { setBusy(false); }
+  }
+  return <>
+    <Button data-testid="material-download" icon="download" disabled={busy} onClick={() => void run()}>Tải xuống</Button>
+    {error && <span role="alert" className="text-xs text-danger">{error}</span>}
+  </>;
+}
+
+/**
+ * Khung xem học liệu: PDF, Word, PowerPoint, Excel mở trong trình xem tối với trang giấy trắng (tải xuống ở thanh công cụ);
+ * video YouTube khung 16:9; loại tệp khác hiện thẻ tệp với nút tải.
+ */
 export function MaterialPreview({ material, classId }: { material: Material; classId?: string }) {
   const { id: materialId, kind, currentVersionNo } = material;
-  const mimeType = material.current.mimeType;
-  const [token, setToken] = useState<DownloadToken>(); const [revision, setRevision] = useState(0);
-  const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
-  const key = `${material.id}:${material.currentVersionNo}:${classId ?? ""}:${revision}`;
-  const [tokenKey, setTokenKey] = useState("");
-  const [pdfUrl, setPdfUrl] = useState("");
+  const viewable = kind === "FILE" ? documentKind(material.current.mimeType) : null;
+  const key = `${materialId}:${currentVersionNo}:${classId ?? ""}`;
+  const [revision, setRevision] = useState(0);
+  const [loaded, setLoaded] = useState<{ key: string; blob?: Blob; error?: string }>({ key: "" });
+
   useEffect(() => {
-    if (kind !== "FILE") return;
-    let cancelled = false; let objectUrl: string | undefined;
+    if (!viewable) return;
+    let cancelled = false;
     const controller = new AbortController();
-    async function load() {
+    (async () => {
       try {
-        const value = await materialApi.token(materialId, classId);
-        if (cancelled) return;
-        if (mimeType === "application/pdf") {
-          const blob = await apiDownload(value.url, { signal: controller.signal });
-          if (cancelled) return;
-          objectUrl = URL.createObjectURL(blob); setPdfUrl(objectUrl);
-        }
-        setToken(value); setTokenKey(key); setError("");
-      } catch (e) { if (!cancelled) setError(materialError(e)); }
-    }
-    void load();
-    return () => { cancelled = true; controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [materialId, currentVersionNo, mimeType, kind, classId, key]);
-  const current = tokenKey === key ? token : undefined;
-  useEffect(() => {
-    if (!current) return;
-    const timer = setTimeout(() => setRevision(v => v + 1), Math.max(1000, new Date(current.expiresAt).getTime() - Date.now() - 15_000));
-    return () => clearTimeout(timer);
-  }, [current]);
-  async function download() {
-    if (loading) return; setLoading(true); setError("");
-    try { const fresh = await materialApi.token(material.id, classId); window.location.assign(fresh.url); }
-    catch (e) { setError(materialError(e)); } finally { setLoading(false); }
-  }
-  if (material.kind === "YOUTUBE_LINK") {
+        const token = await materialApi.token(materialId, classId);
+        const blob = await apiDownload(token.url, { signal: controller.signal });
+        if (!cancelled) setLoaded({ key, blob });
+      } catch (e) { if (!cancelled) setLoaded({ key, error: materialError(e) }); }
+    })();
+    return () => { cancelled = true; controller.abort(); };
+  }, [materialId, classId, viewable, key, revision]);
+
+  if (kind === "YOUTUBE_LINK") {
     const id = material.current.videoId;
-    return <section className={styles.card}><h2>Xem trước</h2>{id && /^[A-Za-z0-9_-]{11}$/.test(id) && <iframe data-testid="material-youtube-player" className={styles.video} title={`Video ${material.title}`} src={`https://www.youtube-nocookie.com/embed/${id}`} allow="encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
-      <a data-testid="material-youtube-external" className="mt-3 inline-block text-sm text-primary-ink" href={`https://www.youtube.com/watch?v=${encodeURIComponent(id ?? "")}`} target="_blank" rel="noopener noreferrer">Mở trên YouTube ↗</a><p className={styles.muted}>Video riêng tư hoặc bị xóa sẽ không phát được.</p></section>;
+    const valid = !!id && /^[A-Za-z0-9_-]{11}$/.test(id);
+    return <div className="flex flex-col gap-2">
+      <a data-testid="material-youtube-external" className="inline-flex items-center gap-1 self-end text-xs font-semibold text-primary-ink hover:underline"
+        href={`https://www.youtube.com/watch?v=${encodeURIComponent(id ?? "")}`} target="_blank" rel="noopener noreferrer">
+        Mở trên YouTube <Icon name="arrow_forward" size={13} className="-rotate-45" />
+      </a>
+      {valid
+        ? <iframe data-testid="material-youtube-player" className="aspect-video w-full rounded-xl border-0 bg-black" title={`Video ${material.title}`}
+          src={`https://www.youtube-nocookie.com/embed/${id}`} allow="encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        : <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black text-sm text-white/70">Không phát được video</div>}
+    </div>;
   }
-  return <section className={styles.card}><div className={styles.toolbar}><h2 className="mr-auto">Xem trước</h2><Button data-testid="material-download" onClick={() => void download()} disabled={loading}>Tải xuống</Button><Button data-testid="material-token-retry" onClick={() => setRevision(v => v + 1)}>Lấy link mới</Button></div>
-    {error && <p role="alert" className={styles.error}>{error}</p>}
-    {material.current.mimeType === "application/pdf" ? current && pdfUrl ? <iframe data-testid="material-pdf-viewer" title={`PDF ${material.title}`} className={styles.viewer} src={pdfUrl} /> : <p role="status">Đang lấy link xem PDF…</p>
-      : <p className={styles.empty}>{material.current.fileName} — tải tệp để xem nội dung.</p>}
-  </section>;
+  if (viewable) {
+    const current = loaded.key === key ? loaded : null;
+    if (current?.error) return <div role="alert" className="flex flex-col items-center gap-3 rounded-xl bg-[#525659] p-16 text-center text-sm text-white/85">
+      {current.error}<Button data-testid="material-token-retry" icon="refresh" onClick={() => setRevision(v => v + 1)}>Thử lại</Button>
+    </div>;
+    if (!current?.blob) return <div role="status" className="flex h-[calc(100vh-13rem)] min-h-[560px] items-center justify-center rounded-xl bg-[#525659] text-sm text-white/75">Đang mở tệp…</div>;
+    return <DocumentViewer blob={current.blob} kind={viewable} title={material.current.fileName ?? material.title} onDownload={() => void download(material, classId)} />;
+  }
+  return <div className="flex flex-col items-center gap-4 rounded-xl border border-line bg-surface px-6 py-14 text-center">
+    <span aria-hidden="true" className="flex size-16 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink"><Icon name="description" size={30} /></span>
+    <div><p className="text-[15px] font-semibold text-ink [overflow-wrap:anywhere]">{material.current.fileName}</p><p className="text-xs text-muted">{fileDescription(material)}</p></div>
+    <DownloadButton material={material} classId={classId} />
+  </div>;
 }

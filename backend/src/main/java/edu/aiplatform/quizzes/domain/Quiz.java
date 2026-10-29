@@ -18,7 +18,8 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                    Instant createdAt, Instant updatedAt, long version) {
 
     /** Mặc định F6: không trộn, không giới hạn giờ, 1 lượt, hiện điểm, không hiện đáp án; theo dõi tắt. */
-    public static final QuizSettings DEFAULT_SETTINGS = new QuizSettings(false, false, null, 1, true, false);
+    /** Quiz mới: không giới hạn thời gian và số lượt (người soạn tự đặt), hiện điểm sau khi nộp. */
+    public static final QuizSettings DEFAULT_SETTINGS = new QuizSettings(false, false, null, null, true, false);
 
     public Quiz {
         referenceMaterialIds = referenceMaterialIds == null ? List.of() : List.copyOf(referenceMaterialIds);
@@ -30,26 +31,31 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                 DEFAULT_SETTINGS, false, null, List.of(), QuizStatus.DRAFT, null, null, null, createdBy, now, now, 0);
     }
 
+    /** Quiz chưa lưu trữ sửa được tại chỗ, kể cả đang mở: không tạo phiên bản mới (yêu cầu 2026-10-29). */
     public boolean isEditable() {
-        return status == QuizStatus.DRAFT || status == QuizStatus.REVIEWED;
+        return status == QuizStatus.DRAFT || status == QuizStatus.REVIEWED || status == QuizStatus.OPEN;
     }
 
     /** Quiz chưa từng phát hành thì xóa hẳn được (BR-U10-24). */
     public boolean isDeletable() {
-        return isEditable() && publishedAt == null;
+        return (status == QuizStatus.DRAFT || status == QuizStatus.REVIEWED) && publishedAt == null;
     }
 
-    /** Mọi thay đổi nội dung: Quiz đã duyệt quay về nháp (BR-U10-20). */
+    /** Mọi thay đổi nội dung: Quiz đã duyệt quay về nháp (BR-U10-20); Quiz đang mở vẫn mở. */
     public Quiz edited(Instant now) {
         requireEditable();
-        return with(QuizStatus.DRAFT, publishedAt, retiredAt, retiredReason, now);
+        return with(afterEdit(), publishedAt, retiredAt, retiredReason, now);
+    }
+
+    private QuizStatus afterEdit() {
+        return status == QuizStatus.OPEN ? QuizStatus.OPEN : QuizStatus.DRAFT;
     }
 
     public Quiz withDetails(String newTitle, String newInstructions, QuizSettings newSettings, boolean monitoring,
                             String notice, List<UUID> materials, Instant now) {
         requireEditable();
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, newTitle, newInstructions,
-                newSettings, monitoring, notice, materials, QuizStatus.DRAFT, publishedAt, retiredAt, retiredReason,
+                newSettings, monitoring, notice, materials, afterEdit(), publishedAt, retiredAt, retiredReason,
                 createdBy, createdAt, now, version);
     }
 
@@ -63,9 +69,22 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
         return with(QuizStatus.OPEN, now, retiredAt, retiredReason, now);
     }
 
+    /** Lưu trữ Quiz ở bất kỳ trạng thái nào chưa lưu trữ; Quiz chưa phát hành lấy thời điểm lưu trữ làm mốc phát hành. */
     public Quiz retired(String reason, Instant now) {
-        require(QuizStatus.OPEN);
-        return with(QuizStatus.RETIRED, publishedAt, now, reason, now);
+        if (status == QuizStatus.RETIRED) {
+            throw new IllegalStateException("Quiz đã lưu trữ");
+        }
+        return with(QuizStatus.RETIRED, publishedAt == null ? now : publishedAt, now, reason, now);
+    }
+
+    /**
+     * Mở lại Quiz đã lưu trữ: Quiz từng phát hành mở lại cho sinh viên làm; Quiz lưu trữ khi chưa phát hành (mốc phát hành
+     * trùng mốc lưu trữ) về nháp để soạn tiếp.
+     */
+    public Quiz reopened(Instant now) {
+        require(QuizStatus.RETIRED);
+        boolean neverPublished = publishedAt != null && publishedAt.equals(retiredAt);
+        return with(neverPublished ? QuizStatus.DRAFT : QuizStatus.OPEN, publishedAt, null, null, now);
     }
 
     /**
