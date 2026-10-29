@@ -48,39 +48,6 @@ function useGroupSet(classId: string) {
   return useGroupSetState(classId).set;
 }
 
-/** Số nhóm và số sinh viên chưa có nhóm trên tab Thông tin lớp (t18). */
-export function GroupCountCard({
-  classId,
-  variant = "default",
-}: {
-  classId: string;
-  variant?: "default" | "overview";
-}) {
-  const { set, error } = useGroupSetState(classId);
-  if (variant === "default" && !set) return null;
-  return (
-    <div
-      data-testid={variant === "overview" ? "overview-groups-card" : undefined}
-      data-class-overview-region={variant === "overview" ? "groups" : undefined}
-      className="flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-5"
-    >
-      <div className="flex min-w-0 flex-col gap-2">
-        <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Nhóm</p>
-        {set ? (
-          <>
-            <p className="font-display text-[30px] leading-none text-ink">{set.groups.length}</p>
-            <p className="text-xs text-muted">{set.ungrouped.length} sinh viên chưa có nhóm</p>
-          </>
-        ) : error ? (
-          <p className="mt-1 text-sm font-semibold text-danger">Không khả dụng</p>
-        ) : (
-          <p className="mt-1 text-sm font-medium text-muted">Đang tải…</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /** Nhóm của sinh viên trong popup Student Detail (t19). */
 export function StudentGroupInfo({ classId, studentId }: { classId: string; studentId: string }) {
   const [group, setGroup] = useState<StudentGroup | null>(null);

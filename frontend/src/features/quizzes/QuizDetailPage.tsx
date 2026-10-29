@@ -243,6 +243,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
                 setNotice({ tone: "success", text: "Đã ngưng quiz." });
               })}>Ngưng quiz</Button>
           </>}>
+          <p>Bạn có chắc muốn ngưng quiz này không?</p>
           <Field label="Lý do" htmlFor="quiz-retire-reason" required>
             <textarea id="quiz-retire-reason" rows={3} maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)}
               className="w-full rounded-lg border border-field bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-focus focus:shadow-[0_0_0_3px_var(--c-primary-soft)]" data-testid="quiz-retire-reason" />
@@ -258,6 +259,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
                 router.push(backHref);
               })}>Xóa</Button>
           </>}>
+          <p>Bạn có chắc muốn xóa quiz nháp này không?</p>
         </Dialog>
       )}
     </>

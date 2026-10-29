@@ -16,5 +16,5 @@ export function AnnouncementEditorDialog({ item, onClose, onSaved }: { item: Ann
 export function DeleteAnnouncementDialog({ item, onClose, onSaved }: { item: Announcement; onClose: () => void; onSaved: () => void }) {
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   async function remove() { setBusy(true); try { await announcementsApi.remove(item.id, item.version); onSaved(); onClose(); } catch (e) { setError(announcementError(e)); } finally { setBusy(false); } }
-  return <Dialog open title="Xóa thông báo?" onClose={onClose} dismissible={!busy} tone="danger" footer={<><Button onClick={onClose} disabled={busy}>Hủy</Button><Button data-testid="announcement-delete-confirm" variant="danger" onClick={() => void remove()} disabled={busy}>Xóa</Button></>}><p>“{item.title}” sẽ bị xóa khỏi lớp {item.className}.</p>{error && <p role="alert" className={styles.error}>{error}</p>}</Dialog>;
+  return <Dialog open title="Xóa thông báo?" onClose={onClose} dismissible={!busy} tone="danger" footer={<><Button onClick={onClose} disabled={busy}>Hủy</Button><Button data-testid="announcement-delete-confirm" variant="danger" onClick={() => void remove()} disabled={busy}>Xóa</Button></>}><p>Bạn có chắc muốn xóa thông báo “{item.title}” không?</p>{error && <p role="alert" className={styles.error}>{error}</p>}</Dialog>;
 }

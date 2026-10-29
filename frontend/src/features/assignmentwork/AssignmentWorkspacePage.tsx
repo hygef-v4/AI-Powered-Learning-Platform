@@ -331,8 +331,8 @@ function SubmitDialog({ attempt, content, serverIssues, onClose, onSubmit }: {
         }}>Nộp bài</Button>
       </>}>
       {message && <Alert tone="danger" role="alert">{message}</Alert>}
-      <TableFrame>
-        <thead><tr><Th>Mục</Th><Th>Kiểm tra</Th></tr></thead>
+      <TableFrame className="[&_table]:table-fixed">
+        <colgroup><col /><col className="w-[40%]" /></colgroup><thead><tr><Th>Mục</Th><Th>Kiểm tra</Th></tr></thead>
         <tbody>
           {errors.length === 0 ? <tr><Td>Toàn bài</Td><Td className="text-success">Hợp lệ</Td></tr>
             : errors.map((issue, i) => <tr key={i}><Td>{attempt.parts.find((p) => p.headingBlockId === issue.blockId)?.title ?? "Toàn bài"}</Td><Td className="text-danger">{issue.message}</Td></tr>)}

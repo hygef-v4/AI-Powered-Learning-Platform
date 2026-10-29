@@ -132,8 +132,8 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             </Pill>
             {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} lỗi</Pill>}
           </div>
-          <TableFrame filledHead>
-            <thead>
+          <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+            <colgroup><col className="w-[72px]" /><col className="w-[30%]" /><col /><col className="w-[130px]" /><col className="w-[200px]" /></colgroup><thead>
               <tr>
                 <Th className="w-16">Dòng</Th>
                 <Th>Email</Th>

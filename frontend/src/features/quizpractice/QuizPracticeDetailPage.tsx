@@ -120,8 +120,8 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
         <Section title={`Các lần làm (${submitted.length})`} icon="history">
           {detail.attempts.length === 0
             ? <p className="text-[13px] text-muted">Bạn chưa làm quiz này.</p>
-            : <TableFrame>
-              <thead><tr><Th>Lần</Th><Th>Bắt đầu</Th><Th>Thời gian</Th>{detail.showScoreAfterSubmit && <Th>Điểm</Th>}<Th></Th></tr></thead>
+            : <TableFrame className="[&_table]:table-fixed">
+              <colgroup><col className="w-[80px]" /><col /><col className="w-[130px]" />{detail.showScoreAfterSubmit && <col className="w-[110px]" />}<col className="w-[120px]" /></colgroup><thead><tr><Th>Lần</Th><Th>Bắt đầu</Th><Th>Thời gian</Th>{detail.showScoreAfterSubmit && <Th>Điểm</Th>}<Th></Th></tr></thead>
               <tbody>
                 {detail.attempts.map((a) => (
                   <tr key={a.attemptId} data-testid="practice-detail-attempt">

@@ -2,13 +2,15 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "./api";
-import { emptyFilter, toListFilter } from "./AssignmentFilters";
+import { AssignmentListCard } from "./AssignmentListCard";
 import { mergeSaved, missingText } from "./AssignmentFormPage";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
 import { fromLocalInput, toLocalInput } from "./format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "./RubricEditor";
 import { ScheduleForm } from "./ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "./types";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const reviewed = {
   id: "a1", status: "REVIEWED", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: null,
@@ -72,17 +74,19 @@ describe("RubricEditor", () => {
 });
 
 describe("CreateAssignmentDialog", () => {
-  it("một form duy nhất, không chia tab; bật Soạn bằng AI thì mở hộp AI sau khi tạo bản nháp", async () => {
+  it("một form duy nhất: Loại gộp hình thức và chế độ, không có Soạn bằng AI, nút chỉ ghi Tạo", async () => {
     const created = { id: "a1", version: 0 } as AssignmentDetail;
-    vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
+    const create = vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
     expect(screen.queryByRole("tab")).toBeNull();
-    expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent("Tạo bài nháp");
-    fireEvent.click(screen.getByRole("switch", { name: "Soạn bằng AI" }));
-    expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent("Tạo và mở AI");
+    expect(screen.queryByRole("switch", { name: "Soạn bằng AI" })).toBeNull();
+    expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent(/^Tạo$/);
+    expect(screen.getByRole("radio", { name: "Nhóm" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Luyện tập" }));
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created, true));
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+    expect(create.mock.calls[0]![1]).toMatchObject({ submissionMode: "INDIVIDUAL", gradingMode: "PRACTICE" });
     vi.restoreAllMocks();
   });
 
@@ -127,10 +131,18 @@ describe("CreateAssignmentDialog", () => {
 });
 
 describe("không còn trạng thái Đã duyệt", () => {
-  it("bài đã duyệt từ trước hiện là Nháp; lọc Nháp lấy cả bài đó", () => {
+  it("bài đã duyệt từ trước hiện là Nháp và nằm ở tab Nháp; loại gộp hình thức và chế độ", () => {
     expect(statusLabels.REVIEWED).toBe("Nháp");
-    expect(toListFilter({ ...emptyFilter, status: "DRAFT" }).status).toEqual(["DRAFT", "REVIEWED"]);
-    expect(toListFilter({ ...emptyFilter, status: "OPEN" }).status).toEqual(["OPEN"]);
+    const row = (id: string, status: string, submissionMode = "INDIVIDUAL", gradingMode = "GRADED") =>
+      ({ id, title: `Bài ${id}`, status, scope: "SUBJECT", submissionMode, gradingMode, closesAt: null }) as never;
+    const page = { data: { items: [row("a", "OPEN"), row("b", "REVIEWED", "INDIVIDUAL", "PRACTICE"), row("c", "DRAFT", "GROUP")], hiddenCount: 0, counts: {}, groupSupported: true, ownerArchived: false },
+      error: null, loading: false, reload: () => {} } as never;
+    render(<AssignmentListCard page={page} />);
+    expect(screen.getByText("Bài a")).toBeInTheDocument();
+    expect(screen.queryByText("Bài b")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /Nháp/ }));
+    expect(screen.getByTestId("assignment-row-b")).toHaveTextContent("Luyện tập");
+    expect(screen.getByTestId("assignment-row-c")).toHaveTextContent("Nhóm");
   });
 });
 

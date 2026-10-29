@@ -25,8 +25,8 @@ export function StudentGradesSection({
       {!value && !error && <p role="status">Đang tải bài nộp và điểm…</p>}
       {value && <>
         <p className="my-3">Đã nộp {value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} bài tính điểm · Nộp trễ {value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
-        <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-          <thead><tr><th scope="col" className="p-2">Bài</th><th scope="col" className="p-2">Hình thức</th><th scope="col" className="p-2">Nộp</th><th scope="col" className="p-2">Điểm</th></tr></thead>
+        <div className="overflow-x-auto"><table className="w-full table-fixed text-left text-sm">
+          <colgroup><col /><col className="w-[120px]" /><col className="w-[150px]" /><col className="w-[110px]" /></colgroup><thead><tr><th scope="col" className="p-2">Bài</th><th scope="col" className="p-2">Hình thức</th><th scope="col" className="p-2">Nộp</th><th scope="col" className="p-2">Điểm</th></tr></thead>
           <tbody>{value.assignments.map(assignment => {
             const grade = value.grades.find(item => item.assignmentId === assignment.id);
             return <tr key={assignment.id} className="border-t">

@@ -42,8 +42,9 @@ describe("U05 reference UI", () => {
   it("hides draft classes for students and keeps archived cards read-only", () => {
     const onOpen = vi.fn();
     render(<ClassDashboardPage audience="student" classes={[course, { ...course, id: "draft", status: "DRAFT" }, { ...course, id: "archived", code: "SE1701", status: "ARCHIVED" }]} onOpen={onOpen} />);
+    // Thẻ dọc: mã lớp ở trên, tên môn ở dưới; lớp nháp không hiện với sinh viên.
     expect(screen.getAllByText("SE1801")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: /Đã kết thúc/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /Đã kết thúc/ }));
     expect(screen.getByText("SE1701")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Xem lớp/ })).not.toBeInTheDocument();
     expect(onOpen).not.toHaveBeenCalled();
@@ -164,8 +165,9 @@ describe("U05 reference UI", () => {
     expect(screen.queryByRole("button", { name: /Phân công/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
     expect(screen.queryByRole("button", { name: /Gỡ/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Xem Nguyễn Văn An" }));
-    expect(screen.getByRole("dialog")).toHaveTextContent("an@example.test");
+    // Bấm sinh viên không mở popup Thông tin sinh viên.
+    fireEvent.click(screen.getByText("Nguyễn Văn An"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("opens the tab named in ?tab= and ignores unknown names", () => {
@@ -191,10 +193,10 @@ describe("U05 reference UI", () => {
     expect(screen.queryByRole("columnheader", { name: "Nhóm" })).not.toBeInTheDocument();
   });
 
-  it("keeps a selected subject when returning to its classes", () => {
+  it("shows the subject chosen on the sidebar without a subject dropdown", () => {
     const other = { ...subject, id: "subject-2", code: "SWR302" };
     render(<ClassListPage classes={[course]} subjects={[subject, other]} initialSubjectId={other.id} onOpen={vi.fn()} onCreate={vi.fn()} />);
-    expect(screen.getByRole("combobox", { name: "Môn học" })).toHaveValue(other.id);
+    expect(screen.queryByRole("combobox", { name: "Môn học" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Xem lớp SE1801" })).not.toBeInTheDocument();
   });
 
@@ -231,37 +233,29 @@ describe("U05 reference UI", () => {
     await waitFor(() => expect(onDistribution).toHaveBeenCalledWith(true, 3));
   });
 
-  it("renders teacher class overview summary, compact metadata with expandable safe description, and keeps student view unchanged", () => {
-    const longDescription = `<script>alert(1)</script> Mô tả học phần chi tiết ${"Rất dài và đầy đủ thông tin hướng dẫn đồ án môn học. ".repeat(5)}`;
+  it("tab Thông tin lớp của giảng viên giống trang lớp sinh viên: thẻ thông tin chỉ xem, không có ô số liệu, mô tả an toàn", () => {
+    const description = `<script>alert(1)</script> Mô tả học phần chi tiết`;
     const removedStudent: EnrollmentView = { ...student, accountId: "removed-1", name: "Sinh viên Đã gỡ", status: "REMOVED" };
     const { container, rerender } = render(
       <ReadOnlyClassPage
         audience="teacher"
-        value={{ ...course, description: longDescription }}
+        value={{ ...course, description }}
         students={[student, removedStudent]}
         onBack={vi.fn()}
       />,
     );
 
-    const studentSummary = screen.getByTestId("overview-students-card");
-    expect(studentSummary).toHaveAttribute("data-class-overview-region", "students");
-    expect(within(studentSummary).getByText("Sinh viên")).toBeInTheDocument();
-    expect(within(studentSummary).getByText("1")).toBeInTheDocument();
-
-    const metadataPanel = screen.getByTestId("overview-metadata-panel");
-    expect(metadataPanel).toHaveAttribute("data-class-overview-region", "metadata");
-    expect(within(metadataPanel).getByText(/Nguyễn Minh Kiên/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
+    expect(screen.getByLabelText("Mã lớp")).toHaveValue(course.code);
+    // Chỉ đếm sinh viên đang học.
+    expect(screen.getByLabelText("Sinh viên")).toHaveValue("1");
+    expect(screen.getByText(description)).toBeInTheDocument();
     expect(container.querySelector("script")).toBeNull();
-
-    const toggleDescBtn = within(metadataPanel).getByRole("button", { name: "Xem đầy đủ" });
-    expect(toggleDescBtn).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(toggleDescBtn);
-    expect(within(metadataPanel).getByRole("button", { name: "Thu gọn" })).toHaveAttribute("aria-expanded", "true");
-    expect(within(metadataPanel).getByText(longDescription.trim())).toBeInTheDocument();
+    expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
 
     rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} onBack={vi.fn()} />);
-    expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Thông tin lớp" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Giảng viên" })).toBeInTheDocument();
   });
 });
 

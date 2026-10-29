@@ -1,13 +1,12 @@
 "use client";
 
-import { ClickableRow, Pagination, Pill, Td } from "@/shared/ui";
+import { Pagination, Pill, Td } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
-import { RESULT_LABELS, actionLabel, formatDateTime, objectTypeLabel, shortId } from "./labels";
-import type { AuditLogItem, AuditLogPage } from "./types";
+import { RESULT_LABELS, actionLabel, formatDateTime, objectTypeLabel, shortId, shortReason } from "./labels";
+import type { AuditLogPage } from "./types";
 
 type Props = {
   data: AuditLogPage;
-  onOpen: (item: AuditLogItem) => void;
   onPageChange: (page: number) => void;
 };
 
@@ -15,13 +14,13 @@ export const SYSTEM_ACTOR = "Hệ thống";
 
 const HEAD = "border-b border-line bg-sunken px-3 py-2.5 text-left text-[11px] font-semibold tracking-[.06em] whitespace-nowrap text-muted uppercase";
 
-/** Bảng bản ghi audit (artboard a13): nền trắng, hàng tiêu đề tô màu nền phụ; bấm dòng mở popup chi tiết. */
-export function AuditTable({ data, onOpen, onPageChange }: Props) {
+/** Bảng bản ghi audit (artboard a13): nền trắng, hàng tiêu đề tô màu nền phụ; chỉ xem, lý do ghi gọn 2–3 chữ. */
+export function AuditTable({ data, onPageChange }: Props) {
   const first = data.page * data.size;
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full border-collapse [&_tbody_tr:last-child>td]:border-b-0">
+        <table className="w-full min-w-[900px] table-fixed border-collapse [&_tbody_tr:last-child>td]:border-b-0">
           <thead>
             <tr>
               <th scope="col" className={cx(HEAD, "w-14 text-right")}>STT</th>
@@ -42,18 +41,7 @@ export function AuditTable({ data, onOpen, onPageChange }: Props) {
               </tr>
             )}
             {data.items.map((item, index) => (
-              <ClickableRow
-                key={item.id}
-                tabIndex={0}
-                onClick={() => onOpen(item)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onOpen(item);
-                  }
-                }}
-                data-testid={`audit-table-row-${item.id}`}
-              >
+              <tr key={item.id} data-testid={`audit-table-row-${item.id}`}>
                 <Td className="px-3 text-right text-muted tabular-nums first:pl-3">{first + index + 1}</Td>
                 <Td className="px-3 whitespace-nowrap tabular-nums">{formatDateTime(item.occurredAt)}</Td>
                 <Td className="px-3">
@@ -76,8 +64,8 @@ export function AuditTable({ data, onOpen, onPageChange }: Props) {
                 <Td className="px-3">
                   <Pill tone={RESULT_LABELS[item.result].tone}>{RESULT_LABELS[item.result].label}</Pill>
                 </Td>
-                <Td className="px-3 whitespace-normal text-body last:pr-3">{item.reason ?? "—"}</Td>
-              </ClickableRow>
+                <Td className="px-3 whitespace-nowrap text-body last:pr-3" title={item.reason ?? undefined}>{shortReason(item.reason)}</Td>
+              </tr>
             ))}
           </tbody>
         </table>

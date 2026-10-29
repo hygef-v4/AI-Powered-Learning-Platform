@@ -106,8 +106,6 @@ export function MyGroupPage({ classId }: { classId: string }) {
     <div className="flex flex-col gap-4">
       <PageHeader
         title={view.name ?? "Nhóm của tôi"}
-        backHref={`/classes/${classId}`}
-        breadcrumb={[{ label: "Lớp của tôi", href: "/classes" }, { label: "Lớp", href: `/classes/${classId}` }, { label: "Nhóm của tôi" }]}
         actions={
           view.groupId && open ? (
             <Button icon="swap_horiz" onClick={() => setRequesting(true)} disabled={view.pendingRequest}>
@@ -164,8 +162,8 @@ export function MyGroupPage({ classId }: { classId: string }) {
             {view.works.length === 0 ? (
               <p className="text-[13px] text-muted">Chưa có bài nhóm nào được mở.</p>
             ) : (
-              <TableFrame>
-                <thead>
+              <TableFrame className="[&_table]:min-w-[560px] [&_table]:table-fixed">
+                <colgroup><col /><col className="w-[150px]" /><col className="w-[140px]" /><col className="w-[150px]" /></colgroup><thead>
                   <tr>
                     <Th>Bài nhóm</Th>
                     <Th>Hạn nộp</Th>

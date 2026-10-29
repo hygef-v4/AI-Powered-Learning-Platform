@@ -5,7 +5,7 @@ import { formatShort } from "./format";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Pill, Section, Select, TextInput } from "@/shared/ui";
 import { approveRequest, rejectRequest } from "./api";
-import { personLabel } from "./GroupEditor";
+import { personLabel } from "./groupDrafts";
 import type { GroupSetView, LeaderRequestView } from "./types";
 
 /** Yêu cầu đổi trưởng nhóm đang chờ (F3, BR-U12-11): duyệt chọn trưởng nhóm mới, từ chối bắt buộc lý do. */

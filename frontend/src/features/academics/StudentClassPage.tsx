@@ -5,9 +5,7 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Field, LockedInput, PageHeader, Pill, Section } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
 import { studentClassAside, studentClassBoard, studentClassSections } from "./slots";
-import { statusLabels, type ClassStatus, type CourseClassView } from "./types";
-
-const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "success", DRAFT: "warning", ARCHIVED: "danger" };
+import type { CourseClassView } from "./types";
 
 /**
  * Lớp của tôi (Sinh viên), cùng bố cục Chi tiết lớp của Chủ nhiệm môn nhưng chỉ xem: tiêu đề là tên lớp, thẻ Thông tin lớp bên
@@ -19,9 +17,7 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
   return (
     <>
       <PageHeader
-        backHref="/classes"
-        title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></>}
-        breadcrumb={[{ label: "Lớp của tôi", href: "/classes" }, { label: value.code }]}
+        title={tab === "materials" ? "Học liệu" : "Thông tin lớp"}
       />
       {tab === "materials" ? (
         <div role="region" aria-label="Học liệu" className="flex flex-col gap-4">

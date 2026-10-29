@@ -13,12 +13,14 @@ import { gradingApi } from "./api";
 function TeacherGradingSection({
   classId,
   tab,
+  headerActions,
 }: {
   classId: string;
   tab: "info" | "students" | "materials" | "evals" | "gradebook";
+  headerActions?: HTMLElement | null;
 }) {
   return tab === "gradebook"
-    ? createElement(ClassGradebookTab, { classId })
+    ? createElement(ClassGradebookTab, { classId, headerActions })
     : tab === "info"
       ? createElement(ClassProgressSection, { classId, layout: "overview" })
       : null;

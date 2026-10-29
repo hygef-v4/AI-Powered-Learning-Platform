@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { Toaster } from "@/shared/ui/Toast";
@@ -62,12 +62,13 @@ describe("SubjectListPage", () => {
     expect(await screen.findByRole("link", { name: "Môn A" })).toHaveAttribute("href", "/admin/subjects/subject-a");
     expect(getSubjects).toHaveBeenCalledWith({ q: "", status: undefined, page: 0, size: 20 });
     expect(screen.getByTestId("subjects-filter-ALL")).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("1 môn học")).toBeInTheDocument();
+    // Không còn dòng đếm số môn dưới tiêu đề.
+    expect(screen.queryByText("1 môn học")).not.toBeInTheDocument();
     fireEvent.click(screen.getByText("ABC"));
     expect(push).toHaveBeenCalledWith("/admin/subjects/subject-a");
   });
 
-  it("phân biệt chưa phân công, contact không tra được và số lớp unknown với0", async () => {
+  it("phân biệt chưa phân công và contact không tra được; không có cột Số lớp", async () => {
     vi.mocked(getSubjects).mockResolvedValue(page([
       item(), item({ id: "b", code: "DEF", name: "Môn B", managerId: "missing", classCount: null }),
       item({ id: "c", code: "XYZ", name: "Môn C", managerId: "manager", manager: { accountId: "manager", displayName: "Chủ nhiệm", email: "m@example.test" }, classCount: 3 }),
@@ -76,8 +77,7 @@ describe("SubjectListPage", () => {
     expect(await screen.findByText("Không tra được chủ nhiệm")).toBeInTheDocument();
     expect(screen.getByText("Chưa phân công")).toBeInTheDocument();
     expect(screen.getByText("Chủ nhiệm")).toBeInTheDocument();
-    expect(within(screen.getByTestId("subjects-row-subject-a")).getByText("0")).toBeInTheDocument();
-    expect(within(screen.getByTestId("subjects-row-b")).getByText("Không khả dụng")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Số lớp" })).not.toBeInTheDocument();
   });
 
   it("debounce300ms và response cũ không ghi đè kết quả mới", async () => {
@@ -98,17 +98,16 @@ describe("SubjectListPage", () => {
     expect(screen.getByText("Kết quả mới")).toBeInTheDocument();
   });
 
-  it("đổi tab reset trang, thanh trang dùng totalElements API và có cột STT", async () => {
+  it("đổi tab reset trang, thanh trang dùng totalElements API và không có cột STT", async () => {
     vi.mocked(getSubjects).mockImplementation(async (query) => page([item()], { page: query?.page ?? 0, size: query?.size ?? 20,
       totalElements: 41, statusCounts: { ACTIVE: 41, ARCHIVED: 2 } }));
     render(<SubjectListPage />);
     await screen.findByText("Môn A");
-    expect(screen.getByRole("columnheader", { name: "STT" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "STT" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Trang trước" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
     await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: undefined, page: 1, size: 20 }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Trang 2" })).toHaveAttribute("aria-current", "page"));
-    expect(within(screen.getByTestId("subjects-row-subject-a")).getByText("21")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subjects-filter-ARCHIVED"));
     // Đổi tab: bảng cũ vẫn ở đó (mờ đi) trong lúc tải, không thay bằng dòng "Đang tải".
     expect(screen.getByRole("table")).toBeInTheDocument();

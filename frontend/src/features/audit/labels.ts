@@ -140,3 +140,53 @@ export function toQuery(form: AuditFilterForm, actorId: string | undefined, page
     size,
   };
 }
+
+/** Lý do từ chối hay gặp, ghi gọn 2–3 chữ. */
+const REASON_LABELS: Record<string, string> = {
+  ROLE_DENIED: "Sai vai trò",
+  UNKNOWN_EMAIL: "Sai email",
+  BAD_PASSWORD: "Sai mật khẩu",
+  LOCKED: "Tài khoản khóa",
+  ACCOUNT_INACTIVE: "Tài khoản khóa",
+  ACCOUNT_NOT_ACTIVE: "Tài khoản khóa",
+  TOO_MANY_FAILURES: "Thử quá nhiều",
+  RATE_LIMITED: "Quá giới hạn",
+  OUT_OF_SCOPE: "Ngoài phạm vi",
+  CLASS_OUT_OF_SCOPE: "Ngoài phạm vi",
+  GRADING_SCOPE: "Ngoài phạm vi",
+  NOT_OWNER: "Không sở hữu",
+  ENROLLMENT_REQUIRED: "Chưa ghi danh",
+  TOKEN_ACCOUNT_MISMATCH: "Sai tài khoản",
+  TOOL_ERROR: "Lỗi công cụ",
+  ARGS_TOO_LARGE: "Dữ liệu quá lớn",
+  DRIVE_ABUSE_BLOCKED: "Bị chặn",
+  API_KEY_INVALID: "Sai khóa API",
+  AI_SERVICE_UNAVAILABLE: "AI quá tải",
+  ACCESS_DENIED: "Không có quyền",
+};
+
+/**
+ * Lý do trên bảng audit, ngắn 2–3 chữ: mã quen thì dịch, mã lạ đoán theo đuôi mã, câu chữ (thường là lỗi nhà cung cấp AI) thì
+ * rút theo mã HTTP; còn lại lấy 3 chữ đầu. Lý do đầy đủ hiện khi rê chuột.
+ */
+export function shortReason(reason: string | null | undefined): string {
+  const value = reason?.trim() ?? "";
+  if (!value) return "—";
+  if (REASON_LABELS[value]) return REASON_LABELS[value];
+  if (/^[A-Z][A-Z0-9_]+$/.test(value)) {
+    if (/NOT_FOUND$/.test(value)) return "Không tìm thấy";
+    if (/(FORBIDDEN|DENIED|NOT_ALLOWED|ONLY)$/.test(value)) return "Không có quyền";
+    if (/INVALID/.test(value)) return "Không hợp lệ";
+    if (/TOO_LARGE/.test(value)) return "Quá lớn";
+    if (/UNAVAILABLE/.test(value)) return "Tạm ngưng";
+    if (/CONFLICT/.test(value)) return "Bị xung đột";
+    return "Bị từ chối";
+  }
+  if (/key api|khóa|HTTP 40[13]/i.test(value)) return "Sai khóa";
+  if (/HTTP 429|hạn mức|giới hạn/i.test(value)) return "Hết hạn mức";
+  if (/quá tải|HTTP 5\d\d/i.test(value)) return "AI quá tải";
+  if (/timeout|kịp|hết thời gian/i.test(value)) return "Quá giờ";
+  if (/HTTP 400|từ chối/i.test(value)) return "Bị từ chối";
+  const words = value.split(/\s+/);
+  return words.length > 3 ? `${words.slice(0, 3).join(" ")}…` : value;
+}

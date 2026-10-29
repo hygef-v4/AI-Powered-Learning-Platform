@@ -44,7 +44,7 @@ export function Toaster() {
 /** Chồng thông báo ở góc phải; dùng chung cho màn sau đăng nhập (dưới thanh trên) và màn chưa đăng nhập. */
 export function ToastStack({ items, className }: { items: ToastItem[]; className?: string }) {
   return (
-    <div aria-live="polite" className={cx("pointer-events-none fixed right-4 z-[70] flex flex-col items-end gap-2 md:right-6", className)}>
+    <div aria-live="polite" className={cx("pointer-events-none fixed right-4 z-[110] flex flex-col items-end gap-2 md:right-6", className)}>
       {items.map((item) => (
         <p
           key={item.id}

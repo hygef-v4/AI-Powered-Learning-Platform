@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-import { assignmentsApi } from "@/features/assignments/api";
-import { Button, Pill } from "@/shared/ui";
+import { Button, Section, Segmented } from "@/shared/ui";
 import { gradingApi } from "./api";
 import type { GradebookPage, SubmissionPage } from "./types";
 import { useResource } from "./useResource";
 
 type GradebookAssignment = GradebookPage["assignments"][number];
-
-const INITIAL_VISIBLE_ASSIGNMENTS = 5;
 
 function parseDeadlineMs(deadline: string | null | undefined): number | null {
   if (!deadline) return null;
@@ -39,59 +36,42 @@ function sortAssignmentsForProgress(
   });
 }
 
-export function ClassProgressSection({
-  classId,
-  layout = "standalone",
-}: {
-  classId: string;
-  layout?: "standalone" | "overview";
-}) {
-  const [viewState, setViewState] = useState<{
-    classId: string;
-    showAll: boolean;
-    distributionOpen: boolean;
-    distributionAssignmentId: string | null;
-  }>({
-    classId,
-    showAll: false,
-    distributionOpen: false,
-    distributionAssignmentId: null,
-  });
+/** Đường dẫn sang tab Chấm điểm của lớp, mở sẵn một bài tập hoặc một sinh viên. */
+export function gradebookHref(classId: string, pick?: { assignment?: string; student?: string }) {
+  const params = new URLSearchParams({ tab: "gradebook" });
+  if (pick?.assignment) params.set("assignment", pick.assignment);
+  if (pick?.student) params.set("student", pick.student);
+  return `/teaching/classes/${encodeURIComponent(classId)}?${params}`;
+}
 
-  const scopedState =
-    viewState.classId === classId
-      ? viewState
-      : {
-          classId,
-          showAll: false,
-          distributionOpen: false,
-          distributionAssignmentId: null,
-        };
+/** Lượt đã nộp (đang chờ chấm hoặc đã chấm), không tính Chưa nộp và Đang làm. */
+const SUBMITTED = new Set(["PENDING", "DRAFT", "FINALIZED", "PUBLISHED"]);
 
+type View = "assignment" | "student";
+
+/** Cả lớp trong sổ điểm (trang 100 sinh viên), để tính tiến độ theo từng sinh viên. */
+async function wholeGradebook(classId: string) {
+  const first = await gradingApi.gradebook(classId, "", 1, 100);
+  const rows = [...first.rows];
+  for (let page = 2; rows.length < first.total && page <= 50; page++) {
+    const next = await gradingApi.gradebook(classId, "", page, 100);
+    if (next.rows.length === 0) break;
+    rows.push(...next.rows);
+  }
+  return { ...first, rows };
+}
+
+/**
+ * Tiến độ nộp bài trên tab Thông tin lớp của giảng viên: tab Theo bài tập (mỗi bài tính điểm một dòng: tên, loại bài, số đã
+ * nộp, thanh tiến độ; bài có bài chờ chấm lên trước rồi đến hạn gần nhất) và Theo sinh viên (mỗi sinh viên một dòng:
+ * số bài đã nộp trên tổng số bài, người nộp ít lên trước). Bấm một dòng để mở Sổ điểm với bài hoặc sinh viên đó; nút Xem sổ
+ * điểm trên đầu thẻ. Danh sách cao cố định, nhiều dòng thì cuộn trong thẻ.
+ */
+export function ClassProgressSection({ classId }: { classId: string; layout?: "standalone" | "overview" }) {
+  const [view, setView] = useState<View>("assignment");
   const load = useCallback(async () => {
-    const [progress, gradebook, openAssignments] = await Promise.all([
-      gradingApi.progress(classId),
-      gradingApi.gradebook(classId),
-      assignmentsApi.listForClass(classId, { status: ["OPEN"] }),
-    ]);
-    const today = new Date().toLocaleDateString("vi-VN");
-    const dueToday = openAssignments.items.filter(
-      (assignment) =>
-        assignment.closesAt &&
-        new Date(assignment.closesAt).toLocaleDateString("vi-VN") === today,
-    ).length;
-    const pendingTotal = Object.values(progress).reduce(
-      (total, page) => total + (page.summary.PENDING ?? 0),
-      0,
-    );
-    return {
-      progress,
-      assignments: gradebook.assignments,
-      openCount: openAssignments.items.length,
-      hiddenOpenCount: openAssignments.hiddenCount ?? 0,
-      dueToday,
-      pendingTotal,
-    };
+    const [progress, gradebook] = await Promise.all([gradingApi.progress(classId), wholeGradebook(classId)]);
+    return { progress, assignments: gradebook.assignments, rows: gradebook.rows };
   }, [classId]);
 
   const { value, error, refresh } = useResource(load);
@@ -100,322 +80,80 @@ export function ClassProgressSection({
     () => (value ? sortAssignmentsForProgress(value.assignments, value.progress) : []),
     [value],
   );
+  const students = useMemo(() => (value ? (value.rows ?? []).map((row) => ({
+    student: row.student,
+    submitted: row.grades.filter((cell) => SUBMITTED.has(cell.status)).length,
+  })).sort((a, b) => a.submitted - b.submitted || a.student.name.localeCompare(b.student.name, "vi")) : []), [value]);
 
-  const visibleAssignments = scopedState.showAll
-    ? sortedAssignments
-    : sortedAssignments.slice(0, INITIAL_VISIBLE_ASSIGNMENTS);
+  const empty = sortedAssignments.length === 0 || (view === "student" && students.length === 0);
 
-  const eligibleDistributionAssignments = useMemo(
-    () =>
-      sortedAssignments.filter(
-        (assignment) => (value?.progress[assignment.id]?.summary.PUBLISHED ?? 0) > 0,
-      ),
-    [sortedAssignments, value],
-  );
-
-  const activeDistributionAssignmentId = useMemo(() => {
-    if (eligibleDistributionAssignments.length === 0) return null;
-    if (
-      scopedState.distributionAssignmentId &&
-      eligibleDistributionAssignments.some((a) => a.id === scopedState.distributionAssignmentId)
-    ) {
-      return scopedState.distributionAssignmentId;
-    }
-    return eligibleDistributionAssignments[0]?.id ?? null;
-  }, [eligibleDistributionAssignments, scopedState.distributionAssignmentId]);
-
-  const openCard = (
-    <div
-      data-testid="overview-open-card"
-      data-class-overview-region={layout === "overview" ? "open" : undefined}
-      className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-5"
-    >
-      <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Bài đang mở</dt>
-      {value ? (
-        <>
-          <dd className="font-display text-[30px] leading-none text-ink">{value.openCount}</dd>
-          <dd className="mt-0.5 text-xs text-muted">
-            {value.dueToday} bài hết hạn hôm nay
-            {value.hiddenOpenCount > 0 ? ` · ${value.hiddenOpenCount} bài ẩn theo quyền` : ""}
-          </dd>
-        </>
-      ) : error ? (
-        <dd className="mt-1 text-sm font-semibold text-danger">Không tải được</dd>
-      ) : (
-        <dd className="mt-1 text-sm font-medium text-muted">Đang tải…</dd>
-      )}
-    </div>
-  );
-
-  const pendingCard = (
-    <div
-      data-testid="overview-pending-card"
-      data-class-overview-region={layout === "overview" ? "pending" : undefined}
-      className={`flex flex-col gap-2 rounded-xl border p-5 ${value && value.pendingTotal > 0 ? "border-primary bg-primary-soft" : "border-line bg-surface"}`}
-    >
-      <dt className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">Chờ chấm</dt>
-      {value ? (
-        <>
-          <dd className={`font-display text-[30px] leading-none ${value.pendingTotal > 0 ? "text-primary-ink" : "text-ink"}`}>{value.pendingTotal}</dd>
-          <dd className="mt-0.5 text-xs text-muted">Bài nộp chờ chấm</dd>
-        </>
-      ) : error ? (
-        <dd className="mt-1 text-sm font-semibold text-danger">Không tải được</dd>
-      ) : (
-        <dd className="mt-1 text-sm font-medium text-muted">Đang tải…</dd>
-      )}
-    </div>
-  );
-
-  const progressPanel = (
-    <section
-      data-testid="overview-progress-panel"
-      data-class-overview-region={layout === "overview" ? "progress" : undefined}
-      className={
-        layout === "overview"
-          ? "rounded-xl border border-line bg-surface p-5 min-w-0"
-          : "mt-5 rounded-xl border border-line bg-surface p-5 min-w-0"
-      }
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-bold text-ink">Tiến độ nộp bài</h2>
-        {sortedAssignments.length > INITIAL_VISIBLE_ASSIGNMENTS && (
-          <Button
-            size="sm"
-            variant="secondary"
-            aria-expanded={scopedState.showAll}
-            onClick={() =>
-              setViewState({
-                ...scopedState,
-                showAll: !scopedState.showAll,
-              })
-            }
-          >
-            {scopedState.showAll ? "Thu gọn" : `Xem tất cả (${sortedAssignments.length})`}
-          </Button>
+  return (
+    <Section title="Tiến độ nộp bài"
+      actions={<Link href={gradebookHref(classId)} className="text-[13px] font-semibold text-primary-ink hover:underline">Chấm điểm</Link>}>
+      <Segmented as="tab" ariaLabel="Xem tiến độ" value={view} onChange={setView} className="self-start"
+        options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
+      {/* Cao bằng danh sách Thông báo gần đây bên cạnh; nhiều dòng thì cuộn trong vùng này. */}
+      <div className="-mx-2 h-[248px] overflow-x-hidden overflow-y-auto px-2 [scrollbar-color:var(--c-muted)_transparent] [scrollbar-gutter:stable]">
+        {error ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <p role="alert" className="text-[13px] text-danger">{error}</p>
+            <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>Thử tải lại</Button>
+          </div>
+        ) : !value ? (
+          <p role="status" className="flex h-full items-center justify-center text-[13px] text-muted">Đang tải tiến độ nộp bài…</p>
+        ) : empty ? (
+          <p className="flex h-full items-center justify-center text-[13px] text-muted">
+            {sortedAssignments.length === 0 ? "Chưa có bài tính điểm trong lớp." : "Lớp chưa có sinh viên."}
+          </p>
+        ) : view === "assignment" ? (
+          <ul className="-my-1 flex flex-col">
+            {sortedAssignments.map((assignment) => {
+              const p = value.progress[assignment.id];
+              const total = Math.max(0, p?.summary.total ?? 0);
+              const submitted = Math.max(0, p?.summary.submitted ?? 0);
+              const unit = assignment.submissionMode === "GROUP" ? "nhóm" : "sinh viên";
+              return (
+                <ProgressRow key={assignment.id} testId="progress-assignment-row" dataId={assignment.id}
+                  href={gradebookHref(classId, { assignment: assignment.id })} title={assignment.title} meta={assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+                  done={submitted} total={total} hint={`${submitted} / ${total} ${unit} đã nộp`} showBar={!!p} />
+              );
+            })}
+          </ul>
+        ) : (
+          <ul className="-my-1 flex flex-col">
+            {students.map(({ student, submitted }) => (
+              <ProgressRow key={student.accountId} testId="progress-student-row" dataId={student.accountId}
+                href={gradebookHref(classId, { student: student.accountId })} title={student.name} meta={student.email}
+                done={submitted} total={sortedAssignments.length} hint={`Đã nộp ${submitted} / ${sortedAssignments.length} bài`} showBar />
+            ))}
+          </ul>
         )}
       </div>
-
-      {layout === "standalone" && (
-        <dl className="my-4 grid gap-3 sm:grid-cols-2">
-          {openCard}
-          {pendingCard}
-        </dl>
-      )}
-
-      {error && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger-line bg-danger-soft p-3 text-sm text-danger">
-          <p role="alert">{error}</p>
-          <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>
-            Thử tải lại
-          </Button>
-        </div>
-      )}
-
-      {!value && !error && (
-        <p role="status" className="mt-3 text-sm text-muted">
-          Đang tải tiến độ nộp bài…
-        </p>
-      )}
-
-      {value && sortedAssignments.length === 0 && (
-        <p className="mt-3 text-sm text-muted">Chưa có bài tính điểm trong lớp.</p>
-      )}
-
-      {value && visibleAssignments.length > 0 && (
-        <div className="mt-3 divide-y divide-line rounded-xl border border-line">
-          {visibleAssignments.map((assignment) => {
-            const p = value.progress[assignment.id];
-            const total = Math.max(0, p?.summary.total ?? 0);
-            const submitted = Math.max(0, p?.summary.submitted ?? 0);
-            const pendingCount = p?.summary.PENDING ?? 0;
-            const percent = total > 0 ? Math.round((100 * submitted) / total) : 0;
-            const unitLabel = assignment.submissionMode === "GROUP" ? "nhóm" : "sinh viên";
-            const submissionHref = `/teaching/classes/${classId}/assignments/${assignment.id}/submissions`;
-            return (
-              <div
-                key={assignment.id}
-                data-testid="progress-assignment-row"
-                data-assignment-id={assignment.id}
-                className="flex flex-col gap-2 p-3.5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      className="font-semibold text-primary-ink hover:underline break-words"
-                      href={submissionHref}
-                    >
-                      {assignment.title}
-                    </Link>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"} · Tính điểm ·{" "}
-                      {p?.deadline
-                        ? `Hạn: ${new Date(p.deadline).toLocaleString("vi-VN")}`
-                        : "Không có hạn nộp"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {pendingCount > 0 && <Pill tone="warning">{pendingCount} chờ chấm</Pill>}
-                    <Link
-                      className="text-xs font-semibold text-primary-ink hover:underline whitespace-nowrap"
-                      href={submissionHref}
-                    >
-                      Xem bài nộp
-                    </Link>
-                  </div>
-                </div>
-                <p className="text-xs text-ink">
-                  {p
-                    ? `${submitted} / ${total} ${unitLabel} đã nộp (${percent}%) · ${pendingCount} chờ chấm`
-                    : "Chưa có dữ liệu"}
-                </p>
-                {p && (
-                  <progress
-                    className="h-2 w-full overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-sunken [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
-                    aria-label={`Tiến độ nộp ${assignment.title}`}
-                    max={Math.max(1, total)}
-                    value={Math.min(submitted, Math.max(1, total))}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {value && sortedAssignments.length > 0 && (
-        <div className="mt-4 border-t border-line pt-4">
-          <button
-            type="button"
-            aria-expanded={scopedState.distributionOpen}
-            className="flex w-full items-center justify-between rounded-lg border border-line bg-sunken px-3.5 py-2.5 text-left text-sm font-semibold text-ink hover:bg-sunken"
-            onClick={() =>
-              setViewState({
-                ...scopedState,
-                distributionOpen: !scopedState.distributionOpen,
-              })
-            }
-          >
-            <span>Phân bố điểm đã công bố</span>
-            <span className="text-xs font-medium text-muted">
-              {scopedState.distributionOpen ? "Thu gọn" : "Mở phân bố điểm"}
-            </span>
-          </button>
-
-          {scopedState.distributionOpen && (
-            <div className="mt-3 rounded-xl border border-line bg-sunken/60 p-3.5">
-              {eligibleDistributionAssignments.length === 0 ? (
-                <p className="text-sm text-muted">
-                  Chưa đủ dữ liệu công bố hoặc ẩn theo ngưỡng riêng tư để hiển thị phân bố điểm.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label
-                      htmlFor={`dist-assignment-${classId}`}
-                      className="text-xs font-semibold text-muted"
-                    >
-                      Bài tập đã công bố
-                    </label>
-                    <select
-                      id={`dist-assignment-${classId}`}
-                      aria-label="Bài tập xem phân bố điểm"
-                      className="max-w-full rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-ink"
-                      value={activeDistributionAssignmentId ?? ""}
-                      onChange={(e) =>
-                        setViewState({
-                          ...scopedState,
-                          distributionAssignmentId: e.target.value,
-                        })
-                      }
-                    >
-                      {eligibleDistributionAssignments.map((assignment) => (
-                        <option key={assignment.id} value={assignment.id}>
-                          {assignment.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {activeDistributionAssignmentId && (
-                    <PublishedDistribution
-                      key={`${classId}:${activeDistributionAssignmentId}`}
-                      classId={classId}
-                      assignmentId={activeDistributionAssignmentId}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </section>
+    </Section>
   );
-
-  if (layout === "overview") {
-    return (
-      <>
-        {openCard}
-        {pendingCard}
-        {progressPanel}
-      </>
-    );
-  }
-
-  return progressPanel;
 }
 
-function PublishedDistribution({
-  classId,
-  assignmentId,
-}: {
-  classId: string;
-  assignmentId: string;
+/** Một dòng tiến độ: tên, dòng phụ, số đã nộp trên tổng và thanh tiến độ; cả dòng là liên kết sang Chấm điểm. */
+function ProgressRow({ testId, dataId, href, title, meta, done, total, hint, showBar }: {
+  testId: string; dataId: string; href: string; title: string; meta: string; done: number; total: number; hint: string; showBar: boolean;
 }) {
-  const load = useCallback(
-    () => gradingApi.classDistribution(classId, assignmentId),
-    [classId, assignmentId],
-  );
-  const { value, error, refresh } = useResource(load);
   return (
-    <section className="mt-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-        Phân bố điểm đã công bố
-      </h3>
-      {error && (
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-danger-line bg-danger-soft p-2.5 text-sm text-danger">
-          <p role="alert">{error}</p>
-          <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>
-            Thử tải lại
-          </Button>
-        </div>
-      )}
-      {!value && !error && (
-        <p role="status" className="mt-2 text-sm text-muted">
-          Đang tải phân bố điểm…
-        </p>
-      )}
-      {value?.length === 0 && (
-        <p className="mt-2 text-sm text-muted">
-          Chưa đủ dữ liệu công bố hoặc ẩn theo ngưỡng riêng tư để hiển thị phân bố điểm.
-        </p>
-      )}
-      {value && value.length > 0 && (
-        <ul className="mt-2 space-y-2">
-          {value.map((bucket) => (
-            <li key={bucket.label} className="flex items-center gap-3 text-sm">
-              <span className="w-20 shrink-0 font-medium text-ink">{bucket.label}</span>
-              <progress
-                className="h-2 flex-1 overflow-hidden rounded-full accent-primary [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-line [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
-                aria-label={`Mức điểm ${bucket.label}`}
-                max={Math.max(1, ...value.map((item) => item.count))}
-                value={bucket.count}
-              />
-              <span className="shrink-0 text-xs text-muted">{bucket.count} sinh viên</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <li data-testid={testId} data-assignment-id={testId === "progress-assignment-row" ? dataId : undefined} className="border-b border-line last:border-b-0">
+      <Link href={href} className="row-interactive -mx-2 flex flex-col gap-1.5 rounded-lg px-2 py-2.5 hover:bg-shell">
+        <span className="flex items-center gap-3">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13.5px] font-semibold text-ink">{title}</span>
+            <span className="block truncate text-xs text-muted">{meta}</span>
+          </span>
+          <span className="shrink-0 text-xs text-muted tabular-nums" title={hint}>{done}/{total}</span>
+        </span>
+        {showBar && (
+          <span aria-hidden className="block h-1 overflow-hidden rounded-full bg-sunken">
+            <span className="block h-full rounded-full bg-primary"
+              ref={(node) => { if (node) node.style.width = `${total > 0 ? Math.round((100 * done) / total) : 0}%`; }} />
+          </span>
+        )}
+      </Link>
+    </li>
   );
 }

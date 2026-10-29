@@ -49,15 +49,15 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
           {error}
         </p>
       )}
-      <TableFrame filledHead className="mt-2">
+      <TableFrame filledHead className="mt-2 [&_table]:min-w-[600px] [&_table]:table-fixed">
+        <colgroup><col /><col className="w-[120px]" /><col className="w-[120px]" /><col className="w-[110px]" /><col className="w-[84px]" /></colgroup>
         <thead>
           <tr>
             <Th>Nhãn và token</Th>
             <Th>Quyền</Th>
-            <Th>Ngày tạo</Th>
             <Th>Hạn dùng</Th>
             <Th>Trạng thái</Th>
-            <Th className="w-[1%]">
+            <Th>
               <span className="sr-only">Thao tác</span>
             </Th>
           </tr>
@@ -65,7 +65,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
         <tbody>
           {credentials.length === 0 && (
             <tr>
-              <Td colSpan={6} className="py-6 text-center! text-muted">
+              <Td colSpan={5} className="py-6 text-center! text-muted">
                 Chưa có agent
               </Td>
             </tr>
@@ -73,11 +73,10 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
           {credentials.map((c) => (
             <tr key={c.id}>
               <Td>
-                <p className="font-semibold">{c.label}</p>
+                <p className="truncate font-semibold" title={c.label}>{c.label}</p>
                 <p className="font-mono text-[11px] text-muted">{masked(c.tokenHint)}</p>
               </Td>
               <Td className="whitespace-nowrap">{ACCESS_LABEL[c.access]}</Td>
-              <Td className="whitespace-nowrap">{formatDate(c.createdAt)}</Td>
               <Td className="whitespace-nowrap">{formatDate(c.expiresAt)}</Td>
               <Td>
                 <Pill tone={MCP_STATUS[c.status].tone}>{MCP_STATUS[c.status].text}</Pill>
@@ -129,7 +128,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
           </Button>
         }
       >
-        <p>Agent “{revoking?.label}” không gọi được công cụ của nền tảng từ lời gọi tiếp theo. Thao tác không hoàn tác được.</p>
+        <p>Bạn có chắc muốn thu hồi agent “{revoking?.label}” không?</p>
       </Dialog>
     </SettingsGroup>
   );

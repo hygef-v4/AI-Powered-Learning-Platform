@@ -22,7 +22,7 @@ describe("sidebar của môn", () => {
     expect(subjectContext(at("/teaching/classes"))).toBeNull();
 
     const subject = subjectContext(at("/manager/subjects/s-1"))!;
-    expect(labels(subject.items)).toEqual(["Thông tin môn", "Câu hỏi", "Quiz", "Bài tập", "Học liệu", "Lớp của môn"]);
+    expect(labels(subject.items)).toEqual(["Thông tin môn", "Câu hỏi", "Quiz", "Bài tập", "Học liệu", "Lớp học"]);
     expect(subject.items.map((item) => item.href)).toEqual([
       "/manager/subjects/s-1",
       "/manager/questions?subjectId=s-1",
@@ -46,13 +46,13 @@ describe("sidebar của môn", () => {
 describe("sidebar của lớp", () => {
   it("lớp được phân công có các tab của trang lớp, mở đúng tab theo ?tab=", () => {
     const teaching = classContext(at("/teaching/classes/c-1", "tab=materials"))!;
-    expect(labels(teaching.items)).toEqual(["Thông tin lớp", "Sinh viên", "Học liệu", "Đánh giá", "Sổ điểm", "Thông báo lớp"]);
+    expect(labels(teaching.items)).toEqual(["Thông tin lớp", "Sinh viên", "Học liệu", "Bài tập", "Chấm điểm", "Thông báo lớp"]);
     expect(teaching.items[5]!.href).toBe("/announcements?classId=c-1");
     expect(teaching.items[0]!.href).toBe("/teaching/classes/c-1");
     expect(teaching.items[2]!.href).toBe("/teaching/classes/c-1?tab=materials");
     expect(activeLabel(teaching.items)).toBe("Học liệu");
     expect(activeLabel(classContext(at("/teaching/classes/c-1", "tab=nope"))!.items)).toBe("Thông tin lớp");
-    expect(activeLabel(classContext(at("/teaching/classes/c-1/assignments/a-1/submissions"))!.items)).toBe("Đánh giá");
+    expect(activeLabel(classContext(at("/teaching/classes/c-1/assignments/a-1/submissions"))!.items)).toBe("Bài tập");
     expect(classContext(at("/teaching/classes"))).toBeNull();
   });
 
@@ -74,9 +74,9 @@ describe("sidebar của lớp", () => {
     expect(studentClassContext(at("/my-assignments"))).toBeNull();
   });
 
-  it("lớp của môn (Chủ nhiệm môn) không có sidebar lớp, vẫn là sidebar của môn ở mục Lớp của môn", () => {
+  it("lớp của môn (Chủ nhiệm môn) không có sidebar lớp, vẫn là sidebar của môn ở mục Lớp học", () => {
     expect(classContext(at("/manager/classes/c-2", "tab=students"))).toBeNull();
-    expect(activeLabel(subjectContext(at("/manager/classes/c-2"))!.items)).toBe("Lớp của môn");
+    expect(activeLabel(subjectContext(at("/manager/classes/c-2"))!.items)).toBe("Lớp học");
   });
 });
 

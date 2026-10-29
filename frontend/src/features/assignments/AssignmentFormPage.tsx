@@ -624,7 +624,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
               router.push(backHref);
             }, null)}>Xóa</Button>
           </>}>
-          Bài, rubric và đề xuất AI của bài bị xóa hẳn.
+          <p>Bạn có chắc muốn xóa bản nháp này không?</p>
         </Dialog>
       )}
     </div>
@@ -644,7 +644,7 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
         }}>Ngưng giao</Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <p>Sinh viên không bắt đầu, không nộp thêm; bài đang làm được tự nộp; bài đã nộp giữ nguyên.</p>
+      <p>Bạn có chắc muốn ngưng giao bài này không?</p>
       <Field label="Lý do" htmlFor="retire-reason" required>
         <textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
           className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />

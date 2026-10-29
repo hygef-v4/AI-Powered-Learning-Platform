@@ -5,10 +5,14 @@ import type { GradebookPage } from "./types";
 
 const mocks = vi.hoisted(() => ({
   gradebook: vi.fn(),
+  progress: vi.fn(),
   export: vi.fn(),
 }));
 
 vi.mock("./api", () => ({ gradingApi: mocks }));
+const url = vi.hoisted(() => ({ params: new URLSearchParams() }));
+const push = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useSearchParams: () => url.params, useRouter: () => ({ push }) }));
 
 const longTitle1 =
   "Bài tập lớn số 1: Phân tích yêu cầu và thiết kế sơ đồ lớp chi tiết cho hệ thống quản lý sự kiện trường đại học";
@@ -71,171 +75,128 @@ const samplePage: GradebookPage = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  url.params = new URLSearchParams();
   mocks.gradebook.mockResolvedValue(samplePage);
+  mocks.progress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
 });
 
 afterEach(cleanup);
 
-describe("ClassGradebookTab layout and modes", () => {
-  it("defaults to Theo bài tập mode, aligns grades by assignmentId, and preserves real 0.00 score vs missing evaluation", async () => {
+describe("ClassGradebookTab: danh sách – chi tiết", () => {
+  it("Theo bài tập: danh sách bài bên trái (chỉ ghi loại), bảng điểm của bài đang chọn bên phải, căn theo assignmentId", async () => {
     render(<ClassGradebookTab classId="class-1" />);
 
-    const byAssignmentBtn = await screen.findByRole("button", { name: "Theo bài tập" });
-    const matrixBtn = screen.getByRole("button", { name: "Tổng hợp" });
-    expect(byAssignmentBtn).toHaveAttribute("aria-pressed", "true");
-    expect(matrixBtn).toHaveAttribute("aria-pressed", "false");
+    const first = await screen.findByRole("button", { name: new RegExp(longTitle1) });
+    expect(first).toHaveAttribute("aria-pressed", "true");
+    expect(first).toHaveTextContent(/Cá nhân$/);
+    expect(first).not.toHaveTextContent("chờ chấm");
+    expect(screen.queryByRole("link", { name: "Xem bài nộp" })).not.toBeInTheDocument();
 
-    const selector = screen.getByRole("combobox", { name: "Bài tập" });
-    expect(selector).toHaveValue("a-1");
-
-    // Focused table headers: Sinh viên, Điểm, Trạng thái, Thao tác
-    const headers = screen.getAllByRole("columnheader").map((th) => th.textContent?.trim());
-    expect(headers).toEqual(["Sinh viên", "Điểm", "Trạng thái", "Thao tác"]);
-
-    // Student 1 has 10.00 / 10.00 on a-1 (even though a-2 was first in row.grades)
     const rowAn = screen.getByText("Nguyễn Văn An").closest("tr")!;
-    expect(within(rowAn).getByText("10.00 / 10.00")).toBeInTheDocument();
+    expect(within(rowAn).getByText("10 / 10")).toBeInTheDocument();
     expect(within(rowAn).getByText("Đã công bố")).toBeInTheDocument();
-    expect(within(rowAn).getByRole("link", { name: "Xem điểm" })).toHaveAttribute(
-      "href",
-      "/teaching/evaluations/eval-a1-s1",
-    );
-
-    // Student 2 has real score 0 on a-1 -> must show 0.00 / 10.00, not —
+    expect(within(rowAn).getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/eval-a1-s1");
     const rowBinh = screen.getByText("Trần Thị Bình").closest("tr")!;
-    expect(within(rowBinh).getByText("0.00 / 10.00")).toBeInTheDocument();
-    expect(within(rowBinh).getByText("Đã chấm (nháp)")).toBeInTheDocument();
+    expect(within(rowBinh).getByText("0 / 10")).toBeInTheDocument();
     expect(within(rowBinh).getByText(/Trễ/)).toBeInTheDocument();
-    expect(within(rowBinh).getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute(
-      "href",
-      "/teaching/evaluations/eval-a1-s2",
-    );
+    expect(within(rowBinh).getByRole("link", { name: "Tiếp tục chấm" })).toBeInTheDocument();
 
-    // Switch to assignment a-2: no evaluation -> shows — and Chưa nộp without broken review link
-    fireEvent.change(selector, { target: { value: "a-2" } });
-    expect(within(rowAn).queryByRole("link")).not.toBeInTheDocument();
-    expect(within(rowAn).getByText("Chưa nộp")).toBeInTheDocument();
-    expect(within(rowBinh).queryByRole("link")).not.toBeInTheDocument();
-    expect(within(rowBinh).getByText("Chưa nộp")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle2) }));
+    // Chưa có lượt chấm: dòng vẫn bấm được, sang danh sách bài nộp của bài.
+    const rowAn2 = screen.getByText("Nguyễn Văn An").closest("tr")!;
+    expect(within(rowAn2).getByRole("link", { name: "Xem bài nộp" })).toHaveAttribute("href", "/teaching/classes/class-1/assignments/a-2/submissions");
+    expect(within(rowAn2).getByText("Chưa nộp")).toBeInTheDocument();
+    fireEvent.click(rowAn2);
+    expect(push).toHaveBeenLastCalledWith("/teaching/classes/class-1/assignments/a-2/submissions");
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle1) }));
+    fireEvent.click(screen.getByText("Nguyễn Văn An").closest("tr")!);
+    expect(push).toHaveBeenLastCalledWith("/teaching/evaluations/eval-a1-s1");
+    expect(screen.queryByRole("columnheader", { name: /Bài 1/ })).not.toBeInTheDocument();
   });
 
-  it("supports duplicate assignment titles via UUID identity and falls back safely when selected assignment is removed", async () => {
-    const dupPage: GradebookPage = {
-      ...samplePage,
-      assignments: [
-        { id: "dup-1", title: "Bài kiểm tra", maxScore: 10, submissionMode: "INDIVIDUAL" },
-        { id: "dup-2", title: "Bài kiểm tra", maxScore: 5, submissionMode: "INDIVIDUAL" },
-      ],
-      rows: [
-        {
-          student: { accountId: "s-1", name: "Nguyễn Văn An", email: "an@school.test" },
-          grades: [
-            { assignmentId: "dup-1", evaluationId: "e-1", status: "FINALIZED", score: 8, maxScore: 10, late: false, submittedAt: null, feedback: null },
-            { assignmentId: "dup-2", evaluationId: "e-2", status: "PUBLISHED", score: 4.5, maxScore: 5, late: false, submittedAt: null, feedback: null },
-          ],
-        },
-      ],
-    };
-    mocks.gradebook.mockResolvedValueOnce(dupPage);
-    const { rerender } = render(<ClassGradebookTab classId="class-1" />);
-
-    const selector = await screen.findByRole("combobox", { name: "Bài tập" });
-    fireEvent.change(selector, { target: { value: "dup-2" } });
-    expect(screen.getByText("4.50 / 5.00")).toBeInTheDocument();
-
-    // Simulate refreshed data where dup-2 was removed
-    mocks.gradebook.mockResolvedValueOnce({
-      ...dupPage,
-      assignments: [{ id: "dup-1", title: "Bài kiểm tra", maxScore: 10, submissionMode: "INDIVIDUAL" }],
-    });
-    fireEvent.change(screen.getByRole("searchbox", { name: /Tìm sinh viên/ }), { target: { value: "An" } });
-    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "An", 1));
-    expect(await screen.findByText("8.00 / 10.00")).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Bài tập" })).toHaveValue("dup-1");
-    rerender(<ClassGradebookTab classId="class-1" />);
-  });
-
-  it("switches to Tổng hợp matrix with ordinals, accessible Danh mục bài tập disclosure, and assignmentId-aligned cells", async () => {
+  it("lọc theo trạng thái trên bảng điểm", async () => {
     render(<ClassGradebookTab classId="class-1" />);
-    const matrixBtn = await screen.findByRole("button", { name: "Tổng hợp" });
-    fireEvent.click(matrixBtn);
-
-    expect(matrixBtn).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Theo bài tập" })).toHaveAttribute("aria-pressed", "false");
-
-    // Ordinals Bài 1 and Bài 2 in headers plus accessible Danh mục bài tập disclosure
-    expect(screen.getByText("Bài 1")).toBeInTheDocument();
-    expect(screen.getByText("Bài 2")).toBeInTheDocument();
-    const directory = screen.getByText(/Danh mục bài tập/).closest("details")!;
-    expect(directory).toBeInTheDocument();
-    expect(within(directory).getByRole("link", { name: new RegExp(longTitle1) })).toHaveAttribute(
-      "href",
-      "/teaching/classes/class-1/assignments/a-1/submissions",
-    );
-
-    // Matrix row for Nguyễn Văn An aligns a-1 (first assignment col) and a-2 (second assignment col) despite reversed grades array
-    const rowAn = screen.getByText("Nguyễn Văn An").closest("tr")!;
-    const cellsAn = within(rowAn).getAllByRole("cell");
-    expect(cellsAn[0]).toHaveTextContent("10.00 / 10.00");
-    expect(cellsAn[1]).toHaveTextContent("—");
-    expect(cellsAn[1]).toHaveTextContent("Chưa nộp");
-  });
-
-  it("preserves search and page when switching mode or assignment, resets page on search, and resets state on classId change", async () => {
-    const { rerender } = render(<ClassGradebookTab classId="class-1" />);
     await screen.findByText("Nguyễn Văn An");
-
-    // Go to page 2
-    fireEvent.click(screen.getByTestId("pagination-page-2-button"));
-    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "", 2));
-
-    // Switch assignment and mode -> does not reset page or trigger redundant fetch
-    fireEvent.change(screen.getByRole("combobox", { name: "Bài tập" }), { target: { value: "a-2" } });
-    fireEvent.click(screen.getByRole("button", { name: "Tổng hợp" }));
-    fireEvent.click(screen.getByRole("button", { name: "Theo bài tập" }));
-    expect(mocks.gradebook).toHaveBeenCalledTimes(2);
-    expect(screen.getByRole("combobox", { name: "Bài tập" })).toHaveValue("a-2");
-
-    // Changing search resets page to 1
-    fireEvent.change(screen.getByRole("searchbox", { name: /Tìm sinh viên/ }), { target: { value: "Bình" } });
-    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "Bình", 1));
-
-    // Changing classId resets query, page, and assignment selection
-    rerender(<ClassGradebookTab classId="class-2" />);
-    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-2", "", 1));
-    expect(screen.getByRole("searchbox", { name: /Tìm sinh viên/ })).toHaveValue("");
+    fireEvent.change(screen.getByRole("combobox", { name: "Lọc theo trạng thái" }), { target: { value: "DRAFT" } });
+    expect(screen.queryByText("Nguyễn Văn An")).not.toBeInTheDocument();
+    expect(screen.getByText("Trần Thị Bình")).toBeInTheDocument();
   });
 
-  it("keeps explicit export scope in GradebookExportDialog and renders empty/error states with retry", async () => {
+  it("mở từ Tiến độ nộp bài: ?assignment= chọn sẵn bài, ?student= mở chế độ Theo sinh viên với người đó", async () => {
+    url.params = new URLSearchParams({ assignment: "a-2" });
+    const { unmount } = render(<ClassGradebookTab classId="class-1" />);
+    expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
+    unmount();
+
+    url.params = new URLSearchParams({ student: "s-2" });
+    render(<ClassGradebookTab classId="class-1" />);
+    expect(await screen.findByRole("button", { name: /Trần Thị Bình/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("tab", { name: "Theo sinh viên" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("tìm bài trong danh sách bên trái (lọc tại chỗ, không gọi lại máy chủ)", async () => {
+    render(<ClassGradebookTab classId="class-1" />);
+    await screen.findByRole("button", { name: new RegExp(longTitle1) });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm bài tập" }), { target: { value: "số 2" } });
+    expect(screen.queryByRole("button", { name: new RegExp(longTitle1) })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: new RegExp(longTitle2) })).toBeInTheDocument();
+    expect(mocks.gradebook).toHaveBeenCalledTimes(1);
+  });
+
+  it("Theo sinh viên: danh sách sinh viên, bảng điểm mọi bài của người đang chọn có ô tìm bài; tìm sinh viên hỏi máy chủ, về trang 1", async () => {
+    render(<ClassGradebookTab classId="class-1" />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Theo sinh viên" }));
+
+    const binh = screen.getByRole("button", { name: /Trần Thị Bình/ });
+    expect(binh).not.toHaveTextContent("1/2");
+    fireEvent.click(binh);
+    const rowA1 = screen.getByText(longTitle1).closest("tr")!;
+    expect(within(rowA1).getByText("0 / 10")).toBeInTheDocument();
+    expect(within(rowA1).getByRole("link", { name: "Tiếp tục chấm" })).toBeInTheDocument();
+    const rowA2 = screen.getByText(longTitle2).closest("tr")!;
+    expect(within(rowA2).getByText("Chưa nộp")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm bài tập" }), { target: { value: "số 2" } });
+    expect(screen.queryByText(longTitle1)).not.toBeInTheDocument();
+    expect(screen.getByText(longTitle2)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "Bình" } });
+    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "Bình", 1));
+  });
+
+  it("nút Xuất bảng điểm lên chỗ của dòng tiêu đề và giữ phạm vi xuất đã chọn", async () => {
     mocks.export.mockResolvedValue(new Blob(["csv"], { type: "text/csv" }));
     URL.createObjectURL = vi.fn(() => "blob:test");
     URL.revokeObjectURL = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
 
-    render(<ClassGradebookTab classId="class-1" />);
+    render(<ClassGradebookTab classId="class-1" headerActions={host} />);
     await screen.findByText("Nguyễn Văn An");
-
-    fireEvent.click(screen.getByRole("button", { name: "Xuất sổ điểm" }));
-    const dialog = screen.getByRole("dialog", { name: "Xuất sổ điểm" });
-
+    fireEvent.click(within(host).getByRole("button", { name: "Xuất bảng điểm" }));
+    const dialog = screen.getByRole("dialog", { name: "Xuất bảng điểm" });
     fireEvent.change(within(dialog).getByRole("combobox", { name: /Phạm vi/ }), { target: { value: "a-2" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));
-    await waitFor(() => expect(mocks.export).toHaveBeenCalledWith("class-1", "csv", "a-2"));
+    // Mặc định là Excel, đứng trước CSV.
+    expect(within(dialog).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Excel", "CSV"]);
+    await waitFor(() => expect(mocks.export).toHaveBeenCalledWith("class-1", "xlsx", "a-2"));
+    host.remove();
   });
 
-  it("renders readable empty states and retryable error state", async () => {
+  it("lỗi tải có Thử tải lại; lớp chưa có bài tính điểm; không có sinh viên phù hợp", async () => {
     mocks.gradebook
       .mockRejectedValueOnce(new Error("Mất kết nối máy chủ"))
-      .mockResolvedValueOnce({ ...samplePage, assignments: [], rows: [], total: 0 })
-      .mockResolvedValueOnce({ ...samplePage, rows: [], total: 0 });
+      .mockResolvedValueOnce({ ...samplePage, assignments: [], rows: [], total: 0 });
 
-    render(<ClassGradebookTab classId="class-1" />);
+    const { unmount } = render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Mất kết nối máy chủ");
-
     fireEvent.click(screen.getByRole("button", { name: "Thử tải lại" }));
     expect(await screen.findByText("Chưa có bài tính điểm trong lớp.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Xuất sổ điểm" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Xuất bảng điểm" })).toBeDisabled();
+    unmount();
 
-    fireEvent.change(screen.getByRole("searchbox", { name: /Tìm sinh viên/ }), { target: { value: "không có" } });
+    mocks.gradebook.mockResolvedValue({ ...samplePage, rows: [], total: 0 });
+    render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByText("Không có sinh viên phù hợp.")).toBeInTheDocument();
   });
 });

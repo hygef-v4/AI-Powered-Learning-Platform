@@ -2,7 +2,8 @@
 
 import { type CandidateLoader } from "./useCandidates";
 import { useId, useRef, useState } from "react";
-import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
+import { createPortal } from "react-dom";
+import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Select, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import { formatDate, operationError } from "./ui";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "./enrollmentList";
@@ -12,12 +13,13 @@ const PAGE_SIZE = 20;
 const PREVIEW_SIZE = 10;
 const STATUS_TABS = [{ value: "ACTIVE", label: "Đang học" }, { value: "REMOVED", label: "Đã gỡ" }] as const;
 const OK_RESULTS = new Set(["ENROLLED", "RESTORED"]);
+const NO_GROUP = "__none";
 
 /** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra CSV ở trang Tài khoản. */
 export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] }) {
-  return <TableFrame filledHead>
+  return <TableFrame filledHead className="[&_table]:table-fixed">
     <caption className="sr-only">Kết quả từng dòng</caption>
-    <thead><tr><Th className="w-16">Dòng</Th><Th>Email</Th><Th>Kết quả</Th></tr></thead>
+    <colgroup><col className="w-[72px]" /><col /><col className="w-[200px]" /></colgroup><thead><tr><Th className="w-16">Dòng</Th><Th>Email</Th><Th>Kết quả</Th></tr></thead>
     <tbody>{rows.map((row) => <tr key={row.line}>
       <Td className="text-muted">{row.line}</Td>
       <Td>{row.email}</Td>
@@ -30,14 +32,18 @@ export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] })
  * Sinh viên trong lớp, cùng kiểu trang Tài khoản: Thêm theo danh sách và Thêm sinh viên ở trên; thẻ danh sách có tab
  * trạng thái bên trái, ô tìm bên phải, bảng tiêu đề tô nền. Trang giảng viên chỉ xem (không tab, không thao tác).
  */
-export function EnrollmentPanel({ students, groupNames, editable = false, includeRemoved = false, candidates = [], onStatusChange, onEnroll, onBatch, onView, loadCandidates }: {
-  loadCandidates?: CandidateLoader; students: EnrollmentView[]; groupNames?: Record<string, string> | null; editable?: boolean; includeRemoved?: boolean; candidates?: PersonView[];
+export function EnrollmentPanel({ students, groupNames, groupLeaders, editable = false, includeRemoved = false, candidates = [], onStatusChange, onEnroll, onBatch, onView, loadCandidates, actionsHost }: {
+  loadCandidates?: CandidateLoader; students: EnrollmentView[]; groupNames?: Record<string, string> | null; groupLeaders?: string[]; editable?: boolean; includeRemoved?: boolean; candidates?: PersonView[];
+  /** Chỗ đặt nút Thêm theo danh sách / Thêm sinh viên (hàng tab của trang lớp); không có thì nút nằm trên hàng công cụ của thẻ. */
+  actionsHost?: HTMLElement | null;
   onStatusChange?: (accountId: string, status: "ACTIVE" | "REMOVED") => Promise<void>;
   onEnroll?: (accountId: string) => Promise<void>; onBatch?: (text: string) => Promise<EnrollmentRowResult[]>; onView?: (student: EnrollmentView) => void;
 }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<"ACTIVE" | "REMOVED">("ACTIVE");
+  // Lọc theo nhóm (trang giảng viên): "" là tất cả, NO_GROUP là chưa có nhóm, còn lại là tên nhóm.
+  const [group, setGroup] = useState("");
   const [removing, setRemoving] = useState<EnrollmentView | null>(null);
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -46,24 +52,30 @@ export function EnrollmentPanel({ students, groupNames, editable = false, includ
   const showStatus = editable || includeRemoved;
   const actions = editable && onStatusChange;
   const q = query.toLocaleLowerCase("vi").trim();
-  const visible = students.filter((student) => student.status === (showStatus ? status : "ACTIVE") && `${student.name} ${student.email}`.toLocaleLowerCase("vi").includes(q));
+  const groupOf = (student: EnrollmentView) => groupNames?.[student.accountId] ?? NO_GROUP;
+  const groupOptions = groupNames ? [...new Set(Object.values(groupNames))].sort((a, b) => a.localeCompare(b, "vi", { numeric: true })) : [];
+  const visible = students.filter((student) => student.status === (showStatus ? status : "ACTIVE") && `${student.name} ${student.email}`.toLocaleLowerCase("vi").includes(q)
+    && (!group || groupOf(student) === group));
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const rows = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
-  const columns = 4 + (groupNames !== undefined ? 1 : 0) + (actions ? 1 : 0);
+  // Trang giảng viên (chỉ xem) không có cột STT.
+  const numbered = editable || includeRemoved;
+  const columns = 3 + (numbered ? 1 : 0) + (groupNames !== undefined ? 1 : 0) + (actions ? 1 : 0);
   async function change(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
     if (!onStatusChange || busy) return;
     setBusy(true); setError("");
     try { await onStatusChange(student.accountId, next); setRemoving(null); if (next === "REMOVED") showToast("Đã gỡ sinh viên", "danger"); else showToast("Đã thêm lại sinh viên"); }
     catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
   }
+  const addButtons = editable && (onEnroll || onBatch) ? <div className="flex flex-wrap gap-2">
+    {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>Thêm theo danh sách</Button>}
+    {onEnroll && <Button variant="primary" icon="add" onClick={() => setAdding(true)} data-testid="enrollment-add">Thêm sinh viên</Button>}
+  </div> : null;
   return <div className="flex flex-col gap-4">
-    {editable && (onEnroll || onBatch) && <div className="flex flex-wrap justify-end gap-2">
-      {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>Thêm theo danh sách</Button>}
-      {onEnroll && <Button variant="primary" icon="add" onClick={() => setAdding(true)} data-testid="enrollment-add">Thêm sinh viên</Button>}
-    </div>}
     {editable && importing && onBatch && <BatchEnrollPanel onBatch={onBatch} onClose={() => setImporting(false)} />}
     <section aria-label="Sinh viên trong lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      {/* Một hàng công cụ: tab trạng thái, lọc nhóm, ô tìm. */}
       <div className="flex flex-wrap items-center gap-3">
         {showStatus && <div role="tablist" aria-label="Trạng thái sinh viên" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
           {STATUS_TABS.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={status === tab.value}
@@ -73,15 +85,24 @@ export function EnrollmentPanel({ students, groupNames, editable = false, includ
             {tab.label}
           </button>)}
         </div>}
+        {groupNames && (
+          <Select aria-label="Lọc theo nhóm" value={group} wrapperClassName="w-48" onChange={(event) => { setGroup(event.target.value); setPage(0); }}>
+            <option value="">Tất cả</option>
+            <option value={NO_GROUP}>Chưa có nhóm</option>
+            {groupOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+          </Select>
+        )}
         <div role="search" className="ml-auto w-full sm:w-72">
           <TextInput type="search" icon="search" aria-label="Lọc theo tên hoặc email" placeholder="Lọc theo tên hoặc email"
             value={query} maxLength={200} onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
+        {addButtons && !actionsHost && addButtons}
       </div>
+      {addButtons && actionsHost && createPortal(addButtons, actionsHost)}
       {error && !removing && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <TableFrame filledHead>
-        <thead><tr>
-          <Th className="w-12">STT</Th><Th>Họ tên</Th><Th>Email</Th>
+      <TableFrame filledHead className="[&_table]:min-w-[640px] [&_table]:table-fixed">
+        <colgroup>{numbered && <col className="w-[60px]" />}<col /><col className="w-[30%]" />{groupNames !== undefined && <col className="w-[130px]" />}<col className="w-[120px]" />{actions && <col className="w-[56px]" />}</colgroup><thead><tr>
+          {numbered && <Th className="w-12">STT</Th>}<Th>Họ tên</Th><Th>Email</Th>
           {groupNames !== undefined && <Th>Nhóm</Th>}
           <Th>Ngày vào lớp</Th>
           {actions && <Th className="w-12"><span className="sr-only">Thao tác</span></Th>}
@@ -89,9 +110,10 @@ export function EnrollmentPanel({ students, groupNames, editable = false, includ
         <tbody>
           {rows.map((student, index) => {
             const cells = <>
-              <Td className="text-muted">{current * PAGE_SIZE + index + 1}</Td>
-              <Td>{onView ? <button type="button" aria-label={`Xem ${student.name}`} onClick={(event) => { event.stopPropagation(); onView(student); }}
-                className="text-left font-semibold text-ink hover:text-primary-ink">{student.name}</button> : <span className="font-semibold text-ink">{student.name}</span>}</Td>
+              {numbered && <Td className="text-muted">{current * PAGE_SIZE + index + 1}</Td>}
+              <Td><span className="flex flex-wrap items-center gap-2">{onView ? <button type="button" aria-label={`Xem ${student.name}`} onClick={(event) => { event.stopPropagation(); onView(student); }}
+                className="text-left font-semibold text-ink hover:text-primary-ink">{student.name}</button> : <span className="font-semibold text-ink">{student.name}</span>}
+                {groupLeaders?.includes(student.accountId) && <Pill tone="warning">Trưởng nhóm</Pill>}</span></Td>
               <Td className="text-muted">{student.email}</Td>
               {groupNames !== undefined && <Td>{groupNames === null ? "—" : groupNames[student.accountId] ?? <span className="text-muted">Chưa có nhóm</span>}</Td>}
               <Td className="text-muted">{formatDate(student.enrolledAt)}</Td>
@@ -109,6 +131,7 @@ export function EnrollmentPanel({ students, groupNames, editable = false, includ
     {adding && onEnroll && <AddStudentDialog candidates={candidates} loadCandidates={loadCandidates} onEnroll={onEnroll} onClose={() => setAdding(false)} />}
     <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
       footer={<Button variant="danger" disabled={busy} onClick={() => removing && void change(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
+      <p>Bạn có chắc muốn gỡ {removing?.name} khỏi lớp không?</p>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Dialog>
   </div>;
@@ -197,8 +220,8 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
         <Pill tone="success">{valid} hợp lệ</Pill>
         {preview.length > valid && <Pill tone="danger">{preview.length - valid} lỗi</Pill>}
       </div>
-      <TableFrame filledHead>
-        <thead><tr><Th className="w-16">Dòng</Th><Th>Email</Th><Th>Kết quả kiểm tra</Th></tr></thead>
+      <TableFrame filledHead className="[&_table]:table-fixed">
+        <colgroup><col className="w-[72px]" /><col /><col className="w-[220px]" /></colgroup><thead><tr><Th className="w-16">Dòng</Th><Th>Email</Th><Th>Kết quả kiểm tra</Th></tr></thead>
         <tbody>{shown.map((row) => <tr key={row.line}>
           <Td className="text-muted">{row.line}</Td>
           <Td>{row.email}</Td>

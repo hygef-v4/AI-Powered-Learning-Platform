@@ -14,8 +14,8 @@ export function RubricViewer({ title, criteria, total }: { title?: string; crite
   return (
     <div className="flex flex-col gap-1.5">
       {title && <p className="text-[13px] font-semibold text-ink">{title}</p>}
-      <TableFrame>
-        <thead>
+      <TableFrame className="[&_table]:table-fixed">
+        <colgroup><col /><col className="w-[100px]" /></colgroup><thead>
           <tr><Th>Mục chấm</Th><Th className="text-right">Điểm</Th></tr>
         </thead>
         <tbody>

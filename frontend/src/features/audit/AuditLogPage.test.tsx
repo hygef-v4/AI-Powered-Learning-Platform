@@ -120,7 +120,8 @@ describe("AuditLogPage", () => {
     const row = await screen.findByTestId(`audit-table-row-${SYSTEM_ROW.id}`);
     expect(within(row).getByText("Hệ thống")).toBeInTheDocument();
     expect(within(row).getByText("Thất bại")).toBeInTheDocument();
-    expect(within(row).getByText("Hết thời gian kết nối Google Drive")).toBeInTheDocument();
+    // Lý do ghi gọn 2–3 chữ, đủ câu khi rê chuột.
+    expect(within(row).getByText("Quá giờ")).toHaveAttribute("title", "Hết thời gian kết nối Google Drive");
   });
 
   it("lọc sẵn đối tượng khi mở từ Account Detail", async () => {
@@ -168,18 +169,11 @@ describe("AuditLogPage", () => {
     expect(all.has("to")).toBe(false);
   });
 
-  it("bấm dòng mở chi tiết chỉ đọc kèm JSON, nút Đóng đóng popup", async () => {
+  it("bảng chỉ xem: bấm dòng không mở popup chi tiết", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json(page([ADMIN_ROW]))));
     render(<AuditLogPage />);
 
     fireEvent.click(await screen.findByTestId(`audit-table-row-${ADMIN_ROW.id}`));
-    const dialog = screen.getByRole("dialog", { name: "Chi tiết bản ghi" });
-    expect(within(dialog).getByText(ADMIN_ROW.id)).toBeInTheDocument();
-    expect(within(dialog).getByText("Bản ghi không sửa hoặc xóa được")).toBeInTheDocument();
-    expect(within(dialog).getByTestId("audit-detail-json")).toHaveTextContent('"role": "TEACHER"');
-    expect(within(dialog).queryByRole("button", { name: /Sửa|Xóa/ })).not.toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByTestId("audit-detail-close-button"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

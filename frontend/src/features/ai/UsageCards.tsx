@@ -18,12 +18,14 @@ export function TokenCard({ title, action, className, children }: { title: strin
   );
 }
 
-/** Thẻ trắng: một nhãn và một con số. */
-export function CountCard({ title, value }: { title: string; value: ReactNode }) {
+/** Thẻ trắng (hoặc cam khi là thẻ chính của trang): một nhãn và một con số. */
+export function CountCard({ title, value, accent = false }: { title: string; value: ReactNode; accent?: boolean }) {
   return (
-    <div className="flex min-w-0 flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-6">
-      <p className="text-sm font-medium text-muted">{title}</p>
-      <p className="text-[40px] leading-none font-bold text-ink tabular-nums">{value}</p>
+    <div className={accent
+      ? "flex min-w-0 flex-col justify-between gap-4 rounded-2xl bg-primary p-6 text-on-primary"
+      : "flex min-w-0 flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-6"}>
+      <p className={accent ? "text-sm font-semibold opacity-90" : "text-sm font-medium text-muted"}>{title}</p>
+      <p className={accent ? "text-[40px] leading-none font-bold tabular-nums" : "text-[40px] leading-none font-bold text-ink tabular-nums"}>{value}</p>
     </div>
   );
 }

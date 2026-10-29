@@ -43,8 +43,8 @@ export const gradingApi = {
     write<BatchResult>("/evaluations:ai-proposals", { items, request }),
   estimateBatch: (items: ItemVersion[]) =>
     write<AiEstimate>("/evaluations:ai-proposal-estimate", { items }),
-  gradebook: (classId: string, q = "", page = 1) =>
-    apiFetch<GradebookPage>(`${root}/classes/${classId}/gradebook?${query({ q, page, size: 20 })}`),
+  gradebook: (classId: string, q = "", page = 1, size = 20) =>
+    apiFetch<GradebookPage>(`${root}/classes/${classId}/gradebook?${query({ q, page, size })}`),
   export: (classId: string, format: string, assignmentId?: string) =>
     apiDownload(`${root}/classes/${classId}/gradebook/export?${query({ format, assignmentId })}`),
   progress: (classId: string) =>

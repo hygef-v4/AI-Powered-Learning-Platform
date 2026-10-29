@@ -42,6 +42,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
     {value.status !== "ARCHIVED" && <Button variant="danger" icon="archive" onClick={() => choose("ARCHIVED")} data-testid="class-state-archive">Lưu trữ lớp</Button>}
     <Dialog open={target !== null} title={`${label}?`} icon={open ? "lock_open" : "archive"} tone={open ? "primary" : "danger"} onClose={() => setTarget(null)} dismissible={!busy}
       footer={<Button variant={open ? "primary" : "danger"} className="w-full" disabled={busy} onClick={() => void confirm()} data-testid="class-state-confirm">{open ? (value.status === "ARCHIVED" ? "Mở lại" : "Mở lớp") : "Lưu trữ"}</Button>}>
+      <p>Bạn có chắc muốn {label.toLocaleLowerCase("vi")} {value.name} không?</p>
       {error ? <div role="alert" className="text-sm text-danger">{error}{conflicts.length > 0 && <ul className="mt-1 list-disc pl-5">{conflicts.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}</ul>}</div> : null}
     </Dialog>
   </>;

@@ -351,8 +351,8 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
             {s.late && " · trễ hạn"}
           </p>
           <p className="font-mono text-[11px] break-all text-muted">Mã biên nhận: {s.receiptHash}</p>
-          <TableFrame>
-            <thead>
+          <TableFrame className="[&_table]:min-w-[520px] [&_table]:table-fixed">
+            <colgroup><col /><col className="w-[30%]" /><col className="w-[170px]" /></colgroup><thead>
               <tr>
                 <Th>Mục</Th>
                 <Th>Tác giả</Th>

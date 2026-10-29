@@ -123,8 +123,8 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
       <Alert tone="danger" role="alert">
         {account.displayName} đang giữ các môn hoặc lớp.
       </Alert>
-      <TableFrame filledHead>
-        <thead>
+      <TableFrame filledHead className="[&_table]:table-fixed">
+        <colgroup><col className="w-[110px]" /><col className="w-[140px]" /><col /></colgroup><thead>
           <tr>
             <Th>Loại</Th>
             <Th>Mã</Th>
@@ -185,12 +185,7 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
         </>
       }
     >
-      {reopening ? (
-        <p>
-          <b className="text-ink">{account.displayName}</b> đăng nhập lại được. Tài khoản đã từng kích hoạt về Hoạt động; tài
-          khoản chưa kích hoạt về Chờ kích hoạt.
-        </p>
-      ) : null}
+      <p>Bạn có chắc muốn {reopening ? "mở lại" : "vô hiệu hóa"} tài khoản {account.displayName} không?</p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}

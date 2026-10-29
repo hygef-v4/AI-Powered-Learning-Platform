@@ -79,8 +79,8 @@ export function QuestionImportDialog({ subjectId, onClose, onImported }: Props) 
               <Pill tone={preview.invalid > 0 ? "danger" : "neutral"}>{preview.invalid} lỗi</Pill>
             </div>
             <p className="text-muted">Câu nhập vào ở trạng thái Nháp.</p>
-            <TableFrame className="max-h-80 overflow-y-auto">
-              <thead><tr><Th>Dòng</Th><Th>Câu hỏi</Th><Th>Số lựa chọn</Th><Th>Kết quả</Th></tr></thead>
+            <TableFrame className="max-h-80 overflow-y-auto [&_table]:table-fixed">
+              <colgroup><col className="w-[64px]" /><col /><col className="w-[110px]" /><col className="w-[170px]" /></colgroup><thead><tr><Th>Dòng</Th><Th>Câu hỏi</Th><Th>Số lựa chọn</Th><Th>Kết quả</Th></tr></thead>
               <tbody>
                 {preview.rows.map((row) => (
                   <tr key={row.row}>

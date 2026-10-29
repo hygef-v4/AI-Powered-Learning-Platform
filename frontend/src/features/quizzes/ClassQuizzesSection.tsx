@@ -45,8 +45,8 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
       {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => { setError(null); setAttempt((n) => n + 1); }}>Thử lại</Button>}>{error}</Alert>}
       {!error && !rows && <p role="status" className="text-sm text-muted">Đang tải quiz…</p>}
       {rows && (
-        <TableFrame>
-          <thead><tr><Th>Quiz</Th><Th className="max-sm:hidden">Phạm vi</Th><Th>Trạng thái</Th><Th className="max-sm:hidden">Bài nộp</Th></tr></thead>
+        <TableFrame className="[&_table]:min-w-[560px] [&_table]:table-fixed">
+          <colgroup><col /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[160px]" /></colgroup><thead><tr><Th>Quiz</Th><Th className="max-sm:hidden">Phạm vi</Th><Th>Trạng thái</Th><Th className="max-sm:hidden">Bài nộp</Th></tr></thead>
           <tbody>
             {rows.length === 0 && <tr><Td colSpan={4} className="py-6 text-center text-muted">Lớp chưa có quiz.</Td></tr>}
             {rows.map((row) => (

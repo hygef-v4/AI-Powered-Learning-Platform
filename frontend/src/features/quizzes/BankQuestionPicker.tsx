@@ -113,8 +113,8 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
         <p className="text-muted">Còn {freeSlots} chỗ trống trong quiz. {tab === "manual" ? `Đã chọn ${selected.length} câu.` : random ? `Có ${random.matching} câu phù hợp.` : ""}</p>
         {tooMany && <Alert tone="warning">Số câu chọn vượt chỗ trống của quiz.</Alert>}
         {error && <Alert tone="danger" role="alert">{error}</Alert>}
-        <TableFrame className="max-h-80 overflow-y-auto">
-          <thead><tr><Th>{tab === "manual" ? "Chọn" : ""}</Th><Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Thẻ</Th></tr></thead>
+        <TableFrame className="max-h-80 overflow-y-auto [&_table]:min-w-[600px] [&_table]:table-fixed">
+          <colgroup><col className="w-[64px]" /><col /><col className="w-[130px]" /><col className="w-[100px]" /><col className="w-[20%]" /></colgroup><thead><tr><Th>{tab === "manual" ? "Chọn" : ""}</Th><Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Thẻ</Th></tr></thead>
           <tbody>
             {(tab === "manual" ? page?.items ?? [] : random?.rows ?? []).map((row) => (
               <tr key={row.id} data-testid="bank-picker-row">

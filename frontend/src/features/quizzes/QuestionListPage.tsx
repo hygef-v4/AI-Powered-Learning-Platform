@@ -142,8 +142,8 @@ export function QuestionListPage() {
       {!error && !data && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải câu hỏi…</p>}
       {!error && data && (
         <div className="flex flex-col gap-3">
-          <TableFrame>
-            <thead><tr><Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
+          <TableFrame className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+            <colgroup><col /><col className="w-[130px]" /><col className="w-[100px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr><Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
             <tbody>
               {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">Chưa có câu hỏi phù hợp.</Td></tr>}
               {data.items.map((row) => (

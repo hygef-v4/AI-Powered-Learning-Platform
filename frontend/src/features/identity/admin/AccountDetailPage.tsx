@@ -81,12 +81,7 @@ export function AccountDetailPage() {
     <>
       <PageHeader
         backHref="/admin/accounts"
-        title={
-          <>
-            {account.displayName}
-            <Pill tone={STATUS_TONES[account.status]}>{STATUS_LABELS[account.status]}</Pill>
-          </>
-        }
+        title={account.displayName}
         breadcrumb={[{ label: "Tài khoản", href: "/admin/accounts" }, { label: account.email }]}
       />
       <div className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">

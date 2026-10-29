@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, Th, cx } from "@/shared/ui";
+import { Alert, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { errorMessage, formatDateTime } from "./format";
 import { studentAssignmentResults } from "./slots";
 import type { StudentRow } from "./types";
@@ -39,7 +39,7 @@ function detailHref(row: StudentRow, general: boolean) {
 
 /**
  * #38 Student Assignments (F1, UC 37): bài của các lớp đang học (hoặc một lớp khi mở từ sidebar của lớp, `?classId=`), cùng bố
- * cục bảng Lớp của môn: một thẻ có tab Chưa làm / Đang làm / Đã nộp và ô lọc loại bài (Cá nhân / Nhóm / Luyện tập); bảng tiêu đề tô nền,
+ * cục bảng Lớp học: một thẻ có tab Chưa làm / Đang làm / Đã nộp, ô lọc loại bài (Cá nhân / Nhóm / Luyện tập) và ô tìm theo tên bài; bảng tiêu đề tô nền,
  * bấm dòng để mở bài. Các tab cùng độ rộng cột; cột thứ năm là Lượt làm (số lượt còn lại), riêng Đã nộp là Điểm. Bài đang làm
  * (kể cả bài nhóm nhóm đang làm) có nhãn Đang làm màu vàng; bài nhóm hiện trạng thái theo tiến độ của nhóm;
  * điểm do U09 gắn.
@@ -52,6 +52,7 @@ export function StudentAssignmentsPage() {
   const focus = params.get("focus");
   const [chosenTab, setTab] = useState<Tab | null>(null);
   const [mode, setMode] = useState("");
+  const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const { rows, error, loading } = useStudentAssignments(classId);
 
@@ -59,7 +60,9 @@ export function StudentAssignmentsPage() {
     key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : row.submittedCount > 0 || !!row.group?.submitted;
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
   const tab: Tab = chosenTab ?? TABS.find((item) => focused && inTab(focused, item.value))?.value ?? "upcoming";
-  const visible = (rows ?? []).filter((row) => inTab(row, tab) && (!mode || kindOf(row) === mode));
+  const q = query.toLocaleLowerCase("vi").trim();
+  const visible = (rows ?? []).filter((row) => inTab(row, tab) && (!mode || kindOf(row) === mode)
+    && row.title.toLocaleLowerCase("vi").includes(q));
   const count = (key: Tab) => (rows ?? []).filter((row) => inTab(row, key)).length;
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
@@ -67,7 +70,7 @@ export function StudentAssignmentsPage() {
 
   return (
     <>
-      <PageHeader title="Bài tập" subtitle={rows ? `${count("upcoming")} bài chưa làm` : undefined} />
+      <PageHeader title="Bài tập" />
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
       <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">
@@ -85,6 +88,10 @@ export function StudentAssignmentsPage() {
             <option value="">Mọi loại</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => <option key={kind} value={kind}>{KIND_LABELS[kind]}</option>)}
           </Select>
+          <div role="search" className="w-full sm:w-64">
+            <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={query} maxLength={200}
+              onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
+          </div>
         </div>
         {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau. */}
         <TableFrame filledHead className="[&_table]:min-w-[760px] [&_table]:table-fixed">

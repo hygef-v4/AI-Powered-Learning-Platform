@@ -46,8 +46,8 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
         <p className="mb-2 text-xs text-muted" data-testid="quiz-attempts-summary">
           {data.studentsAttempted} / {data.totalStudents} sinh viên đã làm · Chỉ đọc. Quiz Practice không vào sổ điểm.
         </p>
-        <TableFrame>
-          <thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th></tr></thead>
+        <TableFrame className="[&_table]:table-fixed">
+          <colgroup><col /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[170px]" /></colgroup><thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th></tr></thead>
           <tbody>
             {data.students.map((s) => (
               <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row">

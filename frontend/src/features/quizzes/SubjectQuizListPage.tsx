@@ -107,8 +107,8 @@ export function SubjectQuizListPage() {
       {!error && !data && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải quiz…</p>}
       {!error && data && (
         <div className="flex flex-col gap-3">
-          <TableFrame>
-            <thead><tr><Th>Quiz</Th><Th>Số câu</Th><Th>Thời gian</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
+          <TableFrame className="[&_table]:min-w-[680px] [&_table]:table-fixed">
+            <colgroup><col /><col className="w-[90px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>Số câu</Th><Th>Thời gian</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
             <tbody>
               {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">Chưa có quiz phù hợp.</Td></tr>}
               {data.items.map((row) => (

@@ -1,35 +1,63 @@
-import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { subjectSummarySections } from "./slots";
-import { EmptyState, Icon, PageHeading } from "./ui";
-import type { CourseClassView, SubjectView } from "./types";
-import styles from "./academics.module.css";
+"use client";
 
-export function ManagerDashboardPage({ subjects, classes, teachingCount = 0, onSubject, onTeaching }: { subjects: SubjectView[]; classes: CourseClassView[]; teachingCount?: number; onSubject: (id: string) => void; onTeaching: () => void }) {
-  return <><PageHeading title="Môn được phân công"/>
-    {teachingCount > 0 && <div className={styles.notice}><Icon name="info"/><div>Bạn đang được phân công dạy <strong>{teachingCount} lớp</strong>. <button className={styles.textButton} onClick={onTeaching}>Mở Lớp được phân công<Icon name="chevron"/></button></div></div>}
-    <div className={styles.cardGrid}>{subjects.map((subject) => { const rows = classes.filter((course) => course.subject.id === subject.id); return <article key={subject.id} className={styles.subjectCard}><h2>{subject.code}</h2><p className={styles.subjectName}>{subject.name}</p><div className={styles.statRow}>{([ ["OPEN", "Đang mở"], ["ARCHIVED", "Lưu trữ"] ] as const).map(([status, label]) => <div key={status}><small>{label}</small><strong>{rows.filter((row) => row.status === status).length}</strong></div>)}</div><SlotOutlet slot={subjectSummarySections} props={{subjectId:subject.id,variant:"inline" as const}}/><button className={styles.textButton} style={{ marginTop: 18, alignSelf: "flex-start" }} onClick={() => onSubject(subject.id)}>Mở môn<Icon name="chevron"/></button></article>; })}</div>
-    {!subjects.length && <section className={styles.panel}><EmptyState title="Bạn chưa được giao quản lý môn"/></section>}
+import { useId, useState } from "react";
+import { Field, LockedInput, PageHeader, Section, Segmented } from "@/shared/ui";
+import type { ManagedSubject } from "./api";
+import { CourseCard, CourseGrid } from "./CourseCard";
+import type { CourseClassView, SubjectView } from "./types";
+
+/** Số lớp đang hoạt động (đang mở) của một môn. */
+function openClasses(subject: SubjectView, classes: CourseClassView[]) {
+  return classes.filter((course) => course.subject.id === subject.id && course.status === "OPEN").length;
+}
+
+type SubjectTab = "ACTIVE" | "ARCHIVED";
+
+/**
+ * Môn được phân công (Chủ nhiệm môn): tab Hoạt động / Lưu trữ theo trạng thái môn, lưới thẻ dọc chỉ có mã môn ở trên và tên
+ * môn ở dưới; bấm thẻ để mở Thông tin môn.
+ */
+export function ManagerDashboardPage({ subjects, onSubject }: { subjects: ManagedSubject[]; onSubject: (id: string) => void }) {
+  const [tab, setTab] = useState<SubjectTab>("ACTIVE");
+  const archived = subjects.filter((subject) => subject.status === "ARCHIVED").length;
+  const count = (value: SubjectTab) => (value === "ARCHIVED" ? archived : subjects.length - archived);
+  const shown = subjects.filter((subject) => (subject.status === "ARCHIVED") === (tab === "ARCHIVED"));
+  return <>
+    <PageHeader title="Môn được phân công" />
+    <Segmented as="tab" ariaLabel="Lọc môn" value={tab} onChange={setTab} className="self-start"
+      options={([{ value: "ACTIVE", label: "Hoạt động" }, { value: "ARCHIVED", label: "Lưu trữ" }] as const).map((option) => ({
+        value: option.value, label: <>{option.label}<span className="ml-1 tabular-nums text-muted">{count(option.value)}</span></>,
+      }))} />
+    <CourseGrid empty={shown.length === 0 ? (tab === "ARCHIVED" ? "Chưa có môn lưu trữ." : "Bạn chưa được giao quản lý môn.") : null}>
+      {shown.map((subject) => (
+        <CourseCard key={subject.id} code={subject.code} name={subject.name} band={subject.code} icon="menu_book"
+          onOpen={() => onSubject(subject.id)} label={`Mở môn ${subject.code}`} testId={`subject-row-${subject.id}`} />
+      ))}
+    </CourseGrid>
   </>;
 }
+
 /**
- * Thông tin môn của Chủ nhiệm môn: chọn môn gọn trên tiêu đề, dải số lớp, rồi lưới ô số liệu do các unit gắn vào. Lớp của
- * môn mở từ sidebar của môn.
+ * Thông tin môn của Chủ nhiệm môn: một thẻ như Thông tin môn học bên quản trị (mã môn, tên môn, mô tả) nhưng chỉ xem, thêm ô
+ * Số lớp là số lớp đang hoạt động. Không có ô số liệu khác; đổi môn bằng ô chọn môn trên sidebar.
  */
-export function MySubjectPage({ subject, subjects, classes, onSwitch }: { subject: SubjectView; subjects?: SubjectView[]; classes: CourseClassView[]; onSwitch?: (id: string) => void; onBack?: () => void }) {
-  const rows = classes.filter((course) => course.subject.id === subject.id);
+export function MySubjectPage({ subject, classes }: { subject: SubjectView; classes: CourseClassView[] }) {
+  const id = useId();
   return <>
-    <header className={styles.pageHeading}>
-      <div className={styles.headingText}>
-        {subjects && subjects.length > 1 && onSwitch
-          ? <label className={styles.subjectSwitch}><select aria-label="Môn học" value={subject.id} onChange={(event) => onSwitch(event.target.value)}>
-            {subjects.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}
-          </select></label>
-          : <span className={styles.subjectCode}>{subject.code}</span>}
-        <h1>{subject.name}</h1>
-        {subject.description && <p className={styles.lede}>{subject.description}</p>}
+    <PageHeader title="Thông tin môn" />
+    <Section title="Thông tin môn học">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-[1fr_2fr_1fr]">
+        <Field label="Mã môn" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={subject.code} /></Field>
+        <Field label="Tên môn học" htmlFor={`${id}-name`}><LockedInput id={`${id}-name`} value={subject.name} /></Field>
+        <Field label="Số lớp" htmlFor={`${id}-classes`}><LockedInput id={`${id}-classes`} value={String(openClasses(subject, classes))} /></Field>
+        <div className="sm:col-span-3">
+          <Field label="Mô tả" htmlFor={`${id}-description`}>
+            <p id={`${id}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">
+              {subject.description?.trim() || <span className="text-muted">Chưa có mô tả.</span>}
+            </p>
+          </Field>
+        </div>
       </div>
-    </header>
-    <div className={styles.statRow}>{([ ["OPEN", "Lớp đang mở"], ["ARCHIVED", "Lớp lưu trữ"] ] as const).map(([status, label]) => <div key={status}><strong>{rows.filter((row) => row.status === status).length}</strong><small>{label}</small></div>)}</div>
-    <div className={styles.bento}><SlotOutlet slot={subjectSummarySections} props={{subjectId:subject.id,variant:"card" as const}}/></div>
+    </Section>
   </>;
 }

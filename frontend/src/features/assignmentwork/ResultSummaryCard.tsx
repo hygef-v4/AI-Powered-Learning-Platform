@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { DocumentPart } from "@/shared/document";
 import { Section } from "@/shared/ui";
@@ -11,7 +10,7 @@ import { formatPoints, resultByPart, useAttemptResult } from "./attemptResult";
  * Thẻ Kết quả trên Assignment Detail: chỉ điểm tổng và điểm từng bài (nhánh con trực tiếp của gốc tài liệu); nhận xét chi
  * tiết xem ở Lịch sử nộp bài.
  */
-export function ResultSummaryCard({ attemptId, historyHref }: { attemptId: string; historyHref: string }) {
+export function ResultSummaryCard({ attemptId }: { attemptId: string }) {
   const { result, failed, loading } = useAttemptResult(attemptId);
   const [parts, setParts] = useState<{ attemptId: string; parts: DocumentPart[] } | null>(null);
   useEffect(() => {
@@ -25,7 +24,7 @@ export function ResultSummaryCard({ attemptId, historyHref }: { attemptId: strin
   const groups = result ? resultByPart(result.items, parts?.attemptId === attemptId ? parts.parts : undefined) : [];
 
   return (
-    <Section title="Kết quả" actions={<Link href={historyHref} className="text-[13px] font-semibold text-primary-ink hover:underline">Xem chi tiết</Link>}>
+    <Section title="Kết quả">
       {failed ? <p role="alert" className="text-[13px] text-danger">Không tải được kết quả.</p>
         : loading ? <p role="status" className="text-[13px] text-muted">Đang tải kết quả…</p>
         : result?.score == null ? <p className="text-[13px] text-muted">Chưa có điểm công bố.</p>

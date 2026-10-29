@@ -1,54 +1,41 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Section } from "@/shared/ui";
+import { createPortal } from "react-dom";
+import { Button } from "@/shared/ui";
 import { assignmentsApi, type ListFilter } from "./api";
-import { AssignmentFilters, emptyFilter, isFiltered, toListFilter, type FilterState } from "./AssignmentFilters";
-import { AssignmentTable } from "./AssignmentTable";
+import { ALL_ASSIGNMENTS, AssignmentListCard } from "./AssignmentListCard";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
-import { errorMessage } from "./format";
 import { useAssignmentPage } from "./useAssignmentPage";
 
-export function useDebounced<T>(value: T, ms = 300): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), ms);
-    return () => clearTimeout(timer);
-  }, [value, ms]);
-  return debounced;
+/**
+ * Tab Bài tập của Teacher Class Detail (F1, UC 34), gắn qua TeacherClassTab: nút Tạo bài tập trên dòng tiêu đề trang lớp;
+ * danh sách cùng kiểu trang Bài tập của môn, thêm cột Phạm vi và Bài nộp.
+ */
+export function ClassAssignmentsSection({ classId, tab, headerActions }: { classId: string; tab: string; headerActions?: HTMLElement | null }) {
+  return tab === "evals" ? <ClassAssignments classId={classId} headerActions={headerActions} /> : null;
 }
 
-/** Phần Bài tập trong tab Đánh giá của Teacher Class Detail (F1, UC 34); gắn qua TeacherClassTab. */
-export function ClassAssignmentsSection({ classId, tab }: { classId: string; tab: string }) {
-  return tab === "evals" ? <ClassAssignments classId={classId} /> : null;
-}
-
-function ClassAssignments({ classId }: { classId: string }) {
+function ClassAssignments({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const router = useRouter();
-  const [filter, setFilter] = useState<FilterState>(emptyFilter);
   const [creating, setCreating] = useState(false);
-  const debounced = useDebounced(filter);
   const load = useCallback((value: ListFilter, signal: AbortSignal) => assignmentsApi.listForClass(classId, value, signal), [classId]);
-  const page = useAssignmentPage(load, toListFilter(debounced));
+  const page = useAssignmentPage(load, ALL_ASSIGNMENTS);
+  const create = (
+    <Button variant="primary" icon="add" onClick={() => setCreating(true)}
+      disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">Tạo bài tập</Button>
+  );
   return (
-    <Section title="Bài tập" icon="assignment"
-      actions={<Button size="sm" variant="primary" icon="add" onClick={() => setCreating(true)}
-        disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">Tạo bài tập</Button>}>
-      <AssignmentFilters value={filter} onChange={setFilter} />
-      {page.loading && !page.data && <p role="status" className="text-sm text-muted">Đang tải bài tập…</p>}
-      {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>Thử lại</Button>}>{errorMessage(page.error)}</Alert>}
-      {page.data && (
-        <>
-          <AssignmentTable items={page.data.items} classId={classId} showScope filtered={isFiltered(debounced)} />
-          {page.data.hiddenCount > 0 && <p className="text-xs text-muted">Đang ẩn {page.data.hiddenCount} bài Đã đóng hoặc Ngưng giao.</p>}
-        </>
-      )}
+    <div className="flex flex-col gap-3">
+      {/* Nút lên dòng tiêu đề trang lớp để bảng nằm sát tiêu đề như trang Bài tập của sinh viên. */}
+      {headerActions ? createPortal(create, headerActions) : <div className="flex justify-end">{create}</div>}
+      <AssignmentListCard page={page} classId={classId} />
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created, startWithAi) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}${startWithAi ? "&startAI=1" : ""}`)} />
+          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`)} />
       )}
-    </Section>
+    </div>
   );
 }

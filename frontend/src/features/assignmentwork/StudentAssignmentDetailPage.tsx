@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
@@ -9,7 +10,7 @@ import { workApi } from "./api";
 import { errorMessage, formatDateTime } from "./format";
 import { ResultSummaryCard } from "./ResultSummaryCard";
 import { assignmentMaterialSections, groupWorkEntries } from "./slots";
-import { myStatusLabels, myStatusTones, type StudentDetail } from "./types";
+import { myStatusLabels, myStatusTones, type AttemptSummary, type StudentDetail } from "./types";
 import { rowStatus, useStudentAssignments } from "./useStudentAssignments";
 
 /** Loại bài như trên bảng Bài tập: luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
@@ -30,6 +31,8 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const classId = params.get("classId") ?? "";
   const general = params.get("from") === "all";
   const [detail, setDetail] = useState<StudentDetail | null>(null);
+  // Các lượt làm của mình (mới nhất trước); không tải được thì chỉ hiện lượt mới nhất trong chi tiết bài.
+  const [attempts, setAttempts] = useState<AttemptSummary[] | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [starting, setStarting] = useState(false);
   // Trạng thái lấy đúng như trên bảng Bài tập (cùng nguồn dữ liệu, có tiến độ bài nhóm).
@@ -42,6 +45,10 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
     workApi.detail(assignmentId, classId, controller.signal).then(
       (value) => { if (!controller.signal.aborted) setDetail(value); },
       (e) => { if (!controller.signal.aborted) setError(e); },
+    );
+    workApi.history(assignmentId, classId, controller.signal).then(
+      (value) => { if (!controller.signal.aborted) setAttempts(value); },
+      () => {},
     );
     return () => controller.abort();
   }, [assignmentId, classId]);
@@ -72,7 +79,11 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const lateDeadline = pastDeadline && !!detail.lateUntil && !submitted;
   const status = row ? rowStatus(row) : null;
   const latest = detail.latestAttempt;
-  const latestKey = latest ? (latest.status === "IN_PROGRESS" ? "IN_PROGRESS" : latest.late ? "SUBMITTED_LATE" : "SUBMITTED") : null;
+  const statusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
+  // Danh sách lượt: đủ các lượt khi tải được lịch sử, không thì lượt mới nhất.
+  const rowsOfAttempts = attempts && attempts.length > 0
+    ? [...attempts].sort((a, b) => b.attemptNo - a.attemptNo)
+    : latest ? [{ ...latest, attemptNo: null }] : [];
   return (
     <div className="flex flex-col gap-4">
       <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: "Bài tập", href: back }, { label: detail.title }]} />
@@ -94,14 +105,28 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             )}
           </Section>
           <SlotOutlet slot={assignmentMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
-          {latest?.graded && <ResultSummaryCard attemptId={latest.attemptId} historyHref={`${history}&attempt=${encodeURIComponent(latest.attemptId)}`} />}
+          {latest?.graded && <ResultSummaryCard attemptId={latest.attemptId} />}
         </div>
         <Section title="Làm bài" actions={<span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa">{detail.attemptsUsed}/{detail.maxAttempts ?? 1}</span>}>
-          {latest && latestKey && (
-            <div className="flex items-center justify-between gap-3 text-[13px]">
-              <span className="font-mono text-xs text-muted">{formatDateTime(latest.submittedAt ?? latest.lastSavedAt ?? latest.startedAt)}</span>
-              <Pill tone={myStatusTones[latestKey]}>{myStatusLabels[latestKey]}</Pill>
-            </div>
+          {rowsOfAttempts.length > 0 && (
+            // Mỗi lượt một dòng; bấm để mở lịch sử nộp bài đúng lượt đó (lượt đang làm thì mở trang làm bài).
+            <ul aria-label="Các lượt làm" className="-mx-2 flex flex-col">
+              {rowsOfAttempts.map((a) => {
+                const key = statusKey(a);
+                const href = a.status === "IN_PROGRESS" ? `/attempts/${encodeURIComponent(a.attemptId)}` : `${history}&attempt=${encodeURIComponent(a.attemptId)}`;
+                return (
+                  <li key={a.attemptId}>
+                    <Link href={href} className="row-interactive flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] hover:bg-shell">
+                      <span className="flex min-w-0 flex-col">
+                        {a.attemptNo !== null && <span className="font-semibold text-ink">Lượt {a.attemptNo}</span>}
+                        <span className="font-mono text-xs text-muted">{formatDateTime(a.submittedAt ?? a.lastSavedAt ?? a.startedAt)}</span>
+                      </span>
+                      <Pill tone={myStatusTones[key]}>{myStatusLabels[key]}</Pill>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           )}
           {detail.submissionMode === "GROUP" ? (
             <SlotOutlet slot={groupWorkEntries} props={{ assignmentId, classId }} />

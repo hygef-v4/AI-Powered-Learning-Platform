@@ -90,7 +90,6 @@ export function AccountListPage() {
     <>
       <PageHeader
         title="Tài khoản"
-        subtitle={data ? `${data.total} tài khoản` : undefined}
         actions={
           <>
             <Button icon="upload_file" onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
@@ -170,10 +169,10 @@ export function AccountListPage() {
             {error}
           </Alert>
         ) : (
-          <TableFrame filledHead>
+          <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+            <colgroup><col /><col className="w-[34%]" /><col className="w-[140px]" /><col className="w-[120px]" /><col className="w-[48px]" /></colgroup>
             <thead>
               <tr>
-                <Th className="w-12">STT</Th>
                 <Th>Họ tên</Th>
                 <Th>Email</Th>
                 <Th>Vai trò</Th>
@@ -186,16 +185,15 @@ export function AccountListPage() {
             <tbody>
               {!data && (
                 <tr>
-                  <Td colSpan={6} className="py-8 text-center text-muted">
+                  <Td colSpan={5} className="py-8 text-center text-muted">
                     Đang tải...
                   </Td>
                 </tr>
               )}
-              {data?.items.map((account, index) => (
+              {data?.items.map((account) => (
                 <ClickableRow key={account.id} onClick={() => router.push(`/admin/accounts/${account.id}`)}>
-                  <Td className="text-muted tabular-nums">{data.page * data.size + index + 1}</Td>
                   <Td>
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex min-w-0 items-center gap-2.5">
                       <span
                         aria-hidden
                         className={cx(
@@ -208,13 +206,14 @@ export function AccountListPage() {
                       <Link
                         href={`/admin/accounts/${account.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="font-semibold text-ink hover:text-primary-ink"
+                        className="truncate font-semibold text-ink hover:text-primary-ink"
+                        title={account.displayName}
                       >
                         {account.displayName}
                       </Link>
                     </span>
                   </Td>
-                  <Td className="text-body">{account.email}</Td>
+                  <Td className="truncate text-body" title={account.email}>{account.email}</Td>
                   <Td>{ROLE_LABELS[account.role]}</Td>
                   <Td>
                     <Pill tone={STATUS_TONES[account.status]}>{STATUS_LABELS[account.status]}</Pill>
@@ -226,7 +225,7 @@ export function AccountListPage() {
               ))}
               {data && data.items.length === 0 && (
                 <tr>
-                  <Td colSpan={6} className="py-10 text-center text-muted">
+                  <Td colSpan={5} className="py-10 text-center text-muted">
                     Không có tài khoản phù hợp với bộ lọc.
                   </Td>
                 </tr>

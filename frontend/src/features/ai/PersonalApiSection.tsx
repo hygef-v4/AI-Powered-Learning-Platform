@@ -67,14 +67,14 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
           {error}
         </Alert>
       )}
-      <TableFrame filledHead className="mt-2">
-        <thead>
+      <TableFrame filledHead className="mt-2 [&_table]:min-w-[720px] [&_table]:table-fixed">
+        <colgroup><col className="w-[140px]" /><col className="w-[150px]" /><col /><col className="w-[260px]" /><col className="w-[84px]" /></colgroup><thead>
           <tr>
             <Th>Nhà cung cấp</Th>
             <Th>Khóa</Th>
             <Th>Mô hình</Th>
-            <Th className="w-[260px]">Kiểm tra</Th>
-            <Th className="w-[1%]">
+            <Th>Kiểm tra</Th>
+            <Th>
               <span className="sr-only">Thao tác</span>
             </Th>
           </tr>
@@ -93,7 +93,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
               <tr key={c.provider}>
                 <Td className="font-semibold whitespace-nowrap">{label}</Td>
                 <Td className="font-mono text-xs whitespace-nowrap">{masked(c.keyHint)}</Td>
-                <Td className="whitespace-nowrap">{c.model}</Td>
+                <Td className="truncate" title={c.model ?? undefined}>{c.model}</Td>
                 <Td>
                   <div className="flex items-center justify-between gap-3">
                     {c.lastTestResult ? (
@@ -166,10 +166,7 @@ export function PersonalApiSection({ connections, providers, onSave, onTest, onR
           </Button>
         }
       >
-        <p>
-          Khóa {revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} sẽ bị xóa khỏi hệ thống. Thao tác
-          không hoàn tác được.
-        </p>
+        <p>Bạn có chắc muốn thu hồi khóa {revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} không?</p>
       </Dialog>
     </SettingsGroup>
   );

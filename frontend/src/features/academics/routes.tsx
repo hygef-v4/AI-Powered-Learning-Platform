@@ -153,7 +153,6 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       onBack={() => router.push("/manager/classes")} actions={actions}/>;
   } else {
     content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}
-      loadStudent={scope === "teaching" ? academicsApi.student : undefined}
       onBack={() => router.push(scope === "me" ? "/classes" : "/teaching/classes")}/>;
   }
   return <>
@@ -162,46 +161,28 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   </>;
 }
 
-/** Ghi môn đang chọn lên `?subjectId=` để sidebar của môn theo đúng môn đó. */
-function keepSubjectInUrl(subjectId: string) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("subjectId", subjectId);
-  window.history.replaceState(window.history.state, "", url);
-}
-
 export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "subjects" | "classes"; id?: string; initialSubjectId?: string}) {
   const router = useRouter();
   const [creating, setCreating] = useState<SubjectView | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
     const subjects = await academicsApi.subjects(signal);
     const classes = await allClasses("manager", signal);
-    let teachingCount = 0;
-    if (view === "overview") {
-      try {
-        teachingCount = (await allClasses("teaching", signal)).length;
-      } catch (error) {
-        if (!(error instanceof ApiError) || ![403, 404].includes(error.problem.status)) throw error;
-      }
-    }
-    return {subjects, classes, teachingCount, subject: id ? await academicsApi.subject(id, signal) : subjects[0]};
-  }, [id, view]);
+    return {subjects, classes, subject: id ? await academicsApi.subject(id, signal) : subjects[0]};
+  }, [id]);
   const state = useResource(load);
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.candidates("teacher", q, signal), []);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 
-  const {subjects, classes, subject, teachingCount} = state.data;
+  const {subjects, classes, subject} = state.data;
   let content: ReactNode;
   if (view === "overview") {
-    content = <ManagerDashboardPage teachingCount={teachingCount} subjects={subjects} classes={classes}
-      onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}
-      onTeaching={() => router.push("/teaching/classes")}/>;
+    content = <ManagerDashboardPage subjects={subjects}
+      onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>;
   } else if (view === "subjects") {
-    content = subject ? <MySubjectPage subject={subject} subjects={subjects} classes={classes}
-      onSwitch={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>
+    content = subject ? <MySubjectPage subject={subject} classes={classes}/>
       : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
   } else {
     content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
-      onSubjectChange={keepSubjectInUrl}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;
   }
   return <>

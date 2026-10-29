@@ -219,8 +219,8 @@ export function TeacherQuotaTable() {
       )}
       {!quotas && !error && <p className="py-3 text-[13px] text-muted">Đang tải…</p>}
       {quotas && (
-        <TableFrame filledHead className="mt-2">
-          <thead>
+        <TableFrame filledHead className="mt-2 [&_table]:table-fixed">
+          <colgroup><col /><col className="w-[150px]" /><col className="w-[84px]" /></colgroup><thead>
             <tr>
               <Th>Giảng viên</Th>
               <Th className="text-right">Token / ngày</Th>
@@ -281,7 +281,9 @@ export function TeacherQuotaTable() {
             Xóa
           </Button>
         }
-      />
+      >
+        <p>Bạn có chắc muốn xóa mức riêng của {removing?.name} không?</p>
+      </Dialog>
     </SettingsGroup>
   );
 }

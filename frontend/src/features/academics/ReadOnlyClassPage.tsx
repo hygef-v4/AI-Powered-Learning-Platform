@@ -1,19 +1,19 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { teacherClassTabs } from "./slots";
+import { teacherClassInfoFields, teacherClassTabs } from "./slots";
 import { StudentClassPage } from "./StudentClassPage";
-import { StudentDetailDialog } from "./ClassDialogs";
 import { EnrollmentPanel } from "./EnrollmentPanel";
-import { EmptyState, PageHeading, StatusBadge, Tabs } from "./ui";
+import { Field, LockedInput, PageHeader, Section } from "@/shared/ui";
+import { EmptyState, PageHeading, Tabs } from "./ui";
 import type { CourseClassView, EnrollmentView } from "./types";
+
 import styles from "./academics.module.css";
 
 type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
-const DESCRIPTION_PREVIEW_LIMIT = 140;
 
 /** Tab theo `?tab=` (sidebar của lớp, nút Mở tab Sinh viên ở Kiểm tra sẵn sàng bài nhóm); thiếu hay sai thì là Thông tin lớp. */
 function tabOf(wanted: string | null | undefined): ClassTab {
@@ -25,12 +25,10 @@ export function ReadOnlyClassPage({
   value,
   students,
   onBack,
-  loadStudent,
 }: {
   audience: "student" | "teacher";
   value: CourseClassView;
   students?: EnrollmentView[];
-  loadStudent?: (classId: string, accountId: string, signal?: AbortSignal) => Promise<EnrollmentView>;
   onBack: () => void;
 }) {
   const params = useSearchParams();
@@ -49,40 +47,20 @@ export function ReadOnlyClassPage({
     url.searchParams.set("tab", next);
     window.history.replaceState(window.history.state, "", url);
   };
-  const [selected, setSelected] = useState<EnrollmentView | null>(null);
-  const [detailError, setDetailError] = useState("");
-  const [detailBusy, setDetailBusy] = useState(false);
-  const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string> } | null>(null);
-  const [expandedDescClassId, setExpandedDescClassId] = useState<string | null>(null);
+  const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string>; leaders: string[] } | null>(null);
+  const fieldId = useId();
+  // Ô trên dòng tiêu đề cho nút của tab đang mở (unit gắn vào bằng portal).
+  const [headerActions, setHeaderActions] = useState<HTMLElement | null>(null);
+  // U12 dựng bảng sinh viên kèm nhóm thì bảng sinh viên chỉ xem của trang ẩn đi.
+  const [groupTable, setGroupTable] = useState(false);
   const onGroupNamesLoaded = useCallback(
-    (names: Record<string, string>) => setGroupNames({ classId: value.id, names }),
+    (names: Record<string, string>, leaders: string[] = []) => setGroupNames({ classId: value.id, names, leaders }),
     [value.id],
   );
-  const detailRequest = useRef<AbortController | null>(null);
-  useEffect(() => () => detailRequest.current?.abort(), []);
-
-  async function selectStudent(student: EnrollmentView) {
-    detailRequest.current?.abort();
-    const request = new AbortController();
-    detailRequest.current = request;
-    setDetailError("");
-    setDetailBusy(true);
-    try {
-      const detail = loadStudent ? await loadStudent(value.id, student.accountId, request.signal) : student;
-      if (!request.signal.aborted) setSelected(detail);
-    } catch {
-      if (!request.signal.aborted) setDetailError("Không tải được thông tin sinh viên.");
-    } finally {
-      if (!request.signal.aborted) setDetailBusy(false);
-    }
-  }
-
   const enrollmentRows = students ?? [];
   const activeStudents = enrollmentRows.filter((student) => student.status === "ACTIVE");
   const studentSummaryCount = students !== undefined ? activeStudents.length : value.activeStudentCount;
   const normalizedDescription = (value.description ?? "").trim();
-  const isLongDescription = normalizedDescription.length > DESCRIPTION_PREVIEW_LIMIT;
-  const isDescriptionExpanded = expandedDescClassId === value.id;
 
   if (audience === "student" && value.status !== "OPEN") {
     return (
@@ -103,102 +81,68 @@ export function ReadOnlyClassPage({
     { key: "info" as const, label: "Thông tin lớp" },
     { key: "students" as const, label: "Sinh viên", count: studentSummaryCount },
     { key: "materials" as const, label: "Học liệu" },
-    { key: "evals" as const, label: "Đánh giá" },
-    { key: "gradebook" as const, label: "Sổ điểm" },
+    { key: "evals" as const, label: "Bài tập" },
+    { key: "gradebook" as const, label: "Chấm điểm" },
   ];
 
   return (
     <>
-      <PageHeading
-        title={
-          <>
-            {value.subject.name}
-            {value.status !== "OPEN" && <StatusBadge status={value.status} />}
-          </>
-        }
-        subtitle={`${value.subject.code} · ${value.code} · ${value.term}`}
-        onBack={onBack}
-      />
+      {/* Tiêu đề là tên trang đang mở; quay về danh sách lớp bằng sidebar của lớp. */}
+      <PageHeader
+        title={tabs.find((t) => t.key === tab)?.label}
+        actions={<div ref={setHeaderActions} className="flex flex-wrap items-center gap-2" />} />
       {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
       <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>
-      {detailError && <p role="alert" className="text-sm text-danger">{detailError}</p>}
-      {detailBusy && <p role="status" className="text-sm text-muted">Đang tải sinh viên…</p>}
       {(
         // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
         <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
         {tab === "info" && (
-          <div className={styles.teacherOverviewGrid} data-teacher-overview="true">
-            <div
-              data-testid="overview-students-card"
-              data-class-overview-region="students"
-              className={styles.overviewSummaryCard}
-            >
-              <p className={styles.overviewSummaryLabel}>Sinh viên</p>
-              <p className={styles.overviewSummaryValue}>{studentSummaryCount}</p>
-              <p className={styles.overviewSummaryMeta}>Đang học trong lớp</p>
+          // Thẻ Thông tin lớp như trang lớp của sinh viên, thêm ô Sinh viên (đang học) và Học liệu (U13, đang hoạt động); bên dưới
+          // hàng thẻ chia đôi do các unit gắn vào (Thông báo gần đây, Tiến độ nộp bài). Không có ô số liệu.
+          <div className="flex flex-col gap-4" data-teacher-overview="true">
+            <Section title="Thông tin lớp">
+              {/* Hai cột như thẻ của sinh viên, thêm cột thứ ba bên phải cho Sinh viên và Học liệu. */}
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-3 lg:grid-rows-2">
+                <Field label="Mã lớp" htmlFor={`${fieldId}-code`}><LockedInput id={`${fieldId}-code`} value={value.code} /></Field>
+                <Field label="Tên lớp" htmlFor={`${fieldId}-name`}><LockedInput id={`${fieldId}-name`} value={value.name} /></Field>
+                <Field label="Mã môn" htmlFor={`${fieldId}-subject`}><LockedInput id={`${fieldId}-subject`} value={value.subject.code} /></Field>
+                <Field label="Học kỳ" htmlFor={`${fieldId}-term`}><LockedInput id={`${fieldId}-term`} value={value.term} /></Field>
+                <Field label="Sinh viên" htmlFor={`${fieldId}-students`}><LockedInput id={`${fieldId}-students`} value={String(studentSummaryCount)} /></Field>
+                <SlotOutlet slot={teacherClassInfoFields} props={{ classId: value.id }} />
+              </div>
+              <div>
+                  <Field label="Mô tả" htmlFor={`${fieldId}-description`}>
+                    <p id={`${fieldId}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">
+                      {normalizedDescription || <span className="text-muted">Chưa có mô tả.</span>}
+                    </p>
+                  </Field>
+              </div>
+            </Section>
+            <div className="grid items-start gap-4 lg:grid-cols-2">
+              <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
             </div>
-            <section
-              data-testid="overview-metadata-panel"
-              data-class-overview-region="metadata"
-              className={`${styles.panel} ${styles.overviewMetadataPanel}`}
-            >
-              <h2>Thông tin lớp</h2>
-              <dl className={styles.compactReadList}>
-                <dt>Giảng viên</dt>
-                <dd>{value.teacher ? `${value.teacher.name} · ${value.teacher.email}` : "Chưa phân công"}</dd>
-                <dt>Trạng thái</dt>
-                <dd>
-                  <StatusBadge status={value.status} />
-                </dd>
-                <dt>Mô tả</dt>
-                <dd>
-                  {!normalizedDescription ? (
-                    "Chưa có mô tả."
-                  ) : !isLongDescription ? (
-                    <span className={styles.descriptionText}>{normalizedDescription}</span>
-                  ) : (
-                    <div className={styles.descriptionBlock}>
-                      <span className={styles.descriptionText}>
-                        {isDescriptionExpanded
-                          ? normalizedDescription
-                          : `${normalizedDescription.slice(0, DESCRIPTION_PREVIEW_LIMIT).trimEnd()}…`}
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.textButton}
-                        aria-expanded={isDescriptionExpanded}
-                        onClick={() => setExpandedDescClassId(isDescriptionExpanded ? null : value.id)}
-                      >
-                        {isDescriptionExpanded ? "Thu gọn" : "Xem đầy đủ"}
-                      </button>
-                    </div>
-                  )}
-                </dd>
-              </dl>
-            </section>
-            <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
           </div>
         )}
         {tab === "students" && (
-          <>
-            <EnrollmentPanel
-              students={activeStudents}
-              groupNames={groupNames?.classId === value.id ? groupNames.names : undefined}
-              onView={(student) => void selectStudent(student)}
-            />
+          // Có U12 thì thẻ Nhóm cạnh bảng sinh viên (việc với nhóm làm trong popup); không thì bảng sinh viên chỉ xem.
+          <div className="flex flex-col gap-4">
             <SlotOutlet
               slot={teacherClassTabs}
-              props={{ classId: value.id, tab: "students" as const, onGroupNamesLoaded }}
+              props={{
+                classId: value.id, tab: "students" as const, students: activeStudents, onGroupNamesLoaded, onStudentTable: setGroupTable,
+              }}
             />
-          </>
+            {!groupTable && <EnrollmentPanel
+              students={activeStudents}
+              groupNames={groupNames?.classId === value.id ? groupNames.names : undefined}
+              groupLeaders={groupNames?.classId === value.id ? groupNames.leaders : undefined}
+            />}
+          </div>
         )}
         {(tab === "materials" || tab === "evals" || tab === "gradebook") && (
-          <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab }} />
+          <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab, headerActions }} />
         )}
         </div>
-      )}
-      {selected && (
-        <StudentDetailDialog classId={value.id} student={selected} onClose={() => setSelected(null)} />
       )}
     </>
   );

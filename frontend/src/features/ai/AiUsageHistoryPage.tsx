@@ -89,7 +89,8 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
             </p>
           </TokenCard>
         )}
-        <CountCard title="API cá nhân" value={data ? formatTokens(data.personal.requests) : "—"} />
+        {/* Không có thẻ API hệ thống (sinh viên): API cá nhân là thẻ chính, màu cam. */}
+        <CountCard title="API cá nhân" accent={!shared?.quota} value={data ? formatTokens(data.personal.requests) : "—"} />
         {mcpEnabled && <CountCard title="Agent MCP" value={data ? formatTokens(data.mcp.requests) : "—"} />}
       </div>
       <SettingsCard>
@@ -130,8 +131,8 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
           )}
           {!data && !error && <p className="py-3 text-[13px] text-muted">Đang tải…</p>}
           {data && (
-            <TableFrame filledHead className="mt-3">
-              <thead>
+            <TableFrame filledHead className="mt-3 [&_table]:min-w-[820px] [&_table]:table-fixed">
+              <colgroup><col className="w-[150px]" /><col /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[140px]" /><col className="w-[120px]" /></colgroup><thead>
                 <tr>
                   <Th>Thời gian</Th>
                   <Th>Tác vụ</Th>

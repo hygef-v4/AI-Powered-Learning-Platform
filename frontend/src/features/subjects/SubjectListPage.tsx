@@ -40,11 +40,9 @@ export function SubjectListPage() {
   const searching = search.trim() !== query.q;
   const stale = resource.loading || searching;
   const data = resource.error !== null ? null : (resource.data ?? last);
-  const counts = data?.statusCounts ?? null;
-  const total = counts ? counts.ACTIVE + counts.ARCHIVED : null;
 
   return <>
-    <PageHeader title="Môn học" subtitle={total === null ? undefined : `${total} môn học`}
+    <PageHeader title="Môn học"
       actions={<Button id="subjects-create-open" variant="primary" icon="add" onClick={() => setCreating(true)} disabled={resource.error !== null} data-testid="subjects-create-open">Thêm môn học</Button>} />
     {creating && <SubjectFormDialog onClose={() => setCreating(false)} onCreated={() => {
       setCreating(false);

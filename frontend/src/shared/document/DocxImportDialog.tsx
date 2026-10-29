@@ -98,8 +98,8 @@ export function DocxImportDialog({ title = "Nhập DOCX", preview, onImport, all
         <div className="flex flex-col gap-3" data-testid="docx-preview">
           <p className="text-[13px] text-ink">{result.document.blocks.length} khối · {result.imageCount} ảnh · {result.diagramCount} sơ đồ</p>
           {sections.length > 0 && (
-            <TableFrame>
-              <thead><tr><Th>#</Th><Th>Mục</Th><Th>Độ dài</Th></tr></thead>
+            <TableFrame className="[&_table]:table-fixed">
+              <colgroup><col className="w-[48px]" /><col /><col className="w-[100px]" /></colgroup><thead><tr><Th>#</Th><Th>Mục</Th><Th>Độ dài</Th></tr></thead>
               <tbody>
                 {sections.map((section, index) => (
                   <tr key={index}><Td>{index + 1}</Td><Td>{section.title}</Td><Td>{section.blocks} khối</Td></tr>

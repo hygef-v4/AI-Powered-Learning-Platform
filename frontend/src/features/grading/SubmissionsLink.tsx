@@ -1,39 +1,17 @@
 "use client";
 import Link from "next/link";
-import { useCallback } from "react";
-import { gradingApi } from "./api";
-import { useResource } from "./useResource";
-export function SubmissionsLink({
-  assignmentId,
-  classId,
-}: {
-  assignmentId: string;
-  classId?: string;
-}) {
-  return classId ? <ClassSubmissionsLink classId={classId} assignmentId={assignmentId} /> : null;
-}
-function ClassSubmissionsLink({
-  assignmentId,
-  classId,
-}: {
-  assignmentId: string;
-  classId: string;
-}) {
-  const load = useCallback(
-    () => gradingApi.submissions(classId, assignmentId),
-    [classId, assignmentId],
-  );
-  const { value, error } = useResource(load);
+import { gradebookHref } from "./ClassProgressSection";
+
+/**
+ * Nút Bài nộp trên bảng Bài tập của lớp, chỉ ở bài cá nhân và bài nhóm (bài luyện tập không chấm nên không có): sang trang
+ * Chấm điểm mở sẵn bài đó. Bấm nút không kích hoạt bấm dòng.
+ */
+export function SubmissionsLink({ assignmentId, classId, practice }: { assignmentId: string; classId?: string; practice?: boolean }) {
+  if (!classId || practice) return null;
   return (
-    <Link
-      className="text-primary-ink"
-      href={`/teaching/classes/${classId}/assignments/${assignmentId}/submissions`}
-    >
-      {value
-        ? `${value.summary.submitted ?? 0} / ${value.summary.total ?? 0} nộp · ${value.summary.PENDING ?? 0} chờ chấm`
-        : error
-          ? "Bài nộp chưa khả dụng"
-          : "Xem bài nộp"}
+    <Link href={gradebookHref(classId, { assignment: assignmentId })} onClick={(event) => event.stopPropagation()}
+      className="inline-flex h-8 items-center justify-center rounded-lg border border-line-strong bg-surface px-2.5 text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-ink">
+      Bài nộp
     </Link>
   );
 }

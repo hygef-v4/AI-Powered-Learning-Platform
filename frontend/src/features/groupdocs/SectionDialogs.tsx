@@ -256,8 +256,8 @@ export function SubmitGroupDialog({
       {undone.length > 0 && (
         <>
           <Alert tone="warning">Chỉ nội dung của mục Xong được đưa vào bản nộp.</Alert>
-          <TableFrame>
-            <thead>
+          <TableFrame className="[&_table]:table-fixed">
+            <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
               <tr>
                 <Th>Mục</Th>
                 <Th>Người giữ</Th>

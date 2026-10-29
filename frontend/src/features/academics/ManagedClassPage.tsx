@@ -46,6 +46,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
     window.history.replaceState(window.history.state, "", url);
   };
   const [assigning, setAssigning] = useState(false);
+  const [tabActions, setTabActions] = useState<HTMLElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const archived = value.status === "ARCHIVED";
@@ -60,9 +61,13 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
     { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
   ];
   return <>
-    <PageHeader backHref="/manager/classes" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></>}
-      breadcrumb={[{ label: "Lớp của môn", href: "/manager/classes" }, { label: value.code }]} />
-    <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" />
+    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span>}
+      breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: value.code }]} />
+    {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
+    <div className="relative">
+      <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" />
+      <div ref={setTabActions} className="absolute right-0 bottom-1.5" />
+    </div>
     {tab === "info" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
       <ClassInfoForm value={value} onSave={actions.onSaveInfo}/>
       <div className="flex flex-col gap-4">
@@ -86,7 +91,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
         </Section>
       </div>
     </div> : <div role="tabpanel" aria-label="Sinh viên">
-      <EnrollmentPanel loadCandidates={loadCandidates} students={students} editable={!archived} includeRemoved candidates={candidates} onStatusChange={actions.onEnrollmentStatus} onEnroll={actions.onEnroll} onBatch={actions.onBatch}/>
+      <EnrollmentPanel loadCandidates={loadCandidates} students={students} editable={!archived} includeRemoved candidates={candidates} onStatusChange={actions.onEnrollmentStatus} onEnroll={actions.onEnroll} onBatch={actions.onBatch} actionsHost={tabActions}/>
     </div>}
     {assigning && !archived && <AssignTeacherDialog loadTeachers={loadTeachers} value={value} teachers={teachers} onAssign={actions.onAssign} onClose={() => setAssigning(false)}/>}
   </>;

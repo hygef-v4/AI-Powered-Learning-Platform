@@ -47,8 +47,7 @@ export function ArchiveMaterialDialog({ material, onClose, onSaved }: { material
     catch (e) { setError(materialError(e)); } finally { lock.current = false; setBusy(false); }
   }
   return <Dialog open title="Lưu trữ học liệu?" onClose={onClose} dismissible={!busy} tone="danger" footer={<><Button className="flex-1" disabled={busy} onClick={onClose}>Hủy</Button><Button className="flex-1" data-testid="material-archive-confirm" variant="danger" disabled={busy} onClick={() => void archive()}>Lưu trữ</Button></>}>
-    <p className="text-sm leading-6"><strong>{material.title}</strong> sẽ ẩn với sinh viên. Học liệu không bị xóa; bạn có thể xem ở tab Lưu trữ.</p>
-    <p className="mt-3 text-sm leading-6">Bài tập, Quiz đang gắn học liệu vẫn giữ liên kết nhưng sinh viên không mở được học liệu đã lưu trữ.</p>
+    <p className="text-sm leading-6">Bạn có chắc muốn lưu trữ học liệu {material.title} không?</p>
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </Dialog>;
 }

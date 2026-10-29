@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Icon, type IconName } from "./Icon";
 import type { Tone } from "./tones";
 
@@ -57,9 +58,9 @@ export function Dialog({ open, title, onClose, dismissible = true, size = "md", 
   }, [open]);
 
   if (!open) return null;
-  return (
+  const overlay = (
     <div
-      className="fixed inset-0 z-50 flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]"
       onMouseDown={(event) => {
         if (dismissible && event.target === event.currentTarget) onClose();
       }}
@@ -95,4 +96,6 @@ export function Dialog({ open, title, onClose, dismissible = true, size = "md", 
       </div>
     </div>
   );
+  // Gắn vào body để lớp phủ phủ cả sidebar và thanh trên cùng, không bị kẹt trong khung nội dung.
+  return typeof document === "undefined" ? overlay : createPortal(overlay, document.body);
 }

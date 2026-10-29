@@ -181,6 +181,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
             {confirm === "delete" ? "Xóa" : "Ngưng dùng"}
           </Button>
         </>}>
+        <p>{confirm === "delete" ? "Bạn có chắc muốn xóa câu hỏi nháp này không?" : "Bạn có chắc muốn ngưng dùng câu hỏi này không?"}</p>
       </Dialog>
     </>
   );

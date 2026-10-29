@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { statusLabels, type ClassStatus, type CourseClassView, type SubjectView } from "./types";
 
 const PAGE_SIZE = 20;
@@ -14,10 +14,11 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
 
 /**
  * Lớp của môn (Chủ nhiệm môn), cùng bố cục tab Lớp học ở Chi tiết môn của Admin: một thẻ có tab trạng thái và ô tìm theo
- * mã hoặc tên lớp, bảng tiêu đề tô nền; khác ở chỗ bấm dòng để mở chi tiết lớp. Chọn môn và Tạo lớp ở đầu trang.
+ * mã hoặc tên lớp, bảng tiêu đề tô nền; khác ở chỗ bấm dòng để mở chi tiết lớp. Môn là môn đang chọn trên sidebar
+ * (`?subjectId=`), không đổi môn ngay trên trang; Tạo lớp ở đầu trang.
  */
-export function ClassListPage({ classes, subjects, initialSubjectId, onSubjectChange, onOpen, onCreate }: { classes: CourseClassView[]; subjects: SubjectView[]; initialSubjectId?: string; onSubjectChange?: (id: string) => void; onOpen: (id: string) => void; onCreate: (subject: SubjectView) => void }) {
-  const [subjectId, setSubjectId] = useState(initialSubjectId ?? subjects[0]?.id ?? "");
+export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onCreate }: { classes: CourseClassView[]; subjects: SubjectView[]; initialSubjectId?: string; onOpen: (id: string) => void; onCreate: (subject: SubjectView) => void }) {
+  const subjectId = initialSubjectId ?? subjects[0]?.id ?? "";
   const [status, setStatus] = useState<ClassStatus | "ALL">("ALL");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -31,13 +32,9 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onSubjectCh
   const rows = filtered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
 
   return <>
-    <PageHeader title="Lớp của môn" actions={<>
-      {subjects.length > 0 && <Select aria-label="Môn học" value={subjectId} wrapperClassName="w-60" data-testid="class-subject-filter"
-        onChange={(event) => { setSubjectId(event.target.value); setPage(0); onSubjectChange?.(event.target.value); }}>
-        {subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.code} · {subject.name}</option>)}
-      </Select>}
+    <PageHeader title="Lớp học" actions={
       <Button variant="primary" icon="add" disabled={!selected} onClick={() => selected && onCreate(selected)} data-testid="class-create">Tạo lớp</Button>
-    </>} />
+    } />
     <section aria-label="Danh sách lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center gap-3">
         <div role="tablist" aria-label="Trạng thái lớp" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
@@ -53,8 +50,8 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onSubjectCh
             value={query} maxLength={200} data-testid="class-search" onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
       </div>
-      <TableFrame filledHead>
-        <thead><tr><Th>Mã lớp</Th><Th>Tên lớp</Th><Th>Học kỳ</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
+      <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+        <colgroup><col className="w-[130px]" /><col /><col className="w-[110px]" /><col className="w-[24%]" /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Tên lớp</Th><Th>Học kỳ</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
         <tbody>
           {rows.map((course) => <ClickableRow key={course.id} onClick={() => onOpen(course.id)}>
             <Td className="font-mono font-semibold">{course.code}</Td>

@@ -40,10 +40,10 @@ export function Td({ className, children, ...rest }: TdHTMLAttributes<HTMLTableC
   );
 }
 
-/** Dòng bấm được: nền nổi nhẹ khi rê chuột. */
+/** Dòng bấm được: rê chuột thì nền ấm lên, vạch màu chính hiện ở mép trái, mũi tên cuối dòng nhích sang phải (`row-interactive`). */
 export function ClickableRow({ className, children, ...rest }: HTMLAttributes<HTMLTableRowElement>) {
   return (
-    <tr className={cx("cursor-pointer transition-colors duration-200 hover:bg-surface", className)} {...rest}>
+    <tr className={cx("row-interactive cursor-pointer", className)} {...rest}>
       {children}
     </tr>
   );

@@ -5,12 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { cx } from "@/shared/ui/cx";
 import { ApiError } from "@/shared/api/client";
 import { Alert, PageHeader } from "@/shared/ui";
-import { AuditDetailDialog } from "./AuditDetailDialog";
 import { AuditFilters } from "./AuditFilters";
 import { AuditTable } from "./AuditTable";
 import { getAuditLogs } from "./api";
 import { defaultFilter, toQuery } from "./labels";
-import type { AuditFilterForm, AuditLogItem, AuditLogPage as Page, AuditQuery } from "./types";
+import type { AuditFilterForm, AuditLogPage as Page, AuditQuery } from "./types";
 
 export const PAGE_SIZE = 50;
 /** Gõ hay chọn liền nhiều ô thì gom lại một lần tra cứu. */
@@ -37,7 +36,6 @@ export function AuditLogPage() {
   const [data, setData] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<AuditLogItem | null>(null);
   const applied = useRef<AuditQuery | null>(null);
   const request = useRef(0);
   const opened = useRef(false);
@@ -145,10 +143,9 @@ export function AuditLogPage() {
       )}
       {data && (
         <div className={loading ? "opacity-60" : undefined} aria-busy={loading}>
-          <AuditTable data={data} onOpen={setSelected} onPageChange={changePage} />
+          <AuditTable data={data} onPageChange={changePage} />
         </div>
       )}
-      <AuditDetailDialog item={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

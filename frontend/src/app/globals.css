@@ -183,10 +183,14 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1,
-h2,
-h3 {
-  text-wrap: balance;
+/* Trong layer base để class tiện ích (truncate, whitespace-nowrap) của từng chỗ vẫn thắng; ngoài layer thì tiêu đề cắt
+   một dòng vẫn bị xuống dòng. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
 }
 
 /* Ô chọn, thanh trượt và con trỏ nhập lấy màu chủ đạo thay vì xanh mặc định của trình duyệt. */
@@ -357,4 +361,40 @@ html.drawio-panel-open [data-app-sidebar] {
     linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
   background-position: -1px -1px;
+}
+
+/* Dòng bấm được (bảng và danh sách): rê chuột thì nền ấm lên, một vạch màu chính trượt vào ở mép trái, mũi tên cuối dòng
+   nhích sang phải. Dòng bảng vẽ vạch trên ô đầu (tr không nhận box-shadow ổn định). */
+@layer components {
+  .row-interactive {
+    transition: background-color 0.2s ease, box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .row-interactive:not(tr):hover {
+    box-shadow: inset 3px 0 0 var(--c-primary);
+  }
+  tr.row-interactive:hover {
+    background-color: color-mix(in oklab, var(--c-primary-soft) 45%, transparent);
+  }
+  tr.row-interactive > td:first-child {
+    transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  tr.row-interactive:hover > td:first-child {
+    box-shadow: inset 3px 0 0 var(--c-primary);
+  }
+  tr.row-interactive > td:last-child svg {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  tr.row-interactive:hover > td:last-child svg {
+    transform: translateX(3px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row-interactive,
+    tr.row-interactive > td:first-child,
+    tr.row-interactive > td:last-child svg {
+      transition: none;
+    }
+    tr.row-interactive:hover > td:last-child svg {
+      transform: none;
+    }
+  }
 }

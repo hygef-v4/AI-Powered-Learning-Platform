@@ -12,7 +12,7 @@ export function GradebookExportDialog({
   assignments: { id: string; title: string }[];
   onClose: () => void;
 }) {
-  const [format, setFormat] = useState("csv");
+  const [format, setFormat] = useState("xlsx");
   const [assignment, setAssignment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +38,7 @@ export function GradebookExportDialog({
   return (
     <Dialog
       open
-      title="Xuất sổ điểm"
+      title="Xuất bảng điểm"
       onClose={onClose}
       dismissible={!busy}
       footer={
@@ -50,7 +50,7 @@ export function GradebookExportDialog({
       }
     >
       <Field label="Định dạng">
-        <Segmented ariaLabel="Định dạng" value={format} onChange={setFormat} options={[{ value: "csv", label: "CSV" }, { value: "xlsx", label: "Excel (.xlsx)" }]} />
+        <Segmented ariaLabel="Định dạng" value={format} onChange={setFormat} options={[{ value: "xlsx", label: "Excel" }, { value: "csv", label: "CSV" }]} />
       </Field>
       <label className="flex flex-col gap-1.5 text-xs font-semibold text-body">
         Phạm vi

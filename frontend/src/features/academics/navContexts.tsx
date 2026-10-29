@@ -15,7 +15,7 @@ import type { CourseClassView, SubjectView } from "./types";
 
 const enc = encodeURIComponent;
 
-/** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp của môn). */
+/** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp học). */
 const SUBJECT_ROOTS = ["/manager/subjects", "/manager/questions", "/manager/quizzes", "/manager/assignments", "/manager/materials", "/manager/classes"];
 
 function under(pathname: string, root: string) {
@@ -67,8 +67,8 @@ const TEACHING_ITEMS: ClassItem[] = [
   { key: "info", label: "Thông tin lớp", icon: "info", href: teachingPage() },
   { key: "students", label: "Sinh viên", icon: "groups", href: teachingPage("students") },
   { key: "materials", label: "Học liệu", icon: "folder_open", href: teachingPage("materials") },
-  { key: "evals", label: "Đánh giá", icon: "assignment", href: teachingPage("evals") },
-  { key: "gradebook", label: "Sổ điểm", icon: "receipt_long", href: teachingPage("gradebook") },
+  { key: "evals", label: "Bài tập", icon: "assignment", href: teachingPage("evals") },
+  { key: "gradebook", label: "Chấm điểm", icon: "receipt_long", href: teachingPage("gradebook") },
   { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: announcements },
 ];
 /** Các trang sinh viên vào được của một lớp. */
@@ -98,13 +98,13 @@ function buildClass(scope: ClassScope, id: string, open: string): NavContext {
   };
 }
 
-/** Lớp được phân công (`/teaching/classes/{id}`) và Thông báo lớp của một lớp. Lớp của môn (Chủ nhiệm môn) dùng sidebar của môn. */
+/** Lớp được phân công (`/teaching/classes/{id}`) và Thông báo lớp của một lớp. Lớp học của môn (Chủ nhiệm môn) dùng sidebar của môn. */
 export function classContext({ pathname, search }: NavLocation): NavContext | null {
   if (pathname === "/announcements" && search.get("classId")) return buildClass("teaching", search.get("classId")!, "announcements");
   const match = /^\/teaching\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!match) return null;
   const tabs = TEACHING_ITEMS.filter((item) => item.key !== "announcements");
-  // Trang con của lớp (bài nộp của một bài tập) thuộc tab Đánh giá.
+  // Trang con của lớp (bài nộp của một bài tập) thuộc tab Bài tập.
   const open = match[2] ? "evals" : tabs.find((tab) => tab.key === search.get("tab"))?.key ?? "info";
   return buildClass("teaching", decodeURIComponent(match[1]!), open);
 }
@@ -231,10 +231,11 @@ function Switcher({ label, code, name, loading, options }: { label: string; code
         ) : (
           <span className="min-w-0 flex-1">
             <span className={cx(WHEN_OPEN, "block leading-none")} title={name}>
-              <span className="block font-mono text-[9.5px] leading-none tracking-wide text-muted">{code}</span>
+              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{code}</span>
               <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold text-ink">{name}</span>
             </span>
-            <span className={cx(WHEN_COLLAPSED, "text-center font-mono text-[10px] leading-tight font-bold tracking-[-0.04em] text-ink [overflow-wrap:anywhere]")}>{code}</span>
+            {/* Thu gọn: mã dài chỉ hiện mấy chữ đầu, cắt gọn không có dấu ... */}
+            <span className={cx(WHEN_COLLAPSED, "overflow-hidden text-center font-mono text-[10px] leading-tight font-bold tracking-[-0.04em] whitespace-nowrap text-ink")}>{code}</span>
           </span>
         )
       }
@@ -255,7 +256,7 @@ function Switcher({ label, code, name, loading, options }: { label: string; code
           >
             {/* Cùng kiểu ô chọn: mã nhỏ sát trên tên một dòng, tên dài thì cắt và hiện đủ khi rê chuột. */}
             <span className="min-w-0 flex-1 leading-none" title={option.name}>
-              <span className="block font-mono text-[9.5px] leading-none tracking-wide text-muted">{option.code}</span>
+              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{option.code}</span>
               <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold">{option.name}</span>
             </span>
             {option.selected && <Icon name="check" size={15} className="shrink-0 text-primary-ink" />}

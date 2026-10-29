@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, PageHeader, Pill, Section, showToast, Tabs, type TabItem } from "@/shared/ui";
+import { Button, PageHeader, Section, showToast, Tabs, type TabItem } from "@/shared/ui";
 import { getSubject, getSubjectClasses } from "./api";
 import { ManagerCard } from "./ManagerCard";
 import { ManagerChangeDialog } from "./ManagerChangeDialog";
@@ -66,7 +66,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
     { key: "classes", label: "Lớp học", count: data.classCount ?? undefined },
   ];
   return <>
-    <PageHeader backHref="/admin/subjects" title={<><span className="min-w-0 break-words [overflow-wrap:anywhere]">{data.name}</span><Pill tone={archived ? "danger" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill></>}
+    <PageHeader backHref="/admin/subjects" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{data.name}</span>}
       breadcrumb={[{ label: "Môn học", href: "/admin/subjects" }, { label: data.code }]} />
     <Tabs items={tabs} value={tab} onChange={setTab} label="Nội dung môn học" testIdPrefix="subjects-tab-" />
     {tab === "information" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">

@@ -154,8 +154,8 @@ export function SubmissionDetailPage({
             )}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-[13.5px] [&_tbody_tr:last-child>td]:border-b-0">
-              <thead>
+            <table className="w-full min-w-[760px] table-fixed border-collapse text-left text-[13.5px] [&_tbody_tr:last-child>td]:border-b-0">
+              <colgroup><col className="w-[44px]" /><col /><col className="w-[150px]" /><col className="w-[70px]" /><col className="w-[150px]" /><col className="w-[100px]" /><col className="w-[120px]" /></colgroup><thead>
                 <tr>
                   <th className={HEAD}>
                     <input

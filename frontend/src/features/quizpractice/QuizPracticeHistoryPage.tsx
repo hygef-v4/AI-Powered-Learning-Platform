@@ -57,8 +57,8 @@ export function QuizPracticeHistoryPage() {
       {error && <Alert tone="danger" role="alert" className="mb-3">{error}</Alert>}
       {!rows && !error && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải quiz…</p>}
       {rows && (
-        <TableFrame>
-          <thead><tr><Th>Quiz</Th><Th>Lớp</Th><Th>Số lần làm</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th><Th></Th></tr></thead>
+        <TableFrame className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+          <colgroup><col /><col className="w-[140px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[110px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>Lớp</Th><Th>Số lần làm</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th><Th></Th></tr></thead>
           <tbody>
             {shown.length === 0 && <tr><Td colSpan={6} className="py-8 text-center text-muted">Chưa có quiz luyện tập.</Td></tr>}
             {shown.map((row) => (
