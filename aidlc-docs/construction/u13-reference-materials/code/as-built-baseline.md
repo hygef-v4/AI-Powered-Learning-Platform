@@ -14,9 +14,9 @@ Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt bu�
 | [materials/model](../../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [materials](../../../../frontend/src/features/materials) | [api](../../../../frontend/src/features/materials/api) | [model](../../../../frontend/src/features/materials/model) | [pages](../../../../frontend/src/features/materials/pages) | [components](../../../../frontend/src/features/materials/components) | [hooks](../../../../frontend/src/features/materials/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [materials](../../../../frontend/src/features/materials) | [api](../../../../frontend/src/features/materials/api) | [model](../../../../frontend/src/features/materials/model) | [pages](../../../../frontend/src/features/materials/pages) | [components](../../../../frontend/src/features/materials/components) | [hooks](../../../../frontend/src/features/materials/hooks) | [styles](../../../../frontend/src/features/materials/styles) | [tests](../../../../frontend/tests/features/materials) |
 
 Tests: [materials](../../../../backend/src/test/java/edu/aiplatform/materials).
 

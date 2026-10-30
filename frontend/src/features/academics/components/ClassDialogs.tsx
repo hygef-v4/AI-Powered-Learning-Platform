@@ -8,7 +8,7 @@ import { studentDetailSections } from "../slots";
 import { PersonPicker } from "./PersonPicker";
 import { Avatar, formatDate, Modal, operationError } from "./ui";
 import type { ClassStatus, CourseClassView, EnrollmentView, PersonView } from "../model/types";
-import styles from "../academics.module.css";
+import styles from "../styles/academics.module.css";
 
 export class ReopenConflictError extends Error {
   constructor(public readonly students: string[]) { super("Không thể mở lại lớp vì có sinh viên đang ở lớp khác cùng môn."); }

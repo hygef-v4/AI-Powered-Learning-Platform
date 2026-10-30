@@ -16,9 +16,9 @@ Tài khoản trường cấp, OTP/kích hoạt/khôi phục, JWT/session, hồ s
 | [identity/config](../../../../backend/src/main/java/edu/aiplatform/identity/config) | Properties, cấu hình bean và topology. |
 | [identity/contract](../../../../backend/src/main/java/edu/aiplatform/identity/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [identity](../../../../frontend/src/features/identity) | [api](../../../../frontend/src/features/identity/api) | [model](../../../../frontend/src/features/identity/model) | [pages](../../../../frontend/src/features/identity/pages) | [components](../../../../frontend/src/features/identity/components) | [hooks](../../../../frontend/src/features/identity/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [identity](../../../../frontend/src/features/identity) | [api](../../../../frontend/src/features/identity/api) | [model](../../../../frontend/src/features/identity/model) | [pages](../../../../frontend/src/features/identity/pages) | [components](../../../../frontend/src/features/identity/components) | [hooks](../../../../frontend/src/features/identity/hooks) | — | [tests](../../../../frontend/tests/features/identity) |
 
 Tests: [identity](../../../../backend/src/test/java/edu/aiplatform/identity).
 

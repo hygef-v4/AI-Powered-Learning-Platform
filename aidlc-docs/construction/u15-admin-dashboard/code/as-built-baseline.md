@@ -13,9 +13,9 @@ Admin Dashboard có counts, backup metadata/history và GET /activity. Activity 
 | [admindashboard/dto](../../../../backend/src/main/java/edu/aiplatform/admindashboard/dto) | Kiểu dữ liệu request/response riêng. |
 | [admindashboard/integration](../../../../backend/src/main/java/edu/aiplatform/admindashboard/integration) | Adapter hạ tầng/provider, listener và sender. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [admindashboard](../../../../frontend/src/features/admindashboard) | [api](../../../../frontend/src/features/admindashboard/api) | [model](../../../../frontend/src/features/admindashboard/model) | [pages](../../../../frontend/src/features/admindashboard/pages) | [components](../../../../frontend/src/features/admindashboard/components) | [hooks](../../../../frontend/src/features/admindashboard/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [admindashboard](../../../../frontend/src/features/admindashboard) | [api](../../../../frontend/src/features/admindashboard/api) | [model](../../../../frontend/src/features/admindashboard/model) | [pages](../../../../frontend/src/features/admindashboard/pages) | [components](../../../../frontend/src/features/admindashboard/components) | [hooks](../../../../frontend/src/features/admindashboard/hooks) | — | [tests](../../../../frontend/tests/features/admindashboard) |
 
 Tests: [admindashboard](../../../../backend/src/test/java/edu/aiplatform/admindashboard).
 

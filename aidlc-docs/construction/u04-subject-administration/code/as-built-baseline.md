@@ -15,9 +15,9 @@ subjects có quản trị danh sách/chi tiết/create/update, manager assignmen
 | [subjects/dto](../../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
 | [subjects/contract](../../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [subjects](../../../../frontend/src/features/subjects) | [api](../../../../frontend/src/features/subjects/api) | [model](../../../../frontend/src/features/subjects/model) | [pages](../../../../frontend/src/features/subjects/pages) | [components](../../../../frontend/src/features/subjects/components) | [hooks](../../../../frontend/src/features/subjects/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [subjects](../../../../frontend/src/features/subjects) | [api](../../../../frontend/src/features/subjects/api) | [model](../../../../frontend/src/features/subjects/model) | [pages](../../../../frontend/src/features/subjects/pages) | [components](../../../../frontend/src/features/subjects/components) | [hooks](../../../../frontend/src/features/subjects/hooks) | — | [tests](../../../../frontend/tests/features/subjects) |
 
 Tests: [subjects](../../../../backend/src/test/java/edu/aiplatform/subjects).
 

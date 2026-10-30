@@ -14,9 +14,9 @@ quizpractice lưu attempt/snapshot/answers/result/activity; frontend QuizTakingP
 | [quizpractice/model](../../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizpractice/dto](../../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [quizpractice](../../../../frontend/src/features/quizpractice) | [api](../../../../frontend/src/features/quizpractice/api) | [model](../../../../frontend/src/features/quizpractice/model) | [pages](../../../../frontend/src/features/quizpractice/pages) | [components](../../../../frontend/src/features/quizpractice/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [quizpractice](../../../../frontend/src/features/quizpractice) | [api](../../../../frontend/src/features/quizpractice/api) | [model](../../../../frontend/src/features/quizpractice/model) | [pages](../../../../frontend/src/features/quizpractice/pages) | [components](../../../../frontend/src/features/quizpractice/components) | — | — | [tests](../../../../frontend/tests/features/quizpractice) |
 
 Tests: [quizpractice](../../../../backend/src/test/java/edu/aiplatform/quizpractice).
 

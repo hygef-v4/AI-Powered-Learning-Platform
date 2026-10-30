@@ -6,8 +6,8 @@ import "@/features/register";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
 import { Toaster } from "@/shared/ui/Toast";
 import { ClientRegistrations } from "./ClientRegistrations";
-import "./globals.css";
-import "./fonts.css";
+import "../shared/styles/globals.css";
+import "../shared/styles/fonts.css";
 
 export const metadata: Metadata = {
   title: "Nền tảng học tập",

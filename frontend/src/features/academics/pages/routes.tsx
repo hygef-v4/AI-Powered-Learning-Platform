@@ -13,7 +13,7 @@ import {ClassFormDialog} from "../components/ClassFormDialog";
 import {ReopenConflictError} from "../components/ClassDialogs";
 import {EmptyState, operationError} from "../components/ui";
 import type {SubjectView, CourseClassView, EnrollmentView} from "../model/types";
-import styles from "../academics.module.css";
+import styles from "../styles/academics.module.css";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 type ResourceLoader<T> = (signal: AbortSignal) => Promise<T>;

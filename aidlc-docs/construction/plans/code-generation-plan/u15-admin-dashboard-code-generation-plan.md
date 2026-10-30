@@ -120,7 +120,7 @@ assertThat(view.accounts().data().byRoleAndStatus().get(Role.ADMIN).get(AccountS
 
 ## Task5 — Dashboard và backup history UI
 
-**Files:** types/api, năm component trong file map; tests `frontend/src/features/admindashboard/api/index.test.ts`, `AdminDashboardPage.test.tsx`, `BackupHistoryDialog.test.tsx`. Có thể mount route khi phát triển; HomePaths chưa đổi.
+**Files:** types/api, năm component trong file map; tests `frontend/tests/features/admindashboard/api/index.test.ts`, `AdminDashboardPage.test.tsx`, `BackupHistoryDialog.test.tsx`. Có thể mount route khi phát triển; HomePaths chưa đổi.
 
 **Interfaces:** consumes JSON Task4 và shared apiFetch/session/UI; produces `getAdminDashboard(signal?:AbortSignal):Promise<AdminDashboardView>`, `getBackupHistory(page:number,size:number,signal?:AbortSignal):Promise<BackupHistoryPage>`, named page/components theo FD17/10. Dùng PageHeader/Section/Alert/Table/Pill/Dialog/Pagination sẵn có; Pagination page0-based.
 
@@ -131,7 +131,7 @@ assertThat(view.accounts().data().byRoleAndStatus().get(Role.ADMIN).get(AccountS
 
 ## Task6 — Navigation và Admin homePath
 
-**Files:** app/admin/page.tsx, features/admindashboard/index.ts/register.ts, backend identity/application/HomePaths.java; update `identity/application/AuthServiceTest.java`; add `frontend/src/features/admindashboard/components/navigation.test.tsx`; mở rộng RoleGuard.test.tsx nếu cần coverage mới.
+**Files:** app/admin/page.tsx, features/admindashboard/index.ts/register.ts, backend identity/application/HomePaths.java; update `identity/application/AuthServiceTest.java`; add `frontend/tests/features/admindashboard/components/navigation.test.tsx`; mở rộng RoleGuard.test.tsx nếu cần coverage mới.
 
 **Consumes:** page/API Task4/5 và existing AuthenticatedLayout/NavEntry/session. **Produces:** ADMIN_HOME=/admin, các role khác giữ nguyên.
 

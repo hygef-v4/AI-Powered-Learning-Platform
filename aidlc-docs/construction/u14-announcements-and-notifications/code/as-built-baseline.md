@@ -20,10 +20,10 @@ announcements/notifications có CRUD, recipients, preference, in-app/SSE/email/r
 | [notifications/integration](../../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [announcements](../../../../frontend/src/features/announcements) | [api](../../../../frontend/src/features/announcements/api) | [model](../../../../frontend/src/features/announcements/model) | [pages](../../../../frontend/src/features/announcements/pages) | [components](../../../../frontend/src/features/announcements/components) | — |
-| [notifications](../../../../frontend/src/features/notifications) | [api](../../../../frontend/src/features/notifications/api) | [model](../../../../frontend/src/features/notifications/model) | — | [components](../../../../frontend/src/features/notifications/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [announcements](../../../../frontend/src/features/announcements) | [api](../../../../frontend/src/features/announcements/api) | [model](../../../../frontend/src/features/announcements/model) | [pages](../../../../frontend/src/features/announcements/pages) | [components](../../../../frontend/src/features/announcements/components) | — | [styles](../../../../frontend/src/features/announcements/styles) | [tests](../../../../frontend/tests/features/announcements) |
+| [notifications](../../../../frontend/src/features/notifications) | [api](../../../../frontend/src/features/notifications/api) | [model](../../../../frontend/src/features/notifications/model) | — | [components](../../../../frontend/src/features/notifications/components) | — | [styles](../../../../frontend/src/features/notifications/styles) | [tests](../../../../frontend/tests/features/notifications) |
 
 Tests: [announcements](../../../../backend/src/test/java/edu/aiplatform/announcements), [notifications](../../../../backend/src/test/java/edu/aiplatform/notifications).
 

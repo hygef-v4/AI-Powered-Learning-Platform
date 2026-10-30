@@ -15,9 +15,9 @@ assignments sở hữu document/rubric/authoring/AI draft/publication/copy. UI e
 | [assignments/dto](../../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignments/contract](../../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [assignments](../../../../frontend/src/features/assignments) | [api](../../../../frontend/src/features/assignments/api) | [model](../../../../frontend/src/features/assignments/model) | [pages](../../../../frontend/src/features/assignments/pages) | [components](../../../../frontend/src/features/assignments/components) | [hooks](../../../../frontend/src/features/assignments/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [assignments](../../../../frontend/src/features/assignments) | [api](../../../../frontend/src/features/assignments/api) | [model](../../../../frontend/src/features/assignments/model) | [pages](../../../../frontend/src/features/assignments/pages) | [components](../../../../frontend/src/features/assignments/components) | [hooks](../../../../frontend/src/features/assignments/hooks) | — | [tests](../../../../frontend/tests/features/assignments) |
 
 Tests: [assignments](../../../../backend/src/test/java/edu/aiplatform/assignments).
 

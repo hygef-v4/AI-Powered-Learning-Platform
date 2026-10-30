@@ -14,9 +14,9 @@ Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPE
 | [quizzes/model](../../../../backend/src/main/java/edu/aiplatform/quizzes/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizzes/contract](../../../../backend/src/main/java/edu/aiplatform/quizzes/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [quizzes](../../../../frontend/src/features/quizzes) | [api](../../../../frontend/src/features/quizzes/api) | [model](../../../../frontend/src/features/quizzes/model) | [pages](../../../../frontend/src/features/quizzes/pages) | [components](../../../../frontend/src/features/quizzes/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [quizzes](../../../../frontend/src/features/quizzes) | [api](../../../../frontend/src/features/quizzes/api) | [model](../../../../frontend/src/features/quizzes/model) | [pages](../../../../frontend/src/features/quizzes/pages) | [components](../../../../frontend/src/features/quizzes/components) | — | — | [tests](../../../../frontend/tests/features/quizzes) |
 
 Tests: [quizzes](../../../../backend/src/test/java/edu/aiplatform/quizzes).
 

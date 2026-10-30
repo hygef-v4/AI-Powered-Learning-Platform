@@ -15,9 +15,9 @@ CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, Academ
 | [academics/dto](../../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
 | [academics/contract](../../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [academics](../../../../frontend/src/features/academics) | [api](../../../../frontend/src/features/academics/api) | [model](../../../../frontend/src/features/academics/model) | [pages](../../../../frontend/src/features/academics/pages) | [components](../../../../frontend/src/features/academics/components) | [hooks](../../../../frontend/src/features/academics/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [academics](../../../../frontend/src/features/academics) | [api](../../../../frontend/src/features/academics/api) | [model](../../../../frontend/src/features/academics/model) | [pages](../../../../frontend/src/features/academics/pages) | [components](../../../../frontend/src/features/academics/components) | [hooks](../../../../frontend/src/features/academics/hooks) | [styles](../../../../frontend/src/features/academics/styles) | [tests](../../../../frontend/tests/features/academics) |
 
 Tests: [academics](../../../../backend/src/test/java/edu/aiplatform/academics).
 
