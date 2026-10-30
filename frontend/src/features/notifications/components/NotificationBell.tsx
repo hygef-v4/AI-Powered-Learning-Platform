@@ -4,7 +4,7 @@ import { useSession } from "@/features/identity/hooks/session";
 import { Icon } from "@/shared/ui/Icon";
 import { notificationsApi } from "../api";
 import { NotificationPopup } from "./NotificationPopup";
-import styles from "../notifications.module.css";
+import styles from "../styles/notifications.module.css";
 export function NotificationBell() { const session = useSession(); return session.status === "authenticated" ? <Bell key={session.profile.accountId} student={session.profile.role === "STUDENT"} /> : null; }
 function Bell({ student }: { student: boolean }) {
   const [count, setCount] = useState(0); const [failed, setFailed] = useState(false); const [open, setOpen] = useState(false); const [revision, setRevision] = useState(0); const host = useRef<HTMLDivElement>(null); const button = useRef<HTMLButtonElement>(null);

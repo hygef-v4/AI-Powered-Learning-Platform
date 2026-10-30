@@ -15,9 +15,9 @@ grading có submission review, AI proposal và structured feedback với evidenc
 | [grading/dto](../../../../backend/src/main/java/edu/aiplatform/grading/dto) | Kiểu dữ liệu request/response riêng. |
 | [grading/contract](../../../../backend/src/main/java/edu/aiplatform/grading/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [grading](../../../../frontend/src/features/grading) | [api](../../../../frontend/src/features/grading/api) | [model](../../../../frontend/src/features/grading/model) | [pages](../../../../frontend/src/features/grading/pages) | [components](../../../../frontend/src/features/grading/components) | [hooks](../../../../frontend/src/features/grading/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [grading](../../../../frontend/src/features/grading) | [api](../../../../frontend/src/features/grading/api) | [model](../../../../frontend/src/features/grading/model) | [pages](../../../../frontend/src/features/grading/pages) | [components](../../../../frontend/src/features/grading/components) | [hooks](../../../../frontend/src/features/grading/hooks) | — | [tests](../../../../frontend/tests/features/grading) |
 
 Tests: [grading](../../../../backend/src/test/java/edu/aiplatform/grading).
 

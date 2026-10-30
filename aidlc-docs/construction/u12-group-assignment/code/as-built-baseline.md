@@ -19,10 +19,10 @@ groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null 
 | [groupdocs/integration](../../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [groupdocs/contract](../../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [groups](../../../../frontend/src/features/groups) | [api](../../../../frontend/src/features/groups/api) | [model](../../../../frontend/src/features/groups/model) | — | [components](../../../../frontend/src/features/groups/components) | — |
-| [groupdocs](../../../../frontend/src/features/groupdocs) | [api](../../../../frontend/src/features/groupdocs/api) | [model](../../../../frontend/src/features/groupdocs/model) | [pages](../../../../frontend/src/features/groupdocs/pages) | [components](../../../../frontend/src/features/groupdocs/components) | [hooks](../../../../frontend/src/features/groupdocs/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [groups](../../../../frontend/src/features/groups) | [api](../../../../frontend/src/features/groups/api) | [model](../../../../frontend/src/features/groups/model) | — | [components](../../../../frontend/src/features/groups/components) | — | — | [tests](../../../../frontend/tests/features/groups) |
+| [groupdocs](../../../../frontend/src/features/groupdocs) | [api](../../../../frontend/src/features/groupdocs/api) | [model](../../../../frontend/src/features/groupdocs/model) | [pages](../../../../frontend/src/features/groupdocs/pages) | [components](../../../../frontend/src/features/groupdocs/components) | [hooks](../../../../frontend/src/features/groupdocs/hooks) | — | [tests](../../../../frontend/tests/features/groupdocs) |
 
 Tests: [groups](../../../../backend/src/test/java/edu/aiplatform/groups), [groupdocs](../../../../backend/src/test/java/edu/aiplatform/groupdocs).
 

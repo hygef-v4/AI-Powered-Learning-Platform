@@ -30,10 +30,10 @@ files/jobs/settings/backup có source và Flyway schema. Settings hiện hành l
 | [backup/config](../../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |
 | [backup/contract](../../../../backend/src/main/java/edu/aiplatform/backup/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [files](../../../../frontend/src/features/files) | [api](../../../../frontend/src/features/files/api) | [model](../../../../frontend/src/features/files/model) | — | [components](../../../../frontend/src/features/files/components) | [hooks](../../../../frontend/src/features/files/hooks) |
-| [settings](../../../../frontend/src/features/settings) | [api](../../../../frontend/src/features/settings/api) | [model](../../../../frontend/src/features/settings/model) | [pages](../../../../frontend/src/features/settings/pages) | [components](../../../../frontend/src/features/settings/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [files](../../../../frontend/src/features/files) | [api](../../../../frontend/src/features/files/api) | [model](../../../../frontend/src/features/files/model) | — | [components](../../../../frontend/src/features/files/components) | [hooks](../../../../frontend/src/features/files/hooks) | — | [tests](../../../../frontend/tests/features/files) |
+| [settings](../../../../frontend/src/features/settings) | [api](../../../../frontend/src/features/settings/api) | [model](../../../../frontend/src/features/settings/model) | [pages](../../../../frontend/src/features/settings/pages) | [components](../../../../frontend/src/features/settings/components) | — | — | [tests](../../../../frontend/tests/features/settings) |
 
 Tests: [files](../../../../backend/src/test/java/edu/aiplatform/files), [jobs](../../../../backend/src/test/java/edu/aiplatform/jobs), [settings](../../../../backend/src/test/java/edu/aiplatform/settings), [backup](../../../../backend/src/test/java/edu/aiplatform/backup).
 

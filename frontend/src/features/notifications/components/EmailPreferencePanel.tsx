@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { notificationsApi } from "../api";
 import { preferenceLabels, type EmailPreferences } from "../model/types";
-import styles from "../notifications.module.css";
+import styles from "../styles/notifications.module.css";
 export function EmailPreferencePanel() {
   const [values, setValues] = useState<EmailPreferences | null>(null); const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [revision, setRevision] = useState(0);
   useEffect(() => { const controller = new AbortController(); void notificationsApi.preferences(controller.signal).then(setValues).catch(() => { if (!controller.signal.aborted) setError("Không thể tải tùy chọn email."); }); return () => controller.abort(); }, [revision]);

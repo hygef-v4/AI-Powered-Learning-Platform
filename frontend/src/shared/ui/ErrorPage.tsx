@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ErrorMark, type ErrorKind } from "@/shared/ui/ErrorMark";
 import { Logo } from "@/shared/ui/Logo";
-import styles from "./error-page.module.css";
+import styles from "../styles/error-page.module.css";
 
 /** Chữ của từng trang lỗi: chỉ nói lỗi gì, không hướng dẫn thêm; `code` chỉ có ở lỗi mang mã HTTP. */
 const COPY: Record<ErrorKind, { code?: string; title: string; description: string }> = {

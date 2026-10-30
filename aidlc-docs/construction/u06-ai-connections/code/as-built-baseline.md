@@ -16,9 +16,9 @@ MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ ch�
 | [ai/config](../../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
 | [ai/contract](../../../../backend/src/main/java/edu/aiplatform/ai/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [ai](../../../../frontend/src/features/ai) | [api](../../../../frontend/src/features/ai/api) | [model](../../../../frontend/src/features/ai/model) | [pages](../../../../frontend/src/features/ai/pages) | [components](../../../../frontend/src/features/ai/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [ai](../../../../frontend/src/features/ai) | [api](../../../../frontend/src/features/ai/api) | [model](../../../../frontend/src/features/ai/model) | [pages](../../../../frontend/src/features/ai/pages) | [components](../../../../frontend/src/features/ai/components) | — | — | [tests](../../../../frontend/tests/features/ai) |
 
 Tests: [ai](../../../../backend/src/test/java/edu/aiplatform/ai).
 

@@ -1,5 +1,7 @@
 # Current code baseline — structure refactor 2026-10-30
 
+Frontend layout follow-up: parent HEAD `5480c267` + working-tree CSS/test relocation. Tests and fixtures: [frontend/tests](../../../frontend/tests); shared/global CSS: [shared/styles](../../../frontend/src/shared/styles); feature CSS: each feature styles directory. [Fresh verification and limits](../../construction/build-and-test/2026-10-30-frontend-styles-tests-results.md).
+
 Parent HEAD `5a76e428` + working-tree refactor on branch `aidlc-docs`; no new commit. 66 UC, 15 logical units and their ownership are retained. Java 17/Spring Boot modular monolith + worker; Next.js/React/TypeScript frontend.
 
 Verification: [refactor results and limits](../../construction/build-and-test/2026-10-30-package-moves-only-results.md). Source inventory does not imply full UC/runtime/provider acceptance.
@@ -62,9 +64,9 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [identity](../../../frontend/src/features/identity) | [api](../../../frontend/src/features/identity/api) | [model](../../../frontend/src/features/identity/model) | [pages](../../../frontend/src/features/identity/pages) | [components](../../../frontend/src/features/identity/components) | [hooks](../../../frontend/src/features/identity/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [identity](../../../frontend/src/features/identity) | [api](../../../frontend/src/features/identity/api) | [model](../../../frontend/src/features/identity/model) | [pages](../../../frontend/src/features/identity/pages) | [components](../../../frontend/src/features/identity/components) | [hooks](../../../frontend/src/features/identity/hooks) | — | [tests](../../../frontend/tests/features/identity) |
 
 ## U02 — Audit
 
@@ -95,9 +97,9 @@ Primary UC 13; FR-014.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [audit](../../../frontend/src/features/audit) | [api](../../../frontend/src/features/audit/api) | [model](../../../frontend/src/features/audit/model) | [pages](../../../frontend/src/features/audit/pages) | [components](../../../frontend/src/features/audit/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [audit](../../../frontend/src/features/audit) | [api](../../../frontend/src/features/audit/api) | [model](../../../frontend/src/features/audit/model) | [pages](../../../frontend/src/features/audit/pages) | [components](../../../frontend/src/features/audit/components) | — | — | [tests](../../../frontend/tests/features/audit) |
 
 ## U03 — Job and Settings
 
@@ -171,10 +173,10 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [files](../../../frontend/src/features/files) | [api](../../../frontend/src/features/files/api) | [model](../../../frontend/src/features/files/model) | — | [components](../../../frontend/src/features/files/components) | [hooks](../../../frontend/src/features/files/hooks) |
-| [settings](../../../frontend/src/features/settings) | [api](../../../frontend/src/features/settings/api) | [model](../../../frontend/src/features/settings/model) | [pages](../../../frontend/src/features/settings/pages) | [components](../../../frontend/src/features/settings/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [files](../../../frontend/src/features/files) | [api](../../../frontend/src/features/files/api) | [model](../../../frontend/src/features/files/model) | — | [components](../../../frontend/src/features/files/components) | [hooks](../../../frontend/src/features/files/hooks) | — | [tests](../../../frontend/tests/features/files) |
+| [settings](../../../frontend/src/features/settings) | [api](../../../frontend/src/features/settings/api) | [model](../../../frontend/src/features/settings/model) | [pages](../../../frontend/src/features/settings/pages) | [components](../../../frontend/src/features/settings/components) | — | — | [tests](../../../frontend/tests/features/settings) |
 
 ## U04 — Subject Administration
 
@@ -215,9 +217,9 @@ Primary UC 16–19; FR-003.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [subjects](../../../frontend/src/features/subjects) | [api](../../../frontend/src/features/subjects/api) | [model](../../../frontend/src/features/subjects/model) | [pages](../../../frontend/src/features/subjects/pages) | [components](../../../frontend/src/features/subjects/components) | [hooks](../../../frontend/src/features/subjects/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [subjects](../../../frontend/src/features/subjects) | [api](../../../frontend/src/features/subjects/api) | [model](../../../frontend/src/features/subjects/model) | [pages](../../../frontend/src/features/subjects/pages) | [components](../../../frontend/src/features/subjects/components) | [hooks](../../../frontend/src/features/subjects/hooks) | — | [tests](../../../frontend/tests/features/subjects) |
 
 ## U05 — Class & Enrollment
 
@@ -258,9 +260,9 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [academics](../../../frontend/src/features/academics) | [api](../../../frontend/src/features/academics/api) | [model](../../../frontend/src/features/academics/model) | [pages](../../../frontend/src/features/academics/pages) | [components](../../../frontend/src/features/academics/components) | [hooks](../../../frontend/src/features/academics/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [academics](../../../frontend/src/features/academics) | [api](../../../frontend/src/features/academics/api) | [model](../../../frontend/src/features/academics/model) | [pages](../../../frontend/src/features/academics/pages) | [components](../../../frontend/src/features/academics/components) | [hooks](../../../frontend/src/features/academics/hooks) | [styles](../../../frontend/src/features/academics/styles) | [tests](../../../frontend/tests/features/academics) |
 
 ## U06 — AI Connections
 
@@ -316,9 +318,9 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [ai](../../../frontend/src/features/ai) | [api](../../../frontend/src/features/ai/api) | [model](../../../frontend/src/features/ai/model) | [pages](../../../frontend/src/features/ai/pages) | [components](../../../frontend/src/features/ai/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [ai](../../../frontend/src/features/ai) | [api](../../../frontend/src/features/ai/api) | [model](../../../frontend/src/features/ai/model) | [pages](../../../frontend/src/features/ai/pages) | [components](../../../frontend/src/features/ai/components) | — | — | [tests](../../../frontend/tests/features/ai) |
 
 ## U07 — Assignment Authoring
 
@@ -363,9 +365,9 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [assignments](../../../frontend/src/features/assignments) | [api](../../../frontend/src/features/assignments/api) | [model](../../../frontend/src/features/assignments/model) | [pages](../../../frontend/src/features/assignments/pages) | [components](../../../frontend/src/features/assignments/components) | [hooks](../../../frontend/src/features/assignments/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [assignments](../../../frontend/src/features/assignments) | [api](../../../frontend/src/features/assignments/api) | [model](../../../frontend/src/features/assignments/model) | [pages](../../../frontend/src/features/assignments/pages) | [components](../../../frontend/src/features/assignments/components) | [hooks](../../../frontend/src/features/assignments/hooks) | — | [tests](../../../frontend/tests/features/assignments) |
 
 ## U08 — Assignment Work
 
@@ -400,9 +402,9 @@ Primary UC 37–41; FR-018, FR-030, FR-039.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [assignmentwork](../../../frontend/src/features/assignmentwork) | [api](../../../frontend/src/features/assignmentwork/api) | [model](../../../frontend/src/features/assignmentwork/model) | [pages](../../../frontend/src/features/assignmentwork/pages) | [components](../../../frontend/src/features/assignmentwork/components) | [hooks](../../../frontend/src/features/assignmentwork/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [assignmentwork](../../../frontend/src/features/assignmentwork) | [api](../../../frontend/src/features/assignmentwork/api) | [model](../../../frontend/src/features/assignmentwork/model) | [pages](../../../frontend/src/features/assignmentwork/pages) | [components](../../../frontend/src/features/assignmentwork/components) | [hooks](../../../frontend/src/features/assignmentwork/hooks) | — | [tests](../../../frontend/tests/features/assignmentwork) |
 
 ## U09 — Assignment Grading
 
@@ -458,9 +460,9 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [grading](../../../frontend/src/features/grading) | [api](../../../frontend/src/features/grading/api) | [model](../../../frontend/src/features/grading/model) | [pages](../../../frontend/src/features/grading/pages) | [components](../../../frontend/src/features/grading/components) | [hooks](../../../frontend/src/features/grading/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [grading](../../../frontend/src/features/grading) | [api](../../../frontend/src/features/grading/api) | [model](../../../frontend/src/features/grading/model) | [pages](../../../frontend/src/features/grading/pages) | [components](../../../frontend/src/features/grading/components) | [hooks](../../../frontend/src/features/grading/hooks) | — | [tests](../../../frontend/tests/features/grading) |
 
 ## U10 — Quiz Authoring
 
@@ -507,9 +509,9 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [quizzes](../../../frontend/src/features/quizzes) | [api](../../../frontend/src/features/quizzes/api) | [model](../../../frontend/src/features/quizzes/model) | [pages](../../../frontend/src/features/quizzes/pages) | [components](../../../frontend/src/features/quizzes/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [quizzes](../../../frontend/src/features/quizzes) | [api](../../../frontend/src/features/quizzes/api) | [model](../../../frontend/src/features/quizzes/model) | [pages](../../../frontend/src/features/quizzes/pages) | [components](../../../frontend/src/features/quizzes/components) | — | — | [tests](../../../frontend/tests/features/quizzes) |
 
 ## U11 — Quiz Practice
 
@@ -541,9 +543,9 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [quizpractice](../../../frontend/src/features/quizpractice) | [api](../../../frontend/src/features/quizpractice/api) | [model](../../../frontend/src/features/quizpractice/model) | [pages](../../../frontend/src/features/quizpractice/pages) | [components](../../../frontend/src/features/quizpractice/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [quizpractice](../../../frontend/src/features/quizpractice) | [api](../../../frontend/src/features/quizpractice/api) | [model](../../../frontend/src/features/quizpractice/model) | [pages](../../../frontend/src/features/quizpractice/pages) | [components](../../../frontend/src/features/quizpractice/components) | — | — | [tests](../../../frontend/tests/features/quizpractice) |
 
 ## U12 — Group Assignment
 
@@ -594,10 +596,10 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [groups](../../../frontend/src/features/groups) | [api](../../../frontend/src/features/groups/api) | [model](../../../frontend/src/features/groups/model) | — | [components](../../../frontend/src/features/groups/components) | — |
-| [groupdocs](../../../frontend/src/features/groupdocs) | [api](../../../frontend/src/features/groupdocs/api) | [model](../../../frontend/src/features/groupdocs/model) | [pages](../../../frontend/src/features/groupdocs/pages) | [components](../../../frontend/src/features/groupdocs/components) | [hooks](../../../frontend/src/features/groupdocs/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [groups](../../../frontend/src/features/groups) | [api](../../../frontend/src/features/groups/api) | [model](../../../frontend/src/features/groups/model) | — | [components](../../../frontend/src/features/groups/components) | — | — | [tests](../../../frontend/tests/features/groups) |
+| [groupdocs](../../../frontend/src/features/groupdocs) | [api](../../../frontend/src/features/groupdocs/api) | [model](../../../frontend/src/features/groupdocs/model) | [pages](../../../frontend/src/features/groupdocs/pages) | [components](../../../frontend/src/features/groupdocs/components) | [hooks](../../../frontend/src/features/groupdocs/hooks) | — | [tests](../../../frontend/tests/features/groupdocs) |
 
 ## U13 — Reference Materials
 
@@ -639,9 +641,9 @@ Primary UC 58–62; FR-004, FR-005.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [materials](../../../frontend/src/features/materials) | [api](../../../frontend/src/features/materials/api) | [model](../../../frontend/src/features/materials/model) | [pages](../../../frontend/src/features/materials/pages) | [components](../../../frontend/src/features/materials/components) | [hooks](../../../frontend/src/features/materials/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [materials](../../../frontend/src/features/materials) | [api](../../../frontend/src/features/materials/api) | [model](../../../frontend/src/features/materials/model) | [pages](../../../frontend/src/features/materials/pages) | [components](../../../frontend/src/features/materials/components) | [hooks](../../../frontend/src/features/materials/hooks) | [styles](../../../frontend/src/features/materials/styles) | [tests](../../../frontend/tests/features/materials) |
 
 ## U14 — Announcements & Notifications
 
@@ -689,10 +691,10 @@ Primary UC 63–65; FR-011, FR-019, FR-023.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [announcements](../../../frontend/src/features/announcements) | [api](../../../frontend/src/features/announcements/api) | [model](../../../frontend/src/features/announcements/model) | [pages](../../../frontend/src/features/announcements/pages) | [components](../../../frontend/src/features/announcements/components) | — |
-| [notifications](../../../frontend/src/features/notifications) | [api](../../../frontend/src/features/notifications/api) | [model](../../../frontend/src/features/notifications/model) | — | [components](../../../frontend/src/features/notifications/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [announcements](../../../frontend/src/features/announcements) | [api](../../../frontend/src/features/announcements/api) | [model](../../../frontend/src/features/announcements/model) | [pages](../../../frontend/src/features/announcements/pages) | [components](../../../frontend/src/features/announcements/components) | — | [styles](../../../frontend/src/features/announcements/styles) | [tests](../../../frontend/tests/features/announcements) |
+| [notifications](../../../frontend/src/features/notifications) | [api](../../../frontend/src/features/notifications/api) | [model](../../../frontend/src/features/notifications/model) | — | [components](../../../frontend/src/features/notifications/components) | — | [styles](../../../frontend/src/features/notifications/styles) | [tests](../../../frontend/tests/features/notifications) |
 
 ## U15 — Admin Dashboard
 
@@ -725,9 +727,9 @@ Primary UC 66; FR-024, FR-038.
 
 ### Frontend
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [admindashboard](../../../frontend/src/features/admindashboard) | [api](../../../frontend/src/features/admindashboard/api) | [model](../../../frontend/src/features/admindashboard/model) | [pages](../../../frontend/src/features/admindashboard/pages) | [components](../../../frontend/src/features/admindashboard/components) | [hooks](../../../frontend/src/features/admindashboard/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [admindashboard](../../../frontend/src/features/admindashboard) | [api](../../../frontend/src/features/admindashboard/api) | [model](../../../frontend/src/features/admindashboard/model) | [pages](../../../frontend/src/features/admindashboard/pages) | [components](../../../frontend/src/features/admindashboard/components) | [hooks](../../../frontend/src/features/admindashboard/hooks) | — | [tests](../../../frontend/tests/features/admindashboard) |
 
 ## Shared verification
 

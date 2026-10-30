@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import { fileDescription, materialHref, type Material } from "../model/types";
-import styles from "../materials.module.css";
+import styles from "../styles/materials.module.css";
 
 /** Ô Học liệu trong thẻ Thông tin lớp của giảng viên: số học liệu đang hoạt động của lớp (kể cả của môn). */
 export function ClassMaterialCountField({ classId }: { classId: string }) {

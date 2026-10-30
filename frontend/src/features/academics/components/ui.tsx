@@ -8,7 +8,7 @@ import { Pill } from "@/shared/ui/Pill";
 import { EmptyState as SharedEmptyState } from "@/shared/ui/EmptyState";
 import type { Tone } from "@/shared/ui/tones";
 import { statusLabels, type ClassStatus } from "../model/types";
-import styles from "../academics.module.css";
+import styles from "../styles/academics.module.css";
 
 export type IconName = "school" | "grid" | "book" | "users" | "folder" | "file" | "arrow" | "chevron" | "search" | "plus" | "close" | "lock" | "save" | "archive" | "person" | "info" | "check" | "clock";
 

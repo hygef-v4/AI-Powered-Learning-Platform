@@ -15,9 +15,9 @@ assignmentwork có start/save/submit/history, late/auto-submit, practice feedbac
 | [assignmentwork/dto](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignmentwork/contract](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [assignmentwork](../../../../frontend/src/features/assignmentwork) | [api](../../../../frontend/src/features/assignmentwork/api) | [model](../../../../frontend/src/features/assignmentwork/model) | [pages](../../../../frontend/src/features/assignmentwork/pages) | [components](../../../../frontend/src/features/assignmentwork/components) | [hooks](../../../../frontend/src/features/assignmentwork/hooks) |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [assignmentwork](../../../../frontend/src/features/assignmentwork) | [api](../../../../frontend/src/features/assignmentwork/api) | [model](../../../../frontend/src/features/assignmentwork/model) | [pages](../../../../frontend/src/features/assignmentwork/pages) | [components](../../../../frontend/src/features/assignmentwork/components) | [hooks](../../../../frontend/src/features/assignmentwork/hooks) | — | [tests](../../../../frontend/tests/features/assignmentwork) |
 
 Tests: [assignmentwork](../../../../backend/src/test/java/edu/aiplatform/assignmentwork).
 

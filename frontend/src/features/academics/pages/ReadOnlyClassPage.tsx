@@ -10,7 +10,7 @@ import { Field, LockedInput, PageHeader, Section } from "@/shared/ui";
 import { EmptyState, PageHeading, Tabs } from "../components/ui";
 import type { CourseClassView, EnrollmentView } from "../model/types";
 
-import styles from "../academics.module.css";
+import styles from "../styles/academics.module.css";
 
 type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];

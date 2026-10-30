@@ -14,9 +14,9 @@ Audit append-only và Admin query có source; AuditQueryService/IAuditQuery/IAud
 | [audit/model](../../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [audit/contract](../../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-| Feature | API | Model | Pages | Components | Hooks |
-|---|---|---|---|---|---|
-| [audit](../../../../frontend/src/features/audit) | [api](../../../../frontend/src/features/audit/api) | [model](../../../../frontend/src/features/audit/model) | [pages](../../../../frontend/src/features/audit/pages) | [components](../../../../frontend/src/features/audit/components) | — |
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [audit](../../../../frontend/src/features/audit) | [api](../../../../frontend/src/features/audit/api) | [model](../../../../frontend/src/features/audit/model) | [pages](../../../../frontend/src/features/audit/pages) | [components](../../../../frontend/src/features/audit/components) | — | — | [tests](../../../../frontend/tests/features/audit) |
 
 Tests: [audit](../../../../backend/src/test/java/edu/aiplatform/audit).
 

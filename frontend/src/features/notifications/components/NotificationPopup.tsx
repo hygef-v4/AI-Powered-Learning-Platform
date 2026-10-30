@@ -5,7 +5,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { notificationsApi, safeNotificationLink } from "../api";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
-import styles from "../notifications.module.css";
+import styles from "../styles/notifications.module.css";
 /**
  * Popup thông báo: tiêu đề kèm nút cài đặt (bánh răng, chỉ Sinh viên có tùy chọn email) mở trang Cài đặt riêng trong popup; hàng tab
  * Tất cả / Chưa đọc mang luôn nút đánh dấu đã đọc. Làm mới (SSE, định kỳ, sau khi đọc) giữ danh sách cũ của cùng bộ lọc cho tới khi
