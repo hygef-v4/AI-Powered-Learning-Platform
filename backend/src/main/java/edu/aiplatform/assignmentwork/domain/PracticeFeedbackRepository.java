@@ -27,6 +27,12 @@ public class PracticeFeedbackRepository {
         this.json = json;
     }
 
+    /** Serialize the shared API/MCP daily budget and pending checks until the reservation commits. */
+    public void lockAccount(UUID accountId) {
+        jdbc.sql("select 1 from (select pg_advisory_xact_lock(hashtextextended(:key, 0))) locked")
+                .param("key", "practice-feedback:" + accountId).query(Integer.class).single();
+    }
+
     public void insert(PracticeFeedback f) {
         jdbc.sql("insert into practice_feedback (id, attempt_id, account_id, origin, task_id, request_ref, status, "
                         + "submission_hash, feedback, provenance, safe_error, created_at, completed_at) values (:id, "

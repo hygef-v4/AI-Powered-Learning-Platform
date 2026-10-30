@@ -84,6 +84,14 @@ async function openSettings() {
   fireEvent.click(await screen.findByRole("tab", { name: "Cài đặt" }));
 }
 
+it("không có tab hoặc request MCP trong Cài đặt AI của Admin, kể cả query tab cũ", async () => {
+  const calls = backend();
+  render(<AiConnectionsPanel tab="mcp" />);
+  expect(screen.queryByRole("tab", { name: "Agent MCP" })).not.toBeInTheDocument();
+  await waitFor(() => expect(calls.some((c) => c.url.includes("/api/v1/admin/ai/"))).toBe(true));
+  expect(calls.some((c) => c.url.includes("mcp-credentials"))).toBe(false);
+});
+
 describe("AiConnectionsPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -91,7 +99,7 @@ describe("AiConnectionsPanel", () => {
     backend();
     render(<AiConnectionsPanel />);
     const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
-    expect(tabs).toEqual(["Usage", "Cài đặt", "Agent MCP"]);
+    expect(tabs).toEqual(["Usage", "Cài đặt"]);
     expect(screen.getByRole("tab", { name: "Usage" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText("Giảng viên đã dùng hôm nay")).toBeInTheDocument();
   });

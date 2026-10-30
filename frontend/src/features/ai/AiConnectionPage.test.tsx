@@ -123,12 +123,22 @@ describe("AiConnectionPage", () => {
     expect(within(screen.getByRole("table")).queryByText("Gemini")).not.toBeInTheDocument();
   });
 
-  it("học sinh không có tab Agent MCP và không gọi API agent", async () => {
+  it("học sinh có tab Agent MCP và quản lý agent của chính mình", async () => {
     session.role = "STUDENT";
     const calls = backend({ sources: [] });
     render(<AiConnectionPage initialTab="settings" />);
     await screen.findByText("••••3kQf");
+    fireEvent.click(screen.getByRole("tab", { name: "Agent MCP" }));
+    expect(await screen.findByText("Claude Desktop")).toBeInTheDocument();
+    expect(calls.some((c) => c.url === "/api/v1/me/mcp-credentials")).toBe(true);
+  });
+
+  it("admin không thấy Agent MCP kể cả khi mở tab MCP trực tiếp", async () => {
+    session.role = "ADMIN";
+    const calls = backend({ sources: [] });
+    render(<AiConnectionPage initialTab="mcp" />);
     expect(screen.queryByRole("tab", { name: "Agent MCP" })).not.toBeInTheDocument();
+    await waitFor(() => expect(calls.some((c) => c.url.includes("ai-usage"))).toBe(true));
     expect(calls.some((c) => c.url.includes("mcp-credentials"))).toBe(false);
   });
 

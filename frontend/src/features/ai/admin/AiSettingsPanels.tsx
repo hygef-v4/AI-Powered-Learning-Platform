@@ -2,22 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
-import { AdminMcpTab } from "./AdminMcpPage";
 import { InstitutionalKeysSection } from "./InstitutionalKeysSection";
 import { QuotaPolicySection, TeacherQuotaTable } from "./QuotaSections";
 import { SharedUsageTab } from "./SharedUsageTab";
 
-type Tab = "usage" | "settings" | "mcp";
+type Tab = "usage" | "settings";
 
 const TABS: TabItem<Tab>[] = [
   { key: "usage", label: "Usage" },
   { key: "settings", label: "Cài đặt" },
-  { key: "mcp", label: "Agent MCP" },
 ];
 
 /**
- * Trang "Cài đặt AI" mở từ Setting List (UC 14, 15, 32, 33): tab Usage mở trước; tab Cài đặt gồm khóa của trường, hạn
- * mức chung và mức riêng trong một thẻ; tab Agent MCP là agent của chính Admin. Mở từ thẻ hạn mức thì vào tab Cài đặt và cuộn tới phần hạn mức.
+ * Cài đặt AI của Admin chỉ gồm usage, khóa chung và quota. Agent MCP thuộc Student/Teacher/Subject Manager.
  */
 function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuota?: boolean; initialTab?: Tab }) {
   const [tab, setTab] = useState<Tab>(focusQuota ? "settings" : initialTab);
@@ -34,7 +31,6 @@ function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuo
       />
       <Tabs items={TABS} value={tab} onChange={setTab} label="Cài đặt AI" />
       {tab === "usage" && <SharedUsageTab />}
-      {tab === "mcp" && <AdminMcpTab />}
       {tab === "settings" && (
         <SettingsCard>
           <InstitutionalKeysSection />
@@ -46,7 +42,7 @@ function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuo
   );
 }
 
-/** Đăng ký cho mục "Cài đặt AI" trên Setting List; {@code ?tab=mcp} mở thẳng tab Agent MCP (đường dẫn cũ /admin/mcp). */
+/** Query tab cũ/không hợp lệ quay về Usage; không gắn component MCP trong khu vực Admin. */
 export function AiConnectionsPanel({ tab }: { tab?: string }) {
   return <AiSettingsPage initialTab={TABS.some((t) => t.key === tab) ? (tab as Tab) : "usage"} />;
 }

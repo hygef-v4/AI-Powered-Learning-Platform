@@ -23,8 +23,8 @@ class McpStaffAdmissionTest {
             new AiAccess(authorization, audit, clock), audit, clock,
             new KeyCipher(KeyCipherAndCatalogTest.properties(KeyCipherAndCatalogTest.KEY_V1, null)));
 
-    @Test void adminManagesCredentialsWithMcpPermissionWithoutPersonalAi() {
-        Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
+    @Test void studentManagesCredentialsWithMcpPermissionWithoutSharedAi() {
+        Actor admin = new Actor(UUID.randomUUID(), Role.STUDENT);
         when(authorization.authorize(eq(admin), anyString(), any())).thenAnswer(call ->
                 "MCP_SELF".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
                         : AuthorizationDecision.deny("ROLE"));
@@ -33,10 +33,10 @@ class McpStaffAdmissionTest {
         verify(authorization, times(2)).authorize(eq(admin), eq("MCP_SELF"), any());
     }
 
-    @Test void studentCannotManageCredentialsDespiteHavingPersonalAi() {
-        Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
+    @Test void adminCannotManageCredentialsDespiteManagingInstitutionalAi() {
+        Actor student = new Actor(UUID.randomUUID(), Role.ADMIN);
         when(authorization.authorize(eq(student), anyString(), any())).thenAnswer(call ->
-                "AI_PERSONAL".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
+                "AI_ADMIN".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
                         : AuthorizationDecision.deny("ROLE"));
         assertThatThrownBy(() -> service.create(student, "x", McpCredential.Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> service.list(student)).isInstanceOf(ApiException.class);
@@ -44,7 +44,7 @@ class McpStaffAdmissionTest {
         verify(repository, never()).insert(any());
     }
 
-    @Test void oldTokenIsRejectedAsSoonAsCurrentAccountRoleBecomesStudent() {
+    @Test void oldTokenIsRejectedAsSoonAsCurrentAccountRoleBecomesAdmin() {
         UUID accountId = UUID.randomUUID();
         String token = "mcp_existing-test-secret";
         var credential = new McpCredential(UUID.randomUUID(), accountId, "test", McpCredential.Access.READ_WRITE,
@@ -52,10 +52,10 @@ class McpStaffAdmissionTest {
         when(repository.findByHash(credential.tokenHash())).thenReturn(Optional.of(credential));
         when(accounts.getContact(accountId)).thenReturn(Optional.of(new AccountContact(accountId, "test@local", "test",
                 Role.TEACHER, AccountStatus.ACTIVE)), Optional.of(new AccountContact(accountId, "test@local", "test",
-                Role.STUDENT, AccountStatus.ACTIVE)), Optional.of(new AccountContact(accountId, "test@local", "test",
-                Role.ADMIN, AccountStatus.ACTIVE)));
+                Role.ADMIN, AccountStatus.ACTIVE)), Optional.of(new AccountContact(accountId, "test@local", "test",
+                Role.STUDENT, AccountStatus.ACTIVE)));
         assertThat(service.authenticate(token)).isPresent();
         assertThat(service.authenticate(token)).isEmpty();
-        assertThat(service.authenticate(token)).get().extracting(p -> p.actor().role()).isEqualTo(Role.ADMIN);
+        assertThat(service.authenticate(token)).get().extracting(p -> p.actor().role()).isEqualTo(Role.STUDENT);
     }
 }

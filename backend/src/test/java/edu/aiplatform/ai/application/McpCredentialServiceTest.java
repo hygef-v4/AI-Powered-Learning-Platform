@@ -108,8 +108,8 @@ class McpCredentialServiceTest {
     }
 
     @Test
-    void studentCannotCreateCredential() {
-        Actor admin = new Actor(UUID.randomUUID(), Role.STUDENT);
+    void adminCannotCreateCredential() {
+        Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         when(authorization.authorize(eq(admin), any(), any())).thenReturn(AuthorizationDecision.deny("ROLE"));
 
         assertThatThrownBy(() -> service.create(admin, "x", Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
@@ -131,9 +131,9 @@ class McpCredentialServiceTest {
     }
 
     @Test
-    void authenticateRejectsExpiredRevokedInactiveAndStudent() {
+    void authenticateRejectsExpiredRevokedInactiveAndAdmin() {
         when(accounts.getContact(staff.accountId())).thenReturn(Optional.of(
-                new AccountContact(staff.accountId(), "a@x", "A", Role.STUDENT, AccountStatus.ACTIVE)));
+                new AccountContact(staff.accountId(), "a@x", "A", Role.ADMIN, AccountStatus.ACTIVE)));
         when(repository.findByHash(any())).thenReturn(Optional.of(credential(NOW, null)));
         assertThat(service.authenticate(TOKEN)).isEmpty();
         when(repository.findByHash(any())).thenReturn(Optional.of(credential(NOW.plusSeconds(60), NOW)));
@@ -141,10 +141,10 @@ class McpCredentialServiceTest {
 
         when(repository.findByHash(any())).thenReturn(Optional.of(credential(NOW.plusSeconds(60), null)));
         when(accounts.getContact(staff.accountId())).thenReturn(Optional.of(
-                new AccountContact(staff.accountId(), "a@x", "A", Role.STUDENT, AccountStatus.DISABLED)));
+                new AccountContact(staff.accountId(), "a@x", "A", Role.ADMIN, AccountStatus.DISABLED)));
         assertThat(service.authenticate(TOKEN)).isEmpty();
         when(accounts.getContact(staff.accountId())).thenReturn(Optional.of(
-                new AccountContact(staff.accountId(), "a@x", "A", Role.STUDENT, AccountStatus.ACTIVE)));
+                new AccountContact(staff.accountId(), "a@x", "A", Role.ADMIN, AccountStatus.ACTIVE)));
         assertThat(service.authenticate(TOKEN)).isEmpty();
 
         assertThat(service.authenticate("not-a-token")).isEmpty();
@@ -168,6 +168,24 @@ class McpCredentialServiceTest {
         when(repository.findOwn(staff.accountId(), other)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.revoke(staff, other))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(AiAccess.NOT_FOUND));
+    }
+
+    @Test
+    void revealRejectsForeignExpiredRevokedAndMissingCiphertext() {
+        when(authorization.authorize(eq(staff), any(), any())).thenReturn(AuthorizationDecision.allow());
+        UUID foreign=UUID.randomUUID();
+        assertThatThrownBy(()->service.reveal(staff,foreign)).isInstanceOf(ApiException.class);
+        var expired=credential(NOW,null);
+        when(repository.findOwn(staff.accountId(),expired.id())).thenReturn(Optional.of(expired));
+        assertThatThrownBy(()->service.reveal(staff,expired.id())).isInstanceOf(ApiException.class);
+        var revoked=credential(NOW.plusSeconds(60),NOW);
+        when(repository.findOwn(staff.accountId(),revoked.id())).thenReturn(Optional.of(revoked));
+        assertThatThrownBy(()->service.reveal(staff,revoked.id())).isInstanceOf(ApiException.class);
+        var active=credential(NOW.plusSeconds(60),null);
+        when(repository.findOwn(staff.accountId(),active.id())).thenReturn(Optional.of(active));
+        when(repository.findSecret(active.id())).thenReturn(Optional.empty());
+        assertThatThrownBy(()->service.reveal(staff,active.id())).isInstanceOf(ApiException.class);
+        verify(audit,never()).record(org.mockito.ArgumentMatchers.argThat(e->e.action().equals("MCP_TOKEN_REVEALED")));
     }
 
     private static final String TOKEN = "mcp_abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";

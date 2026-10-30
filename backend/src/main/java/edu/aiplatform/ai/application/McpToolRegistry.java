@@ -38,7 +38,7 @@ public class McpToolRegistry {
     }
 
     static boolean visible(McpToolDefinition d, Role role, Access access) {
-        return role != Role.STUDENT && d.allowedRoles() != null && d.allowedRoles().contains(role)
+        return role != null && role != Role.ADMIN && d.allowedRoles() != null && d.allowedRoles().contains(role)
                 && (d.kind() == McpToolKind.READ || access == Access.READ_WRITE);
     }
 

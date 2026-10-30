@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { AdminMcpTab } from "./AdminMcpPage";
+import { McpAgentsTab } from "../McpAgentsTab";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -43,7 +43,7 @@ function backend(list: unknown[]) {
 
 it("Admin tạo agent: popup token có biểu tượng sao chép, cấu hình mẫu điền sẵn token, nút Đóng", async () => {
   const calls = backend([]);
-  render(<AdminMcpTab />);
+  render(<McpAgentsTab />);
   expect(await screen.findByText("Chưa có agent")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Kết nối agent mới/ }));
   const dialog = await screen.findByRole("dialog", { name: "Kết nối agent mới" });
@@ -64,7 +64,7 @@ it("Admin tạo agent: popup token có biểu tượng sao chép, cấu hình m�
 
 it("Sửa agent dùng cùng popup: đổi nhãn, quyền; xem lại token; lưu xong không hiện cách kết nối", async () => {
   const calls = backend([AGENT]);
-  render(<AdminMcpTab />);
+  render(<McpAgentsTab />);
   expect(await screen.findByText("Hiệu lực")).toBeInTheDocument();
   expect(screen.queryByRole("columnheader", { name: /Lần dùng cuối/ })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Sửa agent Reporting" }));
@@ -88,7 +88,7 @@ it("Sửa agent dùng cùng popup: đổi nhãn, quyền; xem lại token; lưu 
 
 it("shows a retry action when Admin credential loading fails", async () => {
   vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(JSON.stringify({ status: 503 }), { status: 503 }))));
-  render(<AdminMcpTab />);
+  render(<McpAgentsTab />);
   expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được");
   expect(screen.getByRole("button", { name: "Tải lại" })).toBeInTheDocument();
 });

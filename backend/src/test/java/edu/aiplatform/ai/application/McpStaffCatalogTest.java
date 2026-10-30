@@ -37,14 +37,20 @@ class McpStaffCatalogTest {
         var definitions=providers.stream().flatMap(p -> p.tools().stream()).toList();
         assertThat(definitions).allMatch(d -> checker.validSchema(d.parameterSchema()));
         assertThat(definitions).extracting(McpToolDefinition::name).doesNotHaveDuplicates()
-                .doesNotContain("read_own_work","record_private_feedback");
+                .contains("read_own_work","record_private_feedback");
         ObjectProvider<IMcpToolProvider> source=mock(ObjectProvider.class);
         when(source.orderedStream()).thenAnswer(call -> providers.stream());
         var registry=new McpToolRegistry(source);
         for(var access:Access.values()) {
-            assertThat(registry.visible(Role.STUDENT,access)).isEmpty();
-            assertThat(registry.visible(Role.ADMIN,access)).extracting(McpToolDefinition::name)
-                    .containsExactlyInAnyOrder("get_my_capabilities","read_ai_usage_summary","read_ai_quota_policy","read_ai_connection_status","read_platform_health_summary");
+            var learner=registry.visible(Role.STUDENT,access);
+            assertThat(learner).extracting(McpToolDefinition::name)
+                    .contains("get_my_capabilities","read_assignment_context","read_own_work")
+                    .doesNotContain("read_ai_usage_summary","read_platform_health_summary","read_grading_context",
+                            "create_assignment_draft","save_assignment_draft","record_grading_proposal","read_quiz_context");
+            assertThat(learner.stream().anyMatch(d -> "record_private_feedback".equals(d.name())))
+                    .isEqualTo(access==Access.READ_WRITE);
+            if(access==Access.READ_ONLY)assertThat(learner).allMatch(d -> d.kind()==McpToolKind.READ);
+            assertThat(registry.visible(Role.ADMIN,access)).isEmpty();
             for(var role:List.of(Role.TEACHER,Role.SUBJECT_MANAGER)) {
                 var tools=registry.visible(role,access);
                 assertThat(tools).extracting(McpToolDefinition::name).contains("get_my_capabilities","read_grading_context","list_my_classes")

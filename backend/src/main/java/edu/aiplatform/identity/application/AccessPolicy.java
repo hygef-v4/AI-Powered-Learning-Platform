@@ -77,7 +77,7 @@ final class AccessPolicy {
             Map.entry(Actions.ASSIGNMENT_WORK, new Rule(EnumSet.of(STUDENT), ScopeKind.CLASS)),
             Map.entry(Actions.ASSIGNMENT_ATTEMPT_REVIEW, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),
             Map.entry(Actions.AI_PERSONAL, new Rule(EnumSet.of(STUDENT, TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
-            Map.entry(Actions.MCP_SELF, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER, ADMIN), ScopeKind.NONE)),
+            Map.entry(Actions.MCP_SELF, new Rule(EnumSet.of(STUDENT, TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
             Map.entry(Actions.AI_SHARED_USE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.NONE)),
             Map.entry(Actions.AI_ADMIN, new Rule(ADMIN_ONLY, ScopeKind.NONE)),
             Map.entry(Actions.GROUP_MANAGE, new Rule(EnumSet.of(TEACHER, SUBJECT_MANAGER), ScopeKind.CLASS)),

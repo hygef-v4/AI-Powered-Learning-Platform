@@ -93,6 +93,7 @@ public class PracticeFeedbackService {
         }
         PracticeFeedback pending = transaction.execute(status -> {
             AssignmentAttempt attempt = eligible(actor, attemptId, "PRACTICE_FEEDBACK_REQUESTED");
+            feedback.lockAccount(actor.accountId());
             var existing = feedback.findByRequest(requestRef);
             if (existing.isPresent()) {
                 if (!existing.get().attemptId().equals(attemptId)) {
@@ -176,6 +177,10 @@ public class PracticeFeedbackService {
                                      String agentLabel) {
         return transaction.execute(status -> {
             AssignmentAttempt attempt = eligible(actor, attemptId, "MCP_RECORD_PRIVATE_FEEDBACK");
+            feedback.lockAccount(actor.accountId());
+            if (feedback.hasPending(attemptId)) {
+                throw ApiException.conflict("FEEDBACK_PENDING", "Lượt này đang chờ góp ý");
+            }
             if (submissionHash == null || !submissionHash.equals(attempt.receiptHash())) {
                 throw ApiException.conflict("SUBMISSION_HASH_MISMATCH", "Bài nộp đã khác bản agent đọc");
             }

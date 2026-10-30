@@ -12,6 +12,6 @@ accountMenuEntries.register({
   roles: ["STUDENT", "TEACHER", "SUBJECT_MANAGER"],
 });
 
-// U06: mục "Cài đặt AI" trên Setting List (U03) mở trang cài đặt AI; Agent MCP của Admin là một tab trong trang đó.
+// U06: Admin cấu hình API/quota tại Settings; MCP chỉ ở Kết nối AI của Student/Teacher/Subject Manager.
 settingsSectionRegistry.register({ key: "ai-connections", component: AiConnectionsPanel, icon: "smart_toy", tone: "accent" });
 settingsSectionRegistry.register({ key: "teacher-quota", component: TeacherQuotaPanel, icon: "speed", tone: "primary" });

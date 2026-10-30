@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { AiProvider } from "@/shared/ai";
 import { Alert, Button, PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { useSession } from "@/features/identity/session";
-import { AdminMcpTab } from "./admin/AdminMcpPage";
+import { McpAgentsTab } from "./McpAgentsTab";
 import { getConnections, getProviders, revokeConnection, saveConnection, testConnection } from "./api";
 import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
 import { PersonalApiSection } from "./PersonalApiSection";
@@ -21,12 +21,12 @@ const loadAll = async (): Promise<Data> => {
 
 /**
  * Màn #6 AI Connection (UC 31–33), cùng bố cục trang Cài đặt AI của Admin: tab Usage mở trước (lịch sử của chính mình),
- * tab API cá nhân là khóa API cá nhân và hướng dẫn trong một thẻ, tab Agent MCP (Teacher, Subject Manager) là agent của mình.
+ * tab API cá nhân là khóa API cá nhân, tab Agent MCP của Student/Teacher/Subject Manager là agent của chính mình.
  */
 export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   const session = useSession();
   const mcpEnabled = session.status === "authenticated" &&
-    (session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
+    (session.profile.role === "STUDENT" || session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
   const tabs: TabItem<Tab>[] = [
     { key: "usage", label: "Usage" },
     { key: "settings", label: "API cá nhân" },
@@ -41,7 +41,7 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
       <Tabs items={tabs} value={tab} onChange={setChosen} label="Kết nối AI" />
       {tab === "usage" && <AiUsageHistoryPage mcpEnabled={mcpEnabled} />}
       {tab === "settings" && <PersonalKeysTab />}
-      {tab === "mcp" && <AdminMcpTab />}
+      {tab === "mcp" && <McpAgentsTab />}
     </div>
   );
 }

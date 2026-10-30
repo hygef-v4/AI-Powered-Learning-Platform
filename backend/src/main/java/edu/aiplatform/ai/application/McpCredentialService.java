@@ -42,7 +42,7 @@ public class McpCredentialService {
 
     public static final int MAX_ACTIVE = 5;
     static final Set<Integer> DAYS = Set.of(7, 30, 90);
-    static final Set<Role> AGENT_ROLES = EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER, Role.ADMIN);
+    static final Set<Role> AGENT_ROLES = EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
     static final String PREFIX = "mcp_";
 
     private final McpCredentialRepository repository;

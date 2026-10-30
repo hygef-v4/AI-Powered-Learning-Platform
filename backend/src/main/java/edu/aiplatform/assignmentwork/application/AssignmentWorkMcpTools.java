@@ -48,15 +48,36 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         String attempt = "{\"type\":\"object\",\"required\":[\"attemptId\"],\"properties\":{\"attemptId\":"
                 + "{\"type\":\"string\",\"format\":\"uuid\"}}}";
         return List.of(
+                new McpToolDefinition(READ_OWN, "Đọc bài Practice đã nộp của bạn; không trả rubric hoặc điểm chính thức.",
+                        attempt, McpToolKind.READ, Set.of(Role.STUDENT)),
+                new McpToolDefinition(RECORD, "Lưu góp ý riêng cho bài Practice đã nộp; cần submissionHash từ read_own_work.",
+                        "{\"type\":\"object\",\"required\":[\"attemptId\",\"submissionHash\",\"feedback\"],"
+                                + "\"properties\":{\"attemptId\":{\"type\":\"string\",\"format\":\"uuid\"},"
+                                + "\"submissionHash\":{\"type\":\"string\"},\"agentLabel\":{\"type\":\"string\"},"
+                                + "\"feedback\":" + FeedbackFormat.OUTPUT_SCHEMA.strip() + "}}",
+                        McpToolKind.WRITE, Set.of(Role.STUDENT)),
                 new McpToolDefinition(READ_SUBMISSION, "Đọc bài đã nộp của sinh viên lớp bạn dạy.",
                         attempt, McpToolKind.READ, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)));
     }
 
     @Override
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {
+        boolean ownTool = READ_OWN.equals(toolName) || RECORD.equals(toolName);
+        boolean educator = actor != null && (actor.role() == Role.TEACHER || actor.role() == Role.SUBJECT_MANAGER);
+        if (actor == null || (ownTool ? actor.role() != Role.STUDENT : !educator)) {
+            return error("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
+        }
         try {
             UUID attemptId = UUID.fromString(String.valueOf(args.get("attemptId")));
             return switch (toolName) {
+                case READ_OWN -> new McpToolResult(false, feedback.readOwnWork(actor, attemptId));
+                case RECORD -> {
+                    PracticeFeedback saved = feedback.recordFromAgent(actor, attemptId,
+                            args.get("submissionHash") == null ? null : String.valueOf(args.get("submissionHash")),
+                            json.valueToTree(args.get("feedback")),
+                            args.get("agentLabel") == null ? null : String.valueOf(args.get("agentLabel")));
+                    yield new McpToolResult(false, Map.of("feedbackId", saved.id().toString(), "status", "READY"));
+                }
                 case READ_SUBMISSION -> new McpToolResult(false, submission(actor, attemptId));
                 default -> error("TOOL_NOT_FOUND", "Không có tool này");
             };

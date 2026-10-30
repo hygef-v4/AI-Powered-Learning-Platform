@@ -32,7 +32,9 @@ class AssignmentMcpToolsTest {
         when(f.classes.listOpenClassesOf(f.student.accountId())).thenReturn(List.of(f.classRef(f.classId, ClassStatus.OPEN)));
         when(f.classes.isActiveStudent(f.student.accountId(), f.classId)).thenReturn(true);
         McpToolResult ok = tools.call(f.student, AssignmentMcpTools.READ, Map.of("assignmentId", open.id().toString()));
-        assertThat(ok.error()).isTrue();
+        assertThat(ok.error()).isFalse();
+        assertThat((Map<String,Object>)ok.content()).containsKeys("assignmentId", "title", "status", "gradingMode")
+                .doesNotContainKeys("instructions", "document", "parts", "rubrics");
         McpToolResult denied = tools.call(f.student, AssignmentMcpTools.READ, Map.of("assignmentId", draft.id().toString()));
         assertThat(denied.error()).isTrue();
 
