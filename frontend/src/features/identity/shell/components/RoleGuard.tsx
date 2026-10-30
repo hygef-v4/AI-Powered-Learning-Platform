@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ErrorPage } from "@/app/ErrorPage";
+import { ErrorPage } from "@/shared/ui/ErrorPage";
 import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
