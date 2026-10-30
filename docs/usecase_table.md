@@ -169,3 +169,7 @@ Active use cases were renumbered 01–66 in unit order (U01 → U15) on 2026-10-
 | 36 | 64 |
 | 12 | 65 |
 | 58 | 66 |
+
+## Code-derived clarifications — 2026-10-30
+
+IDs 01–66 remain unchanged. UC14/15 do not expose editable activity.retentionDays: source retains activity for one day. UC26 creates DRAFT; UC29 allows OPEN without teacher. UC32 is for Student/Teacher/Subject Manager, not Admin; owner can reveal an ACTIVE credential when ciphertext exists. UC31 personal API remains available to Student. UC48 supports edit OPEN and retire/reopen under version/container guards; review has not been removed. UC55 request/rejection reasons are optional, max 1,000 characters. UC58–62 include U13 material modules and scoped Quiz attachment; UC66 includes /activity. Admin institutional key reveal is a documented AS-BUILT exception to prior no-readback design. See [decision-register.md](../aidlc-docs/inception/reverse-engineering/decision-register.md).

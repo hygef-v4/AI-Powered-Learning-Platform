@@ -1,6 +1,9 @@
 # U10 Quiz Authoring — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Lấy ngân hàng câu hỏi của U06 cũ, phần Quiz của U08 cũ và cài đặt Quiz của U09 cũ. Ngân hàng chỉ còn câu trắc nghiệm theo UC 46, 47. Làm Quiz thuộc U11. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 46, 47, 48. **Primary stories:** US-ASM-006, US-QBK-002; phần Quiz của US-ASM-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
@@ -25,19 +28,19 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U10-10 | Quiz của lớp: giảng viên chính của lớp (R3/R4) soạn từ tab Evals. Quiz của môn: Chủ nhiệm môn (R2) soạn từ Quiz List trên Manager Dashboard, mọi lớp `OPEN` của môn thấy. Giảng viên lớp chỉ xem Quiz của môn. Admin không soạn, không xem. | UC 48, FR-027, US-AIG-002 |
 | BR-U10-11 | Quiz không cần học liệu. Tùy chọn gắn tối đa 10 tài liệu tham khảo (khi U13 có) để Learning Material hiện Quiz. | US-ASM-006 S1 |
 | BR-U10-12 | Quiz chỉ có chế độ `PRACTICE` (D01 chốt 2026-10-15): không có lịch, không vào sổ điểm. | FR-007, D01 |
-| BR-U10-13 | Quiz có 1–200 câu: câu `ACTIVE` của ngân hàng môn (ghim phiên bản) hoặc câu riêng của Quiz (cùng quy tắc BR-U10-02, 03, sửa được khi Quiz còn nháp). Mỗi câu có điểm > 0, mặc định là `defaultPoints`; tổng điểm là tổng các câu. | FR-017 |
+| BR-U10-13 | Quiz1–200 câu ngân hàng ACTIVE ghim version hoặc câu inline. OPEN cho sửa nội dung/inline theo quyền/version và vẫn OPEN; snapshot attempt cũ bất biến. REVIEWED edit về DRAFT, RETIRED không editable. Điểm câu>0, tổng từ item points. | FR-017 |
 | BR-U10-14 | Thêm câu từ ngân hàng: chọn tay, hoặc bốc ngẫu nhiên N câu `ACTIVE` khớp bộ lọc (độ khó, tag), không trùng câu đã có, N không vượt chỗ còn trống; người soạn xem lại, bỏ hoặc bốc lại từng câu trước khi lưu. | FR-016 |
-| BR-U10-15 | Cài đặt: trộn câu, trộn đáp án (mỗi lượt một thứ tự, U11 lưu seed); giới hạn giờ (trống hoặc 1–300 phút); số lượt (1–10 hoặc không giới hạn); hiện điểm sau khi nộp; hiện đáp án đúng (`NEVER`, `AFTER_SUBMIT`). Theo dõi hoạt động mặc định tắt, kèm thông báo, chỉ bật được khi đã đặt `activity.retentionDays`. | FR-017, FR-039 |
+| BR-U10-15 | Cài đặt: trộn câu, trộn đáp án (mỗi lượt một thứ tự, U11 lưu seed); giới hạn giờ (trống hoặc 1–300 phút); số lượt (1–10 hoặc không giới hạn); hiện điểm sau khi nộp; hiện đáp án đúng (`NEVER`, `AFTER_SUBMIT`). Theo dõi hoạt động mặc định tắt, kèm thông báo, retention cố định 1 ngày, không phụ thuộc setting cũ. | FR-017, FR-039 |
 | BR-U10-16 | Chấm: `MCQ_SINGLE` đúng thì đủ điểm câu; `MCQ_MULTI` phải chọn đủ đáp án đúng và không chọn sai mới có điểm. Chấm theo đáp án của phiên bản đã ghim. Đáp án không gửi cho người học trước khi nộp; sau khi nộp chỉ trả theo cài đặt. | US-ASM-006 S2 |
 
 ## 3. Vòng đời Quiz
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U10-20 | Trạng thái `DRAFT → REVIEWED → OPEN → RETIRED`. Chỉ sửa khi `DRAFT`; sửa Quiz `REVIEWED` đưa về `DRAFT`. | FR-007 |
+| BR-U10-20 | Có DRAFT/REVIEWED/OPEN/RETIRED. Publication vẫn qua REVIEWED. Quiz.edited: REVIEWED về DRAFT; OPEN sửa giữ OPEN theo service guards; RETIRED không editable. Không diễn giải góp ý bỏ review 29/10 là đã triển khai. | FR-007 |
 | BR-U10-21 | Duyệt: chính người có quyền tự duyệt sau khi xem trước; kiểm 1–200 câu, câu riêng hợp lệ, câu ngân hàng còn `ACTIVE`, điểm hợp lệ, cài đặt hợp lệ. | US-ASM-001 |
 | BR-U10-22 | Phát hành từ `REVIEWED`: Quiz của lớp cần lớp `OPEN`, Quiz của môn cần môn `ACTIVE`; chuyển `OPEN` ngay. Phát hành version mới thì version cũ chuyển `RETIRED` trong cùng transaction. Sau commit phát `quiz.published`. | US-ASM-001 S2 |
-| BR-U10-23 | Ngưng: `OPEN` → `RETIRED`, lý do bắt buộc; `onRetired` của U11 (tự nộp lượt đang làm) chạy trong cùng transaction; lượt cũ vẫn xem được. | FR-028 |
+| BR-U10-23 | Retire mọi trạng thái chưa RETIRED, reason trống mặc định Lưu trữ, kiểm version/callback. Never-published giữ publishedAt=null; reopen về DRAFT nếu null, ngược lại OPEN với container active. Migration cũ equal timestamps chỉ giữ publication khi có SUCCESS QUIZ_PUBLISHED audit đúng object; không có proof thì null/review. Không suy ra đã phát hành chỉ từ RETIRED hoặc timestamp equality. | FR-028 |
 | BR-U10-24 | Xóa: Quiz `DRAFT` hoặc `REVIEWED` chưa từng phát hành, xóa hẳn kèm câu riêng và đề xuất AI. | UC 48 |
 | BR-U10-25 | Người học thấy Quiz `OPEN` của lớp `OPEN` mình đang ghi danh, gồm Quiz của lớp và Quiz của môn chứa lớp. | FR-007 |
 

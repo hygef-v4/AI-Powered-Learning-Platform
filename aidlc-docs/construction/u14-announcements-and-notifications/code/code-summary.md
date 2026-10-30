@@ -1,5 +1,9 @@
 # U14 — Implementation handoff
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Ngày2026-10-21, branch `announcements-and-notifications`, UC63–65. Kế hoạch11 bước và C01–C08 được duyệt tại `u14-implementation-approval-questions.md`, Answer a. Người dùng duyệt application code bằng “tiếp tục” ngày2026-10-21; acceptance tích hợp vẫn mở. Theo yêu cầu tiếp theo, source đã chia thành7commit cục bộ từ `6cef92a` đến `adfc51f`, tài liệu trong commit riêng; chưa push/deploy, không gửi email thật.
 
 ## Phạm vi

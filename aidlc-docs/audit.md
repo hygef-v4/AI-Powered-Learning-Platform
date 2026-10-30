@@ -6876,3 +6876,90 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Context**: Construction, U12 sửa sau khi người dùng review tay
 
 ---
+
+## Documentation drift audit and synchronization planning — 2026-10-30
+**Timestamp**: 2026-10-30T04:47:18Z
+**User Input**: "giúp tôi check doc aidlc và code hiện tại xem lệch thế nào, sau đó lập kế hoạch đồng bộ lại doc aidlc theo code mới"
+**AI Response**: Compared staging@794a405304bf02dd2593a9fa2c88662d7cd52845 against AI-DLC overview, design, rules and test summaries. Created inception/plans/2026-10-30-doc-code-drift-audit.md (14 drift groups, 15-unit inventory) and inception/plans/2026-10-30-aidlc-doc-sync-plan.md (six ordered tasks). Static review only; no fresh application test/runtime acceptance claimed.
+**Context**: CLAUDE workflow, existing Security/Resiliency scope retained, PBT disabled. Current code to documentation; application code, DB and runtime config unchanged. No commit/push/deploy; synchronization execution pending plan review.
+
+## Synchronization direction clarification — 2026-10-30
+**Timestamp**: 2026-10-30T04:47:18Z
+**User Input**: "tôi plan đồng bộ, tôi muốn doc aidlc cập nhật theo những thay đổi mới trong code"
+**AI Response**: Confirmed direction: update AI-DLC documents from current code behavior, schema, APIs, permissions and flows; preserve previous decisions as traceability rather than stale current descriptions.
+**Context**: Same documentation planning task. Existing audit entries preserved; append only.
+
+---
+
+
+## Documentation synchronization execution — 2026-10-30
+**Timestamp**: 2026-10-30T05:02:13.334933+00:00
+**User Input**: "Giúp tôi triển khai theo plan"
+**AI Response**: Executing the approved six-task code-to-documentation synchronization at staging@794a4053. Created source manifests, contract/API inventory, traceability, decision register and current unit baselines; correcting overview ownership, requirements, role/key/credential/lifecycle/module/activity rules. Additional institutional-key reveal behavior found and documented as D15, not a code/security change.
+**Context**: Direct execution in existing checkout preserves uncommitted planning context. No application-code/DB/runtime-config changes, test-pass claims, commit/push/deploy. Existing extension selections retained; PBT disabled. Document/schema/link/diagram verification follows.
+
+---
+
+
+## Draw.io scope clarification — 2026-10-30
+**Timestamp**: 2026-10-30T05:18:30.529740+00:00
+**User Input**: "drawio là sửa những cái j"
+**AI Response**: Explained selected changes in BF01 class teacher optional, BF02 modules, BF06 Quiz/activity, BF08 AI/MCP roles/keys, BF12 optional reasons, baseline annotations in other flows and simplified unit dependency scope. Existing layout retained; XML/combined file and PNGs refreshed and checked.
+**Context**: Status/scope clarification during approved execution; no cancellation or new application change.
+
+## Documentation synchronization verification — 2026-10-30
+**Timestamp**: 2026-10-30T05:18:30.529754+00:00
+**AI Response**: Completed six documentation tasks; independent review findings corrected in originals. Current links/source paths, four scoped OpenAPI specs, draw.io references/combined consistency, 12 refreshed flow exports and source-diff boundary checked. Reports/state/plan updated, historical approvals/evidence retained. No fresh application tests, live provider certification, source/DB/config changes, commit/push/deployment.
+**Context**: Documentation-only completion. D15 key-reveal behavior recorded with security review pending. Security/Resiliency scope retained; PBT disabled.
+
+---
+
+
+## Business rule, use case and unit test review — 2026-10-30
+**Timestamp**: 2026-10-30T05:36:26.594452+00:00
+**User Input**: "giúp tôi rà soát doc aidlc với code 1 lần nữa check xem test unit đã đúng theo bussiness rule của từng unit , usecase chưa"
+**AI Response**: Reviewed actual assertions/fixtures against current BR/source across15units/66UC with three independent read-only review groups. Found documentation drift, non-discriminating fixtures, coverage gaps and U03 source risks. Fresh Maven verify:1471total/1372pass/99skip/0fail/error, but required DB-suite guard fails on skipped PostgreSQL tests. Initial frontend import failures repaired by npm ci against existing lockfile; final94files/597tests pass. Wrote consolidated audit, three per-UC appendices and machine-readable run evidence; no application/test source/config/dependency-version changes.
+**Context**: Review-only continuation. Existing uncommitted doc sync preserved. No live stack/provider/email/grade changes, commit/push/deploy. Test env JDBC URLs blank only in the Maven process. Security/resiliency scope retained; PBT disabled. Passing assertions do not certify all BR/usecases; remediation not executed.
+
+---
+
+
+## Audit remediation and MCP correction — 2026-10-30
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "Giúp tôi sửa lại các lỗi trên với sửa mcp bỏ kết nối mcp ra khỏi admin, thêm lại vào student, student có thể kế nối mcp để dùng dịch vụ ai practice quiz như cũ"
+**AI Response**: Implementing approved audit fixes via failing regressions then source fixes; restoring Student/removing Admin MCP. User clarified API AI business operations define MCP scope: UC41 submitted Practice feedback, not new AI Quiz explanation. Disposable Docker tests enabled; no app DB migration, external provider, commit/push/deploy.
+**Context**: Existing uncommitted docs retained; code/test/docs scope authorized.
+
+## Student MCP clarification
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "Ơ khoan luồng cũ trong uc có cái giải thích quiz đã nộp ko, cái api ai dùng tnao thì mcp dùng như thế"
+**AI Response**: Verified legacy UC41 supports personal API or MCP feedback for own submitted Practice Assignment. UC52 is deterministic allowed Quiz result/explanation. Removed the suggested new AI Quiz-explanation scope.
+
+## Execution preference
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "tự làm đi đừn chia subagent làm nữa"
+**AI Response**: Stopped existing subagents and continued all remaining implementation/review/verification directly. No further delegation.
+
+---
+
+
+## Remediation Build and Test completion
+**Timestamp**: 2026-10-30T06:51:55.303165+00:00
+**AI Response**: Completed approved fixes directly after stopping delegated workers. Student MCP supports the existing UC41 submitted-own Practice feedback service and shared API/MCP budget; Admin admission/catalog/UI denied. No new AI Quiz service. Full backend verify 1611 passed/0 skipped; PostgreSQL CI guard passed; frontend 599 passed/94 files, lint/typecheck/build passed with two existing warnings. BF06/BF08 XML/combined/PNG refreshed and visually inspected.
+**Context**: Final self-review closed poison-envelope, lost backup-success CAS, after-commit retention, target eligibility, legacy Quiz publication and API/MCP race findings. Only disposable DB migrations, no live data/provider/commit/push/deploy. Report: construction/build-and-test/2026-10-30-remediation-student-mcp-results.md. Broader integration/runtime/provider/performance/security/restore acceptance remains explicit.
+
+---
+
+
+## Documentation alignment confirmation
+**Timestamp**: 2026-10-30T07:02:14.039643+00:00
+**User Input**: "h doc aidlc đã khớp code với test rồi dko"
+**AI Response**: Confirmed current documentation alignment within the reviewed implementation/test scope. Historical evidence and pending full-UC, E2E/provider acceptance remain explicitly distinguished.
+
+## Local commit request and pre-commit verification
+**Timestamp**: 2026-10-30T07:02:14.039643+00:00
+**User Input**: "giúp tôi commit rõ ràng, ghi rõ description"
+**AI Response**: Prepared four local commits on the current aidlc-docs branch: Student/Admin MCP, job/enrollment/Quiz fixes, remaining BR regression coverage, and AI-DLC synchronization. Each has a descriptive body covering behavior, reason, relevant limitations and verification. Fresh pre-commit backend verify: 1611 passed/0 failures/errors/skips; frontend: 599 passed/94 files/0 pending; required PostgreSQL guard passed. Commit bodies describe validation of the complete remediation tree. Cache/build/log files excluded by explicit path lists.
+**Context**: User authorizes local commits; no push, merge, deployment or live database migration requested. Actual commit IDs and completion are recorded by Git history and reported to the user after creation.
+
+---

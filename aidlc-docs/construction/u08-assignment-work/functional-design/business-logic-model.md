@@ -1,6 +1,9 @@
 # U08 Assignment Work — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
@@ -113,7 +116,7 @@ Xuất:
 1. U09 kiểm giảng viên được giao lớp rồi gọi `IActivityQuery.summary(workRef, accountId)`.
 2. U08 ghép `HIDDEN` với `VISIBLE` theo phiên thành khoảng rời trang; khoảng không có heartbeat quá 2 phút, sự kiện lệch thứ tự, giờ client bất thường được đánh dấu "không rõ" (BR-U08-53).
 3. Trả trạng thái chính sách, số lần, tổng thời gian đã biết, các khoảng và khoảng không rõ; không có kết luận.
-4. Scanner xóa theo lô sự kiện có giờ server cũ hơn `activity.retentionDays` (BR-U08-54).
+4. Scanner xóa theo lô sự kiện có giờ server cũ hơn 1 ngày (`ActivityService.RETENTION`) (BR-U08-54).
 
 ## 6. Interface cho unit khác
 
@@ -121,3 +124,9 @@ Xuất:
 1. U09 đọc bài nộp theo bài và lớp, nội dung lượt, trạng thái từng sinh viên (chưa làm, đang làm, đã nộp, nộp trễ) qua `ISubmissionQuery`; cài `ISubmissionListener` để tạo dòng chờ chấm.
 2. U14 lấy sinh viên chưa nộp của bài sắp hết hạn qua `listStudentsWithoutSubmission` để nhắc 24 giờ trước hạn; với bài nhóm, U08 dựa vào trạng thái nhóm từ `IGroupWorkStatus` của U12.
 3. U11, U12 ghi sự kiện qua `IActivityWrite`; U12 cài `IGroupWorkStatus` và slot `GroupWorkEntry`.
+
+## Source behavior delta — 2026-10-30
+
+assignmentwork có start/save/submit/history, late/auto-submit, practice feedback và activity. ActivityService.RETENTION = 1 ngày; scanner xóa theo hằng này, không Settings activity.retentionDays 1–365. Theo dõi hoạt động không tự trừ điểm. Feedback Practice gắn submission/version và không vào gradebook.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

@@ -30,7 +30,7 @@ Given Student, When chọn nguồn, Then personal API hoạt động đúng quy�
 
 **Current UC trace**: UC 32. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là user, tôi kết nối agent vào tools ALAP với phạm vi cá nhân.
+**Story**: Là Student/Teacher/Subject Manager ACTIVE, tôi kết nối agent với tool đúng role/scope. Student dùng MCP hoặc API cá nhân cho UC41; Admin không dùng MCP.
 
 **Truy vết**: FR-035/037. Primary unit U06.
 
@@ -1445,3 +1445,11 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 ## Validation
 
 Mỗi story có Given/When/Then; baseline scope và UC owner ở requirements/use-cases.md. FR/NFR/SEC tham chiếu requirements hiện hành; UC dùng số mới 01–66 đánh theo unit ngày 2026-10-14 (bảng đối chiếu số cũ ở use-cases.md), không đọc catalog 73 cũ. Không xác nhận tests đã chạy; Construction design/plans đã sync; code/contracts/migrations thực tế chưa revision. Security/resiliency enabled subset giữ nguyên; PBT disabled.
+
+## Current acceptance deltas — 2026-10-30
+
+US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys/provider and Admin reveal audited; personal keys remain private. Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
+
+## MCP correction and audit remediation — 2026-10-30
+
+Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.

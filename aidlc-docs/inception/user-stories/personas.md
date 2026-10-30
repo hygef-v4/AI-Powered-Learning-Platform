@@ -4,10 +4,10 @@
 
 | Persona | Nhu cầu và trách nhiệm | AI access |
 |---|---|---|
-| P-STUDENT | Assignment tài liệu SWR/SWD cá nhân/nhóm, diagram tùy chọn, Quiz; autosave/nộp, sửa theo phản hồi | API/agent riêng, không quota chung; policy từng bài và ownership |
+| P-STUDENT | Assignment tài liệu SWR/SWD cá nhân/nhóm, diagram tùy chọn, Quiz; autosave/nộp, sửa theo phản hồi | API cá nhân hoặc agent MCP cho Practice đã nộp, không quota chung; policy từng bài và ownership |
 | P-TEACHER | Soạn/giao/nhận/chấm bài lớp, rubric, phản hồi sau nộp bài Practice và công bố điểm | API chung có quota hoặc API/MCP cá nhân; không auto-fallback |
 | P-SUBJECT-MANAGER | Tài nguyên/ngân hàng môn, triển khai lớp, phân công/ghi danh; bài cá nhân cấp môn | R2 cho môn; R4 khi dạy/chấm lớp; quota educator trong quyền |
-| P-ADMIN | Accounts/subjects/Settings, institutional connection/quota/audit, thống kê | Test synthetic connection, không đọc bài hay key cá nhân |
+| P-ADMIN | Accounts/subjects/Settings, institutional connection/quota/audit, thống kê | MCP báo cáo riêng và test synthetic; reveal key chung có audit, không đọc bài/key cá nhân |
 
 ## Bối cảnh và pain points cần khảo sát
 

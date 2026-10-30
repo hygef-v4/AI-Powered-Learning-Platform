@@ -1,6 +1,6 @@
 # Kết nối agent MCP
 
-Hướng dẫn cho Teacher, Subject Manager và Admin. Agent MCP dùng mô hình/tài khoản riêng và gọi công cụ theo quyền hiện tại trên nền tảng. Nền tảng không gọi AI thay agent. Student dùng AI cá nhân/Practice trên giao diện; không sử dụng MCP, kể cả token đã cấp trước đây.
+Hướng dẫn cho Student, Teacher và Subject Manager. Agent MCP dùng mô hình/tài khoản riêng và gọi công cụ theo quyền hiện tại trên nền tảng. Nền tảng không gọi AI thay agent. Student dùng API cá nhân hoặc MCP cho Practice Assignment đã nộp. Admin không kết nối MCP; token Admin cũ bị từ chối theo role hiện tại.
 
 > **Chưa kiểm chứng.** Nhóm chưa thử với ứng dụng agent cụ thể nào. Các đoạn cấu hình dưới đây theo đặc tả MCP (transport Streamable HTTP, bản 2025-06-18); tên trường cấu hình có thể khác giữa các ứng dụng. Khi đã thử được với một ứng dụng, cập nhật mục "Ứng dụng đã kiểm chứng".
 
@@ -19,7 +19,7 @@ Yêu cầu có header `Origin` (gửi từ trang web trong trình duyệt) bị 
 
 ## Tạo token
 
-1. Teacher/Manager mở **Kết nối AI → Agent MCP**. Admin mở **Agent MCP** tại `/admin/mcp`. Bấm **Kết nối agent mới**, mặc định **Chỉ đọc**.
+1. Student/Teacher/Manager mở **Kết nối AI → Agent MCP**. Bấm **Kết nối agent mới**, mặc định **Chỉ đọc**.
 2. Đặt nhãn (ví dụ tên ứng dụng), chọn quyền:
    - **Chỉ đọc**: đọc ngữ cảnh bài tập/quiz, bài nộp và học liệu trong quyền của bạn.
    - **Đọc và ghi**: thêm các thao tác được làm như tạo bản nháp, đề xuất chấm. Không có công cụ nộp bài chính thức hay công bố điểm.
@@ -114,9 +114,9 @@ Các tool hiện có trong mã nguồn (danh sách thực tế còn lọc theo r
 | `list_submissions`, `read_grading_context`, `list_grading_proposals` | Tìm bài, lấy snapshot cá nhân/nhóm gốc và theo dõi đề xuất |
 | `read_grading_batch`, `record_grading_proposals_batch` | Tối đa 20 item, kết quả và retry độc lập từng item |
 | `read_class_learning_summary`, `read_grade_distribution` | Thống kê theo lớp được dạy, có nguồn/thời điểm/trạng thái; phân bố từ điểm đã công bố |
-| `read_ai_usage_summary`, `read_ai_quota_policy`, `read_ai_connection_status`, `read_platform_health_summary` | Chỉ Admin: báo cáo AI 7/30 ngày, quota phân trang, kết nối che và tổng quan hệ thống |
+| `read_own_work`, `record_private_feedback` | Student: own submitted Practice feedback, cùng nghiệp vụ/guard với personal API; ghi cần READ_WRITE |
 
-Admin chỉ thấy bốn tool báo cáo và capabilities; không có quyền đọc bài nộp, tạo đề hay chấm. Teacher/Manager chỉ thấy tool học vụ theo scope. READ_ONLY không thấy/gọi được tool ghi.
+Admin không thấy/gọi tool MCP. Teacher/Manager giữ tool học vụ đúng scope; Student chỉ các tool đọc metadata/Practice của mình và lưu góp ý riêng. READ_ONLY không gọi tool ghi.
 
 Luồng soạn: capabilities → tìm lớp/môn → học liệu → requirements → tạo nháp. Cung cấp `title`, đúng một `classId`/`subjectId`, `requestRef` và `draft` (assignment) hoặc `questions` (quiz). Quiz nhận `settings` tùy chọn; cả hai nhận `referenceMaterialIds`. Mở nháp trên UI để xem/áp dụng đề xuất. Giữ nguyên requestRef và nội dung khi retry sau timeout: server trả cùng ID. Đổi nội dung phải dùng requestRef mới; quyền hiện tại được kiểm lại trước replay. Mutation lỗi rollback cả container lẫn kết quả retry.
 
@@ -134,7 +134,7 @@ Nền tảng không biết agent dùng bao nhiêu token của mô hình. Lịch 
 
 | Hiện tượng | Nguyên nhân |
 |---|---|
-| HTTP 401 | Token sai/thu hồi/hết hạn, tài khoản không ACTIVE hoặc role hiện tại là Student |
+| HTTP 401 | Token sai/thu hồi/hết hạn, tài khoản không ACTIVE hoặc role hiện tại là Admin |
 | HTTP 403 | Yêu cầu có header `Origin` (gọi từ trình duyệt) |
 | Lỗi JSON-RPC `-32029` | Vượt 60 lời gọi mỗi phút; chờ rồi thử lại |
 | Lỗi `-32602` "Không có tool này" | Tool không có, không dành cho role của bạn, hoặc là tool ghi trong khi token chỉ đọc |
@@ -143,3 +143,13 @@ Nền tảng không biết agent dùng bao nhiêu token của mô hình. Lịch 
 ## Ứng dụng đã kiểm chứng
 
 Codex CLI đã gọi đọc thành công bằng token Teacher ở kiểm tra readiness trước đợt mở rộng. Tool mới cần backend chạy migration mới và được khởi động lại từ mã hiện tại; test tự động không thay thế nghiệm thu tài khoản thật. Xem [báo cáo mở rộng MCP](../../aidlc-docs/construction/build-and-test/2026-10-26-mcp-staff-expansion-results.md).
+
+## Student: API và MCP cùng nghiệp vụ
+
+1. Hoàn thành và nộp Practice Assignment trên app.
+2. Kết nối agent riêng bằng credential READ_WRITE nếu muốn lưu góp ý (READ_ONLY chỉ đọc).
+3. Agent gọi read_own_work(attemptId), lấy nội dung được phép và submissionHash; không rubric/điểm official.
+4. Agent dùng mô hình riêng tạo feedback đúng outputSchema, rồi gọi record_private_feedback với cùng attemptId/submissionHash.
+5. App hiển thị lịch sử góp ý riêng. Bài đang làm/GRADED, sai owner, mất enrollment, hash cũ, pending request hoặc hết20lượt/ngày bị từ chối như luồng API. Hai transport dùng chung budget và khóa theo account.
+
+UC52 Quiz Result vẫn hiển thị điểm/giải thích đáp án theo cấu hình; không thêm dịch vụ AI giải thích Quiz. Không có auto-submit/publish/chấm điểm chính thức qua Student MCP.

@@ -1,6 +1,9 @@
 # U03 Job and Settings — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -60,8 +63,8 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-50 | `IJob.enqueue` không ghi database: trong transaction của unit gọi, nó đăng ký gửi `JobMessage` sau commit, rollback thì không gửi; gọi ngoài transaction thì gửi ngay. Trạng thái việc nằm ở dòng nghiệp vụ của unit gọi. | Thiết kế |
 | BR-U03-51 | Chống xử lý trùng dựa vào trạng thái dòng nghiệp vụ: handler gặp dòng đã xử lý hoặc không còn chờ thì ack và bỏ. `idempotencyKey` đi trong message để log và đối chiếu. | Thiết kế |
 | BR-U03-52 | Payload chỉ chứa ID và tham chiếu; U03 từ chối payload có khóa cấm (`password`, `otp`, `token`, `secret`, `phone`) bằng `ForbiddenKeyGuard`. | SEC-005 |
-| BR-U03-53 | Worker ack thủ công, chỉ sau khi handler đã cập nhật dòng nghiệp vụ. | Thiết kế |
-| BR-U03-56 | Lỗi tạm và `attempt` < 5: gửi lại vào hàng chờ thử lại có TTL theo lượt (30 giây, 1, 2, 4, 8 phút), hết TTL thì quay về queue gốc. Lỗi vĩnh viễn hoặc hết lượt: gọi `onFailed` của unit sở hữu để chuyển dòng nghiệp vụ sang trạng thái lỗi, log ERROR. | REL-003 |
+| BR-U03-53 | Envelope sai/bị thiếu trường hoặc attempt ngoài0–5 bị discard/ACK. Với việc hợp lệ, chỉ ACK sau handler hoàn tất/terminal persistence hoặc retry handoff thành công; exception lưu trạng thái/chuyển retry thì NACK requeue, không ACK trong finally. | Thiết kế |
+| BR-U03-56 | Retryable lỗi/timeout và attempt<5 chuyển retry TTL hữu hạn; terminal gọi onFailed. Nếu lưu terminal thất bại thì propagate để giữ delivery; lỗi chỉ dùng finite safe-message allowlist trước log/DB/audit/event, không truncate lỗi thô thành safeError. | REL-003 |
 | BR-U03-57 | Không có màn hình hay nút chạy lại việc nền; người dùng thao tác lại từ màn nghiệp vụ nếu màn đó cho phép. | Thiết kế |
 | BR-U03-58 | Message có thể mất nếu backend dừng giữa commit và gửi. Mỗi unit có việc nền đăng ký `IPendingSweeper`: mỗi phút, dòng còn chờ quá 5 phút được gửi lại message. | REL-003 |
 | BR-U03-59 | Handler của unit sở hữu phải idempotent vì một việc có thể được gửi hơn một lần. | Thiết kế |
@@ -87,7 +90,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-83 | Mỗi lần sửa ghi audit `SETTING_UPDATED` (khóa, giá trị trước và sau, người sửa, thời điểm) trong cùng transaction. | FR-014 |
 | BR-U03-84 | Không thêm hay xóa mục từ giao diện. Khi khởi động, mục đã khai báo mà chưa có trong bảng được tạo với giá trị mặc định (hoặc rỗng là "chưa cấu hình"); mục đã có giữ nguyên giá trị Admin đã sửa. | FR-033 |
 | BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký, khóa backup) không phải cài đặt khóa–giá trị: hoặc là biến môi trường, hoặc do unit sở hữu lưu dạng bảo vệ (API AI chung của U06). | SEC-006 |
-| BR-U03-86 | Giá trị mới có hiệu lực trong tối đa 30 giây ở mọi instance backend và worker; thao tác đang chạy giữ giá trị cũ; dữ liệu đã tạo không bị ảnh hưởng. | FR-033 |
+| BR-U03-86 | Cache thường refresh trong30 giây. Khi DB lỗi và đã có cache, source tiếp tục dùng last-known value dù quá TTL; không có cache thì unavailable. Đây là ngoại lệ freshness trong outage, không hứa mọi instance luôn mới trong30 giây khi dependency lỗi. | FR-033 |
 | BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
 | BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định). Chỉ bật được khi đã đặt giờ; giờ chạy phải được xác nhận trước triển khai, hệ thống không tự gán. Thời gian giữ bản cố định 7 ngày (BR-U03-96), không phải cài đặt. | FR-038, council features, chốt 2026-10-15 |
 | BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `ISettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
@@ -98,7 +101,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 |---|---|---|
 | BR-U03-90 | Backup chạy theo lịch trong Settings, mỗi ngày tối đa một lần chạy theo lịch; không có nút backup thủ công trên giao diện. | FR-038 |
 | BR-U03-91 | Chỉ backup database: một lần backup gồm bản dump PostgreSQL nhất quán tại một thời điểm, phiên bản schema và ứng dụng. Tệp người dùng trên Drive (học liệu, ảnh trong tài liệu) không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được từ backup. | FR-038, chốt 2026-10-15 |
-| BR-U03-92 | Trạng thái lần chạy: `CREATED` → `RUNNING` → `SUCCESS` hoặc `FAILED`. Chỉ `SUCCESS` sau khi dump, upload archive và kiểm checksum đều xong. | FR-038 |
+| BR-U03-92 | Backup handle giữ transaction/row lock qua dump-upload-checksum-terminal update để serialize duplicate delivery. markSuccess=0 phải retry/rollback, không audit success/purge. SUCCESS commit rồi mới purge archive cũ; rollback không purge. Retention lỗi không đảo ngược SUCCESS đã commit. Connection/row lock được giữ trong thời gian dump/upload; readers thấy trạng thái đã commit trước đó cho tới khi kết thúc. | FR-038 |
 | BR-U03-93 | Archive dump được mã hóa trước khi upload; khóa giải mã không nằm trên VPS và không nằm trong archive. Không xuất API key hay mật khẩu dạng rõ; bản ghi credential trong database vẫn là ciphertext. | FR-038, SEC-006 |
 | BR-U03-94 | Bản backup nằm trong thư mục Drive riêng tư tách khỏi thư mục tệp đang dùng. | FR-038 |
 | BR-U03-95 | Lỗi tạm (Drive, mạng) được thử lại hữu hạn; lỗi vĩnh viễn hoặc hết lượt thì `FAILED` kèm lỗi đã che, dọn phần upload dở, ghi audit và phát sự kiện `backup.failed` để U14 báo Admin. Lỗi gửi email không đổi kết quả backup. | FR-038 |

@@ -1,5 +1,9 @@
 # U05 Class & Enrollment — code summary
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-class-enrollment-code-generation-plan.md), nhánh `Class&Enrollment`, merge vào `iter1` cùng U01–U04. Integration test (PostgreSQL thật, chạy đồng thời) do tester viết.
 
 ## Business logic

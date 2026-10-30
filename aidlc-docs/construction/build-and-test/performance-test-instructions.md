@@ -1,23 +1,9 @@
-# Performance test instructions — U14
+# Performance and resilience verification
 
-Status: not executed; no load harness or latency evidence is claimed. Use real providers and isolated infrastructure after [integration prerequisites](integration-test-instructions.md) pass. Timeouts and unit tests do not prove NFR compliance.
+No performance/capacity/latency run was performed in the 2026-10-30 documentation synchronization. Existing NFR targets remain targets. Timeouts, isolated unit tests and source presence are not measured compliance. Applicable resiliency scope remains RESILIENCY-04/06/10.
 
-| Measurement | Acceptance target |
-|---|---|
-| Notification delivery and UI/SSE update | Within5s of committed source event |
-| Announcement fanout |200students within5s |
-| Feed query |p95≤300ms, pages≤50 |
-| Deadline scanner |Reminder within5min of the24h-before-close point |
-| Retention |Only older-than180day notifications;≤10000 per batch |
+Use isolated representative data; record commit/config/topology, concurrency/cardinality, warmup/duration/sample count, p50/p95/p99, errors, DB/worker pool/queue metrics and provider conditions. Evaluate source-scoped targets in each unit NFR document before accepting numbers.
 
-An independent tester should prepare distinct student sessions, realistic announcement/notification histories, multiple OPEN classes and500+assignment/class cardinalities. Record dataset sizes, indexes, instance/worker counts, CPU/RAM, database/broker versions and network topology. Use fixed fixtures and a stable workload for comparable reruns.
+Priority scenarios: module list/Quiz visibility and reorder CAS; dashboard activity independent timeout/UNAVAILABLE; AI quota/idempotency/batch partial outcomes and continuation; notification fanout/SSE/email retry; submission/deadline scanners and activity one-day retention; DB backup/isolated restore. Keep unknown/unavailable data visible; do not replace it with zero.
 
-Suggested measurement protocol (test design, not a new requirement): warm up2minutes; measure10minutes at the agreed concurrent workload; repeat with200recipient fanout and two workers; then increase load in controlled steps until queue lag/errors appear. Record actual concurrency, request rate, sample count, p50/p95/p99, failures, event-to-SSE delay, queue depth, pool use and lock wait. Schedule reminder cases around the real deadline window; accelerated-clock results alone cannot certify wall-clock delivery.
-
-Exercise DB lock contention, slow provider and SMTP timeout under load. Verify bounded cancellation/resource release, no cap overshoot and no loss after recovery. Scanner batching must eventually cover all eligible rows;500limits alone are insufficient evidence. Retain sanitized raw measurements and compare each target separately. No throughput/error-rate target is invented here; agree unspecified capacity criteria before claiming acceptance.
-
-No k6/JMeter dependency or nonexistent script is introduced. Tester-owned harness and reproducible command/version must accompany the actual report.
-
-## MCP staff expansion — 2026-10-26
-
-See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.
+The older U14-specific procedure and targets are preserved in [historical instructions](../../history/build-and-test-before-2026-10-30/performance-test-instructions.md); validate target applicability before reusing them across all units. CI deployment is disabled; this document does not enable it.

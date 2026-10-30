@@ -1,6 +1,9 @@
 # U08 Assignment Work — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
@@ -68,7 +71,7 @@ stateDiagram-v2
 | `IAssignmentLifecycleListener` (contract của U07, U08 cài) | `onRetired` (tự nộp lượt đang làm), `onOpened` (không làm gì) | U07 | Tự nộp khi bài bị ngưng giao |
 | `StudentClassSection`, `ClassCardSection` (contract của U05, U08 cài); `NavEntry` (contract của U01, U08 cài) | - | U05, U01 | Phần Bài tập sắp đến hạn trên Student Class Detail; dòng bài trên thẻ lớp ở Class Dashboard; mục Bài tập trên menu bên của Student |
 | `IAiTaskResultHandler` cho `PRACTICE_FEEDBACK`, `IMcpToolProvider` (contract của U06, U08 cài) | - | U06 | Nhận phản hồi AI; tool `read_own_work`, `read_authorized_submission`, `record_private_feedback` |
-| `IScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; khai báo `activity.retentionDays` |
+| `IScheduledScanner`, `SettingDefinition` (contract của U03, U08 cài) | - | U03 | Tự nộp khi hết hạn, xóa dữ liệu hoạt động quá hạn; không còn khai báo activity.retentionDays; retention source cố định 1 ngày |
 | Hook `useActivityTracker`, component `ActivityTimeline` | - | Frontend U09, U11, U12 | Gửi sự kiện rời trang từ trình duyệt; hiện dòng thời gian cho giảng viên |
 
 ### Contract U08 khai báo (unit khác cài)
@@ -104,3 +107,9 @@ Chưa có U09, U12, U13 thì: không tạo dòng chờ chấm, không hiện đi
 | `GET /api/v1/assignments/{assignmentId}/attempts/mine`, `GET /api/v1/attempts/{attemptId}/export.docx` | 40 |
 | `POST`, `GET /api/v1/attempts/{attemptId}/feedback` | 41 |
 | `POST /api/v1/attempts/{attemptId}/activity` | 39 |
+
+## Source behavior delta — 2026-10-30
+
+assignmentwork có start/save/submit/history, late/auto-submit, practice feedback và activity. ActivityService.RETENTION = 1 ngày; scanner xóa theo hằng này, không Settings activity.retentionDays 1–365. Theo dõi hoạt động không tự trừ điểm. Feedback Practice gắn submission/version và không vào gradebook.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

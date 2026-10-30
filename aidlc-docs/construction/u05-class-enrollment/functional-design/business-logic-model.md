@@ -1,6 +1,9 @@
 # U05 Class & Enrollment — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Tách phần lớp và ghi danh từ U04 cũ; mã `BR-U05-xx` ứng với `BR-U04-xx` cũ cùng số. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
 
@@ -81,7 +84,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F9 - Gán giảng viên (UC 27)
 1. Bấm "Phân công giảng viên", tìm và chọn người; frontend gọi `PUT /api/v1/manager/classes/{id}/teacher` kèm `version`.
 2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); người mới phải `TEACHER` hoặc `SUBJECT_MANAGER` đang `ACTIVE` (BR-U05-12).
-3. Lớp `OPEN` không được bỏ trống giảng viên.
+3. Lớp `OPEN` được phép chưa gán giảng viên.
 4. Cập nhật có điều kiện `version`; ghi audit `CLASS_TEACHER_CHANGED` (người cũ, người mới).
 5. Từ request tiếp theo, người cũ mất quyền dạy lớp.
 
@@ -115,7 +118,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F14 - Đổi trạng thái lớp (UC 29)
 1. Bấm Mở, Lưu trữ hoặc Mở lại, xác nhận; frontend gọi `PUT /api/v1/manager/classes/{id}/status` kèm trạng thái mới và `version`.
 2. Kiểm quyền Chủ nhiệm môn và chuyển hợp lệ (BR-U05-14).
-3. Mở hoặc mở lại: cần giảng viên và môn `ACTIVE` (hỏi U04); mở lại kiểm BR-U05-15, vướng thì trả danh sách người vướng.
+3. Mở hoặc mở lại: cần môn `ACTIVE`; giảng viên tùy chọn, nếu có phải hợp lệ (hỏi U04); mở lại kiểm BR-U05-15, vướng thì trả danh sách người vướng.
 4. Cập nhật có điều kiện `version`; ghi audit `CLASS_STATUS_CHANGED`.
 5. `DRAFT→OPEN`: phát `enrollment.activated` cho mọi ghi danh `ACTIVE` sau commit (BR-U05-26).
 6. Lưu trữ: lớp chỉ đọc; dữ liệu giữ nguyên (BR-U05-16).
@@ -127,3 +130,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. U01 gọi `listTaughtClasses` khi chặn hạ role người đang dạy lớp.
 3. U04 gọi `ISubjectClasses` để hiện lớp của môn và lưu trữ mọi lớp của môn khi lưu trữ môn.
 4. U07–U15 gọi `IClassAccess`: thông tin lớp, sinh viên `ACTIVE`, Chủ nhiệm môn của lớp, lớp `OPEN` của một người hoặc của một môn, số đếm cho Admin Dashboard.
+
+## Source behavior delta — 2026-10-30
+
+CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

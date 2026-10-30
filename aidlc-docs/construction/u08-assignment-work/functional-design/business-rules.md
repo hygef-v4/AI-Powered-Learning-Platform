@@ -1,6 +1,9 @@
 # U08 Assignment Work — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
@@ -52,7 +55,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U08-41 | Nguồn: API cá nhân (qua `IAiTask`, nguồn `PERSONAL`; Student không có API chung) hoặc agent MCP (đọc qua `read_own_work`, ghi qua `record_private_feedback`). Không có kết nối nào vẫn làm và nộp bài bình thường. | FR-030 |
 | BR-U08-42 | Phản hồi gồm nhận xét chung, điểm mạnh, nhận xét từng phần và gợi ý cải thiện, có nhãn "AI ước tính, không phải điểm chính thức"; không có đánh giá theo rubric, không có điểm ước tính (người học không xem rubric, yêu cầu 2026-10-21); không vào sổ điểm, không sửa bài nộp. | FR-030, FR-008 |
 | BR-U08-43 | Mỗi phản hồi gắn `submissionHash` của lượt; kết quả có hash khác, lượt không còn thuộc người học, hoặc sai schema thì không lưu. Một lượt có nhiều phản hồi, lưu thành lịch sử kèm provenance. | US-ASM-012 S2, S4 |
-| BR-U08-44 | Giới hạn: mỗi lượt tối đa một yêu cầu đang chờ; mỗi người tối đa 20 yêu cầu mỗi ngày (web và MCP cộng chung); `requestRef` chống gửi trùng. | FR-030 |
+| BR-U08-44 | Giới hạn: mỗi lượt tối đa một yêu cầu đang chờ; mỗi người tối đa 20 yêu cầu mỗi ngày (web và MCP cộng chung); `requestRef` chống gửi trùng. API/MCP lấy cùng transaction-scoped advisory lock theo account trước pending/quota check và insert; nhiều attempts/transports không vượt20lượt/ngày. | FR-030 |
 | BR-U08-45 | Prompt gồm hướng dẫn, khung và bài nộp dạng chữ (sơ đồ ở dạng XML rút gọn qua `IDocumentModel`); không có rubric, không có dữ liệu người khác, không có key. Tool `read_own_work` cũng không trả rubric. Chỉ chính người học xem phản hồi. | FR-030 |
 
 ## 6. Dữ liệu hoạt động (FR-039)
@@ -63,7 +66,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U08-51 | Trình duyệt gửi `SESSION_START`, `HIDDEN`, `VISIBLE` (theo trạng thái hiển thị của trang), `HEARTBEAT` mỗi 60 giây khi trang mở và `SESSION_END` khi rời trang (nếu gửi được); mỗi sự kiện có `sessionId`, `clientEventId`, `sequence`, giờ client. Chuyển vào iframe Draw.io không tính là rời trang. | FR-039 |
 | BR-U08-52 | Server kiểm actor là chủ lượt (lượt Quiz và tài liệu nhóm do U11, U12 kiểm rồi gọi `IActivityWrite`), chính sách và trạng thái; bỏ trùng theo `clientEventId`; tối đa 60 sự kiện mỗi phút mỗi công việc; ghi giờ server. | FR-039 |
 | BR-U08-53 | Tóm tắt: số lần rời trang, tổng thời gian rời đã biết, các khoảng rời, các khoảng thiếu dữ liệu ghi là "không rõ" (không có heartbeat quá 2 phút, sự kiện lệch thứ tự, giờ client bất thường); trạng thái `DISABLED`, `NO_DATA`, `AVAILABLE`, `EXPIRED`. Không kết luận gian lận, không đổi điểm, không tự nộp. | FR-039, US-INT-001 S2 |
-| BR-U08-54 | Giữ dữ liệu theo `activity.retentionDays` (U08 khai báo trong Settings nhóm `ACTIVITY`, 1–365, không có mặc định); chưa đặt thì U07, U10 không cho bật theo dõi; quá hạn thì scanner xóa. | FR-039 |
+| BR-U08-54 | ActivityService.RETENTION cố định 1 ngày; scanner xóa dữ liệu quá hạn, tối đa 10.000 mỗi lượt. activity.retentionDays không còn là Settings khai báo; không chặn bật monitoring vì chưa đặt setting cũ. Policy/notice và quyền ghi/đọc vẫn được kiểm theo source. | FR-039 |
 | BR-U08-55 | Giảng viên xem qua U09 (U09 kiểm phân công lớp rồi gọi `IActivityQuery`); Admin không xem. | US-INT-001 |
 
 ## 7. Phân quyền, audit và lỗi

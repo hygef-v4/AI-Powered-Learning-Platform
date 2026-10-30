@@ -1,5 +1,9 @@
 # U06 AI Connections — code summary
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-generation-plan/u06-ai-connections-code-generation-plan.md) (duyệt 2026-10-21), trên nhánh `ai-connections` tách từ `staging`, chưa push. Người code: Võ Minh Tài (Người 2). Chưa gọi provider AI thật (không có khóa API thật trên máy), chưa thử với ứng dụng agent MCP thật; integration test do tester viết.
 
 ## Commit

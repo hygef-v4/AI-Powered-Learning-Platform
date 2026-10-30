@@ -1,6 +1,9 @@
 # U10 Quiz Authoring — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Lấy ngân hàng câu hỏi của U06 cũ, phần Quiz của U08 cũ và cài đặt Quiz của U09 cũ. Ngân hàng chỉ còn câu trắc nghiệm theo UC 46, 47. Làm Quiz thuộc U11. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 46, 47, 48. **Primary stories:** US-ASM-006, US-QBK-002; phần Quiz của US-ASM-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
@@ -60,7 +63,7 @@ app/quizzes/[id]/                QuizDetailPage       #22 Quiz Detail
 | `QuestionMetaPanel`, `QuestionVersionPanel` | như trên | "Phân loại": Độ khó (Dễ, Trung bình, Khó), Thẻ (tối đa 10). "Trạng thái": trạng thái, phiên bản · ngày, người tạo, số quiz đang dùng |
 | `SubjectQuizListPage` | `GET /api/v1/subjects/{subjectId}/quizzes` | "Quiz", ghi chú "Quiz của môn chỉ dùng để luyện tập (Practice): không có lịch, không vào sổ điểm."; nút chọn môn, Tạo quiz; tab Tất cả, Nháp, Đã duyệt, Đang mở, Ngưng; ô tìm; cột Quiz, Số câu, Thời gian, Trạng thái, Cập nhật |
 | `ClassQuizzesSection` | `GET /api/v1/classes/{classId}/quizzes`, `GET .../quiz-copy-sources`, `POST .../quizzes:copy` | Trong bảng chung của tab Đánh giá (cùng phần Bài tập của U07): nút Tạo Quiz, Copy Quiz từ lớp khác; dòng Quiz (tên, "Quiz · Practice"), Phạm vi (Của môn, Của lớp), Trạng thái, cột Bài nộp do U11 gắn (số sinh viên đã làm); Quiz của môn chỉ xem |
-| `QuizTopBar`, `QuizDetailPage` | `GET`, `PATCH /api/v1/quizzes/{id}`; `/review`, `/publish`, `/retire`, `/clone`, `/versions` | Đường dẫn "Quiz", tên, nhãn trạng thái, phiên bản, "Đã lưu hh:mm"; Xem trước, Lưu, Duyệt (Nháp) hoặc Phát hành (Đã duyệt); "Thao tác khác": Ngưng (bắt buộc lý do), Nhân bản, Tạo version mới, Xóa (chỉ bản nháp); lỗi duyệt hiện theo câu; giảng viên có thêm tab Lượt làm của sinh viên (U11) |
+| `QuizTopBar`, `QuizDetailPage` | `GET`, `PATCH /api/v1/quizzes/{id}`; `/review`, `/publish`, `/retire`, `/clone`, `/versions` | Đường dẫn "Quiz", tên, nhãn trạng thái, phiên bản, "Đã lưu hh:mm"; Xem trước, Lưu, Duyệt (Nháp) hoặc Phát hành (Đã duyệt); "Thao tác khác": Lưu trữ (lý do trống mặc định Lưu trữ), Nhân bản, Tạo version mới, Xóa (chỉ bản nháp); lỗi duyệt hiện theo câu; giảng viên có thêm tab Lượt làm của sinh viên (U11) |
 | `QuizItemList`, `InlineQuestionEditor` | `PUT .../items`, `.../inline-questions` | "Câu hỏi (n)", tổng điểm; mỗi câu: thứ tự, loại, nguồn ("Từ ngân hàng · vN" hoặc câu riêng của Quiz), điểm, nội dung, lựa chọn và đáp án đúng; Thêm câu, Lấy từ ngân hàng, Tạo nháp bằng AI; `409` báo tải lại |
 | `BankQuestionPicker` | `GET /api/v1/subjects/{subjectId}/questions`, `POST .../items:random-preview` | Popup "Lấy câu hỏi từ ngân hàng", hai tab. Chọn tay: lọc Độ khó, Thẻ, ô tìm; bảng chọn nhiều (Câu hỏi, Loại, Độ khó, Thẻ); chỉ câu Đang dùng, ẩn câu đã có trong quiz; "Đã chọn n câu"; Thêm n câu. Bốc ngẫu nhiên: Số câu, Độ khó, Thẻ, Bốc thử ("Có n câu phù hợp"), bảng xem trước; Lưu n câu vào quiz (chỉ xem trước, lưu mới ghim phiên bản) |
 | `QuizSettingsPanel`, `MaterialRefPicker` | `PATCH /api/v1/quizzes/{id}` | "Cấu hình": Hướng dẫn (tùy chọn), Thời gian làm bài (phút, 1–300 hoặc để trống), Số lượt tối đa (1–10 hoặc không giới hạn), Hiện điểm sau khi nộp (công tắc), Hiện đáp án (Không bao giờ, Sau khi nộp), Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động kèm Lời báo cho sinh viên, Gắn với học liệu (tối đa 10, khi U13 có), Tổng điểm |
@@ -74,3 +77,13 @@ Route `/manager/*` cho Subject Manager, `/quizzes/*` cho Teacher, Subject Manage
 |---|---|---|
 | `QuizDetailSection` | U11 | Tab Lượt làm của sinh viên trên Quiz Detail |
 | `QuizRowAction` | U11 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
+
+## Source behavior delta — 2026-10-30
+
+Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Quiz reopen HTTP/UI — source 2026-10-30
+
+QuizController POST `/api/v1/quizzes/{id}/reopen` nhận expected version; frontend chỉ hiển thị thao tác theo trạng thái/quyền trả từ server. Source service kiểm RETIRED, version và active container. Retire reason trống dùng Lưu trữ; không trình bày lý do là bắt buộc trên mọi nhánh. Actor-scope/version errors vẫn phải hiển thị, không tự retry mutation.

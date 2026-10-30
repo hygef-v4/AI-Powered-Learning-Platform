@@ -1,6 +1,9 @@
 # U06 AI Connections — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
 
@@ -11,8 +14,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U06-01 | Có hai loại kết nối: `INSTITUTIONAL` (API chung, chỉ Admin cấu hình qua Settings) và `PERSONAL` (API cá nhân, chỉ chủ tài khoản Student, Teacher, Subject Manager cấu hình trong UC 31). Admin không có API cá nhân, không xem hay dùng kết nối cá nhân của người khác. | FR-012, FR-021 |
-| BR-U06-02 | Provider: `GEMINI`, `OPENAI`, `CLAUDE`. Mỗi người tối đa một kết nối cá nhân còn hiệu lực cho mỗi provider; API chung tối đa một kết nối cho mỗi provider. Mỗi kết nối chọn một model trong danh sách cho phép do server cấu hình. Địa chỉ gọi provider cố định trong code; không nhận URL từ người dùng. | FR-012 |
-| BR-U06-03 | Key được mã hóa trước khi lưu, kèm phiên bản khóa mã hóa; chỉ hiện 4 ký tự cuối. Không trả key hay bản mã qua API, không ghi vào log hay audit. Thay key thì ghi đè; thu hồi thì xóa bản mã và chuyển `REVOKED`. | FR-012, SEC-006 |
+| BR-U06-02 | Provider GEMINI/OPENAI/CLAUDE. PERSONAL tối đa một kết nối chưa REVOKED mỗi owner/provider. INSTITUTIONAL có nhiều kết nối/provider; repository ưu tiên ACTIVE rồi created_at, id. Server giới hạn model/endpoint, không nhận URL provider tùy ý. | FR-012 |
+| BR-U06-03 | Provider key mã hóa kèm phiên bản khóa; list chỉ hiện hint. PERSONAL không readback cho Admin. Ngoại lệ AS-BUILT: Admin dùng revealInstitutional cho key chung không REVOKED, kể cả DISABLED; audit AI_CONNECTION_KEY_REVEALED không chứa key. Không ghi secret vào log/audit. Đây là delta D15 so với thiết kế không-readback cũ. | FR-012, SEC-006 |
 | BR-U06-04 | Kiểm tra kết nối gửi một yêu cầu tổng hợp cố định, tối đa 5 token ra, không dùng nội dung học vụ; UI báo trước việc này có thể phát sinh chi phí trên key. Lưu kết quả đã làm sạch và thời điểm. Kiểm tra API chung không cho Admin quyền học vụ. | FR-037, US-AIG-003 |
 | BR-U06-05 | Kết nối API chung có trạng thái `ACTIVE`, `DISABLED` (công tắc tắt, giữ key), `REVOKED`. Đổi, tắt, thu hồi có hiệu lực với yêu cầu AI mới; task đã gửi tới provider vẫn chạy xong. | FR-021 |
 | BR-U06-06 | Thay key hoặc model phải gửi kèm `version`; lệch thì `409`. | FR-033 |
@@ -47,8 +50,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U06-30 | Student, Teacher, Subject Manager tạo credential MCP cho agent của mình; Admin không. Credential gắn tài khoản, nhãn, quyền `READ_ONLY` hoặc `READ_WRITE`, hạn 7, 30 hoặc 90 ngày (mặc định 30); tối đa 5 credential còn hiệu lực mỗi người. | FR-035 |
-| BR-U06-31 | Token chỉ hiện một lần lúc tạo; lưu bản băm SHA-256 và 4 ký tự cuối. Credential hết hiệu lực khi hết hạn hoặc bị thu hồi; tài khoản không còn `ACTIVE` thì mọi lời gọi bị từ chối. Đổi hoặc đặt lại mật khẩu, đổi role không thu hồi credential; mỗi lời gọi dùng role và phạm vi hiện hành (BR-U06-33). Có hiệu lực ở lời gọi tiếp theo. | FR-035 |
+| BR-U06-30 | MCP_SELF và bearer MCP chỉ dành ACTIVE STUDENT, TEACHER, SUBJECT_MANAGER. ADMIN không tạo/list/update/reveal/revoke credential và credential Admin cũ bị từ chối theo role hiện hành ở lần gọi kế tiếp. Student API cá nhân vẫn tách nguồn shared quota; không cấp Admin học vụ qua MCP. | FR-035 |
+| BR-U06-31 | Token dùng SHA-256/hint để xác thực; có thể lưu thêm AES-GCM ciphertext/IV/key version. Token trả khi tạo và chủ credential ACTIVE có thể xem lại khi còn bản mã giải mã được; ghi MCP_TOKEN_REVEALED. Token cũ không có bản mã hoặc thiếu encryption key có thể không reveal được. Hết hạn/revoke/role không hợp lệ/account không ACTIVE bị chặn ở call kế tiếp; đổi password không tự revoke. | FR-035 |
 | BR-U06-32 | MCP server dùng transport Streamable HTTP tại `/mcp`, xác thực bằng header `Authorization: Bearer`. Không dùng key provider để xác thực, không trả key cho agent. MCP không gọi AI thay agent: agent dùng mô hình của nó. | FR-012, FR-035 |
 | BR-U06-33 | Mỗi lời gọi tool: xác thực credential; dựng actor từ tài khoản của credential; tool ghi cần `READ_WRITE`; tham số đúng schema và không quá 64 KB; tối đa 60 lời gọi mỗi phút mỗi credential; unit sở hữu tool kiểm quyền qua `IAuthorization` và kiểm `expectedVersion` khi ghi; kết quả không quá 256 KB. | FR-035 |
 | BR-U06-34 | Tool do unit sở hữu dữ liệu đăng ký, kèm role được dùng. Không có tool nộp bài chính thức, công bố điểm, khôi phục dữ liệu, đọc credential. Tham số và kết quả coi là không tin cậy. | FR-035 |

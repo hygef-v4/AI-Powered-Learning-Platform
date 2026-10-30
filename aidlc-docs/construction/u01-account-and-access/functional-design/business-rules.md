@@ -1,6 +1,9 @@
 # U01 Account & Access — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -61,7 +64,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-43 | Ngoài khóa theo tài khoản còn giới hạn theo client để chặn thử nhiều tài khoản. | Câu 5 |
 | BR-U01-44 | Phiên gồm access token 15 phút mang mã phiên `sid` và refresh token lưu phía server (idle 2 giờ, tối đa 7 ngày). Refresh chỉ thành công khi phiên còn. JWT TTL không là grace period: mỗi action kiểm phiên `sid` còn, tài khoản `ACTIVE` và role hiện hành; phiên bị xóa hoặc quyền bị thu hồi có hiệu lực request tiếp theo. | US-IAM-002 S1/S3, U01 NFR |
 | BR-U01-45 | Đăng xuất chỉ thu hồi phiên hiện tại. Không có "đăng xuất mọi thiết bị"; người dùng đổi mật khẩu để đá phiên khác. | Câu 14 |
-| BR-U01-46 | Refresh token bị dùng lại thì thu hồi phiên đó. | Thiết kế |
+| BR-U01-46 | Refresh token xoay đồng thời trong cửa sổ grace 20 giây không thu hồi phiên; dùng lại token cũ sau grace thu hồi phiên. Mọi request vẫn kiểm sid/current account. | Thiết kế |
 | BR-U01-47 | Không có MFA, kể cả `ADMIN` (ngoại lệ SECURITY-12 được chấp nhận). | U01 NFR |
 | BR-U01-48 | Đăng nhập hoặc kích hoạt thành công đi qua Post-Login rồi tới dashboard theo role (`homePath`): `STUDENT`, `TEACHER` → Class Dashboard; `SUBJECT_MANAGER` → Manager Dashboard, có nút sang Class Dashboard để vào lớp được giao dạy; `ADMIN` → Admin Dashboard. Admin không vào Manager Dashboard hay Class Dashboard. Khung sau đăng nhập có lối vào User Profile và Logout. | Screen flow G21 Page-2; người dùng chốt 2026-10-09 |
 
@@ -117,7 +120,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 | BR-U01-92 | Lỗi gửi email không làm hỏng yêu cầu: người dùng vẫn nhận phản hồi trung tính, job retry hữu hạn. | US-IAM-003 S2, RESILIENCY |
 | BR-U01-93 | Khi không kiểm được quyền (phụ thuộc lỗi) thì từ chối. | SECURITY-15 |
 | BR-U01-94 | Lỗi trả client dạng an toàn, không lộ stack trace hay trạng thái tài khoản. | SECURITY-15 |
-| BR-U01-95 | Redis không khả dụng thì không tạo phiên mới, không refresh, không gửi OTP; trả "hệ thống tạm bận". Access token còn hạn vẫn dùng được. | SEC-006, U01 NFR |
+| BR-U01-95 | Redis không khả dụng thì fail closed: không tạo/refresh phiên, gửi OTP hoặc xác thực sid hiện hành; trả 503 SYSTEM_BUSY. JWT còn hạn không thay thế kiểm phiên trên Redis. | SEC-006, U01 NFR |
 
 ## Quy tắc tích hợp revision hiện hành
 

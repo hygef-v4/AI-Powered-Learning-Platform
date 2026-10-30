@@ -1,5 +1,9 @@
 # U13 Reference Materials — bàn giao code
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Ngày 2026-10-21; nhánh `reference-materials`. Người dùng chọn A trong file duyệt Part 1, sau đó yêu cầu giữ nguyên DTO U06 và tiếp tục code. Không commit/push, đổi Jira hoặc nhắn owner unit.
 
 ## Phạm vi đã triển khai

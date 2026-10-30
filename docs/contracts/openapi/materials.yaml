@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "U13 Reference Materials",
-    "version": "1.0.0",
-    "description": "UC58–62. Subject Manager manages assigned subject materials; assigned teacher manages class materials. Students read ACTIVE material of an OPEN enrolled class. Admin denied. Private files use U03 five-minute account-bound tokens. Mutation versions are zero-based optimistic versions; content versionNo starts at one. SUCCESS audit shares the business transaction. Outside scope is 404; no storage fileId or extracted document text appears in web DTOs."
+    "version": "1.1.0",
+    "description": "UC58–62. Subject Manager manages assigned subject materials; assigned teacher manages class materials. Students read ACTIVE material of an OPEN enrolled class. Admin denied. Private files use U03 five-minute account-bound tokens. Mutation versions are zero-based optimistic versions; content versionNo starts at one. SUCCESS audit shares the business transaction. Outside scope is 404; no storage fileId or extracted document text appears in web DTOs. AS-BUILT 2026-10-30 at staging@794a4053: material modules owned by U13; source-observed, not runtime acceptance."
   },
   "security": [
     {
@@ -1295,6 +1295,816 @@
           }
         ]
       }
+    },
+    "/api/v1/subjects/{subjectId}/modules": {
+      "parameters": [
+        {
+          "name": "subjectId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listSubjectMaterialModules",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Subject-scoped view; manager can manage module, only subject-scope quizzes included.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialModule"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMaterialModule",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Active subject manager creates module; title 1–200, orderNo appended.",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialModule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModuleInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subjects/{subjectId}/modules:reorder": {
+      "parameters": [
+        {
+          "name": "subjectId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "reorderMaterialModules",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Manager; nonempty 1–500 id/version items, duplicate IDs rejected, CAS for each. Source accepts subset; does not require full list.",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reorder"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/classes/{classId}/modules": {
+      "parameters": [
+        {
+          "name": "classId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listTeachingMaterialModules",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Assigned teacher reads modules; module canManage false. Class quizzes restricted to this class, subject quizzes OPEN or RETIRED with actual non-null publishedAt only. Quiz canManage is separate.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialModule"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/classes/{classId}/modules": {
+      "parameters": [
+        {
+          "name": "classId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listStudentMaterialModules",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Active enrollment/open-class scope; only quizzes visible through IQuizQuery.listForClass.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialModule"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material-modules/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "renameMaterialModule",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Manager of active subject; stale version MATERIAL_VERSION_CONFLICT.",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModuleUpdate"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteMaterialModule",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Manager, expected version. MATERIAL_MODULE_NOT_EMPTY for active materials; archived materials move to first other module or MATERIAL_MODULE_LAST. Quiz links cascade.",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/material-modules/{id}/quizzes": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "attachQuizToMaterialModule",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Quiz same subject and actor can manage Quiz. One module per Quiz; attaching elsewhere moves link. Same link is idempotent.",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuizAttach"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material-modules/{id}/quizzes/{quizId}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "quizId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "detachQuizFromMaterialModule",
+        "description": "Session authentication; backend scope/ownership checked. Admin denied; out-of-scope is 404. Mutations require CSRF. Quiz management scope required; missing link 404.",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or outside authorized scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or read-only scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1376,12 +2186,17 @@
           },
           "source": {
             "$ref": "#/components/schemas/Source"
+          },
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
           "kind",
           "title",
-          "source"
+          "source",
+          "moduleId"
         ]
       },
       "Update": {
@@ -1404,6 +2219,14 @@
             "type": "integer",
             "format": "int64",
             "minimum": 0
+          },
+          "moduleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Optional; omitted or null keeps current module; otherwise same-subject module required."
           }
         },
         "required": [
@@ -1611,6 +2434,10 @@
             "items": {
               "$ref": "#/components/schemas/Version"
             }
+          },
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
@@ -1628,7 +2455,8 @@
           "updatedAt",
           "canManage",
           "current",
-          "versions"
+          "versions",
+          "moduleId"
         ]
       },
       "DownloadToken": {
@@ -1645,6 +2473,134 @@
         "required": [
           "url",
           "expiresAt"
+        ]
+      },
+      "ModuleInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "ModuleUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "title",
+          "version"
+        ]
+      },
+      "QuizAttach": {
+        "type": "object",
+        "properties": {
+          "quizId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "quizId"
+        ]
+      },
+      "ModuleQuiz": {
+        "type": "object",
+        "properties": {
+          "quizId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "REVIEWED",
+              "OPEN",
+              "RETIRED"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SUBJECT",
+              "CLASS"
+            ]
+          },
+          "classId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "canManage": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "quizId",
+          "title",
+          "status",
+          "scope",
+          "classId",
+          "canManage"
+        ]
+      },
+      "MaterialModule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "orderNo": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "canManage": {
+            "type": "boolean"
+          },
+          "quizzes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModuleQuiz"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "orderNo",
+          "version",
+          "canManage",
+          "quizzes"
         ]
       }
     }

@@ -1,6 +1,9 @@
 # U13 Reference Materials — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
@@ -20,7 +23,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 37 | Learning Material: học liệu dạng tệp (`s05`), video YouTube (`s05b`) | `LearningMaterialPage` | 62 | Người có quyền xem |
 | 17, 18 | Số học liệu trên Manager Dashboard, My Subject (`m11`, `m01`) | `MaterialSummary` | 58 | Subject Manager |
 
-U13 đăng ký `NavEntry` "Học liệu" (Subject Manager). Học liệu không có module: là một danh sách có thứ tự.
+U13 đăng ký `NavEntry` "Học liệu" (Subject Manager). Học liệu hiển thị theo ModuleBoard: module của môn, materialId/moduleId và Quiz links theo quyền.
 
 ## 2. Cây component
 
@@ -64,3 +67,13 @@ app/materials/[id]/view/          LearningMaterialPage      #37 Learning Materia
 | `MaterialSummary` | `GET /api/v1/subjects/{subjectId}/materials` (đếm) | Dòng tóm tắt trên thẻ môn (Manager Dashboard); thẻ số liệu "Học liệu" (n đang dùng · n lưu trữ) trên My Subject |
 
 Route `/manager/materials` cho Subject Manager; `/materials/*` cho người có quyền (backend kiểm quyền thật).
+
+## Source behavior delta — 2026-10-30
+
+Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt buộc moduleId cùng môn; dữ liệu cũ backfill Module 1. Manager quản lý module; class viewers đọc theo scope. Quiz nằm tối đa một module, attach khác module chuyển link; phải kiểm quyền với Quiz. Delete chặn active materials; archived materials chuyển sang module khác, không xóa module cuối nếu cần giữ chúng. Version/reorder kiểm server; module không đồng nghĩa Lesson/RAG.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## ModuleBoard — current UI contract
+
+ModuleBoard groups subject/class materials by moduleId and shows scoped Quiz links. Manager module create/rename/delete/reorder differs from educator Quiz attach/detach permission. Material create requires moduleId; update may move to another module of the same subject. Render availability/version/scope errors, including module not empty and last-module restrictions. Server canManage fields are projections, not a replacement for backend checks.

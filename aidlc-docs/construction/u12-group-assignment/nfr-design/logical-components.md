@@ -1,6 +1,6 @@
 # U12 Group Assignment — logical-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
 
@@ -18,3 +18,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | `GroupWorkQueryService` (cài `IGroupWorkStatus`, `IGroupSubmissionSource`), `GroupMcpTools` | backend | Interface cho U08, U09, U06 (F15) |
 | `ISseHub`, `RabbitSseHub` | backend | Realtime (P4) |
 | Repository các bảng nhóm, tài liệu | backend, worker | Chỉ dùng trong package |
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
