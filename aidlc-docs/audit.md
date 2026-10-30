@@ -6963,3 +6963,77 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Context**: User authorizes local commits; no push, merge, deployment or live database migration requested. Actual commit IDs and completion are recorded by Git history and reported to the user after creation.
 
 ---
+
+## Code structure audit and refactor planning — 2026-10-30
+
+**Timestamp**: 2026-10-30T07:29:54Z (review checkpoint; report and plan prepared in this session)
+
+**User Input (complete raw task request)**:
+
+> $ponytail:ponytail-audit $clean-code:clean-code giúp tôi review lại dự án hiện tại tôi thấy mấy file code đang đặt khá là lộn xộn, ở trong frontend thì còn k chia package kiểu api, model,  component hay gì đó, trong backend thì chia khá là rối bthg tôi hay chia controller, service, repository,  giúp tôi đọc lại cả doc aidlc và lên kế hoạch refactor dự án cho dễ đọc hơn, k nên phức tạp hóa quá
+
+**Subsequent User Input (complete raw)**:
+
+> Làm tiếp
+
+**AI Response**: Continued the authorized review/planning directly, without subagents or implementation. Inspected repository instructions, source/module structure, current AI-DLC requirements/ownership/decision/inventory and latest remediation evidence; traced representative auth, subject/class/enrollment, document/attempt, AI/proposal, worker and notification paths. Prepared a nine-finding structure audit and a staged refactor proposal, preserving 15 unit boundaries/public contracts and using Subjects as the first example before wider migration. Identified two registered Admin-only MCP providers unreachable under current supported role admission/catalog rules, 17 JDBC repositories in domain, mixed responsibilities and per-row lookup work. Avoided re-reporting remediated historical bugs.
+
+**Verification**: Fresh frontend 599 tests/94 files pass; lint exit 0 with two pre-existing unused-import warnings; typecheck exit 0. Maven offline ArchitectureTest attempt stopped during dependency resolution, not application test execution; workspace cache missing jsoup and then a parent-imported Netty BOM. Copied an already cached jsoup artifact into the ignored workspace cache; no dependency download or manifest change. Full backend/DB guard, production frontend build and E2E/provider/load/restore were not rerun. Historical results explicitly distinguished.
+
+**Artifacts**: `inception/reverse-engineering/2026-10-30-code-structure-audit.md`; `inception/plans/2026-10-30-code-structure-refactor-plan.md`.
+
+**Context**: Documentation only, plus ignored verification logs/cache. No production/test/config/schema changes, commit, push or deployment. Proposal awaits review before construction; the user's continuation message was not interpreted as approving an unseen implementation plan. Existing security/resiliency decisions retained; PBT remains disabled.
+
+---
+
+## Approved structure refactor — 2026-10-30
+
+**Timestamp**: 2026-10-30T09:27:37Z
+
+**User Input (complete raw approval)**: “Giúp tôi refactor lại dự án theo kế hoạch”
+
+**Continuation inputs (complete raw)**: “Làm tiếp”; “làm tiếp”.
+
+**Status request (complete raw)**: “bạn đang làm gì ,sắp xong chưa”
+
+**AI Response**: Implemented the approved plan directly, without subagents. Preserved existing business-unit/public-contract boundaries while moving internal source/test packages and frontend feature files. Strengthened architecture tests before moving packages; removed unreachable Admin-only MCP providers while retaining forbidden-provider coverage. Split U05 queries/class/enrollment and document/editor/AI-draft responsibilities; batch-read regressions were observed failing then passing. Current Construction and Inception inventories/guides were synchronized with the new paths.
+
+**Verification**: Baseline backend 1611 pass/0 skipped with required DB guard. Final backend clean verify 1614 pass/0 failure/error/skip, required PostgreSQL guard passed; frontend 601 pass/94 files, typecheck/lint/production build exit 0. Final logs `.tmp/2026-10-30-refactor-final-*`; report `construction/build-and-test/2026-10-30-code-structure-refactor-results.md`.
+
+**Rulings and limits**: Kept the checkout and earlier documentation edits; no commit/push/deploy. Kept document helpers package-private in the same service package; explicitly exposed internal DTO snapshot factories only where the new service/dto boundary requires them. Contract source, migrations, infrastructure and dependency versions unchanged. Native frontend worker termination was retried with two workers; no dependency upgrade. Browser E2E, real providers, load/security/restore were not run. Existing security/resiliency scope retained; PBT disabled.
+
+---
+
+## Move-only scope correction — 2026-10-30
+
+**Timestamp**: 2026-10-30T09:56:47Z
+
+**User Input (complete raw concern)**:
+
+> code các file b có sửa gì ko, tôi tưởng chỉ cần chuyển file sang thư mục khác thôi , sao tôi check commit thì thấy b xóa file sau add lại
+
+**User Input (complete raw clarification)**:
+
+> tôi k muốn commit xóa file ấy , như v thì sẽ mất commit cũ của người khác tôi chỉ muốn chuyển file sang folder package khác để sắp xếp lại thôi
+
+**AI Response and action**: Narrowed the existing authorized task to file/package relocation only. Reconstructed source from parent HEAD, preserving every original file and restoring original implementations/tests. Undid the broader service/editor/document/draft extractions, batching, public barrels, Admin MCP cleanup and extra tests. Kept only package/import/FQN/path references needed by moves; ArchitectureTest layer selector names and required-suite FQNs follow the new locations. Current Construction/Inception inventories and README corrected; broader proposal/results explicitly marked superseded. No subagents.
+
+**Verification**: All 1,501 source/resource files correspond 1:1 to baseline; 1,066 moves (716 Java, 308 frontend, 42 placeholders). Verified 908 Java bodies and 506 TypeScript/TSX ASTs against originals with only package/import/reference normalization. Temporary-index Git comparison detects 1,066 renames and zero unpaired addition/deletion at 20% similarity; real index unchanged. Fresh backend clean verify: 1,611 passed/0 skipped and required PostgreSQL guard passed; frontend 599 passed/94 files; typecheck/build passed; ESLint exit 0 with two pre-existing unused-import warnings. Current Markdown links/fences, 46 controller annotation sets, protected contracts/schema/config/dependencies and git diff whitespace checked.
+
+**Result and limits**: `construction/build-and-test/2026-10-30-package-moves-only-results.md`. HEAD remains 5a76e428; no staging, commit, push, history rewrite or deploy. Explained that D/A UI presentation does not remove old commits; Git infers rename when comparing snapshots. Browser E2E/provider/load/restore acceptance not rerun. Existing security/resiliency scope retained; PBT disabled. Previous audit entries remain append-only historical evidence.
+
+---
+
+## Documentation-first commit and replay request — 2026-10-30
+
+**User Input (complete raw)**:
+
+> tôi nghĩ b nên commit changes doc aidlc trước sau đó discard toàn bộ changes code rồi chạy lại script chuyển file vì nãy b có delete với add lại file rồi nên git nó vẫn nhận file xóa này
+
+**Authorized sequence**: Commit only AI-DLC documentation and README; back up the verified code proposal, restore only backend/src, frontend/src and the required-test path script, then replay the verified relocation manifest using git mv and update package/import/path references. Leave code staged for review without committing or pushing it. Do not rewrite existing commits or discard unrelated files.
+
+**Preflight evidence**: All 1,501 original source/resource files retained; Java body and TypeScript AST comparisons already verified. Rechecked source equality, 908 Java bodies, 44 current Markdown files/local links and 46 controller annotation sets. A temporary-index comparison at the default 50% similarity threshold detects all 1,066 renames and 86 reference-only modifications, with no unpaired additions/deletions. Git infers renames from snapshots; redoing the move does not create separate persistent rename metadata. Existing backend/frontend test evidence applies only if replay output exactly matches the previously verified tree.
+
+**Limits**: Only documentation is authorized to be committed in this step. Code is to remain reviewable in the working tree/index; no code commit, push, deployment or history rewrite. Security/resiliency scope and disabled PBT remain unchanged.
+
+---

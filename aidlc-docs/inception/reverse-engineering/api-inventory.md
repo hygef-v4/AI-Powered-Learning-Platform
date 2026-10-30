@@ -2,7 +2,7 @@
 
 Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller-level RequestMapping plus method-level mappings below are exact source annotations; resolve their composition before client use. Non-controller MCP tool schemas are registered by IMcpToolProvider. Four existing OpenAPI specs are partial coverage, not a platform-wide contract.
 
-## [academics\web\AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/web/AcademicsController.java)
+## [academics\controller\AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -29,7 +29,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PutMapping("/manager/classes/{id}/enrollments/{accountId}/status")
 ```
 
-## [admindashboard\web\AdminDashboardController.java](../../../backend/src/main/java/edu/aiplatform/admindashboard/web/AdminDashboardController.java)
+## [admindashboard\controller\AdminDashboardController.java](../../../backend/src/main/java/edu/aiplatform/admindashboard/controller/AdminDashboardController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/dashboard")
@@ -38,7 +38,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/backups")
 ```
 
-## [ai\web\AiAdminController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiAdminController.java)
+## [ai\controller\AiAdminController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiAdminController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/ai")
@@ -59,7 +59,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/usage-summary")
 ```
 
-## [ai\web\AiConnectionController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiConnectionController.java)
+## [ai\controller\AiConnectionController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiConnectionController.java)
 
 ```java
 @GetMapping("/api/v1/ai/providers")
@@ -69,7 +69,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @DeleteMapping("/api/v1/me/ai-connections/{provider}")
 ```
 
-## [ai\web\AiUsageController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiUsageController.java)
+## [ai\controller\AiUsageController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiUsageController.java)
 
 ```java
 @GetMapping("/api/v1/me/ai-usage")
@@ -78,7 +78,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/api/v1/ai/tasks/{id}:cancel")
 ```
 
-## [ai\web\McpController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/McpController.java)
+## [ai\controller\McpController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/McpController.java)
 
 ```java
 @RequestMapping("/mcp")
@@ -86,7 +86,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @RequestMapping(method = {RequestMethod.GET, RequestMethod.DELETE})
 ```
 
-## [ai\web\McpCredentialController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/McpCredentialController.java)
+## [ai\controller\McpCredentialController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/McpCredentialController.java)
 
 ```java
 @RequestMapping("/api/v1/me/mcp-credentials")
@@ -97,7 +97,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @DeleteMapping("/{id}")
 ```
 
-## [announcements\web\AnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/web/AnnouncementController.java)
+## [announcements\controller\AnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/controller/AnnouncementController.java)
 
 ```java
 @GetMapping("/classes/{classId}/announcements")
@@ -106,13 +106,13 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @DeleteMapping("/announcements/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
 ```
 
-## [announcements\web\MyAnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/web/MyAnnouncementController.java)
+## [announcements\controller\MyAnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/controller/MyAnnouncementController.java)
 
 ```java
 @GetMapping
 ```
 
-## [assignments\web\AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/AssignmentAiDraftController.java)
+## [assignments\controller\AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java)
 
 ```java
 @RequestMapping("/api/v1/assignments/{id}/ai-drafts")
@@ -123,7 +123,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/{draftId}:discard")
 ```
 
-## [assignments\web\AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/AssignmentController.java)
+## [assignments\controller\AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentController.java)
 
 ```java
 @RequestMapping("/api/v1/assignments/{id}")
@@ -145,7 +145,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/versions")
 ```
 
-## [assignments\web\ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/ClassAssignmentController.java)
+## [assignments\controller\ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -155,7 +155,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(value = "/assignments:copy", consumes = "application/json")
 ```
 
-## [assignments\web\RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/RubricController.java)
+## [assignments\controller\RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/RubricController.java)
 
 ```java
 @RequestMapping("/api/v1/assignments/{id}/parts/{partId}/rubric")
@@ -163,7 +163,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PutMapping(consumes = "application/json")
 ```
 
-## [assignments\web\SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/SubjectAssignmentController.java)
+## [assignments\controller\SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/SubjectAssignmentController.java)
 
 ```java
 @RequestMapping("/api/v1/subjects/{subjectId}/assignments")
@@ -173,7 +173,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(consumes = "application/json")
 ```
 
-## [assignmentwork\web\AttemptController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/web/AttemptController.java)
+## [assignmentwork\controller\AttemptController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller/AttemptController.java)
 
 ```java
 @PostMapping(value = "/api/v1/assignments/{assignmentId}/attempts", consumes = "application/json")
@@ -191,7 +191,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(value = "/api/v1/attempts/{attemptId}/activity", consumes = "application/json")
 ```
 
-## [assignmentwork\web\StudentAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/web/StudentAssignmentController.java)
+## [assignmentwork\controller\StudentAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller/StudentAssignmentController.java)
 
 ```java
 @RequestMapping("/api/v1/me/assignments")
@@ -199,20 +199,20 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/{assignmentId}")
 ```
 
-## [audit\web\AuditController.java](../../../backend/src/main/java/edu/aiplatform/audit/web/AuditController.java)
+## [audit\controller\AuditController.java](../../../backend/src/main/java/edu/aiplatform/audit/controller/AuditController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/audit-logs")
 @GetMapping
 ```
 
-## [files\web\DownloadController.java](../../../backend/src/main/java/edu/aiplatform/files/web/DownloadController.java)
+## [files\controller\DownloadController.java](../../../backend/src/main/java/edu/aiplatform/files/controller/DownloadController.java)
 
 ```java
 @GetMapping("/api/v1/files/download/{token}")
 ```
 
-## [files\web\FileController.java](../../../backend/src/main/java/edu/aiplatform/files/web/FileController.java)
+## [files\controller\FileController.java](../../../backend/src/main/java/edu/aiplatform/files/controller/FileController.java)
 
 ```java
 @RequestMapping("/api/v1/files")
@@ -220,7 +220,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/policies")
 ```
 
-## [grading\web\EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/EvaluationController.java)
+## [grading\controller\EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/EvaluationController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -231,7 +231,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/evaluations:publish")
 ```
 
-## [grading\web\GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/GradebookController.java)
+## [grading\controller\GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradebookController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -241,7 +241,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/students/{accountId}/grades")
 ```
 
-## [grading\web\GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/GradingProposalController.java)
+## [grading\controller\GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradingProposalController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -251,7 +251,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/evaluations:ai-proposal-estimate")
 ```
 
-## [grading\web\MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/MyGradeController.java)
+## [grading\controller\MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/MyGradeController.java)
 
 ```java
 @RequestMapping("/api/v1/me")
@@ -260,14 +260,14 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/grade-distributions")
 ```
 
-## [grading\web\SubmissionImageController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/SubmissionImageController.java)
+## [grading\controller\SubmissionImageController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/SubmissionImageController.java)
 
 ```java
 @RequestMapping("/api/v1/evaluations/{evaluationId}/images")
 @GetMapping("/{fileId}")
 ```
 
-## [grading\web\SubmissionReviewController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/SubmissionReviewController.java)
+## [grading\controller\SubmissionReviewController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/SubmissionReviewController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -275,7 +275,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/submission-progress")
 ```
 
-## [groupdocs\web\GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/web/GroupDocController.java)
+## [groupdocs\controller\GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 
 ```java
 @GetMapping("/api/v1/assignments/{assignmentId}/my-group-doc")
@@ -291,7 +291,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/api/v1/group-docs/{id}/export.docx")
 ```
 
-## [groups\web\GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/web/GroupController.java)
+## [groups\controller\GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
 
 ```java
 @GetMapping("/api/v1/classes/{classId}/groups")
@@ -309,7 +309,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/api/v1/classes/{classId}/group-assignments/{assignmentId}/progress")
 ```
 
-## [identity\web\AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/AdminAccountController.java)
+## [identity\controller\AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AdminAccountController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/accounts")
@@ -323,7 +323,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/imports:commit")
 ```
 
-## [identity\web\AuthController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/AuthController.java)
+## [identity\controller\AuthController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AuthController.java)
 
 ```java
 @RequestMapping("/api/v1/auth")
@@ -332,7 +332,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/logout")
 ```
 
-## [identity\web\MeController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/MeController.java)
+## [identity\controller\MeController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/MeController.java)
 
 ```java
 @RequestMapping("/api/v1/me")
@@ -341,7 +341,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/password")
 ```
 
-## [identity\web\OtpFlowController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/OtpFlowController.java)
+## [identity\controller\OtpFlowController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/OtpFlowController.java)
 
 ```java
 @RequestMapping("/api/v1/auth")
@@ -353,7 +353,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/password-reset/complete")
 ```
 
-## [materials\web\ClassMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/ClassMaterialController.java)
+## [materials\controller\ClassMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/ClassMaterialController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -362,7 +362,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PutMapping("/materials:reorder") @ResponseStatus(HttpStatus.NO_CONTENT)
 ```
 
-## [materials\web\MaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MaterialController.java)
+## [materials\controller\MaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MaterialController.java)
 
 ```java
 @RequestMapping("/api/v1/materials/{id}")
@@ -373,7 +373,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/download-token") public DownloadToken download(@AuthenticationPrincipal Actor actor,@PathVariable UUID id,
 ```
 
-## [materials\web\MaterialModuleController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MaterialModuleController.java)
+## [materials\controller\MaterialModuleController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MaterialModuleController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -388,14 +388,14 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @DeleteMapping("/material-modules/{id}/quizzes/{quizId}") @ResponseStatus(HttpStatus.NO_CONTENT)
 ```
 
-## [materials\web\MyMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MyMaterialController.java)
+## [materials\controller\MyMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MyMaterialController.java)
 
 ```java
 @RequestMapping("/api/v1/me/classes/{classId}/materials")
 @GetMapping public List<MaterialViews.Detail> list(@AuthenticationPrincipal Actor actor,@PathVariable UUID classId,
 ```
 
-## [materials\web\SubjectMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/SubjectMaterialController.java)
+## [materials\controller\SubjectMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/SubjectMaterialController.java)
 
 ```java
 @RequestMapping("/api/v1/subjects/{subjectId}")
@@ -404,7 +404,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PutMapping("/materials:reorder") @ResponseStatus(HttpStatus.NO_CONTENT)
 ```
 
-## [notifications\web\NotificationController.java](../../../backend/src/main/java/edu/aiplatform/notifications/web/NotificationController.java)
+## [notifications\controller\NotificationController.java](../../../backend/src/main/java/edu/aiplatform/notifications/controller/NotificationController.java)
 
 ```java
 @GetMapping("/notifications")
@@ -414,14 +414,14 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping(value="/notifications/events",produces=MediaType.TEXT_EVENT_STREAM_VALUE)
 ```
 
-## [notifications\web\NotificationPreferenceController.java](../../../backend/src/main/java/edu/aiplatform/notifications/web/NotificationPreferenceController.java)
+## [notifications\controller\NotificationPreferenceController.java](../../../backend/src/main/java/edu/aiplatform/notifications/controller/NotificationPreferenceController.java)
 
 ```java
 @GetMapping public Map<String,Boolean> get(@AuthenticationPrincipal Actor actor) {return service.get(actor);}
 @PutMapping public Map<String,Boolean> put(@AuthenticationPrincipal Actor actor,@RequestBody Map<String,Boolean> input) {return service.put(actor,input);}
 ```
 
-## [quizpractice\web\QuizPracticeController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/web/QuizPracticeController.java)
+## [quizpractice\controller\QuizPracticeController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller/QuizPracticeController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -435,7 +435,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(value = "/quiz-attempts/{attemptId}/activity", consumes = "application/json")
 ```
 
-## [quizpractice\web\TeacherQuizAttemptController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/web/TeacherQuizAttemptController.java)
+## [quizpractice\controller\TeacherQuizAttemptController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller/TeacherQuizAttemptController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -443,7 +443,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/quiz-attempts/{attemptId}")
 ```
 
-## [quizzes\web\ClassQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/ClassQuizController.java)
+## [quizzes\controller\ClassQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/ClassQuizController.java)
 
 ```java
 @RequestMapping("/api/v1/classes/{classId}")
@@ -453,7 +453,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(value = "/quizzes:copy", consumes = "application/json")
 ```
 
-## [quizzes\web\QuestionController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/QuestionController.java)
+## [quizzes\controller\QuestionController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/QuestionController.java)
 
 ```java
 @RequestMapping("/api/v1")
@@ -474,7 +474,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(value = "/questions/{id}/retire", consumes = "application/json")
 ```
 
-## [quizzes\web\QuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/QuizController.java)
+## [quizzes\controller\QuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/QuizController.java)
 
 ```java
 @RequestMapping("/api/v1/quizzes/{id}")
@@ -501,7 +501,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/versions")
 ```
 
-## [quizzes\web\SubjectQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/SubjectQuizController.java)
+## [quizzes\controller\SubjectQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/SubjectQuizController.java)
 
 ```java
 @RequestMapping("/api/v1/subjects/{subjectId}/quizzes")
@@ -509,7 +509,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping(consumes = "application/json")
 ```
 
-## [settings\web\SettingsController.java](../../../backend/src/main/java/edu/aiplatform/settings/web/SettingsController.java)
+## [settings\controller\SettingsController.java](../../../backend/src/main/java/edu/aiplatform/settings/controller/SettingsController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/settings")
@@ -518,7 +518,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PatchMapping("/{key}")
 ```
 
-## [subjects\web\SubjectAdminController.java](../../../backend/src/main/java/edu/aiplatform/subjects/web/SubjectAdminController.java)
+## [subjects\controller\SubjectAdminController.java](../../../backend/src/main/java/edu/aiplatform/subjects/controller/SubjectAdminController.java)
 
 ```java
 @RequestMapping("/api/v1/admin/subjects")
@@ -530,3 +530,7 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PutMapping(value = "/{id}/manager", consumes = "application/json")
 @PutMapping(value = "/{id}/status", consumes = "application/json")
 ```
+
+## Structure snapshot
+
+Paths refreshed for parent HEAD `5a76e428` + working-tree structure refactor; endpoint annotations and public contracts unchanged. [Verification results](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).

@@ -1,19 +1,31 @@
 # U05 Class & Enrollment — AS-BUILT 2026-10-30
 
-Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed. Primary UC 20–30; FR-003, FR-005, FR-024.
+Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
 
 CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
 
 ## Source và negative-test inventory
 
-- [backend/src/main/java/edu/aiplatform/academics/application/AcademicsService.java](../../../../backend/src/main/java/edu/aiplatform/academics/application/AcademicsService.java)
-- [backend/src/main/java/edu/aiplatform/academics/web/AcademicsController.java](../../../../backend/src/main/java/edu/aiplatform/academics/web/AcademicsController.java)
+| Source | Trách nhiệm |
+|---|---|
+| [academics/controller](../../../../backend/src/main/java/edu/aiplatform/academics/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [academics/service](../../../../backend/src/main/java/edu/aiplatform/academics/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [academics/repository](../../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [academics/model](../../../../backend/src/main/java/edu/aiplatform/academics/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [academics/dto](../../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
+| [academics/contract](../../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
-[Contracts/migrations/tests/UI đầy đủ](../../../inception/reverse-engineering/current-code-baseline.md); [Delta disposition](../../../inception/reverse-engineering/decision-register.md).
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [academics](../../../../frontend/src/features/academics) | [api](../../../../frontend/src/features/academics/api) | [model](../../../../frontend/src/features/academics/model) | [pages](../../../../frontend/src/features/academics/pages) | [components](../../../../frontend/src/features/academics/components) | [hooks](../../../../frontend/src/features/academics/hooks) |
+
+Tests: [academics](../../../../backend/src/test/java/edu/aiplatform/academics).
+
+[Controller, migration and individual test inventory](../../../inception/reverse-engineering/current-code-baseline.md).
 
 ## Evidence và giới hạn
 
-Không chạy lại application test/build trong đợt sửa tài liệu. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
 
 ### Ghi nhận kiểm thử trước baseline
 

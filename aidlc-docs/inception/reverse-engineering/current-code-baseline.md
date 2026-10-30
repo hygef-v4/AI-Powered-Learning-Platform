@@ -1,900 +1,734 @@
-# Current code baseline — 2026-10-30
+# Current code baseline — structure refactor 2026-10-30
 
-**Source:** `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. Brownfield documentation synchronization, source-observed. 66 UC (catalog and English table each contain IDs 01–66); 15 logical units, 50 MVP stories + 1 extension preserved. No runtime or fresh application-test claim.
+Parent HEAD `5a76e428` + working-tree refactor on branch `aidlc-docs`; no new commit. 66 UC, 15 logical units and their ownership are retained. Java 17/Spring Boot modular monolith + worker; Next.js/React/TypeScript frontend.
 
-Java 17 / Spring Boot 3.5.6 / Maven; Next.js 16.3.8 / React 19.3.0 / TypeScript / npm. One modular Spring Boot application and worker; PostgreSQL/Flyway, Redis, RabbitMQ, private Drive storage and SMTP. CI Java 17 / Node 22; deploy job disabled.
-
-## Ownership manifest
-
-| Unit | Responsibility | UC | Backend packages | Design folder |
-|---|---|---|---|---|
-| U01 | Account & Access | 01–12 | [identity](../../../backend/src/main/java/edu/aiplatform/identity) | [u01-account-and-access](../../construction/u01-account-and-access) |
-| U02 | Audit | 13 | [audit](../../../backend/src/main/java/edu/aiplatform/audit) | [u02-audit-job-and-outbox](../../construction/u02-audit-job-and-outbox) |
-| U03 | Job and Settings | 14–15 | [files](../../../backend/src/main/java/edu/aiplatform/files), [jobs](../../../backend/src/main/java/edu/aiplatform/jobs), [settings](../../../backend/src/main/java/edu/aiplatform/settings), [backup](../../../backend/src/main/java/edu/aiplatform/backup) | [u03-job-and-settings](../../construction/u03-job-and-settings) |
-| U04 | Subject Administration | 16–19 | [subjects](../../../backend/src/main/java/edu/aiplatform/subjects) | [u04-subject-administration](../../construction/u04-subject-administration) |
-| U05 | Class & Enrollment | 20–30 | [academics](../../../backend/src/main/java/edu/aiplatform/academics) | [u05-class-enrollment](../../construction/u05-class-enrollment) |
-| U06 | AI Connections | 31–33 | [ai](../../../backend/src/main/java/edu/aiplatform/ai) | [u06-ai-connections](../../construction/u06-ai-connections) |
-| U07 | Assignment Authoring | 34–36 | [assignments](../../../backend/src/main/java/edu/aiplatform/assignments) | [u07-assignment-authoring](../../construction/u07-assignment-authoring) |
-| U08 | Assignment Work | 37–41 | [assignmentwork](../../../backend/src/main/java/edu/aiplatform/assignmentwork) | [u08-assignment-work](../../construction/u08-assignment-work) |
-| U09 | Assignment Grading | 42–45 | [grading](../../../backend/src/main/java/edu/aiplatform/grading) | [u09-assignment-grading](../../construction/u09-assignment-grading) |
-| U10 | Quiz Authoring | 46–48 | [quizzes](../../../backend/src/main/java/edu/aiplatform/quizzes) | [u10-quiz-authoring](../../construction/u10-quiz-authoring) |
-| U11 | Quiz Practice | 49–52 | [quizpractice](../../../backend/src/main/java/edu/aiplatform/quizpractice) | [u11-quiz-practice](../../construction/u11-quiz-practice) |
-| U12 | Group Assignment | 53–57 | [groups](../../../backend/src/main/java/edu/aiplatform/groups), [groupdocs](../../../backend/src/main/java/edu/aiplatform/groupdocs) | [u12-group-assignment](../../construction/u12-group-assignment) |
-| U13 | Reference Materials | 58–62 | [materials](../../../backend/src/main/java/edu/aiplatform/materials) | [u13-reference-materials](../../construction/u13-reference-materials) |
-| U14 | Announcements & Notifications | 63–65 | [announcements](../../../backend/src/main/java/edu/aiplatform/announcements), [notifications](../../../backend/src/main/java/edu/aiplatform/notifications) | [u14-announcements-and-notifications](../../construction/u14-announcements-and-notifications) |
-| U15 | Admin Dashboard | 66 | [admindashboard](../../../backend/src/main/java/edu/aiplatform/admindashboard) | [u15-admin-dashboard](../../construction/u15-admin-dashboard) |
+Verification: [refactor results and limits](../../construction/build-and-test/2026-10-30-package-moves-only-results.md). Source inventory does not imply full UC/runtime/provider acceptance.
 
 ## U01 — Account & Access
 
-FR: FR-001, FR-002, FR-015; primary UC 01–12. Source present; runtime/acceptance pending.
+Primary UC 01–12; FR-001, FR-002, FR-015.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/identity/contract/AccountContact.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AccountContact.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/AccountStatus.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AccountStatus.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/Actions.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Actions.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/Actor.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Actor.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/AuthorizationDecision.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AuthorizationDecision.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/IAccountLookup.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IAccountLookup.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/IAuthorization.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IAuthorization.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/IClassScope.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IClassScope.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/IMail.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IMail.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/ISubjectScope.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ISubjectScope.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/MailMessage.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/MailMessage.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/ResourceRef.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ResourceRef.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/Role.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Role.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/ScopeKind.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ScopeKind.java)
+| Source | Trách nhiệm |
+|---|---|
+| [identity/controller](../../../backend/src/main/java/edu/aiplatform/identity/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [identity/service](../../../backend/src/main/java/edu/aiplatform/identity/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [identity/repository](../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [identity/model](../../../backend/src/main/java/edu/aiplatform/identity/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [identity/integration](../../../backend/src/main/java/edu/aiplatform/identity/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [identity/config](../../../backend/src/main/java/edu/aiplatform/identity/config) | Properties, cấu hình bean và topology. |
+| [identity/contract](../../../backend/src/main/java/edu/aiplatform/identity/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/identity/web/AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/AdminAccountController.java)
-- [backend/src/main/java/edu/aiplatform/identity/web/AuthController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/AuthController.java)
-- [backend/src/main/java/edu/aiplatform/identity/web/MeController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/MeController.java)
-- [backend/src/main/java/edu/aiplatform/identity/web/OtpFlowController.java](../../../backend/src/main/java/edu/aiplatform/identity/web/OtpFlowController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/identity/V20260925_0930__create_accounts.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0930__create_accounts.sql)
-- [backend/src/main/resources/db/migration/identity/V20260925_0931__add_audit_actor_fk.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0931__add_audit_actor_fk.sql)
+- [AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AdminAccountController.java)
+- [AuthController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AuthController.java)
+- [MeController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/MeController.java)
+- [OtpFlowController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/OtpFlowController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/identity/application/AccountAdminServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AccountAdminServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/AccountImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AccountImportServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/AccountLookupAndPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AccountLookupAndPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/AdminDashboardPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AdminDashboardPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AuthorizationServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/AuthServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/AuthServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/GradingPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/GradingPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/McpPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/McpPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/NotificationAccountLookupTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/NotificationAccountLookupTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/OtpMailHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/OtpMailHandlerTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/OtpServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/OtpServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/PasswordCompletionTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/PasswordCompletionTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/ProfileAndPasswordChangeTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/ProfileAndPasswordChangeTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/application/SessionAuthorityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/application/SessionAuthorityTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/AccountRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/AccountRepositoryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/AccountRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/AccountRepositoryTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/AccountTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/AccountTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/EmailPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/EmailPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/PasswordPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/PasswordPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/domain/ProfilePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/domain/ProfilePolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/infrastructure/JwtServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/infrastructure/JwtServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/infrastructure/OtpStoresTest.java](../../../backend/src/test/java/edu/aiplatform/identity/infrastructure/OtpStoresTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/infrastructure/RequestThrottleIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/infrastructure/RequestThrottleIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/infrastructure/SessionStoreIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/infrastructure/SessionStoreIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/infrastructure/SessionStoreTest.java](../../../backend/src/test/java/edu/aiplatform/identity/infrastructure/SessionStoreTest.java)
-- [backend/src/test/java/edu/aiplatform/identity/web/IdentityWebSecurityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/web/IdentityWebSecurityTest.java)
+- [IdentityWebSecurityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/controller/IdentityWebSecurityTest.java)
+- [JwtServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/JwtServiceTest.java)
+- [OtpStoresTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/OtpStoresTest.java)
+- [RequestThrottleIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/RequestThrottleIntegrationTest.java)
+- [SessionStoreIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/SessionStoreIntegrationTest.java)
+- [SessionStoreTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/SessionStoreTest.java)
+- [AccountTest.java](../../../backend/src/test/java/edu/aiplatform/identity/model/AccountTest.java)
+- [EmailPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/model/EmailPolicyTest.java)
+- [PasswordPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/model/PasswordPolicyTest.java)
+- [ProfilePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/model/ProfilePolicyTest.java)
+- [AccountRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/repository/AccountRepositoryIntegrationTest.java)
+- [AccountRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/identity/repository/AccountRepositoryTest.java)
+- [AccountAdminServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountAdminServiceTest.java)
+- [AccountImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountImportServiceTest.java)
+- [AccountLookupAndPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountLookupAndPolicyTest.java)
+- [AdminDashboardPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AdminDashboardPolicyTest.java)
+- [AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthorizationServiceTest.java)
+- [AuthServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthServiceTest.java)
+- [GradingPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/GradingPolicyTest.java)
+- [McpPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpPolicyTest.java)
+- [McpRolePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpRolePolicyTest.java)
+- [NotificationAccountLookupTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/NotificationAccountLookupTest.java)
+- [OtpMailHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/OtpMailHandlerTest.java)
+- [OtpServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/OtpServiceTest.java)
+- [PasswordCompletionTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/PasswordCompletionTest.java)
+- [ProfileAndPasswordChangeTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/ProfileAndPasswordChangeTest.java)
+- [SessionAuthorityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/SessionAuthorityTest.java)
 
+### Migrations
+
+- [V20260925_0930__create_accounts.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0930__create_accounts.sql)
+- [V20260925_0931__add_audit_actor_fk.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0931__add_audit_actor_fk.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [identity](../../../frontend/src/features/identity) | [api](../../../frontend/src/features/identity/api) | [model](../../../frontend/src/features/identity/model) | [pages](../../../frontend/src/features/identity/pages) | [components](../../../frontend/src/features/identity/components) | [hooks](../../../frontend/src/features/identity/hooks) |
 
 ## U02 — Audit
 
-FR: FR-014; primary UC 13. Source present; runtime/acceptance pending.
+Primary UC 13; FR-014.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/audit/contract/AuditEvent.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditEvent.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/AuditFilter.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditFilter.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/AuditLogView.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditLogView.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/AuditResult.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditResult.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/IAudit.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAudit.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/IAuditQuery.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAuditQuery.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/IAuditStats.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAuditStats.java)
+| Source | Trách nhiệm |
+|---|---|
+| [audit/controller](../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [audit/service](../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [audit/repository](../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/model](../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [audit/contract](../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/audit/web/AuditController.java](../../../backend/src/main/java/edu/aiplatform/audit/web/AuditController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/audit/V20260925_0900__create_audit_logs.sql](../../../backend/src/main/resources/db/migration/audit/V20260925_0900__create_audit_logs.sql)
+- [AuditController.java](../../../backend/src/main/java/edu/aiplatform/audit/controller/AuditController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/audit/application/AuditQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/audit/application/AuditQueryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/audit/application/AuditStoreTest.java](../../../backend/src/test/java/edu/aiplatform/audit/application/AuditStoreTest.java)
-- [backend/src/test/java/edu/aiplatform/audit/domain/AuditLogRepositoryWhereTest.java](../../../backend/src/test/java/edu/aiplatform/audit/domain/AuditLogRepositoryWhereTest.java)
-- [backend/src/test/java/edu/aiplatform/audit/web/AuditControllerTest.java](../../../backend/src/test/java/edu/aiplatform/audit/web/AuditControllerTest.java)
+- [AuditControllerTest.java](../../../backend/src/test/java/edu/aiplatform/audit/controller/AuditControllerTest.java)
+- [AuditLogRepositoryWhereTest.java](../../../backend/src/test/java/edu/aiplatform/audit/repository/AuditLogRepositoryWhereTest.java)
+- [AuditQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/audit/service/AuditQueryServiceTest.java)
+- [AuditStoreTest.java](../../../backend/src/test/java/edu/aiplatform/audit/service/AuditStoreTest.java)
 
+### Migrations
+
+- [V20260925_0900__create_audit_logs.sql](../../../backend/src/main/resources/db/migration/audit/V20260925_0900__create_audit_logs.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [audit](../../../frontend/src/features/audit) | [api](../../../frontend/src/features/audit/api) | [model](../../../frontend/src/features/audit/model) | [pages](../../../frontend/src/features/audit/pages) | [components](../../../frontend/src/features/audit/components) | — |
 
 ## U03 — Job and Settings
 
-FR: FR-013, FR-033, FR-038; primary UC 14–15. Source present; runtime/acceptance pending.
+Primary UC 14–15; FR-013, FR-033, FR-038.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardRunView.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardRunView.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardSummary.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardSummary.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/BackupRunView.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupRunView.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/BackupState.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupState.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/IBackupStatus.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/IBackupStatus.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java](../../../backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/DownloadToken.java](../../../backend/src/main/java/edu/aiplatform/files/contract/DownloadToken.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/FileRef.java](../../../backend/src/main/java/edu/aiplatform/files/contract/FileRef.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/FileUpload.java](../../../backend/src/main/java/edu/aiplatform/files/contract/FileUpload.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/IArtifact.java](../../../backend/src/main/java/edu/aiplatform/files/contract/IArtifact.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/StoredFileInfo.java](../../../backend/src/main/java/edu/aiplatform/files/contract/StoredFileInfo.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/DomainEvent.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/DomainEvent.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/EventTypes.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/EventTypes.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/IEventPublisher.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IEventPublisher.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/IJob.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IJob.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/IJobHandler.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IJobHandler.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/IPendingSweeper.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IPendingSweeper.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/IScheduledScanner.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IScheduledScanner.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/JobMessage.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobMessage.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/JobQueue.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobQueue.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/JobTypes.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobTypes.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/PendingJob.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/PendingJob.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/RetryableJobException.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/RetryableJobException.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/ISettings.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/ISettings.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/ISettingsSectionProvider.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/ISettingsSectionProvider.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/SettingDefinition.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingDefinition.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/SettingGroup.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingGroup.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/SettingKey.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingKey.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/SettingType.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingType.java)
+| Source | Trách nhiệm |
+|---|---|
+| [files/controller](../../../backend/src/main/java/edu/aiplatform/files/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [files/service](../../../backend/src/main/java/edu/aiplatform/files/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [files/model](../../../backend/src/main/java/edu/aiplatform/files/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [files/integration](../../../backend/src/main/java/edu/aiplatform/files/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [files/config](../../../backend/src/main/java/edu/aiplatform/files/config) | Properties, cấu hình bean và topology. |
+| [files/contract](../../../backend/src/main/java/edu/aiplatform/files/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [jobs/service](../../../backend/src/main/java/edu/aiplatform/jobs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [jobs/integration](../../../backend/src/main/java/edu/aiplatform/jobs/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [jobs/config](../../../backend/src/main/java/edu/aiplatform/jobs/config) | Properties, cấu hình bean và topology. |
+| [jobs/contract](../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [settings/controller](../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [settings/service](../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [settings/repository](../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/model](../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [settings/contract](../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [backup/service](../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [backup/repository](../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/model](../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [backup/integration](../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [backup/config](../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |
+| [backup/contract](../../../backend/src/main/java/edu/aiplatform/backup/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/files/web/DownloadController.java](../../../backend/src/main/java/edu/aiplatform/files/web/DownloadController.java)
-- [backend/src/main/java/edu/aiplatform/files/web/FileController.java](../../../backend/src/main/java/edu/aiplatform/files/web/FileController.java)
-- [backend/src/main/java/edu/aiplatform/settings/web/SettingsController.java](../../../backend/src/main/java/edu/aiplatform/settings/web/SettingsController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/backup/V20260925_0920__create_backup_tables.sql](../../../backend/src/main/resources/db/migration/backup/V20260925_0920__create_backup_tables.sql)
-- [backend/src/main/resources/db/migration/settings/V20260925_0910__create_system_settings.sql](../../../backend/src/main/resources/db/migration/settings/V20260925_0910__create_system_settings.sql)
+- [DownloadController.java](../../../backend/src/main/java/edu/aiplatform/files/controller/DownloadController.java)
+- [FileController.java](../../../backend/src/main/java/edu/aiplatform/files/controller/FileController.java)
+- [SettingsController.java](../../../backend/src/main/java/edu/aiplatform/settings/controller/SettingsController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupDashboardContractTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupDashboardContractTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupEncryptorTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupEncryptorTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupJobHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupJobHandlerTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupRetentionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupRetentionServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupScheduleScannerTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupScheduleScannerTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/application/BackupStatusServiceTest.java](../../../backend/src/test/java/edu/aiplatform/backup/application/BackupStatusServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/infrastructure/BackupDashboardStatusIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/backup/infrastructure/BackupDashboardStatusIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/backup/infrastructure/LocalBackupStoreTest.java](../../../backend/src/test/java/edu/aiplatform/backup/infrastructure/LocalBackupStoreTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/ArtifactServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/ArtifactServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/ContentInspectorTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/ContentInspectorTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/DownloadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/DownloadServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/DownloadTokenServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/DownloadTokenServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/FileRefSignerTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/FileRefSignerTest.java)
-- [backend/src/test/java/edu/aiplatform/files/application/UploadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/application/UploadServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/files/domain/FileNameSanitizerTest.java](../../../backend/src/test/java/edu/aiplatform/files/domain/FileNameSanitizerTest.java)
-- [backend/src/test/java/edu/aiplatform/files/domain/PurposePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/files/domain/PurposePolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/files/infrastructure/LocalFolderStorageAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/files/infrastructure/LocalFolderStorageAdapterTest.java)
-- [backend/src/test/java/edu/aiplatform/jobs/application/EventPublisherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/application/EventPublisherTest.java)
-- [backend/src/test/java/edu/aiplatform/jobs/application/JobDispatcherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/application/JobDispatcherTest.java)
-- [backend/src/test/java/edu/aiplatform/jobs/application/JobHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/application/JobHandlerRegistryTest.java)
-- [backend/src/test/java/edu/aiplatform/jobs/application/JobPublisherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/application/JobPublisherTest.java)
-- [backend/src/test/java/edu/aiplatform/jobs/application/RunnersTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/application/RunnersTest.java)
-- [backend/src/test/java/edu/aiplatform/settings/application/SettingsSectionRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/settings/application/SettingsSectionRegistryTest.java)
-- [backend/src/test/java/edu/aiplatform/settings/application/SettingsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/settings/application/SettingsServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/settings/domain/SettingValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/settings/domain/SettingValidatorTest.java)
+- [BackupDashboardUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java)
+- [BackupConcurrentDeliveryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/backup/integration/BackupConcurrentDeliveryIntegrationTest.java)
+- [BackupDashboardStatusIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/backup/integration/BackupDashboardStatusIntegrationTest.java)
+- [LocalBackupStoreTest.java](../../../backend/src/test/java/edu/aiplatform/backup/integration/LocalBackupStoreTest.java)
+- [BackupDashboardContractTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupDashboardContractTest.java)
+- [BackupEncryptorTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupEncryptorTest.java)
+- [BackupJobHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupJobHandlerTest.java)
+- [BackupRetentionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupRetentionServiceTest.java)
+- [BackupScheduleScannerTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupScheduleScannerTest.java)
+- [BackupStatusServiceTest.java](../../../backend/src/test/java/edu/aiplatform/backup/service/BackupStatusServiceTest.java)
+- [LocalFolderStorageAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/files/integration/LocalFolderStorageAdapterTest.java)
+- [FileNameSanitizerTest.java](../../../backend/src/test/java/edu/aiplatform/files/model/FileNameSanitizerTest.java)
+- [PurposePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/files/model/PurposePolicyTest.java)
+- [ArtifactServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/ArtifactServiceTest.java)
+- [ContentInspectorTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/ContentInspectorTest.java)
+- [DownloadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadServiceTest.java)
+- [DownloadTokenServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadTokenServiceTest.java)
+- [FileRefSignerTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/FileRefSignerTest.java)
+- [UploadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/UploadServiceTest.java)
+- [JobListenerTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/integration/JobListenerTest.java)
+- [EventPublisherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/EventPublisherTest.java)
+- [JobDispatcherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/JobDispatcherTest.java)
+- [JobHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/JobHandlerRegistryTest.java)
+- [JobPublisherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/JobPublisherTest.java)
+- [RunnersTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/RunnersTest.java)
+- [SettingValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/settings/model/SettingValidatorTest.java)
+- [SettingsSectionRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsSectionRegistryTest.java)
+- [SettingsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsServiceTest.java)
 
+### Migrations
+
+- [V20260925_0920__create_backup_tables.sql](../../../backend/src/main/resources/db/migration/backup/V20260925_0920__create_backup_tables.sql)
+- [V20260925_0910__create_system_settings.sql](../../../backend/src/main/resources/db/migration/settings/V20260925_0910__create_system_settings.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [files](../../../frontend/src/features/files) | [api](../../../frontend/src/features/files/api) | [model](../../../frontend/src/features/files/model) | — | [components](../../../frontend/src/features/files/components) | [hooks](../../../frontend/src/features/files/hooks) |
+| [settings](../../../frontend/src/features/settings) | [api](../../../frontend/src/features/settings/api) | [model](../../../frontend/src/features/settings/model) | [pages](../../../frontend/src/features/settings/pages) | [components](../../../frontend/src/features/settings/components) | — |
 
 ## U04 — Subject Administration
 
-FR: FR-003; primary UC 16–19. Source present; runtime/acceptance pending.
+Primary UC 16–19; FR-003.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectClasses.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectClasses.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectMutationGuard.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectMutationGuard.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectQuery.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectQuery.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/SubjectClassSummary.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectClassSummary.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/SubjectRef.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectRef.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/SubjectStatus.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectStatus.java)
+| Source | Trách nhiệm |
+|---|---|
+| [subjects/controller](../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [subjects/service](../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [subjects/model](../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [subjects/dto](../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
+| [subjects/contract](../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/subjects/web/SubjectAdminController.java](../../../backend/src/main/java/edu/aiplatform/subjects/web/SubjectAdminController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/subjects/V20260925_1000__create_subjects.sql](../../../backend/src/main/resources/db/migration/subjects/V20260925_1000__create_subjects.sql)
+- [SubjectAdminController.java](../../../backend/src/main/java/edu/aiplatform/subjects/controller/SubjectAdminController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectAdminCommandTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectAdminCommandTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectAdminReadTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectAdminReadTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectAuditTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectAuditTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectClassesReaderTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectClassesReaderTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectContractsWiringTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectContractsWiringTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectMutationGuardTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectMutationGuardTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectQueryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectScopeServiceTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectScopeServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/application/SubjectStatusTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/application/SubjectStatusTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/domain/SubjectCodeTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/domain/SubjectCodeTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/domain/SubjectTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/domain/SubjectTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/infrastructure/SubjectRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/infrastructure/SubjectRepositoryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/subjects/web/SubjectAdminControllerTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/web/SubjectAdminControllerTest.java)
+- [SubjectAdminControllerTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/controller/SubjectAdminControllerTest.java)
+- [SubjectCodeTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/model/SubjectCodeTest.java)
+- [SubjectTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/model/SubjectTest.java)
+- [SubjectRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/repository/SubjectRepositoryIntegrationTest.java)
+- [SubjectAdminCommandTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectAdminCommandTest.java)
+- [SubjectAdminReadTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectAdminReadTest.java)
+- [SubjectAuditTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectAuditTest.java)
+- [SubjectClassesReaderTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectClassesReaderTest.java)
+- [SubjectContractsWiringTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectContractsWiringTest.java)
+- [SubjectMutationGuardTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectMutationGuardTest.java)
+- [SubjectQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectQueryServiceTest.java)
+- [SubjectScopeServiceTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectScopeServiceTest.java)
+- [SubjectStatusTest.java](../../../backend/src/test/java/edu/aiplatform/subjects/service/SubjectStatusTest.java)
 
+### Migrations
+
+- [V20260925_1000__create_subjects.sql](../../../backend/src/main/resources/db/migration/subjects/V20260925_1000__create_subjects.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [subjects](../../../frontend/src/features/subjects) | [api](../../../frontend/src/features/subjects/api) | [model](../../../frontend/src/features/subjects/model) | [pages](../../../frontend/src/features/subjects/pages) | [components](../../../frontend/src/features/subjects/components) | [hooks](../../../frontend/src/features/subjects/hooks) |
 
 ## U05 — Class & Enrollment
 
-FR: FR-003, FR-005, FR-024; primary UC 20–30. Source present; runtime/acceptance pending.
+Primary UC 20–30; FR-003, FR-005, FR-024.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/academics/contract/ClassRef.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/ClassRef.java)
-- [backend/src/main/java/edu/aiplatform/academics/contract/ClassStatus.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/ClassStatus.java)
-- [backend/src/main/java/edu/aiplatform/academics/contract/IClassAccess.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/IClassAccess.java)
+| Source | Trách nhiệm |
+|---|---|
+| [academics/controller](../../../backend/src/main/java/edu/aiplatform/academics/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [academics/service](../../../backend/src/main/java/edu/aiplatform/academics/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [academics/repository](../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [academics/model](../../../backend/src/main/java/edu/aiplatform/academics/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [academics/dto](../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
+| [academics/contract](../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/academics/web/AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/web/AcademicsController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/classes/V20260925_1100__create_classes_enrollments.sql](../../../backend/src/main/resources/db/migration/classes/V20260925_1100__create_classes_enrollments.sql)
-- [backend/src/main/resources/db/migration/classes/V20261027_1100__allow_open_class_without_teacher.sql](../../../backend/src/main/resources/db/migration/classes/V20261027_1100__allow_open_class_without_teacher.sql)
+- [AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/academics/application/AcademicsAccessAndReadTest.java](../../../backend/src/test/java/edu/aiplatform/academics/application/AcademicsAccessAndReadTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/application/AcademicsBatchTransactionTest.java](../../../backend/src/test/java/edu/aiplatform/academics/application/AcademicsBatchTransactionTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/application/AcademicsMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/academics/application/AcademicsMcpToolsTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/application/AcademicsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/application/AcademicsServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/domain/CourseClassTest.java](../../../backend/src/test/java/edu/aiplatform/academics/domain/CourseClassTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/domain/EnrollmentListParserTest.java](../../../backend/src/test/java/edu/aiplatform/academics/domain/EnrollmentListParserTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/domain/EnrollmentTest.java](../../../backend/src/test/java/edu/aiplatform/academics/domain/EnrollmentTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsContractAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsContractAdapterTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsPersistenceTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsReadRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/academics/infrastructure/AcademicsReadRepositoryTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/web/AcademicsApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/academics/web/AcademicsApiContractTest.java)
-- [backend/src/test/java/edu/aiplatform/academics/web/AcademicsControllerTest.java](../../../backend/src/test/java/edu/aiplatform/academics/web/AcademicsControllerTest.java)
+- [AcademicsApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/academics/controller/AcademicsApiContractTest.java)
+- [AcademicsControllerTest.java](../../../backend/src/test/java/edu/aiplatform/academics/controller/AcademicsControllerTest.java)
+- [AcademicsPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/integration/AcademicsPersistenceTest.java)
+- [CourseClassTest.java](../../../backend/src/test/java/edu/aiplatform/academics/model/CourseClassTest.java)
+- [EnrollmentListParserTest.java](../../../backend/src/test/java/edu/aiplatform/academics/model/EnrollmentListParserTest.java)
+- [EnrollmentTest.java](../../../backend/src/test/java/edu/aiplatform/academics/model/EnrollmentTest.java)
+- [AcademicsReadRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/academics/repository/AcademicsReadRepositoryTest.java)
+- [AcademicsAccessAndReadTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsAccessAndReadTest.java)
+- [AcademicsBatchTransactionTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsBatchTransactionTest.java)
+- [AcademicsContractAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsContractAdapterTest.java)
+- [AcademicsMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsMcpToolsTest.java)
+- [AcademicsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsServiceTest.java)
 
+### Migrations
+
+- [V20260925_1100__create_classes_enrollments.sql](../../../backend/src/main/resources/db/migration/classes/V20260925_1100__create_classes_enrollments.sql)
+- [V20261027_1100__allow_open_class_without_teacher.sql](../../../backend/src/main/resources/db/migration/classes/V20261027_1100__allow_open_class_without_teacher.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [academics](../../../frontend/src/features/academics) | [api](../../../frontend/src/features/academics/api) | [model](../../../frontend/src/features/academics/model) | [pages](../../../frontend/src/features/academics/pages) | [components](../../../frontend/src/features/academics/components) | [hooks](../../../frontend/src/features/academics/hooks) |
 
 ## U06 — AI Connections
 
-FR: FR-012, FR-021, FR-034, FR-035, FR-036, FR-037; primary UC 31–33. Source present; runtime/acceptance pending.
+Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiPrompt.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiPrompt.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiProvider.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiProvider.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiSource.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiSource.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTaskFailure.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskFailure.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTaskRequest.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskRequest.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTaskResult.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskResult.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTaskState.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskState.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTaskView.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskView.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiTokenEstimate.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTokenEstimate.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AiUsageSummary.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiUsageSummary.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/ApplyOutcome.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/ApplyOutcome.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceFile.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceFile.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceText.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceText.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IAiTask.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAiTask.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IAiTaskResultHandler.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAiTaskResultHandler.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IAssignmentSourceTextExtractor.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAssignmentSourceTextExtractor.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IMcpToolProvider.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IMcpToolProvider.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IMcpWriteRequest.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IMcpWriteRequest.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/IReferenceMaterial.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IReferenceMaterial.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/MaterialText.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/MaterialText.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpFingerprint.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpFingerprint.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpInput.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpInput.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpSchemas.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpSchemas.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpToolDefinition.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolDefinition.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpToolKind.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolKind.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/McpToolResult.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolResult.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/SelectableMaterial.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/SelectableMaterial.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/UsageMeasurement.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/UsageMeasurement.java)
+| Source | Trách nhiệm |
+|---|---|
+| [ai/controller](../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [ai/service](../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [ai/repository](../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [ai/model](../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [ai/integration](../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [ai/config](../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
+| [ai/contract](../../../backend/src/main/java/edu/aiplatform/ai/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/ai/web/AiAdminController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiAdminController.java)
-- [backend/src/main/java/edu/aiplatform/ai/web/AiConnectionController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiConnectionController.java)
-- [backend/src/main/java/edu/aiplatform/ai/web/AiUsageController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/AiUsageController.java)
-- [backend/src/main/java/edu/aiplatform/ai/web/McpController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/McpController.java)
-- [backend/src/main/java/edu/aiplatform/ai/web/McpCredentialController.java](../../../backend/src/main/java/edu/aiplatform/ai/web/McpCredentialController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/ai/V20260925_1200__create_ai_tables.sql](../../../backend/src/main/resources/db/migration/ai/V20260925_1200__create_ai_tables.sql)
-- [backend/src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql](../../../backend/src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql)
-- [backend/src/main/resources/db/migration/ai/V20261027_0900__allow_many_institutional_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_0900__allow_many_institutional_keys.sql)
-- [backend/src/main/resources/db/migration/ai/V20261027_1000__store_mcp_token_ciphertext.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_1000__store_mcp_token_ciphertext.sql)
+- [AiAdminController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiAdminController.java)
+- [AiConnectionController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiConnectionController.java)
+- [AiUsageController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/AiUsageController.java)
+- [McpController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/McpController.java)
+- [McpCredentialController.java](../../../backend/src/main/java/edu/aiplatform/ai/controller/McpCredentialController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/ai/application/AdminAiMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AdminAiMcpToolsTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiConnectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiConnectionServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiSettingsSectionsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiSettingsSectionsTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiSourceServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiSourceServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiTaskFlowTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiTaskFlowTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiTaskResultHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiTaskResultHandlerRegistryTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/AiUsageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/AiUsageServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/KeyCipherAndCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/KeyCipherAndCatalogTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/McpCredentialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/McpCredentialServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/McpServerTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/McpServerTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/McpStaffAdmissionTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/McpStaffAdmissionTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/McpStaffCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/McpStaffCatalogTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/McpWriteRequestIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/McpWriteRequestIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/application/QuotaServicesTest.java](../../../backend/src/test/java/edu/aiplatform/ai/application/QuotaServicesTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/contract/AiTokenEstimateTest.java](../../../backend/src/test/java/edu/aiplatform/ai/contract/AiTokenEstimateTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/contract/McpInputTest.java](../../../backend/src/test/java/edu/aiplatform/ai/contract/McpInputTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/domain/AiDomainTest.java](../../../backend/src/test/java/edu/aiplatform/ai/domain/AiDomainTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/domain/AiRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/domain/AiRepositoriesIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/infrastructure/HttpProviderGatewayTest.java](../../../backend/src/test/java/edu/aiplatform/ai/infrastructure/HttpProviderGatewayTest.java)
-- [backend/src/test/java/edu/aiplatform/ai/web/AiControllersTest.java](../../../backend/src/test/java/edu/aiplatform/ai/web/AiControllersTest.java)
+- [AiTokenEstimateTest.java](../../../backend/src/test/java/edu/aiplatform/ai/contract/AiTokenEstimateTest.java)
+- [McpInputTest.java](../../../backend/src/test/java/edu/aiplatform/ai/contract/McpInputTest.java)
+- [AiControllersTest.java](../../../backend/src/test/java/edu/aiplatform/ai/controller/AiControllersTest.java)
+- [HttpProviderGatewayTest.java](../../../backend/src/test/java/edu/aiplatform/ai/integration/HttpProviderGatewayTest.java)
+- [AiDomainTest.java](../../../backend/src/test/java/edu/aiplatform/ai/model/AiDomainTest.java)
+- [AiRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/model/AiRepositoriesIntegrationTest.java)
+- [AdminAiMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AdminAiMcpToolsTest.java)
+- [AiConnectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiConnectionServiceTest.java)
+- [AiSettingsSectionsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiSettingsSectionsTest.java)
+- [AiSourceServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiSourceServiceTest.java)
+- [AiTaskFlowTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskFlowTest.java)
+- [AiTaskResultHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskResultHandlerRegistryTest.java)
+- [AiUsageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiUsageServiceTest.java)
+- [KeyCipherAndCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/KeyCipherAndCatalogTest.java)
+- [McpCredentialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpCredentialServiceTest.java)
+- [McpServerTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpServerTest.java)
+- [McpStaffAdmissionTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpStaffAdmissionTest.java)
+- [McpStaffCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpStaffCatalogTest.java)
+- [McpWriteRequestIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpWriteRequestIntegrationTest.java)
+- [QuotaServicesTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/QuotaServicesTest.java)
 
+### Migrations
+
+- [V20260925_1200__create_ai_tables.sql](../../../backend/src/main/resources/db/migration/ai/V20260925_1200__create_ai_tables.sql)
+- [V20261026_1800__create_mcp_write_requests.sql](../../../backend/src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql)
+- [V20261027_0900__allow_many_institutional_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_0900__allow_many_institutional_keys.sql)
+- [V20261027_1000__store_mcp_token_ciphertext.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_1000__store_mcp_token_ciphertext.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [ai](../../../frontend/src/features/ai) | [api](../../../frontend/src/features/ai/api) | [model](../../../frontend/src/features/ai/model) | [pages](../../../frontend/src/features/ai/pages) | [components](../../../frontend/src/features/ai/components) | — |
 
 ## U07 — Assignment Authoring
 
-FR: FR-006, FR-007, FR-016, FR-017, FR-027, FR-028; primary UC 34–36. Source present; runtime/acceptance pending.
+Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentContent.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentContent.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentDayCount.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentDayCount.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentScope.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentScope.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentStatus.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentStatus.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentView.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentView.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/BlockOrigin.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/BlockOrigin.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/BlockType.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/BlockType.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/CriterionKind.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/CriterionKind.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DiagramType.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DiagramType.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DocumentBlock.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentBlock.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DocumentFiles.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentFiles.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DocumentModel.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentModel.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DocumentPart.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentPart.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/DocxImportPreview.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocxImportPreview.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/GradingMode.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/GradingMode.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentLifecycleListener.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentLifecycleListener.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentQuery.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentQuery.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramLinker.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramLinker.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramResolver.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramResolver.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IDocumentModel.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDocumentModel.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IDocx.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDocx.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IGroupAssignmentSupport.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IGroupAssignmentSupport.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/IRubric.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IRubric.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/ReadinessResult.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ReadinessResult.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/RubricCriterion.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricCriterion.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/RubricItem.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricItem.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/RubricScore.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricScore.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/RubricView.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricView.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionMode.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionMode.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionWindow.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionWindow.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/ValidationIssue.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ValidationIssue.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/ValidationResult.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ValidationResult.java)
+| Source | Trách nhiệm |
+|---|---|
+| [assignments/controller](../../../backend/src/main/java/edu/aiplatform/assignments/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [assignments/service](../../../backend/src/main/java/edu/aiplatform/assignments/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [assignments/repository](../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignments/model](../../../backend/src/main/java/edu/aiplatform/assignments/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [assignments/dto](../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
+| [assignments/contract](../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/assignments/web/AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/AssignmentAiDraftController.java)
-- [backend/src/main/java/edu/aiplatform/assignments/web/AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/AssignmentController.java)
-- [backend/src/main/java/edu/aiplatform/assignments/web/ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/ClassAssignmentController.java)
-- [backend/src/main/java/edu/aiplatform/assignments/web/RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/RubricController.java)
-- [backend/src/main/java/edu/aiplatform/assignments/web/SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/web/SubjectAssignmentController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/assignments/V20260925_1300__create_assignment_tables.sql](../../../backend/src/main/resources/db/migration/assignments/V20260925_1300__create_assignment_tables.sql)
+- [AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java)
+- [AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentController.java)
+- [ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java)
+- [RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/RubricController.java)
+- [SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/SubjectAssignmentController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentAiDraftServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentAuthoringServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentCopyServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftGenerationSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftGenerationSchemaTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftPromptBuilderTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftPromptBuilderTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentDraftValidatorTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentMcpAuthoringServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentMcpToolsTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentPublicationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentPublicationServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/AssignmentQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/AssignmentQueryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/DocumentModelServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/DocumentModelServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/application/DocxRoundTripTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/application/DocxRoundTripTest.java)
-- [backend/src/test/java/edu/aiplatform/assignments/domain/PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/domain/PartCalculatorTest.java)
+- [PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/PartCalculatorTest.java)
+- [AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiDraftServiceTest.java)
+- [AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAuthoringServiceTest.java)
+- [AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentCopyServiceTest.java)
+- [AssignmentDraftGenerationSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentDraftGenerationSchemaTest.java)
+- [AssignmentDraftPromptBuilderTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentDraftPromptBuilderTest.java)
+- [AssignmentDraftValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentDraftValidatorTest.java)
+- [AssignmentMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentMcpAuthoringServiceTest.java)
+- [AssignmentMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentMcpToolsTest.java)
+- [AssignmentPublicationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentPublicationServiceTest.java)
+- [AssignmentQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentQueryServiceTest.java)
+- [DocumentModelServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/DocumentModelServiceTest.java)
+- [DocxRoundTripTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/DocxRoundTripTest.java)
 
+### Migrations
+
+- [V20260925_1300__create_assignment_tables.sql](../../../backend/src/main/resources/db/migration/assignments/V20260925_1300__create_assignment_tables.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [assignments](../../../frontend/src/features/assignments) | [api](../../../frontend/src/features/assignments/api) | [model](../../../frontend/src/features/assignments/model) | [pages](../../../frontend/src/features/assignments/pages) | [components](../../../frontend/src/features/assignments/components) | [hooks](../../../frontend/src/features/assignments/hooks) |
 
 ## U08 — Assignment Work
 
-FR: FR-018, FR-030, FR-039; primary UC 37–41. Source present; runtime/acceptance pending.
+Primary UC 37–41; FR-018, FR-030, FR-039.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityEventInput.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityEventInput.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityInterval.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityInterval.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityKind.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityKind.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityPolicyState.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityPolicyState.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivitySummary.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivitySummary.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/AttemptStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/AttemptStatus.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/GroupWorkStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/GroupWorkStatus.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityQuery.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityQuery.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityWrite.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityWrite.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IGroupWorkStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IGroupWorkStatus.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IntervalCertainty.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IntervalCertainty.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionListener.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionListener.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionQuery.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionQuery.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/StudentSubmissionStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/StudentSubmissionStatus.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmissionView.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmissionView.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmitMode.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmitMode.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkKind.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkKind.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkRef.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkRef.java)
+| Source | Trách nhiệm |
+|---|---|
+| [assignmentwork/controller](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [assignmentwork/service](../../../backend/src/main/java/edu/aiplatform/assignmentwork/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [assignmentwork/repository](../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignmentwork/model](../../../backend/src/main/java/edu/aiplatform/assignmentwork/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [assignmentwork/dto](../../../backend/src/main/java/edu/aiplatform/assignmentwork/dto) | Kiểu dữ liệu request/response riêng. |
+| [assignmentwork/contract](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/assignmentwork/web/AttemptController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/web/AttemptController.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/web/StudentAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/web/StudentAssignmentController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql)
+- [AttemptController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller/AttemptController.java)
+- [StudentAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller/StudentAssignmentController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/assignmentwork/application/ActivityTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/application/ActivityTest.java)
-- [backend/src/test/java/edu/aiplatform/assignmentwork/application/AttemptServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/application/AttemptServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignmentwork/application/PracticeFeedbackServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/application/PracticeFeedbackServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/assignmentwork/application/StudentAssignmentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/application/StudentAssignmentServiceTest.java)
+- [ActivityTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/ActivityTest.java)
+- [AttemptServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/AttemptServiceTest.java)
+- [PracticeFeedbackConcurrencyIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackConcurrencyIntegrationTest.java)
+- [PracticeFeedbackMcpParityTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackMcpParityTest.java)
+- [PracticeFeedbackServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackServiceTest.java)
+- [StudentAssignmentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignmentwork/service/StudentAssignmentServiceTest.java)
 
+### Migrations
+
+- [V20260925_1400__create_assignment_work_tables.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [assignmentwork](../../../frontend/src/features/assignmentwork) | [api](../../../frontend/src/features/assignmentwork/api) | [model](../../../frontend/src/features/assignmentwork/model) | [pages](../../../frontend/src/features/assignmentwork/pages) | [components](../../../frontend/src/features/assignmentwork/components) | [hooks](../../../frontend/src/features/assignmentwork/hooks) |
 
 ## U09 — Assignment Grading
 
-FR: FR-008, FR-009, FR-020, FR-024; primary UC 42–45. Source present; runtime/acceptance pending.
+Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/grading/contract/GroupSectionAuthor.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSectionAuthor.java)
-- [backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionStatus.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionStatus.java)
-- [backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionView.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionView.java)
-- [backend/src/main/java/edu/aiplatform/grading/contract/IGroupEvaluation.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/IGroupEvaluation.java)
-- [backend/src/main/java/edu/aiplatform/grading/contract/IGroupSubmissionSource.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/IGroupSubmissionSource.java)
+| Source | Trách nhiệm |
+|---|---|
+| [grading/controller](../../../backend/src/main/java/edu/aiplatform/grading/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [grading/service](../../../backend/src/main/java/edu/aiplatform/grading/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [grading/repository](../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [grading/model](../../../backend/src/main/java/edu/aiplatform/grading/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [grading/dto](../../../backend/src/main/java/edu/aiplatform/grading/dto) | Kiểu dữ liệu request/response riêng. |
+| [grading/contract](../../../backend/src/main/java/edu/aiplatform/grading/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/grading/web/EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/EvaluationController.java)
-- [backend/src/main/java/edu/aiplatform/grading/web/GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/GradebookController.java)
-- [backend/src/main/java/edu/aiplatform/grading/web/GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/GradingProposalController.java)
-- [backend/src/main/java/edu/aiplatform/grading/web/MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/MyGradeController.java)
-- [backend/src/main/java/edu/aiplatform/grading/web/SubmissionImageController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/SubmissionImageController.java)
-- [backend/src/main/java/edu/aiplatform/grading/web/SubmissionReviewController.java](../../../backend/src/main/java/edu/aiplatform/grading/web/SubmissionReviewController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/grading/V20260925_1500__create_grading_tables.sql](../../../backend/src/main/resources/db/migration/grading/V20260925_1500__create_grading_tables.sql)
+- [EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/EvaluationController.java)
+- [GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradebookController.java)
+- [GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradingProposalController.java)
+- [MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/MyGradeController.java)
+- [SubmissionImageController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/SubmissionImageController.java)
+- [SubmissionReviewController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/SubmissionReviewController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/grading/application/EvaluationLifecycleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/EvaluationLifecycleServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradebookExporterTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradebookExporterTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradebookServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradebookServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingAccessTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingAccessTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingBatchTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingBatchTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingCommandsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingCommandsTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingMcpBatchServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingMcpBatchServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingMcpQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingMcpQueryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingMcpReplayTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingMcpReplayTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingMcpToolsTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingPromptSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingPromptSchemaTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingProposalResultHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingProposalResultHandlerTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingProposalServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingProposalServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingProposalValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingProposalValidatorTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GradingServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GradingServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/GroupEvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/GroupEvaluationTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/application/SubmissionImageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/application/SubmissionImageServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/contract/stub/GroupSourceUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/grading/contract/stub/GroupSourceUnavailableTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/domain/EvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/domain/EvaluationTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/domain/GradeDistributionCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/domain/GradeDistributionCalculatorTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/infrastructure/EvaluationMappingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/infrastructure/EvaluationMappingTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/infrastructure/EvaluationVersionIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/infrastructure/EvaluationVersionIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/grading/infrastructure/GradingPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/infrastructure/GradingPersistenceTest.java)
+- [GroupSourceUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/grading/contract/stub/GroupSourceUnavailableTest.java)
+- [GradingPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/integration/GradingPersistenceTest.java)
+- [EvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EvaluationTest.java)
+- [GradeDistributionCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/GradeDistributionCalculatorTest.java)
+- [EvaluationMappingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationMappingTest.java)
+- [EvaluationVersionIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationVersionIntegrationTest.java)
+- [EvaluationLifecycleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/EvaluationLifecycleServiceTest.java)
+- [GradebookExporterTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookExporterTest.java)
+- [GradebookServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookServiceTest.java)
+- [GradingAccessTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingAccessTest.java)
+- [GradingBatchTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingBatchTest.java)
+- [GradingCommandsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingCommandsTest.java)
+- [GradingMcpBatchServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpBatchServiceTest.java)
+- [GradingMcpQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpQueryServiceTest.java)
+- [GradingMcpReplayTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpReplayTest.java)
+- [GradingMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpToolsTest.java)
+- [GradingPromptSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingPromptSchemaTest.java)
+- [GradingProposalResultHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingProposalResultHandlerTest.java)
+- [GradingProposalServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingProposalServiceTest.java)
+- [GradingProposalValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingProposalValidatorTest.java)
+- [GradingServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingServiceTest.java)
+- [GroupEvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GroupEvaluationTest.java)
+- [SubmissionImageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionImageServiceTest.java)
 
+### Migrations
+
+- [V20260925_1500__create_grading_tables.sql](../../../backend/src/main/resources/db/migration/grading/V20260925_1500__create_grading_tables.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [grading](../../../frontend/src/features/grading) | [api](../../../frontend/src/features/grading/api) | [model](../../../frontend/src/features/grading/model) | [pages](../../../frontend/src/features/grading/pages) | [components](../../../frontend/src/features/grading/components) | [hooks](../../../frontend/src/features/grading/hooks) |
 
 ## U10 — Quiz Authoring
 
-FR: FR-006, FR-007, FR-016, FR-017, FR-028; primary UC 46–48. Source present; runtime/acceptance pending.
+Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerKey.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerKey.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerReview.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerReview.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionScore.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionScore.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionType.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionType.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizAnswer.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizAnswer.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizOptionView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizOptionView.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizQuestionView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizQuestionView.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScope.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScope.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScore.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScore.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizSettings.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizSettings.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStatus.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStatus.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStudentView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStudentView.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/QuizView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizView.java)
+| Source | Trách nhiệm |
+|---|---|
+| [quizzes/controller](../../../backend/src/main/java/edu/aiplatform/quizzes/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [quizzes/service](../../../backend/src/main/java/edu/aiplatform/quizzes/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [quizzes/repository](../../../backend/src/main/java/edu/aiplatform/quizzes/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizzes/model](../../../backend/src/main/java/edu/aiplatform/quizzes/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [quizzes/contract](../../../backend/src/main/java/edu/aiplatform/quizzes/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/quizzes/web/ClassQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/ClassQuizController.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/web/QuestionController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/QuestionController.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/web/QuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/QuizController.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/web/SubjectQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/web/SubjectQuizController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql](../../../backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql)
+- [ClassQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/ClassQuizController.java)
+- [QuestionController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/QuestionController.java)
+- [QuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/QuizController.java)
+- [SubjectQuizController.java](../../../backend/src/main/java/edu/aiplatform/quizzes/controller/SubjectQuizController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuestionBankMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuestionBankMcpToolsTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuestionBankServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuestionBankServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuestionImporterTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuestionImporterTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuizAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuizAiDraftServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuizDraftPromptTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuizDraftPromptTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuizMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuizMcpAuthoringServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuizMcpToolsSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuizMcpToolsSchemaTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/application/QuizServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/application/QuizServicesTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/domain/QuestionRulesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/domain/QuestionRulesTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/domain/QuestionTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/domain/QuestionTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/domain/QuizTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/domain/QuizTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/infrastructure/JdbcQuestionRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/infrastructure/JdbcQuestionRepositoryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/infrastructure/JdbcQuizRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/infrastructure/JdbcQuizRepositoryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/web/QuestionControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/web/QuestionControllerTest.java)
-- [backend/src/test/java/edu/aiplatform/quizzes/web/QuizControllersTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/web/QuizControllersTest.java)
+- [QuestionControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuestionControllerTest.java)
+- [QuizControllersTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuizControllersTest.java)
+- [QuizPublicationMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/integration/QuizPublicationMigrationIntegrationTest.java)
+- [QuestionRulesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionRulesTest.java)
+- [QuestionTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionTest.java)
+- [QuizTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuizTest.java)
+- [JdbcQuestionRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuestionRepositoryIntegrationTest.java)
+- [JdbcQuizRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuizRepositoryIntegrationTest.java)
+- [QuestionBankMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionBankMcpToolsTest.java)
+- [QuestionBankServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionBankServiceTest.java)
+- [QuestionImporterTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionImporterTest.java)
+- [QuizAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizAiDraftServiceTest.java)
+- [QuizDraftPromptTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizDraftPromptTest.java)
+- [QuizMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpAuthoringServiceTest.java)
+- [QuizMcpToolsSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpToolsSchemaTest.java)
+- [QuizServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizServicesTest.java)
 
+### Migrations
+
+- [V20260925_1600__create_quiz_tables.sql](../../../backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql)
+- [V20261030_1810__preserve_unpublished_quiz_retirement.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261030_1810__preserve_unpublished_quiz_retirement.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [quizzes](../../../frontend/src/features/quizzes) | [api](../../../frontend/src/features/quizzes/api) | [model](../../../frontend/src/features/quizzes/model) | [pages](../../../frontend/src/features/quizzes/pages) | [components](../../../frontend/src/features/quizzes/components) | — |
 
 ## U11 — Quiz Practice
 
-FR: FR-017, FR-018, FR-039; primary UC 49–52. Source present; runtime/acceptance pending.
+Primary UC 49–52; FR-017, FR-018, FR-039.
 
-### Public contracts
-
-- Không có file tương ứng trong checkout; pending.
+| Source | Trách nhiệm |
+|---|---|
+| [quizpractice/controller](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [quizpractice/service](../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [quizpractice/repository](../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizpractice/model](../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [quizpractice/dto](../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/quizpractice/web/QuizPracticeController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/web/QuizPracticeController.java)
-- [backend/src/main/java/edu/aiplatform/quizpractice/web/TeacherQuizAttemptController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/web/TeacherQuizAttemptController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql)
+- [QuizPracticeController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller/QuizPracticeController.java)
+- [TeacherQuizAttemptController.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller/TeacherQuizAttemptController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/quizpractice/application/QuizPracticeServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/application/QuizPracticeServicesTest.java)
-- [backend/src/test/java/edu/aiplatform/quizpractice/domain/QuizAttemptTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/domain/QuizAttemptTest.java)
-- [backend/src/test/java/edu/aiplatform/quizpractice/infrastructure/JdbcQuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/infrastructure/JdbcQuizAttemptRepositoryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/quizpractice/web/QuizPracticeControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/web/QuizPracticeControllerTest.java)
+- [QuizPracticeControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/controller/QuizPracticeControllerTest.java)
+- [QuizAttemptTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/model/QuizAttemptTest.java)
+- [JdbcQuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java)
+- [QuizPracticeServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/QuizPracticeServicesTest.java)
 
+### Migrations
+
+- [V20260925_1700__create_quiz_attempts.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [quizpractice](../../../frontend/src/features/quizpractice) | [api](../../../frontend/src/features/quizpractice/api) | [model](../../../frontend/src/features/quizpractice/model) | [pages](../../../frontend/src/features/quizpractice/pages) | [components](../../../frontend/src/features/quizpractice/components) | — |
 
 ## U12 — Group Assignment
 
-FR: FR-025, FR-026, FR-039; primary UC 53–57. Source present; runtime/acceptance pending.
+Primary UC 53–57; FR-025, FR-026, FR-039.
 
-### Public contracts
-
-- [backend/src/main/java/edu/aiplatform/groupdocs/contract/ISseHub.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract/ISseHub.java)
+| Source | Trách nhiệm |
+|---|---|
+| [groups/controller](../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [groups/service](../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [groups/repository](../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/model](../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [groupdocs/controller](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [groupdocs/service](../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [groupdocs/repository](../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/model](../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [groupdocs/integration](../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [groupdocs/contract](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/groupdocs/web/GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/web/GroupDocController.java)
-- [backend/src/main/java/edu/aiplatform/groups/web/GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/web/GroupController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/groups/V20260925_1800__create_group_tables.sql](../../../backend/src/main/resources/db/migration/groups/V20260925_1800__create_group_tables.sql)
-- [backend/src/main/resources/db/migration/groups/V20261025_1800__add_group_documents_assignment_fk.sql](../../../backend/src/main/resources/db/migration/groups/V20261025_1800__add_group_documents_assignment_fk.sql)
-- [backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
+- [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
+- [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupAutoSubmitScannerTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupAutoSubmitScannerTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupDocumentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupDocumentServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupSectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupSectionServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupSubmissionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupSubmissionServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupWorkQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupWorkQueryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/application/GroupWorkspaceServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/application/GroupWorkspaceServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/domain/GroupRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/domain/GroupRepositoriesIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/domain/GroupSectionTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/domain/GroupSectionTest.java)
-- [backend/src/test/java/edu/aiplatform/groupdocs/infrastructure/RabbitSseHubTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/infrastructure/RabbitSseHubTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/application/ClassGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/application/ClassGroupServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/application/GroupRenameServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/application/GroupRenameServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/application/LeaderRequestServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/application/LeaderRequestServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/application/MyGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/application/MyGroupServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/application/RandomGroupSplitterTest.java](../../../backend/src/test/java/edu/aiplatform/groups/application/RandomGroupSplitterTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/domain/GroupSetRulesTest.java](../../../backend/src/test/java/edu/aiplatform/groups/domain/GroupSetRulesTest.java)
-- [backend/src/test/java/edu/aiplatform/groups/web/GroupControllersTest.java](../../../backend/src/test/java/edu/aiplatform/groups/web/GroupControllersTest.java)
+- [RabbitSseHubTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/integration/RabbitSseHubTest.java)
+- [GroupRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupRepositoriesIntegrationTest.java)
+- [GroupSectionTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupSectionTest.java)
+- [GroupAutoSubmitScannerTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScannerTest.java)
+- [GroupDocumentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocumentServiceTest.java)
+- [GroupSectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSectionServiceTest.java)
+- [GroupSubmissionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSubmissionServiceTest.java)
+- [GroupWorkQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupWorkQueryServiceTest.java)
+- [GroupWorkspaceServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupWorkspaceServiceTest.java)
+- [GroupControllersTest.java](../../../backend/src/test/java/edu/aiplatform/groups/controller/GroupControllersTest.java)
+- [GroupSetRulesTest.java](../../../backend/src/test/java/edu/aiplatform/groups/model/GroupSetRulesTest.java)
+- [ClassGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/ClassGroupServiceTest.java)
+- [GroupRenameServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupRenameServiceTest.java)
+- [LeaderRequestServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/LeaderRequestServiceTest.java)
+- [MyGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/MyGroupServiceTest.java)
+- [RandomGroupSplitterTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/RandomGroupSplitterTest.java)
 
+### Migrations
+
+- [V20260925_1800__create_group_tables.sql](../../../backend/src/main/resources/db/migration/groups/V20260925_1800__create_group_tables.sql)
+- [V20261025_1800__add_group_documents_assignment_fk.sql](../../../backend/src/main/resources/db/migration/groups/V20261025_1800__add_group_documents_assignment_fk.sql)
+- [V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [groups](../../../frontend/src/features/groups) | [api](../../../frontend/src/features/groups/api) | [model](../../../frontend/src/features/groups/model) | — | [components](../../../frontend/src/features/groups/components) | — |
+| [groupdocs](../../../frontend/src/features/groupdocs) | [api](../../../frontend/src/features/groupdocs/api) | [model](../../../frontend/src/features/groupdocs/model) | [pages](../../../frontend/src/features/groupdocs/pages) | [components](../../../frontend/src/features/groupdocs/components) | [hooks](../../../frontend/src/features/groupdocs/hooks) |
 
 ## U13 — Reference Materials
 
-FR: FR-004, FR-005; primary UC 58–62. Source present; runtime/acceptance pending.
+Primary UC 58–62; FR-004, FR-005.
 
-### Public contracts
-
-- Không có file tương ứng trong checkout; pending.
+| Source | Trách nhiệm |
+|---|---|
+| [materials/controller](../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [materials/service](../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [materials/model](../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [materials/integration](../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/materials/web/ClassMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/ClassMaterialController.java)
-- [backend/src/main/java/edu/aiplatform/materials/web/MaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MaterialController.java)
-- [backend/src/main/java/edu/aiplatform/materials/web/MaterialModuleController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MaterialModuleController.java)
-- [backend/src/main/java/edu/aiplatform/materials/web/MyMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/MyMaterialController.java)
-- [backend/src/main/java/edu/aiplatform/materials/web/SubjectMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/web/SubjectMaterialController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/materials/V20260925_1900__create_material_tables.sql](../../../backend/src/main/resources/db/migration/materials/V20260925_1900__create_material_tables.sql)
-- [backend/src/main/resources/db/migration/materials/V20261029_1000__create_material_modules.sql](../../../backend/src/main/resources/db/migration/materials/V20261029_1000__create_material_modules.sql)
+- [ClassMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/ClassMaterialController.java)
+- [MaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MaterialController.java)
+- [MaterialModuleController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MaterialModuleController.java)
+- [MyMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/MyMaterialController.java)
+- [SubjectMaterialController.java](../../../backend/src/main/java/edu/aiplatform/materials/controller/SubjectMaterialController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialAccessPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialAccessPolicyTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialMcpTransactionTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialMcpTransactionTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialModuleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialModuleServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialQueryAndReferenceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialQueryAndReferenceTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/MaterialTextExtractJobHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/MaterialTextExtractJobHandlerTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/application/ReferenceMaterialWiringTest.java](../../../backend/src/test/java/edu/aiplatform/materials/application/ReferenceMaterialWiringTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/domain/YoutubeVideoTest.java](../../../backend/src/test/java/edu/aiplatform/materials/domain/YoutubeVideoTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/infrastructure/MaterialTextExtractorTest.java](../../../backend/src/test/java/edu/aiplatform/materials/infrastructure/MaterialTextExtractorTest.java)
-- [backend/src/test/java/edu/aiplatform/materials/web/MaterialControllerTest.java](../../../backend/src/test/java/edu/aiplatform/materials/web/MaterialControllerTest.java)
+- [MaterialControllerTest.java](../../../backend/src/test/java/edu/aiplatform/materials/controller/MaterialControllerTest.java)
+- [MaterialTextExtractorTest.java](../../../backend/src/test/java/edu/aiplatform/materials/integration/MaterialTextExtractorTest.java)
+- [YoutubeVideoTest.java](../../../backend/src/test/java/edu/aiplatform/materials/model/YoutubeVideoTest.java)
+- [MaterialAccessPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialAccessPolicyTest.java)
+- [MaterialMcpTransactionTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialMcpTransactionTest.java)
+- [MaterialModuleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialModuleServiceTest.java)
+- [MaterialQueryAndReferenceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialQueryAndReferenceTest.java)
+- [MaterialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialServiceTest.java)
+- [MaterialTextExtractJobHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialTextExtractJobHandlerTest.java)
+- [ReferenceMaterialWiringTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/ReferenceMaterialWiringTest.java)
 
+### Migrations
+
+- [V20260925_1900__create_material_tables.sql](../../../backend/src/main/resources/db/migration/materials/V20260925_1900__create_material_tables.sql)
+- [V20261029_1000__create_material_modules.sql](../../../backend/src/main/resources/db/migration/materials/V20261029_1000__create_material_modules.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [materials](../../../frontend/src/features/materials) | [api](../../../frontend/src/features/materials/api) | [model](../../../frontend/src/features/materials/model) | [pages](../../../frontend/src/features/materials/pages) | [components](../../../frontend/src/features/materials/components) | [hooks](../../../frontend/src/features/materials/hooks) |
 
 ## U14 — Announcements & Notifications
 
-FR: FR-011, FR-019, FR-023; primary UC 63–65. Source present; runtime/acceptance pending.
+Primary UC 63–65; FR-011, FR-019, FR-023.
 
-### Public contracts
-
-- Không có file tương ứng trong checkout; pending.
+| Source | Trách nhiệm |
+|---|---|
+| [announcements/controller](../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [announcements/service](../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [announcements/model](../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [announcements/dto](../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
+| [notifications/controller](../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [notifications/service](../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [notifications/model](../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [notifications/integration](../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [notifications/config](../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/announcements/web/AnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/web/AnnouncementController.java)
-- [backend/src/main/java/edu/aiplatform/announcements/web/MyAnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/web/MyAnnouncementController.java)
-- [backend/src/main/java/edu/aiplatform/notifications/web/NotificationController.java](../../../backend/src/main/java/edu/aiplatform/notifications/web/NotificationController.java)
-- [backend/src/main/java/edu/aiplatform/notifications/web/NotificationPreferenceController.java](../../../backend/src/main/java/edu/aiplatform/notifications/web/NotificationPreferenceController.java)
-
-### Migrations
-
-- [backend/src/main/resources/db/migration/notifications/V20260925_2000__create_notification_tables.sql](../../../backend/src/main/resources/db/migration/notifications/V20260925_2000__create_notification_tables.sql)
+- [AnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/controller/AnnouncementController.java)
+- [MyAnnouncementController.java](../../../backend/src/main/java/edu/aiplatform/announcements/controller/MyAnnouncementController.java)
+- [NotificationController.java](../../../backend/src/main/java/edu/aiplatform/notifications/controller/NotificationController.java)
+- [NotificationPreferenceController.java](../../../backend/src/main/java/edu/aiplatform/notifications/controller/NotificationPreferenceController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/announcements/application/AnnouncementServiceTest.java](../../../backend/src/test/java/edu/aiplatform/announcements/application/AnnouncementServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/announcements/domain/AnnouncementSanitizationTest.java](../../../backend/src/test/java/edu/aiplatform/announcements/domain/AnnouncementSanitizationTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/AssignmentNotificationRoutingTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/AssignmentNotificationRoutingTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/DeadlineReminderScannerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/DeadlineReminderScannerTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/EmailDeliveryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/EmailDeliveryServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/NotificationEventServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/NotificationEventServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/NotificationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/NotificationServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/application/RecipientResolverTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/application/RecipientResolverTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationDeliveryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationDeliveryIntegrationTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationEventListenerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationEventListenerTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationTopologyContextTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/infrastructure/NotificationTopologyContextTest.java)
-- [backend/src/test/java/edu/aiplatform/notifications/web/NotificationControllerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/web/NotificationControllerTest.java)
+- [AnnouncementSanitizationTest.java](../../../backend/src/test/java/edu/aiplatform/announcements/model/AnnouncementSanitizationTest.java)
+- [AnnouncementServiceTest.java](../../../backend/src/test/java/edu/aiplatform/announcements/service/AnnouncementServiceTest.java)
+- [NotificationControllerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/controller/NotificationControllerTest.java)
+- [NotificationDeliveryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/integration/NotificationDeliveryIntegrationTest.java)
+- [NotificationEventListenerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/integration/NotificationEventListenerTest.java)
+- [NotificationTopologyContextTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/integration/NotificationTopologyContextTest.java)
+- [AssignmentNotificationRoutingTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/AssignmentNotificationRoutingTest.java)
+- [DeadlineReminderScannerTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/DeadlineReminderScannerTest.java)
+- [EmailDeliveryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/EmailDeliveryServiceTest.java)
+- [NotificationEventServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/NotificationEventServiceTest.java)
+- [NotificationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/NotificationServiceTest.java)
+- [RecipientResolverTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/RecipientResolverTest.java)
 
+### Migrations
+
+- [V20260925_2000__create_notification_tables.sql](../../../backend/src/main/resources/db/migration/notifications/V20260925_2000__create_notification_tables.sql)
+
+### Frontend
+
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [announcements](../../../frontend/src/features/announcements) | [api](../../../frontend/src/features/announcements/api) | [model](../../../frontend/src/features/announcements/model) | [pages](../../../frontend/src/features/announcements/pages) | [components](../../../frontend/src/features/announcements/components) | — |
+| [notifications](../../../frontend/src/features/notifications) | [api](../../../frontend/src/features/notifications/api) | [model](../../../frontend/src/features/notifications/model) | — | [components](../../../frontend/src/features/notifications/components) | — |
 
 ## U15 — Admin Dashboard
 
-FR: FR-024, FR-038; primary UC 66. Source present; runtime/acceptance pending.
+Primary UC 66; FR-024, FR-038.
 
-### Public contracts
-
-- Không có file tương ứng trong checkout; pending.
+| Source | Trách nhiệm |
+|---|---|
+| [admindashboard/controller](../../../backend/src/main/java/edu/aiplatform/admindashboard/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [admindashboard/service](../../../backend/src/main/java/edu/aiplatform/admindashboard/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [admindashboard/dto](../../../backend/src/main/java/edu/aiplatform/admindashboard/dto) | Kiểu dữ liệu request/response riêng. |
+| [admindashboard/integration](../../../backend/src/main/java/edu/aiplatform/admindashboard/integration) | Adapter hạ tầng/provider, listener và sender. |
 
 ### Controllers
 
-- [backend/src/main/java/edu/aiplatform/admindashboard/web/AdminDashboardController.java](../../../backend/src/main/java/edu/aiplatform/admindashboard/web/AdminDashboardController.java)
-
-### Migrations
-
-- Không có file tương ứng trong checkout; pending.
+- [AdminDashboardController.java](../../../backend/src/main/java/edu/aiplatform/admindashboard/controller/AdminDashboardController.java)
 
 ### Tests
 
-- [backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardAccessTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardAccessTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardActivityServiceTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardActivityServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardBackupTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardBackupTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardServiceTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/application/AdminDashboardServiceTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/infrastructure/DashboardSourceReaderTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/infrastructure/DashboardSourceReaderTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardApiContractTest.java)
-- [backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardControllerTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardControllerTest.java)
+- [AdminDashboardApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/controller/AdminDashboardApiContractTest.java)
+- [AdminDashboardControllerTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/controller/AdminDashboardControllerTest.java)
+- [DashboardSourceReaderTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/integration/DashboardSourceReaderTest.java)
+- [AdminDashboardAccessTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/service/AdminDashboardAccessTest.java)
+- [AdminDashboardActivityServiceTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/service/AdminDashboardActivityServiceTest.java)
+- [AdminDashboardBackupTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/service/AdminDashboardBackupTest.java)
+- [AdminDashboardServiceTest.java](../../../backend/src/test/java/edu/aiplatform/admindashboard/service/AdminDashboardServiceTest.java)
 
-## Frontend routes
+### Migrations
 
-- [frontend/src/app/(auth)/activate/page.tsx](../../../frontend/src/app/%28auth%29/activate/page.tsx)
-- [frontend/src/app/(auth)/login/page.tsx](../../../frontend/src/app/%28auth%29/login/page.tsx)
-- [frontend/src/app/(auth)/reset-password/page.tsx](../../../frontend/src/app/%28auth%29/reset-password/page.tsx)
-- [frontend/src/app/admin/accounts/[id]/page.tsx](../../../frontend/src/app/admin/accounts/[id]/page.tsx)
-- [frontend/src/app/admin/accounts/page.tsx](../../../frontend/src/app/admin/accounts/page.tsx)
-- [frontend/src/app/admin/audit/page.tsx](../../../frontend/src/app/admin/audit/page.tsx)
-- [frontend/src/app/admin/mcp/page.tsx](../../../frontend/src/app/admin/mcp/page.tsx)
-- [frontend/src/app/admin/page.tsx](../../../frontend/src/app/admin/page.tsx)
-- [frontend/src/app/admin/settings/[key]/page.tsx](../../../frontend/src/app/admin/settings/[key]/page.tsx)
-- [frontend/src/app/admin/settings/page.tsx](../../../frontend/src/app/admin/settings/page.tsx)
-- [frontend/src/app/admin/settings/sections/[sectionKey]/page.tsx](../../../frontend/src/app/admin/settings/sections/[sectionKey]/page.tsx)
-- [frontend/src/app/admin/subjects/[id]/page.tsx](../../../frontend/src/app/admin/subjects/[id]/page.tsx)
-- [frontend/src/app/admin/subjects/page.tsx](../../../frontend/src/app/admin/subjects/page.tsx)
-- [frontend/src/app/ai/connection/page.tsx](../../../frontend/src/app/ai/connection/page.tsx)
-- [frontend/src/app/ai/usage/page.tsx](../../../frontend/src/app/ai/usage/page.tsx)
-- [frontend/src/app/announcements/page.tsx](../../../frontend/src/app/announcements/page.tsx)
-- [frontend/src/app/assignments/[id]/diagrams/[blockId]/page.tsx](../../../frontend/src/app/assignments/[id]/diagrams/[blockId]/page.tsx)
-- [frontend/src/app/assignments/[id]/page.tsx](../../../frontend/src/app/assignments/[id]/page.tsx)
-- [frontend/src/app/attempts/[attemptId]/diagrams/[blockId]/page.tsx](../../../frontend/src/app/attempts/[attemptId]/diagrams/[blockId]/page.tsx)
-- [frontend/src/app/attempts/[attemptId]/page.tsx](../../../frontend/src/app/attempts/[attemptId]/page.tsx)
-- [frontend/src/app/attempts/[attemptId]/receipt/page.tsx](../../../frontend/src/app/attempts/[attemptId]/receipt/page.tsx)
-- [frontend/src/app/classes/[id]/announcements/page.tsx](../../../frontend/src/app/classes/[id]/announcements/page.tsx)
-- [frontend/src/app/classes/[id]/group/page.tsx](../../../frontend/src/app/classes/[id]/group/page.tsx)
-- [frontend/src/app/classes/[id]/page.tsx](../../../frontend/src/app/classes/[id]/page.tsx)
-- [frontend/src/app/classes/page.tsx](../../../frontend/src/app/classes/page.tsx)
-- [frontend/src/app/group-docs/[id]/page.tsx](../../../frontend/src/app/group-docs/[id]/page.tsx)
-- [frontend/src/app/manager/assignments/page.tsx](../../../frontend/src/app/manager/assignments/page.tsx)
-- [frontend/src/app/manager/classes/[id]/page.tsx](../../../frontend/src/app/manager/classes/[id]/page.tsx)
-- [frontend/src/app/manager/classes/page.tsx](../../../frontend/src/app/manager/classes/page.tsx)
-- [frontend/src/app/manager/materials/page.tsx](../../../frontend/src/app/manager/materials/page.tsx)
-- [frontend/src/app/manager/page.tsx](../../../frontend/src/app/manager/page.tsx)
-- [frontend/src/app/manager/questions/[id]/page.tsx](../../../frontend/src/app/manager/questions/[id]/page.tsx)
-- [frontend/src/app/manager/questions/page.tsx](../../../frontend/src/app/manager/questions/page.tsx)
-- [frontend/src/app/manager/quizzes/page.tsx](../../../frontend/src/app/manager/quizzes/page.tsx)
-- [frontend/src/app/manager/subjects/[id]/page.tsx](../../../frontend/src/app/manager/subjects/[id]/page.tsx)
-- [frontend/src/app/manager/subjects/page.tsx](../../../frontend/src/app/manager/subjects/page.tsx)
-- [frontend/src/app/materials/[id]/page.tsx](../../../frontend/src/app/materials/[id]/page.tsx)
-- [frontend/src/app/materials/[id]/view/page.tsx](../../../frontend/src/app/materials/[id]/view/page.tsx)
-- [frontend/src/app/my-assignments/[assignmentId]/history/page.tsx](../../../frontend/src/app/my-assignments/[assignmentId]/history/page.tsx)
-- [frontend/src/app/my-assignments/[assignmentId]/page.tsx](../../../frontend/src/app/my-assignments/[assignmentId]/page.tsx)
-- [frontend/src/app/my-assignments/page.tsx](../../../frontend/src/app/my-assignments/page.tsx)
-- [frontend/src/app/page.tsx](../../../frontend/src/app/page.tsx)
-- [frontend/src/app/post-login/page.tsx](../../../frontend/src/app/post-login/page.tsx)
-- [frontend/src/app/profile/page.tsx](../../../frontend/src/app/profile/page.tsx)
-- [frontend/src/app/quiz-attempts/[attemptId]/page.tsx](../../../frontend/src/app/quiz-attempts/[attemptId]/page.tsx)
-- [frontend/src/app/quiz-attempts/[attemptId]/result/page.tsx](../../../frontend/src/app/quiz-attempts/[attemptId]/result/page.tsx)
-- [frontend/src/app/quiz-practice/[quizId]/page.tsx](../../../frontend/src/app/quiz-practice/[quizId]/page.tsx)
-- [frontend/src/app/quiz-practice/page.tsx](../../../frontend/src/app/quiz-practice/page.tsx)
-- [frontend/src/app/quizzes/[id]/page.tsx](../../../frontend/src/app/quizzes/[id]/page.tsx)
-- [frontend/src/app/teaching/classes/[id]/announcements/page.tsx](../../../frontend/src/app/teaching/classes/[id]/announcements/page.tsx)
-- [frontend/src/app/teaching/classes/[id]/assignments/[assignmentId]/submissions/page.tsx](../../../frontend/src/app/teaching/classes/[id]/assignments/[assignmentId]/submissions/page.tsx)
-- [frontend/src/app/teaching/classes/[id]/page.tsx](../../../frontend/src/app/teaching/classes/[id]/page.tsx)
-- [frontend/src/app/teaching/classes/page.tsx](../../../frontend/src/app/teaching/classes/page.tsx)
-- [frontend/src/app/teaching/evaluations/[evaluationId]/page.tsx](../../../frontend/src/app/teaching/evaluations/[evaluationId]/page.tsx)
 
-## Frontend components and tests
 
-- [frontend/src/features/academics/academics.test.tsx](../../../frontend/src/features/academics/academics.test.tsx)
-- [frontend/src/features/academics/api.test.ts](../../../frontend/src/features/academics/api.test.ts)
-- [frontend/src/features/academics/integration.test.tsx](../../../frontend/src/features/academics/integration.test.tsx)
-- [frontend/src/features/academics/navContexts.test.tsx](../../../frontend/src/features/academics/navContexts.test.tsx)
-- [frontend/src/features/academics/pagination.characterization.test.tsx](../../../frontend/src/features/academics/pagination.characterization.test.tsx)
-- [frontend/src/features/academics/register.ts](../../../frontend/src/features/academics/register.ts)
-- [frontend/src/features/academics/routes.characterization.test.tsx](../../../frontend/src/features/academics/routes.characterization.test.tsx)
-- [frontend/src/features/academics/routes.test.tsx](../../../frontend/src/features/academics/routes.test.tsx)
-- [frontend/src/features/academics/useCandidates.test.tsx](../../../frontend/src/features/academics/useCandidates.test.tsx)
-- [frontend/src/features/admindashboard/AdminDashboardPage.test.tsx](../../../frontend/src/features/admindashboard/AdminDashboardPage.test.tsx)
-- [frontend/src/features/admindashboard/api.test.ts](../../../frontend/src/features/admindashboard/api.test.ts)
-- [frontend/src/features/admindashboard/navigation.test.tsx](../../../frontend/src/features/admindashboard/navigation.test.tsx)
-- [frontend/src/features/admindashboard/register.ts](../../../frontend/src/features/admindashboard/register.ts)
-- [frontend/src/features/ai/admin/AdminMcpPage.test.tsx](../../../frontend/src/features/ai/admin/AdminMcpPage.test.tsx)
-- [frontend/src/features/ai/admin/AiSettingsPanels.test.tsx](../../../frontend/src/features/ai/admin/AiSettingsPanels.test.tsx)
-- [frontend/src/features/ai/AiConnectionPage.test.tsx](../../../frontend/src/features/ai/AiConnectionPage.test.tsx)
-- [frontend/src/features/ai/AiUsageHistoryPage.test.tsx](../../../frontend/src/features/ai/AiUsageHistoryPage.test.tsx)
-- [frontend/src/features/ai/register.ts](../../../frontend/src/features/ai/register.ts)
-- [frontend/src/features/announcements/Announcements.test.tsx](../../../frontend/src/features/announcements/Announcements.test.tsx)
-- [frontend/src/features/announcements/ClassAnnouncementsPage.test.tsx](../../../frontend/src/features/announcements/ClassAnnouncementsPage.test.tsx)
-- [frontend/src/features/announcements/register.ts](../../../frontend/src/features/announcements/register.ts)
-- [frontend/src/features/assignments/AiDraftDialog.test.tsx](../../../frontend/src/features/assignments/AiDraftDialog.test.tsx)
-- [frontend/src/features/assignments/AiDraftPreview.test.tsx](../../../frontend/src/features/assignments/AiDraftPreview.test.tsx)
-- [frontend/src/features/assignments/assignments.test.tsx](../../../frontend/src/features/assignments/assignments.test.tsx)
-- [frontend/src/features/assignments/register.ts](../../../frontend/src/features/assignments/register.ts)
-- [frontend/src/features/assignmentwork/assignmentwork.test.tsx](../../../frontend/src/features/assignmentwork/assignmentwork.test.tsx)
-- [frontend/src/features/assignmentwork/register.ts](../../../frontend/src/features/assignmentwork/register.ts)
-- [frontend/src/features/assignmentwork/StudentAssignmentsPage.test.tsx](../../../frontend/src/features/assignmentwork/StudentAssignmentsPage.test.tsx)
-- [frontend/src/features/assignmentwork/SubmissionHistoryPage.test.tsx](../../../frontend/src/features/assignmentwork/SubmissionHistoryPage.test.tsx)
-- [frontend/src/features/assignmentwork/workspace-ui.test.tsx](../../../frontend/src/features/assignmentwork/workspace-ui.test.tsx)
-- [frontend/src/features/audit/AuditLogPage.test.tsx](../../../frontend/src/features/audit/AuditLogPage.test.tsx)
-- [frontend/src/features/audit/register.ts](../../../frontend/src/features/audit/register.ts)
-- [frontend/src/features/files/api.test.ts](../../../frontend/src/features/files/api.test.ts)
-- [frontend/src/features/files/FileUploader.test.tsx](../../../frontend/src/features/files/FileUploader.test.tsx)
-- [frontend/src/features/files/purposes.test.ts](../../../frontend/src/features/files/purposes.test.ts)
-- [frontend/src/features/grading/ai-source-integration.test.tsx](../../../frontend/src/features/grading/ai-source-integration.test.tsx)
-- [frontend/src/features/grading/batch-action-feedback.test.tsx](../../../frontend/src/features/grading/batch-action-feedback.test.tsx)
-- [frontend/src/features/grading/class-progress-layout.test.tsx](../../../frontend/src/features/grading/class-progress-layout.test.tsx)
-- [frontend/src/features/grading/gradebook-layout.test.tsx](../../../frontend/src/features/grading/gradebook-layout.test.tsx)
-- [frontend/src/features/grading/manual-workflow.test.tsx](../../../frontend/src/features/grading/manual-workflow.test.tsx)
-- [frontend/src/features/grading/partial-scores.test.tsx](../../../frontend/src/features/grading/partial-scores.test.tsx)
-- [frontend/src/features/grading/register.ts](../../../frontend/src/features/grading/register.ts)
-- [frontend/src/features/grading/route-shell.test.tsx](../../../frontend/src/features/grading/route-shell.test.tsx)
-- [frontend/src/features/grading/structured-feedback.test.tsx](../../../frontend/src/features/grading/structured-feedback.test.tsx)
-- [frontend/src/features/grading/submissions.test.tsx](../../../frontend/src/features/grading/submissions.test.tsx)
-- [frontend/src/features/grading/workspace.test.tsx](../../../frontend/src/features/grading/workspace.test.tsx)
-- [frontend/src/features/groupdocs/GroupWorkspacePage.test.tsx](../../../frontend/src/features/groupdocs/GroupWorkspacePage.test.tsx)
-- [frontend/src/features/groupdocs/register.ts](../../../frontend/src/features/groupdocs/register.ts)
-- [frontend/src/features/groups/ClassGroupsPanel.test.tsx](../../../frontend/src/features/groups/ClassGroupsPanel.test.tsx)
-- [frontend/src/features/groups/MyGroup.test.tsx](../../../frontend/src/features/groups/MyGroup.test.tsx)
-- [frontend/src/features/groups/register.ts](../../../frontend/src/features/groups/register.ts)
-- [frontend/src/features/groups/splitUngrouped.test.ts](../../../frontend/src/features/groups/splitUngrouped.test.ts)
-- [frontend/src/features/groups/TeacherGroupWidgets.test.tsx](../../../frontend/src/features/groups/TeacherGroupWidgets.test.tsx)
-- [frontend/src/features/identity/admin/AdminScreens.test.tsx](../../../frontend/src/features/identity/admin/AdminScreens.test.tsx)
-- [frontend/src/features/identity/admin/Pagination.test.ts](../../../frontend/src/features/identity/admin/Pagination.test.ts)
-- [frontend/src/features/identity/components/OtpInput.test.tsx](../../../frontend/src/features/identity/components/OtpInput.test.tsx)
-- [frontend/src/features/identity/LoginForm.test.tsx](../../../frontend/src/features/identity/LoginForm.test.tsx)
-- [frontend/src/features/identity/otp/OtpFlow.test.tsx](../../../frontend/src/features/identity/otp/OtpFlow.test.tsx)
-- [frontend/src/features/identity/passwordRules.test.ts](../../../frontend/src/features/identity/passwordRules.test.ts)
-- [frontend/src/features/identity/profile/PasswordChangeDialog.test.tsx](../../../frontend/src/features/identity/profile/PasswordChangeDialog.test.tsx)
-- [frontend/src/features/identity/profile/ProfileForm.test.tsx](../../../frontend/src/features/identity/profile/ProfileForm.test.tsx)
-- [frontend/src/features/identity/register.ts](../../../frontend/src/features/identity/register.ts)
-- [frontend/src/features/identity/session.test.ts](../../../frontend/src/features/identity/session.test.ts)
-- [frontend/src/features/identity/shell/RoleGuard.test.tsx](../../../frontend/src/features/identity/shell/RoleGuard.test.tsx)
-- [frontend/src/features/materials/api.test.ts](../../../frontend/src/features/materials/api.test.ts)
-- [frontend/src/features/materials/MaterialDialogs.test.tsx](../../../frontend/src/features/materials/MaterialDialogs.test.tsx)
-- [frontend/src/features/materials/MaterialPreview.test.tsx](../../../frontend/src/features/materials/MaterialPreview.test.tsx)
-- [frontend/src/features/materials/ModuleBoard.test.tsx](../../../frontend/src/features/materials/ModuleBoard.test.tsx)
-- [frontend/src/features/materials/register.ts](../../../frontend/src/features/materials/register.ts)
-- [frontend/src/features/materials/xlsx.test.ts](../../../frontend/src/features/materials/xlsx.test.ts)
-- [frontend/src/features/notifications/Notifications.test.tsx](../../../frontend/src/features/notifications/Notifications.test.tsx)
-- [frontend/src/features/notifications/register.ts](../../../frontend/src/features/notifications/register.ts)
-- [frontend/src/features/quizpractice/MaterialQuizList.test.tsx](../../../frontend/src/features/quizpractice/MaterialQuizList.test.tsx)
-- [frontend/src/features/quizpractice/QuizPracticeScreens.test.tsx](../../../frontend/src/features/quizpractice/QuizPracticeScreens.test.tsx)
-- [frontend/src/features/quizpractice/register.ts](../../../frontend/src/features/quizpractice/register.ts)
-- [frontend/src/features/quizzes/AiDrafts.test.tsx](../../../frontend/src/features/quizzes/AiDrafts.test.tsx)
-- [frontend/src/features/quizzes/McqEditor.test.tsx](../../../frontend/src/features/quizzes/McqEditor.test.tsx)
-- [frontend/src/features/quizzes/questionForm.test.ts](../../../frontend/src/features/quizzes/questionForm.test.ts)
-- [frontend/src/features/quizzes/QuestionScreens.test.tsx](../../../frontend/src/features/quizzes/QuestionScreens.test.tsx)
-- [frontend/src/features/quizzes/QuizScreens.test.tsx](../../../frontend/src/features/quizzes/QuizScreens.test.tsx)
-- [frontend/src/features/quizzes/register.ts](../../../frontend/src/features/quizzes/register.ts)
-- [frontend/src/features/register.test.ts](../../../frontend/src/features/register.test.ts)
-- [frontend/src/features/register.ts](../../../frontend/src/features/register.ts)
-- [frontend/src/features/settings/register.ts](../../../frontend/src/features/settings/register.ts)
-- [frontend/src/features/settings/SettingListPage.test.tsx](../../../frontend/src/features/settings/SettingListPage.test.tsx)
-- [frontend/src/features/settings/SettingValueForm.test.tsx](../../../frontend/src/features/settings/SettingValueForm.test.tsx)
-- [frontend/src/features/settings/validation.test.ts](../../../frontend/src/features/settings/validation.test.ts)
-- [frontend/src/features/subjects/api.test.ts](../../../frontend/src/features/subjects/api.test.ts)
-- [frontend/src/features/subjects/ManagerChangeDialog.test.tsx](../../../frontend/src/features/subjects/ManagerChangeDialog.test.tsx)
-- [frontend/src/features/subjects/ManagerPicker.test.tsx](../../../frontend/src/features/subjects/ManagerPicker.test.tsx)
-- [frontend/src/features/subjects/register.ts](../../../frontend/src/features/subjects/register.ts)
-- [frontend/src/features/subjects/SubjectClassesTable.test.tsx](../../../frontend/src/features/subjects/SubjectClassesTable.test.tsx)
-- [frontend/src/features/subjects/SubjectDetailMutations.test.tsx](../../../frontend/src/features/subjects/SubjectDetailMutations.test.tsx)
-- [frontend/src/features/subjects/SubjectDetailPage.test.tsx](../../../frontend/src/features/subjects/SubjectDetailPage.test.tsx)
-- [frontend/src/features/subjects/SubjectEditForm.test.tsx](../../../frontend/src/features/subjects/SubjectEditForm.test.tsx)
-- [frontend/src/features/subjects/SubjectFormDialog.test.tsx](../../../frontend/src/features/subjects/SubjectFormDialog.test.tsx)
-- [frontend/src/features/subjects/SubjectListPage.test.tsx](../../../frontend/src/features/subjects/SubjectListPage.test.tsx)
-- [frontend/src/features/subjects/SubjectStatusActions.test.tsx](../../../frontend/src/features/subjects/SubjectStatusActions.test.tsx)
-- [frontend/src/features/subjects/validation.test.ts](../../../frontend/src/features/subjects/validation.test.ts)
+### Frontend
 
-## Adapter and evidence limits
+| Feature | API | Model | Pages | Components | Hooks |
+|---|---|---|---|---|---|
+| [admindashboard](../../../frontend/src/features/admindashboard) | [api](../../../frontend/src/features/admindashboard/api) | [model](../../../frontend/src/features/admindashboard/model) | [pages](../../../frontend/src/features/admindashboard/pages) | [components](../../../frontend/src/features/admindashboard/components) | [hooks](../../../frontend/src/features/admindashboard/hooks) |
 
-Contract stub classes remain conditional fallbacks, not proof that every running provider is stubbed. Runtime bean selection depends on profile/configuration. Drive/SMTP/AI adapters need live credentials; docs do not certify their availability.
+## Shared verification
 
-- [backend/src/main/java/edu/aiplatform/academics/contract/stub/AcademicsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/stub/AcademicsContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/ai/contract/stub/AiContractStubs.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/stub/AiContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/assignments/contract/stub/AssignmentsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/stub/AssignmentsContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/stub/AssignmentWorkContractStubs.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/stub/AssignmentWorkContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/audit/contract/stub/AuditContractStubs.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/stub/AuditContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/backup/contract/stub/BackupContractStubs.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/stub/BackupContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/files/contract/stub/FilesContractStubs.java](../../../backend/src/main/java/edu/aiplatform/files/contract/stub/FilesContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/grading/contract/stub/GradingContractStubs.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/stub/GradingContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/groupdocs/contract/stub/GroupDocsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract/stub/GroupDocsContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/identity/contract/stub/IdentityContractStubs.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/stub/IdentityContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/jobs/contract/stub/JobsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/stub/JobsContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/quizzes/contract/stub/QuizzesContractStubs.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/stub/QuizzesContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/settings/contract/stub/SettingsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/stub/SettingsContractStubs.java)
-- [backend/src/main/java/edu/aiplatform/subjects/contract/stub/SubjectsContractStubs.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/stub/SubjectsContractStubs.java)
-
-## Subsequent approved remediation working tree
-
-Source changes after this initial HEAD inventory restore Student/remove Admin MCP, make worker/backup terminal handling durable, recheck enrollment targets, serialize API/MCP feedback budgets and correct Quiz publication/retry guards. HEAD remains unchanged. [Fresh verification and release notes](../../construction/build-and-test/2026-10-30-remediation-student-mcp-results.md).
+- [ArchitectureTest.java](../../../backend/src/test/java/edu/aiplatform/ArchitectureTest.java)

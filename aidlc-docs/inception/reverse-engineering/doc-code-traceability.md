@@ -74,3 +74,7 @@ Source-observed at `794a405304bf02dd2593a9fa2c88662d7cd52845`. Rows use the **de
 ## Delta disposition
 
 [D01–D14 audit](../plans/2026-10-30-doc-code-drift-audit.md) and [D15 and previous design decisions](decision-register.md). AS-BUILT differs from prior requirements where recorded. Missing direct trace is kept pending rather than fabricated.
+
+## Structure snapshot
+
+Paths refreshed for parent HEAD `5a76e428` + working-tree structure refactor; endpoint annotations and public contracts unchanged. [Verification results](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).

@@ -1,6 +1,6 @@
 # U03 Job and Settings — logical-components
 
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -8,21 +8,29 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 ## 1. Thành phần
 
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `FileUploadController`, `UploadService`, `ContentInspector` | backend | F1 upload (P1, P3) |
-| `ArtifactService` | backend, worker | `IArtifact`: `store`, `attach`, `issueDownloadToken`, `open` |
-| `DownloadController`, `DownloadTokenService` | backend | F3 tải về (P2, P4) |
-| `FilePolicyService` | backend | F5 `GET /api/v1/files/policies`, đọc giới hạn qua `ISettings` |
-| `IStorage` + adapter Drive, local, chưa cấu hình | backend, worker | P5, P6 |
-| `DriveJobHandler` | worker | `DRIVE_CLEANUP` |
-| `JobPublisher`, `EventPublisher`, `AmqpPublisher`, `AmqpTopology` | backend, worker | J1, E1, P8 |
-| `JobListener`, `JobRetryPublisher`, `JobHandlerRegistry`, `PendingSweepRunner`, `ScheduledScanRunner` | worker | J2–J4, P9–P12 |
-| `SettingsController`, `SettingsService`, `SettingDefinitionRegistry`, `SettingsSectionRegistry` | backend (worker đọc qua `ISettings`) | S1–S5, P14, P15 |
-| `BackupScheduleScanner` | worker | B1 |
-| `BackupJobHandler`, `DumpRunner`, `BackupEncryptor`, `BackupStorage` | worker | B2, B4, P16, P17 |
-| `BackupRetentionService` | worker | B3, P18 |
-| `BackupStatusService` | backend | `IBackupStatus` cho U15 |
+| Source | Trách nhiệm |
+|---|---|
+| [files/controller](../../../../backend/src/main/java/edu/aiplatform/files/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [files/service](../../../../backend/src/main/java/edu/aiplatform/files/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [files/model](../../../../backend/src/main/java/edu/aiplatform/files/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [files/integration](../../../../backend/src/main/java/edu/aiplatform/files/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [files/config](../../../../backend/src/main/java/edu/aiplatform/files/config) | Properties, cấu hình bean và topology. |
+| [files/contract](../../../../backend/src/main/java/edu/aiplatform/files/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [jobs/service](../../../../backend/src/main/java/edu/aiplatform/jobs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [jobs/integration](../../../../backend/src/main/java/edu/aiplatform/jobs/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [jobs/config](../../../../backend/src/main/java/edu/aiplatform/jobs/config) | Properties, cấu hình bean và topology. |
+| [jobs/contract](../../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [settings/controller](../../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [settings/service](../../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [settings/repository](../../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/model](../../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [settings/contract](../../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+| [backup/service](../../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [backup/repository](../../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/model](../../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [backup/integration](../../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [backup/config](../../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |
+| [backup/contract](../../../../backend/src/main/java/edu/aiplatform/backup/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ## 2. Cấu hình
 
@@ -39,4 +47,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 ## Design assessment scope — 2026-10-30
 
-Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Ghi nhận trước refactor chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+
+## Structure refactor — 2026-10-30
+
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).

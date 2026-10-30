@@ -52,7 +52,7 @@ Java paths dưới đây tính từ `backend/src/main/java/edu/aiplatform/`; tes
 | identity/contract/Actions.java, identity/application/AccessPolicy.java | Một action mới ADMIN_DASHBOARD_VIEW, ADMIN/NONE |
 | identity/application/HomePaths.java | ADMIN_HOME=/admin chỉ khi Task6 pass |
 | docs/contracts/openapi/admin-dashboard.yaml | API mới, nullable/partial/empty/error examples |
-| frontend/src/features/admindashboard/types.ts, api.ts | Model JSON và HTTP client |
+| frontend/src/features/admindashboard/model/types.ts, api.ts | Model JSON và HTTP client |
 | frontend/src/features/admindashboard/{AdminDashboardPage,CountCard,BackupSection,BackupHistoryDialog,StatusBreakdown}.tsx | Màn a01/popup a01b theo thiết kế |
 | frontend/src/app/admin/page.tsx | Mount dashboard dưới layout hiện có |
 | frontend/src/features/admindashboard/index.ts, register.ts | Export; giữ duy nhất NavEntry admin-dashboard đã có |
@@ -120,7 +120,7 @@ assertThat(view.accounts().data().byRoleAndStatus().get(Role.ADMIN).get(AccountS
 
 ## Task5 — Dashboard và backup history UI
 
-**Files:** types/api, năm component trong file map; tests `frontend/src/features/admindashboard/api.test.ts`, `AdminDashboardPage.test.tsx`, `BackupHistoryDialog.test.tsx`. Có thể mount route khi phát triển; HomePaths chưa đổi.
+**Files:** types/api, năm component trong file map; tests `frontend/src/features/admindashboard/api/index.test.ts`, `AdminDashboardPage.test.tsx`, `BackupHistoryDialog.test.tsx`. Có thể mount route khi phát triển; HomePaths chưa đổi.
 
 **Interfaces:** consumes JSON Task4 và shared apiFetch/session/UI; produces `getAdminDashboard(signal?:AbortSignal):Promise<AdminDashboardView>`, `getBackupHistory(page:number,size:number,signal?:AbortSignal):Promise<BackupHistoryPage>`, named page/components theo FD17/10. Dùng PageHeader/Section/Alert/Table/Pill/Dialog/Pagination sẵn có; Pagination page0-based.
 
@@ -131,7 +131,7 @@ assertThat(view.accounts().data().byRoleAndStatus().get(Role.ADMIN).get(AccountS
 
 ## Task6 — Navigation và Admin homePath
 
-**Files:** app/admin/page.tsx, features/admindashboard/index.ts/register.ts, backend identity/application/HomePaths.java; update `identity/application/AuthServiceTest.java`; add `frontend/src/features/admindashboard/navigation.test.tsx`; mở rộng RoleGuard.test.tsx nếu cần coverage mới.
+**Files:** app/admin/page.tsx, features/admindashboard/index.ts/register.ts, backend identity/application/HomePaths.java; update `identity/application/AuthServiceTest.java`; add `frontend/src/features/admindashboard/components/navigation.test.tsx`; mở rộng RoleGuard.test.tsx nếu cần coverage mới.
 
 **Consumes:** page/API Task4/5 và existing AuthenticatedLayout/NavEntry/session. **Produces:** ADMIN_HOME=/admin, các role khác giữ nguyên.
 
@@ -209,7 +209,7 @@ Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây
 
 ### Task B1 — U03 capability contract và compatibility
 
-**Files create:** backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java, BackupDashboardRunView.java, BackupDashboardSummary.java; backend/src/test/java/edu/aiplatform/backup/application/BackupDashboardContractTest.java; backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java.
+**Files create:** backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java, BackupDashboardRunView.java, BackupDashboardSummary.java; backend/src/test/java/edu/aiplatform/backup/service/BackupDashboardContractTest.java; backend/src/test/java/edu/aiplatform/backup/contract/stub/BackupDashboardUnavailableTest.java.
 
 **Files modify:** backend/src/main/java/edu/aiplatform/backup/contract/stub/BackupContractStubs.java; backend/src/test/java/edu/aiplatform/shared/stub/ContractStubsTest.java.
 
@@ -222,7 +222,7 @@ Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây
 
 ### Task B2 — U03 read-provider, summary SQL và public error
 
-**Files modify:** backend/src/main/java/edu/aiplatform/backup/application/BackupStatusService.java; backend/src/main/java/edu/aiplatform/backup/domain/BackupRunRepository.java. **Files create test:** backend/src/test/java/edu/aiplatform/backup/application/BackupStatusServiceTest.java.
+**Files modify:** backend/src/main/java/edu/aiplatform/backup/service/BackupStatusService.java; backend/src/main/java/edu/aiplatform/backup/repository/BackupRunRepository.java. **Files create test:** backend/src/test/java/edu/aiplatform/backup/service/BackupStatusServiceTest.java.
 
 **Consumes:** contract B1; domain BackupRun/backup_runs hiện có. **Produces:** BackupStatusService implements IBackupStatus,IBackupDashboardStatus; repository thêm `SummaryRow summarize(Instant fromInclusive, Instant toExclusive)` và nested `public record SummaryRow(Instant latestSuccessfulAt, long failedRuns, String latestFailureMessage, boolean invalidTerminal)`. Service kiểm integrity, che latestFailureMessage và dựng public BackupDashboardSummary với window echo. Dùng find/latest/page hiện có cho metadata. New methods read-only Spring transaction timeout1s. Mapping safeError nằm private trong service, không tạo service layer/framework.
 
@@ -234,7 +234,7 @@ Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây
 
 ### Task B3 — U15 consumer và HTTP absence semantics
 
-**Files modify:** backend/src/main/java/edu/aiplatform/admindashboard/application/AdminDashboardService.java; docs/contracts/openapi/admin-dashboard.yaml; backend/src/test/java/edu/aiplatform/admindashboard/application/DashboardFixture.java, AdminDashboardBackupTest.java, AdminDashboardAccessTest.java; backend/src/test/java/edu/aiplatform/admindashboard/web/AdminDashboardApiContractTest.java.
+**Files modify:** backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardService.java; docs/contracts/openapi/admin-dashboard.yaml; backend/src/test/java/edu/aiplatform/admindashboard/service/DashboardFixture.java, AdminDashboardBackupTest.java, AdminDashboardAccessTest.java; backend/src/test/java/edu/aiplatform/admindashboard/controller/AdminDashboardApiContractTest.java.
 
 **Consumes:** IBackupDashboardStatus B1/B2. **Produces:** existing BackupSection/BackupRunItem/BackupFailureSummary và hai endpoint hiện hữu; AVAILABLE latestSuccessfulAt.data có thể null, không đổi JSON keys.
 
@@ -246,7 +246,7 @@ Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây
 
 ### Task B4 — UI dữ liệu thật, absence và lỗi
 
-**Files modify:** frontend/src/features/admindashboard/types.ts, BackupSection.tsx, testFixtures.ts, BackupSection.test.tsx, BackupHistoryDialog.test.tsx, AdminDashboardPage.test.tsx. BackupRunTable.tsx chỉ sửa nếu test phát hiện cần thiết, không thay shared UI.
+**Files modify:** frontend/src/features/admindashboard/model/types.ts, BackupSection.tsx, testFixtures.ts, BackupSection.test.tsx, BackupHistoryDialog.test.tsx, AdminDashboardPage.test.tsx. BackupRunTable.tsx chỉ sửa nếu test phát hiện cần thiết, không thay shared UI.
 
 **Consumes:** JSON B3; **Produces:** existing `/admin` dashboard/history, same apiFetch/endpoints. Đổi type `latestSuccessfulAt: Section<string | null>`; những type khác giữ nguyên.
 
@@ -257,7 +257,7 @@ Các rule ngoài reduced scope N/A theo state; PBT disabled giữ nguyên. Đây
 
 ### Task B5 — Integration/verification và bàn giao acceptance
 
-**Files planned cho tester độc lập:** backend/src/test/java/edu/aiplatform/backup/infrastructure/BackupDashboardStatusIntegrationTest.java; có thể bổ sung existing AdminDashboardApiContractTest cho DTO guard coverage ở B3. **Files documentation modify:** construction/u15-admin-dashboard/code/implementation-summary.md, construction/build-and-test/u15-verification.md, construction/u03-job-and-settings/code/code-summary.md và plan/state/audit.
+**Files planned cho tester độc lập:** backend/src/test/java/edu/aiplatform/backup/integration/BackupDashboardStatusIntegrationTest.java; có thể bổ sung existing AdminDashboardApiContractTest cho DTO guard coverage ở B3. **Files documentation modify:** construction/u15-admin-dashboard/code/implementation-summary.md, construction/build-and-test/u15-verification.md, construction/u03-job-and-settings/code/code-summary.md và plan/state/audit.
 
 **Consumes:** provider+consumer+UI B1–B4. **Produces:** report phân biệt code-ready với full UC66 acceptance, SQL/provider/session/browser/NFR evidence thật; không tự chuyển Jira Done.
 

@@ -1,6 +1,6 @@
 # U02 Audit — logical-components
 
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
@@ -23,11 +23,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 ## 2. Thành phần
 
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `IAudit` / `AuditStore` | Backend, worker | P1: một hàm `record`; `SUCCESS` INSERT trong transaction của unit gọi, `DENIED`/`FAILURE` bằng transaction riêng; kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
-| `AuditQueryService` | Backend | Tra cứu audit cho ADMIN, lấy email người thực hiện qua `IAccountLookup` (U01), tự ghi `AUDIT_QUERIED` |
-| `AuditController` | Backend | `GET /api/v1/admin/audit-logs` |
+| Source | Trách nhiệm |
+|---|---|
+| [audit/controller](../../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [audit/service](../../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [audit/repository](../../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/model](../../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [audit/contract](../../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ## 3. Cấu hình
 
@@ -55,4 +57,8 @@ Không có biến riêng; dùng kết nối PostgreSQL chung.
 
 ## Design assessment scope — 2026-10-30
 
-Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Ghi nhận trước refactor chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+
+## Structure refactor — 2026-10-30
+
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).

@@ -18,6 +18,8 @@
 
 ## Current gates
 
+Current move-only working tree at parent HEAD `5a76e428`: backend 1,611 passed/0 skipped and required DB guard passed; frontend 599 passed/94 files, typecheck/build passed, lint exit 0 with two existing warnings. All original source/resource files retained; broader refactor edits withdrawn. See [package/file move results](2026-10-30-package-moves-only-results.md). No stage, commit, push or history rewrite.
+
 Fresh local automated verification: backend 1,611 passed/0 skipped, required DB guard passed, frontend 599 passed/94 files, lint/typecheck/build passed (2 existing lint warnings). See [2026-10-30-remediation-student-mcp-results.md](2026-10-30-remediation-student-mcp-results.md). CI, browser/runtime/provider/restore/security/performance acceptance remains pending. Docker and disposable PostgreSQL migrations were exercised in the remediation; the older “Docker stopped”, skipped-suite and missing-schema statements describe earlier runs. No live application database migration, provider call, email/grade publication or deployment was performed.
 
 ## Runbooks
