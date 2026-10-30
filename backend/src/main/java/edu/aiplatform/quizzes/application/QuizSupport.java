@@ -96,7 +96,8 @@ class QuizSupport {
             access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, OBJECT, quiz.id(), NOT_FOUND);
             ClassRef ref = classRef(classId);
             if (!ref.subjectId().equals(quiz.subjectId())
-                    || (quiz.status() != QuizStatus.OPEN && quiz.status() != QuizStatus.RETIRED)) {
+                    || (quiz.status() != QuizStatus.OPEN
+                        && (quiz.status() != QuizStatus.RETIRED || quiz.publishedAt() == null))) {
                 throw ApiException.notFound(NOT_FOUND);
             }
             return false;

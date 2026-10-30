@@ -38,13 +38,18 @@ class QuizTest {
         Quiz retired = open.retired("Hết dùng", NOW);
         assertThat(retired.status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(retired.retiredReason()).isEqualTo("Hết dùng");
+        assertThat(retired.reopened(NOW).status()).as("trùng thời điểm vẫn là Quiz từng phát hành")
+                .isEqualTo(QuizStatus.OPEN);
         assertThatThrownBy(() -> draft().published(NOW)).isInstanceOf(IllegalStateException.class);
 
         Quiz later = open.retired("Hết dùng", NOW.plusSeconds(60));
         assertThat(later.reopened(NOW.plusSeconds(120)).status()).as("quiz đã phát hành mở lại").isEqualTo(QuizStatus.OPEN);
         assertThat(later.reopened(NOW.plusSeconds(120)).retiredAt()).isNull();
         Quiz archivedDraft = draft().retired("Lưu trữ", NOW);
+        assertThat(archivedDraft.publishedAt()).as("lưu trữ không phải phát hành").isNull();
         assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).status()).as("lưu trữ khi còn nháp thì về nháp").isEqualTo(QuizStatus.DRAFT);
+        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).publishedAt()).isNull();
+        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).isDeletable()).isTrue();
     }
 
     @Test

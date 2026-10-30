@@ -97,6 +97,7 @@ public class QuizQueryService implements IQuizQuery {
 
     private static QuizView view(Quiz q, BigDecimal maxScore) {
         return new QuizView(q.id(), q.scope(), q.classId(), q.subjectId(), q.versionNo(), q.title(), q.status(),
-                q.settings(), q.activityMonitoringEnabled(), q.activityNotice(), q.referenceMaterialIds(), maxScore);
+                q.settings(), q.activityMonitoringEnabled(), q.activityNotice(), q.referenceMaterialIds(), maxScore,
+                q.publishedAt());
     }
 }

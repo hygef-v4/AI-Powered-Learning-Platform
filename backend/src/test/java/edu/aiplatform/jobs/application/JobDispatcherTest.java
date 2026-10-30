@@ -1,6 +1,7 @@
 package edu.aiplatform.jobs.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -17,8 +18,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+@ExtendWith(OutputCaptureExtension.class)
 class JobDispatcherTest {
 
     final IMessageSender sender = mock(IMessageSender.class);
@@ -103,7 +108,43 @@ class JobDispatcherTest {
         });
 
         assertThat(dispatcher(handler).dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.FAILED);
-        assertThat(handler.failedWith).isEqualTo("IllegalStateException: dữ liệu sai");
+        assertThat(handler.failedWith).isNotBlank().doesNotContain("dữ liệu sai");
+    }
+
+    @Test
+    void terminalFailurePersistenceErrorIsPropagatedWithoutLoggingItsMessage(CapturedOutput output) {
+        RuntimeException persistenceFailure = new IllegalStateException("db-password-secret-SENTINEL");
+        FakeHandler handler = new FakeHandler(m -> { throw new IllegalArgumentException("bad input"); }) {
+            @Override
+            public void onFailed(JobMessage message, String error) {
+                throw persistenceFailure;
+            }
+        };
+
+        assertThatThrownBy(() -> dispatcher(handler).dispatch(message(0))).isSameAs(persistenceFailure);
+        assertThat(output.getAll()).doesNotContain("db-password-secret-SENTINEL");
+    }
+
+    @Test
+    void arbitraryProviderErrorIsRedactedBeforeFailurePersistenceAndLogging(CapturedOutput output) {
+        String secret = "opaque-provider-secret-SENTINEL";
+        FakeHandler handler = new FakeHandler(m -> { throw new IllegalStateException(secret); });
+
+        assertThat(dispatcher(handler).dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.FAILED);
+
+        assertThat(handler.failedWith).isNotBlank().doesNotContain(secret);
+        assertThat(output.getAll()).doesNotContain(secret);
+    }
+
+    @Test
+    void exhaustedRetryErrorIsRedactedBeforeFailurePersistenceAndLogging(CapturedOutput output) {
+        String secret = "unlabelled-retry-secret-SENTINEL";
+        FakeHandler handler = new FakeHandler(m -> { throw new RetryableJobException(secret); });
+
+        assertThat(dispatcher(handler).dispatch(message(5))).isEqualTo(JobDispatcher.Outcome.FAILED);
+
+        assertThat(handler.failedWith).contains("Hết lượt").doesNotContain(secret);
+        assertThat(output.getAll()).doesNotContain(secret);
     }
 
     @Test

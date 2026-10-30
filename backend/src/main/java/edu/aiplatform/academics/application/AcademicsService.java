@@ -197,8 +197,11 @@ public class AcademicsService {
             for(var row:rows) {
                 EnrollmentResult result=row.error();
                 if(result==null) result=lineTransaction.execute(tx -> {
+                    AccountContact resolved=found.get(row.email());
+                    // Khóa tài khoản trước môn như U01: mỗi dòng dùng role/trạng thái hiện tại tới lúc commit.
+                    AccountContact account=resolved==null?null:accounts.lockContact(resolved.accountId()).orElse(null);
                     CourseClass current=locked(actor,id,null); editable(current);
-                    return enrollLine(actor,current,found.get(row.email()),EnrollmentSource.LIST);
+                    return enrollLine(actor,current,account,EnrollmentSource.LIST);
                 });
                 results.add(new RowResult(row.lineNumber(),row.email(),result));
             }

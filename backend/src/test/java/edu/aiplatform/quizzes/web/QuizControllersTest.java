@@ -42,6 +42,7 @@ import edu.aiplatform.quizzes.domain.QuestionContent;
 import edu.aiplatform.quizzes.domain.QuizOrigin;
 import edu.aiplatform.quizzes.domain.Violation;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
+import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -49,6 +50,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -163,6 +166,11 @@ class QuizControllersTest {
         when(publication.retire(teacher, quizId, "Đổi đề", 3)).thenReturn(detail());
         mvc.perform(post("/api/v1/quizzes/{id}/retire", quizId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"reason\":\"Đổi đề\",\"version\":3}")).andExpect(status().isOk());
+        verify(publication).retire(teacher, quizId, "Đổi đề", 3);
+        when(publication.reopen(teacher, quizId, 4)).thenReturn(detail());
+        mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":4}")).andExpect(status().isOk());
+        verify(publication).reopen(teacher, quizId, 4);
         when(copies.newVersion(teacher, quizId)).thenReturn(detail());
         mvc.perform(post("/api/v1/quizzes/{id}/versions", quizId)).andExpect(status().isCreated());
         UUID source = UUID.randomUUID();
@@ -171,6 +179,36 @@ class QuizControllersTest {
                 .content("{\"sourceQuizId\":\"" + source + "\"}")).andExpect(status().isCreated());
         mvc.perform(delete("/api/v1/quizzes/{id}", quizId).param("version", "5")).andExpect(status().isNoContent());
         verify(authoring).delete(teacher, quizId, 5);
+    }
+
+    @Test
+    void retirementAllowsOmittedReasonAndPreservesServerPrincipalAndVersion() throws Exception {
+        when(publication.retire(teacher, quizId, null, 6)).thenReturn(detail());
+        mvc.perform(post("/api/v1/quizzes/{id}/retire", quizId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":6}"))
+                .andExpect(status().isOk());
+        verify(publication).retire(teacher, quizId, null, 6);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"version\":-1}", "{\"version\":\"4\"}",
+            "{\"version\":4,\"actor\":\"forged\"}"})
+    void reopenRejectsMalformedVersionAndExtraFieldsBeforeService(String body) throws Exception {
+        mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+        verify(publication, never()).reopen(any(), any(), anyLong());
+    }
+
+    @Test
+    void reopenPreservesServiceConflictAndScopeDenial() throws Exception {
+        when(publication.reopen(teacher, quizId, 4)).thenThrow(ApiException.conflict("QUIZ_VERSION_CONFLICT", "Tải lại"));
+        mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":4}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("QUIZ_VERSION_CONFLICT"));
+        when(publication.reopen(teacher, quizId, 5)).thenThrow(ApiException.notFound("QUIZ_NOT_FOUND"));
+        mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":5}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("QUIZ_NOT_FOUND"));
     }
 
     @Test

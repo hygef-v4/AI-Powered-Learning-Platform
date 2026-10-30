@@ -8,6 +8,8 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /** B3: giữ các bản thành công trong 7 ngày; không bao giờ xóa bản thành công mới nhất (BR-U03-96). */
 @Service
@@ -25,6 +27,9 @@ public class BackupRetentionService {
         this.store = store;
     }
 
+    // afterCommit callbacks still have the completed transaction's connection bound. Suspend it so each
+    // successful external deletion's metadata update commits, retaining the existing per-archive behavior.
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void purgeOld(Instant now) {
         for (BackupRun run : runs.findPurgeCandidates(now.minus(KEEP))) {
             try {

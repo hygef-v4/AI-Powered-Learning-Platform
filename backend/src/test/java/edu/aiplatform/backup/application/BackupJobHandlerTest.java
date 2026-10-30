@@ -39,6 +39,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 class BackupJobHandlerTest {
 
@@ -95,6 +96,7 @@ class BackupJobHandlerTest {
     void successfulRunStoresAnEncryptedArchiveThatDecryptsToTheDump() throws Exception {
         when(runs.markRunning(runId, now)).thenReturn(1);
         when(runs.schemaVersion()).thenReturn("20260925.0920");
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
         LocalBackupStore store = new LocalBackupStore(dir.resolve("backups"));
 
         handler(publicKey(), store).handle(message);
@@ -112,6 +114,53 @@ class BackupJobHandlerTest {
         }
         assertThat(plain.toString()).isEqualTo("-- dump của database");
         assertThat(dir.resolve("tmp").resolve(runId.toString())).doesNotExist();
+    }
+
+    @Test
+    void lostSuccessTransitionDoesNotAuditCompletionOrPurgeArchives() {
+        when(runs.markRunning(runId, now)).thenReturn(1);
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(0);
+
+        assertThatThrownBy(() -> handler(publicKey(), new LocalBackupStore(dir.resolve("backups"))).handle(message))
+                .isInstanceOf(RetryableJobException.class);
+
+        verify(audit, never()).record(any());
+        verify(retention, never()).purgeOld(any());
+    }
+
+    @Test
+    void retentionWaitsForSuccessfulCommit() {
+        when(runs.markRunning(runId, now)).thenReturn(1);
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            handler(publicKey(), new LocalBackupStore(dir.resolve("backups"))).handle(message);
+
+            verify(retention, never()).purgeOld(any());
+            var callbacks = TransactionSynchronizationManager.getSynchronizations();
+            assertThat(callbacks).hasSize(1);
+            callbacks.forEach(callback -> callback.afterCommit());
+            verify(retention).purgeOld(now);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void rolledBackCompletionNeverPurgesArchives() {
+        when(runs.markRunning(runId, now)).thenReturn(1);
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            handler(publicKey(), new LocalBackupStore(dir.resolve("backups"))).handle(message);
+
+            TransactionSynchronizationManager.getSynchronizations().forEach(callback ->
+                    callback.afterCompletion(org.springframework.transaction.support.TransactionSynchronization.STATUS_ROLLED_BACK));
+
+            verify(retention, never()).purgeOld(any());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test
@@ -157,5 +206,34 @@ class BackupJobHandlerTest {
 
         verify(jobs, never()).enqueue(anyString(), anyMap(), anyString());
         verify(events, never()).publish(any());
+    }
+
+    @Test
+    void untrustedFailureTextCannotReachStoredErrorAuditOrEvent() {
+        String secret = "opaque-backup-secret-SENTINEL";
+        when(runs.markFailed(eq(runId), anyString(), eq(now))).thenReturn(1);
+        when(runs.find(runId)).thenReturn(Optional.empty());
+
+        handler(publicKey(), mock(IBackupStore.class)).onFailed(message, "Provider rejected " + secret);
+
+        ArgumentCaptor<String> stored = ArgumentCaptor.forClass(String.class);
+        verify(runs).markFailed(eq(runId), stored.capture(), eq(now));
+        ArgumentCaptor<AuditEvent> audited = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit).record(audited.capture());
+        ArgumentCaptor<DomainEvent> event = ArgumentCaptor.forClass(DomainEvent.class);
+        verify(events).publish(event.capture());
+        assertThat(stored.getValue()).isNotBlank().doesNotContain(secret);
+        assertThat(audited.getValue().reason()).isEqualTo(stored.getValue()).doesNotContain(secret);
+        assertThat(event.getValue().payload().get("error")).isEqualTo(stored.getValue());
+        assertThat(event.getValue().payload().toString()).doesNotContain(secret);
+    }
+
+    @Test
+    void knownSafeTimeoutReasonIsPreserved() {
+        when(runs.markFailed(eq(runId), anyString(), eq(now))).thenReturn(1);
+
+        handler(publicKey(), mock(IBackupStore.class)).onFailed(message, "Quá thời gian xử lý");
+
+        verify(runs).markFailed(runId, "Quá thời gian xử lý", now);
     }
 }

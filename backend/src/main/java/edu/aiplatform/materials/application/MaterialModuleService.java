@@ -44,7 +44,7 @@ public class MaterialModuleService {
             Set<UUID> open=quizzes.listForClass(classId).stream().map(QuizView::quizId).collect(Collectors.toSet());
             visible=q->open.contains(q.quizId());
         } else visible=q->q.scope()==QuizScope.SUBJECT
-                ? q.status()==QuizStatus.OPEN||q.status()==QuizStatus.RETIRED  // giảng viên chỉ xem Quiz của môn đã phát hành
+                ? q.status()==QuizStatus.OPEN||(q.status()==QuizStatus.RETIRED&&q.publishedAt()!=null)
                 : classId.equals(q.classId());
         return views(actor,c.subjectId(),false,visible);
     }

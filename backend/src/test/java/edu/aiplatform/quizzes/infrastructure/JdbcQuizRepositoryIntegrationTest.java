@@ -140,6 +140,39 @@ class JdbcQuizRepositoryIntegrationTest {
     }
 
     @Test
+    void retiringUnpublishedQuizKeepsPublicationNullAndReopensAsDeletableDraft() {
+        Quiz draft = subjectQuiz();
+        assertThat(quizzes.update(draft.retired("Lưu trữ", NOW))).isTrue();
+        Quiz retired = quizzes.find(draft.id()).orElseThrow();
+        assertThat(retired.status()).isEqualTo(QuizStatus.RETIRED);
+        assertThat(retired.publishedAt()).isNull();
+        assertThat(retired.retiredAt()).isEqualTo(NOW);
+        assertThat(quizzes.update(retired.reopened(NOW))).isTrue();
+        Quiz reopened = quizzes.find(draft.id()).orElseThrow();
+        assertThat(reopened.status()).isEqualTo(QuizStatus.DRAFT);
+        assertThat(reopened.publishedAt()).isNull();
+        assertThat(quizzes.delete(reopened.id(), reopened.version())).isTrue();
+    }
+
+    @Test
+    void publishedQuizRetiredAtPublicationInstantReopensAsOpenAfterRoundTrip() {
+        Quiz draft = subjectQuiz();
+        assertThat(quizzes.update(draft.reviewed(NOW))).isTrue();
+        Quiz reviewed = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.update(reviewed.published(NOW))).isTrue();
+        Quiz open = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.update(open.retired("Hết đợt", NOW))).isTrue();
+        Quiz retired = quizzes.find(draft.id()).orElseThrow();
+        assertThat(retired.publishedAt()).isEqualTo(retired.retiredAt());
+        assertThat(quizzes.update(retired.reopened(NOW))).isTrue();
+        Quiz reopened = quizzes.find(draft.id()).orElseThrow();
+        assertThat(reopened.status()).isEqualTo(QuizStatus.OPEN);
+        assertThat(reopened.publishedAt()).isEqualTo(NOW);
+        assertThat(reopened.retiredAt()).isNull();
+        assertThat(quizzes.delete(reopened.id(), reopened.version())).isFalse();
+    }
+
+    @Test
     void quizWithSettingsAndItemsReadsBack() {
         Quiz quiz = subjectQuiz();
         Question q = activeBank(Difficulty.EASY, "a");

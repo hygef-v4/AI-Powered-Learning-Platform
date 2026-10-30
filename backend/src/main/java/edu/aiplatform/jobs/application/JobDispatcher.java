@@ -3,6 +3,7 @@ package edu.aiplatform.jobs.application;
 import edu.aiplatform.jobs.contract.IJobHandler;
 import edu.aiplatform.jobs.contract.JobMessage;
 import edu.aiplatform.jobs.contract.RetryableJobException;
+import edu.aiplatform.jobs.contract.SafeJobErrors;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -88,11 +89,8 @@ public class JobDispatcher {
 
     private Outcome fail(IJobHandler handler, JobMessage message, String error) {
         log.error("Việc {} key={} thất bại: {}", message.jobType(), message.idempotencyKey(), error);
-        try {
-            handler.onFailed(message, error);
-        } catch (RuntimeException e) {
-            log.error("onFailed của việc {} lỗi", message.jobType(), e);
-        }
+        // Persistence errors must reach the listener so that it requeues the original delivery.
+        handler.onFailed(message, error);
         return Outcome.FAILED;
     }
 
@@ -101,13 +99,8 @@ public class JobDispatcher {
                 message.attempt() + 1, message.correlationId());
     }
 
-    /** Lỗi đã che: chỉ loại lỗi và thông điệp ngắn, không có stack trace. */
+    /** Provider/DB exception messages are untrusted, including when they look short or harmless. */
     static String safe(Throwable e) {
-        if (e instanceof TimeoutException) {
-            return "Quá thời gian xử lý";
-        }
-        String message = e.getMessage() == null ? "" : e.getMessage();
-        return e.getClass().getSimpleName() + (message.isEmpty() ? "" : ": "
-                + message.substring(0, Math.min(200, message.length())));
+        return SafeJobErrors.from(e);
     }
 }

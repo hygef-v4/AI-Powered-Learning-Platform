@@ -121,10 +121,13 @@ class AcademicsServiceTest {
     }
     @Test void batchLooksUpOnceAndReturnsAllNineResultTypes() {
         var restored = UUID.randomUUID(); var duplicate = UUID.randomUUID(); var other = UUID.randomUUID(); var wrong = UUID.randomUUID(); var disabled = UUID.randomUUID();
-        when(accounts.findByEmails(any())).thenReturn(List.of(
+        var found=List.of(
             new AccountContact(studentId,"new@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),new AccountContact(restored,"restore@a.com","N",Role.STUDENT,AccountStatus.PENDING),
             new AccountContact(duplicate,"has@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),new AccountContact(other,"other@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),
-            new AccountContact(wrong,"teacher@a.com","N",Role.TEACHER,AccountStatus.ACTIVE),new AccountContact(disabled,"disabled@a.com","N",Role.STUDENT,AccountStatus.DISABLED)));
+            new AccountContact(wrong,"teacher@a.com","N",Role.TEACHER,AccountStatus.ACTIVE),new AccountContact(disabled,"disabled@a.com","N",Role.STUDENT,AccountStatus.DISABLED));
+        when(accounts.findByEmails(any())).thenReturn(found);
+        when(accounts.lockContact(any())).thenAnswer(call->found.stream()
+                .filter(account->account.accountId().equals(call.getArgument(0))).findFirst());
         when(enrollments.find(classId,restored)).thenReturn(Optional.of(Enrollment.create(classId,restored,EnrollmentSource.MANUAL,now.minusSeconds(10)).remove(now.minusSeconds(5))));
         when(enrollments.find(classId,duplicate)).thenReturn(Optional.of(Enrollment.create(classId,duplicate,EnrollmentSource.MANUAL,now)));
         when(enrollments.activeInOtherClass(other,subjectId,classId)).thenReturn(true);

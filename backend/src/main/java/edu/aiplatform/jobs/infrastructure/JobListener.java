@@ -1,8 +1,10 @@
 package edu.aiplatform.jobs.infrastructure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.rabbitmq.client.Channel;
 import edu.aiplatform.jobs.application.JobDispatcher;
+import edu.aiplatform.jobs.application.JobRouting;
 import edu.aiplatform.jobs.contract.JobMessage;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -56,12 +58,44 @@ public class JobListener {
     }
 
     void handle(Message message, Channel channel) throws IOException {
+        long deliveryTag = message.getMessageProperties().getDeliveryTag();
+        JobMessage job;
         try {
-            dispatcher.dispatch(objectMapper.readValue(message.getBody(), JobMessage.class));
+            JsonNode envelope = objectMapper.readTree(message.getBody());
+            if (!validEnvelope(envelope)) {
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+            job = objectMapper.treeToValue(envelope, JobMessage.class);
         } catch (IOException e) {
             log.error("Bỏ message việc nền không đọc được");
-        } finally {
-            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            channel.basicAck(deliveryTag, false);
+            return;
         }
+        try {
+            dispatcher.dispatch(job);
+        } catch (RuntimeException e) {
+            // Do not expose dependency messages or lose work when terminal persistence/retry handoff fails.
+            log.warn("Chưa hoàn tất việc nền; đưa message lại hàng đợi");
+            channel.basicNack(deliveryTag, false, true);
+            return;
+        }
+        channel.basicAck(deliveryTag, false);
+    }
+
+    private static boolean validEnvelope(JsonNode value) {
+        if (value == null || !value.isObject()) {
+            return false;
+        }
+        JsonNode schema = value.path("schemaVersion"), attempt = value.path("attempt");
+        return schema.isIntegralNumber() && schema.canConvertToInt() && schema.intValue() > 0
+                && attempt.isIntegralNumber() && attempt.canConvertToInt()
+                && attempt.intValue() >= 0 && attempt.intValue() <= JobRouting.MAX_ATTEMPT
+                && nonBlank(value.path("jobType")) && nonBlank(value.path("idempotencyKey"))
+                && nonBlank(value.path("correlationId")) && value.path("payload").isObject();
+    }
+
+    private static boolean nonBlank(JsonNode value) {
+        return value.isTextual() && !value.textValue().isBlank();
     }
 }

@@ -134,7 +134,7 @@ public class QuizAttemptService {
             }
             attempt = support.submit(actor, attempt, SubmitMode.MANUAL);
         }
-        return support.result(attempt, false, canRetry(attempt));
+        return support.result(attempt, false, canRetry(actor, attempt));
     }
 
     /** Kết quả lượt đã nộp của mình (UC 52, BR-U11-20). */
@@ -144,11 +144,22 @@ public class QuizAttemptService {
         if (attempt.inProgress()) {
             throw ApiException.conflict("ATTEMPT_IN_PROGRESS", "Lượt này chưa nộp");
         }
-        return support.result(attempt, false, canRetry(attempt));
+        return support.result(attempt, false, canRetry(actor, attempt));
     }
 
-    private boolean canRetry(QuizAttempt attempt) {
-        Integer max = attempt.snapshot().settings().maxAttempts();
+    private boolean canRetry(Actor actor, QuizAttempt attempt) {
+        if (!access.allowedClass(actor, Actions.QUIZ_PRACTICE, attempt.classId())) {
+            return false;
+        }
+        ClassRef ref = support.classRef(attempt.classId());
+        if (ref.status() != ClassStatus.OPEN) {
+            return false;
+        }
+        QuizView quiz = support.quizInClass(attempt.quizId(), ref);
+        if (quiz.status() != QuizStatus.OPEN) {
+            return false;
+        }
+        Integer max = quiz.settings().maxAttempts();
         return max == null || attempts.countAttempts(attempt.quizId(), attempt.accountId()) < max;
     }
 

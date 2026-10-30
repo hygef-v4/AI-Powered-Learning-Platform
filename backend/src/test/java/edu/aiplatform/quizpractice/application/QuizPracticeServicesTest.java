@@ -62,6 +62,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -87,6 +89,7 @@ class QuizPracticeServicesTest {
     private QuizSettings settings = new QuizSettings(false, false, 10, 2, true, true);
     private QuizStatus quizStatus = QuizStatus.OPEN;
     private boolean monitoring;
+    private boolean practiceAllowed = true;
     private QuizAttemptService attemptsService;
     private QuizPracticeQueryService queries;
     private TeacherQuizAttemptService teacherService;
@@ -99,7 +102,7 @@ class QuizPracticeServicesTest {
     void setup() {
         IAuthorization authorization = (actor, action, ref) -> {
             boolean allowed = Actions.QUIZ_PRACTICE.equals(action)
-                    ? (actor.equals(student) || actor.equals(other)) && classA.equals(ref.id())
+                    ? practiceAllowed && (actor.equals(student) || actor.equals(other)) && classA.equals(ref.id())
                     : actor.equals(teacher) && classA.equals(ref.id());
             return allowed ? AuthorizationDecision.allow() : AuthorizationDecision.deny("OUT_OF_SCOPE");
         };
@@ -317,6 +320,82 @@ class QuizPracticeServicesTest {
             assertThat(q.correctOptionIds()).isNull();
         });
         assertThat(result.correctCount()).isNotNull();
+    }
+
+    @Test
+    void resultCannotRetryAfterQuizRetirementOrClassClosure() {
+        UUID attemptId = submitFresh(student);
+        assertThat(attemptsService.result(student, attemptId).canRetry()).isTrue();
+
+        quizStatus = QuizStatus.RETIRED;
+        assertThat(attemptsService.result(student, attemptId).canRetry()).isFalse();
+        assertThat(attemptsService.submit(student, attemptId).canRetry()).isFalse();
+
+        quizStatus = QuizStatus.OPEN;
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+        assertThat(attemptsService.result(student, attemptId).canRetry()).isFalse();
+    }
+
+    @Test
+    void ownResultRemainsReadableButRetryIsDeniedAfterEnrollmentRemoval() {
+        UUID attemptId = submitFresh(student);
+        practiceAllowed = false;
+
+        var result = attemptsService.result(student, attemptId);
+
+        assertThat(result.attemptId()).isEqualTo(attemptId);
+        assertThat(result.score()).isEqualByComparingTo("1");
+        assertThat(result.canRetry()).isFalse();
+        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_ATTEMPT_SUBMITTED");
+    }
+
+    @Test
+    void retryUsesCurrentAttemptLimitWhileResultVisibilityKeepsSnapshot() {
+        settings = new QuizSettings(false, false, null, 2, false, false);
+        var taking = attemptsService.start(student, quizId, classA);
+        settings = new QuizSettings(false, false, null, 1, true, true);
+
+        var result = attemptsService.submit(student, taking.attemptId());
+
+        assertThat(result.canRetry()).isFalse();
+        assertThat(result.showScore()).isFalse();
+        assertThat(result.score()).isNull();
+        assertThat(result.questions()).allSatisfy(q -> {
+            assertThat(q.correct()).isNull();
+            assertThat(q.correctOptionIds()).isNull();
+        });
+        settings = new QuizSettings(false, false, null, null, true, true);
+        assertThat(attemptsService.result(student, taking.attemptId()).canRetry()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"AUTH_NULL", "AUTH_DEPENDENCY", "AUTH_THROW", "CLASS_THROW", "QUIZ_THROW"})
+    void retryDependencyFailuresAreUnavailableWithoutFalseDenialAudit(String failure) {
+        UUID attemptId = submitFresh(student);
+        IAuthorization provider = mock(IAuthorization.class);
+        if (!failure.equals("AUTH_NULL")) {
+            when(provider.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
+        }
+        if (failure.equals("AUTH_DEPENDENCY")) {
+            when(provider.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.deny("DEPENDENCY_UNAVAILABLE"));
+        } else if (failure.equals("AUTH_THROW")) {
+            when(provider.authorize(any(), any(), any())).thenThrow(new IllegalStateException("private provider detail"));
+        } else if (failure.equals("CLASS_THROW")) {
+            when(classes.getClassRef(classA)).thenThrow(new IllegalStateException("private provider detail"));
+        } else if (failure.equals("QUIZ_THROW")) {
+            when(quizzes.get(quizId)).thenThrow(new IllegalStateException("private provider detail"));
+        }
+        List<AuditEvent> guardAudits = new ArrayList<>();
+        PracticeAccess access = new PracticeAccess(provider, guardAudits::add, clock);
+        var guarded = new QuizAttemptService(store,
+                new PracticeSupport(store, quizzes, scoring, classes, access, clock), access, clock);
+
+        ApiException rejected = api(() -> guarded.result(student, attemptId));
+
+        assertThat(rejected.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(rejected.getMessage()).doesNotContain("private provider detail");
+        assertThat(guardAudits).isEmpty();
+        assertThat(store.byId.get(attemptId).status()).isEqualTo(AttemptStatus.SUBMITTED);
     }
 
     @Test

@@ -32,6 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -59,6 +60,12 @@ class AcademicsApiContractTest {
     private ClassView course() {
         return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", "Morning class",
                 "Description", "2026-1", ClassStatus.OPEN, teacher, 2, 1, timestamp, true, 7);
+    }
+
+    private ClassView mutationResult(String name, String description, String term, ClassStatus status,
+                                     Person assignedTeacher, boolean distribution, long version) {
+        return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", name,
+                description, term, status, assignedTeacher, 2, 1, timestamp, distribution, version);
     }
 
     private Student student() {
@@ -144,31 +151,46 @@ class AcademicsApiContractTest {
     }
 
     @Test void createReturns201AndMapsOptionalTeacher() throws Exception {
-        when(service.create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId)).thenReturn(course());
+        when(service.create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId))
+                .thenReturn(mutationResult("Morning class", "Description", "2026-1", ClassStatus.DRAFT, teacher, false, 0));
         String body = "{\"subjectId\":\"" + subjectId + "\",\"code\":\"C01\",\"name\":\"Morning class\",\"description\":\"Description\",\"term\":\"2026-1\",\"teacherId\":\"" + accountId + "\"}";
         mvc.perform(post("/api/v1/manager/classes").contentType("application/json").content(body))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.version").value(7));
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.version").value(0))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.teacher.id").value(accountId.toString()));
         verify(service).create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId);
         verifyNoMoreInteractions(service);
     }
 
     @Test void classMutationsForwardVersionAndTypedValues() throws Exception {
-        when(service.updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6)).thenReturn(course());
-        when(service.assignTeacher(serverActor, classId, null, 7)).thenReturn(course());
-        when(service.gradeDistribution(serverActor, classId, false, 8)).thenReturn(course());
-        when(service.changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9)).thenReturn(course());
+        when(service.updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6))
+                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, teacher, true, 7));
+        when(service.assignTeacher(serverActor, classId, null, 7))
+                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, true, 8));
+        when(service.gradeDistribution(serverActor, classId, false, 8))
+                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, false, 9));
+        when(service.changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
+                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.ARCHIVED, null, false, 10));
         mvc.perform(patch("/api/v1/manager/classes/" + classId).contentType("application/json")
                 .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"term\":\"2027-1\",\"version\":6}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
+                .andExpect(jsonPath("$.name").value("Renamed"))
+                .andExpect(jsonPath("$.description").value("Updated"))
+                .andExpect(jsonPath("$.term").value("2027-1"))
+                .andExpect(jsonPath("$.version").value(7));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/teacher").contentType("application/json")
                 .content("{\"teacherId\":null,\"version\":7}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.teacher.id").value(accountId.toString()));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.teacher").value(nullValue()))
+                .andExpect(jsonPath("$.version").value(8));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/grade-distribution").contentType("application/json")
                 .content("{\"enabled\":false,\"version\":8}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(7));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(9))
+                .andExpect(jsonPath("$.showGradeDistribution").value(false));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/status").contentType("application/json")
                 .content("{\"status\":\"ARCHIVED\",\"version\":9}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"))
+                .andExpect(jsonPath("$.status").value("ARCHIVED"))
+                .andExpect(jsonPath("$.version").value(10));
         verify(service).updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6);
         verify(service).assignTeacher(serverActor, classId, null, 7);
         verify(service).gradeDistribution(serverActor, classId, false, 8);

@@ -40,6 +40,16 @@ class PracticeAccess {
         if (actor == null || actor.accountId() == null) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "Cần đăng nhập");
         }
+        if (!allowedClass(actor, action, classId)) {
+            deny(actor, action, objectType, objectId, notFoundCode);
+        }
+    }
+
+    /** Current permission for an available action; hiding an action does not deny access to an owned result. */
+    boolean allowedClass(Actor actor, String action, UUID classId) {
+        if (actor == null || actor.accountId() == null) {
+            return false;
+        }
         AuthorizationDecision decision;
         try {
             decision = authorization.authorize(actor, action, ResourceRef.courseClass(classId));
@@ -49,9 +59,7 @@ class PracticeAccess {
         if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
             throw unavailable();
         }
-        if (!decision.allowed()) {
-            deny(actor, action, objectType, objectId, notFoundCode);
-        }
+        return decision.allowed();
     }
 
     /** Từ chối kèm audit {@code ACCESS_DENIED} (ví dụ xem lượt của người khác, BR-U11-22). */

@@ -69,21 +69,21 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
         return with(QuizStatus.OPEN, now, retiredAt, retiredReason, now);
     }
 
-    /** Lưu trữ Quiz ở bất kỳ trạng thái nào chưa lưu trữ; Quiz chưa phát hành lấy thời điểm lưu trữ làm mốc phát hành. */
+    /** Lưu trữ Quiz chưa lưu trữ, giữ nguyên lịch sử phát hành (null nếu chưa từng phát hành). */
     public Quiz retired(String reason, Instant now) {
         if (status == QuizStatus.RETIRED) {
             throw new IllegalStateException("Quiz đã lưu trữ");
         }
-        return with(QuizStatus.RETIRED, publishedAt == null ? now : publishedAt, now, reason, now);
+        return with(QuizStatus.RETIRED, publishedAt, now, reason, now);
     }
 
     /**
-     * Mở lại Quiz đã lưu trữ: Quiz từng phát hành mở lại cho sinh viên làm; Quiz lưu trữ khi chưa phát hành (mốc phát hành
-     * trùng mốc lưu trữ) về nháp để soạn tiếp.
+     * Mở lại Quiz đã lưu trữ: Quiz có lịch sử phát hành mở lại cho sinh viên làm; Quiz chưa từng phát hành về nháp để
+     * soạn tiếp. Hai sự kiện phát hành/lưu trữ có thể xảy ra cùng thời điểm.
      */
     public Quiz reopened(Instant now) {
         require(QuizStatus.RETIRED);
-        boolean neverPublished = publishedAt != null && publishedAt.equals(retiredAt);
+        boolean neverPublished = publishedAt == null;
         return with(neverPublished ? QuizStatus.DRAFT : QuizStatus.OPEN, publishedAt, null, null, now);
     }
 

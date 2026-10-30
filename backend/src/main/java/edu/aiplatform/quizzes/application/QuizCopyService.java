@@ -67,7 +67,8 @@ public class QuizCopyService {
     @Transactional
     public QuizDetail newVersion(Actor actor, UUID id) {
         Quiz source = support.loadManaged(actor, id);
-        if (source.status() != QuizStatus.OPEN && source.status() != QuizStatus.RETIRED) {
+        if (source.status() != QuizStatus.OPEN
+                && (source.status() != QuizStatus.RETIRED || source.publishedAt() == null)) {
             throw ApiException.conflict("QUIZ_NOT_PUBLISHED", "Chỉ tạo version mới từ quiz đã phát hành");
         }
         support.requireContainerActive(source);

@@ -14,6 +14,8 @@ import edu.aiplatform.subjects.contract.*;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.*;
@@ -45,7 +47,10 @@ class AcademicsBatchTransactionTest {
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(subjects.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
         when(classes.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","","2026",ClassStatus.OPEN,managerId,false,now,now,0)));
-        when(accounts.findByEmails(any())).thenReturn(List.of(contact(first,"first@example.test",Role.STUDENT),contact(second,"second@example.test",Role.STUDENT),contact(third,"third@example.test",Role.STUDENT)));
+        var students=List.of(contact(first,"first@example.test",Role.STUDENT),contact(second,"second@example.test",Role.STUDENT),contact(third,"third@example.test",Role.STUDENT));
+        when(accounts.findByEmails(any())).thenReturn(students);
+        when(accounts.lockContact(any())).thenAnswer(call->students.stream()
+                .filter(student->student.accountId().equals(call.getArgument(0))).findFirst());
         when(enrollments.find(eq(classId),any())).thenAnswer(call->{
             UUID account=call.getArgument(1);
             return tx.committed.contains(account)?Optional.of(Enrollment.create(classId,account,EnrollmentSource.LIST,now)):Optional.empty();
@@ -123,6 +128,43 @@ class AcademicsBatchTransactionTest {
         assertThat(tx.committed).containsExactly(first);assertThat(tx.commits).isEqualTo(1);assertThat(tx.rollbacks).isEqualTo(1);
         verify(enrollments,never()).insert(argThat(value->!value.accountId().equals(first)));
         verify(audit).record(argThat(event->event.action().equals("ACCESS_DENIED")&&event.result()==AuditResult.DENIED));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"STUDENT,DISABLED,DISABLED", "TEACHER,ACTIVE,NOT_STUDENT"})
+    void studentEligibilityIsRevalidatedInsideEachRowAfterEarlierCommit(
+            Role currentRole, AccountStatus currentStatus, EnrollmentResult expected) {
+        // Bulk resolution sees all three as eligible. The second account changes after row one commits.
+        when(accounts.lockContact(any())).thenAnswer(call -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+            UUID id = call.getArgument(0);
+            if (id.equals(second)) {
+                assertThat(tx.committed).contains(first);
+                return Optional.of(new AccountContact(second, "second@example.test", "Person", currentRole, currentStatus));
+            }
+            return Optional.of(contact(id, id.equals(first) ? "first@example.test" : "third@example.test", Role.STUDENT));
+        });
+
+        var rows = service.enrollBatch(manager, classId, input);
+
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result)
+                .containsExactly(EnrollmentResult.ENROLLED, expected, EnrollmentResult.ENROLLED);
+        assertThat(tx.committed).containsExactly(first, third);
+        verify(accounts).findByEmails(List.of("first@example.test", "second@example.test", "third@example.test"));
+        verify(enrollments, never()).insert(argThat(value -> value.accountId().equals(second)));
+        verify(events, never()).publish(argThat(event -> event.payload().get("accountId").equals(second.toString())));
+        verify(audit, never()).record(argThat(event -> event.result() == AuditResult.SUCCESS
+                && second.toString().equals(event.details().get("accountId"))));
+        var order = inOrder(accounts, lock, enrollments);
+        order.verify(accounts).lockContact(first);
+        order.verify(lock).lockActive(eq(subjectId), any());
+        order.verify(enrollments).insert(argThat(value -> value.accountId().equals(first)));
+        order.verify(accounts).lockContact(second);
+        order.verify(lock).lockActive(eq(subjectId), any());
+        order.verify(accounts).lockContact(third);
+        order.verify(lock).lockActive(eq(subjectId), any());
+        assertThat(tx.commits).isEqualTo(3);
+        assertThat(tx.rollbacks).isZero();
     }
 
     @Test void rowCommitIsIndependentOfAnAlreadyActiveCallerTransaction() {

@@ -15,6 +15,7 @@ import edu.aiplatform.jobs.contract.JobMessage;
 import edu.aiplatform.jobs.contract.JobQueue;
 import edu.aiplatform.jobs.contract.JobTypes;
 import edu.aiplatform.jobs.contract.RetryableJobException;
+import edu.aiplatform.jobs.contract.SafeJobErrors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,8 +35,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * {@code BACKUP_RUN} (B2, B4): dump, mã hóa, tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS}
@@ -45,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class BackupJobHandler implements IJobHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(BackupJobHandler.class);
     static final Duration TIMEOUT = Duration.ofHours(2);
 
     private final BackupRunRepository runs;
@@ -87,8 +93,11 @@ public class BackupJobHandler implements IJobHandler {
     }
 
     @Override
+    @Transactional
     public void handle(JobMessage message) {
         UUID runId = runId(message);
+        // Hold the conditional UPDATE's row lock until completion/rollback. Duplicate workers then see terminal
+        // state; a rolled-back attempt can still be claimed by the next retry.
         if (runs.markRunning(runId, clock.instant()) == 0) {
             return;
         }
@@ -109,10 +118,13 @@ public class BackupJobHandler implements IJobHandler {
                 throw new RetryableJobException("Bản tải lên không khớp kích thước hoặc checksum");
             }
             Instant now = clock.instant();
-            runs.markSuccess(runId, snapshotAt, runs.schemaVersion(), appVersion(), stored.ref(), sha256, size, now);
+            if (runs.markSuccess(runId, snapshotAt, runs.schemaVersion(), appVersion(), stored.ref(), sha256, size,
+                    now) == 0) {
+                throw new RetryableJobException("Chưa ghi được kết quả backup");
+            }
             audit.record(new AuditEvent(UUID.randomUUID(), null, "BACKUP_COMPLETED", "BACKUP_RUN", runId.toString(),
                     AuditResult.SUCCESS, null, Map.of("byteSize", size), now));
-            retention.purgeOld(now);
+            purgeAfterCommit(now);
         } catch (StorageUnavailableException | IOException e) {
             throw new RetryableJobException("Lưu trữ hoặc tệp tạm tạm thời lỗi", e);
         } finally {
@@ -125,7 +137,7 @@ public class BackupJobHandler implements IJobHandler {
     public void onFailed(JobMessage message, String error) {
         UUID runId = runId(message);
         Instant now = clock.instant();
-        String safeError = error == null ? "Lỗi không rõ" : error.substring(0, Math.min(500, error.length()));
+        String safeError = SafeJobErrors.sanitize(error);
         if (runs.markFailed(runId, safeError, now) == 0) {
             return;
         }
@@ -138,6 +150,24 @@ public class BackupJobHandler implements IJobHandler {
         payload.put("scheduledFor", runs.find(runId).map(BackupRun::scheduledFor).map(Object::toString).orElse(null));
         payload.put("error", safeError);
         events.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.BACKUP_FAILED, "U03", now, null, payload));
+    }
+
+    private void purgeAfterCommit(Instant now) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            retention.purgeOld(now);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    retention.purgeOld(now);
+                } catch (RuntimeException e) {
+                    // Backup completion is already durable. Retention can retry on the next successful backup.
+                    log.warn("Chưa dọn được bản backup cũ; thử lại ở lần backup tiếp theo");
+                }
+            }
+        });
     }
 
     private void ensureSpace(Path dir) throws IOException {

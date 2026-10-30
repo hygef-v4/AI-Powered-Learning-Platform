@@ -99,6 +99,7 @@ public class QuizAuthoringService {
         List<QuizRow> rows = new ArrayList<>();
         quizzes.listClassQuizzes(classId).forEach(s -> rows.add(QuizRow.of(s, false)));
         quizzes.listSubjectQuizzes(ref.subjectId(), List.of(QuizStatus.OPEN, QuizStatus.RETIRED))
+                .stream().filter(s -> s.quiz().status() == QuizStatus.OPEN || s.quiz().publishedAt() != null)
                 .forEach(s -> rows.add(QuizRow.of(s, true)));
         return rows;
     }
