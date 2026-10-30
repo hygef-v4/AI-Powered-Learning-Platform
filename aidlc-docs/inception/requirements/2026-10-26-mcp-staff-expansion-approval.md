@@ -1,5 +1,7 @@
 # Duyệt kế hoạch kỹ thuật MCP cho ba role
 
+**Superseded role scope 2026-10-30:** Admin MCP removed; Student own submitted Practice MCP restored by explicit user instruction. This document preserves historical staff-expansion scope; current requirements are in 2026-10-30-test-remediation-student-mcp.md.
+
 Phạm vi sản phẩm kế thừa quyết định đã chốt trong hội thoại. Tài liệu này duyệt kế hoạch kỹ thuật mới trước khi thực thi theo CLAUDE.md, không yêu cầu xác nhận lại việc loại Student.
 
 ## Câu hỏi 1

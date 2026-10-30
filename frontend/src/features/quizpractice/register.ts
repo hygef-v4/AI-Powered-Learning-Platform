@@ -3,8 +3,8 @@
 
 import { learningMaterialSections } from "@/features/materials/slots";
 import { quizDetailSections, quizRowActions } from "@/features/quizzes/slots";
-import { MaterialQuizList } from "./MaterialQuizList";
-import { QuizAttemptCount, QuizAttemptsSection } from "./TeacherQuizSections";
+import { MaterialQuizList } from "./components/MaterialQuizList";
+import { QuizAttemptCount, QuizAttemptsSection } from "./components/TeacherQuizSections";
 
 
 quizDetailSections.register({ key: "quiz-practice-attempts", order: 10, component: QuizAttemptsSection });

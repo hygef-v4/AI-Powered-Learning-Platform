@@ -2,7 +2,7 @@
 
 import { studentClassBoard } from "@/features/academics/slots";
 import { navEntries } from "@/features/identity/slots";
-import { ClassTodoCard } from "./ClassTodoCard";
+import { ClassTodoCard } from "./components/ClassTodoCard";
 
 navEntries.register({ key: "my-assignments", order: 20, title: "Bài tập", href: "/my-assignments", icon: "assignment", roles: ["STUDENT"] });
 // Bài tập cần làm chiếm nửa phải hàng thẻ dưới Thông tin lớp.

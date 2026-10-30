@@ -1,5 +1,9 @@
 # U10 Quiz Authoring — code summary (giai đoạn 1: ngân hàng câu hỏi; giai đoạn 2: Quiz)
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-20 trên nhánh `quiz-authoring` (tách từ `staging` `6341aed`) theo [plan giai đoạn 1](../../plans/code-generation-plan/u10-quiz-authoring-code-generation-plan.md). Phạm vi: UC 46 View Subject Question Bank (KAN-143), UC 47 Create/Update/Delete Subject Question (KAN-78); luồng F1, F2, F3. Chưa gồm F4 (AI soạn câu, giai đoạn 4) và phần Quiz (UC 48, giai đoạn 2). Chưa commit.
 
 ## Business logic

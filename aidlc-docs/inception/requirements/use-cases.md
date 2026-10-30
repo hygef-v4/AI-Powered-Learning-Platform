@@ -2,7 +2,7 @@
 
 **66 active UC; 50 MVP stories + 1 extension; 15 logical units.**
 
-Source: [English UC table](../../../docs/usecase_table.md). User-approved catalog changes are documented in sync plan. Documentation-only; code, Jira, Google Reports and diagram files are not synchronized by this request.
+Source: [English UC table](../../../docs/usecase_table.md). User-approved catalog changes are documented in sync plan. Documentation-only; code-derived documentation synchronized 2026-10-30; Jira/Google Reports are outside this local sync; source-observed is not runtime acceptance.
 
 | ID | Use case | Primary unit | Scope/behavior |
 |---|---|---|---|
@@ -19,8 +19,8 @@ Source: [English UC table](../../../docs/usecase_table.md). User-approved catalo
 | 11 | Update Account Information | U01 | Allows an administrator to update permitted information and role settings of a selected account. |
 | 12 | Change Account Status | U01 | Allows an administrator to change an account's status and control its eligibility to access the platform. |
 | 13 | View Audit Log | U02 | Allows an administrator to view and search audit logs by actor, action, affected object, result and time. Audit records are read-only and cannot be edited or deleted. |
-| 14 | View Settings | U03 | Allows an administrator to view permitted operational settings, file constraints, backup schedule, activity retention and institutional AI token quota policies for eligible teachers and subject managers. The settings also show institutional Gemini, OpenAI or Claude API configuration, selected providers/models and connection status. API keys remain masked; viewing settings does not change configuration or grant academic content access. |
-| 15 | Edit Setting | U03 | Allows an administrator to update permitted operational settings, file constraints, backup schedule, activity retention and institutional AI token quota policies for eligible teachers and subject managers. Within the same settings, the administrator can configure, replace or revoke institutional Gemini, OpenAI or Claude API keys, select supported models and test connections with synthetic data. Credentials are protected, and changes are validated, version-checked and audited. Shared API access is educator-only within quota; quota is not sold or allocated to students, and exhausted shared quota never automatically uses a personal API. Configuration does not grant academic content access; personal APIs and MCP agents remain separate through UC 31/32. |
+| 14 | View Settings | U03 | Allows an administrator to view permitted operational settings, file constraints, backup schedule, fixed one-day activity retention information and institutional AI token quota policies for eligible teachers and subject managers. The settings also show institutional Gemini, OpenAI or Claude API configuration, selected providers/models and connection status. API keys remain masked; viewing settings does not change configuration or grant academic content access. |
+| 15 | Edit Setting | U03 | Allows an administrator to update permitted operational settings, file constraints, backup schedule, fixed one-day activity retention information and institutional AI token quota policies for eligible teachers and subject managers. Within the same settings, the administrator can configure, replace or revoke institutional Gemini, OpenAI or Claude API keys, select supported models and test connections with synthetic data. Credentials are protected, and changes are validated, version-checked and audited. Shared API access is educator-only within quota; quota is not sold or allocated to students, and exhausted shared quota never automatically uses a personal API. Configuration does not grant academic content access; personal APIs and MCP agents remain separate through UC 31/32. |
 | 16 | View Subject List | U04 | Allows an administrator to view the platform's subjects and select a subject to inspect or manage. |
 | 17 | Add Subject | U04 | Allows an administrator to create a subject with the required identifying information and subject-manager assignment. |
 | 18 | View Subject Detail | U04 | Allows an administrator to view a subject's information, assigned subject manager and related class information. |
@@ -43,7 +43,7 @@ Source: [English UC table](../../../docs/usecase_table.md). User-approved catalo
 | 35 | Create/Update/Delete Individual Assignment | U07 | Allows an assigned teacher, or a subject manager within their authorized subject scope, to create, update or delete individual Assignments using document sections and rubrics. Each student completes and submits their own work. Draw.io diagrams are optional and enabled by the educator; optional activity monitoring is configured before publication. Student feedback is available only for submitted Practice Assignments, not editable drafts or Graded work. |
 | 36 | Add/Update/Delete Rubric | U07 | Allows an authorized educator to add, update or delete rubrics for document sections in individual or group Assignments, including diagram criteria when diagrams are enabled. Rubrics are validated, locked at publication and snapshotted for attempts and submissions. |
 | 37 | View Assignment List | U08 | Allows a student to view available individual or group Assignments in their enrolled classes. An Assignment may contain document content only or optional Draw.io diagrams; Quiz is a separate assessment type. |
-| 38 | View Assignment Detail | U08 | Allows a student to view an Assignment's instructions, document structure, rubric, submission mode, diagram requirements, deadline, attempt limits and applicable AI/activity policies. |
+| 38 | View Assignment Detail | U08 | Student views permitted pre-start metadata, schedule and available actions; full instructions/document content become available through an authorized attempt, rubric stays hidden. |
 | 39 | Complete Individual Assignment | U08 | Allows a student to start or resume an individual Assignment, edit permitted document sections, autosave drafts and submit the completed work. When the teacher enables diagrams, the student can optionally create or edit Draw.io diagram blocks within the workspace; full Draw.io XML and previews are preserved with the document. Diagram editing is part of Assignment completion, not a separate use case or assessment type. |
 | 40 | View Submission History | U08 | Allows a student to view their previous submissions for an assignment, including submitted content, submission time and permitted scores or feedback. |
 | 41 | Request Practice Feedback | U08 | Allows a student to request private feedback on their own submitted Practice Assignment through a personal AI API connection or external MCP agent. Feedback is versioned and does not create official Gradebook grades; no shared AI token grant is provided to students. |
@@ -61,7 +61,7 @@ Source: [English UC table](../../../docs/usecase_table.md). User-approved catalo
 | 53 | Create/Update/Delete Group Assignment | U12 | Allows a teacher assigned to a class to create, update or delete group Assignments using a shared document structure and section rubrics. Group members work on authorized sections and the group leader submits the document. Draw.io diagrams are optional and enabled by the teacher; optional activity monitoring is configured before publication. Group Assignments are Graded only; subject-wide group authoring is not supported. |
 | 54 | View My Group | U12 | Allows a student to view their group in a class, including its members, leader and group-assignment documents. |
 | 55 | Request Leader Change | U12 | Allows a group member to submit a request to change the group leader, provide a reason and optionally propose a replacement. |
-| 56 | Complete Group Assignment | U12 | Allows group members to claim and edit authorized sections of a shared Assignment document. When the teacher enables diagrams, members can optionally create or edit Draw.io diagram blocks in sections they are permitted to edit; full Draw.io XML and previews are preserved with the document. The group leader submits the group document; version history and individual activity signals are retained when monitoring is enabled. |
+| 56 | Complete Group Assignment | U12 | Allows group members to claim and edit authorized sections of a shared Assignment document. Members can optionally create or edit available Draw.io diagram blocks in sections they are permitted to edit; full Draw.io XML and previews are preserved with the document. The group leader submits the group document; version history and individual activity signals are retained when monitoring is enabled. |
 | 57 | Create/Update/Delete Class Group | U12 | Allows an assigned teacher to create class groups manually or randomly, add, move or remove members, appoint group leaders, and approve or reject leader-change requests. |
 | 58 | View Subject Materials | U13 | Allows a subject manager to view permitted reference files and educational YouTube video links in an assigned subject and inspect their versions or details. |
 | 59 | Add/Update/Delete Subject Material | U13 | Allows a subject manager to add, update or remove subject reference files stored privately through Google Drive and educational YouTube video links shared with authorized classes. YouTube links are part of the core scope; full Lesson processing, automatic transcription, AI summaries and advanced RAG remain extensions. |
@@ -144,7 +144,7 @@ Active use cases were renumbered 01–66 in unit order (U01 → U15) on 2026-10-
 | 28 | 40 |
 | 29 | 41 |
 | 37 | 42 |
-| 38 | 43 |
+| 38 | View Assignment Detail | U08 | Student views permitted pre-start metadata, schedule and available actions; full instructions/document content become available through an authorized attempt, rubric stays hidden. |
 | 39 | 44 |
 | 40 | 45 |
 | 56 | 46 |
@@ -168,3 +168,11 @@ Active use cases were renumbered 01–66 in unit order (U01 → U15) on 2026-10-
 | 36 | 64 |
 | 12 | 65 |
 | 58 | 66 |
+
+## Code-derived clarifications — 2026-10-30
+
+IDs 01–66 remain unchanged. UC14/15 do not expose editable activity.retentionDays: source retains activity for one day. UC26 creates DRAFT; UC29 allows OPEN without teacher. UC32 is for Student/Teacher/Subject Manager, not Admin; owner can reveal an ACTIVE credential when ciphertext exists. UC31 personal API remains available to Student. UC48 supports edit OPEN and retire/reopen under version/container guards; review has not been removed. UC55 request/rejection reasons are optional, max 1,000 characters. UC58–62 include U13 material modules and scoped Quiz attachment; UC66 includes /activity. Admin institutional key reveal is a documented AS-BUILT exception to prior no-readback design. See [decision-register.md](../reverse-engineering/decision-register.md).
+
+## MCP correction and audit remediation — 2026-10-30
+
+Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.

@@ -1,20 +1,28 @@
 # U12 Group Assignment — logical-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `ClassGroupController`, `LeaderRequestController`, `MyGroupController`, `GroupDocumentController`, `GroupProgressController` | backend | API mục 5 của domain-entities |
-| `ClassGroupService`, `RandomGroupSplitter` | backend | Nhóm, chia ngẫu nhiên, đổi thành viên (F1, F2, F14, P2) |
-| `LeaderRequestService` | backend | Yêu cầu đổi trưởng nhóm (F3, F5) |
-| `GroupReadinessService` (cài `IGroupAssignmentSupport`), `GroupAssignmentLifecycle` (cài `IAssignmentLifecycleListener`) | backend | Sẵn sàng; mở, ngưng giao (F6, F7, F13) |
-| `GroupDocumentService`, `GroupDocCreateJobHandler` | backend, worker | Tạo tài liệu, workspace (F7, F8, P3) |
-| `GroupSectionService` | backend | Giao, nhận, làm, Xong, nhả (F9–F11, P1) |
-| `GroupSubmissionService`, `GroupAutoSubmitScanner` | backend, worker | Nộp, tự nộp (F12, F13, P5) |
-| `GroupWorkQueryService` (cài `IGroupWorkStatus`, `IGroupSubmissionSource`), `GroupMcpTools` | backend | Interface cho U08, U09, U06 (F15) |
-| `ISseHub`, `RabbitSseHub` | backend | Realtime (P4) |
-| Repository các bảng nhóm, tài liệu | backend, worker | Chỉ dùng trong package |
+| Source | Trách nhiệm |
+|---|---|
+| [groups/controller](../../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [groups/service](../../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [groups/repository](../../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/model](../../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [groupdocs/controller](../../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [groupdocs/service](../../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [groupdocs/repository](../../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/model](../../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [groupdocs/integration](../../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [groupdocs/contract](../../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Ghi nhận trước refactor chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+
+## Structure refactor — 2026-10-30
+
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).

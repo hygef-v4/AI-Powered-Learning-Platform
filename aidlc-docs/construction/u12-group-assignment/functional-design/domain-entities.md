@@ -1,6 +1,9 @@
 # U12 Group Assignment — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
 
@@ -26,7 +29,7 @@ U12 không sở hữu: bài, khung, rubric (U07), đánh giá và điểm (U09),
 |---|---|
 | `ClassGroup` | `id`, `classId`, `name` (≤ 100, không trùng trong lớp), `leaderId`, `createdBy`, `createdAt`, `updatedAt`; bộ nhóm của lớp có `version` chung để lưu một lần |
 | `GroupMember` | `groupId`, `classId`, `accountId`, `joinedAt`; duy nhất (`classId`, `accountId`) |
-| `LeaderChangeRequest` | `id`, `groupId`, `requestedBy`, `proposedLeaderId` (có thể trống), `reason` (10–1.000), `status` (`PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`), `newLeaderId`, `decidedBy`, `decidedAt`, `decisionReason`, `createdAt`; tối đa một `PENDING` mỗi nhóm |
+| `LeaderChangeRequest` | `id`, `groupId`, `requestedBy`, `proposedLeaderId` (có thể trống), `reason` (0–1.000), `status` (`PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`), `newLeaderId`, `decidedBy`, `decidedAt`, `decisionReason`, `createdAt`; tối đa một `PENDING` mỗi nhóm |
 
 ```mermaid
 stateDiagram-v2
@@ -101,3 +104,9 @@ Không có.
 | `POST /api/v1/group-docs/{id}/sections/{sectionId}:claim`, `:assign`, `:release`, `:done`; `PUT .../sections/{sectionId}/draft` | 56 |
 | `POST /api/v1/group-docs/{id}/submit`; `GET .../export.docx` | 56 |
 | `GET /api/v1/classes/{classId}/group-assignments/{assignmentId}/progress` | 42, 57 |
+
+## Source behavior delta — 2026-10-30
+
+groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

@@ -1,6 +1,9 @@
 # U05 Class & Enrollment — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Tách phần lớp và ghi danh từ U04 cũ; mã `BR-U05-xx` ứng với `BR-U04-xx` cũ cùng số. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
 
@@ -12,9 +15,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U05-10 | Chỉ Chủ nhiệm môn của môn tạo lớp (UC 26) trên Class List; môn phải `ACTIVE` (hỏi U04); lớp bắt đầu ở `DRAFT`. | UC 26 |
 | BR-U05-11 | `code` lớp duy nhất trong môn, tối đa 30 ký tự, không đổi; `subjectId` không đổi. | Thiết kế |
-| BR-U05-12 | Giảng viên chính là tài khoản `TEACHER` hoặc `SUBJECT_MANAGER` đang `ACTIVE`. Chỉ Chủ nhiệm môn của môn gán hoặc đổi (UC 27); lớp `OPEN` không được thiếu giảng viên. `teacher_id` hiện thời là căn cứ duy nhất của quyền R3/R4; đổi giảng viên thì người cũ mất quyền ở request tiếp theo. | FR-003, UC 27 |
+| BR-U05-12 | Teacher được gán phải ACTIVE và role TEACHER/SUBJECT_MANAGER; chỉ Chủ nhiệm môn của môn gán/đổi. OPEN được phép thiếu teacher. teacher_id hiện hành là căn cứ teaching scope; chưa gán thì không có educator nhận quyền từ phân công đó. Đổi teacher mất quyền ở request tiếp theo. | FR-003, UC 27 |
 | BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `term`, mở, lưu trữ, mở lại lớp và bật/tắt phân bố điểm (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên. | FR-003, UC 29 |
-| BR-U05-14 | Chuyển trạng thái hợp lệ: `DRAFT→OPEN`, `DRAFT→ARCHIVED`, `OPEN→ARCHIVED`, `ARCHIVED→OPEN`. Mở hoặc mở lại cần có giảng viên và môn `ACTIVE`. | UC 29 |
+| BR-U05-14 | Chuyển DRAFT→OPEN, DRAFT→ARCHIVED, OPEN→ARCHIVED, ARCHIVED→OPEN. Create vẫn DRAFT. Mở/mở lại cần môn ACTIVE và kiểm enrollment conflict; teacher có thể null, nếu đã gán phải còn hợp lệ. Source-observed thay quy tắc bắt buộc teacher trước 27/10. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
 | BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. Khi U04 lưu trữ môn, U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn qua `ISubjectClasses.archiveClassesOfSubject` (BR-U04-04), ghi audit từng lớp. | UC 29, BR-U04-04 |
 | BR-U05-17 | `showGradeDistribution` mặc định tắt, chỉ Chủ nhiệm môn bật/tắt trong UC 29. U09 đọc cờ qua `IClassAccess.getClassRef` và chỉ trả phân bố ẩn danh trên Student Assignments khi đủ mẫu. | FR-024, UC 29, US-RPT-001 |
@@ -48,7 +51,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-44 | Không lưu tiến độ, lộ trình hay trạng thái hoàn thành bài học. | Phạm vi |
 | BR-U05-45 | Class Dashboard của Teacher và Subject Manager (UC 22) hiện lớp mình là giảng viên chính: `DRAFT` ở "Sắp mở", `OPEN` ở "Đang dạy", `ARCHIVED` ở "Đã kết thúc". | UC 22 |
 | BR-U05-46 | Teacher Class Detail (UC 23) chỉ mở được khi là giảng viên chính của lớp. U05 cung cấp tab Class Detail (thông tin chỉ đọc) và tab Students (sinh viên `ACTIVE`); tab Materials (U13), Evals (U07, U09, U10) và phần nhóm trong tab Students (U12) gắn vào qua `TeacherClassTab`. | UC 23 |
-| BR-U05-47 | Student Detail (popup từ tab Students) chỉ hiện email, tên hiển thị, ngày ghi danh và nhóm trong lớp; phần nhóm do U12 gắn vào qua `StudentDetailSection`. Chỉ đọc. | UC 23; người dùng chốt 2026-10-09 |
+| BR-U05-47 | Teacher Class Detail hiển thị roster chỉ đọc; trang hiện tại không mở Student Detail popup khi bấm sinh viên. Backend scoped student-detail endpoint vẫn kiểm active student/class. Không biến popup cũ chưa nối vào UI thành acceptance đã có. | UC 23; người dùng chốt 2026-10-09 |
 | BR-U05-48 | Manager Dashboard (UC 30) là trang đích của Subject Manager: các môn mình quản lý (lấy từ U04) kèm số lớp theo trạng thái và số học liệu, câu hỏi, Quiz, bài tập do U13, U10, U07 gắn qua `SubjectSummarySection`; lối vào My Subject; menu bên (`NavEntry` của U01) có My Subject, Class List và màn của unit khác (Material List, Question List, Quiz List, Assignment List); nút sang Class Dashboard nếu có dạy lớp. My Subject hiện thông tin môn, số lớp theo trạng thái và các số liệu đó. | UC 30, BR-U01-48 |
 | BR-U05-49 | Managed Class Detail (UC 25) hiện thông tin lớp, giảng viên chính và danh sách sinh viên; thao tác UC 27–29 nằm trên màn này. | UC 25 |
 

@@ -1,5 +1,9 @@
 # U12 Group Assignment — code summary
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-generation-plan/u12-group-assignment-code-generation-plan.md), trên nhánh `group-assignment` tạo lại từ `staging`, chưa push. Người code: Võ Minh Tài (Người 2). U07 (soạn bài, khung, `DocumentEditor`) và U08 (Assignment Detail, `useActivityTracker`) chưa có code nên luồng thật phát hành bài nhóm → tạo tài liệu → làm → nộp → U09 chấm chỉ thử được khi hai unit đó vào `staging`; integration test do tester viết.
 
 ## Commit

@@ -1,6 +1,9 @@
 # U07 Assignment Authoring — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 34, 35, 36. **Primary stories:** US-ASM-001 (phần Assignment), US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
@@ -124,7 +127,7 @@ Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chư
 |---|---|---|
 | `IAuthorization` | U01 | Kiểm R2, R3/R4, R5 |
 | `IAudit` | U02 | Audit |
-| `IArtifact`, `IEventPublisher`, `ISettings` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; kiểm `activity.retentionDays` khi bật theo dõi |
+| `IArtifact`, `IEventPublisher`, `ISettings` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; retention activity hiện cố định 1 ngày, không dùng setting cũ |
 | `ISubjectQuery` | U04 | Môn còn `ACTIVE` |
 | `IClassAccess` | U05 | Trạng thái lớp, lớp của môn |
 | `IAiTask`, `IReferenceMaterial` | U06 | Gửi task AI soạn bản nháp; lấy chữ tài liệu tham khảo (U13 cài) |

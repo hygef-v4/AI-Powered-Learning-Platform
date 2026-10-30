@@ -1,6 +1,6 @@
 # Unit / Story / UC map — 2026-10-14
 
-> Revision 2026-10-14 theo yêu cầu người dùng: 15 unit chia lại thành 3 iteration, mỗi iteration 5 unit, mỗi unit nằm trọn một iteration; unit chia theo dữ liệu sở hữu để liên kết trong cao và liên kết ngoài thấp. Danh mục 66 UC, 50 MVP story + 1 extension giữ nguyên ID. Đây là revision tài liệu; thiết kế Construction vẫn nằm trong các folder unit cũ, chưa tách/gộp theo unit mới.
+> AS-BUILT sync 2026-10-30; 66 UC/15 unit ownership retained and verified against source. Dated planning estimates below remain estimates, not actual LOC or runtime acceptance.
 
 66 active UC; 50 MVP stories + 1 extension; 15 logical units
 

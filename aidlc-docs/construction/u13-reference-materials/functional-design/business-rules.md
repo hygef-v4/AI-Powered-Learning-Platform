@@ -1,6 +1,9 @@
 # U13 Reference Materials — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
@@ -19,7 +22,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX qua U03 purpose `MATERIAL`; loại và dung lượng theo Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video dạng `youtube.com/watch?v=` hoặc `youtu.be/`, không nhận playlist). | FR-004, UC 59, 61 |
-| BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Không có module, Lesson, tiến độ học. | FR-004, FR-005 |
+| BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Có module cơ bản của môn; Lesson nâng cao và tiến độ học chưa thuộc scope implementation này. | FR-004, FR-005 |
 | BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (Quiz gắn tài liệu, provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
 | BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. | FR-004 |
 | BR-U13-14 | Thêm tài liệu không tự gọi AI, không tóm tắt, không tạo embedding. Tóm tắt, phụ đề, embedding, RAG là phần mở rộng US-CNT-005. | FR-004, US-CNT-005 |
@@ -48,3 +51,16 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U13-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa kèm `version`; lệch thì `409`. | SEC-002 |
 | BR-U13-41 | Audit: `MATERIAL_CREATED`, `MATERIAL_UPDATED`, `MATERIAL_VERSION_CREATED`, `MATERIAL_ARCHIVED`. Không audit từng lần xem, tải. | FR-014 |
 | BR-U13-42 | U01, U04, U05 không trả lời thì từ chối (fail closed); trích chữ lỗi không ảnh hưởng việc xem, tải. | BR-U01-93 |
+
+## Module rules — AS-BUILT 2026-10-30
+
+| Rule | Behavior |
+|---|---|
+| BR-U13-M01 | Manager của môn quản lý module; tên 1–200, orderNo ≥0, version CAS. Mọi material có moduleId cùng subject. |
+| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. |
+| BR-U13-M03 | Quiz tối đa một module qua unique quiz_id; attach chuyển link cũ. Quiz cùng môn và actor có quyền manage Quiz. |
+| BR-U13-M04 | Xóa chặn active materials; archived materials chuyển module khác; không xóa module cuối nếu còn archived materials. Quiz links cascade khi xóa module. |
+| BR-U13-M05 | Subject view chỉ subject Quiz; teacher class view thấy subject OPEN hoặc RETIRED có publishedAt thực và quiz lớp mình; RETIRED chưa phát hành bị ẩn; Student chỉ quiz listForClass cho phép. canManageModules khác canManageQuiz. |
+| BR-U13-M06 | Reorder items không rỗng, tối đa 500, mỗi item id/version; trùng id hoặc stale version bị từ chối. Source không buộc gửi đủ toàn bộ module. |
+
+Negative tests/source: MaterialModuleServiceTest, MaterialModuleService và migration 29/10; chưa chạy lại ở baseline.

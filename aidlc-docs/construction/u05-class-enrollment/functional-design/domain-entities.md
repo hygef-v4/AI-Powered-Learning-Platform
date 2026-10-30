@@ -1,6 +1,9 @@
 # U05 Class & Enrollment — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Tách phần lớp và ghi danh từ U04 cũ; mã `BR-U05-xx` ứng với `BR-U04-xx` cũ cùng số. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
 
@@ -28,20 +31,20 @@ U05 không sở hữu: tài khoản và role (U01), môn và Chủ nhiệm môn 
 | `description` | chuỗi ≤ 2.000 | Tùy chọn |
 | `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
-| `teacherId` | UUID | FK `accounts`; `TEACHER` hoặc `SUBJECT_MANAGER`; bắt buộc trước khi `OPEN` |
+| `teacherId` | UUID | FK `accounts`; `TEACHER` hoặc `SUBJECT_MANAGER`; nullable, kể cả khi OPEN; nếu có phải ACTIVE/đúng role |
 | `showGradeDistribution` | bool | Mặc định `false` |
 | `createdAt`, `updatedAt`, `version` | | Khóa lạc quan |
 
 ```mermaid
 stateDiagram-v2
     [*] --> DRAFT: Chủ nhiệm môn tạo lớp
-    DRAFT --> OPEN: Mở lớp, có giảng viên và môn ACTIVE
+    DRAFT --> OPEN: Mở lớp, môn ACTIVE; teacher tùy chọn
     DRAFT --> ARCHIVED: Lưu trữ
     OPEN --> ARCHIVED: Lưu trữ
     ARCHIVED --> OPEN: Mở lại
 ```
 
-**Text alternative**: Lớp tạo ra ở `DRAFT`. Mở lớp cần có giảng viên chính và môn `ACTIVE`. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN` và bị từ chối nếu có sinh viên đang học lớp chưa lưu trữ khác cùng môn.
+**Text alternative**: Lớp tạo ra ở `DRAFT`. Mở lớp cần môn `ACTIVE`; teacher có thể chưa gán. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN` và bị từ chối nếu có sinh viên đang học lớp chưa lưu trữ khác cùng môn.
 
 ## 3. `Enrollment`
 
@@ -108,3 +111,9 @@ stateDiagram-v2
 | `PUT /api/v1/manager/classes/{id}/teacher`, `GET /api/v1/manager/teacher-candidates` | 26, 27 |
 | `GET .../{id}/student-candidates`, `POST .../{id}/enrollments`, `POST .../{id}/enrollments:batch`, `PUT .../{id}/enrollments/{accountId}/status` | 28 |
 | `PATCH /api/v1/manager/classes/{id}`, `PUT .../{id}/grade-distribution`, `PUT .../{id}/status` | 29 |
+
+## Source behavior delta — 2026-10-30
+
+CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

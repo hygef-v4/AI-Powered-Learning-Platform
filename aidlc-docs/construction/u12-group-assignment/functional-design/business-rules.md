@@ -1,6 +1,9 @@
 # U12 Group Assignment — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
 
@@ -10,7 +13,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U12-01 | Nhóm thuộc lớp; tạo, chia, sửa, xóa nhóm, thành viên, trưởng nhóm và xử lý yêu cầu đổi trưởng nhóm thuộc UC 57 — Create/Update/Delete Class Group, làm trong tab Students của Teacher Class Detail (UC 23 chỉ là điểm truy cập, Student Detail chỉ đọc vẫn thuộc UC 23); mọi bài nhóm của lớp dùng chung các nhóm này. Chỉ giảng viên chính của lớp (R3/R4) tạo, sửa. Admin và Chủ nhiệm môn không dạy lớp không xem, không sửa. | UC 57, FR-025 |
+| BR-U12-01 | Teacher chính quản lý group set/member/leader của lớp và leader requests. Ngoại lệ Student leader hiện hành được rename nhóm của mình trong lớp OPEN, có version/name/audit guards; không được sửa toàn group set hay nhóm khác. | UC 57, FR-025 |
 | BR-U12-02 | Chỉ sinh viên ghi danh `ACTIVE` của lớp được vào nhóm; mỗi sinh viên tối đa một nhóm trong lớp. Mỗi nhóm có tên (≤ 100, không trùng trong lớp), ít nhất một thành viên và đúng một trưởng nhóm là thành viên. | US-GRP-001 S1, S2 |
 | BR-U12-03 | Tạo tay: tạo nhóm, thêm, chuyển, gỡ thành viên, chọn trưởng nhóm. Chia ngẫu nhiên: nhập sĩ số tối đa 2–20; chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có; các nhóm mới chênh nhau tối đa một người; trưởng nhóm chọn ngẫu nhiên; kết quả là bản xem trước để sửa rồi mới lưu. | US-GRP-001 S1, S3 |
 | BR-U12-04 | Lưu cả bộ nhóm của lớp một lần kèm `version`; có chỗ mâu thuẫn thì từ chối toàn bộ và báo từng lỗi. | US-GRP-001 S2 |
@@ -22,8 +25,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U12-10 | Thành viên (kể cả trưởng nhóm) gửi yêu cầu đổi trưởng nhóm kèm lý do 10–1.000 ký tự, có thể đề cử người thay là thành viên khác trưởng nhóm hiện tại. Mỗi nhóm tối đa một yêu cầu đang chờ; người gửi hủy được khi còn chờ. | UC 55, US-GRP-002 |
-| BR-U12-11 | Chỉ giảng viên chính của lớp duyệt hoặc từ chối. Duyệt thì chọn trưởng nhóm mới (mặc định người được đề cử, bắt buộc chọn khi không có đề cử); từ chối bắt buộc lý do. | US-GRP-002 S1, S2 |
+| BR-U12-10 | Thành viên kể cả leader gửi yêu cầu đổi leader, lý do tùy chọn tối đa 1.000 ký tự; null lưu chuỗi rỗng. Có thể đề cử thành viên khác leader hiện tại. Mỗi nhóm tối đa một pending request; người gửi hủy khi pending. | UC 55, US-GRP-002 |
+| BR-U12-11 | Chỉ giảng viên chính của lớp duyệt/từ chối request pending. Duyệt cần leader mới hợp lệ; từ chối không bắt buộc lý do, trống thành null, nếu có tối đa 1.000 ký tự. Scope/state vẫn kiểm backend. | US-GRP-002 S1, S2 |
 | BR-U12-12 | Giảng viên đổi trưởng nhóm trực tiếp thì yêu cầu đang chờ của nhóm tự hủy. Trưởng nhóm rời nhóm thì giảng viên phải chọn trưởng nhóm mới trong cùng thao tác. | FR-025 |
 | BR-U12-13 | Đổi trưởng nhóm chuyển quyền giao mục và nộp bài sang người mới; không đổi mục ai đang giữ. | US-GRP-002 S1 |
 
@@ -63,7 +66,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U12-50 | My Group (phần trên Student Class Detail): tên nhóm, thành viên, trưởng nhóm, tài liệu nhóm của các bài nhóm đã mở kèm tiến độ và trạng thái nộp, yêu cầu đổi trưởng nhóm gần nhất của mình (trạng thái, lý do từ chối). Không thấy nhóm khác hay yêu cầu của người khác, chỉ biết nhóm đang có yêu cầu chờ. | UC 54, US-GRP-001 S4 |
+| BR-U12-50 | My Group hiện nhóm/thành viên/leader và link chung tới Assignment nhóm. Source hiện tại không render từng work/progress hoặc myRequests/rejection reason trên màn này; request được xử lý qua dialog/service. Đây là UI hiện hành, không hứa các trường hiển thị đã bỏ. | UC 54, US-GRP-001 S4 |
 | BR-U12-51 | Student Assignments (U08) hiện trạng thái bài nhóm qua `IGroupWorkStatus`; Assignment Detail có nút mở workspace (slot `GroupWorkEntry`) kèm nhóm, trưởng nhóm, số mục theo trạng thái. Popup Student Detail hiện nhóm của sinh viên (slot `StudentDetailSection`). | UC 37, 38, 23 |
 | BR-U12-52 | Giảng viên xem tiến độ từng nhóm theo bài nhóm trong tab Students: số mục xong, đang làm, trống, người giữ, đã nộp, trễ, cách nộp; nhả khóa mục; U09 lấy cùng dữ liệu qua `IGroupSubmissionSource` cho Submission Detail và chấm. | UC 42, FR-026 |
 

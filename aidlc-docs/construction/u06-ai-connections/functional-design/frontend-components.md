@@ -1,6 +1,9 @@
 # U06 AI Connections — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
@@ -13,7 +16,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 
 | # | Màn (artboard) | Component | UC | Role |
 |---|---|---|---|---|
-| 6 | AI Connection (`c12`), popup Thêm khóa API (`c12a`), Kết nối agent mới (`c12b`), Token agent hiện một lần (`c12c`) | `AiConnectionPage`, `ApiKeyDialog`, `McpCredentialDialog`, `McpTokenDialog` | 31, 32 | Student, Teacher, Subject Manager |
+| 6 | AI Connection (`c12`), popup Thêm khóa API (`c12a`), Kết nối agent mới (`c12b`), Token agent và owner reveal khi có ciphertext (`c12c`) | `AiConnectionPage`, `ApiKeyDialog`, `McpCredentialDialog`, `McpTokenDialog` | 31, 32 | Student, Teacher, Subject Manager |
 | 7 | AI Usage History (`c13`) | `AiUsageHistoryPage` | 33 | Student, Teacher, Subject Manager |
 | 10 | Setting Detail — API AI của trường và hạn mức: tab Khóa và hạn mức (`a14`), tab Usage (`a14c`) | `AiConnectionsPanel`, `TeacherQuotaPanel` | 14, 15, 33 | Admin |
 | – | Popup Chọn nguồn AI (`c16`), nhúng ở màn của unit khác | `AiSourcePicker`, `AiTaskStatus` | UC của U07–U10 | Theo màn chứa |
@@ -30,7 +33,7 @@ app/ai/connection/            AiConnectionPage     #6 AI Connection
     ApiSetupGuide                                  hướng dẫn lấy khóa từng nhà cung cấp
   McpAgentSection                                  bảng credential MCP
     McpCredentialDialog                            c12b: nhãn, quyền, hạn dùng
-    McpTokenDialog                                 c12c: token hiện một lần
+    McpTokenDialog                                 c12c: token tạo/reveal có kiểm owner và ACTIVE
     McpSetupGuide                                  các bước cài agent và đoạn cấu hình mẫu
 app/ai/usage/                 AiUsageHistoryPage   #7 AI Usage History
   UsageSummaryCards, UsageFilters, UsageTable
@@ -67,3 +70,9 @@ shell/ (đăng ký vào AccountMenuEntry của U01)
 | `AiTaskStatus` | `GET /api/v1/ai/tasks/{id}`, `POST ...:cancel` | Hỏi mỗi 2 giây; hiện chờ, đang chạy, xong, lỗi, không rõ kết quả; Hủy khi còn chờ |
 
 Route `/ai/*` chỉ cho Student, Teacher, Subject Manager (dùng `RoleGuard` của U01); panel Settings nằm trong route `/admin/*` của U03. Backend vẫn kiểm quyền thật.
+
+## AI/MCP current flow — 2026-10-30
+
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; Admin reveal key chung không REVOKED (kể cả DISABLED) và ghi audit. Personal key không có readback cho Admin. Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Admin API key reveal là luồng riêng ở AiAdminController; không dùng để đọc personal key. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.

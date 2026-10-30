@@ -1,6 +1,9 @@
 # U07 Assignment Authoring — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 34, 35, 36. **Primary stories:** US-ASM-001 (phần Assignment), US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
@@ -144,6 +147,6 @@ Ngưng giao:
 
 ### F16 - Interface cho unit khác
 1. U08 đọc bài, lịch, `submissionWindow` (`ON_TIME`, `LATE`, `CLOSED`) và nội dung đã khóa (khung, phần, `requiredDiagrams`, rubric) qua `IAssignmentQuery`; kiểm bài làm qua `IDocumentModel`.
-2. U09 đọc rubric đã khóa và tính điểm qua `IRubric.score`; dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
+2. U09 đọc rubric đã khóa và tính điểm qua GradingJson item scores (partial0..max, checkbox-compatible); dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
 3. U12 đọc khung và phần cho tài liệu nhóm; cài `IGroupAssignmentSupport` và `IAssignmentLifecycleListener`.
 4. U14 nhận `assignment.opened`; đọc bài sắp hết hạn qua `listClosingBetween` để nhắc hạn.

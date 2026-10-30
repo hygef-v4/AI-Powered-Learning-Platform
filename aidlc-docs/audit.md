@@ -6876,3 +6876,204 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Context**: Construction, U12 sửa sau khi người dùng review tay
 
 ---
+
+## Documentation drift audit and synchronization planning — 2026-10-30
+**Timestamp**: 2026-10-30T04:47:18Z
+**User Input**: "giúp tôi check doc aidlc và code hiện tại xem lệch thế nào, sau đó lập kế hoạch đồng bộ lại doc aidlc theo code mới"
+**AI Response**: Compared staging@794a405304bf02dd2593a9fa2c88662d7cd52845 against AI-DLC overview, design, rules and test summaries. Created inception/plans/2026-10-30-doc-code-drift-audit.md (14 drift groups, 15-unit inventory) and inception/plans/2026-10-30-aidlc-doc-sync-plan.md (six ordered tasks). Static review only; no fresh application test/runtime acceptance claimed.
+**Context**: CLAUDE workflow, existing Security/Resiliency scope retained, PBT disabled. Current code to documentation; application code, DB and runtime config unchanged. No commit/push/deploy; synchronization execution pending plan review.
+
+## Synchronization direction clarification — 2026-10-30
+**Timestamp**: 2026-10-30T04:47:18Z
+**User Input**: "tôi plan đồng bộ, tôi muốn doc aidlc cập nhật theo những thay đổi mới trong code"
+**AI Response**: Confirmed direction: update AI-DLC documents from current code behavior, schema, APIs, permissions and flows; preserve previous decisions as traceability rather than stale current descriptions.
+**Context**: Same documentation planning task. Existing audit entries preserved; append only.
+
+---
+
+
+## Documentation synchronization execution — 2026-10-30
+**Timestamp**: 2026-10-30T05:02:13.334933+00:00
+**User Input**: "Giúp tôi triển khai theo plan"
+**AI Response**: Executing the approved six-task code-to-documentation synchronization at staging@794a4053. Created source manifests, contract/API inventory, traceability, decision register and current unit baselines; correcting overview ownership, requirements, role/key/credential/lifecycle/module/activity rules. Additional institutional-key reveal behavior found and documented as D15, not a code/security change.
+**Context**: Direct execution in existing checkout preserves uncommitted planning context. No application-code/DB/runtime-config changes, test-pass claims, commit/push/deploy. Existing extension selections retained; PBT disabled. Document/schema/link/diagram verification follows.
+
+---
+
+
+## Draw.io scope clarification — 2026-10-30
+**Timestamp**: 2026-10-30T05:18:30.529740+00:00
+**User Input**: "drawio là sửa những cái j"
+**AI Response**: Explained selected changes in BF01 class teacher optional, BF02 modules, BF06 Quiz/activity, BF08 AI/MCP roles/keys, BF12 optional reasons, baseline annotations in other flows and simplified unit dependency scope. Existing layout retained; XML/combined file and PNGs refreshed and checked.
+**Context**: Status/scope clarification during approved execution; no cancellation or new application change.
+
+## Documentation synchronization verification — 2026-10-30
+**Timestamp**: 2026-10-30T05:18:30.529754+00:00
+**AI Response**: Completed six documentation tasks; independent review findings corrected in originals. Current links/source paths, four scoped OpenAPI specs, draw.io references/combined consistency, 12 refreshed flow exports and source-diff boundary checked. Reports/state/plan updated, historical approvals/evidence retained. No fresh application tests, live provider certification, source/DB/config changes, commit/push/deployment.
+**Context**: Documentation-only completion. D15 key-reveal behavior recorded with security review pending. Security/Resiliency scope retained; PBT disabled.
+
+---
+
+
+## Business rule, use case and unit test review — 2026-10-30
+**Timestamp**: 2026-10-30T05:36:26.594452+00:00
+**User Input**: "giúp tôi rà soát doc aidlc với code 1 lần nữa check xem test unit đã đúng theo bussiness rule của từng unit , usecase chưa"
+**AI Response**: Reviewed actual assertions/fixtures against current BR/source across15units/66UC with three independent read-only review groups. Found documentation drift, non-discriminating fixtures, coverage gaps and U03 source risks. Fresh Maven verify:1471total/1372pass/99skip/0fail/error, but required DB-suite guard fails on skipped PostgreSQL tests. Initial frontend import failures repaired by npm ci against existing lockfile; final94files/597tests pass. Wrote consolidated audit, three per-UC appendices and machine-readable run evidence; no application/test source/config/dependency-version changes.
+**Context**: Review-only continuation. Existing uncommitted doc sync preserved. No live stack/provider/email/grade changes, commit/push/deploy. Test env JDBC URLs blank only in the Maven process. Security/resiliency scope retained; PBT disabled. Passing assertions do not certify all BR/usecases; remediation not executed.
+
+---
+
+
+## Audit remediation and MCP correction — 2026-10-30
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "Giúp tôi sửa lại các lỗi trên với sửa mcp bỏ kết nối mcp ra khỏi admin, thêm lại vào student, student có thể kế nối mcp để dùng dịch vụ ai practice quiz như cũ"
+**AI Response**: Implementing approved audit fixes via failing regressions then source fixes; restoring Student/removing Admin MCP. User clarified API AI business operations define MCP scope: UC41 submitted Practice feedback, not new AI Quiz explanation. Disposable Docker tests enabled; no app DB migration, external provider, commit/push/deploy.
+**Context**: Existing uncommitted docs retained; code/test/docs scope authorized.
+
+## Student MCP clarification
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "Ơ khoan luồng cũ trong uc có cái giải thích quiz đã nộp ko, cái api ai dùng tnao thì mcp dùng như thế"
+**AI Response**: Verified legacy UC41 supports personal API or MCP feedback for own submitted Practice Assignment. UC52 is deterministic allowed Quiz result/explanation. Removed the suggested new AI Quiz-explanation scope.
+
+## Execution preference
+**Timestamp**: 2026-10-30T06:39:43.159511+00:00
+**User Input**: "tự làm đi đừn chia subagent làm nữa"
+**AI Response**: Stopped existing subagents and continued all remaining implementation/review/verification directly. No further delegation.
+
+---
+
+
+## Remediation Build and Test completion
+**Timestamp**: 2026-10-30T06:51:55.303165+00:00
+**AI Response**: Completed approved fixes directly after stopping delegated workers. Student MCP supports the existing UC41 submitted-own Practice feedback service and shared API/MCP budget; Admin admission/catalog/UI denied. No new AI Quiz service. Full backend verify 1611 passed/0 skipped; PostgreSQL CI guard passed; frontend 599 passed/94 files, lint/typecheck/build passed with two existing warnings. BF06/BF08 XML/combined/PNG refreshed and visually inspected.
+**Context**: Final self-review closed poison-envelope, lost backup-success CAS, after-commit retention, target eligibility, legacy Quiz publication and API/MCP race findings. Only disposable DB migrations, no live data/provider/commit/push/deploy. Report: construction/build-and-test/2026-10-30-remediation-student-mcp-results.md. Broader integration/runtime/provider/performance/security/restore acceptance remains explicit.
+
+---
+
+
+## Documentation alignment confirmation
+**Timestamp**: 2026-10-30T07:02:14.039643+00:00
+**User Input**: "h doc aidlc đã khớp code với test rồi dko"
+**AI Response**: Confirmed current documentation alignment within the reviewed implementation/test scope. Historical evidence and pending full-UC, E2E/provider acceptance remain explicitly distinguished.
+
+## Local commit request and pre-commit verification
+**Timestamp**: 2026-10-30T07:02:14.039643+00:00
+**User Input**: "giúp tôi commit rõ ràng, ghi rõ description"
+**AI Response**: Prepared four local commits on the current aidlc-docs branch: Student/Admin MCP, job/enrollment/Quiz fixes, remaining BR regression coverage, and AI-DLC synchronization. Each has a descriptive body covering behavior, reason, relevant limitations and verification. Fresh pre-commit backend verify: 1611 passed/0 failures/errors/skips; frontend: 599 passed/94 files/0 pending; required PostgreSQL guard passed. Commit bodies describe validation of the complete remediation tree. Cache/build/log files excluded by explicit path lists.
+**Context**: User authorizes local commits; no push, merge, deployment or live database migration requested. Actual commit IDs and completion are recorded by Git history and reported to the user after creation.
+
+---
+
+## Code structure audit and refactor planning — 2026-10-30
+
+**Timestamp**: 2026-10-30T07:29:54Z (review checkpoint; report and plan prepared in this session)
+
+**User Input (complete raw task request)**:
+
+> $ponytail:ponytail-audit $clean-code:clean-code giúp tôi review lại dự án hiện tại tôi thấy mấy file code đang đặt khá là lộn xộn, ở trong frontend thì còn k chia package kiểu api, model,  component hay gì đó, trong backend thì chia khá là rối bthg tôi hay chia controller, service, repository,  giúp tôi đọc lại cả doc aidlc và lên kế hoạch refactor dự án cho dễ đọc hơn, k nên phức tạp hóa quá
+
+**Subsequent User Input (complete raw)**:
+
+> Làm tiếp
+
+**AI Response**: Continued the authorized review/planning directly, without subagents or implementation. Inspected repository instructions, source/module structure, current AI-DLC requirements/ownership/decision/inventory and latest remediation evidence; traced representative auth, subject/class/enrollment, document/attempt, AI/proposal, worker and notification paths. Prepared a nine-finding structure audit and a staged refactor proposal, preserving 15 unit boundaries/public contracts and using Subjects as the first example before wider migration. Identified two registered Admin-only MCP providers unreachable under current supported role admission/catalog rules, 17 JDBC repositories in domain, mixed responsibilities and per-row lookup work. Avoided re-reporting remediated historical bugs.
+
+**Verification**: Fresh frontend 599 tests/94 files pass; lint exit 0 with two pre-existing unused-import warnings; typecheck exit 0. Maven offline ArchitectureTest attempt stopped during dependency resolution, not application test execution; workspace cache missing jsoup and then a parent-imported Netty BOM. Copied an already cached jsoup artifact into the ignored workspace cache; no dependency download or manifest change. Full backend/DB guard, production frontend build and E2E/provider/load/restore were not rerun. Historical results explicitly distinguished.
+
+**Artifacts**: `inception/reverse-engineering/2026-10-30-code-structure-audit.md`; `inception/plans/2026-10-30-code-structure-refactor-plan.md`.
+
+**Context**: Documentation only, plus ignored verification logs/cache. No production/test/config/schema changes, commit, push or deployment. Proposal awaits review before construction; the user's continuation message was not interpreted as approving an unseen implementation plan. Existing security/resiliency decisions retained; PBT remains disabled.
+
+---
+
+## Approved structure refactor — 2026-10-30
+
+**Timestamp**: 2026-10-30T09:27:37Z
+
+**User Input (complete raw approval)**: “Giúp tôi refactor lại dự án theo kế hoạch”
+
+**Continuation inputs (complete raw)**: “Làm tiếp”; “làm tiếp”.
+
+**Status request (complete raw)**: “bạn đang làm gì ,sắp xong chưa”
+
+**AI Response**: Implemented the approved plan directly, without subagents. Preserved existing business-unit/public-contract boundaries while moving internal source/test packages and frontend feature files. Strengthened architecture tests before moving packages; removed unreachable Admin-only MCP providers while retaining forbidden-provider coverage. Split U05 queries/class/enrollment and document/editor/AI-draft responsibilities; batch-read regressions were observed failing then passing. Current Construction and Inception inventories/guides were synchronized with the new paths.
+
+**Verification**: Baseline backend 1611 pass/0 skipped with required DB guard. Final backend clean verify 1614 pass/0 failure/error/skip, required PostgreSQL guard passed; frontend 601 pass/94 files, typecheck/lint/production build exit 0. Final logs `.tmp/2026-10-30-refactor-final-*`; report `construction/build-and-test/2026-10-30-code-structure-refactor-results.md`.
+
+**Rulings and limits**: Kept the checkout and earlier documentation edits; no commit/push/deploy. Kept document helpers package-private in the same service package; explicitly exposed internal DTO snapshot factories only where the new service/dto boundary requires them. Contract source, migrations, infrastructure and dependency versions unchanged. Native frontend worker termination was retried with two workers; no dependency upgrade. Browser E2E, real providers, load/security/restore were not run. Existing security/resiliency scope retained; PBT disabled.
+
+---
+
+## Move-only scope correction — 2026-10-30
+
+**Timestamp**: 2026-10-30T09:56:47Z
+
+**User Input (complete raw concern)**:
+
+> code các file b có sửa gì ko, tôi tưởng chỉ cần chuyển file sang thư mục khác thôi , sao tôi check commit thì thấy b xóa file sau add lại
+
+**User Input (complete raw clarification)**:
+
+> tôi k muốn commit xóa file ấy , như v thì sẽ mất commit cũ của người khác tôi chỉ muốn chuyển file sang folder package khác để sắp xếp lại thôi
+
+**AI Response and action**: Narrowed the existing authorized task to file/package relocation only. Reconstructed source from parent HEAD, preserving every original file and restoring original implementations/tests. Undid the broader service/editor/document/draft extractions, batching, public barrels, Admin MCP cleanup and extra tests. Kept only package/import/FQN/path references needed by moves; ArchitectureTest layer selector names and required-suite FQNs follow the new locations. Current Construction/Inception inventories and README corrected; broader proposal/results explicitly marked superseded. No subagents.
+
+**Verification**: All 1,501 source/resource files correspond 1:1 to baseline; 1,066 moves (716 Java, 308 frontend, 42 placeholders). Verified 908 Java bodies and 506 TypeScript/TSX ASTs against originals with only package/import/reference normalization. Temporary-index Git comparison detects 1,066 renames and zero unpaired addition/deletion at 20% similarity; real index unchanged. Fresh backend clean verify: 1,611 passed/0 skipped and required PostgreSQL guard passed; frontend 599 passed/94 files; typecheck/build passed; ESLint exit 0 with two pre-existing unused-import warnings. Current Markdown links/fences, 46 controller annotation sets, protected contracts/schema/config/dependencies and git diff whitespace checked.
+
+**Result and limits**: `construction/build-and-test/2026-10-30-package-moves-only-results.md`. HEAD remains 5a76e428; no staging, commit, push, history rewrite or deploy. Explained that D/A UI presentation does not remove old commits; Git infers rename when comparing snapshots. Browser E2E/provider/load/restore acceptance not rerun. Existing security/resiliency scope retained; PBT disabled. Previous audit entries remain append-only historical evidence.
+
+---
+
+## Documentation-first commit and replay request — 2026-10-30
+
+**User Input (complete raw)**:
+
+> tôi nghĩ b nên commit changes doc aidlc trước sau đó discard toàn bộ changes code rồi chạy lại script chuyển file vì nãy b có delete với add lại file rồi nên git nó vẫn nhận file xóa này
+
+**Authorized sequence**: Commit only AI-DLC documentation and README; back up the verified code proposal, restore only backend/src, frontend/src and the required-test path script, then replay the verified relocation manifest using git mv and update package/import/path references. Leave code staged for review without committing or pushing it. Do not rewrite existing commits or discard unrelated files.
+
+**Preflight evidence**: All 1,501 original source/resource files retained; Java body and TypeScript AST comparisons already verified. Rechecked source equality, 908 Java bodies, 44 current Markdown files/local links and 46 controller annotation sets. A temporary-index comparison at the default 50% similarity threshold detects all 1,066 renames and 86 reference-only modifications, with no unpaired additions/deletions. Git infers renames from snapshots; redoing the move does not create separate persistent rename metadata. Existing backend/frontend test evidence applies only if replay output exactly matches the previously verified tree.
+
+**Limits**: Only documentation is authorized to be committed in this step. Code is to remain reviewable in the working tree/index; no code commit, push, deployment or history rewrite. Security/resiliency scope and disabled PBT remain unchanged.
+
+---
+
+## Fresh test and build after git mv — 2026-10-30
+
+**Timestamp**: 2026-10-30T10:11:21Z
+
+**User Input (complete raw)**:
+
+> thử kiểm tra test và build lại backend frontend
+
+**Source**: HEAD 11df6307 (documentation-only commit); staged move-only source proposal: 1,066 renames and 86 package/import/reference modifications. No production/test source edits made for this verification.
+
+**Fresh commands and results**:
+- Backend Maven 3.9.12: `mvn -B -f backend/pom.xml clean verify` using the existing user Maven cache. 1,611 tests, 0 failures/errors/skips; BUILD SUCCESS, 3m16s. Spring Boot JAR repackaged successfully.
+- `scripts/assert-required-backend-tests.ps1`: passed, SubjectRepositoryIntegrationTest 31 and NotificationDeliveryIntegrationTest 2; no skips. Testcontainers exercised disposable PostgreSQL/Redis.
+- Frontend `vitest run --maxWorkers=2 --reporter=dot`: 599 passed across 94 files, exit 0.
+- Frontend `eslint .`: exit 0, two existing unused-import warnings (`navEntries` and `Icon`). Existing React act warnings also appear in jsdom tests; no test failures.
+- Frontend `tsc --noEmit`: exit 0.
+- Frontend `node scripts/build.mjs`: production build exit 0, Next routes and BUILD_ID generated.
+
+**Evidence**: `.tmp/2026-10-30-after-gitmv-{backend,db-guard,frontend,lint,typecheck,build}.log`; backend target Surefire reports/JAR; frontend .next output. Direct Node CLI invokes installed package commands without changing dependencies. Runtime JDK 21 target Java 17 and Node 25; CI uses Java 17/Node 22.
+
+**Limits and state**: No new source changes, commit, push or deployment. Code stays staged; this audit entry and state verification note are unstaged documentation updates. Browser E2E, real AI/email/storage providers, load/restore and full runtime acceptance were not run. Existing security/resiliency scope retained; PBT disabled.
+
+---
+
+## Commit authorization — 2026-10-30
+
+**Timestamp**: 2026-10-30T10:13:26Z
+
+**User Input (complete raw)**:
+
+> giúp tôi commit
+
+**Action**: Prepare a new commit on aidlc-docs containing the staged move-only backend/frontend refactor, required-suite FQN updates, and the latest state/audit verification notes. Documentation-first commit 11df6307 remains unchanged; no amend, rebase or push.
+
+**Pre-commit evidence**: Rechecked all 1,501 source/resource files against the tested tree; 908 Java bodies and 506 TypeScript/TSX ASTs preserve original code except package/import/reference updates. Git detects 1,066 renames, 86 reference modifications and no unpaired source additions/deletions. Controller annotations, public contracts, schema/migrations, config and dependencies unchanged; diff whitespace and current doc links checked. Reuse the immediately preceding fresh backend 1,611 pass/0 skipped, frontend 599 pass/94 files, build/typecheck and required DB guard results; no source edits since that run. Two existing lint warnings remain.
+
+**Limits**: Commit locally only. Browser E2E/provider/load/restore acceptance remains unverified. Existing security/resiliency scope retained; PBT disabled.
+
+---

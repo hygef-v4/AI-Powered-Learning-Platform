@@ -3,11 +3,11 @@ import { createElement } from "react";
 import { teacherClassTabs, studentDetailSections } from "@/features/academics/slots";
 import { assignmentRowActions } from "@/features/assignments/slots";
 import { attemptResultSources, studentAssignmentResults } from "@/features/assignmentwork/slots";
-import { ClassGradebookTab } from "./ClassGradebookTab";
-import { ClassProgressSection } from "./ClassProgressSection";
-import { StudentGradesSection } from "./StudentGradesSection";
-import { SubmissionsLink } from "./SubmissionsLink";
-import { StudentGradeCell } from "./StudentGradeCell";
+import { ClassGradebookTab } from "./components/ClassGradebookTab";
+import { ClassProgressSection } from "./components/ClassProgressSection";
+import { StudentGradesSection } from "./components/StudentGradesSection";
+import { SubmissionsLink } from "./components/SubmissionsLink";
+import { StudentGradeCell } from "./components/StudentGradeCell";
 import { gradingApi } from "./api";
 
 function TeacherGradingSection({

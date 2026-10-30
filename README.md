@@ -1,8 +1,8 @@
 # AI-Powered-Learning-Platform
 
-Nền tảng học tập cho một trường hoặc trung tâm đào tạo với bốn vai trò: Student, Teacher, Subject Manager và Administrator. Phạm vi gồm 66 use case chia cho 15 unit: tài khoản và phân quyền, môn, lớp, ghi danh; Assignment cá nhân và nhóm (Draw.io tùy chọn) ở chế độ `GRADED` hoặc `PRACTICE`; Quiz trắc nghiệm luyện tập; chấm điểm có AI đề xuất; học liệu tệp và link YouTube; thông báo trong app và email. AI dùng API chung theo quota giảng viên, API cá nhân hoặc agent riêng qua MCP; không bán credit.
+Nền tảng học tập cho một trường hoặc trung tâm đào tạo với bốn vai trò: Student, Teacher, Subject Manager và Administrator. Phạm vi gồm 66 use case chia cho 15 unit: tài khoản và phân quyền, môn, lớp, ghi danh; Assignment cá nhân ở chế độ `GRADED` hoặc `PRACTICE`, Assignment nhóm chỉ `GRADED` (Draw.io tùy chọn); Quiz trắc nghiệm luyện tập; chấm điểm có AI đề xuất; học liệu tệp và link YouTube; thông báo trong app và email. AI dùng API chung theo quota giảng viên, API cá nhân hoặc agent riêng qua MCP; không bán credit.
 
-Dự án đang ở giai đoạn sinh code theo quy trình AI-DLC. Hiện có **khung code**: dự án chạy được, mỗi unit có package riêng và các interface xuyên unit, chưa có nghiệp vụ.
+Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend và frontend chia theo nghiệp vụ, có test tự động và hạ tầng chạy local. Bằng chứng kiểm thử và các phần nghiệm thu runtime/provider còn lại được ghi trong [AI-DLC state](aidlc-docs/aidlc-state.md).
 
 ## Cấu trúc
 
@@ -36,14 +36,17 @@ Dự án đang ở giai đoạn sinh code theo quy trình AI-DLC. Hiện có **k
 
 ## Quy ước
 
-- Mỗi package của unit chia tầng `contract` (interface và kiểu dữ liệu cho unit khác), `application`, `domain`, `infrastructure`, `web`; tầng chưa có code giữ chỗ bằng `.gitkeep`. Unit khác chỉ được import `contract`.
+- Trong mỗi package nghiệp vụ, `controller` nhận HTTP, `service` xử lý use case, `repository` chứa SQL/JPA và persistence mapping, `model` chứa đối tượng/quy tắc nghiệp vụ, `dto` chứa kiểu request/response riêng. Cấu hình và adapter ngoài nằm ở `config`/`integration` khi cần. Unit khác chỉ import public `contract`; không thêm tầng rỗng hay interface/Impl cho mọi service.
 - Interface đặt tên dạng `Ixxx` (ví dụ `IAuthorization`, `IJobHandler`, `IAccountRepository`), không dùng đuôi `Port`. Class, record, enum đặt tên bình thường.
 - Unit gọi thẳng `contract` của unit khác, không theo thứ tự số unit (ví dụ U01 dùng `IAudit` của U02, `IJob` của U03). Khi unit cần dữ liệu mà unit sở hữu chưa có thì có thể khai báo interface trong `contract` của mình cho unit kia cài (ví dụ `ISubjectClasses` do U04 khai báo, U05 cài).
-- Mỗi interface một class cài có bản tạm trong `contract/stub/` (ví dụ `IdentityContractStubs`): trả dữ liệu mẫu, danh sách rỗng, kiểm quyền trả `true`, ghi/gửi chỉ ghi log. Bản tạm chỉ bật khi chưa unit nào cài thật, lúc khởi động ghi cảnh báo; tắt hẳn bằng `platform.contract-stubs.enabled=false`. Interface nhiều unit cùng cài (`IJobHandler`, listener…) không cần bản tạm vì nơi gọi nhận danh sách.
-- `backend/src/test/java/edu/aiplatform/ArchitectureTest.java` kiểm tên interface và việc unit khác chỉ dùng tầng `contract`.
-- Frontend làm tương tự bằng slot: unit trước khai báo slot trong `src/features/<package>/slots.ts`, unit sau đăng ký component vào slot và thêm import file đăng ký của mình vào `src/features/register.ts`.
+- Các fallback còn giữ trong `contract/stub/` chỉ bật khi thiếu implementation thật và ghi cảnh báo; tắt bằng `platform.contract-stubs.enabled=false`. Không xem dữ liệu mẫu hoặc quyền giả của fallback là bằng chứng nghiệp vụ đã chạy đúng.
+- `backend/src/test/java/edu/aiplatform/ArchitectureTest.java` giữ các kiểm tra hiện có; tên package tầng được cập nhật theo vị trí mới.
+- Trong `frontend/src/features/<nghiệp vụ>`, `api` gọi backend, `model` chứa types/validation/format, `pages` ghép màn hình, `components` chứa UI và `hooks` quản lý state/vòng đời. Test nằm cạnh code. Route Next.js vẫn ở `src/app`; giữ subgroup như `identity/otp` hoặc `ai/admin` khi hữu ích.
+- Các slot được đăng ký ở `register.ts` và nạp tập trung qua `src/features/register.ts`. HTTP client/CSRF/refresh dùng chung ở `shared/api`, UI dùng chung ở `shared/ui`. Import của caller và test được cập nhật theo vị trí file mới.
 - Migration Flyway đặt trong `backend/src/main/resources/db/migration/<thư mục của unit>/` (danh sách trong `README.md` ở thư mục đó).
 - Người code viết unit test; integration test do tester viết.
+
+Đợt sắp xếp này chỉ chuyển file và cập nhật package/import/tham chiếu; giữ nguyên nội dung xử lý và các file gốc. [Kết quả kiểm tra](aidlc-docs/construction/build-and-test/2026-10-30-package-moves-only-results.md).
 
 ## Chạy local
 

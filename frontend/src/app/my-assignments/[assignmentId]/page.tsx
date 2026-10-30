@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { StudentAssignmentDetailPage } from "@/features/assignmentwork/StudentAssignmentDetailPage";
+import { StudentAssignmentDetailPage } from "@/features/assignmentwork/pages/StudentAssignmentDetailPage";
 
 // U08 #39 Assignment Detail (classId trong query).
 export default async function Page({ params }: { params: Promise<{ assignmentId: string }> }) {

@@ -1,45 +1,33 @@
-# Components — 2026-10-13
+# Components — AS-BUILT 2026-10-30
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed, không phải runtime acceptance. 66 active UC, 50 MVP stories + 1 extension, 15 logical units.
 
-| Unit | Tên | Primary UC |
-|---|---|---|
-| U01 | Account & Access | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12 |
-| U02 | Audit | 13 |
-| U03 | File, Job, Event & Settings | 14, 15 |
-| U04 | Subject, Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 16, 17, 18, 19 |
-| U05 | Reference Content & Announcements | 62, 63, 60, 61, 64, 58, 59 |
-| U06 | Rubrics & Subject Quiz Bank | 36, 46, 47 |
-| U07 | AI Usage & Teacher Quota | 33 |
-| U08 | Assignment/Quiz Lifecycle & Copy | 34 |
-| U09 | Assignment Documents & Quiz Authoring | 48, 35, 53 |
-| U11 | Individual Work & Quiz Submission | 49, 50, 51, 52, 37, 38, 39, 40, 41 |
-| U12 | Group & Allocation | 54, 55, 57 |
-| U13 | AI Connections & MCP | 31, 32 |
-| U14 | Group Workspace & Submission | 56 |
-| U15 | Grading & Gradebook | 42, 43, 44, 45 |
-| U16 | Reporting & Notification | 65, 66 |
+| Unit | Trách nhiệm hiện hành | UC | Packages |
+|---|---|---|---|
+| U01 | Account & Access | 01–12 | [identity](../../../backend/src/main/java/edu/aiplatform/identity) |
+| U02 | Audit | 13 | [audit](../../../backend/src/main/java/edu/aiplatform/audit) |
+| U03 | Job and Settings | 14–15 | [files](../../../backend/src/main/java/edu/aiplatform/files), [jobs](../../../backend/src/main/java/edu/aiplatform/jobs), [settings](../../../backend/src/main/java/edu/aiplatform/settings), [backup](../../../backend/src/main/java/edu/aiplatform/backup) |
+| U04 | Subject Administration | 16–19 | [subjects](../../../backend/src/main/java/edu/aiplatform/subjects) |
+| U05 | Class & Enrollment | 20–30 | [academics](../../../backend/src/main/java/edu/aiplatform/academics) |
+| U06 | AI Connections | 31–33 | [ai](../../../backend/src/main/java/edu/aiplatform/ai) |
+| U07 | Assignment Authoring | 34–36 | [assignments](../../../backend/src/main/java/edu/aiplatform/assignments) |
+| U08 | Assignment Work | 37–41 | [assignmentwork](../../../backend/src/main/java/edu/aiplatform/assignmentwork) |
+| U09 | Assignment Grading | 42–45 | [grading](../../../backend/src/main/java/edu/aiplatform/grading) |
+| U10 | Quiz Authoring | 46–48 | [quizzes](../../../backend/src/main/java/edu/aiplatform/quizzes) |
+| U11 | Quiz Practice | 49–52 | [quizpractice](../../../backend/src/main/java/edu/aiplatform/quizpractice) |
+| U12 | Group Assignment | 53–57 | [groups](../../../backend/src/main/java/edu/aiplatform/groups), [groupdocs](../../../backend/src/main/java/edu/aiplatform/groupdocs) |
+| U13 | Reference Materials | 58–62 | [materials](../../../backend/src/main/java/edu/aiplatform/materials) |
+| U14 | Announcements & Notifications | 63–65 | [announcements](../../../backend/src/main/java/edu/aiplatform/announcements), [notifications](../../../backend/src/main/java/edu/aiplatform/notifications) |
+| U15 | Admin Dashboard | 66 | [admindashboard](../../../backend/src/main/java/edu/aiplatform/admindashboard) |
 
-## External ports
+## Kiến trúc triển khai
 
-| Interface | Adapter |
-|---|---|
-| IAiProvider | Gemini/OpenAI/Claude direct APIs; normalized output/usage |
-| IAiConnection | U13 shared/personal credentials, test/revoke, ownership |
-| ITeacherQuota / IUsage | U07 atomic reserve/reconcile, per-user/model/window and usage provenance |
-| McpTransportAdapter | U13 authenticated tools into domain ports; not LLM execution by default |
-| IBackupStatus | U03 read-only backup metadata to U16; no archive/secrets |
-| ITeacherQuotaPolicy | U07 policy read/write for Admin Settings UC 14; U03 orchestrates |
-| IActivityQuery | U11 scoped activity for U15 review UC 42, including U14 member events |
-| IFileStorage | Google Drive private file streams |
-| IMail | Brevo demo/production, Mailpit local |
+Một backend Spring Boot và một worker dùng chung code/module; frontend Next.js; không phải 15 microservice. PostgreSQL/Flyway quản lý schema; Redis cho phiên/rate limit; RabbitMQ cho job/events; private Google Drive cho tệp/backup; SMTP Brevo demo/production và Mailpit local. Adapter availability phụ thuộc cấu hình/profile; có lớp fallback không chứng minh runtime đang dùng stub.
 
-Không IPayment, ICredit, ICodeRunner hoặc Judge0. Giữ public contracts, không direct repository xuyên unit. U05 basic references MVP, Lesson/RAG optional.
+## Quyền và ranh giới
 
-## Bổ sung hội đồng — current scope
+U01 kiểm actor/current role/session; U04/U05 cung cấp subject/class scope. U06 sở hữu AI quota/task/credential/MCP; U07 authoring, U08 attempts/activity, U09 grading/gradebook; U10 bank/Quiz, U11 Quiz attempts; U12 groups và groupdocs; U13 materials/modules, U14 announcements/notifications, U15 admin aggregates. Student dùng API cá nhân hoặc MCP cho UC41; Admin không kết nối MCP. Không wallet/payment/Code Lab/Judge0.
 
-Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích hợp), teacher review U15, email quan trọng/failure U16; minh bạch AI U07/U13. Không thêm unit hoặc đổi nhân sự. Xem [đặc tả hội đồng](../requirements/council-features-2026-10-13.md). D05 đã được người dùng yêu cầu bổ sung, D01–D04 còn mở. Đây là phạm vi tài liệu, chưa runtime evidence.
+## Nguồn chi tiết
 
-## UC consolidation — 66 active UC
-
-UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+[Manifest code/schema/UI/tests](../reverse-engineering/current-code-baseline.md); [Public contract signatures](component-methods.md); [HTTP API inventory](../reverse-engineering/api-inventory.md); [Decision/delta register](../reverse-engineering/decision-register.md).

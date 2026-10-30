@@ -1,6 +1,9 @@
 # U13 Reference Materials — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
@@ -64,3 +67,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. U07, U10 gọi `IReferenceMaterial.listSelectable(actor, scopeRef)` để hiện danh sách tài liệu người soạn chọn được (BR-U13-31).
 2. Khi gửi task AI, U07, U10 gọi `extractText(actor, materialIds, maxChars)`: U13 kiểm lại quyền từng tài liệu, trả chữ phiên bản hiện tại kèm id, phiên bản, tiêu đề; tài liệu chưa có chữ được đánh dấu để người soạn biết.
 3. Agent gọi `read_authorized_material(materialId)` qua U06: U13 kiểm quyền xem của actor, trả chữ (cắt theo trần của tool) và thông tin tài liệu.
+
+## Source behavior delta — 2026-10-30
+
+Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt buộc moduleId cùng môn; dữ liệu cũ backfill Module 1. Manager quản lý module; class viewers đọc theo scope. Quiz nằm tối đa một module, attach khác module chuyển link; phải kiểm quyền với Quiz. Delete chặn active materials; archived materials chuyển sang module khác, không xóa module cuối nếu cần giữ chúng. Version/reorder kiểm server; module không đồng nghĩa Lesson/RAG.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

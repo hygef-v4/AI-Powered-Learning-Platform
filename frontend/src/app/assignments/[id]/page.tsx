@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AssignmentFormPage } from "@/features/assignments/AssignmentFormPage";
+import { AssignmentFormPage } from "@/features/assignments/pages/AssignmentFormPage";
 
 // U07 #26 Assignment Form.
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

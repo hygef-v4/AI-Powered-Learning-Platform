@@ -1,4 +1,4 @@
-import { QuizDetailPage } from "@/features/quizzes/QuizDetailPage";
+import { QuizDetailPage } from "@/features/quizzes/pages/QuizDetailPage";
 
 // U10 #22 Quiz Detail; ?classId= khi giảng viên mở quiz của môn từ lớp mình dạy (chỉ xem).
 export default async function Page({ params, searchParams }: {

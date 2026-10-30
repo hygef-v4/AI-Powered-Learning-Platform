@@ -1,9 +1,9 @@
 package edu.aiplatform.identity;
 
-import edu.aiplatform.identity.application.IdentityProperties;
+import edu.aiplatform.identity.config.IdentityProperties;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Role;
-import edu.aiplatform.identity.domain.Account;
+import edu.aiplatform.identity.model.Account;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;

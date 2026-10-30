@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Đường dẫn cũ của Agent MCP: nay là tab trong trang Cài đặt AI (mục Cài đặt). */
+/** Tương thích bookmark cũ; Admin không còn chức năng kết nối MCP. */
 export default function Page() {
-  redirect("/admin/settings/sections/ai-connections?tab=mcp");
+  redirect("/admin/settings/sections/ai-connections");
 }

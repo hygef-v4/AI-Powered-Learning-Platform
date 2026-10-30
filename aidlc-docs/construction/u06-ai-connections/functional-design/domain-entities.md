@@ -1,6 +1,9 @@
 # U06 AI Connections — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
 
@@ -37,7 +40,7 @@ U06 không sở hữu: tài khoản và role (U01), cài đặt khóa–giá tr�
 | `lastTestAt`, `lastTestResult` | thời gian, chuỗi | Kết quả đã làm sạch |
 | `createdAt`, `updatedAt`, `version` | | Khóa lạc quan |
 
-Duy nhất: một kết nối chưa `REVOKED` cho mỗi `(ownerId, provider)` với `PERSONAL`, cho mỗi `provider` với `INSTITUTIONAL`.
+Duy nhất: một kết nối chưa `REVOKED` cho mỗi `(ownerId, provider)` với `PERSONAL`, INSTITUTIONAL cho phép nhiều kết nối cho mỗi `provider` (migration 27/10).
 
 ```mermaid
 stateDiagram-v2
@@ -164,3 +167,9 @@ Tool giai đoạn đầu theo FR-035:
 | `GET /api/v1/admin/ai/connections`, `PUT /api/v1/admin/ai/connections/{provider}`, `POST .../{provider}:test`, `PUT .../{provider}/status`, `DELETE .../{provider}` | 14, 15 |
 | `GET`, `PUT /api/v1/admin/ai/quota-policy`; `GET /api/v1/admin/ai/teacher-quotas`, `PUT`, `DELETE /api/v1/admin/ai/teacher-quotas/{accountId}` | 14, 15 |
 | `GET /api/v1/admin/ai/usage-summary` | 33 |
+
+## Credential/key schema delta — 2026-10-30
+
+McpCredential: tokenHash/hint vẫn xác thực; migration 27/10 thêm `token_ciphertext bytea`, `token_iv bytea`, `token_key_version integer` nullable. Legacy row null không reveal được; storeSecret có thể không lưu khi encryption chưa cấu hình. INSTITUTIONAL unique/provider đã bỏ, PERSONAL owner/provider giữ unique. Admin institutional key reveal là ngoại lệ D15; list DTO vẫn masked.
+
+Source: [McpCredentialService.java](../../../../backend/src/main/java/edu/aiplatform/ai/service/McpCredentialService.java); [AiConnectionService.java](../../../../backend/src/main/java/edu/aiplatform/ai/service/AiConnectionService.java).

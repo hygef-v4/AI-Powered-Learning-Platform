@@ -1,4 +1,4 @@
-import { QuizPracticeDetailPage } from "@/features/quizpractice/QuizPracticeDetailPage";
+import { QuizPracticeDetailPage } from "@/features/quizpractice/pages/QuizPracticeDetailPage";
 
 // U11 #43 Quiz Practice Detail; ?classId= là lớp người học làm quiz, thiếu thì trang tự tìm lớp (link thông báo của U14).
 export default async function Page({ params, searchParams }: {

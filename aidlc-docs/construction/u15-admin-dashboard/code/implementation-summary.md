@@ -1,5 +1,9 @@
 # U15 Admin Dashboard — implementation handoff
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Ngày 2026-10-20, theo phê duyệt “Cứ giúp tôi code trc theo plan còn khi nào u3 xong thì xử lý sau”. Triển khai phương án A của [plan](../../plans/code-generation-plan/u15-admin-dashboard-code-generation-plan.md), áp dụng Clean Code và Superpowers executing-plans/TDD/review/verification. Đây là consumer slice code-ready; chưa nghiệm thu toàn bộ UC66/KAN-80.
 
 ## Đã triển khai

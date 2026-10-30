@@ -1,28 +1,17 @@
-# Unit and existing automated test execution — U14
+# Automated test instructions — all units
 
-From `backend/`:
+Current structure: parent HEAD `5a76e428` + working-tree refactor; [fresh verification results](2026-10-30-package-moves-only-results.md). Maven verify includes existing integration suites, so do not call its entire count unit-only.
 
 ```powershell
+Push-Location backend
 mvn -B verify
-mvn -B '-Dtest=edu.aiplatform.announcements.**,edu.aiplatform.notifications.**,NotificationAccountLookupTest,ArchitectureTest' package
+Pop-Location
+./scripts/assert-required-backend-tests.ps1
+Push-Location frontend
+npm test
+Pop-Location
 ```
 
-The second command is a focused diagnostic; do not add its counts to the full suite. Existing repository tests include integration tests under Surefire, so the full count is not a unit-only count. Docker-dependent tests can skip when Engine is unavailable. There is no separate Maven Failsafe profile in this checkout.
+Record commit/dirty source, JDK/Node versions, exact command, suite/test/pass/fail/error/skip counts and log path. Check Surefire XML and Vitest output; skipped/disabled/environment-gated cases remain distinct. Baseline existence and per-unit test paths are in the [source manifest](../../inception/reverse-engineering/current-code-baseline.md). The changed contracts require role/owner, revoked/expired/no ciphertext, OPEN null teacher, optional reason >1,000, module stale/version/delete/visibility and Quiz reopen boundary cases; inspect existing assertions before claiming coverage.
 
-From `frontend/`:
-
-```powershell
-npm test -- --maxWorkers=2
-npm run lint
-npm run typecheck
-```
-
-Read Maven XML/text reports under `backend/target/surefire-reports` and Vitest output. Final-source baseline: backend921 total,844 passed,77 skipped,0 failures/errors; frontend314 passed across61files. Coverage percentage was not measured; test counts are not coverage.
-
-U14 focused checks cover scoped announcements/CAS, event schema/recipient resolution, cap/preference/retry/reminders, API authorization and frontend UI/nonce behavior. Mocked provider tests cannot certify real database locks, SMTP delivery or two-instance SSE. See the [independent tester matrix](u14-verification.md).
-
-When a check fails, retain failure output, distinguish application failure from environment failure, fix the relevant cause and rerun affected checks. Do not count a skipped case as passed or increase timeouts solely to hide failures. Record test author and execution environment separately for independent acceptance.
-
-## MCP staff expansion — 2026-10-26
-
-See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.
+Only source/test package, import and path references change. Existing test bodies and assertions are retained; ArchitectureTest layer selectors follow the relocated packages. See [build instructions](build-instructions.md) for CI command order and [evidence](build-and-test-summary.md) for historical runs.

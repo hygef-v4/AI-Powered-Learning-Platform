@@ -1,10 +1,10 @@
-# Main Business Flows (TO-BE)
+# Main Business Flows — code-aligned source view
 
-**Revision 2026-10-17** — reviewed against the unit business rules (`aidlc-docs/construction/*/functional-design/business-rules.md`). Twelve swimlane diagrams follow the current scope: SWR/SWD focus, two assessment types (ASSIGNMENT with INDIVIDUAL/GROUP mode and optional Draw.io; QUIZ for practice), 66 active use cases ([docs/usecase_table.md](../../../docs/usecase_table.md)), 15 units, roles `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`. AI uses an institution-sponsored educator quota, personal API keys or the user's own MCP agent; AI credits are **not** sold. There is no Code Lab, Judge0, payment or PayOS. Sources: [requirements.md](../requirements/requirements.md), [council-features-2026-10-13.md](../requirements/council-features-2026-10-13.md) and the unit business rules.
+**Source synchronization 2026-10-30, staging@794a4053** — reviewed against the unit business rules (`aidlc-docs/construction/*/functional-design/business-rules.md`). Twelve swimlane diagrams follow the current scope: SWR/SWD focus, two assessment types (ASSIGNMENT with INDIVIDUAL/GROUP mode and optional Draw.io; QUIZ for practice), 66 active use cases ([docs/usecase_table.md](../../../docs/usecase_table.md)), 15 units, roles `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`. AI uses an institution-sponsored educator quota, personal API keys or the user's own MCP agent; AI credits are **not** sold. There is no Code Lab, Judge0, payment or PayOS. Sources: [requirements.md](../requirements/requirements.md), [council-features-2026-10-13.md](../requirements/council-features-2026-10-13.md) and the unit business rules.
 
 Changes since the 2026-10-15 revision: new BF-11 (accounts) and BF-12 (class groups); every flow now shows its time triggers, failure branches and end events; BF-01 checks students row by row; BF-03 and BF-06 include the REVIEWED step; BF-04 covers the late window, auto-submission and Practice feedback; BF-05 runs assign and claim in parallel with lock release; BF-07 separates finalize and publish; BF-08 uses daily quotas only and shows the MCP agent as its own lane; BF-09 backs up the database only with a fixed 7-day retention; BF-10 has a retry limit, daily email cap and an event table.
 
-These are TO-BE flows of the proposed system. The AS-IS process (how SWR/SWD teachers and students work today) is a separate deliverable that must come from a real survey; nothing here claims survey evidence or implemented runtime behaviour.
+These flow revisions align selected implementation deltas with code; source-observed is not runtime acceptance. The AS-IS process (how SWR/SWD teachers and students work today) is a separate deliverable that must come from a real survey; nothing here claims survey evidence or implemented runtime behaviour.
 
 Files: one draw.io file per flow, a combined 12-page file `AI-Powered-Learning-Platform-Main-Business-Flows.drawio`, and PNG exports at 2x in `exports/` for the report.
 
@@ -444,3 +444,22 @@ Notes:
 - Automatic submission happens only at the final deadline (or when an Assignment or Quiz is retired) and is marked as automatic for the teacher.
 - AI output is always a draft with provenance. Only the Teacher confirms and publishes official grades; only the author publishes an Assignment or Quiz.
 - Technical placement (PostgreSQL state, RabbitMQ jobs, Redis TTL data, Google Drive file bytes) stays in the unit designs, not in the business flows.
+
+## Code-aligned deltas and revision scope — 2026-10-30
+
+Single-flow XML, combined 12-page draw.io and PNG exports share the same source revision. AS-IS survey remains separate. The simplified unit dependency diagram is not an exhaustive runtime call graph; use the source import-contract matrix.
+
+- BF-01: Create stays DRAFT. OPEN permits teacher=null; assigned teacher must remain eligible. Teaching scope requires current assignment.
+- BF-02: U13 modules own same-subject materials; moduleId required. Quiz at most one module, separate Quiz manage scope. Module delete checks active/archived materials.
+- BF-03: U07 owns authoring/rubric and U06 AI proposals. Source existence is separate from historical test evidence; review/publication remain explicit.
+- BF-04: Activity retained one day; activity.retentionDays setting removed. No automatic score penalty. Version and owned submission checks remain.
+- BF-05: U12 groups/groupdocs; existing claims/locks and leader submission remain. Peer grading/import-by-AI feedback remains proposed.
+- BF-06: REVIEWED still exists. OPEN edits remain OPEN; retire any non-RETIRED Quiz. Reopen returns DRAFT/OPEN using publishedAt null vs proven publication; version and active-container guards.
+- BF-07: U09 grading/gradebook; structured feedback/proposals require educator review; no AI finalize/publish. Work activity retention one day.
+- BF-08: MCP Student/Teacher/Manager; Admin denied. Student personal API/MCP share Practice-feedback guards. Multiple institutional keys/provider. Admin key reveal and ACTIVE owner token reveal are audited source exceptions; no secrets in diagrams.
+- BF-09: U03 owns encrypted DB-only backup, seven-day retention. U15 metadata, U14 failure notification. Actual restore evidence required separately.
+- BF-10: U14 announcements/notifications; U01 SMTP/OTP. Dedup/retry finite; SENT means provider accepted, not inbox or exactly-once guarantee.
+- BF-11: U01 school-issued accounts, no public registration. OTP/runtime provider acceptance is separate from source snapshot.
+- BF-12: U12 leader request and rejection reasons optional, maximum 1,000 characters. Scope/current membership/pending checks remain.
+
+Other diagrams under docs/uml remain outside this flow synchronization; use Git history for their older assumptions.

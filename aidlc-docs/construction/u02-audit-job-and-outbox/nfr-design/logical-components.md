@@ -1,6 +1,6 @@
 # U02 Audit — logical-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U02 Audit thuộc Iter 1, người code: Người 2; phạm vi UC 13 giữ như U02 cũ (chỉ audit; việc nền đã thuộc U03). 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
@@ -23,11 +23,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 ## 2. Thành phần
 
-| Thành phần | Chạy ở | Trách nhiệm |
-|---|---|---|
-| `IAudit` / `AuditStore` | Backend, worker | P1: một hàm `record`; `SUCCESS` INSERT trong transaction của unit gọi, `DENIED`/`FAILURE` bằng transaction riêng; kiểm khóa cấm bằng `ForbiddenKeyGuard` (`shared/`) |
-| `AuditQueryService` | Backend | Tra cứu audit cho ADMIN, lấy email người thực hiện qua `IAccountLookup` (U01), tự ghi `AUDIT_QUERIED` |
-| `AuditController` | Backend | `GET /api/v1/admin/audit-logs` |
+| Source | Trách nhiệm |
+|---|---|
+| [audit/controller](../../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [audit/service](../../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [audit/repository](../../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/model](../../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [audit/contract](../../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ## 3. Cấu hình
 
@@ -52,3 +54,11 @@ Không có biến riêng; dùng kết nối PostgreSQL chung.
 ## Kiểm tra revision bắt buộc
 
 - Id lặp không trùng; rollback denied vẫn ghi; field secrets/prompt bị loại; filter malformed từ chối; không Admin denied.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Ghi nhận trước refactor chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+
+## Structure refactor — 2026-10-30
+
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).
