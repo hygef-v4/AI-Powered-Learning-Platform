@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.zaxxer.hikari.HikariDataSource;
 import edu.aiplatform.assignments.contract.BlockOrigin;
 import edu.aiplatform.assignments.contract.BlockType;
 import edu.aiplatform.assignments.contract.DocumentBlock;
@@ -13,54 +14,112 @@ import edu.aiplatform.groupdocs.domain.GroupDocument.SubmitMode;
 import edu.aiplatform.groups.domain.ClassGroup;
 import edu.aiplatform.groups.domain.GroupRepository;
 import edu.aiplatform.groups.domain.LeaderChangeRequest;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.flywaydb.core.Flyway;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.images.builder.Transferable;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Chạy SQL của hai repository U12 trên PostgreSQL đã migrate (biến môi trường {@code U12_TEST_JDBC_URL}, user có quyền
- * như {@code app}). Không có biến thì bỏ qua; integration test đầy đủ do tester viết.
+ * SQL của hai repository U12 chạy bằng role {@code app} trên PostgreSQL 16 dùng riêng cho test, với toàn bộ migration
+ * Flyway thật. Dữ liệu sinh tại chỗ và container được hủy sau test; không kết nối database ngoài.
  */
-@EnabledIfEnvironmentVariable(named = "U12_TEST_JDBC_URL", matches = "jdbc:postgresql:.*")
+@Testcontainers
 class GroupRepositoriesIntegrationTest {
 
-    private static JdbcClient jdbc;
+    private static final String APP_PASSWORD = UUID.randomUUID().toString();
+    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
+
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
+            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
+            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+
+    private static HikariDataSource appDataSource;
+    private static HikariDataSource ownerDataSource;
+    private static JdbcClient owner;
     private static GroupRepository groups;
     private static GroupDocumentRepository documents;
     private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.MILLIS);
     private static UUID classId;
     private static UUID studentA;
     private static UUID studentB;
+    private static UUID subject;
+    private static UUID teacher;
 
     @BeforeAll
     static void setUp() {
-        DriverManagerDataSource source = new DriverManagerDataSource(System.getenv("U12_TEST_JDBC_URL"),
-                System.getenv("U12_TEST_JDBC_USER"), System.getenv("U12_TEST_JDBC_PASSWORD"));
-        jdbc = JdbcClient.create(source);
+        Flyway.configure().dataSource(POSTGRES.getJdbcUrl(), "migrator", MIGRATOR_PASSWORD)
+                .locations("classpath:db/migration").load().migrate();
+        appDataSource = dataSource("app", APP_PASSWORD);
+        ownerDataSource = dataSource(POSTGRES.getUsername(), POSTGRES.getPassword());
+        owner = JdbcClient.create(ownerDataSource);
+        JdbcClient jdbc = JdbcClient.create(appDataSource);
         var json = JsonMapper.builder().findAndAddModules().build();
         groups = new GroupRepository(jdbc);
         documents = new GroupDocumentRepository(jdbc, json);
-        String admin = System.getenv("U12_TEST_ADMIN_JDBC_URL");
-        JdbcClient owner = admin == null ? jdbc : JdbcClient.create(new DriverManagerDataSource(admin,
-                System.getenv("U12_TEST_ADMIN_USER"), System.getenv("U12_TEST_ADMIN_PASSWORD")));
-        UUID subject = UUID.randomUUID();
+    }
+
+    @AfterAll
+    static void close() {
+        if (appDataSource != null) {
+            appDataSource.close();
+        }
+        if (ownerDataSource != null) {
+            ownerDataSource.close();
+        }
+    }
+
+    @BeforeEach
+    void seed() {
+        owner.sql("truncate accounts, subjects cascade").update();
+        subject = UUID.randomUUID();
         classId = UUID.randomUUID();
         studentA = UUID.randomUUID();
         studentB = UUID.randomUUID();
+        teacher = UUID.randomUUID();
         for (UUID student : List.of(studentA, studentB)) {
             owner.sql("insert into accounts (id, school_email, role, status, display_name, password_hash) values "
                     + "(?, ?, 'STUDENT', 'ACTIVE', 'SV', 'x')").params(student, student + "@fpt.edu.vn").update();
         }
         owner.sql("insert into subjects (id, code, name, created_at, updated_at) values (?, ?, 'Môn', now(), now())")
-                .params(subject, "SWP" + (System.nanoTime() % 100000)).update();
-        owner.sql("insert into course_classes (id, subject_id, code, name, created_at, updated_at) values "
-                + "(?, ?, 'SE1', 'SE1', now(), now())").params(classId, subject).update();
+                .params(subject, "SWP391").update();
+        owner.sql("insert into accounts (id, school_email, role, status, display_name, password_hash) values "
+                + "(?, ?, 'TEACHER', 'ACTIVE', 'GV', 'x')").params(teacher, teacher + "@fpt.edu.vn").update();
+        owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, created_at, updated_at) values "
+                + "(?, ?, 'SE1', 'SE1', 'OPEN', ?, now(), now())").params(classId, subject, teacher).update();
+    }
+
+    private static Transferable rolesScript() {
+        try {
+            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
+            return Transferable.of(script.replace("\r", ""), 0755);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static HikariDataSource dataSource(String user, String password) {
+        HikariDataSource source = new HikariDataSource();
+        source.setJdbcUrl(POSTGRES.getJdbcUrl());
+        source.setUsername(user);
+        source.setPassword(password);
+        source.setMaximumPoolSize(4);
+        return source;
     }
 
     @Test
@@ -97,6 +156,11 @@ class GroupRepositoriesIntegrationTest {
         UUID groupId = UUID.randomUUID();
         groups.insertGroup(new ClassGroup(groupId, classId, "Nhóm D " + groupId, studentA, null, NOW, NOW, List.of()));
         UUID assignment = UUID.randomUUID();
+        owner.sql("insert into assignments (id, scope, class_id, subject_id, origin, submission_mode, grading_mode, title, "
+                + "skeleton, parts, status, opens_at, closes_at, max_attempts, created_by, created_at, updated_at) values "
+                + "(?, 'CLASS', ?, ?, 'MANUAL', 'GROUP', 'GRADED', 'Bài nhóm', '{\"blocks\":[]}'::jsonb, '[]'::jsonb, "
+                + "'OPEN', now() - interval '1 hour', now() + interval '1 hour', 1, ?, now(), now())")
+                .params(assignment, classId, subject, teacher).update();
         GroupDocument doc = GroupDocument.create(UUID.randomUUID(), groupId, assignment, classId,
                 new DocumentModel(List.of()), false, NOW);
         assertThat(documents.insertIfAbsent(doc)).isTrue();

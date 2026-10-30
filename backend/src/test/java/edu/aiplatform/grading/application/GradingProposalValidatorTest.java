@@ -177,7 +177,7 @@ class GradingProposalValidatorTest {
     }
 
     @Test
-    void rejectsInvalidBlockIdsDuplicateItemsMissingEvidenceAndOversizedFeedback() throws Exception {
+    void rejectsInvalidBlockIdsDuplicateItemsMissingEvidenceAndUnknownFields() throws Exception {
         var validator = new GradingProposalValidator(json);
         // Unknown block anchor
         var badBlock = json.readTree("""
@@ -204,7 +204,10 @@ class GradingProposalValidatorTest {
             }
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validate(badBlock, rubric(), Set.of("p", "block-1")))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> {
+                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_UNKNOWN_EVIDENCE_BLOCK");
+                });
 
         // Missing evidence when requiresReview is false
         var missingEvidence = json.readTree("""
@@ -231,7 +234,10 @@ class GradingProposalValidatorTest {
             }
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validate(missingEvidence, rubric(), Set.of("p")))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> {
+                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_MISSING_EVIDENCE");
+                });
 
         // Duplicate item entry
         var duplicateItems = json.readTree("""
@@ -251,8 +257,28 @@ class GradingProposalValidatorTest {
               }
             }
             """.formatted(rid, rid, iid, rid, iid, rid, iid));
-        assertThatThrownBy(() -> validator.validate(duplicateItems, rubric(), Set.of("p")))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL"));
+        UUID secondItem = UUID.randomUUID();
+        var twoItemRubric = List.of(new RubricView(rid, UUID.randomUUID(), "p",
+                List.of(new RubricCriterion(UUID.randomUUID(), "c", "", CriterionKind.values()[0],
+                        List.of(new RubricItem(iid, "i", BigDecimal.ONE),
+                                new RubricItem(secondItem, "second", BigDecimal.ONE)))), new BigDecimal("2")));
+        assertThatThrownBy(() -> validator.validate(duplicateItems, twoItemRubric, Set.of("p")))
+                .isInstanceOfSatisfying(ApiException.class, ex -> {
+                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_DUPLICATE_ITEM");
+                });
+
+        var missingItem = duplicateItems.deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode) missingItem.path("structuredFeedback").path("items")).remove(1);
+        assertThatThrownBy(() -> validator.validate(missingItem, twoItemRubric, Set.of("p")))
+                .isInstanceOfSatisfying(ApiException.class, ex ->
+                        assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_ITEM_COVERAGE"));
+
+        var missingReviewReason = missingEvidence.deepCopy();
+        ((ObjectNode) missingReviewReason.path("structuredFeedback").path("items").get(0)).put("requiresReview", true);
+        assertThatThrownBy(() -> validator.validate(missingReviewReason, rubric(), Set.of("p")))
+                .isInstanceOfSatisfying(ApiException.class, ex ->
+                        assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_MISSING_REVIEW_REASON"));
 
         // Unknown field inside structuredFeedback
         var unknownField = json.readTree("""
@@ -271,6 +297,26 @@ class GradingProposalValidatorTest {
             }
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validate(unknownField, rubric(), Set.of("p")))
+                .isInstanceOfSatisfying(ApiException.class, ex -> {
+                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("FEEDBACK_UNKNOWN_FIELD");
+                });
+    }
+
+    @Test
+    void feedbackMayBeOmittedButOversizedFeedbackAndSectionsAreRejected() {
+        var validator = new GradingProposalValidator(json);
+        ObjectNode payload = json.valueToTree(Map.of("checks", Map.of(), "score", "0.00"));
+        assertThat(validator.validate(payload, rubric()).feedback()).isNull();
+        payload.put("feedback", "x".repeat(10_000));
+        assertThat(validator.validate(payload, rubric()).feedback()).hasSize(10_000);
+        payload.put("feedback", "x".repeat(10_001));
+        assertThatThrownBy(() -> validator.validate(payload, rubric()))
                 .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL"));
+        payload.remove("feedback");
+        payload.set("sections", json.valueToTree(List.of(Map.of("partId", "p", "feedback", "x".repeat(10_001)))));
+        assertThatThrownBy(() -> validator.validate(payload, rubric()))
+                .isInstanceOfSatisfying(ApiException.class, ex ->
+                        assertThat(GradingProposalValidator.rejectionDiagnostic(ex)).isEqualTo("PROPOSAL_SECTION_MISMATCH"));
     }
 }

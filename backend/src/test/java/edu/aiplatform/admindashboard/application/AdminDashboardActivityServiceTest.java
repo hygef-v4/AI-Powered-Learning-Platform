@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AdminDashboardActivityServiceTest {
     private final IAuditStats audit = mock(IAuditStats.class);
@@ -112,6 +114,69 @@ class AdminDashboardActivityServiceTest {
         try (var f = new DashboardFixture()) {
             assertThatThrownBy(() -> service(f).activity(new Actor(UUID.randomUUID(), Role.TEACHER)))
                     .isInstanceOf(ApiException.class);
+        }
+    }
+
+    @Test
+    void assignmentRowsAccumulateDuplicatesAndIgnoreNegativeUnknownAndOutOfRangeCounts() {
+        try (var f = new DashboardFixture()) {
+            LocalDate today = LocalDate.parse("2026-10-20");
+            when(assignments.countGivenByDay(any(), any(), any())).thenReturn(List.of(
+                    new AssignmentDayCount(today, "INDIVIDUAL", 2),
+                    new AssignmentDayCount(today, "INDIVIDUAL", 3),
+                    new AssignmentDayCount(today, "GROUP", -9),
+                    new AssignmentDayCount(today, "UNKNOWN", 500),
+                    new AssignmentDayCount(today.plusDays(1), "PRACTICE", 100)));
+
+            var section = service(f).activity(f.admin).assignmentsByDay();
+
+            assertThat(section.availability()).isEqualTo(Availability.AVAILABLE);
+            assertThat(section.data().get(6)).isEqualTo(new DayAssignments(today, 5, 0, 0));
+        }
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void nullOrUnmappableAssignmentSourceOnlyHidesAssignmentSection(boolean unmappable) {
+        try (var f = new DashboardFixture()) {
+            when(assignments.countGivenByDay(any(), any(), any())).thenReturn(unmappable
+                    ? List.of(new AssignmentDayCount(LocalDate.parse("2026-10-20"), null, 1)) : null);
+
+            var view = service(f).activity(f.admin);
+
+            assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.UNAVAILABLE);
+            assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.AVAILABLE);
+            assertThat(view.securityEvents().availability()).isEqualTo(Availability.AVAILABLE);
+        }
+    }
+
+    @Test
+    void activeChangeAuditFailureDoesNotHideIndependentSecurityOrAssignmentSources() {
+        try (var f = new DashboardFixture()) {
+            when(audit.countSucceeded(eq("ACCOUNT_ACTIVATED"), any(), any(), isNull(), isNull()))
+                    .thenThrow(new IllegalStateException("counts unavailable"));
+
+            var view = service(f).activity(f.admin);
+
+            assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.UNAVAILABLE);
+            assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.AVAILABLE);
+            assertThat(view.securityEvents().availability()).isEqualTo(Availability.AVAILABLE);
+        }
+    }
+
+    @ParameterizedTest @ValueSource(booleans = {false, true})
+    void securityAuditFailureOrMappingFailureDoesNotHideOtherSections(boolean mappingFailure) {
+        try (var f = new DashboardFixture()) {
+            if (mappingFailure) {
+                when(audit.recentSecurityEvents(any(), anyInt())).thenReturn(List.of(new AuditLogView(null, null)));
+            } else {
+                when(audit.recentSecurityEvents(any(), anyInt())).thenThrow(new IllegalStateException("events unavailable"));
+            }
+
+            var view = service(f).activity(f.admin);
+
+            assertThat(view.securityEvents().availability()).isEqualTo(Availability.UNAVAILABLE);
+            assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.AVAILABLE);
+            assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.AVAILABLE);
         }
     }
 }

@@ -79,6 +79,27 @@ class MaterialAccessPolicyTest {
         assertThatThrownBy(()->policy.read(new Actor(account,Role.SUBJECT_MANAGER),material(false,Material.Status.ACTIVE),null))
                 .isInstanceOfSatisfying(ApiException.class,e->{assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("private data");});
     }
+    @Test void managerReadsAndManagesOwnSubjectButCannotListOrReadAnUnassignedSubject() {
+        Actor manager=new Actor(account,Role.SUBJECT_MANAGER);
+        policy.subjectList(manager,subject);
+        policy.read(manager,material(false,Material.Status.ARCHIVED),null);
+        policy.write(manager,material(false,Material.Status.ACTIVE));
+        assertThat(policy.canManageModules(manager,subject)).isTrue();
+        verify(auth,atLeastOnce()).authorize(manager,Actions.MATERIAL_SUBJECT_MANAGE,ResourceRef.subject(subject));
+        verifyNoInteractions(audit);
+
+        when(auth.authorize(manager,Actions.MATERIAL_SUBJECT_MANAGE,ResourceRef.subject(other)))
+                .thenReturn(AuthorizationDecision.deny("OUT_OF_SUBJECT_SCOPE"));
+        denied(()->policy.subjectList(manager,other));
+    }
+
+    @Test void foreignSubjectManagerCannotReadDetailOrChangeModules() {
+        Actor manager=new Actor(other,Role.SUBJECT_MANAGER);
+        when(auth.authorize(eq(manager),anyString(),any())).thenReturn(AuthorizationDecision.deny("OUT_OF_SUBJECT_SCOPE"));
+        denied(()->policy.read(manager,material(false,Material.Status.ACTIVE),null));
+        assertThat(policy.canManageModules(manager,subject)).isFalse();
+        assertThat(policy.canManageQuiz(manager,subject,null)).isFalse();
+    }
     void denied(Runnable call) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,e->assertThat(e.status().value()).isEqualTo(404));
         verify(audit).record(argThat(event->event.action().equals("ACCESS_DENIED")&&event.result()==AuditResult.DENIED));

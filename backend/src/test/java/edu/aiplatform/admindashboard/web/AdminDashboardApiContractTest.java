@@ -7,10 +7,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.admindashboard.application.DashboardFixture;
+import edu.aiplatform.admindashboard.application.AdminDashboardActivityService;
+import edu.aiplatform.assignments.contract.IAssignmentQuery;
+import edu.aiplatform.audit.contract.IAuditStats;
 import edu.aiplatform.backup.contract.*;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.identity.contract.*;
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.ZoneOffset;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -127,6 +132,94 @@ class AdminDashboardApiContractTest {
             mvc.perform(get("/api/v1/admin/dashboard?unknown=1")).andExpect(status().isForbidden());
             verify(f.audit).record(argThat(event -> teacher.accountId().equals(event.actorId())
                     && event.action().equals("ACCESS_DENIED") && event.result() == AuditResult.DENIED));
+        }
+    }
+
+    @Test void activeAdminReceivesActivityWithNoStore() throws Exception {
+        try (var f = new DashboardFixture()) {
+            IAuditStats stats = mock(IAuditStats.class);
+            IAssignmentQuery assignments = mock(IAssignmentQuery.class);
+            var activity = new AdminDashboardActivityService(f.service, stats, assignments, f.reader,
+                    Clock.fixed(f.now, ZoneOffset.UTC));
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, activity))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
+
+            var response = mvc.perform(get("/api/v1/admin/dashboard/activity")).andExpect(status().isOk())
+                    .andReturn().getResponse();
+
+            assertThat(response.getHeader("Cache-Control")).isEqualTo("no-store");
+            JsonNode body = Jackson2ObjectMapperBuilder.json().build().readTree(response.getContentAsString());
+            assertThat(body.path("activeAccountChangeToday").path("data").asLong(-1)).isZero();
+            assertThat(body.path("assignmentsByDay").path("data")).hasSize(7);
+            assertThat(body.path("securityEvents").path("availability").asText()).isEqualTo("AVAILABLE");
+            verify(assignments).countGivenByDay(any(), any(), any());
+            verify(stats).recentSecurityEvents(any(), eq(50));
+            verifyNoInteractions(f.accounts, f.subjects, f.classes, f.backups, f.settings);
+        }
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"", "?unknown=1", "?unknown=1&unknown=2"})
+    void activityChecksEveryRoleAndAuditsDenialBeforeParsingQueryOrReadingSources(String query) throws Exception {
+        try (var f = new DashboardFixture()) {
+            IAuditStats stats = mock(IAuditStats.class);
+            IAssignmentQuery assignments = mock(IAssignmentQuery.class);
+            var activity = new AdminDashboardActivityService(f.service, stats, assignments, f.reader,
+                    Clock.fixed(f.now, ZoneOffset.UTC));
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, activity))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            for (Role role : Role.values()) {
+                if (role == Role.ADMIN) continue;
+                Actor actor = new Actor(UUID.randomUUID(), role);
+                SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor, null));
+                mvc.perform(get("/api/v1/admin/dashboard/activity" + query)).andExpect(status().isForbidden());
+                verify(f.audit).record(argThat(event -> actor.accountId().equals(event.actorId())
+                        && event.action().equals("ACCESS_DENIED") && event.result() == AuditResult.DENIED));
+            }
+            SecurityContextHolder.clearContext();
+            mvc.perform(get("/api/v1/admin/dashboard/activity" + query)).andExpect(status().isUnauthorized());
+            verify(f.audit).record(argThat(event -> event.actorId() == null && event.action().equals("ACCESS_DENIED")));
+            verifyNoInteractions(stats, assignments, f.accounts, f.subjects, f.classes, f.backups, f.settings);
+        }
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"unknown=1", "unknown=1&unknown=2"})
+    void activityRejectsUnknownOrDuplicateQueryForAdminWithoutSourceReads(String query) throws Exception {
+        try (var f = new DashboardFixture()) {
+            IAuditStats stats = mock(IAuditStats.class);
+            IAssignmentQuery assignments = mock(IAssignmentQuery.class);
+            var activity = new AdminDashboardActivityService(f.service, stats, assignments, f.reader,
+                    Clock.fixed(f.now, ZoneOffset.UTC));
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, activity))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
+
+            mvc.perform(get("/api/v1/admin/dashboard/activity?" + query)).andExpect(status().isBadRequest());
+
+            verifyNoInteractions(stats, assignments, f.accounts, f.subjects, f.classes, f.backups, f.settings);
+        }
+    }
+
+    @Test void disabledAdminCannotReadActivitySources() throws Exception {
+        try (var f = new DashboardFixture()) {
+            when(f.authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("ACCOUNT_NOT_ACTIVE"));
+            IAuditStats stats = mock(IAuditStats.class);
+            IAssignmentQuery assignments = mock(IAssignmentQuery.class);
+            var activity = new AdminDashboardActivityService(f.service, stats, assignments, f.reader,
+                    Clock.fixed(f.now, ZoneOffset.UTC));
+            var mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(f.service, activity))
+                    .setControllerAdvice(new AdminDashboardExceptionHandler())
+                    .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(f.admin, null));
+
+            mvc.perform(get("/api/v1/admin/dashboard/activity")).andExpect(status().isForbidden());
+
+            verify(f.audit).record(argThat(event -> f.admin.accountId().equals(event.actorId())
+                    && event.action().equals("ACCESS_DENIED")));
+            verifyNoInteractions(stats, assignments, f.accounts, f.subjects, f.classes, f.backups, f.settings);
         }
     }
 

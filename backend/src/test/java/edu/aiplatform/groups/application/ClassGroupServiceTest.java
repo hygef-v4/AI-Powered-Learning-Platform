@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import edu.aiplatform.academics.contract.ClassRef;
@@ -183,6 +184,21 @@ class ClassGroupServiceTest {
         assertThatThrownBy(() -> service.view(other, classId))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
         verify(audit).record(any());
+    }
+
+    @Test
+    void lostSetVersionCasStopsBeforeMembershipDocumentAndNotificationMutations() {
+        when(groups.bumpSetVersion(classId, 3L, NOW)).thenReturn(false);
+        var command = new SaveCommand(3L, List.of(new Draft("new", null, "New group", students.get(0),
+                List.of(students.get(0), students.get(1)))));
+
+        assertThatThrownBy(() -> service.save(teacher, classId, command))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
+
+        verify(groups, never()).insertGroup(any());
+        verify(groups, never()).removeMembers(any(), any());
+        verify(groups, never()).deleteGroup(any());
+        verifyNoInteractions(documents, groupDocuments, streams, events, audit);
     }
 
     private void classStatus(ClassStatus status) {

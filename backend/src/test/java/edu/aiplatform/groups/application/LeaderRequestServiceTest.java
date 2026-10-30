@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +36,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.dao.DuplicateKeyException;
 
 class LeaderRequestServiceTest {
 
@@ -144,6 +147,79 @@ class LeaderRequestServiceTest {
         assertThatThrownBy(() -> service.approve(teacher, request.id(), member.accountId()))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_CLOSED"));
         verify(groups, never()).bumpSetVersion(any(), anyLong(), any());
+    }
+
+    @Test
+    void currentLeaderCanRequestWithExactlyOneThousandTrimmedCharacters() {
+        service.submit(leader, group.id(), "  " + "x".repeat(1000) + "  ", member.accountId());
+        ArgumentCaptor<LeaderChangeRequest> saved = ArgumentCaptor.forClass(LeaderChangeRequest.class);
+        verify(groups).insertRequest(saved.capture());
+        assertThat(saved.getValue().reason()).hasSize(1000);
+        assertThat(saved.getValue().requestedBy()).isEqualTo(leader.accountId());
+    }
+
+    @Test
+    void duplicatePendingInsertRaceReturnsConflictWithoutPublishingSuccess() {
+        doThrow(new DuplicateKeyException("concurrent request")).when(groups).insertRequest(any());
+
+        assertThatThrownBy(() -> service.submit(member, group.id(), "   ", null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_PENDING"));
+
+        verifyNoInteractions(events, audit);
+    }
+
+    @Test
+    void requesterCannotCancelAnAlreadyDecidedRequest() {
+        LeaderChangeRequest decided = pending(null).decide(Status.REJECTED, null, teacher.accountId(), null, NOW);
+        when(groups.lockRequest(decided.id())).thenReturn(Optional.of(decided));
+
+        assertThatThrownBy(() -> service.cancel(member, decided.id()))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_CLOSED"));
+
+        verify(groups, never()).updateRequest(any());
+        verifyNoInteractions(events, audit);
+    }
+
+    @Test
+    void inactiveChosenLeaderAndArchivedClassCannotBeApproved() {
+        LeaderChangeRequest request = pending(member.accountId());
+        when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
+        when(classes.isActiveStudent(member.accountId(), classId)).thenReturn(false);
+        assertThatThrownBy(() -> service.approve(teacher, request.id(), null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_NOT_MEMBER"));
+        status(ClassStatus.ARCHIVED);
+        assertThatThrownBy(() -> service.approve(teacher, request.id(), null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_CLASS_ARCHIVED"));
+        verify(groups, never()).setLeader(any(), any(), any());
+        verify(groups, never()).updateRequest(any());
+        verifyNoInteractions(events, audit);
+    }
+
+    @Test
+    void foreignTeacherCannotDecideRequestEvenWhenItExists() {
+        LeaderChangeRequest request = pending(member.accountId());
+        when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
+        Actor foreign = new Actor(UUID.randomUUID(), Role.TEACHER);
+        when(authorization.authorize(eq(foreign), any(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
+
+        assertThatThrownBy(() -> service.reject(foreign, request.id(), "No"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
+
+        verify(groups, never()).updateRequest(any());
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void rejectionTrimsAndPersistsBoundaryReasonAndRejectsOneThousandAndOne() {
+        LeaderChangeRequest request = pending(null);
+        when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
+        assertThatThrownBy(() -> service.reject(teacher, request.id(), "x".repeat(1001)))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("REJECT_REASON_INVALID"));
+        var result = service.reject(teacher, request.id(), "  " + "x".repeat(1000) + "  ");
+
+        assertThat(result.decisionReason()).isEqualTo("x".repeat(1000));
+        verify(groups).updateRequest(org.mockito.ArgumentMatchers.argThat(r -> r.status() == Status.REJECTED
+                && r.decisionReason().equals("x".repeat(1000)) && teacher.accountId().equals(r.decidedBy())));
     }
 
     private LeaderChangeRequest pending(UUID proposed) {

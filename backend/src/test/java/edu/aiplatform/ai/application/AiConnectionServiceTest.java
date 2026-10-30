@@ -182,6 +182,19 @@ class AiConnectionServiceTest {
     }
 
     @Test
+    void institutionalRevealAllowsDisabledButNeverPersonalRevokedOrMissing() {
+        AiConnection shared=existing(AiConnection.Scope.INSTITUTIONAL);
+        when(repository.findById(shared.id())).thenReturn(Optional.of(shared.withStatus(Status.DISABLED,NOW)));
+        assertThat(service.revealInstitutional(admin,shared.id())).isEqualTo("AIzaSy-old-key-0000");
+        when(repository.findById(shared.id())).thenReturn(Optional.of(shared.revoked(NOW)));
+        assertThatThrownBy(()->service.revealInstitutional(admin,shared.id())).isInstanceOf(ApiException.class);
+        var personal=existing(AiConnection.Scope.PERSONAL);
+        when(repository.findById(personal.id())).thenReturn(Optional.of(personal));
+        assertThatThrownBy(()->service.revealInstitutional(admin,personal.id())).isInstanceOf(ApiException.class);
+        assertThatThrownBy(()->service.revealInstitutional(admin,UUID.randomUUID())).isInstanceOf(ApiException.class);
+    }
+
+    @Test
     void draftTestUsesTypedKeyOrSavedKeyWithoutSavingResult() {
         AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
         when(repository.findById(shared.id())).thenReturn(Optional.of(shared));

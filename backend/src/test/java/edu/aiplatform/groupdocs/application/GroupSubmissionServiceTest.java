@@ -7,7 +7,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,11 +75,13 @@ class GroupSubmissionServiceTest {
     private final IDocumentModel documentModel = mock(IDocumentModel.class);
     private final IGroupEvaluation evaluation = mock(IGroupEvaluation.class);
     private final IAudit audit = mock(IAudit.class);
+    private final ISseHub sse = mock(ISseHub.class);
+    private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupSubmissionService service = new GroupSubmissionService(documents, groups,
             new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
-            assignments, documentModel, mock(IDocx.class), evaluation, mock(ISseHub.class), audit,
-            mock(IEventPublisher.class), new ObjectMapper().findAndRegisterModules(), clock);
+            assignments, documentModel, mock(IDocx.class), evaluation, sse, audit,
+            events, new ObjectMapper().findAndRegisterModules(), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
     private final UUID heading1 = UUID.randomUUID();
@@ -182,6 +187,95 @@ class GroupSubmissionServiceTest {
         assertThat(service.autoSubmit(document.id()).orElseThrow().mode()).isEqualTo("AUTO_RETIRED");
     }
 
+    @Test
+    void staleSubmissionVersionHasNoPersistenceOrDeliverySideEffects() {
+        assertThatThrownBy(() -> service.submit(leader, document.id(), 1L))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
+        verify(documents, never()).update(any());
+        verify(documents, never()).listSections(any());
+        verifyNoInteractions(documentModel, evaluation, events, sse, audit);
+    }
+
+    @Test
+    void lostDocumentCasDoesNotPublishAReceiptOrTriggerGrading() {
+        when(documents.listSections(document.id())).thenReturn(List.of());
+        when(documents.update(any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.submit(leader, document.id(), 0L))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
+
+        verifyNoInteractions(evaluation, events, sse, audit);
+    }
+
+    @Test
+    void resubmitBuildsANewSnapshotWithoutChangingThePreviousReceipt() {
+        DocumentBlock first = block(UUID.randomUUID(), BlockType.PARAGRAPH, "first answer");
+        DocumentBlock second = block(UUID.randomUUID(), BlockType.PARAGRAPH, "replacement answer");
+        when(documents.listSections(document.id())).thenReturn(List.of(
+                section("p1", heading1, 1, Status.DONE, null, List.of(first), member.accountId())));
+        var firstReceipt = service.submit(leader, document.id(), 0L);
+        ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
+        verify(documents).update(saved.capture());
+        GroupDocument originalSnapshot = saved.getValue();
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(persistedVersion(originalSnapshot, 1)));
+        when(documents.listSections(document.id())).thenReturn(List.of(
+                section("p1", heading1, 1, Status.DONE, null, List.of(second), leader.accountId())));
+
+        var secondReceipt = service.submit(leader, document.id(), 1L);
+
+        verify(documents, times(2)).update(saved.capture());
+        GroupDocument newSnapshot = saved.getValue();
+        assertThat(newSnapshot.version()).isEqualTo(1);
+        assertThat(originalSnapshot.submittedDocument().blocks()).extracting(DocumentBlock::id)
+                .contains(first.id()).doesNotContain(second.id());
+        assertThat(originalSnapshot.receiptHash()).isEqualTo(firstReceipt.receiptHash());
+        assertThat(newSnapshot.submittedDocument().blocks()).extracting(DocumentBlock::id)
+                .contains(second.id()).doesNotContain(first.id());
+        assertThat(newSnapshot.sectionAuthors()).extracting(GroupDocument.SectionAuthor::accountId)
+                .containsExactly(leader.accountId());
+        assertThat(secondReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
+        verify(evaluation).onGroupSubmitted(document.id(), secondReceipt.receiptHash(), assignmentId, classId, group.memberIds());
+    }
+
+    @Test
+    void unchangedSinceManualSubmitOnlyClosesAndPreservesSnapshot() {
+        when(documents.listSections(document.id())).thenReturn(List.of());
+        var receipt = service.submit(leader, document.id(), 0L);
+        ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
+        verify(documents).update(saved.capture());
+        GroupDocument submitted = saved.getValue();
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
+        when(documents.lockSections(document.id())).thenReturn(List.of());
+        clearInvocations(documents, evaluation, events, audit, sse);
+
+        assertThat(service.autoSubmit(document.id())).isEmpty();
+
+        verify(documents).update(saved.capture());
+        assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
+        assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
+        assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
+        assertThat(saved.getValue().submitMode()).isEqualTo(GroupDocument.SubmitMode.MANUAL);
+        verifyNoInteractions(evaluation, events, audit);
+        verify(sse).publish(eq(GroupSectionService.channel(document.id())),
+                eq(java.util.Map.of("type", "document.closed", "documentId", document.id().toString())));
+    }
+
+    @Test
+    void lostCasWhileClosingUnchangedSubmissionHasNoDeliverySideEffects() {
+        GroupDocument submitted = document.withSubmission(skeleton, List.of(), leader.accountId(),
+                GroupDocument.SubmitMode.MANUAL, NOW, false, "existing-receipt", List.of(),
+                GroupDocument.Status.IN_PROGRESS);
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
+        when(documents.lockSections(document.id())).thenReturn(List.of());
+        when(documents.update(any())).thenReturn(false);
+
+        assertThat(service.autoSubmit(document.id())).isEmpty();
+
+        verifyNoInteractions(evaluation, events, audit, sse);
+    }
+
     private GroupSection section(String partId, UUID heading, int order, Status status, UUID holder,
                                  List<DocumentBlock> published, UUID author) {
         return new GroupSection(UUID.randomUUID(), document.id(), partId, heading, List.of(), order, "Mục " + order, status,
@@ -190,5 +284,13 @@ class GroupSubmissionServiceTest {
 
     private static DocumentBlock block(UUID id, BlockType type, String text) {
         return new DocumentBlock(id, BlockOrigin.TEACHER, type, JsonNodeFactory.instance.objectNode().put("text", text));
+    }
+
+    /** The repository increments the persisted version after a successful conditional update. */
+    private static GroupDocument persistedVersion(GroupDocument d, long version) {
+        return new GroupDocument(d.id(), d.groupId(), d.assignmentId(), d.classId(), d.status(), d.sharedBlocks(),
+                d.activityMonitoring(), d.autoSubmitReason(), d.submittedDocument(), d.sectionAuthors(), d.submittedBy(),
+                d.submitMode(), d.submittedAt(), d.late(), d.receiptHash(), d.warnings(), d.lastChangedAt(), version,
+                d.createdAt());
     }
 }
