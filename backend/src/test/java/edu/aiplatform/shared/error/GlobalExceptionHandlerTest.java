@@ -4,7 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import edu.aiplatform.grading.application.GradingCommands.Save;
+import edu.aiplatform.grading.service.GradingCommands.Save;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;

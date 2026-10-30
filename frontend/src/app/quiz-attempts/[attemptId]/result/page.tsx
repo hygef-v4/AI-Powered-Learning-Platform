@@ -1,4 +1,4 @@
-import { QuizResultPage } from "@/features/quizpractice/QuizResultPage";
+import { QuizResultPage } from "@/features/quizpractice/pages/QuizResultPage";
 
 // U11 #45 Quiz Result.
 export default async function Page({ params }: { params: Promise<{ attemptId: string }> }) {

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AuthenticatedLayout } from "@/features/identity/shell/AuthenticatedLayout";
+import { AuthenticatedLayout } from "@/features/identity/shell/components/AuthenticatedLayout";
 
 // U01: User Profile mở cho mọi role đã đăng nhập.
 export default function ProfileLayout({ children }: { children: ReactNode }) {

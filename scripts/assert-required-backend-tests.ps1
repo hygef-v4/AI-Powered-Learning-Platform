@@ -4,8 +4,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $requiredSuites = @{
-    'edu.aiplatform.subjects.infrastructure.SubjectRepositoryIntegrationTest' = 31
-    'edu.aiplatform.notifications.infrastructure.NotificationDeliveryIntegrationTest' = 2
+    'edu.aiplatform.subjects.repository.SubjectRepositoryIntegrationTest' = 31
+    'edu.aiplatform.notifications.integration.NotificationDeliveryIntegrationTest' = 2
 }
 
 foreach ($suiteName in $requiredSuites.Keys) {

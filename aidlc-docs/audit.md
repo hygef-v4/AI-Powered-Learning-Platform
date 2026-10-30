@@ -7037,3 +7037,43 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Limits**: Only documentation is authorized to be committed in this step. Code is to remain reviewable in the working tree/index; no code commit, push, deployment or history rewrite. Security/resiliency scope and disabled PBT remain unchanged.
 
 ---
+
+## Fresh test and build after git mv — 2026-10-30
+
+**Timestamp**: 2026-10-30T10:11:21Z
+
+**User Input (complete raw)**:
+
+> thử kiểm tra test và build lại backend frontend
+
+**Source**: HEAD 11df6307 (documentation-only commit); staged move-only source proposal: 1,066 renames and 86 package/import/reference modifications. No production/test source edits made for this verification.
+
+**Fresh commands and results**:
+- Backend Maven 3.9.12: `mvn -B -f backend/pom.xml clean verify` using the existing user Maven cache. 1,611 tests, 0 failures/errors/skips; BUILD SUCCESS, 3m16s. Spring Boot JAR repackaged successfully.
+- `scripts/assert-required-backend-tests.ps1`: passed, SubjectRepositoryIntegrationTest 31 and NotificationDeliveryIntegrationTest 2; no skips. Testcontainers exercised disposable PostgreSQL/Redis.
+- Frontend `vitest run --maxWorkers=2 --reporter=dot`: 599 passed across 94 files, exit 0.
+- Frontend `eslint .`: exit 0, two existing unused-import warnings (`navEntries` and `Icon`). Existing React act warnings also appear in jsdom tests; no test failures.
+- Frontend `tsc --noEmit`: exit 0.
+- Frontend `node scripts/build.mjs`: production build exit 0, Next routes and BUILD_ID generated.
+
+**Evidence**: `.tmp/2026-10-30-after-gitmv-{backend,db-guard,frontend,lint,typecheck,build}.log`; backend target Surefire reports/JAR; frontend .next output. Direct Node CLI invokes installed package commands without changing dependencies. Runtime JDK 21 target Java 17 and Node 25; CI uses Java 17/Node 22.
+
+**Limits and state**: No new source changes, commit, push or deployment. Code stays staged; this audit entry and state verification note are unstaged documentation updates. Browser E2E, real AI/email/storage providers, load/restore and full runtime acceptance were not run. Existing security/resiliency scope retained; PBT disabled.
+
+---
+
+## Commit authorization — 2026-10-30
+
+**Timestamp**: 2026-10-30T10:13:26Z
+
+**User Input (complete raw)**:
+
+> giúp tôi commit
+
+**Action**: Prepare a new commit on aidlc-docs containing the staged move-only backend/frontend refactor, required-suite FQN updates, and the latest state/audit verification notes. Documentation-first commit 11df6307 remains unchanged; no amend, rebase or push.
+
+**Pre-commit evidence**: Rechecked all 1,501 source/resource files against the tested tree; 908 Java bodies and 506 TypeScript/TSX ASTs preserve original code except package/import/reference updates. Git detects 1,066 renames, 86 reference modifications and no unpaired source additions/deletions. Controller annotations, public contracts, schema/migrations, config and dependencies unchanged; diff whitespace and current doc links checked. Reuse the immediately preceding fresh backend 1,611 pass/0 skipped, frontend 599 pass/94 files, build/typecheck and required DB guard results; no source edits since that run. Two existing lint warnings remain.
+
+**Limits**: Commit locally only. Browser E2E/provider/load/restore acceptance remains unverified. Existing security/resiliency scope retained; PBT disabled.
+
+---

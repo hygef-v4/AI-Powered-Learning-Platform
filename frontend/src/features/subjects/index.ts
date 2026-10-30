@@ -1,2 +1,2 @@
-export { SubjectListPage } from "./SubjectListPage";
-export { SubjectDetailPage } from "./SubjectDetailPage";
+export { SubjectListPage } from "./pages/SubjectListPage";
+export { SubjectDetailPage } from "./pages/SubjectDetailPage";

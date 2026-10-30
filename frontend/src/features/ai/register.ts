@@ -2,7 +2,7 @@
 
 import { accountMenuEntries, navEntries } from "@/features/identity/slots";
 import { settingsSectionRegistry } from "@/features/settings/slots";
-import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/AiSettingsPanels";
+import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/components/AiSettingsPanels";
 
 accountMenuEntries.register({
   key: "ai-connection",
