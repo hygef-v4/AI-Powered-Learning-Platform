@@ -1,5 +1,5 @@
 // Kiểm thử end-to-end góp ý 2026-11-02 trên stack local: tiếp quản, chốt, lịch sử, khôi phục, nhập DOCX/Draw.io,
-// đánh giá chéo (U12) và nguồn AI mặc định (U06). Dùng Nhóm A (sv1, trưởng nhóm sv2) của lớp trong seed.json.
+// đánh giá chéo (U12) và nguồn AI mặc định (U06). Tự chọn một nhóm của lớp trong seed.json có trưởng nhóm và thành viên.
 import fs from "node:fs";
 import { BASE, Session, check, env } from "./lib.mjs";
 
@@ -15,7 +15,8 @@ const login = async (key) => {
 };
 const brief = (r) => `${r.status} ${r.data?.code ?? ""} ${(r.data?.detail ?? "").slice(0, 90)}`;
 const T = await login("teacher");
-const S = { sv1: await login("sv1"), sv2: await login("sv2"), sv3: await login("sv3") };
+const S = {};
+for (const k of ["sv1", "sv2", "sv3", "sv4", "sv5"]) S[k] = await login(k);
 
 /** Gửi multipart kèm cookie và CSRF của phiên. */
 async function multipart(session, path, files) {
@@ -49,8 +50,15 @@ await T.put("/api/v1/me/ai-source-preference", { source: oldPref?.source ?? null
 
 // ---------- Bài nhóm 3 phần, mở 15 phút
 const set = (await T.get(`/api/v1/classes/${C}/groups`)).data;
-const GA = set.groups.find((x) => x.members.some((m) => m.accountId === A.sv1.id && m.active));
-check(R, "Chuẩn bị: sv1 có nhóm, trưởng nhóm là sv2", GA && GA.leaderId === A.sv2.id, GA ? `${GA.name} leader=${GA.leaderId === A.sv2.id}` : "sv1 chưa có nhóm");
+// Nhóm có trưởng nhóm và ít nhất một thành viên khác; người ngoài là sinh viên của nhóm khác.
+const keyOf = (id) => Object.keys(S).find((k) => A[k].id === id);
+const GA = set.groups.find((x) => x.leaderId && keyOf(x.leaderId) && x.members.some((m) => m.active && m.accountId !== x.leaderId && keyOf(m.accountId)));
+const LK = keyOf(GA?.leaderId);
+const MK = keyOf(GA?.members.find((m) => m.active && m.accountId !== GA.leaderId && keyOf(m.accountId))?.accountId);
+const OK = Object.keys(S).find((k) => set.groups.some((x) => x.id !== GA?.id && x.members.some((m) => m.active && m.accountId === A[k].id)));
+check(R, "Chuẩn bị: có nhóm với trưởng nhóm, thành viên và người nhóm khác", GA && LK && MK && OK, `${GA?.name} leader=${LK} member=${MK} outsider=${OK}`);
+const L = S[LK], M = S[MK], O = S[OK];
+const LID = A[LK].id, MID = A[MK].id;
 const asg = await T.post(`/api/v1/classes/${C}/assignments`, { submissionMode: "GROUP", gradingMode: "GRADED", diagramEnabled: true, title: "Góp ý 11/2 " + new Date().toISOString().slice(11, 19) });
 const AID = asg.data.id;
 const H = (t) => ({ id: crypto.randomUUID(), origin: "TEACHER", type: "HEADING", content: { style: "H1", text: t } });
@@ -66,95 +74,96 @@ const pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail
 check(R, "Chuẩn bị: phát hành bài nhóm 3 phần", pub.status === 200, brief(pub));
 let D = null;
 for (let i = 0; i < 20 && !D; i++) {
-  const d = await S.sv1.get(`/api/v1/assignments/${AID}/my-group-doc`);
+  const d = await M.get(`/api/v1/assignments/${AID}/my-group-doc`);
   D = d.data?.documentId ?? null;
   if (!D) await new Promise((x) => setTimeout(x, 500));
 }
-let w = (await S.sv1.get(`/api/v1/group-docs/${D}`)).data;
+let w = (await M.get(`/api/v1/group-docs/${D}`)).data;
 const [s1, s2, s3] = w.sections;
 const para = (t) => [{ id: crypto.randomUUID(), origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: t }] } }];
 
 // ---------- Tiếp quản (BR-U12-33)
-let c = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
-const d1 = await S.sv1.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: c.data.version, blocks: para("Nháp của sv1") });
-const take = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
-check(R, "U12-33 trưởng nhóm tiếp quản mục sv1 đang giữ, làm tiếp từ bản nháp", take.status === 200 && take.data?.holderId === A.sv2.id &&
-  JSON.stringify(take.data?.draftBlocks ?? []).includes("Nháp của sv1"), brief(take));
-const late = await S.sv1.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: d1.data.version, blocks: para("sv1 gõ tiếp") });
+let c = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
+const d1 = await M.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: c.data.version, blocks: para("Nháp của thành viên") });
+const take = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
+check(R, "U12-33 trưởng nhóm tiếp quản mục thành viên đang giữ, làm tiếp từ bản nháp", take.status === 200 && take.data?.holderId === LID &&
+  JSON.stringify(take.data?.draftBlocks ?? []).includes("Nháp của thành viên"), brief(take));
+const late = await M.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: d1.data.version, blocks: para("thành viên gõ tiếp") });
 check(R, "U12-33 người bị tiếp quản lưu tiếp nhận SECTION_NOT_HELD", late.status === 409 && late.data?.code === "SECTION_NOT_HELD", brief(late));
-const outsiderTake = await S.sv3.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
+const outsiderTake = await O.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
 check(R, "U12-33 sinh viên nhóm khác không tiếp quản được", outsiderTake.status === 404, brief(outsiderTake));
 const teacherTake = await T.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
 check(R, "U12-33 giảng viên không tiếp quản được", teacherTake.status >= 400, brief(teacherTake));
 
 // ---------- Lịch sử, Xong, chốt (BR-U12-35, 39)
-let revs = await S.sv1.get(`/api/v1/group-docs/${D}/sections/${s1.id}/revisions`);
-check(R, "U12-35 lịch sử có bản TAKEOVER của sv1", revs.status === 200 && revs.data?.[0]?.kind === "TAKEOVER" && revs.data[0].authorId === A.sv1.id, brief(revs));
-const d2 = await S.sv2.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: take.data.version, blocks: para("Bản trưởng nhóm") });
-const done = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s1.id}:done`);
+let revs = await M.get(`/api/v1/group-docs/${D}/sections/${s1.id}/revisions`);
+check(R, "U12-35 lịch sử có bản TAKEOVER của thành viên", revs.status === 200 && revs.data?.[0]?.kind === "TAKEOVER" && revs.data[0].authorId === MID, brief(revs));
+const d2 = await L.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: take.data.version, blocks: para("Bản trưởng nhóm") });
+const done = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:done`);
 check(R, "U12-35 trưởng nhóm bấm Xong mục đã tiếp quản", d2.status === 200 && done.status === 200 && done.data?.status === "DONE", brief(done));
-const memberLock = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
+const memberLock = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
 check(R, "U12-39 thành viên không chốt được", memberLock.status === 403, brief(memberLock));
-const notDone = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s3.id}:lock`);
+const notDone = await L.post(`/api/v1/group-docs/${D}/sections/${s3.id}:lock`);
 check(R, "U12-39 mục chưa Xong không chốt được", notDone.status === 409 && notDone.data?.code === "SECTION_NOT_DONE", brief(notDone));
-const lock = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
-check(R, "U12-39 trưởng nhóm chốt mục đã Xong", lock.status === 200 && lock.data?.lockedBy === A.sv2.id, brief(lock));
-const claimLocked = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
-const assignLocked = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s1.id}:assign`, { assigneeId: A.sv1.id, replaceHolder: false });
+const lock = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
+check(R, "U12-39 trưởng nhóm chốt mục đã Xong", lock.status === 200 && lock.data?.lockedBy === LID, brief(lock));
+const claimLocked = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
+const assignLocked = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:assign`, { assigneeId: MID, replaceHolder: false });
 check(R, "U12-39 mục đã chốt không nhận, không giao được", claimLocked.data?.code === "SECTION_LOCKED" && assignLocked.data?.code === "SECTION_LOCKED", `${brief(claimLocked)} | ${brief(assignLocked)}`);
-const unlock = await S.sv2.post(`/api/v1/group-docs/${D}/sections/${s1.id}:unlock`);
+const unlock = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:unlock`);
 check(R, "U12-39 mở chốt", unlock.status === 200 && !unlock.data?.lockedBy, brief(unlock));
 
 // ---------- Khôi phục (BR-U12-35)
-c = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
-revs = await S.sv1.get(`/api/v1/group-docs/${D}/sections/${s1.id}/revisions`);
+c = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
+revs = await M.get(`/api/v1/group-docs/${D}/sections/${s1.id}/revisions`);
 const takeoverRev = revs.data.find((r) => r.kind === "TAKEOVER");
-const restore = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:restore`, { revisionId: takeoverRev.id, version: c.data.version });
-check(R, "U12-35 khôi phục bản lịch sử vào bản nháp", restore.status === 200 && JSON.stringify(restore.data?.draftBlocks).includes("Nháp của sv1"), brief(restore));
-await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s1.id}:release`);
+const restore = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:restore`, { revisionId: takeoverRev.id, version: c.data.version });
+check(R, "U12-35 khôi phục bản lịch sử vào bản nháp", restore.status === 200 && JSON.stringify(restore.data?.draftBlocks).includes("Nháp của thành viên"), brief(restore));
+await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:release`);
 
 // ---------- Nhập DOCX vào mục và cả tài liệu (BR-U12-46)
-const exported = await S.sv2.call("GET", `/api/v1/group-docs/${D}/export.docx?submitted=false`, undefined, { raw: true });
+const exported = await L.call("GET", `/api/v1/group-docs/${D}/export.docx?submitted=false`, undefined, { raw: true });
 const docxBytes = Buffer.from(await exported.arrayBuffer());
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-c = await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s3.id}:claim`);
-const secPrev = await multipart(S.sv1, `/api/v1/group-docs/${D}/sections/${s3.id}/docx:preview`, { file: [docxBytes, "nhom.docx", DOCX] });
+c = await M.post(`/api/v1/group-docs/${D}/sections/${s3.id}:claim`);
+const secPrev = await multipart(M, `/api/v1/group-docs/${D}/sections/${s3.id}/docx:preview`, { file: [docxBytes, "nhom.docx", DOCX] });
 check(R, "U12-46 người giữ xem trước DOCX vào mục, không còn heading", secPrev.status === 200 && secPrev.data?.document?.blocks?.length > 0 &&
   !secPrev.data.document.blocks.some((b) => b.type === "HEADING"), `${secPrev.status} blocks=${secPrev.data?.document?.blocks?.length}`);
-const notHolder = await multipart(S.sv2, `/api/v1/group-docs/${D}/sections/${s3.id}/docx:preview`, { file: [docxBytes, "nhom.docx", DOCX] });
+const notHolder = await multipart(L, `/api/v1/group-docs/${D}/sections/${s3.id}/docx:preview`, { file: [docxBytes, "nhom.docx", DOCX] });
 check(R, "U12-46 không giữ mục thì không nhập DOCX vào mục", notHolder.status === 409, `${notHolder.status} ${notHolder.data?.code}`);
-const drawio = `<mxfile><diagram name="2. Thiết kế" id="p1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram><diagram name="Trang lạ" id="p2">x</diagram></mxfile>`;
-const memberImport = await multipart(S.sv1, `/api/v1/group-docs/${D}/import:preview`, { docx: [docxBytes, "nhom.docx", DOCX] });
+const drawio = `<mxfile><diagram name="2. Thiết kế" id="p1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="2" value="Lớp A" vertex="1" parent="1"><mxGeometry x="20" y="20" width="120" height="60" as="geometry"/></mxCell></root></mxGraphModel></diagram><diagram name="Trang lạ" id="p2">x</diagram></mxfile>`;
+const memberImport = await multipart(M, `/api/v1/group-docs/${D}/import:preview`, { docx: [docxBytes, "nhom.docx", DOCX] });
 check(R, "U12-46 thành viên không nhập cả tài liệu", memberImport.status === 403, `${memberImport.status}`);
-const prev = await multipart(S.sv2, `/api/v1/group-docs/${D}/import:preview`, { docx: [docxBytes, "nhom.docx", DOCX], drawio: [Buffer.from(drawio), "nhom.drawio", "application/xml"] });
+const prev = await multipart(L, `/api/v1/group-docs/${D}/import:preview`, { docx: [docxBytes, "nhom.docx", DOCX], drawio: [Buffer.from(drawio), "nhom.drawio", "application/xml"] });
 const plan = prev.data?.sections ?? [];
 check(R, "U12-46 xem trước chia theo tên mục, sơ đồ vào mục 2, mục đang giữ bị bỏ qua", prev.status === 200 &&
   plan.some((p) => p.sectionId === s1.id && !p.skipReason) && plan.some((p) => p.sectionId === s2.id && p.blocks.some((b) => b.type === "DIAGRAM")) &&
   (plan.find((p) => p.sectionId === s3.id)?.skipReason ?? "").includes("người giữ") && prev.data.unmatched.some((u) => u.includes("Trang lạ")),
   `${prev.status} ${JSON.stringify(plan.map((p) => [p.title, p.blocks.length, p.skipReason]))} unmatched=${JSON.stringify(prev.data?.unmatched)}`);
-const apply = await S.sv2.post(`/api/v1/group-docs/${D}/import:apply`, { sections: plan.filter((p) => !p.skipReason).map((p) => ({ sectionId: p.sectionId, version: p.version, blocks: p.blocks })) });
-w = (await S.sv2.get(`/api/v1/group-docs/${D}`)).data;
+const apply = await L.post(`/api/v1/group-docs/${D}/import:apply`, { sections: plan.filter((p) => !p.skipReason).map((p) => ({ sectionId: p.sectionId, version: p.version, blocks: p.blocks })) });
+w = (await L.get(`/api/v1/group-docs/${D}`)).data;
 const s2now = w.sections.find((s) => s.id === s2.id);
 check(R, "U12-46 áp dụng: mục 2 Xong có sơ đồ, lịch sử IMPORT", apply.status === 200 && apply.data?.applied >= 2 && s2now.status === "DONE" &&
   s2now.publishedBlocks.some((b) => b.type === "DIAGRAM"), `${brief(apply)} applied=${apply.data?.applied}`);
-const rev2 = await S.sv2.get(`/api/v1/group-docs/${D}/sections/${s2.id}/revisions`);
+const rev2 = await L.get(`/api/v1/group-docs/${D}/sections/${s2.id}/revisions`);
 check(R, "U12-46 mục được nhập có bản lịch sử IMPORT", rev2.data?.[0]?.kind === "IMPORT", brief(rev2));
-await S.sv1.post(`/api/v1/group-docs/${D}/sections/${s3.id}:release`);
+await M.post(`/api/v1/group-docs/${D}/sections/${s3.id}:release`);
 
 // ---------- Đánh giá chéo (BR-U12-47)
-const early = await S.sv1.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: [{ revieweeId: A.sv2.id, score: 4, comment: "Tốt" }] });
+const early = await M.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: [{ revieweeId: LID, score: 4, comment: "Tốt" }] });
 check(R, "U12-47 chưa nộp thì chưa đánh giá được", early.status === 409 && early.data?.code === "PEER_REVIEW_CLOSED", brief(early));
-w = (await S.sv2.get(`/api/v1/group-docs/${D}`)).data;
-const sub = await S.sv2.post(`/api/v1/group-docs/${D}/submit`, { version: w.version });
-const self = await S.sv1.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: [{ revieweeId: A.sv1.id, score: 5, comment: null }] });
+w = (await L.get(`/api/v1/group-docs/${D}`)).data;
+const sub = await L.post(`/api/v1/group-docs/${D}/submit`, { version: w.version });
+if (sub.status !== 200) console.log("submit issues", JSON.stringify(sub.data?.issues ?? sub.data));
+const self = await M.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: [{ revieweeId: MID, score: 5, comment: null }] });
 check(R, "U12-47 không tự chấm mình", sub.status === 200 && self.status === 400, `${brief(sub)} | ${brief(self)}`);
-const mates = GA.members.filter((m) => m.active && m.accountId !== A.sv1.id).map((m) => m.accountId);
-const save = await S.sv1.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: mates.map((id) => ({ revieweeId: id, score: id === A.sv2.id ? 4 : 3, comment: "Đóng góp tốt" })) });
+const mates = GA.members.filter((m) => m.active && m.accountId !== MID).map((m) => m.accountId);
+const save = await M.put(`/api/v1/group-docs/${D}/peer-reviews`, { reviews: mates.map((id) => ({ revieweeId: id, score: id === LID ? 4 : 3, comment: "Đóng góp tốt" })) });
 check(R, "U12-47 thành viên lưu đánh giá cho các thành viên khác", save.status === 200 && save.data?.mine?.length === mates.length, brief(save));
-const sv2View = await S.sv2.get(`/api/v1/group-docs/${D}/peer-reviews`);
-check(R, "U12-47 thành viên khác không thấy đánh giá của sv1", sv2View.status === 200 && sv2View.data?.mine?.length === 0 && sv2View.data?.summary?.length === 0, brief(sv2View));
+const leaderView = await L.get(`/api/v1/group-docs/${D}/peer-reviews`);
+check(R, "U12-47 thành viên khác không thấy đánh giá của người khác", leaderView.status === 200 && leaderView.data?.mine?.length === 0 && leaderView.data?.summary?.length === 0, brief(leaderView));
 const tView = await T.get(`/api/v1/group-docs/${D}/peer-reviews`);
-const lead = tView.data?.summary?.find((s) => s.accountId === A.sv2.id);
+const lead = tView.data?.summary?.find((s) => s.accountId === LID);
 check(R, "U12-47 giảng viên thấy trung bình và thang 10", tView.status === 200 && lead?.average === 4 && lead?.outOfTen === 8 && tView.data.reviewers === 1,
   `${brief(tView)} lead=${JSON.stringify(lead && { a: lead.average, t: lead.outOfTen })} reviewers=${tView.data?.reviewers}`);
 

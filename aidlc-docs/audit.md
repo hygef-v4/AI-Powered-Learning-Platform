@@ -7473,3 +7473,17 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Context**: Requirements triage + Code Generation (plan pre-approved by the user in the same message).
 
 ---
+
+## Merge request and staging retest — 2026-11-02
+
+**Timestamp**: 2026-11-02T03:30:00Z
+
+**User Input (complete raw)**:
+
+> merch vao stagging va test lai cho toi
+
+**AI Response**: Full backend `mvn -B clean verify` passed (1,694 tests, 0 failures, BUILD SUCCESS); frontend vitest 669/669, lint and typecheck clean. Local stack rebuilt from the branch (identical to what merges; `staging` had no new commits). End-to-end: new `u12c` 30/30; regression U02 16/16, U06 24/24, U06b 15/15, U12 53/53, U12b 30/30, U12→U14 notify 3/3 on fresh class SE-TEST10. Scripts updated for teammates' intentional API changes (institutional AI keys addressed by id; leader-request reason optional per BR-U12-10/11). Docker Desktop recovered by moving stale socket folders aside. PR to `staging` opened for merge.
+
+**Context**: Build and Test + integration.
+
+---
