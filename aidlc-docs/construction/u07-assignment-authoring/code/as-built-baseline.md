@@ -1,8 +1,12 @@
 # U07 Assignment Authoring — AS-BUILT 2026-10-30
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
+
+**Contract delta 2026-11-01:** `AssignmentSettingsSection` / `assignmentSettingsSections` provides U09 a separate assignment-class settings area with class context. Content authoring readOnly does not gate this section: a teacher assigned to the class can configure histogram visibility for a shared SUBJECT assignment while its content remains readOnly. `AssignmentFormSection` remains the existing U12 group slot. Verification for this delta belongs to the current change, not the older reports below.
 
 assignments sở hữu document/rubric/authoring/AI draft/publication/copy. UI editor và service copy hiện có; không phân loại sample/general rubric/flat-page hoàn thành chỉ từ nhãn feat(ui). Nguồn AI qua U06, kết quả chỉ proposal/draft; version và scoped destination vẫn phải kiểm server. Hợp nhất delta AI authoring 24/10 và summary có ngày vào truy vết.
+
+**Compatibility fix 2026-11-01:** RubricRepository reads both the current criteria array and the historical object envelope containing `criteria`, preserving decimal points and IDs. Reading never rewrites the stored envelope or its metadata, nor restores historical authoring features. Malformed criteria still fail instead of becoming an empty rubric. This restores U09 gradebook/progress reads for existing envelope rows. Editor tools now have distinct enabled hover/focus backgrounds and pointer cursors; the assignment sticky header stacks above the document toolbar so its dropdown remains accessible.
 
 ## Source và negative-test inventory
 

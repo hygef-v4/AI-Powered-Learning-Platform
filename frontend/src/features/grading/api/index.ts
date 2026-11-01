@@ -15,6 +15,9 @@ import type {
   SubmissionPage,
 } from "../model/types";
 const root = "/api/v1";
+export type GradeDistributionVisibility = { enabled: boolean; version: number; canEdit: boolean };
+const visibilityPath = (classId: string, assignmentId: string) =>
+  `/classes/${encodeURIComponent(classId)}/assignments/${encodeURIComponent(assignmentId)}/grade-distribution-visibility`;
 const query = (values: Record<string, string | number | undefined>) => {
   const q = new URLSearchParams();
   Object.entries(values).forEach(([k, v]) => {
@@ -25,6 +28,10 @@ const query = (values: Record<string, string | number | undefined>) => {
 const write = <T>(path: string, body: unknown, method = "POST") =>
   apiFetch<T>(root + path, { method, body: JSON.stringify(body) });
 export const gradingApi = {
+  distributionVisibility: (classId: string, assignmentId: string, signal?: AbortSignal) =>
+    apiFetch<GradeDistributionVisibility>(root + visibilityPath(classId, assignmentId), { signal }),
+  saveDistributionVisibility: (classId: string, assignmentId: string, enabled: boolean, version: number) =>
+    write<GradeDistributionVisibility>(visibilityPath(classId, assignmentId), { enabled, version }, "PUT"),
   task: (id: string) => apiFetch<{ state: string; safeError: string | null }>(`${root}/ai/tasks/${encodeURIComponent(id)}`),
   assignmentContext: (assignmentId: string) =>
     apiFetch<AssignmentContext>(`${root}/assignments/${encodeURIComponent(assignmentId)}`),

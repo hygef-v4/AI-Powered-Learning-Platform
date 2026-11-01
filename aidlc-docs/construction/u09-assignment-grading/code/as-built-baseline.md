@@ -1,6 +1,8 @@
 # U09 Assignment Grading — AS-BUILT 2026-10-30
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
+
+**Contract delta 2026-11-01:** grading owns `grade_distribution_visibility`, keyed by assignment and class, with `enabled` (default false) and optimistic `version`; migration `V20261101_0900__assignment_grade_distribution_visibility.sql` does not import old class flags. GET/PUT `/api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` returns `{enabled,version,canEdit}`; PUT accepts `{enabled,version}`. Only the current assigned teacher can configure GRADED assignments; class-management role alone cannot. SUBJECT settings are independent per class; unpublished SUBJECT DRAFT/REVIEWED returns `404`. Archived class/retired assignment gives `canEdit=false`, PUT `409`. Content readOnly is independent. Student histogram still requires active enrollment, at least 20 usable published scores, suppression below 5 and no identities/individual scores; Quiz/Practice excluded. Verification for this delta belongs to the current change, not the older reports below.
 
 grading có submission review, AI proposal và structured feedback với evidence/recommendations, manual/finalize/publication/history/gradebook. Official publish là thao tác educator có scope và version; AI không tự công bố. Các reports structured feedback/result delivery/gradebook 25–26/10 là evidence lịch sử, không phải run mới ở HEAD.
 

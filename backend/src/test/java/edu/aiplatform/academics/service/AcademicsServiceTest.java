@@ -203,12 +203,6 @@ class AcademicsServiceTest {
         service.changeStatus(manager,classId,ClassStatus.OPEN,0);
         verifyNoInteractions(events);
     }
-    @Test void gradeDistributionIsVersionedAndCodeRemainsImmutable() {
-        var result=service.gradeDistribution(manager,classId,true,0);
-        assertThat(result.showGradeDistribution()).isTrue();
-        assertThat(result.version()).isEqualTo(1);
-        verify(classes).update(argThat(c -> c.subjectId().equals(subjectId) && c.code().equals("C")),eq(0L));
-    }
     @Test void teacherCandidatesFilterWrongRoleAndDisabledAccounts() {
         when(accounts.findAccounts(anyString(),anySet(),eq(20))).thenReturn(List.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE),contact(studentId,Role.STUDENT,AccountStatus.ACTIVE),contact(UUID.randomUUID(),Role.SUBJECT_MANAGER,AccountStatus.DISABLED)));
         assertThat(service.teacherCandidates(manager,"Person")).extracting(AcademicsDtos.Person::id).containsExactly(teacherId);

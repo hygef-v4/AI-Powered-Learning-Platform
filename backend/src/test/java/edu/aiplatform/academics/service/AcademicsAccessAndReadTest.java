@@ -441,7 +441,7 @@ class AcademicsAccessAndReadTest {
     }
 
     static Stream<String> mutationOperations() {
-        return Stream.of("create","updateInfo","assignTeacher","gradeDistribution","changeStatus","enroll","enrollBatch","removeEnrollment","activateEnrollment");
+        return Stream.of("create","updateInfo","assignTeacher","changeStatus","enroll","enrollBatch","removeEnrollment","activateEnrollment");
     }
 
     private void invokeMutation(String operation,Actor actor) {
@@ -449,7 +449,6 @@ class AcademicsAccessAndReadTest {
             case "create" -> service.create(actor,subjectId,"CS101-B","New class",null,null,teacherId);
             case "updateInfo" -> service.updateInfo(actor,classId,"Changed",null,null,7);
             case "assignTeacher" -> service.assignTeacher(actor,classId,managerId,7);
-            case "gradeDistribution" -> service.gradeDistribution(actor,classId,false,7);
             case "changeStatus" -> service.changeStatus(actor,classId,ClassStatus.ARCHIVED,7);
             case "enroll" -> service.enroll(actor,classId,studentId);
             case "enrollBatch" -> service.enrollBatch(actor,classId,"student@example.com");

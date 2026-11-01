@@ -150,6 +150,13 @@ class AcademicsApiContractTest {
         verifyNoMoreInteractions(service);
     }
 
+    @Test void managerGradeDistributionMutationHasBeenRemoved() throws Exception {
+        mvc.perform(put("/api/v1/manager/classes/" + classId + "/grade-distribution")
+                .contentType("application/json").content("{\"enabled\":true,\"version\":0}"))
+                .andExpect(status().isNotFound());
+        verifyNoInteractions(service);
+    }
+
     @Test void createReturns201AndMapsOptionalTeacher() throws Exception {
         when(service.create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId))
                 .thenReturn(mutationResult("Morning class", "Description", "2026-1", ClassStatus.DRAFT, teacher, false, 0));
@@ -167,8 +174,6 @@ class AcademicsApiContractTest {
                 .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, teacher, true, 7));
         when(service.assignTeacher(serverActor, classId, null, 7))
                 .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, true, 8));
-        when(service.gradeDistribution(serverActor, classId, false, 8))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, false, 9));
         when(service.changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
                 .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.ARCHIVED, null, false, 10));
         mvc.perform(patch("/api/v1/manager/classes/" + classId).contentType("application/json")
@@ -182,10 +187,6 @@ class AcademicsApiContractTest {
                 .content("{\"teacherId\":null,\"version\":7}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.teacher").value(nullValue()))
                 .andExpect(jsonPath("$.version").value(8));
-        mvc.perform(put("/api/v1/manager/classes/" + classId + "/grade-distribution").contentType("application/json")
-                .content("{\"enabled\":false,\"version\":8}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(9))
-                .andExpect(jsonPath("$.showGradeDistribution").value(false));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/status").contentType("application/json")
                 .content("{\"status\":\"ARCHIVED\",\"version\":9}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"))
@@ -193,7 +194,6 @@ class AcademicsApiContractTest {
                 .andExpect(jsonPath("$.version").value(10));
         verify(service).updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6);
         verify(service).assignTeacher(serverActor, classId, null, 7);
-        verify(service).gradeDistribution(serverActor, classId, false, 8);
         verify(service).changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9);
         verifyNoMoreInteractions(service);
     }
@@ -235,7 +235,6 @@ class AcademicsApiContractTest {
                 Arguments.of("PATCH", "/class", "{\"name\":\"" + "x".repeat(201) + "\",\"version\":0}"),
                 Arguments.of("PUT", "/class/teacher", "{\"teacherId\":\"internal-secret\",\"version\":0}"),
                 Arguments.of("PUT", "/class/teacher", "{\"version\":0,\"actor\":\"forged\"}"),
-                Arguments.of("PUT", "/class/grade-distribution", "{\"version\":0}"),
                 Arguments.of("PUT", "/class/status", "{\"status\":\"internal-secret\",\"version\":0}"),
                 Arguments.of("POST", "/class/enrollments", "{}"),
                 Arguments.of("POST", "/class/enrollments:batch", "{\"text\":null}"),

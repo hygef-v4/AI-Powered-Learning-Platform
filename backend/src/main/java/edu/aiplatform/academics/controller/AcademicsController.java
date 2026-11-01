@@ -71,8 +71,6 @@ public class AcademicsController {
     }
     @PutMapping("/manager/classes/{id}/teacher")
     public ClassView teacher(@AuthenticationPrincipal Actor actor,@PathVariable UUID id,@Valid @RequestBody TeacherInput input) {return service.assignTeacher(actor,id,input.teacherId(),input.version());}
-    @PutMapping("/manager/classes/{id}/grade-distribution")
-    public ClassView distribution(@AuthenticationPrincipal Actor actor,@PathVariable UUID id,@Valid @RequestBody DistributionInput input) {return service.gradeDistribution(actor,id,input.enabled(),input.version());}
     @PutMapping("/manager/classes/{id}/status")
     public ClassView status(@AuthenticationPrincipal Actor actor,@PathVariable UUID id,@Valid @RequestBody StatusInput input) {return service.changeStatus(actor,id,input.status(),input.version());}
     @PostMapping("/manager/classes/{id}/enrollments")
@@ -91,7 +89,6 @@ public class AcademicsController {
     public record InfoInput(@NotBlank @Size(max=200) String name,@Size(max=2000) String description,@Size(max=20) String term,
                             @NotNull @PositiveOrZero Long version) implements IStrictInput { }
     public record TeacherInput(UUID teacherId,@NotNull @PositiveOrZero Long version) implements IStrictInput { }
-    public record DistributionInput(@NotNull Boolean enabled,@NotNull @PositiveOrZero Long version) implements IStrictInput { }
     public record StatusInput(@NotNull ClassStatus status,@NotNull @PositiveOrZero Long version) implements IStrictInput { }
     public record EnrollmentInput(@NotNull UUID accountId) implements IStrictInput { }
     public record BatchInput(@NotNull String text) implements IStrictInput { }

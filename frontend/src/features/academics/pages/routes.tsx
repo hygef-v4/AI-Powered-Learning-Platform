@@ -138,7 +138,6 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
     onSaveInfo: async input => { await mutate(() => academicsApi.info(id, input)); },
     onAssign: async (teacherId, version) => { await mutate(() => academicsApi.teacher(id, teacherId, version)); },
     onChangeStatus: async (status, version) => { await mutate(() => academicsApi.status(id, status, version)); },
-    onDistribution: async (enabled, version) => { await mutate(() => academicsApi.distribution(id, enabled, version)); },
     onEnrollmentStatus: async (accountId, status) => { await mutate(() => academicsApi.enrollmentStatus(id, accountId, status)); },
     onEnroll: async accountId => { await mutate(() => academicsApi.enroll(id, accountId)); },
     onBatch: async text => await mutate(() => academicsApi.batch(id, text)),

@@ -32,6 +32,9 @@ import edu.aiplatform.grading.model.EvaluationStatus;
 import edu.aiplatform.grading.model.GradeDistributionCalculator;
 import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
+import edu.aiplatform.grading.repository.GradeDistributionVisibilityRepository;
+import edu.aiplatform.assignments.contract.AssignmentScope;
+import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
@@ -65,6 +68,7 @@ public class GradebookService {
 
     private final ObjectProvider<IGroupSubmissionSource> groups;
     private final IEvaluationRepository evaluations;
+    private final GradeDistributionVisibilityRepository visibility;
     private final GradingAccess access;
     private final IAssignmentQuery assignments;
     private final ISubmissionQuery submissions;
@@ -76,7 +80,8 @@ public class GradebookService {
 
     public GradebookService(IEvaluationRepository evaluations, GradingAccess access, IAssignmentQuery assignments,
             ISubmissionQuery submissions, IClassAccess classes, IAccountLookup accounts, IRubric rubric, IAudit audit,
-            Clock clock, ObjectProvider<IGroupSubmissionSource> groups) {
+            Clock clock, ObjectProvider<IGroupSubmissionSource> groups, GradeDistributionVisibilityRepository visibility) {
+        this.visibility = visibility;
         this.groups = groups;
         this.evaluations = evaluations;
         this.access = access;
@@ -297,7 +302,10 @@ public class GradebookService {
         var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         var assignment = assignments.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
-        if (student && !courseClass.showGradeDistribution())
+        if (assignment.scope() == AssignmentScope.SUBJECT
+                && (assignment.status() == AssignmentStatus.DRAFT || assignment.status() == AssignmentStatus.REVIEWED))
+            throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+        if (student && !visibility.find(classId, assignmentId).enabled())
             return List.of();
         // One published value per active learner, never one value per attempt.
         var active = new HashSet<>(classes.listActiveStudents(classId));

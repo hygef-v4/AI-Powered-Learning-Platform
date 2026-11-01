@@ -52,7 +52,7 @@ Catalog source: [use-cases.md](../requirements/use-cases.md). Unit, iteration, p
 | US-ASM-001 | U07 (duyệt, phát hành Assignment) | U10 (phát hành Quiz) |
 | US-ASM-003 | U08 (làm, nộp Assignment cá nhân) | U11 (làm Quiz) |
 | US-AIG-001, US-AIG-002 | U06 (gọi AI) | U07, U10 (nhận bản nháp) |
-| US-RPT-001 | U09 (theo dõi nộp bài) | U14 (nhắc hạn), U05 (bật phân bố điểm) |
+| US-RPT-001 | U09 (theo dõi nộp bài, cài đặt phân bố theo bài–lớp) | U14 (nhắc hạn), U05 (phạm vi dạy và ghi danh) |
 | US-INT-001 | U09 (giảng viên xem) | U08 (dữ liệu hoạt động), U11, U12 (ghi sự kiện) |
 
 ## Truy vết chức năng đã gộp

@@ -118,6 +118,7 @@ Part
 | `IGroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành. Chưa có U12 thì bản tạm trả lỗi `GROUP_SUPPORT_UNAVAILABLE` (hằng `UNAVAILABLE`) và U07 không cho tạo, duyệt, phát hành bài nhóm |
 | Slot frontend `AssignmentRowAction` | - | U09 | Lối vào bài nộp (Submission Detail) trên từng dòng bài |
 | Slot frontend `AssignmentFormSection` | - | U12 | Phần nhóm trên Assignment Form của bài `GROUP` |
+| Slot frontend `AssignmentSettingsSection` (`assignmentSettingsSections`) | Ngữ cảnh bài và lớp hiện tại | U09 | Cài đặt phân bố theo bài–lớp, quyền riêng từ server không phụ thuộc readOnly nội dung |
 
 Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chưa có U13 thì `IReferenceMaterial` của U06 trả rỗng, AI soạn chỉ từ yêu cầu.
 

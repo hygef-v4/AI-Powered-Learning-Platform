@@ -4,7 +4,7 @@ import { type DiagramType } from "@/shared/document";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Field, Switch } from "@/shared/ui";
 import { Choice } from "./Choice";
-import { assignmentFormSections } from "../slots";
+import { assignmentFormSections, assignmentSettingsSections } from "../slots";
 import { type AssignmentDetail, type GradingMode, type SubmissionMode } from "../model/types";
 
 export type Settings = {
@@ -32,11 +32,12 @@ export function settingsOf(detail: AssignmentDetail): Settings {
  * xem), Chế độ; nút gạt Ghi nhận hoạt động kèm lời báo. Không còn mục sơ đồ bắt buộc và học liệu gắn kèm: giá trị đã
  * có giữ nguyên khi lưu. Sơ đồ luôn dùng được (yêu cầu 2026-10-21 thay BR-U07-14).
  */
-export function AssignmentSettingsPanel({ detail, value, onChange, readOnly }: {
+export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, classId = detail.classId }: {
   detail: AssignmentDetail;
   value: Settings;
   onChange: (value: Settings) => void;
   readOnly: boolean;
+  classId?: string | null;
 }) {
   const group = detail.submissionMode === "GROUP";
   return (
@@ -55,6 +56,7 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly }: {
             { value: "PRACTICE", label: "Practice" },
           ]} />
       </Field>
+      {classId && <SlotOutlet slot={assignmentSettingsSections} props={{ assignmentId: detail.id, classId, gradingMode: value.gradingMode }} />}
       <div className="flex flex-col gap-1">
         <Switch checked={value.activityMonitoringEnabled} label="Ghi nhận hoạt động"
           disabled={readOnly}

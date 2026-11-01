@@ -1228,9 +1228,9 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 #### Scenario 3 - Phân bố điểm ẩn danh trên danh sách bài Student
 
-- **Given** Chủ nhiệm môn của môn đã bật hiển thị phân bố điểm trong Edit Class Information (UC 29), bài GRADED đủ điều kiện riêng tư và điểm đã công bố theo lớp
+- **Given** giảng viên được phân công dạy lớp đã bật phân bố cho cặp bài tập–lớp (mặc định tắt), bài GRADED có ít nhất 20 người đang ghi danh có điểm công bố dùng được
 - **When** người học mở Student Assignments của lớp (UC 37)
-- **Then** bài GRADED có điểm đã công bố hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng quá ít người; quiz/Practice không có phân bố; không suy ra danh tính hoặc điểm của người học khác; Teacher chỉ được giao dạy không có quyền bật/tắt cài đặt này
+- **Then** bài GRADED hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng dưới 5 người; Quiz/Practice không có phân bố; không trả danh tính/điểm cá nhân khác. Bài SUBJECT có cài đặt riêng từng lớp; giảng viên lớp bật/tắt được dù nội dung bài chỉ đọc. Chủ nhiệm môn không được giao dạy không có quyền bật/tắt
 
 
 

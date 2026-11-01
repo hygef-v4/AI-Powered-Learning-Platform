@@ -3,19 +3,18 @@
 import type {CandidateLoader} from "../hooks/useCandidates";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Button, PageHeader, Pill, Section, showToast, Switch, Tabs, type TabItem } from "@/shared/ui";
+import { Button, PageHeader, Pill, Section, Tabs, type TabItem } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
 import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
-import { formatDate, operationError } from "../components/ui";
+import { formatDate } from "../components/ui";
 import { statusLabels, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 export type ManagedClassActions = {
   onSaveInfo: (input: ClassInfoInput) => Promise<void>;
   onAssign: (teacherId: string | null, version: number) => Promise<void>;
   onChangeStatus: (status: ClassStatus, version: number) => Promise<void>;
-  onDistribution: (enabled: boolean, version: number) => Promise<void>;
   onEnrollmentStatus: (accountId: string, status: "ACTIVE" | "REMOVED") => Promise<void>;
   onEnroll: (accountId: string) => Promise<void>;
   onBatch: (input: string) => Promise<EnrollmentRowResult[]>;
@@ -25,7 +24,7 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
 
 /**
  * Chi tiết lớp của Chủ nhiệm môn, cùng bố cục Chi tiết môn: tiêu đề là tên lớp, tab Thông tin (thẻ sửa ngay bên trái; cột
- * phải có Trạng thái, Giảng viên, Phân bố điểm) và tab Sinh viên.
+ * phải có Trạng thái, Giảng viên) và tab Sinh viên.
  */
 export function ManagedClassPage({ value, students, teachers, candidates, actions, loadTeachers, loadCandidates }: {
   loadTeachers?:CandidateLoader; loadCandidates?:CandidateLoader; value: CourseClassView; students: EnrollmentView[]; teachers: PersonView[]; candidates: PersonView[]; onBack: () => void; actions: ManagedClassActions;
@@ -47,15 +46,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
   };
   const [assigning, setAssigning] = useState(false);
   const [tabActions, setTabActions] = useState<HTMLElement | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const archived = value.status === "ARCHIVED";
-  async function setDistribution(enabled: boolean) {
-    if (busy || archived) return;
-    setBusy(true); setError("");
-    try { await actions.onDistribution(enabled, value.version); if (enabled) showToast("Đã bật phân bố điểm"); else showToast("Đã tắt phân bố điểm", "danger"); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
-  }
   const tabs: TabItem<Tab>[] = [
     { key: "info", label: "Thông tin" },
     { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
@@ -83,11 +74,6 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
             <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(value.teacher.name)}</span>
             <div className="min-w-0"><p className="text-sm font-semibold">{value.teacher.name}</p><p className="break-all text-xs text-muted">{value.teacher.email}</p></div>
           </div> : <div><Pill>Chưa phân công</Pill></div>}
-        </Section>
-        <Section title="Phân bố điểm">
-          <Switch checked={value.showGradeDistribution} ariaLabel="Cho sinh viên xem phân bố điểm" label={`Cho sinh viên xem (${value.showGradeDistribution ? "đang bật" : "đang tắt"})`} disabled={archived || busy}
-            onChange={(next) => void setDistribution(next)} />
-          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </Section>
       </div>
     </div> : <div role="tabpanel" aria-label="Sinh viên">

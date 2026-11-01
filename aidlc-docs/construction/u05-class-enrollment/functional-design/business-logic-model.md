@@ -25,7 +25,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F10 Thêm từng sinh viên | UC 28 | Class Detail |
 | F11 Thêm sinh viên theo danh sách | UC 28 | Class Detail |
 | F12 Gỡ sinh viên | UC 28 | Class Detail |
-| F13 Sửa thông tin lớp, phân bố điểm | UC 29 | Class Detail |
+| F13 Sửa thông tin lớp | UC 29 | Class Detail |
 | F14 Đổi trạng thái lớp | UC 29 | Class Detail |
 | F15 Phạm vi lớp cho unit khác | Mọi UC cần R3/R4/R5 | - |
 
@@ -109,11 +109,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. Từ request tiếp theo, sinh viên mất quyền vào lớp; bài làm và điểm giữ nguyên.
 4. Thêm lại người đã gỡ: cùng API với `ACTIVE`, chạy F10 bước 3–6.
 
-### F13 - Sửa thông tin lớp và phân bố điểm (UC 29)
+### F13 - Sửa thông tin lớp (UC 29)
 1. Sửa tên, mô tả, học kỳ kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
-2. Bật hoặc tắt phân bố điểm: `PUT /api/v1/manager/classes/{id}/grade-distribution` kèm `version`, xác nhận khi bật.
-3. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); cập nhật có điều kiện `version`, lệch thì `409`.
-4. Ghi audit `CLASS_UPDATED` hoặc `GRADE_DISTRIBUTION_CHANGED`.
+2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); cập nhật có điều kiện `version`, lệch thì `409`.
+3. Ghi audit `CLASS_UPDATED`. Cài đặt phân bố thuộc U09 theo bài–lớp; endpoint manager cũ bị gỡ.
 
 ### F14 - Đổi trạng thái lớp (UC 29)
 1. Bấm Mở, Lưu trữ hoặc Mở lại, xác nhận; frontend gọi `PUT /api/v1/manager/classes/{id}/status` kèm trạng thái mới và `version`.

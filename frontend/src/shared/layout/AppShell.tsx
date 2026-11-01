@@ -184,7 +184,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         <div className="relative isolate flex min-w-0 flex-1 flex-col overflow-x-clip">
           {/* Hình chìm to ở góc dưới phải vùng nội dung: đứng yên khi cuộn, nằm dưới mọi thẻ và nội dung. */}
           <LogoWatermark className="pointer-events-none fixed right-0 bottom-[-6vh] -z-10 w-[min(48vw,560px)] text-watermark select-none" />
-          <main className="mx-auto flex w-full max-w-[1160px] min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 sm:px-8 md:pt-10">{children}</main>
+          <main className="mx-auto flex w-full max-w-[1160px] min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 has-[[data-wide-workspace]]:max-w-[1680px] sm:px-8 md:pt-10">{children}</main>
         </div>
       </div>
       <LogoutDialog open={logoutOpen} onClose={closeLogout} />

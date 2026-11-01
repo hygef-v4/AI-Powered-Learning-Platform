@@ -493,8 +493,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="sticky top-14 z-20 -mx-4 -mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+    <div data-wide-workspace className="flex flex-col gap-4">
+      <header className="sticky top-14 z-30 -mx-4 -mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
         <Link href={backHref} aria-label="Quay lại" className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
           <Icon name="arrow_back" size={16} />
         </Link>
@@ -553,7 +553,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {!permissions.canManage && <Alert tone="info">Bài của môn · chỉ xem</Alert>}
       {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title="Đã ngưng giao">{detail.retiredReason}</Alert>}
 
-      <DocumentEditor document={skeleton} mode={preview ? "student" : "author"} diagramEnabled readOnly={!editable}
+      <DocumentEditor fullWidth document={skeleton} mode={preview ? "student" : "author"} diagramEnabled readOnly={!editable}
         imageUrl={imageUrlFor(detail.id)} issues={preview ? [] : issues.filter((issue) => !issue.code.startsWith("RUBRIC"))}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={editSkeleton}
@@ -569,7 +569,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
       {dialog === "settings" && (
         <Dialog open size="lg" title="Cài đặt bài" onClose={() => setDialog(null)}>
-          <AssignmentSettingsPanel detail={detail} value={settings} readOnly={!permissions.canEditContent} onChange={editSettings} />
+          <AssignmentSettingsPanel detail={detail} classId={classId} value={settings} readOnly={!permissions.canEditContent} onChange={editSettings} />
         </Dialog>
       )}
       {dialog === "schedule" && (

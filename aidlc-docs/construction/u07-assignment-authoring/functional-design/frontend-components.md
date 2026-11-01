@@ -47,6 +47,7 @@ app/assignments/[id]/     AssignmentFormPage          #26 Assignment Form
   AiDraftDialog                               AiSourcePicker (U06), AiTaskStatus (U06), xem trước đề xuất
   RetireDialog, popup Xóa bản nháp
   (vùng AssignmentFormSection cho U12: kiểm tra sẵn sàng của bài nhóm)
+  (vùng AssignmentSettingsSection / assignmentSettingsSections cho U09: cài đặt phân bố theo bài–lớp)
 app/assignments/[id]/diagrams/[blockId]/   DiagramViewPage   trang xem sơ đồ từ link trong DOCX
 shared/document/
   DocumentEditor, RichText, runs              trình soạn dùng chung U07, U08, U12; định dạng theo vùng bôi đen
@@ -80,3 +81,4 @@ Route `/assignments/*` và `/manager/assignments` cho Teacher, Subject Manager (
 |---|---|---|
 | `AssignmentRowAction` | U09 | Cột Bài nộp trên dòng bài ở tab Đánh giá |
 | `AssignmentFormSection` | U12 | Kiểm tra sẵn sàng nhóm trên Assignment Form của bài nhóm |
+| `AssignmentSettingsSection` (`assignmentSettingsSections`) | U09 | Cài đặt phân bố cho bài GRADED khi có classId. Quyền `canEdit` của U09 độc lập với readOnly của nội dung bài, kể cả bài SUBJECT chỉ đọc |

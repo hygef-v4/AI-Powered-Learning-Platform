@@ -424,6 +424,38 @@ describe("phần và rubric", () => {
 });
 
 describe("CommentRail", () => {
+  it("extends answer blank space to its rubric height and releases it when the rail disappears", () => {
+    let cardHeight = 240;
+    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
+      return this.hasAttribute("data-comment") ? cardHeight : 0;
+    });
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return new DOMRect(0, this.hasAttribute("data-leaf-body") ? 50 : this.hasAttribute("data-block-id") ? 10 : 0, 100, 20);
+    });
+    function Rail() {
+      const paper = useRef<HTMLDivElement>(null);
+      return <>
+        <div ref={paper}><section data-section="h1" data-leaf>
+          <div data-block-id="h1">Câu 1</div><div data-leaf-body data-testid="answer-body">Bài làm ngắn</div>
+        </section></div>
+        <CommentRail paper={paper} matchSectionHeight comments={[{ key: "h1", anchorBlockId: "h1", content: <p>Tiêu chí</p> }]} />
+      </>;
+    }
+    try {
+      const { unmount } = render(<Rail />);
+      const body = screen.getByTestId("answer-body");
+      expect(body.style.minHeight).toBe("200px");
+      cardHeight = 100;
+      fireEvent(window, new Event("resize"));
+      expect(body.style.minHeight).toBe("60px");
+      unmount();
+      expect(body.style.minHeight).toBe("");
+    } finally {
+      height.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
   it("thẻ nằm trong dải của phần và dính khi cuộn qua đầu phần", () => {
     function Rail() {
       const paper = useRef<HTMLDivElement>(null);

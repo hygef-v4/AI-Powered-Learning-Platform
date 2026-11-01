@@ -224,13 +224,11 @@ describe("U05 reference UI", () => {
     await waitFor(() => expect(screen.queryByLabelText("Danh sách email")).not.toBeInTheDocument());
   });
 
-  it("enables grade distribution straight from the switch", async () => {
-    const onDistribution = vi.fn().mockResolvedValue(undefined);
+  it("does not offer the removed class-wide grade distribution setting to managers", () => {
     const action = vi.fn().mockResolvedValue(undefined);
-    render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onDistribution, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
-    fireEvent.click(screen.getByRole("switch"));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    await waitFor(() => expect(onDistribution).toHaveBeenCalledWith(true, 3));
+    render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByText("Phân bố điểm")).not.toBeInTheDocument();
   });
 
   it("tab Thông tin lớp của giảng viên giống trang lớp sinh viên: thẻ thông tin chỉ xem, không có ô số liệu, mô tả an toàn", () => {

@@ -9,9 +9,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mục | Giá trị |
 |---|---|
 | Chạy ở | `backend` (API, xuất, tool MCP), `worker` (handler đề xuất AI) |
-| Bảng | `evaluations`, `grading_proposals` trong `postgres` |
+| Bảng | `evaluations`, `grading_proposals`, `grade_distribution_visibility` trong `postgres` |
 | Migration | `db/migration/grading/V20260925_1500__create_grading_tables.sql`: `evaluations` (unique `attempt_id`, unique riêng phần `(group_document_id, account_id)` với `MEMBER`, unique riêng phần `group_document_id` với `GROUP_DOCUMENT`, index `(assignment_id, class_id, status)`, `(class_id, account_id)`; FK `assignment_id` → `assignments`, `class_id` → `course_classes`, `attempt_id` → `assignment_attempts`, `account_id` → `accounts`); `grading_proposals` (unique `request_ref`, index `(evaluation_id, version_no)`); chạy sau `assignmentwork` (1400) |
-| Quyền database | User `app` được `SELECT`, `INSERT`, `UPDATE` trên hai bảng; không `DELETE` |
+| Migration cài đặt phân bố | `db/migration/grading/V20261101_0900__assignment_grade_distribution_visibility.sql`: khóa `(class_id,assignment_id)`, FK lớp/bài, `enabled=false`, `version>0`; bảng mới rỗng, không backfill cờ true lịch sử của lớp |
+| Quyền database | User `app` được `SELECT`, `INSERT`, `UPDATE` trên các bảng U09; không `DELETE` |
 | Sự kiện | `grade.published` qua exchange `platform.events` của U03 |
 | Tệp xuất | Ghi luồng vào response, không lưu |
 | Mạng ra | Không có |

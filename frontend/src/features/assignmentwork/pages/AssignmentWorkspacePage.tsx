@@ -230,7 +230,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const active = attempt.parts.find((part) => part.partId === activePart);
 
   return (
-    <div data-workspace-focus={focusMode} className="flex flex-col gap-3">
+    <div data-wide-workspace data-workspace-focus={focusMode} className="flex flex-col gap-3">
       <PageHeader backHref={detailHref} title={<>{attempt.title}<Pill>Lượt {attempt.attemptNo}/{attempt.maxAttempts}</Pill></>}
         subtitle={`Hạn nộp: ${formatDateTime(attempt.deadlineAt)}${editable ? ` · ${new Date(attempt.deadlineAt).getTime() > now + offset ? `Còn ${left} đến hạn nộp` : "Đã đến hạn nộp"}` : ""}`}
         actions={<>
@@ -244,7 +244,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {attempt.status === "SUBMITTED" && <Alert tone="info">Đã nộp lúc {formatTime(attempt.submittedAt)} · chỉ xem</Alert>}
       {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn</Alert>}
       {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title="Bài có ghi nhận hoạt động">{attempt.activityNotice}</Alert>}
-      <DocumentEditor document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
+      <DocumentEditor fullWidth document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={edit}
