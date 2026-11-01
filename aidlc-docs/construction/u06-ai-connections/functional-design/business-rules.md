@@ -1,5 +1,9 @@
 # U06 AI Connections — business-rules
 
+## Server-managed workflows amendment — 2026-11-01
+
+`read_agent_workflow` là tool READ cho Teacher/Subject Manager, nhận đúng hai giá trị `AUTHOR_ASSIGNMENT` hoặc `GRADE_WITH_RUBRIC`. Trả hướng dẫn đầy đủ từ tài nguyên classpath backend và `version` theo hash nội dung; không nhận đường dẫn tùy ý và không phụ thuộc thư mục skill/working directory của người dùng. Token READ_ONLY đọc được, nhưng không được cấp quyền ghi. Student/Admin không thấy hoặc gọi hai workflow giảng viên. Capabilities chỉ agent tới tool này; người dùng không bắt buộc tải/cài skill. Các wrapper cục bộ chỉ là tùy chọn. Quyền, scope và guard backend không thay đổi; việc đọc hướng dẫn không chứng minh model tuân thủ hoặc chấm đúng. [Yêu cầu](../../../inception/requirements/2026-11-01-server-agent-workflows.md).
+
 ## External-agent workflow amendment — 2026-11-01
 
 Giao việc và hỏi làm rõ diễn ra trong Codex, Claude Code, OpenCode hoặc Antigravity; không cần tạo phiên hay điền form trên nền tảng trước. get_my_capabilities trả hướng dẫn theo role; Student vẫn chỉ góp ý Practice đã nộp của mình. UI dùng để xem, sửa và duyệt kết quả qua reviewUrl. Skill là tùy chọn, hook không phải điều kiện dùng MCP. Không tự gọi provider hoặc công bố điểm qua MCP.

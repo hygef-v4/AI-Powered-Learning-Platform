@@ -1,4 +1,18 @@
-# Skill và hook cho agent MCP
+# Workflow trên server và skill tùy chọn
+
+**Người dùng không cần tải hoặc cài skill.** Sau khi kết nối MCP, agent đọc `get_my_capabilities`, rồi gọi tool đọc `read_agent_workflow` với một trong hai tham số:
+
+```json
+{ "workflow": "AUTHOR_ASSIGNMENT" }
+```
+
+```json
+{ "workflow": "GRADE_WITH_RUBRIC" }
+```
+
+Kết quả gồm `workflow`, `version` và `instructions` đầy đủ bằng tiếng Anh. `version` là hash nội dung đã chuẩn hóa xuống dòng; khi hướng dẫn đổi và backend được build/triển khai lại, hash cũng đổi. Agent dùng hướng dẫn cho tác vụ hiện tại, đồng thời lấy schema/rubric/context hiện hành qua các tool nghiệp vụ. Sau khi server thêm tool mới, tải lại danh sách MCP tool hoặc mở phiên agent mới; không cần cài thêm skill.
+
+Tool này chỉ dành cho Teacher/Subject Manager, đọc được bằng token Chỉ đọc hoặc Đọc và ghi. Đọc hướng dẫn không cấp quyền tạo/chấm: tool ghi vẫn cần quyền ghi và đúng phạm vi. Student/Admin không được đọc hai workflow giảng viên.
 
 ## Giao việc trong agent ngoài, duyệt trên hệ thống
 
@@ -16,18 +30,18 @@ MCP_CONTEXT_READ_REQUIRED: đọc lại từ đầu; snapshot không đổi thì
 
 Tiến độ chứng minh server đã phục vụ đủ trang cho tài khoản, không chứng minh model chú ý hoặc chấm đúng. Skill và hook không thay thế giáo viên duyệt.
 
-Hai skill dùng API/tool MCP hiện hành, không chứa token và không thay thế kiểm tra backend:
+Hai nguồn hướng dẫn đầy đủ được đóng gói trong backend, không chứa token và không thay thế kiểm tra backend:
 
-- [author-assignment](../../agent-skills/author-assignment/SKILL.md): soạn đề và rubric từ học liệu, giữ thang điểm yêu cầu, lưu DRAFT và mở đề xuất để duyệt.
-- [grade-with-rubric](../../agent-skills/grade-with-rubric/SKILL.md): đọc đủ snapshot, chấm từng item có bằng chứng, lưu đề xuất để giáo viên duyệt.
+- [AUTHOR_ASSIGNMENT](../../backend/src/main/resources/agent-workflows/author-assignment/SKILL.md): soạn đề và rubric từ học liệu, giữ thang điểm yêu cầu, lưu DRAFT và mở đề xuất để duyệt.
+- [GRADE_WITH_RUBRIC](../../backend/src/main/resources/agent-workflows/grade-with-rubric/SKILL.md): đọc đủ snapshot, chấm từng item có bằng chứng, lưu đề xuất để giáo viên duyệt.
 
-Ví dụ: “Dùng author-assignment tạo đề thiết kế phần mềm 12 điểm cho lớp … từ học liệu …”. Hoặc “Dùng grade-with-rubric đề xuất chấm các bài PENDING của bài tập …; báo những mục cần tôi xem lại”.
+Ví dụ: “Đọc workflow AUTHOR_ASSIGNMENT rồi tạo đề thiết kế phần mềm 12 điểm cho lớp … từ học liệu …”. Hoặc “Đọc workflow GRADE_WITH_RUBRIC rồi đề xuất chấm các bài PENDING của bài tập …; báo những mục cần tôi xem lại”.
 
-## Cài đặt có chủ đích
+## Skill cục bộ chỉ là tùy chọn
 
-Các file hiện chỉ nằm trong repository; chưa cài vào cấu hình cá nhân. Với client hỗ trợ Agent Skills, sao chép **cả thư mục skill** vào thư mục skill của đúng client rồi tải lại và kiểm tra danh sách skill. Ví dụ Codex dùng `~/.agents/skills/author-assignment/SKILL.md` và `~/.agents/skills/grade-with-rubric/SKILL.md` theo [tài liệu chính thức](https://developers.openai.com/codex/skills/). Các client khác cần kiểm tra đường dẫn theo phiên bản đang cài; đừng coi một đường dẫn chung là tương thích mọi ứng dụng.
+Các file [author-assignment](../../agent-skills/author-assignment/SKILL.md) và [grade-with-rubric](../../agent-skills/grade-with-rubric/SKILL.md) trong `agent-skills` chỉ còn là wrapper ngắn, gọi workflow trên server; không chứa bản sao hướng dẫn đầy đủ. Nếu đã cài chúng thì có thể cập nhật wrapper, nhưng luồng mặc định không yêu cầu bước tải/cài nào. Chưa thay đổi cấu hình skill cá nhân trong tác vụ này.
 
-Nếu client không tải SKILL.md, mở file và dùng nội dung như hướng dẫn workflow. Hai skill không yêu cầu hook để hoạt động. Token MCP phải có quyền ghi và role phù hợp; việc cài skill không cấp thêm quyền.
+Nếu thiếu tool workflow, agent phải báo rõ và yêu cầu tải lại catalog/cập nhật server, không dùng bản hướng dẫn cũ để giả vờ hoàn tất. Full source nằm trong `backend/src/main/resources/agent-workflows`, đi theo jar/Docker; chạy backend không cần checkout repository hay thư mục skill của người dùng. Không yêu cầu hook để hoạt động.
 
 ## Hook Gemini CLI tùy chọn
 

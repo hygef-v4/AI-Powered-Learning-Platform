@@ -35,7 +35,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     @Override public List<McpToolDefinition> tools() {
         String scope="\"classId\":"+McpSchemas.UUID+",\"assignmentId\":"+McpSchemas.UUID;
         return List.of(
-                McpSchemas.read("read_grading_context","Đọc snapshot để chấm. Chỉ chấm khi complete=true và đã ghép đủ các trang cùng fingerprint.",CONTEXT_INPUT,"evaluationId"),
+                McpSchemas.read("read_grading_context","Đọc read_agent_workflow với workflow=GRADE_WITH_RUBRIC trước khi chấm. Đọc snapshot; chỉ chấm khi complete=true và đã ghép đủ các trang cùng fingerprint.",CONTEXT_INPUT,"evaluationId"),
                 McpSchemas.read("list_submissions","Tìm bài nộp được phép; evaluationId null nghĩa là chưa có snapshot để chấm.",scope+","+McpSchemas.PAGE
                         +",\"state\":{\"enum\":[\"ALL\",\"PENDING\",\"DRAFT\",\"FINALIZED\",\"PUBLISHED\",\"NOT_SUBMITTED\",\"IN_PROGRESS\"]}"
                         +",\"late\":{\"type\":\"boolean\"},\"type\":{\"enum\":[\"ATTEMPT\",\"GROUP_DOCUMENT\"]},\"proposalStatus\":"+McpSchemas.TEXT,"classId","assignmentId"),

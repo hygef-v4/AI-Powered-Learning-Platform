@@ -1,5 +1,7 @@
 # Kết nối agent MCP
 
+**Không cần tải skill:** Teacher/Subject Manager gọi `read_agent_workflow` với `AUTHOR_ASSIGNMENT` hoặc `GRADE_WITH_RUBRIC` để nhận toàn bộ hướng dẫn có phiên bản từ server. Capabilities và schema nghiệp vụ chỉ agent tới workflow phù hợp; [cách dùng](mcp-agent-workflows.md). Student vẫn chỉ dùng góp ý Practice riêng, không có workflow chấm giảng viên.
+
 **Luồng agent ngoài:** giao việc và hỏi làm rõ trong chat của agent; không cần điền form trên hệ thống trước. Kết quả tạo/sửa đề và đề xuất chấm trả reviewUrl để mở đúng bản trên UI. Tool ghi chấm hiện bắt buộc snapshotFingerprint và backend kiểm tra đọc đủ context; tải lại schema tool nếu client dùng cấu hình cũ. [Cách dùng và xử lý lỗi đọc context](mcp-agent-workflows.md).
 
 Hướng dẫn cho Student, Teacher và Subject Manager. Agent MCP dùng mô hình/tài khoản riêng và gọi công cụ theo quyền hiện tại trên nền tảng. Nền tảng không gọi AI thay agent. Student dùng API cá nhân hoặc MCP cho Practice Assignment đã nộp. Admin không kết nối MCP; token Admin cũ bị từ chối theo role hiện tại.

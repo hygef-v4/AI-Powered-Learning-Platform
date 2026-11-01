@@ -1,5 +1,9 @@
 # U07 Assignment Authoring — business-rules
 
+## Server-managed authoring workflow — 2026-11-01
+
+Agent đọc `read_agent_workflow(workflow=AUTHOR_ASSIGNMENT)` để nhận đầy đủ quy trình từ server, sau đó lấy schema mới nhất qua `read_authoring_requirements(kind=ASSIGNMENT)`. Không cần skill cài trên máy hoặc form khởi tạo trên UI. Tiếp tục hỏi làm rõ trong chat ngoài, lưu DRAFT/đề xuất và trả reviewUrl cho người soạn duyệt. Quiz/ngân hàng dùng schema/hướng dẫn riêng theo kind, không áp dụng sai workflow Assignment. Nguồn đầy đủ duy nhất: `backend/src/main/resources/agent-workflows/author-assignment/SKILL.md`.
+
 ## External-agent authoring amendment — 2026-11-01
 
 Agent xác định đúng lớp/môn được phép và hỏi gộp thông tin chưa rõ trong chat ngoài trước khi ghi: chủ đề/học liệu, độ khó, thang điểm, Practice/Graded và cá nhân/nhóm. Tái sử dụng thông tin đã nêu hoặc đã có; không chọn kết quả đầu khi nhiều lớp/môn trùng tên. read_authoring_requirements trả schema và hướng dẫn hỏi làm rõ. Tạo mới hoặc sửa đề đều trả reviewUrl chứa proposalId để người dùng mở đúng bản DRAFT/đề xuất trên UI. Không tạo lại đề chỉ để mở duyệt, không áp dụng/phát hành qua MCP. Hướng dẫn hội thoại không chứng minh agent hiểu đúng yêu cầu.

@@ -1,5 +1,9 @@
 # U09 Assignment Grading — business-rules
 
+## Server-managed grading workflow — 2026-11-01
+
+Agent đọc `read_agent_workflow(workflow=GRADE_WITH_RUBRIC)` để nhận đầy đủ quy trình vận hành từ server. `read_grading_context.gradingInstructions` vẫn là chính sách chấm chung API/MCP, không bị thay bằng hướng dẫn vận hành. Đọc đủ context, kiểm tra fingerprint/tiến độ, rubric, bằng chứng, idempotency và duyệt giảng viên tiếp tục bắt buộc như trước. Không cài skill/hook cá nhân để dùng luồng này. Nguồn đầy đủ duy nhất: `backend/src/main/resources/agent-workflows/grade-with-rubric/SKILL.md`; wrapper cục bộ chỉ gọi tool đọc, không giữ bản sao đầy đủ.
+
 ## External-agent grading amendment — 2026-11-01
 
 Giao việc và xác định phạm vi trong chat ngoài; hỏi lại khi chấm hết chưa rõ bài tập hoặc có bao gồm DRAFT không. Chỉ tạo đề xuất cho gốc bài PENDING/DRAFT, không ghi đè điểm đã chốt/công bố hay chấm đóng góp MEMBER.
