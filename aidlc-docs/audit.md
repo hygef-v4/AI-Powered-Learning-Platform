@@ -7147,3 +7147,31 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Context**: Documentation only; no code change.
 
 ---
+
+## Backend verification request — 2026-11-01
+
+**Timestamp**: 2026-11-01T02:30:00Z
+
+**User Input (complete raw)**:
+
+> kiểm tra backend cho tôi
+
+**AI Response**: Ran `mvn -B clean verify` in `backend/` with the Maven 3.9.12 bundled in NetBeans (no system Maven), JDK 21 and Docker Desktop started for Testcontainers: BUILD SUCCESS, 1,632 tests, 0 failures, 0 errors, 0 skipped, including ArchitectureTest, QuizMcpToolsSchemaTest and the PostgreSQL/Redis integration tests; `scripts/assert-required-backend-tests.ps1` passed. A first run without `clean` failed 143 tests from stale compiled classes of renamed packages left in `target/`. Updated the verification section of [review-bugs remediation](construction/remediation/review-bugs-2026-11-01/README.md).
+
+**Context**: Verification only; no code change.
+
+---
+
+## Verification commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T02:40:00Z
+
+**User Input (complete raw)**:
+
+> Commit
+
+**AI Response**: Committed the updated verification section and audit entries on local branch `fix/review-bugs-2026-11-01`. No push.
+
+**Context**: Documentation only; no code change.
+
+---

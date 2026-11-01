@@ -36,8 +36,7 @@ Nhánh: `fix/review-bugs-2026-11-01`, commit `1cd58c02`. Phạm vi: 26 lỗi tì
 ## Kiểm tra
 
 - Frontend: `npm ci`, eslint 0 lỗi, tsc 0 lỗi, vitest 605/605 (96 tệp), production build đạt.
-- Backend: máy không có Maven. Code và unit test được biên dịch bằng `javac` với thư viện lấy từ boot jar cũ; `json-schema-validator` chỉ có bản giả để biên dịch. Chạy 1.515 unit test: 1.387 đạt, 128 lỗi do môi trường (thiếu `json-smart`, bản giả JSON Schema, classpath quá dài cho JVM con của bộ trích chữ). Không lỗi nào thuộc các test đã sửa hoặc thêm.
-- Chưa chạy: `mvn verify`, test tích hợp Testcontainers, `ArchitectureTest`, `QuizMcpToolsSchemaTest`. Cần chạy trước khi merge.
+- Backend: `mvn -B clean verify` (Maven 3.9.12, JDK 21, Docker 29.7.2) đạt: 1.632 test, 0 lỗi, 0 bỏ qua, gồm `ArchitectureTest`, `QuizMcpToolsSchemaTest`, `UnattachedFileScannerTest` và các test tích hợp Testcontainers (PostgreSQL, Redis). `scripts/assert-required-backend-tests.ps1` đạt. Phải `clean` vì `target/` còn lớp test cũ của các gói đã đổi tên (`identity.application`, `identity.web`, `subjects.infrastructure`); không xóa thì 143 test cũ đó lỗi.
 
 ## Lưu ý còn lại
 
