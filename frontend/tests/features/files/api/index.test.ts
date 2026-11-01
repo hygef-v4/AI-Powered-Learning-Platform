@@ -56,6 +56,21 @@ describe("multipart upload", () => {
     expect(xhr.send).toHaveBeenCalledOnce();
   });
 
+  it("refreshes an expired session once and resends the upload", async () => {
+    const refresh = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", refresh);
+    const upload = uploadFile(new File(["pdf"], "qa.pdf"), "MATERIAL", vi.fn());
+    const first = UploadRequest.latest;
+    first.status = 401; first.response = { detail: "Bạn cần đăng nhập" }; first.onload?.();
+    await vi.waitFor(() => expect(UploadRequest.latest).not.toBe(first));
+    const second = UploadRequest.latest;
+    expect(refresh).toHaveBeenCalledWith("/api/v1/auth/refresh", expect.objectContaining({ method: "POST" }));
+    second.onload?.();
+    await expect(upload.promise).resolves.toEqual(second.response);
+    expect(first.send).toHaveBeenCalledOnce();
+    expect(second.send).toHaveBeenCalledOnce();
+  });
+
   it("keeps cancellation terminal and reports network failure without replaying the upload", async () => {
     const upload = uploadFile(new File(["pdf"], "qa.pdf"), "MATERIAL", vi.fn());
     const xhr = UploadRequest.latest;

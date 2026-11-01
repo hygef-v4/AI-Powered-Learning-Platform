@@ -160,6 +160,7 @@ class GradebookServiceTest {
         when(a.subjectId()).thenReturn(subject);
         when(a.title()).thenReturn("Group assignment");
         when(a.gradingMode()).thenReturn(GradingMode.GRADED);
+        when(a.status()).thenReturn(edu.aiplatform.assignments.contract.AssignmentStatus.OPEN);
         when(a.submissionMode()).thenReturn(SubmissionMode.GROUP);
         when(assignments.get(aid)).thenReturn(Optional.of(a));
         when(assignments.listForClass(cid)).thenReturn(List.of(a));
@@ -185,5 +186,19 @@ class GradebookServiceTest {
         assertThat(cell.submittedAt()).isEqualTo(submittedAt);
         assertThat(cell.score()).isEqualByComparingTo("1");
         verifyNoInteractions(subs);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(edu.aiplatform.assignments.contract.AssignmentStatus.class)
+    void onlyGivenGradedAssignmentsBecomeGradebookColumns(edu.aiplatform.assignments.contract.AssignmentStatus status) {
+        var view = mock(AssignmentView.class);
+        when(view.gradingMode()).thenReturn(GradingMode.GRADED);
+        when(view.status()).thenReturn(status);
+
+        boolean expected = switch (status) {
+            case OPEN, CLOSED, RETIRED -> true;
+            default -> false;
+        };
+        assertThat(GradebookService.gradable(view)).isEqualTo(expected);
     }
 }

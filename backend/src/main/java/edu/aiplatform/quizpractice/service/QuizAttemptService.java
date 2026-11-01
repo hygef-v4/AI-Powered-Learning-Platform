@@ -84,7 +84,7 @@ public class QuizAttemptService {
     /** Đề của lượt đang làm, không có đáp án (BR-U11-12, NFR-U11-30). */
     @Transactional(readOnly = true)
     public TakingView get(Actor actor, UUID attemptId) {
-        QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         if (!attempt.inProgress()) {
             throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp; hãy xem kết quả");
         }
@@ -97,7 +97,7 @@ public class QuizAttemptService {
      */
     @Transactional
     public SaveResult saveAnswers(Actor actor, UUID attemptId, Map<UUID, List<String>> answers, long answerVersion) {
-        QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         Instant now = clock.instant();
         if (!attempt.inProgress()) {
             throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
@@ -128,7 +128,7 @@ public class QuizAttemptService {
     /** Nộp tay (BR-U11-13): nộp lặp trả kết quả cũ; quá hạn cộng 30 giây thì từ chối, scanner sẽ tự nộp. */
     @Transactional
     public ResultView submit(Actor actor, UUID attemptId) {
-        QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         if (attempt.inProgress()) {
             if (!attempt.acceptsAnswersAt(clock.instant())) {
                 access.rejected(actor, "QUIZ_SUBMIT_REJECTED", attemptId, "ATTEMPT_TIME_UP");

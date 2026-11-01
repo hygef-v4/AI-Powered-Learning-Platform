@@ -171,7 +171,8 @@ class AssignmentAccess {
         } catch (RuntimeException e) {
             throw unavailable();
         }
-        if (decision == null) {
+        // U01 không kiểm được phạm vi (database, U04, U05 lỗi): báo bận, không trả 404 và ghi từ chối oan.
+        if (decision == null || (!decision.allowed() && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
             throw unavailable();
         }
         return decision.allowed();

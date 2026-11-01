@@ -50,6 +50,17 @@ public final class JobRouting {
     }
 
     /** OTP được gửi trước email thông báo. */
+    /**
+     * Loại việc có {@code IPendingSweeper} gửi lại khi message mất; {@code GROUP_DOC_CREATE} không cần vì tài liệu nhóm
+     * được tạo ngay khi người học mở bài. Loại khác mất message thì không ai gửi lại.
+     */
+    static final java.util.Set<String> RECOVERABLE = java.util.Set.of(JobTypes.AI_TASK, JobTypes.BACKUP_RUN,
+            JobTypes.MATERIAL_TEXT_EXTRACT, JobTypes.EMAIL_SEND, JobTypes.GROUP_DOC_CREATE);
+
+    public static boolean recoverable(String jobType) {
+        return RECOVERABLE.contains(jobType);
+    }
+
     public static int priorityOf(String jobType) {
         return switch (jobType) {
             case JobTypes.OTP_DELIVERY -> EMAIL_MAX_PRIORITY;

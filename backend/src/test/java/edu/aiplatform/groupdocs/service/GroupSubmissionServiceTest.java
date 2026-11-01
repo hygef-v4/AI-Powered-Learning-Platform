@@ -169,6 +169,22 @@ class GroupSubmissionServiceTest {
     }
 
     @Test
+    void autoSubmitAfterTheDeadlineIsOnTimeWhenTheLastEditWasBeforeIt() {
+        Instant closesAt = NOW.minusSeconds(120);
+        when(assignments.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
+                classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP, GradingMode.GRADED, true,
+                AssignmentStatus.CLOSED, NOW.minusSeconds(86400), closesAt, null, null, false, null, List.of())));
+        DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
+        GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
+                .withDraft(List.of(draft), closesAt.minusSeconds(60));
+        when(documents.lockSections(document.id())).thenReturn(List.of(held));
+        when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
+
+        assertThat(service.autoSubmit(document.id()).orElseThrow().late())
+                .as("tài liệu sửa lần cuối lúc tạo, trước hạn").isFalse();
+    }
+
+    @Test
     void autoSubmitOnClosedDocumentDoesNothing() {
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document.closed()));
 

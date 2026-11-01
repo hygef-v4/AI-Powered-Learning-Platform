@@ -1,6 +1,5 @@
 package edu.aiplatform.grading.controller;
 
-import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.grading.service.GradebookService;
 import edu.aiplatform.grading.dto.GradingViews.SubmissionPage;
@@ -43,7 +42,7 @@ public class SubmissionReviewController {
         gradebook.list(actor, classId, null, 1, 1);
         var result = new LinkedHashMap<UUID, SubmissionPage>();
         for (var a : assignments.listForClass(classId))
-            if (a.gradingMode() == GradingMode.GRADED)
+            if (GradebookService.gradable(a))
                 result.put(a.assignmentId(), review.list(actor, classId, a.assignmentId(), null, null, 1, 1));
         return result;
     }

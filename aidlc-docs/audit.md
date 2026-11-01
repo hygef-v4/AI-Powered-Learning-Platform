@@ -7077,3 +7077,45 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Limits**: Commit locally only. Browser E2E/provider/load/restore acceptance remains unverified. Existing security/resiliency scope retained; PBT disabled.
 
 ---
+
+## Bug remediation request — 2026-10-31
+
+**Timestamp**: 2026-10-31T18:28:55Z
+
+**User Input (complete raw)**:
+
+> sửa toàn bộ 26 bug trên
+
+**Context**: Follows the read-only review on HEAD aa30ad60 that reported 26 bugs plus one suspected CSP issue (requests "kiểm tra toàn bộ dự án và gửi tôi các bug bạn tìm được" and "đọc kĩ lại toàn bộ dự án đã rồi gửi lại tôi toàn bộ bug bạn tìm được"). Work on local branch `fix/review-bugs-2026-11-01` (no upstream); no commit or push unless requested.
+
+**AI Response**: Remediation started directly as scoped bug fixes; per-bug results recorded below when finished.
+
+---
+
+## Bug remediation result — 2026-10-31
+
+**Timestamp**: 2026-10-31T23:15:00Z
+
+**AI Response**: Fixed the 26 reported bugs plus the confirmed docx-preview CSP issue on branch `fix/review-bugs-2026-11-01` (uncommitted):
+- AI/jobs: in-flight duplicate AI_TASK no longer marks UNKNOWN; Gemini thinking tokens counted as output; listener requeue backoff; one live handler per job key; lost jobs logged by recoverability; sweeper resends a job at most every 20 min; backup sweeper skips locked runs.
+- Quiz: OPEN quiz with attempts rejects question edits (QUIZ_HAS_ATTEMPTS via new IQuizAttemptPresence); retired version cannot reopen while another version is open; removed students cannot get/save/submit/log activity (results stay readable).
+- Security: OTP verify is one atomic Lua step plus 30/15min per-IP throttle; `?next=` rejects control/whitespace and checks origin.
+- Grading/groups/materials: gradebook and submission-progress only use OPEN/CLOSED/RETIRED graded assignments; group auto-submit lateness uses last change time; group docs hide fileIds, sanitize drafts, new image endpoint; extractor busy maps to 503; default module created for staff when a subject has none; unattached uploads (including abandoned DOCX previews) cleaned after FileRef expiry.
+- Minor: settings cache evicted after commit; announcement edit returns new version; dependency failures in upload/assignment access return 503; reopening an archived class notifies enrolled students.
+- Frontend: upload refreshes session on 401; group doc SSE reconnects after HTTP errors; polling retries transient errors; lint warnings removed; Word preview styles re-inserted with page nonce and `font-src blob:`.
+
+**Verification**: frontend `npm ci`, eslint 0 problems, tsc 0 errors, vitest 605/605 (96 files), production build OK. Backend: Maven unavailable on this machine; main and unit-test sources compiled with javac against the existing boot-jar dependencies (json-schema-validator stubbed for compile only; ArchUnit/Testcontainers tests excluded). Unit-test run results recorded in the session reply. Docker/Testcontainers integration tests and `mvn verify` not run.
+
+---
+
+## Commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T00:00:00Z
+
+**User Input (complete raw)**:
+
+> Commit các thay đổi trong cây làm việc với thông điệp hợp lý.
+
+**AI Response**: Committed the bug remediation on local branch `fix/review-bugs-2026-11-01` (no push). The pre-existing roadmap note (`cuong-uc-roadmap-2026-10-20.md`, check of 2026-10-24) was committed separately as a docs commit.
+
+---

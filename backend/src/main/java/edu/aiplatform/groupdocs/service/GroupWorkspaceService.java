@@ -1,6 +1,7 @@
 package edu.aiplatform.groupdocs.service;
 
 import edu.aiplatform.assignments.contract.AssignmentView;
+import edu.aiplatform.assignments.contract.DocumentFiles;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
@@ -79,7 +80,8 @@ public class GroupWorkspaceService {
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
-                window.name(), d.sharedBlocks(), sections, new Role(ctx.member(), ctx.leader(), ctx.teacher()),
+                window.name(), DocumentFiles.hideFiles(d.sharedBlocks()), sections,
+                new Role(ctx.member(), ctx.leader(), ctx.teacher()),
                 submission, d.activityMonitoring(), assignment != null && assignment.diagramEnabled(), d.version(),
                 ctx.actorId());
     }

@@ -10,6 +10,7 @@ import edu.aiplatform.quizzes.service.QuestionViews.QuestionView;
 import edu.aiplatform.quizzes.service.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.service.QuizViews.QuizInfo;
 import edu.aiplatform.quizzes.service.QuizViews.QuizItemView;
+import edu.aiplatform.quizzes.contract.IQuizAttemptPresence;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.repository.IQuestionRepository;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /** Phần dùng chung của các service Quiz: tải, kiểm quyền (BR-U10-10, 50, 52), dựng Quiz Detail, lưu có version. */
@@ -39,6 +41,7 @@ class QuizSupport {
     private final IClassAccess classes;
     private final QuizAccess access;
     private final ActiveSubjects activeSubjects;
+    private IQuizAttemptPresence attemptPresence;
 
     QuizSupport(IQuizRepository quizzes, IQuestionRepository questions, IClassAccess classes, QuizAccess access,
                 ActiveSubjects activeSubjects) {
@@ -49,8 +52,34 @@ class QuizSupport {
         this.activeSubjects = activeSubjects;
     }
 
+    /** U11 cài; thiếu bean (test, cấu hình rút gọn) thì coi như chưa có lượt. */
+    @Autowired(required = false)
+    void setAttemptPresence(IQuizAttemptPresence attemptPresence) {
+        this.attemptPresence = attemptPresence;
+    }
+
     Quiz load(UUID id) {
         return quizzes.find(id).orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+    }
+
+    /**
+     * Sửa câu (danh sách câu, câu riêng) của Quiz đang mở chỉ khi chưa ai làm: lượt đã có chấm và xem kết quả theo câu,
+     * đáp án hiện hành nên đổi câu sẽ đổi điểm của lượt cũ (BR-U11-11). Đã có lượt thì tạo version mới.
+     */
+    void requireNoAttemptsWhenOpen(Quiz quiz) {
+        if (quiz.status() != QuizStatus.OPEN || attemptPresence == null) {
+            return;
+        }
+        boolean used;
+        try {
+            used = attemptPresence.hasAttempts(quiz.id());
+        } catch (RuntimeException e) {
+            throw ApiException.unavailable("QUIZ_DEPENDENCY_UNAVAILABLE", "Chưa kiểm tra được lượt làm quiz, thử lại sau");
+        }
+        if (used) {
+            throw ApiException.conflict("QUIZ_HAS_ATTEMPTS",
+                    "Quiz đang mở đã có lượt làm nên không sửa câu được; hãy tạo version mới");
+        }
     }
 
     /** Quiz của môn: Chủ nhiệm môn của môn (R2); Quiz của lớp: giảng viên của lớp (R3/R4). Không đạt → 404. */

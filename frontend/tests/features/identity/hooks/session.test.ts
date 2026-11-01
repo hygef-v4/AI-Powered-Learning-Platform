@@ -16,6 +16,10 @@ describe("đường dẫn quay lại sau đăng nhập", () => {
     expect(safeNextPath("https://evil.example")).toBeNull();
     expect(safeNextPath("//evil.example")).toBeNull();
     expect(safeNextPath("/\\evil.example")).toBeNull();
+    // Trình duyệt bỏ tab, xuống dòng trong URL: "/\t/evil" thành "//evil".
+    expect(safeNextPath("/\t/evil.example")).toBeNull();
+    expect(safeNextPath("/\n/evil.example")).toBeNull();
+    expect(safeNextPath("/%09/evil.example")).toBe("/%09/evil.example");
     expect(safeNextPath("/login?next=/x")).toBeNull();
   });
 });

@@ -6,7 +6,6 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert } from "@/shared/ui/Alert";
 import { Button, IconButton } from "@/shared/ui/Button";
-import { Icon } from "@/shared/ui/Icon";
 import { Field, TextInput } from "@/shared/ui/inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { PageHeader } from "@/shared/ui/PageHeader";

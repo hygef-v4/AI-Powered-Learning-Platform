@@ -66,7 +66,8 @@ public class BackupRunRepository {
     }
 
     public List<BackupRun> findCreatedBefore(Instant olderThan) {
-        return jdbc.sql("select * from backup_runs where state = 'CREATED' and created_at < :t")
+        // Lần chạy đang dump giữ khóa dòng (RUNNING chưa commit, vẫn đọc ra CREATED): bỏ qua, không gửi lại.
+        return jdbc.sql("select * from backup_runs where state = 'CREATED' and created_at < :t for update skip locked")
                 .param("t", ts(olderThan)).query(BackupRunRepository::map).list();
     }
 

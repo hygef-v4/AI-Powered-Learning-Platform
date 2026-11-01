@@ -5,6 +5,8 @@ import edu.aiplatform.jobs.contract.JobMessage;
 import edu.aiplatform.jobs.contract.RetryableJobException;
 import edu.aiplatform.jobs.contract.SafeJobErrors;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +32,8 @@ public class JobDispatcher {
     private final JobHandlerRegistry registry;
     private final IMessageSender sender;
     private final Duration defaultTimeout;
+    /** Việc đang chạy theo {@code jobType:idempotencyKey}, gồm cả lần đã quá giờ mà handler chưa dừng. */
+    private final Map<String, Object> running = new ConcurrentHashMap<>();
     private final ExecutorService runner = Executors.newCachedThreadPool(runnable -> {
         Thread thread = new Thread(runnable, "job-handler");
         thread.setDaemon(true);
@@ -72,7 +76,26 @@ public class JobDispatcher {
 
     private void runWithTimeout(IJobHandler handler, JobMessage message) throws Exception {
         Duration timeout = handler.timeout() == null ? defaultTimeout : handler.timeout();
-        Future<?> future = runner.submit(() -> handler.handle(message));
+        // Hết giờ chỉ ngắt được handler chịu interrupt: lần chạy cũ còn sống thì bản gửi lại (retry, sweeper) chờ lượt
+        // sau, không chạy song song cùng một việc.
+        String key = message.jobType() + ":" + message.idempotencyKey();
+        Object token = new Object();
+        if (running.putIfAbsent(key, token) != null) {
+            throw new RetryableJobException("Lần chạy trước của việc này chưa dừng");
+        }
+        Future<?> future;
+        try {
+            future = runner.submit(() -> {
+                try {
+                    handler.handle(message);
+                } finally {
+                    running.remove(key, token);
+                }
+            });
+        } catch (RuntimeException e) {
+            running.remove(key, token);
+            throw e;
+        }
         try {
             future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {

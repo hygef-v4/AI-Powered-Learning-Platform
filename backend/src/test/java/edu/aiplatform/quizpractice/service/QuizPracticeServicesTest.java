@@ -232,6 +232,19 @@ class QuizPracticeServicesTest {
     }
 
     @Test
+    void studentRemovedFromTheClassCannotContinueAnAttemptInProgress() {
+        var taking = attemptsService.start(student, quizId, classA);
+        practiceAllowed = false;
+
+        assertThat(api(() -> attemptsService.get(student, taking.attemptId())).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0))
+                .status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(store.byId.get(taking.attemptId()).inProgress()).isTrue();
+        assertThat(audits).extracting(AuditEvent::action).contains("ACCESS_DENIED");
+    }
+
+    @Test
     void submitScoresWithPinnedAnswersAndRepeatsReturnTheSameResult() {
         var taking = attemptsService.start(student, quizId, classA);
         attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1"), q2, List.of("1")), 0);
@@ -592,6 +605,11 @@ class QuizPracticeServicesTest {
         @Override
         public int countAttempts(UUID quizId, UUID accountId) {
             return (int) byId.values().stream().filter(a -> a.quizId().equals(quizId) && a.accountId().equals(accountId)).count();
+        }
+
+        @Override
+        public boolean existsForQuiz(UUID quizId) {
+            return byId.values().stream().anyMatch(a -> a.quizId().equals(quizId));
         }
 
         @Override

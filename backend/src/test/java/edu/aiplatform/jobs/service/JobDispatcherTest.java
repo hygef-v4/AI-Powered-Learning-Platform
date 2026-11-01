@@ -172,6 +172,33 @@ class JobDispatcherTest {
     }
 
     @Test
+    void timedOutHandlerThatIgnoresInterruptBlocksASecondRunOfTheSameJob() throws Exception {
+        java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger runs = new java.util.concurrent.atomic.AtomicInteger();
+        FakeHandler handler = new FakeHandler(m -> {
+            runs.incrementAndGet();
+            while (release.getCount() > 0) {
+                try {
+                    release.await();
+                } catch (InterruptedException ignored) {
+                    // Handler không chịu dừng khi bị ngắt.
+                }
+            }
+        });
+        JobDispatcher dispatcher = dispatcher(handler);
+
+        assertThat(dispatcher.dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.RETRIED);
+        assertThat(dispatcher.dispatch(message(1))).as("lần cũ còn chạy").isEqualTo(JobDispatcher.Outcome.RETRIED);
+        assertThat(runs.get()).isEqualTo(1);
+
+        release.countDown();
+        for (int i = 0; i < 50 && dispatcher.dispatch(message(0)) != JobDispatcher.Outcome.DONE; i++) {
+            Thread.sleep(20);
+        }
+        assertThat(runs.get()).isGreaterThan(1);
+    }
+
+    @Test
     void safeErrorHasNoStackTraceAndIsShort() {
         assertThat(JobDispatcher.safe(new RuntimeException("x".repeat(500)))).hasSizeLessThan(230);
         assertThat(JobDispatcher.safe(new java.util.concurrent.TimeoutException())).isEqualTo("Quá thời gian xử lý");

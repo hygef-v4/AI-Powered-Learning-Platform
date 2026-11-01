@@ -158,6 +158,7 @@ public class QuizAuthoringService {
     @Transactional
     public QuizDetail saveItems(Actor actor, UUID id, List<ItemInput> inputs, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
+        support.requireNoAttemptsWhenOpen(quiz);
         List<QuizItem> current = quizzes.items(id);
         Set<UUID> pinned = current.stream().map(QuizItem::questionId).collect(Collectors.toSet());
         Map<UUID, Question> byId = questions.findAll(inputs.stream().map(ItemInput::questionId).distinct().toList())
@@ -230,6 +231,7 @@ public class QuizAuthoringService {
     @Transactional
     public QuizDetail addInline(Actor actor, UUID id, QuestionContent content, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
+        support.requireNoAttemptsWhenOpen(quiz);
         rejectQuestion(QuestionRules.validate(content));
         List<QuizItem> items = new ArrayList<>(quizzes.items(id));
         if (items.size() >= QuizRules.MAX_ITEMS) {
@@ -245,6 +247,7 @@ public class QuizAuthoringService {
     @Transactional
     public QuizDetail updateInline(Actor actor, UUID id, UUID questionId, QuestionContent content, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
+        support.requireNoAttemptsWhenOpen(quiz);
         Question q = inlineOf(id, questionId);
         rejectQuestion(QuestionRules.validate(content));
         if (!questions.update(q.withContent(content, clock.instant()))) {
@@ -256,6 +259,7 @@ public class QuizAuthoringService {
     @Transactional
     public QuizDetail deleteInline(Actor actor, UUID id, UUID questionId, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
+        support.requireNoAttemptsWhenOpen(quiz);
         inlineOf(id, questionId);
         List<QuizItem> remaining = new ArrayList<>();
         for (QuizItem item : quizzes.items(id)) {

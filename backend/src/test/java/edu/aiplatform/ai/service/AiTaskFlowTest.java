@@ -285,10 +285,25 @@ class AiTaskFlowTest {
     }
 
     @Test
-    void redeliveredMessageAfterDispatchBecomesUnknownWithoutSecondCall() {
+    void duplicateMessageWhileCallIsInFlightLeavesTheTaskRunning() {
         AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
         AiTask queued = tasks.rows.get(view.taskId());
         tasks.update(queued.moveTo(AiTaskState.RUNNING, NOW));
+
+        worker.handle(message(view.taskId()));
+
+        verify(gateway, never()).call(any(), any());
+        assertThat(tasks.rows.get(view.taskId()).state()).as("lần gọi đầu vẫn có thể trả kết quả")
+                .isEqualTo(AiTaskState.RUNNING);
+        verify(quota, never()).chargeReserved(any(), any(), anyLong());
+    }
+
+    @Test
+    void redeliveredMessageAfterDispatchBecomesUnknownWithoutSecondCall() {
+        AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
+        AiTask queued = tasks.rows.get(view.taskId());
+        tasks.update(queued.moveTo(AiTaskState.RUNNING,
+                NOW.minus(properties.requestTimeout()).minusSeconds(31)));
 
         worker.handle(message(view.taskId()));
 

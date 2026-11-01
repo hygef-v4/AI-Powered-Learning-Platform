@@ -26,6 +26,15 @@ export function loginPathFor(location: { pathname: string; search: string }) {
  */
 export function safeNextPath(next: string | null): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
+  // Trình phân tích URL bỏ tab và xuống dòng, đổi `\` thành `/`: "/\t/evil.com" thành "//evil.com". Có ký tự điều
+  // khiển hay khoảng trắng thì bỏ, rồi kiểm lại bằng chính URL parser cho chắc cùng origin.
+  if (/[\u0000-\u001f\u007f\s\\]/.test(next)) return null;
+  try {
+    const base = "https://app.invalid";
+    if (new URL(next, base).origin !== base) return null;
+  } catch {
+    return null;
+  }
   const pathname = next.split(/[?#]/)[0] ?? "";
   return isPublicPath(pathname) ? null : next;
 }

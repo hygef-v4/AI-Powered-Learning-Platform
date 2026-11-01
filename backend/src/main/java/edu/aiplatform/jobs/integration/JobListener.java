@@ -7,10 +7,12 @@ import edu.aiplatform.jobs.service.JobDispatcher;
 import edu.aiplatform.jobs.service.JobRouting;
 import edu.aiplatform.jobs.contract.JobMessage;
 import java.io.IOException;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -23,13 +25,22 @@ import org.springframework.stereotype.Component;
 public class JobListener {
 
     private static final Logger log = LoggerFactory.getLogger(JobListener.class);
+    /** Chờ trước khi đưa lại message lỗi hạ tầng, để database hay broker hỏng không thành vòng lặp nóng. */
+    static final Duration REQUEUE_BACKOFF = Duration.ofSeconds(5);
 
     private final JobDispatcher dispatcher;
     private final ObjectMapper objectMapper;
+    private final Duration requeueBackoff;
 
+    @Autowired
     public JobListener(JobDispatcher dispatcher, ObjectMapper objectMapper) {
+        this(dispatcher, objectMapper, REQUEUE_BACKOFF);
+    }
+
+    JobListener(JobDispatcher dispatcher, ObjectMapper objectMapper, Duration requeueBackoff) {
         this.dispatcher = dispatcher;
         this.objectMapper = objectMapper;
+        this.requeueBackoff = requeueBackoff;
     }
 
     @RabbitListener(queues = "jobs.triggered", ackMode = "MANUAL", concurrency = "2")
@@ -77,10 +88,22 @@ public class JobListener {
         } catch (RuntimeException e) {
             // Do not expose dependency messages or lose work when terminal persistence/retry handoff fails.
             log.warn("Chưa hoàn tất việc nền; đưa message lại hàng đợi");
+            pauseBeforeRequeue();
             channel.basicNack(deliveryTag, false, true);
             return;
         }
         channel.basicAck(deliveryTag, false);
+    }
+
+    private void pauseBeforeRequeue() {
+        if (requeueBackoff.isZero() || requeueBackoff.isNegative()) {
+            return;
+        }
+        try {
+            Thread.sleep(requeueBackoff.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static boolean validEnvelope(JsonNode value) {

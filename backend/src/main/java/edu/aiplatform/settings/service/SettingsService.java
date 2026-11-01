@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Cài {@link ISettings} (S3, cache 30 giây) và nghiệp vụ UC 14, 15 (S1, S2): chỉ {@code ADMIN}, sửa có
@@ -168,11 +170,27 @@ public class SettingsService implements ISettings {
         details.put("after", json);
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "SETTING_UPDATED", "SETTING", key,
                 AuditResult.SUCCESS, null, details, now));
-        cache.remove(key);
+        evictAfterCommit(key);
         return view(definition, repository.find(key).orElseThrow());
     }
 
     // ---------- helpers ----------
+
+    /**
+     * Xóa cache cả bây giờ lẫn sau commit: một lần đọc song song chen vào trước commit sẽ nạp lại giá trị cũ, lần xóa
+     * sau commit bỏ giá trị đó để cài đặt mới có hiệu lực ngay, không đợi hết 30 giây.
+     */
+    private void evictAfterCommit(String key) {
+        cache.remove(key);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    cache.remove(key);
+                }
+            });
+        }
+    }
 
     private void requireAdmin(Actor actor, String action) {
         boolean allowed = actor != null && actor.role() == Role.ADMIN

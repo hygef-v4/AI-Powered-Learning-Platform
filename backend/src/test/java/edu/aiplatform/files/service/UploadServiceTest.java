@@ -97,6 +97,15 @@ class UploadServiceTest {
     }
 
     @Test
+    void authorizationDependencyFailureIsUnavailableWithoutADenialAudit() {
+        when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.deny("DEPENDENCY_UNAVAILABLE"));
+
+        assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.MATERIAL, upload("a.pdf", TestFiles.PDF)))
+                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        verify(fileAudit, org.mockito.Mockito.never()).uploadDenied(any(), any(), anyMap());
+    }
+
+    @Test
     void rejectsFileOverTheLimitFromSettings() {
         when(settings.get(PurposePolicy.IMAGE_MAX_MB)).thenReturn(Optional.of(1));
         byte[] big = new byte[1024 * 1024 + 1];

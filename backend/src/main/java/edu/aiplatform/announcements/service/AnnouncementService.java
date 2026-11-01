@@ -54,7 +54,8 @@ public class AnnouncementService {
     }
     private Announcement load(Actor actor,UUID id) {return repository.find(id).filter(a->a.status==Announcement.Status.ACTIVE).orElseThrow(()->access.denied(actor,id));}
     private void checkVersion(Announcement a,long version) {if(version<0||a.version!=version)throw ApiException.conflict("ANNOUNCEMENT_STALE","Thông báo đã thay đổi, hãy tải lại");}
-    private void save(Announcement a,long version) {if(!repository.update(a,version))throw ApiException.conflict("ANNOUNCEMENT_STALE","Thông báo đã thay đổi, hãy tải lại");}
+    /** Ghi có điều kiện version; câu UPDATE tăng version trong database nên bản trả về cũng phải mang version mới. */
+    private void save(Announcement a,long version) {if(!repository.update(a,version))throw ApiException.conflict("ANNOUNCEMENT_STALE","Thông báo đã thay đổi, hãy tải lại");a.version=version+1;}
     private AnnouncementViews.Item view(Actor actor,Announcement a,ClassRef c) {
         String author=accounts.getContact(a.createdBy).map(AccountContact::displayName).orElse("Giảng viên");
         return new AnnouncementViews.Item(a.id,a.classId,c.name(),a.title,a.body,a.important,a.sendEmail,a.createdBy,author,a.createdAt,a.updatedAt,a.version,actor.role()!=Role.STUDENT&&Objects.equals(c.teacherId(),actor.accountId()));

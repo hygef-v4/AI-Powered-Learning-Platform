@@ -35,3 +35,7 @@ export const eventsUrl = (id: string) => `${doc(id)}/events`;
 /** Ghi nhận hoạt động khi bài bật giám sát (U12 nhận như U08); `keepalive` cho lần gửi lúc rời trang. */
 export const sendActivity = (id: string, events: ActivityEventInput[], keepalive: boolean) =>
   apiFetch<void>(`${doc(id)}/activity`, { method: "POST", body: JSON.stringify({ events }), keepalive });
+
+/** Ảnh trong tài liệu nhóm mở theo id block; backend chuyển tới link tải ngắn hạn. */
+export const groupDocImageUrl = (id: string) => (blockId: string) =>
+  `${doc(id)}/blocks/${encodeURIComponent(blockId)}/image`;

@@ -21,6 +21,26 @@ const ZOOMS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
 const FAILED = "Không mở được tệp, hãy tải xuống để xem.";
 
 /**
+ * Nonce CSP của trang (layout gắn vào script khởi tạo theme). Trình duyệt ẩn thuộc tính `nonce` khỏi DOM nhưng vẫn đọc
+ * được qua thuộc tính `nonce` của phần tử.
+ */
+function pageNonce(): string | undefined {
+  const script = document.querySelector<HTMLScriptElement>("script[nonce]");
+  return script?.nonce || script?.getAttribute("nonce") || undefined;
+}
+
+/** Thẻ <style> mới mang nonce của trang, cùng nội dung các thẻ <style> thư viện đã dựng trong `source`. */
+export function noncedStyles(source: Element): HTMLStyleElement[] {
+  const nonce = pageNonce();
+  return Array.from(source.querySelectorAll("style")).map((original) => {
+    const style = document.createElement("style");
+    if (nonce) style.nonce = nonce;
+    style.textContent = original.textContent;
+    return style;
+  });
+}
+
+/**
  * Trình xem tài liệu kiểu trình đọc của Google: khung nền tối, trang giấy trắng giữa khung, thanh công cụ tối ở trên có tên
  * tệp, số trang, phóng to / thu nhỏ và tải xuống. PDF vẽ bằng pdf.js; Word thành trang giấy, PowerPoint thành danh sách
  * slide, Excel thành bảng theo sheet; mọi thứ dựng trên trình duyệt từ tệp đã tải, thư viện chỉ tải khi mở loại tệp đó.
@@ -72,7 +92,12 @@ export function DocumentViewer({ blob, kind, title, onDownload }: { blob: Blob; 
         if (kind === "docx") {
           const { renderAsync } = await import("docx-preview");
           if (cancelled) return;
-          await renderAsync(blob, container, undefined, { inWrapper: true, ignoreLastRenderedPageBreak: true });
+          // docx-preview chèn thẻ <style> không có nonce nên CSP (style-src 'nonce-…') chặn và tài liệu mất định dạng:
+          // dựng style vào khung rời rồi chép sang thẻ <style> mang nonce của trang.
+          const styles = document.createElement("div");
+          await renderAsync(blob, container, styles, { inWrapper: true, ignoreLastRenderedPageBreak: true });
+          if (cancelled) return;
+          container.prepend(...noncedStyles(styles));
           container.querySelectorAll(".docx-wrapper > section").forEach((section, index) => { (section as HTMLElement).dataset.page = String(index + 1); });
         } else {
           const { init } = await import("pptx-preview");

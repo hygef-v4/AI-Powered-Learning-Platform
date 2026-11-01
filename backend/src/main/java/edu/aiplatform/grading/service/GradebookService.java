@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.assignments.contract.AssignmentStatus;
+import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IRubric;
@@ -111,9 +113,18 @@ public class GradebookService {
         return new GradebookPage(pageRows, columns, rows.size(), page, size);
     }
 
+    /**
+     * Bài có điểm đã giao cho sinh viên: {@code IAssignmentQuery.listForClass} trả cả bài lớp còn nháp, đã duyệt, chờ mở;
+     * những bài đó chưa có ai nộp nên không thành cột bảng điểm.
+     */
+    public static boolean gradable(AssignmentView assignment) {
+        return assignment.gradingMode() == GradingMode.GRADED && (assignment.status() == AssignmentStatus.OPEN
+                || assignment.status() == AssignmentStatus.CLOSED || assignment.status() == AssignmentStatus.RETIRED);
+    }
+
     private List<AssignmentColumn> assignmentColumns(ClassRef courseClass) {
         return assignments.listForClass(courseClass.classId()).stream()
-                .filter(assignment -> assignment.gradingMode() == GradingMode.GRADED)
+                .filter(GradebookService::gradable)
                 .peek(assignment -> SubmissionReviewService.requireAssignment(assignment, courseClass))
                 .map(assignment -> new AssignmentColumn(assignment.assignmentId(), assignment.title(),
                         rubric.maxPoints(assignment.assignmentId()), assignment.submissionMode()))
