@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -49,13 +50,15 @@ export function ClassGradebookTab({ classId, headerActions }: { classId: string;
  */
 function GradebookContent({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const params = useSearchParams();
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [mode, setMode] = useState<Mode>(() => (params?.get("student") ? "student" : "assignment"));
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState(() => params?.get("assignment") ?? "");
-  const [selectedStudentId, setSelectedStudentId] = useState(() => params?.get("student") ?? "");
-  const [assignmentQuery, setAssignmentQuery] = useState("");
-  const [status, setStatus] = useState("");
+  const [query, setQuery] = useUrlState<string>("gradebookQuery", "", undefined, "replace");
+  const [pageValue, setPageValue] = useUrlState<string>("gradebookPage", "1", undefined, "replace");
+  const page = /^[1-9]\d*$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 1;
+  const setPage = (page: number) => setPageValue(String(page));
+  const [mode, setMode] = useUrlState<Mode>("gradebookMode", params?.get("student") ? "student" : "assignment", ["assignment", "student"]);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useUrlState<string>("assignment", "");
+  const [selectedStudentId, setSelectedStudentId] = useUrlState<string>("student", "");
+  const [assignmentQuery, setAssignmentQuery] = useUrlState<string>("gradebookAssignmentQuery", "", undefined, "replace");
+  const [status, setStatus] = useUrlState<string>("gradebookStatus", "", ["", ...STATUS_FILTERS]);
   const [exporting, setExporting] = useState(false);
 
   // Gõ tìm sinh viên: hỏi máy chủ sau khi ngừng gõ một nhịp, không theo từng phím.

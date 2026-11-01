@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useId, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { teacherClassInfoFields, teacherClassTabs } from "../slots";
@@ -15,11 +15,6 @@ import styles from "../styles/academics.module.css";
 type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
 
-/** Tab theo `?tab=` (sidebar của lớp, nút Mở tab Sinh viên ở Kiểm tra sẵn sàng bài nhóm); thiếu hay sai thì là Thông tin lớp. */
-function tabOf(wanted: string | null | undefined): ClassTab {
-  return CLASS_TABS.find((t) => t === wanted) ?? "info";
-}
-
 export function ReadOnlyClassPage({
   audience,
   value,
@@ -31,22 +26,7 @@ export function ReadOnlyClassPage({
   students?: EnrollmentView[];
   onBack: () => void;
 }) {
-  const params = useSearchParams();
-  const urlTab = tabOf(params?.get("tab"));
-  const [tab, setTab] = useState<ClassTab>(urlTab);
-  // Bấm mục trên sidebar của lớp thì `?tab=` đổi: mở theo.
-  const [seenUrlTab, setSeenUrlTab] = useState(urlTab);
-  if (urlTab !== seenUrlTab) {
-    setSeenUrlTab(urlTab);
-    setTab(urlTab);
-  }
-  // Giữ tab trên URL để tải lại hoặc gửi link vẫn mở đúng tab.
-  const openTab = (next: ClassTab) => {
-    setTab(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", next);
-    window.history.replaceState(window.history.state, "", url);
-  };
+  const [tab, openTab] = useUrlState<ClassTab>("tab", "info", CLASS_TABS);
   const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string>; leaders: string[] } | null>(null);
   const fieldId = useId();
   // Ô trên dòng tiêu đề cho nút của tab đang mở (unit gắn vào bằng portal).

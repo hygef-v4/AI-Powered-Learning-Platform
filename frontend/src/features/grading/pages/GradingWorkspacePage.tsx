@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import {
@@ -166,11 +166,11 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
     <main data-wide-workspace data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
+          <BackLink className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
             onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
             href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>
             <Icon name="arrow_back" size={14} />Bài nộp
-          </Link>
+          </BackLink>
           <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{studentName}</h1>
           {context.value?.title && <p className="text-sm text-muted">{context.value.title}</p>}
           <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">

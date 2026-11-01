@@ -1,5 +1,6 @@
 "use client";
 
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useRef, useState } from "react";
 import { PROVIDER_LABEL, formatDateTime, formatMaybeTokens, formatTokens, type SourceOption } from "@/shared/ai";
 import { Alert, PageNav, Pill, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
@@ -30,7 +31,8 @@ function dayBound(day: string, end: boolean): string | undefined {
  * "Không có số liệu".
  */
 export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean }) {
-  const [source, setSource] = useState<UsageSource | "">("");
+  const [chosenSource, setSource] = useUrlState<UsageSource | "">("source", "", ["", "SHARED", "PERSONAL", "MCP"]);
+  const source = chosenSource === "MCP" && !mcpEnabled ? "" : chosenSource;
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(0);

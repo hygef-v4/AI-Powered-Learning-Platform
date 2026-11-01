@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
 import { useRouter, useSearchParams } from "next/navigation";
 import { uploadFile } from "@/features/files/api";
 import { ApiError } from "@/shared/api/client";
@@ -495,9 +495,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
   return (
     <div data-wide-workspace className="flex flex-col gap-4">
       <header className="sticky top-14 z-30 -mx-4 -mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
-        <Link href={backHref} aria-label="Quay lại" className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
+        <BackLink href={backHref} aria-label="Quay lại" className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
           <Icon name="arrow_back" size={16} />
-        </Link>
+        </BackLink>
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
           <h1 className="sr-only">{title || detail.title || "Bài chưa đặt tên"}</h1>
           <span className="truncate text-[13px] font-semibold text-ink">{detail.ownerName || (detail.scope === "SUBJECT" ? "Bài của môn" : "Bài của lớp")}</span>

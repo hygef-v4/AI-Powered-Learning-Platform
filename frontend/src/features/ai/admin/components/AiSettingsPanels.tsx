@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { InstitutionalKeysSection } from "./InstitutionalKeysSection";
 import { QuotaPolicySection, TeacherQuotaTable } from "./QuotaSections";
@@ -17,7 +18,7 @@ const TABS: TabItem<Tab>[] = [
  * Cài đặt AI của Admin chỉ gồm usage, khóa chung và quota. Agent MCP thuộc Student/Teacher/Subject Manager.
  */
 function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuota?: boolean; initialTab?: Tab }) {
-  const [tab, setTab] = useState<Tab>(focusQuota ? "settings" : initialTab);
+  const [tab, setTab] = useUrlState<Tab>("tab", focusQuota ? "settings" : initialTab, ["usage", "settings"]);
   useEffect(() => {
     if (focusQuota) document.getElementById("ai-quota")?.scrollIntoView?.({ block: "start" });
   }, [focusQuota]);

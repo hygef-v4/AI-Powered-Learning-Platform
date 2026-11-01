@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, ClassFilter, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
@@ -50,13 +50,15 @@ export function StudentAssignmentsPage() {
   const classId = params.get("classId") ?? undefined;
   // Quay về từ một bài (`focus`): mở tab đang chứa bài đó theo dữ liệu mới tải; bấm tab thì theo lựa chọn.
   const focus = params.get("focus");
-  const [chosenTab, setTab] = useState<Tab | null>(null);
+  const [chosenTab, setTab] = useUrlState<Tab | "">("tab", "", ["", "upcoming", "doing", "submitted"]);
   // `?mode=GROUP` (link Bài nhóm trên trang Nhóm của tôi) mở sẵn ô lọc loại bài.
-  const [mode, setMode] = useState(() => { const initial = params.get("mode"); return initial && initial in KIND_LABELS ? initial : ""; });
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
+  const [mode, setMode] = useUrlState<string>("mode", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE"], "replace");
+  const [query, setQuery] = useUrlState<string>("q", "", undefined, "replace");
+  const [pageValue, setPageValue] = useUrlState<string>("page", "0", undefined, "replace");
+  const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
+  const setPage = (value: number) => setPageValue(String(value));
   // Trang chung (không có `?classId=`) lọc theo lớp ngay trên trang, không đổi sang sidebar của lớp.
-  const [classFilter, setClassFilter] = useState("");
+  const [classFilter, setClassFilter] = useUrlState<string>("classFilter", "", undefined, "replace");
   const { rows: allRows, error, loading } = useStudentAssignments(classId);
   const classes = [...new Map((allRows ?? []).map((row) => [row.classId, { classId: row.classId, code: row.classCode, name: row.className }])).values()]
     .sort((a, b) => a.code.localeCompare(b.code, "vi"));
@@ -65,7 +67,7 @@ export function StudentAssignmentsPage() {
   const inTab = (row: StudentRow, key: Tab) =>
     key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : row.submittedCount > 0 || !!row.group?.submitted;
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
-  const tab: Tab = chosenTab ?? TABS.find((item) => focused && inTab(focused, item.value))?.value ?? "upcoming";
+  const tab: Tab = chosenTab || TABS.find((item) => focused && inTab(focused, item.value))?.value || "upcoming";
   const q = query.toLocaleLowerCase("vi").trim();
   const visible = (rows ?? []).filter((row) => inTab(row, tab) && (!mode || kindOf(row) === mode)
     && row.title.toLocaleLowerCase("vi").includes(q));

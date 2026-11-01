@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Section, cx } from "@/shared/ui";
 import { DeadlineChip } from "./DeadlineChip";
 import type { StudentRow } from "../model/types";
@@ -27,7 +28,7 @@ function kindOf(row: StudentRow): Kind {
  */
 export function ClassTodoCard({ classId }: { classId: string }) {
   const { rows, error } = useStudentAssignments(classId);
-  const [mode, setMode] = useState<Kind>("INDIVIDUAL");
+  const [mode, setMode] = useUrlState<Kind>("todoKind", "INDIVIDUAL", ["INDIVIDUAL", "GROUP", "PRACTICE"]);
   // Mốc "còn hạn" lấy một lần lúc mở trang.
   const [now] = useState(() => Date.now());
   const todo = (rows ?? [])

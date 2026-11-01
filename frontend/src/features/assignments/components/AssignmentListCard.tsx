@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ClickableRow, Icon, PageNav, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import type { ListFilter } from "../api";
@@ -36,10 +36,12 @@ function kindOf(row: AssignmentRow): Kind {
  */
 export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof useAssignmentPage>; classId?: string }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("open");
-  const [kind, setKind] = useState<Kind | "">("");
-  const [query, setQuery] = useState("");
-  const [pageNo, setPageNo] = useState(0);
+  const [tab, setTab] = useUrlState<Tab>("assignmentState", "open", ["open", "draft", "closed"]);
+  const [kind, setKind] = useUrlState<Kind | "">("assignmentKind", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE"]);
+  const [query, setQuery] = useUrlState<string>("assignmentQuery", "", undefined, "replace");
+  const [pageValue, setPageValue] = useUrlState<string>("assignmentPage", "0", undefined, "replace");
+  const pageNo = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
+  const setPageNo = (page: number) => setPageValue(String(page));
   const items = page.data?.items ?? [];
   const q = query.toLocaleLowerCase("vi").trim();
   const inTab = (row: AssignmentRow, value: Tab) => TABS.find((t) => t.value === value)!.statuses.includes(row.status);

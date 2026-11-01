@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, Section, Segmented } from "@/shared/ui";
 import { gradingApi } from "../api";
 import type { GradebookPage, SubmissionPage } from "../model/types";
@@ -68,7 +69,7 @@ async function wholeGradebook(classId: string) {
  * điểm trên đầu thẻ. Danh sách cao cố định, nhiều dòng thì cuộn trong thẻ.
  */
 export function ClassProgressSection({ classId }: { classId: string; layout?: "standalone" | "overview" }) {
-  const [view, setView] = useState<View>("assignment");
+  const [view, setView] = useUrlState<View>("progressView", "assignment", ["assignment", "student"]);
   const load = useCallback(async () => {
     const [progress, gradebook] = await Promise.all([gradingApi.progress(classId), wholeGradebook(classId)]);
     return { progress, assignments: gradebook.assignments, rows: gradebook.rows };

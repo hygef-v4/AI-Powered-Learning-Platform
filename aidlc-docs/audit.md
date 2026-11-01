@@ -7198,4 +7198,22 @@ Follow-up scope (2026-11-01), complete raw input: "Giúp tôi chỉ sửa giao d
 
 **Action**: Replaced the cool-tinted light canvas/sidebar/topbar with #FAFAFA and white surfaces, neutral gray text/borders/sunken surfaces and neutral shadows. Blue remains a control/selection accent. Dark theme and behavior unchanged. Updated PRODUCT.md to the latest reference. Fourteen contrast checks passed (minimum 4.75:1); Orca measured actual white sidebar and #FAFAFA canvas, no overflow, and screenshot inspected. No new tests for this CSS-only refinement, backend changes, commit or push.
 
+## Back navigation and page selections — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> khi bấm nút back tôi muốn nó quay lại đúng trang trước mà trạng thái đang chọn lúc trước, kiểu đang ở cùng 1 trang nhưng có nhiều tab thì phải quay về đúng tab trc đó chọn
+
+**Action**: Traced hardcoded Back destinations, local-only tab state and replace-only class tab history. Added shared BackLink and URL state hook, updated page tabs/selections across academics, assignments/grading, quizzes, AI and group workspace while keeping modal workflow state local. Maintained link modifiers, fallback href and grading unsaved-work cancellation. Browser test caught Next's native-history bypass when passing its internal state; corrected to null user state so Next copies routing metadata and updates URL hooks. No custom history stack, backend or persisted data changes.
+
+**Verification**: Full frontend 641 tests/96 files passed; production build/typecheck passed; lint zero errors/two existing warnings; diff whitespace clean. Orca verified gradebook student/filter state survived opening submissions and Back, plus visible-tab restoration on same-page Back/Forward. Backend tests and broad all-role browser acceptance not rerun. No commit/push. Results: construction/build-and-test/2026-11-01-back-navigation-state-results.md.
+
+## Navigation commit authorization — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> giúp tôi commit
+
+**Action**: Reviewed the pending navigation-only source, tests and AI-DLC artifacts against HEAD 387f416f. User authorizes committing the verified Back/Forward and URL selection restoration work with an English description; no push. Latest source matches the preceding 641-test frontend/build/typecheck/lint/browser verification. Fresh whitespace validation passed. Tests were not repeated solely to commit unchanged source.
+
 ---

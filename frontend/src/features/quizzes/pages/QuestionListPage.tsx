@@ -1,5 +1,6 @@
 "use client";
 
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, cx, Menu, MenuItem, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
@@ -17,8 +18,8 @@ const TABS: { key: QuestionType | null; label: string }[] = [
   { key: "MCQ_MULTI", label: TYPE_LABELS.MCQ_MULTI },
 ];
 
-type Filters = { type: QuestionType | null; difficulty: Difficulty | ""; status: QuestionStatus | ""; q: string; page: number };
-const NO_FILTERS: Filters = { type: null, difficulty: "", status: "", q: "", page: 0 };
+type Filters = { difficulty: Difficulty | ""; status: QuestionStatus | ""; q: string; page: number };
+const NO_FILTERS: Filters = { difficulty: "", status: "", q: "", page: 0 };
 
 /** Màn #19 Question List (UC 46): ngân hàng câu hỏi của môn Chủ nhiệm môn đang quản lý (BR-U10-01, 06). */
 export function QuestionListPage() {
@@ -26,6 +27,7 @@ export function QuestionListPage() {
   const params = useSearchParams();
   const [subjects, setSubjects] = useState<ManagedSubject[] | null>(null);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
+  const [type, setType] = useUrlState<QuestionType | "">("type", "", ["", "MCQ_SINGLE", "MCQ_MULTI"]);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [search, setSearch] = useState("");
   const [data, setData] = useState<QuestionPage | null>(null);
@@ -57,7 +59,7 @@ export function QuestionListPage() {
     if (!subject) return;
     let active = true;
     getQuestions(subject.id, {
-      type: filters.type ?? undefined,
+      type: type || undefined,
       difficulty: filters.difficulty || undefined,
       status: filters.status || undefined,
       q: filters.q || undefined,
@@ -73,7 +75,7 @@ export function QuestionListPage() {
     return () => {
       active = false;
     };
-  }, [subject, filters, reloadKey]);
+  }, [subject, filters, type, reloadKey]);
 
   const selectSubject = (id: string) => {
     setFilters(NO_FILTERS);
@@ -115,11 +117,11 @@ export function QuestionListPage() {
       <div className="flex flex-wrap items-center gap-2">
         <div role="tablist" aria-label="Loại câu" className="inline-flex gap-0.5 rounded-[10px] bg-sunken p-[3px]">
           {TABS.map((tab) => (
-            <button key={tab.label} type="button" role="tab" aria-selected={filters.type === tab.key}
-              onClick={() => setFilters((current) => ({ ...current, type: tab.key, page: 0 }))}
+            <button key={tab.label} type="button" role="tab" aria-selected={(type || null) === tab.key}
+              onClick={() => { setType(tab.key ?? ""); setFilters((current) => ({ ...current, page: 0 })); }}
               data-testid={`question-list-tab-${tab.key ?? "ALL"}`}
               className={cx("rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold transition-[background-color,color] duration-200",
-                filters.type === tab.key ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink")}>
+                (type || null) === tab.key ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink")}>
               {tab.label}
             </button>
           ))}

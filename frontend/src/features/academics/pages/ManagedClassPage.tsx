@@ -1,7 +1,7 @@
 "use client";
 
 import type {CandidateLoader} from "../hooks/useCandidates";
-import { useSearchParams } from "next/navigation";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useState } from "react";
 import { Button, PageHeader, Pill, Section, Tabs, type TabItem } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
@@ -29,21 +29,7 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
 export function ManagedClassPage({ value, students, teachers, candidates, actions, loadTeachers, loadCandidates }: {
   loadTeachers?:CandidateLoader; loadCandidates?:CandidateLoader; value: CourseClassView; students: EnrollmentView[]; teachers: PersonView[]; candidates: PersonView[]; onBack: () => void; actions: ManagedClassActions;
 }) {
-  // Tab theo `?tab=` để sidebar của lớp mở đúng tab; bấm tab trên trang (màn hẹp) thì ghi lại vào URL.
-  const params = useSearchParams();
-  const urlTab: Tab = params?.get("tab") === "students" ? "students" : "info";
-  const [tab, setTab] = useState<Tab>(urlTab);
-  const [seenUrlTab, setSeenUrlTab] = useState(urlTab);
-  if (urlTab !== seenUrlTab) {
-    setSeenUrlTab(urlTab);
-    setTab(urlTab);
-  }
-  const openTab = (next: Tab) => {
-    setTab(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", next);
-    window.history.replaceState(window.history.state, "", url);
-  };
+  const [tab, openTab] = useUrlState<Tab>("tab", "info", ["info", "students"]);
   const [assigning, setAssigning] = useState(false);
   const [tabActions, setTabActions] = useState<HTMLElement | null>(null);
   const archived = value.status === "ARCHIVED";
