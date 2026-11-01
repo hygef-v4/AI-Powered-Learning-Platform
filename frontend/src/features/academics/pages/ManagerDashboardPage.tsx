@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Field, LockedInput, PageHeader, Section, Segmented } from "@/shared/ui";
 import type { ManagedSubject } from "../api";
 import { CourseCard, CourseGrid } from "../components/CourseCard";
@@ -18,7 +19,7 @@ type SubjectTab = "ACTIVE" | "ARCHIVED";
  * môn ở dưới; bấm thẻ để mở Thông tin môn.
  */
 export function ManagerDashboardPage({ subjects, onSubject }: { subjects: ManagedSubject[]; onSubject: (id: string) => void }) {
-  const [tab, setTab] = useState<SubjectTab>("ACTIVE");
+  const [tab, setTab] = useUrlState<SubjectTab>("subjectStatus", "ACTIVE", ["ACTIVE", "ARCHIVED"]);
   const archived = subjects.filter((subject) => subject.status === "ARCHIVED").length;
   const count = (value: SubjectTab) => (value === "ARCHIVED" ? archived : subjects.length - archived);
   const shown = subjects.filter((subject) => (subject.status === "ARCHIVED") === (tab === "ARCHIVED"));

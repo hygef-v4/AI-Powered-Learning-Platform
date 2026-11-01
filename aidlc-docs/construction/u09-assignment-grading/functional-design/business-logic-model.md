@@ -116,8 +116,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F13 - Người học xem điểm và phân bố
 1. Student Assignments (U08) nhúng `StudentGradeCell` qua slot `StudentAssignmentResult`; component gọi `GET /api/v1/me/grades` và `GET /api/v1/me/grade-distributions` kèm lớp.
 2. U09 kiểm người học đang ghi danh lớp; trả điểm `PUBLISHED` của chính mình theo từng bài.
-3. Phân bố: kiểm BR-U09-62 với từng bài; đủ điều kiện thì trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả.
+3. Phân bố: kiểm cài đặt `enabled` của đúng cặp bài–lớp và BR-U09-62 với từng bài; chỉ tính người đang ghi danh có điểm công bố dùng được, ít nhất 20 người; trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả. Không đọc cờ lịch sử ở lớp.
 4. Submission History (U08) nhúng `StudentGradePanel` qua slot `SubmissionResultSection`; gọi `GET /api/v1/me/grades/attempts/{attemptId}`: điểm, nhận xét, mục rubric đạt, nhãn "đã cập nhật" nếu có; lượt chưa công bố thì trả "chưa có điểm".
+
+### F13a - Giảng viên bật/tắt phân bố theo bài–lớp
+1. Trong ngữ cảnh bài GRADED của lớp, gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility`, nhận `{enabled,version,canEdit}`. Chưa có bản ghi thì trả tắt và version ban đầu; không chuyển cờ true từ lớp.
+2. Kiểm bài thuộc lớp (bài CLASS của lớp hoặc SUBJECT của môn), người gọi được phân công dạy và lớp cho phép sửa. Quyền chỉ đọc nội dung bài không khóa cài đặt này; Chủ nhiệm môn chỉ quản lý môn không được sửa. Bài SUBJECT còn DRAFT/REVIEWED chưa được giao cho lớp: GET trả `404`. Lớp ARCHIVED hoặc bài RETIRED: GET trả `canEdit=false`, PUT trả `409`.
+3. PUT cùng URL gửi `{enabled,version}`. Chưa có bản ghi dùng version `0`, lưu lần đầu thành `1`. Cập nhật lạc quan trong U09 theo khóa bài–lớp; version lệch trả `409`, tạo mới đồng thời cũng phải kiểm version. Trả `{enabled,version,canEdit}` và audit `GRADE_DISTRIBUTION_VISIBILITY_CHANGED` với bài/lớp và trạng thái enabled.
+4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
 1. U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).

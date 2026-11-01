@@ -1,3 +1,4 @@
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiConnectionPage } from "@/features/ai/pages/AiConnectionPage";
@@ -104,13 +105,13 @@ function openTab(name: string) {
 }
 
 describe("AiConnectionPage", () => {
-  beforeEach(() => { session.role = "TEACHER"; });
+  beforeEach(() => { window.history.replaceState(null, "", "/"); session.role = "TEACHER"; });
   afterEach(() => vi.unstubAllGlobals());
 
   it("mở tab Usage trước: API hệ thống hôm nay và số lượt gọi", async () => {
     backend();
     render(<AiConnectionPage />);
-    expect(screen.getByRole("tab", { name: "Usage" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Lịch sử sử dụng" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText("4.000")).toBeInTheDocument();
     expect(screen.getByText("/ 10.000 token", { exact: false })).toBeInTheDocument();
     expect(await screen.findByText("3")).toBeInTheDocument();
@@ -209,4 +210,21 @@ describe("AiConnectionPage", () => {
     await screen.findByText("Agent 1");
     expect(screen.getByRole("button", { name: /Kết nối agent mới/ })).toBeDisabled();
   });
+});
+
+
+it("restores personal AI tab from URL and rejects unauthorized MCP", async () => {
+  backend();
+  session.role = "TEACHER";
+  window.history.replaceState(null, "", "/ai/connection?tab=settings");
+  const view = render(<AiConnectionPage />);
+  expect(await screen.findByText("••••3kQf")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("tab", { name: "Agent MCP" }));
+  view.unmount();
+  const restored = render(<AiConnectionPage />);
+  expect(await screen.findByText("Claude Desktop")).toBeInTheDocument();
+  session.role = "ADMIN";
+  restored.rerender(<AiConnectionPage />);
+  expect(screen.queryByRole("tab", { name: "Agent MCP" })).not.toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: "Lịch sử sử dụng" })).toHaveAttribute("aria-selected", "true");
 });

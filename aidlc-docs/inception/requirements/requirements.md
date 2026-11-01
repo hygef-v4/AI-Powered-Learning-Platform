@@ -224,7 +224,7 @@ Administrator xem Admin Dashboard (UC 66): số tài khoản theo role/status, m
 
 Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 45). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
 
-Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): chỉ Chủ nhiệm môn bật/tắt cho lớp trong Edit Class Information (UC 29), mặc định tắt; chỉ bài GRADED đủ mẫu riêng tư, không quiz/Practice, bài của môn tính riêng từng lớp. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
+Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): giảng viên được phân công dạy lớp bật/tắt cho từng cặp bài tập–lớp trong ngữ cảnh bài tập, mặc định tắt; Chủ nhiệm môn chỉ có quyền khi được phân công dạy lớp. Chỉ bài GRADED, không Quiz/Practice; bài SUBJECT có cài đặt độc lập từng lớp. Chỉ tính người đang ghi danh có điểm công bố dùng được (ít nhất 20), ẩn khoảng dưới 5 người và không trả danh tính/điểm cá nhân khác. Quyền chỉ đọc nội dung bài không quyết định quyền cài đặt phân bố. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 

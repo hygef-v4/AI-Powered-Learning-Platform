@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import {
@@ -10,9 +10,10 @@ import {
   type DocumentModel as EditorDocument,
   type RubricCriterion,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Icon, IconButton, Pill } from "@/shared/ui";
+import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
 import { checklistPoints, RubricChecklist } from "../components/RubricChecklistPanel";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
+import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { checklistBindings, GradingNotes, needsGradingNotes } from "../components/GradingForm";
@@ -107,8 +108,19 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  useEffect(() => {
+    if (aiOpen) document.getElementById("grading-ai-review")?.scrollIntoView?.({ block: "start" });
+  }, [aiOpen]);
   const [activePart, setActivePart] = useState<string | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
   const context = useSubmissionContext(evaluation.classId, evaluation.assignmentId);
+  const directory = useSubmissionDirectory(evaluation.classId, evaluation.assignmentId);
+  const submitters = (directory.value ?? []).filter((row) => row.evaluationId === evaluation.id ||
+    (evaluation.accountId && row.student.accountId === evaluation.accountId));
+  const studentName = [...new Set(submitters.map((row) => row.student.name))].join(", ") ||
+    (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
+  const studentMatches = (directory.value ?? []).filter((row) => row.evaluationId &&
+    `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
   const paper = useMemo(() => editorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
   const partTitles = Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
@@ -151,15 +163,16 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   const activeHeading = detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
 
   return (
-    <main data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
+    <main data-wide-workspace data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
+          <BackLink className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
             onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
             href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>
             <Icon name="arrow_back" size={14} />Bài nộp
-          </Link>
-          <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{context.value?.title || "Chấm bài"}</h1>
+          </BackLink>
+          <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{studentName}</h1>
+          {context.value?.title && <p className="text-sm text-muted">{context.value.title}</p>}
           <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">
             <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{statusLabels[evaluation.state]}</Pill>
             {context.value && <span className="font-semibold text-ink">{context.value.ownerName}</span>}
@@ -170,11 +183,32 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
         </Button>
       </header>
       <div role="region" aria-label="Thao tác chấm bài"
-        className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-line bg-[var(--c-topbar)] px-4 py-3 shadow-[var(--shadow-lift)] backdrop-blur-md">
+        className="sticky top-16 z-30 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-line bg-[var(--c-topbar)] px-4 py-3 shadow-[var(--shadow-lift)] backdrop-blur-md">
         <div className="flex items-center gap-1">
           <IconButton icon="chevron_left" label="Bài trước" disabled={currentIndex <= 0 || busy} onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)} />
           <span className="min-w-12 text-center font-mono text-xs text-muted">{Math.max(1, currentIndex + 1)} / {detail.navigationIds.length || 1}</span>
           <IconButton icon="chevron_right" label="Bài sau" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)} />
+          <details className="ml-2">
+            <summary aria-label="Chọn sinh viên" title="Chọn sinh viên khác" className="max-w-[min(16rem,45vw)] cursor-pointer rounded-lg px-2 py-2 text-sm font-semibold break-words text-ink">{studentName}</summary>
+            <div className="absolute left-0 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-float)]">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
+                Tìm sinh viên
+                <input type="search" placeholder="Tên hoặc email" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)}
+                  className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal" />
+              </label>
+              {directory.error ? <p role="alert" className="mt-3 text-sm text-danger">Không tải được danh sách. <button type="button" className="underline" onClick={() => void directory.refresh().catch(() => {})}>Thử lại</button></p>
+                : !directory.value ? <p role="status" className="mt-3 text-sm text-muted">Đang tải sinh viên…</p>
+                  : <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
+                    {studentMatches.map((row) => <li key={row.student.accountId}>
+                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!)}
+                        className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50">
+                        <span className="block font-semibold">{row.student.name}</span><span className="block text-xs text-muted">{row.student.email}</span>
+                      </button>
+                    </li>)}
+                    {!studentMatches.length && <li className="py-3 text-sm text-muted">Không có bài nộp phù hợp.</li>}
+                  </ul>}
+            </div>
+          </details>
         </div>
         <div className="flex items-baseline gap-3">
           <output aria-label="Điểm tạm tính" className="font-display text-[26px] leading-none tracking-[-0.02em] text-ink tabular-nums">
@@ -195,7 +229,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
         <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
       )}
       {!detail.rubrics.length && <Alert tone="warning">Bài chưa có rubric khả dụng.</Alert>}
-      <DocumentEditor document={paper} onChange={() => {}} mode="student" readOnly diagramEnabled={false}
+      <DocumentEditor fullWidth matchCommentHeight document={paper} onChange={() => {}} mode="student" readOnly diagramEnabled={false}
         imageUrl={(blockId) => imageUrls[blockId] ?? null}
         emptyLeafLabel="Sinh viên chưa làm phần này."
         header={<div className="mb-5 border-b border-line pb-4">
@@ -208,7 +242,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
         toolbarExtra={<>
           {pending && <Pill tone="warning">AI đang chấm…</Pill>}
           {!pending && ready && <Pill tone="success">Có đề xuất AI</Pill>}
-          <ToolbarButton icon="smart_toy" title="Chấm bằng AI" aria-label="Chấm bằng AI" onClick={() => setAiOpen(true)} />
+          <ToolbarButton icon="smart_toy" title="Chấm bằng AI" aria-label="Chấm bằng AI" aria-expanded={aiOpen} aria-controls="grading-ai-review" onClick={() => setAiOpen((value) => !value)} />
         </>} />
       <GroupSectionAuthors detail={detail} />
       {evaluation.kind === "GROUP_DOCUMENT" && (
@@ -224,7 +258,11 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
       <ActivityReview detail={detail} />
       <GradeHistory evaluation={evaluation} />
       {aiOpen && (
-        <Dialog open size="xl" icon="smart_toy" title="Chấm bằng AI" onClose={() => setAiOpen(false)}>
+        <section id="grading-ai-review" aria-label="Chấm bằng AI" className="scroll-mt-52 border-t border-line pt-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-ink">Chấm bằng AI</h2>
+            <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>Đóng</Button>
+          </div>
           <AiProposalPanel evaluationId={evaluation.id} proposals={proposals} disabled={disabled || official}
             rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
             pollExhausted={pollExhausted} onRecheck={resumePolling}
@@ -233,7 +271,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
               applyProposal(checks, feedback, id, itemScores);
               setAiOpen(false);
             }} />
-        </Dialog>
+        </section>
       )}
       {action && (
         <BatchActionDialog

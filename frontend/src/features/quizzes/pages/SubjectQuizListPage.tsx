@@ -1,5 +1,6 @@
 "use client";
 
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, cx, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
@@ -24,7 +25,8 @@ export function SubjectQuizListPage() {
   const params = useSearchParams();
   const [subjects, setSubjects] = useState<ManagedSubject[] | null>(null);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<{ status: QuizStatus | null; q: string; page: number }>({ status: null, q: "", page: 0 });
+  const [status, setStatus] = useUrlState<QuizStatus | "">("status", "", ["", "DRAFT", "REVIEWED", "OPEN", "RETIRED"]);
+  const [filters, setFilters] = useState({ q: "", page: 0 });
   const [search, setSearch] = useState("");
   const [data, setData] = useState<QuizPage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function SubjectQuizListPage() {
   useEffect(() => {
     if (!subject) return;
     let active = true;
-    getSubjectQuizzes(subject.id, { status: filters.status ?? undefined, q: filters.q, page: filters.page, size: PAGE_SIZE })
+    getSubjectQuizzes(subject.id, { status: status || undefined, q: filters.q, page: filters.page, size: PAGE_SIZE })
       .then((page) => {
         if (!active) return;
         setError(null);
@@ -62,7 +64,7 @@ export function SubjectQuizListPage() {
     return () => {
       active = false;
     };
-  }, [subject, filters, reloadKey]);
+  }, [subject, filters, status, reloadKey]);
 
   if (subjectsError) return <PageLoadError>{subjectsError}</PageLoadError>;
   if (subjects === null) return <PageLoading label="Đang tải môn học…" />;
@@ -78,7 +80,7 @@ export function SubjectQuizListPage() {
           <Select aria-label="Chọn môn" value={subject.id} data-testid="quiz-list-subject"
             onChange={(event) => {
               setData(null);
-              setFilters({ status: null, q: "", page: 0 });
+              setFilters({ q: "", page: 0 });
               setSearch("");
               router.replace(`/manager/quizzes?subjectId=${encodeURIComponent(event.target.value)}`);
             }}>
@@ -91,11 +93,11 @@ export function SubjectQuizListPage() {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div role="tablist" aria-label="Trạng thái quiz" className="flex gap-1">
           {TABS.map((tab) => (
-            <button key={tab.label} type="button" role="tab" aria-selected={filters.status === tab.key}
-              onClick={() => setFilters((current) => ({ ...current, status: tab.key, page: 0 }))}
+            <button key={tab.label} type="button" role="tab" aria-selected={(status || null) === tab.key}
+              onClick={() => { setStatus(tab.key ?? ""); setFilters((current) => ({ ...current, page: 0 })); }}
               data-testid={`quiz-list-tab-${tab.key ?? "ALL"}`}
               className={cx("rounded-lg px-3 py-1.5 text-[13px] font-semibold",
-                filters.status === tab.key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
+                (status || null) === tab.key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
               {tab.label}
             </button>
           ))}

@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useState } from "react";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
@@ -38,9 +40,11 @@ export function SubmissionDetailPage({
   assignmentId: string;
 }) {
   const context = useSubmissionContext(classId, assignmentId);
-  const [filter, setFilter] = useState("ALL");
-  const [late, setLate] = useState("");
-  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useUrlState<string>("status", "ALL", ["ALL", "PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "IN_PROGRESS", "NOT_SUBMITTED"]);
+  const [late, setLate] = useUrlState<string>("late", "", ["", "false", "true"]);
+  const [pageValue, setPageValue] = useUrlState<string>("page", "1", undefined, "replace");
+  const page = /^[1-9]\d{0,4}$/.test(pageValue) ? Number(pageValue) : 1;
+  const setPage = (next: number) => setPageValue(String(next));
   const [selected, setSelected] = useState<string[]>([]);
   const [action, setAction] = useState<"ai" | "finalize" | "publish" | null>(null);
   const load = useCallback(
@@ -57,9 +61,9 @@ export function SubmissionDetailPage({
   return (
     <main className="flex min-w-0 flex-col gap-6">
       <header className="flex flex-col gap-2.5">
-        <Link className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink" href={`/teaching/classes/${classId}`}>
+        <BackLink className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink" href={`/teaching/classes/${classId}`}>
           <Icon name="arrow_back" size={14} />Về lớp học
-        </Link>
+        </BackLink>
         <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] break-words text-ink [overflow-wrap:anywhere] sm:text-[32px]">
           {context.value ? `Bài nộp — ${context.value.title.trim() || "Bài tập chưa có tiêu đề"}` : "Bài nộp"}
         </h1>

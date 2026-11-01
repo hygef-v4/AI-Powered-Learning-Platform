@@ -53,7 +53,7 @@ export function CourseCard({ code, name, band, icon, extra, onOpen, label, testI
   const frame = "flex aspect-[4/5] flex-col overflow-hidden rounded-xl border border-line bg-surface text-left";
   return onOpen ? (
     <button type="button" onClick={onOpen} aria-label={label} data-testid={testId}
-      className={cx(frame, "group transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] focus-visible:-translate-y-0.5")}>
+      className={cx(frame, "group cursor-pointer transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] focus-visible:-translate-y-0.5")}>
       {body}
     </button>
   ) : <div className={cx(frame, "opacity-70")} data-testid={testId}>{body}</div>;

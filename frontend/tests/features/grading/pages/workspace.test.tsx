@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   push: vi.fn(),
   task: vi.fn(),
+  submissions: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
@@ -49,6 +50,9 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.detail.mockResolvedValue(detail);
   mocks.proposals.mockResolvedValue([]);
+  mocks.submissions.mockResolvedValue({ rows: [
+    { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },
+  ], total: 1, page: 1, size: 20 });
 });
 afterEach(() => {
   cleanup();
@@ -59,6 +63,40 @@ function openAi() {
   fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
 }
 describe("workspace save", () => {
+  it("names the current student and searches all pages before switching submissions", async () => {
+    mocks.submissions.mockResolvedValueOnce({ rows: [
+      { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },
+    ], total: 2 }).mockResolvedValueOnce({ rows: [
+      { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
+    ], total: 2 });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    expect(await screen.findByRole("heading", { level: 1, name: "Nguyễn An" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Chọn sinh viên")).toHaveTextContent("Nguyễn An");
+    fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "binh@school.test" } });
+    fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
+    expect(mocks.submissions).toHaveBeenCalledWith("c", "a", "ALL", 2);
+    expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next");
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("keeps unsaved work when the teacher cancels switching students", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mocks.submissions.mockResolvedValue({ rows: [
+      { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
+    ], total: 1 });
+    mocks.detail.mockResolvedValue({ ...detail, rubrics: [
+      { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
+    ] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
+    fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
+    fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
+    expect(confirm).toHaveBeenCalled();
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeChecked();
+    confirm.mockRestore();
+  });
   it("sends version and checklist, then moves to the next submission only after saving", async () => {
     mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" />);
@@ -214,15 +252,17 @@ describe("AI proposal comparison and draft application", () => {
     render(<GradingWorkspacePage evaluationId="e" />);
     expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
     openAi();
-    const dialog = screen.getByRole("dialog", { name: "Chấm bằng AI" });
+    const review = screen.getByRole("region", { name: "Chấm bằng AI" });
+    expect(screen.queryByRole("dialog", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     // Điểm lẻ 0.5 đã lưu của mục 1 không còn tính (chỉ checklist).
-    expect(dialog).toHaveTextContent(/Điểm đang chấm: 2\.00/);
-    expect(dialog).toHaveTextContent(/AI đề xuất: 3\.00/);
-    expect(dialog).not.toHaveTextContent(/Điều chỉnh/);
-    expect(dialog).toHaveTextContent(/Lệch \+1\.00/);
+    expect(review).toHaveTextContent(/Điểm đang chấm: 2\.00/);
+    expect(review).toHaveTextContent(/AI đề xuất: 3\.00/);
+    expect(review).not.toHaveTextContent(/Điều chỉnh/);
+    expect(review).toHaveTextContent(/Lệch \+1\.00/);
 
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
     expect(mocks.save).not.toHaveBeenCalled();
+    expect(screen.queryByRole("region", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
     // Tạm thời không nhận nhận xét của AI.
@@ -254,7 +294,7 @@ describe("AI proposal comparison and draft application", () => {
     // Đề xuất AI tải bằng yêu cầu riêng, có thể về sau phần chấm điểm: chờ có đề xuất rồi mới mở popup.
     expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
     openAi();
-    expect(screen.getByRole("dialog", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.00/);
+    expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.00/);
     expect(document.body.textContent).not.toContain("NaN");
   });
 

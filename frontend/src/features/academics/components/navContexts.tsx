@@ -4,6 +4,7 @@
 // đang ở trang của môn hay lớp đó. Đầu sidebar là ô chọn để chuyển sang môn, lớp khác mà vẫn ở đúng mục đang mở.
 
 import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
 import { useEffect, useState, type ReactNode } from "react";
 import { subjectNavEntries } from "@/features/identity/slots";
 import { FADE_LABEL, type NavContext, type NavItem, type NavLocation } from "@/shared/layout/navigation";
@@ -186,14 +187,14 @@ function NavHeader({ back, children }: { back: { href: string; label: string }; 
   return (
     <div className="mb-3 flex shrink-0 flex-col gap-2.5 border-b border-line pb-3.5">
       <div className="overflow-hidden">
-        <Link
+        <BackLink
           href={back.href}
           title={back.label}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink"
         >
           <Icon name="arrow_back" size={17} className="shrink-0" />
           <span className={FADE_LABEL}>{back.label}</span>
-        </Link>
+        </BackLink>
       </div>
       {children}
     </div>

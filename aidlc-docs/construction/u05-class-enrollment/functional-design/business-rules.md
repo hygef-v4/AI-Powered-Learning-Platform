@@ -16,11 +16,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-10 | Chỉ Chủ nhiệm môn của môn tạo lớp (UC 26) trên Class List; môn phải `ACTIVE` (hỏi U04); lớp bắt đầu ở `DRAFT`. | UC 26 |
 | BR-U05-11 | `code` lớp duy nhất trong môn, tối đa 30 ký tự, không đổi; `subjectId` không đổi. | Thiết kế |
 | BR-U05-12 | Teacher được gán phải ACTIVE và role TEACHER/SUBJECT_MANAGER; chỉ Chủ nhiệm môn của môn gán/đổi. OPEN được phép thiếu teacher. teacher_id hiện hành là căn cứ teaching scope; chưa gán thì không có educator nhận quyền từ phân công đó. Đổi teacher mất quyền ở request tiếp theo. | FR-003, UC 27 |
-| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `term`, mở, lưu trữ, mở lại lớp và bật/tắt phân bố điểm (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên. | FR-003, UC 29 |
+| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `term`, mở, lưu trữ, mở lại lớp (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên trong U05; quyền cài đặt phân bố theo bài–lớp thuộc U09. | FR-003, UC 29 |
 | BR-U05-14 | Chuyển DRAFT→OPEN, DRAFT→ARCHIVED, OPEN→ARCHIVED, ARCHIVED→OPEN. Create vẫn DRAFT. Mở/mở lại cần môn ACTIVE và kiểm enrollment conflict; teacher có thể null, nếu đã gán phải còn hợp lệ. Source-observed thay quy tắc bắt buộc teacher trước 27/10. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
 | BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. Khi U04 lưu trữ môn, U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn qua `ISubjectClasses.archiveClassesOfSubject` (BR-U04-04), ghi audit từng lớp. | UC 29, BR-U04-04 |
-| BR-U05-17 | `showGradeDistribution` mặc định tắt, chỉ Chủ nhiệm môn bật/tắt trong UC 29. U09 đọc cờ qua `IClassAccess.getClassRef` và chỉ trả phân bố ẩn danh trên Student Assignments khi đủ mẫu. | FR-024, UC 29, US-RPT-001 |
+| BR-U05-17 | Phân bố điểm không thuộc UC 29; U09 sở hữu cài đặt mặc định tắt theo bài–lớp, chỉ giảng viên được giao dạy lớp bật/tắt. Cột lịch sử `course_classes.show_grade_distribution` và field `showGradeDistribution` còn giữ dormant, không dùng làm quyền hay chuyển true cũ sang cài đặt mới. | FR-024, US-RPT-001 |
 
 ## 2. Ghi danh (Subject Manager, UC 28)
 
@@ -61,7 +61,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U05-50 | Chủ nhiệm môn thấy lớp của các môn mình quản lý (UC 24); giảng viên thấy lớp mình dạy (UC 22); sinh viên thấy lớp đã ghi danh (UC 20). Trang tối đa 100 dòng, tìm theo mã hoặc tên. | UC 20, 22, 24 |
 | BR-U05-51 | Truy cập lớp ngoài phạm vi trả "không tìm thấy" và ghi audit `ACCESS_DENIED`. | US-CAT-002 S3 |
-| BR-U05-52 | Audit: `CLASS_CREATED`, `CLASS_UPDATED`, `CLASS_STATUS_CHANGED`, `GRADE_DISTRIBUTION_CHANGED`, `CLASS_TEACHER_CHANGED` (trước/sau), `STUDENT_ENROLLED`, `STUDENT_REMOVED` (mỗi người một sự kiện). | FR-014, SEC-005 |
+| BR-U05-52 | Audit: `CLASS_CREATED`, `CLASS_UPDATED`, `CLASS_STATUS_CHANGED`, `CLASS_TEACHER_CHANGED` (trước/sau), `STUDENT_ENROLLED`, `STUDENT_REMOVED` (mỗi người một sự kiện). Cài đặt phân bố do U09 audit theo bài–lớp. | FR-014, SEC-005 |
 | BR-U05-53 | Dữ liệu sai (lớp, môn hoặc người không tồn tại, sai role) thì từ chối toàn bộ thao tác đó, báo cách sửa, không lộ dữ liệu người khác. | US-CAT-001 S2 |
 | BR-U05-54 | U01 hoặc U04 không trả lời thì từ chối (fail closed). | BR-U01-93 |
 | BR-U05-55 | Admin không có màn hay API lớp; Admin chỉ xem danh sách lớp của một môn qua Subject Detail của U04. | BR-U01-60 |

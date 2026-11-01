@@ -144,9 +144,6 @@ public class AcademicsService {
             return view(changed);
         });
     }
-    public ClassView gradeDistribution(Actor actor,UUID id,boolean enabled,long version) {
-        return mutate(actor,"GRADE_DISTRIBUTION_CHANGED",id,version,c -> c.setGradeDistribution(enabled,clock.instant()),Map.of("enabled",enabled));
-    }
     public ClassView changeStatus(Actor actor,UUID id,ClassStatus status,long version) {
         return command(actor,"CLASS_STATUS_CHANGED",id,() -> {
             if(status==null) throw ApiException.badRequest("INVALID_STATUS","Chọn trạng thái lớp");

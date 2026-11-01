@@ -6,6 +6,7 @@
 // ngăn nhau bằng một đường kẻ; bấm đầu module (mũi tên cuối hàng) để thu gọn / mở.
 
 import Link from "next/link";
+import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
@@ -68,11 +69,11 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
-        <Link href={back} title="Học liệu"
+        <BackLink href={back} title="Học liệu"
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
           <Icon name="arrow_back" size={17} className="shrink-0" />
           <span className={FADE_LABEL}>Học liệu</span>
-        </Link>
+        </BackLink>
       </div>
       <nav aria-label="Danh sách module" className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>}

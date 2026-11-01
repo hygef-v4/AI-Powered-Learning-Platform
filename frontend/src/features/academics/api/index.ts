@@ -21,7 +21,6 @@ export const academicsApi={
  info:(id:string,input:ClassInfoInput)=>write<CourseClassView>(`manager/classes/${enc(id)}`,"PATCH",input),
  teacher:(id:string,teacherId:string|null,version:number)=>write<CourseClassView>(`manager/classes/${enc(id)}/teacher`,"PUT",{teacherId,version}),
  status:(id:string,status:ClassStatus,version:number)=>write<CourseClassView>(`manager/classes/${enc(id)}/status`,"PUT",{status,version}),
- distribution:(id:string,enabled:boolean,version:number)=>write<CourseClassView>(`manager/classes/${enc(id)}/grade-distribution`,"PUT",{enabled,version}),
  enroll:async(id:string,accountId:string)=>{const response=await write<{result:EnrollmentResult}>(`manager/classes/${enc(id)}/enrollments`,"POST",{accountId});if(!["ENROLLED","RESTORED","ALREADY_ENROLLED"].includes(response.result))throw new Error(resultLabels[response.result]??"Không thể ghi danh sinh viên.");return response;},
  enrollmentStatus:(id:string,accountId:string,status:"ACTIVE"|"REMOVED")=>write<unknown>(`manager/classes/${enc(id)}/enrollments/${enc(accountId)}/status`,"PUT",{status}),
  batch:(id:string,text:string)=>write<EnrollmentRowResult[]>(`manager/classes/${enc(id)}/enrollments:batch`,"POST",{text}),

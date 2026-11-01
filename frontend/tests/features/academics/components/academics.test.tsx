@@ -224,13 +224,11 @@ describe("U05 reference UI", () => {
     await waitFor(() => expect(screen.queryByLabelText("Danh sách email")).not.toBeInTheDocument());
   });
 
-  it("enables grade distribution straight from the switch", async () => {
-    const onDistribution = vi.fn().mockResolvedValue(undefined);
+  it("does not offer the removed class-wide grade distribution setting to managers", () => {
     const action = vi.fn().mockResolvedValue(undefined);
-    render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onDistribution, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
-    fireEvent.click(screen.getByRole("switch"));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    await waitFor(() => expect(onDistribution).toHaveBeenCalledWith(true, 3));
+    render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByText("Phân bố điểm")).not.toBeInTheDocument();
   });
 
   it("tab Thông tin lớp của giảng viên giống trang lớp sinh viên: thẻ thông tin chỉ xem, không có ô số liệu, mô tả an toàn", () => {
@@ -284,4 +282,31 @@ describe("enrollment CSV preview", () => {
     expect(managerTeachingNav?.href).toBe("/teaching/classes");
     expect(studentNav?.href).toBe("/classes");
   });
+});
+
+it("restores class tabs through Back and keeps unrelated query parameters", async () => {
+  window.history.replaceState(null, "", "/teaching/classes/class-1?tab=students&keep=yes");
+  const view = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("tab", { name: "Chấm điểm" }));
+  expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("gradebook");
+  window.history.back();
+  await waitFor(() => expect(new URLSearchParams(window.location.search).get("tab")).toBe("students"));
+  view.rerender(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
+});
+
+it("keeps the manager class list status, search and page when returning", () => {
+  window.history.replaceState(null, "", "/manager/classes?subjectId=subject-1&classStatus=ARCHIVED&classQuery=SE&classPage=1");
+  const classes = Array.from({ length: 22 }, (_, i) => ({ ...course, id: String(i), code: `SE${i}`, status: "ARCHIVED" as const }));
+  const props = { classes, subjects: [subject], onOpen: vi.fn(), onCreate: vi.fn() };
+  const first = render(<ClassListPage {...props} />);
+  expect(screen.getByRole("tab", { name: "Lưu trữ" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("searchbox")).toHaveValue("SE");
+  expect(screen.getByTestId("class-open-20")).toBeInTheDocument();
+  expect(screen.queryByTestId("class-open-0")).not.toBeInTheDocument();
+  first.unmount();
+  render(<ClassListPage {...props} />);
+  expect(screen.getByTestId("class-open-20")).toBeInTheDocument();
 });

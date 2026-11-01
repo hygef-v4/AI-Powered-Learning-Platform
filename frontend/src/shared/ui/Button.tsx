@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "../navigation/BackLink";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
@@ -19,7 +20,7 @@ const SIZES: Record<Size, { box: string; icon: number }> = {
 };
 
 const BASE =
-  "inline-flex items-center justify-center rounded-lg border font-semibold whitespace-nowrap select-none " +
+  "inline-flex cursor-pointer items-center justify-center rounded-lg border font-semibold whitespace-nowrap select-none " +
   "transition-[background-color,border-color,color,transform,opacity] duration-200 active:scale-[.98] " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus " +
   "disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100";
@@ -45,17 +46,19 @@ export function Button({
 
 export function ButtonLink({
   href,
+  back = false,
   variant = "secondary",
   size = "md",
   icon,
   className,
   children,
-}: Common & { href: string; className?: string }) {
+}: Common & { href: string; className?: string; back?: boolean }) {
+  const NavigationLink = back ? BackLink : Link;
   return (
-    <Link href={href} className={cx(BASE, VARIANTS[variant], SIZES[size].box, className)}>
+    <NavigationLink href={href} className={cx(BASE, VARIANTS[variant], SIZES[size].box, className)}>
       {icon && <Icon name={icon} size={SIZES[size].icon} />}
       {children}
-    </Link>
+    </NavigationLink>
   );
 }
 
@@ -75,7 +78,7 @@ export function IconButton({
       title={label}
       style={{ width: size, height: size }}
       className={cx(
-        "inline-flex shrink-0 items-center justify-center rounded-lg text-muted transition-colors duration-200",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-200",
         "hover:bg-sunken hover:text-ink active:scale-95 disabled:cursor-not-allowed disabled:opacity-45",
         className,
       )}

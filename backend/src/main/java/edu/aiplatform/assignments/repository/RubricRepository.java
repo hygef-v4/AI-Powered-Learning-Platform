@@ -98,7 +98,12 @@ public class RubricRepository {
 
     private List<RubricCriterion> read(String value) {
         try {
-            return json.readValue(value, new TypeReference<List<RubricCriterion>>() { });
+            var stored = json.readTree(value);
+            // Historical authoring builds stored criteria inside an object with additional metadata.
+            var reader = json.readerFor(new TypeReference<List<RubricCriterion>>() { });
+            if (stored != null && stored.isObject() && stored.has("criteria"))
+                reader = reader.at("/criteria");
+            return reader.readValue(value);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Không đọc được JSON của rubric", e);
         }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, ButtonLink, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
@@ -30,7 +31,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [view, setView] = useState<WorkspaceView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [tab, setTab] = useState<"work" | "submission">("work");
+  const [tab, setTab] = useUrlState("tab", "work", ["work", "submission"]);
   const [editing, setEditing] = useState<SectionView | null>(null);
   const [assigning, setAssigning] = useState<SectionView | null>(null);
   const [releasing, setReleasing] = useState<SectionView | null>(null);
@@ -76,7 +77,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       }
       void reload();
     },
-    [reload],
+    [reload, setTab],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
 
@@ -134,7 +135,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3">
-        <ButtonLink href={me.teacher ? `/teaching/classes/${view.classId}` : `/classes/${view.classId}`} icon="arrow_back" size="sm">
+        <ButtonLink back href={me.teacher ? `/teaching/classes/${view.classId}` : `/classes/${view.classId}`} icon="arrow_back" size="sm">
           Thoát
         </ButtonLink>
         <div className="min-w-0">

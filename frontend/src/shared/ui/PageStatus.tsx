@@ -42,12 +42,12 @@ export function InkMark({ state, size = 160, className }: { state: "grinding" | 
 /** Chiếm đúng vùng nội dung còn thấy dưới thanh trên (trừ lề trên dưới của `main`) để logo nằm giữa màn hình. */
 const CENTER = "flex min-h-[calc(100dvh-3.5rem-6.5rem)] flex-1 flex-col items-center justify-center";
 
-/** Cả trang đang tải: chỉ có bút mài nghiên ở giữa, không chữ (trình đọc màn hình vẫn đọc `label`). */
+/** Chờ dữ liệu của một trang trong khung ứng dụng. */
 export function PageLoading({ label = "Đang tải…", className }: { label?: string; className?: string }) {
   return (
-    <div role="status" className={cx(CENTER, className)}>
-      <InkMark state="grinding" />
-      <span className="sr-only">{label}</span>
+    <div role="status" className={cx(CENTER, "gap-3 text-sm text-muted", className)}>
+      <span aria-hidden="true" className="size-6 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
+      <span>{label}</span>
     </div>
   );
 }

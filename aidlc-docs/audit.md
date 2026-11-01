@@ -7173,5 +7173,156 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **AI Response**: Committed the updated verification section and audit entries on local branch `fix/review-bugs-2026-11-01`. No push.
 
 **Context**: Documentation only; no code change.
+## UI remediation request
+
+**Timestamp**: 2026-11-01T08:25:00Z
+
+**User Input (complete raw)**:
+
+> giúp tôi tạo kế hoạch và tiến hành sửa tất cả lỗi ui hiện tại
+
+**Action**: Reuse the prior visual audit and four screenshots as scope. Record the plan in `inception/plans/2026-11-01-ui-remediation.md`; repair the observed UI defects in shared controls and affected pages. User authorized planning and execution in the same request. No data, API, or AI tasks submitted during UI verification.
+
+---
+
+## Dark-mode UI correction before commit
+
+**Timestamp**: 2026-11-01T01:36:34Z
+
+**User Input (complete raw text)**:
+
+> [Image #1] a khoan dark mode bị lỗi này
+
+**Action**: Paused the pending commit, added theme colors to native select option and optgroup, verified computed colors in Orca, reran frontend build/lint and full tests. Test suite passed 599/599 with four workers; default worker runs timed out on one subject-detail test that passed alone. Native OS popup was not captured by Orca screenshot.
+
+---
+
+## Development indicator and font review
+
+**Timestamp**: 2026-11-01T01:48:18Z
+
+**User Input (complete raw text)**:
+
+> [Image #1] sao lại có nút gì ở đây, với bạn tìm đc font chữ nào đẹp hơn ko
+
+**Action**: Identified the bottom-left overlay as Next.js development tools, disabled the on-screen indicator in `frontend/next.config.ts`, verified that its controls no longer appear in Orca, and ran a successful production build. Confirmed that the current Be Vietnam Pro font loads; researched Plus Jakarta Sans as a Vietnamese-capable alternative. The font was not changed because `PRODUCT.md` records Be Vietnam Pro as a user-confirmed choice and this request asks for an alternative to review.
+
+---
+
+## Plus Jakarta Sans trial
+
+**Timestamp**: 2026-11-01T01:57:16Z
+
+**User Input (complete raw text)**:
+
+> ok thử giúp tôi đổi font
+
+**Action**: Switched the frontend to self-hosted Plus Jakarta Sans variable WOFF2 files with Vietnamese, Latin and Latin Extended coverage in normal and italic styles; retained the OFL license, updated font tokens and preloads, removed unused Be Vietnam Pro assets, and recorded the product choice as a trial. Orca confirmed loaded font faces and no page-level horizontal overflow at 390/1280 px in light/dark themes. Production build passed; lint had zero errors and two existing unused-import warnings. Automated tests were not rerun for this static font/CSS change. No commit or push.
+
+---
+
+## Font trial commit request
+
+Course card cursor follow-up (2026-11-01), raw input: "[Image #1] để hover vào mấy cái div như này thì để cursor pointer đc ko". Added cursor-pointer to clickable CourseCard buttons shared by class/subject dashboards. Orca confirmed pointer on both visible class cards. No tests rerun for this single CSS utility change; no commit.
+
+Grading alignment follow-up (2026-11-01), raw input: "[Image #1] kéo rộng phần bài làm nếu chiều dài nó thấp hơn cái tiêu chí chấm điểm của nó, kéo rộng phần blank space". Added opt-in answer min-height matching for grading comment rails. Recalculates on rubric/content/font/viewport changes and removes imposed heights when the rail unmounts. Existing taller answers retain their natural height. Verified 49 focused tests and focused lint; Orca desktop measurements confirmed shorter answer sections now exceed corresponding rubric heights while long answers retain natural height.
+
+UI follow-up (2026-11-01), raw text: "[Image #1] nên hiện tên sinh viên ra luôn". Grading selector now displays the current student's name directly. Search and accessible selection label retained; 16 grading workspace tests passed.
+
+Follow-up request (2026-11-01), complete raw input: "Ý lad nới rộng cả phần assignmnet chung, để chữ nhìn rõ ràng hơn ấy, với lại thêm phần chuyển với search sinh viên lúc chấm bài, thêm cả tên sinh viên lại như lúc truớc". Expanded opt-in width to assignment authoring and grading, increased document body text, and restored actual student identity plus searchable navigation across all submission pages. The existing unsaved-grade guard is reused. Verification: 155 related tests, production build/typecheck and focused lint passed; inspected actual author and grading pages in Orca. No backend changes or commit.
+
+Follow-up scope (2026-11-01), complete raw input: "Giúp tôi chỉ sửa giao diện làm bài nới rộng ra với chuyển cái ai chấm bài ở trang grading thành màn hình phảng k phải popup thôi". Prior uncommitted changes were discarded. Implemented only opt-in student workspace width and inline AI grading review; preserved grade application/save and document behavior. Verification: 49 focused tests, production build/typecheck and focused ESLint passed. Orca measured student paper 1110 px at desktop 1440 px, no page overflow at mobile 390 px, and confirmed grading AI is an inline page section with no dialog. No paid provider calls, backend changes, commit or push.
+
+**User Input (complete raw text)**:
+
+> giúp tôi commit
+
+**Action**: Reviewed the pending font trial, Next.js development indicator fix, and narrow Impeccable `overused-font` exception for the user-approved trial. Prepared a single English-language commit without pushing.
+
+---
+
+## Assignment distribution visibility — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> bỏ phần bật tắt phân bố điểm này được ko, nếu bỏ thì b nghĩ phần này nên để cho giáo viên bật tắt ở từng bài assignment có đc k
+
+> giúp tôi lại doc aidlc với code
+
+**Decision and authorization**: Implement the proposed move in both current AI-DLC artifacts and application code: remove the manager's class setting; assigned teachers configure anonymous distribution independently for each GRADED assignment/class pair, default off. Preserve minimum 20 published usable scores and bucket suppression below five. Keep existing unrelated UI changes. Existing class-level enabled flags do not enable any new assignment setting. No commit or push requested.
+
+**Workflow**: Resumed existing brownfield AI-DLC; approved implementation scope supplies authorization to proceed with the concrete plan and routine verification. Backend, frontend and current documentation are separate parallel tasks under dispatching-parallel-agents. Security/resiliency scope retained; PBT disabled. Plan: construction/plans/code-generation-plan/2026-11-01-assignment-distribution-visibility.md.
+
+**Result**: Implemented assignment/class-specific visibility owned by U09 with assigned-teacher authorization, optimistic version checks and unchanged aggregate privacy guards. Removed the U05 manager mutation endpoint and UI; retained legacy class field dormant. Synchronized 24 current docs plus plan/state/result artifacts and grading OpenAPI. Fresh verification: 174 distinct focused backend tests passed (including real PostgreSQL concurrency/migration and architecture); 615 frontend tests passed; expanded settings suite 13/13; production build/typecheck passed; lint zero errors/two existing warnings. Local backend restarted with the additive migration. Orca verified default off, immediate save on/off, persistence after reload, and narrow-screen fit; left the preference off/version 2. No assignment content or score changes, production deployment, commit or push. Complete backend suite and broad all-role browser acceptance not run. Details: construction/build-and-test/2026-11-01-assignment-distribution-visibility-results.md.
+
+## Gradebook and toolbar bug fixes — 2026-11-01
+
+**User Input (complete raw text; four images attached)**:
+
+> [Image #1] [Image #2] sao có lỗi http 500, giúp tôi fix [Image #3]  với làm có thể hover khi di chuột vào các icon công cụ ở phần bài tập này[Image #4] sửa lỗi ui này nữa
+
+**Investigation**: Reproduced GET gradebook for the pictured class returning 500. Backend Jackson exception in RubricRepository.read expected an array but encountered an object. Read-only PostgreSQL inspection found six envelope-shaped rubric rows and 22 array-shaped rows; envelopes retain criteria and metadata from a historical implementation. No rows changed. UI root causes: identical hover/toolbar backgrounds and missing enabled pointer styling; same-z-index sticky header and toolbar let the later toolbar obscure the header menu.
+
+**Scope**: Add narrow read compatibility and a repository regression without migration or data rewriting; fix shared editor hover/focus feedback and header stacking. Existing pending work preserved. Plan: construction/plans/code-generation-plan/2026-11-01-gradebook-toolbar-fixes.md. Security/resiliency scope retained; PBT disabled.
+
+**Result**: Fixed recognized historical rubric envelope reading without database rewriting, preserving decimal points and IDs. Added actual PostgreSQL regression; 175 assignment/grading tests passed with zero failures/errors/skips after reproducing the read failure. Frontend 77 focused tests, typecheck, targeted lint and production build passed. Shared toolbar hover/focus/pointer feedback corrected; header z-index 30 puts all four menu items above toolbar z-index 20. Restarted existing local backend; health UP; identical gradebook request now 200. Orca confirmed gradebook student/assignment data, class progress 0/1, no HTTP 500, hover styling and visible menu. Full project suites/broad acceptance not rerun. No data changes, migration, deployment, commit or push. Details: construction/build-and-test/2026-11-01-gradebook-toolbar-fixes-results.md.
+
+## Commit authorization — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> giúp tôi commit rõ ràng
+
+**Action**: Reviewed all pending changes from the scoped assignment/grading UI requests, assignment-class distribution settings, rubric read compatibility and toolbar fixes, including their tests and synchronized AI-DLC artifacts. User authorizes a descriptive English-language commit containing this work; no push. Latest source verification remains the 175-test backend run, 77-test focused frontend run, production build/typecheck and browser checks above; the preceding 615-test frontend run covers the earlier feature set. Fresh diff whitespace validation passed. Full project tests were not rerun solely for committing.
+
+## Slate Blue palette trial — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> thử chuyeerh thành slate blue xem
+
+**Action**: Implemented the proposed trial through shared color tokens: #F3F5F7 light canvas, white cards, #E9EEF4 sidebar, #466A96 primary and corresponding slate/pale-blue dark palette. Muted text was darkened after contrast checks; 14 representative text/background pairs now meet at least 4.67:1. Removed oversized shell watermark, softened shadows, and moved wordmark badge/login seal to semantic theme colors while retaining the small brush mark colors. PRODUCT.md records the user's trial decision. No layout/function/backend/data/dependency changes.
+
+**Verification**: Production build/typecheck passed; 9 shared layout/UI tests passed; targeted ESLint and diff whitespace checks passed. Orca screenshots inspected in light/dark, computed tokens confirmed, no page overflow at 390 px. Left light theme selected for review. Broader all-page/role visual acceptance and full suites not rerun. No commit or push.
+
+## Neutral white palette follow-up — 2026-11-01
+
+**User Input (complete raw text; reference image attached)**:
+
+> [Image #1] hiện tại màu vẫn trông hơi lạnh và mỏi mắt, tôi muốn kiểu nền trắng như này
+
+**Action**: Replaced the cool-tinted light canvas/sidebar/topbar with #FAFAFA and white surfaces, neutral gray text/borders/sunken surfaces and neutral shadows. Blue remains a control/selection accent. Dark theme and behavior unchanged. Updated PRODUCT.md to the latest reference. Fourteen contrast checks passed (minimum 4.75:1); Orca measured actual white sidebar and #FAFAFA canvas, no overflow, and screenshot inspected. No new tests for this CSS-only refinement, backend changes, commit or push.
+
+## Back navigation and page selections — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> khi bấm nút back tôi muốn nó quay lại đúng trang trước mà trạng thái đang chọn lúc trước, kiểu đang ở cùng 1 trang nhưng có nhiều tab thì phải quay về đúng tab trc đó chọn
+
+**Action**: Traced hardcoded Back destinations, local-only tab state and replace-only class tab history. Added shared BackLink and URL state hook, updated page tabs/selections across academics, assignments/grading, quizzes, AI and group workspace while keeping modal workflow state local. Maintained link modifiers, fallback href and grading unsaved-work cancellation. Browser test caught Next's native-history bypass when passing its internal state; corrected to null user state so Next copies routing metadata and updates URL hooks. No custom history stack, backend or persisted data changes.
+
+**Verification**: Full frontend 641 tests/96 files passed; production build/typecheck passed; lint zero errors/two existing warnings; diff whitespace clean. Orca verified gradebook student/filter state survived opening submissions and Back, plus visible-tab restoration on same-page Back/Forward. Backend tests and broad all-role browser acceptance not rerun. No commit/push. Results: construction/build-and-test/2026-11-01-back-navigation-state-results.md.
+
+## Navigation commit authorization — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> giúp tôi commit
+
+**Action**: Reviewed the pending navigation-only source, tests and AI-DLC artifacts against HEAD 387f416f. User authorizes committing the verified Back/Forward and URL selection restoration work with an English description; no push. Latest source matches the preceding 641-test frontend/build/typecheck/lint/browser verification. Fresh whitespace validation passed. Tests were not repeated solely to commit unchanged source.
+
+---
+
+## Staging merge and PR request — 2026-11-01
+
+**Timestamp**: 2026-11-01T03:30:00Z
+
+**User Input (complete raw)**:
+
+> Gộp, push, mở PR
+
+**AI Response**: Merged `origin/staging` (`a0e1ea4f`) into `fix/review-bugs-2026-11-01`, kept both sides of the appended audit log, dropped one duplicate `AssignmentStatus` import in `GradebookService`, pushed the branch to its own remote branch and opened a pull request into `staging`. A trial of the same merge passed `mvn clean verify` (1,644 tests, 0 skipped), the required-suite check, and frontend lint, typecheck, vitest 647/647 and build.
+
+**Context**: Integration only; no new behavior change.
 
 ---

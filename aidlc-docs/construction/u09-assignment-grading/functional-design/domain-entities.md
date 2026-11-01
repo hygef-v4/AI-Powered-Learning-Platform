@@ -18,11 +18,14 @@ Thiết kế độc lập công nghệ.
 | `Evaluation` | Aggregate root | `evaluations` |
 | `EvaluationHistory` | Phần tử chỉ thêm | `evaluations.history` |
 | `GradingProposal` | Đề xuất từ AI hoặc MCP, có version | `grading_proposals` |
+| `GradeDistributionVisibility` | Cài đặt có version theo cặp `assignmentId`, `classId`; `enabled=false` mặc định | `grade_distribution_visibility` (U09/grading) |
 | `GradebookView`, `GradeDistributionView` | Kết quả tính khi đọc | Không lưu |
 
 U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Quiz và kết quả luyện tập (U11), phản hồi Practice (U08), dữ liệu hoạt động (U08), thông báo (U14).
 
 ## 2. `Evaluation`
+
+`GradeDistributionVisibility` dùng khóa duy nhất `(assignmentId,classId)`, `enabled` và `version`. Migration grading `V20261101_0900__assignment_grade_distribution_visibility.sql` tạo bảng rỗng, không chuyển cờ lớp cũ. Không có bản ghi nghĩa là tắt. GET/PUT trả `{enabled,version,canEdit}`; PUT nhận `{enabled,version}`. Quyền `canEdit` dựa phân công dạy hiện tại và trạng thái lớp/bài, độc lập quyền sửa nội dung bài; bài SUBJECT mỗi lớp một bản ghi.
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -101,7 +104,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `IAuthorization` | U01 | Kiểm R3/R4, R5 |
 | `IAudit` | U02 | Audit |
 | `IEventPublisher` | U03 | Sự kiện `grade.published` |
-| `IClassAccess` | U05 | Sinh viên đang ghi danh, cờ `showGradeDistribution` |
+| `IClassAccess` | U05 | Sinh viên đang ghi danh, giảng viên được phân công, trạng thái và phạm vi lớp; không đọc cột phân bố lịch sử |
 | `IAiTask` | U06 | Task đề xuất chấm |
 | `IAssignmentQuery`, `IRubric`, `IDocumentModel` | U07 | Bài, rubric đã khóa, tính điểm, chữ và XML rút gọn cho AI |
 | `ISubmissionQuery`, `IActivityQuery` | U08 | Bài nộp, tiến độ, dữ liệu hoạt động |
@@ -115,6 +118,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `POST`, `GET /api/v1/evaluations/{id}/ai-proposals`; `POST /api/v1/evaluations:ai-proposals` | 43 |
 | `POST /api/v1/evaluations:finalize`, `POST /api/v1/evaluations:publish` | 43, 44 |
 | `GET /api/v1/classes/{classId}/gradebook`, `GET .../gradebook/export` | 45 |
+| `GET`, `PUT /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` | 34, 35, 45 (cài đặt U09 trong ngữ cảnh bài) |
 | `GET /api/v1/classes/{classId}/submission-progress`; `GET /api/v1/classes/{classId}/grade-distribution?assignmentId=` | 42, 45 (tab Thông tin lớp) |
 | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | 45 (popup Student Detail) |
 | `GET /api/v1/me/grades`, `GET /api/v1/me/grades/attempts/{attemptId}`, `GET /api/v1/me/grade-distributions` | 37, 40 (U08) |

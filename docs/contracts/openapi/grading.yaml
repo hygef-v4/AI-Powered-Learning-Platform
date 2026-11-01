@@ -237,6 +237,81 @@ paths:
         '404': *id005
         '409': *id006
         '503': *id007
+  /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility:
+    parameters:
+    - name: classId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: assignmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: getGradeDistributionVisibility
+      tags: [U09]
+      description: >-
+        Assigned teacher of this class only, including an assigned SubjectManager.
+        Content authoring readOnly does not restrict this separate permission.
+        GRADED assignments only, never Quiz/Practice. SUBJECT assignments have independent
+        settings per class; unpublished SUBJECT DRAFT/REVIEWED returns 404.
+        Missing setting defaults off. Archived class or retired assignment returns canEdit=false.
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Current setting for this assignment and class
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeDistributionVisibility'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '503': *id007
+    put:
+      operationId: updateGradeDistributionVisibility
+      tags: [U09]
+      description: >-
+        Assigned teacher only. Stores enabled for this assignment-class pair with optimistic
+        version checking; stale version, archived class or retired assignment returns 409.
+        Enabling records intent even when the minimum privacy sample is not yet met.
+        Old class flags are ignored and never migrated to enabled settings.
+      security:
+      - session: []
+        csrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled, version]
+              properties:
+                enabled:
+                  type: boolean
+                version:
+                  type: integer
+                  format: int64
+                  minimum: 0
+      responses:
+        '200':
+          description: Saved setting and new version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeDistributionVisibility'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
   /api/v1/classes/{classId}/gradebook/export:
     get:
       operationId: exportGradebook
@@ -657,7 +732,12 @@ paths:
       operationId: getMyGradeDistribution
       tags:
       - U09
-      description: 'Student: active enrollment; own PUBLISHED results only.'
+      description: >-
+        Student with active enrollment only. Anonymous histogram for a GRADED assignment
+        only when this assignment-class setting is enabled (default false) and at least
+        20 actively enrolled learners have usable published scores. Buckets below 5 are
+        suppressed. No learner identities or individual scores are returned. Quiz/Practice
+        are excluded; SUBJECT assignments use independent settings and samples per class.
       parameters:
       - name: classId
         in: query
@@ -695,6 +775,19 @@ components:
       in: header
       name: X-XSRF-TOKEN
   schemas:
+    GradeDistributionVisibility:
+      type: object
+      required: [enabled, version, canEdit]
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        canEdit:
+          type: boolean
     Problem:
       type: object
       properties:

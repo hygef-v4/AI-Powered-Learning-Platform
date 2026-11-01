@@ -1,7 +1,10 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SubjectClassesTab } from "@/features/subjects/components/SubjectClassesTab";
 import type { SubjectClassSummary } from "@/features/subjects/model/types";
+
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
+afterEach(() => window.history.replaceState(null, "", "/"));
 
 const items: SubjectClassSummary[] = [
   { classId: "a", code: "C-A", name: "Lớp nháp", term: "2026-1", status: "DRAFT", teacherName: null, activeStudentCount: 100 },
@@ -41,4 +44,18 @@ describe("SubjectClassesTable/Tab", () => {
     fireEvent.click(screen.getByTestId("subjects-classes-filter-DRAFT"));
     expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
   });
+});
+
+it("restores the subject class status and search independently of the subject tab", () => {
+  window.history.replaceState(null, "", "/subjects/s?tab=classes&subjectClassStatus=ARCHIVED&subjectClassQuery=C-C");
+  const first = render(<SubjectClassesTab items={items} />);
+  expect(screen.getByRole("tab", { name: "Lưu trữ" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("searchbox")).toHaveValue("C-C");
+  expect(screen.getByText("Lớp lưu trữ")).toBeInTheDocument();
+  expect(screen.queryByText("Lớp mở")).not.toBeInTheDocument();
+  first.unmount();
+  render(<SubjectClassesTab items={items} />);
+  expect(screen.getByText("Lớp lưu trữ")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("tab", { name: "Đang mở" }));
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("classes");
 });

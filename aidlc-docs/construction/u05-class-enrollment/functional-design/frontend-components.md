@@ -43,7 +43,6 @@ app/manager/classes/[id]/       ManagedClassPage     #29 Class Detail
   ReopenRejectedDialog                               popup Mở lại bị từ chối
   ClassInfoForm                                      tab Thông tin: sửa học kỳ, tên, mô tả (UC 29)
   TeacherCard, AssignTeacherDialog                   thẻ Giảng viên, popup Phân công (UC 27)
-  GradeDistributionToggle                            thẻ Quyền xem (UC 29)
   StudentsTabManaged                                 tab Sinh viên (UC 28)
     AddStudentsPanel                                 Thêm từng người / Thêm theo danh sách, kết quả từng dòng
     EnrollmentTable                                  Đang học / Đã gỡ; Gỡ, Thêm lại
@@ -73,7 +72,6 @@ features/academics/slots.ts                          StudentClassSection, Teache
 | `ManagedClassPage` | `GET /api/v1/manager/classes/{id}` | Nút quay lại; "mã môn · mã lớp" kèm nhãn trạng thái; đường dẫn "Lớp của môn › …"; nút Phân công giảng viên và Mở lớp (Nháp), Lưu trữ lớp (Đang mở) hoặc Mở lại lớp (Lưu trữ); tab Thông tin, Sinh viên (kèm số) |
 | `ClassInfoForm` | `PATCH /api/v1/manager/classes/{id}` | Mã lớp (chỉ đọc), Học kỳ*, Tên lớp*, Mô tả (tùy chọn); Sinh viên "n đang học · n đã gỡ"; Ngày tạo; Hủy, Lưu thay đổi; `409` báo tải lại |
 | `TeacherCard`, `AssignTeacherDialog` | `GET /api/v1/manager/teacher-candidates`, `PUT .../teacher` | Thẻ "Giảng viên": avatar, tên, email, nút Đổi giảng viên. Popup "Phân công giảng viên": ô "Tìm theo tên hoặc email"; danh sách chọn một (avatar, tên, email, vai trò; người đang dạy ghi "hiện tại"); "Chỉ hiện người có vai trò Giảng viên hoặc Chủ nhiệm môn đang hoạt động."; Hủy, Phân công |
-| `GradeDistributionToggle` | `PUT .../grade-distribution` | Thẻ "Quyền xem": công tắc "Cho sinh viên xem phân bố điểm", ghi chú "Sinh viên thấy biểu đồ phân bố điểm của bài đã công bố, không thấy điểm người khác." |
 | `ClassStateActions`, `ReopenRejectedDialog` | `PUT .../status` | Mở, lưu trữ, mở lại có xác nhận; `409` báo tải lại. Mở lại bị từ chối: popup "Không mở lại được lớp" (mã lớp · học kỳ), "Một số người trong lớp không còn hoạt động. Hãy đổi giảng viên hoặc gỡ sinh viên bị vô hiệu hóa rồi thử lại.", bảng Người, Vai trò trong lớp, Lý do; Đóng |
 | `AddStudentsPanel` | `GET .../student-candidates?q=`, `POST .../enrollments:batch` | Thẻ "Thêm sinh viên", hai cách: Thêm từng người (tìm theo tên hoặc email, debounce 300 ms) và Thêm theo danh sách (dán email, mỗi dòng một, tối đa 200 dòng); bảng kết quả từng dòng Email, Kết quả (Đã thêm, Đã có trong lớp, Tài khoản vô hiệu hóa, Không phải sinh viên…); nút Thêm vào lớp |
 | `EnrollmentTable`, `RemoveStudentDialog` | `PUT .../enrollments/{accountId}/status` | Ô tìm tên hoặc email; tab Đang học, Đã gỡ (kèm số); cột Sinh viên (avatar, tên, email), Trạng thái, Ngày vào lớp, nút Gỡ hoặc Thêm lại; phân trang. Popup "Gỡ sinh viên khỏi lớp?": "X sẽ không còn thấy lớp. Bài đã nộp và điểm vẫn được giữ; bạn có thể Thêm lại sau."; Hủy, Gỡ khỏi lớp |

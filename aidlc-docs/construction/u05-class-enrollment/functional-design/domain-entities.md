@@ -32,7 +32,7 @@ U05 không sở hữu: tài khoản và role (U01), môn và Chủ nhiệm môn 
 | `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
 | `teacherId` | UUID | FK `accounts`; `TEACHER` hoặc `SUBJECT_MANAGER`; nullable, kể cả khi OPEN; nếu có phải ACTIVE/đúng role |
-| `showGradeDistribution` | bool | Mặc định `false` |
+| `showGradeDistribution` (cột lịch sử `course_classes.show_grade_distribution`) | bool | Giữ trong model/DTO/ClassRef để tương thích; dormant, không dùng quyết định phân bố của U09 |
 | `createdAt`, `updatedAt`, `version` | | Khóa lạc quan |
 
 ```mermaid
@@ -77,7 +77,7 @@ stateDiagram-v2
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
 | `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
 
-`ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution`. `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này.
+`ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution` (dormant). `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này. U09 kiểm giảng viên được phân công và ghi danh qua U05, không đọc cột phân bố lịch sử.
 
 ### Contract U05 cung cấp (unit khác cài, phía frontend)
 
@@ -110,7 +110,7 @@ stateDiagram-v2
 | `GET /api/v1/manager/classes/{id}` | 25 |
 | `PUT /api/v1/manager/classes/{id}/teacher`, `GET /api/v1/manager/teacher-candidates` | 26, 27 |
 | `GET .../{id}/student-candidates`, `POST .../{id}/enrollments`, `POST .../{id}/enrollments:batch`, `PUT .../{id}/enrollments/{accountId}/status` | 28 |
-| `PATCH /api/v1/manager/classes/{id}`, `PUT .../{id}/grade-distribution`, `PUT .../{id}/status` | 29 |
+| `PATCH /api/v1/manager/classes/{id}`, `PUT .../{id}/status` | 29 |
 
 ## Source behavior delta — 2026-10-30
 

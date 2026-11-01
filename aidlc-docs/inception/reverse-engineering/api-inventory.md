@@ -1,6 +1,6 @@
 # API inventory — source annotations
 
-Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller-level RequestMapping plus method-level mappings below are exact source annotations; resolve their composition before client use. Non-controller MCP tool schemas are registered by IMcpToolProvider. Four existing OpenAPI specs are partial coverage, not a platform-wide contract.
+Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed, with assignment-class distribution contract delta 2026-11-01. Controller-level RequestMapping plus method-level mappings below compose the public routes. The old manager class distribution endpoint is removed; U09 GET/PUT visibility uses `{enabled,version,canEdit}` responses and `{enabled,version}` PUT requests. Non-controller MCP tool schemas are registered by IMcpToolProvider. Four existing OpenAPI specs are partial coverage, not a platform-wide contract.
 
 ## [academics\controller\AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
@@ -22,7 +22,6 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @PostMapping("/manager/classes")
 @PatchMapping("/manager/classes/{id}")
 @PutMapping("/manager/classes/{id}/teacher")
-@PutMapping("/manager/classes/{id}/grade-distribution")
 @PutMapping("/manager/classes/{id}/status")
 @PostMapping("/manager/classes/{id}/enrollments")
 @PostMapping("/manager/classes/{id}/enrollments:batch")
@@ -239,6 +238,14 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/gradebook/export")
 @GetMapping("/grade-distribution")
 @GetMapping("/students/{accountId}/grades")
+```
+
+## [grading\controller\GradeDistributionVisibilityController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradeDistributionVisibilityController.java)
+
+```java
+@RequestMapping("/api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility")
+@GetMapping
+@PutMapping
 ```
 
 ## [grading\controller\GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradingProposalController.java)

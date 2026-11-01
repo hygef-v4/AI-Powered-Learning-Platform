@@ -101,7 +101,7 @@ export function Switch({ checked, onChange, label, ariaLabel, disabled }: Switch
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cx(
-          "relative inline-block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 disabled:opacity-45",
+          "relative inline-block h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-45",
           checked ? "bg-primary" : "bg-line-strong",
         )}
       >
@@ -183,7 +183,7 @@ export function Segmented<T extends string>({ value, onChange, options, ariaLabe
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cx(
-              "flex-1 rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-[background-color,color,box-shadow] duration-200",
+              "flex-1 cursor-pointer rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-[background-color,color,box-shadow] duration-200",
               "disabled:cursor-not-allowed disabled:opacity-45",
               on ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink",
             )}

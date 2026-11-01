@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
@@ -10,7 +10,9 @@ import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/a
 import { ScheduleForm } from "@/features/assignments/components/ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "@/features/assignments/model/types";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams(window.location.search) }));
+
+afterEach(() => window.history.replaceState(null, "", "/"));
 
 const reviewed = {
   id: "a1", status: "REVIEWED", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: null,
@@ -243,4 +245,28 @@ describe("mergeSaved", () => {
     const saved: DocumentModel = { blocks: [{ id: "i1", origin: "TEACHER", type: "IMAGE", content: { hasFile: true, alt: "" } }] };
     expect(mergeSaved(local, saved).blocks[0]!.content).toEqual({ fileRef: undefined, hasFile: true, alt: "" });
   });
+});
+
+it("restores assignment list filters and page from the URL after returning", () => {
+  window.history.replaceState(null, "", "/teaching/classes/c?tab=evals&assignmentState=draft&assignmentKind=GROUP&assignmentQuery=Draft&assignmentPage=1");
+  const items = Array.from({ length: 12 }, (_, i) => ({ id: String(i), title: `Draft ${i}`, status: "DRAFT", scope: "CLASS", submissionMode: "GROUP", gradingMode: "GRADED", closesAt: null }));
+  const page = { data: { items }, error: null, loading: false, reload: vi.fn() } as never;
+  const first = render(<AssignmentListCard page={page} />);
+  expect(screen.getByRole("tab", { name: /Nháp/ })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("searchbox")).toHaveValue("Draft");
+  expect(screen.getByTestId("assignment-row-10")).toBeInTheDocument();
+  expect(screen.queryByTestId("assignment-row-0")).not.toBeInTheDocument();
+  first.unmount();
+  render(<AssignmentListCard page={page} />);
+  expect(screen.getByTestId("assignment-row-10")).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Draft 0" } });
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("evals");
+  expect(new URLSearchParams(window.location.search).get("assignmentPage")).toBe("0");
+});
+
+it("uses the first assignment page for invalid URL page numbers", () => {
+  window.history.replaceState(null, "", "/?assignmentPage=-1");
+  const page = { data: { items: [{ id: "a", title: "Open", status: "OPEN", scope: "CLASS", submissionMode: "GROUP", gradingMode: "GRADED", closesAt: null }] }, error: null, loading: false, reload: vi.fn() } as never;
+  render(<AssignmentListCard page={page} />);
+  expect(screen.getByTestId("assignment-row-a")).toBeInTheDocument();
 });

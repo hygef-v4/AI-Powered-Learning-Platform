@@ -42,7 +42,7 @@ class GradebookServiceTest {
         when(repo.findForClass(cid)).thenReturn(List.of(mine, other));
         var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
                 assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
-                mock(org.springframework.beans.factory.ObjectProvider.class));
+                mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
         assertThat(service.myGrades(actor, cid)).isEmpty();
         mine.score = BigDecimal.ONE;
         mine.state = EvaluationStatus.FINALIZED;
@@ -106,7 +106,7 @@ class GradebookServiceTest {
         when(repo.findByAttemptId(mine.attemptId)).thenReturn(Optional.of(mine));
         var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
                 assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
-                mock(org.springframework.beans.factory.ObjectProvider.class));
+                mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
 
         var view = service.forAttempt(actor, mine.attemptId);
         assertThat(view.score()).isEqualByComparingTo("1.25");
@@ -179,7 +179,8 @@ class GradebookServiceTest {
                 .thenReturn(List.of(new edu.aiplatform.grading.contract.GroupSubmissionStatus(doc, UUID.randomUUID(),
                         "Group", true, submittedAt, true)));
         var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(), groups);
+                assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(), groups,
+                mock(GradeDistributionVisibilityRepository.class));
         var cell = service.list(new Actor(UUID.randomUUID(), Role.TEACHER), cid, null, 1, 20).rows().get(0).grades()
                 .get(0);
         assertThat(cell.late()).isTrue();

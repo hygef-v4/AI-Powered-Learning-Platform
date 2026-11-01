@@ -67,6 +67,8 @@ type Props = {
   emptyLeafLabel?: string;
   /** Opt-in answer affordances for the individual assignment workspace. */
   answerGuidance?: boolean;
+  fullWidth?: boolean;
+  matchCommentHeight?: boolean;
 };
 
 type StyleValue = "P" | "UL" | "OL" | HeadingStyle;
@@ -285,8 +287,8 @@ export function ToolbarButton({ icon, active, className, children, ...rest }: Bu
 }) {
   return (
     <button type="button" aria-pressed={active} onMouseDown={(event) => event.preventDefault()}
-      className={cx("inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-[13px] font-medium whitespace-nowrap text-body hover:bg-sunken disabled:opacity-35 disabled:hover:bg-transparent",
-        active && "bg-primary-soft text-ink hover:bg-primary-soft", className)}
+      className={cx("inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-[13px] font-medium whitespace-nowrap text-body transition-colors enabled:cursor-pointer enabled:hover:bg-line-strong enabled:focus-visible:bg-line-strong disabled:cursor-default disabled:opacity-35",
+        active && "bg-primary-soft text-ink", className)}
       {...rest}>
       {icon && <Icon name={icon} size={18} />}
       {children}
@@ -432,7 +434,7 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, toolbarExtra, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false,
+  header, toolbarExtra, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -660,6 +662,7 @@ export function DocumentEditor({
         title={muted && !readOnly ? "Đề của giảng viên, không sửa được" : undefined}
         onFocusCapture={() => focusBlock(block.id)} onMouseDownCapture={() => focusBlock(block.id)}
         className={cx("group/block relative -mx-1 rounded px-1 py-0.5 outline-none",
+          fullWidth && (block.type === "PARAGRAPH" || block.type === "LIST") && "[&_.text-sm]:text-base [&_.text-sm]:leading-7",
           muted && "opacity-70", muted && !readOnly && "cursor-not-allowed",
           blockIssues.length > 0 && "shadow-[inset_3px_0_0_var(--color-danger)]")}>
         {removeLabel && <CornerDelete label={removeLabel} onClick={() => remove(block.id)} />}
@@ -812,7 +815,7 @@ export function DocumentEditor({
                       if (!target || !event.target.value) return;
                       replace(target.id, convertBlock(target, event.target.value as StyleValue), { id: target.id, at: "end" });
                     }}
-                    className="h-7 w-36 rounded-md bg-transparent px-1.5 text-[13px] text-ink hover:bg-sunken disabled:opacity-40">
+                    className="h-7 w-36 rounded-md bg-transparent px-1.5 text-[13px] text-ink transition-colors enabled:cursor-pointer enabled:hover:bg-line-strong enabled:focus-visible:bg-line-strong disabled:cursor-default disabled:opacity-40">
                     {style === "" && <option value="">Kiểu chữ</option>}
                     {currentStyle !== "" && !AUTHOR_STYLES.includes(currentStyle) && <option value={currentStyle}>{STYLE_LABELS[currentStyle]}</option>}
                     {AUTHOR_STYLES.map((value) => <option key={value} value={value}>{STYLE_LABELS[value]}</option>)}
@@ -855,7 +858,7 @@ export function DocumentEditor({
               </ToolPopover>
               {uploadImage && (
                 <label title="Chèn ảnh" aria-label="Chèn ảnh" onMouseDown={(event) => event.preventDefault()}
-                  className={cx("inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-body hover:bg-sunken", insertAllowed ? "cursor-pointer" : "pointer-events-none opacity-35")}>
+                  className={cx("inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-body transition-colors", insertAllowed ? "cursor-pointer hover:bg-line-strong focus-within:bg-line-strong has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus" : "pointer-events-none opacity-35")}>
                   <Glyph name="image" />
                   <input type="file" accept={IMAGE_TYPES} className="sr-only" data-testid="add-IMAGE" disabled={!insertAllowed}
                     onChange={(event) => { const file = event.target.files?.[0]; if (file) insertImage(file); event.target.value = ""; }} />
@@ -871,9 +874,9 @@ export function DocumentEditor({
         </div>
       )}
 
-      <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-start justify-center gap-5" : "mx-auto w-full max-w-[816px]"}>
+      <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
         <div ref={paper} data-testid="document-paper"
-          className="min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:px-14 sm:pt-12">
+          className={cx("min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:pt-12", fullWidth ? "sm:px-8" : "sm:px-14")}>
           {/* Khung bọc nội dung (không có min-height) để cột ghi chú biết khi nào block đổi chỗ. */}
           <div ref={content}>
             {header}
@@ -888,7 +891,7 @@ export function DocumentEditor({
             <button type="button" aria-label="Viết tiếp ở cuối tài liệu" onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
           )}
         </div>
-        {rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} />}
+        {rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />}
       </div>
 
       {editing && editing.type === "DIAGRAM" && (

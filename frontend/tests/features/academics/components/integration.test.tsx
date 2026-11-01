@@ -1,5 +1,5 @@
 import {render,screen,fireEvent} from "@testing-library/react";
-import {it,expect} from "vitest";
+import {it,expect,afterEach} from "vitest";
 import {ReadOnlyClassPage} from "@/features/academics/pages/ReadOnlyClassPage";
 import {classCapability} from "@/features/academics/api";
 import {vi} from "vitest";
@@ -7,6 +7,8 @@ import {teacherClassTabs,classCardSections} from "@/features/academics/slots";
 import {ClassDashboardPage} from "@/features/academics/pages/ClassDashboardPage";
 import {ManagerDashboardPage,MySubjectPage} from "@/features/academics/pages/ManagerDashboardPage";
 import type {CourseClassView} from "@/features/academics/model/types";
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
+afterEach(() => window.history.replaceState(null, "", "/"));
 const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",term:"1",status:"OPEN",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
 it("hosts student card extension and lists managed subjects without stat extensions",()=>{
  classCardSections.register({key:"test-card",order:1,component:()=> <p>Card extension</p>});
@@ -26,4 +28,15 @@ it("accepts empty authorized classes and never falls back on server failure",asy
  await expect(classCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
  fn.mockReset().mockImplementation(()=>Promise.resolve(Response.json({}, {status:503})));
  await expect(classCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
+});
+
+it("restores dashboard filters without sharing their query parameter", () => {
+  window.history.replaceState(null, "", "/?classStatus=ARCHIVED&subjectStatus=ARCHIVED");
+  render(<><ClassDashboardPage audience="teacher" classes={[{...value,status:"ARCHIVED"}]} onOpen={()=>{}}/><ManagerDashboardPage subjects={[{...value.subject,status:"ARCHIVED"}]} onSubject={()=>{}}/></>);
+  expect(screen.getByRole("tab", {name:/Kết thúc/})).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("tab", {name:/Lưu trữ/})).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("tab", {name:/Đang dạy/}));
+  const params = new URLSearchParams(window.location.search);
+  expect(params.get("classStatus")).toBe("OPEN");
+  expect(params.get("subjectStatus")).toBe("ARCHIVED");
 });
