@@ -22,8 +22,7 @@ vi.mock("@/features/quizzes/api", () => ({
 
 const push = vi.fn();
 const replace = vi.fn();
-let search = new URLSearchParams("subjectId=s1");
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => search }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 
 const QUESTION: QuestionView = {
   id: "q1", lineageId: "q1", versionNo: 1, subjectId: "s1", type: "MCQ_SINGLE", stem: "Thủ đô của Việt Nam?",
@@ -38,7 +37,6 @@ afterEach(() => vi.clearAllMocks());
 
 describe("QuestionListPage (UC 46)", () => {
   beforeEach(() => {
-    search = new URLSearchParams("subjectId=s1");
     vi.mocked(getManagedSubjects).mockResolvedValue([{ id: "s1", code: "SWT301", name: "Kiểm thử", status: "ACTIVE" }]);
     vi.mocked(getQuestions).mockResolvedValue({
       items: [{ id: "q1", lineageId: "q1", versionNo: 1, type: "MCQ_SINGLE", stem: "Thủ đô của Việt Nam?", difficulty: "EASY",
@@ -63,6 +61,18 @@ describe("QuestionListPage (UC 46)", () => {
     await waitFor(() => expect(getQuestions).toHaveBeenLastCalledWith("s1", expect.objectContaining({ type: "MCQ_MULTI", page: 0 })));
     fireEvent.change(screen.getByTestId("question-list-status"), { target: { value: "DRAFT" } });
     await waitFor(() => expect(getQuestions).toHaveBeenLastCalledWith("s1", expect.objectContaining({ status: "DRAFT" })));
+  });
+
+
+  it("restores type tab from URL after remount and ignores invalid types", async () => {
+    const view = render(<QuestionListPage />);
+    fireEvent.click(await screen.findByTestId("question-list-tab-MCQ_MULTI"));
+    view.unmount();
+    const restored = render(<QuestionListPage />);
+    expect(await screen.findByTestId("question-list-tab-MCQ_MULTI")).toHaveAttribute("aria-selected", "true");
+    window.history.replaceState(null, "", "?subjectId=s1&type=unknown");
+    restored.rerender(<QuestionListPage />);
+    expect(screen.getByTestId("question-list-tab-ALL")).toHaveAttribute("aria-selected", "true");
   });
 
   it("môn đã lưu trữ chỉ xem", async () => {
@@ -151,3 +161,5 @@ describe("QuestionDetailPage (UC 47)", () => {
     expect(screen.getByText("Chưa chọn môn")).toBeInTheDocument();
   });
 });
+
+beforeEach(() => { window.history.replaceState(null, "", "/manager?subjectId=s1"); });

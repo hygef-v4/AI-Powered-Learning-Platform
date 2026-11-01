@@ -1,3 +1,4 @@
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
@@ -12,7 +13,7 @@ let server: SubjectDetail;
 const base: SubjectDetail = { id: "a", code: "ABC", name: "Môn A", description: "Mô tả môn", managerId: null, manager: null, status: "ACTIVE", classCount: 0, version: 7, createdAt: "2026-10-01T00:00:00Z", updatedAt: "2026-10-01T00:00:00Z" };
 const candidate: ManagerCandidate = { accountId: "b", displayName: "Người B", email: "b@example.test", role: "SUBJECT_MANAGER", status: "ACTIVE" };
 const search = vi.fn<SearchSubjectManagers>();
-beforeEach(() => {
+beforeEach(() => { window.history.replaceState(null, "", "/");
   server = { ...base }; search.mockReset().mockResolvedValue([candidate]);
   vi.mocked(getSubject).mockReset().mockImplementation(async () => ({ ...server }));
   vi.mocked(getSubjectClasses).mockReset().mockResolvedValue({ availability: "AVAILABLE", items: [] });

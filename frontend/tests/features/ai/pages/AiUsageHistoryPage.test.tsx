@@ -1,5 +1,6 @@
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiUsageHistoryPage } from "@/features/ai/pages/AiUsageHistoryPage";
 import type { UsageItem, UsagePage } from "@/features/ai/model/types";
 
@@ -88,4 +89,22 @@ describe("AiUsageHistoryPage", () => {
       expect(last.searchParams.get("from")).toBe("2026-09-30T17:00:00.000Z");
     });
   });
+});
+
+beforeEach(() => { window.history.replaceState(null, "", "/ai/connection"); });
+
+it("restores source from URL on remount and ignores unknown or unavailable MCP", async () => {
+  const fetchMock = vi.fn((url: string) => String(url).startsWith("/api/v1/ai/sources") ? json([]) : json(page([])));
+  vi.stubGlobal("fetch", fetchMock);
+  const view = render(<AiUsageHistoryPage />);
+  fireEvent.click(screen.getByRole("tab", { name: "Agent MCP" }));
+  view.unmount();
+  const restored = render(<AiUsageHistoryPage />);
+  expect(screen.getByRole("tab", { name: "Agent MCP" })).toHaveAttribute("aria-selected", "true");
+  restored.rerender(<AiUsageHistoryPage mcpEnabled={false} />);
+  expect(screen.getByRole("tab", { name: "Tất cả" })).toHaveAttribute("aria-selected", "true");
+  window.history.replaceState(null, "", "?source=unknown");
+  restored.rerender(<AiUsageHistoryPage />);
+  expect(screen.getByRole("tab", { name: "Tất cả" })).toHaveAttribute("aria-selected", "true");
+  await screen.findByText("Chưa có lượt sử dụng nào trong khoảng này.");
 });

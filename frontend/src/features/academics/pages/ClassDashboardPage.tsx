@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { PageHeader, Segmented } from "@/shared/ui";
 import { CourseCard, CourseGrid } from "../components/CourseCard";
@@ -13,7 +13,7 @@ import type { ClassStatus, CourseClassView } from "../model/types";
  * lớp đã kết thúc.
  */
 export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "student" | "teacher"; classes: CourseClassView[]; onOpen: (id: string) => void }) {
-  const [status, setStatus] = useState<ClassStatus>("OPEN");
+  const [status, setStatus] = useUrlState<ClassStatus>("classStatus", "OPEN", audience === "student" ? ["OPEN", "ARCHIVED"] : ["OPEN", "DRAFT", "ARCHIVED"]);
   const student = audience === "student";
   const count = (value: ClassStatus) => classes.filter((course) => course.status === value).length;
   const tabs: { value: ClassStatus; label: string }[] = student

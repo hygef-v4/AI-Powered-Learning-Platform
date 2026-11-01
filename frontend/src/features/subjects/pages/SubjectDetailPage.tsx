@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, PageHeader, Section, showToast, Tabs, type TabItem } from "@/shared/ui";
 import { getSubject, getSubjectClasses } from "../api";
 import { ManagerCard } from "../components/ManagerCard";
@@ -28,7 +29,7 @@ export function SubjectDetailPage(props: Props) {
  * có thẻ Trạng thái (nút lưu trữ / mở lại) và Chủ nhiệm môn; lưu xong báo nổi ở góc phải.
  */
 function SubjectDetailContent({ subjectId, searchManagers }: Props) {
-  const [tab, setTab] = useState<Tab>("information");
+  const [tab, setTab] = useUrlState<Tab>("tab", "information", ["information", "classes"]);
   const [mode, setMode] = useState<"manager" | "status" | null>(null);
   const [mutationAccessError, setMutationAccessError] = useState<unknown>(null);
   // Lưu xong sau khi đã rời môn này (đổi môn khi request còn chờ) thì không báo gì: thông báo nổi là toàn cục.

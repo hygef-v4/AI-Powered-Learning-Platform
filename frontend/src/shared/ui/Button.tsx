@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "../navigation/BackLink";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
@@ -45,17 +46,19 @@ export function Button({
 
 export function ButtonLink({
   href,
+  back = false,
   variant = "secondary",
   size = "md",
   icon,
   className,
   children,
-}: Common & { href: string; className?: string }) {
+}: Common & { href: string; className?: string; back?: boolean }) {
+  const NavigationLink = back ? BackLink : Link;
   return (
-    <Link href={href} className={cx(BASE, VARIANTS[variant], SIZES[size].box, className)}>
+    <NavigationLink href={href} className={cx(BASE, VARIANTS[variant], SIZES[size].box, className)}>
       {icon && <Icon name={icon} size={SIZES[size].icon} />}
       {children}
-    </Link>
+    </NavigationLink>
   );
 }
 

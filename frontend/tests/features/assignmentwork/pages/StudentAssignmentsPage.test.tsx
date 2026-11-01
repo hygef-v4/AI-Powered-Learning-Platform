@@ -5,7 +5,7 @@ import { workApi } from "@/features/assignmentwork/api";
 import type { StudentRow } from "@/features/assignmentwork/model/types";
 
 const state = vi.hoisted(() => ({ search: "" }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams(state.search) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn() }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 vi.mock("@/features/assignmentwork/api", async (original) => ({ ...await original<typeof import("@/features/assignmentwork/api")>(), workApi: { list: vi.fn() } }));
 
 const row = (patch: Partial<StudentRow>): StudentRow => ({
@@ -16,6 +16,7 @@ const row = (patch: Partial<StudentRow>): StudentRow => ({
 
 beforeEach(() => {
   state.search = "";
+  window.history.replaceState(null, "", "/my-assignments");
   vi.mocked(workApi.list).mockResolvedValue([
     row({ assignmentId: "a1", title: "Sơ đồ lớp" }),
     row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", className: "Kiểm thử phần mềm" }),
@@ -35,7 +36,39 @@ it("trang chung có ô lọc lớp cạnh tiêu đề; chọn một lớp thì c
 
 it("trang bài tập của một lớp (?classId=) không có ô lọc lớp", async () => {
   state.search = "classId=c1";
+  window.history.replaceState(null, "", `?${state.search}`);
   render(<StudentAssignmentsPage />);
   await screen.findByText("Sơ đồ lớp");
   expect(screen.queryByTestId("assignment-class-filter")).not.toBeInTheDocument();
+});
+
+
+it("restores list tab, kind, class, search and page on remount without a history entry per search", async () => {
+  vi.mocked(workApi.list).mockResolvedValue(Array.from({ length: 25 }, (_, index) => row({
+    assignmentId: String(index), title: "Nhóm " + index, submissionMode: "GROUP", submittedCount: 1,
+  })));
+  window.history.replaceState(null, "", "/my-assignments?tab=submitted&mode=GROUP&classFilter=c1&q=Nh%C3%B3m&page=1");
+  const view = render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Nhóm 20")).toBeInTheDocument();
+  expect(screen.queryByText("Nhóm 0")).not.toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByLabelText("Loại bài")).toHaveValue("GROUP");
+  const historyLength = window.history.length;
+  fireEvent.change(screen.getByLabelText("Tìm bài tập"), { target: { value: "Nhóm 2" } });
+  expect(window.history.length).toBe(historyLength);
+  expect(new URLSearchParams(window.location.search).get("page")).toBe("0");
+  view.unmount();
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Nhóm 2")).toBeInTheDocument();
+  expect(screen.getByLabelText("Tìm bài tập")).toHaveValue("Nhóm 2");
+  expect(screen.getByLabelText("Loại bài")).toHaveValue("GROUP");
+});
+
+it("ignores invalid list values and retains focus-based tab selection", async () => {
+  vi.mocked(workApi.list).mockResolvedValue([row({ assignmentId: "done", myStatus: "SUBMITTED", submittedCount: 1, title: "Đã làm" })]);
+  window.history.replaceState(null, "", "/my-assignments?tab=invalid&mode=invalid&page=-2&focus=done");
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Đã làm")).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByLabelText("Loại bài")).toHaveValue("");
 });

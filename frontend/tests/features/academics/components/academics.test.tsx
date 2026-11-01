@@ -283,3 +283,30 @@ describe("enrollment CSV preview", () => {
     expect(studentNav?.href).toBe("/classes");
   });
 });
+
+it("restores class tabs through Back and keeps unrelated query parameters", async () => {
+  window.history.replaceState(null, "", "/teaching/classes/class-1?tab=students&keep=yes");
+  const view = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("tab", { name: "Chấm điểm" }));
+  expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("gradebook");
+  window.history.back();
+  await waitFor(() => expect(new URLSearchParams(window.location.search).get("tab")).toBe("students"));
+  view.rerender(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
+});
+
+it("keeps the manager class list status, search and page when returning", () => {
+  window.history.replaceState(null, "", "/manager/classes?subjectId=subject-1&classStatus=ARCHIVED&classQuery=SE&classPage=1");
+  const classes = Array.from({ length: 22 }, (_, i) => ({ ...course, id: String(i), code: `SE${i}`, status: "ARCHIVED" as const }));
+  const props = { classes, subjects: [subject], onOpen: vi.fn(), onCreate: vi.fn() };
+  const first = render(<ClassListPage {...props} />);
+  expect(screen.getByRole("tab", { name: "Lưu trữ" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("searchbox")).toHaveValue("SE");
+  expect(screen.getByTestId("class-open-20")).toBeInTheDocument();
+  expect(screen.queryByTestId("class-open-0")).not.toBeInTheDocument();
+  first.unmount();
+  render(<ClassListPage {...props} />);
+  expect(screen.getByTestId("class-open-20")).toBeInTheDocument();
+});

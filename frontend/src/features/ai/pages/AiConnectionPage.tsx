@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import type { AiProvider } from "@/shared/ai";
 import { Alert, Button, PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { useSession } from "@/features/identity/hooks/session";
@@ -32,7 +33,7 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
     { key: "settings", label: "API cá nhân" },
     ...(mcpEnabled ? [{ key: "mcp" as const, label: "Agent MCP" }] : []),
   ];
-  const [chosen, setChosen] = useState<Tab>(initialTab === "settings" || initialTab === "mcp" ? initialTab : "usage");
+  const [chosen, setChosen] = useUrlState<Tab>("tab", initialTab === "settings" || initialTab === "mcp" ? initialTab : "usage", ["usage", "settings", "mcp"]);
   const tab = tabs.some((t) => t.key === chosen) ? chosen : "usage";
 
   return (

@@ -1,5 +1,6 @@
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiConnectionsPanel } from "@/features/ai/admin/components/AiSettingsPanels";
 import type { ConnectionView } from "@/features/ai/model/types";
 
@@ -225,4 +226,20 @@ describe("AiConnectionsPanel", () => {
     expect(calls.some((c) => c.url === "/api/v1/admin/ai/teacher-candidates?q=h")).toBe(true);
     expect(screen.getByLabelText(/Email giảng viên/)).toHaveValue("hoatt@fpt.edu.vn");
   });
+});
+
+beforeEach(() => { window.history.replaceState(null, "", "/admin/settings/ai"); });
+
+
+it("restores admin AI tab on remount and falls back for invalid URL tabs", async () => {
+  backend();
+  const view = render(<AiConnectionsPanel />);
+  await openSettings();
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("settings");
+  view.unmount();
+  const restored = render(<AiConnectionsPanel />);
+  expect(await screen.findByRole("tab", { name: "Cài đặt" })).toHaveAttribute("aria-selected", "true");
+  window.history.replaceState(null, "", "?tab=mcp");
+  restored.rerender(<AiConnectionsPanel />);
+  expect(screen.getByRole("tab", { name: "Lịch sử sử dụng" })).toHaveAttribute("aria-selected", "true");
 });

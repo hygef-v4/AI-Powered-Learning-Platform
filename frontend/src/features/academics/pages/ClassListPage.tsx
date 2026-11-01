@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { statusLabels, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 
@@ -19,9 +19,11 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
  */
 export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onCreate }: { classes: CourseClassView[]; subjects: SubjectView[]; initialSubjectId?: string; onOpen: (id: string) => void; onCreate: (subject: SubjectView) => void }) {
   const subjectId = initialSubjectId ?? subjects[0]?.id ?? "";
-  const [status, setStatus] = useState<ClassStatus | "ALL">("ALL");
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
+  const [status, setStatus] = useUrlState<ClassStatus | "ALL">("classStatus", "ALL", ["ALL", "OPEN", "ARCHIVED"]);
+  const [query, setQuery] = useUrlState<string>("classQuery", "", undefined, "replace");
+  const [pageValue, setPageValue] = useUrlState<string>("classPage", "0", undefined, "replace");
+  const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
+  const setPage = (page: number) => setPageValue(String(page));
   const selected = subjects.find((subject) => subject.id === subjectId);
   const q = query.trim().toLocaleLowerCase("vi");
   const filtered = classes.filter((course) => course.subject.id === subjectId

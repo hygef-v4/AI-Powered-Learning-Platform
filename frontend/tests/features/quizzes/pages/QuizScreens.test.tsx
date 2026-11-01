@@ -40,7 +40,7 @@ vi.mock("@/features/quizzes/api", () => ({
 
 const push = vi.fn();
 const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams("subjectId=s1") }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 vi.mock("@/features/materials/components/ModulePlace", () => ({ useModuleScope: () => null, useModulePlace: () => ({ reload: () => {} }), ModuleNeighbours: () => null }));
 
 const QUESTION: QuestionView = {
@@ -85,6 +85,20 @@ describe("SubjectQuizListPage", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/quizzes/z9"));
     expect(createSubjectQuiz).toHaveBeenCalledWith("s1", "Ôn tập");
   });
+});
+
+
+it("restores quiz status tab after remount and ignores invalid status", async () => {
+  vi.mocked(getManagedSubjects).mockResolvedValue([{ id: "s1", code: "SWT301", name: "Kiểm thử", status: "ACTIVE" }]);
+  vi.mocked(getSubjectQuizzes).mockResolvedValue({ items: [], total: 0, page: 0, size: 20 });
+  const view = render(<SubjectQuizListPage />);
+  fireEvent.click(await screen.findByTestId("quiz-list-tab-OPEN"));
+  view.unmount();
+  const restored = render(<SubjectQuizListPage />);
+  expect(await screen.findByTestId("quiz-list-tab-OPEN")).toHaveAttribute("aria-selected", "true");
+  window.history.replaceState(null, "", "?subjectId=s1&status=unknown");
+  restored.rerender(<SubjectQuizListPage />);
+  expect(screen.getByTestId("quiz-list-tab-ALL")).toHaveAttribute("aria-selected", "true");
 });
 
 describe("QuizDetailPage", () => {
@@ -267,3 +281,5 @@ describe("settingsInput (BR-U10-15)", () => {
     expect(input?.instructions).toBeNull();
   });
 });
+
+beforeEach(() => { window.history.replaceState(null, "", "/manager?subjectId=s1"); });

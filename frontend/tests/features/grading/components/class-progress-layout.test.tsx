@@ -15,6 +15,8 @@ const assignmentMocks = vi.hoisted(() => ({
   listForClass: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
+
 vi.mock("@/features/grading/api", () => ({ gradingApi: gradingMocks }));
 vi.mock("@/features/assignments/api", () => ({ assignmentsApi: assignmentMocks }));
 
@@ -63,6 +65,7 @@ const emptyOpenPage: AssignmentPage = {
 describe("U09 ClassProgressSection layout and lazy distribution", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    window.history.replaceState(null, "", "/");
     assignmentMocks.listForClass.mockResolvedValue(emptyOpenPage);
     gradingMocks.classDistribution.mockResolvedValue([]);
   });
@@ -199,6 +202,7 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
     expect(screen.queryByRole("button", { name: "Phân bố điểm" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Theo sinh viên" }));
+    expect(new URLSearchParams(window.location.search).get("progressView")).toBe("student");
     const rows = screen.getAllByTestId("progress-student-row");
     expect(rows[0]).toHaveTextContent("Bình");
     expect(within(rows[0]!).getByTitle("Đã nộp 0 / 2 bài")).toHaveTextContent("0/2");

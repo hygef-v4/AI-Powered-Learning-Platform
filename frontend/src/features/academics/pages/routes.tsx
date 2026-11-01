@@ -152,7 +152,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       onBack={() => router.push("/manager/classes")} actions={actions}/>;
   } else {
     content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}
-      onBack={() => router.push(scope === "me" ? "/classes" : "/teaching/classes")}/>;
+      onBack={() => { if (window.history.length > 1) window.history.back(); else router.push(scope === "me" ? "/classes" : "/teaching/classes"); }}/>;
   }
   return <>
     {mutationConflict?.classId === id && <p role="alert" className={styles.error} data-testid="class-mutation-conflict">{mutationConflict.message}</p>}

@@ -10,9 +10,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
-const url = vi.hoisted(() => ({ params: new URLSearchParams() }));
 const push = vi.hoisted(() => vi.fn());
-vi.mock("next/navigation", () => ({ useSearchParams: () => url.params, useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push }) }));
 
 const longTitle1 =
   "Bài tập lớn số 1: Phân tích yêu cầu và thiết kế sơ đồ lớp chi tiết cho hệ thống quản lý sự kiện trường đại học";
@@ -75,7 +74,7 @@ const samplePage: GradebookPage = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  url.params = new URLSearchParams();
+  window.history.replaceState(null, "", "/");
   mocks.gradebook.mockResolvedValue(samplePage);
   mocks.progress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
 });
@@ -123,12 +122,12 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
   });
 
   it("mở từ Tiến độ nộp bài: ?assignment= chọn sẵn bài, ?student= mở chế độ Theo sinh viên với người đó", async () => {
-    url.params = new URLSearchParams({ assignment: "a-2" });
+    window.history.replaceState(null, "", "/?assignment=a-2");
     const { unmount } = render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
     unmount();
 
-    url.params = new URLSearchParams({ student: "s-2" });
+    window.history.replaceState(null, "", "/?student=s-2");
     render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByRole("button", { name: /Trần Thị Bình/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("tab", { name: "Theo sinh viên" })).toHaveAttribute("aria-selected", "true");
@@ -199,4 +198,42 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByText("Không có sinh viên phù hợp.")).toBeInTheDocument();
   });
+});
+
+it("restores the selected student, mode and filters after returning", async () => {
+  window.history.replaceState(null, "", "/teaching/classes/class-1?tab=gradebook&keep=yes");
+  const first = render(<ClassGradebookTab classId="class-1" />);
+  fireEvent.click(await screen.findByRole("tab", { name: "Theo sinh viên" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Trần Thị Bình/ }));
+  fireEvent.change(screen.getByRole("searchbox", { name: "Tìm bài tập" }), { target: { value: "số 1" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "Lọc theo trạng thái" }), { target: { value: "DRAFT" } });
+  expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
+  expect(new URLSearchParams(window.location.search).get("student")).toBe("s-2");
+  first.unmount();
+  render(<ClassGradebookTab classId="class-1" />);
+  expect(await screen.findByRole("button", { name: /Trần Thị Bình/ })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("tab", { name: "Theo sinh viên" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByRole("searchbox", { name: "Tìm bài tập" })).toHaveValue("số 1");
+  expect(screen.getByRole("combobox", { name: "Lọc theo trạng thái" })).toHaveValue("DRAFT");
+});
+
+it("validates gradebook URL pagination before calling the API", async () => {
+  window.history.replaceState(null, "", "/?gradebookPage=NaN&gradebookMode=invalid");
+  render(<ClassGradebookTab classId="class-1" />);
+  await screen.findByRole("button", { name: new RegExp(longTitle1) });
+  expect(mocks.gradebook).toHaveBeenCalledWith("class-1", "", 1);
+  expect(screen.getByRole("tab", { name: "Theo bài tập" })).toHaveAttribute("aria-selected", "true");
+});
+
+it("restores gradebook search and pagination while typing replaces the current entry", async () => {
+  window.history.replaceState(null, "", "/?gradebookQuery=Bình&gradebookPage=2&assignment=a-2");
+  render(<ClassGradebookTab classId="class-1" />);
+  expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("searchbox", { name: "Tìm sinh viên" })).toHaveValue("Bình");
+  await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "Bình", 2));
+  const length = window.history.length;
+  fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "An" } });
+  expect(window.history.length).toBe(length);
+  expect(new URLSearchParams(window.location.search).get("gradebookPage")).toBe("1");
+  await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "An", 1));
 });

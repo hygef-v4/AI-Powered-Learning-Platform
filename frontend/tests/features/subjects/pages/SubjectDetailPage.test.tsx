@@ -1,3 +1,4 @@
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search), useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
@@ -18,7 +19,7 @@ function deferred<T>() {
 }
 
 describe("SubjectDetailPage", () => {
-  beforeEach(() => {
+  beforeEach(() => { window.history.replaceState(null, "", "/");
     vi.mocked(getSubject).mockReset().mockResolvedValue(detail());
     vi.mocked(getSubjectClasses).mockReset().mockResolvedValue({ availability: "AVAILABLE", items: [] });
   });
@@ -110,4 +111,28 @@ describe("SubjectDetailPage", () => {
     expect(screen.getByRole("tab", { name: /Lớp học/ })).toHaveFocus();
     expect(await screen.findByText("Không có lớp phù hợp.")).toBeInTheDocument();
   });
+});
+
+
+it("restores subject tab after remount and history navigation, rejecting unknown tabs", async () => {
+  vi.mocked(getSubject).mockReset().mockResolvedValue(detail());
+  vi.mocked(getSubjectClasses).mockReset().mockResolvedValue({ availability: "AVAILABLE", items: [] });
+  window.history.replaceState(null, "", "/admin/subjects/a?tab=information");
+  const view = render(<SubjectDetailPage subjectId="a" />);
+  await screen.findByDisplayValue("Mô tả môn");
+  fireEvent.click(screen.getByRole("tab", { name: /Lớp học/ }));
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("classes");
+  view.unmount();
+  const restored = render(<SubjectDetailPage subjectId="a" />);
+  expect(await screen.findByRole("tab", { name: /Lớp học/ })).toHaveAttribute("aria-selected", "true");
+  await act(async () => {
+    const popped = new Promise<void>((resolve) => window.addEventListener("popstate", () => resolve(), { once: true }));
+    window.history.back();
+    await popped;
+  });
+  restored.rerender(<SubjectDetailPage subjectId="a" />);
+  expect(screen.getByRole("tab", { name: "Thông tin" })).toHaveAttribute("aria-selected", "true");
+  window.history.replaceState(null, "", "?tab=unknown");
+  restored.rerender(<SubjectDetailPage subjectId="a" />);
+  expect(screen.getByRole("tab", { name: "Thông tin" })).toHaveAttribute("aria-selected", "true");
 });
