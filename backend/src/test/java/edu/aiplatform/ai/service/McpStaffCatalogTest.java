@@ -15,7 +15,7 @@ import org.springframework.beans.factory.ObjectProvider;
 class McpStaffCatalogTest {
     final ObjectMapper json=new ObjectMapper();
     List<IMcpToolProvider> catalog() {
-        return List.of(new McpCapabilitiesTools(),new McpAuthoringRequirementsTools(null,json),
+        return List.of(new McpCapabilitiesTools(),new McpAgentWorkflowTools(json),new McpAuthoringRequirementsTools(null,json),
                 new edu.aiplatform.academics.service.AcademicsMcpTools(null,null),
                 new edu.aiplatform.assignments.service.AssignmentMcpTools(null,null,null,null,null,null,json),
                 new edu.aiplatform.assignments.service.AssignmentMcpQueryTools(null),
@@ -45,7 +45,7 @@ class McpStaffCatalogTest {
             var learner=registry.visible(Role.STUDENT,access);
             assertThat(learner).extracting(McpToolDefinition::name)
                     .contains("get_my_capabilities","read_assignment_context","read_own_work")
-                    .doesNotContain("read_ai_usage_summary","read_platform_health_summary","read_grading_context",
+                    .doesNotContain("read_agent_workflow","read_ai_usage_summary","read_platform_health_summary","read_grading_context",
                             "create_assignment_draft","save_assignment_draft","record_grading_proposal","read_quiz_context");
             assertThat(learner.stream().anyMatch(d -> "record_private_feedback".equals(d.name())))
                     .isEqualTo(access==Access.READ_WRITE);
@@ -53,6 +53,7 @@ class McpStaffCatalogTest {
             assertThat(registry.visible(Role.ADMIN,access)).isEmpty();
             for(var role:List.of(Role.TEACHER,Role.SUBJECT_MANAGER)) {
                 var tools=registry.visible(role,access);
+                assertThat(tools).extracting(McpToolDefinition::name).contains("read_agent_workflow");
                 assertThat(tools).extracting(McpToolDefinition::name).contains("get_my_capabilities","read_grading_context","list_my_classes")
                         .doesNotContain("read_ai_usage_summary","read_platform_health_summary");
                 if(access==Access.READ_ONLY)assertThat(tools).allMatch(d -> d.kind()==McpToolKind.READ);

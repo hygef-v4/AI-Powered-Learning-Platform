@@ -20,7 +20,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
         this.authoring=authoring;this.drafts=drafts;this.access=access;this.writes=writes;this.json=json;
     }
     @Override public List<McpToolDefinition> tools() {
-        return List.of(new McpToolDefinition("create_assignment_draft","Tạo bài tập DRAFT kèm đề xuất để người soạn xem và áp dụng. requestRef chống tạo trùng.",
+        return List.of(new McpToolDefinition("create_assignment_draft","Đọc read_agent_workflow với workflow=AUTHOR_ASSIGNMENT trước khi soạn. Tạo bài tập DRAFT kèm đề xuất để người soạn xem và áp dụng. requestRef chống tạo trùng.",
                 McpSchemas.schema(McpSchemas.SCOPE+",\"title\":"+McpSchemas.TEXT
                         +",\"submissionMode\":{\"enum\":[\"INDIVIDUAL\",\"GROUP\"]},\"gradingMode\":{\"enum\":[\"PRACTICE\",\"GRADED\"]}"
                         +",\"referenceMaterialIds\":{\"type\":\"array\",\"maxItems\":20,\"items\":"+McpSchemas.UUID+"}"

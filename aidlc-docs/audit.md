@@ -1,5 +1,19 @@
 # AI-DLC Audit Log
 
+## 2026-11-01 — Server workflow commit preparation and requested authoring trial
+
+User inputs (raw): “b giúp tôi test thử tạo 1 bài nữa xem nào cho lớp se js” and “giúp tôi tạo commit rõ ràng”. The separately requested trial read full AUTHOR_ASSIGNMENT from MCP without local skills, resolved SE_JS, fetched current schema/material metadata and successfully created one DRAFT/READY proposal for a meeting-room booking design assignment (4 questions, 10 points, 10 rubric items). Returned exact reviewUrl; no automatic apply/publication. User now authorizes a local English commit for server-managed workflow source, wrappers, tests and AI-DLC documentation; no push. Existing 39 backend/architecture tests, package/resource checks and authenticated workflow-read evidence retained; no repeated unrelated tests or private configuration changes.
+
+## 2026-11-01 — Server-managed workflow execution completed
+
+Implemented approved server reader with fixed workflow enums, complete packaged resources and content versions; optional local skills now fetch server instructions. Student/Admin role isolation and READ_ONLY access retained. Capabilities/domain descriptions and ASSIGNMENT requirements point to the reader; QUIZ/BANK discovery and generic clarification retained. Existing API/MCP grading policy and write guards unchanged. Updated current guides/U06/U07/U09 rules, requirements/stories, plan, state and results.
+
+Observed catalog regression RED before implementation. Backend affected/architecture 39 tests passed, zero failures/errors/skips; hook self-check 14 passed. Packaged both canonical resources in jar along with application/migration resources. Stopped only the verified local backend before packaging, then restarted in its existing Orca terminal; no build configuration/dependency change. Existing native capability call sees the new tool, and direct authenticated MCP RPC read both workflows without local skill files or write/model calls. Cached native tool catalog requires refresh/new session for the new callable name. Fresh reviewer found no blocker after retaining QUIZ/BANK guidance. Full results and limitations: construction/build-and-test/2026-11-01-server-agent-workflows-results.md. No new credential, private configuration change, global skill installation, migration, commit or push; no semantic grading-quality claim.
+
+## 2026-11-01 — Server-managed workflow execution started
+
+User input (raw): “giúp tôi lập kết hoạch và triển khai”. This authorizes the preceding agreed read_agent_workflow approach with AUTHOR_ASSIGNMENT and GRADE_WITH_RUBRIC, complete server-managed instructions and optional local skill installation. Read CLAUDE/current state, existing MCP registry/capabilities/requirements, source skills and Docker build context. Created requirements/stories and an inline execution plan. Full resources will live inside backend/src for packaged/Docker availability; old local skill paths become optional wrappers. No new provider calls, credential changes, write-tool acceptance, commit or push are part of this work.
+
 ## 2026-11-01 — Commit preparation
 
 User input (raw): “giúp tôi commit rõ ràng”. Authorized committing the pending MCP quality and external-agent workflow implementation with an English title and detailed description; no push. Reviewed tracked/untracked scope and whitespace checks. Commit description records implemented safeguards, client setup, review handoff, AI-DLC synchronization, existing verification and pending real-model/client acceptance. Temporary logs, local credentials and build outputs stay ignored.

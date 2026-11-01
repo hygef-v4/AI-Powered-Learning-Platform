@@ -17,11 +17,10 @@ public class McpCapabilitiesTools implements IMcpToolProvider {
     }
     static String workflow(Role role) {
         if(role==Role.STUDENT)return "Start in agent chat. Only submitted own Practice work is eligible for private feedback; no official grading or publication.";
-        return "Start and clarify the task in this external agent chat; no platform form is required. Resolve authorized targets first. "
-                +"If multiple classes/assignments match or material requirements are missing, ask one grouped clarification before writing; never guess IDs, scale or scope. "
-                +"For authoring call read_authoring_requirements; reuse explicit assignment settings when revising. "
-                +"For grading select only the agreed PENDING/DRAFT roots, read all read_grading_context continuations and pass the snapshotFingerprint on writes. "
-                +"MCP_CONTEXT_READ_REQUIRED means reread from offset 0; context changes require reassessment. "
-                +"Return the exact reviewUrl from each successful tool result. The platform UI is for viewing/editing/approval; never regenerate to open a review or publish official grades.";
+        return "Start and clarify the task in this external agent chat; no platform form or local skill installation is required. "
+                +"Before authoring assignments call read_agent_workflow with workflow=AUTHOR_ASSIGNMENT; "
+                +"before grading call it with workflow=GRADE_WITH_RUBRIC. Follow the complete server-managed instructions and current domain tool schemas. "
+                +"For quiz/question-bank authoring call read_authoring_requirements with the matching kind and clarify missing requirements before writing. "
+                +"Return the exact reviewUrl for platform UI editing/approval. Never publish official grades through MCP.";
     }
 }

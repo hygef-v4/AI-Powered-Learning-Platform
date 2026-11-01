@@ -27,7 +27,9 @@ public class McpAuthoringRequirementsTools implements IMcpToolProvider {
             return new McpToolResult(false,Map.of("kind",kind,"proposalInputSchema",json.readTree(save.definition().parameterSchema()),
                     "createInputSchema",json.readTree(creation.definition().parameterSchema()),
                     "maxAiGradingRubricItems",AiGradingLimits.MAX_RUBRIC_ITEMS,
-                    "workflow","Start in external agent chat. Resolve the authorized target and ask one grouped clarification for missing topic/materials, difficulty, points, Practice vs Graded and individual/group mode; do not silently invent these choices. Reuse explicit existing settings for revisions. Create DRAFT; return the exact reviewUrl for UI editing and approval, never regenerate just to open review. Generated content remains a proposal, not published content."));
+                    "workflow","ASSIGNMENT".equals(kind)
+                            ?"Read read_agent_workflow with workflow=AUTHOR_ASSIGNMENT for complete server-managed instructions. Continue clarification in external agent chat, use these current schemas, create only DRAFT/proposals and return reviewUrl for human review. No local skill installation required."
+                            :"Resolve the authorized target and ask one grouped clarification in external agent chat for missing topic/materials, difficulty and points; never guess IDs or silently change the scale. Use these current schemas and save only a draft/proposal for human review. The assignment workflow does not replace QUIZ/BANK schemas."));
         }catch(com.fasterxml.jackson.core.JsonProcessingException e){throw new IllegalStateException("Invalid registered MCP schema",e);}
     }
 }
