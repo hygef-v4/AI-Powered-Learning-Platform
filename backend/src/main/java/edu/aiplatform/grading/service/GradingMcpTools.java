@@ -21,29 +21,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class GradingMcpTools implements IMcpToolProvider {
     private static final Set<String> ARGUMENT_FIELDS = Set.of("submissionRef", "submissionHash", "proposal",
-            "requestRef", "expectedVersion", "agentLabel");
+            "requestRef", "expectedVersion", "agentLabel", "snapshotFingerprint");
     private static final Set<String> REFERENCE_FIELDS = Set.of("kind", "id", "classId", "assignmentId");
     private final IEvaluationRepository evaluations;
     private final GradingProposalTransactions tx;
     private final ObjectMapper json;
+    private final GradingMcpQueryService reads;
 
-    public GradingMcpTools(IEvaluationRepository evaluations, GradingProposalTransactions tx, ObjectMapper json) {
+    public GradingMcpTools(IEvaluationRepository evaluations, GradingProposalTransactions tx, ObjectMapper json,
+            GradingMcpQueryService reads) {
         this.evaluations = evaluations;
         this.tx = tx;
         this.json = json;
+        this.reads = reads;
     }
 
     public List<McpToolDefinition> tools() {
         return List.of(new McpToolDefinition("record_grading_proposal",
-                "Record a rubric proposal for teacher review; cannot save or publish official grades.",
+                "Record a rubric proposal after reading every current read_grading_context page. Pass its snapshotFingerprint; return reviewUrl to the user. Cannot save or publish official grades.",
                 "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"submissionRef\",\"submissio"
-                        + "nHash\",\"proposal\",\"requestRef\",\"expectedVersion\"],\"properties\":{\"submissionRef\":{\"t"
+                        + "nHash\",\"proposal\",\"requestRef\",\"expectedVersion\",\"snapshotFingerprint\"],\"properties\":{\"submissionRef\":{\"t"
                         + "ype\":\"object\",\"required\":[\"kind\",\"id\",\"classId\",\"assignmentId\"],\"properties\":{\""
                         + "kind\":{\"enum\":[\"ATTEMPT\",\"GROUP_DOCUMENT\"]},\"id\":{\"type\":\"string\"},\"classId\":{\""
                         + "type\":\"string\"},\"assignmentId\":{\"type\":\"string\"}}},\"submissionHash\":{\"type\":\"stri"
                         + "ng\"},\"proposal\":{\"type\":\"object\"},\"requestRef\":{\"type\":\"string\",\"maxLength\":200}"
                         + ",\"expectedVersion\":{\"type\":\"integer\",\"minimum\":0},\"agentLabel\":{\"type\":\"string\","
-                        + "\"maxLength\":200}}}",
+                        + "\"maxLength\":200},\"snapshotFingerprint\":{\"type\":\"string\",\"pattern\":\"^[0-9a-f]{64}$\"}}}",
                 McpToolKind.WRITE, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)));
     }
 
@@ -66,15 +69,24 @@ public class GradingMcpTools implements IMcpToolProvider {
             String requestRef = root.path("requestRef").asText();
             if (requestRef.isBlank() || requestRef.length() > 200)
                 throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
+            String fingerprint=root.path("snapshotFingerprint").asText();
+            if(!fingerprint.matches("[0-9a-f]{64}"))throw GradingMcpReadProgress.required();
+            reads.requireCompleteRead(actor,evaluation.id,root.path("expectedVersion").asLong(),
+                    root.path("submissionHash").asText(),fingerprint);
             var proposal = tx.recordMcp(actor, evaluation.id, root.path("expectedVersion").asLong(),
                     root.path("submissionHash").asText(), requestRef, root.get("proposal"),
                     root.path("agentLabel").asText("Agent"));
-            return new McpToolResult(false, Map.of("proposalId", proposal.id, "status", proposal.status));
+            return new McpToolResult(false, Map.of("proposalId", proposal.id, "status", proposal.status,
+                    "evaluationId",evaluation.id,"reviewUrl",reviewUrl(evaluation.id,proposal.id)));
         } catch (ApiException ex) {
             throw ex;
         } catch (RuntimeException ex) {
             throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid grading proposal arguments");
         }
+    }
+
+    static String reviewUrl(UUID evaluationId,UUID proposalId) {
+        return "/teaching/evaluations/"+evaluationId+"?proposalId="+proposalId+"#grading-ai-review";
     }
 
     private JsonNode readSubmissionReference(JsonNode arguments) {

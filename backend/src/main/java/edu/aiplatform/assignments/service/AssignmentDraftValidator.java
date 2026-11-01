@@ -21,6 +21,7 @@ final class AssignmentDraftValidator {
         BigDecimal total = BigDecimal.ZERO.setScale(2);
         int questionCount = 0;
         int leafCount = 0;
+        int itemCount = 0;
         JsonNode sections = proposal == null ? null : proposal.path("sections");
 
         if (proposal != null && options.requireTitle()) {
@@ -115,6 +116,7 @@ final class AssignmentDraftValidator {
                             continue;
                         }
                         total = total.add(value).setScale(2);
+                        itemCount++;
                     }
                 }
             }
@@ -130,6 +132,12 @@ final class AssignmentDraftValidator {
             }
         }
 
+        if (gradingMode == GradingMode.GRADED
+                && itemCount > edu.aiplatform.ai.contract.AiGradingLimits.MAX_RUBRIC_ITEMS) {
+            issue(issues, "WARNING", "AI_GRADING_RUBRIC_LIMIT", "sections.rubric",
+                    "Rubric vượt giới hạn " + edu.aiplatform.ai.contract.AiGradingLimits.MAX_RUBRIC_ITEMS
+                            + " mục cho một lượt chấm AI. Bạn vẫn có thể chấm thủ công.");
+        }
         boolean hasError = false;
         boolean hasWarning = false;
         for (JsonNode issue : issues) {

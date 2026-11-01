@@ -25,11 +25,11 @@ import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
-export function GradingWorkspacePage({ evaluationId }: { evaluationId: string }) {
+export function GradingWorkspacePage({ evaluationId, proposalId }: { evaluationId: string; proposalId?: string }) {
   const load = useCallback(() => gradingApi.detail(evaluationId), [evaluationId]);
   const resource = useResource(load);
   return resource.value ? (
-    <Workspace key={evaluationId} initial={resource.value} refresh={resource.refresh} />
+    <Workspace key={evaluationId} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} />
   ) : resource.error ? (
     <PageLoadError onRetry={() => void resource.refresh()}>{resource.error}</PageLoadError>
   ) : (
@@ -82,7 +82,7 @@ function noteCriteria(rubric: Rubric): RubricCriterion[] {
   }));
 }
 
-function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promise<Detail> }) {
+function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string }) {
   const workspace = useGradingWorkspace(initial, refresh);
   const {
     detail,
@@ -92,6 +92,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
     error,
     dirty,
     proposals,
+    proposalsLoaded,
     pollExhausted,
     disabled,
     official,
@@ -107,10 +108,15 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
   } = workspace;
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
   const [focusMode, setFocusMode] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
+  const [reviewSelection, setReviewSelection] = useState(proposalId);
+  if (reviewSelection !== proposalId) {
+    setReviewSelection(proposalId);
+    setAiOpen(Boolean(proposalId));
+  }
   useEffect(() => {
-    if (aiOpen) document.getElementById("grading-ai-review")?.scrollIntoView?.({ block: "start" });
-  }, [aiOpen]);
+    if (aiOpen) (document.getElementById(`grading-proposal-${proposalId}`) ?? document.getElementById("grading-ai-review"))?.scrollIntoView?.({ block: "start" });
+  }, [aiOpen, proposalId, proposals.length]);
   const [activePart, setActivePart] = useState<string | null>(null);
   const [studentSearch, setStudentSearch] = useState("");
   const context = useSubmissionContext(evaluation.classId, evaluation.assignmentId);
@@ -263,7 +269,7 @@ function Workspace({ initial, refresh }: { initial: Detail; refresh: () => Promi
             <h2 className="text-lg font-semibold text-ink">Chấm bằng AI</h2>
             <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>Đóng</Button>
           </div>
-          <AiProposalPanel evaluationId={evaluation.id} proposals={proposals} disabled={disabled || official}
+          <AiProposalPanel evaluationId={evaluation.id} proposals={proposals} proposalsLoaded={proposalsLoaded} selectedProposalId={proposalId} disabled={disabled || official}
             rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
             pollExhausted={pollExhausted} onRecheck={resumePolling}
             onRequest={(input) => void requestProposal(input)}

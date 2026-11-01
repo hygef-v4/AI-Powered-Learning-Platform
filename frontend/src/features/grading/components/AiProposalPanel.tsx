@@ -49,6 +49,8 @@ function pendingStageDetail(taskState?: string | null): string {
 
 export function AiProposalPanel({
   proposals,
+  selectedProposalId,
+  proposalsLoaded = true,
   onApply,
   onRequest,
   disabled = false,
@@ -61,6 +63,8 @@ export function AiProposalPanel({
 }: {
   evaluationId: string;
   proposals: Proposal[];
+  selectedProposalId?: string;
+  proposalsLoaded?: boolean;
   onApply: (
     checks: Checks,
     feedback: string,
@@ -305,11 +309,14 @@ export function AiProposalPanel({
         />
       )}
       {proposals.length === 0 && <p className="mt-3 text-sm text-muted">Chưa có đề xuất. Bạn có thể tự chấm theo rubric hoặc yêu cầu AI hỗ trợ.</p>}
+      {selectedProposalId && proposalsLoaded && !proposals.some((p) => p.id === selectedProposalId) && (
+        <p role="alert" className="mt-3 text-sm text-danger">Không tìm thấy đề xuất từ liên kết. Kiểm tra lịch sử đề xuất bên dưới; điểm chưa bị thay đổi.</p>
+      )}
       {proposals.map((p, index) => {
         const baseMeta = STATUS_META[p.status] ?? { label: "Chưa khả dụng", tone: "neutral" as Tone, icon: "•" };
         const meta = p.status === "PENDING" ? { ...baseMeta, label: pendingStageLabel(p.taskState) } : baseMeta;
         const sourceLabel = `Lần ${p.versionNo} · ${p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? "API cá nhân" : "API trường"}`;
-        const keepExpanded = index === 0 || p.status === "PENDING" || p.status === "FAILED" || p.status === "REJECTED";
+        const keepExpanded = p.id === selectedProposalId || index === 0 || p.status === "PENDING" || p.status === "FAILED" || p.status === "REJECTED";
         if (!keepExpanded) {
           const isOpen = !!expandedOlder[p.id];
           return (
@@ -340,7 +347,8 @@ export function AiProposalPanel({
           );
         }
         return (
-          <article key={p.id} className="mt-3 rounded-lg border border-line bg-shell/40 p-3 text-sm">
+          <article key={p.id} id={`grading-proposal-${p.id}`} className="mt-3 scroll-mt-52 rounded-lg border border-line bg-shell/40 p-3 text-sm">
+            {p.id === selectedProposalId && <p className="mb-2 text-xs font-semibold text-primary-ink">Đề xuất từ liên kết</p>}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Pill tone={meta.tone}>
                 <span aria-hidden="true">{meta.icon}</span>

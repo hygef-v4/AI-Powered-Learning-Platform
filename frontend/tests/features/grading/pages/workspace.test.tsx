@@ -63,6 +63,23 @@ function openAi() {
   fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
 }
 describe("workspace save", () => {
+  it("reports an unavailable proposal link without creating or applying a replacement", async () => {
+    render(<GradingWorkspacePage evaluationId="e" proposalId="missing" />);
+    expect(await screen.findByText(/Không tìm thấy đề xuất từ liên kết/)).toBeInTheDocument();
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+  it("opens the exact older proposal from an agent link without applying or saving it", async () => {
+    mocks.proposals.mockResolvedValue([
+      { id: "new", versionNo: 2, status: "READY", origin: "MCP", proposal: { checks: {}, score: 2, feedback: "Latest agent feedback" } },
+      { id: "old", versionNo: 1, status: "READY", origin: "MCP", proposal: { checks: {}, score: 1, feedback: "Requested older feedback" } },
+    ]);
+    render(<GradingWorkspacePage evaluationId="e" proposalId="old" />);
+    expect(await screen.findByText("Requested older feedback")).toBeVisible();
+    expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toBeInTheDocument();
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
   it("names the current student and searches all pages before switching submissions", async () => {
     mocks.submissions.mockResolvedValueOnce({ rows: [
       { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },

@@ -6,7 +6,7 @@ import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Pill, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { revealMcpToken } from "../api";
 import { ACCESS_LABEL, MAX_AGENTS, MCP_STATUS, errorMessage } from "../model/labels";
-import { JsonCode, mcpConfigSample, mcpEndpoint } from "./SetupGuides";
+import { McpClientSetup } from "./SetupGuides";
 import type { McpAccess, McpCreated, McpCredential } from "../model/types";
 
 type Props = {
@@ -310,7 +310,6 @@ function TokenCard({ value, children }: { value: string; children?: ReactNode })
 /** Popup token sau khi tạo (c12c): token trong thẻ cam có biểu tượng sao chép, đoạn cấu hình mẫu đã điền token. */
 export function McpTokenDialog({ created, onClose }: { created: McpCreated; onClose: () => void }) {
   const [copied, setCopied] = useState<string | null>(null);
-  const config = mcpConfigSample(mcpEndpoint(), created.token);
   const copy = async (what: string, text: string) => setCopied((await copyText(text)) ? what : null);
   return (
     <Dialog
@@ -340,20 +339,7 @@ export function McpTokenDialog({ created, onClose }: { created: McpCreated; onCl
         <dt className="text-muted">Hết hạn</dt>
         <dd className="text-ink">{formatDate(created.credential.expiresAt)}</dd>
       </dl>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold text-body">Đoạn cấu hình mẫu</span>
-        <JsonCode
-          text={config}
-          action={
-            <IconButton
-              icon={copied === "config" ? "check" : "copy"}
-              label={copied === "config" ? "Đã sao chép" : "Sao chép cấu hình"}
-              className="text-[#d4dbe3] hover:bg-white/10 hover:text-white"
-              onClick={() => void copy("config", config)}
-            />
-          }
-        />
-      </div>
+      <McpClientSetup token={created.token} />
       <span className="sr-only" role="status">
         {copied ? "Đã sao chép" : ""}
       </span>

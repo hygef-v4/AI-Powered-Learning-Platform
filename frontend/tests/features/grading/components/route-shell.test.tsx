@@ -10,18 +10,19 @@ vi.mock("@/features/identity/shell/components/AuthenticatedLayout", () => ({
   ),
 }));
 vi.mock("@/features/grading", () => ({
-  GradingWorkspacePage: ({ evaluationId }: { evaluationId: string }) => (
-    <div data-testid="grading-workspace" data-evaluation-id={evaluationId} />
+  GradingWorkspacePage: ({ evaluationId, proposalId }: { evaluationId: string; proposalId?: string }) => (
+    <div data-testid="grading-workspace" data-evaluation-id={evaluationId} data-proposal-id={proposalId} />
   ),
 }));
 
 afterEach(cleanup);
 describe("teaching evaluation route composition", () => {
   it("uses one parent shell with both authorized roles and preserves the evaluation ID", async () => {
-    const page = await EvaluationPage({ params: Promise.resolve({ evaluationId: "evaluation-123" }) });
+    const page = await EvaluationPage({ params: Promise.resolve({ evaluationId: "evaluation-123" }), searchParams: Promise.resolve({ proposalId: "proposal-1" }) });
     render(<TeachingLayout>{page}</TeachingLayout>);
     expect(screen.getAllByTestId("authenticated-shell")).toHaveLength(1);
     expect(screen.getByTestId("authenticated-shell")).toHaveAttribute("data-roles", "TEACHER,SUBJECT_MANAGER");
     expect(screen.getByTestId("grading-workspace")).toHaveAttribute("data-evaluation-id", "evaluation-123");
+    expect(screen.getByTestId("grading-workspace")).toHaveAttribute("data-proposal-id", "proposal-1");
   });
 });

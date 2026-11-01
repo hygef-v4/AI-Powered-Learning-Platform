@@ -1,5 +1,11 @@
 # U06 AI Connections — business-rules
 
+## External-agent workflow amendment — 2026-11-01
+
+Giao việc và hỏi làm rõ diễn ra trong Codex, Claude Code, OpenCode hoặc Antigravity; không cần tạo phiên hay điền form trên nền tảng trước. get_my_capabilities trả hướng dẫn theo role; Student vẫn chỉ góp ý Practice đã nộp của mình. UI dùng để xem, sửa và duyệt kết quả qua reviewUrl. Skill là tùy chọn, hook không phải điều kiện dùng MCP. Không tự gọi provider hoặc công bố điểm qua MCP.
+
+[Yêu cầu và stories](../../../inception/requirements/2026-11-01-external-agent-workflow.md).
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

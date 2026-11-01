@@ -182,7 +182,8 @@ public class McpServer {
             Map<String, Object> map = json.convertValue(args, Map.class);
             result = "get_my_capabilities".equals(name)
                     ? new McpToolResult(false, Map.of("role", principal.actor().role(), "access", principal.credential().access(),
-                            "tools", registry.visible(principal.actor().role(), principal.credential().access()).stream().map(McpToolDefinition::name).toList()))
+                            "tools", registry.visible(principal.actor().role(), principal.credential().access()).stream().map(McpToolDefinition::name).toList(),
+                            "workflow",McpCapabilitiesTools.workflow(principal.actor().role())))
                     : entry.get().provider().call(principal.actor(), name, map);
         } catch (ApiException e) {
             if (e.status().value() == 403 || e.status().value() == 404) {

@@ -93,6 +93,15 @@ public class SubmissionReviewService {
     public SubmissionPage list(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late, int page,
             int size) {
         page(page, size);
+        var listing = listRows(actor, classId, assignmentId, filter, late);
+        return new SubmissionPage(listing.rows().stream().skip((long) (page - 1) * size).limit(size).toList(),
+                listing.rows().size(), page, size, listing.summary(), listing.closesAt());
+    }
+
+    record Listing(List<SubmissionRow> rows, List<edu.aiplatform.grading.model.Evaluation> evaluations,
+                   Map<String, Long> summary, java.time.Instant closesAt) {}
+
+    Listing listRows(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late) {
         access.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         var assignment = assignments.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
@@ -121,7 +130,9 @@ public class SubmissionReviewService {
             Map<UUID, StudentSubmissionStatus> source = new HashMap<>();
             for (var submission : submissions.listSubmissions(assignmentId, classId))
                 source.put(submission.accountId(), submission);
-            for (var sid : classes.listActiveStudents(classId)) {
+            var students = classes.listActiveStudents(classId);
+            var contacts = accounts.getContacts(students);
+            for (var sid : students) {
                 var submission = source.get(sid);
                 var evaluation = submission == null ? null
                         : evals.stream()
@@ -131,7 +142,10 @@ public class SubmissionReviewService {
                 String status = evaluation != null ? evaluation.state.name()
                         : submission == null || submission.latestStatus() == null ? "NOT_SUBMITTED"
                                 : submission.latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS" : "PENDING";
-                rows.add(new SubmissionRow(person(sid), evaluation == null ? null : evaluation.id,
+                var contact = contacts.get(sid);
+                var student = contact == null ? new Person(sid, "Unavailable", "")
+                        : new Person(sid, contact.displayName(), contact.email());
+                rows.add(new SubmissionRow(student, evaluation == null ? null : evaluation.id,
                         submission == null ? null : submission.gradedAttemptId(), status,
                         evaluation == null ? null : evaluation.score, evaluation == null ? null : evaluation.maxScore,
                         submission != null && submission.late(), submission == null ? null : submission.submittedAt(),
@@ -153,8 +167,7 @@ public class SubmissionReviewService {
         var filtered = rows.stream()
                 .filter(r -> filter == null || filter.isBlank() || filter.equals("ALL") || r.status().equals(filter))
                 .filter(r -> late == null || r.late() == late).toList();
-        return new SubmissionPage(filtered.stream().skip((long) (page - 1) * size).limit(size).toList(),
-                filtered.size(), page, size, summary, assignment.closesAt());
+        return new Listing(filtered, evals, summary, assignment.closesAt());
     }
 
     public EvaluationDetail detail(Actor actor, UUID id) {

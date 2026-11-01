@@ -55,7 +55,7 @@ it("Admin tạo agent: popup token có biểu tượng sao chép, cấu hình m�
   expect(within(token).getByText("mcp_TEST_ONCE")).toBeInTheDocument();
   expect(within(token).getByRole("button", { name: "Sao chép token" })).toBeInTheDocument();
   expect(token.querySelector("pre")!.textContent).toContain("Bearer mcp_TEST_ONCE");
-  expect(token.querySelector("pre")!.textContent).toContain('    "mcpServers"');
+  expect(token.querySelector("pre")!.textContent).toContain('[mcp_servers.nen-tang-hoc-tap]');
   expect(within(token).queryByText("Địa chỉ MCP")).not.toBeInTheDocument();
   fireEvent.click(within(token).getAllByRole("button", { name: "Đóng" }).at(-1)!);
   await waitFor(() => expect(screen.queryByText("mcp_TEST_ONCE")).not.toBeInTheDocument());

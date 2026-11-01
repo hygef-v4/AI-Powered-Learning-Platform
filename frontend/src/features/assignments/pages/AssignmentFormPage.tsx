@@ -542,6 +542,12 @@ export function AssignmentFormPage({ id }: { id: string }) {
           Bài đã thay đổi ở nơi khác, bản đang sửa chưa lưu
         </Alert>
       )}
+      {detail.gradingMode === "GRADED" && detail.maxAiGradingRubricItems !== undefined
+        && rubricItemCount > detail.maxAiGradingRubricItems && (
+        <Alert tone="warning" role="status">
+          Rubric có {rubricItemCount} mục, vượt giới hạn {detail.maxAiGradingRubricItems} mục cho một lượt chấm AI. Bạn vẫn có thể soạn và chấm thủ công.
+        </Alert>
+      )}
       {message && (
         <Alert tone={message.tone} role={message.tone === "danger" ? "alert" : "status"}>{message.text}</Alert>
       )}

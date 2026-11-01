@@ -61,6 +61,7 @@ export type Permissions = {
 };
 
 export type AssignmentDetail = {
+  maxAiGradingRubricItems?: number;
   id: string;
   scope: AssignmentScope;
   classId: string | null;

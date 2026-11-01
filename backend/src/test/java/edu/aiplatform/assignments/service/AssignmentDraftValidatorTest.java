@@ -13,6 +13,24 @@ class AssignmentDraftValidatorTest {
     private final ObjectMapper json = new ObjectMapper();
 
     @Test
+    void warnsAboveThirtyItemsWithoutBlockingManualAuthoring() {
+        var proposal = json.createObjectNode().put("instructions", "Answer each part");
+        var sections = proposal.putArray("sections");
+        for (int n = 0; n < 31; n++) {
+            var section = sections.addObject().put("level", 1).put("title", "Question " + n);
+            section.putArray("rubric").addObject().put("title", "Criterion").put("kind", "TEXT")
+                    .putArray("items").addObject().put("text", "Required answer").put("points", 1);
+        }
+        var result = AssignmentDraftValidator.validate(proposal, GradingMode.GRADED,
+                AssignmentDraftValidator.Options.legacy());
+        assertThat(result.path("status").asText()).isEqualTo("NEEDS_REVIEW");
+        assertThat(issueCodes(result)).contains("AI_GRADING_RUBRIC_LIMIT");
+        sections.remove(30);
+        assertThat(AssignmentDraftValidator.validate(proposal, GradingMode.GRADED,
+                AssignmentDraftValidator.Options.legacy()).path("status").asText()).isEqualTo("VALID");
+    }
+
+    @Test
     void acceptsBilingualProfileWhenQuestionAndRubricTotalsMatch() throws Exception {
         JsonNode proposal = json.readTree("""
                 {"schemaVersion":2,"title":"Online Pharmacy Management","businessContext":"Customers search and order medicines; pharmacists manage stock and verify prescriptions.","instructions":"Answer in English.","sections":[

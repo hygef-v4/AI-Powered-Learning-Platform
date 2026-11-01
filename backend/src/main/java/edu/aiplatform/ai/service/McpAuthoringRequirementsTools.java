@@ -25,7 +25,9 @@ public class McpAuthoringRequirementsTools implements IMcpToolProvider {
             var save=registry.find(proposal,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
             var creation=registry.find(create,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
             return new McpToolResult(false,Map.of("kind",kind,"proposalInputSchema",json.readTree(save.definition().parameterSchema()),
-                    "createInputSchema",json.readTree(creation.definition().parameterSchema()),"workflow","Create DRAFT; generated content is a proposal for human review and validation."));
+                    "createInputSchema",json.readTree(creation.definition().parameterSchema()),
+                    "maxAiGradingRubricItems",AiGradingLimits.MAX_RUBRIC_ITEMS,
+                    "workflow","Start in external agent chat. Resolve the authorized target and ask one grouped clarification for missing topic/materials, difficulty, points, Practice vs Graded and individual/group mode; do not silently invent these choices. Reuse explicit existing settings for revisions. Create DRAFT; return the exact reviewUrl for UI editing and approval, never regenerate just to open review. Generated content remains a proposal, not published content."));
         }catch(com.fasterxml.jackson.core.JsonProcessingException e){throw new IllegalStateException("Invalid registered MCP schema",e);}
     }
 }

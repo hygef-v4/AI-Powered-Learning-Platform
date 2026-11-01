@@ -121,8 +121,8 @@ class GradingProposalResultHandlerTest {
                 new GradingProposalValidator(json), json, Clock.systemUTC()));
         UUID taskId = UUID.randomUUID();
         String output = """
-                {"checks":{"%s":["%s"]},"itemScoresByRubric":{"%s":{"%s":2.00}},"score":2.00,"feedback":"Tốt","sections":[]}
-                """.formatted(rubricId, itemId, rubricId, itemId);
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":2.00}},"score":"2.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"Observed relationship","reason":"Partially correct","requiresReview":false}]}}
+                """.formatted(rubricId, rubricId, itemId, rubricId, itemId);
         var result = new AiTaskResult(taskId, "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
                 "evaluation:" + e.id, 1, output);
 

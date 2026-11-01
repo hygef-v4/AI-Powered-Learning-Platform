@@ -19,6 +19,21 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class GradingPromptSchemaTest {
+    @org.junit.jupiter.api.Test
+    void apiPromptIncludesAssignmentIdentityAndDiagramRequirements() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var builder = new GradingPromptBuilder(org.mockito.Mockito.mock(edu.aiplatform.assignments.contract.IDocumentModel.class), mapper);
+        var e = new edu.aiplatform.grading.model.Evaluation();
+        e.rubricSnapshot = "[]";
+        var id = java.util.UUID.randomUUID();
+        var document = new edu.aiplatform.assignments.contract.DocumentModel(java.util.List.of());
+        var assignment = new edu.aiplatform.assignments.contract.AssignmentContent(id, 3, "Instructions", document,
+                java.util.List.of(), java.util.Map.of(edu.aiplatform.assignments.contract.DiagramType.CLASS, 1), java.util.List.of());
+        var payload = mapper.readTree(builder.build(e, document, assignment).user());
+        org.assertj.core.api.Assertions.assertThat(payload.path("assignmentId").asText()).isEqualTo(id.toString());
+        org.assertj.core.api.Assertions.assertThat(payload.path("versionNo").asInt()).isEqualTo(3);
+        org.assertj.core.api.Assertions.assertThat(payload.path("requiredDiagrams").path("CLASS").asInt()).isEqualTo(1);
+    }
     @Test
     void generatedSchemaDeclaresRubricKeysSectionPropertiesAndStructuredFeedback() throws Exception {
         var json = new ObjectMapper().findAndRegisterModules();

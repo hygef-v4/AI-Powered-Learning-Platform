@@ -51,6 +51,8 @@ class AssignmentMcpToolsTest {
         McpToolResult saved = tools.call(f.teacher, AssignmentMcpTools.SAVE, Map.of("assignmentId", a.id().toString(),
                 "expectedVersion", a.version(), "draft", draft));
         assertThat(saved.error()).isFalse();
+        assertThat((Map<String,Object>)saved.content()).containsKeys("proposalId","reviewUrl","assignmentId");
+        assertThat(((Map<String,Object>)saved.content()).get("reviewUrl").toString()).startsWith("/assignments/"+a.id()+"?proposalId=");
         assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
     }
 }

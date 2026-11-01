@@ -51,6 +51,10 @@ public final class AssignmentViews {
                          AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
                          Integer maxAttempts, String retiredReason, Instant createdAt, Instant updatedAt, long version,
                          Permissions permissions, boolean groupSupported, List<ValidationIssue> warnings) {
+        @com.fasterxml.jackson.annotation.JsonProperty("maxAiGradingRubricItems")
+        public int maxAiGradingRubricItems() {
+            return edu.aiplatform.ai.contract.AiGradingLimits.MAX_RUBRIC_ITEMS;
+        }
     }
 
     public record Rubric(UUID rubricId, UUID assignmentId, String partId, String partTitle,

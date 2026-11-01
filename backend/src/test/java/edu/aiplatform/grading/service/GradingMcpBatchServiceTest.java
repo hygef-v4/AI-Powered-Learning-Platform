@@ -28,11 +28,28 @@ class GradingMcpBatchServiceTest {
         assertThat(result.get("partial")).isEqualTo(true);
     }
     @Test void aggregateReadBudgetReturnsRetryableErrorInsteadOfTruncatedContext() {
-        when(reads.context(eq(actor),anyMap())).thenReturn(Map.of("text","x".repeat(120000),"complete",true));
+        when(reads.context(eq(actor),anyMap(),eq(false))).thenReturn(Map.of("text","x".repeat(120000),"complete",true));
         var result=(Map<String,Object>)batch.call(actor,"read_grading_batch",Map.of("items",List.of(
                 Map.of("evaluationId",UUID.randomUUID().toString()),Map.of("evaluationId",UUID.randomUUID().toString())))).content();
         var items=(List<Map<String,Object>>)result.get("items");
         assertThat(items.get(0)).containsEntry("outcome","OK");
         assertThat(items.get(1)).containsEntry("code","MCP_BATCH_RESULT_LIMIT").doesNotContainKey("result");
+        verify(reads,times(1)).recordRead(eq(actor),anyMap());
+    }
+    @Test void escapedTransportEnvelopeCannotMarkAnUndeliveredPageAsRead() {
+        when(reads.context(eq(actor),anyMap(),eq(false)))
+                .thenReturn(Map.of("text","\\".repeat(50000),"complete",true))
+                .thenReturn(Map.of("text","x".repeat(68000),"complete",true));
+        var result=(Map<String,Object>)batch.call(actor,"read_grading_batch",Map.of("items",List.of(
+                Map.of("evaluationId",UUID.randomUUID().toString()),Map.of("evaluationId",UUID.randomUUID().toString())))).content();
+        var items=(List<Map<String,Object>>)result.get("items");
+        assertThat(items.get(1).get("code")).isEqualTo("MCP_BATCH_RESULT_LIMIT");
+        assertThat(items.get(1)).doesNotContainKey("result");
+        try {
+            String text=new ObjectMapper().writeValueAsString(result);
+            assertThat(new ObjectMapper().writeValueAsBytes(Map.of("content",List.of(Map.of("type","text","text",text)),"isError",false)).length)
+                    .isLessThan(256*1024-512);
+        } catch(Exception ex){throw new AssertionError(ex);}
+        verify(reads,times(1)).recordRead(eq(actor),anyMap());
     }
 }

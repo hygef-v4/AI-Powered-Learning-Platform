@@ -75,21 +75,34 @@ public class GradingProposalValidator {
                     ? json.convertValue(payload.get("itemScoresByRubric"), new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {})
                     : Map.of();
             if (itemScores == null) throw new IllegalArgumentException();
+            requireCompleteScores(rubrics, checks, itemScores);
             var score = GradingJson.score(rubrics, checks, itemScores);
             requireMatchingScore(payload.get("score"), score);
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
-            GradingFeedback structuredFeedback = null;
-            if (payload.has("structuredFeedback") && !payload.get("structuredFeedback").isNull()) {
-                structuredFeedback = feedbackValidator.validateNode(
-                        payload.get("structuredFeedback"), rubrics, validBlockIds, true);
-            }
+            GradingFeedback structuredFeedback = feedbackValidator.validateNode(
+                    payload.get("structuredFeedback"), rubrics, validBlockIds, true);
             return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores), structuredFeedback);
         } catch (ApiException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal does not match the rubric schema");
+        }
+    }
+
+    private void requireCompleteScores(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
+            Map<UUID, Map<UUID, BigDecimal>> scores) {
+        for (var rubric : rubrics) {
+            var awarded = scores.get(rubric.rubricId());
+            if (awarded == null) throw new IllegalArgumentException();
+            for (var criterion : rubric.criteria()) for (var item : criterion.items()) {
+                var points = awarded.get(item.itemId());
+                if (points == null) throw new IllegalArgumentException();
+                boolean checked = checks.getOrDefault(rubric.rubricId(), Set.of()).contains(item.itemId());
+                if (checked != (points.compareTo(item.points()) == 0))
+                    throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Checks must match full-credit item scores");
+            }
         }
     }
 

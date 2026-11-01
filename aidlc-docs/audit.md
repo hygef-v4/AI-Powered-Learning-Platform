@@ -1,5 +1,23 @@
 # AI-DLC Audit Log
 
+## 2026-11-01 — Commit preparation
+
+User input (raw): “giúp tôi commit rõ ràng”. Authorized committing the pending MCP quality and external-agent workflow implementation with an English title and detailed description; no push. Reviewed tracked/untracked scope and whitespace checks. Commit description records implemented safeguards, client setup, review handoff, AI-DLC synchronization, existing verification and pending real-model/client acceptance. Temporary logs, local credentials and build outputs stay ignored.
+
+## 2026-11-01 — Implementation reconfirmation
+
+User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytail”. Reconciled the external-agent workflow plan against source, current state and existing verification evidence. All implementation checklist items are complete: clarification instructions, contiguous snapshot-read guard and exact review links/UI handoff. Backend health was checked again and is UP. No duplicate implementation or unnecessary repeated test run; no new application edits, external configuration changes, commit or push. Teacher-scored model calibration and all-client authenticated acceptance remain outside the completed implementation evidence.
+
+## 2026-11-01 — External-agent workflow implementation
+
+**User input (raw):** “ok giúp tôi lập plan và triển khai”. Follow-up (raw): “nhớ sửa cả doc aidlc”. Accepted scope is the preceding agent-first explanation: exchange requirements and clarify ambiguity in external agent chat, process through MCP, return exact links for viewing/editing/approval on the platform. No mandatory UI initiation flow.
+
+**Action:** Created requirements/stories and implementation plan; executed in existing checkout, preserving prior authorized changes. Added contiguous read-progress guard per actor/evaluation/fingerprint in existing Redis with 30-minute inactivity TTL and fail-closed dependency behavior. Added required snapshotFingerprint to proposal writes; preserved existing transactional authorization/version/hash/rubric checks and API/manual/history routes. Revised assignment and grading results return reviewUrl; grading UI opens exact selected older proposal without applying scores. Capability/schema response guidance and both skills now specify grouped external-chat clarification and exact handoff. Updated current U06/U07/U09 business rules and guides.
+
+**Verification:** Reproduced missing-read guard and escaped-batch-envelope bugs before fixes. Backend focused/architecture 67 passed, zero failures/errors/skips; frontend affected 38 passed; typecheck/build passed; lint zero errors/two existing warnings. Redis atomic script tested on a random local key and cleaned up. Fresh review found escaped-envelope admission and lost transaction boundary; both corrected and re-reviewed. Skill pressure dry-runs found Practice/Graded ambiguity and it was corrected. Existing older proposal opened through Orca in a separate Teacher tab: flat review, correct selection, no dialog or implicit save. Backend packaged/restarted in existing terminal, health UP.
+
+**Limits:** Follow-up full repo suites not rerun. No provider/model calls, new credentials, private configuration/skill installation, migration, official publication, commit or push. No semantic-quality or all-client authenticated acceptance claim. Progress proves served pages, not model understanding. Results: construction/build-and-test/2026-11-01-external-agent-workflow-results.md. Existing security/resiliency retained; PBT disabled.
+
 ## Initial User Request
 **Timestamp**: 2026-09-12T15:04:50Z
 **User Input**: "giúp tôi triển khai quy trình ai dlc"
@@ -7217,3 +7235,41 @@ Follow-up scope (2026-11-01), complete raw input: "Giúp tôi chỉ sửa giao d
 **Action**: Reviewed the pending navigation-only source, tests and AI-DLC artifacts against HEAD 387f416f. User authorizes committing the verified Back/Forward and URL selection restoration work with an English description; no push. Latest source matches the preceding 641-test frontend/build/typecheck/lint/browser verification. Fresh whitespace validation passed. Tests were not repeated solely to commit unchanged source.
 
 ---
+
+## MCP quality audit and proposed remediation plan — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> $ponytail:ponytail-audit giúp tôi audit mcp và doc aidlc, hiện tại guide hdan kết nối mcp chưa rõ ràng với lại có cách nào tối ưu việc ra đề, chấm điểm bằng mcp ko, nếu dùng mcp thì có đảm bảo chất luwnowngj chấm theo rubric ko
+
+> có nên thêm các hook hay skill gì ko
+
+> giúp tôi lập kế hoạch sửa
+
+**Action**: Read MCP connection/config generation, server/auth, assignment authoring, grading context/proposals/validation/batching, relevant tests and dated AI-DLC policies. Reported seven scoped findings and checked official OpenCode/Gemini client format documentation. User now authorizes planning, not implementation. Created proposed requirements and a seven-task execution plan under the existing AI-DLC locations using writing-plans guidance. Backend guards are authoritative; optional skills/hooks remain client assistance. Proposed 30-item warning preserves manual authoring; quality pilot requires teacher-scored references and agreed error criteria. Preserved historical policy/evidence; no fresh runtime/model-quality claims.
+
+**Limits**: No application source changes, tests, external messages, real credentials/provider calls, global client installation, database changes, commit or push. Plan self-review covers all audit findings and maps R01–R10 to tasks. Security/resiliency retained at existing scope; PBT disabled. Plan and implementation approach await review.
+
+## 2026-11-01 — MCP quality remediation execution and setup follow-up
+
+Latest user steering (raw): “ok giúp tôi đổi lại tên”, superseded by “mà thôi bỏ gemini cli đi”. Removed Gemini CLI from the MCP guide/token-dialog selector and configuration generator, defaulting to Codex. Updated current setup documentation and corresponding tests; Gemini API integration and Antigravity paths remain intact. Focused 18 tests and typecheck passed. No personal config removed, commit or push.
+
+Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent tự setup luôn” and “prompt bằng tiếng anh”. Implemented English setup prompt copying plus preview/manual fallback in McpClientSetup, shared with the explicit token dialog. Reuses client-native configuration and actual endpoint; preserves existing servers, private config and safe read verification. Placeholder guide does not obtain/reveal a token. Explicit token-dialog prompt warns that it includes the provided token. Added three regressions (missing-button RED, then 18 affected tests GREEN), passed typecheck/targeted lint/build, checked Orca guide. No actual client setup, real token copying, commit or push.
+
+**User input (raw)**:
+
+> $superpowers:using-superpowers $ponytail:ponytail giúp tôi triển klhai theo kế hoạch
+
+> tôi muốn hỗ trợ mcp codex, claude code, antigravity, open code
+
+> bỏ mấy cái cli sau tham khảo các reppo github xem ngta viết guide etup như tnao cho dễ dùng
+
+**Clarification response (raw)**:
+
+> Bỏ cả hướng dẫn terminal, ưu tiên thao tác trong ứng dụng
+
+**Action**: Executed approved plan with shared strict new-proposal validation, safe legacy replay, common API/MCP context/fingerprint, metadata-only discovery, shared AI rubric-limit warnings, repository-local authoring/grading skills and optional Gemini Node hook adapters. Fresh review issues were reproduced and fixed. Reworked setup to select the application first, open personal config, paste a native sample and verify in the application; removed terminal setup instructions and CLI suffixes from UI. Codex and Claude personal samples use direct Bearer headers rather than requiring environment-variable setup. Claude uses ~/.claude.json. No personal config or token was written. Referenced GitHub MCP and Context7 guide organization and official client config documentation.
+
+**Evidence**: Backend 1,630 runtime cases passed; original combined Maven command then exhausted Metaspace in architecture discovery, and separate architecture rerun passed 2 cases. Required database-suite guard passed. Frontend full 644 passed before final guide revisions; final affected setup suites 15 passed. Final production build/typecheck passed; lint zero errors and two existing warnings. Hooks 13 scenarios passed. Backend package built, existing Orca backend terminal restarted, /health UP. Orca guide inspected without Computer Use. Results/remaining gates: construction/build-and-test/2026-11-01-mcp-quality-remediation-results.md.
+
+**Limits**: No new external-client authenticated acceptance, teacher-scored model pilot, representative latency/load measurement, Python fixture run, global installation, provider invocation, official publication, commit or push. Historical policy supersession notice already existed and was preserved. Schema validity does not establish semantic grading quality. Security/resiliency retained; PBT disabled.

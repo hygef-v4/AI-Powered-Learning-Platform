@@ -1,5 +1,17 @@
 # U09 Assignment Grading — business-rules
 
+## External-agent grading amendment — 2026-11-01
+
+Giao việc và xác định phạm vi trong chat ngoài; hỏi lại khi chấm hết chưa rõ bài tập hoặc có bao gồm DRAFT không. Chỉ tạo đề xuất cho gốc bài PENDING/DRAFT, không ghi đè điểm đã chốt/công bố hay chấm đóng góp MEMBER.
+
+Tool ghi đơn và từng item batch bắt buộc có snapshotFingerprint. Backend kiểm tra fingerprint hiện hành và tiến độ đọc liên tiếp đủ context theo actor/evaluation/fingerprint. Redis lưu offset cao nhất với TTL 30 phút không đọc, không lưu bài/token. Đọc lại không giảm tiến độ; nhảy trang bị từ chối; bài trống vẫn cần lần đọc đầu. Batch context bị bỏ do giới hạn byte không ghi nhận tiến độ.
+
+MCP_CONTEXT_READ_REQUIRED: đọc lại từ offset 0. MCP_CONTEXT_READ_UNAVAILABLE: dừng, không bỏ guard. Snapshot thay đổi: đọc/chấm lại. Retry ghi không đổi giữ requestRef/payload nhưng vẫn cần context hiện hành. API callbacks, lịch sử và chấm tay không phụ thuộc progress MCP.
+
+Ghi đơn, batch và danh sách đề xuất trả reviewUrl mở đúng evaluation/proposalId trên màn hình phẳng, kể cả bản cũ. Mở link không áp dụng/lưu/chốt/công bố điểm. Link mất đề xuất báo rõ, không tạo thay thế. Tiến độ chỉ chứng minh server đã phục vụ đủ trang cho tài khoản, không chứng minh model hiểu/chấm đúng; vẫn cần chuẩn giáo viên.
+
+[Yêu cầu và stories](../../../inception/requirements/2026-11-01-external-agent-workflow.md).
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 
