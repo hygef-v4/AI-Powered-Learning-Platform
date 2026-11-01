@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Giao diện tối giản: nền sáng ngả cam với điểm nhấn cam mơ, chế độ tối nền xanh biển sâu với điểm nhấn xanh lơ.
+ * Nền trắng trung tính với điểm nhấn xanh lam trầm; chế độ tối dùng nền slate với xanh lam nhạt.
  * Màu là biến CSS đổi theo theme; class Tailwind (text-ink, bg-surface, bg-primary-soft…) đọc qua biến nên tự đổi theo.
  * `primary` là màu nền nhấn (nút, chỉ báo); chữ nhấn trên nền sáng dùng `primary-ink`, chữ trên nền nhấn dùng `on-primary`.
  */
@@ -97,23 +97,23 @@
 
 :root {
   color-scheme: light;
-  --c-bg: #fff8f1;
+  --c-bg: #fafafa;
   --c-surface: #ffffff;
-  --c-sunken: #fcf1e4;
-  --c-line: #f1e3d3;
-  --c-line-strong: #e6d2bc;
-  --c-field: #a38a73;
-  --c-focus: #9a5508;
-  --c-line-soft: #f7ecdf;
-  --c-ink: #2a211b;
-  --c-body: #54473d;
-  --c-muted: #7a6757;
-  --c-faint: #a8978a;
-  --c-primary: #f6b24e;
-  --c-primary-strong: #eda137;
-  --c-primary-soft: #ffedd2;
-  --c-primary-ink: #9a5508;
-  --c-on-primary: #3a2408;
+  --c-sunken: #f4f4f5;
+  --c-line: #e4e4e7;
+  --c-line-strong: #d4d4d8;
+  --c-field: #8c8c96;
+  --c-focus: #466a96;
+  --c-line-soft: #efeff1;
+  --c-ink: #27272a;
+  --c-body: #45454b;
+  --c-muted: #62626b;
+  --c-faint: #686872;
+  --c-primary: #466a96;
+  --c-primary-strong: #38597f;
+  --c-primary-soft: #eef2f7;
+  --c-primary-ink: #38597f;
+  --c-on-primary: #ffffff;
   --c-success: #2f6b3c;
   --c-success-soft: #e6f4ea;
   --c-warning: #8a5a00;
@@ -128,40 +128,38 @@
   --c-accent-soft: #f1eaf6;
   --c-orange: #a4511a;
   --c-orange-soft: #fdebdd;
-  --c-tier-1: #fdf3e6;
-  --c-tier-2: #fbe8d0;
-  --c-tier-3: #f8dcb9;
-  --c-tier-4: #f4cfa2;
-  --c-scrim: rgb(42 33 27 / 0.32);
-  --c-topbar: rgb(255 248 241 / 0.86);
-  /* Ba vùng của khung trang mỗi vùng một màu: thanh trên trắng ngà ánh vàng (khác thẻ trắng, nhạt hơn sidebar), sidebar cát, nội dung kem (--c-bg). */
-  --c-nav: #fbf0dc;
-  /* Hình chìm sau vùng nội dung: đậm hơn nền một chút, nhạt hơn thanh trên. */
-  --c-watermark: #fcf2e3;
-  --c-sidebar: #f6e7d4;
-  --shadow-float: 0 18px 48px rgb(60 38 14 / 0.12), 0 2px 6px rgb(60 38 14 / 0.04);
-  --shadow-lift: 0 6px 18px rgb(80 50 10 / 0.06);
+  --c-tier-1: #f7f7f8;
+  --c-tier-2: #f1f1f3;
+  --c-tier-3: #e9e9ed;
+  --c-tier-4: #e0e0e6;
+  --c-scrim: rgb(24 24 27 / 0.28);
+  --c-topbar: rgb(255 255 255 / 0.96);
+  --c-nav: #ffffff;
+  --c-watermark: #f1f1f3;
+  --c-sidebar: #ffffff;
+  --shadow-float: 0 18px 48px rgb(24 24 27 / 0.08), 0 2px 6px rgb(24 24 27 / 0.035);
+  --shadow-lift: 0 4px 14px rgb(24 24 27 / 0.025);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --c-bg: #0e1b25;
-  --c-surface: #13232f;
-  --c-sunken: #0b1620;
-  --c-line: #1f3341;
-  --c-line-strong: #2a4354;
-  --c-field: #56778b;
-  --c-focus: #8fd6e3;
-  --c-line-soft: #182a37;
-  --c-ink: #eaf4fa;
-  --c-body: #bcd0dc;
-  --c-muted: #8ba3b3;
-  --c-faint: #5f7a8c;
-  --c-primary: #8fd6e3;
-  --c-primary-strong: #a8e2ec;
-  --c-primary-soft: #163a4a;
-  --c-primary-ink: #9be0ec;
-  --c-on-primary: #08222b;
+  --c-bg: #18212d;
+  --c-surface: #202b39;
+  --c-sunken: #141d28;
+  --c-line: #37475b;
+  --c-line-strong: #4a5e77;
+  --c-field: #71849c;
+  --c-focus: #9ab9df;
+  --c-line-soft: #2b394b;
+  --c-ink: #e9eef5;
+  --c-body: #c5cfdd;
+  --c-muted: #a2afc0;
+  --c-faint: #96a5b9;
+  --c-primary: #9ab9df;
+  --c-primary-strong: #b0cae9;
+  --c-primary-soft: #2b405b;
+  --c-primary-ink: #aec8e8;
+  --c-on-primary: #182638;
   --c-success: #8fd9a8;
   --c-success-soft: #15352a;
   --c-warning: #f0cf86;
@@ -176,15 +174,15 @@
   --c-accent-soft: #2e2440;
   --c-orange: #f3b98c;
   --c-orange-soft: #3b2a1c;
-  --c-tier-1: #162a38;
-  --c-tier-2: #1a3242;
-  --c-tier-3: #1e3a4c;
-  --c-tier-4: #234356;
+  --c-tier-1: #263549;
+  --c-tier-2: #2d4059;
+  --c-tier-3: #354b68;
+  --c-tier-4: #3d5879;
   --c-scrim: rgb(3 10 16 / 0.62);
-  --c-topbar: rgb(14 27 37 / 0.86);
-  --c-nav: #1f3849;
-  --c-watermark: #142634;
-  --c-sidebar: #08121a;
+  --c-topbar: rgb(24 33 45 / 0.96);
+  --c-nav: #1d2939;
+  --c-watermark: #263549;
+  --c-sidebar: #131d28;
   --shadow-float: 0 18px 48px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.2);
   --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
 }

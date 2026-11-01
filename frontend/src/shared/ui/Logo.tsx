@@ -44,8 +44,8 @@ export function LogoWatermark({ className }: { className?: string }) {
 export function HankoMark({ size = 28, className }: { size?: number; className?: string }) {
   return (
     <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" className={cx("shrink-0", className)}>
-      <rect x="4" y="4" width="56" height="56" rx="12" className="fill-[#e8833a] dark:fill-primary" />
-      <g fill="none" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" className="stroke-[#fff8f1] dark:stroke-on-primary">
+      <rect x="4" y="4" width="56" height="56" rx="12" className="fill-primary" />
+      <g fill="none" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" className="stroke-on-primary">
         <path d="M21.5 12.5 24 17.5" />
         <path d="M32 11v6" />
         <path d="M42.5 12.5 40 17.5" />
@@ -64,7 +64,7 @@ export function Logo({ className }: { className?: string }) {
     <span className={cx("inline-flex items-center gap-2.5 text-ink", className)}>
       <LogoMark />
       <span className="font-display text-[17px] leading-none tracking-[-0.02em] whitespace-nowrap">
-        Nền tảng <i className="rounded-md bg-[#e8833a] px-1.5 pb-0.5 text-[#fff8f1] dark:bg-primary dark:text-on-primary">học tập</i>
+        Nền tảng <i className="rounded-md bg-primary px-1.5 pb-0.5 text-on-primary">học tập</i>
       </span>
     </span>
   );

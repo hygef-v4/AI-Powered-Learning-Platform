@@ -7180,4 +7180,22 @@ Follow-up scope (2026-11-01), complete raw input: "Giúp tôi chỉ sửa giao d
 
 **Action**: Reviewed all pending changes from the scoped assignment/grading UI requests, assignment-class distribution settings, rubric read compatibility and toolbar fixes, including their tests and synchronized AI-DLC artifacts. User authorizes a descriptive English-language commit containing this work; no push. Latest source verification remains the 175-test backend run, 77-test focused frontend run, production build/typecheck and browser checks above; the preceding 615-test frontend run covers the earlier feature set. Fresh diff whitespace validation passed. Full project tests were not rerun solely for committing.
 
+## Slate Blue palette trial — 2026-11-01
+
+**User Input (complete raw text)**:
+
+> thử chuyeerh thành slate blue xem
+
+**Action**: Implemented the proposed trial through shared color tokens: #F3F5F7 light canvas, white cards, #E9EEF4 sidebar, #466A96 primary and corresponding slate/pale-blue dark palette. Muted text was darkened after contrast checks; 14 representative text/background pairs now meet at least 4.67:1. Removed oversized shell watermark, softened shadows, and moved wordmark badge/login seal to semantic theme colors while retaining the small brush mark colors. PRODUCT.md records the user's trial decision. No layout/function/backend/data/dependency changes.
+
+**Verification**: Production build/typecheck passed; 9 shared layout/UI tests passed; targeted ESLint and diff whitespace checks passed. Orca screenshots inspected in light/dark, computed tokens confirmed, no page overflow at 390 px. Left light theme selected for review. Broader all-page/role visual acceptance and full suites not rerun. No commit or push.
+
+## Neutral white palette follow-up — 2026-11-01
+
+**User Input (complete raw text; reference image attached)**:
+
+> [Image #1] hiện tại màu vẫn trông hơi lạnh và mỏi mắt, tôi muốn kiểu nền trắng như này
+
+**Action**: Replaced the cool-tinted light canvas/sidebar/topbar with #FAFAFA and white surfaces, neutral gray text/borders/sunken surfaces and neutral shadows. Blue remains a control/selection accent. Dark theme and behavior unchanged. Updated PRODUCT.md to the latest reference. Fourteen contrast checks passed (minimum 4.75:1); Orca measured actual white sidebar and #FAFAFA canvas, no overflow, and screenshot inspected. No new tests for this CSS-only refinement, backend changes, commit or push.
+
 ---
