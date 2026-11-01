@@ -4,6 +4,7 @@ import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
 import edu.aiplatform.groupdocs.service.GroupDocAccess;
 import edu.aiplatform.groupdocs.service.GroupSectionService;
+import edu.aiplatform.groupdocs.service.GroupSectionService.RevisionView;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
 import edu.aiplatform.groupdocs.service.GroupSubmissionService;
 import edu.aiplatform.groupdocs.service.GroupSubmissionService.Export;
@@ -67,6 +68,9 @@ public class GroupDocController {
     public record SubmitRequest(Long version) {
     }
 
+    public record RestoreRequest(UUID revisionId, Long version) {
+    }
+
     public record ActivityRequest(List<ActivityEventInput> events) {
     }
 
@@ -114,6 +118,33 @@ public class GroupDocController {
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:done")
     public SectionView done(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
         return sections.done(actor, id, sectionId);
+    }
+
+    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:take-over")
+    public SectionView takeOver(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
+        return sections.takeOver(actor, id, sectionId);
+    }
+
+    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:lock")
+    public SectionView lock(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
+        return sections.lock(actor, id, sectionId);
+    }
+
+    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:unlock")
+    public SectionView unlock(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
+        return sections.unlock(actor, id, sectionId);
+    }
+
+    @GetMapping("/api/v1/group-docs/{id}/sections/{sectionId}/revisions")
+    public List<RevisionView> revisions(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                        @PathVariable UUID sectionId) {
+        return sections.revisions(actor, id, sectionId);
+    }
+
+    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:restore")
+    public SectionView restore(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId,
+                               @RequestBody RestoreRequest request) {
+        return sections.restore(actor, id, sectionId, request.revisionId(), request.version());
     }
 
     @PutMapping("/api/v1/group-docs/{id}/sections/{sectionId}/draft")
