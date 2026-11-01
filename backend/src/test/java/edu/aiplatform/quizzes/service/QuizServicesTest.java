@@ -77,6 +77,8 @@ class QuizServicesTest {
     private QuizCopyService copies;
     private QuizScorer scorer;
     private QuizQueryService query;
+    private QuizSupport support;
+    private final java.util.Set<UUID> attempted = new java.util.HashSet<>();
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -105,8 +107,9 @@ class QuizServicesTest {
 
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
-        QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access,
+        support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access,
                 new ActiveSubjects(subjects));
+        support.setAttemptPresence(attempted::contains);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(new FakeReferenceMaterial(), support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
                 materials, clock);
@@ -396,6 +399,21 @@ class QuizServicesTest {
     }
 
     @Test
+    void openQuizWithAttemptsRejectsQuestionEditsButKeepsDetailsEditable() {
+        Question question = bank(true);
+        QuizDetail open = published(classQuizWith(question));
+        UUID id = open.quiz().id();
+        attempted.add(id);
+        long version = open.quiz().version();
+
+        assertThat(api(() -> authoring.addInline(teacher, id, content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"),
+                version)).code()).isEqualTo("QUIZ_HAS_ATTEMPTS");
+        assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), version)).code()).isEqualTo("QUIZ_HAS_ATTEMPTS");
+        assertThat(query.getStudentView(id).orElseThrow().questions()).as("đề không đổi").hasSize(1);
+        assertThat(store.quizRepository.find(id).orElseThrow().version()).isEqualTo(version);
+    }
+
+    @Test
     void openQuizAllowsItemAndInlineEditsAndKeepsOpenStatus() {
         QuizDetail open = published(classQuizWith(bank(true)));
         UUID id = open.quiz().id();
@@ -466,6 +484,18 @@ class QuizServicesTest {
         assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_VERSION_CREATED", "QUIZ_RETIRED");
         assertThat(copies.newVersion(teacher, v2.quiz().id()).quiz().versionNo()).as("v2 đã mở, được tạo v3")
                 .isEqualTo(3);
+    }
+
+    @Test
+    void retiredOldVersionCannotReopenWhileANewerVersionIsOpen() {
+        QuizDetail v1 = published(classQuizWith(bank(true)));
+        QuizDetail v2 = copies.newVersion(teacher, v1.quiz().id());
+        published(v2);
+        Quiz old = store.quizzes.get(v1.quiz().id());
+
+        assertThat(api(() -> publication.reopen(teacher, old.id(), old.version())).code())
+                .isEqualTo("QUIZ_OTHER_VERSION_OPEN");
+        assertThat(store.quizzes.get(old.id()).status()).isEqualTo(QuizStatus.RETIRED);
     }
 
     @Test

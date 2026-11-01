@@ -108,6 +108,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
 
     @Override
     public Duration timeout() {
+        return callWindow();
+    }
+
+    /** Thời gian tối đa một lần gọi provider có thể còn chạy sau mốc gửi. */
+    private Duration callWindow() {
         return properties.requestTimeout().plusSeconds(30);
     }
 
@@ -174,7 +179,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         Instant now = clock.instant();
         if (task.state() == AiTaskState.RUNNING) {
-            // Message đến lại sau mốc gửi: không gọi provider lần hai (BR-U06-22).
+            // Message đến lại sau mốc gửi: không gọi provider lần hai (BR-U06-22). Lần gọi trước có thể vẫn đang chạy
+            // (bản trùng do sweeper hoặc retry): chỉ coi là không rõ khi đã quá hạn gọi, không thì để lần gọi đó xong.
+            if (task.dispatchedAt() != null && !task.dispatchedAt().plus(callWindow()).isBefore(now)) {
+                return null;
+            }
             unknown(task, "Không rõ kết quả của lần gọi trước");
             return null;
         }

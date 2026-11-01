@@ -7,7 +7,7 @@ import { ApiError } from "@/shared/api/client";
 import { Alert, Button, ButtonLink, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentViewer } from "@/shared/document";
-import { claimSection, downloadDocx, getWorkspace, releaseSection, sendActivity } from "../api";
+import { claimSection, downloadDocx, getWorkspace, groupDocImageUrl, releaseSection, sendActivity } from "../api";
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "../components/SectionDialogs";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "../model/types";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
@@ -245,13 +245,13 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             {view.sharedBlocks.blocks.length > 0 && (
               <div className="rounded-xl bg-shell p-3">
                 <p className="mb-1 text-xs font-semibold text-muted">Hướng dẫn của giảng viên</p>
-                <DocumentViewer document={view.sharedBlocks} />
+                <DocumentViewer document={view.sharedBlocks} imageUrl={groupDocImageUrl(documentId)} />
               </div>
             )}
             {view.sections.map((s) => (
               <article key={s.id} id={`section-${s.id}`} aria-label={s.title} className="scroll-mt-4">
                 <h3 className="mt-2 text-[14px] font-bold text-ink">{s.title}</h3>
-                <DocumentViewer document={{ blocks: s.publishedBlocks ?? [] }} empty="Chưa có nội dung đã Xong." />
+                <DocumentViewer document={{ blocks: s.publishedBlocks ?? [] }} imageUrl={groupDocImageUrl(documentId)} empty="Chưa có nội dung đã Xong." />
               </article>
             ))}
           </Section>

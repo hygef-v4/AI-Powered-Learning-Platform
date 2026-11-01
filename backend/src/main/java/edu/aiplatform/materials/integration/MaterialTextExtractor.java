@@ -24,10 +24,16 @@ public class MaterialTextExtractor {
     @org.springframework.beans.factory.annotation.Autowired
     public MaterialTextExtractor(IArtifact artifacts) {this(artifacts,Duration.ofSeconds(120));}
     MaterialTextExtractor(IArtifact artifacts,Duration deadline) {this.artifacts=artifacts;this.deadline=deadline;}
+    /** Đang có đủ 2 lần trích xuất chạy cùng lúc: lỗi tạm, không phải tệp hỏng. */
+    public static final class BusyException extends IllegalStateException {
+        BusyException() {super("Extraction capacity is busy");}
+    }
     public Result extract(String fileId) {
         AtomicReference<InputStream> activeStream=new AtomicReference<>();
         AtomicReference<Process> activeProcess=new AtomicReference<>();
-        Future<Result> task=executor.submit(()->parse(fileId,activeStream,activeProcess));
+        Future<Result> task;
+        try {task=executor.submit(()->parse(fileId,activeStream,activeProcess));}
+        catch(RejectedExecutionException e) {throw new BusyException();}
         try {return task.get(deadline.toMillis(),TimeUnit.MILLISECONDS);}
         catch(InterruptedException e) {Thread.currentThread().interrupt();throw new IllegalStateException("Extraction interrupted");}
         catch(ExecutionException|TimeoutException e) {throw new IllegalStateException("Extraction failed");}

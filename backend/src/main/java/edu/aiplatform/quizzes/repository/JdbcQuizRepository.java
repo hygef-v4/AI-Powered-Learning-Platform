@@ -210,8 +210,8 @@ public class JdbcQuizRepository implements IQuizRepository {
     @Override
     public Optional<Quiz> findOpenInVersionChain(UUID quizId) {
         return jdbc.sql(VERSION_CHAIN + "select " + COLUMNS + " from quizzes where id in (select id from down)"
-                        + " and id <> :id and status = 'OPEN' for update")
-                .param("id", quizId).query(this::map).optional();
+                        + " and id <> :id and status = 'OPEN' order by version_no desc, id for update")
+                .param("id", quizId).query(this::map).list().stream().findFirst();
     }
 
     @Override

@@ -66,6 +66,12 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     }
 
     @Override
+    public boolean existsForQuiz(UUID quizId) {
+        return jdbc.sql("select exists (select 1 from quiz_attempts where quiz_id = :quizId)")
+                .param("quizId", quizId).query(Boolean.class).single();
+    }
+
+    @Override
     public void insert(QuizAttempt a) {
         jdbc.sql("""
                         insert into quiz_attempts (id, quiz_id, class_id, account_id, attempt_no, snapshot, answers,

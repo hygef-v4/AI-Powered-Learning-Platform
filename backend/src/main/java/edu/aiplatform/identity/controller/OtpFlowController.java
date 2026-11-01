@@ -65,8 +65,9 @@ public class OtpFlowController {
     }
 
     @PostMapping("/activation/verify")
-    public TicketResponse verifyActivation(@RequestBody @Validated VerifyRequest request) {
-        return new TicketResponse(otp.verify(request.email(), OtpPurpose.ACTIVATION, request.otp()));
+    public TicketResponse verifyActivation(@RequestBody @Validated VerifyRequest request, HttpServletRequest http) {
+        return new TicketResponse(otp.verify(request.email(), OtpPurpose.ACTIVATION, request.otp(),
+                http.getRemoteAddr()));
     }
 
     /** Kích hoạt xong thì tự đăng nhập (BR-U01-13): trả phiên và đặt cookie như đăng nhập. */
@@ -88,8 +89,9 @@ public class OtpFlowController {
     }
 
     @PostMapping("/password-reset/verify")
-    public TicketResponse verifyPasswordReset(@RequestBody @Validated VerifyRequest request) {
-        return new TicketResponse(otp.verify(request.email(), OtpPurpose.PASSWORD_RESET, request.otp()));
+    public TicketResponse verifyPasswordReset(@RequestBody @Validated VerifyRequest request, HttpServletRequest http) {
+        return new TicketResponse(otp.verify(request.email(), OtpPurpose.PASSWORD_RESET, request.otp(),
+                http.getRemoteAddr()));
     }
 
     /** Đặt lại xong không tự đăng nhập; mọi phiên cũ đã bị xóa (BR-U01-34). */

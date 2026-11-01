@@ -44,6 +44,7 @@ class OtpServiceTest {
     void setUp() {
         service = new OtpService(accounts, IdentityTestData.properties(), throttle, challenges, tickets, jobs);
         when(throttle.tryOtpRequest(anyString(), anyString())).thenReturn(true);
+        when(throttle.tryOtpVerify(anyString())).thenReturn(true);
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(pending));
     }
 
@@ -82,7 +83,17 @@ class OtpServiceTest {
                 .thenReturn(OtpChallengeStore.Verification.VALID);
         when(tickets.issue(pending.id(), OtpPurpose.ACTIVATION)).thenReturn("ticket");
 
-        assertThat(service.verify("taivm@fpt.edu.vn", OtpPurpose.ACTIVATION, "048213")).isEqualTo("ticket");
+        assertThat(service.verify("taivm@fpt.edu.vn", OtpPurpose.ACTIVATION, "048213", IP)).isEqualTo("ticket");
+    }
+
+    @Test
+    void verifyIsRateLimitedPerIpBeforeTouchingTheCode() {
+        when(throttle.tryOtpVerify(IP)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.verify("taivm@fpt.edu.vn", OtpPurpose.ACTIVATION, "048213", IP))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo(OtpService.OTP_TOO_MANY_ATTEMPTS));
+        verify(challenges, never()).verify(any(), any(), anyString());
     }
 
     @Test
@@ -92,7 +103,7 @@ class OtpServiceTest {
 
         for (String[] attempt : new String[][] {
                 {"taivm@fpt.edu.vn", "111111"}, {"none@fpt.edu.vn", "048213"}, {"taivm@fpt.edu.vn", "12ab56"}}) {
-            assertThatThrownBy(() -> service.verify(attempt[0], OtpPurpose.ACTIVATION, attempt[1]))
+            assertThatThrownBy(() -> service.verify(attempt[0], OtpPurpose.ACTIVATION, attempt[1], IP))
                     .isInstanceOfSatisfying(ApiException.class,
                             e -> assertThat(e.code()).isEqualTo(OtpService.OTP_INVALID));
         }

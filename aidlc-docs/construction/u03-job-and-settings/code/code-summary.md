@@ -38,7 +38,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 - `app/admin/settings` (Setting List), `app/admin/settings/[key]` (Setting Detail), `app/admin/settings/sections/[sectionKey]` (panel ủy quyền).
 - `features/settings`: `SettingGroupTable`, `DelegatedSectionCard`, `SettingValueForm` (kiểm sơ bộ, 400, 409), `SettingsSectionHost`.
 - `features/files`: `FileUploader` (kéo thả, tiến trình, Hủy), `useFileUpload`, `FileLink`, `purposes`.
-- `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối).
+- `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối hoặc lỗi 4xx; mất mạng, 5xx, 429 thì poll tiếp).
 - Giao diện theo design G21 (17/10): `shared/ui` (màu, nút, thẻ, bảng, ô nhập, nhãn, popup, icon Material Symbols dạng SVG tự host) và `shared/layout/AppShell` (thanh trên cùng, menu bên theo vai trò, popup Đăng xuất), gắn cho mọi màn `/admin/*` qua `app/admin/layout.tsx`. Menu bên lấy từ `NavEntry` (slot của U01); mỗi unit đăng ký mục của mình trong `features/<package>/register.ts` (đã đăng ký sẵn đủ mục theo design). Unit khác dùng lại, không tự vẽ khung.
 
 ## Hạ tầng

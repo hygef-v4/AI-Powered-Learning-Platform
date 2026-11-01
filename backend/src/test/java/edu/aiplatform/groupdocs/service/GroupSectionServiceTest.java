@@ -88,6 +88,7 @@ class GroupSectionServiceTest {
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
         when(documents.updateSection(any())).thenReturn(true);
         when(documentModel.validateForSave(any(), any())).thenReturn(new ValidationResult(List.of(), List.of()));
+        when(documentModel.sanitize(any())).thenAnswer(call -> call.getArgument(0));
     }
 
     @Test

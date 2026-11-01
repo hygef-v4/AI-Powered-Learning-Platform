@@ -7110,6 +7110,101 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 
 ---
 
+## Bug remediation request — 2026-10-31
+
+**Timestamp**: 2026-10-31T18:28:55Z
+
+**User Input (complete raw)**:
+
+> sửa toàn bộ 26 bug trên
+
+**Context**: Follows the read-only review on HEAD aa30ad60 that reported 26 bugs plus one suspected CSP issue (requests "kiểm tra toàn bộ dự án và gửi tôi các bug bạn tìm được" and "đọc kĩ lại toàn bộ dự án đã rồi gửi lại tôi toàn bộ bug bạn tìm được"). Work on local branch `fix/review-bugs-2026-11-01` (no upstream); no commit or push unless requested.
+
+**AI Response**: Remediation started directly as scoped bug fixes; per-bug results recorded below when finished.
+
+---
+
+## Bug remediation result — 2026-10-31
+
+**Timestamp**: 2026-10-31T23:15:00Z
+
+**AI Response**: Fixed the 26 reported bugs plus the confirmed docx-preview CSP issue on branch `fix/review-bugs-2026-11-01` (uncommitted):
+- AI/jobs: in-flight duplicate AI_TASK no longer marks UNKNOWN; Gemini thinking tokens counted as output; listener requeue backoff; one live handler per job key; lost jobs logged by recoverability; sweeper resends a job at most every 20 min; backup sweeper skips locked runs.
+- Quiz: OPEN quiz with attempts rejects question edits (QUIZ_HAS_ATTEMPTS via new IQuizAttemptPresence); retired version cannot reopen while another version is open; removed students cannot get/save/submit/log activity (results stay readable).
+- Security: OTP verify is one atomic Lua step plus 30/15min per-IP throttle; `?next=` rejects control/whitespace and checks origin.
+- Grading/groups/materials: gradebook and submission-progress only use OPEN/CLOSED/RETIRED graded assignments; group auto-submit lateness uses last change time; group docs hide fileIds, sanitize drafts, new image endpoint; extractor busy maps to 503; default module created for staff when a subject has none; unattached uploads (including abandoned DOCX previews) cleaned after FileRef expiry.
+- Minor: settings cache evicted after commit; announcement edit returns new version; dependency failures in upload/assignment access return 503; reopening an archived class notifies enrolled students.
+- Frontend: upload refreshes session on 401; group doc SSE reconnects after HTTP errors; polling retries transient errors; lint warnings removed; Word preview styles re-inserted with page nonce and `font-src blob:`.
+
+**Verification**: frontend `npm ci`, eslint 0 problems, tsc 0 errors, vitest 605/605 (96 files), production build OK. Backend: Maven unavailable on this machine; main and unit-test sources compiled with javac against the existing boot-jar dependencies (json-schema-validator stubbed for compile only; ArchUnit/Testcontainers tests excluded). Unit-test run results recorded in the session reply. Docker/Testcontainers integration tests and `mvn verify` not run.
+
+---
+
+## Commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T00:00:00Z
+
+**User Input (complete raw)**:
+
+> Commit các thay đổi trong cây làm việc với thông điệp hợp lý.
+
+**AI Response**: Committed the bug remediation on local branch `fix/review-bugs-2026-11-01` (no push). The pre-existing roadmap note (`cuong-uc-roadmap-2026-10-20.md`, check of 2026-10-24) was committed separately as a docs commit.
+
+---
+
+## Documentation sync request — 2026-11-01
+
+**Timestamp**: 2026-11-01T01:00:00Z
+
+**User Input (complete raw)**:
+
+> sửa doc  toàn dự án cho khớp với các bug bạn vừa sửa
+
+**AI Response**: Updated documentation to match commit `1cd58c02`: business rules BR-U01-22, BR-U03-04/07/53/56/58/86, BR-U05-26, BR-U06-15/22, BR-U07-72, BR-U09-60, BR-U10-13/23, BR-U11-12, BR-U12-35/37/43, BR-U13-M02, BR-U14-04; U10 status paragraphs, U06 state diagram and NFR pattern, U03 P8 pattern and frontend components (upload retry, polling), U01 LoginPage `next`, U12 SSE hook, U07/U13 code summaries (source busy, DOCX CSP), U10 contract table and component methods (`IQuizAttemptPresence`), API inventory and code baseline (`GroupDocImageController`, `UnattachedFileScannerTest`), decision register R01–R05, aidlc-state, and new [review-bugs remediation](construction/remediation/review-bugs-2026-11-01/README.md). Historical reports left unchanged.
+
+**Context**: Documentation only; no code change.
+
+---
+
+## Documentation commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T01:30:00Z
+
+**User Input (complete raw)**:
+
+> Commit tài liệu
+
+**AI Response**: Committed the documentation sync (30 changed docs plus the new remediation record) on local branch `fix/review-bugs-2026-11-01` as a single docs commit. No push.
+
+**Context**: Documentation only; no code change.
+
+---
+
+## Backend verification request — 2026-11-01
+
+**Timestamp**: 2026-11-01T02:30:00Z
+
+**User Input (complete raw)**:
+
+> kiểm tra backend cho tôi
+
+**AI Response**: Ran `mvn -B clean verify` in `backend/` with the Maven 3.9.12 bundled in NetBeans (no system Maven), JDK 21 and Docker Desktop started for Testcontainers: BUILD SUCCESS, 1,632 tests, 0 failures, 0 errors, 0 skipped, including ArchitectureTest, QuizMcpToolsSchemaTest and the PostgreSQL/Redis integration tests; `scripts/assert-required-backend-tests.ps1` passed. A first run without `clean` failed 143 tests from stale compiled classes of renamed packages left in `target/`. Updated the verification section of [review-bugs remediation](construction/remediation/review-bugs-2026-11-01/README.md).
+
+**Context**: Verification only; no code change.
+
+---
+
+## Verification commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T02:40:00Z
+
+**User Input (complete raw)**:
+
+> Commit
+
+**AI Response**: Committed the updated verification section and audit entries on local branch `fix/review-bugs-2026-11-01`. No push.
+
+**Context**: Documentation only; no code change.
 ## UI remediation request
 
 **Timestamp**: 2026-11-01T08:25:00Z
@@ -7250,6 +7345,19 @@ Follow-up scope (2026-11-01), complete raw input: "Giúp tôi chỉ sửa giao d
 
 ---
 
+## Staging merge and PR request — 2026-11-01
+
+**Timestamp**: 2026-11-01T03:30:00Z
+
+**User Input (complete raw)**:
+
+> Gộp, push, mở PR
+
+**AI Response**: Merged `origin/staging` (`a0e1ea4f`) into `fix/review-bugs-2026-11-01`, kept both sides of the appended audit log, dropped one duplicate `AssignmentStatus` import in `GradebookService`, pushed the branch to its own remote branch and opened a pull request into `staging`. A trial of the same merge passed `mvn clean verify` (1,644 tests, 0 skipped), the required-suite check, and frontend lint, typecheck, vitest 647/647 and build.
+
+**Context**: Integration only; no new behavior change.
+
+---
 ## MCP quality audit and proposed remediation plan — 2026-11-01
 
 **User Input (complete raw text)**:
@@ -7287,3 +7395,29 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Evidence**: Backend 1,630 runtime cases passed; original combined Maven command then exhausted Metaspace in architecture discovery, and separate architecture rerun passed 2 cases. Required database-suite guard passed. Frontend full 644 passed before final guide revisions; final affected setup suites 15 passed. Final production build/typecheck passed; lint zero errors and two existing warnings. Hooks 13 scenarios passed. Backend package built, existing Orca backend terminal restarted, /health UP. Orca guide inspected without Computer Use. Results/remaining gates: construction/build-and-test/2026-11-01-mcp-quality-remediation-results.md.
 
 **Limits**: No new external-client authenticated acceptance, teacher-scored model pilot, representative latency/load measurement, Python fixture run, global installation, provider invocation, official publication, commit or push. Historical policy supersession notice already existed and was preserved. Schema validity does not establish semantic grading quality. Security/resiliency retained; PBT disabled.
+
+## Auto-fix merge conflict with staging — 2026-11-01
+
+**Timestamp**: 2026-11-01T04:30:00Z
+
+**User Input (complete raw)**: None. Desktop app Auto-fix event, enabled by the user for PR #34, reported a merge conflict with `staging`.
+
+**AI Response**: Merged `origin/staging` (`e54359e4`) into `fix/review-bugs-2026-11-01`; the only conflict was the appended audit log, keeping both sides. On the merged tree `mvn -B clean verify` passed (1,661 tests, 0 skipped), the required-suite check passed, and frontend lint, typecheck, vitest 657/657 and build passed.
+
+**Context**: Integration only; no new behavior change.
+
+---
+
+## Staging update and merge-readiness check — 2026-11-01
+
+**Timestamp**: 2026-11-01T05:30:00Z
+
+**User Input (complete raw)**:
+
+> cập nhật code mới nhất trên staging xem có thể merge vào chưa
+
+**AI Response**: Merged `origin/staging` (`a44b1273`) into `fix/review-bugs-2026-11-01` with no conflict and pushed. On the merged tree `mvn -B clean verify` passed (1,674 tests, 0 skipped), the required-suite check passed, and frontend lint, typecheck, vitest 657/657 and build passed. PR #34 was not merged; that decision stays with the user.
+
+**Context**: Integration only; no new behavior change.
+
+---

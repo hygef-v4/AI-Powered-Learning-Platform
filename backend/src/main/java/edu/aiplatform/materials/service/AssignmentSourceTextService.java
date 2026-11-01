@@ -38,6 +38,9 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
             final String text;
             try {
                 text = extractor.extract(file.fileId(), file.mediaType()).text();
+            } catch (MaterialTextExtractor.BusyException e) {
+                throw ApiException.unavailable("ASSIGNMENT_SOURCE_BUSY",
+                        "Hệ thống đang đọc nhiều tệp cùng lúc, vui lòng thử lại sau ít phút");
             } catch (RuntimeException e) {
                 throw ApiException.badRequest("ASSIGNMENT_SOURCE_UNREADABLE",
                         "Không đọc được " + file.fileName() + ". Dùng TXT UTF-8 hoặc PDF/DOCX có lớp chữ.");

@@ -78,8 +78,14 @@ public class HttpProviderGateway implements IProviderGateway {
                 + URLEncoder.encode(r.model(), StandardCharsets.UTF_8) + ":generateContent";
         JsonNode reply = send(HttpRequest.newBuilder(URI.create(url)).header("x-goog-api-key", r.apiKey()), body, r);
         JsonNode meta = reply.path("usageMetadata");
-        Usage usage = new Usage(number(meta, "promptTokenCount"), number(meta, "candidatesTokenCount"),
-                number(meta, "cachedContentTokenCount"), number(meta, "thoughtsTokenCount"));
+        // Gemini đếm token suy nghĩ riêng ngoài candidatesTokenCount nhưng vẫn tính tiền: gộp vào token ra như OpenAI
+        // (completion_tokens đã gồm reasoning) để quota quyết toán đủ.
+        Long thoughts = number(meta, "thoughtsTokenCount");
+        Long candidates = number(meta, "candidatesTokenCount");
+        Long output = candidates == null && thoughts == null ? null
+                : (candidates == null ? 0 : candidates) + (thoughts == null ? 0 : thoughts);
+        Usage usage = new Usage(number(meta, "promptTokenCount"), output, number(meta, "cachedContentTokenCount"),
+                thoughts);
         StringBuilder text = new StringBuilder();
         for (JsonNode part : reply.path("candidates").path(0).path("content").path("parts")) {
             text.append(part.path("text").asText(""));

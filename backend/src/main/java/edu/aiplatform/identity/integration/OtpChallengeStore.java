@@ -2,12 +2,13 @@ package edu.aiplatform.identity.integration;
 
 import edu.aiplatform.identity.config.IdentityProperties;
 import edu.aiplatform.identity.model.OtpPurpose;
-import java.security.MessageDigest;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 /**
@@ -78,23 +79,32 @@ public class OtpChallengeStore {
         redis.expire(key, properties.otpTtl());
     }
 
+    /**
+     * Trừ lượt rồi mới so mã, trong một lệnh Redis: request song song không so được quá số lượt còn lại (BR-U01-22).
+     * Đúng thì xóa mã (dùng một lần, chỉ một request thắng); hết lượt thì xóa. Trả 1 khi mã đúng.
+     */
+    static final RedisScript<Long> VERIFY = new DefaultRedisScript<>("""
+            local stored = redis.call('HGET', KEYS[1], 'codeHash')
+            if not stored then return 0 end
+            local left = redis.call('HINCRBY', KEYS[1], 'attemptsLeft', -1)
+            if left < 0 then
+                redis.call('DEL', KEYS[1])
+                return 0
+            end
+            if stored == ARGV[1] then
+                redis.call('DEL', KEYS[1])
+                return 1
+            end
+            if left <= 0 then redis.call('DEL', KEYS[1]) end
+            return 0
+            """, Long.class);
+
     public Verification verify(UUID accountId, OtpPurpose purpose, String code) {
-        String key = key(accountId, purpose);
-        Object stored = redis.opsForHash().get(key, CODE_HASH);
-        if (stored == null || code == null) {
+        if (code == null) {
             return Verification.INVALID;
         }
-        boolean matches = MessageDigest.isEqual(stored.toString().getBytes(StandardCharsets.UTF_8),
-                hash(accountId, purpose, code).getBytes(StandardCharsets.UTF_8));
-        if (matches) {
-            // Hai request đúng cùng lúc: chỉ request xóa được khóa mới thắng.
-            return Boolean.TRUE.equals(redis.delete(key)) ? Verification.VALID : Verification.INVALID;
-        }
-        Long left = redis.opsForHash().increment(key, ATTEMPTS_LEFT, -1);
-        if (left == null || left <= 0) {
-            redis.delete(key);
-        }
-        return Verification.INVALID;
+        Long result = redis.execute(VERIFY, List.of(key(accountId, purpose)), hash(accountId, purpose, code));
+        return result != null && result == 1L ? Verification.VALID : Verification.INVALID;
     }
 
     /** Đổi hoặc đặt lại mật khẩu xong thì hủy OTP đặt lại mật khẩu còn chờ. */

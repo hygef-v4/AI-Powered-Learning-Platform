@@ -3,6 +3,7 @@ package edu.aiplatform.groupdocs.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.DocumentBlock;
+import edu.aiplatform.assignments.contract.DocumentFiles;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.ValidationIssue;
@@ -132,7 +133,7 @@ public class GroupSectionService {
         if (version == null || version != section.version()) {
             throw ApiException.conflict("SECTION_VERSION_CONFLICT", "Mục vừa được thay đổi ở nơi khác, hãy tải lại");
         }
-        List<DocumentBlock> content = checkBlocks(blocks);
+        List<DocumentBlock> content = clean(section, checkBlocks(blocks));
         rejectInvalid(validate(ctx, section, content));
         Instant now = clock.instant();
         GroupSection saved = save(section.withDraft(content, now));
@@ -192,6 +193,17 @@ public class GroupSectionService {
         return content;
     }
 
+    /**
+     * Làm sạch như bài cá nhân (NFR-U07-30): bỏ khóa lạ, làm sạch SVG; {@code fileId} client gửi bị bỏ, ảnh chỉ giữ
+     * {@code fileId} đã lưu của chính block đó trong mục.
+     */
+    private List<DocumentBlock> clean(GroupSection section, List<DocumentBlock> content) {
+        List<DocumentBlock> previous = section.draftBlocks() != null ? section.draftBlocks()
+                : section.publishedBlocks() == null ? List.of() : section.publishedBlocks();
+        DocumentModel sanitized = documentModel.sanitize(new DocumentModel(content));
+        return DocumentFiles.resolveFiles(new DocumentModel(previous), sanitized, null).blocks();
+    }
+
     /** Kiểm nội dung mục trong khung chung (block của người soạn còn đủ, đúng thứ tự). */
     private ValidationResult validate(GroupDocContext ctx, GroupSection section, List<DocumentBlock> content) {
         DocumentModel shared = ctx.document().sharedBlocks();
@@ -249,8 +261,13 @@ public class GroupSectionService {
         public static SectionView of(GroupSection s, UUID viewer) {
             boolean holder = viewer != null && viewer.equals(s.claimedBy());
             return new SectionView(s.id(), s.partId(), s.title(), s.orderNo(), s.status(), s.claimedBy(), s.assignedBy(),
-                    s.publishedBlocks(), holder ? s.draftBlocks() : null, holder ? s.draftSavedAt() : null,
-                    s.lastAuthorId(), s.version());
+                    hideFiles(s.publishedBlocks()), holder ? hideFiles(s.draftBlocks()) : null,
+                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version());
+        }
+
+        /** Không trả {@code fileId} của U03 cho trình duyệt; ảnh mở theo id block (như bài cá nhân). */
+        private static List<DocumentBlock> hideFiles(List<DocumentBlock> blocks) {
+            return blocks == null ? null : DocumentFiles.hideFiles(new DocumentModel(blocks)).blocks();
         }
     }
 }

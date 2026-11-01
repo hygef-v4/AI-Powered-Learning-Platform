@@ -168,7 +168,9 @@ public class GroupSubmissionService {
     private Receipt store(GroupDocument document, ClassGroup group, AssignmentView assignment, GroupSnapshot.Result snapshot,
                           UUID by, SubmitMode mode, GroupDocument.Status next, List<String> warnings) {
         Instant now = clock.instant();
-        boolean late = assignment.closesAt() != null && now.isAfter(assignment.closesAt());
+        // Tự nộp chạy sau hạn cuối: trễ hay không tính theo lần sửa cuối của nhóm, như bài cá nhân (AttemptSubmitter).
+        Instant effective = mode == SubmitMode.MANUAL || document.lastChangedAt() == null ? now : document.lastChangedAt();
+        boolean late = assignment.closesAt() != null && effective.isAfter(assignment.closesAt());
         String hash = GroupSnapshot.receiptHash(json, document.id(), snapshot, now);
         GroupDocument submitted = document.withSubmission(snapshot.document(), snapshot.authors(), by, mode, now, late, hash,
                 warnings, next);

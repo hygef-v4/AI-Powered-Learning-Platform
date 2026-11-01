@@ -15,6 +15,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class OtpService {
 
     public static final String OTP_INVALID = "OTP_INVALID";
+    public static final String OTP_TOO_MANY_ATTEMPTS = "OTP_TOO_MANY_ATTEMPTS";
     public static final String OTP_INVALID_MESSAGE = "Mã không hợp lệ hoặc đã hết hạn.";
 
     private final AccountRepository accounts;
@@ -57,7 +59,11 @@ public class OtpService {
     }
 
     /** OTP đúng thì trả {@code otpTicket} để sang bước đặt mật khẩu (BR-U01-28); sai thì một lỗi chung. */
-    public String verify(String rawEmail, OtpPurpose purpose, String code) {
+    public String verify(String rawEmail, OtpPurpose purpose, String code, String clientIp) {
+        if (!throttle.tryOtpVerify(clientIp)) {
+            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, OTP_TOO_MANY_ATTEMPTS,
+                    "Nhập mã quá nhiều lần, hãy thử lại sau ít phút");
+        }
         String email = EmailPolicy.normalize(rawEmail);
         Optional<Account> account = accounts.findByEmail(email).filter(purpose::appliesTo);
         if (account.isEmpty() || code == null || !code.strip().matches("\\d{6}")

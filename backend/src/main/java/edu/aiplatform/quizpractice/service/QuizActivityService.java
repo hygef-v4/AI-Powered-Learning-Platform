@@ -35,7 +35,7 @@ public class QuizActivityService {
 
     @Transactional
     public void record(Actor actor, UUID attemptId, List<ActivityEventInput> events) {
-        QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         if (!attempt.inProgress()) {
             throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
         }

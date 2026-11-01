@@ -77,7 +77,7 @@ class HttpProviderGatewayTest {
         assertThat(response.output()).isEqualTo("{\"score\":8}");
         assertThat(response.requestId()).isEqualTo("r1");
         assertThat(response.usage().inputTokens()).isEqualTo(120);
-        assertThat(response.usage().outputTokens()).isEqualTo(30);
+        assertThat(response.usage().outputTokens()).as("token suy nghĩ cũng tính vào token ra").isEqualTo(35);
         assertThat(response.usage().reasoningTokens()).isEqualTo(5);
         assertThat(response.usage().cachedTokens()).isNull();
         JsonNode body = json.readTree(lastBody.get());

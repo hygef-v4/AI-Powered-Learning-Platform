@@ -52,6 +52,27 @@ class OtpStoresTest {
     }
 
     @Test
+    void eachGuessSpendsAnAttemptBeforeTheCodeIsCompared() {
+        challenges.replace(accountId, OtpPurpose.ACTIVATION, "048213");
+        for (int i = 0; i < 5; i++) {
+            challenges.verify(accountId, OtpPurpose.ACTIVATION, "11111" + i);
+        }
+
+        assertThat(challenges.verify(accountId, OtpPurpose.ACTIVATION, "048213")).isEqualTo(Verification.INVALID);
+        assertThat(redis.hashes).doesNotContainKey(OtpChallengeStore.key(accountId, OtpPurpose.ACTIVATION));
+    }
+
+    @Test
+    void fifthGuessCanStillBeTheCorrectOne() {
+        challenges.replace(accountId, OtpPurpose.ACTIVATION, "048213");
+        for (int i = 0; i < 4; i++) {
+            challenges.verify(accountId, OtpPurpose.ACTIVATION, "111111");
+        }
+
+        assertThat(challenges.verify(accountId, OtpPurpose.ACTIVATION, "048213")).isEqualTo(Verification.VALID);
+    }
+
+    @Test
     void newCodeReplacesOldCode() {
         challenges.replace(accountId, OtpPurpose.ACTIVATION, "111111");
         challenges.replace(accountId, OtpPurpose.ACTIVATION, "222222");

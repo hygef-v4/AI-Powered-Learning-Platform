@@ -155,6 +155,7 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 - [DownloadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadServiceTest.java)
 - [DownloadTokenServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadTokenServiceTest.java)
 - [FileRefSignerTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/FileRefSignerTest.java)
+- [UnattachedFileScannerTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/UnattachedFileScannerTest.java)
 - [UploadServiceTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/UploadServiceTest.java)
 - [JobListenerTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/integration/JobListenerTest.java)
 - [EventPublisherTest.java](../../../backend/src/test/java/edu/aiplatform/jobs/service/EventPublisherTest.java)
@@ -567,6 +568,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 ### Controllers
 
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
+- [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
 
 ### Tests

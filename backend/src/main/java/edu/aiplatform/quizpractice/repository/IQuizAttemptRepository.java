@@ -21,6 +21,9 @@ public interface IQuizAttemptRepository {
 
     int countAttempts(UUID quizId, UUID accountId);
 
+    /** Quiz đã có lượt nào (đang làm hoặc đã nộp) của bất kỳ ai. */
+    boolean existsForQuiz(UUID quizId);
+
     void insert(QuizAttempt attempt);
 
     /** Lưu câu trả lời khi lượt còn {@code IN_PROGRESS} và {@code answer_version} còn bằng {@code expectedVersion}. */

@@ -29,7 +29,7 @@ public class JobPublisher implements IJob {
     @Override
     public void enqueue(String jobType, Map<String, Object> payload, String idempotencyKey) {
         JobMessage message = build(jobType, payload, idempotencyKey);
-        afterCommit.run(() -> send(message));
+        afterCommit.run(() -> send(message), () -> lost(message, "hàng chờ gửi đầy"));
     }
 
     /** Gửi lại ngay việc còn chờ do {@code IPendingSweeper} trả (J3). */
@@ -50,7 +50,18 @@ public class JobPublisher implements IJob {
         try {
             sender.sendJob(message);
         } catch (RuntimeException e) {
-            log.warn("Gửi việc {} key={} lỗi; sweeper sẽ gửi lại", message.jobType(), message.idempotencyKey());
+            lost(message, "gửi RabbitMQ lỗi");
+        }
+    }
+
+    /** Message chưa tới broker: chỉ loại việc có sweeper được gửi lại; loại khác ghi ERROR kèm khóa để xử lý tay. */
+    private static void lost(JobMessage message, String reason) {
+        if (JobRouting.recoverable(message.jobType())) {
+            log.warn("Chưa gửi được việc {} key={} ({}); sweeper sẽ gửi lại", message.jobType(),
+                    message.idempotencyKey(), reason);
+        } else {
+            log.error("Mất việc {} key={} ({}); loại việc này không có sweeper gửi lại", message.jobType(),
+                    message.idempotencyKey(), reason);
         }
     }
 }

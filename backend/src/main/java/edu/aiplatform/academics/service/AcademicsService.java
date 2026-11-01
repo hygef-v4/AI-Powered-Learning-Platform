@@ -167,7 +167,8 @@ public class AcademicsService {
             CourseClass changed=current.changeStatus(status,subjectActive,false,clock.instant());
             classes.update(changed,version);
             success(actor,"CLASS_STATUS_CHANGED",id,Map.of("before",current.status().name(),"after",status.name()));
-            if(current.status()==ClassStatus.DRAFT && status==ClassStatus.OPEN) {
+            // Mở lớp lần đầu hay mở lại lớp đã lưu trữ: sinh viên đang ghi danh đều được báo lớp đã mở.
+            if(status==ClassStatus.OPEN) {
                 for(int offset=0;;offset+=100) {
                     var page=enrollments.listByClass(id,true,100,offset);
                     page.forEach(e -> activated(changed,e.accountId()));

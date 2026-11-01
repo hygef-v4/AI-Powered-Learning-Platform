@@ -87,12 +87,19 @@ class PracticeSupport {
         return call(() -> quizzes.getStudentView(quizId)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
     }
 
-    /** Lượt của chính người gọi; của người khác thì 404 và audit (BR-U11-22). */
+    /** Lượt của chính người gọi; của người khác thì 404 và audit (BR-U11-22). Kết quả cũ vẫn xem được sau khi rời lớp. */
     QuizAttempt ownAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = attempts.find(attemptId).orElseThrow(() -> ApiException.notFound(ATTEMPT_NOT_FOUND));
         if (actor == null || !attempt.accountId().equals(actor.accountId())) {
             throw access.deny(actor, action, PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
         }
+        return attempt;
+    }
+
+    /** Như {@link #ownAttempt} và người gọi còn học lớp của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
+    QuizAttempt ownActiveAttempt(Actor actor, UUID attemptId, String action) {
+        QuizAttempt attempt = ownAttempt(actor, attemptId, action);
+        access.requireClass(actor, action, attempt.classId(), PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
         return attempt;
     }
 

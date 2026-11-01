@@ -238,6 +238,7 @@ public class QuizAiDraftService {
     public QuizDetail acceptForQuiz(Actor actor, UUID quizId, UUID draftId, List<QuestionContent> picked,
                                     long version) {
         Quiz quiz = support.loadEditable(actor, quizId, version);
+        support.requireNoAttemptsWhenOpen(quiz);
         QuizAiDraft draft = requireReady(quizDraft(quizId, draftId));
         validatePicked(picked, draft);
         List<QuizItem> items = new ArrayList<>(quizzes.items(quizId));

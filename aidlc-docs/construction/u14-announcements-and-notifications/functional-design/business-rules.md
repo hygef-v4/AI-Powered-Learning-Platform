@@ -16,7 +16,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-01 | Giảng viên chính của lớp (R3/R4) tạo, sửa, xóa thông báo của lớp `OPEN`; người học đang ghi danh và giảng viên của lớp đọc. Người học không đăng; Admin không vào lớp. | FR-023, UC 63, 64 |
 | BR-U14-02 | Thông báo có tiêu đề văn bản thuần (≤ 200) và nội dung Markdown (≤ 5.000 ký tự đầu vào). Tạo/sửa loại thẻ HTML, thuộc tính sự kiện và nội dung script/style bằng parser trước lưu, giữ Markdown hợp lệ; từ chối nếu rỗng sau làm sạch. Hiển thị tiếp tục chặn HTML thô, ảnh và URL nguy hiểm. Không tệp đính kèm, không bình luận. Phương án A được duyệt ngày 2026-10-23. | FR-023, SEC-003 |
 | BR-U14-03 | Khi tạo, giảng viên có thể đánh dấu quan trọng và chọn gửi email. Tạo mới thì phát `class.announcement-posted` sau commit: người học đang ghi danh nhận thông báo trong app; thông báo quan trọng có chọn email thì gửi email theo tùy chọn của người nhận. | UC 64, FR-011 |
-| BR-U14-04 | Sửa kiểm `version`, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
+| BR-U14-04 | Sửa kiểm `version` và trả `version` mới (đã tăng) để lần sửa tiếp không bị 409, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
 | BR-U14-05 | Xóa là xóa mềm: loại khỏi danh sách, giữ người xóa, thời điểm, tham chiếu và audit. | US-CNT-004 S5 |
 | BR-U14-06 | Class Announcements mở từ Class Dashboard: thông báo của mọi lớp `OPEN` mình học hoặc dạy, mới nhất trước, lọc theo lớp; mở từ một lớp thì lọc sẵn lớp đó. Student Class Detail hiện vài thông báo mới nhất của lớp. | US-CNT-004 S2 |
 

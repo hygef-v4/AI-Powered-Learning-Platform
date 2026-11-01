@@ -99,6 +99,7 @@ stateDiagram-v2
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
 | `IQuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
+| `IQuizAttemptPresence` | `hasAttempts(quizId)` | U11 (`QuizAttemptPresence`) | Chặn sửa câu của Quiz `OPEN` đã có lượt làm (BR-U10-13); thêm 2026-11-01 |
 | Slot frontend `QuizDetailSection` | - | U11 | Lượt làm và dữ liệu hoạt động của lượt trên Quiz Detail cho giảng viên |
 | Slot frontend `QuizRowAction` | - | U11 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 
@@ -129,7 +130,7 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 
 ## Source behavior delta — 2026-10-30
 
-Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
+Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
 

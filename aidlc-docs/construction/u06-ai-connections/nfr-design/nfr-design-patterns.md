@@ -11,7 +11,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 - Quyết toán trên đúng các cửa sổ đã lưu trên task, kể cả khi đã sang ngày mới.
 
 ## P2 - Mốc gửi trước khi gọi provider
-- Commit `RUNNING` và `dispatchedAt` trước khi gọi; message đến lại thấy mốc gửi mà chưa có kết quả thì `UNKNOWN`.
+- Commit `RUNNING` và `dispatchedAt` trước khi gọi; message đến lại thấy mốc gửi mà chưa có kết quả thì không gọi lại: còn trong `requestTimeout` + 30 giây thì giữ `RUNNING` (lần gọi trước có thể đang chạy), quá hạn thì `UNKNOWN`.
 - Lỗi trước mốc gửi (database tạm lỗi) cho U03 thử lại; sau mốc gửi không ném lỗi để U03 thử lại.
 
 ## P3 - Kết quả qua handler

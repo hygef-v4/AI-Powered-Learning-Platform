@@ -75,6 +75,7 @@ Source-observed at `794a405304bf02dd2593a9fa2c88662d7cd52845`. Canonical signatu
 
 ## U10 Quiz Authoring
 
+- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizAttemptPresence.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizAttemptPresence.java)
 - [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java)
 - [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java)
 - [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java)

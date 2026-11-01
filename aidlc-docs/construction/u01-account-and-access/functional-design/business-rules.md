@@ -35,7 +35,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-20 | OTP gồm 6 chữ số, sinh ngẫu nhiên an toàn, chỉ lưu dạng băm. | Câu 4 |
 | BR-U01-21 | OTP hết hạn sau 10 phút. | Câu 4 |
-| BR-U01-22 | Nhập sai 5 lần thì hủy OTP; phải yêu cầu mã mới. | Câu 4 |
+| BR-U01-22 | Nhập sai 5 lần thì hủy OTP; phải yêu cầu mã mới. Trừ lượt và so mã là một bước nguyên tử trên Redis (Lua), nên gửi song song không vượt 5 lượt. Mỗi IP nhập OTP tối đa 30 lần mỗi 15 phút; vượt thì 429 `OTP_TOO_MANY_ATTEMPTS`. | Câu 4 |
 | BR-U01-23 | Mỗi tài khoản và mục đích chỉ có một OTP hiệu lực; mã mới làm mã cũ mất hiệu lực. | Câu 4 |
 | BR-U01-24 | OTP dùng một lần; xóa ngay khi dùng thành công. | component-methods |
 | BR-U01-25 | Yêu cầu gửi OTP bị giới hạn tần suất theo email và theo client; vượt giới hạn thì không gửi nhưng vẫn trả phản hồi trung tính. | US-IAM-001 S3 |

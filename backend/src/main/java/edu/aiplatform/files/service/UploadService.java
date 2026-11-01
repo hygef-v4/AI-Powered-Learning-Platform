@@ -4,11 +4,13 @@ import edu.aiplatform.files.config.FilesProperties;
 
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.FileUpload;
+import edu.aiplatform.files.integration.UnattachedFiles;
 import edu.aiplatform.files.model.FileNameSanitizer;
 import edu.aiplatform.files.model.FileType;
 import edu.aiplatform.files.model.PurposeLimits;
 import edu.aiplatform.files.model.PurposePolicy;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.jobs.contract.IJob;
@@ -31,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /** F1 Upload (P1): ghi ra tệp tạm, kiểm trần và loại theo Settings, lưu lên Drive, trả {@code FileRef}. */
@@ -40,6 +43,8 @@ public class UploadService {
     static final Duration FILE_REF_TTL = Duration.ofHours(1);
     static final int MAX_CONCURRENT_UPLOADS = 5;
     static final int DELETE_ATTEMPTS = 3;
+    /** Lý do U01 trả khi không kiểm được quyền (AuthorizationService.DEPENDENCY_UNAVAILABLE). */
+    static final String DEPENDENCY_UNAVAILABLE = "DEPENDENCY_UNAVAILABLE";
 
     private static final Logger log = LoggerFactory.getLogger(UploadService.class);
 
@@ -53,6 +58,7 @@ public class UploadService {
     private final Clock clock;
     private final Path tmpDir;
     private final Semaphore permits = new Semaphore(MAX_CONCURRENT_UPLOADS);
+    private UnattachedFiles unattached;
 
     public UploadService(IAuthorization authorization, PurposePolicy policy, ContentInspector inspector,
                          IStorage storage, FileRefSigner signer, FileAudit fileAudit, IJob jobs, Clock clock,
@@ -109,8 +115,12 @@ public class UploadService {
     }
 
     private void checkAllowed(Actor actor, ArtifactPurpose purpose) {
-        if (!authorization.authorize(actor, "FILE_UPLOAD", ResourceRef.none()).allowed()
-                || !policy.canUpload(actor.role(), purpose)) {
+        AuthorizationDecision decision = authorization.authorize(actor, "FILE_UPLOAD", ResourceRef.none());
+        // U01 không kiểm được (database tạm lỗi): báo bận, không ghi từ chối oan cho người dùng (BR-U01-93, 95).
+        if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
+            throw ApiException.unavailable("UPLOAD_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, thử lại sau");
+        }
+        if (!decision.allowed() || !policy.canUpload(actor.role(), purpose)) {
             fileAudit.uploadDenied(actor.accountId(), "ROLE_NOT_ALLOWED", Map.of("purpose", purpose.name()));
             throw ApiException.forbidden("FILE_UPLOAD_FORBIDDEN");
         }
@@ -136,12 +146,31 @@ public class UploadService {
             var payload = new FileRefSigner.Payload(fileId, metadata.ownerAccountId(), metadata.purpose(),
                     metadata.mediaType(), metadata.byteSize(), metadata.originalFileName(), metadata.sha256(),
                     expiresAt.getEpochSecond());
-            return new UploadResult(signer.sign(payload), metadata.mediaType(), metadata.byteSize(),
+            UploadResult result = new UploadResult(signer.sign(payload), metadata.mediaType(), metadata.byteSize(),
                     metadata.originalFileName(), expiresAt);
+            trackUnattached(fileId, expiresAt);
+            return result;
         } catch (RuntimeException e) {
             compensate(fileId);
             throw e;
         }
+    }
+
+    /** Ghi tệp vào danh sách chờ gắn để tệp không ai gắn được dọn; Redis lỗi thì chỉ mất việc dọn, upload vẫn xong. */
+    private void trackUnattached(String fileId, Instant expiresAt) {
+        if (unattached == null) {
+            return;
+        }
+        try {
+            unattached.add(fileId, expiresAt);
+        } catch (RuntimeException e) {
+            log.warn("Chưa ghi được tệp chờ gắn: {}", e.getClass().getSimpleName());
+        }
+    }
+
+    @Autowired(required = false)
+    void setUnattachedFiles(UnattachedFiles unattached) {
+        this.unattached = unattached;
     }
 
     /** Xóa tệp đã lên Drive khi bước sau lỗi; xóa không được thì gửi việc dọn (BR-U03-06). */

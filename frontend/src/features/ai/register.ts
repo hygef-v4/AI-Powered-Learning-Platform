@@ -1,6 +1,6 @@
 // U06: nút Kết nối AI trên thanh trên cùng cho Student, Teacher, Subject Manager.
 
-import { accountMenuEntries, navEntries } from "@/features/identity/slots";
+import { accountMenuEntries } from "@/features/identity/slots";
 import { settingsSectionRegistry } from "@/features/settings/slots";
 import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/components/AiSettingsPanels";
 

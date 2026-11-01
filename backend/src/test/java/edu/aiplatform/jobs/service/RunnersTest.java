@@ -36,6 +36,42 @@ class RunnersTest {
     }
 
     @Test
+    void sweeperResendsTheSameJobAtMostOncePerResendInterval() {
+        IPendingSweeper sweeper = mock(IPendingSweeper.class);
+        JobPublisher publisher = mock(JobPublisher.class);
+        PendingJob pending = new PendingJob("k", Map.of("runId", "r"));
+        when(sweeper.jobType()).thenReturn("BACKUP_RUN");
+        when(sweeper.findStalePending(any())).thenReturn(List.of(pending));
+        Instant[] at = {now};
+        Clock moving = new Clock() {
+            @Override
+            public java.time.ZoneId getZone() {
+                return ZoneOffset.UTC;
+            }
+
+            @Override
+            public Clock withZone(java.time.ZoneId zone) {
+                return this;
+            }
+
+            @Override
+            public Instant instant() {
+                return at[0];
+            }
+        };
+        PendingSweepRunner runner = new PendingSweepRunner(List.of(sweeper), publisher, moving);
+
+        runner.runOnce();
+        at[0] = now.plusSeconds(60);
+        runner.runOnce();
+        verify(publisher, org.mockito.Mockito.times(1)).resend("BACKUP_RUN", pending);
+
+        at[0] = now.plus(PendingSweepRunner.RESEND_INTERVAL);
+        runner.runOnce();
+        verify(publisher, org.mockito.Mockito.times(2)).resend("BACKUP_RUN", pending);
+    }
+
+    @Test
     void oneFailingScannerDoesNotStopTheOthers() {
         IScheduledScanner broken = mock(IScheduledScanner.class);
         IScheduledScanner healthy = mock(IScheduledScanner.class);

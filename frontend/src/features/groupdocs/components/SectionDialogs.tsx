@@ -5,7 +5,7 @@ import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
 import { DocumentEditor, DocumentViewer } from "@/shared/document";
 import { Alert, Button, Dialog, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
-import { assignSection, finishSection, saveDraft, submitDocument } from "../api";
+import { assignSection, finishSection, groupDocImageUrl, saveDraft, submitDocument } from "../api";
 import type { DocumentBlock, DocumentModel, Receipt, SectionView, WorkspaceView } from "../model/types";
 
 export const AUTOSAVE_MS = 10_000;
@@ -126,6 +126,7 @@ export function SectionEditorDialog({
           document={doc}
           mode="student"
           diagramEnabled={diagramEnabled}
+          imageUrl={groupDocImageUrl(documentId)}
           onChange={(next) => {
             setDoc(next);
             setDirty(true);
@@ -134,7 +135,7 @@ export function SectionEditorDialog({
             part.guide.length > 0 && (
               <div className="mb-3 rounded-xl bg-shell p-3">
                 <p className="mb-1 text-xs font-semibold text-muted">Hướng dẫn của giảng viên cho mục này</p>
-                <DocumentViewer document={{ blocks: part.guide }} />
+                <DocumentViewer document={{ blocks: part.guide }} imageUrl={groupDocImageUrl(documentId)} />
               </div>
             )
           }

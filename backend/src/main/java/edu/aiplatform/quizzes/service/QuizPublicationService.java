@@ -123,6 +123,11 @@ public class QuizPublicationService {
         }
         QuizSupport.requireVersion(quiz, version);
         support.requireContainerActive(quiz);
+        // Mở lại thành OPEN mà chuỗi đã có version khác đang mở thì người học thấy hai version cùng lúc.
+        if (quiz.publishedAt() != null && quizzes.findOpenInVersionChain(id).isPresent()) {
+            throw ApiException.conflict("QUIZ_OTHER_VERSION_OPEN",
+                    "Đang có version khác của quiz này mở; ngưng version đó trước khi mở lại version này");
+        }
         Quiz reopened = support.save(quiz.reopened(clock.instant()));
         audit.success(actor, "QUIZ_REOPENED", QuizSupport.OBJECT, quiz.id(), Map.of("status", reopened.status().name()));
         return support.detail(reopened, true);

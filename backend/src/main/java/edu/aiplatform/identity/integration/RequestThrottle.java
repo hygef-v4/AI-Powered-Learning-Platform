@@ -78,6 +78,17 @@ public class RequestThrottle {
                 bandwidth(1, limits.otpCooldown()));
     }
 
+    /**
+     * Nhập OTP: mỗi IP 30 lần mỗi 15 phút, cộng chung kích hoạt và đặt lại mật khẩu. Mỗi mã chỉ 5 lượt, giới hạn này
+     * chặn dò mã của nhiều tài khoản từ một nơi.
+     */
+    public boolean tryOtpVerify(String clientIp) {
+        return tryConsume("otp-verify-ip:" + clientIp, bandwidth(OTP_VERIFY_PER_IP, OTP_VERIFY_WINDOW));
+    }
+
+    static final int OTP_VERIFY_PER_IP = 30;
+    static final Duration OTP_VERIFY_WINDOW = Duration.ofMinutes(15);
+
     static Bandwidth bandwidth(int capacity, Duration period) {
         return Bandwidth.builder().capacity(capacity).refillIntervally(capacity, period).build();
     }

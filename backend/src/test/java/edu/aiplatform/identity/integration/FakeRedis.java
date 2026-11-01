@@ -53,6 +53,27 @@ final class FakeRedis {
         // SessionStore.CLAIM_REFRESH: đọc refresh token và đánh dấu "used:{sid}:{millis}" trong một bước.
         when(template.execute(any(RedisScript.class), anyList(), any(Object[].class))).thenAnswer(i -> {
             String key = i.<List<String>>getArgument(1).get(0);
+            if (i.getArgument(0) == OtpChallengeStore.VERIFY) {
+                // OtpChallengeStore.VERIFY: trừ lượt trước rồi so mã, một bước.
+                Map<Object, Object> hash = hashes.get(key);
+                if (hash == null || hash.get(OtpChallengeStore.CODE_HASH) == null) {
+                    return 0L;
+                }
+                long left = Long.parseLong(String.valueOf(hash.getOrDefault(OtpChallengeStore.ATTEMPTS_LEFT, "0"))) - 1;
+                hash.put(OtpChallengeStore.ATTEMPTS_LEFT, String.valueOf(left));
+                if (left < 0) {
+                    hashes.remove(key);
+                    return 0L;
+                }
+                if (hash.get(OtpChallengeStore.CODE_HASH).equals(i.getArgument(2))) {
+                    hashes.remove(key);
+                    return 1L;
+                }
+                if (left <= 0) {
+                    hashes.remove(key);
+                }
+                return 0L;
+            }
             String value = values.get(key);
             if (value == null || value.startsWith(SessionStore.USED_MARK)) {
                 return value;

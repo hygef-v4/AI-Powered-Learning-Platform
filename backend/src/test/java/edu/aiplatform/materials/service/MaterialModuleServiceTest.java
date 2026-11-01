@@ -177,4 +177,27 @@ class MaterialModuleServiceTest {
         assertThat(classView.quizzes()).filteredOn(q->q.scope()==QuizScope.CLASS).allSatisfy(q->assertThat(q.canManage()).isTrue());
         assertThat(classView.quizzes()).filteredOn(q->q.scope()==QuizScope.SUBJECT).allSatisfy(q->assertThat(q.canManage()).isFalse());
     }
+
+    @Test void teacherOpeningAClassOfASubjectWithoutModulesGetsADefaultModule() {
+        var teacher=new Actor(UUID.randomUUID(),Role.TEACHER);
+        UUID fresh=UUID.randomUUID();
+        when(access.classList(teacher,classId,false)).thenReturn(new ClassRef(classId,fresh,"C","Class",ClassStatus.OPEN,teacher.accountId(),false));
+        when(access.subject(fresh)).thenReturn(new edu.aiplatform.subjects.contract.SubjectRef(fresh,"SWP","Môn",
+                edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE,null));
+        when(repo.list(fresh)).thenReturn(List.of());
+
+        service.forClass(teacher,classId,false);
+
+        verify(repo).insert(argThat(m->m.subjectId().equals(fresh)&&m.title().equals("Module 1")));
+    }
+
+    @Test void studentViewNeverCreatesModules() {
+        var student=new Actor(UUID.randomUUID(),Role.STUDENT);
+        when(access.classList(student,classId,true)).thenReturn(new ClassRef(classId,subject,"C","Class",ClassStatus.OPEN,null,false));
+        when(repo.list(subject)).thenReturn(List.of());
+
+        service.forClass(student,classId,true);
+
+        verify(repo,never()).insert(any());
+    }
 }

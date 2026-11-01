@@ -37,7 +37,7 @@ class JobListenerTest {
     void successfulDurableDispatchIsAcknowledged() throws Exception {
         when(dispatcher.dispatch(job)).thenReturn(JobDispatcher.Outcome.DONE);
 
-        new JobListener(dispatcher, mapper).handle(delivery(mapper.writeValueAsBytes(job)), channel);
+        new JobListener(dispatcher, mapper, Duration.ZERO).handle(delivery(mapper.writeValueAsBytes(job)), channel);
 
         verify(channel).basicAck(42L, false);
         verify(channel, never()).basicNack(anyLong(), anyBoolean(), anyBoolean());
@@ -47,7 +47,7 @@ class JobListenerTest {
     void dispatchFailureRequeuesWithoutAcknowledging() throws Exception {
         when(dispatcher.dispatch(job)).thenThrow(new IllegalStateException("database unavailable"));
 
-        new JobListener(dispatcher, mapper).handle(delivery(mapper.writeValueAsBytes(job)), channel);
+        new JobListener(dispatcher, mapper, Duration.ZERO).handle(delivery(mapper.writeValueAsBytes(job)), channel);
 
         verify(channel, never()).basicAck(anyLong(), anyBoolean());
         verify(channel).basicNack(42L, false, true);
@@ -67,7 +67,7 @@ class JobListenerTest {
         JobDispatcher realDispatcher = new JobDispatcher(new JobHandlerRegistry(List.of(handler)), sender,
                 Duration.ofSeconds(1));
 
-        new JobListener(realDispatcher, mapper).handle(delivery(mapper.writeValueAsBytes(job)), channel);
+        new JobListener(realDispatcher, mapper, Duration.ZERO).handle(delivery(mapper.writeValueAsBytes(job)), channel);
 
         verify(channel, never()).basicAck(anyLong(), anyBoolean());
         verify(channel).basicNack(42L, false, true);
@@ -75,7 +75,7 @@ class JobListenerTest {
 
     @Test
     void malformedDeliveryIsDiscardedAndAcknowledged() throws Exception {
-        new JobListener(dispatcher, mapper).handle(delivery("not json".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+        new JobListener(dispatcher, mapper, Duration.ZERO).handle(delivery("not json".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                 channel);
 
         verifyNoInteractions(dispatcher);
@@ -85,7 +85,7 @@ class JobListenerTest {
     @ParameterizedTest
     @MethodSource("malformedEnvelopes")
     void invalidEnvelopeIsDiscardedWithoutDispatchOrRequeue(String body) throws Exception {
-        new JobListener(dispatcher, mapper).handle(delivery(body.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+        new JobListener(dispatcher, mapper, Duration.ZERO).handle(delivery(body.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                 channel);
 
         verifyNoInteractions(dispatcher);
@@ -126,7 +126,7 @@ class JobListenerTest {
         JobMessage finalAttempt = new JobMessage(1, JobTypes.BACKUP_RUN, "backup:day", Map.of(), 5, "c");
         when(dispatcher.dispatch(finalAttempt)).thenReturn(JobDispatcher.Outcome.FAILED);
 
-        new JobListener(dispatcher, mapper).handle(delivery(mapper.writeValueAsBytes(finalAttempt)), channel);
+        new JobListener(dispatcher, mapper, Duration.ZERO).handle(delivery(mapper.writeValueAsBytes(finalAttempt)), channel);
 
         verify(dispatcher).dispatch(finalAttempt);
         verify(channel).basicAck(42L, false);

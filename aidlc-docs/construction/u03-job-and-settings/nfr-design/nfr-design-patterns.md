@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Health kiểm Drive bằng `drives.get` có cache 60 giây; lỗi thì Drive `DEGRADED` nhưng backend vẫn chạy.
 
 ## P8 - Gửi việc nền sau commit
-- Có transaction thì đăng ký `afterCommit`; không có thì gửi ngay; gửi trên luồng riêng để RabbitMQ chậm không chặn request; lỗi chỉ log.
+- Có transaction thì đăng ký `afterCommit`; không có thì gửi ngay; gửi trên luồng riêng để RabbitMQ chậm không chặn request. Hàng đợi luồng gửi đầy thì từ chối (AbortPolicy), không chạy trên luồng request; message không gửi được ghi log WARN nếu loại việc có sweeper gửi lại (AI_TASK, BACKUP_RUN, MATERIAL_TEXT_EXTRACT, EMAIL_SEND, GROUP_DOC_CREATE), ngược lại ERROR kèm loại việc và khóa.
 
 ## P9 - Thử lại qua queue có TTL
 - Bản sao `attempt + 1` gửi tới exchange fanout `jobs.retry.{30s|1m|2m|4m|8m}` (routing key là loại việc) rồi vào queue cùng tên có TTL cố định; hết hạn thì dead-letter về `jobs` giữ routing key.

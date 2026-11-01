@@ -94,7 +94,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. `POST /api/v1/quizzes/{id}/retire` kèm version; lý do trống mặc định Lưu trữ.
 2. Kiểm quyền, container và version; cho phép mọi trạng thái chưa RETIRED.
 3. Một transaction: RETIRED, giữ publishedAt thực (null nếu chưa phát hành), gọi onRetired và audit QUIZ_RETIRED.
-4. `POST /api/v1/quizzes/{id}/reopen` kèm version: chỉ RETIRED, container active; về DRAFT khi publishedAt null, ngược lại OPEN.
+4. `POST /api/v1/quizzes/{id}/reopen` kèm version: chỉ RETIRED, container active; về DRAFT khi publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi có version khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN.
 5. Migration V20261030_1810 đối chiếu SUCCESS QUIZ_PUBLISHED audit đúng object cho legacy equal-time rows; thiếu bằng chứng thì quay lại review, không tự OPEN.
 
 ### F11 - Nhân bản, version mới, copy (UC 48)
@@ -121,6 +121,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## Source behavior delta — 2026-10-30
 
-Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
+Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

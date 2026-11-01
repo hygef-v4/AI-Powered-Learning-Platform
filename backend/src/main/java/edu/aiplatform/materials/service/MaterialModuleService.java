@@ -29,17 +29,19 @@ public class MaterialModuleService {
         this.modules=modules;this.access=access;this.quizzes=quizzes;this.audit=audit;this.clock=clock;
     }
 
-    @Transactional(readOnly=true,timeout=10,noRollbackFor=ApiException.class)
+    @Transactional(timeout=10,noRollbackFor=ApiException.class)
     public List<MaterialViews.Module> forSubject(Actor actor,UUID subjectId) {
         access.subjectList(actor,subjectId);
         boolean editable=access.canManageModules(actor,subjectId);
+        if(editable)ensureDefaultModule(actor,subjectId);
         // Trang môn chỉ hiện Quiz của môn; Quiz của lớp chỉ giảng viên của lớp đó mở được.
         return views(actor,subjectId,editable,q->q.scope()==QuizScope.SUBJECT);
     }
 
-    @Transactional(readOnly=true,timeout=10,noRollbackFor=ApiException.class)
+    @Transactional(timeout=10,noRollbackFor=ApiException.class)
     public List<MaterialViews.Module> forClass(Actor actor,UUID classId,boolean student) {
         var c=access.classList(actor,classId,student);
+        if(!student)ensureDefaultModule(actor,c.subjectId());
         Predicate<QuizView> visible;
         if(student) {
             Set<UUID> open=quizzes.listForClass(classId).stream().map(QuizView::quizId).collect(Collectors.toSet());
@@ -48,6 +50,17 @@ public class MaterialModuleService {
                 ? q.status()==QuizStatus.OPEN||(q.status()==QuizStatus.RETIRED&&q.publishedAt()!=null)
                 : classId.equals(q.classId());
         return views(actor,c.subjectId(),false,visible);
+    }
+
+    /**
+     * Học liệu luôn thuộc một module, mà chỉ Chủ nhiệm môn tạo được module: môn chưa có module nào (môn mới) thì tạo
+     * "Module 1" khi người soạn mở trang, để giảng viên của lớp thêm được học liệu.
+     */
+    private void ensureDefaultModule(Actor actor,UUID subjectId) {
+        if(!modules.list(subjectId).isEmpty()||access.subject(subjectId).status()!=edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE)return;
+        var now=clock.instant();
+        var module=new MaterialModule(UUID.randomUUID(),subjectId,"Module 1",0,actor.accountId(),now,now,0);
+        modules.insert(module);record(actor,"MATERIAL_MODULE_CREATED",module);
     }
 
     public MaterialViews.Module create(Actor actor,UUID subjectId,MaterialCommands.ModuleInput input) {

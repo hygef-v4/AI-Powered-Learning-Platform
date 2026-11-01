@@ -51,7 +51,7 @@ app/group-docs/[id]/              GroupWorkspacePage      #40 chế độ nhóm
   SubmitGroupDialog                          s18c
   GroupSubmissionTab                         s18d: bản nộp, biên nhận, tác giả từng mục, DOCX
   AutoSubmitOverlay                          s18e
-  useGroupDocStream                          SSE, tải lại khi kết nối lại
+  useGroupDocStream                          SSE, tải lại khi kết nối lại; đóng hẳn (401) thì làm mới phiên và nối lại có backoff
   (useActivityTracker của U08 khi bật theo dõi)
 ```
 
