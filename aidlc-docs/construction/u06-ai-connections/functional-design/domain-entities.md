@@ -82,7 +82,7 @@ stateDiagram-v2
     QUEUED --> FAILED: Kết nối không còn ACTIVE
     RUNNING --> READY: Kết quả đúng schema
     RUNNING --> FAILED: Provider từ chối hoặc sai schema
-    RUNNING --> UNKNOWN: Hết giờ, mất kết nối hoặc message đến lại
+    RUNNING --> UNKNOWN: Hết giờ, mất kết nối hoặc message đến lại sau cửa sổ gọi
 ```
 
 **Text alternative**: Task tạo ra ở `QUEUED` sau khi đã giữ chỗ quota nếu dùng API chung. Worker ghi mốc gửi rồi mới gọi provider (`RUNNING`). Kết quả đúng schema thì `READY`; provider từ chối hoặc kết quả sai schema thì `FAILED`; không biết kết quả thì `UNKNOWN` và không gọi lại. Task chưa gửi có thể bị hủy, quá hạn hoặc thất bại vì kết nối đã tắt.

@@ -78,7 +78,7 @@ shared/ui/                        bộ giao diện dùng chung (U03); U01 thêm 
 | Validation phía client | Email đúng định dạng, mật khẩu không rỗng |
 | API | `authenticate` → `SessionInfo { accountId, displayName, role, homePath }` |
 | Hành vi lỗi | Mọi thất bại hiện **một** câu: "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng." Không phân biệt khóa tạm, chưa kích hoạt hay không tồn tại |
-| Thành công | Chuyển tới `homePath` (BR-U01-48): Student, Teacher → `/classes` (Class Dashboard); Subject Manager → `/manager` (Manager Dashboard); Admin → `/admin` (Admin Dashboard) |
+| Thành công | Chuyển tới `homePath` (BR-U01-48): Student, Teacher → `/classes` (Class Dashboard); Subject Manager → `/manager` (Manager Dashboard); Admin → `/admin` (Admin Dashboard). Hết phiên ở trang nội bộ thì về `/login?next=<trang đang mở>` và đăng nhập xong quay lại đó; `safeNextPath` chỉ nhận đường dẫn cùng origin bắt đầu bằng một `/`, bỏ giá trị có `//`, `\`, ký tự điều khiển hay khoảng trắng (chặn open redirect) và bỏ trang công khai, không hợp lệ thì về `homePath` |
 
 ### ActivationPage (#2) / PasswordResetPage (#3)
 

@@ -26,3 +26,15 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved docum
 ## User override and remediation — 2026-10-30
 
 Previous D03 role findings describe the initial794a4053 audit. The user now explicitly removes Admin MCP and restores Student MCP for the same submitted-own PRACTICE feedback operation as personal APIs. No new AI Quiz-result explanation is introduced. Teacher/Manager tools stay scoped. Current spec: [remediation scope](../requirements/2026-10-30-test-remediation-student-mcp.md).
+
+## Bug remediation — 2026-11-01
+
+User request: “sửa toàn bộ 26 bug trên”, then “sửa doc toàn dự án cho khớp với các bug bạn vừa sửa”. Commit `1cd58c02` changes these documented behaviors; full list in [review-bugs remediation](../../construction/remediation/review-bugs-2026-11-01/README.md).
+
+| Delta | Previous documentation | Current implementation | Disposition |
+|---|---|---|---|
+| R01 BR-U03-07 | Unattached uploads kept, no cleanup job | Unattached uploads tracked in Redis and deleted 10 minutes after FileRef expiry; attach needs Redis | Supersedes the earlier design decision |
+| R02 D10 / BR-U10-13 | OPEN edit stays OPEN | OPEN edit stays OPEN only while no attempt exists; question edits after an attempt return 409 `QUIZ_HAS_ATTEMPTS` | Refines D10; new version required for question changes |
+| R03 BR-U10-23 | Reopen RETIRED to OPEN when published | Rejected with 409 `QUIZ_OTHER_VERSION_OPEN` while another version of the chain is OPEN | Refines reopen |
+| R04 BR-U06-22 | Redelivery with dispatch mark goes UNKNOWN | Stays RUNNING inside `requestTimeout` + 30 s, UNKNOWN after | Avoids losing an in-flight result |
+| R05 BR-U11-12 | Enrollment checked when the attempt starts | Enrollment re-checked for get/save/submit/activity; results stay readable | BR-U11-20 unchanged |

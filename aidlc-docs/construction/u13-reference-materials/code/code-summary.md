@@ -30,7 +30,7 @@ OpenAPI: [materials.yaml](../../../../docs/contracts/openapi/materials.yaml). Fi
 - U03: không sửa source; tái sử dụng IArtifact/IJob/IJobHandler/IPendingSweeper và routing MATERIAL_TEXT_EXTRACT đã có. `backend/pom.xml` thêm hai parser module Tika cùng `tika.version` hiện có; không thêm OCR parser.
 - U06: không sửa DTO, chữ ký interface hoặc stub. Bean U13 thực hiện IReferenceMaterial; test context xác nhận conditional stub nhường đúng một provider thật. DTO hiện tại thiếu versionNo/textStatus trong kết quả nguồn AI; giữ gate C04, không giả rằng provenance liên unit đã đầy đủ. MCP của U13 có versionNo thực trong kết quả.
 - U05/U08/U11: đăng ký qua slot trong register.ts của U13; không sửa implementation các unit này. Giữ LearningMaterialSection cho U11.
-- `frontend/next.config.ts`: thêm CSP/header cho `/manager/materials` và `/materials/*`, cho phép self/blob PDF và youtube-nocookie; không áp CSP mới lên route unit khác.
+- `frontend/next.config.ts`: thêm CSP/header cho `/manager/materials` và `/materials/*`, cho phép self/blob PDF và youtube-nocookie; không áp CSP mới lên route unit khác. Hiện CSP chung đặt trong `frontend/src/proxy.ts` với `font-src 'self' blob:` cho font nhúng trong DOCX. Xem trước DOCX (`DocumentViewer`): `docx-preview` dựng style vào một khung tách rời, `noncedStyles()` chép thành thẻ `<style>` mang nonce của trang để không bị `style-src` chặn.
 
 ## Các quyết định cần người nhận biết
 

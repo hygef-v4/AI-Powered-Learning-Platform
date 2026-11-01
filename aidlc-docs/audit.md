@@ -7119,3 +7119,31 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **AI Response**: Committed the bug remediation on local branch `fix/review-bugs-2026-11-01` (no push). The pre-existing roadmap note (`cuong-uc-roadmap-2026-10-20.md`, check of 2026-10-24) was committed separately as a docs commit.
 
 ---
+
+## Documentation sync request — 2026-11-01
+
+**Timestamp**: 2026-11-01T01:00:00Z
+
+**User Input (complete raw)**:
+
+> sửa doc  toàn dự án cho khớp với các bug bạn vừa sửa
+
+**AI Response**: Updated documentation to match commit `1cd58c02`: business rules BR-U01-22, BR-U03-04/07/53/56/58/86, BR-U05-26, BR-U06-15/22, BR-U07-72, BR-U09-60, BR-U10-13/23, BR-U11-12, BR-U12-35/37/43, BR-U13-M02, BR-U14-04; U10 status paragraphs, U06 state diagram and NFR pattern, U03 P8 pattern and frontend components (upload retry, polling), U01 LoginPage `next`, U12 SSE hook, U07/U13 code summaries (source busy, DOCX CSP), U10 contract table and component methods (`IQuizAttemptPresence`), API inventory and code baseline (`GroupDocImageController`, `UnattachedFileScannerTest`), decision register R01–R05, aidlc-state, and new [review-bugs remediation](construction/remediation/review-bugs-2026-11-01/README.md). Historical reports left unchanged.
+
+**Context**: Documentation only; no code change.
+
+---
+
+## Documentation commit request — 2026-11-01
+
+**Timestamp**: 2026-11-01T01:30:00Z
+
+**User Input (complete raw)**:
+
+> Commit tài liệu
+
+**AI Response**: Committed the documentation sync (30 changed docs plus the new remediation record) on local branch `fix/review-bugs-2026-11-01` as a single docs commit. No push.
+
+**Context**: Documentation only; no code change.
+
+---

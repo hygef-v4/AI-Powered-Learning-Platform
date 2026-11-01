@@ -291,6 +291,14 @@ Baseline `794a405304bf02dd2593a9fa2c88662d7cd52845`, source-observed. Controller
 @GetMapping("/api/v1/group-docs/{id}/export.docx")
 ```
 
+## [groupdocs\controller\GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
+
+Added 2026-11-01 (bug remediation): 302 redirect to a 5-minute U03 download token for an image block; responses no longer carry `fileId`.
+
+```java
+@GetMapping("/api/v1/group-docs/{id}/blocks/{blockId}/image")
+```
+
 ## [groups\controller\GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
 
 ```java

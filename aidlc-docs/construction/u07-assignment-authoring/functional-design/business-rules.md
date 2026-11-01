@@ -88,4 +88,4 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U07-70 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa bài, rubric, lịch phải kèm `version`; lệch thì `409`. | SEC-002 |
 | BR-U07-71 | Audit: `ASSIGNMENT_CREATED`, `ASSIGNMENT_DELETED`, `ASSIGNMENT_PUBLISHED` (lớp hoặc môn, lịch), `ASSIGNMENT_SCHEDULE_CHANGED`, `ASSIGNMENT_RETIRED` (lý do), `ASSIGNMENT_CLONED`, `ASSIGNMENT_VERSION_CREATED`, `ASSIGNMENT_COPIED` (nguồn, đích), `RUBRIC_UPDATED`, `ASSIGNMENT_AI_DRAFT_APPLIED` (provenance), `ASSIGNMENT_DOCX_IMPORTED`; `ASSIGNMENT_REVIEWED` chỉ khi gọi API duyệt. Không ghi nội dung đề. | FR-014 |
-| BR-U07-72 | U01, U04, U05 không trả lời thì từ chối (fail closed). AI, U12, U13 lỗi không chặn việc soạn thủ công. | BR-U01-93 |
+| BR-U07-72 | U01, U04, U05 không trả lời thì từ chối (fail closed): trả 503 `ASSIGNMENT_DEPENDENCY_UNAVAILABLE` (kể cả khi U01 trả `DEPENDENCY_UNAVAILABLE`), không trả 404 hay ghi audit từ chối oan. AI, U12, U13 lỗi không chặn việc soạn thủ công. | BR-U01-93 |

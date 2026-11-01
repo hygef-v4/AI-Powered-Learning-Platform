@@ -32,7 +32,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-23 | Thêm từng người: tìm theo email hoặc tên, tối đa 20 kết quả, chỉ `STUDENT`. Thêm theo danh sách: dán email hoặc CSV một cột, tối đa 200 dòng và 100 KB; xử lý từng dòng, dòng hợp lệ vẫn được ghi danh. | UC 28 |
 | BR-U05-24 | Kết quả từng dòng: `ENROLLED`, `RESTORED`, `ALREADY_ENROLLED`, `NOT_FOUND`, `NOT_STUDENT`, `DISABLED`, `IN_OTHER_CLASS`, `INVALID_EMAIL`, `DUPLICATE_IN_LIST`. | UC 28 |
 | BR-U05-25 | Gỡ sinh viên: chuyển `REMOVED`, giữ lịch sử bài làm và điểm; quyền R5 bị thu hồi ở request tiếp theo. Cần xác nhận trên UI. | US-CAT-003 S3 |
-| BR-U05-26 | Khi ghi danh có hiệu lực với sinh viên (ghi danh vào lớp `OPEN`, hoặc lớp `DRAFT` chuyển `OPEN` thì với mọi ghi danh `ACTIVE`), phát sự kiện `enrollment.activated` sau commit; U14 gửi thông báo trong app và email. | US-NTF-001 |
+| BR-U05-26 | Khi ghi danh có hiệu lực với sinh viên (ghi danh vào lớp `OPEN`, hoặc lớp `DRAFT` chuyển `OPEN` hay lớp `ARCHIVED` mở lại thành `OPEN` thì với mọi ghi danh `ACTIVE`), phát sự kiện `enrollment.activated` sau commit; U14 gửi thông báo trong app và email. | US-NTF-001 |
 
 ## 3. Phạm vi cho phân quyền
 

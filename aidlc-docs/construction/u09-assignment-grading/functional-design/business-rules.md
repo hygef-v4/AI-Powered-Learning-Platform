@@ -67,7 +67,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-60 | Sổ điểm lớp (tab Evals): bài `GRADED` của lớp và bài `GRADED` của môn chứa lớp, gom theo sinh viên đang ghi danh (mỗi sinh viên một mục đóng mở); mỗi bài là điểm của lượt được chấm "x / tổng" và trạng thái (chưa nộp, trễ, chờ chấm, đã chấm, đã chốt, đã công bố); bài nhóm lấy điểm thành viên. Không có Quiz, `PRACTICE`, đề xuất AI; không tính điểm tổng. | UC 45, US-GRD-004 S2 |
+| BR-U09-60 | Sổ điểm lớp (tab Evals): bài `GRADED` đã giao (`OPEN`, `CLOSED`, `RETIRED`; không lấy `DRAFT`) của lớp và của môn chứa lớp; `/submission-progress` dùng cùng điều kiện; gom theo sinh viên đang ghi danh (mỗi sinh viên một mục đóng mở); mỗi bài là điểm của lượt được chấm "x / tổng" và trạng thái (chưa nộp, trễ, chờ chấm, đã chấm, đã chốt, đã công bố); bài nhóm lấy điểm thành viên. Không có Quiz, `PRACTICE`, đề xuất AI; không tính điểm tổng. | UC 45, US-GRD-004 S2 |
 | BR-U09-61 | Xuất CSV hoặc XLSX theo lớp, tùy chọn một bài: sinh viên, bài, trạng thái nộp và chấm, thời gian nộp, điểm đã chốt hoặc đã công bố, nhận xét; ghi rõ chưa nộp, chưa chốt. Kiểm quyền trước khi tạo tệp; tạo khi yêu cầu, không lưu; giá trị CSV được chặn công thức bảng tính; tên tệp không chứa dữ liệu cá nhân; ghi audit. | US-RPT-003 |
 | BR-U09-62 | Phân bố điểm ẩn danh cạnh bài trên Student Assignments: chỉ bài `GRADED`, lớp bật `showGradeDistribution` (U05), lớp có ít nhất 20 người học có điểm đã công bố của bài đó; trả khoảng điểm tổng hợp, ẩn khoảng có dưới 5 người; không trả tên hay điểm của người khác. | US-RPT-001 S3, BR-U05-17 |
 

@@ -57,7 +57,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Rule | Behavior |
 |---|---|
 | BR-U13-M01 | Manager của môn quản lý module; tên 1–200, orderNo ≥0, version CAS. Mọi material có moduleId cùng subject. |
-| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. |
+| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. Môn `ACTIVE` chưa có module nào (môn mới) thì tự tạo "Module 1" (audit `MATERIAL_MODULE_CREATED`) khi Chủ nhiệm môn mở trang học liệu của môn hoặc giảng viên mở trang học liệu của lớp, để thêm được học liệu; Student mở trang không tạo module. |
 | BR-U13-M03 | Quiz tối đa một module qua unique quiz_id; attach chuyển link cũ. Quiz cùng môn và actor có quyền manage Quiz. |
 | BR-U13-M04 | Xóa chặn active materials; archived materials chuyển module khác; không xóa module cuối nếu còn archived materials. Quiz links cascade khi xóa module. |
 | BR-U13-M05 | Subject view chỉ subject Quiz; teacher class view thấy subject OPEN hoặc RETIRED có publishedAt thực và quiz lớp mình; RETIRED chưa phát hành bị ẩn; Student chỉ quiz listForClass cho phép. canManageModules khác canManageQuiz. |
