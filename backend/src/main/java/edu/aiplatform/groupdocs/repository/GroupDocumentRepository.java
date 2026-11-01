@@ -44,7 +44,8 @@ public class GroupDocumentRepository {
             + "warnings::text as warnings, last_changed_at, version, created_at";
     private static final String SECTION_COLUMNS = "id, group_document_id, part_id, heading_block_id, "
             + "ancestor_heading_ids::text as ancestors, order_no, title, status, claimed_by, claimed_at, assigned_by, "
-            + "published_blocks::text as published, draft_blocks::text as draft, draft_saved_at, last_author_id, version";
+            + "published_blocks::text as published, draft_blocks::text as draft, draft_saved_at, last_author_id, version, "
+            + "locked_by, locked_at";
 
     private final JdbcClient jdbc;
     private final ObjectMapper json;
@@ -203,7 +204,7 @@ public class GroupDocumentRepository {
         return jdbc.sql("select s.id, s.group_document_id, s.part_id, s.heading_block_id, s.ancestor_heading_ids::text as ancestors, "
                         + "s.order_no, s.title, s.status, s.claimed_by, s.claimed_at, s.assigned_by, "
                         + "s.published_blocks::text as published, s.draft_blocks::text as draft, s.draft_saved_at, "
-                        + "s.last_author_id, s.version from group_document_sections s join group_documents d "
+                        + "s.last_author_id, s.version, s.locked_by, s.locked_at from group_document_sections s join group_documents d "
                         + "on d.id = s.group_document_id where d.group_id = :groupId and s.claimed_by = :accountId for update of s")
                 .param("groupId", groupId).param("accountId", accountId).query(this::section).list();
     }
@@ -221,18 +222,35 @@ public class GroupDocumentRepository {
         p.put("draft", s.draftBlocks() == null ? null : write(s.draftBlocks()));
         p.put("draftSavedAt", ts(s.draftSavedAt()));
         p.put("lastAuthor", s.lastAuthorId());
+        p.put("lockedBy", s.lockedBy());
+        p.put("lockedAt", ts(s.lockedAt()));
         return jdbc.sql("update group_document_sections set status = :status, claimed_by = :claimedBy, "
                         + "claimed_at = :claimedAt, assigned_by = :assignedBy, published_blocks = cast(:published as jsonb), "
                         + "draft_blocks = cast(:draft as jsonb), draft_saved_at = :draftSavedAt, last_author_id = :lastAuthor, "
-                        + "version = version + 1 where id = :id and version = :version")
+                        + "locked_by = :lockedBy, locked_at = :lockedAt, version = version + 1 "
+                        + "where id = :id and version = :version")
                 .params(p).update() == 1;
     }
 
     public void insertRevision(SectionRevision r) {
-        jdbc.sql("insert into group_document_revisions (id, section_id, author_id, blocks, created_at) values "
-                        + "(:id, :sectionId, :authorId, cast(:blocks as jsonb), :createdAt)")
+        jdbc.sql("insert into group_document_revisions (id, section_id, author_id, blocks, created_at, kind) values "
+                        + "(:id, :sectionId, :authorId, cast(:blocks as jsonb), :createdAt, :kind)")
                 .param("id", r.id()).param("sectionId", r.sectionId()).param("authorId", r.authorId())
-                .param("blocks", write(r.blocks())).param("createdAt", ts(r.createdAt())).update();
+                .param("blocks", write(r.blocks())).param("createdAt", ts(r.createdAt())).param("kind", r.kind().name())
+                .update();
+    }
+
+    /** Lịch sử của mục, mới nhất trước, tối đa {@code limit} bản. */
+    public List<SectionRevision> listRevisions(UUID sectionId, int limit) {
+        return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "
+                        + "from group_document_revisions where section_id = :id order by created_at desc, id limit :limit")
+                .param("id", sectionId).param("limit", limit).query(this::revision).list();
+    }
+
+    public Optional<SectionRevision> findRevision(UUID sectionId, UUID revisionId) {
+        return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "
+                        + "from group_document_revisions where section_id = :sectionId and id = :id")
+                .param("sectionId", sectionId).param("id", revisionId).query(this::revision).optional();
     }
 
     // ---- ánh xạ ----------------------------------------------------------------------------------------------
@@ -262,7 +280,13 @@ public class GroupDocumentRepository {
                 instant(rs.getTimestamp("claimed_at")), rs.getObject("assigned_by", UUID.class),
                 published == null ? null : readList(published, BLOCKS), draft == null ? null : readList(draft, BLOCKS),
                 instant(rs.getTimestamp("draft_saved_at")), rs.getObject("last_author_id", UUID.class),
-                rs.getLong("version"));
+                rs.getLong("version"), rs.getObject("locked_by", UUID.class), instant(rs.getTimestamp("locked_at")));
+    }
+
+    private SectionRevision revision(ResultSet rs, int n) throws SQLException {
+        return new SectionRevision(rs.getObject("id", UUID.class), rs.getObject("section_id", UUID.class),
+                rs.getObject("author_id", UUID.class), readList(rs.getString("blocks"), BLOCKS),
+                instant(rs.getTimestamp("created_at")), SectionRevision.Kind.valueOf(rs.getString("kind")));
     }
 
     private String write(Object value) {

@@ -1,8 +1,10 @@
 package edu.aiplatform.groupdocs.model;
 
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
+import edu.aiplatform.groupdocs.repository.GroupPeerReviewRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -186,6 +188,30 @@ class GroupRepositoriesIntegrationTest {
         assertThat(documents.updateSection(drafted.done(NOW))).isTrue();
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentA, blocks, NOW));
         assertThat(documents.groupHasContent(groupId)).isTrue();
+
+        // Chốt mục (BR-U12-39), lịch sử theo loại (BR-U12-35) và đánh giá chéo (BR-U12-47).
+        GroupSection done = documents.lockSection(doc.id(), section.id()).orElseThrow();
+        assertThat(documents.updateSection(done.lockedBy(studentA, NOW))).isTrue();
+        GroupSection lockedDone = documents.lockSection(doc.id(), section.id()).orElseThrow();
+        assertThat(lockedDone.lockedBy()).isEqualTo(studentA);
+        assertThat(lockedDone.lockedAt()).isEqualTo(NOW);
+        assertThatThrownBy(() -> documents.updateSection(lockedDone.claimedBy(studentB, studentB, NOW)))
+                .as("CSDL không cho giữ mục đã chốt").isInstanceOf(RuntimeException.class);
+        assertThat(documents.updateSection(documents.lockSection(doc.id(), section.id()).orElseThrow().unlocked())).isTrue();
+        documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentB, blocks, NOW.plusSeconds(1),
+                SectionRevision.Kind.IMPORT));
+        assertThat(documents.listRevisions(section.id(), 10)).extracting(SectionRevision::kind)
+                .containsExactly(SectionRevision.Kind.IMPORT, SectionRevision.Kind.DONE);
+        UUID firstRevision = documents.listRevisions(section.id(), 10).get(1).id();
+        assertThat(documents.findRevision(section.id(), firstRevision)).isPresent();
+        assertThat(documents.findRevision(UUID.randomUUID(), firstRevision)).isEmpty();
+        GroupPeerReviewRepository peer = new GroupPeerReviewRepository(JdbcClient.create(appDataSource));
+        peer.upsert(new PeerReview(UUID.randomUUID(), doc.id(), studentA, studentB, 4, "Tốt", NOW, NOW));
+        peer.upsert(new PeerReview(UUID.randomUUID(), doc.id(), studentA, studentB, 2, null, NOW, NOW.plusSeconds(5)));
+        assertThat(peer.listByDocument(doc.id())).singleElement().satisfies(r -> {
+            assertThat(r.score()).isEqualTo(2);
+            assertThat(r.comment()).isNull();
+        });
 
         GroupDocument current = documents.lockDocument(doc.id()).orElseThrow();
         GroupDocument submitted = current.withSubmission(new DocumentModel(blocks),

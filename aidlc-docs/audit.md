@@ -7421,3 +7421,69 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Context**: Integration only; no new behavior change.
 
 ---
+
+## Feedback triage and remediation for U02/U06/U12 — 2026-11-02
+
+**Timestamp**: 2026-11-02T02:00:00Z
+
+**User Input (complete raw)**:
+
+> * Thêm chia material theo module. 
+> * Quiz: 
+> 
+> * Phần tài liệu tham khảo hình như đang thừa
+> * Trong thực tế (theo thầy Kiên): Khi sinh viên làm nó sẽ sinh ra đề mới chứ không cố định câu hỏi hoặc người dùng muốn tạo 1 quiz gồm tag 1 4 câu tag 2 5 câu tag 3 7 câu -> Thêm quiz config 
+> * Chống cheating: sử dụng js để ghi số lần sinh viên out tab -> Vấn đề: sinh viên có thể disable được
+> * Hiển thị câu hỏi và xem kết quả thành mỗi câu 1 trang
+> * Thêm cơ chế chống trùng câu hỏi hoặc cho chủ nhiệm môn duyệt khi có câu hỏi và ngân hàng câu hỏi
+> * Cần cấu hình sao cho bao nhiêu điểm cho bao nhiêu lượt out tab/cheating.
+> * Phần duyệt đang bị thừa. Để lại trong trường hợp: giảng viên có câu hỏi cho vào ngân hàng câu hỏi để chủ nhiệm môn duyệt
+> 
+> * Tạo đề: Phần tạo bằng AI không nên dùng pop-up hoặc phải kéo rộng pop-up ra.
+> * Assignment: 
+> 
+> * Assignment có thể có tiêu chí chung, cần phải thêm.
+> * Để tạo đề thành màn hình phẳng và cho giảng viên gõ chỉnh sửa luôn
+> * Khi AI sinh đề thì những nội dung AI sinh để màu vàng, khi user sửa thì nó thành bình thường để phân biệt rõ
+> * Khi tạo đề có thể tạo câu trả lời mẫu
+> 
+> * Giao diện đang bị khó dùng, chuyển thành flat page hết. 
+> * Sửa thành cho người dùng cấu hình khi dùng chức năng AI thì dùng cách nào, tránh để người dùng phải chọn cách mỗi khi sử dụng chức năng AI
+> * Chấm bài: 
+> 
+> * Bỏ phần pop up để duyệt đề xuất của AI khi chấm bài 
+> * Sửa phần tiêu chí chấm không ở bên cạnh bài làm học sinh nữa
+> * Thêm search và navigate bài làm của sinh viên trong màn chấm bài 
+> 
+> * Bài nhóm: 
+> 
+> * Việc 1 thành viên nhóm nhận phần, người khác hay kể cả nhóm trưởng không thể sửa là điều không nên
+> * Có thể cho thành viên nhận thoải mái rồi nhóm trưởng chốt phần, hay có thể cho thêm lịch sử thay đổi
+> * Câu hỏi cần nhóm trả lời: có nên cho thêm đánh giá giữa các thành viên trong nhóm với nhau hay không? Khi đó số điểm bài có trở thành phần trăm điểm của giáo viên với phần trăm điểm của thành viên nhóm đánh giá hay không?
+> 
+> * Giao diện nên có cả tiếng anh và tiếng việt
+> * Thực tế ASIS: 3 đầu điểm: điểm tài liệu, điểm thành viên nhóm cho nhau, điểm presentation giống edunext. 
+> * Có thể vẫn cho nộp file, sau đó hệ thống bóc tách nó ra và AI sẽ dán vào từng ô. Ảnh thì có thể mapping, svien nộp 2 file: 1 file word, 1 file diagram, có thể quy ước 1 page trong file drawio tương ứng với 1 diagram. Warning cho người dùng có thể tốn nhiều token
+> * Có thể làm tài liệu hướng dẫn sử dụng.
+> 
+> xem co phan nao la phan cua toi khong roi hay sua cho toi, pull cac commit moi ve truoc de xem co cap nhat gi khong, roi hay sua cho toi, hay tu dong sua, neu cai gi can quyet dinh thi hay tu quyet dinh cach tot nhat, khong can hoi lai toi, hay lam tu dau den cuoi.
+
+**AI Response**: Fast-forwarded `staging` to `6fe413fa`. Ownership by commit history: U02, U06, U12 (Quiz U10/U11, Assignment U07, Grading U09 and materials U13 belong to teammates and are not changed). In scope: U06 default AI source; U12 take-over editing, leader finalize, section history, image upload, DOCX/Draw.io import with deterministic mapping, peer review; user guide for U02/U06/U12. The user explicitly pre-approved the plan and all decisions; plan recorded at `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`.
+
+**Context**: Requirements triage + Code Generation (plan pre-approved by the user in the same message).
+
+---
+
+## Merge request and staging retest — 2026-11-02
+
+**Timestamp**: 2026-11-02T03:30:00Z
+
+**User Input (complete raw)**:
+
+> merch vao stagging va test lai cho toi
+
+**AI Response**: Full backend `mvn -B clean verify` passed (1,694 tests, 0 failures, BUILD SUCCESS); frontend vitest 669/669, lint and typecheck clean. Local stack rebuilt from the branch (identical to what merges; `staging` had no new commits). End-to-end: new `u12c` 30/30; regression U02 16/16, U06 24/24, U06b 15/15, U12 53/53, U12b 30/30, U12→U14 notify 3/3 on fresh class SE-TEST10. Scripts updated for teammates' intentional API changes (institutional AI keys addressed by id; leader-request reason optional per BR-U12-10/11). Docker Desktop recovered by moving stale socket folders aside. PR to `staging` opened for merge.
+
+**Context**: Build and Test + integration.
+
+---

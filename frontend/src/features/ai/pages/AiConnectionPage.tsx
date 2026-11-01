@@ -9,6 +9,7 @@ import { McpAgentsTab } from "../components/McpAgentsTab";
 import { getConnections, getProviders, revokeConnection, saveConnection, testConnection } from "../api";
 import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
 import { PersonalApiSection } from "../components/PersonalApiSection";
+import { DefaultSourceSection } from "../components/DefaultSourceSection";
 import { ApiSetupGuide } from "../components/SetupGuides";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
 
@@ -47,7 +48,7 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   );
 }
 
-/** Tab API cá nhân: bảng khóa API cá nhân và hướng dẫn lấy khóa trong một thẻ. */
+/** Tab API cá nhân: nguồn AI mặc định, bảng khóa API cá nhân và hướng dẫn lấy khóa trong một thẻ. */
 function PersonalKeysTab() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +104,7 @@ function PersonalKeysTab() {
       {!data && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
       {data && (
         <SettingsCard>
+          <DefaultSourceSection reloadKey={data.connections} />
           <PersonalApiSection connections={data.connections} providers={data.providers} onSave={save} onTest={test} onRevoke={revoke} />
           <ApiSetupGuide />
         </SettingsCard>

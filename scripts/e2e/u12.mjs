@@ -62,8 +62,12 @@ check(R, "Sinh viên không xem được bộ nhóm của lớp (API giảng vi�
 
 // ---------- Đổi trưởng nhóm (U12-07, 04, 20, 21)
 const lr = (s, body) => s.post(`/api/v1/groups/${G1.id}/leader-requests`, body);
-let r = await lr(S.sv2, { reason: "ngắn", proposedLeaderId: A.sv2.id });
-check(R, "U12-07 lý do dưới 10 ký tự bị chặn", r.status === 400, brief(r));
+// Lý do tùy chọn, tối đa 1.000 ký tự (BR-U12-10, đổi 2026-10-29).
+let r = await lr(S.sv2, { reason: "x".repeat(1001), proposedLeaderId: A.sv2.id });
+check(R, "U12-07 lý do quá 1.000 ký tự bị chặn", r.status === 400, brief(r));
+r = await lr(S.sv2, { reason: "", proposedLeaderId: A.sv2.id });
+check(R, "U12-07 lý do để trống vẫn gửi được", r.status === 201 || r.status === 200, brief(r));
+if (r.data?.id) await S.sv2.post(`/api/v1/leader-requests/${r.data.id}:cancel`);
 r = await lr(S.sv2, { reason: "Trưởng nhóm bận thực tập cả tháng", proposedLeaderId: A.sv2.id });
 const req1 = r.data;
 check(R, "U12-07 gửi yêu cầu", r.status === 201 || r.status === 200, brief(r));
@@ -74,8 +78,8 @@ const myAfterCancel = await S.sv2.get(`/api/v1/me/classes/${C}/group`);
 check(R, "U12-07 hủy yêu cầu: Đã hủy", (r.status === 200 || r.status === 204) && JSON.stringify(myAfterCancel.data?.myRequests ?? []).includes("CANCELLED"), brief(r));
 r = await lr(S.sv2, { reason: "Trưởng nhóm bận thực tập cả tháng", proposedLeaderId: A.sv2.id });
 const req2 = r.data;
-let rj = await T.post(`/api/v1/leader-requests/${req2.id}:reject`, { reason: "" });
-check(R, "U12-04 từ chối bắt buộc lý do", rj.status === 400, brief(rj));
+let rj = await T.post(`/api/v1/leader-requests/${req2.id}:reject`, { reason: "x".repeat(1001) });
+check(R, "U12-04 lý do từ chối quá 1.000 ký tự bị chặn", rj.status === 400, brief(rj));
 rj = await T.post(`/api/v1/leader-requests/${req2.id}:reject`, { reason: "Nhóm đang ổn, giữ nguyên" });
 check(R, "U12-04 từ chối có lý do", rj.status === 200 || rj.status === 204, brief(rj));
 r = await lr(S.sv2, { reason: "Không đề cử ai, nhờ thầy chọn giúp", proposedLeaderId: null });

@@ -46,4 +46,32 @@ describe("AiSourcePicker", () => {
     fireEvent.click(submit);
     expect(onSubmit).toHaveBeenCalledWith({ source: "PERSONAL", provider: "CLAUDE" });
   });
+
+  it("nguồn mặc định dùng được: tự gửi ngay, không bắt chọn lại", async () => {
+    const options = OPTIONS.map((o) => (o.source === "PERSONAL" ? { ...o, preferred: true } : o));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response(JSON.stringify(options), { headers: { "Content-Type": "application/json" } }))),
+    );
+    const onSubmit = vi.fn();
+    render(<AiSourcePicker open task="Sinh câu hỏi · Bài 3" onCancel={() => undefined} onSubmit={onSubmit} />);
+
+    expect(await screen.findByText(/Đang gửi bằng nguồn mặc định: API cá nhân · Claude/)).toBeInTheDocument();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith({ source: "PERSONAL", provider: "CLAUDE" });
+  });
+
+  it("nguồn mặc định không dùng được: báo lý do, không tự đổi nguồn", async () => {
+    const options = OPTIONS.map((o) => (o.source === "SHARED" ? { ...o, preferred: true } : o));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response(JSON.stringify(options), { headers: { "Content-Type": "application/json" } }))),
+    );
+    const onSubmit = vi.fn();
+    render(<AiSourcePicker open task="Sinh câu hỏi · Bài 3" onCancel={() => undefined} onSubmit={onSubmit} />);
+
+    expect(await screen.findByText(/Nguồn mặc định API của trường chưa dùng được: Đã hết hạn mức hôm nay/)).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Gửi yêu cầu" })).toBeDisabled();
+  });
 });

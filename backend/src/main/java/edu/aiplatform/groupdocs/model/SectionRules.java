@@ -13,8 +13,14 @@ public final class SectionRules {
     private SectionRules() {
     }
 
-    /** Thành viên tự nhận mục {@code OPEN} hoặc {@code DONE}; mục người khác đang giữ thì không. */
+    /**
+     * Thành viên tự nhận mục {@code OPEN} hoặc {@code DONE}; mục người khác đang giữ thì tiếp quản
+     * ({@link #canTakeOver}); mục đã chốt thì không (BR-U12-39).
+     */
     public static String canClaim(GroupSection section, UUID actor) {
+        if (section.locked()) {
+            return "SECTION_LOCKED";
+        }
         if (section.status() == Status.CLAIMED) {
             return actor.equals(section.claimedBy()) ? null : "SECTION_CLAIMED_BY_OTHER";
         }
@@ -27,6 +33,24 @@ public final class SectionRules {
             return "SECTION_NOT_CLAIMED";
         }
         return actor.equals(section.claimedBy()) || leader || teacher ? null : "SECTION_RELEASE_FORBIDDEN";
+    }
+
+    /** Mọi thành viên tiếp quản được mục người khác đang giữ (BR-U12-33); mục chưa ai giữ thì nhận như thường. */
+    public static String canTakeOver(GroupSection section, UUID actor) {
+        if (section.status() != Status.CLAIMED) {
+            return "SECTION_NOT_CLAIMED";
+        }
+        return null;
+    }
+
+    /** Trưởng nhóm giao mục chưa chốt (BR-U12-33, 39). */
+    public static String canAssign(GroupSection section) {
+        return section.locked() ? "SECTION_LOCKED" : null;
+    }
+
+    /** Trưởng nhóm chốt mục đã Xong (BR-U12-39); mục đang có người giữ hay chưa có nội dung thì không. */
+    public static String canLock(GroupSection section) {
+        return section.status() == Status.DONE ? null : "SECTION_NOT_DONE";
     }
 
     /** Chỉ người giữ lưu nháp và bấm Xong. */

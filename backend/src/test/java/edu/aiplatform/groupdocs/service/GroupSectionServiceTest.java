@@ -24,6 +24,10 @@ import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.assignments.contract.ValidationResult;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.FileRef;
+import edu.aiplatform.files.contract.IArtifact;
+import edu.aiplatform.files.contract.StoredFileInfo;
 import edu.aiplatform.groupdocs.contract.ISseHub;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
@@ -66,10 +70,11 @@ class GroupSectionServiceTest {
     private final IDocumentModel documentModel = mock(IDocumentModel.class);
     private final ISseHub sse = mock(ISseHub.class);
     private final IAudit audit = mock(IAudit.class);
+    private final IArtifact artifacts = mock(IArtifact.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupSectionService service = new GroupSectionService(documents,
             new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
-            documentModel, sse, audit, new ObjectMapper(), clock);
+            documentModel, sse, audit, artifacts, new ObjectMapper(), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
     private final GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId,
@@ -194,7 +199,7 @@ class GroupSectionServiceTest {
         GroupSectionService real = new GroupSectionService(documents,
                 new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
                 new edu.aiplatform.assignments.service.DocumentModelService(new ObjectMapper()), sse, audit,
-                new ObjectMapper(), clock);
+                artifacts, new ObjectMapper(), clock);
 
         var saved = real.saveDraft(member, document.id(), sectionId, 2L, List.of(paragraph("Bài làm của nhóm")));
 
@@ -219,6 +224,93 @@ class GroupSectionServiceTest {
         section(Status.OPEN, null, null, 0);
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
+    }
+
+    @Test
+    void anyMemberTakesOverAHeldSectionKeepingTheDraftInHistory() {
+        GroupSection held = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", Status.CLAIMED,
+                member.accountId(), NOW, null, null, List.of(block()), NOW, null, 4);
+        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
+
+        var taken = service.takeOver(leader, document.id(), sectionId);
+
+        assertThat(taken.holderId()).isEqualTo(leader.accountId());
+        assertThat(taken.draftBlocks()).hasSize(1);
+        ArgumentCaptor<SectionRevision> revision = ArgumentCaptor.forClass(SectionRevision.class);
+        verify(documents).insertRevision(revision.capture());
+        assertThat(revision.getValue().kind()).isEqualTo(SectionRevision.Kind.TAKEOVER);
+        assertThat(revision.getValue().authorId()).isEqualTo(member.accountId());
+        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit).record(event.capture());
+        assertThat(event.getValue().action()).isEqualTo("GROUP_SECTION_TAKEN_OVER");
+
+        // Người trước lưu tiếp thì bị từ chối vì không còn giữ mục.
+        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held.takenOverBy(leader.accountId(), NOW)));
+        assertThatThrownBy(() -> service.saveDraft(member, document.id(), sectionId, 4L, List.of(block())))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
+    }
+
+    @Test
+    void takingOverAnUnheldSectionIsRefused() {
+        section(Status.OPEN, null, null, 0);
+        assertThatThrownBy(() -> service.takeOver(member, document.id(), sectionId))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_CLAIMED"));
+    }
+
+    @Test
+    void leaderLocksDoneSectionWhichBlocksClaimAndAssignUntilUnlocked() {
+        section(Status.CLAIMED, member.accountId(), null, 1);
+        assertThatThrownBy(() -> service.lock(leader, document.id(), sectionId))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_DONE"));
+        section(Status.DONE, null, List.of(block()), 2);
+        assertThatThrownBy(() -> service.lock(member, document.id(), sectionId))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
+
+        var locked = service.lock(leader, document.id(), sectionId);
+        assertThat(locked.lockedBy()).isEqualTo(leader.accountId());
+        assertThat(locked.lockedAt()).isEqualTo(NOW);
+
+        GroupSection lockedSection = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ",
+                Status.DONE, null, null, null, List.of(block()), null, null, member.accountId(), 3, leader.accountId(), NOW);
+        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(lockedSection));
+        assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_LOCKED"));
+        assertThatThrownBy(() -> service.assign(leader, document.id(), sectionId, member.accountId(), false))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_LOCKED"));
+
+        var unlocked = service.unlock(leader, document.id(), sectionId);
+        assertThat(unlocked.lockedBy()).isNull();
+    }
+
+    @Test
+    void holderRestoresARevisionIntoTheDraft() {
+        section(Status.CLAIMED, member.accountId(), null, 3);
+        UUID revisionId = UUID.randomUUID();
+        DocumentBlock old = block();
+        when(documents.findRevision(sectionId, revisionId)).thenReturn(Optional.of(
+                new SectionRevision(revisionId, sectionId, leader.accountId(), List.of(old), NOW.minusSeconds(60))));
+
+        assertThatThrownBy(() -> service.restore(leader, document.id(), sectionId, revisionId, 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
+        var restored = service.restore(member, document.id(), sectionId, revisionId, 3L);
+
+        assertThat(restored.draftBlocks()).extracting(DocumentBlock::id).containsExactly(old.id());
+        assertThat(restored.status()).isEqualTo(Status.CLAIMED);
+    }
+
+    @Test
+    void draftAttachesNewlyUploadedImagesThroughTheFileService() {
+        section(Status.CLAIMED, member.accountId(), null, 1);
+        when(artifacts.attach(new FileRef("ref-1"), member, ArtifactPurpose.DOCUMENT_IMAGE)).thenReturn(new StoredFileInfo(
+                "file-1", member.accountId(), ArtifactPurpose.DOCUMENT_IMAGE, "a.png", "image/png", 10L, "sha"));
+        DocumentBlock image = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.IMAGE,
+                JsonNodeFactory.instance.objectNode().put("fileRef", "ref-1").put("alt", "Ảnh"));
+
+        service.saveDraft(member, document.id(), sectionId, 1L, List.of(image));
+
+        ArgumentCaptor<GroupSection> saved = ArgumentCaptor.forClass(GroupSection.class);
+        verify(documents).updateSection(saved.capture());
+        assertThat(saved.getValue().draftBlocks().get(0).content().path("fileId").asText()).isEqualTo("file-1");
     }
 
     private static DocumentBlock heading(String text) {
