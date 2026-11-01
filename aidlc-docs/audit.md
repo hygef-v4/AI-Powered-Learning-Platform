@@ -7101,3 +7101,37 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Action**: Paused the pending commit, added theme colors to native select option and optgroup, verified computed colors in Orca, reran frontend build/lint and full tests. Test suite passed 599/599 with four workers; default worker runs timed out on one subject-detail test that passed alone. Native OS popup was not captured by Orca screenshot.
 
 ---
+
+## Development indicator and font review
+
+**Timestamp**: 2026-11-01T01:48:18Z
+
+**User Input (complete raw text)**:
+
+> [Image #1] sao lại có nút gì ở đây, với bạn tìm đc font chữ nào đẹp hơn ko
+
+**Action**: Identified the bottom-left overlay as Next.js development tools, disabled the on-screen indicator in `frontend/next.config.ts`, verified that its controls no longer appear in Orca, and ran a successful production build. Confirmed that the current Be Vietnam Pro font loads; researched Plus Jakarta Sans as a Vietnamese-capable alternative. The font was not changed because `PRODUCT.md` records Be Vietnam Pro as a user-confirmed choice and this request asks for an alternative to review.
+
+---
+
+## Plus Jakarta Sans trial
+
+**Timestamp**: 2026-11-01T01:57:16Z
+
+**User Input (complete raw text)**:
+
+> ok thử giúp tôi đổi font
+
+**Action**: Switched the frontend to self-hosted Plus Jakarta Sans variable WOFF2 files with Vietnamese, Latin and Latin Extended coverage in normal and italic styles; retained the OFL license, updated font tokens and preloads, removed unused Be Vietnam Pro assets, and recorded the product choice as a trial. Orca confirmed loaded font faces and no page-level horizontal overflow at 390/1280 px in light/dark themes. Production build passed; lint had zero errors and two existing unused-import warnings. Automated tests were not rerun for this static font/CSS change. No commit or push.
+
+---
+
+## Font trial commit request
+
+**User Input (complete raw text)**:
+
+> giúp tôi commit
+
+**Action**: Reviewed the pending font trial, Next.js development indicator fix, and narrow Impeccable `overused-font` exception for the user-approved trial. Prepared a single English-language commit without pushing.
+
+---
