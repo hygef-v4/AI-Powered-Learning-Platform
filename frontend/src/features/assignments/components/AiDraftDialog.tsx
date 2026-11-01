@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AiTaskStatus } from "@/shared/ai/AiTaskStatus";
+import { usePreferredSource, type SourceChoice } from "@/shared/ai";
 import { getPolicies, uploadFile } from "@/features/files/api";
 import {
   acceptAttribute,
@@ -70,6 +71,14 @@ export function AiDraftDialog({
   const abortUploads = useRef(new Map<string, () => void>());
   const [source, setSource] = useState<"SHARED" | "PERSONAL">("SHARED");
   const [provider, setProvider] = useState("GEMINI");
+  // Nguồn AI mặc định của người dùng (U06, BR-U06-28) làm giá trị ban đầu; vẫn đổi được cho lần này.
+  const preferred = usePreferredSource();
+  const [appliedPreferred, setAppliedPreferred] = useState<SourceChoice | null>(null);
+  if (preferred && preferred !== appliedPreferred) {
+    setAppliedPreferred(preferred);
+    setSource(preferred.source);
+    if (preferred.provider) setProvider(preferred.provider);
+  }
   const [draft, setDraft] = useState<AiDraft | null>(null);
   const [replaceInstructions, setReplaceInstructions] = useState(
     !currentInstructions.trim(),
