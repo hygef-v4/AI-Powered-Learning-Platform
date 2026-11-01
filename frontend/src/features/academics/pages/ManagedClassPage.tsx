@@ -85,7 +85,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
           </div> : <div><Pill>Chưa phân công</Pill></div>}
         </Section>
         <Section title="Phân bố điểm">
-          <Switch checked={value.showGradeDistribution} ariaLabel="Cho sinh viên xem phân bố điểm" label="Cho sinh viên xem" disabled={archived || busy}
+          <Switch checked={value.showGradeDistribution} ariaLabel="Cho sinh viên xem phân bố điểm" label={`Cho sinh viên xem (${value.showGradeDistribution ? "đang bật" : "đang tắt"})`} disabled={archived || busy}
             onChange={(next) => void setDistribution(next)} />
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </Section>

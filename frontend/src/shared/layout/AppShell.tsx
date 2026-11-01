@@ -109,7 +109,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           <ToggleIcon open={sidebarOpen} />
         </button>
         <Link href="/" className="rounded-lg px-1.5 py-1" aria-label="Nền tảng học tập, trang chủ">
-          <Logo />
+          <Logo className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         </Link>
         <div className="ml-auto flex items-center gap-1">
           <button
@@ -181,9 +181,9 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         {drawerOpen && (
           <div aria-hidden className="fixed inset-x-0 top-14 bottom-0 z-20 animate-fade bg-[var(--c-scrim)] md:hidden" onClick={() => setDrawer(null)} />
         )}
-        <div className="relative isolate flex min-w-0 flex-1 flex-col">
+        <div className="relative isolate flex min-w-0 flex-1 flex-col overflow-x-clip">
           {/* Hình chìm to ở góc dưới phải vùng nội dung: đứng yên khi cuộn, nằm dưới mọi thẻ và nội dung. */}
-          <LogoWatermark className="pointer-events-none fixed right-[-1.5vw] bottom-[-6vh] -z-10 w-[min(48vw,560px)] text-watermark select-none" />
+          <LogoWatermark className="pointer-events-none fixed right-0 bottom-[-6vh] -z-10 w-[min(48vw,560px)] text-watermark select-none" />
           <main className="mx-auto flex w-full max-w-[1160px] min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 sm:px-8 md:pt-10">{children}</main>
         </div>
       </div>

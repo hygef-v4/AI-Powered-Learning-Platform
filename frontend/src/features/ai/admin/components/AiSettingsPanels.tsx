@@ -9,7 +9,7 @@ import { SharedUsageTab } from "./SharedUsageTab";
 type Tab = "usage" | "settings";
 
 const TABS: TabItem<Tab>[] = [
-  { key: "usage", label: "Usage" },
+  { key: "usage", label: "Lịch sử sử dụng" },
   { key: "settings", label: "Cài đặt" },
 ];
 

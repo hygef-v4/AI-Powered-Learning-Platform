@@ -51,7 +51,7 @@ export function AuditTable({ data, onPageChange }: Props) {
                     <i className="text-muted">{SYSTEM_ACTOR}</i>
                   )}
                 </Td>
-                <Td className="px-3 font-bold">{actionLabel(item.action)}</Td>
+                <Td className="px-3 font-bold [overflow-wrap:anywhere]" title={item.action}>{actionLabel(item.action)}</Td>
                 <Td className="px-3" title={item.objectType ? objectTypeLabel(item.objectType) : undefined}>
                   {item.objectLabel ? (
                     <span className="[overflow-wrap:anywhere]">{item.objectLabel}</span>

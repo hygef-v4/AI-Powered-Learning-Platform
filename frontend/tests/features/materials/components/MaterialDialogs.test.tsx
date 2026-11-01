@@ -30,7 +30,7 @@ it("rejects playlist before creating anything", async () => {
   youtube();
   fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk?list=x" } });
   fireEvent.click(screen.getByTestId("material-source-save"));
-  expect(await screen.findByRole("alert")).toHaveTextContent("không nhận playlist");
+  expect(await screen.findByRole("alert")).toHaveTextContent("bỏ phần đó rồi thử lại");
   expect(posts()).toHaveLength(0);
 });
 

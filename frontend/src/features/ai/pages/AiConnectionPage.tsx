@@ -28,7 +28,7 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   const mcpEnabled = session.status === "authenticated" &&
     (session.profile.role === "STUDENT" || session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
   const tabs: TabItem<Tab>[] = [
-    { key: "usage", label: "Usage" },
+    { key: "usage", label: "Lịch sử sử dụng" },
     { key: "settings", label: "API cá nhân" },
     ...(mcpEnabled ? [{ key: "mcp" as const, label: "Agent MCP" }] : []),
   ];

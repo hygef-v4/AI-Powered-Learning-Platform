@@ -360,7 +360,7 @@ export function AiDraftDialog({
         ready ? (
           <>
             <Button onClick={() => void discard()} disabled={busy}>
-              Bỏ
+              Bỏ đề xuất
             </Button>
             {invalid && <Button onClick={() => void revise()} disabled={busy}>Sửa yêu cầu và tạo lại</Button>}
             <Button
@@ -376,9 +376,6 @@ export function AiDraftDialog({
           </>
         ) : (
           <>
-            <Button onClick={() => void discard()} disabled={busy}>
-              Hủy
-            </Button>
             <Button
               variant="primary"
               onClick={() => void send()}

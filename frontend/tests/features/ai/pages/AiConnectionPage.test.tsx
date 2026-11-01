@@ -110,7 +110,7 @@ describe("AiConnectionPage", () => {
   it("mở tab Usage trước: API hệ thống hôm nay và số lượt gọi", async () => {
     backend();
     render(<AiConnectionPage />);
-    expect(screen.getByRole("tab", { name: "Usage" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Lịch sử sử dụng" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText("4.000")).toBeInTheDocument();
     expect(screen.getByText("/ 10.000 token", { exact: false })).toBeInTheDocument();
     expect(await screen.findByText("3")).toBeInTheDocument();

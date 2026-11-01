@@ -189,6 +189,13 @@
   --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
 }
 
+/* Native select popup must use the same foreground and surface in both themes. */
+select option,
+select optgroup {
+  color: var(--c-ink);
+  background-color: var(--c-surface);
+}
+
 html {
   background: var(--c-bg);
   -webkit-text-size-adjust: 100%;

@@ -99,8 +99,8 @@ describe("AiConnectionsPanel", () => {
     backend();
     render(<AiConnectionsPanel />);
     const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
-    expect(tabs).toEqual(["Usage", "Cài đặt"]);
-    expect(screen.getByRole("tab", { name: "Usage" })).toHaveAttribute("aria-selected", "true");
+    expect(tabs).toEqual(["Lịch sử sử dụng", "Cài đặt"]);
+    expect(screen.getByRole("tab", { name: "Lịch sử sử dụng" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText("Giảng viên đã dùng hôm nay")).toBeInTheDocument();
   });
 

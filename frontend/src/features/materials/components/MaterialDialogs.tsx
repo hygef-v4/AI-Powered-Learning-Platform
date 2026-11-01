@@ -73,7 +73,7 @@ export function ModuleItemDialog({ scope, moduleId, item, onClose, onSaved }: {
     if (lock.current) return;
     if (!title.trim()) { setError("Nhập tên học liệu."); return; }
     if (content === "YOUTUBE_LINK" && (!editing || url.trim() !== (material?.current.videoUrl ?? "")) && !validYoutube(url)) {
-      setError("Chỉ nhận link HTTPS của một video YouTube, không nhận playlist."); return;
+      setError("Dán link HTTPS của một video YouTube. Nếu link có &list= hoặc &index=, hãy bỏ phần đó rồi thử lại."); return;
     }
     if (content === "FILE" && !editing && !fileRef) { setError("Chọn tệp."); return; }
     lock.current = true; setBusy(true); setError("");

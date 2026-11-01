@@ -144,11 +144,8 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     showDraft(null);
   });
 
-  const footer = mode === "form" ? (
-    <Button onClick={onClose} disabled={busy}>Đóng</Button>
-  ) : (
+  const footer = mode === "form" ? undefined : (
     <>
-      <Button onClick={onClose} disabled={busy}>Đóng</Button>
       {draft && draft.status !== "PENDING" && (
         <Button onClick={() => showDraft(null)} disabled={busy} data-testid="ai-draft-new">Yêu cầu mới</Button>
       )}

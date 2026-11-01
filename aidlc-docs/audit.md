@@ -7077,3 +7077,27 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Limits**: Commit locally only. Browser E2E/provider/load/restore acceptance remains unverified. Existing security/resiliency scope retained; PBT disabled.
 
 ---
+
+## UI remediation request
+
+**Timestamp**: 2026-11-01T08:25:00Z
+
+**User Input (complete raw)**:
+
+> giúp tôi tạo kế hoạch và tiến hành sửa tất cả lỗi ui hiện tại
+
+**Action**: Reuse the prior visual audit and four screenshots as scope. Record the plan in `inception/plans/2026-11-01-ui-remediation.md`; repair the observed UI defects in shared controls and affected pages. User authorized planning and execution in the same request. No data, API, or AI tasks submitted during UI verification.
+
+---
+
+## Dark-mode UI correction before commit
+
+**Timestamp**: 2026-11-01T01:36:34Z
+
+**User Input (complete raw text)**:
+
+> [Image #1] a khoan dark mode bị lỗi này
+
+**Action**: Paused the pending commit, added theme colors to native select option and optgroup, verified computed colors in Orca, reran frontend build/lint and full tests. Test suite passed 599/599 with four workers; default worker runs timed out on one subject-detail test that passed alone. Native OS popup was not captured by Orca screenshot.
+
+---

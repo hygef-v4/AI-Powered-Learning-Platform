@@ -29,6 +29,7 @@ export const ACTION_LABELS: Record<string, string> = {
   MCP_TOOL_CALLED: "Agent MCP gọi công cụ",
   // U12 Nhóm và bài nhóm
   GROUP_CREATED: "Tạo nhóm",
+  GROUP_RENAMED: "Đổi tên nhóm",
   GROUP_UPDATED: "Sửa nhóm",
   GROUP_DELETED: "Xóa nhóm",
   GROUP_LEADER_CHANGED: "Đổi trưởng nhóm",
@@ -39,6 +40,10 @@ export const ACTION_LABELS: Record<string, string> = {
   GROUP_SECTION_ASSIGNED: "Giao mục tài liệu nhóm",
   GROUP_SECTION_RELEASED: "Nhả mục tài liệu nhóm",
   GROUP_SUBMITTED: "Nộp bài nhóm",
+  ANNOUNCEMENT_CREATED: "Tạo thông báo",
+  QUIZ_REOPENED: "Mở lại quiz",
+  QUIZ_RETIRED: "Lưu trữ quiz",
+  QUIZ_ATTEMPT_SUBMITTED: "Nộp bài quiz",
 };
 
 export const OBJECT_TYPE_LABELS: Record<string, string> = {
@@ -60,6 +65,9 @@ export const OBJECT_TYPE_LABELS: Record<string, string> = {
   LEADER_CHANGE_REQUEST: "Yêu cầu đổi trưởng nhóm",
   GROUP_DOCUMENT: "Tài liệu nhóm",
   GROUP_SECTION: "Mục tài liệu nhóm",
+  ANNOUNCEMENT: "Thông báo",
+  QUIZ: "Quiz",
+  ATTEMPT: "Lượt làm bài",
 };
 
 export const actionLabel = (code: string) => ACTION_LABELS[code] ?? code;
