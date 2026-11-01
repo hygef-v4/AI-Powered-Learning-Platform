@@ -137,3 +137,15 @@ Bằng chứng: `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`. Nh�
 - `HttpProviderGateway.safeMessage(status, body)`: Gemini trả 400 `API_KEY_INVALID` thì báo "Key API không hợp lệ".
 - `features/ai/labels.ts` `TASK_LABEL`: tên tiếng Việt cho loại tác vụ trong Lịch sử AI.
 - U02 `features/audit/labels.ts`: nhãn cho hành động và loại đối tượng của U06, U12.
+
+## Nguồn AI mặc định (2026-11-02)
+
+Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`. Rule: BR-U06-28.
+
+- **Migration** `ai/V20261102_0900__create_ai_source_preferences.sql`: một dòng mỗi tài khoản, API cá nhân bắt buộc có provider.
+- **Backend:** `AiSourcePreferenceRepository`, `AiSourcePreference`; `AiSourceService.preference/savePreference`; `SourceOption.preferred`; API `GET/PUT /api/v1/me/ai-source-preference` (`source` null là hỏi mỗi lần).
+- **Frontend:**
+  - `DefaultSourceSection` ở tab API cá nhân của Kết nối AI.
+  - `AiSourcePicker` tự gửi bằng nguồn mặc định khi dùng được, báo lý do khi không; liên kết tới Kết nối AI.
+  - `shared/ai/preference.ts` (`usePreferredSource`) cho hộp tạo nháp của U07 (`AiDraftDialog` lấy làm giá trị ban đầu).
+- **Test:** `AiSourceServiceTest` (+3), `AiControllersTest` (+1), `AiSourcePicker.test.tsx` (+2), `DefaultSourceSection.test.tsx` (2, mới).
