@@ -25,6 +25,7 @@ export function useGradingProposals(
     pollExhausted: boolean;
   }>({ evaluationId, proposals: [], pollExhausted: false });
   const [pollToken, setPollToken] = useState(0);
+  const [loadedEvaluation, setLoadedEvaluation] = useState<string | null>(null);
   const proposalsRef = useRef<Proposal[]>([]);
   const onErrorRef = useRef(onError);
 
@@ -98,6 +99,7 @@ export function useGradingProposals(
           }),
         );
         if (stopped) return;
+        setLoadedEvaluation(evaluationId);
         consecutiveErrors = 0;
         proposalsRef.current = next;
         const hasPending = next.some((proposal) => proposal.status === "PENDING");
@@ -181,5 +183,5 @@ export function useGradingProposals(
     setPollToken((token) => token + 1);
   }, [evaluationId]);
 
-  return { proposals, pollExhausted, addProposal, resumePolling };
+  return { proposals, proposalsLoaded: loadedEvaluation === evaluationId, pollExhausted, addProposal, resumePolling };
 }

@@ -50,7 +50,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [dirty, setDirty] = useState(false);
   const evaluation = detail.evaluation;
   const dirtyRef = useRef(dirty);
-  const { proposals, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
+  const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
   useEffect(() => {
     dirtyRef.current = dirty;
@@ -190,6 +190,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     error,
     dirty,
     proposals,
+    proposalsLoaded,
     pollExhausted,
     disabled: busy || !detail.current || evaluation.state === "SUPERSEDED",
     official: evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED",

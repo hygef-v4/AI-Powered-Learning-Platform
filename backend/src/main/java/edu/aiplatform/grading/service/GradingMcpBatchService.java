@@ -40,17 +40,27 @@ public class GradingMcpBatchService implements IMcpToolProvider {
                 if(!seen.add(key))throw ApiException.badRequest("DUPLICATE_ITEM","Repeated item in batch");
                 if(input.containsKey("evaluationId"))outcome.put("evaluationId",input.get("evaluationId"));
                 if(input.containsKey("requestRef"))outcome.put("requestRef",input.get("requestRef"));
-                var result=write?writes.call(actor,"record_grading_proposal",input).content():reads.context(actor,input);
+                var result=write?writes.call(actor,"record_grading_proposal",input).content():reads.context(actor,input,false);
                 outcome.put("outcome","OK");outcome.put("result",result);
                 // Leave space for bounded outcomes for all remaining items.
-                if(bytes(results)+bytes(outcome)>180*1024) {
+                if(!fits(results,outcome)) {
                     outcome.remove("result");outcome.put("outcome","ERROR");outcome.put("code","MCP_BATCH_RESULT_LIMIT");
-                }
-            }catch(ApiException e){outcome.put("outcome","ERROR");outcome.put("code",e.code());}
-            catch(RuntimeException e){outcome.put("outcome","ERROR");outcome.put("code","MCP_ITEM_UNAVAILABLE");}
+                } else if(!write)reads.recordRead(actor,(Map<String,Object>)result);
+            }catch(ApiException e){outcome.remove("result");outcome.put("outcome","ERROR");outcome.put("code",e.code());}
+            catch(RuntimeException e){outcome.remove("result");outcome.put("outcome","ERROR");outcome.put("code","MCP_ITEM_UNAVAILABLE");}
             results.add(outcome);
         }
         return new McpToolResult(false,Map.of("items",results,"partial",results.stream().anyMatch(r -> !"OK".equals(r.get("outcome")))));
+    }
+    private boolean fits(List<Map<String,Object>> results,Map<String,Object> next) {
+        var candidate=new ArrayList<>(results);candidate.add(next);
+        var content=Map.of("items",candidate,"partial",true);
+        try {
+            String text=json.writeValueAsString(content);
+            // Account for text escaping in the MCP envelope; reserve room for remaining bounded outcomes.
+            var envelope=Map.of("content",List.of(Map.of("type","text","text",text)),"isError",false);
+            return bytes(content)<=180*1024&&bytes(envelope)<=240*1024;
+        }catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException(ex);}
     }
     private int bytes(Object value){try{return json.writeValueAsBytes(value).length;}catch(Exception e){throw new IllegalStateException(e);}}
 }

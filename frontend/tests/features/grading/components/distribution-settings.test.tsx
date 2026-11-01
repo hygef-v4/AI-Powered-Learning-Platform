@@ -26,6 +26,22 @@ const subjectAssignment = {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("assignment/class grade distribution visibility", () => {
+  it.each([30, 31])("uses the server AI limit for the authoring page with %s rubric items", async (count) => {
+    const detail = { ...subjectAssignment, maxAiGradingRubricItems: 30,
+      skeleton: { blocks: [{ id: "p", type: "HEADING", origin: "TEACHER", content: { style: "H1", text: "Question" } }] },
+      parts: [{ partId: "p", headingBlockId: "p", ancestorHeadingIds: [], title: "Question", rubricId: "r",
+        criteriaCount: 2, totalPoints: 12, rubricComplete: true, locked: false }] } as AssignmentDetail;
+    vi.spyOn(assignmentsApi, "detail").mockResolvedValue(detail);
+    vi.spyOn(assignmentsApi, "rubric").mockResolvedValue({ rubricId: "r", assignmentId: "a", partId: "p",
+      partTitle: "Question", criteria: [{ criterionId: "c", title: "Criterion", description: "", kind: "TEXT",
+        items: Array.from({ length: count }, (_, index) => ({ itemId: `i${index}`, text: `Requirement ${index}`, points: 1 })) }],
+      totalPoints: 12, locked: false, complete: true, diagramEnabled: false, editable: false, assignmentVersion: 1 });
+    render(<AssignmentFormPage id="a" />);
+    await screen.findByText("Question");
+    await waitFor(() => expect(assignmentsApi.rubric).toHaveBeenCalled());
+    if (count > 30) expect(await screen.findByText(/Rubric có 31 mục, vượt giới hạn 30/)).toBeVisible();
+    else expect(screen.queryByText(/vượt giới hạn/)).not.toBeInTheDocument();
+  });
   it("uses the versioned GET/PUT contract and encodes both path identifiers", async () => {
     const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify(initial))));
     vi.stubGlobal("fetch", fetch);

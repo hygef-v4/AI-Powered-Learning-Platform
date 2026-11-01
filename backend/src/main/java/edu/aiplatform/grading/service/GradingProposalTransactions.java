@@ -290,13 +290,9 @@ public class GradingProposalTransactions {
         if (review == null) {
             return GradingFeedbackValidator.validBlockIds(rubrics, null);
         }
-        try {
-            var detail = review.detail(actor, evaluation.id);
-            DocumentModel doc = detail == null ? null : detail.document();
-            return GradingFeedbackValidator.validBlockIds(rubrics, doc);
-        } catch (RuntimeException ex) {
-            return GradingFeedbackValidator.validBlockIds(rubrics, null);
-        }
+        var detail = review.detail(actor, evaluation.id);
+        DocumentModel doc = detail == null ? null : detail.document();
+        return GradingFeedbackValidator.validBlockIds(rubrics, doc);
     }
 
     @Transactional
@@ -381,9 +377,6 @@ public class GradingProposalTransactions {
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
         if (evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT)
             throw ApiException.conflict("INVALID_GRADE_STATE", "AI proposals require a pending or draft grade");
-        var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
-        var validBlockIds = resolveValidBlockIds(actor, evaluation, rubrics);
-        validator.validate(payload, rubrics, validBlockIds);
         var existing = proposals.findByRequestRef(requestRef);
         if (existing.isPresent()) {
             var proposal = existing.get();
@@ -394,6 +387,9 @@ public class GradingProposalTransactions {
                 throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
             return proposal;
         }
+        var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
+        var validBlockIds = resolveValidBlockIds(actor, evaluation, rubrics);
+        validator.validate(payload, rubrics, validBlockIds);
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
         proposal.evaluationId = evaluationId;

@@ -3,6 +3,16 @@ import { describe, expect, it } from "vitest";
 import { AiDraftPreview } from "@/features/assignments/components/AiDraftPreview";
 
 describe("AI assessment preview", () => {
+  it("shows the server warning without treating an oversized rubric as invalid", () => {
+    render(<AiDraftPreview targetPoints={12} proposal={{ title: "Exam", businessContext: "", instructions: "Answer",
+      sections: [{ level: 1, title: "Design", guidance: "", rubric: [] }],
+      validation: { status: "NEEDS_REVIEW", questionCount: 1, rubricLeafCount: 1, totalPoints: 12,
+        issues: [{ severity: "WARNING", code: "AI_GRADING_RUBRIC_LIMIT", path: "sections.rubric",
+          message: "Rubric vượt giới hạn 30 mục cho một lượt chấm AI. Bạn vẫn có thể chấm thủ công." }] } }} />);
+    expect(screen.getByText(/vượt giới hạn 30 mục/)).toBeVisible();
+    expect(screen.queryByText("Cần sửa trước khi áp dụng")).not.toBeInTheDocument();
+    expect(screen.getByText("12.00 / 12 điểm")).toBeVisible();
+  });
   it("keeps invalid empty output visible ahead of long collapsed prose", () => {
     const context = "Repeated context. ".repeat(300);
     render(<AiDraftPreview targetPoints={10} proposal={{ title: "Event exam", businessContext: context,

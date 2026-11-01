@@ -21,11 +21,15 @@ class GradingMcpQueryServiceTest {
     final GradingPromptBuilder prompts=mock(GradingPromptBuilder.class);
     final GradingProposalService proposals=mock(GradingProposalService.class);
     final GradebookService gradebook=mock(GradebookService.class);
-    final GradingMcpQueryService service=new GradingMcpQueryService(reviews,prompts,proposals,gradebook,json);
+    final IAssignmentQuery assignments=mock(IAssignmentQuery.class);
+    final GradingMcpReadProgress progress=mock(GradingMcpReadProgress.class);
+    final GradingMcpQueryService service=new GradingMcpQueryService(reviews,prompts,proposals,gradebook,json,assignments,progress);
     final Actor teacher=new Actor(UUID.randomUUID(),Role.TEACHER);
     Evaluation evaluation() {return Evaluation.pending(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),"hash",BigDecimal.TEN,"[]",Instant.now());}
     void setup(Evaluation e,List<DocumentBlock> blocks) {
         when(reviews.detail(teacher,e.id)).thenReturn(new GradingViews.EvaluationDetail(e,new DocumentModel(blocks),List.of(),List.of(),null,"DISABLED",List.of(),List.of(),List.of(),true));
+        when(assignments.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,1,"Read the case",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
+        when(prompts.gradingInstructions()).thenReturn("Grade only the locked rubric");
         when(prompts.outputSchema(e)).thenReturn("{\"type\":\"object\"}");
     }
     @Test void pagesStructuredBlocksAndRejectsChangedSnapshot() {
@@ -59,6 +63,59 @@ class GradingMcpQueryServiceTest {
         verifyNoInteractions(reviews);
         var e=evaluation();setup(e,List.of());
         assertThatThrownBy(() -> service.context(teacher,Map.of("evaluationId",e.id.toString(),"offset",1))).isInstanceOf(ApiException.class);
+    }
+    @Test void gradingContextContainsAssignmentAndSharedPolicy() {
+        var e=evaluation();setup(e,List.of());
+        var context=service.context(teacher,Map.of("evaluationId",e.id.toString()));
+        assertThat(context).containsKeys("assignmentContext", "gradingInstructions");
+        assertThat((Map<String,Object>)context.get("assignmentContext")).containsEntry("instructions","Read the case");
+        assertThat(context.get("gradingInstructions")).isEqualTo("Grade only the locked rubric");
+        verify(progress).advance(teacher.accountId(),e.id,(String)context.get("snapshotFingerprint"),0,0);
+        service.requireCompleteRead(teacher,e.id,e.version,e.submissionHash,(String)context.get("snapshotFingerprint"));
+        verify(progress).requireComplete(teacher.accountId(),e.id,(String)context.get("snapshotFingerprint"),0);
+    }
+    @Test void unavailableReadProgressCannotBecomeAContextSuccess() {
+        var e=evaluation();setup(e,List.of());
+        doThrow(ApiException.unavailable("MCP_CONTEXT_READ_UNAVAILABLE","Unavailable")).when(progress).advance(any(),any(),any(),anyInt(),anyInt());
+        assertThatThrownBy(() -> service.context(teacher,Map.of("evaluationId",e.id.toString())))
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("MCP_CONTEXT_READ_UNAVAILABLE"));
+    }
+    @Test void completedReadOfOldAssignmentCannotAuthorizeANewWrite() {
+        var e=evaluation();setup(e,List.of());
+        var context=service.context(teacher,Map.of("evaluationId",e.id.toString()));
+        when(assignments.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,2,
+                "Changed instructions",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
+        assertThatThrownBy(() -> service.requireCompleteRead(teacher,e.id,e.version,e.submissionHash,(String)context.get("snapshotFingerprint")))
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+        verify(progress,never()).requireComplete(any(),any(),any(),anyInt());
+    }
+    @Test void changedAssignmentInstructionsInvalidateContinuationEvenWithTheSameSubmissionHash() {
+        var e=evaluation();
+        var blocks=List.of(new DocumentBlock(UUID.randomUUID(),null,BlockType.PARAGRAPH,json.createObjectNode().put("text","x".repeat(80000))),
+                new DocumentBlock(UUID.randomUUID(),null,BlockType.PARAGRAPH,json.createObjectNode().put("text","x".repeat(80000))));
+        setup(e,blocks);
+        var first=service.context(teacher,Map.of("evaluationId",e.id.toString()));
+        when(assignments.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,1,
+                "Changed instructions",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
+        assertThatThrownBy(() -> service.context(teacher,(Map<String,Object>)first.get("continuation")))
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+    }
+    @Test void discoveryDoesNotLoadSubmissionDocuments() {
+        var e=evaluation();
+        var rows=new ArrayList<GradingViews.SubmissionRow>();
+        var evals=new ArrayList<Evaluation>();
+        for(int n=0;n<200;n++) {
+            var item=evaluation();item.classId=e.classId;item.assignmentId=e.assignmentId;evals.add(item);
+            rows.add(new GradingViews.SubmissionRow(null,item.id,item.attemptId,"PENDING",null,BigDecimal.TEN,false,Instant.now(),1,0));
+        }
+        when(reviews.listRows(teacher,e.classId,e.assignmentId,"ALL",null)).thenReturn(
+                new SubmissionReviewService.Listing(rows,evals,Map.of("total",200L),null));
+        var output=(Map<String,Object>)service.call(teacher,"list_submissions",Map.of(
+                "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString(),"size",20)).content();
+        assertThat((List<?>)output.get("items")).hasSize(20);
+        assertThat(output.get("total")).isEqualTo(200);
+        verify(reviews,never()).detail(any(),any());
+        verify(reviews).listRows(teacher,e.classId,e.assignmentId,"ALL",null);
     }
     @Test void assignmentSummaryAggregatesExistingFeedbackWithExplicitCoverage() {
         var e=evaluation();e.structuredFeedback=new GradingFeedback(1,new GradingFeedback.Summary(List.of("Clear design"),List.of("Explain constraints"),List.of()),List.of());

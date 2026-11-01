@@ -5,6 +5,7 @@ import edu.aiplatform.grading.dto.GradingViews;
 import com.fasterxml.jackson.databind.*;
 import edu.aiplatform.ai.contract.*;
 import edu.aiplatform.grading.model.EvaluationKind;
+import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Instant;
@@ -24,9 +25,12 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     private final GradingProposalService proposals;
     private final GradebookService gradebook;
     private final ObjectMapper json;
+    private final IAssignmentQuery assignments;
+    private final GradingMcpReadProgress progress;
     public GradingMcpQueryService(SubmissionReviewService reviews,GradingPromptBuilder prompts,
-            GradingProposalService proposals,GradebookService gradebook,ObjectMapper json) {
-        this.reviews=reviews;this.prompts=prompts;this.proposals=proposals;this.gradebook=gradebook;this.json=json;
+            GradingProposalService proposals,GradebookService gradebook,ObjectMapper json,IAssignmentQuery assignments,
+            GradingMcpReadProgress progress) {
+        this.reviews=reviews;this.prompts=prompts;this.proposals=proposals;this.gradebook=gradebook;this.json=json;this.assignments=assignments;this.progress=progress;
     }
     @Override public List<McpToolDefinition> tools() {
         String scope="\"classId\":"+McpSchemas.UUID+",\"assignmentId\":"+McpSchemas.UUID;
@@ -50,7 +54,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 var rows=proposals.list(actor,id).stream().map(p -> {
                     Map<String,Object> row=new LinkedHashMap<>();row.put("proposalId",p.id);row.put("status",p.status);
                     row.put("origin",p.origin);row.put("createdAt",p.createdAt);row.put("completedAt",p.completedAt);
-                    row.put("usedAt",p.usedAt);return row;
+                    row.put("usedAt",p.usedAt);row.put("reviewUrl",GradingMcpTools.reviewUrl(id,p.id));return row;
                 }).toList();yield McpInput.page(rows,in.page(),in.size());
             }
             case "read_grade_distribution" -> Map.of("classId",in.uuid("classId"),"assignmentId",in.uuid("assignmentId"),
@@ -75,6 +79,53 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ,timeout=20)
     public Map<String,Object> context(Actor actor,Map<String,Object> args) {
+        return context(actor,args,true);
+    }
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ,timeout=20)
+    public Map<String,Object> context(Actor actor,Map<String,Object> args,boolean recordRead) {
+        var snapshot=snapshot(actor,args);var detail=snapshot.detail();var e=detail.evaluation();
+        UUID id=e.id;int offset=new McpInput(args).integer("offset",0,0,Integer.MAX_VALUE);
+        var blocks=detail.document().blocks();if(offset>blocks.size())throw McpInput.invalid();
+        var reference=Map.of("kind",e.kind.name(),"id",(e.kind==EvaluationKind.ATTEMPT?e.attemptId:e.groupDocumentId).toString(),
+                "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString());
+        Map<String,Object> out=new LinkedHashMap<>();out.put("evaluationId",id.toString());out.put("expectedVersion",e.version);
+        out.put("submissionRef",reference);out.put("submissionHash",e.submissionHash);out.put("snapshotFingerprint",snapshot.fingerprint());
+        try {out.put("rubricSnapshot",json.readTree(e.rubricSnapshot));out.put("outputSchema",json.readTree(prompts.outputSchema(e)));}
+        catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException("Invalid grading schema",ex);}
+        out.put("assignmentContext",snapshot.assignmentContext());out.put("gradingInstructions",snapshot.policy());
+        out.put("untrustedContent",true);out.put("offset",offset);out.put("totalBlocks",blocks.size());
+        List<Object> selected=new ArrayList<>();out.put("documentBlocks",selected);
+        int next=offset;out.put("complete",false);
+        out.put("continuation",continuation(id,e.version,e.submissionHash,snapshot.fingerprint(),next));
+        if(bytes(out)>CONTEXT_BYTES)throw tooLarge();
+        while(next<blocks.size()) {
+            selected.add(blocks.get(next));
+            if(bytes(out)>CONTEXT_BYTES) {selected.remove(selected.size()-1);break;}
+            next++;
+        }
+        if(next==offset&&next<blocks.size())throw tooLarge();
+        boolean complete=next==blocks.size();out.put("complete",complete);
+        out.put("continuation",complete?null:continuation(id,e.version,e.submissionHash,snapshot.fingerprint(),next));
+        if(recordRead)recordRead(actor,out);
+        return out;
+    }
+
+    void recordRead(Actor actor,Map<String,Object> context) {
+        int offset=(Integer)context.get("offset");
+        progress.advance(actor.accountId(),UUID.fromString((String)context.get("evaluationId")),
+                (String)context.get("snapshotFingerprint"),offset,offset+((List<?>)context.get("documentBlocks")).size());
+    }
+
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ,timeout=20)
+    public void requireCompleteRead(Actor actor,UUID evaluationId,long version,String hash,String fingerprint) {
+        if(fingerprint==null||!fingerprint.matches("[0-9a-f]{64}"))throw GradingMcpReadProgress.required();
+        var snapshot=snapshot(actor,Map.of("evaluationId",evaluationId.toString(),"expectedVersion",version,
+                "submissionHash",hash,"snapshotFingerprint",fingerprint));
+        progress.requireComplete(actor.accountId(),evaluationId,snapshot.fingerprint(),snapshot.detail().document().blocks().size());
+    }
+
+    private record Snapshot(GradingViews.EvaluationDetail detail,Map<String,Object> assignmentContext,String policy,String fingerprint){}
+    private Snapshot snapshot(Actor actor,Map<String,Object> args) {
         McpInput.teaching(actor);var in=new McpInput(args);UUID id=in.uuid("evaluationId");
         int offset=in.integer("offset",0,0,Integer.MAX_VALUE);
         if(offset>0&&(!in.has("expectedVersion")||!in.has("submissionHash")||!in.has("snapshotFingerprint")))throw McpInput.invalid();
@@ -84,51 +135,40 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         if(in.has("expectedVersion"))e.checkVersion(in.version("expectedVersion"));
         if(in.has("submissionHash")&&!Objects.equals(e.submissionHash,in.text("submissionHash",null)))
             throw ApiException.conflict("SUBMISSION_CHANGED","Snapshot changed");
+        var assignment=assignments.getContent(e.assignmentId).orElseThrow(() ->
+                ApiException.unavailable("ASSIGNMENT_UNAVAILABLE","Assignment context unavailable"));
+        if(!GradingJson.write(json,assignment.rubrics()).equals(e.rubricSnapshot))
+            throw ApiException.conflict("RUBRIC_CHANGED","Locked rubric no longer matches submitted snapshot");
+        Map<String,Object> assignmentContext=new LinkedHashMap<>();
+        assignmentContext.put("assignmentId",assignment.assignmentId());
+        assignmentContext.put("versionNo",assignment.versionNo());
+        assignmentContext.put("instructions",assignment.instructions());
+        assignmentContext.put("skeleton",assignment.skeleton());
+        assignmentContext.put("requiredDiagrams",assignment.requiredDiagrams());
+        String policy=prompts.gradingInstructions();
         String fingerprint=McpFingerprint.of(json,Map.of("hash",e.submissionHash,"version",e.version,
-                "rubric",e.rubricSnapshot,"document",detail.document()));
+                "rubric",e.rubricSnapshot,"document",detail.document(),"assignment",assignmentContext,"policy",policy));
         if(in.has("snapshotFingerprint")&&!fingerprint.equals(in.text("snapshotFingerprint",null)))
             throw ApiException.conflict("SUBMISSION_CHANGED","Snapshot or rubric changed; restart reading");
-        var blocks=detail.document().blocks();if(offset>blocks.size())throw McpInput.invalid();
-        var reference=Map.of("kind",e.kind.name(),"id",(e.kind==EvaluationKind.ATTEMPT?e.attemptId:e.groupDocumentId).toString(),
-                "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString());
-        Map<String,Object> out=new LinkedHashMap<>();out.put("evaluationId",id.toString());out.put("expectedVersion",e.version);
-        out.put("submissionRef",reference);out.put("submissionHash",e.submissionHash);out.put("snapshotFingerprint",fingerprint);
-        try {out.put("rubricSnapshot",json.readTree(e.rubricSnapshot));out.put("outputSchema",json.readTree(prompts.outputSchema(e)));}
-        catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException("Invalid grading schema",ex);}
-        out.put("untrustedContent",true);out.put("offset",offset);out.put("totalBlocks",blocks.size());
-        List<Object> selected=new ArrayList<>();out.put("documentBlocks",selected);
-        int next=offset;out.put("complete",false);
-        // Reserve space for continuation before accumulating blocks.
-        out.put("continuation",continuation(id,e.version,e.submissionHash,fingerprint,next));
-        if(bytes(out)>CONTEXT_BYTES)throw tooLarge();
-        while(next<blocks.size()) {
-            selected.add(blocks.get(next));
-            if(bytes(out)>CONTEXT_BYTES) {selected.remove(selected.size()-1);break;}
-            next++;
-        }
-        if(next==offset&&next<blocks.size())throw tooLarge();
-        boolean complete=next==blocks.size();out.put("complete",complete);
-        out.put("continuation",complete?null:continuation(id,e.version,e.submissionHash,fingerprint,next));
-        return out;
+        return new Snapshot(detail,assignmentContext,policy,fingerprint);
     }
     private Map<String,Object> submissions(Actor actor,McpInput in) {
         UUID classId=in.uuid("classId"),assignmentId=in.uuid("assignmentId");int page=in.page(),size=in.size();
         String state=in.text("state","ALL");Boolean late=in.get("late")==null?null:bool(in.get("late"));
         // Filtering precedes pagination, so totals never describe a different scope or filter.
-        var first=reviews.list(actor,classId,assignmentId,state,late,1,100);
-        List<GradingViews.SubmissionRow> all=new ArrayList<>(first.rows());
-        if(first.total()>10000)throw ApiException.badRequest("MCP_DISCOVERY_TOO_LARGE","Narrow the status filter");
-        for(int p=2;all.size()<first.total();p++) {
-            var more=reviews.list(actor,classId,assignmentId,state,late,p,100);if(more.rows().isEmpty())break;all.addAll(more.rows());
-        }
+        var listing=reviews.listRows(actor,classId,assignmentId,state,late);
+        if(listing.rows().size()>10000)throw ApiException.badRequest("MCP_DISCOVERY_TOO_LARGE","Narrow the status filter");
+        var byId=new HashMap<UUID,edu.aiplatform.grading.model.Evaluation>();
+        listing.evaluations().forEach(e -> byId.put(e.id,e));
         List<Map<String,Object>> rows=new ArrayList<>();
         String type=in.text("type",null),proposalState=in.text("proposalStatus",null);
         if(type!=null&&!Set.of("ATTEMPT","GROUP_DOCUMENT").contains(type))throw McpInput.invalid();
-        for(var row:all) {
+        for(var row:listing.rows()) {
             Map<String,Object> mapped=new LinkedHashMap<>();mapped.put("student",row.student());mapped.put("evaluationId",row.evaluationId());
             mapped.put("status",row.status());mapped.put("expectedVersion",row.version());mapped.put("late",row.late());mapped.put("submittedAt",row.submittedAt());
             if(row.evaluationId()!=null) {
-                var e=reviews.detail(actor,row.evaluationId()).evaluation();
+                var e=byId.get(row.evaluationId());
+                if(e==null)throw ApiException.conflict("SUBMISSION_CHANGED","Reload submission metadata");
                 if(e.kind==EvaluationKind.MEMBER||(type!=null&&!type.equals(e.kind.name())))continue;
                 if(proposalState!=null&&proposals.list(actor,e.id).stream().noneMatch(p -> proposalState.equals(p.status)))continue;
                 mapped.put("submissionRef",Map.of("kind",e.kind.name(),"id",(e.kind==EvaluationKind.ATTEMPT?e.attemptId:e.groupDocumentId),"classId",e.classId,"assignmentId",e.assignmentId));
@@ -136,7 +176,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
             } else if(type!=null||proposalState!=null)continue;
             rows.add(mapped);
         }
-        var out=new LinkedHashMap<>(McpInput.page(rows,page,size));out.put("summary",first.summary());return out;
+        var out=new LinkedHashMap<>(McpInput.page(rows,page,size));out.put("summary",listing.summary());return out;
     }
     private Map<String,Object> assignmentSummary(Actor actor,UUID classId,UUID assignmentId,int limit) {
         var page=reviews.list(actor,classId,assignmentId,"ALL",null,1,limit);

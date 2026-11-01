@@ -88,7 +88,9 @@ public class AssignmentMcpTools implements IMcpToolProvider {
                     Object label = args.get("agentLabel");
                     AssignmentAiDraft saved = drafts.saveFromAgent(actor, id, expected, draft,
                             label == null ? null : String.valueOf(label));
-                    yield new McpToolResult(false, Map.of("draftId", saved.id().toString(), "status", "READY"));
+                    yield new McpToolResult(false, Map.of("draftId", saved.id().toString(), "proposalId",saved.id().toString(),
+                            "assignmentId",id.toString(),"status", "READY",
+                            "reviewUrl","/assignments/"+id+"?proposalId="+saved.id()));
                 }
                 default -> error("TOOL_NOT_FOUND", "Không có tool này");
             };

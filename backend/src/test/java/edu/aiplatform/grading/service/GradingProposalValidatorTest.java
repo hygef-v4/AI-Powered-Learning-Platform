@@ -15,6 +15,34 @@ class GradingProposalValidatorTest {
     final UUID rid = UUID.randomUUID(), iid = UUID.randomUUID();
 
     @Test
+    void newProposalsRequireExplicitScoresAndEvidenceForEveryItem() {
+        var validator = new GradingProposalValidator(json);
+        ObjectNode payload = json.valueToTree(Map.of("checks", Map.of(), "score", "0"));
+        assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(ApiException.class);
+        payload.set("itemScoresByRubric", json.valueToTree(Map.of(rid, Map.of(iid, BigDecimal.ZERO))));
+        assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(ApiException.class);
+        payload.putNull("structuredFeedback");
+        assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(ApiException.class);
+        payload.set("structuredFeedback", json.valueToTree(Map.of("schemaVersion", 1,
+                "summary", Map.of("strengths", List.of(), "improvements", List.of(), "nextSteps", List.of()),
+                "items", List.of(Map.of("rubricId", rid, "itemId", iid, "evidence", "Required work is absent",
+                        "reason", "No matching answer", "requiresReview", false)))));
+        assertThat(validator.validate(payload, rubric()).score()).isEqualByComparingTo("0");
+        payload.set("itemScoresByRubric", json.valueToTree(Map.of(rid, Map.of())));
+        assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(ApiException.class);
+    }
+
+    private ObjectNode complete(ObjectNode payload) {
+        if (!payload.has("itemScoresByRubric")) payload.set("itemScoresByRubric",
+                json.valueToTree(Map.of(rid, Map.of(iid, new BigDecimal(payload.path("score").asText())))));
+        payload.set("structuredFeedback", json.valueToTree(Map.of("schemaVersion", 1,
+                "summary", Map.of("strengths", List.of(), "improvements", List.of(), "nextSteps", List.of()),
+                "items", List.of(Map.of("rubricId", rid, "itemId", iid, "evidence", "Observed answer",
+                        "reason", "Matches awarded points", "requiresReview", false)))));
+        return payload;
+    }
+
+    @Test
     void rejectionDiagnosticsIdentifyValidationStageWithoutEchoingProviderContent() {
         assertThat(GradingProposalValidator.rejectionDiagnostic(
                 ApiException.badRequest("INVALID_AI_PROPOSAL", "Unknown evidenceBlockId: private-provider-content")))
@@ -39,7 +67,7 @@ class GradingProposalValidatorTest {
         var validator = new GradingProposalValidator(json);
         var checks = Map.of(rid.toString(), List.of(iid.toString()));
         assertThat(validator.validate(
-                json.valueToTree(Map.of("checks", checks, "score", "1", "feedback", "ok", "sections", List.of())),
+                complete(json.valueToTree(Map.of("checks", checks, "score", "1", "feedback", "ok", "sections", List.of()))),
                 rubric()).score()).isEqualByComparingTo("1");
         assertThatThrownBy(() -> validator.validate(json.valueToTree(Map.of("checks", checks, "score", "2")), rubric()))
                 .isInstanceOf(RuntimeException.class);
@@ -67,6 +95,7 @@ class GradingProposalValidatorTest {
         var validator = new GradingProposalValidator(json);
         var payload = json.valueToTree(Map.of("checks", Map.of(), "score", "0.50", "itemScoresByRubric",
                 Map.of(rid.toString(), Map.of(iid.toString(), new BigDecimal("0.50")))));
+        complete((ObjectNode) payload);
         assertThat(validator.validate(payload, rubric()).score()).isEqualByComparingTo("0.50");
         ((ObjectNode) payload).put("score", "1.00");
         assertThatThrownBy(() -> validator.validate(payload, rubric())).isInstanceOf(RuntimeException.class);
@@ -262,6 +291,7 @@ class GradingProposalValidatorTest {
                 List.of(new RubricCriterion(UUID.randomUUID(), "c", "", CriterionKind.values()[0],
                         List.of(new RubricItem(iid, "i", BigDecimal.ONE),
                                 new RubricItem(secondItem, "second", BigDecimal.ONE)))), new BigDecimal("2")));
+        ((ObjectNode) duplicateItems.path("itemScoresByRubric").path(rid.toString())).put(secondItem.toString(), 0);
         assertThatThrownBy(() -> validator.validate(duplicateItems, twoItemRubric, Set.of("p")))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
@@ -306,7 +336,7 @@ class GradingProposalValidatorTest {
     @Test
     void feedbackMayBeOmittedButOversizedFeedbackAndSectionsAreRejected() {
         var validator = new GradingProposalValidator(json);
-        ObjectNode payload = json.valueToTree(Map.of("checks", Map.of(), "score", "0.00"));
+        ObjectNode payload = complete(json.valueToTree(Map.of("checks", Map.of(), "score", "0.00")));
         assertThat(validator.validate(payload, rubric()).feedback()).isNull();
         payload.put("feedback", "x".repeat(10_000));
         assertThat(validator.validate(payload, rubric()).feedback()).hasSize(10_000);

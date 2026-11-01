@@ -27,9 +27,9 @@ class McpStaffCatalogTest {
                 new edu.aiplatform.quizzes.service.QuestionBankMcpTools(null,null,null,null,null,json),
                 new edu.aiplatform.materials.service.MaterialMcpTools(null,null),
                 new edu.aiplatform.materials.service.MaterialMcpQueryTools(null),
-                new edu.aiplatform.grading.service.GradingMcpTools(null,null,json),
-                new edu.aiplatform.grading.service.GradingMcpQueryService(null,null,null,null,json),
-                new edu.aiplatform.grading.service.GradingMcpBatchService(null,new edu.aiplatform.grading.service.GradingMcpTools(null,null,json),json),
+                new edu.aiplatform.grading.service.GradingMcpTools(null,null,json,null),
+                new edu.aiplatform.grading.service.GradingMcpQueryService(null,null,null,null,json,null,null),
+                new edu.aiplatform.grading.service.GradingMcpBatchService(null,new edu.aiplatform.grading.service.GradingMcpTools(null,null,json,null),json),
                 new AdminAiMcpTools(null,null),new edu.aiplatform.admindashboard.service.AdminDashboardMcpTools(null));
     }
     @Test void allSchemasCompileAndEveryRoleTokenCombinationHasCorrectCatalog() {
@@ -87,6 +87,14 @@ class McpStaffCatalogTest {
                 var response=server.handle(principal,request).orElseThrow();
                 assertThat(response.has("error")).as(role+" "+access+" "+tool.name()+" "+response).isFalse();
                 assertThat(response.at("/result/isError").asBoolean()).as(tool.name()).isFalse();
+                if("get_my_capabilities".equals(tool.name())) {
+                    var content=json.readTree(response.at("/result/content/0/text").asText());
+                    assertThat(content.path("workflow").asText()).contains(role==Role.STUDENT?"submitted own Practice":"external agent chat");
+                }
+                if("get_my_capabilities".equals(tool.name())) {
+                    var content=json.readTree(response.at("/result/content/0/text").asText());
+                    assertThat(content.path("workflow").asText()).contains(role==Role.STUDENT?"submitted own Practice":"external agent chat");
+                }
             }
         }
     }
@@ -97,7 +105,7 @@ class McpStaffCatalogTest {
         if(schema.has("anyOf"))return sample(schema.get("anyOf").get(0));
         var type=schema.path("type");String name=type.isArray()?type.get(0).asText():type.asText("object");
         return switch(name) {
-            case "string" -> TextNode.valueOf("uuid".equals(schema.path("format").asText())?"12345678-1234-1234-1234-123456789abc":"fixture");
+            case "string" -> TextNode.valueOf(schema.has("pattern")?"a".repeat(64):"uuid".equals(schema.path("format").asText())?"12345678-1234-1234-1234-123456789abc":"fixture");
             case "integer","number" -> IntNode.valueOf(schema.has("minimum")?schema.path("minimum").asInt():1);
             case "boolean" -> BooleanNode.FALSE;
             case "null" -> NullNode.instance;
