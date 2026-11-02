@@ -1,5 +1,9 @@
 # U11 Quiz Practice — code summary (giai đoạn 3)
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-authoring` `f3b54bc`) theo [plan giai đoạn 3](../../plans/code-generation-plan/u11-quiz-practice-code-generation-plan.md) (G1–G7). Phạm vi: UC 49 (KAN-128), UC 50 (KAN-129), UC 51 (KAN-130), UC 52 (KAN-57), phần Quiz của UC 42; luồng F1–F7, F9. Chưa gồm tracker hoạt động phía trình duyệt (G3) và `MaterialQuizList` (G4). Chưa commit.
 
 ## Business logic
@@ -173,3 +177,7 @@ Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của
 | Mở lại học liệu lớp | Đạt; "Bạn đã dùng hết 1/1 lượt làm quiz này." |
 | Giảng viên mở Lượt làm → Sinh viên Một → Xem bài | Đạt; "Dòng thời gian hoạt động": "Rời trang 1 lần · tổng thời gian đã biết 4 giây", khoảng 14:13:18–14:13:22, kèm câu trả lời |
 | Log backend, worker | Không có lỗi |
+
+## Làm lại Quiz (2026-11-01)
+
+Thêm `AttemptActivityAssessor`, `ActivityOutcome`, `ActivitySignal`, `PenaltyDecision`, `QuestionPager`. Mã lỗi: `PENALTY_REASON_INVALID`, `PENALTY_POINTS_INVALID`, `PENALTY_NOT_DECIDABLE`. Mục G4 ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).

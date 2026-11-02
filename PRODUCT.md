@@ -42,8 +42,8 @@ An AI-assisted learning platform for an FPT university setting: classes, assignm
 
 User-confirmed (binding):
 - Name: "Nền tảng học tập". Logo: hanko seal with the kanji 学.
-- Palette direction: light theme leads with light yellow-orange on an orange-tinted white background; dark theme leads with pale cyan on a deep ocean-blue background with blue-tinted white text.
-- Font: Be Vietnam Pro only.
+- Palette trial updated 2026-11-01 from the user's white-background reference: light canvas #FAFAFA, white sidebar/top bar/cards, neutral gray borders and text. Muted blue #466A96 is reserved for controls and selected states rather than tinting large surfaces. This replaces the cooler Slate Blue light surfaces the user found tiring. Dark theme retains slate surfaces with pale blue accents. Semantic success/warning/error colors remain distinct. Remove the oversized shell watermark and soften shadows; retain the small brush logo's brand colors.
+- Font: Plus Jakarta Sans is being trialed at the user's request (2026-11-01); Be Vietnam Pro was the previous approved choice.
 - Shell: left sidebar holds only page links; search, notifications and account sit in a top bar.
 - Style: modern minimalist, "less is more": show only what the user needs, neatly arranged, understandable on one screen, with small interaction effects.
 

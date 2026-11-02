@@ -1,5 +1,9 @@
 # U05 Class & Enrollment — code summary
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-class-enrollment-code-generation-plan.md), nhánh `Class&Enrollment`, merge vào `iter1` cùng U01–U04. Integration test (PostgreSQL thật, chạy đồng thời) do tester viết.
 
 ## Business logic
@@ -12,7 +16,7 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-cl
 | UC 26 Tạo lớp | `create`: lớp `DRAFT`, mã và môn không đổi sau khi tạo, giảng viên tùy chọn phải `TEACHER`/`SUBJECT_MANAGER` đang `ACTIVE` |
 | UC 27 Gán giảng viên | `assignTeacher`: không bỏ giảng viên của lớp `OPEN` |
 | UC 28 Ghi danh | Ghi danh từng người, nhập danh sách (`EnrollmentListParser`: tối đa 200 dòng, 100 KB, tra U01 một lần, mỗi dòng một transaction), gỡ và khôi phục; một sinh viên chỉ `ACTIVE` ở một lớp chưa lưu trữ của mỗi môn (BR-U05-22) |
-| UC 29 Sửa lớp, trạng thái | Sửa thông tin có `version`, bật/tắt phân bố điểm, `DRAFT → OPEN → ARCHIVED` và mở lại; mở lại bị chặn nếu sinh viên đang học lớp khác cùng môn (BR-U05-15) |
+| UC 29 Sửa lớp, trạng thái | Sửa thông tin có `version`, `DRAFT → OPEN → ARCHIVED` và mở lại; mở lại bị chặn nếu sinh viên đang học lớp khác cùng môn (BR-U05-15). Cài đặt phân bố theo bài–lớp thuộc U09 |
 | UC 30 Môn học của Chủ nhiệm | `managedSubjects`/`managedSubject`: thẻ môn và số lớp theo trạng thái |
 | Khóa theo môn | `ISubjectMutationGuard.lockActive` của U04 (khóa dòng `subjects`, chờ tối đa 1 giây, môn không `ACTIVE` thì từ chối): mọi thao tác ghi lớp và ghi danh trong cùng môn chạy lần lượt, và không chạy chồng với việc U04 lưu trữ môn |
 | Contract cho unit khác | `AcademicsContractAdapter` cài `IClassAccess`, `IClassScope` (U01), `ISubjectClasses` (U04); đọc quan hệ hiện thời, không cache. `archiveClassesOfSubject`: U04 lưu trữ môn thì U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn trong cùng transaction, ghi audit từng lớp |
@@ -33,7 +37,7 @@ Gốc `/api/v1`.
 | `POST /manager/classes`; `GET /manager/teacher-candidates` | 26 |
 | `PUT /manager/classes/{id}/teacher` | 27 |
 | `POST /manager/classes/{id}/enrollments`, `enrollments:batch`; `PUT /manager/classes/{id}/enrollments/{accountId}/status`; `GET /manager/classes/{id}/student-candidates` | 28 |
-| `PATCH /manager/classes/{id}`; `PUT /manager/classes/{id}/grade-distribution`, `/status` | 29 |
+| `PATCH /manager/classes/{id}`; `PUT /manager/classes/{id}/status` | 29 |
 | `GET /manager/subjects`, `/manager/subjects/{id}` | 30 |
 
 `version` lệch trả 409; mở lại vướng sinh viên trả 409 kèm danh sách; field lạ trong body trả 400.

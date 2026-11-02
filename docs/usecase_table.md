@@ -36,7 +36,7 @@ Active IDs were renumbered 01–66 in unit order (U01 → U15) on 2026-10-14; se
 | 26 | Create Class | Subject Class Management | Allows a subject manager to create a class within a subject they manage. |
 | 27 | Assign Teacher To Class | Subject Class Management | Allows a subject manager to assign or change the teacher responsible for a managed class. |
 | 28 | Add/Remove Class Students | Class Enrollment Management | Allows a subject manager to add students to or remove students from a managed class while preserving their learning history. |
-| 29 | Edit Class Information | Subject Class Management | Allows a subject manager to update class information, open or archive a class, and control anonymous grade-distribution visibility. |
+| 29 | Edit Class Information | Subject Class Management | Allows a subject manager to update class information, open or archive a class, and reopen a class. |
 | 30 | View Managed Subject | Subject Management | Allows a subject manager to view their assigned subjects and access each subject's information and management functions. |
 | 31 | Manage Personal AI API | Personal AI API Configuration | Allows a student, teacher or subject manager to configure, test, replace or revoke their own Gemini, OpenAI or Claude API key. |
 | 32 | Connect/Revoke MCP Agent | External Agent Connection | Allows an authorized user to connect or revoke their own MCP agent and access platform tools within their permissions. |
@@ -169,3 +169,7 @@ Active use cases were renumbered 01–66 in unit order (U01 → U15) on 2026-10-
 | 36 | 64 |
 | 12 | 65 |
 | 58 | 66 |
+
+## Code-derived clarifications — 2026-10-30
+
+IDs 01–66 remain unchanged. UC14/15 do not expose editable activity.retentionDays: source retains activity for one day. UC26 creates DRAFT; UC29 allows OPEN without teacher. UC32 is for Student/Teacher/Subject Manager, not Admin; owner can reveal an ACTIVE credential when ciphertext exists. UC31 personal API remains available to Student. UC48 supports edit OPEN and retire/reopen under version/container guards; review has not been removed. UC55 request/rejection reasons are optional, max 1,000 characters. UC58–62 include U13 material modules and scoped Quiz attachment; UC66 includes /activity. Admin institutional key reveal is a documented AS-BUILT exception to prior no-readback design. See [decision-register.md](../aidlc-docs/inception/reverse-engineering/decision-register.md).

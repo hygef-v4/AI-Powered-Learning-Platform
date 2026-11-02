@@ -1,6 +1,9 @@
 # U10 Quiz Authoring — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Lấy ngân hàng câu hỏi của U06 cũ, phần Quiz của U08 cũ và cài đặt Quiz của U09 cũ. Ngân hàng chỉ còn câu trắc nghiệm theo UC 46, 47. Làm Quiz thuộc U11. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 46, 47, 48. **Primary stories:** US-ASM-006, US-QBK-002; phần Quiz của US-ASM-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
@@ -53,21 +56,24 @@ stateDiagram-v2
 | `title` (≤ 200), `instructions` (≤ 5.000) | |
 | `settings` | `shuffleQuestions`, `shuffleOptions`, `timeLimitMinutes` (trống hoặc 1–300), `maxAttempts` (1–10 hoặc trống là không giới hạn), `showScoreAfterSubmit`, `showCorrectAnswers` (`NEVER`, `AFTER_SUBMIT`) |
 | `activityMonitoringEnabled`, `activityNotice` | Mặc định tắt |
-| `referenceMaterialIds` | ≤ 10, tùy chọn |
-| `status` | `DRAFT`, `REVIEWED`, `OPEN`, `RETIRED` |
+| `paperMode` | `FIXED`, `GENERATED` (BR-U10-17) |
+| `status` | `DRAFT`, `OPEN`, `RETIRED` |
 | `publishedAt`, `retiredAt`, `retiredReason`, `createdBy`, `version` | |
 | `QuizItem` | `quizId`, `questionId` (phiên bản ghim), `position`, `points` (> 0); khóa (`quizId`, `questionId`) |
+| `DrawRule` | `quizId`, `position`, `tag`, `difficulty` (tùy chọn), `questionCount`, `pointsEach` (BR-U10-17) |
 
 ```mermaid
 stateDiagram-v2
     [*] --> DRAFT: Tạo, nhân bản, copy hoặc version mới
-    DRAFT --> REVIEWED: Người soạn duyệt
-    REVIEWED --> DRAFT: Sửa Quiz đã duyệt
-    REVIEWED --> OPEN: Phát hành
-    OPEN --> RETIRED: Ngưng hoặc version mới được phát hành
+    DRAFT --> OPEN: Phát hành
+    OPEN --> OPEN: Sửa Quiz đang mở
+    DRAFT --> RETIRED: Lưu trữ
+    OPEN --> RETIRED: Lưu trữ hoặc version mới
+    RETIRED --> DRAFT: Mở lại, publishedAt null
+    RETIRED --> OPEN: Mở lại Quiz đã phát hành
 ```
 
-**Text alternative**: Quiz tạo ra ở `DRAFT`, duyệt thành `REVIEWED`, phát hành thì `OPEN` ngay (không có lịch). Quiz `OPEN` bị ngưng, hoặc có version mới được phát hành, thì `RETIRED`; lượt làm cũ vẫn xem được.
+**Text alternative**: Tạo DRAFT, phát hành OPEN. Sửa OPEN giữ OPEN. Lưu trữ mọi trạng thái chưa RETIRED; mở lại về DRAFT khi publishedAt null, ngược lại OPEN; service kiểm version/container ACTIVE. Snapshot/lượt cũ vẫn được giữ.
 
 ## 4. `QuizAiDraft`
 
@@ -79,7 +85,7 @@ stateDiagram-v2
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án; `listByMaterial(materialId, classId)`; `get(quizId)` | U11, U13 | Hiện Quiz cho người học; Quiz gắn tài liệu trên Learning Material |
+| `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án (Quiz sinh đề không có câu, chỉ có số câu); `drawPaper(quizId, seenQuestionIds, seed)` → đề cho lượt mới; `getPaper(quizId, questionPoints)` → đề theo câu đã lưu trong lượt; `get(quizId)` | U11 | Hiện Quiz và lập đề cho người học |
 | `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
 | `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần Quiz trong tab Đánh giá; số câu hỏi, Quiz của môn trên Manager Dashboard, My Subject; mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager |
@@ -91,6 +97,7 @@ stateDiagram-v2
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
 | `IQuizLifecycleListener` | `onRetired(quizId)` | U11 | Tự nộp lượt đang làm trong cùng transaction ngưng Quiz hoặc phát hành version mới |
+| `IQuizAttemptPresence` | `hasAttempts(quizId)` | U11 (`QuizAttemptPresence`) | Chặn sửa câu của Quiz `OPEN` đã có lượt làm (BR-U10-13); thêm 2026-11-01 |
 | Slot frontend `QuizDetailSection` | - | U11 | Lượt làm và dữ liệu hoạt động của lượt trên Quiz Detail cho giảng viên |
 | Slot frontend `QuizRowAction` | - | U11 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 
@@ -102,7 +109,7 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 |---|---|---|
 | `IAuthorization` | U01 | Kiểm R2, R3/R4 |
 | `IAudit` | U02 | Audit |
-| `IEventPublisher`, `ISettings` | U03 | Sự kiện `quiz.published`; kiểm `activity.retentionDays` |
+| `IEventPublisher`, `ISettings` | U03 | Sự kiện `quiz.published`; retention activity cố định 1 ngày, không kiểm setting cũ |
 | `ISubjectQuery` | U04 | Môn còn `ACTIVE`, môn được giao |
 | `IClassAccess` | U05 | Lớp, giảng viên, môn của lớp |
 | `IAiTask`, `IReferenceMaterial` | U06 | Task AI soạn câu; chữ tài liệu tham khảo (U13 cài) |
@@ -118,3 +125,17 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 | `GET`, `PATCH`, `DELETE /api/v1/quizzes/{id}`; `PUT .../items`; `POST .../items:random-preview`; `POST .../inline-questions`, `PATCH`, `DELETE .../inline-questions/{questionId}` | 48 |
 | `POST /api/v1/quizzes/{id}/ai-drafts`, `GET .../ai-drafts/{draftId}`, `POST .../ai-drafts/{draftId}:accept`, `:discard` | 47, 48 |
 | `POST /api/v1/quizzes/{id}/review`, `/publish`, `/retire`, `/clone`, `/versions` | 48 |
+
+## Source behavior delta — 2026-10-30
+
+Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Sinh đề theo tag: BR-U10-17.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Legacy publication reconciliation
+
+V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired rows require successful QUIZ_PUBLISHED audit for the exact QUIZ object to keep publication; unproven rows become null/review. New real same-instant publication stays non-null. QuizView now carries nullable publishedAt; subject teacher/module visibility and new-version require actual publication for RETIRED.
+
+## Delta 2026-11-01: câu đề xuất và chống trùng
+
+`Question.status` thêm `PENDING`, `REJECTED` (câu giảng viên đề xuất, BR-U10-09). `questions` thêm `content_hash`, `normalized_stem` (BR-U10-08), repository tự ghi khi lưu nội dung. Bảng mới: `question_reviews` (mỗi lần duyệt hoặc từ chối), `question_proposals` (lớp gửi đề xuất), `quiz_draw_rules`. `QuizSettings` thêm `leavePenalty`. Tắt `Quiz.referenceMaterialIds`.

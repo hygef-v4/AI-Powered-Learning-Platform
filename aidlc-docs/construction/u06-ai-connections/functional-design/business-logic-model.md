@@ -1,6 +1,9 @@
 # U06 AI Connections — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
 
@@ -46,14 +49,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm chủ sở hữu; xóa bản mã, chuyển `REVOKED`; ghi audit `AI_CONNECTION_CHANGED`.
 3. Task chưa gửi đi dùng kết nối này chuyển `FAILED` khi tới lượt chạy; task đã gửi vẫn chạy xong (BR-U06-05).
 
-## 3. MCP (Student, Teacher, Subject Manager)
+## 3. MCP (Student, Teacher, Subject Manager; Admin bị từ chối)
 
 ### F4 - Tạo credential MCP (UC 32)
 1. Mở tab MCP Agent; frontend gọi `GET /api/v1/me/mcp-credentials`.
 2. Bấm Tạo, nhập nhãn (tên agent), chọn quyền `READ_ONLY` hoặc `READ_WRITE` và hạn 7, 30 hoặc 90 ngày; frontend gọi `POST /api/v1/me/mcp-credentials`.
-3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
+3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; Admin bị từ chối; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
 4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối và hạn (BR-U06-31).
-5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token đúng một lần kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
+5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token khi tạo; owner ACTIVE có thể reveal khi có bản mã kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
 
 ### F5 - Thu hồi credential MCP (UC 32)
 1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/mcp-credentials/{id}`.
@@ -81,17 +84,18 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 5. Admin (qua Settings của U03)
 
 ### F8 - Cấu hình API chung (UC 14, 15)
-1. Admin mở Setting List; bấm phần "API AI của trường" mở `AiConnectionsPanel`; panel gọi `GET /api/v1/admin/ai/connections` (dạng che).
-2. Thêm hoặc thay key, chọn model: `PUT /api/v1/admin/ai/connections/{provider}` kèm `version`; kiểm Admin; mã hóa, lưu kết nối `INSTITUTIONAL` `ACTIVE`.
-3. Kiểm tra: `POST /api/v1/admin/ai/connections/{provider}:test` chạy như F2 bước 2–5; usage ghi nguồn `SHARED`, không trừ quota giảng viên.
-4. Tắt hoặc bật: `PUT .../{provider}/status`; thu hồi: `DELETE .../{provider}` xóa bản mã.
-5. Ghi audit `AI_CONNECTION_CHANGED`; yêu cầu AI mới dùng cấu hình hiện hành (BR-U06-05).
+1. Admin GET `/api/v1/admin/ai/connections` lấy danh sách masked. Nhiều key/provider.
+2. Thêm: POST `/api/v1/admin/ai/connections` với provider/apiKey/model; sửa PUT `/api/v1/admin/ai/connections/{id}` theo SaveCommand/version.
+3. Test draft chưa lưu: POST `/api/v1/admin/ai/connections:test`; test key đã lưu: POST `/api/v1/admin/ai/connections/{id}:test`, synthetic payload, usage SHARED.
+4. Bật/tắt PUT `/api/v1/admin/ai/connections/{id}/status` với enabled/version; revoke DELETE `/api/v1/admin/ai/connections/{id}`.
+5. Admin GET `/api/v1/admin/ai/connections/{id}/key` xem key chung không REVOKED, kể cả DISABLED; ghi AI_CONNECTION_KEY_REVEALED, không log secret. Không có quyền đọc key cá nhân.
+6. Provider selection ưu tiên ACTIVE, created_at rồi id; task dùng trạng thái/quota hiện hành.
 
 ### F9 - Cấu hình quota (UC 14, 15)
 1. Bấm phần "Quota AI giảng viên" mở `TeacherQuotaPanel`; panel gọi `GET /api/v1/admin/ai/quota-policy` và `GET /api/v1/admin/ai/teacher-quotas?q=`.
 2. Đặt mức mặc định mỗi ngày và trần ngày toàn hệ thống: `PUT /api/v1/admin/ai/quota-policy` kèm `version`; số nguyên không âm.
-3. Đặt mức riêng: tìm giảng viên qua `IAccountLookup.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` kèm `version`; bỏ mức riêng: `DELETE` để về mặc định.
-4. Kiểm Admin; người được đặt phải là Teacher hoặc Subject Manager; lệch `version` thì `409`.
+3. Đặt mức riêng: tìm giảng viên qua `IAccountLookup.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` chỉ với `dayTokens` (không có version/CAS trong DTO hiện tại); bỏ mức riêng: `DELETE` để về mặc định.
+4. Kiểm Admin; người được đặt phải là Teacher hoặc Subject Manager. Global quota-policy có version/CAS; teacher override hiện không có version/CAS, không hứa 409 cho stale override.
 5. Ghi audit `QUOTA_CHANGED` (trước, sau); mức mới áp cho lần giữ chỗ tiếp theo, không thu hồi phần đã dùng.
 
 ### F10 - Tổng hợp usage API chung (UC 33, Admin)
@@ -129,3 +133,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F14 - Tóm tắt cho Setting List (UC 14)
 1. U03 gọi `summary()` của `AiConnectionsSection` và `TeacherQuotaSection` (timeout 1 giây).
 2. Trả bản tóm tắt đã che: trạng thái và model từng provider của API chung; mức mặc định, trần ngày, số giảng viên có mức riêng, hoặc "Chưa cấu hình".
+
+## AI/MCP current flow — 2026-10-30
+
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; Admin reveal key chung không REVOKED (kể cả DISABLED) và ghi audit. Personal key không có readback cho Admin. Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Admin API key reveal là luồng riêng ở AiAdminController; không dùng để đọc personal key. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.

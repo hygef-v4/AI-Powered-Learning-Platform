@@ -11,6 +11,10 @@ public final class EventTypes {
     public static final String GRADE_PUBLISHED = "grade.published";
     /** U10. */
     public static final String QUIZ_PUBLISHED = "quiz.published";
+    /** U10. */
+    public static final String QUESTION_PROPOSED = "question.proposed";
+    /** U10. */
+    public static final String QUESTION_REVIEWED = "question.reviewed";
     /** U12. */
     public static final String GROUP_MEMBERSHIP_CHANGED = "group.membership-changed";
     /** U12. */

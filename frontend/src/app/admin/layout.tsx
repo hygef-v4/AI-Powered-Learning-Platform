@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AuthenticatedLayout } from "@/features/identity/shell/AuthenticatedLayout";
+import { AuthenticatedLayout } from "@/features/identity/shell/components/AuthenticatedLayout";
 
 // Khung chung của mọi màn /admin/* (Admin Dashboard, Settings, Account List, Subject List, Audit Log):
 // U01 kiểm phiên và role ADMIN rồi vẽ shared/layout/AppShell với menu bên của Admin.

@@ -1,6 +1,9 @@
 # U10 Quiz Authoring — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Lấy ngân hàng câu hỏi của U06 cũ, phần Quiz của U08 cũ và cài đặt Quiz của U09 cũ. Ngân hàng chỉ còn câu trắc nghiệm theo UC 46, 47. Làm Quiz thuộc U11. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 46, 47, 48. **Primary stories:** US-ASM-006, US-QBK-002; phần Quiz của US-ASM-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
@@ -70,8 +73,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Thêm câu ngân hàng: chọn tay (`GET /api/v1/subjects/{subjectId}/questions?status=ACTIVE`) hoặc bốc ngẫu nhiên (`POST /api/v1/quizzes/{id}/items:random-preview`); xem lại, bỏ hoặc bốc lại; lưu `PUT /api/v1/quizzes/{id}/items` kèm `version` (BR-U10-13, 14).
 3. Viết câu riêng: `POST /api/v1/quizzes/{id}/inline-questions` theo BR-U10-02, 03.
 4. Sắp thứ tự, đặt điểm từng câu; lưu kèm `version`.
-5. Sửa tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động, tài liệu gắn kèm: `PATCH /api/v1/quizzes/{id}` kèm `version`; bật theo dõi cần `activity.retentionDays` (đọc qua `ISettings`) (BR-U10-15).
-6. Quiz đang `REVIEWED` thì về `DRAFT`.
+5. Sửa tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động, tài liệu gắn kèm: `PATCH /api/v1/quizzes/{id}` kèm `version`; bật theo dõi cần thông báo hợp lệ; retention cố định 1 ngày (BR-U10-15).
 
 ### F8 - AI soạn câu cho Quiz (UC 48)
 1. Trên Quiz Detail của Quiz `DRAFT` bấm "Soạn bằng AI", nhập yêu cầu, chọn tài liệu và nguồn như F4 bước 1.
@@ -80,20 +82,21 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. `onReady`: Quiz còn `DRAFT` thì lưu đề xuất `READY`; không thì `REJECTED`.
 5. Người soạn chọn, sửa, chấp nhận: câu thành câu riêng của Quiz, thêm vào cuối danh sách (không vượt 200 câu); kèm `version`; audit `QUIZ_AI_DRAFT_ACCEPTED`.
 
-### F9 - Xem trước, duyệt, phát hành (UC 48)
+### F9 - Xem trước, phát hành (UC 48)
 1. Xem trước như người học: câu, lựa chọn, không có đáp án.
-2. Duyệt: `POST /api/v1/quizzes/{id}/review` kèm `version`; kiểm BR-U10-21; lỗi thì trả danh sách cần sửa; đạt thì `REVIEWED`; audit.
-3. Phát hành: `POST /api/v1/quizzes/{id}/publish` kèm `version`; kiểm lớp `OPEN` (`IClassAccess`) hoặc môn `ACTIVE` (`ISubjectQuery`).
-4. Một transaction: Quiz `OPEN`, `publishedAt`; có version cũ đang `OPEN` thì chuyển `RETIRED` và gọi `IQuizLifecycleListener.onRetired` của nó; audit `QUIZ_PUBLISHED`.
-5. Sau commit phát `quiz.published` (Quiz, lớp hoặc môn) cho U14.
+2. Phát hành: xác nhận rồi `POST /api/v1/quizzes/{id}/publish` kèm `version`; kiểm BR-U10-21, lỗi thì trả danh sách cần sửa; kiểm lớp `OPEN` (`IClassAccess`) hoặc môn `ACTIVE` (`ISubjectQuery`).
+3. Một transaction: Quiz `OPEN`, `publishedAt`; có version cũ đang `OPEN` thì chuyển `RETIRED` và gọi `IQuizLifecycleListener.onRetired` của nó; audit `QUIZ_PUBLISHED`.
+4. Sau commit phát `quiz.published` (Quiz, lớp hoặc môn) cho U14.
 
-### F10 - Ngưng Quiz (UC 48)
-1. Bấm Ngưng, nhập lý do; `POST /api/v1/quizzes/{id}/retire`.
-2. Kiểm quyền và `OPEN`.
-3. Một transaction: `RETIRED`, gọi `onRetired` (U11 tự nộp lượt đang làm); audit `QUIZ_RETIRED`.
+### F10 - Lưu trữ và mở lại Quiz (UC 48)
+1. `POST /api/v1/quizzes/{id}/retire` kèm version; lý do trống mặc định Lưu trữ.
+2. Kiểm quyền, container và version; cho phép mọi trạng thái chưa RETIRED.
+3. Một transaction: RETIRED, giữ publishedAt thực (null nếu chưa phát hành), gọi onRetired và audit QUIZ_RETIRED.
+4. `POST /api/v1/quizzes/{id}/reopen` kèm version: chỉ RETIRED, container active; về DRAFT khi publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi có version khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN.
+5. Migration V20261030_1810 đối chiếu SUCCESS QUIZ_PUBLISHED audit đúng object cho legacy equal-time rows; thiếu bằng chứng thì quay lại review, không tự OPEN.
 
 ### F11 - Nhân bản, version mới, copy (UC 48)
-1. Nhân bản: `POST /api/v1/quizzes/{id}/clone`; version mới: `POST .../versions` (kiểm chưa có version đang mở); copy giữa lớp: `GET /api/v1/classes/{classId}/quiz-copy-sources`, `POST /api/v1/classes/{classId}/quizzes:copy` (kiểm dạy cả hai lớp).
+1. Nhân bản: `POST /api/v1/quizzes/{id}/clone`; version mới: `POST .../versions` (nguồn OPEN hoặc RETIRED có publishedAt thực; kiểm chưa có version đang soạn); copy giữa lớp: `GET /api/v1/classes/{classId}/quiz-copy-sources`, `POST /api/v1/classes/{classId}/quizzes:copy` (kiểm dạy cả hai lớp).
 2. Một transaction: tạo Quiz `DRAFT` theo BR-U10-31 (câu ngân hàng giữ phiên bản ghim, câu riêng sao mới); audit `QUIZ_CLONED`, `QUIZ_VERSION_CREATED` hoặc `QUIZ_COPIED`.
 3. Mở Quiz Detail của Quiz mới.
 
@@ -111,5 +114,18 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F14 - Interface cho unit khác
 1. U11 lấy Quiz người học được thấy (`IQuizQuery.listForClass`), đề không có đáp án và cài đặt (`getStudentView`), chấm bài (`IQuizScoring.score`) và đáp án để hiện sau khi nộp theo cài đặt (`answerReview`).
-2. U13 lấy Quiz gắn một tài liệu (`listByMaterial`) để hiện trên Learning Material; U11 cài `IQuizLifecycleListener` và slot `QuizDetailSection`.
+2. U11 cài `IQuizLifecycleListener` và slot `QuizDetailSection`.
 3. U14 nhận `quiz.published` để báo trong app.
+
+## Source behavior delta — 2026-10-30
+
+Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Sinh đề theo tag: BR-U10-17.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Delta 2026-11-01: sinh đề, chống trùng, đề xuất câu
+
+- **Sinh đề (BR-U10-17):** `PUT /quizzes/{id}/draw-rules`, `GET /quizzes/{id}/bank-tags`, `POST /quizzes/{id}/paper-preview`. `QuizPaperPlanner` phân bổ câu bằng ghép cặp; U11 gọi `drawPaper` khi bắt đầu lượt và lưu câu, điểm vào snapshot.
+- **Chống trùng (BR-U10-08):** `QuestionDuplicates` khóa theo môn bằng advisory lock rồi kiểm hash; `GET /subjects/{id}/questions:duplicates` cho báo cáo. `QuestionFingerprintBackfill` điền dữ liệu cũ khi khởi động.
+- **Đề xuất (BR-U10-09):** `GET, POST, PATCH, DELETE /classes/{classId}/question-proposals`; `POST /questions/{id}/approve`, `/reject`; hàng loạt `POST /subjects/{id}/questions:approve`, `:reject`, `:activate`. Sự kiện `question.proposed`, `question.reviewed` cho U14.
+- Đã bỏ: `POST /quizzes/{id}/review`, gắn `referenceMaterialIds` khi lưu Quiz, `IQuizQuery.listByMaterial`.

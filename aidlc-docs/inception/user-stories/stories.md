@@ -30,7 +30,7 @@ Given Student, When chọn nguồn, Then personal API hoạt động đúng quy�
 
 **Current UC trace**: UC 32. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là user, tôi kết nối agent vào tools ALAP với phạm vi cá nhân.
+**Story**: Là Student/Teacher/Subject Manager ACTIVE, tôi kết nối agent với tool đúng role/scope. Student dùng MCP hoặc API cá nhân cho UC41; Admin không dùng MCP.
 
 **Truy vết**: FR-035/037. Primary unit U06.
 
@@ -1228,9 +1228,9 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 #### Scenario 3 - Phân bố điểm ẩn danh trên danh sách bài Student
 
-- **Given** Chủ nhiệm môn của môn đã bật hiển thị phân bố điểm trong Edit Class Information (UC 29), bài GRADED đủ điều kiện riêng tư và điểm đã công bố theo lớp
+- **Given** giảng viên được phân công dạy lớp đã bật phân bố cho cặp bài tập–lớp (mặc định tắt), bài GRADED có ít nhất 20 người đang ghi danh có điểm công bố dùng được
 - **When** người học mở Student Assignments của lớp (UC 37)
-- **Then** bài GRADED có điểm đã công bố hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng quá ít người; quiz/Practice không có phân bố; không suy ra danh tính hoặc điểm của người học khác; Teacher chỉ được giao dạy không có quyền bật/tắt cài đặt này
+- **Then** bài GRADED hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng dưới 5 người; Quiz/Practice không có phân bố; không trả danh tính/điểm cá nhân khác. Bài SUBJECT có cài đặt riêng từng lớp; giảng viên lớp bật/tắt được dù nội dung bài chỉ đọc. Chủ nhiệm môn không được giao dạy không có quyền bật/tắt
 
 
 
@@ -1376,7 +1376,7 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** giảng viên có phân công lớp và có dữ liệu activity
 - **When** xem timeline từng sinh viên kể cả bài nhóm
-- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận hoặc đổi điểm; ngoài quyền bị từ chối.
+- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận; ngoài quyền bị từ chối. Assignment không đổi điểm. Quiz có cấu hình thì mức trừ gợi ý được tính khi nộp, giảng viên quyết định trừ hay không từng lượt kèm lý do, chưa quyết định thì điểm giữ nguyên (sửa FR-039 2026-11-02).
 
 #### Scenario 3 - Activity trong UC 42
 
@@ -1445,3 +1445,11 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 ## Validation
 
 Mỗi story có Given/When/Then; baseline scope và UC owner ở requirements/use-cases.md. FR/NFR/SEC tham chiếu requirements hiện hành; UC dùng số mới 01–66 đánh theo unit ngày 2026-10-14 (bảng đối chiếu số cũ ở use-cases.md), không đọc catalog 73 cũ. Không xác nhận tests đã chạy; Construction design/plans đã sync; code/contracts/migrations thực tế chưa revision. Security/resiliency enabled subset giữ nguyên; PBT disabled.
+
+## Current acceptance deltas — 2026-10-30
+
+US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys/provider and Admin reveal audited; personal keys remain private. Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
+
+## MCP correction and audit remediation — 2026-10-30
+
+Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.

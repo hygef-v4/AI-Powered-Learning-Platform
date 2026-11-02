@@ -1,4 +1,5 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+"use client";
+import { useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
 
@@ -83,32 +84,51 @@ export function Select({ invalid, wrapperClassName, className, children, ...rest
 
 type SwitchProps = {
   checked: boolean;
-  onChange: (checked: boolean) => void;
+  /** Trả về Promise (lưu lên server) thì công tắc đổi ngay, khóa lại tới khi xong; lỗi thì về lại giá trị `checked`. */
+  onChange: (checked: boolean) => void | Promise<unknown>;
   label: ReactNode;
   ariaLabel?: string;
   disabled?: boolean;
 };
 
-/** Công tắc bật/tắt. */
+/**
+ * Công tắc bật/tắt. Lưu lên server thì không đợi phản hồi mới đổi: bấm là gạt ngay sang giá trị mới và khóa công tắc
+ * (disabled, `aria-busy`) tới khi lưu xong, để không bấm chồng; lưu xong thì theo `checked` của trang (lỗi thì tự về giá trị cũ).
+ */
 export function Switch({ checked, onChange, label, ariaLabel, disabled }: SwitchProps) {
+  const [pending, setPending] = useState<boolean | null>(null);
+  const shown = pending ?? checked;
+  function toggle() {
+    if (pending !== null) return;
+    const next = !shown;
+    const result = onChange(next);
+    if (result && typeof (result as Promise<unknown>).then === "function") {
+      setPending(next);
+      void Promise.resolve(result).catch(() => undefined).finally(() => setPending(null));
+    }
+  }
   return (
     <span className="inline-flex items-center gap-2.5 text-[13.5px] text-ink">
       <button
         type="button"
         role="switch"
-        aria-checked={checked}
+        aria-checked={shown}
         aria-label={ariaLabel}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
+        aria-busy={pending !== null || undefined}
+        disabled={disabled || pending !== null}
+        onClick={toggle}
         className={cx(
-          "relative inline-block h-5 w-9 shrink-0 rounded-full transition-colors duration-200 disabled:opacity-45",
-          checked ? "bg-primary" : "bg-line-strong",
+          // Màu nền và độ mờ đổi dần cùng nhịp với nút gạt, không nháy.
+          "relative inline-block h-5 w-9 shrink-0 cursor-pointer rounded-full transition-[background-color,opacity] duration-300 ease-[cubic-bezier(.16,1,.3,1)]",
+          // Đang lưu: chỉ công tắc này khóa, giữ nguyên độ đậm (chỉ đổi con trỏ); trang không khóa các công tắc khác khi lưu.
+          pending !== null ? "cursor-progress" : disabled && "cursor-not-allowed opacity-45",
+          shown ? "bg-primary" : "bg-line-strong",
         )}
       >
         <span
           className={cx(
             "absolute top-0.5 left-0.5 size-4 rounded-full bg-surface shadow-sm transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)]",
-            checked && "translate-x-4",
+            shown && "translate-x-4",
           )}
         />
       </button>
@@ -183,7 +203,7 @@ export function Segmented<T extends string>({ value, onChange, options, ariaLabe
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cx(
-              "flex-1 rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-[background-color,color,box-shadow] duration-200",
+              "flex-1 cursor-pointer rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-[background-color,color,box-shadow] duration-200",
               "disabled:cursor-not-allowed disabled:opacity-45",
               on ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink",
             )}

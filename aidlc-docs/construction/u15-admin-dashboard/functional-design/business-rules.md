@@ -1,6 +1,9 @@
 # U15 Admin Dashboard — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U15 Admin Dashboard thuộc Iter 3, người code: Người 5; UC 66. Lấy phần Admin Dashboard của U16 cũ; thêm trạng thái backup của U03. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 66. **Primary stories:** US-RPT-002. **Requirements:** FR-024, FR-038.
 
@@ -35,3 +38,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U15-30 | Admin Dashboard có lối vào Account List (U01), Subject List (U04), Setting List (U03), Audit Log (U02). Không có lối vào Manager Dashboard, Class Dashboard hay nội dung lớp. | UC 66, screen flow |
 | BR-U15-31 | Khi U15 chưa có (Iter 1, 2), `homePath` của Admin tạm là Account List. | Thiết kế |
+
+## Activity projection — AS-BUILT 2026-10-30
+
+Admin Dashboard có counts, backup metadata/history và GET /activity. Activity gồm biến động ACTIVE accounts hôm nay, số Assignment 7 ngày (individual/group/practice), tối đa 50 security events trong 30 ngày; ngày Asia/Ho_Chi_Minh. Các nguồn lỗi/timeout trả từng Section UNAVAILABLE/data null; no-store, chỉ ADMIN, query lạ bị từ chối. Không lộ archive/secrets hoặc cấp quyền học vụ.

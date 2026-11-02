@@ -1,17 +1,19 @@
 openapi: 3.1.0
 info:
   title: U15 Admin Dashboard
-  version: 1.0.0
-  description: Current-contract consumer slice A. No U03 contract changes; missing
-    start/summary metadata remains unknown.
+  version: 1.1.0
+  description: >-
+    AS-BUILT 2026-10-30 staging@794a4053. Counts, backup metadata/history and independent activity
+    projection. Source-observed; runtime evidence separate.
 security:
-- cookieAuth: []
+  - cookieAuth: []
 paths:
   /api/v1/admin/dashboard:
     get:
       operationId: getAdminDashboard
-      description: Read-only, active ADMIN only. No actor/role or unknown query parameters.
-        No cache. Backup metadata only; no ID, archive references or credentials.
+      description: >-
+        Read-only, active ADMIN only. No actor/role or unknown query parameters. No cache. Backup
+        metadata only; no ID, archive references or credentials.
       responses:
         '200':
           description: Partial dashboard results
@@ -71,8 +73,9 @@ paths:
   /api/v1/admin/dashboard/backups:
     get:
       operationId: getBackupHistory
-      description: Read-only, active ADMIN only. No actor/role or unknown query parameters.
-        No cache. Backup metadata only; no ID, archive references or credentials.
+      description: >-
+        Read-only, active ADMIN only. No actor/role or unknown query parameters. No cache. Backup
+        metadata only; no ID, archive references or credentials.
       responses:
         '200':
           description: History ordered by scheduledFor descending
@@ -130,20 +133,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
       parameters:
-      - in: query
-        name: page
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 2147483647
-          default: 0
-      - in: query
-        name: size
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 20
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+  /api/v1/admin/dashboard/activity:
+    get:
+      operationId: getAdminDashboardActivity
+      description: >-
+        Current active ADMIN only; no query parameters (unknown/repeated query rejected with
+        DASHBOARD_PAGE_INVALID), no-store. Asia/Ho_Chi_Minh: active-account change today; seven
+        contiguous days of assignment counts; up to 50 suspicious events from 30 calendar days.
+        Independent source failures/timeouts give Section UNAVAILABLE with null data; available
+        sections remain. No private academic content or secrets.
+      responses:
+        '200':
+          description: Independent activity sections
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityView'
+        '400':
+          description: Invalid query
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Authentication required
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Current active ADMIN required
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '503':
+          description: Authorization, audit or requested history unavailable
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
 components:
   securitySchemes:
     cookieAuth:
@@ -155,26 +223,26 @@ components:
       type: object
       additionalProperties: false
       required:
-      - byRoleAndStatus
-      - total
-      - activeTotal
+        - byRoleAndStatus
+        - total
+        - activeTotal
       properties:
         byRoleAndStatus:
           type: object
           additionalProperties: false
           required:
-          - ADMIN
-          - SUBJECT_MANAGER
-          - TEACHER
-          - STUDENT
+            - ADMIN
+            - SUBJECT_MANAGER
+            - TEACHER
+            - STUDENT
           properties:
             ADMIN:
               type: object
               additionalProperties: false
               required:
-              - PENDING
-              - ACTIVE
-              - DISABLED
+                - PENDING
+                - ACTIVE
+                - DISABLED
               properties:
                 PENDING:
                   type: integer
@@ -192,9 +260,9 @@ components:
               type: object
               additionalProperties: false
               required:
-              - PENDING
-              - ACTIVE
-              - DISABLED
+                - PENDING
+                - ACTIVE
+                - DISABLED
               properties:
                 PENDING:
                   type: integer
@@ -212,9 +280,9 @@ components:
               type: object
               additionalProperties: false
               required:
-              - PENDING
-              - ACTIVE
-              - DISABLED
+                - PENDING
+                - ACTIVE
+                - DISABLED
               properties:
                 PENDING:
                   type: integer
@@ -232,9 +300,9 @@ components:
               type: object
               additionalProperties: false
               required:
-              - PENDING
-              - ACTIVE
-              - DISABLED
+                - PENDING
+                - ACTIVE
+                - DISABLED
               properties:
                 PENDING:
                   type: integer
@@ -260,14 +328,14 @@ components:
       type: object
       additionalProperties: false
       required:
-      - scheduledFor
-      - state
-      - snapshotAt
-      - startedAt
-      - completedAt
-      - byteSize
-      - safeError
-      - purgedAt
+        - scheduledFor
+        - state
+        - snapshotAt
+        - startedAt
+        - completedAt
+        - byteSize
+        - safeError
+        - purgedAt
       properties:
         scheduledFor:
           type: string
@@ -275,73 +343,73 @@ components:
         state:
           type: string
           enum:
-          - CREATED
-          - RUNNING
-          - SUCCESS
-          - FAILED
+            - CREATED
+            - RUNNING
+            - SUCCESS
+            - FAILED
         snapshotAt:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+            - type: string
+              format: date-time
+            - type: 'null'
         startedAt:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Null until the owner U03 exposes start time. Never inferred
-            from snapshotAt.
+            - type: string
+              format: date-time
+            - type: 'null'
+          description: Null until the owner U03 exposes start time. Never inferred from snapshotAt.
         completedAt:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+            - type: string
+              format: date-time
+            - type: 'null'
         byteSize:
           anyOf:
-          - type: integer
-            format: int64
-            minimum: 0
-          - type: 'null'
+            - type: integer
+              format: int64
+              minimum: 0
+            - type: 'null'
         safeError:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: 'null'
         purgedAt:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+            - type: string
+              format: date-time
+            - type: 'null'
     BackupSchedule:
       type: object
       additionalProperties: false
       required:
-      - enabled
-      - dailyAt
-      - timeZone
-      - nextPlannedAt
+        - enabled
+        - dailyAt
+        - timeZone
+        - nextPlannedAt
       properties:
         enabled:
           type: boolean
         dailyAt:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: 'null'
         timeZone:
           type: string
           const: Asia/Ho_Chi_Minh
         nextPlannedAt:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Estimate from received settings only; not proof a job is scheduled.
-            U03 settings may be cached.
+            - type: string
+              format: date-time
+            - type: 'null'
+          description: >-
+            Estimate from received settings only; not proof a job is scheduled. U03 settings may be
+            cached.
     BackupFailureSummary:
       type: object
       additionalProperties: false
       required:
-      - count
-      - latestSafeError
+        - count
+        - latestSafeError
       properties:
         count:
           type: integer
@@ -349,286 +417,290 @@ components:
           minimum: 0
         latestSafeError:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: 'null'
     BackupSection:
       type: object
       additionalProperties: false
       required:
-      - latest
-      - schedule
-      - recentRuns
-      - latestSuccessfulAt
-      - failuresLast7Days
+        - latest
+        - schedule
+        - recentRuns
+        - latestSuccessfulAt
+        - failuresLast7Days
       properties:
         latest:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                anyOf:
-                - $ref: '#/components/schemas/BackupRunItem'
-                - type: 'null'
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  anyOf:
+                    - $ref: '#/components/schemas/BackupRunItem'
+                    - type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         schedule:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                $ref: '#/components/schemas/BackupSchedule'
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  $ref: '#/components/schemas/BackupSchedule'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         recentRuns:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                type: array
-                maxItems: 3
-                items:
-                  $ref: '#/components/schemas/BackupRunItem'
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  type: array
+                  maxItems: 3
+                  items:
+                    $ref: '#/components/schemas/BackupRunItem'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         latestSuccessfulAt:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                type: [string, 'null']
-                format: date-time
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  type:
+                    - string
+                    - 'null'
+                  format: date-time
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         failuresLast7Days:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                $ref: '#/components/schemas/BackupFailureSummary'
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
-      description: 'Latest success uses completedAt across all history, including purged runs.
-        Failures count terminal FAILED runs in the previous 168 hours [from,to).
-        AVAILABLE latest/latestSuccessfulAt with null data means no matching run;
-        UNAVAILABLE means the source could not be read. Sources are independent snapshots.'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  $ref: '#/components/schemas/BackupFailureSummary'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
+      description: >-
+        Latest success uses completedAt across all history, including purged runs. Failures count
+        terminal FAILED runs in the previous 168 hours [from,to). AVAILABLE
+        latest/latestSuccessfulAt with null data means no matching run; UNAVAILABLE means the source
+        could not be read. Sources are independent snapshots.
     AdminDashboardView:
       type: object
       additionalProperties: false
       required:
-      - calculatedAt
-      - accounts
-      - subjects
-      - classes
-      - activeEnrollments
-      - backup
+        - calculatedAt
+        - accounts
+        - subjects
+        - classes
+        - activeEnrollments
+        - backup
       properties:
         calculatedAt:
           type: string
           format: date-time
         accounts:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                $ref: '#/components/schemas/AccountCounts'
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  $ref: '#/components/schemas/AccountCounts'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         subjects:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                type: object
-                additionalProperties: false
-                required:
-                - ACTIVE
-                - ARCHIVED
-                properties:
-                  ACTIVE:
-                    type: integer
-                    format: int64
-                    minimum: 0
-                  ARCHIVED:
-                    type: integer
-                    format: int64
-                    minimum: 0
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - ACTIVE
+                    - ARCHIVED
+                  properties:
+                    ACTIVE:
+                      type: integer
+                      format: int64
+                      minimum: 0
+                    ARCHIVED:
+                      type: integer
+                      format: int64
+                      minimum: 0
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         classes:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                type: object
-                additionalProperties: false
-                required:
-                - DRAFT
-                - OPEN
-                - ARCHIVED
-                properties:
-                  DRAFT:
-                    type: integer
-                    format: int64
-                    minimum: 0
-                  OPEN:
-                    type: integer
-                    format: int64
-                    minimum: 0
-                  ARCHIVED:
-                    type: integer
-                    format: int64
-                    minimum: 0
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - DRAFT
+                    - OPEN
+                    - ARCHIVED
+                  properties:
+                    DRAFT:
+                      type: integer
+                      format: int64
+                      minimum: 0
+                    OPEN:
+                      type: integer
+                      format: int64
+                      minimum: 0
+                    ARCHIVED:
+                      type: integer
+                      format: int64
+                      minimum: 0
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
         activeEnrollments:
           oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: AVAILABLE
-              data:
-                type: integer
-                format: int64
-                minimum: 0
-          - type: object
-            additionalProperties: false
-            required:
-            - availability
-            - data
-            properties:
-              availability:
-                const: UNAVAILABLE
-              data:
-                type: 'null'
-          description: All ACTIVE enrollment relationships, including DRAFT/ARCHIVED
-            classes, as defined by U05.
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: AVAILABLE
+                data:
+                  type: integer
+                  format: int64
+                  minimum: 0
+            - type: object
+              additionalProperties: false
+              required:
+                - availability
+                - data
+              properties:
+                availability:
+                  const: UNAVAILABLE
+                data:
+                  type: 'null'
+          description: >-
+            All ACTIVE enrollment relationships, including DRAFT/ARCHIVED classes, as defined by
+            U05.
         backup:
           $ref: '#/components/schemas/BackupSection'
     BackupHistoryPage:
       type: object
       additionalProperties: false
       required:
-      - items
-      - page
-      - size
-      - totalElements
-      - totalPages
+        - items
+        - page
+        - size
+        - totalElements
+        - totalPages
       properties:
         items:
           type: array
@@ -653,9 +725,9 @@ components:
     ProblemDetail:
       type: object
       required:
-      - status
-      - detail
-      - code
+        - status
+        - detail
+        - code
       properties:
         type:
           type: string
@@ -667,3 +739,111 @@ components:
           type: string
         code:
           type: string
+    DayAssignments:
+      type: object
+      properties:
+        day:
+          type: string
+          format: date
+        individual:
+          type: integer
+          format: int64
+          minimum: 0
+        group:
+          type: integer
+          format: int64
+          minimum: 0
+        practice:
+          type: integer
+          format: int64
+          minimum: 0
+      required:
+        - day
+        - individual
+        - group
+        - practice
+    SecurityEventItem:
+      type: object
+      properties:
+        occurredAt:
+          type: string
+          format: date-time
+        action:
+          type: string
+        result:
+          type: string
+        account:
+          type:
+            - string
+            - 'null'
+        reason:
+          type:
+            - string
+            - 'null'
+      required:
+        - occurredAt
+        - action
+        - result
+        - account
+        - reason
+    ActivityView:
+      type: object
+      properties:
+        calculatedAt:
+          type: string
+          format: date-time
+        activeAccountChangeToday:
+          type: object
+          properties:
+            availability:
+              type: string
+              enum:
+                - AVAILABLE
+                - UNAVAILABLE
+            data:
+              anyOf:
+                - type: integer
+                  format: int64
+                - type: 'null'
+          required:
+            - availability
+            - data
+        assignmentsByDay:
+          type: object
+          properties:
+            availability:
+              type: string
+              enum:
+                - AVAILABLE
+                - UNAVAILABLE
+            data:
+              anyOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/DayAssignments'
+                - type: 'null'
+          required:
+            - availability
+            - data
+        securityEvents:
+          type: object
+          properties:
+            availability:
+              type: string
+              enum:
+                - AVAILABLE
+                - UNAVAILABLE
+            data:
+              anyOf:
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/SecurityEventItem'
+                - type: 'null'
+          required:
+            - availability
+            - data
+      required:
+        - calculatedAt
+        - activeAccountChangeToday
+        - assignmentsByDay
+        - securityEvents

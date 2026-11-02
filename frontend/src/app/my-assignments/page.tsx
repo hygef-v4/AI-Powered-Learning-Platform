@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { StudentAssignmentsPage } from "@/features/assignmentwork/StudentAssignmentsPage";
+import { StudentAssignmentsPage } from "@/features/assignmentwork/pages/StudentAssignmentsPage";
 
 // U08 #38 Student Assignments.
 export default function Page() {

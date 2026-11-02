@@ -56,7 +56,7 @@ export function Tabs<T extends string>({
             }}
             data-testid={testIdPrefix ? `${testIdPrefix}${item.key}` : undefined}
             className={cx(
-              "flex items-center gap-1.5 py-3 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",
+              "flex cursor-pointer items-center gap-1.5 py-3 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",
               on ? "text-ink" : "text-muted hover:text-ink",
             )}
           >

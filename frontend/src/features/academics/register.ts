@@ -3,7 +3,7 @@
 // U05: mục menu bên của lớp, môn và hai dashboard; sidebar của một môn và của một lớp.
 
 import { contextNavEntries, navEntries, subjectNavEntries } from "@/features/identity/slots";
-import { classContext, studentClassContext, subjectContext } from "./navContexts";
+import { classContext, studentClassContext, subjectContext } from "./components/navContexts";
 
 // Chủ nhiệm môn dùng menu của Giảng viên, thêm Môn được phân công; các màn của một môn nằm trong sidebar của môn.
 navEntries.register({ key: "manager-dashboard", order: 10, title: "Môn được phân công", href: "/manager", icon: "menu_book", roles: ["SUBJECT_MANAGER"] });

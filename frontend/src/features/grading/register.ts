@@ -1,14 +1,15 @@
 "use client";
 import { createElement } from "react";
 import { teacherClassTabs, studentDetailSections } from "@/features/academics/slots";
-import { assignmentRowActions } from "@/features/assignments/slots";
+import { assignmentRowActions, assignmentSettingsSections } from "@/features/assignments/slots";
 import { attemptResultSources, studentAssignmentResults } from "@/features/assignmentwork/slots";
-import { ClassGradebookTab } from "./ClassGradebookTab";
-import { ClassProgressSection } from "./ClassProgressSection";
-import { StudentGradesSection } from "./StudentGradesSection";
-import { SubmissionsLink } from "./SubmissionsLink";
-import { StudentGradeCell } from "./StudentGradeCell";
+import { ClassGradebookTab } from "./components/ClassGradebookTab";
+import { ClassProgressSection } from "./components/ClassProgressSection";
+import { StudentGradesSection } from "./components/StudentGradesSection";
+import { SubmissionsLink } from "./components/SubmissionsLink";
+import { StudentGradeCell } from "./components/StudentGradeCell";
 import { gradingApi } from "./api";
+import { GradeDistributionSettings } from "./components/GradeDistributionSettings";
 
 function TeacherGradingSection({
   classId,
@@ -32,6 +33,7 @@ studentDetailSections.register({
   component: StudentGradesSection,
 });
 assignmentRowActions.register({ key: "u09-submissions", order: 90, component: SubmissionsLink });
+assignmentSettingsSections.register({ key: "u09-distribution-visibility", order: 90, component: GradeDistributionSettings });
 studentAssignmentResults.register({
   key: "u09-student-grade",
   order: 90,

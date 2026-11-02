@@ -1,6 +1,9 @@
 # U12 Group Assignment — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
 
@@ -56,7 +59,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F5 - Gửi, hủy yêu cầu đổi trưởng nhóm (UC 55)
 1. Trên My Group bấm "Đề nghị đổi trưởng nhóm", nhập lý do, tùy chọn đề cử; frontend gọi `POST /api/v1/groups/{groupId}/leader-requests`.
-2. Kiểm người gửi là thành viên hiệu lực, lớp `OPEN`, lý do 10–1.000 ký tự, người được đề cử là thành viên khác trưởng nhóm, nhóm chưa có yêu cầu đang chờ (BR-U12-10).
+2. Kiểm người gửi là thành viên hiệu lực, lớp `OPEN`, lý do tùy chọn, tối đa 1.000 ký tự, người được đề cử là thành viên khác trưởng nhóm, nhóm chưa có yêu cầu đang chờ (BR-U12-10).
 3. Tạo yêu cầu `PENDING`; audit; sau commit phát `group.leader-change-requested` cho giảng viên của lớp.
 4. Hủy khi còn chờ: `POST /api/v1/leader-requests/{id}:cancel` (chỉ người gửi).
 
@@ -121,3 +124,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. U09 đọc bản nộp và tiến độ qua `IGroupSubmissionSource`; agent của giảng viên đọc bản nộp qua tool `read_authorized_group_submission` (kiểm giảng viên chính của lớp).
 3. Ghi dữ liệu hoạt động: U12 kiểm thành viên hiệu lực, tài liệu `IN_PROGRESS`, chính sách đã chụp khi bài mở, rồi gọi `IActivityWrite.record` loại `GROUP_DOCUMENT`.
 4. `ISseHub` gửi sự kiện tới mọi instance backend qua exchange `platform.realtime`; U14 dùng `ISseHub` cho chuông thông báo.
+
+## Source behavior delta — 2026-10-30
+
+groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

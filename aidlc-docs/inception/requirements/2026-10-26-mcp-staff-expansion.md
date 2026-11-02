@@ -1,5 +1,7 @@
 # MCP cho Teacher, Subject Manager và Admin
 
+**Superseded role scope 2026-10-30:** Admin MCP removed; Student own submitted Practice MCP restored by explicit user instruction. This document preserves historical staff-expansion scope; current requirements are in 2026-10-30-test-remediation-student-mcp.md.
+
 ## Trạng thái và căn cứ
 
 Yêu cầu triển khai: "giúp tôi sửa theo những gì đề xuất và đã chốt". Phạm vi sản phẩm dưới đây kế thừa trao đổi và quyết định loại Student khỏi MCP; kế hoạch kỹ thuật cần được duyệt trước Code Generation theo CLAUDE.md.

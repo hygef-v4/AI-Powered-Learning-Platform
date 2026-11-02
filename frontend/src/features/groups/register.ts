@@ -5,9 +5,9 @@
 import { createElement } from "react";
 import { studentClassAside, studentDetailSections, teacherClassTabs } from "@/features/academics/slots";
 import { assignmentFormSections } from "@/features/assignments/slots";
-import { ClassGroupsPanel } from "./ClassGroupsPanel";
-import { MyGroupCard } from "./MyGroup";
-import { GroupAssignmentPanel, StudentGroupInfo } from "./TeacherGroupWidgets";
+import { ClassGroupsPanel } from "./components/ClassGroupsPanel";
+import { MyGroupCard } from "./components/MyGroup";
+import { GroupAssignmentPanel, StudentGroupInfo } from "./components/TeacherGroupWidgets";
 
 function TeacherGroupTab({ classId, tab, students, onViewStudent, onGroupNamesLoaded, onStudentTable }: {
   classId: string;

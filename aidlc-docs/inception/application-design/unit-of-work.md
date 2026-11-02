@@ -1,6 +1,6 @@
 # Unit of Work — 2026-10-14
 
-> Revision 2026-10-14 theo yêu cầu người dùng: 15 unit chia lại thành 3 iteration, mỗi iteration 5 unit, mỗi unit nằm trọn một iteration; unit chia theo dữ liệu sở hữu để liên kết trong cao và liên kết ngoài thấp. Danh mục 66 UC, 50 MVP story + 1 extension giữ nguyên ID. Đây là revision tài liệu; thiết kế Construction vẫn nằm trong các folder unit cũ, chưa tách/gộp theo unit mới.
+> AS-BUILT sync 2026-10-30; 66 UC/15 unit ownership retained and verified against source. Dated planning estimates below remain estimates, not actual LOC or runtime acceptance.
 
 66 active UC; 50 MVP stories + 1 extension; 15 logical units; 3 iteration × 5 unit
 
@@ -30,7 +30,7 @@
 | 2 | AI và nghiệp vụ chính: kết nối AI (API chung, API cá nhân, MCP), soạn/làm/chấm Assignment cá nhân, soạn Quiz và ngân hàng câu hỏi | U06–U10 |
 | 3 | Phần còn lại: làm Quiz, Assignment nhóm, học liệu, thông báo lớp và thông báo hệ thống, Admin Dashboard | U11–U15 |
 
-Mỗi unit chỉ phụ thuộc unit ở iteration trước hoặc cùng iteration; không có vòng phụ thuộc. Sơ đồ: [unit-of-work-dependency.drawio](unit-of-work-dependency.drawio) (chỉ vẽ phụ thuộc trực tiếp).
+Iteration là lịch phân công lịch sử, không là ràng buộc chiều phụ thuộc source; quan hệ port có thể hai chiều; import-contract matrix hiện hành ở component-dependency.md, không coi iteration là DAG runtime. Sơ đồ: [unit-of-work-dependency.drawio](unit-of-work-dependency.drawio) (chỉ vẽ phụ thuộc trực tiếp).
 
 ## Boundaries
 

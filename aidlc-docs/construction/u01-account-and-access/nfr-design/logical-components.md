@@ -1,6 +1,6 @@
 # U01 Account & Access — logical-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -37,21 +37,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 ## 2. Thành phần
 
-| Thành phần | Trách nhiệm | Phục vụ |
-|---|---|---|
-| `RateLimitFilter` | Bucket4j trên Redis cho endpoint public | NFR-U01-20, 21, 53 |
-| `JwtAuthFilter` | Kiểm chữ ký/hạn JWT, rồi current session/account authority; actor từ server authority, fail closed | NFR-U01-04, 10 |
-| `AuthService` | Đăng nhập, refresh, đăng xuất, khóa tạm, đổi/đặt lại mật khẩu | F3, F4, F5, F6 |
-| `ActivationService` | Yêu cầu và hoàn tất kích hoạt | F1, F2 |
-| `OtpService` | Tạo job gửi OTP; xác minh mã người dùng nhập | BR-U01-20…27 |
-| `PasswordPolicy` | ≥ 8 ký tự, chữ + số, không chứa tên email, ≤ 72 byte | BR-U01-30, 31, NFR-U01-14 |
-| `TokenService` | Phát và xoay JWT/refresh; kiểm phiên còn khi refresh; xóa phiên của tài khoản khi thu hồi | NFR-U01-10, 11 |
-| `ProfileService` | Xem và sửa tên, số điện thoại của chính mình | F7 |
-| `AccountAdminService` | Danh sách, chi tiết, tạo, sửa thông tin (version), đổi role, vô hiệu hóa/mở lại, bảo vệ admin cuối | F8, F9, F11, F12, F14 |
-| `AccountImportService` | Kiểm CSV, xác nhận thì kiểm lại và tạo dòng hợp lệ; không lưu kết quả, audit kèm checksum | F10 |
-| `AuthorizationService` | `authorize(actor, action, resourceRef)` mặc định từ chối; `ADMIN` bị từ chối mọi hành động cần phân công môn/lớp | F13 |
-| `OtpMailHandler` (worker) | Nhận message, sinh mã, lưu băm vào Redis, gửi SMTP, retry; hết lượt thì log ERROR | NFR-U01-30, 31 |
-| `SensitiveDataMasker` | Che dữ liệu nhạy cảm trong log | NFR-U01-50 |
+| Source | Trách nhiệm |
+|---|---|
+| [identity/controller](../../../../backend/src/main/java/edu/aiplatform/identity/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [identity/service](../../../../backend/src/main/java/edu/aiplatform/identity/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [identity/repository](../../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [identity/model](../../../../backend/src/main/java/edu/aiplatform/identity/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [identity/integration](../../../../backend/src/main/java/edu/aiplatform/identity/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [identity/config](../../../../backend/src/main/java/edu/aiplatform/identity/config) | Properties, cấu hình bean và topology. |
+| [identity/contract](../../../../backend/src/main/java/edu/aiplatform/identity/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ## 3. Kho dữ liệu
 
@@ -108,3 +102,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Ghi nhận trước refactor chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.
+
+## Structure refactor — 2026-10-30
+
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).
